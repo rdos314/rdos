@@ -151,10 +151,12 @@ init_flat_check:
 	mov eax,SIZE vbe_object
 	AllocateSmallGlobalMem
 ;
+	push bx
 	mov al,dh
 	mov cx,ds:vmi_x_pixels
 	mov dx,ds:vmi_y_pixels
 	InitVideoBitmap
+	pop bx
 ;
 	mov ax,ds:vmi_scan_lines
 	mov es:v_row_size,ax
@@ -1666,11 +1668,17 @@ page
 ;						CX		x-resolution
 ;						DX		y-resolution
 ;
+;		RETURNS:		BX		bitmap handle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_vbe_mode_name	DB 'Set VBE Mode',0
 
 set_vbe_mode	PROC far
+	push ds
+	push ax
+	push dx
+;
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_init_proc
@@ -1716,6 +1724,9 @@ set_vbe_mode_do:
 	clc
 
 set_vbe_mode_done:
+	pop dx
+	pop ax
+	pop ds
 	retf32
 set_vbe_mode	ENDP
 

@@ -37,6 +37,8 @@ INCLUDE ..\os\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\user.inc
 INCLUDE ..\os\os.inc
+INCLUDE handle.inc
+INCLUDE bitmap.inc
 INCLUDE video.inc
 
 video_mode_entry	STRUC
@@ -77,6 +79,48 @@ CallVideo	MACRO	call_proc
 	mov ds,ds:v_handle
 	call ds:&call_proc
 	pop ds
+				ENDM
+
+CallBitmap	MACRO	call_proc
+	local bmp
+	local done
+	local fail
+
+	or bx,bx
+	jnz bmp
+;
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	call ds:&call_proc
+	pop ds
+	jmp done
+
+fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp done
+
+bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	call ds:&call_proc
+	pop ds	
+
+done:
 				ENDM
 
 	.386p
@@ -140,6 +184,8 @@ page
 ;
 ;		PARAMETERS:		AX		Mode
 ;
+;		RETURNS:		BX		bitmap handle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_video_mode_name	DB 'Set Video Mode',0
@@ -148,7 +194,6 @@ set_video_mode	PROC far
 	push ds
 	push es
 	push ax
-	push bx
 ;
 	mov bx,video_data_sel
 	mov ds,bx
@@ -181,7 +226,7 @@ set_mode_no_descruct:
 	mov ds:v_handle,ax
 	GetFocusThread
 	or ax,ax
-	jz set_video_mode_done
+	jz set_video_mode_ok
 ;
 	push es
 	push edx
@@ -192,21 +237,23 @@ set_mode_no_descruct:
 	cmp edx,es:p_cr3
 	pop edx
 	pop es
-	jne set_video_mode_done
+	jne set_video_mode_ok
 ;
 	push ds
 	mov ds,ds:v_handle
 	call ds:switch_to_proc
 	pop ds
-	clc
-	jmp set_video_mode_done
+	jmp set_video_mode_ok
 
 set_video_mode_next:
 	mov bx,es:mode_link
 	jmp set_video_mode_loop
 
+set_video_mode_ok:
+	mov ds,ds:v_handle
+	mov bx,ds:v_bitmap
+
 set_video_mode_done:
-	pop bx
 	pop ax
 	pop es
 	pop ds
@@ -859,6 +906,9 @@ PAGE
 set_draw_color_name	DB 'Set Draw Color',0
 
 set_draw_color	PROC far
+	or bx,bx
+	jnz set_draw_color_bmp
+;
 	push ds
 	push ax
 	mov ax,video_local_sel
@@ -867,7 +917,30 @@ set_draw_color	PROC far
 	mov ds,ds:v_handle
 	mov ds:v_color,eax
 	pop ds
-	clc
+	jmp set_draw_color_done
+
+set_draw_color_fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp set_draw_color_done
+
+set_draw_color_bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_draw_color_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	mov ds:v_color,eax
+	pop ds	
+
+set_draw_color_done:
 	retf32
 set_draw_color	ENDP
 
@@ -888,20 +961,46 @@ PAGE
 set_lgop_name	DB 'Set LGOP',0
 
 set_lgop	PROC far
+	cmp ax,13
+	jbe set_lgop_ok
+	mov ax,1
+
+set_lgop_ok:
+	or bx,bx
+	jnz set_lgop_bmp
+;
 	push ds
 	push ax
 	mov ax,video_local_sel
 	mov ds,ax
 	pop ax
 	mov ds,ds:v_handle
-	cmp ax,13
-	jbe set_lgop_ok
-	mov ax,1
-
-set_lgop_ok:
 	mov ds:v_lgop,ax
-	clc
 	pop ds
+	jmp set_lgop_done
+
+set_lgop_fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp set_lgop_done
+
+set_lgop_bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_lgop_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	mov ds:v_lgop,ax
+	pop ds	
+
+set_lgop_done:
 	retf32
 set_lgop	ENDP
 
@@ -921,6 +1020,9 @@ PAGE
 set_hollow_style_name	DB 'Set Hollow Style',0
 
 set_hollow_style	PROC far
+	or bx,bx
+	jnz set_hollow_bmp
+;
 	push ds
 	push ax
 	mov ax,video_local_sel
@@ -929,6 +1031,30 @@ set_hollow_style	PROC far
 	mov ds,ds:v_handle
 	mov ds:v_style,STYLE_HOLLOW
 	pop ds
+	jmp set_hollow_done
+
+set_hollow_fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp set_hollow_done
+
+set_hollow_bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_hollow_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	mov ds:v_style,STYLE_HOLLOW
+	pop ds	
+
+set_hollow_done:
 	retf32
 set_hollow_style	ENDP
 
@@ -948,6 +1074,9 @@ PAGE
 set_filled_style_name	DB 'Set Filled Style',0
 
 set_filled_style	PROC far
+	or bx,bx
+	jnz set_filled_bmp
+;
 	push ds
 	push ax
 	mov ax,video_local_sel
@@ -956,6 +1085,30 @@ set_filled_style	PROC far
 	mov ds,ds:v_handle
 	mov ds:v_style,STYLE_FILLED
 	pop ds
+	jmp set_filled_done
+
+set_filled_fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp set_filled_done
+
+set_filled_bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_filled_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	mov ds:v_style,STYLE_FILLED
+	pop ds	
+
+set_filled_done:
 	retf32
 set_filled_style	ENDP
 
@@ -979,7 +1132,7 @@ PAGE
 get_pixel_name	DB 'Get Pixel',0
 
 get_pixel	PROC far
-	CallVideo get_pixel_proc
+	CallBitmap get_pixel_proc
 	retf32
 get_pixel	ENDP
 
@@ -1001,7 +1154,7 @@ PAGE
 set_pixel_name	DB 'Set Pixel',0
 
 set_pixel	PROC far
-	CallVideo set_pixel_proc
+	CallBitmap set_pixel_proc
 	retf32
 set_pixel	ENDP
 
@@ -1025,7 +1178,7 @@ PAGE
 draw_line_name	DB 'Draw Line',0
 
 draw_line	PROC far
-	CallVideo draw_line_proc
+	CallBitmap draw_line_proc
 	retf32
 draw_line	ENDP
 
@@ -1049,7 +1202,7 @@ PAGE
 draw_rect_name	DB 'Draw Rect',0
 
 draw_rect	PROC far
-	CallVideo draw_rect_proc
+	CallBitmap draw_rect_proc
 	retf32
 draw_rect	ENDP
 
@@ -1073,7 +1226,7 @@ PAGE
 draw_ellipse_name	DB 'Draw Ellipse',0
 
 draw_ellipse	PROC far
-	CallVideo draw_ellipse_proc
+	CallBitmap draw_ellipse_proc
 	retf32
 draw_ellipse	ENDP
 

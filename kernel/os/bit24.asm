@@ -37,7 +37,7 @@ INCLUDE ..\os\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\user.inc
 INCLUDE ..\os\os.inc
-INCLUDE ..\os\video.inc
+INCLUDE video.inc
 
 	.386p
 

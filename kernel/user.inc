@@ -1423,6 +1423,14 @@ DrawEllipse      MACRO
 	UserGate draw_ellipse_nr
 						ENDM
 
+;	IN  AL		Bits per pixel
+;	IN  CX		Width
+;	IN  DX		Height
+;	OUT BX		Bitmap handle
+CreateBitmap      MACRO
+	UserGate create_bitmap_nr
+						ENDM
+
 ;	IN  AX		start x
 ;	IN  BX		start y
 ;	IN  CX		end x

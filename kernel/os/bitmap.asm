@@ -40,8 +40,9 @@ INCLUDE os.inc
 INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
-INCLUDE video.inc
 INCLUDE handle.inc
+INCLUDE bitmap.inc
+INCLUDE video.inc
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -111,12 +112,137 @@ init_video_copy:
 	rep movsd
 
 init_video_done:
+	mov cx,SIZE bitmap_struc
+	AllocateHandle
+	mov ds:[bx].bm_sel,es
+	mov ds:[bx].bm_flag,BM_FLAG_VIDEO
+	mov [bx].hh_sign,BITMAP_HANDLE
+	mov bx,[bx].hh_handle
+	mov es:v_bitmap,bx
+;
 	pop di
 	pop si
 	pop cx
 	pop ds
 	ret
 init_video_bitmap	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateBitmap
+;
+;		DESCRIPTION:	Create bitmap
+;
+;		PARAMETERS:		AL		Bits per pixel
+;						CX		Width
+;						DX		Height
+;
+;		RETURNS:		BX		Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_bitmap_name	DB 'Create Bitmap', 0
+
+create_bitmap	Proc far
+	push ds
+	push es
+	push eax
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push eax
+	mov eax,SIZE video_api_struc
+	AllocateSmallGlobalMem
+	pop eax
+;
+	InitSection es:v_section
+	mov es:v_color,0
+	mov es:v_lgop,1
+	mov es:v_style,0
+	mov es:v_bpp,al
+	mov es:v_width,cx
+	mov es:v_height,dx
+;
+	mov si,cs
+	mov ds,si
+;
+	cmp al,24
+	je cr_bitmap24
+;
+	cmp al,32
+	je cr_bitmap32
+;
+	FreeMem
+	stc
+	jmp cr_bitmap_end
+
+cr_bitmap24:
+	mov si,OFFSET BitmapTab24
+	mov ax,es:v_width
+	add ax,ax
+	add ax,es:v_width
+	dec ax
+	add ax,4
+	mov es:v_row_size,ax
+	jmp cr_bitmap_copy
+
+cr_bitmap32:
+	mov si,OFFSET BitmapTab32
+	mov ax,es:v_width
+	add ax,ax
+	add ax,ax
+	mov es:v_row_size,ax
+	jmp cr_bitmap_copy
+
+cr_bitmap_copy:
+	mov cx,24
+	xor di,di
+	rep movsd
+;
+	movzx eax,es:v_row_size
+	movzx edx,es:v_height
+	mul edx
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:v_app_size,eax
+	AllocateLocalLinear
+	mov es:v_app_base,edx
+;
+	push es
+	mov ecx,eax
+	shr ecx,2
+	mov edi,edx
+	mov ax,flat_sel
+	mov es,ax
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	pop es
+;
+	mov cx,SIZE bitmap_struc
+	AllocateHandle
+	mov ds:[bx].bm_sel,es
+	mov ds:[bx].bm_flag,BM_FLAG_BITMAP
+	mov [bx].hh_sign,BITMAP_HANDLE
+	mov bx,[bx].hh_handle
+	mov es:v_bitmap,bx
+	clc
+
+cr_bitmap_end:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	retf32
+create_bitmap	Endp
 
 PAGE
 
@@ -160,6 +286,12 @@ init_bitmap	PROC near
 	xor cl,cl
 	mov ax,init_video_bitmap_nr
 	RegisterOsGate
+;
+	mov si,OFFSET create_bitmap
+	mov di,OFFSET create_bitmap_name
+	xor dx,dx
+	mov ax,create_bitmap_nr
+	RegisterBimodalUserGate
 ;
 	ret
 init_bitmap	ENDP
