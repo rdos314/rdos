@@ -11,12 +11,15 @@
 
 void cdecl main()
 {
+    int val;
+    
     for (;;)
 	{
-		if (RdosWriteSerialRaw(0x26, 5, 2))
-			printf("1");
-		else
-        	printf("0");
+		RdosWriteSerialRaw(0x26, 5, 2);
+    	if (RdosReadSerialRaw(0x26, 1, &val))
+	    	printf("%ld.%ld\r\n", val / 10, val % 10);
+    	else
+	    	printf("fail\r\n");
 		RdosWaitMilli(1000);
     }
 }

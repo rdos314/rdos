@@ -1472,6 +1472,121 @@ write_serial_val	Proc far
 write_serial_val	Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadSerialVal
+;
+;		DESCRIPTION:	Read serial val
+;
+;		PARAMETERS:		DL		Line #
+;						DH		Device #
+;
+;		RETURNS:		EAX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_val_name	DB 'Read Serial Value', 0
+
+rd0_proc    Proc near
+    int 3
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz rd0_done
+;    
+    mov es:dqe_data,0
+    mov es:dqe_val,1
+    mov es:dqe_proc,OFFSET rd1_proc
+    clc
+
+rd0_done:
+    ret
+rd0_proc    Endp
+
+rd1_proc    Proc near
+    mov al,es:dqe_val
+    and eax,3Fh
+    or es:dqe_data,eax
+    mov es:dqe_val,2
+    mov es:dqe_proc,OFFSET rd2_proc
+    clc
+    ret
+rd1_proc    Endp
+
+rd2_proc    Proc near
+    mov al,es:dqe_val
+    and eax,3Fh
+    shl eax,6    
+    or es:dqe_data,eax
+    mov es:dqe_val,3
+    mov es:dqe_proc,OFFSET rd3_proc
+    clc
+    ret
+rd2_proc    Endp
+
+rd3_proc    Proc near
+    mov al,es:dqe_val
+    and eax,3Fh
+    shl eax,12  
+    or es:dqe_data,eax
+    mov es:dqe_val,4
+    mov es:dqe_proc,OFFSET rd4_proc
+    clc
+    ret
+rd3_proc    Endp
+
+rd4_proc    Proc near
+    mov al,es:dqe_val
+    and eax,3Fh
+    shl eax,18  
+    or es:dqe_data,eax
+    mov es:dqe_val,5
+    mov es:dqe_proc,OFFSET rd_check_proc
+    clc
+    ret
+rd4_proc    Endp
+
+rd_check_proc    Proc near
+    int 3
+    mov al,es:dqe_val
+    or al,al
+    jz rd_check_done
+;    
+    or es:dqe_stat,DQE_STAT_SUCCESS
+
+rd_check_done:
+    stc
+    ret
+rd_check_proc    Endp
+
+read_serial_val	Proc far
+	push eax
+	push bx
+	push cx
+    push edx
+    push di
+    push ebp
+;
+    mov ebp,eax
+    mov cx,dx
+    xor ax,ax
+    mov edx,1193 * 100
+    mov di,OFFSET rd0_proc
+    mov bl,2
+    call DioReq
+;
+	pop ebp
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	retf32
+read_serial_val	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1569,6 +1684,11 @@ init	PROC far
 	mov si,OFFSET write_serial_val
 	mov di,OFFSET write_serial_val_name
 	mov ax,write_serial_val_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET read_serial_val
+	mov di,OFFSET read_serial_val_name
+	mov ax,read_serial_val_nr
 	RegisterBimodalUserGate
 ;
 	popa
