@@ -328,6 +328,9 @@ const TPathName &TPathName::operator+=(const TString &str)
 	path = FPathName.GetData();
 	ptr = str.GetData();
 
+	while (*ptr == '\\' || *ptr == '/')
+		ptr++;
+
 	if (!strcmp(path, "."))
 		FPathName = str;
 	else
@@ -340,14 +343,14 @@ const TPathName &TPathName::operator+=(const TString &str)
 		{
 			case '\\':
 			case '/':
-				FPathName += str;
+				FPathName += ptr;
 				break;
 	
 			default:
 				if (*path && *ptr != '.')
-					FPathName += "\\" + str;
+					FPathName += "\\" + TString(ptr);
 				else
-					FPathName += str;
+					FPathName += ptr;
 				break;
 		}	
 	}
@@ -371,6 +374,9 @@ const TPathName &TPathName::operator+=(const char *str)
 	int pos;
 
 	path = FPathName.GetData();
+
+	while (*str == '\\' || *str == '/')
+		str++;
 
 	if (!strcmp(path, "."))
 		FPathName = TString(str);

@@ -59,9 +59,15 @@ dhcp_option	ENDS
 
 dhcp_data	STRUC
 
+dhcp_ident			DD ?
+dhcp_wanted_ip		DD ?
+dhcp_server			DD ?
 dhcp_option_list	DW ?
+dhcp_stat			DB ?
 
 dhcp_data	ENDS
+
+	extrn define_ip:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -418,6 +424,116 @@ LeaseData	Proc near
 LeaseData	Endp
 	
 PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServerSize
+;
+;	Purpose:		Size of server IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;
+;	Returns:		CX			Size of server IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServerSize	Proc near
+	mov cx,6
+	ret
+ServerSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ServerData
+;
+;	Purpose:		Copy server IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;					ES:DI		Position to copy at
+;
+;	Returns:		ES:DI		New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ServerData	Proc near
+	push ds
+	push eax
+;
+	mov al,54
+	stosb
+	mov al,4
+	stosb
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_server
+	stosd
+;
+	pop eax
+	pop ds
+	ret
+ServerData	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReqIpSize
+;
+;	Purpose:		Size of client IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;
+;	Returns:		CX			Size of client IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqIpSize	Proc near
+	mov cx,6
+	ret
+ReqIpSize	Endp
+	
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReqIpData
+;
+;	Purpose:		Copy client IP
+;
+;	Parameters:		DS			Class selector
+;					FS			Driver selector
+;					ES:DI		Position to copy at
+;
+;	Returns:		ES:DI		New position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReqIpData	Proc near
+	push ds
+	push eax
+;
+	mov al,50
+	stosb
+	mov al,4
+	stosb
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_wanted_ip
+	stosd
+;
+	pop eax
+	pop ds
+	ret
+ReqIpData	Endp
+	
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -435,15 +551,16 @@ PAGE
 
 ;   	size-proc				data-proc
 
-DhcpOptTab:
+DiscOptTab:
 d00	DW OFFSET ClientSize,		OFFSET ClientData
 d01 DW OFFSET ParamSize,		OFFSET ParamData
 d02 DW OFFSET LeaseSize,		OFFSET LeaseData
-d03	DW -1
+d03 DW OFFSET ReqIpSize,		OFFSET ReqIpData
+d04	DW -1
 
 DhcpDiscover	Proc far
 	mov dx,SIZE dhcp_header + 1
-	mov bx,OFFSET DhcpOptTab
+	mov bx,OFFSET DiscOptTab
 
 dhcp_disc_size_loop:
 	mov ax,cs:[bx]
@@ -465,7 +582,12 @@ dhcp_disc_size_ok:
 	mov al,ds:addr_len
 	mov es:[di].dhcp_hw_len,al
 	mov es:[di].dhcp_hops,0
+	push ds
+	mov ax,dhcp_data_sel
+	mov ds,ax
 	GetSystemTime
+	mov ds:dhcp_ident,eax
+	pop ds
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
 	mov es:[di].dhcp_flags,0
@@ -496,7 +618,7 @@ dhcp_disc_size_ok:
 ;
 	push di
 	add di,SIZE dhcp_header
-	mov bx,OFFSET DhcpOptTab
+	mov bx,OFFSET DiscOptTab
 
 dhcp_disc_data_loop:
 	mov ax,cs:[bx]
@@ -522,6 +644,112 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DhcpRequest
+;
+;		DESCRIPTION:    Send DHCP request for a driver
+;
+;       PARAMETERS:     DS			Class selector
+;						FS			Driver selector
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;   	size-proc				data-proc
+
+ReqOptTab:
+ro00 DW OFFSET ClientSize,		OFFSET ClientData
+ro01 DW OFFSET ParamSize,		OFFSET ParamData
+ro02 DW OFFSET LeaseSize,		OFFSET LeaseData
+ro03 DW OFFSET ReqIpSize,		OFFSET ReqIpData
+ro04 DW OFFSET ServerSize,		OFFSET ServerData
+ro05 DW -1
+
+DhcpRequest	Proc far
+	mov dx,SIZE dhcp_header + 1
+	mov bx,OFFSET ReqOptTab
+
+dhcp_req_size_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz dhcp_req_size_ok
+;
+	call word ptr cs:[bx]
+	add dx,cx
+	add bx,4
+	jmp dhcp_req_size_loop
+
+dhcp_req_size_ok:
+	mov cx,dx
+	push cx
+	call CreateDhcpBroadcast
+	mov es:[di].dhcp_op,1
+	mov al,ds:class_id
+	mov es:[di].dhcp_hw_type,al
+	mov al,ds:addr_len
+	mov es:[di].dhcp_hw_len,al
+	mov es:[di].dhcp_hops,0
+	push ds
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_ident
+	pop ds
+	mov es:[di].dhcp_id,eax
+	mov es:[di].dhcp_elapsed,0
+	mov es:[di].dhcp_flags,0
+	mov es:[di].dhcp_client_ip,0
+	mov es:[di].dhcp_req_ip,0
+	mov es:[di].dhcp_server_ip,0
+	mov es:[di].dhcp_relay_ip,0
+	mov es:[di].dhcp_magic,63538263h
+	mov es:[di].dhcp_msg_code,53
+	mov es:[di].dhcp_msg_len,1
+	mov es:[di].dhcp_msg_type,3
+;
+	push di
+	mov cx,34h
+	add di,OFFSET dhcp_hw_addr
+	xor eax,eax
+	rep stosd
+	pop di
+;
+	movzx cx,ds:addr_len
+	push ds
+	push di
+	call fs:d_address
+	add di,OFFSET dhcp_hw_addr
+	rep movsb
+	pop di
+	pop ds
+;
+	push di
+	add di,SIZE dhcp_header
+	mov bx,OFFSET ReqOptTab
+
+dhcp_req_data_loop:
+	mov ax,cs:[bx]
+	cmp ax,-1
+	jz dhcp_req_data_ok
+;
+	call word ptr cs:[bx+2]
+	add bx,4
+	jmp dhcp_req_data_loop
+
+dhcp_req_data_ok:
+	mov al,-1
+	stosb
+;
+	pop di
+	pop cx
+	call SendDhcpBroadcast
+	ret
+DhcpRequest	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			AddDhcpOption
 ;
 ;		DESCRIPTION:    Add a requested DHCP option to ask for
@@ -538,25 +766,312 @@ add_dhcp_option	Proc far
 	push ds
 	push es
 	push ax
+	push dx
 ;
+	mov dx,es
 	push eax
 	mov eax,SIZE dhcp_option
 	AllocateSmallGlobalMem
 	pop eax
 	mov es:dhcp_opt_code,al
 	mov word ptr es:dhcp_opt_callb,di
-	mov word ptr es:dhcp_opt_callb+2,es
+	mov word ptr es:dhcp_opt_callb+2,dx
 	mov ax,dhcp_data_sel
 	mov ds,ax
 	mov ax,ds:dhcp_option_list
 	mov es:dhcp_opt_next,ax
 	mov ds:dhcp_option_list,es
 ;
+	pop dx
 	pop ax
 	pop es
 	pop ds
 	ret
 add_dhcp_option	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsDhcpDone
+;
+;		DESCRIPTION:    Check if DHCP is finished
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public IsDhcpDone
+
+IsDhcpDone	Proc near
+	push ds
+	push ax
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov al,ds:dhcp_stat
+	or al,al
+	stc
+	jz is_dhcp_done
+;
+	clc
+
+is_dhcp_done:
+	pop ax
+	pop ds
+	ret
+IsDhcpDone	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveError
+;
+;	Purpose:		Receive error
+;
+;	Parameters:		ES:EDI	UDP data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveError	Proc near
+	FreeMem
+	ret
+ReceiveError	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveOffer
+;
+;	Purpose:		Receive offer
+;
+;	Parameters:		ES:EDI	UDP data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveOffer	Proc near
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,es:[di].dhcp_req_ip
+	mov ds:dhcp_wanted_ip,eax
+;
+	mov eax,ds:dhcp_server
+	or eax,eax
+	jnz receive_offer_leave
+;
+	add di,SIZE dhcp_header
+
+receive_offer_loop:
+	mov al,es:[di]
+	cmp al,54
+	jne receive_offer_next
+;
+	mov eax,es:[di+2]
+	mov ds:dhcp_server,eax
+;
+	push es
+	push di
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET DhcpRequest
+	NetBroadcast
+	pop di
+	pop es
+	jmp receive_offer_leave
+
+receive_offer_next:
+	inc di
+	sub cx,1
+	jz receive_offer_leave
+;
+	movzx ax,byte ptr es:[di]
+	inc ax
+	add di,ax
+	sub cx,ax
+	ja receive_offer_loop
+
+receive_offer_leave:
+	FreeMem
+;
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+	ret
+ReceiveOffer	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveAck
+;
+;	Purpose:		Receive ACK
+;
+;	Parameters:		ES:EDI	UDP data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveAck	Proc near
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov eax,es:[di].dhcp_req_ip
+	call define_ip
+;
+	mov ax,dhcp_data_sel
+	mov ds,ax
+;
+	add di,SIZE dhcp_header
+
+receive_ack_loop:
+	mov al,es:[di]
+	cmp al,-1
+	je receive_ack_leave
+;
+	mov bx,ds:dhcp_option_list
+
+receive_ack_opt_loop:
+	or bx,bx
+	jz receive_ack_next
+;
+	mov fs,bx
+	mov bx,fs:dhcp_opt_next
+	cmp al,fs:dhcp_opt_code
+	jne receive_ack_opt_loop
+;
+	push cx
+	push di
+	movzx cx,byte ptr es:[di+1]
+	add di,2
+	call fs:dhcp_opt_callb
+	pop di
+	pop cx
+
+receive_ack_next:
+	inc di
+	sub cx,1
+	jz receive_ack_leave
+;
+	movzx ax,byte ptr es:[di]
+	inc ax
+	add di,ax
+	sub cx,ax
+	ja receive_ack_loop
+
+receive_ack_leave:
+	mov ds:dhcp_stat,1
+	FreeMem
+;
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+	ret
+ReceiveAck	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveDhcp
+;
+;	Purpose:		Receive notify from UDP
+;
+;	Parameters:		ES:EDI	UDP data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public ReceiveDhcp
+
+receive_tab:
+r00	DW OFFSET ReceiveError
+r01	DW OFFSET ReceiveError
+r02	DW OFFSET ReceiveOffer
+r03	DW OFFSET ReceiveError
+r04	DW OFFSET ReceiveError
+r05	DW OFFSET ReceiveAck
+r06	DW OFFSET ReceiveError
+r07	DW OFFSET ReceiveError
+r08	DW OFFSET ReceiveError
+
+ReceiveDhcp	Proc near
+	push ax
+	push bx
+;
+	mov ax,es:[di].udp_source
+	xchg al,ah
+	cmp ax,67
+	jne receive_free
+;
+	mov ax,es:[di].udp_dest
+	xchg al,ah
+	cmp ax,68
+	jne receive_free
+;
+	add di,8
+	sub cx,8
+	sub cx,SIZE dhcp_header
+	jb receive_free
+;
+	mov al,es:[di].dhcp_op
+	cmp al,2
+	jne receive_free
+;
+	mov al,es:[di].dhcp_msg_code
+	cmp al,53
+	jne receive_free
+;
+	movzx bx,es:[di].dhcp_msg_type
+	cmp bx,8
+	jae receive_free
+;
+	push ds
+	mov ax,dhcp_data_sel
+	mov ds,ax
+	mov eax,ds:dhcp_ident
+	pop ds
+	cmp eax,es:[di].dhcp_id
+	jne receive_free
+;
+	add bx,bx
+	call word ptr cs:[bx].receive_tab	
+	jmp receive_done
+
+receive_free:
+	FreeMem
+
+receive_done:
+	pop bx
+	pop ax
+	ret
+ReceiveDhcp	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DhcpTimeout
+;
+;		description:	DHCP configuration timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DhcpTimeout	Proc far
+	mov bx,dhcp_data_sel
+	mov ds,bx
+	mov ds:dhcp_stat,1
+	ret
+DhcpTimeout	Endp
 
 PAGE
 
@@ -583,7 +1098,14 @@ dhcp_thread_pr:
 	mov es,ax
 	mov di,OFFSET DhcpDiscover
 	NetBroadcast
-	int 3
+;
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET DhcpTimeout
+	GetSystemTime
+	add eax,1193 * 2000
+	adc edx,0
+	StartTimer
 	retf
 
 PAGE
@@ -640,6 +1162,10 @@ init_dhcp	PROC near
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es:dhcp_option_list,0
+	mov es:dhcp_stat,0
+	mov es:dhcp_server,0
+	GetIpAddress
+	mov es:dhcp_wanted_ip,edx
 ;
 	mov ax,cs
 	mov ds,ax

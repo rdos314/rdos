@@ -41,6 +41,8 @@ INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE	ntp.inc
 
+	extrn WriteIpEnv:near
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -223,7 +225,27 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ntp_name	DB 'NTP', 0
+
 define_ntp_server	Proc far
+	push ds
+	push es
+	push ax
+	push edx
+	push di
+;
+	mov edx,es:[di]
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET ntp_name
+	call WriteIpEnv
+;
+	pop di
+	pop edx
+	pop ax
+	pop es
+	pop ds
 	ret
 define_ntp_server	Endp
 

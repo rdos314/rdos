@@ -41,6 +41,7 @@
 #include "pasv.h"
 #include "port.h"
 #include "list.h"
+#include "cwd.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -121,6 +122,7 @@ void cdecl main()
 	TPasvFactory *pasv = new TPasvFactory;
 	TPortFactory *port = new TPortFactory;
 	TListFactory *list = new TListFactory;
+    TCwdFactory *cwd = new TCwdFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);

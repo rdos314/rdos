@@ -50,6 +50,8 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
+	extrn ReceiveDhcp:near
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -550,6 +552,14 @@ Receive	Proc far
 	mov ds,ax
 	mov ax,es:[di].udp_dest
 	xchg al,ah
+;
+	cmp ax,68
+	jne receive_not_dhcp
+;
+	call ReceiveDhcp
+	jmp receive_done
+
+receive_not_dhcp:
 	test ax,8000h
 	jz receive_not_query
 ;

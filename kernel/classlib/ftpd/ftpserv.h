@@ -56,6 +56,7 @@ public:
 	TString User;
 	TString Pass;
 	TString CurrDir;
+	TString RootDir;
 
 	TSocket *FDataSocket;
 };

@@ -245,22 +245,6 @@ void TListCommand::WriteEntry()
 
 /*##########################################################################
 #
-#   Name       : TListCommand::Add
-#
-#   Purpose....: Add files for argument
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListCommand::Add(TString &path)
-{
-    FFileList.Add(path);
-}
-
-/*##########################################################################
-#
 #   Name       : TListCommand::Execute
 #
 #   Purpose....: Run command
@@ -276,6 +260,9 @@ void TListCommand::Execute(char *param)
 	int ArgCount;
 	TLangString msg;
 	int ok;
+	TPathName path(FServer->RootDir);
+
+	path += FServer->CurrDir;
 
 	ok = ScanCmdLine(param, 0);
 	if (ok)
@@ -302,12 +289,16 @@ void TListCommand::Execute(char *param)
 	    {
     		while (arg)
 	    	{
-		    	Add(arg->FName);
+			    FFileList.Add(path + arg->FName);
+			    FDirList.Add(path + arg->FName);
     			arg = arg->FList;
 	    	}
     	}
 	    else
-		    Add("*");
+		{
+	  		FFileList.Add(path + "*");
+	  		FDirList.Add(path + "*");
+		}
 
         FFileList.RemoveDuplicates();
         FDirList.RemoveDuplicates();

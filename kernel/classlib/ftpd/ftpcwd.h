@@ -20,48 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# list.h
-# List command class
+# cwd.h
+# Cwd command class
 #
 ########################################################################*/
 
-#ifndef _LIST_H
-#define _LIST_H
+#ifndef _CWD_H
+#define _CWD_H
 
 #include "cmd.h"
 #include "cmdfact.h"
 #include "direntry.h"
 
-class TListFactory : public TCommandFactory
+class TCwdFactory : public TCommandFactory
 {
 public:
-	TListFactory();
+	TCwdFactory();
 	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TListCommand : public TCommand
+class TCwdCommand : public TCommand
 {
 public:
-	TListCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TListCommand();
+	TCwdCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TCwdCommand();
 
 	virtual void Execute(char *param);
 
 protected:
-	void WriteHeader(TString &str);
-	void WriteFooter();
-
-	void WriteEntry(const TDirEntryData &entry);
-	void WriteEntry();
-
-	TDirList FFileList;
-	TDirList FDirList;
-
-	int FFileCount;
-	int FDirCount;
-	long FTotalSize;
 };
 
 #endif

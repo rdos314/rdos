@@ -40,6 +40,7 @@ INCLUDE ..\os.inc
 INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE	ip.inc
+INCLUDE udp.inc
 
 	extrn init_dns:near
 	extrn init_icmp:near
@@ -48,12 +49,139 @@ INCLUDE	ip.inc
 	extrn init_dhcp:near
 	extrn init_ntp:near
 	extrn init_tcp:near
+	extrn IsDhcpDone:near
+
+Reverse	MACRO
+	xchg al,ah
+	rol eax,16
+	xchg al,ah
+		ENDM
 
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ConvertOne
+;
+;		description:	Convert one digit
+;
+;		RETURNS:		AL		Digit
+;						SS:BP	Result buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ConvertOne	Proc near
+	push ax
+	push cx
+;
+	cmp al,100
+	jb conv_10_cond
+;
+	xor ah,ah
+	mov cl,100
+	div cl
+	add al,'0'
+	mov [bp],al
+	inc bp
+	mov al,ah
+	jmp conv_10
+
+conv_10_cond:	
+	cmp al,10
+	jb conv_1
+
+conv_10:
+	xor ah,ah
+	mov cl,10
+	div cl
+	add al,'0'
+	mov [bp],al
+	inc bp
+	mov al,ah
+
+conv_1:
+	add al,'0'
+	mov [bp],al
+	inc bp
+;
+	pop cx
+	pop ax
+	ret
+ConvertOne	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteIpEnv
+;
+;		description:	Write IP address to sys-env
+;
+;		RETURNS:		EDX		IP address
+;						ES:EDI	Variabel name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public WriteIpEnv
+
+WriteIpEnv	Proc near
+	push ds
+	push es
+	pushad
+	sub sp,20
+	mov bp,sp
+;
+	mov al,dl
+	call ConvertOne
+	mov al,'.'
+	mov [bp],al
+	inc bp
+	shr edx,8
+;
+	mov al,dl
+	call ConvertOne
+	mov al,'.'
+	mov [bp],al
+	inc bp
+	shr edx,8
+;
+	mov al,dl
+	call ConvertOne
+	mov al,'.'
+	mov [bp],al
+	inc bp
+	shr edx,8
+;
+	mov al,dl
+	call ConvertOne
+	xor al,al
+	mov [bp],al
+;
+	OpenSysEnv
+;
+	mov ax,es
+	mov ds,ax
+	mov si,di
+	mov ax,ss
+	mov es,ax
+	mov di,sp
+	AddEnvVar
+	CloseEnv
+;
+	add sp,20
+	popad
+	pop es
+	pop ds
+	ret
+WriteIpEnv	Endp
 
 PAGE
 
@@ -232,7 +360,18 @@ create_ip_header	Proc far
 	push ecx
 	push esi
 	push ebp
+
+create_header_dhcp_loop:
+	call IsDhcpDone
+	jnc create_header_dhcp_done
 ;
+	push ax
+	mov ax,10
+	WaitMilliSec
+	pop ax
+	jmp create_header_dhcp_loop
+
+create_header_dhcp_done:
 	push ds
 	push ax
 	push cx
@@ -785,6 +924,32 @@ receive_check_ok:
 	AddNetSourceAddress
 	pop edi
 ;
+	call IsDhcpDone
+	jnc receive_dhcp_done
+;
+	mov al,es:[di].ip_proto
+	cmp al,17
+	jne receive_fail
+;
+	mov al,ds:[di].ip_hdr_ver
+	and al,0Fh
+	shl al,2
+	xor ah,ah
+	mov si,di
+	add si,ax	
+	add si,SIZE ip_header
+;
+	mov ax,es:[si].udp_source
+	xchg al,ah
+	cmp ax,67
+	jne receive_fail
+;
+	mov ax,es:[si].udp_dest
+	xchg al,ah
+	cmp ax,68
+	jne receive_fail
+
+receive_dhcp_done:
 	mov eax,es:[di].ip_dest
 	cmp eax,ds:my_ip
 	je receive_this_node
@@ -866,6 +1031,44 @@ receive_done:
 receive	Endp
 
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			define_ip
+;
+;		description:	Define IP
+;
+;		RETURNS:		EAX		IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public define_ip
+
+define_ip	Proc near
+	push es
+	push ax
+	push edx
+	push di
+;
+	mov dx,ip_data_sel
+	mov es,dx
+	mov es:my_ip,eax
+;
+	mov edx,eax
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET ip_name
+	call WriteIpEnv
+;
+	pop di
+	pop edx
+	pop ax
+	pop es
+	ret
+define_ip	Endp
+
+PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -880,14 +1083,25 @@ PAGE
 
 define_mask	Proc far
 	push ds
-	push eax
+	push es
+	push ax
+	push edx
+	push di
 ;
 	mov ax,ip_data_sel
 	mov ds,ax
-	mov eax,es:[di]
-	mov ds:ip_mask,eax
+	mov edx,es:[di]
+	mov ds:ip_mask,edx
 ;
-	pop eax
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET mask_name
+	call WriteIpEnv
+;
+	pop di
+	pop edx
+	pop ax
+	pop es
 	pop ds
 	ret
 define_mask	Endp
@@ -907,14 +1121,25 @@ PAGE
 
 define_gateway	Proc far
 	push ds
-	push eax
+	push es
+	push ax
+	push edx
+	push di
 ;
 	mov ax,ip_data_sel
 	mov ds,ax
-	mov eax,es:[di]
-	mov ds:gateway,eax
+	mov edx,es:[di]
+	mov ds:gateway,edx
 ;
-	pop eax
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET gateway_name
+	call WriteIpEnv
+;
+	pop di
+	pop edx
+	pop ax
+	pop es
 	pop ds
 	ret
 define_gateway	Endp
@@ -928,14 +1153,15 @@ PAGE
 ;	Purpose:		Define DNS
 ;
 ;	Parameters:		CX			Size of msg
-;					ES:DI		gateway
+;					ES:DI		dns
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 define_dns	Proc far
 	push ds
-	push eax
+	push ax
 	push cx
+	push edx
 	push di
 ;
 	mov ax,ip_data_sel
@@ -943,20 +1169,38 @@ define_dns	Proc far
 	or cx,cx
 	jz define_dns_done
 ;
-	mov eax,es:[di]
-	mov ds:dns1,eax
+	mov edx,es:[di]
+	mov ds:dns1,edx
+;
+	push es
+	push di
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET dns1_name
+	call WriteIpEnv
+	pop di
+	pop es
+;
 	add di,4
 	sub cx,4
 	or cx,cx
 	jz define_dns_done
 ;
-	mov eax,es:[di]
-	mov ds:dns2,eax
+	mov edx,es:[di]
+	mov ds:dns2,edx
+;
+	push es
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET dns2_name
+	call WriteIpEnv
+	pop es
 
 define_dns_done:
 	pop di
+	pop edx
 	pop cx
-	pop eax
+	pop ax
 	pop ds
 	ret
 define_dns	Endp
