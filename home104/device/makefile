@@ -37,6 +37,10 @@ link_opt = /l/s/3
 
 # DEFINE GROUPS OF MODULES
 
+piclcd_srcs = PICLCD.ASM
+piclcd_objs = $(piclcd_srcs:.ASM=.OBJ)
+piclcd_rdvs = PICLCD.RDV
+
 ewlcd_srcs = EWLCD.ASM
 ewlcd_objs = $(ewlcd_srcs:.ASM=.OBJ)
 ewlcd_rdvs = EWLCD.RDV
@@ -57,12 +61,12 @@ dcf_srcs = DCF.ASM
 dcf_objs = $(dcf_srcs:.ASM=.OBJ)
 dcf_rdvs = DCF.RDV
 
-srcs =      $(ewlcd_srcs) $(keylcd_srcs) \
+srcs =      $(ewlcd_srcs) $(keylcd_srcs) $(piclcd_srcs) \
 			$(anio_srcs) $(digio_srcs) $(dcf_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(ewlcd_rdvs) $(keylcd_rdvs)\
+rdvs =      $(ewlcd_rdvs) $(keylcd_rdvs) $(piclcd_rdvs) \
 			$(anio_rdvs) $(digio_rdvs) $(dcf_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -83,6 +87,14 @@ maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 # +++++++++
 
 MAIN:   $(rdvs)
+
+PICLCD.RDV : $(piclcd_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(piclcd_objs)
+	PICLCD.RDV
+	PICLCD;       
+!
 
 EWLCD.RDV : $(ewlcd_objs)
     tlink @&&!
