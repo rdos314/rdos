@@ -173,7 +173,7 @@ void main(void)
 {
 	TFile FlashFile("demo.rom");
 
-	OpenScreen("c:\\sim.log");
+	OpenScreen("g:\\sim.log");
 
 	Flash.LoadTop(&FlashFile);
 	ZFLogic.DefineMemCs(&Flash, 0);
@@ -186,9 +186,9 @@ void main(void)
 	Pci.RegisterFunction(new TZfxXbus(&Pci), 0, 0x12, 3);
 	Pci.RegisterFunction(new TZfxUsb(&Pci), 0, 0x13, 0);
 
-    Cpu.Define(&Pic0);
-    Cpu.OnSetClk = SetClk;
-    Cpu.OnResetClk = ResetClk;
+	Cpu.Define(&Pic0);
+	Cpu.OnSetClk = SetClk;
+	Cpu.OnResetClk = ResetClk;
 	Cpu.OnIdle = Idle;
 	Cpu.OnReadFromMemory = ReadFromMemory;
 	Cpu.OnWriteToMemory = WriteToMemory;

@@ -1067,6 +1067,9 @@ emulate_no_int:
 
 emulate_no_trap:
 	call ReadCodeByte
+	test [ebp].em_flags, single_faulted
+	jnz emulate_done
+;
 	movzx ebx,al
 	shl ebx,2
 	call dword ptr [ebx].EmulateTab

@@ -499,10 +499,16 @@ StackFault	Endp
 	public ProtectionFault
 
 ProtectionFault	Proc near
-	int 3
 	test [ebp].em_flags,single_faulted
 	jnz DoubleFault
 	or [ebp].em_flags,single_faulted
+;
+    test [ebp].reg_cs.d_access, ACCESS_SIZE
+    jnz gpf_reset
+;
+	int 3
+
+gpf_reset:	
 	ResetFault
 	mov cx,1
 	mov al,13
@@ -793,7 +799,6 @@ LoadStackSelector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwitchStackSelector	Proc near
-    int 3
 	push si
 	mov [ebp].em_pl,0
 	push bx
@@ -2721,7 +2726,34 @@ HwInt	Proc near
 ;
 	test byte ptr [ebp].reg_eflags+2,2
 	jnz IntFarVm
-	jmp IntFarPm
+;
+	mov [ebp].em_pl,0
+	mov [ebp].em_transfer,TRANSFER_FLAGS
+	mov [ebp].em_params,0
+;
+	movzx bx,al
+	shl bx,3
+;
+	movzx ecx,bx
+	or cl,7				;adjust the size of the interrupt number
+	dec ecx				; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
+	sub ecx,[ebp].reg_idt.d_limit
+	jnc ProtectionFault
+;
+	movzx ecx,bx
+	add ecx,[ebp].reg_idt.d_base
+	mov ebx,ecx
+	call ReadLinearQword
+	test dh,80h			;Is the descriptor present ?
+	jz IdtFault
+;
+	test dh,10h			;descriptor type ? 1=Code or Data and 0= System
+	jnz IdtFault
+;
+	xor bx,bx
+	mov cl,dh
+    jmp IntFarValidated
+	
 HwInt	Endp
 
 IntFar	Proc near
@@ -2776,8 +2808,10 @@ IntFarPm:
 	and cx,303h
 	cmp cl,ch				;CPL <= DPL 
 	ja ProtectionFault
-;
+
 	mov cl,dh
+
+IntFarValidated:
 	and cl,0Fh
 	cmp cl,5
 	je IntFarTssGate
