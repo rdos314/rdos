@@ -431,5 +431,7 @@ add_dhcp_option_nr			EQU 292
 
 define_protocol_addr_nr     EQU 293
 
+register_swap_proc_nr       EQU 294
+
 osgate_entries				EQU 300
 

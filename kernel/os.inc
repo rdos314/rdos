@@ -309,6 +309,12 @@ SegmentNotPresent	MACRO
 
 ;;;;;;;;; PAGING ;;;;;;;;;;;;;;;;;;;;
 
+;	ES:DI   Swap callback
+;       AL  Swap level (0 = highest priority, 15 = lowest priority)
+RegisterSwapProc	MACRO
+	OsGate register_swap_proc_nr
+					ENDM
+
 ;	EDX		LINEAR ADDRESS
 ;	EAX		PAGE ENTRY
 GetPhysicalPage	MACRO

@@ -83,6 +83,7 @@ RELEASE = 4
 	extrn move_adapters:near
 	extrn init_device:near
 	extrn init_env:near
+	extrn init_swap:near
 
 	extrn init_exec:near
 
@@ -556,6 +557,7 @@ prot_init:
 	call init_int
 	call init_irq
 	call init_trap_vectors
+	call init_swap
 	call init_env
 	call init_exec
 	call init_device

@@ -196,7 +196,7 @@ p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
 			DEVICE.ASM				IO.ASM      			HANDLE.ASM	\
 			PROC.ASM 				ENV.ASM					APP.ASM
 
-p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				\
+p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				    SWAP.ASM    \
 			MEM.ASM                 GDT.ASM                 \
 			INT.ASM                 INT16.ASM               INT32.ASM       
 

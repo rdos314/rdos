@@ -639,7 +639,6 @@ do_usergate16	PROC near
 	jmp do16_direct_do16
 
 do16_direct_cs16:
-	int 3
 	mov [bp+10],ax
 	mov ax,es:[edi].gate_entry_offset16
 	mov [bp+8],ax
