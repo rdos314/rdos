@@ -146,6 +146,7 @@ RxRingPhys			DD ?
 RxRingLinear		DD ?
 RxRingSize			DD ?
 RxRingSel			DW ?
+RxRingPtr           DW ?
 TxRingPhys			DD ?
 TxRingLinear		DD ?
 TxRingSize			DD ?
@@ -304,12 +305,14 @@ ReadEthernetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateRing	Proc near
+    mov ds:RxRingPtr,0
 	mov ecx,(2 SHL RX_BUF_LEN_IDX) + 1
 	AllocateMultiplePhysical
 	jc arDone
 ;
 	mov ds:RxRingPhys,eax
 	mov eax,ecx
+	dec eax
 	shl eax,12
 	add eax,eax
 	AllocateBigLinear
@@ -319,6 +322,7 @@ AllocateRing	Proc near
 ;
 	mov eax,ds:RxRingPhys
 	or al,7
+	mov ecx,2 SHL RX_BUF_LEN_IDX
 
 al_rxring_loop:
 	SetPhysicalPage
@@ -326,6 +330,7 @@ al_rxring_loop:
 	add edx,1000h
 	loop al_rxring_loop
 ;
+	mov ecx,2 SHL RX_BUF_LEN_IDX
 	mov eax,ds:RxRingPhys
 	or al,7
 
@@ -480,7 +485,7 @@ InitHardware	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt	Proc far
-	mov dx,ds;IoBase
+	mov dx,ds:IoBase
 	add dx,IntrStatus
 	in ax,dx
 	mov bx,ax
@@ -525,15 +530,29 @@ NetInt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Preview	Proc far
-    int 3
     push ds
-    push fs
+;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov fs,ds:RxRingSel
+	mov dx,ds:IoBase
+	add dx,ChipCmd
+	in al,dx
+	test al,1
 	stc
-	pop fs
-	pop ds
+	jnz preview_done
+;    
+    push ebx
+    xor ebx,ebx
+    mov bx,ds:RxRingPtr
+	mov ds,ds:RxRingSel
+	mov dx,ds:[ebx+12+4]	
+	xchg dl,dh
+    xor ecx,ecx
+    pop ebx
+    clc
+
+preview_done:
+    pop ds
 	ret
 Preview	Endp
 
@@ -551,6 +570,28 @@ Preview	Endp
 
 Receive	Proc far
     int 3
+    push ds
+    push fs
+    push ebx
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov fs,ds:RxRingSel
+	xor ebx,ebx
+    mov bx,ds:RxRingPtr
+    mov ax,fs:[ebx]
+    movzx ecx,word ptr fs:[ebx+2]
+    test al,RxOK
+    stc
+    jz rDone
+;        
+	clc
+
+rDone:
+    stc
+    pop ebx
+	pop fs
+	pop ds
 	ret
 Receive	Endp
 
@@ -564,6 +605,34 @@ Receive	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Remove	Proc far
+    push ds
+    push ebx
+    push cx
+    push dx
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+    mov dx,ds:IoBase
+    xor ebx,ebx
+    mov bx,ds:RxRingPtr
+    push ds
+    mov ds,ds:RxRingSel
+    mov cx,ds:[ebx+2]
+    add bx,cx
+    add bx,4
+    dec bx
+    and bx,0FFFCh
+    add bx,4
+    mov ax,bx
+    add dx,RxBufPtr
+    out dx,ax
+    pop ds
+    mov ds:RxRingPtr,bx
+;
+    pop dx
+    pop cx
+    pop ebx
+    pop ds
 	ret
 Remove	Endp
 
@@ -720,7 +789,6 @@ init_pci_found:
 ;
 	call ReadEthernetAddress
 	call AllocateRing
-	int 3
 	call InitHardware
 ;
 	push ds
