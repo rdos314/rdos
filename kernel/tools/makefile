@@ -78,9 +78,17 @@ rdfsimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSIMG.ASM
 rdfsimg_objs = $(rdfsimg_srcs:.ASM=.OBJ)
 rdfsimg_exes = RDFSIMG.EXE
 
+bootsec_srcs = BOOTSEC.ASM
+bootsec_objs = $(bootsec_srcs:.ASM=.OBJ)
+bootsec_exes = BOOTSEC.EXE
+
 hdboot_srcs = HDBOOT.ASM BOOT.ASM
 hdboot_objs = $(hdboot_srcs:.ASM=.OBJ)
 hdboot_exes = HDBOOT.EXE
+
+mkhdboot_srcs = MKHDBOOT.ASM
+mkhdboot_objs = $(mkhdboot_srcs:.ASM=.OBJ)
+mkhdboot_exes = MKHDBOOT.EXE
 
 acrimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM ACRIMG.ASM
 acrimg_objs = $(acrimg_srcs:.ASM=.OBJ)
@@ -115,7 +123,7 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(state_srcs) $(state40_srcs) $(acrimg_srcs) \
-			$(run_srcs) $(remdebug_srcs)
+			$(run_srcs) $(remdebug_srcs) $(mkhdboot_srcs) $(bootsec_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -123,8 +131,9 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
 			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
-		    $(state_exes) $(state40_exes) $(acrloc_exes)	\
-			$(run_exes) $(remdebug_exes) $(acrimg_exes)
+		    $(state_exes) $(state40_exes) $(acrloc_exes) $(bootsec_exes)	\
+			$(run_exes) $(remdebug_exes) $(acrimg_exes) $(mkhdboot_exes)
+			
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -235,12 +244,28 @@ RDFSIMG.EXE : $(rdfsimg_objs)
 	RDFSIMG;
 !
 
+BOOTSEC.EXE : $(bootsec_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(bootsec_objs)
+	BOOTSEC
+	BOOTSEC;
+!
+
 HDBOOT.EXE : $(hdboot_objs)
     tlink @&&!
 	$(link_opt) +
 	$(hdboot_objs)
 	HDBOOT
 	HDBOOT;
+!
+
+MKHDBOOT.EXE : $(mkhdboot_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(mkhdboot_objs)
+	MKHDBOOT
+	MKHDBOOT;
 !
 
 ACRIMG.EXE : $(acrimg_objs)
@@ -303,7 +328,4 @@ RUN.EXE : $(run_objs)
 
 GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)
 	grubimg
-
-BOOTSEC.BIN:	HDIMG.EXE $(hdimg_objs)
-	hdimg
 

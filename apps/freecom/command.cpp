@@ -23,6 +23,7 @@
 #include "showpart.h"
 #include "rmpart.h"
 #include "mkpart.h"
+#include "inithd.h"
 
 #include "part.h"
 #include "rdfspart.h"
@@ -38,6 +39,7 @@ TDelFactory *del;
 TDirFactory *dir;
 TEraseFactory *erase;
 THelpFactory *help;
+TInitHdFactory *inithd;
 TMdFactory *md;
 TMkdirFactory *mkdir;
 TMakePartitionFactory *mkpart;
@@ -81,6 +83,7 @@ void Init()
 	mkpart = new TMakePartitionFactory;
 	mkdir = new TMkdirFactory;
 	md = new TMdFactory;
+	inithd = new TInitHdFactory;
 	erase = new TEraseFactory;
 	dir = new TDirFactory;
 	del = new TDelFactory;

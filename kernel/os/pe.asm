@@ -3834,9 +3834,10 @@ get_dll_resource	Proc far
 	push ebx
 	push edx
 	push edi
+	push ebp
 ;
 	mov edi,eax
-	mov eax,edx
+	mov ebp,edx
 	mov ecx,ebx
 	xor cx,cx
 	cmp ecx,LIB_HANDLE
@@ -3858,7 +3859,7 @@ get_dll_resource	Proc far
 	jz get_dll_resource_fail_pop
 
 get_dll_resource_type_loop:
-	cmp eax,[esi]
+	cmp ebp,[esi]
 	je get_dll_resource_type_found
 ;
 	add esi,8
@@ -3879,6 +3880,9 @@ get_dll_resource_type_found:
 	jz get_dll_resource_fail_pop
 ;
     mov eax,edi
+    cmp ebp,6
+    jne get_dll_resource_id_loop
+;
     shr eax,4
     inc eax
 
@@ -3910,6 +3914,8 @@ get_dll_resource_found:
 	mov ecx,[eax+4]
 	mov esi,[eax]
 	add esi,es:lib_base
+	cmp ebp,6
+	jne get_dll_resource_ok_pop
 
 get_dll_resource_entry_loop:
     movzx ecx,word ptr [esi]
@@ -3924,6 +3930,8 @@ get_dll_resource_entry_loop:
 
 get_dll_resource_ok:    
     add esi,2
+
+get_dll_resource_ok_pop:
 	pop es
 	clc
 	jmp get_dll_resource_done
@@ -3937,6 +3945,7 @@ get_dll_resource_fail:
 	jmp get_dll_resource_done
 
 get_dll_resource_done:
+    pop ebp
 	pop edi
 	pop edx
 	pop ebx

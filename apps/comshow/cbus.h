@@ -46,6 +46,7 @@ public:
     virtual int GetMsg();
     virtual void ShowMsg();
 
+
 protected:
     void ShowDefault(TCbusMsg *Msg);
     void ShowCbusPumpReqText();
@@ -54,6 +55,13 @@ protected:
     void ShowCode(char Code);
     void UpdatePump();
     void ShowPumpMsg(char ToAdr, char FromAdr, char MessCode, const char *MsgData);
+
+    void ShowOneMsg();
+
+    TDateTime *FPrevTime;    
+    char *FPrevMsg;
+    char *FTempMsg;
+    int FPrevSize;
 
     TCbusMsg *FCbusReqMsg;
     TCbusMsg *FCbusReplyMsg;

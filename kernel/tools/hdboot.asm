@@ -994,6 +994,8 @@ Start:
 ;
 ; test from dos
 ;
+    jmp read_part
+
 	mov ax,1000h
 	mov es,ax
 	xor bx,bx

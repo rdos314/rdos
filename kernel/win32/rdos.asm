@@ -6223,6 +6223,72 @@ RdosReadResource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           ReadBinaryResource
+;
+;       DESCRIPTION:    Read binary resource (type 10)
+;
+;		PARAMETERS:		Handle
+;						ID
+;						Buf
+;						Size
+;
+;		RETURNS:		Size read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadBinaryResource
+
+RdosReadBinaryResource	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	or ebx,ebx
+	jnz read_bin_resource_handle_ok
+;
+	mov ebx,fs:pvModuleHandle
+
+read_bin_resource_handle_ok:
+	mov eax,[ebp+12]
+	mov edx,10
+	UserGate get_dll_resource_nr
+	jc read_bin_resource_fail
+;
+	cmp ecx,[ebp+20]
+	jbe read_bin_resource_copy
+;
+	mov ecx,[ebp+20]
+
+read_bin_resource_copy:
+	mov edi,[ebp+16]
+	mov eax,ecx
+
+read_bin_resource_copy_loop:
+    movs byte ptr es:[edi],[esi]
+    inc esi
+    loop read_bin_resource_copy_loop
+;    
+	jmp read_bin_resource_done
+	
+read_bin_resource_fail:
+	xor eax,eax
+
+read_bin_resource_done:
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosReadBinaryResource	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RdosOpenAdc
 ;
 ;       DESCRIPTION:    Open handle to ADC channel

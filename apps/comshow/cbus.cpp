@@ -560,14 +560,14 @@ void TCbusProtocolAnalyser::ShowPumpMsg(char ToAdr, char FromAdr, char MessCode,
 	}
 }
 
-/*##################  TCbusProtocolAnalyser::ShowMsg ##########################
+/*##################  TCbusProtocolAnalyser::ShowOneMsg ##########################
 *   Purpose....: Show CBUS msg	   					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TCbusProtocolAnalyser::ShowMsg()
+void TCbusProtocolAnalyser::ShowOneMsg()
 {
 	int Len;
 	int MsgLen;
@@ -578,7 +578,7 @@ void TCbusProtocolAnalyser::ShowMsg()
 	char MessCode;
 	char *str;
 
-	MsgLen = strlen(FMsg);
+	MsgLen = FSize;
 	str = FMsg;
 
 	if (MsgLen >= 9 + 2)
@@ -595,9 +595,9 @@ void TCbusProtocolAnalyser::ShowMsg()
 				MessCode = HexBin2(*(str+5)) + HexBin1(*(str+6));
 				memcpy(MsgData, str+9, Len);
 				MsgData[Len] = 0;
-				if (MessCode >= 0x50 && MessCode < 0x60)
-					ShowPumpMsg(ToAdr, FromAdr, MessCode, MsgData);
-				else
+//				if (MessCode >= 0x50 && MessCode < 0x60)
+//					ShowPumpMsg(ToAdr, FromAdr, MessCode, MsgData);
+//				else
 				{
 					ShowLongTime(FTime);
 					ShowMneMsg();
@@ -623,6 +623,51 @@ void TCbusProtocolAnalyser::ShowMsg()
 	}
 }
 
+/*##################  TCbusProtocolAnalyser::ShowMsg ##########################
+*   Purpose....: Show CBUS msg	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TCbusProtocolAnalyser::ShowMsg()
+{
+	TDateTime *TempTime;
+    int Elapsed;
+    int TempSize;
+    
+    if (FPrevTime && FTime)
+    {    
+        Elapsed = FTime->GetLsb() - FPrevTime->GetLsb();
+
+		if (Elapsed > 1193 * 1000)
+        {
+            memcpy(FTempMsg, FMsg, FSize);
+            TempSize = FSize;
+            TempTime = FTime;
+            FTime = FPrevTime;        
+            FSize = FPrevSize;
+		    memcpy(FMsg,FPrevMsg, FSize);
+            ShowOneMsg();
+
+            FTime = TempTime;
+            FSize = TempSize;
+            memcpy(FMsg, FTempMsg, FSize);
+            ShowOneMsg();
+        }
+        *FPrevTime = *FTime;
+        FPrevSize = FSize;
+        memcpy(FPrevMsg, FMsg, FSize);
+    }
+    else
+    {
+        FPrevTime = new TDateTime;
+        *FPrevTime = *FTime;
+        FPrevSize = FSize;
+        memcpy(FPrevMsg, FMsg, FSize);
+    }
+}
+
 /*##################  TCbusProtocolAnalyser::TCbusProtocolAnalyser ##########################
 *   Purpose....: Constructor         	   					      	        #
 *   In params..: *                                                          #
@@ -635,6 +680,10 @@ TCbusProtocolAnalyser::TCbusProtocolAnalyser(TFile *RawFile, int MaxSize)
 {
 	FCbusReqMsg = 0;
 	FCbusReplyMsg = 0;
+
+	FPrevMsg = new char[MaxSize + 1];
+	FTempMsg = new char[MaxSize + 1];
+	FPrevTime = 0;
 }
 
 /*##################  TCbusProtocolAnalyser::~TCbusProtocolAnalyser ##########################
@@ -651,4 +700,13 @@ TCbusProtocolAnalyser::~TCbusProtocolAnalyser()
 
 	if (FCbusReplyMsg)
 		delete FCbusReplyMsg;
+
+    if (FPrevMsg)
+        delete FPrevMsg;
+
+    if (FTempMsg)
+        delete FTempMsg;
+
+    if (FPrevTime)
+        delete FPrevTime;
 }

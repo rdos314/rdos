@@ -699,7 +699,16 @@ STRINGTABLE
  950, "Currently supported filesystem names are:\r\n";
  951, "FAT12, FAT16, FAT32, RDFS and FLASHFS\r\n";
  952, "Unable to create partition. Invalid size of filesystem name\r\n";
- 953, "'%s' kan inte ha n†gra parametrar\r\n";
+ 953, "Init harddrive partition table and write RDOS bootloader\r\n";
+ 954, "\r\n";
+ 955, "INITHD disc [filesys size]\r\n";
+ 956, "  disc            Disc number\r\n";
+ 957, "  filesys         Filesystem name on boot partition\r\n";
+ 958, "  size            Partition size in MB\r\n";
+ 959, "\r\n";
+ 960, "Currently supported filesystem names are:\r\n";
+ 961, "FAT12, FAT16, FAT32, RDFS and FLASHFS\r\n";
+ 962, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "256,1";
  TEXT_ERROR_INVALID_LSWITCH, "257,1";
  TEXT_ERROR_ILLFORMED_OPTION, "258,1";
@@ -951,5 +960,6 @@ STRINGTABLE
  PROMPT_RMPART, "942,1";
  TEXT_CMDHELP_MKPART, "943,9";
  TEXT_MKPART_ERROR, "952,1";
+ TEXT_CMDHELP_INITHD, "953,9";
 }
 

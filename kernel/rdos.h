@@ -263,6 +263,7 @@ int __stdcall RdosGetModuleHandle();
 int __stdcall RdosLoadDll(const char *Name);
 void __stdcall RdosFreeDll(int handle);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);
+int __stdcall RdosReadBinaryResource(int handle, int ID, char *Buf, int Size);
 
 int __stdcall RdosOpenAdc(int channel);
 void __stdcall RdosCloseAdc(int handle);
