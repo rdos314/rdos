@@ -475,6 +475,11 @@ open_com	Proc far
 	push dx
 	push di
 ;
+    xor bx,bx
+	mov al,[bp].port_irq
+	IsIrqFree
+	jc open_com_done
+;
 	mov eax, SIZE port_struc
 	AllocateSmallGlobalMem
 ;
@@ -617,7 +622,8 @@ open_parity_done:
 	in al,dx
 ;
 	pop bx
-;
+
+open_com_done:
 	pop di
 	pop dx
 	pop cx

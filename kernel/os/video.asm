@@ -1605,7 +1605,7 @@ blit_diff_loop:
 	cmp dx,0
 	jl blit_diff_next
 ;
-    cmp dx,ds:v_width
+    cmp dx,ds:v_height
     jge blit_diff_next
 ;
 	xor edi,edi

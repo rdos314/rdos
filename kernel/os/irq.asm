@@ -595,6 +595,45 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			is_irq_free
+;
+;		description:	Check if IRQ can be reserved
+;
+;		PARAMETERS:		al			irq nr
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_irq_free_name DB 'Is Irq Free',0
+
+is_irq_free	Proc far
+	push ds
+	push ax
+	push si
+;
+	movzx si,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+    mov ax,ds:[si].usage_section.cs_value
+    or ax,ax
+    clc
+    jz is_irq_free_done
+;
+    stc
+
+is_irq_free_done:
+	pop si
+	pop ax
+	pop ds
+	ret
+is_irq_free	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			release_private_irq_handler
 ;
 ;		description:	Release a no shareable irq handler
@@ -692,6 +731,12 @@ init_irq	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET is_irq_free
+	mov di,OFFSET is_irq_free_name
+	xor cl,cl
+	mov ax,is_irq_free_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET request_private_irq_handler
 	mov di,OFFSET request_private_irq_handler_name

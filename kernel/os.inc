@@ -1048,6 +1048,11 @@ HookOut	MACRO
 ;;;;;;;;;; IRQ ;;;;;;;;;;;;;;;;;;;
 
 ;	AL			IRQ NR
+IsIrqFree	MACRO
+	OsGate is_irq_free_nr
+					ENDM
+
+;	AL			IRQ NR
 ;	DS			DATA PASSED TO HANDLER
 ;	ES:DI		HANDLER ADDRESS
 RequestPrivateIrqHandler	MACRO
