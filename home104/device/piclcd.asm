@@ -40,6 +40,7 @@ INCLUDE ..\..\kernel\video.inc
 
 DQE_STAT_DONE       = 1
 DQE_STAT_TIMEOUT    = 2
+DQE_STAT_SUCCESS    = 4
 
 digio_queue_entry   STRUC
 
@@ -47,10 +48,16 @@ dqe_prev    DW ?
 dqe_next    DW ?
 
 dqe_stat    DB ?
-dqe_channel DB ?
+dqe_device  DB ?
 dqe_val     DB ?
+dqe_node    DB ?
+dqe_cmd     DB ?
+dqe_line    DB ?
 dqe_timeout DD ?
+dqe_data    DD ?
 dqe_proc    DW ?
+dqe_action  DW ?
+dqe_thread  DW ?
 
 digio_queue_entry   ENDS
 
@@ -824,6 +831,7 @@ pic_int_loop:
     jz pic_int_loop
 ;
     mov es,dx
+    and al,3Fh
     mov es:dqe_val,al
     or es:dqe_stat,DQE_STAT_DONE    	
 ;    
@@ -842,6 +850,7 @@ pic_int_not1:
 	jz pic_int_loop
 ;	
     mov es,dx
+    and al,3Fh
     mov es:dqe_val,al
     or es:dqe_stat,DQE_STAT_DONE
 ;	
@@ -860,6 +869,7 @@ pic_int_not2:
 	jz pic_int_loop
 ;
     mov es,dx
+    and al,3Fh
     mov es:dqe_val,al
     or es:dqe_stat,DQE_STAT_DONE
 ;	
@@ -985,26 +995,21 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioStartReq
+;		NAME:			DioRun
 ;
-;		description:	Start a request
+;		description:	Run dio-command
 ;
-;       PARAMETERS:     AX      Queue #
+;       PARAMETERS:     ES      Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioStartReq Proc near
+DioRun  Proc near 
     push es
     pushad
-;    
-    mov si,ax
-    add si,si
-    add si,OFFSET DioQueue
-    mov di,[si]
-    or di,di
-    jz dsrDone
-
-dsrClearLoop:
+;
+    movzx ax,es:dqe_device    
+   
+drClearLoop:
     push ax
     mov cl,al
     mov ah,2
@@ -1014,7 +1019,7 @@ dsrClearLoop:
     in al,dx
     test al,ah
     pop ax
-    jnz dsrDo
+    jnz drDo
 ;
     mov dx,3BAh
     add dx,ax
@@ -1022,14 +1027,14 @@ dsrClearLoop:
     push ax
     in al,dx
     pop ax
-    jmp dsrClearLoop
+    jmp drClearLoop
 
-dsrDo:
-    call DioRemove
-    mov es:dqe_stat,0
-    add si,OFFSET DioQueue
-    add si,OFFSET DioCurr
-    mov [si],es
+drDo:
+    and es:dqe_stat,NOT (DQE_STAT_DONE OR DQE_STAT_TIMEOUT)
+    mov di,ax
+    add di,di
+    add di,OFFSET DioCurr
+    mov [di],es
 ;   
     mov dx,3BAh
     add dx,ax
@@ -1046,9 +1051,43 @@ dsrDo:
 	mov di,OFFSET DioTimeout
 	mov bx,cx
 	StartTimer
+;
+    popad
+    pop es
+    ret
+DioRun  Endp
+	
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioStartReq
+;
+;		description:	Start a request
+;
+;       PARAMETERS:     AX      Queue #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioStartReq Proc near
+    push es
+    push si
+    push di
+;    
+    mov si,ax
+    add si,si
+    add si,OFFSET DioQueue
+    mov di,[si]
+    or di,di
+    jz dsrDone
+;
+    call DioRemove
+    call DioRun
 
 dsrDone:
-    popad
+    pop di
+    pop si
     pop es
     ret
 DioStartReq Endp
@@ -1096,6 +1135,7 @@ DioCheckReq Proc near
     add dx,ax
     add dx,ax
     in al,dx
+    and al,3Fh
     mov es:dqe_val,al
     or es:dqe_stat,DQE_STAT_DONE
 
@@ -1104,6 +1144,15 @@ dcrRemove:
     mov bx,es
     StopTimer
     call es:dqe_proc
+    jc dcrFree
+;
+    mov ds:[si],es
+    call DioRun
+    jmp dcrDone
+
+dcrFree:
+    mov bx,es:dqe_thread
+    Signal
 
 dcrDone:
     popad
@@ -1162,38 +1211,122 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioCreateReq
+;		NAME:		    DioReq
 ;
-;		description:	Dio create req
+;		description:	Dio req
 ;
 ;       PARAMETERS:     AX      Queue #
 ;                       EDX     Timeout in tics
-;                       DI      Offset to first proc
+;                       EBP     Data
+;                       BL      Cmd #
+;                       CL      Line #
+;                       CH      Node #
+;                       DI      Action proc
+;
+;       RETURNS:        EAX     Data returned
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioCreateReq   Proc near
+DioReq   Proc near
+    push ds
     push es
+    push bx
     push di
 ;    
+    ClearSignal
     push ax
+    mov ax,piclcd_data_sel
+    mov ds,ax    
     mov eax,SIZE digio_queue_entry
     AllocateSmallGlobalMem
+    GetThread
+    mov es:dqe_thread,ax
     pop ax
-    mov es:dqe_channel,al
+    mov es:dqe_device,0
+    mov es:dqe_stat,0
     mov es:dqe_timeout,edx
-    mov es:dqe_proc,di
+    mov es:dqe_proc,OFFSET node_proc
+    mov es:dqe_node,ch
+    mov es:dqe_line,cl
+    mov es:dqe_cmd,bl
+    mov es:dqe_data,ebp
+    mov es:dqe_action,di
+    push ax
     call es:dqe_proc
+    pop ax
 ;
     mov di,OFFSET DioQueue
     add di,ax
     add di,ax
     call DioInsert
 ;
+    mov bx,ds:PicThread
+    Signal    
+    WaitForSignal
+;
+    mov eax,es:dqe_data
+    mov bl,es:dqe_stat
+    FreeMem
+    stc
+    test bl,DQE_STAT_SUCCESS
+    jz drDone
+;
+    clc
+
+drDone:
     pop di
-    pop es    
+    pop bx
+    pop es
+    pop ds
     ret
-DioCreateReq    Endp
+DioReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			node_proc
+;
+;       PARAMETERS:     ES      Req block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+node_proc   Proc near
+    mov al,es:dqe_node
+    mov es:dqe_val,al
+    mov es:dqe_proc, OFFSET cmd_proc
+    clc
+    ret
+node_proc   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			cmd_proc
+;
+;       PARAMETERS:     ES      Req block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cmd_proc   Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz cmd_done
+;    
+    mov ah,es:dqe_cmd
+    mov al,es:dqe_line
+    shl al,3
+    or al,ah
+    mov es:dqe_val,al
+    mov ax,es:dqe_action
+    mov es:dqe_proc,ax
+    clc
+
+cmd_done:
+    ret
+cmd_proc   Endp
 
 PAGE
 
@@ -1203,58 +1336,157 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; es    dio block
-
-first_proc   Proc near
-    mov es:dqe_val,55h
-    mov es:dqe_proc, OFFSET requeue_proc    
-    ret
-first_proc   Endp
-
-requeue_proc    Proc near
-    push ax
-    push si
-;    
-    movzx ax,es:dqe_channel
-    mov si,OFFSET DioQueue
-    add si,ax
-    add si,ax    
-    call DioInsert
-;
-    pop si
-    pop ax    
-    ret
-requeue_proc    Endp
-
 pic_name	DB 'PICLCD',0
 
 pic_thread:
-    mov eax,4000
-    WaitMilliSec
-    int 3
-;    
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
     mov ds:PicThread,ax    
     ClearSignal
-;
-    xor ax,ax
-    mov di,OFFSET first_proc
-    mov edx,1193 * 100
-    call DioCreateReq
-;    
-    inc ax
-    call DioCreateReq
-;
-    inc ax
-    mov edx,1193 * 1000
-    call DioCreateReq
 
 pic_thread_loop: 
     call DioUpdate   
 	WaitForSignal
     jmp pic_thread_loop
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteSerialVal
+;
+;		DESCRIPTION:	Write serial value
+;
+;		PARAMETERS:		DL		Line #
+;						DH		Device #
+;						EAX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_serial_val_name	DB 'Write Serial Value', 0
+
+wr0_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz wr0_done
+;    
+    mov eax,es:dqe_data
+    and al,3Fh
+    mov es:dqe_val,al
+    mov es:dqe_proc,OFFSET wr1_proc
+    clc
+
+wr0_done:
+    ret
+wr0_proc    Endp
+
+wr1_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz wr1_done
+;    
+    mov eax,es:dqe_data
+    shr eax,6
+    and al,3Fh
+    mov es:dqe_val,al
+    mov es:dqe_proc,OFFSET wr2_proc
+    clc
+
+wr1_done:
+    ret
+wr1_proc    Endp
+
+wr2_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz wr1_done
+;    
+    mov eax,es:dqe_data
+    shr eax,12
+    and al,3Fh
+    mov es:dqe_val,al
+    mov es:dqe_proc,OFFSET wr3_proc
+    clc
+
+wr2_done:
+    ret
+wr2_proc    Endp
+
+wr3_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz wr3_done
+;    
+    mov eax,es:dqe_data
+    shr eax,18
+    and al,3Fh
+    mov es:dqe_val,al
+    mov es:dqe_proc,OFFSET wr4_proc
+    clc
+
+wr3_done:
+    ret
+wr3_proc    Endp
+
+wr4_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz wr4_done
+;    
+    mov eax,es:dqe_data
+    shr eax,18
+    and al,3Fh
+    mov es:dqe_val,al
+    mov es:dqe_proc,OFFSET wr_check_proc
+    clc
+
+wr4_done:
+    ret
+wr4_proc    Endp
+
+wr_check_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    jz wr_check_done
+;    
+    or es:dqe_stat,DQE_STAT_SUCCESS
+    stc
+
+wr_check_done:    
+    ret
+wr_check_proc    Endp
+
+write_serial_val	Proc far
+	push eax
+	push bx
+	push cx
+    push edx
+    push di
+    push ebp
+;
+    mov ebp,eax
+    mov cx,dx
+    xor ax,ax
+    mov edx,1193 * 100
+    mov di,OFFSET wr0_proc
+    mov bl,3
+    call DioReq
+;
+	pop ebp
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	retf32
+write_serial_val	Endp
 
 PAGE
 
@@ -1346,9 +1578,15 @@ init	PROC far
     call InitLCD
 ;
 	mov ax,cs
+	mov ds,ax
 	mov es,ax
 	mov di,OFFSET InitDriver
 	HookInitTasking
+;
+	mov si,OFFSET write_serial_val
+	mov di,OFFSET write_serial_val_name
+	mov ax,write_serial_val_nr
+	RegisterBimodalUserGate
 ;
 	popa
 	pop ds
