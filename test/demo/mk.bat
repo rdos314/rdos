@@ -1,3 +1,3 @@
-boot2bin
-cfg2bin demo
-cfg2bin guidemo
+..\..\kernel\tools\boot2bin
+..\..\kernel\tools\cfg2bin demo
+..\..\kernel\tools\cfg2bin guidemo

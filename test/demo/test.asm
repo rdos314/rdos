@@ -31,11 +31,8 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
-INCLUDE ..\os\system.inc
-INCLUDE ..\os\user.def
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\state.def
+INCLUDE ..\..\kernel\user.def
+INCLUDE ..\..\kernel\user.inc
 
 data	SEGMENT byte public 'DATA'
 
