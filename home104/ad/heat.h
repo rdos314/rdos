@@ -20,35 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# sample.h
-# Sampling base class
+# heat.h
+# Heat class
 #
 ########################################################################*/
 
-#ifndef _MINSAMP_H
-#define _MINSAMP_H
+#ifndef _HEAT_H
+#define _HEAT_H
 
-#include "sample.h"
+#include "minsamp.h"
 #include "datetime.h"
 
-class TMinSample : public TSample
+class THeat : public TMinSample
 {
 public:
-	TMinSample();
-	TMinSample(int index, const char *unit);
-	virtual ~TMinSample();
-
-	virtual void Add(TDateTime *time, long double value);
+	THeat();
+	virtual ~THeat();
 
 protected:
-    int FPrevYear;
-    int FPrevMonth;
-    int FPrevDay;
-    int FPrevHour;
-    int FPrevMin;
+	virtual void NotifyBeforeClear();
 
 private:
-	void Init();
+	void StartEP();
+	void StopEP();
+	void StartVP();
+	void StopVP();
+	void UpdateOff(long double value);
+	void UpdateOn(long double value);
+
+	int FStat;
+	long double FMax;
 };
 
 #endif

@@ -209,8 +209,8 @@ void __stdcall RdosCloseAdc(int handle);
 void __stdcall RdosDefineAdcTime(int handle, long msg, long lsb);
 long __stdcall RdosReadAdc(int handle);
 
-int __stdcall RdosReadDigitalLine(int device, int line);
-void __stdcall RdosToggleDigitalLine(int device, int line);
+int __stdcall RdosReadDigital(int device, int *val);
+int __stdcall RdosToggleDigitalLine(int device, int line);
 
 #ifdef __cplusplus
 }

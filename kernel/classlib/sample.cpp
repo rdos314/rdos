@@ -268,6 +268,23 @@ void TSample::DefineMean(TSample *Sample)
 
 /*##########################################################################
 #
+#   Name       : TSample::NotifyBeforeClear
+#
+#   Purpose....: Notify before clear
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSample::NotifyBeforeClear()
+{
+	if (BeforeClear)
+		(*BeforeClear)(this);
+}
+
+/*##########################################################################
+#
 #   Name       : TSample::Clear
 #
 #   Purpose....: Clear samples
@@ -286,8 +303,7 @@ void TSample::Clear()
 
 	if (FSampleCount)
 	{
-		if (BeforeClear)
-			(*BeforeClear)(this);
+		NotifyBeforeClear();
 
 		if (FMinSample)
 		{

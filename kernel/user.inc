@@ -1669,11 +1669,10 @@ ReadAdc      MACRO
 	UserGate read_adc_nr
 						ENDM
 
-;	IN  DL		Line #
 ;	IN  DH		Device #
 ;	OUT AL		State
-ReadDigitalLine      MACRO
-	UserGate read_digital_line_nr
+ReadDigital      MACRO
+	UserGate read_digital_nr
 						ENDM
 
 ;	IN  DL		Line #

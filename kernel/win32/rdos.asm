@@ -4819,33 +4819,44 @@ RdosReadAdc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RdosReadDigitalLine
+;       NAME:           RdosReadDigital
 ;
-;       DESCRIPTION:    Read digital input line
+;       DESCRIPTION:    Read digital input
 ;
 ;		PARAMETERS:		Device
-;						Line
+;						Value ptr
 ;
-;		RETURNS:		Value
+;		RETURNS:		TRUE if successful
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public RdosReadDigitalLine
+		public RdosReadDigital
 
-RdosReadDigitalLine	Proc near
+RdosReadDigital	Proc near
 	push ebp
 	mov ebp,esp
 	push edx
+	push esi
 ;
 	mov dh,[ebp+8]
-	mov dl,[ebp+12]
-	UserGate read_digital_line_nr
-	movzx eax,al
+	UserGate read_digital_nr
+	jc rddFail
 ;
+	movzx eax,al
+	mov esi,[ebp+12]
+	mov [esi],eax
+	mov eax,1
+	jmp rddDone
+
+rddFail:
+	xor eax,eax
+
+rddDone:
+	pop esi
 	pop edx
 	pop ebp
 	ret 8
-RdosReadDigitalLine	Endp
+RdosReadDigital	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -4869,7 +4880,15 @@ RdosToggleDigitalLine	Proc near
 	mov dh,[ebp+8]
 	mov dl,[ebp+12]
 	UserGate toggle_digital_line_nr
+	jc rtdFail
 ;
+	mov eax,1
+	jmp rtdDone
+
+rtdFail:
+	xor eax,eax
+
+rtdDone:
 	pop edx
 	pop ebp
 	ret 8

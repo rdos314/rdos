@@ -397,5 +397,5 @@ signal_wait_nr              EQU 267
 
 invert_mouse_nr             EQU 268
 
-osgate_entries				EQU 269
+osgate_entries				EQU 270
 

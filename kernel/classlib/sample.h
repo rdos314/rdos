@@ -75,6 +75,8 @@ public:
 	void (*BeforeClear)(TSample *Sample);
 
 protected:
+	virtual void NotifyBeforeClear();
+
     TSample *FMinSample;
     TSample *FMaxSample;
     TSample *FMeanSample;

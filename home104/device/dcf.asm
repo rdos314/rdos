@@ -426,14 +426,20 @@ dcf_int	Proc far
 	mov ds:int_time,eax
 	mov ds:int_time+4,edx
 ;
-	add eax,125 * 1192
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET dcf_timeout
-	mov bx,ds:thread_id
-	mov cx,bx
-	StartTimer
+	mov dx,28Ah
+	in al,dx
+	and al,2
+	shl al,2
+	mov ah,al
+	mov dx,288h
+	in al,dx
+	and al,NOT 8
+	or al,ah
+	out dx,al
+;
+	mov dx,280h
+	mov al,2
+	out dx,al	
 ;
 	ret
 dcf_int	Endp
@@ -1248,6 +1254,8 @@ dcf_thread:
     mov al,8Bh
     out dx,al
 ;
+	int 3
+
 	mov ax,dcf_data_sel
 	mov es,ax
 

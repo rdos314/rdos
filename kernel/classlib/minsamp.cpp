@@ -41,8 +41,40 @@
 #   Returns....: *
 #
 ##########################################################################*/
+TMinSample::TMinSample()
+{
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TMinSample::TMinSample
+#
+#   Purpose....: Constructor for minute sampling
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TMinSample::TMinSample(int index, const char *unit)
  : TSample(index, unit)
+{
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TMinSample::Init
+#
+#   Purpose....: Init for minute sampling
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMinSample::Init()
 {
     FPrevMin = -1;
     FPrevHour = -1;

@@ -17,6 +17,7 @@
 #include "bitdev.h"
 #include "videodev.h"
 #include "keyboard.h"
+#include "heat.h"
 
 
 #define FALSE	0
@@ -30,6 +31,8 @@ TSample tsmin[3], tsmax[3];
 
 long double rv[4];
 TSample rsmin[4], rsmax[4];
+
+THeat heat;
 
 void UpdateTime()
 {
@@ -53,6 +56,7 @@ void UpdateLight(int all)
 {
 	char str[80];
 	TDateTime time;
+	int diostat;
 
 	if (all)
 		sprintf(str, "LJUS:  %7.3LfW/m2 (%7.3Lf, %7.3Lf)", lv, lsmin.GetMin(&time), lsmax.GetMax(&time));
@@ -61,6 +65,31 @@ void UpdateLight(int all)
 
 	RdosSetCursorPosition(0, 0);
 	RdosWriteString(str);
+
+	if (RdosReadDigital(1, &diostat))
+	{
+		if (diostat & 1)
+		{
+			if (lv > 0.050)
+				RdosToggleDigitalLine(1, 0);
+		}
+		else
+		{
+			if (lv < 0.030)
+				RdosToggleDigitalLine(1, 0);
+		}
+
+		if (diostat & 0x80)
+		{
+			if (lv > 0.200)
+				RdosToggleDigitalLine(1, 7);
+		}
+		else
+		{
+			if (lv < 0.120)
+				RdosToggleDigitalLine(1, 7);
+		}
+	}
 }
 
 void UpdateTemp(int index, int all)
@@ -81,6 +110,7 @@ void UpdateTemp(int index, int all)
 
 		case 2:
 			strcpy(par, "PANNA:  ");
+			heat.Add(&time, tv[2]);
 			break;
 	}
 

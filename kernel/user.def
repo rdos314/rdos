@@ -277,7 +277,7 @@ read_adc_nr					= 248
 
 free_v86_nr                 = 249
 
-read_digital_line_nr		= 250
+read_digital_nr				= 250
 toggle_digital_line_nr		= 251
 
 usergate_entries			= 256
