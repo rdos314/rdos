@@ -970,6 +970,37 @@ wait_for_disc_request	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			poll_disc_request
+;
+;		DESCRIPTION:	poll for a new disc request
+;
+;		PARAMETERS:		BX		Disc selector
+;
+;		RETURNS:		EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_disc_request_name	DB 'Poll Disc Request', 0
+
+poll_disc_request	Proc far
+	push ds
+;
+	mov ds,bx
+	mov edi,ds:disc_pend_list
+	or edi,edi
+	stc
+	jz poll_disc_req_done
+;
+	clc
+
+poll_disc_req_done:
+	pop ds
+	ret
+poll_disc_request	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			get_disc_request
 ;
 ;		DESCRIPTION:	get a disc request
@@ -1989,6 +2020,11 @@ init	PROC far
 	mov si,OFFSET wait_for_disc_request
 	mov di,OFFSET wait_for_disc_request_name
 	mov ax,wait_for_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET poll_disc_request
+	mov di,OFFSET poll_disc_request_name
+	mov ax,poll_disc_request_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_disc_request

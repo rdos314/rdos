@@ -255,5 +255,6 @@ flush_disc_nr				EQU 224
 wait_for_disc_request_nr	EQU 225
 get_disc_request_nr			EQU 226
 disc_request_completed_nr	EQU 227
+poll_disc_request_nr		EQU 228
 
-osgate_entries				EQU 228
+osgate_entries				EQU 229

@@ -1114,6 +1114,12 @@ GetDiscRequest	MACRO
 					ENDM
 
 ;	IN  BX		Disc sel
+;	OUT	EDI		Disc handle
+PollDiscRequest	MACRO
+	OsGate poll_disc_request_nr
+					ENDM
+
+;	IN  BX		Disc sel
 ;	IN	EDI		Disc handle
 DiscRequestCompleted	MACRO
 	OsGate disc_request_completed_nr
