@@ -42,6 +42,21 @@ INCLUDE ..\os\os.inc
 INCLUDE ..\os\video.inc
 INCLUDE pcvideo.inc
 
+pm_info_block	STRUC
+
+pmi_signature	DB 4 DUP(?)
+pmi_entry_point	DW ?
+pmi_init		DW ?
+pmi_bios_data	DW ?
+pmi_A000		DW ?
+pmi_B000		DW ?
+pmi_B800		DW ?
+pmi_C000		DW ?
+pmi_mode		DB ?
+pmi_chksum		DB ?
+
+pm_info_block	ENDS
+
 vesa_info_struc	STRUC
 
 vesa_name		DB 4 DUP(?)
@@ -72,22 +87,85 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+vesa_id	DB 'VESA'
+
 page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			CheckVesa
+;		NAME:			InitPm
 ;
-;		DESCRIPTION:	Check for a VESA video BIOS
+;		DESCRIPTION:	Protected mode init
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-vesa_id	DB 'VESA'
+InitPm	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov eax,10000h
+	AllocateGlobalMem
+	xor di,di
+;
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+;
+	mov ax,4F00h
+	call ds:v_pm16_entry
+	cmp ax,4Fh
+	jne init_pm_leave
+;
+	mov eax,dword ptr es:vesa_name
+	cmp eax,dword ptr cs:vesa_id
+	jne init_pm_leave
+;
+	mov al,es:vesa_major_ver
+	mov ds:v_major_ver,al
+	mov al,es:vesa_minor_ver
+	mov ds:v_minor_ver,al
+	mov eax,es:vesa_cap
+	mov ds:v_cap,ax
+	mov ax,es:vesa_video_mem
+	shl eax,16
+	mov ds:v_video_mem,eax
 
-CheckVesa	Proc near
+init_pm_leave:
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+;
+	FreeMem
+;
+	popad
+	pop es
+	pop ds
+	ret
+InitPm	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitV86
+;
+;		DESCRIPTION:	V86 mode init
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitV86	Proc near
 	push ds
 	push es
 	pushad
@@ -101,11 +179,11 @@ CheckVesa	Proc near
 	mov ax,4F00h
 	V86BiosInt
 	cmp ax,4Fh
-	jne vesa_check_failed
+	jne init_v86_check_failed
 ;
 	mov eax,dword ptr es:vesa_name
 	cmp eax,dword ptr cs:vesa_id
-	jne vesa_check_failed
+	jne init_v86_check_failed
 ;
 	mov al,es:vesa_major_ver
 	mov ds:v_major_ver,al
@@ -119,46 +197,168 @@ CheckVesa	Proc near
 ;
 	mov al,ds:v_major_ver
 	cmp al,2
-	jc vesa_v86_calls
+;	jc init_v86_calls
 ;
 	mov ax,4F0Ah
 	xor bl,bl
 	push 10h
 	V86BiosInt
 	cmp ax,4Fh
-	jne vesa_v86_calls
+	jne init_v86_calls
 ;
 	mov bx,es:[di].vpm_table
 
-vesa_io_loop:
+init_v86_io_loop:
 	mov ax,[bx]
 	add bx,2
 	cmp ax,-1
-	jne vesa_io_loop
+	jne init_v86_io_loop
 ;
 	mov ax,[bx]
 	cmp ax,-1
-	je vesa_memory_done
+	je init_v86_memory_done
 ;
 	mov edx,[bx]
 	movzx ecx,word ptr [bx+4]
 
-vesa_memory_done:
+init_v86_memory_done:
 
-vesa_v86_calls:
-	jmp vesa_check_done
+init_v86_calls:
+	jmp init_v86_check_done
 
-vesa_check_failed:
+init_v86_check_failed:
 	mov ds:v_major_ver,0
 	mov ds:v_minor_ver,0
 
-vesa_check_done:
+init_v86_check_done:
 	FreeMem
 	popad
 	pop es
 	pop ds
 	ret
-CheckVesa	Endp
+InitV86	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetupPmEntry
+;
+;		DESCRIPTION:	Setup Pm entry point
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pm_id	DB 'PMID'
+
+SetupPmEntry	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov bx,__C000
+	mov ds,bx
+	mov eax,10000h
+	AllocateGlobalMem
+	xor si,si
+	xor di,di
+	mov cx,4000h
+	rep movsd
+;
+	mov eax,dword ptr cs:pm_id
+	xor si,si
+	mov cx,8000h
+
+ScanPmLoop:
+	cmp eax,es:[si]
+	jne ScanPmNext
+;
+	int 3
+	push cx
+	push si
+	mov cx,SIZE pm_info_block
+	xor dl,dl
+
+ChksumPmLoop:
+	add dl,es:[si]
+	inc si
+	loop ChksumPmLoop
+;
+	pop si
+	pop cx
+	or dl,dl
+	jnz ScanPmNext	
+;
+	int 3
+	push es
+	mov eax,600h
+	AllocateSmallGlobalMem
+	xor di,di
+	mov cx,180h
+	xor eax,eax
+	rep stosd
+	mov bx,es
+	pop es
+;
+	mov es:[si].pmi_bios_data,bx
+	mov es:[si].pmi_A000,__A000
+	mov es:[si].pmi_B000,__B000
+	mov es:[si].pmi_B800,__B800
+	mov es:[si].pmi_C000,es
+	mov es:[si].pmi_mode,1
+	mov bx,es
+	GetSelectorBaseSize
+	AllocateGdt
+	CreateCodeSelector16
+;
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov word ptr ds:v_pm16_entry+2,es
+	mov ax,es:[si].pmi_entry_point
+	mov word ptr ds:v_pm16_entry,ax
+	mov ds:v_init_proc,OFFSET InitPm
+;
+	mov eax,1024
+	AllocateSmallGlobalMem
+	mov ds:v_pm16_stack,es
+;
+	mov ax,es
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+;
+	push cs
+	push OFFSET SetupPmInitRet
+	push es
+	push es:[si].pmi_init
+	retf
+
+SetupPmInitRet:
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+	jmp SetupPmDone
+
+ScanPmNext:
+	inc si
+	sub cx,1
+	jnz ScanPmLoop
+;
+	FreeMem
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov ds:v_init_proc,OFFSET InitV86
+
+SetupPmDone:
+	popad
+	pop es
+	pop ds
+	ret
+SetupPmEntry	Endp
 
 PAGE
 
@@ -177,7 +377,10 @@ test_thread_name	DB 'VESA Test',0
 
 test_thread	Proc far
 	int 3
-	call CheckVesa
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	call SetupPmEntry
+	call ds:v_init_proc
 	ret
 test_thread	Endp
 		

@@ -129,6 +129,7 @@ __F000				EQU 273h
 app_data_sel		EQU 278h
 
 __A000				EQU 283h
+__C000				EQU 28Bh
 
 ;
 os_begin_sel		EQU 1800h

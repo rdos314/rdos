@@ -32,5 +32,8 @@ v_major_ver		DB ?
 v_minor_ver		DB ?
 v_cap			DW ?
 v_video_mem		DD ?
+v_pm16_stack	DW ?
+v_pm16_entry	DD ?
+v_init_proc		DW ?
 
 video_data_seg	ENDS

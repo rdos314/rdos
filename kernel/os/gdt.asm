@@ -178,6 +178,11 @@ init_gdt	PROC near
 	mov ecx,8000h
 	CreateDataSelector16
 ;
+	mov edx,0C0000h
+	mov bx,__C000
+	mov ecx,10000h
+	CreateDataSelector16
+;
 	mov edx,0F0000h
 	mov bx,__F000
 	mov ecx,10000h
