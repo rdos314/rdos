@@ -131,12 +131,14 @@ int TPingCommand::Execute(char *param)
 	}
 	else
 	{
+		Write("Resolve\r\n");
 		Node = RdosNameToIp(NodeName);
+		Write("Done\r\n");
 		if (Node == 0)
 		{
-    		FMsg.Load(TEXT_ERROR_INVALID_HOSTNAME);
-    		Write(FMsg.GetData());
-    		return 0;
+			FMsg.Load(TEXT_ERROR_INVALID_HOSTNAME);
+			Write(FMsg.GetData());
+			return 0;
 		}
 	}
 
@@ -150,20 +152,20 @@ int TPingCommand::Execute(char *param)
 		n1 = Temp & 0xFF;
 		Temp = Temp >> 8;
 		n0 = Temp & 0xFF;
-    	FMsg.printf(TEXT_PING_NODE, n3, n2, n1, n0);
-    	Write(FMsg.GetData());
-    	
+		FMsg.printf(TEXT_PING_NODE, n3, n2, n1, n0);
+		Write(FMsg.GetData());
+
 		for (i = 0; i < 10; i++)
 		{
 			if (RdosPing(Node, 2000))
 			{
-        		FMsg.Load(TEXT_PING_OK);
-        		Write(FMsg.GetData());
+				FMsg.Load(TEXT_PING_OK);
+				Write(FMsg.GetData());
 			}
 			else
 			{
-        		FMsg.Load(TEXT_PING_TIMEOUT);
-        		Write(FMsg.GetData());
+				FMsg.Load(TEXT_PING_TIMEOUT);
+				Write(FMsg.GetData());
 			}
 		}
 		return 0;

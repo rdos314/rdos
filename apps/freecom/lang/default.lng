@@ -1572,7 +1572,7 @@ Cannot find host name
 .
 
 :TEXT_PING_NODE
-Pinging node %d,%d,%d,%d
+Pinging node %d.%d.%d.%d
 .
 
 :TEXT_PING_OK

@@ -345,4 +345,7 @@ is_signalled_nr             = 296
 
 get_drive_disc_param_nr     = 297
 
+get_ide_disc_nr             = 298
+get_floppy_disc_nr          = 299
+
 usergate_entries			= 300

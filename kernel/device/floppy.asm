@@ -88,6 +88,7 @@ TimeoutCount	DB ?
 Gap			  	DB 4 DUP(?)
 Tracks			DB 4 DUP(?)
 MotorCount		DB 4 DUP(?)
+DiscArr         DW 2 DUP(?)
 
 CmdCode			DB ?
 DriveHead		DB ?

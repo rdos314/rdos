@@ -1034,6 +1034,18 @@ Ping		MACRO
 
 ;;;;;;;;;;;;; LOW-LEVEL DISCS ;;;;;;;;;;;;;
 
+; IN   BL           Unit #
+; OUT  AL			Disc #
+GetIdeDisc     MACRO
+	UserGate get_ide_disc_nr
+						ENDM
+
+; IN   BL           Unit #
+; OUT  AL			Disc #
+GetFloppyDisc     MACRO
+	UserGate get_floppy_disc_nr
+						ENDM
+
 ;	IN	AL			Disc #
 ;	OUT	CX			Bytes / sector
 ;	OUT	EDX			Total # of sectors

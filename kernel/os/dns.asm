@@ -224,6 +224,7 @@ name_to_ip	Proc near
 	mov ax,es
 	mov gs,ax
 	mov ebp,edi
+;
 	call FindHostByName
 	jc name_to_ip_lookup
 ;
@@ -233,10 +234,11 @@ name_to_ip	Proc near
 
 name_to_ip_lookup:
 	call GetHostNameSize
-	jc name_to_ip_fail
+	jc name_to_ip_done
 ;
 	push es
 	push edi
+	movzx ecx,cx
 	mov eax,ecx
 	add eax,SIZE dns_header + SIZE dns_host_query + 2
 	AllocateSmallGlobalMem
@@ -294,7 +296,7 @@ name_to_ip_move_part:
 	push cx
 	or edx,edx
 	jz name_to_ip_ppp
-;
+;    
 	xor di,di
 	QueryUdp
 	jc name_to_ip_second
@@ -316,7 +318,7 @@ name_to_ip_second:
 ;
 	xor di,di
 	QueryUdp
-	jc name_to_ip_ppp
+	jc name_to_ip_fail
 ;
 	call DecodeNameRequest
 	jnc name_to_ip_ok

@@ -1923,6 +1923,52 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetIdeDisc
+;
+;		description:	Get disc # for a physical disc unit
+;
+;		PARAMETERS:		BL          IDE disc #
+;
+;       RETURNS:        AL          disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ide_disc_name DB 'Get IDE Disc',0
+
+get_ide_disc	Proc far
+    push ds
+    push bx
+;
+    mov ax,ide_data_sel
+    mov ds,ax
+    cmp bl,2
+    jae get_ide_fail
+;    
+    movzx bx,bl
+    add bx,bx
+    mov bx,[bx].DriveSelArr
+    or bx,bx
+    jz get_ide_fail
+;
+    mov ds,bx
+    mov al,ds:disc_nr
+    clc
+    jmp get_ide_done
+
+get_ide_fail:
+    stc
+    
+get_ide_done:    
+    pop bx
+    pop ds    
+	retf32
+get_ide_disc	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init device
@@ -1949,6 +1995,12 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET get_ide_disc
+	mov di,OFFSET get_ide_disc_name
+	xor dx,dx
+	mov ax,get_ide_disc_nr
+	RegisterBimodalUserGate
+;
 	mov dx,1F7h
 	in al,dx
 	cmp al,-1
@@ -1962,6 +2014,8 @@ init	PROC far
 	AllocateFixedSystemMem
 	InitSection es:IdeSection
 	mov es:IdeThread,0
+	mov es:DriveSelArr,0
+	mov es:DriveSelArr+2,0
 ;
 	mov al,0Eh
 	mov bx,ide_data_sel

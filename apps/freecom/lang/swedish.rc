@@ -687,7 +687,7 @@ STRINGTABLE
  1706, "  host name       Host name to ping\r\n";
  1707, "Invalid IP address\r\n";
  1708, "Cannot find host name\r\n";
- 1709, "Pinging node %d,%d,%d,%d\r\n";
+ 1709, "Pinging node %d.%d.%d.%d\r\n";
  1710, "Ping ok\r\n";
  1711, "Ping timeout\r\n";
  1712, "Init floppy and write RDOS bootloader\r\n";
