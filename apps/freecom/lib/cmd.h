@@ -37,6 +37,7 @@ public:
 	virtual ~TCommand();
 
 	int Run();
+	virtual void InitOptions();
 	virtual int Execute(char *param) = 0;
 
 	static int ErrorLevel;

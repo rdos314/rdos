@@ -110,6 +110,23 @@ int TSetCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 
 /*##########################################################################
 #
+#   Name       : TSetCommand::InitOptions
+#
+#   Purpose....: Init options
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSetCommand::InitOptions()
+{
+	FOptC = 0;
+	FPromptUser = 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TSetCommand::Run
 #
 #   Purpose....: Run command
@@ -126,12 +143,6 @@ int TSetCommand::Execute(char *param)
 	char *value;
 	char *PromptBuf = 0;
 	char *p;
-
-	FOptC = 0;
-	FPromptUser = 0;
-
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
 
 	/* if no parameters, show the environment */
 	if (*param == 0)

@@ -20,40 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdfact.h
-# Command factory base class
+# help.h
+# Help command class
 #
 ########################################################################*/
 
-#ifndef _CMDFACT_H
-#define _CMDFACT_H
+#ifndef _HELP_H
+#define _HELP_H
 
 #include "cmd.h"
+#include "cmdfact.h"
 
-class TCommandFactory
+class THelpFactory : public TCommandFactory
 {
-friend class THelpCommand;
-    
 public:
-    TCommandFactory(const char *name);
-	virtual ~TCommandFactory();
+	THelpFactory();
+	virtual TCommand *Create(const char *param);
+};
 
-	static TCommand *Parse(const char *line);
+class THelpCommand : public TCommand
+{
+public:
+	THelpCommand(const char *param);
 
-protected:
-    static const char *FindArg(int no);
-    static TString ExpandEnv(TString &line);
-
-	virtual TCommand *Create(const char *param) = 0;
-	virtual int PassAll();
-    virtual int PassDir();
-	
-	void InsertCommand();
-	void RemoveCommand();
-
-	static TCommandFactory *FCmdList;
-	TCommandFactory *FList;
-	TString FName;
+	virtual int Execute(char *param);	
 };
 
 #endif

@@ -90,10 +90,30 @@ int TCommand::Run()
 	param = new char[size + 1];
 	memcpy(param, FCmdLine.GetData(), size + 1);
 
+    InitOptions();
+	
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
 	result = Execute(param);
 
 	delete param;
 	return result;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::InitOptions
+#
+#   Purpose....: Default init options
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::InitOptions()
+{
 }
 
 /*##########################################################################

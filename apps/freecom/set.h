@@ -46,6 +46,7 @@ public:
 	virtual int Execute(char *param);	
 
 protected:
+    virtual void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	
 	int FOptC;
