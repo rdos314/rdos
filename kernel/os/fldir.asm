@@ -172,12 +172,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindLastDirInfo	Proc near
-	push es
 	push cx
 	push esi
 ;
-	mov ax,flat_sel
-	mov es,ax
 	inc esi
 	mov cx,1FFh
 
@@ -211,7 +208,6 @@ fldiDone:
 ;
 	pop esi
 	pop cx
-	pop es
 	ret
 FindLastDirInfo	Endp
 
@@ -232,10 +228,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExtendDir	Proc near
+	push es
 	push fs
-	push ax
-	push edx
+	pushad
 ;
+	mov ax,flat_sel
+	mov es,ax
     mov fs,bx
     mov edx,fs:ds_link
     call DirEntryLogToPhysSector
@@ -244,9 +242,10 @@ ExtendDir	Proc near
     mov al,ds:drive_nr
     LockSector
 	call FindLastDirInfo
+	mov esi,eax
 ;
-	mov al,es:[esi]
-	cmp al,-1
+	mov eax,es:[esi-3]
+	cmp eax,-1
 	jne edPresent
 ;
 	sub esi,0Fh
@@ -284,7 +283,7 @@ edCheckSpace:
 edSpaceOk:	
 	mov eax,es:[esi].fde_size
 	add eax,20h
-	mov es:[edi].fde_size
+	mov es:[edi].fde_size,eax
 	mov eax,es:[esi].fde_time
 	mov es:[edi].fde_time,eax
 	mov eax,es:[esi].fde_time+4
@@ -339,10 +338,12 @@ edMakeValid:
     UnlockSector
 	clc
 
+edObjectOk:
+
 edDone:
-	pop edx
-	pop ax
+	popad
 	pop fs
+	pop es
 	ret
 ExtendDir	Endp
 
