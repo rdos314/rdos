@@ -252,6 +252,7 @@ TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList)
 	FUserList = UserList;
 	CurrDir = "/";
 	FDataSocket = 0;
+	OnCommand = 0;
 }
 
 /*##########################################################################
@@ -622,7 +623,8 @@ void TFtpSocketServer::HandleSocket()
 			if (count == 0)
 				break;
 
-			printf(Buf);
+            if (OnCommand)
+                (*OnCommand)(this, Buf);
 
 			cmd = TCommandFactory::Parse(this, Buf);
 

@@ -77,6 +77,8 @@ public:
 
 	void Reply(TLangString *Msg);
 
+	void (*OnCommand)(TFtpSocketServer *server, const char *str);
+
     static int IsEmpty(const char *s);
     static int IsArgDelim(char ch);
     static int IsFileNameChar(char c);

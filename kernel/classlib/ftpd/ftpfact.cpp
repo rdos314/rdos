@@ -321,6 +321,7 @@ TSocketServer *TFtpSocketServerFactory::Create()
 {
 	TFtpSocketServer *server;
 	server = new TFtpSocketServer(FList);
+	server->OnCommand = OnCommand;
 
 	return server;
 }

@@ -41,6 +41,18 @@
 
 TFtpSocketServerFactory Factory;
 
+/*##################  WriteCommand ##########################
+*   Purpose....: Write command echo	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCommand(TFtpSocketServer *server, const char *str)
+{
+	printf(str);
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -63,6 +75,7 @@ void cdecl main()
 	Factory.AddUser("m-drive", "rdos", "m:\\");
 	Factory.AddUser("n-drive", "rdos", "n:\\");
 	Factory.AddUser("z-drive", "rdos", "z:\\");
+	Factory.OnCommand = WriteCommand;
 	TSocket::Listen(&Factory, 21, 0x4000);
 }
 

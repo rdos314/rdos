@@ -31,6 +31,8 @@
 #include "ftpcmd.h"
 #include "ftpacc.h"
 
+class TFtpSocketServer;
+
 class TCommandFactory
 {
 friend class THelpCommand;
@@ -64,6 +66,8 @@ public:
 	virtual char *GetThreadName();
 	virtual int GetStackSize();
 	virtual TSocketServer *Create();
+
+	void (*OnCommand)(TFtpSocketServer *server, const char *str);
 
 protected:
     TFtpUser *FList;
