@@ -58,6 +58,14 @@ grubload_srcs = GRUB32.ASM	GRUBLOAD.ASM
 grubload_objs = $(grubload_srcs:.ASM=.OBJ)
 grubload_exes = GRUBLOAD.EXE
 
+acrprom_srcs = ACRPROM.ASM
+acrprom_objs = $(acrprom_srcs:.ASM=.OBJ)
+acrprom_exes = ACRPROM.EXE
+
+acrloc_srcs = ACRLOC.ASM
+acrloc_objs = $(acrloc_srcs:.ASM=.OBJ)
+acrloc_exes = ACRLOC.EXE
+
 rdfsboot_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSBOOT.ASM
 rdfsboot_objs = $(rdfsboot_srcs:.ASM=.OBJ)
 rdfsboot_exes = RDFSBOOT.EXE
@@ -94,8 +102,8 @@ test_srcs = TEST.ASM ..\OS\MATH.ASM
 test_objs = $(test_srcs:.ASM=.OBJ)
 test_exes = TEST.EXE
 
-srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs)    \
-			$(bootprom_srcs) $(elanboot_srcs)	\
+srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
+			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs)	\
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(test_srcs) $(state_srcs) \
@@ -103,11 +111,11 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs)    \
 
 objs =      $(srcs:.ASM=.OBJ)
 
-exes =      $(cfg2bin_exes) $(boot2bin_exes)  \
+exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes)	\
 			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
-		    $(test_exes) $(state_exes)	\
+		    $(test_exes) $(state_exes) $(acrloc_exes)	\
 			$(run_exes) $(remdebug_exes)
 
 maps =      $(exes:.EXE=.MAP)
@@ -181,6 +189,22 @@ ELANBOOT.EXE : $(elanboot_objs)
 	$(elanboot_objs)
 	ELANBOOT
 	ELANBOOT;
+!
+
+ACRPROM.EXE : $(acrprom_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(acrprom_objs)
+	ACRPROM
+	ACRPROM;
+!
+
+ACRLOC.EXE : $(acrloc_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(acrloc_objs)
+	ACRLOC
+	ACRLOC;
 !
 
 RDFSBOOT.EXE : $(rdfsboot_objs)

@@ -66,12 +66,19 @@ test_name	DB 'Test Section Thread', 0
 
 test_thread:
 	int 3
+;
 	LeaveUserSection
 	EnterUserSection
 	jmp test_thread
+
+divi	DW 1111h
 	
 init:
 	int 3
+	mov ax,-5050
+	mov bl,-4
+;	div cs:divi
+	idiv bl
 	CreateBlockedUserSection
 ;
 	mov ax,cs
