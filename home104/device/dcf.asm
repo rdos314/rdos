@@ -31,13 +31,13 @@
 
 GateSize = 16
 
-INCLUDE ..\user.def
-INCLUDE ..\os.def
-INCLUDE ..\os.inc
-INCLUDE ..\user.inc
-INCLUDE ..\driver.def
-INCLUDE ..\wait.inc
-INCLUDE ..\handle.inc
+INCLUDE ..\..\kernel\user.def
+INCLUDE ..\..\kernel\os.def
+INCLUDE ..\..\kernel\os.inc
+INCLUDE ..\..\kernel\user.inc
+INCLUDE ..\..\kernel\driver.def
+INCLUDE ..\..\kernel\wait.inc
+INCLUDE ..\..\kernel\handle.inc
 
 dcf_data	STRUC
 

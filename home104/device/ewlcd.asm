@@ -29,12 +29,12 @@
 
 GateSize = 16
 
-INCLUDE ..\driver.def
-INCLUDE ..\user.def
-INCLUDE ..\os.def
-INCLUDE ..\user.inc
-INCLUDE ..\os.inc
-INCLUDE ..\video.inc
+INCLUDE ..\..\kernel\driver.def
+INCLUDE ..\..\kernel\user.def
+INCLUDE ..\..\kernel\os.def
+INCLUDE ..\..\kernel\user.inc
+INCLUDE ..\..\kernel\os.inc
+INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
