@@ -98,7 +98,7 @@ RESET:		PAGE1
 			movlw $C0
 			movwf VAL2
 ;
-			movlw $C0
+			movlw $C
 			movwf VAL3
 ;
 			clrf VAL4
@@ -107,8 +107,8 @@ RESET:		PAGE1
 			clrf VAL7
 			goto ILOOP
 
-SendRef0:	movlw 0
-			call Send0
+RecRef:		movlw 0
+			call Rec0
 			return
 
 SendRef1:	movlw 0
@@ -138,6 +138,11 @@ SendInten:	movlw 3
 SendAmbient:
             movlw 4
 			call Send1
+			return
+
+SendRefType:
+            movlw 5
+			call Send0
 			return
 
 StartTemp:	movlw 7
@@ -171,13 +176,13 @@ HandlePend:
 			goto StartTemp      ; 15
 			goto RecTemp		; 16
 			goto SendAmbient	; 17
-			goto SendRef0		; 18
-			goto SendRef1		; 19
-			goto SendInten	 	; 20
-			goto SendTemp		; 21
-			goto StartFuzzy    	; 22
-			return      		; 23
-			return 				; 24
+			goto SendRefType	; 18
+			goto RecRef			; 19
+			goto SendRef1		; 20
+			goto SendInten	 	; 21
+			goto SendTemp		; 22
+			goto StartFuzzy    	; 23
+			return				; 24
 			return				; 25
 			return				; 26
 			return				; 27
@@ -226,6 +231,86 @@ HandleSt:	movf STATE,W
 			goto SetClkVal
 			goto ResClk
 
+HandleRead:
+			movf CHAN,W
+			addwf PCL,F
+			goto ReadRef        ; 0
+			goto ReadTemp       ; 1
+			goto ReadMotor      ; 2
+			goto ReadInten      ; 3
+			goto DummyRead      ; 4
+			goto DummyRead      ; 5
+			goto DummyRead      ; 6
+			goto DummyRead      ; 7
+
+HandleWrite:
+			movf CHAN,W
+			addwf PCL,F
+			goto WriteRef       ; 0
+			goto DummyWrite     ; 1
+			goto DummyWrite     ; 2
+			goto WriteInten     ; 3
+			goto WriteAmbient   ; 4
+			goto WriteRefType   ; 5
+			goto DummyWrite     ; 6
+			goto DummyWrite     ; 7
+
+DummyRead:
+			clrf T0
+			clrf T1
+			clrf T2
+			return
+
+ReadRef:
+			movf VAL0,W
+			movwf T0
+			clrf T1
+			clrf T2
+			return
+
+ReadTemp:
+			movf VAL1,W
+			movwf T0
+			clrf T1
+			clrf T2
+			return
+
+ReadMotor:
+			movf VAL2,W
+			movwf T0
+			clrf T1
+			clrf T2
+			return
+
+ReadInten:
+			movf VAL3,W
+			movwf T0
+			clrf T1
+			clrf T2
+			return
+
+DummyWrite:
+			return
+
+WriteRef:
+			movf T0,W
+			movwf VAL0
+			return
+
+WriteInten:	movf T0,W
+			movwf VAL3
+			return
+
+WriteAmbient:
+            movf T0,W
+			movwf VAL4
+			return
+
+WriteRefType:
+            movf T0,W
+			movwf VAL5
+			return
+			
 ILOOP:		call POLLTIMER
 			btfss PORTA,0
 			goto ILOOP
@@ -467,7 +552,17 @@ POLLTIMER:	decfsz CLKCNT,F
 ;
 			movlw DELAY_TICS
 			movwf CLKCNT
+
+POLLTIM:	btfss INTCON,2
+			return
+
+			bcf INTCON,2
 ;
+			decfsz TMRCNT,F
+			goto DoIdle
+			goto DoSec
+
+DoIdle:
 			btfsc SEC,7
 			goto HandlePend
 ;
@@ -476,15 +571,9 @@ POLLTIMER:	decfsz CLKCNT,F
 ;
 			btfsc PORTB,4
 			goto HandleSt
-
-POLLTIM:	btfss INTCON,2
 			return
 
-			bcf INTCON,2
-
-			decfsz TMRCNT,F
-			return
-;
+DoSec:
 			movlw DELAY_TICS
 			movwf CLKCNT
 			
@@ -572,20 +661,7 @@ UPDATEDO:	rrf VAL,F
 
 READCMD:	movlw 24
 			movwf COUNT
-
-			movf CHAN,W
-			addlw VAL0
-			movwf FSR
-			movf INDF,W
-			movwf T2
-			clrf T1
-			clrf T0
-
-			bcf STATUS,C
-			rrf T2,F
-			rrf T1,F
-			rrf T0,F
-
+			call HandleRead
 			clrf CRC
 
 RDVALLOOP:	movf T0,W
@@ -738,28 +814,7 @@ WRCRCCONT:	bcf STATUS,C
 			btfss STATUS,Z
 			return
 
-WRCRCOK:	movf CHAN,W
-			addlw VAL0
-			movwf FSR
-;
-			bcf STATUS,C
-			rlf T0,F
-			rlf T1,F
-			rlf T2,F
-			btfss STATUS,C
-			goto WRPOSVAL
-
-			clrf INDF
-			clrf VAL
-			goto WRVALDO
-
-WRPOSVAL:	movf T2,W
-			movwf INDF
-			movwf VAL
-
-WRVALDO:	call SENDVAL
+WRCRCOK:	call HandleWrite
 			return
-
-SENDVAL:	return
 
         .END

@@ -49,6 +49,10 @@ BIT			.EQU $20
 INTEN		.EQU $21
 AdcLsb		.EQU $22
 AdcMsb		.EQU $23
+RefType		.EQU $24
+DelayMs		.EQU $25
+TState		.EQU $26
+Stable		.EQU $27
 
 
 	        .ORG 4
@@ -66,26 +70,33 @@ RESET:		PAGE1
 			movlw %00001000
 			movwf PORTB
 ;
-			clrf REF
+			clrf RefType
 ;
-			movlw 40
+			call READEE
+			movwf REF
 			movwf TEM0
 			clrf TEM1
 ;
 			clrf SumLow1
 			clrf SumHi1
 ;
-			movlw $C0
+			movlw $80
 			movwf MOT
 ;
 			movlw 12
 			movwf INTEN
+;
+			movlw $FF
+			movwf DelayMs
+			clrf TState
+			movlw 10
+			movwf Stable
 
-LP:			call Wait
-			call INITLED
+LP:			call INITLED
 			call WRITEREF
 			call WRITETEM
 			call WRITEMOT
+			call Wait
 			goto LP
 
 STOP:		goto STOP
@@ -145,7 +156,7 @@ SetVal:		movf REG,W
 			goto SetMotor	; 2
 			goto SetInten	; 3
 			return			; 4
-			return			; 5
+			goto SetRefType	; 5
 			return			; 6
 			goto GetAdc		; 7
 
@@ -360,14 +371,15 @@ GetAdc:		call ReadAdc1
 			addwf SumHi1,F
 			return
 
-WaitClk:
+WaitClk:	call Poll
 WaitClkHi:	btfss PORTB,7
 			return
 
 			btfsc PORTB,4
 			goto WaitClk
 
-WaitClkLow:	btfss PORTB,7
+WaitClkLow:	call Poll
+			btfss PORTB,7
 			return
 
 			btfss PORTB,4
@@ -383,12 +395,14 @@ SetMotor:	movf VAL,W
 			movwf MOT
 			return
 
-SetInten:	rrf VAL,F
-			rrf VAL,F
-			rrf VAL,F
-			rrf VAL,W
+SetInten:	movf VAL,W
 			andlw $F
 			movwf INTEN
+			return
+
+SetRefType:	movf VAL,W
+			movwf RefType
+			call READEE
 			return
 
 GetRef:		movf REF,W
@@ -428,6 +442,7 @@ GetMotor:	movf MOT,W
 			return
 			
 Wait:		btfss PORTB,7
+			call Poll
 			goto Wait
 ;			
 			PAGE1
@@ -528,6 +543,7 @@ WaitRecShift:
 			rrf VAL,F
 
 WaitRecHi:
+			call Poll
 			btfss PORTB,7
 			goto WaitEnd
 
@@ -535,6 +551,7 @@ WaitRecHi:
 			goto WaitRecHi
 
 WaitRecLow:	
+			call Poll
 			btfss PORTB,7
 			goto WaitEnd
 
@@ -550,7 +567,8 @@ WaitEnd:
 			movwf TRISB
 			PAGE0
 
-WaitHi:		btfss PORTB,7
+WaitHi:		call Poll
+			btfss PORTB,7
 			return
 			goto WaitHi
 		
@@ -645,6 +663,101 @@ LOADLED:	movlw 5
 			clrf PORTA
 			call DELAY
 
+			return
+
+READEE:		movf RefType,W
+			movwf EEADR
+        	PAGE1
+        	bsf EECON1,RD
+    	    PAGE0
+	        movf EEDATA,W
+			movwf REF
+			sublw 150
+			btfsc STATUS,C
+			goto ReadEeCheckHi
+;
+			movlw 150
+			movwf REF
+			return
+
+ReadEeCheckHi:
+			movf REF,W
+			sublw 250
+			btfsc STATUS,C
+			return
+;
+			movlw 250
+			movwf REF
+			return
+
+WRITEEE:	movf RefType,W
+			movwf EEADR
+			PAGE1
+	        bsf EECON1,WREN
+	        PAGE0
+    	    movf REF,W
+	        movwf EEDATA
+
+		 	PAGE1
+     		movlw $55
+	        movwf EECON2
+	        movlw $AA
+	        movwf EECON2
+       	   	bsf EECON1,WR
+
+CHKWRT:		btfss EECON1,4
+	        goto CHKWRT
+
+    	    bcf EECON1,WREN 
+	        bcf EECON1,4
+ 	        PAGE0
+        	bcf INTCON,6
+			return
+
+Poll:		decfsz DelayMs,F
+			return
+;
+			movlw $FF
+			movwf DelayMs
+;
+			movf PORTA,W
+			andlw $18
+			xorwf TState,W
+			btfss STATUS,Z
+			goto RedoDebounc
+;
+			decfsz Stable,F
+			return
+;
+			movlw 8
+			xorwf TState,W
+			btfss STATUS,Z
+			goto CheckRed
+
+CheckBoth:	movlw $10
+			xorwf TState,W
+			btfsc STATUS,Z
+			return
+;
+			decf REF,F
+			call WRITEREF
+			return	
+
+CheckRed:	movlw $10
+			xorwf TState,W
+			btfss STATUS,Z
+			return
+;
+			incf REF,F
+			call WRITEREF
+			return
+
+RedoDebounc:
+			movf PORTA,W
+			andlw $18
+			movwf TState
+			movlw 10
+			movwf Stable
 			return
 
         .END
