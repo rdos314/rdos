@@ -155,11 +155,190 @@ page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			FindResolution
+;
+;		DESCRIPTION:	Find a resolution
+;
+;		PARAMETERS:		DS		PC video sel
+;						CX		x-resolution
+;						DX		y-resolution
+;
+;		RETURNS:		NC		OK
+;						ES		Resolution selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindResolution	Proc near
+	push ax
+;
+	mov ax,ds:v_video_resol_list
+	or ax,ax
+	stc
+	jz find_resol_done
+
+find_resol_loop:
+	mov es,ax
+	cmp cx,es:vr_x_size
+	jne find_resol_next
+;
+	cmp dx,es:vr_y_size
+	clc
+	je find_resol_done
+
+find_resol_next:
+	mov ax,es:vr_next
+	or ax,ax
+	jnz find_resol_loop
+;
+	stc
+
+find_resol_done:
+	pop ax
+	ret
+FindResolution	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddResolution
+;
+;		DESCRIPTION:	Add a resolution
+;
+;		PARAMETERS:		DS		PC video sel
+;						CX		x-resolution
+;						DX		y-resolution
+;
+;		RETURNS:		ES		Resolution selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddResolution	Proc near
+	push eax
+	mov eax,SIZE video_resol_struc
+	AllocateSmallGlobalMem
+	mov ax,ds:v_video_resol_list
+	mov es:vr_next,ax
+	mov ds:v_video_resol_list,es
+	mov es:vr_x_size,cx
+	mov es:vr_y_size,dx
+	mov es:vr_flat16_mode,0
+	mov es:vr_flat24_mode,0
+	mov es:vr_flat32_mode,0
+	mov es:vr_flat16_flags,0
+	mov es:vr_flat24_flags,0
+	mov es:vr_flat32_flags,0
+	pop eax
+	ret
+AddResolution	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddVideoMode
+;
+;		DESCRIPTION:	Add a video mode
+;
+;		PARAMETERS:		DS		PC video sel
+;						AX		0 = V86, 1 = PM
+;						CX		Mode #
+;						ES		Video mode info block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddVideo	MACRO mode
+	local add_new
+	local add_v86
+	local add_do
+
+	mov dx,es:vr_&mode&_mode
+	or dx,dx
+	jz add_do
+;
+	mov dl,es:vr_&mode&_flags
+	test dl,VIDEO_MODE_FLAGS_PM
+	jz add_v86
+;
+	or ax,ax
+	jz add_video_done
+;
+	test dl,VIDEO_MODE_FLAGS_LFB
+	jnz add_video_done
+
+add_do:
+	mov es:vr_&mode&_mode,cx
+	or es:vr_&mode&_flags, VIDEO_MODE_FLAGS_PM OR VIDEO_MODE_FLAGS_LFB
+	jmp add_video_done
+
+add_v86:
+	or ax,ax
+	jnz add_do
+;
+	test dl,VIDEO_MODE_FLAGS_LFB
+	jz add_do	
+	jmp add_video_done
+		ENDM
+
+AddVideoMode	Proc near
+	push es
+	push fs
+;
+	int 3
+	mov dx,es
+	mov fs,dx
+	push ax
+	push cx
+	mov cx,fs:vmi_x_pixels
+	mov dx,fs:vmi_y_pixels
+	call FindResolution
+	jnc add_video_found
+;
+	call AddResolution
+
+add_video_found:
+	pop cx
+	pop ax
+;
+	mov dl,fs:vmi_bits_per_pixel
+	cmp dl,16
+	je add_video16
+;
+	cmp dl,24
+	je add_video24
+;
+	cmp dl,32
+	je add_video32
+	jmp add_video_done
+
+add_video16:
+	AddVideo flat16
+
+add_video24:
+	AddVideo flat24
+
+add_video32:
+	AddVideo flat32
+
+add_video_done:
+	pop fs
+	pop es
+	ret
+AddVideoMode	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			DecodeVideoMode
 ;
 ;		DESCRIPTION:	Decode a video mode
 ;
-;		PARAMETERS:		AX		0 = V86, 1 = PM
+;		PARAMETERS:		DS		PC video sel
+;						AX		0 = V86, 1 = PM
 ;						CX		Mode #
 ;						ES		Video mode info block
 ;
@@ -177,10 +356,7 @@ DecodeVideoMode	Proc near
 	clc
 	jne decode_video_mode_done
 ;
-	int 3
-	mov dx,es:vmi_x_pixels
-	mov dx,es:vmi_y_pixels
-	mov edx,es:vmi_lfb
+	call AddVideoMode
 	clc
 
 decode_video_mode_done:
@@ -249,7 +425,7 @@ get_video_modes_pm_loop:
 	jmp get_video_modes_pm_loop
 
 get_video_modes_pm_done:
-	FreeMem
+;	FreeMem
 ;
 	popa
 	pop fs
@@ -277,8 +453,6 @@ GetVideoModesV86	Proc near
 	push fs
 	pusha
 ;
-	xor ax,ax
-	mov ds,ax
 	mov ax,word ptr es:vesa_modes+2
 	cmp ax,2000h
 	jne get_video_modes_v86_not_self
@@ -306,18 +480,22 @@ get_video_modes_v86_loop:
 	cmp cx,-1
 	je get_video_modes_v86_free
 ;
+	xor ax,ax
+	mov ds,ax
 	mov ax,4F01h
 	push 10h
 	V86BiosInt
 	cmp ax,4Fh
 	jne get_video_modes_v86_loop
 ;
+	mov ax,pc_video_data_sel
+	mov ds,ax
 	xor ax,ax
 	call DecodeVideoMode
 	jmp get_video_modes_v86_loop
 
 get_video_modes_v86_free:
-	FreeMem
+;	FreeMem
 
 get_video_modes_v86_done:
 	popa
@@ -770,7 +948,7 @@ init_pm_leave:
 	mov sp,bp
 
 init_pm_free:
-	FreeMem
+;	FreeMem
 ;
 	popad
 	pop es
@@ -836,6 +1014,7 @@ InitV86	Proc near
 	xor bl,bl
 	push 10h
 	V86BiosInt
+	int 3
 ;
 	mov bx,es
 	GetSelectorBaseSize
@@ -1129,7 +1308,6 @@ test_thread	Proc far
 	call SetupPmEntry
 	call ds:v_init_proc
 ;
-	int 3
 	xor bx,bx
 	xor dx,dx
 	call ds:v_set_window_proc
@@ -1215,6 +1393,7 @@ init	PROC far
 	mov bx,pc_video_data_sel
 	AllocateFixedSystemMem
 	mov es:v_curr_object,0
+	mov es:v_video_resol_list,0
 ;
 	mov ax,cs
 	mov ds,ax

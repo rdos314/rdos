@@ -77,6 +77,8 @@ get_selector_gdt:
 
 get_selector_check:
 	and bx,0FFF8h
+	jz get_selector_error
+;
 	mov al,[bx+5]
 	test al,80h
 	jz get_selector_error

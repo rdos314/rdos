@@ -872,9 +872,29 @@ SetupDMA	Proc near
 	push eax
 	mov ax,flat_sel
 	mov es,ax
-	mov al,es:[edx]
+;
 	GetPhysicalPage
 	and ax,0F000h
+	or eax,eax
+	jz setup_dma_alloc
+;
+	cmp eax,1000000h
+	jc setup_dma_inrange
+;
+	int 3
+	FreePhysical
+
+setup_dma_alloc:
+	AllocateDmaPhysical
+	or al,3
+	SetPhysicalPage
+	and ax,0F000h
+	cmp eax,1000000h
+	jc setup_dma_inrange
+;
+	int 3
+
+setup_dma_inrange:
 	and dx,0FFFh
 	or ax,dx
 	mov edx,eax

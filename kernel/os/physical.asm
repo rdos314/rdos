@@ -150,6 +150,7 @@ init_free_page_loop:
 init_free_done:
 	mov fs:unused_phys_list,-1
 	mov fs:free_phys_list,0
+	mov fs:free_dma_phys_list,0
 	ret
 init_physical_dir	Endp
 
@@ -225,6 +226,11 @@ init_physical_gates	PROC near
 	xor cl,cl
 	mov ax,allocate_physical_nr
 	RegisterOsGate
+	mov si,OFFSET allocate_dma_physical
+	mov di,OFFSET allocate_dma_physical_name
+	xor cl,cl
+	mov ax,allocate_dma_physical_nr
+	RegisterOsGate
 	mov si,OFFSET get_physical_page
 	mov di,OFFSET get_physical_page_name
 	xor cl,cl
@@ -280,8 +286,19 @@ allocate_physical	PROC far
 	mov dx,phys_list_sel
 	mov es,dx
 	mov ebx,free_phys_list
+	or ebx,ebx
+	jnz allocate_normal
+;
+	mov ebx,free_dma_phys_list
+	mov edx,es:[ebx]
+	mov free_dma_phys_list,edx
+	jmp allocate_mark
+
+allocate_normal:
 	mov edx,es:[ebx]
 	mov free_phys_list,edx
+
+allocate_mark:
 	mov edx,unused_phys_list
 	mov es:[ebx],edx
 	mov unused_phys_list,ebx
@@ -298,6 +315,53 @@ allocate_physical	PROC far
 	pop ds
 	ret
 allocate_physical	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDmaPhysical
+;
+;		DESCRIPTION:	Allocate DMA physical page
+;
+;		PARAMETERS:		EAX		Address
+;												
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dma_physical_name	DB 'Allocate DMA Physical Memory',0
+
+allocate_dma_physical	PROC far
+	push ds
+	push es
+	push ebx
+	push edx
+	mov bx,system_data_sel
+	mov ds,bx
+	push ds
+	EnterSection phys_section
+	dec ds:phys_free_pages
+	mov dx,phys_list_sel
+	mov es,dx
+	mov ebx,free_dma_phys_list
+	mov edx,es:[ebx]
+	mov free_dma_phys_list,edx
+	mov edx,unused_phys_list
+	mov es:[ebx],edx
+	mov unused_phys_list,ebx
+	mov ax,phys_page_sel
+	mov ds,ax
+	mov eax,ebx
+	mov eax,[eax]
+	xor al,al
+	pop ds
+	LeaveSection phys_section
+	pop edx
+	pop ebx
+	pop es
+	pop ds
+	ret
+allocate_dma_physical	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -332,9 +396,20 @@ free_physical	PROC far
 	mov ebx,unused_phys_list
 	mov edx,es:[ebx]
 	mov unused_phys_list,edx
+	cmp eax,1000000h
+	jc free_dma_phys
+;
 	mov edx,free_phys_list
 	mov es:[ebx],edx
 	mov free_phys_list,ebx
+	jmp free_link_page
+
+free_dma_phys:
+	mov edx,free_dma_phys_list
+	mov es:[ebx],edx
+	mov free_dma_phys_list,ebx
+
+free_link_page:
 	mov dx,phys_page_sel
 	mov ds,dx
 	mov [ebx],eax

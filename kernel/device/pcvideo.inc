@@ -25,6 +25,26 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+VIDEO_MODE_FLAGS_PM		EQU 1
+VIDEO_MODE_FLAGS_LFB	EQU 2
+
+video_resol_struc	STRUC
+
+vr_next				DW ?
+
+vr_x_size			DW ?
+vr_y_size			DW ?
+
+vr_flat16_mode		DW ?
+vr_flat24_mode		DW ?
+vr_flat32_mode		DW ?
+
+vr_flat16_flags		DB ?
+vr_flat24_flags		DB ?
+vr_flat32_flags		DB ?
+
+video_resol_struc	ENDS
+
 video_data_seg	STRUC
 
 v_curr_object		DW ?
@@ -41,5 +61,6 @@ v_init_proc			DW ?
 v_set_window_proc	DW ?
 v_set_start_proc	DW ?
 v_set_palette_proc	DW ?
+v_video_resol_list	DW ?
 
 video_data_seg	ENDS

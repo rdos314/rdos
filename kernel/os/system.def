@@ -108,6 +108,7 @@ math_tss			DW ?
 phys_free_pages		DD ?
 
 free_phys_list		DD ?
+free_dma_phys_list	DD ?
 unused_phys_list	DD ?
 phys_section		section_typ <>
 

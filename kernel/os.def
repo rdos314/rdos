@@ -287,5 +287,6 @@ format_file_system_nr		EQU 255
 flush_drive_nr				EQU 256
 create_disc_seq_nr			EQU 257
 perform_disc_seq_nr			EQU 258
+allocate_dma_physical_nr	EQU 259
 
-osgate_entries				EQU 259
+osgate_entries				EQU 260

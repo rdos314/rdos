@@ -770,6 +770,11 @@ AllocatePhysical	MACRO
 					ENDM
 
 ;	EAX		FYSISK ADDRESS
+AllocateDmaPhysical	MACRO
+	OsGate allocate_dma_physical_nr
+					ENDM
+
+;	EAX		FYSISK ADDRESS
 FreePhysical	MACRO
 	OsGate free_physical_nr
 					ENDM

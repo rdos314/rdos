@@ -38,6 +38,8 @@ INCLUDE ..\os\user.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.inc
 
+INCLUDE ..\os\int.def
+
 list_entry	STRUC
 
 list_link		DW ?
@@ -86,43 +88,12 @@ code	SEGMENT byte public 'CODE'
 
 DecodeSelector	Proc near
 	push ds
-	push ax
 ;
 	test bx,7
 	jnz decode_sel_fail
 ;
-	mov ax,gdt_sel
-	mov ds,ax
-	mov al,[bx+5]
-	test al,80h
-	jz decode_sel_fail
-;
-	test al,10h
-	jz decode_sel_fail
-;
-	test al,8
-	jnz decode_sel_fail
-;
-	test al,2
-	jz decode_sel_fail
-;
-	xor ch,ch
-	mov cl,[bx+6]
-	and cl,0Fh
-	shl ecx,16
-	mov cx,[bx]
-	test byte ptr [bx+6],80h
-	jz decode_size_ok
-;
-	shl ecx,12
-	or cx,0FFFh
-
-decode_size_ok:
-	inc ecx
-	mov edx,[bx+2]
-	rol edx,8
-	mov dl,[bx+7]
-	ror edx,8
+	GetSelectorBaseSize
+	jc decode_sel_fail
 ;
 	sub edx,global_page_linear
 	jc decode_sel_fail
@@ -141,7 +112,6 @@ decode_sel_fail:
 	stc
 
 decode_sel_done:
-	pop ax
 	pop ds
 	ret
 DecodeSelector	Endp
@@ -180,13 +150,7 @@ HandleInputSel	Proc near
 handle_input_ds_move:
 	xor eax,eax
 	xchg eax,gs:[esi]
-	xchg eax,gs:[edi]
-	and ax,0F000h
-	or eax,eax
-	jz handle_input_ds_next
-;
-	FreePhysical
-handle_input_ds_next:
+	mov gs:[edi],eax
 	add esi,4
 	add edi,4
 	loop handle_input_ds_move
@@ -220,13 +184,7 @@ handle_input_es:
 handle_input_es_move:
 	xor eax,eax
 	xchg eax,gs:[esi]
-	xchg eax,gs:[edi]
-	and ax,0F000h
-	or eax,eax
-	jz handle_input_es_next
-;
-	FreePhysical
-handle_input_es_next:
+	mov gs:[edi],eax
 	add esi,4
 	add edi,4
 	loop handle_input_es_move
@@ -255,6 +213,9 @@ HandleInputSel	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleOutputSel	Proc near
+	mov ax,process_page_sel
+	mov gs,ax
+;
 	mov ax,ds
 	or ax,ax
 	jz handle_output_es
@@ -266,8 +227,6 @@ HandleOutputSel	Proc near
 	call DecodeSelector
 	jc handle_output_es
 ;
-	mov ax,process_page_sel
-	mov gs,ax
 	mov edi,edx
 	shr edi,10
 ;
@@ -286,14 +245,6 @@ HandleOutputSel	Proc near
 	mov cx,10h
 
 handle_output_ds_copy:
-	mov eax,gs:[edi]
-	and ax,0F000h
-	or eax,eax
-	jz handle_output_ds_copy_next
-;
-	FreePhysical
-
-handle_output_ds_copy_next:
 	mov eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
@@ -307,8 +258,6 @@ handle_output_ds_same:
 	call DecodeSelector
 	jc handle_output_es
 ;
-	mov ax,process_page_sel
-	mov gs,ax
 	mov edi,edx
 	shr edi,10
 	mov esi,40h
@@ -340,8 +289,6 @@ handle_output_es:
 	call DecodeSelector
 	jc handle_output_done
 ;
-	mov ax,process_page_sel
-	mov gs,ax
 	mov edi,edx
 	shr edi,10
 ;
@@ -360,20 +307,11 @@ handle_output_es:
 	mov cx,10h
 
 handle_output_es_copy:
-	mov eax,gs:[edi]
-	and ax,0F000h
-	or eax,eax
-	jz handle_output_es_copy_next
-;
-	FreePhysical
-
-handle_output_es_copy_next:
 	mov eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
 	add edi,4
 	loop handle_output_es_copy
-;
 	jmp handle_output_done
 
 handle_output_es_same:
@@ -381,8 +319,6 @@ handle_output_es_same:
 	call DecodeSelector
 	jc handle_output_done
 ;
-	mov ax,process_page_sel
-	mov gs,ax
 	mov edi,edx
 	shr edi,10
 	mov esi,80h
@@ -403,6 +339,23 @@ handle_output_es_move:
 	loop handle_output_es_move
 
 handle_output_done:
+	mov edi,40h
+	mov cx,20h
+
+handle_output_zero:
+	xor eax,eax
+	xchg eax,gs:[edi]
+	and ax,0F000h
+	or eax,eax
+	jz handle_output_zero_next
+;
+;	FreePhysical
+
+handle_output_zero_next:
+	add esi,4
+	add edi,4
+	loop handle_output_zero
+;
 	ret
 HandleOutputSel	Endp
 
@@ -522,6 +475,8 @@ bios_proc_check:
 ;
 	call HandleInputSel
 	push fs:list_flags
+	mov eax,cr3
+	mov cr3,eax
 	mov eax,fs:list_eax
 	mov ebx,fs:list_ebx
 	mov ecx,fs:list_ecx

@@ -1287,7 +1287,7 @@ get_disc_request	Proc far
 	call update_async_timer
 	call update_disc_seq
 	call get_pending
-	jc get_disc_req_fail
+	jnc get_disc_req_ok
 
 get_disc_req_fail:
 	LeaveSection ds:disc_section
