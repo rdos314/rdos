@@ -1129,6 +1129,144 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			Blit
+;
+;		DESCRIPTION:	Blit
+;
+;		PARAMETERS:		AX		Source bitmap handle or 0
+;						BX		Dest bitmap handle or 0
+;						CX		Width
+;						DX		Height
+;						ESI		Source x + y << 16
+;						EDI		Dest x + y << 16
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+blit_name	DB 'Blit',0
+
+blit_src_y		EQU -2
+blit_src_x		EQU -4
+blit_dest_y		EQU -6
+blit_dest_x		EQU -8
+blit_width		EQU -10
+blit_height		EQU -12
+blit_src_sel	EQU -14
+blit_dest_sel	EQU -16
+
+blit_pr	PROC far
+	push bp
+	mov bp,sp
+	sub sp,16
+	push ds
+	push es
+	pushad
+;
+	mov [bp].blit_src_x,esi
+	mov [bp].blit_dest_x,edi
+	mov [bp].blit_width,cx
+	mov [bp].blit_height,dx
+;
+	or bx,bx
+	jnz blit_dest_bmp
+	mov dx,video_local_sel
+	mov ds,dx
+	mov dx,ds:v_handle
+	mov [bp].blit_dest_sel,dx
+	jmp blit_get_src
+
+blit_dest_bmp:
+	push ax
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	pop ax
+	jc blit_failed
+;
+	mov dx,[bx].bm_sel
+	mov [bp].blit_dest_sel,dx
+
+blit_get_src:
+	mov bx,ax
+	or bx,bx
+	jnz blit_src_bmp
+;
+	mov dx,video_local_sel
+	mov ds,dx
+	mov dx,ds:v_handle
+	mov [bp].blit_src_sel,dx
+	jmp blit_do
+
+blit_src_bmp:
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc blit_failed
+;
+	mov dx,[bx].bm_sel
+	mov [bp].blit_src_sel,dx
+
+blit_do:
+	mov ax,[bp].blit_src_sel
+	cmp ax,[bp].blit_dest_sel
+	je blit_same_bitmap
+;
+	mov ds,[bp].blit_dest_sel
+	mov al,ds:v_bpp
+	mov ds,[bp].blit_src_sel
+	cmp al,ds:v_bpp
+	je blit_same_bpp
+;
+	movzx eax,[bp].blit_width
+	shl eax,2
+	AllocateSmallGlobalMem
+
+blit_diff_loop:
+	mov ds,[bp].blit_src_sel
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_src_x
+	mov dx,[bp].blit_src_y
+	xor edi,edi
+	call ds:get_rgb_row_proc
+;
+	mov ds,[bp].blit_dest_sel
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_dest_x
+	mov dx,[bp].blit_dest_y
+	xor edi,edi
+	call ds:set_rgb_row_proc
+;
+	inc word ptr [bp].blit_src_y
+	inc word ptr [bp].blit_dest_y
+	sub word ptr [bp].blit_height,1
+	jnz blit_diff_loop
+;
+	FreeMem	
+	clc
+	jmp blit_done
+
+blit_same_bpp:
+	clc
+	jmp blit_done
+
+blit_same_bitmap:
+	clc
+	jmp blit_done
+
+blit_failed:
+	stc
+
+blit_done:
+	popad
+	pop es
+	pop ds
+	add sp,16
+	pop bp
+	retf32
+blit_pr	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			DrawLine
 ;
 ;		DESCRIPTION:	Draw a line
@@ -2245,6 +2383,12 @@ init	PROC far
 	mov di,OFFSET set_pixel_name
 	xor dx,dx
 	mov ax,set_pixel_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET blit_pr
+	mov di,OFFSET blit_name
+	xor dx,dx
+	mov ax,blit_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET draw_line

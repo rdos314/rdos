@@ -83,14 +83,9 @@ divi	DW 1111h
 	
 init:
 	mov ax,16
-	int 3
 	mov cx,800
 	mov dx,600
-	SetVgaMode
-	push bx
 	CreateBitmap
-	CloseBitmap
-	pop bx
 	mov ax,LGOP_NONE
 	SetLgop
 	mov eax,0FFh
@@ -155,10 +150,20 @@ init:
     mov si,250
     mov di,250
     DrawEllipse
-        int 3
+	int 3
+	push bx
+	mov ax,32
+	mov cx,800
+	mov dx,600
+	SetVgaMode
+	pop ax
+	xor esi,esi
+	xor edi,edi
+	Blit
+	CloseBitmap
+	int 3
 	mov ax,3
 	SetVideoMode
-	int 3
 	mov ax,-5050
 	mov bl,-4
 ;	div cs:divi
