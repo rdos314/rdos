@@ -267,4 +267,8 @@ poll_disc_request_nr		EQU 236
 new_disc_request_nr			EQU 237
 get_disc_request_array_nr	EQU 238
 
-osgate_entries				EQU 239
+enter_section_nr			EQU 239
+leave_section_nr			EQU 240
+leave_section_sleep_nr		EQU 241
+
+osgate_entries				EQU 242

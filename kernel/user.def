@@ -67,8 +67,6 @@ dpmi_call_int_nr			EQU 37
 dpmi_call_nr				EQU 38
 allocate_vm_callback_nr		EQU 39
 free_vm_callback_nr			EQU 40
-enter_section_nr			EQU 41
-leave_section_nr			EQU 42
 wait_until_nr				EQU 43
 get_system_time_nr			EQU 44
 fire_event_nr				EQU 45
@@ -113,7 +111,6 @@ get_symbol_type_nr			EQU 84
 get_debug_thread_nr			EQU 85
 get_symbol_handle_nr		EQU 86
 translate_symbol_segment_nr	EQU 87
-leave_section_sleep_nr		EQU 88
 set_vga_mode_nr				EQU 89
 lock_cd_nr					EQU 90
 unlock_cd_nr				EQU 91
@@ -249,4 +246,10 @@ close_mapping_nr				EQU 216
 map_view_nr						EQU 217
 unmap_view_nr					EQU 218
 
-usergate_entries			EQU 219
+create_user_section_nr			EQU 219
+create_blocked_user_section_nr	EQU 220
+delete_user_section_nr			EQU 221
+enter_user_section_nr			EQU 222
+leave_user_section_nr			EQU 223
+
+usergate_entries			EQU 224

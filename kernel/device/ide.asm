@@ -1269,6 +1269,34 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			INSTALL_TIMEOUT
+;
+;		DESCRIPTION:	Install unit timeout
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_timeout	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,ide_data_sel
+	mov ds,ax
+	mov bx,ds:IdeThread
+	Signal
+;
+	pop bx
+	pop ax
+	pop ds
+	ret
+install_timeout	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INSTALL_UNIT
 ;
 ;		DESCRIPTION:	Install a unit
@@ -1282,6 +1310,23 @@ install_unit	Proc near
 	ClearSignal
 	call CheckReady
 	jc install_unit_done
+;
+	push bx
+	push es
+	push ax
+	push di
+	GetSystemTime
+	add eax,119300
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET install_timeout
+	mov bx,cs
+	StartTimer
+	pop di
+	pop ax
+	pop es
+;
 	push ax
 ;
 	mov dx,1F6h
@@ -1295,7 +1340,9 @@ install_unit	Proc near
 	out dx,al
 ;
 	WaitForSignal
+	StopTimer
 	pop ax
+	pop bx
 ;
 	push ax
 	mov dx,1F0h

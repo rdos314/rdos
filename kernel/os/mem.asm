@@ -2909,6 +2909,8 @@ PAGE
 
 allocate_fixed_process_mem_name	DB 'Allocate Fixed Process Mem',0
 
+	public allocate_fixed_process_mem
+
 allocate_fixed_process_mem	PROC far
 	push ds
 	push ecx

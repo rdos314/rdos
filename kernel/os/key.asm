@@ -106,6 +106,7 @@ command			DB ?
 scan_code		DB ?
 status			DB ?
 
+mouse_timeout	DB ?
 mouse_counter	DB ?
 mouse_buttons	DB ?
 mouse_dx		DB ?
@@ -734,6 +735,32 @@ SendCommand	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SendMouseTimeout
+;
+;		DESCRIPTION:	Send a command timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendMouseTimeout	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,key_data_sel
+	mov ds,ax
+	inc ds:mouse_timeout
+	mov bx,ds:mouse_thread
+	Signal
+;
+	pop bx
+	pop ax
+	pop ds
+	ret
+SendMouseTimeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SendMouseCommand
 ;
 ;		DESCRIPTION:	Send a command to mouse port
@@ -744,6 +771,18 @@ SendCommand	Endp
 
 SendMouseCommand	proc near
 	ClearSignal
+	pushad
+	mov ds:mouse_timeout,0
+	mov bx,ds:mouse_thread
+	mov ax,cs
+	mov es,ax
+	GetSystemTime
+	add eax,1193*30
+	adc edx,0
+	mov di,OFFSET SendMouseTimeout
+	StartTimer
+	popad
+;
 	mov ds:command,al
 send_mouse_check_ready:
 	in al,64h
@@ -774,10 +813,29 @@ send_mouse_command_do:
 	sti
 	mov al,ds:command
 	out 60h,al
+
 send_mouse_command_wait:
 	WaitForSignal
+	mov al,ds:mouse_timeout
+	or al,al
+	jnz send_mouse_cmd_fail
+;
 	test ds:status, status_mouse_ack
 	jz send_mouse_command_wait
+;
+	clc
+	jmp send_mouse_cmd_done
+
+send_mouse_cmd_fail:
+	stc
+
+send_mouse_cmd_done:
+	pushf
+	push bx
+	mov bx,ds:mouse_thread
+	StopTimer
+	pop bx
+	popf
 	ret
 SendMouseCommand	Endp
 
@@ -816,23 +874,24 @@ check_aux_wait2:
 	jmp check_aux_wait2
 
 check_aux_command:
-	mov al,5Ah
+	mov al,0F4h
 	out 60h,al
 ;
-	mov cx,20
+	mov cx,10
 check_aux_wait3:
 	in al,64h
 	test al,1
 	jz check_aux_delay
 ;
-	test al,20h
-	jz check_aux_delay
-;
+	mov ah,al
 	in al,60h
-	cmp al,5Ah
+	test ah,20h
+	jz check_aux_fail
+;
+	cmp al,0F4h
+	jne check_aux_fail
+;
 	clc
-	je check_aux_done
-	stc
 	jmp check_aux_done
 
 check_aux_delay:
@@ -872,7 +931,7 @@ init_mouse	Proc far
 	mov ds:mouse_thread,ax
 ;
 	stc
-;	call CheckAux
+	call CheckAux
 	jc init_mouse_done
 ;
 	mov al,12
@@ -919,19 +978,35 @@ init_enable_do:
 ;
 	mov al,0F3h
 	call SendMouseCommand
+	jc init_mouse_revoke
+;
 	mov al,100
 	call SendMouseCommand
+	jc init_mouse_revoke
 ;
 	mov al,0E8h
 	call SendMouseCommand
+	jc init_mouse_revoke
+;
 	mov al,3
 	call SendMouseCommand
+	jc init_mouse_revoke
 ;
 	mov al,0E6h
 	call SendMouseCommand
+	jc init_mouse_revoke
 ;
 	mov al,0F4h
 	call SendMouseCommand
+	jc init_mouse_revoke
+	jmp init_mouse_done
+
+init_mouse_revoke:
+	mov al,0FFh
+	call SendCommand
+;
+	mov al,12
+	ReleasePrivateIrqHandler
 
 init_mouse_done:
 	pop di

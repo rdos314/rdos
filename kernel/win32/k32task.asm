@@ -41,14 +41,6 @@ UserGate      MACRO gate_nr
 	dw 200Bh + (gate_nr SHL 4)
 			ENDM
 
-section_typ	STRUC
-cs_value	DW ?
-cs_list		DW ?
-cs_owner	DW ?
-cs_count	DD ?
-section_typ	ENDS
-
-
 tib_data	STRUC
 
 pvFirstExcept		DD ?
@@ -205,13 +197,13 @@ icsPtr	EQU 8
 InitializeCriticalSection	Proc near
 	push ebp
 	mov ebp,esp
+	push bx
 ;
 	mov edx,[ebp].icsPtr
-	mov [edx].cs_value,0
-	mov [edx].cs_list,0
-	mov [edx].cs_owner,0
-	mov [edx].cs_count,0
+	UserGate create_user_section_nr
+	mov [edx],bx
 ;
+	pop bx
 	pop ebp
 	ret 4
 InitializeCriticalSection	Endp
@@ -221,7 +213,7 @@ InitializeCriticalSection	Endp
 ;
 ;       NAME:           DeleteCriticalSection
 ;
-;       DESCRIPTION:    DeleteCritical section. Not neccesary in RDOS
+;       DESCRIPTION:    DeleteCritical section.
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -230,6 +222,16 @@ InitializeCriticalSection	Endp
 dcsPtr	EQU 8
 
 DeleteCriticalSection	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov edx,[ebp].dcsPtr
+	mov bx,[edx]
+	UserGate delete_user_section_nr
+;
+	pop ebx
+	pop ebp
 	ret 4
 DeleteCriticalSection	Endp
 
@@ -249,27 +251,13 @@ ecsPtr	EQU 8
 EnterCriticalSection	Proc
 	push ebp
 	mov ebp,esp
-	push esi
+	push ebx
 ;
-	str ax
-	mov esi,[ebp].ecsPtr
-	sub [esi].cs_value,1
-	jc EnterSectionDone
-;
-	cmp ax,[esi].cs_owner
-	je EnterSectionSame
-;
-	UserGate enter_section_nr
-	jmp EnterSectionDone
-
-EnterSectionSame:
-	add [esi].cs_value,1
-
-EnterSectionDone:
-	mov [esi].cs_owner,ax
-	inc [esi].cs_count
+	mov edx,[ebp].ecsPtr
+	mov bx,[edx]
+	UserGate enter_user_section_nr
 ;	
-	pop esi
+	pop ebx
 	pop ebp
 	ret 4
 EnterCriticalSection	Endp
@@ -290,19 +278,13 @@ lcsPtr	EQU 8
 LeaveCriticalSection	Proc
 	push ebp
 	mov ebp,esp
-	push esi
+	push ebx
 ;
-	mov esi,[ebp].lcsPtr
+	mov edx,[ebp].lcsPtr
+	mov bx,[edx]
+	UserGate leave_user_section_nr
 ;
-	sub [esi].cs_count,1
-	jnz LeaveSectionDone
-;
-	add [esi].cs_value,1
-	jc LeaveSectionDone
-	UserGate leave_section_nr
-
-LeaveSectionDone:
-	pop esi
+	pop ebx
 	pop ebp
 	ret 4
 LeaveCriticalSection	Endp
@@ -347,20 +329,25 @@ ThreadStartup Proc near
 	push dword ptr [edx]
 	push OFFSET ExitThread
 	push dword ptr [edx+4]
+	push ebx
 	mov [edx+16],fs
-	lea esi,[edx+8]
-	add [esi].cs_value,1
-	jc tsLeaveDone
-	UserGate leave_section_nr
-tsLeaveDone:
-	lea esi,[edx+12]
-	sub [esi].cs_value,1
-	jc tsEnterDone
-	UserGate enter_section_nr
-tsEnterDone:
+;
+	mov ebx,[edx+8]
+	UserGate leave_user_section_nr
+;
+	mov ebx,[edx+12]
+	UserGate enter_user_section_nr
+;
+	mov ebx,[edx+8]
+	UserGate delete_user_section_nr
+;
+	mov ebx,[edx+12]
+	UserGate delete_user_section_nr
+;
 	mov eax,1000h
 	UserGate free_app_mem_nr
 	mov eax,ecx
+	pop ebx
 	ret
 ThreadStartup Endp
 	
@@ -378,10 +365,12 @@ CreateThread Proc near
 	mov [edx],eax
 	mov eax,[ebp].ctStart
 	mov [edx+4],eax
-	mov [edx+8].cs_value,-1
-	mov [edx+8].cs_list,0
-	mov [edx+12].cs_value,-1
-	mov [edx+12].cs_list,0
+;
+	UserGate create_blocked_user_section_nr
+	mov [edx+8],bx
+;
+	UserGate create_blocked_user_section_nr
+	mov [edx+12],bx
 ;	
 	mov ax,cs
 	mov ds,ax
@@ -394,12 +383,9 @@ CreateThread Proc near
 ;
 	mov ax,es
 	mov ds,ax
-	lea esi,[edx+8]
-	sub [esi].cs_value,1
-	jc ctEnterDone
-	UserGate enter_section_nr
-
-ctEnterDone:
+	mov bx,[edx+8]
+	UserGate enter_user_section_nr
+;
 	push ds
 	mov ds,es:[edx+16]
 	mov ecx,[ebp].ctId
@@ -413,12 +399,10 @@ ctEnterDone:
 ctIdDone:
 	mov ecx,ds:pvThreadHandle
 	pop ds
-	lea esi,[edx+12]
-	add [esi].cs_value,1
-	jc ctLeaveDone
-	UserGate leave_section_nr
-
-ctLeaveDone:
+;
+	mov bx,[edx+12]
+	UserGate leave_user_section_nr
+;
 	pop edi
 	pop esi
 	pop ebx

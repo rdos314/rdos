@@ -57,6 +57,11 @@ void RdosTerminateThread();
 void RdosWaitMilli(int ms);
 int RdosGetTics();
 
+int RdosCreateSection();
+void RdosDeleteSection(int Handle);
+void RdosEnterSection(int Handle);
+void RdosLeaveSection(int Handle);
+
 int RdosNameToIp(const char *HostName);
 int RdosIpToName(int Ip, char *HostName, int MaxSize);
 

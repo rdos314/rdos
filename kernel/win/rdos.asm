@@ -149,56 +149,6 @@ _SwapOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			BLOCK_SECTION
-;
-;		description:	Block on critical section
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _BlockSection
-
-_BlockSection	Proc far
-	push bp
-	mov bp,sp
-	push ds
-	push esi
-	xor esi,esi
-	lds si,[bp+6]
-	UserGate enter_section_nr
-	pop esi
-	pop ds
-	pop bp
-	ret
-_BlockSection	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UNBLOCK_SECTION
-;
-;		description:	Unblock critical section
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _UnblockSection
-
-_UnblockSection	Proc far
-	push bp
-	mov bp,sp
-	push ds
-	push esi
-	xor esi,esi
-	lds si,[bp+6]
-	UserGate leave_section_nr
-	pop esi
-	pop ds
-	pop bp
-	ret
-_UnblockSection	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			SetVgaMode
 ;
 ;		description:	SetVgaMode()

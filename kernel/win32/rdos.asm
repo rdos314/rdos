@@ -211,6 +211,49 @@ RdosWaitMilli	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCreateSection
+;
+;		description:	Create section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateSection
+
+RdosCreateSection	Proc
+	push ebx
+	UserGate create_user_section_nr
+	movzx eax,bx
+	pop ebx
+	ret
+RdosCreateSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDeleteSection
+;
+;		description:	Delete section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDeleteSection
+
+RdosDeleteSection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate delete_user_section_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosDeleteSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosEnterSection
 ;
 ;		description:	Enter section
@@ -222,14 +265,12 @@ RdosWaitMilli	Endp
 RdosEnterSection	Proc
 	push ebp
 	mov ebp,esp
-	push esi
+	push ebx
 ;
-	mov esi,[ebp+8]
-	sub word ptr [esi],1
-	jc enter_done
-	UserGate enter_section_nr
-enter_done:
-	pop esi
+	mov bx,[ebp+8]
+	UserGate enter_user_section_nr
+;
+	pop ebx
 	pop ebp
 	ret 4
 RdosEnterSection	Endp
@@ -239,7 +280,7 @@ RdosEnterSection	Endp
 ;
 ;		NAME:			RdosLeaveSection
 ;
-;		description:	LEAVE SECTION
+;		description:	Leave section
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -248,14 +289,12 @@ RdosEnterSection	Endp
 RdosLeaveSection	Proc
 	push ebp
 	mov ebp,esp
-	push esi
+	push ebx
 ;
-	mov esi,[ebp+8]
-	add word ptr [esi],1
-	jc leave_done
-	UserGate leave_section_nr
-leave_done:
-	pop esi
+	mov bx,[ebp+8]
+	UserGate leave_user_section_nr
+;
+	pop ebx
 	pop ebp
 	ret 4
 RdosLeaveSection	Endp

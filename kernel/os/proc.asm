@@ -105,6 +105,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn init_process_paging:near
 	extrn init_process_mem:near
 	extrn init_process_app:near
+	extrn init_process_task:near
 	extrn init_task_traps:near
 	extrn init_task_tasks:near
 	extrn trap_single_step:near
@@ -320,6 +321,7 @@ trap_create_process	PROC near
 ;
 	call init_process_mem
 	call init_process_app
+	call init_process_task
 ;
 	mov ax,proc_data_sel
 	mov ds,ax
@@ -1381,11 +1383,11 @@ init_task_tss	PROC near
 ; dr0 - dr7
 ;
 	xor edx,edx
-	mov ds:dr0,edx
-	mov ds:dr1,edx
-	mov ds:dr2,edx
-	mov ds:dr3,edx
-	mov ds:dr7,edx
+	mov ds:tss_dr0,edx
+	mov ds:tss_dr1,edx
+	mov ds:tss_dr2,edx
+	mov ds:tss_dr3,edx
+	mov ds:tss_dr7,edx
 ;
 ; 387 status
 ;

@@ -236,6 +236,31 @@ GetThread	MACRO
 	UserGate get_thread_nr
 					ENDM
 
+; OUT BX		Section handle
+CreateUserSection	MACRO
+	UserGate create_user_section_nr
+					ENDM
+
+; OUT BX		Section handle
+CreateBlockedUserSection	MACRO
+	UserGate create_blocked_user_section_nr
+					ENDM
+
+; IN  BX		Section handle
+DeleteUserSection	MACRO
+	UserGate delete_user_section_nr
+					ENDM
+
+; IN  BX		Section handle
+EnterUserSection	MACRO
+	UserGate enter_user_section_nr
+					ENDM
+
+; IN  BX		Section handle
+LeaveUserSection	MACRO
+	UserGate leave_user_section_nr
+					ENDM
+
 ;	BX			Thread
 ;	EDX:EAX		Used CPU time
 GetCpuTime	MACRO
@@ -327,183 +352,6 @@ DebugGo MACRO
 
 DebugNext       MACRO
 	UserGate debug_next_nr
-						ENDM
-
-;       ES:(E)DI        NAME OF SECTION
-InitSection     MACRO section
-	mov section.cs_value,0
-	mov section.cs_list,0
-						ENDM
-
-EnterSection    MACRO section
-	LOCAL enter_section_done
-	pushf
-	cli
-	sub section.cs_value,1
-	jc enter_section_done
-	push esi
-	lea esi,section
-	UserGate enter_section_nr
-	pop esi
-enter_section_done:
-	popf
-						ENDM
-
-LeaveSection    MACRO section
-	LOCAL leave_section_done
-	pushf
-	cli
-	add section.cs_value,1
-	jc leave_section_done
-	push esi
-	lea esi,section
-	UserGate leave_section_nr
-	pop esi
-leave_section_done:
-	popf
-						ENDM
-
-InitReadWriteSection    MACRO section
-	mov section.ssync_value,0
-	mov section.ssync_list,0
-	mov section.sread_value,0
-	mov section.swrite_value,0
-	mov section.swrite_list,0
-						ENDM
-
-EnterReadSection        MACRO section
-	LOCAL enter_sync_ok,enter_read_ok,enter_read_done
-	pushf
-	cli
-	sub section.ssync_value,1
-	jc enter_sync_ok
-	push esi
-	mov esi,OFFSET section.ssync_value
-	UserGate enter_section_nr
-	pop esi
-enter_sync_ok:
-	sub section.sread_value,1
-	jnc enter_read_ok
-	sub section.swrite_value,1
-	jc enter_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	UserGate enter_section_nr
-	pop esi
-enter_read_ok:
-	add section.ssync_value,1
-	jc enter_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	UserGate leave_section_nr
-	pop esi
-enter_read_done:
-	popf
-						ENDM
-
-LeaveReadSection        MACRO section
-	LOCAL leave_sync_ok,leave_read_ok,leave_read_done
-	pushf
-	cli
-	sub section.ssync_value,1
-	jc leave_sync_ok
-	push esi
-	mov esi,OFFSET section.ssync_value
-	UserGate enter_section_nr
-	pop esi
-leave_sync_ok:
-	add section.sread_value,1
-	jnc leave_read_ok
-	add section.swrite_value,1
-	jc leave_read_ok
-	push esi
-	mov esi,OFFSET section.swrite_value
-	UserGate leave_section_nr
-	pop esi
-leave_read_ok:
-	add section.ssync_value,1
-	jc leave_read_done
-	push esi
-	mov esi,OFFSET section.ssync_value
-	UserGate leave_section_nr
-	pop esi
-leave_read_done:
-	popf
-						ENDM
-
-EnterWriteSection       MACRO section
-	LOCAL enter_section_done
-	pushf
-	cli
-	sub section.swrite_value,1
-	jc enter_section_done
-	push esi
-	mov esi,OFFSET section.swrite_value
-	UserGate enter_section_nr
-	pop esi
-enter_section_done:
-	popf
-						ENDM
-
-LeaveWriteSection       MACRO section
-	LOCAL leave_section_done
-	pushf
-	cli
-	add section.swrite_value,1
-	jc leave_section_done
-	push esi
-	mov esi,OFFSET section.swrite_value
-	UserGate leave_section_nr
-	pop esi
-leave_section_done:
-	popf
-						ENDM
-
-;       DS:ESI          SECTION DATA
-;       FS:EDI          LIST
-LeaveSectionSleep       MACRO
-	UserGate leave_section_sleep_nr
-						ENDM
-
-InitFarSection     MACRO seg, section
-	mov seg:section.cs_value,0
-	mov seg:section.cs_list,0
-						ENDM
-
-EnterFarSection    MACRO seg, section
-	LOCAL enter_section_done
-	pushf
-	cli
-	sub seg:section.cs_value,1
-	jc enter_section_done
-	push ds
-	push esi
-	mov si,seg
-	mov ds,si
-	lea esi,seg:section
-	UserGate enter_section_nr
-	pop esi
-	pop ds
-enter_section_done:
-	popf
-						ENDM
-
-LeaveFarSection    MACRO seg, section
-	LOCAL leave_section_done
-	pushf
-	cli
-	add seg:section.cs_value,1
-	jc leave_section_done
-	push ds
-	push esi
-	mov si,seg
-	mov ds,si
-	lea esi,seg:section
-	UserGate leave_section_nr
-	pop esi
-	pop ds
-leave_section_done:
-	popf
 						ENDM
 
 Swap       MACRO
