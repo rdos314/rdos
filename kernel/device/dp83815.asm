@@ -1052,7 +1052,6 @@ IFDEF debug
 	call LogEntry
 ENDIF
 
-    sub ecx,4
 	call CreateSendEntry
 	xor ax,ax
 	mov es,ax

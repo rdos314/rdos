@@ -761,7 +761,8 @@ void TNetProtocolAnalyser::ShowMsg()
             ShowUnknown(DataType, str, size);
             break;
             
-    }	
+	}
+	Write("\r\n");
 }
 
 /*##################  TNetProtocolAnalyser::TNetProtocolAnalyser ##########################

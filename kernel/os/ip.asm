@@ -393,6 +393,49 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:		    CalcChecksum
+;
+;	Purpose:		Calculate checksum for IP header
+;
+;	Parameters:		DS:DI   IP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcChecksum    Proc near
+    push ax
+    push cx
+    push dx
+    push si
+;    
+	mov ds:[di].ip_checksum,0
+	movzx cx,ds:[di].ip_hdr_ver
+	and cl,0Fh
+	shl cl,1
+	mov si,di
+	xor	dx,dx
+	clc
+	
+calc_checksum_loop:
+	lodsw
+	adc	dx,ax
+	loop calc_checksum_loop
+;	
+    adc dx,0
+    adc dx,0
+	not dx
+	mov ds:[di].ip_checksum,dx
+;
+    pop si
+    pop dx
+    pop cx
+    pop ax	
+	ret
+CalcChecksum    Endp	
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			send_ip_data
 ;
 ;	Purpose:		send IP data
@@ -415,22 +458,6 @@ send_ip_data	Proc far
 	mov ax,es
 	mov ds,ax
 	mov di,ds:[0]
-;
-	mov ds:[di].ip_checksum,0
-	movzx cx,es:[di].ip_hdr_ver
-	and cl,0Fh
-	shl cl,1
-	mov si,di
-	xor	dx,dx
-	clc
-send_checksum_loop:
-	lodsw
-	adc	dx,ax
-	loop send_checksum_loop
-    adc dx,0
-    adc dx,0
-	not dx
-	mov ds:[di].ip_checksum,dx
 ;
 	movzx ecx,ds:[di].ip_size
 	xchg cl,ch
@@ -458,12 +485,14 @@ send_checksum_loop:
 send_ppp:	
 	GetPppIp
 	mov es:[di].ip_source,edx
+    call CalcChecksum
 	SendPpp
 	jmp send_done
 
 send_gateway:
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
+    call CalcChecksum
 	mov esi,OFFSET gateway
 	SendNet
 	jmp send_done
@@ -471,6 +500,7 @@ send_gateway:
 send_self:
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
+    call CalcChecksum
 	xor ax,ax
 	mov ds,ax
 	push cs
@@ -480,6 +510,7 @@ send_self:
 send_local_net:
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
+    call CalcChecksum
 	mov esi,OFFSET ip_dest
 	add esi,edi
 	SendNet
