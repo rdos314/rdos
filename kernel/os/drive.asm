@@ -130,7 +130,7 @@ boot_mapping_sectors		DW 1
 boot_resv3					DB 0
 boot_resv4					DW 0
 boot_small_sectors			DW 0
-boot_media					DB 0F0h
+boot_media					DB 0F8h
 boot_resv6					DW 0
 boot_sectors_per_cyl		DW 1
 boot_heads					DW 1
@@ -4147,6 +4147,55 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetDriveDiscParam
+;
+;		DESCRIPTION:	Get disc parameters for drive
+;
+;		PARAMETERS:		AL			Drive #
+;
+;       RETURNS:        AL          Disc #
+;                       ECX         Total number of sectors
+;                       EDX         Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_drive_disc_param_name	DB 'Get Drive Disc Param',0
+
+get_drive_disc_param	Proc far
+    push ds
+    push bx
+;
+	movzx bx,al
+	shl bx,1
+	mov ax,disc_data_sel
+	mov ds,ax
+	mov ax,ds:[bx].drive_def_arr
+	or ax,ax
+	stc
+	jz get_drive_disc_param_done
+;
+    cmp ax,-1
+    stc
+    je get_drive_disc_param_done
+;
+    mov ds,ax	
+	mov ecx,ds:drive_sectors
+	mov edx,ds:drive_start_sector
+	mov ds,ds:drive_disc
+	mov al,ds:disc_nr
+	clc
+
+get_drive_disc_param_done:
+    pop bx
+    pop ds	
+    retf32
+get_drive_disc_param    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			FormatDrive
 ;
 ;		DESCRIPTION:	Format a drive
@@ -4228,7 +4277,6 @@ format_find_drive_next:
 	sub bp,1
 	jnz format_find_drive_loop
 ;
-    int 3
 	mov ah,al
 	AllocateStaticDrive
 	OpenDrive
@@ -4251,7 +4299,7 @@ format_do:
 	mov ecx,fs:drive_sectors
 
 format_perf:
-    int 3
+    dec ecx
     push edx
     push es
     mov dx,flat_sel
@@ -4830,6 +4878,12 @@ init	PROC far
 	mov di,OFFSET get_disc_info_name
 	xor dx,dx
 	mov ax,get_disc_info_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_drive_disc_param
+	mov di,OFFSET get_drive_disc_param_name
+	xor dx,dx
+	mov ax,get_drive_disc_param_nr
 	RegisterBimodalUserGate
 ;
 	mov bx,OFFSET format_drive16

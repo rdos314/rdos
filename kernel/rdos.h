@@ -253,6 +253,9 @@ int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
 int __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
+int __stdcall RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
+int __stdcall RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
+
 int __stdcall RdosCreateFileDrive(long Size, const char *FsName, const char *FileName);
 int __stdcall RdosOpenFileDrive(const char *FileName);
 

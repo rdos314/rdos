@@ -219,7 +219,7 @@ get_param	Endp
     public format12
     
 format12	PROC far
-    int 3
+    push ds
     push es
     pushad
 ;
@@ -258,7 +258,7 @@ format_cluster_ok12:
 ;
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-	mov es:[esi].boot_fs_version,1
+	mov es:[esi].boot_fs_version,0
 	mov es:[esi].boot_root_cluster,2
 	ModifySector
 	UnlockSector
@@ -350,9 +350,21 @@ format_root_dir_loop12:
     pop cx
     loop format_root_dir_loop12    
 ;
+    mov ax,bp
+	mov eax,SIZE drive_data_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov ax,bp
+	mov ds:fat_type,fat12
+    call get_param
+;
     clc    
     popad
     pop es
+    pop ds
 	ret
 format12	Endp
 
@@ -372,6 +384,7 @@ format12	Endp
     public format16
     
 format16	PROC far
+    push ds
     push es
     pushad
 ;
@@ -402,12 +415,15 @@ format_cluster_ok16:
     dec ecx
     shr ecx,8
     inc ecx
+    mov eax,ecx
+    shr eax,8
+    sub ecx,eax
     mov es:[esi].boot_fat_sectors16,cx
     mov es:[esi].boot_fat_sectors,ecx
 ;
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-	mov es:[esi].boot_fs_version,1
+	mov es:[esi].boot_fs_version,0
 	mov es:[esi].boot_root_cluster,2
 	ModifySector
 	UnlockSector
@@ -499,9 +515,21 @@ format_root_dir_loop16:
     pop cx
     loop format_root_dir_loop16    
 ;
+    mov ax,bp
+	mov eax,SIZE drive_data_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov ax,bp
+	mov ds:fat_type,fat16
+    call get_param
+;
     clc    
     popad
     pop es
+    pop ds
 	ret
 format16	Endp
 
@@ -521,8 +549,191 @@ format16	Endp
     public format32
     
 format32	PROC far
-    int 3
-	stc
+    push ds
+    push es
+    pushad
+;
+    mov bp,ax
+    mov dx,flat_sel
+    mov es,dx
+	xor edx,edx
+	LockSector
+;	
+    mov al,1
+
+format_cluster_loop32:
+    cmp al,8
+    je format_cluster_ok32
+;
+    shl al,1
+    shr ecx,1
+    jmp format_cluster_loop32
+
+format_cluster_ok32:
+    mov es:[esi].boot_sectors_per_cluster,al
+;    
+    movzx eax,al
+    mul ecx
+	mov es:[esi].boot_sectors,eax
+	mov es:[esi].boot_sectors16,0
+;
+    dec ecx
+    shr ecx,7
+    inc ecx
+    mov eax,ecx
+    shr eax,7
+    sub ecx,eax
+    mov es:[esi].boot_fat_sectors16,0
+    mov es:[esi].boot_fat_sectors,ecx
+    mov es:[esi].boot_ext_flags,0
+;
+    mov es:[esi].boot_resv_sectors,32
+    mov es:[esi].boot_sectors16,0
+    mov es:[esi].boot_fats,2
+    mov es:[esi].boot_root_dirs,0
+	mov es:[esi].boot_fs_version,0
+	mov es:[esi].boot_root_cluster,2
+	mov es:[esi].boot_info_sector,1
+	mov es:[esi].boot_backup_sector,6
+	push ebx
+	push esi
+;
+    push ecx
+    push esi
+    mov ax,bp
+	mov edx,6
+	LockSector
+	mov edi,esi
+	pop esi	
+    mov ecx,80h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop ecx
+    ModifySector
+    UnlockSector
+;
+    pop esi
+    pop ebx
+	ModifySector
+	UnlockSector
+;	
+    push ecx
+;
+    push ecx
+    mov ax,bp
+    mov edx,1
+    NewSector
+    mov dword ptr es:[esi],41615252h
+    mov dword ptr es:[esi+1E4h],61417272h
+    shl ecx,7
+    mov es:[esi+1E8h],ecx
+    mov dword ptr es:[esi+1ECh],2
+    mov dword ptr es:[esi+1F0h],0
+    mov dword ptr es:[esi+1FCh],0AA550000h
+    ModifySector
+    UnlockSector
+    pop ecx
+;
+    push ecx
+    mov ax,bp
+    mov edx,32
+    NewSector
+    mov dword ptr es:[esi],0FFFFFF8h
+    mov dword ptr es:[esi+4],0FFFFFFFh
+    mov dword ptr es:[esi+8],0FFFFFFFh
+    lea edi,[esi+12]
+    mov ecx,7Dh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop ecx
+    
+format_fat1_loop32:
+    sub ecx,1
+    jz format_fat1_done32
+;
+    push ecx
+    mov ax,bp
+    inc edx
+    NewSector
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop ecx
+    jmp format_fat1_loop32
+
+format_fat1_done32:
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov dword ptr es:[esi], 0FFFFFF8h
+    mov dword ptr es:[esi+4],0FFFFFFFh
+    mov dword ptr es:[esi+8],0FFFFFFFh
+    lea edi,[esi+12]
+    mov ecx,7Dh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+;    
+    pop ecx
+
+format_fat2_loop32:
+    sub ecx,1
+    jz format_fat2_done32
+;
+    push ecx
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop ecx
+    jmp format_fat2_loop32    
+
+format_fat2_done32:
+
+    mov cx,8
+
+format_root_dir_loop32:    
+    push cx
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop cx
+    loop format_root_dir_loop32
+;
+    mov ax,bp
+	mov eax,SIZE drive_data_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov ax,bp
+	mov ds:fat_type,fat32
+    call get_param
+;
+    clc    
+    popad
+    pop es
+    pop ds
 	ret
 format32	Endp
 

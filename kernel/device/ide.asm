@@ -1314,14 +1314,6 @@ write_drive	Proc near
 	mov ax,ide_data_sel
 	mov ds,ax
 	EnterSection ds:IdeSection
-;
-	mov ax,es:[edi].dh_sector
-	or ax,es:[edi].dh_unit
-	jnz write_drive_not_zero
-;
-	int 3
-
-write_drive_not_zero:
 
 write_drive_retry_loop:
 	ClearSignal

@@ -1089,6 +1089,14 @@ GetDriveInfo     MACRO
 	UserGate get_drive_info_nr
 						ENDM
 
+;	IN	AL			Drive #
+;   OUT AL          Disc #
+;   OUT ECX         Total # of sectors
+;   OUT EDX         Start sector
+GetDriveDiscParam     MACRO
+	UserGate get_drive_disc_param_nr
+						ENDM
+
 ;   IN  ECX 	    Size of filesystem
 ;	IN	DS:(E)SI	File system name
 ;	IN	ES:(E)DI	Filename

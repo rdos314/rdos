@@ -65,9 +65,11 @@ friend class TDiscPartition;
 public:
 	TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
 	int GetDisc();
+	int GetDrive();
 	unsigned char GetType();
 	int GetBytesPerSector();
-	double GetSpace();
+	double GetTotalSpace();
+	double GetFreeSpace();
 
 	virtual const char *GetPartName();
 	virtual int IsTable();
@@ -76,12 +78,15 @@ public:
 
 	long Start;
 	long Size;
+	long DriveSectors;
+	long FreeSectors;
 
 protected:
 	void WriteToTable(TPartitionTable *Owner);
 	void DeleteFromTable(TPartitionTable *Owner);
 
 	int FDisc;
+	int FDrive;
 	unsigned char FType;
 	TPartitionTable *FParent;
 	int FControlEntry;

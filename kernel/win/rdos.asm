@@ -5244,6 +5244,113 @@ write_disc_done:
 	ret
 _RdosWriteDisc	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDriveInfo
+;
+;		DESCRIPTION:	Get drive info
+;
+;		PARAMETER:		Drive #
+;						Free units
+;						Bytes / unit
+;						Total units
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetDriveInfo
+
+_RdosGetDriveInfo	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push bx
+	push cx
+	push edx
+;
+	mov al,[bp+6]
+    GetDriveInfo
+	jc get_drive_info_fail
+;
+    lds bx,[bp+8]
+    mov [bx],eax
+;
+    lds bx,[bp+12]
+    mov [bx],cx
+;
+    lds bx,[bp+16]
+    mov [bx],edx
+;
+	mov ax,1
+	jmp get_drive_info_done
+
+get_drive_info_fail:
+	xor ax,ax
+
+get_drive_info_done:
+	pop edx
+	pop cx
+	pop bx
+	pop ds
+	pop bp
+	ret
+_RdosGetDriveInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDriveDiscParam
+;
+;		DESCRIPTION:	Get drive disc parameters
+;
+;		PARAMETER:		Drive #
+;						Disc #
+;						Start sector
+;						Total sectors
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetDriveDiscParam
+
+_RdosGetDriveDiscParam	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push bx
+	push ecx
+	push edx
+;
+	mov al,[bp+6]
+    GetDriveDiscParam
+	jc get_drive_disc_param_fail
+;
+    lds bx,[bp+8]
+    movzx ax,al
+    mov [bx],ax
+;
+    lds bx,[bp+12]
+    mov [bx],edx
+;
+    lds bx,[bp+16]
+    mov [bx],ecx
+;
+	mov ax,1
+	jmp get_drive_disc_param_done
+
+get_drive_disc_param_fail:
+	xor ax,ax
+
+get_drive_disc_param_done:
+	pop edx
+	pop ecx
+	pop bx
+	pop ds
+	pop bp
+	ret
+_RdosGetDriveDiscParam	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;

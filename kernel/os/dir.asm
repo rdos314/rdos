@@ -2179,9 +2179,9 @@ PAGE
 ;
 ;		PARAMETERS:		AL			DRIVE NR
 ;
-;		RETURNS:		EAX			FREE UNITS
-;						CX			BYTES / UNIT
-;						EDX			TOTAL # OF UNITS
+;		RETURNS:		EAX			Free units
+;						CX			Bytes per unit
+;						EDX			Total # of units
 ;						NC			SUCCESS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2193,6 +2193,8 @@ get_drive_info:
 	jc get_drive_info_done
 ;
 	CallFileSystem info_proc
+	jc get_drive_info_done
+;
 
 get_drive_info_done:
 	retf32

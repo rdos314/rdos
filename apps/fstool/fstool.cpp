@@ -4,48 +4,82 @@
 #include "part.h"
 #include "rdfspart.h"
 #include "fatpart.h"
+#include "ffspart.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
 TDiscPartition *Part[2];
 
+void ShowEntry(int Nr, TPartition *Entry)
+{
+	const char *Name;
+	int Typ;
+	double TotalSpace;
+	double FreeSpace;
+	int Drive;
+	char DriveStr[4];
+	
+	if (Entry)
+	{
+		Name = Entry->GetPartName();
+		Typ = Entry->GetType();
+		TotalSpace = Entry->GetTotalSpace();
+
+		if (Entry->Size)
+		{
+		    if (Entry->IsFs())
+		        Drive = Entry->GetDrive();
+		    else
+		        Drive = 0;
+
+			if (Drive)
+			{
+			    DriveStr[0] = 'A' + (char)Drive;
+			    DriveStr[1] = ':';
+			    DriveStr[2] = 0;
+			      
+			    FreeSpace = Entry->GetFreeSpace();
+			        
+    		    printf("%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n",
+	    				Nr,
+							DriveStr,
+    					Typ,
+	    				Entry->Start,
+		    			Entry->Start + Entry->Size - 1,
+			    		Name,
+				    	TotalSpace,
+				    	FreeSpace);
+			}
+			else
+				printf("%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n",
+					    Nr,
+						Typ,
+						Entry->Start,
+    					Entry->Start + Entry->Size - 1,
+	    				Name,
+		    			TotalSpace);
+		}
+		else
+			printf("%d: -- No entry\r\n", Nr);
+
+	}
+}
+
 void ShowTreeTable(TPartitionTable *Part)
 {
 	int i;
 	TPartition *Entry;
-	const char *Name;
-	int Typ;
-	double Space;
+   double TotalSpace;
 
-	Space = Part->GetSpace();
+	TotalSpace = Part->GetTotalSpace();
 	printf("%08lX-%08lX %15.3f MB\r\n",
 			Part->Start,
 			Part->Start + Part->Size - 1,
-			Space);
+			TotalSpace);
 
 	for (i = 0; i < 4; i++)
-	{
-		Entry = Part->PartArr[i];
-		if (Entry)
-		{
-			Name = Entry->GetPartName();
-			Typ = Entry->GetType();
-			Space = Entry->GetSpace();
-
-			if (Entry->IsFs() || Entry->IsTable())
-				printf("%d: %02hX %08lX-%08lX %8s %15.3f MB\r\n",
-						i,
-						Typ,
-						Entry->Start,
-						Entry->Start + Entry->Size - 1,
-						Name,
-						Space);
-			else
-				printf("%d: No entry\r\n", i);
-
-		}
-	}
+	    ShowEntry(i, Part->PartArr[i]);
 
 	for (i = 0; i < 4; i++)
 	{
@@ -76,27 +110,7 @@ void ShowTable(TDiscPartition *Part)
 
 	printf("\r\nDisc %d %08lX BIOS sectors / cyl %04X, heads %04X\r\n", Part->GetDisc(), Sectors, SectorsPerCyl, Heads);
 	for (i = 0; i < Part->PartCount; i++)
-	{
-		Entry = Part->PartArr[i];
-		if (Entry)
-		{
-			if (Entry->IsFs())
-				printf("%d: %02hX %08lX-%08lX %8s %15.3f MB\r\n",
-						i,
-						(unsigned int)Entry->GetType(),
-						Entry->Start,
-						Entry->Start + Entry->Size - 1,
-						Entry->GetPartName(),
-						Entry->GetSpace());
-			else
-				printf("%d: -- %08lX-%08lX %8s %15.3f MB\r\n",
-						i,
-						Entry->Start,
-						Entry->Start + Entry->Size - 1,
-						Entry->GetPartName(),
-						Entry->GetSpace());
-		}
-	}
+	    ShowEntry(i, Part->PartArr[i]);
 }
 
 void cdecl main()
@@ -108,6 +122,7 @@ void cdecl main()
 	factory = new TFat12PartitionFactory;
 	factory = new TFat16PartitionFactory;
 	factory = new TFat32PartitionFactory;
+   factory = new TFlashFsPartitionFactory;
 
 	for (i = 0; i < 2; i++)
 		Part[i] = new TDiscPartition(i);
@@ -116,8 +131,4 @@ void cdecl main()
 	 ShowTree(Part[1]);
 	 ShowTable(Part[0]);
 	 ShowTable(Part[1]);
-
-	 Part[0]->Delete(3);
-	 Part[0]->Add("FAT16", 0x00100000);
 }
-

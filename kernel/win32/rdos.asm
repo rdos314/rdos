@@ -5929,6 +5929,110 @@ RdosGetRdfsInfo	Proc near
 RdosGetRdfsInfo	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDriveInfo
+;
+;		DESCRIPTION:	Get drive info
+;
+;		PARAMETER:		Drive #
+;						Free units
+;						Bytes per unit
+;						Total units
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetDriveInfo
+
+RdosGetDriveInfo	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov al,[ebp+8]
+	UserGate get_drive_info_nr
+	jc get_drive_info_fail
+;
+	mov ebx,[ebp+12]
+	mov [ebx],eax
+;
+	mov ebx,[ebp+16]
+	movzx ecx,cx
+	mov [ebx],ecx
+;
+	mov ebx,[ebp+20]
+	mov [ebx],edx
+;
+	mov eax,1
+	jmp get_drive_info_done
+
+get_drive_info_fail:
+	xor eax,eax
+
+get_drive_info_done:
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosGetDriveInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDriveDiscParam
+;
+;		DESCRIPTION:	Get drive disc param
+;
+;		PARAMETER:		Drive #
+;                       Disc #
+;						Start sector
+;						Total sectors
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetDriveDiscParam
+
+RdosGetDriveDiscParam	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov al,[ebp+8]
+	UserGate get_drive_disc_param_nr
+	jc get_drive_disc_param_fail
+;
+	mov ebx,[ebp+12]
+	movzx eax,al
+	mov [ebx],eax
+;
+	mov ebx,[ebp+16]
+	mov [ebx],edx
+;
+	mov ebx,[ebp+20]
+	mov [ebx],ecx
+;
+	mov eax,1
+	jmp get_drive_disc_param_done
+
+get_drive_disc_param_fail:
+	xor eax,eax
+
+get_drive_disc_param_done:
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosGetDriveDiscParam	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           RdosFormatDrive

@@ -343,4 +343,6 @@ set_signal_nr               = 294
 reset_signal_nr             = 295
 is_signalled_nr             = 296
 
+get_drive_disc_param_nr     = 297
+
 usergate_entries			= 300

@@ -46,11 +46,14 @@ TFsPartitionFactory *TFsPartitionFactory::FPartList = 0;
 TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
 {
 	FDisc = Disc;
+	FDrive = 0;
 	FParent = Parent;
 	FControlEntry = Entry;
 	FType = Type;
 	Start = PStart;
 	Size = PSize;
+    DriveSectors = Size;
+    FreeSectors = 0;
 }
 
 /*##################  TPartition::GetPartName  #############
@@ -75,6 +78,18 @@ const char *TPartition::GetPartName()
 int TPartition::GetDisc()
 {
 	return FDisc;
+}
+
+/*##################  TPartition::GetDrive  #############
+*   Purpose....: Get drive nr						                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TPartition::GetDrive()
+{
+	return FDrive;
 }
 
 /*##################  TPartition::GetType  #############
@@ -109,16 +124,28 @@ int TPartition::GetBytesPerSector()
 		return 0;
 }
 
-/*##################  TPartition::GetSpace  #############
-*   Purpose....: Get space in MB						                    #
+/*##################  TPartition::GetTotalSpace  #############
+*   Purpose....: Get total space in MB						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-double TPartition::GetSpace()
+double TPartition::GetTotalSpace()
 {
 	return (double)Size * (double)GetBytesPerSector() / (double)0x100000;
+}
+
+/*##################  TPartition::GetFreeSpace  #############
+*   Purpose....: Get free space in MB						                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+double TPartition::GetFreeSpace()
+{
+	return (double)FreeSectors * (double)GetBytesPerSector() / (double)0x100000;
 }
 
 /*##################  TPartition::IsTable  #############
@@ -252,6 +279,35 @@ void TPartition::DeleteFromTable(TPartitionTable *Owner)
 TFsPartition::TFsPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
  : TPartition(Disc, Type, Parent, Entry, PStart, PSize)
 {
+    int DriveNr;
+    int DiscNr;
+    long StartSector;
+    long DriveSize;
+    long FreeUnits;
+    int BytesPerUnit;
+    long TotalUnits;
+    int Clusters;
+
+	 for (DriveNr = 0; DriveNr < 25; DriveNr++)
+	 {
+		  if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))
+		  {
+				if (DiscNr == Disc)
+				{
+					 if (PStart <= StartSector && PStart + PSize >= StartSector + DriveSize)
+					 {
+						  FDrive = DriveNr;
+						  if (RdosGetDriveInfo(DriveNr, &FreeUnits, &BytesPerUnit, &TotalUnits))
+						  {
+								Clusters = BytesPerUnit / 512;
+								DriveSectors = Clusters * TotalUnits;
+								FreeSectors = Clusters * FreeUnits;
+						  }
+						  break;
+					 }
+				}
+		  }
+	 }
 }
 
 /*##################  TFsPartitionEntry::GetPartName  #############
@@ -652,8 +708,18 @@ TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *Free
 			if (PartArr[i]->IsTable())
 			{
 				if (PartArr[i]->Start <= FreePart->Start && PartArr[i]->Start + PartArr[i]->Size >= FreePart->Start)
-					return ((TPartitionTable *)PartArr[i])->InsertFs(FsName, FreePart, NewSize);
-			}
+				{
+				    PartTable = (TPartitionTable *)PartArr[i];
+					FsPart = PartTable->InsertFs(FsName, FreePart, NewSize);
+					while (PartTable->FParent && FsPart->Start + FsPart->Size > PartTable->Start + PartTable->Size)
+                    {
+				        PartTable->Size = FsPart->Start + FsPart->Size - PartTable->Start;
+            			PartTable->WriteToTable(PartTable->FParent);
+            			PartTable = PartTable->FParent;
+					}
+					return FsPart;
+                }
+   			}
 		}
 
 	FreeEntries = 0;
@@ -700,6 +766,7 @@ TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *Free
 void TPartitionTable::FreeEntry(int Entry)
 {
 	TPartition *Part;
+	TPartitionTable *PartTable;
 	int i;
 	int Count;
 
@@ -707,6 +774,15 @@ void TPartitionTable::FreeEntry(int Entry)
 	if (Part->IsFs() || Part->IsTable())
 	{
 		PartArr[Entry] = new TPartition(FDisc, 0, 0, Entry, 0, 0);
+
+        PartTable = this;
+		while (PartTable->FParent && Part->Start + Part->Size == PartTable->Start + PartTable->Size)
+		{
+		    PartTable->Size -= Part->Size;
+            PartTable->WriteToTable(PartTable->FParent);
+            PartTable = PartTable->FParent;
+        }
+        
 		Part->DeleteFromTable(this);
 		delete Part;
 	}
@@ -1172,9 +1248,9 @@ void TDiscPartition::Delete(int Entry)
 	{
 		Part->FParent->FreeEntry(Part->FControlEntry);
 		delete Part;
-	}
 
-	PartCount--;
-	for (i = Entry; i < PartCount; i++)
-		PartArr[i] = PartArr[i+1];
+		PartCount--;
+		for (i = Entry; i < PartCount; i++)
+			PartArr[i] = PartArr[i+1];
+	}
 }
