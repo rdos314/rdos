@@ -486,7 +486,6 @@ CreateConnection	Proc near
 	mov es:tcp_rts,1193000 * 3
 	mov es:tcp_rtm,0
 	mov es:tcp_reorder_count,0
-	mov es:tcp_delete_ok,0
 	mov es:tcp_send_timeout,0
 	mov es:tcp_delete_timeout,0
 ;
@@ -656,7 +655,7 @@ find_connection_ok:
 	push ax
 	mov ds,ax
 	EnterSection ds:tcp_section
-	test ds:tcp_pending,FLAG_DELETE
+	test ds:tcp_pending,FLAG_DELETE_NET
 	jz find_connection_not_deleted
 ;
 	pop ax
@@ -731,7 +730,7 @@ find_wild_connection_ok:
 	push ax
 	mov ds,ax
 	EnterSection ds:tcp_section
-	test ds:tcp_pending,FLAG_DELETE
+	test ds:tcp_pending,FLAG_DELETE_NET
 	jz find_wild_connection_not_deleted
 ;
 	pop ax
@@ -1445,7 +1444,7 @@ CheckRst	Proc near
 	clc
 	jz check_rst_done
 ;
-	or ds:tcp_pending,FLAG_DELETE
+	or ds:tcp_pending,FLAG_DELETE_NET
 	stc
 
 check_rst_done:
@@ -1474,7 +1473,7 @@ CheckSyn	Proc near
 	clc
 	jz check_syn_done
 ;
-	or ds:tcp_pending,FLAG_DELETE
+	or ds:tcp_pending,FLAG_DELETE_NET
 	stc
 
 check_syn_done:
@@ -2145,7 +2144,7 @@ ReceiveSynSent	Proc near
 	test dl,RST
 	jz receive_syn_sent_norst
 ;
-	or ds:tcp_pending,FLAG_DELETE
+	or ds:tcp_pending,FLAG_DELETE_NET
 	jmp receive_syn_sent_done
 
 receive_syn_sent_noack:
@@ -2537,7 +2536,7 @@ ReceiveLastAck	Proc near
 	jmp receive_last_ack_done
 
 receive_last_ack_delete:
-	or ds:tcp_pending, FLAG_DELETE
+	or ds:tcp_pending, FLAG_DELETE_NET
 
 receive_last_ack_done:
 	ret
@@ -3085,7 +3084,7 @@ wait_tcp_ok:
 	jmp wait_tcp_done
 
 wait_tcp_fail:
-	or ds:tcp_pending,FLAG_DELETE
+	mov ds:tcp_delete_timeout,240 * 10
 	LeaveSection ds:tcp_section
 	pop bx
     FreeHandle
@@ -3196,9 +3195,14 @@ open_tcp_handle:
 	jmp open_tcp_done
 
 open_tcp_fail:
-	or ds:tcp_pending,FLAG_DELETE
-	mov ds:tcp_delete_ok,1
+	or ds:tcp_pending,FLAG_DELETE_NET
 	LeaveSection ds:tcp_section
+;	
+	cli
+	or ds:tcp_pending,FLAG_DELETE_USER
+	xor ax,ax
+	mov ds,ax
+	sti
 	stc
 
 open_tcp_done:
@@ -3226,8 +3230,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseDelete	Proc near
-	or ds:tcp_pending,FLAG_DELETE
-	mov ds:tcp_delete_ok,1
+	or ds:tcp_pending,FLAG_DELETE_NET
 	ret
 CloseDelete	Endp
 
@@ -3403,7 +3406,28 @@ delete_tcp_connection	Proc far
     DerefHandle
     jc delete_tcp_done
 ;    
-	mov [bx].tcp_handle_sel,0
+    xor ax,ax
+	xchg ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz delete_tcp_handle
+;
+    cli
+    mov ds,ax
+    test ds:tcp_pending,FLAG_UNLINKED
+    jz delete_tcp_mark
+;        
+    sti
+    EnterSection ds:tcp_section
+	call DeleteConnection
+	jmp delete_tcp_handle
+
+delete_tcp_mark:
+    or ds:tcp_pending,FLAG_DELETE_USER
+    xor ax,ax
+    mov ds,ax
+    sti
+
+delete_tcp_handle:
 	FreeHandle
 	clc
 
@@ -3598,7 +3622,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AbortDelete	Proc near
-	or ds:tcp_pending,FLAG_DELETE
+	mov ds:tcp_delete_timeout,240 * 10
 	ret
 AbortDelete	Endp
 
@@ -3622,7 +3646,7 @@ AbortReset	Proc near
 	Reverse
 	mov es:[di].tcp_seq,eax
 	call SendSegment
-	or ds:tcp_pending,FLAG_DELETE
+	mov ds:tcp_delete_timeout,240 * 10
 	ret
 AbortReset	Endp
 
@@ -3926,7 +3950,7 @@ read_tcp_loop:
 	jz read_tcp_ok
 
 read_tcp_retry:
-	test ds:tcp_pending,FLAG_DELETE
+	test ds:tcp_pending,FLAG_DELETE_NET
 	jnz read_tcp_fail
 ;
 	mov dx,ds:tcp_receive_count
@@ -4125,7 +4149,7 @@ WriteNormal	Proc near
 	mov fs,ds:tcp_send_buffer
 
 write_tcp_retry:
-	test ds:tcp_pending,FLAG_DELETE OR FLAG_CLOSED
+	test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_CLOSED
 	jnz write_tcp_fail
 ;
 	mov bx,ds:tcp_send_tail
@@ -4476,7 +4500,7 @@ tcp_active_next:
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
-	test ds:tcp_pending,FLAG_DELETE
+	test ds:tcp_pending,FLAG_DELETE_NET
 	jz tcp_update
 ;
 	test ds:tcp_pending,FLAG_WAIT
@@ -4488,10 +4512,7 @@ tcp_active_next:
 	jmp tcp_update
 
 tcp_user_done:
-	mov al,ds:tcp_delete_ok
-	or al,al
-	jz tcp_leave
-;
+    or ds:tcp_pending,FLAG_UNLINKED
 	mov bx,ds
 	mov si,ds:tcp_next
 	mov ax,tcp_data_sel
@@ -4521,7 +4542,13 @@ tcp_unlink_head:
 tcp_delete_do:
 	push si
 	mov ds,bx
+;	
+    test ds:tcp_pending,FLAG_DELETE_USER
+    jz tcp_delete_conn_done
+;    
 	call DeleteConnection
+
+tcp_delete_conn_done:
 	pop ax
 	jmp tcp_active_next
 
@@ -4548,8 +4575,7 @@ tcp_leave:
 	jl tcp_delete_timeout_done
 	
 tcp_delete_timeout_do:
-    or ds:tcp_pending,FLAG_DELETE
-    mov ds:tcp_delete_ok,1        
+    or ds:tcp_pending,FLAG_DELETE_NET
 
 tcp_delete_timeout_done:
 	mov ax,ds:tcp_next

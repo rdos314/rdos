@@ -48,10 +48,12 @@ FLAG_SEND_PUSH		EQU 4
 FLAG_WAIT			EQU 8
 FLAG_REC_PUSH		EQU 10h
 FLAG_ACK			EQU 20h
-FLAG_DELETE			EQU 40h
-FLAG_DELAY_ACK		EQU 80h
-FLAG_RESENT			EQU 100h
-FLAG_CLOSED			EQU 200h
+FLAG_DELAY_ACK		EQU 40h
+FLAG_RESENT			EQU 80h
+FLAG_CLOSED			EQU 100h
+FLAG_DELETE_NET		EQU 200h
+FLAG_DELETE_USER    EQU 400h
+FLAG_UNLINKED       EQU 800h
 
 REORDER_ENTRIES	EQU 8
 
@@ -134,7 +136,6 @@ tcp_rtm				DD ?
 tcp_fin_seq			DD ?
 tcp_time_val		DD ?
 tcp_time_seq		DD ?
-tcp_delete_ok		DB ?
 tcp_ack_timeout		DB ?
 tcp_push_timeout	DB ?
 tcp_user_timeout	DW ?
