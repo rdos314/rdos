@@ -20,27 +20,29 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* CMOS.H
-* Cmos emulation
+* ZFL.H
+* ZF-logic emulation
 *
 *##########################################################################*/
 
-#ifndef	_CMOS_H
-#define _CMOS_H
+#ifndef	_ZFL_H
+#define _ZFL_H
 
 #include "isa.h"
 
-class TCmos : public TIsaFunction
+class TZFLogic : public TIsaFunction
 {
 public:
-	TCmos(TIsa *Isa, int Base);
+	TZFLogic(TIsa *Isa, int Base);
 
 	virtual void Out(int Num, int Offset, char Value);
 	virtual char In(int Num, int Offset);
+	virtual void WriteMem(int Num, unsigned long Offset, char Value);
+	virtual char ReadMem(int Num, unsigned long Offset);
 
 private:
-	char FPort;
-	char FData[128];
+	char FIndex;
+	char FData[0x82];
 };
 
 #endif

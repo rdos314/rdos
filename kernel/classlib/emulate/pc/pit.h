@@ -28,56 +28,56 @@
 #ifndef	_PIT_H
 #define _PIT_H
 
+#include "isa.h"
+#include "pic.h"
+
 class TPitCounter
 {
-		friend class TPit;
-	public:
-		TPitCounter(void *Data);
+	friend class TPit;
+public:
+	TPitCounter();
 
-		void SetClk();
-		void ResetClk();
-		void SetGate();
-		void ResetGate();
+	void Define(TPic *Pic, int Irq);
+	void SetClk();
+	void ResetClk();
+	void SetGate();
+	void ResetGate();
 
-		void (*OnSetOut)(void *Data);
-		void (*OnResetOut)(void *Data);
+protected:
+	void LoadPeriod(char Value);
+	void LoadCounter(char Value);
+	void ModifyOut(char Value);
+	char Read();
+	void Load(char Value);
+	void SetMode(char Mode);
 
-	protected:
-		void LoadPeriod(char Value);
-		void LoadCounter(char Value);
-		void ModifyOut(char Value);
-		char Read();
-		void Load(char Value);
-		void SetMode(char Mode);
-
-	private:
-		int FClk;
-		int FGate;
-		int FOut;
-		char FMode;
-		int FRunning;
-		short int FPeriod;
-		short int FCount;
-		short int FLatchedCount;
-		int FLatched;
-		char FByteCounter;
-		char FRl;
-		void *FData;
+private:
+	int FClk;
+	int FGate;
+	int FOut;
+	char FMode;
+	int FRunning;
+	short int FPeriod;
+	short int FCount;
+	short int FLatchedCount;
+	int FLatched;
+	char FByteCounter;
+	char FRl;
+	TPic *FPic;
+	int FIrq;
 };
 
-class TPit
+class TPit : public TIsaFunction
 {
-	public:
-		TPit(void *Data);
-		~TPit();
+public:
+	TPit(TIsa *Isa, int Base);
+	~TPit();
 
-		void Out(int Port, char Value);
-		char In(int Port);
+	virtual void Out(int Num, int Offset, char Value);
+	virtual char In(int Num, int Offset);
 
-		TPitCounter *Counter[3];
+	TPitCounter *Counter[3];
 
-	protected:
-	private:
 };
 
 #endif

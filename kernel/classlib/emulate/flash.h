@@ -20,27 +20,29 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* CMOS.H
-* Cmos emulation
+* FLASH.H
+* Flash memory emulation
 *
 *##########################################################################*/
 
-#ifndef	_CMOS_H
-#define _CMOS_H
+#ifndef	_FLASH_H
+#define _FLASH_H
 
 #include "isa.h"
+#include "file.h"
 
-class TCmos : public TIsaFunction
+class TFlash : public TIsaFunction
 {
 public:
-	TCmos(TIsa *Isa, int Base);
+	TFlash(TIsa *Isa, unsigned long Base, unsigned long Size);
+	~TFlash();
 
-	virtual void Out(int Num, int Offset, char Value);
-	virtual char In(int Num, int Offset);
+	void LoadTop(TFile *File);
+	void LoadBottom(TFile *File);
 
 private:
-	char FPort;
-	char FData[128];
+	int FSize;
+	char *FData;
 };
 
 #endif

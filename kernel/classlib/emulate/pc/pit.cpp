@@ -36,10 +36,8 @@
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPitCounter::TPitCounter(void *Data)
+TPitCounter::TPitCounter()
 {
-	OnSetOut = 0;
-	OnResetOut = 0;
 	FClk = 0;
 	FGate = 1;
 	FOut = 0;
@@ -51,7 +49,19 @@ TPitCounter::TPitCounter(void *Data)
 	FLatched = FALSE;
 	FByteCounter = 0;
 	FRl = 0;
-	FData = Data;
+	FPic = 0;
+}
+
+/*##################  TPitCounter::Define  ###############
+*   Purpose....: Define an interrupt						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TPitCounter::Define(TPic *Pic, int Irq)
+{
+	FPic = Pic;
+	FIrq = Irq;
 }
 
 /*##################  TPitCounter::ModifyOut  ###############
@@ -67,13 +77,13 @@ void TPitCounter::ModifyOut(char Value)
 		FOut = Value;
 		if (Value)
 		{
-			if (OnSetOut)
-				(*OnSetOut)(FData);
+			if (FPic)
+				FPic->Set(FIrq);
 		}
 		else
 		{
-			if (OnResetOut)
-				(*OnResetOut)(FData);
+			if (FPic)
+				FPic->Reset(FIrq);
 		}	
 	}
 }
@@ -419,12 +429,15 @@ char TPitCounter::Read()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPit::TPit(void *Data)
+TPit::TPit(TIsa *Isa, int Base)
+  : TIsaFunction(Isa)
 {
 	int i;
 
 	for (i = 0; i < 3; i++)
-		Counter[i] = new TPitCounter(Data);
+		Counter[i] = new TPitCounter;
+
+	DefineIo(0, Base, 4, 0);
 }
 
 /*##################  TPit::~TPit  ###############
@@ -447,11 +460,11 @@ TPit::~TPit()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPit::Out(int Port, char Value)
+void TPit::Out(int Num, int Offset, char Value)
 {
 	int Channel;
 
-	switch (Port & 3)
+	switch (Offset)
 	{
 		case 0:
 			Counter[0]->Load(Value);
@@ -479,9 +492,9 @@ void TPit::Out(int Port, char Value)
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-char TPit::In(int Port)
+char TPit::In(int Num, int Offset)
 {
-	switch (Port & 3)
+	switch (Offset)
 	{
 		case 0:
 			return Counter[0]->Read();

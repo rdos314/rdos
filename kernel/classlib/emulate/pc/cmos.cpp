@@ -37,7 +37,8 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TCmos::TCmos()
+TCmos::TCmos(TIsa *Isa, int Base)
+  : TIsaFunction(Isa)
 {
 	int i;
 
@@ -45,6 +46,8 @@ TCmos::TCmos()
 		FData[i] = 0;
 
 	FPort = 0;
+
+	DefineIo(0, Base, 2, 0);
 }
 
 /*##################  TCmos::Out  ###############
@@ -54,9 +57,9 @@ TCmos::TCmos()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TCmos::Out(int Port, char Value)
+void TCmos::Out(int Num, int Offset, char Value)
 {
-	switch (Port & 1)
+	switch (Offset)
 	{
 		case 0:
 			FPort = Value & 0x7F;
@@ -64,9 +67,6 @@ void TCmos::Out(int Port, char Value)
 
 		case 1:
 			FData[FPort] = Value;
-			break;
-
-		default:
 			break;
 	}
 }
@@ -78,19 +78,16 @@ void TCmos::Out(int Port, char Value)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TCmos::In(int Port)
+char TCmos::In(int Num, int Offset)
 {
 	char Val;
 
-	switch (Port & 1)
+	switch (Offset)
 	{
 		case 0:
 			return FPort;
 
 		case 1:
 			return FData[FPort];
-
-		default:
-			return 0xFF;
 	}
 }

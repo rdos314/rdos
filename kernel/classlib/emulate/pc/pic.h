@@ -48,13 +48,15 @@
 #define ICW4_BUF			8
 #define ICW4_SNFM			0x10
 
-class TPic
+#include "isa.h"
+
+class TPic : TIsaFunction
 {
 	public:
-		TPic();
+		TPic(TIsa *Isa, int Base);
 
-		void Out(int Port, char Value);
-		char In(int Port);
+		virtual void Out(int Num, int Offset, char Value);
+		virtual char In(int Num, int Offset);
 
 		void Cascade(int Number, TPic *Pic);
 		void Set(int Number);

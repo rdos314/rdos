@@ -35,21 +35,26 @@
 #include "zfnb.h"
 #include "zfsb.h"
 #include "zfsmi.h"
+#include "zfl.h"
 #include "zfide.h"
 #include "zfxbus.h"
 #include "zfusb.h"
 #include "cmos.h"
+#include "flash.h"
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
 
 #define STACK_SIZE	0x4000
 
-TPic Pic0;
-TPit Pit(&Pic0);
-TKeyb Keyb;
-TCmos Cmos;
-TPci Pci;
+TIsa Isa;
+TPci Pci(&Isa);
+TPic Pic0(&Isa, 0x20);
+TPit Pit(&Isa, 0x40);
+TKeyb Keyb(&Isa, 0x60);
+TCmos Cmos(&Isa, 0x70);
+TZFLogic ZFLogic(&Isa, 0x218);
+TFlash Flash(&Isa, 0xFFFC0000, 0x40000);
 TCpu Cpu;
 void *Eprom;
 char *LowRam;
@@ -68,30 +73,6 @@ void Idle(TCpu *Cpu)
 		RdosReadKeyboard();
 		Cpu->Break();
 	}
-}
-
-/*##################  PitSetOut0  ###############
-*   Purpose....: Out 0 on PIT set								            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void PitSetOut0(void *Cpu)
-{
-	Pic0.Set(0);
-}
-
-/*##################  PitResetOut0  ###############
-*   Purpose....: Out 0 on PIT reset								            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void PitResetOut0(void *Cpu)
-{
-	Pic0.Reset(0);
 }
 
 /*##################  AddCycles  ###############
@@ -142,21 +123,7 @@ char __stdcall GetIntVector(TCpu *Cpu)
 *##########################################################################*/
 char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 {
-	char *Source;
-
-	if (Address >= 0xFFFC0000 || (Address >= 0xC0000 && Address < 0x100000))
-	{
-		Source = (char *)Eprom;
-		Source += Address & 0x3FFFF;
-		return *Source;
-	}
-	else
-	{
-        if (Address < 0x10000 && Address >= 0xF000)
-            return *(LowRam + Address);
-        else
-	        return Pci.ReadMem(Address);
-	}
+	return Pci.ReadMem(Address);
 }
 
 /*##################  WriteToMemory  ###############
@@ -168,10 +135,7 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 *##########################################################################*/
 void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 {
-    if (Address < 0x10000 && Address >= 0xF000)
-        *(LowRam + Address) = Value;
-    else
-		Pci.WriteMem(Address, Value);
+	Pci.WriteMem(Address, Value);
 }
 
 /*##################  ReadFromIo  ###############
@@ -183,35 +147,7 @@ void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 *##########################################################################*/
 char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 {
-	switch (Port & 0xFFF0)
-	{
-		case 0x20:
-		    switch (Port)
-		    {
-		        case 0x20:
-		        case 0x21:
-        			return Pic0.In(Port & 1);
-
-        	    default:
-        		    return Pci.In(Port);
-			}
-        	break;
-
-		case 0x40:
-			return Pit.In(Port & 0xF);
-
-		case 0x60:
-		    if (Pci.IsKeyboardEnabled())
-    			return Keyb.In(Port & 0xF);
-			else
-				return 0xFF;
-
-		case 0x70:
-			return Cmos.In(Port & 0xF);
-
-		default:
-		    return Pci.In(Port);
-	}
+    return Pci.In(Port);
 }
 
 /*##################  WriteToIo  ###############
@@ -223,71 +159,7 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 *##########################################################################*/
 void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 {
-	switch (Port & 0xFFF0)
-	{
-		case 0x20:
-		    switch (Port)
-		    {
-				case 0x20:
-		        case 0x21:
-        			Pic0.Out(Port & 1, Value);
-        			break;
-
-        	    default:
-        	        Pci.Out(Port, Value);
-        	        break;
-        	}
-        	break;
-
-
-			break;
-
-		case 0x40:
-			Pit.Out(Port & 0xF, Value);
-			break;
-
-		case 0x60:
-		    if (Pci.IsKeyboardEnabled())
-				Keyb.Out(Port & 0xF, Value);
-			break;
-
-		case 0x70:
-			Cmos.Out(Port & 0xF, Value);
-			break;
-
-		default:
-			Pci.Out(Port, Value);
-			break;
-	}
-}
-
-/*##################  Reset  ###############
-*   Purpose....: Set CPU registers to reset state				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void Reset()
-{
-	int file;
-	int i;
-	long l;
-	long *LongPtr;
-	int size;
-	Eprom = new char[0x40000];
-	LowRam = new char[0x10000];
-
-	file = RdosOpenFile("demo.rom", 0);
-	if (file)
-	{
-		size = RdosGetFileSize(file);
-		RdosReadFile(file, ((char *)Eprom) + 0x40000 - size, size);
-		RdosCloseFile(file);
-	}
-
-	Pit.Counter[0]->OnSetOut = PitSetOut0;
-	Pit.Counter[1]->OnResetOut = PitResetOut0;
+	Pci.Out(Port, Value);
 }
 
 /*##################  main  ###############
@@ -299,8 +171,12 @@ void Reset()
 *##########################################################################*/
 void main(void)
 {
+	TFile FlashFile("demo.rom");
+
 	OpenScreen("c:\\sim.log");
 
+	Flash.LoadTop(&FlashFile);
+	Pit.Counter[0]->Define(&Pic0, 0);
 	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
 	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
@@ -314,8 +190,6 @@ void main(void)
 	Cpu.OnReadFromIo = ReadFromIo;
 	Cpu.OnWriteToIo = WriteToIo;
 	Cpu.Reset();
-
-	Reset();
 
 	while (1)
 	{

@@ -1038,6 +1038,7 @@ PAGE
 OkText DB 'Everything is OK',0
 
 InitRdos:
+	int 3
     xor esi,esi
     FindRam
     mov edx,esi
@@ -1071,16 +1072,105 @@ InitRdos:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-	mov ds:ram1_size,0A0000h
-	mov ds:ram2_base,100000h
-	mov eax,cs:code_base
-	mov ds:rom1_base,eax
-	sub eax,ds:ram2_base
-	mov ds:ram2_size,eax
-	mov eax,cs:code_size
-	mov ds:rom1_size,eax
+;
+	xor edi,edi
+	ReadNB 20Fh
+	mov bx,ax
+	test bx,101h
+	jz size_dram_bank0_done
+;
+	ReadNB 202h
+	shr ax,9
+	and al,7
+	mov	cl,al
+	mov eax,200000h
+	shl eax,cl
+	add edi,eax
+	
+size_dram_bank0_done:
+	test bx,202h
+	jz size_dram_bank1_done
+;
+	ReadNB 205h
+	shr ax,9
+	and al,7
+	mov	cl,al
+	mov eax,200000h
+	shl eax,cl
+	add edi,eax
+	
+size_dram_bank1_done:
+	test bx,404h
+	jz size_dram_bank2_done
+;
+	ReadNB 208h
+	shr ax,9
+	and al,7
+	mov	cl,al
+	mov eax,200000h
+	shl eax,cl
+	add edi,eax
+	
+size_dram_bank2_done:
+	test bx,808h
+	jz size_dram_bank3_done
+;
+	ReadNB 20Bh
+	shr ax,9
+	and al,7
+	mov	cl,al
+	mov eax,200000h
+	shl eax,cl
+	add edi,eax
+	
+size_dram_bank3_done:
+	mov ds:ram1_size,edi
+	mov ds:ram2_size,0
+;
+	WriteZflDword 2Ah, 0FFFFFFh
+	WriteZflDword 26h, 0
+;
+	mov esi,0FFFFFFF0h
+	mov eax,es:[esi]
+	mov ebx,es:[esi+4]
+	mov ecx,es:[esi+8]
+	mov edx,es:[esi+12]
+	mov edi,1000h
+
+size_flash_loop:
+	mov esi,0FFFFFFF0h
+	sub esi,edi	
+	cmp eax,es:[esi]
+	jne size_flash_next
+;
+	cmp ebx,es:[esi+4]
+	jne size_flash_next
+;
+	cmp ecx,es:[esi+8]
+	jne size_flash_next
+;
+	cmp edx,es:[esi+12]
+	je size_flash_found
+
+size_flash_next:
+	shl edi,1
+	cmp edi,1000000h
+	jne size_flash_loop	
+
+size_flash_found:
+	dec edi
+	WriteZflDword 2Ah, edi
+	inc edi
+	mov esi,1000000h
+	sub esi,edi
+	WriteZflDword 26h, esi
+;
+	or esi,0FF000000h
+	mov ds:rom1_base,esi
+	mov ds:rom1_size,edi
+;
 	mov ds:rom2_size,0
-	mov ds:rom_shadow,0
+	mov ds:rom_shadow,1
 ;
     mov ax,gdt_sel
     mov ss,ax
@@ -1107,7 +1197,6 @@ PAGE
 ;       PARAMETERS:     DI      Offset of error text in code segment
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 FatalError:
     SetupSerial

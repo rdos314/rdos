@@ -28,6 +28,8 @@
 #ifndef	_PCI_H
 #define _PCI_H
 
+#include "isa.h"
+
 class TPci;
 
 class TPciAreaData
@@ -97,7 +99,7 @@ public:
 class TPci
 {
 public:
-	TPci();
+	TPci(TIsa *Isa);
 	~TPci();
 
 	void Out(int Port, char Value);
@@ -128,7 +130,10 @@ private:
 	int FDataChanged;
     int FKeyboardEnabled;
 
+	TIsa *FIsa;
     TPciBus *FBusArr[256];
+	int FHookIoMax;
+	int FHookMemMax;
 	TPciArea *FHookIoArr[256];
 	TPciArea *FHookMemArr[256];
 	    

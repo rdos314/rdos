@@ -20,89 +20,68 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* KEYB.CPP
-* PC keyboard emulation
+* ZFL.CPP
+* ZF-Logic emulation
 *
 *##########################################################################*/
 
-#include "keyb.h"
+#include "zfl.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-/*##################  TKeyb::TKeyb  ###############
-*   Purpose....: Constructor for KEYB							            #
+/*##################  TZFLogic::TZFLogic  ###############
+*   Purpose....: Constructor for ZF-Logic						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TKeyb::TKeyb(TIsa *Isa, int Base)
+TZFLogic::TZFLogic(TIsa *Isa, int Base)
   : TIsaFunction(Isa)
 {
-	FRefresh = FALSE;
-	FLast = 0;
-	FHasData = FALSE;
-	FEnabled = FALSE;
-	FWriteOut = FALSE;
-	FOut = 1;
+	int i;
+
+	FIndex = 0;
+	for (i = 0; i < 0x82; i++)
+		FData[i] = 0;
+
+	FData[0x28] = 0xFF;
+	FData[0x2B] = 0xFF;
 
 	DefineIo(0, Base, 8, 0);
 }
 
-/*##################  TKeyb::Out  ###############
+/*##################  TZFLogic::Out  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TKeyb::Out(int Num, int Offset, char Value)
+void TZFLogic::Out(int Num, int Offset, char Value)
 {
 	switch (Offset)
 	{
 		case 0:
-			FLast = 0;
-			if (FWriteOut)
-			{
-				FOut = Value;
-				FWriteOut = FALSE;
-				GetA20Gate();
-			}
+			FIndex = Value;
 			break;
 
 		case 1:
+		case 2:
+			FData[FIndex] = Value;
+			break;
+
+		case 3:
+			FData[FIndex + 1] = Value;
 			break;
 
 		case 4:
-			FLast = 4;
-			switch ((unsigned char)Value)
-			{
-				case 0xAA:
-					FHasData = TRUE;
-					FData = 0x55;
-					break;
+			FData[FIndex + 2] = Value;
+			break;
 
-				case 0xAD:
-					FEnabled = FALSE;
-					break;
-
-				case 0xAE:
-					FEnabled = TRUE;
-					break;
-
-				case 0xC0:
-					FHasData = TRUE;
-					FData = 0x54;
-					break;
-
-				case 0xD1:
-					FWriteOut = TRUE;
-					break;
-
-				default:
-					break;
-			}
+		case 5:
+			FData[FIndex + 3] = Value;
 			break;
 
 		default:
@@ -110,71 +89,57 @@ void TKeyb::Out(int Num, int Offset, char Value)
 	}
 }
 
-/*##################  TKeyb::In  ###############
+/*##################  TZFLogic::In  ###############
 *   Purpose....: Perform in instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TKeyb::In(int Num, int Offset)
+char TZFLogic::In(int Num, int Offset)
 {
-	char Val;
-
 	switch (Offset)
 	{
 		case 0:
-			if (FHasData)
-			{
-				FHasData = FALSE;
-				return FData;
-			}
-			else
-				return 0xFF;
+			return FIndex;
 
 		case 1:
-			if (FRefresh)
-				return 0x10;
-			else
-				return 0;
+		case 2:
+			return FData[FIndex];
+
+		case 3:
+			return FData[FIndex + 1];
 
 		case 4:
-			Val = 0;
-			if (FHasData)
-				Val |= 1;
+			return FData[FIndex + 2];
 
-			if (FLast == 0)
-				Val |= 8;
-
-			if (FEnabled)
-				Val |= 0x10;			
-			return Val;
+		case 5:
+			return FData[FIndex + 3];
 
 		default:
 			return 0xFF;
 	}
 }
 
-/*##################  TKeyb::SetRefresh  ###############
-*   Purpose....: Set refresh state						            #
+/*##################  TZFLogic::WriteMem  ###############
+*   Purpose....: Perform write instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TKeyb::SetRefresh(int Value)
+void TZFLogic::WriteMem(int Num, unsigned long Offset, char Value)
 {
-	FRefresh = Value;
 }
- 
-/*##################  TKeyb::GetA20Gate  ###############
-*   Purpose....: Get A20 gate state								            #
+
+/*##################  TZFLogic::ReadMem ###############
+*   Purpose....: Perform read instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-int TKeyb::GetA20Gate()
+char TZFLogic::ReadMem(int Num, unsigned long Offset)
 {
-	return (FOut & 0x2) >> 1;
+	return 0xFF;
 }

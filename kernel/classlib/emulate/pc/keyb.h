@@ -28,28 +28,28 @@
 #ifndef	_KEYB_H
 #define _KEYB_H
 
-class TKeyb
+#include "isa.h"
+
+class TKeyb : public TIsaFunction
 {
-	public:
-		TKeyb();
+public:
+	TKeyb(TIsa *Isa, int Base);
 
-		void Out(int Port, char Value);
-		char In(int Port);
+	virtual void Out(int Num, int Offset, char Value);
+	virtual char In(int Num, int Offset);
 
-		void SetRefresh(int Value);
+	void SetRefresh(int Value);
 
-		int GetA20Gate();
+	int GetA20Gate();
 
-	protected:
-
-	private:
-		int FHasData;
-		char FData;
-		int FEnabled;
-		int FLast;
-		int FRefresh;
-		int FWriteOut;
-		char FOut;
+private:
+	int FHasData;
+	char FData;
+	int FEnabled;
+	int FLast;
+	int FRefresh;
+	int FWriteOut;
+	char FOut;
 };
 
 #endif

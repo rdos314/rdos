@@ -36,7 +36,8 @@
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPic::TPic()
+TPic::TPic(TIsa *Isa, int Base)
+  : TIsaFunction(Isa)
 {
 	int i;
 
@@ -55,6 +56,8 @@ TPic::TPic()
 	FMode = MODE_ICW1;
 	FRis = FALSE;
 	FLowest = 7;
+
+	DefineIo(0, Base, 2, 0);
 }
 
 /*##################  TPic::Cascade  ###############
@@ -278,9 +281,9 @@ char TPic::GetVector()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void TPic::Out(int Port, char Value)
+void TPic::Out(int Num, int Offset, char Value)
 {
-	if (Port & 1)
+	if (Offset)
 	{
 		switch (FMode)
 		{
@@ -350,9 +353,9 @@ void TPic::Out(int Port, char Value)
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-char TPic::In(int Port)
+char TPic::In(int Num, int Offset)
 {
-	if (Port & 1)
+	if (Offset)
 		return FImr;
 	else
 	{

@@ -371,10 +371,11 @@ TPciBus::~TPciBus()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TPci::TPci()
+TPci::TPci(TIsa *Isa)
 {
     int i;
 
+	FIsa = Isa;
     FIndex = 0;
     FValue = 0;
     FIndexChanged = FALSE;
@@ -387,6 +388,8 @@ TPci::TPci()
 		FHookIoArr[i] = 0;
 		FHookMemArr[i] = 0;
 	}
+	FHookIoMax = 0;
+	FHookMemMax = 0;
 }
 
 /*##################  TPci::~TPci  ###############
@@ -479,6 +482,13 @@ void TPci::Out(int Port, char Value)
     
     switch (Port)
     {
+		case 0x60:
+		case 0x62:
+		case 0x64:
+			if (FKeyboardEnabled)
+				DefaultOut(Port, Value);
+			break;
+
         case 0xCF8:
             if (FDataChanged)
             {
@@ -582,6 +592,14 @@ char TPci::In(int Port)
 {
 	switch (Port)
 	{
+		case 0x60:
+		case 0x62:
+		case 0x64:
+			if (FKeyboardEnabled)
+				return DefaultIn(Port);
+			else
+				return 0xFF;
+				
 		case 0xCF8:
 			return (char)(FIndex & 0xFF);
 
@@ -736,6 +754,8 @@ void TPci::DefineIo(TPciFunction *func, int Num, int Base, int Size)
 		if (FHookIoArr[i] == 0)
 		{
 			FHookIoArr[i] = area;
+			if (i > FHookIoMax)
+				FHookIoMax = i;
 			break;
 		}
 }
@@ -787,6 +807,8 @@ void TPci::DefineMem(TPciFunction *func, int Num, int Base, int Size)
 		if (FHookMemArr[i] == 0)
 		{
 			FHookMemArr[i] = area;
+			if (i > FHookMemMax)
+				FHookMemMax = i;
 			break;
 		}
 }
@@ -828,16 +850,18 @@ void TPci::WriteMem(unsigned long Address, char Value)
 	TPciArea *area;
 	int i;
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i <= FHookMemMax; i++)
 	{
 		area = FHookMemArr[i];
 		if (area)
-			if (area->Base <= Address && area->Base + area->Size > Address)
+			if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
 			{
 				area->func->WriteMem(area->Num, Address - area->Base, Value);
-				break;
+				return;
 			}
 	}
+
+	FIsa->WriteMem(Address, Value);
 }
 
 /*##################  TPci::ReadMem  ###############
@@ -852,14 +876,15 @@ char TPci::ReadMem(unsigned long Address)
 	TPciArea *area;
 	int i;
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i <= FHookMemMax; i++)
 	{
 		area = FHookMemArr[i];
 		if (area)
-			if (area->Base <= Address && area->Base + area->Size > Address)
+			if (area->Base <= Address && area->Base + area->Size - 1 >= Address)
 				return area->func->ReadMem(area->Num, Address - area->Base);
 	}
-	return 0xFF;
+
+	return FIsa->ReadMem(Address);
 }
 
 /*##################  TPci::DefaultOut  ###############
@@ -874,16 +899,18 @@ void TPci::DefaultOut(int Port, char Value)
 	TPciArea *area;
 	int i;
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i <= FHookIoMax; i++)
 	{
 		area = FHookIoArr[i];
 		if (area)
 			if (area->Base <= Port && area->Base + area->Size > Port)
 			{
 				area->func->Out(area->Num, Port - area->Base, Value);
-				break;
+				return;
 			}
 	}
+
+	FIsa->Out(Port, Value);
 }
 
 /*##################  TPci::DefaultIn  ###############
@@ -898,12 +925,13 @@ char TPci::DefaultIn(int Port)
 	TPciArea *area;
 	int i;
 
-	for (i = 0; i < 256; i++)
+	for (i = 0; i <= FHookIoMax; i++)
 	{
 		area = FHookIoArr[i];
 		if (area)
 			if (area->Base <= Port && area->Base + area->Size > Port)
 				return area->func->In(area->Num, Port - area->Base);
 	}
-	return 0xFF;
+
+	return FIsa->In(Port);
 }
