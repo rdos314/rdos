@@ -1078,7 +1078,6 @@ PAGE
 send_net_name	DB 'Send Net',0
 
 send_net	Proc far
-	push ds
 	push fs
 	push eax
 	push di
@@ -1165,10 +1164,12 @@ send_start:
 	pop dx
 
 send_done:
+	xor ax,ax
+	mov ds,ax
+;
 	pop di
 	pop eax
 	pop fs
-	pop ds
 	ret
 send_net	Endp
 

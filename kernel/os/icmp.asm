@@ -156,6 +156,9 @@ ReceiveEchoReply	Proc near
 	Signal
 
 receive_echo_reply_done:
+	xor ax,ax
+	mov ds,ax
+	FreeMem
 	ret
 ReceiveEchoReply	Endp
 
@@ -209,6 +212,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveDiscard	Proc near
+	xor ax,ax
+	mov ds,ax
+	FreeMem
 	ret
 ReceiveDiscard	Endp
 
@@ -248,10 +254,6 @@ Receive	Proc far
 	call word ptr cs:[bx].ReceiveTab
 
 receive_done:
-	xor ax,ax
-	mov ds,ax
-	FreeMem
-;
 	pop bx
 	pop ax
 	ret

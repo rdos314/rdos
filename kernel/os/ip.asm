@@ -363,7 +363,6 @@ PAGE
 send_ip_data_name	DB 'Send IP Data',0
 
 send_ip_data	Proc far
-	push ds
 	push fs
 	push eax
 	push bx
@@ -441,6 +440,7 @@ send_local_net:
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
 	mov esi,OFFSET ip_dest
+	add esi,edi
 	SendNet
 
 send_done:
@@ -451,7 +451,6 @@ send_done:
 	pop bx
 	pop eax
 	pop fs
-	pop ds
 	ret
 send_ip_data	Endp
 
@@ -478,7 +477,6 @@ receive	Proc far
 	push ecx
 	push esi
 ;
-	int 3
 	mov es:[0],di
 	mov ax,es:[di].ip_size
 	xchg al,ah
