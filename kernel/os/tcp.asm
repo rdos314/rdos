@@ -439,6 +439,93 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			CopyFromBuffer
+;
+;	Purpose:		Copy from buffer
+;
+;	Parameters:		CX          Number of bytes
+;                   FS:BX       Buffer pointer
+;                   ES:EDI      Destination address
+;
+;   Returns:        BX          New buffer pointer
+;                   EDI         New destination
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyFromBuffer    Proc near
+    push eax
+    push cx
+;
+    or cx,cx
+    jz cfbDone
+
+cfbLoop:
+	mov al,fs:[bx]
+	mov es:[edi],al
+	inc bx
+	inc edi
+	cmp bx,ds:tcp_buffer_size
+	jnz cfbWrapDone
+	
+	xor bx,bx
+	
+cfbWrapDone:
+	loop cfbLoop
+
+cfbDone:
+    pop cx
+    pop eax
+    ret
+CopyFromBuffer  Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CopyToBuffer
+;
+;	Purpose:		Copy to buffer
+;
+;	Parameters:		CX          Number of bytes
+;                   FS:BX       Buffer pointer
+;                   ES:ESI      Source address
+;
+;   Returns:        BX          New buffer pointer
+;                   ESI         New source
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+CopyToBuffer    Proc near
+    push eax
+    push cx
+;
+    or cx,cx
+    jz ctbDone    
+
+ctbLoop:
+	mov al,es:[esi]
+	mov fs:[bx],al
+	inc bx
+	inc esi
+	cmp bx,ds:tcp_buffer_size
+	jnz ctbWrapDone
+;
+	xor bx,bx
+	
+ctbWrapDone:
+	loop ctbLoop
+
+ctbDone:
+    pop cx
+    pop eax
+    ret
+CopyToBuffer    Endp    
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			CreateConnection
 ;
 ;	Purpose:		Create a connection and link it
@@ -1050,28 +1137,16 @@ send_ack_data_no_push:
 ;
 	add di,SIZE tcp_header
 	mov fs,ds:tcp_send_buffer
-	mov bx,ds:tcp_send_head
-	mov dx,ds:tcp_send_count
-;
 	or cx,cx
 	jz send_ack_do
-
-send_ack_data_loop:
-	mov al,fs:[bx]
-	dec dx
-	inc bx
-	cmp bx,ds:tcp_buffer_size
-	jnz send_ack_data_no_wrap
-	xor bx,bx
-send_ack_data_no_wrap:
-	mov es:[di],al
-	inc di
-	loop send_ack_data_loop
+;
+    movzx edi,di
+	sub ds:tcp_send_count,cx
+	mov bx,ds:tcp_send_head
+    call CopyFromBuffer
+	mov ds:tcp_send_head,bx
 
 send_ack_do:
-	mov ds:tcp_send_head,bx
-	mov ds:tcp_send_count,dx
-;
 	pop di
 	pop cx
 	pop fs
@@ -1270,17 +1345,9 @@ retrans_no_fin:
 retrans_data_copy:
 	or cx,cx
 	jz retrans_do
-
-retrans_data_loop:
-	mov al,fs:[bx]
-	inc bx
-	cmp bx,ds:tcp_buffer_size
-	jnz retrans_data_no_wrap
-	xor bx,bx
-retrans_data_no_wrap:
-	mov es:[di],al
-	inc di
-	loop retrans_data_loop
+;
+    movzx edi,di
+    call CopyFromBuffer
 
 retrans_do:
 	pop di
@@ -1981,18 +2048,8 @@ process_data_reorder:
 	pop bx
 	pop cx
 ;
-	mov dx,ds:tcp_buffer_size
-
-process_data_loop:
-	mov al,es:[si]
-	mov fs:[bx],al
-	inc bx
-	inc si
-	cmp bx,dx
-	jnz process_data_no_wrap
-	xor bx,bx
-process_data_no_wrap:
-	loop process_data_loop
+    movzx esi,si
+    call CopyToBuffer
 
 process_data_moved:
 	mov eax,ds:tcp_reorder_arr.reorder_seq
@@ -3953,27 +4010,23 @@ read_tcp_retry:
 	test ds:tcp_pending,FLAG_DELETE_NET
 	jnz read_tcp_fail
 ;
-	mov dx,ds:tcp_receive_count
-	or dx,dx
-	jz read_tcp_no_char
+    mov edx,ecx
+    movzx eax,ds:tcp_receive_count
+    cmp ecx,eax
+    jb read_tcp_size_ok
 ;
-	mov bx,ds:tcp_receive_head
-	dec dx
-	mov ds:tcp_receive_count,dx
-	mov dl,fs:[bx]
-	inc bx
-	cmp bx,ds:tcp_buffer_size
-	jnz read_tcp_no_wrap
-	xor bx,bx
-read_tcp_no_wrap:
-	mov ds:tcp_receive_head,bx
-	mov es:[edi],dl
-	inc edi
-	inc eax
-	dec ecx
-	jmp read_tcp_loop
+    mov ecx,eax
 
-read_tcp_no_char:
+read_tcp_size_ok:
+    sub ds:tcp_receive_count,cx
+    mov bx,ds:tcp_receive_head
+    call CopyFromBuffer
+    mov ds:tcp_receive_head,bx
+;
+    xchg ecx,edx
+    sub ecx,edx
+    jz read_tcp_ok    
+;
 	test ds:tcp_pending, FLAG_REC_PUSH
 	jz read_tcp_wait
 ;
@@ -4147,44 +4200,43 @@ PAGE
 
 WriteNormal	Proc near
 	mov fs,ds:tcp_send_buffer
+    mov esi,edi
 
 write_tcp_retry:
 	test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_CLOSED
 	jnz write_tcp_fail
 ;
-	mov bx,ds:tcp_send_tail
+	or ecx,ecx
+	jz write_tcp_ok
+;	
 	mov dx,ds:tcp_buffer_size
 	sub dx,ds:tcp_send_count
 	movzx edx,dx
-	cmp edx,ecx
-	jc write_tcp_loop
-;	
-	mov dx,cx
-
-write_tcp_loop:
-	or ecx,ecx
-	jz write_tcp_ok
 ;
-    or dx,dx
+	mov eax,ds:tcp_send_next
+	sub eax,ds:tcp_send_una
+;
+    sub edx,eax
+    jc write_tcp_full
+;
+    mov eax,ecx
+	cmp ecx,edx
+	jc write_tcp_size_ok
+;	
+	mov ecx,edx
+
+write_tcp_size_ok:	
+    or ecx,ecx
     jz write_tcp_full
 ;
-	mov al,es:[edi]
-	mov fs:[bx],al
-;
-	inc edi
-	dec ecx
-	dec dx
-	inc ds:tcp_send_count
-;	
-	inc bx
-	cmp bx,ds:tcp_buffer_size
-	jnz write_tcp_next
-;
-	xor bx,bx
-
-write_tcp_next:
-	mov ds:tcp_send_tail,bx
-	jmp write_tcp_loop
+    add ds:tcp_send_count,cx
+	mov bx,ds:tcp_send_tail
+    call CopyToBuffer
+    mov ds:tcp_send_tail,bx
+;    
+    xchg eax,ecx
+    sub ecx,eax
+    jmp write_tcp_retry
 
 write_tcp_full:
 	call SendData
