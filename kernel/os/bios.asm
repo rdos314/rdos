@@ -618,11 +618,6 @@ init_bios_data_loop:
 	mov es,ax
 ;
 	mov di,OFFSET emulate_bios
-	mov eax,008000h
-	mov edx,0C0000h
-	SetPageEmulate
-;
-	mov di,OFFSET emulate_bios
 	mov eax,010000h
 	mov edx,0F0000h
 	SetPageEmulate
