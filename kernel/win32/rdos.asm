@@ -567,6 +567,34 @@ RdosAddWaitForMouse	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosAddWaitForCom
+;
+;		description:	void RdosAddWaitForCom(int Handle, int ComHandle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForCom
+
+RdosAddWaitForCom	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate add_wait_for_com_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddWaitForCom	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetTextMode
 ;
 ;		description:	int RdosSetTextMode();
@@ -2015,9 +2043,9 @@ PAGE
 ;
 ;		NAME:			RdosFlushCom
 ;
-;		description:	Clear receive and transmit buffer
+;		description:	Flush comport
 ;
-;		PARAMETERS:		port_handle	    port handle
+;		PARAMETERS:		port_handle		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2035,71 +2063,6 @@ RdosFlushCom	Proc
 	pop ebp
 	ret 4
 RdosFlushCom	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			RdosPollCom
-;
-;		description:	Check if any char is available
-;
-;		PARAMETERS:		hport		port handle
-;
-;		RETURNS:		> 0			number of chars in buffer
-;						FALSE		buffer empty
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public RdosPollCom
-
-RdosPollCom	PROC
-	push ebp
-	mov ebp,esp
-	push ebx
-;
-	mov bx,[ebp+8]
-	UserGate poll_com_nr
-;
-	pop ebx
-	pop ebp
-	ret 4
-RdosPollCom	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			RdosWaitForCom
-;
-;		description:	Wait for char with timeout
-;
-;		PARAMETERS:		hport		port handle
-;						timeout		milliseconds timeout
-;
-;		RETURNS:		> 0			number of chars in buffer
-;						FALSE		buffer empty
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public RdosWaitForCom
-
-RdosWaitForCom	PROC
-	push ebp
-	mov ebp,esp
-	push ebx
-;
-	mov bx,[ebp+8]
-	mov eax,[ebp+12]
-	UserGate wait_for_com_nr
-	movzx eax,ax
-;
-	pop ebx
-	pop ebp
-	ret 8
-RdosWaitForCom	ENDP
 
 PAGE
 

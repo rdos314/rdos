@@ -94,9 +94,9 @@ keyboard_srcs = KEYBOARD.ASM
 keyboard_objs = $(keyboard_srcs:.ASM=.OBJ)
 keyboard_rdvs = KEYBOARD.RDV
 
-key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
+key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM SERKEY.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
-key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV
+key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV SERKEY.RDV
 
 keym_srcs = KEYMOUSE.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
 keym_objs = $(keym_srcs:.ASM=.OBJ)
@@ -437,6 +437,14 @@ KEYMFR.RDV : $(keym_objs)
 	KEYMOUSE+KEYFR
 	KEYMFR.RDV
 	KEYMFR;
+!
+
+SERKEY.RDV : $(key_objs)
+    tlink @&&!
+	$(link_opt) +
+	SERKEY+KEYSW
+	SERKEY.RDV
+	SERKEY;
 !
 
 MOUSE.RDV : $(mouse_objs)

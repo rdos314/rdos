@@ -42,6 +42,8 @@ public:
 
 	int ID;
 
+    TWait *GetWait();
+
 protected:
 	int RegisterWait(TWait *Wait);
 	virtual void SignalNewData() = 0;

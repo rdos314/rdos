@@ -43,34 +43,10 @@ INCLUDE os.inc
 INCLUDE key.inc
 
 
-;
-; ctrl_func data types
-;
-ctrl_F1		EQU 0
-ctrl_F2		EQU 1
-ctrl_F3		EQU 2
-ctrl_F4		EQU 3
-ctrl_F5		EQU 4
-ctrl_F6		EQU 5
-ctrl_F7		EQU 6
-ctrl_F8		EQU 7
-ctrl_F9		EQU 8
-ctrl_F10	EQU 9
+COM_BASE = 3F8h
+COM_IRQ = 4
+COM_BAUD_DIV = 1
 
-;
-; status
-;
-status_key_req		EQU 1
-status_key_ack		EQU 4
-
-key_data_seg	STRUC
-
-mode_thread		DW ?
-command			DB ?
-status			DB ?
-focus_req       DB ?
-
-key_data_seg	ENDS
 
 	.386p
 
@@ -524,10 +500,6 @@ caps_press_scan	PROC near
 	xor ax,caps_active
 	SetKeyboardState
 	pop ax
-;
-	mov bx,ds:mode_thread
-	Signal
-    clc
 	ret
 caps_press_scan	ENDP
 
@@ -548,10 +520,6 @@ num_press_scan	PROC near
 	xor ax,num_active
 	SetKeyboardState
 	pop ax
-;
-	mov bx,ds:mode_thread
-	Signal
-    clc
 	ret
 num_press_scan	ENDP
 
@@ -694,21 +662,7 @@ pause_break_rel_scan	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 f_press_scan	PROC near
-    push ax
-    GetKeyboardState
-    mov cx,ax
-    pop ax
-;
-	test cx,ctrl_pressed
-	jz f_press_norm
-;
-    mov ds:focus_req,al
-	mov bx,ds:mode_thread
-	Signal
-	stc
-    ret
-
-f_press_norm:
+    SetFocus
     clc
     ret
 f_press_scan    ENDP
@@ -1009,233 +963,49 @@ pFF	DW	OFFSET normal_scan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SendCommand
+;		NAME:			keyboard_pr
 ;
-;		DESCRIPTION:	Send a command to keyboard port
-;
-;		PARAMETERS:		AL		command
+;		DESCRIPTION:	Keyboard thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-TimeoutCommand	Proc far
-	mov ax,pc_key_data_sel
-	mov ds,ax
-	in al,64h
-	test al,2
-	jnz timeout_command_retry
-	mov al,ds:command
-	out 60h,al
-	jmp timeout_command_done
+keyboard_name	DB 'Serial Keyboard',0
 
-timeout_command_retry:
-	mov ax,cs
-	mov es,ax
-	GetSystemTime
-	add eax,1193*30
-	adc edx,0
-	mov bx,ds:mode_thread
-	mov di,OFFSET TimeoutCommand
-	StartTimer
+wait_handle = -2
+com_handle = -4
 
-timeout_command_done:
-	ret
-TimeoutCommand	Endp
+keyboard_pr:
+    push bp
+    mov bp,sp
+    sub sp,4
+    mov dx,COM_BASE
+    mov al,COM_IRQ
+    mov ah,8
+    mov bl,1
+    mov bh,'N'
+    mov cx,COM_BAUD_DIV
+    mov si,100h
+    mov di,100h
+    OpenCom
+    mov [bp].com_handle,bx
+    CreateWait
+    mov [bp].wait_handle,bx
+    mov ax,[bp].com_handle
+    AddWaitForCom
 
-SendCommand	proc near
-	mov ds:command,al
-send_check_ready:
-	in al,64h
-	test al,2
-	jz send_command_do
-	mov eax,10
-	WaitMilliSec
-	jmp send_check_ready
-
-send_command_do:
-	cli
-	mov al,ds:status
-	or al,status_key_req
-	and al,NOT status_key_ack
-	mov ds:status,al
-	sti
-	mov ax,cs
-	mov es,ax
-	GetSystemTime
-	add eax,1193*30
-	adc edx,0
-	mov bx,ds:mode_thread
-	mov di,OFFSET TimeoutCommand
-	StopTimer
-	StartTimer
-	mov al,ds:command
-	out 60h,al
-send_command_wait:
-	WaitForSignal
-	test ds:status, status_key_ack
-	jz send_command_wait
+keyboard_loop:
+    mov bx,[bp].wait_handle
+    WaitWithoutTimeout
+    mov bx,[bp].com_handle
+    ReadCom
 ;
-	mov bx,ds:mode_thread
-	StopTimer
-	ret
-SendCommand	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			UpdateMode
-;
-;		DESCRIPTION:	Update mode indicators
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateMode	PROC near
-	mov al,0EDh
-	call SendCommand
-;
-    GetKeyboardState
-    mov dx,ax
-	xor al,al
-	test dx,num_active
-	jz num_off
-	or al,2
-num_off:
-	test dx,caps_active
-	jz caps_off
-	or al,4
-caps_off:
-	call SendCommand
-	ret
-UpdateMode	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			mode_pr
-;
-;		DESCRIPTION:	Keyboard LED thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-mode_name	DB 'Keyboard LEDs',0
-
-mode_pr:
-	sti
-	mov ax,pc_key_data_sel
-	mov ds,ax
-	GetThread
-	mov ds:mode_thread,ax
-	in al,60h
-
-mode_thread_loop:
-	WaitForSignal
-	mov al,ds:focus_req
-	or al,al
-	jz mode_thread_mode
-;
-    mov ds:focus_req,0
-    SetFocus
-    jmp mode_thread_loop
-
-mode_thread_mode:
-	call UpdateMode
-	jmp mode_thread_loop
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			keyb_int
-;
-;		DESCRIPTION:	Keyboard hardware int
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-keyb_int	Proc far
-	cld
-keyb_int_loop:
-	cli
-	in al,64h
-	test al,1
-	jz keyb_int_done
-;
-	in al,60h
-	sti
-	or al,al
-	je keyb_int_loop
-;
-	test ds:status,status_key_req
-	jz keyb_int_not_resend
-;
-	cmp al,0FAh
-	jnz keyb_int_not_ack
-;
-	cli
-	mov al,ds:status
-	or al,status_key_ack
-	and al,NOT status_key_req
-	mov ds:status,al
-	mov bx,ds:mode_thread
-	Signal
-	jmp keyb_int_loop
-
-keyb_int_not_ack:
-	cmp al,0FEh
-	jnz keyb_int_not_resend
-;
-	mov al,ds:command
-	out 60h,al
-	jmp keyb_int_loop
-
-keyb_int_not_resend:
-	cmp al,0FFh
-	je keyb_int_loop
-;
-	cmp al,0E0h
-	jnz keyb_int_not_numpad
-;
-	push ax
-	GetKeyboardState
-	or ax,ext_numpad_active
-	and ax, NOT ext_numpad_handled
-	SetKeyboardState
-	pop ax
-	jmp keyb_int_loop	
-
-keyb_int_not_numpad:
-	push ax
-	GetKeyboardState
-	mov cx,ax
-	pop ax
-	test cx,ext_numpad_active
-	jz keyb_int_numpad_handled
-;
-	test cx, ext_numpad_handled
-	jz keyb_int_numpad_mark_handled
-;
-	and cx, NOT ext_numpad_active
-	push ax
-	mov ax,cx
-	SetKeyboardState
-	pop ax
-	jmp keyb_int_numpad_handled
-
-keyb_int_numpad_mark_handled:
-	or cx, ext_numpad_handled
-	push ax
-	mov ax,cx
-	SetKeyboardState
-	pop ax
-
-keyb_int_numpad_handled:
 	movzx bx,al
 	add bx,bx
 	call word ptr cs:[bx].handle_scan_code_tab
-	jc keyb_int_done
+	jc keyboard_loop
 ;
     call decode_scan_code
-
-keyb_int_done:
-	ret
-keyb_int	Endp
+    jmp keyboard_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1250,27 +1020,12 @@ init_keyb_thread	PROC far
 	push ds
 	push es
 	pusha
-;
-	mov bx,pc_key_data_sel
-	mov ds,bx
-	mov al,1
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET keyb_int
-	RequestPrivateIrqHandler
-;
-    mov ax,start_keyboard_nr
-    IsValidOsGate
-    jc keyb_started
-;
-    StartKeyboard
-
-keyb_started:    
+;    
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov si,OFFSET mode_pr
-	mov di,OFFSET mode_name
+	mov si,OFFSET keyboard_pr
+	mov di,OFFSET keyboard_name
 	mov cx,500
 	mov ax,4
 	CreateThread
@@ -1294,28 +1049,13 @@ init	PROC far
 	push ds
 	push es
 	pusha
-	mov bx,pc_key_code_sel
+	mov bx,ser_key_code_sel
 	InitDevice
 ;
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET init_keyb_thread
 	HookInitTasking
-;
-	mov bx,pc_key_data_sel
-	mov eax,SIZE key_data_seg
-	AllocateFixedSystemMem
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
-	mov ax,pc_key_data_sel
-	mov ds,ax
-	xor ax,ax
-	mov ds:mode_thread,ax
-	mov ds:status,0
-	mov ds:focus_req,0
 ;
 	popa
 	pop es

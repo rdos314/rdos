@@ -391,6 +391,13 @@ AddWaitForMouse       MACRO
 	UserGate add_wait_for_mouse_nr
 						ENDM
 
+; IN  AX        Com handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForCom       MACRO
+	UserGate add_wait_for_com_nr
+						ENDM
+
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
 ;	IN  ES:(E)DI	Mailslot name
@@ -1292,18 +1299,6 @@ CloseCom       MACRO
 ;	IN  BX		port handle
 FlushCom       MACRO
 	UserGate flush_com_nr
-						ENDM
-
-;	IN  BX		port handle
-;	OUT AX		number of char in buffer
-PollCom       MACRO
-	UserGate poll_com_nr
-						ENDM
-
-;	IN  BX		port handle
-;	IN  EAX		timeout in ms
-WaitForCom       MACRO
-	UserGate wait_for_com_nr
 						ENDM
 
 ;	IN  BX		port handle

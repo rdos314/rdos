@@ -28,38 +28,25 @@
 #ifndef	_SERIAL_H
 #define _SERIAL_H
 
-#include "device.h"
+#include "waitdev.h"
 
-class TSerialDevice : public TDevice
+class TSerialDevice : public TWaitDevice
 {
 public:
-	TSerialDevice(const char *IniSection, int Port, long Baudrate);
-	TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate);
-	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(int Port, long Baudrate);
-	TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(int Port, int Irq, long Baudrate);
-	TSerialDevice(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
-    TSerialDevice(const char *IniSection);
+	TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate);
+	TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate);
+	TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(TWait *Wait, int Port, long Baudrate);
+	TSerialDevice(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate);
+	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	~TSerialDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
-    virtual void Open();
-    virtual void Close();
 
 	void Block();
 	void Unblock();
-	void SetPort(int Port);
-	void SetIrq(int Irq);
-	void SetBaudrate(long Baudrate);
-	void SetParity(char Parity);
-	void SetDataBits(int Bits);
-	void SetStopBits(int Bits);
-	long GetBaudrate() const;
-	char GetParity() const;
-	int GetDataBits() const;
-	int GetStopBits() const;
 	int GetSendBufferSpace();
 	int GetReceiveBufferSpace();
 	void Clear();
@@ -72,59 +59,22 @@ public:
 	void Write(char ch);
     void Write(const char *buf, int count);
 	void Write(const char *str);
-    int Poll();
 	char Read();
-	int WaitForChar(long MaxWait);
+	int WaitForChar(int Timeout);
+
+	void (*OnChar)(TSerialDevice *Serial, char ch);
 
 protected:
+	virtual void SignalNewData();
 
 private:
-	void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	void Init(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
-	void CalcBase();
-	void CalcIrq();
-	void OpenPort();
+	void Init(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	void Init(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	int CalcBase(int Port);
+	int CalcIrq(int Port);
 
 	TSection FSection;
-	int FPort;
-	int FBase;
-	int FIrq;
-	long FBaudrate;
-	char FParity;
-	int FDataBits;
-	int FStopBits;
 	int FHandle;
-};
-
-class TSerialCommand
-{
-public:
-	TSerialCommand(TSerialDevice *serial);
-	virtual ~TSerialCommand();
-	int Run();
-
-protected:
-	void Block();
-	void Unblock();
-	virtual int Execute() = 0;
-	void Clear();
-	void ResetDtr();
-	void SetDtr();
-	void ResetRts();
-	void SetRts();
-	void EnableAutoRts();
-	void DisableAutoRts();
-	void Write(char ch);
-	void Write(const char *buf, int count);
-	void Write(const char *str);
-    int Poll();
-	char Read();
-    int WaitForChar(long MaxWait);
-
-	TSerialDevice *FSerial;
-
-private:
-
 };
 
 #endif

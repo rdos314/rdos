@@ -131,6 +131,21 @@ TWaitDevice::~TWaitDevice()
 
 /*##########################################################################
 #
+#   Name       : TWaitDevice::GetWait
+#
+#   Purpose....: Get wait
+#   In params..: *
+#   Out params.: *
+#   Returns....: handle to wait
+#
+##########################################################################*/
+TWait *TWaitDevice::GetWait()
+{	
+	return FWait;
+}
+
+/*##########################################################################
+#
 #   Name       : TWait::TWait
 #
 #   Purpose....: Constructor for TWait		                          

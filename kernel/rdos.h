@@ -77,8 +77,6 @@ void __stdcall RdosFreeMem(void *ptr);
 int __stdcall RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
 void __stdcall RdosCloseCom(int Handle);
 void __stdcall RdosFlushCom(int Handle);
-int __stdcall RdosPollCom(int Handle);
-int __stdcall RdosWaitForCom(int Handle, int Timeout);
 char __stdcall RdosReadCom(int Handle);
 void __stdcall RdosWriteCom(int Handle, char Val);
 void __stdcall RdosSetDtr(int Handle);
@@ -135,6 +133,7 @@ void __stdcall RdosStopWait(int Handle);
 void __stdcall RdosRemoveWait(int Handle, void *ID);
 void __stdcall RdosAddWaitForKeyboard(int Handle, void *ID);
 void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
+void __stdcall RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
 
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);

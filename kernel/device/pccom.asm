@@ -36,8 +36,17 @@ include ..\os\user.def
 include ..\os\user.inc
 include ..\os\driver.def
 include ..\os\handle.inc
+include ..\os\wait.inc
 						
 		NAME pccom
+
+serial_wait_header	STRUC
+
+sw_obj			wait_obj_header <>
+sw_handle		DW ?
+
+serial_wait_header	ENDS
+
 
 serial_handle_seg		STRUC
 
@@ -64,7 +73,7 @@ rec_size		DW ?
 rec_buf			DW ?
 send_buf		DW ?
 
-owner_thread	DW ?
+avail_obj   	DW ?
 
 irq				DB ?
 base			DW ?
@@ -144,11 +153,20 @@ rec_pr	PROC near
 	inc bx
 	cmp bx,ds:rec_size
 	jnz rec_no_wrap
+;
 	xor bx,bx
+	
 rec_no_wrap:
 	mov ds:rec_tail,bx
-	mov bx,ds:owner_thread
-	Signal
+;
+    mov bx,ds:avail_obj
+    or bx,bx
+    jz rec_exit
+;
+    mov es,bx
+    SignalWait
+	mov ds:avail_obj,0
+	
 rec_exit:
 	sti
 	ret
@@ -311,6 +329,7 @@ open_com	Proc far
 	mov ds:rec_count,0
 	mov ds:rec_head,0
 	mov ds:rec_tail,0
+	mov ds:avail_obj,0
 ;
 	mov ax,[bp].port_base
 	mov ds:base,ax
@@ -472,25 +491,23 @@ close_com_done:
 close_com	Endp
 
 PAGE
-
+	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
+;		NAME:			FlushCom
 ;
-;		NAME:			flush_com
+;		DESCRIPTION:	Flush com
 ;
-;		description:	Clears receive & transmit queues
-;
-;		PARAMETERS:		BX		Port handle
+;		PARAMETERS:		BX      Wait object
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 flush_com_name DB 'Flush Com',0
 
-flush_com	Proc far
-	push ds
-	push ax
-	push bx
-	push dx
+flush_com	PROC far
+    push ds
+    push ax
 ;
     mov ax,SERIAL_HANDLE
     DerefHandle
@@ -513,125 +530,10 @@ flush_com	Proc far
 	sti
 
 flush_com_done:
-	pop dx
-	pop bx
-	pop ax
-	pop ds
-	retf32
-flush_com	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			poll_com
-;
-;		description:	Check if data is available from port
-;
-;		PARAMETERS:		BX			Port handle
-;
-;		RETURNS:		AX			Number of bytes in buffer			
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-poll_com_name DB 'Poll Com',0
-
-poll_com	PROC far
-	push ds
-	push ax
-	push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc poll_com_done
-;
-	mov ds,[bx].port_sel
-	mov ax,ds:rec_count
-
-poll_com_done:
-    pop bx
     pop ax
-	pop ds
-	retf32
-poll_com	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			wait_for_com
-;
-;		description:	Wait with timeout for data
-;
-;		PARAMETERS:		BX			Port handle
-;						EAX			Timeout in ms
-;
-;		RETURNS:		AX			# of available bytes
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_com_name DB 'Wait For Com',0
-
-WaitForCharTimeout	Proc far
-	mov bx,cx
-	Signal
-	ret
-WaitForCharTimeout	Endp
-
-wait_for_com	PROC far
-	push ds
-	push es
-	push ebx
-	push cx
-	push edx
-	push di
-;
-    push ax
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    pop ax
-    jc wait_for_com_done
-;
-	mov ds,[bx].port_sel
-	mov ebx,eax
-	GetThread
-	mov ds:owner_thread,ax
-	ClearSignal
-;
-	mov ax,ds:rec_count
-	or ax,ax
-	jnz wait_for_com_done
-;
-	mov eax,1193
-	mul ebx
-	push edx
-	push eax
-	GetSystemTime
-	pop ebx
-	add eax,ebx
-	pop ebx
-	adc edx,ebx
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET WaitForCharTimeout
-	mov bx,ds:owner_thread
-	mov cx,bx
-	StartTimer
-	WaitForSignal
-	StopTimer
-	mov ax,ds:rec_count
-
-wait_for_com_done:
-	pop di
-	pop edx
-	pop cx
-	pop ebx
-	pop es
-	pop ds
-	retf32
-wait_for_com	ENDP
+    pop ds
+    retf32
+flush_com Endp
 
 PAGE
 
@@ -998,6 +900,177 @@ reset_rts_done:
 reset_rts	Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForCom
+;
+;		DESCRIPTION:	Start a wait for com
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_com	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sw_handle
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc start_wait_for_done
+;
+	mov ds,[bx].port_sel
+	mov ds:avail_obj,es
+	mov ax,ds:rec_count
+	or ax,ax
+	je start_wait_for_done
+;
+	mov ds:avail_obj,0
+    SignalWait
+
+start_wait_for_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_com Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForCom
+;
+;		DESCRIPTION:	Stop a wait for com
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_com	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sw_handle
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc stop_wait_done
+;
+	mov ds,[bx].port_sel
+	mov ds:avail_obj,0
+
+stop_wait_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+stop_wait_for_com Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearCom
+;
+;		DESCRIPTION:	Clear com
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_com	PROC far
+    ret
+clear_com Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsComIdle
+;
+;		DESCRIPTION:	Check if com is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_com_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sw_handle
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc is_idle_done
+;
+	mov ds,[bx].port_sel
+	mov ax,ds:rec_count
+	or ax,ax
+	clc
+	je is_idle_done
+;
+	stc
+
+is_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_com_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForCom
+;
+;		DESCRIPTION:	Add a wait for serial port
+;
+;		PARAMETERS:		AX      Serial handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_com_name	DB 'Add Wait For Com',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_com,    	com_code_sel
+aw1 DW OFFSET stop_wait_for_com,		com_code_sel
+aw2	DW OFFSET clear_com,				com_code_sel
+aw3	DW OFFSET is_com_idle,		    	com_code_sel
+
+add_wait_for_com	PROC far
+	push ds
+	push es
+	push eax
+	push di
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE serial_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;
+	mov es:sw_handle,ax
+
+add_wait_done:
+    pop di
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_com	ENDP
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1019,6 +1092,12 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET add_wait_for_com
+	mov di,OFFSET add_wait_for_com_name
+	xor dx,dx
+	mov ax,add_wait_for_com_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET open_com
 	mov di,OFFSET open_com_name
 	xor dx,dx
@@ -1035,18 +1114,6 @@ init	Proc far
 	mov di,OFFSET flush_com_name
 	xor dx,dx
 	mov ax,flush_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET poll_com
-	mov di,OFFSET poll_com_name
-	xor dx,dx
-	mov ax,poll_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET wait_for_com
-	mov di,OFFSET wait_for_com_name
-	xor dx,dx
-	mov ax,wait_for_com_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_com

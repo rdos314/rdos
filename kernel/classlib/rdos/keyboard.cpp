@@ -226,11 +226,14 @@ void TKeyboardDevice::SignalNewData()
 	int VirtualKey;
 	int ScanCode;
 
-	if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
-	{
-		if (ExtKey & 0x8000)
-			KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
-		else
-			KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
-	}
+    if (OnKeyPress || OnKeyRelease)
+    {
+    	if (RdosReadKeyEvent(&ExtKey, &KeyState, &VirtualKey, &ScanCode))
+	    {
+    		if (ExtKey & 0x8000)
+	    		KeyRelease(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+		    else
+			    KeyPress(ExtKey & 0x7FFF, KeyState, VirtualKey, ScanCode & 0x7F);
+    	}
+    }
 }
