@@ -153,12 +153,6 @@ register_gate	PROC far
 	push gs
 	push bx
 ;
-;	mov bx,ax
-;	shl bx,3
-;	add bx,os_begin_sel
-;	push cs
-;	call create_call_gate_sel16
-;
 	push ds
 	mov bx,ax
 	mov ax,osgate_sel
@@ -259,13 +253,28 @@ do_osgate16	PROC near
 	mov [bp+14],ax	
 ;
 	mov ax,es:[di].gate_sel
+	cmp ax,[bp+16]
+	je do_direct
+;
 	mov ds:[ebx+3],ax
 	mov [bp+10],ax
 	mov ax,es:[di].gate_offset
 	mov ds:[ebx+1],ax
 	mov [bp+8],ax
 	mov byte ptr ds:[ebx],9Ah
-;
+	jmp do_direct_do
+
+do_direct:
+	mov [bp+10],ax
+	mov ax,es:[di].gate_offset
+	mov [bp+8],ax
+	sub ax,[bp+14]
+	inc ax
+	mov ds:[ebx+2],ax
+	mov word ptr ds:[ebx],0E80Eh
+	mov byte ptr ds:[ebx+4],90h
+
+do_direct_do:
 	pop di
 	pop edx
 	pop ecx

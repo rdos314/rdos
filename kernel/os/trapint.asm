@@ -1004,6 +1004,8 @@ segment_not_present	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+	extrn do_usercall32:near
+
 trap_13:
 	sti
 	push bp
@@ -1011,8 +1013,28 @@ trap_13:
 	push eax
 	push ebx
 	push ds
+;
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t13_default
+;
+	mov ds,[bp].vm_cs
+	mov ebx,[bp].vm_eip
+	mov al,[ebx]
+	cmp al,9Ah
+	jne t13_default
+;
+	mov ax,[ebx+5]
+	cmp ax,2
+	jne t13_default
+;
+	call do_usercall32
+	jnc t13_end
+
+t13_default:
 	mov al,13
 	call emulate
+
+t13_end:
 	pop ds
 	pop ebx
 	pop eax

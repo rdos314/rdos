@@ -1008,23 +1008,58 @@ GetUserCall	ENDP
 GetMne	PROC near
 	push si
 	push di
+;
+	xor dl,dl
+	mov bx,gs:tss_cs
+	test byte ptr gs:tss_eflags+2,2
+	jnz get_cs_bitness_done
+
+get_cs_bitness_pm:
+	test bx,4
+	jz get_cs_bitness_gdt
+
+get_cs_bitness_ldt:
+	mov es,gs:tss_thread
+	mov es,es:p_ldt_sel
+	jmp get_cs_bitness_test
+
+get_cs_bitness_gdt:
+	mov ax,gdt_sel
+	mov es,ax
+
+get_cs_bitness_test:
+	and bx,0FFF8h
+	mov dl,es:[bx+6]
+	shr dl,6
+	and dl,1
+
+get_cs_bitness_done:
 	mov di,OFFSET op_in_text
 	mov si,OFFSET op_in_code
+;
+	mov al,[si]
+	cmp al,66h
+	jne write_op_override_done
+;
+	inc si
+	xor dl,1
+
+write_op_override_done:
 	mov ax,[si]
 	cmp ax,0B0Fh
 	jne not_illegal_op
-	mov al,[si+2]
-	cmp al,66h
-	jne write_illegal16
-	inc si
-	mov al,[si+2]
+
 write_illegal16:
+	mov al,[si+2]
 	cmp al,0CAh
 	je write_illegal_osgate
+;
 	cmp al,0CBh
 	je write_illegal_osgate
+;
 	cmp al,0D6h
 	je write_illegal_usergate
+;
 	cmp al,0D7h
 	je write_illegal_usergate
 	jmp write_special_end
@@ -1043,7 +1078,7 @@ write_illegal_osgate:
 
 write_illegal_usergate:
 	mov eax,[si+3]
-	cmp eax,osgate_entries
+	cmp eax,usergate_entries
 	jnc write_special_fail
 ;
 	shl eax,5
@@ -1054,14 +1089,41 @@ write_illegal_usergate:
 	jmp write_special_end
 
 not_illegal_op:
-	cmp al,66h
-	jne not_call16
-	inc si
-	mov al,[si]
-not_call16:
 	cmp al,9Ah
-	jne write_special_fail
+	jne not_call_far
 ;
+	test dl,1
+	jz write_call_far16
+;
+	mov dx,[si+5]
+	cmp dx,2
+	jne not_call32
+;
+	mov eax,[si+1]
+	cmp eax,usergate_entries
+	jnc write_special_fail
+;
+	shl eax,5
+	mov ebx,eax
+	call GetIllegalUserGate
+	mov op_size,bx
+	clc
+	jmp write_special_end
+	
+not_call32:
+	mov bx,[si+1]
+	mov dx,[si+5]
+	call GetOsCall
+	mov op_size,bx
+	jnc write_special_end
+;
+	mov bx,[si+1]
+	mov dx,[si+5]
+	call GetUserCall
+	mov op_size,bx
+	jmp write_special_end
+
+write_call_far16:
 	mov bx,[si+1]
 	mov dx,[si+3]
 	call GetOsCall
@@ -1070,6 +1132,38 @@ not_call16:
 ;
 	mov bx,[si+1]
 	mov dx,[si+3]
+	call GetUserCall
+	mov op_size,bx
+	jmp write_special_end
+
+not_call_far:
+	cmp al,0E8h
+	jne write_special_fail
+;
+	test dl,1
+	jz write_call_near16
+;
+	mov ebx,[si+1]
+	mov dx,gs:tss_cs
+	add ebx,dword ptr gs:tss_eip
+	add ebx,5
+	call GetUserCall
+	mov op_size,bx
+	jmp write_special_end
+	
+write_call_near16:
+	mov bx,[si+1]
+	mov dx,gs:tss_cs
+	add bx,gs:tss_eip
+	add bx,3
+	call GetOsCall
+	mov op_size,bx
+	jnc write_special_end
+;
+	mov bx,[si+1]
+	mov dx,gs:tss_cs
+	add bx,gs:tss_eip
+	add bx,3
 	call GetUserCall
 	mov op_size,bx
 	jmp write_special_end
