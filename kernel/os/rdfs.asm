@@ -68,6 +68,14 @@ attr_arcive			EQU 20h
 	extrn read_file_block:near
 	extrn write_file_block:near
 
+alloc_struc	STRUC
+
+as_base		DD ?
+as_size		DD ?
+as_sectors	DD ?
+
+alloc_struc	ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -101,7 +109,7 @@ get_rdfs_info	Proc near
 	mov ax,cs
 	mov ds,ax
 	mov esi,OFFSET KeyTab
-	mov ecx,2 * 4096
+	mov ecx,2 * 2048
 	rep movs dword ptr es:[edi],[esi]
 	pop edi
 	pop es
@@ -176,11 +184,13 @@ CreateDrive	Proc near
 	mov ds:info_sector.ri_free_arr_size,edx
 	add edx,2
 	mov ds:info_sector.ri_root_dir,edx
+	mov ds:info_sector.ri_hole_start,edx
 	sub edx,ecx
 	neg edx
 	mov ds:info_sector.ri_total_sectors,edx
-	sub edx,4
 	mov ds:info_sector.ri_free_sectors,edx
+	mov ds:info_sector.ri_hole_size,edx
+	InitSection ds:alloc_section
 ;
 	pop edx
 	pop eax
@@ -213,6 +223,7 @@ WriteInfoSector	Proc near
 	xor eax,eax
 	rep stos dword ptr es:[edi]
 ;
+	mov edi,esi
 	mov esi,OFFSET info_sector
 	mov ecx,SIZE rdfs_info_struc
 	rep movs byte ptr es:[edi],[esi]
@@ -289,6 +300,342 @@ WriteAllocationArr	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CreateAllocMem
+;
+;		DESCRIPTION:	Allocate mem for alloc sectors
+;
+;		PARAMETERS:		DS			Drive
+;						ECX			Number of sectors
+;
+;		RETURNS:		FS			Alloc segment
+;						ESI			Alloc buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateAllocMem	Proc near
+	mov eax,ds:info_sector.ri_hole_start
+	and eax,7Fh
+	add eax,ecx
+	dec eax
+	shr eax,7
+	inc eax
+	mov ecx,eax
+;
+	shl eax,2
+	add eax,SIZE alloc_struc
+	push es
+	AllocateSmallGlobalMem
+	push ecx
+	mov edi,SIZE alloc_struc
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	pop ecx
+	mov bx,es
+	mov fs,bx
+	pop es
+	mov fs:as_sectors,ecx
+;
+	mov eax,ecx
+	shl eax,9
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	AllocateBigLinear	
+	mov esi,edx
+;
+	mov fs:as_base,esi
+	mov fs:as_size,eax
+	ret
+CreateAllocMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeAllocMem
+;
+;		DESCRIPTION:	Free mem for alloc sectors
+;
+;		PARAMETERS:		DS			Drive
+;						FS			Alloc segment
+;						ESI			Alloc buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeAllocMem	Proc near
+	mov edx,fs:as_base
+	mov ecx,fs:as_size
+	FreeLinear
+	push es
+	mov ax,fs
+	mov es,ax
+	xor ax,ax
+	mov fs,ax
+	FreeMem
+	pop es
+	ret
+FreeAllocMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetAllocSectors
+;
+;		DESCRIPTION:	Req & wait for allocate sectors
+;
+;		PARAMETERS:		DS			Drive
+;						FS			Alloc segment
+;						ESI			Alloc buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAllocSectors	Proc near
+	mov edi,SIZE alloc_struc
+	mov edx,ds:info_sector.ri_hole_start
+	shr edx,7
+	add edx,ds:info_sector.ri_free_arr
+	mov ecx,fs:as_sectors
+
+get_alloc_req_loop:
+	mov al,ds:drive_nr
+	ReqSector
+	mov fs:[edi],ebx
+	add edi,4
+	add esi,200h
+	inc edx
+	sub ecx,1
+	jnz get_alloc_req_loop
+;
+	mov ecx,fs:as_sectors
+
+get_alloc_wait_loop:
+	sub esi,200h
+	sub edi,4
+	mov ebx,fs:[edi]
+	WaitForSector
+	jc get_alloc_fail
+;
+	sub ecx,1
+	jnz get_alloc_wait_loop
+;
+	clc
+	jmp get_alloc_done
+
+get_alloc_fail:
+	lea eax,[edi + 4 - SIZE alloc_struc]
+	shl eax,5
+	mov edx,ds:info_sector.ri_hole_start
+	and dl,80h
+	add edx,eax
+	sub edx,ds:info_sector.ri_hole_start
+	add ds:info_sector.ri_hole_start,edx
+	sub ds:info_sector.ri_hole_size,edx
+	sub ds:info_sector.ri_free_sectors,edx	
+	stc
+
+get_alloc_done:
+	ret
+GetAllocSectors	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MarkAllocSectors
+;
+;		DESCRIPTION:	Markup allocate sectors
+;
+;		PARAMETERS:		DS			Drive
+;						FS			Alloc segment
+;						ESI			Alloc buffer
+;						ECX			Sectors to mark
+;						EBP			Markup value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MarkAllocSectors	Proc near
+	mov eax,ds:info_sector.ri_hole_start
+	shl eax,2
+	and eax,1FCh
+	add esi,eax	
+	mov edi,SIZE alloc_struc
+	xor ebx,ebx
+
+mark_alloc_loop:
+	mov eax,es:[esi]
+	or eax,eax	
+	jnz mark_alloc_fail
+;
+	inc ebx
+	mov es:[esi],ebp
+	add esi,4
+	sub ecx,1
+	jnz mark_alloc_loop
+;
+	clc
+	jmp mark_alloc_done
+
+mark_alloc_fail:
+	inc ebx
+	add esi,4
+	test si,1FFh
+	jz mark_alloc_fail_done
+;
+	mov eax,es:[esi]
+	or eax,eax	
+	jnz mark_alloc_fail
+
+mark_alloc_fail_done:
+	add ds:info_sector.ri_hole_start,ebx
+	sub ds:info_sector.ri_hole_size,ebx
+	sub ds:info_sector.ri_free_sectors,ebx	
+	stc
+
+mark_alloc_done:
+	ret
+MarkAllocSectors	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteAllocSectors
+;
+;		DESCRIPTION:	Write allocate sectors
+;
+;		PARAMETERS:		DS			Drive
+;						FS			Alloc segment
+;						ESI			Alloc buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteAllocSectors	Proc near
+	mov ecx,fs:as_sectors
+	mov edi,SIZE alloc_struc
+
+write_alloc_loop:
+	mov ebx,fs:[edi]
+	ModifySeqSector
+	UnlockSector
+	add edi,4
+	sub ecx,1
+	jnz write_alloc_loop
+;
+	ret
+WriteAllocSectors	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CancelAllocSectors
+;
+;		DESCRIPTION:	Cancel for allocate sectors
+;
+;		PARAMETERS:		DS			Drive
+;						FS			Alloc segment
+;						ESI			Alloc buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CancelAllocSectors	Proc near
+	mov ecx,fs:as_sectors
+	mov edi,SIZE alloc_struc
+
+cancel_alloc_loop:
+	mov ebx,fs:[edi]
+	or ebx,ebx
+	jz cancel_alloc_next
+;
+	UnlockSector
+	xor eax,eax
+	mov fs:[edi],eax
+
+cancel_alloc_next:
+	add edi,4
+	sub ecx,1
+	jnz cancel_alloc_loop
+;
+	ret
+CancelAllocSectors	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateSectors
+;
+;		DESCRIPTION:	Allocate sectors
+;
+;		PARAMETERS:		DS			Drive
+;						ECX			Number of sectors
+;						EBP			Control sector
+;
+;		RETURNS:		EDX			Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateSectors	Proc near
+	push es
+	push fs
+	push eax
+	push ebx
+	push ecx
+	push esi
+	push edi
+	push ebp
+;
+	EnterSection ds:alloc_section
+
+alloc_retry:
+	cmp ecx,ds:info_sector.ri_hole_size
+	ja alloc_sectors_fail
+;
+	push ecx
+	call CreateAllocMem
+	call GetAllocSectors
+	pop ecx
+	jc alloc_sectors_restart
+;
+	push ecx
+	call MarkAllocSectors
+	pop ecx
+	jc alloc_sectors_restart
+;
+	push ecx
+	call WriteAllocSectors
+	call FreeAllocMem
+	pop ecx
+;
+	mov edx,ds:info_sector.ri_hole_start
+	add ds:info_sector.ri_hole_start,ecx
+	sub ds:info_sector.ri_hole_size,ecx
+	sub ds:info_sector.ri_free_sectors,ecx
+	clc
+	jmp alloc_sectors_done
+	
+alloc_sectors_restart:
+	push ecx
+	call CancelAllocSectors
+	call FreeAllocMem
+	pop ecx
+	jmp alloc_retry
+
+alloc_sectors_fail:
+	stc
+
+alloc_sectors_done:
+	LeaveSection ds:alloc_section
+;
+	pop ebp
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop eax
+	pop fs
+	pop es
+	ret
+AllocateSectors	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Format
 ;
 ;		DESCRIPTION:	Format filesystem
@@ -308,8 +655,11 @@ format	PROC far
 	mov bx,flat_sel
 	mov es,bx
 	call CreateDrive
-	call WriteInfoSector
-	call WriteAllocationArr
+;	call WriteInfoSector
+;	call WriteAllocationArr
+	mov ecx,2
+	mov ebp,-1
+	call AllocateSectors
 ;
 	mov bx,ds
 	mov es,bx

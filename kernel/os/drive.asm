@@ -1948,7 +1948,6 @@ flush_drive	Proc far
 	push es
 	pushad
 ;
-	int 3
 	movzx bx,al
 	shl bx,1
 	mov ax,disc_data_sel
@@ -1961,10 +1960,11 @@ flush_drive	Proc far
 	mov ds,ds:drive_disc
 ;
 	EnterSection ds:disc_section
+	movzx ebp,ds:disc_sectors_per_unit
 	push edx
 	pop ax
 	pop dx
-	div ds:disc_sectors_per_unit
+	div bp
 	movzx esi,ax
 	movzx ebx,dx
 
@@ -1973,35 +1973,61 @@ flush_loop:
 	or edx,edx
 	jz flush_next_unit
 ;
-	mov edi,es:[4*ebx+edx].disc_sector_arr
-	or edi,edi
-	jz flush_next
+	push ecx
+	lea edi,[4*ebx+edx].disc_sector_arr
+	mov eax,ebp
+	sub eax,ebx
+	cmp eax,ecx
+	ja flush_sector_loop
 ;
+	mov ecx,eax
+
+flush_sector_loop:
+	xor eax,eax
+	repe scas dword ptr es:[edi]
+	sub edi,4
+	xchg eax,es:[edi]
+	or eax,eax
+	jz flush_unit_done
+;
+	push edi
+	mov edi,eax
 	call free_handle
-	mov es:[4*ebx+edx].disc_sector_arr,0
+	pop edi
 	sub es:[edx].disc_sectors,1
-	jnz flush_next
+	jnz flush_sector_loop
 ;
 	mov ds:[4*esi].disc_unit_arr,0
-	push ecx
 	movzx ecx,ds:disc_sectors_per_unit
 	shl ecx,2
 	add ecx,OFFSET disc_sector_arr
 	FreeLinear
+	xor ecx,ecx
+
+flush_unit_done:
+	mov eax,ebp
+	sub eax,ebx
+	sub eax,ecx
 	pop ecx
+	sub ecx,eax
+	jz flush_leave
+;
+	xor ebx,ebx
+	inc esi
+	jmp flush_loop
 
 flush_next_unit:
-	movzx edx,ds:disc_sectors_per_unit
-	sub edx,esi
+	mov edx,ebp
+	sub edx,ebx
 	sub ecx,edx
 	jbe flush_leave
 ;
-	xor esi,esi
-	inc ebx
+	xor ebx,ebx
+	inc esi
 	jmp flush_loop
 
 flush_next:
-	inc esi
+	inc ebx
 	cmp si,ds:disc_sectors_per_unit
 	jne flush_unit_ok
 
@@ -2105,6 +2131,9 @@ PAGE
 ;		PARAMETERS:		AL		Drive #
 ;						EDX		Sector #
 ;
+;		RETURNS:		EBX		Handle
+;						ESI		Logical address of buffer
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 new_sector_name	DB 'New Sector',0
@@ -2113,7 +2142,6 @@ new_sector	PROC far
 	push ds
 	push es
 	push ax
-	push bx
 	push cx
 	push edx
 	push edi
@@ -2166,12 +2194,13 @@ new_loop:
 
 new_done:
 	LeaveSection ds:disc_section
+	mov esi,es:[edi].dh_data
+	mov ebx,edi
 
 new_leave:
 	pop edi
 	pop edx
 	pop cx
-	pop bx
 	pop ax
 	pop es
 	pop ds
@@ -2397,6 +2426,62 @@ modify_done:
 	pop ds
 	ret
 modify_sector	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MODIFY_SEQ_SECTOR
+;
+;		DESCRIPTION:	Modify sequential sector contents
+;
+;		PARAMETERS:		EBX		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+modify_seq_sector_name	DB 'Modify Seq Write Sector',0
+
+modify_seq_sector	PROC far
+	push ds
+	push es
+	pushad
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,ebx
+	mov ds,es:[edi].dh_buf_sel
+	ClearSignal
+	EnterSection ds:disc_section
+
+modify_seq_try_again:
+	test es:[edi].dh_flags, FLAG_IO_BUSY
+	jz modify_seq_not_busy
+;
+	call block
+	jmp modify_seq_try_again
+
+modify_seq_not_busy:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_USED
+	jne modify_seq_done
+
+modify_seq_clean:
+	GetSystemTime
+	mov es:[edi].dh_time_lsb,eax
+	mov es:[edi].dh_time_msb,dx
+	mov es:[edi].dh_state,STATE_SEQ
+	call insert_seq_write
+
+modify_seq_done:
+	LeaveSection ds:disc_section
+	mov bx,ds:disc_thread
+	Signal
+	clc
+;
+	popad
+	pop es
+	pop ds
+	ret
+modify_seq_sector	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2778,158 +2863,6 @@ wait_sector_found:
 	pop ds
 	ret
 wait_for_sector	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			LOCK_SEQ_SECTOR
-;
-;		DESCRIPTION:	Lock sector for sequential write access and return address
-;
-;		PARAMETERS:		AL		Drive #
-;						EDX		Sector #
-;
-;		RETURNS:		EBX		Handle
-;						ESI		Logical address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-lock_seq_sector_name	DB 'Lock Seq Write Access Sector',0
-
-lock_seq_sector	PROC far
-	push ds
-	push es
-	push ax
-	push cx
-	push edx
-	push edi
-;
-	movzx bx,al
-	shl bx,1
-	mov ax,disc_data_sel
-	mov ds,ax
-	mov ds,ds:[bx].drive_def_arr
-	mov ax,flat_sel
-	mov es,ax
-	cmp edx,ds:drive_sectors
-	jc lock_seq_inrange
-;
-	int 3
-	stc
-	jmp lock_seq_done
-
-lock_seq_inrange:
-	add edx,ds:drive_start_sector
-	mov ds,ds:drive_disc
-	push edx
-	pop ax
-	pop dx
-	div ds:disc_sectors_per_unit
-	mov cx,ax
-	EnterSection ds:disc_section
-
-lock_seq_loop:
-	call check_buf
-	jnc lock_seq_found
-;
-	ClearSignal
-	call allocate_handle
-	push edx
-	call allocate_data
-	mov es:[edi].dh_data,edx
-	pop edx
-	mov es:[edi].dh_buf_sel,ds
-	mov es:[edi].dh_sector,dx
-	mov es:[edi].dh_unit,cx
-	mov es:[edi].dh_wait,0
-	mov es:[edi].dh_thread,0
-	mov es:[edi].dh_lock_count,0
-	mov es:[edi].dh_state,STATE_EMPTY
-	mov es:[edi].dh_usage,0
-	mov es:[edi].dh_flags,0
-	mov es:[edi].dh_time_lsb,0
-	mov es:[edi].dh_time_msb,0
-	call insert_buf
-	call insert_pending
-
-lock_seq_signal:
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	clc
-	jne lock_seq_found
-
-lock_seq_block:
-	call block
-	jmp lock_seq_loop
-
-lock_seq_found:
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz lock_seq_block
-;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je lock_seq_signal
-;	
-	inc es:[edi].dh_lock_count
-	inc es:[edi].dh_usage
-	LeaveSection ds:disc_section
-	mov al,es:[edi].dh_state
-;
-	cmp al,STATE_USED
-	je lock_seq_get_adds
-;
-	cmp al,STATE_DIRTY
-	je lock_seq_get_adds
-;
-	cmp al,STATE_SEQ
-	je lock_seq_get_adds
-;
-	stc
-	jmp lock_seq_done
-
-lock_seq_get_adds:
-	mov esi,es:[edi].dh_data
-	mov ebx,edi
-
-lock_seq_done:
-	pop edi
-	pop edx
-	pop cx
-	pop ax
-	pop es
-	pop ds
-	ret
-lock_seq_sector	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UNLOCK_SEQ_SECTOR
-;
-;		DESCRIPTION:	Unlock sequential sector
-;
-;		PARAMETERS:		EBX		Handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unlock_seq_sector_name	DB 'Unlock Seq Write Access Sector',0
-
-unlock_seq_sector	PROC far
-	push es
-	push ax
-	mov ax,flat_sel
-	mov es,ax
-	dec es:[ebx].dh_lock_count
-	xor ebx,ebx
-	pop ax
-	pop es
-	clc
-	ret
-unlock_seq_sector	ENDP
 
 PAGE
 
@@ -3395,7 +3328,6 @@ format_drive_found:
 	sub si,OFFSET drive_def_arr
 	mov ax,si
 	shr al,1
-	int 3
 	FlushDrive
 
 format_do:
@@ -3816,6 +3748,11 @@ init	PROC far
 	mov ax,close_drive_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET flush_drive
+	mov di,OFFSET flush_drive_name
+	mov ax,flush_drive_nr
+	RegisterOsGate
+;
 	mov si,OFFSET new_sector
 	mov di,OFFSET new_sector_name
 	mov ax,new_sector_nr
@@ -3841,6 +3778,11 @@ init	PROC far
 	mov ax,modify_sector_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET modify_seq_sector
+	mov di,OFFSET modify_seq_sector_name
+	mov ax,modify_seq_sector_nr
+	RegisterOsGate
+;
 	mov si,OFFSET req_sector
 	mov di,OFFSET req_sector_name
 	mov ax,req_sector_nr
@@ -3854,16 +3796,6 @@ init	PROC far
 	mov si,OFFSET wait_for_sector
 	mov di,OFFSET wait_for_sector_name
 	mov ax,wait_for_sector_nr
-	RegisterOsGate
-;
-	mov si,OFFSET lock_seq_sector
-	mov di,OFFSET lock_seq_sector_name
-	mov ax,lock_seq_sector_nr
-	RegisterOsGate
-;
-	mov si,OFFSET unlock_seq_sector
-	mov di,OFFSET unlock_seq_sector_name
-	mov ax,unlock_seq_sector_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET reset_drive

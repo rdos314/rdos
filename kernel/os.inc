@@ -1411,17 +1411,9 @@ NewSector	MACRO
 	OsGate new_sector_nr
 					ENDM
 
-;	AL		Drive #
 ;	EBX		Handle
-;	EDX		Sector
-;	ESI		Logical address of data
-LockSeqSector	MACRO
-	OsGate lock_seq_sector_nr
-					ENDM
-
-;	EBX		Handle
-UnlockSeqSector	MACRO
-	OsGate unlock_seq_sector_nr
+ModifySeqSector	MACRO
+	OsGate modify_seq_sector_nr
 					ENDM
 
 ;	AL		DRIVE #

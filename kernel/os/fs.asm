@@ -414,7 +414,6 @@ format_file_system	Proc far
 	push es
 	push di
 ;
-	int 3
 	call GetFileSystem
 	call es:[di].format_proc
 ;

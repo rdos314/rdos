@@ -253,8 +253,7 @@ get_selector_base_size_nr	EQU 222
 get_drive_param_nr			EQU 223
 get_file_list_entry_nr		EQU 224
 free_file_list_entry_nr		EQU 225
-lock_seq_sector_nr			EQU 226
-unlock_seq_sector_nr		EQU 227
+modify_seq_sector_nr		EQU 227
 new_sector_nr				EQU 228
 wait_for_disc_request_nr	EQU 229
 get_disc_request_nr			EQU 230

@@ -32,12 +32,15 @@ ri_free_arr_size	DD ?
 ri_root_dir			DD ?
 ri_total_sectors	DD ?
 ri_free_sectors		DD ?
+ri_hole_start		DD ?
+ri_hole_size		DD ?
 
 rdfs_info_struc	ENDS
 
 drive_data_seg	STRUC
 
 info_sector			rdfs_info_struc <>
+alloc_section		section_typ <>
 drive_nr			DB ?
 
 drive_data_seg	ENDS
