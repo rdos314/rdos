@@ -859,8 +859,8 @@ SetTimeDiff	Proc near
 	adc edx,ds:fract_diff+4
 	UpdateTime
 ;
-;	mov bx,ds:rtc_id
-;	Signal
+	mov bx,ds:rtc_id
+	Signal
 ;
 	popad
 	ret
