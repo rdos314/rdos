@@ -2614,7 +2614,7 @@ modify_clean:
 	mov es:[edi].dh_state,STATE_DIRTY
 ;	
     test es:[edi].dh_flags, FLAG_IO_PENDING
-    jz modify_done
+    jnz modify_done
 ;    
 	GetSystemTime
 	mov es:[edi].dh_time_lsb,eax

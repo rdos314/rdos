@@ -5748,6 +5748,70 @@ ofdDone:
 	ret
 _RdosOpenFileDrive	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosEnableStatusLED
+;
+;       DESCRIPTION:    Enable status LED
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosEnableStatusLED
+
+_RdosEnableStatusLED	Proc far
+	EnableStatusLED
+	ret
+_RdosEnableStatusLED	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDisableStatusLED
+;
+;       DESCRIPTION:    Disable status LED
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosDisableStatusLED
+
+_RdosDisableStatusLED	Proc far
+	DisableStatusLED
+	ret
+_RdosDisableStatusLED	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosStartWatchdog
+;
+;       DESCRIPTION:    Start watchdog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosStartWatchdog
+
+_RdosStartWatchdog	Proc far
+	StartWatchdog
+	ret
+_RdosStartWatchdog	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosKickWatchdog
+;
+;       DESCRIPTION:    Kick watchdog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosKickWatchdog
+
+_RdosKickWatchdog	Proc far
+	KickWatchdog
+	ret
+_RdosKickWatchdog	Endp
+
 code	ENDS
 
 	END

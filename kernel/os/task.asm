@@ -3032,14 +3032,14 @@ leave_user_section	PROC far
 	jz leave_user_section_pop
 ;
 	mov es,ax
-	mov di,es:p_prev
+	mov di,es:p_next
 	cmp di,fs:[bx].ucs_list
 	mov fs:[bx].ucs_list,di
-	mov si,es:p_next
+	mov si,es:p_prev
 	mov ds,di
-	mov ds:p_next,si
+	mov ds:p_prev,si
 	mov ds,si
-	mov ds:p_prev,di
+	mov ds:p_next,di
 	jne leave_user_section_empty
 ;
 	mov word ptr fs:[bx].ucs_list,0
