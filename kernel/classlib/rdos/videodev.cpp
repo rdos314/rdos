@@ -60,4 +60,5 @@ TVideoGraphicDevice::TVideoGraphicDevice(int bpp, int width, int height)
 ##########################################################################*/
 TVideoGraphicDevice::~TVideoGraphicDevice()
 {
+	RdosSetTextMode();
 }
