@@ -164,7 +164,7 @@ init_mode12	Proc far
 ;
 	mov eax,SIZE video_object
 	AllocateSmallGlobalMem
-	mov cx,28
+	mov cx,24
 	mov ax,cs
 	mov ds,ax
 	mov si,OFFSET ModeTab

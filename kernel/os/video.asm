@@ -85,6 +85,8 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+	extrn init_bitmap:near
+
 page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -850,13 +852,22 @@ PAGE
 ;		DESCRIPTION:	Set draw color
 ;
 ;		PARAMETERS:		EAX			RGB color
+;						BX			Bitmap handle or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_draw_color_name	DB 'Set Draw Color',0
 
 set_draw_color	PROC far
-	CallVideo set_draw_color_proc
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	mov ds:v_color,eax
+	pop ds
+	clc
 	retf32
 set_draw_color	ENDP
 
@@ -870,13 +881,27 @@ PAGE
 ;		DESCRIPTION:	Set LGOP
 ;
 ;		PARAMETERS:		AX			LGOP
+;						BX			Bitmap handle or 0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_lgop_name	DB 'Set LGOP',0
 
 set_lgop	PROC far
-	CallVideo set_lgop_proc
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	cmp ax,13
+	jbe set_lgop_ok
+	mov ax,1
+
+set_lgop_ok:
+	mov ds:v_lgop,ax
+	clc
+	pop ds
 	retf32
 set_lgop	ENDP
 
@@ -889,12 +914,21 @@ PAGE
 ;
 ;		DESCRIPTION:	Set hollow style
 ;
+;		PARAMETERS:		BX			Bitmap handle or 0
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_hollow_style_name	DB 'Set Hollow Style',0
 
 set_hollow_style	PROC far
-	CallVideo set_hollow_style_proc
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	mov ds:v_style,STYLE_HOLLOW
+	pop ds
 	retf32
 set_hollow_style	ENDP
 
@@ -907,12 +941,21 @@ PAGE
 ;
 ;		DESCRIPTION:	Set filled style
 ;
+;		PARAMETERS:		BX			Bitmap handle or 0
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_filled_style_name	DB 'Set Filled Style',0
 
 set_filled_style	PROC far
-	CallVideo set_filled_style_proc
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	mov ds:v_style,STYLE_FILLED
+	pop ds
 	retf32
 set_filled_style	ENDP
 
@@ -925,7 +968,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Get pixel
 ;
-;		PARAMETERS:		CX		x
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x
 ;						DX		y
 ;
 ;		RETURNS:		EAX		RGB color
@@ -948,7 +992,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Set pixel
 ;
-;		PARAMETERS:		CX		x
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x
 ;						DX		y
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -969,10 +1014,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a line
 ;
-;		PARAMETERS:		AX		x1
-;						BX		y1
-;						CX		x2
-;						DX		y2
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x1
+;						DX		y1
+;						SI		x2
+;						DI		y2
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -992,10 +1038,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a rectangle
 ;
-;		PARAMETERS:		AX		x
-;						BX		y
-;						CX		w
-;						DX		b
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x
+;						DX		y
+;						SI		w
+;						DI		b
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1015,10 +1062,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a ellipse
 ;
-;		PARAMETERS:		AX		x
-;						BX		y
-;						CX		w
-;						DX		b
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x
+;						DX		y
+;						SI		w
+;						DI		b
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2136,6 +2184,8 @@ init	PROC far
 	HookGetBiosData
 	mov di,OFFSET bda_set_cursor_row
 	HookSetBiosData
+;
+	call init_bitmap
 ;
 	pop ds
 	popa

@@ -76,28 +76,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			init_thread
-;
-;		DESCRIPTION:	Init thread
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init_thread	PROC far
-	mov ax,pc_video_thread_sel
-	mov ds,ax
-	mov ds:vt_color,0
-	mov ds:vt_lgop,1
-	mov ds:vt_style,0
-	ret
-init_thread	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init device
@@ -113,10 +91,6 @@ init	PROC far
 	mov bx,pc_video_code_sel
 	InitDevice
 ;
-	mov eax,SIZE video_thread_seg
-	mov bx,pc_video_thread_sel
-	AllocateFixedThreadMem
-;
 	mov eax,SIZE video_data_seg
 	mov bx,pc_video_data_sel
 	AllocateFixedSystemMem
@@ -125,9 +99,6 @@ init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov di,OFFSET init_thread
-	HookCreateThread
 ;
 	mov di,OFFSET init_focus
 	HookEnableFocus

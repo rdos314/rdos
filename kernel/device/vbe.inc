@@ -128,13 +128,9 @@ vbe_object	STRUC
 
 vo_base			video_api_struc <>
 vo_lfb			DD ?
-vo_lfb_size		DD ?
 vo_lfb_base		DD ?
 vo_mem_base		DD ?
-vo_app_base		DD ?
-vo_row_size		DW ?
 vo_flags		DB ?
-vo_bpp			DB ?
 vo_has_focus	DB ?
 vo_mode_info	vesa_mode_info <>
 

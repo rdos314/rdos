@@ -85,14 +85,17 @@ init:
 	mov cx,800
 	mov dx,600
 	SetVgaMode
+	xor bx,bx
+	mov ax,LGOP_NONE
+	SetLgop
 	mov eax,0FFh
 	SetDrawColor
 	SetFilledStyle
 ;
-	mov ax,50
-	mov bx,100
-	mov cx,200
-	mov dx,150
+	mov cx,50
+	mov dx,100
+	mov si,200
+	mov di,150
 	DrawRect
 ;
 	mov eax,0FF00h
@@ -101,10 +104,10 @@ init:
 	mov ax,LGOP_ADD
 	SetLgop
 ;
-	mov ax,100
-	mov bx,150
-	mov cx,150
-	mov dx,200
+	mov cx,100
+	mov dx,150
+	mov si,150
+	mov di,200
 	DrawRect
 ;
 	SetHollowStyle
@@ -112,27 +115,26 @@ init:
 	mov eax,0FF0000h
 	SetDrawColor
 ;
-	mov ax,50
-	mov bx,100
-	mov cx,200
-	mov dx,150
+	mov cx,50
+	mov dx,100
+	mov si,200
+	mov di,150
 	DrawRect
 ;
-	mov ax,350
-	mov bx,100
-	mov cx,50
-	mov dx,300
+	mov cx,350
+	mov dx,100
+	mov si,50
+	mov di,300
 	DrawLine
 ;
-        SetFilledStyle
-	mov ax,200
-	mov bx,300
-	mov cx,150
-	mov dx,250
+    SetFilledStyle
+	mov cx,200
+	mov dx,300
+	mov si,150
+	mov di,250
 	DrawRect
 	mov eax,0707000h
 	SetDrawColor	
-	mov ax,200
 	DrawEllipse
 ;
 	SetHollowStyle
@@ -140,15 +142,14 @@ init:
 	SetLgop
 	mov eax,07070h
 	SetDrawColor
-        mov ax,200	
 	DrawEllipse
 ;
-        SetFilledStyle
-        mov ax,300
-        mov bx,50
-        mov cx,250
-        mov dx,250
-        DrawEllipse
+    SetFilledStyle
+    mov cx,300
+    mov dx,50
+    mov si,250
+    mov di,250
+    DrawEllipse
         int 3
 	mov ax,3
 	SetVideoMode

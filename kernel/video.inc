@@ -25,6 +25,9 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+STYLE_HOLLOW			EQU 0
+STYLE_FILLED			EQU 1
+
 ; DS 		Video handle
 
 video_api_struc	STRUC
@@ -124,16 +127,6 @@ draw_bitmap_proc		DD ?
 ; IN  DX		end y
 fill_rect_proc			DD ?
 
-; IN  EAX		RGB color
-set_draw_color_proc		DD ?
-
-; IN  AX		LGOP
-set_lgop_proc			DD ?
-
-set_hollow_style_proc			DD ?
-
-set_filled_style_proc			DD ?
-
 ; IN  CX			x
 ; IN  DX			y
 ; OUT EAX			RGB color
@@ -163,5 +156,15 @@ draw_ellipse_proc			DD ?
 
 v_section	section_typ <>
 v_mode		DW ?
+v_width		DW ?
+v_height	DW ?
+v_row_size	DW ?
+v_app_base	DD ?
+v_app_size	DD ?
+v_bpp		DB ?
+
+v_color		DD ?
+v_lgop		DW ?
+v_style		DB ?
 
 video_api_struc	ENDS

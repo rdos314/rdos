@@ -48,10 +48,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-	extrn LinearTab16:near
-	extrn LinearTab24:near
-	extrn LinearTab32:near
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -66,6 +62,11 @@ PAGE
 ;		RETURNS:		AX		Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LinearTab:
+mt00 DW OFFSET delete_linear,		pc_video_code_sel
+mt01 DW OFFSET switch_to_linear,	pc_video_code_sel
+mt02 DW OFFSET switch_from_linear,	pc_video_code_sel
 
 init_flat_mode	Proc far
 	push ds
@@ -149,15 +150,19 @@ init_flat_check:
 	mov ds,ax
 	mov eax,SIZE vbe_object
 	AllocateSmallGlobalMem
+;
+	mov al,dh
+	mov cx,ds:vmi_x_pixels
+	mov dx,ds:vmi_y_pixels
+	InitVideoBitmap
+;
 	mov ax,ds:vmi_scan_lines
-	mov es:vo_row_size,ax
+	mov es:v_row_size,ax
 	mov eax,ds:vmi_lfb
 	mov es:vo_lfb,eax
 	mov es:vo_flags,dl
-	mov es:vo_bpp,dh
 	mov es:vo_has_focus,0
 	mov es:v_mode,bx
-	InitSection es:v_section
 ;
 	mov di,OFFSET vo_mode_info
 	xor si,si
@@ -170,13 +175,13 @@ init_flat_check:
 	dec eax
 	and ax,0F000h
 	add eax,1000h
-	mov es:vo_lfb_size,eax
+	mov es:v_app_size,eax
 	AllocateBigLinear
 	mov es:vo_lfb_base,edx
 	AllocateBigLinear
 	mov es:vo_mem_base,edx
 	AllocateLocalLinear
-	mov es:vo_app_base,edx
+	mov es:v_app_base,edx
 ;
 	push es
 	mov edi,es:vo_mem_base
@@ -193,9 +198,9 @@ init_flat_check:
 	push es
 	mov esi,es:vo_mem_base
 	shr esi,10
-	mov edi,es:vo_app_base
+	mov edi,es:v_app_base
 	shr edi,10
-	mov ecx,es:vo_lfb_size
+	mov ecx,es:v_app_size
 	shr ecx,12
 	mov bx,process_page_sel
 	mov ds,bx
@@ -207,7 +212,7 @@ init_flat_check:
 	push ds
 	mov edi,es:vo_lfb_base
 	shr edi,10
-	mov ecx,es:vo_lfb_size
+	mov ecx,es:v_app_size
 	shr ecx,12
 	mov bx,process_page_sel
 	mov ds,bx
@@ -222,35 +227,11 @@ init_lfb_map_loop:
 	jnz init_lfb_map_loop
 ;
 	pop ds
-;
-	mov al,es:vo_bpp
-	cmp al,16
-	je init_linear16
-;
-	cmp al,24
-	je init_linear24
-;
-	cmp al,32
-	je init_linear32
-;
-	jmp init_flat_free_fail
-
-init_linear16:
-	mov si,OFFSET LinearTab16
-	jmp init_mode_tab
-
-init_linear24:
-	mov si,OFFSET LinearTab24
-	jmp init_mode_tab
-
-init_linear32:
-	mov si,OFFSET LinearTab32
-	
-init_mode_tab:
 	push ds
-	mov cx,28
+	mov cx,3
 	mov ax,cs
 	mov ds,ax
+	mov si,OFFSET LinearTab
 	xor di,di
 	rep movsd
 	mov ax,es
@@ -308,24 +289,24 @@ delete_linear	Proc far
 ;
 	mov edi,ds:vo_lfb_base
 	shr edi,10
-	mov ecx,ds:vo_lfb_size
+	mov ecx,ds:v_app_size
 	shr ecx,12
 	xor eax,eax
 	rep stos dword ptr es:[edi]
 ;
-	mov edi,ds:vo_app_base
+	mov edi,ds:v_app_base
 	shr edi,10
-	mov ecx,ds:vo_lfb_size
+	mov ecx,ds:v_app_size
 	shr ecx,12
 	xor eax,eax
 	rep stos dword ptr es:[edi]
 ;
-	mov ecx,ds:vo_lfb_size
+	mov ecx,ds:v_app_size
 	mov edx,ds:vo_lfb_base
 	FreeLinear
 	mov edx,ds:vo_mem_base
 	FreeLinear
-	mov edx,ds:vo_app_base
+	mov edx,ds:v_app_base
 	FreeLinear
 ;
 	mov ax,ds
@@ -419,14 +400,14 @@ switch_to_active:
 	mov es,ax
 	mov esi,ds:vo_mem_base
 	mov edi,ds:vo_lfb_base
-	mov ecx,ds:vo_lfb_size
+	mov ecx,ds:v_app_size
 	shr ecx,2
 	rep movs dword ptr es:[edi],es:[esi]
 ;
 	mov esi,ds:vo_lfb_base
 	shr esi,10
-	mov edi,ds:vo_app_base
-	mov ecx,ds:vo_lfb_size
+	mov edi,ds:v_app_base
+	mov ecx,ds:v_app_size
 	GetFocusThread
 	mov es,ax
 	mov bx,alias_linear SHR 20
@@ -482,14 +463,14 @@ switch_from_linear	Proc far
 	mov es,ax
 	mov esi,ds:vo_lfb_base
 	mov edi,ds:vo_mem_base
-	mov ecx,ds:vo_lfb_size
+	mov ecx,ds:v_app_size
 	shr ecx,2
 	rep movs dword ptr es:[edi],es:[esi]
 ;
 	mov esi,ds:vo_mem_base
 	shr esi,10
-	mov edi,ds:vo_app_base
-	mov ecx,ds:vo_lfb_size
+	mov edi,ds:v_app_base
+	mov ecx,ds:v_app_size
 	GetFocusThread
 	mov es,ax
 	mov bx,alias_linear SHR 20

@@ -1790,6 +1790,15 @@ RegisterVideoMode	MACRO
 	OsGate register_video_mode_nr
 					ENDM
 
+;	IN  AL		Bits per pixel
+;	IN  CX		Width
+;	IN  DX		Height
+;	IN	ES		Video / bitmap selector
+;	OUT BX		Bitmap handle
+InitVideoBitmap	MACRO
+	OsGate init_video_bitmap_nr
+					ENDM
+
 ;;;;;;;;;; MOUSE ;;;;;;;;;
 
 InitMouse	MACRO

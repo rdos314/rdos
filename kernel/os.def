@@ -342,5 +342,7 @@ register_video_mode_nr		EQU 251
 init_mouse_nr				EQU 252
 update_mouse_nr				EQU 253
 
-osgate_entries				EQU 254
+init_video_bitmap_nr		EQU 254
+
+osgate_entries				EQU 255
 

@@ -1342,24 +1342,29 @@ SetVgaMode      MACRO
 						ENDM
 
 ;	IN  EAX           	RGB color
+;	IN	BX				Bitmap handle or 0
 SetDrawColor        MACRO
 	UserGate set_drawcolor_nr
 						ENDM
 
 ;	IN  AX              LGOP
+;	IN	BX				Bitmap handle or 0
 SetLgop        MACRO
 	UserGate set_lgop_nr
 						ENDM
 
 ;	IN  AX              Requested font height
+;	IN	BX				Bitmap handle or 0
 SetFont        MACRO
 	UserGate set_font_nr
 						ENDM
 
+;	IN	BX				Bitmap handle or 0
 SetHollowStyle        MACRO
 	UserGate set_hollow_style_nr
 						ENDM
 
+;	IN	BX				Bitmap handle or 0
 SetFilledStyle        MACRO
 	UserGate set_filled_style_nr
 						ENDM
@@ -1376,6 +1381,7 @@ GetStringWidth        MACRO
 	UserGate get_string_width_nr
 						ENDM
 
+;	IN	BX		Bitmap handle or 0
 ;	IN  CX		x
 ;	IN  DX		y
 ;	OUT EAX		RGB value
@@ -1383,32 +1389,36 @@ GetPixel      MACRO
 	UserGate get_pixel_nr
 						ENDM
 
+;	IN	BX		Bitmap handle or 0
 ;	IN  CX		x
 ;	IN  DX		y
 SetPixel      MACRO
 	UserGate set_pixel_nr
 						ENDM
 
-;	IN  AX		x1
-;	IN  BX		y1
+;	IN	BX		Bitmap handle or 0
 ;	IN	CX		x2
 ;	IN	DX		y2
+;	IN  SI		x1
+;	IN  DI		y1
 DrawLine      MACRO
 	UserGate draw_line_nr
 						ENDM
 
-;	IN  AX		x
-;	IN  BX		y
+;	IN	BX		Bitmap handle or 0
 ;	IN	CX		w
 ;	IN	DX		h
+;	IN  SI		x
+;	IN  DI		y
 DrawRect      MACRO
 	UserGate draw_rect_nr
 						ENDM
 
-;	IN  AX		x
-;	IN  BX		y
+;	IN	BX		Bitmap handle or 0
 ;	IN	CX		w
 ;	IN	DX		h
+;	IN  SI		x
+;	IN  DI		y
 DrawEllipse      MACRO
 	UserGate draw_ellipse_nr
 						ENDM
