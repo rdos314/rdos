@@ -112,9 +112,6 @@ int TProtocolAnalyser::GetMsg()
 	if (FRawFile->GetSize() <= FRawFile->GetPos())
         return FALSE;
 
-	Pos = FRawFile->GetPos();
-	FRawFile->Read(&Debug, sizeof(TSerialDebug));
-
 	if (FTime)
 		delete FTime;
 	FTime = 0;
@@ -145,7 +142,10 @@ int TProtocolAnalyser::GetMsg()
 
 		Elapsed = Debug.TimeLSB - LastTime;
 		if (Elapsed > 1193 * 25)
+		{
+			FRawFile->SetPos(Pos);
 			return TRUE;
+		}
 
 		LastTime = Debug.TimeLSB;
 		ch = Debug.ch;

@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "serial.h"
 #include "rdos.h"
+#include "keyboard.h"
 
 #include "str.h"
 #include "path.h"
@@ -21,6 +22,7 @@ void cdecl main()
 	char Str[10];
 	TWaitDevice *WaitDevice;
 	TWait Wait;
+	TKeyboardDevice Keyboard;
 
 	TSerialDevice Port1(1, 9600, 'N', 8, 1);
 	TSerialDevice Port2(3, 9600, 'N', 8, 1);
@@ -30,10 +32,11 @@ void cdecl main()
 
 	Wait.Add(&Port1);
 	Wait.Add(&Port2);
+	Wait.Add(&Keyboard);
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-	TFile *File = new TFile("z:\\zap.dat", 0);
+	TFile *File = new TFile("cbus.dat", 0);
 
 	for (;;)
 	{
@@ -54,6 +57,15 @@ void cdecl main()
 			Debug.ch = Port2.Read();
 			File->Write(&Debug, sizeof(Debug));
 			RdosSetForeColor(11);
+		}
+
+		if (WaitDevice == &Keyboard)
+		{
+			if (Keyboard.Poll())
+			{
+				Keyboard.Get();
+				return;
+			}
 		}
 
 		sprintf(Str, "%04hX", Debug.ch);

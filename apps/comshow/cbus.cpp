@@ -166,16 +166,16 @@ int TCbusProtocolAnalyser::GetMsg()
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
+		if (Elapsed > 1193 * 15)
 		{
-		    FRawFile->SetPos(Pos);
+			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
 
 		ch = Debug.ch;
 
-        if (ch == ':')
-            done = TRUE;
+		if (ch == ':')
+			done = TRUE;
 
 		LastTime = Debug.TimeLSB;
 		FSize++;
@@ -205,7 +205,7 @@ int TCbusProtocolAnalyser::GetMsg()
 		}
 		
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
+		if (Elapsed > 1193 * 15)
 		{
 		    FRawFile->SetPos(Pos);
 			return TRUE;
@@ -241,7 +241,7 @@ void TCbusProtocolAnalyser::ShowDefault(TCbusMsg *Msg)
     char str[80];
     
 	sprintf(str, "%02X <%s>", Msg->MessCode, Msg->MsgData);
-//	Write(str);
+	Write(str);
 }
 
 /*##################  TCbusProtocolAnalyser::GetCbusPumpReqText ##########################
@@ -597,19 +597,29 @@ void TCbusProtocolAnalyser::ShowMsg()
 				MsgData[Len] = 0;
 				if (MessCode >= 0x50 && MessCode < 0x60)
 					ShowPumpMsg(ToAdr, FromAdr, MessCode, MsgData);
-//				else
-//					ShowHexMsg();
+				else
+				{
+					ShowLongTime(FTime);
+					ShowMneMsg();
+				}
 			}
-//			else
-//				ShowHexMsg();
+			else
+			{
+				ShowLongTime(FTime);
+				ShowMneMsg();
+			}
 		}
-//		else
-//			ShowHexMsg();
+		else
+		{
+			ShowLongTime(FTime);
+			ShowMneMsg();
+		}
 	}
 	else
 	{
 		UpdatePump();
-//		ShowHexMsg();
+		ShowLongTime(FTime);
+		ShowMneMsg();
 	}
 }
 
@@ -637,8 +647,8 @@ TCbusProtocolAnalyser::TCbusProtocolAnalyser(TFile *RawFile, int MaxSize)
 TCbusProtocolAnalyser::~TCbusProtocolAnalyser()
 {
 	if (FCbusReqMsg)
-        delete FCbusReqMsg;
+		delete FCbusReqMsg;
 
-    if (FCbusReplyMsg)
-        delete FCbusReplyMsg;
+	if (FCbusReplyMsg)
+		delete FCbusReplyMsg;
 }
