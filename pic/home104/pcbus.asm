@@ -67,7 +67,7 @@ WAIT:
 ;;;;;;;;;;
 
 Delay:
-    movlw $FF
+    movlw 1
     movwf DELCNT
 ;
 
