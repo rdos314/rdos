@@ -153,7 +153,7 @@ void TShowPartitionCommand::ShowEntry(int Nr, TPartition *Entry)
 
 		if (Entry->Size)
 		{
-			if (Entry->IsFs())
+			if (Entry->IsFs() && Entry->GetDrive())
 				Drive = Entry->GetDrive()->GetDriveNr();
 			else
 				Drive = 0;
