@@ -3830,6 +3830,367 @@ _RdosWriteString	PROC far
 	ret
 _RdosWriteString	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosNameToIp
+;
+;		DESCRIPTION:	Convert host name to IP address
+;
+;		PARAMETER:		Pathname
+;						IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosNameToIp
+
+_RdosNameToIp	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	NameToIP
+	jc rntiFail
+;
+	mov eax,edx
+	jmp rntiDone
+
+rntiFail:
+	xor eax,eax
+
+rntiDone:
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosNameToIp	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosIpToName
+;
+;		DESCRIPTION:	Convert IP address to host name
+;
+;		PARAMETER:		IP address
+;						Host name
+;						Max size of name
+;
+;		RETURNS:		Number of bytes returned
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosIpToName
+
+_RdosIpToName	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+	mov edx,[bp+6]
+	les di,[bp+10]
+	mov cx,[bp+14]
+	IPToName
+	jnc ritnDone
+
+ritnFail:
+	xor ax,ax
+
+ritnDone:
+	pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosIpToName	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPing
+;
+;		DESCRIPTION:	Ping node
+;
+;		PARAMETER:		Node
+;						Timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosPing
+
+_RdosPing	PROC far
+	push bp
+	mov bp,sp
+	push edx
+;
+	mov edx,[bp+6]
+	mov eax,[bp+10]
+	Ping
+	jc ping_failed
+;
+	mov ax,1
+	jmp ping_done
+
+ping_failed:
+	xor ax,ax
+
+ping_done:
+	pop edx
+	pop bp
+	ret
+_RdosPing	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLocalMailslot
+;
+;		DESCRIPTION:	Get local mailslot from name
+;
+;		PARAMETER:		Name
+;
+;		RETURNS:		Mailslot
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetLocalMailslot
+
+_RdosGetLocalMailslot	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+    GetLocalMailslot
+	jc rglmFail
+;
+	mov ax,bx
+	jmp rglmDone
+
+rglmFail:
+	xor ax,ax
+
+rglmDone:
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosGetLocalMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRemoteMailslot
+;
+;		DESCRIPTION:	Get remote mailslot from name
+;
+;		PARAMETER:		Ip
+;						Name
+;
+;		RETURNS:		Mailslot
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetRemoteMailslot
+
+_RdosGetRemoteMailslot	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push edx
+	push di
+;
+	mov edx,[bp+6]
+	les di,[bp+10]
+	GetRemoteMailslot
+	jc rgrmFail
+;
+	mov ax,bx
+	jmp rgrmDone
+
+rgrmFail:
+	xor ax,ax
+
+rgrmDone:
+	pop di
+	pop edx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosGetRemoteMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosFreeMailslot
+;
+;		DESCRIPTION:	Free mailslot handle
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosFreeMailslot
+
+_RdosFreeMailslot	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	FreeMailslot
+;
+	pop bx
+	pop bp
+	ret
+_RdosFreeMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSendMailslot
+;
+;		DESCRIPTION:	Send to mailslot and wait for reply
+;
+;		PARAMETER:		Handle
+;						Msg
+;						Size
+;						ReplyBuf
+;						MaxReplySize
+;
+;		RETURNS:		Reply size or -1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSendMailslot
+
+_RdosSendMailslot	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push es
+	push bx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	lds si,[bp+8]
+	mov cx,[bp+12]
+	les di,[bp+14]
+	mov ax,[bp+18]
+	SendMailslot
+	jc smFail
+;
+	mov ax,cx
+	jmp smDone
+
+smFail:
+	mov ax,-1
+
+smDone:
+	pop di
+	pop si
+	pop bx
+	pop es
+	pop ds
+	pop bp
+	ret
+_RdosSendMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosDefineMailslot
+;
+;		DESCRIPTION:	Define mailslot for current thread
+;
+;		PARAMETER:		Name
+;						Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDefineMailslot
+
+_RdosDefineMailslot	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+	DefineMailslot
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosDefineMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReceiveMailslot
+;
+;		DESCRIPTION:	Receive from mailslot
+;
+;		PARAMETER:		Msg buffer
+;
+;		RETURNS:		Message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReceiveMailslot
+
+_RdosReceiveMailslot	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	ReceiveMailslot
+	mov ax,cx
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosReceiveMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReplyMailslot
+;
+;		DESCRIPTION:	Receive from mailslot
+;
+;		PARAMETER:		Msg
+;						Size
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReplyMailslot
+
+_RdosReplyMailslot	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+	ReplyMailslot
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosReplyMailslot	Endp
+
 code	ENDS
 
 	END

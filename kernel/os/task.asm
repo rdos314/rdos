@@ -40,7 +40,7 @@ INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 
-section_num	EQU 64
+section_num	EQU 512
 
 user_section	STRUC
 

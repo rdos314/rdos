@@ -1,12 +1,12 @@
 
-#ifndef _SYSTEM_H
-#define _SYSTEM_H
+#ifndef _RDOS_H
+#define _RDOS_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#undef WIN32
+//#undef WIN32
 
 #define FILE_ATTRIBUTE_READONLY         0x1
 #define FILE_ATTRIBUTE_HIDDEN           0x2
@@ -32,10 +32,6 @@ extern "C" {
 #define getgreen(pgc)     (((pgc)>>8)&0xFF)
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
-
-#ifndef __stdcall
-#define __stdcall
-#endif
 
 void __stdcall RdosSetTextMode();
 int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);

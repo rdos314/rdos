@@ -45,8 +45,21 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
+    int IsOpen();
+	void Open();
+	void Close();
+	
 	void Block();
 	void Unblock();
+	void SetBaudrate(long Baudrate);
+	void SetParity(char Parity);
+	void SetDataBits(int Bits);
+	void SetStopBits(int Bits);
+	long GetBaudrate() const;
+	int GetPort() const;
+	char GetParity() const;
+	int GetDataBits() const;
+	int GetStopBits() const;
 	int GetSendBufferSpace();
 	int GetReceiveBufferSpace();
 	void Clear();
@@ -72,9 +85,51 @@ private:
 	void Init(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	int CalcBase(int Port);
 	int CalcIrq(int Port);
+	void OpenPort();
 
 	TSection FSection;
 	int FHandle;
+
+    TWait *FCurrWait;
+    int FPort;
+	int FIrq;
+	int FBase;
+	long FBaudrate;
+	char FParity;
+	int FDataBits;
+	int FStopBits;
+	int FDataMask;
+	int FAutoRts;
+};
+
+class TSerialCommand
+{
+public:
+	TSerialCommand(TSerialDevice *serial);
+	virtual ~TSerialCommand();
+	int Run();
+
+protected:
+	void Block();
+	void Unblock();
+	virtual int Execute() = 0;
+	void Clear();
+	void ResetDtr();
+	void SetDtr();
+	void ResetRts();
+	void SetRts();
+	void EnableAutoRts();
+	void DisableAutoRts();
+	void Write(char ch);
+	void Write(const char *buf, int count);
+	void Write(const char *str);
+	char Read();
+    int WaitForChar(long MaxWait);
+
+	TSerialDevice *FSerial;
+
+private:
+
 };
 
 #endif

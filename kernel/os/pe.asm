@@ -3190,11 +3190,13 @@ allocate_mem	PROC far
 	and ax,0F000h
 	add eax,1000h
 	mov ecx,eax
+	push ecx
 	AllocateLocalLinear
 	sub edx,local_page_linear
 ;
 	mov eax,SIZE pe_mem_struc
 	AllocateLocalMem
+	pop ecx
 	mov es:mem_base,edx
 	mov es:mem_size,ecx
 	mov ax,pe_app_sel
