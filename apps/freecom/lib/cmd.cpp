@@ -36,6 +36,80 @@
 
 TFile *TCommand::FInputFile = new TFile("CON");
 TFile *TCommand::FOutputFile = new TFile("CON");
+TCommandFactory *TCommandFactory::FCmdList = 0;
+
+/*##########################################################################
+#
+#   Name       : TCommandFactory::TCommandFactory
+#
+#   Purpose....: Constructor for command factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCommandFactory::TCommandFactory(const char *name)
+  : FName(name)
+{	
+	InsertCommand();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandFactor::~TCommandFactor
+#
+#   Purpose....: Destructor for command factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCommandFactory::~TCommandFactory()
+{	
+	RemoveCommand();
+}
+
+/*##################  TCommandFactory::InsertCommand  ##########################
+*   Purpose....: Insert device into command list                           #
+*				 Should only be done in constructor							#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TCommandFactory::InsertCommand()
+{
+	FList = FCmdList;
+	FCmdList = this;
+}
+
+/*##################  TCommandFactory::RemoveCommand  ##########################
+*   Purpose....: Remove device from command list                           #
+*				 Should only done in destructor								#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TCommandFactory::RemoveCommand()
+{
+	TCommandFactory *ptr;
+	TCommandFactory *prev;
+	prev = 0;
+
+	ptr = FCmdList;
+	while ((ptr != 0) && (ptr != this))
+    {
+		prev = ptr;
+		ptr = ptr->FList;
+    }
+	if (prev == 0)
+		FCmdList = FCmdList->FList;
+	else
+		prev->FList = ptr->FList;
+}
 
 /*##########################################################################
 #

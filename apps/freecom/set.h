@@ -30,6 +30,13 @@
 
 #include "cmd.h"
 
+class TSetFactory : public TCommandFactory
+{
+public:
+	TSetFactory();
+	virtual TCommand *Create(const char *param);
+};
+
 class TSetCommand : public TCommand
 {
 public:

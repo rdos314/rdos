@@ -99,4 +99,21 @@ protected:
 	static TFile *FOutputFile;
 };
 
+class TCommandFactory
+{
+public:
+    TCommandFactory(const char *name);
+	virtual ~TCommandFactory();
+
+	virtual TCommand *Create(const char *param) = 0;
+
+protected:
+	void InsertCommand();
+	void RemoveCommand();
+
+	static TCommandFactory *FCmdList;
+	TCommandFactory *FList;
+	TString FName;
+};
+
 #endif

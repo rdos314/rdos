@@ -35,6 +35,38 @@
 
 /*##########################################################################
 #
+#   Name       : TSetFactory::TSetFactory
+#
+#   Purpose....: Constructor for TSetFactory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSetFactory::TSetFactory()
+  : TCommandFactory("SET")
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TSetFactory::Create
+#
+#   Purpose....: Create a command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TCommand *TSetFactory::Create(const char *param)
+{
+	return new TSetCommand(param);
+}
+
+/*##########################################################################
+#
 #   Name       : TSetCommand::TSetCommand
 #
 #   Purpose....: Constructor for TSetCommand
