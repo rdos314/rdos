@@ -137,6 +137,51 @@ RdosCreateThread	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetThreadHandle
+;
+;		description:	Get current thread handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetThreadHandle
+
+RdosGetThreadHandle	PROC
+	UserGate get_thread_nr
+	movzx eax,ax
+	ret
+RdosGetThreadHandle	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosExec
+;
+;		description:	Execute a program
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosExec
+
+RdosExec	PROC
+	push ebp
+	mov ebp,esp
+	push esi
+	push edi
+;
+	mov esi,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate load_exe_nr
+	UserGate get_exit_code_nr
+;
+	pop edi
+	pop esi
+	pop ebp
+	ret 8
+RdosExec	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosAllocateMem
 ;
 ;		description:	Allocate memory

@@ -351,7 +351,9 @@ void TString::AssignCopy(int len, const char *str)
     	memcpy(FBuf, str, len);
 	    FData->FDataSize = len;
     	*(FBuf+len) = 0;
-    }
+	}
+	else
+		Init();
 }
 
 /*##########################################################################

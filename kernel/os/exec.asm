@@ -362,6 +362,8 @@ load_program16:
 	SimSti
 	SaveContext
 	xor eax,eax
+	mov fs,ax
+	mov gs,ax
 	push eax
 	push eax
 	push eax
@@ -449,6 +451,8 @@ load_program32:
 	SimSti
 	SaveContext
 	xor eax,eax
+	mov fs,ax
+	mov gs,ax
 	push eax
 	push eax
 	push eax
@@ -489,10 +493,15 @@ load_copy_exe_loop32:
 	jc load_close_fail32
 ;
 	call leave_load
+	test byte ptr [bp+2].load_eflags,2
+	jnz load_prog_vm32
+;
 	mov ds,[bp].load_ds
 	mov es,[bp].load_es
 	mov fs,[bp].load_fs
 	mov gs,[bp].load_gs
+
+load_prog_vm32:
 	pop ebp
 	pop edi
 	pop esi

@@ -128,6 +128,8 @@ int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathNa
 
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();
+int __stdcall RdosGetThreadHandle();
+int __stdcall RdosExec(const char *prog, const char *param);
 void __stdcall RdosWaitMilli(int ms);
 void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
 void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
