@@ -34,7 +34,8 @@ class TJpegBitmapDevice : public TBitmapGraphicDevice
 {
 public:
 	TJpegBitmapDevice(int bpp, int width, int height);
-
+	TJpegBitmapDevice(TGraphicDevice *dev);
+        
 	static TJpegBitmapDevice *Create(const char *FileName);
 	int Save(const char *FileName);
 };

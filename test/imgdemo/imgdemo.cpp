@@ -13,11 +13,11 @@
 
 TGraphicDevice *vbe;
 TSprite *MouseSprite;
-TBitmapGraphicDevice *redhead;
-TBitmapGraphicDevice *neander;
-TBitmapGraphicDevice *orgneander;
-TBitmapGraphicDevice *facemask;
-TBitmapGraphicDevice *backmask;
+TJpegBitmapDevice *redhead;
+TJpegBitmapDevice *neander;
+TJpegBitmapDevice *orgneander;
+TBmpBitmapDevice *facemask;
+TBmpBitmapDevice *backmask;
 
 TMouseDevice *Mouse;
 TKeyboardDevice *Keyboard;
@@ -261,9 +261,9 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 			break;
 
 		case 'S':
-			SaveBmp("c:\\facemask.bmp", facemask);
-			SaveBmp("c:\\backmask.bmp", backmask);
-			SaveJPEG("c:\\neander2.jpg", neander);
+			facemask->Save("c:\\facemask.bmp");
+			backmask->Save("c:\\backmask.bmp");
+			neander->Save("c:\\neander2.jpg");
 			break;
 
 		case VK_ESCAPE:
@@ -394,12 +394,12 @@ void GetNeanderMasks()
 
 	if (facemask)
 		delete facemask;
-	facemask = new TBitmapGraphicDevice(1, neander->GetWidth(), neander->GetHeight());
+	facemask = new TBmpBitmapDevice(1, neander->GetWidth(), neander->GetHeight());
 	facemask->SetLgopNone();
 
 	if (backmask)
 		delete backmask;
-	backmask = new TBitmapGraphicDevice(1, neander->GetWidth(), neander->GetHeight());
+	backmask = new TBmpBitmapDevice(1, neander->GetWidth(), neander->GetHeight());
 	backmask->SetLgopNone();
 
 	bits = (unsigned char *)neander->GetLinear();
@@ -1003,21 +1003,21 @@ void main()
 
 	Wait = new TWait();
 
-	redhead = CreateJPEG("redhead.jpg");
+	redhead = TJpegBitmapDevice::Create("redhead.jpg");
 	GetRedheadColors();
 
-	orgneander = CreateJPEG("neander.jpg");
-	neander = new TBitmapGraphicDevice(orgneander);
+	orgneander = TJpegBitmapDevice::Create("neander.jpg");
+	neander = new TJpegBitmapDevice(orgneander);
 	neander->Blit(orgneander, 0, 0, 0, 0, orgneander->GetWidth(), orgneander->GetHeight());
 
-	facemask = CreateBmp("facemask.bmp");
-	backmask = CreateBmp("backmask.bmp");
+	facemask = TBmpBitmapDevice::Create("facemask.bmp");
+	backmask = TBmpBitmapDevice::Create("backmask.bmp");
 
 	if (facemask == 0 && backmask == 0)
 	{
 		GetNeanderMasks();
-		SaveBmp("c:\\facemask.bmp", facemask);
-		SaveBmp("c:\\backmask.bmp", backmask);
+		facemask->Save("c:\\facemask.bmp");
+		backmask->Save("c:\\backmask.bmp");
 	}
 
 	GetNeanderColors();
@@ -1025,9 +1025,9 @@ void main()
 	FixupBorders();
 
 	ProcessNeander();
-	SaveJPEG("c:\\neander2.jpg", neander);
+	neander->Save("c:\\neander2.jpg");
 
-	jessica = CreateJPEG("d:\\linnea.jpg");
+	jessica = TJpegBitmapDevice::Create("d:\\linnea.jpg");
 
 	vbe = new TVideoGraphicDevice(24, 1280, 1024);
 

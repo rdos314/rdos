@@ -53,6 +53,22 @@ TJpegBitmapDevice::TJpegBitmapDevice(int bpp, int width, int height)
 
 /*##########################################################################
 #
+#   Name       : TJpegBitmapDevice::TJpegBitmapDevice
+#
+#   Purpose....: Constructor for TJpegBitmapDevice
+#
+#   In params..: dev
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJpegBitmapDevice::TJpegBitmapDevice(TGraphicDevice *dev)
+  : TBitmapGraphicDevice(dev)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TJpegBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a JPEG file
