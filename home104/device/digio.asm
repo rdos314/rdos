@@ -37,8 +37,8 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\wait.inc
 INCLUDE ..\..\kernel\handle.inc
 
-IO_OUT	= 3B3h
-IO_IN	= 3B3h
+IO_OUT	= 289h
+IO_IN	= 28Ah
 
 digio_seg	STRUC
 
@@ -1044,9 +1044,9 @@ init	Proc far
 	AllocateFixedSystemMem
 	InitSection es:io_section
 ;
-;    mov dx,28Bh
-;    mov al,89h
-;    out dx,al
+    mov dx,28Bh
+    mov al,89h
+    out dx,al
 ;
 	mov al,-1
 	mov dx,IO_OUT
