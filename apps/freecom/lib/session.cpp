@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "session.h"
 #include "rdos.h"
 #include "cmdhelp.h"
 #include "pathcmd.h"
@@ -38,6 +39,7 @@
 #include "date.h"
 #include "cls.h"
 #include "copy.h"
+#include "newsess.h"
 #include "cmdline.h"
 #include "chdir.h"
 #include "mkdir.h"
@@ -56,6 +58,7 @@
 #include "rdfspart.h"
 #include "fatpart.h"
 #include "ffspart.h"
+#include "exit.h"
 
 #include "file.h"
 #include "path.h"
@@ -77,11 +80,13 @@ static TFsPartitionFactory *flashfs;
 static TCommandFactory *cd;
 static TCommandFactory *chdir;
 static TCommandFactory *cls;
+static TCommandFactory *newsess;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
 static TCommandFactory *del;
 static TCommandFactory *dir;
 static TCommandFactory *erase;
+static TCommandFactory *exitcmd;
 static TCommandFactory *help;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
@@ -98,6 +103,9 @@ static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *time;
+
+static TStringList *History;
+static TKeyboardDevice *Keyboard;
 
 int TSession::Count = 0;
 
@@ -142,11 +150,13 @@ TSession::TSession()
     	md = new TMdFactory;
     	inithd = new TInitHdFactory;
     	initfd = new TInitFdFactory;
+    	exitcmd = new TExitFactory;
     	erase = new TEraseFactory;
     	dir = new TDirFactory;
     	del = new TDelFactory;
     	date = new TDateFactory;
     	cpy = new TCopyFactory;
+    	newsess = new TNewSessionFactory;
     	cls = new TClsFactory;
     	chdir = new TChdirFactory;
     	cd = new TCdFactory;
@@ -160,6 +170,43 @@ TSession::TSession()
     Count++;
 
     WriteWelcome();
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::TSession
+#
+#   Purpose....: Copy constructor for session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSession::TSession(const TSession &src)
+{
+    Count++;
+
+    
+	if (src.FCmdFile->IsDevice())
+        FCmdFile = new TFile("CON");
+    else
+        FCmdFile = new TFile(*src.FCmdFile);
+
+	if (src.FInputFile->IsDevice())
+        FInputFile = new TFile("CON");
+    else
+        FInputFile = new TFile(*src.FInputFile);
+        
+	if (src.FOutputFile->IsDevice())
+        FOutputFile = new TFile("CON");
+    else
+        FOutputFile = new TFile(*src.FOutputFile);
+
+	if (src.FErrorFile->IsDevice())
+        FErrorFile = new TFile("CON");
+    else
+        FErrorFile = new TFile(*src.FErrorFile);
 }
 
 /*##########################################################################
@@ -206,11 +253,13 @@ TSession::~TSession()
     	delete md;
     	delete inithd;
     	delete initfd;
+    	delete exitcmd;
     	delete erase;
     	delete dir;
     	delete del;
     	delete date;
     	delete cpy;
+    	delete newsess;
     	delete cls;
 	    delete chdir;
     	delete cd;
@@ -1066,8 +1115,57 @@ void TSession::Run()
 		if (ok)
 		{
 			cmd = new TCommandLine(this, param);
-			cmd->Run();
-			delete cmd;
+			if (cmd->IsExit())
+			{
+			    delete cmd;
+			    break;
+			}
+			else
+            {	    		
+    			cmd->Run();
+	    		delete cmd;
+	    	}
 		}
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::Run
+#
+#   Purpose....: Run session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSession::Run(const char *param)
+{
+	int ok;
+	TCommandLine *cmd;
+
+	cmd = new TCommandLine(this, param);
+	if (cmd->IsExit())
+        delete cmd;
+	else
+    {	    		
+    	cmd->Run();
+	    delete cmd;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::Run
+#
+#   Purpose....: Run batch session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSession::Run(TPathName &bat, const char *param)
+{
 }

@@ -38,9 +38,12 @@ class TSession
 {
 public:
     TSession();
+	TSession(const TSession &source);
     ~TSession();
 
     void Run();
+    void Run(const char *param);
+    void Run(TPathName &bat, const char *param);
     
     void Write(char ch);
     void Write(const char *str);
@@ -63,23 +66,21 @@ public:
     void SetErrorFile(TFile *File);
 
 	TFile *GetCmdFile();
-    TFile *GetInputFile();
-    TFile *GetOutputFile();
-    TFile *GetErrorFile();
+	TFile *GetInputFile();
+	TFile *GetOutputFile();
+	TFile *GetErrorFile();
 
 protected:
-    void WriteWelcome();
-    TString FormatTime(TDateTime &time);
-    TString FormatLongDate(TDateTime &date);
+	void WriteWelcome();
+	TString FormatTime(TDateTime &time);
+	TString FormatLongDate(TDateTime &date);
 
-    TFile *FCmdFile;
-    TFile *FInputFile;
-    TFile *FOutputFile;
-    TFile *FErrorFile;
+	TFile *FCmdFile;
+	TFile *FInputFile;
+	TFile *FOutputFile;
+	TFile *FErrorFile;
 
-    static Count;
-    static TStringList *History;
-    static TKeyboardDevice *Keyboard;
+	static Count;
 
 };
 

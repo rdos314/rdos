@@ -62,9 +62,9 @@ TExecCommand::TExecCommand(TSession *session, const char *line)
     cp = Unquote(line, rest);
 
 	FProgName = cp;
+	FCmdLine = rest;
 
 	FDetach = FALSE;
-	FValid = FALSE;
 
 	name = (char *)FProgName.GetData();
 
@@ -75,33 +75,62 @@ TExecCommand::TExecCommand(TSession *session, const char *line)
     }
 	
 	if (strchr(name, '\\'))
-		FValid = CheckAllExt(name);
+		Find(name, param);
 
-	if (!FValid && strchr(name, '/'))
-		FValid = CheckAllExt(name);
+	if (strchr(name, '/'))
+		Find(name, param);
 
-	if (!FValid && strchr(name, ':'))
-		FValid = CheckAllExt(name);
+	if (strchr(name, ':'))
+		Find(name, param);
 
-    if (!FValid)
-    {
-    	path = new char[512];
-    	env = TEnv::OpenSysEnv();
-	    if (env->Find("PATH", path))
-    	{
-	    	FValid = CheckPathExt(path, name);
-		    delete env;
-    		delete path;
-    	}
-    	else
-    	{	    	
-        	delete env;	
-        	delete path;	
-       }
+	path = new char[512];
+	env = TEnv::OpenSysEnv();
+	if (env->Find("PATH", path))
+	{
+		Find(path, name, param);
+		delete env;
+		delete path;
+		return result;
+	}		
+	delete env;	
+	delete path;	
+	Find(name, param);
+}
+
+/*##########################################################################
+#
+#   Name       : TExecCommand::Start
+#
+#   Purpose....: Start program
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TExecCommand::Start(TPathName *path, const char *param)
+{
+	TPathName StartupDir;
+
+	if (FDetach)
+	{   
+	    if (FBatFile)
+	        return -1;
+	    else
+	    {
+    		if (RdosSpawn(path->Get().GetData(), param, StartupDir.Get().GetData()))
+	    	    return 0;
+		    else
+		        return -1;
+		}
     }
-
-    if (!FValid)
-    	FValid = CheckAllExt(name);
+    else
+    {
+        if (FBatFile)
+            return RunBatch(*path, param);
+        else
+        	return RdosExec(path->Get().GetData(), param);
+    }
 }
 
 /*##########################################################################
@@ -115,37 +144,74 @@ TExecCommand::TExecCommand(TSession *session, const char *line)
 #   Returns....: *
 #
 ##########################################################################*/
-int TExecCommand::CheckExt(const char *path, const char *ext)
+int TExecCommand::CheckExt(TPathName *path, const char *ext)
 {
-    FFullPath = TString(path);
-    FFullPath += ext;
+	TPathName pn(*path);
 
-	if (FFullPath.IsFile())
+	pn += ext;
+	if (pn.IsFile())
+	{
+		*path += ext;
 		return TRUE;
+	}
 	else
 		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TExecCommand::CheckAllExt
+#   Name       : TExecCommand::CheckPath
 #
-#   Purpose....: Check if path is valid file (.exe.com)
+#   Purpose....: Check if path is valid file (.exe.bat.com)
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TExecCommand::CheckAllExt(const char *path)
+int TExecCommand::CheckPath(TPathName *path)
 {
+    FBatFile = FALSE;
+    
 	if (CheckExt(path, ".com"))
 		return TRUE;
 
 	if (CheckExt(path, ".exe"))
 		return TRUE;
 
+	if (CheckExt(path, ".bat"))
+	{
+	    FBatFile = TRUE;
+		return TRUE;
+    }
+
 	return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TExecCommand::CheckPath
+#
+#   Purpose....: Check if name is a valid file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPathName *TExecCommand::CheckPath(const char *name)
+{
+	TPathName *pn;
+
+	pn = new TPathName(name);
+
+	if (CheckPath(pn))
+		return pn;
+	else
+	{
+		delete pn;
+		return 0;
+	}
 }
 
 /*##########################################################################
@@ -159,67 +225,106 @@ int TExecCommand::CheckAllExt(const char *path)
 #   Returns....: *
 #
 ##########################################################################*/
-int TExecCommand::CheckPath(const char *path, const char *name)
+TPathName *TExecCommand::CheckPath(const char *path, const char *name)
 {
-	TPathName pn(path);
-	pn += name;
+	TPathName *pn;
 
-	return CheckAllExt(pn.Get().GetData());
-}
+	pn = new TPathName(path);
+	*pn += name;
 
-/*##########################################################################
-#
-#   Name       : TExecCommand::CheckPathExt
-#
-#   Purpose....: Find with path var
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::CheckPathExt(char *path, const char *name)
-{
-	char *ptr;
-
-	if (CheckAllExt(name))
-	    return TRUE;
-
-	while (*path)
+	if (CheckPath(pn))
+		return pn;
+	else
 	{
-		ptr = strchr(path, ';');
-		if (ptr)
-		{
-			*ptr = 0;
-			if (CheckPath(path, name))
-			    return TRUE;
-
-			path = ptr + 1;
-		}
-		else
-			return CheckPath(path, name);
+		delete pn;
+		return 0;
 	}
 }
 
 /*##########################################################################
 #
-#   Name       : TExecCommand::IsValid
+#   Name       : TExecCommand::Load
 #
-#   Purpose....: Is cmd valid?
+#   Purpose....: Load with absolute path
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TExecCommand::IsValid()
+int TExecCommand::Load(const char *name, char *param)
 {
-    return FValid;
+	TPathName *pn;
+	int result;
+
+	pn = CheckPath(name);
+
+	if (pn)
+	{
+		result = Start(pn, param);
+		delete pn;
+		return result;
+	}
+	else
+	{
+		FMsg.printf(TEXT_ERROR_BADCOMMAND, name);
+		Write(FMsg.GetData());
+		return 1;
+	}
 }
 
 /*##########################################################################
 #
-#   Name       : TExecCommand::Execute
+#   Name       : TExecCommand::Load
+#
+#   Purpose....: Load with path var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TExecCommand::Load(char *path, const char *name, char *param)
+{
+	char *ptr;
+	TPathName *pn = 0;
+	int result;
+
+	pn = CheckPath(name);
+
+	while (*path && !pn)
+	{
+		ptr = strchr(path, ';');
+		if (ptr)
+		{
+			*ptr = 0;
+			pn = CheckPath(path, name);
+			path = ptr + 1;
+		}
+		else
+		{
+			pn = CheckPath(path, name);
+			break;
+		}
+	}
+
+	if (pn)
+	{
+		result = Start(pn, param);
+		delete pn;
+		return result;
+	}
+	else
+	{
+		FMsg.printf(TEXT_ERROR_BADCOMMAND, name);
+		Write(FMsg.GetData());
+		return 1;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TExecCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -230,15 +335,41 @@ int TExecCommand::IsValid()
 ##########################################################################*/
 int TExecCommand::Execute(char *param)
 {
-	TPathName StartupDir;
+	char *name;
+	char *path;
+	char *ptr;
+	TEnv *env;
+	int result;
 
-	if (FDetach)
-	{   
-		if (RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData()))
-			return 0;
-		else
-			 return -1;
-	 }
-	 else
-		  return RdosExec(FFullPath.Get().GetData(), param);
+	FDetach = FALSE;
+
+	name = (char *)FProgName.GetData();
+
+    if (*name == '@')
+    {
+        name++;
+        FDetach = TRUE;
+    }
+	
+	if (strchr(name, '\\'))
+		return Load(name, param);
+
+	if (strchr(name, '/'))
+		return Load(name, param);
+
+	if (strchr(name, ':'))
+		return Load(name, param);
+
+	path = new char[512];
+	env = TEnv::OpenSysEnv();
+	if (env->Find("PATH", path))
+	{
+		result = Load(path, name, param);
+		delete env;
+		delete path;
+		return result;
+	}		
+	delete env;	
+	delete path;	
+	return Load(name, param);
 }

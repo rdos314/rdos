@@ -20,41 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdline.h
-# Command line class
+# exec.h
+# Execute external command class
 #
 ########################################################################*/
 
-#ifndef _CMDLINE_H
-#define _CMDLINE_H
+#ifndef _EXEC_H
+#define _EXEC_H
 
 #include "cmd.h"
-#include "str.h"
+#include "path.h"
 
-class TCommandLine
+class TExecCommand : public TCommand
 {
 public:
-	TCommandLine(TSession *session, const char *line);
-	~TCommandLine();
+	TExecCommand(TSession *session, const char *line);
 
-    int IsExit();
-	int Run();
+	virtual int Execute(char *param);	
 
 protected:
-	int IsRedir(char ch);
-	void InsertLast(TCommand *cmd);
-	const char *RedirInput(const char *line);
-	const char *RedirOutput(const char *line);
-	const char *RedirAppend(const char *line);
-	void Pipe(TString &str);
-	void Add(TString &str);
+	int Start(TPathName *path, const char *param);
+	int CheckExt(TPathName *path, const char *ext);
+	int CheckPath(TPathName *path);
+	TPathName *CheckPath(const char *name);
+	TPathName *CheckPath(const char *path, const char *name);
+	int Load(const char *name, char *param);
+	int Load(char *path, const char *name, char *param);
 
-   TSession *FSession;
-	TCommand *FList;
-	 int FRemoveInput;
-	TString FInputFile;
-	TString FOutputFile;
-	TString FAppendFile;
+    int FBatFile;	
+    int FDetach;
+	TString FProgName;
 };
 
 #endif

@@ -34,6 +34,8 @@
 #include "parser.h"
 #include "session.h"
 
+class TSession;
+
 class TArg
 {
 public:
@@ -53,6 +55,12 @@ public:
     TCommand(TSession *session);
     TCommand(TSession *session, const char *param);
 	virtual ~TCommand();
+
+	virtual int IsExit();
+
+	int Command();
+	int Command(const char *param);
+    int RunBatch(TPathName &path, const char *param);
 
 	void DefineInput(TString &name, int remove);
 	void DefineOutput(TString &name);

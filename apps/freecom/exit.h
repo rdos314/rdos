@@ -20,41 +20,33 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdline.h
-# Command line class
+# exit.h
+# Exit command class
 #
 ########################################################################*/
 
-#ifndef _CMDLINE_H
-#define _CMDLINE_H
+#ifndef _EXIT_H
+#define _EXIT_H
 
 #include "cmd.h"
-#include "str.h"
+#include "cmdfact.h"
 
-class TCommandLine
+class TExitFactory : public TCommandFactory
 {
 public:
-	TCommandLine(TSession *session, const char *line);
-	~TCommandLine();
-
-    int IsExit();
-	int Run();
+	TExitFactory();
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
-	int IsRedir(char ch);
-	void InsertLast(TCommand *cmd);
-	const char *RedirInput(const char *line);
-	const char *RedirOutput(const char *line);
-	const char *RedirAppend(const char *line);
-	void Pipe(TString &str);
-	void Add(TString &str);
+};
 
-   TSession *FSession;
-	TCommand *FList;
-	 int FRemoveInput;
-	TString FInputFile;
-	TString FOutputFile;
-	TString FAppendFile;
+class TExitCommand : public TCommand
+{
+public:
+	TExitCommand(TSession *session, const char *param);
+
+    virtual int IsExit();
+	virtual int Execute(char *param);	
 };
 
 #endif

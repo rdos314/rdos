@@ -20,41 +20,39 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdline.h
-# Command line class
+# newsess.h
+# New command session class
 #
 ########################################################################*/
 
-#ifndef _CMDLINE_H
-#define _CMDLINE_H
+#ifndef _NEWSESS_H
+#define _NEWSESS_H
 
 #include "cmd.h"
-#include "str.h"
+#include "cmdfact.h"
+#include "direntry.h"
 
-class TCommandLine
+class TNewSessionFactory : public TCommandFactory
 {
 public:
-	TCommandLine(TSession *session, const char *line);
-	~TCommandLine();
-
-    int IsExit();
-	int Run();
+	TNewSessionFactory();
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
-	int IsRedir(char ch);
-	void InsertLast(TCommand *cmd);
-	const char *RedirInput(const char *line);
-	const char *RedirOutput(const char *line);
-	const char *RedirAppend(const char *line);
-	void Pipe(TString &str);
-	void Add(TString &str);
+};
 
-   TSession *FSession;
-	TCommand *FList;
-	 int FRemoveInput;
-	TString FInputFile;
-	TString FOutputFile;
-	TString FAppendFile;
+class TNewSessionCommand : public TCommand
+{
+public:
+	TNewSessionCommand(TSession *session, const char *param);
+
+	virtual int Execute(char *param);
+
+protected:
+    void InitOptions();
+	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+
+	int FOptC;
 };
 
 #endif

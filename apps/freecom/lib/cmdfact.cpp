@@ -268,13 +268,14 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
 {
 	const char *rest;
 	int size;
-	 int i;
+	int i;
 	char *com;
 	char *ptr;
-	 int done;
-	 TString Line;
+	int done;
+	TString Line;
 	TCommandFactory *factory = 0;
 	TCommand *cmd;
+	TExecCommand *exec;
 
 	Line = TString(LTrim(line));
 
@@ -354,7 +355,13 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
 	}
 	else
 	{
-		cmd = new TExecCommand(session, line);
-		return cmd;
+		exec = new TExecCommand(session, line);
+		if (exec->IsValid())
+			return exec;
+		else
+		{
+			delete exec;
+			return 0;
+		}
 	}
 }

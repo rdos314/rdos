@@ -158,6 +158,76 @@ TCommand::~TCommand()
 
 /*##########################################################################
 #
+#   Name       : TCommand::IsExit
+#
+#   Purpose....: Is this an exit command?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::IsExit()
+{
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Command
+#
+#   Purpose....: Spawn command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::Command()
+{
+	TSession session(*FSession);
+	session.Run();
+	return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Command
+#
+#   Purpose....: Spawn command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::Command(const char *param)
+{
+	TSession session(*FSession);
+	session.Run(param);
+    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::RunBatch
+#
+#   Purpose....: Run batch file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::RunBatch(TPathName &path, const char *param)
+{
+	TSession session(*FSession);
+	session.Run(path, param);
+    return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TCommand::Write
 #
 #   Purpose....: Write to std output

@@ -326,6 +326,25 @@ void TCommandLine::Add(TString &str)
 
 /*##########################################################################
 #
+#   Name       : TCommandLine::IsExit
+#
+#   Purpose....: Check if command line contains "exit"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandLine::IsExit()
+{
+    if (FList && FList->IsExit())
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TCommandLine::Run
 #
 #   Purpose....: Run command line

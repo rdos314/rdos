@@ -36,19 +36,19 @@ class TExecCommand : public TCommand
 public:
 	TExecCommand(TSession *session, const char *line);
 
-	virtual int Execute(char *param);	
+	virtual int Execute(char *param);
+	int IsValid();
 
 protected:
-	int Start(TPathName *path, const char *param);
-	int CheckExt(TPathName *path, const char *ext);
-	int CheckPath(TPathName *path);
-	TPathName *CheckPath(const char *name);
-	TPathName *CheckPath(const char *path, const char *name);
-	int Load(const char *name, char *param);
-	int Load(char *path, const char *name, char *param);
-	
+	int CheckExt(const char *path, const char *ext);
+	int CheckAllExt(const char *name);
+	int CheckPath(const char *path, const char *name);
+	int CheckPathExt(char *path, const char *name);
+
     int FDetach;
+    int FValid;
 	TString FProgName;
+	TPathName FFullPath;
 };
 
 #endif
