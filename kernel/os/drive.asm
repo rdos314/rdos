@@ -122,11 +122,185 @@ dss_arr				DD ?
 
 disc_seq_struc	ENDS
 
+boot_media_struc	STRUC
+
+boot_bytes_per_sector		DW 512
+boot_resv1					DB 0
+boot_mapping_sectors		DW 1
+boot_resv3					DB 0
+boot_resv4					DW 0
+boot_small_sectors			DW 0
+boot_media					DB 0F0h
+boot_resv6					DW 0
+boot_sectors_per_cyl		DW 1
+boot_heads					DW 1
+boot_hidden_sectors			DD 1
+boot_sectors				DD 0
+boot_drive_nr				DB 0,0
+boot_signature				DB 0 
+boot_serial					DD 0
+boot_volume					DB 11 DUP(0)
+boot_fs						DB 8 DUP(0)
+
+boot_media_struc		ENDS
+
+boot_struc	STRUC
+
+boot_jmp					DB ?,?,?
+boot_name					DB 8 DUP(?)
+boot_param                  boot_media_struc <>
+
+boot_struc		ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			Boot sector. DO NOT MOVE THIS CODE!!!
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    db 0EBh
+    db SIZE boot_struc - 2      ; jmp StartBoot
+	db 90h
+	db 'Rdos    '
+
+BootMedia	boot_media_struc	<>
+
+StartBoot:
+	db 0EAh
+	dw OFFSET JmpBootCode
+	dw 07C0h
+JmpBootCode:
+	cli
+	mov bx,800h
+	mov ss,bx
+	mov sp,100h
+	sti
+	mov bx,70h
+	mov es,bx
+	xor bx,bx
+	mov cx,8
+	xor dx,dx
+	mov ax,1
+LoadBootNext:
+	push cx
+	mov cx,3
+LoadBootRetry:
+	call ReadSector
+	jnc BootSectorOk
+	push ax
+	mov ax,0
+	int 13h
+	pop ax
+	loop LoadBootRetry	
+	stc
+BootSectorOk:
+	pop cx
+	jc BootFail
+	add ax,1
+	adc dx,0
+	add bx,512
+	loop LoadBootNext
+;
+	mov ax,cs
+	mov es,ax
+	db 0EAh
+
+	public BootLoadOffset
+
+BootLoadOffset:
+
+	dw 0
+	dw 70h
+
+BootFail:
+	mov si,OFFSET DiskError
+	call BootWriteAsciiz
+BootStop:
+	jmp BootStop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BootWriteAsciiz
+;
+;		DESCRIPTION:	Write a message
+;
+;		PARAMETERS:		CS:SI	Message to write
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BootWriteAsciiz	Proc near
+	lods byte ptr cs:[si]
+	or al,al
+	jz WriteAsciizDone
+	mov ah,0Eh
+	mov bx,7
+	int 10h
+	jmp BootWriteAsciiz
+WriteAsciizDone:
+	ret
+BootWriteAsciiz	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReadSector
+;
+;		DESCRIPTION:	Read a sector
+;
+;		PARAMETERS:		DX:AX	Sector #
+;						ES:BX	Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector	Proc near
+	push ax
+	push cx
+	push dx
+	push bx
+	div cs:BootMedia.boot_sectors_per_cyl
+	inc dl
+	mov bl,dl
+	xor dx,dx
+	div cs:BootMedia.boot_heads
+	mov bh,dl
+	mov dx,ax
+	mov ax,201h
+	mov cl,6
+	shl dh,cl
+	or dh,bl
+	mov cx,dx
+	xchg ch,cl
+	mov dl,cs:BootMedia.boot_drive_nr
+	mov dh,bh
+	pop bx
+	int 13h
+	pop dx
+	pop cx
+	pop ax
+	ret
+ReadSector	Endp
+
+DiskError:
+		db 'Disk error',0Dh,0Ah,0
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckPending
+;
+;		DESCRIPTION:	Check pending test
+;
+;		PARAMETERS:		DX:AX	Sector #
+;						ES:BX	Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckPending	Proc near
 	xor cx,cx
@@ -3982,6 +4156,8 @@ PAGE
 ;						ECX			Number of sectors
 ;						ES:(E)DI	FS name
 ;
+;       RETURNS:        AL          Drive #
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 format_drive_name	DB 'Format Drive',0
@@ -3990,7 +4166,12 @@ format_drive	Proc near
 	push ds
 	push es
 	push fs
-	pushad
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+	push ebp
 ;
 	push ax
 	mov ax,es
@@ -4047,15 +4228,20 @@ format_find_drive_next:
 	sub bp,1
 	jnz format_find_drive_loop
 ;
+    int 3
 	mov ah,al
 	AllocateStaticDrive
 	OpenDrive
 	jmp format_do
 
 format_drive_found:
+    push dx
+    mov dl,al
 	sub si,OFFSET drive_def_arr
 	mov ax,si
 	shr al,1
+	mov ah,dl
+	pop dx
 	FlushDrive
 
 format_do:
@@ -4065,6 +4251,74 @@ format_do:
 	mov ecx,fs:drive_sectors
 
 format_perf:
+    int 3
+    push edx
+    push es
+    mov dx,flat_sel
+    mov es,dx
+    mov dx,cs
+    mov ds,dx
+	xor edx,edx
+	NewSector
+;	
+    push ecx
+    push esi
+    push edi
+    mov edi,esi
+    xor esi,esi
+    mov ecx,80h
+    rep movs dword ptr es:[edi],[esi]
+    pop edi
+    pop esi
+    pop ecx
+;
+	mov es:[esi].boot_param.boot_drive_nr,ah
+	add es:[esi].boot_param.boot_drive_nr,80h
+    mov edx,ecx
+    dec edx
+	mov es:[esi].boot_param.boot_sectors,edx
+	cmp edx,10000h
+	jae format_no_small
+;
+    mov es:[esi].boot_param.boot_small_sectors,dx	
+
+format_no_small:
+	pop es
+;	
+	push cx
+	push esi
+;	
+	mov dx,flat_sel
+	mov ds,dx
+	xor di,di
+	mov cx,8
+	lea esi,[esi].boot_param.boot_fs
+
+format_name_loop:
+    mov dl,es:[di]
+    or dl,dl
+    jz format_name_space
+;
+    inc di
+    mov [esi],dl
+    inc esi
+    jmp format_name_next
+
+format_name_space:
+    mov dl,' '
+    mov [esi],dl
+    inc esi    
+
+format_name_next:
+    loop format_name_loop
+;
+    pop esi    
+	pop cx
+;	
+	ModifySector
+	UnlockSector
+	pop edx
+;
 	xor di,di
 	FormatFileSystem
 	jc format_fail
@@ -4078,7 +4332,12 @@ format_fail:
 	stc
 
 format_done:
-	popad
+	pop ebp
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
 	pop fs
 	pop es
 	pop ds

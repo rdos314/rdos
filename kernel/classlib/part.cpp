@@ -839,7 +839,22 @@ TFsPartition *TFsPartitionFactory::Parse(int Disc, unsigned char Type, TPartitio
 *##########################################################################*/
 TFsPartition *TFsPartitionFactory::Format(int Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size)
 {
-	 return 0;
+	TFsPartition *part;
+	TFsPartitionFactory *factory = 0;
+	TString Name(FsName);
+
+	factory = FPartList;
+    while (factory)
+	{
+	    if (Name == factory->FFsName)
+	        break;
+		factory = factory->FList;
+	}
+
+    if (factory)
+        return factory->Create(Disc, Parent, Entry, Start, Size);
+    else
+        return 0;
 }
 
 /*##################  TFsPartitionFactory::Insert  ##########################

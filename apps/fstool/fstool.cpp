@@ -3,6 +3,7 @@
 #include "rdos.h"
 #include "part.h"
 #include "rdfspart.h"
+#include "fatpart.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -104,6 +105,9 @@ void cdecl main()
 	TFsPartitionFactory *factory;
 
 	factory = new TRdfsPartitionFactory;
+	factory = new TFat12PartitionFactory;
+	factory = new TFat16PartitionFactory;
+	factory = new TFat32PartitionFactory;
 
 	for (i = 0; i < 2; i++)
 		Part[i] = new TDiscPartition(i);
@@ -113,7 +117,7 @@ void cdecl main()
 	 ShowTable(Part[0]);
 	 ShowTable(Part[1]);
 
-	 Part[0]->Add("RDFS", 0x00100000);
 	 Part[0]->Delete(3);
+	 Part[0]->Add("FAT16", 0x00100000);
 }
 

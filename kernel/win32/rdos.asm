@@ -5940,6 +5940,8 @@ RdosGetRdfsInfo	Endp
 ;						Size
 ;						FS name
 ;
+;       RETURNS:        Drive #
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 		public RdosFormatDrive
@@ -5956,7 +5958,7 @@ RdosFormatDrive	Proc near
 	UserGate format_drive_nr
 	jc rfdFail
 ;
-    mov eax,1
+    movzx eax,al
     jmp rfdDone
 
 rfdFail:

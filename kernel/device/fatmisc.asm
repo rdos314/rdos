@@ -227,7 +227,7 @@ format12	PROC far
     mov dx,flat_sel
     mov es,dx
 	xor edx,edx
-	NewSector
+	LockSector
 ;
     mov al,1
 
@@ -256,20 +256,10 @@ format_cluster_ok12:
     mov es:[esi].boot_fat_sectors16,cx
     mov es:[esi].boot_fat_sectors,ecx
 ;
-    mov es:[esi].boot_media,0F0h
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-    mov es:[esi].boot_bytes_per_sector,200h
-    mov es:[esi].boot_name,0
-	mov es:[esi].boot_resv_sectors,1
-	mov es:[esi].boot_sectors_per_cyl,1
-	mov es:[esi].boot_heads,1
-	mov es:[esi].boot_hidden_sectors,0
-	mov es:[esi].boot_ext_flags,0
 	mov es:[esi].boot_fs_version,1
 	mov es:[esi].boot_root_cluster,2
-	mov es:[esi].boot_info_sector,0
-	mov es:[esi].boot_backup_sector,0
 	ModifySector
 	UnlockSector
 ;
@@ -389,7 +379,7 @@ format16	PROC far
     mov dx,flat_sel
     mov es,dx
 	xor edx,edx
-	NewSector
+	LockSector
 ;
     mov al,1
 
@@ -415,20 +405,10 @@ format_cluster_ok16:
     mov es:[esi].boot_fat_sectors16,cx
     mov es:[esi].boot_fat_sectors,ecx
 ;
-    mov es:[esi].boot_media,0F8h
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
-    mov es:[esi].boot_bytes_per_sector,200h
-    mov es:[esi].boot_name,0
-	mov es:[esi].boot_resv_sectors,1
-	mov es:[esi].boot_sectors_per_cyl,1
-	mov es:[esi].boot_heads,1
-	mov es:[esi].boot_hidden_sectors,0
-	mov es:[esi].boot_ext_flags,0
 	mov es:[esi].boot_fs_version,1
 	mov es:[esi].boot_root_cluster,2
-	mov es:[esi].boot_info_sector,0
-	mov es:[esi].boot_backup_sector,0
 	ModifySector
 	UnlockSector
 ;
