@@ -47,8 +47,11 @@ siokeyb_objs	= SIOKEYB.OBJ
 radled_srcs		= RADLED.ASM
 radled_objs		= RADLED.OBJ
 
+radcom_srcs		= RADCOM.ASM
+radcom_objs		= RADCOM.OBJ
+
 srcs =      $(serda_srcs) $(siodrive_srcs) $(siokeyb_srcs)	\
-			$(radled_srcs)
+			$(radled_srcs) $(radcom_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
