@@ -308,12 +308,18 @@ void main()
 			if (log.rad[i].valid && log.rad[i].taux)
 			{
 				val = log.rad[i].t / 100.0;
+				if (val < 10.0)
+					val += 25.5;
+
 				if (plot)
 					temp->Plot(time, val);
 				else
 					temp->LineTo(time, val);
 
 				val = log.rad[i].taux / 100.0;
+				if (val < 10.0)
+					val += 25.5;
+
 				if (plot)
 					aux->Plot(time, val);
 				else
