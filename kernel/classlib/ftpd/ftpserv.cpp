@@ -51,6 +51,7 @@
 ##########################################################################*/
 TFtpSocketServer::TFtpSocketServer()
 {
+	CurrDir = "/";
 }
 
 /*##########################################################################
@@ -67,6 +68,41 @@ TFtpSocketServer::TFtpSocketServer()
 void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"FTP",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::Reply
+#
+#   Purpose....: Reply to socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Reply(TLangString *msg)
+{
+    msg->Write(FSocket);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::VerifyUser
+#
+#   Purpose....: Verify a valid user is logged in
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::VerifyUser()
+{
+    if (User == "leif" && Pass == "vals")
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -98,18 +134,25 @@ void TFtpSocketServer::HandleSocket()
 		msg.printf(220, Major, Minor, Release);
 		msg.Write(FSocket);
 
-		count = FSocket->Read(Buf, 512);
-		Buf[count] = 0;
-		printf(Buf);
+		while (FSocket->IsOpen())
+		{
+			count = FSocket->Read(Buf, 512);
+			Buf[count] = 0;
 
-		cmd = TCommandFactory::Parse(this, Buf);
+			if (count == 0)
+				break;
 
-        if (cmd)
-            cmd->Run();
-        else
-        {
-    		msg.Load(502);
-	    	msg.Write(FSocket);
-	    }
+			printf(Buf);
+
+			cmd = TCommandFactory::Parse(this, Buf);
+
+			if (cmd)
+				cmd->Run();
+			else
+			{
+				msg.Load(502);
+				msg.Write(FSocket);
+			}
+		}
 	}
 }

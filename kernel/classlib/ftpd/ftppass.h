@@ -20,57 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmd.h
-# Command base class
+# pass.h
+# Password command class
 #
 ########################################################################*/
 
-#ifndef _CMD_H
-#define _CMD_H
+#ifndef _PASS_H
+#define _PASS_H
 
-#include "file.h"
-#include "path.h"
-#include "parser.h"
-#include "ftpserv.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TArg
+class TPassFactory : public TCommandFactory
 {
 public:
-    TArg(const char *name);
-    ~TArg();
-
-    char *ptr;
-
-    TString FName;
-    TArg *FList;
-};
-
-class TCommand : public TParser
-{
-public:
-    TCommand(TFtpSocketServer *Server);
-    TCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TCommand();
-	
-	void Run();
-	virtual void Execute(char *param) = 0;
-
-	static int ErrorLevel;
+	TPassFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
-    void AddArg(const char *name);
-    void AddArg(char *sBeg, char **sEnd);
-    void Split(char *s);
-    int Parse(void *arg);
-    int ScanCmdLine(char *line, void *arg);
+};
 
-	TString FCmdLine;
-	TCommand *FList;
-	
-	TArg *FArgList;
-	int FArgCount;
+class TPassCommand : public TCommand
+{
+public:
+	TPassCommand(TFtpSocketServer *Server, const char *param);
 
-	TFtpSocketServer *FServer;
+	virtual void Execute(char *param);
 };
 
 #endif

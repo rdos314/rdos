@@ -141,12 +141,11 @@ TCommand::~TCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::Run()
+void TCommand::Run()
 {
 	char *param;
 	char *ptr;
 	int size;
-	int result;
 
 	size = FCmdLine.GetSize();
 	param = new char[size + 1];
@@ -154,10 +153,9 @@ int TCommand::Run()
 
 	ptr = param;
 
-	result = Execute(ptr);
+	Execute(ptr);
 
 	delete param;
-	return result;
 }
 
 /*##########################################################################

@@ -45,7 +45,7 @@ class TUserCommand : public TCommand
 public:
 	TUserCommand(TFtpSocketServer *Server, const char *param);
 
-	virtual int Execute(char *param);	
+	virtual void Execute(char *param);
 };
 
 #endif

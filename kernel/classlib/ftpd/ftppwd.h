@@ -20,57 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmd.h
-# Command base class
+# pwd.h
+# Pwd command class
 #
 ########################################################################*/
 
-#ifndef _CMD_H
-#define _CMD_H
+#ifndef _PWD_H
+#define _PWD_H
 
-#include "file.h"
-#include "path.h"
-#include "parser.h"
-#include "ftpserv.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TArg
+class TPwdFactory : public TCommandFactory
 {
 public:
-    TArg(const char *name);
-    ~TArg();
-
-    char *ptr;
-
-    TString FName;
-    TArg *FList;
-};
-
-class TCommand : public TParser
-{
-public:
-    TCommand(TFtpSocketServer *Server);
-    TCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TCommand();
-	
-	void Run();
-	virtual void Execute(char *param) = 0;
-
-	static int ErrorLevel;
+	TPwdFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
-    void AddArg(const char *name);
-    void AddArg(char *sBeg, char **sEnd);
-    void Split(char *s);
-    int Parse(void *arg);
-    int ScanCmdLine(char *line, void *arg);
+};
 
-	TString FCmdLine;
-	TCommand *FList;
-	
-	TArg *FArgList;
-	int FArgCount;
+class TPwdCommand : public TCommand
+{
+public:
+	TPwdCommand(TFtpSocketServer *Server, const char *param);
 
-	TFtpSocketServer *FServer;
+	virtual void Execute(char *param);
 };
 
 #endif

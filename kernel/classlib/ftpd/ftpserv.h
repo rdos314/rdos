@@ -30,6 +30,7 @@
 
 #include "str.h"
 #include "socket.h"
+#include "langstr.h"
 
 class TFtpSocketServer : public TSocketServer
 {
@@ -38,8 +39,13 @@ public:
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual void HandleSocket();
 
+	int VerifyUser();
+
+	void Reply(TLangString *Msg);
+
 	TString User;
 	TString Pass;
+	TString CurrDir;
 };
 
 #endif

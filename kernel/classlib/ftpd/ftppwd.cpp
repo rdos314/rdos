@@ -20,15 +20,15 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# pwd.cpp
+# Pwd command class
 #
 ########################################################################*/
 
 #include <string.h>
 
 #include "cmdhelp.h"
-#include "user.h"
+#include "pwd.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::TUserFactory
+#   Name       : TPwdFactory::TPwdFactory
 #
-#   Purpose....: Constructor for TUserFactory
+#   Purpose....: Constructor for TPwdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserFactory::TUserFactory()
-  : TCommandFactory("USER")
+TPwdFactory::TPwdFactory()
+  : TCommandFactory("PWD")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::Create
+#   Name       : TPwdFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TUserFactory::TUserFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TUserFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TPwdFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TUserCommand(Server, param);
+	return new TPwdCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::TUserCommand
+#   Name       : TPwdCommand::TPwdCommand
 #
-#   Purpose....: Constructor for TUserCommand
+#   Purpose....: Constructor for TPwdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
+TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::Run
+#   Name       : TPwdCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,34 +93,13 @@ TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUserCommand::Execute(char *param)
+void TPwdCommand::Execute(char *param)
 {
-	TArg *arg;
-	int ArgCount;
 	TLangString msg;
-	int ok;
+    TString str;
 
-	ok = ScanCmdLine(param, 0);
-	if (ok)
-	{
-		ArgCount = 0;
-		arg = FArgList;
-		while (arg)
-		{
-			ArgCount++;
-			arg = arg->FList;
-		}
+    str = "\"" + FServer->CurrDir + "\"" + " is current directory";
 
-		ok = (FArgCount == 1);
-	}
-
-	if (ok)
-	{
-		FServer->User = FArgList->FName;
-		msg.Load(331);
-	}
-	else
-		msg.Load(501);
-
+    msg.printf(257, str.GetData());
     FServer->Reply(&msg);    
 }

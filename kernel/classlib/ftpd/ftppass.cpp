@@ -28,7 +28,7 @@
 #include <string.h>
 
 #include "cmdhelp.h"
-#include "user.h"
+#include "pass.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::TUserFactory
+#   Name       : TPassFactory::TPassFactory
 #
-#   Purpose....: Constructor for TUserFactory
+#   Purpose....: Constructor for TPassFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserFactory::TUserFactory()
-  : TCommandFactory("USER")
+TPassFactory::TPassFactory()
+  : TCommandFactory("PASS")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::Create
+#   Name       : TPassFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TUserFactory::TUserFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TUserFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TPassFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TUserCommand(Server, param);
+	return new TPassCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::TUserCommand
+#   Name       : TPassCommand::TPassCommand
 #
-#   Purpose....: Constructor for TUserCommand
+#   Purpose....: Constructor for TPassCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
+TPassCommand::TPassCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::Run
+#   Name       : TPassCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,7 +93,7 @@ TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUserCommand::Execute(char *param)
+void TPassCommand::Execute(char *param)
 {
 	TArg *arg;
 	int ArgCount;
@@ -116,8 +116,12 @@ void TUserCommand::Execute(char *param)
 
 	if (ok)
 	{
-		FServer->User = FArgList->FName;
-		msg.Load(331);
+		FServer->Pass = FArgList->FName;
+
+		if (FServer->VerifyUser())
+    		msg.Load(230);
+    	else
+    	    msg.Load(530);
 	}
 	else
 		msg.Load(501);

@@ -34,6 +34,8 @@
 #include "socket.h"
 #include "langstr.h"
 #include "ftpserv.h"
+#include "user.h"
+#include "pass.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -106,6 +108,9 @@ TFtpSocketServerFactory Factory;
 
 void cdecl main()
 {
+    TUserFactory *user = new TUserFactory;
+    TPassFactory *pass = new TPassFactory;
+    
 	TSocket::Listen(&Factory, 21, 0x4000);
 }
 
