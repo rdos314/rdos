@@ -1,86 +1,66 @@
-#include "socket.h"
-#include "file.h"
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2002, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# httpd.cpp
+# HTTP server application for RDOS
+#
+########################################################################*/
+
 #include <string.h>
 #include <stdio.h>
+
+#include "rdos.h"
+#include "socket.h"
+#include "httpfact.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-class THttpSocketServerFactory : public TSocketServerFactory
-{
-public:
-    virtual char *GetThreadName();
-    virtual int GetStackSize();    
-	virtual TSocketServer *Create();
-};
-
-class THttpSocketServer : public TSocketServer
-{
-public:
-	THttpSocketServer();
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
-};
-
-char *THttpSocketServerFactory::GetThreadName()
-{
-	return "HTTP";
-}
-
-int THttpSocketServerFactory::GetStackSize()
-{
-	return 0x2000;
-}
-
-TSocketServer *THttpSocketServerFactory::Create()
-{
-	return new THttpSocketServer;
-}
-
-THttpSocketServer::THttpSocketServer()
-{
-}
-
-void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
-{
-	strncpy(Name,"HTTP",MaxLen);
-}
-
-void THttpSocketServer::HandleSocket()
-{
-	int count;
-	char Buf[513];
-
-	if (FSocket->WaitForConnection(6000))
-	{
-		do
-		{
-			count = FSocket->Read(Buf, 512);
-			Buf[count] = 0;
-			printf(Buf);
-		}
-		while (count == 512);
-
-		FSocket->Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=1>");
-		FSocket->Write("<title>Document ONE</title>");
-		FSocket->Write("<h1>RDOS web-server</h1>");
-		FSocket->Write("Dynamic reload demo<br>");
-
-		TDateTime time;
-		char str[80];
-
-		sprintf(str, "Nuvarande tid är %4d-%02d-%02d %02d.%02d.%02d,%02d",
-						time.GetYear(), time.GetMonth(), time.GetDay(),
-						time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
-		FSocket->Write(str);
-		FSocket->Push();
-	}
-}
+// this one must be globally defined!
 
 THttpSocketServerFactory Factory;
 
+/*##################  WriteCommand ##########################
+*   Purpose....: Write command echo	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCommand(THttpSocketServer *server, const char *str)
+{
+	printf(str);
+}
+
+/*##################  main ##########################
+*   Purpose....: Program entry-point	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
 void cdecl main()
 {
-    TSocket::Listen(&Factory, 80, 0x4000);
+	Factory.OnCommand = WriteCommand;
+	TSocket::Listen(&Factory, 80, 0x4000);
 }
 

@@ -33,6 +33,7 @@
 #include "httpserv.h"
 #include "httpcmd.h"
 #include "httpfact.h"
+#include "httpget.h"
 
 #include "path.h"
 
@@ -252,6 +253,7 @@ THttpSocketServerFactory::THttpSocketServerFactory()
 ##########################################################################*/
 void THttpSocketServerFactory::Init()
 {
+	THttpGetFactory *get = new THttpGetFactory;
 }
 
 /*##########################################################################

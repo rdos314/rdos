@@ -141,7 +141,7 @@ THttpCommand::~THttpCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCommand::Run()
+void THttpCommand::Run(char *opt)
 {
 	char *param;
 	char *ptr;

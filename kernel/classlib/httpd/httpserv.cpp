@@ -296,14 +296,15 @@ void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 void THttpSocketServer::HandleSocket()
 {
 	int count;
-	char Buf[513];
+	char Buf[2049];
 	THttpCommand *cmd;
+	char *ptr;
 
 	if (FSocket->WaitForConnection(6000))
 	{
 		while (FSocket->IsOpen())
 		{
-			count = FSocket->Read(Buf, 512);
+			count = FSocket->Read(Buf, 2048);
 			Buf[count] = 0;
 
 			if (count == 0)
@@ -312,10 +313,15 @@ void THttpSocketServer::HandleSocket()
             if (OnCommand)
                 (*OnCommand)(this, Buf);
 
+			ptr = strchr(Buf, 0xd);
+			if (ptr)
+			    *ptr = 0;
+
 			cmd = THttpCommandFactory::Parse(this, Buf);
 
 			if (cmd)
-				cmd->Run();
+				cmd->Run(ptr + 2);
 		}
 	}
 }
+

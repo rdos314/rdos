@@ -51,8 +51,8 @@ public:
     THttpCommand(THttpSocketServer *Server);
     THttpCommand(THttpSocketServer *Server, const char *param);
 	virtual ~THttpCommand();
-	
-	void Run();
+
+	void Run(char *opt);
 	virtual void Execute(char *param) = 0;
 
 	static int ErrorLevel;
