@@ -27,15 +27,20 @@ void main()
 {
 //	TLangString::SetLanguage("swedish.dll");
 	char param[256];
-	int size;
+	int ok;
 	TCommand *cmd;
 
-    Init();
+	Init();
 
-	size = RdosReadLine(param, 256);
-	param[size] = 0;
-
-	cmd = sysset->Create(param);
-	cmd->Run();
+	for (;;)
+	{
+		ok = Read(param, 256);
+		if (ok)
+		{
+			cmd = TCommandFactory::Parse(param);
+			if (cmd)
+				cmd->Run();
+		}
+	}
 }
 

@@ -32,6 +32,7 @@
 #include "str.h"
 #include "path.h"
 #include "env.h"
+#include "prompt.h"
 
 /*################## WriteChar ##########################
 *   Purpose....: Write a single char	   					      	        #
@@ -105,7 +106,7 @@ void DisplayPrompt()
 	TString str;
 	TPathName path("");
 
-	TEnv *env = TEnv::OpenSysEnv();
+	TEnv *env = TEnv::OpenProcessEnv();
 	if (!env->Find("PROMPT", promptstr))
 		strcpy(promptstr, "$p$g");
 

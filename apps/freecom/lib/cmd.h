@@ -50,17 +50,40 @@ enum InternalErrorCodes
 	E_User		/* MUST be the last one */
 };
 
+void SetInputFile(TFile *File);
+void SetOutputFile(TFile *File);
+
+int IsEmpty(const char *s);
+int IsArgDelim(char ch);
+int IsOptDelim(char ch);
+int IsOptChar(char ch);
+int IsFileNameChar(char c);
+const char *LTrim(const char *str);
+void RTrim(char *str);
+char *Unquote(const char *str, const char *end);
+int MatchToken(char **Xp, const char *word, int len);
+
+void Write(char ch);
+void Write(const char *str);
+
+void WriteError(char ch);
+void WriteError(const char *str);
+
+char Read();
+int Read(char *str, int maxsize);
+
+void DisplayPrompt();
+
 class TCommand
 {
 public:
     TCommand(const char *param);
 	virtual ~TCommand();
 
-	static void SetInputFile(TFile *File);
-	static void SetOutputFile(TFile *File);
-
 	int Run();
 	virtual int Execute(char *param) = 0;
+
+	static int ErrorLevel;
 
 protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
@@ -69,34 +92,15 @@ protected:
 
 	char *SkipDelim(char *p);
 	char *SkipWord(char *p);
-	int IsOptChar(char ch);
 	int ScanOpt(void *ag, char *rest);
 
 	int LeadOptions(char **Xline, void *arg);
 	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 
-	int IsEmpty(const char *s);
-	int IsArgDelim(char ch);
-	int IsOptDelim(char ch);
-	char *LTrim(char *str);
-	void RTrim(char *str);
-	char *Unquote(const char *str, const char *end);
-
-	static void Write(char ch);
-	static void Write(const char *str);
-
-	static void WriteError(char ch);
-	static void WriteError(const char *str);
-
-	static char Read();
-	static int Read(char *str, int maxsize);
-
 	TLangString FMsg;
 	TString FCmdLine;
 	TLangString FHelpScreen;
 
-	static TFile *FInputFile;
-	static TFile *FOutputFile;
 };
 
 class TCommandFactory
@@ -105,9 +109,16 @@ public:
     TCommandFactory(const char *name);
 	virtual ~TCommandFactory();
 
-	virtual TCommand *Create(const char *param) = 0;
+	static TCommand *Parse(const char *line);
 
 protected:
+    static const char *FindArg(int no);
+    static TString ExpandEnv(TString &line);
+
+	virtual TCommand *Create(const char *param) = 0;
+	virtual int PassAll();
+    virtual int PassDir();
+	
 	void InsertCommand();
 	void RemoveCommand();
 

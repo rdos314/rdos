@@ -27,16 +27,530 @@
 
 #include <ctype.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "cmd.h"
 #include "lang.h"
+#include "env.h"
+#include "rdos.h"
+#include "path.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-TFile *TCommand::FInputFile = new TFile("CON");
-TFile *TCommand::FOutputFile = new TFile("CON");
+TFile *FInputFile = new TFile("CON");
+TFile *FOutputFile = new TFile("CON");
 TCommandFactory *TCommandFactory::FCmdList = 0;
+int TCommand::ErrorLevel = 0;
+
+/*##########################################################################
+#
+#   Name       : SetupInputFile
+#
+#   Purpose....: Setup input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetInputFile(TFile *File)
+{
+	if (FInputFile)
+		delete FInputFile;
+
+	FInputFile = File;
+}
+
+/*##########################################################################
+#
+#   Name       : SetupOutputFile
+#
+#   Purpose....: Setup output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetOutputFile(TFile *File)
+{
+	if (FOutputFile)
+		delete FOutputFile;
+
+	FOutputFile = File;
+}
+
+/*##########################################################################
+#
+#   Name       : IsEmpty
+#
+#   Purpose....: Return true if string is 0 or contains only spaces
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsEmpty(const char *s)
+{
+	if (s)
+	{
+		while(*s)
+		{
+			s++;
+			if (!isspace(*s))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : IsArgDelim
+#
+#   Purpose....: Check for argument delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsArgDelim(char ch)
+{
+	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+}
+
+/*##########################################################################
+#
+#   Name       : IsOptDelim
+#
+#   Purpose....: Check for option delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsOptDelim(char ch)
+{
+	return isspace(ch) || iscntrl(ch);
+}
+
+/*##########################################################################
+#
+#   Name       : IsOptChar
+#
+#   Purpose....: Is option char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsOptChar(char ch)
+{
+	return ch == '/';
+}
+
+
+/*##########################################################################
+#
+#   Name       : IsFileNameChar
+#
+#   Purpose....: Is filename char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int IsFileNameChar(char c)
+{
+    return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
+}
+
+/*##########################################################################
+#
+#   Name       : LTrim
+#
+#   Purpose....: Remove leading "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *LTrim(const char *str)
+{
+	while (*str)
+	{
+		if (IsArgDelim(*str))
+			str++;
+		else
+			break;
+	}
+	return str;
+}
+
+/*##########################################################################
+#
+#   Name       : RTrim
+#
+#   Purpose....: Remove trailing "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void RTrim(char *str)
+{ 
+	char *p;
+
+	p = strchr(str, 0);
+	p--;
+
+	while (p >= str && IsArgDelim(*p))
+		p--;
+
+	p[1] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : Unquote
+#
+#   Purpose....: Unquote to new string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *Unquote(const char *str, const char *end)
+{
+	char *h, *newStr;
+	const char *q;
+	int len;
+
+	newStr = new char[end - str + 1];
+	h = newStr;
+
+	while ((q = strpbrk(str, "\"")) != 0 && q < end)
+	{
+		memcpy(h, str, len = q++ - str);
+		h += len;
+		if ((str = strchr(q, q[-1])) == 0 || str >= end)
+		{
+			str = q;
+			break;
+		}
+
+		memcpy(h, q, len = str++ - q);
+		h += len;
+	}
+
+	memcpy(h, str, len = end - str);
+	h[len] = 0;
+	return newStr;
+}
+
+/*##########################################################################
+#
+#   Name       : MatchToken
+#
+#   Purpose....: Match token at begining of line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int MatchToken(char **Xp, const char *word, int len)
+{	
+    char *p;
+    char *q;
+
+    p = *Xp;
+	if (strncmpi(p, word, len) == 0)
+	{
+		p += len;
+		if (*p)
+		{
+			q = (char *)LTrim(p);
+			if (q == p)
+				return FALSE;
+			p = q;
+		}
+		*Xp = p;
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : Write
+#
+#   Purpose....: Write character to standard output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Write(char ch)
+{
+	char str[2];
+
+	str[0] = ch;
+	str[1] = 0;
+
+	if (FOutputFile)
+		FOutputFile->Write(str, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : Write
+#
+#   Purpose....: Write string to standard output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Write(const char *str)
+{
+	int size = strlen(str);
+
+	if (FOutputFile)
+		FOutputFile->Write(str, size);
+}
+
+/*##########################################################################
+#
+#   Name       : WriteError
+#
+#   Purpose....: Write character to standard error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void WriteError(char ch)
+{
+	char str[2];
+
+	str[0] = ch;
+	str[1] = 0;
+
+	if (FOutputFile)
+		FOutputFile->Write(str, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : WriteError
+#
+#   Purpose....: Write string to standard error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void WriteError(const char *str)
+{
+	int size = strlen(str);
+
+	if (FOutputFile)
+		FOutputFile->Write(str, size);
+}
+
+/*##########################################################################
+#
+#   Name       : Read
+#
+#   Purpose....: Read a character from standard input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char Read()
+{
+	char ch = 3;
+
+	if (FInputFile)
+		FInputFile->Read(&ch, 1);
+
+	return ch;
+}
+
+/*##########################################################################
+#
+#   Name       : Read
+#
+#   Purpose....: Read a string from standard input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int Read(char *str, int maxsize)
+{
+	char ch;
+	int i;
+
+	if (FInputFile)
+	{
+		for (i = 0; i < maxsize; i++)
+		{
+			ch = 0;
+			FInputFile->Read(&ch, 1);
+
+			if (ch == 3)
+				return FALSE;
+
+			if (ch == 0 || ch == 0xa)
+			{
+				*str = 0;
+				break;
+			}
+			else
+			{
+				*str = ch;
+				str++;
+			}
+		}
+		*str = 0;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/*################## FormatTime ##########################
+*   Purpose....: Format time			   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TString FormatTime(TDateTime &time)
+{
+	char str[40];
+	sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
+	return TString(str);
+}
+
+/*################## FormatLongDate ##########################
+*   Purpose....: Format long date		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TString FormatLongDate(TDateTime &date)
+{
+	char str[40];
+	sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
+	return TString(str);
+}
+
+/*################## DisplayPrompt ##########################
+*   Purpose....: Display prompt for user	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void DisplayPrompt()
+{
+	char promptstr[128];
+	char *pr;
+	TString str;
+	TPathName path("");
+
+	TEnv *env = TEnv::OpenProcessEnv();
+	if (!env->Find("PROMPT", promptstr))
+		strcpy(promptstr, "$p$g");
+
+	pr = promptstr;
+
+	while (*pr)
+	{
+		if (*pr != '$')
+			WriteChar(*pr);
+		else
+		{
+			switch (toupper(*++pr))
+            {
+                case 'Q':
+                    Write('=');
+                    break;
+            
+                case '$':
+                    Write('$');
+                    break;
+
+                case 'T':
+                    str = FormatTime(TDateTime());            
+                    Write(str.GetData());
+                    break;
+
+				case 'D':
+					str = FormatLongDate(TDateTime());
+					Write(str.GetData());
+					break;
+
+				case 'P':
+					str = path.GetFullPathName();
+                    str.Lower();
+					Write(str.GetData());
+					break;
+
+                case 'V':
+                    Write("command");
+                    break;
+                    
+                case 'N':
+                    Write(RdosGetCurDrive() + 'A');
+                    break;
+                    
+                case 'G':
+                    Write('>');
+					break;
+
+                case 'L':
+                    Write('<');
+                    break;
+
+                case 'B':
+                    Write('|');
+                    break;
+                    
+                case '_':
+                    Write('\n');
+                    break;
+                    
+                case 'E':
+                    Write(27);
+                    break;
+                    
+                case 'H':
+                    Write(8);
+                    break;
+
+            }
+        }
+        pr++;
+    }
+}
 
 /*##########################################################################
 #
@@ -111,6 +625,239 @@ void TCommandFactory::RemoveCommand()
 		prev->FList = ptr->FList;
 }
 
+/*##################  TCommandFactory::PassAll  ##########################
+*   Purpose....: Pass all characters to commandline                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+int TCommandFactory::PassAll()
+{
+    return FALSE;
+}
+
+/*##################  TCommandFactory::PassDir  ##########################
+*   Purpose....: Pass dir characters to commandline                         #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+int TCommandFactory::PassDir()
+{
+    return FALSE;
+}
+
+/*##################  TCommandFactory::FindArg  ##########################
+*   Purpose....: Find argument to batch-file                                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+const char *TCommandFactory::FindArg(int no)
+{
+    return 0;
+}
+
+/*##################  TCommandFactory::ExpandEnv  ##########################
+*   Purpose....: Parse environment variables in command line                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+TString TCommandFactory::ExpandEnv(TString &line)
+{
+	char *tp;
+	char *ip;
+    TString cp;
+    int ok;
+
+	ip = (char *)line.GetData();
+
+    while (*ip)
+    {
+        if (*ip == '%')
+        {
+            ip++;
+            
+            switch (*ip)
+            {
+                case 0:
+                    cp.Append('%');
+					break;
+
+				case '%':
+					cp.Append('%');
+					ip++;
+					break;
+
+				case '0':
+				case '1':
+				case '2':
+				case '3':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+					tp = (char *)FindArg(*ip - '0');
+		            if (tp)
+					{
+						cp.Append(*tp);
+						ip++;
+			        }
+			        else
+			            cp.Append('%');
+                    break;
+
+                default:
+                    tp = strchr(ip, '%');
+					if (tp)
+        			{
+        			    TEnv *env = TEnv::OpenProcessEnv();
+        				char *eval = new char[256];
+			            *tp = 0;
+
+                        ok = env->Find(ip, eval);
+                        if (!ok)
+                        {
+                            strupr(ip);
+                            ok = env->Find(ip, eval);                        
+                        }
+
+                        if (ok)
+                            cp.Append(eval);
+			            else
+			            {
+							if (MatchToken(&ip, "ERRORLEVEL", 10))
+							{
+								sprintf(eval, "%u", TCommand::ErrorLevel);
+								cp.Append(eval);
+							}
+							else
+			                {
+								if (MatchToken(&ip, "_CWD", 4))
+			                    {
+			                        cp.Append(RdosGetCurDrive() + 'A');
+			                        cp.Append(":\\");
+			                        *eval = 0;
+			                        RdosGetCurDir(RdosGetCurDrive(), eval); 
+                    				cp.Append(eval);
+			                    }
+			                }
+			            }
+			            delete eval;
+                        ip = tp + 1;
+			        }
+			        break;
+		    }
+        }
+        else
+        {
+            cp.Append(*ip);
+            ip++;
+        }
+	}
+	return cp;
+}
+
+/*##################  TCommandFactory::Parse  ##########################
+*   Purpose....: Parse a command line and return a command class	    	#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+TCommand *TCommandFactory::Parse(const char *line)
+{
+	const char *rest;
+	int size;
+    int i;
+	char *com;
+	char *ptr;
+    int done;
+    TString Line;
+    TCommandFactory *factory = 0;
+
+	Line = TString(LTrim(line));
+
+	Line = ExpandEnv(Line);
+	
+	rest = Line.GetData();
+
+	if (*rest)
+	{
+    	size = 0;
+		while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
+		{
+			size++;
+			rest++;
+		}
+
+		if (*rest && strchr("\"", *rest))
+			size = 0;
+
+		if (size)
+		{
+
+	    	com = new char[size + 1];
+
+            rest = Line.GetData();
+            ptr = com;
+            
+	    	for (i = 0; i < size; i++)
+	    	{
+                *ptr = toupper(*rest);
+                ptr++;
+                rest++;
+            }
+            *ptr = 0;
+    		
+        	factory = FCmdList;
+        	while (factory)
+        	{
+                if (!strcmp(factory->FName.GetData(), com))
+                    break;
+                
+        		factory = factory->FList;
+        	}
+
+            delete com;
+        }    
+    }
+
+    if (factory) 
+    {
+        done = factory->PassAll();
+
+        if (!done && factory->PassDir())
+            done = *rest == '\\' || *rest == '.' || *rest == ':';
+
+        if (!done)
+            done = (!*rest || *rest == '/');
+
+        if (!done)
+            if (IsArgDelim(*rest))
+			    rest = LTrim(rest);
+
+	    return factory->Create(rest);
+	    
+	}
+	else
+	{
+        TLangString msg;
+
+        msg.printf(TEXT_ERROR_SYNTAX, line);
+    	WriteError(msg.GetData());
+    	
+        return 0;
+    }
+}
+
 /*##########################################################################
 #
 #   Name       : TCommand::TCommand
@@ -144,44 +891,6 @@ TCommand::~TCommand()
 
 /*##########################################################################
 #
-#   Name       : TCommand::SetupInputFile
-#
-#   Purpose....: Setup input file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::SetInputFile(TFile *File)
-{
-	if (FInputFile)
-		delete FInputFile;
-
-	FInputFile = File;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::SetupOutputFile
-#
-#   Purpose....: Setup output file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::SetOutputFile(TFile *File)
-{
-	if (FOutputFile)
-		delete FOutputFile;
-
-	FOutputFile = File;
-}
-
-/*##########################################################################
-#
 #   Name       : TCommand::Run
 #
 #   Purpose....: Run command
@@ -205,311 +914,6 @@ int TCommand::Run()
 
 	delete param;
 	return result;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsEmpty
-#
-#   Purpose....: Return true if string is 0 or contains only spaces
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsEmpty(const char *s)
-{
-	if (s)
-	{
-		while(*s)
-		{
-			s++;
-			if (!isspace(*s))
-				return FALSE;
-		}
-	}
-	return TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsArgDelim
-#
-#   Purpose....: Check for argument delimiter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsArgDelim(char ch)
-{
-	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsOptDelim
-#
-#   Purpose....: Check for option delimiter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsOptDelim(char ch)
-{
-	return isspace(ch) || iscntrl(ch);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::LTrim
-#
-#   Purpose....: Remove leading "spaces"
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TCommand::LTrim(char *str)
-{
-	while (*str)
-	{
-		if (IsArgDelim(*str))
-			str++;
-		else
-			break;
-	}
-	return str;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::RTrim
-#
-#   Purpose....: Remove trailing "spaces"
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::RTrim(char *str)
-{ 
-	char *p;
-
-	p = strchr(str, 0);
-	p--;
-
-	while (p >= str && IsArgDelim(*p))
-		p--;
-
-	p[1] = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Unquote
-#
-#   Purpose....: Unquote to new string
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TCommand::Unquote(const char *str, const char *end)
-{
-	char *h, *newStr;
-	const char *q;
-	int len;
-
-	newStr = new char[end - str + 1];
-	h = newStr;
-
-	while ((q = strpbrk(str, "\"")) != 0 && q < end)
-	{
-		memcpy(h, str, len = q++ - str);
-		h += len;
-		if ((str = strchr(q, q[-1])) == 0 || str >= end)
-		{
-			str = q;
-			break;
-		}
-
-		memcpy(h, q, len = str++ - q);
-		h += len;
-	}
-
-	memcpy(h, str, len = end - str);
-	h[len] = 0;
-	return newStr;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Write
-#
-#   Purpose....: Write character to standard output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::Write(char ch)
-{
-	char str[2];
-
-	str[0] = ch;
-	str[1] = 0;
-
-	if (FOutputFile)
-		FOutputFile->Write(str, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Write
-#
-#   Purpose....: Write string to standard output
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::Write(const char *str)
-{
-	int size = strlen(str);
-
-	if (FOutputFile)
-		FOutputFile->Write(str, size);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::WriteError
-#
-#   Purpose....: Write character to standard error
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::WriteError(char ch)
-{
-	char str[2];
-
-	str[0] = ch;
-	str[1] = 0;
-
-	if (FOutputFile)
-		FOutputFile->Write(str, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::WriteError
-#
-#   Purpose....: Write string to standard error
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TCommand::WriteError(const char *str)
-{
-	int size = strlen(str);
-
-	if (FOutputFile)
-		FOutputFile->Write(str, size);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Read
-#
-#   Purpose....: Read a character from standard input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char TCommand::Read()
-{
-	char ch = 3;
-
-	if (FInputFile)
-		FInputFile->Read(&ch, 1);
-
-	return ch;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::Read
-#
-#   Purpose....: Read a string from standard input
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::Read(char *str, int maxsize)
-{
-	char ch;
-	int i;
-
-	if (FInputFile)
-	{
-		for (i = 0; i < maxsize; i++)
-		{
-			ch = 0;
-			FInputFile->Read(&ch, 1);
-
-			if (ch == 3)
-				return FALSE;
-
-			if (ch == 0 || ch == 0xd || ch == 0xa)
-			{
-				*str = 0;
-				break;
-			}
-			else
-			{
-				*str = ch;
-				str++;
-			}
-		}
-		*str = 0;
-		return TRUE;
-	}
-	return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsOptChar
-#
-#   Purpose....: Is option char
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsOptChar(char ch)
-{
-	return ch == '/';
 }
 
 /*##########################################################################
