@@ -78,6 +78,69 @@ vpm_table			DW ?
 
 vesa_pm_struc	ENDS
 
+MODE_ATTRIB_SUPORTED	EQU 1
+MODE_ATTRIB_TTY			EQU 4
+MODE_ATTRIB_COLOR		EQU 8
+MODE_ATTRIB_GRAPHICS	EQU 10h
+MODE_ATTRIB_NON_VGA		EQU 20h
+MODE_ATTRIB_NO_WINDOW	EQU 40h
+MODE_ATTRIB_LFB			EQU 80h
+MODE_ATTRIB_DOUBLE_SCAN	EQU 100h
+MODE_ATTRIB_INTERLACED	EQU 200h
+MODE_ATTRIB_TRIPPLE_BUF	EQU 400h
+MODE_ATTRIB_STEREO		EQU 800h
+MODE_ATTRIB_DUAL_START	EQU 1000h
+
+MODE_ATTRIB_REQUIRED	EQU 99h
+
+WIN_ATTRIB_RELOC		EQU 1
+WIN_ATTRIB_READ			EQU 2
+WIN_ATTRIB_WRITE		EQU 4
+
+MODEL_TEXT				EQU 0
+MODEL_CGA				EQU 1
+MODEL_HERC				EQU 2
+MODEL_PLANAR			EQU 3
+MODEL_PACKED			EQU 4
+MODEL_256				EQU 5
+MODEL_DIRECT			EQU 6
+MODEL_YUV				EQU 7
+
+vesa_mode_info	STRUC
+
+vmi_mode_attrib		DW ?
+vmi_wina_attrib		DB ?
+vmi_winb_attrib		DB ?
+vmi_granularity		DW ?
+vmi_size			DW ?
+vmi_wina_seg		DW ?
+vmi_winb_seg		DW ?
+vmi_win_func		DD ?
+vmi_scan_lines		DW ?
+vmi_x_pixels		DW ?
+vmi_y_pixels		DW ?
+vmi_x_chars			DB ?
+vmi_y_chars			DB ?
+vmi_planes			DB ?
+vmi_bits_per_pixel	DB ?
+vmi_banks			DB ?
+vmi_memory_model	DB ?
+vmi_bank_size		DB ?
+vmi_pages			DB ?
+vmi_resv1			DB ?
+vmi_red_mask_size	DB ?
+vmi_red_position	DB ?
+vmi_green_mask_size	DB ?
+vmi_green_position	DB ?
+vmi_blue_mask_size	DB ?
+vmi_blue_position	DB ?
+vmi_rsvd_mask_size	DB ?
+vmi_rsvd_position	DB ?
+vmi_dir_color_mode	DB ?
+vmi_lfb				DD ?
+
+vesa_mode_info	ENDS
+
 	extrn init_text_mode:near
 	extrn init_bit_mode:near
 
@@ -86,6 +149,165 @@ vesa_pm_struc	ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DecodeVideoMode
+;
+;		DESCRIPTION:	Decode a video mode
+;
+;		PARAMETERS:		CX		Mode #
+;						ES		Video mode info block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DecodeVideoMode	Proc near
+	mov ax,es:vmi_mode_attrib
+	and ax,MODE_ATTRIB_REQUIRED
+	cmp ax,MODE_ATTRIB_REQUIRED
+	jne decode_video_mode_done
+;
+	mov al,es:vmi_memory_model
+	cmp al,MODEL_DIRECT
+;	jne decode_video_mode_done
+;
+	mov ax,es:vmi_x_pixels
+	mov ax,es:vmi_y_pixels
+	mov eax,es:vmi_lfb
+
+decode_video_mode_done:
+	ret
+DecodeVideoMode	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetVideoModesPm
+;
+;		DESCRIPTION:	Get all video modes, protected mode version
+;
+;		PARAMETERS:		ES		Info selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetVideoModesPm	Proc near
+	push ds
+	push es
+	push fs
+	pusha
+;
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	lfs si,es:vesa_modes
+	mov eax,100h
+	AllocateSmallGlobalMem
+	xor di,di
+
+get_video_modes_pm_loop:
+	mov cx,fs:[si]
+	add si,2
+	cmp cx,-1
+	je get_video_modes_pm_done
+;
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+	mov ax,4F01h
+	call ds:v_pm16_entry
+	pop bp
+	cmp ax,4Fh
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+	jne get_video_modes_pm_loop
+;
+	call DecodeVideoMode
+	jmp get_video_modes_pm_loop
+
+get_video_modes_pm_done:
+	FreeMem
+;
+	popa
+	pop fs
+	pop es
+	pop ds
+	ret
+GetVideoModesPm	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetVideoModesV86
+;
+;		DESCRIPTION:	Get all video modes, V86 mode version
+;
+;		PARAMETERS:		ES		Info selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetVideoModesV86	Proc near
+	push ds
+	push es
+	push fs
+	pusha
+;
+	xor ax,ax
+	mov ds,ax
+	mov ax,word ptr es:vesa_modes+2
+	cmp ax,2000h
+	jne get_video_modes_v86_not_self
+;
+	mov ax,es
+	mov fs,ax
+	jmp get_video_modes_v86_do
+
+get_video_modes_v86_not_self:
+	cmp ax,0C000h
+	jne get_video_modes_v86_done
+;
+	mov ax,__C000
+	mov fs,ax
+
+get_video_modes_v86_do:
+	mov si,word ptr es:vesa_modes
+	mov eax,1000h
+	AllocateGlobalMem
+	xor di,di
+
+get_video_modes_v86_loop:
+	mov cx,fs:[si]
+	add si,2
+	cmp cx,-1
+	je get_video_modes_v86_free
+;
+	mov ax,4F01h
+	push 10h
+	V86BiosInt
+	cmp ax,4Fh
+	jne get_video_modes_v86_loop
+;
+	call DecodeVideoMode
+	jmp get_video_modes_v86_loop
+
+get_video_modes_v86_free:
+	FreeMem
+
+get_video_modes_v86_done:
+	popa
+	pop fs
+	pop es
+	pop ds
+	ret
+GetVideoModesV86	Endp
 
 vesa_id	DB 'VESA'
 
@@ -327,16 +549,23 @@ page
 
 SetWindowPm32	Proc near
 	push ds
+	push es
 	push gs
+	push si
 ;
 	xor bh,bh
 	mov ax,pc_video_data_sel
 	mov gs,ax
 	mov ax,gs:v_pm32_data_sel
 	mov ds,ax
+	mov es,gs:v_pm32_io
+	mov bp,sp
+	mov ss,ax
+	mov sp,1000h
 	push bp
 	sub sp,8
-	mov [bp],11000h - 60h
+	mov bp,sp
+	mov dword ptr [bp],100h
 	mov ax,gs:v_pm32_code_sel
 	mov [bp+4],ax
 	mov ax,4F05h
@@ -344,7 +573,13 @@ SetWindowPm32	Proc near
 	add sp,8
 	pop bp
 ;
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
 	pop si
+	pop gs
+	pop es
 	pop ds
 	ret
 SetWindowPm32	Endp
@@ -367,14 +602,37 @@ page
 
 SetStartPm32	Proc near
 	push ds
-	push bp
+	push es
+	push gs
+	push si
 ;
 	xor bx,bx
 	mov ax,pc_video_data_sel
+	mov gs,ax
+	mov ax,gs:v_pm32_data_sel
 	mov ds,ax
-;
+	mov es,gs:v_pm32_io
+	mov bp,sp
+	mov ss,ax
+	mov sp,1000h
+	push bp
+	sub sp,8
+	mov bp,sp
+	mov dword ptr [bp],108h
+	mov ax,gs:v_pm32_code_sel
+	mov [bp+4],ax
+	mov ax,4F05h
+	call fword ptr [bp]
+	add sp,8
 	pop bp
+;
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
 	pop si
+	pop gs
+	pop es
 	pop ds
 	ret
 SetStartPm32	Endp
@@ -398,13 +656,36 @@ page
 
 SetPalettePm32	Proc near
 	push ds
-	push bp
+	push es
+	push gs
+	push si
 ;
+	xor bh,bh
 	mov ax,pc_video_data_sel
-	mov ds,ax
-;
+	mov gs,ax
+	mov ds,gs:v_pm32_io
+	mov ax,gs:v_pm32_data_sel
+	mov bp,sp
+	mov ss,ax
+	mov sp,1000h
+	push bp
+	sub sp,8
+	mov bp,sp
+	mov dword ptr [bp],110h
+	mov ax,gs:v_pm32_code_sel
+	mov [bp+4],ax
+	mov ax,4F05h
+	call fword ptr [bp]
+	add sp,8
 	pop bp
+;
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
 	pop si
+	pop gs
+	pop es
 	pop ds
 	ret
 SetPalettePm32	Endp
@@ -457,6 +738,7 @@ InitPm	Proc near
 	mov ax,es:vesa_video_mem
 	shl eax,16
 	mov ds:v_video_mem,eax
+	call GetVideoModesPm
 
 init_pm_leave:
 	pop bp
@@ -519,45 +801,58 @@ InitV86	Proc near
 	cmp al,2
 ;	jc init_v86_calls
 ;
+	mov bx,es
+	GetSelectorBaseSize
+	add edx,1000h
+	sub ecx,1000h
+	CreateDataSelector16
+	mov es,bx
+;
 	mov ax,4F0Ah
 	xor bl,bl
 	push 10h
 	V86BiosInt
+;
+	mov bx,es
+	GetSelectorBaseSize
+	sub edx,1000h
+	add ecx,1000h
+	CreateDataSelector16
+	mov es,bx
+;	
 	cmp ax,4Fh
 	jne init_v86_calls
 ;
 	int 3
-	mov ebx,11000h - 60h
-	movzx eax,es:[di].vpm_set_window
-	add ax,di
+	movzx edi,di
+	add edi,1000h
+	mov ebx,100h
+;
+	movzx eax,es:[edi].vpm_set_window
+	add eax,edi
 	sub eax,ebx
-	sub eax,14
-	mov word ptr es:[ebx],0E589h
-	mov word ptr es:[ebx+2],0D88Ch
-	mov word ptr es:[ebx+4],0D08Eh
-	mov byte ptr es:[ebx+6],0BCh
-	mov dword ptr es:[ebx+7],11000h - 80h
-	mov byte ptr es:[ebx+10],0E8h
-	mov es:[ebx+11],eax
-	mov word ptr es:[ebx+15],0BE66h
-	mov word ptr es:[ebx+17],thread_ss0_sel
-	mov word ptr es:[ebx+19],0D68Eh
-	mov word ptr es:[ebx+21],0EC89h
-	mov byte ptr es:[ebx+23],0CBh
-	add ebx,20h
+	sub eax,5
+	mov byte ptr es:[bx],0E8h
+	mov es:[bx+1],eax
+	mov byte ptr es:[bx+5],0CBh
+	add bx,8
 ;
-	movzx eax,es:[di].vpm_set_disp_start
-	add ax,di
-	mov byte ptr es:[ebx],0E8h
-	mov es:[ebx+1],eax
-	mov byte ptr es:[ebx+5],0CBh
-	add ebx,20h
+	movzx eax,es:[edi].vpm_set_disp_start
+	add eax,edi
+	sub eax,ebx
+	sub eax,5
+	mov byte ptr es:[bx],0E8h
+	mov es:[bx+1],eax
+	mov byte ptr es:[bx+5],0CBh
+	add bx,8
 ;
-	movzx eax,es:[di].vpm_set_palette
-	add ax,di
-	mov byte ptr es:[ebx],0E8h
-	mov es:[ebx+1],eax
-	mov byte ptr es:[ebx+5],0CBh
+	movzx eax,es:[edi].vpm_set_palette
+	add eax,edi
+	sub eax,ebx
+	sub eax,5
+	mov byte ptr es:[bx],0E8h
+	mov es:[bx+1],eax
+	mov byte ptr es:[bx+5],0CBh
 ;
 	mov bx,es
 	GetSelectorBaseSize
@@ -570,21 +865,24 @@ InitV86	Proc near
 	CreateDataSelector32
 	mov ds:v_pm32_data_sel,bx
 ;
-	mov bx,es:[di].vpm_table
-	add bx,di
+	movzx ebx,es:[edi].vpm_table
+	or bx,bx
+	jz init_v86_memory_done
+;
+	add ebx,edi
 
 init_v86_io_loop:
-	mov ax,es:[bx]
-	add bx,2
+	mov ax,es:[ebx]
+	add ebx,2
 	cmp ax,-1
 	jne init_v86_io_loop
 ;
-	mov ax,es:[bx]
+	mov ax,es:[ebx]
 	cmp ax,-1
 	je init_v86_memory_done
 ;
-	mov edx,es:[bx]
-	movzx eax,word ptr es:[bx+4]
+	mov edx,es:[ebx]
+	movzx eax,word ptr es:[ebx+4]
 ;
 	push ds
 	push es
@@ -622,15 +920,19 @@ init_v86_pm32:
 	mov ds:v_set_window_proc,OFFSET SetWindowPm32
 	mov ds:v_set_start_proc,OFFSET SetStartPm32
 	mov ds:v_set_palette_proc,OFFSET SetPalettePm32
+	call GetVideoModesV86
 	jmp init_v86_check_done
 
 init_v86_calls:
 	mov ds:v_set_window_proc,OFFSET SetWindowV86
 	mov ds:v_set_start_proc,OFFSET SetStartV86
 	mov ds:v_set_palette_proc,OFFSET SetPaletteV86
+	call GetVideoModesV86
 ;
 	mov bx,es
 	GetSelectorBaseSize
+	add edx,1000h
+	sub ecx,1000h
 	mov ax,process_page_sel
 	mov ds,ax
 	mov edi,edx
