@@ -254,4 +254,8 @@ leave_user_section_nr			EQU 219
 
 test_nr							EQU 220
 
-usergate_entries			EQU 221
+read_disc_nr					EQU 221
+write_disc_nr					EQU 222
+get_disc_info_nr				EQU 223
+
+usergate_entries			EQU 224

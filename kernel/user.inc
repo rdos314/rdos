@@ -924,6 +924,29 @@ GetDll	MACRO
 	UserGate get_dll_nr
 					ENDM
 
+;	IN	AL			DISC #
+;	OUT	CX			BYTES / SECTOR
+;	OUT	EDX			TOTAL # OF SECTORS
+GetDiscInfo     MACRO
+	UserGate get_disc_info_nr
+						ENDM
+
+;	IN	AL			Disc #
+;	IN	EDX			Sector #
+;	IN	(E)CX		Size
+;	IN	ES:(E)DI	Buffer
+ReadDisc     MACRO
+	UserGate read_disc_nr
+						ENDM
+
+;	IN	AL			Disc #
+;	IN	EDX			Sector #
+;	IN	(E)CX		Size
+;	IN	ES:(E)DI	Buffer
+WriteDisc     MACRO
+	UserGate write_disc_nr
+						ENDM
+
 ;	IN	AL			DRIVE NR
 ;	OUT	EAX			FREE UNITS
 ;	OUT	CX			BYTES / UNIT

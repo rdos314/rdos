@@ -2823,7 +2823,237 @@ reset_drive_done:
 	pop ds
 	ret
 reset_drive	ENDP
-	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_DISC_INFO
+;
+;		DESCRIPTION:	Get disc info
+;
+;		PARAMETERS:		AL			Disc #
+;
+;		RETURNS;		CX			Bytes / sector
+;						EDX			Total sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_info_name	DB 'Get Disc Info',0
+
+get_disc_info	PROC far
+	push ds
+	push ax
+	push bx
+;
+	cmp al,MAX_DRIVES
+	jae get_disc_info_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,ds:[bx].disc_def_arr
+	or bx,bx
+	jz get_disc_info_fail
+;
+	mov ds,bx
+	mov ax,ds:disc_units
+	mul ds:disc_sectors_per_unit
+	push dx
+	push ax
+	pop edx
+	mov cx,ds:disc_bytes_per_sector
+	clc
+	jmp get_disc_info_done
+
+get_disc_info_fail:
+	xor cx,cx
+	xor edx,edx
+	stc
+
+get_disc_info_done:
+	pop bx
+	pop ax
+	pop ds	
+	retf32
+get_disc_info	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			READ_DISC
+;
+;		DESCRIPTION:	Read disc
+;
+;		PARAMETERS:		AL			Disc #
+;						EDX			Sector #
+;						(E)CX		Size
+;						ES:(E)DI	Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_disc_name	DB 'Read Disc',0
+
+read_disc	PROC near
+	push ds
+	push es
+	pushad
+;
+	cmp al,MAX_DRIVES
+	jae read_disc_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,ds:[bx].disc_def_arr
+	or bx,bx
+	jz read_disc_fail
+;
+	mov ds,bx
+	push ds
+	push es
+	push ecx
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	push edx
+	pop ax
+	pop dx
+	div ds:disc_sectors_per_unit
+	mov cx,ax
+	EnterSection ds:disc_section
+
+read_disc_loop:
+	call check_buf
+	jnc read_disc_found
+;
+	ClearSignal
+	call allocate_handle
+	push edx
+	call allocate_data
+	mov es:[edi].dh_data,edx
+	pop edx
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	mov es:[edi].dh_flags,0
+	call insert_buf
+	call insert_pending
+
+read_disc_signal:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	clc
+	jne read_disc_found
+
+read_disc_block:
+	call block
+	jmp read_disc_loop
+
+read_disc_found:
+	test es:[edi].dh_flags, FLAG_IO_BUSY
+	jnz read_disc_block
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je read_disc_signal
+;	
+	mov esi,es:[edi].dh_data
+	mov ax,es
+	mov ds,ax
+	pop edi
+	pop ecx
+	pop es
+;
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop ds
+	LeaveSection ds:disc_section
+	clc
+	jmp read_disc_done
+
+read_disc_fail:
+	stc
+
+read_disc_done:
+	popad
+	pop es
+	pop ds
+	ret
+read_disc	ENDP
+
+read_disc32	Proc far
+	call read_disc
+	retf32
+read_disc32	Endp
+
+read_disc16	Proc far
+	push ecx
+	push edi
+;
+	movzx ecx,cx
+	movzx edi,di
+	call read_disc
+;
+	pop edi
+	pop ecx
+	ret
+read_disc16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WRITE_DISC
+;
+;		DESCRIPTION:	Write disc
+;
+;		PARAMETERS:		AL			Disc #
+;						EDX			Sector #
+;						(E)CX		Size
+;						ES:(E)DI	Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_disc_name	DB 'Write Disc',0
+
+write_disc	PROC near
+	ret
+write_disc	ENDP
+
+write_disc32	Proc far
+	call write_disc
+	retf32
+write_disc32	Endp
+
+write_disc16	Proc far
+	push ecx
+	push edi
+;
+	movzx ecx,cx
+	movzx edi,di
+	call write_disc
+;
+	pop edi
+	pop ecx
+	ret
+write_disc16	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3256,6 +3486,51 @@ init	PROC far
 	mov di,OFFSET reset_drive_name
 	mov ax,reset_drive_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_disc_info
+	mov di,OFFSET get_disc_info_name
+	xor cl,cl
+	mov ax,get_disc_info_nr
+	RegisterUserGate
+;
+	mov bx,ax
+	mov dx,0
+	mov ax,get_virt_disc_info_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET read_disc32
+	mov di,OFFSET read_disc_name
+	xor cl,cl
+	mov ax,read_disc_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET read_disc16
+	mov di,OFFSET read_disc_name
+	xor cl,cl
+	mov ax,read_disc_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,read_virt_disc_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET write_disc32
+	mov di,OFFSET write_disc_name
+	xor cl,cl
+	mov ax,write_disc_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET write_disc16
+	mov di,OFFSET write_disc_name
+	xor cl,cl
+	mov ax,write_disc_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,write_virt_disc_nr
+	RegisterVirtUserGate
 ;
 	mov di,OFFSET init_disc
 	HookInitFileSystem

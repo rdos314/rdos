@@ -712,7 +712,8 @@ fs0F	DW OFFSET fs_unknown
 InstallPartition	Proc near
 	push es
 	push ax
-	push di
+	push esi
+	push edi
 ;
 	mov di,cs
 	mov es,di
@@ -730,7 +731,8 @@ InstallPartition	Proc near
 	clc
 
 install_part_done:
-	pop di
+	pop edi
+	pop esi
 	pop ax
 	pop es
 	ret
@@ -1264,62 +1266,77 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallExtended	Proc near
-	pushad
-;
-	push ax
-	push edx
+	mov ebp,edx
 	mov eax,200h
 	AllocateSmallLinear
 	mov edi,edx
-	pop edx
-	pop ax
 ;
-	mov esi,edx
-
-InstallExtendedLoop:
-	push edx
-	push eax
-	mov eax,esi
+	mov eax,ebp
 	xor edx,edx
 	movzx ecx,word ptr fs:drive_sectors_per_unit
 	div ecx
 	mov bx,dx
 	mov edx,eax
-	pop eax
 ;
 	mov cx,1
 	call ReadDrive
-	pop edx
 ;
-	mov cl,es:[edi+1BEh].part_type
+	mov esi,1BEh
+
+install_ext_loop1:
+	mov cl,es:[esi+edi].part_type
 	or cl,cl
-	jz InstallExtendedDone
+	jz install_ext_next_part1
 ;
-	cmp cl,10h
-	cmc
-	jc InstallExtendedNextPart
-;
-	push edx
-	mov edx,esi
-	add edx,es:[edi+1BEh].part_start_sector
-	call InstallPartition
-	pop edx
-
-InstallExtendedNextPart:
-	mov cl,es:[edi+1CEh].part_type
 	cmp cl,5
-	jne InstallExtendedDone
+	je install_ext_next_part1
 ;
-	mov esi,edx
-	add esi,es:[edi+1CEh].part_start_sector
-	jmp InstallExtendedLoop
+	cmp cl,0Fh
+	je install_ext_next_part1
+;
+	push ebp
+	mov edx,es:[esi+edi].part_start_sector
+	add edx,ebp
+	call InstallPartition
+	pop ebp
 
-InstallExtendedDone:
+install_ext_next_part1:
+	add si,10h
+	cmp si,1FEh
+	jne install_ext_loop1
+;
+	mov esi,1BEh
+
+install_ext_loop2:
+	mov cl,es:[esi+edi].part_type
+	or cl,cl
+	jz install_ext_next_part2
+;
+	cmp cl,5
+	je install_ext_install2
+;
+	cmp cl,0Fh
+	jne install_ext_next_part2
+
+install_ext_install2:
+	push esi
+	push edi
+	push ebp
+	mov edx,es:[esi+edi].part_start_sector
+	add edx,ebp
+	call InstallExtended
+	pop ebp
+	pop edi
+	pop esi
+
+install_ext_next_part2:
+	add si,10h
+	cmp si,1FEh
+	jne install_ext_loop2
+;
 	mov ecx,200h
 	mov edx,edi
 	FreeLinear
-;
-	popad
 	ret
 InstallExtended	Endp
 
@@ -1357,28 +1374,27 @@ drive_assign2	Proc far
 drive_assign_loop2:
 	mov cl,es:[esi+edi].part_type
 	or cl,cl
-	jz drive_assign_free2
+	jz drive_assign_next_part2
 ;
 	cmp cl,5
-	je drive_assign_next_part2
+	je drive_assign_install2
 ;
 	cmp cl,0Fh
 	jne drive_assign_next_part2
-;
+
+drive_assign_install2:
+	push esi
+	push edi
 	mov edx,es:[esi+edi].part_start_sector
 	call InstallExtended
-	jmp drive_assign_next_part2
-	
-drive_assign_ext_dos:
-	mov edx,es:[esi+edi].part_start_sector
-	call InstallExtended
+	pop edi
+	pop esi
 
 drive_assign_next_part2:
 	add si,10h
 	cmp si,1FEh
 	jne drive_assign_loop2
-
-drive_assign_free2:
+;
 	mov ecx,200h
 	mov edx,edi
 	FreeLinear
