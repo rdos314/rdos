@@ -136,6 +136,46 @@ ltE8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 ltF0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 ltF8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 
+
+FAT_INVALID = 1
+FAT_UPPER = 2
+FAT_LOWER = 4
+
+lfn_tab:
+lft00 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft08 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft10 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft18 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft20 DB 0,	0,	0,	0,	0,	0,	0,	0
+lft28 DB 0,	0,	1,	1,	1,	0,	0,	1
+lft30 DB 0,	0,	0,	0,	0,	0,	0,	0
+lft38 DB 0,	0,	1,	1,	1,	1,	1,	1
+lft40 DB 0,	2,	2,	2,	2,	2,	2,	2
+lft48 DB 2,	2,	2,	2,	2,	2,	2,	2
+lft50 DB 2,	2,	2,	2,	2,	2,	2,	2
+lft58 DB 2,	2,	2,	1,	1,	1,	0,	0
+lft60 DB 0,	4,	4,	4,	4,	4,	4,	4
+lft68 DB 4,	4,	4,	4,	4,	4,	4,	4
+lft70 DB 4,	4,	4,	4,	4,	4,	4,	4
+lft78 DB 4,	4,	4,	0,	1,	0,	0,	1
+lft80 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft88 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft90 DB 1,	1,	1,	1,	1,	1,	1,	1
+lft98 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftA0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftA8 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftB0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftB8 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftC0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftC8 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftD0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftD8 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftE0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftE8 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftF0 DB 1,	1,	1,	1,	1,	1,	1,	1
+lftF8 DB 1,	1,	1,	1,	1,	1,	1,	1
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -427,6 +467,141 @@ GetDeletedEntry	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    allocate_root_lfn_entries
+;
+;		DESCRIPTION:	Allocate LFN entries in root directory
+;
+;		PARAMETERS:		BX			Cached dir selector
+;                       CX          Number of entries
+;
+;       RETURNS:        EDX         LFN start sector
+;                       SI          LFN sector offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_root_lfn_entries	Proc near
+	push ax
+	push ebx
+	push cx
+	push di
+	push bp
+;
+    mov bp,cx
+;
+	mov cx,ds:root_entries
+	shr cx,4
+	mov edx,ds:root_sector
+
+arle_sector_loop:
+	mov al,ds:drive_nr
+	LockSector
+	jc arle_dir_next
+
+arle_entry_loop:
+	add si,20h
+	test si,1FFh
+	jnz arle_entry_loop
+
+arle_dir_next:
+	UnlockSector			
+	inc edx
+	loop arle_sector_loop
+;    
+    pop bp
+	pop di
+	pop cx
+	pop ebx
+	pop ax
+	ret
+allocate_root_lfn_entries	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			allocate_dir_lfn_entries
+;
+;		DESCRIPTION:	Allocate LFN entries in sub directory
+;
+;		PARAMETERS:		EDX			Start sector
+;						BX			Cached dir selector
+;                       CX          Number of entries
+;
+;       RETURNS:        EDX         LFN start sector
+;                       SI          LFN sector offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dir_lfn_entries	Proc near
+	push ax
+	push ebx
+	push di
+	push bp
+;
+    mov bp,cx
+
+adl_sector_loop:
+	mov al,ds:drive_nr
+	LockSector
+	jc adl_dir_next
+
+adl_entry_loop:
+	add si,20h
+	test si,1FFh
+	jnz adl_entry_loop
+
+adl_dir_next:
+	mov al,ds:drive_nr
+	UnlockSector			
+	call next_sector
+	jnc adl_sector_loop
+;
+    pop bp
+	pop di
+	pop ebx
+	pop ax
+	ret
+allocate_dir_lfn_entries	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			allocate_lfn_entries
+;
+;		DESCRIPTION:	Allocate LFN entries
+;
+;		PARAMETERS:		BX			Cached dir selector
+;                       CX          Number of entries
+;
+;       RETURNS:        EDX         LFN start sector
+;                       SI          LFN sector offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_lfn_entries    Proc near
+    push fs
+    mov fs,bx
+    mov edx,fs:fds_start_sector
+    or edx,edx
+    jz ale_root
+;
+    call allocate_dir_lfn_entries
+    jmp ale_done
+
+ale_root:
+    call allocate_root_lfn_entries
+
+ale_done:
+    pop fs
+    ret
+allocate_lfn_entries    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			get_entry_name_size
 ;
 ;		DESCRIPTION:	Get dir entry name size
@@ -627,6 +802,8 @@ copy_entry_xlat	Endp
 ;		DESCRIPTION:	Get LFN name size
 ;
 ;		PARAMETERS:		DI			Cached dir selector
+;						EDX			Sector
+;						ESI			Entry data
 ;                       FS          LFN data
 ;
 ;		RETURNS:		NC          LFN valid
@@ -645,10 +822,25 @@ get_lfn_name_size	Proc near
     stc
     jz get_lfn_name_size_done
 ;
+    push esi
+    xor al,al
+    mov cx,11
+
+get_lfn_chksum_loop:
+    ror al,1
+    add al,es:[esi]
+    inc esi
+    loop get_lfn_chksum_loop
+;            
+    pop esi
+    cmp al,fs:lfn_chksum
+    jne get_lfn_name_delete
+;
     mov al,fs:lfn_seq
     cmp al,1
     je get_lfn_name_size_start
-;
+
+get_lfn_name_delete:
     call delete_lfn_entries
     stc
     jmp get_lfn_name_size_done
@@ -727,6 +919,134 @@ get_entry_time	Proc near
 	pop bx
 	ret
 get_entry_time	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			is_valid_fat_name
+;
+;		DESCRIPTION:    Check if file is valid 8.3 name
+;
+;		PARAMETERS:		GS:EDI  Entry name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_valid_fat_name	PROC near
+    push ax
+	push bx
+	push cx
+	push dx
+	push edi
+;
+	mov bx,OFFSET lfn_tab
+	xor dx,dx
+	xor cx,cx    
+
+is_valid_fat_name_loop:
+    mov al,gs:[edi]
+    or al,al
+    jz is_valid_fat_name_check
+;    
+    cmp al,'.'
+    je is_valid_fat_name_dot
+;   
+	xlat byte ptr cs:lfn_tab
+	or dl,al
+    inc cx
+	jmp is_valid_fat_name_next
+
+is_valid_fat_name_dot:
+    or dh,dh
+    jne is_valid_fat_name_fail
+;    
+    cmp cx,8
+    ja is_valid_fat_name_fail
+;
+    inc dh
+    xor cx,cx
+
+is_valid_fat_name_next:	
+    inc edi
+    jmp is_valid_fat_name_loop
+
+is_valid_fat_name_check:
+    or dh,dh
+    je is_valid_fat_name_check_base
+
+is_valid_fat_name_check_ext:
+    cmp cx,3
+    ja is_valid_fat_name_fail
+    jmp is_valid_fat_name_83_ok 
+
+is_valid_fat_name_check_base:
+    cmp cx,8
+    ja is_valid_fat_name_fail
+
+is_valid_fat_name_83_ok:
+    test dl,FAT_INVALID
+    jnz is_valid_fat_name_fail
+;
+    and dl,FAT_LOWER OR FAT_UPPER
+    cmp dl,FAT_LOWER OR FAT_UPPER
+    je is_valid_fat_name_fail
+;
+    clc
+    jmp is_valid_fat_name_done
+
+is_valid_fat_name_fail:
+    stc
+
+is_valid_fat_name_done: 	
+	pop edi
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+is_valid_fat_name	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			calc_lfn_entries
+;
+;		DESCRIPTION:    Calculate number of required LFN entries
+;
+;		PARAMETERS:		GS:EDI  Entry name
+;
+;       RETURNS:        CX      Number of required entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+calc_lfn_entries	PROC near
+    push ax
+	push edi
+;
+    mov cx,1
+    xor ah,ah
+
+calc_lfn_entry_loop:
+    inc ah
+    cmp ah,13
+    jbe calc_lfn_next_char
+;
+    inc cx
+    mov ah,1
+
+calc_lfn_next_char:    
+    mov al,gs:[edi]
+    inc edi
+    or al,al
+    jnz calc_lfn_entry_loop
+;    	
+	pop edi
+	pop ax
+	ret
+calc_lfn_entries	ENDP
 
 PAGE
 
@@ -1106,6 +1426,7 @@ cache_deleted_entry	Endp
 ;		PARAMETERS:		DI			Cached dir selector
 ;						EDX			Sector
 ;						ESI			Entry data
+;                       FS          LFN cache
 ;
 ;		RETURNS:		EDX			Dir file entry
 ;						
@@ -1161,6 +1482,25 @@ cache_file_entry	Proc near
 	pop esi
 	pop ecx
 	mov es:[edi].de_name_size,cx
+;
+    push esi
+    push edi
+    movzx ecx,fs:lfn_entries
+    mov es:[edi].ffe_lfn_count,cx
+    shl ecx,3
+    mov esi,OFFSET lfn_entry_arr
+    lea edi,[edi].ffe_lfn_arr
+	rep movs dword ptr es:[edi],fs:[esi]    	
+	pop edi
+	pop esi
+;
+    push es
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    pop es
     jmp cache_file_time
 
 cache_file_83:	
@@ -1182,6 +1522,7 @@ cache_file_83:
 	mov ax,si
 	and ax,1FFh
 	mov es:[edi].ffe_entry_offset,ax
+    mov es:[edi].ffe_lfn_count,0
 ;	
     push edi
 	lea edi,[edi].ffe_fat_name
@@ -1239,6 +1580,7 @@ cache_file_entry	Endp
 ;		PARAMETERS:		DI			Cached dir selector
 ;						EDX			Sector
 ;						ESI			Entry data
+;                       FS          LFN cache
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1292,6 +1634,25 @@ cache_dir_entry	Proc near
 	pop esi
 	pop ecx
 	mov es:[edi].de_name_size,cx
+;
+    push esi
+    push edi
+    movzx ecx,fs:lfn_entries
+    mov es:[edi].fde_lfn_count,cx
+    shl ecx,3
+    mov esi,OFFSET lfn_entry_arr
+    lea edi,[edi].fde_lfn_arr
+	rep movs dword ptr es:[edi],fs:[esi]    	
+	pop edi
+	pop esi
+;
+    push es
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    pop es
     jmp cache_dir_time
 
 cache_dir_83:	
@@ -1313,6 +1674,7 @@ cache_dir_83:
 	mov ax,si
 	and ax,1FFh
 	mov es:[edi].fde_entry_offset,ax
+    mov es:[edi].fde_lfn_count,0
 ;	
     push edi
 	lea edi,[edi].fde_fat_name
@@ -1392,8 +1754,34 @@ cache_lfn_entry	Proc near
 
 cache_lfn_retry:
     test fs:[esi].lfne_seq,40h
-    jz cache_lfn_done
+    jnz cache_lfn_alloc
 ;
+    push es
+    push ebx
+    push ecx
+    push edi
+;
+    mov ax,flat_sel
+    mov es,ax
+	mov al,ds:drive_nr
+    push esi
+	LockSector
+	pop esi
+	call cache_free_entry
+	mov edi,esi
+    mov ecx,8
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+;
+    pop edi
+    pop ecx
+    pop ebx        
+    pop es
+    jmp cache_lfn_done
+
+cache_lfn_alloc:
     mov eax,SIZE lfn_struc
     AllocateSmallGlobalMem
 ;    
@@ -1405,13 +1793,18 @@ cache_lfn_retry:
     pop di
 ;    
     mov es:lfn_entries,0
-    mov es:lfn_chksum,0
+    mov al,fs:[esi].lfne_chksum
+    mov es:lfn_chksum,al
     mov al,fs:[esi].lfne_seq
     and al,3Fh
     jmp cache_lfn_seq_ok
 
 cache_lfn_check_seq:
     mov es,bx
+    mov al,fs:[esi].lfne_chksum
+    cmp al,es:lfn_chksum
+    jne cache_lfn_error
+;    
     mov al,fs:[esi].lfne_seq
     mov ah,es:lfn_seq
     dec ah
@@ -1419,7 +1812,15 @@ cache_lfn_check_seq:
     je cache_lfn_seq_ok
 
 cache_lfn_error:
+    push fs
+    mov ax,es
+    mov fs,ax
+    mov ax,flat_sel
+    mov es,ax
     call delete_lfn_entries    
+    pop fs
+    xor ax,ax
+    mov es,ax
     jmp cache_lfn_retry
     
 cache_lfn_seq_ok:
@@ -1505,8 +1906,11 @@ delete_lfn_entries	Proc near
     push es
     pushad
 ;
+    mov bx,fs
+    or bx,bx
+    jz delete_lfn_done
+;    
     int 3
-;
     mov bp,di
     mov cx,fs:lfn_entries
     mov di,OFFSET lfn_entry_arr
@@ -1541,7 +1945,8 @@ delete_lfn_loop:
     xor ax,ax
     mov fs,ax
     FreeMem
-;
+
+delete_lfn_done:
     popad
     pop es
     ret
@@ -1658,6 +2063,9 @@ cache_root_dir	Proc near
 	push esi
 	push di
 ;
+    mov fs,bx
+    mov fs:fds_start_sector,0
+;
     xor di,di
     mov fs,di
 	mov di,bx
@@ -1681,7 +2089,7 @@ cache_root_dir_next:
 	inc edx
 	loop cache_root_sector_loop
 ;
-    call cache_free_lfn
+    call delete_lfn_entries
 ;    
 	pop di
 	pop esi
@@ -1717,9 +2125,12 @@ cache_sub_dir	Proc near
 	push esi
 	push di
 ;
+    mov fs,bx
+    mov fs:fds_start_sector,edx
+;
     xor di,di
     mov fs,di
-	mov di,bx
+	mov di,bx	
 
 cache_sub_dir_sector_loop:
 	mov al,ds:drive_nr
@@ -1738,7 +2149,7 @@ cache_sub_dir_next:
 	call next_sector
 	jnc cache_sub_dir_sector_loop
 ;
-    call cache_free_lfn
+    call delete_lfn_entries
 ;
 	pop di
 	pop esi
@@ -2010,6 +2421,15 @@ create_dir	PROC far
 	mov es,ax
 	mov fs,bx
 ;
+    call is_valid_fat_name
+    jnc create_dir_83
+;
+    int 3    
+    call calc_lfn_entries
+    inc cx
+    call allocate_lfn_entries
+
+create_dir_83:
 	call allocate_dir_entry
 	jc create_dir_done
 ;
@@ -2041,7 +2461,12 @@ create_dir	PROC far
 ;
 	mov di,fs
 	push edx
+;	
+	push fs
+	xor bx,bx
+	mov fs,bx
 	call cache_dir_entry
+	pop fs
 ;
 	mov bx,fs
 	CacheDir
@@ -2175,6 +2600,40 @@ delete_file	PROC far
 ;
 	mov ax,flat_sel
 	mov es,ax
+;
+    mov cx,es:[edx].ffe_lfn_count
+    or cx,cx
+    jz delete_file_lfn_done
+;
+    lea ebp,[edx].ffe_lfn_arr
+    push ebx
+    push edx
+    mov di,bx
+
+delete_file_lfn_loop:
+    mov edx,es:[ebp].lfnp_sector
+    mov al,ds:ds_drive
+    LockSector
+    or esi,es:[ebp].lfnp_offset
+    call cache_free_entry
+    push ecx
+    push edi
+    mov edi,esi
+    mov ecx,8
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop edi
+    pop ecx
+    ModifySector
+    UnlockSector
+;
+    add ebp,8
+    loop delete_file_lfn_loop
+;
+    pop edx
+    pop ebx    
+
+delete_file_lfn_done:
 	mov eax,es:[edx].ffe_entry_sector
 	mov cx,es:[edx].ffe_entry_offset
 	mov es:[edx].fe_entry_sector,eax
@@ -2313,6 +2772,15 @@ create_file	PROC far
 	mov es,ax
 	mov fs,bx
 ;
+    call is_valid_fat_name
+    jnc create_file_83
+;
+    int 3    
+    call calc_lfn_entries
+    inc cx
+    call allocate_lfn_entries
+
+create_file_83:
 	call allocate_dir_entry
 	jc create_file_done
 ;
@@ -2340,8 +2808,12 @@ create_file	PROC far
 ;
 	ModifySector
 	UnlockSector
+	push fs
 	mov di,fs
+	xor bx,bx
+	mov fs,bx
 	call cache_file_entry
+	pop fs
 	clc
 	jmp create_file_done
 

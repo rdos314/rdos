@@ -76,6 +76,7 @@ fat_dir_sel_data_struc	STRUC
 
 fds_base			dir_sel_data_struc <>
 
+fds_start_sector    DD ?
 fds_deleted_ptr		DD ?
 fds_free_ptr		DD ?
 
@@ -98,6 +99,8 @@ fde_entry_sector	DD ?
 fde_entry_offset	DW ?
 fde_start_cluster	DD ?
 fde_start_sector	DD ?
+fde_lfn_count       DW ?
+fde_lfn_arr         DD 2 * MAX_LFN_ENTRIES DUP (?)
 fde_fat_name        DB 13 DUP(?)
 
 fde_name		DB ?
@@ -111,6 +114,8 @@ ffe_base			dir_file_entry_data_struc <>
 ffe_entry_sector	DD ?
 ffe_entry_offset	DW ?
 ffe_start_cluster	DD ?
+ffe_lfn_count       DW ?
+ffe_lfn_arr         DD 2 * MAX_LFN_ENTRIES DUP (?)
 ffe_fat_name        DB 13 DUP(?)
 
 ffe_name			DB ?
