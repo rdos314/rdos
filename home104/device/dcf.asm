@@ -53,7 +53,7 @@ dcf_data	STRUC
 thread_id		DW ?
 rtc_id			DW ?
 
-update_diff		DD ?,?
+sys_diff		DD ?,?
 
 on_time			DD ?,?
 start_pulse		DD ?,?
@@ -184,6 +184,45 @@ dcf_int_ack:
 	ret
 dcf_int	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			int_timeout
+;
+;		description:	Reinitialize timer chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_timeout	Proc far
+    mov dx,284h
+	in al,dx
+	and al,NOT 2
+	out dx,al
+;
+	mov dx,280h
+	mov al,2
+	out dx,al
+;
+	mov dx,284h
+	in al,dx
+	or al,2
+    out dx,al
+;
+	mov bx,dcf_data_sel
+	mov ds,bx
+	GetSystemTime
+	add eax,1193000 * 90
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET int_timeout
+	mov bx,ds:thread_id
+	StartTimer
+	ret
+int_timeout	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -202,7 +241,24 @@ WaitForPulse	Proc near
 	mov ds:end_pulse,0	
 	mov ds:end_pulse+4,0	
 ;
+	push es
+	push bx
+	push di
+	GetSystemTime
+	mov ax,cs
+	mov es,ax
+	add eax,1193000 * 5
+	adc edx,0
+	mov di,OFFSET int_timeout
+	mov bx,ds:thread_id
+	StopTimer
+	StartTimer
 	WaitForSignal
+	StopTimer
+	pop di
+	pop bx
+	pop es
+;
 	mov ax,400
 	WaitMilliSec
 ;
@@ -287,8 +343,8 @@ get_sample_loop:
 	mov ds:curr_pulse,eax
 	mov ds:curr_pulse+4,edx
 ;
-	sub eax,ds:first_pulse
-	mov edi,eax	
+	sub eax,ds:first_pulse		; eax = curr_pulse - first_pulse
+	mov edi,eax					; edi = curr_pulse - first_pulse
 	xor edx,edx
 	mov ebx,3600
 	mul ebx
@@ -316,9 +372,9 @@ get_sample_valid:
 ;
 	movzx eax,bx
 	mov edx,1193000
-	mul edx
-	sub edi,eax
-	mov ebp,edi
+	mul edx					; eax = curr_sec * 1193000
+	sub edi,eax				; edi = curr_pulse - first_pulse - curr_sec * 1193000
+	mov ebp,edi				; ebp = diff from expected
 ;
 	pop edi
 	pop si
@@ -335,7 +391,7 @@ GetSample	Endp
 ;		DESCRIPTION:	Process a full minute of samples
 ;
 ;		RETURNS:		NC
-;						EDX:EAX		Diff
+;						EDX:EAX		Diff system time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -449,22 +505,22 @@ ProcessSamples	Proc near
 	add cx,ax
 	mov ds:curr_min,cl
 ;
-	mov cx,59
-	xor eax,eax
-	xor bx,bx
+	mov cx,59				; process 59 s
+	xor eax,eax				; sum = 0
+	xor bx,bx				; sec = 0
 
 process_diff_loop:
-	add eax,ds:[bx].diff_arr
-	add bx,4
+	add eax,ds:[bx].diff_arr		; sum += diff[sec]
+	add bx,4						; sec++
 	loop process_diff_loop
 ;
-	cdq
+	cdq								; edx:eax = sum
 	mov ebx,59
-	idiv ebx
-	cdq
-	mov ds:curr_diff,eax
+	idiv ebx						; eax = sum / 59 (mean value of difference)
+	cdq								; edx:eax = average diff
+	mov ds:curr_diff,eax			; curr_diff = average diff
 	add ds:first_pulse,eax
-	adc ds:first_pulse+4,edx
+	adc ds:first_pulse+4,edx		; first_pulse += average diff
 ;
 	mov dx,ds:curr_year
 	mov ch,ds:curr_month
@@ -472,11 +528,11 @@ process_diff_loop:
 	mov bh,ds:curr_hour
 	mov bl,ds:curr_min
 	xor ah,ah
-	TimeToBinary
+	TimeToBinary			; edx:eax = time in message
 	add eax,60 * 1193000
-	adc edx,0
+	adc edx,0				; time + 1 min
 	sub eax,ds:first_pulse
-	sbb edx,ds:first_pulse+4
+	sbb edx,ds:first_pulse+4	; time + 1 min - first_pulse - average-diff
 	clc
 	jmp process_samples_done
 
@@ -592,6 +648,9 @@ GetDiff	Endp
 UpdateDiff	Proc near
 	pushad
 ;
+	sub eax,ds:sys_diff
+	sbb edx,ds:sys_diff+4
+;
 	mov ebx,60
 	mul ebx
 ;
@@ -611,8 +670,8 @@ update_calc_pos:
 	dec edx
 
 update_save_pos:
-	mov ds:update_diff,eax
-	mov ds:update_diff+4,edx
+	add ds:sys_diff,eax
+	adc ds:sys_diff+4,edx
 	mov bx,ds:rtc_id
 	Signal
 ;
@@ -822,14 +881,15 @@ SetTimeDiff	Proc near
 	add edx,eax
 	mov eax,ebx
 ;
-	add ds:update_diff,eax
-	add ds:update_diff+4,edx
+	add ds:sys_diff,eax
+	add ds:sys_diff+4,edx
 	mov bx,ds:rtc_id
 	Signal
 ;
 	popad
 	ret
 SetTimeDiff	Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -851,6 +911,8 @@ dcf_thread:
 ;
 	GetThread
 	mov ds:thread_id,ax
+	mov ds:sys_diff,0
+	mov ds:sys_diff+4,0
 	mov ds:on_time,0	
 	mov ds:on_time+4,0	
 	mov ds:start_pulse,0	
@@ -874,14 +936,15 @@ dcf_thread:
     mov dx,28Bh
     mov al,8Bh
     out dx,al
-
+;
 	mov ax,dcf_data_sel
 	mov es,ax
 
 dcf_sync_loop:
 	call SyncToDcf
 	mov ds:curr_sec,0
-;
+
+dcf_loop:
 	mov si,OFFSET save_buf
 	mov cx,20
 
@@ -898,7 +961,7 @@ dcf_time_loop:
 	mov si,OFFSET save_buf
 	call SetTimeDiff
 ;
-	int 3
+	jmp dcf_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -920,11 +983,22 @@ rtc_thread:
 ;
 	GetThread
 	mov ds:rtc_id,ax
+	xor eax,eax
+	xor edx,edx
 
 rtc_loop:
+;	push edx
+;	push eax
 	WaitForSignal
-	mov eax,ds:update_diff
-	mov edx,ds:update_diff+4
+;	pop ebx
+;	mov eax,ds:sys_diff
+;	sub eax,ebx
+;	pop ebx
+;	mov edx,ds:sys_diff+4
+;	sbb edx,ebx
+;
+	mov eax,ds:sys_diff
+	mov edx,ds:sys_diff+4
 	UpdateTime
 	UpdateRtc
 	jmp rtc_loop
