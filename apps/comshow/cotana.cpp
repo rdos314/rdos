@@ -176,91 +176,84 @@ int TCotexProtocolAnalyser::GetMsg()
 	unsigned char uch;
 	short int size;
 	int i;
-	TComMsg *ComPtr = FComMsg;
+	TSerialDebug Debug;
+	int StartPos;
+	int Pos;
 
-	count = *FRawCount - FRawPos;
+    if (FRawFile->GetSize() <= FRawFile->GetPos())
+        return FALSE;
 
-	if (count == 0)
-		return FALSE;
+	StartPos = FRawFile->GetPos();
 
 	if (FTime)
 		delete FTime;
-
-	FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
+	FTime = 0;
 
 	str = FMsg;
 	FSize = 0;
 
-	Channel = ComPtr->Channel;
-	LastTime = ComPtr->TimeLSB;
-
 	for (i = 0; i < 6; i++)
 	{
-		if (count > FSize)
+		if (FRawFile->GetSize() > FRawFile->GetPos())
 		{
-			if (Channel != ComPtr->Channel)
+			Pos = FRawFile->GetPos();
+			FRawFile->Read(&Debug, sizeof(TSerialDebug));
+
+            if (!FTime)
+            {
+            	FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+                Channel = Debug.Channel;
+               	LastTime = Debug.TimeLSB;
+            }
+
+			if (Channel != Debug.Channel)
 			{
-				FRawPos += FSize;
-				FComMsg = ComPtr;
+				FRawFile->SetPos(Pos);
 				return TRUE;
 			}
 
-			Elapsed = ComPtr->TimeLSB - LastTime;
+			Elapsed = Debug.TimeLSB - LastTime;
 			if (Elapsed > 1193 * 1000)
 			{
-				FRawPos += FSize;
-				FComMsg = ComPtr;
+				FRawFile->SetPos(Pos);
 				return TRUE;
 			}
 
-			LastTime = ComPtr->TimeLSB;
-			ch = ComPtr->ch;
+			LastTime = Debug.TimeLSB;
+			ch = Debug.ch;
 			FSize++;
-			ComPtr++;
+
 			*str = ch;
 			str++;
 			*str = 0;
 		}
 		else
+		{
+			FRawFile->SetPos(StartPos);
 			return FALSE;
+		}
 
 		uch = (unsigned char)ch;
 		switch (i)
 		{
 			case 0:
 				if (uch != 0xC0)
-				{
-					FRawPos += FSize;
-					FComMsg = ComPtr;
 					return TRUE;
-				}
 				break;
 
 			case 1:
 				if (uch != 0xDA)
-				{
-					FRawPos += FSize;
-					FComMsg = ComPtr;
 					return TRUE;
-				}
 				break;
 
 			case 2:
 				if (uch != 0xB0)
-				{
-					FRawPos += FSize;
-					FComMsg = ComPtr;
 					return TRUE;
-				}
 				break;
 
 			case 3:
 				if (uch != 0x1A)
-				{
-					FRawPos += FSize;
-					FComMsg = ComPtr;
 					return TRUE;
-				}
 				break;
 		}
 	}
@@ -269,46 +262,42 @@ int TCotexProtocolAnalyser::GetMsg()
 	memcpy(&size, str - 2, 2);
 
 	if (size < 0 || size > 0x2000)
-	{
-		FRawPos += FSize;
-		FComMsg = ComPtr;
 		return TRUE;
-	}
 
 	for (i = 0; i < size + 2; i++)
 	{
-		if (count > FSize)
+		if (FRawFile->GetSize() > FRawFile->GetPos())
 		{
-			if (Channel != ComPtr->Channel)
+			Pos = FRawFile->GetPos();
+			FRawFile->Read(&Debug, sizeof(TSerialDebug));
+
+			if (Channel != Debug.Channel)
 			{
-				FRawPos += FSize;
-				FComMsg = ComPtr;
+				FRawFile->SetPos(Pos);
 				return TRUE;
 			}
 
-			Elapsed = ComPtr->TimeLSB - LastTime;
+			Elapsed = Debug.TimeLSB - LastTime;
 			if (Elapsed > 1193 * 10000)
 			{
-				FRawPos += FSize;
-				FComMsg = ComPtr;
+				FRawFile->SetPos(Pos);
 				return TRUE;
 			}
 
-			LastTime = ComPtr->TimeLSB;
-			ch = ComPtr->ch;
+			LastTime = Debug.TimeLSB;
+			ch = Debug.ch;
 			FSize++;
-			ComPtr++;
 			*str = ch;
 			str++;
 			*str = 0;
 		}
 		else
+		{
+			FRawFile->SetPos(StartPos);
 			return FALSE;
-
+		}
 	}
 
-	FRawPos += FSize;
-	FComMsg = ComPtr;
 	return TRUE;
 }
 
@@ -1837,8 +1826,8 @@ void TCotexProtocolAnalyser::ShowMsg()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-TCotexProtocolAnalyser::TCotexProtocolAnalyser(const char *MemMapName, int MaxSize)
-  : TProtocolAnalyser(MemMapName, MaxSize)
+TCotexProtocolAnalyser::TCotexProtocolAnalyser(TFile *RawFile, int MaxSize)
+  : TProtocolAnalyser(RawFile, MaxSize)
 {
 }
 

@@ -106,46 +106,55 @@ int TProtocolAnalyser::GetMsg()
 	char ch;
 	int count;
 	char *str;
+	TSerialDebug Debug;
+	int Pos;
 
-	count = *FRawCount - FRawPos;
+	if (FRawFile->GetSize() <= FRawFile->GetPos())
+        return FALSE;
 
-	if (count == 0)
-		return FALSE;
+	Pos = FRawFile->GetPos();
+	FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-    if (FTime)
-        delete FTime;
-
-    FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
+	if (FTime)
+		delete FTime;
+	FTime = 0;
 
 	str = FMsg;
 	*str = 0;
 	FSize = 0;
 
-	Channel = FComMsg->Channel;
-	LastTime = FComMsg->TimeLSB;
-	ch = FComMsg->ch;
-	FSize++;
-	FComMsg++;
-	FRawPos++;
-
-	while (count > FSize)
+	while (FRawFile->GetSize() > FRawFile->GetPos())
 	{
+		Pos = FRawFile->GetPos();
+		FRawFile->Read(&Debug, sizeof(TSerialDebug));
+
+		if (!FTime)
+		{
+			FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+			Channel = Debug.Channel;
+			LastTime = Debug.TimeLSB;
+		}
+
+		ch = Debug.ch;
+
+		if (Channel != Debug.Channel)
+		{
+			FRawFile->SetPos(Pos);
+			return TRUE;
+		}
+
+		Elapsed = Debug.TimeLSB - LastTime;
+		if (Elapsed > 1193 * 25)
+			return TRUE;
+
+		LastTime = Debug.TimeLSB;
+		ch = Debug.ch;
+
+		FSize++;
 		*str = ch;
 		str++;
 		*str = 0;
 
-		if (Channel != FComMsg->Channel)
-			return TRUE;
-
-		Elapsed = FComMsg->TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
-			return TRUE;
-
-		LastTime = FComMsg->TimeLSB;
-		ch = FComMsg->ch;
-		FSize++;
-		FComMsg++;
-		FRawPos++;
 	}
 
 	return TRUE;
@@ -255,15 +264,10 @@ void TProtocolAnalyser::ShowMsg()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-TProtocolAnalyser::TProtocolAnalyser(const char *MemMapName, int MaxSize)
+TProtocolAnalyser::TProtocolAnalyser(TFile *RawFile, int MaxSize)
 {
-	FMapping = RdosOpenNamedMapping(MemMapName);
-	FRawBuf = (char *)RdosAllocateMem(0x800000);
-	FRawCount = (int *)FRawBuf;
-	FComMsg = (TComMsg *)(FRawBuf + 4);
-	RdosMapView(FMapping, 0, FRawBuf, 0x800000);
-	FRawPos = 0;
-
+	FRawFile = RawFile;
+	
 	FLogFile = 0;
 	FTime = 0;
 
@@ -283,9 +287,7 @@ TProtocolAnalyser::~TProtocolAnalyser()
     if (FLogFile)
         delete FLogFile;
 
-    RdosFreeMem(FRawBuf);
-
-    delete FMsg;
+	delete FMsg;
 
     if (FTime)
         delete FTime;

@@ -29,48 +29,36 @@
 #define _ANABASE_H
 
 #include "file.h"
-
-struct TComMsg
-{
-	int Channel;
-	int TimeLSB;
-	int TimeMSB;
-	char ch;
-};
+#include "serial.h"
 
 class TProtocolAnalyser
 {
 public:
-	TProtocolAnalyser(const char *MemMapName, int MaxSize);
+	TProtocolAnalyser(TFile *RawFile, int MaxSize);
 	virtual ~TProtocolAnalyser();
 
 	void DefineLogFile(const char *LogFileName);
 
-    virtual int GetMsg();
-    virtual void ShowMsg();
+	virtual int GetMsg();
+	virtual void ShowMsg();
 
 protected:
-    void Write(const char *str);
-    void ShowShortTime(TDateTime *time);
-    void ShowLongTime(TDateTime *time);
-    void ShowHexMsg();
-    void ShowMneMsg();
-    void ShowAsciiMsg();
+	void Write(const char *str);
+	void ShowShortTime(TDateTime *time);
+	void ShowLongTime(TDateTime *time);
+	void ShowHexMsg();
+	void ShowMneMsg();
+	void ShowAsciiMsg();
 
-    TComMsg *FComMsg;
-    char *FMsg;
-    int FSize;
-    int FMaxSize;
+	char *FMsg;
+    long FSize;
 
-    int *FRawCount;
-    int FRawPos;
-
-    TDateTime *FTime;
+	TDateTime *FTime;
+    TFile *FRawFile;
 
 private:
-    TFile *FLogFile;
-    int FMapping;
-    char *FRawBuf;
+    int FMaxSize;
+	TFile *FLogFile;
 };
 
 #endif

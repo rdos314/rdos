@@ -50,21 +50,23 @@ void cdecl main()
 {
 	RdosWaitMilli(300);
 
-	TCbusProtocolAnalyser analyzer("comlog", 0x4000);
-//	TCotexProtocolAnalyser analyzer("comlog", 0x400);
+	TFile RawFile("d:\\r1\\cotex.log");
+//	TCbusProtocolAnalyser analyzer("comlog", 0x4000);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //    TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 
-	analyzer.DefineLogFile("c:\\comshow.log");
+	analyzer.DefineLogFile("d:\\r1\\comshow.log");
 
 	for (;;)
 	{
 		while (!RdosPollKeyboard())
 		{
-		    if (analyzer.GetMsg())
-		        analyzer.ShowMsg();
+			if (analyzer.GetMsg())
+				analyzer.ShowMsg();
 		}
 
 		if ((RdosReadKeyboard() & 0xFF) == 0x1B)
 			return;
 	}
 }
+

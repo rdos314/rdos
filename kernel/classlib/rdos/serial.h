@@ -29,6 +29,16 @@
 #define _SERIAL_H
 
 #include "waitdev.h"
+#include "file.h"
+
+class TSerialDebug
+{
+public:
+	short int Channel;
+	long TimeLSB;
+	long TimeMSB;
+	char ch;
+};
 
 class TSerialDevice : public TWaitDevice
 {
@@ -45,6 +55,8 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
+    void StartDebug(TFile *File, int InChannel, int OutChannel);
+    
     int IsOpen();
 	void Open();
 	void Close();
@@ -100,6 +112,10 @@ private:
 	int FStopBits;
 	int FDataMask;
 	int FAutoRts;
+	
+	TFile *FDebugFile;
+	int FInChannel;
+	int FOutChannel;
 };
 
 class TSerialCommand

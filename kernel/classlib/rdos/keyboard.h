@@ -163,13 +163,24 @@ public:
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
 	void Clear();
+	int Poll();
+	int Get();
+	void Put(int ch);
+
+	virtual int IsPinPad();
+	
 	int PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 	int ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 
 	void (*OnKeyPress)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void (*OnKeyRelease)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+
+	int (*KeyPreview)(TKeyboardDevice *Keyboard, int ch);
+
 	
 protected:
+    int IsStdKey(int ExtKey, int VirtualKey);
+
 	virtual void KeyPress(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	virtual void KeyRelease(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 

@@ -124,63 +124,106 @@ int TCbusProtocolAnalyser::GetMsg()
 	int LastTime;
 	int Elapsed;
 	char ch;
-	int count;
+	TSerialDebug Debug;
+	int StartPos;
+	int Pos;
+	int done;
 
-	count = *FRawCount - FRawPos;
-
-	if (count == 0)
-		return FALSE;
+	if (FRawFile->GetSize() <= FRawFile->GetPos())
+        return FALSE;
 
     if (FTime)
         delete FTime;
-
-	FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
+    FTime = 0;
 
 	str = FMsg;
 	*str = 0;
 	FSize = 0;
 
-	Channel = FComMsg->Channel;
-	LastTime = FComMsg->TimeLSB;
-	ch = FComMsg->ch;
-	FSize++;
-	FComMsg++;
-	FRawPos++;
+	done = FALSE;
 
-	while (count > FSize && ch != ':')
+	StartPos = FRawFile->GetPos();
+
+    done = FALSE;
+    
+	while (FRawFile->GetSize() > FRawFile->GetPos() && !done)
 	{
-		if (Channel != FComMsg->Channel)
-			return TRUE;
 
-		Elapsed = FComMsg->TimeLSB - LastTime;
+        Pos = FRawFile->GetPos();
+	    FRawFile->Read(&Debug, sizeof(TSerialDebug));
+
+	    if (!FTime)
+	    {
+        	FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+        	Channel = Debug.Channel;
+        	LastTime = Debug.TimeLSB;
+        }
+
+		if (Channel != Debug.Channel)
+		{
+		    FRawFile->SetPos(StartPos);
+			return TRUE;
+		}
+
+		Elapsed = Debug.TimeLSB - LastTime;
 		if (Elapsed > 1193 * 25)
+		{
+		    FRawFile->SetPos(Pos);
 			return TRUE;
+		}
 
-		LastTime = FComMsg->TimeLSB;
-		ch = FComMsg->ch;
+		ch = Debug.ch;
+
+        if (ch == ':')
+            done = TRUE;
+
+		LastTime = Debug.TimeLSB;
 		FSize++;
-		FComMsg++;
-		FRawPos++;
 	}
 
-	while (count > FSize && ch != '\r')
+	if (!done)
+	{
+	    FRawFile->SetPos(StartPos);
+	    return FALSE;
+	}
+
+    done = FALSE;
+    
+	while (FRawFile->GetSize() > FRawFile->GetPos() && !done)
 	{
 		*str = ch;
 		str++;
 		*str = 0;
 
-		if (Channel != FComMsg->Channel)
-			return TRUE;
-		
-		Elapsed = FComMsg->TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
-			return TRUE;
+        Pos = FRawFile->GetPos();
+	    FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-		LastTime = FComMsg->TimeLSB;
-		ch = FComMsg->ch;
+		if (Channel != Debug.Channel)
+		{
+		    FRawFile->SetPos(Pos);
+			return TRUE;
+		}
+		
+		Elapsed = Debug.TimeLSB - LastTime;
+		if (Elapsed > 1193 * 25)
+		{
+		    FRawFile->SetPos(Pos);
+			return TRUE;
+		}
+
+		LastTime = Debug.TimeLSB;
+		ch = Debug.ch;
+
+		if (ch == '\r')
+		    done = TRUE;
+		    
 		FSize++;
-		FComMsg++;
-		FRawPos++;
+	}
+
+	if (!done)
+	{
+	    FRawFile->SetPos(StartPos);
+	    return FALSE;
 	}
 
 	return TRUE;
@@ -577,8 +620,8 @@ void TCbusProtocolAnalyser::ShowMsg()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-TCbusProtocolAnalyser::TCbusProtocolAnalyser(const char *MemMapName, int MaxSize)
-  : TProtocolAnalyser(MemMapName, MaxSize)
+TCbusProtocolAnalyser::TCbusProtocolAnalyser(TFile *RawFile, int MaxSize)
+  : TProtocolAnalyser(RawFile, MaxSize)
 {
 	FCbusReqMsg = 0;
 	FCbusReplyMsg = 0;

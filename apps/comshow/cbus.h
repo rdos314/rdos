@@ -40,7 +40,7 @@ struct TCbusMsg
 class TCbusProtocolAnalyser : public TProtocolAnalyser
 {
 public:
-	TCbusProtocolAnalyser(const char *MemMapName, int MaxSize);
+	TCbusProtocolAnalyser(TFile *RawFile, int MaxSize);
 	virtual ~TCbusProtocolAnalyser();
     
     virtual int GetMsg();

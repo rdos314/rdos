@@ -369,6 +369,7 @@ void TSerialDevice::Init(TWait *Wait, int Port, int Irq, long Baudrate, char Par
 
     OnChar = 0;    
 
+    FDebugFile = 0;
     FPort = Port;
 	FBase = CalcBase(Port);
 	FIrq = Irq;
@@ -604,6 +605,25 @@ void TSerialDevice::Unblock()
 void TSerialDevice::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"Serial device",MaxLen);
+}
+
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::StartDebug
+#
+#   Purpose....: Start debugging on device
+#
+#   In params..: Handle debug file handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::StartDebug(TFile *File, int InChannel, int OutChannel)
+{
+    FDebugFile = File;
+    FInChannel = InChannel;
+    FOutChannel = OutChannel;
 }
 
 /*##################  TSerialDevice::OpenPort  #######################
@@ -951,7 +971,17 @@ void TSerialDevice::DisableAutoRts()
 ##########################################################################*/
 void TSerialDevice::Write(char ch)
 {
+    TSerialDebug Debug;
+    
 	RdosWriteCom(FHandle, ch);
+
+	if (FDebugFile)
+	{
+	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+	    Debug.Channel = FOutChannel;
+	    Debug.ch = ch;
+	    FDebugFile->Write(&Debug, sizeof(Debug));
+	}	
 }
 
 /*##########################################################################
@@ -971,7 +1001,7 @@ void TSerialDevice::Write(const char *buf, int count)
 	int i;
 	for (i = 0; i < count; i++)
 	{
-		RdosWriteCom(FHandle, *buf);
+		Write(*buf);
 		buf++;
 	}
 }
@@ -991,7 +1021,7 @@ void TSerialDevice::Write(const char *str)
 {
 	while (*str != 0)
 	{
-		RdosWriteCom(FHandle, *str);
+		Write(*str);
 		str++;
 	}
 }
@@ -1031,7 +1061,20 @@ int TSerialDevice::WaitForChar(int Timeout)
 ##########################################################################*/
 char TSerialDevice::Read()
 {
-	return RdosReadCom(FHandle);
+    char ch;
+    TSerialDebug Debug;
+    
+	ch = RdosReadCom(FHandle);
+
+	if (FDebugFile)
+	{
+	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+	    Debug.Channel = FInChannel;
+	    Debug.ch = ch;
+	    FDebugFile->Write(&Debug, sizeof(Debug));
+	}	
+
+	return ch;
 }
 
 /*##########################################################################

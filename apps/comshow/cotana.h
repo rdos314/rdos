@@ -34,7 +34,7 @@
 class TCotexProtocolAnalyser : public TProtocolAnalyser
 {
 public:
-	TCotexProtocolAnalyser(const char *MemMapName, int MaxSize);
+	TCotexProtocolAnalyser(TFile *RawFile, int MaxSize);
 	virtual ~TCotexProtocolAnalyser();
     
     virtual int GetMsg();

@@ -20,7 +20,7 @@ extern "C" {
 #define LGOP_OR  2
 #define LGOP_AND  3
 #define LGOP_XOR  4
-#define LGOP_INVERT  5   
+#define LGOP_INVERT  5
 #define LGOP_INVERT_OR  6
 #define LGOP_INVERT_AND  7
 #define LGOP_INVERT_XOR  8
@@ -33,6 +33,9 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
+#if sizeof(int) == 2
+#define __stdcall
+#endif
 
 void __stdcall RdosSetTextMode();
 int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
