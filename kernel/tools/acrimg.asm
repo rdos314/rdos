@@ -53,13 +53,13 @@ boot_struc	STRUC
 boot_jmp					DB ?,?,?
 boot_name					DB 8 DUP(?)
 boot_bytes_per_sector		DW ?
-boot_resv1					DB ?
+boot_resv1					DB ?        ; sectors per cluster = 1
 boot_mapping_sectors		DW ?
-boot_resv3					DB ?
+boot_resv3					DB ?        ; number of FATs
 boot_resv4					DW ?
 boot_small_sectors			DW ?
 boot_media					DB ?
-boot_resv6					DW ?
+boot_resv6					DW ?        ; FAT sectors
 boot_sectors_per_cyl		DW ?
 boot_heads					DW ?
 boot_hidden_sectors			DD ?
@@ -97,7 +97,6 @@ Buf			DB 1000h DUP(?)
 
 FormatStart:
 
-erase_error	DB 'kunde inte radera flash',0Dh,0Ah,24h
 read_boot_error	DB 'kunde inte l„sa bootsector',0Dh,0Ah,24h
 write_boot_error	DB 'kunde inte skriva bootsector',0Dh,0Ah,24h
 write_sector_error	DB 'kunde inte skriva sector',0Dh,0Ah,24h
@@ -107,6 +106,13 @@ rdossys_error	DB 'kan inte skapa rdos.sys',0Dh,0Ah,24h
 rdosbin_error	DB 'kan inte skapa rdos.bin',0Dh,0Ah,24h
 bin_error   DB 'Hittar inte .bin fil',0Dh,0Ah,24h
 flash_error   DB 'kan inte skapa .rom fil',0Dh,0Ah,24h
+
+fake_bio    DB 'IBMBIO  COM', 27h, 0, 0, 0, 0
+            DB 0, 0, 0, 0, 0, 0, 0, 60h
+            DB 0F0h, 16h, 2, 0, 0B6h, 82h, 0, 0
+fake_dos    DB 'IBMDOS  COM', 27h, 0, 0, 0, 0
+            DB 0, 0, 0, 0, 0, 0, 0, 60h
+            DB 0F0h, 16h, 44h, 0, 12h, 92h, 0, 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -141,7 +147,7 @@ Log Endp
 ;		DESCRIPTION:	Write sector to disc
 ;
 ;		PARAMETERS:		DX		Sector #
-;						DS:BX	Buffer
+;						ES:BX	Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -185,19 +191,21 @@ rdfs_name	DB 'RDFS    '
 
 InitBootRecord	Proc near
 	mov edx,400h
-	mov byte ptr BootSector.boot_name+4,0
+	mov byte ptr BootSector.boot_name+4,1
 	mov word ptr BootSector.boot_name+5,0AC0Eh
-	mov byte ptr BootSector.boot_name+7,0
+	mov byte ptr BootSector.boot_name+7,16h
+	mov BootSector.boot_resv1,1
+	mov BootSector.boot_resv3,1
+	mov BootSector.boot_resv4,0E0h
+	mov BootSector.boot_resv6,0
 	mov BootSector.boot_bytes_per_sector,200h
-	mov BootSector.boot_sectors_per_cyl,10h
-	mov BootSector.boot_heads,4
+	mov BootSector.boot_sectors_per_cyl,12h
+	mov BootSector.boot_heads,2
 	mov BootSector.boot_small_sectors,dx
-	mov BootSector.boot_media,0F0h
+	mov BootSector.boot_media,0F9h
 	mov BootSector.boot_sectors,edx
-	mov ah,2Ch
-	int 21h
-	mov word ptr BootSector.boot_serial,cx
-	mov word ptr BootSector.boot_serial+2,dx
+	mov BootSector.boot_signature,29h
+	mov BootSector.boot_serial,3A5218E7h
 	mov di,OFFSET BootSector.boot_fs
 	mov cx,8
 	mov si,OFFSET rdfs_name
@@ -251,8 +259,30 @@ MergeBootRecord	Proc near
 	rep movsb
 	add si,3Bh
 	add di,3Bh
-	mov cx,200h - 3Eh
+	mov cx,200h - 58h
 	rep movsb
+;
+	push ds
+	mov ax,cs
+	mov ds,ax
+;
+	mov si,OFFSET fake_bio
+	mov cx,11
+	rep movsb
+;
+    mov si,OFFSET fake_dos
+    mov cx,11
+    rep movsb
+;
+    pop ds
+;
+    xor ax,ax
+    stosw	
+;
+    mov al,55h
+    stosb
+    mov al,0AAh
+    stosb
 ;
 	mov di,OFFSET BootSector
 	movzx edx,CurrentSector
@@ -332,6 +362,42 @@ CopySys	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllignSector	Proc near
+    push es
+    push cx
+    push si
+    push di
+;
+    mov dx,CurrentSector
+    dec dx
+    dec dx
+	mov BootSector.boot_resv6,dx
+;
+    push ds
+	mov ax,cs
+	mov ds,ax
+    mov si,OFFSET fake_bio
+	mov ax,SEG @data
+	mov es,ax
+	mov di,OFFSET Buf
+	mov cx,10h
+	rep movsd
+    pop ds
+;
+	mov cx,3F0h
+	xor eax,eax
+	rep stosd
+;
+	mov bx,OFFSET Buf
+	mov dx,CurrentSector
+	dec dx
+	call WriteSector
+;
+    pop di
+    pop si
+    pop cx
+    pop es
+
+AllignSectorLoop:
 	mov dx,CurrentSector
 	sub dx,9
 	test dx,1Fh
@@ -346,7 +412,7 @@ AllignSector	Proc near
 	call WriteSector
 	inc CurrentSector
 	pop di
-	jmp AllignSector
+	jmp AllignSectorLoop
 AllignSectorDone:
 	ret
 AllignSector	Endp
@@ -513,43 +579,6 @@ CloseBin  Proc near
 	int 21h
     ret
 CloseBin   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CreateBin
-;
-;		DESCRIPTION:	Create rdos.bin on "floppy"
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateBin	Proc near
-	push ds
-	mov si,81h
-	
-bin_load_loop:
-	mov ah,62h
-	int 21h
-	mov ds,bx
-	mov al,[si]
-	cmp al,0Dh
-	je create_bin_done
-;
-    call OpenFiles
-    jc create_bin_done
-;
-	mov ax,SEG _data
-	mov ds,ax
-	call AllignSector
-    call LoadBin
-    call CloseBin
-	jmp bin_load_loop
-	
-	clc
-create_bin_done:
-	pop ds
-	ret
-CreateBin	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

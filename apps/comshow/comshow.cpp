@@ -36,6 +36,7 @@
 #include "sernet.h"
 #include "cotana.h"
 #include "bar.h"
+#include "compac.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -63,10 +64,11 @@ void cdecl main()
 	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
+//	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-	analyzer.DefineLogFile("c:\\comshow.log");
+	analyzer.DefineLogFile("cotex.txt");
 
 	for (;;)
 	{
