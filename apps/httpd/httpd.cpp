@@ -64,7 +64,7 @@ void THttpSocketServer::HandleSocket()
 		FSocket->Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=1>");
 		FSocket->Write("<title>Document ONE</title>");
 		FSocket->Write("<h1>RDOS web-server</h1>");
-		FSocket->Write("Dynamic reload demo");
+		FSocket->Write("Dynamic reload demo<br>");
 
 		TDateTime time;
 		char str[80];

@@ -127,6 +127,7 @@ tcp_cwnd			DD ?
 tcp_ssthresh		DD ?
 tcp_dup_acks		DW ?
 tcp_pending			DW ?
+tcp_rtt             DD ?
 tcp_rto				DD ?
 tcp_rts				DD ?
 tcp_rtm				DD ?
@@ -139,6 +140,8 @@ tcp_push_timeout	DB ?
 tcp_user_timeout	DW ?
 tcp_resend_timeout	DW ?
 tcp_zero_timeout	DW ?
+tcp_send_timeout    DW ?
+tcp_delete_timeout  DW ?
 tcp_options			DB ?
 
 tcp_connection	ENDS

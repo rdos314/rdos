@@ -2261,6 +2261,14 @@ free_not_huge:
 	mov dl,[bx+7]
 	ror edx,8
 	mov ax,[bx+6]
+
+	cmp ecx,1000000h
+	jc free_mem_size_ok
+;
+    int 3
+
+free_mem_size_ok:
+	
 	mov byte ptr [bx+5],0
 	popf
 	jz free_descr_gdt

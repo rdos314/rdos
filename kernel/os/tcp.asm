@@ -375,11 +375,14 @@ CreateConnection	Proc near
 	mov es:tcp_mtu,1400
 	mov es:tcp_pending,0
 	mov es:tcp_push_timeout,0
+	mov es:tcp_rtt,119300
 	mov es:tcp_rto,1193000 * 3
 	mov es:tcp_rts,1193000 * 3
 	mov es:tcp_rtm,0
 	mov es:tcp_reorder_count,0
 	mov es:tcp_delete_ok,0
+	mov es:tcp_send_timeout,0
+	mov es:tcp_delete_timeout,0
 	mov eax,ecx
 	push es
 	AllocateSmallGlobalMem
@@ -716,6 +719,15 @@ PAGE
 UpdateRto	Proc near
 	GetSystemTime
 	sub eax,ds:tcp_time_val
+	cmp eax,1193000
+	ja update_rto_rtt_ok
+;	
+	mov edx,ds:tcp_rtt
+	add edx,eax
+	sar edx,1
+	mov ds:tcp_rtt,edx
+
+update_rto_rtt_ok:
 	sub eax,ds:tcp_rts
 	mov edx,eax
 	jae update_rto_err_ok
@@ -785,6 +797,42 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			SetSendTimeout
+;
+;	Purpose:		Setup send timeout
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetSendTimeout	Proc near
+    push eax
+	push ecx
+	push edx
+;
+    mov ax,ds:tcp_send_timeout
+    or ax,ax
+    jnz set_send_timeout_done
+;
+	mov eax,ds:tcp_rtt
+	add eax,119300 / 2
+	xor edx,edx
+	mov ecx,119300
+	div ecx
+	add ax,1
+	mov ds:tcp_send_timeout,ax
+
+set_send_timeout_done:
+    pop edx
+	pop ecx
+	pop eax
+	ret
+SetSendTimeout	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			SendAck
 ;
 ;	Purpose:		Send an ACK segment (possibly with data)
@@ -797,6 +845,7 @@ SendAck	Proc near
 	push es
 	push di
 ;
+    mov ds:tcp_send_timeout,0
 	and ds:tcp_pending,NOT FLAG_DELAY_ACK
 	movzx ecx,ds:tcp_send_count
 	or cx,cx
@@ -2213,10 +2262,12 @@ ReceiveFinWait1	Proc near
 	je receive_fin_wait1_not_acked
 ;
 	mov ds:tcp_state,STATE_TIME_WAIT
+	mov ds:tcp_delete_timeout,240 * 10
 	jmp receive_fin_wait1_done
 
 receive_fin_wait1_not_acked:
 	mov ds:tcp_state,STATE_CLOSING
+	mov ds:tcp_delete_timeout,240 * 10
 
 receive_fin_wait1_done:
 	ret
@@ -2260,6 +2311,7 @@ ReceiveFinWait2	Proc near
 	jz receive_fin_wait1_done
 ;
 	mov ds:tcp_state,STATE_TIME_WAIT
+	mov ds:tcp_delete_timeout,240 * 10
 
 receive_fin_wait2_done:
 	ret
@@ -2593,6 +2645,15 @@ Receive	Proc far
 	call ReceiveChecksum
 	jc receive_free
 ;
+    push ds
+    push bx
+	mov ax,tcp_data_sel
+	mov ds,ax
+	mov bx,ds:TcpThread
+	Signal
+	pop bx
+	pop ds
+;   
 	push di
 	mov ax,es:[di].tcp_dest
 	xchg al,ah
@@ -3103,6 +3164,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CloseCloseWait	Proc near
+    mov ds:tcp_delete_timeout,240 * 10
 	mov ds:tcp_state,STATE_LAST_ACK
 	or ds:tcp_pending,FLAG_CLOSING
 	call SendData
@@ -4030,7 +4092,12 @@ write_tcp_ok:
 	jc write_tcp_delay
 ;	
 	call SendData
+	jmp write_tcp_delay_done
+	
 write_tcp_delay:
+    call SetSendTimeout
+
+write_tcp_delay_done:
 	clc
 
 write_tcp_done:
@@ -4190,6 +4257,17 @@ push_tcp_connection	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateConnection	Proc near
+    mov dx,ds:tcp_send_timeout
+    or dx,dx
+    jz update_send_timeout_done
+;
+    sub dx,1
+    mov ds:tcp_send_timeout,dx
+    jnz update_send_timeout_done
+;
+    or ds:tcp_pending,FLAG_SEND_PUSH
+    
+update_send_timeout_done:
 	mov dx,ds:tcp_pending
 	test dx,FLAG_SEND_PUSH
 	jz update_con_push_done
@@ -4283,13 +4361,14 @@ LogFileName	DB 'z:\tcp.log',0
 tcp_thread_pr:
 	mov ax,250
 	WaitMilliSec
-;
+
+tcp_sleep:
 	mov ax,tcp_data_sel
 	mov ds,ax
 	GetThread
 	mov ds:TcpThread,ax
-tcp_sleep:
 	WaitForSignal
+	mov ds:TcpThread,0
 
 tcp_active_loop:
 	mov ax,ds:ConnectionList
@@ -4315,6 +4394,7 @@ tcp_active_next:
 	and ds:tcp_pending,NOT FLAG_WAIT
 	mov bx,ds:tcp_owner
 	Signal
+	jmp tcp_update
 
 tcp_user_done:
 	mov al,ds:tcp_delete_ok
@@ -4358,6 +4438,29 @@ tcp_update:
 	call UpdateConnection
 
 tcp_leave:
+    mov ax,ds:tcp_delete_timeout
+    or ax,ax
+    jz tcp_delete_timeout_done
+;
+    sub ax,1
+    mov ds:tcp_delete_timeout,ax
+    jz tcp_delete_timeout_do
+;
+	GetSystemTime
+	rcr edx,1
+	rcr eax,1
+	rcr edx,1
+	rcr eax,1
+	rcr edx,1
+	rcr eax,1
+	cmp eax,ds:tcp_send_next
+	jl tcp_delete_timeout_done
+	
+tcp_delete_timeout_do:
+    or ds:tcp_pending,FLAG_DELETE
+    mov ds:tcp_delete_ok,1        
+
+tcp_delete_timeout_done:
 	mov ax,ds:tcp_next
 	LeaveSection ds:tcp_section
 	jmp tcp_active_next

@@ -80,10 +80,10 @@ create_gdt	PROC near
 	mov cx,1000h
 	rep movsb
 	xor al,al
-	mov cx,2000h
+	mov cx,0E000h
 	rep stosb
 	mov ds,bx
-	mov word ptr [bx],2FFFh ; initial size = 3000, fixed = 2000
+	mov word ptr [bx],0EFFFh ; initial size = F000
 	mov si,bx
 	mov di,gdt_sel
 	movsd
@@ -100,7 +100,7 @@ create_gdt	PROC near
 ;
 	mov ax,gdt_sel
 	mov ds,ax
-	mov cx,1000h SHR 3
+	mov cx,0D000h SHR 3
 	mov si,2000h
 	xor bx,bx
 
@@ -231,6 +231,7 @@ allocate_gdt	PROC far
 	or si,si
 	jnz alloc_gdt_room
 ;
+    int 3
 	push ds
 	push cx
 	mov si,gdt_sel
