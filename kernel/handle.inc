@@ -26,6 +26,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ADC_HANDLE =	015FCh 
+DLL_HANDLE16 =  026CFh
+DLL_HANDLE32 =  026DFh
 SPRITE_HANDLE = 02CF5h
 FILE_HANDLE = 	03AB6h
 SERIAL_HANDLE = 05A45h

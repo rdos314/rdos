@@ -96,6 +96,31 @@ e_data		DB ?
 
 entry_struc		ENDS
 
+resource_struc  STRUC
+
+rsc_align_shift         DW ?
+
+resource_struc  ENDS
+
+resource_type_struc STRUC
+
+rt_type_id              DW ?
+rt_resource_count       DW ?
+rt_resv                 DD ?
+
+resource_type_struc ENDS
+
+resource_name_struc STRUC
+
+rn_offset               DW ?
+rn_len                  DW ?
+rn_flags                DW ?
+rn_id                   DW ?
+rn_sel                  DW ?
+rn_usage                DW ?
+
+resource_name_struc ENDS
+
 library_header	STRUC
 
 lib_prev				DW ?
@@ -111,6 +136,8 @@ lib_module_offset		DW ?
 lib_module_size			DW ?
 lib_imported_offset		DW ?
 lib_imported_size		DW ?
+lib_resource_offset     DW ?
+lib_resource_size       DW ?
 lib_resident_offset		DW ?
 lib_resident_size		DW ?
 lib_filebase			DW ?
@@ -131,6 +158,14 @@ lib_sym_type_sel		DW ?
 lib_tables				DB ?
 
 library_header	ENDS
+
+lib_handle_seg	STRUC
+
+lib_handle_base		handle_header <>
+
+lh_sel             DW ?
+
+lib_handle_seg	ENDS
 
 ne_data_seg	STRUC
 

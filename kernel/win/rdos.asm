@@ -4901,6 +4901,134 @@ _RdosSetEnvData	Proc far
 	ret
 _RdosSetEnvData	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosLoadDll
+;
+;       DESCRIPTION:    Load a DLL
+;
+;		PARAMETERS:		DLL name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosLoadDll
+
+_RdosLoadDll	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+	LoadDll
+	jc rldllFail
+;
+    mov ax,bx
+    jmp rldllDone
+
+rldllFail:
+    xor ax,ax
+
+rldllDone:
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosLoadDll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosFreeDll
+;
+;       DESCRIPTION:    Free a DLL
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosFreeDll
+
+_RdosFreeDll	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	FreeDll
+;
+	pop bx
+	pop bp
+	ret
+_RdosFreeDll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadResource
+;
+;       DESCRIPTION:    Read resource
+;
+;		PARAMETERS:		Handle
+;						ID
+;						Buf
+;						Size
+;
+;		RETURNS:		Size read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosReadResource
+
+_RdosReadResource	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push ecx
+	push esi
+	push edi
+;
+	mov bx,[bp+6]
+	mov ax,[bp+8]
+	mov dx,6
+	GetDllResource
+	jc read_resource_fail
+;
+	cmp cx,[bp+14]
+	jbe read_resource_copy
+;
+	mov cx,[bp+14]
+
+read_resource_copy:
+	les di,[bp+10]
+	movzx edi,di
+	movzx ecx,cx
+	mov ax,cx
+	push ecx
+	shr cx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop ecx
+	and ecx,3
+	rep movs byte ptr es:[edi],[esi]
+	jmp read_resource_done
+	
+read_resource_fail:
+	xor eax,eax
+
+read_resource_done:
+	pop edi
+	pop esi
+	pop ecx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosReadResource	Endp
+
 code	ENDS
 
 	END

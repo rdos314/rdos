@@ -39,6 +39,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE int.def
 INCLUDE exec.def
+INCLUDE ..\handle.inc
 INCLUDE ne.def
 INCLUDE system.def
 INCLUDE system.inc
@@ -758,6 +759,81 @@ read_entry_table	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			read_resource_table
+;
+;		DESCRIPTION:    read resource table into lib segment
+;
+;		PARAMETERS:     BX		LIB FILE HANDLE
+;						DS		NE HEADER
+;						ES		LIB SEGMENT         
+;						DI		OFFSET FROM PREV AND NEXT TABLE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_resource_table	PROC near                                  
+	movzx eax,ds:seh_resource_offset
+	add ax,es:lib_filebase
+	SetFilePos
+	mov es:lib_resource_offset,di
+	mov cx,ds:seh_resident_offset
+	sub cx,ds:seh_resource_offset
+	mov es:lib_resource_size,cx		
+	or cx,cx
+	jz read_resource_done
+;
+    push ecx
+    push si
+	ReadFile
+;
+    mov si,di
+    mov cx,es:[si].rsc_align_shift
+    add si,SIZE resource_struc
+
+read_resource_type_loop:
+    mov ax,es:[si].rt_type_id
+    or ax,ax
+    jz read_resource_type_done
+;
+    mov dx,es:[si].rt_resource_count
+    add si,SIZE resource_type_struc
+
+read_resource_name_loop:
+    movzx eax,es:[si].rn_offset
+    shl eax,cl
+    SetFilePos
+;
+    movzx eax,es:[si].rn_len
+    shl eax,cl
+;
+    push es
+    push edi
+    AllocateLocalMem
+    mov ecx,eax
+    xor edi,edi
+    UserGateForce32 read_file_nr
+    mov ax,es
+    pop edi
+    pop es            
+;
+    mov es:[si].rn_sel,ax
+    add si,SIZE resource_name_struc
+    sub dx,1
+    jnz read_resource_name_loop
+;
+    jmp read_resource_type_loop
+
+read_resource_type_done:
+    pop si
+    pop ecx
+    
+read_resource_done:
+	add di,cx
+	ret
+read_resource_table	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			read_resident_table
 ;
 ;		DESCRIPTION:    read resident names table into lib segment
@@ -900,7 +976,7 @@ create_lib	Proc near
 	shl cx,3
 	add ax,cx
 	mov cx,es:seh_entry_table_offset
-	sub cx,es:seh_resident_offset
+	sub cx,es:seh_resource_offset
 	add ax,cx
 	add ax,OFFSET lib_tables
 	push es
@@ -915,6 +991,7 @@ create_lib	Proc near
 	mov es:lib_handle_selector,ax
 	call read_segment_table
 	call read_entry_table
+	call read_resource_table
 	call read_resident_table
 	call read_module_table
 	call load_imported_dlls
@@ -970,6 +1047,35 @@ destroy_selectors:
 destroy_next_selector:
 	add di,8
 	loop destroy_selectors
+;
+    int 3
+    mov ax,es:lib_resource_size
+    or ax,ax
+    jz destroy_resource_done
+;
+    mov di,es:lib_resource_offset
+    add di,SIZE resource_struc
+
+destroy_resource_type_loop:
+    mov ax,es:[di].rt_type_id
+    or ax,ax
+    jz destroy_resource_done
+;
+    mov cx,es:[di].rt_resource_count
+    add si,SIZE resource_type_struc
+
+destroy_resource_name_loop:
+    push es
+    mov es,es:[di].rn_sel
+    FreeMem
+    pop es
+;
+    add di,SIZE resource_name_struc
+    loop destroy_resource_name_loop
+;
+    jmp destroy_resource_type_loop
+    
+destroy_resource_done:
 	ret
 destroy_lib	Endp
 
@@ -1544,7 +1650,20 @@ load_dll16	Proc far
 	push dx
 	push si
 	push di
+;
 	call load_dll
+	jc load_dll16_done
+;
+    mov ax,bx
+	mov cx,SIZE lib_handle_seg
+	AllocateHandle
+	jc load_dll16_done
+;
+	mov ds:[bx].lh_sel,ax
+	mov ds:[bx].hh_sign,DLL_HANDLE16
+	mov bx,ds:[bx].hh_handle
+
+load_dll16_done:
 	pop di
 	pop si
 	pop dx
@@ -1572,12 +1691,122 @@ free_dll16	Proc far
 	push ds
 	push es
 	pusha
+;
+    mov ax,DLL_HANDLE16
+    DerefHandle
+    jc free_dll16_done
+;
+    push ds
+    push bx
+    mov bx,ds:[bx].lh_sel
 	call free_dll
+	pop bx
+	pop ds
+	FreeHandle
+
+free_dll16_done:
 	popa
 	pop es
 	pop ds
 	ret
 free_dll16	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDllResource
+;
+;		DESCRIPTION:    Get DLL resource
+;
+;       PARAMETERS:		BX		Handle
+;						AX		Resource id
+;						DX		Resource type
+;						
+;		RETURNS:		DS:SI	Resource Address
+;						CX		Resource size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dll_resource_name	DB 'Get DLL Resource',0
+
+get_dll_resource	Proc far
+    push es
+	push eax
+	push ebx
+	push dx
+	push di
+;
+	mov si,ax
+;
+    mov ax,DLL_HANDLE16
+    DerefHandle
+    jc get_dll_resource_fail
+;
+	mov es,ds:[bx].lh_sel
+    mov di,es:lib_resource_offset
+    mov cx,es:[di].rsc_align_shift
+    add di,SIZE resource_struc
+
+get_dll_resource_type_loop:
+    mov ax,es:[di].rt_type_id
+    or ax,ax
+    jz get_dll_resource_fail
+;
+    test ax,8000h
+    jz get_dll_resource_next
+;
+    and ax,7FFFh
+    cmp ax,dx
+    jne get_dll_resource_next
+;
+    mov dx,es:[di].rt_resource_count
+    add di,SIZE resource_type_struc
+
+get_dll_resource_name_loop:
+    mov ds,es:[di].rn_sel
+    movzx eax,es:[di].rn_len
+    shl eax,cl
+    xor ebx,ebx
+
+get_dll_resource_arr_loop:
+    cmp ebx,eax
+    jae get_dll_resource_fail
+;
+    or si,si
+    je get_dll_resource_ok
+;
+    movzx eax,byte ptr [ebx]
+    add ebx,eax
+    inc ebx
+    dec si
+    jmp get_dll_resource_arr_loop
+
+get_dll_resource_next:
+    mov dx,es:[di].rt_resource_count
+    add di,SIZE resource_type_struc
+
+get_dll_resource_next_name:
+    add di,SIZE resource_name_struc
+    sub dx,1
+    jnz get_dll_resource_next_name
+    jmp get_dll_resource_type_loop
+
+get_dll_resource_fail:
+    stc
+    jmp get_dll_resource_done
+
+get_dll_resource_ok:
+    mov esi,ebx
+    clc
+    
+get_dll_resource_done:
+	pop di
+	pop dx
+	pop ebx
+	pop eax
+	pop es
+	ret
+get_dll_resource	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1633,6 +1862,59 @@ unload_ne_done:
 	ret
 close_app	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_handle
+;
+;		DESCRIPTION:	Delete handle (called from handle module)
+;
+;		PARAMETERS:		BX			DLL HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,DLL_HANDLE16
+	DerefHandle
+	jc delete_handle_done
+;
+    mov bx,ds:[bx].lh_sel
+;
+	mov ax,ne_app_sel
+	mov ds,ax
+	mov si,OFFSET lib_modules
+	mov ax,[si]
+	or ax,ax
+	jz delete_handle_done
+;
+    mov dx,ax
+
+delete_handle_loop:
+    cmp ax,bx
+    jne delete_handle_next
+;
+	call free_dll
+	jmp delete_handle_done
+
+delete_handle_next:
+    mov es,ax
+    mov ax,es:lib_next
+    cmp ax,dx
+    jne delete_handle_loop
+
+delete_handle_done:
+    popad
+	pop es
+	pop ds
+	ret
+delete_handle	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1657,6 +1939,10 @@ init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET delete_handle
+	mov ax,DLL_HANDLE16
+	RegisterHandle
 ;
 	mov di,OFFSET load_ne
 	HookLoadDosExe
@@ -1683,6 +1969,12 @@ init	PROC far
 	mov di,OFFSET free_dll_name
 	xor dx,dx
 	mov ax,free_dll_nr
+	RegisterUserGate16
+;
+	mov si,OFFSET get_dll_resource
+	mov di,OFFSET get_dll_resource_name
+	xor dx,dx
+	mov ax,get_dll_resource_nr
 	RegisterUserGate16
 ;
 	popa
