@@ -407,15 +407,15 @@ ihResetDone:
 ;
 	mov dx,ds:IoBase
 	add dx,RxConfig
-	mov eax,RX_FIFO_THRESH SHR 13
-	or eax,RX_BUF_LEN_IDX SHR 11
-	or eax,RX_DMA_BURST SHR 8
+	mov eax,RX_FIFO_THRESH SHL 13
+	or eax,RX_BUF_LEN_IDX SHL 11
+	or eax,RX_DMA_BURST SHL 8
 	mov ebx,eax
 	out dx,eax
 ;
 	mov dx,ds:IoBase
 	add dx,TxConfig
-	mov eax,TX_DMA_BURST SHR 8
+	mov eax,TX_DMA_BURST SHL 8
 	out dx,eax
 ;
 	mov dx,ds:IoBase
