@@ -86,13 +86,18 @@ TLangString::TLangString(int ID)
 ##########################################################################*/
 void TLangString::SetLanguage(const char *language)
 {
-	if (FHandle && !FIsLocalHandle)
-	{
-		RdosFreeDll(FHandle);
-		FHandle = 0;
-	}
-	FHandle = RdosLoadDll(language);
-	FIsLocalHandle = FALSE;
+	int Handle = RdosLoadDll(language);
+
+    if (Handle)
+    {	
+    	if (FHandle && !FIsLocalHandle)
+	    {
+		    RdosFreeDll(FHandle);
+    		FHandle = 0;
+	    }
+	    FHandle = Handle;
+    	FIsLocalHandle = FALSE;
+    }
 }
 
 /*##########################################################################

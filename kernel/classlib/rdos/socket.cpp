@@ -32,6 +32,14 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+class TThreadListen
+{
+public:
+	 TSocketServerFactory *Factory;
+    int Port;
+    int BufferSize;
+};
+
 TSection TSocketServer::FSection;
 TSocketServer *TSocketServer::FList = 0;
 
@@ -215,6 +223,49 @@ void TSocket::Listen(TSocketServerFactory *Factory, int Port, int BufferSize)
 {
 	for (;;)
 		RdosListenTcpPort(Port, BufferSize, NewConnection, Factory);
+}
+
+/*##########################################################################
+#
+#   Name       : ListenThread
+#
+#   Purpose....: Listen thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadListen(void *Data)
+{
+	 TThreadListen *listen = (TThreadListen *)Data;
+
+	for (;;)
+		RdosListenTcpPort(listen->Port, listen->BufferSize, NewConnection, listen->Factory);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Listen
+#
+#   Purpose....: Listen for connections in a new thread
+#
+#   In params..: ThreadName Name of listen thread
+#                Port       local port to listen on
+#				 BufferSize	socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Listen(const char *ThreadName, TSocketServerFactory *Factory, int Port, int BufferSize)
+{
+    TThreadListen *listen = new TThreadListen;
+
+    listen->Factory = Factory;
+    listen->Port = Port;
+    listen->BufferSize = BufferSize;
+
+	RdosCreateThread(ThreadListen, ThreadName, listen, 0x2000);
 }
 
 /*##########################################################################

@@ -237,7 +237,7 @@ TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 
 	}
 	else
-	    return 0;
+		 return 0;
 }
 
 /*##########################################################################
@@ -252,6 +252,39 @@ TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 #
 ##########################################################################*/
 TFtpSocketServerFactory::TFtpSocketServerFactory()
+{
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::TFtpSocketServerFactory
+#
+#   Purpose....: Socket server factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language)
+{
+	TLangString::SetLanguage(Language);
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::TFtpSocketServerFactory
+#
+#   Purpose....: Socket server factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServerFactory::Init()
 {
 	TUserFactory *user = new TUserFactory;
 	TPassFactory *pass = new TPassFactory;

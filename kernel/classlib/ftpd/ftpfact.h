@@ -59,10 +59,11 @@ protected:
 class TFtpSocketServerFactory : public TSocketServerFactory
 {
 public:
-    TFtpSocketServerFactory::TFtpSocketServerFactory();
+    TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language);
+	 TFtpSocketServerFactory::TFtpSocketServerFactory();
 
-    void AddUser(const char *User, const char *Passw, const char *RootDir);
-    
+	 void AddUser(const char *User, const char *Passw, const char *RootDir);
+
 	virtual char *GetThreadName();
 	virtual int GetStackSize();
 	virtual TSocketServer *Create();
@@ -70,7 +71,9 @@ public:
 	void (*OnCommand)(TFtpSocketServer *server, const char *str);
 
 protected:
-    TFtpUser *FList;
+	void Init();
+
+	TFtpUser *FList;
 };
 
 #endif

@@ -40,6 +40,7 @@ public:
     ~TSocket();
 
     static void Listen(TSocketServerFactory *Factory, int Port, int BufferSize);
+    static void Listen(const char *ThreadName, TSocketServerFactory *Factory, int Port, int BufferSize);
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual int IsOpen() const;
