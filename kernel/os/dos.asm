@@ -372,6 +372,34 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CLEAR_PSP
+;
+;		DESCRIPTION:	Clear PSP selectors
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public clear_psp
+
+clear_psp	PROC near
+	push ds
+	push bx
+;
+	mov bx,dos_app_sel
+	mov ds,bx
+	mov ds:vm_psp_seg,0
+	mov ds:pm_psp_sel,0
+	mov ds:psp_mode,mode_vm
+;
+	pop bx
+	pop ds
+	ret
+clear_psp	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GET_VIRT_PSP
 ;
 ;		DESCRIPTION:	Get V86 mode PSP

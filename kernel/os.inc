@@ -892,6 +892,16 @@ SetFlags	MACRO
 	OsGate sim_set_flags_nr
 					ENDM
 
+;	BX			Stack selector
+GetExceptionStack16	MACRO
+	OsGate get_exception_stack16_nr
+					ENDM
+
+;	BX			Stack selector
+GetExceptionStack32	MACRO
+	OsGate get_exception_stack32_nr
+					ENDM
+
 ;	BX			Offset to context on locked stack
 SaveContext	MACRO
 	OsGate save_context_nr
@@ -1279,6 +1289,13 @@ HookSetBiosData	MACRO
 	OsGate hook_set_bios_data_nr
 					ENDM
 
+; IN  BX		File handle
+; IN  DS:(E)SI	Program name
+; IN  ES:(E)DI	Command line
+LoadDosExe	MACRO
+	OsGate load_dos_exe_nr
+					ENDM
+
 ;	ES:DI		HANDLER ADDRESS
 HookLoadDosExe	MACRO
 	OsGate hook_load_dos_exe_nr
@@ -1381,6 +1398,10 @@ HookLoadExe	MACRO
 
 OpenApp	MACRO
 	OsGate open_app_nr
+					ENDM
+
+ChainApp	MACRO
+	OsGate chain_app_nr
 					ENDM
 
 CloseApp	MACRO

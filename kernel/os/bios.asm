@@ -525,6 +525,34 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			EmulateBios
+;
+;		DESCRIPTION:	Emulate BIOS (F000:0 F000:FFFF)
+;
+;		PARAMETERS:		EBX		Linear address
+;						AL		Data
+;						CY		Write access
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+emulate_bios	PROC far
+	jc write_bios
+
+read_bios:
+	mov al,-1
+	jmp em_bios_done
+
+write_bios:
+
+em_bios_done:
+	ret
+emulate_bios	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init driver
@@ -585,6 +613,19 @@ init_bios_data_loop:
 	mov [bx+6],cs
 	add bx,8
 	loop init_bios_data_loop
+;
+	mov ax,cs
+	mov es,ax
+;
+	mov di,OFFSET emulate_bios
+	mov eax,008000h
+	mov edx,0C0000h
+	SetPageEmulate
+;
+	mov di,OFFSET emulate_bios
+	mov eax,010000h
+	mov edx,0F0000h
+	SetPageEmulate
 ;	
 	pop es
 	pop ds

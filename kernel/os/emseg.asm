@@ -415,9 +415,25 @@ ExcFar	Proc near
 	jnz ExcFarPm32
 
 ExcFarPm16:
+	GetExceptionStack16
+;
 	mov ax,[bp].reg_ss
+	cmp ax,bx
+	je exc16_same_stack
+;
+	mov ax,bx
+	mov bx,800h
+	jmp exc16_stack_ok
+
+exc16_same_stack:
 	mov bx,word ptr [bp].reg_esp
+	
+exc16_stack_ok:
+	xchg ax,[bp].reg_ss
+	xchg bx,word ptr [bp].reg_esp
+;
 	call PushWord
+;
 	mov ax,bx
 	call PushWord
 ;	
@@ -430,19 +446,20 @@ ExcFarPm16:
 	mov ax,word ptr [bp].reg_eip
 	call PushWord
 ;
-	xor ax,ax
+	mov ax,[bp].vm_err
 	call PushWord
 ;
 	mov ax,callb_exc16_sel
 	call PushWord
 ;
 	pop ax
+;
 	push ax
 	movzx ax,al
 	shl ax,3
 	call PushWord
-;
 	pop ax
+;
 	GetException
 	mov [bp].reg_cs,es
 	mov word ptr [bp].reg_eip,di
@@ -453,6 +470,7 @@ ExcFarPm32:
 	mov ebx,[bp].reg_esp
 	call PushDword
 	mov eax,ebx
+	add eax,12
 	call PushDword
 ;	
 	mov eax,[bp].reg_eflags

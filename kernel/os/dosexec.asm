@@ -45,6 +45,9 @@ INCLUDE dos.inc
 
 	extrn create_enviroment:near
 	extrn create_psp:near
+	extrn clear_psp:near
+	extrn set_virt_psp:near
+	extrn set_prot_psp:near
 	extrn get_prot_psp:near
 
 code	SEGMENT byte public 'CODE'
@@ -648,6 +651,206 @@ load_dos_exe_done:
 	ret
 load_dos_exe	ENDP
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			load_dos_ext_exe
+;
+;		DESCRIPTION:	Load extender .EXE file
+;
+;		PARAMETERS:		BX		File handle
+;						DS:ESI	File name
+;						ES:EDI	Command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+load_dos_ext_exe_name	DB 'Load DOS Extender Exe', 0
+
+load_dos_ext_exe	PROC far
+	push ax
+;
+	push bx
+	call get_prot_psp
+	mov ax,bx
+	pop bx
+	push ax
+;
+	call clear_psp
+;
+	push ds
+	push es
+	push esi
+	push edi
+;
+	push bx
+	xor bx,bx
+	call create_enviroment
+	mov ax,bx
+	pop bx
+	push ax
+;
+	mov eax,SIZE exeh_seg
+	AllocateSmallGlobalMem
+	mov ecx,eax
+	xor eax,eax
+	SetFilePos
+	xor di,di
+	ReadFile
+;
+	mov ax,es
+	mov ds,ax
+	movzx eax,ds:exeh_size_msb
+	dec ax
+	shl eax,9
+	movzx ecx,ds:exeh_size_lsb
+	add eax,ecx
+	add eax,100h
+;	movzx ecx,ds:exeh_size_header
+;	shl ecx,4
+;	sub eax,ecx
+	movzx ecx,ds:exeh_minalloc
+	shl ecx,4
+	add ecx,eax
+	push eax
+	AvailableDosLinear
+	cmp edx,ecx
+	jc load_ext_exe_fail
+;
+	pop eax
+	movzx ecx,ds:exeh_maxalloc
+	shl ecx,4
+	add eax,ecx
+	cmp edx,eax
+	jnc load_ext_exe_whole_size
+
+	mov eax,edx
+load_ext_exe_whole_size:
+	AllocateDosLinear
+	push edx
+	mov edi,edx
+	add edi,100h
+	movzx eax,ds:exeh_size_header
+	shl eax,4
+;	mov edx,eax
+	SetFilePos
+	movzx ecx,ds:exeh_size_msb
+	dec cx
+	shl ecx,9
+	movzx eax,ds:exeh_size_lsb
+	add ecx,eax
+;	sub ecx,edx
+	mov ax,flat_sel
+	mov es,ax
+	UserGateForce32 read_file_nr
+	jc load_ext_exe_fail
+;
+	movzx eax,ds:exeh_reloc_ant
+	shl eax,2
+	mov ecx,eax
+	xor edi,edi
+	or eax,eax
+	jz load_ext_exe_noreloc1
+;
+	AllocateLocalMem
+	movzx eax,ds:exeh_reloc_offs
+	SetFilePos
+	UserGateForce32 read_file_nr
+
+load_ext_exe_noreloc1:
+	CloseFile
+	pop edx
+;
+	push ds
+	mov ax,flat_sel
+	mov ds,ax
+	mov eax,edx
+	mov esi,edx
+	shr edx,4
+	sub eax,10h
+	mov [eax+1],dx
+	add esi,100h
+	mov edx,esi
+	shr edx,4
+	shr ecx,2
+	or ecx,ecx
+	jz load_ext_exe_noreloc2
+
+load_ext_exe_reloc_loop:
+	movzx ebx,word ptr es:[edi]
+	movzx eax,word ptr es:[edi+2]
+	shl eax,4
+	add eax,ebx
+	add [esi+eax],dx
+	add edi,4
+	loop load_ext_exe_reloc_loop
+;
+	FreeMem
+
+load_ext_exe_noreloc2:
+	pop ds
+	pop ax
+	mov bx,dx
+	sub bx,10h
+	call create_psp
+;
+	mov ax,ds:exeh_ss
+	add ax,dx
+	mov [bp].load_ss,ax
+	mov ax,ds:exeh_sp
+	mov [bp].load_esp,ax
+	mov ax,ds:exeh_cs
+	add ax,dx
+	mov [bp].load_cs,ax
+	mov ax,ds:exeh_ip
+	mov [bp].load_eip,ax
+	mov [bp].load_ds,bx
+	mov [bp].load_es,bx
+	mov word ptr [bp+2].load_eflags,2
+	mov ax,7202h
+	SetFlags
+	mov [bp].load_eflags,ax
+;
+	mov ax,ds
+	mov es,ax
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov word ptr ds:app_loader_name,OFFSET exe_loader_name
+	mov word ptr ds:app_loader_name+2,cs
+	FreeMem
+	jmp load_ext_exe_ok
+
+load_ext_exe_fail:
+	add sp,6
+	pop edi
+	pop esi
+	pop es
+	pop ds
+;
+	pop ax
+	push bx
+	mov bx,ax
+	call set_prot_psp
+	pop bx
+	stc
+	jmp load_ext_exe_done
+
+load_ext_exe_ok:
+	pop edi
+	pop esi
+	pop es
+	pop ds
+;
+	pop ax
+	call setup_command_line
+	clc
+
+load_ext_exe_done:
+	pop ax
+	ret
+load_dos_ext_exe	ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -677,6 +880,12 @@ init_dos_exec	PROC near
 	mov di,OFFSET hook_load_dos_exe_name
 	xor cl,cl
 	mov ax,hook_load_dos_exe_nr
+	RegisterOsGate
+;
+	mov si,OFFSET load_dos_ext_exe
+	mov di,OFFSET load_dos_ext_exe_name
+	xor cl,cl
+	mov ax,load_dos_exe_nr
 	RegisterOsGate
 ;
 	mov di,OFFSET load_dos_exe

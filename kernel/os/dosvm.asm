@@ -719,14 +719,22 @@ free_memory	PROC far
 	push edx
 	xor edx,edx
 	mov dx,[bp].vm_es
+;
+	call get_virt_psp
+	cmp bx,dx
+	je free_mem_ok
+;
 	shl edx,4
 	mov ecx,1
 	FreeLinear
 	jc free_mem_fail
+
+free_mem_ok:
 	and byte ptr [bp].vm_eflags,NOT 1
 	pop edx
 	pop ecx
 	ret
+
 free_mem_fail:
 	pop edx
 	pop ecx

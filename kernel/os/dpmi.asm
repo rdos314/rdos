@@ -215,8 +215,8 @@ not_test_dpmi:
 	xor di,di
 	mov bx,1
 	mov cl,3
-	mov dh,1
-	mov dl,0
+	mov dh,0
+	mov dl,9
 	xor si,si
 	xor ax,ax
 	ret

@@ -76,7 +76,6 @@ code	SEGMENT byte public use16 'CODE'
 	extrn set_flags:near
 	extrn get_flags:near
 	extrn allocate_switch_stack:near
-	extrn allocate_locked_stack16:near
 
 	assume cs:code
 
@@ -1184,7 +1183,6 @@ default_exception16:
 ;
 	mov ds,[bp].vm_ss
 	mov bx,[bp].vm_esp
-	add bx,6
 ;
 	mov ax,[bx]
 	mov [bp].vm_eip,ax
@@ -1234,9 +1232,11 @@ prot_exception16	PROC near
 	and bl,3
 	cmp bl,3
 	jne run_default_exception
+;
 	mov bx,thread_app_sel
 	mov ds,bx
 	movzx bx,al
+;
 	shl bx,3
 	cmp word ptr ds:[bx+4].app_pm_exc,callb_exc16_sel
 	je run_default_exception
@@ -1245,23 +1245,26 @@ prot_exception16	PROC near
 	push word ptr ds:[bx].app_pm_exc
 	push ax
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov bx,ds:pint_prot16_stack
-	or bx,bx
-	jnz exc16_stack_ok
-;
-	call allocate_locked_stack16
-
-exc16_stack_ok:
+	GetExceptionStack16
 	mov ds,bx
-	mov bx,800h
 ;
+	push ax
 	mov ax,[bp].vm_ss
+	cmp ax,bx
+	je prot_exc16_same_stack
+;
+	mov bx,800h
+	jmp prot_exc16_stack_ok
+
+prot_exc16_same_stack:
+	mov bx,[bp].vm_esp
+	
+prot_exc16_stack_ok:
 	mov [bx-2],ax
 	mov ax,[bp].vm_esp
 	mov [bx-4],ax
 	sub bx,4
+	pop ax
 ;
 	cmp al,1
 	mov ax,[bp].vm_eflags

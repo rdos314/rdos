@@ -524,6 +524,105 @@ load_fail32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			dos_ext_exec
+;
+;		DESCRIPTION:    DOS extender load
+;
+;		PARAMETERS:     DS:(E)SI	Filename
+;						ES:(E)DI	Command line
+;
+;       RETURN VALUE:   
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dos_ext_exec_name	DB 'DOS Extender Exec',0
+	
+dos_ext_exec16:
+	pop ax
+	pop dx
+	movzx edx,dx
+	push edx
+	movzx eax,ax
+	push eax
+	SimSti
+	SaveContext
+	xor eax,eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+	push eax
+;
+	movzx esi,si
+	movzx edi,di
+	push es
+	push di
+	mov ax,thread_app_sel
+	mov es,ax
+	mov es:app_context,bx
+;
+	push si
+	mov di,OFFSET app_exe_name
+
+dos_ext_copy_exe_loop16:
+	lodsb
+	stosb
+	or al,al
+	jne dos_ext_copy_exe_loop16
+;
+	pop di
+;
+	movzx esi,di
+	mov ax,ds
+	mov es,ax
+	xor cx,cx
+	OpenFile
+	pop di
+	pop es
+	jc dos_ext_fail16
+;
+	LoadDosExe
+	jc dos_ext_close_fail16
+;
+	test byte ptr [bp+2].load_eflags,2
+	jnz dos_ext_prog_vm16
+;
+	mov ds,[bp].load_ds
+	mov es,[bp].load_es
+	mov fs,[bp].load_fs
+	mov gs,[bp].load_gs
+
+dos_ext_prog_vm16:
+	pop ebp
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	iretd
+
+dos_ext_close_fail16:
+	CloseFile
+
+dos_ext_fail16:
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov bx,ds:app_context
+	RestoreContext
+	push ds
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_exit_code
+	pop ds
+	stc
+	retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			load_process
 ;
 ;		DESCRIPTION:    Run program as process
@@ -1125,6 +1224,12 @@ init_exec	PROC near
 	mov dx,virt_ds_in OR virt_es_in
 	mov ax,load_exe_nr
 	RegisterUserGate
+;
+	mov si,OFFSET dos_ext_exec16
+	mov di,OFFSET dos_ext_exec_name
+	mov dx,virt_ds_in OR virt_es_in
+	mov ax,dos_ext_exec_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET unload_exe
 	mov di,OFFSET unload_exe_name

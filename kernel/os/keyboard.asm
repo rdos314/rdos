@@ -1323,6 +1323,10 @@ init	PROC far
 	mov di,OFFSET int16
 	HookVMInt
 ;
+	mov al,16h
+	mov di,OFFSET int16
+	HookProt16Int
+;
 	popa
 	pop es
 	pop ds

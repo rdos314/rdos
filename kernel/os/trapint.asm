@@ -262,6 +262,7 @@ trap_3:
 	mov eax,[bp].vm_eflags
 	test eax,20000h
 	jnz t3_vm
+;
 	mov al,3
 	call prot_exception
 	jmp t3_ret
@@ -967,9 +968,15 @@ trap_11:
 	jnz t11_vm
 	SegmentNotPresent
 	jnc t11_ret
+;
+	mov al,11
+	call prot_exception
+	jmp t11_ret
+
 t11_vm:
 	mov al,11
 	call emulate
+
 t11_ret:
 	pop ds
 	pop ebx

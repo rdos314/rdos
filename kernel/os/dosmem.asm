@@ -54,6 +54,7 @@ dos_mem_struc	ENDS
 
 	extrn get_prot_psp:near
 	extrn get_virt_psp:near
+	extrn set_virt_psp:near
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -90,7 +91,11 @@ allocate_dos_linear	PROC far
 	add ax,2
 	mov dl,8
 	jc dos_alloc_error
-	mov edx,DOS_MEM_START SHL 4
+;
+	mov bx,DOS_MEM_START
+	movzx edx,bx
+	shl edx,4
+;
 	mov bx,flat_sel
 	mov ds,bx
 dos_alloc_loop:
@@ -462,6 +467,8 @@ free_dos_no_merge_up:
 	mov ds,bx
 	mov ax,dos_process_sel
 	mov ds,ax
+
+free_dos_leave:
 	LeaveSection ds:dos_mem_section
 	clc
 

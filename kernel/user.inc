@@ -476,6 +476,12 @@ LoadExe	MACRO
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
+DosExtExec	MACRO
+	UserGate dos_ext_exec_nr
+					ENDM
+
+; IN  DS:(E)SI	Program name
+; IN  ES:(E)DI	Command line
 ; IN  FS:(E)BX	Startup directory & drive
 ; IN  EDX		Debug thread handle
 ; OUT AX		Thread handle

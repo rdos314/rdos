@@ -348,6 +348,18 @@ init_exc_loop:
 	mov ax,set_vm_int_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET get_exception_stack16
+	mov di,OFFSET get_exception_stack16_name
+	xor cl,cl
+	mov ax,get_exception_stack16_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_exception_stack32
+	mov di,OFFSET get_exception_stack32_name
+	xor cl,cl
+	mov ax,get_exception_stack32_nr
+	RegisterOsGate
+;
 	mov si,OFFSET hook_get_vm_int
 	mov di,OFFSET hook_get_vm_int_name
 	xor cl,cl
@@ -448,6 +460,7 @@ init_thread_int	PROC far
 	mov ds,ax
 	mov ds:pint_locked_stack,0
 	mov ds:pint_prot16_stack,0
+	mov ds:pint_prot32_stack,0
 	mov ds:pint_real_stack,0
 	pop ax
 	pop bx
@@ -491,6 +504,14 @@ free_locked_ok:
 	FreeMem
 
 free_prot16_ok:
+	mov ax,ds:pint_prot32_stack
+	or ax,ax
+	jz free_prot32_ok
+;
+	mov es,ax
+	FreeMem
+
+free_prot32_ok:
 	mov edx,ds:pint_real_stack
 	or edx,edx
 	jz free_real_ok
@@ -573,19 +594,28 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			allocate_locked_stack16
+; 	Name:			GetExceptionStack16
 ;
-;	Purpose:		Allocate locked stack
+;	Purpose:		Get 16-bit exception handling stack
+;
+;	Returns:		BX		Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public allocate_locked_stack16
+get_exception_stack16_name	DB 'Get 16-bit Exception Stack', 0
 
-allocate_locked_stack16	Proc near
+get_exception_stack16	Proc far
 	push ds
 	push es
 	push eax
 	push edx
+;
+	mov ax,thread_int_sel
+	mov ds,ax
+;
+	mov bx,ds:pint_prot16_stack
+	or bx,bx
+	jnz get_exc_stack16_done
 ;
 	mov eax,800h
 	AllocateLocalLinear
@@ -594,15 +624,59 @@ allocate_locked_stack16	Proc near
 	or bx,3
 	CreateDataSelector16
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
 	mov ds:pint_prot16_stack,bx
+
+get_exc_stack16_done:
 	pop edx
 	pop eax
 	pop es
 	pop ds
 	ret
-allocate_locked_stack16	Endp
+get_exception_stack16	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetExceptionStack32
+;
+;	Purpose:		Get 32-bit exception handling stack
+;
+;	Returns:		BX		Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exception_stack32_name	DB 'Get 32-bit Exception Stack', 0
+
+get_exception_stack32	Proc far
+	push ds
+	push es
+	push eax
+	push edx
+;
+	mov ax,thread_int_sel
+	mov ds,ax
+;
+	mov bx,ds:pint_prot32_stack
+	or bx,bx
+	jnz get_exc_stack32_done
+;
+	mov eax,800h
+	AllocateLocalLinear
+	AllocateGdt
+	mov ecx,eax
+	or bx,3
+	CreateDataSelector32
+;
+	mov ds:pint_prot32_stack,bx
+
+get_exc_stack32_done:
+	pop edx
+	pop eax
+	pop es
+	pop ds
+	ret
+get_exception_stack32	Endp
 
 PAGE
 
@@ -755,10 +829,42 @@ restore_context	PROC far
 	mov [bp+44],dx
 	popad
 	popf
-	pop gs
-	pop fs
-	pop es
-	pop ds
+;
+	pop ax
+	pushf
+	verr ax
+	jz restore_zero_gs
+	xor ax,ax
+restore_zero_gs:
+	mov gs,ax
+	popf
+;
+	pop ax
+	pushf
+	verr ax
+	jz restore_zero_fs
+	xor ax,ax
+restore_zero_fs:
+	mov fs,ax
+	popf
+;
+	pop ax
+	pushf
+	verr ax
+	jz restore_zero_es
+	xor ax,ax
+restore_zero_es:
+	mov es,ax
+	popf
+;
+	pop ax
+	pushf
+	verr ax
+	jz restore_zero_ds
+	xor ax,ax
+restore_zero_ds:
+	mov ds,ax
+	popf
 	ret
 restore_context	ENDP
 
@@ -1232,13 +1338,7 @@ call_pm16_save_context:
 	push edx
 	mov bp,sp
 ;
-	mov ax,thread_int_sel
-	mov ds,ax
-	mov bx,ds:pint_prot16_stack
-	or bx,bx
-	jnz call_pm16_stack_ok
-	call allocate_locked_stack16
-call_pm16_stack_ok:
+	GetExceptionStack16
 	mov es,bx
 	push word ptr 0
 	push es
@@ -1956,8 +2056,8 @@ reflect_exception:
 	cmp bl,3
 	jne reflect_exc_break
 ;	
-	cmp al,11
-	jne reflect_exc_break
+	cmp al,8
+	je reflect_exc_break
 ;
 	call prot_exception
 	mov ds,[bp].pm_ds
@@ -2064,14 +2164,15 @@ PAGE
 
 raw_switch_v86:
 	mov sp,stack0_size
+;
 	push ax
 	mov ax,thread_app_sel
 	mov ds,ax
 	test ds:app_bitness,1
-	pop ds
 	jz raw_switch16_v86
 
 raw_switch32_v86:
+	pop ds
 	mov es,cx
 	movzx eax,dx
 	push eax
@@ -2090,11 +2191,12 @@ raw_switch32_v86:
 	iretd
 
 raw_switch16_v86:
+	pop ds
 	mov es,cx
 	movzx eax,dx
 	push eax
-	movzx eax,bx
-	push eax
+	movzx ebx,bx
+	push ebx
 	pushfd
 	pop eax
 	or eax,3200h
@@ -2105,8 +2207,8 @@ raw_switch16_v86:
 	push eax
 	movzx eax,si
 	push eax
-	movzx eax,di
-	push eax
+	movzx edi,di
+	push edi
 	iretd
 
 PAGE
@@ -2127,6 +2229,16 @@ get_raw_switch_name	DB 'Get Raw Switch Adress',0
 
 raw_switch_prot_begin:
 	RawSwitch
+
+raw_safe_pm16_begin:
+	mov ds,ax
+	mov es,cx
+	mov ss,dx
+	mov sp,bx
+	push si
+	push di
+	retf
+
 raw_switch_prot_end:
 
 raw_switch_v86_begin:

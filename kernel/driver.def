@@ -84,6 +84,9 @@ hook_out_sel		EQU 118h
 ;
 osgate_sel			EQU 120h
 usergate_sel		EQU 128h
+;
+raw_switch_sel16	EQU 130h
+;
 virt_thread_sel		EQU 138h
 ;
 term_code_sel		EQU 14Bh

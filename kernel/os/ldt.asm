@@ -107,6 +107,9 @@ create_ldt	PROC near
 ;
 	mov ax,thread_app_sel
 	mov ds,ax
+	sldt bx
+	mov ds:app_parent_ldt,bx
+;
 	mov eax,10000h
 	AllocateBigLinear
 	AllocateGdt
@@ -170,6 +173,12 @@ destroy_ldt	PROC near
 	push ax
 	push bx
 ;
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_ldt_sel
+	cmp ax,ds:app_parent_ldt
+	je destroy_ldt_done
+;
 	mov ax,thread_tss_sel
 	mov ds,ax
 	xor bx,bx
@@ -184,6 +193,8 @@ destroy_ldt	PROC near
 	xchg ax,ds:p_ldt_sel
 	mov es,ax
 	FreeMem
+
+destroy_ldt_done:
 	pop bx
 	pop ax
 	pop es

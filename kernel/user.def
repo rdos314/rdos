@@ -286,4 +286,6 @@ write_serial_val_nr			= 253
 create_file_drive_nr        = 254
 open_file_drive_nr          = 255
 
-usergate_entries			= 256
+dos_ext_exec_nr				= 256
+
+usergate_entries			= 300

@@ -388,7 +388,8 @@ load_program	PROC far
 	pop si
 	pop cx
 	pop ds
-	LoadExe
+	DosExtExec
+;	LoadExe
 ;
 	pushf
 	FreeMem

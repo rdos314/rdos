@@ -128,6 +128,7 @@ app_ldt_section		section_typ <>
 app_ldt_data_sel	DW ?
 app_ldt_free		DW ?
 app_ldt_sel			DW ?
+app_parent_ldt		DW ?
 
 app_context			DW ?
 app_bitness			DB ?
