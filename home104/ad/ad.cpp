@@ -110,7 +110,7 @@ void UpdateTemp(int index, int all)
 
 		case 2:
 			strcpy(par, "PANNA:  ");
-			heat.Add(&time, tv[2]);
+			heat.Add(&time, tv[index]);
 			break;
 	}
 

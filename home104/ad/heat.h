@@ -41,10 +41,15 @@ protected:
 	virtual void NotifyBeforeClear();
 
 private:
+	int IsStartedEP();
+	int IsStartedVP();
+	int IsStartedVC();
 	void StartEP();
 	void StopEP();
 	void StartVP();
 	void StopVP();
+	void StartVC();
+	void StopVC();
 	void UpdateOff(long double value);
 	void UpdateOn(long double value);
 

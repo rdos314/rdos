@@ -44,16 +44,20 @@ save_data_struc	STRUC
 sd_day		DD ?
 sd_hour		DB ?
 sd_min		DB ?
-sd_us		DD ?
 
 save_data_struc	ENDS
 
 
 dcf_data	STRUC
 
-int_time		DD ?,?
 thread_id		DW ?
-curr_level		DB ?
+rtc_id			DW ?
+
+update_diff		DD ?,?
+
+on_time			DD ?,?
+start_pulse		DD ?,?
+end_pulse		DD ?,?
 
 first_pulse		DD ?,?
 curr_pulse		DD ?,?
@@ -84,335 +88,6 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteHexByte
-;
-;		DESCRIPTION:	
-;
-;		PARAMETERS:		AL		Byte to write
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteHexByte	PROC near
-	push ax
-	mov ah,al
-	and al,0F0h
-	rol al,4
-	cmp al,0Ah
-	jb write_byte_low1
-	add al,7
-write_byte_low1:
-	add al,'0'
-	WriteChar
-	mov al,ah
-	and al,0Fh
-	cmp al,0Ah
-	jb write_byte_high1
-	add al,7
-write_byte_high1:
-	add al,'0'
-	WriteChar
-	pop ax
-	ret
-WriteHexByte	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteHexWord
-;
-;		DESCRIPTION:	
-;
-;		PARAMETERS:		AX		Word to write
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteHexWord	PROC near
-	xchg al,ah
-	call WriteHexByte
-	xchg al,ah
-	call WriteHexByte
-	ret
-WriteHexWord	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteHexDword
-;
-;		DESCRIPTION:	
-;
-;		PARAMETERS:		EAX		Dword to write
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteHexDword	PROC near
-	rol eax,8
-	call WriteHexByte
-	rol eax,8
-	call WriteHexByte
-	rol eax,8
-	call WriteHexByte
-	rol eax,8
-	call WriteHexByte
-	ret
-WriteHexDword	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			IntToStr
-;
-;		DESCRIPTION:	Convert long to asciiz string
-;
-;		PARAMETERS:		EAX			Value
-;						CX			Number of position
-;						ES:DI		String
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dec_tab:
-	DD 1
-	DD 10
-	DD 100
-	DD 1000
-	DD 10000
-	DD 100000
-	DD 1000000
-	DD 10000000
-	DD 100000000
-	DD 1000000000
-
-IntToStr	PROC near
-	push ax
-	push bx
-	push ecx
-	push edx
-	push di
-	mov edx,eax
-	mov ah,cl
-	mov bx,cx
-	dec bx
-	shl bx,2
-loop_omv_dec:
-	mov ecx,dword ptr cs:[bx].dec_tab
-	xor al,al
-loop_dec_dig:
-	inc al
-	sub edx,ecx
-	jnc loop_dec_dig
-	add edx,ecx
-	dec al
-	sub bx,4
-	add al,'0'
-	stosb
-	dec ah
-	jne loop_omv_dec
-	xor al,al
-	stosb
-	pop di
-	pop edx
-	pop ecx
-	pop bx
-	pop ax
-	ret
-IntToStr	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			RemoveLeading
-;
-;		DESCRIPTION:	Remove leading zeros
-;
-;		PARAMETERS:		ES:DI		STRING
-;
-;		RETURNS:		CY		Significant digits found
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveLeading	Proc near
-	push ax
-	push di
-RemoveLeadingLoop:
-	mov al,es:[di]
-	or al,al
-	clc
-	jz RemoveLeadingDone
-	cmp al,'0'
-	stc
-	jnz RemoveLeadingDone
-	mov byte ptr es:[di],' '
-	inc di
-	jmp RemoveLeadingLoop
-RemoveLeadingDone:
-	pop di
-	pop ax
-	ret
-RemoveLeading	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteTime
-;
-;		DESCRIPTION:	Write time
-;
-;		PARAMETERS:		EDX:EAX		Binary time
-;						ES:DI		Temp storage
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteTime	Proc near
-	pushad
-	push eax
-	mov eax,edx
-	xor edx,edx
-	mov ecx,24
-	div ecx
-	mov cx,8
-	call IntToStr
-	call RemoveLeading
-	pushf
-	WriteAsciiz
-	mov al,' '
-	WriteChar
-	mov eax,edx
-	mov cx,2
-	call IntToStr
-	mov al,'.'
-	popf
-	jc SignHour
-	call RemoveLeading
-	jc SignHour
-	mov al,' '
-SignHour:
-	pushf
-	WriteAsciiz
-	WriteChar
-	popf
-	pop eax
-;
-	pushf
-	mov edx,60
-	mul edx
-	popf
-	push eax
-	pushf
-	mov eax,edx
-	mov cx,2
-	call IntToStr
-	mov al,'.'
-	popf
-	jc MinSign
-	call RemoveLeading
-	jc MinSign
-	mov al,' '
-MinSign:
-	pushf
-	WriteAsciiz
-	WriteChar
-	popf
-	pop eax
-;
-	pushf
-	mov edx,60
-	mul edx
-	popf
-	push eax
-	pushf
-	mov eax,edx
-	mov cx,2
-	call IntToStr
-	mov al,','
-	popf
-	jc SecSign
-	call RemoveLeading
-	jc SecSign
-	mov al,' '
-SecSign:
-	pushf
-	WriteAsciiz
-	WriteChar
-	popf
-	pop eax
-;
-	pushf
-	mov edx,1000
-	mul edx
-	popf
-	push eax
-	pushf
-	mov eax,edx
-	mov cx,3
-	call IntToStr
-	mov al,' '
-	popf
-	jc MilliSign
-	call RemoveLeading
-MilliSign:
-	pushf
-	WriteAsciiz
-	WriteChar
-	popf
-	pop eax
-;
-	pushf
-	mov edx,1000
-	mul edx
-	mov eax,edx
-	mov cx,3
-	call IntToStr
-	popf
-	jc MikroSign
-	call RemoveLeading
-MikroSign:
-	WriteAsciiz
-	popad
-	ret
-WriteTime	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			dcf_timeout
-;
-;		DESCRIPTION:	DCF timeout. Check level + wake-up processing thread
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dcf_timeout	Proc far
-	push ds
-;
-	mov ax,dcf_data_sel
-	mov ds,ax
-;
-	mov dx,28Ah
-	in al,dx
-	and al,10h
-	jz dcf_long
-
-dcf_short:
-	mov ds:curr_level,0
-	jmp dcf_timeout_signal
-
-dcf_long:
-	mov ds:curr_level,1
-
-dcf_timeout_signal:
-	mov bx,ds:thread_id
-	Signal
-;
-	pop ds
-	ret
-dcf_timeout	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			dcf_int
 ;
 ;		DESCRIPTION:	DCF interrupt
@@ -423,12 +98,70 @@ dcf_timeout	Endp
 
 dcf_int	Proc far
 	GetSystemTime
-	mov ds:int_time,eax
-	mov ds:int_time+4,edx
+	cli
+	mov ebx,eax
+	mov ecx,edx
 ;
 	mov dx,28Ah
 	in al,dx
+;
+	push ax
+	mov edx,ds:on_time
+	or edx,ds:on_time+4
+	jz dcf_int_not_started
+
+dcf_int_started:
+	test al,2
+	jz dcf_int_check_pulse
+;
+	mov ds:on_time,ebx
+	mov ds:on_time+4,ecx
+	jmp dcf_int_ack
+
+dcf_int_check_pulse:
+	mov eax,ebx
+	sub eax,ds:on_time
+	cmp eax,1193
+	jc dcf_int_start_done
+;
+	mov eax,ds:start_pulse
+	or eax,ds:start_pulse+4
+	jz dcf_int_valid_start
+
+dcf_int_valid_end:
+	mov ds:end_pulse,ebx
+	mov ds:end_pulse+4,ecx
+	jmp dcf_int_start_done
+
+dcf_int_valid_start:
+	mov eax,ds:on_time
+	mov ds:start_pulse,eax
+	mov eax,ds:on_time+4
+	mov ds:start_pulse+4,eax
+;
+	mov ds:end_pulse,ebx
+	mov ds:end_pulse+4,ecx
+;
+	mov bx,ds:thread_id
+	Signal
+
+dcf_int_start_done:
+	mov ds:on_time,0
+	mov ds:on_time+4,0
+	jmp dcf_int_ack
+
+dcf_int_not_started:
+	test al,2
+	jz dcf_int_ack
+;
+	mov ds:on_time,ebx
+	mov ds:on_time+4,ecx
+	
+dcf_int_ack:
+	pop ax
+	cli
 	and al,2
+	push ax
 	shl al,2
 	mov ah,al
 	mov dx,288h
@@ -439,8 +172,15 @@ dcf_int	Proc far
 ;
 	mov dx,280h
 	mov al,2
-	out dx,al	
+	out dx,al
 ;
+	pop ax
+	mov ah,al
+	mov dx,28Ah
+	in al,dx
+	and al,2
+	cmp al,ah
+	jne dcf_int
 	ret
 dcf_int	Endp
 
@@ -457,32 +197,34 @@ dcf_int	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WaitForPulse	Proc near
+	mov ds:start_pulse,0	
+	mov ds:start_pulse+4,0	
+	mov ds:end_pulse,0	
+	mov ds:end_pulse+4,0	
+;
 	WaitForSignal
-;
-	mov eax,ds:int_time
-	mov edx,ds:int_time+4
-	mov cl,ds:curr_level
-;
-	push ax
-	push dx
-
-wait_pulse_clear_wait:
-	mov dx,28Ah
-	in al,dx
-	test al,10h
-	jnz wait_pulse_clear_int
-;
-	mov ax,50
+	mov ax,400
 	WaitMilliSec
-	jmp wait_pulse_clear_wait
-
-wait_pulse_clear_int:
-	mov dx,280h
-	mov al,2
-	out dx,al	
 ;
-	pop dx
-	pop ax
+	mov eax,ds:start_pulse
+	or eax,ds:start_pulse+4
+	jz WaitForPulse
+;
+	mov eax,ds:end_pulse
+	or eax,ds:end_pulse+4
+	jz WaitForPulse
+;
+	xor cl,cl
+	mov eax,ds:end_pulse
+	sub eax,ds:start_pulse
+	cmp eax,1193 * 130
+	jc wait_for_pulse_time
+;
+	inc cl
+
+wait_for_pulse_time:
+	mov eax,ds:start_pulse
+	mov edx,ds:start_pulse+4
 	ret
 WaitForPulse	Endp
 
@@ -520,100 +262,6 @@ sync_dcf_loop:
 	popad
 	ret
 SyncToDcf	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ClearSamples
-;
-;		DESCRIPTION:	Clear samples
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ClearSample	Proc near
-	pushad
-	xor cx,cx
-	xor dx,dx	
-	SetCursorPosition
-;
-	mov cx,30
-	mov al,' '
-
-clear_sample0:
-	WriteChar
-	loop clear_sample0
-;
-	xor cx,cx
-	mov dx,1
-	SetCursorPosition
-;
-	mov cx,30
-	mov al,' '
-
-clear_sample1:
-	WriteChar
-	loop clear_sample1
-;
-	popad	
-	ret
-ClearSample	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ShowSample
-;
-;		DESCRIPTION:	Show a sample
-;
-;		PARAMETERS:		BX		Offset within minute
-;						CL		Value (pulse length)					
-;						EBP		Diff from normal
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShowSample	Proc near
-	pushad
-;
-	push cx
-;
-	xor cx,cx
-	mov dx,6
-	SetCursorPosition
-;
-	test ebp,80000000h
-	jz show_sample_diff
-;
-	mov al,'-'
-	WriteChar
-	neg ebp
-
-show_sample_diff:
-	mov eax,ebp
-	xor edx,edx
-	mov di,OFFSET temp_buf
-	call WriteTime
-;
-	mov al,' '
-	WriteChar
-;
-	xor dx,dx
-	cmp bx,30
-	jb show_sample_pos_ok
-;
-	sub bx,30
-	inc dx
-
-show_sample_pos_ok:
-	mov cx,bx
-	SetCursorPosition
-;
-	pop ax
-	add al,'0'
-	WriteChar
-;
-	popad	
-	ret
-ShowSample	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -810,10 +458,6 @@ process_diff_loop:
 	add bx,4
 	loop process_diff_loop
 ;
-	xor cx,cx
-	mov dx,2
-	SetCursorPosition
-;
 	cdq
 	mov ebx,59
 	idiv ebx
@@ -821,20 +465,6 @@ process_diff_loop:
 	mov ds:curr_diff,eax
 	add ds:first_pulse,eax
 	adc ds:first_pulse+4,edx
-;
-	test edx,80000000h
-	jz process_show_time
-;
-	mov al,'-'
-	WriteChar
-	not eax
-	not edx
-	add eax,1
-	adc edx,0
-
-process_show_time:
-	mov di,OFFSET temp_buf
-	call WriteTime	
 ;
 	mov dx,ds:curr_year
 	mov ch,ds:curr_month
@@ -851,11 +481,6 @@ process_show_time:
 	jmp process_samples_done
 
 process_samples_failed:
-	mov ax,dx
-	xor cx,cx
-	mov dx,2
-	SetCursorPosition
-	call WriteHexByte
 	stc
 
 process_samples_done:
@@ -886,7 +511,6 @@ RestartSample	Proc near
 	mov ds:first_pulse+4,edx
 	mov ds:curr_sec,0
 	mov ds:val_arr,cl
-	call ClearSample
 	pop edx
 	ret
 RestartSample	Endp
@@ -924,7 +548,6 @@ get_diff_ok:
 	mov si,bx
 	shl si,2
 	mov ds:[si].diff_arr,ebp
-	call ShowSample
 ;
 	cmp bx,58
 	jne get_diff_loop
@@ -935,7 +558,6 @@ get_diff_ok:
 ;
 	call RestartSample
 	xor bx,bx
-	call ShowSample
 	jmp get_diff_done
 
 get_diff_retry:
@@ -944,7 +566,6 @@ get_diff_retry:
 get_diff_restart:
 	call RestartSample
 	xor bx,bx
-	call ShowSample
 	jmp get_diff_loop
 
 get_diff_done:
@@ -954,6 +575,50 @@ get_diff_done:
 	pop bx
 	ret
 GetDiff	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdateDiff
+;
+;		DESCRIPTION:	Update difference from time
+;
+;		PARAMETERS:		EDX:EAX		Diff
+;
+;		RETURNS:		New diff
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateDiff	Proc near
+	pushad
+;
+	mov ebx,60
+	mul ebx
+;
+	xor edx,edx
+	test eax,80000000h
+	jz update_calc_pos
+;
+	dec edx
+
+update_calc_pos:
+	idiv ebx
+;
+	xor edx,edx
+	test eax,80000000h
+	jz update_save_pos
+;
+	dec edx
+
+update_save_pos:
+	mov ds:update_diff,eax
+	mov ds:update_diff+4,edx
+	mov bx,ds:rtc_id
+	Signal
+;
+	popad
+	ret
+UpdateDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1004,82 +669,9 @@ save_diff_min:
 	mul edx
 	mov ds:[si].sd_min,dl
 ;
-	mov edx,60000000
-	mul edx
-	mov ds:[si].sd_us,edx
-;
 	popad
 	ret
 SaveDiff	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ShowDiff
-;
-;		DESCRIPTION:	Show difference from time
-;
-;		PARAMETERS:		DS:SI		Buf to saved in
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShowDiff	Proc near
-	pushad
-;
-	mov di,OFFSET temp_buf
-	xor cx,cx
-	mov dx,5
-	SetCursorPosition
-;
-	mov eax,ds:[si].sd_day
-	test eax,80000000h
-	jz show_diff_do
-;
-	push ax
-	mov al,'-'
-	WriteChar
-	pop ax
-
-show_diff_do:
-	mov cx,8
-	call IntToStr
-	call RemoveLeading
-	WriteAsciiz
-	mov al,' '
-	WriteChar
-;
-	movzx eax,ds:[si].sd_hour
-	mov cx,2
-	call IntToStr
-	call RemoveLeading
-	WriteAsciiz
-	mov al,'.'
-	WriteChar
-;
-	movzx eax,ds:[si].sd_min
-	mov cx,2
-	call IntToStr
-	call RemoveLeading
-	WriteAsciiz
-	mov al,'.'
-	WriteChar
-;
-	mov eax,ds:[si].sd_us
-	mov cx,8
-	call IntToStr
-	call RemoveLeading
-	WriteAsciiz
-;
-	mov al,' '
-	WriteChar
-	mov al,' '
-	WriteChar
-	mov al,' '
-	WriteChar
-;
-	popad
-	ret
-ShowDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1192,20 +784,6 @@ calc_min_next:
 calc_min_ok:
 	mov si,OFFSET save_buf
 	mov ds:[si].sd_min,al
-	mov cx,20
-;
-	xor eax,eax
-
-calc_us_loop:
-	add eax,[si].sd_us
-	add si,SIZE save_data_struc
-	loop calc_us_loop
-;
-	xor edx,edx
-	mov ecx,20
-	div ecx
-;
-	mov [si].sd_us,eax
 	clc
 	jmp calc_done
 
@@ -1216,6 +794,42 @@ calc_done:
 	popad
 	ret
 CalcMeanDiff	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetTimeDiff
+;
+;		DESCRIPTION:	Set time difference in real-time clock
+;
+;		PARAMETERS:		DS:SI		Buf to be saved in
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetTimeDiff	Proc near
+	pushad
+;
+	movzx edx,ds:[si].sd_min
+	xor eax,eax
+	mov ebx,60
+	div ebx
+;
+	mov ebx,eax
+	mov edx,ds:[si].sd_day
+	mov eax,24
+	mul edx
+	movzx edx,ds:[si].sd_hour
+	add edx,eax
+	mov eax,ebx
+;
+	add ds:update_diff,eax
+	add ds:update_diff+4,edx
+	mov bx,ds:rtc_id
+	Signal
+;
+	popad
+	ret
+SetTimeDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1232,19 +846,26 @@ dcf_thread_name		DB 'DCF',0
 
 dcf_thread:
 	sti
-	mov ax,43h
-	EnableFocus
 	mov ax,dcf_data_sel
 	mov ds,ax
 ;
 	GetThread
 	mov ds:thread_id,ax
+	mov ds:on_time,0	
+	mov ds:on_time+4,0	
+	mov ds:start_pulse,0	
+	mov ds:start_pulse+4,0	
+	mov ds:end_pulse,0	
+	mov ds:end_pulse+4,0	
 ;
 	mov al,5
 	mov cx,cs
 	mov es,cx
 	mov di,OFFSET dcf_int
 	RequestPrivateIrqHandler
+;
+	mov ax,ds
+	mov es,ax
 ;
     mov dx,284h
     mov al,2
@@ -1253,14 +874,11 @@ dcf_thread:
     mov dx,28Bh
     mov al,8Bh
     out dx,al
-;
-	int 3
 
 	mov ax,dcf_data_sel
 	mov es,ax
 
 dcf_sync_loop:
-	call ClearSample
 	call SyncToDcf
 	mov ds:curr_sec,0
 ;
@@ -1269,18 +887,47 @@ dcf_sync_loop:
 
 dcf_time_loop:
 	call GetDiff
+	call UpdateDiff
 	call SaveDiff
-	call ShowDiff
 	add si,SIZE save_data_struc
 	loop dcf_time_loop
 ;
-	int 3
 	call CalcMeanDiff
 	jc dcf_sync_loop
 ;
 	mov si,OFFSET save_buf
-	call ShowDiff
+	call SetTimeDiff
+;
 	int 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			rtc_thread
+;
+;		DESCRIPTION:	RTC update thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rtc_thread_name		DB 'DCF RTC',0
+
+rtc_thread:
+	sti
+	mov ax,dcf_data_sel
+	mov ds,ax
+;
+	GetThread
+	mov ds:rtc_id,ax
+
+rtc_loop:
+	WaitForSignal
+	mov eax,ds:update_diff
+	mov edx,ds:update_diff+4
+	UpdateTime
+	UpdateRtc
+	jmp rtc_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1305,7 +952,16 @@ init_dcf_thread	PROC far
 	mov di,OFFSET dcf_thread_name
 	mov ecx,512
 	mov ax,25
-	CreateProcess
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET rtc_thread
+	mov di,OFFSET rtc_thread_name
+	mov ecx,512
+	mov ax,1
+	CreateThread
 ;
 	popa
 	pop es

@@ -1962,7 +1962,7 @@ RdosGetTics	Proc
 	push edx
 	push esi
 ;
-	UserGate get_system_time_nr
+	UserGate get_time_nr
 	mov esi,[ebp].rgtMSB
 	mov [esi],edx
 	mov esi,[ebp].rgtLSB

@@ -64,9 +64,27 @@ THeat::~THeat()
 
 /*##########################################################################
 #
+#   Name       : THeat::IsStartedEP
+#
+#   Purpose....: Check if started EP (elpatron)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THeat::IsStartedEP()
+{
+	if (FStat & 0x40)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : THeat::StartEP
 #
-#   Purpose....: Start EP
+#   Purpose....: Start EP (elpatron)
 #
 #   Out params.: *
 #   Returns....: *
@@ -74,7 +92,7 @@ THeat::~THeat()
 ##########################################################################*/
 void THeat::StartEP()
 {
-	if (FStat & 0x40)
+	if (!IsStartedEP())
 		RdosToggleDigitalLine(1, 6);
 }
 
@@ -82,7 +100,7 @@ void THeat::StartEP()
 #
 #   Name       : THeat::StopEP
 #
-#   Purpose....: Stop EP
+#   Purpose....: Stop EP (elpatron)
 #
 #   Out params.: *
 #   Returns....: *
@@ -90,15 +108,33 @@ void THeat::StartEP()
 ##########################################################################*/
 void THeat::StopEP()
 {
-	if ((FStat & 0x40) == 0)
+	if (IsStartedEP())
 		RdosToggleDigitalLine(1, 6);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::IsStartedVP
+#
+#   Purpose....: Check if started VP (v„rmepump)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THeat::IsStartedVP()
+{
+	if (FStat & 0x20)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 /*##########################################################################
 #
 #   Name       : THeat::StartVP
 #
-#   Purpose....: Start VP
+#   Purpose....: Start VP (v„rmepump)
 #
 #   Out params.: *
 #   Returns....: *
@@ -106,7 +142,7 @@ void THeat::StopEP()
 ##########################################################################*/
 void THeat::StartVP()
 {
-	if (FStat & 0x20)
+	if ((!IsStartedVP()) && IsStartedVC())
 		RdosToggleDigitalLine(1, 5);
 }
 
@@ -114,7 +150,7 @@ void THeat::StartVP()
 #
 #   Name       : THeat::StopVP
 #
-#   Purpose....: Stop VP
+#   Purpose....: Stop VP (v„rmepump)
 #
 #   Out params.: *
 #   Returns....: *
@@ -122,8 +158,58 @@ void THeat::StartVP()
 ##########################################################################*/
 void THeat::StopVP()
 {
-	if ((FStat & 0x20) == 0)
+	if (IsStartedVP())
 		RdosToggleDigitalLine(1, 5);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::IsStartedVC
+#
+#   Purpose....: Check if started VC (v„rmepump cirkulationspump)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THeat::IsStartedVC()
+{
+	if (FStat & 0x10)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StartVC
+#
+#   Purpose....: Start VC (v„rmepump cirkulationspump)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StartVC()
+{
+	if (!IsStartedVC())
+		RdosToggleDigitalLine(1, 4);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StopVC
+#
+#   Purpose....: Stop VC (v„rmepump cirkulationspump)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StopVC()
+{
+	if (IsStartedVC() && (!IsStartedVP()))
+		RdosToggleDigitalLine(1, 4);
 }
 
 /*##########################################################################
@@ -140,8 +226,11 @@ void THeat::UpdateOff(long double value)
 {
 	FMax = value;
 
-	if (value < 42.0)
+	if (value < 45.0)
+	{
+		StartVC();
 		StartVP();
+	}
 }
 
 /*##########################################################################
@@ -159,13 +248,14 @@ void THeat::UpdateOn(long double value)
 	if (value > FMax)
 		FMax = value;
 
-	if (value < FMax - 2.0)
+	if (value < FMax - 0.5)
 		StartEP();
 
 	if (value > 55.0)
 	{
 		StopEP();
 		StopVP();
+		StopVC();
 	}
 }
 
@@ -185,6 +275,8 @@ void THeat::NotifyBeforeClear()
 
 	if (RdosReadDigital(1, &FStat))
 	{
+		RdosSetCursorPosition(12, 0);
+
 		if ((FStat & 0x60) == 0)
 			UpdateOff(GetMean(&time));
 		else
@@ -192,3 +284,4 @@ void THeat::NotifyBeforeClear()
 	}
     TSample::NotifyBeforeClear();
 }
+

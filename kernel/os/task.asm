@@ -3504,10 +3504,18 @@ PAGE
 time_to_system_time_name	DB 'Time To System Time',0
 
 time_to_system_time	PROC far
+	push ds
+	push bx
+	mov bx,task_sel
+	mov ds,bx
+;
 	cli
 	sub eax,ds:time_diff
 	sbb edx,ds:time_diff+4
 	sti
+;
+	pop bx
+	pop ds
 	retf32
 time_to_system_time	ENDP
 
@@ -3529,10 +3537,18 @@ PAGE
 system_time_to_time_name	DB 'System Time To Time',0
 
 system_time_to_time	PROC far
+	push ds
+	push bx
+	mov bx,task_sel
+	mov ds,bx
+;
 	cli
 	add eax,ds:time_diff
 	adc edx,ds:time_diff+4
 	sti
+;
+	pop bx
+	pop ds
 	retf32
 system_time_to_time	ENDP
 
@@ -3588,7 +3604,6 @@ update_time	PROC far
 	mov ds:time_diff,eax
 	mov ds:time_diff+4,edx
 	sti
-	UpdateRtc
 	pop bx
 	pop ds
 	ret
