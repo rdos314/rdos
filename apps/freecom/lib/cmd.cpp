@@ -261,12 +261,6 @@ int TCommand::Run()
 			SetErrorFile(FErrorFile);
 	}
 
-	if (InitOptions())
-	{
-		if (LeadOptions(&ptr, 0) != E_None)
-			return 1;
-	}
-
 	result = Execute(ptr);
 
 	delete param;
@@ -275,18 +269,34 @@ int TCommand::Run()
 
 /*##########################################################################
 #
-#   Name       : TCommand::InitOptions
+#   Name       : TCommand::IsArgDelim
 #
-#   Purpose....: Default init options
+#   Purpose....: Check for argument delimiter
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::InitOptions()
+int TCommand::IsArgDelim(char ch)
 {
-	return TRUE;
+	return ::IsArgDelim(ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::IsOptDelim
+#
+#   Purpose....: Check for option delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::IsOptDelim(char ch)
+{
+	return ::IsOptDelim(ch);
 }
 
 /*##########################################################################

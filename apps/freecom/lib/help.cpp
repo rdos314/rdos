@@ -104,17 +104,13 @@ int THelpCommand::Execute(char *param)
 
     while (cmd)
     {
+        sprintf(str, "%-10s", cmd->FName.GetData());
+        Write(str);
+
         y++;
         if (y == 8)
-        {
-			Write(cmd->FName.GetData());
 			y = 0;
-		}
-		else
-		{
-            sprintf(str, "%-10s", cmd->FName.GetData());
-            Write(str);
-        }
+
         cmd = cmd->FList;            
     }
 

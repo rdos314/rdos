@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# rmdir.cpp
+# Rmdir command class
 #
 ########################################################################*/
 
@@ -29,8 +29,7 @@
 
 #include "cmdhelp.h"
 #include "lang.h"
-#include "pathcmd.h"
-#include "env.h"
+#include "rmdir.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -38,23 +37,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPathFactory::TPathFactory
+#   Name       : TRmdirFactory::TRmdirFactory
 #
-#   Purpose....: Constructor for TPathFactory
+#   Purpose....: Constructor for TRmdirFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPathFactory::TPathFactory()
-  : TCommandFactory("PATH")
+TRmdirFactory::TRmdirFactory()
+  : TCommandFactory("RMDIR")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPathFactory::Create
+#   Name       : TRmdirFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,47 +62,63 @@ TPathFactory::TPathFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPathFactory::Create(const char *param)
+TCommand *TRmdirFactory::Create(const char *param)
 {
-	return new TPathCommand(param);
+	return new TRmdirCommand(param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPathFactory::PassAll
+#   Name       : TMdFactory::TRdFactory
 #
-#   Purpose....: Pass all chars
+#   Purpose....: Constructor for TRdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TPathFactory::PassAll()
+TRdFactory::TRdFactory()
+  : TCommandFactory("RD")
 {
-	return TRUE;
 }
 
 /*##########################################################################
 #
-#   Name       : TPathCommand::TPathCommand
+#   Name       : TRdFactory::Create
 #
-#   Purpose....: Constructor for TPathCommand
+#   Purpose....: Create a command
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPathCommand::TPathCommand(const char *param)
+TCommand *TRdFactory::Create(const char *param)
+{
+	return new TRmdirCommand(param);
+}
+
+/*##########################################################################
+#
+#   Name       : TRmdirCommand::TRmdirCommand
+#
+#   Purpose....: Constructor for TRmdirCommand
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRmdirCommand::TRmdirCommand(const char *param)
   : TCommand(param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_PATH);
+	FHelpScreen.Load(TEXT_CMDHELP_RD);
 }
 
 /*##########################################################################
 #
-#   Name       : TPathCommand::Run
+#   Name       : TRmdirCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -112,30 +127,24 @@ TPathCommand::TPathCommand(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-int TPathCommand::Execute(char *param)
+int TRmdirCommand::Execute(char *param)
 {
-	char *p;
-	TEnv *env = TEnv::OpenProcessEnv();
-	char path[512];
+	TArg *arg;
 
-	if (LeadOptions(&param, 0) != E_None)
+	if (!ScanCmdLine(param, 0))
 		return 1;
 
-	p = (char *)LTrim(param);
-	if (*p == 0 && !strchr(param, ';'))
-	{
-		if (env->Find("PATH", path))
-			FMsg.printf(TEXT_MSG_PATH, path);
-		else
-			FMsg.Load(TEXT_MSG_PATH_NONE);
-		Write(FMsg.GetData());
-	}
-	else
-	{
-		RTrim(p);
+	arg = FArgList;
 
-		env->Add("PATH", p);
+	while (arg)
+	{
+		if (!RdosRemoveDir(arg->FName.GetData()))
+		{
+			FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "RD", FArgList->FName.GetData());
+			Write(FMsg.GetData());
+			return 1;
+		}
+		arg = arg->FList;
 	}
-	delete env;
 	return 0;
 }

@@ -31,6 +31,7 @@
 #include "lang.h"
 #include "copy.h"
 #include "rdos.h"
+#include "path.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -86,6 +87,25 @@ TCopyCommand::TCopyCommand(const char *param)
 
 /*##########################################################################
 #
+#   Name       : TCopyCommand::IsArgDelim
+#
+#   Purpose....: Check for argument delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::IsArgDelim(char ch)
+{
+	if (ch == '+')
+		return TRUE;
+	else
+		return TCommand::IsArgDelim(ch);
+}
+
+/*##########################################################################
+#
 #   Name       : TCopyCommand::OptScan
 #
 #   Purpose....: Opt scan callback
@@ -101,10 +121,6 @@ int TCopyCommand::OptScan(const char *optstr, int ch, int bool, const char *stra
 	{
 		case 'Y':
 			return OptScanBool(optstr, bool, strarg, &FOptY);
-
-		case 'V':
-			return OptScanBool(optstr, bool, strarg, &FOptV);
-
 	}
 	OptError(optstr);
 	return E_Useage;
@@ -121,12 +137,174 @@ int TCopyCommand::OptScan(const char *optstr, int ch, int bool, const char *stra
 #   Returns....: *
 #
 ##########################################################################*/
-int TCopyCommand::InitOptions()
+void TCopyCommand::InitOptions()
 {
-    FOptV = 0;
-    FOptY = 0;
-    
-    return FALSE;
+	FOptY = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TCopyCommand::CopyFile
+#
+#   Purpose....: Copy file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::CopyFile(TString &Src, TString &Dest)
+{
+	char ch;
+	TPathName src(Src);
+	TPathName dest(Dest);
+	TString fullsrc(src.GetFullPathName());
+	TString fulldest(dest.GetFullPathName());
+
+	fullsrc.Upper();
+	fulldest.Upper();
+
+	if (!strcmp(fullsrc.GetData(), fulldest.GetData()))
+	{
+		FMsg.printf(TEXT_ERROR_SELFCOPY, Dest.GetData());
+		Write(FMsg.GetData());
+		return 1;
+	}
+
+	if (dest.IsFile() && !FOptY)
+	{
+		ch = FMsg.UserPrompt(PROMPT_OVERWRITE_FILE, Dest.GetData());
+		switch (ch)
+		{
+			case 3:	/* All */
+				FOptY = TRUE;
+
+			case 1: /* Yes */
+				break;
+
+			case 2:	/* No */
+				return 0;
+
+			default:	/* Quit */
+				return 1;
+		}		
+	}
+
+
+	Write(Src.GetData());
+	Write(" => ");
+	Write(Dest.GetData());
+	Write("\r\n");
+
+	if (src.CopyFile(dest))
+		return 0;
+	else
+	{
+		FMsg.Load(TEXT_ERROR_COPY);
+		Write(FMsg.GetData());
+		return 1;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TCopyCommand::AppendFile
+#
+#   Purpose....: Append file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::AppendFile(TString &Src, TString &Dest)
+{
+	TPathName src(Src);
+	TPathName dest(Dest);
+	TString fullsrc(src.GetFullPathName());
+	TString fulldest(dest.GetFullPathName());
+
+	fullsrc.Upper();
+	fulldest.Upper();
+
+	if (!strcmp(fullsrc.GetData(), fulldest.GetData()))
+		return 0;
+
+	Write(Src.GetData());
+	Write(" =>> ");
+	Write(Dest.GetData());
+	Write("\r\n");
+
+	if (src.AppendFile(dest))
+		return 0;
+	else
+	{
+		FMsg.Load(TEXT_ERROR_COPY);
+		Write(FMsg.GetData());
+		return 1;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TCopyCommand::CopyFiles
+#
+#   Purpose....: Copy files
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::CopyFiles()
+{
+	TDirEntry *entry;
+	int result;
+
+	entry = FSrcFiles.GotoFirst();
+	while (entry)
+	{
+		TPathName path(*FDest);
+		path += entry->EntryName;
+		result = CopyFile(entry->PathName.Get(), path.Get());
+		if (result)
+			return result;
+		entry = FSrcFiles.GotoNext();
+	}
+
+	return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCopyCommand::AppendFiles
+#
+#   Purpose....: Append files
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::AppendFiles()
+{
+	TDirEntry *entry;
+	TString file;
+
+	entry = FSrcFiles.GotoFirst();
+	file = entry->PathName.Get();
+
+	if (entry)
+	{
+		CopyFile(entry->PathName.Get(), FDest->Get());
+		entry = FSrcFiles.GotoNext();
+		while (entry)
+		{
+			AppendFile(entry->PathName.Get(), FDest->Get());
+			entry = FSrcFiles.GotoNext();
+		}
+	}
+	return 0;
 }
 
 /*##########################################################################
@@ -142,19 +320,65 @@ int TCopyCommand::InitOptions()
 ##########################################################################*/
 int TCopyCommand::Execute(char *param)
 {
-    TArg *arg;
+	TArg *arg;
+	TDir *dir;
+	TDirEntry entry;
+	int count;
+
+	FDest = 0;
+
+	InitOptions();
 
 	if (!ScanCmdLine(param, 0))
-        return 1;
+		return 1;
 
     arg = FArgList;
 
-    while (arg)
-    {
+	while (arg)
+	{
         if (LeadOptions(&arg->ptr, 0) != E_None)
-            return 1;
-        else
-            arg = arg->FList;
+			return 1;
+		else
+		{
+			if (arg->FList)
+			{
+				count = 0;
+				dir = new TDir(arg->FName);
+				entry = dir->GotoFirst();
+				while (entry.Valid)
+				{
+					if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
+					{
+						count++;
+						FSrcFiles.Add(entry);
+					}
+					entry = dir->GotoNext();
+				}
+				
+				if (count == 0)
+				{
+					FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
+					Write(FMsg.GetData());
+					delete dir;
+					return 1;
+				}
+
+				delete dir;
+			}
+			else
+				FDest = new TPathName(arg->FName);
+
+			arg = arg->FList;
+		}
 	}
-    return 0;
+
+	if (FDest)
+	{
+		if (FDest->IsDir())
+			return CopyFiles();
+		else
+			return AppendFiles();
+	}
+
+	return 0;
 }

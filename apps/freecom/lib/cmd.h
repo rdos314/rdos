@@ -57,12 +57,13 @@ public:
 	void DefineError(TString &name);
 	
 	int Run();
-	virtual int InitOptions();
 	virtual int Execute(char *param) = 0;
 
 	static int ErrorLevel;
 
 protected:
+	virtual int IsArgDelim(char ch);
+	virtual int IsOptDelim(char ch);
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void OptError(const char *optstr);
 	void ErrorSyntax(const char *str);

@@ -20,38 +20,41 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# set.h
-# Set command class
+# mkdir.h
+# Mkdir command class
 #
 ########################################################################*/
 
-#ifndef _SET_H
-#define _SET_H
+#ifndef _MKDIR_H
+#define _MKDIR_H
 
 #include "cmd.h"
 #include "cmdfact.h"
 
-class TSetFactory : public TCommandFactory
+class TMkdirFactory : public TCommandFactory
 {
 public:
-	TSetFactory();
+	TMkdirFactory();
 	virtual TCommand *Create(const char *param);
-};
-
-class TSetCommand : public TCommand
-{
-public:
-	TSetCommand(const char *param);
-
-	virtual int Execute(char *param);	
 
 protected:
-    void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	
-	int FOptC;
-	int FPromptUser;
+};
 
+class TMdFactory : public TCommandFactory
+{
+public:
+	TMdFactory();
+	virtual TCommand *Create(const char *param);
+
+protected:
+};
+
+class TMkdirCommand : public TCommand
+{
+public:
+	TMkdirCommand(const char *param);
+
+	virtual int Execute(char *param);	
 };
 
 #endif

@@ -37,7 +37,6 @@ public:
 	TExecCommand(const char *name, const char *param);
 
 	virtual int Execute(char *param);	
-	virtual int InitOptions();
 
 protected:
 	int Start(TPathName *path, const char *param);

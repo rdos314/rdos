@@ -16,12 +16,21 @@
 #include "cls.h"
 #include "copy.h"
 #include "cmdline.h"
+#include "chdir.h"
+#include "mkdir.h"
+#include "rmdir.h"
 
+TCdFactory *cd;
+TChdirFactory *chdir;
 TClsFactory *cls;
 TCopyFactory *cpy;
 TDateFactory *date;
 THelpFactory *help;
+TMdFactory *md;
+TMkdirFactory *mkdir;
 TPathFactory *path;
+TRdFactory *rd;
+TRmdirFactory *rmdir;
 TSetFactory *set;
 TSysPathFactory *syspath;
 TSysSetFactory *sysset;
@@ -35,10 +44,16 @@ void Init()
 	sysset = new TSysSetFactory;
 	syspath = new TSysPathFactory;
 	set = new TSetFactory;
+	rmdir = new TRmdirFactory;
+	rd = new TRdFactory;
 	path = new TPathFactory;
+	mkdir = new TMkdirFactory;
+	md = new TMdFactory;
 	date = new TDateFactory;
 	cpy = new TCopyFactory;
 	cls = new TClsFactory;
+	chdir = new TChdirFactory;
+	cd = new TCdFactory;
 	help = new THelpFactory;
 
 	Write("FreeCom for RDOS\r\n\r\n");

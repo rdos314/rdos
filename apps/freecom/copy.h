@@ -30,6 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "filelist.h"
 
 class TCopyFactory : public TCommandFactory
 {
@@ -48,10 +49,19 @@ public:
 	virtual int Execute(char *param);
 
 protected:
+	virtual int IsArgDelim(char ch);
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	virtual int InitOptions();
+    void InitOptions();
 
-	int FOptV;
+	int CopyFile(TString &Src, TString &Dest);
+	int AppendFile(TString &Src, TString &Dest);
+
+	int CopyFiles();
+	int AppendFiles();
+
+	TFileList FSrcFiles;
+	TPathName *FDest;
+
 	int FOptY;
 
 };

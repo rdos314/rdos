@@ -190,6 +190,9 @@ int TTimeCommand::Execute(char *param)
 	char s[40];
 	char time[40];
 
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
 	if (*param == 0)
 	{
 		sprintf(time, "%02d.%02d.%02d,%03d", 

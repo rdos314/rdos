@@ -55,22 +55,6 @@ TExecCommand::TExecCommand(const char *name, const char *param)
 
 /*##########################################################################
 #
-#   Name       : TExecCommand::InitOptions
-#
-#   Purpose....: Make sure no options are scanned
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::InitOptions()
-{
-	return FALSE;
-}
-
-/*##########################################################################
-#
 #   Name       : TExecCommand::Start
 #
 #   Purpose....: Start program

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# chdir.cpp
+# Chdir command class
 #
 ########################################################################*/
 
@@ -29,32 +29,33 @@
 
 #include "cmdhelp.h"
 #include "lang.h"
-#include "pathcmd.h"
-#include "env.h"
+#include "chdir.h"
 #include "rdos.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
+TString PrevDir;
+
 /*##########################################################################
 #
-#   Name       : TPathFactory::TPathFactory
+#   Name       : TChdirFactory::TChdirFactory
 #
-#   Purpose....: Constructor for TPathFactory
+#   Purpose....: Constructor for TChdirFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPathFactory::TPathFactory()
-  : TCommandFactory("PATH")
+TChdirFactory::TChdirFactory()
+  : TCommandFactory("CHDIR")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPathFactory::Create
+#   Name       : TChdirFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,47 +64,63 @@ TPathFactory::TPathFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPathFactory::Create(const char *param)
+TCommand *TChdirFactory::Create(const char *param)
 {
-	return new TPathCommand(param);
+	return new TChdirCommand(param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPathFactory::PassAll
+#   Name       : TCdFactory::TCdFactory
 #
-#   Purpose....: Pass all chars
+#   Purpose....: Constructor for TCdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TPathFactory::PassAll()
+TCdFactory::TCdFactory()
+  : TCommandFactory("CD")
 {
-	return TRUE;
 }
 
 /*##########################################################################
 #
-#   Name       : TPathCommand::TPathCommand
+#   Name       : TCdFactory::Create
 #
-#   Purpose....: Constructor for TPathCommand
+#   Purpose....: Create a command
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPathCommand::TPathCommand(const char *param)
+TCommand *TCdFactory::Create(const char *param)
+{
+	return new TChdirCommand(param);
+}
+
+/*##########################################################################
+#
+#   Name       : TChdirCommand::TChdirCommand
+#
+#   Purpose....: Constructor for TChdirCommand
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChdirCommand::TChdirCommand(const char *param)
   : TCommand(param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_PATH);
+	FHelpScreen.Load(TEXT_CMDHELP_CD);
 }
 
 /*##########################################################################
 #
-#   Name       : TPathCommand::Run
+#   Name       : TChdirCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -112,30 +129,48 @@ TPathCommand::TPathCommand(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-int TPathCommand::Execute(char *param)
+int TChdirCommand::Execute(char *param)
 {
-	char *p;
-	TEnv *env = TEnv::OpenProcessEnv();
-	char path[512];
+	TPathName Path;
 
-	if (LeadOptions(&param, 0) != E_None)
+	if (!ScanCmdLine(param, 0))
 		return 1;
 
-	p = (char *)LTrim(param);
-	if (*p == 0 && !strchr(param, ';'))
+	if (FArgList)
 	{
-		if (env->Find("PATH", path))
-			FMsg.printf(TEXT_MSG_PATH, path);
+		if (!strcmp(FArgList->FName.GetData(), "-"))
+		{
+			if (RdosSetCurDir(PrevDir.GetData()))
+			{
+				PrevDir = Path.GetFullPathName();
+				return 0;
+			}
+			else
+			{
+				FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "CD", PrevDir.GetData());
+				Write(FMsg.GetData());
+				return 1;
+			}
+		}
 		else
-			FMsg.Load(TEXT_MSG_PATH_NONE);
-		Write(FMsg.GetData());
+		{	
+			if (RdosSetCurDir(FArgList->FName.GetData()))
+			{
+				PrevDir = Path.GetFullPathName();
+				return 0;			
+			}
+			else
+			{
+				FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "CD", FArgList->FName.GetData());
+				Write(FMsg.GetData());
+				return 1;
+			}
+		}
 	}
 	else
 	{
-		RTrim(p);
-
-		env->Add("PATH", p);
+		Write(Path.GetFullPathName().GetData());
+		Write("\r\n");
+		return 0;
 	}
-	delete env;
-	return 0;
 }

@@ -165,6 +165,9 @@ int TDateCommand::Execute(char *param)
 	char s[40];
 	char date[40];
 
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
 	if (*param == 0)
 	{
 		sprintf(date, "%04d-%02d-%02d", 
