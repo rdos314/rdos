@@ -271,6 +271,362 @@ TString TPathName::GetFullPathName() const
 
 /*##########################################################################
 #
+#   Name       : TPathName::IsFile
+#
+#   Purpose....: Check if pathname is a file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::IsFile() const
+{
+    int Attrib;
+    
+    if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
+        if (Attrib != FILE_ATTRIBUTE_DIRECTORY)
+            return TRUE;
+        
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::OpenFile
+#
+#   Purpose....: Open path as file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile TPathName::OpenFile() const
+{
+    return TFile(FPathName.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::CreateFile
+#
+#   Purpose....: Create path as file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile TPathName::CreateFile(int Attrib) const
+{
+    return TFile(FPathName.GetData(), Attrib);
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::DeleteFile
+#
+#   Purpose....: Delete file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::DeleteFile() const
+{
+    return RdosDeleteFile(FPathName.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::MoveFile
+#
+#   Purpose....: Move a file to a new name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::MoveFile(const TPathName &NewName) const
+{
+    TFile *src;
+    TFile *dst;
+    int ok;
+    char *buf;
+    int size;
+    int wrsize;
+
+    ok = FALSE;
+    dst = 0;
+    src = new TFile(FPathName.GetData());
+    if (src->IsOpen())
+    {
+        dst = new TFile(NewName.FPathName.GetData(), 0);
+        if (dst->IsOpen())
+        {
+            ok = TRUE;
+            buf = new char[0x1000];
+ 
+            size = src->Read(buf, 0x1000);
+            while (ok && size)
+            {
+                ok = (size == dst->Write(buf, size));
+                if (ok)
+                    size = src->Read(buf, 0x1000);
+            }
+
+            if (ok)
+            {
+                delete src;
+                src = 0;
+                DeleteFile();
+            }
+                        
+            delete buf;
+        }
+
+        if (!ok)
+        {
+            delete dst;
+            dst = 0;
+            NewName.DeleteFile();
+        }
+    }
+
+    if (src)
+        delete src;
+        
+    if (dst)
+        delete dst;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::CopyFile
+#
+#   Purpose....: Copy a file to a new name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::CopyFile(const TPathName &NewName) const
+{
+    TFile *src;
+    TFile *dst;
+    int ok;
+    char *buf;
+    int size;
+    int wrsize;
+
+    ok = FALSE;
+    dst = 0;
+    src = new TFile(FPathName.GetData());
+    if (src->IsOpen())
+    {
+        dst = new TFile(NewName.FPathName.GetData(), 0);
+        if (dst->IsOpen())
+        {
+            ok = TRUE;
+            buf = new char[0x1000];
+ 
+            size = src->Read(buf, 0x1000);
+            while (ok && size)
+            {
+                ok = (size == dst->Write(buf, size));
+                if (ok)
+                    size = src->Read(buf, 0x1000);
+            }
+                        
+            delete buf;
+        }
+
+        if (!ok)
+        {
+            delete dst;
+            dst = 0;
+            NewName.DeleteFile();
+        }
+    }
+
+    if (src)
+        delete src;
+        
+    if (dst)
+        delete dst;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::AppendFile
+#
+#   Purpose....: Append a file to a new name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::AppendFile(const TPathName &NewName) const
+{
+    TFile *src;
+    TFile *dst;
+    int ok;
+    char *buf;
+    int size;
+    int wrsize;
+    long fsize;
+
+    ok = FALSE;
+    dst = 0;
+    src = new TFile(NewName.FPathName.GetData());
+    if (src->IsOpen())
+    {
+        dst = new TFile(FPathName.GetData());
+        if (dst->IsOpen())
+        {
+            fsize = dst->GetSize();
+            dst->SetPos(fsize);
+
+            ok = TRUE;
+            buf = new char[0x1000];
+ 
+            size = src->Read(buf, 0x1000);
+            while (ok && size)
+            {
+                ok = (size == dst->Write(buf, size));
+                if (ok)
+                    size = src->Read(buf, 0x1000);
+            }
+                        
+            delete buf;
+        }
+
+        if (!ok)
+            dst->SetSize(fsize);
+    }
+
+    if (src)
+        delete src;
+        
+    if (dst)
+        delete dst;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::IsDir
+#
+#   Purpose....: Check if pathname is a directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::IsDir() const
+{
+    int Attrib;
+    
+    if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
+        if (Attrib == FILE_ATTRIBUTE_DIRECTORY)
+            return TRUE;
+        
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::MakeDir
+#
+#   Purpose....: Make directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::MakeDir() const
+{
+    return RdosMakeDir(FPathName.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::RemoveDir
+#
+#   Purpose....: Remove directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathName::RemoveDir() const
+{
+    return RdosRemoveDir(FPathName.GetData());
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::Find
+#
+#   Purpose....: Find directory entries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir TPathName::Find() const
+{
+    return TDir(FPathName);
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::Find
+#
+#   Purpose....: Find directory entries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir TPathName::Find(const char *SearchString) const
+{
+    return TDir(FPathName, TString(SearchString));
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::Find
+#
+#   Purpose....: Find directory entries
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir TPathName::Find(const TString &SearchString) const
+{
+    return TDir(FPathName, SearchString);
+}
+
+/*##########################################################################
+#
 #   Name       : TDirEntry::TDirEntry
 #
 #   Purpose....: constructor
@@ -388,6 +744,24 @@ TDir::TDir(const TString &PathName)
 ##########################################################################*/
 TDir::TDir(const TPathName &PathName)
   : FPathName(PathName.Get())
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::TDir
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::TDir(const TPathName &PathName, const TString &SearchString)
+  : FPathName(PathName.Get()),
+    FSearchString(SearchString)
 {
     Init();
 }

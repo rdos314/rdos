@@ -30,6 +30,9 @@
 
 #include "datetime.h"
 #include "str.h"
+#include "file.h"
+
+class TDir;
 
 class TPathName
 {
@@ -47,6 +50,22 @@ public:
 
 	TString Get() const;
 	TString GetFullPathName() const;
+
+    int IsFile() const;
+	TFile OpenFile() const;
+    TFile CreateFile(int Attribute) const;
+    int DeleteFile() const;
+    int MoveFile(const TPathName &NewName) const;
+    int CopyFile(const TPathName &NewName) const;
+    int AppendFile(const TPathName &NewName) const;
+    
+    int IsDir() const;
+    int MakeDir() const;
+    int RemoveDir() const;
+    
+    TDir Find() const;
+    TDir Find(const char *SearchString) const;
+    TDir Find(const TString &SearchString) const;
 
 private:
     TString FPathName;
@@ -74,6 +93,7 @@ public:
 	TDir(const char *PathName);
 	TDir(const TString &PathName);
 	TDir(const TPathName &PathName);
+	TDir(const TPathName &PathName, const TString &SearchStr);
 	~TDir();
 
     TDirEntry GotoFirst();
@@ -86,6 +106,7 @@ private:
 
 	int FDirHandle;
 	TString FPathName;
+	TString FSearchString;
     int FIndex;
 	
 };
