@@ -32,7 +32,7 @@
 .386p
 .model flat
 
-include ..\os\user.def
+include ..\user.def
 
 UserGate	MACRO gate_nr
 	db 9Ah

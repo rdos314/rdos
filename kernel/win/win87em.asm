@@ -29,8 +29,8 @@
 
 GateSize = 16
 
-INCLUDE \rdos\os\user.def
-INCLUDE \rdos\os\user.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 
 .386p
 

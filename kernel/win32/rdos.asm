@@ -30,7 +30,7 @@
 	.386
 	.model flat
 
-include \rdos\os\user.def
+include ..\user.def
 
 tib_data	STRUC
 

@@ -32,7 +32,8 @@
 .386p
 .model flat
 
-include ..\os\user.def
+include ..\user.def
+include ..\driver.def
 include ..\os\protseg.def
 
 UserGate	MACRO gate_nr

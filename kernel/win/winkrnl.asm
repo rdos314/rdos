@@ -29,9 +29,9 @@
 
 GateSize = 16
 
-INCLUDE \rdos\os\protseg.def
-INCLUDE \rdos\os\user.def
-INCLUDE \rdos\os\user.inc
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 
 .386p
 

@@ -27,8 +27,8 @@
 
 GateSize = 16
 
-include ..\os\user.def
-include ..\os\user.inc
+include ..\user.def
+include ..\user.inc
 						
 		NAME rdos
 
@@ -245,7 +245,7 @@ _FillRect	Proc far
 	mov bx,[bp].frStartY
 	mov cx,[bp].frEndX
 	mov dx,[bp].frEndY
-	FillRect
+;	FillRect
 	pop bp
 	ret
 _FillRect	Endp
@@ -277,7 +277,7 @@ _DrawMonoBitmap	Proc far
 	mov cx,[bp].dmEndX
 	mov dx,[bp].dmEndY
 	mov es,[bp].dmBitmap+2
-	DrawMono
+;	DrawMono
 ;
 	pop es
 	pop bp
@@ -299,7 +299,7 @@ _GetCharWidth	Proc far
 	push bp
 	mov bp,sp
 	mov al,[bp+6]
-	GetCharWidth
+;	GetCharWidth
 	mov ax,cx
 	pop bp
 	ret
@@ -326,7 +326,7 @@ _DrawChar	Proc far
 	mov cx,[bp].dcX
 	mov dx,[bp].dcY
 	mov al,[bp].dcCh
-	DrawChar
+;	DrawChar
 	mov ax,cx
 	pop bp
 	ret
@@ -349,7 +349,7 @@ _GetStringWidth	Proc far
 	push es
 	push di
 	les di,[bp+6]
-	GetStringWidth
+;	GetStringWidth
 	mov ax,cx
 	pop di
 	pop es
@@ -380,7 +380,7 @@ _DrawString	Proc far
 	mov cx,[bp].dsX
 	mov dx,[bp].dsY
 	les di,[bp].dsStr
-	DrawString
+;	DrawString
 	mov ax,cx
 	pop di
 	pop es
@@ -740,7 +740,7 @@ _PollCom	PROC far
 	push bp
 	mov bp,sp
 	mov bx,[bp+6]
-	PollCom
+;	PollCom
 	pop bp
 	ret
 _PollCom	ENDP
@@ -769,7 +769,7 @@ _WaitForCom	PROC far
 	mov bp,sp
 	mov bx,[bp+6]
 	mov eax,[bp+8]
-	WaitForCom
+;	WaitForCom
 	pop bp
 	ret
 _WaitForCom	ENDP
