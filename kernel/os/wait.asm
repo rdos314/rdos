@@ -50,6 +50,23 @@ wh_running      DB ?
 
 wait_handle_seg ENDS
 
+signal_wait_header	STRUC
+
+sig_obj			wait_obj_header <>
+sig_handle		DW ?
+
+signal_wait_header	ENDS
+
+signal_handle_seg		STRUC
+
+sig_handle_base	handle_header <>
+
+sig_wait_obj            DW ?
+sig_state               DB ?
+
+signal_handle_seg		ENDS
+
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -706,6 +723,407 @@ signal_wait Proc far
     ret
 signal_wait Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_signal_handle
+;
+;		DESCRIPTION:	Delete signal handle (called from handle module)
+;
+;		PARAMETERS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_signal_handle	Proc far
+	push ds
+	push es
+	push ax
+	push dx
+;
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc delete_signal_handle_done
+;
+    FreeHandle
+
+delete_signal_handle_done:
+	pop dx
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_signal_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateSignal
+;
+;		DESCRIPTION:	Create a new signal handle
+;
+;		RETURNS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_signal_name DB 'Create Signal',0
+
+create_signal   Proc far
+    push ds
+    push ax
+    push cx
+;    
+    mov ax,SIGNAL_HANDLE
+	mov cx,SIZE signal_handle_seg
+	AllocateHandle
+	mov [bx].sig_wait_obj,0
+	mov [bx].sig_state,0
+	mov [bx].hh_sign,SIGNAL_HANDLE
+	mov bx,[bx].hh_handle
+;
+    pop cx
+    pop ax
+    pop ds
+    retf32
+create_signal   Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ResetSignal
+;
+;		DESCRIPTION:	Reset signal (to inactive)
+;
+;		PARAMETERS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_signal_name DB 'Reset Signal',0
+
+reset_signal   Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc reset_sig_done
+;
+    mov ds:[bx].sig_state,0
+
+reset_sig_done:
+    sti
+    pop bx
+    pop ax
+    pop ds
+    retf32
+reset_signal Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IsSignalled
+;
+;		DESCRIPTION:    Is signal active (CLC)
+;
+;		PARAMETERS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_signalled_name DB 'Is Signalled',0
+
+is_signalled   Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc is_sig_done
+;
+    mov al,ds:[bx].sig_state
+    or al,al
+    stc
+    jz is_sig_done
+;
+    clc
+
+is_sig_done:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+is_signalled Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetSignal
+;
+;		DESCRIPTION:	Set signal (to active)
+;
+;		PARAMETERS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_signal_name DB 'Set Signal',0
+
+set_signal   Proc far
+    push ds
+    push es
+    push ax
+    push bx
+;    
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc set_sig_done
+;
+    cli
+    mov ds:[bx].sig_state,1
+    mov ax,ds:[bx].sig_wait_obj
+    or ax,ax
+    jz set_sig_done
+;
+    mov es,ax
+    SignalWait
+	mov ds:[bx].sig_wait_obj,0
+
+set_sig_done:
+    sti
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    retf32
+set_signal Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeSignal
+;
+;		DESCRIPTION:	Free a signal handle
+;
+;		PARAMETERS:		BX		Signal handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_signal_name DB 'Free Signal',0
+
+free_signal   Proc far
+    push ds
+    push ax
+;    
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc free_sig_done
+;
+    FreeHandle
+
+free_sig_done:
+    pop ax
+    pop ds
+    retf32
+free_signal Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForSignal
+;
+;		DESCRIPTION:	Start a wait for signal
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_signal	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sig_handle
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc start_wait_for_done
+;
+    cli
+	mov ds:[bx].sig_wait_obj,es
+	mov al,ds:[bx].sig_state
+	or al,al
+	je start_wait_for_done
+;
+    mov ds:[bx].sig_state,0
+	mov ds:[bx].sig_wait_obj,0
+	sti
+    SignalWait
+
+start_wait_for_done:
+    sti
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_signal Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForSignal
+;
+;		DESCRIPTION:	Stop a wait for signal
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_signal	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sig_handle
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc stop_wait_signal_done
+;
+	mov ds:[bx].sig_wait_obj,0
+
+stop_wait_signal_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+stop_wait_for_signal Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearSignal
+;
+;		DESCRIPTION:	Clear signal
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_signal	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sig_handle
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc clear_signal_done
+;
+	mov ds:[bx].sig_state,0
+
+clear_signal_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+clear_signal Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsSignalIdle
+;
+;		DESCRIPTION:	Check if signal is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_signal_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:sig_handle
+    mov ax,SIGNAL_HANDLE
+    DerefHandle
+    jc is_idle_done
+;
+	mov al,ds:[bx].sig_state
+	or al,al
+	clc
+	je is_idle_done
+;
+	stc
+
+is_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_signal_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForSignal
+;
+;		DESCRIPTION:	Add a wait for a signal object
+;
+;		PARAMETERS:		AX      Signal handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_signal_name	DB 'Add Wait For Signal',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_signal,   	wait_code_sel
+aw1 DW OFFSET stop_wait_for_signal,		wait_code_sel
+aw2	DW OFFSET clear_signal,				wait_code_sel
+aw3	DW OFFSET is_signal_idle,		   	wait_code_sel
+
+add_wait_for_signal	PROC far
+	push ds
+	push es
+	push eax
+	push di
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE signal_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_signal_done
+;
+	mov es:sig_handle,ax
+
+add_wait_signal_done:
+    pop di
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_signal	ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -728,6 +1146,10 @@ init	PROC far
 ;
 	mov ax,WAIT_HANDLE
 	mov di,OFFSET delete_handle
+	RegisterHandle
+;
+	mov ax,SIGNAL_HANDLE
+	mov di,OFFSET delete_signal_handle
 	RegisterHandle
 ;
 	mov si,OFFSET add_wait
@@ -780,6 +1202,42 @@ init	PROC far
 	mov di,OFFSET remove_wait_name
 	xor dx,dx
 	mov ax,remove_wait_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET create_signal
+	mov di,OFFSET create_signal_name
+	xor dx,dx
+	mov ax,create_signal_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET reset_signal
+	mov di,OFFSET reset_signal_name
+	xor dx,dx
+	mov ax,reset_signal_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET is_signalled
+	mov di,OFFSET is_signalled_name
+	xor dx,dx
+	mov ax,is_signalled_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_signal
+	mov di,OFFSET set_signal_name
+	xor dx,dx
+	mov ax,set_signal_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET free_signal
+	mov di,OFFSET free_signal_name
+	xor dx,dx
+	mov ax,free_signal_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET add_wait_for_signal
+	mov di,OFFSET add_wait_for_signal_name
+	xor dx,dx
+	mov ax,add_wait_for_signal_nr
 	RegisterBimodalUserGate
 ;
 	popa

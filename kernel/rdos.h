@@ -178,6 +178,13 @@ void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
 void __stdcall RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
 void __stdcall RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
 
+int __stdcall RdosCreateSignal();
+void __stdcall RdosResetSignal(int Handle);
+int __stdcall RdosIsSignalled(int Handle);
+void __stdcall RdosSetSignal(int Handle);
+void __stdcall RdosFreeSignal(int Handle);
+void __stdcall RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID);
+
 long __stdcall RdosGetIp();
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);

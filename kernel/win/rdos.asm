@@ -619,6 +619,154 @@ _RdosRemoveWait	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCreateSignal
+;
+;		description:	void RdosCreateSignal()
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateSignal
+
+_RdosCreateSignal	Proc far
+	CreateSignal
+	ret
+_RdosCreateSignal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosResetSignal
+;
+;		description:	void RdosResetSignal(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosResetSignal
+
+_RdosResetSignal	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	ResetSignal
+;
+	pop bx
+	pop bp
+	ret
+_RdosResetSignal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosIsSignalled
+;
+;		description:	void RdosIsSignalled(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosIsSignalled
+
+_RdosIsSignalled	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	IsSignalled
+	jc risFree
+;
+    mov ax,1
+    jmp risDone	
+
+risFree:
+    xor ax,ax
+
+risDone:
+	pop bx
+	pop bp
+	ret
+_RdosIsSignalled	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetSignal
+;
+;		description:	void RdosSetSignal(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetSignal
+
+_RdosSetSignal	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	SetSignal
+;
+	pop bx
+	pop bp
+	ret
+_RdosSetSignal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosFreeSignal
+;
+;		description:	void RdosFreeSignal(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosFreeSignal
+
+_RdosFreeSignal	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	FreeSignal
+;
+	pop bx
+	pop bp
+	ret
+_RdosFreeSignal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForSignal
+;
+;		description:	void RdosAddWaitForSignal(int Handle, int SignalHandle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddWaitForSignal
+
+_RdosAddWaitForSignal	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ax,[bp+8]
+	mov ecx,[bp+10]
+	AddWaitForSignal
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosAddWaitForSignal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosAddWaitForKeyboard
 ;
 ;		description:	void RdosAddWaitForKeyboard(int Handle, void *ID)

@@ -420,6 +420,38 @@ AddWaitForAdc       MACRO
 	UserGate add_wait_for_adc_nr
 						ENDM
 
+; OUT BX        Signal handle
+CreateSignal       MACRO
+	UserGate create_signal_nr
+						ENDM
+
+; IN  BX        Signal handle
+SetSignal       MACRO
+	UserGate set_signal_nr
+						ENDM
+						
+; IN  BX        Signal handle
+ResetSignal       MACRO
+	UserGate reset_signal_nr
+						ENDM
+						
+; IN  BX        Signal handle
+IsSignalled       MACRO
+	UserGate is_signalled_nr
+						ENDM
+
+; IN  BX        Signal handle
+FreeSignal       MACRO
+	UserGate free_signal_nr
+						ENDM
+
+; IN  AX        Signal handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForSignal       MACRO
+	UserGate add_wait_for_signal_nr
+						ENDM
+
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
 ;	IN  ES:(E)DI	Mailslot name

@@ -336,5 +336,11 @@ put_keyboard_code_nr        = 289
 
 poll_tcp_connection_nr		= 290
 
+create_signal_nr            = 291
+free_signal_nr              = 292
+add_wait_for_signal_nr      = 293
+set_signal_nr               = 294
+reset_signal_nr             = 295
+is_signalled_nr             = 296
 
 usergate_entries			= 300

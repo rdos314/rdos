@@ -268,8 +268,8 @@ THttpSocketServer::THttpSocketServer()
 ##########################################################################*/
 THttpSocketServer::~THttpSocketServer()
 {
-    if (FSocketBuf)
-        delete FSocketBuf;
+	if (FSocketBuf)
+		delete FSocketBuf;
 }
 
 /*##########################################################################

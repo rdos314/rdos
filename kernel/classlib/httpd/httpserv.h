@@ -95,7 +95,7 @@ protected:
 	TString FMethod;
     char *FSocketBuf;
     int FBufCount;
-    int FBufPos;
+	int FBufPos;
     
 };
 
