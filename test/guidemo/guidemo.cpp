@@ -205,9 +205,17 @@ TPlanet *RandomPlanet(TGraphicDevice *dev)
 TPlanet *RecreatePlanet(TGraphicDevice *dev, TPlanet *templ)
 {
 	TPlanet *planet;
+	int r;
+	int m;
 
-	planet = new TPlanet(dev, templ->r);
-	planet->m = templ->m;
+	r = templ->r;
+	m = templ->m;
+	for (r = 3; r < dev->GetHeight() / 2; r++)
+		if (r * r * r * 25 > m)
+			break;
+
+	planet = new TPlanet(dev, r);
+	planet->m = m;
 	planet->x = templ->x;
 	planet->y = templ->y;
 	planet->vx = templ->vx;
@@ -511,7 +519,7 @@ void cdecl main()
 	RdosWaitMilli(250);
 
 
-	vbe = new TVbeGraphicDevice(16, 800, 600);
+	vbe = new TVbeGraphicDevice(32, 800, 600);
 
 //	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
 

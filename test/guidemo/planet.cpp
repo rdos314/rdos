@@ -22,13 +22,13 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 	int R, G, B;
 	int CR, CG, CB;
 
-    r = radius;
-	w = 2 * r;
-    FBitmap = new TBitmapGraphicDevice(dest->GetBpp(), w, w);
+	r = radius;
+	w = 2 * r + 1;
+	FBitmap = new TBitmapGraphicDevice(dest->GetBpp(), w, w);
 
-    FBitmap->SetLgopNone();
+	FBitmap->SetLgopNone();
 	FBitmap->SetFilledStyle();
-    	
+
 	R = 1024 / w;
 	G = 128;
 	B = 4 * w;
@@ -50,17 +50,17 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 		else
 			CB = 128 + B * i / 10;
 
-        FBitmap->SetDrawColor(CR, CG, CB);
-        FBitmap->DrawEllipse(r, r, i, i);
+		FBitmap->SetDrawColor(CR, CG, CB);
+		FBitmap->DrawEllipse(r, r, i, i);
 	}
 
-    FMask = new TBitmapGraphicDevice(1, w, w);
+	FMask = new TBitmapGraphicDevice(1, w, w);
 
-    FMask->SetLgopNone();
-    FMask->SetFilledStyle();
-    FMask->DrawEllipse(r, r, r, r);
-    
-    Define(dest, FBitmap, FMask, r, r);
+	FMask->SetLgopNone();
+	FMask->SetFilledStyle();
+	FMask->DrawEllipse(r, r, r, r);
+
+	Define(dest, FBitmap, FMask, r, r);
 }
 
 /*##################  TPlanet::~TPlanet ##########################

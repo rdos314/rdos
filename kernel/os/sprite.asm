@@ -434,8 +434,29 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 HideWholeLine    MACRO
+	local hide_whole
+	local hide_done
+
+	mov cx,fs:sp_x
+	test ch,80h
+	jz hide_whole
+;
+	mov ds,fs:sp_back_sel
+	mov ax,fs:sp_w
+	neg cx
+	sub ax,cx
+	jbe hide_done
+;
+	call ds:get_line_proc
+;
+    mov ds,fs:sp_dest_sel
+    xor cx,cx
+    add dx,fs:sp_y
+    call ds:set_native_row_proc
+	jmp hide_done	
+
+hide_whole:
     mov ds,fs:sp_back_sel
     xor cx,cx
     mov ax,fs:sp_w
@@ -445,8 +466,9 @@ HideWholeLine    MACRO
     mov cx,fs:sp_x
     add dx,fs:sp_y
     call ds:set_native_row_proc
-            ENDM
 
+hide_done:
+            ENDM
 
 PAGE
 
@@ -463,8 +485,56 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SaveAndShowWholeLine    MACRO
+	local save_whole
+	local save_done
+
     mov ds,fs:sp_dest_sel
     mov cx,fs:sp_new_x
+	test ch,80h
+	jz save_whole
+;
+	xor cx,cx
+    add dx,fs:sp_new_y
+    call ds:get_line_proc
+;
+    mov ds,fs:sp_back_sel
+    mov cx,fs:sp_new_x
+	neg cx
+    sub dx,fs:sp_new_y
+    mov ax,fs:sp_w
+	sub ax,cx
+	jbe save_done
+;
+    call ds:set_native_row_proc
+;
+    mov ds,fs:sp_bitmap_sel
+    call ds:get_line_proc
+    mov esi,edi
+;
+    push dx
+    mov ds,fs:sp_mask_sel
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	add eax,ds:v_app_base
+    mov edi,eax
+    pop dx
+;
+	mov ds,fs:sp_dest_sel
+    mov ax,fs:sp_lgop
+    push ds:v_lgop
+    mov ds:v_lgop,ax
+    add dx,fs:sp_new_y
+    movzx ecx,dx
+	shl ecx,16
+	xor cx,cx
+    mov dx,fs:sp_w
+	xor al,al
+    call ds:draw_sprite_line_proc
+    pop ds:v_lgop
+	jmp save_done
+
+save_whole:
     add dx,fs:sp_new_y
     call ds:get_line_proc
 ;
@@ -499,6 +569,8 @@ SaveAndShowWholeLine    MACRO
 	xor al,al
     call ds:draw_sprite_line_proc
     pop ds:v_lgop
+
+save_done:
             ENDM
 
 PAGE
