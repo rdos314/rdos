@@ -2045,6 +2045,8 @@ LoadDefaultOk:
     xor ax,ax
     mov ds,ax
 ;
+    inc cs:DiscSubUnit      ; fix for drive-swap!!
+;    
     xor edx,edx
     mov bx,600h
     call ReadSector

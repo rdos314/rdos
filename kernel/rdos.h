@@ -33,6 +33,17 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
+struct ThreadState
+{
+    short int ID;
+    char Name[32];
+    long LsbTime;
+    long MsbTime;
+    char List[32];
+    long Offset;
+    short int Sel;
+};
+
 #ifdef __GNUC__
 #define __stdcall
 #else
@@ -139,6 +150,8 @@ int __stdcall RdosSetFileAttribute(const char *PathName, int Attribute);
 int __stdcall RdosOpenDir(const char *PathName);
 void __stdcall RdosCloseDir(int Handle);
 int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
+
+int __stdcall RdosGetThreadState(int ThreadNr, ThreadState *State);
 
 void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);

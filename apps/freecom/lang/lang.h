@@ -261,5 +261,6 @@
 #define TEXT_PING_OK  257
 #define TEXT_PING_TIMEOUT  258
 #define TEXT_CMDHELP_INITFD  259
+#define TEXT_CMDHELP_STATE  260
 
 #endif

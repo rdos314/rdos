@@ -26,6 +26,7 @@
 #include "inithd.h"
 #include "initfd.h"
 #include "ping.h"
+#include "state.h"
 
 #include "part.h"
 #include "rdfspart.h"
@@ -53,6 +54,7 @@ TRdFactory *rd;
 TRmdirFactory *rmdir;
 TRemovePartitionFactory *rmpart;
 TSetFactory *set;
+TStateFactory *state;
 TTypeFactory *type;
 TTimeFactory *time;
 
@@ -78,6 +80,7 @@ void Init()
 
 	time = new TTimeFactory;
 	type = new TTypeFactory;
+	state = new TStateFactory;
 	set = new TSetFactory;
 	rmpart = new TRemovePartitionFactory;
 	rmdir = new TRmdirFactory;

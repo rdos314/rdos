@@ -718,7 +718,10 @@ STRINGTABLE
  1737, "Init floppy and write RDOS bootloader\r\n";
  1738, "\r\n";
  1739, "INITFD \r\n";
- 1740, "'%s' kan inte ha n†gra parametrar\r\n";
+ 1740, "List running threads\r\n";
+ 1741, "\r\n";
+ 1742, "STATE\r\n";
+ 1743, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "1024,1";
  TEXT_ERROR_INVALID_LSWITCH, "1025,1";
  TEXT_ERROR_ILLFORMED_OPTION, "1026,1";
@@ -979,5 +982,6 @@ STRINGTABLE
  TEXT_PING_OK, "1735,1";
  TEXT_PING_TIMEOUT, "1736,1";
  TEXT_CMDHELP_INITFD, "1737,3";
+ TEXT_CMDHELP_STATE, "1740,3";
 }
 

@@ -1588,3 +1588,9 @@ Init floppy and write RDOS bootloader
 
 INITFD 
 .
+
+:TEXT_CMDHELP_STATE
+List running threads
+
+STATE
+.

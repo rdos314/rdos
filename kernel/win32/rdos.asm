@@ -237,6 +237,43 @@ RdosGetThreadHandle	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetThreadState
+;
+;		description:	Get thread state
+;
+;       parameters:     Thread #
+;                       State buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetThreadState
+
+RdosGetThreadState	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;	
+    mov eax,[ebp+8]
+    mov edi,[ebp+12]
+	UserGate get_state_nr
+	jc rgtsFail
+;	
+    mov eax,1
+    jmp rgtsDone
+    
+rgtsFail:
+    xor eax,eax
+
+rgtsDone:
+	pop edi
+	pop ebp
+	ret 8
+	ret
+RdosGetThreadState	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosExec
 ;
 ;		description:	Execute a program
