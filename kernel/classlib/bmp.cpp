@@ -101,7 +101,25 @@ static void Reverse(const char *src, char *dest, int size)
 
 /*##########################################################################
 #
-#   Name       : CreateBmp
+#   Name       : TBmpBitmapDevice::TBmpBitmapDevice
+#
+#   Purpose....: Constructor for TBmpBitmapDevice
+#
+#   In params..: bpp		bits per pixel
+#				 width
+#				 height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBmpBitmapDevice::TBmpBitmapDevice(int bpp, int width, int height)
+  : TBitmapGraphicDevice(bpp, width, height)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TBmpBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a bmp file
 #
@@ -110,12 +128,12 @@ static void Reverse(const char *src, char *dest, int size)
 #   Returns....: bitmap handle
 #
 ##########################################################################*/
-TBitmapGraphicDevice *CreateBmp(const char *FileName)
+TBmpBitmapDevice *TBmpBitmapDevice::Create(const char *FileName)
 {
 	TFile file(FileName);
 	TBitmapFileHeader fh;
 	TBitmapInfoHeader ih;
-	TBitmapGraphicDevice *dev;
+	TBmpBitmapDevice *dev;
 	char *bits;
 	int LineSize;
 	int FileLineSize;
@@ -148,7 +166,7 @@ TBitmapGraphicDevice *CreateBmp(const char *FileName)
 				switch (ih.BitCount)
 				{
 					case 1:
-						dev = new TBitmapGraphicDevice(ih.BitCount,	ih.Width, ih.Height);
+						dev = new TBmpBitmapDevice(ih.BitCount,	ih.Width, ih.Height);
 						FileLineSize = (ih.Width + 7) / 8;
 						FileLineSize = (FileLineSize + 3) & (~3);
 						bits = (char *)dev->GetLinear();
@@ -164,7 +182,7 @@ TBitmapGraphicDevice *CreateBmp(const char *FileName)
 						return dev;
 
 					case 24:
-						dev = new TBitmapGraphicDevice(ih.BitCount,	ih.Width, ih.Height);
+						dev = new TBmpBitmapDevice(ih.BitCount,	ih.Width, ih.Height);
 						FileLineSize = 3 * ih.Width;
 						FileLineSize = (FileLineSize + 3) & (~3);
 						bits = (char *)dev->GetLinear();
@@ -186,7 +204,7 @@ TBitmapGraphicDevice *CreateBmp(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : SaveBmp
+#   Name       : TBmpBitmapDevice::Save
 #
 #   Purpose....: Save a bitmap to a bmp file
 #
@@ -196,7 +214,7 @@ TBitmapGraphicDevice *CreateBmp(const char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
+int TBmpBitmapDevice::Save(const char *FileName)
 {
 	TFile file(FileName, FILE_ATTRIBUTE_ARCHIVE);
 	TBitmapFileHeader fh;
@@ -221,10 +239,10 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 		fh.BitOffset = fh.Size;
 
 		ih.Size = sizeof(ih);
-		ih.Width = bitmap->GetWidth();
-		ih.Height = bitmap->GetHeight();
+		ih.Width = GetWidth();
+		ih.Height = GetHeight();
 		ih.Planes = 1;
-		ih.BitCount = bitmap->GetBpp();
+		ih.BitCount = GetBpp();
 		ih.Compression = 0;
 		ih.ImageSize = 0;
 		ih.XPelsPerMeter = 0;
@@ -237,8 +255,8 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 			case 1:
 				FileLineSize = (ih.Width + 7) / 8;
 				FileLineSize = (FileLineSize + 3) & (~3);
-				bits = (char *)bitmap->GetLinear();
-				LineSize = bitmap->GetLineSize();
+				bits = (char *)GetLinear();
+				LineSize = GetLineSize();
 
 			    ih.ClrUsed = 2;
 				fh.BitOffset += 8;
@@ -255,7 +273,7 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 				delete pal;
 
 				buf = new char[LineSize];
-				for (Line = bitmap->GetHeight() - 1; Line >= 0; Line--)
+				for (Line = GetHeight() - 1; Line >= 0; Line--)
 				{
 					Reverse(bits + Line * LineSize, buf, LineSize);
 					file.Write(buf, FileLineSize);
@@ -267,8 +285,8 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 		    case 24:
 				FileLineSize = 3 * ih.Width;
 				FileLineSize = (FileLineSize + 3) & (~3); 
-				bits = (char *)bitmap->GetLinear();
-				LineSize = bitmap->GetLineSize();
+				bits = (char *)GetLinear();
+				LineSize = GetLineSize();
 
 				ih.ImageSize = FileLineSize * ih.Height;
 				fh.Size += ih.ImageSize;
@@ -276,7 +294,7 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 				file.Write(&fh, sizeof(fh));
 				file.Write(&ih, sizeof(ih));
 
-				for (Line = bitmap->GetHeight() - 1; Line >= 0; Line--)
+				for (Line = GetHeight() - 1; Line >= 0; Line--)
 					file.Write(bits + Line * LineSize, FileLineSize);
 				return TRUE;
 
@@ -284,8 +302,8 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 				ih.BitCount = 24;
 				FileLineSize = 3 * ih.Width;
 				FileLineSize = (FileLineSize + 3) & (~3);
-				bits = (char *)bitmap->GetLinear();
-				LineSize = bitmap->GetLineSize();
+				bits = (char *)GetLinear();
+				LineSize = GetLineSize();
 
 				ih.ImageSize = FileLineSize * ih.Height;
 				fh.Size += ih.ImageSize;
@@ -293,10 +311,10 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 				file.Write(&fh, sizeof(fh));
 				file.Write(&ih, sizeof(ih));
 
-				for (Line = bitmap->GetHeight() - 1; Line >= 0; Line--)
+				for (Line = GetHeight() - 1; Line >= 0; Line--)
 				{
 				    Count = 0;
-				    for (Pixel = 0; Pixel < bitmap->GetWidth(); Pixel++)
+				    for (Pixel = 0; Pixel < GetWidth(); Pixel++)
 				    {
 				        Count += 3;
     					file.Write(bits + Line * LineSize + 4 * Pixel, 3);

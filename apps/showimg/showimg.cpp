@@ -43,7 +43,7 @@ int main(int argc, char **argv)
 		bitmap = CreateJPEG(FileName);
 
 	if (!bitmap && strstr(FileName, ".bmp"))
-		bitmap = CreateBmp(FileName);
+		bitmap = TBmpBitmapDevice::Create(FileName);
 
 	if (!bitmap)
 	{
@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 	{
 		strcpy(FileName, argv[1]);
 		strcat(FileName, ".bmp");
-		bitmap = CreateBmp(FileName);
+		bitmap = TBmpBitmapDevice::Create(FileName);
 	}
 
 	if (!bitmap)
