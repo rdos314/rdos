@@ -48,6 +48,8 @@ public:
 
 class THttpCommand : public THttpParser
 {
+friend class THttpCustomPage;
+
 public:
     THttpCommand(THttpSocketServer *Server);
     THttpCommand(THttpSocketServer *Server, const char *param);
@@ -65,7 +67,9 @@ protected:
 	int Parse(void *arg);
 	int ScanCmdLine(char *line, void *arg);
 
+	TDateTime DecodeTime(THttpOption *opt);
 	THttpOption *FindOption(const char *name);
+	TDateTime GetModifiedSince();
 
     const char *GetErrorText(int ErrorCode);
 

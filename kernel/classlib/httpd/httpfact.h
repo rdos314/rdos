@@ -31,6 +31,7 @@
 #include "httpcmd.h"
 
 class THttpSocketServer;
+class THttpCustomPage;
 
 class THttpCommandFactory
 {
@@ -56,14 +57,21 @@ class THttpSocketServerFactory : public TSocketServerFactory
 public:
 	THttpSocketServerFactory::THttpSocketServerFactory();
 
+	void AddCustomPage(THttpCustomPage *page);
+
 	virtual char *GetThreadName();
 	virtual int GetStackSize();
 	virtual TSocketServer *Create();
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 
+	TString RootDir;
+	int KeepAlive;
+
 protected:
 	void Init();
+
+	THttpCustomPage *FPageList;
 };
 
 #endif

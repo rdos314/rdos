@@ -37,6 +37,11 @@
 
 int THttpCommand::ErrorLevel = 0;
 
+static char MonthNames[12][4] = {
+                                    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+                                };                                    
+
 /*##########################################################################
 #
 #   Name       : THttpArg::THttpArg
@@ -84,7 +89,7 @@ THttpArg::~THttpArg()
 ##########################################################################*/
 THttpCommand::THttpCommand(THttpSocketServer *Server)
 {
-    FServer = Server;
+	 FServer = Server;
     FArgList = 0;
 }
 
@@ -245,7 +250,7 @@ void THttpCommand::Run()
             
             if (!strcmp(ptr, "HTTP/1.0"))
             {
-                FMajor = 1;
+			    FMajor = 1;
                 FMinor = 0;
             }                
             
@@ -258,13 +263,76 @@ void THttpCommand::Run()
     	    ptr = (char *)FArgList->FName.GetData();
     	    while (*ptr == '/')
     	        ptr++;
-        	Execute(ptr);
+
+            THttpCustomPage *cust = FServer->Find(ptr);
+
+            if (cust)
+                cust->Execute(this);
+            else
+            	Execute(ptr);
         }
     }
 
-    opt = FindOption("Accept");
-
 	delete param;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::DecodeTime
+#
+#   Purpose....: Decode a time option
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime THttpCommand::DecodeTime(THttpOption *opt)
+{
+	char str[40];
+	const char *ptr;
+    int year, month, day;
+	int hour, min, sec;
+	int ok;
+
+    if (opt->FArgList && opt->FArgList->FList)
+        ptr = opt->FArgList->FList->FName.GetData();
+    else
+        ptr = 0;
+
+    if (ptr)
+    {
+        ok = (sscanf(ptr, "%d", &day) == 1);
+        if (ok)
+        {
+		    while (*ptr && (isdigit(*ptr) || *ptr == ' '))
+                ptr++;
+
+            memcpy(str, ptr, 3);
+            str[3] = 0;
+
+            for (month = 1; month <= 12; month++)
+                if (!strcmp(str, MonthNames[month - 1]))
+                    break;
+
+            if (month > 12)
+                ok = FALSE;
+        }
+
+        if (ok)
+        {
+            ptr += 3;
+            ok = (sscanf(ptr, "%04d %02d:%02d:%02d", 
+                                &year, &hour, &min, &sec) == 4);
+        }        
+    }    
+    else
+        ok = FALSE;
+
+    if (ok)
+        return TDateTime(year, month, day, hour, min, sec, 0);
+    else
+        return TDateTime();
 }
 
 /*##########################################################################
@@ -294,6 +362,29 @@ THttpOption *THttpCommand::FindOption(const char *name)
     }
 
     return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::GetModifedSince
+#
+#   Purpose....: Get modified since date
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime THttpCommand::GetModifiedSince()
+{
+    int ok;
+    const char *timestr;
+    THttpOption *opt = FindOption("If-Modified-Since");
+
+    if (opt)
+        return DecodeTime(opt);
+    else
+        return TDateTime();
 }
 
 /*##########################################################################
@@ -545,56 +636,7 @@ void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
 	sprintf(str, ", %d ", time.GetDay());
 	FServer->Write(str);
 
-	switch (time.GetMonth())
-	{
-		case 1:
-			FServer->Write("Jan");
-			break;
-
-		case 2:
-			FServer->Write("Feb");
-			break;
-
-		case 3:
-			FServer->Write("Mar");
-			break;
-
-		case 4:
-			FServer->Write("Apr");
-			break;
-
-		case 5:
-			FServer->Write("May");
-			break;
-
-		case 6:
-			FServer->Write("Jun");
-			break;
-
-		case 7:
-			FServer->Write("Jul");
-			break;
-
-		case 8:
-			FServer->Write("Aug");
-			break;
-
-		case 9:
-			FServer->Write("Sep");
-			break;
-
-		case 10:
-			FServer->Write("Oct");
-			break;
-
-		case 11:
-			FServer->Write("Nov");
-			break;
-
-		case 12:
-			FServer->Write("Dec");
-			break;
-	}
+    FServer->Write(MonthNames[time.GetMonth() - 1]);
 
 	sprintf(str, " %04d %02d:%02d:%02d GMT",
 				time.GetYear(),
@@ -624,6 +666,9 @@ const char *THttpCommand::GetErrorText(int ErrorCode)
         case 200:
             return "OK";
 
+        case 304:
+            return "NOT MODIFIED";
+            
         case 404:
             return "NOT FOUND";
 

@@ -3544,8 +3544,8 @@ delete_tcp_connection	Proc far
     test ds:tcp_pending,FLAG_UNLINKED
     jz delete_tcp_mark
 ;        
-    sti
     EnterSection ds:tcp_section
+    sti
 	call DeleteConnection
 	jmp delete_tcp_handle
 
@@ -4713,8 +4713,12 @@ tcp_delete_do:
 	mov ds,bx
 ;	
     test ds:tcp_pending,FLAG_DELETE_USER
-    jz tcp_delete_conn_done
-;    
+    jnz tcp_delete_conn_del
+;
+	LeaveSection ds:tcp_section
+	jmp tcp_delete_conn_done
+
+tcp_delete_conn_del:
 	call DeleteConnection
 
 tcp_delete_conn_done:

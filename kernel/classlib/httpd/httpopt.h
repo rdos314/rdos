@@ -52,6 +52,7 @@ protected:
     void Split(char *s);
     int Parse(void *arg);
     int ScanCmdLine(char *line, void *arg);
+    TDateTime GetModifiedSince();
 
 	TString FName;
 	THttpOption *FList;

@@ -30,6 +30,7 @@
 
 #include "str.h"
 #include "socket.h"
+#include "httpcust.h"
 
 enum InternalErrorCodes
 {
@@ -68,6 +69,8 @@ public:
 //	int Read(char *buf, int size);
     char *ReadLine();
 
+    THttpCustomPage *Find(const char *FileName);
+
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 
     static int IsEmpty(const char *s);
@@ -80,9 +83,10 @@ public:
     static int MatchToken(char **Xp, const char *word, int len);
 
 	TString RootDir;
+	int KeepAlive;
+    THttpCustomPage *FPageList;
 
 protected:
-
     char *FSocketBuf;
     int FBufCount;
     int FBufPos;

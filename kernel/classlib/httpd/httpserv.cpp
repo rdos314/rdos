@@ -250,6 +250,7 @@ THttpSocketServer::THttpSocketServer()
 {
 	OnCommand = 0;
 	FSocketBuf = 0;
+	FPageList = 0;
 }
 
 /*##########################################################################
@@ -283,6 +284,33 @@ THttpSocketServer::~THttpSocketServer()
 void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"HTTP",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::Find
+#
+#   Purpose....: Find custom page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomPage *THttpSocketServer::Find(const char *FileName)
+{
+    TString Name(FileName);
+    THttpCustomPage *curr = FPageList;
+
+    
+    while (curr)
+    {
+        if (curr->FFileName == Name)
+            return curr;
+        else
+            curr = curr->FList;
+    }
+    return 0;    
 }
 
 /*##########################################################################
@@ -421,7 +449,10 @@ char *THttpSocketServer::ReadLine()
 	while (!ptr)
 	{
 		if (FBufPos == 0)
+		{
+		    FBufCount = 0;
 			return 0;
+	    }
 
 		if (FSocket->Poll() == 0)
 		{
@@ -480,7 +511,10 @@ void THttpSocketServer::HandleSocket()
 	    			cmd->Run();
 	    	}
 	    	else
-	    	    break;
+	    	{
+	    	    if (KeepAlive == 0 || !FSocket->WaitForChar(KeepAlive * 1000))
+    	    	    break;
+    	    }
 		}
 	}
 }

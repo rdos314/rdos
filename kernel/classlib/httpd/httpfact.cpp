@@ -34,6 +34,7 @@
 #include "httpcmd.h"
 #include "httpfact.h"
 #include "httpget.h"
+#include "httpcust.h"
 
 #include "path.h"
 
@@ -205,6 +206,7 @@ THttpCommand *THttpCommandFactory::Parse(THttpSocketServer *Server, const char *
 #
 ##########################################################################*/
 THttpSocketServerFactory::THttpSocketServerFactory()
+  : RootDir("c:\\")
 {
 	Init();
 }
@@ -222,7 +224,39 @@ THttpSocketServerFactory::THttpSocketServerFactory()
 ##########################################################################*/
 void THttpSocketServerFactory::Init()
 {
+    KeepAlive = 15;
+    FPageList = 0;
+    
 	THttpGetFactory *get = new THttpGetFactory;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServerFactory::AddCustomPage
+#
+#   Purpose....: Add a custom page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServerFactory::AddCustomPage(THttpCustomPage *page)
+{
+	 THttpCustomPage *curr;
+
+    page->FList = 0;
+	curr = FPageList;
+   
+	if (curr)
+	{
+		while (curr->FList)
+			curr = curr->FList;
+
+		curr->FList = page;
+	}
+	else
+		FPageList = page;    
 }
 
 /*##########################################################################
@@ -273,7 +307,9 @@ TSocketServer *THttpSocketServerFactory::Create()
 	THttpSocketServer *server;
 	server = new THttpSocketServer();
 	server->OnCommand = OnCommand;
-	server->RootDir = "e:\\wwwroot";
+	server->RootDir = RootDir;
+	server->KeepAlive = KeepAlive;
+	server->FPageList = FPageList;
 
 	return server;
 }

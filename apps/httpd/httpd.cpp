@@ -31,6 +31,7 @@
 #include "rdos.h"
 #include "socket.h"
 #include "httpfact.h"
+#include "httpcust.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -38,6 +39,7 @@
 // this one must be globally defined!
 
 THttpSocketServerFactory Factory;
+THttpCustomPage def("index.htm");
 
 /*##################  WriteCommand ##########################
 *   Purpose....: Write command echo	   					      	        #
@@ -61,6 +63,8 @@ void WriteCommand(THttpSocketServer *server, const char *str)
 void cdecl main()
 {
 	Factory.OnCommand = WriteCommand;
+	Factory.RootDir = "d:\\wwwroot";
+	Factory.AddCustomPage(&def);
 	TSocket::Listen(&Factory, 80, 0x4000);
 }
 
