@@ -1084,7 +1084,7 @@ void TSerialDevice::Write(const char *str)
 #   Returns....: character
 #
 ##########################################################################*/
-int TSerialDevice::WaitForChar(int Timeout)
+int TSerialDevice::WaitForChar(long Timeout)
 {
 	TWait *Wait = GetWait();
 

@@ -59,35 +59,36 @@ public:
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);
     
-    int IsOpen();
-	void Open();
-	void Close();
+    virtual int IsOpen();
+	virtual void Open();
+	virtual void Close();
 	
 	void Block();
 	void Unblock();
-	void SetBaudrate(long Baudrate);
-	void SetParity(char Parity);
-	void SetDataBits(int Bits);
-	void SetStopBits(int Bits);
-	long GetBaudrate() const;
-	int GetPort() const;
-	char GetParity() const;
-	int GetDataBits() const;
-	int GetStopBits() const;
-	int GetSendBufferSpace();
-	int GetReceiveBufferSpace();
-	void Clear();
-	void ResetDtr();
-    void SetDtr();
-	void ResetRts();
-	void SetRts();
-	void EnableAutoRts();
-    void DisableAutoRts();
-	void Write(char ch);
-    void Write(const char *buf, int count);
-	void Write(const char *str);
-	char Read();
-	int WaitForChar(int Timeout);
+	
+	virtual void SetBaudrate(long Baudrate);
+	virtual void SetParity(char Parity);
+	virtual void SetDataBits(int Bits);
+	virtual void SetStopBits(int Bits);
+	virtual long GetBaudrate() const;
+	virtual int GetPort() const;
+	virtual char GetParity() const;
+	virtual int GetDataBits() const;
+	virtual int GetStopBits() const;
+	virtual int GetSendBufferSpace();
+	virtual int GetReceiveBufferSpace();
+	virtual void Clear();
+	virtual void ResetDtr();
+    virtual void SetDtr();
+	virtual void ResetRts();
+	virtual void SetRts();
+	virtual void EnableAutoRts();
+    virtual void DisableAutoRts();
+	virtual void Write(char ch);
+    virtual void Write(const char *buf, int count);
+	virtual void Write(const char *str);
+	virtual char Read();
+	virtual int WaitForChar(long Timeout);
 
 	void (*OnChar)(TSerialDevice *Serial, char ch);
 
