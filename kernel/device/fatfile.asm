@@ -590,6 +590,7 @@ PAGE
 get_file_cluster	Proc near
 	pushad
 ;
+    int 3
 	mov ebx,fs:file_block_size
 	neg ebx
 	and edx,ebx

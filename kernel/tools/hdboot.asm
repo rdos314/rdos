@@ -90,9 +90,10 @@ RdosSectors		    DW 0,0
 CurrSector		    DW 0,0
 SectorsPerCyl	    DW 15
 Heads			    DW 2
-DriveNr			    DB 81h
+DriveNr			    DB 80h
 BootSector          DD 0
 FatSector           DD 0
+RootSector          DD 0
 DataSector          DD 0
 SectorsPerFat       DD 0
 CurrentCluster      DD 0
@@ -300,6 +301,207 @@ ReadSector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			NextCluster12
+;
+;		DESCRIPTION:	Find next cluster for FAT12
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster12	PROC near
+	push ebx
+	push cx
+;
+    mov edx,cs:CurrentCluster
+	mov cx,dx
+	add dx,dx
+	add dx,cx
+	mov cx,dx
+	movzx edx,dx
+	shr edx,10
+	add edx,cs:FatSector
+	and cx,3FFh
+	clc
+	rcr cx,1
+	pushf
+	mov eax,edx
+	call ReadSector
+	jnc nc12Locked
+	popf
+	stc
+	jmp nc12Done
+
+nc12Locked:
+	mov bx,cx
+	popf
+	jc nc12High
+	mov cl,[bx]
+	inc bx
+	test bx,1FFh
+	jnz nc12LowOk
+	inc edx
+	mov eax,edx
+	call ReadSector
+	jc nc12Done
+;
+    xor bx,bx
+
+nc12LowOk:
+	mov ch,[bx]
+	and cx,0FFFh
+	jmp nc12Ok
+
+nc12High:
+	mov ch,[bx]
+	and ch,0F0h
+	inc bx
+	test bx,1FFh
+	jnz nc12HighOk
+	inc edx
+	mov eax,edx
+	call ReadSector
+	jc nc12Done
+
+nc12HighOk:
+	mov cl,[bx]
+	rol cx,4
+nc12Ok:
+	movzx edx,cx
+	mov cs:CurrentCluster,edx
+	cmp edx,0FF8h
+	cmc
+
+nc12Done:
+	pop cx
+	pop ebx
+	ret
+NextCluster12	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NextCluster16
+;
+;		DESCRIPTION:	Find next cluster for FAT16
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster16	PROC near
+	push ebx
+	push cx
+;
+    mov edx,cs:CurrentCluster
+	add edx,edx
+	mov cx,dx
+	shr edx,9
+	add edx,cs:FatSector
+	and cx,1FFh
+	mov eax,edx
+	call ReadSector
+	jc nc16Done
+
+	mov bx,cx
+	movzx edx,word ptr [bx]
+	mov cs:CurrentCluster,edx
+	cmp edx,0FFF8h
+	cmc
+
+nc16Done:
+	pop cx
+	pop ebx
+	ret
+NextCluster16	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NextCluster32
+;
+;		DESCRIPTION:	Find next cluster for FAT32
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster32	PROC near
+	push ebx
+	push cx
+;
+    mov edx,cs:CurrentCluster
+	shl edx,2
+	mov cx,dx
+	shr edx,9
+	add edx,cs:FatSector
+	and cx,1FFh
+	mov eax,edx
+	call ReadSector
+	jc nc32Done
+
+	mov bx,cx
+	mov edx,[bx]
+	and edx,0FFFFFFFh
+	mov cs:CurrentCluster,edx
+	cmp edx,0FFFFFF8h
+	cmc
+
+nc32Done:
+	pop cx
+	pop ebx
+	ret
+NextCluster32	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NextCluster
+;
+;		DESCRIPTION:	Find next cluster
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NextCluster	Proc near
+	cmp cs:FatSize,12
+	je nextc12
+;
+	cmp cs:FatSize,16
+	je nextc16
+
+nextc32:
+	call NextCluster32
+	jmp next_cluster_done
+
+nextc16:
+	call NextCluster16
+	jmp next_cluster_done
+
+nextc12:
+	call NextCluster12
+
+next_cluster_done:
+	ret
+NextCluster	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetCurrentSector
+;
+;		DESCRIPTION:	Get current sector
+;
+;       RETURNS:        EDX     Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCurrentSector    Proc near
+    mov edx,cs:CurrentCluster
+	sub edx,2
+	movzx eax,cs:SectorsPerCluster
+	mul edx
+	mov edx,eax
+	add edx,cs:DataSector
+	ret
+GetCurrentSector	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			ScanDir
 ;
 ;		DESCRIPTION:	Scan a directory
@@ -309,6 +511,69 @@ ReadSector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScanDir Proc near
+    push ds
+    push es
+    push eax
+    push cx
+    push bp
+;    
+    mov ax,cs
+    mov es,ax
+    mov ax,1000h
+    mov ds,ax
+
+sdClusterLoop:
+    call GetCurrentSector
+    mov eax,edx
+    mov cx,cs:SectorsPerCluster    
+
+sdSectorLoop:
+    xor si,si
+    call ReadSector
+
+sdLoop:
+    push cx
+    push si
+    push di    
+    mov cx,11
+    repz cmps byte ptr [si],es:[di]    
+    pop di
+    pop si
+    pop cx
+    jz sdFound
+;
+    add si,20h
+    test si,1FFh
+    jnz sdLoop
+;
+    inc eax
+    loop sdSectorLoop
+;
+    call NextCluster
+    jnc sdClusterLoop
+    jmp sdDone
+
+sdFound:
+    movzx edx,ds:[si].fat_cluster
+    cmp cs:FatSize,32
+    jnz sdClustOk
+;
+    movzx eax,ds:[si].fat_cluster_hi
+    shl eax,16
+    or edx,eax
+
+sdClustOk:       
+    mov cs:CurrentCluster,edx
+    mov eax,ds:[si].fat_file_size
+    mov cs:ImageSize,eax
+    clc
+
+sdDone:
+    pop bp
+    pop cx
+    pop eax
+    pop es
+    pop ds       
     ret
 ScanDir Endp
 
@@ -337,7 +602,7 @@ ScanRootDir Proc near
     mov ds,ax
     xor si,si
     mov cx,cs:RootEntries
-    mov eax,cs:DataSector
+    mov eax,cs:RootSector
     call ReadSector
 
 srdLoop:
@@ -579,26 +844,49 @@ MoveData	Endp
 LoadAdapter	Proc near
 	push ds
 	push esi
-load_adapter_loop:
-	push edi
-	mov dx,cs:CurrSector+2
-	mov ax,cs:CurrSector
-	call ReadSector
-	pop edi
-	jc load_adapter_error
+;    
+    mov ax,cs
+    mov es,ax
+    mov ax,1000h
+    mov ds,ax
+
+laClusterLoop:
+    call GetCurrentSector
+    mov eax,edx
+    push eax
+    pop bx
+    pop bx
+    mov cx,cs:SectorsPerCluster    
+
+laSectorLoop:
+    xor si,si
+    call ReadSector
+    jc laError
 ;
+    push eax
+    push cx
 	mov esi,10000h
     mov ecx,512
 	call MoveData
 	add edi,ecx
-	add dword ptr cs:CurrSector,1
-	sub dword ptr cs:RdosSectors,1
-	jnc load_adapter_loop
-	jmp load_adapter_done
-load_adapter_error:
+	pop cx
+	pop eax
+;
+    sub cs:ImageSize,200h
+    jbe laDone
+;
+    inc eax
+    loop laSectorLoop
+;
+    call NextCluster
+    jnc laClusterLoop
+    jmp laDone
+    
+laError:
 	mov si,OFFSET ReadError
 	call WriteAsciiz
-load_adapter_done:
+	
+laDone:
 	pop esi
 	pop ds
 	ret	
@@ -805,6 +1093,15 @@ boot_fat_adv_loop:
     sub es:boot_fats,1
     jnz boot_fat_adv_loop
 ;
+    cmp cs:FatSize,32
+    je boot_data_sector_ok
+;
+    mov cs:RootSector,eax
+    movzx ecx,es:boot_root_dirs
+    shr ecx,4
+    add eax,ecx
+
+boot_data_sector_ok:    
     mov cs:DataSector,eax
     mov eax,es:boot_root_cluster
     mov cs:CurrentCluster,eax
@@ -819,7 +1116,6 @@ boot_fat_adv_loop:
     call WriteAsciiz
     
 LoadStart:
-    int 3
 	mov si,OFFSET LoadMsg
 	call WriteAsciiz
 	call GateA20
