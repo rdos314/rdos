@@ -1,0 +1,1183 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; MEMMAP.ASM
+; Memory-mapped file module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME memmap
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+GateSize = 16
+
+INCLUDE user.def
+INCLUDE virt.def
+INCLUDE os.def
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE user.inc
+INCLUDE virt.inc
+INCLUDE os.inc
+INCLUDE user.inc
+INCLUDE driver.def
+INCLUDE system.inc
+INCLUDE fs.inc
+
+memmap_seg		STRUC
+
+memmap_next		DW ?
+memmap_sel		DW ?
+view_offset		DD ?
+view_base		DD ?
+view_size		DD ?
+
+memmap_seg		ENDS
+
+mapped_struc	STRUC
+
+map_prev		DW ?
+map_next		DW ?
+map_section		section_typ <>
+map_owner		DW ?
+map_size		DD ?
+map_base		DD ?
+map_users		DW ?
+map_name		DB ?
+
+mapped_struc	ENDS
+
+handle_to_offset	MACRO reg
+	shl reg,4
+	add reg,OFFSET handle_list
+					ENDM
+
+offset_to_handle	MACRO reg
+	sub reg,OFFSET handle_list
+	shr reg,4
+					ENDM
+
+	.386p
+
+code	SEGMENT byte public use16 'CODE'
+
+	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateUnnamed
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;
+;		RETURNS:		ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUnnamed	Proc near
+	push ax
+	push edx
+;
+	push eax
+	mov ax,fs_data_sel
+	mov ds,ax
+	mov eax,OFFSET map_name
+	AllocateSmallGlobalMem
+	pop eax
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:map_size,eax
+	AllocateBigLinear
+	mov es:map_base,edx
+	mov es:map_users,1
+	InitSection es:map_section
+	EnterSection es:map_section
+	mov es:map_owner, OFFSET map_list
+;
+	EnterSection ds:sys_section
+	mov ax,ds:map_list
+	or ax,ax
+	je create_unnamed_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:map_prev
+	mov ds:map_prev,es
+	mov ds,si
+	mov ds:map_next,es
+	mov es:map_next,ax
+	mov es:map_prev,si
+	pop si
+	pop ds
+	jmp create_unnamed_leave
+
+create_unnamed_empty:
+	mov es:map_next,es
+	mov es:map_prev,es
+	mov ds:map_list,es
+
+create_unnamed_leave:
+	LeaveSection ds:sys_section
+;
+	pop edx
+	pop ax
+	ret
+CreateUnnamed	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateNamed
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						ES:EDI		Name
+;
+;		RETURNS:		ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateNamed	Proc near
+	push eax
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push eax
+	push es
+	push edi
+	xor al,al
+	mov ecx,100h
+	repnz scas byte ptr es:[edi]
+	pop esi
+	pop ds
+	mov eax,100h
+	sub eax,ecx
+	xchg eax,ecx
+	mov eax,OFFSET map_name
+	add eax,ecx
+	AllocateSmallGlobalMem
+	mov edi,OFFSET map_name
+	rep movs byte ptr es:[edi],[esi]
+	pop eax
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:map_size,eax
+	AllocateBigLinear
+	mov es:map_base,edx
+	mov es:map_users,1
+	InitSection es:map_section
+	EnterSection es:map_section
+	mov es:map_owner, OFFSET map_named_list
+;
+	mov ax,fs_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	mov ax,ds:map_named_list
+	or ax,ax
+	je create_named_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:map_prev
+	mov ds:map_prev,es
+	mov ds,si
+	mov ds:map_next,es
+	mov es:map_next,ax
+	mov es:map_prev,si
+	pop si
+	pop ds
+	jmp create_named_leave
+
+create_named_empty:
+	mov es:map_next,es
+	mov es:map_prev,es
+	mov ds:map_named_list,es
+
+create_named_leave:
+	LeaveSection ds:sys_section
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop eax
+	ret
+CreateNamed	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateNamedFile
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						BX			File handle
+;						ES:EDI		Name
+;
+;		RETURNS:		ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateNamedFile	Proc near
+	push eax
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push eax
+	push es
+	push edi
+	xor al,al
+	mov ecx,100h
+	repnz scas byte ptr es:[edi]
+	pop esi
+	pop ds
+	mov eax,100h
+	sub eax,ecx
+	xchg eax,ecx
+	mov eax,OFFSET map_name
+	add eax,ecx
+	AllocateSmallGlobalMem
+	mov edi,OFFSET map_name
+	rep movs byte ptr es:[edi],[esi]
+	pop eax
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:map_size,eax
+	AllocateBigLinear
+	mov es:map_base,edx
+	mov es:map_users,1
+	InitSection es:map_section
+	EnterSection es:map_section
+	mov es:map_owner, OFFSET map_named_list
+;
+	mov ax,fs_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	mov ax,ds:map_named_list
+	or ax,ax
+	je create_named_file_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:map_prev
+	mov ds:map_prev,es
+	mov ds,si
+	mov ds:map_next,es
+	mov es:map_next,ax
+	mov es:map_prev,si
+	pop si
+	pop ds
+	jmp create_named_file_leave
+
+create_named_file_empty:
+	mov es:map_next,es
+	mov es:map_prev,es
+	mov ds:map_named_list,es
+
+create_named_file_leave:
+	LeaveSection ds:sys_section
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop eax
+	ret
+CreateNamedFile	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseMapped
+;
+;		DESCRIPTION:	ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseMapped	Proc near
+	sub es:map_users,1
+	jnz close_mapped_done
+;
+	push ax
+	push si
+	mov ax,fs_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	mov si,es:map_owner
+	mov [si],es
+	push ds
+	push si
+	mov ax,es:p_next
+	cmp ax,[si]
+	mov [si],ax
+	mov si,es:p_prev
+	mov ds,ax
+	mov ds:p_prev,si
+	mov ds,si
+	mov ds:p_next,ax
+	pop si
+	pop ds
+	jne close_mapped_leave
+;
+	mov word ptr [si],0
+
+close_mapped_leave:
+	LeaveSection ds:sys_section
+;
+	mov ecx,es:map_size
+	mov edx,es:map_base
+	FreeLinear
+	FreeMem
+	pop si
+	pop ax
+
+close_mapped_done:
+	ret
+CloseMapped	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FindNamed
+;
+;		DESCRIPTION:	ES:EDI		Name
+;
+;		RETURNS:		ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindNamed	Proc near
+	push ax
+	push ebx
+	push dx
+	push si
+;
+	mov ax,fs_data_sel
+	mov ds,ax
+	EnterSection ds:sys_section
+	mov ax,ds:map_named_list
+	or ax,ax
+	je find_named_fail
+;
+	mov dx,ax
+
+find_named_list:
+	mov ds,ax
+	mov si,OFFSET map_name
+	mov ebx,edi
+
+find_named_loop:
+	lodsb
+	mov ah,es:[ebx]
+	inc ebx
+	or al,al
+	jnz find_named_match
+;
+	or ah,ah
+	jz find_named_ok
+	jmp find_named_next
+
+find_named_match:
+	cmp al,ah
+	je find_named_loop
+
+find_named_next:
+	mov ax,ds:map_next
+	cmp ax,dx
+	jne find_named_list
+
+find_named_fail:
+	mov ax,fs_data_sel
+	mov ds,ax
+	LeaveSection ds:sys_section
+	stc
+	jmp find_named_done
+
+find_named_ok:
+	mov dx,ds
+	mov es,dx
+	inc es:map_users
+	mov ax,fs_data_sel
+	mov ds,ax
+	LeaveSection ds:sys_section
+	clc
+
+find_named_done:
+	pop si
+	pop dx
+	pop ebx
+	pop ax
+	ret
+FindNamed	Endp
+	
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateHandle
+;
+;		DESCRIPTION:	ES			File mapping selector
+;
+;		RETURNS:		BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateHandle	Proc near
+	push ax
+	mov ax,fs_process_sel
+	mov ds,ax
+	cli
+	mov bx,ds:handle_free_list
+	mov ax,[bx]
+	mov ds:handle_free_list,ax
+	sti
+	mov ds:[bx].memmap_sel,es
+	mov ds:[bx].view_offset,0
+	mov ds:[bx].view_base,0
+	mov ds:[bx].view_size,0
+	offset_to_handle bx
+	pop ax
+	ret
+CreateHandle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateMapping
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;
+;		RETURNS:		BX			File mapping handle
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_mapping_name DB 'Create Mapping',0
+
+create_mapping	Proc far
+	push ds
+	push es
+	call CreateUnnamed
+	call CreateHandle
+	mov ax,es
+	mov ds,ax
+	LeaveSection ds:map_section
+	clc
+	pop es
+	pop ds
+	retf32
+create_mapping	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateNamedMapping
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						ES;(E)DI	Name of file mapping
+;
+;		RETURNS:		BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_named_mapping_name DB 'Create Named Mapping',0
+
+create_named_mapping	Proc near
+	push ds
+	push es
+	call FindNamed
+	jnc create_named_ok
+;
+	call CreateNamed
+	push ds
+	mov ax,es
+	mov ds,ax
+	LeaveSection ds:map_section
+	pop ds
+
+create_named_ok:
+	call CreateHandle
+	clc
+	pop es
+	pop ds
+	ret
+create_named_mapping	Endp
+
+create_named_mapping32	Proc far
+	call create_named_mapping
+	retf32
+create_named_mapping32	Endp
+
+create_named_mapping16	Proc far
+	push edi
+	movzx edi,di
+	call create_named_mapping
+	pop edi
+	ret
+create_named_mapping16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CreateNamedFileMapping
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						BX			File handle to map
+;						ES:(E)DI	Name of file mapping
+;
+;		RETURNS:		BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_named_file_mapping_name DB 'Create Named File Mapping',0
+
+create_named_file_mapping	Proc near
+	push ds
+	push es
+	call FindNamed
+	jnc create_named_file_ok
+;
+	call CreateNamedFile
+	push ds
+	mov ax,es
+	mov ds,ax
+	LeaveSection ds:map_section
+	pop ds
+
+create_named_file_ok:
+	call CreateHandle
+	clc
+	pop es
+	pop ds
+	ret
+create_named_file_mapping	Endp
+
+create_named_file_mapping32	Proc far
+	call create_named_file_mapping
+	retf32
+create_named_file_mapping32	Endp
+
+create_named_file_mapping16	Proc far
+	push edi
+	movzx edi,di
+	call create_named_file_mapping
+	pop edi
+	ret
+create_named_file_mapping16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			OpenNamedMapping
+;
+;		DESCRIPTION:	ES;(E)DI	Name of file mapping
+;
+;		RETURNS:		BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_named_mapping_name DB 'Open Named Mapping',0
+
+open_named_mapping	Proc near
+	push ds
+	push es
+	call FindNamed
+	jc open_named_done
+	call CreateHandle
+	clc
+open_named_done:
+	pop es
+	pop ds
+	ret
+open_named_mapping	Endp
+
+open_named_mapping32	Proc far
+	call open_named_mapping
+	retf32
+open_named_mapping32	Endp
+
+open_named_mapping16	Proc far
+	push edi
+	movzx edi,di
+	call open_named_mapping
+	pop edi
+	ret
+open_named_mapping16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SyncMapping
+;
+;		DESCRIPTION:	BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sync_mapping_name DB 'Sync Mapping',0
+
+sync_mapping	Proc far
+	retf32
+sync_mapping	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseMapping
+;
+;		DESCRIPTION:	BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_mapping_name DB 'Close Mapping',0
+
+close_mapping	Proc far
+	push ds
+	push ax
+	cmp bx,map_num
+	jc cfm_ok
+;
+	stc
+	jmp cfm_done
+
+cfm_ok:
+	handle_to_offset bx
+	mov ax,fs_process_sel
+	mov ds,ax
+	xor ax,ax
+	xchg ax,ds:[bx].memmap_sel
+	or ax,ax
+	jz cfm_done
+;
+	mov es,ax
+	call CloseMapped
+	mov ax,fs_process_sel
+	mov ds,ax
+	cli
+	mov ax,ds:handle_free_list
+	mov [bx],ax
+	mov ds:handle_free_list,bx
+	sti
+
+cfm_done:
+	xor bx,bx
+	pop ax
+	pop ds
+	retf32
+close_mapping	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			map_to_user
+;
+;		DESCRIPTION:	Map page from object to user memory
+;
+;		PARAMETERS:		BX			Handle offset
+;						EAX			Offset within object
+;						EDX			Pagefault address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_to_user	Proc near
+	push ds
+	push es
+	push eax
+	push ebx
+	push edx
+;
+	add eax,ds:[bx].view_offset
+	and ax,0F000h
+	and dx,0F000h
+	mov ds,ds:[bx].memmap_sel
+	EnterSection ds:map_section
+	mov ebx,ds:map_base
+	add ebx,eax
+;
+	mov ax,process_page_sel
+	mov es,ax
+	shr ebx,10
+	shr edx,10
+;
+	mov eax,es:[ebx]
+	test al,1
+	jnz map_to_user_do
+;
+	push es
+	push ecx
+	push edi
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,ebx
+	shl edi,10
+	xor eax,eax
+	mov ecx,400h
+	rep stos dword ptr es:[edi]	
+	pop edi
+	pop ecx
+	pop es
+	mov eax,es:[ebx]
+
+map_to_user_do:
+	or ax,807h
+	mov es:[edx],eax
+	LeaveSection ds:map_section
+;
+	pop edx
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+map_to_user	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MapFault
+;
+;		DESCRIPTION:	Page-fault handler for memory mapped object
+;
+;		PARAMETERS:		EDX		Page fault address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_fault	Proc far
+	push ds
+	push eax
+	push bx
+	push cx
+	push edx
+;
+	mov ax,fs_process_sel
+	mov ds,ax
+	mov cx,map_num
+	mov bx,OFFSET handle_list
+
+map_fault_loop:
+	mov ax,ds:[bx].memmap_sel
+	or ax,ax
+	jz map_fault_find_next
+;
+	mov eax,ds:[bx].view_size
+	or eax,eax
+	jz map_fault_find_next
+;
+	mov eax,edx	
+	sub eax,ds:[bx].view_base
+	jc map_fault_find_next
+;
+	cmp eax,ds:[bx].view_size
+	jnc map_fault_find_next
+;
+	call map_to_user
+	jmp map_fault_done
+
+map_fault_find_next:
+	add bx,16
+	loop map_fault_loop
+;
+	int 3
+
+map_fault_done:
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	pop ds
+	ret
+map_fault	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MapView
+;
+;		DESCRIPTION:	BX			File mapping handle
+;						EAX			Offset
+;						(E)CX		Size
+;						ES:(E)DI	Address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_view_name DB 'Map View',0
+
+map_view	Proc near
+	push ds
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+	push di
+;
+	cmp bx,map_num
+	jc mfm_ok
+;
+	stc
+	jmp mfm_done
+
+mfm_ok:
+	handle_to_offset bx
+	mov dx,fs_process_sel
+	mov ds,dx
+	mov dx,ds:[bx].memmap_sel
+	or dx,dx
+	stc
+	jz mfm_done
+;
+	mov edx,ds:[bx].view_size
+	or edx,edx
+	stc 
+	jnz mfm_done
+;
+	mov ds:[bx].view_offset,eax
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	mov eax,ecx
+	push bx
+	mov bx,es
+	GetSelectorBaseSize
+	pop bx
+	jc mfm_done
+;
+	cmp ecx,eax
+	jc mfm_done
+;
+	add edx,edi
+	test dx,0FFFh
+	stc
+	jnz mfm_done
+;
+	mov ecx,eax
+	sub eax,ds:[bx].view_offset
+	jc mfm_done
+;
+	mov es,ds:[bx].memmap_sel
+	cmp es:map_size,eax
+	jc mfm_done
+;
+	mov ds:[bx].view_base,edx
+	mov ds:[bx].view_size,ecx
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET map_fault
+	mov eax,ecx
+	HookPage
+	clc
+
+mfm_done:
+	pop di
+	pop edx
+	pop ecx
+	pop bx
+	pop eax
+	pop es
+	pop ds
+	ret
+map_view	Endp
+
+map_view32	Proc far
+	call map_view
+	retf32
+map_view32	Endp
+
+map_view16	Proc far
+	push ecx
+	push edi
+	movzx ecx,cx
+	movzx edi,di
+	call map_view
+	pop edi
+	pop ecx
+	ret
+map_view16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UnmapView
+;
+;		DESCRIPTION:	BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unmap_view_name DB 'Unmap View',0
+
+unmap_view	Proc far
+	push ds
+	push eax
+	push bx
+	push ecx
+	push edx
+;
+	cmp bx,map_num
+	jc ufm_ok
+;
+	stc
+	jmp ufm_done
+
+ufm_ok:
+	handle_to_offset bx
+	mov dx,fs_process_sel
+	mov ds,dx
+	mov dx,ds:[bx].memmap_sel
+	or dx,dx
+	stc
+	jz ufm_done
+;
+	mov edx,ds:[bx].view_size
+	or edx,edx
+	stc 
+	jz ufm_done
+;
+	xor ecx,ecx
+	xchg ecx,ds:[bx].view_size
+	mov edx,ds:[bx].view_base
+;
+	mov ax,process_page_sel
+	mov ds,ax
+;
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
+	shr edx,10
+	shr ecx,12
+	mov eax,2
+
+ufm_loop:
+	test word ptr [edx],800h
+	jz ufm_next
+;
+	mov [edx],eax
+
+ufm_next:
+	add edx,4
+	loop ufm_loop
+;
+	clc
+
+ufm_done:
+	pop edx
+	pop ecx
+	pop bx
+	pop eax
+	pop ds
+	retf32
+unmap_view	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Open app
+;
+;		DESCRIPTION:	Init per-process data
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_memmap_process
+
+init_memmap_process	PROC near
+	mov ax,fs_process_sel
+	mov es,ax
+;
+	mov cx,map_num
+	mov di,16*map_num + OFFSET handle_list
+init_handle_tab_loop:
+	mov ax,di
+	sub di,16
+	mov es:[di].memmap_next,ax
+	mov es:[di].memmap_sel,0
+	loop init_handle_tab_loop
+	mov es:handle_free_list,di
+	ret
+init_memmap_process	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Close app
+;
+;		DESCRIPTION:	Init per-process data
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public close_memmap_app
+
+close_memmap_app	PROC near
+	mov ax,fs_process_sel
+	mov es,ax
+	ret
+close_memmap_app	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Init
+;
+;		DESCRIPTION:	Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_memmap
+
+init_memmap	PROC near
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET create_mapping
+	mov di,OFFSET create_mapping_name
+	xor cl,cl
+	mov ax,create_mapping_nr
+	RegisterUserGate
+;
+	mov si,OFFSET create_named_mapping16
+	mov di,OFFSET create_named_mapping_name
+	xor cl,cl
+	mov ax,create_named_mapping_nr
+	RegisterUserGate16
+;
+	mov si,OFFSET create_named_mapping32
+	mov di,OFFSET create_named_mapping_name
+	xor cl,cl
+	mov ax,create_named_mapping_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET create_named_file_mapping16
+	mov di,OFFSET create_named_file_mapping_name
+	xor cl,cl
+	mov ax,create_named_file_mapping_nr
+	RegisterUserGate16
+;
+	mov si,OFFSET create_named_file_mapping32
+	mov di,OFFSET create_named_file_mapping_name
+	xor cl,cl
+	mov ax,create_named_file_mapping_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET open_named_mapping16
+	mov di,OFFSET open_named_mapping_name
+	xor cl,cl
+	mov ax,open_named_mapping_nr
+	RegisterUserGate16
+;
+	mov si,OFFSET open_named_mapping32
+	mov di,OFFSET open_named_mapping_name
+	xor cl,cl
+	mov ax,open_named_mapping_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET sync_mapping
+	mov di,OFFSET sync_mapping_name
+	xor cl,cl
+	mov ax,sync_mapping_nr
+	RegisterUserGate
+;
+	mov si,OFFSET close_mapping
+	mov di,OFFSET close_mapping_name
+	xor cl,cl
+	mov ax,close_mapping_nr
+	RegisterUserGate
+;
+	mov si,OFFSET map_view16
+	mov di,OFFSET map_view_name
+	xor cl,cl
+	mov ax,map_view_nr
+	RegisterUserGate16
+;
+	mov si,OFFSET map_view32
+	mov di,OFFSET map_view_name
+	xor cl,cl
+	mov ax,map_view_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET unmap_view
+	mov di,OFFSET unmap_view_name
+	xor cl,cl
+	mov ax,unmap_view_nr
+	RegisterUserGate
+;
+	mov ax,fs_data_sel
+	mov ds,ax
+	mov ds:map_list,0
+	mov ds:map_named_list,0
+	InitSection ds:sys_section
+	ret
+init_memmap	ENDP
+
+code	ENDS
+
+	END
