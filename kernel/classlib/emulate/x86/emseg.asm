@@ -368,11 +368,13 @@ EmulateError	Endp
 	public DivFault
 
 DivFault	Proc near
-	int 3
+;	int 3
 	ResetFault
+	or [ebp].em_flags,triple_faulted
+	or [ebp].em_debug,DEBUG_BREAK
 	xor cx,cx
 	mov al,0
-	call ExcFar	
+;	call ExcFar	
 	ret
 DivFault	Endp
 
@@ -1098,6 +1100,7 @@ TransferHigherVm:
 ;
 	pop eax
 	and eax,NOT EFLAGS_UNDEF
+	or al,2
 	mov [ebp].reg_eflags,eax
 ;	
 	pop ax
@@ -1221,6 +1224,7 @@ HigherLoadIt:
 	jc TransferHigherFlagsDone
 ;
 	and ecx,NOT EFLAGS_UNDEF
+	or cl,2
 	mov [ebp].reg_eflags,ecx
 
 TransferHigherFlagsDone:
@@ -2838,6 +2842,8 @@ IretFarPm16:
 IretFarReal16:
 	call TransferReal
 	call PopWord
+	and eax,NOT EFLAGS_UNDEF
+	or al,2
 	mov word ptr [ebp].reg_eflags,ax
 	ret
 IretFar16	Endp

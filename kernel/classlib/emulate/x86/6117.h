@@ -48,6 +48,8 @@ class T6117
 		void DefineDram(int Bank, unsigned long Size);
 		void DefineRom(unsigned long Size, char *FileName);
 
+		void Show();
+
 	protected:
 		char ReadDram(unsigned long Address);
 		void WriteDram(unsigned long Address, char Data);

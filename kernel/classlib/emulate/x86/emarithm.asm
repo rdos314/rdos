@@ -2618,13 +2618,13 @@ DivByte	Proc near
 	cmp ah,bl
 	jae DivFault
 ;
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
+;	mov ah,byte ptr [ebp].reg_eflags
+;	sahf
 	mov ax,word ptr [ebp].reg_eax
 	div bl
 	mov cx,ax
-	lahf
-	mov byte ptr [ebp].reg_eflags,ah
+;	lahf
+;	mov byte ptr [ebp].reg_eflags,ah
 	mov word ptr [ebp].reg_eax,cx
 	ret
 DivByte	Endp
@@ -2645,13 +2645,13 @@ DivWord	Proc near
 	cmp dx,bx
 	jae DivFault
 ;
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
+;	mov ah,byte ptr [ebp].reg_eflags
+;	sahf
 	mov ax,word ptr [ebp].reg_eax
 	div bx
 	mov cx,ax
-	lahf
-	mov byte ptr [ebp].reg_eflags,ah
+;	lahf
+;	mov byte ptr [ebp].reg_eflags,ah
 	mov word ptr [ebp].reg_eax,cx
 	mov word ptr [ebp].reg_edx,dx
 	ret
@@ -2673,13 +2673,13 @@ DivDword	Proc near
 	cmp edx,ebx
 	jae DivFault
 ;
-	mov ah,byte ptr [ebp].reg_eflags
-	sahf
+;	mov ah,byte ptr [ebp].reg_eflags
+;	sahf
 	mov eax,[ebp].reg_eax
 	div ebx
 	mov ecx,eax
-	lahf
-	mov byte ptr [ebp].reg_eflags,ah
+;	lahf
+;	mov byte ptr [ebp].reg_eflags,ah
 	mov [ebp].reg_eax,ecx
 	mov [ebp].reg_edx,edx
 	ret

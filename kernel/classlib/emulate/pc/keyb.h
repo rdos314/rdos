@@ -38,6 +38,8 @@ class TKeyb
 
 		void SetRefresh(int Value);
 
+		int GetA20Gate();
+
 	protected:
 
 	private:
@@ -46,6 +48,8 @@ class TKeyb
 		int FEnabled;
 		int FLast;
 		int FRefresh;
+		int FWriteOut;
+		char FOut;
 };
 
 #endif

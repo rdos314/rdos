@@ -1729,6 +1729,8 @@ EmPopfPm:
 	jc EmPopfDone
 
 EmPopfDo:
+	and eax,NOT EFLAGS_UNDEF
+	or al,2
 	mov word ptr [ebp].reg_eflags,ax
 
 EmPopfDone:
@@ -1758,6 +1760,7 @@ EmPopfdPm:
 
 EmPopfdDo:
 	and eax,NOT EFLAGS_UNDEF
+	or al,2
 	mov [ebp].reg_eflags,eax
 
 EmPopfdDone:
@@ -1794,6 +1797,8 @@ EmLahf	endp
 
 EmSahf	proc near
 	mov al,byte ptr [ebp].reg_eax+1
+	and al,NOT 28h
+	or al,2
 	mov byte ptr [ebp].reg_eflags,al
 	ret
 EmSahf	endp

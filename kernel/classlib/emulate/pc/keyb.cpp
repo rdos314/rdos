@@ -43,6 +43,8 @@ TKeyb::TKeyb()
 	FLast = 0;
 	FHasData = FALSE;
 	FEnabled = FALSE;
+	FWriteOut = FALSE;
+	FOut = 1;
 }
 
 /*##################  TKeyb::Out  ###############
@@ -58,6 +60,12 @@ void TKeyb::Out(int Port, char Value)
 	{
 		case 0:
 			FLast = 0;
+			if (FWriteOut)
+			{
+				FOut = Value;
+				FWriteOut = FALSE;
+				GetA20Gate();
+			}
 			break;
 
 		case 1:
@@ -65,7 +73,7 @@ void TKeyb::Out(int Port, char Value)
 
 		case 4:
 			FLast = 4;
-			switch (Value)
+			switch ((unsigned char)Value)
 			{
 				case 0xAA:
 					FHasData = TRUE;
@@ -82,7 +90,14 @@ void TKeyb::Out(int Port, char Value)
 
 				case 0xC0:
 					FHasData = TRUE;
-					FData = 0x70;
+					FData = 0x54;
+					break;
+
+				case 0xD1:
+					FWriteOut = TRUE;
+					break;
+
+				default:
 					break;
 			}
 			break;
@@ -149,3 +164,14 @@ void TKeyb::SetRefresh(int Value)
 	FRefresh = Value;
 }
  
+/*##################  TKeyb::GetA20Gate  ###############
+*   Purpose....: Get A20 gate state								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int TKeyb::GetA20Gate()
+{
+	return (FOut & 0x2) >> 1;
+}

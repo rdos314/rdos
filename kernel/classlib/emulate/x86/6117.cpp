@@ -26,6 +26,7 @@
 *##########################################################################*/
 
 #include <windows.h>
+#include <stdio.h>
 #include "6117.h"
 
 #define FALSE 0
@@ -697,6 +698,10 @@ char T6117::ReadDram(unsigned long Address)
 	if (FData[0x3C] & 2)
 		return 0xFF;
 
+	if (Address & 0x100000)
+		if (FKeyb->GetA20Gate() == 0)
+			Address = Address & 0xFFEFFFFF;
+
 	if (FDramConfigured)
 	{
 		if (Address < FDramSize)
@@ -734,6 +739,10 @@ void T6117::WriteDram(unsigned long Address, char Data)
 
 	if (FData[0x3C] & 2)
 		return;
+
+	if (Address & 0x100000)
+		if (FKeyb->GetA20Gate() == 0)
+			Address = Address & 0xFFEFFFFF;
 
 	if (FDramConfigured)
 	{
@@ -945,9 +954,8 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
-					_asm int 3
 					UserBreak(Cpu);
-					return;
+					break;
 				}
 
 			case 0xF8000:
@@ -955,12 +963,32 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
-					_asm int 3
 					UserBreak(Cpu);
-					return;
+					break;
 				}
 		}
 	}
 
 	WriteDram(Address, Data);
+}
+
+/*##################  T6117::Show  ###############
+*   Purpose....: Show settings									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void T6117::Show()
+{
+	int i;
+	int j;
+
+	for (i = 0; i < 0x10; i++)
+	{
+		printf("%02hX: ", 8 * i);
+		for (j = 0; j < 8; j++)
+			printf("%04hX ", FData[8 * i + j]);
+		printf("\r\n");
+	}	
 }
