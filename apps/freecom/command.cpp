@@ -43,37 +43,44 @@ TSysSetFactory *sysset;
 TTypeFactory *type;
 TTimeFactory *time;
 
-#include "list.h"
+#include "strlist.h"
 
 void TestList()
 {
-	TList list1;
-	TList list2;
-	TList list3;
-	TListNode node;
+	TStringList list1;
+	TStringList list2;
+	TStringList list3;
+	TStringList list4;
+	TString node;
 
-	list1.AddFirst(TListNode("abc", 3));
-	list1.AddLast(TListNode("cde", 3));
-	list1.AddFirst(TListNode("ferg", 4));
+	list1.AddFirst(TString("abc"));
+	list1.AddLast(TString("cde"));
+	list1.AddFirst(TString("ferg"));
 
-	list2.AddFirst(TListNode("x", 1));
-	list2.AddFirst(TListNode("abc", 3));
-	list2.AddLast(TListNode("y", 1));
+	list2.AddFirst(TString("x"));
+	list2.AddFirst(TString("abc"));
+	list2.AddLast(TString("y"));
 
-	list3 = list1 & list2;
+	list4.AddFirst(TString("x"));
+	list4.AddFirst(TString("z"));
 
-	list3.AddFirst(TListNode("abc", 3));
+	list3 = list1 ^ list2;
+
+	list3.AddFirst(TString("abc"));
 	list3.RemoveDuplicates();
 
-	list3.GotoFirst();
+	list3 ^= list4;
+
+	list3.GotoLast();
 	node = list3.Get();
-	while (node.IsValid())
+	while (node.GetSize())
 	{
-		list3.GotoNext();
+		list3.GotoPrev();
 		node = list3.Get();
 	}
 
-	node = list3[3];
+	list3.Goto(3);
+	node = list3.Get();
 	list1 = list3;
 }
 

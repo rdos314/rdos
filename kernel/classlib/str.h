@@ -29,16 +29,9 @@
 #define _STRING_H
 
 #include <stdarg.h>
+#include "shareobj.h"
 
-class TStringData
-{
-friend class TString;
-    int FRefs;
-    int FDataSize;
-    int FAllocSize;
-};
-
-class TString
+class TString : public TShareObject
 {
 public:
     TString();
@@ -73,7 +66,7 @@ public:
 	void Append(char ch);
 	void Append(const char *str);
 
-	void ConcatCopy(int len1, const char *str1, int len2, const char *str2);
+	void ConcatCopy(const char *str1, int len1, const char *str2, int len2);
 
 protected:
     virtual int Compare(const TString &str) const;
@@ -84,19 +77,8 @@ protected:
 	void Pad(int count, const char *str);
 	int Number(long num, int base, int size, int precision, int type);
 
-	void Init();
-	void AllocBuffer(int size);
-	void Release();
-	void Empty();
-	static void Release(TStringData *Data);
-	void CopyBeforeWrite();
-	void AllocBeforeWrite(int size);
 	void AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen) const;
-	void AssignCopy(int SrcLen, const char *str);
-	void ConcatInPlace(int len, const char *str);
-
-	char *FBuf;
-	TStringData *FData;
+	void ConcatInPlace(const char *str, int size);
 };
 
 TString operator+(const TString& str1, const TString& str2);

@@ -33,9 +33,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TSection FSection;
-TListNode EmptyList;
-
+static TSection FSection;
+static TListNode EmptyList;
 
 /*##########################################################################
 #
@@ -50,7 +49,8 @@ TListNode EmptyList;
 ##########################################################################*/
 TListNode::TListNode()
 {
-	Init();
+	FData = 0;
+	FNext = 0;
 	FValid = FALSE;
 }
 
@@ -67,12 +67,8 @@ TListNode::TListNode()
 ##########################################################################*/
 TListNode::TListNode(const void *x, int size)
 {
-    Init();
-    
-    AllocBuffer(size);
-	memcpy(FBuf, x, size);
+ 	FData = new TShareObject(x, size);
 	FNext = 0;
-
 	FValid = TRUE;
 }
 
@@ -89,14 +85,8 @@ TListNode::TListNode(const void *x, int size)
 ##########################################################################*/
 TListNode::TListNode(const TListNode &src)
 {
-    Init();
-    
-	FData = src.FData;
-	if (FData)
-	{
-		FBuf = src.FBuf;
-		src.FData->FRefs++;
-	}
+	FData = new TShareObject(*src.FData);
+	FNext = 0;
 	FValid = TRUE;
 }
 
@@ -113,24 +103,8 @@ TListNode::TListNode(const TListNode &src)
 ##########################################################################*/
 TListNode::~TListNode()
 {
-    Release();
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::Init
-#
-#   Purpose....: Initialize
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::Init()
-{
-	FBuf = 0;
-	FData = 0;
+	if (FData)
+		delete FData;
 }
 
 /*##########################################################################
@@ -162,10 +136,10 @@ int TListNode::IsValid() const
 ##########################################################################*/
 int TListNode::GetSize() const
 {
-    if (FValid && FData)
-        return FData->FDataSize;
-    else
-        return 0;
+	if (FData)
+		return FData->GetSize();
+	else
+		return 0;
 }
 
 /*##########################################################################
@@ -181,10 +155,10 @@ int TListNode::GetSize() const
 ##########################################################################*/
 const void *TListNode::GetData() const
 {
-    if (FValid && FData)
-        return FBuf;
-    else
-        return "";
+	if (FData)
+		return FData->GetData();
+	else
+		return &EmptyList;
 }
 
 /*##########################################################################
@@ -200,184 +174,11 @@ const void *TListNode::GetData() const
 ##########################################################################*/
 void TListNode::SetData(const void *x, int size)
 {
-	AllocBeforeWrite(size);
-	if (size)
-	{
-		memcpy(FBuf, x, size);
-	    FData->FDataSize = size;
-	}
-	else
-		Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::AllocBuffer
-#
-#   Purpose....: Allocate buffer for data
-#
-#   In params..: size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::AllocBuffer(int size)
-{
-	if (size == 0)
-		Init();
-	else
-	{
-		FData = (TListData *)new char[sizeof(TListData) + size];
-		FData->FRefs = 1;
-		FData->FDataSize = size;
-		FData->FAllocSize = size;
-		FBuf = (char *)FData + sizeof(TListData);
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::Release
-#
-#   Purpose....: Release buffers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::Release()
-{
 	if (FData)
-	{
-		FData->FRefs--;
-		if (FData->FRefs <= 0)
-			delete FData;
-	}
-	Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::Release
-#
-#   Purpose....: Release buffers
-#
-#   In params..: Data
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::Release(TListData *Data)
-{
-	if (Data)
-	{
-        Data->FRefs--;
-        if (Data->FRefs <= 0)
-            delete Data;
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::Empty
-#
-#   Purpose....: Empty
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::Empty()
-{
-	if (FData)
-	{
-		if (FData->FDataSize)
-		{
-			if (FData->FRefs >= 0)
-				Release();
-		}
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::CopyBeforeWrite
-#
-#   Purpose....: Copy data before writing to it
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::CopyBeforeWrite()
-{
-	TListData* OldData;
-	char* OldBuf;
-
-	if (FData)
-	{
-		if (FData->FRefs > 1)
-		{
-			OldData = FData;
-			OldBuf = FBuf;
-			Release();
-			AllocBuffer(OldData->FDataSize);
-			memcpy(FBuf, OldBuf, OldData->FDataSize);
-		}
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::AllocBeforeWrite
-#
-#   Purpose....: Allocate before writing to it
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::AllocBeforeWrite(int size)
-{
-    if (FData)
-    {
-    	if (FData->FRefs > 1 || size > FData->FAllocSize)
-	    {
-    		Release();
-	    	AllocBuffer(size);
-    	}
-	}
+		FData->SetData(x, size);
 	else
-		if (size)
-			AllocBuffer(size);
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::AssignCopy
-#
-#   Purpose....: Assign & copy
-#
-#   In params..: SrcLen
-#				 str
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TListNode::AssignCopy(const void *x, int size)
-{
-	AllocBeforeWrite(size);
-	if (size)
-	{
-		memcpy(FBuf, x, size);
-		FData->FDataSize = size;
-	}
-	else
-		Init();
+		FData = new TShareObject(x, size);
+	FValid = TRUE;
 }
 
 /*##########################################################################
@@ -393,56 +194,20 @@ void TListNode::AssignCopy(const void *x, int size)
 ##########################################################################*/
 int TListNode::Compare(const TListNode &n2) const
 {
-	int size;
-	int res;
-	int size1;
-	int size2;
-
-	size1 = FData->FDataSize;
-	size2 = n2.FData->FDataSize;
-
-	if (size1 > size2)
-		size = size2;
+	if (FData && n2.FData)
+		return FData->Compare(*n2.FData);
 	else
-		size = size1;
-
-	res = memcmp(FBuf, n2.FBuf, size);
-	if (res == 0)
 	{
-		if (size1 == size2)
-			return 0;
-		else
+		if (FData || n2.FData)
 		{
-			if (size1 > size2)
+			if (FData)
 				return 1;
 			else
 				return -1;
 		}
+		else
+			return 0;
 	}
-	else
-		return res;
-}
-
-/*##########################################################################
-#
-#   Name       : TListNode::Clone
-#
-#   Purpose....: Clone entry
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TListNode *TListNode::Clone()
-{
-	if (FData)
-	{
-		FData->FRefs++;
-	    return new TListNode(FBuf, FData->FDataSize);
-    }
-    else
-        return new TListNode(0, 0);
 }
 
 /*##########################################################################
@@ -458,14 +223,14 @@ TListNode *TListNode::Clone()
 ##########################################################################*/
 const TListNode &TListNode::operator=(const TListNode &src)
 {
-	if (FBuf != src.FBuf)
+	if (FData)
+		*FData = *src.FData;
+	else
 	{
-		Release();
-		FBuf = src.FBuf;
-        FData = src.FData;
-        if (FData)
-    		FData->FRefs++;
+		if (src.FData)
+			FData = new TShareObject(*src.FData);
 	}
+	FValid = src.FValid;
 	return *this;
 }
 
@@ -585,7 +350,7 @@ int TListNode::operator<=(const TListNode &dest) const
 
 /*##########################################################################
 #
-#   Name       : TNode::TNode
+#   Name       : TList::TList
 #
 #   Purpose....: Constructor for list
 #
@@ -621,7 +386,7 @@ TList::TList(const TList &src)
 
     while (p)
     {
-        AddLast(*p->Clone());
+        AddLast(*p);
         p = p->FNext;
     }
     FSection.Leave();
@@ -659,6 +424,40 @@ void TList::Init()
     FList = 0;
     FCurrPos = 0;
     FPrevPos = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Get
+#
+#   Purpose....: Get element
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode *TList::Get(int pos)
+{
+    TListNode *p;
+    int n = 0;
+
+    FSection.Enter();
+    
+    if (FList)
+    {
+        p = FList;
+
+        while (p && n < pos)
+        {
+            p = p->FNext;
+            n++;
+        }
+    }
+
+    FSection.Leave();
+
+	return p;
 }
 
 /*##########################################################################
@@ -722,6 +521,39 @@ int TList::Compare(const TList &l) const
 	FSection.Leave();
 
 	return res;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Load
+#
+#   Purpose....: Load with other object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Load(const TList &src)
+{
+    TListNode *p;
+    
+    Clear();    
+
+    FSection.Enter();
+
+    if (FList != src.FList)
+    {
+        p = src.FList;
+
+        while (p)
+        {
+            AddLast(*p);
+            p = p->FNext;
+        }
+    }
+
+    FSection.Leave();
 }
 
 /*##########################################################################
@@ -851,25 +683,7 @@ int TList::operator<=(const TList &dest) const
 ##########################################################################*/
 TList &TList::operator=(const TList &src)
 {
-    TListNode *p;
-    
-    Clear();    
-
-    FSection.Enter();
-
-    if (FList != src.FList)
-    {
-        p = src.FList;
-
-        while (p)
-        {
-            AddLast(*p->Clone());
-            p = p->FNext;
-        }
-    }
-
-    FSection.Leave();
-
+	Load(src);
     return *this;
 }
 
@@ -962,24 +776,7 @@ TList &TList::operator^=(const TList &l)
 ##########################################################################*/
 TListNode &TList::operator[](int pos)
 {
-    TListNode *p;
-    int n = 0;
-
-    FSection.Enter();
-    
-    if (FList)
-    {
-        p = FList;
-
-        while (p && n < pos)
-        {
-            p = p->FNext;
-            n++;
-        }
-    }
-
-    FSection.Leave();
-
+    TListNode *p = Get(pos);
     if (p)
         return *p;
     else
@@ -1662,7 +1459,7 @@ void TList::Concat(const TList &list1, const TList& list2)
 
     while (p)
     {
-        AddLast(*p->Clone());
+        AddLast(*p);
         p = p->FNext;
     }
 
@@ -1670,7 +1467,7 @@ void TList::Concat(const TList &list1, const TList& list2)
 
     while (p)
     {
-        AddLast(*p->Clone());
+        AddLast(*p);
         p = p->FNext;
     }
 
@@ -1707,7 +1504,7 @@ void TList::Intersect(const TList &list1, const TList& list2)
     	    p2 = p2->FNext;
 
         if (p2)
-            AddLast(*p1->Clone());
+            AddLast(*p1);
             
         p1 = p1->FNext;
     }
@@ -1739,7 +1536,7 @@ void TList::Union(const TList &list1, const TList& list2)
 
     while (p1)
     {
-        AddLast(*p1->Clone());
+        AddLast(*p1);
         p1 = p1->FNext;
     }
 
@@ -1754,7 +1551,7 @@ void TList::Union(const TList &list1, const TList& list2)
     	    p1 = p1->FNext;
 
         if (!p1)
-            AddLast(*p2->Clone());
+            AddLast(*p2);
             
         p2 = p2->FNext;
     }
@@ -1793,7 +1590,7 @@ void TList::Difference(const TList &list1, const TList& list2)
     	    p2 = p2->FNext;
 
         if (!p2)
-            AddLast(*p1->Clone());
+            AddLast(*p1);
             
         p1 = p1->FNext;
     }
@@ -1809,7 +1606,7 @@ void TList::Difference(const TList &list1, const TList& list2)
     	    p1 = p1->FNext;
 
         if (!p1)
-            AddLast(*p2->Clone());
+            AddLast(*p2);
             
         p2 = p2->FNext;
     }
@@ -1886,13 +1683,11 @@ void TList::RemoveDuplicates()
         else
         {
             if (insp)
-            {
                 insp->FNext = p;
-                p->FNext = 0;
-            }
             else
                 FList = p;
-                
+
+            p->FNext = 0;                
             insp = p;
         }
 

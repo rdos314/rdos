@@ -28,14 +28,7 @@
 #ifndef _LIST_H
 #define _LIST_H
 
-class TListData
-{
-friend class TListNode;
-friend class TList;
-    int FRefs;
-    int FDataSize;
-    int FAllocSize;
-};
+#include "shareobj.h"
 
 class TListNode
 {
@@ -61,21 +54,10 @@ public:
 	void SetData(const void *x, int size);
 
 protected:
-	void Init();
-	void AllocBuffer(int size);
-	void Release();
-	void Empty();
-	static void Release(TListData *Data);
-	void CopyBeforeWrite();
-	void AllocBeforeWrite(int size);
-	void AssignCopy(const void *x, int size);
-
-    TListNode *Clone();
-	virtual int Compare(const TListNode &n2) const;
+	int Compare(const TListNode &n2) const;
 
 	int FValid;
-	char *FBuf;
-	TListData *FData;
+	TShareObject *FData;
     TListNode *FNext;
 };
 
@@ -135,6 +117,8 @@ public:
 protected:
     void Init();
     void Invalidate(TListNode *ln);
+	void Load(const TList &src);
+	TListNode *Get(int n);
 
 	int Compare(const TList &l) const;
 

@@ -58,7 +58,6 @@ TSection Section;
 ##########################################################################*/
 TString::TString()
 {
-	Init();
 }
 
 /*##########################################################################
@@ -73,17 +72,8 @@ TString::TString()
 #
 ##########################################################################*/
 TString::TString(const TString &src)
+ : TShareObject(src)
 {
-    Init();
-    
-    Section.Enter();
-	FData = src.FData;
-	if (FData)
-	{
-    	FBuf = src.FBuf;
-        src.FData->FRefs++;
-    }
-    Section.Leave();
 }
 
 /*##########################################################################
@@ -98,20 +88,8 @@ TString::TString(const TString &src)
 #
 ##########################################################################*/
 TString::TString(const char *str)
+ : TShareObject(str, strlen(str) + 1)
 {
-	int len;
-
-	Init();
-
-	if (str)
-	{
-		len = strlen(str);
-		if (len)
-		{
-			AllocBuffer(len);
-			memcpy(FBuf, str, len);
-		}
-	}
 }
 
 /*##########################################################################
@@ -127,184 +105,6 @@ TString::TString(const char *str)
 ##########################################################################*/
 TString::~TString()
 {
-	Section.Enter();
-	if (FData)
-	{
-        FData->FRefs--;
-        if (FData->FRefs <= 0)
-            delete FData;
-	}
-	Section.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TString::Init
-#
-#   Purpose....: Initialize
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::Init()
-{
-	FBuf = 0;
-	FData = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TString::AllocBuffer
-#
-#   Purpose....: Allocate buffer for data
-#
-#   In params..: size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::AllocBuffer(int size)
-{
-	if (size == 0)
-		Init();
-	else
-	{
-		Section.Enter();
-		FData = (TStringData *)new char[sizeof(TStringData) + size + 1];
-		FData->FRefs = 1;
-		FData->FDataSize = size;
-		FData->FAllocSize = size;
-		FBuf = (char *)FData + sizeof(TStringData);
-		*(FBuf+size) = 0;
-		Section.Leave();
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TString::Release
-#
-#   Purpose....: Release buffers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::Release()
-{
-	Section.Enter();
-	if (FData)
-	{
-		FData->FRefs--;
-		if (FData->FRefs <= 0)
-			delete FData;
-	}
-	Init();
-	Section.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TString::Release
-#
-#   Purpose....: Release buffers
-#
-#   In params..: Data
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::Release(TStringData *Data)
-{
-	Section.Enter();
-	if (Data)
-	{
-        Data->FRefs--;
-        if (Data->FRefs <= 0)
-            delete Data;
-	}
-	Section.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TString::Empty
-#
-#   Purpose....: Empty
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::Empty()
-{
-    if (FData)
-    {
-    	if (FData->FDataSize)
-	    {
-		    if (FData->FRefs >= 0)
-			    Release();
-    	}
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TString::CopyBeforeWrite
-#
-#   Purpose....: Copy string before writing to it
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::CopyBeforeWrite()
-{
-	TStringData* OldData;
-	char* OldBuf;
-
-    if (FData)
-    {
-    	if (FData->FRefs > 1)
-	    {
-		    OldData = FData;
-    		OldBuf = FBuf;
-	    	Release();
-		    AllocBuffer(OldData->FDataSize);
-    		memcpy(FBuf, OldBuf, OldData->FDataSize+1);
-	    }
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TString::AllocBeforeWrite
-#
-#   Purpose....: Allocate before writing to it
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::AllocBeforeWrite(int size)
-{
-    if (FData)
-    {
-    	if (FData->FRefs > 1 || size > FData->FAllocSize)
-	    {
-    		Release();
-	    	AllocBuffer(size);
-    	}
-    }
-	else
-		if (size)
-			AllocBuffer(size);
 }
 
 /*##########################################################################
@@ -325,38 +125,64 @@ void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen)
 {
 	int NewLen = CopyLen + ExtraLen;
 
-	if (NewLen == 0)
-		dest.Init();
-	else
-	{
-		dest.AllocBuffer(NewLen);
-		memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
-	}
+	dest.AllocBuffer(NewLen + 1);
+	memcpy(dest.FBuf, FBuf+CopyIndex, CopyLen);
+	*(dest.FBuf+CopyLen) = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TString::AssignCopy
+#   Name       : TString::ConcatCopy
 #
-#   Purpose....: Assign & copy
+#   Purpose....: Concat strings
 #
-#   In params..: SrcLen
-#				 str
+#   In params..: len1
+#				 str1
+#				 len2
+#				 str2
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TString::AssignCopy(int len, const char *str)
+void TString::ConcatCopy(const char *str1, int len1, const char *str2, int len2)
 {
-	AllocBeforeWrite(len);
-	if (len)
+	int NewLen = len1 + len2;
+
+	AllocBuffer(NewLen + 1);
+	memcpy(FBuf, str1, len1);
+	memcpy(FBuf+len1, str2, len2);
+	*(FBuf+len1+len2) = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::ConcatInPlace
+#
+#   Purpose....: Concatenation in place
+#
+#   In params..: x
+#				 size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::ConcatInPlace(const char *str, int size)
+{
+	if (size)
 	{
-    	memcpy(FBuf, str, len);
-	    FData->FDataSize = len;
-    	*(FBuf+len) = 0;
+		if (FData->FRefs > 1 || FData->FDataSize + size > FData->FAllocSize)
+		{
+			TShareObjectData* OldData = FData;
+			ConcatCopy(GetData(), GetSize(), str, size);
+			Release(OldData);
+		}
+		else
+		{
+			memcpy(FBuf + FData->FDataSize - 1, str, size);
+			FData->FDataSize += size;
+			*(FBuf+FData->FDataSize) = 0;
+		}
 	}
-	else
-		Init();
 }
 
 /*##########################################################################
@@ -376,9 +202,9 @@ const TString &TString::operator=(const TString &src)
 	{
 		Release();
 		FBuf = src.FBuf;
-        FData = src.FData;
-        if (FData)
-    		FData->FRefs++;
+		FData = src.FData;
+		if (FData)
+			FData->FRefs++;
 	}
 	return *this;
 }
@@ -412,7 +238,7 @@ int TString::Compare(const TString &str) const
 ##########################################################################*/
 const TString &TString::operator=(const char *str)
 {
-	AssignCopy(strlen(str), str);
+	AssignCopy(str, strlen(str) + 1);
 	return *this;
 }
 
@@ -551,32 +377,6 @@ char TString::operator[](int n) const
 
 /*##########################################################################
 #
-#   Name       : TString::ConcatCopy
-#
-#   Purpose....: Concat strings
-#
-#   In params..: len1
-#				 str1
-#				 len2
-#				 str2
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::ConcatCopy(int len1, const char *str1, int len2, const char *str2)
-{
-	int NewLen = len1 + len2;
-
-	if (NewLen)
-	{
-		AllocBuffer(NewLen);
-		memcpy(FBuf, str1, len1);
-		memcpy(FBuf+len1, str2, len2);
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : operator+
 #
 #   Purpose....: Concatenation operator
@@ -590,7 +390,7 @@ void TString::ConcatCopy(int len1, const char *str1, int len2, const char *str2)
 TString operator+(const TString& str1, const TString& str2)
 {
 	TString s;
-	s.ConcatCopy(str1.GetSize(), str1.GetData(), str2.GetSize(), str2.GetData());
+	s.ConcatCopy(str1.GetData(), str1.GetSize(), str2.GetData(), str2.GetSize());
 	return s;
 }
 
@@ -609,7 +409,7 @@ TString operator+(const TString& str1, const TString& str2)
 TString operator+(const TString& str, const char *cstr)
 {
 	TString s;
-	s.ConcatCopy(str.GetSize(), str.GetData(), strlen(cstr), cstr);
+	s.ConcatCopy(str.GetData(), str.GetSize(), cstr, strlen(cstr));
 	return s;
 }
 
@@ -628,39 +428,8 @@ TString operator+(const TString& str, const char *cstr)
 TString operator+(const char *cstr, const TString& str)
 {
 	TString s;
-	s.ConcatCopy(strlen(cstr), cstr, str.GetSize(), str.GetData());
+	s.ConcatCopy(cstr, strlen(cstr), str.GetData(), str.GetSize());
 	return s;
-}
-
-/*##########################################################################
-#
-#   Name       : TString::ConcatInPlace
-#
-#   Purpose....: Concatenation in place
-#
-#   In params..: len
-#				 str
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TString::ConcatInPlace(int len, const char *str)
-{
-	if (len)
-	{
-		if (FData->FRefs > 1 || FData->FDataSize + len > FData->FAllocSize)
-		{
-			TStringData* OldData = FData;
-			ConcatCopy(FData->FDataSize, FBuf, len, str);
-			Release(OldData);
-		}
-		else
-		{
-			memcpy(FBuf+FData->FDataSize, str, len);
-			FData->FDataSize += len;
-			*(FBuf+FData->FDataSize) = 0;
-		}
-	}
 }
 
 /*##########################################################################
@@ -676,7 +445,7 @@ void TString::ConcatInPlace(int len, const char *str)
 ##########################################################################*/
 const TString &TString::operator+=(const char *str)
 {
-	ConcatInPlace(strlen(str), str);
+	ConcatInPlace(str, strlen(str));
 	return *this;
 }
 
@@ -693,7 +462,7 @@ const TString &TString::operator+=(const char *str)
 ##########################################################################*/
 const TString &TString::operator+=(char ch)
 {
-	ConcatInPlace(1, &ch);
+	ConcatInPlace(&ch, 1);
 	return *this;
 }
 
@@ -710,7 +479,7 @@ const TString &TString::operator+=(char ch)
 ##########################################################################*/
 const TString &TString::operator+=(const TString& str)
 {
-	ConcatInPlace(str.FData->FDataSize, str.FBuf);
+	ConcatInPlace(str.GetData(), str.GetSize());
 	return *this;
 }
 
@@ -747,7 +516,7 @@ const char *TString::GetData() const
 int TString::GetSize() const
 {
 	if (FData)
-		return FData->FDataSize;
+		return FData->FDataSize - 1;
 	else
 		return 0;
 }
@@ -827,7 +596,7 @@ void TString::Upper()
 	if (FData)
 	{
 		ptr = FBuf;
-		for (i = 0; i < FData->FDataSize; i++)
+		for (i = 0; i < FData->FDataSize - 1; i++)
 		{
 			*ptr = Upper(*ptr);
 			ptr++;
@@ -872,7 +641,7 @@ void TString::Lower()
 	if (FData)
 	{
 		ptr = FBuf;
-		for (i = 0; i < FData->FDataSize; i++)
+		for (i = 0; i < FData->FDataSize - 1; i++)
 		{
 			*ptr = Lower(*ptr);
 			ptr++;
@@ -899,7 +668,7 @@ void TString::RemoveCrLf()
 
 	if (FData)
 	{
-		ptr = FBuf + FData->FDataSize - 1;
+		ptr = FBuf + FData->FDataSize - 2;
 		if (*ptr == 0xd || *ptr == 0xa)
 		{
 			CopyBeforeWrite();
@@ -957,12 +726,13 @@ void TString::Append(char ch)
 	if (FData == 0)
 	{
 		AllocBuffer(0x10);
-		FData->FDataSize = 0;
+		*FBuf = 0;
+		FData->FDataSize = 1;
 	}
 
 	if (FData->FDataSize + 1 > FData->FAllocSize)
 	{
-		TStringData* OldData = FData;
+		TShareObjectData* OldData = FData;
 		char *ptr = FBuf;
 
 		AllocBuffer(OldData->FDataSize + 0x10);
@@ -971,9 +741,9 @@ void TString::Append(char ch)
 
 		Release(OldData);
 	}
-	*(FBuf+FData->FDataSize) = ch;
-	FData->FDataSize++;
+	*(FBuf+FData->FDataSize-1) = ch;
 	*(FBuf+FData->FDataSize) = 0;
+	FData->FDataSize++;
 }
 
 /*##########################################################################
