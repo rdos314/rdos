@@ -55,6 +55,9 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
     void InitOptions();
 
+	void WriteHeader(TString &str);
+	void WriteFooter();
+
 	void Add(TString &path);
 	void WriteDetailed(const TDirEntryData &entry);
 	void WriteDetailed();
@@ -77,6 +80,10 @@ protected:
 	int FOptL;
     int FOptDirFirst;
     int FOptDirLast;
+
+	int FFileCount;
+	int FDirCount;
+	long FTotalSize;
 };
 
 #endif

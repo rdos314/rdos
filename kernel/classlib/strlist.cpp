@@ -686,6 +686,23 @@ TString &TStringList::Get()
 
 /*##########################################################################
 #
+#   Name       : TStringList::Find
+#
+#   Purpose....: Find specified entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringList::Find(const TString &str)
+{
+	TStringListNode n = TStringListNode(str);
+	return TListBase::Find(&n);
+}
+
+/*##########################################################################
+#
 #   Name       : TStringList::AddFirst
 #
 #   Purpose....: Add entry as first entry

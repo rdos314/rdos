@@ -887,7 +887,7 @@ int TListBase::RemoveCurrent()
     {
         prev = 0;
         p = FList;
-        while (p && p->FNext != FCurrPos)
+        while (p && p != FCurrPos)
         {
             prev = p;
             p = p->FNext;

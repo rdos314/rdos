@@ -666,6 +666,7 @@ int ReadCon(char *str, int maxsize)
                                 CurrX = MAX_X;
                                 CurrY--;
                             }                                
+                            RdosSetCursorPosition(CurrY, CurrX);
                             RdosWriteChar(' ');
                             RdosSetCursorPosition(CurrY, CurrX);
                         }
@@ -681,6 +682,7 @@ int ReadCon(char *str, int maxsize)
                                 CurrX = MAX_X;
                                 CurrY--;
                             }
+                            RdosSetCursorPosition(CurrY, CurrX);
                             RdosWriteString(&str[CurrPos - 1]);
                             RdosWriteChar(' ');
                             RdosSetCursorPosition(CurrY, CurrX);
@@ -703,7 +705,7 @@ int ReadCon(char *str, int maxsize)
                             str[i] = str[i + 1];
                         Count--;
                         str[Count] = 0;
-                        RdosWriteString(&str[CurrPos - 1]);
+                        RdosWriteString(&str[CurrPos]);
                         RdosWriteChar(' ');
                         RdosSetCursorPosition(CurrY, CurrX);
                     }
@@ -731,7 +733,12 @@ int ReadCon(char *str, int maxsize)
                 case VK_RETURN:
                     if (Count)
                     {
-                        History.AddFirst(str);
+						TString s(str);
+
+						if (History.Find(s))
+							History.RemoveCurrent();
+
+                        History.AddFirst(s);
                         if (History.GetSize() >= MAX_HISTORY)
                             History.RemoveLast();
                     }
@@ -770,7 +777,7 @@ int ReadCon(char *str, int maxsize)
                     break;
 
                 case VK_F3:
-                	memset(str, 0, Count);
+                	memset(str, ' ', Count);
                     RdosSetCursorPosition(OrgY, OrgX);
                     RdosWriteString(str);
                 	
@@ -793,7 +800,7 @@ int ReadCon(char *str, int maxsize)
                     
                     if (ok)
                     {
-                    	memset(str, 0, Count);
+                    	memset(str, ' ', Count);
                         RdosSetCursorPosition(OrgY, OrgX);
                         RdosWriteString(str);
                 	
@@ -811,7 +818,7 @@ int ReadCon(char *str, int maxsize)
                 case VK_DOWN:
                     if (History.GotoPrev())
                     {
-                    	memset(str, 0, Count);
+                    	memset(str, ' ', Count);
                         RdosSetCursorPosition(OrgY, OrgX);
                         RdosWriteString(str);
                 	
@@ -842,26 +849,33 @@ int ReadCon(char *str, int maxsize)
                     break;
 
                 default:
-                    if (VirtKey >= ' ' && Count < maxsize - 1)
+					ExtKey = ExtKey & 0xFF;
+                    if (ExtKey >= ' ' && Count < maxsize - 1)
                     {
                         if (Insert && CurrPos != Count)
                         {
                             for (i = Count; i > CurrPos; i--)
                                 str[i] = str[i - 1];
+							Count++;
+	                        str[CurrPos] = (char)ExtKey;
+    	                    RdosWriteChar(str[CurrPos]);
+    	                    RdosGetCursorPosition(&CurrY, &CurrX);
+	                        str[Count] = 0;
+	                        RdosWriteString(&str[CurrPos + 1]);
+    	                    RdosSetCursorPosition(CurrY, CurrX);
                         }
                         else
                         {
                             if (CurrPos == Count)
                                 Count++;
+	                        str[CurrPos] = (char)ExtKey;
+    	                    RdosWriteChar(str[CurrPos]);
+	                        RdosGetCursorPosition(&CurrY, &CurrX);
+	                        str[Count] = 0;
                         }
-                        str[CurrPos] = (char)VirtKey;
-                        RdosWriteChar(str[CurrPos]);
-                        RdosGetCursorPosition(&CurrY, &CurrX);
                         if (CurrX == 0)
                         	OrgY--;
                         CurrPos++;
-                        Count++;
-                        str[Count] = 0;
                     }
                     break;
             }

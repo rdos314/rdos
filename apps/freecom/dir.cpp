@@ -386,6 +386,60 @@ int TDirCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 
 /*##########################################################################
 #
+#   Name       : TDirCommand::WriteHeader
+#
+#   Purpose....: Write directory header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirCommand::WriteHeader(TString &str)
+{
+	TPathName path(str);
+	int drive = path.GetDrive();
+	TPathName search(drive, "\\*");
+	TDirList dir;
+	TDirEntry entry;
+
+	dir.SetRequiredAttributes(8);
+	dir.SetIgnoredAttributes(0);
+	dir.Add(search);
+	
+	FMsg.printf(TEXT_DIR_HDR_VOLUME, drive + 'A');
+	Write(FMsg.GetData());
+
+	if (dir.GotoFirst())
+	{
+		entry = dir.Get();
+		FMsg.printf(TEXT_DIR_HDR_VOLUME_STRING, entry.Get().EntryName);
+		Write(FMsg.GetData());
+	}
+	else
+	{
+		FMsg.Load(TEXT_DIR_HDR_VOLUME_NONE);
+		Write(FMsg.GetData());
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDirCommand::WriteFooter
+#
+#   Purpose....: Write directory footer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirCommand::WriteFooter()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TDirCommand::WriteDetailed
 #
 #   Purpose....: Write detailed listing entry
@@ -415,9 +469,16 @@ void TDirCommand::WriteDetailed(const TDirEntryData &entry)
 	Write(str);
 
 	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		FDirCount++;
 		Write("<DIR>         ");
+	}
 	else
+	{
+		FFileCount++;
+		FTotalSize += entry.FileSize;
 		WriteLong(entry.FileSize);
+	}
 
 	Write("  ");
 
@@ -470,6 +531,7 @@ void TDirCommand::WriteWide(const TDirEntryData &entry)
 
 	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
 	{
+		FDirCount++;
 		size = entry.EntryName.GetSize() + 3;
 		Write("[");
 		Write(entry.EntryName.GetData());
@@ -477,6 +539,8 @@ void TDirCommand::WriteWide(const TDirEntryData &entry)
 	}
 	else
 	{
+		FFileCount++;
+		FTotalSize += entry.FileSize;
 		size = entry.EntryName.GetSize() + 1;
 		Write(entry.EntryName.GetData());
 		Write(" ");
@@ -660,6 +724,10 @@ int TDirCommand::Execute(char *param)
 	if (!ScanCmdLine(param, 0))
 		return 1;
 
+	FFileCount = 0;
+	FDirCount = 0;
+	FTotalSize = 0;
+
     arg = FArgList;
 
     if (FOptDirFirst || FOptDirLast)
@@ -677,6 +745,7 @@ int TDirCommand::Execute(char *param)
     
 	if (arg)
 	{
+		WriteHeader(arg->FName);
 		while (arg)
 		{
 			Add(arg->FName);
@@ -684,8 +753,10 @@ int TDirCommand::Execute(char *param)
 		}
 	}
 	else
+	{
+		WriteHeader("*");
 		Add("*");
-
+	}
 
     FFileList.RemoveDuplicates();
     FDirList.RemoveDuplicates();
@@ -697,6 +768,8 @@ int TDirCommand::Execute(char *param)
 		WriteWide();
 	else
 		WriteDetailed();
+
+	WriteFooter();
 
 	return 0;
 }
