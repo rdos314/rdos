@@ -1185,6 +1185,7 @@ default_exception16:
 ;
 	mov ds,[bp].vm_ss
 	mov bx,[bp].vm_esp
+	add bx,6
 ;
 	mov ax,[bx]
 	mov [bp].vm_eip,ax

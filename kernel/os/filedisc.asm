@@ -56,6 +56,8 @@ fd_drive_nr             DB ?
 fd_access               DB ?
 fd_selector             DW ?
 
+fd_handle				DW ?
+
 file_disc_data_seg  ENDS
 
 	.386p
@@ -80,6 +82,44 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_drive	Proc near
+	mov bx,fs:fd_handle
+	movzx edx,es:[edi].dh_unit
+	movzx eax,fs:fh_sectors_per_unit
+	mul edx
+	movzx edx,es:[edi].dh_sector
+	add eax,edx
+	shl eax,9
+	SetFilePos
+
+read_drive_loop:
+	push ecx
+	push edi
+	mov edi,es:[edi].dh_data
+	mov ecx,200h
+	mov bx,fs:fd_handle
+	UserGateForce32 read_file_nr
+	pop edi
+	pop ecx
+	jnc read_drive_ok
+
+read_drive_fail:
+	mov es:[edi].dh_state,STATE_BAD
+	mov bx,fs:fd_disc_sel
+	DiscRequestCompleted
+	jmp read_drive_next
+
+read_drive_ok:
+	mov eax,es:[edi].dh_data
+	mov es:[edi].dh_state,STATE_USED
+	mov bx,fs:fd_disc_sel
+	DiscRequestCompleted
+
+read_drive_next:
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz read_drive_loop
+;		
 	ret
 read_drive	Endp
 
@@ -99,6 +139,44 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive	Proc near
+	mov bx,fs:fd_handle
+	movzx edx,es:[edi].dh_unit
+	movzx eax,fs:fh_sectors_per_unit
+	mul edx
+	movzx edx,es:[edi].dh_sector
+	add eax,edx
+	shl eax,9
+	SetFilePos
+
+write_drive_loop:
+	push ecx
+	push edi
+	mov edi,es:[edi].dh_data
+	mov ecx,200h
+	mov bx,fs:fd_handle
+	UserGateForce32 write_file_nr
+	pop edi
+	pop ecx
+	jnc write_drive_ok
+
+write_drive_fail:
+	mov es:[edi].dh_state,STATE_BAD
+	mov bx,fs:fd_disc_sel
+	DiscRequestCompleted
+	jmp write_drive_next
+
+write_drive_ok:
+	mov eax,es:[edi].dh_data
+	mov es:[edi].dh_state,STATE_USED
+	mov bx,fs:fd_disc_sel
+	DiscRequestCompleted
+
+write_drive_next:
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz write_drive_loop
+;		
 	ret
 write_drive	Endp
 
@@ -161,6 +239,11 @@ PAGE
 discbuf_name    DB 'File drive', 0
 
 discbuf_thread:
+	mov cl,fs:fd_access
+	mov ax,fs:fd_selector
+	DuplFileInfo
+	mov fs:fd_handle,bx
+;
 	mov ax,flat_sel
 	mov es,ax
 ;
@@ -168,7 +251,6 @@ discbuf_thread:
 
 discbuf_thread_loop:
 	WaitForDiscRequest
-    int 3
 	call perform_one
 	jmp discbuf_thread_loop
 
@@ -361,7 +443,6 @@ open_file_drive Proc near
     UserGateForce32 open_file_nr
     jc ofdDone
 ;
-    int 3
 	mov eax,SIZE file_disc_data_seg
     mov cx,ax
 	AllocateSmallGlobalMem
@@ -370,6 +451,7 @@ open_file_drive Proc near
     ReadFile
     jc ofdFail
 ;
+	mov di,OFFSET fh_fs_name
     IsFileSystemAvailable
     jc ofdFail
 ;

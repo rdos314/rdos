@@ -610,17 +610,19 @@ flash_file  DB 'd:\flash.dat', 0
 fat_fs      DB 'FAT16', 0
 
 flash_thread:
-    int 3
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
+	int 3
     mov edi,OFFSET flash_file
-    mov esi,OFFSET fat_fs
-    mov ecx,100000h
-    UserGateForce32 create_file_drive_nr
+;    mov esi,OFFSET fat_fs
+;    mov ecx,100000h
+;    UserGateForce32 create_file_drive_nr
+;	int 3
 ;
     OpenFileDrive
+	int 3
 ;
     mov ax,cs
     mov es,ax

@@ -243,7 +243,6 @@ format16	PROC far
     push es
     pushad
 ;
-    int 3
     mov bp,ax
     mov dx,flat_sel
     mov es,dx
