@@ -914,12 +914,10 @@ Type BREAK without a parameter to display the current BREAK setting.
 :TEXT_CMDHELP_CALL#1
 Calls one batch program from another.
 
-CALL [/S | /N] [/Y] [drive:][path]filename [batch-parameters]
+CALL [drive:][path]filename [batch-parameters]
 
   batch-parameters   Specifies any command-line information required by
                      the batch program.
-  /S enforces, /N denies swapping of FreeCOM.
-  /Y enables tracemode during execution of the command.
 .
 
 :TEXT_CMDHELP_CD
@@ -1242,6 +1240,12 @@ Suspends processing of a batch program and displays the message:
 "Press any key to continue...." or an optional specified message.
 
 PAUSE [message]
+.
+
+:TEXT_CMDHELP_WAIT
+Suspends processing for a specified time.
+
+WAIT milliseconds
 .
 
 :TEXT_CMDHELP_PROMPT
@@ -1594,4 +1598,25 @@ List running threads
 
 STATE [/S] [thread-ID]
   /S              Suspend thread
+.
+
+:TEXT_CMDHELP_MOVE
+Moves one or more files to another location.
+
+MOVE source [source [ ...]] [destination]
+
+  source       Specifies the file or files to be moved.
+  destination  Specifies the directory and/or filename for the new file(s).
+.
+
+:TEXT_ERROR_MOVE
+MOVE failed
+.
+
+:TEXT_ERROR_OVERWRITE
+Destination file (%s) already exists.
+.
+
+:TEXT_ERROR_MOVE_MULTIPLE
+Cannot move multiple files to a single destination.
 .

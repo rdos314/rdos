@@ -20,37 +20,43 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# set.h
-# Set command class
+# move.h
+# Move command class
 #
 ########################################################################*/
 
-#ifndef _SET_H
-#define _SET_H
+#ifndef _MOVE_H
+#define _MOVE_H
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "direntry.h"
 
-class TSetFactory : public TCommandFactory
+class TMoveFactory : public TCommandFactory
 {
 public:
-	TSetFactory();
+	TMoveFactory();
 	virtual TCommand *Create(TSession *session, const char *param);
-};
-
-class TSetCommand : public TCommand
-{
-public:
-	TSetCommand(TSession *session, const char *param);
-
-	virtual int Execute(char *param);	
 
 protected:
-    void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	
-	int FOptC;
-	int FPromptUser;
+};
+
+class TMoveCommand : public TCommand
+{
+public:
+	TMoveCommand(TSession *session, const char *param);
+
+	virtual int Execute(char *param);
+
+protected:
+    int AddSrc(TArg *arg);
+
+	int MoveFile(TString &Src, TString &Dest);
+	int MoveFiles();
+    int MoveSingleFile();
+
+	TDirList FSrcFiles;
+	TPathName *FDest;
 
 };
 

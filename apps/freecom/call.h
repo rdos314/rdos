@@ -20,38 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# set.h
-# Set command class
+# call.h
+# Call command class
 #
 ########################################################################*/
 
-#ifndef _SET_H
-#define _SET_H
+#ifndef _CALL_H
+#define _CALL_H
 
 #include "cmd.h"
 #include "cmdfact.h"
 
-class TSetFactory : public TCommandFactory
+class TCallFactory : public TCommandFactory
 {
 public:
-	TSetFactory();
+	TCallFactory();
 	virtual TCommand *Create(TSession *session, const char *param);
-};
-
-class TSetCommand : public TCommand
-{
-public:
-	TSetCommand(TSession *session, const char *param);
-
-	virtual int Execute(char *param);	
 
 protected:
-    void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	
-	int FOptC;
-	int FPromptUser;
+};
 
+class TCallCommand : public TCommand
+{
+public:
+	TCallCommand(TSession *session, const char *param);
+
+	virtual int Execute(char *param);
 };
 
 #endif

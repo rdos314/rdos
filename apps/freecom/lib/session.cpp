@@ -60,6 +60,12 @@
 #include "ffspart.h"
 #include "exit.h"
 #include "echo.h"
+#include "call.h"
+#include "pause.h"
+#include "wait.h"
+#include "prompt.h"
+#include "rem.h"
+#include "move.h"
 
 #include "file.h"
 #include "path.h"
@@ -78,6 +84,7 @@ static TFsPartitionFactory *fat16;
 static TFsPartitionFactory *fat32;
 static TFsPartitionFactory *flashfs;
 
+static TCommandFactory *call;
 static TCommandFactory *cd;
 static TCommandFactory *chdir;
 static TCommandFactory *cls;
@@ -95,16 +102,21 @@ static TCommandFactory *inithd;
 static TCommandFactory *md;
 static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
+static TCommandFactory *move;
 static TCommandFactory *ping;
+static TCommandFactory *prompt;
 static TCommandFactory *showpart;
+static TCommandFactory *pause;
 static TCommandFactory *path;
 static TCommandFactory *rd;
+static TCommandFactory *rem;
 static TCommandFactory *rmdir;
 static TCommandFactory *rmpart;
 static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *time;
+static TCommandFactory *wait;
 
 static TStringList *History;
 static TKeyboardDevice *Keyboard;
@@ -139,16 +151,21 @@ TSession::TSession()
     	fat32 = new TFat32PartitionFactory;
     	flashfs = new TFlashFsPartitionFactory;
 
+    	wait = new TWaitFactory;
     	time = new TTimeFactory;
     	type = new TTypeFactory;
     	state = new TStateFactory;
     	set = new TSetFactory;
     	rmpart = new TRemovePartitionFactory;
     	rmdir = new TRmdirFactory;
+    	rem = new TRemFactory;
     	rd = new TRdFactory;
+    	prompt = new TPromptFactory;
     	ping = new TPingFactory;
+    	pause = new TPauseFactory;
     	path = new TPathFactory;
     	showpart = new TShowPartitionFactory;
+    	move = new TMoveFactory;
     	mkpart = new TMakePartitionFactory;
     	mkdir = new TMkdirFactory;
     	md = new TMdFactory;
@@ -165,6 +182,7 @@ TSession::TSession()
     	cls = new TClsFactory;
     	chdir = new TChdirFactory;
     	cd = new TCdFactory;
+    	call = new TCallFactory;
     	help = new THelpFactory;
 
     	History = new TStringList;
@@ -245,16 +263,21 @@ TSession::~TSession()
     	delete fat32;
     	delete flashfs;
 
+        delete wait;
     	delete time;
 	    delete type;
     	delete state;
     	delete set;
     	delete rmpart;
     	delete rmdir;
+    	delete rem;
     	delete rd;
+    	delete prompt;
     	delete ping;
     	delete path;
+    	delete pause;
     	delete showpart;
+    	delete move;
     	delete mkpart;
     	delete mkdir;
     	delete md;
@@ -271,6 +294,7 @@ TSession::~TSession()
     	delete cls;
 	    delete chdir;
     	delete cd;
+    	delete call;
     	delete help;
 
     	delete History;
