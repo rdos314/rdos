@@ -88,6 +88,7 @@ start_sector		DD ?
 root_sector			DD ?
 root_entries		DW ?
 clusters			DD ?
+free_clusters       DD ?
 file_list_ptr		DD ?
 file_free_ptr		DD ?
 drive_root_handle	DW ?

@@ -1085,6 +1085,8 @@ allocate_cluster32	ENDP
 	public allocate_cluster
 
 allocate_cluster	Proc near
+    dec ds:free_clusters
+;
 	cmp ds:fat_type,fat12
 	je alloc12
 ;
@@ -1146,6 +1148,7 @@ free12:
 	call update_cluster_link12
 
 free_cluster_done:
+    inc ds:free_clusters
 	LeaveSection ds:cluster_section
 	pop ecx
 	ret
@@ -1230,6 +1233,355 @@ eof_cluster_done:
 	LeaveSection ds:cluster_section
 	ret
 eof_cluster	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_FREE_CLUSTER12
+;
+;		DESCRIPTION:	Get free clusters for FAT12
+;
+;		PARAMETERS:		AL			Drive
+;
+;		RETURNS			EDX			Free clusters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_cluster12	PROC near
+	push ebx
+	push ecx
+	push esi
+	push edi
+	push ebp
+;
+    xor ebp,ebp
+	EnterSection ds:cluster_section
+	mov edx,ds:fat1_sector
+	xor edi,edi
+;
+	call lock_fat
+	jc get_free_cluster_failed0
+	mov edi,2
+	add si,3
+	jmp get_free_cluster_low
+
+get_free_cluster_lock0:
+
+	call lock_fat
+	jnc get_free_cluster_low
+
+get_free_cluster_failed0:
+	inc edx
+	add edi,342
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster12_done
+
+get_free_cluster_lock1:
+	call lock_fat
+	jnc get_free_cluster_low_locked1
+;
+	inc edx
+	add edi,341
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster12_done
+
+get_free_cluster_lock0_5:
+	call lock_fat
+	jnc get_free_cluster_high
+;
+	inc edx
+	add edi,341
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster12_done
+	jmp get_free_cluster_lock0
+
+get_free_cluster_low_locked1:
+	inc si
+
+get_free_cluster_low:
+	mov cl,es:[esi]
+	inc si
+	test si,1FFh
+	jnz get_free_cluster_low_ok
+	UnlockSector
+	inc edx
+	call lock_fat
+	jnc get_free_cluster_low_ok
+;
+	inc edx
+	add edi,342
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster12_done
+	jmp get_free_cluster_lock0
+
+get_free_cluster_low_ok:
+	mov ch,es:[esi]
+	and ch,0Fh
+	stc
+	jmp get_free_cluster12_test
+
+get_free_cluster_high:
+	mov ch,es:[esi]
+	and ch,0F0h
+	inc si
+	test si,1FFh
+	jnz get_free_cluster_high_ok
+;	
+	UnlockSector
+	inc edx
+	call lock_fat
+	jnc get_free_cluster_high_ok
+;
+	inc edx
+	add edi,342
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster12_done
+	jmp get_free_cluster_lock0_5
+
+get_free_cluster_high_ok:
+	mov cl,es:[esi]
+	rol cx,4
+	inc si
+	clc
+
+get_free_cluster12_test:
+	pushf
+	or cx,cx
+	jnz get_free_cluster12_used
+;
+    inc ebp
+
+get_free_cluster12_used:	
+	add edi,1
+	cmp edi,ds:clusters
+	jc get_free_cluster12_next
+;	
+	popf
+	jmp get_free_cluster12_leave
+
+get_free_cluster12_next:
+	popf
+	jc get_free_cluster_high
+	test si,1FFh
+	jnz get_free_cluster_low
+	UnlockSector
+	inc edx
+	jmp get_free_cluster_lock0
+
+get_free_cluster12_done:
+	UnlockSector
+
+get_free_cluster12_leave:
+	LeaveSection ds:cluster_section
+;
+    mov edx,ebp
+    pop ebp
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	ret
+get_free_cluster12	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_FREE_CLUSTER16
+;
+;		DESCRIPTION:	Get free clusters for FAT16
+;
+;		PARAMETERS:		AL			Drive
+;
+;		RETURNS			EDX			Free clusters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_cluster16	PROC near
+	push ebx
+	push ecx
+	push esi
+	push edi
+	push ebp
+;
+	xor ebp,ebp
+	EnterSection ds:cluster_section
+	mov edx,ds:fat1_sector
+	xor edi,edi
+;
+	call lock_fat
+	jc get_free_cluster16_leave
+;	
+	mov edi,2
+	add si,4
+	jmp get_free_cluster16_loop
+
+get_free_cluster16_lock:
+	call lock_fat
+	jnc get_free_cluster16_loop
+
+get_free_cluster16_failed:
+	inc edx
+	add edi,256
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster16_leave
+	
+get_free_cluster16_loop:
+	mov cx,es:[esi]
+	add si,2
+	or cx,cx
+	jnz get_free_cluster16_used
+;
+    inc ebp
+
+get_free_cluster16_used:
+	inc edi
+	cmp edi,ds:clusters
+	jnc get_free_cluster16_done
+
+get_free_cluster16_next:
+	test si,1FFh
+	jnz get_free_cluster16_loop
+	UnlockSector
+	inc edx
+	jmp get_free_cluster16_lock
+	
+get_free_cluster16_done:
+	pushf
+	UnlockSector
+	popf
+
+get_free_cluster16_leave:
+	LeaveSection ds:cluster_section
+;
+    mov edx,ebp
+    pop ebp
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	ret
+get_free_cluster16	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_FREE_CLUSTER32
+;
+;		DESCRIPTION:	Get free clusters for FAT32
+;
+;		PARAMETERS:		AL			Drive
+;
+;		RETURNS			EDX			Free clusters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_cluster32	PROC near
+	push ebx
+	push ecx
+	push esi
+	push edi
+	push ebp
+;
+    xor ebp,ebp
+	EnterSection ds:cluster_section
+	mov edx,ds:fat1_sector
+	xor edi,edi
+;
+	call lock_fat
+	jc get_free_cluster32_leave
+;	
+	mov edi,2
+	add si,8
+	jmp get_free_cluster32_loop
+
+get_free_cluster32_lock:
+	call lock_fat
+	jnc get_free_cluster32_loop
+
+get_free_cluster32_failed:
+	inc edx
+	add edi,128
+	cmp edi,ds:clusters
+	cmc
+	jc get_free_cluster32_leave
+	
+get_free_cluster32_loop:
+	mov ecx,es:[esi]
+	add si,4
+	or ecx,ecx
+	jnz get_free_cluster32_used
+;
+    inc ebp
+
+get_free_cluster32_used:	
+	inc edi
+	cmp edi,ds:clusters
+	jnc get_free_cluster32_done
+
+get_free_cluster32_next:
+	test si,1FFh
+	jnz get_free_cluster32_loop
+	UnlockSector
+	inc edx
+	jmp get_free_cluster32_lock
+
+get_free_cluster32_done:
+    UnlockSector
+    
+get_free_cluster32_leave:
+	LeaveSection ds:cluster_section
+;
+    mov edx,ebp
+    pop ebp
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	ret
+get_free_cluster32	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_FREE_CLUSTERS
+;
+;		DESCRIPTION:	Get number of free clusters
+;
+;		PARAMETERS:		AL			Drive
+;
+;       RETURNS:        EDX			Free clusters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public get_free_clusters
+
+get_free_clusters   Proc near
+	cmp ds:fat_type,fat12
+	je gfc12
+;
+	cmp ds:fat_type,fat16
+	je gfc16
+
+gfc32:
+	call get_free_cluster32
+	jmp gfc_cluster_done
+
+gfc16:
+	call get_free_cluster16
+	jmp gfc_cluster_done
+
+gfc12:
+	call get_free_cluster12
+
+gfc_cluster_done:
+    ret
+get_free_clusters   Endp
 
 code	ENDS
 

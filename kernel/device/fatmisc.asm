@@ -84,6 +84,8 @@ fat_dir_struc	ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
+    extrn get_free_clusters:near
+
 	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -195,6 +197,11 @@ get_param_total_ok:
 	mov ds:clusters,edx
 	UnlockSector
 ;
+    mov al,ds:drive_nr
+    call get_free_clusters	
+	mov ds:free_clusters,edx
+;	
+
 	pop esi
 	pop edx
 	pop ecx

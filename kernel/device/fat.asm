@@ -205,10 +205,11 @@ dismount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_drive_info	PROC far
-	mov eax,ds:clusters
+    mov eax,ds:free_clusters
+	mov edx,ds:clusters
 	mov cl,ds:fat_cluster_shift
 	shl eax,cl
-	mov edx,eax
+	shl edx,cl
 	mov cx,200h
 	clc
 	ret
