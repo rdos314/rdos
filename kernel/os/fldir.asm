@@ -441,7 +441,6 @@ fdiRetry:
 	cmp cl,DIR_ENTRY_RESTRUCT
 	jne fdiNotRestruct
 ;
-	int 3
     call UndoDirEntry
 	push edi
 	mov edi,esi
@@ -565,9 +564,11 @@ PAGE
 MoveDirData	Proc near
 	push eax
 	push cx
+	push edx
 	push esi
 	push edi
 ;
+    xor edx,edx
 	mov cx,80h
 
 mddLoop:
@@ -578,13 +579,26 @@ mddLoop:
 	mov eax,es:[esi]
 	mov es:[edi],eax
 	add edi,4
+;	
+	cmp eax,-1
+	je mddNext
+;
+    inc edx
 
 mddNext:
 	add esi,4
 	loop mddLoop
 ; 
+    or edx,edx
+    stc
+    jz mddDone
+;
+    clc
+
+mddDone:    
 	pop edi
 	pop esi
+	pop edx
 	pop cx
 	pop eax
 	ret
@@ -607,6 +621,7 @@ PAGE
 MoveObject	Proc near
 	push eax
 	push cx
+	push edx
 	push esi
 	push edi
 ;
@@ -620,13 +635,26 @@ moLoop:
 	mov eax,es:[esi]
 	mov es:[edi],eax
 	add edi,4
-
+;	
+	cmp eax,-1
+	je moNext
+;
+    inc edx
+	
 moNext:
 	add esi,4
 	loop moLoop
 ; 
+    or edx,edx
+    stc
+    jz moDone
+;
+    clc
+
+moDone:     
 	pop edi
 	pop esi
+	pop edx
 	pop cx
 	pop eax
 	ret
@@ -664,7 +692,7 @@ mdeNameLoop:
 	inc esi
 	inc edi
 	sub cx,1
-	jz mdeDone
+	jz mdeFail
 ;
 	or al,al
 	jnz mdeNameLoop
@@ -680,7 +708,7 @@ mdeStartLoop:
 	inc esi
 	cmp esi,ebp
 	jne mdeStartLoop
-	jmp mdeDone
+	jmp mdeFail
 
 mdeRetry:
 	mov eax,es:[esi].fde_size
@@ -720,7 +748,7 @@ mdeCheckEntry:
 ;
 	cmp esi,ebp
 	jb mdeRetry
-	jmp mdeDone
+	jmp mdeFail
 
 mdeCopy:
 	mov eax,es:[esi].fde_size
@@ -732,10 +760,14 @@ mdeCopy:
 	sub edi,ecx
 	call CheckDirInfoSpace
 	jnc mdeSaveSpaceOk
+
+mdeFail:
+    stc
 	jmp mdeDone
 
 mdeSaveSpaceOk:	
 	rep movs byte ptr es:[edi],es:[esi]
+	clc
 
 mdeDone:
 	popad
@@ -763,6 +795,7 @@ MoveFileData	Proc near
 ;
 	mov ecx,80h
 	rep movs dword ptr es:[edi],es:[esi]
+	clc
 ;
 	pop edi
 	pop esi
@@ -1793,9 +1826,9 @@ upsSpaceOk:
 	mov es:[edi].fde_valid,DIR_ENTRY_RESTRUCT
 	call WriteSector
     UnlockSector
-	int 3
-    call RedoDirEntries
-    call RedoFileEntries
+;	int 3
+;    call RedoDirEntries
+;    call RedoFileEntries
 	clc
 
 rdsDone:
@@ -2141,7 +2174,7 @@ cache_dir	PROC far
 	or edx,edx
 	jnz cache_sub_dir
 ;
-	int 3
+    int 3
 	mov fs:fds_owner_sector,-1
 	call GetRootSector
     jc cache_dir_done

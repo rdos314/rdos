@@ -355,15 +355,31 @@ rbWriteEntry:
 	mov al,cl
 	and al,1Fh
 	call MoveSector
+	pushf
 	UnlockSector
+	popf
 	pop ebx
+	jc rbWriteUnlock
+;
 	call WriteSector
+
+rbWriteUnlock:
+    pushf
 	UnlockSector
+	popf
 	pop edi
 	pop esi
 	pop ecx
 	pop ebx
+	jnc rbSaveEntry
 ;
+    mov es:[esi].le_logical_entry,-1
+    mov es:[esi].le_physical_sector,-1
+    mov dword ptr es:[esi].le_owner,-1
+    mov es:[esi].le_status,-1
+    jmp rbLogNext
+	
+rbSaveEntry:
 	inc bp
 	add si,8
 	test si,1FFh
@@ -393,7 +409,6 @@ rbLogNext:
 	call WriteSector
 	pop ebx
 ;
-    int 3
     mov edx,ds:spare_sector
 	movzx eax,ds:block_sectors
 	add edx,eax
