@@ -30,9 +30,9 @@
 
 #include "datetime.h"
 #include "str.h"
-#include "file.h"
 
 class TDir;
+class TFile;
 
 class TPathName
 {
@@ -86,48 +86,6 @@ private:
 
 TPathName operator+(const TPathName& path, const TString &str);
 TPathName operator+(const TPathName& path, const char *str);
-
-class TDirEntry
-{
-public:
-    TDirEntry();
-    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
-    ~TDirEntry();
-    
-    TPathName PathName;
-    TString EntryName;
-    long FileSize;
-    int Attribute;
-    TDateTime Time;
-    int Valid;
-};
-
-class TDir
-{
-public:
-    TDir();
-	TDir(const char *PathName);
-	TDir(const TString &PathName);
-	TDir(const TPathName &PathName);
-	~TDir();
-
-    TDirEntry GotoFirst();
-	TDirEntry GotoNext();
-
-	TPathName FPathName;
-	TString FBaseString;
-	TString FSearchString;
-    
-protected:
-	int IsMatch(const char *FileName);
-
-private:
-    void Init();
-
-	int FDirHandle;
-    int FIndex;
-	
-};
 
 #endif
 
