@@ -675,7 +675,7 @@ empty:
     jmp done
 
 not_upper:
-    cmp ax,ds:[si].spl_lower_ind
+    cmp ax,gs:[si].spl_lower_ind
     jne done
 ;
     push bx
@@ -708,7 +708,6 @@ PAGE
 ;		DESCRIPTION:	Show in line buffer
 ;
 ;		PARAMETERS:		Y       y in current sprite
-;                       DS:BX   Hiding sprite info
 ;                       FS      Current sprite
 ;                       GS      Dest sel
 ;                       DX      Y relative position
@@ -793,7 +792,7 @@ hide_sprite_ovl_next:
 hide_sprite_curr:
     mov gs,fs:sp_dest_sel
     mov dx,bp
-;    HideLineBuffer sp_y
+    HideLineBuffer sp_y
 ;
     push ds
     push bx
@@ -877,7 +876,7 @@ show_sprite_ovl_hide_next:
 show_sprite_curr:
     mov gs,fs:sp_dest_sel
     mov dx,bp
-;    ShowLineBuffer sp_y
+    ShowLineBuffer sp_y
 ;
     push ds
     push bx
@@ -1139,10 +1138,10 @@ move_sprite_ovl_hide_next:
 move_sprite_ovl_hide_curr:
     mov gs,fs:sp_dest_sel
     mov dx,bp
-;    HideLineBuffer sp_y
+    HideLineBuffer sp_y
 ;
     mov dx,bp
-;    ShowLineBuffer sp_new_y
+    ShowLineBuffer sp_new_y
 ;
     push ds
     push bx
@@ -1239,10 +1238,10 @@ move_sprite_down_loop:
     shl bx,4
 ;
     mov dx,bp
-;    HideLineBuffer sp_y
+    HideLineBuffer sp_y
 ;
     mov dx,bp
-;    ShowLineBuffer sp_new_y
+    ShowLineBuffer sp_new_y
 ;    
     mov dx,bp
     HideWholeLine
@@ -1266,13 +1265,11 @@ move_sprite_up_loop:
     shl bx,4
 ;
     mov dx,bp
-;    HideLineBuffer sp_y
+    HideLineBuffer sp_y
 ;
     mov dx,bp
-;    ShowLineBuffer sp_new_y
+    ShowLineBuffer sp_new_y
 ;    
-    mov dx,bp
-    HideWholeLine
     mov dx,bp
     HideWholeLine
 ;
@@ -1433,6 +1430,32 @@ delete_sprite_ind_loop:
     jmp delete_sprite_ind_loop
 
 delete_sprite_ind_done:
+    mov ds,fs:sp_dest_sel
+    mov cx,ds:v_height
+    mov si,ds:v_sprite_lines
+    mov ax,fs:sp_index
+
+delete_sprite_spl_loop:
+    mov dx,ds:[si].spl_lower_ind
+    cmp dx,-1
+    je delete_sprite_spl_next
+;
+    cmp ax,dx
+    jae delete_sprite_check_upper
+;
+    dec dx
+    mov ds:[si].spl_lower_ind,dx
+
+delete_sprite_check_upper:
+    cmp ax,ds:[si].spl_upper_ind
+    jae delete_sprite_spl_next
+;
+    dec ds:[si].spl_upper_ind
+
+delete_sprite_spl_next:
+    add si,4
+    loop delete_sprite_spl_loop
+;
     mov ax,fs
     mov es,ax
     xor ax,ax
