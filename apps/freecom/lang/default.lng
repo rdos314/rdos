@@ -1554,3 +1554,31 @@ INITHD /R disc
 :TEXT_INITHD_AVAIL_ERROR
 Not enough free sectors at the begining of disc %d
 .
+
+:TEXT_CMDHELP_PING
+Ping a node
+
+PING [ip-address] [host name]
+  ip-address      IP address to ping
+  host name       Host name to ping
+.
+
+:TEXT_ERROR_INVALID_IP
+Invalid IP address
+.
+
+:TEXT_ERROR_INVALID_HOSTNAME
+Cannot find host name
+.
+
+:TEXT_PING_NODE
+Pinging node %d,%d,%d,%d
+.
+
+:TEXT_PING_OK
+Ping ok
+.
+
+:TEXT_PING_TIMEOUT
+Ping timeout
+.

@@ -28,7 +28,7 @@
 #ifndef _LOADSRC_H
 #define _LOADSRC_H
 
-#define MAXSTRINGS       256
+#define MAXSTRINGS       1024
 
 #define VERSION_MISMATCH 128
 #define VALIDATION_MISMATCH 64

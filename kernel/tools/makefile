@@ -86,6 +86,10 @@ hdboot_srcs = HDBOOT.ASM BOOT.ASM
 hdboot_objs = $(hdboot_srcs:.ASM=.OBJ)
 hdboot_exes = HDBOOT.EXE
 
+fdboot_srcs = FDBOOT.ASM BOOT.ASM
+fdboot_objs = $(fdboot_srcs:.ASM=.OBJ)
+fdboot_exes = FDBOOT.EXE
+
 mkhdboot_srcs = MKHDBOOT.ASM
 mkhdboot_objs = $(mkhdboot_srcs:.ASM=.OBJ)
 mkhdboot_exes = MKHDBOOT.EXE
@@ -120,7 +124,7 @@ remdebug_exes = REMDEBUG.EXE
 
 srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
-			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) \
+			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) $(fdboot_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(state_srcs) $(state40_srcs) $(acrimg_srcs) \
 			$(run_srcs) $(remdebug_srcs) $(mkhdboot_srcs) $(bootsec_srcs)
@@ -129,7 +133,7 @@ objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
-			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) \
+			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) $(fdboot_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(state_exes) $(state40_exes) $(acrloc_exes) $(bootsec_exes)	\
 			$(run_exes) $(remdebug_exes) $(acrimg_exes) $(mkhdboot_exes)
@@ -154,7 +158,7 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN
+MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN HDBOOT.BIN
 
 CFG2BIN.EXE : $(cfg2bin_objs)
     tlink @&&!
@@ -268,6 +272,14 @@ MKHDBOOT.EXE : $(mkhdboot_objs)
 	MKHDBOOT;
 !
 
+FDBOOT.EXE : $(fdboot_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(fdboot_objs)
+	FDBOOT
+	FDBOOT;
+!
+
 ACRIMG.EXE : $(acrimg_objs)
     tlink @&&!
 	$(link_opt) +
@@ -330,4 +342,7 @@ GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)
 	grubimg
 
 BOOTSEC.BIN:    BOOTSEC.EXE BOOTSEC.ASM
+    mkhdboot
+
+HDBOOT.BIN:    HDBOOT.EXE HDBOOT.ASM
     mkhdboot

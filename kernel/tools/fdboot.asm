@@ -21,7 +21,7 @@
 ; The author of this program may be contacted at leif@rdos.net
 ;
 ; FATBOOT.ASM
-; Second stage boot-loader for FAT12, FAT16 and FAT32
+; Second stage boot-loader for FAT12 floppy
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -59,19 +59,6 @@ boot_backup_sector			DW ?
 
 boot_struc		ENDS
 
-part_struc	STRUC
-
-part_status				DB ?
-part_start_head			DB ?
-part_start_cyl_sector	DW ?
-part_type				DB ?
-part_end_head			DB ?
-part_end_cyl_sector		DW ?
-part_start_sector		DD ?
-part_sectors			DD ?
-
-part_struc	ENDS
-
 fat_dir_struc	STRUC
 
 fat_base		DB 8 DUP(?)
@@ -103,7 +90,7 @@ BootLoadInit:
 
 ReadCount	    	DW 0
 RdosSectors		    DW 0,0
-DriveNr			    DB 80h
+DriveNr			    DB 0
 DefaultBoot         DB 0
 BootSector          DD 0
 FatSector           DD 0
@@ -112,8 +99,6 @@ DataSector          DD 0
 SectorsPerFat       DD 0
 CurrentCluster      DD 0
 RootEntries         DW 0
-PartType            DB 0
-FatSize             DB 0
 SafeBoot            DB 0
 SectorsPerCluster   DW 0
 ImageSize           DD 0
@@ -122,13 +107,7 @@ CurrFatSector       DD 0
 Tics                DD ?
 
 OrgTimerVect        DD ?
-OrgIdeVect          DD ?
 
-IntFlag             DB ?
-DiscSubUnit         DB ?
-LbaMode             DB ?
-Precomp             DB ?
-LbaSectors          DD ?
 DiscCyls            DW ?
 DiscHeads           DW ?
 SectorsPerCyl       DW ?
@@ -285,335 +264,13 @@ tiDone:
     pop eax
     jmp cs:OrgTimerVect
     
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			IdeInt
-;
-;		DESCRIPTION:	IDE INTERRUPT
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-IdeInt:
-    push ax
-	mov al,62h
-	out 20h,al
-    mov cs:IntFlag,1
-;    
-	mov al,66h
-	out 0A0h,al
-	pop ax
-    iret
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CheckReady
-;
-;		DESCRIPTION:	Wait for ready
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckReady	PROC near
-	push ax
-	push cx
-	push dx
-;
-	mov dx,1F7h
-	xor cx,cx
-CheckReadyLoop:
-	in al,dx
-	test al,80h
-	clc
-	jz CheckReadyDone
-;	
-	loop CheckReadyLoop
-	stc
-CheckReadyDone:
-	pop dx
-	pop cx
-	pop ax
-	ret
-CheckReady	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WaitDrq
-;
-;		DESCRIPTION:	Wait for data request
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitDrq	Proc near
-	push ax
-	push cx
-	push dx
-;
-	mov cx,100h
-	mov dx,1F7h
-WaitDrqLoop:
-	in al,dx
-	test al,8
-	clc
-	jnz WaitDrqDone
-	loop WaitDrqLoop
-	stc
-WaitDrqDone:
-	pop dx
-	pop cx
-	pop ax
-	ret
-WaitDrq	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CheckStatus
-;
-;		DESCRIPTION:	Check transfer status
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CheckStatus	Proc near
-	push ax
-	push dx
-;
-	mov dx,1F7h
-	in al,dx
-	test al,80h
-	jnz CheckStatusFail
-	test al,20h
-	jnz CheckStatusFail
-	test al,40h
-	jz CheckStatusFail
-	test al,10h
-	jz CheckStatusFail
-	test al,1
-	clc
-	jz CheckStatusDone
-	mov dx,1F1h
-	in al,dx
-CheckStatusFail:
-	stc
-CheckStatusDone:
-	pop dx
-	pop ax
-	ret
-CheckStatus	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SetupIdeTaskFile
-;
-;		DESCRIPTION:	Setup IDE comp. task file
-;
-;		PARAMETERS:		AH		Precomp
-;						BH		Head #
-;						BL		Sector
-;						CX		Number of sectors
-;						DX		Cylinder
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupIdeTaskFile	Proc near
-	push ax
-	push bx
-	push dx
-;
-	call CheckReady
-	jc SetupIdeTaskDone
-;	
-	push dx
-	mov dx,1F1h
-;
-	jmp short $+2
-	mov al,ah
-	out dx,al
-	inc dx
-;
-	jmp short $+2
-	mov ax,cx
-	out dx,al
-	inc dx
-;
-	jmp short $+2
-	mov al,bl
-	out dx,al
-	inc dx
-;
-	pop ax
-	jmp short $+2
-	out dx,al
-	inc dx
-;
-	jmp short $+2
-	mov al,ah
-	out dx,al
-	inc dx
-;
-	mov al,cs:DiscSubUnit
-	shl al,4
-	or al,bh
-	or al,0A0h
-	out dx,al
-	clc
-SetupIdeTaskDone:
-	pop dx
-	pop bx
-	pop ax
-	ret
-SetupIdeTaskFile	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SetupLbaTaskFile
-;
-;		DESCRIPTION:	Setup LBA comp. task file
-;
-;		PARAMETERS:		AH		Precomp
-;						CX		Number of sectors
-;						EDX		Sector #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SetupLbaTaskFile	Proc near
-	push ax
-	push bx
-	push dx
-;
-	call CheckReady
-	jc SetupLbaTaskDone
-;
-	push edx
-	mov dx,1F1h
-;
-	jmp short $+2
-	mov al,ah
-	out dx,al
-	inc dx
-;
-	jmp short $+2
-	mov al,cl
-	out dx,al
-	inc dx
-;
-	pop ax
-	jmp short $+2
-	out dx,al
-	inc dx
-;
-	mov al,ah
-	jmp short $+2
-	out dx,al
-	inc dx
-;
-	pop ax
-	jmp short $+2
-	out dx,al
-	inc dx
-;
-	mov bl,ah
-	mov al,cs:DiscSubUnit
-	shl al,4
-	or al,bl
-	or al,0E0h
-	out dx,al
-	clc
-	
-SetupLbaTaskDone:
-	pop dx
-	pop bx
-	pop ax
-	ret
-SetupLbaTaskFile	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			RunTaskFile
-;
-;		DESCRIPTION:	Run command
-;
-;		PARAMETERS:		AL		COMMAND CODE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunTaskFile	Proc near
-	push dx
-	mov dx,1F7h
-	out dx,al
-
-rtfWait:
-    mov al,cs:IntFlag
-    or al,al
-    jz rtfWait
-;	
-	call CheckStatus
-	
-RunTaskFileDone:
-	pop dx
-	ret
-RunTaskFile	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadTaskFile
-;
-;		DESCRIPTION:	Read data from device
-;
-;		PARAMETERS:		AL		COMMAND CODE
-;						CX		Number of sectors
-;						ES:DI	Logical address of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadTaskFile	Proc near
-	push cx
-	push dx
-	push di
-;
-    mov cs:IntFlag,0
-	mov dx,1F7h
-	out dx,al
-	
-ReadTaskFileInt:
-    mov al,cs:IntFlag
-    or al,al
-    jz ReadTaskFileInt
-;    
-	push cx
-	mov dx,1F0h
-	mov cx,256
-	rep insw
-	pop cx
-	call CheckStatus
-	jc ReadTaskFileDone
-;	
-	loop ReadTaskFileInt
-	clc
-	
-ReadTaskFileDone:
-	pop di
-	pop dx
-	pop cx
-	ret
-ReadTaskFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			ReadSector
 ;
-;		DESCRIPTION:	Read data
+;		DESCRIPTION:	Read a sector
 ;
 ;		PARAMETERS:		EDX		Sector #
 ;						DS:BX	Address of buffer
@@ -622,51 +279,40 @@ ReadTaskFile	ENDP
 
 ReadSector	Proc near
     push es
-    pushad
-;    
+	push ax
+	push cx
+	push edx
+;	
     mov ax,ds
     mov es,ax
-    mov di,bx
-    mov cx,1
-;    
-	cmp cs:LbaMode,0
-	jz ReadIde
-
-ReadLba:
-	mov ah,cs:Precomp
-	call SetupLbaTaskFile
-	jmp ReadStart
-
-ReadIde:
-    push edx
-    mov eax,edx
-    xor edx,edx
-    movzx ecx,cs:DiscHeads
-    div ecx
-;    
-    push ax
-	mov ax,dx
-	div byte ptr cs:SectorsPerCyl
-	mov bh,al
-	mov bl,ah
-	inc bl
-	mov ah,cs:Precomp
-	pop dx
-	call SetupIdeTaskFile
-	pop edx
-
-ReadStart:
-	jc ReadDone
+    push eax
+    pop ax
+    pop dx
+	push bx
+	div cs:SectorsPerCyl
+	inc dl
+	mov bl,dl
+	xor dx,dx
+	div cs:DiscHeads
+	mov bh,dl
+	mov dx,ax
+	mov ax,201h
+	mov cl,6
+	shl dh,cl
+	or dh,bl
+	mov cx,dx
+	xchg ch,cl
+	mov dl,cs:DriveNr
+	mov dh,bh
+	pop bx
+	int 13h
 ;	
-	mov al,20h
-	call ReadTaskFile
-
-ReadDone:
-    popad
-    pop es
+	pop edx
+	pop cx
+	pop ax
+	pop es
 	ret
 ReadSector	Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -699,7 +345,7 @@ PAGE
 ;
 ;		NAME:			InitIrq
 ;
-;		DESCRIPTION:	Init IDE IRQ
+;		DESCRIPTION:	Init IRQs
 ;
 ;		PARAMETERS:		DS:BX       Sector 0 buffer
 ;
@@ -714,8 +360,6 @@ InitIrq Proc near
     mov es,ax
     mov di,bx
 ;    
-    mov cs:IntFlag,0
-    mov cs:DiscSubUnit,0
     xor ax,ax
     mov ds,ax
     mov bx,8 SHL 2
@@ -724,56 +368,6 @@ InitIrq Proc near
     mov word ptr [bx],OFFSET TimerInt
     mov [bx+2],cs
 ;
-    mov bx,76h SHL 2
-    mov eax,[bx]
-    mov cs:OrgIdeVect,eax
-    mov word ptr [bx],OFFSET IdeInt
-    mov [bx+2],cs
-;
-	mov cs:Precomp,0FFh
-	xor dx,dx
-	xor bx,bx
-	mov cx,1
-	mov ah,cs:Precomp
-	call SetupIdeTaskFile
-	jc init_irq_done
-;
-	mov al,0ECh
-	call ReadTaskFile
-	jc init_irq_done
-;
-	mov eax,es:[di+120]
-	mov cs:LbaSectors,eax
-	mov ax,word ptr es:[di+2]
-	mov cs:DiscCyls,ax
-	mov ax,es:[di+6]
-	mov cs:DiscHeads,ax
-	mov ax,es:[di+12]
-	mov cs:SectorsPerCyl,ax
-;
-	mov cs:LbaMode,1
-	mov cx,1
-	mov ah,cs:Precomp
-	xor edx,edx
-	call SetupLbaTaskFile
-	jc init_irq_done
-;
-	mov al,20h
-	call ReadTaskFile	
-	jnc init_irq_done
-;
-	mov cs:LbaMode,0
-	mov bh,0
-	mov bl,1
-	mov cx,1
-	xor dx,dx
-	call SetupIdeTaskFile
-	jc init_irq_done
-;
-	mov al,20h
-	call ReadTaskFile
-
-init_irq_done:
     pop bx
     pop es
     pop ds
@@ -783,13 +377,13 @@ InitIrq Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			NextCluster12
+;		NAME:			NextCluster
 ;
 ;		DESCRIPTION:	Find next cluster for FAT12
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NextCluster12	PROC near
+NextCluster	PROC near
 	push ebx
 	push cx
 ;
@@ -807,157 +401,55 @@ NextCluster12	PROC near
 	pushf
 	mov bx,200h
 	call ReadFatSector
-	jnc nc12Locked
+	jnc ncLocked
 	popf
 	stc
-	jmp nc12Done
+	jmp ncDone
 
-nc12Locked:
+ncLocked:
 	mov bx,cx
 	add bx,200h
 	popf
-	jc nc12High
+	jc ncHigh
 	mov cl,[bx]
 	inc bx
 	test bx,1FFh
-	jnz nc12LowOk
+	jnz ncLowOk
 	inc edx
 	mov bx,200h
 	call ReadFatSector
-	jc nc12Done
+	jc ncDone
 
-nc12LowOk:
+ncLowOk:
 	mov ch,[bx]
 	and cx,0FFFh
-	jmp nc12Ok
+	jmp ncOk
 
-nc12High:
+ncHigh:
 	mov ch,[bx]
 	and ch,0F0h
 	inc bx
 	test bx,1FFh
-	jnz nc12HighOk
+	jnz ncHighOk
 	inc edx
 	mov bx,200h
 	call ReadFatSector
-	jc nc12Done
+	jc ncDone
 
-nc12HighOk:
+ncHighOk:
 	mov cl,[bx]
 	rol cx,4
-nc12Ok:
+ncOk:
 	movzx edx,cx
 	mov cs:CurrentCluster,edx
 	cmp edx,0FF8h
 	cmc
 
-nc12Done:
+ncDone:
 	pop cx
 	pop ebx
 	ret
-NextCluster12	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			NextCluster16
-;
-;		DESCRIPTION:	Find next cluster for FAT16
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NextCluster16	PROC near
-    push bx
-	push cx
-;
-    mov bx,200h
-    mov edx,cs:CurrentCluster
-	add edx,edx
-	mov cx,dx
-	shr edx,9
-	add edx,cs:FatSector
-	and cx,1FFh
-	call ReadFatSector
-	jc nc16Done
-;
-    add bx,cx
-	movzx edx,word ptr [bx]
-	mov cs:CurrentCluster,edx
-	cmp edx,0FFF8h
-	cmc
-
-nc16Done:
-	pop cx
-	pop bx
-	ret
-NextCluster16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			NextCluster32
-;
-;		DESCRIPTION:	Find next cluster for FAT32
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NextCluster32	PROC near
-    push bx
-	push cx
-;
-    mov bx,200h
-    mov edx,cs:CurrentCluster
-	shl edx,2
-	mov cx,dx
-	shr edx,9
-	add edx,cs:FatSector
-	and cx,1FFh
-	call ReadFatSector
-	jc nc32Done
-;
-    add bx,cx
-	mov edx,[bx]
-	and edx,0FFFFFFFh
-	mov cs:CurrentCluster,edx
-	cmp edx,0FFFFFF8h
-	cmc
-
-nc32Done:
-	pop cx
-	pop bx
-	ret
-NextCluster32	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			NextCluster
-;
-;		DESCRIPTION:	Find next cluster
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-NextCluster	Proc near
-	cmp cs:FatSize,12
-	je nextc12
-;
-	cmp cs:FatSize,16
-	je nextc16
-
-nextc32:
-	call NextCluster32
-	jmp next_cluster_done
-
-nextc16:
-	call NextCluster16
-	jmp next_cluster_done
-
-nextc12:
-	call NextCluster12
-
-next_cluster_done:
-	ret
-NextCluster	Endp
+NextCluster	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1010,14 +502,6 @@ CheckDirEntry   Proc near
     push cs:CurrentCluster
 ;    
     movzx edx,ds:[si].fat_cluster
-    cmp cs:FatSize,32
-    jnz cdeClustOk
-;
-    movzx eax,ds:[si].fat_cluster_hi
-    shl eax,16
-    or edx,eax
-
-cdeClustOk:       
     mov cs:CurrentCluster,edx
 ;
     call GetCurrentSector
@@ -1046,57 +530,6 @@ cdeDone:
     pop es
     ret
 CheckDirEntry   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ScanDir
-;
-;		DESCRIPTION:	Scan directory for RDOS .bin files
-;
-;       PARAMETERS:     
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ScanDir Proc near
-    push es
-    push eax
-    push cx
-    push bp
-;    
-    mov ax,cs
-    mov es,ax
-
-sdClusterLoop:
-    call GetCurrentSector
-    mov cx,cs:SectorsPerCluster    
-
-sdSectorLoop:
-    mov si,200h
-    push bx
-    mov bx,si
-    call ReadSector
-    pop bx
-
-sdLoop:
-    call CheckDirEntry
-    add si,20h
-    test si,1FFh
-    jnz sdLoop
-;
-    inc edx
-    loop sdSectorLoop
-;
-    call NextCluster
-    jnc sdClusterLoop
-
-sdDone:
-    pop bp
-    pop cx
-    pop eax
-    pop es
-    ret
-ScanDir Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1149,28 +582,6 @@ srdDone:
     pop es
     ret
 ScanRootDir Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FindRdosFiles
-;
-;		DESCRIPTION:	Find RDOS bootable files
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindRdosFiles   Proc near
-    mov al,cs:FatSize
-    cmp al,32
-    je frf32
-;
-    call ScanRootDir
-    ret
-
-frf32:
-    call ScanDir
-    ret
-FindRdosFiles   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1350,7 +761,6 @@ blank_line DB '                                                                 
 l1         DB '                                  RDOS Bootloader                                 '
 l2         DB '                    ษอออออออออออออออออออออออออออออออออออออออป                     '
 l4         DB '                    ศอออออออออออออออออออออออออออออออออออออออผ                     '
-org_line   DB '                    บ  Boot original Operating system       บ                     '
 norm_line  DB '                    บ  RDOS - normal boot                   บ                     '
 safe_line  DB '                    บ  RDOS - safe mode boot                บ                     '
 
@@ -1370,13 +780,8 @@ WriteMenu  Proc near
     call WriteLine
     mov cx,22
 ;
-    mov cs:MenuEntries,1
+    mov cs:MenuEntries,0
     mov bx,OFFSET MenuArr
-    dec cx
-    mov si,OFFSET org_line
-    call WriteLine
-    mov word ptr cs:[bx],0
-    add bx,2
 ;
     mov si,OFFSET norm_file
     call FindLine
@@ -1579,14 +984,6 @@ hmOk:
     jz hmOrgOs
 ;        
     movzx edx,cs:[si].fat_cluster
-    cmp cs:FatSize,32
-    jnz hmClustOk
-;
-    movzx eax,cs:[si].fat_cluster_hi
-    shl eax,16
-    or edx,eax
-
-hmClustOk:       
     mov cs:CurrentCluster,edx
     mov eax,cs:[si].fat_file_size
     mov cs:ImageSize,eax
@@ -1902,29 +1299,16 @@ GetRamSizeRm:
 GetRamSize	Endp
 
 ReadError	db 'Cannot read rdos.bin',0Dh,0Ah,0
-InvFatMsg	db 0Dh,0Ah,'Unknown file-system.',0Dh,0Ah,0
 LoadMsg		db 0Dh,0Ah,'Loading Rdos operating system',0
 
-InvalidDisc db 'Cannot read partition table and / or disc', 0Dh, 0Ah, 0
+InvalidDisc db 'Cannot read floppy disc', 0Dh, 0Ah, 0
 BootNotFound db 'Cannot find boot image', 0Dh, 0Ah, 0
+BootNoEntries db 'No image file', 0Dh, 0Ah, 0
 
-PartTypeTab:
-p00 DB 0
-p01 DB 12
-p02 DB 0
-p03 DB 0
-p04 DB 16
-p05 DB 0
-p06 DB 16
-p07 DB 0
-p08 DB 0
-p09 DB 0
-p0A DB 0
-p0B DB 32
-p0C DB 32
-p0D DB 0
-p0E DB 0
-p0F DB 0
+boot_no_entry:
+    mov si,OFFSET BootNoEntries
+    call WriteAsciiz
+    jmp part_stop
 
 read_part_error:
     mov si,OFFSET InvalidDisc
@@ -1951,52 +1335,24 @@ Start:
     xor bx,bx
     call InitIrq
     jc read_part_error
-;
-    mov bx,1BEh
-    mov si,bx
-    mov al,[bx].part_type
-    mov cs:PartType,al
 ;    
-    mov edx,[bx].part_start_sector
+    xor edx,edx
     mov cs:BootSector,edx
     xor bx,bx
     call ReadSector
 	jc read_part_error
-;
-    cmp cs:LbaMode,0
-    jne boot_check_part_type
-;
-    mov ax,ds:boot_sectors_per_cyl
-    cmp ax,cs:SectorsPerCyl
-    jne read_part_error
 ;    
+    mov ax,ds:boot_sectors_per_cyl
+    mov cs:SectorsPerCyl,ax
     mov ax,ds:boot_heads
-    cmp ax,cs:DiscHeads
-    jne read_part_error
-
-boot_check_part_type:
-    mov al,cs:PartType
-    cmp al,10h
-    jae read_part_error
-;
-    mov bx,OFFSET PartTypeTab
-    xlat byte ptr cs:PartTypeTab
-    or al,al
-    je read_part_error
-;
-    mov cs:FatSize,al     
+    mov cs:DiscHeads,ax
+    mov cs:DiscCyls,80
 ;    
     movzx eax,ds:boot_resv_sectors
     add eax,cs:BootSector
     mov cs:FatSector,eax
 ;
     movzx eax,ds:boot_fat_sectors16
-    or ax,ax
-    jnz boot_fat_sectors_ok
-;
-    mov eax,ds:boot_fat_sectors
-
-boot_fat_sectors_ok:
     mov cs:SectorsPerFat,eax
     mov eax,cs:FatSector
 ;
@@ -2009,15 +1365,11 @@ boot_fat_adv_loop:
     sub ds:boot_fats,1
     jnz boot_fat_adv_loop
 ;
-    cmp cs:FatSize,32
-    je boot_data_sector_ok
-;
     mov cs:RootSector,eax
     movzx ecx,ds:boot_root_dirs
     shr ecx,4
     add eax,ecx
-
-boot_data_sector_ok:    
+;
     mov cs:DataSector,eax
     mov eax,ds:boot_root_cluster
     mov cs:CurrentCluster,eax
@@ -2026,7 +1378,11 @@ boot_data_sector_ok:
     movzx ax,ds:boot_sectors_per_cluster
     mov cs:SectorsPerCluster,ax
     mov cs:EntryCount,0
-    call FindRdosFiles
+    call ScanRootDir
+    mov ax,cs:EntryCount
+    or ax,ax
+    jz boot_no_entry
+;    
     call WriteMenu
 ;
     movzx ax,cs:DefaultBoot
@@ -2039,34 +1395,6 @@ LoadDefaultOk:
     mov cs:CurrEntry,ax
     call MarkEntry
     call HandleMenu       
-    jnc LoadStart
-;    
-    call ClearScreen
-    xor ax,ax
-    mov ds,ax
-;
-    xor edx,edx
-    mov bx,600h
-    call ReadSector
-;    
-    mov edx,cs:BootSector
-    mov bx,7C00h
-    call ReadSector
-;
-    mov bx,8 SHL 2
-    mov eax,cs:OrgTimerVect
-    mov [bx],eax
-;
-    mov bx,76h SHL 2
-    mov eax,cs:OrgIdeVect
-    mov [bx],eax
-;
-    mov si,600h + 1BEh    
-	db 0EAh
-	dw 7C00h
-	dw 0
-    
-LoadStart:
     call ClearScreen
 	mov si,OFFSET LoadMsg
 	call WriteAsciiz

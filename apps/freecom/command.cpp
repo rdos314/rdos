@@ -24,6 +24,7 @@
 #include "rmpart.h"
 #include "mkpart.h"
 #include "inithd.h"
+#include "ping.h"
 
 #include "part.h"
 #include "rdfspart.h"
@@ -43,6 +44,7 @@ TInitHdFactory *inithd;
 TMdFactory *md;
 TMkdirFactory *mkdir;
 TMakePartitionFactory *mkpart;
+TPingFactory *ping;
 TShowPartitionFactory *showpart;
 TPathFactory *path;
 TRdFactory *rd;
@@ -78,6 +80,7 @@ void Init()
 	rmpart = new TRemovePartitionFactory;
 	rmdir = new TRmdirFactory;
 	rd = new TRdFactory;
+	ping = new TPingFactory;
 	path = new TPathFactory;
 	showpart = new TShowPartitionFactory;
 	mkpart = new TMakePartitionFactory;
