@@ -1396,34 +1396,44 @@ SetPixel      MACRO
 	UserGate set_pixel_nr
 						ENDM
 
+;	IN  AX		Source bitmap handle or 0
+;	IN	BX		Dest bitmap handle or 0
+;	IN	CX		Width
+;	IN	DX		Height
+;	IN	ESI		source x + y << 16
+;	IN 	EDI		dest x + y << 16
+Blit      MACRO
+	UserGate blit_nr
+						ENDM
+
 ;	IN	BX		Bitmap handle or 0
-;	IN	CX		x2
-;	IN	DX		y2
-;	IN  SI		x1
-;	IN  DI		y1
+;	IN	CX		x1
+;	IN	DX		y1
+;	IN  SI		x2
+;	IN  DI		y2
 DrawLine      MACRO
 	UserGate draw_line_nr
 						ENDM
 
 ;	IN	BX		Bitmap handle or 0
-;	IN	CX		w
-;	IN	DX		h
-;	IN  SI		x
-;	IN  DI		y
+;	IN	CX		x
+;	IN	DX		y
+;	IN  SI		width
+;	IN  DI		height
 DrawRect      MACRO
 	UserGate draw_rect_nr
 						ENDM
 
 ;	IN	BX		Bitmap handle or 0
-;	IN	CX		w
-;	IN	DX		h
-;	IN  SI		x
-;	IN  DI		y
+;	IN	CX		x
+;	IN	DX		y
+;	IN  SI		width
+;	IN  DI		height
 DrawEllipse      MACRO
 	UserGate draw_ellipse_nr
 						ENDM
 
-;	IN  AL		Bits per pixel
+;	IN  AX		Bits per pixel
 ;	IN  CX		Width
 ;	IN  DX		Height
 ;	OUT BX		Bitmap handle

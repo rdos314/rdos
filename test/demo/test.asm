@@ -82,8 +82,8 @@ test_thread:
 divi	DW 1111h
 	
 init:
+	mov ax,16
 	int 3
-	mov al,32
 	mov cx,800
 	mov dx,600
 	SetVgaMode

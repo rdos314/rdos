@@ -50,6 +50,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+	extrn BitmapTab16:near
 	extrn BitmapTab24:near
 	extrn BitmapTab32:near
 
@@ -90,6 +91,9 @@ init_video_bitmap	Proc far
 	mov si,cs
 	mov ds,si
 ;
+	cmp al,16
+	je init_video16
+;
 	cmp al,24
 	je init_video24
 ;
@@ -97,6 +101,10 @@ init_video_bitmap	Proc far
 	je init_video32
 ;
 	jmp init_video_done
+
+init_video16:
+	mov si,OFFSET BitmapTab16
+	jmp init_video_copy
 
 init_video24:
 	mov si,OFFSET BitmapTab24
@@ -107,7 +115,7 @@ init_video32:
 	jmp init_video_copy
 
 init_video_copy:
-	mov cx,24
+	mov cx,30
 	xor di,di
 	rep movsd
 
@@ -171,6 +179,9 @@ create_bitmap	Proc far
 	mov si,cs
 	mov ds,si
 ;
+	cmp al,16
+	je cr_bitmap16
+;
 	cmp al,24
 	je cr_bitmap24
 ;
@@ -180,6 +191,13 @@ create_bitmap	Proc far
 	FreeMem
 	stc
 	jmp cr_bitmap_end
+
+cr_bitmap16:
+	mov si,OFFSET BitmapTab16
+	mov ax,es:v_width
+	add ax,ax
+	mov es:v_row_size,ax
+	jmp cr_bitmap_copy
 
 cr_bitmap24:
 	mov si,OFFSET BitmapTab24
@@ -200,7 +218,7 @@ cr_bitmap32:
 	jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-	mov cx,24
+	mov cx,30
 	xor di,di
 	rep movsd
 ;

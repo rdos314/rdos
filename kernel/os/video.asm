@@ -906,41 +906,7 @@ PAGE
 set_draw_color_name	DB 'Set Draw Color',0
 
 set_draw_color	PROC far
-	or bx,bx
-	jnz set_draw_color_bmp
-;
-	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	mov ds:v_color,eax
-	pop ds
-	jmp set_draw_color_done
-
-set_draw_color_fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp set_draw_color_done
-
-set_draw_color_bmp:
-	push ds
-	push ax
-	push bx
-;
-	mov ax,BITMAP_HANDLE
-	DerefHandle
-	jc set_draw_color_fail
-;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	mov ds:v_color,eax
-	pop ds	
-
-set_draw_color_done:
+	CallBitmap set_color_proc
 	retf32
 set_draw_color	ENDP
 

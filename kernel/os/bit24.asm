@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; LIN24.ASM
+; BIT24.ASM
 ; Linear 24-bit graphics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME lin24
+		NAME bit24
 
 GateSize = 16
 
@@ -512,6 +512,24 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetColor
+;
+;		DESCRIPTION:	Set color
+;
+;		PARAMETER:		EAX			RGB color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_color	Proc far
+	mov ds:v_color,eax
+	ret
+set_color	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetPixel
 ;
 ;		DESCRIPTION:	Get pixel
@@ -588,6 +606,446 @@ set_pixel	Proc far
 	pop ds
 	ret
 set_pixel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetNative
+;
+;		DESCRIPTION:	Get pixels in internal format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_native	Proc far
+	push ds
+	push eax
+	push bx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push ax
+	movzx ecx,cx
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov esi,eax
+	mov dx,flat_sel
+	mov ds,dx
+	pop cx
+;
+	or cx,cx
+	jz get_native_done
+;
+	movzx ecx,cx
+	mov eax,ecx
+	add ecx,ecx
+	add ecx,eax
+;
+	test si,1
+	jz get_native_even
+;
+	movs byte ptr es:[edi],[esi]
+	sub ecx,1
+	jz get_native_done
+
+get_native_even:
+	cmp ecx,2
+	jb get_native_last
+;
+	test si,2
+	jz get_native_double
+;
+	movs word ptr es:[edi],[esi]
+	sub ecx,2
+
+get_native_double:
+	push cx
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop cx
+	and ecx,3
+
+get_native_last:
+	rep movs byte ptr es:[edi],[esi]
+
+get_native_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop bx	
+	pop eax
+	pop ds
+	ret
+get_native	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetRGB
+;
+;		DESCRIPTION:	Get pixels in RGB format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_rgb	Proc far
+	push ds
+	push eax
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push ax
+	movzx ecx,cx
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov esi,eax
+	mov dx,flat_sel
+	mov ds,dx
+	pop cx
+;
+	or cx,cx
+	jz get_rgb_done
+
+get_rgb_loop:
+	movzx ax,byte ptr [esi]
+	shl eax,16
+	mov ax,[esi+1]
+	add esi,3
+	stos dword ptr es:[edi]
+	loop get_rgb_loop
+
+get_rgb_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop eax
+	pop ds
+	ret
+get_rgb	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetNative
+;
+;		DESCRIPTION:	Set pixels in internal format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_native	Proc far
+	push ds
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push ax
+	mov esi,edi
+	movzx ecx,cx
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov edi,eax
+	mov ax,es
+	mov ds,ax
+	mov dx,flat_sel
+	mov es,dx
+	pop cx
+;
+	or cx,cx
+	jz set_native_done
+;
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	je set_native_none
+;
+	add bx,bx
+
+set_native_loop:
+	movzx ax,byte ptr [esi]
+	shl eax,16
+	mov ax,[esi+1]
+	add esi,3
+	call word ptr cs:[bx].LgopTab
+	add edi,3
+	loop set_native_loop
+	jmp set_native_done
+
+set_native_none:
+	movzx ecx,cx
+	mov eax,ecx
+	add ecx,ecx
+	add ecx,eax
+;
+	test di,1
+	jz set_native_even
+;
+	movs byte ptr es:[edi],[esi]
+	sub ecx,1
+	jz set_native_done
+
+set_native_even:
+	cmp ecx,2
+	jb set_native_last
+;
+	test di,2
+	jz set_native_double
+;
+	movs word ptr es:[edi],[esi]
+	sub ecx,2
+
+set_native_double:
+	push cx
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop cx
+	and ecx,3
+
+set_native_last:
+	rep movs byte ptr es:[edi],[esi]
+
+set_native_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop bx	
+	pop eax
+	pop es
+	pop ds
+	ret
+set_native	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetRGB
+;
+;		DESCRIPTION:	Set pixels in RGB format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_rgb	Proc far
+	push ds
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push ax
+	mov esi,edi
+	movzx ecx,cx
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov edi,eax
+	mov ax,es
+	mov ds,ax
+	mov dx,flat_sel
+	mov es,dx
+	pop cx
+;
+	or cx,cx
+	jz set_rgb_done
+;
+	mov bx,ds:v_lgop
+	add bx,bx
+
+set_rgb_loop:
+	lods dword ptr [esi]
+	call word ptr cs:[bx].LgopTab
+	add edi,3
+	loop set_rgb_loop
+
+set_rgb_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop bx	
+	pop eax
+	pop es
+	pop ds
+	ret
+set_rgb	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Copy
+;
+;		DESCRIPTION:	Copy pixels within bitmap
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			source x
+;						DX			source y
+;						SI			dest x
+;						DI			dest y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy	Proc far
+	push ds
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	push ax
+	movzx ecx,cx
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	push eax
+	movzx ecx,si
+	movzx edx,di
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	pop esi
+	mov edi,eax
+	mov dx,flat_sel
+	mov ds,dx
+	mov es,dx
+	pop cx
+;
+	or cx,cx
+	jz copy_done
+;
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	je copy_none
+;
+	add bx,bx
+
+copy_loop:
+	movzx ax,byte ptr [esi]
+	shl eax,16
+	mov ax,[esi+1]
+	add esi,3
+	call word ptr cs:[bx].LgopTab
+	add edi,3
+	loop copy_loop
+	jmp copy_done
+
+copy_none:
+	movzx ecx,cx
+	mov eax,ecx
+	add ecx,ecx
+	add ecx,eax
+;
+	test di,1
+	jz copy_even
+;
+	movs byte ptr es:[edi],[esi]
+	sub ecx,1
+	jz copy_done
+
+copy_even:
+	cmp ecx,2
+	jb copy_last
+;
+	test di,2
+	jz copy_double
+;
+	movs word ptr es:[edi],[esi]
+	sub ecx,2
+
+copy_double:
+	push cx
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop cx
+	and ecx,3
+
+copy_last:
+	rep movs byte ptr es:[edi],[esi]
+
+copy_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop bx	
+	pop eax
+	pop es
+	pop ds
+	ret
+copy	Endp
 
 PAGE
 
@@ -1517,11 +1975,17 @@ mt0F DW OFFSET error,				video_code_sel
 mt10 DW OFFSET error,				video_code_sel
 mt11 DW OFFSET error,				video_code_sel
 mt12 DW OFFSET error,				video_code_sel
-mt13 DW OFFSET get_pixel,			video_code_sel
-mt14 DW OFFSET set_pixel,			video_code_sel
-mt15 DW OFFSET draw_line,			video_code_sel
-mt16 DW OFFSET draw_rect,			video_code_sel
-mt17 DW OFFSET draw_ellipse,		video_code_sel
+mt13 DW OFFSET set_color,			video_code_sel
+mt14 DW OFFSET get_pixel,			video_code_sel
+mt15 DW OFFSET set_pixel,			video_code_sel
+mt16 DW OFFSET get_native,			video_code_sel
+mt17 DW OFFSET get_rgb,				video_code_sel
+mt18 DW OFFSET set_native,			video_code_sel
+mt19 DW OFFSET set_rgb,				video_code_sel
+mt1A DW OFFSET copy,				video_code_sel
+mt1B DW OFFSET draw_line,			video_code_sel
+mt1C DW OFFSET draw_rect,			video_code_sel
+mt1D DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

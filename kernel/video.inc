@@ -127,6 +127,9 @@ draw_bitmap_proc		DD ?
 ; IN  DX		end y
 fill_rect_proc			DD ?
 
+; IN  EAX			RGB color
+set_color_proc			DD ?
+
 ; IN  CX			x
 ; IN  DX			y
 ; OUT EAX			RGB color
@@ -135,6 +138,37 @@ get_pixel_proc			DD ?
 ; IN  CX			x
 ; IN  DX			y
 set_pixel_proc			DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  ES:EDI		line buffer
+get_native_row_proc		DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  ES:EDI		line buffer
+get_rgb_row_proc		DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  ES:EDI		line buffer
+set_native_row_proc		DD ?
+
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  ES:EDI		line buffer
+set_rgb_row_proc		DD ?
+
+; IN  AX			number of pixels
+; IN  CX			source x
+; IN  DX			source y
+; IN  SI			dest x
+; IN  DI			dest y
+copy_row_proc			DD ?
 
 ; IN  AX			x1
 ; IN  BX			y1

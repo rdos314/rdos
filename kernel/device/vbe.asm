@@ -1679,6 +1679,7 @@ set_vbe_mode	PROC far
 	push ax
 	push dx
 ;
+	mov bx,ax
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_init_proc
@@ -1696,22 +1697,45 @@ set_vbe_mode_find:
 	call FindResolution
 	jc set_vbe_mode_done
 ;
+	cmp bl,24
+	ja set_vbe_high
+;
+	cmp bl,16
+	ja set_vbe24
+
+set_vbe16:
+	mov dl,es:vr_flat16_flags
+	test dl, VIDEO_MODE_FLAGS_LFB
+	jz set_vbe24
+;
+	mov ax,es:vr_flat16_mode
+	jmp set_vbe_mode_do
+
+set_vbe24:
+	mov dl,es:vr_flat24_flags
+	test dl, VIDEO_MODE_FLAGS_LFB
+	jz set_vbe_high
+;
+	mov ax,es:vr_flat24_mode
+	jmp set_vbe_mode_do
+
+set_vbe_high:
 	mov dl,es:vr_flat32_flags
 	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe_mode24
+	jz set_vbe_high_mode24
 ;
 	mov ax,es:vr_flat32_mode
 	jmp set_vbe_mode_do
 
-set_vbe_mode24:
+set_vbe_high_mode24:
 	mov dl,es:vr_flat24_flags
 	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe_mode16
+	jz set_vbe_high_mode16
 ;
 	mov ax,es:vr_flat24_mode
 	jmp set_vbe_mode_do
 	
-set_vbe_mode16:
+set_vbe_high_mode16:
 	mov dl,es:vr_flat16_flags
 	test dl, VIDEO_MODE_FLAGS_LFB
 	stc
