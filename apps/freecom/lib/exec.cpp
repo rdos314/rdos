@@ -47,8 +47,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TExecCommand::TExecCommand(TSession *session, const char *name, int detach)
-  : TCommand(session)
+TExecCommand::TExecCommand(TSession *session, const char *name, const char *param, int detach)
+  : TCommand(session, param)
 {
 	FDetach = detach;
 	FProgName = name;

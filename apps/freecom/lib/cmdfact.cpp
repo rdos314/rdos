@@ -553,7 +553,7 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
         if (ok)
         {
             delete cp;
-       		return new TExecCommand(session, FFullPath.Get().GetData(), detach);
+       		return new TExecCommand(session, FFullPath.Get().GetData(), rest, detach);
        	}
 
 		ok = CheckFile(name, ".bat");
@@ -563,7 +563,7 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
         if (ok)
         {
             delete cp;
-       		return new TBatchCommand(session, FFullPath);
+       		return new TBatchCommand(session, FFullPath, rest);
        	}
 
        	cmd = new TErrorCommand(session, name);

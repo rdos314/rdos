@@ -34,7 +34,7 @@
 class TBatchCommand : public TCommand
 {
 public:
-	TBatchCommand(TSession *session, TPathName &name);
+	TBatchCommand(TSession *session, TPathName &name, const char *param);
 
 	virtual int Execute(char *param);
 

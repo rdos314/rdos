@@ -46,8 +46,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TBatchCommand::TBatchCommand(TSession *session, TPathName &name)
-  : TCommand(session)
+TBatchCommand::TBatchCommand(TSession *session, TPathName &name, const char *param)
+  : TCommand(session, param)
 {
 	FProgName = name;
 }

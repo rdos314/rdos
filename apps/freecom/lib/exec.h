@@ -34,7 +34,7 @@
 class TExecCommand : public TCommand
 {
 public:
-	TExecCommand(TSession *session, const char *name, int detach);
+	TExecCommand(TSession *session, const char *name, const char *param, int detach);
 
 	virtual int Execute(char *param);
 
