@@ -30,10 +30,10 @@
 GateSize = 16
 
 include system.def
-include os.def
-include os.inc
-include user.def
-include user.inc
+include ..\os.def
+include ..\os.inc
+include ..\user.def
+include ..\user.inc
 
 include emulate.inc
 include emcom.inc

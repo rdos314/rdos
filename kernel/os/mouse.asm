@@ -38,7 +38,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\os\system.inc
 INCLUDE mouse.inc
-INCLUDE wait.inc
+INCLUDE ..\wait.inc
 
 mouse_wait_header	STRUC
 

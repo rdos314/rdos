@@ -33,18 +33,18 @@ GateSize = 16
 
 INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE driver.def
+INCLUDE ..\driver.def
 INCLUDE int.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE exec.def
 INCLUDE ne.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE	ipc.inc
-INCLUDE handle.inc
+INCLUDE ..\handle.inc
 
 ipc_handle_seg	STRUC
 

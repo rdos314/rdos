@@ -30,12 +30,12 @@
 GateSize = 16
 
 INCLUDE ..\os\system.def
-INCLUDE ..\os\driver.def
+INCLUDE ..\driver.def
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE ..\os\system.inc
 
 INCLUDE ..\os\int.def
