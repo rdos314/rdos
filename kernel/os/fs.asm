@@ -374,6 +374,7 @@ init_file_old_freed:
 	mov dword ptr ds:fs_sys_arr+4,0
 	InitSection ds:fs_list_section
 	InitReadWriteSection ds:fs_access_section
+	EnterWriteSection ds:fs_access_section
 	mov ds:fs_access_parse,0
 	mov ds:fs_root_dir_sel,0
 	mov ds:fs_mount_id,1
@@ -452,6 +453,7 @@ start_file_system	Proc far
 	pop es
 	mov word ptr es:fs_sys_arr+4,si
 	mov word ptr es:fs_sys_arr+6,ds
+	LeaveWriteSection ds:fs_access_section
 ;
 	pop di
 	pop si

@@ -2275,6 +2275,67 @@ RdosGetTime	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSetTime
+;
+;		description:	sets time in record form
+;
+;		PARAMETERS:		int year
+;						int month
+;						int day
+;						int hour
+;						int min
+;						int sec
+;						int milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetTime
+
+sttYear	    EQU 8
+sttMonth	EQU 12
+sttDay		EQU 16
+sttHour	    EQU 20
+sttMin		EQU 24
+sttSec		EQU 28
+sttMilli	EQU 32
+
+RdosSetTime	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov dx,[ebp].sttYear
+	mov ch,[ebp].sttMonth
+	mov cl,[ebp].sttDay
+	mov bh,[ebp].sttHour
+	mov bl,[ebp].sttMin
+	mov ah,[ebp].sttSec
+	UserGate time_to_binary_nr
+;
+    mov edi,edx
+    mov esi,eax
+;
+    mov eax,[ebp].sttMilli
+    mov edx,1192
+    mul edx
+    add esi,eax
+    adc edi,0
+;    
+	UserGate get_system_time_nr
+    sub esi,eax
+    sbb edi,edx
+    mov eax,esi
+    mov edx,edi
+    UserGate update_time_nr
+;
+	popad
+	pop ebp
+	ret 28
+RdosSetTime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosTicsToRecord
 ;
 ;		description:	Convert tics to record form

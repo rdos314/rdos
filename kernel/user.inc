@@ -834,6 +834,12 @@ SystemTimeToTime   MACRO
 	UserGate system_time_to_time_nr
 					ENDM
 
+
+; IN  EDX:EAX		Difference between real time and system time
+UpdateTime	MACRO
+	UserGate update_time_nr
+					ENDM
+
 ; IN  DX		Year
 ; IN  CH		Month
 ; OUT AL		Days in month

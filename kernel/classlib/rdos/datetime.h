@@ -61,6 +61,8 @@ public:
 	int GetSec() const;
 	int GetMilliSec() const;
 
+	void Set();
+
 protected:
 	void RawToRecord();
 	void RecordToRaw();

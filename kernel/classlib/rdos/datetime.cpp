@@ -403,6 +403,22 @@ int TDateTime::GetMilliSec() const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::Set
+#
+#   Purpose....: Set time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::Set()
+{
+	RdosSetTime(FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::RawToRecord
 #
 #   Purpose....: Convert from raw to record format

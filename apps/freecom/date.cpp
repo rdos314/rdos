@@ -145,6 +145,7 @@ int TDateCommand::SetDate(const char *str)
 	msec = FTime.GetMilliSec();
 
 	FTime = TDateTime(year, month, day, hour, min, sec, msec);
+    FTime.Set();
 
 	return TRUE;
 }
@@ -186,7 +187,7 @@ int TDateCommand::Execute(char *param)
 			if (FNoPrompt)
 				return 0;
 
-			FMsg.Load(TEXT_MSG_ENTER_DATE_AMERICAN);
+			FMsg.Load(TEXT_MSG_ENTER_DATE_JAPANESE);
 			Write(FMsg.GetData());
 
 			if (!Read(s, sizeof(s)))

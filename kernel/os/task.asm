@@ -686,12 +686,6 @@ timer_free_list_create:
 	mov ax,sim_get_flags_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET update_time
-	mov di,OFFSET update_time_name
-	xor cl,cl
-	mov ax,update_time_nr
-	RegisterOsGate
-;
 	mov si,OFFSET debug_break
 	mov di,OFFSET debug_break_name
 	xor cl,cl
@@ -782,6 +776,12 @@ timer_free_list_create:
 	mov di,OFFSET debug_next_name
 	xor dx,dx
 	mov ax,debug_next_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET update_time
+	mov di,OFFSET update_time_name
+	xor cl,cl
+	mov ax,update_time_nr
 	RegisterBimodalUserGate
 ;
 	mov di,OFFSET check_list
@@ -3651,7 +3651,7 @@ update_time	PROC far
 	sti
 	pop bx
 	pop ds
-	ret
+	retf32
 update_time	ENDP
 
 code	ENDS

@@ -1066,11 +1066,6 @@ ReleasePrivateIrqHandler	MACRO
 
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
-;	EDX:EAX		Difference between real time and system time
-UpdateTime	MACRO
-	OsGate update_time_nr
-					ENDM
-
 UpdateRtc	MACRO
 	OsGate update_rtc_nr
 					ENDM
