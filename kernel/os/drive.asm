@@ -1187,6 +1187,184 @@ completed_wakeup_done:
 disc_request_completed	Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_disc_request_array
+;
+;		DESCRIPTION:	get a disc request array
+;
+;		PARAMETERS:		BX		Disc selector
+;
+;		RETURNS:		ESI		Disc array
+;						ECX		Number of entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_request_array_name	DB 'Get Disc Request Array', 0
+
+get_disc_request_array	Proc far
+	push ds
+	push es
+	push eax
+	push ebx
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov ds,bx
+	EnterSection ds:disc_section
+	call update_async_write
+	call update_async_timer
+	xor ecx,ecx
+	mov edi,ds:disc_pend_list
+	or edi,edi
+	jz get_disc_req_arr_done
+;
+	movzx edx,es:[edi].dh_sector
+	movzx esi,es:[edi].dh_unit
+	mov esi,ds:[4*esi].disc_unit_arr
+	lea ebx,[4*edx+esi].disc_sector_arr
+	mov edi,es:[4*edx+esi].disc_sector_arr
+	or edi,edi
+	jz get_disc_req_done
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je get_disc_req_arr_read
+;
+	cmp al,STATE_DIRTY
+	je get_disc_req_arr_write
+;
+	cmp al,STATE_SEQ
+	jne get_disc_req_arr_write
+
+get_disc_req_arr_seq:
+	push ebx
+	push ecx
+	push edx
+	call update_seq_write
+	pop edx
+	pop ecx
+	pop ebx
+
+get_disc_req_arr_write:
+	inc edx
+	cmp dx,ds:disc_sectors_per_unit
+	jae get_disc_req_arr_done
+;
+	inc ecx
+	mov edi,es:[4*edx+esi].disc_sector_arr
+	or edi,edi
+	jz get_disc_req_arr_done
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_DIRTY
+	je get_disc_req_arr_write
+;
+	cmp al,STATE_SEQ
+	je get_disc_req_arr_seq
+	jmp get_disc_req_arr_done
+
+get_disc_req_arr_read:
+	inc edx
+	cmp dx,ds:disc_sectors_per_unit
+	jae get_disc_req_arr_done
+;
+	inc ecx
+	mov edi,es:[4*edx+esi].disc_sector_arr
+	or edi,edi
+	jz get_disc_req_arr_done
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je get_disc_req_arr_read
+
+get_disc_req_arr_done:
+	LeaveSection ds:disc_section
+	or ecx,ecx
+	stc
+	jz get_disc_req_arr_end
+;
+	mov esi,ebx
+	clc
+
+get_disc_req_arr_end:
+	pop edi
+	pop edx
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+get_disc_request_array	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			disc_request_array_done
+;
+;		DESCRIPTION:	Disc request array done
+;
+;		PARAMETERS:		BX		Disc selector
+;						ESI		Disc array
+;						ECX		Number of entries
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_request_array_done_name	DB 'Disc Request Array Done', 0
+
+disc_request_array_done	Proc far
+	push ds
+	push es
+	push eax
+	push ebx
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov ds,bx
+	EnterSection ds:disc_section
+;
+	mov edx,ds:disc_pend_list
+	mov edi,es:[esi+4*ecx-4]
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edx].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edx
+	jne disc_req_arr_done_unlink
+;
+	mov ds:disc_pend_list,0
+	mov ds:disc_pend_first,0
+	clc
+	jmp disc_req_arr_done_leave
+
+disc_req_arr_done_unlink:
+	mov ds:disc_pend_list,eax
+	cmp edi,ds:disc_pend_first
+	jne disc_req_arr_done_leave
+;
+	mov ds:disc_pend_first,eax
+
+disc_req_arr_done_leave:
+	LeaveSection ds:disc_section
+;
+	pop edi
+	pop edx
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+disc_request_array_done	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2119,6 +2297,16 @@ init	PROC far
 	mov si,OFFSET disc_request_completed
 	mov di,OFFSET disc_request_completed_name
 	mov ax,disc_request_completed_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_disc_request_array
+	mov di,OFFSET get_disc_request_array_name
+	mov ax,get_disc_request_array_nr
+	RegisterOsGate
+;
+	mov si,OFFSET disc_request_array_done
+	mov di,OFFSET disc_request_array_done_name
+	mov ax,disc_request_array_done_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET allocate_fixed_drive

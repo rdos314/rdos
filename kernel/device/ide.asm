@@ -976,7 +976,8 @@ PAGE
 ;		DESCRIPTION:	Read drive
 ;
 ;		PARAMETERS:		FS		Disc selector
-;						EDI		Disc handle
+;						ESI		Disc handle array
+;						ECX		Entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -985,38 +986,14 @@ read_drive	Proc near
 	mov ds,ax
 	EnterSection IdeSection
 ;
-	push edi
-	mov si,1
-	mov ax,es:[edi].dh_sector
-	mov dx,es:[edi].dh_unit
-	mov bx,fs:disc_sel
-	PollDiscRequest
-	jc read_drive_size_found
+	cmp ecx,256
+	jb read_drive_retry_in_range
+;
+	mov ecx,255
 
-read_drive_size_loop:
-	inc ax
-	cmp ax,fs:drive_sectors_per_unit
-	jae read_drive_size_found
-;
-	mov cl,es:[edi].dh_state
-	cmp cl,STATE_EMPTY
-	jne read_drive_size_found
-;
-	cmp ax,es:[edi].dh_sector
-	jne read_drive_size_found
-;
-	cmp dx,es:[edi].dh_unit
-	jne read_drive_size_found
-;
-	cmp si,255
-	jae read_drive_size_found
-;
-	inc si
-	mov edi,es:[edi].dh_next
-	jmp read_drive_size_loop
-
-read_drive_size_found:
-	pop edi
+read_drive_retry_in_range:
+	push ecx
+	push esi
 
 read_drive_retry_loop:
 	ClearSignal
@@ -1034,10 +1011,7 @@ read_drive_lba:
 	add eax,ebx
 	mov edx,eax
 	mov ah,fs:drive_precomp
-	push cx
-	mov cx,si
 	call SetupLbaTaskFile
-	pop cx
 	jmp read_drive_start
 
 read_drive_ide:
@@ -1048,56 +1022,21 @@ read_drive_ide:
 	mov bl,ah
 	inc bl
 	mov ah,fs:drive_precomp
-	push cx
-	mov cx,si
 	call SetupIdeTaskFile
-	pop cx
 
 read_drive_start:
 	jc read_drive_fail
 ;
-	mov cx,3
+	mov bp,3
 	mov al,20h
 	mov dx,1F7h
 	out dx,al
-	WaitForSignal
 
 read_sector_loop:
+	WaitForSignal
 	call CheckStatus
 	jc read_drive_retry
 ;
-	cmp si,1
-	jnz read_sector_input
-;
-	push edi
-	mov ax,es:[edi].dh_sector
-	mov dx,es:[edi].dh_unit
-	mov bx,fs:disc_sel
-	PollDiscRequest
-	jc read_drive_pop_input
-;
-	mov cl,es:[edi].dh_state
-	cmp cl,STATE_EMPTY
-	jne read_drive_pop_input
-;
-	inc ax
-	cmp ax,es:[edi].dh_sector
-	jne read_drive_pop_input
-;
-	cmp dx,es:[edi].dh_unit
-	jne read_drive_pop_input
-;
-	int 3
-	mov dx,1F1h
-	in al,dx
-	inc al
-	out dx,al
-	inc si
-
-read_drive_pop_input:
-	pop edi
-
-read_sector_input:
 	push cx
 	push edi
 	mov edi,es:[edi].dh_data
@@ -1111,7 +1050,7 @@ read_sector_input:
 	jmp read_drive_ok
 
 read_drive_retry:
-	sub cx,1
+	sub bp,1
 	jnz read_drive_retry_loop
 
 read_drive_fail:
@@ -1122,39 +1061,21 @@ read_drive_fail:
 
 read_drive_ok:
 	mov es:[edi].dh_state,STATE_USED
-	mov ax,es:[edi].dh_sector
-	mov dx,es:[edi].dh_unit
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
 
 read_drive_check_next:
-	inc ax
-	sub si,1
-	jz read_drive_done
-;
-	mov bx,fs:disc_sel
-	GetDiscRequest
-	jc read_drive_error
-;
-	mov cl,es:[edi].dh_state
-	cmp cl,STATE_EMPTY
-	jne read_drive_error
-;
-	cmp ax,es:[edi].dh_sector
-	jne read_drive_error
-;
-	cmp dx,es:[edi].dh_unit
-	jne read_drive_error
-;
-	WaitForSignal
-	mov cx,3
-	jmp read_sector_loop
-
-read_drive_error:
-	int 3
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz read_sector_loop
 
 read_drive_done:
 	LeaveSection IdeSection
+	pop esi
+	pop ecx
+	mov bx,fs:disc_sel
+	DiscRequestArrayDone	
 	ret
 read_drive	Endp
 
@@ -1168,7 +1089,8 @@ PAGE
 ;		DESCRIPTION:	Perform a write request
 ;
 ;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
+;						ESI		Disc handle array
+;						ECX		Entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1177,49 +1099,21 @@ write_drive	Proc near
 	mov ds,ax
 	EnterSection IdeSection
 ;
-	push edi
-	mov si,1
 	mov ax,es:[edi].dh_sector
-	mov dx,es:[edi].dh_unit
-	mov cx,ax
-	or cx,dx
+	or ax,es:[edi].dh_unit
 	jnz write_drive_not_zero
 ;
 	int 3
 
 write_drive_not_zero:
-	mov bx,fs:disc_sel
-	PollDiscRequest
-	jc write_drive_size_found
+	cmp ecx,256
+	jb write_drive_retry_in_range
+;
+	mov ecx,255
 
-write_drive_size_loop:
-	inc ax
-	cmp ax,fs:drive_sectors_per_unit
-	jae write_drive_size_found
-;
-	mov cl,es:[edi].dh_state
-	cmp cl,STATE_DIRTY
-	je write_drive_size_is_write
-;
-	cmp cl,STATE_SEQ
-	jne write_drive_size_found
-
-write_drive_size_is_write:
-	cmp ax,es:[edi].dh_sector
-	jne write_drive_size_found
-;
-	cmp dx,es:[edi].dh_unit
-	jne write_drive_size_found
-;
-	cmp si,255
-	jae write_drive_size_found
-;
-	inc si
-	mov edi,es:[edi].dh_next
-	jmp write_drive_size_loop
-
-write_drive_size_found:
-	pop edi
+write_drive_retry_in_range:
+	push ecx
+	push esi
 
 write_drive_retry_loop:
 	ClearSignal
@@ -1237,10 +1131,7 @@ write_drive_lba:
 	add eax,ebx
 	mov edx,eax
 	mov ah,fs:drive_precomp
-	push cx
-	mov cx,si
 	call SetupLbaTaskFile
-	pop cx
 	jmp write_drive_start
 
 write_drive_ide:
@@ -1251,15 +1142,12 @@ write_drive_ide:
 	mov bl,ah
 	inc bl
 	mov ah,fs:drive_precomp
-	push cx
-	mov cx,si
 	call SetupIdeTaskFile
-	pop cx
 
 write_drive_start:
 	jc write_drive_retry
 ;
-	mov cx,3
+	mov bp,3
 	mov al,30h
 	mov dx,1F7h
 	out dx,al
@@ -1285,7 +1173,7 @@ write_sector_loop:
 	jnc write_drive_ok
 
 write_drive_retry:
-	sub cx,1
+	sub bp,1
 	jnz write_drive_retry_loop
 
 write_drive_fail:
@@ -1296,42 +1184,21 @@ write_drive_fail:
 
 write_drive_ok:
 	mov es:[edi].dh_state,STATE_USED
-	mov ax,es:[edi].dh_sector
-	mov dx,es:[edi].dh_unit
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
 
 write_drive_check_next:
-	inc ax
-	sub si,1
-	jz write_drive_done
-;
-	mov bx,fs:disc_sel
-	GetDiscRequest
-	jc write_drive_error
-;
-	mov cl,es:[edi].dh_state
-	cmp cl,STATE_DIRTY
-	je write_drive_is_write
-;
-	cmp cl,STATE_SEQ
-	jne write_drive_error
-
-write_drive_is_write:
-	cmp ax,es:[edi].dh_sector
-	jne write_drive_error
-;
-	cmp dx,es:[edi].dh_unit
-	jne write_drive_error
-;
-	mov cx,3
-	jmp write_sector_loop
-
-write_drive_error:
-	int 3
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz write_sector_loop
 
 write_drive_done:
 	LeaveSection IdeSection
+	pop esi
+	pop ecx
+	mov bx,fs:disc_sel
+	DiscRequestArrayDone
 	ret
 write_drive	Endp
 
@@ -1351,9 +1218,10 @@ PAGE
 perform_one	Proc near
 
 perform_one_loop:
-	GetDiscRequest
+	GetDiscRequestArray
 	jc perform_one_done
 ;
+	mov edi,es:[esi]
 	mov al,es:[edi].dh_state
 	cmp al,STATE_EMPTY
 	je perform_one_read

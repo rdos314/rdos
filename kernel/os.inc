@@ -1133,6 +1133,20 @@ NewDiscRequest	MACRO
 	OsGate new_disc_request_nr
 					ENDM
 
+;	IN  BX		Disc sel
+;	OUT	ESI		Disc handle array
+;	OUT ECX		Number of entries
+GetDiscRequestArray	MACRO
+	OsGate get_disc_request_array_nr
+					ENDM
+
+;	IN  BX		Disc sel
+;	IN	ESI		Disc handle array
+;	IN  ECX		Number of entries
+DiscRequestArrayDone	MACRO
+	OsGate disc_request_array_done_nr
+					ENDM
+
 ;	OUT	AL		Drive #
 AllocateStaticDrive	MACRO
 	OsGate allocate_static_drive_nr

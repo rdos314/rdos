@@ -257,5 +257,7 @@ get_disc_request_nr			EQU 226
 disc_request_completed_nr	EQU 227
 poll_disc_request_nr		EQU 228
 new_disc_request_nr			EQU 229
+get_disc_request_array_nr	EQU 230
+disc_request_array_done_nr	EQU 231
 
-osgate_entries				EQU 230
+osgate_entries				EQU 232
