@@ -238,6 +238,7 @@ void UpdateFuzzy()
 	int hour;
 	int min;
 	int night;
+	int i;
 
 	RdosSetCursorPosition(11, 0);
 	RdosWriteString("TEMP ");
@@ -260,61 +261,71 @@ void UpdateFuzzy()
 			night = TRUE;
 	}
 
-	if (night)
-		radiator[0]->SetNightRef();
-	else
-		radiator[0]->SetDayRef();
-
-	fval = radiator[0]->GetRef();
-	RdosSetCursorPosition(12, 5);
-	sprintf(str, "%4.1Lf ", fval);
-	RdosWriteString(str);
-
-	radiator[0]->SetIntensity(50.0 + lv * 25.0);
-	radiator[0]->SetAmbient(tv[0]);
-
-	RdosSetCursorPosition(11, 5);
-	if (radiator[0]->IsOnline())
+	for (i = 0; i < 16; i++)
 	{
-		fval = radiator[0]->GetTemp();
-		sprintf(str, "%4.1Lf ", fval);
-		RdosWriteString(str);
-	}
-	else
-		RdosWriteString("---- ");
-
-	RdosSetCursorPosition(13, 5);
-	if (radiator[0]->IsOnline())
-	{
-		fval = radiator[0]->GetMotor();
-		sprintf(str, " %3.1Lf ", fval);
-		RdosWriteString(str);
-
-		if (fval >= 8.5)
+		if (radiator[i])
 		{
-			if (HeatStartCount >= 5)
-				heat->StartHeat();
-			HeatStartCount++;
-			HeatStopCount = 0;
-		}
-		else
-		{
-			if (fval <= 5.0)
+
+			if (night)
+				radiator[i]->SetNightRef();
+			else
+				radiator[i]->SetDayRef();
+
+			fval = radiator[i]->GetRef();
+			RdosSetCursorPosition(12, 5 + 5 * i);
+			sprintf(str, "%4.1Lf ", fval);
+			RdosWriteString(str);
+
+			radiator[i]->SetIntensity(50.0 + lv * 25.0);
+			radiator[i]->SetAmbient(tv[0]);
+
+			RdosSetCursorPosition(11, 5 + 5 * i);
+			if (radiator[i]->IsOnline())
 			{
-				if (HeatStopCount >= 5)
-					heat->StopHeat();
-				HeatStartCount = 0;
-				HeatStopCount++;
+				fval = radiator[i]->GetTemp();
+				sprintf(str, "%4.1Lf ", fval);
+				RdosWriteString(str);
 			}
 			else
+				RdosWriteString("---- ");
+
+			RdosSetCursorPosition(13, 5 + 5 * i);
+			if (radiator[i]->IsOnline())
 			{
-				HeatStartCount = 0;
-				HeatStopCount = 0;
+				fval = radiator[i]->GetMotor();
+				sprintf(str, " %3.1Lf ", fval);
+				RdosWriteString(str);
+
+				if (i == 0)
+				{
+					if (fval >= 8.5)
+					{
+						if (HeatStartCount >= 5)
+							heat->StartHeat();
+						HeatStartCount++;
+						HeatStopCount = 0;
+					}
+					else
+					{
+						if (fval <= 5.0)
+						{
+							if (HeatStopCount >= 5)
+								heat->StopHeat();
+							HeatStartCount = 0;
+							HeatStopCount++;
+						}
+						else
+						{
+							HeatStartCount = 0;
+							HeatStopCount = 0;
+						}
+					}
+				}
 			}
+			else
+				RdosWriteString(" --- ");
 		}
 	}
-	else
-		RdosWriteString(" --- ");
 }
 
 void SecClear(TSample *sample)
@@ -501,6 +512,8 @@ void cdecl main()
 
 	heat = new THeat;
 	radiator[0] = new TRadiator(0x20);
+	radiator[1] = new TRadiator(0x21);
+	radiator[2] = new TRadiator(0x22);
 
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;
