@@ -856,6 +856,8 @@ receive_data_norm_rec:
 	call fs:d_receive
 	call fs:d_remove
 	call gs:p_callback
+	xor ax,ax
+	mov es,ax
 	jmp receive_data_loop
 
 receive_data_prot_next:
