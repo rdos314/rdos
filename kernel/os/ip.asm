@@ -948,6 +948,7 @@ receive_check_ok:
 	xchg al,ah
 	cmp ax,68
 	jne receive_fail
+	jmp receive_this_node
 
 receive_dhcp_done:
 	mov eax,es:[di].ip_dest
@@ -1048,12 +1049,20 @@ PAGE
 define_ip	Proc near
 	push es
 	push ax
+	push bx
 	push edx
+	push esi
 	push di
 ;
+    int 3
+    push ds
 	mov dx,ip_data_sel
-	mov es,dx
-	mov es:my_ip,eax
+	mov ds,dx
+	mov ds:my_ip,eax
+	mov esi,OFFSET my_ip
+	mov bx,ds:ip_handle
+	DefineProtocolAddress
+	pop ds
 ;
 	mov edx,eax
 	mov ax,cs
@@ -1062,7 +1071,9 @@ define_ip	Proc near
 	call WriteIpEnv
 ;
 	pop di
+	pop esi
 	pop edx
+	pop bx
 	pop ax
 	pop es
 	ret

@@ -150,6 +150,7 @@ RxRingSize			DD ?
 RxRingSel			DW ?
 RxRingPtr           DW ?
 TxSelArr            DW 4 DUP(?)
+TxBufPtr            DW 0
 TxThread            DW ?
 TxSection           section_typ <>
 EthernetAddress		DB 6 DUP(?)
@@ -596,7 +597,8 @@ Receive	Proc far
     add edx,ds:RxRingLinear
     CreateAliasSelector16
     mov es,bx
-    xor edi,edi
+	mov edi,14
+	sub ecx,14
 ;
     pop edx
     pop bx
@@ -723,6 +725,12 @@ Send	Proc far
 	stosw
 ;
 	add ecx,14
+	cmp ecx,60
+	jae sPadOk
+;
+    mov ecx,60
+
+sPadOk:	
     mov bx,es
 	push ecx
 	GetSelectorBaseSize
@@ -741,18 +749,17 @@ Send	Proc far
     ClearSignal 
 
 ssRetry:
-    mov cx,4
     mov dx,ds:IoBase
     add dx,TxStatus0
-    mov bx,OFFSET TxSelArr
-
-ssLoop:
+    mov bx,ds:TxBufPtr
+    add bx,bx
+    add dx,bx
+    add dx,bx
+    add bx,OFFSET TxSelArr
+;    
     in eax,dx
     test ax,2000h
     jnz ssFound
-    add dx,4
-    add bx,2
-    loop ssLoop
 ;
     WaitForSignal
     jmp ssRetry 
@@ -779,6 +786,11 @@ ssNoPrev:
     sub dx,TxAddr0
     add dx,TxStatus0
     out dx,eax
+;    
+    mov bx,ds:TxBufPtr
+    inc bx
+    and bx,3
+    mov ds:TxBufPtr,bx
 	LeaveSection ds:TxSection
 ;
 	pop edi

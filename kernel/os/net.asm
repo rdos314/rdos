@@ -1571,6 +1571,41 @@ net_received_done:
 net_received	Endp
 
 PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DefineProtocolAddress
+;
+;	Purpose:		Define protocol address
+;
+;	Parameters:		BX		Driver handle
+;                   DS:ESI  Address
+;					
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_protocol_address_name	DB 'Define Protocol Address',0
+
+define_protocol_address	Proc far
+	push ds
+	push es
+	push ecx
+	push esi
+	push edi
+;
+    mov es,bx
+    movzx ecx,es:p_logical_addr_len
+    mov edi,OFFSET p_logical_my_addr
+    rep movs byte ptr es:[edi],[esi]
+;	
+    pop edi
+    pop esi
+    pop ecx
+    pop es
+	pop ds
+	ret
+define_protocol_address Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1835,6 +1870,12 @@ init	PROC far
 	mov di,OFFSET register_ppp_driver_name
 	xor cl,cl
 	mov ax,register_ppp_driver_nr
+	RegisterOsGate
+;
+	mov si,OFFSET define_protocol_address
+	mov di,OFFSET define_protocol_address_name
+	xor cl,cl
+	mov ax,define_protocol_addr_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_net_buffer

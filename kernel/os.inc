@@ -1151,6 +1151,12 @@ SendNet	MACRO
 	OsGate send_net_nr
 						ENDM
 
+; IN  BX		PROTOCOL HANDLE
+; IN  DS:ESI	ADDRESS
+DefineProtocolAddress	MACRO
+	OsGate define_protocol_addr_nr
+						ENDM
+
 ; IN  FS		Driver handle
 ; IN  ECX		Size
 ; OUT ES:EDI	Data buffer to use

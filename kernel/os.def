@@ -430,5 +430,7 @@ send_broadcast_ip_nr		EQU 290
 net_broadcast_nr			EQU 291
 add_dhcp_option_nr			EQU 292
 
+define_protocol_addr_nr     EQU 293
+
 osgate_entries				EQU 300
 
