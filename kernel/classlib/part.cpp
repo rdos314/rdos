@@ -1127,11 +1127,11 @@ void TDiscPartition::AddFree()
 		Start = PartArr[i]->Start + PartArr[i]->Size;
 	}
 
-	if (Start + 1024 < TotalSectors)
+	if (Start + 1024 < FDisc->GetTotalSectors())
 	{
 		PartArr[i] = new TFreePartition(FDisc);
 		PartArr[i]->Start = Start;
-		PartArr[i]->Size = TotalSectors - Start;
+		PartArr[i]->Size = FDisc->GetTotalSectors() - Start;
 		PartCount++;
 	}
 }
@@ -1163,11 +1163,11 @@ void TDiscPartition::Update()
 
 	PartRoot = new TPartitionTable(FDisc, 0, 0, 0, 0, 0);
 	PartRoot->Start = 0;
-	if (GetParams() && BytesPerSector)
+	if (GetParams())
 	{
-		PartRoot->FTotalSectors = TotalSectors;
-		PartRoot->FHeads = Heads;
-		PartRoot->FSectorsPerCyl = SectorsPerCyl;
+		PartRoot->FTotalSectors = FDisc->GetTotalSectors();
+		PartRoot->FHeads = FDisc->GetHeads();
+		PartRoot->FSectorsPerCyl = FDisc->GetSectorsPerCyl();
 		PartRoot->Size = PartRoot->FTotalSectors;
 		FDisc->Read(0, Buf, 512);
 		PartRoot->ProcessOne(0, &Buf[0x1BE]);

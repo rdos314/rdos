@@ -640,7 +640,7 @@ void TCbusProtocolAnalyser::ShowMsg()
     {    
         Elapsed = FTime->GetLsb() - FPrevTime->GetLsb();
 
-		if (Elapsed > 1193 * 1000)
+		if (Elapsed > 1193 * 500)
         {
             memcpy(FTempMsg, FMsg, FSize);
             TempSize = FSize;

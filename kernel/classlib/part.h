@@ -194,10 +194,6 @@ public:
 	TPartitionTable *PartRoot;
 	TPartition *PartArr[MAX_PART_COUNT];
 	int PartCount;
-	int BytesPerSector;
-	int SectorsPerCyl;
-	int Heads;
-	long TotalSectors;
 
 protected:
 	void Free();

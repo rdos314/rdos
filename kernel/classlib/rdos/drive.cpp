@@ -110,7 +110,7 @@ long TDrive::GetFreeSectors()
     if (FValid)
     {
 		RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);
-	    return FBytesPerUnit * FreeUnits;
+	    return BytesPerUnit * FreeUnits / 512;
 	}
 	else
 	    return 0;
@@ -125,5 +125,5 @@ long TDrive::GetFreeSectors()
 *##########################################################################*/
 long TDrive::GetTotalSectors()
 {
-	return FBytesPerUnit * FUnits;
+	return FBytesPerUnit * FUnits / 512;
 }
