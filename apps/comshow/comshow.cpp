@@ -66,7 +66,7 @@ void cdecl main()
 //	TFile RawFile("z:\\compacpu.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
-	TFile RawFile("raw.dat");
+	TFile RawFile("tatsuno.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
