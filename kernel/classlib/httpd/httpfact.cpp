@@ -241,9 +241,9 @@ void THttpSocketServerFactory::Init()
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpSocketServerFactory::AddCustomPage(THttpCustomPage *page)
+void THttpSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
 {
-	 THttpCustomPage *curr;
+	 THttpCustomPageFactory *curr;
 
     page->FList = 0;
 	curr = FPageList;

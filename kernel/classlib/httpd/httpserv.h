@@ -67,24 +67,25 @@ public:
 
 	int IsOpen();
 //	int Read(char *buf, int size);
-    char *ReadLine();
+	char *ReadLine();
 
-    THttpCustomPage *Find(const char *FileName);
+	THttpCustomPageFactory *Find(const char *FileName);
+	TString CreateUniqueFile();
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 
-    static int IsEmpty(const char *s);
-    static int IsArgDelim(char ch);
-    static int IsFileNameChar(char c);
-    static const char *LTrimsp(const char *str);
-    static const char *LTrim(const char *str);
-    static void RTrim(char *str);
-    static char *Unquote(const char *str, const char *end);
-    static int MatchToken(char **Xp, const char *word, int len);
+	static int IsEmpty(const char *s);
+	static int IsArgDelim(char ch);
+	static int IsFileNameChar(char c);
+	static const char *LTrimsp(const char *str);
+	static const char *LTrim(const char *str);
+	static void RTrim(char *str);
+	static char *Unquote(const char *str, const char *end);
+	static int MatchToken(char **Xp, const char *word, int len);
 
 	TString RootDir;
 	int KeepAlive;
-    THttpCustomPage *FPageList;
+	THttpCustomPageFactory *FPageList;
 
 protected:
     char *FSocketBuf;

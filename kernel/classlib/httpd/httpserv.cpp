@@ -297,20 +297,39 @@ void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpSocketServer::Find(const char *FileName)
+THttpCustomPageFactory *THttpSocketServer::Find(const char *FileName)
 {
     TString Name(FileName);
-    THttpCustomPage *curr = FPageList;
+	THttpCustomPageFactory *curr = FPageList;
 
-    
     while (curr)
     {
-        if (curr->FFileName == Name)
+		if (curr->FReqName == Name)
             return curr;
         else
             curr = curr->FList;
     }
     return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::CreateUniqueFile
+#
+#   Purpose....: Create an unique file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString THttpSocketServer::CreateUniqueFile()
+{
+    char str[50];
+
+    sprintf(str, "z:\\HTTP%ld%d", FSocket->GetRemoteIP(), FSocket->GetRemotePort());
+
+    return TString(str);
 }
 
 /*##########################################################################

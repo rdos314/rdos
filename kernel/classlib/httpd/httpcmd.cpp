@@ -264,12 +264,7 @@ void THttpCommand::Run()
     	    while (*ptr == '/')
     	        ptr++;
 
-            THttpCustomPage *cust = FServer->Find(ptr);
-
-            if (cust)
-                cust->Execute(this);
-            else
-            	Execute(ptr);
+            Execute(ptr);
         }
     }
 

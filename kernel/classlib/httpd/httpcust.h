@@ -20,58 +20,52 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpfact.h
-# HTTP Command factory base class
+# httpcmd.h
+# Http command base class
 #
 ########################################################################*/
 
-#ifndef _HTTPFACT_H
-#define _HTTPFACT_H
+#ifndef _HTTPCUST_H
+#define _HTTPCUST_H
 
-#include "httpcmd.h"
+#include "file.h"
+#include "path.h"
 
+class THttpCommand;
 class THttpSocketServer;
-class THttpCustomPageFactory;
+class THttpSocketServerFactory;
 
-class THttpCommandFactory
+class THttpCustomPage
 {
-public:
-	THttpCommandFactory(const char *name);
-	virtual ~THttpCommandFactory();
+friend class THttpCustomPageFactory;
 
-	static THttpCommand *Parse(THttpSocketServer *Server, const char *line);
+public:
+    THttpCustomPage(THttpCommand *Cmd, const char *FileName);
+    ~THttpCustomPage();
+
+    virtual void Execute();
 
 protected:
-	virtual THttpCommand *Create(THttpSocketServer *Server, const char *param) = 0;
-
-	void InsertCommand();
-	void RemoveCommand();
-
-	static THttpCommandFactory *FCmdList;
-	THttpCommandFactory *FList;
-	TString FName;
+    THttpCommand *FCmd;
+    TString FFileName;
 };
 
-class THttpSocketServerFactory : public TSocketServerFactory
+class THttpCustomPageFactory
 {
+friend class THttpSocketServer;
+friend class THttpSocketServerFactory;
+
 public:
-	THttpSocketServerFactory::THttpSocketServerFactory();
+	THttpCustomPageFactory(const char *ReqName);
+	virtual ~THttpCustomPageFactory();
 
-	void AddCustomPage(THttpCustomPageFactory *page);
+	virtual THttpCustomPage *Create(THttpCommand *cmd);
 
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
-
-	void (*OnCommand)(THttpSocketServer *server, const char *str);
-
-	TString RootDir;
-	int KeepAlive;
+	TString FReqName;
 
 protected:
-	void Init();
-
-	THttpCustomPageFactory *FPageList;
+	THttpCustomPageFactory *FList;
+	THttpCommand *FCmd;
 };
 
 #endif

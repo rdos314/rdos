@@ -49,6 +49,7 @@ public:
 class THttpCommand : public THttpParser
 {
 friend class THttpCustomPage;
+friend class THttpCustomPageFactory;
 
 public:
     THttpCommand(THttpSocketServer *Server);
