@@ -206,6 +206,7 @@ FormatAllocationArr	Endp
 WriteInfoSector	Proc near
 	pushad
 ;
+	int 3
 	inc ds:info_sector.ri_first_id
 	inc ds:info_sector.ri_last_id
 	push ax
@@ -414,6 +415,7 @@ GetAllocArr	Proc near
 	jmp get_alloc_ok
 
 get_alloc_realloc:
+	int 3
 	xor ax,ax
 	mov fs,ax
 	call FreeAllocationArr
@@ -660,6 +662,7 @@ AllocateSectors	Proc near
 	mov ebp,eax
 
 alloc_retry:
+	int 3
 	cmp ecx,ds:info_sector.ri_hole_size
 	ja alloc_sectors_fail
 ;

@@ -1450,6 +1450,7 @@ completed_wakeup_done:
 ;
 	EnterSection ds:disc_section
 	call remove_buf
+	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
@@ -2566,6 +2567,8 @@ perform_disc_empty:
 	mov ds:disc_seq_list,es
 
 perform_disc_do:
+	mov ax,flat_sel
+	mov es,ax
 	call update_disc_seq
 	jmp perform_disc_leave
 
@@ -2621,6 +2624,7 @@ unlock_sector	PROC far
 	jne unlock_done
 ;
 	call remove_buf
+	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi

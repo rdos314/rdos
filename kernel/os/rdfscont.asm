@@ -190,9 +190,14 @@ CreateRootDir	Proc near
 	mov ds:info_sector.ri_target_sector,0
 	mov ds:info_sector.ri_target_offset,0
 	mov ds:info_sector.ri_state,INFO_STATE_ALLOC
+	mov ds:info_sector.ri_count,ecx
 	call AllocateSectors
-	call CreateControlSector
 	LeaveSection ds:alloc_section
+	jc create_root_fail
+;
+	call CreateControlSector
+
+create_root_fail:
 	ret
 CreateRootDir	Endp
 

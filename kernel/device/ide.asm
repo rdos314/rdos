@@ -1207,6 +1207,7 @@ perform_one_loop:
 	jne perform_one_done
 
 perform_one_write:
+	int 3
 	call write_drive
 	jmp perform_one_loop
 

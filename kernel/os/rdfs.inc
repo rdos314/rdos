@@ -45,6 +45,7 @@ ri_target_sector	DD ?
 ri_target_offset	DW ?
 ri_state			DW ?
 ri_sector			DD ?
+ri_count			DD ?
 
 ri_last_id			DD ?
 
