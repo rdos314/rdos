@@ -838,13 +838,13 @@ parse_dir_rel:
 	jz parse_dir_root
 ;
 	mov ds,bx
-	mov edx,ds:ds_mount_id
+	mov ebp,ds:ds_mount_id
 	mov si,fs_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
 	mov ds,ds:[si].fs_sel
-	cmp edx,ds:fs_mount_id
+	cmp ebp,ds:fs_mount_id
 	jne parse_dir_root
 ;
 	EnterReadSection ds:fs_access_section
@@ -907,6 +907,11 @@ parse_dir_start:
 
 parse_dir_tree_loop:
 	mov bx,OFFSET char_tab
+;
+	mov al,es:[edi]
+	cmp al,'.'
+	je parse_dir_dot
+;
 	mov esi,ds:ds_dir_ptr
 	or esi,esi
 	jz parse_dir_ok
@@ -916,9 +921,6 @@ parse_dir_entry_loop:
 	push esi
 	push edi
 	mov esi,fs:[esi].de_name
-	mov al,es:[edi]
-	cmp al,'.'
-	je parse_dir_dot
 
 parse_dir_name_loop:
 	mov al,es:[edi]
@@ -946,8 +948,6 @@ parse_dir_name_loop:
 	jmp parse_dir_next
 
 parse_dir_dot:
-	pop esi
-	pop esi
 	inc edi
 
 parse_dir_dot_loop:
@@ -2188,7 +2188,7 @@ close_dir_unlock_loop:
 	je close_dir_next
 ;
 	int 3
-	FreeMem
+;	FreeMem
 
 close_dir_next:
 	add bx,4

@@ -64,6 +64,14 @@ filename	DB 'e:\rdos\test\kernel.map',0
 
 test_name	DB 'Test Section Thread', 0
 
+int21Handler:
+	int 3
+	iret
+
+int31Handler:
+	int 3
+	iret
+
 test_thread:
 	int 3
 ;
@@ -75,6 +83,7 @@ divi	DW 1111h
 	
 init:
 	int 3
+;
 	mov cx,800
 	mov dx,600
 	SetVgaMode

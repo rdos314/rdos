@@ -186,7 +186,7 @@ grow_file_lock:
 
 grow_list_loop:
 	cmp ebx,fs:file_size
-	ja grow_file_done
+	jae grow_file_done
 ;
 	push bx
 	push edx
@@ -231,7 +231,7 @@ grow_lock_valid:
 
 grow_lock_loop:
 	cmp ebx,fs:file_size
-	ja grow_file_done
+	jae grow_file_done
 ;
 	mov edx,es:[ebp]
 	sub edx,2
@@ -310,7 +310,7 @@ shrink_file_unlock:
 
 shrink_list_loop:
 	cmp ebx,esi
-	ja shrink_file_free
+	jae shrink_file_free
 ;
 	push bx
 	push edx
