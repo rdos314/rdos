@@ -231,7 +231,6 @@ allocate_gdt	PROC far
 	or si,si
 	jnz alloc_gdt_room
 ;
-	int 3
 	push ds
 	push cx
 	mov si,gdt_sel

@@ -430,12 +430,15 @@ send_arp_driver_loop:
 ;
 	movzx cx,ds:addr_len
 	push fs
+	push esi
 	mov fs,ds:[bx]
+;
 	push ds
 	call fs:d_address
-	mov edi,SIZE arp_data
 	rep movs byte ptr es:[edi],ds:[esi]
 	pop ds
+;	
+	pop esi
 	pop fs
 ;	
 	movzx cx,gs:p_logical_addr_len

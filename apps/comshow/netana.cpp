@@ -618,13 +618,17 @@ void TNetProtocolAnalyser::ShowIp(const char *Msg, int Size)
 	short int len;
 	TIpHeader *IpHeader = (TIpHeader *)Msg;
 
+	len = SwapShort(IpHeader->Size);
+	if (Size > len)
+		Size = len;
+
 	Msg += sizeof(TIpHeader);
 	Size -= sizeof(TIpHeader);
 
-	len = SwapShort(IpHeader->Size);
 	sprintf(str, "Size = %d, ",
 			len);
 	Write(str);
+	Write(", ");
 
 	sprintf(str, "%d.%d.%d.%d->",
 				IpHeader->Source[0],

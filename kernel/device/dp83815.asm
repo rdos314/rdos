@@ -418,13 +418,7 @@ CreateSendEntry	Proc near
 	push bx
 	push ecx
 	push edx
-;
-	cmp ecx,78
-	jae cseSizeOK
-;
-	mov ecx,78
-
-cseSizeOK:
+;	
 	mov bx,es
 	mov ax,flat_sel
 	mov es,ax
@@ -437,6 +431,7 @@ cseSizeOK:
 	pop ecx
 	GetPhysicalPage
 	and ax,0F000h
+	and ecx,0FFFh
 	or ecx,80000000h
 	mov es:[edi].dh_link,0
 	mov es:[edi].dh_link_linear,0
@@ -990,6 +985,13 @@ GetBuffer	Proc far
 	push eax
 	mov eax,14
 	add eax,ecx
+	cmp eax,64
+	jae gbSizeOk
+;
+    mov eax,64
+
+gbSizeOk:	
+    add eax,4
 	AllocateGlobalMem
 	mov edi,14
 	pop eax
@@ -1038,12 +1040,19 @@ Send	Proc far
 	stosw
 ;
 	add ecx,14
+	cmp ecx,64
+	jae sSizeOk
+;
+    mov ecx,64
+
+sSizeOk:
 
 IFDEF debug
 	mov al,LS_TYPE_SENT
 	call LogEntry
 ENDIF
 
+    sub ecx,4
 	call CreateSendEntry
 	xor ax,ax
 	mov es,ax
