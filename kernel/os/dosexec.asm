@@ -363,9 +363,9 @@ load_exe	PROC near
 	movzx ecx,ds:exeh_size_lsb
 	add eax,ecx
 	add eax,100h
-	movzx ecx,ds:exeh_size_header
-	shl ecx,4
-	sub eax,ecx
+;	movzx ecx,ds:exeh_size_header
+;	shl ecx,4
+;	sub eax,ecx
 	movzx ecx,ds:exeh_minalloc
 	shl ecx,4
 	add ecx,eax
@@ -389,14 +389,14 @@ load_exe_whole_size:
 	add edi,100h
 	movzx eax,ds:exeh_size_header
 	shl eax,4
-	mov edx,eax
+;	mov edx,eax
 	SetFilePos
 	movzx ecx,ds:exeh_size_msb
 	dec cx
 	shl ecx,9
 	movzx eax,ds:exeh_size_lsb
 	add ecx,eax
-	sub ecx,edx
+;	sub ecx,edx
 	mov ax,flat_sel
 	mov es,ax
 	UserGateForce32 read_file_nr

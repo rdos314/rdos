@@ -598,6 +598,59 @@ alloc_spec_descr_fail:
 	retf16
 allocate_specific_descr	ENDP
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ALLOCATE_DOS_MEM
+;
+;		DESCRIPTION:	
+;
+;		PARAMETERS:		BX			NUMBER OF PARAGRAPH
+;						
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dos_mem	PROC far
+	int 3
+	push ds
+	push es
+	push bx
+	movzx eax,bx
+	shl eax,4
+	AllocateDosMem
+	jc allocate_dos_mem_fail
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_ldt_sel
+	mov bx,es
+	mov dx,bx
+	and bx,0FFF8h
+	mov eax,[bx+2]
+	shr eax,4
+	and eax,0FFFFh
+	and byte ptr [bp].vm_eflags,NOT 1
+	pop bx
+	pop es
+	pop ds
+	retf16
+
+allocate_dos_mem_fail:
+	pop bx
+	pop es
+	pop ds
+	push eax
+	push edx
+	AvailableDosLinear
+	shr edx,4
+	mov bx,dx
+	pop edx
+	pop eax
+	or byte ptr [bp].vm_eflags,1
+	retf16
+allocate_dos_mem	ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1142,7 +1195,7 @@ dd0D	DD OFFSET allocate_specific_descr
 
 dpmi_dosmem:
 ds_ant	DD 2
-ds00	DD OFFSET dpmi_error
+ds00	DD OFFSET allocate_dos_mem
 ds01	DD OFFSET dpmi_error
 ds02	DD OFFSET dpmi_error
 

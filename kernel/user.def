@@ -26,6 +26,32 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;
+; user gate classes
+;
+
+memory_class			EQU 0000h
+paging_class			EQU 0100h
+interrupt_class			EQU 0200h
+tasking_class			EQU 0300h
+ipc_class				EQU 0400h
+loader_class			EQU 0500h
+debug_class				EQU 0600h
+timedate_class			EQU 0700h
+console_class			EQU 0800h
+network_class			EQU 0900h
+rawdisc_class			EQU 0A00h
+dir_class				EQU 0B00h
+file_class				EQU 0C00h
+memmap_class			EQU 0D00h
+keyboard_class			EQU 0E00h
+mouse_class				EQU 0F00h
+cd_class				EQU 1000h
+serial_class			EQU 1100h
+printer_class			EQU 1200h
+text_class				EQU 1300h
+graphics_class			EQU 1400h
+
 ; memory
 
 allocate_dos_mem_nr			EQU 0
