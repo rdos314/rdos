@@ -178,7 +178,8 @@ HandleInputSel	Proc near
 	mov cx,10h
 
 handle_input_ds_move:
-	mov eax,gs:[esi]
+	xor eax,eax
+	xchg eax,gs:[esi]
 	xchg eax,gs:[edi]
 	and ax,0F000h
 	or eax,eax
@@ -217,8 +218,8 @@ handle_input_es:
 	mov cx,10h
 
 handle_input_es_move:
-	mov eax,gs:[esi]
-	mov gs:[edi],eax
+	xor eax,eax
+	xchg eax,gs:[esi]
 	xchg eax,gs:[edi]
 	and ax,0F000h
 	or eax,eax

@@ -159,24 +159,29 @@ page
 ;
 ;		DESCRIPTION:	Decode a video mode
 ;
-;		PARAMETERS:		CX		Mode #
+;		PARAMETERS:		AX		0 = V86, 1 = PM
+;						CX		Mode #
 ;						ES		Video mode info block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DecodeVideoMode	Proc near
-	mov ax,es:vmi_mode_attrib
-	and ax,MODE_ATTRIB_REQUIRED
-	cmp ax,MODE_ATTRIB_REQUIRED
+	mov dx,es:vmi_mode_attrib
+	and dx,MODE_ATTRIB_REQUIRED
+	cmp dx,MODE_ATTRIB_REQUIRED
+	stc
 	jne decode_video_mode_done
 ;
-	mov al,es:vmi_memory_model
-	cmp al,MODEL_DIRECT
-;	jne decode_video_mode_done
+	mov dl,es:vmi_memory_model
+	cmp dl,MODEL_DIRECT
+	clc
+	jne decode_video_mode_done
 ;
-	mov ax,es:vmi_x_pixels
-	mov ax,es:vmi_y_pixels
-	mov eax,es:vmi_lfb
+	int 3
+	mov dx,es:vmi_x_pixels
+	mov dx,es:vmi_y_pixels
+	mov edx,es:vmi_lfb
+	clc
 
 decode_video_mode_done:
 	ret
@@ -204,8 +209,8 @@ GetVideoModesPm	Proc near
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	lfs si,es:vesa_modes
-	mov eax,100h
-	AllocateSmallGlobalMem
+	mov eax,1000h
+	AllocateGlobalMem
 	xor di,di
 
 get_video_modes_pm_loop:
@@ -228,7 +233,19 @@ get_video_modes_pm_loop:
 	mov sp,bp
 	jne get_video_modes_pm_loop
 ;
+	mov ax,1
 	call DecodeVideoMode
+	jnc get_video_modes_pm_loop
+;
+	mov ax,4F01h
+	push 10h
+	V86BiosInt
+	cmp ax,4Fh
+	jne get_video_modes_pm_loop
+;
+	xor ax,ax
+	call DecodeVideoMode
+;
 	jmp get_video_modes_pm_loop
 
 get_video_modes_pm_done:
@@ -295,6 +312,7 @@ get_video_modes_v86_loop:
 	cmp ax,4Fh
 	jne get_video_modes_v86_loop
 ;
+	xor ax,ax
 	call DecodeVideoMode
 	jmp get_video_modes_v86_loop
 
@@ -738,14 +756,20 @@ InitPm	Proc near
 	mov ax,es:vesa_video_mem
 	shl eax,16
 	mov ds:v_video_mem,eax
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
 	call GetVideoModesPm
+	jmp init_pm_free
 
 init_pm_leave:
 	pop bp
 	mov ax,thread_ss0_sel
 	mov ss,ax
 	mov sp,bp
-;
+
+init_pm_free:
 	FreeMem
 ;
 	popad
@@ -823,7 +847,6 @@ InitV86	Proc near
 	cmp ax,4Fh
 	jne init_v86_calls
 ;
-	int 3
 	movzx edi,di
 	add edi,1000h
 	mov ebx,100h
