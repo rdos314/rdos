@@ -182,6 +182,100 @@ RdosExec	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSpawn
+;
+;		description:    Create new process and run a program
+;
+;       parameters:     exe name
+;                       cmd line
+;                       start directory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSpawn
+
+RdosSpawn	PROC
+	push ebp
+	mov ebp,esp
+	push fs
+	push ebx
+	push edx
+	push esi
+	push edi
+;
+    mov dx,ds
+    mov fs,dx
+    xor edx,edx
+	mov esi,[ebp+8]
+	mov edi,[ebp+12]
+    mov ebx,[ebp+16]
+	UserGate spawn_exe_nr
+	jc rsFail
+;	
+    movzx eax,dx
+    jmp rsDone
+    
+rsFail:
+    xor eax,eax
+
+rsDone:
+	pop edi
+	pop esi
+	pop edx
+	pop ebx
+	pop fs
+	pop ebp
+	ret 12
+RdosSpawn	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetVersion
+;
+;		description:    Get RDOS version
+;
+;       parameters:     &major
+;                       &minor
+;                       &release
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetVersion
+
+RdosGetVersion	PROC
+	push ebp
+	mov ebp,esp
+	push eax
+	push ecx
+	push edx
+	push edi
+;
+	UserGate get_version_nr
+;
+    movzx edx,dx
+    mov edi,[ebp+8]
+    mov [edi],edx
+;
+    movzx eax,ax
+    mov edi,[ebp+12]
+    mov [edi],eax
+;
+    movzx eax,cx
+    mov edi,[ebp+16]
+    mov [edi],eax
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop eax
+	pop ebp
+	ret 12
+RdosGetVersion  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosAllocateMem
 ;
 ;		description:	Allocate memory

@@ -460,6 +460,13 @@ ReplyMailslot		MACRO
 
 ;;;;;;;;;;;; PROGRAMS & DLLS ;;;;;;;;;;;;;;;;
 
+; OUT AX Minor version
+; OUT DX Major version
+; OUT CX Release #
+GetVersion	MACRO
+	UserGate get_version_nr
+					ENDM
+
 EmsHandler	MACRO
 	UserGate ems_handler_nr
 					ENDM

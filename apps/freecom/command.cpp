@@ -20,6 +20,7 @@
 #include "mkdir.h"
 #include "rmdir.h"
 #include "dir.h"
+#include "type.h"
 
 TCdFactory *cd;
 TChdirFactory *chdir;
@@ -36,13 +37,23 @@ TRmdirFactory *rmdir;
 TSetFactory *set;
 TSysPathFactory *syspath;
 TSysSetFactory *sysset;
+TTypeFactory *type;
 TTimeFactory *time;
 
 void Init()
 {
+	char VersionStr[16];
+	int Major;
+	int Minor;
+	int Release;
+
+	RdosGetVersion(&Major, &Minor, &Release);
+	sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
+
 	TCommand *cmd;
 
 	time = new TTimeFactory;
+	type = new TTypeFactory;
 	sysset = new TSysSetFactory;
 	syspath = new TSysPathFactory;
 	set = new TSetFactory;
@@ -59,7 +70,10 @@ void Init()
 	cd = new TCdFactory;
 	help = new THelpFactory;
 
-	Write("FreeCom for RDOS\r\n\r\n");
+	Write("FreeCom for RDOS ");
+	Write(VersionStr);
+	Write("\r\n");
+	Write("Use @ before external command to detach\r\n\r\n");
 
 	cmd = help->Create("");
 	if (cmd)

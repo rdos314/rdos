@@ -172,6 +172,45 @@ _RdosExec	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetVersion
+;
+;		description:	void RdosGetVersion(*major,*minor, *relase)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetVersion
+
+_RdosGetVersion	Proc far
+	push bp
+	mov bp,sp
+	push es
+    push di
+    push ax
+    push cx
+    push dx
+;
+	GetVersion
+	les di,[bp+6]
+	mov es:[di],dx
+;
+    les di,[bp+10]
+    mov es:[di],ax
+;
+    les di,[bp+14]
+    mov es:[di],cx
+;	
+    pop dx
+    pop cx
+    pop ax
+    pop di
+    pop es
+	pop bp
+	ret
+_RdosGetVersion	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosAllocateMem
 ;
 ;		description:	void *RdosAllocateMem(size)

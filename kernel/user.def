@@ -306,5 +306,6 @@ write_ini_nr                = 270
 delete_ini_nr               = 271
 
 app_debug_nr				= 272
+get_version_nr              = 273
 
 usergate_entries			= 300

@@ -72,7 +72,17 @@ TExecCommand::TExecCommand(const char *line)
 ##########################################################################*/
 int TExecCommand::Start(TPathName *path, const char *param)
 {
-	return RdosExec(path->Get().GetData(), param);
+	TPathName StartupDir;
+
+	if (FDetach)
+	{
+		if (RdosSpawn(path->Get().GetData(), param, StartupDir.Get().GetData()))
+		    return 0;
+		else
+		    return -1;
+    }
+    else
+    	return RdosExec(path->Get().GetData(), param);
 }
 
 /*##########################################################################
@@ -278,7 +288,16 @@ int TExecCommand::Execute(char *param)
 	TEnv *env;
 	int result;
 
+	FDetach = FALSE;
+
 	name = (char *)FProgName.GetData();
+
+    if (*name == '@')
+    {
+        name++;
+        FDetach = TRUE;
+    }
+	
 	if (strchr(name, '\\'))
 		return Load(name, param);
 

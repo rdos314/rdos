@@ -38,6 +38,10 @@ INCLUDE system.def
 INCLUDE ..\driver.def
 INCLUDE ..\os.inc
 
+MAJOR_VERSION = 8
+MINOR_VERSION = 8
+RELEASE = 2
+
 .386p
 
 	extrn create_data_sel16:near
@@ -88,6 +92,31 @@ INCLUDE ..\os.inc
 code	SEGMENT byte use16 public 'CODE'
 
 	assume cs:code
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Get version
+;
+;		DESCRIPTION:	Get RDOS version
+;
+;       RETURNS:        AX Minor version
+;                       DX Major version
+;                       CX Release #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_version_name    DB 'Get RDOS Version', 0
+
+get_version Proc far
+    mov dx,MAJOR_VERSION
+    mov ax,MINOR_VERSION
+    mov cx,RELEASE
+    retf32
+get_version Endp
+
 
 PAGE
 	
@@ -500,6 +529,13 @@ prot_init:
 	call init_osgate
 	call init_protseg
 	call init_usergate
+;
+	mov si,OFFSET get_version
+	mov di,OFFSET get_version_name
+	xor dx,dx
+	mov ax,get_version_nr
+	RegisterBimodalUserGate
+;
 	call init_mem
 	call init_gdt
 	call init_idt
