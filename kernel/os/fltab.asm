@@ -21,7 +21,7 @@
 ; The author of this program may be contacted at leif@rdos.net
 ;
 ; FLTAB.ASM
-; FLTAB (Flash File System, cluster handling)
+; FLTAB (Flash File System, logical sector handling)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -43,6 +43,8 @@ INCLUDE flashfs.inc
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
+
+    extrn WriteSector:near
 
 	assume cs:code
 
@@ -557,7 +559,7 @@ abScanLoop:
 	mov fs:bc_logical_block,ax
 	mov ds:[di],fs
 ;
-	ModifySector
+	call WriteSector
 	clc
 	jmp abDone
 
@@ -590,8 +592,8 @@ PAGE
 ;
 ;       PARAMETERS:     AL          Entry type
 ;
-;       RETURNS:        EBX         Cluster #
-;                       EDX         Sector #
+;       RETURNS:        EBX         Logical sector #
+;                       EDX         Physical sector #
 ;						FS			Block (for modify operation)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -646,7 +648,7 @@ PAGE
 ;
 ;		PARAMETERS:		BX		Dir sel
 ;
-;       RETURNS:        EDX     Root dir entry sector
+;       RETURNS:        EDX     Logical sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -675,7 +677,7 @@ grsEntry:
 	jc grsDone
 ;
 	mov ebx,fs:bc_handle
-	ModifySector
+	call WriteSector
 	jmp grsEntry
 
 grsCheckEntry:
@@ -683,6 +685,7 @@ grsCheckEntry:
 	stc
 	jne grsDone
 ;
+    xor edx,edx
 	clc
 
 grsDone:
@@ -692,6 +695,183 @@ grsDone:
 	pop fs
 	ret
 GetRootSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DirEntryLogToPhysSector
+;
+;		DESCRIPTION:	Convert dir entry log sector to physical sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		EDX			Physical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DirEntryLogToPhysSector
+    
+DirEntryLogToPhysSector Proc near
+    push fs
+    push ax
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,8
+    call GetBlock
+    jc delpDone
+;
+    mov bl,dl
+    call GetBlockSector
+    jc delpDone
+;
+    cmp al,LOG_ENTRY_DIR_ENTRY
+    stc
+    jne delpDone
+;
+    clc
+
+delpDone:
+    pop ebx
+    pop ax
+    pop fs
+    ret
+DirEntryLogToPhysSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ObjectLogToPhysSector
+;
+;		DESCRIPTION:	Convert object log sector to physical sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		EDX			Physical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public ObjectLogToPhysSector
+    
+ObjectLogToPhysSector Proc near
+    push fs
+    push ax
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,8
+    call GetBlock
+    jc olpDone
+;
+    mov bl,dl
+    call GetBlockSector
+    jc olpDone
+;
+    cmp al,LOG_ENTRY_OBJECT
+    stc
+    jne olpDone
+;
+    clc
+
+olpDone:
+    pop ebx
+    pop ax
+    pop fs
+    ret
+ObjectLogToPhysSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DirDataLogToPhysSector
+;
+;		DESCRIPTION:	Convert dir data log sector to physical sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		EDX			Physical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public DirDataLogToPhysSector
+    
+DirDataLogToPhysSector Proc near
+    push fs
+    push ax
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,8
+    call GetBlock
+    jc ddlpDone
+;
+    mov bl,dl
+    call GetBlockSector
+    jc ddlpDone
+;
+    cmp al,LOG_ENTRY_DIR_DATA
+    stc
+    jne ddlpDone
+;
+    clc
+
+ddlpDone:
+    pop ebx
+    pop ax
+    pop fs
+    ret
+DirDataLogToPhysSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FileDataLogToPhysSector
+;
+;		DESCRIPTION:	Convert file data log sector to physical sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		EDX			Physical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public FileDataLogToPhysSector
+    
+FileDataLogToPhysSector Proc near
+    push fs
+    push ax
+    push ebx
+;
+    mov ebx,edx
+    shr ebx,8
+    call GetBlock
+    jc fdlpDone
+;
+    mov bl,dl
+    call GetBlockSector
+    jc fdlpDone
+;
+    cmp al,LOG_ENTRY_FILE_DATA
+    stc
+    jne fdlpDone
+;
+    clc
+
+fdlpDone:
+    pop ebx
+    pop ax
+    pop fs
+    ret
+FileDataLogToPhysSector Endp
+
 
 code	ENDS
 

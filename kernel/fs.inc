@@ -148,7 +148,7 @@ ds_usage			DW ?
 ds_parent			DW ?
 ds_handle			DD ?
 ds_mount_id			DD ?
-ds_sector           DD ?
+ds_link             DD ?
 ds_drive			DB ?
 
 dir_sel_data_struc	ENDS

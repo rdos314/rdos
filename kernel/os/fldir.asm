@@ -44,6 +44,9 @@ INCLUDE flashfs.inc
 
 code	SEGMENT byte public use16 'CODE'
 
+    extrn WriteSector:near
+    extrn DirEntryLogToPhysSector:near
+    extrn ObjectLogToPhysSector:near
     extrn AllocateSector:near
     extrn GetRootSector:near
 
@@ -234,13 +237,17 @@ ExtendDir	Proc near
 	push edx
 ;
     mov fs,bx
-    mov edx,fs:ds_sector
+    mov edx,fs:ds_link
+    call DirEntryLogToPhysSector
+    jc edDone
+;
     mov al,ds:drive_nr
     LockSector
 	call FindLastDirInfo
     UnlockSector
 	clc
-;
+
+edDone:
 	pop edx
 	pop ax
 	pop fs
@@ -311,15 +318,15 @@ afeLoop:
     mov es:[esi].fde_time,eax
     mov eax,es:[ebp].de_time+4
     mov es:[esi].fde_time+4,eax
-    mov es:[esi].fde_cluster_entry,-1
-    mov es:[esi].fde_cluster_block,-1
+    mov es:[esi].fde_log_entry,-1
+    mov es:[esi].fde_log_block,-1
     mov es:[esi].fde_valid,DIR_ENTRY_OK
-    ModifySector
+    call WriteSector
     UnlockSector
 	pop ebx
 ;
 	mov ebx,fs:bc_handle
-	ModifySector
+	call WriteSector
     clc
     
 afeDone:
@@ -345,7 +352,7 @@ PAGE
 ;		DESCRIPTION:    Init root dir entry
 ;
 ;		PARAMETERS:		BX			Dir selector
-;                       EDX         Sector
+;                       EDX         Logical sector
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -361,10 +368,10 @@ InitRootDirEntry   Proc near
     GetTime
     mov es:[esi].fde_time,eax
     mov es:[esi].fde_time+4,edx
-    mov es:[esi].fde_cluster_entry,-1
-    mov es:[esi].fde_cluster_block,-1
+    mov es:[esi].fde_log_entry,-1
+    mov es:[esi].fde_log_block,-1
     mov es:[esi].fde_valid,DIR_ENTRY_OK
-    ModifySector
+    call WriteSector
     UnlockSector
 ;
     popad
@@ -381,7 +388,7 @@ PAGE
 ;		DESCRIPTION:    Cache dir entry
 ;
 ;		PARAMETERS:		BX			Dir selector
-;                       EDX         Sector
+;                       EDX         Logical sector
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -390,6 +397,10 @@ CacheDirEntry   Proc near
     pushad
 ;
     mov fs,bx
+    mov fs:ds_link,edx
+    call DirEntryLogToPhysSector
+    jc cdeFail
+;
     mov al,ds:drive_nr
     LockSector
     mov al,es:[esi+1FFh]
@@ -397,7 +408,6 @@ CacheDirEntry   Proc near
     je cdeFail
 ;
     UnlockSector
-    mov fs:ds_sector,edx
     clc
     jmp cdeDone
 

@@ -84,6 +84,7 @@ le_type				DB ?
 logical_entry_struc	ENDS
 
 LOG_ENTRY_DIR_DATA =	04Ch
+LOG_ENTRY_OBJECT =      0A6h
 LOG_ENTRY_DIR_ENTRY =	05Ah
 LOG_ENTRY_FILE_DATA =	0C4h
 LOG_ENTRY_ERASE =		02Fh
@@ -99,28 +100,28 @@ dir_entry_struc	STRUC
 
 fde_size			DD ?
 fde_time			DD ?,?
-fde_cluster_entry	DB ?
-fde_cluster_block	DW ?
+fde_log_entry   	DB ?
+fde_log_block   	DW ?
 fde_valid			DB ?
 
 dir_entry_struc	ENDS
 
 DIR_ENTRY_OK =	0B5h
 
-cluster_struc	STRUC
+object_struc	STRUC
 
-c_cluster_entry		DB ?
-c_cluster_block		DW ?
-c_valid				DB ?
+o_log_entry		    DB ?
+o_log_block	    	DW ?
+o_valid				DB ?
 
-cluster_struc	ENDS
+object_struc	ENDS
 
-CLUSTER_OK = 67h
+OBJECT_OK = 67h
 
 dir_data_struc	STRUC
 
-fdd_cluster_entry	DB ?
-fdd_cluster_block	DW ?
+fdd_log_entry	    DB ?
+fdd_log_block   	DW ?
 fdd_valid			DB ?
 
 dir_data_struc	ENDS
