@@ -168,9 +168,8 @@ thread1:
 	fldln2
 	fldpi
 ;
-    xor cx,cx
-tl1:
-    loop tl1
+    mov ax,10
+    WaitMilliSec
     int 3
 	fmul st(1),st(0)
 	retf
@@ -183,9 +182,8 @@ thread2:
     fldpi
     fld1
 ;
-    xor cx,cx
-tl2:
-    loop tl2
+    mov ax,20
+    WaitMilliSec
     int 3
     fadd st(1),st(0)
     retf
@@ -240,12 +238,12 @@ init	Proc far
 	mov bx,power_code_sel
 	InitDevice
 ;
-	mov di,OFFSET init_test
-	HookInitTasking
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET init_test
+	HookInitTasking
 ;
 	mov si,OFFSET start_com_port
 	mov di,OFFSET start_com_port_name
