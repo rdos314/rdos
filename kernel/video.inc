@@ -206,22 +206,24 @@ v_app_size	    DD ?
 v_bpp   		DB ?
 v_bitmap        DW ?
 
-v_sprite_count  DW ?
-v_sprite_size   DW ?
-v_sprite_sel    DW ?
+v_sprite_count 		DW ?
+v_sprite_size   	DW ?
+v_sprite_sel    	DW ?
 
-v_usage_count   DW ?
+v_usage_count   	DW ?
 
-v_x_min         DW ?
-v_y_min         DW ?
-v_x_max         DW ?
-v_y_max         DW ?
+v_x_min         	DW ?
+v_y_min         	DW ?
+v_x_max         	DW ?
+v_y_max         	DW ?
 
-v_color 		DD ?
-v_lgop	    	DW ?
-v_font		    DW ?
-v_style 		DB ?
+v_color 			DD ?
+v_lgop	    		DW ?
+v_font		    	DW ?
+v_style 			DB ?
+v_sprite_pending	DB ?
 
-v_sprite_lines  DW ?
+v_sprite_lines  	DW ?
+v_sprite_max_pos	DW ?
 
 video_api_struc	ENDS

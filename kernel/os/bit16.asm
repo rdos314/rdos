@@ -881,6 +881,9 @@ set_native_do:
     cmp ds:v_sprite_count,0
     jz set_native_sprite_hidden
 ;
+	cmp ds:v_sprite_pending,0
+	jz set_native_sprite_hidden
+;
     push cx
     push dx
     mov ax,cx
@@ -933,6 +936,9 @@ set_native_show_sprite:
     pop ds
     cmp ds:v_sprite_count,0
     jz set_native_done
+;
+	cmp ds:v_sprite_pending,0
+	jz set_native_done
 ;
     ShowSpriteLine
 

@@ -17,8 +17,6 @@
 *##########################################################################*/
 TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 {
-    TGraphicDevice *FBitmap;
-    TGraphicDevice *FMask;
 	int w;
 	int i;
 	int R, G, B;
@@ -60,7 +58,7 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 
     FMask->SetLgopNone();
     FMask->SetFilledStyle();
-    FMask->DrawEllipse(r, r, w, w);
+    FMask->DrawEllipse(r, r, r, r);
     
     Define(dest, FBitmap, FMask, r, r);
 }
@@ -74,6 +72,8 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 *##########################################################################*/
 TPlanet::~TPlanet()
 {
+	Hide();
+
     if (FBitmap)
         delete FBitmap;
 

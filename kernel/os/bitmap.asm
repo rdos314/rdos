@@ -95,6 +95,7 @@ init_video_bitmap	Proc far
 	mov es:v_sprite_sel,0
 	mov es:v_x_min,0
 	mov es:v_y_min,0
+	mov es:v_sprite_pending,0
 	mov si,cx
 	dec si
 	mov es:v_x_max,si
@@ -137,6 +138,7 @@ init_video_copy:
 	mov cx,dx
 	mov eax,-1
 	rep stosd
+	mov es:v_sprite_max_pos,di
 
 init_video_done:
 	mov cx,SIZE bitmap_struc
@@ -216,6 +218,7 @@ create_bitmap	Proc far
 	mov es:v_sprite_sel,0
 	mov es:v_x_min,0
 	mov es:v_y_min,0
+	mov es:v_sprite_pending,0
 	mov si,cx
 	dec si
 	mov es:v_x_max,si
@@ -286,6 +289,7 @@ cr_bitmap_copy:
 	mov cx,es:v_height
 	mov eax,-1
 	rep stosd
+	mov es:v_sprite_max_pos,di
 ;
 	movzx eax,es:v_row_size
 	movzx edx,es:v_height

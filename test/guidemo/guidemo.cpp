@@ -8,7 +8,7 @@
 #include "vbedev.h"
 #include "planet.h"
 
-#define MAX_PLANETS	128
+#define MAX_PLANETS	8
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -32,7 +32,7 @@ void RandomLgop(TGraphicDevice *dev)
 
         case 1:
             dev->SetLgopNull();
-            break;
+			break;
 
         case 2:
             dev->SetLgopOr();
@@ -56,7 +56,7 @@ void RandomLgop(TGraphicDevice *dev)
 
         case 7:
             dev->SetLgopInvAnd();
-            break;
+			break;
 
         case 8:
             dev->SetLgopInvXor();
@@ -128,7 +128,7 @@ void RandomEllipse(TGraphicDevice *dev)
 	ry = random(dev->GetHeight() / 2 + 100);
 
     RandomColor(dev);
-    RandomLgop(dev);
+	RandomLgop(dev);
     RandomFillStyle(dev);
     
 	dev->DrawEllipse(x, y, rx, ry);
@@ -198,6 +198,22 @@ TPlanet *RandomPlanet(TGraphicDevice *dev)
 
 	planet->ela = random(90);
 	planet->vmax = 1500;
+
+	return planet;
+}
+
+TPlanet *RecreatePlanet(TGraphicDevice *dev, TPlanet *templ)
+{
+	TPlanet *planet;
+
+	planet = new TPlanet(dev, templ->r);
+	planet->m = templ->m;
+	planet->x = templ->x;
+	planet->y = templ->y;
+	planet->vx = templ->vx;
+	planet->vy = templ->vy;
+	planet->ela = templ->ela;
+	planet->vmax = templ->vmax;
 
 	return planet;
 }
@@ -386,6 +402,11 @@ void UpdatePlanets(TGraphicDevice *dev)
 									planet->y = comp->y;
 								}
 							}
+
+							PlanetArr[i] = RecreatePlanet(dev, planet);
+							delete planet;
+							planet = PlanetArr[i];
+
 							delete comp;
 							comp = RandomPlanet(dev);
 							PlanetArr[j] = comp;
@@ -490,7 +511,7 @@ void cdecl main()
 	RdosWaitMilli(250);
 
 
-	vbe = new TVbeGraphicDevice(32, 800, 600);
+	vbe = new TVbeGraphicDevice(16, 800, 600);
 
 //	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
 
@@ -529,11 +550,14 @@ void cdecl main()
 	for (i = 0; i < MAX_PLANETS; i++)
 		PlanetArr[i] = RandomPlanet(vbe);
 
-	for (i = 0; i < 1500; i++)
+	for (i = 0; i < 5000; i++)
 	{
 		UpdatePlanets(vbe);
 		RdosWaitMilli(10);
 	}
+
+	for (i = 0; i < MAX_PLANETS; i++)
+		delete PlanetArr[i];
 
 	for (;;)
 	{

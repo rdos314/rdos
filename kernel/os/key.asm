@@ -41,7 +41,7 @@ INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
 
-        NO_MOUSE = 0
+;        NO_MOUSE = 0
 
 ; offset in scan-table
 ;
