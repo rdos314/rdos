@@ -11,35 +11,35 @@
 #include "set.h"
 #include "sysset.h"
 #include "help.h"
-//#include "time.h"
-//#include "date.h"
+#include "time.h"
+#include "date.h"
 #include "cls.h"
 #include "copy.h"
 #include "cmdline.h"
 
 TClsFactory *cls;
 TCopyFactory *cpy;
-//TDateFactory *date;
+TDateFactory *date;
 THelpFactory *help;
 TPathFactory *path;
 TSetFactory *set;
 TSysPathFactory *syspath;
 TSysSetFactory *sysset;
-//TTimeFactory *time;
+TTimeFactory *time;
 
 void Init()
 {
 	TCommand *cmd;
 
-//	time = new TTimeFactory;
+	time = new TTimeFactory;
 	sysset = new TSysSetFactory;
 	syspath = new TSysPathFactory;
 	set = new TSetFactory;
 	path = new TPathFactory;
-	help = new THelpFactory;
-//	date = new TDateFactory;
+	date = new TDateFactory;
 	cpy = new TCopyFactory;
 	cls = new TClsFactory;
+	help = new THelpFactory;
 
 	Write("FreeCom for RDOS\r\n\r\n");
 

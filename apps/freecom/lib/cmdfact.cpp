@@ -36,8 +36,8 @@
 #include "cmdfact.h"
 #include "path.h"
 #include "env.h"
-//#include "setdrive.h"
-//#include "exec.h"
+#include "setdrive.h"
+#include "exec.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -101,7 +101,7 @@ void DisplayPrompt()
                     Write('=');
                     break;
             
-                case '$':
+				case '$':
                     Write('$');
                     break;
 
@@ -122,7 +122,7 @@ void DisplayPrompt()
 					break;
 
                 case 'V':
-                    Write("command");
+					Write("command");
                     break;
                     
                 case 'N':
@@ -143,7 +143,7 @@ void DisplayPrompt()
                     
                 case '_':
                     Write('\n');
-                    break;
+					break;
                     
                 case 'E':
                     Write(27);
@@ -290,7 +290,7 @@ TString TCommandFactory::ExpandEnv(TString &line)
         {
             ip++;
             
-            switch (*ip)
+			switch (*ip)
             {
                 case 0:
                     cp.Append('%');
@@ -316,58 +316,59 @@ TString TCommandFactory::ExpandEnv(TString &line)
 					{
 						cp.Append(*tp);
 						ip++;
-			        }
-			        else
-			            cp.Append('%');
-                    break;
+					}
+					else
+						cp.Append('%');
+					break;
 
-                default:
-                    tp = strchr(ip, '%');
+				default:
+					tp = strchr(ip, '%');
 					if (tp)
-        			{
-        			    TEnv *env = TEnv::OpenProcessEnv();
-        				char *eval = new char[256];
-			            *tp = 0;
+					{
+						TEnv *env = TEnv::OpenProcessEnv();
+						char *eval = new char[256];
+						*tp = 0;
 
-                        ok = env->Find(ip, eval);
-                        if (!ok)
-                        {
-                            strupr(ip);
-                            ok = env->Find(ip, eval);                        
-                        }
+						ok = env->Find(ip, eval);
+						if (!ok)
+						{
+							strupr(ip);
+							ok = env->Find(ip, eval);
+						}
 
-                        if (ok)
-                            cp.Append(eval);
-			            else
-			            {
+						if (ok)
+							cp.Append(eval);
+						else
+						{
 							if (MatchToken(&ip, "ERRORLEVEL", 10))
 							{
 								sprintf(eval, "%u", TCommand::ErrorLevel);
 								cp.Append(eval);
 							}
 							else
-			                {
+							{
 								if (MatchToken(&ip, "_CWD", 4))
-			                    {
-			                        cp.Append(RdosGetCurDrive() + 'A');
-			                        cp.Append(":\\");
-			                        *eval = 0;
-			                        RdosGetCurDir(RdosGetCurDrive(), eval); 
-                    				cp.Append(eval);
-			                    }
-			                }
-			            }
-			            delete eval;
-                        ip = tp + 1;
-			        }
-			        break;
-		    }
-        }
-        else
-        {
-            cp.Append(*ip);
-            ip++;
-        }
+								{
+									cp.Append(RdosGetCurDrive() + 'A');
+									cp.Append(":\\");
+									*eval = 0;
+									RdosGetCurDir(RdosGetCurDrive(), eval);
+									cp.Append(eval);
+								}
+							}
+						}
+						delete eval;
+						delete env;
+						ip = tp + 1;
+					}
+					break;
+			}
+		}
+		else
+		{
+			cp.Append(*ip);
+			ip++;
+		}
 	}
 	return cp;
 }
@@ -400,8 +401,8 @@ TCommand *TCommandFactory::Parse(const char *line)
 	if (strlen(rest) == 2)
 		if (rest[1] == ':' && isalpha(*rest))
 		{
-//			cmd = new TSetDriveCommand(rest);
-//			return cmd;
+			cmd = new TSetDriveCommand(rest);
+			return cmd;
 		}
 
 	if (*rest)
@@ -442,9 +443,9 @@ TCommand *TCommandFactory::Parse(const char *line)
 
 			if (!factory)
 			{
-//				cmd = new TExecCommand(com, rest);
-//				delete com;
-//				return cmd;
+				cmd = new TExecCommand(com, rest);
+				delete com;
+				return cmd;
 			}
 		}
 	}
