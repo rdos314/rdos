@@ -16,6 +16,8 @@
 #include "datetime.h"
 #include "bitdev.h"
 #include "videodev.h"
+#include "keyboard.h"
+
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -303,6 +305,40 @@ void CreateChannel(TAdcDevice *dev)
 	min->BeforeClear = RawProc;
 }
 
+void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+	char str[40];
+
+	sprintf(str, "Key press info:");
+	RdosSetCursorPosition(5, 0);
+	RdosWriteString(str);
+
+	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
+	RdosSetCursorPosition(6, 0);
+	RdosWriteString(str);
+
+	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
+	RdosSetCursorPosition(6, 0);
+	RdosWriteString(str);
+}
+
+void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+	char str[40];
+
+	sprintf(str, "Key release info:");
+	RdosSetCursorPosition(5, 0);
+	RdosWriteString(str);
+
+	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
+	RdosSetCursorPosition(6, 0);
+	RdosWriteString(str);
+
+	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
+	RdosSetCursorPosition(6, 0);
+	RdosWriteString(str);
+}
+
 void cdecl main()
 {
 	int channel;
@@ -310,8 +346,13 @@ void cdecl main()
 	TAdcDevice *adc;
 	TTempDevice *temp;
 	TLightDevice *light;
+	TKeyboardDevice *Keyboard;
 
 	RdosWaitMilli(250);
+
+	Keyboard = new TKeyboardDevice(&Wait);
+	Keyboard->OnKeyPress = KeyPress;
+	Keyboard->OnKeyRelease = KeyRelease;
 
 	light = new TLightDevice(&Wait, 7);
 	CreateChannel(light);
