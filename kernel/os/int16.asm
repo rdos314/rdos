@@ -821,7 +821,9 @@ sim_int_no_push:
 	call set_flags
 	pop bx
 	or eax,20000h
-	and ax,NOT 100h
+	and ax,NOT 4000h
+	push ax
+	popf
 	push eax
 	cmp bl,sim_int
 	je sim_get_int_ads
@@ -1013,7 +1015,16 @@ vm_callback_do:
 	xor dx,dx
 	xchg dx,bx
 	mov [bx],dx
-	pushfd
+;
+    pushfd
+    pop eax
+	call set_flags
+	or eax,20000h
+	and ax,NOT 4000h
+	push ax
+	popf
+	push eax
+;
 	mov bx,fs:[esi+4]
 	push ebx
 	mov bx,fs:[esi+2]
@@ -1043,6 +1054,9 @@ pm_callback16:
 	movzx eax,es:[di].vcs_flags
 	call set_flags
 	or eax,20000h
+	and ax,NOT 4000h
+	push ax
+	popf
 	push eax
 	push 0
 	push es:[di].vcs_cs

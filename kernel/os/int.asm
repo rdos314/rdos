@@ -1161,6 +1161,10 @@ call_vm_real_stack_ok:
 	pop ax
 	mov [edx+4],ax
 	call set_flags
+	and ax,NOT 4000h
+	push ax
+	popf
+;
 	push word ptr 2
 	push ax
 	push word ptr 0
@@ -1367,6 +1371,9 @@ call_pm16_save_context:
 	pop ax
 	mov es:[edx+4],ax
 	call set_flags
+	and ax,NOT 4000h
+	push ax
+	popf
 	push word ptr 0
 	push ax
 	push word ptr 0
@@ -1533,6 +1540,9 @@ call_pm32_save_context:
 	call get_flags
 	movzx eax,ax
 	call set_flags
+	and ax,NOT 4000h
+	push ax
+	popf
 	pop ebx
 	pop ds
 ;
@@ -1825,6 +1835,9 @@ refl_pm_to_vm_stack_ok:
 	pop bx
 	pop ds
 	or eax,20000h
+	and ax,NOT 4000h
+	push ax
+	popf
 	push eax
 ;
 	mov al,bl
@@ -1861,6 +1874,9 @@ reflect_from_vm:
 	mov [bp].vm_cs,ax
 	mov ax,[ebx+4]
 	call set_flags
+	and ax,NOT 4000h
+	push ax
+	popf
 	mov [bp].vm_eflags,ax
 	add word ptr [bp].vm_esp,6
 reflect_vm_done:
@@ -2146,6 +2162,8 @@ raw_switch16:
 	or eax,23200h
 	and eax,NOT 4000h
 	call set_flags
+	push ax
+	popf
 	push eax
 	movzx eax,si
 	push eax
@@ -2193,6 +2211,8 @@ raw_switch32_v86:
 	push ds
 	call set_flags
 	pop ds
+	push ax
+	popf
 	push eax
 	movzx eax,si
 	push eax
@@ -2213,6 +2233,8 @@ raw_switch16_v86:
 	push ds
 	call set_flags
 	pop ds
+	push ax
+	popf
 	push eax
 	movzx eax,si
 	push eax

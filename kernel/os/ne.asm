@@ -1061,7 +1061,7 @@ destroy_resource_type_loop:
     jz destroy_resource_done
 ;
     mov cx,es:[di].rt_resource_count
-    add si,SIZE resource_type_struc
+    add di,SIZE resource_type_struc
 
 destroy_resource_name_loop:
     push es
@@ -1093,12 +1093,15 @@ destroy_lib	Endp
 run_ne_dll	proc near
 	push ds
 	push es
+	push gs
 	pushad
 ;
 	mov si,ds:seh_cs
 	dec si
 	shl si,3
-	push es:[si].lib_tables.seg_selector
+	mov ax,es:[si].lib_tables.seg_selector
+	mov gs,ax
+	push ax
 	push ds:seh_ip
 	xor eax,eax
 	xor ebx,ebx
@@ -1109,6 +1112,7 @@ run_ne_dll	proc near
 	CallPM16
 ;
 	popad
+	pop gs
 	pop es
 	pop ds
 	ret
@@ -1721,8 +1725,8 @@ free_dll16	Endp
 ;						AX		Resource id
 ;						DX		Resource type
 ;						
-;		RETURNS:		DS:SI	Resource Address
-;						CX		Resource size
+;		RETURNS:		DS:ESI	Resource Address
+;						ECX		Resource size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1732,7 +1736,7 @@ get_dll_resource	Proc far
     push es
 	push eax
 	push ebx
-	push dx
+	push edx
 	push di
 ;
 	mov si,ax
@@ -1763,12 +1767,12 @@ get_dll_resource_type_loop:
 
 get_dll_resource_name_loop:
     mov ds,es:[di].rn_sel
-    movzx eax,es:[di].rn_len
-    shl eax,cl
+    movzx edx,es:[di].rn_len
+    shl edx,cl
     xor ebx,ebx
 
 get_dll_resource_arr_loop:
-    cmp ebx,eax
+    cmp ebx,edx
     jae get_dll_resource_fail
 ;
     or si,si
@@ -1795,12 +1799,14 @@ get_dll_resource_fail:
     jmp get_dll_resource_done
 
 get_dll_resource_ok:
+    movzx ecx,byte ptr [ebx]
     mov esi,ebx
+    inc esi
     clc
     
 get_dll_resource_done:
 	pop di
-	pop dx
+	pop edx
 	pop ebx
 	pop eax
 	pop es

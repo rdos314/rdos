@@ -4986,6 +4986,7 @@ _RdosFreeDll	Endp
 _RdosReadResource	Proc far
 	push bp
 	mov bp,sp
+	push ds
 	push es
 	push bx
 	push ecx
@@ -5025,6 +5026,7 @@ read_resource_done:
 	pop ecx
 	pop bx
 	pop es
+	pop ds
 	pop bp
 	ret
 _RdosReadResource	Endp
