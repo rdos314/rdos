@@ -554,10 +554,10 @@ PAGE
 get_pixel	Proc far
 	push ds
 	push edx
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -611,10 +611,10 @@ set_pixel	Proc far
     cmp dx,ds:v_y_max
     jg set_pixel_done
 ;
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
@@ -665,10 +665,10 @@ get_native	Proc far
 	push edi
 ;
 	push ax
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -750,10 +750,10 @@ get_rgb	Proc far
 	push edi
 ;
 	push ax
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -842,10 +842,10 @@ set_native_do:
 ;
 	push ax
 	mov esi,edi
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -976,10 +976,10 @@ set_rgb_do:
 ;
 	push ax
 	mov esi,edi
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -1035,10 +1035,10 @@ get_line	Proc far
 	push ecx
 	push edx
 ;
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ecx
 	add edx,edx
 	add edx,ecx
@@ -1159,6 +1159,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
+	push word ptr [bp].curr_x
+	push cx
+	push edi
+;
     mov ax,[bp].curr_y
     cmp ax,ds:v_y_min
     jl hollow_line_done
@@ -1166,15 +1170,12 @@ HollowLine	Proc near
     cmp ax,ds:v_y_max
     jg hollow_line_done
 ;
-	push cx
-	push edi
-;
     mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg hollow_line_done
+;
     cmp ax,ds:v_x_min
     jl hollow_line_first_done
-;
-    cmp ax,ds:v_x_max
-    jg hollow_line_first_done
 ;
 	mov bx,ds:v_lgop
 	add bx,bx
@@ -1194,21 +1195,20 @@ hollow_line_first_done:
     add ax,cx
     dec ax
     cmp ax,ds:v_x_min
-    jl hollow_line_second_done
+    jl hollow_line_done
 ;
     cmp ax,ds:v_x_max
-    jg hollow_line_second_done
+    jg hollow_line_done
 ;
 	mov bx,ds:v_lgop
 	add bx,bx
 	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
 
-hollow_line_second_done:
+hollow_line_done:
 	pop edi
 	pop cx
-
-hollow_line_done:
+	pop word ptr [bp].curr_x
 	ret
 HollowLine	Endp
 
@@ -1227,6 +1227,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
+	push word ptr [bp].curr_x
+	push cx
+	push edi
+;
     mov ax,[bp].curr_y
     cmp ax,ds:v_y_min
     jl filled_line_done
@@ -1235,6 +1239,8 @@ FilledLine	Proc near
     jg filled_line_done
 ;
     mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg filled_line_done
     
 filled_line_buf_loop:
     cmp ax,ds:v_x_min
@@ -1268,29 +1274,22 @@ filled_line_do:
 ;
 	add bx,bx
 	mov eax,ds:v_color
-;
-	push cx
-	push edi
 
 filled_line_loop:
 	call word ptr cs:[bx].LgopTab
 	inc word ptr [bp].curr_x
 	add edi,3
 	loop filled_line_loop
-;
-	pop edi
-	pop cx
-
-filled_line_done:
-	ret
+	jmp filled_line_done
 
 filled_line_lgop:
 	mov eax,ds:v_color
-	push cx
-	push edi
 	call SlabLgopNone
+
+filled_line_done:
 	pop edi
 	pop cx
+	pop word ptr [bp].curr_x
 	ret
 FilledLine	Endp
 
@@ -1310,6 +1309,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
+	push word ptr [bp].curr_x
+	push cx
+	push dx
+	push edi
+;
     mov bx,[bp].curr_y
     cmp bx,ds:v_y_min
     jl split_line_done
@@ -1317,9 +1321,9 @@ SplitLine	Proc near
     cmp bx,ds:v_y_max
     jg split_line_done
 ;
-	push cx
-	push dx
-	push edi
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_max
+    jg split_line_done
 ;
 	sub cx,ax
 	sub cx,ax
@@ -1374,12 +1378,12 @@ split_right_next:
 	inc word ptr [bp].curr_x
 	add edi,3
 	loop split_right_loop
-;
+
+split_line_done:
 	pop edi
 	pop dx
 	pop cx
-
-split_line_done:
+	pop word ptr [bp].curr_x
 	ret
 SplitLine	Endp
 
@@ -1450,20 +1454,20 @@ draw_mask_do:
     push bp
 	push ebx
 	xchg ecx,edx
-	movzx ebx,dx
+	movsx ebx,dx
 	ror edx,16
-	movzx edx,dx
+	movsx edx,dx
 	movzx eax,ax
-	mul edx
+	imul edx
 	shl eax,3
 	add eax,ebx
 	push eax
 ;
-	movzx ebp,cx
+	movsx ebp,cx
 	ror ecx,16
-	movzx edx,cx
+	movsx edx,cx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ebp
 	add edx,edx
 	add edx,ebp
@@ -1553,11 +1557,11 @@ draw_sprite_line    Proc far
 ;
     push ax
 	push dx
-	movzx ebx,cx
+	movsx ebx,cx
 	ror ecx,16
-	movzx edx,cx
+	movsx edx,cx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ebx
 	add edx,edx
 	add edx,ebx
@@ -1739,16 +1743,16 @@ draw_string_loop:
 	or cx,cx
 	jz draw_string_char_next
 ;
-	movzx esi,word ptr [bp].ds_src_x
-	shr esi,3
+	movsx esi,word ptr [bp].ds_src_x
+	sar esi,3
 	add esi,edi
 ;
-	movzx ebx,word ptr [bp].ds_dest_x
+	movsx ebx,word ptr [bp].ds_dest_x
 	mov [bp].curr_x,bx
-	movzx edx,word ptr [bp].ds_dest_y
+	movsx edx,word ptr [bp].ds_dest_y
 	mov [bp].curr_y,dx
 	movzx eax,word ptr ds:v_row_size
-	mul edx
+	imul edx
 	mov edx,ebx
 	add edx,edx
 	add edx,ebx
@@ -1955,10 +1959,10 @@ line_bresen_magn_ok:
 	push si
 	push di
 	push dx
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov ebx,ecx
 	add ebx,ebx
 	add ebx,ecx
@@ -2003,10 +2007,10 @@ line_bresen_dy_pos:
 line_bresen_do:
 	push cx
 	push dx
-	movzx ecx,ax
-	movzx edx,bx
+	movsx ecx,ax
+	movsx edx,bx
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov ebx,ecx
 	add ebx,ebx
 	add ebx,ecx
@@ -2123,12 +2127,12 @@ line_vert:
 	xchg bx,dx
 
 line_vert_do:
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	sub bx,dx
 	movzx eax,ds:v_row_size
 	mov esi,eax
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
@@ -2156,11 +2160,11 @@ line_horiz:
 	xchg ax,cx
 
 line_horiz_do:
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx ebx,ax
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
@@ -2222,11 +2226,11 @@ draw_rect	Proc far
 ;
 	push si
 	push di
-	movzx ecx,cx
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
 	mov esi,eax
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
@@ -2397,8 +2401,9 @@ draw_ellipse	Proc far
 ;
 	add cx,si
 	mov [bp].curr_x,cx
-	add dx,di
 	mov [bp].de_y0,dx
+	add dx,di
+	add dx,di
 	mov [bp].de_y1,dx
 ;
 	mov ax,di
@@ -2491,11 +2496,10 @@ draw_ellipse	Proc far
 ;
 	movzx esi,ds:v_row_size
 ;
-	movzx ecx,word ptr [bp].curr_x
-	movzx edx,word ptr [bp].de_y0
-	sub dx,[bp].de_h
+	movsx ecx,word ptr [bp].curr_x
+	movsx edx,word ptr [bp].de_y0
 	mov eax,esi
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
@@ -2503,11 +2507,10 @@ draw_ellipse	Proc far
 	add edi,ds:v_app_base
 	mov [bp].de_p0,edi
 ;
-	movzx ecx,word ptr [bp].curr_x
-	movzx edx,word ptr [bp].de_y1
-	add dx,[bp].de_h
+	movsx ecx,word ptr [bp].curr_x
+	movsx edx,word ptr [bp].de_y1
 	mov eax,esi
-	mul edx
+	imul edx
 	mov edi,ecx
 	add edi,edi
 	add edi,ecx
