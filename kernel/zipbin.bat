@@ -1,5 +1,5 @@
 del bin.zip
-pkzip -P *.inc *.def *.h
+pkzip -P bin.zip *.inc *.def *.h
 pkzip -P bin.zip os\*.rdv os\*.exe os\*.bat
 pkzip -P bin.zip device\*.rdv device\*.exe device\*.bat
 pkzip -P bin.zip win\*.bat win\*.dll win\*.h

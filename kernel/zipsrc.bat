@@ -1,5 +1,5 @@
 del src.zip
-pkzip -P *.inc *.def *.h
+pkzip -P src.zip *.inc *.def *.h
 pkzip -P src.zip os\*.asm os\*.inc os\*.def os\makefile os\*.bat
 pkzip -P src.zip device\*.asm device\*.inc device\*.def device\makefile device\*.bat
 pkzip -P src.zip win\*.asm win\*.inc win\*.def win\makefile win\*.bat win\*.zip win\*.dll win\*.h
