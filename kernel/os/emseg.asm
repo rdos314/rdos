@@ -30,13 +30,13 @@
 GateSize = 16
 
 include protseg.def
-include system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
 include int.def
+include system.def
 
 include emulate.inc
 include emcom.inc

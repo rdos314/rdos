@@ -29,11 +29,11 @@
 
 GateSize = 16
 
-include system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def
 include ..\user.inc
+include system.def
 
 include emulate.inc
 include emcom.inc

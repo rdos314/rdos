@@ -31,13 +31,12 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE handle.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\handle.inc
 
 MAX_HANDLES = 400h
 

@@ -237,9 +237,7 @@ objs =      $(srcs:.ASM=.OBJ)
 
 incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 			DISC.DEF                BIOSDATA.DEF    \
-			PROTSEG.INC             DRIVER.DEF              \
-			OS.DEF                  USER.DEF        \
-			OS.INC                  USER.INC        \
+			PROTSEG.INC            \
 			DPMI.INC                INT.DEF			       \
 			FAT.INC                 DOS.INC
 
@@ -307,9 +305,9 @@ MAIN:   $(rdvs) $(exes)
 
 userint.obj:    userint.asm
 
-OS.OBJ :        os.def
+OS.OBJ :        ..\os.def
 
-USER.OBJ :      user.def
+USER.OBJ :      ..\user.def
 
 PCSHUT.EXE : $(pcshut_objs)
     tlink @&&!

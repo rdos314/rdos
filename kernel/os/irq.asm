@@ -29,16 +29,16 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE driver.def
+INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE int.def
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE system.def
 INCLUDE system.inc
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 
 irq_struc	STRUC
 

@@ -29,17 +29,17 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
-INCLUDE video.inc
+INCLUDE ..\video.inc
 
 video_mode_entry	STRUC
 

@@ -31,7 +31,6 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\driver.def
 INCLUDE int.def
@@ -41,6 +40,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE exec.def
 INCLUDE pe.def
+INCLUDE system.def
 INCLUDE system.inc
 
 FILE_HANDLE		EQU 3AB60000h

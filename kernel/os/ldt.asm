@@ -29,13 +29,13 @@
 
 GateSize = 16
 
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE system.def
 INCLUDE int.def
 INCLUDE protseg.def
-INCLUDE os.def
-INCLUDE os.inc
-INCLUDE user.def
-INCLUDE user.inc
 
 ldt_start	EQU 80h
 

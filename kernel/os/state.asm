@@ -29,14 +29,14 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE system.inc
-INCLUDE user.def
+INCLUDE ..\user.def
 INCLUDE state.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE system.def
+INCLUDE system.inc
 
 state_data_seg	STRUC
 

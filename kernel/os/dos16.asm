@@ -29,7 +29,6 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\driver.def
 INCLUDE int.def
@@ -37,6 +36,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE system.def
 INCLUDE dos.inc
 
 	.386p

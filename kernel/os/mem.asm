@@ -29,13 +29,13 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE system.def
 INCLUDE system.inc
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 
 small_linear_struc	STRUC
 slf_prev	DD ?

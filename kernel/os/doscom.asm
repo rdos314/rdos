@@ -29,13 +29,13 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE system.def
 INCLUDE system.inc
 INCLUDE dos.inc
 

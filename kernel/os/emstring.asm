@@ -29,8 +29,7 @@
 
 	.386p
 
-include system.def
-
+include ..\os.def
 include emulate.inc
 include emcom.inc
 include emmem.inc

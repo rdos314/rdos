@@ -29,16 +29,16 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE kdebug.def
-INCLUDE driver.def
+INCLUDE ..\driver.def
 INCLUDE port.def
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE system.def
 INCLUDE system.inc
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 
 section_num	EQU 64
 

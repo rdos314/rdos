@@ -31,7 +31,6 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
 INCLUDE ..\os\kdebug.def
 INCLUDE ..\driver.def
 INCLUDE ..\os\protseg.def
@@ -39,6 +38,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\os\system.def
 
 ;	ds = datasegment
 

@@ -29,12 +29,12 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE os.def
-INCLUDE user.def
-INCLUDE os.inc
-INCLUDE user.inc
+INCLUDE ..\os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.inc
+INCLUDE system.def
 
 gate_entry	STRUC
 gate_name_sel			DW ?

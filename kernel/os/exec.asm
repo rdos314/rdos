@@ -31,16 +31,16 @@
 
 GateSize = 16
 
+INCLUDE protseg.def
+INCLUDE ..\driver.def
+INCLUDE int.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE exec.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE protseg.def
-INCLUDE driver.def
-INCLUDE int.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE exec.def
 
 code	SEGMENT byte public 'CODE'
 

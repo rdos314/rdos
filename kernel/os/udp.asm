@@ -31,7 +31,6 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE ..\driver.def
 INCLUDE int.def

@@ -30,11 +30,11 @@
 GateSize = 16
 
 INCLUDE protseg.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE system.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
 
 
 	.386p

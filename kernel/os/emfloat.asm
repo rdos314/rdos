@@ -29,7 +29,6 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE system.inc
 INCLUDE protseg.def
 INCLUDE ..\user.def

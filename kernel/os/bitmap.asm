@@ -31,17 +31,17 @@
 
 GateSize = 16
 
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
 INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE driver.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE system.inc
-INCLUDE handle.inc
+INCLUDE ..\handle.inc
 INCLUDE bitmap.inc
-INCLUDE video.inc
+INCLUDE ..\video.inc
 
 code	SEGMENT byte public use16 'CODE'
 

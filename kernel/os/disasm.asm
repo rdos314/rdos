@@ -27,7 +27,6 @@
 						
 		NAME DISASM
 
-INCLUDE ..\os\system.def
 INCLUDE ..\os\kdebug.def
 
 blank_sep			EQU 0

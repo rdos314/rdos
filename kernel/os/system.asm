@@ -29,10 +29,10 @@
 
 GateSize = 16
 
-INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE os.def
-INCLUDE os.inc
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE system.def
 INCLUDE system.inc
 
 code	SEGMENT byte public 'CODE'

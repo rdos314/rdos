@@ -28,7 +28,6 @@
 		NAME emulate
 
 include protseg.def
-include system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def

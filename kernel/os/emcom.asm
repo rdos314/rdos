@@ -28,12 +28,12 @@
 		NAME emcom
 
 include protseg.def
-include system.def
 include ..\os.def
 include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
+include system.def
 include int.def
 
 GateSize = 16
