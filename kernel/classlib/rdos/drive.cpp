@@ -182,3 +182,27 @@ long TDrive::GetTotalSectors()
 {
 	return FBytesPerUnit * FUnits / 512;
 }
+
+/*##################  TDrive::CreateFileDrive  #############
+*   Purpose....: Create a file-base drive				                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TDrive::CreateFileDrive(long Size, const char *FsName, const char *FileName)
+{
+	return RdosCreateFileDrive(FDrive, Size, FsName, FileName);
+}
+
+/*##################  TDrive::OpenFileDrive  #############
+*   Purpose....: Open a file-base drive				                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TDrive::OpenFileDrive(const char *FileName)
+{
+	return RdosOpenFileDrive(FDrive, FileName);
+}

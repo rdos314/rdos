@@ -7639,7 +7639,8 @@ RdosDeleteIni	Endp
 ;
 ;       DESCRIPTION:    Create a new file drive
 ;
-;		PARAMETERS:		Size
+;		PARAMETERS:		Drive
+;                       Size
 ;					    FsName
 ;						FileName
 ;
@@ -7654,22 +7655,25 @@ RdosCreateFileDrive	Proc near
 	push esi
 	push edi
 ;
-	mov ecx,[ebp+8]
-	mov esi,[ebp+12]
-	mov edi,[ebp+16]
+    mov al,[ebp+8]
+	mov ecx,[ebp+12]
+	mov esi,[ebp+16]
+	mov edi,[ebp+20]
 	UserGate create_file_drive_nr
-	jnc cfdDone
+	jnc cfdOk
 ;
-	xor al,al
+    xor eax,eax
+    jmp cfdDone
+
+cfdOk:
+	mov eax,1
 
 cfdDone:
-	movzx eax,al
-;
 	pop edi
 	pop esi
 	pop ecx
 	pop ebp
-	ret 12
+	ret 16
 RdosCreateFileDrive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -7679,7 +7683,8 @@ RdosCreateFileDrive	Endp
 ;
 ;       DESCRIPTION:    Open a new file drive
 ;
-;		PARAMETERS:		FsName
+;		PARAMETERS:		Drive
+;                       FsName
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -7690,18 +7695,21 @@ RdosOpenFileDrive	Proc near
 	mov ebp,esp
 	push edi
 ;
-	mov edi,[ebp+8]
+    mov al,[ebp+8]
+	mov edi,[ebp+12]
 	UserGate open_file_drive_nr
-	jnc ofdDone
+	jnc ofdOk
 ;
-	xor al,al
+	xor eax,eax
+	jmp ofdDone
+
+ofdOk:
+	mov eax,1
 
 ofdDone:
-	movzx eax,al
-;
 	pop edi
 	pop ebp
-	ret 4
+	ret 8
 RdosOpenFileDrive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

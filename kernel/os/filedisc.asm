@@ -36,12 +36,33 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\drive.inc
 
+boot_media_struc	STRUC
+
+boot_bytes_per_sector		DW 512
+boot_resv1					DB 0
+boot_mapping_sectors		DW 1
+boot_resv3					DB 0
+boot_resv4					DW 0
+boot_small_sectors			DW 0
+boot_media					DB 0F8h
+boot_resv6					DW 0
+boot_sectors_per_cyl		DW 1
+boot_heads					DW 1
+boot_hidden_sectors			DD 1
+boot_sectors				DD 0
+boot_drive_nr				DB 0,0
+boot_signature				DB 0 
+boot_serial					DD 0
+boot_volume					DB 11 DUP(0)
+boot_fs						DB 8 DUP(0)
+
+boot_media_struc		ENDS
+
 file_header     STRUC
 
-fh_sectors_per_unit     DW ?
-fh_units                DW ?
-fh_size                 DD ?
-fh_fs_name              DB 50 DUP (?)
+boot_jmp					DB ?,?,?
+boot_name					DB 8 DUP(?)
+boot_param                  boot_media_struc <>
 
 file_header     ENDS
 
@@ -53,10 +74,14 @@ fd_disc_sel             DW ?
 fd_disc_nr              DB ?
 fd_drive_nr             DB ?
 
-fd_access               DB ?
+fd_access_drive         DW ?
 fd_selector             DW ?
 
 fd_handle				DW ?
+
+fd_sectors_per_unit     DW ?
+fd_units                DW ?
+fd_size                 DD ?
 
 file_disc_data_seg  ENDS
 
@@ -84,7 +109,7 @@ PAGE
 read_drive	Proc near
 	mov bx,fs:fd_handle
 	movzx edx,es:[edi].dh_unit
-	movzx eax,fs:fh_sectors_per_unit
+	movzx eax,fs:fd_sectors_per_unit
 	mul edx
 	movzx edx,es:[edi].dh_sector
 	add eax,edx
@@ -141,7 +166,7 @@ PAGE
 write_drive	Proc near
 	mov bx,fs:fd_handle
 	movzx edx,es:[edi].dh_unit
-	movzx eax,fs:fh_sectors_per_unit
+	movzx eax,fs:fd_sectors_per_unit
 	mul edx
 	movzx edx,es:[edi].dh_sector
 	add eax,edx
@@ -239,7 +264,7 @@ PAGE
 discbuf_name    DB 'File drive', 0
 
 discbuf_thread:
-	mov cl,fs:fd_access
+	mov cx,fs:fd_access_drive
 	mov ax,fs:fd_selector
 	DuplFileInfo
 	mov fs:fd_handle,bx
@@ -263,11 +288,10 @@ PAGE
 ;
 ;		DESCRIPTION:    Create file as a filesystem & return drive
 ;
-;		PARAMETERS:		DS:(E)SI            Requested filesystem
-;                       ES:(E)DI            Filename to use
+;       PARAMETERS:     AL                  Drive #
+;                       DS:(E)SI            Requested filesystem
+;				        ES:(E)DI            Filename to use
 ;                       ECX	                Size of filesystem
-;
-;       RETURNS:        AL                  Drive #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -282,7 +306,9 @@ create_file_drive   Proc near
     push edx
     push esi
     push edi
+    push bp
 ;
+    mov bp,ax
     push es
     push di
 	mov eax,SIZE file_disc_data_seg
@@ -290,7 +316,7 @@ create_file_drive   Proc near
 ;
     mov ax,es
     mov fs,ax
-    mov di,OFFSET fh_fs_name
+    mov di,OFFSET boot_param.boot_fs
 
 cfdMoveName:
     lods byte ptr [esi]
@@ -298,7 +324,7 @@ cfdMoveName:
     or al,al
     jnz cfdMoveName
 ;
-    mov di,OFFSET fh_fs_name
+    mov di,OFFSET boot_param.boot_fs
     IsFileSystemAvailable
     pop di
     pop es
@@ -327,24 +353,25 @@ cfdIterate:
     jmp cfdIterate
 
 cfdSave:
-    mov es:fh_sectors_per_unit,cx
-	mov es:fh_units,ax
+    mov es:fd_sectors_per_unit,cx
+	mov es:fd_units,ax
 	mul cx
 	push dx
 	push ax
 	pop eax
     shl eax,9
-    mov es:fh_size,eax
+    mov es:fd_size,eax
 ;
     xor di,di
-    mov cx,SIZE file_header
+    mov cx,200h
     WriteFile
 ;
-    mov eax,es:fh_size
+    mov eax,es:fd_size
+    add eax,200h
     SetFileSize
 ;
     GetFileInfo
-    mov es:fd_access,cl
+    mov es:fd_access_drive,cx
     mov es:fd_selector,ax
 ;
 	mov ecx,200h
@@ -353,19 +380,19 @@ cfdSave:
 	mov es:fd_disc_sel,bx
 	mov es:fd_disc_nr,al
 ;
-    mov ax,es:fh_sectors_per_unit
+    mov ax,es:fd_sectors_per_unit
     mov cx,200h
-    mov dx,es:fh_units
+    mov dx,es:fd_units
     xor si,si
     xor di,di    
 	SetDiscParam
 ;
-	AllocateDynamicDrive
+    mov ax,bp
 	mov es:fd_drive_nr,al
 ;
 	mov ah,es:fd_disc_nr
-	mov edx,1
-	mov ecx,es:fh_size
+	xor edx,edx
+	mov ecx,es:fd_size
 	shr ecx,9
 	dec ecx
 	OpenDrive
@@ -386,11 +413,11 @@ cfdSave:
 	pop es
 ;
     mov al,es:fd_drive_nr
-    mov di,OFFSET fh_fs_name
+    mov di,OFFSET boot_param.boot_fs
 	FormatFileSystem
 	InstallFileSystem
 ;
-	mov ecx,es:fh_size
+	mov ecx,es:fd_size
 	shr ecx,9
 	dec ecx
 	StartFileSystem
@@ -403,6 +430,7 @@ cfdFreeFail:
     stc
     
 cfdDone:
+    pop bp
     pop edi
     pop esi
     pop edx
@@ -439,9 +467,8 @@ PAGE
 ;
 ;		DESCRIPTION:    Open file as a logical drive
 ;
-;		PARAMETERS:		ES:(E)DI        Filename
-;
-;       RETURNS:        AL              Logical drive #
+;		PARAMETERS:		AL              Logical drive #
+;                       ES:(E)DI        Filename
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -456,7 +483,9 @@ open_file_drive Proc near
     push edx
     push esi
     push edi
+    push bp
 ;
+    mov bp,ax
     xor cx,cx
     UserGateForce32 open_file_nr
     jc ofdDone
@@ -465,17 +494,38 @@ open_file_drive Proc near
     mov cx,ax
 	AllocateSmallGlobalMem
     xor di,di
-    mov es:fh_fs_name,0
+    mov es:boot_param.boot_fs,0
     ReadFile
     jc ofdFail
 ;
-	mov di,OFFSET fh_fs_name
+	mov di,OFFSET boot_param.boot_fs
     IsFileSystemAvailable
     jc ofdFail
 ;
     GetFileInfo
-    mov es:fd_access,cl
+    mov es:fd_access_drive,cx
     mov es:fd_selector,ax
+;
+    GetFileSize
+    sub eax,200h
+    mov es:fd_size,eax
+;    
+    mov cx,1
+	dec eax
+	shr eax,9
+	inc eax
+
+ofdIterate:
+	cmp eax,100000h
+	jb ofdSave
+;
+    shl cx,1
+    shr eax,1
+    jmp ofdIterate
+
+ofdSave:
+    mov es:fd_sectors_per_unit,cx
+	mov es:fd_units,ax
 ;
 	mov ecx,200h
 	mov bx,es
@@ -483,19 +533,19 @@ open_file_drive Proc near
 	mov es:fd_disc_sel,bx
 	mov es:fd_disc_nr,al
 ;
-    mov ax,es:fh_sectors_per_unit
+    mov ax,es:fd_sectors_per_unit
     mov cx,200h
-    mov dx,es:fh_units
+    mov dx,es:fd_units
     xor si,si
     xor di,di    
 	SetDiscParam
 ;
-	AllocateDynamicDrive
+    mov ax,bp
 	mov es:fd_drive_nr,al
 ;
 	mov ah,es:fd_disc_nr
-	mov edx,1
-	mov ecx,es:fh_size
+	xor edx,edx
+	mov ecx,es:fd_size
 	shr ecx,9
 	dec ecx
 	OpenDrive
@@ -514,10 +564,10 @@ open_file_drive Proc near
 	pop es
 ;
 	mov al,es:fd_drive_nr
-    mov di,OFFSET fh_fs_name
+    mov di,OFFSET boot_param.boot_fs
 	InstallFileSystem
 ;
-	mov ecx,es:fh_size
+	mov ecx,es:fd_size
 	shr ecx,9
 	dec ecx
 	StartFileSystem
@@ -529,6 +579,7 @@ ofdFail:
     stc
     
 ofdDone:
+    pop bp
     pop edi
     pop esi
     pop edx

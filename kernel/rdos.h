@@ -284,8 +284,8 @@ int __stdcall RdosAllocateDynamicDrive();
 int __stdcall RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
 int __stdcall RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
 
-int __stdcall RdosCreateFileDrive(long Size, const char *FsName, const char *FileName);
-int __stdcall RdosOpenFileDrive(const char *FileName);
+int __stdcall RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
+int __stdcall RdosOpenFileDrive(int Drive, const char *FileName);
 
 int __stdcall RdosGetModuleHandle();
 int __stdcall RdosLoadDll(const char *Name);

@@ -1144,16 +1144,16 @@ GetDriveDiscParam     MACRO
 	UserGate get_drive_disc_param_nr
 						ENDM
 
+;   IN  AL          Drive #   
 ;   IN  ECX 	    Size of filesystem
 ;	IN	DS:(E)SI	File system name
 ;	IN	ES:(E)DI	Filename
-;   OUT AL          Drive #   
 CreateFileDrive     MACRO
 	UserGate create_file_drive_nr
 						ENDM
 
+;   IN  AL          Drive #   
 ;	IN	ES:(E)DI	Filename
-;   OUT AL          Drive #   
 OpenFileDrive     MACRO
 	UserGate open_file_drive_nr
 						ENDM

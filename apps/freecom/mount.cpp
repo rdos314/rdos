@@ -154,6 +154,12 @@ int TMountCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 ##########################################################################*/
 int TMountCommand::Mount(TString filename)
 {
+    if (!FDrive->OpenFileDrive(filename.GetData()))
+    {
+    	FMsg.printf(TEXT_ERROR_BADCOMMAND, filename.GetData());
+	    Write(FMsg.GetData());
+		return E_Useage;
+    }
     return 0;
 }
 
@@ -192,7 +198,7 @@ int TMountCommand::Execute(char *param)
                 str[1] = ':';
                 str[2] = 0;
                 strupr(str);
-            	FDrive = TDrive::AllocateFixed(DriveStr[0] - 'A');
+				FDrive = TDrive::AllocateFixed(str[0] - 'A');
               	return Mount(FArgList->FList->FName);
             }
             else
