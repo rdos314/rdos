@@ -123,6 +123,8 @@ protected:
 	void AddAt(int n, TListNode *newln);
 	TListNode *Get(int n);
 
+	virtual TListNode *Clone(const TListNode *ln) const;
+
 	int Compare(const TList &l) const;
 
     TListNode *FList;

@@ -71,6 +71,10 @@ public:
 	void AddAt(int n, TString &str);
 
     int Replace(int n, TString &str);
+
+protected:
+	virtual TListNode *Clone(const TListNode *ln) const;
+
 };
 
 TStringList operator+(const TStringList& list1, const TStringList& list2);

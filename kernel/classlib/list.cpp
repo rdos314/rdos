@@ -386,7 +386,7 @@ TList::TList(const TList &src)
 
     while (p)
     {
-        AddLast(*p);
+        AddLast(Clone(p));
         p = p->FNext;
     }
     FSection.Leave();
@@ -458,6 +458,22 @@ TListNode *TList::Get(int pos)
     FSection.Leave();
 
 	return p;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Clone
+#
+#   Purpose....: Clone list node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode *TList::Clone(const TListNode *ln) const
+{
+	return new TListNode(*ln);
 }
 
 /*##########################################################################
@@ -548,7 +564,7 @@ void TList::Load(const TList &src)
 
         while (p)
         {
-            AddLast(*p);
+            AddLast(Clone(p));
             p = p->FNext;
         }
     }
@@ -1504,7 +1520,7 @@ void TList::Concat(const TList &list1, const TList& list2)
 
     while (p)
     {
-        AddLast(*p);
+        AddLast(Clone(p));
         p = p->FNext;
     }
 
@@ -1512,7 +1528,7 @@ void TList::Concat(const TList &list1, const TList& list2)
 
     while (p)
     {
-        AddLast(*p);
+        AddLast(Clone(p));
         p = p->FNext;
     }
 
@@ -1549,7 +1565,7 @@ void TList::Intersect(const TList &list1, const TList& list2)
     	    p2 = p2->FNext;
 
         if (p2)
-            AddLast(*p1);
+            AddLast(Clone(p1));
             
         p1 = p1->FNext;
     }
@@ -1581,7 +1597,7 @@ void TList::Union(const TList &list1, const TList& list2)
 
     while (p1)
     {
-        AddLast(*p1);
+        AddLast(Clone(p1));
         p1 = p1->FNext;
     }
 
@@ -1596,7 +1612,7 @@ void TList::Union(const TList &list1, const TList& list2)
     	    p1 = p1->FNext;
 
         if (!p1)
-            AddLast(*p2);
+            AddLast(Clone(p2));
             
         p2 = p2->FNext;
     }
@@ -1635,7 +1651,7 @@ void TList::Difference(const TList &list1, const TList& list2)
     	    p2 = p2->FNext;
 
         if (!p2)
-            AddLast(*p1);
+            AddLast(Clone(p1));
             
         p1 = p1->FNext;
     }
@@ -1651,7 +1667,7 @@ void TList::Difference(const TList &list1, const TList& list2)
     	    p1 = p1->FNext;
 
         if (!p1)
-            AddLast(*p2);
+            AddLast(Clone(p2));
             
         p2 = p2->FNext;
     }

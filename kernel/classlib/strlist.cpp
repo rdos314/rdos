@@ -399,6 +399,23 @@ TString &TStringList::operator[](int pos)
 
 /*##########################################################################
 #
+#   Name       : TStringList::Clone
+#
+#   Purpose....: Clone entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode *TStringList::Clone(const TListNode *ln) const
+{
+	TStringListNode *p = (TStringListNode *)ln;
+	return new TStringListNode(*p);
+}
+
+/*##########################################################################
+#
 #   Name       : TStringList::Get
 #
 #   Purpose....: Get current data
