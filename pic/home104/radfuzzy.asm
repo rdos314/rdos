@@ -28,14 +28,15 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-Ref			.EQU $0F
-Temp		.EQU $10
+RefVal	    .EQU $0F
+TempVal		.EQU $10
 MotorVal	.EQU $11
-Da1			.EQU $12
-REG			.EQU $13
-VAL			.EQU $14
-BIT			.EQU $15
-CONTR		.EQU $16
+AmbientVal  .EQU $12
+Da1			.EQU $13
+Reg			.EQU $14
+Val			.EQU $15
+Bit			.EQU $16
+Contr		.EQU $17
 
 TempSumLow	.EQU $18
 TempSumHigh	.EQU $19
@@ -74,28 +75,28 @@ Reset:
 ; All PCL relative code must be here (in the first 256 words)
 
 SetVal:
-	movf REG,W
+	movf Reg,W
 	addwf PCL,F
-	goto SetRef		; 0
-	goto SetTemp	; 1
-	return			; 2
-	return			; 3
-	return			; 4
-	return			; 5
-	return			; 6
-	return			; 7
+	goto SetRef	    	; 0
+	goto SetTemp	    ; 1
+	return		    	; 2
+	return	    		; 3
+	goto SetAmbient	    ; 4
+	return		    	; 5
+	return	    		; 6
+	goto UpdateFuzzy    ; 7
 
 GetVal:	
-	movf REG,W
+	movf Reg,W
 	addwf PCL,F
-	goto GetRef		; 0
-	goto GetTemp	; 1
-	goto GetMotor	; 2
-	return			; 3
-	return			; 4
-	return			; 5
-	return			; 6
-	return			; 7
+	goto GetRef 		; 0
+	goto GetTemp    	; 1
+	goto GetMotor	    ; 2
+	return	    		; 3
+	goto GetAmbient  	; 4
+	return			    ; 5
+	return	    		; 6
+	return		    	; 7
 
 RuleNLC:
 	movf TempError, W
@@ -708,14 +709,21 @@ TempOutputPXL:
 	goto CalcHighSlope
 
 UpdateFuzzy:
-	movlw 220
-	subwf Temp, W
+    movf RefVal,W
+    subwf AmbientVal,W
+    addlw 127
+    movwf AmbientIndex
+;    
+    movf RefVal,W
+	subwf TempVal, W
 	addlw 127
 	movwf ErrorIndex
+;
 	movf PrevErrorIndex, W
 	subwf ErrorIndex, W
 	addlw 127
 	movwf DeltaIndex
+;
 	movf ErrorIndex, W
 	movwf PrevErrorIndex
 ;
@@ -907,10 +915,7 @@ IncMotor:
 	movwf MotorVal
 
 MotorDone:
-	movf NumHigh, W
-	sublw 33
-	movwf MotorVal
-	addwf MotorVal, F
+    call LoadMotor0
 	return
 
 Main:
@@ -922,8 +927,8 @@ Main:
 	movlw %00001100
 	movwf PORTB
 ;
-	clrf Ref
-	clrf Temp
+	clrf RefVal
+	clrf TempVal
 	clrf Da1
 ;
 	movlw 127
@@ -933,10 +938,8 @@ Main:
 	movwf AmbientIndex
 	clrf MotorVal
 
-LP:		
-	call LoadMotor0
+LP:
 	call Wait
-	incf MotorVal,F
 	goto LP
 
 WaitClk:
@@ -957,28 +960,38 @@ WaitClkLow:
 	return
 
 SetRef:	
-	movf VAL,W
-	movwf Ref
+	movf Val,W
+	movwf RefVal
 	return
 
 SetTemp:
-	movf VAL,W
-	movwf Temp
+	movf Val,W
+	movwf TempVal
+	return
+
+SetAmbient:
+	movf Val,W
+	movwf AmbientVal
 	return
 
 GetRef:
-	movf Ref,W
-	movwf VAL
+	movf RefVal,W
+	movwf Val
 	return
 
 GetTemp:
-	movf Temp,W
-	movwf VAL
+	movf TempVal,W
+	movwf Val
 	return
 
 GetMotor:
 	movf MotorVal,W
-	movwf VAL
+	movwf Val
+	return
+
+GetAmbient:
+	movf AmbientVal,W
+	movwf Val
 	return
 			
 Wait:		
@@ -990,8 +1003,8 @@ Wait:
 	movwf TRISB
 	PAGE0
 ;
-	clrf VAL
-	clrf REG
+	clrf Val
+	clrf Reg
 
 	call WaitClk
 	btfss PORTB,5
@@ -1000,47 +1013,47 @@ Wait:
 WaitSend:
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,0
+	bsf Reg,0
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,1
+	bsf Reg,1
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,2
+	bsf Reg,2
 ;
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,0
+	bsf Val,0
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,1
+	bsf Val,1
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,2
+	bsf Val,2
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,3
+	bsf Val,3
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,4
+	bsf Val,4
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,5
+	bsf Val,5
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,6
+	bsf Val,6
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf VAL,7
+	bsf Val,7
 
 	btfss PORTB,7
 	goto WaitEnd
@@ -1051,26 +1064,26 @@ WaitSend:
 WaitRec:
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,0
+	bsf Reg,0
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,1
+	bsf Reg,1
 
 	call WaitClk
 	btfsc PORTB,5
-	bsf REG,2
+	bsf Reg,2
 ;
 	call GetVal
 ;
 	movlw 8
-	movwf BIT
+	movwf Bit
 
 	btfss PORTB,7
 	goto WaitEnd
 
 WaitRecLoop:
-	btfss VAL,0
+	btfss Val,0
 	goto WaitRecReset
 
 	bsf PORTB,6
@@ -1080,7 +1093,7 @@ WaitRecReset:
 	bcf PORTB,6
 
 WaitRecShift:
-	rrf VAL,F
+	rrf Val,F
 
 WaitRecHi:
 	btfss PORTB,7
@@ -1096,7 +1109,7 @@ WaitRecLow:
 	btfss PORTB,4
 	goto WaitRecLow
 
-	decfsz BIT,F
+	decfsz Bit,F
 	goto WaitRecLoop
 
 WaitEnd:
@@ -1115,16 +1128,16 @@ Delay:
 
 LoadMotor0:	
 	movlw %00001001
-	movwf CONTR
+	movwf Contr
 	movf MotorVal,W
-	movwf VAL
+	movwf Val
 	goto LoadMotor
 
 LoadMotor1:	
 	movlw %00001010
-	movwf CONTR
+	movwf Contr
 	movf Da1,W
-	movwf VAL
+	movwf Val
 
 LoadMotor:	
 	bcf PORTB,0
@@ -1132,10 +1145,10 @@ LoadMotor:
 	bcf PORTB,2
 ;
 	movlw 8
-	movwf BIT
+	movwf Bit
 
 LoadContrLoop:
-	btfss CONTR,7
+	btfss Contr,7
 	goto LoadContrRes
 
 LoadContrSet:
@@ -1146,19 +1159,19 @@ LoadContrRes:
 	bcf PORTB,1
 
 LoadContrNext:
-	rlf CONTR,F
+	rlf Contr,F
 	bsf PORTB,0
 	call Delay
 	bcf PORTB,0
 ;
-	decfsz BIT,F
+	decfsz Bit,F
 	goto LoadContrLoop
 ;
 	movlw 8
-	movwf BIT
+	movwf Bit
 
 LoadDataLoop:
-	btfss VAL,7
+	btfss Val,7
 	goto LoadDataRes
 
 LoadDataSet:
@@ -1169,12 +1182,12 @@ LoadDataRes:
 	bcf PORTB,1
 
 LoadDataNext:
-	rlf VAL,F
+	rlf Val,F
 	bsf PORTB,0
 	call Delay
 	bcf PORTB,0
 ;
-	decfsz BIT,F
+	decfsz Bit,F
 	goto LoadDataLoop
 ;
 	bsf PORTB,2

@@ -134,20 +134,29 @@ SendInten:	movlw 3
 			call Send0
 			return
 
+SendAmbient:
+            movlw 4
+			call Send1
+			return
+
+StartFuzzy:	movlw 7
+			call Send1
+			return
+
 HandlePend:
 			bcf SEC,7
 			movf SEC,W
 			incf SEC,F
 			addwf PCL,F
 			goto RecTemp		; 0
-			goto RecMotor		; 1
+			goto SendAmbient	; 1
 			goto SendRef0		; 2
 			goto SendRef1		; 3
-			goto SendMotor	 	; 4
+			goto SendInten	 	; 4
 			goto SendTemp		; 5
-			goto SendInten		; 6
-			return				; 7
-			return				; 8
+			return      		; 6
+			goto StartFuzzy    	; 7
+			return      		; 8
 			return				; 9
 			return				; 10
 			return				; 11
@@ -196,8 +205,8 @@ HandlePend:
 			return 				; 54
 			return				; 55
 			return				; 56
-			return				; 57
-			return				; 58
+			goto RecMotor		; 57
+			goto SendMotor		; 58
 			clrf SEC			; 59
 			return
 
