@@ -255,17 +255,27 @@ InitChip	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InitRing	Proc near
-	mov eax,8192 SHL RX_BUF_LEN_IDX + 5 * TX_BUF_SIZE
-	AllocateBigLinear
+	int 3
+	mov ecx,(2 SHL RX_BUF_LEN_IDX) + 1
+	AllocateMultiplePhysical
+	jc irDone
+;
 	mov ds:RxRing,edx
-	add edx,8192 SHL RX_BUF_LEN_IDX + TX_BUF_SIZE
+;
+	mov ecx,2
+	AllocateMultiplePhysical
+	jc irDone
+;
 	mov ds:TxRing,edx
-	add edx,TX_BUF_SIZE
+	add edx,800h
 	mov ds:TxRing+1,edx
-	add edx,TX_BUF_SIZE
+	add edx,800h
 	mov ds:TxRing+2,edx
-	add edx,TX_BUF_SIZE
+	add edx,800h
 	mov ds:TxRing+3,edx
+
+irDone:
+
 	ret
 InitRing	Endp
 
@@ -461,7 +471,6 @@ init_pci_found:
 	mov di,OFFSET NetInt	
 	RequestPrivateIrqHandler
 ;
-	int 3
 	call InitChip
 	call InitRing
 ;

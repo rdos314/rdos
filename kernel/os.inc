@@ -552,6 +552,12 @@ FreePhysical	MACRO
 	OsGate free_physical_nr
 					ENDM
 
+;	IN  ECX		Number of pages
+;	OUT EAX		Physical base address
+AllocateMultiplePhysical	MACRO
+	OsGate allocate_multiple_physical_nr
+					ENDM
+
 ;	EAX		ANTAL BYTE LEDIGT MINNE
 GetFreePhysical	MACRO
 	OsGate get_free_physical_nr

@@ -231,6 +231,11 @@ init_physical_gates	PROC near
 	xor cl,cl
 	mov ax,allocate_dma_physical_nr
 	RegisterOsGate
+	mov si,OFFSET allocate_multiple_physical
+	mov di,OFFSET allocate_multiple_physical_name
+	xor cl,cl
+	mov ax,allocate_multiple_physical_nr
+	RegisterOsGate
 	mov si,OFFSET get_physical_page
 	mov di,OFFSET get_physical_page_name
 	xor cl,cl
@@ -421,6 +426,218 @@ free_link_page:
 	pop ds	
 	ret
 free_physical	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateMultiplePhysical
+;
+;		DESCRIPTION:	Allocate multiple physical page
+;
+;		PARAMETERS:		ECX		Number of pages
+;
+;		RETURN:			EAX		Physical base address
+;												
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_multiple_physical_name	DB 'Allocate Multiple Physical Memory',0
+
+; edx address to check for
+
+check_address	Proc near
+	push eax
+	push ebx
+;
+	mov ebx,ds:free_phys_list
+
+check_addr_loop:
+	or ebx,ebx
+	jz check_addr_fail
+;	
+	mov eax,fs:[ebx]
+	xor al,al
+	cmp eax,edx
+	je check_addr_found
+;
+	mov ebx,es:[ebx]
+	jmp check_addr_loop
+
+check_addr_fail:
+	stc
+	jmp check_addr_done
+
+check_addr_found:
+	clc
+
+check_addr_done:
+	pop ebx
+	pop eax
+	ret
+check_address	Endp
+
+; edx start address
+; ecx number of pages
+
+do_one_scan	Proc near
+	push ecx
+	push edx
+
+do_one_scan_loop:
+	add edx,1000h
+	call check_address
+	jc do_one_scan_done
+;
+	loop do_one_scan_loop
+;
+	clc
+
+do_one_scan_done:
+	pop edx
+	pop ecx	
+	ret
+do_one_scan	Endp
+
+; ecx number of pages
+; edx start address
+
+find_multi_page	Proc near
+	push ebx
+;
+	mov ebx,ds:free_phys_list
+
+find_multi_loop:
+	or ebx,ebx
+	jz find_multi_fail
+;	
+	mov edx,fs:[ebx]
+	xor dl,dl
+	call do_one_scan
+	jnc find_multi_done
+;
+	mov ebx,es:[ebx]
+	jmp find_multi_loop
+
+find_multi_fail:
+	stc
+
+find_multi_done:
+	pop ebx
+	ret
+find_multi_page	Endp
+
+; edx physical address
+
+allocate_one_entry	Proc near
+	push eax
+	push ebx
+	push esi
+;
+	xor esi,esi
+	mov ebx,ds:free_phys_list
+
+allocate_one_loop:
+	or ebx,ebx
+	jz allocate_one_fail
+;
+	mov eax,fs:[ebx]
+	xor al,al
+	cmp eax,edx
+	je allocate_one_do
+;
+	mov esi,ebx
+	mov ebx,es:[ebx]
+	jmp allocate_one_loop
+
+allocate_one_do:
+	or esi,esi
+	jnz allocate_one_not_first
+;
+	mov eax,es:[ebx]
+	mov ds:free_phys_list,eax
+	jmp allocate_one_unused
+
+allocate_one_not_first:
+	mov eax,es:[ebx]
+	mov es:[esi],eax
+
+allocate_one_unused:
+	mov eax,ds:unused_phys_list
+	mov es:[ebx],eax
+	mov ds:unused_phys_list,ebx
+	clc
+	jmp allocate_one_done
+
+allocate_one_fail:
+	stc
+
+allocate_one_done:
+	pop esi
+	pop ebx
+	pop eax
+	ret
+allocate_one_entry	Endp
+
+; ecx number of pages
+; edx physical start address
+
+allocate_multi_entries	Proc near
+	push ecx
+	push edx
+
+allocate_multi_entry_loop:
+	call allocate_one_entry
+	add edx,1000h
+	loop allocate_multi_entry_loop
+
+allocate_multi_entry_done:
+	pop edx
+	pop ecx
+	ret
+allocate_multi_entries	Endp
+
+allocate_multiple_physical	PROC far
+	push ds
+	push es
+	push fs
+	push ebx
+	push edx
+	mov bx,system_data_sel
+	mov ds,bx
+	mov dx,phys_list_sel
+	mov es,dx
+	mov ax,phys_page_sel
+	mov fs,ax
+	EnterSection ds:phys_section
+	or ecx,ecx
+	jz allocate_multi_fail
+;
+	cmp ecx,ds:phys_free_pages
+	ja allocate_multi_fail
+;
+	call find_multi_page
+	jc allocate_multi_fail
+;
+	call allocate_multi_entries
+	sub ds:phys_free_pages,ecx
+	clc
+;
+	LeaveSection ds:phys_section
+	jmp allocate_multi_done
+
+allocate_multi_fail:
+	LeaveSection ds:phys_section
+	stc
+
+allocate_multi_done:
+	pop edx
+	pop ebx
+	pop fs
+	pop es
+	pop ds
+	ret
+allocate_multiple_physical	ENDP
 
 PAGE
 
