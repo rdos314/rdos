@@ -177,7 +177,7 @@ void TInitFdCommand::WriteBootSector(TDisc *Disc)
 
 	bootp.BytesPerSector = 512;
 	bootp.Resv1 = 0;	    
-	bootp.MappingSectors = FLoaderSectors;
+	bootp.MappingSectors = FLoaderSectors + 1;
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;
 	bootp.SmallSectors = 2880;
@@ -185,7 +185,7 @@ void TInitFdCommand::WriteBootSector(TDisc *Disc)
 	bootp.Resv6 = 0;
 	bootp.SectorsPerCyl = 18;
 	bootp.Heads = 2;
-	bootp.HiddenSectors = 0;
+	bootp.HiddenSectors = FLoaderSectors + 1;
 	bootp.Sectors = 2880;
 	bootp.Drive = 0;
 	bootp.Resv7 = 0;
@@ -276,14 +276,17 @@ int TInitFdCommand::Execute(char *param)
 			Write(FMsg.GetData());
 			return 0;
 		}
-            
 
-        if (ok)
-        {            		
-    	    WriteBootLoader(Disc);
+
+		if (ok)
+		{
+			WriteBootLoader(Disc);
+			RdosWaitMilli(4000);
 			WriteBootSector(Disc);
+			RdosWaitMilli(2000);
 			Disc->Format(2880 - 1 - FLoaderSectors);
-    	}
+			return 0;
+		}
 	}
 
 	ErrorSyntax(0);

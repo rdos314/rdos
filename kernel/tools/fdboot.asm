@@ -108,9 +108,9 @@ Tics                DD ?
 
 OrgTimerVect        DD ?
 
-DiscCyls            DW ?
-DiscHeads           DW ?
-SectorsPerCyl       DW ?
+DiscCyls            DW 1
+DiscHeads           DW 1
+SectorsPerCyl       DW 1
 
 CurrEntry           DW ?
 MenuEntries         DW 0
@@ -285,7 +285,7 @@ ReadSector	Proc near
 ;	
     mov ax,ds
     mov es,ax
-    push eax
+    push edx
     pop ax
     pop dx
 	push bx
@@ -978,24 +978,14 @@ hmDown:
 
 hmOk: 
     mov si,cs:CurrEntry
+    dec si
     add si,si
     mov si,cs:[si].MenuArr
-    or si,si
-    jz hmOrgOs
-;        
     movzx edx,cs:[si].fat_cluster
     mov cs:CurrentCluster,edx
     mov eax,cs:[si].fat_file_size
     mov cs:ImageSize,eax
     clc
-    jmp hmDone
-
-hmOrgOs:
-    mov cs:CurrentCluster,0
-    mov cs:ImageSize,0
-    stc
-
-hmDone:    
     ret
 HandleMenu  Endp
 
