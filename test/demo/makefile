@@ -46,7 +46,7 @@ exes =      $(test_exes)
 
 maps =      $(exes:.EXE=.MAP)
 
-cfgs =      DEMO.CFG GUIDEMO.CFG ALIBOOT.CFG
+cfgs =      RDOS.CFG GUIDEMO.CFG ALIBOOT.CFG
 
 bins =      $(cfgs:.CFG=.BIN)
 
@@ -77,8 +77,8 @@ TEST.EXE : $(test_objs)
 	TEST,,test;
 !
 
-DEMO.BIN:   DEMO.CFG $(rdvs) $(exes) $(dlls)
-	..\..\kernel\tools\cfg2bin demo
+RDOS.BIN:   RDOS.CFG $(rdvs) $(exes) $(dlls)
+	..\..\kernel\tools\cfg2bin rdos
 
 GUIDEMO.BIN:   GUIDEMO.CFG $(rdvs) $(exes) $(dlls)
 	..\..\kernel\tools\cfg2bin guidemo
