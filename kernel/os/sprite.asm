@@ -1200,7 +1200,9 @@ hide_sprite	Proc far
     mov ax,fs:sp_y_max
     mov ds:v_y_max,ax
     mov ds:v_lgop,LGOP_NONE
+	push ds
 	call hide
+	pop ds
 ;
     pop ds:v_lgop
     pop ds:v_y_max
@@ -1271,7 +1273,9 @@ show_sprite	Proc far
     mov ax,fs:sp_y_max
     mov ds:v_y_max,ax
     mov ds:v_lgop,LGOP_NONE
+	push ds
 	call show
+	pop ds
 ;
     pop ds:v_lgop
     pop ds:v_y_max
@@ -1712,7 +1716,9 @@ delete_sprite	Proc near
     mov ax,fs:sp_y_max
     mov ds:v_y_max,ax
     mov ds:v_lgop,LGOP_NONE
+	push ds
 	call hide
+	pop ds
 ;
     pop ds:v_lgop
     pop ds:v_y_max
