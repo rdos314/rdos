@@ -145,10 +145,6 @@ CurrMouseButtons	DW ?
 CurrMouseX			DW ?
 CurrMouseY			DW ?
 
-EventHead	DD ?
-EventTail	DD ?
-EventBuf	DB MAX_INPUT_EVENTS * INPUT_EVENT_SIZE DUP(?)
-
 .code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -211,63 +207,6 @@ ConvertKeyboardState	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           KeyboardHook
-;
-;       DESCRIPTION:    Keyboard callback
-;
-;		PARAMETERS:		AL		char
-;						AH		scan code
-;						CX		keyboard state
-;						DX		virtual key codes
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-KeyboardHook Proc near
-	mov ebx,EventTail
-	mov esi,ebx
-	inc ebx
-	cmp ebx,MAX_INPUT_EVENTS
-	jne khCircOk
-	xor ebx,ebx
-khCircOk:
-	push eax
-	push edx
-	mov eax,INPUT_EVENT_SIZE
-	mul esi
-	mov esi,eax
-	add esi,OFFSET EventBuf
-	pop edx
-	pop eax
-	mov word ptr [esi].wKeyEventType, KEY_EVENT
-	test ah,80h
-	jnz khRel
-
-khPress:
-	mov [esi].bKeyDown,1
-	jmp khDownOk
-
-khRel:
-	mov [esi].bKeyDown,0
-
-khDownOk:
-	mov [esi].wRepeatCount,1
-	mov [esi].wVirtualKeyCode,dx
-	and ah,NOT 80h
-	movzx dx,ah
-	mov [esi].wVirtualScanCode,dx
-	movzx dx,al
-	mov [esi].wAsciiChar,dx
-	mov ax,cx
-	call ConvertKeyboardState
-	mov [esi].dwControlKeyState,eax
-;
-	mov EventTail,ebx
-	ret
-KeyboardHook ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           MouseHook
 ;
 ;       DESCRIPTION:    Mouse callback
@@ -282,7 +221,7 @@ MouseHook Proc near
 	shr ecx,3
 	shr edx,3
 ;
-	mov ebx,EventTail
+;	mov ebx,EventTail
 	mov esi,ebx
 	inc ebx
 	cmp ebx,MAX_INPUT_EVENTS
@@ -294,7 +233,7 @@ mhCircOk:
 	mov eax,INPUT_EVENT_SIZE
 	mul esi
 	mov esi,eax
-	add esi,OFFSET EventBuf
+;	add esi,OFFSET EventBuf
 	pop edx
 	pop eax
 	mov word ptr [esi].wMouseEventType, MOUSE_EVENT
@@ -326,7 +265,7 @@ mhFill:
 	UserGate get_keyboard_state_nr
 	call ConvertKeyboardState
 	mov [esi].dwKbControlKeyState,eax
-	mov EventTail,ebx
+;	mov EventTail,ebx
 
 mhDone:
 	ret
@@ -344,10 +283,15 @@ MouseHook Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EventCount	Proc near
-	mov eax,EventHead
-	sub eax,EventTail
-	jnc ecDone
-	add eax,MAX_INPUT_EVENTS
+    UserGate peek_key_event_nr
+    jc ecNoKey
+;
+    mov eax,1
+    jmp ecDone
+
+ecNoKey:
+    xor eax,eax
+
 ecDone:
 	ret
 EventCount	Endp
@@ -367,50 +311,46 @@ EventCount	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PeekEvent	Proc near
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
+    push ebx
+    push ecx
+    push edx
 ;
-	xor ebx,ebx
-	or ecx,ecx
-	jz peDone
+    xor eax,eax
+    or ecx,ecx
+    jz peDone
 ;
-	mov esi,EventHead
+    UserGate peek_key_event_nr
+    jc peDone
+;
+	mov word ptr [edi].wKeyEventType, KEY_EVENT
+	test ah,80h
+	jnz peRel
 
-peLoop:
-	cmp esi,EventTail
-	je peDone
+pePress:
+	mov [edi].bKeyDown,1
+	jmp peDownOk
 
-peDo:
-	inc ebx
-	mov eax,esi
-	inc eax
-	cmp eax,MAX_INPUT_EVENTS
-	jne peCircOk
-	xor eax,eax
-peCircOk:
-	push eax
-	mov eax,INPUT_EVENT_SIZE
-	mul esi
-	mov esi,eax
-	add esi,OFFSET EventBuf
-	push ecx
-	mov ecx,INPUT_EVENT_SIZE
-	rep movsb
-	pop ecx
-	pop esi
-	loop peLoop
+peRel:
+	mov [edi].bKeyDown,0
+
+peDownOk:
+	mov [edi].wRepeatCount,1
+	movzx ebx,dl
+	mov [edi].wVirtualKeyCode,bx
+	movzx ebx,dh
+	and bl,NOT 80h
+	mov [edi].wVirtualScanCode,bx
+	movzx ebx,al
+	mov [edi].wAsciiChar,bx
+	mov ax,cx
+	call ConvertKeyboardState
+	mov [edi].dwControlKeyState,eax
+	mov eax,1
 
 peDone:
-	mov eax,ebx
-;
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
+    pop edx
+    pop ecx
+    pop ebx
 	ret
 PeekEvent	Endp
 
@@ -429,48 +369,46 @@ PeekEvent	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadEvent	Proc near
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
+    push ebx
+    push ecx
+    push edx
 ;
-	xor ebx,ebx
-	or ecx,ecx
-	jz reDone
+    xor eax,eax
+    or ecx,ecx
+    jz reDone
+;
+    UserGate read_key_event_nr
+    jc reDone
+;
+	mov word ptr [edi].wKeyEventType, KEY_EVENT
+	test ah,80h
+	jnz reRel
 
-reLoop:
-	mov esi,EventHead
-	cmp esi,EventTail
-	je reDone
+rePress:
+	mov [edi].bKeyDown,1
+	jmp reDownOk
 
-reDo:
-	inc ebx
-	mov eax,esi
-	inc eax
-	cmp eax,MAX_INPUT_EVENTS
-	jne reCircOk
-	xor eax,eax
-reCircOk:
-	mov EventHead,eax
-	mov eax,INPUT_EVENT_SIZE
-	mul esi
-	mov esi,eax
-	add esi,OFFSET EventBuf
-	push ecx
-	mov ecx,INPUT_EVENT_SIZE
-	rep movsb
-	pop ecx
-	loop reLoop
+reRel:
+	mov [edi].bKeyDown,0
+
+reDownOk:
+	mov [edi].wRepeatCount,1
+	movzx ebx,dl
+	mov [edi].wVirtualKeyCode,bx
+	movzx ebx,dh
+	and bl,NOT 80h
+	mov [edi].wVirtualScanCode,bx
+	movzx ebx,al
+	mov [edi].wAsciiChar,bx
+	mov ax,cx
+	call ConvertKeyboardState
+	mov [edi].dwControlKeyState,eax
+	mov eax,1
 
 reDone:
-	mov eax,ebx
-;
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
+    pop edx
+    pop ecx
+    pop ebx
 	ret
 ReadEvent	Endp
 
@@ -486,9 +424,6 @@ ReadEvent	Endp
 	public InitConsole
 
 InitConsole Proc near
-	mov EventHead,0
-	mov EventTail,0
-;
 	xor ax,ax
 	xor bx,bx
 	mov cx,639
@@ -814,8 +749,6 @@ FillConsoleOutputCharacterA ENDP
 
 FlushConsoleInputBuffer Proc near
 	UserGate flush_keyboard_nr
-	mov EventHead,0
-	mov EventTail,0
 	mov eax,1
 	ret 4
 FlushConsoleInputBuffer ENDP
@@ -1201,44 +1134,6 @@ scmOutput:
 
 scmInput:
 	mov InputMode,eax
-	test eax,ENABLE_MOUSE_INPUT OR ENABLE_WINDOW_INPUT
-;	jz scmNoKeyHook
-;
-	mov EventHead,0
-	mov EventTail,0
-	push es
-	push edi
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET KeyboardHook
-	UserGate hook_keyboard_nr
-	pop edi
-	pop es
-	jmp scmKeyOk
-
-scmNoKeyHook:
-	UserGate unhook_keyboard_nr
-
-scmKeyOk:
-	test eax,ENABLE_MOUSE_INPUT
-	jz scmNoMouseHook
-;
-	mov EventHead,0
-	mov EventTail,0
-	push es
-	push edi
-	mov ax,cs
-	mov es,ax
-	mov edi,OFFSET MouseHook
-	UserGate hook_mouse_nr
-	pop edi
-	pop es
-	jmp scmMouseOk
-
-scmNoMouseHook:
-	UserGate unhook_mouse_nr
-
-scmMouseOk:
 
 scmOk:
 	mov eax,1

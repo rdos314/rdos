@@ -40,19 +40,10 @@ INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
+INCLUDE key.inc
 
         NO_MOUSE = 0
 
-
-; offset in scan-table
-;
-normal_code		EQU 0
-shift_code		EQU 1
-alt_code		EQU 2
-alt_shift_code	EQU 3
-ctrl_code		EQU 4
-xtra_code		EQU 5
-syntax_call		EQU 6
 
 ;
 ; ctrl_func data types
@@ -100,6 +91,16 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn scan_code_tab:near
 
+;
+; remove later
+;
+    public dummy_scan
+    public simple_scan
+    public caps_scan
+    public del_scan
+    public num_scan
+    public f_key_scan
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -110,13 +111,28 @@ code	SEGMENT byte public use16 'CODE'
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public dummy_scan
     
 dummy_scan	PROC near
 	stc 
 	ret
 dummy_scan	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			state_scan
+;
+;		DESCRIPTION:	Handle state key
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+state_scan	PROC near
+    and ax,80h
+	clc
+	ret
+state_scan	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -128,8 +144,6 @@ dummy_scan	ENDP
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public del_scan
     
 del_scan	PROC near
     push ax
@@ -160,6 +174,60 @@ wait_gate2:
 	ret
 del_scan	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			handle_scan
+;
+;		DESCRIPTION:	Handle a scan
+;
+;		PARAMETERS:		AL      scan code
+;                       CX      State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+handle_scan Proc near
+    test cx,ctrl_pressed
+    jz handle_not_ctrl
+;
+	mov ah,cs:[bx].ctrl_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_ctrl:
+    test cx,alt_pressed
+    jz handle_not_alt
+;
+	mov ah,cs:[bx].alt_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_alt:
+    test cx,shift_pressed
+    jz handle_not_shift
+;
+	mov ah,cs:[bx].shift_code
+	cmp ah,-1
+    jne handle_check
+
+handle_not_shift:
+	mov ah,cs:[bx].normal_code
+
+handle_check:
+	or ah,ah
+	jne handle_no_ext
+;
+    mov cl,al
+	movzx ax,byte ptr cs:[bx].ext_code
+	and cl,80h
+	or al,cl
+	
+handle_no_ext:
+    clc
+    ret
+handle_scan Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -170,32 +238,13 @@ del_scan	Endp
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public simple_scan
     
 simple_scan	PROC near
     push ax
     GetKeyboardState
     mov cx,ax
     pop ax
-;
-	and cx,7
-	test cx,4
-	jz simple_sc_no_ctrl
-;
-	mov cx,4
-	
-simple_sc_no_ctrl:
-	add bx,cx
-	mov ah,cs:[bx]
-	or ah,ah
-	jne simple_sc_no_ext
-;
-	sub bx,cx
-	movzx ax,byte ptr cs:[bx+5]
-	
-simple_sc_no_ext:
-	clc
+    call handle_scan
 	ret
 simple_scan	ENDP
 
@@ -209,8 +258,6 @@ simple_scan	ENDP
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public caps_scan
     
 caps_scan	PROC near
     push ax
@@ -221,22 +268,7 @@ caps_scan	PROC near
 	and cx,107h
 	xor cl,ch
 	and cx,7
-	test cx,4
-	jz simple_cap_no_ctrl
-;	
-	mov cx,4
-
-simple_cap_no_ctrl:
-	add bx,cx
-	mov ah,cs:[bx]
-	or ah,ah
-	jne simple_cap_no_ext
-;
-	sub bx,cx
-	movzx ax,byte ptr cs:[bx+5]
-
-simple_cap_no_ext:
-	clc
+	call handle_scan
 	ret
 caps_scan	ENDP
 
@@ -250,8 +282,6 @@ caps_scan	ENDP
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public num_scan
     
 num_scan	PROC near
     push ax
@@ -271,7 +301,10 @@ num_scan	PROC near
 	jmp num_sc_end
 	
 num_sc_no_num:
+    mov cl,al
 	movzx ax,byte ptr cs:[bx]
+	and cl,80h
+	or al,cl
 
 num_sc_end:
 	clc
@@ -288,193 +321,86 @@ num_scan	ENDP
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-    public f_key_scan
     
 f_key_scan	PROC near
-	and cx,7
-	test cx,4
-	jz simple_fk_no_ctrl
-;
-	mov cx,4
-
-simple_fk_no_ctrl:
-	add bx,cx
-	movzx ax,byte ptr cs:[bx]
-	clc
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
+    call handle_scan
+    xor ah,ah
 	ret
 f_key_scan	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			default_scan
+;		NAME:			decode_scan_code
 ;
-;		DESCRIPTION:	Default scan code handler
+;		DESCRIPTION:	Decode scan code
 ;
 ;		PARAMETERS:		AL		scan code
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-virtual_key_code_tab:
+key_type_tab:
+kt00    DW OFFSET dummy_scan
+kt01    DW OFFSET simple_scan
+kt02    DW OFFSET caps_scan
+kt03    DW OFFSET state_scan
+kt04    DW OFFSET num_scan
+kt05    DW OFFSET del_scan
+kt06    DW OFFSET f_key_scan
 
-v00	DB	0,		0
-v01	DB	1Bh,	1Bh
-v02	DB	'1',	'1'
-v03	DB	'2',	'2'
-v04	DB	'3',	'3'
-v05	DB	'4',	'4'
-v06	DB	'5',	'5'
-v07	DB	'6',	'6'
-v08	DB	'7',	'7'
-v09	DB	'8',	'8'
-v0A	DB	'9',	'9'
-v0B	DB	'0',	'0'
-v0C	DB	0B8h,	0B8h
-v0D	DB	0DBh,	0DBh
-v0E	DB	8,		8
-v0F	DB	9,		9
-v10	DB	'Q',	'Q'
-v11	DB	'W',	'W'
-v12	DB	'E',	'E'
-v13	DB	'R',	'R'
-v14	DB	'T',	'T'
-v15	DB	'Y',	'Y'
-v16	DB	'U',	'U'
-v17	DB	'I',	'I'
-v18	DB	'O',	'O'
-v19	DB	'P',	'P'
-v1A	DB	0DDh,	0DDh
-v1B	DB	0BAh,	0BAh
-v1C	DB	0Dh,	0Dh
-v1D	DB	11h,	11h
-v1E	DB	'A',	'A'
-v1F	DB	'S',	'S'
-v20	DB	'D',	'D'
-v21	DB	'F',	'F'
-v22	DB	'G',	'G'
-v23	DB	'H',	'H'
-v24	DB	'J',	'J'
-v25	DB	'K',	'K'
-v26	DB	'L',	'L'
-v27	DB	0C0h,	0C0h
-v28	DB	0DEh,	0DEh
-v29	DB	0BFh,	0BFh
-v2A	DB	10h,	10h
-v2B	DB	0E2h,	0E2h
-v2C	DB	'Z',	'Z'
-v2D	DB	'X',	'X'
-v2E	DB	'C',	'C'
-v2F	DB	'V',	'V'
-v30	DB	'B',	'B'
-v31	DB	'N',	'N'
-v32	DB	'M',	'M'
-v33	DB	0BCh,	0BCh
-v34	DB	0BEh,	0BEh
-v35	DB	0BDh,	0BDh
-v36	DB	10h,	10h
-v37	DB	2Ch,	2Ch
-v38	DB	12h,	12h
-v39	DB	20h,	20h
-v3A	DB	14h,	14h
-v3B	DB	70h,	70h
-v3C	DB	71h,	71h
-v3D	DB	72h,	72h
-v3E	DB	73h,	73h
-v3F	DB	74h,	74h
-v40	DB	75h,	75h
-v41	DB	76h,	76h
-v42	DB	77h,	77h
-v43	DB	78h,	78h
-v44	DB	79h,	79h
-v45	DB	90h,	90h
-v46	DB	91h,	91h
-v47	DB	67h,	24h
-v48	DB	68h,	26h
-v49	DB	69h,	21h
-v4A	DB	6Dh,	6Dh
-v4B	DB	64h,	25h
-v4C	DB	65h,	65h
-v4D	DB	66h,	27h
-v4E	DB	6Bh,	6Bh
-v4F	DB	61h,	23h
-v50	DB	62h,	28h
-v51	DB	63h,	22h
-v52	DB	60h,	2Dh
-v53	DB	6Ch,	2Eh
-v54	DB	6Eh,	6Eh
-v55	DB	0,		0
-v56	DB	0,		0
-v57	DB	7Ah,	7Ah
-v58	DB	7Bh,	7Bh
-v59	DB	0,		0
-v5A	DB	0,		0
-v5B	DB	0,		0
-v5C	DB	0,		0
-v5D	DB	0,		0
-v5E	DB	0,		0
-v5F	DB	0,		0
-v60	DB	0,		0
-v61	DB	0,		0
-v62	DB	0,		0
-v63	DB	0,		0
-v64	DB	0,		0
-v65	DB	0,		0
-v66	DB	0,		0
-v67	DB	0,		0
-v68	DB	0,		0
-v69	DB	0,		0
-v6A	DB	0,		0
-v6B	DB	0,		0
-v6C	DB	0,		0
-v6D	DB	0,		0
-v6E	DB	0,		0
-v6F	DB	0,		0
-v70	DB	0,		0
-v71	DB	0,		0
-v72	DB	0,		0
-v73	DB	0,		0
-v74	DB	0,		0
-v75	DB	0,		0
-v76	DB	0,		0
-v77	DB	0,		0
-v78	DB	0,		0
-v79	DB	0,		0
-v7A	DB	0,		0
-v7B	DB	0,		0
-v7C	DB	0,		0
-v7D	DB	0,		0
-v7E	DB	0,		0
-v7F	DB	0,		0
-
-default_scan	PROC near
+decode_scan_code	PROC near
+    push di
+;
     movzx bx,al
+    and bl,NOT 80h
     mov dh,al
-    push bx
 	shl bx,3
 	add bx,OFFSET scan_code_tab
-	call word ptr cs:[bx].syntax_call
-	pop bx
-	jc default_scan_done
 ;
-	add bx,bx
+    xor di,di
 	push ax
 	GetKeyboardState
 	mov cx,ax
 	pop ax
 	test cx,ext_numpad_active
-	jz default_scan_get_vk
+	jz decode_scan_get_vk
 ;
-	inc bx
+	inc di
 	
-default_scan_get_vk:
-	xor bh,bh
-	mov dl,byte ptr cs:[bx].virtual_key_code_tab
+decode_scan_get_vk:
+	mov dl,byte ptr cs:[bx+di].vk_code
+;
+    movzx di,byte ptr cs:[bx].key_type
+    add di,di
+	call word ptr cs:[di].key_type_tab
+	jc decode_scan_done
+;
     PutKeyboardCode
 
-default_scan_done:
+decode_scan_done:
+    pop di
 	ret
-default_scan	ENDP
+decode_scan_code	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			normal_scan
+;
+;		DESCRIPTION:	Handle normal key  pressed / release
+;
+;		PARAMETERS:		AL		scan code
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+normal_scan	PROC near
+    clc
+    ret
+normal_scan  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -493,8 +419,7 @@ shift_press_scan	PROC near
 	or ax,shift_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 shift_press_scan	ENDP
 
@@ -515,8 +440,7 @@ shift_rel_scan	PROC near
 	and ax,NOT shift_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 shift_rel_scan	ENDP
 
@@ -537,8 +461,7 @@ alt_press_scan	PROC near
 	or ax,alt_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 alt_press_scan	ENDP
 
@@ -559,8 +482,7 @@ alt_rel_scan	PROC near
 	and ax,NOT alt_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 alt_rel_scan	ENDP
 
@@ -581,8 +503,7 @@ ctrl_press_scan	PROC near
 	or ax,ctrl_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 ctrl_press_scan	ENDP
 
@@ -603,8 +524,7 @@ ctrl_rel_scan	PROC near
 	and ax,NOT ctrl_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 ctrl_rel_scan	ENDP
 
@@ -628,6 +548,7 @@ caps_press_scan	PROC near
 ;
 	mov bx,ds:mode_thread
 	Signal
+    clc
 	ret
 caps_press_scan	ENDP
 
@@ -651,6 +572,7 @@ num_press_scan	PROC near
 ;
 	mov bx,ds:mode_thread
 	Signal
+    clc
 	ret
 num_press_scan	ENDP
 
@@ -671,8 +593,7 @@ print_press_scan	PROC near
 	or ax,print_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 print_press_scan	ENDP
 
@@ -693,8 +614,7 @@ print_rel_scan	PROC near
 	and ax,NOT print_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 print_rel_scan	ENDP
 
@@ -715,8 +635,7 @@ scroll_press_scan	PROC near
 	or ax,scroll_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 scroll_press_scan	ENDP
 
@@ -737,8 +656,7 @@ scroll_rel_scan	PROC near
 	and ax,NOT scroll_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 scroll_rel_scan	ENDP
 
@@ -759,8 +677,7 @@ pause_break_press_scan	PROC near
 	or ax,pause_pressed
 	SetKeyboardState
 	pop ax
-;
-    call default_scan
+    clc
 	ret
 pause_break_press_scan	ENDP
 
@@ -782,8 +699,7 @@ pause_break_rel_scan	PROC near
 	SetKeyboardState
 	pop ax
 	int 4Ah
-;
-    call default_scan
+    clc
 	ret
 pause_break_rel_scan	ENDP
 
@@ -810,10 +726,11 @@ f_press_scan	PROC near
     mov ds:focus_req,al
 	mov bx,ds:mode_thread
 	Signal
+	stc
     ret
 
 f_press_norm:
-    call default_scan
+    clc
     ret
 f_press_scan    ENDP
 
@@ -837,10 +754,11 @@ f_rel_scan	PROC near
 	test cx,ctrl_pressed
 	jz f_rel_norm
 ;
+    stc
     ret
 
 f_rel_norm:
-    call default_scan
+    clc
     ret
 f_rel_scan    ENDP
 
@@ -852,64 +770,64 @@ f_rel_scan    ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 handle_scan_code_tab:
-p00	DW	OFFSET default_scan
-p01	DW	OFFSET default_scan
-p02	DW	OFFSET default_scan
-p03	DW	OFFSET default_scan
-p04	DW	OFFSET default_scan
-p05	DW	OFFSET default_scan
-p06	DW	OFFSET default_scan
-p07	DW	OFFSET default_scan
-p08	DW	OFFSET default_scan
-p09	DW	OFFSET default_scan
-p0A	DW	OFFSET default_scan
-p0B	DW	OFFSET default_scan
-p0C	DW	OFFSET default_scan
-p0D	DW	OFFSET default_scan
-p0E	DW	OFFSET default_scan
-p0F	DW	OFFSET default_scan
-p10	DW	OFFSET default_scan
-p11	DW	OFFSET default_scan
-p12	DW	OFFSET default_scan
-p13	DW	OFFSET default_scan
-p14	DW	OFFSET default_scan
-p15	DW	OFFSET default_scan
-p16	DW	OFFSET default_scan
-p17	DW	OFFSET default_scan
-p18	DW	OFFSET default_scan
-p19	DW	OFFSET default_scan
-p1A	DW	OFFSET default_scan
-p1B	DW	OFFSET default_scan
-p1C	DW	OFFSET default_scan
+p00	DW	OFFSET normal_scan
+p01	DW	OFFSET normal_scan
+p02	DW	OFFSET normal_scan
+p03	DW	OFFSET normal_scan
+p04	DW	OFFSET normal_scan
+p05	DW	OFFSET normal_scan
+p06	DW	OFFSET normal_scan
+p07	DW	OFFSET normal_scan
+p08	DW	OFFSET normal_scan
+p09	DW	OFFSET normal_scan
+p0A	DW	OFFSET normal_scan
+p0B	DW	OFFSET normal_scan
+p0C	DW	OFFSET normal_scan
+p0D	DW	OFFSET normal_scan
+p0E	DW	OFFSET normal_scan
+p0F	DW	OFFSET normal_scan
+p10	DW	OFFSET normal_scan
+p11	DW	OFFSET normal_scan
+p12	DW	OFFSET normal_scan
+p13	DW	OFFSET normal_scan
+p14	DW	OFFSET normal_scan
+p15	DW	OFFSET normal_scan
+p16	DW	OFFSET normal_scan
+p17	DW	OFFSET normal_scan
+p18	DW	OFFSET normal_scan
+p19	DW	OFFSET normal_scan
+p1A	DW	OFFSET normal_scan
+p1B	DW	OFFSET normal_scan
+p1C	DW	OFFSET normal_scan
 p1D	DW	OFFSET ctrl_press_scan
-p1E	DW	OFFSET default_scan
-p1F	DW	OFFSET default_scan
-p20	DW	OFFSET default_scan
-p21	DW	OFFSET default_scan
-p22	DW	OFFSET default_scan
-p23	DW	OFFSET default_scan
-p24	DW	OFFSET default_scan
-p25	DW	OFFSET default_scan
-p26	DW	OFFSET default_scan
-p27	DW	OFFSET default_scan
-p28	DW	OFFSET default_scan
-p29	DW	OFFSET default_scan
+p1E	DW	OFFSET normal_scan
+p1F	DW	OFFSET normal_scan
+p20	DW	OFFSET normal_scan
+p21	DW	OFFSET normal_scan
+p22	DW	OFFSET normal_scan
+p23	DW	OFFSET normal_scan
+p24	DW	OFFSET normal_scan
+p25	DW	OFFSET normal_scan
+p26	DW	OFFSET normal_scan
+p27	DW	OFFSET normal_scan
+p28	DW	OFFSET normal_scan
+p29	DW	OFFSET normal_scan
 p2A	DW	OFFSET shift_press_scan
-p2B	DW	OFFSET default_scan
-p2C	DW	OFFSET default_scan
-p2D	DW	OFFSET default_scan
-p2E	DW	OFFSET default_scan
-p2F	DW	OFFSET default_scan
-p30	DW	OFFSET default_scan
-p31	DW	OFFSET default_scan
-p32	DW	OFFSET default_scan
-p33	DW	OFFSET default_scan
-p34	DW	OFFSET default_scan
-p35	DW	OFFSET default_scan
+p2B	DW	OFFSET normal_scan
+p2C	DW	OFFSET normal_scan
+p2D	DW	OFFSET normal_scan
+p2E	DW	OFFSET normal_scan
+p2F	DW	OFFSET normal_scan
+p30	DW	OFFSET normal_scan
+p31	DW	OFFSET normal_scan
+p32	DW	OFFSET normal_scan
+p33	DW	OFFSET normal_scan
+p34	DW	OFFSET normal_scan
+p35	DW	OFFSET normal_scan
 p36	DW	OFFSET shift_press_scan
 p37	DW	OFFSET print_press_scan
 p38	DW	OFFSET alt_press_scan
-p39	DW	OFFSET default_scan
+p39	DW	OFFSET normal_scan
 p3A	DW	OFFSET caps_press_scan
 p3B	DW	OFFSET f_press_scan
 p3C	DW	OFFSET f_press_scan
@@ -923,122 +841,122 @@ p43	DW	OFFSET f_press_scan
 p44	DW	OFFSET f_press_scan
 p45	DW	OFFSET num_press_scan
 p46	DW	OFFSET scroll_press_scan
-p47	DW	OFFSET default_scan
-p48	DW	OFFSET default_scan
-p49	DW	OFFSET default_scan
-p4A	DW	OFFSET default_scan
-p4B	DW	OFFSET default_scan
-p4C	DW	OFFSET default_scan
-p4D	DW	OFFSET default_scan
-p4E	DW	OFFSET default_scan
-p4F	DW	OFFSET default_scan
-p50	DW	OFFSET default_scan
-p51	DW	OFFSET default_scan
-p52	DW	OFFSET default_scan
-p53	DW	OFFSET default_scan
-p54	DW	OFFSET default_scan
-p55	DW	OFFSET default_scan
-p56	DW	OFFSET default_scan
-p57	DW	OFFSET default_scan
-p58	DW	OFFSET default_scan
-p59	DW	OFFSET default_scan
-p5A	DW	OFFSET default_scan
-p5B	DW	OFFSET default_scan
-p5C	DW	OFFSET default_scan
-p5D	DW	OFFSET default_scan
-p5E	DW	OFFSET default_scan
-p5F	DW	OFFSET default_scan
-p60	DW	OFFSET default_scan
-p61	DW	OFFSET default_scan
-p62	DW	OFFSET default_scan
-p63	DW	OFFSET default_scan
-p64	DW	OFFSET default_scan
-p65	DW	OFFSET default_scan
-p66	DW	OFFSET default_scan
-p67	DW	OFFSET default_scan
-p68	DW	OFFSET default_scan
-p69	DW	OFFSET default_scan
-p6A	DW	OFFSET default_scan
-p6B	DW	OFFSET default_scan
-p6C	DW	OFFSET default_scan
-p6D	DW	OFFSET default_scan
-p6E	DW	OFFSET default_scan
-p6F	DW	OFFSET default_scan
-p70	DW	OFFSET default_scan
-p71	DW	OFFSET default_scan
-p72	DW	OFFSET default_scan
-p73	DW	OFFSET default_scan
-p74	DW	OFFSET default_scan
-p75	DW	OFFSET default_scan
-p76	DW	OFFSET default_scan
-p77	DW	OFFSET default_scan
-p78	DW	OFFSET default_scan
-p79	DW	OFFSET default_scan
-p7A	DW	OFFSET default_scan
-p7B	DW	OFFSET default_scan
-p7C	DW	OFFSET default_scan
-p7D	DW	OFFSET default_scan
-p7E	DW	OFFSET default_scan
-p7F	DW	OFFSET default_scan
-p80	DW	OFFSET default_scan
-p81	DW	OFFSET default_scan
-p82	DW	OFFSET default_scan
-p83	DW	OFFSET default_scan
-p84	DW	OFFSET default_scan
-p85	DW	OFFSET default_scan
-p86	DW	OFFSET default_scan
-p87	DW	OFFSET default_scan
-p88	DW	OFFSET default_scan
-p89	DW	OFFSET default_scan
-p8A	DW	OFFSET default_scan
-p8B	DW	OFFSET default_scan
-p8C	DW	OFFSET default_scan
-p8D	DW	OFFSET default_scan
-p8E	DW	OFFSET default_scan
-p8F	DW	OFFSET default_scan
-p90	DW	OFFSET default_scan
-p91	DW	OFFSET default_scan
-p92	DW	OFFSET default_scan
-p93	DW	OFFSET default_scan
-p94	DW	OFFSET default_scan
-p95	DW	OFFSET default_scan
-p96	DW	OFFSET default_scan
-p97	DW	OFFSET default_scan
-p98	DW	OFFSET default_scan
-p99	DW	OFFSET default_scan
-p9A	DW	OFFSET default_scan
-p9B	DW	OFFSET default_scan
-p9C	DW	OFFSET default_scan
+p47	DW	OFFSET normal_scan
+p48	DW	OFFSET normal_scan
+p49	DW	OFFSET normal_scan
+p4A	DW	OFFSET normal_scan
+p4B	DW	OFFSET normal_scan
+p4C	DW	OFFSET normal_scan
+p4D	DW	OFFSET normal_scan
+p4E	DW	OFFSET normal_scan
+p4F	DW	OFFSET normal_scan
+p50	DW	OFFSET normal_scan
+p51	DW	OFFSET normal_scan
+p52	DW	OFFSET normal_scan
+p53	DW	OFFSET normal_scan
+p54	DW	OFFSET normal_scan
+p55	DW	OFFSET normal_scan
+p56	DW	OFFSET normal_scan
+p57	DW	OFFSET normal_scan
+p58	DW	OFFSET normal_scan
+p59	DW	OFFSET normal_scan
+p5A	DW	OFFSET normal_scan
+p5B	DW	OFFSET normal_scan
+p5C	DW	OFFSET normal_scan
+p5D	DW	OFFSET normal_scan
+p5E	DW	OFFSET normal_scan
+p5F	DW	OFFSET normal_scan
+p60	DW	OFFSET normal_scan
+p61	DW	OFFSET normal_scan
+p62	DW	OFFSET normal_scan
+p63	DW	OFFSET normal_scan
+p64	DW	OFFSET normal_scan
+p65	DW	OFFSET normal_scan
+p66	DW	OFFSET normal_scan
+p67	DW	OFFSET normal_scan
+p68	DW	OFFSET normal_scan
+p69	DW	OFFSET normal_scan
+p6A	DW	OFFSET normal_scan
+p6B	DW	OFFSET normal_scan
+p6C	DW	OFFSET normal_scan
+p6D	DW	OFFSET normal_scan
+p6E	DW	OFFSET normal_scan
+p6F	DW	OFFSET normal_scan
+p70	DW	OFFSET normal_scan
+p71	DW	OFFSET normal_scan
+p72	DW	OFFSET normal_scan
+p73	DW	OFFSET normal_scan
+p74	DW	OFFSET normal_scan
+p75	DW	OFFSET normal_scan
+p76	DW	OFFSET normal_scan
+p77	DW	OFFSET normal_scan
+p78	DW	OFFSET normal_scan
+p79	DW	OFFSET normal_scan
+p7A	DW	OFFSET normal_scan
+p7B	DW	OFFSET normal_scan
+p7C	DW	OFFSET normal_scan
+p7D	DW	OFFSET normal_scan
+p7E	DW	OFFSET normal_scan
+p7F	DW	OFFSET normal_scan
+p80	DW	OFFSET normal_scan
+p81	DW	OFFSET normal_scan
+p82	DW	OFFSET normal_scan
+p83	DW	OFFSET normal_scan
+p84	DW	OFFSET normal_scan
+p85	DW	OFFSET normal_scan
+p86	DW	OFFSET normal_scan
+p87	DW	OFFSET normal_scan
+p88	DW	OFFSET normal_scan
+p89	DW	OFFSET normal_scan
+p8A	DW	OFFSET normal_scan
+p8B	DW	OFFSET normal_scan
+p8C	DW	OFFSET normal_scan
+p8D	DW	OFFSET normal_scan
+p8E	DW	OFFSET normal_scan
+p8F	DW	OFFSET normal_scan
+p90	DW	OFFSET normal_scan
+p91	DW	OFFSET normal_scan
+p92	DW	OFFSET normal_scan
+p93	DW	OFFSET normal_scan
+p94	DW	OFFSET normal_scan
+p95	DW	OFFSET normal_scan
+p96	DW	OFFSET normal_scan
+p97	DW	OFFSET normal_scan
+p98	DW	OFFSET normal_scan
+p99	DW	OFFSET normal_scan
+p9A	DW	OFFSET normal_scan
+p9B	DW	OFFSET normal_scan
+p9C	DW	OFFSET normal_scan
 p9D	DW	OFFSET ctrl_rel_scan
-p9E	DW	OFFSET default_scan
-p9F	DW	OFFSET default_scan
-pA0	DW	OFFSET default_scan
-pA1	DW	OFFSET default_scan
-pA2	DW	OFFSET default_scan
-pA3	DW	OFFSET default_scan
-pA4	DW	OFFSET default_scan
-pA5	DW	OFFSET default_scan
-pA6	DW	OFFSET default_scan
-pA7	DW	OFFSET default_scan
-pA8	DW	OFFSET default_scan
-pA9	DW	OFFSET default_scan
+p9E	DW	OFFSET normal_scan
+p9F	DW	OFFSET normal_scan
+pA0	DW	OFFSET normal_scan
+pA1	DW	OFFSET normal_scan
+pA2	DW	OFFSET normal_scan
+pA3	DW	OFFSET normal_scan
+pA4	DW	OFFSET normal_scan
+pA5	DW	OFFSET normal_scan
+pA6	DW	OFFSET normal_scan
+pA7	DW	OFFSET normal_scan
+pA8	DW	OFFSET normal_scan
+pA9	DW	OFFSET normal_scan
 pAA	DW	OFFSET shift_rel_scan
-pAB	DW	OFFSET default_scan
-pAC	DW	OFFSET default_scan
-pAD	DW	OFFSET default_scan
-pAE	DW	OFFSET default_scan
-pAF	DW	OFFSET default_scan
-pB0	DW	OFFSET default_scan
-pB1	DW	OFFSET default_scan
-pB2	DW	OFFSET default_scan
-pB3	DW	OFFSET default_scan
-pB4	DW	OFFSET default_scan
-pB5	DW	OFFSET default_scan
+pAB	DW	OFFSET normal_scan
+pAC	DW	OFFSET normal_scan
+pAD	DW	OFFSET normal_scan
+pAE	DW	OFFSET normal_scan
+pAF	DW	OFFSET normal_scan
+pB0	DW	OFFSET normal_scan
+pB1	DW	OFFSET normal_scan
+pB2	DW	OFFSET normal_scan
+pB3	DW	OFFSET normal_scan
+pB4	DW	OFFSET normal_scan
+pB5	DW	OFFSET normal_scan
 pB6	DW	OFFSET shift_rel_scan
 pB7	DW	OFFSET print_rel_scan
 pB8	DW	OFFSET alt_rel_scan
-pB9	DW	OFFSET default_scan
-pBA	DW	OFFSET default_scan
+pB9	DW	OFFSET normal_scan
+pBA	DW	OFFSET normal_scan
 pBB	DW	OFFSET f_rel_scan
 pBC	DW	OFFSET f_rel_scan
 pBD	DW	OFFSET f_rel_scan
@@ -1051,63 +969,63 @@ pC3	DW	OFFSET f_rel_scan
 pC4	DW	OFFSET f_rel_scan
 pC5	DW	OFFSET f_rel_scan
 pC6	DW	OFFSET scroll_rel_scan
-pC7	DW	OFFSET default_scan
-pC8	DW	OFFSET default_scan
-pC9	DW	OFFSET default_scan
-pCA	DW	OFFSET default_scan
-pCB	DW	OFFSET default_scan
-pCC	DW	OFFSET default_scan
-pCD	DW	OFFSET default_scan
-pCE	DW	OFFSET default_scan
-pCF	DW	OFFSET default_scan
-pD0	DW	OFFSET default_scan
-pD1	DW	OFFSET default_scan
-pD2	DW	OFFSET default_scan
-pD3	DW	OFFSET default_scan
-pD4	DW	OFFSET default_scan
-pD5	DW	OFFSET default_scan
-pD6	DW	OFFSET default_scan
-pD7	DW	OFFSET default_scan
-pD8	DW	OFFSET default_scan
-pD9	DW	OFFSET default_scan
-pDA	DW	OFFSET default_scan
-pDB	DW	OFFSET default_scan
-pDC	DW	OFFSET default_scan
-pDD	DW	OFFSET default_scan
-pDE	DW	OFFSET default_scan
-pDF	DW	OFFSET default_scan
-pE0	DW	OFFSET default_scan
-pE1	DW	OFFSET default_scan
-pE2	DW	OFFSET default_scan
-pE3	DW	OFFSET default_scan
-pE4	DW	OFFSET default_scan
-pE5	DW	OFFSET default_scan
-pE6	DW	OFFSET default_scan
-pE7	DW	OFFSET default_scan
-pE8	DW	OFFSET default_scan
-pE9	DW	OFFSET default_scan
-pEA	DW	OFFSET default_scan
-pEB	DW	OFFSET default_scan
-pEC	DW	OFFSET default_scan
-pED	DW	OFFSET default_scan
-pEE	DW	OFFSET default_scan
-pEF	DW	OFFSET default_scan
-pF0	DW	OFFSET default_scan
-pF1	DW	OFFSET default_scan
-pF2	DW	OFFSET default_scan
-pF3	DW	OFFSET default_scan
-pF4	DW	OFFSET default_scan
-pF5	DW	OFFSET default_scan
-pF6	DW	OFFSET default_scan
-pF7	DW	OFFSET default_scan
-pF8	DW	OFFSET default_scan
-pF9	DW	OFFSET default_scan
-pFA	DW	OFFSET default_scan
-pFB	DW	OFFSET default_scan
-pFC	DW	OFFSET default_scan
-pFD	DW	OFFSET default_scan
-pFE	DW	OFFSET default_scan
-pFF	DW	OFFSET default_scan
+pC7	DW	OFFSET normal_scan
+pC8	DW	OFFSET normal_scan
+pC9	DW	OFFSET normal_scan
+pCA	DW	OFFSET normal_scan
+pCB	DW	OFFSET normal_scan
+pCC	DW	OFFSET normal_scan
+pCD	DW	OFFSET normal_scan
+pCE	DW	OFFSET normal_scan
+pCF	DW	OFFSET normal_scan
+pD0	DW	OFFSET normal_scan
+pD1	DW	OFFSET normal_scan
+pD2	DW	OFFSET normal_scan
+pD3	DW	OFFSET normal_scan
+pD4	DW	OFFSET normal_scan
+pD5	DW	OFFSET normal_scan
+pD6	DW	OFFSET normal_scan
+pD7	DW	OFFSET normal_scan
+pD8	DW	OFFSET normal_scan
+pD9	DW	OFFSET normal_scan
+pDA	DW	OFFSET normal_scan
+pDB	DW	OFFSET normal_scan
+pDC	DW	OFFSET normal_scan
+pDD	DW	OFFSET normal_scan
+pDE	DW	OFFSET normal_scan
+pDF	DW	OFFSET normal_scan
+pE0	DW	OFFSET normal_scan
+pE1	DW	OFFSET normal_scan
+pE2	DW	OFFSET normal_scan
+pE3	DW	OFFSET normal_scan
+pE4	DW	OFFSET normal_scan
+pE5	DW	OFFSET normal_scan
+pE6	DW	OFFSET normal_scan
+pE7	DW	OFFSET normal_scan
+pE8	DW	OFFSET normal_scan
+pE9	DW	OFFSET normal_scan
+pEA	DW	OFFSET normal_scan
+pEB	DW	OFFSET normal_scan
+pEC	DW	OFFSET normal_scan
+pED	DW	OFFSET normal_scan
+pEE	DW	OFFSET normal_scan
+pEF	DW	OFFSET normal_scan
+pF0	DW	OFFSET normal_scan
+pF1	DW	OFFSET normal_scan
+pF2	DW	OFFSET normal_scan
+pF3	DW	OFFSET normal_scan
+pF4	DW	OFFSET normal_scan
+pF5	DW	OFFSET normal_scan
+pF6	DW	OFFSET normal_scan
+pF7	DW	OFFSET normal_scan
+pF8	DW	OFFSET normal_scan
+pF9	DW	OFFSET normal_scan
+pFA	DW	OFFSET normal_scan
+pFB	DW	OFFSET normal_scan
+pFC	DW	OFFSET normal_scan
+pFD	DW	OFFSET normal_scan
+pFE	DW	OFFSET normal_scan
+pFF	DW	OFFSET normal_scan
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1718,6 +1636,9 @@ keyb_int_numpad_handled:
 	movzx bx,al
 	add bx,bx
 	call word ptr cs:[bx].handle_scan_code_tab
+	jc keyb_int_done
+;
+    call decode_scan_code
 
 keyb_int_done:
 	ret

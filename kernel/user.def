@@ -265,4 +265,7 @@ start_wait_nr               = 236
 stop_wait_nr                = 237
 add_wait_for_keyboard_nr    = 238
 
+peek_key_event_nr           = 239
+read_key_event_nr           = 240
+
 usergate_entries			= 256

@@ -1117,6 +1117,22 @@ FlushKeyboard   MACRO
 	UserGate flush_keyboard_nr
 						ENDM
 
+; OUT AX			Character read
+; OUT CX            Keyboard state
+; OUT DL            Virtual key code
+; OUT DH            Scan code
+PeekKeyEvent    MACRO
+	UserGate peek_key_event_nr
+						ENDM
+
+; OUT AX			Character read
+; OUT CX            Keyboard state
+; OUT DL            Virtual key code
+; OUT DH            Scan code
+ReadKeyEvent    MACRO
+	UserGate read_key_event_nr
+						ENDM
+
 ; IN  ES:(E)DI	Callback
 ;		AL		Char
 ;		AH		Scan code
