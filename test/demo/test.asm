@@ -64,7 +64,7 @@ filename	DB 'e:\rdos\test\kernel.map',0
 
 test_name	DB 'Test Section Thread', 0
 
-draw_string	DB 'RDOS', 0
+draw_string	DB 'RDOS operating system', 0
 
 int21Handler:
 	int 3
@@ -213,23 +213,33 @@ init:
 	mov di,450 ; dest x
 	Blit
 ;
-	int 3
 	push bx
-	mov ax,20
+	mov ax,50
 	OpenFont
 ;
+	int 3
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET draw_string
 	GetStringMetrics
-	CreateStringBitmap
+	push bx
+	mov ax,1
+	CreateBitmap
 	mov eax,0FFFFh
 	SetDrawColor
-;
+	mov ax,LGOP_NONE
+	SetLgop
+	pop ax
+	SetFont
+	xor cx,cx
+	xor dx,dx
+	DrawString
+	GetBitmapInfo
 	mov ax,bx
 	pop bx
+;
 	push ax
-	mov ax,LGOP_NONE
+	mov ax,LGOP_ADD
 	SetLgop
 	pop ax
 	xor esi,esi

@@ -212,9 +212,7 @@ set_vga_mode_nr				= 188
 set_forecolor_nr			= 189
 set_backcolor_nr			= 190
 get_string_metrics_nr		= 193
-fill_rect_nr				= 194
-draw_mono_nr				= 195
-draw_char_nr				= 196
+set_font_nr					= 194
 draw_string_nr				= 197
 
 xms_handler_nr				= 198
@@ -240,5 +238,7 @@ set_vbe_mode_nr				= 214
 open_font_nr				= 215
 close_font_nr				= 216
 create_string_bitmap_nr		= 217
+get_bitmap_info_nr			= 218
+draw_mask_nr				= 219
 
-usergate_entries			= 218
+usergate_entries			= 220

@@ -1092,6 +1092,61 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetFont
+;
+;		DESCRIPTION:	Set font
+;
+;		PARAMETERS:		BX			Bitmap handle or 0
+;						AX			Font
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_font_name	DB 'Set Font',0
+
+set_font	PROC far
+	or bx,bx
+	jnz set_font_bmp
+;
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	mov ds:v_font,ax
+	pop ds
+	jmp set_font_done
+
+set_font_fail:
+	pop bx
+	pop ax
+	pop ds
+	jmp set_font_done
+
+set_font_bmp:
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_font_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	mov ds:v_font,ax
+	pop ds	
+
+set_font_done:
+	retf32
+set_font	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetPixel
 ;
 ;		DESCRIPTION:	Get pixel
@@ -1364,6 +1419,85 @@ blit_done:
 	pop bp
 	retf32
 blit_pr	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawMask
+;
+;		DESCRIPTION:	Draw a mask line
+;
+;		PARAMETERS:		AX		row size
+;						BX		Bitmap handle or 0
+;						ECX		source x + y << 16
+;						EDX		dest x + y << 16
+;						ESI		width + height << 16
+;						ES:EDI	1-bit mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_mask_name	DB 'Draw Mask',0
+
+draw_mask	PROC far
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	movzx eax,ax
+
+draw_mask_loop:
+	ror esi,16
+	or si,si
+	jz draw_mask_done
+;
+	ror esi,16
+	CallBitmap draw_mask_line_proc
+	add ecx,10000h
+	add edx,10000h
+	sub esi,10000h
+	jmp draw_mask_loop
+
+draw_mask_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	retf32
+draw_mask	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawString
+;
+;		DESCRIPTION:	Draw a string
+;
+;		PARAMETERS:		BX		Bitmap handle or 0
+;						CX		x
+;						DX		y
+;						ES:EDI	string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_string_name	DB 'Draw String',0
+
+draw_string16	PROC far
+	push edi
+	movzx edi,di
+	CallBitmap draw_string_proc
+	pop edi
+	ret
+draw_string16	ENDP
+
+draw_string32	PROC far
+	CallBitmap draw_string_proc
+	retf32
+draw_string32	ENDP
 
 PAGE
 	
@@ -2476,6 +2610,12 @@ init	PROC far
 	mov ax,set_filled_style_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET set_font
+	mov di,OFFSET set_font_name
+	xor dx,dx
+	mov ax,set_font_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET get_pixel
 	mov di,OFFSET get_pixel_name
 	xor dx,dx
@@ -2493,6 +2633,19 @@ init	PROC far
 	xor dx,dx
 	mov ax,blit_nr
 	RegisterBimodalUserGate
+;
+	mov si,OFFSET draw_mask
+	mov di,OFFSET draw_mask_name
+	xor dx,dx
+	mov ax,draw_mask_nr
+	RegisterBimodalUserGate
+;
+	mov bx,OFFSET draw_string16
+	mov si,OFFSET draw_string32
+	mov di,OFFSET draw_string_name
+	mov dx,virt_es_in
+	mov ax,draw_string_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET draw_line
 	mov di,OFFSET draw_line_name

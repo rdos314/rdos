@@ -1154,6 +1154,46 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			DrawMask
+;
+;		DESCRIPTION:	Draw a mask
+; 
+;		PARAMETER:		AX			source row size
+;						ECX			source x + y << 16
+;						EDX			dest x + y << 16
+;						SI			width
+;						ES:EDI		1-bit mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_mask_line	Proc far
+	ret
+draw_mask_line	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawString
+;
+;		DESCRIPTION:	Draw a string
+; 
+;		PARAMETER:		CX			x
+;						DX			y
+;						ES:EDI		string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_string	Proc near
+	ret
+draw_string	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			Drawline
 ;
 ;		DESCRIPTION:	Draw a line
@@ -1835,21 +1875,19 @@ mt0B DW OFFSET error,				video_code_sel
 mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
-mt0F DW OFFSET error,				video_code_sel
-mt10 DW OFFSET error,				video_code_sel
-mt11 DW OFFSET error,				video_code_sel
-mt12 DW OFFSET error,				video_code_sel
-mt13 DW OFFSET set_color,			video_code_sel
-mt14 DW OFFSET get_pixel,			video_code_sel
-mt15 DW OFFSET set_pixel,			video_code_sel
-mt16 DW OFFSET get_native,			video_code_sel
-mt17 DW OFFSET get_rgb,				video_code_sel
-mt18 DW OFFSET set_native,			video_code_sel
-mt19 DW OFFSET set_rgb,				video_code_sel
-mt1A DW OFFSET get_line,			video_code_sel
-mt1B DW OFFSET draw_line,			video_code_sel
-mt1C DW OFFSET draw_rect,			video_code_sel
-mt1D DW OFFSET draw_ellipse,		video_code_sel
+mt0F DW OFFSET set_color,			video_code_sel
+mt10 DW OFFSET get_pixel,			video_code_sel
+mt11 DW OFFSET set_pixel,			video_code_sel
+mt12 DW OFFSET get_native,			video_code_sel
+mt13 DW OFFSET get_rgb,				video_code_sel
+mt14 DW OFFSET set_native,			video_code_sel
+mt15 DW OFFSET set_rgb,				video_code_sel
+mt16 DW OFFSET get_line,			video_code_sel
+mt17 DW OFFSET draw_mask_line,		video_code_sel
+mt18 DW OFFSET draw_string,			video_code_sel
+mt19 DW OFFSET draw_line,			video_code_sel
+mt1A DW OFFSET draw_rect,			video_code_sel
+mt1B DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

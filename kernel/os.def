@@ -333,7 +333,7 @@ dupl_file_info_nr			EQU 248
 
 ; video
 
-get_string_mask_nr			EQU 250
+get_char_mask_nr			EQU 250
 register_video_mode_nr		EQU 251
 
 ; mouse

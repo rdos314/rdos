@@ -1770,15 +1770,14 @@ DuplFileInfo	MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
-;	EAX		size of char bitmap
-;	BX		font handle
-;	ES:EDI	string
-;	ESI		1-bit char bitmap
-;	CX		width
-;	DX		height
-;	BP		row size
-GetStringMask	MACRO
-	OsGate get_string_mask_nr
+;	AL			char
+;	BX			font handle
+;	CX			width
+;	DX			height
+;	SI			row size
+;	ES:EDI		1-bit string bitmap
+GetCharMask	MACRO
+	OsGate get_char_mask_nr
 					ENDM
 
 ;	AX		Mode nr

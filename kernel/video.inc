@@ -105,28 +105,6 @@ clear_mask_proc			DD ?
 ; IN  ES:EDI	bitmap
 add_mask_proc			DD ?
 
-; IN  CX		x position
-; IN  DX		y position
-; IN  AL		Char
-draw_char_proc       	DD ?
-
-; IN  CX		x position
-; IN  DX		y position
-; IN  ES:EDI	Null terminated string
-draw_string_proc		DD ?
-
-; IN  CX		x position
-; IN  DX		y position
-; IN  FS:ESI	bitmap info
-; IN  ES:EDI	bitmap
-draw_bitmap_proc		DD ?
-
-; IN  AX		start x
-; IN  BX		start y
-; IN  CX		end x
-; IN  DX		end y
-fill_rect_proc			DD ?
-
 ; IN  EAX			RGB color
 set_color_proc			DD ?
 
@@ -168,6 +146,18 @@ set_rgb_row_proc		DD ?
 ; OUT ES:EDI		line buffer
 get_line_proc			DD ?
 
+; IN  AX			source row size
+; IN  ECX			source x + y << 16
+; IN  EDX			dest x + y << 16
+; IN  SI			width
+; IN  ES:EDI		1-bit mask
+draw_mask_line_proc			DD ?
+
+; IN  CX		x position
+; IN  DX		y position
+; IN  ES:EDI	Null terminated string
+draw_string_proc		DD ?
+
 ; IN  AX			x1
 ; IN  BX			y1
 ; IN  CX			x2
@@ -198,6 +188,7 @@ v_bitmap	DW ?
 
 v_color		DD ?
 v_lgop		DW ?
+v_font		DW ?
 v_style		DB ?
 
 video_api_struc	ENDS

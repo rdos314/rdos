@@ -774,6 +774,358 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			DrawMask
+;
+;		DESCRIPTION:	Draw a mask
+; 
+;		PARAMETER:		AX			source row size
+;						ECX			source x + y << 16
+;						EDX			dest x + y << 16
+;						SI			width
+;						ES:EDI		1-bit mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+last_bit_tab:
+lbt0	DB 0FFh
+lbt1	DB 1
+lbt2	DB 3
+lbt3	DB 7
+lbt4	DB 0Fh
+lbt5	DB 1Fh
+lbt6	DB 3Fh
+lbt7	DB 7Fh
+
+MaskNull	Proc near
+	ret
+MaskNull	Endp
+
+MaskNone	Proc near
+	push bx
+	push dx
+;
+	mov dx,es:[edi]
+	mov bx,0FF00h
+	rol bx,cl
+	and dx,bx
+	xor ah,ah
+	rol ax,cl
+	or ax,dx
+	mov es:[edi],ax
+;
+	pop dx
+	pop bx
+	ret
+MaskNone	Endp
+
+MaskOr	Proc near
+	xor ah,ah
+	rol ax,cl
+	or es:[edi],ax
+	ret
+MaskOr	Endp
+
+MaskAnd	Proc near
+	mov ah,0FFh
+	rol ax,cl
+	and es:[edi],ax
+	ret
+MaskAnd	Endp
+
+MaskXor	Proc near
+	xor ah,ah
+	rol ax,cl
+	xor es:[edi],ax
+	ret
+MaskXor	Endp
+
+MaskInvert	Proc near
+	push bx
+	push dx
+;
+	not al
+	mov dx,es:[edi]
+	mov bx,0FF00h
+	rol bx,cl
+	and dx,bx
+	xor ah,ah
+	rol ax,cl
+	or ax,dx
+	mov es:[edi],ax
+;
+	pop dx
+	pop bx
+	ret
+MaskInvert	Endp
+
+MaskInvertOr	Proc near
+	not al
+	xor ah,ah
+	rol ax,cl
+	or es:[edi],ax
+	ret
+MaskInvertOr	Endp
+
+MaskInvertAnd	Proc near
+	not al
+	mov ah,0FFh
+	rol ax,cl
+	and es:[edi],ax
+	ret
+MaskInvertAnd	Endp
+
+MaskInvertXor	Proc near
+	not al
+	xor ah,ah
+	rol ax,cl
+	xor es:[edi],ax
+	ret
+MaskInvertXor	Endp
+
+MaskTab:
+mtl00	DW OFFSET MaskNull
+mtl01	DW OFFSET MaskNone
+mtl02	DW OFFSET MaskOr
+mtl03	DW OFFSET MaskAnd
+mtl04	DW OFFSET MaskXor
+mtl05	DW OFFSET MaskInvert
+mtl06	DW OFFSET MaskInvertOr
+mtl07	DW OFFSET MaskInvertAnd
+mtl08	DW OFFSET MaskInvertXor
+mtl09	DW OFFSET MaskOr
+mtl0A	DW OFFSET MaskAnd
+mtl0B	DW OFFSET MaskAnd
+
+draw_mask_line	Proc far
+	push es
+	push fs
+	pushad
+;
+	xchg ecx,edx
+	movzx ebx,dx
+	ror edx,16
+	movzx edx,dx
+	movzx eax,ax
+	mul edx
+	shl eax,3
+	add eax,ebx
+	push eax
+;
+	movzx ebp,cx
+	ror ecx,16
+	movzx edx,cx
+	movzx eax,ds:v_row_size
+	mul edx
+	shl eax,3
+	add eax,ebp
+	mov cl,al
+	shr eax,3
+	add eax,ds:v_app_base
+;
+	pop ebp
+	mov ch,bl
+	and cx,707h
+	shr ebp,3
+	add ebp,edi
+;
+	mov di,si
+	add di,bx
+	and di,7
+	mov dl,byte ptr cs:[di].last_bit_tab
+;
+	add si,bx
+	dec si
+	shr si,3
+	inc si
+	shr bx,3
+	sub si,bx
+;
+	xchg esi,ebp
+	mov edi,eax
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov bx,ds:v_lgop
+	add bx,bx
+
+draw_mask_line_loop:
+	mov ax,fs:[esi]
+	xchg cl,ch
+	ror ax,cl
+	xchg cl,ch
+	cmp bp,1
+	jnz draw_mask_save
+;
+	and al,dl
+
+draw_mask_save:
+	call word ptr cs:[bx].MaskTab
+	inc esi
+	inc edi
+	sub bp,1
+	jnz draw_mask_line_loop
+;
+	popad
+	pop fs
+	pop es
+	ret
+draw_mask_line	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawString
+;
+;		DESCRIPTION:	Draw a string
+; 
+;		PARAMETER:		CX			x
+;						DX			y
+;						ES:EDI		string
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ds_dest_y		EQU -2
+ds_dest_x		EQU -4
+ds_cnt			EQU -6
+ds_src_x		EQU -8
+ds_row_size		EQU -10
+ds_width		EQU -12
+ds_height		EQU -14
+ds_line_cnt		EQU -16
+
+draw_string	Proc far
+	push bp
+	mov bp,sp
+	sub sp,16
+;
+	push es
+	push fs
+	push gs
+	pushad
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov [bp].ds_dest_x,cx
+	mov [bp].ds_dest_y,dx
+
+draw_string_loop:
+	mov al,fs:[edi]
+	or al,al
+	jz draw_string_ok
+;
+	inc edi
+	push edi
+;
+	mov bx,ds:v_font
+	GetCharMask
+	jc draw_string_char_next
+;
+	mov ax,es
+	mov gs,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov [bp].ds_row_size,si
+	mov word ptr [bp].ds_src_x,0
+	mov [bp].ds_width,cx
+	mov [bp].ds_height,dx
+	movzx eax,word ptr [bp].ds_row_size
+	mov cx,[bp].ds_height
+	or cx,cx
+	jz draw_string_char_next
+;
+	mov [bp].ds_line_cnt,cx
+;
+	movzx esi,word ptr [bp].ds_src_x
+	shr esi,3
+	add esi,edi
+;
+	movzx ebx,word ptr [bp].ds_dest_x
+	movzx edx,word ptr [bp].ds_dest_y
+	movzx eax,word ptr ds:v_row_size
+	mul edx
+	shl eax,3
+	add eax,ebx
+	mov cl,al
+	and cl,7
+	shr eax,3
+	add eax,ds:v_app_base
+	mov edi,eax
+;
+	mov bx,[bp].ds_width
+	add bx,[bp].ds_src_x
+	mov ax,bx
+	and bx,7
+	mov dl,byte ptr cs:[bx].last_bit_tab
+	dec ax
+	shr ax,3
+	inc ax
+	mov bx,[bp].ds_src_x
+	shr bx,3
+	sub ax,bx
+	mov [bp].ds_cnt,ax
+;
+	mov bx,ds:v_lgop
+	add bx,bx
+
+draw_string_char_loop:
+	push bp
+	push edi
+	mov bp,[bp].ds_cnt
+
+draw_string_line_loop:
+	mov al,gs:[esi]
+	cmp bp,1
+	jnz draw_string_line_save
+;
+	and al,dl
+
+draw_string_line_save:
+	call word ptr cs:[bx].MaskTab
+	inc esi
+	inc edi
+	sub bp,1
+	jnz draw_string_line_loop
+;
+	pop edi
+	pop bp
+	movzx eax,ds:v_row_size
+	add edi,eax
+	sub word ptr [bp].ds_line_cnt,1
+	jnz draw_string_char_loop
+
+draw_string_char_done:
+	mov ax,[bp].ds_width
+	add [bp].ds_dest_x,ax
+
+draw_string_char_next:
+	pop edi
+	jmp draw_string_loop
+
+draw_string_ok:
+	clc
+
+draw_string_done:
+	popad
+	pop gs
+	pop fs
+	pop es
+	add sp,16
+	pop bp
+	ret
+draw_string	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			Drawline
 ;
 ;		DESCRIPTION:	Draw a line
@@ -1455,21 +1807,19 @@ mt0B DW OFFSET error,				video_code_sel
 mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
-mt0F DW OFFSET error,				video_code_sel
-mt10 DW OFFSET error,				video_code_sel
-mt11 DW OFFSET error,				video_code_sel
-mt12 DW OFFSET error,				video_code_sel
-mt13 DW OFFSET set_color,			video_code_sel
-mt14 DW OFFSET get_pixel,			video_code_sel
-mt15 DW OFFSET set_pixel,			video_code_sel
-mt16 DW OFFSET get_rgb,				video_code_sel
-mt17 DW OFFSET get_rgb,				video_code_sel
-mt18 DW OFFSET set_rgb,				video_code_sel
-mt19 DW OFFSET set_rgb,				video_code_sel
-mt1A DW OFFSET get_line,			video_code_sel
-mt1B DW OFFSET draw_line,			video_code_sel
-mt1C DW OFFSET draw_rect,			video_code_sel
-mt1D DW OFFSET draw_ellipse,		video_code_sel
+mt0F DW OFFSET set_color,			video_code_sel
+mt10 DW OFFSET get_pixel,			video_code_sel
+mt11 DW OFFSET set_pixel,			video_code_sel
+mt12 DW OFFSET get_rgb,				video_code_sel
+mt13 DW OFFSET get_rgb,				video_code_sel
+mt14 DW OFFSET set_rgb,				video_code_sel
+mt15 DW OFFSET set_rgb,				video_code_sel
+mt16 DW OFFSET get_line,			video_code_sel
+mt17 DW OFFSET draw_mask_line,		video_code_sel
+mt18 DW OFFSET draw_string,			video_code_sel
+mt19 DW OFFSET draw_line,			video_code_sel
+mt1A DW OFFSET draw_rect,			video_code_sel
+mt1B DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

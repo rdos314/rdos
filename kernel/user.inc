@@ -1428,6 +1428,16 @@ Blit      MACRO
 	UserGate blit_nr
 						ENDM
 
+;	IN	AX		Row size
+;	IN	BX		Bitmap handle or 0
+;	IN	ECX		source x + y << 16
+;	IN	EDX		dest x + y << 16
+;	IN	ESI		width + height << 16
+;	IN	ES:EDI	1-bit mask
+DrawMask      MACRO
+	UserGate draw_mask_nr
+						ENDM
+
 ;	IN	BX		Bitmap handle or 0
 ;	IN	CX		x1
 ;	IN	DX		y1
@@ -1435,6 +1445,19 @@ Blit      MACRO
 ;	IN  DI		y2
 DrawLine      MACRO
 	UserGate draw_line_nr
+						ENDM
+
+;	IN  AX			Font handle
+;	IN  BX			Bitmap handle or 0
+SetFont      MACRO
+	UserGate set_font_nr
+						ENDM
+
+;	IN  CX			x position
+;	IN  DX			y position
+;	IN  ES:(E)DI	String to draw
+DrawString      MACRO
+	UserGate draw_string_nr
 						ENDM
 
 ;	IN	BX		Bitmap handle or 0
@@ -1459,8 +1482,6 @@ DrawEllipse      MACRO
 ;	IN  CX		Width
 ;	IN  DX		Height
 ;	OUT BX		Bitmap handle
-;	OUT SI		Line size
-;	OUT ES:EDI	Buffer ptr
 CreateBitmap      MACRO
 	UserGate create_bitmap_nr
 						ENDM
@@ -1473,42 +1494,16 @@ CloseBitmap      MACRO
 ;	IN  ES:E(DI)	String
 ;	IN  BX			Font handle
 ;	OUT	BX			Bitmap handle
-;	OUT CX			Width
-;	OUT DX			Height
-;	OUT SI			Line size
-;	OUT ES:EDI		Buffer ptr
 CreateStringBitmap      MACRO
 	UserGate create_string_bitmap_nr
 						ENDM
 
-;	IN  AX		start x
-;	IN  BX		start y
-;	IN  CX		end x
-;	IN  DX		end y
-FillRect      MACRO
-	UserGate fill_rect_nr
+;	IN  BX			Bitmap handle
+;	OUT	AL			Bits / pixel
+;	OUT CX			Width
+;	OUT DX			Height
+;	OUT	SI			Line size in bytes
+;	OUT ES:EDI		Buffer address
+GetBitmapInfo      MACRO
+	UserGate get_bitmap_info_nr
 						ENDM
-
-;	IN  AX		start x
-;	IN  BX		start y
-;	IN  CX		end x
-;	IN  DX		end y
-;	IN  ES:EDI	bitmap
-DrawMono      MACRO
-	UserGate draw_mono_nr
-						ENDM
-
-;	IN  AL			char
-;	IN  CX			x position
-;	IN  DX			y position
-DrawChar      MACRO
-	UserGate draw_char_nr
-						ENDM
-
-;	IN  CX			x position
-;	IN  DX			y position
-;	IN  ES:(E)DI	String to draw
-DrawString      MACRO
-	UserGate draw_string_nr
-						ENDM
-
