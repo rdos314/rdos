@@ -37,11 +37,8 @@ public:
 
     virtual void WriteConfig(int Index, int Data);
 
-	virtual void Out(int Num, int Offset, char Value);
-	virtual char In(int Num, int Offset);
-
 protected:
-	char FIoArea[0x40];
+    char FGpio[0x40];
 };
 
 #endif

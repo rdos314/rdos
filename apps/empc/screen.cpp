@@ -26,6 +26,9 @@
 *##########################################################################*/
 
 #include <rdos.h>
+#include <string.h>
+
+int handle;
 
 extern "C"
 {
@@ -34,6 +37,30 @@ void __stdcall ShowChar(char ch);
 void __stdcall ShowSizeString(char *str, int Size);
 void __stdcall ShowAsciiz(char *str);
 
+}
+
+/*##################  OpenScreen  ###############
+*   Purpose....: Open screen log							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void OpenScreen(const char *FileName)
+{
+    handle = RdosCreateFile(FileName, 0);
+}
+
+/*##################  CloseScreen  ###############
+*   Purpose....: Close screen log							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void CloseScreen()
+{
+    RdosCloseFile(handle);
 }
 
 /*##################  ShowChar  ###############
@@ -46,6 +73,7 @@ void __stdcall ShowAsciiz(char *str);
 void __stdcall ShowChar(char ch)
 {
 	RdosWriteChar(ch);
+	RdosWriteFile(handle, &ch, 1);
 }
 
 /*##################  ShowSizeString  ###############
@@ -58,6 +86,7 @@ void __stdcall ShowChar(char ch)
 void __stdcall ShowSizeString(char *str, int Size)
 {
 	RdosWriteSizeString(str, Size);
+	RdosWriteFile(handle, str, Size);
 }
 
 /*##################  ShowAsciiz  ###############
@@ -70,4 +99,5 @@ void __stdcall ShowSizeString(char *str, int Size)
 void __stdcall ShowAsciiz(char *str)
 {
 	RdosWriteString(str);
+	RdosWriteFile(handle, str, strlen(str));
 }

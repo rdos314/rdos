@@ -2445,6 +2445,122 @@ Em&op&ImMem	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			bsf
+;
+;		DESCRIPTION:	EMULATE bsf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmBsf
+
+EmBsf	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmBsf32
+;
+	call ReadCodeByte
+	mov bl,al
+	push bx
+	call LoadWordReg
+	pop bx
+	push bx
+	push ax
+	call LoadWordMemReg
+	mov dx,ax
+	pop bx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	bsf bx,dx
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov ax,bx
+	pop bx
+	call SaveWordReg
+	ret
+EmBsf	Endp
+
+EmBsf32	Proc near
+	call ReadCodeByte
+	mov bl,al
+	push bx
+	call LoadDwordReg
+	pop bx
+	push bx
+	push eax
+	call LoadDwordMemReg
+	mov edx,eax
+	pop ebx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	bsf ebx,edx
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov eax,ebx
+	pop bx
+	call SaveDwordReg
+	ret
+EmBsf32	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			bsr
+;
+;		DESCRIPTION:	EMULATE bsr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmBsr
+
+EmBsr	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmBsr32
+;
+	call ReadCodeByte
+	mov bl,al
+	push bx
+	call LoadWordReg
+	pop bx
+	push bx
+	push ax
+	call LoadWordMemReg
+	mov dx,ax
+	pop bx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	bsr bx,dx
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov ax,bx
+	pop bx
+	call SaveWordReg
+	ret
+EmBsr	Endp
+
+EmBsr32	Proc near
+	call ReadCodeByte
+	mov bl,al
+	push bx
+	call LoadDwordReg
+	pop bx
+	push bx
+	push eax
+	call LoadDwordMemReg
+	mov edx,eax
+	pop ebx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	bsr ebx,edx
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov eax,ebx
+	pop bx
+	call SaveDwordReg
+	ret
+EmBsr32	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			cmp
 ;
 ;		DESCRIPTION:	EMULATE cmp reg,byte ptr mem

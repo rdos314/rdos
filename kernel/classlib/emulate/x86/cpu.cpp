@@ -664,7 +664,7 @@ void TCpu::Go()
 					Done = TRUE;
 
 // fixed breakpoints for ZFX86
-		if (Reg_eip == 0x2514)
+		if (Reg_eip == 0x2517)
 			Done = TRUE;
 
 		if (!Done)

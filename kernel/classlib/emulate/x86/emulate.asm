@@ -329,7 +329,7 @@ em0F00	DD OFFSET Em0F00,				OFFSET Em0F01
 em0F02	DD OFFSET EmLarRegMem,			OFFSET EmLslRegMem
 em0F04	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F06	DD OFFSET EmulateError,			OFFSET EmulateError
-em0F08	DD OFFSET EmulateError,			OFFSET EmulateError
+em0F08	DD OFFSET EmulateError,			OFFSET EmNop
 em0F0A	DD OFFSET EmulateError,			OFFSET OpcodeFault
 em0F0C	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F0E	DD OFFSET EmulateError,			OFFSET EmulateError
@@ -419,7 +419,7 @@ em0FB4	DD OFFSET EmLfs,				OFFSET EmLgs
 em0FB6	DD OFFSET EmMovzxByteMem,		OFFSET EmMovzxWordMem
 em0FB8	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FBA	DD OFFSET Em0FBA,				OFFSET EmBtcMemReg
-em0FBC	DD OFFSET EmulateError,			OFFSET EmulateError
+em0FBC	DD OFFSET EmBsf,    			OFFSET EmBsr
 em0FBE	DD OFFSET EmMovsxByteMem,		OFFSET EmMovsxWordMem
 em0FC0	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FC2	DD OFFSET EmulateError,			OFFSET EmulateError

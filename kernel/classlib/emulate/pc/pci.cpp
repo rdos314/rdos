@@ -45,6 +45,8 @@ TPciFunction::TPciFunction(TPci *Pci)
     {
         FConfig[i] = 0;
         FData[i] = 0xFF;
+        FIoArr[i] = 0;
+        FMemArr[i] = 0;
     }
 
 	FPci = Pci;
@@ -147,8 +149,15 @@ void TPciFunction::WriteData(int Index, int Data)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TPciFunction::Out(int Num, int Port, char Value)
+void TPciFunction::Out(int Num, int Offset, char Value)
 {
+    TPciAreaData *area;
+
+    area = FIoArr[Num];
+    if (area)
+		if (area->Data && Offset >= 0 && Offset < area->Size)
+			*(area->Data + Offset) = Value;
+
 }
 
 /*##################  TPciFunction::In  ###############
@@ -158,9 +167,102 @@ void TPciFunction::Out(int Num, int Port, char Value)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TPciFunction::In(int Num, int Port)
+char TPciFunction::In(int Num, int Offset)
 {
+    TPciAreaData *area;
+
+    area = FIoArr[Num];
+    if (area)
+		if (area->Data && Offset >= 0 && Offset < area->Size)
+			return *(area->Data + Offset);
+
 	return 0xFF;
+}
+
+/*##################  TPciFunction::DefineIo  ###############
+*   Purpose....: Define an io area								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::DefineIo(int Num, int Base, int Size, char *Data)
+{
+    TPciAreaData *area;
+    
+    if (FIoArr[Num])
+    {
+		FPci->UndefineIo(this, Num);
+		delete FIoArr[Num];
+    }
+
+    area = new TPciAreaData;
+    area->Base = Base;
+    area->Size = Size;
+    area->Data = Data;
+    FIoArr[Num] = area;
+
+    FPci->DefineIo(this, Num, Base, Size);
+}
+
+/*##################  TPciFunction::UndefineIo  ###############
+*   Purpose....: Undefine an io area								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::UndefineIo(int Num)
+{
+    if (FIoArr[Num])
+    {
+        FPci->UndefineIo(this, Num);
+        delete FIoArr[Num];
+        FIoArr[Num] = 0;
+    }
+}
+
+/*##################  TPciFunction::DefineMem  ###############
+*   Purpose....: Define a memory area								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::DefineMem(int Num, int Base, int Size, char *Data)
+{
+    TPciAreaData *area;
+    
+    if (FMemArr[Num])
+    {
+        FPci->UndefineMem(this, Num);
+        delete FMemArr[Num];
+    }
+
+    area = new TPciAreaData;
+    area->Base = Base;
+    area->Size = Size;
+    area->Data = Data;
+    FMemArr[Num] = area;
+
+    FPci->DefineMem(this, Num, Base, Size);
+}
+
+/*##################  TPciFunction::UndefineMem  ###############
+*   Purpose....: Undefine a memory area								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::UndefineMem(int Num)
+{
+    if (FMemArr[Num])
+    {
+        FPci->UndefineMem(this, Num);
+        delete FMemArr[Num];
+        FMemArr[Num] = 0;
+    }
 }
 
 /*##################  TPciDevice::TPciDevice  ###############
@@ -240,6 +342,7 @@ TPci::TPci()
     FValue = 0;
     FIndexChanged = FALSE;
     FDataChanged = FALSE;
+    FKeyboardEnabled = FALSE;
 
     for (i = 0; i < 256; i++)
 	{
@@ -298,6 +401,30 @@ void TPci::RegisterFunction(TPciFunction *func, int Bus, int Device, int Functio
 		delete Dev->FunctionArr[Function];
 
 	Dev->FunctionArr[Function] = func;
+}
+
+/*##################  TPci::EnableKeyboard  ###############
+*   Purpose....: Enable keyboard							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::EnableKeyboard()
+{
+    FKeyboardEnabled = TRUE;
+}
+
+/*##################  TPci::IsKeyboardEnabled  ###############
+*   Purpose....: Check if keyboard is enabled							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+int TPci::IsKeyboardEnabled()
+{
+    return FKeyboardEnabled;
 }
 
 /*##################  TPci::Out  ###############

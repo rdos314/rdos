@@ -32,8 +32,13 @@
 
 class TZfxXbus : public TPciFunction
 {
-	public:
-	    TZfxXbus(TPci *Pci);
+public:
+    TZfxXbus(TPci *Pci);
+
+    virtual void WriteConfig(int Index, int Data);
+
+protected:
+    char FData[0x40];
 };
 
 #endif

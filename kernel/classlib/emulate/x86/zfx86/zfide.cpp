@@ -40,6 +40,8 @@
 TZfxIde::TZfxIde(TPci *Pci)
   : TPciFunction(Pci)
 {
+    int i;
+    
     FConfig[0] = 0x78;
     FConfig[1] = 0x10;
     FConfig[2] = 0x2;
@@ -74,4 +76,38 @@ TZfxIde::TZfxIde(TPci *Pci)
     FConfig[0x5C] = 0x71;
     FConfig[0x5D] = 0x77;
     FConfig[0x5E] = 0x07;
+
+	for (i = 0; i < 0x10; i++)
+		FIdeData[i] = 0;
+}
+
+/*##################  TZfxIde::WriteConfig  ###############
+*   Purpose....: Write config							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TZfxIde::WriteConfig(int Index, int Data)
+{
+	int val;
+
+	TPciFunction::WriteConfig(Index, Data);
+
+	switch (Index)
+	{
+		case 0x20:
+		case 0x21:
+		case 0x22:
+		case 0x23:
+			val = FConfig[0x20] & 0xF0;
+			val |= (FConfig[0x21] & 0xFF) << 8;
+			val |= (FConfig[0x22] & 0xFF) << 16;
+			val |= (FConfig[0x23] & 0xFF) << 24;			
+			if (val >= 0x400)
+				DefineIo(0, val, 0x10, FIdeData);
+		    else
+				UndefineIo(0);
+			break;
+	}			
 }

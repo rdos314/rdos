@@ -39,6 +39,9 @@
 #include "zfusb.h"
 #include "cmos.h"
 
+void OpenScreen(const char *FileName);
+void CloseScreen();
+
 #define STACK_SIZE	0x4000
 
 TPic Pic0;
@@ -196,14 +199,16 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 			return Pit.In(Port & 0xF);
 
 		case 0x60:
-		    return 0xFF;
-			return Keyb.In(Port & 0xF);
+		    if (Pci.IsKeyboardEnabled())
+    			return Keyb.In(Port & 0xF);
+			else
+	    	    return 0xFF;
 
 		case 0x70:
 			return Cmos.In(Port & 0xF);
 
 		default:
-		    return Pci.In(Port & 0xF);
+		    return Pci.In(Port);
 	}
 }
 
@@ -227,7 +232,8 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 			break;
 
 		case 0x60:
-			Keyb.Out(Port & 0xF, Value);
+		    if (Pci.IsKeyboardEnabled())
+    			Keyb.Out(Port & 0xF, Value);
 			break;
 
 		case 0x70:
@@ -235,7 +241,7 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 			break;
 
 		default:
-		    Pci.Out(Port & 0xF, Value);
+		    Pci.Out(Port, Value);
 		    break;
 	}
 }
@@ -283,6 +289,8 @@ void Reset()
 *##########################################################################*/
 void main(void)
 {
+    OpenScreen("c:\\sim.log");
+
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
 	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
 	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);
@@ -347,4 +355,5 @@ void main(void)
 				break;
 		}
 	}
+	CloseScreen();
 }

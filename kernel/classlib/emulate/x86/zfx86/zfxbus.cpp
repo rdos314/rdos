@@ -40,6 +40,8 @@
 TZfxXbus::TZfxXbus(TPci *Pci)
   : TPciFunction(Pci)
 {
+	int i;
+
     FConfig[0] = 0x78;
     FConfig[1] = 0x10;
     FConfig[2] = 0x3;
@@ -50,4 +52,43 @@ TZfxXbus::TZfxXbus(TPci *Pci)
     FConfig[0x2D] = 0x10;
     FConfig[0x2E] = 0x3;
     FConfig[0x2F] = 0x4;
+
+	for (i = 0; i < 0x40; i++)
+		FData[i] = 0;
+
+	FData[0] = 0x7;
+	FData[2] = 0xC;
+	FData[3] = 0x1;
+	FData[9] = 0x9;
+}
+
+/*##################  TZfxXbus::WriteConfig  ###############
+*   Purpose....: Write config							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TZfxXbus::WriteConfig(int Index, int Data)
+{
+	int val;
+
+	TPciFunction::WriteConfig(Index, Data);
+
+	switch (Index)
+	{
+		case 0x10:
+		case 0x11:
+		case 0x12:
+		case 0x13:
+			val = FConfig[0x10] & 0xC0;
+			val |= (FConfig[0x11] & 0xFF) << 8;
+			val |= (FConfig[0x12] & 0xFF) << 16;
+			val |= (FConfig[0x13] & 0xFF) << 24;			
+			if (val >= 0x400 && (FConfig[0x10] & 1))
+				DefineIo(0, val, 0x40, FData);
+		    else
+				UndefineIo(0);
+			break;
+	}			
 }

@@ -30,6 +30,14 @@
 
 class TPci;
 
+class TPciAreaData
+{
+public:
+    int Base;
+    int Size;
+    char *Data;
+};
+
 class TPciFunction
 {
 public:
@@ -44,9 +52,17 @@ public:
 	virtual char In(int Num, int Offset);
 
 protected:
+    void DefineIo(int Num, int Base, int Size, char *Data);
+    void UndefineIo(int Num);
+    void DefineMem(int Num, int Base, int Size, char *Data);
+    void UndefineMem(int Num);
+
 	TPci *FPci;
     char FConfig[256];
     char FData[256];
+    TPciAreaData *FIoArr[256];
+    TPciAreaData *FMemArr[256];
+    
 };
 
 class TPciArea
@@ -90,6 +106,9 @@ public:
 	void DefineMem(TPciFunction *func, int Num, int Base, int Size);
 	void UndefineMem(TPciFunction *func, int Num);
 
+	int IsKeyboardEnabled();
+	void EnableKeyboard();
+
 protected:
 	int ReadData(int Index);
 	void WriteData(int Index, int Data);
@@ -102,6 +121,7 @@ private:
 	long FValue;
 	int FIndexChanged;
 	int FDataChanged;
+    int FKeyboardEnabled;
 
     TPciBus *FBusArr[256];
 	TPciArea *FHookIoArr[256];

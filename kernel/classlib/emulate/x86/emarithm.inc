@@ -54,6 +54,9 @@
 	extrn EmBtcMemReg:near
 	extrn EmBtcImMem:near
 
+	extrn EmBsf:near
+	extrn EmBsr:near
+
 	extrn EmAddByteRegMem:near
 	extrn EmAddWordRegMem:near
 	extrn EmAddByteMemReg:near

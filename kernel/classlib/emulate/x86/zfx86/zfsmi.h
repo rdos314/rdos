@@ -32,8 +32,13 @@
 
 class TZfxSmi : public TPciFunction
 {
-	public:
-	    TZfxSmi(TPci *Pci);
+public:
+    TZfxSmi(TPci *Pci);
+
+    virtual void WriteConfig(int Index, int Data);
+
+protected:
+    char FSmiData[0x100];
 };
 
 #endif

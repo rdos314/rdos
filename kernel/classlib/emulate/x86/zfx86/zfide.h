@@ -32,8 +32,13 @@
 
 class TZfxIde : public TPciFunction
 {
-	public:
-	    TZfxIde(TPci *Pci);
+public:
+    TZfxIde(TPci *Pci);
+
+    virtual void WriteConfig(int Index, int Data);
+
+protected:
+    char FIdeData[0x10];
 };
 
 #endif
