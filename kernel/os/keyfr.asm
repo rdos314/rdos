@@ -58,6 +58,12 @@
 ;	jc keyboard_thread_loop            
 ;	call put_key_code                   ; put the scan correspondance in the keyboard buffer
 ;
+;   TODO:   Extended_scan refers to (previous) scan code.
+;           This is no longer supported since key.asm doesn't
+;           save scan-codes anymore. Should be fixed by adding
+;           this functionality to key.asm, and by providing
+;           an interface function. GetKeyboardState used instead
+;           of data-segment layout of key.asm
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -71,27 +77,6 @@ GateSize = 16
 
 INCLUDE ..\os\user.def
 INCLUDE ..\os\user.inc
-
-; I've try to use GetKeyboardState but the result was wrong
-; that's why I put this here only for shift_states
-
-key_data_seg	STRUC
-
-shift_states	DW ?
-mode_thread	DW ?
-keyboard_thread	DW ?
-mouse_thread	DW ?
-command		DB ?
-scan_code	DB ?
-status		DB ?
-
-mouse_timeout	DB ?
-mouse_counter	DB ?
-mouse_buttons	DB ?
-mouse_dx	DB ?
-mouse_dy	DB ?
-
-key_data_seg	ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -375,7 +360,8 @@ nescFF	DW	OFFSET ignore_scan,		OFFSET ignore_scan
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 extended_scan	PROC near
-	mov al,ds:scan_code
+;   mov al,ds:scan_code
+    xor al,al
 	xor ah,ah
 	clc
 	ret
@@ -445,7 +431,10 @@ num37_scan	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 HandleExtScan proc near
-	mov cx,ds:shift_states
+    push ax
+    GetKeyboardState
+    mov cx,ax
+    pop ax
 	xor si,si
 	movzx si,al
 	shl si,2

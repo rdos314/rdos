@@ -229,6 +229,9 @@ pc_video_thread_sel	EQU 8B0h
 power_code_sel          EQU 8C0h
 power_data_sel          EQU 8C8h
 
+pc_key_code_sel         EQU 8D0h
+pc_key_data_sel         EQU 8D8h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

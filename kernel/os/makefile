@@ -86,6 +86,10 @@ pci_srcs = PCI.ASM
 pci_objs = $(pci_srcs:.ASM=.OBJ)
 pci_rdvs = PCI.RDV
 
+keyboard_srcs = KEYBOARD.ASM 
+keyboard_objs = $(keyboard_srcs:.ASM=.OBJ)
+keyboard_rdvs = KEYBOARD.RDV
+
 key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
 key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV
@@ -217,7 +221,7 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
-			$(dosdev_srcs) $(v86bios_srcs) \
+			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs)
 
@@ -244,7 +248,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
-			$(ntp_rdvs) \
+			$(ntp_rdvs) $(keyboard_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
@@ -353,6 +357,14 @@ PCI.RDV : $(pci_objs)
 	$(pci_objs)
 	PCI.RDV
 	PCI;
+!
+
+KEYBOARD.RDV : $(keyboard_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(keyboard_objs)
+	KEYBOARD.RDV
+	KEYBOARD;
 !
 
 KEYSW.RDV : $(key_objs)

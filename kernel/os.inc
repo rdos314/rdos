@@ -1247,6 +1247,18 @@ HookLoadDosExe	MACRO
 	OsGate hook_load_dos_exe_nr
 					ENDM
 
+;	AX          Keyboard state
+SetKeyboardState	MACRO
+	OsGate set_keyboard_state_nr
+					ENDM
+
+;	AX          Keyboard code
+;   DL          Virtual key code
+;   DH          Scan code
+PutKeyboardCode	MACRO
+	OsGate put_keyboard_code_nr
+					ENDM
+
 ;	AL = CHAR OR EXTENDED CHAR
 ReadKeyboardSerial	MACRO
 	OsGate read_keyboard_serial_nr
