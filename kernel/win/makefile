@@ -58,7 +58,7 @@ bins =      $(cfgs:.CFG=.BIN)
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .asm.obj:
-     tasm /M2 /Zi /w+ICG /w+PRO $<,$@;
+     tasm /M4 /Zi /w+ICG /w+PRO $<,$@;
 
 dlls =		$(winkrnl_dlls) $(winuser_dlls) $(wintool_dlls)	\
 			$(win87em_dlls) $(rdos_dlls)

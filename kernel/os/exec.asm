@@ -100,6 +100,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 load_exe_file	PROC near
+    push gs
 	mov ax,exec_sys_sel
 	mov fs,ax
 	mov cl,fs:load_exe_hooks
@@ -137,6 +138,7 @@ load_exe_file_ret:
 	stc
 
 load_exe_file_done:
+    pop gs
 	ret
 load_exe_file	ENDP
 
