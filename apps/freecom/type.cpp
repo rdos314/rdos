@@ -121,44 +121,22 @@ void TTypeCommand::Show(TPathName &PathName)
 
 /*##########################################################################
 #
-#   Name       : TTypeCommand::Show
+#   Name       : TTypeCommand::Add
 #
-#   Purpose....: Show
+#   Purpose....: Add
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TTypeCommand::Show(TArg *arg)
+void TTypeCommand::Add(TArg *arg)
 {
-	int count;
-	TDir *dir;
 	TDirEntry entry;
+	TPathName path(arg->FName);
 
-	count = 0;
-	dir = new TDir(arg->FName);
-	entry = dir->GotoFirst();
-	while (entry.Valid)
-	{
-		if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
-		{
-		    Show(entry.PathName);
-			count++;
-		}
-		entry = dir->GotoNext();
-	}
-
-	if (count == 0)
-	{
-		FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
-		Write(FMsg.GetData());
-		delete dir;
-		return FALSE;
-	}
-
-	delete dir;
-	return TRUE;
+	FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
+	FFileList.Add(path);
 }
 
 /*##########################################################################
@@ -177,6 +155,7 @@ int TTypeCommand::Execute(char *param)
 	TArg *arg;
 	int HasSrc = FALSE;
 	const char *ptr;
+    int ok;
 
 	if (!ScanCmdLine(param, 0))
 		return 1;
@@ -189,11 +168,18 @@ int TTypeCommand::Execute(char *param)
 			return 1;
 		else
 		{
-		    if (!Show(arg))
-		        return 1;
-		        
+		    Add(arg);		        
 			arg = arg->FList;
 		}
+	}
+
+    FFileList.RemoveDuplicates();
+    
+	ok = FFileList.GotoFirst();
+	while (ok)
+	{
+		Show(FFileList.Get().GetPathName());
+		ok = FFileList.GotoNext();
 	}
 
 	return 0;

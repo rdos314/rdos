@@ -27,7 +27,6 @@
 
 #include <string.h>
 #include <ctype.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "cmdhelp.h"
@@ -39,22 +38,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-/* Definitions for optO */
-#define ORDER_BY_SIZE 2
-#define ORDER_BY_DATE 4
-#define ORDER_BY_NAME 8
-#define ORDER_INVERSE 0x01
-#define ORDER_BY_EXT 0x10
-#define ORDER_DIRS_FIRST 0x20
-#define ORDER_DIRS_LAST 0x40
-#define ORDER_BY_MASK 0x1e
-#define DEFAULT_SORT_ORDER "NG"
-
 #define ATTR_DEFAULT FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_DIRECTORY
 #define ATTR_ALL	0x37;
-
-unsigned char FOptOdir;
-char FOptOorderby[5];
 
 /*##########################################################################
 #
@@ -137,9 +122,10 @@ void TDirCommand::InitOptions()
 {
 	FAttrMask = 0;
 	FAttrMatch = 0;
-	FAttrMay = ATTR_DEFAULT;
+	FAttrMay = ATTR_DEFAULT;	
 
-	FOptOdir = 0;
+    FOptDirFirst = TRUE;
+    FOptDirLast = FALSE;
 	FOptO = FALSE;
 	FOptS = FALSE;
 	FOptP = FALSE;
@@ -161,11 +147,9 @@ void TDirCommand::InitOptions()
 ##########################################################################*/
 int TDirCommand::ScanAttr(const char *p)
 {
-	unsigned attr;
-
-	FAttrMask = 0;
-	FAttrMatch = 0;
-	FAttrMay = ATTR_ALL;
+    int attr;
+	int Required = 0;
+	int Ignored = 0;
 
 	if (p && *p)
 	{
@@ -205,18 +189,22 @@ int TDirCommand::ScanAttr(const char *p)
 			switch (p[-1])
 			{
 				case '-':
-					FAttrMatch &= ~attr;
+				    Ignored |= attr;
 					break;
 
 				default:
-					FAttrMatch |= attr;
+				    Required |= attr;
 					break;
 
 			}
-
-			FAttrMask |= attr;
 		}
 	}
+
+    FDirList.SetRequiredAttributes(Required);
+    FFileList.SetRequiredAttributes(Required);
+    FDirList.SetIgnoredAttributes(Ignored);
+    FFileList.SetIgnoredAttributes(Ignored);
+	
 	return E_None;
 }
 
@@ -241,8 +229,11 @@ int TDirCommand::ScanOrder(const char *p)
 	if (!p || !*p)
 		p = DEFAULT_SORT_ORDER;
 
-	memset(FOptOorderby, 0, sizeof(FOptOorderby));
-	FOptOdir = 0;
+    FFileList.ClearSort();
+    FDirList.ClearSort();
+
+    FOptDirFirst = FALSE;
+    FOptDirLast = FALSE;
 
 	if (p && *p)
 	{
@@ -257,57 +248,85 @@ int TDirCommand::ScanOrder(const char *p)
 					break;
 
 				case 'S':
-					changed = TRUE;
-					option = ORDER_BY_SIZE;
+				    if (inverse)
+				    {
+    				    FFileList.AddReverseSortBySize();
+    				    FDirList.AddReverseSortBySize();
+    				}
+    				else
+				    {
+    				    FFileList.AddSortBySize();
+    				    FDirList.AddSortBySize();
+    				}
 					break;
 
 				case 'D':
-					changed = TRUE;
-					option = ORDER_BY_DATE;
+				    if (inverse)
+				    {
+    				    FFileList.AddReverseSortByTime();
+    				    FDirList.AddReverseSortByTime();
+    				}
+    				else
+				    {
+    				    FFileList.AddSortByTime();
+    				    FDirList.AddSortByTime();
+    				}
 					break;
 
 				case 'N':
-					changed = TRUE;
-					option = ORDER_BY_NAME;
+				    if (inverse)
+				    {
+    				    FFileList.AddReverseSortByName();
+    				    FDirList.AddReverseSortByName();
+    				}
+    				else
+				    {
+    				    FFileList.AddSortByName();
+    				    FDirList.AddSortByName();
+    				}
 					break;
 
 				case 'E':
-					changed = TRUE;
-					option = ORDER_BY_EXT;
+				    if (inverse)
+				    {
+    				    FFileList.AddReverseSortByExt();
+    				    FDirList.AddReverseSortByExt();
+    				}
+    				else
+				    {
+    				    FFileList.AddSortByExt();
+    				    FDirList.AddSortByExt();
+    				}
 					break;
 
 				case 'G':
-					FOptOdir = inverse? ORDER_DIRS_LAST: ORDER_DIRS_FIRST;
+				    if (inverse)
+				    {
+				        FOptDirLast = TRUE;
+				        FOptDirFirst = FALSE;
+				    }
+				    else
+				    {
+				        FOptDirFirst = TRUE;
+				        FOptDirLast = FALSE;
+				    }
 					break;
 
 				case 'U':
-					memset(FOptOorderby, 0, sizeof(FOptOorderby));
-					FOptOdir = 0;
+                    FFileList.ClearSort();
+                    FDirList.ClearSort();
+                    FOptDirFirst = FALSE;
+                    FOptDirLast = FALSE;
 					break;
 
 				default:
 					OptError(p);
 					return E_Useage;
 			}
-
-			if (changed)
-			{
-				for (i = 0; i < sizeof(FOptOorderby); ++i)
-				{
-					if (FOptOorderby[i] == 0)
-						break;
-
-					if ((FOptOorderby[i] & ORDER_BY_MASK) == option)
-						memcpy(FOptOorderby+i, FOptOorderby+i+1
-							 , (sizeof(FOptOorderby)-1-i)*sizeof(FOptOorderby[0]));
-				}
-				FOptOorderby[i] = option | inverse;
-			}
 			p++;
 		}
 	}
 
-	FOptO = FOptOorderby[0] | FOptOdir;
 	return E_None;
 }
 
@@ -373,192 +392,6 @@ int TDirCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 
 /*##########################################################################
 #
-#   Name       : TDirCommand::CreateEntryArr
-#
-#   Purpose....: Create entry array from list
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDirCommand::CreateEntryArr()
-{
-	int count;
-	TDirEntry *entry;
-	TDirEntry *ptr;
-
-	count = 0;
-	entry = FFileList.GotoFirst();
-
-	while (entry)
-	{
-		count++;
-		entry = FFileList.GotoNext();
-	}
-
-	FreeEntryArr();
-
-	if (count)
-	{
-		FEntryCount = count;
-		FEntryArr = new TDirEntry*[count];
-
-		count = 0;
-		entry = FFileList.GotoFirst();
-
-		while (entry)
-		{
-			FEntryArr[count] = entry;
-			count++;
-			entry = FFileList.GotoNext();
-		}
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TDirCommand::FreeEntryArr
-#
-#   Purpose....: Free entry array
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDirCommand::FreeEntryArr()
-{
-	if (FEntryArr)
-		delete FEntryArr;
-
-	FEntryArr = 0;
-	FEntryCount = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : Compare
-#
-#   Purpose....: Compare function for qsort
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static int cdecl Compare(const void *e1, const void *e2)
-{
-	TDirEntry **tmp;
-	TDirEntry *dir1;
-	TDirEntry *dir2;
-  	int opt;
-	const char *x1;
-	const char *x2;
-	int rv;
-    int i;
-	int isdir1;
-	int isdir2;
-
-	tmp = (TDirEntry **)e1;
-	dir1 = *tmp;
-
-	tmp = (TDirEntry **)e2;
-	dir2 = *tmp;
-
-	isdir1 = dir1->Attribute & FILE_ATTRIBUTE_DIRECTORY;
-	isdir2 = dir2->Attribute & FILE_ATTRIBUTE_DIRECTORY;
-
-	if (FOptOdir && (isdir1 != isdir2))
-	{
-		if (FOptOdir & ORDER_DIRS_FIRST)
-		{
-			if (isdir1)
-				return -1;
-
-			if (isdir2)
-				return 1;
-		}
-		else
-		{
-			if (isdir1)
-				return 1;
-
-			if (isdir2)
-				return -1;
-		}
-	}
-
-	rv = 0;  	         
-
-	for (i = 0; rv == 0; i++)
-	{
-		opt = FOptOorderby[i];
-
-		switch (opt & ORDER_BY_MASK)
-		{
-			case 0:
-				return 0;
-
-			case ORDER_BY_SIZE:
-				if (dir1->FileSize > dir2->FileSize)
-					rv = 1;
-
-				if (dir1->FileSize < dir2->FileSize)
-					rv = -1;
-				break;
-
-			case ORDER_BY_DATE:
-				if (dir1->Time > dir2->Time)
-					rv = 1;
-
-				if (dir1->Time < dir2->Time)
-					rv = -1;
-				break;
-
-			case ORDER_BY_EXT:
-				x1 = strchr(dir1->EntryName.GetData(), '.');
-				x2 = strchr(dir2->EntryName.GetData(), '.');
-
-				if (x1 && x2)
-					rv = strcmp(x1, x2);
-
-				if (!x1 && x2)
-					rv = -1;
-
-				if (x1 && !x2)
-					rv = 1;
-
-				break;
-
-			case ORDER_BY_NAME:
-				rv = strcmp(dir1->EntryName.GetData(),dir2->EntryName.GetData());
-				break;
-		}
-		if (opt & ORDER_INVERSE)
-			rv = -rv;
-	}
-	return rv;
-}
-
-/*##########################################################################
-#
-#   Name       : TDirCommand::Sort
-#
-#   Purpose....: Sort entries
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDirCommand::Sort()
-{
-	qsort(FEntryArr, FEntryCount, sizeof(TDirEntry *), Compare);
-}
-
-/*##########################################################################
-#
 #   Name       : TDirCommand::WriteDetailed
 #
 #   Purpose....: Write detailed listing entry
@@ -568,7 +401,7 @@ void TDirCommand::Sort()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirCommand::WriteDetailed(TDirEntry *entry)
+void TDirCommand::WriteDetailed(TDirEntryData *entry)
 {
 	char str[31];
 	int size;
@@ -604,6 +437,18 @@ void TDirCommand::WriteDetailed(TDirEntry *entry)
 					entry->Time.GetMilliSec());
 	Write(str);
 	Write("\r\n");
+
+	FCurrentRow++;
+
+	if (FOptP && (FCurrentRow == 23))
+	{
+	    FCurrentRow = 0;
+		FMsg.Load(TEXT_MSG_PAUSE);
+		Write(FMsg.GetData());
+		RdosReadKeyboard();
+		Write("\r\n");
+	}
+
 }
 
 /*##########################################################################
@@ -617,7 +462,7 @@ void TDirCommand::WriteDetailed(TDirEntry *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirCommand::WriteWide(TDirEntry *entry)
+void TDirCommand::WriteWide(TDirEntryData *entry)
 {
 	int size;
 	int i;
@@ -647,6 +492,15 @@ void TDirCommand::WriteWide(TDirEntry *entry)
 		Write(" ");
 
 	FCurrentCol += FWidth;
+
+	if (FOptP && FCurrentCol == 0 && FCurrentRow == 23)
+	{
+	    FCurrentRow = 0;
+		FMsg.Load(TEXT_MSG_PAUSE);
+		Write(FMsg.GetData());
+		RdosReadKeyboard();
+		Write("\r\n");
+	}
 }
 
 /*##########################################################################
@@ -662,19 +516,36 @@ void TDirCommand::WriteWide(TDirEntry *entry)
 ##########################################################################*/
 void TDirCommand::WriteDetailed()
 {
-	int i;
+	int ok;
 
-	for (i = 0; i < FEntryCount; i++)
-	{
-		WriteDetailed(FEntryArr[i]);
-		if (FOptP && (i % 24 == 23))
-		{
-			FMsg.Load(TEXT_MSG_PAUSE);
-			Write(FMsg.GetData());
-			RdosReadKeyboard();
-			Write("\r\n");
-		}
-	}
+	FCurrentRow = 0;
+
+    if (FOptDirFirst)
+    {
+        ok = FDirList.GotoFirst();
+        while (ok)        
+        {
+            WriteDetailed(FDirList.Get().Get());
+            ok = FDirList.GotoNext();
+        }
+    }
+
+    ok = FFileList.GotoFirst();
+    while (ok)       
+    {
+        WriteDetailed(FFileList.Get().Get());
+        ok = FFileList.GotoNext();
+    }
+
+    if (FOptDirLast)
+    {
+        ok = FDirList.GotoFirst();
+        while (ok)        
+        {
+            WriteDetailed(FDirList.Get().Get());
+            ok = FDirList.GotoNext();
+        }
+    }
 }
 
 /*##########################################################################
@@ -692,61 +563,87 @@ void TDirCommand::WriteWide()
 {
 	int i;
 	int size;
+	int ok;
 
 	FCurrentRow = 0;
 	FCurrentCol = 0;
 	FWidth = 1;
 
-	for (i = 0; i < FEntryCount; i++)
-	{
-		size = FEntryArr[i]->EntryName.GetSize();
-		if (FEntryArr[i]->Attribute & FILE_ATTRIBUTE_DIRECTORY)
+    ok = FDirList.GotoFirst();
+    while (ok)        
+    {
+        size = FDirList.Get().GetEntryName.GetSize();
+	    size += 2;
+
+		if (size > FWidth)
+			FWidth = size;
+			
+        ok = FDirList.GotoNext();
+	}
+
+    ok = FFileList.GotoFirst();
+    while (ok)        
+    {
+        size = FFileList.Get().GetEntryName.GetSize();
+        if (FFileList.Get().GetAttrib() & FILE_ATTRIBUTE_DIRECTORY)
 			size += 2;
 
 		if (size > FWidth)
 			FWidth = size;
+			
+        ok = FFileList.GotoNext();
 	}
 
 	FWidth += 2;
 
-	for (i = 0; i < FEntryCount; i++)
-	{
-		WriteWide(FEntryArr[i]);
-		if (FOptP && FCurrentCol == 0 && FCurrentRow == 23)
-		{
-			FMsg.Load(TEXT_MSG_PAUSE);
-			Write(FMsg.GetData());
-			RdosReadKeyboard();
-			Write("\r\n");
-		}
-	}
+    if (FOptDirFirst)
+    {
+        ok = FDirList.GotoFirst();
+        while (ok)        
+        {
+            WriteWide(FDirList.Get().Get());
+            ok = FDirList.GotoNext();
+        }
+    }
+
+    ok = FFileList.GotoFirst();
+    while (ok)       
+    {
+        WriteWide(FFileList.Get().Get());
+        ok = FFileList.GotoNext();
+    }
+
+    if (FOptDirLast)
+    {
+        ok = FDirList.GotoFirst();
+        while (ok)        
+        {
+            WriteWide(FDirList.Get().Get());
+            ok = FDirList.GotoNext();
+        }
+    }	
 }
 
 /*##########################################################################
 #
-#   Name       : TDirCommand::AddFiles
+#   Name       : TDirCommand::Add
 #
-#   Purpose....: Add files
+#   Purpose....: Add files for argument
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirCommand::AddFiles(TString &path)
+void TDirCommand::Add(TString &path)
 {
-	TDir *dir;
-	TDirEntry entry;
-
-	dir = new TDir(path);
-	entry = dir->GotoFirst();
-	while (entry.Valid)
-	{
-		if ((entry.Attribute & FAttrMask) == FAttrMatch)
-			FFileList.Add(entry);
-		entry = dir->GotoNext();
-	}
-	delete dir;
+    if (FOptDirLast || FOptDirFirst)
+    {
+    	FDirList.Add(path);
+    	FFileList.Add(path);
+    }
+    else
+    	FFileList.Add(path);
 }
 
 /*##########################################################################
@@ -771,18 +668,22 @@ int TDirCommand::Execute(char *param)
 
     arg = FArgList;
 
+    if (FOptDirFirst || FOptDirLast)
+    {
+    }
+    
 	if (arg)
 	{
 		while (arg)
 		{
-			AddFiles(arg->FName);
+			Add(arg->FName);
 			arg = arg->FList;
 		}
 	}
 	else
-		AddFiles("*");
+		Add("*");
 
-	CreateEntryArr();
+    
 	Sort();
 
 	if (FOptW)

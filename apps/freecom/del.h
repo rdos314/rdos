@@ -30,7 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "filelist.h"
+#include "direntry.h"
 
 class TDelFactory : public TCommandFactory
 {
@@ -61,14 +61,14 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void InitOptions();
 
-    int Del(TDirEntryData *entry);
+	int Del(TDirEntryData &entry);
 	int Add(TArg *arg);
 
-	TFileList FFileList;
+	TDirList FFileList;
 
 	int FOptP;
 	int FOptV;
-    int FBreak;
+	int FBreak;
 
 };
 

@@ -115,6 +115,17 @@ public:
     void SetDefaultAttributes();
     void SetRequiredAttributes(int attrib);
     void SetIgnoredAttributes(int attrib);
+
+    void ClearSort();
+    void AddSortBySize();
+    void AddSortByTime();
+    void AddSortByName();
+    void AddSortByExt();    
+    void AddReverseSortBySize();
+    void AddReverseSortByTime();
+    void AddReverseSortByName();
+    void AddReverseSortByExt();    
+    void Sort();
     
 	int operator==(const TDirList &dest) const;
 	int operator!=(const TDirList &dest) const;
@@ -146,13 +157,16 @@ protected:
     int CheckAttrib(int attrib);
 	int IsMatch(const char *FileName);
     void Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib);
-
-private:
-    void Init();
     void DoSearch();
 
     int FAttribIgnored;
     int FAttribRequired;
+    char FSortArr[5];
+    int FSortCount;
+
+private:
+    void Init();
+
 };
 
 TDirList operator+(const TDirList& list1, const TDirList& list2);

@@ -30,8 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "filelist.h"
-#include "path.h"
+#include "direntry.h"
 
 class TTypeFactory : public TCommandFactory
 {
@@ -51,9 +50,9 @@ public:
 
 protected:
 	void Show(TPathName &PathName);
-    int Show(TArg *arg);
+    void Add(TArg *arg);
 
-	TFileList FFiles;
+	TDirList FFileList;
 };
 
 #endif

@@ -30,7 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "filelist.h"
+#include "direntry.h"
 
 class TDirFactory : public TCommandFactory
 {
@@ -55,19 +55,15 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
     void InitOptions();
 
-	void AddFiles(TString &path);
-	void CreateEntryArr();
-	void FreeEntryArr();
-	void Sort();
+	void Add(TString &path);
 	void WriteDetailed(TDirEntry *entry);
 	void WriteDetailed();
 	void WriteWide(TDirEntry *entry);
 	void WriteWide();
 
-	TFileList FFileList;
+	TDirList FFileList;
+	TDirList FDirList;
 
-	int FEntryCount;
-	TDirEntry **FEntryArr;
 	int FCurrentRow;
 	int FCurrentCol;
     int FWidth;
@@ -77,11 +73,8 @@ protected:
 	int FOptW;
 	int FOptB;
 	int FOptL;
-	int FOptO;
-
-	int FAttrMask;
-	int FAttrMatch;
-	int FAttrMay;
+    int FOptDirFirst;
+    int FOptDirLast;
 };
 
 #endif

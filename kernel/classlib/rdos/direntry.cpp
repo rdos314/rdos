@@ -27,13 +27,107 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
+
 #include "direntry.h"
 #include "rdos.h"
+#include "section.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
+#define ORDER_BY_SIZE   1
+#define ORDER_BY_DATE   2
+#define ORDER_BY_NAME   4
+#define ORDER_BY_EXT    8
+#define ORDER_BY_MASK   0xf
+#define ORDER_BY_INV    0x10
+
 TDirEntry EmptyDir;
+char FOrderby[5];
+TSection FDirSortSection;
+
+/*##########################################################################
+#
+#   Name       : SortCompare
+#
+#   Purpose....: Compare function for qsort
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int cdecl SortCompare(const void *e1, const void *e2)
+{
+	TDirListNode **tmp;
+	TDirEntryData dir1;
+	TDirEntryData dir2;
+	int opt;
+	const char *x1;
+	const char *x2;
+	int rv;
+	int i;
+
+	tmp = (TDirListNode **)e1;
+	dir1 = (*tmp)->Get().Get();
+
+	tmp = (TDirListNode **)e2;
+	dir2 = (*tmp)->Get().Get();
+
+	rv = 0;
+
+	for (i = 0; rv == 0; i++)
+	{
+		opt = FOrderby[i];
+
+		switch (opt & ORDER_BY_MASK)
+		{
+			case 0:
+				return 0;
+
+			case ORDER_BY_SIZE:
+				if (dir1.FileSize > dir2.FileSize)
+					rv = 1;
+
+				if (dir1.FileSize < dir2.FileSize)
+					rv = -1;
+				break;
+
+			case ORDER_BY_DATE:
+				if (dir1.Time > dir2.Time)
+					rv = 1;
+
+				if (dir1.Time < dir2.Time)
+					rv = -1;
+				break;
+
+			case ORDER_BY_EXT:
+				x1 = strchr(dir1.EntryName.GetData(), '.');
+				x2 = strchr(dir2.EntryName.GetData(), '.');
+
+				if (x1 && x2)
+					rv = strcmp(x1, x2);
+
+				if (!x1 && x2)
+					rv = -1;
+
+				if (x1 && !x2)
+					rv = 1;
+
+				break;
+
+			case ORDER_BY_NAME:
+				rv = strcmp(dir1.EntryName.GetData(),dir2.EntryName.GetData());
+				break;
+		}
+		
+		if (opt & ORDER_BY_INV)
+		    rv = -rv;
+		    
+	}
+	return rv;
+}
 
 /*##########################################################################
 #
@@ -781,6 +875,187 @@ void TDirList::SetIgnoredAttributes(int attrib)
 
 /*##########################################################################
 #
+#   Name       : TDirList::ClearSort
+#
+#   Purpose....: Clear all sort orders
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::ClearSort()
+{
+    int i;
+    
+    FSortCount = 0;
+
+    for (i = 0; i < 5; i++)
+        FSortArr[i] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddSortBySize
+#
+#   Purpose....: Add a new sort by size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddSortBySize()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_SIZE;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddSortByTime
+#
+#   Purpose....: Add a new sort by time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddSortByTime()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_DATE;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddSortByName
+#
+#   Purpose....: Add a new sort by name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddSortByName()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_NAME;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddSortByExt
+#
+#   Purpose....: Add a new sort by extention
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddSortByExt()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_EXT;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddReverseSortBySize
+#
+#   Purpose....: Add a new sort by size, reversed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddReverseSortBySize()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_SIZE | ORDER_BY_INV;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddReverseSortByTime
+#
+#   Purpose....: Add a new sort by time, reversed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddReverseSortByTime()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_DATE | ORDER_BY_INV;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddReverseSortByName
+#
+#   Purpose....: Add a new sort by name, reversed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddReverseSortByName()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_NAME | ORDER_BY_INV;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::AddReverseSortByExt
+#
+#   Purpose....: Add a new sort by extention, reversed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::AddReverseSortByExt()
+{
+    if (FSortCount < 4)
+    {
+        FSortArr[FSortCount] = ORDER_BY_EXT | ORDER_BY_INV;
+        FSortCount++;
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDirList::Add
 #
 #   Purpose....: Add entries
@@ -1047,6 +1322,57 @@ void TDirList::DoSearch()
 
         RdosCloseDir(DirHandle);
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::Sort
+#
+#   Purpose....: Sort list array
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirList::Sort()
+{
+	int count;
+	TDirListNode **EntryArr;
+	int ok;
+	int i;
+
+	count = GetSize();
+
+	if (count && FSortCount)
+	{
+		FDirSortSection.Enter();
+
+		EntryArr = new TDirListNode*[count];
+
+		i = 0;
+		ok = GotoFirst();
+		while (ok)
+		{
+			EntryArr[i] = Clone((TDirListNode *)FCurrPos);
+			i++;
+			ok = GotoNext();
+		}
+
+		Clear();
+
+		for (i = 0; i < 5; i++)
+			FOrderby[i] = FSortArr[i];
+
+		qsort(EntryArr, count, sizeof(TDirListNode *), SortCompare);
+
+		for (i = count - 1; i >= 0; i--)
+			AddFirst(EntryArr[i]);
+
+		delete EntryArr;
+
+		FDirSortSection.Leave();
+	}
 }
 
 /*##########################################################################
