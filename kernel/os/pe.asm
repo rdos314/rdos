@@ -3249,8 +3249,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Free memory
 ;
-;		PARAMETERS:		EAX	Number of bytes
-;						EDX Offset within flat selector
+;		PARAMETERS:		EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -3263,7 +3262,6 @@ free_mem	PROC far
 	push si
 	push edi
 ;
-	mov edi,eax
 	mov ax,pe_app_sel
 	mov ds,ax
 	EnterSection ds:pe_section
@@ -3275,15 +3273,9 @@ free_mem_more:
 	mov si,ax
 free_mem_loop:
 	mov es,ax
-	mov ecx,es:mem_base
-	add ecx,es:mem_size
-	cmp edx,ecx
-	jae free_mem_next
-;
-	mov ecx,edx
-	add ecx,edi
-	cmp ecx,es:mem_base
-	ja free_mem_ok
+
+    cmp edx,es:mem_base
+    je free_mem_ok
 
 free_mem_next:
 	mov ax,es:mem_next
@@ -3294,12 +3286,10 @@ free_mem_failed:
 	jmp free_mem_done
 
 free_mem_ok:
-	push edx
 	mov edx,es:mem_base
 	add edx,local_page_linear
 	mov ecx,es:mem_size
 	FreeLinear
-	pop edx
 	mov ds:pe_mem_blocks,es
 	mov ax,es:mem_prev
 	cmp ax,ds:pe_mem_blocks
@@ -3314,7 +3304,7 @@ free_mem_ok:
 	pop ds
 	FreeMem
 	popf
-	jne free_mem_more
+	jne free_mem_done
 
 free_mem_last_block:
 	mov ds:pe_mem_blocks,0

@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	16
+#define MAX_PLANETS	32
 
 struct TPlanet
 {
