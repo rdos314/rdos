@@ -50,6 +50,8 @@ code	SEGMENT byte public use16 'CODE'
 ; Table is generated using 1.1777758960 as factor
 ;
 
+	public ExtentSizeTab
+
 ExtentSizeTab:
 es00	DD 00000001h, 00000001h, 00000001h, 00000001h
 es04	DD 00000001h, 00000002h, 00000002h, 00000003h

@@ -1398,8 +1398,8 @@ fs00	DW OFFSET dummy,			dosdev_code_sel
 fs01	DW OFFSET dummy,			dosdev_code_sel
 fs02	DW OFFSET dummy,			dosdev_code_sel
 fs03	DW OFFSET dummy,			dosdev_code_sel
-fs04	DW OFFSET cache_dir,		dosdev_code_sel
-fs05	DW OFFSET dummy,			dosdev_code_sel
+fs04	DW OFFSET dummy,			dosdev_code_sel
+fs05	DW OFFSET cache_dir,		dosdev_code_sel
 fs06	DW OFFSET dummy,			dosdev_code_sel
 fs07	DW OFFSET dummy,			dosdev_code_sel
 fs08	DW OFFSET dummy,			dosdev_code_sel
@@ -1408,12 +1408,13 @@ fs10	DW OFFSET dummy,			dosdev_code_sel
 fs11	DW OFFSET dummy,			dosdev_code_sel
 fs12	DW OFFSET dummy,			dosdev_code_sel
 fs13	DW OFFSET dummy,			dosdev_code_sel
-fs14	DW OFFSET read_file,		dosdev_code_sel
-fs15	DW OFFSET write_file,		dosdev_code_sel
-fs16	DW OFFSET dummy,			dosdev_code_sel
+fs14	DW OFFSET dummy,			dosdev_code_sel
+fs15	DW OFFSET read_file,		dosdev_code_sel
+fs16	DW OFFSET write_file,		dosdev_code_sel
 fs17	DW OFFSET dummy,			dosdev_code_sel
 fs18	DW OFFSET dummy,			dosdev_code_sel
 fs19	DW OFFSET dummy,			dosdev_code_sel
+fs20	DW OFFSET dummy,			dosdev_code_sel
 	
 init	PROC far
 	pusha

@@ -38,22 +38,29 @@ rdfs_info_struc	ENDS
 drive_data_seg	STRUC
 
 info_sector			rdfs_info_struc <>
-mapping_sector		DD ?
-data_sector			DD ?
-sectors				DD ?
-drive_root_handle	DW ?
 drive_nr			DB ?
 
 drive_data_seg	ENDS
 
+RC_FLAG_DIR			EQU 1
+RC_FLAG_BACKUP		EQU 2
+
 rdfs_control_struc	STRUC
 
-rc_key_bias			DW ?
+rc_version			DB ?
+rc_flags			DB ?
 rc_key_offset		DW ?
 rc_size				DD ?
 rc_sector_arr		DD 126 DUP(?)
 
 rdfs_control_struc	ENDS
+
+rdfs_dir_sector_header_struc	STRUC
+
+rdsh_version	DB ?
+rdsh_chksum		DB ?
+
+rdfs_dir_sector_header_struc	ENDS
 
 rdfs_dir_block_struc	STRUC
 

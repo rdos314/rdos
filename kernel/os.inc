@@ -1365,6 +1365,7 @@ DemandLoadDrive	MACRO
 ;	IN	AL		Drive #
 ;	IN	AH		Disc # or 0
 ;	IN	EDX		Start sector
+;	IN	ECX		Number of sectors
 OpenDrive	MACRO
 	OsGate open_drive_nr
 					ENDM
@@ -1372,6 +1373,11 @@ OpenDrive	MACRO
 ;	IN	AL		Drive #
 CloseDrive	MACRO
 	OsGate close_drive_nr
+					ENDM
+
+;	IN	AL		Drive #
+FlushDrive	MACRO
+	OsGate flush_drive_nr
 					ENDM
 
 ;	IN	AL		Drive #
@@ -1490,6 +1496,12 @@ IsFileSystemAvailable	MACRO
 ;	ES:DI		FILE SYSTEM NAME
 InstallFileSystem	MACRO
 	OsGate install_file_system_nr
+					ENDM
+
+;	AL			DRIVE #
+;	ES:DI		FILE SYSTEM NAME
+FormatFileSystem	MACRO
+	OsGate format_file_system_nr
 					ENDM
 
 ;	AL			DRIVE #

@@ -34,6 +34,7 @@ GateSize = 16
 include emulate.inc
 include emcom.inc
 include emmem.inc
+include emseg.inc
 
 ByteRegMem	Macro op
 
@@ -2145,14 +2146,324 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DivByte
+;
+;		DESCRIPTION:	EMULATE div byte
+;
+;		PARAMETERS:		BL		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivByte	Proc near
+	mov ax,word ptr [bp].reg_eax
+	cmp ah,bl
+	jae EmulateError
+;
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov ax,word ptr [bp].reg_eax
+	div bl
+	mov cx,ax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov word ptr [bp].reg_eax,cx
+	ret
+DivByte	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DivWord
+;
+;		DESCRIPTION:	EMULATE div word
+;
+;		PARAMETERS:		BX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivWord	Proc near
+	mov dx,word ptr [bp].reg_edx
+	cmp dx,bx
+	jae EmulateError
+;
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov ax,word ptr [bp].reg_eax
+	div bx
+	mov cx,ax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov word ptr [bp].reg_eax,cx
+	mov word ptr [bp].reg_edx,dx
+	ret
+DivWord	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DivDword
+;
+;		DESCRIPTION:	EMULATE div dword
+;
+;		PARAMETERS:		EBX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivDword	Proc near
+	mov edx,[bp].reg_edx
+	cmp edx,ebx
+	jae EmulateError
+;
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov eax,[bp].reg_eax
+	div ebx
+	mov ecx,eax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov [bp].reg_eax,ecx
+	mov [bp].reg_edx,edx
+	ret
+DivDword	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			EmDiv
 ;
 ;		DESCRIPTION:	EMULATE div
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	ExtByteMem Div
-	ExtWordMem Div
+	public EmDivByteMem
+
+EmDivByteMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivByteMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmDivByteMem16
+	or bl,40h	
+EmDivByteMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadByte
+	mov bl,al
+	call DivByte
+	ret
+
+EmDivByteMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].ByteRegTab
+	mov bl,[bp+si]
+	call DivByte
+	ret
+EmDivByteMem	Endp
+
+	public EmDivWordMem
+
+EmDivWordMem	Proc near
+	test byte ptr [bp].em_flags,d32
+	jnz EmDivDwordMem
+;
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivWordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmDivWordMem16
+	or bl,40h	
+EmDivWordMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadWord
+	mov bx,ax
+	call DivWord
+	ret
+
+EmDivWordMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].WordRegTab
+	mov bx,[bp+si]
+	call DivWord
+	ret
+EmDivWordMem	Endp
+
+EmDivDwordMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivDwordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmDivDwordMem16
+	or bl,40h	
+EmDivDwordMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadDword
+	mov ebx,eax
+	call DivDword
+	ret
+
+EmDivDwordMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].DwordRegTab
+	mov ebx,[bp+si]
+	call DivDword
+	ret
+EmDivDwordMem	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivByte
+;
+;		DESCRIPTION:	EMULATE idiv byte
+;
+;		PARAMETERS:		BL		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivByte	Proc near
+	push bx
+	mov ah,byte ptr [bp+1].reg_eax
+	test ah,80h
+	jz idiv_byte_ah_pos
+;
+	neg ah
+
+idiv_byte_ah_pos:
+	test bl,80h
+	jz idiv_byte_bl_pos
+;
+	neg bl
+
+idiv_byte_bl_pos:
+	cmp ah,bl
+	jae EmulateError
+;
+	pop bx
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov ax,word ptr [bp].reg_eax
+	idiv bl
+	mov cx,ax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov word ptr [bp].reg_eax,cx
+	ret
+IdivByte	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivWord
+;
+;		DESCRIPTION:	EMULATE idiv word
+;
+;		PARAMETERS:		BX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivWord	Proc near
+	push bx
+	mov dx,word ptr [bp].reg_edx
+	test dh,80h
+	jz idiv_word_dx_pos
+;
+	neg dx
+
+idiv_word_dx_pos:
+	test bh,80h
+	jz idiv_word_bx_pos
+;
+	neg bx
+
+idiv_word_bx_pos:
+	cmp dx,bx
+	jae EmulateError
+;
+	pop bx
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov ax,word ptr [bp].reg_eax
+	mov dx,word ptr [bp].reg_edx
+	div bx
+	mov cx,ax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov word ptr [bp].reg_eax,cx
+	mov word ptr [bp].reg_edx,dx
+	ret
+IdivWord	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivDword
+;
+;		DESCRIPTION:	EMULATE idiv dword
+;
+;		PARAMETERS:		EBX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivDword	Proc near
+	push ebx
+	mov edx,[bp].reg_edx
+	test edx,80000000h
+	jz idiv_dword_edx_pos
+;
+	neg edx
+
+idiv_dword_edx_pos:
+	test ebx,80000000h
+	jz idiv_dword_ebx_pos
+;
+	neg ebx
+
+idiv_dword_ebx_pos:
+	cmp edx,ebx
+	jae EmulateError
+;
+	pop ebx
+	mov ah,byte ptr [bp].reg_eflags
+	sahf
+	mov eax,[bp].reg_eax
+	mov edx,[bp].reg_edx
+	div ebx
+	mov ecx,eax
+	lahf
+	mov byte ptr [bp].reg_eflags,ah
+	mov [bp].reg_eax,ecx
+	mov [bp].reg_edx,edx
+	ret
+IdivDword	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2163,8 +2474,108 @@ code	SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	ExtByteMem Idiv
-	ExtWordMem Idiv
+	public EmIdivByteMem
+
+EmIdivByteMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivByteMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmIdivByteMem16
+	or bl,40h	
+EmIdivByteMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadByte
+	mov bl,al
+	call IdivByte
+	ret
+
+EmIdivByteMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].ByteRegTab
+	mov bl,[bp+si]
+	call IdivByte
+	ret
+EmIdivByteMem	Endp
+
+	public EmIdivWordMem
+
+EmIdivWordMem	Proc near
+	test byte ptr [bp].em_flags,d32
+	jnz EmIdivDwordMem
+;
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivWordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmIdivWordMem16
+	or bl,40h	
+EmIdivWordMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadWord
+	mov bx,ax
+	call IdivWord
+	ret
+
+EmIdivWordMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].WordRegTab
+	mov bx,[bp+si]
+	call IdivWord
+	ret
+EmIdivWordMem	Endp
+
+EmIdivDwordMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivDwordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [bp].em_flags,a32
+	jz EmIdivDwordMem16
+	or bl,40h	
+EmIdivDwordMem16:
+	xor bh,bh
+	call word ptr cs:[bx].MemTab
+	call ReadDword
+	mov ebx,eax
+	call IdivDword
+	ret
+
+EmIdivDwordMemReg:
+	and bh,7
+	shl bh,1
+	movzx si,bh
+	mov si,word ptr cs:[si].DwordRegTab
+	mov ebx,[bp+si]
+	call IdivDword
+	ret
+EmIdivDwordMem	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

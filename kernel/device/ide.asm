@@ -843,6 +843,7 @@ PAGE
 ;						FS		Disc sel
 ;						CL		PARTITION TYPE
 ;						EDX		START SECTOR
+;						EAX		NUMBER OF SECTORS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -877,6 +878,8 @@ InstallPartition	Proc near
 	cmp cl,7
 	jne install_check_type
 ;
+	push eax
+;
 	push edx
 	mov eax,200h
 	AllocateSmallLinear
@@ -890,7 +893,7 @@ InstallPartition	Proc near
 	div ecx
 	mov bx,dx
 	mov edx,eax
-	mov cx,1
+	mov ecx,1
 	call ReadDrive
 	pop edx
 ;
@@ -913,6 +916,7 @@ InstallPartition	Proc near
 	pop edx
 	pop ds
 ;
+	pop ecx
 	xor di,di
 	IsFileSystemAvailable
 	jc install_part_free
@@ -940,6 +944,7 @@ install_check_type:
 	shl di,1
 
 install_part_test_avail:
+	mov ecx,eax
 	mov di,word ptr cs:[di].FsTab
 	IsFileSystemAvailable
 	jc install_part_done
@@ -1436,7 +1441,7 @@ drive_assign1	Proc far
 	AllocateSmallLinear
 	mov edi,edx
 ;
-	mov cx,1
+	mov ecx,1
 	xor bx,bx
 	xor edx,edx
 	call ReadDrive
@@ -1448,6 +1453,7 @@ drive_assign_loop1:
 	or cl,cl
 	jz drive_assign_free1
 ;
+	mov eax,es:[esi+edi].part_sectors
 	mov edx,es:[esi+edi].part_start_sector
 	call InstallPartition
 
@@ -1495,7 +1501,7 @@ InstallExtended	Proc near
 	mov bx,dx
 	mov edx,eax
 ;
-	mov cx,1
+	mov ecx,1
 	call ReadDrive
 ;
 	mov esi,1BEh
@@ -1514,6 +1520,7 @@ install_ext_loop1:
 	push ebp
 	push edi
 ;
+	mov eax,es:[esi+edi].part_sectors
 	lea edi,[esi+edi+1]
 	call ChsToLba
 	or edx,edx
@@ -1600,7 +1607,7 @@ drive_assign2	Proc far
 	AllocateSmallLinear
 	mov edi,edx
 ;
-	mov cx,1
+	mov ecx,1
 	xor bx,bx
 	xor edx,edx
 	call ReadDrive

@@ -398,6 +398,34 @@ install_file_system	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FORMAT_FILE_SYSTEM
+;
+;		DESCRIPTION:	Format a file system
+;
+;		PARAMETERS:		AL			Drive #
+;						ECX			Drive size
+;						ES:DI		FILE SYSTEM NAME
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+format_file_system_name	DB 'Format File System',0
+
+format_file_system	Proc far
+	push es
+	push di
+;
+	int 3
+	call GetFileSystem
+	call es:[di].format_proc
+;
+	pop di
+	pop es
+	ret
+format_file_system	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			START_FILE_SYSTEM
 ;
 ;		DESCRIPTION:	Start file system
@@ -693,6 +721,11 @@ init	PROC far
 	mov si,OFFSET demand_load_file_system
 	mov di,OFFSET demand_load_file_system_name
 	mov ax,demand_load_file_system_nr
+	RegisterOsGate
+;
+	mov si,OFFSET format_file_system
+	mov di,OFFSET format_file_system_name
+	mov ax,format_file_system_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET is_file_system_available

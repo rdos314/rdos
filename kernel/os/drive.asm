@@ -107,6 +107,7 @@ drive_def_struc	STRUC
 
 drive_disc				DW ?
 drive_start_sector		DD ?
+drive_sectors			DD ?
 
 drive_def_struc	ENDS
 
@@ -1854,6 +1855,7 @@ PAGE
 ;		PARAMETERS:		AL		Drive #
 ;						AH		Disc #
 ;						EDX		Start sector
+;						ECX		Sectors
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1873,6 +1875,7 @@ open_drive	Proc far
 	mov eax,SIZE drive_def_struc
 	AllocateSmallGlobalMem
 	mov es:drive_start_sector,edx
+	mov es:drive_sectors,ecx
 	pop ax
 	movzx bx,ah
 	shl bx,1
@@ -1921,8 +1924,103 @@ close_drive_name	DB 'Close Drive',0
 
 close_drive	Proc far
 	int 3
+	FlushDrive
 	ret
 close_drive	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FlushDrive
+;
+;		DESCRIPTION:	Flush drive
+;
+;		PARAMETERS:		AL		Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_drive_name	DB 'Flush Drive',0
+
+flush_drive	Proc far
+	push ds
+	push es
+	pushad
+;
+	int 3
+	movzx bx,al
+	shl bx,1
+	mov ax,disc_data_sel
+	mov ds,ax
+	mov ds,ds:[bx].drive_def_arr
+	mov ax,flat_sel
+	mov es,ax
+	mov edx,ds:drive_start_sector
+	mov ecx,ds:drive_sectors
+	mov ds,ds:drive_disc
+;
+	EnterSection ds:disc_section
+	push edx
+	pop ax
+	pop dx
+	div ds:disc_sectors_per_unit
+	movzx esi,ax
+	movzx ebx,dx
+
+flush_loop:
+	mov edx,ds:[4*esi].disc_unit_arr
+	or edx,edx
+	jz flush_next_unit
+;
+	mov edi,es:[4*ebx+edx].disc_sector_arr
+	or edi,edi
+	jz flush_next
+;
+	call free_handle
+	mov es:[4*ebx+edx].disc_sector_arr,0
+	sub es:[edx].disc_sectors,1
+	jnz flush_next
+;
+	mov ds:[4*esi].disc_unit_arr,0
+	push ecx
+	movzx ecx,ds:disc_sectors_per_unit
+	shl ecx,2
+	add ecx,OFFSET disc_sector_arr
+	FreeLinear
+	pop ecx
+
+flush_next_unit:
+	movzx edx,ds:disc_sectors_per_unit
+	sub edx,esi
+	sub ecx,edx
+	jbe flush_leave
+;
+	xor esi,esi
+	inc ebx
+	jmp flush_loop
+
+flush_next:
+	inc esi
+	cmp si,ds:disc_sectors_per_unit
+	jne flush_unit_ok
+
+flush_adv_unit:
+	xor esi,esi
+	inc ebx
+
+flush_unit_ok:
+	sub ecx,1
+	jnz flush_loop
+
+flush_leave:
+	LeaveSection ds:disc_section
+;
+	popad
+	pop es
+	pop ds
+	ret
+flush_drive	Endp
 
 PAGE
 
@@ -2027,6 +2125,14 @@ new_sector	PROC far
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
 	mov es,ax
+	cmp edx,ds:drive_sectors
+	jc new_inrange
+;
+	int 3
+	stc
+	jmp new_leave
+
+new_inrange:
 	add edx,ds:drive_start_sector
 	mov ds,ds:drive_disc
 	push edx
@@ -2060,7 +2166,8 @@ new_loop:
 
 new_done:
 	LeaveSection ds:disc_section
-;
+
+new_leave:
 	pop edi
 	pop edx
 	pop cx
@@ -2105,6 +2212,14 @@ lock_sector	PROC far
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
 	mov es,ax
+	cmp edx,ds:drive_sectors
+	jc lock_inrange
+;
+	int 3
+	stc
+	jmp lock_done
+
+lock_inrange:
 	add edx,ds:drive_start_sector
 	mov ds,ds:drive_disc
 	push edx
@@ -2368,6 +2483,14 @@ req_sector	PROC far
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
 	mov es,ax
+	cmp edx,ds:drive_sectors
+	jc req_inrange
+;
+	int 3
+	stc
+	jmp req_done
+
+req_inrange:
 	add edx,ds:drive_start_sector
 	mov ds,ds:drive_disc
 	push edx
@@ -2451,7 +2574,8 @@ req_ok:
 	Signal
 	clc
 	mov ebx,edi
-;
+
+req_done:
 	pop edi
 	pop edx
 	pop ecx
@@ -2495,6 +2619,14 @@ define_sector	PROC far
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
 	mov es,ax
+	cmp edx,ds:drive_sectors
+	jc define_inrange
+;
+	int 3
+	stc
+	jmp define_done
+
+define_inrange:
 	add edx,ds:drive_start_sector
 	mov ds,ds:drive_disc
 	push edx
@@ -2681,6 +2813,14 @@ lock_seq_sector	PROC far
 	mov ds,ds:[bx].drive_def_arr
 	mov ax,flat_sel
 	mov es,ax
+	cmp edx,ds:drive_sectors
+	jc lock_seq_inrange
+;
+	int 3
+	stc
+	jmp lock_seq_done
+
+lock_seq_inrange:
 	add edx,ds:drive_start_sector
 	mov ds,ds:drive_disc
 	push edx
@@ -3172,6 +3312,137 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FormatDrive
+;
+;		DESCRIPTION:	Format a drive
+;
+;		PARAMETERS:		AL			Disc #
+;						EDX			Start sector
+;						ECX			Number of sectors
+;						ES:(E)DI	FS name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+format_drive_name	DB 'Format Drive',0
+
+format_drive	Proc near
+	push ds
+	push es
+	push fs
+	pushad
+;
+	push ax
+	mov ax,es
+	mov ds,ax
+	mov esi,edi
+	mov eax,10h
+	AllocateSmallGlobalMem
+	xor edi,edi
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	pop ax
+	xor di,di
+	IsFileSystemAvailable
+	jc format_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx di,al
+	shl di,1
+	mov di,ds:[di].disc_def_arr
+	mov si,OFFSET drive_def_arr
+	mov bp,MAX_DRIVES
+
+format_find_drive_loop:
+	mov bx,[si]
+	or bx,bx
+	je format_find_drive_next
+;
+	cmp bx,-1
+	je format_find_drive_next
+;
+	mov fs,bx
+	cmp di,fs:drive_disc
+	jne format_find_drive_next
+;
+	mov ebx,edx
+	sub ebx,fs:drive_start_sector
+	jz format_drive_found
+	ja format_find_drive_above
+
+format_find_drive_below:
+	add ebx,fs:drive_sectors
+	jc format_fail
+	jmp format_find_drive_next
+
+format_find_drive_above:
+	sub ebx,fs:drive_sectors
+	jc format_fail
+
+format_find_drive_next:
+	add si,2
+	sub bp,1
+	jnz format_find_drive_loop
+;
+	mov ah,al
+	AllocateStaticDrive
+	OpenDrive
+	jmp format_do
+
+format_drive_found:
+	sub si,OFFSET drive_def_arr
+	mov ax,si
+	shr al,1
+	int 3
+	FlushDrive
+
+format_do:
+	cmp ecx,fs:drive_sectors
+	jbe format_perf
+;
+	mov ecx,fs:drive_sectors
+
+format_perf:
+	xor di,di
+	FormatFileSystem
+	jc format_fail
+;
+	FreeMem
+	clc
+	jmp format_done
+
+format_fail:
+	FreeMem
+	stc
+
+format_done:
+	popad
+	pop fs
+	pop es
+	pop ds
+	ret
+format_drive	Endp
+
+format_drive32	Proc far
+	call format_drive
+	retf32
+format_drive32	Endp
+
+format_drive16	Proc far
+	push edi
+	movzx edi,di
+	call format_drive
+	pop edi
+	ret
+format_drive16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			HOOK_INIT_DISC
 ;
 ;		DESCRIPTION:	Add an InitDisc hook
@@ -3610,6 +3881,18 @@ init	PROC far
 	mov dx,0
 	mov ax,get_virt_disc_info_nr
 	RegisterVirtUserGate
+;
+	mov si,OFFSET format_drive32
+	mov di,OFFSET format_drive_name
+	xor cl,cl
+	mov ax,format_drive_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET format_drive16
+	mov di,OFFSET format_drive_name
+	xor cl,cl
+	mov ax,format_drive_nr
+	RegisterUserGate16
 ;
 	mov si,OFFSET read_disc32
 	mov di,OFFSET read_disc_name

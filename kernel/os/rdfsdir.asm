@@ -76,16 +76,51 @@ cache_dir	Proc far
 	mov al,ds:drive_nr
 	mov edx,ds:ri_root_dir
 	LockSector
+	mov eax,es:[esi].rc_size
+	add eax,eax
+	and ax,0F000h
+	add eax,1000h
+	AllocateBigLinear
+	push edx
 	mov ecx,es:[esi].rc_size
 	mov edx,es:[esi].rc_sector_arr
 	mov bp,es:[esi].rc_key_offset
-	push es:[esi].rc_key_bias
 	UnlockSector
-	LockSector
+	pop esi
+;
+	shr ecx,8
 	mov eax,ecx
-	AllocateSmallLinear
-	mov edi,edx
-	pop ax
+	shl eax,2
+	AllocateSmallMem
+	xor edi,edi
+	push ecx
+	mov al,ds:drive_nr
+
+req_dir_loop:
+	ReqSector
+	mov es:[edi],ebx
+	inc edx
+	add edi,4
+	add esi,200h
+	sub ecx,1
+	jnz req_dir_loop
+;
+	pop ecx
+;
+	sub edi,4
+
+wait_dir_loop:
+	mov ebx,es:[edi]
+	WaitForSector
+	sub edi,4
+	sub ecx,1
+	jnz wait_dir_loop
+;
+	FreeMem
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,esi
 	mov cx,es:[esi]
 	call decrypt
 	xor ah,es:[edi]

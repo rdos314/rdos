@@ -1349,6 +1349,7 @@ drive_assign1	Proc far
 	mov al,es:disc_sub_unit
 	mov ah,es:disc_nr
 	xor edx,edx
+	mov ecx,-1
 	OpenDrive
 	DemandLoadFileSystem
 	ret

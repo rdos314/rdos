@@ -2710,6 +2710,76 @@ RdosWriteDisc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RdosGetRdfsInfo
+;
+;       DESCRIPTION:    Get basic RDFS info
+;
+;		PARAMETERS:		Crypt tab
+;						Key tab
+;						Extent size tab
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetRdfsInfo
+
+RdosGetRdfsInfo	Proc near
+	push ebp
+	mov ebp,esp
+	push gs
+	push ebx
+	push esi
+	push edi
+;
+	mov esi,[ebp+8]
+	mov edi,[ebp+12]
+	mov ebx,[ebp+16]
+	mov ax,ds
+	mov gs,ax
+	UserGate get_rdfs_info_nr
+;
+	pop edi
+	pop esi
+	pop ebx
+	pop gs
+	pop ebp
+	ret 12
+RdosGetRdfsInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosFormatDrive
+;
+;       DESCRIPTION:    Format drive
+;
+;		PARAMETERS:		Disc #
+;						Start sector
+;						Size
+;						FS name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosFormatDrive
+
+RdosFormatDrive	Proc near
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov al,[ebp+8]
+	mov edx,[ebp+12]
+	mov ecx,[ebp+16]
+	mov edi,[ebp+20]
+	UserGate format_drive_nr
+;
+	pop edi
+	pop ebp
+	ret 16
+RdosFormatDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReadResource
 ;
 ;       DESCRIPTION:    Read resource

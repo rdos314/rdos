@@ -1,0 +1,4655 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; RDFSCRYP.ASM
+; Encryption table for RDFS (RDOS File System)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME rdfscryp
+
+	.386p
+
+code	SEGMENT byte public use16 'CODE'
+
+	assume cs:code
+
+	public CryptTab
+
+CryptTab:
+ct000  DB 0ECh, 043h, 087h, 083h, 080h, 009h, 07Ah, 021h
+ct008  DB 011h, 0FFh, 086h, 0DEh, 0F2h, 021h, 0F1h, 0C9h
+ct010  DB 001h, 067h, 00Ch, 08Ch, 017h, 066h, 0B9h, 08Fh
+ct018  DB 0A3h, 05Fh, 029h, 013h, 0DBh, 0D2h, 06Eh, 070h
+ct020  DB 061h, 04Bh, 052h, 066h, 039h, 080h, 08Bh, 01Eh
+ct028  DB 0F9h, 09Ah, 00Eh, 07Eh, 086h, 01Fh, 01Eh, 031h
+ct030  DB 06Ch, 0A2h, 05Dh, 046h, 0CBh, 00Fh, 0B5h, 054h
+ct038  DB 0A5h, 0FFh, 00Ah, 0C7h, 0E2h, 092h, 0DDh, 0A5h
+ct040  DB 01Dh, 012h, 054h, 04Bh, 031h, 0A5h, 07Bh, 0D5h
+ct048  DB 02Eh, 0E3h, 079h, 05Bh, 048h, 0D6h, 00Ch, 0B9h
+ct050  DB 030h, 0DFh, 0DCh, 061h, 0C0h, 076h, 005h, 016h
+ct058  DB 009h, 0D1h, 03Ah, 0D6h, 049h, 0DFh, 033h, 015h
+ct060  DB 088h, 069h, 05Fh, 0A2h, 0F7h, 0B4h, 09Ah, 065h
+ct068  DB 06Fh, 0E3h, 0ADh, 035h, 0A3h, 0BAh, 02Fh, 09Ah
+ct070  DB 07Fh, 05Fh, 072h, 0B6h, 02Eh, 087h, 004h, 0C4h
+ct078  DB 0BEh, 041h, 08Eh, 006h, 021h, 095h, 083h, 040h
+ct080  DB 0DBh, 002h, 078h, 037h, 0DAh, 037h, 051h, 0C7h
+ct088  DB 0DBh, 0D6h, 0D6h, 078h, 0F8h, 092h, 014h, 079h
+ct090  DB 043h, 02Ah, 085h, 0EFh, 026h, 007h, 052h, 064h
+ct098  DB 0CDh, 0D5h, 0FDh, 0C9h, 038h, 03Ah, 014h, 0C0h
+ct0A0  DB 04Ah, 08Fh, 0C6h, 0FFh, 040h, 0C2h, 051h, 07Fh
+ct0A8  DB 0E6h, 036h, 007h, 012h, 09Bh, 0CAh, 0BFh, 06Dh
+ct0B0  DB 042h, 0CCh, 009h, 06Ah, 018h, 032h, 0D6h, 07Dh
+ct0B8  DB 0CEh, 0B5h, 00Ah, 0BBh, 068h, 08Ch, 074h, 01Bh
+ct0C0  DB 0A3h, 05Ch, 045h, 04Eh, 0AEh, 09Eh, 070h, 059h
+ct0C8  DB 0AFh, 066h, 0D1h, 08Ah, 0E3h, 027h, 089h, 0AEh
+ct0D0  DB 074h, 0EBh, 06Ch, 069h, 069h, 0E5h, 013h, 075h
+ct0D8  DB 0B5h, 001h, 023h, 00Ch, 046h, 0A7h, 0A8h, 0E1h
+ct0E0  DB 068h, 052h, 0F9h, 055h, 026h, 02Ch, 0D8h, 0FFh
+ct0E8  DB 010h, 00Dh, 0E5h, 0FCh, 09Dh, 07Dh, 099h, 0C8h
+ct0F0  DB 043h, 062h, 084h, 047h, 031h, 09Ch, 088h, 04Dh
+ct0F8  DB 0EEh, 064h, 07Bh, 085h, 087h, 00Ah, 049h, 035h
+ct100  DB 06Bh, 077h, 0A2h, 0E0h, 0C8h, 041h, 067h, 04Ah
+ct108  DB 08Ch, 0C0h, 074h, 0A8h, 0F1h, 0E6h, 0F7h, 053h
+ct110  DB 03Ah, 0C2h, 050h, 09Ch, 037h, 084h, 0ABh, 0C9h
+ct118  DB 03Fh, 067h, 0A9h, 05Dh, 02Dh, 004h, 033h, 0CFh
+ct120  DB 099h, 0E5h, 09Bh, 075h, 08Fh, 0A0h, 035h, 069h
+ct128  DB 085h, 0D0h, 028h, 033h, 0D7h, 023h, 023h, 0EBh
+ct130  DB 0DEh, 01Ch, 0E9h, 081h, 06Fh, 0D2h, 06Ah, 0E4h
+ct138  DB 05Eh, 094h, 0DBh, 0A5h, 013h, 0C2h, 0BBh, 049h
+ct140  DB 04Eh, 068h, 0A3h, 07Dh, 01Eh, 0C4h, 093h, 008h
+ct148  DB 095h, 01Eh, 0AEh, 0C5h, 0C9h, 0A8h, 0F2h, 0D8h
+ct150  DB 0AFh, 08Fh, 0CEh, 07Eh, 0E8h, 01Fh, 037h, 0B3h
+ct158  DB 02Dh, 05Ah, 0CAh, 006h, 032h, 036h, 095h, 0A6h
+ct160  DB 04Dh, 05Dh, 09Ah, 0ABh, 07Eh, 073h, 0D5h, 001h
+ct168  DB 0EFh, 028h, 07Ah, 06Fh, 045h, 07Fh, 0B5h, 0D7h
+ct170  DB 095h, 0EFh, 04Fh, 062h, 063h, 09Fh, 052h, 00Ch
+ct178  DB 05Ch, 0B8h, 0A2h, 0BBh, 016h, 0B1h, 030h, 018h
+ct180  DB 03Bh, 048h, 0BFh, 0AAh, 088h, 0ACh, 0FDh, 09Eh
+ct188  DB 06Ch, 09Eh, 026h, 0FBh, 04Bh, 07Ah, 091h, 0C9h
+ct190  DB 05Ch, 0F8h, 0B0h, 032h, 0E2h, 011h, 053h, 05Ah
+ct198  DB 0AEh, 0C2h, 073h, 09Dh, 00Ch, 05Eh, 02Ah, 05Fh
+ct1A0  DB 0E8h, 042h, 01Ah, 0ADh, 089h, 0D1h, 078h, 091h
+ct1A8  DB 038h, 024h, 02Dh, 0C7h, 0DDh, 0D6h, 0D0h, 069h
+ct1B0  DB 0F4h, 050h, 022h, 039h, 08Eh, 025h, 0B2h, 0B7h
+ct1B8  DB 081h, 061h, 030h, 00Bh, 0D1h, 014h, 0A2h, 0C3h
+ct1C0  DB 0D0h, 0B0h, 0A2h, 0B7h, 0FCh, 068h, 00Bh, 03Ch
+ct1C8  DB 036h, 08Eh, 007h, 00Bh, 022h, 07Dh, 0D6h, 03Ah
+ct1D0  DB 077h, 090h, 000h, 009h, 000h, 0B1h, 00Ch, 094h
+ct1D8  DB 00Fh, 08Ch, 0A3h, 02Dh, 095h, 0C3h, 0A7h, 0A2h
+ct1E0  DB 09Ah, 071h, 088h, 024h, 037h, 0E4h, 0F5h, 05Dh
+ct1E8  DB 07Bh, 0EDh, 057h, 088h, 081h, 0CBh, 008h, 06Fh
+ct1F0  DB 07Bh, 0D2h, 00Eh, 0D3h, 095h, 0EFh, 042h, 070h
+ct1F8  DB 0BAh, 0A6h, 0ADh, 0E4h, 0C9h, 0DBh, 068h, 01Ah
+ct200  DB 043h, 048h, 0F9h, 0FDh, 013h, 065h, 06Fh, 07Eh
+ct208  DB 076h, 05Dh, 08Bh, 0FEh, 024h, 034h, 057h, 08Ah
+ct210  DB 0C2h, 033h, 0E8h, 0AFh, 05Ah, 0DCh, 085h, 077h
+ct218  DB 02Bh, 08Fh, 0F9h, 00Ch, 09Ch, 0FFh, 06Fh, 01Fh
+ct220  DB 0D0h, 099h, 0D1h, 04Bh, 0EAh, 09Dh, 064h, 050h
+ct228  DB 08Ch, 07Ch, 03Ah, 01Ah, 0BBh, 044h, 09Eh, 0BCh
+ct230  DB 0C8h, 0B4h, 007h, 0BBh, 0E6h, 0B1h, 04Fh, 051h
+ct238  DB 0E3h, 03Eh, 07Ch, 005h, 091h, 09Ah, 05Ah, 0D4h
+ct240  DB 001h, 0C4h, 0BEh, 094h, 0AFh, 0B9h, 0DBh, 028h
+ct248  DB 0D5h, 0D8h, 039h, 0E6h, 01Eh, 016h, 089h, 0B6h
+ct250  DB 007h, 0A0h, 080h, 0D4h, 04Dh, 0D5h, 072h, 07Ch
+ct258  DB 026h, 0D9h, 0FAh, 091h, 0BEh, 0B2h, 0BBh, 028h
+ct260  DB 03Bh, 02Bh, 001h, 0E8h, 0EAh, 084h, 04Fh, 093h
+ct268  DB 09Bh, 064h, 06Eh, 092h, 026h, 09Eh, 0FCh, 08Ch
+ct270  DB 037h, 099h, 0BDh, 074h, 090h, 03Dh, 042h, 043h
+ct278  DB 0ABh, 09Bh, 022h, 06Ch, 04Bh, 0BCh, 080h, 030h
+ct280  DB 006h, 06Dh, 053h, 0A6h, 09Ah, 0F3h, 082h, 001h
+ct288  DB 01Eh, 0D2h, 06Fh, 0F1h, 06Bh, 0EBh, 051h, 062h
+ct290  DB 0A1h, 03Ch, 07Bh, 083h, 0B6h, 086h, 0E5h, 098h
+ct298  DB 022h, 00Bh, 049h, 00Ah, 0F6h, 04Ch, 063h, 02Bh
+ct2A0  DB 054h, 064h, 0C5h, 082h, 094h, 017h, 0D2h, 07Dh
+ct2A8  DB 0E5h, 01Ch, 085h, 048h, 035h, 00Bh, 038h, 096h
+ct2B0  DB 07Fh, 072h, 015h, 046h, 07Dh, 0FDh, 075h, 076h
+ct2B8  DB 037h, 02Fh, 04Bh, 0F9h, 0BAh, 0FFh, 056h, 0F8h
+ct2C0  DB 0F4h, 023h, 04Ah, 027h, 0B3h, 0CFh, 02Ah, 0B1h
+ct2C8  DB 0D8h, 0B2h, 0D5h, 0AFh, 06Fh, 0FFh, 075h, 001h
+ct2D0  DB 03Eh, 003h, 09Ah, 01Bh, 050h, 05Fh, 0CFh, 0DAh
+ct2D8  DB 0AFh, 0FBh, 0FFh, 015h, 071h, 064h, 02Ch, 042h
+ct2E0  DB 04Bh, 00Fh, 0EEh, 0ABh, 018h, 0ABh, 0D5h, 0CAh
+ct2E8  DB 0B4h, 0C6h, 0E0h, 012h, 05Eh, 0F2h, 0F9h, 0F6h
+ct2F0  DB 016h, 02Fh, 0DBh, 0E7h, 0D9h, 040h, 007h, 080h
+ct2F8  DB 03Ch, 0B1h, 00Bh, 00Ah, 0D5h, 03Ah, 0E3h, 0FCh
+ct300  DB 04Ch, 06Eh, 0D3h, 016h, 0E9h, 071h, 068h, 0E0h
+ct308  DB 079h, 04Ch, 0F6h, 09Bh, 07Ch, 0F3h, 00Dh, 01Ch
+ct310  DB 005h, 0A3h, 018h, 059h, 0F8h, 0EAh, 03Ah, 0A7h
+ct318  DB 0ADh, 0E4h, 0D7h, 07Ch, 007h, 008h, 087h, 091h
+ct320  DB 005h, 04Ah, 044h, 045h, 00Ch, 08Ch, 077h, 0D9h
+ct328  DB 007h, 0F5h, 0CFh, 02Bh, 091h, 0B2h, 0C0h, 0A9h
+ct330  DB 0B3h, 0EBh, 060h, 0DFh, 043h, 0D4h, 0F3h, 005h
+ct338  DB 02Ch, 061h, 099h, 0BCh, 04Dh, 072h, 0A1h, 070h
+ct340  DB 0BDh, 0C1h, 08Dh, 0AAh, 018h, 0EFh, 036h, 07Dh
+ct348  DB 0C7h, 0CFh, 09Fh, 0B2h, 032h, 0AAh, 0A6h, 012h
+ct350  DB 0C5h, 06Ah, 091h, 052h, 063h, 08Dh, 0D8h, 03Ah
+ct358  DB 0CEh, 09Ch, 096h, 0ABh, 092h, 056h, 0E5h, 0A5h
+ct360  DB 0D7h, 0A7h, 0A6h, 058h, 0E4h, 090h, 028h, 038h
+ct368  DB 076h, 081h, 0A5h, 034h, 001h, 0B7h, 018h, 018h
+ct370  DB 055h, 059h, 0E3h, 002h, 049h, 021h, 00Eh, 043h
+ct378  DB 02Eh, 097h, 08Eh, 074h, 027h, 04Ch, 0AAh, 0A4h
+ct380  DB 02Eh, 0D4h, 0FAh, 0ECh, 0C4h, 06Dh, 0EAh, 054h
+ct388  DB 0A9h, 038h, 053h, 095h, 0B4h, 0FDh, 0A3h, 09Fh
+ct390  DB 0B9h, 019h, 01Ah, 06Ah, 0E1h, 070h, 073h, 03Eh
+ct398  DB 0BFh, 095h, 087h, 072h, 030h, 03Eh, 0D1h, 024h
+ct3A0  DB 06Ch, 08Fh, 0EDh, 052h, 039h, 06Fh, 0A0h, 021h
+ct3A8  DB 0B3h, 092h, 02Fh, 074h, 070h, 006h, 0F9h, 017h
+ct3B0  DB 00Bh, 0D4h, 03Ch, 0F2h, 093h, 0FBh, 063h, 038h
+ct3B8  DB 0FDh, 01Fh, 0A1h, 0ABh, 0C9h, 0EEh, 0DAh, 064h
+ct3C0  DB 0B9h, 020h, 0EDh, 0C5h, 079h, 06Eh, 001h, 068h
+ct3C8  DB 0ECh, 0B6h, 094h, 0B7h, 047h, 0CCh, 079h, 0A1h
+ct3D0  DB 029h, 077h, 0F9h, 01Fh, 00Bh, 06Ch, 02Dh, 064h
+ct3D8  DB 0EEh, 079h, 0D1h, 0CBh, 0D0h, 002h, 08Fh, 09Ah
+ct3E0  DB 0BFh, 062h, 002h, 0D0h, 073h, 0C1h, 0F5h, 01Ch
+ct3E8  DB 0B2h, 087h, 0D7h, 0C6h, 037h, 0D9h, 095h, 010h
+ct3F0  DB 0ABh, 0B2h, 036h, 0FCh, 0EFh, 03Bh, 067h, 00Fh
+ct3F8  DB 0B2h, 00Ch, 076h, 0B7h, 02Fh, 084h, 0FAh, 082h
+ct400  DB 05Ch, 022h, 012h, 05Ch, 077h, 0FEh, 026h, 092h
+ct408  DB 0F2h, 044h, 0FFh, 0BFh, 084h, 0BEh, 0ACh, 0B2h
+ct410  DB 0EDh, 0A7h, 086h, 0E7h, 011h, 0DBh, 02Bh, 0C7h
+ct418  DB 0BCh, 00Eh, 0AEh, 006h, 03Dh, 00Eh, 0F8h, 0D6h
+ct420  DB 01Bh, 084h, 097h, 019h, 064h, 01Fh, 04Ch, 00Fh
+ct428  DB 022h, 0B2h, 0E6h, 087h, 084h, 01Ah, 009h, 04Dh
+ct430  DB 030h, 02Eh, 03Ah, 0CEh, 0B7h, 07Eh, 0B1h, 0E3h
+ct438  DB 0B1h, 045h, 0A5h, 0B7h, 0DDh, 0C1h, 040h, 087h
+ct440  DB 00Ah, 056h, 022h, 0B4h, 06Fh, 072h, 035h, 0E6h
+ct448  DB 021h, 07Eh, 0E8h, 0DEh, 00Ah, 020h, 034h, 089h
+ct450  DB 0ACh, 07Eh, 040h, 045h, 065h, 07Eh, 0B1h, 0E8h
+ct458  DB 03Ch, 050h, 0ACh, 03Ah, 0D8h, 03Dh, 0D9h, 0B1h
+ct460  DB 044h, 0BDh, 0ABh, 079h, 0CCh, 017h, 063h, 059h
+ct468  DB 05Fh, 010h, 07Ch, 069h, 03Dh, 061h, 0B4h, 001h
+ct470  DB 04Ah, 09Ah, 095h, 071h, 0ADh, 036h, 0D7h, 003h
+ct478  DB 040h, 000h, 0B9h, 047h, 0A9h, 0DFh, 041h, 0CDh
+ct480  DB 0B5h, 033h, 0A5h, 09Ch, 025h, 077h, 0EBh, 09Ah
+ct488  DB 07Fh, 065h, 003h, 07Fh, 02Dh, 09Ah, 0C3h, 0C5h
+ct490  DB 02Ch, 094h, 010h, 044h, 049h, 0AEh, 0F1h, 078h
+ct498  DB 0D4h, 029h, 0D2h, 0C6h, 0D1h, 0A6h, 075h, 04Ah
+ct4A0  DB 023h, 090h, 0A7h, 04Dh, 0C3h, 097h, 037h, 042h
+ct4A8  DB 0F0h, 0FCh, 0F4h, 0E2h, 0C5h, 0DFh, 0B2h, 0EFh
+ct4B0  DB 070h, 072h, 0B9h, 08Fh, 096h, 01Bh, 05Dh, 06Ch
+ct4B8  DB 08Ch, 054h, 0F4h, 0C6h, 057h, 001h, 056h, 000h
+ct4C0  DB 0C9h, 029h, 08Ah, 0EBh, 009h, 068h, 0F6h, 0C2h
+ct4C8  DB 03Eh, 0B5h, 090h, 082h, 024h, 0BDh, 0DEh, 0F4h
+ct4D0  DB 006h, 03Ch, 00Dh, 043h, 0FDh, 053h, 0DDh, 03Ah
+ct4D8  DB 0D5h, 0D1h, 04Dh, 07Fh, 082h, 025h, 0D0h, 005h
+ct4E0  DB 0DAh, 096h, 0C4h, 04Eh, 01Ch, 0A4h, 099h, 0F3h
+ct4E8  DB 01Bh, 087h, 08Eh, 02Dh, 0A0h, 04Fh, 011h, 033h
+ct4F0  DB 071h, 046h, 0D8h, 0ADh, 051h, 0D2h, 0E7h, 0DDh
+ct4F8  DB 097h, 08Ch, 080h, 000h, 0C2h, 03Fh, 032h, 088h
+ct500  DB 084h, 02Eh, 01Dh, 0C9h, 089h, 09Bh, 02Dh, 08Dh
+ct508  DB 0D8h, 0A9h, 00Eh, 0C6h, 093h, 098h, 0A8h, 01Dh
+ct510  DB 038h, 031h, 0B2h, 078h, 087h, 007h, 0C9h, 039h
+ct518  DB 0A1h, 09Fh, 00Eh, 06Ch, 039h, 01Bh, 0F4h, 046h
+ct520  DB 044h, 084h, 09Ah, 00Bh, 0D0h, 0ACh, 06Ah, 024h
+ct528  DB 00Eh, 00Ah, 0E2h, 07Dh, 06Dh, 0C4h, 0B2h, 046h
+ct530  DB 066h, 0C7h, 003h, 0ADh, 00Ch, 077h, 0CBh, 01Ah
+ct538  DB 06Ch, 0C5h, 070h, 0ABh, 034h, 06Ch, 0FBh, 04Ah
+ct540  DB 0C6h, 025h, 089h, 0EEh, 024h, 0B9h, 0F0h, 0D1h
+ct548  DB 045h, 0C4h, 056h, 0B5h, 0E6h, 0BDh, 051h, 05Fh
+ct550  DB 0C2h, 010h, 0E6h, 0BBh, 06Eh, 021h, 075h, 01Dh
+ct558  DB 0A5h, 059h, 079h, 007h, 088h, 005h, 092h, 007h
+ct560  DB 097h, 033h, 069h, 058h, 03Dh, 002h, 0B8h, 082h
+ct568  DB 009h, 08Dh, 000h, 0A6h, 0DDh, 0EDh, 073h, 067h
+ct570  DB 00Bh, 096h, 00Ch, 0CAh, 02Dh, 09Bh, 026h, 069h
+ct578  DB 053h, 05Dh, 026h, 03Ch, 026h, 0C9h, 034h, 03Dh
+ct580  DB 09Dh, 0AFh, 08Ah, 0C9h, 028h, 0B9h, 0F3h, 04Bh
+ct588  DB 00Dh, 061h, 04Dh, 09Bh, 098h, 0E8h, 042h, 0ADh
+ct590  DB 011h, 0FAh, 0C8h, 0CEh, 02Dh, 0B0h, 04Ah, 0BAh
+ct598  DB 04Eh, 0BBh, 0BCh, 064h, 0C0h, 086h, 0BFh, 096h
+ct5A0  DB 018h, 0F6h, 06Fh, 0B5h, 0B3h, 08Bh, 014h, 035h
+ct5A8  DB 055h, 07Ch, 0CEh, 0B0h, 0ADh, 08Bh, 020h, 000h
+ct5B0  DB 044h, 041h, 059h, 048h, 0E1h, 0A8h, 0D8h, 0E8h
+ct5B8  DB 0F1h, 0F6h, 03Eh, 07Ah, 068h, 0CDh, 05Eh, 0ECh
+ct5C0  DB 066h, 0BCh, 06Eh, 003h, 0CFh, 0D4h, 039h, 0EFh
+ct5C8  DB 075h, 09Ch, 007h, 0C9h, 02Bh, 0BDh, 0CBh, 044h
+ct5D0  DB 0FDh, 060h, 023h, 087h, 0F0h, 0A6h, 025h, 0F3h
+ct5D8  DB 0C0h, 02Fh, 0A8h, 02Ah, 0D7h, 0E8h, 02Fh, 049h
+ct5E0  DB 06Ah, 068h, 04Ch, 0C8h, 0A1h, 072h, 084h, 0E4h
+ct5E8  DB 062h, 070h, 097h, 00Eh, 060h, 0FAh, 06Bh, 004h
+ct5F0  DB 073h, 0DFh, 00Eh, 0DAh, 0ACh, 0F5h, 0CFh, 023h
+ct5F8  DB 0ABh, 0C0h, 024h, 0AEh, 00Ah, 08Bh, 0E2h, 00Ah
+ct600  DB 0F8h, 028h, 0C4h, 06Eh, 080h, 0C6h, 0D4h, 00Fh
+ct608  DB 0EFh, 085h, 071h, 0E0h, 007h, 054h, 0E5h, 0B9h
+ct610  DB 086h, 0AAh, 090h, 06Fh, 0E1h, 054h, 0CBh, 020h
+ct618  DB 08Ch, 072h, 024h, 002h, 016h, 035h, 0CAh, 0BBh
+ct620  DB 09Bh, 052h, 063h, 06Bh, 007h, 0B7h, 0DFh, 083h
+ct628  DB 0DCh, 09Dh, 0D6h, 063h, 074h, 051h, 0DEh, 038h
+ct630  DB 0FBh, 012h, 008h, 0B4h, 018h, 0F6h, 0F4h, 0E6h
+ct638  DB 001h, 0D6h, 0A1h, 026h, 051h, 0C5h, 009h, 066h
+ct640  DB 00Ch, 0D3h, 017h, 0E2h, 040h, 08Fh, 0CBh, 0D9h
+ct648  DB 09Bh, 018h, 069h, 0E7h, 070h, 076h, 032h, 03Dh
+ct650  DB 08Dh, 04Ah, 000h, 0ABh, 0D1h, 0C5h, 068h, 04Ch
+ct658  DB 049h, 013h, 0B6h, 0A1h, 0F0h, 007h, 056h, 036h
+ct660  DB 023h, 099h, 0DEh, 08Bh, 0E6h, 021h, 051h, 002h
+ct668  DB 0C1h, 01Dh, 015h, 0CFh, 07Bh, 087h, 00Dh, 02Bh
+ct670  DB 0A3h, 0FCh, 0BAh, 03Bh, 0E3h, 02Dh, 05Ch, 0DEh
+ct678  DB 076h, 0CEh, 01Ch, 0B3h, 06Ch, 0BDh, 06Eh, 08Eh
+ct680  DB 0BAh, 01Bh, 028h, 039h, 0A8h, 0ACh, 04Dh, 0A9h
+ct688  DB 074h, 0D1h, 0B2h, 00Ch, 0EBh, 0BBh, 00Ah, 0BEh
+ct690  DB 0ECh, 011h, 0EBh, 0A3h, 00Bh, 01Bh, 0FFh, 012h
+ct698  DB 02Ah, 0AFh, 02Ch, 030h, 024h, 0FAh, 089h, 02Fh
+ct6A0  DB 033h, 072h, 04Ah, 00Dh, 063h, 0B4h, 05Bh, 084h
+ct6A8  DB 0C2h, 087h, 0CCh, 036h, 072h, 02Eh, 037h, 0D7h
+ct6B0  DB 0A3h, 06Bh, 0A5h, 05Eh, 05Bh, 0E5h, 09Ch, 0CDh
+ct6B8  DB 06Eh, 086h, 0B2h, 0CAh, 032h, 021h, 0B8h, 0F6h
+ct6C0  DB 0A0h, 0AFh, 061h, 044h, 0A9h, 008h, 062h, 00Eh
+ct6C8  DB 045h, 0FDh, 0B5h, 01Fh, 0B4h, 04Eh, 06Fh, 097h
+ct6D0  DB 0D0h, 065h, 03Dh, 0C9h, 09Ah, 012h, 081h, 0F4h
+ct6D8  DB 017h, 093h, 085h, 042h, 00Ch, 077h, 06Fh, 0ECh
+ct6E0  DB 057h, 0E0h, 06Dh, 0CDh, 05Eh, 020h, 01Fh, 0FFh
+ct6E8  DB 0F6h, 007h, 01Ch, 0DFh, 072h, 075h, 02Fh, 015h
+ct6F0  DB 023h, 04Eh, 04Eh, 0E5h, 060h, 090h, 077h, 078h
+ct6F8  DB 0A3h, 002h, 0EEh, 08Fh, 079h, 0C7h, 0C4h, 0A4h
+ct700  DB 019h, 0CCh, 082h, 083h, 04Eh, 0A7h, 07Fh, 0E8h
+ct708  DB 08Ch, 0D4h, 0F6h, 063h, 023h, 0A9h, 031h, 0C0h
+ct710  DB 022h, 0B9h, 0C2h, 0A8h, 046h, 0B8h, 069h, 0B7h
+ct718  DB 0BEh, 088h, 030h, 035h, 082h, 0AAh, 003h, 0D1h
+ct720  DB 0C7h, 0CBh, 089h, 068h, 005h, 0F7h, 0C5h, 00Dh
+ct728  DB 026h, 027h, 013h, 09Fh, 0A2h, 037h, 0E4h, 066h
+ct730  DB 073h, 046h, 0F1h, 0BAh, 034h, 09Fh, 070h, 066h
+ct738  DB 03Dh, 079h, 09Fh, 013h, 041h, 02Eh, 01Ch, 098h
+ct740  DB 06Ah, 089h, 0E0h, 0B3h, 089h, 0D7h, 0E1h, 034h
+ct748  DB 002h, 096h, 0C3h, 0A7h, 051h, 012h, 0BFh, 03Bh
+ct750  DB 0B8h, 099h, 003h, 0BFh, 028h, 051h, 06Ch, 0F4h
+ct758  DB 057h, 026h, 06Eh, 098h, 046h, 086h, 008h, 009h
+ct760  DB 00Fh, 024h, 069h, 00Ch, 058h, 033h, 0BCh, 072h
+ct768  DB 0B1h, 09Bh, 030h, 030h, 08Eh, 020h, 0FCh, 05Dh
+ct770  DB 09Ch, 0D3h, 07Bh, 0A8h, 0C6h, 02Eh, 09Ch, 065h
+ct778  DB 0A1h, 015h, 05Ah, 0FAh, 0D3h, 036h, 0F8h, 08Eh
+ct780  DB 09Eh, 024h, 054h, 0A7h, 0CEh, 09Eh, 0D8h, 0ADh
+ct788  DB 0CFh, 094h, 065h, 064h, 048h, 014h, 063h, 0B9h
+ct790  DB 081h, 0BEh, 0C3h, 096h, 0CBh, 0C1h, 025h, 0A9h
+ct798  DB 0F0h, 026h, 039h, 003h, 0A5h, 08Eh, 0CFh, 0FAh
+ct7A0  DB 089h, 05Eh, 09Eh, 01Fh, 074h, 0CCh, 099h, 07Ch
+ct7A8  DB 0C2h, 01Ah, 06Fh, 0A7h, 054h, 059h, 0CBh, 0D8h
+ct7B0  DB 081h, 01Fh, 044h, 0B5h, 0BAh, 079h, 0A3h, 0A8h
+ct7B8  DB 0CAh, 0D2h, 0A8h, 0ECh, 0D8h, 0AFh, 0F8h, 0F9h
+ct7C0  DB 0CDh, 025h, 026h, 00Fh, 0E1h, 095h, 040h, 0BCh
+ct7C8  DB 0CDh, 04Fh, 0D1h, 085h, 03Dh, 030h, 093h, 074h
+ct7D0  DB 04Bh, 02Fh, 0B9h, 02Fh, 0B2h, 0F5h, 036h, 0B9h
+ct7D8  DB 0B7h, 0B0h, 090h, 09Ch, 0E7h, 04Eh, 016h, 0BFh
+ct7E0  DB 031h, 01Dh, 08Ch, 06Fh, 0F2h, 071h, 056h, 084h
+ct7E8  DB 0CFh, 061h, 053h, 00Ch, 0FCh, 018h, 08Ah, 066h
+ct7F0  DB 03Dh, 070h, 09Ah, 002h, 0A7h, 027h, 0C9h, 020h
+ct7F8  DB 0FDh, 018h, 03Dh, 0D1h, 01Dh, 067h, 07Dh, 0DAh
+ct800  DB 0D6h, 0E0h, 046h, 043h, 0BFh, 04Eh, 0B4h, 010h
+ct808  DB 0B2h, 04Dh, 061h, 097h, 0C4h, 03Fh, 050h, 045h
+ct810  DB 0DBh, 08Fh, 047h, 033h, 010h, 08Fh, 04Bh, 0E3h
+ct818  DB 061h, 07Fh, 0CEh, 015h, 076h, 0B2h, 01Ah, 07Eh
+ct820  DB 07Eh, 04Ah, 0AFh, 06Bh, 0DBh, 0F7h, 077h, 0E5h
+ct828  DB 0A5h, 04Ah, 03Eh, 041h, 0BEh, 00Bh, 0BBh, 038h
+ct830  DB 0A7h, 059h, 09Ch, 022h, 06Ch, 00Dh, 05Eh, 09Ch
+ct838  DB 0C8h, 066h, 0A7h, 057h, 0F9h, 03Ch, 03Dh, 09Ah
+ct840  DB 050h, 069h, 064h, 0AEh, 06Bh, 05Fh, 075h, 009h
+ct848  DB 075h, 0F8h, 048h, 034h, 068h, 095h, 06Eh, 0A6h
+ct850  DB 046h, 0CFh, 091h, 06Ch, 04Eh, 076h, 038h, 0B5h
+ct858  DB 09Ah, 09Bh, 06Ch, 06Ch, 0EFh, 061h, 049h, 08Dh
+ct860  DB 0AAh, 00Ah, 0E8h, 039h, 07Ch, 044h, 031h, 020h
+ct868  DB 0B1h, 034h, 08Dh, 0A3h, 0D6h, 08Bh, 029h, 006h
+ct870  DB 078h, 08Dh, 09Bh, 017h, 0D8h, 0A5h, 0E9h, 066h
+ct878  DB 07Ah, 07Fh, 0D2h, 034h, 057h, 0B8h, 0DFh, 058h
+ct880  DB 0FBh, 052h, 057h, 021h, 03Fh, 0F2h, 096h, 0BEh
+ct888  DB 06Fh, 0A9h, 0BEh, 021h, 0A6h, 088h, 07Ah, 0E8h
+ct890  DB 020h, 0F8h, 06Dh, 0C2h, 0F9h, 092h, 0F6h, 094h
+ct898  DB 001h, 0F0h, 03Ch, 022h, 0B0h, 00Fh, 0E4h, 0D6h
+ct8A0  DB 079h, 030h, 025h, 018h, 0D8h, 07Bh, 0CDh, 013h
+ct8A8  DB 085h, 0A1h, 030h, 0DBh, 07Eh, 0E5h, 085h, 086h
+ct8B0  DB 02Dh, 0A0h, 0E1h, 004h, 002h, 0D6h, 070h, 0D5h
+ct8B8  DB 0F8h, 0D9h, 001h, 004h, 02Bh, 006h, 0FFh, 0D5h
+ct8C0  DB 025h, 0EFh, 04Eh, 041h, 083h, 055h, 07Ah, 0ECh
+ct8C8  DB 024h, 011h, 0FFh, 054h, 01Eh, 0DFh, 05Ch, 0C4h
+ct8D0  DB 0C8h, 049h, 07Ah, 09Dh, 0EDh, 015h, 04Ch, 066h
+ct8D8  DB 05Ah, 010h, 00Eh, 05Ch, 0AAh, 099h, 066h, 0D1h
+ct8E0  DB 00Ch, 0D9h, 0A9h, 00Bh, 0CAh, 087h, 0B0h, 033h
+ct8E8  DB 061h, 093h, 0F2h, 06Ah, 001h, 0BEh, 030h, 009h
+ct8F0  DB 0E8h, 0FEh, 0B2h, 030h, 0B8h, 0FBh, 007h, 001h
+ct8F8  DB 096h, 025h, 05Ch, 016h, 010h, 048h, 0EEh, 0ABh
+ct900  DB 0B5h, 035h, 093h, 06Ah, 04Bh, 03Bh, 018h, 044h
+ct908  DB 065h, 016h, 0F0h, 0A0h, 0B1h, 0D7h, 040h, 006h
+ct910  DB 0B3h, 095h, 099h, 07Fh, 062h, 0C2h, 00Eh, 07Eh
+ct918  DB 009h, 0CCh, 00Ch, 016h, 028h, 05Ch, 0EEh, 0C7h
+ct920  DB 046h, 05Ah, 0BCh, 0C7h, 05Ah, 0A4h, 05Eh, 009h
+ct928  DB 0FBh, 084h, 01Ch, 0D0h, 005h, 022h, 064h, 0EEh
+ct930  DB 08Ch, 04Ah, 03Ah, 062h, 0B2h, 051h, 0A5h, 024h
+ct938  DB 0FFh, 0C5h, 092h, 01Ch, 06Fh, 06Eh, 051h, 054h
+ct940  DB 067h, 0F2h, 02Eh, 099h, 0D9h, 014h, 0C1h, 09Eh
+ct948  DB 06Fh, 0A1h, 090h, 03Eh, 044h, 052h, 013h, 0C3h
+ct950  DB 04Eh, 04Eh, 0B8h, 08Ah, 08Bh, 039h, 036h, 041h
+ct958  DB 08Dh, 031h, 039h, 052h, 0BDh, 0FDh, 073h, 04Fh
+ct960  DB 0F8h, 094h, 09Bh, 0EEh, 0D1h, 058h, 061h, 008h
+ct968  DB 070h, 088h, 02Ch, 011h, 029h, 055h, 042h, 0FBh
+ct970  DB 0AEh, 0D8h, 0D2h, 057h, 0A1h, 035h, 00Bh, 085h
+ct978  DB 02Eh, 086h, 0FAh, 033h, 0CAh, 077h, 094h, 079h
+ct980  DB 0D3h, 0C4h, 0D3h, 01Ah, 04Dh, 0A7h, 0F3h, 0E2h
+ct988  DB 0A2h, 07Ah, 0C2h, 022h, 049h, 084h, 04Bh, 03Fh
+ct990  DB 072h, 0B8h, 092h, 09Ah, 04Eh, 048h, 0A1h, 092h
+ct998  DB 004h, 041h, 00Ch, 05Bh, 01Bh, 05Dh, 081h, 0F1h
+ct9A0  DB 0B4h, 02Ah, 070h, 0B1h, 0E2h, 0D6h, 06Eh, 02Fh
+ct9A8  DB 040h, 0F0h, 054h, 00Eh, 0EAh, 02Dh, 0BEh, 0BFh
+ct9B0  DB 0A9h, 099h, 060h, 07Ch, 061h, 0D2h, 035h, 01Ah
+ct9B8  DB 085h, 023h, 0B1h, 0FEh, 0BAh, 026h, 08Eh, 0D2h
+ct9C0  DB 02Bh, 032h, 03Ah, 082h, 05Eh, 0CEh, 014h, 085h
+ct9C8  DB 0B4h, 0FDh, 05Eh, 0FCh, 0E6h, 0D7h, 070h, 0BEh
+ct9D0  DB 019h, 04Ch, 0CAh, 081h, 091h, 0DAh, 076h, 081h
+ct9D8  DB 06Fh, 009h, 0F2h, 03Bh, 021h, 0B2h, 0D4h, 0BBh
+ct9E0  DB 00Ah, 0BEh, 028h, 08Bh, 0F6h, 0E7h, 007h, 0EAh
+ct9E8  DB 00Fh, 088h, 006h, 021h, 0ECh, 08Dh, 0BFh, 012h
+ct9F0  DB 00Ch, 0FFh, 0A3h, 03Eh, 04Dh, 059h, 09Dh, 064h
+ct9F8  DB 04Dh, 076h, 06Ah, 008h, 0C7h, 03Ah, 0BFh, 05Eh
+ctA00  DB 0B1h, 043h, 0EBh, 048h, 0B7h, 084h, 0A3h, 080h
+ctA08  DB 0DEh, 0DEh, 0E5h, 015h, 0F5h, 0A9h, 002h, 0BDh
+ctA10  DB 0A7h, 055h, 0DBh, 0E3h, 077h, 045h, 06Fh, 0C5h
+ctA18  DB 051h, 082h, 0EAh, 030h, 077h, 09Bh, 075h, 071h
+ctA20  DB 0F5h, 01Fh, 08Ch, 04Bh, 003h, 0A7h, 009h, 0FCh
+ctA28  DB 0F8h, 02Ch, 002h, 033h, 039h, 02Eh, 04Bh, 0D2h
+ctA30  DB 00Eh, 0E6h, 052h, 07Ah, 037h, 032h, 0A0h, 078h
+ctA38  DB 0EBh, 007h, 079h, 04Ch, 04Bh, 083h, 035h, 00Fh
+ctA40  DB 07Fh, 0BEh, 021h, 0A9h, 01Fh, 0CAh, 0FFh, 0B0h
+ctA48  DB 077h, 09Ah, 0FCh, 0C6h, 028h, 0B0h, 025h, 0B3h
+ctA50  DB 08Ah, 0F7h, 009h, 0B1h, 03Ah, 095h, 015h, 05Ah
+ctA58  DB 065h, 0FEh, 07Fh, 08Bh, 0DFh, 00Ch, 04Ch, 028h
+ctA60  DB 0F0h, 0A1h, 0BFh, 0D9h, 088h, 08Eh, 06Bh, 01Dh
+ctA68  DB 06Ah, 04Bh, 0A8h, 08Fh, 04Bh, 006h, 071h, 028h
+ctA70  DB 092h, 0D1h, 0A2h, 0DCh, 04Dh, 0CDh, 095h, 0B5h
+ctA78  DB 023h, 0EAh, 05Dh, 0FAh, 0C2h, 089h, 0A9h, 018h
+ctA80  DB 02Ch, 082h, 0D1h, 082h, 0FDh, 0D7h, 025h, 0BAh
+ctA88  DB 076h, 04Dh, 00Bh, 02Fh, 094h, 039h, 0E9h, 08Eh
+ctA90  DB 09Ah, 0DFh, 06Ah, 046h, 04Ah, 090h, 08Dh, 0A5h
+ctA98  DB 069h, 029h, 054h, 031h, 0CDh, 017h, 0ABh, 05Fh
+ctAA0  DB 0EEh, 0CDh, 046h, 066h, 0BCh, 04Fh, 05Ah, 094h
+ctAA8  DB 054h, 0A9h, 0C7h, 044h, 09Eh, 050h, 006h, 028h
+ctAB0  DB 06Eh, 0D2h, 0B0h, 0C2h, 0B2h, 052h, 088h, 0FBh
+ctAB8  DB 039h, 0D8h, 0BDh, 0C7h, 011h, 015h, 06Fh, 058h
+ctAC0  DB 054h, 0E3h, 070h, 049h, 085h, 039h, 03Ah, 01Ch
+ctAC8  DB 0E3h, 0B7h, 074h, 05Dh, 0C0h, 036h, 0C4h, 04Fh
+ctAD0  DB 0B6h, 0E8h, 02Dh, 053h, 0C3h, 039h, 095h, 0BBh
+ctAD8  DB 069h, 096h, 079h, 0A5h, 02Ch, 06Fh, 0F9h, 09Fh
+ctAE0  DB 03Bh, 055h, 06Bh, 0B6h, 0A1h, 08Bh, 04Bh, 0A0h
+ctAE8  DB 032h, 0F0h, 027h, 0F4h, 0EDh, 086h, 064h, 03Ch
+ctAF0  DB 09Ah, 0B7h, 0E1h, 0BEh, 062h, 045h, 07Ch, 01Fh
+ctAF8  DB 04Ch, 08Ch, 069h, 015h, 06Bh, 0E0h, 067h, 061h
+ctB00  DB 088h, 092h, 01Eh, 02Bh, 0E3h, 021h, 075h, 04Dh
+ctB08  DB 095h, 056h, 025h, 0C2h, 05Ah, 0B6h, 0D1h, 086h
+ctB10  DB 025h, 05Fh, 02Ah, 0E9h, 032h, 04Ah, 01Eh, 0B0h
+ctB18  DB 06Ah, 0BDh, 07Ah, 0A5h, 0D8h, 0F5h, 0C7h, 0EFh
+ctB20  DB 0A2h, 0E9h, 014h, 040h, 0C9h, 08Fh, 07Dh, 063h
+ctB28  DB 0CFh, 039h, 086h, 044h, 03Ch, 08Ch, 05Ah, 000h
+ctB30  DB 0C8h, 00Ah, 071h, 064h, 002h, 045h, 0D0h, 0B0h
+ctB38  DB 023h, 0FEh, 09Dh, 008h, 048h, 03Ch, 092h, 081h
+ctB40  DB 006h, 057h, 049h, 0C7h, 03Ah, 094h, 0AAh, 0FBh
+ctB48  DB 0D8h, 001h, 0CBh, 02Dh, 03Ah, 033h, 0A5h, 02Eh
+ctB50  DB 0DBh, 0B6h, 084h, 024h, 008h, 0D8h, 068h, 084h
+ctB58  DB 04Ch, 00Dh, 0A8h, 0F5h, 0CAh, 080h, 097h, 0C4h
+ctB60  DB 04Bh, 02Ch, 09Bh, 023h, 06Ah, 044h, 073h, 0A3h
+ctB68  DB 031h, 09Dh, 0F2h, 0D3h, 0A0h, 0E6h, 05Fh, 074h
+ctB70  DB 0ECh, 0E7h, 0B5h, 06Eh, 035h, 075h, 065h, 01Fh
+ctB78  DB 01Ch, 0E0h, 099h, 075h, 0DDh, 09Fh, 010h, 0D6h
+ctB80  DB 072h, 012h, 0D7h, 055h, 07Ch, 0C2h, 00Ch, 0BDh
+ctB88  DB 0E7h, 0C3h, 0A5h, 0ADh, 013h, 0DBh, 0D4h, 0DFh
+ctB90  DB 0DFh, 0D9h, 0C8h, 0F4h, 072h, 010h, 03Dh, 0B2h
+ctB98  DB 0B2h, 021h, 072h, 0F3h, 091h, 029h, 0A4h, 0B1h
+ctBA0  DB 01Ah, 0D9h, 074h, 008h, 01Ch, 028h, 09Ch, 0DBh
+ctBA8  DB 055h, 0D6h, 039h, 0DFh, 084h, 052h, 090h, 0EAh
+ctBB0  DB 049h, 068h, 085h, 0F8h, 01Dh, 059h, 07Fh, 0C4h
+ctBB8  DB 09Eh, 007h, 04Eh, 06Bh, 094h, 052h, 0A4h, 02Fh
+ctBC0  DB 0D8h, 0EEh, 0F2h, 028h, 03Bh, 016h, 073h, 085h
+ctBC8  DB 0D4h, 08Dh, 0DBh, 003h, 009h, 039h, 012h, 093h
+ctBD0  DB 060h, 04Bh, 0FAh, 09Eh, 099h, 0C5h, 0E3h, 005h
+ctBD8  DB 056h, 02Eh, 04Ah, 05Ah, 0B0h, 0E3h, 0E4h, 07Ch
+ctBE0  DB 019h, 0BCh, 055h, 0BDh, 06Fh, 09Ch, 057h, 0BFh
+ctBE8  DB 0C4h, 0BBh, 033h, 096h, 09Fh, 076h, 06Fh, 015h
+ctBF0  DB 0FCh, 050h, 092h, 04Ah, 065h, 042h, 06Eh, 0A9h
+ctBF8  DB 054h, 0B2h, 068h, 058h, 04Fh, 0F9h, 09Bh, 027h
+ctC00  DB 061h, 047h, 0DEh, 083h, 0EBh, 06Eh, 054h, 079h
+ctC08  DB 0C7h, 0A8h, 0ABh, 0BEh, 0DDh, 093h, 0C2h, 060h
+ctC10  DB 052h, 075h, 057h, 02Ah, 029h, 068h, 0E4h, 0DDh
+ctC18  DB 08Ch, 05Ah, 03Fh, 074h, 08Dh, 0CFh, 003h, 0B0h
+ctC20  DB 0FEh, 0E2h, 0DAh, 079h, 05Eh, 089h, 049h, 00Ch
+ctC28  DB 037h, 0F9h, 082h, 0A2h, 00Ch, 0E1h, 0EAh, 076h
+ctC30  DB 0CEh, 037h, 085h, 079h, 02Eh, 098h, 0A0h, 091h
+ctC38  DB 00Bh, 05Eh, 027h, 055h, 0CAh, 084h, 0A2h, 02Ch
+ctC40  DB 008h, 023h, 0E3h, 01Ch, 057h, 006h, 042h, 00Ah
+ctC48  DB 066h, 0C8h, 0A0h, 097h, 043h, 0AAh, 0B3h, 077h
+ctC50  DB 0B1h, 0E6h, 082h, 013h, 0AEh, 0BBh, 0D1h, 014h
+ctC58  DB 047h, 0A6h, 009h, 0C9h, 0D0h, 048h, 0D3h, 03Bh
+ctC60  DB 0DCh, 09Eh, 0FCh, 08Bh, 045h, 0C8h, 0BCh, 07Dh
+ctC68  DB 0B2h, 0B0h, 0A6h, 082h, 0C0h, 009h, 0ADh, 0FEh
+ctC70  DB 0C3h, 010h, 058h, 059h, 05Dh, 00Dh, 0F4h, 09Ch
+ctC78  DB 034h, 080h, 0F5h, 0C2h, 041h, 0A1h, 057h, 0E2h
+ctC80  DB 0EFh, 09Dh, 04Ch, 056h, 0AEh, 033h, 0CFh, 0BDh
+ctC88  DB 032h, 00Ch, 0AAh, 01Fh, 076h, 071h, 0B9h, 025h
+ctC90  DB 033h, 05Eh, 0F8h, 041h, 06Ah, 0D4h, 0F5h, 0C4h
+ctC98  DB 072h, 0E1h, 077h, 0C6h, 025h, 003h, 0E5h, 0DCh
+ctCA0  DB 052h, 0D0h, 040h, 0E9h, 085h, 06Dh, 0CCh, 062h
+ctCA8  DB 08Fh, 0F1h, 0A7h, 083h, 03Bh, 00Fh, 08Eh, 044h
+ctCB0  DB 02Bh, 0F8h, 082h, 064h, 00Ch, 04Fh, 0D8h, 0BAh
+ctCB8  DB 0DCh, 076h, 004h, 0C2h, 011h, 0B9h, 09Eh, 06Bh
+ctCC0  DB 0D1h, 050h, 0C2h, 03Fh, 01Ch, 07Bh, 059h, 022h
+ctCC8  DB 09Fh, 02Ah, 0ADh, 02Ah, 0FEh, 050h, 087h, 0B4h
+ctCD0  DB 09Bh, 0CEh, 00Eh, 021h, 011h, 086h, 019h, 043h
+ctCD8  DB 0DAh, 091h, 048h, 05Eh, 065h, 0C4h, 045h, 03Dh
+ctCE0  DB 094h, 088h, 06Fh, 0EEh, 06Dh, 040h, 0DAh, 00Ch
+ctCE8  DB 07Fh, 0C8h, 00Eh, 0A2h, 044h, 0C0h, 0FBh, 0F1h
+ctCF0  DB 068h, 02Fh, 066h, 0EBh, 0DDh, 070h, 02Dh, 01Ah
+ctCF8  DB 0CCh, 050h, 0A7h, 0C7h, 06Eh, 0BAh, 0E8h, 014h
+ctD00  DB 0CCh, 0EFh, 0B2h, 051h, 01Eh, 05Eh, 04Eh, 0FDh
+ctD08  DB 0E3h, 034h, 002h, 00Fh, 003h, 01Eh, 092h, 05Ah
+ctD10  DB 05Ah, 027h, 0ECh, 0E8h, 0CAh, 075h, 085h, 03Ah
+ctD18  DB 03Fh, 0BEh, 01Ah, 0A6h, 0CFh, 072h, 0ADh, 0D4h
+ctD20  DB 0DDh, 0D1h, 0FDh, 0ABh, 092h, 00Dh, 050h, 001h
+ctD28  DB 0D5h, 034h, 0C9h, 021h, 02Dh, 0DEh, 0CDh, 0A6h
+ctD30  DB 086h, 0CAh, 027h, 004h, 0E2h, 05Ah, 068h, 0CDh
+ctD38  DB 07Ah, 0ADh, 0C4h, 0D8h, 02Fh, 0C7h, 030h, 00Ah
+ctD40  DB 0B4h, 092h, 06Ah, 0F4h, 06Dh, 09Ch, 068h, 0B9h
+ctD48  DB 05Bh, 088h, 028h, 074h, 02Dh, 001h, 06Fh, 095h
+ctD50  DB 0E3h, 047h, 0C8h, 040h, 08Ch, 032h, 021h, 082h
+ctD58  DB 007h, 035h, 0ACh, 0BBh, 0CFh, 057h, 09Bh, 07Ah
+ctD60  DB 017h, 0D4h, 0BFh, 0C3h, 099h, 018h, 047h, 029h
+ctD68  DB 09Fh, 0D3h, 086h, 02Bh, 0C2h, 015h, 06Ch, 092h
+ctD70  DB 099h, 09Dh, 0CAh, 067h, 09Eh, 084h, 06Fh, 0A3h
+ctD78  DB 0EBh, 053h, 000h, 04Fh, 003h, 099h, 040h, 0BCh
+ctD80  DB 06Ch, 058h, 0BEh, 0CFh, 027h, 021h, 08Ch, 04Ah
+ctD88  DB 054h, 0E2h, 072h, 073h, 069h, 050h, 02Eh, 069h
+ctD90  DB 0F0h, 0EDh, 018h, 0B4h, 05Ah, 0ACh, 076h, 0E2h
+ctD98  DB 037h, 05Eh, 063h, 0CBh, 064h, 004h, 0DEh, 0BBh
+ctDA0  DB 02Bh, 099h, 0EDh, 033h, 062h, 0C6h, 038h, 0E6h
+ctDA8  DB 093h, 04Dh, 069h, 027h, 07Ch, 03Bh, 03Dh, 0B8h
+ctDB0  DB 088h, 09Fh, 012h, 0F1h, 04Eh, 0AFh, 026h, 05Bh
+ctDB8  DB 046h, 0CAh, 0A7h, 004h, 06Fh, 01Dh, 051h, 003h
+ctDC0  DB 0D9h, 048h, 064h, 0B0h, 06Bh, 037h, 064h, 08Bh
+ctDC8  DB 0A9h, 000h, 0C3h, 0A8h, 08Ah, 0C9h, 037h, 098h
+ctDD0  DB 09Fh, 0C2h, 060h, 01Fh, 0E9h, 042h, 08Bh, 0BFh
+ctDD8  DB 016h, 0B4h, 036h, 021h, 04Ch, 0FAh, 087h, 02Ch
+ctDE0  DB 02Ah, 0DFh, 06Ah, 059h, 06Eh, 0F0h, 003h, 008h
+ctDE8  DB 01Eh, 009h, 0F6h, 009h, 076h, 017h, 02Ah, 072h
+ctDF0  DB 0F0h, 0FBh, 01Ch, 0A2h, 05Fh, 01Bh, 050h, 04Eh
+ctDF8  DB 04Eh, 073h, 033h, 03Eh, 004h, 087h, 0ECh, 039h
+ctE00  DB 073h, 061h, 061h, 09Eh, 070h, 0CFh, 0B3h, 026h
+ctE08  DB 099h, 05Ch, 08Bh, 0FBh, 088h, 016h, 01Bh, 0B5h
+ctE10  DB 069h, 00Ah, 079h, 01Eh, 0D1h, 078h, 061h, 05Dh
+ctE18  DB 08Bh, 003h, 00Eh, 014h, 0B6h, 06Ch, 0C7h, 060h
+ctE20  DB 0BEh, 082h, 043h, 0DCh, 05Ah, 078h, 0F8h, 09Fh
+ctE28  DB 09Bh, 09Dh, 0EAh, 0E2h, 0F5h, 0E5h, 0E2h, 044h
+ctE30  DB 0F5h, 09Dh, 021h, 064h, 0F4h, 038h, 015h, 026h
+ctE38  DB 05Ch, 05Dh, 045h, 006h, 022h, 02Eh, 013h, 0D2h
+ctE40  DB 0E6h, 0F0h, 0EEh, 029h, 07Bh, 00Ch, 02Dh, 07Eh
+ctE48  DB 069h, 020h, 044h, 0A5h, 0B0h, 068h, 082h, 0F3h
+ctE50  DB 084h, 06Ah, 0A7h, 04Ah, 001h, 083h, 08Ch, 01Fh
+ctE58  DB 094h, 058h, 0CDh, 091h, 031h, 049h, 08Dh, 066h
+ctE60  DB 032h, 0C1h, 030h, 0D8h, 029h, 046h, 0FFh, 088h
+ctE68  DB 055h, 0B0h, 0ECh, 0EFh, 017h, 03Fh, 0F8h, 022h
+ctE70  DB 093h, 098h, 0E6h, 026h, 00Ah, 054h, 006h, 0B2h
+ctE78  DB 064h, 0FBh, 0DEh, 004h, 05Ah, 02Ah, 003h, 0E8h
+ctE80  DB 005h, 0B9h, 056h, 090h, 06Eh, 06Ah, 071h, 022h
+ctE88  DB 0A5h, 0D8h, 09Dh, 0ACh, 010h, 06Eh, 07Bh, 0F5h
+ctE90  DB 028h, 0EEh, 0FAh, 070h, 0B3h, 020h, 0ACh, 0DDh
+ctE98  DB 03Ch, 0C1h, 0A6h, 03Dh, 052h, 028h, 003h, 0F3h
+ctEA0  DB 017h, 04Fh, 07Bh, 0C1h, 061h, 0FEh, 04Fh, 0AEh
+ctEA8  DB 024h, 0BAh, 054h, 0E0h, 0A6h, 0CAh, 0E1h, 0FCh
+ctEB0  DB 036h, 050h, 037h, 0F1h, 02Ch, 011h, 038h, 07Dh
+ctEB8  DB 095h, 0FDh, 066h, 049h, 057h, 073h, 020h, 029h
+ctEC0  DB 0D1h, 01Ch, 0C2h, 09Eh, 0A4h, 0C2h, 0C2h, 01Ah
+ctEC8  DB 08Fh, 004h, 0A7h, 000h, 092h, 07Fh, 034h, 08Dh
+ctED0  DB 0AFh, 0B6h, 0DCh, 062h, 0C4h, 054h, 03Eh, 0FBh
+ctED8  DB 08Bh, 037h, 0E4h, 0BEh, 07Ah, 039h, 09Ch, 093h
+ctEE0  DB 05Fh, 005h, 0CEh, 018h, 0DAh, 028h, 0D0h, 028h
+ctEE8  DB 0E6h, 0EBh, 038h, 070h, 04Bh, 029h, 0CBh, 08Eh
+ctEF0  DB 0BCh, 0F8h, 04Eh, 0B3h, 0A7h, 00Ah, 051h, 06Dh
+ctEF8  DB 06Ah, 01Dh, 02Dh, 0CEh, 0DEh, 0EEh, 0BEh, 03Ch
+ctF00  DB 007h, 093h, 089h, 05Dh, 0E9h, 0DFh, 07Ch, 00Eh
+ctF08  DB 0D6h, 02Dh, 0E5h, 078h, 058h, 003h, 08Dh, 08Ah
+ctF10  DB 036h, 07Ch, 0CBh, 050h, 03Ah, 045h, 01Ah, 0CFh
+ctF18  DB 0DFh, 0A4h, 0D0h, 017h, 0E5h, 07Dh, 0B2h, 09Eh
+ctF20  DB 099h, 063h, 0BEh, 045h, 01Bh, 03Fh, 060h, 0F2h
+ctF28  DB 0B5h, 0BBh, 0A5h, 0C3h, 02Ch, 0BCh, 09Eh, 0B5h
+ctF30  DB 0A2h, 0C8h, 092h, 035h, 059h, 0F4h, 0A9h, 06Ah
+ctF38  DB 07Fh, 067h, 09Ch, 060h, 092h, 05Bh, 06Ch, 0FBh
+ctF40  DB 0DCh, 09Ch, 001h, 08Dh, 009h, 03Eh, 093h, 032h
+ctF48  DB 023h, 0AEh, 0D0h, 04Bh, 086h, 0E8h, 0DEh, 000h
+ctF50  DB 067h, 0F6h, 00Ch, 0F8h, 05Dh, 0BCh, 0D9h, 0DAh
+ctF58  DB 01Ch, 0AAh, 0E8h, 0F3h, 02Eh, 0E6h, 091h, 0F8h
+ctF60  DB 079h, 042h, 0D9h, 029h, 0B5h, 0A4h, 078h, 0A1h
+ctF68  DB 0B5h, 050h, 0EAh, 020h, 00Ah, 060h, 039h, 039h
+ctF70  DB 0C2h, 056h, 0FFh, 054h, 002h, 0A3h, 0C3h, 0B3h
+ctF78  DB 025h, 0F2h, 017h, 07Ah, 08Eh, 04Fh, 0B3h, 0B9h
+ctF80  DB 005h, 099h, 0EBh, 04Eh, 00Ah, 08Ch, 057h, 057h
+ctF88  DB 080h, 0A6h, 08Ah, 0E4h, 07Ch, 027h, 050h, 051h
+ctF90  DB 0F1h, 078h, 014h, 0C0h, 078h, 094h, 0BFh, 072h
+ctF98  DB 08Bh, 031h, 0E1h, 0A9h, 06Dh, 042h, 0E7h, 02Fh
+ctFA0  DB 0B2h, 0E1h, 0BBh, 029h, 0C2h, 0B4h, 065h, 02Bh
+ctFA8  DB 0B7h, 0F6h, 09Ch, 0EEh, 072h, 020h, 0A6h, 080h
+ctFB0  DB 0D4h, 0E6h, 003h, 0AFh, 033h, 031h, 040h, 0E9h
+ctFB8  DB 01Fh, 083h, 063h, 0DAh, 059h, 0ECh, 0CBh, 004h
+ctFC0  DB 085h, 097h, 00Dh, 05Fh, 036h, 0A2h, 09Fh, 016h
+ctFC8  DB 088h, 093h, 0E4h, 03Bh, 061h, 084h, 0CBh, 0EAh
+ctFD0  DB 029h, 0BAh, 001h, 090h, 09Eh, 060h, 067h, 017h
+ctFD8  DB 083h, 0B6h, 0C3h, 088h, 05Dh, 06Dh, 0FEh, 0FAh
+ctFE0  DB 0CBh, 0D5h, 0A1h, 02Ch, 091h, 0D2h, 0F7h, 037h
+ctFE8  DB 00Dh, 0F9h, 08Ah, 0DCh, 09Bh, 0E3h, 011h, 026h
+ctFF0  DB 059h, 0F9h, 074h, 026h, 04Ah, 011h, 0A8h, 098h
+ctFF8  DB 077h, 0B0h, 032h, 082h, 06Eh, 01Ah, 0E3h, 05Ch
+
+	public KeyTab
+
+KeyTab:
+kt000	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt001	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt002	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt003	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt004	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt005	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt006	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt007	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt008	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt009	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt00F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt010	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt011	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt012	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt013	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt014	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt015	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt016	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt017	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt018	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt019	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt01F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt020	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt021	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt022	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt023	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt024	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt025	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt026	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt027	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt028	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt029	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt02F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt030	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt031	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt032	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt033	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt034	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt035	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt036	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt037	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt038	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt039	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt03F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt040	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt041	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt042	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt043	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt044	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt045	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt046	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt047	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt048	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt049	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt04F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt050	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt051	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt052	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt053	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt054	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt055	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt056	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt057	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt058	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt059	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt05F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt060	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt061	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt062	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt063	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt064	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt065	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt066	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt067	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt068	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt069	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt06F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt070	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt071	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt072	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt073	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt074	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt075	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt076	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt077	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt078	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt079	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt07F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt080	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt081	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt082	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt083	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt084	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt085	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt086	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt087	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt088	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt089	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt08F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt090	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt091	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt092	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt093	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt094	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt095	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt096	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt097	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt098	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt099	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt09F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt0FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt100	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt101	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt102	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt103	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt104	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt105	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt106	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt107	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt108	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt109	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt10F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt110	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt111	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt112	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt113	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt114	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt115	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt116	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt117	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt118	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt119	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt11F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt120	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt121	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt122	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt123	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt124	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt125	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt126	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt127	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt128	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt129	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt12F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt130	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt131	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt132	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt133	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt134	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt135	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt136	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt137	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt138	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt139	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt13F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt140	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt141	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt142	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt143	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt144	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt145	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt146	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt147	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt148	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt149	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt14F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt150	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt151	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt152	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt153	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt154	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt155	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt156	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt157	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt158	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt159	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt15F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt160	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt161	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt162	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt163	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt164	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt165	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt166	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt167	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt168	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt169	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt16F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt170	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt171	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt172	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt173	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt174	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt175	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt176	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt177	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt178	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt179	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt17F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt180	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt181	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt182	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt183	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt184	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt185	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt186	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt187	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt188	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt189	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt18F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt190	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt191	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt192	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt193	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt194	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt195	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt196	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt197	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt198	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt199	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt19F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt1FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt200	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt201	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt202	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt203	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt204	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt205	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt206	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt207	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt208	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt209	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt20F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt210	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt211	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt212	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt213	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt214	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt215	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt216	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt217	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt218	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt219	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt21F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt220	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt221	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt222	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt223	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt224	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt225	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt226	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt227	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt228	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt229	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt22F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt230	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt231	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt232	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt233	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt234	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt235	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt236	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt237	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt238	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt239	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt23F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt240	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt241	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt242	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt243	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt244	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt245	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt246	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt247	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt248	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt249	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt24F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt250	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt251	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt252	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt253	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt254	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt255	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt256	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt257	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt258	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt259	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt25F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt260	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt261	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt262	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt263	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt264	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt265	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt266	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt267	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt268	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt269	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt26F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt270	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt271	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt272	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt273	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt274	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt275	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt276	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt277	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt278	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt279	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt27F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt280	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt281	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt282	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt283	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt284	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt285	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt286	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt287	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt288	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt289	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt28F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt290	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt291	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt292	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt293	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt294	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt295	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt296	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt297	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt298	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt299	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt29F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt2FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt300	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt301	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt302	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt303	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt304	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt305	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt306	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt307	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt308	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt309	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt30F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt310	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt311	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt312	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt313	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt314	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt315	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt316	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt317	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt318	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt319	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt31F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt320	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt321	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt322	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt323	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt324	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt325	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt326	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt327	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt328	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt329	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt32F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt330	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt331	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt332	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt333	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt334	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt335	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt336	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt337	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt338	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt339	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt33F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt340	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt341	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt342	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt343	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt344	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt345	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt346	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt347	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt348	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt349	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt34F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt350	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt351	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt352	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt353	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt354	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt355	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt356	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt357	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt358	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt359	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt35F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt360	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt361	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt362	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt363	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt364	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt365	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt366	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt367	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt368	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt369	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt36F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt370	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt371	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt372	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt373	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt374	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt375	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt376	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt377	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt378	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt379	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt37F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt380	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt381	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt382	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt383	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt384	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt385	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt386	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt387	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt388	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt389	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt38F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt390	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt391	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt392	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt393	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt394	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt395	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt396	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt397	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt398	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt399	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt39F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt3FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt400	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt401	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt402	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt403	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt404	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt405	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt406	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt407	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt408	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt409	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt40F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt410	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt411	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt412	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt413	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt414	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt415	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt416	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt417	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt418	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt419	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt41F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt420	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt421	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt422	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt423	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt424	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt425	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt426	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt427	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt428	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt429	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt42F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt430	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt431	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt432	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt433	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt434	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt435	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt436	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt437	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt438	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt439	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt43F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt440	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt441	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt442	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt443	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt444	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt445	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt446	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt447	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt448	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt449	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt44F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt450	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt451	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt452	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt453	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt454	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt455	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt456	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt457	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt458	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt459	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt45F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt460	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt461	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt462	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt463	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt464	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt465	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt466	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt467	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt468	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt469	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt46F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt470	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt471	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt472	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt473	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt474	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt475	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt476	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt477	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt478	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt479	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt47F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt480	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt481	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt482	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt483	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt484	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt485	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt486	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt487	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt488	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt489	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt48F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt490	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt491	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt492	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt493	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt494	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt495	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt496	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt497	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt498	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt499	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt49F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt4FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt500	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt501	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt502	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt503	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt504	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt505	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt506	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt507	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt508	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt509	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt50F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt510	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt511	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt512	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt513	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt514	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt515	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt516	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt517	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt518	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt519	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt51F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt520	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt521	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt522	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt523	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt524	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt525	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt526	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt527	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt528	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt529	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt52F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt530	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt531	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt532	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt533	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt534	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt535	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt536	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt537	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt538	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt539	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt53F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt540	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt541	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt542	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt543	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt544	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt545	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt546	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt547	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt548	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt549	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt54F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt550	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt551	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt552	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt553	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt554	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt555	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt556	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt557	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt558	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt559	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt55F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt560	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt561	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt562	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt563	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt564	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt565	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt566	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt567	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt568	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt569	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt56F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt570	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt571	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt572	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt573	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt574	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt575	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt576	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt577	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt578	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt579	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt57F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt580	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt581	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt582	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt583	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt584	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt585	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt586	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt587	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt588	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt589	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt58F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt590	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt591	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt592	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt593	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt594	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt595	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt596	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt597	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt598	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt599	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt59F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt5FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt600	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt601	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt602	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt603	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt604	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt605	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt606	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt607	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt608	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt609	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt60F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt610	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt611	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt612	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt613	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt614	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt615	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt616	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt617	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt618	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt619	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt61F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt620	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt621	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt622	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt623	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt624	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt625	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt626	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt627	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt628	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt629	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt62F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt630	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt631	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt632	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt633	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt634	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt635	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt636	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt637	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt638	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt639	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt63F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt640	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt641	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt642	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt643	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt644	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt645	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt646	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt647	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt648	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt649	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt64F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt650	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt651	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt652	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt653	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt654	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt655	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt656	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt657	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt658	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt659	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt65F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt660	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt661	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt662	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt663	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt664	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt665	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt666	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt667	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt668	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt669	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt66F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt670	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt671	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt672	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt673	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt674	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt675	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt676	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt677	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt678	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt679	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt67F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt680	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt681	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt682	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt683	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt684	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt685	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt686	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt687	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt688	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt689	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt68F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt690	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt691	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt692	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt693	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt694	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt695	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt696	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt697	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt698	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt699	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt69F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt6FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt700	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt701	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt702	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt703	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt704	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt705	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt706	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt707	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt708	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt709	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt70F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt710	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt711	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt712	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt713	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt714	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt715	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt716	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt717	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt718	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt719	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt71F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt720	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt721	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt722	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt723	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt724	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt725	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt726	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt727	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt728	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt729	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt72F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt730	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt731	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt732	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt733	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt734	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt735	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt736	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt737	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt738	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt739	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt73F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt740	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt741	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt742	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt743	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt744	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt745	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt746	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt747	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt748	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt749	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt74F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt750	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt751	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt752	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt753	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt754	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt755	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt756	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt757	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt758	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt759	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt75F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt760	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt761	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt762	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt763	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt764	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt765	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt766	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt767	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt768	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt769	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt76F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt770	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt771	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt772	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt773	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt774	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt775	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt776	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt777	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt778	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt779	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt77F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt780	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt781	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt782	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt783	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt784	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt785	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt786	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt787	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt788	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt789	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt78F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt790	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt791	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt792	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt793	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt794	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt795	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt796	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt797	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt798	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt799	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt79F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt7FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt800	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt801	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt802	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt803	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt804	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt805	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt806	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt807	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt808	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt809	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt80F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt810	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt811	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt812	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt813	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt814	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt815	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt816	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt817	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt818	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt819	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt81F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt820	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt821	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt822	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt823	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt824	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt825	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt826	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt827	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt828	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt829	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt82F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt830	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt831	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt832	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt833	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt834	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt835	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt836	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt837	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt838	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt839	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt83F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt840	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt841	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt842	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt843	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt844	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt845	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt846	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt847	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt848	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt849	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt84F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt850	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt851	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt852	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt853	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt854	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt855	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt856	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt857	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt858	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt859	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt85F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt860	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt861	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt862	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt863	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt864	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt865	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt866	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt867	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt868	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt869	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt86F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt870	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt871	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt872	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt873	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt874	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt875	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt876	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt877	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt878	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt879	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt87F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt880	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt881	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt882	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt883	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt884	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt885	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt886	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt887	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt888	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt889	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt88F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt890	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt891	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt892	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt893	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt894	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt895	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt896	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt897	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt898	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt899	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt89F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt8FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt900	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt901	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt902	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt903	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt904	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt905	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt906	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt907	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt908	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt909	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt90F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt910	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt911	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt912	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt913	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt914	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt915	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt916	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt917	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt918	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt919	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt91F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt920	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt921	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt922	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt923	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt924	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt925	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt926	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt927	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt928	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt929	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt92F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt930	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt931	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt932	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt933	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt934	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt935	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt936	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt937	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt938	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt939	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt93F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt940	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt941	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt942	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt943	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt944	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt945	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt946	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt947	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt948	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt949	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt94F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt950	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt951	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt952	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt953	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt954	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt955	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt956	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt957	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt958	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt959	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt95F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt960	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt961	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt962	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt963	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt964	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt965	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt966	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt967	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt968	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt969	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt96F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt970	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt971	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt972	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt973	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt974	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt975	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt976	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt977	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt978	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt979	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt97F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt980	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt981	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt982	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt983	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt984	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt985	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt986	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt987	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt988	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt989	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt98F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt990	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt991	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt992	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt993	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt994	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt995	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt996	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt997	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt998	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt999	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99A	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99B	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99C	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99D	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99E	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt99F	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9A9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9AF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9B9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9BF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9C9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9CF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9D9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9DF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9E9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9EA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9EB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9EC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9ED	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9EE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9EF	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F0	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F1	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F2	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F3	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F4	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F5	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F6	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F7	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F8	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9F9	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FA	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FB	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FC	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FD	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FE	DW 0000h, 0000h, 0000h, 0000h	; 0
+kt9FF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktA9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktABF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktACF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAD9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktADF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktAFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktB9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBBF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBCF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBD9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBDF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktBFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktC9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCBF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCCF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCD9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCDF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktCFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktD9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDBF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDCF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDD9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDDF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktDFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktE9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEBF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktECF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktED9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEDF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktEFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF00	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF01	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF02	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF03	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF04	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF05	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF06	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF07	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF08	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF09	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF0F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF10	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF11	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF12	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF13	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF14	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF15	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF16	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF17	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF18	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF19	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF1F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF20	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF21	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF22	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF23	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF24	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF25	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF26	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF27	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF28	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF29	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF2F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF30	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF31	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF32	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF33	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF34	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF35	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF36	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF37	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF38	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF39	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF3F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF40	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF41	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF42	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF43	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF44	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF45	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF46	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF47	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF48	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF49	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF4F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF50	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF51	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF52	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF53	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF54	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF55	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF56	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF57	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF58	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF59	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF5F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF60	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF61	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF62	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF63	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF64	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF65	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF66	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF67	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF68	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF69	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF6F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF70	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF71	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF72	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF73	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF74	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF75	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF76	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF77	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF78	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF79	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF7F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF80	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF81	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF82	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF83	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF84	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF85	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF86	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF87	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF88	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF89	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF8F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF90	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF91	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF92	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF93	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF94	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF95	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF96	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF97	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF98	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF99	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9A	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9B	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9C	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9D	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9E	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktF9F	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFA9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFAF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFB9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFBF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFC9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFCF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFD9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFDF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFE9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFEA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFEB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFEC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFED	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFEE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFEF	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF0	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF1	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF2	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF3	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF4	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF5	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF6	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF7	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF8	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFF9	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFA	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFB	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFC	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFD	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFE	DW 0000h, 0000h, 0000h, 0000h	; 0
+ktFFF	DW 0000h, 0000h, 0000h, 0000h	; 0
+
+code	ENDS
+
+	END
+

@@ -144,7 +144,7 @@ ramdrive_srcs = RAMDRIVE.ASM
 ramdrive_objs = $(ramdrive_srcs:.ASM=.OBJ)
 ramdrive_rdvs = RAMDRIVE.RDV
 
-rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSMISC.ASM RDFSTAB.ASM
+rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM RDFSTAB.ASM
 rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
 rdfs_rdvs = RDFS.RDV
 

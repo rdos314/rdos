@@ -78,6 +78,24 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			Format
+;
+;		DESCRIPTION:	Format filesystem
+;
+;		PARAMETERS:		AL			Drive
+;						ES:DI		FS name
+;						ECX			Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+format	PROC far
+	stc
+	ret
+format	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			MOUNT12
 ;
 ;		DESCRIPTION:	Mount FAT12 on a drive
@@ -252,74 +270,77 @@ dummy	Endp
 fs12_name	DB 'FAT12',0
 
 fs12_ctrl:
-f12s00	DW OFFSET mount12,			fat_code_sel
-f12s01	DW OFFSET flush,			fat_code_sel
-f12s02	DW OFFSET dismount,			fat_code_sel
-f12s03	DW OFFSET get_drive_info,	fat_code_sel
-f12s04	DW OFFSET cache_dir12_16,	fat_code_sel
-f12s05	DW OFFSET update_dir,		fat_code_sel
-f12s06	DW OFFSET update_file,		fat_code_sel
-f12s07	DW OFFSET create_dir,		fat_code_sel
-f12s08	DW OFFSET delete_dir,		fat_code_sel
-f12s09	DW OFFSET delete_file,		fat_code_sel
-f12s10	DW OFFSET rename_file,		fat_code_sel
-f12s11	DW OFFSET create_file,		fat_code_sel
-f12s12	DW OFFSET get_ioctl_data,	fat_code_sel
-f12s13	DW OFFSET set_file_size,	fat_code_sel
-f12s14	DW OFFSET dummy,			fat_code_sel
+f12s00	DW OFFSET format,			fat_code_sel
+f12s01	DW OFFSET mount12,			fat_code_sel
+f12s02	DW OFFSET flush,			fat_code_sel
+f12s03	DW OFFSET dismount,			fat_code_sel
+f12s04	DW OFFSET get_drive_info,	fat_code_sel
+f12s05	DW OFFSET cache_dir12_16,	fat_code_sel
+f12s06	DW OFFSET update_dir,		fat_code_sel
+f12s07	DW OFFSET update_file,		fat_code_sel
+f12s08	DW OFFSET create_dir,		fat_code_sel
+f12s09	DW OFFSET delete_dir,		fat_code_sel
+f12s10	DW OFFSET delete_file,		fat_code_sel
+f12s11	DW OFFSET rename_file,		fat_code_sel
+f12s12	DW OFFSET create_file,		fat_code_sel
+f12s13	DW OFFSET get_ioctl_data,	fat_code_sel
+f12s14	DW OFFSET set_file_size,	fat_code_sel
 f12s15	DW OFFSET dummy,			fat_code_sel
-f12s16	DW OFFSET allocate_file_list,fat_code_sel
-f12s17	DW OFFSET free_file_list,	fat_code_sel
-f12s18	DW OFFSET read_file_block,	fat_code_sel
-f12s19	DW OFFSET write_file_block,	fat_code_sel
+f12s16	DW OFFSET dummy,			fat_code_sel
+f12s17	DW OFFSET allocate_file_list,fat_code_sel
+f12s18	DW OFFSET free_file_list,	fat_code_sel
+f12s19	DW OFFSET read_file_block,	fat_code_sel
+f12s20	DW OFFSET write_file_block,	fat_code_sel
 
 fs16_name	DB 'FAT16',0
 
 fs16_ctrl:
-f16s00	DW OFFSET mount16,			fat_code_sel
-f16s01	DW OFFSET flush,			fat_code_sel
-f16s02	DW OFFSET dismount,			fat_code_sel
-f16s03	DW OFFSET get_drive_info,	fat_code_sel
-f16s04	DW OFFSET cache_dir12_16,	fat_code_sel
-f16s05	DW OFFSET update_dir,		fat_code_sel
-f16s06	DW OFFSET update_file,		fat_code_sel
-f16s07	DW OFFSET create_dir,		fat_code_sel
-f16s08	DW OFFSET delete_dir,		fat_code_sel
-f16s09	DW OFFSET delete_file,		fat_code_sel
-f16s10	DW OFFSET rename_file,		fat_code_sel
-f16s11	DW OFFSET create_file,		fat_code_sel
-f16s12	DW OFFSET get_ioctl_data,	fat_code_sel
-f16s13	DW OFFSET set_file_size,	fat_code_sel
-f16s14	DW OFFSET dummy,			fat_code_sel
+f16s00	DW OFFSET format,			fat_code_sel
+f16s01	DW OFFSET mount16,			fat_code_sel
+f16s02	DW OFFSET flush,			fat_code_sel
+f16s03	DW OFFSET dismount,			fat_code_sel
+f16s04	DW OFFSET get_drive_info,	fat_code_sel
+f16s05	DW OFFSET cache_dir12_16,	fat_code_sel
+f16s06	DW OFFSET update_dir,		fat_code_sel
+f16s07	DW OFFSET update_file,		fat_code_sel
+f16s08	DW OFFSET create_dir,		fat_code_sel
+f16s09	DW OFFSET delete_dir,		fat_code_sel
+f16s10	DW OFFSET delete_file,		fat_code_sel
+f16s11	DW OFFSET rename_file,		fat_code_sel
+f16s12	DW OFFSET create_file,		fat_code_sel
+f16s13	DW OFFSET get_ioctl_data,	fat_code_sel
+f16s14	DW OFFSET set_file_size,	fat_code_sel
 f16s15	DW OFFSET dummy,			fat_code_sel
-f16s16	DW OFFSET allocate_file_list,fat_code_sel
-f16s17	DW OFFSET free_file_list,	fat_code_sel
-f16s18	DW OFFSET read_file_block,	fat_code_sel
-f16s19	DW OFFSET write_file_block,	fat_code_sel
+f16s16	DW OFFSET dummy,			fat_code_sel
+f16s17	DW OFFSET allocate_file_list,fat_code_sel
+f16s18	DW OFFSET free_file_list,	fat_code_sel
+f16s19	DW OFFSET read_file_block,	fat_code_sel
+f16s20	DW OFFSET write_file_block,	fat_code_sel
 
 fs32_name	DB 'FAT32',0
 
 fs32_ctrl:
-f32s00	DW OFFSET mount32,			fat_code_sel
-f32s01	DW OFFSET flush,			fat_code_sel
-f32s02	DW OFFSET dismount,			fat_code_sel
-f32s03	DW OFFSET get_drive_info,	fat_code_sel
-f32s04	DW OFFSET cache_dir32,		fat_code_sel
-f32s05	DW OFFSET update_dir,		fat_code_sel
-f32s06	DW OFFSET update_file,		fat_code_sel
-f32s07	DW OFFSET create_dir,		fat_code_sel
-f32s08	DW OFFSET delete_dir,		fat_code_sel
-f32s09	DW OFFSET delete_file,		fat_code_sel
-f32s10	DW OFFSET rename_file,		fat_code_sel
-f32s11	DW OFFSET create_file,		fat_code_sel
-f32s12	DW OFFSET get_ioctl_data,	fat_code_sel
-f32s13	DW OFFSET set_file_size,	fat_code_sel
-f32s14	DW OFFSET dummy,			fat_code_sel
+f32s00	DW OFFSET format,			fat_code_sel
+f32s01	DW OFFSET mount32,			fat_code_sel
+f32s02	DW OFFSET flush,			fat_code_sel
+f32s03	DW OFFSET dismount,			fat_code_sel
+f32s04	DW OFFSET get_drive_info,	fat_code_sel
+f32s05	DW OFFSET cache_dir32,		fat_code_sel
+f32s06	DW OFFSET update_dir,		fat_code_sel
+f32s07	DW OFFSET update_file,		fat_code_sel
+f32s08	DW OFFSET create_dir,		fat_code_sel
+f32s09	DW OFFSET delete_dir,		fat_code_sel
+f32s10	DW OFFSET delete_file,		fat_code_sel
+f32s11	DW OFFSET rename_file,		fat_code_sel
+f32s12	DW OFFSET create_file,		fat_code_sel
+f32s13	DW OFFSET get_ioctl_data,	fat_code_sel
+f32s14	DW OFFSET set_file_size,	fat_code_sel
 f32s15	DW OFFSET dummy,			fat_code_sel
-f32s16	DW OFFSET allocate_file_list,fat_code_sel
-f32s17	DW OFFSET free_file_list,	fat_code_sel
-f32s18	DW OFFSET read_file_block,	fat_code_sel
-f32s19	DW OFFSET write_file_block,	fat_code_sel
+f32s16	DW OFFSET dummy,			fat_code_sel
+f32s17	DW OFFSET allocate_file_list,fat_code_sel
+f32s18	DW OFFSET free_file_list,	fat_code_sel
+f32s19	DW OFFSET read_file_block,	fat_code_sel
+f32s20	DW OFFSET write_file_block,	fat_code_sel
 
 init	PROC far
 	push ds

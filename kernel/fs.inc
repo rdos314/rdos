@@ -174,6 +174,10 @@ dir_handle_struc	ENDS
 
 file_system_struc 	STRUC
 
+;	IN	ES:DI		FS name
+;	IN	ECX			Number of sectors
+format_proc				DD ?
+
 ;	IN	DX			DRIVE DATA
 mount_proc				DD ?
 

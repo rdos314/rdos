@@ -284,5 +284,7 @@ start_disc_nr				EQU 251
 stop_disc_nr				EQU 252
 start_file_system_nr		EQU 253
 stop_file_system_nr			EQU 254
+format_file_system_nr		EQU 255
+flush_drive_nr				EQU 256
 
-osgate_entries				EQU 256
+osgate_entries				EQU 257

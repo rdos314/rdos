@@ -942,6 +942,21 @@ GetDiscInfo     MACRO
 						ENDM
 
 ;	IN	AL			Disc #
+;	IN	EDX			Start sector
+;	IN	ECX			Number of sectors
+;	IN	ES:(E)DI	File system name
+FormatDrive     MACRO
+	UserGate format_drive_nr
+						ENDM
+
+;	IN DS:(E)SI		Main key buffer
+;	IN ES:(E)DI		Selection key buffer
+;	IN GS:(E)BX		Extent size buffer
+GetRdfsInfo     MACRO
+	UserGate get_rdfs_info_nr
+						ENDM
+
+;	IN	AL			Disc #
 ;	IN	EDX			Sector #
 ;	IN	(E)CX		Size
 ;	IN	ES:(E)DI	Buffer
