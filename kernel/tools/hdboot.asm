@@ -31,6 +31,8 @@
 
 .model Small
 
+DATA_SEG = 6000h
+
 boot_struc	STRUC
 
 boot_jmp					DB ?,?,?
@@ -103,6 +105,7 @@ FatSize             DB 0
 SafeBoot            DB 0
 SectorsPerCluster   DW 0
 ImageSize           DD 0
+CurrSector2         DD 0
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -229,7 +232,7 @@ WriteAsciiz	Endp
 ;
 ;		NAME:			ReadSector
 ;
-;		DESCRIPTION:	Read a sector
+;		DESCRIPTION:	Read a sector (to DATA_SEG:0)
 ;
 ;		PARAMETERS:		EAX	Sector #
 ;
@@ -276,7 +279,7 @@ ReadSectorRetry:
 	xchg ch,cl
 	mov dl,cs:DriveNr
 	mov dh,bh
-	mov bx,1000h
+	mov bx,DATA_SEG
 	mov es,bx
 	xor bx,bx
 	int 13h
@@ -297,6 +300,85 @@ ReadSectorOk:
 	pop es
 	ret
 ReadSector	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReadSector2
+;
+;		DESCRIPTION:	Read a sector (to DATA_SEG:200)
+;
+;		PARAMETERS:		EAX	Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadSector2	Proc near
+    push es
+    pusha
+;
+    cmp eax,cs:CurrSector2
+    clc
+    je ReadSectorOk2
+;    
+    mov cs:CurrSector2,eax
+    push eax
+    pop ax
+    pop dx
+;    
+	push ax
+	mov ax,cs:ReadCount
+	inc cs:ReadCount
+	and ax,0Fh
+	jnz ReadSectorNoLog2
+;	
+	mov al,'.'
+	mov ah,0Eh
+	mov bx,7
+	int 10h
+ReadSectorNoLog2:
+	pop ax
+;
+	mov cx,3
+ReadSectorRetry2:
+	push ax
+	push cx
+	push dx
+	div cs:SectorsPerCyl
+	inc dl
+	mov bl,dl
+	xor dx,dx
+	div cs:Heads
+	mov bh,dl
+	mov dx,ax
+	mov ax,201h
+	mov cl,6
+	shl dh,cl
+	or dh,bl
+	mov cx,dx
+	xchg ch,cl
+	mov dl,cs:DriveNr
+	mov dh,bh
+	mov bx,DATA_SEG
+	mov es,bx
+	mov bx,200h
+	int 13h
+	pop dx
+	pop cx
+	pop ax
+;
+	jnc ReadSectorOk2
+	push ax
+	mov ax,0
+	int 13h
+	pop ax
+	loop ReadSectorRetry2	
+	stc
+
+ReadSectorOk2:
+	popa
+	pop es
+	ret
+ReadSector2	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -324,7 +406,7 @@ NextCluster12	PROC near
 	rcr cx,1
 	pushf
 	mov eax,edx
-	call ReadSector
+	call ReadSector2
 	jnc nc12Locked
 	popf
 	stc
@@ -332,6 +414,7 @@ NextCluster12	PROC near
 
 nc12Locked:
 	mov bx,cx
+	add bx,200h
 	popf
 	jc nc12High
 	mov cl,[bx]
@@ -340,10 +423,10 @@ nc12Locked:
 	jnz nc12LowOk
 	inc edx
 	mov eax,edx
-	call ReadSector
+	call ReadSector2
 	jc nc12Done
 ;
-    xor bx,bx
+    mov bx,200h
 
 nc12LowOk:
 	mov ch,[bx]
@@ -358,7 +441,8 @@ nc12High:
 	jnz nc12HighOk
 	inc edx
 	mov eax,edx
-	call ReadSector
+	mov bx,200h
+	call ReadSector2
 	jc nc12Done
 
 nc12HighOk:
@@ -396,10 +480,11 @@ NextCluster16	PROC near
 	add edx,cs:FatSector
 	and cx,1FFh
 	mov eax,edx
-	call ReadSector
+	call ReadSector2
 	jc nc16Done
 
 	mov bx,cx
+	add bx,200h
 	movzx edx,word ptr [bx]
 	mov cs:CurrentCluster,edx
 	cmp edx,0FFF8h
@@ -431,10 +516,11 @@ NextCluster32	PROC near
 	add edx,cs:FatSector
 	and cx,1FFh
 	mov eax,edx
-	call ReadSector
+	call ReadSector2
 	jc nc32Done
 
 	mov bx,cx
+	add bx,200h
 	mov edx,[bx]
 	and edx,0FFFFFFFh
 	mov cs:CurrentCluster,edx
@@ -519,7 +605,7 @@ ScanDir Proc near
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,1000h
+    mov ax,DATA_SEG
     mov ds,ax
 
 sdClusterLoop:
@@ -528,8 +614,8 @@ sdClusterLoop:
     mov cx,cs:SectorsPerCluster    
 
 sdSectorLoop:
-    xor si,si
-    call ReadSector
+    mov si,200h
+    call ReadSector2
 
 sdLoop:
     push cx
@@ -598,7 +684,7 @@ ScanRootDir Proc near
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,1000h
+    mov ax,DATA_SEG
     mov ds,ax
     xor si,si
     mov cx,cs:RootEntries
@@ -847,7 +933,7 @@ LoadAdapter	Proc near
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,1000h
+    mov ax,DATA_SEG
     mov ds,ax
 
 laClusterLoop:
@@ -865,7 +951,7 @@ laSectorLoop:
 ;
     push eax
     push cx
-	mov esi,10000h
+	mov esi,16 * DATA_SEG
     mov ecx,512
 	call MoveData
 	add edi,ecx
@@ -989,14 +1075,18 @@ read_part_error:
 part_stop:
     jmp part_stop
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		DESCRIPTION:	Second stage boot-loader entry point
+;
+;		RETURNS:	    DL          Bios disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 Start:
 	sti
-;
-; test from dos
-;
-    jmp read_part
-
-	mov ax,1000h
+	mov cs:DriveNr,dl
+	mov ax,DATA_SEG
 	mov es,ax
 	xor bx,bx
 	mov ax,201h
@@ -1004,24 +1094,8 @@ Start:
 	mov dl,cs:DriveNr
 	mov cx,1
 	int 13h
-	mov es:boot_jmp,dl
-	jmp read_part
 ;
-	mov al,0EDh
-	out 60h,al
-	hlt
-	hlt
-	xor al,al
-	out 60h,al
-	hlt
-	hlt
-	mov al,0F4h
-	out 60h,al	
-
-read_part:
-	mov al,es:boot_jmp
-	mov cs:DriveNr,al
-    add bx,1BEh
+    mov bx,1BEh
     mov si,bx
     mov al,es:[bx+4]
     mov cs:PartType,al
@@ -1029,7 +1103,6 @@ read_part:
     mov dh,es:[bx+1]
 	mov ax,201h
 	mov dl,cs:DriveNr
-	mov cx,1
 	mov bx,200h
 	int 13h
 	jc read_part_error
@@ -1054,6 +1127,8 @@ read_part:
     adc ah,0
     adc dx,0
 ;
+    mov cs:CurrSector2,-1
+;    
     mov word ptr cs:BootSector,ax
     mov word ptr cs:BootSector+2,dx
     mov eax,cs:BootSector

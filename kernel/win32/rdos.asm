@@ -6266,12 +6266,7 @@ read_bin_resource_handle_ok:
 read_bin_resource_copy:
 	mov edi,[ebp+16]
 	mov eax,ecx
-
-read_bin_resource_copy_loop:
-    movs byte ptr es:[edi],[esi]
-    inc esi
-    loop read_bin_resource_copy_loop
-;    
+    rep movs byte ptr es:[edi],[esi]    
 	jmp read_bin_resource_done
 	
 read_bin_resource_fail:

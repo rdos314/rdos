@@ -329,3 +329,5 @@ RUN.EXE : $(run_objs)
 GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)
 	grubimg
 
+BOOTSEC.BIN:    BOOTSEC.EXE BOOTSEC.ASM
+    mkhdboot

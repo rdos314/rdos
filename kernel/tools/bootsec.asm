@@ -43,9 +43,9 @@ boot_media					DB ?
 boot_resv6					DW ?
 boot_sectors_per_cyl		DW 15
 boot_heads					DW 2
-boot_hidden_sectors			DD 100
+boot_hidden_sectors			DD 10
 boot_sectors				DD 2884
-boot_drive_nr				DB 0,0
+boot_drive_nr				DB 80h,0
 boot_signature				DB ?
 boot_serial					DD ?
 boot_volume					DB 11 DUP(?)
@@ -73,14 +73,14 @@ StartBoot:
 	dw 07C0h
 JmpBootCode:
 	cli
-	mov bx,800h
+	mov bx,5000h
 	mov ss,bx
 	mov sp,100h
 	sti
-	mov bx,70h
+	mov bx,7000h
 	mov es,bx
 	xor bx,bx
-	mov cx,8
+	mov ecx,cs:BootMedia.boot_hidden_sectors
 	xor dx,dx
 	mov ax,1
 LoadBootNext:
@@ -103,6 +103,7 @@ BootSectorOk:
 	add bx,512
 	loop LoadBootNext
 ;
+    mov dl,cs:BootMedia.boot_drive_nr
 	mov ax,cs
 	mov es,ax
 	db 0EAh
@@ -112,7 +113,7 @@ BootSectorOk:
 BootLoadOffset:
 
 	dw 0
-	dw 70h
+	dw 7000h
 
 BootFail:
 	mov si,OFFSET DiskError
