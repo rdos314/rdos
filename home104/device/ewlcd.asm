@@ -96,6 +96,61 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+
+
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitLCD
+;
+;		DESCRIPTION:	Init LCD module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitLCD Proc near
+    mov al,81h      ; CGROM mode, OR mode
+    WriteControl
+;
+    xor al,al
+    WriteData
+    xor al,al
+    WriteData
+    mov al,42h
+    WriteControl    ; set graphics home = 0000
+;
+    mov al,28h
+    WriteData
+    xor al,al
+    WriteData
+    mov al,43h
+    WriteControl    ; set graphics area = 001E
+;
+    xor al,al
+    WriteData
+    mov al,20h
+    WriteData
+    mov al,40h
+    WriteControl    ; set text home = 2000
+;
+    mov al,28h
+    WriteData
+    xor al,al
+    WriteData
+    mov al,41h
+    WriteControl    ; set text area = 0028
+;
+    mov al,3
+    WriteData
+    xor al,al
+    WriteData
+    mov al,22h
+    WriteControl    ; set CGRAM offset = 03
+;
+    mov al,9Ah
+    WriteControl    ; graphics on, text on, cursor off
 ;
     xor al,al
     WriteData
@@ -156,61 +211,7 @@ ylo_next:
 ;
     mov al,0B2h
     WriteControl
-
-
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
 ;
-;		NAME:			InitLCD
-;
-;		DESCRIPTION:	Init LCD module
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitLCD Proc near
-    mov al,81h      ; CGROM mode, OR mode
-    WriteControl
-;
-    xor al,al
-    WriteData
-    xor al,al
-    WriteData
-    mov al,42h
-    WriteControl    ; set graphics home = 0000
-;
-    mov al,LCD_WIDTH / 8
-    WriteData
-    xor al,al
-    WriteData
-    mov al,43h
-    WriteControl    ; set graphics area = 001E
-;
-    xor al,al
-    WriteData
-    mov al,20h
-    WriteData
-    mov al,40h
-    WriteControl    ; set text home = 2000
-;
-    mov al,LCD_WIDTH / 8
-    WriteData
-    xor al,al
-    WriteData
-    mov al,41h
-    WriteControl    ; set text area = 0028
-;
-    mov al,3
-    WriteData
-    xor al,al
-    WriteData
-    mov al,22h
-    WriteControl    ; set CGRAM offset = 03
-;
-    mov al,9Ah
-    WriteControl    ; graphics on, text on, cursor off
     ret
 InitLCD Endp
 
@@ -233,6 +234,7 @@ set_base	Proc far
     push edx
 ;
     call ds:vl_set_proc
+;
     mov edx,edi
     shr edx,3
     mov al,dl
@@ -242,10 +244,18 @@ set_base	Proc far
     mov al,24h
     WriteControl
 ;
+    mov al,0B0h
+    WriteControl
+;
     add edx,ds:v_app_base
     mov al,es:[edx]
     WriteData
-    mov al,0C4h
+	mov al,-1
+	WriteData
+;    mov al,0C4h
+;    WriteControl
+;
+    mov al,0B2h
     WriteControl
 ;
     pop edx
@@ -446,6 +456,7 @@ init_mode	Proc far
 	mov es:mask_copy_proc,ebx
 ;
     call InitLCD
+	mov ax,es
 	clc
 ;
 	pop di
@@ -474,8 +485,8 @@ init_focus	PROC far
     push es
 	pusha
 ;    
-	mov ax,3
-	SetVideoMode
+;	mov ax,3
+;	SetVideoMode
 ;
 	popa
 	pop es
@@ -498,10 +509,6 @@ PAGE
 init	PROC far
 	push ds
 	pusha
-;
-	xor al,al
-	mov dx,3B2h
-	out dx,al
 ;
 	mov bx,pc_video_code_sel
 	InitDevice
