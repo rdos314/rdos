@@ -221,7 +221,7 @@ int_timeout	Proc far
 	mov bx,dcf_data_sel
 	mov ds,bx
 	GetSystemTime
-	add eax,1193000 * 90
+	add eax,1193046 * 90
 	adc edx,0
 	mov bx,cs
 	mov es,bx
@@ -255,7 +255,7 @@ WaitForPulse	Proc near
 	GetSystemTime
 	mov ax,cs
 	mov es,ax
-	add eax,1193000 * 5
+	add eax,1193046 * 5
 	adc edx,0
 	mov di,OFFSET int_timeout
 	mov bx,ds:thread_id
@@ -314,10 +314,10 @@ sync_dcf_loop:
 	mov ebx,eax
 	pop esi
 	sub ebx,esi
-	cmp ebx,1192 * 800
+	cmp ebx,1192 * 1800
 	jb sync_dcf_loop
 ;
-	cmp ebx,1192 * 1200
+	cmp ebx,1192 * 2200
 	ja sync_dcf_loop
 ;
 	mov ds:first_pulse,eax
@@ -372,9 +372,9 @@ get_sample_loop:
 	inc si
 
 get_sample_valid:
-	mov bx,si                   ; bx = current second in DCF message
+	mov bx,si
 	movzx eax,bx
-	mov edx,1193000
+	mov edx,1193046
 	mul edx				    	; eax = curr_sec as timedate
 	sub edi,eax				    ; edi = diff from curr_sec as timedate
 	mov ebp,edi				    ; ebp = diff from curr_sec
@@ -528,7 +528,7 @@ process_ms_loop:
 	mov bl,ds:curr_min
 	xor ah,ah
 	TimeToBinary			; edx:eax = time in message
-	add eax,60 * 1193000
+	add eax,60 * 1193046
 	adc edx,0				; time + 1 min
 	sub eax,ds:first_pulse
 	sbb edx,ds:first_pulse+4	; time + 1 min - first_pulse - average-diff
@@ -636,23 +636,30 @@ GetMinSamples	Endp
 UpdateDiff	Proc near
 	pushad
 ;
-    mov eax,ds:curr_sys_diff		; eax = -1s = AD3700B6h (AF420F6Ch)
-									; 41 min, 4.66s
-    mov edx,ds:curr_sys_diff+4		; edx = -1h = FFFA0C89h
-	UpdateTime
 	int 3
-    add eax,02222222h                ; 30 seconds = AF5922D8h (B164318Eh)
-									; 41 min, 34.66s
-    adc edx,0						; edx = FFFA0C89h
+    mov eax,ds:curr_sys_diff
+	mov ebx,60
+	mul ebx
+	cdq
+	idiv ebx
+	mov ds:[si].sd_fract,eax
+	UpdateTime
 ;
+	int 3
+	mov ebx,eax
+	mov eax,ds:curr_sys_diff
+	sub eax,ebx
+    mov edx,ds:curr_sys_diff+4
+	sbb edx,0
+	add eax,2222222h
+	adc edx,0
 	test edx,80000000h
 	jz upd_diff_pos
 ;
     not eax					
     not edx						
     add eax,1					
-    adc edx,0					; edx = 0005F376h, eax = 50A6DD28h (4E9BCE72h)
-								; 18 min, 25.5s
+    adc edx,0
     mov ds:[si].sd_sign,-1
     jmp upd_diff_sign_ok
 
@@ -665,93 +672,20 @@ upd_diff_sign_ok:
 	xor edx,edx
 	mov ecx,24
 	div ecx
-	mov ds:[si].sd_day,eax	; 00003F7A (00003F7A)
-	mov ds:[si].sd_hour,dl	; 6 (6)
+	mov ds:[si].sd_day,eax
+	mov ds:[si].sd_hour,dl
 	pop eax	
 
 upd_diff_min:
 	mov edx,60
 	mul edx				
-	mov ds:[si].sd_min,dl	; 18 (18)
-	cdq						
-	idiv ebx				; edx = FFFFFE9Fh, eax = FFEEEA9Dh (0072h, 4A7A6Eh)
-	mov cl,ds:[si].sd_sign	
-	or cl,cl
-	jz upd_diff_fract_pos
+	mov ds:[si].sd_min,dl
 ;
-	add eax,02222222h		; 02110CBFh (026C9C90h) (34.1s)
-	jmp upd_diff_fract_save
-
-upd_diff_fract_pos:
-	sub eax,02222222h
-
-upd_diff_fract_save:
-	mov ds:[si].sd_fract,eax	; 02110CBFh (026C9C90h)
+;	mov ds:sys_diff,eax
+;	mov ds:sys_diff+4,edx
 ;
-	mov eax,ds:sys_diff			; eax = 0
-	mov edx,ds:sys_diff+4		; edx = 0
-	mov ebx,eax
-	or ebx,edx
-	jz upd_diff_sys_sign_ok
-;	
-    test edx,80000000h
-    jz upd_diff_sys_pos
-;
-    cmp cl,-1
-    jne upd_diff_done
-;
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
-    jmp upd_diff_sys_sign_ok
-
-upd_diff_sys_pos:
-    or cl,cl
-    jne upd_diff_done
-
-upd_diff_sys_sign_ok:
-	mov ebx,60
-	mul ebx					; edx = eax = 0
-	xor eax,eax
-	div ebx					; edx = eax = 0
-;
-	mov ebx,eax				; ebx = 0
-	mov eax,ds:[si].sd_fract	; eax = FDEEF341h
-	cdq						; edx = FFFFFFFFh
-;
-    test cl,80h
-    jz upd_diff_update_pos
-;
-	sub eax,ebx				; eax = FDEEF341h (-29s)
-	sbb edx,ds:sys_diff+4	; edx = FFFFFFFFh
-;
-    not eax					; -1s
-    not edx					; -1
-    add eax,1				
-    adc edx,0				
-	jmp upd_diff_update
-
-upd_diff_update_pos:
-	add eax,ebx				; eax = FD936370h (-34s)
-	adc edx,ds:sys_diff+4	; edx = FFFFFFFFh
-
-upd_diff_update:
-    add eax,02222222h                ; (-4s)
-	test eax,80000000h
-	jnz upd_diff_save_sys
-;
-	cmp eax,02222222h
-	jc upd_diff_save_sys
-;
-	sub eax,04444444h
-
-upd_diff_save_sys:
-	mov ds:sys_diff,eax
-	mov ds:sys_diff+4,edx
-;
-	mov bx,ds:rtc_id
-	Signal
+;	mov bx,ds:rtc_id
+;	Signal
 
 upd_diff_done:
 	popad
