@@ -27,9 +27,9 @@
 
 GateSize = 16
 
-include ..\user.def
-include ..\user.inc
-						
+include \rdos\kernel\user.def
+include \rdos\kernel\user.inc
+
 		NAME rdos
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
@@ -39,6 +39,18 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 	.386p
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TASK_END
+;
+;		description:	Termination of task
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+task_end:
+	UserGate terminate_thread_nr
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -57,6 +69,8 @@ task_start:
 	push bx
 	push di
 	push si
+	push cs
+	push OFFSET task_end
 	push gs
 	push dx
 	xor ax,ax
@@ -67,20 +81,20 @@ task_start:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CREATE_TASK
+;		NAME:			RdosCreateThread
 ;
-;		description:	Create a task
+;		description:	Create a new thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _CreateTask
+	public _RdosCreateThread
 
 task_callb	EQU 6
 task_name	EQU 10
 task_data	EQU 14
 task_stack	EQU 18
 
-_CreateTask	PROC far
+_RdosCreateThread	PROC far
 	push bp
 	mov bp,sp
 	push ds
@@ -108,27 +122,511 @@ _CreateTask	PROC far
 	pop ds
 	pop bp
 	ret
-_CreateTask	ENDP
+_RdosCreateThread	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WaitMilli
+;		NAME:			RdosAllocateMem
+;
+;		description:	void *RdosAllocateMem(size)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAllocateMem
+
+_RdosAllocateMem	Proc far
+	push bp
+	mov bp,sp
+	push es
+	mov eax,[bp+6]
+	AllocateLocalMem
+	mov dx,es
+	xor ax,ax
+	pop es
+	pop bp
+	ret
+_RdosAllocateMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosFreeMem
+;
+;		description:	void RdosFreeMem(ptr)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosFreeMem
+
+_RdosFreeMem	Proc far
+	push bp
+	mov bp,sp
+	mov es,[bp+8]
+	FreeMem
+	pop bp
+	ret
+_RdosFreeMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetMemSize
+;
+;		description:	int GetMemSize(ptr)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _GetMemSize
+
+_GetMemSize	Proc far
+	push bp
+	mov bp,sp
+	lsl ax,[bp+8]
+	pop bp
+	ret
+_GetMemSize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitMilli
 ;
 ;		description:	Wait a number of milliseconds
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _WaitMilli
+	public _RdosWaitMilli
 
-_WaitMilli	Proc far
+_RdosWaitMilli	Proc far
 	push bp
 	mov bp,sp
 	mov eax,[bp+6]
 	WaitMilliSec
 	pop bp
 	ret
-_WaitMilli	Endp
+_RdosWaitMilli	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateSection
+;
+;		description:	Create section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateSection
+
+_RdosCreateSection	Proc far
+	push bx
+	CreateUserSection
+	movzx eax,bx
+	pop bx
+	ret
+_RdosCreateSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDeleteSection
+;
+;		description:	Delete section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDeleteSection
+
+_RdosDeleteSection	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	DeleteUserSection
+;
+	pop bx
+	pop bp
+	ret
+_RdosDeleteSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			_RdosEnterSection
+;
+;		description:	Enter section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosEnterSection
+
+_RdosEnterSection	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	EnterUserSection
+;
+	pop bx
+	pop bp
+	ret
+_RdosEnterSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosLeaveSection
+;
+;		description:	Leave section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosLeaveSection
+
+_RdosLeaveSection	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	LeaveUserSection
+;
+	pop bx
+	pop bp
+	ret
+_RdosLeaveSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateWait
+;
+;		description:	int RdosCreateWait()
+;
+;       returns:        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateWait
+
+_RdosCreateWait	Proc far
+	push bx
+;
+	CreateWait
+	mov ax,bx
+;
+	pop bx
+	ret
+_RdosCreateWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseWait
+;
+;		description:	void RdosCloseWait(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseWait
+
+_RdosCloseWait	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseWait
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCheckWait
+;
+;		description:	void *RdosCheckWait(int Handle)
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCheckWait
+
+_RdosCheckWait	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	IsWaitIdle
+;
+    mov ax,cx
+    shr ecx,16
+    mov dx,cx
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosCheckWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitForever
+;
+;		description:	int RdosWaitForever(int Handle)
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWaitForever
+
+_RdosWaitForever	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	WaitWithoutTimeout
+	jc rwfFail
+;
+    mov ax,cx
+    shr ecx,16
+    mov dx,cx
+    jmp rwfDone
+
+rwfFail:
+    xor ax,ax
+    xor dx,dx
+
+rwfDone:
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosWaitForever	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitTimeout
+;
+;		description:	int RdosWaitTimeout(int Handle, int MilliTimeout) 
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWaitTimeout
+
+_RdosWaitTimeout	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+;
+	movzx eax,word ptr [bp+8]
+	mov edx,1193
+	mul edx
+	push edx
+	push eax
+	GetSystemTime
+    pop ebx
+    add eax,ebx
+    pop ebx
+    adc edx,ebx
+	mov bx,[bp+6]    	
+    WaitWithTimeout
+	jc rwtFail
+;
+    mov ax,cx
+    shr ecx,16
+    mov dx,cx
+    jmp rwtDone
+
+rwtFail:
+    xor ax,ax
+    xor dx,dx
+
+rwtDone:
+    pop dx
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosWaitTimeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosStopWait
+;
+;		description:	void RdosStopWait(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosStopWait
+
+_RdosStopWait	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	StopWait
+;
+	pop bx
+	pop bp
+	ret
+_RdosStopWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosRemoveWait
+;
+;		description:	void RdosRemoveWait(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosRemoveWait
+
+_RdosRemoveWait	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ecx,[bp+8]
+	RemoveWait
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosRemoveWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForKeyboard
+;
+;		description:	void RdosAddWaitForKeyboard(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddWaitForKeyboard
+
+_RdosAddWaitForKeyboard	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ecx,[bp+8]
+	AddWaitForKeyboard
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosAddWaitForKeyboard	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForMouse
+;
+;		description:	void RdosAddWaitForMouse(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddWaitForMouse
+
+_RdosAddWaitForMouse	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ecx,[bp+8]
+	AddWaitForMouse
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosAddWaitForMouse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForCom
+;
+;		description:	void RdosAddWaitForCom(int Handle, int ComHandle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddWaitForCom
+
+_RdosAddWaitForCom	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ax,[bp+8]
+	mov ecx,[bp+10]
+	AddWaitForCom
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosAddWaitForCom	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForAdc
+;
+;		description:	void RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddWaitForAdc
+
+_RdosAddWaitForAdc	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov ax,[bp+8]
+	mov ecx,[bp+10]
+	AddWaitForAdc
+;
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosAddWaitForAdc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -149,18 +647,976 @@ _SwapOut	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SetVgaMode
+;		NAME:			RdosSetTextMode
 ;
-;		description:	SetVgaMode()
+;		description:	int RdosSetTextMode();
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _SetVgaMode
+	public _RdosSetTextMode
 
-_SetVgaMode	Proc far
-	SetVgaMode
+_RdosSetTextMode	Proc far
+	pusha
+	mov ax,3
+    SetVideoMode
+	popa
 	ret
-_SetVgaMode	Endp
+_RdosSetTextMode	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetVideoMode
+;
+;		description:	int RdosSetVideoMode(int *BitsPerPixel, 
+;						int *xres, int *yres, int *linesize, void **buffer);
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetVideoMode
+
+_RdosSetVideoMode	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	les di,[bp+6]
+	mov ax,es:[di]
+	les di,[bp+10]
+	mov cx,es:[di]
+	les di,[bp+14]
+	mov dx,es:[di]	
+	GetVideoMode
+	jc set_video_fail
+;
+    SetVideoMode
+    jc set_video_fail
+;
+	push di
+	les di,[bp+6]
+	mov es:[di],ax
+	les di,[bp+10]
+	mov es:[di],cx
+	les di,[bp+14]
+	mov es:[di],dx
+	les di,[bp+18]
+	mov es:[di],si
+	les di,[bp+22]
+	pop ax
+	mov es:[di],ax
+	mov ax,bx
+	jmp set_video_done
+
+set_video_fail:
+	xor ax,ax
+	les di,[bp+6]
+	mov es:[di],ax
+	les di,[bp+10]
+	mov es:[di],ax
+	les di,[bp+14]
+	mov es:[di],ax
+	les di,[bp+18]
+	mov es:[di],ax
+	les di,[bp+22]
+	mov es:[di],ax
+
+set_video_done:
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosSetVideoMode	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetClipRect
+;
+;		description:	RdosSetClipRect(handle, xmin, xmax, ymin, ymax)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetClipRect
+
+_RdosSetClipRect	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov si,[bp+12]
+	mov di,[bp+14]
+    SetClipRect
+;
+    pop di
+    pop si
+    pop dx
+    pop cx
+	pop bx
+	pop bp
+	ret
+_RdosSetClipRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosClearClipRect
+;
+;		description:	RdosClearClipRect(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosClearClipRect
+
+_RdosClearClipRect	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	ClearClipRect
+;
+	pop bx
+	pop bp
+	ret
+_RdosClearClipRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetDrawColor
+;
+;		description:	RdosSetDrawColor(handle, color)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetDrawColor
+
+_RdosSetDrawColor	Proc far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+;
+	mov bx,[bp+6]
+	mov eax,[bp+8]
+	SetDrawColor
+;
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosSetDrawColor	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetLGOP
+;
+;		description:	RdosSetLGOP(handle, lgop)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetLGOP
+
+_RdosSetLGOP	Proc far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+;
+	mov bx,[bp+6]
+	mov ax,[ebp+8]
+	SetLgop
+;
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosSetLGOP	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetHollowStyle
+;
+;		description:	RdosSetHollowStyle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetHollowStyle
+
+_RdosSetHollowStyle	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	SetHollowStyle
+;
+	pop bx
+	pop bp
+	ret
+_RdosSetHollowStyle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetFilledStyle
+;
+;		description:	RdosSetFilledStyle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetFilledStyle
+
+_RdosSetFilledStyle	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	SetFilledStyle
+;
+	pop bx
+	pop bp
+	ret
+_RdosSetFilledStyle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosOpenFont
+;
+;		description:	RdosOpenFont(height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosOpenFont
+
+_RdosOpenFont	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov ax,[bp+6]
+	OpenFont
+	mov ax,bx
+;
+	pop bx
+	pop bp
+	ret
+_RdosOpenFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseFont
+;
+;		description:	RdosCloseFont(font)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseFont
+
+_RdosCloseFont	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseFont
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetStringMetrics
+;
+;		description:	RdosGetStringMetrics(font, str, &width, &height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetStringMetrics
+
+_RdosGetStringMetrics	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push cx
+	push dx
+	push di
+;
+	mov bx,[bp+6]
+	les di,[bp+8]
+	GetStringMetrics
+;
+	les di,[bp+12]
+	mov es:[di],cx
+	les di,[bp+16]
+	mov es:[di],dx
+;
+	pop di
+	pop dx
+	pop cx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosGetStringMetrics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetFont
+;
+;		description:	RdosSetFont(handle, font)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetFont
+
+_RdosSetFont	Proc far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+;
+	mov bx,[bp+6]
+	mov ax,[bp+8]
+	SetFont
+;
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosSetFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetPixel
+;
+;		description:	RdosGetPixel(handle, x, y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetPixel
+
+_RdosGetPixel	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	GetPixel
+;
+    push eax
+    pop ax
+    pop dx
+;
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosGetPixel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			_RdosSetPixel
+;
+;		description:	RdosSetPixel(handle, x, y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetPixel
+
+_RdosSetPixel	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	SetPixel
+;
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosSetPixel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosBlit
+;
+;		description:	RdosBlit(SrcHandle, DestHandle, width, height,
+;								 SrcX, SrcY, DestX, DestY);
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosBlit
+
+_RdosBlit	Proc far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov ax,[bp+6]
+	mov bx,[bp+8]
+	mov cx,[bp+10]
+	mov dx,[bp+12]
+	mov si,[bp+14]
+	shl esi,16
+	mov si,[bp+16]
+	mov di,[bp+18]
+	shl edi,16
+	mov di,[bp+20]
+	Blit
+;
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosBlit	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawMask
+;
+;		description:	RdosDrawMask(handle, mask, RowSize, width, height,
+;					 				 SrcX, SrcY, DestX, DestY); 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDrawMask
+
+_RdosDrawMask	Proc far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	mov edi,[bp+8]
+	mov ax,[bp+12]
+	mov si,[bp+14]
+	shl esi,16
+	mov si,[bp+16]
+	mov cx,[bp+18]
+	shl ecx,16
+	mov cx,[bp+20]
+	mov dx,[bp+22]
+	shl edx,16
+	mov dx,[bp+24]
+	Blit
+;
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosDrawMask	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawLine
+;
+;		description:	RdosDrawLine(handle, x1, y1, x2, y2)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDrawLine
+
+_RdosDrawLine	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov si,[bp+12]
+	mov di,[bp+14]
+	DrawLine
+;
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosDrawLine	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawString
+;
+;		description:	RdosDrawString(handle, x, y, str)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDrawString
+
+_RdosDrawString	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push cx
+	push dx
+	push di
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov edi,[bp+12]
+	DrawString
+;
+	pop di
+	pop dx
+	pop cx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosDrawString	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawRect
+;
+;		description:	RdosDrawRect(handle, x, y, width, height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDrawRect
+
+_RdosDrawRect	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov si,[bp+12]
+	mov di,[bp+14]
+	DrawRect
+;
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosDrawRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawEllipse
+;
+;		description:	RdosDrawEllipse(handle, x, y, width, height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDrawEllipse
+
+_RdosDrawEllipse	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov si,[bp+12]
+	mov di,[bp+14]
+    DrawEllipse
+;
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosDrawEllipse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateBitmap
+;
+;		description:	RdosCreateBitmap(BitsPerPixel, width, height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateBitmap
+
+_RdosCreateBitmap	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+;
+	mov ax,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	CreateBitmap
+	mov ax,bx
+;
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosCreateBitmap	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDuplicateBitmapHandle
+;
+;		description:	RdosDuplicateBitmapHandle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDuplicateBitmapHandle
+
+_RdosDuplicateBitmapHandle	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	DuplicateBitmapHandle
+	mov ax,bx
+;
+	pop bx
+	pop bp
+	ret
+_RdosDuplicateBitmapHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseBitmap
+;
+;		description:	RdosCloseBitmap(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseBitmap
+
+_RdosCloseBitmap	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseBitmap
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseBitmap	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateStringBitmap
+;
+;		description:	RdosCreateStringBitmap(font, str)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateStringBitmap
+
+_RdosCreateStringBitmap	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	mov bx,[bp+6]
+	les di,[bp+8]
+	CreateStringBitmap
+	mov ax,bx
+;
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosCreateStringBitmap	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetBitmapInfo
+;
+;		description:	RdosGetBitmapInfo(handle, &BitsPerPixel, &width, &height,
+;					   						&linesize, &buffer)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetBitmapInfo
+
+_RdosGetBitmapInfo	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push ax
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	GetBitmapInfo
+	jc gbiFail
+;
+	push di
+	les di,[bp+8]
+	movzx ax,al
+	mov es:[di],ax
+	les di,[bp+12]
+	mov es:[di],cx
+	les di,[bp+16]
+	mov es:[di],dx
+	les di,[bp+20]
+	mov es:[di],si
+	les di,[bp+24]
+	pop ax
+	mov es:[di],ax
+	jmp gbiDone
+
+gbiFail:
+	xor ax,ax
+	les di,[bp+8]
+	mov es:[di],ax
+	les di,[bp+12]
+	mov es:[di],ax
+	les di,[bp+16]
+	mov es:[di],ax
+	les di,[bp+20]
+	mov es:[di],ax
+	les di,[bp+24]
+	mov es:[di],ax
+
+gbiDone:
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop es
+	pop bp
+	ret
+_RdosGetBitmapInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateSprite
+;
+;		description:	RdosCreateSprite(dest, bitmap, mask, lgop)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateSprite
+
+_RdosCreateSprite	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	mov ax,[bp+12]
+	CreateSprite
+	mov ax,bx
+;
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosCreateSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseSprite
+;
+;		description:	RdosCloseSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseSprite
+
+_RdosCloseSprite	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseSprite
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosShowSprite
+;
+;		description:	RdosShowSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosShowSprite
+
+_RdosShowSprite	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	ShowSprite
+;
+	pop bx
+	pop bp
+	ret
+_RdosShowSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosHideSprite
+;
+;		description:	RdosHideSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosHideSprite
+
+_RdosHideSprite	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	HideSprite
+;
+	pop bx
+	pop bp
+	ret
+_RdosHideSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosMoveSprite
+;
+;		description:	RdosMoveSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosMoveSprite
+
+_RdosMoveSprite	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push cx
+	push dx
+;
+	mov bx,[bp+6]
+	mov cx,[bp+8]
+	mov dx,[bp+10]
+	MoveSprite
+;
+	pop dx
+	pop cx
+	pop bx
+	pop bp
+	ret
+_RdosMoveSprite	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -201,255 +1657,6 @@ _SetBackColor	Proc far
 	pop bp
 	ret
 _SetBackColor	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SetFont
-;
-;		description:	SetFont(height)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _SetFont
-
-_SetFont	Proc far
-	push bp
-	mov bp,sp
-	mov ax,[bp+6]
-	SetFont
-	pop bp
-	ret
-_SetFont	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FillRect
-;
-;		description:	int FillRect(startX, startY, endX, endY)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _FillRect
-
-frStartX	EQU 6
-frStartY	EQU 8
-frEndX		EQU 10
-frEndY		EQU 12
-
-_FillRect	Proc far
-	push bp
-	mov bp,sp
-	mov ax,[bp].frStartX
-	mov bx,[bp].frStartY
-	mov cx,[bp].frEndX
-	mov dx,[bp].frEndY
-;	FillRect
-	pop bp
-	ret
-_FillRect	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DrawMonoBitmap
-;
-;		description:	ivoid DrawMonoBitmap(bitmap, startX, startY, endX, endY)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _DrawMonoBitmap
-
-dmBitmap	EQU 6
-dmStartX	EQU 10
-dmStartY	EQU 12
-dmEndX		EQU 14
-dmEndY		EQU 16
-
-_DrawMonoBitmap	Proc far
-	push bp
-	mov bp,sp
-	push es
-;
-	mov ax,[bp].dmStartX
-	mov bx,[bp].dmStartY
-	mov cx,[bp].dmEndX
-	mov dx,[bp].dmEndY
-	mov es,[bp].dmBitmap+2
-;	DrawMono
-;
-	pop es
-	pop bp
-	ret
-_DrawMonoBitmap	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetCharWidth
-;
-;		description:	int GetCharWidth(ch)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _GetCharWidth
-
-_GetCharWidth	Proc far
-	push bp
-	mov bp,sp
-	mov al,[bp+6]
-;	GetCharWidth
-	mov ax,cx
-	pop bp
-	ret
-_GetCharWidth	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DrawChar
-;
-;		description:	int DrawChar(x, y, ch)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _DrawChar
-
-dcX		EQU 6
-dcY		EQU 8
-dcCh	EQU 10
-
-_DrawChar	Proc far
-	push bp
-	mov bp,sp
-	mov cx,[bp].dcX
-	mov dx,[bp].dcY
-	mov al,[bp].dcCh
-;	DrawChar
-	mov ax,cx
-	pop bp
-	ret
-_DrawChar	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetStringWidth
-;
-;		description:	int GetStringWidth(str)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _GetStringWidth
-
-_GetStringWidth	Proc far
-	push bp
-	mov bp,sp
-	push es
-	push di
-	les di,[bp+6]
-;	GetStringWidth
-	mov ax,cx
-	pop di
-	pop es
-	pop bp
-	ret
-_GetStringWidth	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DrawString
-;
-;		description:	int DrawString(x, y, str)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _DrawString
-
-dsX		EQU 6
-dsY		EQU 8
-dsStr	EQU 10
-
-_DrawString	Proc far
-	push bp
-	mov bp,sp
-	push es
-	push di
-	mov cx,[bp].dsX
-	mov dx,[bp].dsY
-	les di,[bp].dsStr
-;	DrawString
-	mov ax,cx
-	pop di
-	pop es
-	pop bp
-	ret
-_DrawString	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetMemSize
-;
-;		description:	int GetMemSize(ptr)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _GetMemSize
-
-_GetMemSize	Proc far
-	push bp
-	mov bp,sp
-	lsl ax,[bp+8]
-	pop bp
-	ret
-_GetMemSize	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			AllocateMem
-;
-;		description:	void *AllocateMem(size)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _AllocateMem
-
-_AllocateMem	Proc far
-	push bp
-	mov bp,sp
-	push es
-	mov eax,[bp+6]
-	AllocateLocalMem
-	mov dx,es
-	xor ax,ax
-	pop es
-	pop bp
-	ret
-_AllocateMem	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FreeMem
-;
-;		description:	void FreeMem(ptr)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _FreeMem
-
-_FreeMem	Proc far
-	push bp
-	mov bp,sp
-	mov es,[bp+8]
-	FreeMem
-	pop bp
-	ret
-_FreeMem	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -522,109 +1729,486 @@ _GetSysTime	Proc far
 	ret
 _GetSysTime	Endp
 
-FCLK DD 1179648
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			_OpenTimer
+;		NAME:			GetTime
 ;
-;		DESCRIPTION:	opens timer system (starts counting ticks)
+;		description:	gets time in record form
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _OpenTimer
-
-_OpenTimer	Proc far
-	mov ax,word ptr cs:FCLK
-	mov dx,word ptr cs:FCLK+2
-	ret
-_OpenTimer	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			_CloseTimer
-;
-;		DESCRIPTION:	closes timer system (stops counting ticks)
+;		PARAMETERS:		int *year
+;						int *month
+;						int *day
+;						int *hour
+;						int *min
+;						int *sec
+;						int *milli
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _CloseTimer
+	public _GetTime
 
-_CloseTimer	Proc far
-	ret
-_CloseTimer	Endp
+grtYear	EQU 6
+grtMonth	EQU 10
+grtDay		EQU 14
+grtHour	EQU 18
+grtMin		EQU 22
+grtSec		EQU 26
+grtMilli	EQU 30
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			_ReadTimerTicks
-;
-;		DESCRIPTION:	reads current number of timer ticks
-;
-;		RETURNS:		timer chip ticks
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _ReadTimerTicks
-
-_ReadTimerTicks	Proc far
-	GetSystemTime
-	push eax
-	pop ax
-	pop dx
-	ret
-_ReadTimerTicks	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			_CheckTimerRunning
-;
-;		DESCRIPTION:	check if timer is running or if timeout has occured
-;
-;		PARAMETERS:		expire_time		expiration time
-;
-;		RETURNS:		TRUE if timer is running, FALSE if timeout occured
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _CheckTimerRunning
-
-_CheckTimerRunning	Proc far
+_GetTime	Proc far
 	push bp
 	mov bp,sp
 	push ds
-	GetSystemTime
+	push si
+;
+	GetTime
 	push eax
-	pop ax
-	pop dx
-	sub ax,[bp+6]
-	sbb dx,[bp+8]
-	test dh,80h
-	jnz check_timer_running
-	xor ax,ax
-	jmp check_timer_end
-check_timer_running:
-	mov ax,1
-check_timer_end:
+	BinaryToTime
+;
+	lds si,[bp].grtYear
+	mov [si],dx
+	lds si,[bp].grtMonth
+	mov [si],ch
+	mov byte ptr [si+1],0
+	lds si,[bp].grtDay
+	mov [si],cl
+	mov byte ptr [si+1],0
+	lds si,[bp].grtHour
+	mov [si],bh
+	mov byte ptr [si+1],0
+	lds si,[bp].grtMin
+	mov [si],bl
+	mov byte ptr [si+1],0
+	lds si,[bp].grtSec
+	mov [si],ah
+	mov byte ptr [si+1],0
+;
+	TimeToBinary
+	mov ebx,eax
+	pop eax
+	sub eax,ebx
+	xor edx,edx
+	mov ebx,1192
+	div ebx
+	lds si,[bp].grtMilli
+	mov [si],ax
+;
+	pop si
 	pop ds
 	pop bp
 	ret
-_CheckTimerRunning	Endp
+_GetTime	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosTicsToRecord
+;
+;		description:	Convert tics to record form
+;
+;		PARAMETERS:		int MSB
+;						int LSB
+;						int *year
+;						int *month
+;						int *day
+;						int *hour
+;						int *min
+;						int *sec
+;						int *milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosTicsToRecord
+
+ctMSB		EQU 6
+ctLSB		EQU 10
+ctYear		EQU 14
+ctMonth		EQU 18
+ctDay		EQU 22
+ctHour		EQU 26
+ctMin		EQU 30
+ctSec		EQU 34
+ctMilli		EQU 38
+
+_RdosTicsToRecord	Proc far
+	push bp
+	mov bp,sp
+	push es
+	pusha
+;
+	mov edx,[bp].ctMSB
+	mov eax,[bp].ctLSB
+	BinaryToTime
+	push edx
+;
+	les si,[bp].ctYear
+	mov es:[si],dx
+;
+	les si,[bp].ctMonth
+	movzx dx,ch
+	mov es:[si],dx
+;
+	les si,[bp].ctDay
+	movzx dx,cl
+	mov es:[si],dx
+;
+	les si,[bp].ctHour
+	movzx dx,bh
+	mov es:[si],dx
+;
+	les si,[bp].ctMin
+	movzx dx,bl
+	mov es:[si],dx
+;
+	les si,[bp].ctSec
+	movzx dx,ah
+	mov es:[si],dx
+;
+	pop edx
+	TimeToBinary
+	mov ebx,eax
+	mov eax,[bp].ctLSB
+	sub eax,ebx
+	xor edx,edx
+	mov ebx,1192
+	div ebx
+	les si,[bp].ctMilli
+	mov es:[si],ax
+;
+	popa
+	pop es
+	pop bp
+	ret
+_RdosTicsToRecord	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosRecordToTics
+;
+;		description:	Convert record form to tics
+;
+;		PARAMETERS:		int *MSB
+;						int *LSB
+;						int year
+;						int month
+;						int day
+;						int hour
+;						int min
+;						int sec
+;						int milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosRecordToTics
+
+rtMSB		EQU 6
+rtLSB		EQU 10
+rtYear		EQU 14
+rtMonth		EQU 16
+rtDay		EQU 18
+rtHour		EQU 20
+rtMin		EQU 22
+rtSec		EQU 24
+rtMilli		EQU 26
+
+_RdosRecordToTics	Proc far
+	push bp
+	mov bp,sp
+	push es
+	pusha
+;
+	movzx eax,word ptr [bp].rtMilli
+	mov edx,1192
+	mul edx
+	push eax
+	mov dx,[bp].rtYear
+	mov ch,[bp].rtMonth
+	mov cl,[bp].rtDay
+	mov bh,[bp].rtHour
+	mov bl,[bp].rtMin
+	mov ah,[bp].rtSec
+	TimeToBinary
+	pop ebx
+	add eax,ebx
+	adc edx,0
+;
+	les si,[bp].rtMSB
+	mov es:[si],edx
+;
+	les si,[bp].rtLSB
+	mov es:[si],eax
+;
+	popa
+	pop es
+	pop bp
+	ret
+_RdosRecordToTics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetTics
+;
+;		description:	gets system time
+;
+;		parameters:		MSB of tics
+;						LSB of tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetTics
+
+rgtMSB	EQU 6
+rgtLSB	EQU 10
+
+_RdosGetTics	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push dx
+	push si
+;
+	GetTime
+	les si,[bp].rgtMSB
+	mov es:[si],edx
+	les si,[bp].rgtLSB
+	mov es:[si],eax
+;
+	pop si
+	pop dx
+	pop es
+	pop bp
+	ret
+_RdosGetTics	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OpenCom
+;		NAME:			RdosAddTics
 ;
-;		description:	Open serial port
+;		description:	add tics to time
 ;
-;		PARAMETERS:		port_base		Serial port IO base
-;						port_irq		IRQ
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddTics
+
+_RdosAddTics	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	les di,[bp+10]
+	add es:[di],eax
+	les di,[bp+6]
+	adc dword ptr es:[di],0	
+;
+    pop di
+	pop es
+	pop bp
+	ret
+_RdosAddTics	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddMilli
+;
+;		description:	add milli seconds
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddMilli
+
+_RdosAddMilli	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	mov edx,1193
+	mul edx
+	les di,[bp+10]
+	add es:[di],eax
+	les di,[bp+6]
+	adc es:[di],edx
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosAddMilli	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddSec
+;
+;		description:	add seconds
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long sec
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddSec
+
+_RdosAddSec	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	mov edx,1193000
+	mul edx
+	les di,[bp+10]
+	add es:[di],eax
+	les di,[bp+6]
+	adc es:[di],edx
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosAddSec	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddMin
+;
+;		description:	add minute
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long min
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddMin
+
+_RdosAddMin	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	mov edx,1193046*60
+	mul edx
+	les di,[bp+10]
+	add es:[di],eax
+	les di,[bp+6]
+	adc es:[di],edx
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosAddMin	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddHour
+;
+;		description:	add hour
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long hour
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddHour
+
+_RdosAddHour	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	les di,[bp+6]
+	add es:[di],eax
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosAddHour	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddDay
+;
+;		description:	add days
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long day
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosAddDay
+
+_RdosAddDay	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	mov eax,[bp+14]
+	mov edx,24
+	mul edx
+	les di,[bp+6]
+	add es:[di],eax
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosAddDay	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosOpenCom
+;
+;		description:	Open comport
+;
+;		PARAMETERS:		port_base		base IO-address to com port
+;						port_irq		irq to com port
 ;						baud_divisor	baudrate divisor
 ;						parity			parity 'N', 'E' or 'O'
 ;						data_bits		# of data bits
@@ -636,7 +2220,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _OpenCom
+	public _RdosOpenCom
 
 port_base		EQU 6
 port_irq		EQU 8
@@ -647,9 +2231,10 @@ stop_bits		EQU 16
 send_buf_size	EQU 18
 rec_buf_size	EQU 20
 
-_OpenCom	Proc far
+_RdosOpenCom	Proc far
 	push bp
 	mov bp,sp
+	push bx
 	push si
 	push di
 ;
@@ -666,237 +2251,327 @@ _OpenCom	Proc far
 ;
 	pop di
 	pop si
+	pop bx
 	pop bp
 	ret
-_OpenCom	Endp
+_RdosOpenCom	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CloseCom
+;		NAME:			RdosCloseCom
 ;
-;		description:	Close serial port
+;		description:	Close comport
 ;
 ;		PARAMETERS:		port_handle		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _CloseCom
+	public _RdosCloseCom
 
-_CloseCom	Proc far
+_RdosCloseCom	Proc far
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	CloseCom
+;
+    pop bx
 	pop bp
 	ret
-_CloseCom	Endp
+_RdosCloseCom	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FlushCom
+;		NAME:			RdosFlushCom
 ;
-;		description:	Flush serial port buffers
+;		description:	Flush comport
 ;
-;		PARAMETERS:		port_handler	Port handle
+;		PARAMETERS:		port_handle		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _FlushCom
+	public _RdosFlushCom
 
-_FlushCom	Proc far
+_RdosFlushCom	Proc far
 	push bp
 	mov bp,sp
+;
+    push bx
 	mov bx,[bp+6]
 	FlushCom
+;
+    pop bx
 	pop bp
 	ret
-_FlushCom	Endp
+_RdosFlushCom	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PollCom
+;		NAME:			RdosReadCom
 ;
-;		description:	Check if data is available
+;		description:    Read a char
 ;
-;		PARAMETERS:		hport		Port handle
-;
-;		RETURNS:		> 0			Number of bytes available
-;						FALSE		buffer empty
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _PollCom
-
-_PollCom	PROC far
-	push bp
-	mov bp,sp
-	mov bx,[bp+6]
-;	PollCom
-	pop bp
-	ret
-_PollCom	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WaitForCom
-;
-;		description:	Wait for data
-;
-;		PARAMETERS:		hport		Port handle
-;						timeout		ms timeout
-;
-;		RETURNS:		> 0			Number of bytes available
-;						FALSE		buffer empty
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public _WaitForCom
-
-_WaitForCom	PROC far
-	push bp
-	mov bp,sp
-	mov bx,[bp+6]
-	mov eax,[bp+8]
-;	WaitForCom
-	pop bp
-	ret
-_WaitForCom	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadCom
-;
-;		description:	Read a byte from port
-;
-;		PARAMETERS:		hport		Port handle
+;		PARAMETERS:		hport		port handle
 ;
 ;		RETURNS:		ch			received char
-;						-1			buffer empty
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _ReadCom
+	public _RdosReadCom
 
-_ReadCom	PROC far
+_RdosReadCom	PROC far
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	ReadCom
+;
+	pop bx
 	pop bp
 	ret
-_ReadCom	ENDP
+_RdosReadCom	ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			WriteCom
+;		NAME:			RdosWriteCom
 ;
-;		description:	Send a byte to port
+;		description:	Write a char to port
 ;
-;		PARAMETERS:		hport		Port handle
-;						ch			Data
+;		PARAMETERS:		hport		port handle
+;						ch			char
 ;
-;		RETURNS:		0			OK
+;		RETURNS:		0			success
 ;						-1			buffer full
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _WriteCom
+	public _RdosWriteCom
 
-_WriteCom	PROC far
+_RdosWriteCom	PROC far
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	mov al,[bp+8]
 	WriteCom
+;
+    pop bx
 	pop bp
 	ret
-_WriteCom	ENDP
+_RdosWriteCom	ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SetDtr
+;		NAME:			RdosSetDtr
 ;
-;		description:	Set DTR
+;		description:	Set DTR signal
 ;
-;		PARAMETERS:		hport		Port handle
+;		PARAMETERS:		hport		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _SetDtr
+	public _RdosSetDtr
 
-_SetDtr	Proc far
+_RdosSetDtr	Proc far
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	SetDtr
+;
+    pop bx
 	pop bp
 	ret
-_SetDtr	Endp
+_RdosSetDtr	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ResetDtr
+;		NAME:			RdosResetDtr
 ;
-;		description:	Reset DTR
+;		description:	Reset DTR signal
 ;
-;		PARAMETERS:		hport		Port handle
+;		PARAMETERS:		hport		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _ResetDtr
+	public _RdosResetDtr
 
-_ResetDtr	Proc far
+_RdosResetDtr	Proc far
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	ResetDtr
+;
+    pop bx
 	pop bp
 	ret
-_ResetDtr	Endp
+_RdosResetDtr	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			OpenFile
+;
+;		NAME:			RdosSetRts
+;
+;		description:	Set RTS signal
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetRts
+
+_RdosSetRts	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	SetRts
+;
+	pop bx
+	pop bp
+	ret
+_RdosSetRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosResetRts
+;
+;		description:	Reset RTS signal
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosResetRts
+
+_RdosResetRts	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	ResetRts
+;
+	pop bx
+	pop bp
+	ret
+_RdosResetRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetReceiveBufferSpace
+;
+;		description:	Get receive buffer space
+;
+;		PARAMETERS:		hport		port handle
+;
+;       RETURNS:        number of free bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetReceiveBufferSpace
+
+_RdosGetReceiveBufferSpace	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+    GetComReceiveSpace
+;
+	pop bx
+	pop bp
+	ret
+_RdosGetReceiveBufferSpace	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetSendBufferSpace
+;
+;		description:	Get send buffer space
+;
+;		PARAMETERS:		hport		port handle
+;
+;       RETURNS:        number of free bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetSendBufferSpace
+
+_RdosGetSendBufferSpace	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	GetComSendSpace
+;
+	pop bx
+	pop bp
+	ret
+_RdosGetSendBufferSpace	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenFile
 ;
 ;		DESCRIPTION:	Opens a file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _OpenFile
+	public _RdosOpenFile
 
-_OpenFile	PROC	FAR
+_RdosOpenFile	PROC	FAR
 	push bp
 	mov bp,sp
 	push es
+	push bx
+	push cx
 	push di
+;
 	les di,[bp+6]
 	mov cl,[bp+10]
 	OpenFile
 	jc OpenFileFailed
+;
 	mov ax,bx
 	jmp OpenFileDone
 
@@ -905,46 +2580,124 @@ OpenFileFailed:
 
 OpenFileDone:
 	pop di
+	pop cx
+	pop bx
 	pop es
 	pop bp
 	ret
-_OpenFile	ENDP
+_RdosOpenFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			CloseFile
+;		NAME:			RdosCreateFile
+;
+;		DESCRIPTION:	Creates a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateFile
+
+_RdosCreateFile	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push cx
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+    CreateFile
+	jc CreateFileFailed
+;
+	mov ax,bx
+	jmp CreateFileDone
+
+CreateFileFailed:
+	xor ax,ax
+
+CreateFileDone:
+	pop di
+	pop cx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosCreateFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseFile
 ;
 ;		DESCRIPTION:	Close a file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _CloseFile
+	public _RdosCloseFile
 
-_CloseFile	PROC	FAR
+_RdosCloseFile	PROC	FAR
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	CloseFile
+;
+    pop bx
 	pop bp
 	ret
-_CloseFile	ENDP
+_RdosCloseFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			GetFileSize
+;		NAME:			RdosDuplFile
+;
+;		DESCRIPTION:	Duplicate file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDuplFile
+
+_RdosDuplFile	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	DuplFile
+	jc DuplFileFailed
+;
+	mov ax,bx
+	jmp DuplFileDone
+
+DuplFileFailed:
+	xor ax,ax
+
+DuplFileDone:
+	pop bx
+	pop bp
+	ret
+_RdosDuplFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFileSize
 ;
 ;		DESCRIPTION:	Get size of a file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _GetFileSize
+	public _RdosGetFileSize
 
-_GetFileSize	PROC	FAR
+_RdosGetFileSize	PROC	FAR
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	GetFileSize
 	jc GetFileSizeFail
+;
 	push eax
 	pop ax
 	pop dx
@@ -955,46 +2708,54 @@ GetFileSizeFail:
 	xor dx,dx
 
 GetFileSizeDone:
+    pop bx
 	pop bp
 	ret
-_GetFileSize	ENDP
+_RdosGetFileSize	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			SetFileSize
+;		NAME:			RdosSetFileSize
 ;
 ;		DESCRIPTION:	Set size of file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _SetFileSize
+	public _RdosSetFileSize
 
-_SetFileSize	PROC	FAR
+_RdosSetFileSize	PROC	FAR
 	push bp
 	mov bp,sp
+    push bx
+;
 	mov bx,[bp+6]
 	mov eax,[bp+8]
 	SetFileSize
+;
+    pop bx
 	pop bp
 	ret
-_SetFileSize	ENDP
+_RdosSetFileSize	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			GetFilePos
+;		NAME:			RdosGetFilePos
 ;
 ;		DESCRIPTION:	Get position in a file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _GetFilePos
+	public _RdosGetFilePos
 
-_GetFilePos	PROC	FAR
+_RdosGetFilePos	PROC	FAR
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	GetFilePos
 	jc GetFilePosFail
+;
 	push eax
 	pop ax
 	pop dx
@@ -1005,44 +2766,115 @@ GetFilePosFail:
 	xor dx,dx
 
 GetFilePosDone:
+    pop bx
 	pop bp
 	ret
-_GetFilePos	ENDP
+_RdosGetFilePos	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			SetFilePos
+;		NAME:			RdosSetFilePos
 ;
 ;		DESCRIPTION:	Set position in file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _SetFilePos
+	public _RdosSetFilePos
 
-_SetFilePos	PROC	FAR
+_RdosSetFilePos	PROC	FAR
 	push bp
 	mov bp,sp
+	push bx
+;
 	mov bx,[bp+6]
 	mov eax,[bp+8]
 	SetFilePos
+;
+    pop bx
 	pop bp
 	ret
-_SetFilePos	ENDP
+_RdosSetFilePos	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			ReadFile
+;		NAME:			RdosGetFileTime
+;
+;		DESCRIPTION:	Get file date & time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetFileTime
+
+_RdosGetFileTime	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push dx
+	push di
+;
+	mov bx,[bp+6]
+	GetFileTime
+	jc GetFileTimeDone
+;
+	les di,[bp+8]
+	mov es:[di],edx
+;
+	les di,[bp+12]
+	mov es:[di],eax
+
+GetFileTimeDone:
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosGetFileTime	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFileTime
+;
+;		DESCRIPTION:	Set date & time for file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetFileTime
+
+_RdosSetFileTime	PROC far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push dx
+;
+	mov bx,[bp+6]
+	mov edx,[bp+8]
+	mov eax,[bp+12]
+	SetFileTime
+;
+	pop dx
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosSetFileTime	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadFile
 ;
 ;		DESCRIPTION:	Read data from file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _ReadFile
+	public _RdosReadFile
 
-_ReadFile	PROC	FAR
+_RdosReadFile	PROC	FAR
 	push bp
 	mov bp,sp
 	push es
+	push bx
 	push di
 ;
 	mov bx,[bp+6]
@@ -1051,25 +2883,27 @@ _ReadFile	PROC	FAR
 	ReadFile
 ;
 	pop di
+	pop bx
 	pop es
 	pop bp
 	ret
-_ReadFile	ENDP
+_RdosReadFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			WriteFile
+;		NAME:			RdosWriteFile
 ;
 ;		DESCRIPTION:	Write data to file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _WriteFile
+	public _RdosWriteFile
 
-_WriteFile	PROC	FAR
+_RdosWriteFile	PROC	FAR
 	push bp
 	mov bp,sp
 	push es
+	push bx
 	push di
 ;
 	mov bx,[bp+6]
@@ -1078,10 +2912,923 @@ _WriteFile	PROC	FAR
 	WriteFile
 ;
 	pop di
+	pop bx
 	pop es
 	pop bp
 	ret
-_WriteFile	ENDP
+_RdosWriteFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateMapping
+;
+;		DESCRIPTION:	Create file mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateMapping
+
+_RdosCreateMapping	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	movzx eax,word ptr [bp+6]
+	CreateMapping
+	mov ax,bx
+;
+	pop bx
+	pop bp
+	ret
+_RdosCreateMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateNamedMapping
+;
+;		DESCRIPTION:	Create file named mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateNamedMapping
+
+_RdosCreateNamedMapping	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+	movzx ax,[ebp+10]
+	CreateNamedMapping
+	mov ax,bx
+;
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosCreateNamedMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateNamedFileMapping
+;
+;		DESCRIPTION:	Create file named file mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCreateNamedFileMapping
+
+_RdosCreateNamedFileMapping	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+	movzx eax,word ptr [bp+10]
+	mov bx,[bp+12]
+	CreateNamedFileMapping
+	mov ax,bx
+;
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosCreateNamedFileMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenNamedMapping
+;
+;		DESCRIPTION:	Open named mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosOpenNamedMapping
+
+_RdosOpenNamedMapping	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+	OpenNamedMapping
+	mov ax,bx
+;
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosOpenNamedMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSyncMapping
+;
+;		DESCRIPTION:	Sync mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSyncMapping
+
+_RdosSyncMapping	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	SyncMapping
+;
+	pop bx
+	pop bp
+	ret
+_RdosSyncMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseMapping
+;
+;		DESCRIPTION:	Close mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseMapping
+
+_RdosCloseMapping	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseMapping
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosMapView
+;
+;		DESCRIPTION:	Map view into memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosMapView
+
+_RdosMapView	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push cx
+	push di
+;
+	mov bx,[bp+6]
+	mov eax,[bp+10]
+	les di,[bp+14]
+	mov cx,[bp+18]
+	MapView
+;
+	pop di
+	pop cx
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosMapView	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosUnmapView
+;
+;		DESCRIPTION:	Unmap view from memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosUnmapView
+
+_RdosUnmapView	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	UnmapView
+;
+	pop bx
+	pop bp
+	ret
+_RdosUnmapView	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetCurDir
+;
+;		DESCRIPTION:	Set current directory
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetCurDir
+
+_RdosSetCurDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	SetCurDir
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosSetCurDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFocus
+;
+;		DESCRIPTION:	Set focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetFocus
+
+_RdosSetFocus	PROC far
+	push bp
+	mov bp,sp
+	mov ax,[bp+6]
+	SetFocus
+	pop bp
+	ret
+_RdosSetFocus	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosClearKeyboard
+;
+;		DESCRIPTION:	Clear keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosClearKeyboard
+
+_RdosClearKeyboard	PROC far
+	FlushKeyboard
+	ret
+_RdosClearKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPollKeyboard
+;
+;		DESCRIPTION:	Poll keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosPollKeyboard
+
+_RdosPollKeyboard	PROC far
+	PollKeyboard
+	jc rpkEmpty
+;
+	mov ax,1
+	ret
+
+rpkEmpty:
+	xor ax,ax
+	ret
+_RdosPollKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadKeyboard
+;
+;		DESCRIPTION:	Read keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReadKeyboard
+
+_RdosReadKeyboard	PROC far
+	ReadKeyboard
+	ret
+_RdosReadKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetKeyboardState
+;
+;		DESCRIPTION:	Get keyboard state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetKeyboardState
+
+_RdosGetKeyboardState	PROC far
+	GetKeyboardState
+	ret
+_RdosGetKeyboardState	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPeekKeyEvent
+;
+;		DESCRIPTION:	Peek keyboard event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosPeekKeyEvent
+
+_RdosPeekKeyEvent	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+	PeekKeyEvent
+	jc rpeFail
+;
+	les di,[bp+6]
+	mov es:[di],ax
+;
+	les di,[bp+10]
+	mov es:[di],cx
+;
+	les di,[bp+14]
+	movzx ax,dl
+	mov es:[di],ax
+;
+	les di,[bp+18]
+	movzx ax,dh
+	mov es:[di],ax
+;
+	mov ax,1
+	jmp rpeDone
+
+rpeFail:
+	xor ax,ax
+
+rpeDone:
+	pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosPeekKeyEvent	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadKeyEvent
+;
+;		DESCRIPTION:	Read keyboard event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReadKeyEvent
+
+_RdosReadKeyEvent	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+	ReadKeyEvent
+	jc rkeFail
+;
+	les di,[bp+6]
+	mov es:[di],ax
+;
+	les di,[bp+10]
+	mov es:[di],cx
+;
+	les di,[bp+14]
+	movzx ax,dl
+	mov es:[di],ax
+;
+	les di,[bp+18]
+	movzx ax,dh
+	mov es:[di],ax
+;
+	mov ax,1
+	jmp rkeDone
+
+rkeFail:
+	xor ax,ax
+
+rkeDone:
+	pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosReadKeyEvent	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosHideMouse
+;
+;		DESCRIPTION:	Hide mouse
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosHideMouse
+
+_RdosHideMouse	PROC far
+	HideMouse
+	ret
+_RdosHideMouse	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosShowMouse
+;
+;		DESCRIPTION:	Show mouse
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosShowMouse
+
+_RdosShowMouse	PROC far
+	ShowMouse
+	ret
+_RdosShowMouse	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetMousePosition
+;
+;		DESCRIPTION:	Get mouse position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetMousePosition
+
+_RdosGetMousePosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetMousePosition
+	les di,[bp+6]
+	mov es:[di],cx
+	les di,[bp+10]
+	mov es:[di],dx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetMousePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMousePosition
+;
+;		DESCRIPTION:	Set mouse position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetMousePosition
+
+_RdosSetMousePosition	PROC far
+	push bp
+	mov bp,sp
+	push cx
+	push dx
+;
+	mov cx,[bp+6]
+	mov dx,[bp+8]
+	SetMousePosition
+;
+	pop dx
+	pop cx
+	pop bp
+	ret
+_RdosSetMousePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMouseWindow
+;
+;		DESCRIPTION:	Set mouse window
+;
+;		PARAMETER:		start x
+;						start y
+;						end x
+;						end y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetMouseWindow
+
+_RdosSetMouseWindow	PROC far
+	push bp
+	mov bp,sp
+	push ax
+	push bx
+	push cx
+	push dx
+;
+	mov ax,[bp+6]
+	mov bx,[bp+8]
+	mov cx,[bp+10]
+	mov dx,[bp+12]
+	SetMouseWindow
+;
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	pop bp
+	ret
+_RdosSetMouseWindow	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMouseMickey
+;
+;		DESCRIPTION:	Set mouse mickey
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetMouseMickey
+
+_RdosSetMouseMickey	PROC far
+	push bp
+	mov bp,sp
+	push cx
+	push dx
+;
+	mov cx,[bp+6]
+	mov dx,[bp+8]
+	SetMouseMickey
+;
+	pop dx
+	pop cx
+	pop bp
+	ret
+_RdosSetMouseMickey	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetCursorPosition
+;
+;		DESCRIPTION:	Set cursor position
+;
+;		PARAMETER:		Row
+;						Col
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetCursorPosition
+
+_RdosSetCursorPosition	PROC far
+	push bp
+	mov bp,sp
+	push cx
+	push dx
+;
+	mov dx,[bp+6]
+	mov cx,[bp+8]
+	SetCursorPosition
+;
+	pop dx
+	pop cx
+	pop bp
+	ret
+_RdosSetCursorPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButton
+;
+;		DESCRIPTION:	Check if left button is pressed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetLeftButton
+
+_RdosGetLeftButton	PROC far
+	GetLeftButton
+	jc get_left_rel
+;
+	mov ax,1
+	ret
+
+get_left_rel:
+	xor ax,ax
+	ret
+_RdosGetLeftButton	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButton
+;
+;		DESCRIPTION:	Check if right button is pressed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetRightButton
+
+_RdosGetRightButton	PROC far
+	GetRightButton
+	jc get_right_rel
+;
+	mov ax,1
+	ret
+
+get_right_rel:
+	xor ax,ax
+	ret
+_RdosGetRightButton	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButtonPressPosition
+;
+;		DESCRIPTION:	Get left button press position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetLeftButtonPressPosition
+
+_RdosGetLeftButtonPressPosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetLeftButtonPressPosition
+	les di,[bp+6]
+	mov es:[di],cx
+	les di,[bp+10]
+	mov es:[di],dx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetLeftButtonPressPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButtonPressPosition
+;
+;		DESCRIPTION:	Get right button pressed position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetRightButtonPressPosition
+
+_RdosGetRightButtonPressPosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetRightButtonPressPosition
+	les di,[bp+6]
+	mov es:[di],cx
+	les di,[bp+10]
+	mov es:[di],dx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetRightButtonPressPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButtonRelesePosition
+;
+;		DESCRIPTION:	Get left button released position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetLeftButtonReleasePosition
+
+_RdosGetLeftButtonReleasePosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetLeftButtonReleasePosition
+	les di,[bp+6]
+	mov es:[di],cx
+	les di,[bp+10]
+	mov es:[di],dx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetLeftButtonReleasePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButtonReleasePosition
+;
+;		DESCRIPTION:	Get right button release position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetRightButtonReleasePosition
+
+_RdosGetRightButtonReleasePosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetRightButtonReleasePosition
+	les di,[bp+6]
+	mov es:[di],cx
+	les di,[bp+10]
+	mov es:[di],dx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetRightButtonReleasePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadLine
+;
+;		DESCRIPTION:	Read a line from keyboard
+;
+;		PARAMETERS:		Buffer
+;						Buffer size
+;
+;		RETURNS:		Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReadLine
+
+_RdosReadLine	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+	ReadConsole
+;
+	pop di
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosReadLine	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteChar
+;
+;		DESCRIPTION:	Write a single character to screen
+;
+;		PARAMETER:		Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWriteChar
+
+_RdosWriteChar	PROC far
+	push bp
+	mov bp,sp
+;
+	mov al,[bp+6]
+	WriteChar
+;
+	pop bp
+	ret
+_RdosWriteChar	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteSizeString
+;
+;		DESCRIPTION:	Write a fixed number of characters to screen
+;
+;		PARAMETER:		String
+;						Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWriteSizeString
+
+_RdosWriteSizeString	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+	WriteSizeString
+;
+	pop di
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosWriteSizeString	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteString
+;
+;		DESCRIPTION:	Write a string to screen
+;
+;		PARAMETER:		String
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWriteString
+
+_RdosWriteString	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	WriteAsciiz
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosWriteString	ENDP
 
 code	ENDS
 

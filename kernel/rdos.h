@@ -33,6 +33,10 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
+#ifndef __stdcall
+#define __stdcall
+#endif
+
 void __stdcall RdosSetTextMode();
 int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
