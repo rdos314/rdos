@@ -218,7 +218,7 @@ TListBase::TListBase(const TListBase &src)
 
     while (p)
     {
-        AddLast(Clone(p));
+        AddLast(src.Clone(p));
         p = p->FNext;
     }
     FSection.Leave();
