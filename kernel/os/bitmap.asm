@@ -249,6 +249,74 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			delete_bitmap
+;
+;		DESCRIPTION:	Delete bitmap
+;
+;		PARAMETERS:		DS:BX		Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_bitmap	Proc near
+	test ds:[bx].bm_flag,BM_FLAG_BITMAP
+	jz delete_bitmap_free
+;
+	push es
+	push ecx
+	push edx
+	mov es,[bx].bm_sel
+	mov ecx,es:v_app_size
+	mov edx,es:v_app_base
+	FreeLinear
+	FreeMem
+	pop edx
+	pop ecx
+	pop es
+
+delete_bitmap_free:
+	FreeHandle
+	clc
+	ret
+delete_bitmap	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseBitmap
+;
+;		DESCRIPTION:	Close bitmap
+;
+;		PARAMETERS:		BX		Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_bitmap_name	DB 'Close Bitmap', 0
+
+close_bitmap	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc cl_bitmap_done
+;
+	call delete_bitmap
+
+cl_bitmap_done:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+close_bitmap	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			delete_handle
 ;
 ;		DESCRIPTION:	BX			Bitmap handle
@@ -256,6 +324,20 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	call delete_bitmap
+
+delete_handle_done:
+	pop bx
+	pop ax
+	pop ds
 	ret
 delete_handle	Endp
 
@@ -291,6 +373,12 @@ init_bitmap	PROC near
 	mov di,OFFSET create_bitmap_name
 	xor dx,dx
 	mov ax,create_bitmap_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_bitmap
+	mov di,OFFSET close_bitmap_name
+	xor dx,dx
+	mov ax,close_bitmap_nr
 	RegisterBimodalUserGate
 ;
 	ret

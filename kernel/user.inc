@@ -1431,6 +1431,11 @@ CreateBitmap      MACRO
 	UserGate create_bitmap_nr
 						ENDM
 
+;	IN  BX		Bitmap handle
+CloseBitmap      MACRO
+	UserGate close_bitmap_nr
+						ENDM
+
 ;	IN  AX		start x
 ;	IN  BX		start y
 ;	IN  CX		end x

@@ -236,5 +236,6 @@ draw_line_nr				= 208
 draw_rect_nr				= 209
 draw_ellipse_nr				= 210
 create_bitmap_nr			= 211
+close_bitmap_nr				= 212
 
-usergate_entries			= 212
+usergate_entries			= 213
