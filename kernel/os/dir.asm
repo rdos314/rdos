@@ -916,12 +916,12 @@ parse_dir_entry_loop:
 	push esi
 	push edi
 	mov esi,fs:[esi].de_name
-
-parse_dir_name_loop:
 	mov al,es:[edi]
 	cmp al,'.'
 	je parse_dir_dot
-;
+
+parse_dir_name_loop:
+	mov al,es:[edi]
 	xlat byte ptr cs:char_tab
 	mov ah,al
 	mov al,fs:[esi]
