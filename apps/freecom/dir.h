@@ -36,7 +36,7 @@ class TDirFactory : public TCommandFactory
 {
 public:
 	TDirFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TDirCommand : public TCommand
 {
 public:
-	TDirCommand(const char *param);
+	TDirCommand(TSession *session, const char *param);
 	virtual ~TDirCommand();
 
 	virtual int Execute(char *param);

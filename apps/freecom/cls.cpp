@@ -62,9 +62,9 @@ TClsFactory::TClsFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TClsFactory::Create(const char *param)
+TCommand *TClsFactory::Create(TSession *session, const char *param)
 {
-	return new TClsCommand(param);
+	return new TClsCommand(session, param);
 }
 
 /*##########################################################################
@@ -78,8 +78,8 @@ TCommand *TClsFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TClsCommand::TClsCommand(const char *param)
-  : TCommand(param)
+TClsCommand::TClsCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_CLS);
 }

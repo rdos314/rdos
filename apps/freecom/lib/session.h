@@ -29,12 +29,18 @@
 #define _SESSION_H
 
 #include "file.h"
+#include "cmdfact.h"
+#include "part.h"
+#include "strlist.h"
+#include "keyboard.h"
 
 class TSession
 {
 public:
     TSession();
     ~TSession();
+
+    void Run();
     
     void Write(char ch);
     void Write(const char *str);
@@ -49,22 +55,32 @@ public:
     int ReadCmd(char *str, int maxsize);
 
     void DisplayPrompt();
+    int ReadCon(char *str, int maxsize);
 
     void SetCmdFile(TFile *File);
     void SetInputFile(TFile *File);
     void SetOutputFile(TFile *File);
     void SetErrorFile(TFile *File);
 
-    TFile *GetCmdFile();
+	TFile *GetCmdFile();
     TFile *GetInputFile();
     TFile *GetOutputFile();
     TFile *GetErrorFile();
 
 protected:
+    void WriteWelcome();
+    TString FormatTime(TDateTime &time);
+    TString FormatLongDate(TDateTime &date);
+
     TFile *FCmdFile;
     TFile *FInputFile;
     TFile *FOutputFile;
     TFile *FErrorFile;
+
+    static Count;
+    static TStringList *History;
+    static TKeyboardDevice *Keyboard;
+
 };
 
 #endif

@@ -36,13 +36,13 @@ class TTimeFactory : public TCommandFactory
 {
 public:
 	TTimeFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TTimeCommand : public TTimeDateCommand
 {
 public:
-	TTimeCommand(const char *param);
+	TTimeCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);
 

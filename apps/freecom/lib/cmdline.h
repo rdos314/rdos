@@ -34,7 +34,7 @@
 class TCommandLine
 {
 public:
-	TCommandLine(const char *line);
+	TCommandLine(TSession *session, const char *line);
 	~TCommandLine();
 
 	int Run();
@@ -48,8 +48,9 @@ protected:
 	void Pipe(TString &str);
 	void Add(TString &str);
 
+   TSession *FSession;
 	TCommand *FList;
-    int FRemoveInput;
+	 int FRemoveInput;
 	TString FInputFile;
 	TString FOutputFile;
 	TString FAppendFile;

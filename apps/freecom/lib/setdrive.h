@@ -33,7 +33,7 @@
 class TSetDriveCommand : public TCommand
 {
 public:
-	TSetDriveCommand(const char *param);
+	TSetDriveCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 };

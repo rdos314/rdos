@@ -63,9 +63,9 @@ TDateFactory::TDateFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TDateFactory::Create(const char *param)
+TCommand *TDateFactory::Create(TSession *session, const char *param)
 {
-	return new TDateCommand(param);
+	return new TDateCommand(session, param);
 }
 
 /*##########################################################################
@@ -79,8 +79,8 @@ TCommand *TDateFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TDateCommand::TDateCommand(const char *param)
-  : TTimeDateCommand(param)
+TDateCommand::TDateCommand(TSession *session, const char *param)
+  : TTimeDateCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_DATE);
 }

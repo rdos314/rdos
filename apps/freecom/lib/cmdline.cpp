@@ -46,7 +46,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TCommandLine::TCommandLine(const char *line)
+TCommandLine::TCommandLine(TSession *session, const char *line)
 {
 	TCommand *cmd;
 	const char *ptr;
@@ -54,6 +54,7 @@ TCommandLine::TCommandLine(const char *line)
 	char ch;
 	const char *p;
 
+	FSession = session;
 	FList = 0;
 	FRemoveInput = FALSE;
 
@@ -128,7 +129,7 @@ TCommandLine::TCommandLine(const char *line)
 ##########################################################################*/
 TCommandLine::~TCommandLine()
 {
-    TCommand *cmd;
+	 TCommand *cmd;
 	TCommand *next;
 
 	cmd = FList;
@@ -306,7 +307,7 @@ void TCommandLine::Add(TString &str)
 	ptr = LTrim(str.GetData());
 	if (*ptr)
 	{
-		cmd = TCommandFactory::Parse(ptr);
+		cmd = TCommandFactory::Parse(FSession, ptr);
 		if (cmd)
 		{
 			if (FInputFile.GetSize())
@@ -335,12 +336,12 @@ void TCommandLine::Add(TString &str)
 #
 ##########################################################################*/
 int TCommandLine::Run()
-{	
-    TCommand *cmd;
-    int result = 0;
-    TFile *PrevInput = GetInputFile();
-    TFile *PrevOutput = GetOutputFile();
-    TFile *PrevError = GetErrorFile();
+{
+	 TCommand *cmd;
+	 int result = 0;
+	 TFile *PrevInput = FSession->GetInputFile();
+	 TFile *PrevOutput = FSession->GetOutputFile();
+	 TFile *PrevError = FSession->GetErrorFile();
 
 	if (FList)
 	{
@@ -350,11 +351,11 @@ int TCommandLine::Run()
 			result = cmd->Run();
 			cmd = cmd->FList;
 
-			SetInputFile(PrevInput);
-			SetOutputFile(PrevOutput);
-			SetErrorFile(PrevError);
+			FSession->SetInputFile(PrevInput);
+			FSession->SetOutputFile(PrevOutput);
+			FSession->SetErrorFile(PrevError);
 		}
-		Write("\r\n");
+		FSession->Write("\r\n");
 	}
 	return result;
 }

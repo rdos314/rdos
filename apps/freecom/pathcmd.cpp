@@ -64,9 +64,9 @@ TPathFactory::TPathFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPathFactory::Create(const char *param)
+TCommand *TPathFactory::Create(TSession *session, const char *param)
 {
-	return new TPathCommand(param);
+	return new TPathCommand(session, param);
 }
 
 /*##########################################################################
@@ -96,8 +96,8 @@ int TPathFactory::PassAll()
 #   Returns....: *
 #
 ##########################################################################*/
-TPathCommand::TPathCommand(const char *param)
-  : TCommand(param)
+TPathCommand::TPathCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_PATH);
 }

@@ -35,13 +35,13 @@ class TSetFactory : public TCommandFactory
 {
 public:
 	TSetFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TSetCommand : public TCommand
 {
 public:
-	TSetCommand(const char *param);
+	TSetCommand(TSession *session, const char *param);
 
 	static void Register();
 

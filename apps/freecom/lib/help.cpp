@@ -59,9 +59,9 @@ THelpFactory::THelpFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *THelpFactory::Create(const char *param)
+TCommand *THelpFactory::Create(TSession *session, const char *param)
 {
-	return new THelpCommand(param);
+	return new THelpCommand(session, param);
 }
 
 /*##########################################################################
@@ -75,8 +75,8 @@ TCommand *THelpFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-THelpCommand::THelpCommand(const char *param)
-  : TCommand(param)
+THelpCommand::THelpCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 }
 

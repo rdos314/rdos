@@ -67,9 +67,9 @@ TDirFactory::TDirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TDirFactory::Create(const char *param)
+TCommand *TDirFactory::Create(TSession *session, const char *param)
 {
-	return new TDirCommand(param);
+	return new TDirCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,8 +83,8 @@ TCommand *TDirFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TDirCommand::TDirCommand(const char *param)
-  : TCommand(param)
+TDirCommand::TDirCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_DIR);
 }

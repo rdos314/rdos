@@ -63,9 +63,9 @@ TCopyFactory::TCopyFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TCopyFactory::Create(const char *param)
+TCommand *TCopyFactory::Create(TSession *session, const char *param)
 {
-	return new TCopyCommand(param);
+	return new TCopyCommand(session, param);
 }
 
 /*##########################################################################
@@ -79,8 +79,8 @@ TCommand *TCopyFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TCopyCommand::TCopyCommand(const char *param)
-  : TCommand(param)
+TCopyCommand::TCopyCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_COPY);
 }

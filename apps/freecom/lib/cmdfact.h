@@ -31,22 +31,23 @@
 #include "cmd.h"
 
 class TCommand;
+class TSession;
 
 class TCommandFactory
 {
 friend class THelpCommand;
-    
+friend class TSession;
 public:
-    TCommandFactory(const char *name);
+	 TCommandFactory(const char *name);
 	virtual ~TCommandFactory();
 
-	static TCommand *Parse(const char *line);
+	static TCommand *Parse(TSession *session, const char *line);
 
 protected:
-    static const char *FindArg(int no);
-    static TString ExpandEnv(TString &line);
+	static const char *FindArg(int no);
+	static TString ExpandEnv(TString &line);
 
-	virtual TCommand *Create(const char *param) = 0;
+	virtual TCommand *Create(TSession *session, const char *param) = 0;
 	virtual int PassAll();
     virtual int PassDir();
 	

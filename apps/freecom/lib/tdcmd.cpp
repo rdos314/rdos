@@ -47,8 +47,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TTimeDateCommand::TTimeDateCommand(const char *param)
-  : TCommand(param)
+TTimeDateCommand::TTimeDateCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 }
 

@@ -35,7 +35,7 @@
 class TTimeDateCommand : public TCommand
 {
 public:
-	TTimeDateCommand(const char *param);
+	TTimeDateCommand(TSession *session, const char *param);
 
 protected:
 	virtual int InitOptions();

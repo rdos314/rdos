@@ -35,7 +35,7 @@ class TPathFactory : public TCommandFactory
 {
 public:
 	TPathFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 	virtual int PassAll();
@@ -44,7 +44,7 @@ protected:
 class TPathCommand : public TCommand
 {
 public:
-	TPathCommand(const char *param);
+	TPathCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 };

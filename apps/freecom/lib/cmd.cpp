@@ -362,14 +362,14 @@ int TCommand::Run()
 	{
 		FInputFile = new TFile(FInputName.GetData());
 		if (FInputFile->IsOpen())
-			SetInputFile(FInputFile);
+			FSession->SetInputFile(FInputFile);
 	}
 
 	if (FOutputName.GetSize())
 	{
 		FOutputFile = new TFile(FOutputName.GetData(), 0);
 		if (FOutputFile->IsOpen())
-			SetOutputFile(FOutputFile);
+			FSession->SetOutputFile(FOutputFile);
 	}
 	else
 	{
@@ -385,7 +385,7 @@ int TCommand::Run()
 			}
 
 			if (FOutputFile->IsOpen())
-				SetOutputFile(FOutputFile);
+				FSession->SetOutputFile(FOutputFile);
 		}
 	}
 
@@ -393,7 +393,7 @@ int TCommand::Run()
 	{
 		FErrorFile = new TFile(FErrorName.GetData(), 0);
 		if (FErrorFile->IsOpen())
-			SetErrorFile(FErrorFile);
+			FSession->SetErrorFile(FErrorFile);
 	}
 
 	result = Execute(ptr);

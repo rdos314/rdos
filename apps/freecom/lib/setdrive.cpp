@@ -43,8 +43,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSetDriveCommand::TSetDriveCommand(const char *param)
-  : TCommand(param)
+TSetDriveCommand::TSetDriveCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 }
 

@@ -35,7 +35,7 @@ class TRmdirFactory : public TCommandFactory
 {
 public:
 	TRmdirFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ class TRdFactory : public TCommandFactory
 {
 public:
 	TRdFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -52,7 +52,7 @@ protected:
 class TRmdirCommand : public TCommand
 {
 public:
-	TRmdirCommand(const char *param);
+	TRmdirCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 };

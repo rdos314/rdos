@@ -34,131 +34,14 @@
 #include "lang.h"
 #include "cmd.h"
 #include "cmdfact.h"
-#include "path.h"
-#include "env.h"
 #include "setdrive.h"
 #include "exec.h"
+#include "env.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
 TCommandFactory *TCommandFactory::FCmdList = 0;
-
-/*################## FormatTime ##########################
-*   Purpose....: Format time			   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
-TString FormatTime(TDateTime &time)
-{
-	char str[40];
-	sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
-	return TString(str);
-}
-
-/*################## FormatLongDate ##########################
-*   Purpose....: Format long date		   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
-TString FormatLongDate(TDateTime &date)
-{
-	char str[40];
-	sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
-	return TString(str);
-}
-
-/*################## DisplayPrompt ##########################
-*   Purpose....: Display prompt for user	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*##########################################################################*/
-void DisplayPrompt()
-{
-	char promptstr[128];
-	char *pr;
-	TString str;
-	TPathName path("");
-
-	TEnv *env = TEnv::OpenProcessEnv();
-	if (!env->Find("PROMPT", promptstr))
-		strcpy(promptstr, "$p$g");
-
-	pr = promptstr;
-
-	while (*pr)
-	{
-		if (*pr != '$')
-			Write(*pr);
-		else
-		{
-			switch (toupper(*++pr))
-            {
-                case 'Q':
-                    Write('=');
-                    break;
-            
-				case '$':
-                    Write('$');
-                    break;
-
-                case 'T':
-                    str = FormatTime(TDateTime());            
-                    Write(str.GetData());
-                    break;
-
-				case 'D':
-					str = FormatLongDate(TDateTime());
-					Write(str.GetData());
-					break;
-
-				case 'P':
-					str = path.GetFullPathName();
-                    str.Lower();
-					Write(str.GetData());
-					break;
-
-                case 'V':
-					Write("command");
-                    break;
-                    
-                case 'N':
-                    Write(RdosGetCurDrive() + 'A');
-                    break;
-                    
-                case 'G':
-                    Write('>');
-					break;
-
-                case 'L':
-                    Write('<');
-                    break;
-
-                case 'B':
-                    Write('|');
-                    break;
-                    
-                case '_':
-                    Write('\n');
-					break;
-                    
-                case 'E':
-                    Write(27);
-                    break;
-                    
-                case 'H':
-                    Write(8);
-                    break;
-
-            }
-        }
-        pr++;
-    }
-	delete env;
-}
 
 /*##########################################################################
 #
@@ -381,15 +264,15 @@ TString TCommandFactory::ExpandEnv(TString &line)
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-TCommand *TCommandFactory::Parse(const char *line)
+TCommand *TCommandFactory::Parse(TSession *session, const char *line)
 {
 	const char *rest;
 	int size;
-    int i;
+	 int i;
 	char *com;
 	char *ptr;
-    int done;
-    TString Line;
+	 int done;
+	 TString Line;
 	TCommandFactory *factory = 0;
 	TCommand *cmd;
 
@@ -402,7 +285,7 @@ TCommand *TCommandFactory::Parse(const char *line)
 	if (strlen(rest) == 2)
 		if (rest[1] == ':' && isalpha(*rest))
 		{
-			cmd = new TSetDriveCommand(rest);
+			cmd = new TSetDriveCommand(session, rest);
 			return cmd;
 		}
 
@@ -433,18 +316,18 @@ TCommand *TCommandFactory::Parse(const char *line)
 			}
 			*ptr = 0;
 
-            if (*com == '@')
-                factory = 0;
-            else
-            {
-    			factory = FCmdList;
-	    		while (factory)
-		    	{
-    				if (!strcmp(factory->FName.GetData(), com))
-	    				break;
+				if (*com == '@')
+					 factory = 0;
+				else
+				{
+				factory = FCmdList;
+				while (factory)
+				{
+					if (!strcmp(factory->FName.GetData(), com))
+						break;
 
-		    		factory = factory->FList;
-			    }
+					factory = factory->FList;
+				 }
 			 }
 
 			if (!factory)
@@ -466,12 +349,12 @@ TCommand *TCommandFactory::Parse(const char *line)
 			if (IsArgDelim(*rest))
 				rest = LTrim(rest);
 
-		return factory->Create(rest);
+		return factory->Create(session, rest);
 
 	}
 	else
 	{
-		cmd = new TExecCommand(line);
+		cmd = new TExecCommand(session, line);
 		return cmd;
 	}
 }

@@ -47,7 +47,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TExecCommand::TExecCommand(const char *line)
+TExecCommand::TExecCommand(TSession *session, const char *line)
+  : TCommand(session)
 {
 	const char *cp;
 	const char *rest;

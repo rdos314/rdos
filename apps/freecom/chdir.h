@@ -35,7 +35,7 @@ class TChdirFactory : public TCommandFactory
 {
 public:
 	TChdirFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ class TCdFactory : public TCommandFactory
 {
 public:
 	TCdFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -52,7 +52,7 @@ protected:
 class TChdirCommand : public TCommand
 {
 public:
-	TChdirCommand(const char *param);
+	TChdirCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 };

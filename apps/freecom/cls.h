@@ -35,7 +35,7 @@ class TClsFactory : public TCommandFactory
 {
 public:
 	TClsFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -43,7 +43,7 @@ protected:
 class TClsCommand : public TCommand
 {
 public:
-	TClsCommand(const char *param);
+	TClsCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 };

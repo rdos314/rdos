@@ -64,9 +64,9 @@ TSetFactory::TSetFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TSetFactory::Create(const char *param)
+TCommand *TSetFactory::Create(TSession *session, const char *param)
 {
-	return new TSetCommand(param);
+	return new TSetCommand(session, param);
 }
 
 /*##########################################################################
@@ -80,8 +80,8 @@ TCommand *TSetFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TSetCommand::TSetCommand(const char *param)
-  : TCommand(param)
+TSetCommand::TSetCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_SET);
 }

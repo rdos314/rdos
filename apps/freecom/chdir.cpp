@@ -64,9 +64,9 @@ TChdirFactory::TChdirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TChdirFactory::Create(const char *param)
+TCommand *TChdirFactory::Create(TSession *session, const char *param)
 {
-	return new TChdirCommand(param);
+	return new TChdirCommand(session, param);
 }
 
 /*##########################################################################
@@ -96,9 +96,9 @@ TCdFactory::TCdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TCdFactory::Create(const char *param)
+TCommand *TCdFactory::Create(TSession *session, const char *param)
 {
-	return new TChdirCommand(param);
+	return new TChdirCommand(session, param);
 }
 
 /*##########################################################################
@@ -112,8 +112,8 @@ TCommand *TCdFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TChdirCommand::TChdirCommand(const char *param)
-  : TCommand(param)
+TChdirCommand::TChdirCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_CD);
 }

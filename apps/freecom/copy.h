@@ -36,7 +36,7 @@ class TCopyFactory : public TCommandFactory
 {
 public:
 	TCopyFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TCopyCommand : public TCommand
 {
 public:
-	TCopyCommand(const char *param);
+	TCopyCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);
 

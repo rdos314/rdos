@@ -62,9 +62,9 @@ TMkdirFactory::TMkdirFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TMkdirFactory::Create(const char *param)
+TCommand *TMkdirFactory::Create(TSession *session, const char *param)
 {
-	return new TMkdirCommand(param);
+	return new TMkdirCommand(session, param);
 }
 
 /*##########################################################################
@@ -94,9 +94,9 @@ TMdFactory::TMdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TMdFactory::Create(const char *param)
+TCommand *TMdFactory::Create(TSession *session, const char *param)
 {
-	return new TMkdirCommand(param);
+	return new TMkdirCommand(session, param);
 }
 
 /*##########################################################################
@@ -110,8 +110,8 @@ TCommand *TMdFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TMkdirCommand::TMkdirCommand(const char *param)
-  : TCommand(param)
+TMkdirCommand::TMkdirCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_MD);
 }

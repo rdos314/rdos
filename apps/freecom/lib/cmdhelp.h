@@ -61,7 +61,4 @@ void RTrim(char *str);
 char *Unquote(const char *str, const char *end);
 int MatchToken(char **Xp, const char *word, int len);
 
-int ReadCon(char *str, int maxsize);
-void DisplayPrompt();
-
 #endif
