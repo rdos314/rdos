@@ -319,6 +319,7 @@ page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_code_descr_alias	PROC far
+	int 3
 	or bl,3
 	verr bx
 	jnz create_code_alias_fail
@@ -328,9 +329,6 @@ create_code_descr_alias	PROC far
 	mov ds,ax
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
-	mov al,[bx+5]
-	test al,8
-	jz create_code_alias_fail
 	push es
 	push si
 	push di
@@ -358,8 +356,6 @@ create_code_alias_fail:
 	or byte ptr [bp].vm_eflags,1
 	retf16
 create_code_descr_alias	ENDP
-
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -613,7 +609,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_dos_mem	PROC far
-	int 3
 	push ds
 	push es
 	push bx
@@ -650,6 +645,39 @@ allocate_dos_mem_fail:
 	or byte ptr [bp].vm_eflags,1
 	retf16
 allocate_dos_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FREE_DOS_MEM
+;
+;		DESCRIPTION:	
+;
+;		PARAMETERS:		DX			SELECTOR TO FREE
+;						
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dos_mem	PROC far
+	push es
+;
+	verr dx
+	jnz free_dos_mem_fail
+;
+	mov es,dx
+	FreeMem
+	and byte ptr [bp].vm_eflags,NOT 1
+	pop es
+	retf16
+
+free_dos_mem_fail:
+	or byte ptr [bp].vm_eflags,1
+	mov ax,8022h
+	pop es
+	retf16
+free_dos_mem	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1069,6 +1097,108 @@ free_mem	PROC far
 	and byte ptr [bp].vm_eflags,NOT 1
 	retf16
 free_mem	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RESIZE_MEM
+;
+;		DESCRIPTION:	RESIZE LOCAL MEMORY
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+resize_mem	PROC far
+	int 3
+	or byte ptr [bp].vm_eflags,1
+	retf16
+resize_mem	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SET_PAGE_ATTRIB
+;
+;		DESCRIPTION:	Set page attributes
+;
+;		PARAMETERS:		ESI		Memory handle
+;						EBX		Offset within block
+;						ECX		Number of pages
+;						ES:EDX	Buffer to attributes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_page_attrib	PROC far
+	push ecx
+	push edx
+	push edi
+;
+	mov eax,flat_sel
+	mov ds,ax
+	mov edi,edx
+	shl ecx,12
+	mov eax,[esi]
+	mov edx,[esi+4]
+	and bx,0F000h
+;
+	sub eax,ecx
+	jc set_page_range_fail
+;
+	sub eax,ebx
+	jc set_page_range_fail
+;
+	add edx,ebx
+	sub edx,local_page_linear
+	jc set_page_range_fail
+;
+	shr ecx,12
+
+set_page_attrib_loop:
+	mov ax,es:[edi]
+	test al,7
+	jz set_page_uncommited
+;
+	test al,8
+	jz set_page_readonly
+;
+	mov eax,1000h
+	SetFlatLinearReadWrite
+	jmp set_page_attrib_next
+
+set_page_readonly:
+	mov eax,1000h
+	SetFlatLinearRead
+	jmp set_page_attrib_next
+
+set_page_uncommited:
+	mov eax,1000h
+	SetFlatLinearInvalid
+
+set_page_attrib_next:
+	add edi,2
+	loop set_page_attrib_loop
+;
+	pop edi
+	pop edx
+	pop ecx
+;
+	mov eax,[bp].vm_eax
+	mov ds,[bp].pm_ds
+	and byte ptr [bp].vm_eflags,NOT 1
+	retf16
+
+set_page_range_fail:
+	mov ax,8025h
+;
+	or byte ptr [bp].vm_eflags,1
+	pop edi
+	pop edx
+	pop ecx
+	xor ecx,ecx
+	mov ds,[bp].pm_ds
+	retf16
+set_page_attrib	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1196,7 +1326,7 @@ dd0D	DD OFFSET allocate_specific_descr
 dpmi_dosmem:
 ds_ant	DD 2
 ds00	DD OFFSET allocate_dos_mem
-ds01	DD OFFSET dpmi_error
+ds01	DD OFFSET free_dos_mem
 ds02	DD OFFSET dpmi_error
 
 dpmi_int:
@@ -1223,11 +1353,15 @@ dv_ant	DD 0
 dv00	DD OFFSET get_version
 
 dpmi_mem:
-dm_ant	DD 3
+dm_ant	DD 7
 dm00	DD OFFSET get_free_mem
 dm01	DD OFFSET allocate_mem
 dm02	DD OFFSET free_mem
-dm03	DD OFFSET dpmi_error
+dm03	DD OFFSET resize_mem
+dm04	DD OFFSET dpmi_error
+dm05	DD OFFSET dpmi_error
+dm06	DD OFFSET dpmi_error
+dm07	DD OFFSET set_page_attrib
 
 dpmi_page:
 dp_ant	DD 4

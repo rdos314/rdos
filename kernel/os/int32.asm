@@ -644,7 +644,7 @@ sim32_end	PROC far
 	mov eax,[bp].vm_eax
 	mov [esi].vcs_eax,eax
 	mov eax,[bp].vm_ebx
-	mov [esi].vcs_ebx,ebx
+	mov [esi].vcs_ebx,eax
 	mov bp,[bp].vm_bp
 	mov [esi].vcs_ebp,ebp
 ;
