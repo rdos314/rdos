@@ -32,84 +32,14 @@
 
 #include "rdos.h"
 #include "socket.h"
-#include "langstr.h"
-#include "ftpserv.h"
-#include "user.h"
-#include "pass.h"
-#include "pwd.h"
-#include "syst.h"
-#include "pasv.h"
-#include "port.h"
-#include "list.h"
-#include "cwd.h"
-#include "cdup.h"
-#include "type.h"
-#include "retr.h"
-#include "stor.h"
-#include "mdtm.h"
-#include "dele.h"
-#include "mkd.h"
-#include "rmd.h"
-#include "quit.h"
+#include "ftpfact.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-class TFtpSocketServerFactory : public TSocketServerFactory
-{
-public:
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
-};
+// this one must be globally defined!
 
-/*##########################################################################
-#
-#   Name       : TFtpSocketServerFactory::GetThreadName
-#
-#   Purpose....: Return thread name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TFtpSocketServerFactory::GetThreadName()
-{
-	return "FTP";
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServerFactory::GetStackSize
-#
-#   Purpose....: Return thread stack size
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFtpSocketServerFactory::GetStackSize()
-{
-	return 0x2000;
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServerFactory::Create
-#
-#   Purpose....: Create a socket server instance
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer *TFtpSocketServerFactory::Create()
-{
-	return new TFtpSocketServer;
-}
+TFtpSocketServerFactory Factory;
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -118,29 +48,21 @@ TSocketServer *TFtpSocketServerFactory::Create()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-
-TFtpSocketServerFactory Factory;
-
 void cdecl main()
 {
-	TUserFactory *user = new TUserFactory;
-	TPassFactory *pass = new TPassFactory;
-	TPwdFactory *pwd = new TPwdFactory;
-	TSystFactory *syst = new TSystFactory;
-	TPasvFactory *pasv = new TPasvFactory;
-	TPortFactory *port = new TPortFactory;
-	TListFactory *list = new TListFactory;
-	TCwdFactory *cwd = new TCwdFactory;
-	TCdupFactory *cdup = new TCdupFactory;
-	TTypeFactory *type = new TTypeFactory;
-	TRetrFactory *retr = new TRetrFactory;
-	TStorFactory *stor = new TStorFactory;
-	TMdtmFactory *mdtm = new TMdtmFactory;
-	TDeleFactory *dele = new TDeleFactory;
-	TMkdFactory *mkd = new TMkdFactory;
-	TRmdFactory *rmd = new TRmdFactory;
-	TQuitFactory *quit = new TQuitFactory;
-
+	Factory.AddUser("c-drive", "rdos", "c:\\");
+	Factory.AddUser("d-drive", "rdos", "d:\\");
+	Factory.AddUser("e-drive", "rdos", "e:\\");
+	Factory.AddUser("f-drive", "rdos", "f:\\");
+	Factory.AddUser("g-drive", "rdos", "g:\\");
+	Factory.AddUser("h-drive", "rdos", "h\\");
+	Factory.AddUser("i-drive", "rdos", "i:\\");
+	Factory.AddUser("j-drive", "rdos", "j:\\");
+	Factory.AddUser("k-drive", "rdos", "k:\\");
+	Factory.AddUser("l-drive", "rdos", "l:\\");
+	Factory.AddUser("m-drive", "rdos", "m:\\");
+	Factory.AddUser("n-drive", "rdos", "n:\\");
+	Factory.AddUser("z-drive", "rdos", "z:\\");
 	TSocket::Listen(&Factory, 21, 0x4000);
 }
 

@@ -28,8 +28,8 @@
 #ifndef _QUIT_H
 #define _QUIT_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TQuitFactory : public TCommandFactory
 {

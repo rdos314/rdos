@@ -28,8 +28,8 @@
 #ifndef _CWD_H
 #define _CWD_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 #include "direntry.h"
 
 class TCwdFactory : public TCommandFactory

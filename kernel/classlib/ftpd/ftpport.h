@@ -28,8 +28,8 @@
 #ifndef _PORT_H
 #define _PORT_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TPortFactory : public TCommandFactory
 {

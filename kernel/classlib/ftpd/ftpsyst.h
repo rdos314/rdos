@@ -28,8 +28,8 @@
 #ifndef _SYST_H
 #define _SYST_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TSystFactory : public TCommandFactory
 {

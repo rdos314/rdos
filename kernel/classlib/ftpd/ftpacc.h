@@ -20,32 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pasv.h
-# Pasv command class
+# ftpacc.h
+# FTP user access class
 #
 ########################################################################*/
 
-#ifndef _PASV_H
-#define _PASV_H
+#ifndef _FTPACC_H
+#define _FTPACC_H
 
-#include "ftpcmd.h"
-#include "ftpfact.h"
+#include "str.h"
 
-class TPasvFactory : public TCommandFactory
+class TFtpUser
 {
 public:
-	TPasvFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+    TFtpUser(const char *name, const char *passw, const char *root);
 
-protected:
-};
+    TString UserName;
+    TString Password;
+    TString RootDir;
 
-class TPasvCommand : public TCommand
-{
-public:
-	TPasvCommand(TFtpSocketServer *Server, const char *param);
-
-	virtual void Execute(char *param);
+    TFtpUser *FNext;
 };
 
 #endif

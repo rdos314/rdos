@@ -30,7 +30,7 @@
 
 #include "file.h"
 #include "path.h"
-#include "parser.h"
+#include "ftpparse.h"
 #include "ftpserv.h"
 
 class TArg

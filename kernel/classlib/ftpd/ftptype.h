@@ -28,8 +28,8 @@
 #ifndef _TYPE_H
 #define _TYPE_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TTypeFactory : public TCommandFactory
 {

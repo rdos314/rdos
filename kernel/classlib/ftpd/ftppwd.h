@@ -28,8 +28,8 @@
 #ifndef _PWD_H
 #define _PWD_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TPwdFactory : public TCommandFactory
 {

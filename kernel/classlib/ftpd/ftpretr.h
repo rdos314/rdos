@@ -28,8 +28,8 @@
 #ifndef _RETR_H
 #define _RETR_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TRetrFactory : public TCommandFactory
 {

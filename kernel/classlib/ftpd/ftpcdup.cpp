@@ -29,9 +29,9 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cmdhelp.h"
+#include "ftpserv.h"
 #include "dir.h"
-#include "cdup.h"
+#include "ftpcdup.h"
 #include "rdos.h"
 #include "path.h"
 

@@ -28,7 +28,8 @@
 #ifndef _CMDFACT_H
 #define _CMDFACT_H
 
-#include "cmd.h"
+#include "ftpcmd.h"
+#include "ftpacc.h"
 
 class TCommandFactory
 {
@@ -51,6 +52,21 @@ protected:
 	static TCommandFactory *FCmdList;
 	TCommandFactory *FList;
 	TString FName;
+};
+
+class TFtpSocketServerFactory : public TSocketServerFactory
+{
+public:
+    TFtpSocketServerFactory::TFtpSocketServerFactory();
+
+    void AddUser(const char *User, const char *Passw, const char *RootDir);
+    
+	virtual char *GetThreadName();
+	virtual int GetStackSize();
+	virtual TSocketServer *Create();
+
+protected:
+    TFtpUser *FList;
 };
 
 #endif

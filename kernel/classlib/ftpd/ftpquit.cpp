@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "cmdhelp.h"
-#include "quit.h"
+#include "ftpserv.h"
+#include "ftpquit.h"
 #include "rdos.h"
 
 #define FALSE 0

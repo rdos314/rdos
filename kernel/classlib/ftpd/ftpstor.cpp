@@ -29,8 +29,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cmdhelp.h"
-#include "stor.h"
+#include "ftpserv.h"
+#include "ftpstor.h"
 #include "path.h"
 #include "file.h"
 

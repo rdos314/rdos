@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "cmdhelp.h"
-#include "type.h"
+#include "ftpserv.h"
+#include "ftptype.h"
 
 #define FALSE 0
 #define TRUE !FALSE

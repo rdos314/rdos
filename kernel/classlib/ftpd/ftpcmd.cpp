@@ -29,8 +29,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "cmd.h"
-#include "cmdhelp.h"
+#include "ftpcmd.h"
+#include "ftpserv.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -204,7 +204,7 @@ void TCommand::AddArg(char *sBeg, char **sEnd)
     char *arg;
 
     *sEnd = SkipWord(sBeg);
-    arg = Unquote(sBeg, *sEnd);
+    arg = TFtpSocketServer::Unquote(sBeg, *sEnd);
     AddArg(arg);
     delete arg;
 }

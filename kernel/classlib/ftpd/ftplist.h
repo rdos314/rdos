@@ -28,8 +28,8 @@
 #ifndef _LIST_H
 #define _LIST_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 #include "direntry.h"
 
 class TListFactory : public TCommandFactory

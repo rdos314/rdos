@@ -28,8 +28,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "cmdhelp.h"
-#include "port.h"
+#include "ftpserv.h"
+#include "ftpport.h"
 #include "rdos.h"
 
 #define FALSE 0

@@ -29,8 +29,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cmdhelp.h"
-#include "mdtm.h"
+#include "ftpserv.h"
+#include "ftpmdtm.h"
 #include "path.h"
 #include "file.h"
 

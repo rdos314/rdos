@@ -28,8 +28,8 @@
 #ifndef _MKD_H
 #define _MKD_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TMkdFactory : public TCommandFactory
 {

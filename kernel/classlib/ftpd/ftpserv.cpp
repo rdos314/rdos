@@ -25,18 +25,216 @@
 #
 ########################################################################*/
 
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "rdos.h"
+#include "file.h"
+#include "strlist.h"
 #include "socket.h"
 #include "ftpserv.h"
-#include "langstr.h"
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftplang.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::IsEmpty
+#
+#   Purpose....: Return true if string is 0 or contains only spaces
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::IsEmpty(const char *s)
+{
+	if (s)
+	{
+		while(*s)
+		{
+			s++;
+			if (!isspace(*s))
+				return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::IsArgDelim
+#
+#   Purpose....: Check for argument delimiter
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::IsArgDelim(char ch)
+{
+	return isspace(ch) || iscntrl(ch) || strchr(",;=", ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::IsFileNameChar
+#
+#   Purpose....: Is filename char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::IsFileNameChar(char c)
+{
+	return !(c <= ' ' || c == 0x7f || strchr(".\"/\\[]:|<>+=;,", c));
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::LTrimsp
+#
+#   Purpose....: Trim of leading spaces
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TFtpSocketServer::LTrimsp(const char *str)
+{
+	while (*str && isspace(*str))
+		str++;
+	return str;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::LTrim
+#
+#   Purpose....: Remove leading "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TFtpSocketServer::LTrim(const char *str)
+{
+	while (*str)
+	{
+		if (IsArgDelim(*str))
+			str++;
+		else
+			break;
+	}
+	return str;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::RTrim
+#
+#   Purpose....: Remove trailing "spaces"
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::RTrim(char *str)
+{
+	char *p;
+
+	p = strchr(str, 0);
+	p--;
+
+	while (p >= str && IsArgDelim(*p))
+		p--;
+
+	p[1] = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::Unquote
+#
+#   Purpose....: Unquote to new string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TFtpSocketServer::Unquote(const char *str, const char *end)
+{
+	char *h, *newStr;
+	const char *q;
+	int len;
+
+	newStr = new char[end - str + 1];
+	h = newStr;
+
+	while ((q = strpbrk(str, "\"")) != 0 && q < end)
+	{
+		memcpy(h, str, len = q++ - str);
+		h += len;
+		if ((str = strchr(q, q[-1])) == 0 || str >= end)
+		{
+			str = q;
+			break;
+		}
+
+		memcpy(h, q, len = str++ - q);
+		h += len;
+	}
+
+	memcpy(h, str, len = end - str);
+	h[len] = 0;
+	return newStr;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::MatchToken
+#
+#   Purpose....: Match token at begining of line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::MatchToken(char **Xp, const char *word, int len)
+{
+	char *p;
+	char *q;
+
+	p = *Xp;
+	if (strncmpi(p, word, len) == 0)
+	{
+		p += len;
+		if (*p)
+		{
+			q = (char *)LTrim(p);
+			if (q == p)
+				return FALSE;
+			p = q;
+		}
+		*Xp = p;
+		return TRUE;
+	}
+
+	return FALSE;
+}
 
 /*##########################################################################
 #
@@ -49,9 +247,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServer::TFtpSocketServer()
+TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList)
 {
-	RootDir = "e:\\";
+	FUserList = UserList;
 	CurrDir = "/";
 	FDataSocket = 0;
 }
@@ -102,7 +300,7 @@ void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TFtpSocketServer::Reply(TLangString *msg)
 {
-    msg->Write(FSocket);
+	 msg->Write(FSocket);
 }
 
 /*##########################################################################
@@ -118,10 +316,20 @@ void TFtpSocketServer::Reply(TLangString *msg)
 ##########################################################################*/
 int TFtpSocketServer::VerifyUser()
 {
-    if (User == "leif" && Pass == "vals")
-        return TRUE;
-    else
-        return FALSE;
+	TFtpUser *user;
+
+	user = FUserList;
+
+	while (user)
+	{
+		if (user->UserName == User && user->Password == Pass)
+		{
+			RootDir = user->RootDir;
+			return TRUE;
+		}
+		user = user->FNext;
+	}
+	return FALSE;
 }
 
 /*##########################################################################

@@ -31,7 +31,7 @@
 #include <stdarg.h>
 
 #include "rdos.h"
-#include "langstr.h"
+#include "ftplang.h"
 
 #define FALSE 0
 #define TRUE !FALSE

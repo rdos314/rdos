@@ -29,8 +29,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "cmdhelp.h"
-#include "rmd.h"
+#include "ftpserv.h"
+#include "ftprmd.h"
 #include "path.h"
 
 #define FALSE 0

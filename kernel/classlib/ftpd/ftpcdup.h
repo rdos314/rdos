@@ -28,8 +28,8 @@
 #ifndef _CDUP_H
 #define _CDUP_H
 
-#include "cdup.h"
-#include "cmdfact.h"
+#include "ftpcdup.h"
+#include "ftpfact.h"
 #include "direntry.h"
 
 class TCdupFactory : public TCommandFactory

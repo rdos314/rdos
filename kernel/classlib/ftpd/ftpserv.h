@@ -30,12 +30,32 @@
 
 #include "str.h"
 #include "socket.h"
-#include "langstr.h"
+#include "ftplang.h"
+#include "ftpacc.h"
+
+enum InternalErrorCodes
+{
+	E_None = 0,
+	E_Useage = 1,
+	E_Other = 2,
+	E_CBreak = 3,
+	E_NoMem,
+	E_CorruptMemory,
+	E_NoOption,
+	E_Exit,
+	E_Ignore,			/* Error that can be ignored */
+	E_Empty,
+	E_Syntax,
+	E_Range,				/* Numbers out of range */
+	E_NoItems,
+	E_Help,		/* Help screen */
+	E_User		/* MUST be the last one */
+};
 
 class TFtpSocketServer : public TSocketServer
 {
 public:
-	TFtpSocketServer();
+	TFtpSocketServer(TFtpUser *UserList);
 	~TFtpSocketServer();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
@@ -57,12 +77,22 @@ public:
 
 	void Reply(TLangString *Msg);
 
+    static int IsEmpty(const char *s);
+    static int IsArgDelim(char ch);
+    static int IsFileNameChar(char c);
+    static const char *LTrimsp(const char *str);
+    static const char *LTrim(const char *str);
+    static void RTrim(char *str);
+    static char *Unquote(const char *str, const char *end);
+    static int MatchToken(char **Xp, const char *word, int len);
+
 	TString User;
 	TString Pass;
 	TString CurrDir;
 	TString RootDir;
 
 	TSocket *FDataSocket;
+	TFtpUser *FUserList;
 };
 
 #endif

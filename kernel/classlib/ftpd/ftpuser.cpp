@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "cmdhelp.h"
-#include "user.h"
+#include "ftpserv.h"
+#include "ftpuser.h"
 #include "rdos.h"
 
 #define FALSE 0

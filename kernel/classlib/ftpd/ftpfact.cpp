@@ -30,9 +30,27 @@
 #include <stdio.h>
 
 #include "rdos.h"
-#include "cmdhelp.h"
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpserv.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
+#include "ftpuser.h"
+#include "ftppass.h"
+#include "ftppwd.h"
+#include "ftpsyst.h"
+#include "ftppasv.h"
+#include "ftpport.h"
+#include "ftplist.h"
+#include "ftpcwd.h"
+#include "ftpcdup.h"
+#include "ftptype.h"
+#include "ftpretr.h"
+#include "ftpstor.h"
+#include "ftpmdtm.h"
+#include "ftpdele.h"
+#include "ftpmkd.h"
+#include "ftprmd.h"
+#include "ftpquit.h"
+
 #include "path.h"
 
 #define FALSE 0
@@ -53,7 +71,7 @@ TCommandFactory *TCommandFactory::FCmdList = 0;
 ##########################################################################*/
 TCommandFactory::TCommandFactory(const char *name)
   : FName(name)
-{	
+{
 	InsertCommand();
 }
 
@@ -156,14 +174,14 @@ TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 	TCommandFactory *factory = 0;
 	TCommand *cmd;
 
-	Line = TString(LTrim(line));
+	Line = TString(TFtpSocketServer::LTrim(line));
 
 	rest = Line.GetData();
 
 	if (*rest)
 	{
 		size = 0;
-		while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
+		while (*rest && TFtpSocketServer::IsFileNameChar(*rest) && !strchr("\"", *rest))
 		{
 			size++;
 			rest++;
@@ -212,12 +230,116 @@ TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 			done = (!*rest || *rest == '/');
 
 		if (!done)
-			if (IsArgDelim(*rest))
-				rest = LTrim(rest);
+			if (TFtpSocketServer::IsArgDelim(*rest))
+				rest = TFtpSocketServer::LTrim(rest);
 
 		return factory->Create(Server, rest);
 
 	}
 	else
 	    return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::TFtpSocketServerFactory
+#
+#   Purpose....: Socket server factory constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServerFactory::TFtpSocketServerFactory()
+{
+	TUserFactory *user = new TUserFactory;
+	TPassFactory *pass = new TPassFactory;
+	TPwdFactory *pwd = new TPwdFactory;
+	TSystFactory *syst = new TSystFactory;
+	TPasvFactory *pasv = new TPasvFactory;
+	TPortFactory *port = new TPortFactory;
+	TListFactory *list = new TListFactory;
+	TCwdFactory *cwd = new TCwdFactory;
+	TCdupFactory *cdup = new TCdupFactory;
+	TTypeFactory *type = new TTypeFactory;
+	TRetrFactory *retr = new TRetrFactory;
+	TStorFactory *stor = new TStorFactory;
+	TMdtmFactory *mdtm = new TMdtmFactory;
+	TDeleFactory *dele = new TDeleFactory;
+	TMkdFactory *mkd = new TMkdFactory;
+	TRmdFactory *rmd = new TRmdFactory;
+	TQuitFactory *quit = new TQuitFactory;
+
+	FList = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::GetThreadName
+#
+#   Purpose....: Return thread name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TFtpSocketServerFactory::GetThreadName()
+{
+	return "FTP";
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::GetStackSize
+#
+#   Purpose....: Return thread stack size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServerFactory::GetStackSize()
+{
+	return 0x2000;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::Create
+#
+#   Purpose....: Create a socket server instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer *TFtpSocketServerFactory::Create()
+{
+	TFtpSocketServer *server;
+	server = new TFtpSocketServer(FList);
+
+	return server;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::AddUser
+#
+#   Purpose....: Create a socket server instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServerFactory::AddUser(const char *User, const char *Passw, const char *RootDir)
+{
+    TFtpUser *user = new TFtpUser(User, Passw, RootDir);
+
+    user->FNext = FList;
+    FList = user;
 }

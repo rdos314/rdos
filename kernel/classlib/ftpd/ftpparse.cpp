@@ -27,8 +27,8 @@
 
 #include <string.h>
 
-#include "parser.h"
-#include "cmdhelp.h"
+#include "ftpparse.h"
+#include "ftpserv.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -76,7 +76,7 @@ TParser::~TParser()
 ##########################################################################*/
 int TParser::IsArgDelim(char ch)
 {
-	return ::IsArgDelim(ch);
+	return TFtpSocketServer::IsArgDelim(ch);
 }
 
 /*##########################################################################

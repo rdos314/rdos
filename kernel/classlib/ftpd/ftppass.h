@@ -28,8 +28,8 @@
 #ifndef _PASS_H
 #define _PASS_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TPassFactory : public TCommandFactory
 {

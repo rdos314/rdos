@@ -28,8 +28,8 @@
 #ifndef _DELE_H
 #define _DELE_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TDeleFactory : public TCommandFactory
 {

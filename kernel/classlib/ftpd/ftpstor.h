@@ -28,8 +28,8 @@
 #ifndef _STOR_H
 #define _STOR_H
 
-#include "cmd.h"
-#include "cmdfact.h"
+#include "ftpcmd.h"
+#include "ftpfact.h"
 
 class TStorFactory : public TCommandFactory
 {
