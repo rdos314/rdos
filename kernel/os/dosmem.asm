@@ -261,7 +261,7 @@ resize_dos_shrink:
 	mov ax,[ebx].dos_mem_psp
 	or ax,ax
 	mov al,[ebx].dos_mem_id
-	jnz resize_dos_split
+	jnz resize_dos_join
 	push ax
 	mov ax,[edx].dos_mem_size
 	add ax,[ebx].dos_mem_size
@@ -269,6 +269,12 @@ resize_dos_shrink:
 	movzx ebx,ax
 	shl ebx,4
 	pop ax
+	jmp resize_dos_split
+
+resize_dos_join:
+	sub ebx,10h
+	sub ebx,edx
+
 resize_dos_split:
 	shr ebx,4
 	push bx
