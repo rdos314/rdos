@@ -2790,6 +2790,30 @@ RdosCloseFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosIsDevice
+;
+;		DESCRIPTION:	Check if file is a device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosIsDevice
+
+RdosIsDevice	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_ioctl_data_nr
+	movzx eax,dx
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosIsDevice	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosDuplFile
 ;
 ;		DESCRIPTION:	Duplicate file handle

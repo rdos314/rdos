@@ -79,6 +79,7 @@ void WriteLong(long Value);
 
 char Read();
 int Read(char *str, int maxsize);
+int ReadCmd(char *str, int maxsize);
 
 void DisplayPrompt();
 

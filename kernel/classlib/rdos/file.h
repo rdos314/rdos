@@ -39,6 +39,8 @@ public:
 	~TFile();
 
 	int IsOpen();
+	int IsDevice();
+	int IsFile();
 	const char *GetFileName();
 
 	long GetSize();

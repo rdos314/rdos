@@ -143,6 +143,44 @@ int TFile::IsOpen()
 
 /*##########################################################################
 #
+#   Name       : TFile::IsDevice
+#
+#   Purpose....: Check if file is device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if open and device
+#
+##########################################################################*/
+int TFile::IsDevice()
+{
+	if (FHandle)
+		return RdosIsDevice(FHandle);
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::IsFile
+#
+#   Purpose....: Check if file is ordinary file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if open and file
+#
+##########################################################################*/
+int TFile::IsFile()
+{
+	if (FHandle)
+		return !RdosIsDevice(FHandle);
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TFile::GetFileName
 #
 #   Purpose....: Get file name

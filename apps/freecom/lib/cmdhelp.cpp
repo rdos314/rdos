@@ -34,6 +34,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+int FStdInput = TRUE;
+int FStdOutput = TRUE;
+
 TFile *FInputFile = new TFile("CON");
 TFile *FOutputFile = new TFile("CON");
 TFile *FErrorFile = new TFile("CON");
@@ -577,4 +580,19 @@ int Read(char *str, int maxsize)
 		return TRUE;
 	}
 	return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : ReadCmd
+#
+#   Purpose....: Read a command string from standard input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int ReadCmd(char *str, int maxsize)
+{
 }

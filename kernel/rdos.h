@@ -98,6 +98,7 @@ int __stdcall RdosGetSendBufferSpace(int Handle);
 int __stdcall RdosOpenFile(const char *FileName, char Access);
 int __stdcall RdosCreateFile(const char *FileName, int Attrib);
 void __stdcall RdosCloseFile(int Handle);
+int __stdcall RdosIsDevice(int Handle);
 int __stdcall RdosDuplFile(int Handle);
 long __stdcall RdosGetFileSize(int Handle);
 void __stdcall RdosSetFileSize(int Handle, long Size);

@@ -99,7 +99,7 @@ void main()
 	for (;;)
 	{
 		DisplayPrompt();
-		ok = Read(param, 256);
+		ok = ReadCmd(param, 256);
 		if (ok)
 		{
 			cmd = new TCommandLine(param);
