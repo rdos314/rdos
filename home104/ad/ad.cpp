@@ -384,25 +384,24 @@ void DaProc(void *param)
 	int i;
 	int channel;
 
-	_asm int 3
 	for (channel = 0; channel < 8; channel++)
-		RdosWriteSerialVal(2, channel, 255);
+		RdosWriteSerialVal(2, channel, 0x7FFFFFFF);
 
 	for (;;)
 	{
 
 		for (channel = 0; channel < 8; channel++)
 		{
-			for (i = 0; i < 64; i++)
+			for (i = 0; i <= 50; i++)
 			{
-				RdosWriteSerialVal(2, channel, 4 * i);
-				RdosWaitMilli(937);
+				RdosWriteSerialVal(2, channel, 0x7FFFFFFF / 50 * i);
+				RdosWaitMilli(250);
 			}
 
-			for (i = 62; i >= 0; i++)
+			for (i = 49; i >= 0; i--)
 			{
-				RdosWriteSerialVal(2, channel, 4 * i);
-				RdosWaitMilli(937);
+				RdosWriteSerialVal(2, channel, 0x7FFFFFFF / 50 * i);
+				RdosWaitMilli(250);
 			}
 		}
 	}
