@@ -20,46 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmd.h
-# Command base class
+# cmdline.h
+# Command line class
 #
 ########################################################################*/
 
-#ifndef _CMD_H
-#define _CMD_H
+#ifndef _CMDLINE_H
+#define _CMDLINE_H
 
-#include "langstr.h"
+#include "cmd.h"
 
-class TCommand
+class TCommandLine
 {
-    friend class TCommandLine;
 public:
-    TCommand(const char *param);
-	virtual ~TCommand();
+	TCommandLine(const char *line);
+	~TCommandLine();
 
-	int Run();
-	virtual void InitOptions();
-	virtual int Execute(char *param) = 0;
-
-	static int ErrorLevel;
+    int Run();
 
 protected:
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-	void OptError(const char *optstr);
-	void ErrorSyntax(const char *str);
-
-	char *SkipDelim(char *p);
-	char *SkipWord(char *p);
-	int ScanOpt(void *ag, char *rest);
-
-	int LeadOptions(char **Xline, void *arg);
-	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
-
-	TLangString FMsg;
-	TString FCmdLine;
-	TLangString FHelpScreen;
 	TCommand *FList;
-
 };
 
 #endif
