@@ -283,25 +283,35 @@ create_file_drive   Proc near
     push esi
     push edi
 ;
-    UserGateForce32 is_file_system_available_nr
-    jc cfdDone
-;
-    push cx
-    xor cx,cx
-    UserGateForce32 create_file_nr
-    pop cx
-    jc cfdDone
-;
+    push es
+    push di
 	mov eax,SIZE file_disc_data_seg
 	AllocateSmallGlobalMem
+;
+    mov ax,es
+    mov fs,ax
     mov di,OFFSET fh_fs_name
 
 cfdMoveName:
-    lodsb
+    lods byte ptr [esi]
     stosb
     or al,al
     jnz cfdMoveName
 ;
+    mov di,OFFSET fh_fs_name
+    IsFileSystemAvailable
+    pop di
+    pop es
+    jc cfdFreeFail
+;
+    push ecx
+    xor cx,cx
+    UserGateForce32 create_file_nr
+    pop ecx
+    jc cfdFreeFail
+;
+    mov ax,fs
+    mov es,ax
     mov eax,ecx
     mov cx,1
 	dec eax
@@ -380,7 +390,14 @@ cfdSave:
 	FormatFileSystem
 	InstallFileSystem
 	StartFileSystem
+	jmp cfdDone
 
+cfdFreeFail:
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    stc
+    
 cfdDone:
     pop edi
     pop esi

@@ -48,90 +48,6 @@ code	SEGMENT byte public use16 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			EraseFlash
-;
-;		DESCRIPTION:	Erase flash sector
-;
-;		PARAMETERS:	    DS          Flash FS selector
-;                       EDX         Sector #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-EraseFlash	PROC far
-    push es
-    pushad
-;
-    movzx eax,ds:fd_sector_size
-    mov ecx,eax
-    AllocateGlobalMem
-;
-    shr cx,2
-    xor di,di
-    mov eax,-1
-    rep stosd
-;
-    mov cl,ds:fd_access
-    mov ax,ds:fd_selector
-    DuplFileInfo
-;
-    movzx eax,ds:fd_sector_size
-    mul edx
-    SetFilePos
-;
-    xor di,di
-    mov cx,ds:fd_sector_size
-    WriteFile
-;
-    CloseFile
-    FreeMem
-    clc
-;
-    popad
-    pop es
-	ret
-EraseFlash	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ReadFlash
-;
-;		DESCRIPTION:	Read flash sector
-;
-;		PARAMETERS:	    DS          Flash FS selector
-;                       EDX         Sector #
-;                       ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadFlash	PROC far
-    int 3
-    clc
-	ret
-ReadFlash	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteFlash
-;
-;		DESCRIPTION:	Write flash sector
-;
-;		PARAMETERS:	    DS          Flash FS selector
-;                       EDX         Sector #
-;                       ES:EDI      Buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteFlash	PROC far
-    int 3
-    clc
-	ret
-WriteFlash	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			Format
 ;
 ;		DESCRIPTION:	Format filesystem
@@ -607,7 +523,7 @@ dummy	ENDP
 
 flash_name  DB 'FLASH', 0
 flash_file  DB 'd:\flash.dat', 0
-fat_fs      DB 'FAT16', 0
+fat_fs      DB 'FAT12', 0
 
 flash_thread:
     mov ax,cs
@@ -616,10 +532,10 @@ flash_thread:
 ;
 	int 3
     mov edi,OFFSET flash_file
-;    mov esi,OFFSET fat_fs
-;    mov ecx,100000h
-;    UserGateForce32 create_file_drive_nr
-;	int 3
+    mov esi,OFFSET fat_fs
+    mov ecx,100000h
+    UserGateForce32 create_file_drive_nr
+	int 3
 ;
     OpenFileDrive
 	int 3
@@ -640,12 +556,6 @@ flash_thread:
 	pop eax
 	pop es
 	mov fs:fd_drive_nr,al
-    mov word ptr fs:fd_erase_proc,OFFSET EraseFlash
-    mov word ptr fs:fd_erase_proc+2,cs
-    mov word ptr fs:fd_read_proc,OFFSET ReadFlash
-    mov word ptr fs:fd_read_proc+2,cs
-    mov word ptr fs:fd_write_proc,OFFSET WriteFlash
-    mov word ptr fs:fd_write_proc+2,cs
 ;
     xor cx,cx
     mov di,OFFSET flash_file

@@ -304,6 +304,25 @@ void TCbusProtocolAnalyser::ShowCbusPumpReplyText()
 				if (data & 2)
 					Write(", Fuel on");
 
+				switch ((data >> 4) & 3)
+				{
+					case 0:
+						Write(", No prod");
+						break;
+
+					case 1:
+						Write(", Prod 1");
+						break;
+
+					case 2:
+						Write(", Prod 2");
+						break;
+
+					case 3:
+						Write(", Prod 3");
+						break;
+				}
+
 				switch ((data >> 2) & 3)
 				{
 					case 0:
