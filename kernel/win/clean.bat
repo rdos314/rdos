@@ -4,3 +4,4 @@ del *.exe
 del *.rdv
 del *.map
 del *.dll
+del *.zip

@@ -39,7 +39,7 @@ INCLUDE ..\os\state.def
 
 data	SEGMENT byte public 'DATA'
 
-response	DB 20 DUP(?)
+float_string	DB 256 DUP(?)
 
 data	ENDS
 
@@ -49,11 +49,22 @@ code    SEGMENT byte public 'CODE'
 
 	assume cs:code
 
+	extrn float_to_string:near
+
 host_name	DB 'www.rdos.net',0
 host_ip		DB 192,168,12,108
 
+val	DT 4.566
+
 init:
 	int 3
+	finit
+	fld tbyte ptr cs:val
+	mov di,OFFSET float_string
+	mov dl,18
+	mov cl,100
+	call float_to_string
+;
 	mov ax,12h
 	SetVideoMode
 	int 3

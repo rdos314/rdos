@@ -5,3 +5,4 @@ del *.rdv
 del *.map
 del *.dll
 del *.lst
+del *.zip

@@ -824,6 +824,8 @@ ENDIF
 	xor ax,ax
 	lahf
 	mov ebx,cr0
+	and bl,NOT 2
+	or bl,4
 	or bl,1
 	mov cr0,ebx
 	db 0EAh

@@ -6,3 +6,6 @@ del *.map
 del *.tr
 del *.rom
 del *.bin
+del *.zip
+del *.tr2
+del *.lst

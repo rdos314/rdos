@@ -78,7 +78,7 @@ remdebug_srcs = REMDEBUG.ASM
 remdebug_objs = $(remdebug_srcs:.ASM=.OBJ)
 remdebug_exes = REMDEBUG.EXE
 
-test_srcs = TEST.ASM
+test_srcs = TEST.ASM ..\OS\MATH.ASM
 test_objs = $(test_srcs:.ASM=.OBJ)
 test_exes = TEST.EXE
 

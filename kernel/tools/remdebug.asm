@@ -821,13 +821,7 @@ math7	DB 'ST(7)=  ',0
 
 write_math	PROC near	
 	WriteAsciiz
-	mov dx,gs:math_used
-	or dx,dx
 	jmp write_math_end		; fix this !!!
-	jz write_math_end
-	and dl,3
-	cmp dl,3
-	je write_math_end
 	finit
 	fld tbyte ptr gs:[si]
 	push ax
