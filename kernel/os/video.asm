@@ -940,15 +940,77 @@ set_clip_rect_name	DB 'Set Clip Rect',0
 
 set_clip_rect	PROC far
 	push ds
+	push es
 	push bx
 ;
-    int 3
 	push ax
 	mov ax,BITMAP_HANDLE
 	DerefHandle
     pop ax
 	jc set_clip_rect_done
 ;
+	mov es,[bx].bm_sel
+;
+	test ch,80h
+	jz set_clip_xmin_pos
+;
+	xor cx,cx
+
+set_clip_xmin_pos:
+	test dh,80h
+	jz set_clip_ymin_pos
+;
+	xor dx,dx
+
+set_clip_ymin_pos:
+	test si,8000h
+	jz set_clip_xmax_pos
+;
+	xor si,si
+
+set_clip_xmax_pos:
+	test di,8000h
+	jz set_clip_ymax_pos
+;
+	xor di,di
+
+set_clip_ymax_pos:
+	cmp cx,si
+	jc set_clip_x_ok
+;
+	xchg cx,si
+
+set_clip_x_ok:
+	cmp dx,di
+	jc set_clip_y_ok
+;
+	xchg dx,di
+
+set_clip_y_ok:
+	cmp cx,es:v_width
+	jc set_clip_xmin_noov
+;
+	mov cx,es:v_width
+
+set_clip_xmin_noov:
+	cmp dx,es:v_height
+	jc set_clip_ymin_noov
+;
+	mov dx,es:v_height
+
+set_clip_ymin_noov:
+	cmp si,es:v_width
+	jc set_clip_xmax_noov
+;
+	mov si,es:v_width
+
+set_clip_xmax_noov:
+	cmp di,es:v_height
+	jc set_clip_ymax_noov
+;
+	mov di,es:v_height
+
+set_clip_ymax_noov:
     mov [bx].bm_x_min,cx
     mov [bx].bm_y_min,dx
     mov [bx].bm_x_max,si
@@ -956,6 +1018,7 @@ set_clip_rect	PROC far
     
 set_clip_rect_done:
 	pop bx
+	pop es
 	pop ds
 	retf32
 set_clip_rect	ENDP

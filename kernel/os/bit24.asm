@@ -1448,6 +1448,7 @@ PAGE
 
 draw_sprite_line    Proc far
 	pushad
+	mov bp,sp
 	sub sp,4
 	mov [bp].curr_x,ecx
 ;
@@ -1834,13 +1835,13 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 dl_pos EQU -8
 
 draw_line	Proc far
 	push ds
 	push es
 	pushad
+	mov bp,sp
 	sub sp,8
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
