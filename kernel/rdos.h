@@ -89,9 +89,23 @@ void RdosClearKeyboard();
 int RdosPollKeyboard();
 int RdosReadKeyboard();
 
+void RdosHideMouse();
+void RdosShowMouse();
+void RdosGetMousePosition(int *x, int *y);
+void RdosSetMousePosition(int x, int y);
+void RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
+void RdosSetMouseMickey(int x, int y);
+int RdosGetLeftButton();
+int RdosGetRightButton();
+void RdosGetLeftButtonPressPosition(int *x, int *y);
+void RdosGetRightButtonPressPosition(int *x, int *y);
+void RdosGetLeftButtonReleasePosition(int *x, int *y);
+void RdosGetRightButtonReleasePosition(int *x, int *y);
+
 void RdosSetCursorPosition(int Row, int Col);
 void RdosWriteString(const char *Buf);
 int RdosReadLine(char *Buf, int MaxSize);
+
 int RdosPing(long Node, long Timeout);
 
 int RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors);

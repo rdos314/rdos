@@ -1499,6 +1499,160 @@ RdosReadKeyboard	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosHideMouse
+;
+;		DESCRIPTION:	Hide mouse
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosHideMouse
+
+RdosHideMouse	PROC
+	UserGate hide_mouse_nr
+	ret
+RdosHideMouse	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosShowMouse
+;
+;		DESCRIPTION:	Show mouse
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosShowMouse
+
+RdosShowMouse	PROC
+	UserGate show_mouse_nr
+	ret
+RdosShowMouse	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetMousePosition
+;
+;		DESCRIPTION:	Get mouse position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetMousePosition
+
+RdosGetMousePosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_mouse_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],ecx
+	mov eax,[ebp+12]
+	mov [eax],edx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetMousePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMousePosition
+;
+;		DESCRIPTION:	Set mouse position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetMousePosition
+
+RdosSetMousePosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	mov cx,[ebp+8]
+	mov dx,[ebp+12]
+	UserGate set_mouse_position_nr
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosSetMousePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMouseWindow
+;
+;		DESCRIPTION:	Set mouse window
+;
+;		PARAMETER:		start x
+;						start y
+;						end x
+;						end y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetMouseWindow
+
+RdosSetMouseWindow	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	mov ax,[ebp+8]
+	mov bx,[ebp+12]
+	mov cx,[ebp+16]
+	mov dx,[ebp+20]
+	UserGate set_mouse_window_nr
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 16
+RdosSetMouseWindow	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetMouseMickey
+;
+;		DESCRIPTION:	Set mouse mickey
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetMouseMickey
+
+RdosSetMouseMickey	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	mov cx,[ebp+8]
+	mov dx,[ebp+12]
+	UserGate set_mouse_mickey_nr
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosSetMouseMickey	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosSetCursorPosition
 ;
 ;		DESCRIPTION:	Set cursor position
@@ -1525,6 +1679,182 @@ RdosSetCursorPosition	PROC
 	pop ebp
 	ret 8
 RdosSetCursorPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButton
+;
+;		DESCRIPTION:	Check if left button is pressed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLeftButton
+
+RdosGetLeftButton	PROC
+	UserGate get_left_button_nr
+	jc get_left_rel
+;
+	mov eax,1
+	ret
+
+get_left_rel:
+	xor eax,eax
+	ret
+RdosGetLeftButton	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButton
+;
+;		DESCRIPTION:	Check if right button is pressed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRightButton
+
+RdosGetRightButton	PROC
+	UserGate get_right_button_nr
+	jc get_right_rel
+;
+	mov eax,1
+	ret
+
+get_right_rel:
+	xor eax,eax
+	ret
+RdosGetRightButton	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButtonPressPosition
+;
+;		DESCRIPTION:	Get left button press position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLeftButtonPressPosition
+
+RdosGetLeftButtonPressPosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_left_button_press_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],ecx
+	mov eax,[ebp+12]
+	mov [eax],edx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetLeftButtonPressPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButtonPressPosition
+;
+;		DESCRIPTION:	Get right button pressed position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRightButtonPressPosition
+
+RdosGetRightButtonPressPosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_right_button_press_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],ecx
+	mov eax,[ebp+12]
+	mov [eax],edx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetRightButtonPressPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLeftButtonRelesePosition
+;
+;		DESCRIPTION:	Get left button released position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLeftButtonReleasePosition
+
+RdosGetLeftButtonReleasePosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_left_button_release_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],ecx
+	mov eax,[ebp+12]
+	mov [eax],edx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetLeftButtonReleasePosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRightButtonReleasePosition
+;
+;		DESCRIPTION:	Get right button release position
+;
+;		PARAMETER:		x
+;						y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRightButtonReleasePosition
+
+RdosGetRightButtonReleasePosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_right_button_release_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],ecx
+	mov eax,[ebp+12]
+	mov [eax],edx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetRightButtonReleasePosition	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
