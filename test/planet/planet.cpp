@@ -359,9 +359,6 @@ void UpdatePlanets()
 		planet = PlanetArr[i];
 		if (planet)
 		{
-			if (planet->hide)
-				RdosHideSprite(planet->handle);
-
 			if (planet->recreate)
 				CloseSprite(planet);
 
