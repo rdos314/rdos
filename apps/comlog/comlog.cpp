@@ -25,7 +25,7 @@ void cdecl main()
 	TKeyboardDevice Keyboard;
 
 	TSerialDevice Port1(1, 9600, 'N', 8, 1);
-	TSerialDevice Port2(3, 9600, 'N', 8, 1);
+	TSerialDevice Port2(4, 9600, 'N', 8, 1);
 
 	Port1.Open();
 	Port2.Open();
@@ -36,7 +36,7 @@ void cdecl main()
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-	TFile *File = new TFile("cbus.dat", 0);
+	TFile *File = new TFile("cotex.dat", 0);
 
 	for (;;)
 	{

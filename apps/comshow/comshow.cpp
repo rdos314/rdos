@@ -38,6 +38,7 @@
 #include "compac.h"
 #include "netana.h"
 #include "zap.h"
+#include "cotana.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -57,7 +58,7 @@ void cdecl main()
 //	int HasCbus;
 //	int HasBar;
 
-	TFile RawFile("cbus.dat");
+	TFile RawFile("cotex.dat");
 //	TFile RawBarFile("z:\\bar.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
@@ -65,8 +66,8 @@ void cdecl main()
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
 
-	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
@@ -77,12 +78,12 @@ void cdecl main()
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-//	analyzer.DefineLogFile("cotex.txt");
+	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
 //	analyzer.DefineLogFile("compac.txt");
 //	analyzer.DefineLogFile("pump.txt");
 //	analyzer.DefineLogFile("flintab.txt");
-	analyzer.DefineLogFile("cbus.txt");
+//	analyzer.DefineLogFile("cbus.txt");
 
 	for (;;)
 	{

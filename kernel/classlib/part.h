@@ -43,7 +43,7 @@ struct TBootParam
 	short int Resv4;
 	short int SmallSectors;
 	char Media;
-	char Resv6;
+	short int Resv6;
 	short int SectorsPerCyl;
 	short int Heads;
 	int HiddenSectors;
