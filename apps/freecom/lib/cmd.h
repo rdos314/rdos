@@ -32,6 +32,16 @@
 #include "file.h"
 #include "path.h"
 
+class TArg
+{
+public:
+    TArg(const char *name);
+    ~TArg();
+
+    TString FName;
+    TArg *FList;
+};
+
 class TCommand
 {
     friend class TCommandLine;
@@ -60,12 +70,23 @@ protected:
 	int ScanOpt(void *ag, char *rest);
 
 	int LeadOptions(char **Xline, void *arg);
+
+    void AddArg(const char *name);
+    void AddArg(char *sBeg, char **sEnd);
+    void Split(char *s);
+    int ParseOptions(void *arg);
+    int ScanCmdLine(char *line, void *arg);
+	
 	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 
 	TLangString FMsg;
 	TString FCmdLine;
 	TLangString FHelpScreen;
 	TCommand *FList;
+	
+	TArg *FArgList;
+	int FArgCount;
+	int FOptCount;
 
 	TFile *FInputFile;
 	TFile *FOutputFile;

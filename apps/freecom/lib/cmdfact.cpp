@@ -36,8 +36,8 @@
 #include "cmdfact.h"
 #include "path.h"
 #include "env.h"
-#include "setdrive.h"
-#include "exec.h"
+//#include "setdrive.h"
+//#include "exec.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -400,8 +400,8 @@ TCommand *TCommandFactory::Parse(const char *line)
 	if (strlen(rest) == 2)
 		if (rest[1] == ':' && isalpha(*rest))
 		{
-			cmd = new TSetDriveCommand(rest);
-			return cmd;
+//			cmd = new TSetDriveCommand(rest);
+//			return cmd;
 		}
 
 	if (*rest)
@@ -442,9 +442,9 @@ TCommand *TCommandFactory::Parse(const char *line)
 
 			if (!factory)
 			{
-				cmd = new TExecCommand(com, rest);
-				delete com;
-				return cmd;
+//				cmd = new TExecCommand(com, rest);
+//				delete com;
+//				return cmd;
 			}
 		}
 	}

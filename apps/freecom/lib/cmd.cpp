@@ -40,6 +40,38 @@ int TCommand::ErrorLevel = 0;
 
 /*##########################################################################
 #
+#   Name       : TArg::TArg
+#
+#   Purpose....: Constructor for TArg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TArg::TArg(const char *name)
+  : FName(name)
+{
+    FList = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TArg::~TArg
+#
+#   Purpose....: Destructor for TArg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TArg::~TArg()
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TCommand::TCommand
 #
 #   Purpose....: Constructor for command
@@ -52,6 +84,7 @@ int TCommand::ErrorLevel = 0;
 TCommand::TCommand(const char *param)
   : FCmdLine(param)
 {
+    FArgList = 0;
     FInputFile = 0;
     FOutputFile = 0;
     FErrorFile = 0;
@@ -72,6 +105,16 @@ TCommand::TCommand(const char *param)
 ##########################################################################*/
 TCommand::~TCommand()
 {
+    TArg *arg;
+
+    arg = FArgList;
+    while (arg)
+    {
+        FArgList = arg->FList;
+        delete arg;
+        arg = FArgList;
+    }
+    
     if (FInputFile)
         delete FInputFile;
 
@@ -557,3 +600,165 @@ int TCommand::LeadOptions(char **Xline, void *arg)
 	*Xline = line;
 	return ec;
 }
+
+/*##########################################################################
+#
+#   Name       : TCommand::AddArg
+#
+#   Purpose....: Add an argument
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::AddArg(const char *name)
+{
+    TArg *arg = new TArg(name);
+    TArg *curr;
+
+    arg->FList = 0;
+	curr = FArgList;
+   
+	if (curr)
+	{
+		while (curr->FList)
+			curr = curr->FList;
+
+		curr->FList = arg;
+	}
+	else
+		FArgList = arg;    
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::AddArg
+#
+#   Purpose....: Add an argument
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::AddArg(char *sBeg, char **sEnd)
+{ 
+    char *arg;
+
+    *sEnd = SkipWord(sBeg);
+    arg = Unquote(sBeg, *sEnd);
+    AddArg(arg);
+    delete arg;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Split
+#
+#   Purpose....: Split line into arguments
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::Split(char *s)
+{
+	char *start;
+
+    if (s)
+    {
+        start = SkipDelim(s);
+        while (*start)
+			AddArg(start, &s);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::ParseOptions
+#
+#   Purpose....: Parse all options
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::ParseOptions(void *arg)
+{
+    TArg *curr;
+    TArg *argv;
+    char *str;
+   	int ec;
+
+    FOptCount = 0;
+	FArgCount = 0;
+
+    argv = FArgList;	
+	while (argv)
+	{
+	    str = (char *)argv->FName.GetData();
+		if (IsOptChar(*str))
+		{
+			ec = ScanOpt(arg, str);
+			if (ec == E_None)
+			{
+			    curr = FArgList;
+			    if (curr == argv)
+			    {
+			        FArgList = argv->FList;
+			        delete argv;
+			    }
+			    else
+			    {
+			        while (curr && curr->FList != argv)
+			            curr = curr->FList;
+
+			        if (curr)
+			        {
+			            curr->FList = argv->FList;
+			            delete argv;
+			        }
+			    }
+				FOptCount++;
+			}
+			else
+			{
+				if (ec == E_Ignore)
+				    FArgCount++;
+				else
+					return ec;
+			}
+		}
+		else
+    	    FArgCount++;
+	
+		argv = argv->FList;
+	}
+
+	return E_None;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::ScanCmdLine
+#
+#   Purpose....: Scan cmd line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::ScanCmdLine(char *line, void *arg)
+{
+	Split(line);
+
+	if (ParseOptions(arg) != E_None)
+		return FALSE;
+	else
+	    return TRUE;
+}
+
