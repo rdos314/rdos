@@ -745,6 +745,8 @@ init	PROC far
 	mov es:fs_init_done,0
 	mov es:file_defs,0
 	mov es:fs_init_hooks,0
+	mov es:fs_file_list,0
+	InitSection es:fs_file_section
 ;
 	mov di,OFFSET fs_sel
 	mov cx,256

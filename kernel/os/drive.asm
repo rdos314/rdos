@@ -73,6 +73,8 @@ disc_bytes_per_sector	DW ?
 disc_sectors_per_unit	DW ?
 disc_sectors_per_cyl	DW ?
 disc_heads				DW ?
+disc_cached_sectors     DD ?
+disc_cache_limit        DD ?
 disc_thread				DW ?
 disc_timer_id			DW ?
 disc_data_list			DD ?
@@ -290,6 +292,186 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FREE_HANDLE
+;
+;		DESCRIPTION:	Free handle
+;
+;		PARAMETERS:		DS		Disc selector
+;						EDI		Disc buf handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_handle	PROC near
+	push eax
+	test es:[edi].dh_flags, FLAG_EXT_DATA
+	jnz free_handle_do
+;
+	push edx
+	mov edx,es:[edi].dh_data
+	call free_data
+	pop edx
+
+free_handle_do:
+	mov eax,ds:disc_handle_list
+	mov es:[edi],eax
+	mov ds:disc_handle_list,edi
+    dec ds:disc_cached_sectors
+	pop eax
+	ret
+free_handle	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_block
+;
+;		DESCRIPTION:	Free physical memory, disc block
+;
+;		PARAMETERS:		ES      Flat sel
+;                       EDX     Disc block
+;                       EDI     Unit block entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_block   Proc near
+    inc ebp
+    mov edi,edx
+	test es:[edi].dh_flags,FLAG_EXT_DATA OR BUSY_FLAGS
+	jnz swap_block_done
+;	
+    mov al,es:[edi].dh_lock_count
+    or al,al
+    jnz swap_block_done
+;
+    mov al,es:[edi].dh_usage
+    or al,al
+    jnz swap_block_upd_usage
+;
+    dec ebp
+    call remove_buf
+    call free_handle
+    jmp swap_block_done
+
+swap_block_upd_usage:
+    dec al
+    mov es:[edi].dh_usage,al    
+
+swap_block_done:
+    ret
+swap_block   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_unit
+;
+;		DESCRIPTION:	Free disc buffers on a disc unit
+;
+;		PARAMETERS:		DS      Disc sel
+;                       EDX     Unit block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_unit   Proc near
+    mov ax,flat_sel
+    mov es,ax
+    mov edi,edx
+    movzx ecx,ds:disc_sectors_per_unit
+    mov si,es:[edx].disc_sectors
+    lea edi,[edi].disc_sector_arr
+
+swap_sector_loop:
+    or ecx,ecx
+    jz swap_unit_done
+;    
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    mov eax,es:[edi-4]
+    or eax,eax
+    jz swap_sector_loop
+;
+    push ecx
+    push edx
+    push si
+    push edi
+    mov edx,eax
+    call swap_block
+    pop edi
+    pop si
+    pop edx
+    pop ecx
+    sub si,1
+    jnz swap_sector_loop
+
+swap_unit_done:
+    ret
+swap_unit   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_disc
+;
+;		DESCRIPTION:	Free disc buffers on a disc
+;
+;		PARAMETERS:		DS      Disc sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_disc   Proc near
+    push ds
+    push es
+    pushad
+;    
+    xor ebp,ebp
+    mov ax,ds
+    mov es,ax
+    mov edi,OFFSET disc_unit_arr
+    movzx ecx,ds:disc_units
+
+swap_unit_loop:
+    or ecx,ecx
+    jz swap_disc_done
+;    
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    mov edx,es:[edi-4]
+    or edx,edx
+    jz swap_unit_loop
+;
+    push es
+    push ecx
+    push edi
+    call swap_unit
+    pop edi
+    pop ecx
+    pop es
+    jmp swap_unit_loop
+
+swap_disc_done:
+    cmp ebp,ds:disc_cached_sectors
+    je swap_disc_end
+;
+    int 3
+
+swap_disc_end:    
+    popad
+    pop es
+    pop ds
+    ret
+swap_disc   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			ALLOCATE_HANDLE
 ;
 ;		DESCRIPTION:	Allocate handle
@@ -303,7 +485,27 @@ PAGE
 allocate_handle	PROC near
 	push eax
 	push edx
+; 
+    mov eax,ds:disc_cached_sectors
+    cmp eax,ds:disc_cache_limit
+    jc alloc_handle_no_swap
+; 
+    call swap_disc
+    mov eax,ds:disc_cached_sectors
+    cmp eax,ds:disc_cache_limit
+    jc alloc_handle_no_swap
 ;
+    call swap_disc
+    mov eax,ds:disc_cached_sectors
+    cmp eax,ds:disc_cache_limit
+    jc alloc_handle_no_swap
+;
+    shr eax,2
+    inc eax
+    add ds:disc_cache_limit,eax
+
+alloc_handle_no_swap:      
+    inc ds:disc_cached_sectors
 	mov edi,ds:disc_handle_list
 	or edi,edi
 	jnz allocate_handle_done
@@ -332,37 +534,6 @@ allocate_handle_done:
 	ret
 allocate_handle	ENDP
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FREE_HANDLE
-;
-;		DESCRIPTION:	Free handle
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc buf handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-free_handle	PROC near
-	push eax
-	test es:[edi].dh_flags, FLAG_EXT_DATA
-	jnz free_handle_do
-;
-	push edx
-	mov edx,es:[edi].dh_data
-	call free_data
-	pop edx
-
-free_handle_do:
-	mov eax,ds:disc_handle_list
-	mov es:[edi],eax
-	mov ds:disc_handle_list,edi
-	pop eax
-	ret
-free_handle	ENDP
 
 PAGE
 
@@ -1164,6 +1335,18 @@ set_disc_param	Proc far
 	mov ds:disc_sectors_per_cyl,si
 	mov ds:disc_heads,di
 ;
+    GetFreePhysical
+    shr eax,5               ; use 1/32 of physical memory per disc
+    cmp eax,10000h          ; use a minimum of 64k per disc
+    ja set_param_max
+;
+    mov eax,10000h
+
+set_param_max:
+    shr eax,9
+    mov ds:disc_cache_limit,eax
+	mov ds:disc_cached_sectors,0
+;
 	mov ecx,OFFSET disc_unit_arr
 	movzx eax,dx
 	shl eax,2
@@ -1658,6 +1841,7 @@ completed_wakeup_done:
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
+	dec ds:disc_cached_sectors
 	LeaveSection ds:disc_section
 
 completed_done:
@@ -1891,6 +2075,7 @@ install_disc_loop:
 	mov ds:disc_timer_id,0
 	mov ds:disc_thread,0
 	mov ds:disc_change_proc,0
+	mov ds:disc_cached_sectors,0
 	pop ds:disc_param
 	pop ds:disc_handle
 	pop cx
@@ -2897,6 +3082,7 @@ unlock_sector	PROC far
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
+	dec ds:disc_cached_sectors
 
 unlock_done:
 	LeaveSection ds:disc_section
@@ -4177,6 +4363,7 @@ init_disc	Proc far
 	call run_drive_assign2
 	ret
 init_disc	Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

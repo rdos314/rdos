@@ -77,6 +77,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn map_to_file:near
 	extrn sync_memmap:near
+	extrn free_memmap:near
 
 PAGE
 
@@ -422,6 +423,38 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			FreeOnePage
+;
+;		DESCRIPTION:    BX			Map file
+;                       ES:EDX      Page table entry
+;                       EDI			File offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeOnePage Proc near
+	push eax
+	push bx
+	push edx
+;
+	or bx,bx
+	jz fopDone
+;
+	shl edx,10
+	mov eax,edi
+	call free_memmap
+
+fopDone:
+	pop edx
+	pop bx
+	pop eax
+    ret
+FreeOnePage Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			FreeView
 ;
 ;		DESCRIPTION:    DS:BX       Mapping handle
@@ -479,6 +512,7 @@ fw_loop:
 fw_mark:
     call SyncOnePage
 	mov es:[edx],eax
+	call FreeOnePage
 
 fw_next:
 	add edi,1000h

@@ -53,6 +53,9 @@ sys_section			section_typ <>
 fs_init_section		section_typ <>
 fs_init_done		DB ?
 
+fs_file_list        DD ?
+fs_file_section     section_typ <>
+
 file_defs			DB ?
 fs_init_hooks		DB ?
 file_def_arr		DD 2*32 DUP(?)

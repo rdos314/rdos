@@ -122,6 +122,101 @@ CreateFileHandle	Proc near
 	ret
 CreateFileHandle	Endp
 
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InsertListEntry
+;
+;		DESCRIPTION:	Insert a list entry
+;
+;		PARAMETERS:		EDI			List entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertListEntry	Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;
+	mov eax,ds:fs_file_list
+	or eax,eax
+	jne insert_list_more
+
+insert_list_empty:
+	mov es:[edi].fl_prev,edi
+	mov es:[edi].fl_next,edi
+	jmp insert_list_done
+
+insert_list_more:
+	mov ebx,es:[eax].fl_prev
+	mov es:[eax].fl_prev,edi
+	mov es:[ebx].fl_next,edi
+	mov es:[edi].fl_prev,ebx
+	mov es:[edi].fl_next,eax	
+
+insert_list_done:
+	mov ds:fs_file_list,edi
+    LeaveSection ds:fs_file_section
+;
+    pop ebx
+    pop eax
+    pop ds
+    ret
+InsertListEntry Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RemoveListEntry
+;
+;		DESCRIPTION:	Remove a list entry
+;
+;		PARAMETERS:		EDI			List entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveListEntry	Proc near
+    push ds
+    push eax
+    push ebx
+;
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;
+	mov eax,es:[edi].fl_next
+	mov ebx,es:[edi].fl_prev
+	mov es:[ebx].fl_next,eax
+	mov es:[eax].fl_prev,ebx
+	cmp eax,edi
+	jne remove_list_more
+;
+	mov dword ptr ds:fs_file_list,0
+	jmp remove_list_done
+
+remove_list_more:
+    cmp edi,ds:fs_file_list
+    jne remove_list_done
+;
+    mov ds:fs_file_list,eax 
+
+remove_list_done:
+    LeaveSection ds:fs_file_section
+    pop ebx
+    pop eax
+    pop ds 
+    ret
+RemoveListEntry Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -160,6 +255,7 @@ CreateListEntry	Proc near
 	mov es:[edi].fl_prev_small,0
 	mov es:[edi].fl_next_small,0
 	mov es:[edi].fl_pos,esi
+	call InsertListEntry
 	mov eax,edi
 ;
 	pop edi
@@ -192,6 +288,7 @@ FreeListEntry	Proc near
 	push edi
 ;
 	mov edi,eax
+	call RemoveListEntry
 ;
 	mov al,ds:file_drive
 	mov bx,ds
@@ -1987,7 +2084,9 @@ map_to_file_check_base:
 	pop edi
 	jnc map_to_file_do_first
 ;
-	mov dword ptr es:[ebx+esi],0
+    xor eax,eax
+    xchg eax,es:[ebx+esi]
+    call FreeListEntry
 	LeaveSection ds:file_list_section
 	stc
 	jmp map_to_file_leave
@@ -1995,6 +2094,7 @@ map_to_file_check_base:
 map_to_file_do_first:
 	mov esi,es:[ebx+esi]
 	inc es:[esi].fl_ref_count
+	inc es:[esi].fl_usage
 	mov ebx,ds:file_block_size
 	mov esi,es:[esi].fl_base
 	mov eax,ebx
@@ -2083,10 +2183,11 @@ sync_memmap	Proc near
 	mov cl,ds:file_dir_shift
 	shr esi,cl
 	shl si,2
+	EnterSection ds:file_list_section
 	mov ebx,ds:[si].file_entries
 	or ebx,ebx
 	clc
-	jz sync_memmap_done
+	jz sync_memmap_leave
 ;
 	mov esi,ebp
 	mov cl,ds:file_entry_shift
@@ -2096,7 +2197,7 @@ sync_memmap	Proc near
 	mov edi,es:[ebx+esi]
 	or edi,edi
 	clc
-	jz sync_memmap_done
+	jz sync_memmap_leave
 ;
 	push bx
 	mov ecx,1000h
@@ -2106,12 +2207,87 @@ sync_memmap	Proc near
 	CallFileSystem write_file_block_proc
 	pop bx
 
+sync_memmap_leave:
+    LeaveSection ds:file_list_section
+
 sync_memmap_done:
     popad
     pop es
     pop ds
     ret
 sync_memmap Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			free_memmap
+;
+;		DESCRIPTION:	Free memmapped file region
+;
+;		PARAMETERS:		EAX			Offset within object
+;						BX			File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public free_memmap
+
+free_memmap	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov edi,edx
+	mov edx,eax
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc free_memmap_done
+;
+	mov si,bx
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
+	or bx,bx
+	stc
+	jz free_memmap_done
+;
+	mov ds,bx
+	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+	jnz free_memmap_done
+;
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov esi,edx
+	mov cl,ds:file_dir_shift
+	shr esi,cl
+	shl si,2
+	EnterSection ds:file_list_section
+	mov ebx,ds:[si].file_entries
+	or ebx,ebx
+	jz free_memmap_leave
+;
+	mov esi,edx
+	mov cl,ds:file_entry_shift
+	shr esi,cl
+	shl si,2
+	and esi,0FFCh
+	mov esi,es:[ebx+esi]
+	or esi,esi
+	jz free_memmap_leave
+;
+    dec es:[esi].fl_usage
+
+free_memmap_leave:
+	LeaveSection ds:file_list_section
+	clc
+
+free_memmap_done:
+	popad
+	pop es
+	pop ds
+	ret
+free_memmap	Endp
 
 PAGE
 
@@ -2163,6 +2339,32 @@ delete_handle	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_proc
+;
+;		DESCRIPTION:	Free physical memory in file buffers
+;
+;		PARAMETERS:		AL      Swapper run level (0 = free all, 15 = preventive)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_proc	Proc far
+    int 3
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;    
+    mov edi,ds:fs_file_list
+    
+;
+    LeaveSection ds:fs_file_section
+	ret
+swap_proc	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			Init
@@ -2181,6 +2383,9 @@ init_file	PROC near
 	mov di,OFFSET delete_handle
 	mov ax,FILE_HANDLE
 	RegisterHandle
+;
+    mov di,OFFSET swap_proc
+	RegisterSwapProc
 ;
 	mov si,OFFSET get_file_list_entry
 	mov di,OFFSET get_file_list_entry_name

@@ -38,6 +38,15 @@ INCLUDE ..\os.inc
 INCLUDE ..\driver.def
 INCLUDE system.inc
 
+swap_data_seg	STRUC
+
+swap_level          DB ?
+swap_hooks		    DB ?
+
+swap_arr		    DW 2*32 DUP(?)
+
+swap_data_seg	ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -60,8 +69,67 @@ PAGE
 register_swap_proc_name			DB 'Register Swap Proc',0
 
 register_swap_proc	PROC far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,swap_data_sel
+	mov ds,ax
+	mov al,ds:swap_hooks
+	mov bl,al
+	xor bh,bh
+	shl bx,2
+	add bx,OFFSET swap_arr
+	mov [bx],di
+	mov [bx+2],es
+	inc al
+	mov ds:swap_hooks,al
+;
+	pop bx
+	pop ax
+	pop ds
 	ret
 register_swap_proc	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			run_hooks
+;
+;		DESCRIPTION:	Run hooks
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_hooks	Proc near
+	mov ax,swap_data_sel
+	mov ds,ax
+	mov cl,ds:swap_hooks
+	or cl,cl
+	je run_hooks_done
+;
+	mov bx,OFFSET swap_arr
+
+run_hooks_loop:
+	push ds
+	push bx
+	push cx
+;
+    mov al,ds:swap_level	
+	call dword ptr [bx]
+;	
+	pop cx
+	pop bx
+	pop ds
+	add bx,4
+	dec cl
+	jnz run_hooks_loop
+
+run_hooks_done:
+	ret
+run_hooks	Endp
 
 PAGE
 	
@@ -77,8 +145,15 @@ PAGE
 swap_name   DB 'Swap', 0
 
 swap_pr:
-    int 3
-    retf
+
+swap_loop:
+	mov bx,swap_data_sel
+	mov ds,bx
+	mov ds:swap_level,0
+	call run_hooks
+	mov eax,10
+	WaitMilliSec
+	jmp swap_loop
 
 PAGE
 	
@@ -141,6 +216,12 @@ init_swap	PROC near
 	xor cl,cl
 	mov ax,register_swap_proc_nr
 	RegisterOsGate
+;
+	mov bx,swap_data_sel
+	mov eax,SIZE swap_data_seg
+	AllocateFixedSystemMem
+	mov ds,bx
+	mov ds:swap_hooks,0
 ;
     popad
     pop es
