@@ -53,7 +53,7 @@ UserGate      MACRO gate_nr
 	db 66h
 	db 9Ah
 	dw 0
-	dw 200Bh + (gate_nr SHL 4)
+	dw 280Bh + (gate_nr SHL 4)
 			ENDM
 
 		NAME system
@@ -2230,6 +2230,137 @@ RdosReplyMailslot	Proc
 	pop ebp
 	ret 8
 RdosReplyMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDiscInfo
+;
+;		DESCRIPTION:	Get disc info
+;
+;		PARAMETER:		Disc #
+;						Bytes / sector
+;						Total sectors
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetDiscInfo
+
+RdosGetDiscInfo	Proc
+	push ebp
+	mov ebp,esp
+	push edx
+	push edi
+;
+	mov al,[ebp+8]
+	UserGate get_disc_info_nr
+	jc get_disc_info_fail
+;
+	mov edi,[ebp+12]
+	movzx ecx,cx
+	mov [edi],ecx
+;
+	mov edi,[ebp+16]
+	mov [edi],edx
+	mov eax,1
+	jmp get_disc_info_done
+
+get_disc_info_fail:
+	xor eax,eax
+
+get_disc_info_done:
+	pop edi
+	pop edx
+	pop ebp
+	ret 12
+RdosGetDiscInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadDisc
+;
+;		DESCRIPTION:	Read from disc
+;
+;		PARAMETER:		Disc #
+;						Sector #
+;						Buffer
+;						Size
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadDisc
+
+RdosReadDisc	Proc
+	push ebp
+	mov ebp,esp
+	push edx
+	push edi
+;
+	mov al,[ebp+8]
+	mov edx,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate read_disc_nr
+	jc read_disc_fail
+;
+	mov eax,1
+	jmp read_disc_done
+
+read_disc_fail:
+	xor eax,eax
+
+read_disc_done:
+	pop edi
+	pop edx
+	pop ebp
+	ret 16
+RdosReadDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			WriteReadDisc
+;
+;		DESCRIPTION:	Write to disc
+;
+;		PARAMETER:		Disc #
+;						Sector #
+;						Buffer
+;						Size
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteDisc
+
+RdosWriteDisc	Proc
+	push ebp
+	mov ebp,esp
+	push edx
+	push edi
+;
+	mov al,[ebp+8]
+	mov edx,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate write_disc_nr
+	jc write_disc_fail
+;
+	mov eax,1
+	jmp write_disc_done
+
+write_disc_fail:
+	xor eax,eax
+
+write_disc_done:
+	pop edi
+	pop edx
+	pop ebp
+	ret 16
+RdosWriteDisc	Endp
 
 ;	extrn Startup:near
 
