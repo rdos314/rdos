@@ -567,6 +567,25 @@ RdosAddWaitForMouse	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSetTextMode
+;
+;		description:	int RdosSetTextMode();
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetTextMode
+
+RdosSetTextMode	Proc
+	pushad
+	mov ax,3
+    UserGate set_video_mode_nr
+	popad
+	ret
+RdosSetTextMode	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetVideoMode
 ;
 ;		description:	int RdosSetVideoMode(int *BitsPerPixel, 
@@ -2345,7 +2364,7 @@ RdosOpenFile	PROC
 	jmp OpenFileDone
 
 OpenFileFailed:
-	xor ax,ax
+	xor eax,eax
 
 OpenFileDone:
 	pop edi
@@ -2380,7 +2399,7 @@ RdosCreateFile	PROC
 	jmp CreateFileDone
 
 CreateFileFailed:
-	xor ax,ax
+	xor eax,eax
 
 CreateFileDone:
 	pop edi
@@ -2435,7 +2454,7 @@ RdosDuplFile	PROC
 	jmp DuplFileDone
 
 DuplFileFailed:
-	xor ax,ax
+	xor eax,eax
 
 DuplFileDone:
 	pop ebx
