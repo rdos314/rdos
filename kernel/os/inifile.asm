@@ -1194,6 +1194,47 @@ GetEntrySize	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteEntryData
+;
+;       DESCRIPTION:    Delete entry data part
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       EDI         Start of value
+;                       ECX         Remaining size of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteEntryData	Proc near
+    push es
+    push ax
+    push ecx
+    push esi
+    push edi
+;
+    mov ax,flat_data_sel
+    mov es,ax
+    call FindKeySize
+    push ecx
+    mov esi,edi
+    add esi,ecx
+    mov ecx,ds:[bx].ih_file_size
+    sub ecx,esi
+    rep movs byte ptr es:[edi],es:[esi]
+    pop ecx
+    mov al,' '
+    rep stos byte ptr es:[edi]
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ax
+    pop es
+	ret
+DeleteEntryData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           CacheEntryAttrib
 ;
 ;       DESCRIPTION:    Cache entry attributes
@@ -1209,6 +1250,8 @@ CacheEntryAttrib	Proc near
 	push ecx
 	push edi
 ;
+    mov ax,flat_data_sel
+    mov es,ax
     call GetIniFreeSize
 	mov edi,ds:[bx].ih_base
 	add edi,ds:[bx].ih_file_size
@@ -1399,8 +1442,10 @@ wiFindVar:
 	mov ds:[bx].ih_sect_size,ecx
     call FindIniKey
     jc wiAdd
-;
-    jmp wiDone
+
+wiRepl:
+    int 3
+    call DeleteEntryData
 
 wiAdd:
 	call CacheEntryAttrib

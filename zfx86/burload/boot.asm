@@ -1816,8 +1816,8 @@ prot_init:
     WriteCCR 0C3h, ah
 ;     
     WriteNB 20Fh, 0
-    WriteNB 11Bh, 210h
-    WriteNB 11Dh, 3D0h
+    WriteNB 11Bh, 217h
+    WriteNB 11Dh, 22D0h
     WriteNB 110h, 0
     WriteNB 111h, 0
     WriteNB 112h, 0
@@ -1827,24 +1827,25 @@ prot_init:
     WriteNB 117h, 0
     WriteNB 118h, 0
     WriteNB 119h, 6Bh
-    WriteNB 11Ah, 220h
+    WriteNB 11Ah, 227h
+    WriteNB 11Ch, 0
     WriteNB 11Eh, 0
     WriteNB 11Fh, 0
     WriteNB 120h, 0
     WriteNB 200h, 0
     WriteNB 201h, 0
-    WriteNB 202h, 0
-    WriteNB 204h, 0FFFFh
-    WriteNB 205h, 0
-    WriteNB 207h, 0FFFFh
-    WriteNB 208h, 0
-    WriteNB 20Ah, 0FFFFh
-    WriteNB 20Bh, 0
-    WriteNB 20Dh, 0FFFFh
+    WriteNB 202h, 2A00h
+    WriteNB 204h, 0FC71h
+    WriteNB 205h, 2A00h
+    WriteNB 207h, 0FC71h
+    WriteNB 208h, 2A00h
+    WriteNB 20Ah, 0FC71h
+    WriteNB 20Bh, 2A00h
+    WriteNB 20Dh, 0FC71h
     WriteNB 20Eh, 0
-    WriteNB 20Fh, 0
     WriteNB 213h, 321h
     WriteNB 214h, 0    
+    WriteNB 239h, 1249h
 ;
     WritePciDword 0, 12h, 0, 4, 0280000Fh
 ;
