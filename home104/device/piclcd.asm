@@ -1311,9 +1311,10 @@ PAGE
 
 cmd_proc   Proc near
     mov al,es:dqe_val
-    or al,al
+    and al,3Fh
+    cmp al,1Ah
     stc
-    jz cmd_done
+    jnz cmd_done
 ;    
     mov ah,es:dqe_cmd
     mov al,es:dqe_line
@@ -1490,7 +1491,6 @@ PAGE
 read_serial_val_name	DB 'Read Serial Value', 0
 
 rd0_proc    Proc near
-    int 3
     mov al,es:dqe_val
     or al,al
     stc
@@ -1549,7 +1549,6 @@ rd4_proc    Proc near
 rd4_proc    Endp
 
 rd_check_proc    Proc near
-    int 3
     mov al,es:dqe_val
     or al,al
     jz rd_check_done
@@ -1562,14 +1561,11 @@ rd_check_done:
 rd_check_proc    Endp
 
 read_serial_val	Proc far
-	push eax
 	push bx
 	push cx
     push edx
     push di
-    push ebp
 ;
-    mov ebp,eax
     mov cx,dx
     xor ax,ax
     mov edx,1193 * 100
@@ -1577,12 +1573,10 @@ read_serial_val	Proc far
     mov bl,2
     call DioReq
 ;
-	pop ebp
 	pop di
 	pop edx
 	pop cx
 	pop bx
-	pop eax
 	retf32
 read_serial_val	Endp
 

@@ -69,7 +69,7 @@ WAIT:
     call ReadPort
     call Output6
 ;
-    movlw 1
+    movlw $1A
     movwf VAL
     call WritePort    
 ;
@@ -423,22 +423,41 @@ InDataLoop24:
     goto InByteLoop24
 ;
     call ReadPort
+    movlw $A5
+    xorwf CRC,F
     movlw 8
     movwf COUNT
 
 InCrcLoop24:
     call InputBit
-    rrf VAL,F
+    rlf VAL,F
+    rlf VAL,F
+    rlf VAL,W
+    andlw 1
+    xorwf CRC,W
+    andlw 1
+    btfss STATUS,Z
+    goto InCrcFail
+;    
+    rrf CRC,F
     decf COUNT,F
     btfss STATUS,Z
     goto InCrcLoop24
 ;
-    movlw $A5
-    xorwf CRC,W
     movlw 1
-    btfss STATUS,Z    
-    movlw 0
     movwf VAL
+    call WritePort
+    return
+
+InCrcFailLoop:
+    call InputBit
+
+InCrcFail:
+    decf COUNT,F
+    btfss STATUS,Z
+    goto InCrcFailLoop
+;
+    clrf VAL
     call WritePort
     return
             

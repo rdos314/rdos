@@ -13,14 +13,14 @@ void cdecl main()
 {
     int val;
     
-    for (;;)
+	RdosWriteSerialRaw(0x26, 5, 2);
+	for (;;)
 	{
-		RdosWriteSerialRaw(0x26, 5, 2);
-    	if (RdosReadSerialRaw(0x26, 1, &val))
-	    	printf("%ld.%ld\r\n", val / 10, val % 10);
-    	else
-	    	printf("fail\r\n");
+		if (RdosReadSerialRaw(0x26, 1, &val))
+			printf("%ld.%ld\r\n", val / 10, val % 10);
+		else
+			printf("fail\r\n");
 		RdosWaitMilli(1000);
-    }
+	}
 }
 
