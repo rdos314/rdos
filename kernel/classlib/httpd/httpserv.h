@@ -66,7 +66,9 @@ public:
     void Push();
 
 	int IsOpen();
-//	int Read(char *buf, int size);
+	int IsEmpty();
+	
+	int Read(char *buf, int size);
 	char *ReadLine();
 
 	THttpCustomPageFactory *Find(const char *FileName);

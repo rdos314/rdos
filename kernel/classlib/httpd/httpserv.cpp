@@ -40,6 +40,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define BUF_SIZE	513
+
 /*##########################################################################
 #
 #   Name       : THttpSocketServer::IsEmpty
@@ -424,6 +426,104 @@ int THttpSocketServer::IsOpen()
 
 /*##########################################################################
 #
+#   Name       : THttpSocketServer::IsEmpty
+#
+#   Purpose....: Check if data socket is empty
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpSocketServer::IsEmpty()
+{
+	if (FBufCount == FBufPos)
+	{
+		if (FSocket->Poll() == 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::Read
+#
+#   Purpose....: Read a number of data-bytes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpSocketServer::Read(char *buf, int size)
+{
+	char *ptr;
+	char *result;
+	int pos;
+	int count;
+
+	if (FSocketBuf == 0)
+	{
+		FSocketBuf = new char[BUF_SIZE + 1];
+		FBufCount = 0;
+		FBufPos = 0;
+	}
+
+	if (FBufCount <= FBufPos)
+	{
+		FBufPos -= FBufCount;
+
+		if (FSocket->WaitForChar(5000))
+		{
+			FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
+			FSocketBuf[FBufCount] = 0;
+
+			if (OnCommand)
+				(*OnCommand)(this, FSocketBuf);
+		}
+		else
+			return 0;
+	}
+
+	while (FBufCount - FBufPos < size)
+	{
+		if (FBufPos == 0)
+		{
+		    FBufCount = 0;
+			return 0;
+	    }
+
+		if (!FSocket->WaitForChar(5000))
+		{
+		    count = FBufCount - FBufPos;
+		    memcpy(buf, &FSocketBuf[FBufPos], count);
+			FBufPos = 0;
+			FBufCount = 0;
+			return count;
+		}
+
+		memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
+		FBufCount -= FBufPos;
+		FBufPos = 0;
+		pos = FBufCount;
+		FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
+		FSocketBuf[FBufCount] = 0;
+
+		if (OnCommand)
+			(*OnCommand)(this, &FSocketBuf[pos]);
+	}
+
+    memcpy(buf, &FSocketBuf[FBufPos], size);
+    FBufPos += size;
+	return size;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpSocketServer::ReadLine
 #
 #   Purpose....: Read a single line from socket
@@ -451,7 +551,7 @@ char *THttpSocketServer::ReadLine()
 	{
 		FBufPos -= FBufCount;
 
-		if (FSocket->Poll())
+		if (FSocket->WaitForChar(5000))
 		{
 			FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
 			FSocketBuf[FBufCount] = 0;
@@ -473,7 +573,7 @@ char *THttpSocketServer::ReadLine()
 			return 0;
 	    }
 
-		if (FSocket->Poll() == 0)
+		if (!FSocket->WaitForChar(5000))
 		{
 			result = &FSocketBuf[FBufPos];
 			FBufPos = 0;
@@ -590,7 +690,7 @@ void THttpSocketServer::HandleSocket()
 
 	if (FSocket->WaitForConnection(6000))
 	{
-		while (FSocket->IsOpen())
+		while (FSocket->IsOpen() || !IsEmpty())
 		{
 		    ptr = ReadLine();
 		    if (ptr)

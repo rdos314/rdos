@@ -57,11 +57,13 @@ public:
 
 	void Run();
 	int IsOpen();
+	int IsEmpty();
 	int IsMSIE();
 
 	static int ErrorLevel;
 
 protected:
+    void HandlePost(THttpCustomPage *page, const char *name);
 	void GetFile(const char *Name);
 	void Get(const char *Name);
     void Post(const char *Name);
@@ -106,6 +108,8 @@ protected:
 	int FMinor;
 
     TString FUserAgent;
+    int FContentSize;
+    char *FContentData;
 
 	TString FMethod;
 	TString FCmdLine;

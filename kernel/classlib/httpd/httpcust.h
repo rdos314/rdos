@@ -38,15 +38,17 @@ class THttpSocketServerFactory;
 class THttpCustomPage
 {
 friend class THttpCustomPageFactory;
+friend class THttpCommand;
 
 public:
 	THttpCustomPage(THttpCommand *Cmd, const char *FileName);
 	virtual ~THttpCustomPage();
 
+protected:
 	virtual void Get(const char *Name);
 	virtual void Post(const char *Name);
+	virtual void Post(const char *Var, const char *Val);
 
-protected:
 	void WriteFile(TPathName &path, const char *ContentType);
 	void StartPush();
 	int PushFile(TPathName &path, const char *ContentType);

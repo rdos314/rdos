@@ -95,6 +95,8 @@ THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Pa
 	FArgList = 0;
 	FOptCount = 0;
 	FOptList = 0;
+	FContentData = 0;
+	FContentSize = 0;
 }
 
 /*##########################################################################
@@ -128,6 +130,9 @@ THttpCommand::~THttpCommand()
         delete opt;
         opt = FOptList;
 	}
+
+	if (FContentData)
+	    delete FContentData;
 }
 
 /*##########################################################################
@@ -350,6 +355,9 @@ void THttpCommand::AddOpt(char *name, char *param)
 	if (!strcmp(name, "User-Agent"))
 	    FUserAgent = param;
 
+	if (!strcmp(name, "Content-Length"))
+	    sscanf(param, "%d", &FContentSize);
+	    
     opt->FList = 0;
 	curr = FOptList;
    
@@ -452,6 +460,22 @@ int THttpCommand::ScanCmdLine(char *line, void *arg)
 int THttpCommand::IsOpen()
 {
     return FServer->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::IsEmpty
+#
+#   Purpose....: Check if socket is open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCommand::IsEmpty()
+{
+    return FServer->IsEmpty();
 }
 
 /*##########################################################################
@@ -854,6 +878,51 @@ void THttpCommand::Get(const char *Name)
 
 /*##########################################################################
 #
+#   Name       : THttpCommand::HandlePost
+#
+#   Purpose....: Handle post command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
+{
+    char *ptr;
+    char *nextptr;
+    char *valptr;
+    
+    if (FContentData)
+    {
+        ptr = FContentData;
+
+        while (ptr && *ptr)
+        {
+            nextptr = strchr(ptr, '&');   
+            if (nextptr)
+            {
+                *nextptr = 0;
+                nextptr++;
+            }
+
+            valptr = strchr(ptr, '=');
+            if (valptr)
+            {
+                *valptr = 0;
+                valptr++;
+                page->Post(ptr, valptr);
+            }
+
+            ptr = nextptr;
+        }
+    }
+
+	page->Post(name);
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCommand::Post
 #
 #   Purpose....: Post command
@@ -870,7 +939,7 @@ void THttpCommand::Post(const char *Name)
 	if (cust)
 	{
 		THttpCustomPage *page = cust->Create(this);
-		page->Post(Name);
+		HandlePost(page, Name);
 		delete page;
 	}
 	else
@@ -935,6 +1004,13 @@ void THttpCommand::Run()
 		}
 
 		ptr = FServer->ReadLine();
+	}
+
+	if (FContentSize)
+	{
+	    FContentData = new char[FContentSize + 1];
+	    size = FServer->Read(FContentData, FContentSize);
+	    *(FContentData + FContentSize) = 0;
 	}
 
 	size = FCmdLine.GetSize();

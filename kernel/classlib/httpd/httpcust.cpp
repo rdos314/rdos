@@ -132,36 +132,7 @@ int THttpCustomPage::PushFile(TPathName &path, const char *ContentType)
 ##########################################################################*/
 void THttpCustomPage::Get(const char *Name)
 {
-	int i = 0;
-	char str[50];
-
-	StartPush();
-
-	TFile File(FFileName.GetData(), 0);
-
-	while (FCmd->IsOpen())
-	{
-		File.SetSize(0);
-		File.SetPos(0);
-
-		File.Write("<html><body><h2>RDOS Webserver</h2>\r\n");
-		File.Write("Default page for (");
-		File.Write(FFileName.GetData());
-		File.Write(")<br>\r\n");
-
-		sprintf(str, "%d", i);
-		i++;
-
-		File.Write(str);
-		File.Write("<br>\r\n");
-
-		File.Write("</body></html>\r\n");
-
-		if (!PushFile(FFileName.GetData(), "text/html"))
-		    break;
-
-		RdosWaitMilli(1000);
-	}
+	FCmd->GetFile(Name);
 }
 
 /*##########################################################################
@@ -178,6 +149,21 @@ void THttpCustomPage::Get(const char *Name)
 void THttpCustomPage::Post(const char *Name)
 {
     Get(Name);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::Post
+#
+#   Purpose....: Post callback for var & value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::Post(const char *Var, const char *Val)
+{
 }
 
 /*##########################################################################

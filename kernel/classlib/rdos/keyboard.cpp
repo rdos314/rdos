@@ -276,7 +276,7 @@ int TKeyboardDevice::Get()
 #
 #   Name       : TKeyboardDevice::Put
 #
-#   Purpose....: Put a "standard key" in the buffer (not supported)
+#   Purpose....: Put a "standard key" in the buffer
 #
 #   In params.: Virtual key
 #   Out params.: *
