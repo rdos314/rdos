@@ -26,7 +26,8 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SP_FLAG_VISIBLE  EQU 1
-SP_FLAG_OVERLAP  EQU 2
+SP_FLAG_OVL_OLD  EQU 2
+SP_FLAG_OVL_NEW  EQU 4 
 
 sprite_struc	STRUC
 
