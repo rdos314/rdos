@@ -25,19 +25,17 @@ struct TComMsg
 *##########################################################################*/
 void cdecl main()
 {
-	TString str1("Part 1");
-	TString str2("Part 2");
-	TPathName path("test.exe");
-	TDirEntry entry;
+	TPathName dst("d:\\neander");
+	TPathName src("c:\\rdos\\apps\\neander");
 
-	str2 = str1 + "," + str2;
-	str2.Upper();
-	str2.Lower();
-	printf(str2.Find(','));
-	printf(path.GetFullPathName().GetData());
-	printf("\r\n");
+	printf(src.GetBaseName().GetData());
+    printf(src.GetEntryName().GetData());
 
-	TDir dir("c:\\dos");
+	if (dst.MakeDir())
+		printf("Directory %s created\r\n", dst.GetFullPathName().GetData());
+
+	TDir dir = src.Find();
+    TDirEntry entry;
 
 	entry = dir.GotoFirst();
 	while (entry.Valid)
@@ -52,6 +50,8 @@ void cdecl main()
 				entry.Time.GetSec(),
 				entry.Time.GetMilliSec());
 		printf(" %d", entry.FileSize);
+		if (entry.PathName.CopyFile(dst))
+			printf(", copied");
 		printf("\r\n");
 		entry = dir.GotoNext();
 	}

@@ -20,13 +20,13 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dir.h
+# path.h
 # Directory class
 #
 ########################################################################*/
 
-#ifndef _DIR_H
-#define _DIR_H
+#ifndef _PATH_H
+#define _PATH_H
 
 #include "datetime.h"
 #include "str.h"
@@ -46,10 +46,19 @@ public:
 
 	const TPathName &operator=(const TPathName &src);
 	const TPathName &operator=(const TString &src);
-	const TPathName &operator+=(const TString &src);
+	const TPathName &operator+=(const TString &str);
+	const TPathName &operator+=(const char *str);
 
 	TString Get() const;
+	int HasDrive() const;
+	int HasFullPath() const;
+	int GetDrive() const;
+	TString GetBaseName() const;
+	TString GetEntryName() const;
 	TString GetFullPathName() const;
+
+	int GetAttribute() const;
+	int SetAttribute(int Attribute) const;
 
     int IsFile() const;
 	TFile OpenFile() const;
@@ -70,6 +79,9 @@ public:
 private:
     TString FPathName;
 };
+
+TPathName operator+(const TPathName& path, const TString &str);
+TPathName operator+(const TPathName& path, const char *str);
 
 class TDirEntry
 {

@@ -836,7 +836,7 @@ _RdosSetLGOP	Proc far
 	push bx
 ;
 	mov bx,[bp+6]
-	mov ax,[ebp+8]
+	mov ax,[bp+8]
 	SetLgop
 ;
 	pop bx
@@ -2805,7 +2805,6 @@ _RdosGetFileTime	PROC far
 	mov bp,sp
 	push es
 	push bx
-	push dx
 	push di
 ;
 	mov bx,[bp+6]
@@ -2955,7 +2954,7 @@ _RdosCreateNamedMapping	PROC far
 	push di
 ;
 	les di,[bp+6]
-	movzx ax,[ebp+10]
+	movzx ax,[bp+10]
 	CreateNamedMapping
 	mov ax,bx
 ;
@@ -3248,7 +3247,7 @@ rgcdFail:
 rgcdDone:
 	pop di
 	pop es
-	pop ebp
+	pop bp
 	ret
 _RdosGetCurDir	ENDP
 
@@ -3594,7 +3593,7 @@ rdiFail:
 rdiDone:
     pop di
     pop ecx
-	pop ebx
+	pop bx
 	pop es
 	pop bp
 	ret

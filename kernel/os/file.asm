@@ -1562,6 +1562,7 @@ set_file_time_name	DB 'Set File Time',0
 set_file_time:
 	push ds
 	push es
+	push fs
 	push ax
 	push bx
 	push ecx
@@ -1595,6 +1596,7 @@ set_file_time_done:
 	pop ecx
 	pop bx
 	pop ax
+	pop fs
 	pop es
 	pop ds
 	retf32

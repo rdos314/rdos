@@ -24,8 +24,14 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
+#include <ctype.h>
+#include <string.h>
 
 #include <rdos.h>
+#include "str.h"
+#include "path.h"
+#include "env.h"
 
 /*################## WriteChar ##########################
 *   Purpose....: Write a single char	   					      	        #
@@ -46,7 +52,44 @@ void WriteChar(char ch)
 *##########################################################################*/
 void WriteString(const char *str)
 {
-    RdosWriteString(ch);
+    RdosWriteString(str);
+}
+
+/*################## WriteString ##########################
+*   Purpose....: Write a string	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void WriteString(const TString &str)
+{
+    RdosWriteString(str.GetData());
+}
+
+/*################## FormatTime ##########################
+*   Purpose....: Format time			   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TString FormatTime(TDateTime &time)
+{
+	char str[40];
+	sprintf(str, "%02d.%02d.%02d,%03d", time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
+	return TString(str);
+}
+
+/*################## FormatLongDate ##########################
+*   Purpose....: Format long date		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TString FormatLongDate(TDateTime &date)
+{
+	char str[40];
+	sprintf(str, "%04d-%02d-%02d", date.GetYear(), date.GetMonth(), date.GetDay());
+	return TString(str);
 }
 
 /*################## DisplayPrompt ##########################
@@ -55,17 +98,26 @@ void WriteString(const char *str)
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-void DisplayPrompt(const char *pr)
+void DisplayPrompt()
 {
-    char *p;
-    
-    while (*pr)
-    {
-        if (*pr != '$')
-            WriteChar(*pr);
-        else
-        {
-            switch (toupper(*++pr))
+	char promptstr[128];
+	char *pr;
+	TString str;
+	TPathName path("");
+
+	TEnv *env = TEnv::OpenSysEnv();
+	if (!env->Find("PROMPT", promptstr))
+		strcpy(promptstr, "$p$g");
+
+	pr = promptstr;
+
+	while (*pr)
+	{
+		if (*pr != '$')
+			WriteChar(*pr);
+		else
+		{
+			switch (toupper(*++pr))
             {
                 case 'Q':
                     WriteChar('=');
@@ -76,34 +128,32 @@ void DisplayPrompt(const char *pr)
                     break;
 
                 case 'T':
-                    p = FormatTime();            
-                    if (p)
-                        WriteString(p);
+                    str = FormatTime(TDateTime());            
+                    WriteString(str);
                     break;
 
-                case 'D':
-                    p = FormatDateLong();
-                    if (p)
-                        WriteString(p);
-                    break;
-                    
-                case 'P':
-		        	p = cwd(0);
-                    if (p)
-                        WriteString(p);
-                    break;
-                    
+				case 'D':
+					str = FormatLongDate(TDateTime());
+					WriteString(str);
+					break;
+
+				case 'P':
+					str = path.GetFullPathName();
+                    str.Lower();
+					WriteString(str);
+					break;
+
                 case 'V':
-                    WriteString(ShellName);
+                    WriteString("command");
                     break;
                     
                 case 'N':
-                    WriteChar(GetDisk() + 'A');
+                    WriteChar(RdosGetCurDrive() + 'A');
                     break;
                     
                 case 'G':
                     WriteChar('>');
-                    break;
+					break;
 
                 case 'L':
                     WriteChar('<');
@@ -124,7 +174,7 @@ void DisplayPrompt(const char *pr)
                 case 'H':
                     WriteChar(8);
                     break;
-                    
+
             }
         }
         pr++;

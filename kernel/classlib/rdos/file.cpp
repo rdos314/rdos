@@ -240,15 +240,17 @@ void TFile::SetPos(long Pos)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::GetTime(TDateTime *time)
+TDateTime TFile::GetTime()
 {
 	long msb, lsb;
 
 	if (FHandle)
 	{
 		RdosGetFileTime(FHandle, &msb, &lsb);
-		time->SetRaw(msb, lsb);
+		return TDateTime(msb, lsb);
 	}
+
+	return TDateTime();
 }
 
 /*##########################################################################
@@ -262,14 +264,14 @@ void TFile::GetTime(TDateTime *time)
 #   Returns....: *
 #
 ##########################################################################*/
-void TFile::SetTime(const TDateTime *time)
+void TFile::SetTime(const TDateTime &time)
 {
 	long msb, lsb;
 
 	if (FHandle)
 	{
-		msb = time->GetMsb();
-		lsb = time->GetLsb();
+		msb = time.GetMsb();
+		lsb = time.GetLsb();
 		RdosSetFileTime(FHandle, msb, lsb);
 	}
 }

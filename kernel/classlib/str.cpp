@@ -285,6 +285,9 @@ void TString::AllocBeforeWrite(int size)
 	    	AllocBuffer(size);
     	}
     }
+	else
+		if (size)
+			AllocBuffer(size);
 }
 
 /*##########################################################################

@@ -2777,7 +2777,6 @@ RdosGetFileTime	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
-	push edx
 	push edi
 ;
 	mov bx,[ebp+8]
@@ -3420,7 +3419,7 @@ sfaDone:
 	pop edi
 	pop ecx
 	pop ebp
-	ret 4
+	ret 8
 RdosSetFileAttribute	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
