@@ -49,6 +49,9 @@ STATE_USED = 5Ah
 STATE_EMPTY = 0CFh
 STATE_BAD = 0AAh
 
+MAX_TIMEOUT EQU 4 * 1192000
+MIN_TIMEOUT EQU 2 * 1192000
+
 CallDrive	Macro call_proc
 	push ds
 	push bx
@@ -89,8 +92,11 @@ disc_current			DD ?
 disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
-disc_read_list			DD ?
-disc_read_section		section_typ <>
+disc_pend_list			DD ?
+disc_pend_section		section_typ <>
+disc_awrite_list		DD ?
+disc_awrite_section		section_typ <>
+disc_awrite_timer		DW ?
 disc_unit_arr			DD ?
 
 disc_def_struc		ENDS
@@ -239,9 +245,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT_READ
+;		NAME:			INSERT_PENDING
 ;
-;		DESCRIPTION:	Insert block into read request list
+;		DESCRIPTION:	Insert block into pending request list
 ;
 ;		PARAMETERS:		DS		DiscBuf handle
 ;						ES		Flat_sel
@@ -249,74 +255,74 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-insert_read	PROC near
+insert_pending	PROC near
 	push eax
 	push ebx
 	push cx
 	push dx
 ;
-	EnterSection ds:disc_read_section
-	mov eax,ds:disc_read_list
+	EnterSection ds:disc_pend_section
+	mov eax,ds:disc_pend_list
 	or eax,eax
-	jne insert_read_used
+	jne insert_pend_used
 
-insert_read_empty:
+insert_pend_empty:
 	mov es:[edi].dh_prev,edi
 	mov es:[edi].dh_next,edi
-	mov ds:disc_read_list,edi
-	jmp insert_read_done
+	mov ds:disc_pend_list,edi
+	jmp insert_pend_done
 
-insert_read_used:
+insert_pend_used:
 	mov cx,es:[edi].dh_unit
 	mov dx,es:[edi].dh_sector
 	cmp cx,es:[eax].dh_unit
-	jc insert_read_first
+	jc insert_pend_first
 ;
-	jnz insert_read_search_loop
+	jnz insert_pend_search_loop
 	cmp dx,es:[eax].dh_sector
-	jnc insert_read_search_loop
+	jnc insert_pend_search_loop
 
-insert_read_first:
-	mov ds:disc_read_list,edi
-	jmp insert_read_link
+insert_pend_first:
+	mov ds:disc_pend_list,edi
+	jmp insert_pend_link
 
-insert_read_search_loop:
+insert_pend_search_loop:
 	mov eax,es:[eax].dh_next
-	cmp eax,ds:disc_read_list
-	je insert_read_link
+	cmp eax,ds:disc_pend_list
+	je insert_pend_link
 ;
 	cmp cx,es:[eax].dh_unit
-	jc insert_read_link
+	jc insert_pend_link
 ;
-	jnz insert_read_search_loop
+	jnz insert_pend_search_loop
 ;
 	cmp dx,es:[eax].dh_sector
-	jnc insert_read_search_loop
+	jnc insert_pend_search_loop
 
-insert_read_link:	
+insert_pend_link:	
 	mov ebx,es:[eax].dh_prev
 	mov es:[eax].dh_prev,edi
 	mov es:[ebx].dh_next,edi
 	mov es:[edi].dh_prev,ebx
 	mov es:[edi].dh_next,eax	
 
-insert_read_done:
-	LeaveSection ds:disc_read_section
+insert_pend_done:
+	LeaveSection ds:disc_pend_section
 	pop dx
 	pop cx
 	pop ebx
 	pop eax
 	ret
-insert_read	ENDP
+insert_pending	ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_READ
+;		NAME:			GET_PENDING
 ;
-;		DESCRIPTION:	Get next read-request
+;		DESCRIPTION:	Get next pending request
 ;
 ;		PARAMETERS:		DS		Disc selector
 ;						ES		Flat_sel
@@ -325,34 +331,221 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_read	PROC near
-	EnterSection ds:disc_read_section
-	mov edi,ds:disc_read_list
+get_pending	PROC near
+	EnterSection ds:disc_pend_section
+	mov edi,ds:disc_pend_list
 	or edi,edi
 	stc
-	jz get_read_done
+	jz get_pend_done
 ;
 	mov eax,es:[edi].dh_next
 	mov ebx,es:[edi].dh_prev
 	mov es:[ebx].dh_next,eax
 	mov es:[eax].dh_prev,ebx
 	cmp eax,edi
-	jne get_read_unlink
+	jne get_pend_unlink
 ;
-	mov dword ptr ds:disc_read_list,0
+	mov dword ptr ds:disc_pend_list,0
 	clc
-	jmp get_read_done
+	jmp get_pend_done
 
-get_read_unlink:
-	mov ds:disc_read_list,eax
+get_pend_unlink:
+	mov ds:disc_pend_list,eax
 	clc
 
-get_read_done:
+get_pend_done:
 	pushf
-	LeaveSection ds:disc_read_section
+	LeaveSection ds:disc_pend_section
 	popf
 	ret
-get_read	ENDP
+get_pending	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INSERT_ASYNC_WRITE
+;
+;		DESCRIPTION:	Insert block into async write request list
+;
+;		PARAMETERS:		DS		DiscBuf handle
+;						ES		Flat_sel
+;						EDI		DiscBlock handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+insert_async_write	PROC near
+	push eax
+	push ebx
+;
+	EnterSection ds:disc_awrite_section
+	mov eax,ds:disc_awrite_list
+	or eax,eax
+	jne insert_awrite_used
+
+insert_awrite_empty:
+	mov es:[edi].dh_prev,edi
+	mov es:[edi].dh_next,edi
+	jmp insert_awrite_done
+
+insert_awrite_used:
+	mov ebx,es:[eax].dh_prev
+	mov es:[eax].dh_prev,edi
+	mov es:[ebx].dh_next,edi
+	mov es:[edi].dh_prev,ebx
+	mov es:[edi].dh_next,eax	
+
+insert_awrite_done:
+	mov ds:disc_awrite_list,edi
+	LeaveSection ds:disc_awrite_section
+;
+	pop ebx
+	pop eax
+	ret
+insert_async_write	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UPDATE_ASYNC_WRITE
+;
+;		DESCRIPTION:	Update async write list
+;
+;		PARAMETERS:		DS		Disc selector
+;						ES		Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_async_write	PROC far
+
+update_async_loop:
+	EnterSection ds:disc_awrite_section
+	mov edi,ds:disc_awrite_list
+	or edi,edi
+	jz update_async_done
+;
+	int 3
+	GetSystemTime
+	sub eax,MIN_TIMEOUT
+	sbb edx,0
+;
+	mov edi,es:[edi].dh_prev
+	sub eax,es:[edi].dh_time_lsb
+	sbb dx,es:[edi].dh_time_msb
+	jc update_async_done
+;
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edi].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edi
+	jne update_async_insert
+;
+	mov dword ptr ds:disc_awrite_list,0
+
+update_async_insert:
+	LeaveSection ds:disc_awrite_section
+	call insert_pending
+	jmp update_async_loop
+
+update_async_done:
+	LeaveSection ds:disc_awrite_section
+	ret
+update_async_write	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ASYNC_WRITE_TIMEOUT
+;
+;		DESCRIPTION:	Async write timeout
+;
+;		PARAMETERS:		CX		Disc thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+async_write_timeout	Proc far
+	mov ds,cx
+	mov ds:disc_awrite_timer,0
+	mov bx,ds:disc_thread
+	Signal
+	ret
+async_write_timeout	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UPDATE_ASYNC_TIMER
+;
+;		DESCRIPTION:	Update async write timer
+;
+;		PARAMETERS:		DS		Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_async_timer	Proc near
+	push es
+	push eax
+	push bx
+	push cx
+	push edx
+	push edi
+;
+	cli
+	mov ax,ds:disc_awrite_timer
+	or ax,ax
+	jnz update_async_timer_done
+;
+	sti
+	mov ax,flat_sel
+	mov es,ax
+	EnterSection ds:disc_awrite_section
+	mov edi,ds:disc_awrite_list
+	or edi,edi
+	jz update_async_timer_leave
+;
+	mov ds:disc_awrite_timer,1
+	mov edi,es:[edi].dh_prev	
+	GetSystemTime
+	push edx
+	push eax
+	sub eax,es:[edi].dh_time_lsb
+	sbb dx,es:[edi].dh_time_msb
+	movzx edx,dx
+	not eax
+	not edx
+	pop ecx
+	add eax,ecx
+	pop ecx
+	adc edx,ecx
+	add eax,MAX_TIMEOUT
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov cx,ds
+	mov di,OFFSET async_write_timeout
+	StartTimer
+
+update_async_timer_leave:
+	LeaveSection ds:disc_awrite_section
+
+update_async_timer_done:
+	sti
+	pop edi
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	pop es
+	ret
+update_async_timer	Endp
 
 PAGE
 
@@ -882,7 +1075,8 @@ perform_wakeup	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 perform_one	Proc near
-	call get_read
+	call update_async_write
+	call get_pending
 	jc perform_one_done
 ;
 	mov al,es:[edi].dh_state
@@ -1037,13 +1231,16 @@ install_disc_loop:
 	mov word ptr ds:disc_proc+2,cx
 	mov ds:disc_current,0
 	mov ds:disc_list,0
-	mov ds:disc_read_list,0
+	mov ds:disc_pend_list,0
+	mov ds:disc_awrite_list,0
+	mov ds:disc_awrite_timer,0
 	mov ds:disc_free,0
 	mov ds:disc_thread,-1
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
 	InitSection ds:disc_section
-	InitSection ds:disc_read_section
+	InitSection ds:disc_pend_section
+	InitSection ds:disc_awrite_section
 	pop di
 	pop es
 ;
@@ -1325,7 +1522,7 @@ lock_loop:
 	mov es:[edi].dh_time_lsb,0
 	mov es:[edi].dh_time_msb,0
 	call insert_buf
-	call insert_read
+	call insert_pending
 
 lock_read_signal:
 	mov al,es:[edi].dh_state
@@ -1396,31 +1593,31 @@ modify_sector	PROC far
 	mov edi,ebx
 	mov ds,es:[edi].dh_buf_sel
 	EnterSection ds:disc_section
-	cmp es:[edi].dh_state,STATE_USED
-	je modify_do
-;
+
+modify_try_again:
 	cmp es:[edi].dh_state,STATE_DIRTY
+	je modify_dirty
+;
+	cmp es:[edi].dh_state,STATE_USED
 	jne modify_done
 
-modify_do:
+modify_clean:
 	GetSystemTime
 	mov es:[edi].dh_time_lsb,eax
 	mov es:[edi].dh_time_msb,dx
 	mov es:[edi].dh_state,STATE_DIRTY
-	mov cx,es:[edi].dh_unit
-	mov dx,es:[edi].dh_sector
-	ClearSignal
-modify_try_again:
+	call insert_async_write
+	call update_async_timer
+	jmp modify_done
+
+modify_dirty:
 	call check_current
-	jc modify_not_current
-	call block
-	jmp modify_try_again
-modify_not_current:
-	call check_buf
 	jc modify_done
 ;
-	mov bx,ds:disc_thread
-	Signal
+	ClearSignal
+	call block
+	jmp modify_try_again
+
 modify_done:
 	LeaveSection ds:disc_section
 	clc
