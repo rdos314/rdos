@@ -63,6 +63,7 @@ drive_sectors_per_cyl		DW ?
 drive_heads					DW ?
 drive_cyls					DW ?
 drive_sectors_per_unit		DW ?
+drive_units					DW ?
 drive_lba_sectors			DD ?
 disc_sel					DW ?
 disc_thread					DW ?
@@ -615,31 +616,16 @@ GetDriveParams	Proc near
 ;
 	mov eax,es:[edi+120]
 	mov fs:drive_lba_sectors,eax
-	mov dx,word ptr es:[edi+2]
-	mov fs:drive_cyls,dx
-	mov bx,es:[edi+6]
-	mov fs:drive_heads,bx
-	push dx
+	mov ax,word ptr es:[edi+2]
+	mov fs:drive_cyls,ax
+	mov ax,es:[edi+6]
+	mov fs:drive_heads,ax
 	mov ax,es:[edi+12]
 	mov fs:drive_sectors_per_cyl,ax
-	mul fs:drive_heads
-	mov fs:drive_sectors_per_unit,ax
-	pop dx
-	mov bh,byte ptr fs:drive_heads
-	dec bh
-	mov bl,byte ptr fs:drive_sectors_per_cyl
-	mov cx,1
-	dec dx
-;	call SetupIdeTaskFile
-;	jc get_drive_param_done
-;
-;	push ax
-;	mov al,91h
-;	call RunTaskFile
-;	pop ax
-;	jc get_drive_param_done
 ;
 	mov fs:drive_lba_mode,1
+	mov cx,1
+	mov ah,fs:drive_precomp
 	xor edx,edx
 	call SetupLbaTaskFile
 	jc get_drive_param_done
@@ -670,6 +656,178 @@ get_drive_param_done:
 	pop es
 	ret
 GetDriveParams	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CalcParam
+;
+;		DESCRIPTION:	Calculate various parameters
+;
+;		PARAMETERS:		DS		IDE SEGMENT
+;						FS		DRIVE SEL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcParam	Proc near
+	pushad
+;
+	mov ax,fs:drive_sectors_per_cyl
+	mul fs:drive_heads
+	mov fs:drive_sectors_per_unit,ax
+;
+	movzx eax,ax
+	mov esi,eax
+	movzx edi,fs:drive_cyls	
+	mul edi
+	mov edi,eax
+;
+	mov cl,fs:drive_lba_mode
+	or cl,cl
+	jz calc_param_chs
+;
+	cmp edi,fs:drive_lba_sectors
+	jae calc_param_chs
+;
+	mov eax,1
+	mov edx,fs:drive_lba_sectors
+
+calc_param_lba_norm_loop:
+	shl eax,1
+	shr edx,1
+	cmp eax,edx
+	jc calc_param_lba_norm_loop
+;
+	mov esi,edx
+	mov ebx,esi
+	mov ecx,edx
+
+calc_param_lba_chs_loop:
+	xor edx,edx
+	mov eax,fs:drive_lba_sectors
+	div esi
+	cmp ecx,edx
+	jc calc_param_lba_chs_next
+;	
+	mov ecx,edx
+	mov ebx,esi
+	or edx,edx
+	jz calc_param_lba_chs_ok
+
+calc_param_lba_chs_next:
+	inc esi
+	cmp esi,eax
+	jbe calc_param_lba_chs_loop
+;
+	xor edx,edx
+	mov eax,fs:drive_lba_sectors
+	div ebx
+
+calc_param_lba_chs_ok:
+	mov edx,eax
+	mov eax,ebx
+	jmp calc_param_chs_ok
+	
+calc_param_chs:
+	xor edx,edx
+	mov eax,edi
+	div esi
+	mov edx,esi
+	xchg eax,edx
+
+calc_param_chs_ok:
+	mov fs:drive_sectors_per_unit,ax
+	mov fs:drive_units,dx
+	mul dx
+	push dx
+	push ax
+;
+	mov eax,fs:drive_lba_sectors
+	xor edx,edx
+	movzx ecx,fs:drive_sectors_per_cyl
+	div ecx
+	xor edx,edx
+	movzx ecx,fs:drive_heads
+	div ecx
+
+calc_param_bios_loop:
+	cmp eax,1024
+	jbe calc_param_bios_ok
+;
+	test cx,80h
+	jnz calc_param_bios_max_head
+;
+	shl cx,1
+	shr eax,1
+	jmp calc_param_bios_loop
+
+calc_param_bios_max_head:
+	mov ax,1024
+	mov cx,0FFh
+
+calc_param_bios_ok:
+	mov fs:drive_heads,cx
+	mov fs:drive_cyls,ax
+;
+	pop fs:drive_lba_sectors
+;
+	popad
+	ret
+CalcParam	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ChsToLba
+;
+;		DESCRIPTION:	Convert CHS to LBA
+;
+;		PARAMETERS:		DS		IDE SEGMENT
+;						FS		DRIVE SEGMENT
+;						ES:EDI	CHS address
+;
+;		RETURNS:		EDX		LBA address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ChsToLba	Proc near
+	push eax
+	push ecx
+;
+	mov cl,es:[edi+2]
+	movzx ax,byte ptr es:[edi+1]
+	and al,0C0h
+	shl ax,2
+	mov ch,ah
+	cmp cx,1023
+	je chs_to_lba_fail
+;
+	movzx eax,fs:drive_heads
+	movzx ecx,cx
+	mul ecx
+	movzx ecx,byte ptr es:[edi]
+	add ecx,eax
+	movzx eax,fs:drive_sectors_per_cyl
+	mul ecx
+	movzx ecx,byte ptr es:[edi+1]
+	and cl,3Fh
+	add eax,ecx
+	dec eax
+	mov edx,eax
+	jmp chs_to_lba_done
+
+chs_to_lba_fail:
+	xor edx,edx
+
+chs_to_lba_done:
+	pop ecx
+	pop eax
+	ret
+ChsToLba	Endp
 
 PAGE
 
@@ -1146,66 +1304,9 @@ install_unit_ok:
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
 ;
-	mov ax,fs:drive_sectors_per_cyl
-	mul fs:drive_heads
-	movzx eax,ax
-	mov esi,eax
-	movzx edi,fs:drive_cyls	
-	mul edi
-	mov edi,eax
-;
-	mov cl,fs:drive_lba_mode
-	or cl,cl
-	jz install_unit_chs
-;
-	cmp edi,fs:drive_lba_sectors
-	jae install_unit_chs
-;
-	mov eax,1
-	mov edx,fs:drive_lba_sectors
-
-install_unit_lba_norm_loop:
-	shl eax,1
-	shr edx,1
-	cmp eax,edx
-	jc install_unit_lba_norm_loop
-
-install_unit_lba_normed:
-	mov esi,edx
-	mov ebx,esi
-	mov ecx,edx
-
-install_unit_lba_loop:
-	xor edx,edx
-	mov eax,fs:drive_lba_sectors
-	div esi
-	cmp ecx,edx
-	jc install_unit_lba_next
-;	
-	mov ecx,edx
-	mov ebx,esi
-	or edx,edx
-	jz install_unit_lba_do
-
-install_unit_lba_next:
-	inc esi
-	cmp esi,eax
-	jbe install_unit_lba_loop
-
-install_unit_lba_do:
-	mov edx,eax
-	mov eax,ebx
-	jmp install_unit_set_param
-	
-install_unit_chs:
-	xor edx,edx
-	mov eax,edi
-	div esi
-	mov edx,esi
-	xchg eax,edx
-
-install_unit_set_param:
-	mov fs:drive_sectors_per_unit,ax
+	call CalcParam
+	mov ax,fs:drive_sectors_per_unit
+	mov dx,fs:drive_units
 	mov cx,512
 	mov si,fs:drive_sectors_per_cyl
 	mov di,fs:drive_heads
@@ -1356,9 +1457,19 @@ install_ext_loop1:
 	je install_ext_next_part1
 ;
 	push ebp
-	mov edx,es:[esi+edi].part_start_sector
+	push edi
+;
+	lea edi,[esi+edi+1]
+	call ChsToLba
+	or edx,edx
+	jnz install_ext_do
+;
+	mov edx,es:[edi+7]
 	add edx,ebp
+
+install_ext_do:
 	call InstallPartition
+	pop edi
 	pop ebp
 
 install_ext_next_part1:
@@ -1383,9 +1494,18 @@ install_ext_install2:
 	push esi
 	push edi
 	push ebp
-	mov edx,es:[esi+edi].part_start_sector
+;
+	lea edi,[esi+edi+1]
+	call ChsToLba
+	or edx,edx
+	jnz install_ext_link
+;
+	mov edx,es:[edi+7]
 	add edx,ebp
+
+install_ext_link:
 	call InstallExtended
+;
 	pop ebp
 	pop edi
 	pop esi
@@ -1446,8 +1566,17 @@ drive_assign_loop2:
 drive_assign_install2:
 	push esi
 	push edi
-	mov edx,es:[esi+edi].part_start_sector
+;
+	lea edi,[esi+edi+1]
+	call ChsToLba
+	or edx,edx
+	jnz drive_assign_ext
+;
+	mov edx,es:[edi+7]
+
+drive_assign_ext:
 	call InstallExtended
+;
 	pop edi
 	pop esi
 
