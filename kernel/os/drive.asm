@@ -2453,9 +2453,10 @@ create_disc_seq_name	DB 'Create Disc Seq',0
 
 create_disc_seq	PROC far
 	push es
-	push cx
-	push di
+	push ecx
+	push edi
 ;
+    movzx ecx,cx
 	movzx eax,cx
 	lea eax,[4*eax].dss_arr
 	AllocateSmallGlobalMem
@@ -2467,8 +2468,8 @@ create_disc_seq	PROC far
 	mov es:dss_perform_index,0
 	mov ax,es
 ;
-	pop di
-	pop cx
+	pop edi
+	pop ecx
 	pop es
 	ret
 create_disc_seq	ENDP
@@ -2590,12 +2591,14 @@ perform_disc_do:
 
 perform_disc_fail:
 	FreeMem
+	stc
 	jmp perform_disc_done
 
 perform_disc_leave:
 	LeaveSection ds:disc_section
 	mov bx,ds:disc_thread
 	Signal
+	clc
 
 perform_disc_done:
 	pop ebx

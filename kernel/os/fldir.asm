@@ -805,6 +805,8 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public InitRootDirEntry
+    
 InitRootDirEntry   Proc near
     pushad
 ;
@@ -956,6 +958,10 @@ cddSectorLoop:
 	mov edx,es:[esi]
 	and edx,0FFFFFFh
 	call CacheDirEntry
+	jnc cddNext
+;
+    mov dword ptr es:[esi],0    
+    call WriteSector
 
 cddNext:
 	add esi,4
@@ -1010,6 +1016,11 @@ cdoSectorLoop:
 	mov edx,es:[esi]
 	and edx,0FFFFFFh
 	call CacheDirData
+	jnc cdoNext
+;
+    int 3
+    mov dword ptr es:[esi],0    
+    call WriteSector
 
 cdoNext:
 	add esi,4
@@ -1105,7 +1116,6 @@ cache_dir	PROC far
 	push eax
 	push edx
 ;
-	int 3
 	mov ax,flat_sel
 	mov es,ax
 ;
@@ -1115,10 +1125,6 @@ cache_dir	PROC far
 	call GetRootSector
     jc cache_dir_done
 ;
-    call CacheDirSel
-    jnc cache_dir_done
-;
-    call InitRootDirEntry
     call CacheDirSel
 	jmp cache_dir_done
 
@@ -1342,6 +1348,40 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InitFileEntry
+;
+;		DESCRIPTION:    Init file entry time to current date & time
+;
+;		PARAMETERS:		EDX			Dir entry 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFileEntry   Proc near
+    push es
+	push eax
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,edx
+    GetTime
+	mov es:[edi].de_time,eax
+	mov es:[edi+4].de_time,edx
+	mov es:[edi].dfe_data_size,0
+;
+	pop edi
+	pop edx
+	pop eax
+	pop es
+	ret
+InitFileEntry    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DELETE_FILE
 ;
 ;		DESCRIPTION:	Delete file
@@ -1361,7 +1401,6 @@ delete_file	PROC far
 	push edx
 	push edi
 ;
-    int 3
 	mov ax,flat_sel
 	mov es,ax
 	mov edi,es:[edx].ffe_entry_sector
@@ -1409,21 +1448,8 @@ PAGE
     public create_file
     
 create_file	PROC far
-	int 3
     call CreateFileEntry
-;
-	push eax
-	push edx
-	push edi
-	mov edi,edx
-    GetTime
-	mov es:[edi].de_time,eax
-	mov es:[edi+4].de_time,edx
-	mov es:[edi].dfe_data_size,0
-	pop edi
-	pop edx
-	pop eax
-;
+    call InitFileEntry
     call AddFileEntry
     jc cfFail
 ;    

@@ -75,7 +75,7 @@ fc_logical_block	EQU 1F8h
 fc_version			EQU 1FAh
 fc_signature		EQU 1FCh
 
-FLASH_SIGN_OK	EQU	3AF6CD50h
+FLASH_SIGN_OK	EQU	3AF6CD53h
 
 logical_entry_struc	STRUC
 

@@ -46,6 +46,7 @@ code	SEGMENT byte public use16 'CODE'
 
     extrn EraseBlock:near
     extrn WriteSector:near
+    extrn InitRootDirEntry:near
 
 	assume cs:code
 
@@ -112,7 +113,9 @@ aseNext:
 
 aseCheckLast:
 	add esi,8
-	cmp esi,fc_logical_block
+	mov ax,si
+	and ax,1FFh
+	cmp ax,fc_logical_block
 	jb aseLoop
 ;
 	stc
@@ -228,7 +231,9 @@ csaNext:
 
 csaCheckLast:
 	add esi,8
-	cmp esi,fc_logical_block
+	mov ax,si
+	and ax,1FFh
+	cmp ax,fc_logical_block
 	jb csaLoop
 
 csaDone:	
@@ -792,12 +797,19 @@ fsLoop:
 	jz fsNext
 ;
 	cmp ax,-1
-	je fsUpdate
+	je fsDone
 ;
 	cmp bx,es:[esi+ebp].le_logical_entry
 	jne fsNext
 ;
+    push ebx
 	mov es:[esi+ebp].le_type,0
+    mov ebx,edi
+	sub ebx,fs:bc_data_ptr
+	add ebx,fs:bc_handle_ptr
+	mov ebx,es:[ebx]
+	call WriteSector
+	pop ebx
 
 fsNext:
 	or cx,cx
@@ -813,13 +825,10 @@ fsNext:
 
 fsCheckLast:
 	add esi,8
-	cmp esi,fc_logical_block
+	mov ax,si
+	and ax,1FFh
+	cmp ax,fc_logical_block
 	jb fsLoop
-
-fsUpdate:
-	sub edi,fs:bc_data_ptr
-	add edi,fs:bc_handle_ptr
-	call WriteSector
 
 fsDone:	
 	popad
@@ -868,6 +877,8 @@ grsEntry:
 ;
 	mov ebx,fs:bc_alloc_handle
 	call WriteSector
+;
+    call InitRootDirEntry
 	jmp grsEntry
 
 grsCheckEntry:
