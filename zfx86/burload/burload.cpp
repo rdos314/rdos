@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "rdos.h"
 #include "ymodem.h"
 #include "keyboard.h"
@@ -58,12 +60,31 @@ void StartYmodem()
 	}
 }
 
-void cdecl main()
+int cdecl main(int argc, char **argv)
 {
 	char str[100];
 	TYModem *ymodem;
-	TFile File("demo.rom");
+	char FileName[128];
+	TFile *File;
 	char ch;
+
+	if (argc == 1)
+	{
+		printf("usage: showimg filename\r\n");
+		return 1;
+	}
+
+	RdosWaitMilli(250);
+
+	strcpy(FileName, argv[1]);
+	strcat(FileName, ".bin");
+
+	File = new TFile(FileName);
+	if (!File->IsOpen())
+	{
+		printf("file not found: %s\r\n", FileName);
+		return 1;
+	}
 
 	serial = new TSerialDevice(&wait, PORT, 9600);
 
@@ -91,7 +112,7 @@ void cdecl main()
 		serial->Write("yload 200:0");
 		StartYmodem();
 
-		if (ymodem->SendFile(&File))
+		if (ymodem->SendFile(File))
 		{
 			serial->Write("yload 70:0");
 			StartYmodem();
@@ -102,7 +123,7 @@ void cdecl main()
 				serial->Write(0xD);
 				EchoUntilSilent(100);
 
-				sprintf(str, "%08lX", File.GetSize());
+				sprintf(str, "%08lX", File->GetSize());
 				serial->Write(str);
 				serial->Write(0xD);
 				EchoUntilSilent(100);
