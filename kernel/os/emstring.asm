@@ -57,6 +57,7 @@ SourceByte	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz source32
 ;
@@ -83,6 +84,7 @@ up32:
 	inc [bp].reg_esi
 
 done:
+	pop ax
 				ENDM
 
 SourceWord	MACRO
@@ -91,6 +93,7 @@ SourceWord	MACRO
 	local up32
 	local done
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz source32
 ;
@@ -117,6 +120,7 @@ up32:
 	add [bp].reg_esi,2
 
 done:
+	pop ax
 			ENDM
 
 
@@ -126,6 +130,7 @@ SourceDword	MACRO
 	local up32
 	local done
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz source32
 ;
@@ -152,6 +157,7 @@ up32:
 	add [bp].reg_esi,4
 
 done:
+	pop ax
 		ENDM
 
 DestAds	MACRO
