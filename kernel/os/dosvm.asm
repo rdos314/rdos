@@ -665,6 +665,12 @@ allocate_memory	PROC far
 	call get_allocation_strat
 	or ax,ax
 	jz allocate_normal
+;
+    jmp allocate_normal
+;
+    cmp bx,40h
+    jae allocate_normal
+;
 	movzx eax,bx
 	shl eax,4
 	add eax,10h
@@ -1550,10 +1556,21 @@ error_dos	PROC far
 error_dos	ENDP
 
 get_dos_int	PROC far
+    cmp al,2Eh
+    jne get_dos_int_default
+;
+    GetPsp
+    mov [bp].vm_es,bx
+    xor bx,bx
+    jmp get_dos_int_done
+    
+get_dos_int_default:
 	push dx
 	GetVMInt
 	mov [bp].vm_es,dx
 	pop dx
+
+get_dos_int_done:
 	and byte ptr [bp].vm_eflags,NOT 1
 	ret
 get_dos_int	ENDP
