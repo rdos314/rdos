@@ -45,19 +45,12 @@ ih_sel			DW ?
 ih_file_handle	DW ?
 ih_base			DD ?
 ih_size		    DD ?
+ih_file_size    DD ?
 ih_mmap_handle	DW ?
+ih_name_sel     DW ?
+ih_name_size    DD ?
 
 ini_handle_seg	ENDS
-
-ini_sect_seg    STRUC
-
-is_prev			DD ?
-is_next			DD ?
-is_file_pos     DD ?
-is_file_size    DD ?
-is_data         DD ?
-
-ini_sect_seg    ENDS
 
 ini_file_seg STRUC
 
@@ -149,23 +142,29 @@ OpenSystemIni	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           MapIni
+;       NAME:           LockIni
 ;
-;       DESCRIPTION:    Memory map ini file
+;       DESCRIPTION:    Lock ini file & goto current section
 ;
 ;		PARAMETERS:		DS:BX		handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MapIni	Proc near
+LockIni	Proc near
 	push ds
 	push es
 	pushad
 ;
 	mov si,bx
+;	
+    push ds
+    mov ds,[si].ih_sel
+    EnterSection ds:if_section
+    pop ds
 ;
 	mov bx,[si].ih_file_handle
 	GetFileSize
+	mov ds:[si].ih_file_size,eax
 	and ax,0F000h
 	add eax,1000h
 	AllocateLocalLinear
@@ -181,25 +180,25 @@ MapIni	Proc near
 	mov edi,ds:[si].ih_base
 	mov ecx,ds:[si].ih_size
 	UserGateForce32 map_view_nr
-;	
+;    
 	popad
 	pop es
 	pop ds
 	ret
-MapIni	Endp
+LockIni	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           UnmapIni
+;       NAME:           UnlockIni
 ;
-;       DESCRIPTION:    Memory unmap ini file
+;       DESCRIPTION:    Unlock ini
 ;
 ;		PARAMETERS:		DS:BX		handle data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UnmapIni	Proc near
+UnlockIni	Proc near
 	push ds
 	push es
 	pushad
@@ -220,11 +219,14 @@ UnmapIni	Proc near
 	FreeLinear
 
 uiNoMem:
+    mov ds,[si].ih_sel
+    LeaveSection ds:if_section
+;    
 	popad
 	pop es
 	pop ds
 	ret
-UnmapIni	Endp
+UnlockIni	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -360,10 +362,10 @@ cihNew:
 	AllocateHandle
 	pop ax
 	mov [bx].ih_file_handle,ax
+	mov [bx].ih_name_sel,0
 	pop ax
 	mov [bx].ih_sel,ax
 	mov [bx].hh_sign,INI_HANDLE
-	call MapIni
 	mov bx,[bx].hh_handle
 ;
 	pop cx
@@ -439,13 +441,21 @@ close_ini_name	DB 'Close Ini', 0
 
 close_ini	Proc far
 	push ds
+	push es
 	push bx
 ;
 	mov ax,INI_HANDLE
 	DerefHandle
 	jc ciDone
 ;
-	call UnmapIni
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
+    jz ciCloseFile
+;
+    mov es,ax
+    FreeMem
+
+ciCloseFile:
 	push ds:[bx].ih_file_handle
 	mov ds,ds:[bx].ih_sel
 	call FreeIniSel
@@ -454,6 +464,7 @@ close_ini	Proc far
 
 ciDone:
 	pop bx
+	pop es
 	pop ds
 	retf32
 close_ini	Endp
@@ -473,7 +484,63 @@ close_ini	Endp
 goto_ini_section_name	DB 'Goto Ini Section', 0
 
 goto_ini_section	Proc near
-    stc
+    int 3
+    push ds
+    push eax
+    push bx
+    push ecx
+    push edx
+    push esi
+    push edi
+;
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc gisDone
+;
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
+    jz gisSectFree
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+gisSectFree:
+    push edi
+    xor ecx,ecx
+
+gisSectSizeLoop:
+    mov al,es:[edi]
+    or al,al
+    jz gisSectSizeOk
+;
+    inc edi
+    inc ecx
+    jmp gisSectSizeLoop
+
+gisSectSizeOk:
+    pop edi    
+    inc ecx
+    mov eax,ecx
+    push es
+    AllocateSmallMem
+    mov ds:[bx].ih_name_sel,es
+    mov ds:[bx].ih_name_size,ecx
+    pop ds
+    mov esi,edi
+    xor edi,edi
+    rep movs byte ptr es:[edi],[esi]
+    clc
+
+gisDone:
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop bx
+    pop eax
+    pop ds
     ret
 goto_ini_section    Endp
 
@@ -1054,6 +1121,20 @@ delete_handle	Proc far
 	DerefHandle
 	jc delete_handle_done
 ;
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
+    jz delete_handle_name_done
+;
+    push es
+    mov es,ax
+    FreeMem
+    pop es
+
+delete_handle_name_done:
+    push es
+    mov es,ax
+    FreeMem
+    pop es
 	push ds
 	mov ds,ds:[bx].ih_sel
 	call FreeIniSel

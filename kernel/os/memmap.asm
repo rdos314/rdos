@@ -832,6 +832,8 @@ close_mapping	Proc far
 	push ds
 	push es
 	push ax
+	push si
+	push di
 ;
 	mov ax,MEMMAP_HANDLE
 	DerefHandle
@@ -863,6 +865,8 @@ close_rem_done:
 
 cfm_done:
 	FreeHandle
+	pop di
+	pop si
 	pop ax
 	pop es
 	pop ds
