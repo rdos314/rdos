@@ -65,13 +65,19 @@ boot_serial					DD ?
 boot_volume					DB 11 DUP(?)
 boot_fs						DB 8 DUP(?)
 
-disc_fs_handle				DW ?
-disc_sel					DW ?
-disc_thread					DW ?
-disc_sub_unit				DB ?
-disc_nr						DB ?
-
 boot_struc		ENDS
+
+disc_struc	STRUC
+
+boot_sect				DB 512 DUP(?)
+
+disc_fs_handle			DW ?
+disc_sel				DW ?
+disc_thread				DW ?
+disc_sub_unit			DB ?
+disc_nr					DB ?
+
+disc_struc		ENDS
 
 MotorOnWait		EQU 500
 Spec1			EQU 0DFh
@@ -1148,16 +1154,16 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDriveParams
+;		NAME:			ReadBootSector
 ;
 ;		DESCRIPTION:	Get boot-record and drive parameters
 ;
 ;		PARAMETERS:		AL		Sub-unit #
-;						ES		Disc handle
+;						ES:EDI	Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDriveParams	Proc near
+ReadBootSector	Proc near
 	push ds
 	push ax
 	push ebx
@@ -1172,6 +1178,7 @@ GetDriveParams	Proc near
 	mov eax,1000h
 	AllocateBigLinear
 	pop ax
+;
 	mov ebx,edx
 	mov dh,0
 	mov dl,1
@@ -1179,14 +1186,20 @@ GetDriveParams	Proc near
 	mov cx,200h
 	call ReadDrive
 	mov edx,ebx
-	jc get_drive_param_done
+	jc read_boot_sector_done
+;
+	mov ah,1
+	call SeekCmd
+	jc read_boot_sector_done
+;
+    mov dx,3F7h
+    in al,dx
 ;
 	mov cx,flat_sel
 	mov ds,cx
 	mov esi,edx
-	xor edi,edi
-	mov ecx,OFFSET disc_fs_handle
-	rep movs byte ptr es:[edi],[esi]
+	mov ecx,128
+	rep movs dword ptr es:[edi],[esi]
 	mov cx,floppy_data_sel
 	mov ds,cx
 	movzx bx,al
@@ -1196,12 +1209,13 @@ GetDriveParams	Proc near
 	shl ax,cl
 	cmp ax,es:boot_bytes_per_sector
 	stc
-	jne get_drive_param_done
+	jne read_boot_sector_done
 ;
 	mov ax,es:boot_sectors_per_cyl
 	mov ds:[bx].Tracks,al
 	clc
-get_drive_param_done:
+
+read_boot_sector_done:
 	pushf
 	mov ecx,1000h
 	FreeLinear
@@ -1215,7 +1229,7 @@ get_drive_param_done:
 	pop ax
 	pop ds
 	ret
-GetDriveParams	Endp
+ReadBootSector	Endp
 
 PAGE
 
@@ -1326,7 +1340,8 @@ demand_mount	Proc far
 	mov ax,floppy_data_sel
 	mov ds,ax
 	mov al,es:disc_sub_unit
-	call GetDriveParams
+	mov edi,OFFSET boot_sect
+	call ReadBootSector
 	jc drive_assign_done1
 ;
 	call InstallMain
@@ -1384,8 +1399,16 @@ check_media	Proc near
     mov dx,3F7h
     in al,dx
     shl al,1
+	jnc check_media_done
+;
+	mov ah,1
+	call SeekCmd
+    mov dx,3F7h
+    in al,dx
+	int 3
+    shl al,1
+	
 check_media_done:
-	clc
 	pushf
 	LeaveSection FloppySection
 	popf
@@ -1624,6 +1647,7 @@ perform_one_write:
 	jc perform_one_fail
 ;
 	call write_drive
+	jc perform_one_fail
 	jmp perform_one_completed
 
 perform_one_read:
@@ -1631,6 +1655,7 @@ perform_one_read:
 	jc perform_one_done
 ;
 	call read_drive
+	jc perform_one_fail
 
 perform_one_completed:
 	mov bx,fs:disc_sel
@@ -1638,6 +1663,7 @@ perform_one_completed:
 	jmp perform_one_loop
 
 perform_one_fail:
+	int 3
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
 	FlushDisc
@@ -1688,8 +1714,18 @@ discbuf_thread_loop:
 
 install_unit	Proc near
 	push ax
-	mov eax,SIZE boot_struc
+	mov eax,SIZE disc_struc
 	AllocateSmallGlobalMem
+;
+	push ax
+	push di
+	xor di,di
+	mov cx,128
+	mov eax,0FFFFFFFFh
+	rep stosd
+	pop di
+	pop ax
+;
 	mov bx,es
 	mov fs,bx
 	pop ax
