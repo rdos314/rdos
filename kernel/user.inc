@@ -565,6 +565,10 @@ AllocateAppMem     MACRO
 FreeAppMem     MACRO
 	UserGate free_app_mem_nr
 						ENDM
+; OUT EAX    Physical app address
+AppDebug     MACRO
+	UserGate app_debug_nr
+						ENDM
 
 ; OUT BX			PSP Selector
 GetPspSel	MACRO

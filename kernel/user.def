@@ -305,4 +305,6 @@ read_ini_nr                 = 269
 write_ini_nr                = 270
 delete_ini_nr               = 271
 
+app_debug_nr				= 272
+
 usergate_entries			= 300

@@ -151,6 +151,12 @@ init_app	PROC near
 	mov ax,free_app_mem_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET app_debug
+	mov di,OFFSET app_debug_name
+	xor dx,dx
+	mov ax,app_debug_nr
+	RegisterBimodalUserGate
+;
 	mov bx,thread_app_sel
 	mov edx,app_linear
 	mov ecx,SIZE app_seg
@@ -711,6 +717,32 @@ free_mem_done:
 	pop ds
 	retf32
 free_app_mem	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AppDebug
+;
+;		DESCRIPTION:	Debug app selector
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+app_debug_name	DB 'App Debug',0
+
+app_debug	PROC far
+	push ds
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov eax,app_linear SHR 10
+	mov eax,ds:[eax]
+;
+	pop ds
+	retf32
+app_debug	ENDP
 
 code	ENDS
 
