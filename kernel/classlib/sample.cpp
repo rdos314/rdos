@@ -43,6 +43,7 @@
 ##########################################################################*/
 TSample::TSample()
 {
+    FSample = 0;
     FSampleCount = 0;
     FSampleTimeList = 0;
     FSampleAmpList = 0;
@@ -138,6 +139,22 @@ void TSample::Add(TDateTime *time, long double value)
 
 /*##########################################################################
 #
+#   Name       : TSample::Define
+#
+#   Purpose....: Define a clear sample
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSample::Define(TSample *Sample)
+{
+    FSample = Sample;
+}
+
+/*##########################################################################
+#
 #   Name       : TSample::Clear
 #
 #   Purpose....: Clear samples
@@ -149,28 +166,39 @@ void TSample::Add(TDateTime *time, long double value)
 ##########################################################################*/
 void TSample::Clear()
 {
-    TSampleEntry *entry;
-    TSampleEntry *next;
-    
-    if (BeforeClear)
-        (*BeforeClear)(this);
+	TDateTime time;
+	long double val;
+	TSampleEntry *entry;
+	TSampleEntry *next;
 
-    FSection.Enter();
+	if (FSampleCount)
+	{
+		if (BeforeClear)
+			(*BeforeClear)(this);
 
-    entry = FSampleTimeList;
-    while (entry)
-    {
-        next = entry->NextTime;
-        delete entry;
-        entry = next;
-    }
-    
-    FSampleTimeList = 0;            
-    FSampleAmpList = 0;
-    FSampleCount = 0;
-    FCurrent = 0;
-    
-    FSection.Leave();    
+		if (FSample)
+		{
+			val = GetMean(&time);
+			FSample->Add(&time, val);
+		}
+
+		FSection.Enter();
+
+		entry = FSampleTimeList;
+		while (entry)
+		{
+			next = entry->NextTime;
+			delete entry;
+			entry = next;
+		}
+
+		FSampleTimeList = 0;
+		FSampleAmpList = 0;
+		FSampleCount = 0;
+		FCurrent = 0;
+
+		FSection.Leave();
+	}
 }
 
 /*##########################################################################
@@ -332,7 +360,7 @@ void TSample::ExcludeLargest(int count)
 #   Returns....: *
 #
 ##########################################################################*/
-long double TSample::GetMean()
+long double TSample::GetMean(TDateTime *time)
 {
     TSampleEntry *entry;
     int i;
@@ -347,6 +375,9 @@ long double TSample::GetMean()
 
         for (i = 0; entry && i < FExSmallCount; i++)
             entry = entry->NextAmp;
+
+        if (entry)
+        	time->SetRaw(entry->MsbTime, entry->LsbTime);
 
         for (i = 0; entry && i < count; i++)
         {
@@ -372,7 +403,7 @@ long double TSample::GetMean()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TSample::GetMin()
+long double TSample::GetMin(TDateTime *time)
 {
     TSampleEntry *entry;
     int i;
@@ -387,7 +418,10 @@ long double TSample::GetMin()
     FSection.Leave();
 
     if (entry)
+    {
+		time->SetRaw(entry->MsbTime, entry->LsbTime);
         return entry->Value;
+    }
     else
         return 0.0;
 }
@@ -403,7 +437,7 @@ long double TSample::GetMin()
 #   Returns....: *
 #
 ##########################################################################*/
-long double TSample::GetMax()
+long double TSample::GetMax(TDateTime *time)
 {
     TSampleEntry *entry;
     int i;
@@ -421,6 +455,7 @@ long double TSample::GetMax()
 
         FSection.Leave();
 
+		time->SetRaw(entry->MsbTime, entry->LsbTime);
         return entry->Value;
     }
     else

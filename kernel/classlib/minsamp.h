@@ -25,58 +25,26 @@
 #
 ########################################################################*/
 
-#ifndef _SAMPLE_H
-#define _SAMPLE_H
+#ifndef _MINSAMP_H
+#define _MINSAMP_H
 
-#include "section.h"
+#include "sample.h"
 #include "datetime.h"
 
-struct TSampleEntry
-{
-    long MsbTime;
-    long LsbTime;
-    long double Value;
-    TSampleEntry *NextTime;
-    TSampleEntry *NextAmp;
-};
-
-class TSample
+class TMinSample : public TSample
 {
 public:
-	TSample();
-	virtual ~TSample();
+	TMinSample();
+	virtual ~TMinSample();
 
-	void Define(TSample *Sample);
-
-    int GetCount();
-    
-	int GotoFirst(TDateTime *time, long double *value);
-	int GotoNext(TDateTime *time, long double *value);
-
-	int GotoSmallest(TDateTime *time, long double *value);
-	int GotoLarger(TDateTime *time, long double *value);
-
-	void ExcludeSmallest(int count);
-    void ExcludeLargest(int count);
-
-	virtual long double GetMean(TDateTime *time);
-	virtual long double GetMin(TDateTime *time);
-	virtual long double GetMax(TDateTime *time);
-	
-    void Clear();
 	virtual void Add(TDateTime *time, long double value);
 
-	void (*BeforeClear)(TSample *Sample);
-
 protected:
-    TSample *FSample;
-    int FExSmallCount;
-    int FExLargeCount;
-    int FSampleCount;
-    TSampleEntry *FSampleTimeList;
-    TSampleEntry *FSampleAmpList;
-    TSampleEntry *FCurrent;
-    TSection FSection;
+    int FPrevYear;
+    int FPrevMonth;
+    int FPrevDay;
+    int FPrevHour;
+    int FPrevMin;
 
 private:
 };
