@@ -293,7 +293,8 @@ PAGE
 ;	Purpose:		Insert protocol logical address
 ;
 ;	Parameters:		DS		Protocol
-;					ES		Address to physical / logical address
+;					ES:SI	Address logical address
+;					ES:DI	Address to physical
 ;					FS		Driver handle
 ;
 ;	Returns:		AX		Protocol selector
@@ -310,7 +311,9 @@ InsertAddress	Proc near
 	push edx
 	push esi
 	push edi
+	push bp
 ;
+	mov bp,di
 	mov gs,fs:d_class
 	mov bx,fs
 	mov ax,es
@@ -328,12 +331,9 @@ InsertAddress	Proc near
 	mov al,ds:p_logical_addr_len
 	mov es:prot_logical_addr_len,al		
 	mov di,OFFSET prot_logical_addr
-	mov si,SIZE arp_data + OFFSET ar_data
-	movzx cx,gs:addr_len
-	add si,cx
-	mov cl,ds:p_logical_addr_len
+	movzx cx,ds:p_logical_addr_len
 	rep movs byte ptr es:[di],fs:[si]
-	mov si,SIZE arp_data + OFFSET ar_data
+	mov di,bp
 	movzx cx,gs:addr_len
 	rep movs byte ptr es:[di],fs:[si]
 ;
@@ -349,6 +349,7 @@ InsertAddress	Proc near
 	LeaveSection ds:arp_section
 	mov ax,es
 ;
+	pop bp
 	pop edi
 	pop esi
 	pop edx
@@ -543,6 +544,7 @@ receive_arp_found:
 	call FindAddress
 	jnc receive_arp_check_dest
 ;
+	mov edi,SIZE arp_data + OFFSET ar_data
 	mov fs,bp
 	call InsertAddress
 
@@ -1053,6 +1055,58 @@ register_ppp_driver	Proc far
 	pop ds
 	ret
 register_ppp_driver	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			AddNetSourceAddress
+;
+;	Purpose:		Add source address of packet
+;
+;	Parameters:		BX		protocol handle
+;					ES		packet
+;					EDI		source address offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_net_source_address_name	DB 'Add Net Source Address',0
+
+add_net_source_address	Proc far
+	push ds
+	push fs
+	push ax
+	push esi
+	push edi
+	push bp
+;
+	int 3
+	mov bp,fs
+	mov ds,bx
+	mov ax,es
+	mov fs,ax
+	mov esi,edi
+	call FindAddress
+	jnc add_src_address_done
+;
+	push fs
+	push esi
+	mov fs,bp
+	call fs:d_get_address
+	mov edi,esi
+	pop esi
+	pop fs
+;
+	call InsertAddress
+
+add_src_address_done:
+	pop edi
+	pop esi
+	pop ax
+	pop fs
+	pop ds
+	ret
+add_net_source_address	Endp
 
 PAGE
 	    
@@ -1674,6 +1728,12 @@ init	PROC far
 	mov di,OFFSET net_received_name
 	xor cl,cl
 	mov ax,net_received_nr
+	RegisterOsGate
+;
+	mov si,OFFSET add_net_source_address
+	mov di,OFFSET add_net_source_address_name
+	xor cl,cl
+	mov ax,add_net_source_address_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET ether_broadcast

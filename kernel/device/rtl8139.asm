@@ -99,8 +99,14 @@ data	STRUC
 
 IoBase				DW ?
 Handle				DW ?
-RxRing				DD ?
-TxRing				DD 4 DUP(?)
+RxRingPhys			DD ?
+RxRingLinear		DD ?
+RxRingSize			DD ?
+RxRingSel			DW ?
+TxRingPhys			DD ?
+TxRingLinear		DD ?
+TxRingSize			DD ?
+TxRingSel			DW ?
 EthernetAddress		DB 6 DUP(?)
 EeAdrLen			DB ?
 
@@ -248,36 +254,68 @@ InitChip	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitRing
+;		NAME:			AllocateRing
 ;
-;		DESCRIPTION:    Init buffer rings
+;		DESCRIPTION:    Allocate buffer rings
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitRing	Proc near
-	int 3
+AllocateRing	Proc near
 	mov ecx,(2 SHL RX_BUF_LEN_IDX) + 1
 	AllocateMultiplePhysical
-	jc irDone
+	jc arDone
 ;
-	mov ds:RxRing,edx
+	mov ds:RxRingPhys,eax
+	mov eax,ecx
+	shl eax,12
+	AllocateBigLinear
+	mov ds:RxRingLinear,edx
+	mov ds:RxRingSize,eax
+;
+	mov eax,ds:RxRingPhys
+	or al,7
+
+al_rxring_loop:
+	SetPhysicalPage
+	add eax,1000h
+	add edx,1000h
+	loop al_rxring_loop
+;
+	mov ecx,ds:RxRingSize
+	mov edx,ds:RxRingLinear
+	AllocateGdt
+	CreateDataSelector16
+	mov ds:RxRingSel,bx
 ;
 	mov ecx,2
 	AllocateMultiplePhysical
-	jc irDone
+	jc arDone
 ;
-	mov ds:TxRing,edx
-	add edx,800h
-	mov ds:TxRing+1,edx
-	add edx,800h
-	mov ds:TxRing+2,edx
-	add edx,800h
-	mov ds:TxRing+3,edx
+	mov ds:TxRingPhys,eax
+	mov eax,ecx
+	shl eax,12
+	AllocateBigLinear
+	mov ds:TxRingLinear,edx
+	mov ds:TxRingSize,eax
+;
+	mov eax,ds:TxRingPhys
+	or al,7
 
-irDone:
+al_txring_loop:
+	SetPhysicalPage
+	add eax,1000h
+	add edx,1000h
+	loop al_txring_loop
+;
+	mov ecx,ds:TxRingSize
+	mov edx,ds:TxRingLinear
+	AllocateGdt
+	CreateDataSelector16
+	mov ds:TxRingSel,bx
 
+arDone:
 	ret
-InitRing	Endp
+AllocateRing	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -396,6 +434,26 @@ GetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetPktAddress
+;
+;		DESCRIPTION:    Get packet addresses
+;
+; 		PARAMETERS:		ES		Data buffer selector
+;
+;		RETURNS:	 	ES:ESI	Source address
+;						ES:EDI	Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPktAddress	Proc far
+	mov esi,6
+	xor edi,edi
+	ret
+GetPktAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DispatchTable
 ;
 ;		DESCRIPTION:    Driver dispatch table
@@ -405,12 +463,13 @@ GetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable:
-	DW OFFSET Preview,	 	ether_code_sel
-	DW OFFSET Receive,		ether_code_sel
-	DW OFFSET Remove,		ether_code_sel
-	DW OFFSET GetBuffer,	ether_code_sel
-	DW OFFSET Send,			ether_code_sel
-	DW OFFSET GetAddress,	ether_code_sel
+	DW OFFSET Preview,	 		ether_code_sel
+	DW OFFSET Receive,			ether_code_sel
+	DW OFFSET Remove,			ether_code_sel
+	DW OFFSET GetBuffer,		ether_code_sel
+	DW OFFSET Send,				ether_code_sel
+	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -471,8 +530,9 @@ init_pci_found:
 	mov di,OFFSET NetInt	
 	RequestPrivateIrqHandler
 ;
+	int 3
 	call InitChip
-	call InitRing
+	call AllocateRing
 ;
 	push ds
 	mov ax,cs

@@ -3375,6 +3375,26 @@ GetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetPktAddress
+;
+;		DESCRIPTION:    Get packet addresses
+;
+; 		PARAMETERS:		ES		Data buffer selector
+;
+;		RETURNS:	 	ES:ESI	Source address
+;						ES:EDI	Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPktAddress	Proc far
+	mov esi,6
+	xor edi,edi
+	ret
+GetPktAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DispatchTable
 ;
 ;		DESCRIPTION:    Driver dispatch table
@@ -3389,6 +3409,7 @@ Mem8Table:
 	DW OFFSET RemoveMem8,		ether_code_sel
 	DW OFFSET SendMem8,			ether_code_sel
 	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 Mem16Table:
 	DW OFFSET PreviewMem16,		ether_code_sel
@@ -3396,6 +3417,7 @@ Mem16Table:
 	DW OFFSET RemoveMem16,		ether_code_sel
 	DW OFFSET SendMem16,		ether_code_sel
 	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 Io8Table:
 	DW OFFSET PreviewIo8,	 	ether_code_sel
@@ -3403,6 +3425,7 @@ Io8Table:
 	DW OFFSET RemoveIo8,		ether_code_sel
 	DW OFFSET SendIo8,			ether_code_sel
 	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 Io16Table:
 	DW OFFSET PreviewIo16,		ether_code_sel
@@ -3410,6 +3433,7 @@ Io16Table:
 	DW OFFSET RemoveIo16,		ether_code_sel
 	DW OFFSET SendIo16,			ether_code_sel
 	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 Io32Table:
 	DW OFFSET PreviewIo32,	 	ether_code_sel
@@ -3417,6 +3441,7 @@ Io32Table:
 	DW OFFSET RemoveIo32,		ether_code_sel
 	DW OFFSET SendIo32,			ether_code_sel
 	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

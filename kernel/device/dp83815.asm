@@ -1087,6 +1087,26 @@ GetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetPktAddress
+;
+;		DESCRIPTION:    Get packet addresses
+;
+; 		PARAMETERS:		ES		Data buffer selector
+;
+;		RETURNS:	 	ES:ESI	Source address
+;						ES:EDI	Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPktAddress	Proc far
+	mov esi,6
+	xor edi,edi
+	ret
+GetPktAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DispatchTable
 ;
 ;		DESCRIPTION:    Driver dispatch table
@@ -1096,12 +1116,13 @@ GetAddress	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DispTable:
-	DW OFFSET Preview,	 	ether_code_sel
-	DW OFFSET Receive,		ether_code_sel
-	DW OFFSET Remove,		ether_code_sel
-	DW OFFSET GetBuffer,	ether_code_sel
-	DW OFFSET Send,			ether_code_sel
-	DW OFFSET GetAddress,	ether_code_sel
+	DW OFFSET Preview,	 		ether_code_sel
+	DW OFFSET Receive,			ether_code_sel
+	DW OFFSET Remove,			ether_code_sel
+	DW OFFSET GetBuffer,		ether_code_sel
+	DW OFFSET Send,				ether_code_sel
+	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

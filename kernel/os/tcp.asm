@@ -3742,6 +3742,7 @@ write_tcp_retry:
 	test ds:tcp_pending,FLAG_DELETE OR FLAG_CLOSED
 	jnz write_tcp_fail
 ;
+	mov bx,ds:tcp_send_tail
 	mov dx,ds:tcp_buffer_size
 	sub dx,ds:tcp_send_count
 	movzx edx,dx

@@ -551,6 +551,7 @@ PAGE
 ;					DX		packet type
 ;					DS:SI	source address
 ;					ES:EDI	data selector, IP datagram
+;					FS		driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -561,8 +562,9 @@ receive	Proc far
 	push bx
 	push ecx
 	push esi
+	push bp
 ;
-	mov es:[0],di
+	mov bp,di
 	mov ax,es:[di].ip_size
 	xchg al,ah
 	cmp ax,cx
@@ -590,6 +592,14 @@ receive_checksum_loop:
 receive_check_ok:
 	mov ax,ip_data_sel
 	mov ds,ax
+;
+	int 3
+	mov bx,ds:ip_handle
+	push edi
+	lea edi,[di].ip_source
+	AddNetSourceAddress
+	pop edi
+;
 	mov eax,es:[di].ip_dest
 	cmp eax,ds:my_ip
 	je receive_this_node
@@ -603,7 +613,9 @@ receive_check_ok:
 	cmp eax,edx
 	pop edx
 	jne receive_forward
+
 receive_this_node:
+	mov es:[0],bp
 	mov cx,ds:protocol_count
 	or cx,cx
 	jz receive_fail
@@ -658,6 +670,7 @@ receive_fail:
 	FreeMem
 	
 receive_done:
+	pop bp
 	pop esi
 	pop ecx
 	pop bx

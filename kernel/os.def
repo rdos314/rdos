@@ -419,5 +419,7 @@ allocate_multiple_physical_nr	EQU 283
 create_alias_sel16_nr		EQU 284
 create_alias_sel32_nr		EQU 285
 
+add_net_source_address_nr	EQU 286
+
 osgate_entries				EQU 300
 

@@ -82,6 +82,11 @@ d_send			DD ?
 ; OUT  DS:ESI	Node address buffer
 d_address		DD ?
 
+; IN  ES		Data buffer selector
+; OUT ES:ESI	Source address
+; OUT ES:EDI	Dest address
+d_get_address	DD ?
+
 driver_data	ENDS
 
 protocol_data	STRUC

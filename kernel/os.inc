@@ -1170,6 +1170,15 @@ NetReceived	MACRO
 	OsGate net_received_nr
 						ENDM
 
+;	IN	BX		protocol handle
+;	IN  FS		driver
+;	IN  ES		packet
+;	IN  EDI		source address offset
+;	BX		HANDLE
+AddNetSourceAddress	MACRO
+	OsGate add_net_source_address_nr
+						ENDM
+
 ;	AL		Protocol
 ;	ES:DI	Receiver callback
 ;		AX		Size of options
