@@ -344,7 +344,7 @@ init_paging_ram:
 	mov edx,0A0000h
 	mov ecx,100000h
 	sub ecx,edx
-	call map_flat_user
+	call map_flat
 	
 init_paging_done:
 	ret
