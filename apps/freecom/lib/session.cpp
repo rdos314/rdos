@@ -67,6 +67,7 @@
 #include "rem.h"
 #include "move.h"
 #include "synctime.h"
+#include "fd2file.h"
 
 #include "file.h"
 #include "path.h"
@@ -97,6 +98,7 @@ static TCommandFactory *dir;
 static TCommandFactory *echo;
 static TCommandFactory *erase;
 static TCommandFactory *exitcmd;
+static TCommandFactory *fd2file;
 static TCommandFactory *help;
 static TCommandFactory *initfd;
 static TCommandFactory *inithd;
@@ -175,6 +177,7 @@ TSession::TSession()
     	inithd = new TInitHdFactory;
     	initfd = new TInitFdFactory;
     	exitcmd = new TExitFactory;
+    	fd2file = new TFloppyToFileFactory;
     	erase = new TEraseFactory;
     	echo = new TEchoFactory;
     	dir = new TDirFactory;
@@ -287,6 +290,7 @@ TSession::~TSession()
     	delete md;
     	delete inithd;
     	delete initfd;
+    	delete fd2file;
     	delete exitcmd;
     	delete erase;
     	delete echo;
