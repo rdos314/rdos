@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; BIT24.ASM
-; Linear 24-bit graphics
+; BIT1.ASM
+; Linear 1-bit graphics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME bit24
+		NAME bit1
 
 GateSize = 16
 
@@ -37,7 +37,7 @@ INCLUDE ..\os\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\user.inc
 INCLUDE ..\os\os.inc
-INCLUDE video.inc
+INCLUDE ..\os\video.inc
 
 	.386p
 
@@ -54,7 +54,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Null draw
 ;
-;		PARAMETERS:		EAX			Color
+;		PARAMETERS:		EAX			Bit #. Bit 31 = value
 ;						ES:EDI		Dest buffer (LFB)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -68,424 +68,64 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopNone
+;		NAME:			LgopSet
 ;
-;		DESCRIPTION:	Copy draw
+;		DESCRIPTION:	Set drawing color
 ;
-;		PARAMETERS:		EAX			Color
+;		PARAMETERS:		EAX			Bit #.
 ;						ES:EDI		Dest buffer (LFB)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopNone	Proc near
-	mov es:[edi],al
-	ror eax,8
-	mov es:[edi+1],ax
-	rol eax,8
+LgopSet	Proc near
+	bts es:[edi],eax
 	ret
-LgopNone	Endp
+LgopSet	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopOr
+;		NAME:			LgopCompl
 ;
-;		DESCRIPTION:	Or draw
+;		DESCRIPTION:	Complement
 ;
-;		PARAMETERS:		EAX			Color
+;		PARAMETERS:		EAX			Bit #.
 ;						ES:EDI		Dest buffer (LFB)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopOr	Proc near
-	push eax
-	push edx
-	and eax,0FFFFFFh
-	mov edx,es:[edi]
-	or edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
+LgopCompl	Proc near
+	btc es:[edi],eax
 	ret
-LgopOr	Endp
+LgopCompl	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopAnd
+;		NAME:			LgopReset
 ;
-;		DESCRIPTION:	And draw
+;		DESCRIPTION:	Reset draw
 ;
-;		PARAMETERS:		EAX			Color
+;		PARAMETERS:		EAX			Bit #.
 ;						ES:EDI		Dest buffer (LFB)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopAnd	Proc near
-	push eax
-	push edx
-	or eax,0FF000000h
-	mov edx,es:[edi]
-	and edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
+LgopReset	Proc near
+	btr es:[edi],eax
 	ret
-LgopAnd	Endp
+LgopReset	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopXor
-;
-;		DESCRIPTION:	Xor draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopXor	Proc near
-	push eax
-	push edx
-	and eax,0FFFFFFh
-	mov edx,es:[edi]
-	xor edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
-	ret
-LgopXor	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopInvert
-;
-;		DESCRIPTION:	Invert draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopInvert	Proc near
-	push eax
-	push edx
-	not eax
-	mov es:[edi],al
-	ror eax,8
-	mov es:[edi+1],ax
-	pop edx
-	pop eax
-	ret
-LgopInvert	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopInvertOr
-;
-;		DESCRIPTION:	Invert or draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopInvertOr	Proc near
-	push eax
-	push edx
-	not eax
-	and eax,0FFFFFFh
-	mov edx,es:[edi]
-	or edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
-	ret
-LgopInvertOr	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopInvertAnd
-;
-;		DESCRIPTION:	Invert and draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopInvertAnd	Proc near
-	push eax
-	push edx
-	not eax
-	or eax,0FF000000h
-	mov edx,es:[edi]
-	and edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
-	ret
-LgopInvertAnd	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopInvertXor
-;
-;		DESCRIPTION:	Invert xor draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopInvertXor	Proc near
-	push eax
-	push edx
-	not eax
-	and eax,0FFFFFFh
-	mov edx,es:[edi]
-	xor edx,eax
-	mov es:[edi],edx
-	pop edx
-	pop eax
-	ret
-LgopInvertXor	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopAdd
-;
-;		DESCRIPTION:	Add draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopAdd	Proc near
-	push eax
-	push edx
-	mov edx,es:[edi]
-;
-	add dl,al
-	jnc lgop_add_ok1
-	mov dl,0FFh
-lgop_add_ok1:
-	ror eax,8
-	ror edx,8
-;
-	add dl,al
-	jnc lgop_add_ok2
-	mov dl,0FFh
-lgop_add_ok2:
-	ror eax,8
-	ror edx,8
-;
-	add dl,al
-	jnc lgop_add_ok3
-	mov dl,0FFh
-lgop_add_ok3:
-	rol edx,16
-	mov es:[edi],edx
-;
-	pop edx
-	pop eax
-	ret
-LgopAdd	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopSub
-;
-;		DESCRIPTION:	Sub draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopSub	Proc near
-	push eax
-	push edx
-	mov edx,es:[edi]
-;
-	sub dl,al
-	jnc lgop_sub_ok1
-	xor dl,dl
-lgop_sub_ok1:
-	ror eax,8
-	ror edx,8
-;
-	sub dl,al
-	jnc lgop_sub_ok2
-	xor dl,dl
-lgop_sub_ok2:
-	ror eax,8
-	ror edx,8
-;
-	sub dl,al
-	jnc lgop_sub_ok3
-	xor dl,dl
-lgop_sub_ok3:
-	rol edx,16
-	mov es:[edi],edx
-;
-	pop edx
-	pop eax
-	ret
-LgopSub	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopMul
-;
-;		DESCRIPTION:	Mul draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopMul	Proc near
-	push eax
-	push ebx
-	push ecx
-	mov ebx,eax
-	mov ecx,es:[edi]
-;
-	mul cl
-	mov cl,ah
-	ror ebx,8
-	ror ecx,8
-;
-	mov al,bl
-	mul cl
-	mov cl,ah
-	ror ebx,8
-	ror ecx,8
-;
-	mov al,bl
-	mul cl
-	mov cl,ah
-	rol ecx,16
-;
-	mov es:[edi],ecx
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-LgopMul	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopStipple
-;
-;		DESCRIPTION:	Stipple draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopStipple	Proc near
-	ret
-LgopStipple	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopAlpha
-;
-;		DESCRIPTION:	Alpha draw
-;
-;		PARAMETERS:		EAX			Color
-;						ES:EDI		Dest buffer (LFB)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-LgopAlpha	Proc near
-	push eax
-	push ebx
-	push ecx
-	push edx
-;
-	mov ebx,eax
-	mov ecx,es:[edi]
-	mov edx,eax
-	rol edx,8
-	sub dl,80h
-	neg dl
-;
-	mov al,cl
-	mul dl
-	ror ax,7
-	add al,bl
-	mov cl,al
-	ror ebx,8
-	ror ecx,8
-;
-	mov al,cl
-	mul dl
-	ror ax,7
-	add al,bl
-	mov cl,al
-	ror ebx,8
-	ror ecx,8
-;
-	mov al,cl
-	mul dl
-	ror ax,7
-	add al,bl
-	mov cl,al
-	rol ecx,16
-;
-	mov es:[edi],ecx
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-LgopAlpha	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			LgopTap
+;		NAME:			LgopTab
 ;
 ;		DESCRIPTION:	LGOP table
 ;
@@ -493,19 +133,19 @@ PAGE
 
 LgopTab:
 lgt00	DW OFFSET LgopNull
-lgt01	DW OFFSET LgopNone
-lgt02	DW OFFSET LgopOr
-lgt03	DW OFFSET LgopAnd
-lgt04	DW OFFSET LgopXor
-lgt05	DW OFFSET LgopInvert
-lgt06	DW OFFSET LgopInvertOr
-lgt07	DW OFFSET LgopInvertAnd
-lgt08	DW OFFSET LgopInvertXor
-lgt09	DW OFFSET LgopAdd
-lgt0A	DW OFFSET LgopSub
-lgt0B	DW OFFSET LgopMul
-lgt0C	DW OFFSET LgopStipple
-lgt0D	DW OFFSET LgopAlpha
+lgt01	DW OFFSET LgopSet
+lgt02	DW OFFSET LgopSet
+lgt03	DW OFFSET LgopNull
+lgt04	DW OFFSET LgopCompl
+lgt05	DW OFFSET LgopReset
+lgt06	DW OFFSET LgopNull
+lgt07	DW OFFSET LgopReset
+lgt08	DW OFFSET LgopNull
+lgt09	DW OFFSET LgopSet
+lgt0A	DW OFFSET LgopReset
+lgt0B	DW OFFSET LgopNull
+lgt0C	DW OFFSET LgopSet
+lgt0D	DW OFFSET LgopSet
 
 PAGE
 
@@ -540,23 +180,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_pixel	Proc far
-	push ds
+	push es
 	push edx
 	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
 	add eax,ds:v_app_base
 	mov dx,flat_sel
-	mov ds,dx
-	mov eax,[eax]
-	and eax,0FFFFFFh
+	mov es,dx
+	bt es:[eax],ecx
+	jc get_pixel_set
+;
+	xor eax,eax
+	jmp get_pixel_done
+
+get_pixel_set:
+	mov eax,ds:v_color
+
+get_pixel_done:
 	pop edx	
-	pop ds
+	pop es
 	ret
 get_pixel	Endp
 
@@ -582,18 +226,14 @@ set_pixel	Proc far
 	push edx
 	push edi
 ;
-	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edi,ecx
-	add edi,edi
-	add edi,ecx
-	add edi,eax
-	add edi,ds:v_app_base
+	add eax,ds:v_app_base
+	mov edi,eax
 	mov ax,flat_sel
 	mov es,ax
-	mov eax,ds:v_color
+	movzx eax,cx
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].LgopTab
@@ -606,92 +246,6 @@ set_pixel	Proc far
 	pop ds
 	ret
 set_pixel	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			GetNative
-;
-;		DESCRIPTION:	Get pixels in internal format
-;
-;		PARAMETER:		AX			number of pixels
-;						CX			x
-;						DX			y
-;						ES:EDI		line buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_native	Proc far
-	push ds
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push edi
-;
-	push ax
-	movzx ecx,cx
-	movzx edx,dx
-	movzx eax,ds:v_row_size
-	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
-	add eax,ds:v_app_base
-	mov esi,eax
-	mov dx,flat_sel
-	mov ds,dx
-	pop cx
-;
-	or cx,cx
-	jz get_native_done
-;
-	movzx ecx,cx
-	mov eax,ecx
-	add ecx,ecx
-	add ecx,eax
-;
-	test si,1
-	jz get_native_even
-;
-	movs byte ptr es:[edi],[esi]
-	sub ecx,1
-	jz get_native_done
-
-get_native_even:
-	cmp ecx,2
-	jb get_native_last
-;
-	test si,2
-	jz get_native_double
-;
-	movs word ptr es:[edi],[esi]
-	sub ecx,2
-
-get_native_double:
-	push cx
-	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
-	pop cx
-	and ecx,3
-
-get_native_last:
-	rep movs byte ptr es:[edi],[esi]
-
-get_native_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop bx	
-	pop eax
-	pop ds
-	ret
-get_native	Endp
 
 PAGE
 
@@ -711,155 +265,59 @@ PAGE
 
 get_rgb	Proc far
 	push ds
-	push eax
-	push ecx
-	push edx
-	push esi
-	push edi
+	pushad
 ;
 	push ax
-	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
 	add eax,ds:v_app_base
 	mov esi,eax
-	mov dx,flat_sel
-	mov ds,dx
-	pop cx
+	mov ebp,ds:v_color
+	mov ax,flat_sel
+	mov ds,ax
+	movzx eax,cx
+	shr eax,3
+	add esi,eax
+	and cl,7
+	pop dx
 ;
-	or cx,cx
+	or dx,dx
 	jz get_rgb_done
+;
+	lods byte ptr [esi]
+	shr al,cl
+	mov ch,8
+	sub ch,cl
 
 get_rgb_loop:
-	movzx ax,byte ptr [esi+2]
-	shl eax,16
-	mov ax,[esi]
-	add esi,3
-	stos dword ptr es:[edi]
-	loop get_rgb_loop
+	rcr al,1
+	jc get_rgb_set
+
+get_rgb_reset:
+	mov dword ptr es:[edi],0
+	jmp get_rgb_next
+
+get_rgb_set:
+	mov es:[edi],ebp
+
+get_rgb_next:
+	add edi,4
+	sub dx,1
+	jz get_rgb_done
+;
+	sub ch,1
+	jnz get_rgb_loop
+;
+	lods byte ptr [esi]
+	mov ch,8
+	jmp get_rgb_loop
 
 get_rgb_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop eax
+	popad
 	pop ds
 	ret
 get_rgb	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SetNative
-;
-;		DESCRIPTION:	Set pixels in internal format
-;
-;		PARAMETER:		AX			number of pixels
-;						CX			x
-;						DX			y
-;						ES:EDI		line buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_native	Proc far
-	push ds
-	push es
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push edi
-;
-	push ax
-	mov esi,edi
-	movzx ecx,cx
-	movzx edx,dx
-	movzx eax,ds:v_row_size
-	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
-	add eax,ds:v_app_base
-	mov edi,eax
-	mov bx,ds:v_lgop
-	mov ax,es
-	mov ds,ax
-	mov dx,flat_sel
-	mov es,dx
-	pop cx
-;
-	or cx,cx
-	jz set_native_done
-;
-	cmp bx,LGOP_NONE
-	je set_native_none
-;
-	add bx,bx
-
-set_native_loop:
-	movzx ax,byte ptr [esi+2]
-	shl eax,16
-	mov ax,[esi]
-	add esi,3
-	call word ptr cs:[bx].LgopTab
-	add edi,3
-	loop set_native_loop
-	jmp set_native_done
-
-set_native_none:
-	movzx ecx,cx
-	mov eax,ecx
-	add ecx,ecx
-	add ecx,eax
-;
-	test di,1
-	jz set_native_even
-;
-	movs byte ptr es:[edi],[esi]
-	sub ecx,1
-	jz set_native_done
-
-set_native_even:
-	cmp ecx,2
-	jb set_native_last
-;
-	test di,2
-	jz set_native_double
-;
-	movs word ptr es:[edi],[esi]
-	sub ecx,2
-
-set_native_double:
-	push cx
-	shr ecx,2
-	rep movs dword ptr es:[edi],[esi]
-	pop cx
-	and ecx,3
-
-set_native_last:
-	rep movs byte ptr es:[edi],[esi]
-
-set_native_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop bx	
-	pop eax
-	pop es
-	pop ds
-	ret
-set_native	Endp
 
 PAGE
 
@@ -880,28 +338,21 @@ PAGE
 set_rgb	Proc far
 	push ds
 	push es
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push edi
+	pushad
 ;
 	push ax
 	mov esi,edi
-	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
 	add eax,ds:v_app_base
 	mov edi,eax
+	mov ax,flat_sel
+	mov es,ax
+	movzx eax,cx
 	mov bx,ds:v_lgop
-	mov ax,es
-	mov ds,ax
+	mov dx,es
+	mov ds,dx
 	mov dx,flat_sel
 	mov es,dx
 	pop cx
@@ -912,18 +363,19 @@ set_rgb	Proc far
 	add bx,bx
 
 set_rgb_loop:
-	lods dword ptr [esi]
+	mov edx,[esi]
+	cmp edx,-1
+	je set_rgb_next
+;
 	call word ptr cs:[bx].LgopTab
-	add edi,3
+
+set_rgb_next:
+	add esi,4
+	inc eax
 	loop set_rgb_loop
 
 set_rgb_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop bx	
-	pop eax
+	popad
 	pop es
 	pop ds
 	ret
@@ -942,32 +394,21 @@ PAGE
 ;						DX			y
 ;
 ;		RETURNS:		ES:EDI		line buffer
+;						EAX			bit #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_line	Proc far
-	push ds
-	push eax
-	push ecx
 	push edx
-;
-	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edx,ecx
-	add edx,edx
-	add edx,ecx
-	add eax,edx
 	add eax,ds:v_app_base
 	mov edi,eax
 	mov ax,flat_sel
 	mov es,ax
-;
+	movzx eax,cx
 	pop edx
-	pop ecx
-	pop eax
-	pop ds
 	ret
 get_line	Endp
 
@@ -976,89 +417,236 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SlabLgopNone
+;		NAME:			SlabNull
 ;
-;		DESCRIPTION:	Copy line
+;		DESCRIPTION:	Null line
 ;
-;		PARAMETERS:		EAX			Color
+;		PARAMETERS:		EAX			Bit #
 ;						ES:EDI		Dest buffer (LFB)
 ;						CX			number of pixels
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SlabLgopNone	Proc near
-	push edx
-	test di,1
-	jz slab_lgop_none_even
-
-slab_lgop_none_odd:
-	stos byte ptr es:[edi]
-	mov dl,al
-	rol eax,8
-	mov al,dl
-	ror eax,16
-	stos word ptr es:[edi]
-	rol eax,8
-	sub cx,1
-	jz slab_lgop_none_done
-
-slab_lgop_none_even:
-	test di,2
-	jz slab_lgop_none_double
-
-slab_lgop_none_word:
-	cmp cx,1
-	jbe slab_lgop_none_last
-;
-	stos word ptr es:[edi]
-	mov dx,ax
-	ror eax,16
-	rol edx,16
-	mov dl,al
-	mov dh,al
-	ror edx,8
-	mov eax,edx
-	stos dword ptr es:[edi]
-	ror eax,8
-	sub cx,2
-
-slab_lgop_none_double:
-	cmp cx,3
-	jbe slab_lgop_none_word
-;
-	mov dl,al
-	rol eax,8
-	mov al,dl
-	ror eax,8
-	stos dword ptr es:[edi]
-	ror eax,8
-	mov dl,al
-	rol eax,8
-	mov al,dl
-	ror eax,8
-	stos dword ptr es:[edi]
-	ror eax,8
-	mov dl,al
-	rol eax,8
-	mov al,dl
-	ror eax,8
-	stos dword ptr es:[edi]
-	ror eax,8
-	sub cx,4
-	jnc slab_lgop_none_double
-
-slab_lgop_none_last:
-	or cx,cx
-	jz slab_lgop_none_done
-;
-	stos word ptr es:[edi]
-	ror eax,16
-	stos byte ptr es:[edi]
-
-slab_lgop_none_done:
-	pop edx
+SlabNull	Proc near
 	ret
-SlabLgopNone	Endp
+SlabNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabSet
+;
+;		DESCRIPTION:	Set line
+;
+;		PARAMETERS:		EAX			Bit #
+;						ES:EDI		Dest buffer (LFB)
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+or_bit_tab:
+bt00	DB 0FFh
+bt01	DB 0FEh
+bt02	DB 0FCh
+bt03	DB 0F8h
+bt04	DB 0F0h
+bt05	DB 0E0h
+bt06	DB 0C0h
+bt07	DB 80h
+
+SlabSet	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	cmp cx,bx
+	jc slab_set_last_loop
+;
+	mov al,byte ptr cs:[bx].or_bit_tab
+	or es:[edi],al
+	sub cx,bx
+;
+	mov al,-1
+
+slab_set_loop:
+	inc edi
+	xor bl,bl
+	cmp cx,8
+	jb slab_set_last_loop
+;
+	mov es:[edi],al
+	jmp slab_set_loop
+	
+slab_set_last_loop:
+	bts es:[edi],ebx
+	inc bl
+	loop slab_set_last_loop
+;
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabSet	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabReset
+;
+;		DESCRIPTION:	Reset line
+;
+;		PARAMETERS:		EAX			Bit #
+;						ES:EDI		Dest buffer (LFB)
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+and_bit_tab:
+br00	DB 0
+br01	DB 1
+br02	DB 3
+br03	DB 7
+br04	DB 0Fh
+br05	DB 1Fh
+br06	DB 3Fh
+br07	DB 7Fh
+
+SlabReset	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	cmp cx,bx
+	jc slab_reset_last_loop
+;
+	mov al,byte ptr cs:[bx].and_bit_tab
+	and es:[edi],al
+	sub cx,bx
+;
+	xor al,al
+
+slab_reset_loop:
+	inc edi
+	xor bl,bl
+	cmp cx,8
+	jb slab_reset_last_loop
+;
+	mov es:[edi],al
+	jmp slab_reset_loop
+	
+slab_reset_last_loop:
+	btr es:[edi],ebx
+	inc bl
+	loop slab_reset_last_loop
+;
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabReset	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabCompl
+;
+;		DESCRIPTION:	Compl line
+;
+;		PARAMETERS:		EAX			Bit #
+;						ES:EDI		Dest buffer (LFB)
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabCompl	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	cmp cx,bx
+	jc slab_compl_last_loop
+;
+	mov al,es:[edi]
+	mov ah,al
+	and al,byte ptr cs:[bx].or_bit_tab
+	not al
+	and ah,byte ptr cs:[bp].and_bit_tab
+	or al,ah
+	mov es:[edi],al
+	sub cx,bx
+;
+	mov al,-1
+
+slab_compl_loop:
+	inc edi
+	xor bl,bl
+	cmp cx,8
+	jb slab_compl_last_loop
+;
+	xor es:[edi],al
+	jmp slab_compl_loop
+	
+slab_compl_last_loop:
+	btc es:[edi],ebx
+	inc bl
+	loop slab_compl_last_loop
+;
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabCompl	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabTab
+;
+;		DESCRIPTION:	Slab LGOP table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabTab:
+st00	DW OFFSET SlabNull
+st01	DW OFFSET SlabSet
+st02	DW OFFSET SlabSet
+st03	DW OFFSET SlabNull
+st04	DW OFFSET SlabCompl
+st05	DW OFFSET SlabReset
+st06	DW OFFSET SlabNull
+st07	DW OFFSET SlabReset
+st08	DW OFFSET SlabNull
+st09	DW OFFSET SlabSet
+st0A	DW OFFSET SlabReset
+st0B	DW OFFSET SlabNull
+st0C	DW OFFSET SlabSet
+st0D	DW OFFSET SlabSet
 
 PAGE
 
@@ -1069,33 +657,22 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a hollow line
 ; 
-;		PARAMETER:		CX			width
+;		PARAMETER:		EAX			bit #
+;						CX			width
 ;						EDI			position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
-	push cx
-	push edi
+	push eax
 	mov bx,ds:v_lgop
 	add bx,bx
-	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
-;
-	mov ax,cx
-	dec ax
-	mov bx,ax
-	add ax,ax
-	add ax,bx
-	movzx eax,ax
-	add edi,eax
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
+	movzx ecx,cx
+	add eax,ecx
+	dec eax
 	call word ptr cs:[bx].LgopTab
-	pop edi
-	pop cx
+	pop eax
 	ret
 HollowLine	Endp
 
@@ -1108,38 +685,16 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a filled line
 ; 
-;		PARAMETER:		CX			width
+;		PARAMETER:		EAX			bit #
+;						CX			width
 ;						EDI			position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
 	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
-	je filled_line_lgop
-;
 	add bx,bx
-	mov eax,ds:v_color
-;
-	push cx
-	push edi
-
-filled_line_loop:
-	call word ptr cs:[bx].LgopTab
-	add edi,3
-	loop filled_line_loop
-;
-	pop edi
-	pop cx
-	ret
-
-filled_line_lgop:
-	mov eax,ds:v_color
-	push cx
-	push edi
-	call SlabLgopNone
-	pop edi
-	pop cx
+	call word ptr cs:[bx].SlabTab
 	ret
 FilledLine	Endp
 
@@ -1152,53 +707,44 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a split line
 ; 
-;		PARAMETER:		AX			line width
+;		PARAMETER:		EAX			bit #
 ;						CX			gap
+;						DX			line width
 ;						EDI			position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
+	push eax
 	push cx
-	push dx
-	push edi
 ;
-	sub cx,ax
-	sub cx,ax
-	mov dx,ax
+	sub cx,dx
+	sub cx,dx
+	mov bx,ds:v_lgop
+	add bx,bx
 ;
 	push cx
 	mov cx,dx
 
 split_left_loop:
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
-	add edi,3
+	inc eax
 	loop split_left_loop
 ;
 	pop cx
 ;
-	mov ax,cx
-	add ax,ax
-	add ax,cx
-	movzx eax,ax
-	add edi,eax
+	movzx ecx,cx
+	add eax,ecx
 ;
 	mov cx,dx
 
 split_right_loop:
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
-	add edi,3
+	inc eax
 	loop split_right_loop
 ;
-	pop edi
-	pop dx
 	pop cx
+	pop eax
 	ret
 SplitLine	Endp
 
@@ -1237,12 +783,9 @@ line_bresen:
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov ebx,ecx
-	add ebx,ebx
-	add ebx,ecx
-	add ebx,eax
-	add ebx,ds:v_app_base
-	mov ebp,ebx
+	shl eax,3
+	add eax,ecx
+	mov ebp,eax
 	pop dx
 	pop bx
 	pop ax
@@ -1256,12 +799,12 @@ line_bresen:
 line_bresen_dx_neg:
 	add cx,cx
 	neg cx
-	mov esi,-3
+	mov esi,-1
 	jmp line_bresen_dy
 
 line_bresen_dx_pos:
 	add cx,cx
-	mov esi,3
+	mov esi,1
 
 line_bresen_dy:
 	test dh,80h
@@ -1271,12 +814,14 @@ line_bresen_dy_neg:
 	add dx,dx
 	neg dx
 	movzx edi,ds:v_row_size
+	shl edi,3
 	neg edi
 	jmp line_bresen_do
 
 line_bresen_dy_pos:
 	add dx,dx
 	movzx edi,ds:v_row_size
+	shl edi,3
 
 line_bresen_do:
 	push cx
@@ -1285,11 +830,9 @@ line_bresen_do:
 	movzx edx,bx
 	movzx eax,ds:v_row_size
 	mul edx
-	mov ebx,ecx
-	add ebx,ebx
-	add ebx,ecx
-	add ebx,eax
-	add ebx,ds:v_app_base
+	shl eax,3
+	add eax,ecx
+	mov ebx,eax
 	pop dx
 	pop cx
 ;
@@ -1303,8 +846,11 @@ line_bresen_do:
 	mov es,ax
 	mov bx,ds:v_lgop
 	add bx,bx
-	mov eax,ds:v_color
+	mov eax,edi
+	push edi
+	mov edi,ds:v_app_base
 	call word ptr cs:[bx].LgopTab
+	pop edi
 	pop bx
 	pop esi
 ;
@@ -1338,8 +884,11 @@ line_bresen_dx_plot:
 	push bx
 	mov bx,ds:v_lgop
 	add bx,bx
-	mov eax,ds:v_color
+	push edi
+	mov eax,edi
+	mov edi,ds:v_app_base
 	call word ptr cs:[bx].LgopTab
+	pop edi
 	pop bx
 	pop ax
 	jmp line_bresen_dx_loop
@@ -1371,8 +920,11 @@ line_bresen_dy_plot:
 	push bx
 	mov bx,ds:v_lgop
 	add bx,bx
-	mov eax,ds:v_color
+	push edi
+	mov eax,edi
+	mov edi,ds:v_app_base
 	call word ptr cs:[bx].LgopTab
+	pop edi
 	pop bx
 	pop ax
 	jmp line_bresen_dy_loop
@@ -1385,24 +937,20 @@ line_vert:
 	xchg bx,dx
 
 line_vert_do:
-	movzx ecx,cx
-	movzx edx,dx
 	sub bx,dx
+	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mov esi,eax
 	mul edx
-	mov edi,ecx
-	add edi,edi
-	add edi,ecx
-	add edi,eax
-	add edi,ds:v_app_base
+	add eax,ds:v_app_base
+	mov edi,eax
+	mov ax,flat_sel
+	mov es,ax
+	movzx eax,cx
 	mov cx,bx
 	inc cx
-	mov dx,flat_sel
-	mov es,dx
 	mov bx,ds:v_lgop
 	add bx,bx
-	mov eax,ds:v_color
 
 line_vert_loop:
 	call word ptr cs:[bx].LgopTab
@@ -1423,11 +971,9 @@ line_horiz_do:
 	movzx ebx,ax
 	movzx eax,ds:v_row_size
 	mul edx
-	mov edi,ecx
-	add edi,edi
-	add edi,ecx
-	add edi,eax
-	add edi,ds:v_app_base
+	shl eax,3
+	add eax,ecx
+	mov edi,ds:v_app_base
 	sub cx,bx
 	neg cx
 	inc cx
@@ -1485,8 +1031,7 @@ draw_rect	Proc far
 	mov esi,eax
 	mul edx
 	mov edi,ecx
-	add edi,edi
-	add edi,ecx
+	shl edi,2
 	add edi,eax
 	add edi,ds:v_app_base
 	pop dx
@@ -1732,8 +1277,7 @@ draw_ellipse	Proc far
 	mov eax,esi
 	mul edx
 	mov edi,ecx
-	add edi,edi
-	add edi,ecx
+	shl edi,2
 	add edi,eax
 	add edi,ds:v_app_base
 	mov [bp].de_p0,edi
@@ -1744,8 +1288,7 @@ draw_ellipse	Proc far
 	mov eax,esi
 	mul edx
 	mov edi,ecx
-	add edi,edi
-	add edi,ecx
+	shl edi,2
 	add edi,eax
 	add edi,ds:v_app_base
 	mov [bp].de_p1,edi
@@ -1779,8 +1322,8 @@ ellipse_s_neg:
 	add [bp].de_dTx,eax
 	adc [bp+4].de_dTx,dx
 ;
-	sub dword ptr [bp].de_p0,3
-	sub dword ptr [bp].de_p1,3
+	sub dword ptr [bp].de_p0,4
+	sub dword ptr [bp].de_p1,4
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 	jmp ellipse_loop
@@ -1818,8 +1361,8 @@ ellipse_t_neg:
 	add [bp].de_dTy,eax
 	adc [bp+4].de_dTy,dx
 ;
-	sub dword ptr [bp].de_p0,3
-	sub dword ptr [bp].de_p1,3
+	sub dword ptr [bp].de_p0,4
+	sub dword ptr [bp].de_p1,4
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 ;
@@ -1877,9 +1420,9 @@ error	Proc far
 	ret
 error	Endp
 
-	public BitmapTab24
+	public BitmapTab1
 
-BitmapTab24:
+BitmapTab1:
 mt00 DW OFFSET error,				video_code_sel
 mt01 DW OFFSET error,				video_code_sel
 mt02 DW OFFSET error,				video_code_sel
@@ -1902,9 +1445,9 @@ mt12 DW OFFSET error,				video_code_sel
 mt13 DW OFFSET set_color,			video_code_sel
 mt14 DW OFFSET get_pixel,			video_code_sel
 mt15 DW OFFSET set_pixel,			video_code_sel
-mt16 DW OFFSET get_native,			video_code_sel
+mt16 DW OFFSET get_rgb,				video_code_sel
 mt17 DW OFFSET get_rgb,				video_code_sel
-mt18 DW OFFSET set_native,			video_code_sel
+mt18 DW OFFSET set_rgb,				video_code_sel
 mt19 DW OFFSET set_rgb,				video_code_sel
 mt1A DW OFFSET get_line,			video_code_sel
 mt1B DW OFFSET draw_line,			video_code_sel

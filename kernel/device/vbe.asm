@@ -1668,7 +1668,12 @@ page
 ;						CX		x-resolution
 ;						DX		y-resolution
 ;
-;		RETURNS:		BX		bitmap handle
+;		RETURNS:		AX		bits / pixel
+;						BX		bitmap handle
+;						CX		x-resolution
+;						DX		y-resolution
+;						SI		line size
+;						ES:EDI	user buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1695,7 +1700,7 @@ set_vbe_mode	PROC far
 
 set_vbe_mode_find:
 	call FindResolution
-	jc set_vbe_mode_done
+	jc set_vbe_mode_fail
 ;
 	cmp bl,24
 	ja set_vbe_high
@@ -1739,17 +1744,22 @@ set_vbe_high_mode16:
 	mov dl,es:vr_flat16_flags
 	test dl, VIDEO_MODE_FLAGS_LFB
 	stc
-	jz set_vbe_mode_done
+	jz set_vbe_mode_fail
 ;
 	mov ax,es:vr_flat16_mode
 
 set_vbe_mode_do:
+	add sp,4
 	SetVideoMode
 	clc
+	jmp set_vbe_mode_done
 
-set_vbe_mode_done:
+set_vbe_mode_fail:
+	stc
 	pop dx
 	pop ax
+
+set_vbe_mode_done:
 	pop ds
 	retf32
 set_vbe_mode	ENDP
@@ -1782,7 +1792,7 @@ init_vbe	PROC near
 	mov si,OFFSET set_vbe_mode
 	mov di,OFFSET set_vbe_mode_name
 	xor dx,dx
-	mov ax,set_vga_mode_nr
+	mov ax,set_vbe_mode_nr
 	RegisterBimodalUserGate
 	ret
 init_vbe	Endp

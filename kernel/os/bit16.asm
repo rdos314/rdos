@@ -793,6 +793,7 @@ set_native	Proc far
 	add eax,edx
 	add eax,ds:v_app_base
 	mov edi,eax
+	mov bx,ds:v_lgop
 	mov ax,es
 	mov ds,ax
 	mov dx,flat_sel
@@ -802,7 +803,6 @@ set_native	Proc far
 	or cx,cx
 	jz set_native_done
 ;
-	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	je set_native_none
 ;
@@ -884,6 +884,7 @@ set_rgb	Proc far
 	add eax,edx
 	add eax,ds:v_app_base
 	mov edi,eax
+	mov bx,ds:v_lgop
 	mov ax,es
 	mov ds,ax
 	mov dx,flat_sel
@@ -893,7 +894,6 @@ set_rgb	Proc far
 	or cx,cx
 	jz set_rgb_done
 ;
-	mov bx,ds:v_lgop
 	add bx,bx
 
 set_rgb_loop:
@@ -933,29 +933,23 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			Copy
+;		NAME:			GetLine
 ;
-;		DESCRIPTION:	Copy pixels within bitmap
+;		DESCRIPTION:	Get line buffer ptr
 ;
-;		PARAMETER:		AX			number of pixels
-;						CX			source x
-;						DX			source y
-;						SI			dest x
-;						DI			dest y
+;		PARAMETER:		CX			x
+;						DX			y
+;
+;		RETURNS:		ES:EDI		line buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-copy	Proc far
+get_line	Proc far
 	push ds
-	push es
 	push eax
-	push bx
 	push ecx
 	push edx
-	push esi
-	push edi
 ;
-	push ax
 	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
@@ -964,68 +958,16 @@ copy	Proc far
 	add edx,edx
 	add eax,edx
 	add eax,ds:v_app_base
-	push eax
-	movzx ecx,si
-	movzx edx,di
-	movzx eax,ds:v_row_size
-	mul edx
-	mov edx,ecx
-	add edx,edx
-	add eax,edx
-	add eax,ds:v_app_base
-	pop esi
 	mov edi,eax
-	mov dx,flat_sel
-	mov ds,dx
-	mov es,dx
-	pop cx
+	mov ax,flat_sel
+	mov es,ax
 ;
-	or cx,cx
-	jz copy_done
-;
-	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
-	je copy_none
-;
-	add bx,bx
-
-copy_loop:
-	lods word ptr [esi]
-	call word ptr cs:[bx].LgopTab
-	add edi,2
-	loop copy_loop
-	jmp copy_done
-
-copy_none:
-	test di,2
-	jz copy_double
-;
-	movs word ptr es:[edi],[esi]
-	sub cx,1
-	jz copy_done
-
-copy_double:
-	push cx
-	movzx ecx,cx
-	shr ecx,1
-	rep movs dword ptr es:[edi],[esi]
-	pop cx
-	test cx,1
-	jz copy_done
-;	
-	movs word ptr es:[edi],[esi]
-
-copy_done:
-	pop edi
-	pop esi
 	pop edx
 	pop ecx
-	pop bx	
 	pop eax
-	pop es
 	pop ds
 	ret
-copy	Endp
+get_line	Endp
 
 PAGE
 
@@ -1904,7 +1846,7 @@ mt16 DW OFFSET get_native,			video_code_sel
 mt17 DW OFFSET get_rgb,				video_code_sel
 mt18 DW OFFSET set_native,			video_code_sel
 mt19 DW OFFSET set_rgb,				video_code_sel
-mt1A DW OFFSET copy,				video_code_sel
+mt1A DW OFFSET get_line,			video_code_sel
 mt1B DW OFFSET draw_line,			video_code_sel
 mt1C DW OFFSET draw_rect,			video_code_sel
 mt1D DW OFFSET draw_ellipse,		video_code_sel

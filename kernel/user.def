@@ -238,5 +238,6 @@ draw_ellipse_nr				= 210
 create_bitmap_nr			= 211
 close_bitmap_nr				= 212
 blit_nr						= 213
+set_vbe_mode_nr				= 214
 
-usergate_entries			= 214
+usergate_entries			= 215

@@ -163,12 +163,10 @@ set_native_row_proc		DD ?
 ; IN  ES:EDI		line buffer
 set_rgb_row_proc		DD ?
 
-; IN  AX			number of pixels
-; IN  CX			source x
-; IN  DX			source y
-; IN  SI			dest x
-; IN  DI			dest y
-copy_row_proc			DD ?
+; IN  CX			x
+; IN  DX			y
+; OUT ES:EDI		line buffer
+get_line_proc			DD ?
 
 ; IN  AX			x1
 ; IN  BX			y1

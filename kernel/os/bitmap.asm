@@ -50,6 +50,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+	extrn BitmapTab1:near
 	extrn BitmapTab16:near
 	extrn BitmapTab24:near
 	extrn BitmapTab32:near
@@ -149,6 +150,8 @@ PAGE
 ;						DX		Height
 ;
 ;		RETURNS:		BX		Bitmap handle
+;						SI		Line size
+;						ES:EDI	Buffer ptr
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -156,12 +159,9 @@ create_bitmap_name	DB 'Create Bitmap', 0
 
 create_bitmap	Proc far
 	push ds
-	push es
 	push eax
 	push ecx
 	push edx
-	push esi
-	push edi
 ;
 	push eax
 	mov eax,SIZE video_api_struc
@@ -179,6 +179,9 @@ create_bitmap	Proc far
 	mov si,cs
 	mov ds,si
 ;
+	cmp al,1
+	je cr_bitmap1
+;
 	cmp al,16
 	je cr_bitmap16
 ;
@@ -191,6 +194,15 @@ create_bitmap	Proc far
 	FreeMem
 	stc
 	jmp cr_bitmap_end
+
+cr_bitmap1:
+	mov si,OFFSET BitmapTab1
+	mov ax,es:v_width
+	dec ax
+	shr ax,3
+	inc ax
+	mov es:v_row_size,ax
+	jmp cr_bitmap_copy
 
 cr_bitmap16:
 	mov si,OFFSET BitmapTab16
@@ -249,15 +261,17 @@ cr_bitmap_copy:
 	mov [bx].hh_sign,BITMAP_HANDLE
 	mov bx,[bx].hh_handle
 	mov es:v_bitmap,bx
+	mov si,es:v_row_size
+	mov edi,es:v_app_base
+	sub edi,local_page_linear
+	mov ax,flat_data_sel
+	mov es,ax
 	clc
 
 cr_bitmap_end:
-	pop edi
-	pop esi
 	pop edx
 	pop ecx
 	pop eax
-	pop es
 	pop ds
 	retf32
 create_bitmap	Endp

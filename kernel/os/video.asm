@@ -184,7 +184,12 @@ page
 ;
 ;		PARAMETERS:		AX		Mode
 ;
-;		RETURNS:		BX		bitmap handle
+;		RETURNS:		AX		bits / pixel
+;						BX		bitmap handle
+;						CX		x-resolution
+;						DX		y-resolution
+;						SI		line size
+;						ES:EDI	user buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -192,8 +197,6 @@ set_video_mode_name	DB 'Set Video Mode',0
 
 set_video_mode	PROC far
 	push ds
-	push es
-	push ax
 ;
 	mov bx,video_data_sel
 	mov ds,bx
@@ -252,10 +255,16 @@ set_video_mode_next:
 set_video_mode_ok:
 	mov ds,ds:v_handle
 	mov bx,ds:v_bitmap
+	mov cx,ds:v_width
+	mov dx,ds:v_height
+	mov si,ds:v_row_size
+	mov edi,ds:v_app_base
+	sub edi,local_page_linear
+	mov ax,flat_data_sel
+	mov es,ax
+	movzx ax,ds:v_bpp
 
 set_video_mode_done:
-	pop ax
-	pop es
 	pop ds
 	retf32
 set_video_mode	ENDP
@@ -1163,6 +1172,13 @@ blit_pr	PROC far
 ;
 	mov [bp].blit_src_x,esi
 	mov [bp].blit_dest_x,edi
+;
+	or cx,cx
+	jz blit_done
+;
+	or dx,dx
+	jz blit_done
+;
 	mov [bp].blit_width,cx
 	mov [bp].blit_height,dx
 ;
@@ -1214,7 +1230,7 @@ blit_do:
 	cmp al,ds:v_bpp
 	je blit_same_bpp
 ;
-	movzx eax,[bp].blit_width
+	movzx eax,word ptr [bp].blit_width
 	shl eax,2
 	AllocateSmallGlobalMem
 
@@ -1243,10 +1259,97 @@ blit_diff_loop:
 	jmp blit_done
 
 blit_same_bpp:
+	mov ds,[bp].blit_src_sel
+	mov cx,[bp].blit_src_x
+	mov dx,[bp].blit_src_y
+	call ds:get_line_proc
+;
+	mov ds,[bp].blit_dest_sel
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_dest_x
+	mov dx,[bp].blit_dest_y
+	call ds:set_native_row_proc
+;
+	inc word ptr [bp].blit_src_y
+	inc word ptr [bp].blit_dest_y
+	sub word ptr [bp].blit_height,1
+	jnz blit_same_bpp
+;
 	clc
 	jmp blit_done
 
 blit_same_bitmap:
+	mov ds,[bp].blit_src_sel
+	mov dx,[bp].blit_src_y
+	cmp dx,[bp].blit_dest_y
+	je blit_same_line
+	ja blit_forward
+
+blit_reverse:
+	mov ax,[bp].blit_height
+	dec ax
+	add [bp].blit_src_y,ax
+	add [bp].blit_dest_y,ax
+
+blit_reverse_loop:
+	mov cx,[bp].blit_src_x
+	mov dx,[bp].blit_src_y
+	call ds:get_line_proc
+;
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_dest_x
+	mov dx,[bp].blit_dest_y
+	call ds:set_native_row_proc
+;
+	dec word ptr [bp].blit_src_y
+	dec word ptr [bp].blit_dest_y
+	sub word ptr [bp].blit_height,1
+	jnz blit_reverse_loop
+	clc
+	jmp blit_done
+
+blit_forward:
+	mov cx,[bp].blit_src_x
+	mov dx,[bp].blit_src_y
+	call ds:get_line_proc
+;
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_dest_x
+	mov dx,[bp].blit_dest_y
+	call ds:set_native_row_proc
+;
+	inc word ptr [bp].blit_src_y
+	inc word ptr [bp].blit_dest_y
+	sub word ptr [bp].blit_height,1
+	jnz blit_forward
+;
+	clc
+	jmp blit_done
+
+blit_same_line:
+	movzx eax,word ptr [bp].blit_width
+	shl eax,2
+	AllocateSmallGlobalMem
+
+blit_same_line_loop:
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_src_x
+	mov dx,[bp].blit_src_y
+	xor edi,edi
+	call ds:get_native_row_proc
+;
+	mov ax,[bp].blit_width
+	mov cx,[bp].blit_dest_x
+	mov dx,[bp].blit_dest_y
+	xor edi,edi
+	call ds:set_native_row_proc
+;
+	inc word ptr [bp].blit_src_y
+	inc word ptr [bp].blit_dest_y
+	sub word ptr [bp].blit_height,1
+	jnz blit_same_line_loop
+;
+	FreeMem
 	clc
 	jmp blit_done
 

@@ -82,9 +82,13 @@ test_thread:
 divi	DW 1111h
 	
 init:
-	mov ax,16
+	mov ax,32
 	mov cx,800
 	mov dx,600
+	SetVBEMode
+	push bx
+	push cx
+	push dx
 	CreateBitmap
 	mov ax,LGOP_NONE
 	SetLgop
@@ -150,17 +154,66 @@ init:
     mov si,250
     mov di,250
     DrawEllipse
-	int 3
-	push bx
-	mov ax,32
-	mov cx,800
-	mov dx,600
-	SetVgaMode
+	mov ax,bx
+	pop dx
+	pop cx
+	pop bx
+	push ax
+	mov ax,LGOP_ADD
+	SetLgop
 	pop ax
 	xor esi,esi
 	xor edi,edi
 	Blit
+	mov cx,250
+	mov dx,250
+;
+	push bx
+	mov bx,ax
 	CloseBitmap
+	pop bx
+	mov ax,bx
+	mov si,100 ; src y
+	shl esi,16
+	mov si,50 ; src x
+	mov di,300 ; dest y
+	shl edi,16
+	mov di,450 ; dest x
+	Blit
+;
+	int 3
+	push bx
+	mov cx,600
+	mov dx,800
+	mov ax,1
+	CreateBitmap
+;
+	mov ax,LGOP_OR
+	SetLgop
+;
+	mov ax,0FF00h
+	SetDrawColor
+;
+	mov cx,350
+	mov dx,100
+	mov si,50
+	mov di,300
+	DrawLine
+;
+	mov ax,bx
+	pop bx
+	push ax
+	mov ax,LGOP_ADD
+	SetLgop
+	pop ax
+	xor esi,esi
+	xor edi,edi
+	mov cx,600
+	mov dx,600
+	Blit
+	mov bx,ax
+	CloseBitmap
+;
 	int 3
 	mov ax,3
 	SetVideoMode
