@@ -38,7 +38,6 @@ INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE exec.def
-INCLUDE ne.def
 INCLUDE system.inc
 INCLUDE	ip.inc
 INCLUDE dns.inc

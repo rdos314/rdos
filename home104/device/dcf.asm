@@ -54,6 +54,7 @@ dcf_data	STRUC
 thread_id		DW ?
 rtc_id			DW ?
 
+fract_diff		DD ?,?
 sys_diff		DD ?,?
 
 on_time			DD ?,?
@@ -667,9 +668,33 @@ upd_diff_min:
 	mov ds:[si].sd_min,dl
 ;
 	mov eax,ds:[si].sd_fract
+;
+	mov ebx,ds:fract_diff
+	sub ebx,eax
+	jc upd_diff_neg
+;
+	cmp ebx,2222222h
+	jbe upd_diff_save
+;
+	add ds:sys_diff,4444444h
+	adc ds:sys_diff+4,0
+	jmp upd_diff_save
+
+upd_diff_neg:
+	neg ebx
+	cmp ebx,2222222h
+	jbe upd_diff_save
+;
+	sub ds:sys_diff,4444444h
+	sbb ds:sys_diff+4,0
+
+upd_diff_save:
 	cdq
-	mov ds:sys_diff,eax
-	mov ds:sys_diff+4,edx
+	mov ds:fract_diff,eax
+	mov ds:fract_diff+4,edx
+;
+	add eax,ds:sys_diff
+	adc edx,ds:sys_diff+4
 	UpdateTime
 ;
 ;	mov bx,ds:rtc_id
@@ -828,8 +853,10 @@ SetTimeDiff	Proc near
 	movsx edx,ds:[si].sd_hour
 	add edx,eax
 	mov eax,ebx
-	add eax,ds:sys_diff
-	adc edx,ds:sys_diff+4
+	mov ds:sys_diff,eax
+	mov ds:sys_diff+4,edx
+	add eax,ds:fract_diff
+	adc edx,ds:fract_diff+4
 	UpdateTime
 ;
 ;	mov bx,ds:rtc_id
@@ -860,6 +887,8 @@ dcf_thread:
 ;
 	GetThread
 	mov ds:thread_id,ax
+	mov ds:fract_diff,0
+	mov ds:fract_diff+4,0
 	mov ds:sys_diff,0
 	mov ds:sys_diff+4,0
 	mov ds:on_time,0	
@@ -905,7 +934,6 @@ dcf_time_loop:
 	call GetBestDiff
 	jc dcf_loop
 ;
-	int 3
 	mov si,OFFSET save_buf
 	call SetTimeDiff
 ;
@@ -934,10 +962,12 @@ rtc_thread:
 
 rtc_loop:
 	WaitForSignal
-	mov eax,ds:sys_diff
-	mov edx,ds:sys_diff+4
-	UpdateTime
-;	UpdateRtc
+	mov eax,ds:fract_diff
+	mov edx,ds:fract_diff+4
+	add eax,ds:sys_diff
+	adc edx,ds:sys_diff+4
+;	UpdateTime
+	UpdateRtc
 	jmp rtc_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

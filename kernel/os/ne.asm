@@ -1048,7 +1048,6 @@ destroy_next_selector:
 	add di,8
 	loop destroy_selectors
 ;
-    int 3
     mov ax,es:lib_resource_size
     or ax,ax
     jz destroy_resource_done
