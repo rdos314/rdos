@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "rdos.h"
+#include "bmp.h"
+#include "jpeg.h"
+#include "gif.h"
+#include "png.h"
+#include "videodev.h"
+
+#define FALSE	0
+#define	TRUE	!FALSE
+
+int main(int argc, char **argv)
+{
+	TGraphicDevice *vbe;
+	TBitmapGraphicDevice *bitmap;
+	int width, height;
+	int ratio;
+	char *FileName;
+
+	if (argc == 1)
+	{
+		printf("usage: showimg filename\r\n");
+		return 1;
+	}
+
+	RdosWaitMilli(250);
+
+	strcpy(FileName, argv[1]);
+	strlwr(FileName);
+
+	bitmap = 0;
+
+	if (strstr(FileName, ".png"))
+		bitmap = CreatePNG(FileName);
+
+	if (!bitmap && strstr(FileName, ".gif"))
+		bitmap = CreateGIF(FileName);
+
+	if (!bitmap && strstr(FileName, ".jpg"))
+		bitmap = CreateJPEG(FileName);
+
+	if (!bitmap && strstr(FileName, ".bmp"))
+		bitmap = CreateBmp(FileName);
+
+	if (!bitmap)
+	{
+		strcpy(FileName, argv[1]);
+		strcat(FileName, ".jpg");
+		bitmap = CreateJPEG(FileName);
+	}
+
+	if (!bitmap)
+	{
+		strcpy(FileName, argv[1]);
+		strcat(FileName, ".bmp");
+		bitmap = CreateBmp(FileName);
+	}
+
+	if (!bitmap)
+	{
+		strcpy(FileName, argv[1]);
+		strcat(FileName, ".png");
+		bitmap = CreatePNG(FileName);
+	}
+
+	if (!bitmap)
+	{
+		strcpy(FileName, argv[1]);
+		strcat(FileName, ".gif");
+		bitmap = CreateGIF(FileName);
+	}
+
+	if (bitmap)
+	{
+		width = bitmap->GetWidth();
+		height = bitmap->GetHeight();
+		if (width < 640)
+			width = 640;
+		if (height < 480)
+			height = 480;
+
+		ratio = height * 4 / width;
+		if (ratio > 3)
+			height = 3 * width / 4;
+		else
+			width = 4 * height / 3;
+
+		vbe = new TVideoGraphicDevice(24, width, height);
+		vbe->Blit(bitmap, 0, 0, 0, 0, bitmap->GetWidth(), bitmap->GetHeight());
+		RdosReadKeyboard();
+		delete bitmap;
+		delete vbe;
+	}
+	else
+		printf("invalid filename\r\n");
+
+	return 0;
+}
