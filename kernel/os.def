@@ -363,5 +363,7 @@ put_keyboard_code_nr        EQU 265
 add_wait_nr                 EQU 266
 signal_wait_nr              EQU 267
 
-osgate_entries				EQU 268
+invert_mouse_nr             EQU 268
+
+osgate_entries				EQU 269
 

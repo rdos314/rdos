@@ -301,6 +301,272 @@ RdosLeaveSection	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCreateWait
+;
+;		description:	int RdosCreateWait()
+;
+;       returns:        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateWait
+
+RdosCreateWait	Proc
+	push ebx
+;
+	UserGate create_wait_nr
+	movzx eax,bx
+;
+	pop ebx
+	ret
+RdosCreateWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseWait
+;
+;		description:	void RdosCloseWait(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseWait
+
+RdosCloseWait	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_wait_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCheckWait
+;
+;		description:	void *RdosCheckWait(int Handle)
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCheckWait
+
+RdosCheckWait	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	UserGate is_wait_idle_nr
+;
+    mov eax,ecx
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 4
+RdosCheckWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitForever
+;
+;		description:	int RdosWaitForever(int Handle)
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitForever
+
+RdosWaitForever	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	UserGate wait_no_timeout_nr
+	jc rwfFail
+;
+    mov eax,ecx
+    jmp rwfDone
+
+rwfFail:
+    xor eax,eax
+
+rwfDone:
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 4
+RdosWaitForever	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitTimeout
+;
+;		description:	int RdosWaitTimeout(int Handle, int MilliTimeout) 
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitTimeout
+
+RdosWaitTimeout	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+   	mov eax,[ebp+12]
+	mov edx,1193
+	mul edx
+	push edx
+	push eax
+    UserGate get_system_time_nr
+    pop ebx
+    add eax,ebx
+    pop ebx
+    adc edx,ebx
+	mov bx,[ebp+8]    	
+	UserGate wait_timeout_nr
+	jc rwtFail
+;
+    mov eax,ecx
+    jmp rwtDone
+
+rwtFail:
+    xor eax,eax
+
+rwtDone:
+    pop edx
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosWaitTimeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosStopWait
+;
+;		description:	void RdosStopWait(int Handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosStopWait
+
+RdosStopWait	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate stop_wait_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosStopWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosRemoveWait
+;
+;		description:	void RdosRemoveWait(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosRemoveWait
+
+RdosRemoveWait	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate remove_wait_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosRemoveWait	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForKeyboard
+;
+;		description:	void RdosAddWaitForKeyboard(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForKeyboard
+
+RdosAddWaitForKeyboard	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate add_wait_for_keyboard_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosAddWaitForKeyboard	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddWaitForMouse
+;
+;		description:	void RdosAddWaitForMouse(int Handle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForMouse
+
+RdosAddWaitForMouse	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate add_wait_for_mouse_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosAddWaitForMouse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetVideoMode
 ;
 ;		description:	int RdosSetVideoMode(int *BitsPerPixel, 

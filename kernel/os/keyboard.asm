@@ -540,7 +540,6 @@ is_keyboard_idle	PROC far
 ;
 	mov ax,key_local_sel
 	mov ds,ax
-	mov ds:key_avail_obj,es
 ;
 	mov bx,ds:key_buffer_head
 	cmp bx,ds:key_buffer_tail

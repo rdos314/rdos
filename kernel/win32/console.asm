@@ -135,15 +135,19 @@ SHIFT EQU 16
 .data
 	align  DWORD
 
-InputMode dd ENABLE_LINE_INPUT + ENABLE_ECHO_INPUT + ENABLE_PROCESSED_INPUT
-OutputMode dd ENABLE_PROCESSED_OUTPUT + ENABLE_WRAP_AT_EOL_OUTPUT
-ErrorMode dd ENABLE_PROCESSED_OUTPUT + ENABLE_WRAP_AT_EOL_OUTPUT
+InputMode   dd ENABLE_LINE_INPUT + ENABLE_ECHO_INPUT + ENABLE_PROCESSED_INPUT
+OutputMode  dd ENABLE_PROCESSED_OUTPUT + ENABLE_WRAP_AT_EOL_OUTPUT
+ErrorMode   dd ENABLE_PROCESSED_OUTPUT + ENABLE_WRAP_AT_EOL_OUTPUT
 
-MouseButtons dd 2
+MouseButtons    dd 2
+ButtonState     dd 0
+WaitHandle      dw 0
 
-CurrMouseButtons	DW ?
-CurrMouseX			DW ?
-CurrMouseY			DW ?
+ClickX          dw 0
+ClickY          dw 0
+ClickButton     db 0
+ClickTime       dd 0, 0
+
 
 .code
 
@@ -207,69 +211,281 @@ ConvertKeyboardState	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           MouseHook
+;       NAME:           CreateWaitHandle
 ;
-;       DESCRIPTION:    Mouse callback
-;
-;		PARAMETERS:		AX		buttons
-;						CX		delta x
-;						DX		delta y
+;       DESCRIPTION:    Create the wait handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MouseHook Proc near
-	shr ecx,3
+CreateWaitHandle Proc near
+    push ebx
+    push ecx
+;
+    mov bx,WaitHandle
+    or bx,bx
+    jnz cwhDone
+;
+    UserGate create_wait_nr
+    mov WaitHandle,bx
+;
+    mov ecx,OFFSET CreateKeyboardEvent
+    UserGate add_wait_for_keyboard_nr
+;
+    test InputMode,ENABLE_MOUSE_INPUT
+    jz cwhDone
+;
+    mov ecx,OFFSET CreateMouseEvent
+    UserGate add_wait_for_mouse_nr
+
+cwhDone:
+    pop ecx
+    pop ebx    
+    ret
+CreateWaitHandle Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateMouseEvent
+;
+;       DESCRIPTION:    Create a mouse event
+;
+;		PARAMETERS:		EDI     Event buffer
+;                       AL      0 = peek, 1 = read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateMouseEvent Proc near
+    push eax
+    push ecx
+    push edx
+;
+	mov word ptr [edi].wMouseEventType, MOUSE_EVENT
+    xor eax,eax
+    UserGate get_left_button_nr
+    jc cmeLeftOk
+;
+    or al,1
+
+cmeLeftOk:
+    UserGate get_right_button_nr
+    jc cmeRightOk
+;
+    or al,2
+
+cmeRightOk:
+	mov [edi].dwButtonState,eax
+    mov edx,ButtonState
+    mov ButtonState,eax
+;
+    xor dl,al
+    test dl,1
+    jnz cmeLeftClick
+;
+    test dl,2
+    jnz cmeRightClick
+    jmp cmeMoved
+
+cmeLeftClick:
+	test al,1
+	jnz cmeLeftPress
+
+cmeLeftRel:
+	mov [edi].dwEventFlags, 0
+    UserGate get_left_button_release_position_nr
+   	shr ecx,3
 	shr edx,3
-;
-;	mov ebx,EventTail
-	mov esi,ebx
-	inc ebx
-	cmp ebx,MAX_INPUT_EVENTS
-	jne mhCircOk
-	xor ebx,ebx
-mhCircOk:
-	push eax
-	push edx
-	mov eax,INPUT_EVENT_SIZE
-	mul esi
-	mov esi,eax
-;	add esi,OFFSET EventBuf
-	pop edx
-	pop eax
-	mov word ptr [esi].wMouseEventType, MOUSE_EVENT
-;
-	cmp ax,CurrMouseButtons
-	je mhButtonsOk
-;
-	mov CurrMouseButtons,ax
-	mov [esi].dwEventFlags, 0
-	jmp mhFill
+	mov [edi].dwMousePosition.X, cx
+	mov [edi].dwMousePosition.Y, dx    
+	jmp cmeCommon
 
-mhButtonsOk:
-	cmp cx,CurrMouseX
-	jne mhNewPos
+cmeLeftPress:
+    UserGate get_left_button_press_position_nr
+   	shr ecx,3
+	shr edx,3
+	mov [edi].dwMousePosition.X, cx
+	mov [edi].dwMousePosition.Y, dx    
 ;
-	cmp dx,CurrMouseY
-	je mhDone
+    mov eax,ClickTime
+    or eax,ClickTime+4
+    jz cmeNoLeftClick
+;
+    test ClickButton,1
+    jz cmeNoLeftClick
+;
+    cmp cx,ClickX
+    jne cmeNoLeftClick
+;
+    cmp dx,ClickY
+    jne cmeNoLeftClick
+;
+    push edx
+    UserGate get_system_time_nr
+    sub eax,ClickTime
+    sbb edx,ClickTime+4
+    pop edx
+    jnz cmeNoLeftClick
+;
+    cmp eax,1193000 ; 1 second threshold
+    ja cmeNoLeftClick
+;
+	mov [edi].dwEventFlags, DOUBLE_CLICK
+	mov ClickTime,0
+	mov ClickTime+4,0
+	jmp cmeCommon
+    
+cmeNoLeftClick:
+    mov ClickX,cx
+    mov ClickY,dx
+    mov ClickButton,1
+    UserGate get_system_time_nr
+    mov ClickTime,eax
+    mov ClickTime+4,edx    
+	mov [edi].dwEventFlags, 0
+	jmp cmeCommon
 
-mhNewPos:
-	mov [esi].dwEventFlags, MOUSE_MOVED
+cmeRightClick:
+	test al,2
+	jnz cmeRightPress
 
-mhFill:
-	mov CurrMouseX,cx
-	mov CurrMouseY,dx
-	mov [esi].dwMousePosition.X, cx
-	mov [esi].dwMousePosition.Y, dx
-	movzx eax,ax
-	mov [esi].dwButtonState,eax
+cmeRightRel:
+	mov [edi].dwEventFlags, 0
+    UserGate get_right_button_release_position_nr
+   	shr ecx,3
+	shr edx,3
+	mov [edi].dwMousePosition.X, cx
+	mov [edi].dwMousePosition.Y, dx    
+	jmp cmeCommon
+
+cmeRightPress:
+    UserGate get_right_button_press_position_nr
+   	shr ecx,3
+	shr edx,3
+	mov [edi].dwMousePosition.X, cx
+	mov [edi].dwMousePosition.Y, dx    
+;
+    mov eax,ClickTime
+    or eax,ClickTime+4
+    jz cmeNoRightClick
+;
+    test ClickButton,2
+    jz cmeNoRightClick
+;
+    cmp cx,ClickX
+    jne cmeNoRightClick
+;
+    cmp dx,ClickY
+    jne cmeNoRightClick
+;
+    push edx
+    UserGate get_system_time_nr
+    sub eax,ClickTime
+    sbb edx,ClickTime+4
+    pop edx
+    jnz cmeNoRightClick
+;
+    cmp eax,1193000 ; 1 second threshold
+    ja cmeNoRightClick
+;
+	mov [edi].dwEventFlags, DOUBLE_CLICK
+	mov ClickTime,0
+	mov ClickTime+4,0
+	jmp cmeCommon
+    
+cmeNoRightClick:
+    mov ClickX,cx
+    mov ClickY,dx
+    mov ClickButton,2
+    UserGate get_system_time_nr
+    mov ClickTime,eax
+    mov ClickTime+4,edx    
+	mov [edi].dwEventFlags, 0
+	jmp cmeCommon
+
+cmeMoved:    
+	mov [edi].dwEventFlags, MOUSE_MOVED
+    UserGate get_mouse_position_nr
+    UserGate set_mouse_position_nr
+   	shr ecx,3
+	shr edx,3
+	mov [edi].dwMousePosition.X, cx
+	mov [edi].dwMousePosition.Y, dx
+
+cmeCommon:
 	UserGate get_keyboard_state_nr
 	call ConvertKeyboardState
-	mov [esi].dwKbControlKeyState,eax
-;	mov EventTail,ebx
-
-mhDone:
+	mov [edi].dwKbControlKeyState,eax
+	clc
+;
+    pop edx
+    pop ecx
+    pop eax
 	ret
-MouseHook Endp
+CreateMouseEvent Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateKeyboardEvent
+;
+;       DESCRIPTION:    Create a keyboard event
+;
+;		PARAMETERS:		EDI     Event buffer
+;                       AL      0 = peek, 1 = read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateKeyboardEvent Proc near
+    push eax
+    push ebx
+    push ecx
+    push edx
+;
+    or al,al
+    jz ckePeek
+
+ckeRead:
+    UserGate read_key_event_nr
+    jc ckeDone
+    jmp ckeCommon
+
+ckePeek:
+    UserGate peek_key_event_nr
+    jc ckeDone
+
+ckeCommon:
+	mov word ptr [edi].wKeyEventType, KEY_EVENT
+	test ah,80h
+	jnz ckeRel
+
+ckePress:
+	mov [edi].bKeyDown,1
+	jmp ckeDownOk
+
+ckeRel:
+	mov [edi].bKeyDown,0
+
+ckeDownOk:
+	mov [edi].wRepeatCount,1
+	movzx ebx,dl
+	mov [edi].wVirtualKeyCode,bx
+	movzx ebx,dh
+	and bl,NOT 80h
+	mov [edi].wVirtualScanCode,bx
+	movzx ebx,al
+	mov [edi].wAsciiChar,bx
+	mov ax,cx
+	call ConvertKeyboardState
+	mov [edi].dwControlKeyState,eax
+	clc
+
+ckeDone:
+    pop edx
+    pop ecx
+    pop ebx	
+    pop eax
+    ret
+CreateKeyboardEvent Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -283,8 +499,13 @@ MouseHook Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 EventCount	Proc near
-    UserGate peek_key_event_nr
-    jc ecNoKey
+    call CreateWaitHandle
+;
+    push ebx
+    mov bx,WaitHandle
+    UserGate is_wait_idle_nr
+    pop ebx
+    jnc ecNoKey
 ;
     mov eax,1
     jmp ecDone
@@ -311,46 +532,34 @@ EventCount	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PeekEvent	Proc near
-    push ebx
     push ecx
-    push edx
-;
-    xor eax,eax
     or ecx,ecx
-    jz peDone
+    jz peFail
 ;
-    UserGate peek_key_event_nr
-    jc peDone
+    call CreateWaitHandle
 ;
-	mov word ptr [edi].wKeyEventType, KEY_EVENT
-	test ah,80h
-	jnz peRel
+    push ebx
+    mov bx,WaitHandle
+    UserGate is_wait_idle_nr
+    pop ebx
+    jc peFail
+;
+    xor al,al
+    push OFFSET peCopied
+    push ecx
+    ret
 
-pePress:
-	mov [edi].bKeyDown,1
-	jmp peDownOk
-
-peRel:
-	mov [edi].bKeyDown,0
-
-peDownOk:
-	mov [edi].wRepeatCount,1
-	movzx ebx,dl
-	mov [edi].wVirtualKeyCode,bx
-	movzx ebx,dh
-	and bl,NOT 80h
-	mov [edi].wVirtualScanCode,bx
-	movzx ebx,al
-	mov [edi].wAsciiChar,bx
-	mov ax,cx
-	call ConvertKeyboardState
-	mov [edi].dwControlKeyState,eax
+peCopied:
+    jc peFail
+;
 	mov eax,1
+	jmp peDone
+
+peFail:
+    xor eax,eax
 
 peDone:
-    pop edx
     pop ecx
-    pop ebx
 	ret
 PeekEvent	Endp
 
@@ -369,46 +578,34 @@ PeekEvent	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadEvent	Proc near
-    push ebx
     push ecx
-    push edx
-;
-    xor eax,eax
     or ecx,ecx
-    jz reDone
+    jz reFail
 ;
-    UserGate read_key_event_nr
-    jc reDone
+    call CreateWaitHandle
 ;
-	mov word ptr [edi].wKeyEventType, KEY_EVENT
-	test ah,80h
-	jnz reRel
-
-rePress:
-	mov [edi].bKeyDown,1
-	jmp reDownOk
-
-reRel:
-	mov [edi].bKeyDown,0
-
-reDownOk:
-	mov [edi].wRepeatCount,1
-	movzx ebx,dl
-	mov [edi].wVirtualKeyCode,bx
-	movzx ebx,dh
-	and bl,NOT 80h
-	mov [edi].wVirtualScanCode,bx
-	movzx ebx,al
-	mov [edi].wAsciiChar,bx
-	mov ax,cx
-	call ConvertKeyboardState
-	mov [edi].dwControlKeyState,eax
-	mov eax,1
-
-reDone:
-    pop edx
-    pop ecx
+    push ebx
+    mov bx,WaitHandle
+    UserGate wait_no_timeout_nr
     pop ebx
+    jc reFail
+;
+    mov al,1
+    push OFFSET reCopied
+    push ecx
+    ret
+
+reCopied:
+    jc reFail
+;
+	mov eax,1
+	jmp reDone
+
+reFail:
+    xor eax,eax
+    
+reDone:
+    pop ecx
 	ret
 ReadEvent	Endp
 
@@ -451,10 +648,8 @@ InitConsole ENDP
 
 WriteConsole Proc near
 	push ebx
-	UserGate hide_mouse_nr
 	mov bx,1
 	UserGate write_file_nr
-	UserGate show_mouse_nr
 	pop ebx
 	ret
 WriteConsole ENDP
@@ -507,7 +702,6 @@ WriteConsoleA Proc near
 	push ebx
 	push edi
 ;
-	UserGate hide_mouse_nr
 	mov eax,[ebp].wcHandle
 	mov bx,ax
 	xor ax,ax
@@ -531,7 +725,6 @@ wcFailed:
 	xor eax,eax
 
 wcDone:
-	UserGate show_mouse_nr
 	pop edi
 	pop ebx
 	pop ebp
@@ -663,7 +856,7 @@ FillConsoleOutputAttribute Proc near
 	mov ebp,esp
 ;
 	int 3
-	UserGate hide_mouse_nr
+;
 	mov cx,[ebp].fcaCoordX
 	mov dx,[ebp].fcaCoordY
 	shr cx,3
@@ -683,8 +876,7 @@ fcaaloop:
 ;
 	dec ecx
 	jnz fcaaloop
-
-	UserGate show_mouse_nr
+;
 	mov eax,1
 ;
 	pop ebp
@@ -714,7 +906,6 @@ FillConsoleOutputCharacterA Proc near
 	mov ebp,esp
 ;
 	int 3
-	UserGate hide_mouse_nr
 	mov cx,[ebp].fccCoordX
 	mov dx,[ebp].fccCoordY
 	shr cx,3
@@ -730,8 +921,7 @@ fcacloop:
 	UserGate write_char_nr
 	dec ecx
 	jnz fcacloop
-
-	UserGate show_mouse_nr
+;
 	mov eax,1
 	ret 20
 FillConsoleOutputCharacterA ENDP
@@ -1133,6 +1323,35 @@ scmOutput:
 	jmp scmOk
 
 scmInput:
+    call CreateWaitHandle
+    test InputMode,ENABLE_MOUSE_INPUT
+    jz scmHidden
+;
+    test eax,ENABLE_MOUSE_INPUT
+    jnz scmShown
+;
+    UserGate hide_mouse_nr
+;
+    push ebx
+    mov bx,WaitHandle
+    mov ecx,OFFSET CreateMouseEvent
+    UserGate remove_wait_nr
+    pop ebx
+    jmp scmShown
+
+scmHidden:
+    test eax,ENABLE_MOUSE_INPUT
+    jz scmShown
+;
+    push ebx
+    mov bx,WaitHandle
+    mov ecx,OFFSET CreateMouseEvent
+    UserGate add_wait_for_mouse_nr
+    pop ebx
+;    
+    UserGate show_mouse_nr
+    
+scmShown:
 	mov InputMode,eax
 
 scmOk:

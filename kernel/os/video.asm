@@ -346,6 +346,36 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InvertMouse
+;
+;		DESCRIPTION:	Invert colors for mouse-pointer
+;
+;		PARAMETERS:		CX		COL (x)
+;						DX		ROW (y)
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+invert_mouse_name	DB 'InvertMouse',0
+
+invert_mouse	PROC far
+	push ds
+	push ax
+	mov ax,video_local_sel
+	mov ds,ax
+	pop ax
+	mov ds,ds:v_handle
+	call ds:read_char_proc
+	xchg bl,bh
+	call ds:write_char_proc
+	pop ds
+	ret
+invert_mouse	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SetCursorPosition
 ;
 ;		DESCRIPTION:	Set cursor position
@@ -724,11 +754,13 @@ get_char_attrib	PROC far
 	push cx
 	push dx
 ;
+    HideMouse
 	mov dx,video_thread_sel
 	mov ds,dx
 	mov dx,ds:vt_row
 	mov cx,ds:vt_col
 	CallVideo read_char_proc
+	ShowMouse
 ;
 	pop dx
 	pop cx
@@ -752,16 +784,12 @@ PAGE
 write_char_name	DB 'Write Char',0
 
 write_char	PROC far
-	cmp al,8
-	jnz wnd
-	int 3
-wnd:
-
 	push ds
 	push bx
 	push cx
 	push dx
 ;
+    HideMouse
 	mov bx,video_thread_sel
 	mov ds,bx
 	mov bl,ds:vt_forecolor
@@ -772,6 +800,7 @@ wnd:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	pop dx
 	pop cx
@@ -803,6 +832,7 @@ write_asciiz16	PROC far
 	push dx
 	push di
 ;
+    HideMouse
 	mov bx,video_thread_sel
 	mov ds,bx
 	mov bl,ds:vt_forecolor
@@ -823,6 +853,7 @@ write_asciiz_done16:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	pop di
 	pop dx
@@ -841,6 +872,7 @@ write_asciiz32	PROC far
 	push dx
 	push edi
 ;
+    HideMouse
 	mov bx,video_thread_sel
 	mov ds,bx
 	mov bl,ds:vt_forecolor
@@ -861,6 +893,7 @@ write_asciiz_done32:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	pop edi
 	pop dx
@@ -894,6 +927,7 @@ write_dos_string	PROC far
 	push dx
 	push edi
 ;
+    HideMouse
 	mov bx,video_thread_sel
 	mov ds,bx
 	mov bl,ds:vt_forecolor
@@ -914,6 +948,7 @@ write_dos_string_done:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	pop edi
 	pop dx
@@ -944,6 +979,7 @@ write_size_string16	PROC far
 	push ds
 	pusha
 ;
+    HideMouse
 	mov si,cx
 	mov bx,video_thread_sel
 	mov ds,bx
@@ -966,6 +1002,7 @@ write_size_string_done16:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	popa
 	pop ds
@@ -976,6 +1013,7 @@ write_size_string32	PROC far
 	push ds
 	pushad
 ;
+    HideMouse
 	mov esi,ecx
 	mov bx,video_thread_sel
 	mov ds,bx
@@ -998,6 +1036,7 @@ write_size_string_done32:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	popad
 	pop ds
@@ -2183,6 +2222,7 @@ read_video_attrib	PROC far
 	push bx
 	push cx
 	push dx
+	HideMouse
 	mov ax,video_thread_sel
 	mov ds,ax
 	mov dx,ds:vt_row
@@ -2191,6 +2231,7 @@ read_video_attrib	PROC far
 	mov ah,bh
 	shl ah,4
 	or ah,bl
+	ShowMouse
 	pop dx
 	pop cx
 	pop bx
@@ -2217,6 +2258,7 @@ write_ch_attr	PROC far
 	push ds
 	pusha
 ;
+    HideMouse
 	mov si,cx
 	mov dx,video_thread_sel
 	mov ds,dx
@@ -2241,6 +2283,7 @@ write_ch_attr_done:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	popa
 	pop ds
@@ -2266,6 +2309,7 @@ write_ch	PROC far
 	push ds
 	pusha
 ;
+    HideMouse
 	mov si,cx
 	mov dx,video_thread_sel
 	mov ds,dx
@@ -2287,6 +2331,7 @@ write_ch_done:
 	mov ds:vt_row,dx
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
+	ShowMouse
 ;
 	popa
 	pop ds
@@ -2315,6 +2360,7 @@ PAGE
 scroll_video_up	PROC far
 	pusha
 ;
+    HideMouse
 	movzx si,dl
 	movzx di,dh
 	movzx dx,ch
@@ -2335,6 +2381,7 @@ scroll_video_up_do:
 	CallVideo scroll_up_proc
 
 scroll_video_up_done:
+    ShowMouse
 	popa		
 	ret
 scroll_video_up	ENDP
@@ -2361,6 +2408,7 @@ PAGE
 scroll_video_down	PROC far
 	pusha
 ;
+    HideMouse
 	movzx si,dl
 	movzx di,dh
 	movzx dx,ch
@@ -2381,6 +2429,7 @@ scroll_video_down_do:
 	CallVideo scroll_down_proc
 
 scroll_video_down_done:
+    ShowMouse
 	popa		
 	ret
 scroll_video_down	ENDP
@@ -2539,6 +2588,8 @@ write_stg	PROC far
 	push es
 	push fs
 	pusha
+;
+    HideMouse
 	mov al,[bp+2].vm_eflags
 	test al,2
 	jz write_stg_pm
@@ -2568,6 +2619,7 @@ write_stg_do:
 ;
 	movzx di,byte ptr [bp].vm_eax
 	call cs:word ptr [di].write_stg_tab
+	ShowMouse
 ;
 	popa
 	pop fs
@@ -3059,6 +3111,12 @@ init	PROC far
 	mov di,OFFSET register_video_mode_name
 	xor cl,cl
 	mov ax,register_video_mode_nr
+	RegisterOsGate
+;
+	mov si,OFFSET invert_mouse
+	mov di,OFFSET invert_mouse_name
+	xor cl,cl
+	mov ax,invert_mouse_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_video_mode

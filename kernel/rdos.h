@@ -118,6 +118,16 @@ void __stdcall RdosDeleteSection(int Handle);
 void __stdcall RdosEnterSection(int Handle);
 void __stdcall RdosLeaveSection(int Handle);
 
+int __stdcall RdosCreateWait();
+void __stdcall RdosCloseWait(int Handle);
+void * __stdcall RdosCheckWait(int Handle);
+void * __stdcall RdosWaitForever(int Handle);
+void * __stdcall RdosWaitTimeout(int Handle, int MillSec);
+void __stdcall RdosStopWait(int Handle);
+void __stdcall RdosRemoveWait(int Handle, void *ID);
+void __stdcall RdosAddWaitForKeyboard(int Handle, void *ID);
+void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
+
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 

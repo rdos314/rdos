@@ -77,33 +77,12 @@ hide_marker	PROC near
 	or ax,ax
 	jz hide_marker_done
 ;
-	GetCursorPosition
-	push cx
-	push dx
+	test ah,80h
+	jnz hide_marker_done
 ;
-	mov ax,ds:m_horiz_pos
-	xor dx,dx
-	div ds:m_horiz_mickey
-	mov cx,ax
-;
-	mov ax,ds:m_vert_pos
-	xor dx,dx
-	div ds:m_vert_mickey
-	mov dx,ax
-;
-	SetCursorPosition
-	GetCharAttrib
-	push ax
-	mov al,bh
-	SetForeColor
-	mov al,bl
-	SetBackColor
-	pop ax
-	WriteChar
-;
-	pop dx
-	pop cx
-	SetCursorPosition
+    mov cx,ds:m_marker_x
+    mov dx,ds:m_marker_y
+    InvertMouse
 
 hide_marker_done:
 	pop dx
@@ -138,9 +117,8 @@ show_marker	PROC near
 	or ax,ax
 	jz show_marker_done
 ;
-	GetCursorPosition
-	push cx
-	push dx
+    test ah,80h
+    jnz show_marker_done
 ;
 	mov ax,ds:m_horiz_pos
 	xor dx,dx
@@ -152,19 +130,9 @@ show_marker	PROC near
 	div ds:m_vert_mickey
 	mov dx,ax
 ;
-	SetCursorPosition
-	GetCharAttrib
-	push ax
-	mov al,bh
-	SetForeColor
-	mov al,bl
-	SetBackColor
-	pop ax
-	WriteChar
-;
-	pop dx
-	pop cx
-	SetCursorPosition
+    mov ds:m_marker_x,cx
+    mov ds:m_marker_y,dx
+    InvertMouse
 
 show_marker_done:
 	pop dx
@@ -394,6 +362,8 @@ reset	PROC near
 	mov ds:m_cursor_flag,ax
 	mov ds:m_horiz_pos,ax
 	mov ds:m_vert_pos,ax
+	mov ds:m_marker_x,ax
+	mov ds:m_marker_y,ax
 	mov ds:m_botton_status,ax
 	mov ds:m_horiz_motion,ax
 	mov ds:m_vert_motion,ax
@@ -1190,12 +1160,14 @@ add_wait_for_mouse	PROC far
    	mov ax,SIZE mouse_wait_header - SIZE wait_obj_header
     mov di,OFFSET add_wait_tab
     AddWait
+    jc add_wait_done
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
 	mov eax,ds:m_counter
 	mov es:mw_counter,eax
-;
+
+add_wait_done:
     pop di
     pop eax
     pop es
@@ -1370,9 +1342,9 @@ mouse_thread_loop:
 	mov es,ax
 ;
 	WaitForSignal
-	call hide_marker
+;	call hide_marker
 	call refresh_mouse
-	call show_marker
+;	call show_marker
 	jmp mouse_thread_loop
 	ret
 mouse_thread	Endp

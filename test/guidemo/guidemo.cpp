@@ -7,6 +7,7 @@
 #include "bitdev.h"
 #include "videodev.h"
 #include "planthr.h"
+#include "waitdev.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -254,8 +255,11 @@ void cdecl main()
 	TGraphicDevice *bitmap;
 	TFont *font;
 	TPlanetThread *Planets;
+	TWait *Wait;
 
 	RdosWaitMilli(250);
+
+	Wait = new TWait();
 
 	vbe = new TVideoGraphicDevice(32, 800, 600);
 

@@ -395,6 +395,7 @@ PAGE
 
 read_char	Proc far
 	push ds
+	push dx
 	push edi
 ;
 	mov ax,80
@@ -411,6 +412,7 @@ read_char	Proc far
 	and bl,0Fh
 ;
 	pop edi
+	pop dx
 	pop ds
 	ret
 read_char	Endp

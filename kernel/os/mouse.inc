@@ -69,6 +69,9 @@ m_notify_thread	DW ?
 m_notify_sel	DW ?
 m_notify_offs	DD ?
 
+m_marker_x      DW ?
+m_marker_y      DW ?
+
 m_avail_obj		DW ?
 m_counter		DD ?
 

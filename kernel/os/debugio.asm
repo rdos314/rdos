@@ -218,6 +218,8 @@ debug_process:
 marker_loop:
 	call HandleKeyboard
 	call HandleMouse
+	GetMousePosition
+	SetMousePosition
 	jmp marker_loop
 
 init_debug_process	PROC far

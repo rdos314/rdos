@@ -1856,6 +1856,12 @@ UpdateMouse	MACRO
 	OsGate update_mouse_nr
 					ENDM
 
+;	CX		Delta X
+;	DX		Delta Y
+InvertMouse	MACRO
+	OsGate invert_mouse_nr
+					ENDM
+
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
 
 ;   AX      Port number

@@ -3,12 +3,12 @@
 #define _PLANTHR_H
 
 #include "planet.h"
-#include "threaddv.h"
+#include "device.h"
 #include "graphdev.h"
 
 #define MAX_PLANETS 1024
 
-class TPlanetThread : public TThreadDevice
+class TPlanetThread : public TDevice
 {
 public:
 	TPlanetThread(TGraphicDevice *dev, int PlanetCount);

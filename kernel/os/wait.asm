@@ -617,6 +617,76 @@ add_wait    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			RemoveWait
+;
+;		DESCRIPTION:    Remove a wait object
+;
+;       PARAMETERS:     BX      Wait handle
+;                       ECX     Signal ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_wait_name   DB 'Remove Wait', 0
+
+remove_wait    Proc far
+	push ds
+	push es
+	push ax
+	push ebx
+	push dx
+;
+	mov ax,WAIT_HANDLE
+	DerefHandle
+	jc remove_wait_done
+;
+    movzx ebx,bx
+    EnterSection ds:[ebx].wh_section
+;
+    xor dx,dx
+    mov ax,ds:[bx].wh_obj_list
+    
+remove_wait_loop:
+    or ax,ax
+    jz remove_wait_leave
+;
+    mov es,ax
+    cmp ecx,es:wo_id
+    je remove_wait_do
+;
+    mov dx,es
+    mov ax,es:wo_next
+    jmp remove_wait_loop
+
+remove_wait_do:
+    mov ax,es:wo_next
+    FreeMem
+    or dx,dx
+    jz remove_wait_head
+;
+    mov es,dx
+    mov es:wo_next,ax
+    jmp remove_wait_loop
+
+remove_wait_head:
+    mov ds:[bx].wh_obj_list,ax
+    jmp remove_wait_loop
+
+remove_wait_leave:
+    LeaveSection ds:[ebx].wh_section
+	clc
+
+remove_wait_done:
+    pop dx
+    pop ebx
+    pop ax
+    pop es
+	pop ds
+    retf32
+remove_wait    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SignalWait
 ;
 ;		DESCRIPTION:	Signal object
@@ -704,6 +774,12 @@ init	PROC far
 	mov di,OFFSET stop_wait_name
 	xor dx,dx
 	mov ax,stop_wait_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET remove_wait
+	mov di,OFFSET remove_wait_name
+	xor dx,dx
+	mov ax,remove_wait_nr
 	RegisterBimodalUserGate
 ;
 	popa

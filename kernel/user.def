@@ -268,5 +268,6 @@ peek_key_event_nr           = 240
 read_key_event_nr           = 241
 
 add_wait_for_mouse_nr		= 242
+remove_wait_nr              = 243
 
 usergate_entries			= 256

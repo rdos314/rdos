@@ -55,6 +55,9 @@ public:
 	void (*OnIdle)(TDevice *Device);
 	void (*OnBusy)(TDevice *Device);
 
+	void Run();
+	void Stop();
+
 protected:
 	int LoadProperty(const char *Name, int Def);
 	long LoadProperty(const char *Name, long Def);
@@ -66,6 +69,11 @@ protected:
 	virtual void Busy();
 	int IsReseted() const;
 	void ClearReset();
+
+	void Start(const char *ThreadName, int StackSize);
+	virtual void Execute();
+
+	int FInstalled;
 
 private:
 	void Init();
@@ -81,6 +89,7 @@ private:
 	int FOnline;
 	int FBusy;
 	int FReset;
+	int FThreadRunning;
 };
 
 #endif

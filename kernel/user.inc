@@ -369,16 +369,24 @@ StopWait	MACRO
 					ENDM
 
 ; IN  BX		Wait handle
+; IN  ECX       Object ID
+RemoveWait	MACRO
+	UserGate remove_wait_nr
+					ENDM
+
+; IN  BX		Wait handle
 CloseWait	MACRO
 	UserGate close_wait_nr
 					ENDM
 
 ; IN  BX		Wait handle
+; IN  ECX       Object ID
 AddWaitForKeyboard       MACRO
 	UserGate add_wait_for_keyboard_nr
 						ENDM
 
 ; IN  BX		Wait handle
+; IN  ECX       Object ID
 AddWaitForMouse       MACRO
 	UserGate add_wait_for_mouse_nr
 						ENDM
