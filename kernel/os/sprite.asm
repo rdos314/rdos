@@ -1628,6 +1628,54 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			hide_sprite_line
+;
+;		DESCRIPTION:    Hide a sprite line
+;
+;       PARAMETERS:     AX      size
+;                       CX      x
+;                       DX      y
+;                       ES:EDI  buffer
+;                       DS      bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hide_sprite_line_name   DB 'Hide Sprite Line', 0
+
+hide_sprite_line	Proc far
+    int 3
+    ret
+hide_sprite_line    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			show_sprite_line
+;
+;		DESCRIPTION:    Show a sprite line
+;
+;       PARAMETERS:     AX      size
+;                       CX      x
+;                       DX      y
+;                       ES:EDI  buffer
+;                       DS      bitmap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_sprite_line_name   DB 'Show Sprite Line', 0
+
+show_sprite_line	Proc far
+    int 3
+    ret
+show_sprite_line    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			Init
 ;
 ;		DESCRIPTION:	Init module
@@ -1674,6 +1722,18 @@ init_sprite	PROC near
 	xor dx,dx
 	mov ax,close_sprite_nr
 	RegisterBimodalUserGate
+;
+	mov si,OFFSET hide_sprite_line
+	mov di,OFFSET hide_sprite_line_name
+	xor cl,cl
+	mov ax,hide_sprite_line_nr
+	RegisterOsGate
+;
+	mov si,OFFSET show_sprite_line
+	mov di,OFFSET show_sprite_line_name
+	xor cl,cl
+	mov ax,show_sprite_line_nr
+	RegisterOsGate
 ;
 	ret
 init_sprite	ENDP

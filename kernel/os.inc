@@ -1801,6 +1801,20 @@ InitVideoBitmap	MACRO
 	OsGate init_video_bitmap_nr
 					ENDM
 
+;   IN  AX      size
+;   IN  CX      x
+;   IN  DX      y
+;   IN  ES:EDI  buffer
+;   IN  DS      bitmap
+HideSpriteLine	MACRO
+	OsGate hide_sprite_line_nr
+					ENDM
+
+;   IN  DS      bitmap
+ShowSpriteLine	MACRO
+	OsGate show_sprite_line_nr
+					ENDM
+
 ;;;;;;;;;; MOUSE ;;;;;;;;;
 
 InitMouse	MACRO

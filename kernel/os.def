@@ -345,5 +345,8 @@ init_video_bitmap_nr		EQU 254
 
 allocate_small_kernel_mem_nr EQU 255
 
-osgate_entries				EQU 256
+hide_sprite_line_nr         EQU 256
+show_sprite_line_nr         EQU 257
+
+osgate_entries				EQU 258
 
