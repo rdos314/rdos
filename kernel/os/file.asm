@@ -1953,6 +1953,34 @@ map_to_file	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			sync_memmap
+;
+;		DESCRIPTION:	Sync file region
+;
+;		PARAMETERS:		EAX			Offset within file
+;						BX			File handle
+;						EDX			Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public sync_memmap
+
+sync_memmap	Proc near
+	push ds
+	push es
+	pushad
+;
+    popad
+    pop es
+    pop ds
+    ret
+sync_memmap Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			Delete_handle

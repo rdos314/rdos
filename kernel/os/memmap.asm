@@ -386,6 +386,186 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SyncOnePage
+;
+;		DESCRIPTION:    DS:BX       Mapping handle
+;                       ES:EDX      Page table entry
+;                       EDI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncOnePage Proc near
+    ret
+SyncOnePage Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeView
+;
+;		DESCRIPTION:    DS:BX       Mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeView    Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+    push si
+    push edi
+;
+    mov si,bx
+    mov bx,ds:[si].map_file
+	add edi,ds:[si].view_offset
+	and di,0F000h
+	mov dx,ds:[si].memmap_sel
+	or dx,dx
+	stc
+	jz fw_done
+;
+	mov edx,ds:[si].view_size
+	or edx,edx
+	stc 
+	jz fw_done
+;	
+    xor ecx,ecx
+	xchg ecx,ds:[si].view_size
+	mov edx,ds:[si].view_base
+;
+	mov ax,process_page_sel
+	mov es,ax
+;
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
+	shr edx,10
+	shr ecx,12
+	mov eax,2
+
+fw_loop:
+	test byte ptr es:[edx],1
+	jz fw_next
+;
+	test word ptr es:[edx],800h
+	jnz fw_mark
+;
+	push eax
+	mov eax,es:[edx]
+	FreePhysical
+	pop eax
+
+fw_mark:
+    call SyncOnePage
+	mov es:[edx],eax
+
+fw_next:
+	add edi,1000h
+	add edx,4
+	loop fw_loop
+
+fw_done:
+    clc
+    pop edi
+    pop si
+    pop edx
+    pop ecx
+    pop bx
+    pop eax    
+    pop es
+    ret
+FreeView    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UpdateView
+;
+;		DESCRIPTION:    DS:BX       Mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateView    Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+    push edx
+    push si
+    push edi
+;
+    mov si,bx
+    mov bx,ds:[si].map_file
+    or bx,bx
+    jz uw_done
+;       
+	add edi,ds:[si].view_offset
+	and di,0F000h
+	mov dx,ds:[si].memmap_sel
+	or dx,dx
+	stc
+	jz uw_done
+;
+	mov edx,ds:[si].view_size
+	or edx,edx
+	stc 
+	jz uw_done
+;	
+	mov ecx,ds:[si].view_size
+	mov edx,ds:[si].view_base
+;
+	mov ax,process_page_sel
+	mov es,ax
+;
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
+	shr edx,10
+	shr ecx,12
+	mov eax,2
+
+uw_loop:
+	test byte ptr es:[edx],1
+	jz uw_next
+;
+	test word ptr es:[edx],800h
+	jz uw_next
+;
+    call SyncOnePage	
+
+uw_next:
+	add edi,1000h
+	add edx,4
+	loop uw_loop
+
+uw_done:
+    clc
+    pop edi
+    pop si
+    pop edx
+    pop ecx
+    pop bx
+    pop eax    
+    pop es
+    ret
+UpdateView    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			CloseMapped
 ;
 ;		DESCRIPTION:	ES			File mapping selector
@@ -812,6 +992,20 @@ PAGE
 sync_mapping_name DB 'Sync Mapping',0
 
 sync_mapping	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,MEMMAP_HANDLE
+	DerefHandle
+	jc sm_done
+;
+    call UpdateView
+
+sm_done:
+    pop bx
+    pop ax
+    pop ds
 	retf32
 sync_mapping	Endp
 
@@ -838,6 +1032,8 @@ close_mapping	Proc far
 	mov ax,MEMMAP_HANDLE
 	DerefHandle
 	jc cfm_done
+;
+    call FreeView
 ;
 	mov ax,fs_process_sel
 	mov es,ax
@@ -1135,68 +1331,19 @@ unmap_view_name DB 'Unmap View',0
 
 unmap_view	Proc far
 	push ds
-	push eax
+	push ax
 	push bx
-	push ecx
-	push edx
 ;
 	mov ax,MEMMAP_HANDLE
 	DerefHandle
 	jc ufm_done
 ;
-	mov dx,ds:[bx].memmap_sel
-	or dx,dx
-	stc
-	jz ufm_done
-;
-	mov edx,ds:[bx].view_size
-	or edx,edx
-	stc 
-	jz ufm_done
-;
-	xor ecx,ecx
-	xchg ecx,ds:[bx].view_size
-	mov edx,ds:[bx].view_base
-;
-	mov ax,process_page_sel
-	mov ds,ax
-;
-	add ecx,edx
-	and dx,0F000h
-	dec ecx
-	and cx,0F000h
-	add ecx,1000h
-	sub ecx,edx
-	shr edx,10
-	shr ecx,12
-	mov eax,2
-
-ufm_loop:
-	test byte ptr [edx],1
-	jz ufm_next
-;
-	test word ptr [edx],800h
-	jnz ufm_mark
-;
-	push eax
-	mov eax,[edx]
-	FreePhysical
-	pop eax
-
-ufm_mark:
-	mov [edx],eax
-
-ufm_next:
-	add edx,4
-	loop ufm_loop
-;
+    call FreeView
 	clc
 
 ufm_done:
-	pop edx
-	pop ecx
 	pop bx
-	pop eax
+	pop ax
 	pop ds
 	retf32
 unmap_view	Endp
@@ -1220,6 +1367,8 @@ delete_handle	Proc far
 	mov ax,MEMMAP_HANDLE
 	DerefHandle
 	jc delete_handle_done
+;
+    call FreeView
 ;
 	mov ax,fs_process_sel
 	mov es,ax

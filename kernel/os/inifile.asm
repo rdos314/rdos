@@ -129,6 +129,31 @@ open_sys_ini_test_file:
 	mov es,ax
 	mov di,OFFSET DefaultSysIniName
 	OpenFile
+	jnc open_sys_ini_done
+;
+	OpenSysEnv
+;
+	mov eax,1000h
+	AllocateGlobalMem
+	xor di,di
+;
+	mov ax,cs
+	mov ds,ax
+	mov si,OFFSET SysIniVar
+;
+	FindEnvVar
+	pushf
+	CloseEnv
+	popf
+	jc open_sys_ini_free
+;
+	xor cx,cx
+	CreateFile
+
+open_sys_ini_free:
+	pushf
+	FreeMem
+	popf
 
 open_sys_ini_done:
 	pop di
@@ -227,6 +252,429 @@ uiNoMem:
 	pop ds
 	ret
 UnlockIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindIniSection
+;
+;       DESCRIPTION:    Find current section
+;
+;		PARAMETERS:		DS:BX	    Handle data
+;
+;		RETURNS:	    EDI         Linear address to section
+;                       ECX         Size of section
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindIniSection Proc near
+    push ds
+    push es
+    push ax
+    push esi
+;
+	mov ax,flat_data_sel
+	mov es,ax
+	mov edi,ds:[bx].ih_base
+	mov ecx,ds:[bx].ih_file_size
+	mov ds,ds:[bx].ih_name_sel
+;	
+    or ecx,ecx
+    stc
+    jz FindIniSectionDone
+;
+    mov al,es:[edi]
+    cmp al,'['
+    jne FindIniSectionScan
+;
+    inc edi
+    dec ecx
+    jmp FindIniSectionCheck
+	
+FindIniSectionScan:
+	mov al,'['
+	repne scas byte ptr es:[edi]
+	cmp byte ptr es:[edi-1],'['
+	stc
+	jne FindIniSectionDone
+;	
+    mov al,es:[edi-2]
+    cmp al,0Dh
+    je FindIniSectionCheck
+    cmp al,0Ah
+    jne FindIniSectionScan
+
+FindIniSectionCheck:
+	xor esi,esi
+	repe cmps byte ptr ds:[esi],es:[edi]
+	dec esi
+	dec edi
+	inc ecx
+	lods byte ptr [esi]
+	or al,al
+	jne FindIniSectionScan
+;
+	mov al,es:[edi]
+	cmp al,']'
+	jne FindIniSectionScan
+;
+	inc edi
+	dec ecx
+;
+    push edi
+
+FindIniSectionNextSize:
+	mov al,'['
+	repne scas byte ptr es:[edi]
+    mov al,es:[edi-1]
+    cmp al,'['
+    jne FindIniSectionSize
+;
+    dec edi
+    mov al,es:[edi-1]
+    cmp al,0Dh
+    je FindIniSectionSize
+;
+    cmp al,0Ah
+    je FindIniSectionSize
+;
+    inc edi
+    jmp FindIniSectionNextSize
+
+FindIniSectionSize:
+	mov ecx,edi
+	pop edi
+	sub ecx,edi
+    clc
+
+FindIniSectionDone:
+    pop esi
+    pop ax
+    pop es
+    pop ds
+    ret
+FindIniSection Endp	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindIniKey
+;
+;       DESCRIPTION:    Find key in section
+;
+;		PARAMETERS:		FS:ESI      Key name
+;                       EDI         Start of section
+;                       ECX         Size of section
+;
+;       RETURNS:        EDI         Start of value
+;                       ECX         Remaining size of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindIniKey	Proc near
+    push es
+    push ax
+;
+    mov ax,flat_data_sel
+    mov es,ax
+	
+FindIniKeyControl:
+	mov al,es:[edi]
+	cmp al,0Dh
+	je FindIniKeyControlPass
+	cmp al,0Ah
+	je FindIniKeyControlPass
+	cmp al,' '
+	je FindIniKeyControlPass
+	cmp al,9
+	jne FindIniKeyScan
+	
+FindIniKeyControlPass:
+	inc edi
+	sub ecx,1
+	jnz FindIniKeyControl
+	stc
+	jmp FindIniKeyDone
+	
+FindIniKeyScan:
+	push esi
+	repe cmps byte ptr fs:[esi],es:[edi]
+	dec esi
+	dec edi
+	inc ecx
+	lods byte ptr fs:[esi]
+	pop esi
+	or al,al
+	jne FindIniKeyWrongName
+	
+FindIniKeySpacePass:
+	mov al,es:[edi]
+	cmp al,'='
+	je FindIniKeyCorrectName
+	cmp al,' '
+	je FindIniKeySpaceNext
+	cmp al,9
+	jne FindIniKeyWrongName
+
+FindIniKeySpaceNext:	
+	inc edi
+	sub ecx,1
+	jc FindIniKeyDone
+	jmp FindIniKeySpacePass
+	
+FindIniKeyWrongName:
+	mov al,es:[edi]
+	cmp al,0Dh
+	je FindIniKeyControl
+	inc edi	
+	sub ecx,1
+	jc FindIniKeyDone
+	jmp FindIniKeyWrongName
+	
+FindIniKeyCorrectName:
+	inc edi
+	sub ecx,1
+	jc FindIniKeyDone
+	jz FindIniKeyOk
+;
+    mov al,es:[edi]
+    cmp al,' '
+    je FindIniKeyCorrectName
+;
+    cmp al,9
+    je FindIniKeyCorrectName    
+    
+FindIniKeyOk:
+	clc
+	
+FindIniKeyDone:
+    pop ax
+    pop es
+	ret
+FindIniKey	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindKeySize
+;
+;       DESCRIPTION:    Find a size of key
+;
+;		PARAMETERS:		FS:ESI      Key name
+;                       EDI         Start of data
+;                       ECX         Remaining size of section
+;
+;       RETURNS:        ECX         Size of key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindKeySize	Proc near
+    push es
+    push ax
+    push esi
+    push edi
+;
+    push edi
+    mov ax,flat_data_sel
+    mov es,ax
+	
+FindKeySizeLoop:
+	mov al,es:[edi]
+	cmp al,0Dh
+	je FindKeyEndFound
+	cmp al,0Ah
+	je FindKeyEndFound
+;	
+	inc edi
+	sub ecx,1
+	jnz FindKeySizeLoop
+	
+FindKeyEndFound:
+    mov ecx,edi
+    pop eax
+    sub ecx,eax
+
+FindKeyBackLoop:
+    or ecx,ecx
+    jz FindKeySizeDone
+;
+    dec ecx
+    dec edi
+    mov al,es:[edi]
+    cmp al,' '
+    je FindKeyBackLoop
+;
+    cmp al,9
+    je FindKeyBackLoop
+;
+    inc ecx
+
+FindKeySizeDone:
+    pop edi
+    pop esi
+    pop ax
+    pop es
+	ret
+FindKeySize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateIniSection
+;
+;       DESCRIPTION:    Create current ini section
+;
+;		PARAMETERS:		DS:BX	    Handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIniSection Proc near
+    push ds
+    push es
+    pushad
+;
+    sub sp,4
+    mov bp,sp
+;    
+    mov si,bx
+    mov bx,ds:[si].ih_file_handle
+    GetFileSize
+    SetFilePos
+;
+    mov ax,ss
+    mov es,ax
+    mov di,bp   
+    mov byte ptr es:[di],'['
+    mov cx,1
+    WriteFile
+;
+    mov es,ds:[si].ih_name_sel
+   	mov ecx,ds:[si].ih_name_size
+   	dec ecx
+   	xor edi,edi
+   	UserGateForce32 write_file_nr
+;
+    mov ax,ss
+    mov es,ax
+    mov di,bp
+    mov al,']'
+    stosb
+    mov al,0Dh
+    stosb
+    mov al,0Ah
+    stosb
+;
+    mov di,bp
+    mov cx,3
+    WriteFile    
+;
+    add sp,4
+;
+    popad
+    pop es
+    pop ds
+    ret
+CreateIniSection Endp	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetIniFreeSize
+;
+;       DESCRIPTION:    Get free size of ini file
+;
+;		PARAMETERS:		DS:BX       Handle data
+;
+;       RETURNS:        ECX         Free size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIniFreeSize	Proc near
+    push es
+    push ax
+    push edx
+    push edi
+;
+    mov ax,flat_data_sel
+    mov es,ax
+
+	mov edi,ds:[bx].ih_base
+	mov edx,ds:[bx].ih_file_size
+;
+    add edi,edx
+;	
+    xor ecx,ecx
+
+gifLoop:
+    or edx,edx
+    jz gifDone
+;
+    dec edi
+    dec edx
+    inc ecx
+    mov al,es:[edi]
+    cmp al,' '
+    je gifLoop    
+;
+    dec ecx
+
+gifDone:  
+    pop edi
+    pop edx
+    pop ax
+    pop es
+	ret
+GetIniFreeSize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GrowIni
+;
+;       DESCRIPTION:    Grow ini file size
+;
+;		PARAMETERS:		DS:BX	    Handle data
+;                       ECX         Byte to add
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowIni Proc near
+    push es
+    pushad
+;
+    or ecx,ecx
+    jz giDone
+;    
+    push bx
+    call UnlockIni
+;    
+    mov si,bx
+    mov bx,ds:[si].ih_file_handle
+    GetFileSize
+    SetFilePos
+;
+    mov eax,ecx
+    AllocateSmallGlobalMem
+;
+    push ecx
+    xor edi,edi
+    mov al,' '
+    rep stos byte ptr es:[edi]
+    pop ecx
+;
+    xor edi,edi
+    UserGateForce32 write_file_nr
+    FreeMem
+;    
+    pop bx
+    call LockIni
+
+giDone:
+    popad
+    pop es
+    ret
+GrowIni Endp	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -484,7 +932,6 @@ close_ini	Endp
 goto_ini_section_name	DB 'Goto Ini Section', 0
 
 goto_ini_section	Proc near
-    int 3
     push ds
     push eax
     push bx
@@ -606,7 +1053,68 @@ remove_ini_section32  Endp
 read_ini_name	DB 'Read Ini', 0
 
 read_ini	Proc near
+    push ds
+    push fs
+    push eax
+    push bx
+    push esi
+;
+    push ecx
+    push edi
+    mov ax,ds
+    mov fs,ax
+;
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc riDone
+;
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
     stc
+    jz riDone
+;
+    call LockIni
+    call FindIniSection    
+    jc riDone
+;
+    call FindIniKey
+    jc riDone
+;
+    call FindKeySize
+    mov esi,edi
+    mov eax,ecx
+    pop edi
+    pop ecx
+    push ecx
+    push edi
+;
+    xchg eax,ecx
+    cmp ecx,eax
+    jb riCopy
+;
+    mov ecx,eax
+    dec ecx
+
+riCopy:
+	mov ax,flat_data_sel
+	mov fs,ax
+    rep movs byte ptr es:[edi],fs:[esi]
+    xor al,al
+    stos byte ptr es:[edi]
+    clc
+
+riDone:
+    pop edi
+    pop ecx
+    pushf
+    call UnlockIni
+    popf
+;    
+    pop esi
+    pop bx
+    pop eax
+    pop fs
+    pop ds
     ret
 read_ini    Endp
 
@@ -645,6 +1153,121 @@ read_ini32  Endp
 write_ini_name	DB 'Write Ini', 0
 
 write_ini	Proc near
+    int 3
+    push ds
+    push fs
+    pushad
+;
+    mov ebp,edi
+    push ecx
+    mov ax,ds
+    mov fs,ax
+;    
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc wiDone
+;
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
+    stc
+    jz wiDone
+;
+    call LockIni
+
+wiFindLoop:    
+    call FindIniSection    
+    jnc wiFindVar
+;
+    call UnlockIni
+    call CreateIniSection
+    call LockIni
+    call FindIniSection
+    jc wiDone
+
+wiFindVar:
+    call FindIniKey
+    jc wiAdd
+;
+    jmp wiDone
+
+wiAdd:
+    mov ecx,3
+    push esi
+    push ebp
+
+wiAddVarLoop:
+    mov al,fs:[esi]
+    or al,al
+    je wiAddBufLoop
+;
+    inc esi
+    inc ecx
+    jmp wiAddVarLoop
+
+wiAddBufLoop:
+    mov al,es:[ebp]
+    or al,al
+    je wiAddSizeOk
+;    
+    inc ebp
+    inc ecx
+    jmp wiAddBufLoop
+
+wiAddSizeOk:
+    pop ebp
+    pop esi
+;
+    mov eax,ecx
+    call GetIniFreeSize
+    xchg eax,ecx
+    cmp eax,ecx
+    jae wiAddDo
+;
+    sub ecx,eax
+    call GrowIni
+    jmp wiFindLoop
+
+wiAddDo:
+    mov edx,ecx
+    call FindIniSection
+    jc wiDone
+;    
+    add edi,ecx
+    push es
+    mov ax,flat_data_sel
+    mov es,ax
+    mov esi,ds:[bx].ih_base
+    add esi,ds:[bx].ih_file_size
+    dec esi
+    mov eax,esi
+    sub esi,edx
+    mov ecx,esi
+    sub ecx,edi
+    jc wiSyncFile
+;    
+    mov edi,eax
+    inc ecx
+    std
+    rep movs byte ptr es:[edi],es:[esi]
+    cld
+
+wiSyncFile:
+    pop es
+;
+    push bx
+    mov bx,ds:[bx].ih_mmap_handle
+    SyncMapping
+    pop bx
+
+wiDone:
+    pop ecx
+    pushf
+    call UnlockIni
+    popf
+;    
+    popad
+    pop fs
+    pop ds
     stc
     ret
 write_ini    Endp
@@ -697,409 +1320,6 @@ delete_ini32  Proc far
     retf32
 delete_ini32  Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindIniSection
-;
-;       DESCRIPTION:    Find section in .ini file
-;
-;		PARAMETERS:		BX			ini file handle
-;						DS:ESI		Section to find
-;						ES:EDI		Buffer
-;
-;		RETURNS:		EAX			Size of section
-;						EDX			File position
-;						NC			Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindIniSection	Proc near
-	mov eax,100h
-	AllocateGlobalMem
-	xor edx,edx
-FindIniSectionNext:
-	mov eax,edx
-	SetFilePos
-	mov cx,1000h
-	xor edi,edi
-	ReadFile
-	or ax,ax
-	stc
-	jz FindIniSectionDone
-	
-FindIniSectionScan:
-	mov cx,ax
-	mov al,'['
-	repne scasb
-	add edx,edi
-	cmp byte ptr es:[di-1],'['
-	je FindIniSectionTest
-;
-	mov eax,edx
-	SetFilePos
-	mov cx,1000h
-	xor di,di
-	ReadFile
-	or ax,ax
-	stc
-	jnz FindIniSectionScan
-	jmp FindIniSectionDone
-	
-FindIniSectionTest:
-	mov eax,edx
-	SetFilePos
-	mov cx,1000h
-	xor di,di
-	ReadFile
-	or ax,ax
-	stc
-	jz FindIniSectionDone
-;
-	push esi
-	repe cmps byte ptr ds:[esi],es:[edi]
-	dec esi
-	dec edi
-	lods byte ptr es:[esi]
-	or al,al
-	jne FindIniSectionWrongName
-;
-	mov al,es:[di]
-	cmp al,']'
-	jne FindIniSectionWrongName
-;
-	pop esi
-	inc di
-	add edx,edi
-	push edx
-FindIniSectionSize:
-	mov eax,edx
-	SetFilePos
-	mov cx,1000h
-	xor edi,edi
-	ReadFile
-	mov cx,ax
-	mov al,'['
-	repne scasb
-	add edx,edi
-	dec edx
-	or cx,cx
-	je FindIniSectionSize
-;
-	mov eax,edx
-	pop edx
-	sub eax,edx
-	clc
-	jmp FindIniSectionDone	
-	
-FindIniSectionWrongName:
-	pop esi
-	add edx,edi
-	inc edx
-	jmp FindIniSectionNext
-	
-FindIniSectionDone:
-	pushf
-	FreeMem
-	popf
-	ret
-FindIniSection	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           FindIniKey
-;
-;       DESCRIPTION:    Find key in section
-;
-;		PARAMETERS:		BX			ini file handle
-;						DS:ESI		Key to find
-;						EDX			File position
-;						EAX			Size of section
-;						ES:EDI		Key value
-;						NC			Success
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FindIniKey	Proc near
-	mov ecx,eax
-	AllocateGlobalMem
-	mov eax,edx
-	SetFilePos
-	xor edi,edi
-	ReadFile	
-	
-FindIniKeyControl:
-	mov al,es:[edi]
-	cmp al,0Dh
-	je FindIniKeyControlPass
-	cmp al,0Ah
-	je FindIniKeyControlPass
-	cmp al,' '
-	je FindIniKeyControlPass
-	cmp al,9
-	jne FindIniKeyScan
-	
-FindIniKeyControlPass:
-	inc edi
-	sub ecx,1
-	jne FindIniKeyControl
-	stc
-	jmp FindIniKeyDone
-	
-FindIniKeyScan:
-	push esi
-	repe cmps byte ptr ds:[esi],es:[edi]
-	dec esi
-	dec edi
-	inc ecx
-	lods byte ptr ds:[esi]
-	pop esi
-	or al,al
-	jne FindIniKeyWrongName
-	
-FindIniKeySpacePass:
-	mov al,es:[edi]
-	cmp al,'='
-	je FindIniKeyCorrectName
-	cmp al,' '
-	je FindIniKeySpacePass
-	cmp al,9
-	jne FindIniKeyWrongName
-;	
-	inc edi
-	sub ecx,1
-	jc FindIniKeyDone
-	jmp FindIniKeySpacePass
-	
-FindIniKeyWrongName:
-	mov al,es:[edi]
-	cmp al,0Dh
-	je FindIniKeyControl
-	inc edi	
-	sub ecx,1
-	jc FindIniKeyDone
-	jmp FindIniKeyWrongName
-	
-FindIniKeyCorrectName:
-	inc edi
-	clc
-FindIniKeyDone:
-	ret
-FindIniKey	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			GetIniInt
-;
-;		DESCRIPTION:	Read ini file key as integer
-;
-;		PARAMETERS:		ES:DI	String
-;						(E)AX	Size of section
-;						AX		Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetIniInt	PROC near
-	push bx
-	mov bx,ax
-	xor ax,ax
-	xor ch,ch
-GetIniIntPass:
-	mov cl,es:[di]
-	inc di
-	sub bx,1
-	jz GetIniIntEnd
-	cmp cl,' '
-	je GetIniIntPass
-	cmp cl,'	'
-	je GetIniIntPass
-	cmp cl,'+'
-	je GetIniIntPass
-	cmp cl,'-'
-	jne GetIniIntDecode
-	mov ch,80h
-	jmp GetIniIntPass
-GetIniIntDecode:
-	dec di
-	inc bx
-GetIniIntLoop:
-	mov cl,es:[di]
-	sub cl,30h
-	jc GetIniIntEnd
-	cmp cl,0Ah
-	jnc GetIniIntEnd
-	mov dx,10
-	mul dx
-	add al,cl
-	adc ah,0
-	inc di
-	sub bx,1
-	jnz GetIniIntLoop
-GetIniIntEnd:
-	test ch,80h
-	jz GetIniIntPos
-	neg ax
-GetIniIntPos:
-	pop bx
-	ret
-GetIniInt	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetProfileInt
-;
-;       DESCRIPTION:    Get .ini file integer
-;
-;		PARAMETERS:		AppName		name of section
-;						KeyName		name of key
-;						Default		default value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		public GetProfileInt
-
-GetProfileInt	Proc far
-	push bp
-	mov bp,sp
-	push ds
-	push es
-	push si
-	push di
-	call OpenSystemIni
-	lds si,[bp+12]
-	call FindIniSection
-	jc GetProfileIntSectionFail
-	lds si,[bp+8]
-	call FindIniKey
-	jc GetProfileIntKeyFail
-	call GetIniInt
-	FreeMem
-	jmp GetProfileIntEnd
-GetProfileIntKeyFail:
-	FreeMem
-GetProfileIntSectionFail:
-	mov ax,[bp+6]
-GetProfileIntEnd:
-	push ax
-	CloseFile
-	pop ax
-	pop di
-	pop si
-	pop es
-	pop ds
-	pop bp
-	ret 10
-GetProfileInt	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           GetProfileString
-;
-;       DESCRIPTION:    Get .ini file string
-;
-;		PARAMETERS:		AppName		name of section
-;						KeyName		name of key
-;						Default		default value
-;						ReturnedStr	returned string
-;						Size		size of ReturnedStr string 
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		public GetProfileString
-
-GetProfileString	Proc far
-	push bp
-	mov bp,sp
-	push ds
-	push es
-	push si
-	push di
-	call OpenSystemIni
-	lds si,[bp+20]
-	call FindIniSection
-	jc GetProfileStringSectionFail
-	lds si,[bp+16]
-	call FindIniKey
-	jc GetProfileStringKeyFail
-	mov cx,ax
-	xor dx,dx
-	cmp cx,[bp+6]
-	jc GetProfileStringWhole
-	mov cx,[bp+6]
-	dec cx
-GetProfileStringWhole:
-	push es
-	mov ax,es
-	mov ds,ax
-	mov si,di
-	les di,[bp+8]
-GetProfileStringCopy:
-	lodsb
-	cmp al,0Dh
-	je GetProfileStringCopied
-	cmp al,0Ah
-	je GetProfileStringCopied
-	inc dx
-	stosb
-	loop GetProfileStringCopy
-GetProfileStringCopied:
-	xor ax,ax
-	stosb
-	mov ds,ax
-	pop es
-	FreeMem
-	jmp GetProfileStringEnd
-GetProfileStringKeyFail:
-	FreeMem
-GetProfileStringSectionFail:
-	lds si,[bp+12]
-	les di,[bp+8]
-	mov cx,[bp+6]
-	dec cx
-	xor dx,dx
-GetProfileStringDefault:
-	lodsb
-	stosb
-	or al,al
-	je GetProfileStringEnd
-	inc dx
-	loop GetProfileStringDefault
-GetProfileStringEnd:
-	CloseFile
-	mov ax,dx
-	pop di
-	pop si
-	pop es
-	pop ds
-	pop bp
-	ret 18
-GetProfileString	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
-;       NAME:           WriteProfileInt
-;
-;       DESCRIPTION:    Write .ini file string
-;
-;		PARAMETERS:		AppName		name of section
-;						KeyName		name of key
-;						Value		value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		public WriteProfileString
-
-WriteProfileString	Proc far
-	xor ax,ax
-	ret 12
-WriteProfileString	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
