@@ -301,7 +301,9 @@ WriteSizeString	PROC near
     push di
 
 WriteSizeStringLoop:
+	mov al,es:[di]
     call WriteChar
+	inc di
     loop WriteSizeStringLoop
 
 WriteSizeStringDone:
@@ -479,7 +481,6 @@ write_fault_reason:
 	call WriteSizeString
 	mov ax,gs:tss_error_code
 	and ax,0FFF8h
-	mov cl,11
 	call WriteHexWord
 write_fault_end:
 	ret
@@ -577,12 +578,16 @@ abort_pretask:
 	mov dword ptr es:tss_eip,eax
 	mov eax,[bp].vm_eflags
 	mov dword ptr es:tss_eflags,eax
+	mov ax,[bp].vm_err
+	mov word ptr es:tss_error_code,ax
 	mov eax,[bp].vm_eax
 	mov dword ptr es:tss_eax,eax
 	mov dword ptr es:tss_ecx,ecx
 	mov dword ptr es:tss_edx,edx
 	mov eax,[bp].vm_ebx
 	mov dword ptr es:tss_ebx,eax
+	mov ax,[bp].vm_bp
+	mov word ptr es:tss_ebp,ax
 	movzx eax,bp
 	add eax,18
 	mov dword ptr es:tss_esp,eax
@@ -614,11 +619,12 @@ abort_fatal_write:
 	add di,ax
 	mov ax,cs
 	mov es,ax
+	call WriteCRLF
 	add di,OFFSET error_code_tab
 	mov cx,24
 	call WriteSizeString
-	call WriteCRLF
-	call WriteCRLF
+	mov al,' '
+	call WriteChar
 	call WriteFault
 	call WriteCRLF
 ;
@@ -639,6 +645,8 @@ abort_fatal_write:
 	mov es,ax
 	mov di,OFFSET word_reg_tab
 	call WriteWordReg
+	call WriteCRLF
+
 halt_sys:
 	jmp halt_sys
 	

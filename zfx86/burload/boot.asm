@@ -556,18 +556,24 @@ GetAdapterSearch:
 	mov eax,[esi]
 	cmp eax,RdosSign
 	je GetAdapterFound
+
 GetAdapterNext:
 	add esi,1000h
+	jc GetAdapterDone
+;
 	cmp esi,edi
 	jb GetAdapterSearch
 	stc
 	jmp GetAdapterDone
+
 GetAdapterCorrupt:
 	pop esi
 	jmp GetAdapterNext
+
 GetAdapterFound:
 	push esi
 	xor ecx,ecx
+
 GetAdapterNextDriver:
 	cmp [esi].sign,RdosSign
 	je GetAdapterSignOk
@@ -580,6 +586,7 @@ GetAdapterNextDriver:
 GetAdapterSignOk:
 	cmp [esi].typ,RdosEnd
 	je GetAdapterOk
+;
 	mov edx,[esi].len
 	add ecx,edx
 	cmp ecx,1000000h
@@ -591,26 +598,32 @@ GetAdapterSignOk:
 	jmp GetAdapterCorrupt
 	
 GetAdapterSizeOk:
-	xor ax,ax
 	push ecx
 	push esi
 	mov ecx,edx
 	add esi,SIZE rdos_header
 	sub ecx,SIZE rdos_header
 	jz GetAdapterCrcDone
+;
+	xor ax,ax
+
 GetAdapterCrcLoop:
 	call CalcCrc
 	sub ecx,1
 	jnz GetAdapterCrcLoop
+
 GetAdapterCrcDone:
 	pop esi
 	pop ecx
 	cmp ax,[esi].crc
 	je GetAdapterCrcOk
+;
 	jmp GetAdapterCorrupt
+
 GetAdapterCrcOk:
 	add esi,edx
 	jmp GetAdapterNextDriver
+
 GetAdapterOk:
 	pop esi
 	clc
@@ -622,44 +635,12 @@ GetAdapter  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AdapterCrc
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:     ESI     Adapter base
-;                       ECX     Size of adapter
-;
-;		RETURNS:		AX		Adapter CRC
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AdapterCrc  Proc near
-	push ds
-	mov ax,flat_sel
-	mov ds,ax
-	xor ax,ax
-	push ecx
-	push esi
-AdapterCrcLoop:
-	call CalcCrc
-	sub ecx,1
-	jnz AdapterCrcLoop
-	pop esi
-	pop ecx
-	pop ds
-	ret
-AdapterCrc  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			AddAdapter
 ;
 ;		DESCRIPTION:
 ;
 ;		PARAMETERS:     ESI     Adapter base
 ;						ECX     Size of adapter
-;                       AX		Adapter CRC
 ;						BX		Current Adapter record
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -667,27 +648,14 @@ AdapterCrc  Endp
 AddAdapter	Proc near
 	push dx
 	push di
+;
 	add ecx,SIZE rdos_header
-	mov di,OFFSET rom_adapters
-	mov dx,ds:rom_modules
-AddAdapterCheck:
-	or dx,dx
-	jz AddAdapterDo
-	cmp ecx,[di].adapter_size
-	jne AddAdapterCheckNext
-	cmp ax,[di].adapter_crc
-	je AddAdapterEnd
-AddAdapterCheckNext:
-	dec dx
-	add di,SIZE adapter_typ
-	jmp AddAdapterCheck
-AddAdapterDo:
     inc ds:rom_modules
     mov [bx].adapter_base,esi
     mov [bx].adapter_size,ecx
-    mov [bx].adapter_crc,ax
+    mov [bx].adapter_crc,0
     add bx,SIZE adapter_typ
-AddAdapterEnd:
+;
 	pop di
 	pop dx
 	ret
@@ -710,16 +678,18 @@ GetAllAdapters  Proc near
 	add edi,esi
     mov ds:rom_modules,0
     mov bx,OFFSET rom_adapters
+
 get_adapters_loop:
     call GetAdapter
     jc get_adapters_done
-	call AdapterCrc
+;
 	call AddAdapter
     add esi,ecx
     dec esi
     and si,0F000h
     add esi,1000h
     jmp get_adapters_loop
+
 get_adapters_done:
     ret
 GetAllAdapters  Endp
@@ -745,23 +715,29 @@ StartShutDownDevice	Proc near
 	mov bx,OFFSET rom_adapters
 	or cx,cx
 	jz StartShutDeviceEnd
+
 StartShutAdapterLoop:
 	push bx
 	push cx
 	mov esi,[bx].adapter_base
+
 StartShutDeviceLoop:
 	cmp es:[esi].typ,RdosShutDown
 	je StartShutDeviceDo
+;
 	cmp es:[esi].typ,RdosEnd
 	je StartShutNextAdapter
+;
 	add esi,es:[esi].len
 	jmp StartShutDeviceLoop
+
 StartShutNextAdapter:
 	pop cx
 	pop bx
 	add bx,SIZE adapter_typ
 	loop StartShutAdapterLoop
 	jmp StartShutDeviceEnd
+
 StartShutDeviceDo:
 	pop cx
 	pop bx
@@ -789,19 +765,24 @@ StartShutDeviceDo:
 	xor al,al
 	mov [bx+6],ax
 	retf
+
 StartShutDeviceInitied:
 	mov ax,gdt_sel
 	mov ds,ax
 	mov bx,idt_sel
-	mov eax,[bx+2]
-	sub eax,OFFSET rom_idt
+	mov ax,10h*8-1
+	mov [bx],ax
+	mov eax,0FFFFFFF0h
+	sub eax,OFFSET boot_vect
 	add eax,OFFSET boot_idt
 	mov [bx+2],eax
+	db 66h
 	lidt [bx]
+;
 	popad
 	pop es
 	pop ds
-;
+
 StartShutDeviceEnd:	
 	ret
 StartShutDownDevice	Endp
@@ -856,45 +837,37 @@ GetBootDeviceEnd:
 	ret
 GetBootDevice	Endp
 
-rom_gdt:
-gdt0:
-	dw 0
-	dd 0
-	dw 0
-gdt8:
-	dw 10h*8-1
-	dd 920F0000h + OFFSET rom_idt
-	dw 0
-gdt10:
-	dw 28h-1
-	dd 920F0000h + OFFSET rom_gdt
-	dw 0
-gdt18:
-	dw 0FFFFh
-	dd 9A0F0000h
-	dw 0
-gdt20:
-	dw 0FFFFh
-	dd 92000000h
-	dw 8Fh
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Boot idt
+;
+;		DESCRIPTION:    exception handlers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-rom_idt:
-	BootIdtEntry Boot0
-	BootIdtEntry Boot1
-	BootIdtEntry Boot2
-	BootIdtEntry Boot3
-	BootIdtEntry Boot4
-	BootIdtEntry Boot5
-	BootIdtEntry Boot6
-	BootIdtEntry Boot7
-	BootIdtEntry Boot8
-	BootIdtEntry Boot9
-	BootIdtEntry BootA
-	BootIdtEntry BootB
-	BootIdtEntry BootC
-	BootIdtEntry BootD
-	BootIdtEntry BootE
-	BootIdtEntry BootF
+BootExceptionOnePar	MACRO Entry
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,Entry
+	ShutDownPreTask
+				ENDM
+
+BootExceptionNoPar	MACRO Entry
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,Entry
+	ShutDownPreTask
+				ENDM
 
 Boot0:
 	BootExceptionNoPar 0
@@ -944,112 +917,30 @@ BootE:
 BootF:
 	BootExceptionNoPar 0Fh
 
+BootIdtEntry		MACRO Offs
+	dw OFFSET Offs
+	dw device_code_sel
+	dw 8E00h
+	dw 0
+					ENDM
 
-init:
-    mov ax,flat_sel
-    mov ds,ax
-    mov es,ax
-    mov fs,ax
-    mov gs,ax
-    mov ss,ax
-;
-    xor esi,esi
-    FindRam
-    mov edx,esi
-    mov edi,esi
-    xor esi,esi
-    mov ax,gdt_sel
-    mov ds,ax
-    mov ecx,2*5
-    rep movs dword ptr es:[edi],[esi]
-    mov ax,flat_sel
-    mov ds,ax
-    mov esi,edx
-    mov ebx,gdt_sel
-    add ebx,esi
-    mov word ptr [ebx],0FFFh
-    mov [ebx+2],esi
-    mov byte ptr [ebx+5],92h
-    mov word ptr [ebx+6],0
-    lgdt [esi+gdt_sel]
-;
-    FindRam
-    mov ax,gdt_sel
-    mov ds,ax
-    mov bx,system_data_sel
-    mov word ptr [bx],0FFFh
-    mov [bx+2],esi
-    mov byte ptr [bx+5],92h
-    mov word ptr [bx+6],0
-;
-    mov ax,system_data_sel
-    mov ds,ax
-    mov ds:alloc_base,esi
-	mov ds:ram1_size,0A0000h
-	mov ds:ram2_base,100000h
-	mov eax,cs:code_base
-	mov ds:rom1_base,eax
-	sub eax,ds:ram2_base
-	mov ds:ram2_size,eax
-	mov eax,cs:code_size
-	mov ds:rom1_size,eax
-	mov ds:rom2_size,0
-	mov ds:rom_shadow,0
-;
-    mov ax,gdt_sel
-    mov ss,ax
-    mov sp,1000h
-;
-    call GetAllAdapters
-	call StartShutDownDevice
-	call GetBootDevice
-	jnc DoBoot
-;
-    call InitSerial
-    mov si,OFFSET NoBootText
-    call WriteRomString
-DoStop:
-	jmp DoStop
-	
-DoBoot:
-	push esi
-	mov ax,flat_sel
-	mov ds,ax
-	mov ax,gdt_sel
-	mov es,ax
-;
-	mov ebx,0B8000h
-	mov ax,720h
-GetVideoLoop:
-	mov [ebx],ax
-	cmp ax,[ebx]
-	je GetVideoSel
-	mov ebx,0B0000h
-GetVideoSel:
-	mov si,dosB800
-	mov word ptr es:[si],0FFFh
-	mov es:[si+2],ebx
-	mov byte ptr es:[si+5],92h
-	mov word ptr es:[si+6],0
-
-GetVideoDone:
-	pop esi
-	push kernel_code
-	mov ecx,[esi].len
-	add esi,SIZE rdos_header
-	push [esi].init_ip
-	add esi,SIZE device_header
-	mov ax,gdt_sel
-	mov ds,ax
-	dec cx
-	mov bx,kernel_code
-	mov [bx],cx
-	mov [bx+2],esi
-	mov ah,9Ah
-	xchg ah,[bx+5]
-	xor al,al
-	mov [bx+6],ax
-	retf
+boot_idt:
+	BootIdtEntry Boot0
+	BootIdtEntry Boot1
+	BootIdtEntry Boot2
+	BootIdtEntry Boot3
+	BootIdtEntry Boot4
+	BootIdtEntry Boot5
+	BootIdtEntry Boot6
+	BootIdtEntry Boot7
+	BootIdtEntry Boot8
+	BootIdtEntry Boot9
+	BootIdtEntry BootA
+	BootIdtEntry BootB
+	BootIdtEntry BootC
+	BootIdtEntry BootD
+	BootIdtEntry BootE
+	BootIdtEntry BootF
 
 PAGE
 
@@ -1061,8 +952,6 @@ PAGE
 ;		DESCRIPTION:    Init RDOS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OkText DB 'Everything is OK',0
 
 InitRdos:
     xor esi,esi
@@ -1105,6 +994,40 @@ rdos_startup:
     mov ax,gdt_sel
     mov ss,ax
     mov sp,1000h
+;
+	add esi,1000h
+	push esi
+	mov ax,cs
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,esi
+	xor esi,esi
+	mov ecx,OFFSET boot_vect + 10h
+	push cx
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop cx
+	and ecx,3
+	rep movs byte ptr es:[edi],[esi]
+	pop esi
+;
+	mov ax,gdt_sel
+	mov ds,ax
+	mov bx,device_code_sel
+	mov al,[bx+5]
+	mov [bx+2],esi
+	mov [bx+5],al
+	mov word ptr [bx+6],0
+	db 0EAh
+	dw OFFSET ram_startup
+	dw device_code_sel
+
+ram_startup:
+    mov ax,system_data_sel
+    mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
 ;
 	xor edi,edi
 	ReadNB 20Fh
@@ -1196,36 +1119,50 @@ size_flash_found:
 	sub esi,edi
 	dec edi
 ;
-; cannot do this yet!!
-; 
-;	WriteZflDword 26h, esi
 ;	WriteZflDword 2Ah, edi 
+;	WriteZflDword 26h, esi
 ;
 	inc edi
 	or esi,0FF000000h
 	mov eax,dword ptr cs:adapter_start
 	mov ds:rom1_base,eax
 	neg eax
+	sub eax,OFFSET boot_vect + 10h
 	mov ds:rom1_size,eax
 ;
 	mov ds:rom2_size,0
 	mov ds:rom_shadow,1
 ;
-    call InitSerial
-    mov al,'A'
-    call WriteChar
-    call GetAllAdapters
-    mov al,'B'
-    call WriteChar
-	call StartShutDownDevice
-    mov al,'C'
-    call WriteChar
-	call GetBootDevice
-    mov al,'D'
-    call WriteChar
+	mov eax,cr0
+	and eax,NOT 60000000h
+	mov cr0,eax
 ;
-    mov ax,1234h
-    mov ds,ax
+	xor eax,eax
+	mov cr3,eax
+;
+    call GetAllAdapters
+	call StartShutDownDevice
+	call GetBootDevice
+;
+	int 3
+	mov ax,flat_sel
+	mov ds,ax
+	push kernel_code
+	mov ecx,[esi].len
+	add esi,SIZE rdos_header
+	push [esi].init_ip
+	add esi,SIZE device_header
+	mov ax,gdt_sel
+	mov ds,ax
+	dec cx
+	mov bx,kernel_code
+	mov [bx],cx
+	mov [bx+2],esi
+	mov ah,9Ah
+	xchg ah,[bx+5]
+	xor al,al
+	mov [bx+6],ax
+	retf
 
 PAGE
 
@@ -1925,7 +1862,7 @@ prot_init:
     WritePciDword 0, 12h, 0, 40h, edi
 ;    
     WritePciDword 0, 12h, 0, 10h, 00008101h
-    WritePciDword 0, 12h, 0, 50h, 029A557Bh
+    WritePciDword 0, 12h, 0, 50h, 029A5578h
 ;
     ReadPciDword 0, 12h, 0, 58h
     and eax,0FFFFh
@@ -2041,10 +1978,9 @@ DefaultInt:
 	mov di,OFFSET ExceptionText
 	jmp FatalError
 
-
 ; this must always reside at FFFFFF50, and should always be 128 bytes long!!
 
-boot_idt:
+rom_idt:
 	DefaultIdtEntry
 	DefaultIdtEntry
 	DefaultIdtEntry
