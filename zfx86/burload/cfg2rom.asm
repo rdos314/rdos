@@ -1331,61 +1331,6 @@ CloseFiles   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			PatchBoot
-;
-;		DESCRIPTION:	Patch some startup-locations
-;
-;       PARAMETERS:     ECX     Size of boot file
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PatchBoot  Proc near
-    push ds
-    pusha
-;
-    mov dx,SEG buf
-    mov ds,dx
-    mov bx,OFFSET buf
-    add bx,cx
-    inc bx
-    mov dx,[bx-1Eh]
-    neg dx
-    add dx,0FFF0h
-    mov [bx-1Eh],dx
-;
-    popa
-    pop ds
-    ret
-PatchBoot  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OutputBoot
-;
-;		DESCRIPTION:	Write boot buffer to ROM file
-;
-;       PARAMETERS:     ECX     Size of buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-OutputBoot  Proc near
-    push ds
-    pusha
-    mov bx,rom_handle
-    mov dx,SEG buf
-    mov ds,dx
-    mov dx,OFFSET buf
-    mov ah,40h
-    int 21h
-    popa
-    pop ds
-    ret
-OutputBoot  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			LoadBoot
 ;
 ;		DESCRIPTION:	Load boot file
@@ -1422,10 +1367,9 @@ load_boot_ok:
 	mov cx,1Ch
 	mov ah,3Fh
 	int 21h
-	push bx
     mov ax,ds:exeh_ip
-    mov bx,OFFSET buf
-    mov [bx].init_ip,ax
+	push ax
+	push bx
 	xor eax,eax
 	xor ebx,ebx
 	mov ax,ds:exeh_size_msb
@@ -1440,12 +1384,11 @@ load_boot_ok:
 	sub eax,ebx
 	add ax,ds:exeh_minalloc
 	pop bx
-	push ax
 	xor cx,cx
 	mov ax,4200h
 	int 21h
 	pop cx
-	shl cx,4
+	add cx,10h
 	mov dx,OFFSET buf
 	mov ah,3Fh
 	int 21h
@@ -1453,11 +1396,39 @@ load_boot_ok:
 	mov ah,3Eh
 	int 21h
 ;
+    mov si,OFFSET buf
+    add si,cx
+    mov ax,[si-1Eh]
+    neg ax
+    add ax,0FFF0h
+    mov [si-1Eh],ax
+;
     mov bx,SEG _data
     mov ds,bx
         assume ds:_data
-    call PatchBoot
-    call OutputBoot
+    mov bx,rom_handle
+;
+	push cx
+	xor cx,cx
+	xor dx,dx
+	mov ax,4202h
+	int 21h
+	push dx
+	push ax
+	pop edx
+	pop cx
+	add edx,ecx
+;
+    mov ax,SEG buf
+    mov ds,ax
+	mov si,OFFSET buf
+	add si,cx
+	neg edx
+	mov [si-4],edx
+;
+    mov dx,OFFSET buf
+    mov ah,40h
+    int 21h
     
 load_boot_done:
 	pop di

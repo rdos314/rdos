@@ -32,7 +32,6 @@
 #include "pit.h"
 #include "keyb.h"
 #include "pci.h"
-#include "zfnb.h"
 #include "zfsb.h"
 #include "zfsmi.h"
 #include "zfide.h"
@@ -204,7 +203,7 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 		    if (Pci.IsKeyboardEnabled())
     			return Keyb.In(Port & 0xF);
 			else
-	    	    return 0xFF;
+				return 0xFF;
 
 		case 0x70:
 			return Cmos.In(Port & 0xF);
@@ -228,7 +227,7 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 		case 0x20:
 		    switch (Port)
 		    {
-		        case 0x20:
+				case 0x20:
 		        case 0x21:
         			Pic0.Out(Port & 1, Value);
         			break;
@@ -275,14 +274,14 @@ void Reset()
 	long l;
 	long *LongPtr;
 	int size;
-	Eprom = new char[0x10000];
+	Eprom = new char[0x40000];
 	LowRam = new char[0x10000];
 
 	file = RdosOpenFile("demo.rom", 0);
 	if (file)
 	{
 		size = RdosGetFileSize(file);
-		RdosReadFile(file, ((char *)Eprom) + 0x40000 - size - 1, size);
+		RdosReadFile(file, ((char *)Eprom) + 0x40000 - size, size);
 		RdosCloseFile(file);
 	}
 
@@ -301,7 +300,7 @@ void main(void)
 {
     OpenScreen("c:\\sim.log");
 
-	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
+//	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
 	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
 	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);

@@ -38,16 +38,47 @@ INCLUDE ..\os\port.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\system.inc
 
+WriteNB Macro index, data
+    mov ax,index
+    out 24h,ax
+    mov ax,data
+    out 26h,ax
+        Endm
+
+ReadNB  Macro index
+    mov ax,index
+    out 24h,ax
+    in ax,26h
+        ENDM
+
+ReadPciDword Macro bus, device, function, index
+    mov eax,80000000h OR (bus SHL 16) OR (device SHL 11) OR (function SHL 8) OR (index AND 0FFFCh)
+	mov dx,0CF8h
+	out dx,eax
+	mov dx,0CFCh
+	in eax,dx
+        ENDM
+
+
+WritePciDword Macro bus, device, function, index, data
+    mov eax,80000000h OR (bus SHL 16) OR (device SHL 11) OR (function SHL 8) OR (index AND 0FFFCh)
+	mov dx,0CF8h
+	out dx,eax
+    mov eax,data
+	mov dx,0CFCh
+    out dx,eax
+	    ENDM
+
 DefaultIdtEntry		MACRO
 	dw OFFSET DefaultInt
-	dw device_code_sel
+	dw 8
 	dw 8E00h
 	dw 0
 					ENDM
 
 BootIdtEntry		MACRO Offs
 	dw OFFSET Offs
-	dw device_code_sel
+	dw 8
 	dw 8E00h
 	dw 0
 					ENDM
@@ -282,7 +313,6 @@ WriteRomStringDone:
 code_base	DD ?
 code_size	DD ?
 
-ExceptionText DB 'Exception Fault in Boot ',0
 NoBootText DB 'No kernel to boot up',0
 
 KernelLowError	DB 'Low Kernel Overwrite',0
@@ -670,15 +700,6 @@ GetBootDeviceEnd:
 	ret
 GetBootDevice	Endp
 
-DefaultInt:
-    GetVideo
-    mov dh,23
-	mov dl,0
-    mov si,OFFSET ExceptionText
-    WriteRomString
-Stop:
-    jmp Stop
-
 rom_gdt:
 gdt0:
 	dw 0
@@ -702,22 +723,22 @@ gdt20:
 	dw 8Fh
 
 rom_idt:
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
-	DefaultIdtEntry
+	BootIdtEntry Boot0
+	BootIdtEntry Boot1
+	BootIdtEntry Boot2
+	BootIdtEntry Boot3
+	BootIdtEntry Boot4
+	BootIdtEntry Boot5
+	BootIdtEntry Boot6
+	BootIdtEntry Boot7
+	BootIdtEntry Boot8
+	BootIdtEntry Boot9
+	BootIdtEntry BootA
+	BootIdtEntry BootB
+	BootIdtEntry BootC
+	BootIdtEntry BootD
+	BootIdtEntry BootE
+	BootIdtEntry BootF
 
 Boot0:
 	BootExceptionNoPar 0
@@ -766,24 +787,6 @@ BootE:
 
 BootF:
 	BootExceptionNoPar 0Fh
-
-boot_idt:
-	BootIdtEntry Boot0
-	BootIdtEntry Boot1
-	BootIdtEntry Boot2
-	BootIdtEntry Boot3
-	BootIdtEntry Boot4
-	BootIdtEntry Boot5
-	BootIdtEntry Boot6
-	BootIdtEntry Boot7
-	BootIdtEntry Boot8
-	BootIdtEntry Boot9
-	BootIdtEntry BootA
-	BootIdtEntry BootB
-	BootIdtEntry BootC
-	BootIdtEntry BootD
-	BootIdtEntry BootE
-	BootIdtEntry BootF
 
 
 init:
@@ -892,9 +895,176 @@ GetVideoDone:
 	mov [bx+6],ax
 	retf
 
+; di = Offset of error text
+
+FatalError:
+	mov al,8
+	sub al,5
+	and al,3
+;
+	mov ah,1
+	dec ah
+	and ah,1
+	shl ah,2
+	or al,ah
+;
+	mov bx,ax
+	or al,80h
+	mov dx,3F8h + 3
+	out dx,al				; set line control to divisor access
+;
+	mov dx,3F8h
+	mov al,1
+	out dx,al				; output LSB divisor latch
+;
+	mov dx,3F8h + 1
+	mov al,0
+	out dx,al				; output MSB divisor latch
+;
+    mov dx,3F8h + 2
+    mov al,1
+    out dx,al               ; enable FIFOs if present
+;
+	mov ax,bx
+	mov dx,3F8h + 3
+	out dx,al				; set line control 
+;
+	mov dx,3F8h + 1
+	mov al,0
+	out dx,al				; disable rx ints, disable tx, line and modem ints
+;
+	mov dx,3F8h + 4
+	mov al,0Bh
+	out dx,al				; modem control, DTR = high, RTS = high
+
+fatal_wait_loop:
+	mov dx,3F8h+5
+	in al,dx
+	test al,20h
+	jnz fatal_wait_loop
+;
+	mov dx,3F8h
+	mov al,cs:[di]
+	or al,al
+	jz fatal_stop_loop
+;
+	out dx,al
+	inc di
+	jmp fatal_wait_loop
+
+fatal_stop_loop:
+	jmp fatal_stop_loop	
 
 prot_init:
-    int 3
+	mov ax,10h
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
+;
+    WriteNB 20Fh, 0
+    WriteNB 11Bh, 210h
+    WriteNB 11Dh, 3D0h
+    WriteNB 110h, 0
+    WriteNB 111h, 0
+    WriteNB 112h, 0
+    WriteNB 113h, 0
+    WriteNB 114h, 0
+    WriteNB 115h, 0
+    WriteNB 117h, 0
+    WriteNB 118h, 0
+    WriteNB 119h, 6Bh
+    WriteNB 11Ah, 220h
+    WriteNB 11Eh, 0
+    WriteNB 11Fh, 0
+    WriteNB 120h, 0
+    WriteNB 200h, 0
+    WriteNB 201h, 0
+    WriteNB 202h, 0
+    WriteNB 204h, 0FFFFh
+    WriteNB 205h, 0
+    WriteNB 207h, 0FFFFh
+    WriteNB 208h, 0
+    WriteNB 20Ah, 0FFFFh
+    WriteNB 20Bh, 0
+    WriteNB 20Dh, 0FFFFh
+    WriteNB 20Eh, 0
+    WriteNB 20Fh, 0
+    WriteNB 213h, 321h
+    WriteNB 214h, 0    
+;
+    WritePciDword 0, 12h, 0, 4, 0280000Fh
+;
+    ReadPciDword 0, 12h, 0, 0Ch
+    and ax,0FF00h
+    mov edi,eax
+    WritePciDword 0, 12h, 0, 4, edi
+;
+    ReadPciDword 0, 12h, 0, 40h
+    and eax,0FF0000h
+    or eax,02000019h
+    mov edi,eax
+    WritePciDword 0, 12h, 0, 40h, edi
+;    
+    WritePciDword 0, 12h, 0, 10h, 00008101h
+    WritePciDword 0, 12h, 0, 50h, 029A557Bh
+;
+    ReadPciDword 0, 12h, 0, 58h
+    and eax,0FFFFh
+    or eax,28CF0000h
+    mov edi,eax
+    WritePciDword 0, 12h, 0, 58h, edi
+;
+    ReadPciDword 0, 12h, 0, 5Ch
+    xor ax,ax
+    mov edi,eax
+    WritePciDword 0, 12h, 0, 5Ch, edi
+;    
+    ReadPciDword 0, 12h, 0, 80h
+    mov al,1
+    mov edi,eax
+    WritePciDword 0, 12h, 0, 80h, edi
+;    
+    ReadPciDword 0, 12h, 1, 4
+    xor al,al
+    mov edi,eax
+    WritePciDword 0, 12h, 1, 4, edi
+;
+    ReadPciDword 0, 12h, 2, 4
+    mov al,5
+    mov edi,eax
+    WritePciDword 0, 12h, 2, 4, edi
+;
+    ReadPciDword 0, 12h, 3, 4
+    mov al,3
+    mov edi,eax
+    WritePciDword 0, 12h, 3, 4, edi
+;
+    WritePciDword 0, 12h, 3, 40h, 0FFFFFFC0h
+    WritePciDword 0, 12h, 3, 10h, 00008201h
+;
+    ReadPciDword 0, 13h, 0, 4
+    mov al,7
+    mov edi,eax
+    WritePciDword 0, 13h, 0, 4, edi
+;
+    ReadPciDword 0, 13h, 0, 0Ch
+    xor ax,ax
+    mov edi,eax
+    WritePciDword 0, 13h, 0, 0Ch, edi     
+;
+    WritePciDword 0, 12h, 0, 44h, 02FE0000h
+;
+	mov ebx,dword ptr cs:adapter_start
+	mov eax,[ebx]
+	mov edx,[ebx+4]
+	mov ds,ax
+
+ExceptionText DB 'Exception Fault in Boot ',0
+
+DefaultInt:
+	mov di,OFFSET ExceptionText
+	jmp FatalError
 
 ; beyond this point offset-addresses must not be used!!
 
@@ -902,19 +1072,50 @@ startup:
     mov bx,0FFD8h
 	db 66h
 	lgdt fword ptr cs:[bx]
+;
+	mov bx,0FFD0h
+	db 66h
+	lidt fword ptr cs:[bx]
+;
+	xor ax,ax
+	mov ss,ax
+;
 	mov eax,cr0
 	or al,1
 	mov cr0,eax
-
-; this must always reside at FFFFFFD1, and should always be 5 bytes long!!
-
 	db 0EAh
-	dw OFFSET prot_init      ; must be patched to FFF0 - OFFSET boot_vect + OFFSET prot_init
+	dw OFFSET prot_init
 	dw 8
 
-; this must always reside at FFFFFFD8, and should always be 24 bytes long!!
+; this must always reside at FFFFFF50, and should always be 128 bytes long!!
 
-; null sel, and base address
+boot_idt:
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+	DefaultIdtEntry
+
+; this must always reside at FFFFFFD0, and should always be 32 bytes long!!
+
+; boot idt address
+
+	DW 7Fh
+	DD 0FFFFFF50h
+	DW 0
+
+; null sel, and gdt base address
 
 	DW 17h
 	DD 0FFFFFFD8h
@@ -925,7 +1126,7 @@ startup:
     DW OFFSET boot_vect + 0Fh
     DW OFFSET boot_vect      ; must be patched to FFF0 - OFFSET boot_vect
     DW 9BFFh
-    DW 0FF00h        
+    DW 0FF00h
 
 ; flat sel
 
@@ -938,6 +1139,9 @@ startup:
 boot_vect:
     jmp startup
 
-    DB 'RDOS boot-1.0'
+    DB 'RDOS boot'
 
-	END
+adapter_start:
+	DD 0					; must be patched to start of adapters
+
+	END boot_vect
