@@ -85,7 +85,6 @@ disc_block_count		DW ?
 disc_timer_id			DW ?
 disc_current			DD ?
 disc_queue				DD ?
-disc_pending			DD ?
 disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
@@ -606,88 +605,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TIMEOUT_CALLBACK
-;
-;		DESCRIPTION:	Timeout callback
-;
-;		PARAMETERS:		CX		Disc selector
-;						EDX:EAX	Timeout time
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-timeout_callback	Proc far
-	mov ds,cx
-	mov ds:disc_timer_id,0
-	mov ebx,ds:disc_pending
-	or ebx,ebx
-	jz timeout_callback_done
-	push eax
-	push edx
-	mov bx,ds:disc_thread
-	Signal
-	mov ax,cs
-	mov es,ax
-	GetThread
-	mov bx,ax
-	pop edx
-	pop eax
-	add eax,1193000
-	adc edx,0
-	mov di,OFFSET timeout_callback
-	mov ds:disc_timer_id,cx
-	StartTimer
-timeout_callback_done:
-	ret
-timeout_callback	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			REFRESH_TIMER
-;
-;		DESCRIPTION:	Refresh timer
-;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-refresh_timer	Proc near
-	push eax
-	mov ax,ds:disc_timer_id
-	or ax,ax
-	jnz refresh_timer_done
-	push es
-	push cx
-	push edx
-	push di
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET timeout_callback
-	mov cx,ds
-	GetThread
-	mov bx,ax
-	GetSystemTime
-	add eax,1193000
-	adc edx,0
-	mov ds:disc_timer_id,cx
-	StartTimer
-	pop di
-	pop edx
-	pop cx
-	pop es	
-refresh_timer_done:
-	pop eax
-	ret
-refresh_timer	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			INIT_DRIVES
 ;
 ;		DESCRIPTION:	Init all drives assocated with a disc #
@@ -817,64 +734,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UPDATE_PENDING
-;
-;		DESCRIPTION:	Start I/O an pending requests older than 1 sec
-;
-;		PARAMETERS:		DS		Disc selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-update_pending	Proc near
-	GetSystemTime
-	sub eax,1193000
-	sbb dx,0
-	mov si,OFFSET disc_pending
-	mov edi,[si]
-	or edi,edi
-	jz update_pending_done	
-	mov ecx,edi
-update_pending_loop:
-	mov ebx,es:[edi].dh_time_lsb
-	sub ebx,eax
-	mov bx,es:[edi].dh_time_msb
-	sbb bx,dx
-	jg update_pending_skip
-	mov ebx,es:[edi].dh_next
-	mov [si],edi
-	call remove
-	push si
-	mov si,OFFSET disc_queue
-	call insert
-	pop si
-	cmp edi,ebx
-	je update_pending_done
-;
-	cmp ecx,edi
-	jne update_pending_not_head
-;
-	mov edi,ebx
-	mov ecx,edi
-	jmp update_pending_loop
-
-update_pending_not_head:
-	mov edi,ebx
-	jmp update_pending_next
-
-update_pending_skip:
-	mov edi,es:[edi].dh_next
-update_pending_next:
-	cmp edi,ecx
-	jne update_pending_loop
-update_pending_done:
-	ret
-update_pending	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			PERFORM_IO
 ;
 ;		DESCRIPTION:	Perform I/O requests
@@ -935,9 +794,7 @@ perform_io_do_write:
 	EnterSection ds:disc_section
 	popf
 	mov edi,ds:disc_current
-	jnc perform_io_insert
-	mov si,OFFSET disc_pending
-	call insert
+	mov es:[edi].dh_state,STATE_USED
 	jmp perform_io_completed
 perform_io_read:
 	mov edi,es:[edi].dh_data
@@ -952,10 +809,8 @@ perform_io_cont1:
 	EnterSection ds:disc_section
 	popf
 	mov edi,ds:disc_current
-	jc perform_io_insert
+	jc perform_io_completed
 	mov es:[edi].dh_state,STATE_USED
-perform_io_insert:
-	call insert_buf
 perform_io_completed:
 	mov ds:disc_current,0
 ;
@@ -1053,7 +908,6 @@ discbuf_thread_process:
 	sti
 	EnterSection ds:disc_section
 	mov ds:disc_block_count,0
-	call update_pending
 	call perform_io
 	LeaveSection ds:disc_section
 	jmp discbuf_thread_loop
@@ -1119,7 +973,6 @@ install_disc_loop:
 	mov word ptr ds:disc_proc+2,cx
 	mov ds:disc_current,0
 	mov ds:disc_queue,0
-	mov ds:disc_pending,0
 	mov ds:disc_list,0
 	mov ds:disc_free,0
 	mov ds:disc_thread,-1
@@ -1391,9 +1244,6 @@ lock_loop:
 	jnc lock_found
 	call check_current
 	jnc lock_read_signal
-	mov si,OFFSET disc_pending
-	call check
-	jnc lock_found
 	mov si,OFFSET disc_queue
 	call check
 	jnc lock_read_signal
@@ -1487,10 +1337,9 @@ modify_try_again:
 modify_not_current:
 	call check_buf
 	jc modify_done
-	call remove_buf
-	mov si,OFFSET disc_pending
-	call insert
-	call refresh_timer
+;
+	mov bx,ds:disc_thread
+	Signal
 modify_done:
 	LeaveSection ds:disc_section
 	clc
