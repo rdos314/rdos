@@ -242,7 +242,7 @@ void TFile::SetPos(long Pos)
 ##########################################################################*/
 TDateTime TFile::GetTime()
 {
-	long msb, lsb;
+	unsigned long msb, lsb;
 
 	if (FHandle)
 	{

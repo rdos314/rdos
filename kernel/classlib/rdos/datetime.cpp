@@ -28,6 +28,9 @@
 #include "rdos.h"
 #include "datetime.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TDateTime::TDateTime
@@ -74,7 +77,7 @@ TDateTime::TDateTime(const TDateTime &source)
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime::TDateTime(long Msb, long Lsb)
+TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 {
 	FMsb = Msb;
 	FLsb = Lsb;
@@ -158,7 +161,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 #   Returns....: *
 #
 ##########################################################################*/
-void TDateTime::SetRaw(long Msb, long Lsb)
+void TDateTime::SetRaw(unsigned long Msb, unsigned long Lsb)
 {
 	FMsb = Msb;
 	FLsb = Lsb;
@@ -195,6 +198,35 @@ long TDateTime::GetMsb() const
 long TDateTime::GetLsb() const
 {
 	return FLsb;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::HasExpired
+#
+#   Purpose....: Check if time has expired
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if expired
+#
+##########################################################################*/
+int TDateTime::HasExpired() const
+{
+	unsigned long msb, lsb;
+
+	RdosGetTics(&msb, &lsb);
+
+	if (msb > FMsb)
+		return TRUE;
+
+	if (msb < FMsb)
+		return FALSE;
+
+	if (lsb > FLsb)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 /*##########################################################################

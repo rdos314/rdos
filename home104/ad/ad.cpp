@@ -34,7 +34,7 @@ TSample tsmin[3], tsmax[3];
 long double rv[4];
 TSample rsmin[4], rsmax[4];
 
-THeat heat;
+THeat *heat;
 
 void UpdateTime()
 {
@@ -120,7 +120,6 @@ void UpdateTemp(int index, int all)
 
 		case 2:
 			strcpy(par, "PANNA:  ");
-			heat.Add(&time, tv[index]);
 			break;
 	}
 
@@ -199,9 +198,36 @@ void UpdateRaw(int index, int all)
 	RdosWriteString(str);
 }
 
+void UpdateHeat()
+{
+	char str[41];
+
+	RdosSetCursorPosition(9, 0);
+
+	if (heat->IsEpStarted())
+		RdosWriteString("EP ON  ");
+	else
+		RdosWriteString("EP OFF ");
+
+	sprintf(str, "VALVE %4.1Lf", heat->ReadEpValve());
+	RdosWriteString(str);
+
+	RdosSetCursorPosition(10, 0);
+
+	if (heat->IsVpStarted())
+		RdosWriteString("VP ON  ");
+	else
+		RdosWriteString("VP OFF ");
+
+	sprintf(str, "VALVE %4.1Lf", heat-> ReadVpValve());
+	RdosWriteString(str);
+}
+
 void SecClear(TSample *sample)
 {
 	TDateTime time;
+
+	UpdateHeat();
 
 	if (sample->GetCount())
 	{
@@ -285,6 +311,7 @@ void RawProc(TSample *sample)
 			case 4:
 				tsmin[2].Add(&time, val);
 				tsmax[2].Add(&time, val);
+				heat->UpdateEp(val);
 				UpdateTemp(2, TRUE);
 				break;
 
@@ -347,36 +374,23 @@ void CreateChannel(TAdcDevice *dev)
 
 void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-	char str[40];
+	TDateTime RunUntil;
 
-	sprintf(str, "Key press info:");
-	RdosSetCursorPosition(9, 0);
-	RdosWriteString(str);
+	switch (VirtualKey)
+	{
+		case 0x60:
+			RunUntil.AddHour(1);
+			heat->StartHeat(RunUntil);
+			break;
 
-	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
-	RdosSetCursorPosition(10, 0);
-	RdosWriteString(str);
-
-	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
-	RdosSetCursorPosition(11, 0);
-	RdosWriteString(str);
+		case 0x6C:
+			heat->StopHeat();
+			break;	
+	}
 }
 
 void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-	char str[40];
-
-	sprintf(str, "Key release info:");
-	RdosSetCursorPosition(9, 0);
-	RdosWriteString(str);
-
-	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
-	RdosSetCursorPosition(10, 0);
-	RdosWriteString(str);
-
-	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
-	RdosSetCursorPosition(11, 0);
-	RdosWriteString(str);
 }
 
 void DaProc(void *param)
@@ -417,6 +431,8 @@ void cdecl main()
 	TKeyboardDevice *Keyboard;
 
 	RdosWaitMilli(250);
+
+	heat = new THeat;
 
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;

@@ -30,28 +30,53 @@
 
 #include "minsamp.h"
 #include "datetime.h"
+#include "device.h"
 
-class THeat : public TMinSample
+class THeat : public TDevice
 {
 public:
 	THeat();
 	virtual ~THeat();
 
+	virtual void DeviceName(char *Name, int MaxLen) const;
+
+	void StartHeat(TDateTime &RunUntil);
+	void StopHeat();
+	void UpdateEp(long double value);
+
+	int IsEpStarted();
+	int IsVpStarted();
+	long double ReadEpValve();
+	long double ReadVpValve();
+
 protected:
-	virtual void NotifyBeforeClear();
+	void ToggleEpLine();
+	void ToggleVpLine();
+	void WriteEpValve(int value);
+	void WriteVpValve(int value);
+
+	void UpdateStart();
+	void UpdateStop();
+	void Update();
+	virtual void Execute();
 
 private:
-	int IsStartedEP();
-	int IsStartedVP();
-	void StartEP();
-	void StopEP();
-	void StartVP();
-	void StopVP();
-	void UpdateOff(long double value);
-	void UpdateOn(long double value);
+	void StartEp();
+	void StopEp();
+	void StartVp();
+	void StopVp();
 
+	int FStarted;
 	int FStat;
-	long double FMax;
+	long double FEpTemp;
+	int FUpdate;
+	int FStartReq;
+	int FStopReq;
+	int FEpValve;
+	int FVpValve;
+	TDateTime *FVpStopTime;
+	int FEpPending;
+	int FEpStart;
 };
 
 #endif

@@ -100,8 +100,8 @@ long __stdcall RdosGetFilePos(int Handle);
 void __stdcall RdosSetFilePos(int Handle, long Pos);
 int __stdcall RdosReadFile(int Handle, void *Buf, int Size);
 int __stdcall RdosWriteFile(int Handle, const void *Buf, int Size);
-void __stdcall RdosGetFileTime(int Handle, long *MsbTime, long *LsbTime);
-void __stdcall RdosSetFileTime(int Handle, long MsbTime, long LsbTime);
+void __stdcall RdosGetFileTime(int Handle, unsigned long *MsbTime, unsigned long *LsbTime);
+void __stdcall RdosSetFileTime(int Handle, unsigned long MsbTime, unsigned long LsbTime);
 
 int __stdcall RdosCreateMapping(int Size);
 int __stdcall RdosCreateNamedMapping(const char *Name, int Size); 
@@ -124,22 +124,22 @@ int __stdcall RdosGetFileAttribute(const char *PathName, int *Attribute);
 int __stdcall RdosSetFileAttribute(const char *PathName, int Attribute);
 int __stdcall RdosOpenDir(const char *PathName);
 void __stdcall RdosCloseDir(int Handle);
-int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, long *MsbTime, long *LsbTime);
+int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();
 void __stdcall RdosWaitMilli(int ms);
-void __stdcall RdosGetTics(long *msb, long *lsb);
-void __stdcall RdosTicsToRecord(long msb, long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void __stdcall RdosRecordToTics(long *msb, long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
+void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
+void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
 void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void __stdcall RdosAddTics(long *msb, long *lsb, long tics);
-void __stdcall RdosAddMilli(long *msb, long *lsb, long ms);
-void __stdcall RdosAddSec(long *msb, long *lsb, long sec);
-void __stdcall RdosAddMin(long *msb, long *lsb, long min);
-void __stdcall RdosAddHour(long *msb, long *lsb, long hour);
-void __stdcall RdosAddDay(long *msb, long *lsb, long day);
+void __stdcall RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);
+void __stdcall RdosAddMilli(unsigned long *msb, unsigned long *lsb, long ms);
+void __stdcall RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
+void __stdcall RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
+void __stdcall RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
+void __stdcall RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
 
 int __stdcall RdosCreateSection();
 void __stdcall RdosDeleteSection(int Handle);
@@ -224,7 +224,7 @@ int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);
 
 int __stdcall RdosOpenAdc(int channel);
 void __stdcall RdosCloseAdc(int handle);
-void __stdcall RdosDefineAdcTime(int handle, long msg, long lsb);
+void __stdcall RdosDefineAdcTime(int handle, unsigned long msg, unsigned long lsb);
 long __stdcall RdosReadAdc(int handle);
 
 int __stdcall RdosReadSerialLines(int device, int *val);

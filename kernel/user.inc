@@ -618,6 +618,18 @@ SetEnvData	MACRO
 	UserGate set_env_data_nr
 	        ENDM
 
+;;;;;;;;;;;;;; INI FILE HANDLING ;;;;;;;;;;;
+
+; OUT BX            Ini handle
+OpenSysIni	MACRO
+	UserGate open_sys_ini_nr
+	        ENDM
+
+; IN  BX            Ini handle
+CloseIni	MACRO
+	UserGate close_ini_nr
+	        ENDM
+
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  ES:(E)DI        TSS data buffer

@@ -35,8 +35,8 @@ class TSerialDebug
 {
 public:
 	short int Channel;
-	long TimeLSB;
-	long TimeMSB;
+	unsigned long TimeLSB;
+	unsigned long TimeMSB;
 	char ch;
 };
 

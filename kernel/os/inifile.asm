@@ -37,28 +37,37 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE ..\handle.inc
 
-handle_seg	STRUC
+ini_handle_seg	STRUC
 
-ih_base	handle_header <>
+ih_hheader	handle_header <>
 
-ih_sel	DB ?
+ih_sel			DW ?
+ih_file_handle	DW ?
+ih_base			DD ?
+ih_size		    DD ?
+ih_mmap_handle	DW ?
 
-handle_seg	ENDS
+ini_handle_seg	ENDS
 
 ini_sect_seg    STRUC
 
+is_prev			DD ?
+is_next			DD ?
 is_file_pos     DD ?
 is_file_size    DD ?
-is_sel          DW ?
+is_data         DD ?
 
 ini_sect_seg    ENDS
 
 ini_file_seg STRUC
 
-if_section       section_typ <>
-if_access        DB ?
-if_file_sel      DW ?
-if_sect_list     DW ?
+if_prev			DW ?
+if_next			DW ?
+if_section      section_typ <>
+if_list			DD ?
+if_usage		DW ?
+if_file_sel     DW ?
+if_access       DB ?
 
 ini_file_seg ENDS
 
@@ -136,6 +145,350 @@ open_sys_ini_done:
 	pop ds
 	ret
 OpenSystemIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MapIni
+;
+;       DESCRIPTION:    Memory map ini file
+;
+;		PARAMETERS:		DS:BX		handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MapIni	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov si,bx
+;
+	mov bx,[si].ih_file_handle
+	GetFileSize
+	and ax,0F000h
+	add eax,1000h
+	AllocateLocalLinear
+	sub edx,local_page_linear
+	mov ds:[si].ih_base,edx
+	mov ds:[si].ih_size,eax	
+;
+	CreateFileMapping
+	mov ds:[si].ih_mmap_handle,bx
+;
+	mov ax,flat_data_sel
+	mov es,ax
+	mov edi,ds:[si].ih_base
+	mov ecx,ds:[si].ih_size
+	UserGateForce32 map_view_nr
+;	
+	popad
+	pop es
+	pop ds
+	ret
+MapIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnmapIni
+;
+;       DESCRIPTION:    Memory unmap ini file
+;
+;		PARAMETERS:		DS:BX		handle data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnmapIni	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov si,bx
+;
+	mov bx,ds:[si].ih_mmap_handle
+	UnmapView
+	CloseMapping
+	mov ds:[si].ih_mmap_handle,0
+;
+	mov edx,ds:[si].ih_base
+	or edx,edx
+	jz uiNoMem
+;
+	add edx,local_page_linear
+	mov ecx,ds:[si].ih_size
+	FreeLinear
+
+uiNoMem:
+	popad
+	pop es
+	pop ds
+	ret
+UnmapIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateIniSel
+;
+;       DESCRIPTION:    Create ini selector
+;
+;		PARAMETERS:		BX			original file handle
+;
+;		RETURNS:		DS			ini selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIniSel	proc near
+	push es
+	push eax
+	push cx
+;
+	mov eax,SIZE ini_file_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+;
+	InitSection ds:if_section
+	GetFileInfo
+	mov ds:if_access,cl
+	mov ds:if_file_sel,ax
+	mov ds:if_usage,0
+	mov ds:if_list,0
+;
+	pop cx
+	pop eax
+	pop es
+	ret
+CreateIniSel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:         	FreeIniSel
+;
+;       DESCRIPTION:    Free ini selector (if usage permits)
+;
+;		PARAMETERS:		DS			ini selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeIniSel	proc near
+	push es
+	push ax
+	push cx
+;
+	sub ds:if_usage,1
+	jnz fisDone
+;
+	mov cx,ds
+	mov ax,inifile_sys_sel
+	mov ds,ax
+	cmp cx,ds:is_sys_sel
+	jne fisPriv
+;
+	EnterSection ds:is_section
+	mov es,cx
+	mov ds:is_sys_sel,0
+	FreeMem
+	LeaveSection ds:is_section
+	jmp fisDone
+
+fisPriv:
+	EnterSection ds:is_section
+	mov es,cx
+	push si
+	push di
+	push ds
+	mov di,es:if_next
+	cmp di,ds:is_ini_list
+	mov ds:is_ini_list,di
+	mov si,es:if_prev
+	mov ds,di
+	mov ds:if_prev,si
+	mov ds,si
+	mov ds:if_next,di
+	pop ds
+	pop di
+	pop si
+	jne fisUncache
+;
+	mov ds:is_ini_list,0
+
+fisUncache:
+	FreeMem
+	LeaveSection ds:is_section
+
+fisDone:
+	pop cx
+	pop ax
+	pop es
+	ret
+FreeIniSel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateIniHandle
+;
+;       DESCRIPTION:    Create ini handle
+;
+;		PARAMETERS:		DS			ini selector
+;						BX			"original" file handle or 0
+;
+;		RETURNS:		BX			ini handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIniHandle	proc near
+	push ds
+	push ax
+	push cx
+;
+	inc ds:if_usage
+	or bx,bx
+	jnz cihNew
+;
+	mov cl,ds:if_access
+	mov ax,ds:if_file_sel
+	DuplFileInfo
+
+cihNew:
+	push ds
+	push bx
+	mov cx,SIZE ini_handle_seg
+	AllocateHandle
+	pop ax
+	mov [bx].ih_file_handle,ax
+	pop ax
+	mov [bx].ih_sel,ax
+	mov [bx].hh_sign,INI_HANDLE
+	call MapIni
+	mov bx,[bx].hh_handle
+;
+	pop cx
+	pop ax
+	pop ds
+	ret
+CreateIniHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CreateSysIni
+;
+;       DESCRIPTION:    Create system ini object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSysIni	Proc near
+	push ds
+	push es
+	push ax
+	push bx
+;
+	call OpenSystemIni
+	jc csiDone
+;
+	call CreateIniSel
+;
+	mov ax,inifile_sys_sel
+	mov es,ax
+	mov es:is_sys_sel,ds
+
+csiDone:
+	pop bx
+	pop ax
+	pop es
+	pop ds
+	ret
+CreateSysIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenSysIni
+;
+;       DESCRIPTION:    Open system ini file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_sys_ini_name	DB 'Open Sys Ini', 0
+
+open_sys_ini	Proc far
+	push ds
+	push es
+	push ax
+;
+	xor bx,bx
+	mov ax,inifile_sys_sel
+	mov ds,ax
+	EnterSection ds:is_section
+;
+	mov ax,ds:is_sys_sel
+	or ax,ax
+	jnz osiCreateHandle
+;
+	call OpenSystemIni
+	jc osiDone
+;
+	call CreateIniSel
+;
+	mov ax,inifile_sys_sel
+	mov es,ax
+	mov es:is_sys_sel,ds
+
+osiCreateHandle:
+	mov ax,inifile_sys_sel
+	mov ds,ax
+	LeaveSection ds:is_section
+;
+	mov ds,ds:is_sys_sel
+	call CreateIniHandle
+	clc
+
+osiDone:
+	pop ax
+	pop es
+	pop ds
+	retf32
+open_sys_ini	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CloseIni
+;
+;		DESCRIPTION:	Close ini
+;
+;		PARAMETERS:		BX			INI HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_ini_name	DB 'Close Ini', 0
+
+close_ini	Proc far
+	push ds
+	push bx
+;
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc ciDone
+;
+	call UnmapIni
+	push ds:[bx].ih_file_handle
+	mov ds,ds:[bx].ih_sel
+	call FreeIniSel
+	pop bx
+	CloseFile
+
+ciDone:
+	pop bx
+	pop ds
+	retf32
+close_ini	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -556,7 +909,12 @@ test_thread_name	DB 'Ini File', 0
 
 test_thread:
 	int 3
-	call OpenSystemIni
+	OpenSysIni
+	mov dx,bx
+	OpenSysIni
+	CloseIni
+	mov bx,dx
+	CloseIni
 
 init_thread	Proc far
 	push ds
@@ -577,6 +935,38 @@ init_thread	Proc far
 	pop ds
 init_thread	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_handle
+;
+;		DESCRIPTION:	Delete handle (called from handle module)
+;
+;		PARAMETERS:		BX			INI HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push bx
+;
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	push ds
+	mov ds,ds:[bx].ih_sel
+	call FreeIniSel
+	pop ds
+
+delete_handle_done:
+	pop bx
+	pop ds
+	ret
+delete_handle	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
@@ -587,12 +977,19 @@ init_thread	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init	Proc far
-	mov bx,inifile_code_sel
-	InitDevice
-;
 	push ds
 	push es
 	pusha
+;
+	mov bx,inifile_code_sel
+	InitDevice
+;
+	mov eax,SIZE ini_sys_seg
+	mov bx,inifile_sys_sel
+	AllocateFixedSystemMem
+	InitSection es:is_section
+	mov es:is_sys_sel,0
+	mov es:is_ini_list,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -600,6 +997,22 @@ init	Proc far
 ;
 	mov di,OFFSET init_thread
 	HookInitTasking
+;
+	mov si,OFFSET open_sys_ini
+	mov di,OFFSET open_sys_ini_name
+	xor dx,dx
+	mov ax,open_sys_ini_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_ini
+	mov di,OFFSET close_ini_name
+	xor dx,dx
+	mov ax,close_ini_nr
+	RegisterBimodalUserGate
+;
+	mov di,OFFSET delete_handle
+	mov ax,INI_HANDLE
+	RegisterHandle
 ;
 	popa
 	pop es

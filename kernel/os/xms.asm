@@ -111,7 +111,7 @@ init	PROC far
 	RegisterOsGate
 ;
 	mov di,OFFSET delete_handle
-	mov ax,FILE_HANDLE
+	mov ax,XMS_HANDLE
 	RegisterHandle
 	pop ds
 	popa

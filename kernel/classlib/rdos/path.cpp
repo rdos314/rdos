@@ -1151,8 +1151,8 @@ TDirEntry TDir::GotoNext()
     char *Name;
     long FileSize;
     int Attrib;
-    long msb;
-    long lsb;
+	unsigned long msb;
+	unsigned long lsb;
         
     if (FDirHandle)
     {

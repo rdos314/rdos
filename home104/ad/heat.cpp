@@ -25,6 +25,9 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "rdos.h"
 #include "heat.h"
 
@@ -44,7 +47,16 @@
 ##########################################################################*/
 THeat::THeat()
 {
-	FMax = 0.0;
+	FStat = 0;
+	FStarted = FALSE;
+	FUpdate = FALSE;
+	FStartReq = FALSE;
+	FStopReq = FALSE;
+	FVpStopTime = 0;
+	FEpPending = FALSE;
+	FEpStart = FALSE;
+
+	Start("HEAT", 0x2000);
 }
 
 /*##########################################################################
@@ -60,6 +72,204 @@ THeat::THeat()
 ##########################################################################*/
 THeat::~THeat()
 {
+	if (FVpStopTime)
+		delete FVpStopTime;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::DeviceName
+#
+#   Purpose....: Device name
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::DeviceName(char *Name, int MaxLen) const
+{
+	strncpy(Name, "HEAT", MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ReadEpValve
+#
+#   Purpose....: Read voltage on EP valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double THeat::ReadEpValve()
+{
+	return (long double)FEpValve / 0x7FFFFFFF * 10.0;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ReadVpValve
+#
+#   Purpose....: Read voltage on VP valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double THeat::ReadVpValve()
+{
+	return (long double)FVpValve / 0x7FFFFFFF * 10.0;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ToggleVpLine
+#
+#   Purpose....: Toggle VP line
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::ToggleVpLine()
+{
+	RdosToggleSerialLine(1, 5);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ToggleEpLine
+#
+#   Purpose....: Toggle EP line
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::ToggleEpLine()
+{
+	RdosToggleSerialLine(1, 6);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::WriteVpValve
+#
+#   Purpose....: Write VP valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::WriteVpValve(int value)
+{
+	RdosWriteSerialVal(2, 0, value);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::WriteEpValve
+#
+#   Purpose....: Write EP valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::WriteEpValve(int value)
+{
+	RdosWriteSerialVal(2, 1, value);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StartHeat
+#
+#   Purpose....: Start (v„rmepump mot tank)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StartHeat(TDateTime &RunUntil)
+{
+	FStopReq = FALSE;
+
+	if (FVpStopTime)
+		delete FVpStopTime;
+	FVpStopTime = new TDateTime(RunUntil);
+		
+	FStartReq = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::UpdateStart
+#
+#   Purpose....: Update start
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::UpdateStart()
+{
+	if (FVpStopTime)
+	{
+		if (FVpStopTime->HasExpired())
+			FStartReq = FALSE;
+	}
+	else
+		FStartReq = FALSE;
+
+	if (FStartReq)
+	{
+		if (FVpValve < 0x40000000)
+		{
+			if (IsVpStarted())
+				FStartReq = FALSE;
+			else
+				ToggleVpLine();
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StopHeat
+#
+#   Purpose....: Stop (v„rmepump mot tank)
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StopHeat()
+{
+	FStartReq = FALSE;
+	if (FVpStopTime)
+	{
+		delete FVpStopTime;
+		FVpStopTime = 0;
+	}
+	FStopReq = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::UpdateStop
+#
+#   Purpose....: Update stop
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::UpdateStop()
+{
+	if (IsVpStarted())
+		if (FVpValve < 0x40000000)
+			ToggleVpLine();
 }
 
 /*##########################################################################
@@ -72,7 +282,7 @@ THeat::~THeat()
 #   Returns....: *
 #
 ##########################################################################*/
-int THeat::IsStartedEP()
+int THeat::IsEpStarted()
 {
 	if (FStat & 0x40)
 		return TRUE;
@@ -90,15 +300,15 @@ int THeat::IsStartedEP()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::StartEP()
+void THeat::StartEp()
 {
-	if (!IsStartedEP())
-		RdosToggleSerialLine(1, 6);
+	if (!IsEpStarted())
+		ToggleEpLine();
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::StopEP
+#   Name       : THeat::StopEp
 #
 #   Purpose....: Stop EP (elpatron)
 #
@@ -106,15 +316,15 @@ void THeat::StartEP()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::StopEP()
+void THeat::StopEp()
 {
-	if (IsStartedEP())
-		RdosToggleSerialLine(1, 6);
+	if (IsEpStarted())
+		ToggleEpLine();
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::IsStartedVP
+#   Name       : THeat::IsVpStarted
 #
 #   Purpose....: Check if started VP (v„rmepump)
 #
@@ -122,7 +332,7 @@ void THeat::StopEP()
 #   Returns....: *
 #
 ##########################################################################*/
-int THeat::IsStartedVP()
+int THeat::IsVpStarted()
 {
 	if (FStat & 0x20)
 		return TRUE;
@@ -132,7 +342,7 @@ int THeat::IsStartedVP()
 
 /*##########################################################################
 #
-#   Name       : THeat::StartVP
+#   Name       : THeat::StartVp
 #
 #   Purpose....: Start VP (v„rmepump)
 #
@@ -140,27 +350,22 @@ int THeat::IsStartedVP()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::StartVP()
+void THeat::StartVp()
 {
-	int valve;
+	if (!IsVpStarted())
+		if (FVpValve > 0x40000000)
+		{
+			ToggleVpLine();
+			if (FEpValve == 0)
+				WriteEpValve(0x7FFFFFFF);
+		}
 
-	if (!IsStartedVP())
-		if (RdosReadSerialVal(2, 0, &valve))
-			if (valve > 0x40000000)
-			{
-				RdosToggleSerialLine(1, 5);
-
-				if (RdosReadSerialVal(2, 1, &valve))
-					if (valve == 0)
-						RdosWriteSerialVal(2, 1, 0x7FFFFFFF);
-			}
-
-	RdosWriteSerialVal(2, 0, 0x7FFFFFFF);
+	WriteVpValve(0x7FFFFFFF);
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::StopVP
+#   Name       : THeat::StopVp
 #
 #   Purpose....: Stop VP (v„rmepump)
 #
@@ -168,93 +373,134 @@ void THeat::StartVP()
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::StopVP()
+void THeat::StopVp()
 {
-	int valve;
-
-	if (IsStartedVP())
-		if (RdosReadSerialVal(2, 0, &valve))
-			if (valve < 0x40000000)
-				RdosToggleSerialLine(1, 5);
-
-	RdosWriteSerialVal(2, 0, 0);
+	WriteVpValve(0);
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::UpdateOff
+#   Name       : THeat::UpdateEp
 #
-#   Purpose....: Handle new sample in OFF state
+#   Purpose....: Update EP temp
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::UpdateOff(long double value)
+void THeat::UpdateEp(long double value)
 {
-	FMax = value;
-
-	if (value < 42.0)
-		StartVP();
+	FUpdate = TRUE;
+	FEpTemp = value;
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::UpdateOn
+#   Name       : THeat::Update
 #
-#   Purpose....: Handle new sample in ON state
+#   Purpose....: Update min values after states have been read
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::UpdateOn(long double value)
+void THeat::Update()
 {
-	if (value > FMax)
-		FMax = value;
+	FUpdate = FALSE;
 
-	if ((value < FMax - 2.0) || (value < 40.0))
-		StartEP();
+	if (FEpValve > 0x70000000)
+		WriteEpValve(0);
 
-	if (value > 47.0)
+	if (IsEpStarted())
+		FEpPending = TRUE;
+
+	if (FEpValve > 0x40000000)
+		FEpPending = TRUE;
+
+	if (FEpPending)
 	{
-		StopVP();
+		if (FEpTemp < 39.0)
+			StartEp();
 
-		if (value > 55.0)
-			StopEP();
+		if (FEpTemp > 47.0)
+		{
+			FEpStart = TRUE;
+
+			if (FVpValve > 0x40000000)
+			{
+				if (FVpStopTime == 0)
+				{
+					FVpStopTime = new TDateTime;
+					FVpStopTime->AddHour(1);
+				}
+				StopVp();
+			}
+
+			if (FEpTemp > 55.0)
+			{
+				FEpPending = FALSE;
+				FEpStart = FALSE;
+				StopEp();
+			}
+		}
 		else
-			StartEP();
+			StartVp();
+
+		if (FEpStart)
+			if (!IsVpStarted())
+				StartEp();
+
+	}
+	else
+	{
+		if (FEpTemp < 42.0)
+		{
+			FEpPending = TRUE;
+			StartVp();
+		}
 	}
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::NotifyBeforeClear
+#   Name       : THeat::Execute
 #
-#   Purpose....: Handle samples
+#   Purpose....: Thread for updating devices
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::NotifyBeforeClear()
+void THeat::Execute()
 {
-	TDateTime time;
-	int valve;
+	int lines;
+	int vp;
+	int ep;
 
-	if (RdosReadSerialLines(1, &FStat))
+	while (FInstalled)
 	{
-		RdosSetCursorPosition(12, 0);
+		lines = RdosReadSerialLines(1, &FStat);
+		vp = RdosReadSerialVal(2, 0, &FVpValve);
+		ep = RdosReadSerialVal(2, 1, &FEpValve);
 
-		if (RdosReadSerialVal(2, 1, &valve))
-			if (valve > 0x70000000)
-				RdosWriteSerialVal(2, 1, 0);
+		if (lines && vp && ep)
+		{
+			if (FVpStopTime && FVpStopTime->HasExpired())
+				StopHeat();
 
-		if ((FStat & 0x60) == 0)
-			UpdateOff(GetMean(&time));
+			if (FUpdate)
+				Update();
+
+			if (FStartReq)
+				UpdateStart();
+
+			if (FStopReq)
+				UpdateStop();
+
+			RdosWaitMilli(15000);
+
+		}
 		else
-			UpdateOn(GetMean(&time));
+			RdosWaitMilli(1500);
 	}
-	TSample::NotifyBeforeClear();
 }
-

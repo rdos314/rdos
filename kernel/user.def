@@ -297,4 +297,7 @@ find_env_var_nr             = 262
 get_env_data_nr     	    = 263
 set_env_data_nr 	        = 264
 
+open_sys_ini_nr				= 265
+close_ini_nr				= 266
+
 usergate_entries			= 300

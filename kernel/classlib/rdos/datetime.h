@@ -33,14 +33,15 @@ class TDateTime
 public:
 	TDateTime();
 	TDateTime(const TDateTime &Source);
-	TDateTime(long Msb, long Lsb);
+	TDateTime(unsigned long Msb, unsigned long Lsb);
 	TDateTime(int Year, int Month, int Day);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
 
 	long GetMsb() const;
 	long GetLsb() const;
-    void SetRaw(long Msb, long Lsb);
+    void SetRaw(unsigned long Msb, unsigned long Lsb);
+	int HasExpired() const;
 	void AddTics(long tics);
 	void AddMilli(long ms);
 	void AddSec(long sec);
@@ -61,8 +62,8 @@ protected:
 	void RecordToRaw();
 
 private:
-	long FMsb;
-	long FLsb;
+	unsigned long FMsb;
+	unsigned long FLsb;
 	int FYear;
 	int FMonth;
 	int FDay;
