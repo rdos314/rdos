@@ -93,6 +93,7 @@ tcp_section			section_typ <>
 tcp_next			DW ?
 tcp_listen_link		DW ?
 tcp_owner			DW ?
+tcp_writer          DW ?
 tcp_wait            DW ?
 tcp_port			DW ?
 tcp_remote_ip		DD ?

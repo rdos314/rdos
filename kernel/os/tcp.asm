@@ -362,6 +362,7 @@ CreateConnection	Proc near
 	AllocateSmallGlobalMem
 	pop eax
 	mov es:tcp_owner,0
+	mov es:tcp_writer,0
 	mov es:tcp_wait,0
 	mov es:tcp_options,0
 	mov es:tcp_port,si
@@ -2583,6 +2584,12 @@ receive_no_ack:
 	call SendData
 
 receive_leave:
+	mov bx,ds:tcp_writer
+	or bx,bx
+	jz receive_no_writer
+	Signal
+
+receive_no_writer:    
 	LeaveSection ds:tcp_section
 	jmp receive_free
 
@@ -2612,6 +2619,8 @@ receive_no_connection:
 	pop si
 	pop cx
 	pop ds
+	jc receive_free
+;	
 	mov ax,ds:[si].tcp_dest
 	mov es:[di].tcp_source,ax
 	mov ax,ds:[si].tcp_source
@@ -3430,7 +3439,6 @@ is_connection_idle	PROC far
 	jz is_idle_done
 ;
 	mov ds,ax
-	mov ds:tcp_wait,es
 	mov ax,ds:tcp_receive_count
 	or ax,ax
 	clc
@@ -3734,15 +3742,12 @@ write_tcp_retry:
 	test ds:tcp_pending,FLAG_DELETE OR FLAG_CLOSED
 	jnz write_tcp_fail
 ;
-	mov bx,ds:tcp_send_tail
-	mov eax,ds:tcp_send_next
-	sub eax,ds:tcp_send_una
-	add ax,ds:tcp_send_count
 	mov dx,ds:tcp_buffer_size
-	sub dx,ax
+	sub dx,ds:tcp_send_count
 	movzx edx,dx
 	cmp edx,ecx
 	jc write_tcp_start
+;	
 	mov dx,cx
 
 write_tcp_start:
@@ -3752,13 +3757,16 @@ write_tcp_loop:
 	or ecx,ecx
 	jz write_tcp_ok
 ;
+    or dx,dx
+    jz write_tcp_full
+;
 	mov al,es:[edi]
 	mov fs:[bx],al
 ;
 	inc edi
 	dec ecx
 	dec dx
-;
+;	
 	inc bx
 	cmp bx,ds:tcp_buffer_size
 	jnz write_tcp_loop
@@ -3771,7 +3779,7 @@ write_tcp_full:
 ;
 	ClearSignal
 	GetThread
-	mov ds:tcp_owner,ax
+	mov ds:tcp_writer,ax
 	LeaveSection ds:tcp_section
 	WaitForSignal
 	EnterSection ds:tcp_section
@@ -3786,6 +3794,7 @@ write_tcp_ok:
 	mov ax,ds:tcp_send_count
 	cmp ax,600h
 	jc write_tcp_delay
+;	
 	call SendData
 write_tcp_delay:
 	clc

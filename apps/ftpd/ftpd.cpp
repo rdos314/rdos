@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "rdos.h"
 #include "socket.h"
 
 #define FALSE 0
@@ -143,11 +144,26 @@ void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
 ##########################################################################*/
 void TFtpSocketServer::HandleSocket()
 {
+	char VersionStr[16];
+	int Major;
+	int Minor;
+	int Release;
+	
 	int count;
 	char Buf[513];
 
 	if (FSocket->WaitForConnection(6000))
 	{
+
+    	RdosGetVersion(&Major, &Minor, &Release);
+	    sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
+
+    	FSocket->Write("220 FTP for RDOS ");
+	    FSocket->Write(VersionStr);
+    	FSocket->Write(0xd);
+	    FSocket->Write(0xa);
+    	FSocket->Push();
+    	
 		count = FSocket->Read(Buf, 512);
 		Buf[count] = 0;
 		printf(Buf);
