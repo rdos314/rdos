@@ -1,9 +1,18 @@
 NAME    USER32
 EXPORTS
 	Borland32
+	CharUpperA
 	CharUpperBuffA
 	EnumThreadWindows
+	EnumWindows
+	GetClassNameA
+	GetForegroundWindow
 	GetKeyboardType
 	GetSystemMetrics
+	GetWindowTextA
+	GetWindowThreadProcessId
+	IsIconic
+	IsWindow
 	LoadStringA
 	MessageBoxA
+	SetForegroundWindow

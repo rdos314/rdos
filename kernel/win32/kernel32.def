@@ -156,17 +156,20 @@ EXPORTS
     RtlUnwind
     ScrollConsoleScreenBufferA
 	SearchPathA
+	SetConsoleActiveScreenBuffer
     SetConsoleCtrlHandler
     SetConsoleCursorInfo
     SetConsoleCursorPosition
     SetConsoleMode
     SetConsoleScreenBufferSize
+	SetConsoleTitleA
     SetConsoleWindowInfo
     SetCurrentDirectoryA
     SetCurrentDirectoryW
     SetEndOfFile
     SetEnvironmentVariableA
 	SetEnvironmentVariableW
+	SetErrorMode
 	SetEvent
 	SetFileApisToOEM
     SetFileAttributesA

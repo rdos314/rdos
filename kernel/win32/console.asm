@@ -803,6 +803,62 @@ AllocConsole Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           SetConsoleActiveScreenBuffer
+;
+;       DESCRIPTION:    Set console active screen buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public SetConsoleActiveScreenBuffer
+
+SetConsoleActiveScreenBuffer Proc near
+	int 3
+	xor eax,eax
+	ret 4
+SetConsoleActiveScreenBuffer Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetConsoleTitleA
+;
+;       DESCRIPTION:    Set console title
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public SetConsoleTitleA
+
+SetConsoleTitleA Proc near
+	int 3
+	mov eax,1
+	ret 4
+SetConsoleTitleA Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetErrorMode
+;
+;       DESCRIPTION:    Set error mode
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public SetErrorMode
+
+SetErrorMode Proc near
+	push ebp
+	mov ebp,esp
+;
+	int 3
+	mov eax,[ebp+8]
+;
+	pop ebp
+	ret 4
+SetErrorMode Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           Beep
 ;
 ;       DESCRIPTION:    Beep

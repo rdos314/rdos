@@ -85,6 +85,142 @@ EnumThreadWindows Proc near
 	mov eax, 1
 	ret 12
 EnumThreadWindows Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           EnumWindows
+;
+;       DESCRIPTION:    Enum Windows
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EnumWindows
+
+EnumWindows Proc near
+	int 3
+	mov eax, 1
+	ret 8
+EnumWindows Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetClassNameA
+;
+;       DESCRIPTION:    Get class name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetClassNameA
+
+GetClassNameA Proc near
+	int 3
+	mov eax, 0
+	ret 12
+GetClassNameA Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetForegroundWindow
+;
+;       DESCRIPTION:    Get foreground window
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetForegroundWindow
+
+GetForegroundWindow Proc near
+	int 3
+	mov eax, 12345678h
+	ret
+GetForegroundWindow Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetWindowTextA
+;
+;       DESCRIPTION:    Get window text
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetWindowTextA
+
+GetWindowTextA Proc near
+	int 3
+	mov eax, 1
+	ret 12
+GetWindowTextA Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetWindowThreadProcessId
+;
+;       DESCRIPTION:    Get window thread process ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetWindowThreadProcessId
+
+GetWindowThreadProcessId Proc near
+	int 3
+	mov eax, 23456789h
+	ret 8
+GetWindowThreadProcessId Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsIconic
+;
+;       DESCRIPTION:    Is iconic?
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public IsIconic
+
+IsIconic Proc near
+	int 3
+	xor eax,eax
+	ret 4
+IsIconic Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           IsWindow
+;
+;       DESCRIPTION:    Is window?
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public IsWindow
+
+IsWindow Proc near
+	int 3
+	xor eax,eax
+	ret 4
+IsWindow Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetForegroundWindow
+;
+;       DESCRIPTION:    Set foreground window
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public SetForegroundWindow
+
+SetForegroundWindow Proc near
+	int 3
+	mov eax,1
+	ret 4
+SetForegroundWindow Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -156,6 +292,43 @@ cubOk:
 	pop ebp
 	ret 8
 CharUpperBuffA ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CharUpperA
+;
+;       DESCRIPTION:   	Convert chars to uppercase
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public CharUpperA
+
+CharUpperA Proc near
+	int 3
+	push ebp
+	mov ebp,esp
+;
+	xor eax,eax
+	mov edx,[ebp+8]
+cuLoop:
+	mov al,[edx]
+	or al,al
+	jz cuDone
+	mov al,byte ptr [eax].UCaseTab
+	or al,al
+	jnz cuOk
+	mov al,[edx]
+cuOk:
+	mov [edx],al
+	inc edx
+	jmp cuLoop
+
+cuDone:
+	mov eax,[ebp+8]
+	pop ebp
+	ret 4
+CharUpperA ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
