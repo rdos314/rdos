@@ -1575,10 +1575,10 @@ PAGE
 ;
 ;		NAME:			RdosOpenCom
 ;
-;		description:	™ppnar comport
+;		description:	Open comport
 ;
-;		PARAMETERS:		port_base		basadress till com port
-;						port_irq		irq till com port
+;		PARAMETERS:		port_base		base IO-address to com port
+;						port_irq		irq to com port
 ;						baud_divisor	baudrate divisor
 ;						parity			parity 'N', 'E' or 'O'
 ;						data_bits		# of data bits
@@ -1637,7 +1637,7 @@ PAGE
 ;
 ;		NAME:			RdosCloseCom
 ;
-;		description:	St„nger comport
+;		description:	Close comport
 ;
 ;		PARAMETERS:		port_handle		port handle
 ;
@@ -1665,9 +1665,9 @@ PAGE
 ;
 ;		NAME:			RdosFlushCom
 ;
-;		description:	Rensar rx och tx k”
+;		description:	Clear receive and transmit buffer
 ;
-;		PARAMETERS:		port_handler	handle till port
+;		PARAMETERS:		port_handle	    port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1693,11 +1693,11 @@ PAGE
 ;
 ;		NAME:			RdosPollCom
 ;
-;		description:	Testa om det finns n†got tecken fr†n serieport
+;		description:	Check if any char is available
 ;
-;		PARAMETERS:		hport		com handle
+;		PARAMETERS:		hport		port handle
 ;
-;		RETURNS:		> 0			antal tecken i buffert
+;		RETURNS:		> 0			number of chars in buffer
 ;						FALSE		buffer empty
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1724,12 +1724,12 @@ PAGE
 ;
 ;		NAME:			RdosWaitForCom
 ;
-;		description:	V„nta p† tecken
+;		description:	Wait for char with timeout
 ;
-;		PARAMETERS:		hport		com handle
-;						timeout		ms timeout
+;		PARAMETERS:		hport		port handle
+;						timeout		milliseconds timeout
 ;
-;		RETURNS:		> 0			antal tecken i buffert
+;		RETURNS:		> 0			number of chars in buffer
 ;						FALSE		buffer empty
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1758,12 +1758,11 @@ PAGE
 ;
 ;		NAME:			RdosReadCom
 ;
-;		description:	L„s tecken fr†n serieport
+;		description:    Read a char
 ;
-;		PARAMETERS:		hport		com handle
+;		PARAMETERS:		hport		port handle
 ;
 ;		RETURNS:		ch			received char
-;						-1			buffer empty
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1789,12 +1788,12 @@ PAGE
 ;
 ;		NAME:			RdosWriteCom
 ;
-;		description:	S„nd tecken till serieport
+;		description:	Write a char to port
 ;
-;		PARAMETERS:		hport		com handle
-;						ch			tecken
+;		PARAMETERS:		hport		port handle
+;						ch			char
 ;
-;		RETURNS:		0			s„ndning ok
+;		RETURNS:		0			success
 ;						-1			buffer full
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1823,9 +1822,9 @@ PAGE
 ;
 ;		NAME:			RdosSetDtr
 ;
-;		description:	S„tt DTR on
+;		description:	Set DTR signal
 ;
-;		PARAMETERS:		hport		com handle
+;		PARAMETERS:		hport		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1851,9 +1850,9 @@ PAGE
 ;
 ;		NAME:			RdosResetDtr
 ;
-;		description:	S„tt DTR off
+;		description:	Reset DTR signal
 ;
-;		PARAMETERS:		hport		com handle
+;		PARAMETERS:		hport		port handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1871,6 +1870,124 @@ RdosResetDtr	Proc
 	pop ebp
 	ret 4
 RdosResetDtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetRts
+;
+;		description:	Set RTS signal
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetRts
+
+RdosSetRts	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate set_rts_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosSetRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosResetRts
+;
+;		description:	Reset RTS signal
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosResetRts
+
+RdosResetRts	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate reset_rts_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosResetRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetReceiveBufferSpace
+;
+;		description:	Get receive buffer space
+;
+;		PARAMETERS:		hport		port handle
+;
+;       RETURNS:        number of free bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetReceiveBufferSpace
+
+RdosGetReceiveBufferSpace	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_com_receive_space_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetReceiveBufferSpace	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetSendBufferSpace
+;
+;		description:	Get send buffer space
+;
+;		PARAMETERS:		hport		port handle
+;
+;       RETURNS:        number of free bytes
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetSendBufferSpace
+
+RdosGetSendBufferSpace	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_com_send_space_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetSendBufferSpace	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

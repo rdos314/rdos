@@ -98,7 +98,7 @@ extern "C" void PortAThread(void *Data)
 
 	Base = GetBase(1);
 	Irq = GetIrq(1);
-	Handle = RdosOpenCom(Base, Irq, (int)(115200L / 19200), 'N', 8, 1, 1024, 1024);
+	Handle = RdosOpenCom(Base, Irq, (int)(115200L / 9600), 'N', 8, 1, 1024, 1024);
 	Mailslot = RdosGetLocalMailslot("comlog");
 	for (;;)
 	{
@@ -130,7 +130,7 @@ extern "C" void PortBThread(void *Data)
 
 	Base = GetBase(2);
 	Irq = GetIrq(2);
-	Handle = RdosOpenCom(Base, Irq, (int)(115200L / 19200), 'N', 8, 1, 1024, 1024);
+	Handle = RdosOpenCom(Base, Irq, (int)(115200L / 9600), 'N', 8, 1, 1024, 1024);
 	Mailslot = RdosGetLocalMailslot("comlog");
 	for (;;)
 	{

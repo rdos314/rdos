@@ -151,6 +151,55 @@ void FormatShortTime(char *str, TComMsg *Msg)
 	sprintf(str, "%02d.%02d.%02d,%03d", hour, min, sec, milli);
 }
 
+/*##################  GetMsg ##########################
+*   Purpose....: Get next message	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int GetMsg(char *str, TComMsg *Msg, int count)
+{
+	int Channel;
+	int LastTime;
+	int Elapsed;
+	char ch;
+	int used;
+
+	if (count == 0)
+		return 0;
+
+	used = 0;
+	Channel = Msg->Channel;
+	LastTime = Msg->TimeLSB;
+	ch = Msg->ch;
+	used++;
+	Msg++;
+
+	*str = 0;
+
+	while (count > used)
+	{
+		*str = ch;
+		str++;
+		*str = 0;
+
+		if (Channel != Msg->Channel)
+			return used;
+
+		Elapsed = Msg->TimeLSB - LastTime;
+		if (Elapsed > 1193 * 25)
+			return used;
+
+		LastTime = Msg->TimeLSB;
+		ch = Msg->ch;
+		used++;
+		Msg++;
+	}
+
+	return used;
+}
+
 /*##################  GetCbusMsg ##########################
 *   Purpose....: Get next CBUS message	   					      	        #
 *   In params..: *                                                          #
@@ -212,7 +261,7 @@ int GetCbusMsg(char *str, TComMsg *Msg, int count)
 		Msg++;
 	}
 
-	return used;	
+	return used;
 }
 
 /*##################  GetDefault ##########################
@@ -436,10 +485,10 @@ void UpdateCbusPump()
 		else
 			strcpy(ReplyText, "*** NO ANSWER ***");
 
-		sprintf(DispMess, "%s %02X %s %s %s\r\n", 
+		sprintf(DispMess, "%s %02X %s %s %s\r\n",
 						MsgTime,
 						Adr,
-						MsgCode, 
+						MsgCode,
 						ReqText,
 						ReplyText);
 		Write(DispMess);
@@ -547,7 +596,7 @@ void DecodeCbusMsg(const char *TimeStr, const char *str)
 	char MsgData[256];
 	char ToAdr;
 	char FromAdr;
-    char MessCode;
+	char MessCode;
 
 	DispMess[0] = 0;
 
@@ -591,6 +640,34 @@ void DecodeCbusMsg(const char *TimeStr, const char *str)
 	}
 }
 
+/*##################  DecodeHexMsg ##########################
+*   Purpose....: Decode HEX msg	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void DecodeHexMsg(const char *TimeStr, const char *str, int count)
+{
+	char tempstr[15];
+	int i;
+	char ch;
+
+	Write(TimeStr);
+	Write("  ");
+	for (i = 0; i < count; i++)
+	{
+		ch = *str;
+		if (ch >= 0x20)
+			sprintf(tempstr, "%c", ch);
+		else
+			sprintf(tempstr, " <%02X> ", ch);
+		Write(tempstr);
+		str++;
+	}
+	Write("\r\n");
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -605,7 +682,7 @@ void cdecl main()
 	int ok;
 	int pos;
 	char Str[40];
-	char MsgText[256];
+	char MsgText[4192];
 	int Mapping;
 	char *Buf;
 	int *BufSize;
@@ -635,7 +712,7 @@ void cdecl main()
 		{
 			FormatShortTime(Str, BufMsg);
 			remains = *BufSize - pos;
-			count = GetCbusMsg(MsgText, BufMsg, remains);
+			count = GetMsg(MsgText, BufMsg, remains);
 			ok = (remains != count);
 
 			if (ok)
@@ -645,7 +722,7 @@ void cdecl main()
 			{
 				BufMsg += count;
 				pos += count;
-				DecodeCbusMsg(Str, MsgText);
+				DecodeHexMsg(Str, MsgText, count);
 			}
 			else
 				RdosWaitMilli(50);

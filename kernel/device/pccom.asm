@@ -35,8 +35,17 @@ include ..\os\os.inc
 include ..\os\user.def
 include ..\os\user.inc
 include ..\os\driver.def
+include ..\os\handle.inc
 						
 		NAME pccom
+
+serial_handle_seg		STRUC
+
+serial_handle_base	handle_header <>
+
+port_sel            DW ?
+
+serial_handle_seg		ENDS
 
 port_struc	STRUC
 
@@ -275,6 +284,15 @@ open_com	Proc far
 ;
 	mov eax, SIZE port_struc
 	AllocateSmallGlobalMem
+;
+    mov ax,SERIAL_HANDLE
+	mov cx,SIZE serial_handle_seg
+	AllocateHandle
+	mov [bx].port_sel,es
+	mov [bx].hh_sign,SERIAL_HANDLE
+	mov bx,[bx].hh_handle
+	push bx
+;
 	mov ax,es
 	mov ds,ax
 ;
@@ -342,8 +360,12 @@ open_parity_done:
 	mov al,[bp].baud_divisor+1
 	out dx,al				; output MSB divisor latch
 ;
+    inc dx
+    mov al,1
+    out dx,al               ; enable FIFOs if present
+;
 	pop ax
-	add dx,2
+	inc dx
 	out dx,al				; set line control 
 ;
 	sub dx,2
@@ -361,7 +383,8 @@ open_parity_done:
 	inc dx
 	in al,dx
 ;
-	mov bx,ds
+	pop bx
+;
 	pop di
 	pop dx
 	pop cx
@@ -393,7 +416,14 @@ close_com	Proc far
 	push ax
 	push dx
 ;
-	mov ds,bx
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc close_com_done
+;
+    push [bx].port_sel
+    FreeHandle
+    pop ds
+;
 	mov al,ds:irq
 	ReleasePrivateIrqHandler
 ;
@@ -415,7 +445,9 @@ close_com	Proc far
 ;
 	mov ax,500
 	WaitMilliSec
-;
+
+
+close_com_done:
 	pop dx
 	pop ax
 	pop es
@@ -441,9 +473,14 @@ flush_com_name DB 'Flush Com',0
 flush_com	Proc far
 	push ds
 	push ax
+	push bx
 	push dx
 ;
-	mov ds,bx
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc flush_com_done
+;
+	mov ds,[bx].port_sel
 	cli
 ;
 	mov dx,ds:base
@@ -458,8 +495,10 @@ flush_com	Proc far
 	mov ds:rec_head,0
 	mov ds:rec_tail,0
 	sti
-;
+
+flush_com_done:
 	pop dx
+	pop bx
 	pop ax
 	pop ds
 	retf32
@@ -484,8 +523,19 @@ poll_com_name DB 'Poll Com',0
 
 poll_com	PROC far
 	push ds
-	mov ds,bx
+	push ax
+	push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc poll_com_done
+;
+	mov ds,[bx].port_sel
 	mov ax,ds:rec_count
+
+poll_com_done:
+    pop bx
+    pop ax
 	pop ds
 	retf32
 poll_com	ENDP
@@ -522,7 +572,13 @@ wait_for_com	PROC far
 	push edx
 	push di
 ;
-	mov ds,bx
+    push ax
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    pop ax
+    jc wait_for_com_done
+;
+	mov ds,[bx].port_sel
 	mov ebx,eax
 	GetThread
 	mov ds:owner_thread,ax
@@ -530,7 +586,7 @@ wait_for_com	PROC far
 ;
 	mov ax,ds:rec_count
 	or ax,ax
-	jnz done
+	jnz wait_for_com_done
 ;
 	mov eax,1193
 	mul ebx
@@ -550,7 +606,8 @@ wait_for_com	PROC far
 	WaitForSignal
 	StopTimer
 	mov ax,ds:rec_count
-done:
+
+wait_for_com_done:
 	pop di
 	pop edx
 	pop cx
@@ -582,7 +639,12 @@ read_com	PROC far
 	push es
 	push bx
 	push cx
-	mov ds,bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc com_read_done
+;
+	mov ds,[bx].port_sel
 	mov es,ds:rec_buf
 ;
 	cli
@@ -618,6 +680,42 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			get_com_receive_space
+;
+;		description:	Get space in receive buffer
+;
+;		PARAMETERS:		BX			Port handle
+;
+;		RETURNS:		EAX         Free space
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_com_receive_space_name DB 'Get Com Receive Space',0
+
+get_com_receive_space	PROC far
+	push ds
+	push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc get_com_rec_space_done
+;
+	mov ds,[bx].port_sel
+    mov ax,ds:rec_size
+    sub ax,ds:rec_count
+    movzx eax,ax
+
+get_com_rec_space_done:
+    pop bx
+	pop ds
+	retf32
+get_com_receive_space	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			write_com
 ;
 ;		description:	Write byte to port
@@ -639,7 +737,13 @@ write_com	PROC far
 	push cx
 	push dx
 ;
-	mov ds,bx
+    push ax
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    pop ax
+    jc com_send_full
+;
+	mov ds,[bx].port_sel
 	mov es,ds:send_buf
 	cli
 	mov cx,ds:send_count
@@ -667,11 +771,12 @@ com_send_ok_done:
 	sti
 	xor ax,ax
 	jmp com_send_end
+	
 com_send_full:
 	sti
 	mov ax,-1
+
 com_send_end:
-;
 	pop dx
 	pop cx
 	pop bx
@@ -679,6 +784,42 @@ com_send_end:
 	pop ds
 	retf32
 write_com	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_com_send_space
+;
+;		description:	Get space in send buffer
+;
+;		PARAMETERS:		BX			Port handle
+;
+;		RETURNS:		EAX         Free space
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_com_send_space_name DB 'Get Com Send Space',0
+
+get_com_send_space	PROC far
+	push ds
+	push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc get_com_send_space_done
+;
+	mov ds,[bx].port_sel
+    mov ax,ds:send_size
+    sub ax,ds:send_count
+    movzx eax,ax
+
+get_com_send_space_done:
+    pop bx
+	pop ds
+	retf32
+get_com_send_space	ENDP
 
 PAGE
 
@@ -698,15 +839,23 @@ set_dtr_name DB 'Set Dtr',0
 set_dtr	Proc far
 	push ds
 	push ax
+	push bx
 	push dx
 ;
-	mov ds,bx
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc set_dtr_done
+;
+	mov ds,[bx].port_sel
 	mov dx,ds:base
 	add dx,4
-	mov al,0Bh
+	in al,dx
+	or al,1
 	out dx,al
-;
+
+set_dtr_done:
 	pop dx
+	pop bx
 	pop ax
 	pop ds
 	retf32
@@ -730,19 +879,107 @@ reset_dtr_name DB 'Reset Dtr',0
 reset_dtr	Proc far
 	push ds
 	push ax
+	push bx
 	push dx
 ;
-	mov ds,bx
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc reset_dtr_done
+;
+	mov ds,[bx].port_sel
 	mov dx,ds:base
 	add dx,4
-	mov al,0Ah
+	in al,dx
+	and al,NOT 1
 	out dx,al	
-;
+
+reset_dtr_done:
 	pop dx
+	pop bx
 	pop ax
 	pop ds
 	retf32
 reset_dtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			set_rts
+;
+;		description:	Set RTS signal
+;
+;		PARAMETERS:		BX		Port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_rts_name DB 'Set Rts',0
+
+set_rts	Proc far
+	push ds
+	push ax
+	push bx
+	push dx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc set_rts_done
+;
+	mov ds,[bx].port_sel
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	or al,2
+	out dx,al
+
+set_rts_done:
+	pop dx
+	pop bx
+	pop ax
+	pop ds
+	retf32
+set_rts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			reset_rts
+;
+;		description:	Reset RTS signal
+;
+;		PARAMETERS:		BX		Port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_rts_name DB 'Reset Rts',0
+
+reset_rts	Proc far
+	push ds
+	push ax
+	push bx
+	push dx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc reset_rts_done
+;
+	mov ds,[bx].port_sel
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	and al,NOT 2
+	out dx,al	
+
+reset_rts_done:
+	pop dx
+	pop bx
+	pop ax
+	pop ds
+	retf32
+reset_rts	Endp
 
 PAGE
 
@@ -818,6 +1055,30 @@ init	Proc far
 	mov di,OFFSET reset_dtr_name
 	xor dx,dx
 	mov ax,reset_dtr_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_rts
+	mov di,OFFSET set_rts_name
+	xor dx,dx
+	mov ax,set_rts_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET reset_rts
+	mov di,OFFSET reset_rts_name
+	xor dx,dx
+	mov ax,reset_rts_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_com_receive_space
+	mov di,OFFSET get_com_receive_space_name
+	xor dx,dx
+	mov ax,get_com_receive_space_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_com_send_space
+	mov di,OFFSET get_com_send_space_name
+	xor dx,dx
+	mov ax,get_com_send_space_nr
 	RegisterBimodalUserGate
 ;
 	popa

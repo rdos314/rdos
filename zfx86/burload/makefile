@@ -36,15 +36,19 @@ bur2bin_srcs = BUR2BIN.ASM
 bur2bin_objs = $(bur2bin_srcs:.ASM=.OBJ)
 bur2bin_exes = BUR2BIN.EXE
 
-rdosbur_srcs = RDOSBUR.ASM
-rdosbur_objs = $(rdosbur_srcs:.ASM=.OBJ)
-rdosbur_exes = RDOSBUR.EXE
+sdram_srcs  = SDRAM.ASM
+sdram_objs = $(sdram_srcs:.ASM=.OBJ)
+sdram_exes = SDRAM.EXE
 
-srcs =      $(bur2bin_srcs) $(rdosbur_srcs)
+flash_srcs  = FLASH.ASM
+flash_objs = $(flash_srcs:.ASM=.OBJ)
+flash_exes = FLASH.EXE
+
+srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
-exes =      $(bur2bin_exes) $(rdosbur_exes)
+exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -75,12 +79,20 @@ BUR2BIN.EXE : $(bur2bin_objs)
 	BUR2BIN;
 !
 
-RDOSBUR.EXE : $(rdosbur_objs)
+SDRAM.EXE : $(sdram_objs)
     tlink @&&!
 	$(link_opt) +
-	$(rdosbur_objs)
-	RDOSBUR
-	RDOSBUR;
+	$(sdram_objs)
+	SDRAM
+	SDRAM;
+!
+
+FLASH.EXE : $(flash_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(flash_objs)
+	FLASH
+	FLASH;
 !
 
 RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes)

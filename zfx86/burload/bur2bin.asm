@@ -56,8 +56,10 @@ buf			DB 2000h DUP(?)
 
 .code
 
-exe_error   DB 'cannot find rdosbur.exe file',0Dh,0Ah,24h
-bin_error   DB 'cannot create rdosbur.bin file',0Dh,0Ah,24h
+sdram_exe_error   DB 'cannot find sdram.exe file',0Dh,0Ah,24h
+sdram_bin_error   DB 'cannot create sdram.bin file',0Dh,0Ah,24h
+flash_exe_error   DB 'cannot find flash.exe file',0Dh,0Ah,24h
+flash_bin_error   DB 'cannot create flash.bin file',0Dh,0Ah,24h
 
 crlf        DB 0Dh,0Ah,24h
 
@@ -91,28 +93,30 @@ Log Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Init
+;		NAME:			InitSdram
 ;
 ;		DESCRIPTION:	Create bin file
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-exe_name	DB 'rdosbur.exe', 0
-bin_name	DB 'rdosbur.bin', 0
+sdram_exe_name	DB 'sdram.exe', 0
+sdram_bin_name	DB 'sdram.bin', 0
+flash_exe_name	DB 'flash.exe', 0
+flash_bin_name	DB 'flash.bin', 0
 
-init:
+Init:
 	mov ax,cs
 	mov ds,ax
-	mov dx,OFFSET exe_name
+	mov dx,OFFSET sdram_exe_name
 	mov ax,3D00h
 	int 21h
-    jnc OpenOk
+    jnc SdramOpenOk
 ;
-    mov dx,OFFSET exe_error
+    mov dx,OFFSET sdram_exe_error
     call Log
     jmp Done
 
-OpenOk:
+SdramOpenOk:
 	mov bx,ax
     mov ax,SEG @data
     mov ds,ax
@@ -144,11 +148,11 @@ OpenOk:
 	pop cx
 	shl cx,4
 	cmp cx,2000h
-	jc SizeOk
+	jc SdramSizeOk
 ;
 	mov cx,2000h
 
-SizeOk:
+SdramSizeOk:
 	mov file_size,cx
 	mov dx,OFFSET buf
 	mov ah,3Fh
@@ -159,17 +163,98 @@ SizeOk:
 ;
 	mov ax,cs
 	mov ds,ax
-	mov dx,OFFSET bin_name
+	mov dx,OFFSET sdram_bin_name
 	xor cx,cx
 	mov ah,3Ch
 	int 21h
-    jnc CreateOk
+    jnc SdramCreateOk
 ;
-    mov dx,OFFSET bin_error
+    mov dx,OFFSET sdram_bin_error
     call Log
     jmp Done
 
-CreateOk:
+SdramCreateOk:
+	mov bx,ax
+	mov ax,SEG @data
+	mov ds,ax
+	mov dx,OFFSET buf
+	mov cx,file_size
+	mov ah,40h
+	int 21h
+;
+	mov ah,3Eh
+	int 21h
+
+InitFlash:
+	mov ax,cs
+	mov ds,ax
+	mov dx,OFFSET flash_exe_name
+	mov ax,3D00h
+	int 21h
+    jnc FlashOpenOk
+;
+    mov dx,OFFSET flash_exe_error
+    call Log
+    jmp Done
+
+FlashOpenOk:
+	mov bx,ax
+    mov ax,SEG @data
+    mov ds,ax
+;
+	mov dx,OFFSET hdr
+	mov cx,SIZE exeh_seg
+	mov ah,3Fh
+	int 21h
+;
+	push bx
+	xor eax,eax
+	xor ebx,ebx
+	mov ax,hdr.exeh_size_msb
+	shl eax,5
+	mov bx,hdr.exeh_size_lsb
+	shr bx,4
+	inc bx
+	add eax,ebx
+	mov bx,hdr.exeh_size_header
+	mov dx,bx
+	shl dx,4
+	sub eax,ebx
+	add ax,hdr.exeh_minalloc
+	pop bx
+	push ax
+	xor cx,cx
+	mov ax,4200h
+	int 21h
+	pop cx
+	shl cx,4
+	cmp cx,2000h
+	jc FlashSizeOk
+;
+	mov cx,2000h
+
+FlashSizeOk:
+	mov file_size,cx
+	mov dx,OFFSET buf
+	mov ah,3Fh
+	int 21h
+;
+	mov ah,3Eh
+	int 21h
+;
+	mov ax,cs
+	mov ds,ax
+	mov dx,OFFSET flash_bin_name
+	xor cx,cx
+	mov ah,3Ch
+	int 21h
+    jnc FlashCreateOk
+;
+    mov dx,OFFSET flash_bin_error
+    call Log
+    jmp Done
+
+FlashCreateOk:
 	mov bx,ax
 	mov ax,SEG @data
 	mov ds,ax
@@ -185,5 +270,5 @@ Done:
 	mov ax,4C00h
 	int 21h
 
-    END init
+    END Init
 

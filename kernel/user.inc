@@ -1271,6 +1271,28 @@ ResetDtr       MACRO
 	UserGate reset_dtr_nr
 						ENDM
 
+;	IN  BX		port handle
+SetRts       MACRO
+	UserGate set_rts_nr
+						ENDM
+
+;	IN  BX		port handle
+ResetRts       MACRO
+	UserGate reset_rts_nr
+						ENDM
+
+;	IN  BX		port handle
+;   OUT EAX     free space
+GetComReceiveSpace       MACRO
+	UserGate get_com_receive_space_nr
+						ENDM
+
+;	IN  BX		port handle
+;   OUT EAX     free space
+GetComSendSpace       MACRO
+	UserGate get_com_send_space_nr
+						ENDM
+
 ;;;;;;;;;;;;;; PRINTER ;;;;;;;;;;;;
 
 ;	IN  DX		PRINTER #

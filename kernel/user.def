@@ -251,4 +251,9 @@ dup_bitmap_handle_nr        = 225
 set_clip_rect_nr            = 226
 clear_clip_rect_nr          = 227
 
-usergate_entries			= 228
+set_rts_nr                  = 228
+reset_rts_nr                = 229
+get_com_receive_space_nr    = 230
+get_com_send_space_nr       = 231
+
+usergate_entries			= 256
