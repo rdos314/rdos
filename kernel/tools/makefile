@@ -78,9 +78,9 @@ rdfsimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSIMG.ASM
 rdfsimg_objs = $(rdfsimg_srcs:.ASM=.OBJ)
 rdfsimg_exes = RDFSIMG.EXE
 
-hdimg_srcs = BOOTSEC.ASM HDIMG.ASM
-hdimg_objs = $(hdimg_srcs:.ASM=.OBJ)
-hdimg_exes = HDIMG.EXE
+hdboot_srcs = HDBOOT.ASM BOOT.ASM
+hdboot_objs = $(hdboot_srcs:.ASM=.OBJ)
+hdboot_exes = HDBOOT.EXE
 
 acrimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM ACRIMG.ASM
 acrimg_objs = $(acrimg_srcs:.ASM=.OBJ)
@@ -112,7 +112,7 @@ remdebug_exes = REMDEBUG.EXE
 
 srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
-			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
+			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(state_srcs) $(state40_srcs) $(acrimg_srcs) \
 			$(run_srcs) $(remdebug_srcs)
@@ -121,7 +121,7 @@ objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
-			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
+			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(state_exes) $(state40_exes) $(acrloc_exes)	\
 			$(run_exes) $(remdebug_exes) $(acrimg_exes)
@@ -235,12 +235,12 @@ RDFSIMG.EXE : $(rdfsimg_objs)
 	RDFSIMG;
 !
 
-HDIMG.EXE : $(hdimg_objs)
+HDBOOT.EXE : $(hdboot_objs)
     tlink @&&!
 	$(link_opt) +
-	$(hdimg_objs)
-	HDIMG
-	HDIMG;
+	$(hdboot_objs)
+	HDBOOT
+	HDBOOT;
 !
 
 ACRIMG.EXE : $(acrimg_objs)

@@ -962,6 +962,9 @@ calc_lfn_fat_ext_size_loop:
     or al,al
     jz calc_lfn_fat_ext_size_found
 ;
+    cmp al,-1
+    je calc_lfn_fat_ext_size_found    
+;
     cmp al,'.'
     jne calc_lfn_fat_ext_size_loop
 ;    
@@ -1303,6 +1306,9 @@ PAGE
 
 write_lfn_entries    Proc near
     pushad
+;
+    mov fs:lfn_chksum,al
+    mov fs:lfn_seq,1
 ;
     mov bx,fs:lfn_entries
     mov bh,bl
@@ -2652,7 +2658,6 @@ delete_lfn_entries	Proc near
     or bx,bx
     jz delete_lfn_done
 ;    
-    int 3
     mov bp,di
     mov cx,fs:lfn_entries
     mov di,OFFSET lfn_entry_arr
@@ -2739,6 +2744,8 @@ cache_free_lfn Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cache_entry	Proc near
+    push edx
+;    
 	mov al,es:[esi].fat_base
 	or al,al
 	je cache_entry_free
@@ -2758,15 +2765,11 @@ cache_entry	Proc near
 	test al,10h
 	jz cache_entry_file
 ;
-	push edx
 	call cache_dir_entry
-	pop edx
 	jmp cache_entry_done
 
 cache_entry_file:
-	push edx
 	call cache_file_entry
-	pop edx
 	jmp cache_entry_done
 
 cache_entry_lfn:
@@ -2781,6 +2784,7 @@ cache_entry_free:
 	call cache_free_entry
 
 cache_entry_done:
+    pop edx
 	ret
 cache_entry	Endp
 
@@ -3183,7 +3187,6 @@ create_dir_lfn:
     call allocate_lfn_list_entries
     jc create_dir_fail_lfn
 ;    
-    int 3    
 	mov di,bx
     mov edx,fs:lfn_fat_sector
     mov ax,fs:lfn_fat_offset
@@ -3192,17 +3195,28 @@ create_dir_lfn:
 	LockSector
 	pop ax
 ;
+    push gs
+    push di
 	or si,ax
 	mov ax,fs
 	mov gs,ax
 	mov edi,OFFSET lfn_fat_name
 	call set_dir_name
+	pop di
+	pop gs
 ;
-	or cl,20h
-	mov es:[esi].fat_attrib,cl
-	mov es:[esi].fat_cluster,0
-	mov es:[esi].fat_cluster_hi,0
+    push fs
+    mov fs,di
+	call init_dir
+	pop fs
+	jc create_dir_fail_lfn_unlock
+;
+	mov es:[esi].fat_cluster,ax
+	shr eax,16
+	mov es:[esi].fat_cluster_hi,ax
+	mov es:[esi].fat_attrib,10h
 	mov es:[esi].fat_file_size,0
+;	
 	push edx
 	GetTime
 	call set_dir_time
@@ -3217,15 +3231,20 @@ create_dir_chksum_loop:
     add al,es:[esi]
     inc esi
     loop create_dir_chksum_loop
-    pop esi    
+    pop esi
 ;
 	ModifySector
 	UnlockSector
-    call write_lfn_entries    
+	push edx
+;	
+    call write_lfn_entries
 	call cache_dir_entry
-	clc
-	jmp create_dir_done
+	mov fs,di
+    jmp create_dir_lfn_done
 
+create_dir_fail_lfn_unlock:
+    UnlockSector
+    
 create_dir_fail_lfn:
     mov ax,fs
     mov es,ax
@@ -3273,7 +3292,8 @@ create_dir_83:
 	mov fs,bx
 	call cache_dir_entry
 	pop fs
-;
+
+create_dir_lfn_done:
 	mov bx,fs
 	CacheDir
 ;
@@ -3406,6 +3426,7 @@ delete_file	PROC far
 ;
 	mov ax,flat_sel
 	mov es,ax
+	mov ds,bx
 ;
     mov cx,es:[edx].ffe_lfn_count
     or cx,cx
@@ -3446,7 +3467,6 @@ delete_file_lfn_done:
 	mov es:[edx].fe_entry_offset,cx
 	call InsertDeletedEntry
 ;
-	mov ds,bx
 	mov edx,eax
 	mov al,ds:ds_drive
 	LockSector
@@ -3598,7 +3618,6 @@ create_file_lfn:
     call allocate_lfn_list_entries
     jc create_file_fail_lfn
 ;    
-    int 3    
 	mov di,bx
     mov edx,fs:lfn_fat_sector
     mov ax,fs:lfn_fat_offset
@@ -3608,12 +3627,14 @@ create_file_lfn:
 	pop ax
 ;
 	or si,ax
+	push gs
 	push di
 	mov ax,fs
 	mov gs,ax
 	mov edi,OFFSET lfn_fat_name
 	call set_dir_name
 	pop di
+	pop gs
 ;
 	or cl,20h
 	mov es:[esi].fat_attrib,cl
