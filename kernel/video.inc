@@ -133,6 +133,7 @@ set_proc          		DD ?
 ; IN  CX			Number of pixels
 slab_proc               DD ?
 
+; IN  EAX           Source base
 ; IN  FS:ESI	    Source pixels
 ; IN  EDI	    	Position
 ; IN  CX			Number of pixels
@@ -145,6 +146,7 @@ copy_proc               DD ?
 ; IN  EDI		    Dest buffer
 mask_set_proc               DD ?
 
+; IN  EAX           Source base
 ; IN  CX			number of pixels
 ; IN  DL            Start bit number
 ; IN  GS:EBX        Mask bits

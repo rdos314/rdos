@@ -49,13 +49,24 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
+;			Global parameter usage
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+curr_x  EQU -4
+curr_y  EQU -2
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
 ;		NAME:			LgopNull
 ;
 ;		DESCRIPTION:	Null draw
 ;
-;		PARAMETERS:		EAX			Bit #. Bit 31 = value
-;						ES:EDI		Dest buffer (LFB)
+;		PARAMETERS:		EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -72,13 +83,15 @@ PAGE
 ;
 ;		DESCRIPTION:	Set drawing color
 ;
-;		PARAMETERS:		EAX			Bit #.
-;						ES:EDI		Dest buffer (LFB)
+;		PARAMETERS:		EDI 		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LgopSet	Proc near
-	bts es:[edi],eax
+    push eax
+    mov eax,ds:v_app_base
+	bts es:[eax],edi
+	pop eax
 	ret
 LgopSet	Endp
 
@@ -91,13 +104,15 @@ PAGE
 ;
 ;		DESCRIPTION:	Complement
 ;
-;		PARAMETERS:		EAX			Bit #.
-;						ES:EDI		Dest buffer (LFB)
+;		PARAMETERS:		EDI 	        position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LgopCompl	Proc near
-	btc es:[edi],eax
+    push eax
+    mov eax,ds:v_app_base
+	btc es:[eax],edi
+	pop eax
 	ret
 LgopCompl	Endp
 
@@ -110,13 +125,15 @@ PAGE
 ;
 ;		DESCRIPTION:	Reset draw
 ;
-;		PARAMETERS:		EAX			Bit #.
-;						ES:EDI		Dest buffer (LFB)
+;		PARAMETERS:		EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 LgopReset	Proc near
-	btr es:[edi],eax
+    push eax
+    mov eax,ds:v_app_base
+	btr es:[eax],edi
+    pop eax
 	ret
 LgopReset	Endp
 
@@ -165,6 +182,1504 @@ PAGE
 translate_color	Proc far
 	ret
 translate_color	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetBase
+;
+;		DESCRIPTION:	Basic set pixel
+;
+;		PARAMETER:		EAX         Color
+;						EDI         Position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_base	Proc far
+    push bx
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].LgopTab
+	pop bx
+    ret
+set_base    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabNull
+;
+;		DESCRIPTION:	Null line
+;
+;		PARAMETERS:		EDI 		position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabNull	Proc near
+	ret
+SlabNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabSet
+;
+;		DESCRIPTION:	Set line
+;
+;		PARAMETERS:		EDI 		Position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+or_bit_tab:
+bt00	DB 0FFh
+bt01	DB 0FEh
+bt02	DB 0FCh
+bt03	DB 0F8h
+bt04	DB 0F0h
+bt05	DB 0E0h
+bt06	DB 0C0h
+bt07	DB 80h
+
+SlabSet	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	or cx,cx
+	jz slab_set_done
+;
+    mov eax,edi
+    mov edi,ds:v_app_base
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
+	jc slab_set_last_loop
+;
+	mov al,byte ptr cs:[bx].or_bit_tab
+	or es:[edi],al
+	sub cx,8
+	add cx,bx
+;
+	mov al,-1
+	xor bl,bl
+
+slab_set_loop:
+	inc edi
+	cmp cx,8
+	jb slab_set_last_loop
+;
+	mov es:[edi],al
+	sub cx,8
+	jnz slab_set_loop
+	jmp slab_set_done
+	
+slab_set_last_loop:
+	bts es:[edi],ebx
+	inc bl
+	loop slab_set_last_loop
+
+slab_set_done:
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabSet	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabReset
+;
+;		DESCRIPTION:	Reset line
+;
+;		PARAMETERS:		EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+and_bit_tab:
+br00	DB 0
+br01	DB 1
+br02	DB 3
+br03	DB 7
+br04	DB 0Fh
+br05	DB 1Fh
+br06	DB 3Fh
+br07	DB 7Fh
+
+SlabReset	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	or cx,cx
+	jz slab_reset_done
+;
+    mov eax,edi
+    mov edi,ds:v_app_base
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
+	jc slab_reset_last_loop
+;
+	mov al,byte ptr cs:[bx].and_bit_tab
+	and es:[edi],al
+	sub cx,8
+	add cx,bx
+;
+	xor al,al
+	xor bl,bl
+
+slab_reset_loop:
+	inc edi
+	cmp cx,8
+	jb slab_reset_last_loop
+;
+	mov es:[edi],al
+	sub cx,8
+	jnz slab_reset_loop
+	jmp slab_reset_done
+	
+slab_reset_last_loop:
+	btr es:[edi],ebx
+	inc bl
+	loop slab_reset_last_loop
+
+slab_reset_done:
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabReset	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabCompl
+;
+;		DESCRIPTION:	Compl line
+;
+;		PARAMETERS:		EDI 		position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabCompl	Proc near
+	push eax
+	push ebx
+	push cx
+	push edi
+;
+	or cx,cx
+	jz slab_compl_done
+;
+    mov eax,edi
+    mov edi,ds:v_app_base
+	movzx ebx,al
+	shr eax,3
+	add edi,eax
+	and bl,7
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
+	jc slab_compl_last_loop
+;
+	mov al,es:[edi]
+	mov ah,al
+	and al,byte ptr cs:[bx].or_bit_tab
+	not al
+	and ah,byte ptr cs:[bp].and_bit_tab
+	or al,ah
+	mov es:[edi],al
+	sub cx,8
+	add cx,bx
+;
+	mov al,-1
+	xor bl,bl
+
+slab_compl_loop:
+	inc edi
+	cmp cx,8
+	jb slab_compl_last_loop
+;
+	xor es:[edi],al
+	sub cx,8
+	jnz slab_compl_loop
+	jmp slab_compl_done
+	
+slab_compl_last_loop:
+	btc es:[edi],ebx
+	inc bl
+	loop slab_compl_last_loop
+
+slab_compl_done:
+	pop edi
+	pop cx
+	pop ebx
+	pop eax
+	ret
+SlabCompl	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabTab
+;
+;		DESCRIPTION:	Slab LGOP table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabTab:
+st00	DW OFFSET SlabNull
+st01	DW OFFSET SlabSet
+st02	DW OFFSET SlabSet
+st03	DW OFFSET SlabNull
+st04	DW OFFSET SlabCompl
+st05	DW OFFSET SlabReset
+st06	DW OFFSET SlabNull
+st07	DW OFFSET SlabReset
+st08	DW OFFSET SlabNull
+st09	DW OFFSET SlabSet
+st0A	DW OFFSET SlabReset
+st0B	DW OFFSET SlabNull
+st0C	DW OFFSET SlabSet
+st0D	DW OFFSET SlabSet
+st0E	DW OFFSET SlabNull
+st0F	DW OFFSET SlabNull
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Slab
+;
+;		DESCRIPTION:	Fill line
+;
+;		PARAMETERS:		AX			Color
+;					    EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+slab	Proc far
+    push bx
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].SlabTab
+	pop bx
+	ret
+slab	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyNull
+;
+;		DESCRIPTION:	Null copy
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyNull	Proc near
+	ret
+CopyNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyNorm
+;
+;		DESCRIPTION:	Copy normally
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyNorm	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_norm_done
+
+copy_norm_loop:
+    bt fs:[eax],esi
+    jc copy_norm_set
+
+copy_norm_reset:
+    btr es:[edx],edi
+    jmp copy_norm_next
+
+copy_norm_set:
+    bts es:[edx],edi
+
+copy_norm_next:
+    inc esi
+    inc edi
+    loop copy_norm_loop
+
+copy_norm_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyNorm	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyAnd
+;
+;		DESCRIPTION:	Copy by anding source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyAnd	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_and_done
+
+copy_and_loop:
+    bt fs:[eax],esi
+    jnc copy_and_reset
+;
+    bt es:[edx],edi
+    jc copy_and_next
+
+copy_and_reset:
+    btr es:[edx],edi
+
+copy_and_next:
+    inc esi
+    inc edi
+    loop copy_and_loop
+
+copy_and_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyOr
+;
+;		DESCRIPTION:	Copy by oring source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyOr	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_or_done
+
+copy_or_loop:
+    bt es:[edx],edi
+    jc copy_or_next
+;
+    bt fs:[eax],esi
+    jnc copy_or_next
+
+copy_or_set:
+    bts es:[edx],edi
+
+copy_or_next:
+    inc esi
+    inc edi
+    loop copy_or_loop
+
+copy_or_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyXor
+;
+;		DESCRIPTION:	Copy by xoring source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyXor	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_xor_done
+
+copy_xor_loop:
+    bt fs:[eax],esi
+    jnc copy_xor_next
+;
+    btc es:[edx],edi
+
+copy_xor_next:
+    inc esi
+    inc edi
+    loop copy_xor_loop
+
+copy_xor_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvert
+;
+;		DESCRIPTION:	Copy inverted
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvert	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_done
+
+copy_inv_loop:
+    bt fs:[eax],esi
+    jc copy_inv_reset
+
+copy_inv_set:
+    bts es:[edx],edi
+    jmp copy_inv_next
+
+copy_inv_reset:
+    btr es:[edx],edi
+
+copy_inv_next:
+    inc esi
+    inc edi
+    loop copy_inv_loop
+
+copy_inv_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyInvert	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertAnd
+;
+;		DESCRIPTION:	Copy by inverting & anding source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertAnd	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_and_done
+
+copy_inv_and_loop:
+    bt fs:[eax],esi
+    jc copy_inv_and_reset
+;
+    bt es:[edx],edi
+    jc copy_inv_and_next
+
+copy_inv_and_reset:
+    btr es:[edx],edi
+
+copy_inv_and_next:
+    inc esi
+    inc edi
+    loop copy_inv_and_loop
+
+copy_inv_and_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyInvertAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertOr
+;
+;		DESCRIPTION:	Copy by inverting & oring source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertOr	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_or_done
+
+copy_inv_or_loop:
+    bt es:[edx],edi
+    jc copy_inv_or_next
+;
+    bt fs:[eax],esi
+    jc copy_inv_or_next
+
+copy_inv_or_set:
+    bts es:[edx],edi
+
+copy_inv_or_next:
+    inc esi
+    inc edi
+    loop copy_inv_or_loop
+
+copy_inv_or_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyInvertOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertXor
+;
+;		DESCRIPTION:	Copy by inverting & xoring source & dest
+;
+;		PARAMETERS:		FS:EAX      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertXor	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_xor_done
+
+copy_inv_xor_loop:
+    bt fs:[eax],esi
+    jc copy_inv_xor_next
+;
+    btc es:[edx],edi
+
+copy_inv_xor_next:
+    inc esi
+    inc edi
+    loop copy_inv_xor_loop
+
+copy_inv_xor_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+CopyInvertXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyTab
+;
+;		DESCRIPTION:	Copy LGOP table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyTab:
+ct00	DW OFFSET CopyNull
+ct01	DW OFFSET CopyNorm
+ct02	DW OFFSET CopyOr
+ct03	DW OFFSET CopyAnd
+ct04	DW OFFSET CopyXor
+ct05	DW OFFSET CopyInvert
+ct06	DW OFFSET CopyInvertOr
+ct07	DW OFFSET CopyInvertAnd
+ct08	DW OFFSET CopyInvertXor
+ct09	DW OFFSET CopyOr
+ct0A	DW OFFSET CopyAnd
+ct0B	DW OFFSET CopyAnd
+ct0C	DW OFFSET CopyNull
+ct0D	DW OFFSET CopyNull
+ct0E	DW OFFSET CopyNull
+ct0F	DW OFFSET CopyNull
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Copy
+;
+;		DESCRIPTION:	Copy line
+;
+;		PARAMETERS:		EAX         Source base
+;                       FS:ESI      Source position
+;					    EDI		    Dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy	Proc far
+    push bx
+    push edx
+;
+    mov edx,ds:v_app_base
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].CopyTab
+;
+	pop edx
+	pop bx
+    ret
+copy    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSet
+;
+;		DESCRIPTION:	Set mask line
+;
+;		PARAMETERS:		EAX         Color
+;						CX			number of pixels
+;                       DL          Start bit number
+;                       GS:EBX      Mask bits
+;						ES:EDI		Dest buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetTab:
+mst00	DW OFFSET CopyNull
+mst01	DW OFFSET CopyAnd
+mst02	DW OFFSET CopyAnd
+mst03	DW OFFSET CopyNull
+mst04	DW OFFSET CopyInvertAnd
+mst05	DW OFFSET CopyInvertAnd
+mst06	DW OFFSET CopyNull
+mst07	DW OFFSET CopyInvertAnd
+mst08	DW OFFSET CopyNull
+mst09	DW OFFSET CopyAnd
+mst0A	DW OFFSET CopyInvertAnd
+mst0B	DW OFFSET CopyNull
+mst0C	DW OFFSET CopyAnd
+mst0D	DW OFFSET CopyAnd
+mst0E	DW OFFSET CopyNull
+mst0F	DW OFFSET CopyNull
+
+mask_set	Proc far
+    push fs
+    push eax
+    push bx
+    push edx
+    push esi
+;
+    mov ax,gs
+    mov fs,ax
+    mov eax,ebx
+    movzx esi,dl
+    mov edx,ds:v_app_base
+;
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].MaskSetTab
+;
+    pop esi
+    pop edx
+    pop bx
+    pop eax
+    pop fs
+    ret
+mask_set    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskCopyNull
+;
+;		DESCRIPTION:	Masked null copy
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyNull	Proc near
+	ret
+CopyNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyNorm
+;
+;		DESCRIPTION:	Copy normally
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyNorm	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_norm_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_norm_loop:
+    bt es:[esi],eax
+    jc copy_norm_set
+
+copy_norm_reset:
+    btr es:[edi],edx
+    jmp copy_norm_next
+
+copy_norm_set:
+    bts es:[edi],edx
+
+copy_norm_next:
+    inc eax
+    inc edx
+    loop copy_norm_loop
+
+copy_norm_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyNorm	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyAnd
+;
+;		DESCRIPTION:	Copy by anding source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyAnd	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_and_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_and_loop:
+    bt es:[esi],eax
+    jnc copy_and_reset
+;
+    bt es:[edi],edx
+    jc copy_and_next
+
+copy_and_reset:
+    btr es:[edi],edx
+
+copy_and_next:
+    inc eax
+    inc edx
+    loop copy_and_loop
+
+copy_and_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyOr
+;
+;		DESCRIPTION:	Copy by oring source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyOr	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_or_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_or_loop:
+    bt es:[edi],edx
+    jc copy_or_next
+;
+    bt es:[esi],eax
+    jnc copy_or_next
+
+copy_or_set:
+    bts es:[edi],edx
+
+copy_or_next:
+    inc eax
+    inc edx
+    loop copy_or_loop
+
+copy_or_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyXor
+;
+;		DESCRIPTION:	Copy by xoring source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyXor	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_xor_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_xor_loop:
+    bt es:[esi],eax
+    jnc copy_xor_next
+;
+    btc es:[edi],edx
+
+copy_xor_next:
+    inc eax
+    inc edx
+    loop copy_xor_loop
+
+copy_xor_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvert
+;
+;		DESCRIPTION:	Copy inverted
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvert	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_inv_loop:
+    bt es:[esi],eax
+    jc copy_inv_reset
+
+copy_inv_set:
+    bts es:[edi],edx
+    jmp copy_inv_next
+
+copy_inv_reset:
+    btr es:[edi],edx
+
+copy_inv_next:
+    inc eax
+    inc edx
+    loop copy_inv_loop
+
+copy_inv_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyInvert	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertAnd
+;
+;		DESCRIPTION:	Copy by inverting & anding source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertAnd	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_and_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_inv_and_loop:
+    bt es:[esi],eax
+    jc copy_inv_and_reset
+;
+    bt es:[edi],edx
+    jc copy_inv_and_next
+
+copy_inv_and_reset:
+    btr es:[edi],edx
+
+copy_inv_and_next:
+    inc eax
+    inc edx
+    loop copy_inv_and_loop
+
+copy_inv_and_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyInvertAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertOr
+;
+;		DESCRIPTION:	Copy by inverting & oring source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertOr	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_or_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_inv_or_loop:
+    bt es:[edi],edx
+    jc copy_inv_or_next
+;
+    bt es:[esi],eax
+    jc copy_inv_or_next
+
+copy_inv_or_set:
+    bts es:[edi],edx
+
+copy_inv_or_next:
+    inc eax
+    inc edx
+    loop copy_inv_or_loop
+
+copy_inv_or_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyInvertOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyInvertXor
+;
+;		DESCRIPTION:	Copy by inverting & xoring source & dest
+;
+;		PARAMETERS:		EBP         mask position
+;                       ESI         source position
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyInvertXor	Proc near
+    push eax
+    push cx
+    push edx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz copy_inv_xor_done
+;
+    mov ax,si
+	and eax,7
+	shr esi,3
+;
+    mov dx,di
+    and edx,7
+    shr edi,3
+
+copy_inv_xor_loop:
+    bt es:[esi],eax
+    jc copy_inv_xor_next
+;
+    btc es:[edi],edx
+
+copy_inv_xor_next:
+    inc eax
+    inc edx
+    loop copy_inv_xor_loop
+
+copy_inv_xor_done:
+    pop edi
+    pop esi
+    pop edx
+    pop cx
+    pop eax
+	ret
+CopyInvertXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CopyTab
+;
+;		DESCRIPTION:	Copy LGOP table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CopyTab:
+ct00	DW OFFSET CopyNull
+ct01	DW OFFSET CopyNorm
+ct02	DW OFFSET CopyOr
+ct03	DW OFFSET CopyAnd
+ct04	DW OFFSET CopyXor
+ct05	DW OFFSET CopyInvert
+ct06	DW OFFSET CopyInvertOr
+ct07	DW OFFSET CopyInvertAnd
+ct08	DW OFFSET CopyInvertXor
+ct09	DW OFFSET CopyOr
+ct0A	DW OFFSET CopyAnd
+ct0B	DW OFFSET CopyAnd
+ct0C	DW OFFSET CopyNull
+ct0D	DW OFFSET CopyNull
+ct0E	DW OFFSET CopyNull
+ct0F	DW OFFSET CopyNull
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskCopy
+;
+;		DESCRIPTION:	Copy mask line
+;
+;		PARAMETERS:		CX			number of pixels
+;                       DL          Start bit number
+;                       ESI         Source position
+;                       GS:EBX      Mask bits 
+;						EDI	    	Dest position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mask_copy	Proc far
+    push ebx
+    push cx
+    push dx
+    push esi
+    push edi
+;
+    or dl,dl
+    jz mask_copy_prep
+;
+    push cx
+    mov cl,dl
+    mov dl,gs:[ebx]
+    rcr dl,cl
+    mov dh,8
+    sub dh,cl
+    pop cx
+    jmp mask_copy_loop
+
+mask_copy_prep:
+    mov dh,8
+	mov dl,gs:[ebx]
+
+mask_copy_loop:
+	rcr dl,1
+	jnc mask_copy_next
+;
+    mov ax,[bp].curr_x
+    cmp ax,ds:v_x_min
+    jl mask_copy_next
+;
+    cmp ax,ds:v_x_max
+    jg mask_copy_next
+;
+	mov ax,fs:[esi]
+	push bx
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].LgopTab
+	pop bx
+
+mask_copy_next:
+	add esi,2
+	add edi,2
+	inc word ptr [bp].curr_x
+	sub cx,1
+	jz mask_copy_done
+;
+	sub dh,1
+	jnz mask_copy_loop
+;
+	inc ebx
+	jmp mask_copy_prep
+
+mask_copy_done:
+    pop edi
+    pop esi
+    pop dx
+    pop cx
+    pop ebx
+    ret
+mask_copy    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetMask
+;
+;		DESCRIPTION:	Set mask and process sprites & limits
+;
+;		PARAMETER:		DL          First bit
+;						CX			Number of pixels
+;						GS:EBX      Mask to process
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMask	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push ebx
+	push cx
+	push si
+	push edi
+;
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl set_mask_done
+;
+    cmp ax,ds:v_y_max
+    jg set_mask_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg set_mask_done
+    
+set_mask_buf_loop:
+    cmp ax,ds:v_x_min
+    jge set_mask_start_ok
+
+set_mask_adv_buf:
+    inc ax
+    add edi,2
+    sub cx,1
+    jnz set_mask_buf_loop
+    jmp set_mask_done
+
+set_mask_start_ok:
+    mov si,ds:v_x_max
+    sub si,ax
+    inc si
+    cmp cx,si
+    jc set_mask_do
+;
+    mov cx,si
+    
+set_mask_do:
+    cmp ds:v_sprite_count,0
+    jz set_mask_draw
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+set_mask_draw:
+	mov eax,ds:v_color
+    call ds:mask_set_proc
+;
+    cmp ds:v_sprite_count,0
+    jz set_mask_done
+;
+    ShowSpriteLine
+
+set_mask_done:
+	pop edi
+	pop si
+	pop cx
+	pop ebx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+SetMask Endp
 
 PAGE
 
@@ -412,269 +1927,6 @@ get_line	Proc far
 	pop edx
 	ret
 get_line	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabNull
-;
-;		DESCRIPTION:	Null line
-;
-;		PARAMETERS:		EAX			Bit #
-;						ES:EDI		Dest buffer (LFB)
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SlabNull	Proc near
-	ret
-SlabNull	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabSet
-;
-;		DESCRIPTION:	Set line
-;
-;		PARAMETERS:		EAX			Bit #
-;						ES:EDI		Dest buffer (LFB)
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-or_bit_tab:
-bt00	DB 0FFh
-bt01	DB 0FEh
-bt02	DB 0FCh
-bt03	DB 0F8h
-bt04	DB 0F0h
-bt05	DB 0E0h
-bt06	DB 0C0h
-bt07	DB 80h
-
-SlabSet	Proc near
-	push eax
-	push ebx
-	push cx
-	push edi
-;
-	or cx,cx
-	jz slab_set_done
-;
-	movzx ebx,al
-	shr eax,3
-	add edi,eax
-	and bl,7
-	mov ax,cx
-	add ax,bx
-	cmp ax,8
-	jc slab_set_last_loop
-;
-	mov al,byte ptr cs:[bx].or_bit_tab
-	or es:[edi],al
-	sub cx,8
-	add cx,bx
-;
-	mov al,-1
-	xor bl,bl
-
-slab_set_loop:
-	inc edi
-	cmp cx,8
-	jb slab_set_last_loop
-;
-	mov es:[edi],al
-	sub cx,8
-	jnz slab_set_loop
-	jmp slab_set_done
-	
-slab_set_last_loop:
-	bts es:[edi],ebx
-	inc bl
-	loop slab_set_last_loop
-
-slab_set_done:
-	pop edi
-	pop cx
-	pop ebx
-	pop eax
-	ret
-SlabSet	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabReset
-;
-;		DESCRIPTION:	Reset line
-;
-;		PARAMETERS:		EAX			Bit #
-;						ES:EDI		Dest buffer (LFB)
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-and_bit_tab:
-br00	DB 0
-br01	DB 1
-br02	DB 3
-br03	DB 7
-br04	DB 0Fh
-br05	DB 1Fh
-br06	DB 3Fh
-br07	DB 7Fh
-
-SlabReset	Proc near
-	push eax
-	push ebx
-	push cx
-	push edi
-;
-	or cx,cx
-	jz slab_reset_done
-;
-	movzx ebx,al
-	shr eax,3
-	add edi,eax
-	and bl,7
-	mov ax,cx
-	add ax,bx
-	cmp ax,8
-	jc slab_reset_last_loop
-;
-	mov al,byte ptr cs:[bx].and_bit_tab
-	and es:[edi],al
-	sub cx,8
-	add cx,bx
-;
-	xor al,al
-	xor bl,bl
-
-slab_reset_loop:
-	inc edi
-	cmp cx,8
-	jb slab_reset_last_loop
-;
-	mov es:[edi],al
-	sub cx,8
-	jnz slab_reset_loop
-	jmp slab_reset_done
-	
-slab_reset_last_loop:
-	btr es:[edi],ebx
-	inc bl
-	loop slab_reset_last_loop
-
-slab_reset_done:
-	pop edi
-	pop cx
-	pop ebx
-	pop eax
-	ret
-SlabReset	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabCompl
-;
-;		DESCRIPTION:	Compl line
-;
-;		PARAMETERS:		EAX			Bit #
-;						ES:EDI		Dest buffer (LFB)
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SlabCompl	Proc near
-	push eax
-	push ebx
-	push cx
-	push edi
-;
-	or cx,cx
-	jz slab_compl_done
-;
-	movzx ebx,al
-	shr eax,3
-	add edi,eax
-	and bl,7
-	mov ax,cx
-	add ax,bx
-	cmp ax,8
-	jc slab_compl_last_loop
-;
-	mov al,es:[edi]
-	mov ah,al
-	and al,byte ptr cs:[bx].or_bit_tab
-	not al
-	and ah,byte ptr cs:[bp].and_bit_tab
-	or al,ah
-	mov es:[edi],al
-	sub cx,8
-	add cx,bx
-;
-	mov al,-1
-	xor bl,bl
-
-slab_compl_loop:
-	inc edi
-	cmp cx,8
-	jb slab_compl_last_loop
-;
-	xor es:[edi],al
-	sub cx,8
-	jnz slab_compl_loop
-	jmp slab_compl_done
-	
-slab_compl_last_loop:
-	btc es:[edi],ebx
-	inc bl
-	loop slab_compl_last_loop
-
-slab_compl_done:
-	pop edi
-	pop cx
-	pop ebx
-	pop eax
-	ret
-SlabCompl	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabTab
-;
-;		DESCRIPTION:	Slab LGOP table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SlabTab:
-st00	DW OFFSET SlabNull
-st01	DW OFFSET SlabSet
-st02	DW OFFSET SlabSet
-st03	DW OFFSET SlabNull
-st04	DW OFFSET SlabCompl
-st05	DW OFFSET SlabReset
-st06	DW OFFSET SlabNull
-st07	DW OFFSET SlabReset
-st08	DW OFFSET SlabNull
-st09	DW OFFSET SlabSet
-st0A	DW OFFSET SlabReset
-st0B	DW OFFSET SlabNull
-st0C	DW OFFSET SlabSet
-st0D	DW OFFSET SlabSet
 
 PAGE
 
