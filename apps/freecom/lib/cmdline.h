@@ -29,6 +29,7 @@
 #define _CMDLINE_H
 
 #include "cmd.h"
+#include "str.h"
 
 class TCommandLine
 {
@@ -36,12 +37,22 @@ public:
 	TCommandLine(const char *line);
 	~TCommandLine();
 
-    int Run();
+	int Run();
 
 protected:
-    void InsertLast(TCommand *cmd);
+	int IsRedir(char ch);
+	void InsertLast(TCommand *cmd);
+	const char *RedirInput(const char *line);
+	const char *RedirOutput(const char *line);
+	const char *RedirAppend(const char *line);
+	void Pipe(TString &str);
+	void Add(TString &str);
 
 	TCommand *FList;
+    int FRemoveInput;
+	TString FInputFile;
+	TString FOutputFile;
+	TString FAppendFile;
 };
 
 #endif

@@ -39,13 +39,13 @@ public:
     TCommand(const char *param);
 	virtual ~TCommand();
 
-	int DefineInput(const char *name, int remove);
-	int DefineOutput(const char *name);
-	int DefineAppend(const char *name);
-	int DefineError(const char *name);
+	void DefineInput(TString &name, int remove);
+	void DefineOutput(TString &name);
+	void DefineAppend(TString &name);
+	void DefineError(TString &name);
 	
 	int Run();
-	virtual void InitOptions();
+	virtual int InitOptions();
 	virtual int Execute(char *param) = 0;
 
 	static int ErrorLevel;
@@ -70,6 +70,11 @@ protected:
 	TFile *FInputFile;
 	TFile *FOutputFile;
 	TFile *FErrorFile;
+
+	TString FInputName;
+	TString FOutputName;
+	TString FAppendName;
+	TString FErrorName;
 
     TPathName *FRemovePath;
 };

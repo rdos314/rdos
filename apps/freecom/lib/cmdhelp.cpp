@@ -226,6 +226,24 @@ int IsFileNameChar(char c)
 
 /*##########################################################################
 #
+#   Name       : LTrimsp
+#
+#   Purpose....: Trim of leading spaces
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *LTrimsp(const char *str)
+{
+	while (*str && isspace(*str))
+	    str++;
+	return str;
+}
+
+/*##########################################################################
+#
 #   Name       : LTrim
 #
 #   Purpose....: Remove leading "spaces"

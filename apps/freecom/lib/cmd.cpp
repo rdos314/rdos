@@ -99,13 +99,11 @@ TCommand::~TCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::DefineInput(const char *name, int remove)
+void TCommand::DefineInput(TString &name, int remove)
 {
-	FInputFile = new TFile(name);
-	if (FInputFile->IsOpen() && remove)
+	FInputName = name;
+	if (remove)
 		FRemovePath = new TPathName(name);
-        
-    return FInputFile->IsOpen();        
 }
 
 /*##########################################################################
@@ -119,10 +117,9 @@ int TCommand::DefineInput(const char *name, int remove)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::DefineOutput(const char *name)
+void TCommand::DefineOutput(TString &name)
 {
-    FOutputFile = new TFile(name, 2);
-    return FOutputFile->IsOpen();
+	FOutputName = name;
 }
 
 /*##########################################################################
@@ -136,10 +133,9 @@ int TCommand::DefineOutput(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::DefineError(const char *name)
+void TCommand::DefineError(TString &name)
 {
-    FErrorFile = new TFile(name, 2);
-    return FErrorFile->IsOpen();
+	FErrorName = name;
 }
 
 /*##########################################################################
@@ -153,17 +149,9 @@ int TCommand::DefineError(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::DefineAppend(const char *name)
+void TCommand::DefineAppend(TString &name)
 {
-    FOutputFile = new TFile(name);
-    if (FOutputFile->IsOpen())
-        FOutputFile->SetPos(FOutputFile->GetSize());
-    else
-    {
-        delete FOutputFile;
-        FOutputFile = new TFile(name, 2);        
-    }
-    return FOutputFile->IsOpen();
+	FAppendName = name;
 }
 
 /*##########################################################################
@@ -180,28 +168,61 @@ int TCommand::DefineAppend(const char *name)
 int TCommand::Run()
 {
 	char *param;
+	char *ptr;
 	int size;
-    int result;
+	int result;
 
 	size = FCmdLine.GetSize();
 	param = new char[size + 1];
 	memcpy(param, FCmdLine.GetData(), size + 1);
 
-	if (FInputFile)
-	    SetInputFile(FInputFile);
+	ptr = param;
 
-	if (FOutputFile)
-	    SetOutputFile(FOutputFile);
+	if (FInputName.GetSize())
+	{
+		FInputFile = new TFile(FInputName.GetData());
+		if (FInputFile->IsOpen())
+			SetInputFile(FInputFile);
+	}
 
-	if (FErrorFile)
-	    SetErrorFile(FErrorFile);
+	if (FOutputName.GetSize())
+	{
+		FOutputFile = new TFile(FOutputName.GetData(), 0);
+		if (FOutputFile->IsOpen())
+			SetOutputFile(FOutputFile);
+	}
+	else
+	{
+		if (FAppendName.GetSize())
+		{
+			FOutputFile = new TFile(FAppendName.GetData());
+			if (FOutputFile->IsOpen())
+				FOutputFile->SetPos(FOutputFile->GetSize());
+			else
+			{
+				delete FOutputFile;
+				FOutputFile = new TFile(FAppendName.GetData(), 0);
+			}
 
-    InitOptions();
-	
-	if (LeadOptions(&param, 0) != E_None)
-		return 1;
+			if (FOutputFile->IsOpen())
+				SetOutputFile(FOutputFile);
+		}
+	}
 
-	result = Execute(param);
+	if (FErrorName.GetSize())
+	{
+		FErrorFile = new TFile(FErrorName.GetData(), 0);
+		if (FErrorFile->IsOpen())
+			SetErrorFile(FErrorFile);
+	}
+
+	if (InitOptions())
+	{
+		if (LeadOptions(&ptr, 0) != E_None)
+			return 1;
+	}
+
+	result = Execute(ptr);
 
 	delete param;
 	return result;
@@ -218,8 +239,9 @@ int TCommand::Run()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::InitOptions()
+int TCommand::InitOptions()
 {
+	return TRUE;
 }
 
 /*##########################################################################

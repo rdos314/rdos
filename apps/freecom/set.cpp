@@ -34,6 +34,9 @@
 
 #define PROMPT_BUFFER_SIZE	256
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TSetFactory::TSetFactory
@@ -119,10 +122,11 @@ int TSetCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 #   Returns....: *
 #
 ##########################################################################*/
-void TSetCommand::InitOptions()
+int TSetCommand::InitOptions()
 {
 	FOptC = 0;
 	FPromptUser = 0;
+	return TRUE;
 }
 
 /*##########################################################################

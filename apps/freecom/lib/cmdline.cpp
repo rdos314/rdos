@@ -25,6 +25,9 @@
 #
 ########################################################################*/
 
+#include <string.h>
+
+#include "rdos.h"
 #include "cmdhelp.h"
 #include "cmdline.h"
 #include "cmdfact.h"
@@ -44,27 +47,27 @@
 #
 ##########################################################################*/
 TCommandLine::TCommandLine(const char *line)
-{	
-    TCommand *cmd;
-    char *ptr;
-    TString str;
-    char ch;
-    char *p;
-  
-//    cmd = TCommandFactory::Parse(line);
-//    InsertLast(cmd);
+{
+	TCommand *cmd;
+	const char *ptr;
+	TString str;
+	char ch;
+	const char *p;
 
-    ptr = line;
+	FList = 0;
+	FRemoveInput = FALSE;
 
-    while (*ptr)
-    {
-        ch = *ptr;
+	ptr = line;
 
-        switch (ch)
-        {
-            case '"':
+	while (*ptr)
+	{
+		ch = *ptr;
+
+		switch (ch)
+		{
+			case '"':
             case '\'':
-                p = strchr(ptr, ch);
+				p = strchr(ptr, ch);
                 if (p == 0)
                 {
                     str.Append(ptr);
@@ -73,38 +76,43 @@ TCommandLine::TCommandLine(const char *line)
                 else
                 {
                     while (p >= ptr)
-                    {
-                        str.Append(*ptr);
-                        ptr++;
-                    }
-                }
-                break;
+					{
+						str.Append(*ptr);
+						ptr++;
+					}
+				}
+				break;
 
-            case '<':
-                ptr = RedirInput(str, ptr);
-                str = "";
-                break;
+			case '<':
+				ptr = RedirInput(ptr + 1);
+				break;
 
-            case '>':
-                if (*(ptr+1) == '>')
-                    RedirAppend(str, ptr + 1);
-                else
-                    RedirOutput(str, ptr);
-                return;
+			case '>':
+				if (*(ptr+1) == '>')
+					ptr = RedirAppend(ptr + 2);
+				else
+					ptr = RedirOutput(ptr + 1);
+				break;
 
-            case '|':
-                ptr = Pipe(str, ptr);
-                str = "";
-                break;                
+			case '|':
+				Pipe(str);
+				ptr++;
+				str = "";
+				break;
 
-            default:
-                str.Append(ptr);
-                ptr++;
-                break;
-        }
-    }
+			case 0xa:
+			case 0xd:
+				ptr++;
+				break;
 
-    Add(str);
+			default:
+				str.Append(*ptr);
+				ptr++;
+				break;
+		}
+	}
+
+	Add(str);
 }
 
 /*##########################################################################
@@ -119,11 +127,11 @@ TCommandLine::TCommandLine(const char *line)
 #
 ##########################################################################*/
 TCommandLine::~TCommandLine()
-{	
+{
     TCommand *cmd;
-    TCommand *next;
+	TCommand *next;
 
-    cmd = FList;
+	cmd = FList;
 
     while (cmd)
     {
@@ -131,6 +139,22 @@ TCommandLine::~TCommandLine()
         delete cmd;
         cmd = next;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::IsRedir
+#
+#   Purpose....: Is redirection char
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandLine::IsRedir(char ch)
+{
+	return ch == '>' || ch == '<' || ch == '|';
 }
 
 /*##########################################################################
@@ -147,19 +171,156 @@ TCommandLine::~TCommandLine()
 void TCommandLine::InsertLast(TCommand *cmd)
 {
     TCommand *curr;
-    
-    cmd->FList = 0;
-    curr = FList;
-   
-    if (curr)
-    {
-        while (curr->FList)
-            curr = curr->FList;
 
-        curr->FList = cmd;
-    }
-    else
-        FList = cmd;
+    cmd->FList = 0;
+	curr = FList;
+   
+	if (curr)
+	{
+		while (curr->FList)
+			curr = curr->FList;
+
+		curr->FList = cmd;
+	}
+	else
+		FList = cmd;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::RedirInput
+#
+#   Purpose....: Redirect input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommandLine::RedirInput(const char *line)
+{
+	const char *ptr;
+
+	FInputFile = "";
+
+	ptr = LTrim(line);
+	while (*ptr && !IsRedir(*ptr) && !IsArgDelim(*ptr))
+	{
+		FInputFile.Append(*ptr);
+		ptr++;
+	}
+	return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::RedirOutput
+#
+#   Purpose....: Redirect output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommandLine::RedirOutput(const char *line)
+{
+	const char *ptr;
+
+	FOutputFile = "";
+	FAppendFile = "";
+
+	ptr = LTrim(line);
+	while (*ptr && !IsRedir(*ptr) && !IsArgDelim(*ptr))
+	{
+		FOutputFile.Append(*ptr);
+		ptr++;
+	}
+	return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::RedirAppend
+#
+#   Purpose....: Redirect append
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TCommandLine::RedirAppend(const char *line)
+{
+	const char *ptr;
+
+	FOutputFile = "";
+	FAppendFile = "";
+
+	ptr = LTrim(line);
+	while (*ptr && !IsRedir(*ptr) && !IsArgDelim(*ptr))
+	{
+		FAppendFile.Append(*ptr);
+		ptr++;
+	}
+	return ptr;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::Pipe
+#
+#   Purpose....: Pipe
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommandLine::Pipe(TString &str)
+{
+	FOutputFile.printf("z:\\%04hX.tmp", RdosGetThreadHandle());
+	Add(str);
+	FInputFile = FOutputFile;
+	FRemoveInput = TRUE;
+	FOutputFile = "";
+	FAppendFile = "";
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandLine::Add
+#
+#   Purpose....: Add rest of command line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommandLine::Add(TString &str)
+{
+	const char *ptr;
+	TCommand *cmd;
+
+	ptr = LTrim(str.GetData());
+	if (*ptr)
+	{
+		cmd = TCommandFactory::Parse(ptr);
+		if (cmd)
+		{
+			if (FInputFile.GetSize())
+				cmd->DefineInput(FInputFile, FRemoveInput);
+
+			if (FOutputFile.GetSize())
+				cmd->DefineOutput(FOutputFile);
+
+			if (FAppendFile.GetSize())
+				cmd->DefineAppend(FAppendFile);
+
+			InsertLast(cmd);
+		}
+	}
 }
 
 /*##########################################################################
@@ -181,17 +342,19 @@ int TCommandLine::Run()
     TFile *PrevOutput = GetOutputFile();
     TFile *PrevError = GetErrorFile();
 
-    cmd = FList;
+	if (FList)
+	{
+		cmd = FList;
+		while (cmd && result == 0)
+		{
+			result = cmd->Run();
+			cmd = cmd->FList;
 
-    while (cmd && result == 0)
-    {
-        result = cmd->Run();
-        cmd = cmd->FList;
-
-        SetInputFile(PrevInput);
-        SetOutputFile(PrevOutput);
-        SetErrorFile(PrevError);
-    }
-    Write("\r\n");
-    return result;
+			SetInputFile(PrevInput);
+			SetOutputFile(PrevOutput);
+			SetErrorFile(PrevError);
+		}
+		Write("\r\n");
+	}
+	return result;
 }

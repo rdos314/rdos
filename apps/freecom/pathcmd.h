@@ -36,6 +36,9 @@ class TPathFactory : public TCommandFactory
 public:
 	TPathFactory();
 	virtual TCommand *Create(const char *param);
+
+protected:
+	virtual int PassAll();
 };
 
 class TPathCommand : public TCommand

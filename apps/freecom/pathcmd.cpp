@@ -33,6 +33,9 @@
 #include "env.h"
 #include "rdos.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TPathFactory::TPathFactory
@@ -63,6 +66,22 @@ TPathFactory::TPathFactory()
 TCommand *TPathFactory::Create(const char *param)
 {
 	return new TPathCommand(param);
+}
+
+/*##########################################################################
+#
+#   Name       : TPathFactory::PassAll
+#
+#   Purpose....: Pass all chars
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TPathFactory::PassAll()
+{
+	return TRUE;
 }
 
 /*##########################################################################

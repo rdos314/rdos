@@ -63,6 +63,7 @@ int IsArgDelim(char ch);
 int IsOptDelim(char ch);
 int IsOptChar(char ch);
 int IsFileNameChar(char c);
+const char *LTrimsp(const char *str);
 const char *LTrim(const char *str);
 void RTrim(char *str);
 char *Unquote(const char *str, const char *end);

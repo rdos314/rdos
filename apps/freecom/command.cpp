@@ -11,29 +11,37 @@
 #include "set.h"
 #include "sysset.h"
 #include "help.h"
+#include "time.h"
+#include "date.h"
 #include "cmdline.h"
 
+TDateFactory *date;
 THelpFactory *help;
 TPathFactory *path;
 TSetFactory *set;
 TSysPathFactory *syspath;
 TSysSetFactory *sysset;
+TTimeFactory *time;
 
 void Init()
 {
 	TCommand *cmd;
 
+	time = new TTimeFactory;
 	sysset = new TSysSetFactory;
 	syspath = new TSysPathFactory;
 	set = new TSetFactory;
 	path = new TPathFactory;
 	help = new THelpFactory;
+	date = new TDateFactory;
 
 	Write("FreeCom for RDOS\r\n\r\n");
 
 	cmd = help->Create("");
 	if (cmd)
 		cmd->Run();
+
+	Write("\r\n");
 }
 
 void main()

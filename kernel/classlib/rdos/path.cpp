@@ -175,7 +175,30 @@ const TPathName &TPathName::operator=(const TString &src)
 ##########################################################################*/
 const TPathName &TPathName::operator+=(const TString &str)
 {
-	FPathName += "\\" + str;
+	const char *path;
+	const char *ptr;
+	int pos;
+
+	path = FPathName.GetData();
+	ptr = str.GetData();
+	pos = strlen(path);
+	if (pos)
+		pos--;
+
+	switch (path[pos])
+	{
+		case '\\':
+		case '/':
+			FPathName += str;
+			break;
+
+		default:
+			if (*path && *ptr != '.')
+				FPathName += "\\" + str;
+			else
+				FPathName += str;
+			break;
+	}	
     return *this;
 }
 
@@ -192,7 +215,28 @@ const TPathName &TPathName::operator+=(const TString &str)
 ##########################################################################*/
 const TPathName &TPathName::operator+=(const char *str)
 {
-	FPathName += "\\" + TString(str);
+	const char *path;
+	int pos;
+
+	path = FPathName.GetData();
+	pos = strlen(path);
+	if (pos)
+		pos--;
+
+	switch (path[pos])
+	{
+		case '\\':
+		case '/':
+			FPathName += TString(str);
+			break;
+
+		default:
+			if (*path && *str != '.')
+				FPathName += "\\" + TString(str);
+			else
+				FPathName += TString(str);
+			break;
+	}	
     return *this;
 }
 

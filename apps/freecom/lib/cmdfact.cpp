@@ -36,6 +36,8 @@
 #include "cmdfact.h"
 #include "path.h"
 #include "env.h"
+#include "setdrive.h"
+#include "exec.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -386,17 +388,25 @@ TCommand *TCommandFactory::Parse(const char *line)
 	char *ptr;
     int done;
     TString Line;
-    TCommandFactory *factory = 0;
+	TCommandFactory *factory = 0;
+	TCommand *cmd;
 
 	Line = TString(LTrim(line));
 
 	Line = ExpandEnv(Line);
-	
+
 	rest = Line.GetData();
+
+	if (strlen(rest) == 2)
+		if (rest[1] == ':' && isalpha(*rest))
+		{
+			cmd = new TSetDriveCommand(rest);
+			return cmd;
+		}
 
 	if (*rest)
 	{
-    	size = 0;
+		size = 0;
 		while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
 		{
 			size++;
@@ -408,49 +418,53 @@ TCommand *TCommandFactory::Parse(const char *line)
 
 		if (size)
 		{
+			com = new char[size + 1];
 
-	    	com = new char[size + 1];
+			rest = Line.GetData();
+			ptr = com;
 
-            rest = Line.GetData();
-            ptr = com;
-            
-	    	for (i = 0; i < size; i++)
-	    	{
-                *ptr = toupper(*rest);
-                ptr++;
-                rest++;
-            }
-            *ptr = 0;
-    		
-        	factory = FCmdList;
-        	while (factory)
-        	{
-                if (!strcmp(factory->FName.GetData(), com))
-                    break;
-                
-        		factory = factory->FList;
-        	}
+			for (i = 0; i < size; i++)
+			{
+				*ptr = toupper(*rest);
+				ptr++;
+				rest++;
+			}
+			*ptr = 0;
 
-            delete com;
-        }    
-    }
+			factory = FCmdList;
+			while (factory)
+			{
+				if (!strcmp(factory->FName.GetData(), com))
+					break;
 
-    if (factory) 
-    {
-        done = factory->PassAll();
+				factory = factory->FList;
+			}
 
-        if (!done && factory->PassDir())
-            done = *rest == '\\' || *rest == '.' || *rest == ':';
+			if (!factory)
+			{
+				cmd = new TExecCommand(com, rest);
+				delete com;
+				return cmd;
+			}
+		}
+	}
 
-        if (!done)
-            done = (!*rest || *rest == '/');
+	if (factory)
+	{
+		done = factory->PassAll();
 
-        if (!done)
-            if (IsArgDelim(*rest))
-			    rest = LTrim(rest);
+		if (!done && factory->PassDir())
+			done = *rest == '\\' || *rest == '.' || *rest == ':';
 
-	    return factory->Create(rest);
-	    
+		if (!done)
+			done = (!*rest || *rest == '/');
+
+		if (!done)
+			if (IsArgDelim(*rest))
+				rest = LTrim(rest);
+
+		return factory->Create(rest);
+
 	}
 	else
 	{
