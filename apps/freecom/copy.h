@@ -45,7 +45,15 @@ class TCopyCommand : public TCommand
 public:
 	TCopyCommand(const char *param);
 
-	virtual int Execute(char *param);	
+	virtual int Execute(char *param);
+
+protected:
+	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+	virtual int InitOptions();
+
+	int FOptV;
+	int FOptY;
+
 };
 
 #endif

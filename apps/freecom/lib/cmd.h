@@ -38,6 +38,8 @@ public:
     TArg(const char *name);
     ~TArg();
 
+    char *ptr;
+
     TString FName;
     TArg *FList;
 };

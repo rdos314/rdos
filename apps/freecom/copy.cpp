@@ -86,6 +86,51 @@ TCopyCommand::TCopyCommand(const char *param)
 
 /*##########################################################################
 #
+#   Name       : TCopyCommand::OptScan
+#
+#   Purpose....: Opt scan callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
+{
+	switch(ch)
+	{
+		case 'Y':
+			return OptScanBool(optstr, bool, strarg, &FOptY);
+
+		case 'V':
+			return OptScanBool(optstr, bool, strarg, &FOptV);
+
+	}
+	OptError(optstr);
+	return E_Useage;
+}
+
+/*##########################################################################
+#
+#   Name       : TCopyCommand::InitOptions
+#
+#   Purpose....: Init options
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::InitOptions()
+{
+    FOptV = 0;
+    FOptY = 0;
+    
+    return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TCopyCommand::Run
 #
 #   Purpose....: Run command
@@ -97,5 +142,19 @@ TCopyCommand::TCopyCommand(const char *param)
 ##########################################################################*/
 int TCopyCommand::Execute(char *param)
 {
-	return 0;
+    TArg *arg;
+
+	if (!ScanCmdLine(param, 0))
+        return 1;
+
+    arg = FArgList;
+
+    while (arg)
+    {
+        if (LeadOptions(&arg->ptr, 0) != E_None)
+            return 1;
+        else
+            arg = arg->FList;
+	}
+    return 0;
 }

@@ -52,6 +52,8 @@ int TCommand::ErrorLevel = 0;
 TArg::TArg(const char *name)
   : FName(name)
 {
+    ptr = (char *)FName.GetData();
+    
     FList = 0;
 }
 
@@ -671,7 +673,10 @@ void TCommand::Split(char *s)
     {
         start = SkipDelim(s);
         while (*start)
+        {
 			AddArg(start, &s);
+			start = SkipDelim(s);
+		}
     }
 }
 
