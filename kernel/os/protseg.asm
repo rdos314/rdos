@@ -272,6 +272,154 @@ create_data_sel32	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CreateAliasSelector16
+;
+;		DESCRIPTION:	Create a 16-bit aliased data selector
+;
+;		PARAMETERS:		BX			DESCRIPTOR
+;						EDX			BASE
+;						ECX			LIMIT
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_alias_sel16_name DB 'Create 16-bit Alias Selector',0
+
+create_alias_sel16	PROC far
+	push ds
+	push ax
+	push bx
+	push ecx
+;
+	test bx,4
+	jz create_alias16_gdt
+
+create_alias16_ldt:
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_ldt_sel
+	jmp create_alias16_dt_ok
+
+create_alias16_gdt:
+	mov ax,gdt_sel
+	mov ds,ax
+
+create_alias16_dt_ok:
+	mov al,bl
+	and bx,0FFF8h
+	dec ecx
+	cmp ecx,100000h
+	jae create_alias16_big
+;
+	mov [bx],cx
+	mov [bx+2],edx
+	shl al,5
+	or al,92h
+	xchg al,[bx+5]
+	shr ecx,16
+	and cx,0Fh
+	or ch,al
+	or cl,10
+	mov [bx+6],cx
+	jmp create_alias16_done
+
+create_alias16_big:
+	shr ecx,12
+	mov [bx],cx
+	mov [bx+2],edx
+	shl al,5
+	or al,92h
+	xchg al,[bx+5]
+	shr ecx,16
+	and cx,0Fh
+	or ch,al
+	or cl,90h
+	mov [bx+6],cx
+
+create_alias16_done:
+	pop ecx
+	pop bx
+	pop ax
+	pop ds
+	ret
+create_alias_sel16	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateAliasSelector32
+;
+;		DESCRIPTION:	Create a 32-bit alias selector
+;
+;		PARAMETERS:		BX			DESCRIPTOR
+;						EDX			BASE
+;						ECX			LIMIT
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_alias_sel32_name DB 'Create 32-bit Alias Selector',0
+
+create_alias_sel32	PROC far
+	push ds
+	push ax
+	push bx
+	push ecx
+;
+	test bx,4
+	jz create_alias32_gdt
+
+create_alias32_ldt:
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_ldt_sel
+	jmp create_alias32_dt_ok
+
+create_alias32_gdt:
+	mov ax,gdt_sel
+	mov ds,ax
+
+create_alias32_dt_ok:
+	mov al,bl
+	and bx,0FFF8h
+	dec ecx
+	cmp ecx,100000h
+	jae create_alias32_big
+;
+	mov [bx],cx
+	mov [bx+2],edx
+	shl al,5
+	or al,92h
+	xchg al,[bx+5]
+	shr ecx,16
+	and cx,0Fh
+	or ch,al
+	or cl,50h
+	mov [bx+6],cx
+	jmp create_alias32_done
+
+create_alias32_big:
+	shr ecx,12
+	mov [bx],cx
+	mov [bx+2],edx
+	shl al,5
+	or al,92h
+	xchg al,[bx+5]
+	shr ecx,16
+	and cx,0Fh
+	or ch,al
+	or cl,0D0h
+	mov [bx+6],cx
+
+create_alias32_done:
+	pop ecx
+	pop bx
+	pop ax
+	pop ds
+	ret
+create_alias_sel32	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CreateCodeSelector16
 ;
 ;		DESCRIPTION:	Create 16-bit code selector
@@ -957,6 +1105,18 @@ init_protseg	PROC near
 	mov di,OFFSET create_data_sel32_name
 	xor cl,cl
 	mov ax,create_data_sel32_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_alias_sel16
+	mov di,OFFSET create_alias_sel16_name
+	xor cl,cl
+	mov ax,create_alias_sel16_nr
+	RegisterOsGate
+;
+	mov si,OFFSET create_alias_sel32
+	mov di,OFFSET create_alias_sel32_name
+	xor cl,cl
+	mov ax,create_alias_sel32_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET create_code_sel16

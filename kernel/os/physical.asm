@@ -450,7 +450,7 @@ check_address	Proc near
 	push eax
 	push ebx
 ;
-	mov ebx,ds:free_phys_list
+	mov ebx,ds:free_dma_phys_list
 
 check_addr_loop:
 	or ebx,ebx
@@ -485,10 +485,10 @@ do_one_scan	Proc near
 	push edx
 
 do_one_scan_loop:
-	add edx,1000h
 	call check_address
 	jc do_one_scan_done
 ;
+	add edx,1000h
 	loop do_one_scan_loop
 ;
 	clc
@@ -505,7 +505,7 @@ do_one_scan	Endp
 find_multi_page	Proc near
 	push ebx
 ;
-	mov ebx,ds:free_phys_list
+	mov ebx,ds:free_dma_phys_list
 
 find_multi_loop:
 	or ebx,ebx
@@ -535,7 +535,7 @@ allocate_one_entry	Proc near
 	push esi
 ;
 	xor esi,esi
-	mov ebx,ds:free_phys_list
+	mov ebx,ds:free_dma_phys_list
 
 allocate_one_loop:
 	or ebx,ebx
@@ -555,7 +555,7 @@ allocate_one_do:
 	jnz allocate_one_not_first
 ;
 	mov eax,es:[ebx]
-	mov ds:free_phys_list,eax
+	mov ds:free_dma_phys_list,eax
 	jmp allocate_one_unused
 
 allocate_one_not_first:
@@ -603,10 +603,11 @@ allocate_multiple_physical	PROC far
 	push fs
 	push ebx
 	push edx
-	mov bx,system_data_sel
-	mov ds,bx
-	mov dx,phys_list_sel
-	mov es,dx
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov ax,phys_list_sel
+	mov es,ax
 	mov ax,phys_page_sel
 	mov fs,ax
 	EnterSection ds:phys_section
@@ -621,6 +622,7 @@ allocate_multiple_physical	PROC far
 ;
 	call allocate_multi_entries
 	sub ds:phys_free_pages,ecx
+	mov eax,edx
 	clc
 ;
 	LeaveSection ds:phys_section
