@@ -1207,6 +1207,8 @@ install_unit_chs:
 install_unit_set_param:
 	mov fs:drive_sectors_per_unit,ax
 	mov cx,512
+	mov si,fs:drive_sectors_per_cyl
+	mov di,fs:drive_heads
 	mov bx,fs:disc_sel
 	SetDiscParam
 ;

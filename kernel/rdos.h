@@ -108,7 +108,7 @@ int RdosReadLine(char *Buf, int MaxSize);
 
 int RdosPing(long Node, long Timeout);
 
-int RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors);
+int RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 int RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
 int RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 

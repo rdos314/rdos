@@ -1297,6 +1297,8 @@ StopDisc	MACRO
 ;	IN  BX		Disc sel
 ;	IN  CX		Bytes per sector
 ;	IN  DX		Units
+;	IN  SI		BIOS sectors / cylinder
+;	IN  DI		BIOS heads
 SetDiscParam	MACRO
 	OsGate set_disc_param_nr
 					ENDM

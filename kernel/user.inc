@@ -927,6 +927,8 @@ GetDll	MACRO
 ;	IN	AL			DISC #
 ;	OUT	CX			BYTES / SECTOR
 ;	OUT	EDX			TOTAL # OF SECTORS
+;	OUT SI			BIOS SECTORS / CYL
+;	OUT DI			BIOS HEADS
 GetDiscInfo     MACRO
 	UserGate get_disc_info_nr
 						ENDM

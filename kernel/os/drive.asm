@@ -73,6 +73,8 @@ disc_nr					DB ?
 disc_units				DW ?
 disc_bytes_per_sector	DW ?
 disc_sectors_per_unit	DW ?
+disc_sectors_per_cyl	DW ?
+disc_heads				DW ?
 disc_thread				DW ?
 disc_timer_id			DW ?
 disc_data_list			DD ?
@@ -1066,6 +1068,8 @@ PAGE
 ;						BX		Disc sel
 ;						CX		Bytes per sector
 ;						DX		Units
+;						SI		BIOS sectors / cylinder
+;						DI		BIOS heads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1083,6 +1087,8 @@ set_disc_param	Proc far
 	mov ds:disc_sectors_per_unit,ax
 	mov ds:disc_bytes_per_sector,cx
 	mov ds:disc_units,dx
+	mov ds:disc_sectors_per_cyl,si
+	mov ds:disc_heads,di
 ;
 	mov ecx,OFFSET disc_unit_arr
 	movzx eax,dx
@@ -2837,6 +2843,8 @@ PAGE
 ;
 ;		RETURNS;		CX			Bytes / sector
 ;						EDX			Total sectors
+;						SI			BIOS sectors / cylinder
+;						DI			BIOS heads
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2865,12 +2873,16 @@ get_disc_info	PROC far
 	push ax
 	pop edx
 	mov cx,ds:disc_bytes_per_sector
+	mov si,ds:disc_sectors_per_cyl
+	mov di,ds:disc_heads
 	clc
 	jmp get_disc_info_done
 
 get_disc_info_fail:
 	xor cx,cx
 	xor edx,edx
+	xor si,si
+	xor di,di
 	stc
 
 get_disc_info_done:

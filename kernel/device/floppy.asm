@@ -1404,6 +1404,8 @@ demand_mount	Proc far
 	mul es:boot_heads
 	mov cx,es:boot_bytes_per_sector
 	mov edx,80
+	mov si,es:boot_sectors_per_cyl
+	mov di,es:boot_heads
 	mov bx,es:disc_sel
 	SetDiscParam
 ;

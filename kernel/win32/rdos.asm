@@ -2570,6 +2570,8 @@ RdosReplyMailslot	Endp
 ;		PARAMETER:		Disc #
 ;						Bytes / sector
 ;						Total sectors
+;						BIOS sectors / cyl
+;						BIOS heads
 ;
 ;		RETURNS:		OK
 ;
@@ -2580,19 +2582,30 @@ RdosReplyMailslot	Endp
 RdosGetDiscInfo	Proc
 	push ebp
 	mov ebp,esp
+	push ebx
 	push edx
+	push esi
 	push edi
 ;
 	mov al,[ebp+8]
 	UserGate get_disc_info_nr
 	jc get_disc_info_fail
 ;
-	mov edi,[ebp+12]
+	mov ebx,[ebp+12]
 	movzx ecx,cx
-	mov [edi],ecx
+	mov [ebx],ecx
 ;
-	mov edi,[ebp+16]
-	mov [edi],edx
+	mov ebx,[ebp+16]
+	mov [ebx],edx
+;
+	mov ebx,[ebp+20]
+	movzx esi,si
+	mov [ebx],esi
+;
+	mov ebx,[ebp+24]
+	movzx edi,di
+	mov [ebx],edi
+;
 	mov eax,1
 	jmp get_disc_info_done
 
@@ -2601,9 +2614,11 @@ get_disc_info_fail:
 
 get_disc_info_done:
 	pop edi
+	pop esi
 	pop edx
+	pop ebx
 	pop ebp
-	ret 12
+	ret 20
 RdosGetDiscInfo	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
