@@ -288,10 +288,12 @@ create_header_alloc:
 	mov ds,ax
 	movzx esi,sp
 	GetNetBuffer
+	jc create_header_gw_pop
 ;	
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
-;
+
+create_header_gw_pop:
 	pop eax
 	pop esi
 	pop ds
@@ -315,10 +317,12 @@ create_header_not_ppp:
 	mov ds,ax
 	movzx esi,sp
 	GetNetBuffer
+	jc create_header_local_pop
 ;	
 	mov eax,fs:my_ip
 	mov es:[di].ip_source,eax
-;
+
+create_header_local_pop:
 	pop edx
 	pop esi
 	pop ds
