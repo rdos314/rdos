@@ -35,6 +35,8 @@ class TCmos : public TIsaFunction
 public:
 	TCmos(TIsa *Isa, int Base);
 
+	virtual int GetSize();
+
 	virtual void Out(int Num, int Offset, char Value);
 	virtual char In(int Num, int Offset);
 

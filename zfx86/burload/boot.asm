@@ -343,6 +343,27 @@ WriteChar   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			WriteCRLF
+;
+;		DESCRIPTION:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteCRLF	Proc near
+    push ax
+    push dx
+    mov al,0Dh
+    SendChar
+    mov al,0Ah
+    SendChar
+    pop dx
+    pop ax
+    ret
+WriteCRLF   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			SingleHex
 ;
 ;		DESCRIPTION:
@@ -355,10 +376,7 @@ WriteChar   Endp
 SingleHex	Proc near
 	mov ah,al
 	and al,0F0h
-	rol al,1
-	rol al,1
-	rol al,1
-	rol al,1
+	rol al,4
 	cmp al,0Ah
 	jb ok_low1
 	add al,7
@@ -385,12 +403,12 @@ SingleHex   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteHexByte    Proc near
+    push ax
 	call SingleHex
-    mov di,ax
-    mov al,ah
 	call WriteChar
-    mov ax,di
+	xchg al,ah
     call WriteChar
+    pop ax
     ret
 WriteHexByte    Endp
 
@@ -406,23 +424,32 @@ WriteHexByte    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteHexWord	Proc near
-    mov si,ax
-    shr ax,8
-	call SingleHex
-    mov di,ax
-	call WriteChar
-    mov ax,di
-    mov al,ah
-    call WriteChar
-    mov ax,si
-    call SingleHex
-    mov di,ax
-    call WriteChar
-    mov ax,di
-    mov al,ah
-    call WriteChar
+    xchg al,ah
+    call WriteHexByte
+    xchg al,ah
+    call WriteHexByte
     ret
 WriteHexWord    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteHexDword
+;
+;		DESCRIPTION:
+;
+;		PARAMETERS:		EAX		HEX DATA IN
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteHexDword	Proc near
+    push eax
+    shr eax,16
+    call WriteHexWord
+    pop eax
+    call WriteHexWord
+    ret
+WriteHexDword   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1038,7 +1065,6 @@ PAGE
 OkText DB 'Everything is OK',0
 
 InitRdos:
-	int 3
     xor esi,esi
     FindRam
     mov edx,esi
@@ -1059,7 +1085,11 @@ InitRdos:
     mov byte ptr [ebx+5],92h
     mov word ptr [ebx+6],0
     lgdt [esi+gdt_sel]
-;
+	db 0EAh
+	dw OFFSET rdos_startup
+	dw device_code_sel
+
+rdos_startup:
     FindRam
     mov ax,gdt_sel
     mov ds,ax
@@ -1072,9 +1102,13 @@ InitRdos:
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
+    mov ax,gdt_sel
+    mov ss,ax
+    mov sp,1000h
 ;
 	xor edi,edi
 	ReadNB 20Fh
+;
 	mov bx,ax
 	test bx,101h
 	jz size_dram_bank0_done
@@ -1158,32 +1192,40 @@ size_flash_next:
 	jne size_flash_loop	
 
 size_flash_found:
-	dec edi
-	WriteZflDword 2Ah, edi
-	inc edi
 	mov esi,1000000h
 	sub esi,edi
-	WriteZflDword 26h, esi
+	dec edi
 ;
+; cannot do this yet!!
+; 
+;	WriteZflDword 26h, esi
+;	WriteZflDword 2Ah, edi 
+;
+	inc edi
 	or esi,0FF000000h
-	mov ds:rom1_base,esi
-	mov ds:rom1_size,edi
+	mov eax,dword ptr cs:adapter_start
+	mov ds:rom1_base,eax
+	neg eax
+	mov ds:rom1_size,eax
 ;
 	mov ds:rom2_size,0
 	mov ds:rom_shadow,1
 ;
-    mov ax,gdt_sel
-    mov ss,ax
-    mov sp,1000h
-;
     call InitSerial
+    mov al,'A'
+    call WriteChar
+    call GetAllAdapters
+    mov al,'B'
+    call WriteChar
+	call StartShutDownDevice
+    mov al,'C'
+    call WriteChar
+	call GetBootDevice
+    mov al,'D'
+    call WriteChar
+;
     mov ax,1234h
-    call WriteHexWord
-    mov si,OFFSET OkText
-    call WriteRomString
-
-stopl:
-    jmp stopl
+    mov ds,ax
 
 PAGE
 
@@ -1536,10 +1578,10 @@ check_bank_col_ok:
     jmp check_bank_col_loop
 
 check_bank_next:
-    shr esi,14
+    shr esi,17
     bsf eax,esi
     dec ax
-    shl al,9
+    shl ax,9
     and di,0F1FFh
     or di,ax
 ;

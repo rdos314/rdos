@@ -50,6 +50,17 @@ TKeyb::TKeyb(TIsa *Isa, int Base)
 	DefineIo(0, Base, 8, 0);
 }
 
+/*##################  TKeyb::GetSize  ###############
+*   Purpose....: Get mapping size of device						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TKeyb::GetSize()
+{
+    return 8;
+}
+
 /*##################  TKeyb::Out  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #

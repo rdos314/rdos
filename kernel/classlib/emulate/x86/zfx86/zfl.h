@@ -30,19 +30,56 @@
 
 #include "isa.h"
 
+class TZflMemArea
+{
+public:
+	TZflMemArea();
+
+	unsigned long Base;
+	unsigned long Size;
+	unsigned long Page;
+	int Enabled;
+	int Write;
+	TIsaFunction *func;
+};
+
+class TZflIoArea
+{
+public:
+	TZflIoArea();
+
+    int Base;
+    int Size;
+    int Enabled;
+    int Write;
+    TIsaFunction *func;
+};
+
 class TZFLogic : public TIsaFunction
 {
 public:
 	TZFLogic(TIsa *Isa, int Base);
+
+	virtual int GetSize();
 
 	virtual void Out(int Num, int Offset, char Value);
 	virtual char In(int Num, int Offset);
 	virtual void WriteMem(int Num, unsigned long Offset, char Value);
 	virtual char ReadMem(int Num, unsigned long Offset);
 
+	void DefineIoCs(TIsaFunction *func, int Num);
+	void DefineMemCs(TIsaFunction *func, int Num);
+
+protected:
+    void UpdateData(int Index);
+    void UpdateIoWindow(int Num);
+    void UpdateMemWindow(int Num);
+    
 private:
 	char FIndex;
 	char FData[0x82];
+	TZflMemArea ZflMemArr[4];
+	TZflIoArea ZflIoArr[4];
 };
 
 #endif

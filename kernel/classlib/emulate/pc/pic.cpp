@@ -60,6 +60,17 @@ TPic::TPic(TIsa *Isa, int Base)
 	DefineIo(0, Base, 2, 0);
 }
 
+/*##################  TPic::GetSize  ###############
+*   Purpose....: Get mapping size of device						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TPic::GetSize()
+{
+    return 2;
+}
+
 /*##################  TPic::Cascade  ###############
 *   Purpose....: Cascade a PIC									            #
 *   In params..: *                                                          #

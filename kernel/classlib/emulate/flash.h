@@ -34,8 +34,11 @@
 class TFlash : public TIsaFunction
 {
 public:
+	TFlash(unsigned long Size);
 	TFlash(TIsa *Isa, unsigned long Base, unsigned long Size);
 	~TFlash();
+
+	virtual int GetSize();
 
 	void LoadTop(TFile *File);
 	void LoadBottom(TFile *File);

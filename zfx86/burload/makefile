@@ -52,13 +52,18 @@ boot_srcs = BOOT.ASM
 boot_objs = $(boot_srcs:.ASM=.OBJ)
 boot_exes = BOOT.EXE
 
+shutdown_srcs = SHUTDOWN.ASM
+shutdown_objs = $(shutdown_srcs:.ASM=.OBJ)
+shutdown_exes = SHUTDOWN.EXE
+
 srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs) $(cfg2rom_srcs) \
-            $(boot_srcs)
+            $(boot_srcs) $(shutdown_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes) $(cfg2rom_exes) \
-            $(boot_exes)
+            $(boot_exes) $(shutdown_exes)
+
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -119,6 +124,14 @@ BOOT.EXE : $(boot_objs)
 	$(boot_objs)
 	BOOT
 	BOOT;
+!
+
+SHUTDOWN.EXE : $(shutdown_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(shutdown_objs)
+	SHUTDOWN
+	SHUTDOWN;
 !
 
 RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes)

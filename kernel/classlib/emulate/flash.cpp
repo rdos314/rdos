@@ -37,6 +37,27 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
+TFlash::TFlash(unsigned long Size)
+  : TIsaFunction(0)
+{
+	int i;
+
+	FSize = Size;
+	FData = new char[Size];
+
+	for (i = 0; i < Size; i++)
+		*(FData + i) = 0xFF;
+
+	DefineMem(0, 0, Size, FData);
+}
+
+/*##################  TFlash::TFlash  ###############
+*   Purpose....: Constructor for flash							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
 TFlash::TFlash(TIsa *Isa, unsigned long Base, unsigned long Size)
   : TIsaFunction(Isa)
 {
@@ -64,6 +85,17 @@ TFlash::~TFlash()
 		delete FData;
 }
 
+/*##################  TFlash::GetSize  ###############
+*   Purpose....: Get mapping size of device						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TFlash::GetSize()
+{
+    return FSize;
+}
+
 /*##################  TFlash::LoadTop ###############
 *   Purpose....: Load image at top						            #
 *   In params..: *                                                          #
@@ -79,7 +111,7 @@ void TFlash::LoadTop(TFile *File)
 	size = File->GetSize();
 	if (size > FSize)
 	{
-		File->SetPos(pos - FSize);
+		File->SetPos(size - FSize);
 		pos = 0;
 	}
 	else

@@ -970,10 +970,10 @@ check_bank_col_ok:
     jmp check_bank_col_loop
 
 check_bank_next:
-    shr esi,14
+    shr esi,17
     bsf eax,esi
     dec ax
-    shl al,9
+    shl ax,9
     and di,0F1FFh
     or di,ax
 ;

@@ -50,6 +50,17 @@ TCmos::TCmos(TIsa *Isa, int Base)
 	DefineIo(0, Base, 2, 0);
 }
 
+/*##################  TCmos::GetSize  ###############
+*   Purpose....: Get mapping size of device						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TCmos::GetSize()
+{
+    return 2;
+}
+
 /*##################  TCmos::Out  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #

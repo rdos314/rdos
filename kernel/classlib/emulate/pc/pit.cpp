@@ -454,6 +454,17 @@ TPit::~TPit()
 		delete Counter[i];
 }
 
+/*##################  TPit::GetSize  ###############
+*   Purpose....: Get mapping size of device						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+int TPit::GetSize()
+{
+    return 4;
+}
+
 /*##################  TPit::Out  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #

@@ -74,7 +74,7 @@ void cdecl main()
 				serial.Write(0xD);
 				EchoUntilSilent(100);
 
-				sprintf(str, "%08hX", File.GetSize());
+				sprintf(str, "%08lX", File.GetSize());
 				serial.Write(str);
 				serial.Write(0xD);
 				EchoUntilSilent(100);

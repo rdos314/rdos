@@ -134,11 +134,12 @@ char TIsaFunction::In(int Num, int Offset)
 void TIsaFunction::DefineIo(int Num, int Base, int Size, char *Data)
 {
     TIsaAreaData *area;
-    
+
     if (FIoArr[Num])
     {
-		FIsa->UndefineIo(this, Num);
-		delete FIoArr[Num];
+        if (FIsa)
+    	    FIsa->UndefineIo(this, Num);
+        delete FIoArr[Num];
     }
 
     area = new TIsaAreaData;
@@ -147,7 +148,8 @@ void TIsaFunction::DefineIo(int Num, int Base, int Size, char *Data)
     area->Data = Data;
     FIoArr[Num] = area;
 
-    FIsa->DefineIo(this, Num, Base, Size);
+    if (FIsa)
+        FIsa->DefineIo(this, Num, Base, Size);
 }
 
 /*##################  TIsaFunction::UndefineIo  ###############
@@ -161,7 +163,9 @@ void TIsaFunction::UndefineIo(int Num)
 {
     if (FIoArr[Num])
     {
-        FIsa->UndefineIo(this, Num);
+        if (FIsa)
+            FIsa->UndefineIo(this, Num);
+
         delete FIoArr[Num];
         FIoArr[Num] = 0;
     }
@@ -177,20 +181,23 @@ void TIsaFunction::UndefineIo(int Num)
 void TIsaFunction::DefineMem(int Num, int Base, int Size, char *Data)
 {
     TIsaAreaData *area;
-    
+
     if (FMemArr[Num])
     {
-        FIsa->UndefineMem(this, Num);
+        if (FIsa)
+            FIsa->UndefineMem(this, Num);
+
         delete FMemArr[Num];
     }
 
     area = new TIsaAreaData;
-    area->Base = Base;
+    area->Base = Base & 0x00FFFFFF;
     area->Size = Size;
     area->Data = Data;
     FMemArr[Num] = area;
 
-    FIsa->DefineMem(this, Num, Base, Size);
+    if (FIsa)
+        FIsa->DefineMem(this, Num, Base, Size);
 }
 
 /*##################  TIsaFunction::UndefineMem  ###############
@@ -204,7 +211,9 @@ void TIsaFunction::UndefineMem(int Num)
 {
     if (FMemArr[Num])
     {
-        FIsa->UndefineMem(this, Num);
+        if (FIsa)
+            FIsa->UndefineMem(this, Num);
+
         delete FMemArr[Num];
         FMemArr[Num] = 0;
     }
@@ -317,7 +326,7 @@ void TIsa::DefineMem(TIsaFunction *func, int Num, int Base, int Size)
 	int i;
 
 	area = new TIsaArea;
-	area->Base = Base;
+	area->Base = Base & 0x00FFFFFF;
 	area->Size = Size;
 	area->func = func;
 	area->Num = Num;
@@ -369,6 +378,8 @@ void TIsa::WriteMem(unsigned long Address, char Value)
 	TIsaArea *area;
 	int i;
 
+	Address = Address & 0x00FFFFFF;
+
 	for (i = 0; i <= FHookMemMax; i++)
 	{
 		area = FHookMemArr[i];
@@ -392,6 +403,8 @@ char TIsa::ReadMem(unsigned long Address)
 {
 	TIsaArea *area;
 	int i;
+
+	Address = Address & 0x00FFFFFF;
 
 	for (i = 0; i <= FHookMemMax; i++)
 	{

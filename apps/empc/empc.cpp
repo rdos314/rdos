@@ -53,8 +53,8 @@ TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 TKeyb Keyb(&Isa, 0x60);
 TCmos Cmos(&Isa, 0x70);
+TFlash Flash(0x40000);
 TZFLogic ZFLogic(&Isa, 0x218);
-TFlash Flash(&Isa, 0xFFFC0000, 0x40000);
 TCpu Cpu;
 void *Eprom;
 char *LowRam;
@@ -176,6 +176,8 @@ void main(void)
 	OpenScreen("c:\\sim.log");
 
 	Flash.LoadTop(&FlashFile);
+	ZFLogic.DefineMemCs(&Flash, 0);
+
 	Pit.Counter[0]->Define(&Pic0, 0);
 	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
