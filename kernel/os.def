@@ -248,5 +248,8 @@ free_dos_linear_nr			EQU 217
 resize_dos_linear_nr		EQU 218
 hook_load_dos_exe_nr		EQU 219
 create_process_nr			EQU 220
+new_sector_nr				EQU 221
+lock_seq_sector_nr			EQU 222
+unlock_seq_sector_nr		EQU 223
 
-osgate_entries				EQU 221
+osgate_entries				EQU 224

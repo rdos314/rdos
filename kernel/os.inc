@@ -1121,9 +1121,15 @@ CloseDrive	MACRO
 	OsGate close_drive_nr
 					ENDM
 
-;	AL		DRIVE #
+;	AL		Drive #
+;	EDX		Sector
+NewSector	MACRO
+	OsGate new_sector_nr
+					ENDM
+
+;	AL		Drive #
 ;	EBX		Handle
-;	EDX		SECTOR
+;	EDX		Sector
 ;	ESI		Logical address of data
 LockSector	MACRO
 	OsGate lock_sector_nr
@@ -1137,6 +1143,19 @@ UnlockSector	MACRO
 ;	EBX		Handle
 ModifySector	MACRO
 	OsGate modify_sector_nr
+					ENDM
+
+;	AL		Drive #
+;	EBX		Handle
+;	EDX		Sector
+;	ESI		Logical address of data
+LockSeqSector	MACRO
+	OsGate lock_seq_sector_nr
+					ENDM
+
+;	EBX		Handle
+UnlockSeqSector	MACRO
+	OsGate unlock_seq_sector_nr
 					ENDM
 
 ;	AL		Drive #

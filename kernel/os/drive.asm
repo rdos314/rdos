@@ -48,8 +48,11 @@ STATE_DIRTY = 9Bh
 STATE_USED = 5Ah
 STATE_EMPTY = 0CFh
 STATE_BAD = 0AAh
+STATE_SEQ = 7Bh
 
-MAX_TIMEOUT EQU 4 * 1192000
+FLAGS_READ_AHEAD = 1
+
+POLL_TIMEOUT EQU 2 * 1192000
 MIN_TIMEOUT EQU 2 * 1192000
 
 CallDrive	Macro call_proc
@@ -93,10 +96,11 @@ disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
 disc_pend_list			DD ?
-disc_pend_section		section_typ <>
 disc_awrite_list		DD ?
-disc_awrite_section		section_typ <>
 disc_awrite_timer		DW ?
+disc_awrite_timeout		DD ?,?
+disc_swrite_list		DD ?
+disc_swrite_first		DD ?
 disc_unit_arr			DD ?
 
 disc_def_struc		ENDS
@@ -127,7 +131,8 @@ dh_wait				DW ?
 dh_thread			DW ?
 dh_lock_count		DB ?
 dh_state			DB ?
-dh_usage			DW ?
+dh_usage			DB ?
+dh_flags			DB ?
 dh_buf_sel			DW ?
 dh_time_lsb			DD ?
 dh_time_msb			DW ?
@@ -261,7 +266,6 @@ insert_pending	PROC near
 	push cx
 	push dx
 ;
-	EnterSection ds:disc_pend_section
 	mov eax,ds:disc_pend_list
 	or eax,eax
 	jne insert_pend_used
@@ -307,7 +311,6 @@ insert_pend_link:
 	mov es:[edi].dh_next,eax	
 
 insert_pend_done:
-	LeaveSection ds:disc_pend_section
 	pop dx
 	pop cx
 	pop ebx
@@ -332,7 +335,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_pending	PROC near
-	EnterSection ds:disc_pend_section
 	mov edi,ds:disc_pend_list
 	or edi,edi
 	stc
@@ -354,9 +356,6 @@ get_pend_unlink:
 	clc
 
 get_pend_done:
-	pushf
-	LeaveSection ds:disc_pend_section
-	popf
 	ret
 get_pending	ENDP
 
@@ -379,7 +378,6 @@ insert_async_write	PROC near
 	push eax
 	push ebx
 ;
-	EnterSection ds:disc_awrite_section
 	mov eax,ds:disc_awrite_list
 	or eax,eax
 	jne insert_awrite_used
@@ -398,7 +396,6 @@ insert_awrite_used:
 
 insert_awrite_done:
 	mov ds:disc_awrite_list,edi
-	LeaveSection ds:disc_awrite_section
 ;
 	pop ebx
 	pop eax
@@ -420,14 +417,16 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 update_async_write	PROC far
+	GetSystemTime
+	sub eax,ds:disc_awrite_timeout
+	sbb edx,ds:disc_awrite_timeout+4
+	jc update_async_done
 
 update_async_loop:
-	EnterSection ds:disc_awrite_section
 	mov edi,ds:disc_awrite_list
 	or edi,edi
 	jz update_async_done
 ;
-	int 3
 	GetSystemTime
 	sub eax,MIN_TIMEOUT
 	sbb edx,0
@@ -447,12 +446,10 @@ update_async_loop:
 	mov dword ptr ds:disc_awrite_list,0
 
 update_async_insert:
-	LeaveSection ds:disc_awrite_section
 	call insert_pending
 	jmp update_async_loop
 
 update_async_done:
-	LeaveSection ds:disc_awrite_section
 	ret
 update_async_write	ENDP
 
@@ -491,13 +488,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 update_async_timer	Proc near
-	push es
-	push eax
-	push bx
-	push cx
-	push edx
-	push edi
-;
 	cli
 	mov ax,ds:disc_awrite_timer
 	or ax,ax
@@ -506,44 +496,26 @@ update_async_timer	Proc near
 	sti
 	mov ax,flat_sel
 	mov es,ax
-	EnterSection ds:disc_awrite_section
 	mov edi,ds:disc_awrite_list
 	or edi,edi
-	jz update_async_timer_leave
+	jz update_async_timer_done
 ;
 	mov ds:disc_awrite_timer,1
-	mov edi,es:[edi].dh_prev	
 	GetSystemTime
-	push edx
-	push eax
-	sub eax,es:[edi].dh_time_lsb
-	sbb dx,es:[edi].dh_time_msb
-	movzx edx,dx
-	not eax
-	not edx
-	pop ecx
-	add eax,ecx
-	pop ecx
-	adc edx,ecx
-	add eax,MAX_TIMEOUT
+	add eax,POLL_TIMEOUT
 	adc edx,0
+	mov ds:disc_awrite_timeout,eax
+	mov ds:disc_awrite_timeout+4,edx
+	push es
 	mov bx,cs
 	mov es,bx
 	mov cx,ds
 	mov di,OFFSET async_write_timeout
 	StartTimer
-
-update_async_timer_leave:
-	LeaveSection ds:disc_awrite_section
+	pop es
 
 update_async_timer_done:
 	sti
-	pop edi
-	pop edx
-	pop cx
-	pop bx
-	pop eax
-	pop es
 	ret
 update_async_timer	Endp
 
@@ -552,9 +524,100 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			INSERT_SEQ_WRITE
+;
+;		DESCRIPTION:	Insert block into seq write request list
+;
+;		PARAMETERS:		DS		DiscBuf handle
+;						ES		Flat_sel
+;						EDI		DiscBlock handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+insert_seq_write	PROC near
+	push eax
+	push ebx
+;
+	mov eax,ds:disc_swrite_first
+	or eax,eax
+	jnz insert_seq_list
+;
+	mov ds:disc_swrite_first,edi
+	call insert_pending
+	jmp insert_seq_done
+
+insert_seq_list:
+	mov eax,ds:disc_swrite_list
+	or eax,eax
+	jne insert_seq_used
+
+insert_seq_empty:
+	mov es:[edi].dh_prev,edi
+	mov es:[edi].dh_next,edi
+	jmp insert_seq_save
+
+insert_seq_used:
+	mov ebx,es:[eax].dh_prev
+	mov es:[eax].dh_prev,edi
+	mov es:[ebx].dh_next,edi
+	mov es:[edi].dh_prev,ebx
+	mov es:[edi].dh_next,eax	
+
+insert_seq_save:
+	mov ds:disc_swrite_list,edi
+
+insert_seq_done:
+	pop ebx
+	pop eax
+	ret
+insert_seq_write	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UPDATE_SEQ_WRITE
+;
+;		DESCRIPTION:	Update seq write list
+;
+;		PARAMETERS:		DS		Disc selector
+;						ES		Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_seq_write	PROC far
+	mov edi,ds:disc_swrite_list
+	or edi,edi
+	mov ds:disc_swrite_first,edi
+	jz update_seq_done
+;
+	mov edi,es:[edi].dh_prev
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edi].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edi
+	jne update_seq_insert
+;
+	mov dword ptr ds:disc_swrite_list,0
+
+update_seq_insert:
+	mov ds:disc_swrite_first,edi
+	call insert_pending
+
+update_seq_done:
+	ret
+update_seq_write	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CHECK_BUF
 ;
-;		DESCRIPTION:	Check if sector is in buffer list
+;		DESCRIPTION:	Check if sector is in buffer cache
 ;
 ;		PARAMETERS:		DS		Disc selector
 ;						ES		Flat_sel
@@ -1075,8 +1138,15 @@ perform_wakeup	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 perform_one	Proc near
+
+perform_one_loop:
+	EnterSection ds:disc_section
 	call update_async_write
+	call update_async_timer
 	call get_pending
+	pushf
+	LeaveSection ds:disc_section
+	popf
 	jc perform_one_done
 ;
 	mov al,es:[edi].dh_state
@@ -1084,7 +1154,15 @@ perform_one	Proc near
 	je perform_one_read
 ;
 	cmp al,STATE_DIRTY
+	je perform_one_write
+;
+	cmp al,STATE_SEQ
 	jne perform_one_done
+
+perform_one_seq:
+	EnterSection ds:disc_section
+	call update_seq_write
+	LeaveSection ds:disc_section
 
 perform_one_write:
 	call perform_media_check
@@ -1104,6 +1182,7 @@ perform_one_read:
 perform_one_completed:
 	mov ds:disc_current,0
 	call perform_wakeup
+	jmp perform_one_loop
 
 perform_one_done:
 	ret
@@ -1234,13 +1313,15 @@ install_disc_loop:
 	mov ds:disc_pend_list,0
 	mov ds:disc_awrite_list,0
 	mov ds:disc_awrite_timer,0
+	mov ds:disc_awrite_timeout,0
+	mov ds:disc_awrite_timeout+4,0
+	mov ds:disc_swrite_list,0
+	mov ds:disc_swrite_first,0
 	mov ds:disc_free,0
 	mov ds:disc_thread,-1
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
 	InitSection ds:disc_section
-	InitSection ds:disc_pend_section
-	InitSection ds:disc_awrite_section
 	pop di
 	pop es
 ;
@@ -1464,6 +1545,76 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			NEW_SECTOR
+;
+;		DESCRIPTION:	Create a new sector cache entry without reading
+;
+;		PARAMETERS:		AL		Drive #
+;						EDX		Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+new_sector_name	DB 'New Sector',0
+
+new_sector	PROC far
+	push ds
+	push es
+	push ax
+	push cx
+	push edx
+	push edi
+;
+	movzx bx,al
+	shl bx,1
+	mov ax,disc_data_sel
+	mov ds,ax
+	mov ds,ds:[bx].drive_def_arr
+	mov ax,flat_sel
+	mov es,ax
+	add edx,ds:drive_start_sector
+	mov ds,ds:drive_disc
+	push edx
+	pop ax
+	pop dx
+	div ds:disc_sectors_per_unit
+	mov cx,ax
+	EnterSection ds:disc_section
+
+new_loop:
+	call check_buf
+	jnc new_done
+;
+	call allocate
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_USED
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	call insert_buf
+
+new_done:
+	LeaveSection ds:disc_section
+;
+	pop edi
+	pop edx
+	pop cx
+	pop ax
+	pop es
+	pop ds
+	ret
+new_sector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			LOCK_SECTOR
 ;
 ;		DESCRIPTION:	Lock sector and return address
@@ -1503,11 +1654,11 @@ lock_sector	PROC far
 	EnterSection ds:disc_section
 
 lock_loop:
-	call check_buf
-	jnc lock_found
-;
 	call check_current
 	jnc lock_read_signal
+;
+	call check_buf
+	jnc lock_found
 ;
 	ClearSignal
 	call allocate
@@ -1519,12 +1670,49 @@ lock_loop:
 	mov es:[edi].dh_lock_count,0
 	mov es:[edi].dh_state,STATE_EMPTY
 	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
 	mov es:[edi].dh_time_lsb,0
 	mov es:[edi].dh_time_msb,0
 	call insert_buf
 	call insert_pending
 
+lock_read_ahead:
+	push dx
+	push edi
+	inc dx
+	cmp dx,ds:disc_sectors_per_unit
+	je lock_read_ahead_done
+;
+	call check_buf
+	jnc lock_read_ahead_done
+;
+	call allocate
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,FLAGS_READ_AHEAD
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	call insert_buf
+	call insert_pending
+	
+lock_read_ahead_done:
+	pop edi
+	pop dx
+
 lock_read_signal:
+	test es:[edi].dh_flags,FLAGS_READ_AHEAD
+	jz lock_read_check_empty
+;
+	and es:[edi].dh_flags, NOT FLAGS_READ_AHEAD
+	jmp lock_read_ahead
+
+lock_read_check_empty:
 	mov al,es:[edi].dh_state
 	cmp al,STATE_EMPTY
 	clc
@@ -1546,6 +1734,9 @@ lock_found:
 	je lock_get_adds
 ;
 	cmp al,STATE_DIRTY
+	je lock_get_adds
+;
+	cmp al,STATE_SEQ
 	je lock_get_adds
 ;
 	stc
@@ -1583,9 +1774,9 @@ modify_sector	PROC far
 	push es
 	push eax
 	push ebx
-	push cx
+	push ecx
 	push edx
-	push si
+	push esi
 	push edi
 ;
 	mov ax,flat_sel
@@ -1595,10 +1786,14 @@ modify_sector	PROC far
 	EnterSection ds:disc_section
 
 modify_try_again:
-	cmp es:[edi].dh_state,STATE_DIRTY
+	mov al,es:[edi].dh_state
+	cmp al,STATE_DIRTY
 	je modify_dirty
 ;
-	cmp es:[edi].dh_state,STATE_USED
+	cmp al,STATE_SEQ
+	je modify_dirty
+;
+	cmp al,STATE_USED
 	jne modify_done
 
 modify_clean:
@@ -1623,9 +1818,9 @@ modify_done:
 	clc
 ;
 	pop edi
-	pop si
+	pop esi
 	pop edx
-	pop cx
+	pop ecx
 	pop ebx
 	pop eax
 	pop es
@@ -1658,6 +1853,145 @@ unlock_sector	PROC far
 	clc
 	ret
 unlock_sector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LOCK_SEQ_SECTOR
+;
+;		DESCRIPTION:	Lock sector for sequential write access and return address
+;
+;		PARAMETERS:		AL		Drive #
+;						EDX		Sector #
+;
+;		RETURNS:		EBX		Handle
+;						ESI		Logical address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_seq_sector_name	DB 'Lock Seq Write Access Sector',0
+
+lock_seq_sector	PROC far
+	push ds
+	push es
+	push ax
+	push cx
+	push edx
+	push edi
+;
+	movzx bx,al
+	shl bx,1
+	mov ax,disc_data_sel
+	mov ds,ax
+	mov ds,ds:[bx].drive_def_arr
+	mov ax,flat_sel
+	mov es,ax
+	add edx,ds:drive_start_sector
+	mov ds,ds:drive_disc
+	push edx
+	pop ax
+	pop dx
+	div ds:disc_sectors_per_unit
+	mov cx,ax
+	EnterSection ds:disc_section
+
+lock_seq_loop:
+	call check_current
+	jnc lock_seq_signal
+;
+	call check_buf
+	jnc lock_seq_found
+;
+	ClearSignal
+	call allocate
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	call insert_buf
+	call insert_pending
+
+lock_seq_signal:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	clc
+	jne lock_seq_found
+;
+	call block
+	jmp lock_seq_loop
+
+lock_seq_found:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je lock_seq_signal
+;	
+	inc es:[edi].dh_lock_count
+	inc es:[edi].dh_usage
+	LeaveSection ds:disc_section
+	mov al,es:[edi].dh_state
+;
+	cmp al,STATE_USED
+	je lock_seq_get_adds
+;
+	cmp al,STATE_DIRTY
+	je lock_seq_get_adds
+;
+	cmp al,STATE_SEQ
+	je lock_seq_get_adds
+;
+	stc
+	jmp lock_seq_done
+
+lock_seq_get_adds:
+	mov esi,es:[edi].dh_data
+	mov ebx,edi
+
+lock_seq_done:
+	pop edi
+	pop edx
+	pop cx
+	pop ax
+	pop es
+	pop ds
+	ret
+lock_seq_sector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UNLOCK_SEQ_SECTOR
+;
+;		DESCRIPTION:	Unlock sequential sector
+;
+;		PARAMETERS:		EBX		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_seq_sector_name	DB 'Unlock Seq Write Access Sector',0
+
+unlock_seq_sector	PROC far
+	push es
+	push ax
+	mov ax,flat_sel
+	mov es,ax
+	dec es:[ebx].dh_lock_count
+	xor ebx,ebx
+	pop ax
+	pop es
+	clc
+	ret
+unlock_seq_sector	ENDP
 
 PAGE
 
@@ -1861,6 +2195,11 @@ init	PROC far
 	mov ax,close_drive_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET new_sector
+	mov di,OFFSET new_sector_name
+	mov ax,new_sector_nr
+	RegisterOsGate
+;
 	mov si,OFFSET lock_sector
 	mov di,OFFSET lock_sector_name
 	mov ax,lock_sector_nr
@@ -1874,6 +2213,16 @@ init	PROC far
 	mov si,OFFSET modify_sector
 	mov di,OFFSET modify_sector_name
 	mov ax,modify_sector_nr
+	RegisterOsGate
+;
+	mov si,OFFSET lock_seq_sector
+	mov di,OFFSET lock_seq_sector_name
+	mov ax,lock_seq_sector_nr
+	RegisterOsGate
+;
+	mov si,OFFSET unlock_seq_sector
+	mov di,OFFSET unlock_seq_sector_name
+	mov ax,unlock_seq_sector_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET reset_drive

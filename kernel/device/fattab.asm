@@ -1097,16 +1097,36 @@ allocate_cluster	Proc near
 
 alloc32:
 	call allocate_cluster32
-	jmp allocate_cluster_done
+	jmp allocate_cluster_zero
 
 alloc16:
 	call allocate_cluster16
-	jmp allocate_cluster_done
+	jmp allocate_cluster_zero
 
 alloc12:
 	call allocate_cluster12
 
-allocate_cluster_done:
+allocate_cluster_zero:
+	pushf
+	push bx
+	push cx
+	push edx
+;
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	mov bx,1
+	shl bx,cl
+	mov cx,bx
+
+allocate_cluster_init_loop:
+	NewSector
+	inc edx
+	loop allocate_cluster_init_loop
+;
+	pop edx
+	pop cx
+	pop bx
+	popf
 	ret
 allocate_cluster	Endp
 
