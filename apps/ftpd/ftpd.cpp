@@ -38,6 +38,7 @@
 #include "pass.h"
 #include "pwd.h"
 #include "syst.h"
+#include "pasv.h"
 #include "port.h"
 #include "list.h"
 #include "quit.h"
@@ -117,6 +118,7 @@ void cdecl main()
 	TPassFactory *pass = new TPassFactory;
 	TPwdFactory *pwd = new TPwdFactory;
 	TSystFactory *syst = new TSystFactory;
+	TPasvFactory *pasv = new TPasvFactory;
 	TPortFactory *port = new TPortFactory;
 	TListFactory *list = new TListFactory;
 	TQuitFactory *quit = new TQuitFactory;

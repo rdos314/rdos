@@ -138,21 +138,20 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 {
 	if (IP == FSocket->GetRemoteIP())
 	{
-        if (FDataSocket)
-            delete FDataSocket;
-            
-	    FDataSocket = new TSocket(FWait, IP, port, 6000, 0x2000);
-	    
-	    if (FDataSocket->WaitForConnection(6000))
-        	return TRUE;
-        else
-        {
-            delete FDataSocket;
-            FDataSocket = 0;
-        }
+		if (FDataSocket)
+			delete FDataSocket;
+
+		FDataSocket = new TSocket(FWait, IP, port, 6000, 0x2000);
+
+		if (FDataSocket->WaitForConnection(6000))
+			return TRUE;
+		else
+		{
+			delete FDataSocket;
+			FDataSocket = 0;
+		}
 	}
-	else
-		return FALSE;
+	return FALSE;
 }
 
 /*##########################################################################
@@ -168,11 +167,11 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 ##########################################################################*/
 void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 {
-	*IP == FSocket->GetRemoteIP();
+	*IP = FSocket->GetLocalIP();
 
-    if (FDataSocket)
-        delete FDataSocket;
-            
+	if (FDataSocket)
+		delete FDataSocket;
+
 	FDataSocket = new TSocket(FWait, FSocket->GetRemoteIP(), 0, 6000, 0x2000);
 	*port = FDataSocket->GetLocalPort();
 }
@@ -195,7 +194,7 @@ void TFtpSocketServer::Write(char ch)
 	str[0] = ch;
 	str[1] = 0;
 
-	if (FDataSocket)
+	if (FDataSocket && FDataSocket->IsOpen())
 		FDataSocket->Write(str, 1);
 }
 
@@ -214,7 +213,7 @@ void TFtpSocketServer::Write(const char *str)
 {
 	int size = strlen(str);
 
-	if (FDataSocket)
+	if (FDataSocket && FDataSocket->IsOpen())
 		FDataSocket->Write(str, size);
 }
 
@@ -303,7 +302,10 @@ void TFtpSocketServer::WriteLong(long value)
 void TFtpSocketServer::Push()
 {
 	if (FDataSocket)
-		FDataSocket->Push();
+	{
+		delete FDataSocket;
+		FDataSocket = 0;
+	}
 }
 
 /*##########################################################################

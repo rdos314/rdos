@@ -135,54 +135,57 @@ void TListCommand::WriteEntry(const TDirEntryData &entry)
 	FServer->Write(" 0 pg92075 ");
 
 	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
-	    FServer->WriteLong(4096);
+		FServer->Write("4096");
 	else
-    	FServer->WriteLong(entry.FileSize);
+	{
+		sprintf(str, "%d", entry.FileSize);
+		FServer->Write(str);
+	}
 
-    switch (entry.Time.GetMonth())
-    {
-        case 1:
-            FServer->Write(" Jan ");
-            break;
+	switch (entry.Time.GetMonth())
+	{
+		case 1:
+			FServer->Write(" Jan ");
+			break;
 
-        case 2:
-            FServer->Write(" Feb ");
-            break;
+		case 2:
+			FServer->Write(" Feb ");
+			break;
 
-        case 3:
-            FServer->Write(" Mar ");
-            break;
+		case 3:
+			FServer->Write(" Mar ");
+			break;
 
-        case 4:
-            FServer->Write(" Apr ");
-            break;
+		case 4:
+			FServer->Write(" Apr ");
+			break;
 
-        case 5:
-            FServer->Write(" May ");
-            break;
+		case 5:
+			FServer->Write(" May ");
+			break;
 
-        case 6:
-            FServer->Write(" Jun ");
-            break;
+		case 6:
+			FServer->Write(" Jun ");
+			break;
 
-        case 7:
-            FServer->Write(" Jul ");
-            break;
+		case 7:
+			FServer->Write(" Jul ");
+			break;
 
-        case 8:
-            FServer->Write(" Aug ");
-            break;
+		case 8:
+			FServer->Write(" Aug ");
+			break;
 
-        case 9:
-            FServer->Write(" Sep ");
-            break;
+		case 9:
+			FServer->Write(" Sep ");
+			break;
 
-        case 10:
-            FServer->Write(" Oct ");
-            break;
+		case 10:
+			FServer->Write(" Oct ");
+			break;
 
-        case 11:
-            FServer->Write(" Nov ");
+		case 11:
+			FServer->Write(" Nov ");
             break;
 
         case 12:
@@ -195,11 +198,11 @@ void TListCommand::WriteEntry(const TDirEntryData &entry)
 					entry.Time.GetDay(),
 					entry.Time.GetHour(),
 					entry.Time.GetMin());
-    else
-    	sprintf(str, "%02d %04d ",
+	else
+		sprintf(str, "%02d %04d ",
 					entry.Time.GetDay(),
 					entry.Time.GetYear());
-					
+
 	FServer->Write(str);
 
 	size = entry.EntryName.GetSize();
