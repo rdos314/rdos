@@ -73,7 +73,7 @@ RESET:		PAGE1
 			clrf RefType
 ;
 			call READEE
-			movwf REF
+			movf REF,W
 			movwf TEM0
 			clrf TEM1
 ;
@@ -665,22 +665,16 @@ LOADLED:	movlw 5
 
 			return
 
-READEE:		movf RefType,W
-			movwf EEADR
-        	PAGE1
-        	bsf EECON1,RD
-    	    PAGE0
-	        movf EEDATA,W
-			movwf REF
+CheckRef:	movf REF,W
 			sublw 150
-			btfsc STATUS,C
-			goto ReadEeCheckHi
+			btfss STATUS,C
+			goto CheckRefHi
 ;
 			movlw 150
 			movwf REF
 			return
 
-ReadEeCheckHi:
+CheckRefHi:
 			movf REF,W
 			sublw 250
 			btfsc STATUS,C
@@ -688,6 +682,16 @@ ReadEeCheckHi:
 ;
 			movlw 250
 			movwf REF
+			return
+
+READEE:		movf RefType,W
+			movwf EEADR
+        	PAGE1
+        	bsf EECON1,RD
+    	    PAGE0
+	        movf EEDATA,W
+			movwf REF
+			call CheckRef
 			return
 
 WRITEEE:	movf RefType,W
@@ -740,6 +744,8 @@ CheckBoth:	movlw $10
 			return
 ;
 			decf REF,F
+			call CheckRef
+			call WRITEEE
 			call WRITEREF
 			return	
 
@@ -748,7 +754,9 @@ CheckRed:	movlw $10
 			btfss STATUS,Z
 			return
 ;
+			call CheckRef
 			incf REF,F
+			call WRITEEE
 			call WRITEREF
 			return
 
