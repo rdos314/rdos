@@ -535,7 +535,6 @@ load_fail32:
 load_cmd_line	DB 0, 0Dh
 
 load_process:
-	int 3
 	SimSti
 	mov ax,exec_sys_sel
 	mov ds,ax

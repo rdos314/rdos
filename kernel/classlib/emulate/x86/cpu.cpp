@@ -146,6 +146,7 @@ TCpu::TCpu()
 	OnReadFromIo = 0;
 	OnWriteToIo = 0;
 	FPic = 0;
+	FUpdateCycles = FALSE;
 	Reset();
 }
 
@@ -473,7 +474,7 @@ void TCpu::ReadFromIo(void *Buffer, unsigned short int Port, int Size)
 void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 {
 	char *Dest;
-    int i;
+	int i;
 
 	if (Running)
 		AddCycles((Size - 1) / 4 + 1);
@@ -488,6 +489,20 @@ void TCpu::WriteToIo(void *Buffer, unsigned short int Port, int Size)
 	}
 }
 
+/*##################  TCpu::EmulateOne  ###############
+*   Purpose....: Emulate one instruction									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::EmulateOne()
+{
+	FUpdateCycles = TRUE;
+	Emulate(this);
+	FUpdateCycles = FALSE;
+}
+
 /*##################  TCpu::AddCycles  ###############
 *   Purpose....: Add cpu cycles									            #
 *   In params..: *                                                          #
@@ -499,12 +514,15 @@ void TCpu::AddCycles(unsigned int Cycles)
 {
 	long Total;
 
-	TotalCycles += Cycles;
-	Total = TotalCycles / 8;
-	if (Total & 1)
-		NotifySetClk();
-	else
-		NotifyResetClk();
+	if (FUpdateCycles)
+	{
+		TotalCycles += Cycles;
+		Total = TotalCycles / 8;
+		if (Total & 1)
+			NotifySetClk();
+		else
+			NotifyResetClk();
+	}
 }
 
 /*##################  TCpu::Break  ###############
@@ -534,7 +552,7 @@ void TCpu::Trace()
 	if (ReqBuffer[0] == 0xCC)
 		Reg_eip++;
 	else
-		Emulate(this);
+		EmulateOne();
 	ReadInstruction(this);
 }
 
@@ -565,7 +583,7 @@ void TCpu::Pace()
 		case 0x9A:
 			BreakCs = Reg_cs.selector;
 			BreakEip = Reg_eip + 5;
-			Emulate(this);
+			EmulateOne();
 			ReadInstruction(this);
 			Done = FALSE;
 			break;
@@ -575,7 +593,7 @@ void TCpu::Pace()
 		case 0xE2:
 			BreakCs = Reg_cs.selector;
 			BreakEip = Reg_eip + 2;
-			Emulate(this);
+			EmulateOne();
 			ReadInstruction(this);
 			Done = FALSE;
 			break;
@@ -583,7 +601,7 @@ void TCpu::Pace()
 		case 0xE8:
 			BreakCs = Reg_cs.selector;
 			BreakEip = Reg_eip + 3;
-			Emulate(this);
+			EmulateOne();
 			ReadInstruction(this);
 			Done = FALSE;
 			break;
@@ -597,7 +615,7 @@ void TCpu::Pace()
 			BreakCs = Reg_cs.selector;
 			BreakEip = Reg_eip;
 			BreakOnEqual = FALSE;
-			Emulate(this);
+			EmulateOne();
 			ReadInstruction(this);
 			Done = FALSE;
 			break;
@@ -617,7 +635,7 @@ void TCpu::Pace()
 		}
 		if (!Done)
 		{
-			Emulate(this);
+			EmulateOne();
 			if (EmDebug & DEBUG_BREAK)
 				Done = TRUE;
 			else
@@ -654,7 +672,7 @@ void TCpu::Go()
 	CheckDelay = 1000;
 	while (!Done)
 	{
-		Emulate(this);
+		EmulateOne();
 		if (EmDebug & DEBUG_BREAK)
 			Done = TRUE;
 

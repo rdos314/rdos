@@ -65,6 +65,7 @@ sernet_data_seg	SEGMENT AT 0
 
 node			DB ?
 irq				DB ?
+port            DW ?
 base			DW ?
 baud			DW ?
 
@@ -584,19 +585,19 @@ data_timeout_save:
 	jmp data_timeout_done
 
 data_send_dummy:
-;	cli
-;	mov dx,ds:base
-;	mov al,'A'
-;	out dx,al
+	cli
+	mov dx,ds:base
+	mov al,'A'
+	out dx,al
 ;
-;	inc dx
-;	mov al,3
-;	out dx,al
+	inc dx
+	mov al,3
+	out dx,al
 ;
-;	add dx,3
-;	mov al,0Bh
-;	out dx,al				; modem control, DTR = high, RTS = high
-;	sti
+	add dx,3
+	mov al,0Bh
+	out dx,al				; modem control, DTR = high, RTS = high
+	sti
 	jmp data_timeout_done
 
 data_reinit:
@@ -1484,7 +1485,16 @@ init_net	Proc far
 	mov di,OFFSET ComInt
 	RequestPrivateIrqHandler
 ;
-	mov cx,ds:baud
+    mov ax,start_com_port_nr
+    IsValidOsGate
+    jc init_net_open
+;
+    mov ax,ds:port
+    mov dx,ds:base
+    StartComPort
+
+init_net_open:    
+   	mov cx,ds:baud
 	mov dx,ds:base
 	add dx,3
 	mov al,83h
@@ -1640,6 +1650,7 @@ Init	Proc far
 	mov ds,ax
 	mov ax,word ptr cs:[bx].BaseTab
 	mov ds:base,ax
+	mov ds:port,bx
 ;
 	mov ax,cs
 	mov es,ax

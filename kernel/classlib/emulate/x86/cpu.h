@@ -237,8 +237,10 @@ public:
 	void (*OnWriteToIo)(TCpu *Cpu, unsigned short Port, char Value);
 
 	TPic *FPic;
+	int FUpdateCycles;
 
 protected:
+	void EmulateOne();
 	void AddCycles(unsigned int Cycles);
 	virtual void NotifyIdle();
 	virtual void NotifySetClk();

@@ -57,18 +57,24 @@ shutdown_srcs = SHUTDOWN.ASM
 shutdown_objs = $(shutdown_srcs:.ASM=.OBJ)
 shutdown_exes = SHUTDOWN.EXE
 
+zfx86_srcs = ZFX86.ASM
+zfx86_objs = $(zfx86_srcs:.ASM=.OBJ)
+zfx86_rdvs = ZFX86.RDV
+
 test_srcs = TEST.ASM ..\OS\MATH.ASM
 test_objs = $(test_srcs:.ASM=.OBJ)
 test_exes = TEST.EXE
 
 srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs) $(cfg2rom_srcs) \
-            $(boot_srcs) $(shutdown_srcs) $(test_srcs)
+            $(boot_srcs) $(shutdown_srcs) $(test_srcs) $(zfx86_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes) $(cfg2rom_exes) \
             $(boot_exes) $(shutdown_exes) $(test_exes)
 
+
+rdvs =      $(zfx86_rdvs)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -89,7 +95,7 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   RDOSBUR.BIN
+MAIN:   RDOSBUR.BIN $(rdvs)
 
 BUR2BIN.EXE : $(bur2bin_objs)
     tlink @&&!
@@ -139,6 +145,14 @@ SHUTDOWN.EXE : $(shutdown_objs)
 	SHUTDOWN;
 !
 
+ZFX86.RDV : $(zfx86_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(zfx86_objs)
+	ZFX86.RDV
+	ZFX86;
+!
+
 TEST.EXE : $(test_objs)
     tlink @&&!
 	$(prot_opt) +
@@ -147,6 +161,6 @@ TEST.EXE : $(test_objs)
 	TEST,,test;
 !
 
-RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes)
+RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes) $(rdvs)
 	bur2bin
 	cfg2rom demo

@@ -1827,3 +1827,17 @@ InitMouse	MACRO
 UpdateMouse	MACRO
 	OsGate update_mouse_nr
 					ENDM
+
+;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
+
+;   AX      Port number
+;   DX      Base address
+StartComPort	MACRO
+	OsGate start_com_port_nr
+					ENDM
+
+;   AX      Port number
+;   DX      Base address
+StopComPort	MACRO
+	OsGate stop_com_port_nr
+					ENDM

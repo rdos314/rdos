@@ -37,7 +37,14 @@ include ..\core\emcom.inc
 include ..\core\empage.inc
 include ..\core\emtss.inc
 
+
 .code
+
+;	extrn NotifyTaskSwitch:near
+
+NotifyTaskSwitch    Proc near
+    ret 8
+NotifyTaskSwitch    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -51,6 +58,7 @@ include ..\core\emtss.inc
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ResetFault	Macro
+	mov ax,[ebp].reg_cs.d_selector
 	mov eax,[ebp].org_eip
 	mov [ebp].reg_eip,eax
 	mov eax,[ebp].org_esp
@@ -439,7 +447,6 @@ DoubleFault	Endp
 	public SegmentFault
 
 SegmentFault	Proc near
-	int 3
 	test [ebp].em_flags,single_faulted
 	jnz DoubleFault
 	or [ebp].em_flags,single_faulted
@@ -1661,11 +1668,11 @@ JmpTssSizeOk:
 ;
 	pop bx                  ;we have the two tasks visible here
 ;
-        movzx eax,[ebp].reg_tr.d_selector
-        push eax                           ;task2
-        movzx eax,bx
-        push eax                           ;task1
-;	call NotifyTaskSwitch
+    movzx eax,[ebp].reg_tr.d_selector
+    push eax                           ;task2
+    movzx eax,bx
+    push eax                           ;task1
+	call NotifyTaskSwitch
 ;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault
@@ -1732,11 +1739,11 @@ CallTssSizeOk:
 ;
 	pop bx                  ;we have the two tasks visible here
 ;
-        movzx eax,[ebp].reg_tr.d_selector
-        push eax                           ;task2
-        movzx eax,bx
-        push eax                           ;task1
-;	call NotifyTaskSwitch
+    movzx eax,[ebp].reg_tr.d_selector
+    push eax                           ;task2
+    movzx eax,bx
+    push eax                           ;task1
+	call NotifyTaskSwitch
 ;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault
@@ -1801,11 +1808,11 @@ RetTssSizeOk:
 ;
 	pop bx                  ;we have the two tasks visible here
 ;
-        movzx eax,[ebp].reg_tr.d_selector
-        push eax                           ;task2
-        movzx eax,bx
-        push eax                           ;task1
-;	call NotifyTaskSwitch
+    movzx eax,[ebp].reg_tr.d_selector
+    push eax                           ;task2
+    movzx eax,bx
+    push eax                           ;task1
+	call NotifyTaskSwitch
 ;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault

@@ -321,6 +321,14 @@ open_com	Proc far
 	mov di,OFFSET com_int
 	RequestPrivateIrqHandler
 ;
+    mov ax,start_com_port_nr
+    IsValidOsGate
+    jc open_com_started
+;
+    mov dx,[bp].port_base
+    StartComPort
+
+open_com_started:    
 	mov al,[bp].port_data_bits
 	sub al,5
 	and al,3
@@ -424,6 +432,14 @@ close_com	Proc far
     FreeHandle
     pop ds
 ;
+    mov ax,stop_com_port_nr
+    IsValidOsGate
+    jc close_com_stopped
+;
+    mov dx,ds:base
+    StopComPort
+
+close_com_stopped:
 	mov al,ds:irq
 	ReleasePrivateIrqHandler
 ;

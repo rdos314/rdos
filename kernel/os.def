@@ -348,5 +348,8 @@ allocate_small_kernel_mem_nr EQU 255
 hide_sprite_line_nr         EQU 256
 show_sprite_line_nr         EQU 257
 
-osgate_entries				EQU 258
+start_com_port_nr           EQU 258
+stop_com_port_nr            EQU 259
+
+osgate_entries				EQU 260
 

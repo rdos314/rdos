@@ -75,31 +75,31 @@ void Idle(TCpu *Cpu)
 	}
 }
 
-/*##################  AddCycles  ###############
-*   Purpose....: Add cpu cycles									            #
+/*##################  SetClk  ###############
+*   Purpose....: 1 / 8 clk high notification					            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void AddCycles(TCpu *Cpu, unsigned int Cycles)
+void SetClk(TCpu *Cpu)
 {
-	long TotalCycles;
+	Pit.Counter[0]->SetClk();
+	Pit.Counter[2]->SetClk();
+}
 
-	TotalCycles = Cpu->TotalCycles + Cycles;
-	Cpu->TotalCycles = TotalCycles;
-	TotalCycles = TotalCycles / 8;
-	if (TotalCycles & 1)
-	{
-		Pit.Counter[0]->SetClk();
-		Pit.Counter[2]->SetClk();
-	}
-	else
-	{
-		Pit.Counter[0]->ResetClk();
-		Pit.Counter[2]->ResetClk();
-		Cpu->PendingInt = Pic0.IsIntActive();
-	}
+/*##################  ResetClk  ###############
+*   Purpose....: 1 / 8 clk low notification					            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void ResetClk(TCpu *Cpu)
+{
+	Pit.Counter[0]->ResetClk();
+	Pit.Counter[2]->ResetClk();
+	Cpu->PendingInt = Pic0.IsIntActive();
 }
 
 /*##################  GetIntVector  ###############
@@ -186,6 +186,9 @@ void main(void)
 	Pci.RegisterFunction(new TZfxXbus(&Pci), 0, 0x12, 3);
 	Pci.RegisterFunction(new TZfxUsb(&Pci), 0, 0x13, 0);
 
+    Cpu.Define(&Pic0);
+    Cpu.OnSetClk = SetClk;
+    Cpu.OnResetClk = ResetClk;
 	Cpu.OnIdle = Idle;
 	Cpu.OnReadFromMemory = ReadFromMemory;
 	Cpu.OnWriteToMemory = WriteToMemory;
