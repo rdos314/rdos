@@ -203,7 +203,8 @@ v_row_size	DW ?
 v_app_base	DD ?
 v_app_size	DD ?
 v_bpp		DB ?
-v_bitmap	DW ?
+v_bitmap    DW ?
+v_sprites   DW ?
 
 v_color		DD ?
 v_lgop		DW ?

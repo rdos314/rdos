@@ -89,6 +89,7 @@ init_video_bitmap	Proc far
 	mov es:v_bpp,al
 	mov es:v_width,cx
 	mov es:v_height,dx
+	mov es:v_sprites,0
 ;
 	mov si,cs
 	mov ds,si
@@ -178,6 +179,7 @@ create_bitmap	Proc far
 	mov es:v_bpp,al
 	mov es:v_width,cx
 	mov es:v_height,dx
+	mov es:v_sprites,0
 ;
 	mov si,cs
 	mov ds,si

@@ -973,7 +973,7 @@ init_enable_loop2:
 init_enable_do:
 	mov al,47h
 	out 60h,al
-;	jmp init_mouse_revoke ; activate this to disable non-existent mouse !!
+	jmp init_mouse_revoke ; activate this to disable non-existent mouse !!
 ;
 	mov al,0F3h
 	call SendMouseCommand

@@ -84,6 +84,7 @@ test_thread:
 divi	DW 1111h
 	
 init:
+        int 3
 	mov ax,32
 	mov cx,800
 	mov dx,600

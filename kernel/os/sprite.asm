@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
-		NAME bitmap
+		NAME sprite
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -109,6 +109,30 @@ create_sprite_dest_ok:
     mov ax,ds:v_height
     mov es:sp_dest_h,ax
 ;
+	mov ax,ds:v_sprites
+	or ax,ax
+	je create_sprite_ins_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:sp_prev
+	mov ds:sp_prev,es
+	mov ds,si
+	mov ds:sp_next,es
+	mov es:sp_next,di
+	mov es:sp_prev,si
+	pop si
+	pop ds
+	jmp create_sprite_ins_done
+
+create_sprite_ins_empty:
+	mov es:sp_next,es
+	mov es:sp_prev,es
+	mov ds:v_sprites,es
+
+
+create_sprite_ins_done:
     mov bx,cx
 	mov ax,BITMAP_HANDLE
     DerefHandle
@@ -412,6 +436,40 @@ move_sprite	Proc far
     or fs:sp_flags,SP_FLAG_VISIBLE
 	mov fs:sp_new_x,cx
 	mov fs:sp_new_y,dx
+;
+    int 3
+    mov ds,fs:sp_dest_sel
+    mov dx,fs
+    mov cx,ds:v_sprites
+
+move_sprite_check_loop:
+    mov es,cx
+    cmp cx,dx
+    je move_sprite_check_next
+;
+    and es:sp_flags,NOT SP_FLAG_OVERLAP
+    mov ax,es:sp_y
+    sub ax,fs:sp_new_y
+    jc move_sprite_this_above
+;
+    sub ax,fs:sp_h
+    jae move_sprite_check_next
+;
+    or es:sp_flags,SP_FLAG_OVERLAP
+    jmp move_sprite_check_next
+
+move_sprite_this_above:
+    neg ax
+    sub ax,es:sp_h
+    jae move_sprite_check_next
+;
+    or es:sp_flags,SP_FLAG_OVERLAP
+
+move_sprite_check_next:
+    mov cx,es:sp_next
+    cmp cx,ds:v_sprites
+    jne move_sprite_check_loop
+;
 	cmp dx,fs:sp_y
 	ja move_sprite_up
 

@@ -26,6 +26,7 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SP_FLAG_VISIBLE  EQU 1
+SP_FLAG_OVERLAP  EQU 2
 
 sprite_struc	STRUC
 
@@ -51,6 +52,8 @@ sp_w                DW ?
 sp_h                DW ?
 sp_dest_w           DW ?
 sp_dest_h           DW ?
+sp_next             DW ?
+sp_prev             DW ?
 sp_bpp              DB ?
 sp_flags            DB ?
 
