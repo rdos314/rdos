@@ -48,6 +48,69 @@ struct TIpHeader
     unsigned char Dest[4];
 };
 
+struct TArp
+{
+	short int Class;
+	short int Type;
+	unsigned char HwLen;
+	unsigned char ProtLen;
+	short int Op;
+	unsigned char Node1;
+	unsigned char Ip1[4];
+	unsigned char Node2;
+	unsigned char Ip2[4];
+};
+
+struct TSmpHeader
+{
+	long Connection;
+	long OffsetSize;
+	short int Mailslot;
+	short int Size;
+	unsigned char Flags;
+	unsigned char Responses;
+	short int Checksum;
+};
+
+#define SOM		1
+#define EOM		2
+#define REQ		4
+#define RPY		8
+#define NAM		0x10
+
+/*##################  SwapLong ##########################
+*   Purpose....: Swap long	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static long SwapLong(long Val)
+{
+	_asm
+	{
+		mov eax,Val
+		xchg al,ah
+		ror eax,16
+		xchg al,ah
+	}
+}
+
+/*##################  SwapShort ##########################
+*   Purpose....: Swap short	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static short int SwapShort(short int Val)
+{
+	_asm
+	{
+		mov ax,Val
+		xchg al,ah
+	}
+}
 
 /*##################  TSernetProtocolAnalyser::GetMsg ##########################
 *   Purpose....: Get next CBUS message	   					      	        #
@@ -185,20 +248,69 @@ void TSernetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
 	char tempstr[100];
 	char ch;
 	int i;
+	TSmpHeader *Smp;
+	int MsgSize;
+    int Responses;
 
 	Write("SMP: ");
 
-	for (i = 0; i < Size; i++)
+	if (Size >= sizeof(TSmpHeader))
 	{
-		ch = *Msg;
-		sprintf(tempstr, "%04hX", ch);
-		tempstr[0] = tempstr[2];
-		tempstr[1] = tempstr[3];
-		tempstr[2] = ' ';
-		tempstr[3] = 0;
+		Smp = (TSmpHeader *)Msg;
+
+		sprintf(tempstr, "Conn = %ld, ", SwapLong(Smp->Connection));
 		Write(tempstr);
-		Msg++;
+
+		sprintf(tempstr, "Size = %ld, ", SwapLong(Smp->OffsetSize));
+		Write(tempstr);	
+
+		sprintf(tempstr, "Slot = %d", SwapShort(Smp->Mailslot));
+		Write(tempstr);
+
+		if (Smp->Flags & SOM)
+			Write(", SOM");
+
+		if (Smp->Flags & EOM)
+			Write(", EOM");
+
+		if (Smp->Flags & REQ)
+			Write(", REQ");
+
+		if (Smp->Flags & RPY)
+			Write(", RPY");
+
+		if (Smp->Flags & NAM)
+			Write(", NAM");
+
+		MsgSize = SwapShort(Smp->Size);
+		Responses = Smp->Responses;
+
+		Write(" ");
+		for (i = sizeof(TSmpHeader); i < MsgSize; i++)
+		{
+			ch = *Msg;
+			sprintf(tempstr, "%04hX", ch);
+			tempstr[0] = tempstr[2];
+			tempstr[1] = tempstr[3];
+			tempstr[2] = ' ';
+			tempstr[3] = 0;
+			Write(tempstr);
+			Msg++;
+		}
+				
 	}
+	else
+		for (i = 0; i < Size; i++)
+		{
+			ch = *Msg;
+			sprintf(tempstr, "%04hX", ch);
+			tempstr[0] = tempstr[2];
+			tempstr[1] = tempstr[3];
+			tempstr[2] = ' ';
+			tempstr[3] = 0;
+			Write(tempstr);
+			Msg++;
+		}
 	Write("\r\n");
 
 }
@@ -215,20 +327,96 @@ void TSernetProtocolAnalyser::ShowArp(const char *Msg, int Size)
 	char tempstr[100];
 	char ch;
 	int i;
+	TArp *Arp;
+	short int Val;
 
 	Write("ARP: ");
 
-	for (i = 0; i < Size; i++)
+	if (Size == sizeof(TArp))
 	{
-		ch = *Msg;
-		sprintf(tempstr, "%04hX", ch);
+		Arp = (TArp *)Msg;
+
+		Write("Class = ");
+		sprintf(tempstr, "%04hX", Arp->Class);
+		ch = tempstr[0];
 		tempstr[0] = tempstr[2];
+		tempstr[2] = ch;
+		ch = tempstr[1];
 		tempstr[1] = tempstr[3];
-		tempstr[2] = ' ';
-		tempstr[3] = 0;
+		tempstr[3] = ch;
 		Write(tempstr);
-		Msg++;
+		Write(", ");
+
+		Write("Type = ");
+		sprintf(tempstr, "%04hX", Arp->Type);
+		ch = tempstr[0];
+		tempstr[0] = tempstr[2];
+		tempstr[2] = ch;
+		ch = tempstr[1];
+		tempstr[1] = tempstr[3];
+		tempstr[3] = ch;
+		Write(tempstr);
+		Write(", ");
+
+		Write("Op = ");
+		sprintf(tempstr, "%04hX", Arp->Op);
+		ch = tempstr[0];
+		tempstr[0] = tempstr[2];
+		tempstr[2] = ch;
+		ch = tempstr[1];
+		tempstr[1] = tempstr[3];
+		tempstr[3] = ch;
+		Write(tempstr);
+		Write(", ");
+
+	    sprintf(tempstr, "%d.%d.%d.%d",
+    	            Arp->Ip1[0],
+        	        Arp->Ip1[1],
+            	    Arp->Ip1[2],
+                	Arp->Ip1[3]);
+
+	    Write(tempstr);
+		Write(" = ");
+
+		if (Arp->Node1)
+		{
+			sprintf(tempstr, "%02hX", Arp->Node1);
+			Write(tempstr);
+		}
+		else
+			Write("??");
+
+		Write(", ");
+
+	    sprintf(tempstr, "%d.%d.%d.%d",
+    	            Arp->Ip2[0],
+        	        Arp->Ip2[1],
+            	    Arp->Ip2[2],
+                	Arp->Ip2[3]);
+
+	    Write(tempstr);
+		Write(" = ");
+
+		if (Arp->Node2)
+		{
+			sprintf(tempstr, "%02hX", Arp->Node2);
+			Write(tempstr);
+		}
+		else
+			Write("??");
 	}
+	else
+		for (i = 0; i < Size; i++)
+		{
+			ch = *Msg;
+			sprintf(tempstr, "%04hX", ch);
+			tempstr[0] = tempstr[2];
+			tempstr[1] = tempstr[3];
+			tempstr[2] = ' ';
+			tempstr[3] = 0;
+			Write(tempstr);
+			Msg++;
+		}
 	Write("\r\n");
 
 }

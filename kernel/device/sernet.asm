@@ -585,6 +585,7 @@ data_timeout_save:
 	jmp data_timeout_done
 
 data_send_dummy:
+	jmp data_timeout_done
 	cli
 	mov dx,ds:base
 	mov al,'A'
