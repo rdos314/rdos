@@ -448,19 +448,23 @@ HideWholeLine    MACRO
 	sub ax,cx
 	jbe hide_done
 ;
+    push ax
 	call ds:get_line_proc
+	mov bl,al
+    pop ax
 ;
     mov ds,fs:sp_dest_sel
     xor cx,cx
     add dx,fs:sp_y
     call ds:set_sprite_row_proc
-	jmp hide_done	
+	jmp hide_done
 
 hide_whole:
     mov ds,fs:sp_back_sel
     xor cx,cx
-    mov ax,fs:sp_w
     call ds:get_line_proc
+    mov bl,al
+    mov ax,fs:sp_w
 ;
     mov ds,fs:sp_dest_sel
     mov cx,fs:sp_x
@@ -496,6 +500,7 @@ SaveAndShowWholeLine    MACRO
 	xor cx,cx
     add dx,fs:sp_new_y
     call ds:get_line_proc
+    mov bl,al
 ;
     mov ds,fs:sp_back_sel
     mov cx,fs:sp_new_x
@@ -537,6 +542,7 @@ SaveAndShowWholeLine    MACRO
 save_whole:
     add dx,fs:sp_new_y
     call ds:get_line_proc
+    mov bl,al
 ;
     mov ds,fs:sp_back_sel
     xor cx,cx
@@ -627,12 +633,17 @@ hide_line_do:
 	push gs
     mov gs,ds:[bx].spi_sel
     mov ds,gs:sp_back_sel
+    push bx
+    push ax
     call ds:get_line_proc
+    mov bl,al
+    pop ax
 ;
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
     call ds:set_sprite_row_proc
+    pop bx
 	pop gs
     pop ds
 
@@ -698,14 +709,17 @@ save_line_do:
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_new_x
     add dx,gs:sp_new_y
+    push bx
     push ax
     call ds:get_line_proc
+    mov bl,al
     pop ax
 ;
     mov ds,gs:sp_back_sel
     sub cx,gs:sp_new_x
     sub dx,gs:sp_new_y
     call ds:set_sprite_row_proc
+    pop bx
 	pop gs
     pop ds
 
@@ -1986,12 +2000,17 @@ hide_sprite_len_ok:
 	push gs
     mov gs,ds:[bx].spi_sel
     mov ds,gs:sp_back_sel
+    push bx
+    push ax
     call ds:get_line_proc
+    mov bl,al
+    pop ax
 ;
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
     call ds:set_sprite_row_proc
+    pop bx
 	pop gs
     pop ds
 
@@ -2113,13 +2132,16 @@ show_sprite_len_ok:
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
+    push bx
     call ds:get_line_proc
+    mov bl,al
 ;
     mov ax,bp
     mov ds,gs:sp_back_sel
     sub cx,gs:sp_x
     sub dx,gs:sp_y
     call ds:set_sprite_row_proc
+    pop bx
 ;
     mov ds,gs:sp_bitmap_sel
     call ds:get_line_proc

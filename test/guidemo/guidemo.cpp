@@ -15,61 +15,69 @@ int count = 0;
 
 void RandomColor(TGraphicDevice *dev)
 {
-	dev->SetDrawColor(random(256), random(256), random(256));
+	int col;
+
+	if (dev->GetBpp() == 1)
+	{
+		col = 255 * random(2);
+		dev->SetDrawColor(col, col, col);
+	}
+	else
+		dev->SetDrawColor(random(256), random(256), random(256));
 }
 
 void RandomLgop(TGraphicDevice *dev)
 {
 	switch (random(12))
-    {
-        case 0:
-            dev->SetLgopNone();
+	{
+		case 0:
+			dev->SetLgopNone();
 			break;
 
 		case 1:
-            dev->SetLgopNull();
+			dev->SetLgopNull();
 			break;
 
-        case 2:
-            dev->SetLgopOr();
-            break;
+		case 2:
+			dev->SetLgopOr();
+			break;
 
-        case 3:
+		case 3:
 			dev->SetLgopAnd();
-            break;
+			break;
 
-        case 4:
-            dev->SetLgopXor();
-            break;
+		case 4:
+			dev->SetLgopXor();
+			break;
 
-        case 5:
+		case 5:
 			dev->SetLgopInv();
-            break;
+			break;
 
-        case 6:
+		case 6:
 			dev->SetLgopInvOr();
-            break;
+			break;
 
-        case 7:
+		case 7:
 			dev->SetLgopInvAnd();
 			break;
 
-        case 8:
-            dev->SetLgopInvXor();
-            break;
+		case 8:
+			dev->SetLgopInvXor();
+			break;
 
 		case 9:
-            dev->SetLgopAdd();
-            break;
+			dev->SetLgopAdd();
+			break;
 
-        case 10:
-            dev->SetLgopSub();
-            break;
+		case 10:
+			dev->SetLgopSub();
+			break;
 
 		case 11:
-            dev->SetLgopMul();
-            break;
-    }
+			dev->SetLgopMul();
+			break;
+	}
 }
 
 void RandomFillStyle(TGraphicDevice *dev)
@@ -85,13 +93,13 @@ void RandomLine(TGraphicDevice *dev)
 	int x1, y1;
 	int x2, y2;
 
-	x1 = random(dev->GetWidth() + 200) - 100;
-	y1 = random(dev->GetHeight() + 200) - 100;
-	x2 = random(dev->GetWidth() + 200) - 100;
-	y2 = random(dev->GetHeight() + 200) - 100;
+	x1 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y1 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x2 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y2 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
-    RandomColor(dev);
-    RandomLgop(dev);
+	RandomColor(dev);
+	RandomLgop(dev);
 
 	dev->DrawLine(x1, y1, x2, y2);
 }
@@ -101,10 +109,10 @@ void RandomRect(TGraphicDevice *dev)
 	int x1, y1;
 	int x2, y2;
 
-	x1 = random(dev->GetWidth() + 200) - 100;
-	y1 = random(dev->GetHeight() + 200) - 100;
-	x2 = random(dev->GetWidth() + 200) - 100;
-	y2 = random(dev->GetHeight() + 200) - 100;
+	x1 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y1 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x2 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y2 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
 	RandomColor(dev);
 	RandomLgop(dev);
@@ -118,10 +126,10 @@ void RandomEllipse(TGraphicDevice *dev)
 	int x, y;
 	int rx, ry;
 
-	x = random(dev->GetWidth() + 200) - 100;
-	y = random(dev->GetHeight() + 200) - 100;
-	rx = random(dev->GetWidth() / 2 + 100);
-	ry = random(dev->GetHeight() / 2 + 100);
+	x = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	rx = random(dev->GetWidth() / 2 + dev->GetWidth() / 8);
+	ry = random(dev->GetHeight() / 2 + dev->GetHeight() / 8);
 
 	RandomColor(dev);
 	RandomLgop(dev);
@@ -135,8 +143,8 @@ void RandomText(TGraphicDevice *dev)
 	int x, y;
 	char str[80];
 
-	x = random(dev->GetWidth() + 200) - 100;
-	y = random(dev->GetHeight() + 200) - 100;
+	x = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
 	sprintf(str, "%d", count);
 
@@ -153,7 +161,7 @@ void Pattern1(TGraphicDevice *dev)
 	dev->SetLgopAdd();
 	dev->SetDrawColor(0, 0, 128);
 
-	for (i = 0; i < 800; i++)
+	for (i = 0; i < dev->GetWidth(); i++)
 		dev->DrawLine(0, 3 * i, 3 * i, 0);
 }
 
@@ -164,7 +172,7 @@ void Pattern2(TGraphicDevice *dev)
 	dev->SetLgopAdd();
 	dev->SetDrawColor(0, 128, 0);
 
-	for (i = -250; i < 250; i++)
+	for (i = -dev->GetWidth() / 3; i < dev->GetWidth() / 3; i++)
 		dev->DrawLine(dev->GetHeight(), dev->GetWidth() - 3 * i, 3 * i, 0);
 }
 
@@ -175,7 +183,7 @@ void Pattern3(TGraphicDevice *dev)
 	dev->SetLgopAdd();
 	dev->SetDrawColor(128, 0, 0);
 
-	for (i = -250; i < 250; i++)
+	for (i = -dev->GetWidth(); i < dev->GetWidth(); i++)
 		dev->DrawLine(0, 3 * i, dev->GetHeight() - 3 * i, dev->GetWidth());
 }
 
@@ -252,13 +260,15 @@ void cdecl main()
 	vbe = new TVideoGraphicDevice(32, 800, 600);
 
 	RdosSetCursorPosition(0, 0);
-    RdosWriteString("Test av text mode");
+	RdosWriteString("Test av text mode");
 
 	vbe->SetDrawColor(255,255,255);
-	vbe->DrawLine(0, 0, 240, 128);
+	vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
 	vbe->DrawLine(240, 0, 0, 128);
 
 //	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
+
+	Planets = new TPlanetThread(vbe, 8);
 
 	RdosWaitMilli(5000);
 
@@ -283,8 +293,6 @@ void cdecl main()
 	vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
 
 	RdosWaitMilli(5000);
-
-	Planets = new TPlanetThread(vbe, 8);
 
 	bitmap = new TBitmapGraphicDevice(vbe);
 	TestAll(bitmap);

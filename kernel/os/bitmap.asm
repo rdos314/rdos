@@ -89,6 +89,14 @@ init_video_bitmap	Proc far
 	mov es:v_font,0
 	mov es:v_style,0
 	mov es:v_bpp,al
+	cmp al,1
+	jne init_video_no_pad
+;
+    dec cx
+    and cx,0FFF8h
+    add cx,8
+
+init_video_no_pad:
 	mov es:v_width,cx
 	mov es:v_height,dx
 	mov es:v_sprite_count,0
@@ -277,6 +285,14 @@ create_bitmap	Proc far
 	mov es:v_text_font,0
 	mov es:v_style,0
 	mov es:v_bpp,al
+	cmp al,1
+	jne create_bitmap_no_pad
+;
+    dec cx
+    and cx,0FFF8h
+    add cx,8
+
+create_bitmap_no_pad:
 	mov es:v_width,cx
 	mov es:v_height,dx
     mov es:v_sprite_count,0

@@ -159,7 +159,8 @@ mask_copy_proc               DD ?
 
 ; IN  CX			x
 ; IN  DX			y
-; OUT EDI   		Position
+; OUT ES:EDI   		Buffer
+; OUT AL            Bit number
 get_line_proc			DD ?
 
 ; IN  CX			x
@@ -204,12 +205,14 @@ set_rgb_row_proc		DD ?
 draw_mask_line_proc			DD ?
 
 ; IN  AX			number of pixels
+; IN  BL            bit number
 ; IN  CX			x
 ; IN  DX			y
 ; IN  ES:EDI		line buffer
 set_sprite_row_proc		DD ?
 
 ; IN  AL            mask offset bit
+; IN  BL            bit number
 ; IN  ECX			x + y << 16
 ; IN  DX			width
 ; IN  ESI   		sprite bits

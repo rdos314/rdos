@@ -2605,9 +2605,10 @@ PAGE
 ;		DESCRIPTION:	Set sprite in native format
 ;
 ;		PARAMETER:		AX			number of pixels
+;                       BL          first bit
 ;						CX			x
 ;						DX			y
-;						EDI			position
+;					    ES:EDI      buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2619,6 +2620,7 @@ set_sprite	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
+	movzx esi,bl
 ;
     cmp dx,ds:v_y_min
     jl set_sprite_done
@@ -2632,7 +2634,7 @@ set_sprite_buf_loop:
 
 set_sprite_adv_buf:
     inc cx
-    inc edi
+    inc esi
     sub ax,1
     jnz set_sprite_buf_loop
     jmp set_sprite_done
@@ -2650,8 +2652,8 @@ set_sprite_do:
     or ax,ax
     jz set_sprite_done
 ;
+    push edi
 	push ax
-	mov esi,edi
 	movsx ecx,cx
 	movsx edx,dx
 	movzx eax,ds:v_row_size
@@ -2665,6 +2667,7 @@ set_sprite_do:
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
+	pop eax
 ;
     call ds:copy_proc
 
@@ -2703,6 +2706,7 @@ get_line	Proc far
 	mov ax,flat_sel
 	mov es,ax
 	movzx eax,cx
+	and ax,7
 	pop edx
 	ret
 get_line	Endp

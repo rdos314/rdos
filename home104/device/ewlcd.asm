@@ -154,7 +154,7 @@ switch_to	Proc far
     push es
 	pushad
 ;
-	EnterSection ds:v_section
+;	EnterSection ds:v_section
 	mov ds:vl_has_focus,1
 ;
     mov ax,flat_sel
@@ -184,7 +184,7 @@ switch_to_loop:
     mov al,0B2h
     WriteControl
 ;
-	LeaveSection ds:v_section
+;	LeaveSection ds:v_section
 ;
 	popad
 	pop es

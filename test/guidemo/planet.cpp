@@ -29,29 +29,39 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 	FBitmap->SetLgopNone();
 	FBitmap->SetFilledStyle();
 
-	R = 1024 / w;
-	G = 128;
-	B = 4 * w;
-
-	for (i = r; i > 2; i--)
+	if (dest->GetBpp() == 1)
 	{
-		if (R * (r - i) / 10 > 127)
-			CR = 255;
-		else
-			CR = 128 + R * i / 10;
+		FBitmap->SetDrawColor(0, 0, 0);
+		FBitmap->DrawEllipse(r, r, r, r);
+		FBitmap->SetDrawColor(255, 255, 255);
+		FBitmap->DrawEllipse(r, r, r - 1, r - 1);
+	}
+	else
+	{
+		R = 1024 / w;
+		G = 128;
+		B = 4 * w;
 
-		if (G * (r - i) / 10 > 127)
-			CG = 255;
-		else
-			CG = 128 + G * i / 10;
+		for (i = r; i > 2; i--)
+		{
+			if (R * (r - i) / 10 > 127)
+				CR = 255;
+			else
+				CR = 128 + R * i / 10;
 
-		if (B * (r - i) / 10 > 127)
-			CB = 255;
-		else
-			CB = 128 + B * i / 10;
+			if (G * (r - i) / 10 > 127)
+				CG = 255;
+			else
+				CG = 128 + G * i / 10;
 
-		FBitmap->SetDrawColor(CR, CG, CB);
-		FBitmap->DrawEllipse(r, r, i, i);
+			if (B * (r - i) / 10 > 127)
+				CB = 255;
+			else
+				CB = 128 + B * i / 10;
+
+			FBitmap->SetDrawColor(CR, CG, CB);
+			FBitmap->DrawEllipse(r, r, i, i);
+		}
 	}
 
 	FMask = new TBitmapGraphicDevice(1, w, w);
