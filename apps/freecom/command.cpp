@@ -14,9 +14,11 @@
 //#include "time.h"
 //#include "date.h"
 #include "cls.h"
+#include "copy.h"
 #include "cmdline.h"
 
 TClsFactory *cls;
+TCopyFactory *cpy;
 //TDateFactory *date;
 THelpFactory *help;
 TPathFactory *path;
@@ -36,6 +38,7 @@ void Init()
 	path = new TPathFactory;
 	help = new THelpFactory;
 //	date = new TDateFactory;
+	cpy = new TCopyFactory;
 	cls = new TClsFactory;
 
 	Write("FreeCom for RDOS\r\n\r\n");
@@ -62,9 +65,9 @@ void main()
 		ok = Read(param, 256);
 		if (ok)
 		{
-		    cmd = new TCommandLine(param);
-		    cmd->Run();
-		    delete cmd;
+			cmd = new TCommandLine(param);
+			cmd->Run();
+			delete cmd;
 		}
 	}
 }
