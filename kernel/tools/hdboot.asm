@@ -118,6 +118,7 @@ SectorsPerCluster   DW 0
 ImageSize           DD 0
 CurrFatSector       DD 0
 
+OrgIdeVect          DD ?
 IntFlag             DB ?
 DiscSubUnit         DB ?
 LbaMode             DB ?
@@ -127,6 +128,9 @@ DiscCyls            DW ?
 DiscHeads           DW ?
 SectorsPerCyl       DW ?
 
+CurrEntry           DW ?
+MenuEntries         DW 0
+MenuArr             DW MAX_IMAGES DUP(0)
 EntryCount          DW 0
 EntryArr            DB MAX_IMAGES * 32 DUP(0)
 
@@ -684,6 +688,8 @@ InitIrq Proc near
     xor ax,ax
     mov ds,ax
     mov bx,76h SHL 2
+    mov eax,[bx]
+    mov cs:OrgIdeVect,eax
     mov word ptr [bx],OFFSET IdeInt
     mov [bx+2],cs
 ;
@@ -937,7 +943,6 @@ GetCurrentSector    Proc near
 	ret
 GetCurrentSector	Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1129,6 +1134,448 @@ frf32:
     call ScanDir
     ret
 FindRdosFiles   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FindLine
+;
+;		DESCRIPTION:	Find a specific line
+;
+;       PARAMETERS:     SI      Filename
+;
+;       RETURNS:        AX      Entry offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindLine    Proc near
+    push cx
+    push edx
+    push di
+;
+    mov cx,cs:EntryCount
+    mov di,OFFSET EntryArr
+    or cx,cx
+    jz flFail
+
+flLoop:
+    mov edx,cs:[si]
+    cmp edx,cs:[di]
+    jne flNext
+;
+    mov edx,cs:[si+4]
+    cmp edx,cs:[di+4]
+    jne flNext
+;
+    mov dword ptr cs:[di],0
+    mov ax,di
+    clc
+    jmp flDone
+
+flNext:
+    add di,20h
+    loop flLoop
+
+flFail:
+    stc
+
+flDone:
+    pop di
+    pop edx
+    pop cx      
+    ret
+FindLine    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteLine
+;
+;		DESCRIPTION:	Write one full line
+;
+;       PARAMETERS:     SI      Offset to text
+;                       ES:DI   Screen buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteLine  Proc near
+    push ax
+    push cx
+    push si
+;
+    mov ah,7
+    mov cx,80
+
+wlLoop:
+    lods byte ptr cs:[si]
+    stosw
+    loop wlLoop
+;
+    pop si
+    pop cx
+    pop ax    
+    ret
+WriteLine   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteCust
+;
+;		DESCRIPTION:	Write a custom line
+;
+;       PARAMETERS:     SI      Offset to dir entry
+;                       ES:DI   Screen buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cust_bl    DB '                    บ  RDOS - ', 0
+cust_el    DB 'บ                   ', 0
+cust_ext   DB '.BIN boot', 0
+
+WriteCust   Proc near
+    push cx
+    push si
+;
+    mov ah,7
+    mov cx,80
+
+    push si
+    mov si,OFFSET cust_bl
+
+wcBeginLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    jz wcBeginDone
+;    
+    stosw
+    loop wcBeginLoop
+    
+wcBeginDone:
+    pop si
+;
+    mov cx,30
+
+wcNameLoop:
+    lods byte ptr cs:[si]
+    cmp al,' '
+    je wcNameDone
+;
+    stosw
+    loop wcNameLoop            
+
+wcNameDone:
+    mov si,OFFSET cust_ext
+
+wcExtLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    je wcExtDone
+;
+    stosw
+    loop wcExtLoop
+    jmp wcAddEnd
+
+wcExtDone:
+    mov al,' '
+
+wcPadLoop:
+    stosw
+    loop wcPadLoop
+
+wcAddEnd:
+    mov si,OFFSET cust_el
+
+wcAddLoop:
+    lods byte ptr cs:[si]
+    or al,al
+    je wcDone
+;
+    stosw
+    jmp wcAddLoop 
+
+wcDone:   
+    pop si
+    pop cx    
+    ret
+WriteCust   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteMenu
+;
+;		DESCRIPTION:	Write boot-menu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+blank_line DB '                                                                                  '
+l1         DB '                                  RDOS Bootloader                                 '
+l2         DB '                    ษอออออออออออออออออออออออออออออออออออออออป                     '
+l4         DB '                    ศอออออออออออออออออออออออออออออออออออออออผ                     '
+org_line   DB '                    บ  Boot original Operating system       บ                     '
+norm_line  DB '                    บ  RDOS - normal boot                   บ                     '
+safe_line  DB '                    บ  RDOS - safe mode boot                บ                     '
+
+norm_file   DB 'RDOS    '
+safe_file   DB 'SAFE    '
+                                  
+WriteMenu  Proc near
+    push es
+    pushad
+;    
+    mov ax,0B800h
+    mov es,ax
+    xor di,di
+    mov si,OFFSET l1
+    call WriteLine
+    mov si,OFFSET l2
+    call WriteLine
+    mov cx,22
+;
+    mov cs:MenuEntries,1
+    mov bx,OFFSET MenuArr
+    dec cx
+    mov si,OFFSET org_line
+    call WriteLine
+    mov word ptr cs:[bx],0
+    add bx,2
+;
+    mov si,OFFSET norm_file
+    call FindLine
+    jc wmNormOk
+;    
+    inc cs:MenuEntries
+    dec cx
+    mov si,OFFSET norm_line
+    call WriteLine
+    mov cs:[bx],ax
+    add bx,2
+
+wmNormOk:
+    mov si,OFFSET safe_file
+    call FindLine
+    jc wmSafeOk
+;    
+    inc cs:MenuEntries
+    dec cx
+    mov si,OFFSET safe_line
+    call WriteLine    
+    mov cs:[bx],ax
+    add bx,2
+
+wmSafeOk: 
+    mov dx,cs:EntryCount
+    mov si,OFFSET EntryArr
+    or dx,dx
+    jz wmEntryDone
+
+wmEntryLoop:
+    mov al,cs:[si]
+    or al,al
+    jz wmEntryNext
+;
+    inc cs:MenuEntries
+    dec cx
+    mov cs:[bx],si
+    add bx,2
+    call WriteCust
+
+wmEntryNext:
+    add si,20h
+    sub dx,1
+    jnz wmEntryLoop
+
+wmEntryDone:
+    mov si,OFFSET l4
+    call WriteLine
+    mov si,OFFSET blank_line
+
+wbl:
+    call WriteLine
+    loop wbl
+;
+    popad
+    pop es           
+    ret
+WriteMenu   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MarkEntry
+;
+;		DESCRIPTION:	Mark a entry
+;
+;       PARAMETERS:     AX      Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MarkEntry   Proc near
+    push ds
+    pusha
+;
+    add ax,2
+    mov dx,2 * 80
+    mul dx
+    mov bx,ax
+    add bx,2 * 22
+    mov cx,37
+;
+    mov ax,0B800h
+    mov ds,ax
+    inc bx
+
+meLoop:
+    mov byte ptr [bx],70h
+    add bx,2
+    loop meLoop
+;    
+    popa
+    pop ds
+    ret
+MarkEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnmarkEntry
+;
+;		DESCRIPTION:	Unmark a entry
+;
+;       PARAMETERS:     AX      Entry #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnmarkEntry   Proc near
+    push ds
+    pusha
+;
+    add ax,2
+    mov dx,2 * 80
+    mul dx
+    mov bx,ax
+    add bx,2 * 22
+    mov cx,37
+;
+    mov ax,0B800h
+    mov ds,ax
+    inc bx
+
+umeLoop:
+    mov byte ptr [bx],7
+    add bx,2
+    loop umeLoop
+;    
+    popa
+    pop ds
+    ret
+UnmarkEntry   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HandleMenu
+;
+;		DESCRIPTION:    Handle menu
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleMenu  Proc near    
+    mov ax,0
+    int 16h 
+    cmp al,0Dh
+    je hmOk
+;
+    cmp ax,4800h
+    jne hmNotUp
+
+hmUp:
+    mov ax,cs:CurrEntry
+    or ax,ax
+    jz HandleMenu
+;
+    call UnmarkEntry
+    dec ax
+    call MarkEntry
+    mov cs:CurrEntry,ax
+    jmp HandleMenu    
+
+hmNotUp:
+    cmp ax,5000h
+    jne HandleMenu
+
+hmDown:
+    mov ax,cs:CurrEntry
+    inc ax
+    cmp ax,cs:MenuEntries
+    je HandleMenu
+;
+    dec ax
+    call UnmarkEntry    
+    inc ax
+    call MarkEntry
+    mov cs:CurrEntry,ax
+    jmp HandleMenu
+
+hmOk: 
+    mov si,cs:CurrEntry
+    add si,si
+    mov si,cs:[si].MenuArr
+    or si,si
+    jz hmOrgOs
+;        
+    movzx edx,cs:[si].fat_cluster
+    cmp cs:FatSize,32
+    jnz hmClustOk
+;
+    movzx eax,cs:[si].fat_cluster_hi
+    shl eax,16
+    or edx,eax
+
+hmClustOk:       
+    mov cs:CurrentCluster,edx
+    mov eax,cs:[si].fat_file_size
+    mov cs:ImageSize,eax
+    clc
+    jmp hmDone
+
+hmOrgOs:
+    mov cs:CurrentCluster,0
+    mov cs:ImageSize,0
+    stc
+
+hmDone:    
+    ret
+HandleMenu  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ClearScreen
+;
+;		DESCRIPTION:	Clear screen
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+                                  
+ClearScreen  Proc near
+    push es
+    pusha
+;    
+    mov ax,0B800h
+    mov es,ax
+    xor di,di
+    mov ax,0720h
+    mov cx,80 * 25
+    rep stosw
+;
+    mov ax,3
+    int 10h
+;
+    popa
+    pop es
+    ret
+ClearScreen Endp       
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1525,12 +1972,37 @@ boot_data_sector_ok:
     mov cs:SectorsPerCluster,ax
     mov cs:EntryCount,0
     call FindRdosFiles
+    call WriteMenu
+;
+    xor ax,ax
+    mov cs:CurrEntry,ax
+    call MarkEntry
+    call HandleMenu       
     jnc LoadStart
 ;    
-    mov si,OFFSET BootNotFound
-    call WriteAsciiz
+    call ClearScreen
+    xor ax,ax
+    mov ds,ax
+;
+    xor edx,edx
+    mov bx,600h
+    call ReadSector
+;    
+    mov edx,cs:BootSector
+    mov bx,7C00h
+    call ReadSector
+;
+    mov bx,76h SHL 2
+    mov eax,cs:OrgIdeVect
+    mov [bx],eax
+;
+    mov si,600h + 1BEh    
+	db 0EAh
+	dw 7C00h
+	dw 0
     
 LoadStart:
+    call ClearScreen
 	mov si,OFFSET LoadMsg
 	call WriteAsciiz
 	call GateA20

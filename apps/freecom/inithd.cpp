@@ -256,7 +256,7 @@ int TInitHdCommand::Execute(char *param)
 	    if (Disc->IsValid())
 	    {
     	    WriteBootLoader(Disc);
-//    	    WriteBootSector(Disc);
+    	    WriteBootSector(Disc);
     	    return 0;
     	}
 	}

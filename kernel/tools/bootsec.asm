@@ -43,7 +43,7 @@ boot_media					DB ?
 boot_resv6					DW ?
 boot_sectors_per_cyl		DW 15
 boot_heads					DW 2
-boot_hidden_sectors			DD 10
+boot_hidden_sectors			DD 16
 boot_sectors				DD 2884
 boot_drive_nr				DB 80h,0
 boot_signature				DB ?
