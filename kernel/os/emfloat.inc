@@ -20,26 +20,36 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; EMSEG.INC
-; External definitions for segment emulator functions
+; EMFLOAT.INC
+; External definitions for FPU helper emulator functions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn ValidateSegment:near
-	extrn ValidateJmpSegment:near
-	extrn ValidateCallSegment:near
-	extrn ValidateRetSegment:near
-	extrn EmulateError:near
+	extrn CmpReal:near
+	extrn AddReal:near
+	extrn SubReal:near
+	extrn MulReal:near
+	extrn DivReal:near
 
-	extrn JmpFar:near
-	extrn CallFar16:near
-	extrn CallFar32:near
-	extrn RetFar16:near
-	extrn RetFar32:near
-	extrn IntFar:near
-	extrn ExcFar:near
-	extrn IretFar16:near
-	extrn IretFar32:near
-	extrn IretTss:near
+	extrn DoubleToReal:near
+	extrn FloatToReal:near
+	extrn QwordToReal:near
+	extrn LongToReal:near
+	extrn IntToReal:near
+	extrn BcdToReal:near
 
-	extrn FpFault:near
+	extrn RealToDouble:near
+	extrn RealToFloat:near
+	extrn RealToQword:near
+	extrn RealToLong:near
+	extrn RealToInt:near
+	extrn RealToBcd:near
+
+	extrn CalcExp2M1:near
+	extrn CalcLog2:near
+	extrn CalcSqrt:near
+	extrn CalcPartialRemainder:near
+	extrn CalcSin:near
+	extrn CalcCos:near
+	extrn CalcTan:near
+	extrn CalcAtan:near

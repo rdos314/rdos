@@ -488,6 +488,26 @@ ExcFarPm32:
 ExcFarDone:
 	ret
 ExcFar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FpFault
+;
+;		DESCRIPTION:	Floating point fault
+;
+;		PARAMETERS:		SS:BP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public FpFault
+
+FpFault	Proc near
+	xor cx,cx
+	mov al,7
+	call ExcFar	
+	ret
+FpFault	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

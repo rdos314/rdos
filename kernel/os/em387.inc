@@ -21,25 +21,16 @@
 ; The author of this program may be contacted at leif@rdos.net
 ;
 ; EMSEG.INC
-; External definitions for segment emulator functions
+; External definitions for 387 emulator functions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	extrn ValidateSegment:near
-	extrn ValidateJmpSegment:near
-	extrn ValidateCallSegment:near
-	extrn ValidateRetSegment:near
-	extrn EmulateError:near
-
-	extrn JmpFar:near
-	extrn CallFar16:near
-	extrn CallFar32:near
-	extrn RetFar16:near
-	extrn RetFar32:near
-	extrn IntFar:near
-	extrn ExcFar:near
-	extrn IretFar16:near
-	extrn IretFar32:near
-	extrn IretTss:near
-
-	extrn FpFault:near
+	extrn EmWait:near
+	extrn EmD8:near
+	extrn EmD9:near
+	extrn EmDA:near
+	extrn EmDB:near
+	extrn EmDC:near
+	extrn EmDD:near
+	extrn EmDE:near
+	extrn EmDF:near

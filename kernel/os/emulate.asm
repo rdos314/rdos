@@ -48,6 +48,7 @@ include emtrans.inc
 include emcontr.inc
 include emstring.inc
 include emprot.inc
+include em387.inc
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -942,7 +943,7 @@ emt92	DW OFFSET EmXchgAxDx,			OFFSET EmXchgAxBx
 emt94	DW OFFSET EmXchgAxSp,			OFFSET EmXchgAxBp
 emt96	DW OFFSET EmXchgAxSi,			OFFSET EmXchgAxDi
 emt98	DW OFFSET EmCbw,				OFFSET EmCwd
-emt9A	DW OFFSET EmCallFar,			OFFSET EmulateError
+emt9A	DW OFFSET EmCallFar,			OFFSET EmWait
 emt9C	DW OFFSET EmPushf,				OFFSET EmPopf
 emt9E	DW OFFSET EmSahf,				OFFSET EmLahf
 emtA0	DW OFFSET EmMoveByteMemToAcc,	OFFSET EmMoveWordMemToAcc
@@ -973,10 +974,10 @@ emtD0	DW OFFSET EmD0,					OFFSET EmD1
 emtD2	DW OFFSET EmD2,					OFFSET EmD3
 emtD4	DW OFFSET EmulateError,			OFFSET EmulateError
 emtD6	DW OFFSET EmulateError,			OFFSET EmXlat
-emtD8	DW OFFSET EmulateError,			OFFSET EmulateError
-emtDA	DW OFFSET EmulateError,			OFFSET EmulateError
-emtDC	DW OFFSET EmulateError,			OFFSET EmulateError
-emtDE	DW OFFSET EmulateError,			OFFSET EmulateError
+emtD8	DW OFFSET EmD8,					OFFSET EmD9
+emtDA	DW OFFSET EmDA,					OFFSET EmDA
+emtDC	DW OFFSET EmDC,					OFFSET EmDD
+emtDE	DW OFFSET EmDE,					OFFSET EmDF
 emtE0	DW OFFSET EmLoopnzShort,		OFFSET EmLoopzShort
 emtE2	DW OFFSET EmLoopShort,			OFFSET EmJcxzShort
 emtE4	DW OFFSET EmInByteIm,	 		OFFSET EmInWordIm

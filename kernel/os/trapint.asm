@@ -878,6 +878,7 @@ trap_7:
 	push bx
 		assume ds:tss_seg
 	mov bx,OFFSET math_control
+	db 66h
 	fsave [bx]
 	mov math_used,1
 	pop bx
@@ -887,6 +888,7 @@ math_reload:
 	mov ax,math_used
 	or ax,ax
 	jz math_init
+	db 66h
 	frstor [bx]
 	jmp math_same_tss
 math_init:
