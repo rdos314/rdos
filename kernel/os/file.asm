@@ -31,16 +31,16 @@
 
 GateSize = 16
 
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
 INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE driver.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE system.inc
-INCLUDE fs.inc
-INCLUDE handle.inc
+INCLUDE ..\fs.inc
+INCLUDE ..\handle.inc
 
 file_handle_seg		STRUC
 
