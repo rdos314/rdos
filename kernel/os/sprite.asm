@@ -56,6 +56,127 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:           CheckSprite
+;
+;		DESCRIPTION:	Check if sprite structures are valid 
+;
+;		PARAMETERS:		FS		sprite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSprite	Proc near
+	push ds
+	push es
+	push fs
+	push gs
+	pushad
+;
+	mov ds,fs:sp_dest_sel
+    mov si,ds:v_sprite_lines
+    mov cx,ds:v_sprite_count
+    mov es,ds:v_sprite_sel
+	xor di,di
+	or cx,cx
+	jz check_sprite_done
+;
+
+check_sprite_loop:
+	mov fs,es:[di].spi_sel
+	mov ax,fs:sp_x
+	cmp ax,es:[di].spi_x_min
+	je check_sprite_x_min_ok
+;
+	int 3
+
+check_sprite_x_min_ok:
+	add ax,fs:sp_w
+	dec ax
+	cmp ax,es:[di].spi_x_max
+	je check_sprite_x_max_ok
+;
+	int 3
+
+check_sprite_x_max_ok:
+	mov ax,fs:sp_y
+	cmp ax,es:[di].spi_y_min
+	je check_sprite_y_min_ok
+;
+	int 3
+
+check_sprite_y_min_ok:
+	add ax,fs:sp_h
+	dec ax
+	cmp ax,es:[di].spi_y_max
+	je check_sprite_y_max_ok
+;
+	int 3
+
+check_sprite_y_max_ok:
+	test fs:sp_flags,SP_FLAG_VISIBLE
+	jz check_sprite_next
+;
+	test es:[di].spi_flags,SP_FLAG_VISIBLE
+	jnz check_sprite_limits
+;
+	int 3
+
+check_sprite_limits:
+	mov ax,fs:sp_index
+	mov bx,fs:sp_y
+	mov bp,fs:sp_h
+	shl bx,2
+	or bp,bp
+	jz check_sprite_next
+
+check_sprite_line_loop:
+	mov dx,ds:[bx+si].spl_lower_ind
+	cmp dx,-1
+	jne check_sprite_lower_not_free
+;
+	int 3
+
+check_sprite_lower_not_free:
+	cmp ax,dx
+	jae check_sprite_lower_ok
+;
+	int 3
+
+check_sprite_lower_ok:
+	mov dx,ds:[bx+si].spl_upper_ind
+	cmp dx,-1
+	jne check_sprite_upper_not_free
+;
+	int 3
+
+check_sprite_upper_not_free:
+	cmp ax,dx
+	jbe check_sprite_upper_ok
+;
+	int 3
+
+check_sprite_upper_ok:
+	add bx,4
+	sub bp,1
+	jnz check_sprite_line_loop
+
+check_sprite_next:
+	add di,16
+	loop check_sprite_loop
+
+check_sprite_done:
+	popad
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	ret
+CheckSprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:           CreateSprite
 ;
 ;		DESCRIPTION:	Create a new sprite
@@ -1170,6 +1291,7 @@ move_sprite	Proc far
     je move_sprite_coord
 
 move_sprite_move:
+	call CheckSprite
     mov gs,fs:sp_dest_sel
     mov cx,gs:v_sprite_count
     mov ds,gs:v_sprite_sel
