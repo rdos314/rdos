@@ -45,6 +45,10 @@ ewlcd_srcs = EWLCD.ASM
 ewlcd_objs = $(ewlcd_srcs:.ASM=.OBJ)
 ewlcd_rdvs = EWLCD.RDV
 
+keylcd_srcs = KEYLCD.ASM
+keylcd_objs = $(keylcd_srcs:.ASM=.OBJ)
+keylcd_rdvs = KEYLCD.RDV
+
 anio_srcs = ANIO.ASM
 anio_objs = $(anio_srcs:.ASM=.OBJ)
 anio_rdvs = ANIO.RDV
@@ -93,7 +97,7 @@ fat_srcs = FAT.ASM FATMISC.ASM FATTAB.ASM FATDIR.ASM FATFILE.ASM
 fat_objs = $(fat_srcs:.ASM=.OBJ)
 fat_rdvs = FAT.RDV
 
-srcs =      $(ide_srcs) $(pcvideo_srcs) $(ewlcd_srcs) \
+srcs =      $(ide_srcs) $(pcvideo_srcs) $(ewlcd_srcs) $(keylcd_srcs) \
 			$(floppy_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
@@ -101,7 +105,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(ewlcd_srcs) \
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(ewlcd_rdvs) \
+rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(ewlcd_rdvs) $(keylcd_rdvs)\
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(anio_rdvs)
@@ -139,6 +143,14 @@ EWLCD.RDV : $(ewlcd_objs)
 	$(ewlcd_objs)
 	EWLCD.RDV
 	EWLCD;       
+!
+
+KEYLCD.RDV : $(keylcd_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(keylcd_objs)
+	KEYLCD.RDV
+	KEYLCD;       
 !
 
 ANIO.RDV : $(anio_objs)
