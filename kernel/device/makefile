@@ -37,7 +37,7 @@ link_opt = /l/s/3
 
 # DEFINE GROUPS OF MODULES
 
-pcvideo_srcs = PCVIDEO.ASM  TEXTMODE.ASM	BITMODE.ASM
+pcvideo_srcs = PCVIDEO.ASM  TEXTMODE.ASM	BITMODE.ASM	VBE.ASM	TRUEMODE.ASM
 pcvideo_objs = $(pcvideo_srcs:.ASM=.OBJ)
 pcvideo_rdvs = PCVIDEO.RDV
 

@@ -188,7 +188,7 @@ init_mem	PROC near
 ;
 	mov big_used_mem,0
 	mov small_used_mem,0
-	mov process_alloc_base,process_linear + SIZE process_seg
+	mov process_alloc_base,fixed_process_linear + SIZE process_seg
 	mov thread_alloc_base,thread_linear
 	mov fixed_vm_base,fixed_vm_linear
 ;
@@ -1132,6 +1132,7 @@ allocate_vm_found:
 	mov [bx].vms_next,di
 	mov [bx].vms_prev,si
 	mov [si].vms_next,bx
+	mov [di].vms_prev,bx
 ;
 	mov di,[si].vmf_next
 	mov [bx].vmf_next,di

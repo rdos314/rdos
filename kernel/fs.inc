@@ -25,9 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dir_num		EQU 8
 MAX_DRIVES	EQU 'Z' - 'A' + 1
-file_num = 80h
 map_num = 40h
 
 FILE_ATTRIB_NOBUFFER = 80h
@@ -71,13 +69,8 @@ fs_process_seg	STRUC
 cur_dir_sel			DW 256 DUP(?)
 curr_drive			DB ?
 resv1				DB ?
-dir_free_list		DW ?
-file_free_list		DW ?
 handle_free_list	DW ?
-dir_list			DB 4 * dir_num DUP(?)
-file_list			DB 8 * file_num DUP(?)
 handle_list			DB 16 * map_num DUP(?)
-file_handle_section	section_typ <>
 
 fs_process_seg	ENDS
 

@@ -70,7 +70,6 @@ code	SEGMENT byte public 'CODE'
 	extrn init_file:near
 	extrn init_dir:near
 	extrn init_memmap:near
-	extrn init_file_process:near
 	extrn init_dir_process:near
 	extrn init_memmap_process:near
 	extrn close_file_app:near
@@ -537,7 +536,6 @@ init_process	PROC far
 	mov es:curr_drive,MAX_DRIVES - 1
 ;
 	call init_dir_process
-	call init_file_process
 	call init_memmap_process
 ;
 	popad

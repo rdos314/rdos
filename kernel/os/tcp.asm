@@ -185,46 +185,46 @@ handle_num EQU 128
 
 tcp_handle	STRUC
 
-handle_next		DW ?
-handle_sel		DW ?
+tcp_handle_next		DW ?
+tcp_handle_sel		DW ?
 
 tcp_handle	ENDS
 
 tcp_process_seg	STRUC
 
-handle_free_list	DW ?
-handles				DB 4*handle_num DUP(?)
+tcp_handle_free_list	DW ?
+tcp_handles				DB 4*handle_num DUP(?)
 
 tcp_process_seg	ENDS
 
 HandleToOffset	MACRO reg
 	dec reg
 	shl reg,2
-	add reg,OFFSET handles	
+	add reg,OFFSET tcp_handles	
 					ENDM
 
 OffsetToHandle	MACRO reg
-	sub reg,OFFSET handles
+	sub reg,OFFSET tcp_handles
 	shr reg,2
 	inc reg
 					ENDM
 
-AllocateHandle	MACRO
+AllocateTcpHandle	MACRO
 	push ax
 	cli
-	mov bx,ds:handle_free_list
+	mov bx,ds:tcp_handle_free_list
 	mov ax,[bx]
-	mov ds:handle_free_list,ax
+	mov ds:tcp_handle_free_list,ax
 	sti
 	pop ax
 				ENDM
 
-FreeHandle	MACRO
+FreeTcpHandle	MACRO
 	push ax
 	cli
-	mov ax,ds:handle_free_list
+	mov ax,ds:tcp_handle_free_list
 	mov [bx],ax
-	mov ds:handle_free_list,bx
+	mov ds:tcp_handle_free_list,bx
 	sti
 	pop ax
 			ENDM
@@ -2891,8 +2891,8 @@ listen_tcp_leave:
 	push eax
 	mov ax,tcp_process_sel
 	mov ds,ax
-	AllocateHandle
-	mov [bx].handle_sel,es
+	AllocateTcpHandle
+	mov [bx].tcp_handle_sel,es
 	OffsetToHandle bx
 	pop eax
 	push eax
@@ -2944,7 +2944,7 @@ wait_tcp_inv:
 
 wait_tcp_valid:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz wait_tcp_inv
 ;
@@ -2982,7 +2982,7 @@ wait_tcp_fail:
 	pop bx
 	mov ax,tcp_process_sel
 	mov ds,ax
-	mov word ptr [bx].handle_sel,0
+	mov word ptr [bx].tcp_handle_sel,0
 	FreeHandle
 	stc
 
@@ -3075,8 +3075,8 @@ open_tcp_create:
 	mov dx,ds
 	mov bx,tcp_process_sel
 	mov ds,bx
-	AllocateHandle
-	mov [bx].handle_sel,dx
+	AllocateTcpHandle
+	mov [bx].tcp_handle_sel,dx
 	OffsetToHandle bx
 	clc
 	jmp open_tcp_done
@@ -3198,7 +3198,7 @@ close_tcp_fail:
 
 close_tcp_ok:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz close_tcp_fail
 ;
@@ -3246,7 +3246,7 @@ delete_tcp_connection	Proc far
 ;
 	HandleToOffset bx
 	xor ax,ax
-	xchg ax,[bx].handle_sel
+	xchg ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz delete_tcp_done
 ;
@@ -3258,7 +3258,7 @@ delete_tcp_connection	Proc far
 	sti
 ;
 	mov ds,ax
-	FreeHandle
+	FreeTcpHandle
 
 delete_tcp_done:
 	pop bx
@@ -3295,7 +3295,7 @@ is_tcp_connection_closed	Proc far
 	ja is_tcp_closed_fail
 ;
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz is_tcp_closed_fail
 ;
@@ -3401,7 +3401,7 @@ abort_tcp_fail:
 
 abort_tcp_ok:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz abort_tcp_fail
 ;
@@ -3595,7 +3595,7 @@ read_tcp_fail16:
 
 read_tcp_ok16:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz read_tcp_fail16
 ;
@@ -3645,7 +3645,7 @@ read_tcp_fail32:
 
 read_tcp_ok32:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz read_tcp_fail32
 ;
@@ -3803,7 +3803,7 @@ write_tcp_fail16:
 
 write_tcp_ok16:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz write_tcp_fail16
 ;
@@ -3846,7 +3846,7 @@ write_tcp_fail32:
 
 write_tcp_ok32:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz write_tcp_fail32
 ;
@@ -3899,7 +3899,7 @@ push_tcp_fail:
 
 push_tcp_ok:
 	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz push_tcp_fail
 ;
@@ -4167,13 +4167,13 @@ init_process	PROC far
 	mov ax,tcp_process_sel
 	mov es,ax
 	mov cx,handle_num
-	mov di,4*handle_num + OFFSET handles
+	mov di,4*handle_num + OFFSET tcp_handles
 init_handle_tab_loop:
 	mov ax,di
 	sub di,4
 	mov es:[di],ax
 	loop init_handle_tab_loop
-	mov es:handle_free_list,di
+	mov es:tcp_handle_free_list,di
 ;
 	popad
 	pop es

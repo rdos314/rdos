@@ -131,6 +131,9 @@ app_data_sel		EQU 278h
 __A000				EQU 283h
 __C000				EQU 28Bh
 
+handle_sel			EQU 290h
+handle_mem_sel		EQU 298h
+
 ;
 os_begin_sel		EQU 1800h
 user_begin_sel		EQU 2800h
@@ -170,7 +173,8 @@ local_page_linear		EQU 01000000h
 
 flat_size				EQU 60000000h
 
-process_linear			EQU 60000000h
+handle_linear			EQU 60000000h
+fixed_process_linear	EQU 60010000h
 
 focus_size		        EQU 00400000h
 

@@ -61,7 +61,7 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 	extrn QueryMailslot:near
-	extrn AllocateHandle:near
+	extrn AllocateIpcHandle:near
 	extrn QueueReset:near
 	extrn HandleResponses:near
 	extrn ReceiveRequest:near

@@ -1322,7 +1322,7 @@ gmfAttribOk:
 	mov di,[bp].gmfCurrBase
 	mov ax,[bp].gmfEntry
 	stosw
-	mov [bp].gmfCurrBase,edi
+	mov [bp].gmfCurrBase,di
 	inc word ptr [bp].gmfEntries
 
 gmfNext:

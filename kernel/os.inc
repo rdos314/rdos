@@ -866,6 +866,25 @@ WaitSleepTask	MACRO
 	OsGate wait_sleep_task_nr
 					ENDM
 
+; IN  AX		Signature
+; IN  CX		Size of data
+; OUT DS:BX		Handle data
+AllocateHandle	MACRO
+	OsGate allocate_handle_nr
+					ENDM
+
+; IN  BX		Handle data
+FreeHandle	MACRO
+	OsGate free_handle_nr
+					ENDM
+
+; IN  AX		Signature
+; IN  BX  		Handle
+; OUT DS:BX		Handle data
+DerefHandle	MACRO
+	OsGate deref_handle_nr
+					ENDM
+
 ;	AX			THREAD TO DEBUG
 ChangeEnviroment	MACRO
 	OsGate change_enviroment_nr

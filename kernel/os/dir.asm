@@ -43,6 +43,15 @@ INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE fs.inc
+INCLUDE handle.inc
+
+dir_handle_seg	STRUC
+
+dir_handle_base	handle_header <>
+
+dir_handle_sel	DW ?
+
+dir_handle_seg	ENDS
 
 CallFileSystem	MACRO	call_proc
 	push ds
@@ -62,36 +71,6 @@ CallFileSystem	MACRO	call_proc
 	pop gs
 	pop ds
 				ENDM
-
-dir_to_offset	MACRO reg
-	shl reg,1
-	add reg,OFFSET dir_list	
-					ENDM
-
-offset_to_dir	MACRO reg
-	sub reg,OFFSET dir_list
-	shr reg,1
-					ENDM
-
-allocate_dir	MACRO
-	push ax
-	cli
-	mov bx,ds:dir_free_list
-	mov ax,[bx]
-	mov ds:dir_free_list,ax
-	sti
-	pop ax
-				ENDM
-
-free_dir	MACRO
-	push ax
-	cli
-	mov ax,ds:dir_free_list
-	mov [bx],ax
-	mov ds:dir_free_list,bx
-	sti
-	pop ax
-			ENDM
 
 	.386p
 
@@ -769,14 +748,18 @@ PAGE
 
 CreateDirHandle	Proc near
 	push ds
+	push cx
 	push si
-	mov si,fs_process_sel
-	mov ds,si
+;
 	mov si,bx
-	allocate_dir
-	mov ds:[bx],si
-	offset_to_dir bx
+	mov cx,SIZE dir_handle_seg
+	AllocateHandle
+	mov [bx].dir_handle_sel,si
+	mov [bx].hh_sign,DIR_HANDLE
+	mov bx,[bx].hh_handle
+;
 	pop si
+	pop cx
 	pop ds
 	ret
 CreateDirHandle	Endp
@@ -2084,10 +2067,11 @@ ReadDirBase	Proc near
 	push fs
 	push esi
 ;
-	mov ax,fs_process_sel
-	mov ds,ax
-	dir_to_offset bx
-	mov bx,ds:[bx]
+	mov ax,DIR_HANDLE
+	DerefHandle
+	jc read_dir_fail
+;
+	mov bx,[bx].dir_handle_sel
 	or bx,bx
 	jz read_dir_fail
 ;
@@ -2794,26 +2778,29 @@ close_dir_name	DB 'Close Directory',0
 
 close_dir	Proc far
 	push ds
+	push ax
 	push bx
 	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	dir_to_offset bx
+;
+	mov ax,DIR_HANDLE
+	DerefHandle
+	jc close_dir_done
+;
 	mov si,bx
-	mov bx,ds:[bx]
+	mov bx,[bx].dir_handle_sel
 	or bx,bx
 	stc
 	jz close_dir_done
 ;
 	call CloseDirBase
 	mov bx,si
-	mov word ptr ds:[bx],0
-	free_dir
+	FreeHandle
 	clc
 
 close_dir_done:
 	pop si
 	pop bx
+	pop ax
 	pop ds
 	retf32
 close_dir	Endp
@@ -3118,15 +3105,6 @@ init_dir_process	PROC near
 	mov cx,256
 	xor ax,ax
 	rep stosw
-;
-	mov cx,dir_num
-	mov di,2*dir_num + OFFSET dir_list
-init_dir_tab_loop:
-	mov ax,di
-	sub di,2
-	mov es:[di],ax
-	loop init_dir_tab_loop
-	mov es:dir_free_list,di
 	ret
 init_dir_process	Endp
 

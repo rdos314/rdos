@@ -46,34 +46,15 @@ INCLUDE ne.def
 INCLUDE system.inc
 INCLUDE ip.inc
 INCLUDE	ipc.inc
+INCLUDE handle.inc
 
-handle_num EQU 128
+ipc_handle_seg	STRUC
 
-ipc_handle	STRUC
+ipc_handle_base		handle_header <>
+ipc_handle_next		DW ?
+ipc_handle_sel		DW ?
 
-handle_next		DW ?
-handle_sel		DW ?
-
-ipc_handle	ENDS
-
-ipc_process_seg	STRUC
-
-handle_free_list	DW ?
-handles				DB 4*handle_num DUP(?)
-
-ipc_process_seg	ENDS
-
-HandleToOffset	MACRO reg
-	dec reg
-	shl reg,2
-	add reg,OFFSET handles	
-					ENDM
-
-OffsetToHandle	MACRO reg
-	sub reg,OFFSET handles
-	shr reg,2
-	inc reg
-					ENDM
+ipc_handle_seg	ENDS
 
 code	SEGMENT byte public 'CODE'
 
@@ -164,7 +145,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			AllocateHandle
+;		NAME:			AllocateIpcHandle
 ;
 ;		DESCRIPTION:	Allocate a mailslot handle
 ;
@@ -174,29 +155,27 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public AllocateHandle
+	public AllocateIpcHandle
 
-AllocateHandle	Proc near
+AllocateIpcHandle	Proc near
 	push ds
 	push ax
+	push cx
 	push dx
 ;
 	mov dx,bx
-	mov ax,ipc_process_sel
-	mov ds,ax
-	cli
-	mov bx,ds:handle_free_list
-	mov ax,[bx]
-	mov ds:handle_free_list,ax
-	sti
-	mov [bx].handle_sel,dx
-	OffsetToHandle bx
+	mov cx,SIZE ipc_handle_seg
+	AllocateHandle
+	mov [bx].ipc_handle_sel,dx
+	mov [bx].hh_sign,IPC_HANDLE
+	mov bx,[bx].hh_handle
 ;
 	pop dx
+	pop cx
 	pop ax
 	pop ds
 	ret
-AllocateHandle	Endp
+AllocateIpcHandle	Endp
 
 PAGE
 	
@@ -264,7 +243,7 @@ get_local_ok:
 	mov ax,ipc_data_sel
 	mov ds,ax
 	LeaveSection ds:ipc_section
-	call AllocateHandle
+	call AllocateIpcHandle
 	pop edi
 	clc
 
@@ -308,32 +287,18 @@ free_mailslot	Proc far
 	push ds
 	push ax
 ;
-	or bx,bx
-	jz free_mailslot_done
+	mov ax,IPC_HANDLE
+	DerefHandle
+	jc free_mailslot_done
 ;
-	cmp bx,handle_num
-	ja free_mailslot_done
-;
-	mov ax,ipc_process_sel
-	mov ds,ax
-	HandleToOffset bx
-	xor ax,ax
-	xchg ax,[bx].handle_sel
+	mov ax,[bx].ipc_handle_sel
 	or ax,ax
+	stc
 	jz free_mailslot_done
 ;
 	mov ds,ax
-	mov ax,ipc_process_sel
-	cli
 	dec ds:m_usage
-	mov ds,ax
-	sti
-;
-	cli
-	mov ax,ds:handle_free_list
-	mov [bx],ax
-	mov ds:handle_free_list,bx
-	sti
+	clc
 
 free_mailslot_done:
 	pop ax
@@ -370,27 +335,22 @@ send_mailslot	Proc near
 	push bx
 	push ebp
 ;
-	or bx,bx
-	jz send_mailslot_fail
-;
-	cmp bx,handle_num
-	ja send_mailslot_fail
-;
 	mov ebp,eax
 	mov ax,ds
 	mov fs,ax
-	mov ax,ipc_process_sel
-	mov ds,ax
-	HandleToOffset bx
-	mov ax,[bx].handle_sel
+	mov ax,IPC_HANDLE
+	DerefHandle
+	jc send_mailslot_done
+;
+	mov ax,[bx].ipc_handle_sel
 	or ax,ax
-	jz send_mailslot_fail
+	stc
+	jz send_mailslot_done
 ;
 	mov ds,ax
 	cmp ecx,ds:m_rec_max_size
 	jbe send_mailslot_ok
-
-send_mailslot_fail:
+;
 	stc
 	jmp send_mailslot_done
 
@@ -937,41 +897,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init_process
-;
-;		DESCRIPTION:	init process handle table
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_process	PROC far
-	push ds
-	push es
-	pushad
-;
-	mov ax,ipc_process_sel
-	mov es,ax
-	mov cx,handle_num
-	mov di,4*handle_num + OFFSET handles
-init_handle_tab_loop:
-	mov ax,di
-	sub di,4
-	mov es:[di],ax
-	loop init_handle_tab_loop
-	mov es:handle_free_list,di
-;
-	popad
-	pop es
-	pop ds
-	ret
-init_process	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			init
 ;
 ;		DESCRIPTION:    Init IPC driver
@@ -1002,10 +927,6 @@ init	PROC far
 	mov eax,SIZE ipc_thread_data
 	mov bx,ipc_thread_sel
 	AllocateFixedThreadMem
-;	
-	mov eax,SIZE ipc_process_seg
-	mov bx,ipc_process_sel
-	AllocateFixedProcessMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1079,9 +1000,6 @@ init	PROC far
 ;
 	mov di,OFFSET init_thread
 	HookCreateThread
-;
-	mov di,OFFSET init_process
-	HookCreateProcess
 ;
 	call init_smp
 ;

@@ -206,7 +206,6 @@ ntp_data_sel		EQU 808h
 
 ipc_code_sel		EQU 810h
 ipc_data_sel		EQU 818h
-ipc_process_sel		EQU 820h
 ipc_thread_sel		EQU 828h
 
 v86_bios_code_sel	EQU 830h

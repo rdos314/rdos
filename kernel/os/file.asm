@@ -43,8 +43,11 @@ INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE fs.inc
+INCLUDE handle.inc
 
 file_handle_seg		STRUC
+
+file_handle_base	handle_header <>
 
 file_handle_pos		DD ?
 file_handle_sel		DW ?
@@ -52,32 +55,6 @@ file_handle_access	DB ?
 file_handle_drive	DB ?
 
 file_handle_seg		ENDS
-
-file_to_offset	MACRO reg
-	shl reg,3
-	add reg,OFFSET file_list
-					ENDM
-
-offset_to_file	MACRO reg
-	sub reg,OFFSET file_list
-	shr reg,3
-					ENDM
-
-allocate_file	MACRO
-	push ax
-	mov bx,ds:file_free_list
-	mov ax,[bx]
-	mov ds:file_free_list,ax
-	pop ax
-				ENDM
-
-free_file	MACRO
-	push ax
-	mov ax,ds:file_free_list
-	mov [bx],ax
-	mov ds:file_free_list,bx
-	pop ax
-			ENDM
 
 CallFileSystem	MACRO	call_proc
 	push ds
@@ -128,18 +105,18 @@ CreateFileHandle	Proc near
 	push es
 	push si
 ;
-	mov si,fs_process_sel
-	mov ds,si
 	mov es,bx
 	inc es:file_usage
-	EnterSection ds:file_handle_section
-	allocate_file
-	mov ds:[bx].file_handle_pos,0
-	mov ds:[bx].file_handle_sel,es
-	mov ds:[bx].file_handle_access,cl
-	mov ds:[bx].file_handle_drive,al
-	LeaveSection ds:file_handle_section
-	offset_to_file bx
+	push cx
+	mov cx,SIZE file_handle_seg
+	AllocateHandle
+	pop cx
+	mov [bx].file_handle_pos,0
+	mov [bx].file_handle_sel,es
+	mov [bx].file_handle_access,cl
+	mov [bx].file_handle_drive,al
+	mov [bx].hh_sign,FILE_HANDLE
+	mov bx,[bx].hh_handle
 	clc
 ;
 	pop si
@@ -1171,13 +1148,16 @@ get_file_info_name	DB 'Get File info',0
 get_file_info	PROC far
 	push ds
 	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov ax,ds:[bx].file_handle_sel
-	mov cl,ds:[bx].file_handle_access
-	mov ch,ds:[bx].file_handle_drive
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc get_file_info_done
+;
+	mov ax,[bx].file_handle_sel
+	mov cl,[bx].file_handle_access
+	mov ch,[bx].file_handle_drive
 	clc
+
+get_file_info_done:
 	pop bx
 	pop ds
 	ret
@@ -1206,17 +1186,16 @@ dupl_file_info	PROC far
 	push ax
 	mov ds,ax
 	inc ds:file_usage
-	mov ax,fs_process_sel
-	mov ds,ax
 	pop ax
-	EnterSection ds:file_handle_section
-	allocate_file
-	mov ds:[bx].file_handle_pos,0
-	mov ds:[bx].file_handle_sel,ax
-	mov ds:[bx].file_handle_access,cl
-	mov ds:[bx].file_handle_drive,ch
-	LeaveSection ds:file_handle_section
-	offset_to_file bx
+	push cx
+	mov cx,SIZE file_handle_seg
+	AllocateHandle
+	mov [bx].file_handle_pos,0
+	mov [bx].file_handle_sel,ax
+	mov [bx].file_handle_access,cl
+	mov [bx].file_handle_drive,ch
+	mov [bx].hh_sign,FILE_HANDLE
+	mov bx,[bx].hh_handle
 	clc
 	pop ds
 	ret
@@ -1242,17 +1221,18 @@ close_file:
 	push ds
 	push bx
 	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc close_file_done
+;
 	mov si,bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz close_file_done
 ;
-	push ds
 	mov ds,bx
 	sub ds:file_usage,1
 	jnz close_file_handle
@@ -1261,12 +1241,8 @@ close_file:
 ;	call FreeFileSel
 
 close_file_handle:
-	pop ds
 	mov bx,si
-	EnterSection ds:file_handle_section
-	mov ds:[bx].file_handle_sel,0
-	free_file
-	LeaveSection ds:file_handle_section
+	FreeHandle
 	clc
 
 close_file_done:
@@ -1294,16 +1270,25 @@ dupl_file:
 	push ds
 	push es
 	push eax
+	push cx
 	push si
+;
 	mov bx,ax
-	mov ds,ax
-	inc ds:file_usage
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc dupl_file_done
+;
 	mov si,bx
-	EnterSection ds:file_handle_section
-	allocate_file
+	mov bx,[bx].file_handle_sel
+	or bx,bx
+	stc
+	jz dupl_file_done
+;
+	mov ds,bx
+	inc ds:file_usage
+;
+	mov cx,SIZE file_handle_seg
+	AllocateHandle
 	mov eax,[si].file_handle_pos
 	mov [bx].file_handle_pos,eax
 	mov ax,[si].file_handle_sel
@@ -1312,10 +1297,13 @@ dupl_file:
 	mov [bx].file_handle_access,al
 	mov al,[si].file_handle_drive
 	mov [bx].file_handle_drive,al
-	LeaveSection ds:file_handle_section
-	offset_to_file bx
+	mov [bx].hh_sign,FILE_HANDLE
+	mov bx,[bx].hh_handle
 	clc
+
+dupl_file_done:
 	pop si
+	pop cx
 	pop eax
 	pop es
 	pop ds
@@ -1338,18 +1326,23 @@ get_ioctl_data_name	DB 'Get IOCTL Data',0
 
 get_ioctl_data:
 	push ds
+	push ax
 	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc get_ioctl_data_done
+;
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz get_ioctl_data_done
+;
 	CallFileSystem get_ioctl_data_proc
 get_ioctl_data_done:
 	pop bx
+	pop ax
 	pop ds
 	retf32
 
@@ -1372,11 +1365,12 @@ get_file_size:
 	push ds
 	push bx
 	push edx
-	mov dx,fs_process_sel
-	mov ds,dx
-	file_to_offset bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc get_file_size_done
+;
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz get_file_size_done
@@ -1385,6 +1379,7 @@ get_file_size:
 	EnterReadSection ds:file_size_section
 	mov eax,ds:file_size
 	LeaveReadSection ds:file_size_section
+	clc
 
 get_file_size_done:
 	pop edx
@@ -1408,14 +1403,17 @@ set_file_size_name	DB 'Set File Size',0
 
 set_file_size:
 	push ds
+	push eax
 	push bx
 	push edx
-	mov dx,fs_process_sel
-	mov ds,dx
+;
 	mov edx,eax
-	file_to_offset bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc set_file_size_done
+;
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz set_file_size_done
@@ -1428,6 +1426,7 @@ set_file_size:
 set_file_size_done:
 	pop edx
 	pop bx
+	pop eax
 	pop ds
 	retf32
 
@@ -1449,15 +1448,19 @@ get_file_pos_name	DB 'Get File Position',0
 get_file_pos:
 	push ds
 	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov ax,ds:[bx].file_handle_sel
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc get_file_pos_done
+;
+	mov ax,[bx].file_handle_sel
 	or ax,ax
 	stc
 	jz get_file_pos_done
+;
 	mov eax,[bx].file_handle_pos
 	clc
+
 get_file_pos_done:
 	pop bx
 	pop ds
@@ -1480,18 +1483,18 @@ set_file_pos_name	DB 'Set File Position',0
 set_file_pos:
 	push ds
 	push bx
-	push dx
-	mov dx,fs_process_sel
-	mov ds,dx
-	file_to_offset bx
-	mov dx,[bx].file_handle_sel
-	or dx,dx
-	stc
-	jz set_file_pos_done
-	mov [bx].file_handle_pos,eax
+	push edx
+;
+	mov edx,eax
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc set_file_pos_done
+;
+	mov [bx].file_handle_pos,edx
 	clc
+
 set_file_pos_done:
-	pop dx
+	pop edx
 	pop bx
 	pop ds
 	retf32
@@ -1517,13 +1520,14 @@ get_file_time:
 	push bx
 	push ecx
 ;
-	mov dx,fs_process_sel
-	mov ds,dx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc get_file_time_done
+;
 	mov dx,flat_sel
 	mov es,dx
-	file_to_offset bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz get_file_time_done
@@ -1558,18 +1562,21 @@ set_file_time_name	DB 'Set File Time',0
 set_file_time:
 	push ds
 	push es
+	push ax
 	push bx
 	push ecx
 	push edx
 	push edi
-	mov cx,fs_process_sel
-	mov ds,cx
+;
 	mov cx,flat_sel
 	mov es,cx
 	mov ecx,eax
-	file_to_offset bx
-	mov al,ds:[bx].file_handle_drive
-	mov bx,ds:[bx].file_handle_sel
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc set_file_time_done
+;
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz set_file_time_done
@@ -1587,6 +1594,7 @@ set_file_time_done:
 	pop edx
 	pop ecx
 	pop bx
+	pop ax
 	pop es
 	pop ds
 	retf32
@@ -1614,13 +1622,15 @@ read_file32:
 	push bx
 	push edx
 	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc read_file32_done
+;
 	mov si,bx
-	mov al,ds:[bx].file_handle_drive
-	mov edx,ds:[bx].file_handle_pos
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov edx,[bx].file_handle_pos
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz read_file32_done
@@ -1656,15 +1666,17 @@ read_file16	PROC far
 	push edx
 	push si
 	push edi
+;
 	movzx ecx,cx
 	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc read_file16_done
+;
 	mov si,bx
-	mov al,ds:[bx].file_handle_drive
-	mov edx,ds:[bx].file_handle_pos
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov edx,[bx].file_handle_pos
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz read_file16_done
@@ -1719,13 +1731,15 @@ write_file32:
 	push bx
 	push edx
 	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc write_file32_done
+;
 	mov si,bx
-	mov al,ds:[bx].file_handle_drive
-	mov edx,ds:[bx].file_handle_pos
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov edx,[bx].file_handle_pos
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz write_file32_done
@@ -1761,15 +1775,17 @@ write_file16	PROC far
 	push edx
 	push si
 	push edi
+;
 	movzx ecx,cx
 	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc write_file16_done
+;
 	mov si,bx
-	mov al,ds:[bx].file_handle_drive
-	mov edx,ds:[bx].file_handle_pos
-	mov bx,ds:[bx].file_handle_sel
+	mov al,[bx].file_handle_drive
+	mov edx,[bx].file_handle_pos
+	mov bx,[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz write_file16_done
@@ -1800,37 +1816,6 @@ write_file16_done:
 	pop ds
 	ret
 write_file16	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Init process
-;
-;		DESCRIPTION:	Init per-process data
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public init_file_process
-
-init_file_process	PROC near
-	mov ax,fs_process_sel
-	mov es,ax
-;
-	InitSection es:file_handle_section
-	mov cx,file_num
-	mov di,8*file_num + OFFSET file_list
-init_file_tab_loop:
-	mov ax,di
-	sub di,8
-	mov es:[di],ax
-	loop init_file_tab_loop
-	mov es:file_free_list,di
-	ret
-init_file_process	Endp
 
 PAGE
 

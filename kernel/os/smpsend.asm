@@ -123,7 +123,7 @@ code	SEGMENT byte public 'CODE'
 	extrn QueueAck:near
 	extrn QueueTooLarge:near
 	extrn FindHost:near
-	extrn AllocateHandle:near
+	extrn AllocateIpcHandle:near
 	extrn FlushResponses:near
 
 PAGE
@@ -590,7 +590,7 @@ get_send_mailslot_query:
 get_send_mailslot_ok:
 	inc ds:m_usage
 	mov bx,ds
-	call AllocateHandle
+	call AllocateIpcHandle
 	clc
 	jmp get_send_mailslot_done
 

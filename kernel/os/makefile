@@ -176,7 +176,7 @@ time_rdvs = TIME.RDV
 kernel_srcs =   KERNEL.ASM
 
 p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
-			DEVICE.ASM				IO.ASM      \
+			DEVICE.ASM				IO.ASM      			HANDLE.ASM	\
 			PROC.ASM 				ENV.ASM					APP.ASM
 
 p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				\

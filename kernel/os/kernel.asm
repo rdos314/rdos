@@ -65,6 +65,7 @@ INCLUDE os.inc
 	extrn init_state:near
 	extrn init_task:near
 	extrn init_thread:near
+	extrn init_handle:near
 	extrn init_mem_sels:near
 	extrn init_osgate:near
 	extrn init_systemgate:near
@@ -509,6 +510,7 @@ prot_init:
 	call init_ldt
 	call init_app
 	call init_thread
+	call init_handle
 	call init_int
 	call init_irq
 	call init_trap_vectors
