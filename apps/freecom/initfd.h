@@ -53,13 +53,21 @@ protected:
     void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-    void LoadBootLoader(TDisc *Disc);
-	void WriteBootSector(TDisc *Disc);
-	void WriteBootLoader(TDisc *Disc);
+    void LoadBootLoader();
+	void WriteBootSector();
+	void WriteBootLoader();
+
+    int WriteFloppy(char *param);
+    int WriteFile(char *param);
 
     int FLoaderSectors;
 	char *FBootLoader;
 	int FLoaderSize;
+
+	TFile *FFile;
+	TDisc *FDisc;
+
+	int FOptF;
 };
 
 #endif

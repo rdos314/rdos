@@ -87,6 +87,9 @@ TInitFdCommand::TInitFdCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_INITFD);
+
+	FFile = 0;
+	FDisc = 0;
 }
 
 /*##########################################################################
@@ -104,6 +107,12 @@ TInitFdCommand::~TInitFdCommand()
 {
     if (FBootLoader)
         delete FBootLoader;
+
+    if (FFile)
+        delete FFile;
+
+    if (FDisc)
+        delete FDisc;
 }
 
 /*##########################################################################
@@ -119,6 +128,12 @@ TInitFdCommand::~TInitFdCommand()
 ##########################################################################*/
 int TInitFdCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
+	switch(ch)
+	{
+		case 'F':
+			return OptScanBool(optstr, bool, strarg, &FOptF);
+
+	}
 	OptError(optstr);
 	return E_Useage;
 }
@@ -136,6 +151,7 @@ int TInitFdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 ##########################################################################*/
 void TInitFdCommand::InitOptions()
 {
+    FOptF = FALSE;
 }
 
 /*##########################################################################
@@ -149,7 +165,7 @@ void TInitFdCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitFdCommand::LoadBootLoader(TDisc *Disc)
+void TInitFdCommand::LoadBootLoader()
 {
 	FBootLoader = new char[512 * BOOT_LOADER_SECTORS];
 
@@ -170,13 +186,13 @@ void TInitFdCommand::LoadBootLoader(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitFdCommand::WriteBootSector(TDisc *Disc)
+void TInitFdCommand::WriteBootSector()
 {
 	char *BootSector;
 	TBootParam bootp;
 
 	bootp.BytesPerSector = 512;
-	bootp.Resv1 = 0;	    
+	bootp.Resv1 = 0;
 	bootp.MappingSectors = FLoaderSectors + 1;
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;
@@ -196,13 +212,19 @@ void TInitFdCommand::WriteBootSector(TDisc *Disc)
 
 	BootSector = new char[512];
 
-	Disc->Read(0, BootSector, 512);
 	memset(BootSector, 0, 0x200);
 	RdosReadBinaryResource(0, 100, BootSector, 0x200);
 
 	memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
-	Disc->Write(0, BootSector, 512);
+	if (FDisc)
+		FDisc->Write(0, BootSector, 512);
+
+	if (FFile)
+	{
+		FFile->SetPos(0);
+		FFile->Write(BootSector, 512);
+	}
 
 	delete BootSector;
 }
@@ -218,7 +240,7 @@ void TInitFdCommand::WriteBootSector(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitFdCommand::WriteBootLoader(TDisc *Disc)
+void TInitFdCommand::WriteBootLoader()
 {
 	int Sector;
 	char *ptr;
@@ -229,10 +251,107 @@ void TInitFdCommand::WriteBootLoader(TDisc *Disc)
 
 	for (Sector = 1; Sector <= BOOT_LOADER_SECTORS && size >= 0; Sector++)
 	{
-		Disc->Write(Sector, ptr, 512);
+		if (FDisc)
+			FDisc->Write(Sector, ptr, 512);
+
+		if (FFile)
+		{
+			FFile->SetPos(512 * Sector);
+			FFile->Write(ptr, 512);
+		}
+
 		ptr += 512;
 		size -= 512;
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TInitFdCommand::WriteFloppy
+#
+#   Purpose....: Write to floppy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TInitFdCommand::WriteFloppy(char *param)
+{
+	int ok;
+	int DiscNr;
+	TFloppyDisc *Disc;
+
+	if (sscanf(param, "%d", &DiscNr) == 1)
+	{
+		Disc = new TFloppyDisc(DiscNr, 512, 2880, 18, 2);
+		FDisc = Disc;
+		ok = FDisc->IsValid();
+
+		if (ok)
+			LoadBootLoader();
+		else
+		{
+			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+			Write(FMsg.GetData());
+			return 1;
+		}
+
+
+		if (ok)
+		{
+			WriteBootLoader();
+			RdosWaitMilli(4000);
+			WriteBootSector();
+			RdosWaitMilli(2000);
+			Disc->Format(2880 - 1 - FLoaderSectors);
+			return 0;
+		}
+	}
+
+	ErrorSyntax(0);
+	return 1;
+}
+
+/*##########################################################################
+#
+#   Name       : TInitFdCommand::WriteFile
+#
+#   Purpose....: Write to file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TInitFdCommand::WriteFile(char *param)
+{
+	int ok;
+
+	FFile = new TFile(param, 0);
+
+	ok = FFile->IsOpen();
+
+	if (ok)
+		LoadBootLoader();
+	else
+	{
+		FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, param);
+		Write(FMsg.GetData());
+		return 1;
+	}
+
+
+	if (ok)
+	{
+		WriteBootLoader();
+		WriteBootSector();
+//		Disc->Format(2880 - 1 - FLoaderSectors);
+		return 0;
+	}
+
+	ErrorSyntax(0);
+	return 1;
 }
 
 /*##########################################################################
@@ -248,48 +367,15 @@ void TInitFdCommand::WriteBootLoader(TDisc *Disc)
 ##########################################################################*/
 int TInitFdCommand::Execute(char *param)
 {
-	int DiscNr;
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-	int Heads;
-	TFloppyDisc *Disc;
-	TDiscPartition *DiscPart;
-	TPartition *Part;
-	int ok;
-
 	InitOptions();
 
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
 
-	if (sscanf(param, "%d", &DiscNr) == 1)
-	{
-		Disc = new TFloppyDisc(DiscNr, 512, 2880, 18, 2);
-		ok = Disc->IsValid();
+	if (FOptF)
+	    return WriteFile(param);
+	else
+	    return WriteFloppy(param);
 
-		if (ok)
-			LoadBootLoader(Disc);
-		else
-		{
-			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
-			Write(FMsg.GetData());
-			return 0;
-		}
-
-
-		if (ok)
-		{
-			WriteBootLoader(Disc);
-			RdosWaitMilli(4000);
-			WriteBootSector(Disc);
-			RdosWaitMilli(2000);
-			Disc->Format(2880 - 1 - FLoaderSectors);
-			return 0;
-		}
-	}
-
-	ErrorSyntax(0);
-	return 1;
 }
 

@@ -1537,7 +1537,7 @@ Unable to create partition. Invalid size of filesystem name
 Init harddrive partition table and write RDOS bootloader
 
 INITHD [/R] [/I] disc
-  disc            Disc number
+  disc            Disc number (0 is first drive)
   /R              Make RDOS normal boot as default
   /I              Clear partition table and write MBR signature
 .
@@ -1577,7 +1577,9 @@ Ping timeout
 :TEXT_CMDHELP_INITFD
 Init floppy and write RDOS bootloader
 
-INITFD disc
+INITFD [disc] [/F filename]
+  disc          Floppy disc number (0 is first drive)
+  /F filename   Write image to a file.
 .
 
 :TEXT_CMDHELP_STATE
