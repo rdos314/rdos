@@ -51,6 +51,9 @@ public:
 	const TString &operator+=(const char *str);
 	const TString &operator+=(char ch);
 	const TString &operator+=(const TString& str);
+	int operator==(const TString &str) const;
+	int operator!=(const TString &str) const;
+	char operator[](int n) const;
 
 	int printf(const char *fmt, ...);
 	int printf(const char *frm, va_list args);
@@ -69,6 +72,8 @@ public:
 	void ConcatCopy(int len1, const char *str1, int len2, const char *str2);
 
 protected:
+    virtual int Compare(const TString &str) const;
+    
 	virtual char Upper(char ch); 
 	virtual char Lower(char ch); 
 

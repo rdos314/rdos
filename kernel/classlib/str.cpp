@@ -42,6 +42,9 @@ TSection Section;
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
+#define FALSE 0
+#define TRUE !FALSE
+
 /*##########################################################################
 #
 #   Name       : TString::TString
@@ -382,6 +385,22 @@ const TString &TString::operator=(const TString &src)
 
 /*##########################################################################
 #
+#   Name       : TString::Compare
+#
+#   Purpose....: Compare nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::Compare(const TString &str) const
+{
+    return strcmp(FBuf, str.FBuf);
+}
+
+/*##########################################################################
+#
 #   Name       : TString::operator=
 #
 #   Purpose....: Assignment operator for C-string
@@ -395,6 +414,63 @@ const TString &TString::operator=(const char *str)
 {
 	AssignCopy(strlen(str), str);
 	return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator==
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator==(const TString &str) const
+{
+	if (Compare(str) == 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator!=
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator!=(const TString &str) const
+{
+	if (Compare(str) == 0)
+		return FALSE;
+	else
+		return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator[]
+#
+#   Purpose....: [] operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TString::operator[](int n) const
+{
+    if (FData && FData->FDataSize > n)
+        return FBuf[n];
+    else
+        return 0; 
 }
 
 /*##########################################################################

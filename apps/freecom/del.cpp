@@ -163,18 +163,18 @@ void TDelCommand::InitOptions()
 #
 #   Name       : TDelCommand::Del
 #
-#   Purpose....: Delete file
+#   Purpose....: File
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TDelCommand::Del(TPathName &path)
+int TDelCommand::Del(TDirEntry *entry)
 {
 	if (FOptP)
 	{
-		switch (FMsg.UserPrompt(PROMPT_DELETE_FILE, path.Get().GetData()))
+		switch (FMsg.UserPrompt(PROMPT_DELETE_FILE, entry->PathName.Get().GetData()))
 		{
 			case 4:
 				FBreak = TRUE;
@@ -184,6 +184,9 @@ int TDelCommand::Del(TPathName &path)
 				FOptP = FALSE;
 				break;
 
+			case 2:
+			    return TRUE;
+
 			case 1:
 				break;
 
@@ -192,17 +195,20 @@ int TDelCommand::Del(TPathName &path)
 		}
 	}
     
-	if (!FOptP)
+	if (!FOptP && FOptV)
 	{
-        FMsg.printf(TEXT_DELETE_FILE, path.Get().GetData());
+        FMsg.printf(TEXT_DELETE_FILE, entry->PathName.Get().GetData());
 		Write(FMsg.GetData());
 	}
 
-    if (path.DeleteFile())
+	if (FBreak)
+	    return FALSE;
+
+    if (entry->PathName.DeleteFile())
         return TRUE;
     else
     {
-	    FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "DEL", path.Get().GetData());
+	    FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "DEL", entry->PathName.Get().GetData());
 		Write(FMsg.GetData());
     	return FALSE;
     }
@@ -210,16 +216,16 @@ int TDelCommand::Del(TPathName &path)
 
 /*##########################################################################
 #
-#   Name       : TDelCommand::Del
+#   Name       : TDelCommand::Add
 #
-#   Purpose....: Delete files in argument
+#   Purpose....: Add files for argument
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TDelCommand::Del(TArg *arg)
+int TDelCommand::Add(TArg *arg)
 {
 	int count;
 	TDir *dir;
@@ -239,13 +245,12 @@ int TDelCommand::Del(TArg *arg)
 	{
 		if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
 		{
-		    if (Del(entry.PathName))
-				count++;
+			FFileList.Add(entry);
+			count++;
 		}
 		entry = dir->GotoNext();
 	}
-
-	if (!FBreak && count == 0)
+	if (count == 0)
 	{
 		FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
 		Write(FMsg.GetData());
@@ -255,7 +260,6 @@ int TDelCommand::Del(TArg *arg)
 
 	delete dir;
 	return count;
-
 }
 
 /*##########################################################################
@@ -275,6 +279,7 @@ int TDelCommand::Execute(char *param)
 	const char *ptr;
 	int count;
 	int total;
+	TDirEntry *entry;
 
 	InitOptions();
 
@@ -282,7 +287,6 @@ int TDelCommand::Execute(char *param)
 		return 1;
 
 	arg = FArgList;
-	total = 0;
 	FBreak = FALSE;
 
 	while (arg && !FBreak)
@@ -291,15 +295,26 @@ int TDelCommand::Execute(char *param)
 			return 1;
 		else
 		{
-			count = Del(arg);
-			if (count)
-				total += count;
-			else
+			count = Add(arg);
+			if (count == 0)
 				return 1;
 
 			arg = arg->FList;
 		}
 	}
+
+	total = 0;
+	entry = FFileList.GotoFirst();
+	while (entry)
+	{
+	    if (Del(entry))
+	        total++;
+	    else
+	        return 1;
+	        
+		entry = FFileList.GotoNext();
+	}
+	
 
 	if (total)
 	{

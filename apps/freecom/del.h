@@ -61,10 +61,10 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void InitOptions();
 
-	int Del(TPathName &path);
-	int Del(TArg *arg);
+    int Del(TDirEntry *entry);
+	int Add(TArg *arg);
 
-	TFileList FFiles;
+	TFileList FFileList;
 
 	int FOptP;
 	int FOptV;
