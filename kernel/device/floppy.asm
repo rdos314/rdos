@@ -1910,7 +1910,7 @@ install_unit	Proc near
 	mov ds,ax
 	mov es,ax
 	mov si,OFFSET discbuf_thread
-	mov ax,4
+	mov ax,2
 	mov cx,100h
 	CreateThread
 	ret

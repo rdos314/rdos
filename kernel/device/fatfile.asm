@@ -958,12 +958,35 @@ read_req_loop:
 	or edx,edx
 	jnz read_file_req_cluster
 ;
-	mov edx,es:[ebp-4]
-	mov al,fs:file_drive
-	call next_cluster
-	jc read_file_wait
+    push ecx
+    push ebp
+    xor ecx,ecx
+
+read_cluster_back_loop:
+    inc ecx    
+    sub ebp,4
+    mov edx,es:[ebp]
+    or edx,edx
+    jz read_cluster_back_loop
+
+read_cluster_fwd_loop:
+    mov edx,es:[ebp]
+    mov al,fs:file_drive
+    call next_cluster
+    jc read_cluster_fail
+;    
+    add ebp,4
+    mov es:[ebp],edx
+    loop read_cluster_fwd_loop   
 ;
-	mov es:[ebp],edx
+    pop ebp
+    pop ecx
+    jmp read_file_req_cluster
+
+read_cluster_fail:
+    pop ebp
+    pop ecx
+    jmp read_file_wait
 
 read_file_req_cluster:
 	push ecx
@@ -995,7 +1018,8 @@ read_cluster_next:
 ;
 	add ebp,4
 	pop ecx
-	loop read_req_loop
+	sub ecx,1
+	jnz read_req_loop
 
 read_file_wait:
 	mov esi,edi
@@ -1108,10 +1132,36 @@ write_req_loop:
 	or edx,edx
 	jnz write_cluster_ok
 ;
-	mov edx,es:[ebp-4]
-	mov al,fs:file_drive
-	call next_cluster
-	mov es:[ebp],edx
+    push ecx
+    push ebp
+    xor ecx,ecx
+
+write_cluster_back_loop:
+    inc ecx    
+    sub ebp,4
+    mov edx,es:[ebp]
+    or edx,edx
+    jz write_cluster_back_loop
+
+write_cluster_fwd_loop:
+    mov edx,es:[ebp]
+    mov al,fs:file_drive
+    call next_cluster
+    jc write_cluster_fail
+;    
+    cmp edx,0FFFFh
+    je write_cluster_fail
+;    
+    add ebp,4
+    mov es:[ebp],edx
+    loop write_cluster_fwd_loop
+;
+    pop ebp
+    pop ecx
+    jmp write_cluster_ok
+
+write_cluster_fail:
+    int 3    
 
 write_cluster_ok:
 	push ecx

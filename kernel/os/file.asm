@@ -294,17 +294,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeListEntry	Proc near
-	push ax
+	push eax
 	push bx
 	push ecx
 	push edx
 	push edi
 ;
 	mov edi,eax
-;
-	mov al,ds:file_drive
-	mov bx,ds
-	CallFileSystem free_file_list_proc
 ;
 	mov eax,es:[edi].fl_pos
 	mov dword ptr es:[eax],0
@@ -317,11 +313,14 @@ FreeListEntry	Proc near
 	cmp ecx,1000h
 	jc free_small_list
 ;
+	mov al,ds:file_drive
+	mov bx,ds
+	CallFileSystem free_file_list_proc
 	FreeLinear
-	mov es:[edi].fl_base,0
 	jmp free_list_done
 
 free_small_list:
+    push edi
 	push esi
 
 free_small_start_loop:
@@ -378,13 +377,17 @@ free_small_unlink_done:
 
 free_small_fail:
 	pop esi
+	pop edi
+	mov al,ds:file_drive
+	mov bx,ds
+	CallFileSystem free_file_list_proc
 
 free_list_done:
 	pop edi
 	pop edx
 	pop ecx
 	pop bx
-	pop ax
+	pop eax
 	ret
 FreeListEntry	Endp
 
@@ -957,6 +960,187 @@ ReadFileListEntry	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_file_list
+;
+;		DESCRIPTION:	Free file list entry, if possible
+;
+;		PARAMETERS:		DS      File selector
+;                       ES:EDI  Dir array
+;                       EAX     File list entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_file_list  Proc near
+    inc ebp
+    mov dx,es:[eax].fl_usage
+    or dx,dx
+    jnz swap_list_done
+;
+    mov dx,es:[eax].fl_ref_count
+    cmp dx,4
+    jbe swap_list_handle_ref
+;
+    mov dx,4
+
+swap_list_handle_ref:
+    dec dx
+    mov es:[eax].fl_ref_count,dx
+    or dx,dx
+    jnz swap_list_done
+;
+    dec ebp
+    call FreeListEntry 
+
+swap_list_done:   
+    ret
+swap_file_list  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_dir
+;
+;		DESCRIPTION:	Free physical memory in file directory
+;
+;		PARAMETERS:		DS      File selector
+;                       ES:EDI     Dir array
+;
+;       RETURNS:        EBP     Entry count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_dir    Proc near
+    xor ebp,ebp
+    mov ecx,400h
+
+swap_dir_loop:    
+    or ecx,ecx
+    jz swap_dir_done
+;    
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    mov eax,es:[edi-4]
+    or eax,eax
+    jz swap_dir_loop
+;
+    call swap_file_list
+    jmp swap_dir_loop
+
+swap_dir_done:    
+    ret
+swap_dir    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_file
+;
+;		DESCRIPTION:	Free physical memory in file
+;
+;		PARAMETERS:		DS      File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_file   Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+	jnz swap_file_done
+;
+    mov cx,ds:file_dir_entries
+    mov si,OFFSET file_entries
+
+swap_file_loop:    
+	mov edi,ds:[si]
+	or edi,edi
+	jz swap_file_next
+;
+    push cx
+    push si
+    call swap_dir
+    pop si
+    pop cx
+;    
+    or ebp,ebp
+    jnz swap_file_next
+;
+    push ecx
+    xor edx,edx
+    xchg edx,ds:[si]
+    mov ecx,1000h    
+    FreeLinear
+    pop ecx
+    
+swap_file_next:
+	add si,4
+	loop swap_file_loop
+;
+
+swap_file_done:
+    popad
+    pop es
+    ret
+swap_file   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_all
+;
+;		DESCRIPTION:	Free physical memory in all files
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_all    Proc near
+    push ds
+    push es
+    push ax
+    push bx
+;
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;    
+    mov bx,ds:fs_file_list
+
+swap_all_loop:	
+    push ds
+    mov ds,bx
+	EnterWriteSection ds:file_size_section
+    call swap_file
+	LeaveWriteSection ds:file_size_section
+	pop ds
+;
+    mov es,bx
+    mov bx,es:file_next
+    cmp bx,ds:fs_file_list
+    jne swap_all_loop
+;    
+    xor ax,ax
+    mov es,ax
+    LeaveSection ds:fs_file_section
+;
+    pop bx
+    pop ax
+    pop es
+    pop ds
+    ret
+swap_all    Endp 
+   
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			read file
@@ -988,7 +1172,14 @@ read_file	Proc near
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
+;    
+    GetFreePhysical
+    cmp eax,100000h
+    ja read_file_mem_all_ok
 ;
+    call swap_all 
+
+read_file_mem_all_ok:	
 	EnterReadSection ds:file_size_section
 	cmp edx,ds:file_size
 	jnc read_file_done
@@ -1005,6 +1196,13 @@ read_file_size_ok:
 	jz read_file_done
 
 read_file_loop:
+    GetFreePhysical
+    cmp eax,100000h
+    ja read_file_mem_ok
+;
+    call swap_file
+
+read_file_mem_ok:
 	push cx
 	mov esi,edx
 	mov cl,ds:file_dir_shift
@@ -1150,7 +1348,14 @@ write_file	Proc near
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
+;    
+    GetFreePhysical
+    cmp eax,100000h
+    ja write_file_mem_all_ok
 ;
+    call swap_all 
+
+write_file_mem_all_ok:	
 	EnterWriteSection ds:file_size_section
 	cmp edx,ds:file_size
 	jnc write_file_extend
@@ -1173,6 +1378,13 @@ write_file_size_ok:
 	jz write_file_done
 
 write_file_loop:
+    GetFreePhysical
+    cmp eax,100000h
+    ja write_file_mem_ok
+;
+    call swap_file
+
+write_file_mem_ok:
 	push cx
 	mov esi,edx
 	mov cl,ds:file_dir_shift
@@ -2357,144 +2569,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			swap_file_list
-;
-;		DESCRIPTION:	Free file list entry, if possible
-;
-;		PARAMETERS:		DS      File selector
-;                       ES:EDI  Dir array
-;                       EAX     File list entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-swap_file_list  Proc near
-    inc ebp
-    mov dx,es:[eax].fl_usage
-    or dx,dx
-    jnz swap_list_done
-;
-    mov dx,es:[eax].fl_ref_count
-    cmp dx,4
-    jbe swap_list_handle_ref
-;
-    mov dx,4
-
-swap_list_handle_ref:
-    dec dx
-    mov es:[eax].fl_ref_count,dx
-    or dx,dx
-    jnz swap_list_done
-;
-    dec ebp
-    call FreeListEntry 
-
-swap_list_done:   
-    ret
-swap_file_list  Endp
-    
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			swap_dir
-;
-;		DESCRIPTION:	Free physical memory in file directory
-;
-;		PARAMETERS:		DS      File selector
-;                       ES:EDI     Dir array
-;
-;       RETURNS:        EBP     Entry count
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-swap_dir    Proc near
-    xor ebp,ebp
-    mov ecx,400h
-
-swap_dir_loop:    
-    or ecx,ecx
-    jz swap_dir_done
-;    
-    xor eax,eax
-    repz scas dword ptr es:[edi]
-    mov eax,es:[edi-4]
-    or eax,eax
-    jz swap_dir_loop
-;
-    call swap_file_list
-    jmp swap_dir_loop
-
-swap_dir_done:    
-    ret
-swap_dir    Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			swap_file
-;
-;		DESCRIPTION:	Free physical memory in file
-;
-;		PARAMETERS:		BX      File selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-swap_file   Proc near
-    push ds
-    push bx
-;    
-    mov ax,flat_sel
-    mov es,ax
-    mov ds,bx
-	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
-	jnz swap_file_done
-;	
-	EnterWriteSection ds:file_size_section
-;
-    mov cx,ds:file_dir_entries
-    mov si,OFFSET file_entries
-
-swap_file_loop:    
-	mov edi,ds:[si]
-	or edi,edi
-	jz swap_file_next
-;
-    push cx
-    push si
-    call swap_dir
-    pop si
-    pop cx
-;    
-    or ebp,ebp
-    jnz swap_file_next
-;
-    push ecx
-    xor edx,edx
-    xchg edx,ds:[si]
-    mov ecx,1000h    
-    FreeLinear
-    pop ecx
-    
-swap_file_next:
-	add si,4
-	loop swap_file_loop
-;
-	LeaveWriteSection ds:file_size_section
-
-swap_file_done:
-    pop bx
-    pop ds
-    ret
-swap_file   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			swap_proc
 ;
 ;		DESCRIPTION:	Free physical memory in file buffers
@@ -2510,8 +2584,14 @@ swap_proc	Proc far
 ;    
     mov bx,ds:fs_file_list
 
-swap_loop:
+swap_loop:	
+    push ds
+    mov ds,bx
+	EnterWriteSection ds:file_size_section
     call swap_file
+	LeaveWriteSection ds:file_size_section
+	pop ds
+;
     mov es,bx
     mov bx,es:file_next
     cmp bx,ds:fs_file_list
