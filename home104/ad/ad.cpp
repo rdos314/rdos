@@ -122,7 +122,7 @@ void cdecl main()
 	TAdcDevice *adc[8];
 	TSecSample *sample[8];
 
-	for (channel = 0; channel < 8; channel++)
+	for (channel = 0; channel < 1; channel++)
 	{
 		adc[channel] = new TAdcDevice(&Wait, channel);
 		adc[channel]->DefineInterval(11930);
