@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "adcdev.h"
+#include "datetime.h"
 #include "secsamp.h"
 #include "datetime.h"
 #include "bitdev.h"
@@ -13,6 +14,85 @@
 
 #define FALSE	0
 #define TRUE	!FALSE
+
+static long double Meassured[8];
+
+void Sample(TAdcDevice *adc, TDateTime *time, long double value)
+{
+	char str[80];
+	int channel = adc->GetChannel();
+
+	sprintf(str, "%7.1LfmV", value);
+	RdosSetCursorPosition(8 + channel, 0);
+	RdosWriteString(str);
+}
+
+void Sample()
+{
+	long double val[16][100];
+	long double min, max;
+	long double mean;
+	int values;
+	int i;
+	int channel;
+	int value;
+
+	for (i = 0; i < 100; i++)
+	{
+		for (channel = 0; channel < 8; channel++)
+		{
+//			value = RdosReadAD(channel);
+			val[channel][i] = (long double)value / 32768.0 * 10000.0;
+		}
+		RdosWaitMilli(10);
+	}
+
+	for (channel = 0; channel < 8; channel++)
+	{
+		min = 10000.0;
+		max = -10000.0;
+
+		for (i = 0; i < 100; i++)
+		{
+			if (val[channel][i] < min)
+				min = val[channel][i];
+
+			if (val[channel][i] > max)
+				max = val[channel][i];
+		}
+
+		values = 100;
+		mean = 0.0;
+		for (i = 0; i < 100; i++)
+		{
+			if (val[channel][i] > min && val[channel][i] < max)
+				mean += val[channel][i];
+			else
+				values--;
+		}
+
+		if (values)
+			mean = mean / values;
+		else
+			mean = (min + max) / 2;
+		mean -= 1.0;
+
+		Meassured[channel] = mean;
+	}
+}
+
+void WriteRaw()
+{
+	int channel;
+	char str[20];
+
+	for (channel = 0; channel < 8; channel++)
+	{
+		sprintf(str, "%7.1LfmV", Meassured[channel]);
+		RdosSetCursorPosition(8 + channel, 0);
+		RdosWriteString(str);
+	}
+}
 
 static long double Meassured[8];
 
@@ -120,16 +200,12 @@ void cdecl main()
 
 	TWait Wait;
 	TAdcDevice *adc[8];
-	TSecSample *sample[8];
 
-	for (channel = 0; channel < 1; channel++)
+	for (channel = 0; channel < 8; channel++)
 	{
 		adc[channel] = new TAdcDevice(&Wait, channel);
-		adc[channel]->DefineInterval(11930);
-//        adc[channel]->OnSample = Sample;
-        sample[channel] = new TSecSample;
-        sample[channel]->BeforeClear = BeforeClear;
-        adc[channel]->Define(sample[channel]);
+		adc[channel]->DefineInterval(1193000);
+        adc[channel]->OnSample = Sample;
 	}
 
 	for (;;)
@@ -145,6 +221,25 @@ void cdecl main()
 	for (;;)
 	{
 		time = new TDateTime;
+
+		if (PrevMin != time->GetMin())
+		{
+			for (i = 0; i < 8; i++)
+			{
+				if (countarr[i])
+				{
+					temp = sumarr[i] / countarr[i];
+					if (temp < minarr[i])
+						minarr[i] = temp;
+
+					if (temp > maxarr[i])
+						maxarr[i] = temp;
+				}
+				countarr[i] = 0;
+				sumarr[i] = 0.0;
+			}
+			PrevMin = time->GetMin();
+		}
 
 		if (PrevMin != time->GetMin())
 		{
