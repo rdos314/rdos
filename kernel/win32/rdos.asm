@@ -5711,6 +5711,209 @@ RdosCloseIni	Proc near
 	ret 4
 RdosCloseIni	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGotoIniSection
+;
+;       DESCRIPTION:    Goto ini section
+;
+;		PARAMETERS:		handle
+;					    SectionName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGotoIniSection
+
+RdosGotoIniSection	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate goto_ini_section_nr
+	jc gisFail
+;
+	mov eax,1
+	jmp gisDone
+
+gisFail:
+	xor eax,eax
+
+gisDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosGotoIniSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosRemoveIniSection
+;
+;       DESCRIPTION:    Remove ini section
+;
+;		PARAMETERS:		handle
+;					    SectionName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosRemoveIniSection
+
+RdosRemoveIniSection	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate remove_ini_section_nr
+	jc risFail
+;
+	mov eax,1
+	jmp risDone
+
+risFail:
+	xor eax,eax
+
+risDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosRemoveIniSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosReadIni
+;
+;       DESCRIPTION:    Read ini var
+;
+;		PARAMETERS:		handle
+;					    VarName
+;                       Str
+;                       MaxSize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadIni
+
+RdosReadIni	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate read_ini_nr
+	jc riFail
+;
+	mov eax,1
+	jmp riDone
+
+riFail:
+	xor eax,eax
+
+riDone:
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosReadIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosWriteIni
+;
+;       DESCRIPTION:    Write ini var
+;
+;		PARAMETERS:		handle
+;					    VarName
+;                       Str
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosWriteIni
+
+RdosWriteIni	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate write_ini_nr
+	jc wiFail
+;
+	mov eax,1
+	jmp wiDone
+
+wiFail:
+	xor eax,eax
+
+wiDone:
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDeleteIni
+;
+;       DESCRIPTION:    Delete ini var
+;
+;		PARAMETERS:		handle
+;					    VarName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosDeleteIni
+
+RdosDeleteIni	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	UserGate delete_ini_nr
+	jc diFail
+;
+	mov eax,1
+	jmp diDone
+
+diFail:
+	xor eax,eax
+
+diDone:
+	pop esi
+	pop ebx
+	pop ebp
+	ret 8
+RdosDeleteIni	Endp
+
+
 ;	extrn Startup:near
 
 ;	public _main

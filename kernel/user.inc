@@ -630,6 +630,39 @@ CloseIni	MACRO
 	UserGate close_ini_nr
 	        ENDM
 
+; IN  BX            Ini handle
+; IN  ES:(E)DI      Section name
+GotoIniSection	MACRO
+	UserGate goto_ini_section_nr
+	        ENDM
+
+; IN  BX            Ini handle
+; IN  ES:(E)DI      Section name
+RemoveIniSection	MACRO
+	UserGate remove_ini_section_nr
+	        ENDM
+
+; IN  BX            Ini handle
+; IN  DS:(E)SI      Var name
+; IN  ES:(E)DI      Buffer
+; IN  (E)CX         Max size
+ReadIni	MACRO
+	UserGate read_ini_nr
+	        ENDM
+
+; IN  BX            Ini handle
+; IN  DS:(E)SI      Var name
+; IN  ES:(E)DI      String
+WriteIni	MACRO
+	UserGate write_ini_nr
+	        ENDM
+
+; IN  BX            Ini handle
+; IN  DS:(E)SI      Var name
+DeleteIni	MACRO
+	UserGate delete_ini_nr
+	        ENDM
+
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  ES:(E)DI        TSS data buffer

@@ -461,6 +461,178 @@ close_ini	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GotoIniSection
+;
+;       DESCRIPTION:    Goto a ini section
+;
+;       PARAMETERS:     BX          Ini handle
+;                       ES:(E)DI    Section name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+goto_ini_section_name	DB 'Goto Ini Section', 0
+
+goto_ini_section	Proc near
+    stc
+    ret
+goto_ini_section    Endp
+
+goto_ini_section16  Proc far
+    push edi
+    movzx edi,di
+    call goto_ini_section
+    pop edi
+    ret
+goto_ini_section16  Endp
+
+goto_ini_section32  Proc far
+    call goto_ini_section
+    retf32
+goto_ini_section32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RemoveIniSection
+;
+;       DESCRIPTION:    Remove a ini section
+;
+;       PARAMETERS:     BX          Ini handle
+;                       ES:(E)DI    Section name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_ini_section_name	DB 'Remove Ini Section', 0
+
+remove_ini_section	Proc near
+    stc
+    ret
+remove_ini_section    Endp
+
+remove_ini_section16  Proc far
+    push edi
+    movzx edi,di
+    call remove_ini_section
+    pop edi
+    ret
+remove_ini_section16  Endp
+
+remove_ini_section32  Proc far
+    call remove_ini_section
+    retf32
+remove_ini_section32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadIni
+;
+;       DESCRIPTION:    Read ini var
+;
+;       PARAMETERS:     BX          Ini handle
+;                       DS:(E)SI    Var name
+;                       ES:(E)DI    Buffer
+;                       (E)CX       Max size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_ini_name	DB 'Read Ini', 0
+
+read_ini	Proc near
+    stc
+    ret
+read_ini    Endp
+
+read_ini16  Proc far
+    push ecx
+    push esi
+    push edi
+    movzx ecx,cx
+    movzx esi,si
+    movzx edi,di
+    call read_ini
+    pop edi
+    pop esi
+    pop ecx
+    ret
+read_ini16  Endp
+
+read_ini32  Proc far
+    call read_ini
+    retf32
+read_ini32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           WriteIni
+;
+;       DESCRIPTION:    Write ini var
+;
+;       PARAMETERS:     BX          Ini handle
+;                       DS:(E)SI    Var name
+;                       ES:(E)DI    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_ini_name	DB 'Write Ini', 0
+
+write_ini	Proc near
+    stc
+    ret
+write_ini    Endp
+
+write_ini16  Proc far
+    push esi
+    push edi
+    movzx esi,si
+    movzx edi,di
+    call write_ini
+    pop edi
+    pop esi
+    ret
+write_ini16  Endp
+
+write_ini32  Proc far
+    call write_ini
+    retf32
+write_ini32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DeleteIni
+;
+;       DESCRIPTION:    Delete ini var
+;
+;       PARAMETERS:     BX          Ini handle
+;                       DS:(E)SI    Var name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_ini_name	DB 'Delete Ini', 0
+
+delete_ini	Proc near
+    stc
+    ret
+delete_ini    Endp
+
+delete_ini16  Proc far
+    push esi
+    movzx esi,si
+    call delete_ini
+    pop esi
+    ret
+delete_ini16  Endp
+
+delete_ini32  Proc far
+    call delete_ini
+    retf32
+delete_ini32  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FindIniSection
 ;
 ;       DESCRIPTION:    Find section in .ini file
@@ -932,6 +1104,41 @@ init	Proc far
 	xor dx,dx
 	mov ax,close_ini_nr
 	RegisterBimodalUserGate
+;    
+	mov bx,OFFSET goto_ini_section16
+	mov si,OFFSET goto_ini_section32
+	mov di,OFFSET goto_ini_section_name
+	mov dx,virt_es_in
+	mov ax,goto_ini_section_nr
+	RegisterUserGate
+;    
+	mov bx,OFFSET remove_ini_section16
+	mov si,OFFSET remove_ini_section32
+	mov di,OFFSET remove_ini_section_name
+	mov dx,virt_es_in
+	mov ax,remove_ini_section_nr
+	RegisterUserGate
+;    
+	mov bx,OFFSET read_ini16
+	mov si,OFFSET read_ini32
+	mov di,OFFSET read_ini_name
+	mov dx,virt_ds_in OR virt_es_in
+	mov ax,read_ini_nr
+	RegisterUserGate
+;    
+	mov bx,OFFSET write_ini16
+	mov si,OFFSET write_ini32
+	mov di,OFFSET write_ini_name
+	mov dx,virt_ds_in OR virt_es_in
+	mov ax,write_ini_nr
+	RegisterUserGate
+;    
+	mov bx,OFFSET delete_ini16
+	mov si,OFFSET delete_ini32
+	mov di,OFFSET delete_ini_name
+	mov dx,virt_ds_in
+	mov ax,delete_ini_nr
+	RegisterUserGate
 ;
 	mov di,OFFSET delete_handle
 	mov ax,INI_HANDLE

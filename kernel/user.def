@@ -299,5 +299,10 @@ set_env_data_nr 	        = 264
 
 open_sys_ini_nr				= 265
 close_ini_nr				= 266
+goto_ini_section_nr         = 267
+remove_ini_section_nr       = 268
+read_ini_nr                 = 269
+write_ini_nr                = 270
+delete_ini_nr               = 271
 
 usergate_entries			= 300
