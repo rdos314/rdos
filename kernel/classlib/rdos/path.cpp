@@ -107,8 +107,8 @@ TPathName::TPathName(int Drive)
 #
 ##########################################################################*/
 TPathName::TPathName(const char *PathName)
-  : FPathName(PathName)
 {
+	Init(PathName);
 }
 
 /*##########################################################################
@@ -123,8 +123,8 @@ TPathName::TPathName(const char *PathName)
 #
 ##########################################################################*/
 TPathName::TPathName(const TString &PathName)
-  : FPathName(PathName)
 {
+	Init(PathName.GetData());
 }
 
 /*##########################################################################
@@ -188,6 +188,88 @@ TPathName::TPathName(const TPathName &PathName)
 ##########################################################################*/
 TPathName::~TPathName()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::Init
+#
+#   Purpose....: Init
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPathName::Init(const char *PathName)
+{
+	char *str;
+	int drive;
+
+	if (strlen(PathName) == 1 && PathName[0] == '.')
+	{
+		str = new char[512];
+
+		drive = RdosGetCurDrive();
+		*str = drive + 'a';
+		*(str+1) = ':';
+		*(str+2) = '\\';
+		RdosGetCurDir(drive, str + 3);
+
+		if (*(str + 3) == '\\')
+			*(str + 3) = 0;
+
+		FPathName = str;
+
+		delete str;
+
+		return;
+	}
+
+	if (strlen(PathName) == 2 && PathName[1] == ':')
+	{
+		str = new char[512];
+
+		drive = PathName[0];
+		drive = toupper(drive) - 'A';
+		
+		*str = PathName[0];
+		*(str+1) = ':';
+		*(str+2) = '\\';
+		RdosGetCurDir(drive, str + 3);
+
+		if (*(str + 3) == '\\')
+			*(str + 3) = 0;
+
+		FPathName = str;
+
+		delete str;
+
+		return;
+	}
+
+	if (strlen(PathName) == 3 && PathName[1] == ':' && PathName[2] == '.')
+	{
+		str = new char[512];
+
+		drive = PathName[0];
+		drive = toupper(drive) - 'A';
+		*str = PathName[0];
+		*(str+1) = ':';
+		*(str+2) = '\\';
+		RdosGetCurDir(drive, str + 3);
+
+		if (*(str + 3) == '\\')
+			*(str + 3) = 0;
+
+		FPathName = str;
+
+		delete str;
+
+		return;
+	}
+
+	FPathName = PathName;
 }
 
 /*##########################################################################
@@ -983,7 +1065,7 @@ int TPathName::IsDir() const
     int Attrib;
     
     if (RdosGetFileAttribute(FPathName.GetData(), &Attrib))
-        if (Attrib == FILE_ATTRIBUTE_DIRECTORY)
+        if (Attrib & FILE_ATTRIBUTE_DIRECTORY)
             return TRUE;
         
     return FALSE;

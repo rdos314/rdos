@@ -1988,6 +1988,8 @@ RdosTicsToRecord	Proc
 ;
 	mov edx,[ebp].ctMSB
 	mov eax,[ebp].ctLSB
+	add eax,1193 / 2
+	adc edx,0
 	UserGate binary_to_time_nr
 	push edx
 ;
@@ -2024,6 +2026,12 @@ RdosTicsToRecord	Proc
 	mov ebx,1192
 	div ebx
 	mov esi,[ebp].ctMilli
+	cmp ax,1000
+	jne rttrSaveMs
+;
+	dec ax
+
+rttrSaveMs:	
 	movzx eax,ax
 	mov [esi],eax
 ;

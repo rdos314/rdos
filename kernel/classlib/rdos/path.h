@@ -79,6 +79,8 @@ public:
     TDir Find(const TString &SearchString) const;
 
 private:
+	void Init(const char *PathName);
+
     TString FPathName;
 };
 
