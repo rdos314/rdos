@@ -767,7 +767,6 @@ HideLineBuffer  MACRO y
     local lower_loop
     local done
 
-    int 3
     add dx,fs:&y
     mov si,dx
     shl si,2
@@ -847,7 +846,6 @@ ShowLineBuffer  MACRO y
     local not_upper
     local done
 
-    int 3
     add dx,fs:&y
     mov si,dx
     shl si,2
@@ -1097,10 +1095,17 @@ hide_sprite	Proc far
 	jc hide_sprite_done
 ;
     mov fs,ds:[bx].sp_sel
+    mov ds,fs:sp_dest_sel
+    EnterSection ds:v_section
+;
     test fs:sp_flags,SP_FLAG_VISIBLE
-    jz hide_sprite_done
+    jz hide_sprite_leave
 ;
 	call hide
+
+hide_sprite_leave:
+    mov ds,fs:sp_dest_sel
+	LeaveSection ds:v_section
 
 hide_sprite_done:
 	popad
@@ -1138,10 +1143,18 @@ show_sprite	Proc far
 	jc show_sprite_done
 ;
     mov fs,ds:[bx].sp_sel
+    mov ds,fs:sp_dest_sel
+    EnterSection ds:v_section
+;
     test fs:sp_flags,SP_FLAG_VISIBLE
-    jnz show_sprite_done
+    jnz show_sprite_leave
 ;
 	call show
+
+show_sprite_leave:
+    mov ds,fs:sp_dest_sel
+    LeaveSection ds:v_section
+    clc
 
 show_sprite_done:
 	popad
@@ -1278,6 +1291,9 @@ move_sprite	Proc far
 	jc move_sprite_done
 ;
     mov fs,ds:[bx].sp_sel
+    mov ds,fs:sp_dest_sel
+    EnterSection ds:v_section
+;    
     mov fs:sp_new_x,cx
     mov fs:sp_new_y,dx
 ;
@@ -1359,6 +1375,8 @@ move_sprite_coord:
     add ax,fs:sp_h
     dec ax
     mov ds:[bx].spi_y_max,ax
+    mov ds,fs:sp_dest_sel
+    LeaveSection ds:v_section
     clc
 
 move_sprite_done:

@@ -33,5 +33,9 @@ bitmap_struc	STRUC
 bm_base		handle_header <>
 bm_sel		DW ?
 bm_flag		DW ?
+bm_color 	DD ?
+bm_lgop	   	DW ?
+bm_font	    DW ?
+bm_style	DB ?
 
 bitmap_struc	ENDS

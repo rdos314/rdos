@@ -1487,6 +1487,12 @@ CreateBitmap      MACRO
 						ENDM
 
 ;	IN  BX		Bitmap handle
+;	OUT BX		Duplicated bitmap handle
+DuplicateBitmapHandle      MACRO
+	UserGate dup_bitmap_handle_nr
+						ENDM
+
+;	IN  BX		Bitmap handle
 CloseBitmap      MACRO
 	UserGate close_bitmap_nr
 						ENDM

@@ -46,6 +46,7 @@ void RdosDrawString(int handle, int x, int y, const char *str);
 void RdosDrawRect(int handle, int x, int y, int width, int height);
 void RdosDrawEllipse(int handle, int x, int y, int width, int height);
 int RdosCreateBitmap(int BitsPerPixel, int width, int height);
+int RdosDuplicateBitmapHandle(int handle);
 void RdosCloseBitmap(int handle);
 int RdosCreateStringBitmap(int font, const char *str);
 void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,

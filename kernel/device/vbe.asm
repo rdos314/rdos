@@ -396,7 +396,7 @@ switch_to_pm:
 	mov sp,bp
 
 switch_to_active:
-	EnterSection ds:v_section
+	SimCli
 	mov ax,pc_video_data_sel
 	mov es,ax
 	mov es:v_curr_object,ds
@@ -421,7 +421,6 @@ switch_to_active:
 	mov dx,process_dir_sel
 	mov es,dx
 	or ax,803h
-	SimCli
 	mov es:[bx],eax
 	mov eax,cr3
 	mov cr3,eax
@@ -439,7 +438,6 @@ switch_to_active:
 	rep movs dword ptr es:[edi],[esi]
 	SimSti
 	pop ds
-	LeaveSection ds:v_section
 ;
 	popad
 	pop es
@@ -463,7 +461,7 @@ switch_from_linear	Proc far
 	push es
 	pushad
 ;
-	EnterSection ds:v_section
+	SimCli
 	mov ds:vo_has_focus,1
 	mov ax,flat_sel
 	mov es,ax
@@ -484,7 +482,6 @@ switch_from_linear	Proc far
 	mov dx,process_dir_sel
 	mov es,dx
 	or ax,803h
-	SimCli
 	mov es:[bx],eax
 	mov eax,cr3
 	mov cr3,eax
@@ -502,7 +499,6 @@ switch_from_linear	Proc far
 	rep movs dword ptr es:[edi],[esi]
 	SimSti
 	pop ds
-	LeaveSection ds:v_section
 ;
 	popad
 	pop es

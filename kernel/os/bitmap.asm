@@ -82,6 +82,7 @@ init_video_bitmap	Proc far
 	push di
 ;
 	InitSection es:v_section
+	mov es:v_usage_count,1
 	mov es:v_color,0
 	mov es:v_lgop,1
 	mov es:v_font,0
@@ -134,7 +135,11 @@ init_video_done:
 	AllocateHandle
 	mov ds:[bx].bm_sel,es
 	mov ds:[bx].bm_flag,BM_FLAG_VIDEO
-	mov [bx].hh_sign,BITMAP_HANDLE
+	mov ds:[bx].hh_sign,BITMAP_HANDLE
+	mov ds:[bx].bm_color,0
+	mov ds:[bx].bm_lgop,1
+	mov ds:[bx].bm_font,0
+	mov ds:[bx].bm_style,0
 	mov bx,[bx].hh_handle
 	mov es:v_bitmap,bx
 ;
@@ -182,6 +187,7 @@ create_bitmap	Proc far
 	pop eax
 ;
 	InitSection es:v_section
+	mov es:v_usage_count,1
 	mov es:v_color,0
 	mov es:v_lgop,1
 	mov es:v_font,0
@@ -281,7 +287,11 @@ cr_bitmap_copy:
 	AllocateHandle
 	mov ds:[bx].bm_sel,es
 	mov ds:[bx].bm_flag,BM_FLAG_BITMAP
-	mov [bx].hh_sign,BITMAP_HANDLE
+	mov ds:[bx].hh_sign,BITMAP_HANDLE
+	mov ds:[bx].bm_color,0
+	mov ds:[bx].bm_lgop,1
+	mov ds:[bx].bm_font,0
+	mov ds:[bx].bm_style,0
 	mov bx,[bx].hh_handle
 	mov es:v_bitmap,bx
 	clc
@@ -296,6 +306,56 @@ cr_bitmap_end:
 	pop ds
 	retf32
 create_bitmap	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DuplicateBitmapHandle
+;
+;		DESCRIPTION:	Duplicate bitmap handle
+;
+;		PARAMETERS:		BX      Bitmap handle
+;
+;		RETURNS:		BX		Duplicated bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dup_bitmap_handle_name	DB 'Duplicate Bitmap Handle', 0
+
+dup_bitmap_handle	Proc far
+	push ds
+	push es
+	push ax
+	push cx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc dph_done
+;
+	mov es,[bx].bm_sel
+	mov ax,[bx].bm_flag
+	mov cx,SIZE bitmap_struc
+	AllocateHandle
+	mov ds:[bx].bm_sel,es
+	mov ds:[bx].bm_flag,ax
+	mov ds:[bx].hh_sign,BITMAP_HANDLE
+	mov ds:[bx].bm_color,0
+	mov ds:[bx].bm_lgop,1
+	mov ds:[bx].bm_font,0
+	mov ds:[bx].bm_style,0
+	mov bx,[bx].hh_handle
+	inc es:v_usage_count
+	clc
+
+dph_done:
+    pop cx
+    pop ax
+	pop es
+	pop ds
+	retf32
+dup_bitmap_handle	Endp
 
 PAGE
 
@@ -476,16 +536,22 @@ delete_bitmap	Proc near
 	push ecx
 	push edx
 	mov es,[bx].bm_sel
+	sub es:v_usage_count,1
+	jnz delete_bitmap_freed
+;
 	mov ecx,es:v_app_size
 	mov edx,es:v_app_base
 	FreeLinear
 	FreeMem
+
+delete_bitmap_freed:
 	pop edx
 	pop ecx
 	pop es
 
 delete_bitmap_free:
 	FreeHandle
+
 	clc
 	ret
 delete_bitmap	Endp
@@ -584,6 +650,12 @@ init_bitmap	PROC near
 	mov di,OFFSET create_bitmap_name
 	xor dx,dx
 	mov ax,create_bitmap_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET dup_bitmap_handle
+	mov di,OFFSET dup_bitmap_handle_name
+	xor dx,dx
+	mov ax,dup_bitmap_handle_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET close_bitmap

@@ -911,6 +911,31 @@ RdosCreateBitmap	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosDuplicateBitmapHandle
+;
+;		description:	RdosDuplicateBitmapHandle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDuplicateBitmapHandle
+
+RdosDuplicateBitmapHandle	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate dup_bitmap_handle_nr
+	movzx eax,bx
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosDuplicateBitmapHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosCloseBitmap
 ;
 ;		description:	RdosCloseBitmap(handle)

@@ -209,6 +209,8 @@ v_sprite_count  DW ?
 v_sprite_size   DW ?
 v_sprite_sel    DW ?
 
+v_usage_count   DW ?
+
 v_color 		DD ?
 v_lgop	    	DW ?
 v_font		    DW ?

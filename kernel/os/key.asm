@@ -933,7 +933,6 @@ init_mouse	Proc far
 	call CheckAux
 	jc init_mouse_done
 ;
-    int 3
     
 init_check_aux_loop:
 	in al,64h
@@ -958,7 +957,6 @@ init_check_loop1:
 
 init_check_read:
     in al,60h
-    int 3
 ;
 	mov al,12
 	mov bx,cs

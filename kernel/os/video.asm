@@ -70,30 +70,9 @@ CallVideo	MACRO	call_proc
 				ENDM
 
 CallBitmap	MACRO	call_proc
-	local bmp
 	local done
 	local fail
 
-	or bx,bx
-	jnz bmp
-;
-	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	call ds:&call_proc
-	pop ds
-	jmp done
-
-fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp done
-
-bmp:
 	push ds
 	push ax
 	push bx
@@ -105,8 +84,53 @@ bmp:
 	mov ds,[bx].bm_sel
 	pop bx
 	pop ax
+	EnterSection ds:v_section
 	call ds:&call_proc
+	LeaveSection ds:v_section
 	pop ds	
+	jmp done
+
+fail:
+	pop bx
+	pop ax
+	pop ds
+
+done:
+				ENDM
+
+CallBitmapParam	MACRO	call_proc
+	local done
+	local fail
+
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc fail
+;
+    push [bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_font
+    mov al,[bx].bm_style
+	mov ds,[bx].bm_sel
+	mov ds:v_style,al
+	pop ds:v_font
+	pop ds:v_lgop
+	pop ds:v_color
+	pop bx
+	pop ax
+	EnterSection ds:v_section
+	call ds:&call_proc
+	LeaveSection ds:v_section
+	pop ds	
+	jmp done
+
+fail:
+	pop bx
+	pop ax
+	pop ds
 
 done:
 				ENDM
@@ -904,7 +928,20 @@ PAGE
 set_draw_color_name	DB 'Set Draw Color',0
 
 set_draw_color	PROC far
-	CallBitmap set_color_proc
+	push ds
+	push bx
+;
+	push ax
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+    pop ax
+	jc set_draw_color_done
+;
+    mov [bx].bm_color,eax
+    
+set_draw_color_done:
+	pop bx
+	pop ds
 	retf32
 set_draw_color	ENDP
 
@@ -930,41 +967,20 @@ set_lgop	PROC far
 	mov ax,1
 
 set_lgop_ok:
-	or bx,bx
-	jnz set_lgop_bmp
-;
 	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	mov ds:v_lgop,ax
-	pop ds
-	jmp set_lgop_done
-
-set_lgop_fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp set_lgop_done
-
-set_lgop_bmp:
-	push ds
-	push ax
 	push bx
 ;
+	push ax
 	mov ax,BITMAP_HANDLE
 	DerefHandle
-	jc set_lgop_fail
+    pop ax
+	jc set_lgop_done
 ;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	mov ds:v_lgop,ax
-	pop ds	
-
+    mov [bx].bm_lgop,ax
+    
 set_lgop_done:
+	pop bx
+	pop ds
 	retf32
 set_lgop	ENDP
 
@@ -984,41 +1000,20 @@ PAGE
 set_hollow_style_name	DB 'Set Hollow Style',0
 
 set_hollow_style	PROC far
-	or bx,bx
-	jnz set_hollow_bmp
-;
 	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	mov ds:v_style,STYLE_HOLLOW
-	pop ds
-	jmp set_hollow_done
-
-set_hollow_fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp set_hollow_done
-
-set_hollow_bmp:
-	push ds
-	push ax
 	push bx
 ;
+	push ax
 	mov ax,BITMAP_HANDLE
 	DerefHandle
-	jc set_hollow_fail
+    pop ax
+	jc set_hollow_done
 ;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	mov ds:v_style,STYLE_HOLLOW
-	pop ds	
-
+    mov [bx].bm_style,STYLE_HOLLOW
+    
 set_hollow_done:
+	pop bx
+	pop ds
 	retf32
 set_hollow_style	ENDP
 
@@ -1038,41 +1033,20 @@ PAGE
 set_filled_style_name	DB 'Set Filled Style',0
 
 set_filled_style	PROC far
-	or bx,bx
-	jnz set_filled_bmp
-;
 	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	mov ds:v_style,STYLE_FILLED
-	pop ds
-	jmp set_filled_done
-
-set_filled_fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp set_filled_done
-
-set_filled_bmp:
-	push ds
-	push ax
 	push bx
 ;
+	push ax
 	mov ax,BITMAP_HANDLE
 	DerefHandle
-	jc set_filled_fail
+    pop ax
+	jc set_filled_done
 ;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	mov ds:v_style,STYLE_FILLED
-	pop ds	
-
+    mov [bx].bm_style,STYLE_FILLED
+    
 set_filled_done:
+	pop bx
+	pop ds
 	retf32
 set_filled_style	ENDP
 
@@ -1093,41 +1067,20 @@ PAGE
 set_font_name	DB 'Set Font',0
 
 set_font	PROC far
-	or bx,bx
-	jnz set_font_bmp
-;
 	push ds
-	push ax
-	mov ax,video_local_sel
-	mov ds,ax
-	pop ax
-	mov ds,ds:v_handle
-	mov ds:v_font,ax
-	pop ds
-	jmp set_font_done
-
-set_font_fail:
-	pop bx
-	pop ax
-	pop ds
-	jmp set_font_done
-
-set_font_bmp:
-	push ds
-	push ax
 	push bx
 ;
+	push ax
 	mov ax,BITMAP_HANDLE
 	DerefHandle
-	jc set_font_fail
+    pop ax
+	jc set_font_done
 ;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	mov ds:v_font,ax
-	pop ds	
-
+    mov [bx].bm_font,ax
+    
 set_font_done:
+	pop bx
+	pop ds
 	retf32
 set_font	ENDP
 
@@ -1173,7 +1126,7 @@ PAGE
 set_pixel_name	DB 'Set Pixel',0
 
 set_pixel	PROC far
-	CallBitmap set_pixel_proc
+	CallBitmapParam set_pixel_proc
 	retf32
 set_pixel	ENDP
 
@@ -1228,6 +1181,7 @@ blit_pr	PROC far
 ;
 	or bx,bx
 	jnz blit_dest_bmp
+;
 	mov dx,video_local_sel
 	mov ds,dx
 	mov dx,ds:v_handle
@@ -1243,6 +1197,7 @@ blit_dest_bmp:
 ;
 	mov dx,[bx].bm_sel
 	mov [bp].blit_dest_sel,dx
+	mov si,[bx].bm_lgop
 
 blit_get_src:
 	mov bx,ax
@@ -1268,12 +1223,31 @@ blit_do:
 	cmp ax,[bp].blit_dest_sel
 	je blit_same_bitmap
 ;
+    jae blit_take_dest_first
+
+blit_take_src_first:
+    mov ds,[bp].blit_src_sel
+	EnterSection ds:v_section
+	mov ds,[bp].blit_dest_sel
+	EnterSection ds:v_section
+    mov ds:v_lgop,si
+    jmp blit_entered
+
+blit_take_dest_first:
+	mov ds,[bp].blit_dest_sel
+	EnterSection ds:v_section
+    mov ds:v_lgop,si
+    mov ds,[bp].blit_src_sel
+	EnterSection ds:v_section
+    	
+blit_entered:
 	mov ds,[bp].blit_src_sel
 	mov al,ds:v_bpp
 	cmp al,1
 	je blit1
 ;
 	mov ds,[bp].blit_dest_sel
+	mov ds:v_lgop,si
 	cmp al,ds:v_bpp
 	je blit_same_bpp
 ;
@@ -1302,6 +1276,10 @@ blit_diff_loop:
 	jnz blit_diff_loop
 ;
 	FreeMem	
+	mov ds,[bp].blit_dest_sel
+	LeaveSection ds:v_section
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
@@ -1322,11 +1300,16 @@ blit_same_bpp:
 	sub word ptr [bp].blit_height,1
 	jnz blit_same_bpp
 ;
+	mov ds,[bp].blit_dest_sel
+	LeaveSection ds:v_section
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
 blit_same_bitmap:
 	mov ds,[bp].blit_src_sel
+	EnterSection ds:v_section
 	mov dx,[bp].blit_src_y
 	cmp dx,[bp].blit_dest_y
 	je blit_same_line
@@ -1352,6 +1335,9 @@ blit_reverse_loop:
 	dec word ptr [bp].blit_dest_y
 	sub word ptr [bp].blit_height,1
 	jnz blit_reverse_loop
+;
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
@@ -1370,6 +1356,8 @@ blit_forward:
 	sub word ptr [bp].blit_height,1
 	jnz blit_forward
 ;
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
@@ -1397,6 +1385,8 @@ blit_same_line_loop:
 	jnz blit_same_line_loop
 ;
 	FreeMem
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
@@ -1419,6 +1409,10 @@ blit1_line_loop:
 	sub word ptr [bp].blit_height,1
 	jnz blit1_line_loop
 ;
+    mov ds,[bp].blit_dest_sel
+	LeaveSection ds:v_section
+    mov ds,[bp].blit_src_sel
+	LeaveSection ds:v_section
 	clc
 	jmp blit_done
 
@@ -1468,7 +1462,7 @@ draw_mask_loop:
 	jz draw_mask_done
 ;
 	ror esi,16
-	CallBitmap draw_mask_line_proc
+	CallBitmapParam draw_mask_line_proc
 	add ecx,10000h
 	add edx,10000h
 	sub esi,10000h
@@ -1503,13 +1497,13 @@ draw_string_name	DB 'Draw String',0
 draw_string16	PROC far
 	push edi
 	movzx edi,di
-	CallBitmap draw_string_proc
+	CallBitmapParam draw_string_proc
 	pop edi
 	ret
 draw_string16	ENDP
 
 draw_string32	PROC far
-	CallBitmap draw_string_proc
+	CallBitmapParam draw_string_proc
 	retf32
 draw_string32	ENDP
 
@@ -1533,7 +1527,7 @@ PAGE
 draw_line_name	DB 'Draw Line',0
 
 draw_line	PROC far
-	CallBitmap draw_line_proc
+	CallBitmapParam draw_line_proc
 	retf32
 draw_line	ENDP
 
@@ -1557,7 +1551,7 @@ PAGE
 draw_rect_name	DB 'Draw Rect',0
 
 draw_rect	PROC far
-	CallBitmap draw_rect_proc
+	CallBitmapParam draw_rect_proc
 	retf32
 draw_rect	ENDP
 
@@ -1581,7 +1575,7 @@ PAGE
 draw_ellipse_name	DB 'Draw Ellipse',0
 
 draw_ellipse	PROC far
-	CallBitmap draw_ellipse_proc
+	CallBitmapParam draw_ellipse_proc
 	retf32
 draw_ellipse	ENDP
 
