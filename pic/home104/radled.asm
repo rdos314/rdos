@@ -28,32 +28,41 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-TEMP		.EQU $0F
-COUNT		.EQU $10
-V0			.EQU $11
-V1			.EQU $12
-D0			.EQU $13
-D1			.EQU $14
-D2			.EQU $15
-REF			.EQU $16
-AD0			.EQU $17
-AD1			.EQU $18
-SumLow1		.EQU $19
-SumHi1		.EQU $1A
-TEM0		.EQU $1B
-TEM1		.EQU $1C
-MOT			.EQU $1D
-REG			.EQU $1E
-VAL			.EQU $1F
-BIT			.EQU $20
-INTEN		.EQU $21
-AdcLsb		.EQU $22
-AdcMsb		.EQU $23
-RefType		.EQU $24
-DelayMs		.EQU $25
-TState		.EQU $26
-Stable		.EQU $27
-
+TEMP		.EQU $0C
+COUNT		.EQU $0D
+V0			.EQU $0E
+V1			.EQU $0F
+D0			.EQU $10
+D1			.EQU $11
+D2			.EQU $12
+REF			.EQU $13
+Ch0Low		.EQU $14
+Ch0High		.EQU $15
+Ch1Low		.EQU $16
+Ch1High		.EQU $17
+Ch2Low		.EQU $18
+Ch2High		.EQU $19
+Ch3Low		.EQU $1A
+Ch3High		.EQU $1B
+MOT			.EQU $1C
+REG			.EQU $1D
+VAL			.EQU $1E
+BIT			.EQU $1F
+INTEN		.EQU $20
+AdcLsb		.EQU $21
+AdcMsb		.EQU $22
+RefType		.EQU $23
+DelayMs		.EQU $24
+TState		.EQU $25
+Stable		.EQU $26
+AdcLow0		.EQU $27
+AdcHigh0	.EQU $28
+AdcLow1		.EQU $29
+AdcHigh1	.EQU $2A
+AdcLow2		.EQU $2B
+AdcHigh2	.EQU $2C
+AdcLow3		.EQU $2D
+AdcHigh3	.EQU $2E
 
 	        .ORG 4
     	    .ORG 5
@@ -74,11 +83,24 @@ RESET:		PAGE1
 ;
 			call READEE
 			movf REF,W
-			movwf TEM0
-			clrf TEM1
+			movwf AdcLow0
+			clrf AdcHigh0
 ;
-			clrf SumLow1
-			clrf SumHi1
+			clrf Ch0Low
+			clrf Ch0High
+			clrf Ch1Low
+			clrf Ch1High
+			clrf Ch2Low
+			clrf Ch2High
+			clrf Ch3Low
+			clrf Ch3High
+;
+			clrf AdcLow1
+			clrf AdcHigh1
+			clrf AdcLow2
+			clrf AdcHigh2
+			clrf AdcLow3
+			clrf AdcHigh3
 ;
 			movlw $80
 			movwf MOT
@@ -154,7 +176,7 @@ SetVal:		movf REG,W
 			goto SetRef		; 0
 			return			; 1
 			goto SetMotor	; 2
-			goto SetInten	; 3
+			return			; 3
 			return			; 4
 			goto SetRefType	; 5
 			return			; 6
@@ -162,14 +184,14 @@ SetVal:		movf REG,W
 
 GetVal:		movf REG,W
 			addwf PCL,F
-			goto GetRef		; 0
-			goto GetTemp	; 1
-			goto GetMotor	; 2
-			return			; 3
-			return			; 4
-			return			; 5
-			return			; 6
-			return			; 7
+			goto GetRef			; 0
+			goto GetTemp		; 1
+			return				; 2
+			goto GetTemp1		; 3
+			goto GetLightLow 	; 4
+			goto GetLightHigh	; 5
+			return				; 6
+			return				; 7
 
 INITLED:	movlw $C
 			call SENDBYTE
@@ -230,9 +252,9 @@ WRREFDO:	call SENDBYTE
 			call LOADLED
 			return
 
-WRITETEM:	movf TEM0,W
+WRITETEM:	movf AdcLow0,W
 			movwf V0
-			movf TEM1,W
+			movf AdcHigh0,W
 			movwf V1
 			call DECODE
 ;
@@ -289,6 +311,12 @@ ReadAdc0:	movlw %10001000
 			goto ReadAdc
 
 ReadAdc1:	movlw %10011000
+			goto ReadAdc
+
+ReadAdc2:	movlw %10101000
+			goto ReadAdc
+
+ReadAdc3:	movlw %10111000
 
 ReadAdc:	movwf TEMP
 			movlw 7
@@ -362,13 +390,46 @@ AdcLsbLoop:
 			bsf PORTB,3
 			return
 
-GetAdc:		call ReadAdc1
+GetAdc0:	call ReadAdc0
 			movf AdcLsb,W
-			addwf SumLow1,F
+			addwf Ch0Low,F
 			btfsc STATUS,C
-			incf SumHi1,F
+			incf Ch0High,F
 			movf AdcMsb,W
-			addwf SumHi1,F
+			addwf Ch0High,F
+			return
+
+GetAdc1:	call ReadAdc1
+			movf AdcLsb,W
+			addwf Ch1Low,F
+			btfsc STATUS,C
+			incf Ch1High,F
+			movf AdcMsb,W
+			addwf Ch1High,F
+			return
+
+GetAdc2:	call ReadAdc2
+			movf AdcLsb,W
+			addwf Ch2Low,F
+			btfsc STATUS,C
+			incf Ch2High,F
+			movf AdcMsb,W
+			addwf Ch2High,F
+			return
+
+GetAdc3:	call ReadAdc3
+			movf AdcLsb,W
+			addwf Ch3Low,F
+			btfsc STATUS,C
+			incf Ch3High,F
+			movf AdcMsb,W
+			addwf Ch3High,F
+			return
+
+GetAdc:		call GetAdc0
+			call GetAdc1
+			call GetAdc2
+			call GetAdc3
 			return
 
 WaitClk:	call Poll
@@ -395,11 +456,6 @@ SetMotor:	movf VAL,W
 			movwf MOT
 			return
 
-SetInten:	movf VAL,W
-			andlw $F
-			movwf INTEN
-			return
-
 SetRefType:	movf VAL,W
 			movwf RefType
 			call READEE
@@ -409,32 +465,150 @@ GetRef:		movf REF,W
 			movwf VAL
 			return
 
-GetTemp:	bcf STATUS,C
-			rrf SumHi1,F
-			rrf SumLow1,F	
+SaveAdc0:	bcf STATUS,C
+			rrf Ch0High,F
+			rrf Ch0Low,F	
 ;
 			bcf STATUS,C
-			rrf SumHi1,F
-			rrf SumLow1,F	
+			rrf Ch0High,F
+			rrf Ch0Low,F	
 ;
 			bcf STATUS,C
-			rrf SumHi1,F
-			rrf SumLow1,F	
+			rrf Ch0High,F
+			rrf Ch0Low,F	
 ;
 			bcf STATUS,C
-			rrf SumHi1,F
-			rrf SumLow1,F	
+			rrf Ch0High,F
+			rrf Ch0Low,F	
 ;
-			movf SumLow1,W
-			movwf TEM0
-			movf SumHi1,W
-			movwf TEM1
+			movf Ch0Low,W
+			movwf AdcLow0
+			movf Ch0High,W
+			movwf AdcHigh0
 ;
-			clrf SumLow1
-			clrf SumHi1
+			clrf Ch0Low
+			clrf Ch0High
+			return
+
+SaveAdc1:	bcf STATUS,C
+			rrf Ch1High,F
+			rrf Ch1Low,F	
 ;
-			movf TEM0,W
+			bcf STATUS,C
+			rrf Ch1High,F
+			rrf Ch1Low,F	
+;
+			bcf STATUS,C
+			rrf Ch1High,F
+			rrf Ch1Low,F	
+;
+			bcf STATUS,C
+			rrf Ch1High,F
+			rrf Ch1Low,F	
+;
+			movf Ch1Low,W
+			movwf AdcLow1
+			movf Ch1High,W
+			movwf AdcHigh1
+;
+			clrf Ch1Low
+			clrf Ch1High
+			return
+
+SaveAdc2:	bcf STATUS,C
+			rrf Ch2High,F
+			rrf Ch2Low,F	
+;
+			bcf STATUS,C
+			rrf Ch2High,F
+			rrf Ch2Low,F	
+;
+			bcf STATUS,C
+			rrf Ch2High,F
+			rrf Ch2Low,F	
+;
+			bcf STATUS,C
+			rrf Ch2High,F
+			rrf Ch2Low,F	
+;
+			movf Ch2Low,W
+			movwf AdcLow2
+			movf Ch2High,W
+			movwf AdcHigh2
+;
+			clrf Ch2Low
+			clrf Ch2High
+			return
+
+SaveAdc3:	bcf STATUS,C
+			rrf Ch3High,F
+			rrf Ch3Low,F	
+;
+			bcf STATUS,C
+			rrf Ch3High,F
+			rrf Ch3Low,F	
+;
+			bcf STATUS,C
+			rrf Ch3High,F
+			rrf Ch3Low,F	
+;
+			bcf STATUS,C
+			rrf Ch3High,F
+			rrf Ch3Low,F	
+;
+			movf Ch3Low,W
+			movwf AdcLow3
+			movf Ch3High,W
+			movwf AdcHigh3
+;
+			clrf Ch3Low
+			clrf Ch3High
+			return
+
+SetInten:
+			movf AdcHigh3,W
+			btfss STATUS,Z
+			goto SetMaxInten
+;
+			movf AdcLow3,W
+			movwf INTEN
+			rrf INTEN,F
+			rrf INTEN,F
+			rrf INTEN,F
+			rrf INTEN,W
+			andlw $F
+			movwf INTEN
+			return
+
+SetMaxInten:	
+			movlw $F
+			movwf INTEN
+			return
+
+GetTemp0:	movf AdcLow0,W
 			movwf VAL
+			return
+
+GetTemp1:	movf AdcLow1,W
+			movwf VAL
+			return
+
+GetLightLow:	
+			movf AdcLow3,W
+			movwf VAL
+			return
+
+GetLightHigh:	
+			movf AdcHigh3,W
+			movwf VAL
+			return
+
+GetTemp:	call SaveAdc0
+			call SaveAdc1
+			call SaveAdc2
+			call SaveAdc3
+			call SetInten
+			call GetTemp0
 			return
 
 GetMotor:	movf MOT,W

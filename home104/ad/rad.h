@@ -41,11 +41,12 @@ public:
 	void SetDayRef();
 	void SetNightRef();
 	void SetRef(long double Temp);
-	void SetIntensity(long double rel);
 	void SetAmbient(long double rel);
 	long double GetRef();
 	long double GetTemp();
 	long double GetMotor();
+	long double GetAuxTemp();
+	long double GetLight();
 
 protected:
 	void GetSettings();
@@ -54,15 +55,15 @@ protected:
 private:
 	int FUpdateRefType;
 	int FUpdateRef;
-	int FUpdateInten;
 	int FUpdateAmbient;
 
 	int FChannel;
 	long double FAmbient;
-	long double FInten;
 	long double FRef;
 	long double FTemp;
 	long double FMotor;
+	long double FAuxTemp;
+	long double FLight;
 	int FRefType;
 };
 

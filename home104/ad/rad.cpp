@@ -52,14 +52,14 @@ TRadiator::TRadiator(int channel)
 
 	FChannel = channel;
 	FUpdateRef = FALSE;
-	FUpdateInten = FALSE;
 	FUpdateAmbient = FALSE;
-	FInten = 50.0;
 	FAmbient = 20.0;
 	FRef = 20.0;
 	FTemp = 20.0;
 	FMotor = 0.0;
 	FRefType = 0;
+	FAuxTemp = 20.0;
+	FLight = 0.0;
 
 	sprintf(str, "RAD %d", channel);
 
@@ -149,22 +149,6 @@ void TRadiator::SetRef(long double Temp)
 
 /*##########################################################################
 #
-#   Name       : TRadiator::SetIntensity
-#
-#   Purpose....: Set relative display intensity
-#
-#   Out params.: % of maximal brightness
-#   Returns....: *
-#
-##########################################################################*/
-void TRadiator::SetIntensity(long double rel)
-{
-	FInten = rel;
-	FUpdateInten = TRUE;
-}
-
-/*##########################################################################
-#
 #   Name       : TRadiator::SetAmbient
 #
 #   Purpose....: Set ambient (outdoor) temperature
@@ -226,6 +210,36 @@ long double TRadiator::GetMotor()
 
 /*##########################################################################
 #
+#   Name       : TRadiator::GetAuxTemp
+#
+#   Purpose....: Get current aux temperature
+#
+#   Out params.: *
+#   Returns....: Current aux temperature
+#
+##########################################################################*/
+long double TRadiator::GetAuxTemp()
+{
+	return FAuxTemp;
+}
+
+/*##########################################################################
+#
+#   Name       : TRadiator::GetLight
+#
+#   Purpose....: Get current light in W/m2
+#
+#   Out params.: *
+#   Returns....: Current light
+#
+##########################################################################*/
+long double TRadiator::GetLight()
+{
+	return FLight;
+}
+
+/*##########################################################################
+#
 #   Name       : TRadiator::GetSettings
 #
 #   Purpose....: Get current settings
@@ -257,6 +271,16 @@ void TRadiator::GetSettings()
 		if (FMotor >= 10.0)
 			FMotor = 9.9;
 	}
+	else
+		ok = FALSE;
+
+	if (RdosReadSerialRaw(FChannel, 4, &val))
+		FAuxTemp = (long double)val / 10.0;
+	else
+		ok = FALSE;
+
+	if (RdosReadSerialRaw(FChannel, 3, &val))
+		FLight = (long double)val / 500.0;
 	else
 		ok = FALSE;
 
@@ -292,16 +316,6 @@ void TRadiator::Execute()
 		{
 			val = (int)(10.0 * FRef + 0.5);
 			FUpdateRef = !RdosWriteSerialRaw(FChannel, 0, val);
-		}
-
-		if (FUpdateInten)
-		{
-			val = (int)(0.15 * FInten + 0.5);
-			if (val < 8)
-				val = 8;
-			if (val > 15)
-				val = 15;
-			FUpdateInten = !RdosWriteSerialRaw(FChannel, 3, val);
 		}
 
 		if (FUpdateAmbient)

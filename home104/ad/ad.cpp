@@ -240,14 +240,20 @@ void UpdateFuzzy()
 	int night;
 	int i;
 
-	RdosSetCursorPosition(11, 0);
+	RdosSetCursorPosition(10, 0);
 	RdosWriteString("TEMP ");
 
-	RdosSetCursorPosition(12, 0);
+	RdosSetCursorPosition(11, 0);
 	RdosWriteString("REF  ");
 
-	RdosSetCursorPosition(13, 0);
+	RdosSetCursorPosition(12, 0);
 	RdosWriteString("MOT  ");
+
+	RdosSetCursorPosition(13, 0);
+	RdosWriteString("LGHT ");
+
+	RdosSetCursorPosition(14, 0);
+	RdosWriteString("ATMP ");
 
 	hour = time.GetHour();
 	min = time.GetMin();
@@ -272,14 +278,13 @@ void UpdateFuzzy()
 				radiator[i]->SetDayRef();
 
 			fval = radiator[i]->GetRef();
-			RdosSetCursorPosition(12, 5 + 5 * i);
+			RdosSetCursorPosition(11, 5 + 5 * i);
 			sprintf(str, "%4.1Lf ", fval);
 			RdosWriteString(str);
 
-			radiator[i]->SetIntensity(50.0 + lv * 25.0);
 			radiator[i]->SetAmbient(tv[0]);
 
-			RdosSetCursorPosition(11, 5 + 5 * i);
+			RdosSetCursorPosition(10, 5 + 5 * i);
 			if (radiator[i]->IsOnline())
 			{
 				fval = radiator[i]->GetTemp();
@@ -290,6 +295,26 @@ void UpdateFuzzy()
 				RdosWriteString("---- ");
 
 			RdosSetCursorPosition(13, 5 + 5 * i);
+			if (radiator[i]->IsOnline())
+			{
+				fval = radiator[i]->GetLight();
+				sprintf(str, "%4.2Lf ", fval);
+				RdosWriteString(str);
+			}
+			else
+				RdosWriteString("---- ");
+
+			RdosSetCursorPosition(14, 5 + 5 * i);
+			if (radiator[i]->IsOnline())
+			{
+				fval = radiator[i]->GetAuxTemp();
+				sprintf(str, "%4.1Lf ", fval);
+				RdosWriteString(str);
+			}
+			else
+				RdosWriteString("---- ");
+
+			RdosSetCursorPosition(12, 5 + 5 * i);
 			if (radiator[i]->IsOnline())
 			{
 				fval = radiator[i]->GetMotor();

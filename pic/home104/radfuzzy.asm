@@ -28,43 +28,43 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-RefVal	    .EQU $0F
-TempVal		.EQU $10
-MotorVal	.EQU $11
-Da0			.EQU $12
-Da1			.EQU $13
-Reg			.EQU $14
-Val			.EQU $15
-Bit			.EQU $16
-Contr		.EQU $17
+RefVal	    .EQU $0C
+TempVal		.EQU $0D
+MotorVal	.EQU $0E
+Da0			.EQU $0F
+Da1			.EQU $10
+Reg			.EQU $11
+Val			.EQU $12
+Bit			.EQU $13
+Contr		.EQU $14
 
-TempSumLow	.EQU $18
-TempSumHigh	.EQU $19
-TempRemain	.EQU $1A
+TempSumLow	.EQU $15
+TempSumHigh	.EQU $16
+TempRemain	.EQU $17
 
-FuzzyIndex	.EQU $1D
-FuzzyCount	.EQU $1E
-FuzzyVal	.EQU $1F
+FuzzyIndex	.EQU $18
+FuzzyCount	.EQU $19
+FuzzyVal	.EQU $1A
 
-TempError	.EQU $22
-TempDelta	.EQU $23
-Ambient		.EQU $24
+TempError	.EQU $1B
+TempDelta	.EQU $1C
+Ambient		.EQU $1D
 
-ErrorIndex	.EQU $25
-DeltaIndex	.EQU $26
-AmbientIndex .EQU $27
+ErrorIndex	.EQU $1E
+DeltaIndex	.EQU $1F
+AmbientIndex .EQU $20
 
-FuzzyTemp	.EQU $28
-Resultant	.EQU $29
+FuzzyTemp	.EQU $21
+Resultant	.EQU $22
 
-NumLow		.EQU $2A
-NumHigh		.EQU $2B
-DenomLow	.EQU $2C
-DenomHigh	.EQU $2D
-NumDivLow	.EQU $2E
-NumDivHigh	.EQU $2F
+NumLow		.EQU $23
+NumHigh		.EQU $24
+DenomLow	.EQU $25
+DenomHigh	.EQU $26
+NumDivLow	.EQU $27
+NumDivHigh	.EQU $28
 
-PrevErrorIndex	.EQU $30
+PrevErrorIndex	.EQU $29
 
 	.ORG 4
  	.ORG 5
@@ -892,22 +892,42 @@ DivNext:
 ;
 	movlw 16
 	subwf NumHigh, W
-;	movf NumHigh, W
-;	sublw 16
 	btfsc STATUS, C
 	goto IncMotor
 
 DecMotor:
 	addwf MotorVal, F
 	btfss STATUS, C
+	goto MotorMin
+;
+	addwf MotorVal, F
+	btfss STATUS, C
+	goto MotorMin
+;
+	addwf MotorVal, F
+	btfss STATUS, C
+	goto MotorMin
+	goto MotorDone
+
+MotorMin:
 	clrf MotorVal
 	goto MotorDone
 
 IncMotor:
 	addwf MotorVal, F
-	btfss STATUS, C
-	goto MotorDone
+	btfsc STATUS, C
+	goto MotorMax
 ;
+	addwf MotorVal, F
+	btfsc STATUS, C
+	goto MotorMax
+;
+	addwf MotorVal, F
+	btfsc STATUS, C
+	goto MotorMax
+	goto MotorDone
+
+MotorMax:
 	movlw 255
 	movwf MotorVal
 
@@ -938,7 +958,7 @@ Main:
 	movlw 100
 	movwf AmbientIndex
 ;
-	movlw $C0
+	movlw $80
 	movwf MotorVal
 
 LP:

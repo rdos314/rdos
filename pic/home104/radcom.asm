@@ -14,7 +14,7 @@ PORTB:  .EQU 6
 TRISA:  .EQU 5
 TRISB:  .EQU 6
 
-NODEID:	.EQU $21
+NODEID:	.EQU $22
 DELAY_TICS:	.EQU 200
 
 W:      .EQU 0          ;Working
@@ -32,35 +32,38 @@ WR:     .EQU 1          ;eeprom write initiate flag
 WREN:   .EQU 2          ;eeprom write enable flag
 RD:     .EQU 0          ;eeprom read enable flag
 
-AL:		.EQU $0F
-DL:		.EQU $10
-TEMP:	.EQU $11
-LCNT:	.EQU $12
-CHAN:	.EQU $13
-VAL:	.EQU $14
-COUNT:	.EQU $15
-BITS:   .EQU $16
-CRC:	.EQU $17
-CMD:	.EQU $18
-T0:		.EQU $19
-T1:		.EQU $1A
-T2:		.EQU $1B
-TMRCNT	.EQU $1C
-CLKCNT	.EQU $1D
-STATE	.EQU $1E
-BIT		.EQU $1F
-FLREG	.EQU $20
-SEC		.EQU $21
-FLVAL   .EQU $22
+AL:			.EQU $0C
+DL:			.EQU $0D
+TEMP:		.EQU $0E
+LCNT:		.EQU $0F
+CHAN:		.EQU $10
+VAL:		.EQU $11
+COUNT:		.EQU $12
+BITS:   	.EQU $13
+CRC:		.EQU $14
+CMD:		.EQU $15
+T0:			.EQU $16
+T1:			.EQU $17
+T2:			.EQU $18
+TMRCNT		.EQU $19
+CLKCNT		.EQU $1A
+STATE		.EQU $1B
+BIT			.EQU $1C
+FLREG		.EQU $1D
+SEC			.EQU $1E
+FLVAL  	 	.EQU $1F
 
-VAL0:	.EQU $28
-VAL1:	.EQU $29
-VAL2:	.EQU $2A
-VAL3:	.EQU $2B
-VAL4:	.EQU $2C
-VAL5:	.EQU $2D
-VAL6:	.EQU $2E
-VAL7:	.EQU $2F
+Temp		.EQU $20
+Ref			.EQU $21
+Motor		.EQU $22
+AuxTemp		.EQU $23
+LightLow	.EQU $24
+LightHigh	.EQU $25
+DummyVal	.EQU $26
+Ambient		.EQU $27
+RefType		.EQU $28
+LightTemp	.EQU $29
+
 
 	        .ORG 4
     	    .ORG 5
@@ -93,64 +96,114 @@ RESET:		PAGE1
 			clrf SEC
 ;
 			movlw 200
-			movwf VAL0
-			movwf VAL1
+			movwf Temp
+			movwf Ref
 ;
-			movlw $C0
-			movwf VAL2
+			movlw $80
+			movwf Motor
+			movwf Ambient
 ;
-			movlw $C
-			movwf VAL3
-;
-			clrf VAL4
-			clrf VAL5
-			clrf VAL6
-			clrf VAL7
+			clrf AuxTemp
+			clrf LightLow
+			clrf LightHigh
+			clrf DummyVal
+			clrf RefType
 			goto ILOOP
 
 RecRef:		movlw 0
+			movwf FLREG
+			movlw Ref
+			movwf FSR
 			call Rec0
 			return
 
 SendRef1:	movlw 0
+			movwf FLREG
+			movlw Ref
+			movwf FSR
 			call Send1
 			return
 
 RecTemp:	movlw 1
+			movwf FLREG
+			movlw Temp
+			movwf FSR
+			call Rec0
+			return
+
+RecAuxTemp:	movlw 3
+			movwf FLREG
+			movlw AuxTemp
+			movwf FSR
 			call Rec0
 			return
 
 RecMotor:	movlw 2
+			movwf FLREG
+			movlw Motor
+			movwf FSR
 			call Rec1
 			return
 
+RecLightLow:	
+			movlw 4
+			movwf FLREG
+			movlw LightTemp
+			movwf FSR
+			call Rec0
+			return
+
+RecLight:	movlw 5
+			movwf FLREG
+			movlw LightHigh
+			movwf FSR
+			call Rec0
+;
+			movf LightTemp,W
+			movwf LightLow
+			return
+
 SendTemp:	movlw 1
+			movwf FLREG
+			movlw Temp
+			movwf FSR
 			call Send1
 			return
 
 SendMotor:	movlw 2
-			call Send0
-			return
-
-SendInten:	movlw 3
+			movwf FLREG
+			movlw Motor
+			movwf FSR
 			call Send0
 			return
 
 SendAmbient:
             movlw 4
+			movwf FLREG
+			movlw Ambient
+			movwf FSR
 			call Send1
 			return
 
 SendRefType:
             movlw 5
+			movwf FLREG
+			movlw RefType
+			movwf FSR
 			call Send0
 			return
 
 StartTemp:	movlw 7
+			movwf FLREG
+			movlw DummyVal
+			movwf FSR
 			call Send0
 			return
 
 StartFuzzy:	movlw 7
+			movwf FLREG
+			movlw DummyVal
+			movwf FSR
 			call Send1
 			return
 
@@ -180,11 +233,11 @@ HandlePend:
 			goto SendRefType	; 18
 			goto RecRef			; 19
 			goto SendRef1		; 20
-			goto SendInten	 	; 21
+			goto RecLightLow	; 21
 			goto SendTemp		; 22
-			goto StartFuzzy    	; 23
-			return				; 24
-			return				; 25
+			goto RecAuxTemp    	; 23
+			goto RecLight		; 24
+			goto StartFuzzy		; 25
 			return				; 26
 			return				; 27
 			return				; 28
@@ -238,8 +291,8 @@ HandleRead:
 			goto ReadRef        ; 0
 			goto ReadTemp       ; 1
 			goto ReadMotor      ; 2
-			goto ReadInten      ; 3
-			goto DummyRead      ; 4
+			goto ReadLight      ; 3
+			goto ReadAuxTemp    ; 4
 			goto DummyRead      ; 5
 			goto DummyRead      ; 6
 			goto DummyRead      ; 7
@@ -250,7 +303,7 @@ HandleWrite:
 			goto WriteRef       ; 0
 			goto DummyWrite     ; 1
 			goto DummyWrite     ; 2
-			goto WriteInten     ; 3
+			goto DummyWrite     ; 3
 			goto WriteAmbient   ; 4
 			goto WriteRefType   ; 5
 			goto DummyWrite     ; 6
@@ -263,28 +316,36 @@ DummyRead:
 			return
 
 ReadRef:
-			movf VAL0,W
+			movf Ref,W
 			movwf T0
 			clrf T1
 			clrf T2
 			return
 
 ReadTemp:
-			movf VAL1,W
+			movf Temp,W
 			movwf T0
 			clrf T1
 			clrf T2
 			return
 
 ReadMotor:
-			movf VAL2,W
+			movf Motor,W
 			movwf T0
 			clrf T1
 			clrf T2
 			return
 
-ReadInten:
-			movf VAL3,W
+ReadLight:
+			movf LightLow,W
+			movwf T0
+			movf LightHigh,W
+			movwf T1
+			clrf T2
+			return
+
+ReadAuxTemp:
+			movf AuxTemp,W
 			movwf T0
 			clrf T1
 			clrf T2
@@ -293,23 +354,18 @@ ReadInten:
 DummyWrite:
 			return
 
-WriteRef:
-			movf T0,W
-			movwf VAL0
-			return
-
-WriteInten:	movf T0,W
-			movwf VAL3
+WriteRef:	movf T0,W
+			movwf Ref
 			return
 
 WriteAmbient:
             movf T0,W
-			movwf VAL4
+			movwf Ambient
 			return
 
 WriteRefType:
             movf T0,W
-			movwf VAL5
+			movwf RefType
 			return
 			
 ILOOP:		call POLLTIMER
@@ -585,38 +641,25 @@ DoSec:
 			bsf SEC,7
 			return
 
-; W = register #
-Send0:		movwf FLREG
-			addlw VAL0
-			movwf FSR
-			clrf STATE
+Send0:		clrf STATE
 			bsf FLREG,3
 			movlw %00001010
 			movwf PORTB
 			return
 
-Send1:		movwf FLREG
-			addlw VAL0
-			movwf FSR
-			clrf STATE
+Send1:		clrf STATE
 			bsf FLREG,3
 			movlw %00010010
 			movwf PORTB
 			return
 
-Rec0:		movwf FLREG
-			addlw VAL0
-			movwf FSR
-			clrf STATE
+Rec0:		clrf STATE
 			bcf FLREG,3
 			movlw %00001000
 			movwf PORTB
 			return
 
-Rec1:		movwf FLREG
-			addlw VAL0
-			movwf FSR
-			clrf STATE
+Rec1:		clrf STATE
 			bcf FLREG,3
 			movlw %00010000
 			movwf PORTB
