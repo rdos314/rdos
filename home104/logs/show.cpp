@@ -178,7 +178,7 @@ void main()
 	light->SetColor(0, 192, 0);
 	outlight->SetColor(192, 0, 0);
 
-	tempy->Define(-10.0, 70.0);
+	tempy->Define(-15.0, 70.0);
 	motory->Define(0.0, 10.0);
 	lighty->Define(0.0, 3.5);
 	vpy->Define(-0.1, 1.1);
@@ -209,7 +209,7 @@ void main()
 		prevplot = 0.0;
 		file->SetPos(0);
 
-		for (j = -10; j < 70; j++)
+		for (j = -15; j < 70; j++)
 		{
 			if (j % 5 == 0)
 				lines->SetColor(125, 125, 125);
@@ -325,7 +325,7 @@ void main()
 				else
 					motor->LineTo(time, val);
 
-				val = log.rad[i].light / 100.0;
+				val = log.rad[i].light / 200.0;
 				if (plot)
 					light->Plot(time, val);
 				else
