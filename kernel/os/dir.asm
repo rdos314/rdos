@@ -343,214 +343,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InsertFreeEntry
-;
-;		DESCRIPTION:	Insert free entry structure
-;
-;		PARAMETERS:		BX			Dir selector
-;						EDX			Free entry
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-insert_free_entry_name DB 'Insert Free Entry', 0
-
-insert_free_entry	PROC far
-	push ds
-	push es
-	push eax
-	push ebx
-;
-	mov ds,bx
-	mov ax,flat_sel
-	mov es,ax
-;
-	mov eax,ds:ds_free_ptr
-	or eax,eax
-	jne insert_free_used
-
-insert_free_empty:
-	mov es:[edx].de_prev,edx
-	mov es:[edx].de_next,edx
-	mov ds:ds_free_ptr,edx
-	jmp insert_free_done
-
-insert_free_used:
-	mov ebx,es:[eax].de_prev
-	mov es:[eax].de_prev,edx
-	mov es:[ebx].de_next,edx
-	mov es:[edx].de_prev,ebx
-	mov es:[edx].de_next,eax	
-
-insert_free_done:
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-insert_free_entry	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			InsertDeletedEntry
-;
-;		DESCRIPTION:	Insert deleted entry structure
-;
-;		PARAMETERS:		BX			Dir selector
-;						EDX			Deleted entry
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-insert_deleted_entry_name DB 'Insert Deleted Entry', 0
-
-insert_deleted_entry	PROC far
-	push ds
-	push es
-	push eax
-	push ebx
-;
-	mov ds,bx
-	mov ax,flat_sel
-	mov es,ax
-;
-	mov eax,ds:ds_deleted_ptr
-	or eax,eax
-	jne insert_deleted_used
-
-insert_deleted_empty:
-	mov es:[edx].de_prev,edx
-	mov es:[edx].de_next,edx
-	mov ds:ds_deleted_ptr,edx
-	jmp insert_deleted_done
-
-insert_deleted_used:
-	mov ebx,es:[eax].de_prev
-	mov es:[eax].de_prev,edx
-	mov es:[ebx].de_next,edx
-	mov es:[edx].de_prev,ebx
-	mov es:[edx].de_next,eax	
-
-insert_deleted_done:
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-insert_deleted_entry	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetFreeEntry
-;
-;		DESCRIPTION:	Get free entry structure
-;
-;		PARAMETERS:		BX			Dir selector
-;
-;		RETURNS:		EDX			Entry
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_free_entry_name DB 'Get Free Entry', 0
-
-get_free_entry	PROC far
-	push ds
-	push es
-	push eax
-	push ebx
-;
-	mov ds,bx
-	mov ax,flat_sel
-	mov es,ax
-;
-	mov edx,ds:ds_free_ptr
-	or edx,edx
-	stc
-	jz get_free_done
-;
-	mov eax,es:[edx].de_next
-	mov ebx,es:[edx].de_prev
-	mov es:[ebx].de_next,eax
-	mov es:[eax].de_prev,ebx
-	mov ds:ds_free_ptr,eax
-	cmp eax,edx
-	jne get_free_list_ok
-;
-	mov ds:ds_free_ptr,0
-
-get_free_list_ok:
-	clc
-
-get_free_done:
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-get_free_entry	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetDeletedEntry
-;
-;		DESCRIPTION:	Get deleted entry structure
-;
-;		PARAMETERS:		BX			Dir selector
-;
-;		RETURNS:		EDX			Entry
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_deleted_entry_name DB 'Get Deleted Entry', 0
-
-get_deleted_entry	PROC far
-	push ds
-	push es
-	push eax
-	push ebx
-;
-	mov ds,bx
-	mov ax,flat_sel
-	mov es,ax
-;
-	mov edx,ds:ds_deleted_ptr
-	or edx,edx
-	stc
-	jz get_deleted_done
-;
-	mov eax,es:[edx].de_next
-	mov ebx,es:[edx].de_prev
-	mov es:[ebx].de_next,eax
-	mov es:[eax].de_prev,ebx
-	mov ds:ds_deleted_ptr,eax
-	cmp eax,edx
-	jne get_deleted_list_ok
-;
-	mov ds:ds_deleted_ptr,0
-
-get_deleted_list_ok:
-	clc
-
-get_deleted_done:
-	pop ebx
-	pop eax
-	pop es
-	pop ds
-	ret
-get_deleted_entry	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			CreateDirSel
 ;
 ;		DESCRIPTION:	Create a dir selector
@@ -566,33 +358,23 @@ PAGE
 
 CreateDirSel	PROC near
 	push ds
-	push es
-	push eax
-	push dx
 ;
-	push edx
-	mov dl,al
-	mov eax,SIZE dir_sel_data_struc
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
+	push bx
+	CallFileSystem allocate_dir_sel_proc
+	mov ds,bx
+	pop bx
+;
 	InitReadWriteSection ds:ds_access_section
 	InitSection ds:ds_list_section
 	mov ds:ds_dir_ptr,0
 	mov ds:ds_file_ptr,0
-	mov ds:ds_deleted_ptr,0
-	mov ds:ds_free_ptr,0
 	mov ds:ds_usage,0
-	mov ds:ds_drive,dl
+	mov ds:ds_drive,al
 	mov ds:ds_parent,bx
-	pop eax
-	mov ds:ds_handle,eax
+	mov ds:ds_handle,edx
 	mov ds:ds_mount_id,ebp
 	mov bx,ds
 ;
-	pop dx
-	pop eax
-	pop es
 	pop ds
 	ret
 CreateDirSel	ENDP
@@ -611,8 +393,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FreeDirSel	PROC near
-	push es
 	push eax
+	push bx
 	push ecx
 	push edx
 ;
@@ -640,7 +422,7 @@ free_dir_dir_next:
 free_dir_file:
 	mov edx,ds:ds_file_ptr
 	or edx,edx
-	jz free_dir_deleted
+	jz free_dir_del
 
 free_dir_file_loop:
 	mov eax,es:[edx].de_next
@@ -656,43 +438,17 @@ free_dir_file_next:
 	cmp edx,ds:ds_file_ptr
 	jne free_dir_file_loop
 
-free_dir_deleted:
-	mov edx,ds:ds_deleted_ptr
-	or edx,edx
-	jz free_dir_free
-
-free_dir_deleted_loop:
-	mov eax,es:[edx].de_next
-	xor ecx,ecx
-	FreeLinear
-	mov edx,eax
-	cmp edx,ds:ds_deleted_ptr
-	jne free_dir_deleted_loop
-
-free_dir_free:
-	mov edx,ds:ds_free_ptr
-	or edx,edx
-	jz free_dir_del
-
-free_dir_free_loop:
-	mov eax,es:[edx].de_next
-	xor ecx,ecx
-	FreeLinear
-	mov edx,eax
-	cmp edx,ds:ds_free_ptr
-	jne free_dir_free_loop
-
 free_dir_del:
-	mov ax,ds
-	mov es,ax
-	xor ax,ax
-	mov ds,ax
-	FreeMem
+	mov al,ds:ds_drive
+	mov bx,ds
+	xor dx,dx
+	mov ds,dx
+	CallFileSystem free_dir_sel_proc
 ;
 	pop edx
 	pop ecx
+	pop bx
 	pop eax
-	pop es
 	ret
 FreeDirSel	ENDP
 
@@ -3163,30 +2919,6 @@ init_dir	PROC near
 	mov di,OFFSET insert_file_entry_name
 	xor cl,cl
 	mov ax,insert_file_entry_nr
-	RegisterOsGate
-;
-	mov si,OFFSET insert_free_entry
-	mov di,OFFSET insert_free_entry_name
-	xor cl,cl
-	mov ax,insert_free_entry_nr
-	RegisterOsGate
-;
-	mov si,OFFSET insert_deleted_entry
-	mov di,OFFSET insert_deleted_entry_name
-	xor cl,cl
-	mov ax,insert_deleted_entry_nr
-	RegisterOsGate
-;
-	mov si,OFFSET get_free_entry
-	mov di,OFFSET get_free_entry_name
-	xor cl,cl
-	mov ax,get_free_entry_nr
-	RegisterOsGate
-;
-	mov si,OFFSET get_deleted_entry
-	mov di,OFFSET get_deleted_entry_name
-	xor cl,cl
-	mov ax,get_deleted_entry_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_drive_info

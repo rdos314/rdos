@@ -105,6 +105,293 @@ ctF8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			AllocateDirSel
+;
+;		DESCRIPTION:	Allocate dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public allocate_dir_sel
+
+allocate_dir_sel	PROC far
+	push es
+	push eax
+;
+	mov eax,SIZE fat_dir_sel_data_struc
+	AllocateSmallGlobalMem
+	mov es:fds_deleted_ptr,0
+	mov es:fds_free_ptr,0
+	mov bx,es
+;
+	pop eax
+	pop es
+	ret
+allocate_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDirSel
+;
+;		DESCRIPTION:	Free dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public free_dir_sel
+
+free_dir_sel	PROC far
+	push es
+	push eax
+	push ecx
+	push edx
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov ds,bx
+	mov edx,ds:fds_deleted_ptr
+	or edx,edx
+	jz free_dir_free
+
+free_dir_deleted_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:fds_deleted_ptr
+	jne free_dir_deleted_loop
+
+free_dir_free:
+	mov edx,ds:fds_free_ptr
+	or edx,edx
+	jz free_dir_del
+
+free_dir_free_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:fds_free_ptr
+	jne free_dir_free_loop
+
+free_dir_del:
+	xor ax,ax
+	mov ds,ax
+	mov es,bx
+	FreeMem
+;
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	ret
+free_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertFreeEntry
+;
+;		DESCRIPTION:	Insert free entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;						EDX			Free entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertFreeEntry	PROC near
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,ds:fds_free_ptr
+	or eax,eax
+	jne insert_free_used
+
+insert_free_empty:
+	mov es:[edx].de_prev,edx
+	mov es:[edx].de_next,edx
+	mov ds:fds_free_ptr,edx
+	jmp insert_free_done
+
+insert_free_used:
+	mov ebx,es:[eax].de_prev
+	mov es:[eax].de_prev,edx
+	mov es:[ebx].de_next,edx
+	mov es:[edx].de_prev,ebx
+	mov es:[edx].de_next,eax	
+
+insert_free_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+InsertFreeEntry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertDeletedEntry
+;
+;		DESCRIPTION:	Insert deleted entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;						EDX			Deleted entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertDeletedEntry	PROC near
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,ds:fds_deleted_ptr
+	or eax,eax
+	jne insert_deleted_used
+
+insert_deleted_empty:
+	mov es:[edx].de_prev,edx
+	mov es:[edx].de_next,edx
+	mov ds:fds_deleted_ptr,edx
+	jmp insert_deleted_done
+
+insert_deleted_used:
+	mov ebx,es:[eax].de_prev
+	mov es:[eax].de_prev,edx
+	mov es:[ebx].de_next,edx
+	mov es:[edx].de_prev,ebx
+	mov es:[edx].de_next,eax	
+
+insert_deleted_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+InsertDeletedEntry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFreeEntry
+;
+;		DESCRIPTION:	Get free entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;
+;		RETURNS:		EDX			Entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFreeEntry	PROC near
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edx,ds:fds_free_ptr
+	or edx,edx
+	stc
+	jz get_free_done
+;
+	mov eax,es:[edx].de_next
+	mov ebx,es:[edx].de_prev
+	mov es:[ebx].de_next,eax
+	mov es:[eax].de_prev,ebx
+	mov ds:fds_free_ptr,eax
+	cmp eax,edx
+	jne get_free_list_ok
+;
+	mov ds:fds_free_ptr,0
+
+get_free_list_ok:
+	clc
+
+get_free_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+GetFreeEntry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDeletedEntry
+;
+;		DESCRIPTION:	Get deleted entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;
+;		RETURNS:		EDX			Entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDeletedEntry	PROC near
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edx,ds:fds_deleted_ptr
+	or edx,edx
+	stc
+	jz get_deleted_done
+;
+	mov eax,es:[edx].de_next
+	mov ebx,es:[edx].de_prev
+	mov es:[ebx].de_next,eax
+	mov es:[eax].de_prev,ebx
+	mov ds:fds_deleted_ptr,eax
+	cmp eax,edx
+	jne get_deleted_list_ok
+;
+	mov ds:fds_deleted_ptr,0
+
+get_deleted_list_ok:
+	clc
+
+get_deleted_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+GetDeletedEntry	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			get_entry_name_size
 ;
 ;		DESCRIPTION:	Get dir entry name size
@@ -370,21 +657,21 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_dir_entry	Proc near
-	mov edx,fs:ds_deleted_ptr
+	mov edx,fs:fds_deleted_ptr
 	or edx,edx
 	jz alloc_dir_try_free
 ;
 	mov bx,fs
-	GetDeletedEntry
+	call GetDeletedEntry
 	jnc alloc_dir_init
 
 alloc_dir_try_free:
-	mov edx,fs:ds_free_ptr
+	mov edx,fs:fds_free_ptr
 	or edx,edx
 	jz alloc_dir_extend
 ;
 	mov bx,fs
-	GetFreeEntry
+	call GetFreeEntry
 	jnc alloc_dir_init
 
 alloc_dir_extend:
@@ -587,7 +874,7 @@ cache_free_entry	Proc near
 	mov es:[edi].fe_entry_offset,ax
 ;
 	mov edx,edi
-	InsertFreeEntry
+	call InsertFreeEntry
 ;
 	pop edi
 	pop edx
@@ -628,7 +915,7 @@ cache_deleted_entry	Proc near
 	mov es:[edi].fe_entry_offset,ax
 ;
 	mov edx,edi
-	InsertDeletedEntry
+	call InsertDeletedEntry
 ;
 	pop edi
 	pop edx
@@ -1301,7 +1588,7 @@ delete_dir	PROC far
 	mov edi,es:[edx].fde_start_cluster
 	mov es:[edx].fe_entry_sector,eax
 	mov es:[edx].fe_entry_offset,cx
-	InsertDeletedEntry
+	call InsertDeletedEntry
 ;
 	mov fs,bx
 	mov edx,eax
@@ -1366,7 +1653,7 @@ delete_file	PROC far
 	mov cx,es:[edx].ffe_entry_offset
 	mov es:[edx].fe_entry_sector,eax
 	mov es:[edx].fe_entry_offset,cx
-	InsertDeletedEntry
+	call InsertDeletedEntry
 ;
 	mov ds,bx
 	mov edx,eax

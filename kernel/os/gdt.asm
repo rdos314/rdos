@@ -232,6 +232,7 @@ allocate_gdt	PROC far
 	jnz alloc_gdt_room
 ;
 	int 3
+	push ds
 	push cx
 	mov si,gdt_sel
 	mov cx,es:[si]
@@ -258,7 +259,7 @@ alloc_gdt_not_full:
 ;
 	mov si,es:[bx]
 	inc si
-	add si,1000h
+	sub si,1000h
 	mov cx,1000h SHR 3
 	xor bx,bx
 
@@ -272,6 +273,7 @@ extend_gdt_loop:
 	xor bx,bx
 	mov es:[bx],si
 	pop cx
+	pop ds
 
 alloc_gdt_room:
 	mov bx,si

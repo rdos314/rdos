@@ -218,6 +218,51 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			AllocateDirSel
+;
+;		DESCRIPTION:	Allocate dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dir_sel	PROC far
+	push es
+	push eax
+;
+	mov eax,SIZE dir_sel_data_struc
+	AllocateSmallGlobalMem
+	mov bx,es
+;
+	pop eax
+	pop es
+	ret
+allocate_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDirSel
+;
+;		DESCRIPTION:	Free dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dir_sel	PROC far
+	push es
+;
+	mov es,bx
+	FreeMem
+;
+	pop es
+	ret
+free_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CREATE_DIR
 ;
 ;		DESCRIPTION:	Create new directory
@@ -1096,22 +1141,24 @@ fs01	DW OFFSET mount,			ramdrive_code_sel
 fs02	DW OFFSET flush,			ramdrive_code_sel
 fs03	DW OFFSET dismount,			ramdrive_code_sel
 fs04	DW OFFSET get_drive_info,	ramdrive_code_sel
-fs05	DW OFFSET cache_dir,		ramdrive_code_sel
-fs06	DW OFFSET update_dir,		ramdrive_code_sel
-fs07	DW OFFSET update_file,		ramdrive_code_sel
-fs08	DW OFFSET create_dir,		ramdrive_code_sel
-fs09	DW OFFSET delete_dir,		ramdrive_code_sel
-fs10	DW OFFSET delete_file,		ramdrive_code_sel
-fs11	DW OFFSET rename_file,		ramdrive_code_sel
-fs12	DW OFFSET create_file,		ramdrive_code_sel
-fs13	DW OFFSET get_ioctl_data,	ramdrive_code_sel
-fs14	DW OFFSET set_file_size,	ramdrive_code_sel
-fs15	DW OFFSET read_file,		ramdrive_code_sel
-fs16	DW OFFSET write_file,		ramdrive_code_sel
-fs17	DW OFFSET allocate_file_list,ramdrive_code_sel
-fs18	DW OFFSET free_file_list,	ramdrive_code_sel
-fs19	DW OFFSET read_file_block,	ramdrive_code_sel
-fs20	DW OFFSET write_file_block,	ramdrive_code_sel
+fs05	DW OFFSET allocate_dir_sel,	ramdrive_code_sel
+fs06	DW OFFSET free_dir_sel,		ramdrive_code_sel
+fs07	DW OFFSET cache_dir,		ramdrive_code_sel
+fs08	DW OFFSET update_dir,		ramdrive_code_sel
+fs09	DW OFFSET update_file,		ramdrive_code_sel
+fs10	DW OFFSET create_dir,		ramdrive_code_sel
+fs11	DW OFFSET delete_dir,		ramdrive_code_sel
+fs12	DW OFFSET delete_file,		ramdrive_code_sel
+fs13	DW OFFSET rename_file,		ramdrive_code_sel
+fs14	DW OFFSET create_file,		ramdrive_code_sel
+fs15	DW OFFSET get_ioctl_data,	ramdrive_code_sel
+fs16	DW OFFSET set_file_size,	ramdrive_code_sel
+fs17	DW OFFSET read_file,		ramdrive_code_sel
+fs18	DW OFFSET write_file,		ramdrive_code_sel
+fs19	DW OFFSET allocate_file_list,ramdrive_code_sel
+fs20	DW OFFSET free_file_list,	ramdrive_code_sel
+fs21	DW OFFSET read_file_block,	ramdrive_code_sel
+fs22	DW OFFSET write_file_block,	ramdrive_code_sel
 
 init	PROC far
 	push ds

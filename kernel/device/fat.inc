@@ -29,6 +29,15 @@ fat12				EQU 12
 fat16				EQU 16
 fat32				EQU 32
 
+fat_dir_sel_data_struc	STRUC
+
+fds_base			dir_sel_data_struc <>
+
+fds_deleted_ptr		DD ?
+fds_free_ptr		DD ?
+
+fat_dir_sel_data_struc	ENDS
+
 fe_struc	STRUC
 
 fe_base				dir_entry_data_struc <>

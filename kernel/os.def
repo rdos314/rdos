@@ -353,10 +353,6 @@ free_file_list_entry_nr		EQU 239
 cache_dir_nr				EQU 240
 insert_dir_entry_nr			EQU 241
 insert_file_entry_nr		EQU 242
-insert_free_entry_nr		EQU 243
-insert_deleted_entry_nr		EQU 244
-get_free_entry_nr			EQU 245
-get_deleted_entry_nr		EQU 246
 
 ; file 
 
@@ -409,6 +405,7 @@ lock_proc_env_nr            EQU 274
 unlock_proc_env_nr          EQU 275
 
 erase_sectors_nr            EQU 276
+flush_sector_nr				EQU 277
 
 osgate_entries				EQU 300
 

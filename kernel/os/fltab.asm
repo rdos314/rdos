@@ -47,6 +47,7 @@ code	SEGMENT byte public use16 'CODE'
     extrn EraseBlock:near
     extrn WriteSector:near
     extrn InitRootDirEntry:near
+	extrn MoveSector:near
 
 	assume cs:code
 
@@ -246,6 +247,164 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			RedoBlock
+;
+;		DESCRIPTION:	Redo block (erase & copy)
+;
+;		PARAMETERS:		FS		Block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoBlock	Proc near
+	push gs
+	pushad
+;
+	mov edx,ds:spare_sector
+	call EraseBlock
+;
+	mov edi,fs:bc_handle_ptr
+	mov ebp,fs:bc_data_ptr
+;
+	mov cx,ds:control_sectors
+	mov ax,ds:block_sectors
+	sub ax,cx
+	movzx eax,ax
+	add edx,eax
+
+rbRelockLoop:
+	mov ebx,es:[edi]
+	UnlockSector
+	mov al,ds:drive_nr
+	LockSector
+	mov es:[edi],ebx
+	mov es:[ebp],esi
+	add edi,4
+	add ebp,4
+	inc edx
+	loop rbRelockLoop
+;
+	mov cx,ds:data_sectors
+	mov edi,fs:bc_data_ptr
+	mov ebx,fs:bc_log_sector_ptr
+	mov esi,es:[edi]
+	xor bp,bp
+
+rbLogLoop:
+	mov ax,es:[ebx].bs_type
+	cmp ax,LOG_ENTRY_OBJECT
+	je rbWriteEntry
+;
+	cmp ax,LOG_ENTRY_DIR_DATA
+	je rbWriteEntry
+;
+	cmp ax,LOG_ENTRY_DIR_ENTRY
+	je rbWriteEntry
+;
+	cmp ax,LOG_ENTRY_FILE_DATA
+	je rbWriteEntry
+;
+	mov es:[ebx].bs_type,-1
+	jmp rbLogNext
+
+rbWriteEntry:
+	mov es:[esi].le_type,ax
+	mov ax,bp
+	inc ax
+	mov es:[esi].le_physical_sector,ax
+;
+	push ebx
+	sub ebx,fs:bc_log_sector_ptr
+	shr ebx,2
+	mov es:[esi].le_logical_entry,bx
+	push esi
+	movzx esi,bp
+	add esi,esi
+	add esi,fs:bc_phys_sector_ptr
+	mov es:[esi],bx
+	pop esi
+	pop ebx
+;
+	push ebx
+	push ecx
+	push esi
+	push edi
+	mov cx,es:[esi].le_type
+	movzx edx,es:[ebx].bs_physical_sector
+	mov es:[ebx].bs_physical_sector,bp
+	add edx,fs:bc_start_sector
+	push edx
+	movzx edx,bp
+	add edx,ds:spare_sector
+	mov al,ds:drive_nr
+	LockSector
+	mov edi,esi
+	pop edx
+	push ebx
+	LockSector
+	mov ax,cx
+	call MoveSector
+	UnlockSector
+	pop ebx
+	call WriteSector
+	UnlockSector
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+;
+	inc bp
+	add si,8
+	test si,1FFh
+	jnz rbLogNext
+;
+	push ebx
+	mov ebx,edi
+	sub ebx,fs:bc_data_ptr
+	add ebx,fs:bc_handle_ptr
+	mov ebx,es:[ebx]
+	call WriteSector
+	pop ebx
+;
+	add edi,4
+	mov esi,es:[edi]
+
+rbLogNext:
+	add ebx,4
+	sub cx,1
+	jnz rbLogLoop
+;
+	push ebx
+	mov ebx,edi
+	sub ebx,fs:bc_data_ptr
+	add ebx,fs:bc_handle_ptr
+	mov ebx,es:[ebx]
+	call WriteSector
+	pop ebx
+;
+	movzx eax,bp
+	mov edi,fs:bc_phys_sector_ptr
+	add edi,eax
+	add edi,eax
+	movzx ecx,ds:data_sectors
+	sub ecx,eax
+	mov ax,-1
+	rep stos word ptr es:[edi]
+;
+	mov edx,ds:spare_sector
+	xchg edx,fs:bc_start_sector
+	mov ds:spare_sector,edx
+	clc
+;
+	popad
+	pop gs
+	ret
+RedoBlock	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetFreeBlockSectors
 ;
 ;		DESCRIPTION:	Get free sectors in block
@@ -416,6 +575,10 @@ absBlankLoop:
 ;
 	shl ebx,2
 	mov es:[ebx].bs_type,LOG_ENTRY_ERASE
+;
+	mov es:[esi].le_type,0
+	mov ebx,fs:bc_alloc_handle
+	call WriteSector
 	jmp absRetry
 
 absPhysNext:
@@ -441,6 +604,98 @@ absDone:
 	pop eax
 	ret
 AllocateBlockSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AliasBlockSector
+;
+;		DESCRIPTION:	Alias a sector in block
+;
+;		PARAMETERS:		FS			Block selector
+;						AX			Entry type
+;						BX			Entry #
+;
+;		RETURNS:		EDX			Physical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AliasBlockSector	Proc near
+	push eax
+	push cx
+	push esi
+	push edi
+	push ebp
+
+albsRetry:
+	mov cx,ds:data_sectors
+	mov edi,fs:bc_phys_sector_ptr
+
+albsPhysLoop:
+	mov bp,es:[edi]
+	cmp bp,-1
+	jne albsPhysNext
+;
+	call AllocateSectorEntry
+	jc albsDone
+;
+	mov es:[esi].le_type,ax
+	mov eax,edi
+	sub eax,fs:bc_phys_sector_ptr
+	shr eax,1
+	movzx edx,ax
+	add edx,fs:bc_start_sector
+	inc ax
+	mov es:[esi].le_physical_sector,ax
+	mov es:[edi],bx
+	mov es:[esi].le_logical_entry,bx
+;
+	push ebx
+	push esi
+	push ax
+	mov al,ds:drive_nr
+	LockSector
+	pop ax
+	mov ebp,-1
+	mov cx,80h
+
+albsBlankLoop:
+	and ebp,es:[esi]
+	add esi,4
+	loop albsBlankLoop
+;
+	UnlockSector
+	pop esi
+	pop ebx
+	inc ebp
+	or ebp,ebp
+	clc
+	jz albsDone
+;
+	mov es:[esi].le_type,0
+	push ebx
+	mov ebx,fs:bc_alloc_handle
+	call WriteSector
+	pop ebx
+	jmp albsRetry
+
+albsPhysNext:
+	add edi,2
+	sub cx,1
+	jnz albsPhysLoop
+;
+	stc
+
+albsDone:
+	pop ebp
+	pop edi
+	pop esi
+	pop cx
+	pop eax
+	ret
+AliasBlockSector	Endp
 
 PAGE
 
@@ -749,6 +1004,57 @@ asDone:
 	pop eax
 	ret
 AllocateSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AliasSector
+;
+;		DESCRIPTION:	Alias a sector
+;
+;       PARAMETERS:     EBX			Logical sector #
+;
+;       RETURNS:        EBX         Logical sector #
+;                       EDX         Physical sector #
+;						FS			Block (for modify operation)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public AliasSector
+
+AliasSector	PROC near
+	push eax
+	push ebx
+;
+    mov edx,edx
+    shr ebx,16
+    call GetBlock
+    jc alsDone
+;
+    mov bx,dx
+    call GetBlockSector
+    jc alsDone
+;
+	call AliasBlockSector
+	jnc alsOk
+;
+	int 3
+	call RedoBlock
+	jc alsDone
+;
+	call AliasBlockSector
+	jc alsDone
+
+alsOk:
+    clc
+
+alsDone:
+	pop ebx
+	pop eax
+	ret
+AliasSector	Endp
 
 PAGE
 

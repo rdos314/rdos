@@ -1692,6 +1692,11 @@ ModifySector	MACRO
 	OsGate modify_sector_nr
 					ENDM
 
+;	EBX		Handle
+FlushSector	MACRO
+	OsGate flush_sector_nr
+					ENDM
+
 ;	AL		Drive #
 ;	EBX		Handle
 ;	EDX		Sector
@@ -1834,31 +1839,6 @@ InsertDirEntry	MACRO
 InsertFileEntry	MACRO
 	OsGate insert_file_entry_nr
 					ENDM
-
-;	BX			DIR SELECTOR
-;	EDX			FREE ENTRY
-InsertFreeEntry	MACRO
-	OsGate insert_free_entry_nr
-					ENDM
-
-;	BX			DIR SELECTOR
-;	EDX			DELETED ENTRY
-InsertDeletedEntry	MACRO
-	OsGate insert_deleted_entry_nr
-					ENDM
-
-;	BX			DIR SELECTOR
-;	EDX			DELETED ENTRY
-GetFreeEntry	MACRO
-	OsGate get_free_entry_nr
-					ENDM
-
-;	BX			DIR SELECTOR
-;	EDX			DELETED ENTRY
-GetDeletedEntry	MACRO
-	OsGate get_deleted_entry_nr
-					ENDM
-
 
 ;;;;;;;;;;;; FILE ;;;;;;;;;;;
 

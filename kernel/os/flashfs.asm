@@ -44,6 +44,8 @@ INCLUDE flashfs.inc
 
 code	SEGMENT byte public use16 'CODE'
 
+	extrn allocate_dir_sel:far
+	extrn free_dir_sel:far
 	extrn cache_dir:far
 	extrn create_file:far
 	extrn delete_file:far
@@ -196,8 +198,12 @@ mount_cache_loop:
 ;	
     mov ax,fs
     or ax,ax
-    jz mount_cache_next
+    jnz mount_cache_check
 ;
+	mov ds:spare_sector,edx
+	jmp mount_cache_next
+
+mount_cache_check:
     movzx bx,fs:bc_logical_block
     add bx,bx
 ;
@@ -242,7 +248,8 @@ mount_cache_next:
 	add di,2
 	movzx eax,ds:block_sectors
     add edx,eax
-    loop mount_cache_loop
+    sub cx,1
+	jnz mount_cache_loop
 ;
     xor bx,bx
     xor si,si
@@ -679,23 +686,24 @@ ffs01	DW OFFSET mount,			flashfs_code_sel
 ffs02	DW OFFSET flush,		    flashfs_code_sel
 ffs03	DW OFFSET dismount,			flashfs_code_sel
 ffs04	DW OFFSET get_drive_info,	flashfs_code_sel
-ffs05	DW OFFSET cache_dir,		flashfs_code_sel
-ffs06	DW OFFSET update_dir,		flashfs_code_sel
-ffs07	DW OFFSET update_file,		flashfs_code_sel
-ffs08	DW OFFSET create_dir,		flashfs_code_sel
-ffs09	DW OFFSET delete_dir,		flashfs_code_sel
-ffs10	DW OFFSET delete_file,		flashfs_code_sel
-ffs11	DW OFFSET rename_file,		flashfs_code_sel
-ffs12	DW OFFSET create_file,		flashfs_code_sel
-ffs13	DW OFFSET get_ioctl_data,	flashfs_code_sel
-ffs14	DW OFFSET set_file_size,	flashfs_code_sel
-ffs15	DW OFFSET read_file,		flashfs_code_sel
-ffs16	DW OFFSET write_file,		flashfs_code_sel
-ffs17	DW OFFSET allocate_file_list,flashfs_code_sel
-ffs18	DW OFFSET free_file_list,	flashfs_code_sel
-ffs19	DW OFFSET read_file_block,	flashfs_code_sel
-ffs20	DW OFFSET write_file_block,	flashfs_code_sel
-
+ffs05	DW OFFSET allocate_dir_sel,	flashfs_code_sel
+ffs06	DW OFFSET free_dir_sel,		flashfs_code_sel
+ffs07	DW OFFSET cache_dir,		flashfs_code_sel
+ffs08	DW OFFSET update_dir,		flashfs_code_sel
+ffs09	DW OFFSET update_file,		flashfs_code_sel
+ffs10	DW OFFSET create_dir,		flashfs_code_sel
+ffs11	DW OFFSET delete_dir,		flashfs_code_sel
+ffs12	DW OFFSET delete_file,		flashfs_code_sel
+ffs13	DW OFFSET rename_file,		flashfs_code_sel
+ffs14	DW OFFSET create_file,		flashfs_code_sel
+ffs15	DW OFFSET get_ioctl_data,	flashfs_code_sel
+ffs16	DW OFFSET set_file_size,	flashfs_code_sel
+ffs17	DW OFFSET read_file,		flashfs_code_sel
+ffs18	DW OFFSET write_file,		flashfs_code_sel
+ffs19	DW OFFSET allocate_file_list,flashfs_code_sel
+ffs20	DW OFFSET free_file_list,	flashfs_code_sel
+ffs21	DW OFFSET read_file_block,	flashfs_code_sel
+ffs22	DW OFFSET write_file_block,	flashfs_code_sel
 
 init	PROC far
 	push ds

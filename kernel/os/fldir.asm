@@ -50,10 +50,62 @@ code	SEGMENT byte public use16 'CODE'
     extrn ObjectLogToPhysSector:near
     extrn DirDataLogToPhysSector:near
     extrn AllocateSector:near
+	extrn AliasSector:near
 	extrn FreeSector:near
     extrn GetRootSector:near
 
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDirSel
+;
+;		DESCRIPTION:	Allocate dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public allocate_dir_sel
+
+allocate_dir_sel	PROC far
+	push es
+	push eax
+;
+	mov eax,SIZE flash_dir_sel_data_struc
+	AllocateSmallGlobalMem
+	mov es:fds_used_entries,0
+	mov es:fds_deleted_entries,0
+	mov bx,es
+;
+	pop eax
+	pop es
+	ret
+allocate_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDirSel
+;
+;		DESCRIPTION:	Free dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public free_dir_sel
+
+free_dir_sel	PROC far
+	push es
+;
+	mov es,bx
+	FreeMem
+;
+	pop es
+	ret
+free_dir_sel	ENDP
 
 PAGE
 
@@ -215,22 +267,118 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CheckDirInfoSpace
+;
+;		DESCRIPTION:    Check if dir info space exists
+;
+;		PARAMETERS:		CX			Bytes wanted
+;						EDI			Start position
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDirInfoSpace	Proc near
+	push ax
+	push cx
+	push edi
+;
+	mov al,-1
+
+cdisLoop:
+	and al,es:[edi]
+	inc edi
+	loop cdisLoop
+;
+	add al,1
+	jz cdisOk
+;
+	stc
+	jmp cdisDone
+
+cdisOk:
+	clc
+
+cdisDone:
+	pop edi
+	pop cx
+	pop ax
+	ret
+CheckDirInfoSpace	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoDirEntry
+;
+;		DESCRIPTION:    Redo dir entry sector (with the same logical sector)
+;
+;		PARAMETERS:		EDX			Logical sector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoDirEntry	Proc near
+	push fs
+	pushad
+;
+	int 3
+	mov ebx,edx
+	call DirEntryLogToPhysSector
+	jc rdeFail
+;
+	mov ebp,edx
+	call AliasSector
+	jc rdeFail
+;
+	mov al,ds:drive_nr
+	LockSector
+	push ebx
+	mov edi,esi
+;
+	mov edx,ebp
+	LockSector
+	call MoveDirEntry
+	UnlockSector
+;
+	pop ebx
+	call WriteSector
+	UnlockSector
+
+rdeFail:
+	popad
+	pop fs
+	ret
+RedoDirEntry	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			FindDirInfo
 ;
 ;		DESCRIPTION:    Find position of valid dir entry info
 ;
-;		PARAMETERS:		ESI			Dir entry data
-;						EBX			Dir entry handle
+;		PARAMETERS:		FS			Dir selector
+;						EDX			Logical sector
 ;
 ;		RETURNS:		EAX			Offset to last valid dir info
+;						ESI			Dir entry data
+;						EBX			Dir entry handle
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindDirInfo	Proc near
 	push cx
-	push esi
 	push edi
 	push ebp
+
+fdiRedo:
+    call DirEntryLogToPhysSector
+	jc fdiEnd
+;
+	mov al,ds:drive_nr
+	LockSector
 ;
 	mov edi,esi
 	add edi,200h
@@ -280,6 +428,67 @@ fdiRetry:
 	add cx,cx
 	add ax,cx
 	mov cl,es:[esi+eax].fde_valid
+	cmp cl,DIR_ENTRY_RESTRUCT
+	jne fdiNotRestruct
+;
+	push edi
+	mov edi,esi
+
+fdiRestructLoop:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov ecx,eax
+	add esi,SIZE dir_entry_struc
+	add esi,eax
+	add eax,eax
+	add esi,eax
+	mov byte ptr es:[esi-1],0
+
+fdiRestructRetry:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov cx,ax
+	add cx,cx
+	add ax,cx
+	mov cl,es:[esi+eax].fde_valid
+	cmp cl,DIR_ENTRY_RESTRUCT
+	je fdiRestructLoop
+;
+	cmp cl,DIR_ENTRY_OK
+	je fdiRestructSave
+;
+	add esi,eax
+	add esi,SIZE dir_entry_struc
+;
+	cmp esi,edi
+	jb fdiRetry
+;
+	pop edi
+	jmp fdiInit
+
+fdiRestructSave:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov ecx,eax
+	add ecx,SIZE dir_entry_struc
+	add eax,eax
+	add ecx,eax
+	sub edi,ecx
+	call CheckDirInfoSpace
+	jnc fdiSaveSpaceOk
+;
+	pop edi
+	jmp fdiFail
+
+fdiSaveSpaceOk:	
+	push edi
+	rep movs byte ptr es:[edi],es:[esi]
+	pop esi
+	call WriteSector
+	pop edi
+	jmp fdiDone
+	
+fdiNotRestruct:
 	cmp cl,DIR_ENTRY_OK
 	je fdiDone
 ;
@@ -288,7 +497,8 @@ fdiRetry:
 ;
 	cmp esi,edi
 	jb fdiRetry
-;
+
+fdiInit:
 	mov esi,ebp
 	sub esi,SIZE dir_entry_struc
 	mov eax,es:[esi]
@@ -307,20 +517,294 @@ fdiRetry:
 	call WriteSector
 
 fdiDone:
-	clc
 	mov eax,esi
+	mov esi,edi
+	sub esi,200h
+	clc
 	jmp fdiEnd
 
 fdiFail:
-	stc
+	UnlockSector
+	call RedoDirEntry
+	jnc fdiRedo
 
 fdiEnd:
 	pop ebp
 	pop edi
-	pop esi
 	pop cx
 	ret
 FindDirInfo	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MoveDirData
+;
+;		DESCRIPTION:    Move dir data sector contents
+;
+;		PARAMETERS:		ESI			Source buffer
+;						EDI			Dest buffer
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveDirData	Proc near
+	push eax
+	push cx
+	push esi
+	push edi
+;
+	mov cx,80h
+
+mddLoop:
+	mov al,es:[esi].fdd_valid
+	cmp al,DIR_DATA_OK
+	jne mddNext
+;
+	mov eax,es:[esi]
+	mov es:[edi],eax
+	add edi,4
+
+mddNext:
+	add esi,4
+	loop mddLoop
+; 
+	pop edi
+	pop esi
+	pop cx
+	pop eax
+	ret
+MoveDirData	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MoveObject
+;
+;		DESCRIPTION:    Move object sector contents
+;
+;		PARAMETERS:		ESI			Source buffer
+;						EDI			Dest buffer
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveObject	Proc near
+	push eax
+	push cx
+	push esi
+	push edi
+;
+	mov cx,80h
+
+moLoop:
+	mov al,es:[esi].o_valid
+	cmp al,OBJECT_OK
+	jne moNext
+;
+	mov eax,es:[esi]
+	mov es:[edi],eax
+	add edi,4
+
+moNext:
+	add esi,4
+	loop moLoop
+; 
+	pop edi
+	pop esi
+	pop cx
+	pop eax
+	ret
+MoveObject	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MoveDirEntry
+;
+;		DESCRIPTION:    Move dir entry sector contents
+;
+;		PARAMETERS:		ESI			Source buffer
+;						EDI			Dest buffer
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveDirEntry	Proc near
+	pushad
+;
+	mov ecx,200h
+	mov ebp,esi
+	add ebp,200h
+	mov al,es:[esi]
+	mov es:[edi],al
+	inc esi
+	inc edi
+	dec cx
+
+mdeNameLoop:
+	mov al,es:[esi]
+	mov es:[edi],al
+	inc esi
+	inc edi
+	sub cx,1
+	jz mdeDone
+;
+	or al,al
+	jnz mdeNameLoop
+;
+	and di,0FE00h
+	add edi,200h
+
+mdeStartLoop:
+	mov al,es:[esi]
+	cmp al,-1
+	jnz mdeRetry
+;
+	inc esi
+	cmp esi,ebp
+	jne mdeStartLoop
+	jmp mdeDone
+
+mdeRetry:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov cx,ax
+	add cx,cx
+	add ax,cx
+	mov cl,es:[esi+eax].fde_valid
+	cmp cl,DIR_ENTRY_RESTRUCT
+	jne mdeCheckEntry
+
+mdeRestructLoop:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov ecx,eax
+	add esi,SIZE dir_entry_struc
+	add esi,eax
+	add eax,eax
+	add esi,eax
+
+mdeRestructRetry:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov cx,ax
+	add cx,cx
+	add ax,cx
+	mov cl,es:[esi+eax].fde_valid
+	cmp cl,DIR_ENTRY_RESTRUCT
+	je mdeRestructLoop
+
+mdeCheckEntry:
+	cmp cl,DIR_ENTRY_OK
+	je mdeCopy
+;
+	add esi,eax
+	add esi,SIZE dir_entry_struc
+;
+	cmp esi,ebp
+	jb mdeRetry
+	jmp mdeDone
+
+mdeCopy:
+	mov eax,es:[esi].fde_size
+	shr eax,16
+	mov ecx,eax
+	add ecx,SIZE dir_entry_struc
+	add eax,eax
+	add ecx,eax
+	sub edi,ecx
+	call CheckDirInfoSpace
+	jnc mdeSaveSpaceOk
+	jmp mdeDone
+
+mdeSaveSpaceOk:	
+	rep movs byte ptr es:[edi],es:[esi]
+
+mdeDone:
+	popad
+	ret
+MoveDirEntry	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MoveFileData
+;
+;		DESCRIPTION:    Move file data sector contents
+;
+;		PARAMETERS:		ESI			Source buffer
+;						EDI			Dest buffer
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveFileData	Proc near
+	push ecx
+	push esi
+	push edi
+;
+	mov ecx,80h
+	rep movs dword ptr es:[edi],es:[esi]
+;
+	pop edi
+	pop esi
+	pop ecx
+	ret
+MoveFileData	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MoveSector
+;
+;		DESCRIPTION:    Move sector contents
+;
+;		PARAMETERS:		AX			Sector type
+;						ESI			Source buffer
+;						EDI			Dest buffer
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public MoveSector
+
+MoveSector	Proc near
+	cmp ax,LOG_ENTRY_DIR_DATA
+	jz msDirData
+;
+	cmp ax,LOG_ENTRY_OBJECT
+	jz msObject
+;
+	cmp ax,LOG_ENTRY_DIR_ENTRY
+	jz msDirEntry
+;
+	cmp ax,LOG_ENTRY_FILE_DATA
+	jz msFileData
+;
+	ret
+
+msDirData:
+	call MoveDirData
+	ret
+
+msObject:
+	call MoveObject
+	ret
+
+msDirEntry:
+	call MoveDirEntry
+	ret
+
+msFileData:
+	call MoveFileData
+	ret
+MoveSector	Endp
 
 PAGE
 
@@ -532,20 +1016,20 @@ PAGE
 GrowDir	Proc near
 	push es
 	push fs
-	push gs
 	pushad
 ;
 	mov ax,flat_sel
 	mov es,ax
-    mov gs,bx
-    mov edx,gs:ds_link
+    mov fs,bx
+
+gdRedo:
+    mov edx,fs:fds_entry_sector
     call DirEntryLogToPhysSector
     jc gdDone
 ;
     mov al,ds:drive_nr
     LockSector
-	call FindDirInfo
-	mov esi,eax
+	add si,fs:fds_info_offset
 	mov ecx,es:[esi].fde_size
 	mov eax,ecx
 	shr eax,16
@@ -555,23 +1039,20 @@ GrowDir	Proc near
 	sub edi,eax
 	add eax,eax
 	sub edi,eax
+	push ecx
+	mov ecx,esi
+	sub ecx,edi
+	call CheckDirInfoSpace
+	jnc gdSpaceOk
 ;
-	push edi
-	mov al,-1
-
-gdCheckSpace:
-	and al,es:[edi]
-	inc edi
-	cmp esi,edi
-	jne gdCheckSpace
-;
-	pop edi
-	add al,1
-	jz gdSpaceOk
-;
-	int 3
+	pop ecx
+	UnlockSector
+	call RedoDirEntry
+	jc gdDone
+	jmp gdRedo
 
 gdSpaceOk:	
+	pop ecx
 	mov eax,es:[esi].fde_size
 	add eax,10000h
 	mov es:[edi].fde_size,eax
@@ -635,7 +1116,6 @@ gdUnlock:
 
 gdDone:
 	popad
-	pop gs
 	pop fs
 	pop es
 	ret
@@ -667,14 +1147,13 @@ AddToDir	Proc near
     mov fs,bx
 
 atdRetry:    
-    mov edx,fs:ds_link
+    mov edx,fs:fds_entry_sector
     call DirEntryLogToPhysSector
     jc atdDone
 ;    
     mov al,ds:drive_nr
     LockSector
-	call FindDirInfo
-	mov esi,eax
+	add si,fs:fds_info_offset
 	mov ecx,es:[esi].fde_size
     shr ecx,16
     or ecx,ecx
@@ -692,7 +1171,6 @@ atdRetry:
     jnc atdUnlock
 
 atdGrow: 
-	int 3   
     push bx
     mov bx,fs
     call GrowDir
@@ -832,6 +1310,91 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RedoDirSel
+;
+;		DESCRIPTION:    Recreate directory selector
+;
+;		PARAMETERS:		FS			Dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoDirSel	Proc near
+	push eax
+	push ebx
+	push edx
+	push esi
+	push edi
+
+rdsRedo:
+	mov edx,fs:fds_entry_sector
+    mov al,ds:drive_nr
+    LockSector
+	add si,fs:fds_info_offset
+	mov edi,esi
+	sub edi,13
+	mov ecx,esi
+	sub ecx,edi
+	call CheckDirInfoSpace
+	jnc upsSpaceOk
+;
+	UnlockSector
+	call RedoDirEntry
+	jc rdsDone
+	jmp rdsRedo
+
+upsSpaceOk:	
+	mov es:[edi].fde_size,0
+	mov eax,es:[esi].fde_time
+	mov es:[edi].fde_time,eax
+	mov eax,es:[esi].fde_time+4
+	mov es:[edi].fde_time+4,eax
+	mov es:[edi].fde_valid,DIR_ENTRY_RESTRUCT
+	call WriteSector
+    UnlockSector
+	clc
+
+rdsDone:
+	pop edi
+	pop esi
+	pop edx
+	pop ebx
+	pop eax
+	ret
+RedoDirSel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdateDirSel
+;
+;		DESCRIPTION:    Update directory selector (possible restructure)
+;
+;		PARAMETERS:		FS			Dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateDirSel	Proc near
+	push eax
+;
+	mov eax,fs:fds_used_entries
+	mov eax,fs:fds_deleted_entries
+	cmp eax,128
+	jc udsDone
+;
+	call RedoDirSel
+	
+udsDone:
+	pop eax
+	ret
+UpdateDirSel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CacheDirEntry
 ;
 ;		DESCRIPTION:    Cache a single dir entry
@@ -851,11 +1414,8 @@ CacheDirEntry	Proc near
 	push ebp
 ;
 	mov ebp,edx
-    call DirEntryLogToPhysSector
+    call FindDirInfo
     jc cdeDone
-;
-    mov al,ds:drive_nr
-    LockSector
 ;
 	mov cl,es:[esi]
 	test cl,10h
@@ -870,7 +1430,6 @@ cdeAddFile:
 	pop bx
 ;
 	mov es:[edx].ffe_entry_sector,ebp
-	call FindDirInfo
 	mov esi,eax
 	mov eax,es:[esi].fde_size
 	mov es:[edx].dfe_data_size,eax
@@ -882,6 +1441,7 @@ cdeAddFile:
 	push bx
 	mov bx,fs
 	InsertFileEntry
+	inc fs:fds_used_entries
 	pop bx
 	jmp cdeUnlock
 
@@ -894,7 +1454,6 @@ cdeAddDir:
 	pop bx
 ;
 	mov es:[edx].fde_entry_sector,ebp
-	call FindDirInfo
 	mov esi,eax
 	mov eax,es:[esi].fde_time
 	mov es:[edx].de_time,eax
@@ -904,6 +1463,7 @@ cdeAddDir:
 	push bx
 	mov bx,fs
 	InsertDirEntry
+	inc fs:fds_used_entries
 	pop bx
 
 cdeUnlock:
@@ -952,6 +1512,13 @@ CacheDirData	Proc near
 
 cddSectorLoop:
 	mov al,es:[esi].fdd_valid
+	or al,al
+	jnz cddNotDeleted
+;
+	inc fs:fds_deleted_entries
+	jmp cddNext
+	
+cddNotDeleted:
 	cmp al,DIR_DATA_OK
 	jnz cddNext
 ;
@@ -960,7 +1527,8 @@ cddSectorLoop:
 	call CacheDirEntry
 	jnc cddNext
 ;
-    mov dword ptr es:[esi],0    
+	inc fs:fds_deleted_entries
+    mov es:[esi].fdd_valid,0    
     call WriteSector
 
 cddNext:
@@ -1057,13 +1625,13 @@ CacheDirSel   Proc near
     pushad
 ;
     mov fs,bx
-    mov fs:ds_link,edx
-    call DirEntryLogToPhysSector
+    mov fs:fds_entry_sector,edx
+    call FindDirInfo
     jc cdDone
 ;    
-    mov al,ds:drive_nr
-    LockSector
-	call FindDirInfo
+	mov dx,ax
+	sub dx,si
+	mov fs:fds_info_offset,dx
 	mov esi,eax
 	mov ecx,es:[esi].fde_size
     shr ecx,16
@@ -1080,6 +1648,7 @@ cdCacheLoop:
 	add edi,4
 	loop cdCacheLoop
 ;
+	call UpdateDirSel
 	clc
 
 cdUnlock:
@@ -1278,8 +1847,8 @@ PAGE
 ;
 ;		DESCRIPTION:    Find director entry from dir selector
 ;
-;		PARAMETERS:		BX			Dir selector
-;                       EDX         Logical sector
+;		PARAMETERS:		FS			Dir selector
+;						BX			Dir selector
 ;						EDI			Logical dir entry sector
 ;
 ;		RETURNS:		EBX			Sector handle
@@ -1294,13 +1863,13 @@ FindDirSel   Proc near
 	push edi
 	push ebp
 ;
+    mov edx,fs:fds_entry_sector
     call DirEntryLogToPhysSector
     jc fdsDone
 ;    
     mov al,ds:drive_nr
     LockSector
-	call FindDirInfo
-	mov esi,eax
+	add si,fs:fds_info_offset
 	mov ecx,es:[esi].fde_size
     shr ecx,16
     or ecx,ecx
@@ -1398,14 +1967,12 @@ delete_file	PROC far
 	push es
 	push fs
 	push eax
-	push edx
 	push edi
 ;
 	mov ax,flat_sel
 	mov es,ax
 	mov edi,es:[edx].ffe_entry_sector
 	mov fs,bx
-    mov edx,fs:ds_link
 	call FindDirSel
 	jc dfDone
 ;
@@ -1417,11 +1984,13 @@ delete_file	PROC far
 	mov es:[esi].fdd_valid,0
 	call WriteSector
 	UnlockSector
+;
+	inc fs:fds_deleted_entries
+	call UpdateDirSel
 	clc
 
 dfDone:
 	pop edi
-	pop edx
 	pop eax
 	pop fs
 	pop es
@@ -1448,12 +2017,16 @@ PAGE
     public create_file
     
 create_file	PROC far
+	push fs
+;
     call CreateFileEntry
     call InitFileEntry
     call AddFileEntry
     jc cfFail
 ;    
 	InsertFileEntry	
+	mov fs,bx
+	inc fs:fds_used_entries
 	jmp cfDone
 
 cfFail:
@@ -1462,6 +2035,7 @@ cfFail:
     stc
 
 cfDone:
+	pop fs
 	ret
 create_file	ENDP
 

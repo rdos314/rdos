@@ -846,6 +846,27 @@ free_file_list	PROC far
 	shl eax,cl
 	mov ecx,eax
 
+file_list_flush_loop:
+	mov ebx,es:[edx]
+	cmp ebx,-1
+	je file_list_flush_next
+;
+	or ebx,ebx
+	jz file_list_flush_next 
+;
+	FlushSector
+
+file_list_flush_next:
+	add edx,4
+	loop file_list_flush_loop
+;
+	mov edx,es:[edi].ffl_sector_ptr
+	mov cl,fs:file_entry_shift
+	sub cl,9
+	mov eax,1
+	shl eax,cl
+	mov ecx,eax
+
 file_list_unlock_loop:
 	mov ebx,es:[edx]
 	cmp ebx,-1
@@ -854,6 +875,7 @@ file_list_unlock_loop:
 	or ebx,ebx
 	jz file_list_unlock_next 
 ;
+	WaitForSector
 	UnlockSector
 
 file_list_unlock_next:
@@ -1113,11 +1135,10 @@ write_cluster_loop:
 write_cluster_define:
 	mov al,ds:drive_nr
 	DefineSector
+	mov es:[edi],ebx
 
 write_cluster_next:
 	ModifySector
-	UnlockSector
-	mov dword ptr es:[edi],-1
 ;
 	pop ebx
 	add edi,4

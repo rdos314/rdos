@@ -307,6 +307,50 @@ check_device_not_found:
 	ret
 check_device	ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDirSel
+;
+;		DESCRIPTION:	Allocate dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dir_sel	PROC far
+	push es
+	push eax
+;
+	mov eax,SIZE dir_sel_data_struc
+	AllocateSmallGlobalMem
+	mov bx,es
+;
+	pop eax
+	pop es
+	ret
+allocate_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDirSel
+;
+;		DESCRIPTION:	Free dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dir_sel	PROC far
+	push es
+;
+	mov es,bx
+	FreeMem
+;
+	pop es
+	ret
+free_dir_sel	ENDP
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1387,9 +1431,9 @@ fs01	DW OFFSET dummy,			dosdev_code_sel
 fs02	DW OFFSET dummy,			dosdev_code_sel
 fs03	DW OFFSET dummy,			dosdev_code_sel
 fs04	DW OFFSET dummy,			dosdev_code_sel
-fs05	DW OFFSET cache_dir,		dosdev_code_sel
-fs06	DW OFFSET dummy,			dosdev_code_sel
-fs07	DW OFFSET dummy,			dosdev_code_sel
+fs05	DW OFFSET allocate_dir_sel,	dosdev_code_sel
+fs06	DW OFFSET free_dir_sel,		dosdev_code_sel
+fs07	DW OFFSET cache_dir,		dosdev_code_sel
 fs08	DW OFFSET dummy,			dosdev_code_sel
 fs09	DW OFFSET dummy,			dosdev_code_sel
 fs10	DW OFFSET dummy,			dosdev_code_sel
@@ -1397,12 +1441,14 @@ fs11	DW OFFSET dummy,			dosdev_code_sel
 fs12	DW OFFSET dummy,			dosdev_code_sel
 fs13	DW OFFSET dummy,			dosdev_code_sel
 fs14	DW OFFSET dummy,			dosdev_code_sel
-fs15	DW OFFSET read_file,		dosdev_code_sel
-fs16	DW OFFSET write_file,		dosdev_code_sel
-fs17	DW OFFSET dummy,			dosdev_code_sel
-fs18	DW OFFSET dummy,			dosdev_code_sel
+fs15	DW OFFSET dummy,			dosdev_code_sel
+fs16	DW OFFSET dummy,			dosdev_code_sel
+fs17	DW OFFSET read_file,		dosdev_code_sel
+fs18	DW OFFSET write_file,		dosdev_code_sel
 fs19	DW OFFSET dummy,			dosdev_code_sel
 fs20	DW OFFSET dummy,			dosdev_code_sel
+fs21	DW OFFSET dummy,			dosdev_code_sel
+fs22	DW OFFSET dummy,			dosdev_code_sel
 	
 init	PROC far
 	pusha

@@ -142,13 +142,10 @@ ds_access_section	read_write_section_typ <>
 ds_list_section		section_typ <>
 ds_dir_ptr			DD ?
 ds_file_ptr			DD ?
-ds_deleted_ptr		DD ?
-ds_free_ptr			DD ?
 ds_usage			DW ?
 ds_parent			DW ?
 ds_handle			DD ?
 ds_mount_id			DD ?
-ds_link             DD ?
 ds_drive			DB ?
 
 dir_sel_data_struc	ENDS
@@ -181,6 +178,15 @@ dismount_proc			DD ?
 ;	OUT	CX			NUMBER OF BYTES/UNIT
 ;	OUT	EDX			TOTAL NUMBER OF UNITS
 info_proc				DD ?
+
+;	IN  AL			Drive
+;	IN  BX			Parent dir selector
+;	IN  EDX			Parent dir entry
+;	OUT BX			DIR SELECTOR
+allocate_dir_sel_proc		DD ?
+
+;	IN  BX			DIR SELECTOR
+free_dir_sel_proc			DD ?
 
 ;	IN  BX			DIR SELECTOR
 ;	IN	EDX			DIR ENTRY OR 0

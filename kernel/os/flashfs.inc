@@ -25,6 +25,17 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+flash_dir_sel_data_struc	STRUC
+
+fds_base			dir_sel_data_struc <>
+
+fds_entry_sector	DD ?
+fds_used_entries	DD ?
+fds_deleted_entries	DD ?
+fds_info_offset		DW ?
+
+flash_dir_sel_data_struc	ENDS
+
 fde_struc	STRUC
 
 fde_base			dir_dir_entry_data_struc <>
@@ -48,6 +59,7 @@ drive_nr			DB ?
 block_sectors		DW ?
 control_sectors		DW ?
 data_sectors		DW ?
+spare_sector		DD ?
 
 drive_data_seg	ENDS
 
@@ -75,7 +87,7 @@ fc_logical_block	EQU 1F8h
 fc_version			EQU 1FAh
 fc_signature		EQU 1FCh
 
-FLASH_SIGN_OK	EQU	3AF6CD53h
+FLASH_SIGN_OK	EQU	3AF6CD51h
 
 logical_entry_struc	STRUC
 
@@ -107,7 +119,9 @@ fde_valid			DB ?
 
 dir_entry_struc	ENDS
 
-DIR_ENTRY_OK =	0B5h
+DIR_ENTRY_OK =			0B5h
+DIR_ENTRY_RESTRUCT =	0F5h	; must be possible to convert to OK without
+								; changing 0s to 1s!!
 
 object_struc	STRUC
 

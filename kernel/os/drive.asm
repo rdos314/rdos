@@ -44,7 +44,7 @@ MAX_DRIVES = 'Z' - 'A' + 1
 DRIVE_WAIT_NUM = 32
 
 POLL_TIMEOUT EQU 119200
-MIN_TIMEOUT EQU 119200
+MIN_TIMEOUT EQU 1192000
 
 drive_wait_struc	STRUC
 
@@ -615,6 +615,44 @@ update_async_insert:
 update_async_done:
 	ret
 update_async_write	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FLUSH_ASYNC_WRITE
+;
+;		DESCRIPTION:	Flush async write list
+;
+;		PARAMETERS:		DS		Disc selector
+;						ES		Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_async_write	PROC near
+	mov edi,ds:disc_awrite_list
+	or edi,edi
+	jz flush_async_done
+;
+	mov edi,es:[edi].dh_prev
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edi].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edi
+	jne flush_async_insert
+;
+	mov dword ptr ds:disc_awrite_list,0
+
+flush_async_insert:
+	and es:[edi].dh_flags, NOT FLAG_ASYNC_WRITE
+	call insert_pending
+	jmp flush_async_write
+
+flush_async_done:
+	ret
+flush_async_write	ENDP
 
 PAGE
 
@@ -2439,6 +2477,59 @@ modify_sector	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FLUSH_SECTOR
+;
+;		DESCRIPTION:	Flush sector contents
+;
+;		PARAMETERS:		EBX		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush_sector_name	DB 'Flush Sector',0
+
+flush_sector	PROC far
+	push ds
+	push es
+	pushad
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,ebx
+	mov ds,es:[edi].dh_buf_sel
+	ClearSignal
+	EnterSection ds:disc_section
+
+flush_try_again:
+	test es:[edi].dh_flags, FLAG_IO_BUSY
+	jz flush_not_busy
+
+flush_block:
+	call block
+	jmp flush_try_again
+
+flush_not_busy:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_DIRTY
+	jne flush_done
+
+flush_dirty:
+	call flush_async_write
+	mov bx,ds:disc_thread
+	Signal
+
+flush_done:
+	LeaveSection ds:disc_section
+	clc
+;
+	popad
+	pop es
+	pop ds
+	ret
+flush_sector	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CREATE_DISC_SEQ
 ;
 ;		DESCRIPTION:	Create a sequence
@@ -3021,7 +3112,7 @@ PAGE
 ;
 ;		NAME:			WaitForSector
 ;
-;		DESCRIPTION:	Wait until sector is available
+;		DESCRIPTION:	Wait until sector is idle
 ;
 ;		PARAMETERS:		AL		Drive #
 ;						EBX		Handle
@@ -3044,9 +3135,16 @@ wait_for_sector	PROC far
 
 wait_sector_loop:
 	cmp es:[edi].dh_state,STATE_EMPTY
+	je wait_sector_block
+;
+	cmp es:[edi].dh_state,STATE_SEQ
+	je wait_sector_block
+;
+	cmp es:[edi].dh_state,STATE_DIRTY
 	clc
 	jne wait_sector_found
-;
+
+wait_sector_block:
 	call block
 	jmp wait_sector_loop
 
@@ -3973,6 +4071,11 @@ init	PROC far
 	mov si,OFFSET modify_sector
 	mov di,OFFSET modify_sector_name
 	mov ax,modify_sector_nr
+	RegisterOsGate
+;
+	mov si,OFFSET flush_sector
+	mov di,OFFSET flush_sector_name
+	mov ax,flush_sector_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET create_disc_seq

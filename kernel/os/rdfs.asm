@@ -35,6 +35,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\fs.inc
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE rdfs.inc
@@ -316,6 +317,49 @@ get_drive_info	PROC far
 	ret
 get_drive_info	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDirSel
+;
+;		DESCRIPTION:	Allocate dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_dir_sel	PROC far
+	push es
+	push eax
+;
+	mov eax,SIZE dir_sel_data_struc
+	AllocateSmallGlobalMem
+	mov bx,es
+;
+	pop eax
+	pop es
+	ret
+allocate_dir_sel	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDirSel
+;
+;		DESCRIPTION:	Free dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_dir_sel	PROC far
+	push es
+;
+	mov es,bx
+	FreeMem
+;
+	pop es
+	ret
+free_dir_sel	ENDP
+
 PAGE 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -370,22 +414,24 @@ rdfs01	DW OFFSET mount,			rdfs_code_sel
 rdfs02	DW OFFSET flush,			rdfs_code_sel
 rdfs03	DW OFFSET dismount,			rdfs_code_sel
 rdfs04	DW OFFSET get_drive_info,	rdfs_code_sel
-rdfs05	DW OFFSET cache_dir,		rdfs_code_sel
-rdfs06	DW OFFSET update_dir,		rdfs_code_sel
-rdfs07	DW OFFSET update_file,		rdfs_code_sel
-rdfs08	DW OFFSET create_dir,		rdfs_code_sel
-rdfs09	DW OFFSET delete_dir,		rdfs_code_sel
-rdfs10	DW OFFSET delete_file,		rdfs_code_sel
-rdfs11	DW OFFSET rename_file,		rdfs_code_sel
-rdfs12	DW OFFSET create_file,		rdfs_code_sel
-rdfs13	DW OFFSET get_ioctl_data,	rdfs_code_sel
-rdfs14	DW OFFSET set_file_size,	rdfs_code_sel
-rdfs15	DW OFFSET dummy,			rdfs_code_sel
-rdfs16	DW OFFSET dummy,			rdfs_code_sel
-rdfs17	DW OFFSET allocate_file_list,rdfs_code_sel
-rdfs18	DW OFFSET free_file_list,	rdfs_code_sel
-rdfs19	DW OFFSET read_file_block,	rdfs_code_sel
-rdfs20	DW OFFSET write_file_block,	rdfs_code_sel
+rdfs05	DW OFFSET allocate_dir_sel,	rdfs_code_sel
+rdfs06	DW OFFSET free_dir_sel,		rdfs_code_sel
+rdfs07	DW OFFSET cache_dir,		rdfs_code_sel
+rdfs08	DW OFFSET update_dir,		rdfs_code_sel
+rdfs09	DW OFFSET update_file,		rdfs_code_sel
+rdfs10	DW OFFSET create_dir,		rdfs_code_sel
+rdfs11	DW OFFSET delete_dir,		rdfs_code_sel
+rdfs12	DW OFFSET delete_file,		rdfs_code_sel
+rdfs13	DW OFFSET rename_file,		rdfs_code_sel
+rdfs14	DW OFFSET create_file,		rdfs_code_sel
+rdfs15	DW OFFSET get_ioctl_data,	rdfs_code_sel
+rdfs16	DW OFFSET set_file_size,	rdfs_code_sel
+rdfs17	DW OFFSET dummy,			rdfs_code_sel
+rdfs18	DW OFFSET dummy,			rdfs_code_sel
+rdfs19	DW OFFSET allocate_file_list,rdfs_code_sel
+rdfs20	DW OFFSET free_file_list,	rdfs_code_sel
+rdfs21	DW OFFSET read_file_block,	rdfs_code_sel
+rdfs22	DW OFFSET write_file_block,	rdfs_code_sel
 
 init	PROC far
 	push ds

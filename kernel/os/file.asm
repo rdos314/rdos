@@ -192,9 +192,13 @@ FreeListEntry	Proc near
 	push edi
 ;
 	mov edi,eax
+;
+	mov al,ds:file_drive
+	mov bx,ds
+	CallFileSystem free_file_list_proc
+;
 	mov eax,es:[edi].fl_pos
 	mov dword ptr es:[eax],0
-	push edi
 	mov edx,es:[edi].fl_base
 	or edx,edx
 	jz free_list_done
@@ -267,11 +271,6 @@ free_small_fail:
 	pop esi
 
 free_list_done:
-	pop edi
-	mov al,ds:file_drive
-	mov bx,ds
-	CallFileSystem free_file_list_proc
-;
 	pop edi
 	pop edx
 	pop ecx
@@ -517,11 +516,16 @@ free_file_dir_next:
 	loop free_file_dir_loop
 
 free_file_sel:
+	mov ecx,ds:file_dir_entry
 	mov ax,ds
 	mov es,ax
+	mov ax,flat_sel
+	mov ds,ax
+	mov ds:[ecx].dfe_file_sel,0
+	FreeMem
+;
 	xor ax,ax
 	mov ds,ax
-	FreeMem
 ;
 	pop si
 	pop ecx
@@ -1239,8 +1243,7 @@ close_file:
 	sub ds:file_usage,1
 	jnz close_file_handle
 ;
-;	CallFileSystem close_file_proc
-;	call FreeFileSel
+	call FreeFileSel
 
 close_file_handle:
 	mov bx,si
@@ -2064,8 +2067,7 @@ delete_handle	Proc far
 	sub ds:file_usage,1
 	jnz delete_handle_handle
 ;
-;	CallFileSystem close_file_proc
-;	call FreeFileSel
+	call FreeFileSel
 
 delete_handle_handle:
 	mov bx,si
