@@ -244,6 +244,98 @@ ExtendDir	Proc near
     mov al,ds:drive_nr
     LockSector
 	call FindLastDirInfo
+;
+	mov al,es:[esi]
+	cmp al,-1
+	jne edPresent
+;
+	sub esi,0Fh
+	xor ecx,ecx
+	jmp edAlloc
+
+edPresent:
+	mov ecx,es:[esi].fde_size
+
+edAlloc:
+	mov eax,ecx
+	shr eax,16
+	inc eax	
+	mov edi,esi
+	sub edi,13
+	sub edi,eax
+	add eax,eax
+	sub edi,eax
+;
+	push edi
+	mov al,-1
+
+edCheckSpace:
+	and al,es:[edi]
+	inc edi
+	cmp esi,edi
+	jne edCheckSpace
+;
+	pop edi
+	add al,1
+	jz edSpaceOk
+;
+	int 3
+
+edSpaceOk:	
+	mov eax,es:[esi].fde_size
+	add eax,20h
+	mov es:[edi].fde_size
+	mov eax,es:[esi].fde_time
+	mov es:[edi].fde_time,eax
+	mov eax,es:[esi].fde_time+4
+	mov es:[edi].fde_time+4,eax
+	add esi,OFFSET fde_log_entry
+	add edi,OFFSET fde_log_entry
+;
+	push ecx
+	dec ecx
+	shr ecx,16
+	inc cx
+	or cx,cx
+	jz edMoveDone
+
+edMoveLoop:
+	mov eax,es:[esi]
+	mov es:[edi],eax
+	add esi,3
+	add edi,3
+	loop edMoveLoop	
+
+edMoveDone:
+	xor ax,ax
+	mov fs,ax
+	pop ecx
+	or cx,cx
+	jnz edMakeValid
+
+edAllocObjectSector:
+	push ebx
+	mov al,LOG_ENTRY_OBJECT
+	call AllocateSector
+	mov eax,ebx
+	pop ebx
+	jc edDone
+;
+	mov es:[edi],eax
+	add edi,3
+
+edMakeValid:
+	mov byte ptr es:[edi],DIR_ENTRY_OK	
+	ModifySector
+;
+	mov ax,fs
+	or ax,ax
+	jz edObjectOk
+;
+	push ebx
+	mov ebx,fs:bc_handle
+	ModifySector
+	pop ebx
     UnlockSector
 	clc
 
@@ -494,8 +586,7 @@ create_file	PROC far
     call CreateFileEntry
     call AddFileEntry
     jc cfFail
-;
-    
+;    
 	InsertFileEntry	
 	jmp cfDone
 
