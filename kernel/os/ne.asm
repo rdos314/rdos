@@ -452,6 +452,13 @@ demand_load	Proc far
 	stc
 	jz demand_load_end
 demand_load_ldt:
+	mov ax,ne_app_sel
+	mov ds,ax
+	mov ax,ds:lib_modules
+	or ax,ax
+	stc
+	jz demand_load_end
+;
 	mov ax,thread_sel
 	mov ds,ax
 	mov ds,ds:p_ldt_sel

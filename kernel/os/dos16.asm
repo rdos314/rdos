@@ -320,7 +320,7 @@ set_dta	PROC far
 	push ebx
 	push dx
 	movzx ebx,dx
-	mov dx,ds
+	mov dx,[bp].pm_ds
 	call set_prot_dta
 	pop dx
 	pop ebx

@@ -496,6 +496,12 @@ set_prot_psp	PROC near
 	cmp ds:psp_mode,mode_pm
 	je set_prot_psp_nofree
 ;
+	cmp bx,ds:pm_psp_sel
+	je set_prot_psp_nofree
+;
+	cmp bx,ds:pm_dta_sel
+	je set_prot_psp_nofree
+;
 	push bx
 	mov bx,ds:pm_psp_sel
 	and bx,0FFF8h
@@ -638,16 +644,6 @@ set_prot_dta	PROC near
 	push bx
 	mov ax,dos_app_sel
 	mov ds,ax
-	cmp ds:dta_mode,mode_pm
-	je set_prot_dta_nofree
-;
-	push bx
-	mov bx,ds:pm_dta_sel
-	and bx,0FFF8h
-	FreeLdt
-	pop bx
-
-set_prot_dta_nofree:
 	mov ds:dta_mode,mode_pm
 	mov ds:pm_dta_sel,dx
 	mov ds:dta_offset,ebx

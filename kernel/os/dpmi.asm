@@ -69,10 +69,6 @@ enter_dpmi	PROC far
 	push si
 	push di
 ;
-	mov ax,thread_app_sel
-	mov es,ax
-	mov es:app_context,0
-;
 	mov al,[bp].vm_eax
 	test al,1
 	jz enter16

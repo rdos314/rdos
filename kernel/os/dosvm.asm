@@ -47,6 +47,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+	extrn reset_find_sel:near
 
 	extrn ucase_tab:near
 	extrn file_ucase_tab:near
@@ -232,6 +233,8 @@ load_program	PROC far
 	pop cx
 	pop ds
 	LoadExe
+	cmp ah,3
+	je load_resident
 ;
 	pushf
 	FreeMem
@@ -248,6 +251,11 @@ load_program	PROC far
 	popf
 	jc load_fail
 ;
+	and byte ptr [bp].vm_eflags,1
+	jmp load_done
+
+load_resident:
+	add sp,2
 	and byte ptr [bp].vm_eflags,1
 	jmp load_done
 
@@ -293,44 +301,48 @@ PAGE
 
 keep_process:
 	int 3
+	push ax
 	call get_virt_psp
-	push dx
-;	DestroyPsp
-	pop dx
 	movzx eax,dx
 	shl eax,4
 	movzx edx,bx
 	shl edx,4
-	mov ecx,1
-	ResizeLinear
+	ResizeDosLinear
+	pop ax
 	jc keep_fail
 ;
-	xor ax,ax
-	mov ds,ax
-	mov es,ax
-	mov fs,ax
-	mov gs,ax
-	mov ax,thread_sel
-	mov es,ax
-;	mov ds,es:p_prim_client
-
-keep_find_loader:
-;	mov ax,ds:cl_next
-	or ax,ax
-	jz keep_fail
+	mov ah,3
+	mov bx,thread_app_sel
+	mov ds,bx
+	mov ds:app_exit_code,ax
 ;
-	mov ds,ax
-;	mov bx,ds:cl_context
-	or bx,bx
-	jz keep_find_loader
+	call reset_find_sel
+	mov bx,flat_sel
+	mov ds,bx
+	call get_virt_psp
+	movzx ebx,bx
+	shl ebx,4
+	mov ax,[ebx].psp_parent
+	call get_prot_psp
+	GetSelectorBaseSize
+	movzx edx,ax
+	shl edx,4
+	CreateDataSelector16
 ;
-;	mov ds:cl_context,0
+	mov bx,thread_app_sel
+	mov ds,bx
+	xor bx,bx
+	xchg bx,ds:app_context
 	RestoreContext
-	xor ax,ax
+	mov bx,thread_app_sel
+	mov ds,bx
+	mov ax,ds:app_exit_code
+	clc
 	retf32
 
 keep_fail:
-	TerminateThread
+	xor ax,ax
+	UnloadExe
 
 PAGE
 

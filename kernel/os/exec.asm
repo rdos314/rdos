@@ -285,10 +285,12 @@ load_program16:
 ;
 	movzx esi,si
 	movzx edi,di
+	push bx
 	GetPsp
 	call enter_load
 	OpenApp
 	SetPsp
+	pop bx
 	push es
 	push di
 	mov ax,thread_app_sel
@@ -337,6 +339,11 @@ load_fail16:
 	mov ds,ax
 	mov bx,ds:app_context
 	RestoreContext
+	push ds
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_exit_code
+	pop ds
 	stc
 	retf32
 	
@@ -396,6 +403,11 @@ load_fail32:
 	mov ds,ax
 	mov bx,ds:app_context
 	RestoreContext
+	push ds
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_exit_code
+	pop ds
 	stc
 	retf32
 
@@ -627,6 +639,11 @@ spawn_fail:
 	mov ds,ax
 	mov bx,ds:app_context
 	RestoreContext
+	push ds
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_exit_code
+	pop ds
 	ret
 spawn_startup	Endp
 
@@ -736,8 +753,12 @@ spawn_program32	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_exe_name DB 'Unload Exe',0
+
+unload_exe_retry:
+	int 3
 	
 unload_exe	Proc far
+	int 3
 	push ax
 	UnhookKeyboard
 	UnhookMouse
@@ -749,8 +770,16 @@ unload_exe	Proc far
 	mov ax,thread_app_sel
 	mov ds,ax
 	pop ax
+	or bx,bx
+	jz unload_exe_retry
+;
 	mov ds:app_exit_code,ax
 	RestoreContext
+	push ds
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,ds:app_exit_code
+	pop ds
 	clc
 	retf32
 unload_exe	Endp

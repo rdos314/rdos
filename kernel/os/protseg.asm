@@ -61,6 +61,7 @@ get_selector_base_size_name DB 'Get selector base & size',0
 get_selector_base_size	PROC far
 	push ds
 	push ax
+	push bx
 ;
 	test bx,4
 	jz get_selector_gdt
@@ -110,6 +111,7 @@ get_selector_error:
 	stc
 
 get_selector_done:
+	pop bx
 	pop ax
 	pop ds
 	ret

@@ -264,9 +264,9 @@ PAGE
 	public exit_code
 
 exit_code	PROC far
-	call get_prot_psp
+	mov bx,thread_app_sel
 	mov ds,bx
-	mov ax,ds:psp_ret_code
+	mov ax,ds:app_exit_code
 	mov ebx,[bp].vm_ebx
 	and byte ptr [bp].vm_eflags,NOT 1
 	ret
@@ -586,7 +586,7 @@ close_handle_inrange:
 	je close_handle_closed
 	CloseFile
 close_handle_closed:
-	and byte ptr [bp].vm_eflags,1
+	and byte ptr [bp].vm_eflags, NOT 1
 	mov ax,[bp].vm_eax
 close_handle_done:
 	mov bx,[bp].vm_ebx
