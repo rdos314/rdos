@@ -61,6 +61,12 @@ struct TArp
 	unsigned char Ip2[4];
 };
 
+#define SOM		1
+#define EOM		2
+#define REQ		4
+#define RPY		8
+#define NAM		0x10
+
 struct TSmpHeader
 {
 	long Connection;
@@ -72,11 +78,18 @@ struct TSmpHeader
 	short int Checksum;
 };
 
-#define SOM		1
-#define EOM		2
-#define REQ		4
-#define RPY		8
-#define NAM		0x10
+#define ACTION_RESET		1
+#define ACTION_ACK			2
+#define ACTION_TOO_LARGE	3
+#define ACTION_BUSY			4
+
+struct TSmpResponse
+{
+	long Connection;
+	short int Mailslot;
+	char Size;
+	char Action;
+};
 
 /*##################  SwapLong ##########################
 *   Purpose....: Swap long	   					      	        #
@@ -249,8 +262,13 @@ void TSernetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
 	char ch;
 	int i;
 	TSmpHeader *Smp;
+	TSmpResponse *Response;
 	int MsgSize;
     int Responses;
+	int Nam;
+	int Req;
+	int Reply;
+	int RespSize;
 
 	Write("SMP: ");
 
@@ -258,14 +276,58 @@ void TSernetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
 	{
 		Smp = (TSmpHeader *)Msg;
 
-		sprintf(tempstr, "Conn = %ld, ", SwapLong(Smp->Connection));
-		Write(tempstr);
+		if (Smp->Flags & NAM)
+			Nam = TRUE;
+		else
+			Nam = FALSE;
 
-		sprintf(tempstr, "Size = %ld, ", SwapLong(Smp->OffsetSize));
-		Write(tempstr);	
+		if (Smp->Flags & REQ)
+			Req = TRUE;
+		else
+			Req = FALSE;
 
-		sprintf(tempstr, "Slot = %d", SwapShort(Smp->Mailslot));
-		Write(tempstr);
+		if (Smp->Flags & RPY)
+			Reply = TRUE;
+		else
+			Reply = FALSE;
+
+		if ((Req && !Nam) || Reply)
+		{
+			sprintf(tempstr, "Conn = %08lX, ", SwapLong(Smp->Connection));
+			Write(tempstr);
+		}
+
+		if (Nam && Reply)
+		{
+			sprintf(tempstr, "Maxsize = %ld, ", SwapLong(Smp->OffsetSize));
+			Write(tempstr);	
+		}
+
+		if (!Nam && (Req || Reply))
+		{
+			sprintf(tempstr, "Size = %0ld, ", SwapLong(Smp->OffsetSize));
+			Write(tempstr);	
+		}
+
+		if ((Req && !Nam) || Reply)
+		{
+			sprintf(tempstr, "Slot = %04hX", SwapShort(Smp->Mailslot));
+			Write(tempstr);
+		}
+
+		if (Nam)
+		{
+			if (Req)
+				Write("NAM");
+			else
+				Write(", NAM");
+		}
+
+		if (Req)
+			Write(", REQ");
+
+		if (Reply)
+			Write(", RPY");
 
 		if (Smp->Flags & SOM)
 			Write(", SOM");
@@ -273,31 +335,99 @@ void TSernetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
 		if (Smp->Flags & EOM)
 			Write(", EOM");
 
-		if (Smp->Flags & REQ)
-			Write(", REQ");
-
-		if (Smp->Flags & RPY)
-			Write(", RPY");
-
-		if (Smp->Flags & NAM)
-			Write(", NAM");
-
 		MsgSize = SwapShort(Smp->Size);
 		Responses = Smp->Responses;
 
-		Write(" ");
-		for (i = sizeof(TSmpHeader); i < MsgSize; i++)
+		Msg += sizeof(TSmpHeader);
+
+		for (i = 0; i < Responses; i++)
 		{
-			ch = *Msg;
-			sprintf(tempstr, "%04hX", ch);
-			tempstr[0] = tempstr[2];
-			tempstr[1] = tempstr[3];
-			tempstr[2] = ' ';
-			tempstr[3] = 0;
+			Write(", (");
+
+			Response = (TSmpResponse *)Msg;
+
+			switch (Response->Action)
+			{
+				case ACTION_RESET:
+					Write("Reset ");
+					break;
+
+				case ACTION_ACK:
+					Write("Ack ");
+					break;
+
+				case ACTION_TOO_LARGE:
+					Write("Too large ");
+					break;
+
+				case ACTION_BUSY:
+					Write("Busy ");
+					break;
+
+				default:
+					Write(" Illegal action ");
+					break;
+			}
+			sprintf(tempstr, "Conn = %08lX, ", SwapLong(Response->Connection));
 			Write(tempstr);
-			Msg++;
+
+			sprintf(tempstr, "Slot = %04hX", SwapShort(Response->Mailslot));
+			Write(tempstr);
+
+			RespSize = Response->Size;
+			Msg += sizeof(TSmpResponse);
+
+			Write(" ");
+			for (i = 0; i < RespSize; i++)
+			{
+				ch = *Msg;
+				sprintf(tempstr, "%04hX", ch);
+				tempstr[0] = tempstr[2];
+				tempstr[1] = tempstr[3];
+				tempstr[2] = ' ';
+				tempstr[3] = 0;
+				Write(tempstr);
+				Msg++;
+			}		
+
+			Write(")");
 		}
-				
+
+		if (Nam)
+		{
+			if (Req)
+			{
+				Write(" Name: <");
+				Write(Msg);
+				Write(">");
+			}
+			else
+			{
+				sprintf(tempstr, " Max connections = %d", SwapShort(*(short int *)Msg));
+				Write(tempstr);
+
+				Msg += 2;
+				Write(" Name: <");
+				Write(Msg);
+				Write(">");
+			}
+		}
+		else
+		{
+			Write(" ");
+			for (i = sizeof(TSmpHeader); i < MsgSize; i++)
+			{
+				ch = *Msg;
+				sprintf(tempstr, "%04hX", ch);
+				tempstr[0] = tempstr[2];
+				tempstr[1] = tempstr[3];
+				tempstr[2] = ' ';
+				tempstr[3] = 0;
+				Write(tempstr);
+				Msg++;
+			}
+		}
+
 	}
 	else
 		for (i = 0; i < Size; i++)

@@ -242,8 +242,8 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET init_test
-	HookInitTasking
+;	mov di,OFFSET init_test
+;	HookInitTasking
 ;
 	mov si,OFFSET start_com_port
 	mov di,OFFSET start_com_port_name
