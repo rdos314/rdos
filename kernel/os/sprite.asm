@@ -889,6 +889,13 @@ move_sprite	Proc far
     test fs:sp_flags,SP_FLAG_VISIBLE
     jz move_sprite_hidden
 ;
+    cmp cx,fs:sp_x
+    jne move_sprite_move
+;
+    cmp dx,fs:sp_y
+    je move_sprite_hidden
+
+move_sprite_move:
     or fs:sp_flags,SP_FLAG_VISIBLE
     and fs:sp_flags,NOT (SP_FLAG_OVL_OLD OR SP_FLAG_OVL_NEW)
     mov ds,fs:sp_dest_sel
