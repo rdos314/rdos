@@ -41,12 +41,19 @@ class TListNode
 {
 friend class TList;
 public:
+	TListNode();
 	TListNode(const void *x, int size);
 	virtual ~TListNode();
 
+	int IsValid() const;
+
 	const TListNode &operator=(const TListNode &src);
-	int operator== (const TListNode &l) const;
-	int operator!= (const TListNode &l) const;
+	int operator==(const TListNode &dest) const;
+	int operator!=(const TListNode &dest) const;
+	int operator>(const TListNode &dest) const;
+	int operator>=(const TListNode &dest) const;
+	int operator<(const TListNode &dest) const;
+	int operator<=(const TListNode &dest) const;
 
 protected:
 	void Init();
@@ -60,6 +67,7 @@ protected:
 
 	virtual int Compare(const TListNode &n2) const;
 
+	int FValid;
     int FRefCount;
 	char *FBuf;
 	TListData *FData;
@@ -72,11 +80,13 @@ public:
     TList();
     ~TList();
 
-    TListNode *GotoFirst();
-    TListNode *GotoNext();
-    TListNode *GotoPrev();
-    TListNode *GotoLast();
-    TListNode *Goto(int pos);
+    int GotoFirst();
+    int GotoNext();
+    int GotoPrev();
+    int GotoLast();
+    int Goto(int pos);
+
+	TListNode &Get();
 
 	int operator== (const TList &l) const;
     int operator!= (const TList &l) const;

@@ -51,8 +51,12 @@ public:
 	const TString &operator+=(const char *str);
 	const TString &operator+=(char ch);
 	const TString &operator+=(const TString& str);
-	int operator==(const TString &str) const;
-	int operator!=(const TString &str) const;
+	int operator==(const TString &dest) const;
+	int operator!=(const TString &dest) const;
+	int operator>(const TString &dest) const;
+	int operator>=(const TString &dest) const;
+	int operator<(const TString &dest) const;
+	int operator<=(const TString &dest) const;
 	char operator[](int n) const;
 
 	int printf(const char *fmt, ...);

@@ -456,6 +456,82 @@ int TString::operator!=(const TString &str) const
 
 /*##########################################################################
 #
+#   Name       : TString::operator>
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator>(const TString &dest) const
+{
+	if (Compare(dest) > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator<
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator<(const TString &dest) const
+{
+	if (Compare(dest) < 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator>=
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator>=(const TString &dest) const
+{
+	if (Compare(dest) >= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::operator<=
+#
+#   Purpose....: Compare strings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::operator<=(const TString &dest) const
+{
+	if (Compare(dest) <= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TString::operator[]
 #
 #   Purpose....: [] operator
