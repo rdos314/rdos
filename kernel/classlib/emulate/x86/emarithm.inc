@@ -242,3 +242,5 @@
 	extrn EmSetnl:near
 	extrn EmSetle:near
 	extrn EmSetnle:near
+
+    extrn EmBswap:near

@@ -99,6 +99,7 @@ char TCmos::In(int Num, int Offset)
 			return FPort;
 
 		case 1:
+			FData[0xA] ^= 0x80;
 			return FData[FPort];
 	}
 }

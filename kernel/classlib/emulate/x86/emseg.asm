@@ -733,7 +733,7 @@ LoadStackSelector	Proc near
 	jz ProtectionFault
 ;
 	LoadDescriptor StackFault
-	test dl,10
+	test dl,10h
 	jz StackFault
 ;
 	push cx
@@ -786,6 +786,7 @@ LoadStackSelector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwitchStackSelector	Proc near
+	push si
 	mov [ebp].em_pl,0
 	push bx
 	mov bx,ax
@@ -829,6 +830,8 @@ SwitchStackSizeOk:
 
 SwitchStackDirOk:
 	mov [ebp].reg_ss.d_access,bl
+	mov bx,si                        ;restore bx
+	pop si
 	ret
 SwitchStackSelector	Endp
 
@@ -1004,19 +1007,23 @@ TransferEqual	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 TransferHigher	Proc near
-	test [ebp].em_transfer,TRANSFER_32
-	jnz TransferHigherProt
-;
 	test [ebp].em_transfer,TRANSFER_FLAGS
 	jz TransferHigherProt
 ;
-	test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
-	jz TransferHigherProt
-;
+	test byte ptr [ebp].em_flags,d32
+	jz TransferHigherProt             ;16 bit protected mode
+
 	call PopDword
 	mov ecx,eax
 	test ecx,EFLAGS_VM
-	jz TransferHigherProt
+	jnz short TransferHigherVm
+;
+        call PushDword
+	test [ebp].em_transfer,TRANSFER_32
+	jnz TransferHigherProt
+
+	test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+	jnz TransferHigherProt
 
 TransferHigherVm:
 	cmp esi,10000h
@@ -1123,10 +1130,10 @@ TransferHigherProt:
 	cmp esi,ecx
 	ja ProtectionFault
 ;
-	test dl,8
+	test dl,8                       ;must be a code segment
 	jz ProtectionFault
 ;
-	test dl,4
+	test dl,4                         ;conforming or not
 	jz HigherNormalCode
 
 HigherConformingCode:
@@ -1177,8 +1184,9 @@ HigherFlagsDone16:
 	jz HigherStackDone16
 ;
 	call PopWord
-	mov word ptr [ebp].reg_esp,ax
+	push ax
 	call PopWord
+	pop word ptr [ebp].reg_esp
 	call SwitchStackSelector
 
 HigherStackDone16:
@@ -1206,8 +1214,9 @@ HigherFlagsDone32:
 	jz HigherStackDone32
 ;
 	call PopDword
-	mov [ebp].reg_esp,eax
+	push eax
 	call PopWord
+	pop dword ptr [ebp].reg_esp
 	call SwitchStackSelector
 	
 HigherStackDone32:
@@ -1258,23 +1267,23 @@ TransferLower	Proc near
 	jz ProtectionFault
 ;
 	test dl,4
-	jz LowerNormalCode
+	jz LowerNormalCode		;conforming or not ?
 ;
-	AssertCallDpl
+	AssertCallDpl		;make sur that the call is from a less privilege segment
 ;
 	and bx,0FFFCh
 	mov cl,[ebp].reg_cs.d_access
-	and cl,3
-	or bl,cl
+	and cl,3			
+	or bl,cl			;take the privilege of the caller (to be conform :-)
 	or [ebp].em_transfer,cl
 	jmp LowerPush
 
 LowerNormalCode:
-	mov cl,dl
+	mov cl,dl		;cl = DPL of the gate
 	shr cl,5
-	mov ch,bl
+	mov ch,bl		; ch = RPL 
 	and cx,303h
-	jne ProtectionFault
+	jne ProtectionFault		
 ;
 	or [ebp].em_transfer,cl
 	mov ch,[ebp].reg_cs.d_access
@@ -1284,8 +1293,9 @@ LowerNormalCode:
 	ja ProtectionFault
 ;
 	or [ebp].em_transfer,TRANSFER_SWITCH
-
 LowerPush:
+	mov al, [ebp].em_transfer
+        and al,3
 	test [ebp].em_transfer,TRANSFER_32
 	jnz Lower32
 
@@ -1323,10 +1333,10 @@ LowerVm16:
 	mov ax,word ptr [ebp].reg_eflags
 	call PushWord
 ;
-	mov ax,bx
+	mov ax,word ptr [ebp].reg_cs.d_selector
 	call PushWord
 ;
-	mov ax,si
+	mov ax,word ptr [ebp].reg_eip
 	call PushWord
 ;
 	test [ebp].em_transfer,TRANSFER_CODE
@@ -1425,6 +1435,23 @@ Lower32:
 	test [ebp].reg_eflags,EFLAGS_VM
 	jz LowerProt32
 
+;state of the stack before and after switch by processor to exception or interrupt handler
+;
+; 32 bits case
+;
+;esp before switch
+;       | old gs selector
+;       | old fs selector
+;       | old ds selector
+;       | old es selector
+;       | old ss selector
+;   old esp
+;   old eflags
+;       | old cs selector
+;   old eip
+;   error code if exist
+;esp after switch
+
 LowerVm32:
 	push [ebp].reg_esp
 	push [ebp].reg_ss.d_selector
@@ -1454,23 +1481,23 @@ LowerVm32:
 	mov ax,[ebp].reg_es.d_selector
 	call PushWord
 ;
+	mov eax,2
+	call SubFromStack
+	pop ax                  ;old ss
+	call PushWord
+;	
+	pop eax                 ;old esp
+	call PushDword
+;
 	mov eax,[ebp].reg_eflags
 	call PushDword
 ;
 	mov eax,2
 	call SubFromStack
-	pop ax
-	call PushWord
-;	
-	pop eax
-	call PushDword
-;
-	mov eax,2
-	call SubFromStack
-	mov ax,bx
+	mov ax,[ebp].reg_cs.d_selector   ;old cs
 	call PushWord
 ;
-	mov eax,esi
+	mov eax,[ebp].reg_eip             ;old eip
 	call PushDword
 ;
 	test [ebp].em_transfer,TRANSFER_CODE
@@ -1485,6 +1512,8 @@ LowerProt32:
 	test al,TRANSFER_SWITCH
 	jz LowerStackPushed32
 ;
+	and al,3                   ;select the RPL with TRANSFER_RPL
+;
 	push word ptr [ebp].reg_ss.d_access
 	push [ebp].reg_ss.d_base
 	push [ebp].reg_ss.d_limit
@@ -1494,7 +1523,7 @@ LowerProt32:
 	call GetStack
 	push eax
 	mov ax,dx
-	call LoadStackSelector
+	call SwitchStackSelector
 	pop [ebp].reg_esp
 ;
 	mov eax,2
@@ -1602,13 +1631,13 @@ TransferLower	Endp
 
 JmpTss	Proc near
 	test dl,8
-	jz JmpTssCheck16
+	jz short JmpTssCheck16
 
 JmpTssCheck32:
 	mov dh,ACCESS_SIZE
-	cmp ecx,104
+	cmp ecx,103
 	jc InvalidTssFault
-	jmp JmpTssSizeOk
+	jmp short JmpTssSizeOk
 
 JmpTssCheck16:
 	xor dh,dh
@@ -1625,12 +1654,19 @@ JmpTssSizeOk:
 	call LoadTss
 ;
 	mov al,dl
-	or dh,2
+	or al,2
 	mov ebx,edi
 	add ebx,5
-	call WriteLinearByte
+	call WriteLinearByte     ;must set the new task as busy 
 ;
-	pop bx
+	pop bx                  ;we have the two tasks visible here
+;
+        movzx eax,[ebp].reg_tr.d_selector
+        push eax                           ;task2
+        movzx eax,bx
+        push eax                           ;task1
+;	call NotifyTaskSwitch
+;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault
 ;
@@ -1638,7 +1674,7 @@ JmpTssSizeOk:
 	and al,NOT 2
 	mov ebx,edi
 	add ebx,5
-	call WriteLinearByte
+	call WriteLinearByte     ;must clear the old task as busy'ness 
 ;
 	mov bx,[ebp].reg_tr.d_selector
 	and [ebp].reg_eflags,NOT EFLAGS_NT
@@ -1663,13 +1699,13 @@ JmpTss	Endp
 
 CallTss	Proc near
 	test dl,8
-	jz CallTssCheck16
+	jz short CallTssCheck16
 
 CallTssCheck32:
 	mov dh,ACCESS_SIZE
-	cmp ecx,104
+	cmp ecx,103
 	jc InvalidTssFault
-	jmp CallTssSizeOk
+	jmp short CallTssSizeOk
 
 CallTssCheck16:
 	xor dh,dh
@@ -1684,21 +1720,29 @@ CallTssSizeOk:
 	mov [ebp].reg_tr.d_base,eax
 	mov [ebp].reg_tr.d_limit,ecx
 	call LoadTss
-	mov ax,bx
+        pop ax        ;the call tak selector
+	push ax       ;used below
 	call SetBacklink
 ;
 	mov al,dl
-	or dh,2
+	or al,2              ;the busy byte must be set
 	mov ebx,edi
 	add ebx,5
 	call WriteLinearByte
 ;
-	pop bx
+	pop bx                  ;we have the two tasks visible here
+;
+        movzx eax,[ebp].reg_tr.d_selector
+        push eax                           ;task2
+        movzx eax,bx
+        push eax                           ;task1
+;	call NotifyTaskSwitch
+;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault
 ;
 	mov al,dl
-	or al,2
+	or al,2         ;the busy byte must be left set
 	mov ebx,edi
 	add ebx,5
 	call WriteLinearByte
@@ -1726,13 +1770,13 @@ CallTss	Endp
 
 RetTss	Proc near
 	test dl,8
-	jz RetTssCheck16
+	jz short RetTssCheck16
 
 RetTssCheck32:
 	mov dh,ACCESS_SIZE
-	cmp ecx,104
+	cmp ecx,103
 	jc InvalidTssFault
-	jmp RetTssSizeOk
+	jmp short RetTssSizeOk
 
 RetTssCheck16:
 	xor dh,dh
@@ -1740,7 +1784,7 @@ RetTssCheck16:
 	jc InvalidTssFault
 
 RetTssSizeOk:
-	and [ebp].reg_eflags,NOT EFLAGS_NT
+	and [ebp].reg_eflags,NOT EFLAGS_NT  ;the NT flag must be cleared
 	call SaveTss
 	push [ebp].reg_tr.d_selector
 	mov [ebp].reg_tr.d_access,dh
@@ -1750,17 +1794,24 @@ RetTssSizeOk:
 	call LoadTss
 ;
 	mov al,dl
-	or dh,2
+	or al,2               ;the busy byte must be left set
 	mov ebx,edi
 	add ebx,5
 	call WriteLinearByte
 ;
-	pop bx
+	pop bx                  ;we have the two tasks visible here
+;
+        movzx eax,[ebp].reg_tr.d_selector
+        push eax                           ;task2
+        movzx eax,bx
+        push eax                           ;task1
+;	call NotifyTaskSwitch
+;	
 	LoadDescriptor ProtectionFault
 	jc ProtectionFault
 ;
 	mov al,dl
-	and al,NOT 2
+	and al,NOT 2       ;the busy byte must be clear for the old task
 	mov ebx,edi
 	add ebx,5
 	call WriteLinearByte
@@ -2115,7 +2166,7 @@ JmpFar	Proc near
 ;
 	mov [ebp].em_pl,0
 	LoadDescriptor ProtectionFault
-	jc JmpFarGate
+	jc short JmpFarGate
 ;
 	test dl,10h
 	jnz JmpFarCodeOrData
@@ -2128,16 +2179,17 @@ JmpFar	Proc near
 ;
 	cmp cl,9
 	je JmpFarTssCheckDpl
+	pop cx
 	jmp ProtectionFault
 
 JmpFarGate:
 	and dl,0Fh
 ;
 	cmp dl,4
-	je JmpFarCallGate
+	je short JmpFarCallGate
 ;
 	cmp dl,0Ch
-	je JmpFarCallGate
+	je short JmpFarCallGate
 ;
 	cmp dl,5
 	je JmpFarTssGate
@@ -2159,11 +2211,12 @@ JmpFarTssGate:
 	push cx
 	mov cl,dl
 	and cl,0Fh	
-	cmp cl,1
-	je JmpFarTss
+	cmp cl,1                           ;16 bit available TSS
+	je short JmpFarTss
 ;
 	cmp cl,9
-	je JmpFarTss
+	je JmpFarTss                         ;32 bit available TSS
+	pop cx
 	jmp ProtectionFault
 
 JmpFarTssCheckDpl:
@@ -2211,11 +2264,14 @@ CallFar16	Proc near
 	jnz CallFarNormal16
 ;
 	AssertDataDpl
-	and dl,0Fh
-	cmp dl,1
+	push cx                   
+	mov cl,dl
+	and cl,0Fh
+	cmp cl,1
 	je CallFarTss16
-	cmp dl,9
+	cmp cl,9
 	je CallFarTss16
+	pop cx                    
 	jmp ProtectionFault
 
 CallFarGate16:	
@@ -2254,16 +2310,20 @@ CallFarGate16NotC:
 	test dl,10h
 	jnz ProtectionFault
 ;
-	and dl,0Fh
-	cmp dl,1
+        push cx
+        mov cl,dl
+	and cl,0Fh
+	cmp cl,1
 	je CallFarTss16
 ;
-	cmp dl,9
+	cmp cl,9
 	je CallFarTss16
 ;
+        pop cx              
 	jmp ProtectionFault
 
-CallFarTss16:	
+CallFarTss16:
+	pop cx	           
 	call CallTss
 	ret
 
@@ -2313,11 +2373,15 @@ CallFar32	Proc near
 	jnz CallFarNormal32
 ;
 	AssertDataDpl
-	and dl,0Fh
-	cmp dl,1
+	
+	push cx
+	mov cl,dl
+	and cl,0Fh
+	cmp cl,1
 	je CallFarTss32
-	cmp dl,9
+	cmp cl,9
 	je CallFarTss32
+	pop cx                    
 	jmp ProtectionFault
 
 CallFarGate32:	
@@ -2356,16 +2420,20 @@ CallFarGate32NotC:
 	test dl,10h
 	jnz ProtectionFault
 ;
-	and dl,0Fh
-	cmp dl,1
+        push cx
+        mov cl,dl
+	and cl,0Fh
+	cmp cl,1
 	je CallFarTss32
 ;
-	cmp dl,9
+	cmp cl,9
 	je CallFarTss32
 ;
+        pop cx                   
 	jmp ProtectionFault
 
 CallFarTss32:	
+        pop cx                   
 	call CallTss
 	ret
 
@@ -2652,12 +2720,12 @@ IntFar	Proc near
 	test [ebp].reg_cr0,CR0_PE
 	jz IntFarReal
 ;
-	test byte ptr [ebp].reg_eflags+2,2
+	test byte ptr [ebp].reg_eflags+2,2		;test The VM indicator
 	jnz IntFarVm
 ;
-	mov ecx,[ebp].reg_eflags
+	mov ecx,[ebp].reg_eflags			;what is this verification for ? ### GIL ????###
 	ror cx,4
-	mov	ch,[ebp].reg_cs.d_access
+	mov ch,[ebp].reg_cs.d_access
 	and cx,303h
 	cmp cl,ch
 	jc PrivilegeFault
@@ -2678,8 +2746,8 @@ IntFarPm:
 	shl bx,3
 ;
 	movzx ecx,bx
-	or cl,7
-	dec ecx
+	or cl,7				;adjust the size of the interrupt number
+	dec ecx				; 0..7FFh but 0FFh*8=7F8h + 7 = 7FFh
 	sub ecx,[ebp].reg_idt.d_limit
 	jnc ProtectionFault
 ;
@@ -2687,18 +2755,18 @@ IntFarPm:
 	add ecx,[ebp].reg_idt.d_base
 	mov ebx,ecx
 	call ReadLinearQword
-	test dh,80h
+	test dh,80h			;Is the descriptor present ?
 	jz IdtFault
 ;
-	test dh,10h
+	test dh,10h			;descriptor type ? 1=Code or Data and 0= System
 	jnz IdtFault
 ;
 	xor bx,bx
-	mov	cl,byte ptr [ebp].reg_cs.d_access
+	mov cl,byte ptr [ebp].reg_cs.d_access 	
 	mov ch,dh
-	shr ch,5
+	shr ch,5				; target DPL
 	and cx,303h
-	cmp cl,ch
+	cmp cl,ch				;CPL <= DPL 
 	ja ProtectionFault
 ;
 	mov cl,dh
@@ -2742,8 +2810,8 @@ IntFarLoad:
 	mov dx,ax
 	shr eax,16
 	xchg eax,edx	
-	mov esi,eax
-	mov bx,dx
+	mov esi,eax			;get the offset in ESI
+	mov bx,dx			;get the selector in BX
 	LoadDescriptor ProtectionFault
 	test dl,10h
 	jz ProtectionFault
@@ -2760,19 +2828,23 @@ IntFarTssGate:
 	mov bx,ax
 	LoadDescriptor InvalidTssFault
 ;
-	test dl,10h
+        push cx
+        mov cl,dl 
+	test cl,10h
 	jnz ProtectionFault
 ;
-	and dl,0Fh
-	cmp dl,1
+	and cl,0Fh
+	cmp cl,1
 	je IntFarTss
 ;
-	cmp dl,9
+	cmp cl,9
 	je IntFarTss
 ;
+        pop cx                     
 	jmp ProtectionFault
 
 IntFarTss:	
+        pop cx                     
 	call CallTss
 	ret
 
@@ -2785,7 +2857,7 @@ IntFarReal:
 	mov ax,word ptr [ebp].reg_eip
 	call PushWord
 	pop bx
-	movzx ebx,bl
+        movzx ebx,bl
 	shl ebx,2
 	add ebx,[ebp].reg_idt.d_base
 	call ReadLinearDword
@@ -2918,6 +2990,7 @@ IretTss	Proc near
 ;
 	cmp cl,0Bh
 	je IretTssDo
+	pop cx
 	jmp ProtectionFault
 
 IretTssDo:

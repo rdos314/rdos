@@ -425,10 +425,10 @@ em0FC0	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FC2	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FC4	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FC6	DD OFFSET EmulateError,			OFFSET EmulateError
-em0FC8	DD OFFSET EmulateError,			OFFSET EmulateError
-em0FCA	DD OFFSET EmulateError,			OFFSET EmulateError
-em0FCC	DD OFFSET EmulateError,			OFFSET EmulateError
-em0FCE	DD OFFSET EmulateError,			OFFSET EmulateError
+em0FC8	DD OFFSET EmBswap,				OFFSET EmBswap
+em0FCA	DD OFFSET EmBswap,				OFFSET EmBswap
+em0FCC	DD OFFSET EmBswap,				OFFSET EmBswap
+em0FCE	DD OFFSET EmBswap,				OFFSET EmBswap
 em0FD0	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FD2	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FD4	DD OFFSET EmulateError,			OFFSET EmulateError

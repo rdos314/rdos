@@ -177,7 +177,7 @@ Em&op&DwordMem8	Proc near
 	push bx
 	call LoadByteMemReg
 	pop bx
-	&op eax,al
+	&op eax,ax
 	call SaveDwordReg
 	ret
 Em&op&DwordMem8	Endp

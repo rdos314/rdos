@@ -2549,9 +2549,15 @@ lost_focus_hook	PROC far
 	push ax
 	mov ax,video_focus_sel
 	mov ds,ax
+	mov ax,ds:v_handle
+	or ax,ax
 	pop ax
+	jz lost_focus_hook_switched
+;
 	mov ds,ds:v_handle
 	call ds:switch_from_proc
+
+lost_focus_hook_switched:
 	pop ds
 	ret
 lost_focus_hook	Endp
@@ -2574,9 +2580,15 @@ got_focus_hook	PROC far
 	push ax
 	mov ax,video_focus_sel
 	mov ds,ax
+	mov ax,ds:v_handle
+	or ax,ax
 	pop ax
+	jz got_focus_hook_switched
+;
 	mov ds,ds:v_handle
 	call ds:switch_to_proc
+
+got_focus_hook_switched:
 	pop ds
 	ret
 got_focus_hook	Endp

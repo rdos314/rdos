@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-.386
+.486
 .model flat
 						
 		NAME emarithm
@@ -2132,7 +2132,7 @@ Em&op	Proc near
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
 	&op al
-	call SaveByteMem
+	call SaveByteMemReg
 	ret
 Em&op	Endp
 			Endm
@@ -3344,5 +3344,26 @@ EmCdq:
 	mov [ebp].reg_edx,edx
 	ret
 EmCwd	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EmBswap
+;
+;		DESCRIPTION:	EMULATE bswap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmBswap
+	
+EmBswap proc near
+	and al,7
+	movzx esi,al
+	mov esi,dword ptr [4*esi].DwordRegTab
+	mov ebx,[ebp+esi]
+	bswap ebx
+	mov [ebp+esi],ebx
+	ret
+EmBswap endp	
 
 	END

@@ -735,6 +735,7 @@ set_focus_no_lost:
 	mov ds,ax
 	mov [bx],edx
 ;
+	int 3
 	mov bx,focus_sel
 	mov ds,bx
 	call trap_got_focus

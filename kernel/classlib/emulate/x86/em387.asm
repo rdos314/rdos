@@ -88,8 +88,12 @@ const1	DT 1.0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckFpTrap	MACRO
+	local CheckFpTrap_no
 	test [ebp].reg_cr0, CR0_EM OR CR0_TS
-	jnz FpFault
+	jz short CheckFpTrap_no
+	dec [ebp].reg_eip                      ;ReadCodeByte has increase this
+	jmp FpFault
+CheckFpTrap_no:	
 			ENDM
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

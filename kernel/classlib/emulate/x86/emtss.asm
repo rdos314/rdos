@@ -513,6 +513,7 @@ LoadTss:
 
 ValidateTss	Proc near
 	call ValidateTssLdt
+	or [ebp].reg_cr0,CR0_TS
 ;
 	test [ebp].reg_eflags,EFLAGS_VM
 	jz ValidatePmTss
@@ -655,7 +656,7 @@ SetBacklink	Endp
 GetStack	Proc near
 	push ebx
 	test [ebp].reg_tr.d_access,ACCESS_SIZE
-	jz GetStack32
+	jnz GetStack32
 
 GetStack16:
 	mov ebx,[ebp].reg_tr.d_base
