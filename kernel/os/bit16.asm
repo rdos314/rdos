@@ -1899,30 +1899,45 @@ dl_log_add_y    EQU -16
 dl_dx           EQU -18
 dl_dy           EQU -20
 dl_inc_low      EQU -22
-dl_inc_high     EQU -24
 
 draw_line	Proc far
 	push ds
 	push es
 	pushad
 	mov bp,sp
-	sub sp,24
-;
-    int 3
-	cmp si,cx
-	je line_vert
+	sub sp,22
 ;
 	cmp di,dx
 	je line_horiz
 
 line_bresen:
-	cmp di,dx
-	jge line_bresen_magn_ok
+	jg line_bresen_magn_ok
 ;
 	xchg cx,si
 	xchg dx,di
 
 line_bresen_magn_ok:
+	cmp si,cx
+	je line_vert
+;
+    jg line_bresen_check_pos
+
+line_bresen_check_neg:
+    cmp si,ds:v_x_max
+    jg line_done
+;
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
+    cmp di,ds:v_y_min
+    jl line_done
+;
+    jmp line_bresen_check_done
+
+line_bresen_check_pos:
     cmp cx,ds:v_x_max
     jg line_done
 ;
@@ -1934,7 +1949,8 @@ line_bresen_magn_ok:
 ;
     cmp di,ds:v_y_min
     jl line_done
-;
+
+line_bresen_check_done:
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
 ;
@@ -1996,13 +2012,12 @@ line_bresen_calc_dy_inc:
 
 line_bresen_calc_save:
 	neg ax
-	mov [bp].dl_inc_high,ax
 	mov [bp].dl_inc_low,ax
-
-line_low_loop:
+;
     mov cx,[bp].curr_x
     mov dx,[bp].curr_y
-;
+
+line_low_loop:
     cmp cx,si
     jne line_more_low
 ;
@@ -2014,7 +2029,7 @@ line_more_low:
     jl line_skip_low
 ;
     cmp dx,ds:v_y_min
-    jge line_high_loop
+    jge line_inrange_bresen
 
 line_skip_low:
     mov ax,[bp].dl_dx
@@ -2027,13 +2042,13 @@ line_skip_dx_low:
 	jnz line_skip_dx_fract_neg_low
 
 line_skip_dx_fract_pos_low:
-    mov ax,[bp].dl_dx
+    mov ax,[bp].dl_dy
 	sub [bp].dl_inc_low,ax
     add cx,[bp].dl_log_add_x
 	jmp line_low_loop
 
 line_skip_dx_fract_neg_low:
-    mov ax,[bp].dl_dy
+    mov ax,[bp].dl_dx
 	add [bp].dl_inc_low,ax
     add dx,[bp].dl_log_add_y
     jmp line_low_loop
@@ -2055,62 +2070,11 @@ line_skip_dy_fract_neg_low:
 	add cx,[bp].dl_log_add_x
 	jmp line_low_loop
 
-line_high_loop:
-    cmp cx,si
-    jne line_more_high
-;
-    cmp dx,di
-    je line_done
-
-line_more_high:
-    cmp si,ds:v_x_max
-    jg line_skip_high
-;
-    cmp di,ds:v_y_max
-    jle line_inrange_bresen
-
-line_skip_high:
-    mov ax,[bp].dl_dx
-	cmp ax,[bp].dl_dy
-	jb line_skip_dy_high
-
-line_skip_dx_high:
-	mov ax,[bp].dl_inc_high
-	test ah,80h
-	jnz line_skip_dx_fract_neg_high
-
-line_skip_dx_fract_pos_high:
-    mov ax,[bp].dl_dy
-	sub [bp].dl_inc_high,ax
-    sub si,[bp].dl_log_add_x
-	jmp line_high_loop
-
-line_skip_dx_fract_neg_high:
-    mov ax,[bp].dl_dx
-	add [bp].dl_inc_high,ax
-    sub di,[bp].dl_log_add_y
-    jmp line_high_loop
-
-line_skip_dy_high:
-	mov ax,[bp].dl_inc_high
-	test ah,80h
-	jnz line_skip_dy_fract_neg_high
-
-line_skip_dy_fract_pos_high:
-    mov ax,[bp].dl_dx
-	sub [bp].dl_inc_high,ax
-	sub di,[bp].dl_log_add_y
-	jmp line_high_loop
-
-line_skip_dy_fract_neg_high:
-    mov ax,[bp].dl_dy
-	add [bp].dl_inc_low,ax
-	sub si,[bp].dl_log_add_x
-	jmp line_high_loop
-
 line_inrange_bresen:    
-	movsx ecx,word ptr [bp].curr_x
-	movsx edx,word ptr [bp].curr_y
+    mov [bp].curr_x,cx
+    mov [bp].curr_y,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
 	imul edx
 	mov ebx,ecx
@@ -2127,16 +2091,11 @@ line_inrange_bresen:
 	add ebx,ebx
 	add ebx,eax
 	add ebx,ds:v_app_base
-	mov edi,ebx
+	mov esi,ebx
 ;
-	mov ax,flat_sel
-	mov es,ax
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-;
-	pop esi
+    pop edi
+    mov ax,flat_sel
+    mov es,ax
 	mov ax,[bp].dl_inc_low
     mov cx,[bp].dl_dx
     mov dx,[bp].dl_dy
@@ -2144,8 +2103,22 @@ line_inrange_bresen:
 	jb line_bresen_dy_loop
 
 line_bresen_dx_loop:
-	cmp esi,edi
-	je line_done
+    cmp edi,esi
+    je line_done
+;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_max
+    jg line_done
+;
+    cmp bx,ds:v_x_min
+    jl line_done
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_max
+    jg line_done
+;
+    cmp bx,ds:v_y_min
+    jl line_done
 ;
 	test ah,80h
 	jnz line_bresen_dx_fract_neg
@@ -2164,14 +2137,6 @@ line_bresen_dx_fract_neg:
 	add ax,cx
 
 line_bresen_dx_plot:
-	cmp edi,ds:v_app_base
-	jb line_done
-;
-	sub esi,[bp].dl_phys_add_y
-	cmp esi,edi
-	jae line_done
-;
-	add esi,[bp].dl_phys_add_y
 	push ax
 	mov eax,ds:v_color
 	mov bx,ds:v_lgop
@@ -2181,8 +2146,22 @@ line_bresen_dx_plot:
 	jmp line_bresen_dx_loop
 
 line_bresen_dy_loop:
-	cmp esi,edi
+	cmp edi,esi
 	je line_done
+;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_max
+    jg line_done
+;
+    cmp bx,ds:v_x_min
+    jl line_done
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_max
+    jg line_done
+;
+    cmp bx,ds:v_y_min
+    jl line_done
 ;
 	test ah,80h
 	jnz line_bresen_dy_fract_neg
@@ -2201,14 +2180,6 @@ line_bresen_dy_fract_neg:
 	add ax,dx
 
 line_bresen_dy_plot:
-	cmp edi,ds:v_app_base
-	jb line_done
-;
-	sub esi,[bp].dl_phys_add_y
-	cmp esi,edi
-	jae line_done
-;
-	add esi,[bp].dl_phys_add_y
 	push ax
 	mov eax,ds:v_color
 	mov bx,ds:v_lgop
@@ -2295,7 +2266,7 @@ line_horiz_do:
 	call FilledLine
 
 line_done:
-    add sp,24
+    add sp,22
 	popad
 	pop es
 	pop ds
