@@ -26,240 +26,272 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_mem_nr					EQU 0
-display_char_nr				EQU 1
-wait_milli_nr				EQU 2
-wait_micro_nr				EQU 3
-create_thread_nr			EQU 4
-terminate_thread_nr			EQU 5
-allocate_dos_mem_nr			EQU 6
-set_text_mode_nr			EQU 7
-set_page_nr					EQU 8
-set_cursor_position_nr		EQU 9
-get_cursor_position_nr		EQU 10
-write_char_nr				EQU 11
-write_asciiz_nr				EQU 12
-read_keyboard_nr			EQU 13
-poll_keyboard_nr			EQU 14
-register_event_nr			EQU 15
-init_event_thread_nr		EQU 16
-register_event_thread_nr	EQU 17
-wait_event_nr				EQU 18
-global_event_nr				EQU 19
-allocate_local_mem_nr		EQU 20
-available_local_linear_nr	EQU 21
-used_local_linear_nr		EQU 22
-write_size_string_nr		EQU 23
-flush_keyboard_nr			EQU 24
-set_focus_nr				EQU 25
-enable_focus_nr				EQU 26
-text_mode_nr				EQU 27
-get_raw_switch_ads_nr		EQU 28
-raw_switch_nr				EQU 29
-get_exception_nr			EQU 30
-set_exception_nr			EQU 31
-get_pm_int_nr				EQU 32
-set_pm_int_nr				EQU 33
-available_vm_linear_nr		EQU 34
-used_vm_linear_nr			EQU 35
-dpmi_int_nr					EQU 36
-dpmi_call_int_nr			EQU 37
-dpmi_call_nr				EQU 38
-allocate_vm_callback_nr		EQU 39
-free_vm_callback_nr			EQU 40
-wait_until_nr				EQU 41
-get_system_time_nr			EQU 42
-fire_event_nr				EQU 43
-get_drive_info_nr			EQU 44
-set_cur_drive_nr			EQU 45
-get_cur_drive_nr			EQU 46
-set_cur_dir_nr				EQU 47
-get_cur_dir_nr				EQU 48
-make_dir_nr					EQU 49
-remove_dir_nr				EQU 50
-delete_file_nr				EQU 51
-rename_file_nr				EQU 52
-open_dir_nr					EQU 53
-close_dir_nr				EQU 54
-read_dir_nr					EQU 55
-get_file_attribute_nr		EQU 56
-set_file_attribute_nr		EQU 57
-open_file_nr				EQU 58
-create_file_nr				EQU 59
-close_file_nr				EQU 60
-dupl_file_nr				EQU 61
-get_ioctl_data_nr			EQU 62
-get_file_size_nr			EQU 63
-set_file_size_nr			EQU 64
-get_file_pos_nr				EQU 65
-set_file_pos_nr				EQU 66
-get_file_time_nr			EQU 67
-set_file_time_nr			EQU 68
-read_file_nr				EQU 69
-write_file_nr				EQU 70
-read_con_nr					EQU 71
-get_debug_tss_nr			EQU 72
-debug_trace_nr				EQU 73
-debug_pace_nr				EQU 74
-debug_go_nr					EQU 75
-debug_next_nr				EQU 76
-get_symbol_dir_nr			EQU 77
-get_symbol_segment_nr		EQU 78
-get_symbol_line_nr			EQU 79
-get_symbol_procedure_nr		EQU 80
-get_symbol_type_nr			EQU 81
-get_debug_thread_nr			EQU 82
-get_symbol_handle_nr		EQU 83
-translate_symbol_segment_nr	EQU 84
-set_vga_mode_nr				EQU 85
-lock_cd_nr					EQU 86
-unlock_cd_nr				EQU 87
-eject_cd_nr					EQU 88
-insert_cd_nr				EQU 89
-fill_rect_nr				EQU 90
-days_in_month_nr			EQU 91
-adjust_time_nr				EQU 92
-passed_days_nr				EQU 93
-time_to_binary_nr			EQU 94
-binary_to_time_nr			EQU 95
-send_serial_nr				EQU 96
-get_state_nr				EQU 97
-receive_serial_nr			EQU 98
-reset_serial_nr				EQU 99
-get_serial_node_nr			EQU 100
-get_serial_state_nr			EQU 101
-get_serial_activity_nr		EQU 102
-load_exe_nr					EQU 103
-spawn_exe_nr				EQU 104
-init_printer_nr				EQU 105
-check_printer_nr			EQU 106
-write_printer_nr			EQU 107
-load_dll_nr					EQU 108
-free_dll_nr					EQU 109
-swap_nr						EQU 110
+; memory
 
-open_com_nr					EQU 111
-close_com_nr				EQU 112
-flush_com_nr				EQU 113
-poll_com_nr					EQU 114
-read_com_nr					EQU 115
-write_com_nr				EQU 116
-set_dtr_nr					EQU 117
-reset_dtr_nr				EQU 118
+allocate_dos_mem_nr			EQU 0
+allocate_local_mem_nr		EQU 1
+free_mem_nr					EQU 2
+available_local_linear_nr	EQU 3
+used_local_linear_nr		EQU 4
+available_vm_linear_nr		EQU 5
+used_vm_linear_nr			EQU 6
 
-open_cbus_nr				EQU 119
-close_cbus_nr				EQU 120
-flush_cbus_nr				EQU 121
-poll_cbus_nr				EQU 122
-read_cbus_nr				EQU 123
-write_cbus_nr				EQU 124
-get_psp_sel_nr				EQU 125
-set_forecolor_nr			EQU 126
-set_backcolor_nr			EQU 127
-set_font_nr					EQU 128
-get_char_width_nr			EQU 129
-get_string_width_nr			EQU 130
-draw_char_nr				EQU 131
-draw_string_nr				EQU 132
-show_mouse_nr				EQU 133
-hide_mouse_nr				EQU 134
-get_mouse_position_nr		EQU 135
-set_mouse_position_nr		EQU 136
-set_mouse_window_nr			EQU 137
-get_left_button_nr			EQU 138
-get_right_button_nr			EQU 139
-get_left_button_press_position_nr	EQU 140
-get_right_button_press_position_nr	EQU 141
-get_left_button_release_position_nr	EQU 142
-get_right_button_release_position_nr	EQU 143
-set_mouse_mickey_nr			EQU 144
-pause_nr					EQU 145
-open_tcp_connection_nr		EQU 146
-listen_tcp_port_nr			EQU 147
-wait_for_tcp_connection_nr	EQU 148
-close_tcp_connection_nr		EQU 149
-abort_tcp_connection_nr		EQU 150
-read_tcp_connection_nr		EQU 151
-write_tcp_connection_nr		EQU 152
-push_tcp_connection_nr		EQU 153
-name_to_ip_nr				EQU 154
-sync_time_nr				EQU 155
-get_time_nr					EQU 156
-time_to_system_time_nr		EQU 157
-system_time_to_time_nr		EQU 158
-wait_for_com_nr				EQU 159
-draw_mono_nr				EQU 160
-get_vm_int_nr				EQU 161
-set_vm_int_nr				EQU 162
-set_flat_linear_valid_nr		EQU 163
-set_flat_linear_invalid_nr		EQU 164
-set_flat_linear_read_nr			EQU 165
-set_flat_linear_readwrite_nr	EQU 166
-reserve_pe_mem_nr			EQU 167
-get_thread_nr				EQU 168
-ping_nr						EQU 169 
-get_cpu_time_nr				EQU 170
-get_dll_proc_nr				EQU 171
-get_dll_name_nr				EQU 172
-get_dll_nr					EQU 173
-get_exit_code_nr			EQU 174
-wait_for_pe_debug_nr		EQU 175
-continue_pe_debug_nr		EQU 176
-notify_pe_exception_nr		EQU 177
-read_thread_mem_nr			EQU 178
-write_thread_mem_nr			EQU 179
-get_thread_tss_nr			EQU 180
-set_thread_tss_nr			EQU 181
-get_keyboard_state_nr		EQU 182
-hook_keyboard_nr			EQU 183
-unhook_keyboard_nr			EQU 184
-hook_mouse_nr				EQU 185
-unhook_mouse_nr				EQU 186
-delete_tcp_connection_nr	EQU 187
-is_tcp_connection_closed_nr	EQU 188
-get_ip_address_nr			EQU 189
-ip_to_name_nr				EQU 190
-get_dns_nr					EQU 191
-get_ppp_dns_nr				EQU 192
-get_local_mailslot_nr		EQU 193
-get_remote_mailslot_nr		EQU 194
-free_mailslot_nr			EQU 195
-send_mailslot_nr			EQU 196
-define_mailslot_nr			EQU 197
-receive_mailslot_nr			EQU 198
-reply_mailslot_nr			EQU 199
-set_video_mode_nr			EQU 200
+; paging
 
-get_exe_name_nr				EQU 201
-get_cmd_line_nr				EQU 202
-get_env_nr					EQU 203
-unload_exe_nr				EQU 204
-allocate_app_mem_nr			EQU 205
-free_app_mem_nr				EQU 206
+reserve_pe_mem_nr			EQU 7
+set_flat_linear_valid_nr	EQU 8
+set_flat_linear_invalid_nr	EQU 9
+set_flat_linear_read_nr		EQU 10
+set_flat_linear_readwrite_nr EQU 11
 
-create_mapping_nr				EQU 207
-create_named_mapping_nr			EQU 208
-create_named_file_mapping_nr	EQU 209
-open_named_mapping_nr			EQU 210
-sync_mapping_nr					EQU 211
-close_mapping_nr				EQU 212
-map_view_nr						EQU 213
-unmap_view_nr					EQU 214
+; interrupt & exception
 
-create_user_section_nr			EQU 215
-create_blocked_user_section_nr	EQU 216
-delete_user_section_nr			EQU 217
-enter_user_section_nr			EQU 218
-leave_user_section_nr			EQU 219
+get_raw_switch_ads_nr		EQU 12
+raw_switch_nr				EQU 13
+get_exception_nr			EQU 14
+set_exception_nr			EQU 15
+get_pm_int_nr				EQU 16
+set_pm_int_nr				EQU 17
+get_vm_int_nr				EQU 18
+set_vm_int_nr				EQU 19
+dpmi_int_nr					EQU 20
+dpmi_call_int_nr			EQU 21
+dpmi_call_nr				EQU 22
+allocate_vm_callback_nr		EQU 23
+free_vm_callback_nr			EQU 24
 
-test_nr							EQU 220
+; multitasking
 
-read_disc_nr					EQU 221
-write_disc_nr					EQU 222
-get_disc_info_nr				EQU 223
-get_dll_resource_nr				EQU 224
-get_rdfs_info_nr				EQU 225
-format_drive_nr					EQU 226
-create_file_mapping_nr			EQU 227
+wait_milli_nr				EQU 25
+wait_micro_nr				EQU 26
+wait_until_nr				EQU 27
+create_thread_nr			EQU 28
+terminate_thread_nr			EQU 29
+get_thread_nr				EQU 30
+swap_nr						EQU 31
 
-usergate_entries				EQU 228
+; critical sections
+
+create_user_section_nr		EQU 32
+create_blocked_user_section_nr EQU 33
+delete_user_section_nr		EQU 34
+enter_user_section_nr		EQU 35
+leave_user_section_nr		EQU 36
+
+; IPC
+
+get_local_mailslot_nr		EQU 37
+get_remote_mailslot_nr		EQU 38
+free_mailslot_nr			EQU 39
+send_mailslot_nr			EQU 40
+define_mailslot_nr			EQU 41
+receive_mailslot_nr			EQU 42
+reply_mailslot_nr			EQU 43
+
+; programs & DLLs
+
+load_exe_nr					EQU 44
+spawn_exe_nr				EQU 45
+unload_exe_nr				EQU 46
+get_exit_code_nr			EQU 47
+get_exe_name_nr				EQU 48
+get_cmd_line_nr				EQU 49
+get_env_nr					EQU 50
+load_dll_nr					EQU 51
+free_dll_nr					EQU 52
+get_dll_proc_nr				EQU 53
+get_dll_resource_nr			EQU 54
+get_dll_name_nr				EQU 55
+get_dll_nr					EQU 56
+allocate_app_mem_nr			EQU 57
+free_app_mem_nr				EQU 58
+get_psp_sel_nr				EQU 59
+
+; debugging
+
+get_debug_tss_nr			EQU 60
+get_debug_thread_nr			EQU 61
+debug_trace_nr				EQU 62
+debug_pace_nr				EQU 63
+debug_go_nr					EQU 64
+debug_next_nr				EQU 65
+get_state_nr				EQU 66
+pause_nr					EQU 67
+wait_for_pe_debug_nr		EQU 68
+continue_pe_debug_nr		EQU 69
+notify_pe_exception_nr		EQU 70
+read_thread_mem_nr			EQU 71
+write_thread_mem_nr			EQU 72
+get_thread_tss_nr			EQU 73
+set_thread_tss_nr			EQU 74
+
+; time & date
+
+get_cpu_time_nr				EQU 75
+get_system_time_nr			EQU 76
+get_time_nr					EQU 77
+time_to_system_time_nr		EQU 78
+system_time_to_time_nr		EQU 79
+days_in_month_nr			EQU 80
+adjust_time_nr				EQU 81
+passed_days_nr				EQU 82
+time_to_binary_nr			EQU 83
+binary_to_time_nr			EQU 84
+sync_time_nr				EQU 85
+
+; focus
+
+set_focus_nr				EQU 86
+enable_focus_nr				EQU 87
+
+; network
+
+get_dns_nr					EQU 88
+get_ppp_dns_nr				EQU 89
+open_tcp_connection_nr		EQU 90
+listen_tcp_port_nr			EQU 91
+wait_for_tcp_connection_nr	EQU 92
+close_tcp_connection_nr		EQU 93
+delete_tcp_connection_nr	EQU 94
+is_tcp_connection_closed_nr	EQU 95
+abort_tcp_connection_nr		EQU 96
+read_tcp_connection_nr		EQU 97
+write_tcp_connection_nr		EQU 98
+push_tcp_connection_nr		EQU 99
+get_ip_address_nr			EQU 100
+name_to_ip_nr				EQU 101
+ip_to_name_nr				EQU 102
+ping_nr						EQU 103 
+
+; low-level discs
+
+get_disc_info_nr			EQU 104
+format_drive_nr				EQU 105
+get_rdfs_info_nr			EQU 106
+read_disc_nr				EQU 107
+write_disc_nr				EQU 108
+get_drive_info_nr			EQU 109
+
+; directories
+
+set_cur_drive_nr			EQU 110
+get_cur_drive_nr			EQU 111
+set_cur_dir_nr				EQU 112
+get_cur_dir_nr				EQU 113
+make_dir_nr					EQU 114
+remove_dir_nr				EQU 115
+rename_file_nr				EQU 116
+delete_file_nr				EQU 117
+get_file_attribute_nr		EQU 118
+set_file_attribute_nr		EQU 119
+open_dir_nr					EQU 120
+close_dir_nr				EQU 121
+read_dir_nr					EQU 122
+
+; files
+
+open_file_nr				EQU 123
+create_file_nr				EQU 124
+close_file_nr				EQU 125
+dupl_file_nr				EQU 126
+get_ioctl_data_nr			EQU 127
+get_file_size_nr			EQU 128
+set_file_size_nr			EQU 129
+get_file_pos_nr				EQU 130
+set_file_pos_nr				EQU 131
+get_file_time_nr			EQU 132
+set_file_time_nr			EQU 133
+read_file_nr				EQU 134
+write_file_nr				EQU 135
+read_con_nr					EQU 136
+
+; memory mapping
+
+create_mapping_nr			EQU 137
+create_named_mapping_nr		EQU 138
+create_file_mapping_nr		EQU 139
+create_named_file_mapping_nr EQU 140
+open_named_mapping_nr		EQU 141
+sync_mapping_nr				EQU 142
+close_mapping_nr			EQU 143
+map_view_nr					EQU 144
+unmap_view_nr				EQU 145
+
+; keyboard
+
+read_keyboard_nr			EQU 146
+poll_keyboard_nr			EQU 147
+flush_keyboard_nr			EQU 148
+hook_keyboard_nr			EQU 149
+unhook_keyboard_nr			EQU 150
+get_keyboard_state_nr		EQU 151
+
+; Mouse
+
+show_mouse_nr				EQU 152
+hide_mouse_nr				EQU 153
+get_mouse_position_nr		EQU 154
+set_mouse_position_nr		EQU 155
+set_mouse_window_nr			EQU 156
+set_mouse_mickey_nr			EQU 157
+get_left_button_nr			EQU 158
+get_right_button_nr			EQU 159
+get_left_button_press_position_nr	EQU 160
+get_right_button_press_position_nr	EQU 161
+get_left_button_release_position_nr	EQU 162
+get_right_button_release_position_nr	EQU 163
+hook_mouse_nr				EQU 164
+unhook_mouse_nr				EQU 165
+
+; CDROM
+
+lock_cd_nr					EQU 166
+unlock_cd_nr				EQU 167
+eject_cd_nr					EQU 168
+insert_cd_nr				EQU 169
+
+; Serial
+
+open_com_nr					EQU 170
+close_com_nr				EQU 171
+flush_com_nr				EQU 172
+poll_com_nr					EQU 173
+wait_for_com_nr				EQU 174
+read_com_nr					EQU 175
+write_com_nr				EQU 176
+set_dtr_nr					EQU 177
+reset_dtr_nr				EQU 178
+
+; printer
+
+init_printer_nr				EQU 179
+check_printer_nr			EQU 180
+write_printer_nr			EQU 181
+
+; screen, text mode
+
+set_cursor_position_nr		EQU 182
+get_cursor_position_nr		EQU 183
+write_char_nr				EQU 184
+write_asciiz_nr				EQU 185
+write_size_string_nr		EQU 186
+
+; screen, graphics mode
+
+set_video_mode_nr			EQU 187
+set_vga_mode_nr				EQU 188
+set_forecolor_nr			EQU 189
+set_backcolor_nr			EQU 190
+set_font_nr					EQU 191
+get_char_width_nr			EQU 192
+get_string_width_nr			EQU 193
+fill_rect_nr				EQU 194
+draw_mono_nr				EQU 195
+draw_char_nr				EQU 196
+draw_string_nr				EQU 197
+
+; uncategorized & new
+
+test_nr						EQU 198
+
+usergate_entries			EQU 199

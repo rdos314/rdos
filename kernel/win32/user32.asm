@@ -174,8 +174,6 @@ MessageBoxA Proc near
 	mov ebp,esp
 	push edi
 ;
-	UserGate set_text_mode_nr
-;
 	mov edi,[ebp+16]
 	UserGate write_asciiz_nr
 	mov al,0Dh

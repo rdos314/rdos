@@ -210,6 +210,10 @@ thread_seg	SEGMENT AT 0
 	p_stack_sel		DW ?
 	p_sleep_sel		DW ?
 	p_sleep_offset	DD ?
+	p_wait_list		DW ?
+	p_kill			DB ?
+	p_is_waiting	DB ?
+	p_ref_count		DW ?
 	thread_name		DB 32 DUP(?)
 thread_seg	ENDS
 
