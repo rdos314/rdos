@@ -41,10 +41,13 @@ lfn_pos_struc   ENDS
 
 lfn_struc   STRUC
 
+lfn_fat_sector      DD ?
+lfn_fat_offset      DW ?
 lfn_entries         DW ?
 lfn_entry_arr       DD 2 * MAX_LFN_ENTRIES DUP (?)
 lfn_seq             DB ?
 lfn_chksum          DB ?
+lfn_fat_name        DB 13 DUP(?)
 lfn_name            DB 256 DUP(?)
 
 lfn_struc   ENDS
