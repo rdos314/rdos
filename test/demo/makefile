@@ -66,6 +66,10 @@ rdfsimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSIMG.ASM
 rdfsimg_objs = $(rdfsimg_srcs:.ASM=.OBJ)
 rdfsimg_exes = RDFSIMG.EXE
 
+hdimg_srcs = BOOTSEC.ASM HDIMG.ASM
+hdimg_objs = $(hdimg_srcs:.ASM=.OBJ)
+hdimg_exes = HDIMG.EXE
+
 grubimg_srcs = GRUBIMG.ASM
 grubimg_objs = $(grubimg_srcs:.ASM=.OBJ)
 grubimg_exes = GRUBIMG.EXE
@@ -92,7 +96,7 @@ test_exes = TEST.EXE
 
 srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs)	\
-			$(rdfsboot_srcs) $(grubload_srcs) \
+			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(test_srcs) $(state_srcs) \
 			$(run_srcs) $(remdebug_srcs)
@@ -101,7 +105,7 @@ objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(cfg2bin_exes) $(boot2bin_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes)	\
-			$(rdfsboot_exes) $(grubload_exes) \
+			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(test_exes) $(state_exes)	\
 			$(run_exes) $(remdebug_exes)
@@ -195,6 +199,14 @@ RDFSIMG.EXE : $(rdfsimg_objs)
 	RDFSIMG;
 !
 
+HDIMG.EXE : $(hdimg_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(hdimg_objs)
+	HDIMG
+	HDIMG;
+!
+
 GRUBIMG.EXE : $(grubimg_objs)
     tlink @&&!
 	$(link_opt) +
@@ -252,4 +264,7 @@ ELANBOOT.BIN:   ELANBOOT.CFG $(rdvs) $(exes) $(dlls)
 
 GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)
 	grubimg
+
+BOOTSEC.BIN:	HDIMG.EXE $(hdimg_objs)
+	hdimg
 

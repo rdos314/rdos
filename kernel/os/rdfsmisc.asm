@@ -586,12 +586,12 @@ get_param	Proc near
 	mov ds:drive_nr,al
 	xor edx,edx
 	LockSector
-	mov edx,es:[esi].boot_hidden_sectors
+;	mov edx,es:[esi].boot_hidden_sectors
 	mov ds:mapping_sector,edx
-	movzx ecx,es:[esi].boot_mapping_sectors
+;	movzx ecx,es:[esi].boot_mapping_sectors
 	add edx,ecx
 	mov ds:data_sector,edx
-	mov ecx,es:[esi].boot_sectors
+;	mov ecx,es:[esi].boot_sectors
 	sub ecx,edx
 	mov ds:sectors,ecx
 	UnlockSector
