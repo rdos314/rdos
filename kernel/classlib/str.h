@@ -63,6 +63,8 @@ public:
 	void Upper();
 	void Lower();
 	void RemoveCrLf();
+	void Append(char ch);
+	void Append(const char *str);
 
 	void ConcatCopy(int len1, const char *str1, int len2, const char *str2);
 
@@ -71,8 +73,6 @@ protected:
 	virtual char Lower(char ch); 
 
 	void Pad(int count, const char *str);
-	void Append(char ch);
-	void Append(const char *str, int size);
 	int Number(long num, int base, int size, int precision, int type);
 
 	void Init();

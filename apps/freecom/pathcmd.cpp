@@ -28,7 +28,7 @@
 #include <string.h>
 
 #include "lang.h"
-#include "path.h"
+#include "pathcmd.h"
 #include "env.h"
 #include "rdos.h"
 

@@ -5,7 +5,7 @@
 #include "env.h"
 #include "langstr.h"
 #include "lang.h"
-#include "path.h"
+#include "pathcmd.h"
 #include "syspath.h"
 #include "set.h"
 #include "sysset.h"
@@ -34,6 +34,7 @@ void main()
 
 	for (;;)
 	{
+		DisplayPrompt();
 		ok = Read(param, 256);
 		if (ok)
 		{

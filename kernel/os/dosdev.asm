@@ -1179,6 +1179,7 @@ ckbend	DW OFFSET con_io_normal
 
 con_io	PROC near
 	push ds
+	push ebx
 	push ecx
 	push edx
 	push esi
@@ -1204,6 +1205,7 @@ con_io_in_tab:
 	pop esi
 	pop edx
 	pop ecx
+	pop ebx
 	pop ds
 	ret
 con_io	ENDP

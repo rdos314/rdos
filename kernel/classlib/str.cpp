@@ -71,11 +71,16 @@ TString::TString()
 ##########################################################################*/
 TString::TString(const TString &src)
 {
-	Section.Enter();
+    Init();
+    
+    Section.Enter();
 	FData = src.FData;
-	FBuf = src.FBuf;
-    src.FData->FRefs++;
-	Section.Leave();
+	if (FData)
+	{
+    	FBuf = src.FBuf;
+        src.FData->FRefs++;
+    }
+    Section.Leave();
 }
 
 /*##########################################################################
@@ -786,7 +791,7 @@ static int skip_atoi(const char **s)
 #
 #   Name       : TString::Append
 #
-#   Purpose....: Append character to string (printf)
+#   Purpose....: Append character
 #
 #   In params..: *
 #   Out params.: *
@@ -815,6 +820,26 @@ void TString::Append(char ch)
 	*(FBuf+FData->FDataSize) = ch;
 	FData->FDataSize++;
 	*(FBuf+FData->FDataSize) = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Append
+#
+#   Purpose....: Append string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Append(const char *str)
+{
+	while (*str)
+	{
+		Append(*str);
+		str++;
+	}
 }
 
 /*##########################################################################

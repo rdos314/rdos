@@ -485,7 +485,7 @@ void DisplayPrompt()
 	while (*pr)
 	{
 		if (*pr != '$')
-			WriteChar(*pr);
+			Write(*pr);
 		else
 		{
 			switch (toupper(*++pr))
