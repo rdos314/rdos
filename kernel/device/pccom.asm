@@ -354,6 +354,13 @@ open_parity_done:
 	mov al,0Bh
 	out dx,al				; modem control, DTR = high, RTS = high
 ;
+	mov dx,ds:base
+	in al,dx
+	add dx,5
+	in al,dx
+	inc dx
+	in al,dx
+;
 	mov bx,ds
 	pop di
 	pop dx

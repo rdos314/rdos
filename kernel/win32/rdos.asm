@@ -666,6 +666,165 @@ RdosGetSysTime	Proc
 	ret 24
 RdosGetSysTime	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetTime
+;
+;		description:	gets time in record form
+;
+;		PARAMETERS:		int *year
+;						int *month
+;						int *day
+;						int *hour
+;						int *min
+;						int *sec
+;						int *milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetTime
+
+gttYear	EQU 8
+gttMonth	EQU 12
+gttDay		EQU 16
+gttHour	EQU 20
+gttMin		EQU 24
+gttSec		EQU 28
+gttMilli	EQU 32
+
+RdosGetTime	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	UserGate get_time_nr
+	push eax
+	UserGate binary_to_time_nr
+	push edx
+;
+	mov esi,[ebp].gttYear
+	movzx edx,dx
+	mov [esi],edx
+;
+	mov esi,[ebp].gttMonth
+	movzx edx,ch
+	mov [esi],edx
+;
+	mov esi,[ebp].gttDay
+	movzx edx,cl
+	mov [esi],edx
+;
+	mov esi,[ebp].gttHour
+	movzx edx,bh
+	mov [esi],edx
+;
+	mov esi,[ebp].gttMin
+	movzx edx,bl
+	mov [esi],edx
+;
+	mov esi,[ebp].gttSec
+	movzx edx,ah
+	mov [esi],edx
+;
+	pop edx
+	UserGate time_to_binary_nr
+	mov ebx,eax
+	pop eax
+	sub eax,ebx
+	xor edx,edx
+	mov ebx,1192
+	div ebx
+	mov esi,[ebp].gttMilli
+	movzx eax,ax
+	mov [esi],eax
+;
+	popad
+	pop ebp
+	ret 24
+RdosGetTime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosConvertTics
+;
+;		description:	Convert tics to record form
+;
+;		PARAMETERS:		int MSB
+;						int LSB
+;						int *year
+;						int *month
+;						int *day
+;						int *hour
+;						int *min
+;						int *sec
+;						int *milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosConvertTics
+
+ctMSB		EQU 8
+ctLSB		EQU 12
+ctYear		EQU 16
+ctMonth		EQU 20
+ctDay		EQU 24
+ctHour		EQU 28
+ctMin		EQU 32
+ctSec		EQU 36
+ctMilli		EQU 40
+
+RdosConvertTics	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov edx,[ebp].ctMSB
+	mov eax,[ebp].ctLSB
+	UserGate binary_to_time_nr
+	push edx
+;
+	mov esi,[ebp].ctYear
+	movzx edx,dx
+	mov [esi],edx
+;
+	mov esi,[ebp].ctMonth
+	movzx edx,ch
+	mov [esi],edx
+;
+	mov esi,[ebp].ctDay
+	movzx edx,cl
+	mov [esi],edx
+;
+	mov esi,[ebp].ctHour
+	movzx edx,bh
+	mov [esi],edx
+;
+	mov esi,[ebp].ctMin
+	movzx edx,bl
+	mov [esi],edx
+;
+	mov esi,[ebp].ctSec
+	movzx edx,ah
+	mov [esi],edx
+;
+	pop edx
+	UserGate time_to_binary_nr
+	mov ebx,eax
+	mov eax,[ebp].ctLSB
+	sub eax,ebx
+	xor edx,edx
+	mov ebx,1192
+	div ebx
+	mov esi,[ebp].ctMilli
+	movzx eax,ax
+	mov [esi],eax
+;
+	popad
+	pop ebp
+	ret 32
+RdosConvertTics	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -674,17 +833,32 @@ RdosGetSysTime	Endp
 ;
 ;		description:	gets system time
 ;
-;		returns:		LSB of tics
+;		parameters:		MSB of tics
+;						LSB of tics
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public RdosGetTics
 
+rgtMSB	EQU 8
+rgtLSB	EQU 12
+
 RdosGetTics	Proc
+	push ebp
+	mov ebp,esp
 	push edx
+	push esi
+;
 	UserGate get_system_time_nr
+	mov esi,[ebp].rgtMSB
+	mov [esi],edx
+	mov esi,[ebp].rgtLSB
+	mov [esi],eax
+;
+	pop esi
 	pop edx
-	ret
+	pop ebp
+	ret 8
 RdosGetTics	Endp
 
 PAGE

@@ -646,35 +646,36 @@ allocate_big_linear	PROC far
 	add es:big_used_mem,eax
 	sub es:big_avail_mem,eax
 	shr eax,12
-	xor dx,dx
+	xor edx,edx
 allocate_global_loop:
 	cmp ebx,(global_page_linear + global_page_size) SHR 10
 	jne allocate_global_no_wrap
 	mov ebx,global_page_linear SHR 10
-	xor dx,dx
+	xor edx,edx
 allocate_global_no_wrap:
-	inc dx
-	mov cl,[ebx]
-	test cl,7
+	inc edx
+	mov ecx,[ebx]
+	or ecx,ecx
 	jz allocate_global_next
-	xor dx,dx
+	xor edx,edx
 allocate_global_next:
 	add ebx,4
-	cmp ax,dx
+	cmp eax,edx
 	je allocate_global_end
 	jmp allocate_global_loop
 allocate_global_end:
-	mov cx,ax
+	mov ecx,eax
 	shl eax,2
 	sub ebx,eax
 	mov dl,2
 	push ebx
-	push cx
+	push ecx
 allocate_global_mark:
 	mov [ebx],dl
 	add ebx,4
-	loop allocate_global_mark
-	pop cx
+	sub ecx,1
+	jnz allocate_global_mark
+	pop ecx
 	pop edx
 ;
 	mov ax,mem_sel

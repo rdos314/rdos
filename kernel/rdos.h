@@ -40,7 +40,7 @@ void RdosSetFileSize(int Handle, long Size);
 long RdosGetFilePos(int Handle);
 void RdosSetFilePos(int Handle, long Pos);
 int RdosReadFile(int Handle, void *Buf, int Size);
-int RdosWriteFile(int Handle, void *Buf, int Size);
+int RdosWriteFile(int Handle, const void *Buf, int Size);
 
 int RdosCreateMapping(int Size);
 int RdosCreateNamedMapping(const char *Name, int Size); 
@@ -56,7 +56,10 @@ void RdosSetCurDir(const char *PathName);
 void RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void RdosTerminateThread();
 void RdosWaitMilli(int ms);
-int RdosGetTics();
+void RdosGetTics(int *msb, int *lsb);
+void RdosConvertTics(int msb, int lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 
 int RdosCreateSection();
 void RdosDeleteSection(int Handle);
