@@ -79,7 +79,7 @@ d_get_buffer	DD ?
 ; IN  ES		Data buffer selector
 d_send			DD ?
 
-; IN  DS:ESI	Node address buffer
+; OUT  DS:ESI	Node address buffer
 d_address		DD ?
 
 driver_data	ENDS

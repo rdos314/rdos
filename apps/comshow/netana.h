@@ -49,7 +49,10 @@ public:
 
 protected:
 	void ShowNetAddress(const char *Adress);
-    void ShowIpData(unsigned char Protocol, const char *Msg, int Size);
+	void ShowIpData(unsigned char Protocol, const char *Msg, int Size);
+	void ShowIcmp(const char *Msg, int Size);
+	void ShowUdp(const char *Msg, int Size);
+	void ShowTcp(const char *Msg, int Size);
     void ShowSmp(const char *Msg, int Size);
     void ShowArp(const char *Msg, int Size);
     void ShowIp(const char *Msg, int Size);

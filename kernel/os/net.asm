@@ -427,8 +427,17 @@ send_arp_driver_loop:
 	mov es:[di].arp_prot_len,al
 	mov es:[di].arp_op,100h
 	add edi,SIZE arp_data
+;
 	movzx cx,ds:addr_len
-	add di,cx
+	push fs
+	mov fs,ds:[bx]
+	push ds
+	call fs:d_address
+	mov edi,SIZE arp_data
+	rep movs byte ptr es:[edi],ds:[esi]
+	pop ds
+	pop fs
+;	
 	movzx cx,gs:p_logical_addr_len
 	push si
 	mov si,OFFSET p_logical_my_addr
@@ -441,14 +450,8 @@ send_arp_driver_loop:
 	push esi
 	rep movs byte ptr es:[edi],fs:[esi]
 ;
-	movzx cx,ds:addr_len
 	push fs
 	mov fs,ds:[bx]
-	push ds
-	call fs:d_address
-	mov edi,SIZE arp_data
-	rep movs byte ptr es:[edi],ds:[esi]
-	pop ds
 	mov esi,OFFSET broadcast_addr
 	mov ecx,ebp
 	xor di,di
@@ -456,6 +459,7 @@ send_arp_driver_loop:
 	call fs:d_send
 	pop fs
 	pop esi
+;	
 	add bx,2
 	pop cx
 	sub cx,1

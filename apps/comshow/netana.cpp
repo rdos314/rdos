@@ -333,7 +333,7 @@ void TNetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
 				tempstr[3] = 0;
 				Write(tempstr);
 				Msg++;
-			}		
+			}
 
 			Write(")");
 		}
@@ -413,7 +413,7 @@ void TNetProtocolAnalyser::ShowNetAddress(const char *Msg)
 			Write("-");
 		Msg++;
 	}
-}		
+}
 
 /*##################  TNetProtocolAnalyser::ShowArp ##########################
 *   Purpose....: Show ARP data message		   					      	        #
@@ -467,28 +467,28 @@ void TNetProtocolAnalyser::ShowArp(const char *Msg, int Size)
 		tempstr[1] = tempstr[3];
 		tempstr[3] = ch;
 		Write(tempstr);
-		Write(", ");
+		Write("\r\n");
 
-	    sprintf(tempstr, "%d.%d.%d.%d",
-    	            Arp->Ip1[0],
-        	        Arp->Ip1[1],
-            	    Arp->Ip1[2],
-                	Arp->Ip1[3]);
+		sprintf(tempstr, "%d.%d.%d.%d",
+					Arp->Ip1[0],
+					Arp->Ip1[1],
+					Arp->Ip1[2],
+					Arp->Ip1[3]);
 
-	    Write(tempstr);
+		Write(tempstr);
 		Write(" = ");
 
 		ShowNetAddress(Arp->NetAdr1);
 
-		Write(", ");
+		Write("\r\n");
 
-	    sprintf(tempstr, "%d.%d.%d.%d",
-    	            Arp->Ip2[0],
-        	        Arp->Ip2[1],
-            	    Arp->Ip2[2],
-                	Arp->Ip2[3]);
+		sprintf(tempstr, "%d.%d.%d.%d",
+					Arp->Ip2[0],
+					Arp->Ip2[1],
+					Arp->Ip2[2],
+					Arp->Ip2[3]);
 
-	    Write(tempstr);
+		Write(tempstr);
 		Write(" = ");
 
 		ShowNetAddress(Arp->NetAdr2);
@@ -510,6 +510,101 @@ void TNetProtocolAnalyser::ShowArp(const char *Msg, int Size)
 
 }
 
+/*##################  TNetProtocolAnalyser::ShowIcmp ##########################
+*   Purpose....: Show ICMP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TNetProtocolAnalyser::ShowIcmp(const char *Msg, int Size)
+{
+	char tempstr[100];
+	char ch;
+
+	Write("ICMP: ");
+
+	if (Size >= 2)
+	{
+		ch = *Msg;
+		switch (ch)
+		{
+			case 0:
+				Write("Echo Reply, ");
+				break;
+
+			case 8:
+				Write("Echo Req, ");
+				break;
+
+			default:
+				Write("Unknown type");
+				break;
+		}
+
+		switch (ch)
+		{
+			case 0:
+			case 8:
+				if (Size > 8 && Size < 107)
+				{
+					Write("Id = ");
+					sprintf(tempstr, "%08lX", *(int *)(Msg + 4));
+					Write(tempstr);
+					Write(" ");
+
+					Msg += 8;
+					Size -= 8;
+					memcpy(tempstr, Msg, Size);
+					tempstr[Size] = 0;
+					Write(tempstr);
+				}
+				break;
+
+			default:
+				Write("Code = ");
+				ch = *(Msg + 1);
+				sprintf(tempstr, "%04hX", ch);
+				tempstr[0] = tempstr[2];
+				tempstr[1] = tempstr[3];
+				tempstr[2] = ' ';
+				tempstr[3] = 0;
+				Write(tempstr);
+				Msg += 4;
+				Size -= 4;
+				break;
+		}
+	}
+
+	Write("\r\n");
+}
+
+/*##################  TNetProtocolAnalyser::ShowUdp ##########################
+*   Purpose....: Show UDP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TNetProtocolAnalyser::ShowUdp(const char *Msg, int Size)
+{
+	Write("UDP:");
+	Write("\r\n");
+}
+
+/*##################  TNetProtocolAnalyser::ShowTcp ##########################
+*   Purpose....: Show TCP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TNetProtocolAnalyser::ShowTcp(const char *Msg, int Size)
+{
+	Write("TCP:");
+	Write("\r\n");
+}
+
 /*##################  TNetProtocolAnalyser::ShowIp ##########################
 *   Purpose....: Show IP data message		   					      	        #
 *   In params..: *                                                          #
@@ -520,37 +615,56 @@ void TNetProtocolAnalyser::ShowArp(const char *Msg, int Size)
 void TNetProtocolAnalyser::ShowIp(const char *Msg, int Size)
 {
 	char str[80];
+	short int len;
 	TIpHeader *IpHeader = (TIpHeader *)Msg;
 
-    Msg += sizeof(TIpHeader);
-    Size -= sizeof(TIpHeader);
+	Msg += sizeof(TIpHeader);
+	Size -= sizeof(TIpHeader);
 
-    sprintf(str, "%d.%d.%d.%d->",
-                IpHeader->Source[0],
-                IpHeader->Source[1],
-                IpHeader->Source[2],
-                IpHeader->Source[3]);
+	len = SwapShort(IpHeader->Size);
+	sprintf(str, "Size = %d, ",
+			len);
+	Write(str);
 
-    Write(str);
+	sprintf(str, "%d.%d.%d.%d->",
+				IpHeader->Source[0],
+				IpHeader->Source[1],
+				IpHeader->Source[2],
+				IpHeader->Source[3]);
 
-    sprintf(str, "%d.%d.%d.%d ",
-                IpHeader->Dest[0],
-                IpHeader->Dest[1],
-                IpHeader->Dest[2],
-                IpHeader->Dest[3]);
+	Write(str);
 
-    Write(str);
+	sprintf(str, "%d.%d.%d.%d ",
+				IpHeader->Dest[0],
+				IpHeader->Dest[1],
+				IpHeader->Dest[2],
+				IpHeader->Dest[3]);
 
-    switch (IpHeader->Protocol)
-    {
-        case 121:
-            ShowSmp(Msg, Size);
-            break;
+	Write(str);
+	Write("\r\n");
 
-        default:
-            ShowIpData(IpHeader->Protocol, Msg, Size);
-            break;
-    }
+	switch (IpHeader->Protocol)
+	{
+		case 1:
+			ShowIcmp(Msg, Size);
+			break;
+
+		case 6:
+			ShowTcp(Msg, Size);
+			break;
+
+		case 17:
+			ShowUdp(Msg, Size);
+			break;
+
+		case 121:
+			ShowSmp(Msg, Size);
+			break;
+
+		default:
+			ShowIpData(IpHeader->Protocol, Msg, Size);
+			break;
+	}
 }
 
 /*##################  TNetProtocolAnalyser::ShowNet ##########################

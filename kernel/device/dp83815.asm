@@ -419,10 +419,10 @@ CreateSendEntry	Proc near
 	push ecx
 	push edx
 ;
-	cmp ecx,64
+	cmp ecx,78
 	jae cseSizeOK
 ;
-	mov ecx,64
+	mov ecx,78
 
 cseSizeOK:
 	mov bx,es
