@@ -34,6 +34,7 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\user.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\os.inc
+INCLUDE ..\os\user.inc
 INCLUDE ..\os\driver.def
 
 	.386p
@@ -145,6 +146,79 @@ stop_com_done:
 	ret
 stop_com_port	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_test
+;
+;		DESCRIPTION:    init test
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+thread1_name    DB 'Thread 1',0
+
+thread1:
+	int 3
+	finit
+	fldln2
+	fldpi
+;
+    xor cx,cx
+tl1:
+    loop tl1
+    int 3
+	fmul st(1),st(0)
+	retf
+
+thread2_name    DB 'Thread 2',0
+
+thread2:
+    int 3
+    finit
+    fldpi
+    fld1
+;
+    xor cx,cx
+tl2:
+    loop tl2
+    int 3
+    fadd st(1),st(0)
+    retf
+
+init_test	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET thread1
+	mov di,OFFSET thread1_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET thread2
+	mov di,OFFSET thread2_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_test	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -165,6 +239,9 @@ init	Proc far
 ;
 	mov bx,power_code_sel
 	InitDevice
+;
+	mov di,OFFSET init_test
+	HookInitTasking
 ;
 	mov ax,cs
 	mov ds,ax

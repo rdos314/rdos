@@ -49,3 +49,5 @@
 	extrn EmSldtMem:near
 	extrn EmStrMem:near
 
+	extrn EmClts:near
+

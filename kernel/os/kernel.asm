@@ -478,6 +478,13 @@ init:
 	dw 0,kernel_tss
 
 prot_init:
+;
+; enable FPU emulation!!
+;
+;    mov eax,cr0
+;    or al,4
+;    mov cr0,eax
+;
 	cli
 	call init_pre_tasking
 	call init_boot_system

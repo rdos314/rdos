@@ -46,6 +46,7 @@ void __stdcall UserBreak(TCpu *Cpu);
 void __stdcall ReadInstruction(TCpu *Cpu);
 void __stdcall DisAssemble(TCpu *Cpu);
 void __stdcall WriteRegs(TCpu *Cpu);
+void __stdcall WriteFpuRegs(TCpu *Cpu);
 void __stdcall Emulate(TCpu *Cpu);
 char __stdcall GetIntVector(TCpu *Cpu);
 void __stdcall ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
@@ -790,6 +791,7 @@ void TCpu::ShowData()
 void TCpu::Show()
 {
 	DisAssemble(this);
+	WriteFpuRegs(this);
 	WriteRegs(this);
 }
 
@@ -802,31 +804,6 @@ void TCpu::Show()
 *##########################################################################*/
 void TCpu::ShowFpu()
 {
-	int FpuReg;
-	int FpuTag;
-	int i;
-
-	FpuTag = Tag;
-	FpuReg = MathStatus >> 11;
-	for (i = 7; i >= 0; i--)
-	{
-		switch ((FpuTag >> (2 * ((FpuReg + i) & 7))) & 3)
-		{
-			case 0:
-				printf("ST(%d)= %Lg\r\n", i, st[(FpuReg + i) & 7]);
-				break;
-
-			case 1:
-				printf("ST(%d)=ZERO\r\n", i);
-				break;
-
-			case 2:
-				printf("ST(%d)=NAN\r\n", i);
-				break;
-
-			case 3:
-				printf("ST(%d)\r\n", i);
-				break;
-		}
-	}
+	WriteFpuRegs(this);
 }
+

@@ -793,6 +793,7 @@ LoadStackSelector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SwitchStackSelector	Proc near
+    int 3
 	push si
 	mov [ebp].em_pl,0
 	push bx
@@ -801,7 +802,7 @@ SwitchStackSelector	Proc near
 	jz ProtectionFault
 ;
 	LoadDescriptor StackFault
-	test dl,10
+	test dl,10h
 	jz StackFault
 ;
 	and dl,1Ah

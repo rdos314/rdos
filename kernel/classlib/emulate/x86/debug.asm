@@ -33,9 +33,17 @@
 INCLUDE ..\core\emulate.inc
 INCLUDE ..\core\emcom.inc
 
+
+.data
+
+FloatBuffer DB 40 DUP(?)
+
+.code
+
 	extrn ShowChar:near
 	extrn ShowSizeString:near
 	extrn ShowAsciiz:near
+	extrn FloatToString:near
 	extrn _debugflag		;the underscore because of the C language
 	extrn op_code_size
 	extrn data_code_size
@@ -46,8 +54,6 @@ INCLUDE ..\core\emcom.inc
 	public WriteHexPtr32
 	public WriteHexByte
 	public NewLine		
-
-.code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1205,5 +1211,118 @@ WriteRegs	Proc near
 	pop ebp
 	ret 4
 WriteRegs	Endp
+
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteOneFpu
+;
+;		DESCRIPTION:	Write one FPU register
+;
+;       PARAMETERS:     ESI     Offset to FPU register
+;                       EDI     Text
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+WriteOneFpu Proc near
+	call WriteAsciiz
+	finit
+	fld tbyte ptr [ebp+esi]
+	push eax
+	mov edi,OFFSET FloatBuffer
+	mov al,' '
+	mov ecx,35
+	rep stosb
+	mov ecx,35
+	mov edi,OFFSET FloatBuffer
+	mov dl,18
+	call FloatToString
+	call WriteSizeString
+	pop eax
+	call NewLine
+    ret
+WriteOneFpu Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteFpuRegs
+;
+;		DESCRIPTION:	Write FPU registers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public WriteFpuRegs
+
+math0   DB 'ST(0)=', 0
+math1   DB 'ST(1)=', 0
+math2   DB 'ST(2)=', 0
+math3   DB 'ST(3)=', 0
+math4   DB 'ST(4)=', 0
+math5   DB 'ST(5)=', 0
+math6   DB 'ST(6)=', 0
+math7   DB 'ST(7)=', 0
+
+WriteFpuRegs	Proc near
+	push ebp
+	mov ebp,esp
+	pushad
+	mov ebp,[ebp+8]
+;
+    mov dx,[ebp].math_tag
+    mov ax,[ebp].math_status
+	shr ax,3
+	mov cl,ah
+	and cl,7
+	add cl,cl
+	ror dx,cl
+	mov ax,dx
+;
+	mov esi,OFFSET math_st0
+	mov edi,OFFSET math0
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st1
+	mov edi,OFFSET math1
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st2
+	mov edi,OFFSET math2
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st3
+	mov edi,OFFSET math3
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st4
+	mov edi,OFFSET math4
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st5
+	mov edi,OFFSET math5
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st6
+	mov edi,OFFSET math6
+	call WriteOneFpu
+;
+	ror ax,2
+	mov esi,OFFSET math_st7
+	mov edi,OFFSET math7
+	call WriteOneFpu
+;
+	popad
+	pop ebp
+	ret 4
+WriteFpuRegs	Endp
+
 
 	END

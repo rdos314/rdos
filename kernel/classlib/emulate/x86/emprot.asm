@@ -61,6 +61,25 @@ EmLoad&name	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			EmClts
+;
+;		DESCRIPTION:	EMULATE clts
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmClts
+
+EmClts	Proc near
+	test byte ptr [ebp].reg_cs.d_access, ACCESS_RPL
+	jnz PrivilegeFault
+;
+	and byte ptr [ebp].reg_cr0,NOT CR0_TS
+	ret
+EmClts	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			EmMoveCrReg
 ;
 ;		DESCRIPTION:	EMULATE mov cr,reg

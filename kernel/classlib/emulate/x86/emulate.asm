@@ -328,7 +328,7 @@ Em0FTab:
 em0F00	DD OFFSET Em0F00,				OFFSET Em0F01
 em0F02	DD OFFSET EmLarRegMem,			OFFSET EmLslRegMem
 em0F04	DD OFFSET EmulateError,			OFFSET EmulateError
-em0F06	DD OFFSET EmulateError,			OFFSET EmulateError
+em0F06	DD OFFSET EmClts,			OFFSET EmulateError
 em0F08	DD OFFSET EmulateError,			OFFSET EmNop
 em0F0A	DD OFFSET EmulateError,			OFFSET OpcodeFault
 em0F0C	DD OFFSET EmulateError,			OFFSET EmulateError
