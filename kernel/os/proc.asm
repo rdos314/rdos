@@ -1965,6 +1965,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_process_callback:
+    int 3
 	mov ax,thread_sel
 	mov fs,ax
 	push ds
@@ -1979,6 +1980,7 @@ create_process_callback:
 create_callback_prot:
 	call init_prot_callback_frame
 create_callback_frame_done:
+    int 3
 	mov eax,ds:cm_eax
 	mov ebx,ds:cm_ebx
 	mov ecx,ds:cm_ecx
