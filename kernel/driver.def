@@ -213,7 +213,6 @@ sernet_data_sel		EQU 558h
 ip_code_sel			EQU 560h
 ip_data_sel			EQU 568h
 
-tcp_code_sel		EQU 570h
 tcp_data_sel		EQU 578h
 
 socket_code_sel		EQU 580h
@@ -318,10 +317,9 @@ pe_process_sel		EQU 7C8h
 ppp_code_sel		EQU 7D0h
 ppp_data_sel		EQU 7D8h
 
-udp_code_sel		EQU 7E0h
+dhcp_data_sel		EQU 7E0h
 udp_data_sel		EQU 7E8h
 
-ntp_code_sel		EQU 800h
 ntp_data_sel		EQU 808h
 
 ipc_code_sel		EQU 810h

@@ -211,6 +211,23 @@ sync_time_done:
 sync_time	Endp
 
 PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			define_ntp_server
+;
+;	Purpose:		Define a NTP server from DHCP
+;
+;	Parameters:		CX			Size of msg
+;					ES:DI		NTP server
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_ntp_server	Proc far
+	ret
+define_ntp_server	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -221,14 +238,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,ntp_code_sel
-	InitDevice
-;
+	public init_ntp
+
+init_ntp	PROC near
 	mov eax,SIZE ntp_data
 	mov bx,ntp_data_sel
 	AllocateFixedSystemMem
@@ -244,12 +256,13 @@ init	PROC far
 	mov ax,sync_time_nr
 	RegisterBimodalUserGate
 ;
-	popa
-	pop es
-	pop ds
+	mov al,42
+	mov di,OFFSET define_ntp_server
+	AddDhcpOption
+;
 	ret
-init	ENDP
+init_ntp	ENDP
 
 code    ENDS
 
-        END init
+        END

@@ -46,6 +46,8 @@ INCLUDE	ip.inc
 	extrn init_cache:near
 	extrn init_udp:near
 	extrn init_dhcp:near
+	extrn init_ntp:near
+	extrn init_tcp:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -545,6 +547,188 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			create_broadcast_ip
+;
+;	Purpose:		create a broadcast IP header, and allocate space for data
+;
+;	Parameters:		AL		Protocol
+;					AH		Time to live
+;					ECX		Size of data
+;					DS:ESI	Options
+;					FS		Driver handle
+;
+;	Returns:		ES:EDI	Ip data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_broadcast_ip_name	DB 'Create Broadcast IP',0
+
+create_broadcast_ip	Proc far
+	push eax
+	push bx
+	push ecx
+	push esi
+	push ebp
+;
+	push ds
+	push ax
+	push cx
+	mov cx,SIZE ip_header
+	push esi
+create_broad_opt_loop:
+	mov al,[esi]
+	or al,al
+	jz create_broad_alloc
+	inc esi
+	inc cx
+	cmp al,1
+	jz create_broad_opt_loop
+;
+	movzx eax,byte ptr [esi]
+	dec al
+	add cx,ax
+	add esi,eax
+	jmp create_broad_opt_loop
+
+create_broad_alloc:	
+	pop esi
+	mov bx,cx
+	dec cx
+	and cx,NOT 3
+	add cx,4
+	movzx eax,cx
+	pop cx
+	add ax,cx
+;
+	push ax
+	push bx
+	mov cx,ax
+	mov bx,ip_data_sel
+	mov ds,bx
+	mov bx,ds:ip_handle
+	GetBroadcastBuffer
+	pop ax
+	pop cx
+	pop dx
+	pop ds
+	jc create_broad_fail
+
+create_broad_fill:
+	mov bp,di
+	mov es:[0],di
+	dec ax
+	shr ax,2
+	inc ax
+	or al,40h
+	mov es:[di].ip_hdr_ver,al
+	mov es:[di].ip_tos,0
+	xchg cl,ch
+	mov es:[di].ip_size,cx
+	mov es:[di].ip_frags,0
+	mov es:[di].ip_ttl,dh
+	mov es:[di].ip_proto,dl
+	mov es:[di].ip_checksum,0
+;
+	push ds
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov ax,ds:curr_id
+	inc ds:curr_id
+	xchg al,ah
+	mov es:[di].ip_id,ax
+	mov es:[di].ip_source,0
+	mov es:[di].ip_dest,-1
+	pop ds
+;
+	add edi,SIZE ip_header
+create_broad_copy_opt:
+	mov al,[esi]
+	or al,al
+	jz create_broad_pad
+	movs byte ptr es:[edi],ds:[esi]
+	cmp al,1
+	je create_broad_copy_opt
+	movzx ecx,byte ptr [esi]
+	rep movs byte ptr es:[edi],ds:[esi]
+	jmp create_broad_copy_opt
+
+create_broad_pad:
+	mov si,di
+	sub si,bp
+	xor al,al
+create_broad_pad_loop:
+	test si,3
+	jz create_broad_ok
+	stos byte ptr es:[edi]
+	inc si
+	jmp create_broad_pad_loop		
+
+create_broad_fail:
+	xor ax,ax
+	mov es,ax
+	xor edi,edi
+	stc
+	jmp create_broad_done
+
+create_broad_ok:
+	clc
+
+create_broad_done:
+	pop ebp
+	pop esi
+	pop ecx
+	pop bx
+	pop eax
+	ret
+create_broadcast_ip	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			send_broadcast_ip
+;
+;	Purpose:		send broadcast IP data
+;
+;	Parameters:		ES		Data selector, IP datagram
+;					FS		Driver selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_broadcast_ip_name	DB 'Send Broadcast IP',0
+
+send_broadcast_ip	Proc far
+    push ds
+	push eax
+	push bx
+	push ecx
+	push edi
+;
+	mov ax,es
+	mov ds,ax
+	mov di,ds:[0]
+    call CalcChecksum
+;
+	movzx ecx,ds:[di].ip_size
+	xchg cl,ch
+;
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov bx,ds:ip_handle
+	SendBroadcast
+;
+	pop edi
+	pop ecx
+	pop bx
+	pop eax
+	pop ds
+	ret
+send_broadcast_ip	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			receive
 ;
 ;	Purpose:		received IP data
@@ -682,6 +866,100 @@ receive_done:
 receive	Endp
 
 PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			define_mask
+;
+;	Purpose:		Define IP mask
+;
+;	Parameters:		CX			Size of msg
+;					ES:DI		mask
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_mask	Proc far
+	push ds
+	push eax
+;
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov eax,es:[di]
+	mov ds:ip_mask,eax
+;
+	pop eax
+	pop ds
+	ret
+define_mask	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			define_gateway
+;
+;	Purpose:		Define gateway
+;
+;	Parameters:		CX			Size of msg
+;					ES:DI		gateway
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_gateway	Proc far
+	push ds
+	push eax
+;
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov eax,es:[di]
+	mov ds:gateway,eax
+;
+	pop eax
+	pop ds
+	ret
+define_gateway	Endp
+	    
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			define_dns
+;
+;	Purpose:		Define DNS
+;
+;	Parameters:		CX			Size of msg
+;					ES:DI		gateway
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+define_dns	Proc far
+	push ds
+	push eax
+	push cx
+	push di
+;
+	mov ax,ip_data_sel
+	mov ds,ax
+	or cx,cx
+	jz define_dns_done
+;
+	mov eax,es:[di]
+	mov ds:dns1,eax
+	add di,4
+	sub cx,4
+	or cx,cx
+	jz define_dns_done
+;
+	mov eax,es:[di]
+	mov ds:dns2,eax
+
+define_dns_done:
+	pop di
+	pop cx
+	pop eax
+	pop ds
+	ret
+define_dns	Endp
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -865,6 +1143,18 @@ init	PROC far
 	mov ax,send_ip_data_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET create_broadcast_ip
+	mov di,OFFSET create_broadcast_ip_name
+	xor cl,cl
+	mov ax,create_broadcast_ip_nr
+	RegisterOsGate
+;
+	mov si,OFFSET send_broadcast_ip
+	mov di,OFFSET send_broadcast_ip_name
+	xor cl,cl
+	mov ax,send_broadcast_ip_nr
+	RegisterOsGate
+;
 	mov si,OFFSET get_ip_address
 	mov di,OFFSET get_ip_address_name
 	xor dx,dx
@@ -880,10 +1170,30 @@ init	PROC far
 	RegisterNetProtocol
 	mov ds:ip_handle,bx
 ;
+	call init_dhcp
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov al,1
+	mov di,OFFSET define_mask
+	AddDhcpOption
+;
+	mov al,3
+	mov di,OFFSET define_gateway
+	AddDhcpOption
+;
+	mov al,6
+	mov di,OFFSET define_dns
+	AddDhcpOption
+;
 	call init_cache
 	call init_dns
 	call init_icmp
 	call init_udp
+	call init_ntp
+	call init_tcp
 ;
 	popa
 	pop es

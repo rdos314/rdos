@@ -3693,10 +3693,10 @@ is_connection_idle Endp
 add_wait_for_tcp_connection_name	DB 'Add Wait For TCP Connection',0
 
 add_wait_tab:
-aw0	DW OFFSET start_wait_for_connection,    tcp_code_sel
-aw1 DW OFFSET stop_wait_for_connection,		tcp_code_sel
-aw2	DW OFFSET clear_connection,				tcp_code_sel
-aw3	DW OFFSET is_connection_idle,		    tcp_code_sel
+aw0	DW OFFSET start_wait_for_connection,    ip_code_sel
+aw1 DW OFFSET stop_wait_for_connection,		ip_code_sel
+aw2	DW OFFSET clear_connection,				ip_code_sel
+aw3	DW OFFSET is_connection_idle,		    ip_code_sel
 
 add_wait_for_tcp_connection	PROC far
 	push ds
@@ -4365,7 +4365,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init_tcp
+;		NAME:			init_tcp_thread
 ;
 ;		DESCRIPTION:    Create supervisor thread
 ;
@@ -4375,7 +4375,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_tcp	Proc far
+init_tcp_thread	Proc far
 	push ds
 	push es
 	pusha
@@ -4393,27 +4393,22 @@ init_tcp	Proc far
 	pop es
 	pop ds
 	ret
-init_tcp	Endp
+init_tcp_thread	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init
+;		NAME:			init_tcp
 ;
 ;		DESCRIPTION:    Init tcp driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov bx,tcp_code_sel
-	InitDevice
-;
+	public init_tcp
+
+init_tcp	PROC near
 	mov eax,SIZE tcp_data
 	mov bx,tcp_data_sel
 	AllocateFixedSystemMem
@@ -4432,7 +4427,7 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET init_tcp
+	mov di,OFFSET init_tcp_thread
 	HookInitTasking
 ;
 	mov di,OFFSET delete_handle
@@ -4529,12 +4524,9 @@ init	PROC far
 	mov di,OFFSET Receive
 	HookIp
 ;
-	popa
-	pop es
-	pop ds
 	ret
-init	ENDP
+init_tcp	ENDP
 
 code    ENDS
 
-        END init
+        END

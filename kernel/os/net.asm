@@ -1319,6 +1319,144 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			GetBroadcastBuffer
+;
+;	Purpose:		Get a broadcast buffer
+;
+;	Parameters:		FS		driver handle
+;					ECX		size of data
+;					ES:EDI	address of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_broadcast_buffer_name	DB 'Get Broadcast Buffer',0
+
+get_broadcast_buffer	Proc far
+	call fs:d_get_buffer
+	ret
+get_broadcast_buffer	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			SendBroadcast
+;
+;	Purpose:		Send broadcast message
+;
+;	Parameters:		BX		protocol
+;					FS		driver handle
+;					ECX		size of data
+;					ES:EDI	address of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+send_broadcast_name	DB 'Send Broadcast',0
+
+send_broadcast	Proc far
+	push ds
+	push esi
+;
+	mov ds,bx
+	mov dx,ds:p_packet_type
+	mov ds,fs:d_class
+	mov esi,OFFSET broadcast_addr
+	call fs:d_send
+;
+	pop esi
+	pop ds
+	ret
+send_broadcast	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			NetBroadcast
+;
+;	Purpose:		Broadcast to all devices
+;
+;	Parameters:		ES:DI	Callback for each driver
+;						FS		driver handle
+;						GS		passed unchanged
+;						EDX		passed unchanged
+;						ESI		passed unchanged
+;						EBP		passed unchanged
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+net_broadcast_name	DB 'Net Broadcast',0
+
+net_broadcast	Proc far
+	push ds
+	push fs
+	pushad
+;
+	mov ax,net_data_sel
+	mov ds,ax
+	mov cx,ds:class_count
+	mov bx,OFFSET class_arr
+	or cx,cx
+	jz net_br_done
+
+net_br_class_loop:
+	push ds
+	push bx
+	push cx
+	mov ds,ds:[bx]
+	mov cx,ds:driver_count
+	mov bx,OFFSET driver_arr
+	or cx,cx
+	jz net_br_class_next
+;
+	mov cx,ds:driver_count
+	mov bx,OFFSET driver_arr
+
+net_br_driver_loop:
+	push cx
+;
+	push ds
+	push es
+	push gs
+	pushad
+;
+	mov fs,ds:[bx]
+	push cs
+	push OFFSET net_br_driver_next
+	push es
+	push di
+	retf
+
+net_br_driver_next:
+	popad
+	pop gs
+	pop es
+	pop ds
+;
+	add bx,2
+	pop cx
+	sub cx,1
+	jnz net_br_driver_loop
+
+net_br_class_next:	
+	pop cx
+	pop bx
+	pop ds
+	add bx,2
+	sub cx,1
+	jnz net_br_class_loop
+
+net_br_done:
+	popad
+	pop fs
+	pop ds
+	ret
+net_broadcast	ENDP
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			GetPppBuffer
 ;
 ;	Purpose:		Get PPP buffer
@@ -1631,6 +1769,7 @@ init_net	Proc far
 	pop ds
 	ret
 init_net	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1708,6 +1847,24 @@ init	PROC far
 	mov di,OFFSET send_net_name
 	xor cl,cl
 	mov ax,send_net_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_broadcast_buffer
+	mov di,OFFSET get_broadcast_buffer_name
+	xor cl,cl
+	mov ax,get_broadcast_buffer_nr
+	RegisterOsGate
+;
+	mov si,OFFSET send_broadcast
+	mov di,OFFSET send_broadcast_name
+	xor cl,cl
+	mov ax,send_broadcast_nr
+	RegisterOsGate
+;
+	mov si,OFFSET net_broadcast
+	mov di,OFFSET net_broadcast_name
+	xor cl,cl
+	mov ax,net_broadcast_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_ppp_buffer

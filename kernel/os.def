@@ -421,5 +421,14 @@ create_alias_sel32_nr		EQU 285
 
 add_net_source_address_nr	EQU 286
 
+get_broadcast_buffer_nr		EQU 287
+send_broadcast_nr			EQU 288
+
+create_broadcast_ip_nr		EQU 289
+send_broadcast_ip_nr		EQU 290
+
+net_broadcast_nr			EQU 291
+add_dhcp_option_nr			EQU 292
+
 osgate_entries				EQU 300
 

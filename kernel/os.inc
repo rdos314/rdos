@@ -1151,6 +1151,34 @@ SendNet	MACRO
 	OsGate send_net_nr
 						ENDM
 
+; IN  FS		Driver handle
+; IN  ECX		Size
+; OUT ES:EDI	Data buffer to use
+; OUT NC		Success
+GetBroadcastBuffer	MACRO
+	OsGate get_broadcast_buffer_nr
+						ENDM
+
+; IN  BX		Protocol handle
+; IN  FS		Driver handle
+; IN  ECX		Size
+; IN  ES		Data buffer
+; OUT NC		Success
+SendBroadcast	MACRO
+	OsGate send_broadcast_nr
+						ENDM
+
+; IN  ES:DI		Callback for each driver
+;						DS		class selector
+;						FS		driver handle
+;						GS		passed unchanged
+;						EDX		passed unchanged
+;						ESI		passed unchanged
+;						EBP		passed unchanged
+NetBroadcast	MACRO
+	OsGate net_broadcast_nr
+				ENDM
+
 ; IN  ECX		SIZE
 ; OUT ES:EDI	DATA BUFFER TO USE
 ; OUT NC		SUCCESS
@@ -1203,6 +1231,29 @@ CreateIpHeader	MACRO
 ;	ES		Datagram to send
 SendIp	MACRO
 	OsGate send_ip_data_nr
+						ENDM
+
+; IN  AL		Protocol
+; IN  AH		Time to live
+; IN  ECX		Size of data
+; IN  FS		Driver selector
+; IN  DS:ESI	Options
+; OUT ES:EDI	IP Data
+CreateBroadcastIp	MACRO
+	OsGate create_broadcast_ip_nr
+						ENDM
+
+; IN  ES		Datagram to send
+; IN  FS		Driver selector
+SendBroadcastIp	MACRO
+	OsGate send_broadcast_ip_nr
+						ENDM
+
+; IN  AL		Option code
+; IN  ES:DI		Callback for option data
+;					ES:DI		Receive option data
+AddDhcpOption	MACRO
+	OsGate add_dhcp_option_nr
 						ENDM
 
 ;	ES:DI	New IP cache entry callback
