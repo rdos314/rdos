@@ -41,13 +41,17 @@ zfx86_srcs = ZFX86.ASM
 zfx86_objs = $(zfx86_srcs:.ASM=.OBJ)
 zfx86_rdvs = ZFX86.RDV
 
-srcs =      $(shutdown_srcs) $(zfx86_srcs)
+fldisc_srcs = FLDISC.ASM
+fldisc_objs = $(fldisc_srcs:.ASM=.OBJ)
+fldisc_rdvs = FLDISC.RDV
+
+srcs =      $(shutdown_srcs) $(zfx86_srcs) $(fldisc_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(shutdown_exes)
 
-rdvs =      $(zfx86_rdvs)
+rdvs =      $(zfx86_rdvs) $(fldisc_rdvs)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -84,4 +88,12 @@ ZFX86.RDV : $(zfx86_objs)
 	$(zfx86_objs)
 	ZFX86.RDV
 	ZFX86;
+!
+
+FLDISC.RDV : $(fldisc_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(fldisc_objs)
+	FLDISC.RDV
+	FLDISC;
 !

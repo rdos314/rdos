@@ -445,7 +445,7 @@ void cdecl main()
 
 #endif
 
-	RdosCreateThread(DaProc, "DA", 0, 0x2000);
+//	RdosCreateThread(DaProc, "DA", 0, 0x2000);
 
 	for (;;)
 		Wait.WaitForever();
