@@ -32,6 +32,10 @@ CRC:    .EQU $0F
 VAL:    .EQU $10
 COUNT:  .EQU $11
 DELCNT: .EQU $12
+TEMP:   .EQU $13
+BITS:   .EQU $14
+CMD:    .EQU $15
+CMDLEN: .EQU $16
 
     .ORG 4
     .ORG 5
@@ -56,10 +60,34 @@ RESET:
     movwf PORTB			
 			
 WAIT:
+    bcf PORTA,1    
 	btfss PORTB,6
 	goto WAIT
+;	
+    bsf PORTA,1
+    call Preamp
+    call ReadPort
     call Output6
-
+;
+    movlw 1
+    movwf VAL
+    call WritePort    
+;
+    call ReadPort
+    movf VAL,W
+    movwf CMD
+    call Output6	    
+;
+    movlw 1
+    btfss PORTA,4
+    movlw 0   
+    movwf VAL
+    call WritePort
+    movf VAL,W
+    btfsc STATUS,Z
+    goto WAIT
+;
+    call Write24
     goto WAIT
 
 ;;;;;;;;;;
@@ -91,6 +119,11 @@ DelayLoop:
 ;;;;;;;;;;;;
 
 ReadPort:
+    
+ReadWaitLoop:
+	btfss PORTB,6
+	goto ReadWaitLoop
+
     PAGE1
 	movlw $7F
 	movwf TRISB
@@ -122,7 +155,7 @@ WritePort:
     bcf PORTA,0
     nop
     nop
-    bsf PORTA,0
+    bsf PORTA,0    
     return
 
 ;;;;;;;;;;;;
@@ -156,6 +189,7 @@ BitDone:
 ;;;;;;;;;;;;
 
 Preamp:
+    call Delay
     movlw 14
     movwf COUNT
     bsf VAL,0
@@ -166,35 +200,145 @@ PreampLoop:
     btfss STATUS,Z
     goto PreampLoop
 ;
+    bcf VAL,0
+    call OutputBit
     return
+
+;;;;;;;;;;;;
+; UpdateCrc
+;;;;;;;;;;;;
+
+UpdateCrc:	
+    movf VAL,W
+    andlw 1
+	movwf BITS
+	clrf TEMP
+	bcf STATUS,C
+	rlf CRC,F
+	rlf TEMP,W
+	xorwf BITS,W
+	btfsc STATUS,Z
+	return
+
+	movlw $26
+	xorwf CRC,F
+	return
 
 ;;;;;;;;;;;;
 ; Output6
 ;;;;;;;;;;;;
 
 Output6:
-    call ReadPort
-    bsf PORTA,1
-    call Delay
-;
-    call Preamp
+    clrf CRC
 ;
     movlw 6
     movwf COUNT
 
-OutLoop6:
+OutDataLoop6:
+    call OutputBit
+    call UpdateCrc
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto OutDataLoop6
+;
+    bcf VAL,0
+    call OutputBit
+;
+    movf CRC,W
+    movwf VAL
+;
+    movlw 6
+    movwf COUNT
+
+OutCrcLoop6:
     call OutputBit
     rrf VAL,F
     decf COUNT,F
     btfss STATUS,Z
-    goto OutLoop6
+    goto OutCrcLoop6
+;
+    bcf VAL,0
+    call OutputBit
+    call Delay
+    return                                                  
+
+;;;;;;;;;;;;
+; Output24
+;;;;;;;;;;;;
+
+Write24:
+    clrf CRC
+    movlw 4
+    movwf CMDLEN
+
+OutByteLoop24:
+    call ReadPort
+    movlw 6
+    movwf COUNT
+
+OutDataLoop24:
+    call OutputBit
+    call UpdateCrc
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto OutDataLoop24
+;
+    bcf VAL,0
+    call OutputBit
+    call Delay
+;    
+    decf CMDLEN,F
+    btfsc STATUS,Z
+    goto OutCrc24
 ;
     movlw 1
+    btfss PORTA,4
+    movlw 0   
+    movwf VAL
+    call WritePort
+    movf VAL,W
+    btfsc STATUS,Z
+    return
+    goto OutByteLoop24
+
+OutCrc24:
+    btfsc PORTA,4
+    goto OutCrcDo24
+;
+    clrf VAL
+    call WritePort
+    return
+
+OutCrcDo24:    
+    movf CRC,W
+    movwf VAL
+;
+    movlw 6
+    movwf COUNT
+
+OutCrcLoop24:
+    call OutputBit
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto OutCrcLoop24
+;
+    movlw 1
+    btfss PORTA,4
+    movlw 0   
     movwf VAL
     call WritePort
 ;
-    bcf PORTA,1    
-    return                                                  
+    bcf VAL,0
+    call OutputBit
+    call Delay
+;
+    bcf VAL,0
+    call OutputBit
+    call Delay
+    return
             
         .END
 
