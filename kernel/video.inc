@@ -166,6 +166,7 @@ get_line_proc			DD ?
 ; IN  ES:EDI		1-bit mask
 draw_mask_line_proc			DD ?
 
+; IN  AL            mask offset bit
 ; IN  ECX			x + y << 16
 ; IN  DX			width
 ; IN  ESI   		sprite bits

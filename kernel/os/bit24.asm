@@ -1315,13 +1315,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_sprite_line    Proc far
-	push ebx
-	push ecx
-	push edx
-	push esi
-	push edi
-	push ebp
+	pushad
 ;
+    push ax
 	push dx
 	movzx ebx,cx
 	ror ecx,16
@@ -1336,20 +1332,36 @@ draw_sprite_line    Proc far
 	mov ebp,eax
 	xchg ebp,edi
 	pop cx
+	pop dx
+    and dl,7
 ;
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	je draw_sprite_none
 ;
 	add bx,bx
+;
+    or dl,dl
+    jz draw_sprite_lgop_prep
+;
+    push cx
+    mov cl,dl
+    mov dl,es:[ebp]
+    rcr dl,cl
+    mov dh,8
+    sub dh,cl
+    pop cx
+    jmp draw_sprite_lgop_loop
+
+draw_sprite_lgop_prep:
+    mov dh,8
 	mov dl,es:[ebp]
-	mov dh,8
 
 draw_sprite_lgop_loop:
 	rcr dl,1
 	jnc draw_sprite_lgop_next
 ;
-	mov eax,es:[esi]
+	mov ax,es:[esi]
 	call word ptr cs:[bx].LgopTab
 
 draw_sprite_lgop_next:
@@ -1367,6 +1379,19 @@ draw_sprite_lgop_next:
 	jmp draw_sprite_lgop_loop
 
 draw_sprite_none:
+    or dl,dl
+    jz draw_sprite_none_prep
+;
+    push cx
+    mov cl,dl
+    mov dl,es:[ebp]
+    rcr dl,cl
+    mov dh,8
+    sub dh,cl
+    pop cx
+    jmp draw_sprite_none_loop
+
+draw_sprite_none_prep:
 	mov dl,es:[ebp]
 	mov dh,8
 
@@ -1394,12 +1419,7 @@ draw_sprite_none_next:
 	jmp draw_sprite_none_loop
 
 draw_sprite_done:
-	pop ebp
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
+	popad
     ret
 draw_sprite_line    Endp
 
