@@ -38,13 +38,37 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
+TDisc::TDisc()
+{
+    FValid = FALSE;
+}
+
+/*##################  TDisc::TDisc  #############
+*   Purpose....: Disc constructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
 TDisc::TDisc(int Disc)
+{
+    Define(Disc);
+}
+
+/*##################  TDisc::Define  #############
+*   Purpose....: Define disc							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TDisc::Define(int Disc)
 {
 	FDisc = Disc;
 	FValid = RdosGetDiscInfo(Disc, &FBytesPerSector, &FSectors, &FSectorsPerCyl, &FHeads);
 
 	if (FValid && FBytesPerSector == 0)
-    	FValid = 0;
+    	FValid = FALSE;
 
 	if (!FValid)
 	{

@@ -20,47 +20,28 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# disc.h
-# Direct disc access classes
+# idedisc.cpp
+# Direct IDE disc access class
 #
 ########################################################################*/
 
-#ifndef _DISC_H
-#define _DISC_H
+#include "rdos.h"
+#include "idedisc.h"
 
-#include "str.h"
+#define FALSE	0
+#define TRUE	!FALSE
 
-class TDisc
+/*##################  TIdeDisc::TIdeDisc  #############
+*   Purpose....: IDE disc constructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TIdeDisc::TIdeDisc(int Unit)
 {
-public:
-	TDisc(int Disc);
-	~TDisc();
+    int Disc = RdosGetIdeDisc(Unit);
 
-    int IsValid();
-	int GetDiscNr();
-	int GetBytesPerSector();
-	long GetTotalSectors();
-	int GetSectorsPerCyl();
-	int GetHeads();
-
-	int Read(long Sector, char *buf, int size);
-	int Write(long Sector, const char *buf, int size);
-	int GetDrive(long Start, long Size);
-
-	long ChsToLba(const char *Data);
-	void LbaToChs(long Sector, char *Data);
-
-protected:
-    TDisc();
-    void Define(int Disc);
-
-	int FDisc;
-	int FBytesPerSector;
-	long FSectors;
-	int FSectorsPerCyl;
-	int FHeads;
-	int FValid;
-};
-
-#endif
-
+    if (Disc >= 0)
+        Define(Disc);
+}

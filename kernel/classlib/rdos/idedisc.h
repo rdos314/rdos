@@ -20,46 +20,21 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# disc.h
-# Direct disc access classes
+# idedisc.h
+# Direct IDE disc access classes
 #
 ########################################################################*/
 
-#ifndef _DISC_H
-#define _DISC_H
+#ifndef _IDEDISC_H
+#define _IDEDISC_H
 
-#include "str.h"
+#include "disc.h"
 
-class TDisc
+class TIdeDisc : public TDisc
 {
 public:
-	TDisc(int Disc);
-	~TDisc();
+	TIdeDisc(int Unit);
 
-    int IsValid();
-	int GetDiscNr();
-	int GetBytesPerSector();
-	long GetTotalSectors();
-	int GetSectorsPerCyl();
-	int GetHeads();
-
-	int Read(long Sector, char *buf, int size);
-	int Write(long Sector, const char *buf, int size);
-	int GetDrive(long Start, long Size);
-
-	long ChsToLba(const char *Data);
-	void LbaToChs(long Sector, char *Data);
-
-protected:
-    TDisc();
-    void Define(int Disc);
-
-	int FDisc;
-	int FBytesPerSector;
-	long FSectors;
-	int FSectorsPerCyl;
-	int FHeads;
-	int FValid;
 };
 
 #endif

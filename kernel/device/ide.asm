@@ -1946,7 +1946,7 @@ get_ide_disc	Proc far
 ;    
     movzx bx,bl
     add bx,bx
-    mov bx,[bx].DriveSelArr
+    mov bx,ds:[bx].DriveSelArr
     or bx,bx
     jz get_ide_fail
 ;

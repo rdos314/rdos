@@ -246,6 +246,9 @@ int __stdcall RdosReadLine(char *Buf, int MaxSize);
 
 int __stdcall RdosPing(long Node, long Timeout);
 
+int __stdcall RdosGetIdeDisc(int UnitNr);
+int __stdcall RdosGetFloppyDisc(int UnitNr);
+
 int __stdcall RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 int __stdcall RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
 int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);

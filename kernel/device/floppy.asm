@@ -1875,6 +1875,9 @@ discbuf_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 install_unit	Proc near
+    movzx si,al
+    add si,si
+    add si,OFFSET DiscArr
 	push ax
 	mov eax,SIZE disc_struc
 	AllocateSmallGlobalMem
@@ -1899,6 +1902,7 @@ install_unit	Proc near
 	InstallDisc
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
+	mov ds:[si],fs
 ;
 	push di
 	mov ax,cs
@@ -1973,6 +1977,52 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetFloppyDisc
+;
+;		description:	Get disc # for a physical disc unit
+;
+;		PARAMETERS:		BL          Floppy disc #
+;
+;       RETURNS:        AL          disc #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_floppy_disc_name DB 'Get Floppy Disc',0
+
+get_floppy_disc	Proc far
+    push ds
+    push bx
+;
+    mov ax,floppy_data_sel
+    mov ds,ax
+    cmp bl,2
+    jae get_floppy_fail
+;    
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].DiscArr
+    or bx,bx
+    jz get_floppy_fail
+;
+    mov ds,bx
+    mov al,ds:disc_nr
+    clc
+    jmp get_floppy_done
+
+get_floppy_fail:
+    stc
+    
+get_floppy_done:    
+    pop bx
+    pop ds    
+	retf32
+get_floppy_disc	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init device
@@ -2023,6 +2073,12 @@ open_floppy_started:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET get_floppy_disc
+	mov di,OFFSET get_floppy_disc_name
+	xor dx,dx
+	mov ax,get_floppy_disc_nr
+	RegisterBimodalUserGate
 ;
 	mov di,OFFSET disc_ctrl
 	HookInitDisc

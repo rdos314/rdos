@@ -5746,6 +5746,76 @@ RdosReplyMailslot	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetIdeDisc
+;
+;		DESCRIPTION:	Get IDE disc
+;
+;		PARAMETER:		Unit #
+;
+;		RETURNS:		Disc # or -1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetIdeDisc
+
+RdosGetIdeDisc	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bl,[ebp+8]
+	UserGate get_ide_disc_nr
+	jc get_ide_disc_fail
+;
+    movzx eax,al
+	jmp get_ide_disc_done
+
+get_ide_disc_fail:
+	mov eax,-1
+
+get_ide_disc_done:
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetIdeDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFloppyDisc
+;
+;		DESCRIPTION:	Get floppy disc
+;
+;		PARAMETER:		Unit #
+;
+;		RETURNS:		Disc # or -1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFloppyDisc
+
+RdosGetFloppyDisc	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bl,[ebp+8]
+	UserGate get_floppy_disc_nr
+	jc get_floppy_disc_fail
+;
+    movzx eax,al
+	jmp get_floppy_disc_done
+
+get_floppy_disc_fail:
+	mov eax,-1
+
+get_floppy_disc_done:
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetFloppyDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosGetDiscInfo
 ;
 ;		DESCRIPTION:	Get disc info
