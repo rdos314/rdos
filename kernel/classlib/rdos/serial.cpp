@@ -388,6 +388,53 @@ void TSerialDevice::Init(TWait *Wait, int Port, int Irq, long Baudrate, char Par
 #
 #   Purpose....: Constructor
 #
+#   In params..: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialDevice::TSerialDevice()
+{
+    OnChar = 0;    
+    FPort = 0;
+	FBase = 0;
+	FIrq = 0;
+    FBaudrate = 0;
+    FParity = 0;
+    FDataBits = 0;
+    FStopBits = 0;
+    FCurrWait = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::TSerialDevice
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Returns....: *
+#
+##########################################################################*/
+TSerialDevice::TSerialDevice(const char *IniSection)
+ : TWaitDevice(IniSection)
+{
+    OnChar = 0;    
+    FPort = 0;
+	FBase = 0;
+	FIrq = 0;
+    FBaudrate = 0;
+    FParity = 0;
+    FDataBits = 0;
+    FStopBits = 0;
+    FCurrWait = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::TSerialDevice
+#
+#   Purpose....: Constructor
+#
 #   In params..: IniSection Parameter section
 #                Port       port number (ie COM1 = 1)
 #                Baudrate   baudrate

@@ -51,6 +51,8 @@ public:
 	TSerialDevice(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
 	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate);
 	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(const char *IniSection);
+	TSerialDevice();
 	~TSerialDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
