@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,92 +20,86 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpd.cpp
-# FTP server application for RDOS
+# ftpserv.cpp
+# FTP socket server class
 #
 ########################################################################*/
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
 
 #include "rdos.h"
 #include "socket.h"
-#include "langstr.h"
 #include "ftpserv.h"
+#include "langstr.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-class TFtpSocketServerFactory : public TSocketServerFactory
-{
-public:
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
-};
-
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::GetThreadName
+#   Name       : TFtpSocketServer::TFtpSocketServer
 #
-#   Purpose....: Return thread name
+#   Purpose....: Socket server constructor
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-char *TFtpSocketServerFactory::GetThreadName()
+TFtpSocketServer::TFtpSocketServer()
 {
-	return "FTP";
 }
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::GetStackSize
+#   Name       : TFtpSocketServer::DeviceName
 #
-#   Purpose....: Return thread stack size
+#   Purpose....: Device name
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TFtpSocketServerFactory::GetStackSize()
+void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
 {
-	return 0x2000;
+	strncpy(Name,"FTP",MaxLen);
 }
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::Create
+#   Name       : TFtpSocketServer::HandleSocket
 #
-#   Purpose....: Create a socket server instance
+#   Purpose....: Handle socket
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TFtpSocketServerFactory::Create()
+void TFtpSocketServer::HandleSocket()
 {
-	return new TFtpSocketServer;
+	int Major;
+	int Minor;
+	int Release;
+	TLangString msg;
+
+	int count;
+	char Buf[513];
+
+	if (FSocket->WaitForConnection(6000))
+	{
+
+		RdosGetVersion(&Major, &Minor, &Release);
+		msg.printf(220, Major, Minor, Release);
+		msg.Write(FSocket);
+
+		count = FSocket->Read(Buf, 512);
+		Buf[count] = 0;
+		printf(Buf);
+
+		msg.Load(502);
+		msg.Write(FSocket);
+	}
 }
-
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-
-TFtpSocketServerFactory Factory;
-
-void cdecl main()
-{
-	TSocket::Listen(&Factory, 21, 0x4000);
-}
-
