@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 
-extern "C" void ConnectionThread(void *TcpHandle)
+void ConnectionThread(void *TcpHandle)
 {
 	int count;
 	char Buf[513];
@@ -37,21 +37,13 @@ extern "C" void ConnectionThread(void *TcpHandle)
 	}
 }
 
-extern "C" void NewConnection(int Handle)
+void __stdcall NewConnection(int Handle)
 {
 	RdosCreateThread(ConnectionThread, "HTTP", (void *)Handle, 0x2000);
 }
 
-extern "C" void TestThread(void *)
-{
-	_asm int 3
-	printf("Test thread");
-}
-
 void cdecl main()
 {
-	_asm int 3
-	RdosCreateThread(TestThread, "Test", (void *)0x12345678, 0x2000);
 	RdosListenTcpPort(80, 0x4000, NewConnection);
 }
 

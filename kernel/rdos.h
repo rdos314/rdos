@@ -176,7 +176,7 @@ int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 
 int __stdcall RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-void __stdcall RdosListenTcpPort(int Port, int BufferSize, void (*Callb)(int Handle));
+void __stdcall RdosListenTcpPort(int Port, int BufferSize, void __stdcall (*Callb)(int Handle));
 int __stdcall RdosWaitForTcpConnection(int Handle, long Timeout);
 void __stdcall RdosCloseTcpConnection(int Handle);
 void __stdcall RdosDeleteTcpConnection(int Handle);

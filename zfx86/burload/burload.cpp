@@ -8,7 +8,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define PORT	2
+#define PORT	1
 
 TWait wait;
 TSerialDevice *serial;

@@ -48,134 +48,6 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
-LogInit	MACRO
-	push ds
-	push es
-	push ax
-	push bx
-	push cx
-	push di
-;
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET LogFileName
-	xor cx,cx
-	CreateFile
-	CloseFile
-;
-	pop di
-	pop cx
-	pop bx
-	pop ax
-	pop es
-	pop ds
-		ENDM
-
-;
-;	ES:DI		TCP header
-;	CX			Size
-
-LogMessage	MACRO
-	push ds
-	push eax
-	push bx
-	push cx
-	push edx
-	push di
-;
-	add cx,di
-	xor di,di
-	push es
-	push di
-	push cx
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET LogFileName
-	xor cl,cl
-	OpenFile
-	GetFileSize
-	SetFilePos
-;
-	GetThread
-	mov es,ax
-	mov di,OFFSET thread_name
-	mov cx,32
-	WriteFile
-	xor ax,ax
-	push ax
-	GetSystemTime
-	push eax
-	mov ax,ss
-	mov es,ax
-	mov di,sp
-	mov cx,5
-	WriteFile
-	add sp,6
-;
-	pop cx
-	pop di
-	pop es
-	WriteFile
-	CloseFile
-;
-	pop di
-	pop edx
-	pop cx
-	pop bx
-	pop eax
-	pop ds
-			ENDM
-;
-;	DS	connection
-;
-
-LogConnection	MACRO
-	push es
-	push eax
-	push bx
-	push cx
-	push edx
-	push di
-;
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET LogFileName
-	xor cl,cl
-	OpenFile
-	GetFileSize
-	SetFilePos
-;
-	GetThread
-	mov es,ax
-	mov di,OFFSET thread_name
-	mov cx,32
-	WriteFile
-	mov ax,1
-	push ax
-	GetSystemTime
-	push eax
-	mov ax,ss
-	mov es,ax
-	mov di,sp
-	mov cx,5
-	WriteFile
-	add sp,6
-;
-	mov ax,ds
-	mov es,ax
-	xor di,di
-	mov cx,SIZE tcp_connection
-	WriteFile
-	CloseFile
-;
-	pop di
-	pop edx
-	pop cx
-	pop bx
-	pop eax
-	pop es
-			ENDM
-
 handle_num EQU 128
 
 tcp_handle	STRUC
@@ -480,7 +352,6 @@ SendSegment	Proc near
 	call CalcChecksum
 	not ax
 	mov es:[di].tcp_checksum,ax
-;	LogMessage
 	SendIp
 ;
 	pop cx
@@ -2656,7 +2527,6 @@ rt07 DW OFFSET ReceiveClosing
 rt08 DW OFFSET ReceiveTimeWait
 
 Receive	Proc far
-;	LogMessage
 	call ReceiveChecksum
 	jc receive_free
 ;
@@ -2808,7 +2678,6 @@ receive_rst_do:
 	call CalcChecksum
 	not ax
 	mov es:[di].tcp_checksum,ax
-;	LogMessage
 	SendIp
 	mov ax,ds
 	mov es,ax
@@ -4019,7 +3888,6 @@ LogFileName	DB 'z:\tcp.log',0
 tcp_thread_pr:
 	mov ax,250
 	WaitMilliSec
-	LogInit
 ;
 	mov ax,tcp_data_sel
 	mov ds,ax
