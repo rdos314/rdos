@@ -100,8 +100,6 @@ dir_entry_struc	STRUC
 
 fde_size			DD ?
 fde_time			DD ?,?
-fde_log_entry   	DB ?
-fde_log_block   	DW ?
 fde_valid			DB ?
 
 dir_entry_struc	ENDS

@@ -47,31 +47,11 @@ code	SEGMENT byte public use16 'CODE'
     extrn WriteSector:near
     extrn DirEntryLogToPhysSector:near
     extrn ObjectLogToPhysSector:near
+    extrn DirDataLogToPhysSector:near
     extrn AllocateSector:near
     extrn GetRootSector:near
 
 	assume cs:code
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetEntryNameSize
-;
-;		DESCRIPTION:	Get size of entryname
-;
-;		PARAMETERS:		ES:EDI  File name
-;
-;		RETURNS:		ECX		Size of entry name
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetEntryNameSize	Proc near
-	push ax
-    pop ax
-	ret
-GetEntryNameSize	Endp
 
 PAGE
 
@@ -216,28 +196,225 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ExtendDir
+;		NAME:			AddObjectEntry
 ;
-;		DESCRIPTION:    Extend directory, and add entry
+;		DESCRIPTION:    Add entry to object sector
 ;
-;		PARAMETERS:		BX			Dir selector
-;                       ES:EDI      File name
-;                       CX          Attribute
-;                       EDX         Dir file entry
+;		PARAMETERS:		EBX         Object sector handle
+;                       ESI         Object sector address
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ExtendDir	Proc near
+AddObjectEntry	Proc near
+    push fs
+    push ax
+    push ebx
+    push edx
+;
+    push ebx
+    mov al,LOG_ENTRY_DIR_DATA
+    call AllocateSector
+    mov eax,ebx
+    pop ebx
+    jc adoeDone
+;
+    mov es:[esi],eax
+    mov byte ptr es:[esi+3],OBJECT_OK
+    call WriteSector
+;
+    mov ebx,fs:bc_handle
+    call WriteSector
+    UnlockSector
+    clc
+
+adoeDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+AddObjectEntry Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddDirEntry
+;
+;		DESCRIPTION:    Add entry to dir data sector
+;
+;		PARAMETERS:		ESI         Object sector address
+;                       EBP         Dir file entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddDirEntry	Proc near
+    push fs
+    push ax
+    push ebx
+    push cx
+    push edx
+    push esi
+;
+    mov edx,es:[esi]
+    and edx,0FFFFFFh
+    call DirDataLogToPhysSector
+    jc adeDone
+;
+    mov al,ds:drive_nr
+    LockSector
+;
+    add esi,200h
+    mov cx,80h
+
+adeSectorLoop:    
+    sub esi,4
+    mov edx,es:[esi]
+    cmp edx,-1
+    jne adeTake
+;
+    loop adeSectorLoop
+
+adeTake:
+    cmp edx,-1
+    stc
+    jne adeUnlock
+;
+    push ebx
+    mov al,LOG_ENTRY_DIR_ENTRY
+    call AllocateSector
+    mov eax,ebx
+    pop ebx
+    jc adeUnlock
+;
+    mov es:[esi],eax
+    mov es:[ebp].ffe_sector,eax
+    mov byte ptr es:[esi+3],DIR_DATA_OK
+    call WriteSector
+;
+    push ebx
+    mov ebx,fs:bc_handle
+    call WriteSector
+    UnlockSector
+    pop ebx
+    clc
+
+adeUnlock:
+    pushf    
+    UnlockSector
+    popf
+
+adeDone:
+    pop esi
+    pop edx
+    pop cx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+AddDirEntry Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDirObject
+;
+;		DESCRIPTION:    Allocate dir entry 
+;
+;		PARAMETERS:		EDX			Logical object sector
+;                       EBP         Dir file entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDirObject	Proc near
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    call ObjectLogToPhysSector
+    jc adoDone
+;
+    mov al,ds:drive_nr
+    LockSector
+;
+    add esi,200h
+    mov cx,80h
+
+adoSectorLoop:    
+    sub esi,4
+    mov edx,es:[esi]
+    cmp edx,-1
+    jne adoTake
+;
+    loop adoSectorLoop
+
+adoTake:
+    mov al,es:[esi+3]
+    cmp al,-1
+    je adoTakeThis
+;
+    cmp al,OBJECT_OK
+    jne adoTakeNext
+;
+    call AddDirEntry
+    jnc adoUnlock
+
+adoTakeNext:
+    add esi,4
+    test si,1FFh
+    stc
+    jz adoUnlock
+
+adoTakeThis:
+    call AddObjectEntry
+    jc adoUnlock
+;
+    call AddDirEntry
+
+adoUnlock:
+    pushf
+    UnlockSector
+    popf
+
+adoDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    ret
+AllocateDirObject   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GrowDir
+;
+;		DESCRIPTION:    Grow directory
+;
+;		PARAMETERS:		BX			Dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowDir	Proc near
 	push es
 	push fs
+	push gs
 	pushad
 ;
 	mov ax,flat_sel
 	mov es,ax
-    mov fs,bx
-    mov edx,fs:ds_link
+    mov gs,bx
+    mov edx,gs:ds_link
     call DirEntryLogToPhysSector
-    jc edDone
+    jc gdDone
 ;
     mov al,ds:drive_nr
     LockSector
@@ -246,16 +423,16 @@ ExtendDir	Proc near
 ;
 	mov eax,es:[esi-3]
 	cmp eax,-1
-	jne edPresent
+	jne gdPresent
 ;
 	sub esi,0Fh
 	xor ecx,ecx
-	jmp edAlloc
+	jmp gdAlloc
 
-edPresent:
+gdPresent:
 	mov ecx,es:[esi].fde_size
 
-edAlloc:
+gdAlloc:
 	mov eax,ecx
 	shr eax,16
 	inc eax	
@@ -268,84 +445,170 @@ edAlloc:
 	push edi
 	mov al,-1
 
-edCheckSpace:
+gdCheckSpace:
 	and al,es:[edi]
 	inc edi
 	cmp esi,edi
-	jne edCheckSpace
+	jne gdCheckSpace
 ;
 	pop edi
 	add al,1
-	jz edSpaceOk
+	jz gdSpaceOk
 ;
 	int 3
 
-edSpaceOk:	
+gdSpaceOk:	
 	mov eax,es:[esi].fde_size
-	add eax,20h
+	add eax,10000h
 	mov es:[edi].fde_size,eax
 	mov eax,es:[esi].fde_time
 	mov es:[edi].fde_time,eax
 	mov eax,es:[esi].fde_time+4
 	mov es:[edi].fde_time+4,eax
-	add esi,OFFSET fde_log_entry
-	add edi,OFFSET fde_log_entry
+	add esi,OFFSET fde_valid
+	add edi,OFFSET fde_valid
 ;
 	push ecx
 	dec ecx
 	shr ecx,16
 	inc cx
 	or cx,cx
-	jz edMoveDone
+	jz gdMoveDone
 
-edMoveLoop:
+gdMoveLoop:
 	mov eax,es:[esi]
 	mov es:[edi],eax
 	add esi,3
 	add edi,3
-	loop edMoveLoop	
+	loop gdMoveLoop	
 
-edMoveDone:
+gdMoveDone:
 	xor ax,ax
 	mov fs,ax
 	pop ecx
 	or cx,cx
-	jnz edMakeValid
+	jnz gdMakeValid
 
-edAllocObjectSector:
-	push ebx
+gdAllocObjectSector:
+    push ebx
 	mov al,LOG_ENTRY_OBJECT
 	call AllocateSector
 	mov eax,ebx
 	pop ebx
-	jc edDone
+	jc gdUnlock
 ;
 	mov es:[edi],eax
 	add edi,3
 
-edMakeValid:
+gdMakeValid:
 	mov byte ptr es:[edi],DIR_ENTRY_OK	
-	ModifySector
+	call WriteSector
 ;
 	mov ax,fs
 	or ax,ax
-	jz edObjectOk
+	jz gdUnlock
 ;
-	push ebx
+    push ebx
 	mov ebx,fs:bc_handle
-	ModifySector
-	pop ebx
+	call WriteSector
     UnlockSector
+    pop ebx
 	clc
 
-edObjectOk:
+gdUnlock:
+    pushf
+    UnlockSector
+    popf	
 
-edDone:
+gdDone:
 	popad
+	pop gs
 	pop fs
 	pop es
 	ret
-ExtendDir	Endp
+GrowDir	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddToDir
+;
+;		DESCRIPTION:    Add entry to directory
+;
+;		PARAMETERS:		BX			Dir selector
+;                       EDX         Dir file entry
+;
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddToDir	Proc near
+    push es
+    push fs
+    pushad
+;
+    mov ebp,edx
+	mov ax,flat_sel
+	mov es,ax
+    mov fs,bx
+
+atdRetry:    
+    mov edx,fs:ds_link
+    call DirEntryLogToPhysSector
+    jc atdDone
+;    
+    mov al,ds:drive_nr
+    LockSector
+	call FindLastDirInfo
+	mov esi,eax
+	mov eax,es:[esi-3]
+	cmp eax,-1
+	jne atdPresent
+;
+	sub esi,0Fh
+	xor ecx,ecx
+	jmp atdGetObj
+
+atdPresent:
+	mov ecx,es:[esi].fde_size
+
+atdGetObj:
+    shr ecx,16
+    or ecx,ecx
+    jz atdGrow
+;
+    lea edi,[esi].fde_valid
+    add edi,ecx
+    add ecx,ecx
+    add edi,ecx
+    sub edi,3
+;
+    mov edx,es:[edi]
+    and edx,0FFFFFFh
+    call AllocateDirObject
+    jnc atdUnlock
+
+atdGrow:    
+    push bx
+    mov bx,fs
+    call GrowDir
+    pop bx
+    UnlockSector
+    jnc atdRetry
+    jmp atdDone
+
+atdUnlock:
+    pushf
+    UnlockSector
+    popf
+
+atdDone:
+    popad
+    pop fs
+    pop es
+    ret
+AddToDir   Endp
 
 PAGE
 
@@ -374,7 +637,7 @@ AddFileEntry  Proc near
     push edi
     push ebp
 ;
-	call ExtendDir
+	call AddToDir
 	jc afeDone
 ;
     mov ebp,edx
@@ -383,13 +646,9 @@ AddFileEntry  Proc near
     mov ax,flat_sel
     mov es,ax
 ;
-	mov al,LOG_ENTRY_DIR_ENTRY
-	push ebx
-	call AllocateSector
-	pop ebx
-	jc afeDone
+    mov edx,es:[ebp].ffe_sector
+    call DirEntryLogToPhysSector    
 ;
-	push ebx
     mov al,ds:drive_nr
     LockSector
 ;
@@ -405,21 +664,15 @@ afeLoop:
     jnz afeLoop
 ;
     and si,0FE00h
-    add esi,1F0h
+    add esi,1F3h
     mov es:[esi].fde_size,0
     mov eax,es:[ebp].de_time
     mov es:[esi].fde_time,eax
     mov eax,es:[ebp].de_time+4
     mov es:[esi].fde_time+4,eax
-    mov es:[esi].fde_log_entry,-1
-    mov es:[esi].fde_log_block,-1
     mov es:[esi].fde_valid,DIR_ENTRY_OK
     call WriteSector
     UnlockSector
-	pop ebx
-;
-	mov ebx,fs:bc_handle
-	call WriteSector
     clc
     
 afeDone:
@@ -456,13 +709,11 @@ InitRootDirEntry   Proc near
     LockSector
     mov es:[esi].deh_attrib,10h
     mov es:[esi].deh_name,0
-    add esi,1F0h
+    add esi,1F3h
     mov es:[esi].fde_size,0
     GetTime
     mov es:[esi].fde_time,eax
     mov es:[esi].fde_time+4,edx
-    mov es:[esi].fde_log_entry,-1
-    mov es:[esi].fde_log_block,-1
     mov es:[esi].fde_valid,DIR_ENTRY_OK
     call WriteSector
     UnlockSector
