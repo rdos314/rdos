@@ -35,8 +35,8 @@ ConfigSize = 2000h
 
 GateSize = 16
 
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\system.def
+INCLUDE ..\..\kernel\os.def
+INCLUDE ..\..\kernel\os\system.def
 
 exeh_seg	SEGMENT AT 0
 exeh_signature		DW ?

@@ -53,25 +53,13 @@ boot_srcs = BOOT.ASM
 boot_objs = $(boot_srcs:.ASM=.OBJ)
 boot_exes = BOOT.EXE
 
-shutdown_srcs = SHUTDOWN.ASM
-shutdown_objs = $(shutdown_srcs:.ASM=.OBJ)
-shutdown_exes = SHUTDOWN.EXE
-
-zfx86_srcs = ZFX86.ASM
-zfx86_objs = $(zfx86_srcs:.ASM=.OBJ)
-zfx86_rdvs = ZFX86.RDV
-
-test_srcs = TEST.ASM ..\OS\MATH.ASM
-test_objs = $(test_srcs:.ASM=.OBJ)
-test_exes = TEST.EXE
-
 srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs) $(cfg2rom_srcs) \
-            $(boot_srcs) $(shutdown_srcs) $(test_srcs) $(zfx86_srcs)
+            $(boot_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes) $(cfg2rom_exes) \
-            $(boot_exes) $(shutdown_exes) $(test_exes)
+            $(boot_exes)
 
 
 rdvs =      $(zfx86_rdvs)
@@ -95,7 +83,7 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   RDOSBUR.BIN $(rdvs)
+MAIN:  FLASH.BIN SDRAM.BIN $(rdvs)
 
 BUR2BIN.EXE : $(bur2bin_objs)
     tlink @&&!
@@ -137,30 +125,5 @@ BOOT.EXE : $(boot_objs)
 	BOOT;
 !
 
-SHUTDOWN.EXE : $(shutdown_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(shutdown_objs)
-	SHUTDOWN
-	SHUTDOWN;
-!
-
-ZFX86.RDV : $(zfx86_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(zfx86_objs)
-	ZFX86.RDV
-	ZFX86;
-!
-
-TEST.EXE : $(test_objs)
-    tlink @&&!
-	$(prot_opt) +
-	$(test_objs)
-	TEST
-	TEST,,test;
-!
-
-RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes) $(rdvs)
+FLASH.BIN SDRAM.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes) $(rdvs)
 	bur2bin
-	cfg2rom demo

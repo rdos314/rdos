@@ -33,10 +33,10 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
-INCLUDE ..\os\port.def
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\system.inc
+INCLUDE ..\..\kernel\os.def
+INCLUDE ..\..\kernel\os\system.def
+INCLUDE ..\..\kernel\os\system.inc
+INCLUDE ..\..\kernel\driver.def
 
 StartSound    Macro
     mov al,0B4h
