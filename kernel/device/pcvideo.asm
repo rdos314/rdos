@@ -94,6 +94,326 @@ page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetWindowV86
+;
+;		DESCRIPTION:	V86 SetWindow
+;
+;		PARAMETERS:		BL		Window A/B
+;						DX		Window #
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetWindowV86	Proc near
+	push ds
+	push es
+;
+	xor ax,ax
+	mov ds,ax
+	mov es,ax
+	xor bh,bh
+	push 10h
+	mov ax,4F05h
+	V86BiosInt
+;
+	pop es
+	pop ds
+	ret
+SetWindowV86	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetStartV86
+;
+;		DESCRIPTION:	V86 SetStart
+;
+;		PARAMETERS:		CX		First pixel
+;						DX		First line		
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetStartV86	Proc near
+	push ds
+	push es
+;
+	xor ax,ax
+	xor bx,bx
+	mov ds,ax
+	mov es,ax
+	push 10h
+	mov ax,4F07h
+	V86BiosInt
+;
+	pop es
+	pop ds
+	ret
+SetStartV86	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetPaletteV86
+;
+;		DESCRIPTION:	V86 SetPalette
+;
+;		PARAMETERS:		CX		Palette entries
+;						DX		First entry
+;						ES:DI	Palette data
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPaletteV86	Proc near
+	push ds
+;
+	xor bl,bl
+	xor ax,ax
+	mov ds,ax
+	push 10h
+	mov ax,4F09h
+	V86BiosInt
+;
+	pop ds
+	ret
+SetPaletteV86	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetWindowPm16
+;
+;		DESCRIPTION:	16-bit protected mode SetWindow
+;
+;		PARAMETERS:		BL		Window A/B
+;						DX		Window #
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetWindowPm16	Proc near
+	push ds
+	push bp
+;
+	xor bh,bh
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+	mov ax,4F05h
+	call ds:v_pm16_entry
+	pop bp
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
+	pop bp
+	pop si
+	pop ds
+	ret
+SetWindowPm16	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SeStartPm16
+;
+;		DESCRIPTION:	16-bit protected mode SetStart
+;
+;		PARAMETERS:		CX		First pixel
+;						DX		First line		
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetStartPm16	Proc near
+	push ds
+	push bp
+;
+	xor bx,bx
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+	mov ax,4F07h
+	call ds:v_pm16_entry
+	pop bp
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
+	pop bp
+	pop si
+	pop ds
+	ret
+SetStartPm16	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetPalettePm16
+;
+;		DESCRIPTION:	16-bit protected mode SetPalette
+;
+;		PARAMETERS:		CX		Palette entries
+;						DX		First entry
+;						ES:DI	Palette data
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPalettePm16	Proc near
+	push ds
+	push bp
+;
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+	mov ax,4F09h
+	call ds:v_pm16_entry
+	pop bp
+	mov si,thread_ss0_sel
+	mov ss,si
+	mov sp,bp
+;
+	pop bp
+	pop si
+	pop ds
+	ret
+SetPalettePm16	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetWindowPm32
+;
+;		DESCRIPTION:	32-bit protected mode SetWindow
+;
+;		PARAMETERS:		BL		Window A/B
+;						DX		Window #
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetWindowPm32	Proc near
+	push ds
+	push gs
+;
+	xor bh,bh
+	mov ax,pc_video_data_sel
+	mov gs,ax
+	mov ax,gs:v_pm32_data_sel
+	mov ds,ax
+	push bp
+	sub sp,8
+	mov [bp],11000h - 60h
+	mov ax,gs:v_pm32_code_sel
+	mov [bp+4],ax
+	mov ax,4F05h
+	call fword ptr [bp]
+	add sp,8
+	pop bp
+;
+	pop si
+	pop ds
+	ret
+SetWindowPm32	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetStartPm32
+;
+;		DESCRIPTION:	32-bit protected mode SetStart
+;
+;		PARAMETERS:		CX		First pixel
+;						DX		First line		
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetStartPm32	Proc near
+	push ds
+	push bp
+;
+	xor bx,bx
+	mov ax,pc_video_data_sel
+	mov ds,ax
+;
+	pop bp
+	pop si
+	pop ds
+	ret
+SetStartPm32	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetPalettePm32
+;
+;		DESCRIPTION:	32-bit protected mode SetPalette
+;
+;		PARAMETERS:		CX		Palette entries
+;						DX		First entry
+;						ES:DI	Palette data
+;
+;		RETURNS:		AX		Status
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetPalettePm32	Proc near
+	push ds
+	push bp
+;
+	mov ax,pc_video_data_sel
+	mov ds,ax
+;
+	pop bp
+	pop si
+	pop ds
+	ret
+SetPalettePm32	Endp
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			InitPm
 ;
 ;		DESCRIPTION:	Protected mode init
@@ -172,7 +492,7 @@ InitV86	Proc near
 ;
 	mov ax,pc_video_data_sel
 	mov ds,ax
-	mov eax,10000h
+	mov eax,11000h
 	AllocateGlobalMem
 	xor di,di
 	push 10h
@@ -206,32 +526,133 @@ InitV86	Proc near
 	cmp ax,4Fh
 	jne init_v86_calls
 ;
+	int 3
+	mov ebx,11000h - 60h
+	movzx eax,es:[di].vpm_set_window
+	add ax,di
+	sub eax,ebx
+	sub eax,14
+	mov word ptr es:[ebx],0E589h
+	mov word ptr es:[ebx+2],0D88Ch
+	mov word ptr es:[ebx+4],0D08Eh
+	mov byte ptr es:[ebx+6],0BCh
+	mov dword ptr es:[ebx+7],11000h - 80h
+	mov byte ptr es:[ebx+10],0E8h
+	mov es:[ebx+11],eax
+	mov word ptr es:[ebx+15],0BE66h
+	mov word ptr es:[ebx+17],thread_ss0_sel
+	mov word ptr es:[ebx+19],0D68Eh
+	mov word ptr es:[ebx+21],0EC89h
+	mov byte ptr es:[ebx+23],0CBh
+	add ebx,20h
+;
+	movzx eax,es:[di].vpm_set_disp_start
+	add ax,di
+	mov byte ptr es:[ebx],0E8h
+	mov es:[ebx+1],eax
+	mov byte ptr es:[ebx+5],0CBh
+	add ebx,20h
+;
+	movzx eax,es:[di].vpm_set_palette
+	add ax,di
+	mov byte ptr es:[ebx],0E8h
+	mov es:[ebx+1],eax
+	mov byte ptr es:[ebx+5],0CBh
+;
+	mov bx,es
+	GetSelectorBaseSize
+;
+	AllocateGdt
+	CreateCodeSelector32
+	mov ds:v_pm32_code_sel,bx
+;
+	AllocateGdt
+	CreateDataSelector32
+	mov ds:v_pm32_data_sel,bx
+;
 	mov bx,es:[di].vpm_table
+	add bx,di
 
 init_v86_io_loop:
-	mov ax,[bx]
+	mov ax,es:[bx]
 	add bx,2
 	cmp ax,-1
 	jne init_v86_io_loop
 ;
-	mov ax,[bx]
+	mov ax,es:[bx]
 	cmp ax,-1
 	je init_v86_memory_done
 ;
-	mov edx,[bx]
-	movzx ecx,word ptr [bx+4]
+	mov edx,es:[bx]
+	movzx eax,word ptr es:[bx+4]
+;
+	push ds
+	push es
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	AllocateGlobalMem
+	mov bx,es
+	push edx
+	GetSelectorBaseSize
+	mov ax,process_page_sel
+	mov ds,ax
+	mov edi,edx
+	pop edx
+	shr edi,10
+	shr ecx,12
+	or dl,3
+
+init_v86_memmap_loop:
+	mov ds:[edi],edx
+	add edi,4
+	add edx,1000h
+	sub ecx,1
+	jnz init_v86_memmap_loop
+;
+	pop es
+	pop ds
+	mov ds:v_pm32_io,bx
+	jmp init_v86_pm32
 
 init_v86_memory_done:
+	mov ds:v_pm32_io,0
+
+init_v86_pm32:
+	mov ds:v_set_window_proc,OFFSET SetWindowPm32
+	mov ds:v_set_start_proc,OFFSET SetStartPm32
+	mov ds:v_set_palette_proc,OFFSET SetPalettePm32
+	jmp init_v86_check_done
 
 init_v86_calls:
+	mov ds:v_set_window_proc,OFFSET SetWindowV86
+	mov ds:v_set_start_proc,OFFSET SetStartV86
+	mov ds:v_set_palette_proc,OFFSET SetPaletteV86
+;
+	mov bx,es
+	GetSelectorBaseSize
+	mov ax,process_page_sel
+	mov ds,ax
+	mov edi,edx
+	shr edi,10
+	shr ecx,12
+	xor edx,edx
+
+init_v86_free_loop:
+	mov ds:[edi],edx
+	add edi,4
+	sub ecx,1
+	jnz init_v86_free_loop
+;
+	FreeMem
 	jmp init_v86_check_done
 
 init_v86_check_failed:
 	mov ds:v_major_ver,0
 	mov ds:v_minor_ver,0
+	FreeMem
 
 init_v86_check_done:
-	FreeMem
 	popad
 	pop es
 	pop ds
@@ -275,7 +696,6 @@ ScanPmLoop:
 	cmp eax,es:[si]
 	jne ScanPmNext
 ;
-	int 3
 	push cx
 	push si
 	mov cx,SIZE pm_info_block
@@ -291,7 +711,6 @@ ChksumPmLoop:
 	or dl,dl
 	jnz ScanPmNext	
 ;
-	int 3
 	push es
 	mov eax,600h
 	AllocateSmallGlobalMem
@@ -315,16 +734,20 @@ ChksumPmLoop:
 ;
 	mov ax,pc_video_data_sel
 	mov ds,ax
-	mov word ptr ds:v_pm16_entry+2,es
+	mov word ptr ds:v_pm16_entry+2,bx
 	mov ax,es:[si].pmi_entry_point
 	mov word ptr ds:v_pm16_entry,ax
 	mov ds:v_init_proc,OFFSET InitPm
+	mov ds:v_set_window_proc,OFFSET SetWindowPm16
+	mov ds:v_set_start_proc,OFFSET SetStartPm16
+	mov ds:v_set_palette_proc,OFFSET SetPalettePm16
 ;
 	mov eax,1024
 	AllocateSmallGlobalMem
 	mov ds:v_pm16_stack,es
 ;
 	mov ax,es
+	mov es,bx
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
@@ -376,11 +799,15 @@ PAGE
 test_thread_name	DB 'VESA Test',0
 
 test_thread	Proc far
-	int 3
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	call SetupPmEntry
 	call ds:v_init_proc
+;
+	int 3
+	xor bx,bx
+	xor dx,dx
+	call ds:v_set_window_proc
 	ret
 test_thread	Endp
 		

@@ -27,13 +27,19 @@
 
 video_data_seg	STRUC
 
-v_curr_object	DW ?
-v_major_ver		DB ?
-v_minor_ver		DB ?
-v_cap			DW ?
-v_video_mem		DD ?
-v_pm16_stack	DW ?
-v_pm16_entry	DD ?
-v_init_proc		DW ?
+v_curr_object		DW ?
+v_major_ver			DB ?
+v_minor_ver			DB ?
+v_cap				DW ?
+v_video_mem			DD ?
+v_pm16_stack		DW ?
+v_pm16_entry		DD ?
+v_pm32_io			DW ?
+v_pm32_data_sel		DW ?
+v_pm32_code_sel		DW ?
+v_init_proc			DW ?
+v_set_window_proc	DW ?
+v_set_start_proc	DW ?
+v_set_palette_proc	DW ?
 
 video_data_seg	ENDS
