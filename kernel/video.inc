@@ -166,6 +166,12 @@ get_line_proc			DD ?
 ; IN  ES:EDI		1-bit mask
 draw_mask_line_proc			DD ?
 
+; IN  AX			number of pixels
+; IN  CX			x
+; IN  DX			y
+; IN  ES:EDI		line buffer
+set_sprite_row_proc		DD ?
+
 ; IN  AL            mask offset bit
 ; IN  ECX			x + y << 16
 ; IN  DX			width
@@ -222,7 +228,6 @@ v_color 			DD ?
 v_lgop	    		DW ?
 v_font		    	DW ?
 v_style 			DB ?
-v_sprite_pending	DB ?
 
 v_sprite_lines  	DW ?
 v_sprite_max_pos	DW ?

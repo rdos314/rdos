@@ -827,14 +827,8 @@ set_native	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
-;
-    cli
-	cmp ds:v_sprite_pending,1
-	je set_native_sprite_entered
 	EnterSection ds:v_sprite_section
-
-set_native_sprite_entered:
-    sti
+;
     cmp dx,ds:v_y_min
     jl set_native_done
 ;
@@ -885,9 +879,6 @@ set_native_do:
 ;
     cmp ds:v_sprite_count,0
     jz set_native_sprite_hidden
-;
-	cmp ds:v_sprite_pending,1
-	je set_native_sprite_hidden
 ;
     push cx
     push dx
@@ -959,19 +950,10 @@ set_native_show_sprite:
     cmp ds:v_sprite_count,0
     jz set_native_done
 ;
-	cmp ds:v_sprite_pending,1
-	jz set_native_done
-;
     ShowSpriteLine
 
 set_native_done:
-    cli
-	cmp ds:v_sprite_pending,1
-	je set_native_sprite_left
 	LeaveSection ds:v_sprite_section
-
-set_native_sprite_left:
-    sti
     add sp,4
 	popad
 	pop es
@@ -1747,6 +1729,120 @@ draw_mask_line_done:
 	pop es
 	ret
 draw_mask_line	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetSprite
+;
+;		DESCRIPTION:	Set sprite pixels in internal format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_sprite	Proc far
+	push ds
+	push es
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+    cmp dx,ds:v_y_min
+    jl set_sprite_done
+;
+    cmp dx,ds:v_y_max
+    jg set_sprite_done
+
+set_sprite_buf_loop:
+    cmp cx,ds:v_x_min
+    jge set_sprite_start_ok
+
+set_sprite_adv_buf:
+    inc cx
+    add edi,3
+    sub ax,1
+    jnz set_sprite_buf_loop
+    jmp set_sprite_done
+
+set_sprite_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,cx
+    inc bx
+    cmp ax,bx
+    jc set_sprite_do
+;
+    mov ax,bx
+    
+set_sprite_do:
+    or ax,ax
+    jz set_sprite_done
+;
+	push ax
+	mov esi,edi
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	mov edx,ecx
+	add edx,edx
+	add edx,ecx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov edi,eax
+	pop cx
+;
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	movzx ecx,cx
+	mov eax,ecx
+	add ecx,ecx
+	add ecx,eax
+;
+	test di,1
+	jz set_sprite_even
+;
+	movs byte ptr es:[edi],[esi]
+	sub ecx,1
+	jz set_sprite_done
+
+set_sprite_even:
+	cmp ecx,2
+	jb set_sprite_last
+;
+	test di,2
+	jz set_sprite_double
+;
+	movs word ptr es:[edi],[esi]
+	sub ecx,2
+
+set_sprite_double:
+	push cx
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+	pop cx
+	and ecx,3
+
+set_sprite_last:
+	rep movs byte ptr es:[edi],[esi]
+
+set_sprite_done:
+    add sp,4
+	popad
+	pop es
+	pop ds
+	ret
+set_sprite	Endp
 
 PAGE
 
@@ -3203,11 +3299,12 @@ mt14 DW OFFSET set_native,			video_code_sel
 mt15 DW OFFSET set_rgb,				video_code_sel
 mt16 DW OFFSET get_line,			video_code_sel
 mt17 DW OFFSET draw_mask_line,		video_code_sel
-mt18 DW OFFSET draw_sprite_line,	video_code_sel
-mt19 DW OFFSET draw_string,			video_code_sel
-mt1A DW OFFSET draw_line,			video_code_sel
-mt1B DW OFFSET draw_rect,			video_code_sel
-mt1C DW OFFSET draw_ellipse,		video_code_sel
+mt18 DW OFFSET set_sprite,			video_code_sel
+mt19 DW OFFSET draw_sprite_line,	video_code_sel
+mt1A DW OFFSET draw_string,			video_code_sel
+mt1B DW OFFSET draw_line,			video_code_sel
+mt1C DW OFFSET draw_rect,			video_code_sel
+mt1D DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

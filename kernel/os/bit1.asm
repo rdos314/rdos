@@ -990,6 +990,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetSprite
+;
+;		DESCRIPTION:	Set pixels in native format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_sprite	Proc far
+    ret
+set_sprite  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			DrawSprite
 ;
 ;		DESCRIPTION:	Draw a sprite
@@ -1877,12 +1897,13 @@ mt13 DW OFFSET get_rgb,				video_code_sel
 mt14 DW OFFSET set_rgb,				video_code_sel
 mt15 DW OFFSET set_rgb,				video_code_sel
 mt16 DW OFFSET get_line,			video_code_sel
-mt17 DW OFFSET draw_mask_line,		video_code_sel
-mt18 DW OFFSET draw_sprite_line,	video_code_sel
-mt19 DW OFFSET draw_string,			video_code_sel
-mt1A DW OFFSET draw_line,			video_code_sel
-mt1B DW OFFSET draw_rect,			video_code_sel
-mt1C DW OFFSET draw_ellipse,		video_code_sel
+mt17 DW OFFSET set_sprite,			video_code_sel
+mt18 DW OFFSET draw_mask_line,		video_code_sel
+mt19 DW OFFSET draw_sprite_line,	video_code_sel
+mt1A DW OFFSET draw_string,			video_code_sel
+mt1B DW OFFSET draw_line,			video_code_sel
+mt1C DW OFFSET draw_rect,			video_code_sel
+mt1D DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

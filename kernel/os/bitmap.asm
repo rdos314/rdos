@@ -96,7 +96,6 @@ init_video_bitmap	Proc far
 	mov es:v_sprite_sel,0
 	mov es:v_x_min,0
 	mov es:v_y_min,0
-	mov es:v_sprite_pending,0
 	mov si,cx
 	dec si
 	mov es:v_x_max,si
@@ -131,7 +130,7 @@ init_video32:
 	jmp init_video_copy
 
 init_video_copy:
-	mov cx,29
+	mov cx,30
 	xor di,di
 	rep movsd
 ;
@@ -220,7 +219,6 @@ create_bitmap	Proc far
 	mov es:v_sprite_sel,0
 	mov es:v_x_min,0
 	mov es:v_y_min,0
-	mov es:v_sprite_pending,0
 	mov si,cx
 	dec si
 	mov es:v_x_max,si
@@ -282,7 +280,7 @@ cr_bitmap32:
 	jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-	mov cx,29
+	mov cx,30
 	xor di,di
 	rep movsd
 ;

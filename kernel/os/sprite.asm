@@ -453,7 +453,7 @@ HideWholeLine    MACRO
     mov ds,fs:sp_dest_sel
     xor cx,cx
     add dx,fs:sp_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 	jmp hide_done	
 
 hide_whole:
@@ -465,7 +465,7 @@ hide_whole:
     mov ds,fs:sp_dest_sel
     mov cx,fs:sp_x
     add dx,fs:sp_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 
 hide_done:
             ENDM
@@ -506,7 +506,7 @@ SaveAndShowWholeLine    MACRO
 	jbe save_done
 ;
     push cx
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 ;
     mov ds,fs:sp_bitmap_sel
     call ds:get_line_proc
@@ -542,7 +542,7 @@ save_whole:
     xor cx,cx
     sub dx,fs:sp_new_y
     mov ax,fs:sp_w
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 ;
     mov ds,fs:sp_bitmap_sel
     call ds:get_line_proc
@@ -632,7 +632,7 @@ hide_line_do:
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 	pop gs
     pop ds
 
@@ -705,7 +705,7 @@ save_line_do:
     mov ds,gs:sp_back_sel
     sub cx,gs:sp_new_x
     sub dx,gs:sp_new_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 	pop gs
     pop ds
 
@@ -1181,7 +1181,6 @@ hide_sprite	Proc far
     mov ds,fs:sp_dest_sel
     EnterSection ds:v_sprite_section
 ;
-	mov ds:v_sprite_pending,1
     test fs:sp_flags,SP_FLAG_VISIBLE
     jz hide_sprite_leave
 ;
@@ -1212,7 +1211,6 @@ hide_sprite	Proc far
 
 hide_sprite_leave:
     mov ds,fs:sp_dest_sel
-	mov ds:v_sprite_pending,0
 	LeaveSection ds:v_sprite_section
 
 hide_sprite_done:
@@ -1254,7 +1252,6 @@ show_sprite	Proc far
     mov ds,fs:sp_dest_sel
     EnterSection ds:v_sprite_section
 ;
-	mov ds:v_sprite_pending,1
     test fs:sp_flags,SP_FLAG_VISIBLE
     jnz show_sprite_leave
 ;
@@ -1285,7 +1282,6 @@ show_sprite	Proc far
 
 show_sprite_leave:
     mov ds,fs:sp_dest_sel
-	mov ds:v_sprite_pending,0
     LeaveSection ds:v_sprite_section
     clc
 
@@ -1559,7 +1555,6 @@ move_sprite	Proc far
     push ds:v_y_max
     push ds:v_lgop
 ;
-	mov ds:v_sprite_pending,1
     mov ax,fs:sp_x_min
     mov ds:v_x_min,ax
     mov ax,fs:sp_y_min
@@ -1652,7 +1647,6 @@ move_sprite_coord:
     dec ax
     mov ds:[bx].spi_y_max,ax
     mov ds,fs:sp_dest_sel
-	mov ds:v_sprite_pending,0
 ;
     pop ds:v_lgop
     pop ds:v_y_max
@@ -1697,7 +1691,6 @@ delete_sprite	Proc near
     mov ds,fs:sp_dest_sel
     EnterSection ds:v_sprite_section
 ;
-	mov ds:v_sprite_pending,1
 	test fs:sp_flags,SP_FLAG_VISIBLE
     jz delete_sprite_hidden
 ;
@@ -1802,7 +1795,6 @@ delete_sprite_spl_next:
     loop delete_sprite_spl_loop
 ;
     mov ds,fs:sp_dest_sel
-	mov ds:v_sprite_pending,0
     LeaveSection ds:v_sprite_section
     mov ax,fs
     mov es,ax
@@ -1930,8 +1922,6 @@ hide_sprite_line	Proc far
 	cmp ds:[si].spl_upper_ind,-1
 	je hide_sprite_l_done
 ;
-	inc ds:v_sprite_pending
-;
     push ds:v_x_min
     push ds:v_y_min
     push ds:v_x_max
@@ -2001,7 +1991,7 @@ hide_sprite_len_ok:
     mov ds,gs:sp_dest_sel
     add cx,gs:sp_x
     add dx,gs:sp_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 	pop gs
     pop ds
 
@@ -2020,7 +2010,6 @@ hide_sprite_l_next:
     pop ds:v_x_max
     pop ds:v_y_min
     pop ds:v_x_min
-	dec ds:v_sprite_pending
 
 hide_sprite_l_done:
     pop si
@@ -2046,7 +2035,6 @@ show_sprite_line	Proc far
     cmp ds:v_sprite_show_size,0
     jz show_sprite_l_done
 ;
-	inc ds:v_sprite_pending
     push ds:v_x_min
     push ds:v_y_min
     push ds:v_x_max
@@ -2131,7 +2119,7 @@ show_sprite_len_ok:
     mov ds,gs:sp_back_sel
     sub cx,gs:sp_x
     sub dx,gs:sp_y
-    call ds:set_native_row_proc
+    call ds:set_sprite_row_proc
 ;
     mov ds,gs:sp_bitmap_sel
     call ds:get_line_proc
@@ -2181,7 +2169,6 @@ show_sprite_l_next:
     pop ds:v_x_max
     pop ds:v_y_min
     pop ds:v_x_min
-	dec ds:v_sprite_pending
 
 show_sprite_l_done:
     ret
