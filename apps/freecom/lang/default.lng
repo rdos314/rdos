@@ -1582,3 +1582,9 @@ Ping ok
 :TEXT_PING_TIMEOUT
 Ping timeout
 .
+
+:TEXT_CMDHELP_INITFD
+Init floppy and write RDOS bootloader
+
+INITFD 
+.

@@ -24,6 +24,7 @@
 #include "rmpart.h"
 #include "mkpart.h"
 #include "inithd.h"
+#include "initfd.h"
 #include "ping.h"
 
 #include "part.h"
@@ -40,6 +41,7 @@ TDelFactory *del;
 TDirFactory *dir;
 TEraseFactory *erase;
 THelpFactory *help;
+TInitFdFactory *initfd;
 TInitHdFactory *inithd;
 TMdFactory *md;
 TMkdirFactory *mkdir;
@@ -87,6 +89,7 @@ void Init()
 	mkdir = new TMkdirFactory;
 	md = new TMdFactory;
 	inithd = new TInitHdFactory;
+	initfd = new TInitFdFactory;
 	erase = new TEraseFactory;
 	dir = new TDirFactory;
 	del = new TDelFactory;

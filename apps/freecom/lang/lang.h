@@ -260,5 +260,6 @@
 #define TEXT_PING_NODE  256
 #define TEXT_PING_OK  257
 #define TEXT_PING_TIMEOUT  258
+#define TEXT_CMDHELP_INITFD  259
 
 #endif

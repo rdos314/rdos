@@ -715,7 +715,10 @@ STRINGTABLE
  1734, "Pinging node %d,%d,%d,%d\r\n";
  1735, "Ping ok\r\n";
  1736, "Ping timeout\r\n";
- 1737, "'%s' kan inte ha n†gra parametrar\r\n";
+ 1737, "Init floppy and write RDOS bootloader\r\n";
+ 1738, "\r\n";
+ 1739, "INITFD \r\n";
+ 1740, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "1024,1";
  TEXT_ERROR_INVALID_LSWITCH, "1025,1";
  TEXT_ERROR_ILLFORMED_OPTION, "1026,1";
@@ -975,5 +978,6 @@ STRINGTABLE
  TEXT_PING_NODE, "1734,1";
  TEXT_PING_OK, "1735,1";
  TEXT_PING_TIMEOUT, "1736,1";
+ TEXT_CMDHELP_INITFD, "1737,3";
 }
 
