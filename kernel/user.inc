@@ -1006,6 +1006,13 @@ WriteDisc     MACRO
 	UserGate write_disc_nr
 						ENDM
 
+;	IN	AL			Disc #
+;	IN	EDX			Sector #
+;	IN	(E)CX	    Number of sectors to erase
+EraseDiscSectors     MACRO
+	UserGate erase_disc_sectors_nr
+						ENDM
+
 ;	IN	AL			Drive #
 ;	OUT	EAX			Free units
 ;	OUT	CX			bytes / unit
@@ -1816,4 +1823,21 @@ ReadSerialVal      MACRO
 ;	IN  EAX		Value
 WriteSerialVal      MACRO
 	UserGate write_serial_val_nr
+						ENDM
+
+EnableStatusLED      MACRO
+	UserGate enable_status_led_nr
+						ENDM
+
+DisableStatusLED      MACRO
+	UserGate disable_status_led_nr
+						ENDM
+
+;   IN  EAX     Timeout in milli seconds
+StartWatchdog      MACRO
+	UserGate start_watchdog_nr
+						ENDM
+
+KickWatchdog      MACRO
+	UserGate kick_watchdog_nr
 						ENDM

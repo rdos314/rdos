@@ -266,6 +266,12 @@ int __stdcall RdosReadIni(int handle, const char *var, char *str, int maxsize);
 int __stdcall RdosWriteIni(int handle, const char *var, const char *str);
 int __stdcall RdosDeleteIni(int handle, const char *var);
 
+void __stdcall RdosEnableStatusLED();
+void __stdcall RdosDisableStatusLED();
+
+void __stdcall RdosStartWatchdog(int timeout);
+void __stdcall RdosKickWatchdog();
+
 #ifdef __cplusplus
 }
 #endif

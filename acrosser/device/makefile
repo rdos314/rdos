@@ -37,11 +37,15 @@ ar-b1320_srcs = AR-B1320.ASM
 ar-b1320_objs = $(ar-b1320_srcs:.ASM=.OBJ)
 ar-b1320_rdvs = ar-b1320.RDV
 
-srcs =      $(ar-b1320_srcs)
+flash_srcs = FLASH.ASM
+flash_objs = $(flash_srcs:.ASM=.OBJ)
+flash_rdvs = flash.RDV
+
+srcs =      $(ar-b1320_srcs) $(flash_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(ar-b1320_rdvs)
+rdvs =      $(ar-b1320_rdvs) $(flash_rdvs)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -70,4 +74,12 @@ ar-b1320.RDV : $(ar-b1320_objs)
 	$(ar-b1320_objs)
 	ar-b1320.RDV
 	ar-b1320;
+!
+
+FLASH.RDV : $(flash_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(flash_objs)
+	FLASH.RDV
+	FLASH;
 !

@@ -290,6 +290,236 @@ get_adapters_done:
 GetAllAdapters  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UnlockConfig
+;
+;		DESCRIPTION:	Unlock ALI config register
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UnlockConfig  Proc near
+    push ax
+    mov al,13h
+    out 22h,al
+    nop
+    nop
+    mov al,0C5h
+    out 23h,al
+    pop ax
+    ret
+UnlockConfig  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LockConfig
+;
+;		DESCRIPTION:	Lock ALI config register
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LockConfig  Proc near
+    push ax
+    mov al,13h
+    out 22h,al
+    nop
+    nop
+    mov al,0
+    out 23h,al
+    pop ax
+    ret
+LockConfig  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReadConfig
+;
+;		DESCRIPTION:	Read config register
+;
+;       PARAMETERS:     AL      Index
+;
+;       RETURNS:        DL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadConfig  Proc near
+    call UnlockConfig
+;
+    push ax
+    out 22h,al
+    nop
+    nop
+    in al,23h
+    mov dl,al
+    pop ax
+;
+    call LockConfig
+    ret
+ReadConfig  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteConfig
+;
+;		DESCRIPTION:	Write config register
+;
+;       PARAMETERS:     AL      Index
+;                       DL      Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteConfig  Proc near
+    call UnlockConfig
+;
+    push ax
+    out 22h,al
+    nop
+    nop
+    mov al,dl
+    out 23h,al
+    pop ax
+;
+    call LockConfig
+    ret
+WriteConfig  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StartWatchdog
+;
+;		DESCRIPTION:	Start watchdog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_watchdog_name DB 'Start Watchdog', 0
+
+start_watchdog   Proc far
+    push ax
+    push dx
+;    
+    mov al,38h
+    call ReadConfig
+    and dl,0Fh
+    or dl,0D0h
+    call WriteConfig
+;
+    mov al,39h
+    xor dl,dl
+    call WriteConfig
+;
+    mov al,3Ah
+    xor dl,dl
+    call WriteConfig
+;
+    mov al,3Bh
+    mov dl,5
+    call WriteConfig
+;
+    mov al,37h
+    call ReadConfig
+    or dl,40h
+    call WriteConfig
+;
+    pop dx
+    pop ax
+    retf32
+start_watchdog   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			KickWatchdog
+;
+;		DESCRIPTION:	Kick watchdog
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+kick_watchdog_name DB 'Kick Watchdog', 0
+
+kick_watchdog   Proc far
+    push ax
+    push dx
+;    
+    GetDebugThread
+    or ax,ax
+    jnz kw_done
+;    
+    cli
+    mov al,37h
+    call ReadConfig
+    and dl,NOT 40h
+    call WriteConfig    
+    or dl,40h
+    call WriteConfig
+    sti
+
+kw_done:
+    pop dx
+    pop ax
+    retf32
+kick_watchdog   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EnableLED
+;
+;		DESCRIPTION:	Enable LED
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_status_name  DB 'Enable Status LED', 0
+
+enable_status_led   Proc far
+    push ax
+    cli
+    mov al,0Bh
+    out 70h,al
+    in al,71h
+    or al,8
+    mov ah,al
+    mov al,0Bh
+    out 70h,al
+    mov al,ah
+    out 71h,al
+    sti
+    pop ax
+    retf32
+enable_status_led   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DisableLED
+;
+;		DESCRIPTION:	Disable LED
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_status_name  DB 'Disable Status LED', 0
+
+disable_status_led   Proc far
+    push ax
+    cli
+    mov al,0Bh
+    out 70h,al
+    in al,71h
+    and al,0F7h
+    mov ah,al
+    mov al,0Bh
+    out 70h,al
+    mov al,ah
+    out 71h,al
+    sti
+    pop ax
+    retf32
+disable_status_led   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			test_pr
@@ -360,13 +590,50 @@ init	Proc far
 	InitDevice
 ;
 	mov ax,cs
-	mov es,ax
+	mov es,ax	
 	mov di,OFFSET init_thread
-	HookInitTasking
+;	HookInitTasking
 ;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET enable_status_led
+	mov di,OFFSET enable_status_name
+	xor dx,dx
+	mov ax,enable_status_led_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET disable_status_led
+	mov di,OFFSET disable_status_name
+	xor dx,dx
+	mov ax,disable_status_led_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET start_watchdog
+	mov di,OFFSET start_watchdog_name
+	xor dx,dx
+	mov ax,start_watchdog_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET kick_watchdog
+	mov di,OFFSET kick_watchdog_name
+	xor dx,dx
+	mov ax,kick_watchdog_nr
+	RegisterBimodalUserGate
+;	
+    mov ah,2
+    mov al,0Ah
+    out 70h,al
+    in al,71h
+    and al,0F0h
+    or ah,al
+    mov al,0Ah
+    out 70h,al
+    mov al,ah
+    out 71h,al
+;
+    EnableStatusLED    
 ;
     mov eax,80000h
     AllocateBigLinear

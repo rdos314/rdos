@@ -6372,6 +6372,84 @@ ofdDone:
 	ret 4
 RdosOpenFileDrive	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosEnableStatusLED
+;
+;       DESCRIPTION:    Enable status LED
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosEnableStatusLED
+
+RdosEnableStatusLED	Proc near
+	UserGate enable_status_led_nr
+	ret
+RdosEnableStatusLED	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDisableStatusLED
+;
+;       DESCRIPTION:    Disable status LED
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosDisableStatusLED
+
+RdosDisableStatusLED	Proc near
+	UserGate disable_status_led_nr
+	ret
+RdosDisableStatusLED	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosStartWatchdog
+;
+;       DESCRIPTION:    Start watchdog
+;
+;		PARAMETERS:		Timeout in milliseconds
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosStartWatchdog
+
+RdosStartWatchdog	Proc near
+	push ebp
+	mov ebp,esp
+;
+	mov eax,[ebp+8]
+	UserGate start_watchdog_nr
+;
+	pop ebp
+	ret 4
+RdosStartWatchdog	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosKickWatchdog
+;
+;       DESCRIPTION:    Kick watchdog
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosKickWatchdog
+
+RdosKickWatchdog	Proc near
+	UserGate kick_watchdog_nr
+	ret
+RdosKickWatchdog	Endp
+
 ;	extrn Startup:near
 
 ;	public _main

@@ -3110,6 +3110,94 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			EraseDiscSectors
+;
+;		DESCRIPTION:	Erase a number of sectors on a disc
+;
+;		PARAMETERS:		AL		Disc #
+;                       ECX     Number of sectors
+;						EDX		Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+erase_disc_sectors_name	DB 'Erase Disc Sectors',0
+
+erase_disc_sectors   Proc near
+	push ds
+	push es
+	pushad
+;
+	cmp al,MAX_DRIVES
+	jae erase_disc_sectors_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,[bx].disc_def_arr
+	or bx,bx
+	jz erase_disc_sectors_fail
+;
+	cmp bx,-1
+	je erase_disc_sectors_fail
+;
+	mov ds,bx
+	mov bx,ds:disc_handle
+	lds si,ds:disc_param
+	call [si].erase_proc
+	jnc erase_disc_sectors_done
+;
+    mov bx,flat_sel
+    mov es,bx
+
+erase_disc_loop:
+    NewSector
+    mov edi,esi
+    push ecx
+    push eax
+    mov eax,-1
+    mov ecx,80h
+    rep stos dword ptr es:[edi]
+    pop eax
+    pop ecx 
+    ModifySector
+;
+    inc edx
+    loop erase_disc_loop
+;
+    clc
+	jmp erase_disc_sectors_done
+
+erase_disc_sectors_fail:
+	stc
+
+erase_disc_sectors_done:
+	popad
+	pop es  
+	pop ds
+    ret
+erase_disc_sectors   Endp
+
+erase_disc_sectors32	Proc far
+	call erase_disc_sectors
+	retf32
+erase_disc_sectors32	Endp
+
+erase_disc_sectors16	Proc far
+	push ecx
+;
+	movzx ecx,cx
+	call erase_disc_sectors
+;
+	pop ecx
+	ret
+erase_disc_sectors16	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			WaitForSector
 ;
 ;		DESCRIPTION:	Wait until sector is idle
@@ -4143,6 +4231,13 @@ init	PROC far
 	mov di,OFFSET write_disc_name
 	mov dx,virt_es_in
 	mov ax,write_disc_nr
+	RegisterUserGate
+;
+	mov bx,OFFSET erase_disc_sectors16
+	mov si,OFFSET erase_disc_sectors32
+	mov di,OFFSET erase_disc_sectors_name
+	xor dx,dx
+	mov ax,erase_disc_sectors_nr
 	RegisterUserGate
 ;
 	mov di,OFFSET init_disc
