@@ -140,10 +140,13 @@ void THttpOption::AddArg(const char *name)
 void THttpOption::AddArg(char *sBeg, char **sEnd)
 { 
     char *arg;
+    char *tempstr;
 
     *sEnd = SkipWord(sBeg);
     arg = THttpSocketServer::Unquote(sBeg, *sEnd);
-    AddArg(arg);
+    tempstr = (char *)THttpSocketServer::LTrim(arg);
+    THttpSocketServer::RTrim(tempstr);
+    AddArg(tempstr);
     delete arg;
 }
 

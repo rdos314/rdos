@@ -236,7 +236,12 @@ void THttpCommand::Run()
     	}
 
     	if (ArgCount == 2)
-        	Execute(FArgList->FName.GetData());
+    	{
+    	    ptr = (char *)FArgList->FName.GetData();
+    	    while (*ptr == '/')
+    	        ptr++;
+        	Execute(ptr);
+        }
     }
 
 	delete param;
