@@ -139,10 +139,10 @@ STRINGTABLE
  1158, "„r %s\r\n";
  1159, "saknar etikett\r\n";
  1160, " Volymen har serienummer %04X-%04X\r\n";
- 1161, "%10s fil(er)";
+ 1161, " file(s)        ";
  1162, "   %12s byte\r\n";
  1163, "Totalt antal visade filer:\r\n";
- 1164, "%10s kat";
+ 1164, " dir(s)         ";
  1165, " %15s byte lediga\r\n";
  1166, "Katalog i %s\r\n";
  1167, " Katalog i %s\r\n";

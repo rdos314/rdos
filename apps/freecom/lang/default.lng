@@ -622,26 +622,28 @@ has no label
 :TEXT_DIR_HDR_SERIAL_NUMBER#0%
  Volume Serial Number is %04X-%04X
 .
-:TEXT_DIR_FTR_FILES#1%
-%10s file(s)\
+:TEXT_DIR_FTR_FILES
+ file(s)        \
 .
-:TEXT_DIR_FTR_BYTES#0%
-   %12s bytes
+:TEXT_DIR_FTR_BYTES
+ bytes
 .
 :TEXT_DIR_FTR_TOTAL_NUMBER
 Total files listed:
 .
-:TEXT_DIR_FTR_DIRS#1%
-%10s dir(s)\
+:TEXT_DIR_FTR_DIRS
+ dir(s)         \
 .
-:TEXT_DIR_FTR_BYTES_FREE#0%
- %15s bytes free
+:TEXT_DIR_FTR_BYTES_FREE
+ bytes free
 .
 :TEXT_DIR_DIRECTORY#0%
 Directory of %s
 .
 :TEXT_DIR_DIRECTORY_WITH_SPACE#0%
+
  Directory of %s
+ 
 .
 :TEXT_DIR_LINE_FILENAME_WIDE#1%
 %-15s\

@@ -99,7 +99,10 @@ TWaitCommand::TWaitCommand(TSession *session, const char *param)
 int TWaitCommand::Execute(char *param)
 {
     int time;
-    
+
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+        
 	if (sscanf(param, "%d", &time) == 1)
 	{
 	    RdosWaitMilli(time);

@@ -99,6 +99,9 @@ int TEchoCommand::Execute(char *param)
 {
     TString str;
 
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
     str = param;
     str.Upper();
     

@@ -96,5 +96,8 @@ TCallCommand::TCallCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TCallCommand::Execute(char *param)
 {
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
     return Command(param);
 }

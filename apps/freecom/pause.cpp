@@ -97,6 +97,9 @@ TPauseCommand::TPauseCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TPauseCommand::Execute(char *param)
 {
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
     if (*param)
     {
         WriteError(param);

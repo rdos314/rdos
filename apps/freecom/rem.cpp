@@ -96,5 +96,8 @@ TRemCommand::TRemCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TRemCommand::Execute(char *param)
 {
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
 	return 0;
 }

@@ -423,7 +423,7 @@ void TSession::DisplayPrompt()
 	TString str;
 	TPathName path("");
 
-	TEnv *env = TEnv::OpenProcessEnv();
+	TEnv *env = TEnv::OpenSysEnv();
 	if (!env->Find("PROMPT", promptstr))
 		strcpy(promptstr, "$p$g");
 

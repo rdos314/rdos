@@ -398,16 +398,18 @@ int TDirCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 void TDirCommand::WriteHeader(TString &str)
 {
 	TPathName path(str);
-	int drive = path.GetDrive();
-	TPathName search(drive, "\\*");
+	FDrive = path.GetDrive();
+	TPathName search(FDrive, "\\*");
 	TDirList dir;
 	TDirEntry entry;
+
+	FCurrentRow = 0;
 
 	dir.SetRequiredAttributes(8);
 	dir.SetIgnoredAttributes(0);
 	dir.Add(search);
 	
-	FMsg.printf(TEXT_DIR_HDR_VOLUME, drive + 'A');
+	FMsg.printf(TEXT_DIR_HDR_VOLUME, FDrive + 'A');
 	Write(FMsg.GetData());
 
 	if (dir.GotoFirst())
@@ -421,6 +423,11 @@ void TDirCommand::WriteHeader(TString &str)
 		FMsg.Load(TEXT_DIR_HDR_VOLUME_NONE);
 		Write(FMsg.GetData());
 	}
+	FCurrentRow++;
+	
+	FMsg.printf(TEXT_DIR_DIRECTORY_WITH_SPACE, path.GetFullPathName().GetData());
+	Write(FMsg.GetData());
+	FCurrentRow += 3;
 }
 
 /*##########################################################################
@@ -436,6 +443,27 @@ void TDirCommand::WriteHeader(TString &str)
 ##########################################################################*/
 void TDirCommand::WriteFooter()
 {
+    long FreeUnits;
+    long TotalUnits;
+    int BytesPerUnit;
+
+    WriteLong(FFileList.GetSize());
+	FMsg.Load(TEXT_DIR_FTR_FILES);
+	Write(FMsg.GetData());
+
+	WriteLong(FTotalSize);
+	FMsg.Load(TEXT_DIR_FTR_BYTES);
+	Write(FMsg.GetData());
+
+    WriteLong(FDirList.GetSize());
+	FMsg.Load(TEXT_DIR_FTR_DIRS);
+	Write(FMsg.GetData());
+
+    FreeUnits = 0;
+    RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &TotalUnits);
+	WriteLong(FreeUnits * BytesPerUnit);
+	FMsg.Load(TEXT_DIR_FTR_BYTES_FREE);
+	Write(FMsg.GetData());    
 }
 
 /*##########################################################################
@@ -576,8 +604,6 @@ void TDirCommand::WriteDetailed()
 {
 	int ok;
 
-	FCurrentRow = 0;
-
     if (FOptDirFirst)
     {
         ok = FDirList.GotoFirst();
@@ -623,7 +649,6 @@ void TDirCommand::WriteWide()
 	int size;
 	int ok;
 
-	FCurrentRow = 0;
 	FCurrentCol = 0;
 	FWidth = 1;
 

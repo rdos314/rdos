@@ -99,6 +99,9 @@ int TPromptCommand::Execute(char *param)
 {
 	TEnv *env;
 
+	if (LeadOptions(&param, 0) != E_None)
+		return 1;
+
 	if (*param == 0)
 	    strcpy(param, "$p$g");
 

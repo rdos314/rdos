@@ -84,6 +84,7 @@ protected:
 	int FFileCount;
 	int FDirCount;
 	long FTotalSize;
+	int FDrive;
 };
 
 #endif
