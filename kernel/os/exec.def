@@ -84,6 +84,7 @@ spawn_struc	STRUC
 
 s_name				DW ?
 s_cmd				DW ?
+s_curr_dir			DW ?
 s_loader_name		DD ?
 s_param				DD ?
 s_thread			DW ?
@@ -91,5 +92,6 @@ s_app				DW ?
 s_ret_code			DW ?
 s_sect1				section_typ <>
 s_sect2				section_typ <>
+s_switch			DB ?
 
 spawn_struc	ENDS

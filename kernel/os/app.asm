@@ -327,6 +327,7 @@ run_open_hooks	Proc near
 	mov ds:app_init_thread_proc,0
 	mov ds:app_free_thread_proc,0
 	mov ds:app_spawn_proc,0
+	mov ds:app_close_proc,0
 ;
 	mov ax,app_data_sel
 	mov ds,ax
@@ -447,6 +448,15 @@ PAGE
 close_app_name	DB 'Close App',0
 
 close_app	PROC far
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov eax,ds:app_close_proc
+	or eax,eax
+	jz close_proc_handled
+;
+	call ds:app_close_proc
+
+close_proc_handled:
 	mov ax,app_data_sel
 	mov ds,ax
 	mov cl,ds:close_app_hooks

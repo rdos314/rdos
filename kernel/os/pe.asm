@@ -66,6 +66,13 @@ cpeUnicode		DW ?
 
 cp_event_struc ENDS
 
+tp_event_struc	STRUC
+
+tpeBasic		event_struc <>
+tpeExitCode		DD ?
+
+tp_event_struc ENDS
+
 ct_event_struc	STRUC
 
 cteBasic		event_struc <>
@@ -175,6 +182,12 @@ seInsDone:
 	LeaveSection ds:lib_section
 ;
 	mov bx,ds:lib_debug_thread
+	GetThreadFocusKey
+	jc seSignal
+;
+	SetFocus
+
+seSignal:
 	Signal
 	
 seDone:
@@ -281,6 +294,36 @@ CreateProcessEvent Proc near
 	pop eax
 	ret
 CreateProcessEvent Endp
+                                          
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TerminateProcessEvent
+;
+;		DESCRIPTION:    Terminate process debug event
+;
+;		PARAMETERS:		EAX		Exit code
+;
+;		RETURNS:		ES		Event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TerminateProcessEvent Proc near
+	push ebx
+;
+	push eax
+	mov eax,SIZE tp_event_struc
+	AllocateSmallGlobalMem
+	sub eax,OFFSET event_code
+	mov es:event_size,eax
+	mov es:event_code,5
+	pop eax
+;
+	mov es:tpeExitCode,eax
+;
+	pop ebx
+	ret
+TerminateProcessEvent Endp
                                           
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -536,6 +579,8 @@ InsertApp	Proc near
 	mov word ptr ds:app_free_thread_proc+2,cs
 	mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
 	mov word ptr ds:app_spawn_proc+2,cs
+	mov word ptr ds:app_close_proc,OFFSET close_proc
+	mov word ptr ds:app_close_proc+2,cs
 	mov word ptr ds:app_loader_name,OFFSET pe_loader_name
 	mov word ptr ds:app_loader_name+2,cs
 ;
@@ -2720,6 +2765,97 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			close_proc
+;
+;		DESCRIPTION:    Close app callback
+;
+;		PARAMETERS:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_proc	Proc far
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov ax,word ptr ds:app_loader_name
+	cmp ax,OFFSET pe_loader_name
+	jne free_process_no_debug
+;
+	mov ax,cs
+	cmp ax,word ptr ds:app_loader_name+2
+	jne free_process_no_debug
+;
+	mov ax,pe_app_sel
+	mov ds,ax
+	mov ds,ds:pe_app	
+	mov ax,ds:lib_debug_lib
+	or ax,ax
+	jz free_process_no_debug
+;
+	call TerminateProcessEvent
+	GetThread
+	movzx eax,ax
+	or eax,PROCESS_HANDLE
+	mov es:event_proc_id,eax
+;
+	movzx eax,ax
+	or eax,THREAD_HANDLE
+	mov es:event_thread_id,eax
+;
+	mov ax,ds:lib_debug_lib
+	or ax,ax
+	jz free_process_no_debug
+;
+	mov ds,ax
+	EnterSection ds:lib_section
+;
+	mov ax,ds:lib_events
+	or ax,ax
+	je free_process_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:event_prev
+	mov ds:event_prev,es
+	mov ds,si
+	mov ds:event_next,es
+	mov es:event_next,ax
+	mov es:event_prev,si
+	pop si
+	pop ds
+	jmp free_process_inserted
+
+free_process_empty:
+	mov es:event_next,es
+	mov es:event_prev,es
+
+free_process_inserted:
+	mov ds:lib_events,es
+	xor ax,ax
+	mov es,ax
+	LeaveSection ds:lib_section
+;
+	mov bx,ds:lib_debug_thread
+	GetThreadFocusKey
+	jc fpSignal
+;
+	SetFocus
+
+fpSignal:
+	Signal
+
+	mov ax,1000
+	WaitMilliSec
+
+free_process_no_debug:
+	ret
+close_proc	Endp
+
+PAGE
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			WaitForPeDebug
 ;
 ;		DESCRIPTION:    Wait for an debug event from process
@@ -2774,7 +2910,14 @@ wfdFound:
 wfdRemoved:
 	mov ds:lib_debug_thread,0
 	LeaveSection ds:lib_section
+	GetThread
+	mov bx,ax
+	GetThreadFocusKey
+	jc wfdFocusDone
 ;
+	SetFocus
+
+wfdFocusDone:
 	mov ax,es
 	mov ds,ax
 	mov ax,flat_data_sel
@@ -2861,6 +3004,12 @@ continue_debug_found:
 	mov ds,ax
 	mov si,OFFSET debug_list
 	mov [si],bx
+	GetThreadFocusKey
+	jc continue_wake
+;
+	SetFocus
+
+continue_wake:
 	Wake
 	jmp continue_debug_done
 	
@@ -2994,6 +3143,12 @@ neInsDone:
 	LeaveSection ds:lib_section
 ;
 	mov bx,ds:lib_debug_thread
+	GetThreadFocusKey
+	jc neSignal
+;
+	SetFocus
+
+neSignal:
 	Signal
 ;
 	pop ax

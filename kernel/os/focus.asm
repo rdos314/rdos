@@ -179,6 +179,12 @@ init	PROC far
 	mov ax,get_focus_thread_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET get_thread_focus_key
+	mov di,OFFSET get_thread_focus_key_name
+	xor cl,cl
+	mov ax,get_thread_focus_key_nr
+	RegisterOsGate
+;
 	mov si,OFFSET allocate_focus_linear
 	mov di,OFFSET allocate_focus_linear_name
 	xor cl,cl
@@ -219,6 +225,57 @@ get_focus_thread	PROC far
 	pop ds
 	ret
 get_focus_thread	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetThreadFocusKey
+;
+;		DESCRIPTION:	Get thread switch key
+;
+;		PARAMETERS:		BX		Thread
+;
+;		RETURNS:		AL		Switch key
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_focus_key_name	DB 'Get Thread Focus Key',0
+
+get_thread_focus_key	PROC far
+	push ds
+	push cx
+	push si
+;
+	mov ax,focus_sel
+	mov ds,ax
+	mov cx,256
+	mov si,OFFSET focus_thread
+
+get_thread_key_loop:
+	cmp bx,[si]
+	je get_thread_key_ok
+;
+	add si,2
+	loop get_thread_key_loop
+;
+	xor ax,ax
+	stc
+	jmp get_thread_key_done
+
+get_thread_key_ok:
+	mov ax,si
+	sub ax,OFFSET focus_thread
+	shr ax,1
+	clc
+
+get_thread_key_done:
+	pop si
+	pop cx
+	pop ds
+	ret
+get_thread_focus_key	ENDP
 
 PAGE
 

@@ -152,6 +152,7 @@ app_free_mem_proc		DD ?
 app_init_thread_proc	DD ?
 app_free_thread_proc	DD ?
 app_spawn_proc			DD ?
+app_close_proc			DD ?
 app_loader_name			DD ?
 
 app_exit_code			DW ?
@@ -204,6 +205,7 @@ thread_seg	SEGMENT AT 0
 	p_step_ads		DW ?,?
 	p_ldt_sel		DW ?
 	p_signal		DB ?
+	p_parent_switch	DB ?
 	p_lib_sel		DW ?
 	p_stack_sel		DW ?
 	p_sleep_sel		DW ?

@@ -592,34 +592,12 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-sys_dir_fault_tab:
-sf0	DW OFFSET page_fault_error_sys_dir
-sf1	DW OFFSET page_fault_error_sys_dir
-sf2	DW OFFSET page_fault_error_sys_dir
-sf3	DW OFFSET page_fault_error_sys_dir
-sf4	DW OFFSET page_fault_error_sys_dir
-sf5	DW OFFSET page_fault_error_sys_dir
-sf6	DW OFFSET page_fault_error_sys_dir
-sf7	DW OFFSET sys_dir_fault_system
-sf8	DW OFFSET page_fault_error_sys_dir
-sf9	DW OFFSET page_fault_error_sys_dir
-sfA	DW OFFSET page_fault_error_sys_dir
-sfB	DW OFFSET page_fault_error_sys_dir
-sfC	DW OFFSET page_fault_error_sys_dir
-sfD	DW OFFSET page_fault_error_sys_dir
-sfE	DW OFFSET sys_dir_fault_system
-sfF	DW OFFSET sys_dir_fault_system
-
 sys_dir_fault	Proc near
-	push edi
 	sub eax,sys_page_linear
 	shl eax,10
-	mov edi,eax
-	shr edi,28
-	add di,di
-	call word ptr cs:[di].sys_dir_fault_tab
-	pop edi
-	ret
+	cmp eax,system_mem_start
+	jb page_fault_error2
+	jmp sys_dir_fault_system
 sys_dir_fault	Endp
 
 PAGE
@@ -627,7 +605,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			process_dir_fault_user
+;		NAME:			process_dir_fault_move
 ;
 ;		DESCRIPTION:	Pagefault in user process page directory
 ;
@@ -704,31 +682,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			process_dir_fault_kernel
-;
-;		DESCRIPTION:	pagefault in kernel process page dir
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-process_dir_fault_kernel:
-	mov edi,eax
-	and edi,0FFC00000h
-;
-	cmp edi,handle_linear
-	je process_dir_fault_local
-;
-	cmp edi,io_local_linear
-	je process_dir_fault_local
-;
-	jmp process_dir_fault_move
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			process_dir_fault
 ;
 ;		DESCRIPTION:	Pagefault in process page directory
@@ -737,24 +690,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-process_dir_fault_tab:
-jf0	DW OFFSET process_dir_fault_local
-jf1	DW OFFSET process_dir_fault_local
-jf2	DW OFFSET process_dir_fault_local
-jf3	DW OFFSET process_dir_fault_local
-jf4	DW OFFSET process_dir_fault_local
-jf5	DW OFFSET process_dir_fault_local
-jf6	DW OFFSET process_dir_fault_local
-jf7	DW OFFSET process_dir_fault_move
-jf8	DW OFFSET process_dir_fault_local
-jf9	DW OFFSET process_dir_fault_move
-jfA	DW OFFSET process_dir_fault_move
-jfB	DW OFFSET process_dir_fault_move
-jfC	DW OFFSET process_dir_fault_move
-jfD	DW OFFSET process_dir_fault_move
-jfE	DW OFFSET process_dir_fault_move
-jfF	DW OFFSET process_dir_fault_kernel
-
 process_dir_fault	Proc near
 	mov ax,[bp].vm_eflags
 	and ax,NOT 4500h
@@ -762,18 +697,23 @@ process_dir_fault	Proc near
 	mov eax,cr2
 	popf
 ;
-	push edx
-	push edi
 	sub eax,process_page_linear
 	mov edx,eax
 	shl eax,10
+;
 	mov edi,eax
-	shr edi,28
-	add di,di
-	call word ptr cs:[di].process_dir_fault_tab
-	pop edi
-	pop edx
-	ret
+	and edi,0FFC00000h
+;
+	cmp edi,system_mem_start
+	jc process_dir_fault_local
+;
+	cmp edi,handle_linear
+	je process_dir_fault_local
+;
+	cmp edi,io_local_linear
+	je process_dir_fault_local
+;
+	jmp process_dir_fault_move
 process_dir_fault	Endp
 
 PAGE
@@ -824,7 +764,8 @@ page_fault_user_valid:
 	jz page_fault_em_normal
 ;
 	pop ax
-	pop di
+	pop edi
+	pop edx
 	pop ecx
 	pop es
 	push ax
@@ -915,9 +856,12 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-page_fault_kernel:
+page_fault	Proc near
 	mov eax,cr2
 	and eax,0FFC00000h
+;
+	cmp eax,system_mem_start
+	jc page_fault_user
 ;
 	cmp eax,handle_linear
 	je page_fault_user
@@ -941,6 +885,8 @@ page_fault_kernel:
 	popf
 	jmp sys_dir_fault
 
+page_fault	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -954,25 +900,11 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-page_fault_error_alias_dir:
-	pop edi
-	pop esi
-	pop edx
-	jmp page_fault_error2
-
-page_fault_error_proc_dir:
-	pop edi
-	pop edx
-	jmp page_fault_error2
-
-page_fault_error_sys_dir:
-	pop edi
-	jmp page_fault_error2
-
 page_fault_error2:
 	pop ax
 	mov eax,cr2
-	pop di
+	pop edi
+	pop edx
 	pop ecx
 	pop es
 	pop ds
@@ -989,7 +921,8 @@ page_fault_error:
 	mov eax,cr2
 	sti
 	int 3
-	pop di
+	pop edi
+	pop edx
 	pop cx
 	pop es
 	mov al,14
@@ -1015,24 +948,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-page_fault_tab:
-pf0	DW OFFSET page_fault_user
-pf1	DW OFFSET page_fault_user
-pf2	DW OFFSET page_fault_user
-pf3	DW OFFSET page_fault_user
-pf4	DW OFFSET page_fault_user
-pf5	DW OFFSET page_fault_user
-pf6	DW OFFSET page_fault_user
-pf7	DW OFFSET page_fault_user
-pf8	DW OFFSET page_fault_user
-pf9	DW OFFSET page_fault_error2
-pfA	DW OFFSET page_fault_error2
-pfB	DW OFFSET page_fault_error2
-pfC	DW OFFSET page_fault_error2
-pfD	DW OFFSET page_fault_error2
-pfE	DW OFFSET page_fault_system
-pfF	DW OFFSET page_fault_kernel
-
 pagefault_trap:
 	push bp
 	mov bp,sp
@@ -1041,22 +956,22 @@ pagefault_trap:
 	push ds
 	push es
 	push ecx
-	push di
+	push edx
+	push edi
 	mov eax,[bp].vm_err
 	test ax,1
 	jz trap_not_present
+;
 trap_error_do:
 	call page_fault_error
 	jmp trap_14_done
+
 trap_not_present:
-	mov eax,cr2
-	shr eax,28
-	and ax,0Fh
-	mov di,ax
-	add di,di
-	call word ptr cs:[di].page_fault_tab
+	call page_fault
+
 trap_14_done:
-	pop di
+	pop edi
+	pop edx
 	pop ecx
 	pop es
 	pop ds

@@ -169,7 +169,7 @@ init_mem	PROC near
 	mov [eax].sls_next,edx
 	mov [eax].sls_prev,edx
 	mov eax,edx
-	mov edx,global_page_size - 10h
+	mov edx,global_byte_size - 10h
 	mov [eax].slf_prev,0
 	mov [eax].slf_next,0
 	mov [eax].sls_prev,0
@@ -2152,12 +2152,17 @@ free_descr_gdt:
 free_lin_mem:
 	test al,10h
 	jnz free_mem_end
-	mov al,ah
-	and ax,0F0h
-	shr ax,3
-	mov si,OFFSET free_mem_tab
-	add si,ax
-	call word ptr cs:[si]
+;
+	cmp edx,system_mem_start
+	jc free_mem_local
+;
+	call free_system
+	jmp free_mem_clear
+
+free_mem_local:
+	call free_local_mem
+
+free_mem_clear:
 	xor ax,ax
 	mov es,ax
 free_mem_end:
@@ -2237,13 +2242,16 @@ free_linear	PROC far
 ;
 	mov ax,mem_sel
 	mov es,ax
-	mov eax,edx
-	shr eax,24
-	and ax,0F0h
-	shr ax,3
-	mov bx,OFFSET free_mem_tab
-	add bx,ax
-	call word ptr cs:[bx]
+	cmp edx,system_mem_start
+	jc free_linear_local
+;
+	call free_system
+	jmp free_linear_clear
+
+free_linear_local:
+	call free_local_mem
+
+free_linear_clear:
 	xor edx,edx
 	pop si
 	pop ecx

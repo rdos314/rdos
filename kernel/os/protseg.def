@@ -164,15 +164,15 @@ stack0_size			EQU 200h
 ; linear address space
 ;
 
-video_local_linear		EQU 000A0000h
-ems_linear				EQU 000D0000h
-fixed_vm_linear			EQU 000E0000h
-vm_linear				EQU 000E1000h
+video_local_linear		EQU 0000A0000h
+ems_linear				EQU 0000D0000h
+fixed_vm_linear			EQU 0000E0000h
+vm_linear				EQU 0000E1000h
 
-local_byte_linear		EQU 00110000h
-local_page_linear		EQU 01000000h
+local_byte_linear		EQU 000110000h
+local_page_linear		EQU 001000000h
 
-flat_size				EQU 60000000h
+flat_size				EQU 0E0000000h
 
 system_mem_start		EQU 0E0000000h
 
@@ -180,7 +180,7 @@ global_byte_linear		EQU 0E0000000h
 global_byte_size		EQU 008000000h
 
 global_page_linear		EQU 0E8000000h
-global_page_size		EQU 008000000h
+global_page_size		EQU 014000000h
 
 handle_linear			EQU 0FC000000h
 fixed_process_linear	EQU 0FC010000h

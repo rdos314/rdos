@@ -885,6 +885,7 @@ GetEnvironment	MACRO
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line
+; IN  FS:(E)BX	Startup directory & drive
 ; IN  EDX		Bit 0 = debug flag
 ; OUT AX		Thread handle
 ; OUT DX		Application handle

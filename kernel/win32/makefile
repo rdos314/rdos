@@ -67,28 +67,28 @@ MAIN:	$(dlls) rdos.obj
 
 KERNEL32.DLL : $(kernel32_objs)
     tlink32 @&&!
-    -B:0x5E000000 $(dll_opt) $(kernel32_objs)
+    -B:0xDE000000 $(dll_opt) $(kernel32_objs)
 	KERNEL32.DLL
 	KERNEL32.MAP,,KERNEL32.DEF
 !
 
 USER32.DLL : $(user32_objs)
     tlink32 @&&!
-	-B:0x5E100000 $(dll_opt) $(user32_objs)
+	-B:0xDE100000 $(dll_opt) $(user32_objs)
 	USER32.DLL
 	USER32.MAP,,USER32.DEF
 !
 
 OLEAUT32.DLL : $(oleaut32_objs)
     tlink32 @&&!
-	-B:0x5E200000 $(dll_opt) $(oleaut32_objs)
+	-B:0xDE200000 $(dll_opt) $(oleaut32_objs)
 	OLEAUT32.DLL
 	OLEAUT32.MAP,,OLEAUT32.DEF
 !
 
 ADVAPI32.DLL : $(advapi32_objs)
     tlink32 @&&!
-	-B:0x5E300000 $(dll_opt) $(advapi32_objs)
+	-B:0xDE300000 $(dll_opt) $(advapi32_objs)
 	ADVAPI32.DLL
 	ADVAPI32.MAP,,ADVAPI32.DEF
 !

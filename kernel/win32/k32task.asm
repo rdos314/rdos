@@ -530,10 +530,13 @@ cpEnv			EQU 32
 cpCurrDir		EQU 36
 cpStartup		EQU 40
 cpInfo			EQU 44
+cpDir			EQU -256
 
 CreateProcessA Proc near
 	push ebp
 	mov ebp,esp
+	sub esp,256
+	push fs
 	push ebx
 	push esi
 	push edi
@@ -564,6 +567,26 @@ cpNoDebug:
 	xor edx,edx
 
 cpCreate:
+	mov ax,ds
+	mov fs,ax
+	mov ebx,[ebp].cpCurrDir
+	or ebx,ebx
+	jnz cpSpawnIt
+;
+	push edi
+	lea edi,[ebp].cpDir
+	UserGate get_cur_drive_nr
+	push eax
+	add al,'A'
+	stosb
+	mov ax,'\:'
+	stosw
+	pop eax
+	UserGate get_cur_dir_nr
+	pop edi
+	lea ebx,[ebp].cpDir
+
+cpSpawnIt:
 	UserGate spawn_exe_nr
 	jc cpFail
 ;
@@ -593,6 +616,8 @@ cpDone:
 	pop edi
 	pop esi
 	pop ebx
+	pop fs
+	add esp,256
 	pop ebp
 	ret 40
 CreateProcessA Endp

@@ -752,6 +752,7 @@ init_thread_block	PROC near
 	mov ax,ds:p_lib_sel
 	mov es:p_lib_sel,ax
 	mov es:p_signal,0
+	mov es:p_parent_switch,0
 ;
 	add dx,dx
 	mov es:p_prio,dx
@@ -1364,6 +1365,26 @@ terminate_thread:
 	SimSti
 	mov ax,thread_sel
 	mov ds,ax
+	mov bx,ds:p_tss_data_sel
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov ax,ds:math_tss
+	cmp ax,bx
+	jne terminate_fpu_ok
+;
+	mov ds:math_tss,0
+
+terminate_fpu_ok:
+	mov ax,thread_sel
+	mov ds,ax
+	mov al,ds:p_parent_switch
+	or al,al
+	jz terminate_focus_ok
+;
+	SetFocus
+
+terminate_focus_ok:
 	mov es,ds:p_thread_sel
 	mov bx,es:p_stack_sel
 	verr bx
@@ -1373,6 +1394,14 @@ terminate_thread:
 	FreeMem
 
 no_free_ss:
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_process_sel
+	sub ds:ms_thread_count,1
+	jz terminate_proc
+;
+	mov ax,thread_sel
+	mov ds,ax
 	mov eax,ds:p_free_proc
 	or eax,eax
 	jz terminate_app_handled
@@ -1381,16 +1410,10 @@ no_free_ss:
 
 terminate_app_handled:
 	call trap_terminate_thread
-;
-	mov ax,thread_sel
-	mov ds,ax
-	mov ds,ds:p_process_sel
-	sub ds:ms_thread_count,1
-	jz terminate_proc
-;
 	int 47h
 
 terminate_proc:
+	call trap_terminate_thread
 	call free_handle_process
 	call trap_terminate_process
 	call free_process_paging

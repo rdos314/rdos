@@ -212,8 +212,6 @@ enter_clone_cmd_size_ok:
 	AllocateSmallGlobalMem
 	xor edi,edi
 	rep movs byte ptr es:[edi],[esi]
-	mov ax,es
-	mov ds,ax
 	pop esi
 	pop ds
 ;
@@ -248,6 +246,95 @@ leave_load	Proc near
 	pop ax
 	ret
 leave_load	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			enter_process
+;
+;		DESCRIPTION:   	Make a global copy of parameters
+;
+;		PARAMETERS:     DS:ESI		Filename
+;						ES:EDI		Command line
+;						FS:EBX		Current dir
+;
+;       RETURN VALUE:   DS:ESI		Global filename
+;						ES:EDI		Global command line
+;						FS:EBX		Global current dir
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enter_process	Proc near
+	push eax
+	push ecx
+;
+	call enter_load
+;
+	xor ecx,ecx
+	push ebx
+
+enter_clone_curdir_size_loop:
+	mov al,fs:[ebx]
+	inc ebx
+	or al,al
+	jz enter_clone_curdir_size_ok
+;
+	inc ecx
+	jmp enter_clone_curdir_size_loop
+
+enter_clone_curdir_size_ok:
+	pop ebx
+;
+	inc ecx
+	push ds
+	push es
+	push esi
+	push edi
+	mov ax,fs
+	mov ds,ax
+	mov esi,ebx
+	mov eax,ecx
+	AllocateSmallGlobalMem
+	xor edi,edi
+	rep movs byte ptr es:[edi],[esi]
+	mov ax,es
+	mov fs,ax
+	pop edi
+	pop esi
+	pop es
+	pop ds
+;
+	xor ebx,ebx
+;
+	pop ecx
+	pop eax
+	ret
+enter_process	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			leave_process
+;
+;		DESCRIPTION:    Free global copy of parameters
+;
+;		PARAMETERS:     DS:ESI		Filename
+;						ES:EDI		Command line
+;						FS:EBX		Current dir
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+leave_process	Proc near
+	call leave_load
+	push ax
+	mov ax,fs
+	mov es,ax
+	xor ax,ax
+	mov fs,ax
+	FreeMem
+	pop ax
+	ret
+leave_process	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -509,6 +596,7 @@ load_process_fail:
 ;
 ;		PARAMETERS:     DS:(E)SI	Filename
 ;						ES:(E)DI	Command line
+;						FS:(E)BX	Startup dir
 ;						EDX			Loader parameter
 ;
 ;       RETURN VALUE:   AX		Thread handle
@@ -543,6 +631,35 @@ spawn_startup	Proc far
 	mov si,di
 	xor bx,bx
 ;
+	mov ax,thread_sel
+	mov es,ax
+	mov al,gs:s_switch
+	mov es:p_parent_switch,al
+;
+	mov es,gs:s_curr_dir
+	xor di,di
+	mov ax,es:[di]
+	cmp ah,':'
+	jne spawn_dir_ok
+;
+	sub al,'A'
+	jc spawn_dir_ok
+;
+	cmp al,26
+	jc spawn_set_drive
+;
+	sub al,20h
+	jc spawn_dir_ok
+;
+	cmp al,26
+	jnc spawn_dir_ok
+
+spawn_set_drive:
+	SetCurDrive
+	add di,2
+	SetCurDir
+	
+spawn_dir_ok:
 	xor di,di
 	mov es,gs:s_name
 	xor cx,cx
@@ -584,7 +701,8 @@ spawn_startup	Proc far
 spawn_notify_done:
 	mov ds,gs:s_name
 	mov es,gs:s_cmd
-	call leave_load
+	mov fs,gs:s_curr_dir
+	call leave_process
 ;
 	mov ax,gs
 	mov es,ax
@@ -625,7 +743,8 @@ spawn_fail:
 ;
 	mov ds,gs:s_name
 	mov es,gs:s_cmd
-	call leave_load
+	mov fs,gs:s_curr_dir
+	call leave_process
 ;
 	mov ax,gs
 	mov es,ax
@@ -648,48 +767,56 @@ spawn_startup	Endp
 spawn_program	Proc near
 	push ds
 	push es
-	push fs
+	push gs
 	push bx
 	push cx
 	push esi
 	push edi
 ;
-	call enter_load
+	call enter_process
 	push es
 	mov eax,SIZE spawn_struc
 	AllocateSmallGlobalMem
 	mov ax,es
-	mov fs,ax
+	mov gs,ax
 	pop es
-	mov fs:s_name,ds
-	mov fs:s_cmd,es
-	mov fs:s_param,edx
+	mov gs:s_name,ds
+	mov gs:s_cmd,es
+	mov gs:s_curr_dir,fs
+	mov gs:s_param,edx
+	mov gs:s_switch,0
 ;
+	GetThread
+	mov bx,ax
+	GetThreadFocusKey
+	jc spawn_focus_done
+;
+	mov gs:s_switch,al
+
+spawn_focus_done:
 	push ds
 	mov ax,thread_app_sel
 	mov ds,ax
 	mov eax,ds:app_loader_name
-	mov fs:s_loader_name,eax
+	mov gs:s_loader_name,eax
 	pop ds
 ;
-	mov fs:s_sect1.cs_value,-1
-	mov fs:s_sect1.cs_list,0
-	mov fs:s_sect2.cs_value,-1
-	mov fs:s_sect2.cs_list,0
+	mov gs:s_sect1.cs_value,-1
+	mov gs:s_sect1.cs_list,0
+	mov gs:s_sect2.cs_value,-1
+	mov gs:s_sect2.cs_list,0
 ;	
 	mov ax,ds
 	mov es,ax
 	mov ax,cs
 	mov ds,ax
-	mov ax,cs
-	mov ds,ax
 	mov si,OFFSET spawn_startup
-	mov bx,fs
+	mov bx,gs
 	mov ax,2
 	mov ecx,200h
 	CreateProcess
 ;
-	mov ax,fs
+	mov ax,gs
 	mov ds,ax
 	EnterSection ds:s_sect1
 	mov ax,ds:s_thread
@@ -715,22 +842,25 @@ spawn_done:
 	pop esi
 	pop cx
 	pop bx
-	pop fs
+	pop gs
 	pop es
 	pop ds
 	ret
 spawn_program	Endp
 	
 spawn_program16	Proc far
+	push ebx
 	push esi
 	push edi
 ;
+	movzx ebx,bx
 	movzx esi,si
 	movzx edi,di
 	call spawn_program
 ;
 	pop edi
 	pop esi
+	pop ebx
 	ret
 spawn_program16	Endp
 	
