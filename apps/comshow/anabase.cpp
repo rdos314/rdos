@@ -126,6 +126,7 @@ int TProtocolAnalyser::GetMsg()
 	ch = FComMsg->ch;
 	FSize++;
 	FComMsg++;
+	FRawPos++;
 
 	while (count > FSize)
 	{
@@ -144,6 +145,7 @@ int TProtocolAnalyser::GetMsg()
 		ch = FComMsg->ch;
 		FSize++;
 		FComMsg++;
+		FRawPos++;
 	}
 
 	return TRUE;
@@ -232,6 +234,20 @@ void TProtocolAnalyser::ShowAsciiMsg()
 	Write("\r\n");
 }
 
+/*##################  TProtocolAnalyser::ShowMsg ##########################
+*   Purpose....: Show msg in ascii 	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TProtocolAnalyser::ShowMsg()
+{
+    if (FTime)
+        ShowLongTime(FTime);
+    ShowHexMsg();
+}
+
 /*##################  TProtocolAnalyser::TProtocolAnalyser ##########################
 *   Purpose....: Constructor         	   					      	        #
 *   In params..: *                                                          #
@@ -242,15 +258,15 @@ void TProtocolAnalyser::ShowAsciiMsg()
 TProtocolAnalyser::TProtocolAnalyser(const char *MemMapName, int MaxSize)
 {
 	FMapping = RdosOpenNamedMapping(MemMapName);
-	FRawBuf = (char *)RdosAllocateMem(0x200000);
+	FRawBuf = (char *)RdosAllocateMem(0x800000);
 	FRawCount = (int *)FRawBuf;
 	FComMsg = (TComMsg *)(FRawBuf + 4);
-	RdosMapView(FMapping, 0, FRawBuf, 0x200000);
-    FRawPos = 0;
+	RdosMapView(FMapping, 0, FRawBuf, 0x800000);
+	FRawPos = 0;
 
 	FLogFile = 0;
 	FTime = 0;
-	
+
 	FMaxSize = MaxSize;
 	FMsg = new char[MaxSize + 1];
 }

@@ -145,6 +145,7 @@ int TCbusProtocolAnalyser::GetMsg()
 	ch = FComMsg->ch;
 	FSize++;
 	FComMsg++;
+	FRawPos++;
 
 	while (count > FSize && ch != ':')
 	{
@@ -159,6 +160,7 @@ int TCbusProtocolAnalyser::GetMsg()
 		ch = FComMsg->ch;
 		FSize++;
 		FComMsg++;
+		FRawPos++;
 	}
 
 	while (count > FSize && ch != '\r')
@@ -178,6 +180,7 @@ int TCbusProtocolAnalyser::GetMsg()
 		ch = FComMsg->ch;
 		FSize++;
 		FComMsg++;
+		FRawPos++;
 	}
 
 	return TRUE;

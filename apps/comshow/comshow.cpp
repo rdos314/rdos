@@ -21,7 +21,7 @@
 # The author of this program may be contacted at leif@rdos.net
 #
 # comshow.cpp
-# Protocol analyzer app. 
+# Protocol analyzer app.
 #
 ########################################################################*/
 
@@ -34,6 +34,7 @@
 #include "file.h"
 #include "cbus.h"
 #include "sernet.h"
+#include "cotana.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -47,9 +48,10 @@
 *##########################################################################*/
 void cdecl main()
 {
-	RdosWaitMilli(200);
+	RdosWaitMilli(300);
 
-	TCbusProtocolAnalyser analyzer("comlog", 0x400);
+//	TProtocolAnalyser analyzer("comlog", 0x4000);
+	TCotexProtocolAnalyser analyzer("comlog", 0x400);
 //    TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 
 	analyzer.DefineLogFile("c:\\comshow.log");

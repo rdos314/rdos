@@ -33,11 +33,11 @@ void cdecl main()
 	TSerialDevice Port1(&Wait, 1, 9600);
 	TSerialDevice Port2(&Wait, 2, 9600);
 
-	Mapping = RdosCreateNamedMapping("comlog", 0x200000);
-	Buf = (char *)RdosAllocateMem(0x200000);
+	Mapping = RdosCreateNamedMapping("comlog", 0x800000);
+	Buf = (char *)RdosAllocateMem(0x800000);
 	BufSize = (int *)Buf;
 	BufMsg = (TComMsg *)(Buf + 4);
-	RdosMapView(Mapping, 0, Buf, 0x200000);
+	RdosMapView(Mapping, 0, Buf, 0x800000);
 	*BufSize = 0;
 
 	for (;;)

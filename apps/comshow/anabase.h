@@ -47,7 +47,7 @@ public:
 	void DefineLogFile(const char *LogFileName);
 
     virtual int GetMsg();
-    virtual void ShowMsg() = 0;
+    virtual void ShowMsg();
 
 protected:
     void Write(const char *str);
