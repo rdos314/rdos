@@ -258,4 +258,11 @@ get_com_send_space_nr       = 231
 
 get_char_attrib_nr			= 232
 
+create_wait_nr              = 233
+close_wait_nr               = 234
+add_wait_until_nr           = 235
+start_wait_nr               = 236
+stop_wait_nr                = 237
+add_wait_for_keyboard_nr    = 238
+
 usergate_entries			= 256

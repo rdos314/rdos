@@ -86,6 +86,18 @@ divi	DW 1111h
 init:
         int 3
 ;
+    CreateWait
+    GetSystemTime
+    add eax,60 * 1192000
+    adc edx,0
+    mov ecx,12345
+    AddWaitUntil
+    mov ecx,23456
+    AddWaitForKeyboard
+    mov ecx,11111
+    StartWait
+    StopWait
+    CloseWait
 	GetCursorPosition
 	push cx
 	push dx

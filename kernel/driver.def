@@ -233,7 +233,6 @@ pc_key_code_sel         EQU 8D0h
 pc_key_data_sel         EQU 8D8h
 
 wait_code_sel           EQU 8E0h
-wait_thread_sel         EQU 8E8h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h

@@ -605,6 +605,20 @@ WaitForSignal	MACRO
 	OsGate wait_for_signal_nr
 					ENDM
 
+; IN  AX      Extra bytes needed in wait object
+; IN  BX      Wait handle
+; IN  DS:SI   Init procedure (wait object in ES)
+; IN  ES:DI   Abort procedure (wait object in ES)
+; OUT ES      Wait object
+AddWait	MACRO
+	OsGate add_wait_nr
+					ENDM
+
+; IN  ES      Wait object
+SignalWait	MACRO
+	OsGate signal_wait_nr
+					ENDM
+
 ;       ES:(E)DI        NAME OF SECTION
 InitSection     MACRO section
 	mov section.cs_value,0

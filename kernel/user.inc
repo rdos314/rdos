@@ -337,6 +337,40 @@ LeaveUserSection	MACRO
 	UserGate leave_user_section_nr
 					ENDM
 
+;;;;;;;;; WAITABLE OBJECTS ;;;;;;;;;;;;
+
+; OUT BX		Wait handle
+CreateWait	MACRO
+	UserGate create_wait_nr
+					ENDM
+
+; IN  BX		Wait handle
+StartWait	MACRO
+	UserGate start_wait_nr
+					ENDM
+
+; IN  BX		Wait handle
+StopWait	MACRO
+	UserGate stop_wait_nr
+					ENDM
+
+; IN  BX		Wait handle
+CloseWait	MACRO
+	UserGate close_wait_nr
+					ENDM
+
+; IN  BX		Wait handle
+; IN  ECX       Signalled ID
+; IN  EDX:EAX   System time to wait until
+AddWaitUntil       MACRO
+	UserGate add_wait_until_nr
+						ENDM
+
+; IN  BX		Wait handle
+AddWaitForKeyboard       MACRO
+	UserGate add_wait_for_keyboard_nr
+						ENDM
+
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
 ;	IN  ES:(E)DI	Mailslot name

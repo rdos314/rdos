@@ -40,6 +40,7 @@ INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
+INCLUDE wait.inc
 
         NO_MOUSE = 0
 
@@ -84,6 +85,8 @@ key_int_offs		DW ?
 key_notify_thread	DW ?
 key_notify_sel		DW ?
 key_notify_offs		DD ?
+
+key_avail_obj       DW ?
 
 key_proc_seg	ENDS
 
@@ -151,6 +154,16 @@ keyboard_thread_no_circ:
 	mov [si],ax
 	mov ds:key_buffer_tail,bx
 ;
+    mov bx,ds:key_avail_obj
+    or bx,bx
+    jz keyboard_wake
+;
+    push es
+    mov es,bx
+    SignalWait
+    pop es
+
+keyboard_wake:
 	mov si,OFFSET key_proc_wait
 	mov ax,[si]
 	or ax,ax
@@ -413,6 +426,100 @@ poll_key_empty:
 	pop ds
 	retf32
 poll_keyboard	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForKeyboard
+;
+;		DESCRIPTION:	Start a wait for keyboard
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_keyboard	PROC far
+    push ds
+    push ax
+    push bx
+;
+	mov ax,key_local_sel
+	mov ds,ax
+	mov ds:key_avail_obj,es
+;
+	mov bx,ds:key_buffer_head
+	cmp bx,ds:key_buffer_tail
+	je start_wait_for_done
+;
+    SignalWait
+
+start_wait_for_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_keyboard Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForKeyboard
+;
+;		DESCRIPTION:	Stop a wait for keyboard
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_keyboard	PROC far
+    push ds
+    push ax
+;
+	mov ax,key_local_sel
+	mov ds,ax
+	mov ds:key_avail_obj,0
+;
+    pop ax
+    pop ds
+    ret
+stop_wait_for_keyboard Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForKeyboard
+;
+;		DESCRIPTION:	Add a wait for keyboard
+;
+;		PARAMETERS:		BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_keyboard_name	DB 'Add Wait For Keyboard',0
+
+add_wait_for_keyboard	PROC far
+	push ds
+	push es
+	push ax
+	push si
+	push di
+;
+    mov ax,cs
+    mov ds,ax
+    mov es,ax
+    xor ax,ax
+    mov si,OFFSET start_wait_for_keyboard
+    mov di,OFFSET stop_wait_for_keyboard
+    AddWait
+;
+    pop di
+    pop si
+    pop ax
+    pop es
+    pop ds
+	retf32
+add_wait_for_keyboard	ENDP
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -981,6 +1088,7 @@ init_local_sel	PROC far
 	mov ds:key_buffer_tail,ax
 	mov ds:key_proc_wait,0
 	mov ds:key_notify_thread,0
+	mov ds:key_avail_obj,0
 	mov ds:key_emul_thread,0
 	mov ds:key_int_seg,0E000h
 	mov ds:key_int_offs,9*4
@@ -1075,6 +1183,12 @@ init	PROC far
 ;
 	mov di,OFFSET check_list
 	HookState
+;
+	mov si,OFFSET add_wait_for_keyboard
+	mov di,OFFSET add_wait_for_keyboard_name
+	xor dx,dx
+	mov ax,add_wait_for_keyboard_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_keyboard
 	mov di,OFFSET read_keyboard_name
