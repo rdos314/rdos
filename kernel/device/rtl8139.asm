@@ -94,10 +94,11 @@ EE_DIS			= 80h
  
 data	STRUC
 
-IoBase			DW ?
-Handle			DW ?
-Is8139			DB ?
-EeAdrLen		DB ?
+IoBase				DW ?
+Handle				DW ?
+EthernetAddress		DB 6 DUP(?)
+Is8139				DB ?
+EeAdrLen			DB ?
 
 data	ENDS
 
@@ -205,6 +206,40 @@ reReadNext:
 	pop bx
 	ret
 ReadEe	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitChip
+;
+;		DESCRIPTION:    Init chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitChip	Proc near
+	mov ds:EeAdrLen,8 
+	xor bx,bx
+	call ReadEe
+	cmp ax,8129
+	jnz icReadAdr
+;
+	mov ds:EeAdrLen,6
+
+icReadAdr:
+	mov bx,7
+	mov si,OFFSET EthernetAddress
+
+icReadLoop:
+	call ReadEe
+	xchg al,ah
+	mov ds:[si],ax
+	add si,2
+	inc bx
+	cmp bx,10
+	jne icReadLoop
+;
+	ret
+InitChip	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -401,6 +436,8 @@ init_pci_found:
 	mov es,bx
 	mov di,OFFSET NetInt	
 	RequestPrivateIrqHandler
+;
+	call InitChip
 ;
 	push ds
 	mov ax,cs
