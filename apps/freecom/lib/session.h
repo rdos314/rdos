@@ -47,6 +47,10 @@ public:
     void Run();
     void Run(const char *param);
     int Run(const char *name, TArg *ArgList);
+
+    void SetEchoOn();
+    void SetEchoOff();
+    int IsEchoOn();
     
     void Write(char ch);
     void Write(const char *str);
@@ -88,6 +92,7 @@ protected:
 
     TString FName;
     TArg *FArgList;
+    int FEcho;
     
 	static Count;
 

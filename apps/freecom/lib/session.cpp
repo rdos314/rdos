@@ -59,6 +59,7 @@
 #include "fatpart.h"
 #include "ffspart.h"
 #include "exit.h"
+#include "echo.h"
 
 #include "file.h"
 #include "path.h"
@@ -85,6 +86,7 @@ static TCommandFactory *cpy;
 static TCommandFactory *date;
 static TCommandFactory *del;
 static TCommandFactory *dir;
+static TCommandFactory *echo;
 static TCommandFactory *erase;
 static TCommandFactory *exitcmd;
 static TCommandFactory *help;
@@ -123,6 +125,7 @@ int TSession::Count = 0;
 TSession::TSession()
 {
     FArgList = 0;
+    FEcho = TRUE;
     FCmdFile = new TFile("CON");
     FInputFile = new TFile("CON");
     FOutputFile = new TFile("CON");
@@ -153,6 +156,7 @@ TSession::TSession()
     	initfd = new TInitFdFactory;
     	exitcmd = new TExitFactory;
     	erase = new TEraseFactory;
+    	echo = new TEchoFactory;
     	dir = new TDirFactory;
     	del = new TDelFactory;
     	date = new TDateFactory;
@@ -189,6 +193,7 @@ TSession::TSession(const TSession &src)
     Count++;
 
     FArgList = 0;
+    FEcho = TRUE;
     
 	if (src.FCmdFile->IsDevice())
         FCmdFile = new TFile("CON");
@@ -257,6 +262,7 @@ TSession::~TSession()
     	delete initfd;
     	delete exitcmd;
     	delete erase;
+    	delete echo;
     	delete dir;
     	delete del;
     	delete date;
@@ -270,6 +276,54 @@ TSession::~TSession()
     	delete History;
     	delete Keyboard;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::SetEchoOn
+#
+#   Purpose....: Set Echo state to on
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSession::SetEchoOn()
+{
+    FEcho = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::SetEchoOff
+#
+#   Purpose....: Set Echo state to off
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSession::SetEchoOff()
+{
+    FEcho = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::IsEchoOn
+#
+#   Purpose....: Check if echo is on
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSession::IsEchoOn()
+{
+    return FEcho;
 }
 
 /*##########################################################################
@@ -1191,10 +1245,26 @@ void TSession::Run()
 	char param[256];
 	int ok;
 	TCommandLine *cmd;
+	TEnv *env = TEnv::OpenSysEnv();
+	
+	if (!env->Find("COMSPEC", param))
+	{
+    	TPathName CurrDir;
+    	CurrDir += "command.exe";    	
+	    env->Add("COMSPEC", CurrDir.Get().GetData());
+
+    	TSession *session = new TSession(*this);
+	    if (session->Run("autoexec.bat", 0) != 0)
+	        session->Run("autoexec.cmd", 0);
+        delete session;
+	}
+    delete env;
 
 	for (;;)
 	{
-		DisplayPrompt();
+	    if (FEcho)
+    		DisplayPrompt();
+    		
 		ok = ReadCmd(param, 256);
 		if (ok)
 		{
@@ -1265,29 +1335,42 @@ int TSession::Run(const char *name, TArg *ArgList)
         delete FCmdFile;
 
     FCmdFile = new TFile(name);
-
-	while (FCmdFile->GetPos() != FCmdFile->GetSize())
-	{
-		DisplayPrompt();
-		ok = ReadCmd(param, 256);
-		if (ok)
-		{
-            CmdStr = ExpandParam(param);
-            ptr = CmdStr.GetData();		
-			cmd = new TCommandLine(this, ptr);
-			if (cmd->IsExit())
-			{
-			    delete cmd;
-			    break;
-			}
-			else
-            {	    		
-    			cmd->Run();
-	    		delete cmd;
-	    	}
-		}
-		else
-		    return 1;
-	}
-    return 0;
+    if (FCmdFile->IsOpen())
+    {
+    	while (FCmdFile->GetPos() != FCmdFile->GetSize())
+    	{
+	        if (FEcho)
+    	    	DisplayPrompt();
+    		
+    		ok = ReadCmd(param, 256);
+	    	if (ok)
+		    {
+                CmdStr = ExpandParam(param);
+	    		ptr = CmdStr.GetData();
+    
+	    		if (FEcho)
+		    	{
+        			Write(ptr);
+	        		Write('\n');
+	            }
+	        
+    			cmd = new TCommandLine(this, ptr);
+	    		if (cmd->IsExit())
+		    	{
+    			    delete cmd;
+	    		    break;
+		    	}
+			    else
+                {	    		
+        			cmd->Run();
+	        		delete cmd;
+	    	    }
+    		}
+	    	else
+	    	    return 1;
+    	}
+        return 0;
+    }
+    else
+        return 1;
 }
