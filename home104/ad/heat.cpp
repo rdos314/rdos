@@ -142,8 +142,20 @@ int THeat::IsStartedVP()
 ##########################################################################*/
 void THeat::StartVP()
 {
+	int valve;
+
 	if (!IsStartedVP())
-		RdosToggleSerialLine(1, 5);
+		if (RdosReadSerialVal(2, 0, &valve))
+			if (valve > 0x40000000)
+			{
+				RdosToggleSerialLine(1, 5);
+
+				if (RdosReadSerialVal(2, 1, &valve))
+					if (valve == 0)
+						RdosWriteSerialVal(2, 1, 0x7FFFFFFF);
+			}
+
+	RdosWriteSerialVal(2, 0, 0x7FFFFFFF);
 }
 
 /*##########################################################################
@@ -158,8 +170,14 @@ void THeat::StartVP()
 ##########################################################################*/
 void THeat::StopVP()
 {
+	int valve;
+
 	if (IsStartedVP())
-		RdosToggleSerialLine(1, 5);
+		if (RdosReadSerialVal(2, 0, &valve))
+			if (valve < 0x40000000)
+				RdosToggleSerialLine(1, 5);
+
+	RdosWriteSerialVal(2, 0, 0);
 }
 
 /*##########################################################################
@@ -176,7 +194,7 @@ void THeat::UpdateOff(long double value)
 {
 	FMax = value;
 
-	if (value < 42.5)
+	if (value < 42.0)
 		StartVP();
 }
 
@@ -198,7 +216,7 @@ void THeat::UpdateOn(long double value)
 	if ((value < FMax - 2.0) || (value < 40.0))
 		StartEP();
 
-	if (value > 49.0)
+	if (value > 47.0)
 	{
 		StopVP();
 
@@ -222,10 +240,15 @@ void THeat::UpdateOn(long double value)
 void THeat::NotifyBeforeClear()
 {
 	TDateTime time;
+	int valve;
 
 	if (RdosReadSerialLines(1, &FStat))
 	{
 		RdosSetCursorPosition(12, 0);
+
+		if (RdosReadSerialVal(2, 1, &valve))
+			if (valve > 0x70000000)
+				RdosWriteSerialVal(2, 1, 0);
 
 		if ((FStat & 0x60) == 0)
 			UpdateOff(GetMean(&time));

@@ -41,7 +41,6 @@ INCLUDE ..\..\kernel\handle.inc
 
 save_data_struc	STRUC
 
-sd_sign     DB ?
 sd_day		DD ?
 sd_hour		DB ?
 sd_min		DB ?
@@ -636,42 +635,28 @@ GetMinSamples	Endp
 UpdateDiff	Proc near
 	pushad
 ;
-	int 3
     mov eax,ds:curr_sys_diff
 	mov ebx,60
 	mul ebx
 	cdq
 	idiv ebx
 	mov ds:[si].sd_fract,eax
-	UpdateTime
+	cdq
 ;
-	int 3
 	mov ebx,eax
 	mov eax,ds:curr_sys_diff
 	sub eax,ebx
+	mov ebx,edx
     mov edx,ds:curr_sys_diff+4
-	sbb edx,0
+	sbb edx,ebx
 	add eax,2222222h
 	adc edx,0
-	test edx,80000000h
-	jz upd_diff_pos
 ;
-    not eax					
-    not edx						
-    add eax,1					
-    adc edx,0
-    mov ds:[si].sd_sign,-1
-    jmp upd_diff_sign_ok
-
-upd_diff_pos:
-    mov ds:[si].sd_sign,0
-
-upd_diff_sign_ok:
 	push eax
 	mov eax,edx
-	xor edx,edx
+	cdq
 	mov ecx,24
-	div ecx
+	idiv ecx
 	mov ds:[si].sd_day,eax
 	mov ds:[si].sd_hour,dl
 	pop eax	
@@ -681,8 +666,11 @@ upd_diff_min:
 	mul edx				
 	mov ds:[si].sd_min,dl
 ;
-;	mov ds:sys_diff,eax
-;	mov ds:sys_diff+4,edx
+	mov eax,ds:[si].sd_fract
+	cdq
+	mov ds:sys_diff,eax
+	mov ds:sys_diff+4,edx
+	UpdateTime
 ;
 ;	mov bx,ds:rtc_id
 ;	Signal
@@ -836,20 +824,20 @@ SetTimeDiff	Proc near
 	mov ebx,eax
 	mov edx,ds:[si].sd_day
 	mov eax,24
-	mul edx
-	movzx edx,ds:[si].sd_hour
+	imul edx
+	movsx edx,ds:[si].sd_hour
 	add edx,eax
 	mov eax,ebx
+	add eax,ds:sys_diff
+	adc edx,ds:sys_diff+4
+	UpdateTime
 ;
-	add ds:sys_diff,eax
-	add ds:sys_diff+4,edx
-	mov bx,ds:rtc_id
-	Signal
+;	mov bx,ds:rtc_id
+;	Signal
 ;
 	popad
 	ret
 SetTimeDiff	Endp
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -917,6 +905,7 @@ dcf_time_loop:
 	call GetBestDiff
 	jc dcf_loop
 ;
+	int 3
 	mov si,OFFSET save_buf
 	call SetTimeDiff
 ;
@@ -942,23 +931,13 @@ rtc_thread:
 ;
 	GetThread
 	mov ds:rtc_id,ax
-	xor eax,eax
-	xor edx,edx
 
 rtc_loop:
-	push edx
-	push eax
 	WaitForSignal
-	int 3
-	pop eax
-	mov ebx,ds:sys_diff
-	sub eax,ebx
-	pop edx
-	mov ebx,ds:sys_diff+4
-	sbb edx,ebx
-;
+	mov eax,ds:sys_diff
+	mov edx,ds:sys_diff+4
 	UpdateTime
-	UpdateRtc
+;	UpdateRtc
 	jmp rtc_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
