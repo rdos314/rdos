@@ -806,28 +806,19 @@ char T6117::Read(TCpu *Cpu, unsigned long Address)
 				if (FData[0x14] & 4)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return 0xFF;
-				}
 
 			case 0xD0000:
 				if (FData[0x14] & 0x10)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return 0xFF;
-				}
 
 			case 0xD8000:
 				if (FData[0x14] & 0x40)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return 0xFF;
-				}
 
 			case 0xE0000:
 				if (FData[0x15] & 1)
@@ -955,7 +946,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 				else
 				{
 					UserBreak(Cpu);
-					break;
+					return;
 				}
 
 			case 0xF8000:
@@ -964,7 +955,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 				else
 				{
 					UserBreak(Cpu);
-					break;
+					return;
 				}
 		}
 	}

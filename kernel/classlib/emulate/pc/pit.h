@@ -56,9 +56,9 @@ class TPitCounter
 		int FOut;
 		char FMode;
 		int FRunning;
-		int FPeriod;
-		int FCount;
-		int FLatchedCount;
+		short int FPeriod;
+		short int FCount;
+		short int FLatchedCount;
 		int FLatched;
 		char FByteCounter;
 		char FRl;

@@ -298,6 +298,7 @@ void TPitCounter::SetMode(char Mode)
 	}
 	else
 	{
+		FRunning = FALSE;
 		FMode = (Mode >> 1) & 7;
 		FRl = (Mode >> 4) & 3;
 
@@ -364,15 +365,18 @@ char TPitCounter::Read()
 		switch (FRl)
 		{
 			case 1:
+				FLatched = FALSE;
 				return FLatchedCount & 0xFF;
 
 			case 2:
+				FLatched = FALSE;
 				return (FLatchedCount >> 8) & 0xFF;
 
 			case 3:
 				if (FByteCounter)
 				{
 					FByteCounter = 0;
+					FLatched = FALSE;
 					return (FLatchedCount >> 8) & 0xFF;
 				}
 				else
