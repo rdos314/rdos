@@ -20,30 +20,38 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pathcmd.h
-# Path command class
+# cmdfact.h
+# Command factory base class
 #
 ########################################################################*/
 
-#ifndef _PATHCMD_H
-#define _PATHCMD_H
+#ifndef _CMDFACT_H
+#define _CMDFACT_H
 
 #include "cmd.h"
-#include "cmdfact.h"
 
-class TPathFactory : public TCommandFactory
+class TCommandFactory
 {
 public:
-	TPathFactory();
-	virtual TCommand *Create(const char *param);
-};
+    TCommandFactory(const char *name);
+	virtual ~TCommandFactory();
 
-class TPathCommand : public TCommand
-{
-public:
-	TPathCommand(const char *param);
+	static TCommand *Parse(const char *line);
 
-	virtual int Execute(char *param);	
+protected:
+    static const char *FindArg(int no);
+    static TString ExpandEnv(TString &line);
+
+	virtual TCommand *Create(const char *param) = 0;
+	virtual int PassAll();
+    virtual int PassDir();
+	
+	void InsertCommand();
+	void RemoveCommand();
+
+	static TCommandFactory *FCmdList;
+	TCommandFactory *FList;
+	TString FName;
 };
 
 #endif

@@ -29,6 +29,7 @@
 #define _SET_H
 
 #include "cmd.h"
+#include "cmdfact.h"
 
 class TSetFactory : public TCommandFactory
 {

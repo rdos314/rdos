@@ -27,6 +27,7 @@
 
 #include <string.h>
 
+#include "cmdhelp.h"
 #include "lang.h"
 #include "pathcmd.h"
 #include "env.h"

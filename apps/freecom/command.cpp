@@ -5,6 +5,7 @@
 #include "env.h"
 #include "langstr.h"
 #include "lang.h"
+#include "cmdhelp.h"
 #include "pathcmd.h"
 #include "syspath.h"
 #include "set.h"

@@ -27,6 +27,7 @@
 
 #include <string.h>
 
+#include "cmdhelp.h"
 #include "lang.h"
 #include "set.h"
 #include "env.h"
