@@ -40,14 +40,6 @@ INCLUDE os.inc
 INCLUDE handle.inc
 INCLUDE wait.inc
 
-wait_until_obj  STRUC
-
-wu_header       wait_obj_header <>
-wu_lsb          DD ?
-wu_msb          DD ?
-
-wait_until_obj  ENDS
-
 wait_handle_seg STRUC
 
 wh_handle_base	handle_header <>
@@ -186,154 +178,20 @@ delete_handle	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			timeout_wait_until
+;		NAME:			IsWaitIdle
 ;
-;		DESCRIPTION:	Timeout on wait until
-;
-;       PARAMETERS:     CX       object
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-timeout_wait_until Proc far
-    push es
-    mov es,cx
-    inc es:wo_signalled
-	mov bx,es:wo_thread
-    Signal
-    pop es
-    ret
-timeout_wait_until  Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			init_wait_until
-;
-;		DESCRIPTION:	Init wait until
-;
-;       PARAMETERS:     ES       object
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_wait_until Proc far
-    push es
-    push eax
-    push bx
-    push cx
-    push edx
-    push di
-;
-    mov eax,es:wu_lsb
-    mov edx,es:wu_msb
-    mov bx,es
-    mov cx,es
-    mov ax,cs
-    mov es,ax
-    mov di,OFFSET timeout_wait_until
-    StartTimer
-;
-    pop di
-    pop edx
-    pop cx
-    pop bx
-    pop eax
-    pop es
-    ret
-init_wait_until Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			abort_wait_until
-;
-;		DESCRIPTION:	Abort wait until
-;
-;       PARAMETERS:     ES       object
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-abort_wait_until Proc far
-    push bx
-    mov bx,es
-    StopTimer
-    pop bx
-    ret
-abort_wait_until Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			AddWaitUntil
-;
-;		DESCRIPTION:	Add wait until to wait
-;
-;       PARAMETERS:     BX      Wait handle
-;                       ECX     ID
-;                       EDX:EAX Time to wait until
-;                       
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_until_name    DB 'Add Wait Until', 0
-
-add_wait_until Proc far
-	push ds
-	push es
-	push eax
-	push ebx
-;
-    push ax
-	mov ax,WAIT_HANDLE
-	DerefHandle
-	pop ax
-	jc add_wait_until_done
-;
-    movzx ebx,bx
-    EnterSection ds:[ebx].wh_section
-;    
-    push eax
-    mov eax,SIZE wait_until_obj
-    AllocateSmallGlobalMem
-    pop eax
-;
-    mov word ptr es:wo_init_proc, OFFSET init_wait_until
-    mov word ptr es:wo_init_proc+2,cs
-    mov word ptr es:wo_abort_proc, OFFSET abort_wait_until
-    mov word ptr es:wo_abort_proc+2,cs
-    mov es:wo_id,ecx
-    mov es:wu_lsb,eax
-    mov es:wu_msb,edx
-;
-    mov ax,ds:[bx].wh_obj_list
-    mov es:wo_next,ax
-    mov ds:[bx].wh_obj_list,es
-;
-    LeaveSection ds:[ebx].wh_section
-	clc
-
-add_wait_until_done:
-    pop ebx
-    pop eax
-    pop es
-	pop ds
-	retf32
-add_wait_until ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			StartWait
-;
-;		DESCRIPTION:    Start a wait
+;		DESCRIPTION:    Check if wait is idle
 ;
 ;       PARAMETERS:     BX      Wait handle
 ;
-;       RETURNS:        ECX     Signalled ID
+;       RETURNS:        NC
+;							ECX     Non-idle ID
 ;                       
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_wait_name    DB 'Start Wait', 0
+is_wait_idle_name    DB 'Is Wait Idle', 0
 
-start_wait Proc far
+is_wait_idle Proc far
 	push ds
 	push es
 	push eax
@@ -343,73 +201,286 @@ start_wait Proc far
     xor ecx,ecx
 	mov ax,WAIT_HANDLE
 	DerefHandle
-	jc start_wait_done
+	jc is_wait_idle_done
 ;
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
-    or al,al
-    jnz start_wait_stopped_leave
-;
-    GetThread
-    mov ds:[bx].wh_thread,ax
-    ClearSignal
     mov dx,ds:[bx].wh_obj_list
     or dx,dx
-    jz start_wait_start_leave
+    jz is_wait_idle_ok_leave
 
-start_wait_start_loop:
+is_wait_idle_loop:
     mov es,dx
-    mov es:wo_thread,ax
-    mov es:wo_signalled,0
-    call es:wo_init_proc
+    call es:wo_idle_proc
+	jc is_wait_idle_fail_leave
+;
     mov dx,es:wo_next
     or dx,dx
-    jnz start_wait_start_loop
+    jnz is_wait_idle_loop
 
-start_wait_start_leave:
-    inc ds:[bx].wh_running
+is_wait_idle_ok_leave:
     LeaveSection ds:[ebx].wh_section
+	clc
+	jmp is_wait_idle_done
 
-start_wait_do:
-    WaitForSignal
-;
-    EnterSection ds:[ebx].wh_section
-    mov al,ds:[bx].wh_running
-    or al,al
-    jz start_wait_stopped_leave
-;
-    dec ds:[bx].wh_running
-    mov ax,ds:[bx].wh_obj_list
-    or ax,ax
-    jz start_wait_stopped_leave
-
-start_wait_stop_loop:
-    mov es,ax
-    mov ax,es:wo_signalled
-    or ax,ax
-    jz start_wait_stop_next
-;
-    mov ecx,es:wo_id
-    call es:wo_abort_proc
-
-start_wait_stop_next:
-    mov ax,es:wo_next
-    or ax,ax
-    jnz start_wait_stop_loop
-
-start_wait_stopped_leave:
+is_wait_idle_fail_leave:
+	mov ecx,es:wo_id
     LeaveSection ds:[ebx].wh_section
-    clc
+	stc
 
-start_wait_done:
+is_wait_idle_done:
     pop dx
     pop ebx
     pop eax
     pop es
     pop ds
     retf32
-start_wait  Endp
+is_wait_idle  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WaitWithoutTimeout
+;
+;		DESCRIPTION:    Wait without timeout
+;
+;       PARAMETERS:     BX      Wait handle
+;
+;       RETURNS:        ECX     Signalled ID
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_no_timeout_name    DB 'Wait Without Timeout', 0
+
+wait_no_timeout Proc far
+	push ds
+	push es
+	push eax
+	push ebx
+	push dx
+;
+    xor ecx,ecx
+	mov ax,WAIT_HANDLE
+	DerefHandle
+	jc wait_no_timeout_done
+;
+    movzx ebx,bx
+    EnterSection ds:[ebx].wh_section
+    mov al,ds:[bx].wh_running
+    or al,al
+    jnz wait_no_timeout_stopped_leave
+;
+    GetThread
+    mov ds:[bx].wh_thread,ax
+    ClearSignal
+    mov dx,ds:[bx].wh_obj_list
+    or dx,dx
+    jz wait_no_timeout_start_leave
+
+wait_no_timeout_start_loop:
+    mov es,dx
+    mov es:wo_thread,ax
+    mov es:wo_signalled,0
+    call es:wo_init_proc
+    mov dx,es:wo_next
+    or dx,dx
+    jnz wait_no_timeout_start_loop
+
+wait_no_timeout_start_leave:
+    inc ds:[bx].wh_running
+    LeaveSection ds:[ebx].wh_section
+
+wait_no_timeout_do:
+    WaitForSignal
+;
+    EnterSection ds:[ebx].wh_section
+    mov al,ds:[bx].wh_running
+    or al,al
+    jz wait_no_timeout_stopped_leave
+;
+    dec ds:[bx].wh_running
+    mov ax,ds:[bx].wh_obj_list
+    or ax,ax
+    jz wait_no_timeout_stopped_leave
+
+wait_no_timeout_stop_loop:
+    mov es,ax
+    mov ax,es:wo_signalled
+    or ax,ax
+    jnz wait_no_timeout_stop_signalled
+;
+    call es:wo_abort_proc
+	jmp wait_no_timeout_stop_next
+
+wait_no_timeout_stop_signalled:
+	or ecx,ecx
+	jnz wait_no_timeout_stop_next
+;
+    mov ecx,es:wo_id
+    call es:wo_clear_proc
+
+wait_no_timeout_stop_next:
+    mov ax,es:wo_next
+    or ax,ax
+    jnz wait_no_timeout_stop_loop
+
+wait_no_timeout_stopped_leave:
+    LeaveSection ds:[ebx].wh_section
+    clc
+
+wait_no_timeout_done:
+    pop dx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+wait_no_timeout  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			timeout_wait
+;
+;		DESCRIPTION:	Timeout on wait 
+;
+;       PARAMETERS:     CX       thread to signal
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timeout_wait Proc far
+	mov bx,cx
+    Signal
+    ret
+timeout_wait  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WaitWithTimeout
+;
+;		DESCRIPTION:    Wait with timeout
+;
+;       PARAMETERS:     BX      Wait handle
+;						EDX:EAX	Timeout time
+;
+;       RETURNS:        ECX     Signalled ID
+;                       
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_timeout_name    DB 'Wait With Timeout', 0
+
+wait_timeout Proc far
+	push ds
+	push es
+	push eax
+	push ebx
+	push dx
+	push di
+;
+	push ax
+    xor ecx,ecx
+	mov ax,WAIT_HANDLE
+	DerefHandle
+	pop ax
+	jc wait_timeout_done
+;
+    movzx ebx,bx
+    EnterSection ds:[ebx].wh_section
+	push ax
+    mov al,ds:[bx].wh_running
+    or al,al
+	pop ax
+    jnz wait_timeout_stopped_leave
+;
+	push eax
+	push edx
+    GetThread
+    mov ds:[bx].wh_thread,ax
+    ClearSignal
+    mov dx,ds:[bx].wh_obj_list
+    or dx,dx
+    jz wait_timeout_start_timer
+
+wait_timeout_start_loop:
+    mov es,dx
+    mov es:wo_thread,ax
+    mov es:wo_signalled,0
+    call es:wo_init_proc
+    mov dx,es:wo_next
+    or dx,dx
+    jnz wait_timeout_start_loop
+
+wait_timeout_start_timer:
+	GetThread
+	mov cx,ax
+    mov ax,cs
+    mov es,ax
+	pop edx
+	pop eax
+;
+	push bx
+	mov bx,cx
+    mov di,OFFSET timeout_wait
+    StartTimer
+	pop bx
+;
+    inc ds:[bx].wh_running
+    LeaveSection ds:[ebx].wh_section
+
+wait_timeout_do:
+    WaitForSignal
+;
+	push bx
+	mov bx,cx
+	StopTimer
+	pop bx
+;
+    xor ecx,ecx
+    EnterSection ds:[ebx].wh_section
+    mov al,ds:[bx].wh_running
+    or al,al
+    jz wait_timeout_stopped_leave
+;
+    dec ds:[bx].wh_running
+    mov ax,ds:[bx].wh_obj_list
+    or ax,ax
+    jz wait_timeout_stopped_leave
+
+wait_timeout_stop_loop:
+    mov es,ax
+    mov ax,es:wo_signalled
+    or ax,ax
+    jnz wait_timeout_stop_signalled
+;
+    call es:wo_abort_proc
+	jmp wait_timeout_stop_next
+
+wait_timeout_stop_signalled:
+	or ecx,ecx
+	jnz wait_timeout_stop_next
+;
+    mov ecx,es:wo_id
+    call es:wo_clear_proc
+
+wait_timeout_stop_next:
+    mov ax,es:wo_next
+    or ax,ax
+    jnz wait_timeout_stop_loop
+
+wait_timeout_stopped_leave:
+    LeaveSection ds:[ebx].wh_section
+    clc
+
+wait_timeout_done:
+	pop di
+    pop dx
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    retf32
+wait_timeout  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -449,7 +520,7 @@ stop_wait_loop:
     mov es,ax
     mov ax,es:wo_signalled
     or ax,ax
-    jz stop_wait_next
+    jnz stop_wait_next
 ;
     call es:wo_abort_proc
 
@@ -486,8 +557,7 @@ stop_wait  Endp
 ;       PARAMETERS:     AX      Extra bytes needed in wait object
 ;                       BX      Wait handle
 ;                       ECX     Signalled ID
-;                       DS:SI   Init procedure (wait object in ES)
-;                       ES:DI   Abort procedure (wait object in ES)
+;                       ES:DI   Method table
 ;
 ;       RETURNS:        ES      Wait object
 ;
@@ -500,10 +570,13 @@ add_wait    Proc far
 	push fs
 	push eax
 	push ebx
-	push dx
+	push cx
+	push si
+	push di
 ;
-    mov dx,ds
-    mov fs,dx
+	mov si,es
+	mov fs,si
+	mov si,di
 ;
     push ax
 	mov ax,WAIT_HANDLE
@@ -514,16 +587,14 @@ add_wait    Proc far
     movzx ebx,bx
     EnterSection ds:[ebx].wh_section
 ;    
-    mov dx,es
     movzx eax,ax
-    add eax,SIZE wait_until_obj
+    add eax,SIZE wait_obj_header
     AllocateSmallGlobalMem
 ;
-    mov word ptr es:wo_init_proc,si
-    mov word ptr es:wo_init_proc+2,fs
-    mov word ptr es:wo_abort_proc,di
-    mov word ptr es:wo_abort_proc+2,dx
     mov es:wo_id,ecx
+	mov di,OFFSET wo_init_proc
+	mov cx,4
+	rep movs dword ptr es:[di],fs:[si]
 ;
     mov ax,ds:[bx].wh_obj_list
     mov es:wo_next,ax
@@ -533,10 +604,12 @@ add_wait    Proc far
 	clc
 
 add_wait_done:
-    pop dx
+	pop di
+	pop si
+    pop cx
     pop ebx
     pop eax
-    pop fs
+	pop fs
 	pop ds
     ret
 add_wait    Endp
@@ -609,16 +682,22 @@ init	PROC far
 	mov ax,close_wait_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET add_wait_until
-	mov di,OFFSET add_wait_until_name
+	mov si,OFFSET is_wait_idle
+	mov di,OFFSET is_wait_idle_name
 	xor dx,dx
-	mov ax,add_wait_until_nr
+	mov ax,is_wait_idle_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET start_wait
-	mov di,OFFSET start_wait_name
+	mov si,OFFSET wait_no_timeout
+	mov di,OFFSET wait_no_timeout_name
 	xor dx,dx
-	mov ax,start_wait_nr
+	mov ax,wait_no_timeout_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET wait_timeout
+	mov di,OFFSET wait_timeout_name
+	xor dx,dx
+	mov ax,wait_timeout_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET stop_wait

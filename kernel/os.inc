@@ -607,8 +607,7 @@ WaitForSignal	MACRO
 
 ; IN  AX      Extra bytes needed in wait object
 ; IN  BX      Wait handle
-; IN  DS:SI   Init procedure (wait object in ES)
-; IN  ES:DI   Abort procedure (wait object in ES)
+; IN  ES:DI   Method table (init, abort, peek)
 ; OUT ES      Wait object
 AddWait	MACRO
 	OsGate add_wait_nr

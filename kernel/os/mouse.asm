@@ -38,6 +38,14 @@ INCLUDE ..\os\user.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.inc
 INCLUDE mouse.inc
+INCLUDE wait.inc
+
+mouse_wait_header	STRUC
+
+mw_obj			wait_obj_header <>
+mw_counter		DD ?
+
+mouse_wait_header	ENDS
 
 	.386p
 
@@ -197,13 +205,25 @@ update_mouse	PROC far
 	mov bx,ds:md_mouse_thread
 	mov ax,mouse_focus_sel
 	mov ds,ax
+	inc ds:m_counter
 	mov ax,ds:m_notify_thread
 	or ax,ax
 	jz mouse_int_signal
+;
 	mov bx,ax
+
 mouse_int_signal:
 	Signal
 ;
+    mov bx,ds:m_avail_obj
+    or bx,bx
+    jz update_mouse_done
+;
+    mov es,bx
+    SignalWait
+	mov ds:m_avail_obj,0
+
+update_mouse_done:
 	pop bx
 	pop ds
 	ret
@@ -1020,6 +1040,170 @@ set_mouse_mickey	PROC far
 set_mouse_mickey	ENDP
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForMouse
+;
+;		DESCRIPTION:	Start a wait for mouse
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_mouse	PROC far
+    push ds
+    push ax
+    push bx
+;
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov ds:m_avail_obj,es
+	mov eax,ds:m_counter
+	cmp eax,es:mw_counter
+	je start_wait_for_done
+;
+	mov ds:m_avail_obj,0
+    SignalWait
+
+start_wait_for_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_mouse Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForMouse
+;
+;		DESCRIPTION:	Stop a wait for mouse
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_mouse	PROC far
+    push ds
+    push ax
+;
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov ds:m_avail_obj,0
+;
+    pop ax
+    pop ds
+    ret
+stop_wait_for_mouse Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearMouse
+;
+;		DESCRIPTION:	Clear mouse
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_mouse	PROC far
+    push ds
+    push eax
+;
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov eax,ds:m_counter
+	mov es:mw_counter,eax
+;
+    pop eax
+    pop ds
+    ret
+clear_mouse Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsMouseIdle
+;
+;		DESCRIPTION:	Check if mouse is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_mouse_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov eax,ds:m_counter
+	cmp eax,es:mw_counter
+	clc
+	je is_idle_done
+;
+	stc
+
+is_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_mouse_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForMouse
+;
+;		DESCRIPTION:	Add a wait for mouse
+;
+;		PARAMETERS:		BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_mouse_name	DB 'Add Wait For Mouse',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_mouse, 	mouse_code_sel
+aw1 DW OFFSET stop_wait_for_mouse,		mouse_code_sel
+aw2	DW OFFSET clear_mouse,				mouse_code_sel
+aw3	DW OFFSET is_mouse_idle,			mouse_code_sel
+
+add_wait_for_mouse	PROC far
+	push ds
+	push es
+	push eax
+	push di
+;
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE mouse_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+;
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov eax,ds:m_counter
+	mov es:mw_counter,eax
+;
+    pop di
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_mouse	ENDP
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1208,6 +1392,10 @@ PAGE
 
 init_focus	PROC far
 	call reset
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov ds:m_counter,0
+	mov ds:m_avail_obj,0
 	ret
 init_focus	ENDP
 
@@ -1281,7 +1469,7 @@ init	PROC far
 ;
 	mov bx,mouse_local_sel
 	mov dx,mouse_focus_sel
-	mov eax,OFFSET m_end
+	mov eax,SIZE mouse_seg
 	AllocateFixedFocusMem
 ;
 	mov bx,mouse_data_sel
@@ -1301,6 +1489,12 @@ init	PROC far
 	mov al,33h
 	mov di,OFFSET int33
 	HookVMInt
+;
+	mov si,OFFSET add_wait_for_mouse
+	mov di,OFFSET add_wait_for_mouse_name
+	xor dx,dx
+	mov ax,add_wait_for_mouse_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET update_mouse
 	mov di,OFFSET update_mouse_name

@@ -345,8 +345,22 @@ CreateWait	MACRO
 					ENDM
 
 ; IN  BX		Wait handle
-StartWait	MACRO
-	UserGate start_wait_nr
+; OUT ECX		Non-idle ID
+IsWaitIdle	MACRO
+	UserGate is_wait_idle_nr
+					ENDM
+
+; IN  BX		Wait handle
+; OUT ECX		Signalled ID
+WaitWithoutTimeout	MACRO
+	UserGate wait_no_timeout_nr
+					ENDM
+
+; IN  BX		Wait handle
+; IN  EDX:EAX	Timeout
+; OUT ECX		Signalled ID
+WaitWithTimeout	MACRO
+	UserGate wait_timeout_nr
 					ENDM
 
 ; IN  BX		Wait handle
@@ -360,15 +374,13 @@ CloseWait	MACRO
 					ENDM
 
 ; IN  BX		Wait handle
-; IN  ECX       Signalled ID
-; IN  EDX:EAX   System time to wait until
-AddWaitUntil       MACRO
-	UserGate add_wait_until_nr
+AddWaitForKeyboard       MACRO
+	UserGate add_wait_for_keyboard_nr
 						ENDM
 
 ; IN  BX		Wait handle
-AddWaitForKeyboard       MACRO
-	UserGate add_wait_for_keyboard_nr
+AddWaitForMouse       MACRO
+	UserGate add_wait_for_mouse_nr
 						ENDM
 
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
@@ -1131,19 +1143,6 @@ PeekKeyEvent    MACRO
 ; OUT DH            Scan code
 ReadKeyEvent    MACRO
 	UserGate read_key_event_nr
-						ENDM
-
-; IN  ES:(E)DI	Callback
-;		AL		Char
-;		AH		Scan code
-;		CX		Keyboard state
-;		DX		Virtual key code
-HookKeyboard    MACRO
-	UserGate hook_keyboard_nr
-						ENDM
-
-UnhookKeyboard    MACRO
-	UserGate unhook_keyboard_nr
 						ENDM
 
 ext_numpad_handled	EQU 800h

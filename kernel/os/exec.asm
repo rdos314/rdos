@@ -919,7 +919,6 @@ unload_exe_name DB 'Unload Exe',0
 	
 unload_exe	Proc far
 	push ax
-	UnhookKeyboard
 	UnhookMouse
 	mov ax,thread_app_sel
 	mov ds,ax

@@ -163,8 +163,6 @@ unmap_view_nr				= 145
 read_keyboard_nr			= 146
 poll_keyboard_nr			= 147
 flush_keyboard_nr			= 148
-hook_keyboard_nr			= 149
-unhook_keyboard_nr			= 150
 get_keyboard_state_nr		= 151
 
 show_mouse_nr				= 152
@@ -260,12 +258,15 @@ get_char_attrib_nr			= 232
 
 create_wait_nr              = 233
 close_wait_nr               = 234
-add_wait_until_nr           = 235
-start_wait_nr               = 236
-stop_wait_nr                = 237
-add_wait_for_keyboard_nr    = 238
+is_wait_idle_nr				= 235
+wait_no_timeout_nr          = 236
+wait_timeout_nr				= 237
+stop_wait_nr                = 238
+add_wait_for_keyboard_nr    = 239
 
-peek_key_event_nr           = 239
-read_key_event_nr           = 240
+peek_key_event_nr           = 240
+read_key_event_nr           = 241
+
+add_wait_for_mouse_nr		= 242
 
 usergate_entries			= 256

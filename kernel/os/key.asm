@@ -42,7 +42,7 @@ INCLUDE user.inc
 INCLUDE os.inc
 INCLUDE key.inc
 
-        NO_MOUSE = 0
+;        NO_MOUSE = 0
 
 
 ;
@@ -90,16 +90,6 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn scan_code_tab:near
-
-;
-; remove later
-;
-    public dummy_scan
-    public simple_scan
-    public caps_scan
-    public del_scan
-    public num_scan
-    public f_key_scan
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

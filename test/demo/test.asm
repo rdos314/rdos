@@ -82,20 +82,40 @@ test_thread:
 	jmp test_thread
 
 divi	DW 1111h
+
+read_keyboard	Proc near
+	ReadKeyEvent
+	ret
+read_keyboard	Endp
+
+read_mouse	Proc near
+	GetMousePosition
+	ret
+read_mouse	Endp
 	
 init:
         int 3
 ;
     CreateWait
+	mov ecx,OFFSET read_keyboard
+	AddWaitForKeyboard
+    mov ecx,OFFSET read_mouse
+    AddWaitForMouse
+
+wait_loop:
+	IsWaitIdle
     GetSystemTime
     add eax,60 * 1192000
     adc edx,0
-    mov ecx,12345
-    AddWaitUntil
-    mov ecx,23456
-    AddWaitForKeyboard
     mov ecx,11111
-    StartWait
+    WaitWithTimeout
+	push OFFSET wait_ret
+	push cx
+	retn
+
+wait_ret:
+	jmp wait_loop
+
     StopWait
     CloseWait
 	GetCursorPosition

@@ -69,7 +69,8 @@ m_notify_thread	DW ?
 m_notify_sel	DW ?
 m_notify_offs	DD ?
 
-m_end	DB ?
+m_avail_obj		DW ?
+m_counter		DD ?
 
 mouse_seg	ENDS
 

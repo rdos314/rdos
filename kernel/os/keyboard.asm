@@ -42,22 +42,6 @@ INCLUDE user.inc
 INCLUDE os.inc
 INCLUDE wait.inc
 
-        NO_MOUSE = 0
-
-;
-; ctrl_func data types
-;
-ctrl_F1		EQU 0
-ctrl_F2		EQU 1
-ctrl_F3		EQU 2
-ctrl_F4		EQU 3
-ctrl_F5		EQU 4
-ctrl_F6		EQU 5
-ctrl_F7		EQU 6
-ctrl_F8		EQU 7
-ctrl_F9		EQU 8
-ctrl_F10	EQU 9
-
 key_buf_struc   STRUC
 
 kb_code         DW ?
@@ -363,15 +347,6 @@ put_keyboard_code	PROC far
 	mov ds:vk_code,dl
 	mov ds:scan_code,dh
 	mov bx,ds:keyboard_thread
-	mov ax,key_focus_sel
-	mov ds,ax
-	mov ax,ds:key_notify_thread
-	or ax,ax
-	jz keyb_int_signal
-;
-	mov bx,ax
-	
-keyb_int_signal:
 	Signal
 ;
     pop bx
@@ -513,6 +488,7 @@ start_wait_for_keyboard	PROC far
 	cmp bx,ds:key_buffer_tail
 	je start_wait_for_done
 ;
+	mov ds:key_avail_obj,0
     SignalWait
 
 start_wait_for_done:
@@ -549,6 +525,55 @@ stop_wait_for_keyboard Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			IsKeyboardIdle
+;
+;		DESCRIPTION:	Check if keyboard is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_keyboard_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+	mov ax,key_local_sel
+	mov ds,ax
+	mov ds:key_avail_obj,es
+;
+	mov bx,ds:key_buffer_head
+	cmp bx,ds:key_buffer_tail
+	clc
+	je check_idle_done
+;
+	stc
+
+check_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_keyboard_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearKeyboard
+;
+;		DESCRIPTION:	Clear keyboard
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_keyboard	PROC far
+    ret
+clear_keyboard Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			AddWaitForKeyboard
 ;
 ;		DESCRIPTION:	Add a wait for keyboard
@@ -560,26 +585,26 @@ stop_wait_for_keyboard Endp
 
 add_wait_for_keyboard_name	DB 'Add Wait For Keyboard',0
 
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_keyboard, 	key_code_sel
+aw1 DW OFFSET stop_wait_for_keyboard,	key_code_sel
+aw2	DW OFFSET clear_keyboard,			key_code_sel
+aw3	DW OFFSET is_keyboard_idle,			key_code_sel
+
 add_wait_for_keyboard	PROC far
-	push ds
 	push es
 	push ax
-	push si
 	push di
 ;
     mov ax,cs
-    mov ds,ax
     mov es,ax
+    mov di,OFFSET add_wait_tab
     xor ax,ax
-    mov si,OFFSET start_wait_for_keyboard
-    mov di,OFFSET stop_wait_for_keyboard
     AddWait
 ;
     pop di
-    pop si
     pop ax
     pop es
-    pop ds
 	retf32
 add_wait_for_keyboard	ENDP
 	
@@ -809,139 +834,6 @@ set_keyboard_state	PROC far
 	pop ds
 	ret
 set_keyboard_state	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			Keyboard callback thread
-;
-;		DESCRIPTION:	Implements the keyboard hooks
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_thread_name	DB 'Keyboard Hook',0
-
-hook_thread	Proc far
-	mov ax,key_local_sel
-	mov ds,ax
-	GetThread
-	mov ds:key_notify_thread,ax
-
-hook_thread_loop:
-	mov ax,key_data_sel
-	mov ds,ax
-	mov ax,key_local_sel
-	mov es,ax
-;
-	WaitForSignal
-	GetThread
-	cmp ax,es:key_notify_thread
-	jne hook_thread_end	
-;
-    mov ax,ds:key_code
-	mov al,ah
-	mov ah,ds:scan_code
-	movzx dx,ds:vk_code
-	push es:key_notify_offs
-	CallPm32
-	jmp hook_thread_loop
-
-hook_thread_end:
-	ret
-hook_thread	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			HookKeyboard
-;
-;		DESCRIPTION:	Create a keyboard callback
-;
-;		PARAMETERS:		ES:(E)DI	Callback
-;							AX		Scan code
-;							DX		Key code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-hook_keyboard_name	DB 'Hook Keyboard',0
-
-hook_keyboard	PROC near
-	push ds
-	push es
-	push ax
-	push bx
-	push si
-	push di
-;
-	mov bx,key_local_sel
-	mov ds,bx
-	mov ax,ds:key_notify_thread
-	or ax,ax
-	jz hook_keyb_do
-	UnhookKeyboard
-
-hook_keyb_do:
-	mov ds:key_notify_sel,es
-	mov ds:key_notify_offs,edi
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET hook_thread
-	mov di,OFFSET hook_thread_name
-	mov cx,100h
-	mov ax,3
-	CreateThread
-;
-	pop di
-	pop si
-	pop bx
-	pop ax
-	pop es
-	pop ds
-	ret
-hook_keyboard	ENDP
-
-hook_keyboard16	Proc far
-	push edi
-	movzx edi,di
-	call hook_keyboard
-	pop edi
-	ret
-hook_keyboard16	Endp
-
-hook_keyboard32	Proc far
-	call hook_keyboard
-	retf32
-hook_keyboard32	Endp	
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			UnhookKeyboard
-;
-;		DESCRIPTION:	Delete a keyboard callback
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-unhook_keyboard_name	DB 'Unhook Keyboard',0
-
-unhook_keyboard	PROC near
-	push ds
-	push bx
-;
-	mov bx,key_local_sel
-	mov ds,bx
-	xor bx,bx
-	xchg bx,ds:key_notify_thread
-	Signal
-;
-	pop bx
-	pop ds
-	retf32
-unhook_keyboard	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1259,7 +1151,6 @@ init_local_sel	PROC far
 	mov ds:key_buffer_head,ax
 	mov ds:key_buffer_tail,ax
 	mov ds:key_proc_wait,0
-	mov ds:key_notify_thread,0
 	mov ds:key_avail_obj,0
 	mov ds:key_emul_thread,0
 	mov ds:key_int_seg,0E000h
@@ -1396,19 +1287,6 @@ init	PROC far
 	mov di,OFFSET read_key_event_name
 	xor dx,dx
 	mov ax,read_key_event_nr
-	RegisterBimodalUserGate
-;
-	mov bx,OFFSET hook_keyboard16
-	mov si,OFFSET hook_keyboard32
-	mov di,OFFSET hook_keyboard_name
-	xor dx,dx
-	mov ax,hook_keyboard_nr
-	RegisterUserGate
-;
-	mov si,OFFSET unhook_keyboard
-	mov di,OFFSET unhook_keyboard_name
-	xor dx,dx
-	mov ax,unhook_keyboard_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_keyboard_serial
