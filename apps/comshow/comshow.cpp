@@ -50,13 +50,13 @@ void cdecl main()
 {
 	RdosWaitMilli(300);
 
-	TFile RawFile("d:\\r2\\spp.log");
+	TFile RawFile("e:\\r2\\spp.log");
 //	TCbusProtocolAnalyser analyzer("comlog", 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
   TProtocolAnalyser analyzer(&RawFile, 0x400);
 
-	analyzer.DefineLogFile("d:\\r2\\comshow.log");
+	analyzer.DefineLogFile("e:\\r2\\comshow.log");
 
 	for (;;)
 	{
