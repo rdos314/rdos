@@ -43,6 +43,8 @@ class TSetCommand : public TCommand
 public:
 	TSetCommand(const char *param);
 
+	static void Register();
+
 	virtual int Execute(char *param);	
 
 protected:

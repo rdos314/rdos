@@ -30,6 +30,8 @@
 
 #include "cmd.h"
 
+class TCommand;
+
 class TCommandFactory
 {
 friend class THelpCommand;

@@ -21,7 +21,7 @@
 # The author of this program may be contacted at leif@rdos.net
 #
 # pathcmd.h
-# Path command class
+# Pathcmd command class
 #
 ########################################################################*/
 

@@ -7,9 +7,7 @@
 #include "lang.h"
 #include "cmdhelp.h"
 #include "pathcmd.h"
-#include "syspath.h"
 #include "set.h"
-#include "sysset.h"
 #include "help.h"
 #include "time.h"
 #include "date.h"
@@ -38,8 +36,6 @@ TPathFactory *path;
 TRdFactory *rd;
 TRmdirFactory *rmdir;
 TSetFactory *set;
-TSysPathFactory *syspath;
-TSysSetFactory *sysset;
 TTypeFactory *type;
 TTimeFactory *time;
 
@@ -57,8 +53,6 @@ void Init()
 
 	time = new TTimeFactory;
 	type = new TTypeFactory;
-	sysset = new TSysSetFactory;
-	syspath = new TSysPathFactory;
 	set = new TSetFactory;
 	rmdir = new TRmdirFactory;
 	rd = new TRdFactory;

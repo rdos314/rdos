@@ -155,7 +155,7 @@ int TSetCommand::Execute(char *param)
 	/* if no parameters, show the environment */
 	if (*param == 0)
 	{
-		env = TEnv::OpenProcessEnv();
+		env = TEnv::OpenSysEnv();
 		var = env->GotoFirst();
 
 		while (var)
@@ -206,7 +206,7 @@ int TSetCommand::Execute(char *param)
 	if (IsEmpty(value))
 		value = 0;
 
-	env = TEnv::OpenProcessEnv();
+	env = TEnv::OpenSysEnv();
 	if (!FOptC)
 		strupr(param);
 	env->Add(param, value);

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# pathcmd.cpp
+# Pathcmd command class
 #
 ########################################################################*/
 
@@ -30,6 +30,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "pathcmd.h"
+#include "path.h"
 #include "env.h"
 #include "rdos.h"
 
@@ -115,7 +116,7 @@ TPathCommand::TPathCommand(const char *param)
 int TPathCommand::Execute(char *param)
 {
 	char *p;
-	TEnv *env = TEnv::OpenProcessEnv();
+	TEnv *env = TEnv::OpenSysEnv();
 	char path[512];
 
 	if (LeadOptions(&param, 0) != E_None)
