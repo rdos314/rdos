@@ -48,6 +48,7 @@ public:
 
 	int VerifyUser();
 	int OpenDataConnection(long IP, int port);
+	void ListenForDataConnection(long *IP, int *port);
 	void Quit();
 
 	void Reply(TLangString *Msg);

@@ -43,6 +43,8 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual int IsOpen() const;
+
+	static long GetLocalIP();
 	
 	long GetRemoteIP() const;
 	int GetRemotePort() const;

@@ -175,6 +175,7 @@ void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
 void __stdcall RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
 void __stdcall RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
 
+long __stdcall RdosGetIp();
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 

@@ -310,6 +310,18 @@ int TSocket::IsOpen() const
 	    return FALSE;
 }
 
+/*##################  TSocket::GetLocalIP  ############################
+*   Purpose....: Get local IP          		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long TSocket::GetLocalIP()
+{
+	return RdosGetIp();
+}
+
 /*##################  TSocket::GetRemoteIP  ############################
 *   Purpose....: Get remote IP          		                            #
 *   In params..: *                                                          #

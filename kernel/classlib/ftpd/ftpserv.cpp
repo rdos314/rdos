@@ -157,6 +157,28 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 
 /*##########################################################################
 #
+#   Name       : TFtpSocketServer::ListenForDataConnection
+#
+#   Purpose....: Listen for data connection from client
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
+{
+	*IP == FSocket->GetRemoteIP();
+
+    if (FDataSocket)
+        delete FDataSocket;
+            
+	FDataSocket = new TSocket(FWait, FSocket->GetRemoteIP(), 0, 6000, 0x2000);
+	*port = FDataSocket->GetLocalPort();
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpSocketServer::Write
 #
 #   Purpose....: Write character to data socket

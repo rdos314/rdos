@@ -4650,6 +4650,22 @@ RdosNameToIp	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetIp
+;
+;		DESCRIPTION:	Get my IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetIp
+
+RdosGetIp	PROC
+	UserGate get_ip_address_nr
+	mov eax,edx
+	ret
+RdosGetIp	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosIpToName
 ;
 ;		DESCRIPTION:	Convert IP address to host name
