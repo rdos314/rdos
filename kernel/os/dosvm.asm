@@ -234,24 +234,19 @@ load_program	PROC far
 	pop cx
 	pop ds
 	LoadExe
+	jc load_fail
+;
 	cmp ah,3
 	je load_resident
 ;
-	pushf
 	FreeMem
-	popf
-;
 	pop es
-	pushf
 	FreeSelector
 	mov si,ds
 	mov es,si
 	xor si,si
 	mov ds,si
 	FreeSelector
-	popf
-	jc load_fail
-;
 	and byte ptr [bp].vm_eflags,1
 	jmp load_done
 
@@ -261,6 +256,14 @@ load_resident:
 	jmp load_done
 
 load_fail:
+	FreeMem
+	pop es
+	FreeSelector
+	mov si,ds
+	mov es,si
+	xor si,si
+	mov ds,si
+	FreeSelector
 	or byte ptr [bp].vm_eflags,1
 
 load_done:
