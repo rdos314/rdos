@@ -1082,6 +1082,7 @@ AliasSector	PROC near
 	push ecx
 	push ebp
 ;
+    and ecx,0FFFFFFh
 	mov ebp,ecx
     mov edx,edx
     shr ebx,16
@@ -1149,6 +1150,7 @@ FreeSector	PROC near
 	stc
 	jne fsDone
 ;
+    mov bx,dx
 	mov edx,ecx
 	mov es:[edi].bs_status,0
 	movzx edi,es:[edi].bs_physical_sector
@@ -1311,6 +1313,7 @@ DirEntryLogToPhysSector Proc near
     push ecx
     push ebp
 ;
+    and ecx,0FFFFFFh
     mov ebp,ecx
     mov ebx,edx
     shr ebx,16
@@ -1365,6 +1368,7 @@ ObjectLogToPhysSector Proc near
     push ecx
     push ebp
 ;
+    and ecx,0FFFFFFh
     mov ebp,ecx
     mov ebx,edx
     shr ebx,16
@@ -1419,6 +1423,7 @@ DirDataLogToPhysSector Proc near
     push ecx
     push ebp
 ;
+    and ecx,0FFFFFFh
     mov ebp,ecx
     mov ebx,edx
     shr ebx,16
@@ -1473,6 +1478,7 @@ FileDataLogToPhysSector Proc near
     push ecx
     push ebp
 ;
+    and ecx,0FFFFFFh
     mov ebp,ecx
     mov ebx,edx
     shr ebx,16

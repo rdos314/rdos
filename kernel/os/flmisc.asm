@@ -125,7 +125,6 @@ WriteSectorAlloc	Proc near
     push cx
     push esi
 ;
-    int 3
     mov esi,gs:bc_op_ads
 	mov al,es:[esi].le_status
 	and al,1Fh
@@ -187,11 +186,11 @@ WriteSectorFree	Proc near
     push cx
     push esi
 ;
-    int 3
     mov esi,gs:bc_op_ads
 	mov al,es:[esi].le_status
 	and al,1Fh
 	or al,LOG_STATUS_BEFORE_FREE
+	mov es:[esi].le_status,al
 ;    
     push ebx
     mov cx,1
