@@ -2831,7 +2831,7 @@ debug_thread_loop:
 free_thread	Proc far
 	GetThread
 	mov bx,ax
-	mov ax,kdebug_data_sel
+	mov ax,ipc_debug_data_sel
 	mov ds,ax
 	mov ax,ds:debug_thread
 	cmp ax,bx
@@ -2841,7 +2841,7 @@ free_thread	Proc far
 	mov ds,ax
 	mov si,OFFSET debug_list
 	mov bx,[si]
-	mov ax,kdebug_data_sel
+	mov ax,ipc_debug_data_sel
 	mov ds,ax
 	mov ds:debug_thread,bx
 

@@ -495,6 +495,7 @@ prot_init:
 	call init_gdt
 	call init_idt
 	call init_system
+	call init_physical_gates
 	call move_adapters
 	call init_paging_gates
 	call init_physical_gates

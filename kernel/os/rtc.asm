@@ -98,6 +98,7 @@ get_cmos_wait_update:
 	in al,71h
 	test al,80h
 	jz get_cmos_wait_update
+
 get_cmos_wait_idle:
 	mov al,0Ah
 	out 70h,al

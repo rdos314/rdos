@@ -1079,6 +1079,7 @@ size_dram_bank2_done:
 	add edi,eax
 	
 size_dram_bank3_done:
+	add edi,edi
 	mov ds:ram1_size,edi
 	mov ds:ram2_size,0
 ;
@@ -1921,6 +1922,9 @@ prot_init:
 ;
     WriteSIO 21h, 1
     WriteSIO 22h, 0
+;
+    WriteSIO 7, 0Ah
+    WriteSIO 30h, 1
 ;
     WriteCCR 0C1h, 0
     jmp InitDram
