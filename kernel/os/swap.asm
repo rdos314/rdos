@@ -145,6 +145,7 @@ PAGE
 swap_name   DB 'Swap', 0
 
 swap_pr:
+    int 3
 
 swap_loop:
 	mov bx,swap_data_sel

@@ -53,7 +53,7 @@ sys_section			section_typ <>
 fs_init_section		section_typ <>
 fs_init_done		DB ?
 
-fs_file_list        DD ?
+fs_file_list        DW ?
 fs_file_section     section_typ <>
 
 file_defs			DB ?
@@ -76,8 +76,6 @@ fs_process_seg	ENDS
 
 file_list_struc	STRUC
 
-fl_prev				DD ?
-fl_next				DD ?
 fl_usage			DW ?
 fl_ref_count		DW ?
 fl_base				DD ?
@@ -93,6 +91,8 @@ file_list_struc	ENDS
 
 file_data_struc	STRUC
 
+file_prev		    DW ?
+file_next			DW ?
 file_size_section	read_write_section_typ <>
 file_list_section	section_typ <>
 file_dir_entry		DD ?

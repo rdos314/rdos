@@ -83,6 +83,115 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			InsertFileSel
+;
+;		DESCRIPTION:	Insert a file selector
+;
+;		PARAMETERS:     BX      File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertFileSel	Proc near
+    push ds
+    push es
+    push eax
+    push ebx
+	push di
+;
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;
+    mov es,bx
+	mov di,ds:fs_file_list
+	or di,di
+	je ins_file_sel_empty
+;
+	push ds
+	push si
+	mov ds,di
+	mov si,ds:file_prev
+	mov ds:file_prev,es
+	mov ds,si
+	mov ds:file_next,es
+	mov es:file_next,di
+	mov es:file_prev,si
+	pop si
+	pop ds
+	jmp ins_file_sel_leave
+	
+ins_file_sel_empty:
+	mov es:file_next,es
+	mov es:file_prev,es
+	mov ds:fs_file_list,es
+
+ins_file_sel_leave:
+    LeaveSection ds:fs_file_section
+;
+    pop di
+    pop ebx
+    pop eax
+    pop es
+    pop ds
+    ret
+InsertFileSel Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RemoveFileSel
+;
+;		DESCRIPTION:	Remove a file selector
+;
+;		PARAMETERS:	    BX      File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveFileSel	Proc near
+    push ds
+    push eax
+    push ebx
+	push si
+;
+    mov ax,fs_data_sel
+    mov ds,ax
+    EnterSection ds:fs_file_section
+;
+    mov es,bx
+	push di
+	push ds
+	mov di,es:file_next
+	mov ds:fs_file_list,di
+	mov si,es:file_prev
+	mov ds,di
+	mov ds:file_prev,si
+	mov ds,si
+	mov ds:file_next,di
+	pop ds
+	pop di
+	mov di,ds:fs_file_list
+    mov es,di	
+    cmp di,es:file_next
+	jne rem_file_sel_leave
+;	
+	mov ds:fs_file_list,0
+
+rem_file_sel_leave:
+    LeaveSection ds:fs_file_section
+	pop si
+    pop ebx
+    pop eax
+    pop ds 
+    ret
+RemoveFileSel Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			CreateFileHandle
 ;
 ;		DESCRIPTION:	Creates a file handle
@@ -122,101 +231,6 @@ CreateFileHandle	Proc near
 	ret
 CreateFileHandle	Endp
 
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			InsertListEntry
-;
-;		DESCRIPTION:	Insert a list entry
-;
-;		PARAMETERS:		EDI			List entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InsertListEntry	Proc near
-    push ds
-    push eax
-    push ebx
-;
-    mov ax,fs_data_sel
-    mov ds,ax
-    EnterSection ds:fs_file_section
-;
-	mov eax,ds:fs_file_list
-	or eax,eax
-	jne insert_list_more
-
-insert_list_empty:
-	mov es:[edi].fl_prev,edi
-	mov es:[edi].fl_next,edi
-	jmp insert_list_done
-
-insert_list_more:
-	mov ebx,es:[eax].fl_prev
-	mov es:[eax].fl_prev,edi
-	mov es:[ebx].fl_next,edi
-	mov es:[edi].fl_prev,ebx
-	mov es:[edi].fl_next,eax	
-
-insert_list_done:
-	mov ds:fs_file_list,edi
-    LeaveSection ds:fs_file_section
-;
-    pop ebx
-    pop eax
-    pop ds
-    ret
-InsertListEntry Endp	
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			RemoveListEntry
-;
-;		DESCRIPTION:	Remove a list entry
-;
-;		PARAMETERS:		EDI			List entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RemoveListEntry	Proc near
-    push ds
-    push eax
-    push ebx
-;
-    mov ax,fs_data_sel
-    mov ds,ax
-    EnterSection ds:fs_file_section
-;
-	mov eax,es:[edi].fl_next
-	mov ebx,es:[edi].fl_prev
-	mov es:[ebx].fl_next,eax
-	mov es:[eax].fl_prev,ebx
-	cmp eax,edi
-	jne remove_list_more
-;
-	mov dword ptr ds:fs_file_list,0
-	jmp remove_list_done
-
-remove_list_more:
-    cmp edi,ds:fs_file_list
-    jne remove_list_done
-;
-    mov ds:fs_file_list,eax 
-
-remove_list_done:
-    LeaveSection ds:fs_file_section
-    pop ebx
-    pop eax
-    pop ds 
-    ret
-RemoveListEntry Endp
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -255,7 +269,6 @@ CreateListEntry	Proc near
 	mov es:[edi].fl_prev_small,0
 	mov es:[edi].fl_next_small,0
 	mov es:[edi].fl_pos,esi
-	call InsertListEntry
 	mov eax,edi
 ;
 	pop edi
@@ -288,7 +301,6 @@ FreeListEntry	Proc near
 	push edi
 ;
 	mov edi,eax
-	call RemoveListEntry
 ;
 	mov al,ds:file_drive
 	mov bx,ds
@@ -562,6 +574,7 @@ crfs_init:
 	mov ds:file_size,ecx
 	mov ds:file_dir_entry,edx
 	mov bx,ds
+	call InsertFileSel
 ;
 	pop di
 	pop eax
@@ -653,6 +666,9 @@ FreeFileSel	PROC near
 	push si
 	push edi
 ;
+    mov bx,ds
+    call RemoveFileSel
+;    
 	mov ax,flat_sel
 	mov es,ax
 	mov edi,ds:file_dir_entry
@@ -2341,6 +2357,144 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			swap_file_list
+;
+;		DESCRIPTION:	Free file list entry, if possible
+;
+;		PARAMETERS:		DS      File selector
+;                       ES:EDI  Dir array
+;                       EAX     File list entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_file_list  Proc near
+    inc ebp
+    mov dx,es:[eax].fl_usage
+    or dx,dx
+    jnz swap_list_done
+;
+    mov dx,es:[eax].fl_ref_count
+    cmp dx,4
+    jbe swap_list_handle_ref
+;
+    mov dx,4
+
+swap_list_handle_ref:
+    dec dx
+    mov es:[eax].fl_ref_count,dx
+    or dx,dx
+    jnz swap_list_done
+;
+    dec ebp
+    call FreeListEntry 
+
+swap_list_done:   
+    ret
+swap_file_list  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_dir
+;
+;		DESCRIPTION:	Free physical memory in file directory
+;
+;		PARAMETERS:		DS      File selector
+;                       ES:EDI     Dir array
+;
+;       RETURNS:        EBP     Entry count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_dir    Proc near
+    xor ebp,ebp
+    mov ecx,400h
+
+swap_dir_loop:    
+    or ecx,ecx
+    jz swap_dir_done
+;    
+    xor eax,eax
+    repz scas dword ptr es:[edi]
+    mov eax,es:[edi-4]
+    or eax,eax
+    jz swap_dir_loop
+;
+    call swap_file_list
+    jmp swap_dir_loop
+
+swap_dir_done:    
+    ret
+swap_dir    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			swap_file
+;
+;		DESCRIPTION:	Free physical memory in file
+;
+;		PARAMETERS:		BX      File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+swap_file   Proc near
+    push ds
+    push bx
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov ds,bx
+	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+	jnz swap_file_done
+;	
+	EnterWriteSection ds:file_size_section
+;
+    mov cx,ds:file_dir_entries
+    mov si,OFFSET file_entries
+
+swap_file_loop:    
+	mov edi,ds:[si]
+	or edi,edi
+	jz swap_file_next
+;
+    push cx
+    push si
+    call swap_dir
+    pop si
+    pop cx
+;    
+    or ebp,ebp
+    jnz swap_file_next
+;
+    push ecx
+    xor edx,edx
+    xchg edx,ds:[si]
+    mov ecx,1000h    
+    FreeLinear
+    pop ecx
+    
+swap_file_next:
+	add si,4
+	loop swap_file_loop
+;
+	LeaveWriteSection ds:file_size_section
+
+swap_file_done:
+    pop bx
+    pop ds
+    ret
+swap_file   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			swap_proc
 ;
 ;		DESCRIPTION:	Free physical memory in file buffers
@@ -2350,14 +2504,21 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 swap_proc	Proc far
-    int 3
     mov ax,fs_data_sel
     mov ds,ax
     EnterSection ds:fs_file_section
 ;    
-    mov edi,ds:fs_file_list
-    
-;
+    mov bx,ds:fs_file_list
+
+swap_loop:
+    call swap_file
+    mov es,bx
+    mov bx,es:file_next
+    cmp bx,ds:fs_file_list
+    jne swap_loop
+;    
+    xor ax,ax
+    mov es,ax
     LeaveSection ds:fs_file_section
 	ret
 swap_proc	Endp
