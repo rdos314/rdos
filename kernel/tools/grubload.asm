@@ -499,6 +499,7 @@ AdapterCrc  Endp
 AddAdapter	Proc near
 	push dx
 	push di
+	add ecx,SIZE rdos_header
 	mov di,OFFSET rom_adapters
 	mov dx,ds:rom_modules
 AddAdapterCheck:
@@ -698,6 +699,7 @@ ExceptionText DB 'Exception Fault in Boot ',0
 NoBootText DB 'No kernel to boot up',0
 MemFail DB 'Multiboot without memflag',0
 ModuleFail DB 'No module loaded',0
+TestText DB 'Test reached',0
 
 DefaultInt:
     GetVideo

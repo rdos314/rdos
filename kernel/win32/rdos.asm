@@ -53,7 +53,7 @@ UserGate      MACRO gate_nr
 	db 66h
 	db 9Ah
 	dw 0
-	dw 280Bh + (gate_nr SHL 4)
+	dw 180Bh + (gate_nr SHL 4)
 			ENDM
 
 		NAME system

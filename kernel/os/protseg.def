@@ -136,9 +136,8 @@ handle_mem_sel		EQU 298h
 handle_data_sel		EQU 2A0h
 
 ;
-os_begin_sel		EQU 1800h
-user_begin_sel		EQU 2800h
-mem_begin_sel		EQU 4800h
+user_begin_sel		EQU 1800h
+mem_begin_sel		EQU 3800h
 
 gdt_size			EQU 8000h
 

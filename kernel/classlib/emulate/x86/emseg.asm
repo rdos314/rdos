@@ -390,7 +390,6 @@ DivFault	Endp
 	public OpcodeFault
 
 OpcodeFault	Proc near
-	int 3
 	or [ebp].em_flags,single_faulted
 	ResetFault
 	xor cx,cx

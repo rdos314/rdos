@@ -37,8 +37,8 @@ INCLUDE \rdos\os\system.def
 INCLUDE \rdos\os\protseg.def
 INCLUDE \rdos\os\system.inc
 
-DRAM_SIZE 		EQU 000400000h
-PROM_BASE		EQU 0FFF00000h
+DRAM_SIZE 		EQU 0000E0000h
+PROM_BASE		EQU 0FFFE0000h
 
 DefaultIdtEntry		MACRO
 	dw OFFSET DefaultInt
@@ -277,6 +277,7 @@ AdapterCrc  Endp
 AddAdapter	Proc near
 	push dx
 	push di
+	add ecx,SIZE rdos_header
 	mov di,OFFSET rom_adapters
 	mov dx,ds:rom_modules
 AddAdapterCheck:
@@ -479,15 +480,15 @@ gdt0:
 	dw 0
 gdt8:
 	dw 10h*8-1
-	dd 92FF0000h + OFFSET rom_idt
+	dd 92FFF000h + OFFSET rom_idt
 	dw 0FF00h
 gdt10:
 	dw 28h-1
-	dd 92FF0000h + OFFSET rom_gdt
+	dd 92FFF000h + OFFSET rom_gdt
 	dw 0FF00h
 gdt18:
 	dw 0FFFFh
-	dd 9AFF0000h
+	dd 9AFFF000h
 	dw 0FF00h
 gdt20:
 	dw 0FFFFh
@@ -580,39 +581,18 @@ boot_idt:
 
 idt_reg:
 	dw 10h*8-1
-	dd 0FFFF0000h + OFFSET rom_idt
+	dd 0FFFFF000h + OFFSET rom_idt
 
 gdt_reg:
 	dw 28h-1
-	dd 0FFFF0000h + OFFSET rom_gdt
-
-boot_file	DB 'bootprom.bin',0
-
-test_buf	DB 200h DUP(?)
-	mov ax,cs
-	mov ds,ax
-	mov dx,OFFSET boot_file
-	mov ax,3D00h
-	int 21h
-	mov bx,ax
-	mov dx,OFFSET test_buf
-	mov ah,3Fh
-	mov cx,200h
-	int 21h
-;
-	mov ax,cs
-	mov ds,ax
-	mov esi,OFFSET test_buf
-	call GetAdapter
-
-
+	dd 0FFFFF000h + OFFSET rom_gdt
 
 init:
 	cli
 	db 66h
-	lgdt fword ptr gdt_reg
+	lgdt cs:fword ptr gdt_reg + 0F000h
 	db 66h
-    lidt fword ptr idt_reg
+    lidt cs:fword ptr idt_reg + 0F000h
 	xor ax,ax
 	lahf
 	mov ebx,cr0
@@ -680,7 +660,7 @@ DoBoot:
 	mov ds:rom1_base,PROM_BASE
 	mov ds:rom1_size,-PROM_BASE
 	mov ds:rom2_size,0
-	mov ds:rom_shadow,0
+	mov ds:rom_shadow,1
 ;
 	mov ax,flat_sel
 	mov ds,ax

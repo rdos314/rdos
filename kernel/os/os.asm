@@ -35,15 +35,17 @@ INCLUDE os.def
 INCLUDE os.inc
 
 gate_entry	STRUC
+gate_sel			DW ?
+gate_offset			DW ?
 gate_name_sel		DW ?
-gate_name_offset	DD ?
-virt_gate_nr		DW ?
+gate_name_offset	DW ?
 gate_entry	ENDS
 
 code	SEGMENT byte public 'CODE'
 
 	.386p
 
+	extrn get_selector_base_size:near
 	extrn create_data_sel16:near
 	extrn create_call_gate_sel16:near
 	extrn create_int_gate_sel:near
@@ -74,11 +76,11 @@ init_osgate	PROC near
 ;
 	mov ax,cs
 	mov ds,ax
-	mov si,OFFSET register_gate
-	mov bx,os_begin_sel
-	xor cl,cl
-	push cs
-	call create_call_gate_sel16
+;	mov si,OFFSET register_gate
+;	mov bx,os_begin_sel
+;	xor cl,cl
+;	push cs
+;	call create_call_gate_sel16
 ;
 	mov bx,osgate_sel
 	mov eax,osgate_entries SHL 3
@@ -89,11 +91,15 @@ init_osgate	PROC near
 	xor di,di
 	rep stosb
 	xor di,di
+	mov es:[di].gate_offset,OFFSET register_gate
+	mov es:[di].gate_sel,cs
 	mov es:[di].gate_name_offset,OFFSET register_gate_name
 	mov es:[di].gate_name_sel,cs
 	mov cx,osgate_entries-1
 	mov di,8
 init_osgate_loop:
+	mov es:[di].gate_sel,0
+	mov es:[di].gate_offset,0
 	mov es:[di].gate_name_offset,OFFSET illegal_gate_name
 	mov es:[di].gate_name_sel,cs
 	add di,8
@@ -141,18 +147,17 @@ illegal_gate	ENDP
 
 register_gate_name	DB 'Register Kernel Gate',0
 
-
 register_gate	PROC far
 	push ds
 	push fs
 	push gs
 	push bx
 ;
-	mov bx,ax
-	shl bx,3
-	add bx,os_begin_sel
-	push cs
-	call create_call_gate_sel16
+;	mov bx,ax
+;	shl bx,3
+;	add bx,os_begin_sel
+;	push cs
+;	call create_call_gate_sel16
 ;
 	push ds
 	mov bx,ax
@@ -160,10 +165,10 @@ register_gate	PROC far
 	mov ds,ax
 	pop ax
 	shl bx,3
+	mov [bx].gate_sel,ax
+	mov [bx].gate_offset,si
 	mov [bx].gate_name_sel,es
-	xor eax,eax
-	mov ax,di
-	mov [bx].gate_name_offset,eax
+	mov [bx].gate_name_offset,di
 ;
 	pop bx
 	pop gs
@@ -196,15 +201,10 @@ is_valid_osgate	PROC far
 	mov ax,osgate_sel
 	mov ds,ax
 	shl bx,3
-	mov ax,[bx].gate_name_sel
-	cmp ax,kernel_code
+	mov ax,[bx].gate_sel
+	or ax,ax
 	clc
-	jne is_valid_gate_done
-;
-	mov eax,[bx].gate_name_offset
-	cmp eax,OFFSET illegal_gate_name
-	clc
-	jne is_valid_gate_done
+	jnz is_valid_gate_done
 ;
 	stc
 
@@ -214,6 +214,138 @@ is_valid_gate_done:
 	pop ds
 	ret
 is_valid_osgate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DO_OSGATE16
+;
+;		DESCRIPTION:	Translate a 16-bit gate
+;
+;		PARAMETERS:		DS:EBX		Fault address
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public do_osgate16
+
+do_osgate16	PROC near
+	push es
+	push ecx
+	push edx
+	push di
+;
+	mov di,ds:[ebx+3]
+	shl di,3
+	mov ax,osgate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	mov ax,[bp].vm_eflags
+	mov [bp+12],ax
+	mov ax,[bp].vm_cs
+	mov [bp+16],ax
+	mov ax,[bp].vm_eip
+	add ax,5
+	mov [bp+14],ax	
+;
+	mov ax,es:[di].gate_sel
+	mov ds:[ebx+3],ax
+	mov [bp+10],ax
+	mov ax,es:[di].gate_offset
+	mov ds:[ebx+1],ax
+	mov [bp+8],ax
+	mov byte ptr ds:[ebx],9Ah
+;
+	pop di
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,6
+	iret
+do_osgate16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DO_OSGATE32
+;
+;		DESCRIPTION:	Translate a 32-bit gate
+;
+;		PARAMETERS:		DS:EBX		Fault address
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public do_osgate32
+
+do_osgate32	PROC near
+	push es
+	push ecx
+	push edx
+	push di
+;
+	mov al,ds:[ebx+5]
+	mov di,ds:[ebx+3]
+	shl di,3
+	mov ax,osgate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	mov ax,[bp].vm_eflags
+	mov [bp+12],ax
+	mov ax,[bp].vm_cs
+	mov [bp+16],ax
+	mov ax,[bp].vm_eip
+	add ax,6
+	mov [bp+14],ax	
+;
+	mov ax,es:[di].gate_sel
+	mov ds:[ebx+4],ax
+	mov [bp+10],ax
+	mov ax,es:[di].gate_offset
+	mov ds:[ebx+2],ax
+	mov [bp+8],ax
+	mov byte ptr ds:[ebx],66h
+	mov byte ptr ds:[ebx+1],9Ah
+;
+	pop di
+	pop edx
+	pop ecx
+	pop es
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	mov sp,bp
+	pop bp
+	add sp,6
+	iret
+do_osgate32	ENDP
 
 code	ENDS
 

@@ -26,16 +26,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 OsGate16	MACRO gate_nr
-	db 9Ah
-	dw 0
-	dw 1800h + (gate_nr SHL 3)
+	db 0Fh
+	db 0Bh
+	db 0CAh
+	dw gate_nr
 			ENDM
 
 OsGate32	MACRO gate_nr
-	db 66h
-	db 9Ah
-	dw 0
-	dw 1800h + (gate_nr SHL 3)
+	db 0Fh
+	db 0Bh
+	db 0CBh
+	dw gate_nr
+	nop
 			ENDM
 
 OsGate	MACRO gate_nr

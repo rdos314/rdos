@@ -481,6 +481,7 @@ AdapterCrc  Endp
 AddAdapter	Proc near
 	push dx
 	push di
+	add ecx,SIZE rdos_header
 	mov di,OFFSET rom_adapters
 	mov dx,ds:rom_modules
 AddAdapterCheck:

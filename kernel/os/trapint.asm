@@ -363,6 +363,9 @@ trap_5:
 	extrn translate_vm_usergate:near
 	extrn do_virtgate:near
 
+	extrn do_osgate16:near
+	extrn do_osgate32:near
+
 	extrn reflect_end:near
 	extrn sim16_end:near
 	extrn sim32_end:near
@@ -620,7 +623,7 @@ pm16_C2	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_C4	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_C6	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_C8	DW OFFSET emulate_6,			OFFSET emulate_6
-pm16_CA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_CA	DW OFFSET do_osgate16,			OFFSET do_osgate32
 pm16_CC	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_CE	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_D0	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -1223,13 +1226,46 @@ pretask5:
 	ShutDownPreTask
 
 pretask6:
-	sub sp,4
+	push dword ptr 0
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
+;
+	test byte ptr [bp+2].vm_eflags,2
+	jnz pretask6_default
+;
+	mov ds,[bp].vm_cs
+	mov ebx,[bp].vm_eip
+	mov ax,[ebx]
+	cmp ax,00B0Fh
+	jne pretask6_default
+;
+	mov al,byte ptr [ebx+2]
+	cmp al,0CAh
+	je pretask_osgate16
+;
+	cmp al,0CBh
+	jne pretask6_default
+
+pretask_osgate32:
+	call do_osgate32
+	jmp pretask6_retry
+
+pretask_osgate16:
+	call do_osgate16
+
+pretask6_retry:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+pretask6_default:
 	mov al,6
 	ShutDownPreTask
 

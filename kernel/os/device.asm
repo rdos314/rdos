@@ -159,7 +159,6 @@ move_adapter_loop:
 	mov edi,edx
 	mov esi,fs:[bx].adapter_base
 	mov ecx,fs:[bx].adapter_size
-	add ecx,SIZE rdos_header
 	dec ecx
 	shr ecx,2
 	inc ecx

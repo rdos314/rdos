@@ -330,7 +330,7 @@ em0F02	DD OFFSET EmLarRegMem,			OFFSET EmLslRegMem
 em0F04	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F06	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F08	DD OFFSET EmulateError,			OFFSET EmulateError
-em0F0A	DD OFFSET EmulateError,			OFFSET EmulateError
+em0F0A	DD OFFSET EmulateError,			OFFSET OpcodeFault
 em0F0C	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F0E	DD OFFSET EmulateError,			OFFSET EmulateError
 em0F10	DD OFFSET EmulateError,			OFFSET EmulateError

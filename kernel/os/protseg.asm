@@ -58,6 +58,8 @@ code	SEGMENT byte use16 public 'CODE'
 
 get_selector_base_size_name DB 'Get selector base & size',0
 
+	public get_selector_base_size
+
 get_selector_base_size	PROC far
 	push ds
 	push ax

@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
 ; Copyright (C) 1988-2000, Leif Ekblad
 ;
@@ -54,11 +54,18 @@ vm_eax		EQU -4
 vm_ebx		EQU -8
 vm_edx		EQU -12
 
-gate_entry	STRUC
-gate_name_sel		DW ?
-gate_name_offset	DD ?
-virt_gate_nr		DW ?
-gate_entry	ENDS
+osgate_entry	STRUC
+og_sel			DW ?
+og_offset		DW ?
+og_name_sel		DW ?
+og_name_offset	DW ?
+osgate_entry	ENDS
+
+usergate_entry	STRUC
+ug_name_sel		DW ?
+ug_name_offset	DD ?
+ug_virt_gate_nr	DW ?
+usergate_entry	ENDS
 
 virt_gate_entry	STRUC
 vg_sel			DW ?
@@ -800,6 +807,35 @@ WriteData	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+GetIllegalOsGate	PROC near
+	push ds
+	push fs
+	mov ax,osgate_sel
+	mov ds,ax
+	mov fs,[bx].og_name_sel
+	mov si,[bx].og_name_offset
+	mov ax,kdebug_data_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
+	xor bx,bx
+illegal_out_os_loop:
+	mov al,fs:[si]
+	or al,al
+	je illegal_out_os_ok
+	stosb
+	inc si
+	inc bx
+	loop illegal_out_os_loop
+illegal_out_os_ok:
+	inc cx
+	mov al,' '
+	rep stosb	
+	pop fs
+	pop ds
+	ret
+GetIllegalOsGate	ENDP
+
 GetVirtGate	PROC near
 	push ds
 	push fs
@@ -807,6 +843,9 @@ GetVirtGate	PROC near
 	mov ds,ax
 	mov fs,[bx].vg_sel
 	mov si,[bx].vg_name_offset
+	mov ax,kdebug_data_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
 	mov cx,40
 	xor bx,bx
 illegal_out_virt_loop:
@@ -826,6 +865,68 @@ illegal_out_virt_ok:
 	ret
 GetVirtGate	ENDP
 
+; dx:bx	= call address
+
+GetOsCall	PROC near
+	push ds
+	push fs
+	mov ax,gs:tss_eflags+2
+	test ax,2
+	jnz short get_oscall_error
+;
+	mov ax,osgate_sel
+	mov ds,ax
+	xor si,si
+	mov cx,osgate_entries
+
+get_oscall_scan_loop:
+	cmp dx,ds:[si].og_sel
+	jne get_oscall_scan_next
+;
+	cmp bx,ds:[si].og_offset
+	je get_oscall_found
+
+get_oscall_scan_next:
+	add si,8
+	loop get_oscall_scan_loop
+;
+	jmp short get_oscall_error
+
+get_oscall_found:
+	mov fs,[si].og_name_sel
+	mov si,[si].og_name_offset
+	mov ax,kdebug_data_sel
+	mov es,ax
+	mov di,OFFSET op_in_text
+	mov cx,40
+	xor bx,bx
+
+get_oscall_out_loop:
+	mov al,fs:[si]
+	or al,al
+	je get_oscall_out_ok
+;
+	stosb
+	inc si
+	inc bx
+	loop get_oscall_out_loop
+
+get_oscall_out_ok:
+	inc cx
+	mov al,' '
+	rep stosb	
+	clc
+	jmp get_oscall_end
+
+get_oscall_error:
+	stc
+
+get_oscall_end:
+	pop fs
+	pop ds
+	ret
+GetOsCall	ENDP
+
 GetCallGate	PROC near
 	push ds
 	push fs
@@ -836,20 +937,6 @@ GetCallGate	PROC near
 	jnz test_call_error	
 	mov bx,dx
 	and bx,0FFF8h
-	sub bx,os_begin_sel
-	jc test_call_error
-	shr bx,3
-	cmp bx,osgate_entries
-	jnc test_call_user
-	shl bx,3
-	mov ax,osgate_sel
-	mov ds,ax
-	mov esi,[bx].gate_name_offset
-	mov fs,[bx].gate_name_sel
-	jmp call_output
-test_call_user:
-	shl bx,3
-	add bx,os_begin_sel
 	sub bx,user_begin_sel
 	jc test_call_error
 	shr bx,4
@@ -858,8 +945,8 @@ test_call_user:
 	shl bx,3
 	mov ax,usergate_sel
 	mov ds,ax
-	mov esi,[bx].gate_name_offset
-	mov fs,[bx].gate_name_sel
+	mov esi,[bx].ug_name_offset
+	mov fs,[bx].ug_name_sel
 call_output:
 	mov ax,kdebug_data_sel
 	mov es,ax
@@ -904,7 +991,13 @@ GetMne	PROC near
 write_illegal16:
 	cmp al,0F4h
 	je write_illegal_virtgate
+;
+	cmp al,0CAh
+	je write_illegal_osgate
+	cmp al,0CBh
+	je write_illegal_osgate
 	jmp write_special_end
+
 write_illegal_virtgate:
 	mov ax,[si+3]
 	shl ax,3
@@ -913,6 +1006,19 @@ write_illegal_virtgate:
 	mov op_size,bx
 	clc
 	jmp write_special_end
+
+write_illegal_osgate:
+	mov ax,[si+3]
+	cmp ax,osgate_entries
+	jnc write_special_fail
+;
+	shl ax,3
+	mov bx,ax
+	call GetIllegalOsGate
+	mov op_size,bx
+	clc
+	jmp write_special_end
+
 not_illegal_op:
 	cmp al,66h
 	jne not_call16
@@ -924,7 +1030,14 @@ not_call16:
 	mov dx,[si+3]
 	call GetCallGate
 	mov op_size,bx
+	jnc write_special_end
+;
+	mov bx,[si+1]
+	mov dx,[si+3]
+	call GetOsCall
+	mov op_size,bx
 	jmp write_special_end
+
 write_special_fail:
 	stc
 write_special_end:

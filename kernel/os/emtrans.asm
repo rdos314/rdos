@@ -114,6 +114,9 @@ MovxByteMem	Macro op
 	public Em&op&ByteMem
 
 Em&op&ByteMem	Proc near
+	test byte ptr [bp].em_flags,d32
+	jnz Em&op&DwordMem8
+;
 	call ReadCodeByte
 	mov bl,al
 	push bx
@@ -124,6 +127,17 @@ Em&op&ByteMem	Proc near
 	ret
 Em&op&ByteMem	Endp
 
+Em&op&DwordMem8	Proc near
+	call ReadCodeByte
+	mov bl,al
+	push bx
+	call LoadByteMemReg
+	pop bx
+	&op eax,ax
+	call SaveDwordReg
+	ret
+Em&op&DwordMem8	Endp
+
 			Endm
 
 
@@ -133,7 +147,7 @@ MovxWordMem	Macro op
 
 Em&op&WordMem	Proc near
 	test byte ptr [bp].em_flags,d32
-	jnz Em&op&DwordMem
+	jnz Em&op&DwordMem16
 ;
 	call ReadCodeByte
 	mov bl,al
@@ -145,7 +159,7 @@ Em&op&WordMem	Proc near
 	ret
 Em&op&WordMem	Endp
 
-Em&op&DwordMem	Proc near
+Em&op&DwordMem16	Proc near
 	call ReadCodeByte
 	mov bl,al
 	push bx
@@ -154,7 +168,7 @@ Em&op&DwordMem	Proc near
 	&op eax,ax
 	call SaveDwordReg
 	ret
-Em&op&DwordMem	Endp
+Em&op&DwordMem16	Endp
 
 			Endm
 

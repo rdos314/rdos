@@ -49,27 +49,6 @@ Callf32	MACRO	sel,offs
 	dw sel
 		ENDM
 
-ReflectVMToPM	MACRO int_nr
-	db 0Fh
-	db 0Bh
-	db 0F1h
-	db int_nr
-				ENDM
-
-ReflectInt	MACRO int_nr
-	db 0Fh
-	db 0Bh
-	db 0F2h
-	dw int_nr
-					ENDM
-
-DpmiEntry	MACRO
-	db 0Fh
-	db 0Bh
-	db 0F7h
-	dw 0
-					ENDM
-
 ReflectEnd	MACRO
 	db 0Fh
 	db 0Bh
@@ -186,6 +165,40 @@ BreakException32	MACRO int_nr
 	db 0Bh
 	db 21h
 	db int_nr
+					ENDM
+
+;OsGate16	MACRO gate_nr
+;	db 0Fh
+;	db 0Bh
+;	db 0CAh
+;	dw gate_nr
+
+;OsGate32	MACRO gate_nr
+;	db 0Fh
+;	db 0Bh
+;	db 0CBh
+;	dw gate_nr
+;	nop
+
+ReflectVMToPM	MACRO int_nr
+	db 0Fh
+	db 0Bh
+	db 0F1h
+	db int_nr
+				ENDM
+
+ReflectInt	MACRO int_nr
+	db 0Fh
+	db 0Bh
+	db 0F2h
+	dw int_nr
+					ENDM
+
+DpmiEntry	MACRO
+	db 0Fh
+	db 0Bh
+	db 0F7h
+	dw 0
 					ENDM
 
 ShutDownBoot	MACRO

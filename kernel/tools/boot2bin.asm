@@ -80,9 +80,9 @@ driver_param	DB 128 DUP(?)
 
 config_text DB ConfigSize DUP(?)
 
-boot_name	DB 'aliboot.exe',0
-bin_name	DB 'aliboot.bin',0
-cfg_name	DB 'aliboot.cfg',0
+boot_name	DB 'bootprom.exe',0
+bin_name	DB 'bootprom.bin',0
+cfg_name	DB 'bootprom.cfg',0
 
 jmp_code	DB 0E9h
 position	DW ?
@@ -211,7 +211,7 @@ load_boot_ok:
 	mov ah,3Fh
 	int 21h
     mov ax,ds:exeh_ip
-	add ax,0Dh
+	add ax,0Dh + 0F000h
     mov es:position,ax
 	mov dx,ds:exeh_size_header
 	shl dx,4
@@ -219,8 +219,8 @@ load_boot_ok:
 	mov ax,4200h
 	int 21h
 ;
-	mov cx,0FFF0h
-	xor dx,dx
+	mov cx,0FF0h
+	mov dx,0F000h
 	mov ah,3Fh
 	int 21h
 	mov ah,3Eh
