@@ -85,6 +85,8 @@ T6117::T6117(TKeyb *Keyb)
 	FDramSize = 0;
 	FRom = 0;
 	FRomSize = 0;
+	FAdapterRom = 0;
+	FAdapterRomSize = 0;
 	for (i = 0; i < 4; i++)
 		FDramBanks[i] = 0;
 
@@ -272,7 +274,7 @@ char T6117::In(int Port)
 }
 
 /*##################  T6117::DefineRom  ###############
-*   Purpose....: Define ROM contents							            #
+*   Purpose....: Define ROM contents (E000:0)					            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -292,6 +294,31 @@ void T6117::DefineRom(unsigned long Size, char *FileName)
 	if (file)
 	{
 		_lread(file, FRom, Size);
+		_lclose(file);
+	}
+}
+
+/*##################  T6117::DefineAdapterRom  ###############
+*   Purpose....: Define adapter ROM contents (D000:0)				            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void T6117::DefineAdapterRom(unsigned long Size, char *FileName)
+{
+	HFILE file;
+
+	if (FAdapterRom)
+		free(FAdapterRom);
+
+	FAdapterRomSize = Size;
+	FAdapterRom = (char *)malloc(Size);
+
+	file = _lopen(FileName, 0);
+	if (file)
+	{
+		_lread(file, FAdapterRom, Size);
 		_lclose(file);
 	}
 }
@@ -812,13 +839,25 @@ char T6117::Read(TCpu *Cpu, unsigned long Address)
 				if (FData[0x14] & 0x10)
 					break;
 				else
-					return 0xFF;
+				{
+					Offset = Ads & 0xFFFF;
+					if (Offset < FAdapterRomSize)
+						return *(FAdapterRom + Offset);
+					else
+						return 0xFF;
+				}
 
 			case 0xD8000:
 				if (FData[0x14] & 0x40)
 					break;
 				else
-					return 0xFF;
+				{
+					Offset = Ads & 0xFFFF;
+					if (Offset < FAdapterRomSize)
+						return *(FAdapterRom + Offset);
+					else
+						return 0xFF;
+				}
 
 			case 0xE0000:
 				if (FData[0x15] & 1)
@@ -890,37 +929,25 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 				if (FData[0x14] & 2)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return;
-				}
 
 			case 0xC8000:
 				if (FData[0x14] & 8)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return;
-				}
 
 			case 0xD0000:
 				if (FData[0x14] & 0x20)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return;
-				}
 
 			case 0xD8000:
 				if (FData[0x14] & 0x80)
 					break;
 				else
-				{
-					UserBreak(Cpu);
 					return;
-				}
 
 			case 0xE0000:
 				if (FData[0x15] & 2)

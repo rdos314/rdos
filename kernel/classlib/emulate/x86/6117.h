@@ -47,6 +47,7 @@ class T6117
 		void Reset();
 		void DefineDram(int Bank, unsigned long Size);
 		void DefineRom(unsigned long Size, char *FileName);
+		void DefineAdapterRom(unsigned long Size, char *FileName);
 
 		void Show();
 
@@ -69,6 +70,9 @@ class T6117
 
 		char *FRom;
 		int FRomSize;
+
+		char *FAdapterRom;
+		int FAdapterRomSize;
 
 		int FDramConfigured;
 		int FDramMode;
