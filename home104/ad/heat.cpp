@@ -142,7 +142,7 @@ int THeat::IsStartedVP()
 ##########################################################################*/
 void THeat::StartVP()
 {
-	if ((!IsStartedVP()) && IsStartedVC())
+	if (!IsStartedVP())
 		RdosToggleDigitalLine(1, 5);
 }
 
@@ -164,56 +164,6 @@ void THeat::StopVP()
 
 /*##########################################################################
 #
-#   Name       : THeat::IsStartedVC
-#
-#   Purpose....: Check if started VC (v„rmepump cirkulationspump)
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int THeat::IsStartedVC()
-{
-	if (FStat & 0x10)
-		return TRUE;
-	else
-		return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : THeat::StartVC
-#
-#   Purpose....: Start VC (v„rmepump cirkulationspump)
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THeat::StartVC()
-{
-	if (!IsStartedVC())
-		RdosToggleDigitalLine(1, 4);
-}
-
-/*##########################################################################
-#
-#   Name       : THeat::StopVC
-#
-#   Purpose....: Stop VC (v„rmepump cirkulationspump)
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THeat::StopVC()
-{
-	if (IsStartedVC() && (!IsStartedVP()))
-		RdosToggleDigitalLine(1, 4);
-}
-
-/*##########################################################################
-#
 #   Name       : THeat::UpdateOff
 #
 #   Purpose....: Handle new sample in OFF state
@@ -226,11 +176,8 @@ void THeat::UpdateOff(long double value)
 {
 	FMax = value;
 
-	if (value < 45.0)
-	{
-		StartVC();
+	if (value < 42.5)
 		StartVP();
-	}
 }
 
 /*##########################################################################
@@ -248,14 +195,17 @@ void THeat::UpdateOn(long double value)
 	if (value > FMax)
 		FMax = value;
 
-	if (value < FMax - 0.5)
+	if ((value < FMax - 2.0) || (value < 40.0))
 		StartEP();
 
-	if (value > 55.0)
+	if (value > 49.0)
 	{
-		StopEP();
 		StopVP();
-		StopVC();
+
+		if (value > 55.0)
+			StopEP();
+		else
+			StartEP();
 	}
 }
 
@@ -282,6 +232,6 @@ void THeat::NotifyBeforeClear()
 		else
 			UpdateOn(GetMean(&time));
 	}
-    TSample::NotifyBeforeClear();
+	TSample::NotifyBeforeClear();
 }
 

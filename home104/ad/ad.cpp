@@ -23,6 +23,7 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+int lvcnt = 0;
 long double lv;
 TSample lsmin, lsmax;
 
@@ -58,6 +59,7 @@ void UpdateLight(int all)
 	TDateTime time;
 	int diostat;
 
+
 	if (all)
 		sprintf(str, "LJUS:  %7.3LfW/m2 (%7.3Lf, %7.3Lf)", lv, lsmin.GetMin(&time), lsmax.GetMax(&time));
 	else
@@ -66,30 +68,37 @@ void UpdateLight(int all)
 	RdosSetCursorPosition(0, 0);
 	RdosWriteString(str);
 
-	if (RdosReadDigital(1, &diostat))
+	if (lvcnt <= 0)
 	{
-		if (diostat & 1)
-		{
-			if (lv > 0.050)
-				RdosToggleDigitalLine(1, 0);
-		}
-		else
-		{
-			if (lv < 0.030)
-				RdosToggleDigitalLine(1, 0);
-		}
+		lvcnt = 90;
 
-		if (diostat & 0x80)
+		if (RdosReadDigital(1, &diostat))
 		{
-			if (lv > 0.200)
-				RdosToggleDigitalLine(1, 7);
-		}
-		else
-		{
-			if (lv < 0.120)
-				RdosToggleDigitalLine(1, 7);
+			if (diostat & 1)
+			{
+				if (lv > 0.050)
+					RdosToggleDigitalLine(1, 0);
+			}
+			else
+			{
+				if (lv < 0.030)
+					RdosToggleDigitalLine(1, 0);
+			}
+
+			if (diostat & 0x80)
+			{
+				if (lv > 0.200)
+					RdosToggleDigitalLine(1, 7);
+			}
+			else
+			{
+				if (lv < 0.120)
+					RdosToggleDigitalLine(1, 7);
+			}
 		}
 	}
+	else
+		lvcnt--;
 }
 
 void UpdateTemp(int index, int all)
