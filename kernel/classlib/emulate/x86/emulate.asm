@@ -42,6 +42,7 @@ include ..\core\em387.inc
 
 .code
 
+   extrn setvalue:near
    extrn GetIntVector:near
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -961,7 +962,7 @@ emtC0	DD OFFSET EmC0,					OFFSET EmC1
 emtC2	DD OFFSET EmRetNearN,			OFFSET EmRetNear
 emtC4	DD OFFSET EmLes,				OFFSET EmLds
 emtC6	DD OFFSET EmMoveByteImToMem,	OFFSET EmMoveWordImToMem
-emtC8	DD OFFSET EmulateError,			OFFSET EmulateError
+emtC8	DD OFFSET EmEnter,				OFFSET EmLeave
 emtCA	DD OFFSET EmulateError,			OFFSET EmRetFar
 emtCC	DD OFFSET EmInt3,				OFFSET EmInt
 emtCE	DD OFFSET EmulateError,			OFFSET EmIret
@@ -1006,8 +1007,16 @@ emtFE	DD OFFSET EmFE,					OFFSET EmFF
 Emulate	Proc near
 	push ebp
 	mov ebp,esp
+	sub	esp,Tprog_position_		;de l'espace pour fabriquer la structure
 	pushad
+	lea	ebx,[ebp-Tprog_position_]
 	mov ebp,[ebp+8]
+	mov	eax,[ebp].reg_eip
+	mov	[ebx].p_offset,eax
+	mov	ax,[ebp].reg_cs.d_selector
+	mov	[ebx].p_segment,ax
+	push	ebx
+	call	setvalue
 ;
 	mov [ebp].running,1
 	mov al,[ebp].reg_cs.d_access
@@ -1065,6 +1074,7 @@ emulate_done:
 	mov [ebp].running,0
 ;
 	popad
+	add	esp,Tprog_position_		;de l'espace pour fabriquer la structure
 	pop ebp
 	ret 4
 Emulate	Endp

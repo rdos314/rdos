@@ -31,11 +31,23 @@
 #include "emulate.h"
 #include "pic.h"
 #include "pit.h"
+#include "keyb.h"
+#include "cmos.h"
 
 #define STACK_SIZE	0x4000
 
+#define COUNTBUFFER	10
+Tprog_position set_val,get_val;
+Tprog_position	buffer_val[COUNTBUFFER];
+unsigned int NewCs = 0;
+unsigned long NewEip = 0;
+int debugflag;
+
 TPic Pic0;
 TPit Pit;
+TKeyb Keyb;
+TCmos Cmos;
+TCpu Cpu;
 
 /*##################  PitSetOut0  ###############
 *   Purpose....: Out 0 on PIT set								            #
@@ -203,6 +215,14 @@ void __stdcall ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int 
 			*Dest = Pit.In(Port & 0xF);
 			break;
 
+		case 0x60:
+			*Dest = Keyb.In(Port & 0xF);
+			break;
+
+		case 0x70:
+			*Dest = Cmos.In(Port & 0xF);
+			break;
+
 		default:
 			*Dest = 0;
 	}
@@ -233,6 +253,14 @@ void __stdcall WriteToIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int S
 		case 0x40:
 			Pit.Out(Port & 0xF, *Dest);
 			break;
+
+		case 0x60:
+			Keyb.Out(Port & 0xF, *Dest);
+			break;
+
+		case 0x70:
+			Cmos.Out(Port & 0xF, *Dest);
+			break;
 	}
 }
 
@@ -249,9 +277,11 @@ void Reset(TCpu *Cpu)
 	int i;
 	long l;
 	long *LongPtr;
-
 	Cpu->Eprom = malloc(0x100000);
 	Cpu->Dram = malloc(0x400000);
+
+	debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
+	initbuffer(buffer_val,COUNTBUFFER); /* initialise le buffer*/
 
 	LongPtr = (long *)Cpu->Dram;
 	for (l = 0; l < 0x100000; l++)
@@ -260,7 +290,7 @@ void Reset(TCpu *Cpu)
 		LongPtr++;
 	}
 
-	file = _lopen("bootprom.bin", 0);
+	file = _lopen("\\rdos\\app\\bootprom.bin", 0);
 	if (file)
 	{
 		_lread(file, Cpu->Eprom, 0x100000);
@@ -322,6 +352,294 @@ void Reset(TCpu *Cpu)
 	Pit.Counter[1].OnResetOut = PitResetOut0;
 }
 
+/*##################  On_F_Char  ###############
+*   Purpose....: handle F(PU)									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void On_F_Char()
+{
+	int FpuReg;
+	int FpuTag;
+	int i;
+
+	FpuTag = Cpu.Tag;
+	FpuReg = Cpu.MathStatus >> 11;
+	for (i = 7; i >= 0; i--)
+	{
+		switch ((FpuTag >> (2 * ((FpuReg + i) & 7))) & 3)
+		{
+			case 0:
+				printf("ST(%d)= %Lg\r\n", i, Cpu.st[(FpuReg + i) & 7]);
+				break;
+
+			case 1:
+				printf("ST(%d)=ZERO\r\n", i);
+				break;
+
+			case 2:
+				printf("ST(%d)=NAN\r\n", i);
+				break;
+
+			case 3:
+				printf("ST(%d)\r\n", i);
+				break;
+		}
+	}
+    getch();
+}
+
+/*##################  On_T_Char  ###############
+*   Purpose....: handle T(race)									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void On_T_Char()
+{
+	if (Cpu.ReqBuffer[0] == 0xCC)
+		Cpu.Reg_eip++;
+	else
+		Emulate(&Cpu);
+	ReadInstruction(&Cpu);
+}
+
+/*##################  On_P_Char  ###############
+*   Purpose....: handle P(ace)									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void On_P_Char()
+{
+	int Done;
+	unsigned int BreakCs;
+	unsigned long BreakEip;
+	int CheckHlt;
+	int CheckDelay;
+
+	switch (Cpu.ReqBuffer[0])
+	{
+		case 0xCC:
+			Cpu.Reg_eip++;
+			ReadInstruction(&Cpu);
+			Done = TRUE;
+			break;
+
+		case 0x9A:
+			BreakCs = Cpu.Reg_cs.selector;
+			BreakEip = Cpu.Reg_eip + 5;
+			Emulate(&Cpu);
+			ReadInstruction(&Cpu);
+			Done = FALSE;
+			CheckHlt = FALSE;
+			break;
+
+		case 0xE0:
+		case 0xE1:
+		case 0xE2:
+			BreakCs = Cpu.Reg_cs.selector;
+			BreakEip = Cpu.Reg_eip + 2;
+			Emulate(&Cpu);
+			ReadInstruction(&Cpu);
+			Done = FALSE;
+			CheckHlt = FALSE;
+			break;
+
+		case 0xE8:
+			BreakCs = Cpu.Reg_cs.selector;
+			BreakEip = Cpu.Reg_eip + 3;
+			Emulate(&Cpu);
+			ReadInstruction(&Cpu);
+			Done = FALSE;
+			CheckHlt = FALSE;
+			break;
+
+		case 0xF4:
+			Done = FALSE;
+			CheckHlt = TRUE;
+			break;
+
+		default:
+			Emulate(&Cpu);
+			ReadInstruction(&Cpu);
+			Done = TRUE;
+			break;
+	}
+
+	CheckDelay = 1000;
+	while (!Done)
+	{
+		if (CheckHlt)
+			Done = Cpu.ReqBuffer[0] != 0xF4;
+		else
+			Done = (BreakCs == Cpu.Reg_cs.selector &&
+					BreakEip == Cpu.Reg_eip);
+		if (!Done)
+		{
+			Emulate(&Cpu);
+			if (Cpu.EmFlags & TRIPLE_FAULT)
+				Done = TRUE;
+			else
+			{
+				if (!CheckDelay)
+				{
+					CheckDelay = 1000;
+					if  (kbhit())
+					{
+						getch();
+						Done = TRUE;
+					}
+				}
+				else
+					CheckDelay--;
+			}
+			ReadInstruction(&Cpu);
+		}
+	}
+}
+
+/*##################  On_G_Char  ###############
+*   Purpose....: handle G(o)									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void On_G_Char()
+{
+	int Done;
+	int CheckDelay;
+
+	Done = Cpu.ReqBuffer[0] == 0xCC;
+	CheckDelay = 1000;
+	while (!Done)
+	{
+		Emulate(&Cpu);
+		if (Cpu.EmFlags & TRIPLE_FAULT)
+			Done = TRUE;
+		ReadInstruction(&Cpu);
+		if (Cpu.ReqBuffer[0] == 0xCC)
+		{
+			Done = TRUE;
+			Cpu.Reg_eip++;
+		}
+		else
+		{
+			if (!CheckDelay)
+			{
+				CheckDelay = 1000;
+				if (kbhit())
+				{
+					getch();
+					Done = TRUE;
+				}
+			}
+			else
+				CheckDelay--;
+		}
+	}
+}
+
+/*##################  On_R_Char  ###############
+*   Purpose....:  On R or r command reset the conputer		            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 01-05-20                                                   #
+*##########################################################################*/
+void On_R_Char()
+{
+	free(Cpu.Dram);
+	free(Cpu.Eprom);
+	Reset(&Cpu);
+}	
+
+/*##################  On_U_Char  ###############
+*   Purpose....:  Disassemble 20 instruction    		            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 01-05-20                                                   #
+*##########################################################################*/
+void On_U_Char()
+{
+	TCpu Cpu_backup;
+
+	debugflag =INSTRUCTION_CODE_ONLY;
+	Cpu_backup=Cpu;		/* save Cpu context*/
+	if (NewCs==0)
+	{
+		Dis_ass_more(&Cpu,20);
+		getch();			/* Pour attendre */
+    }
+	else
+	{
+		Cpu.Reg_cs.selector=NewCs;
+ 		Cpu.Reg_eip=NewEip;
+ 		
+        Dis_ass_more(&Cpu,20);
+        getch();			/* Pour attendre */
+	}	
+        
+	Cpu=Cpu_backup;
+    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
+}	
+
+/*##################  On_B_Char  ###############
+*   Purpose....:  Disassemble precedent  instructions    		    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 01-05-20                                                   #
+*##########################################################################*/
+void On_B_Char()
+{
+	TCpu Cpu_backup;
+
+	debugflag =INSTRUCTION_CODE_ONLY;
+	Cpu_backup=Cpu;		/* save Cpu context*/  
+	getvalue(&Cpu);
+	getch();			/* Pour attendre */
+
+	Cpu=Cpu_backup;
+    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
+}
+
+/*##################  On_D_Char  ###############
+*   Purpose....:  print data on the screnn
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 17-06-2001                                                   #
+*##########################################################################*/
+void On_D_Char()
+{
+	TCpu Cpu_backup;
+
+	Cpu_backup=Cpu;		/* save Cpu context*/
+	if (NewCs==0)
+	{
+		showdata(&Cpu);
+ 		getch();			/* Pour attendre */
+	}
+	else
+	{
+		Cpu.Reg_gs.selector=NewCs;
+ 		Cpu.Reg_esi=NewEip;
+ 		
+        showdata(&Cpu);
+        getch();			/* Pour attendre */
+	}	
+
+	Cpu=Cpu_backup;
+    debugflag = SYSTEM_REGISTER | DESCRIPTOR_REGISTER | GENERAL_REGISTER | CONTROL_REGISTER;
+}
+
 /*##################  main  ###############
 *   Purpose....: main				            #
 *   In params..: *                                                          #
@@ -331,48 +649,16 @@ void Reset(TCpu *Cpu)
 *##########################################################################*/
 extern "C" void main(void)
 {
-	TCpu Cpu;
-	int Done;
-	unsigned int BreakCs;
-	unsigned long BreakEip;
-	int CheckHlt;
-	int CheckDelay;
-	int i;
-	int FpuReg;
-	int FpuTag;
-
 	Reset(&Cpu);
-	DisAssemble(&Cpu);
-	WriteRegs(&Cpu);
 	while (1)
 	{
+		DisAssemble(&Cpu);
+		WriteRegs(&Cpu);
 		switch (getch())
 		{
 			case 'f':
 			case 'F':
-				FpuTag = Cpu.Tag;
-				FpuReg = Cpu.MathStatus >> 11;
-				for (i = 7; i >= 0; i--)
-				{
-					switch ((FpuTag >> (2 * ((FpuReg + i) & 7))) & 3)
-					{
-						case 0:
-							printf("ST(%d)= %Lg\r\n", i, Cpu.st[(FpuReg + i) & 7]);
-							break;
-
-						case 1:
-							printf("ST(%d)=ZERO\r\n", i);
-							break;
-
-						case 2:
-							printf("ST(%d)=NAN\r\n", i);
-							break;
-
-						case 3:
-							printf("ST(%d)\r\n", i);
-							break;
-					}
-				}
+				On_F_Char();
 				break;
 
 			case 'q':
@@ -381,122 +667,33 @@ extern "C" void main(void)
 
 			case 't':
 			case 'T':
-				if (Cpu.ReqBuffer[0] == 0xCC)
-					Cpu.Reg_eip++;
-				else
-					Emulate(&Cpu);
-				ReadInstruction(&Cpu);
-				DisAssemble(&Cpu);
-				WriteRegs(&Cpu);
+				On_T_Char();
 				break;
 
 			case 'p':
 			case 'P':
-				switch (Cpu.ReqBuffer[0])
-				{
-					case 0xCC:
-						Cpu.Reg_eip++;
-						ReadInstruction(&Cpu);
-						Done = TRUE;
-						break;
-
-					case 0x9A:
-						BreakCs = Cpu.Reg_cs.selector;
-						BreakEip = Cpu.Reg_eip + 5;
-						Emulate(&Cpu);
-						ReadInstruction(&Cpu);
-						Done = FALSE;
-						CheckHlt = FALSE;
-						break;
-
-					case 0xE8:
-						BreakCs = Cpu.Reg_cs.selector;
-						BreakEip = Cpu.Reg_eip + 3;
-						Emulate(&Cpu);
-						ReadInstruction(&Cpu);
-						Done = FALSE;
-						CheckHlt = FALSE;
-						break;
-
-					case 0xF4:
-						Done = FALSE;
-						CheckHlt = TRUE;
-						break;
-
-					default:
-						Emulate(&Cpu);
-						ReadInstruction(&Cpu);
-						Done = TRUE;
-						break;
-				}
-
-				CheckDelay = 1000;
-				while (!Done)
-				{
-					if (CheckHlt)
-						Done = Cpu.ReqBuffer[0] != 0xF4;
-					else
-						Done = (BreakCs == Cpu.Reg_cs.selector &&
-								BreakEip == Cpu.Reg_eip);
-					if (!Done)
-					{
-						Emulate(&Cpu);
-						if (Cpu.EmFlags & TRIPLE_FAULT)
-							Done = TRUE;
-						else
-						{
-							if (!CheckDelay)
-							{
-								CheckDelay = 1000;
-								if  (kbhit())
-								{
-									getch();
-									Done = TRUE;
-								}
-							}
-							else
-								CheckDelay--;
-						}
-						ReadInstruction(&Cpu);
-					}
-				}
-				DisAssemble(&Cpu);
-				WriteRegs(&Cpu);
+				On_P_Char();
 				break;
 
 			case 'g':
 			case 'G':
-				Done = Cpu.ReqBuffer[0] == 0xCC;
-				CheckDelay = 1000;
-				while (!Done)
-				{
-					Emulate(&Cpu);
-					if (Cpu.EmFlags & TRIPLE_FAULT)
-						Done = TRUE;
-					ReadInstruction(&Cpu);
-					if (Cpu.ReqBuffer[0] == 0xCC)
-					{
-						Done = TRUE;
-						Cpu.Reg_eip++;
-					}
-					else
-					{
-						if (!CheckDelay)
-						{
-							CheckDelay = 1000;
-							if (kbhit())
-							{
-								getch();
-								Done = TRUE;
-							}
-						}
-						else
-							CheckDelay--;
-					}
-				}
-				DisAssemble(&Cpu);
-				WriteRegs(&Cpu);
+				On_G_Char();
 				break;
+
+			case 'r':
+			case 'R':
+				On_R_Char();
+				break;
+
+			case 'u':
+			case 'U':
+				On_U_Char();
+				break;	
+
+			case 'b':
+			case 'B':
+				On_B_Char();
+				break;					
 		}
 	}
 }

@@ -247,6 +247,7 @@ DestByte	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [ebp].em_flags,a32
 	jnz dest32
 ;
@@ -273,6 +274,7 @@ up32:
 	inc [ebp].reg_edi
 
 done:
+	pop ax
 				ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -292,6 +294,7 @@ DestWord	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [ebp].em_flags,a32
 	jnz dest32
 ;
@@ -318,6 +321,7 @@ up32:
 	add [ebp].reg_edi,2
 
 done:
+	pop ax
 				ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -337,6 +341,7 @@ DestDword	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [ebp].em_flags,a32
 	jnz dest32
 ;
@@ -363,6 +368,7 @@ up32:
 	add [ebp].reg_edi,4
 
 done:
+	pop ax
 				ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

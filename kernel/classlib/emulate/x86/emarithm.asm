@@ -35,6 +35,7 @@
 include ..\core\emulate.inc
 include ..\core\emcom.inc
 include ..\core\emmem.inc
+include ..\core\emseg.inc
 
 .code
 
@@ -1315,34 +1316,34 @@ Em&op&DwordImsxMem	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RotateByteMem
+;		NAME:			RotateByteMem1
 ;
-;		DESCRIPTION:	Emulate rotate byte, mem, count
+;		DESCRIPTION:	Emulate rotate byte, mem, 1
 ;
 ;		PARAMETERS:		SS:EBP	CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RotateByteMem	Macro op, count
+RotateByteMem1	Macro op
 
-	public Em&op&ByteMem&count
+	public Em&op&ByteMem1
 
-Em&op&ByteMem&count	Proc near
+Em&op&ByteMem1	Proc near
 	mov bl,al
 ;
 	mov bh,bl
 	and bl,0C0h
 	cmp bl,0C0h
-	je Em&op&ByteMemReg&count
+	je Em&op&ByteMemReg1
 ;
 	shr bl,2
 	and bh,7
 	shl bh,1
 	or bl,bh
 	test byte ptr [ebp].em_flags,a32
-	jz Em&op&ByteMem&count&16
+	jz Em&op&ByteMem116
 	or bl,40h	
-Em&op&ByteMem&count&16:
+Em&op&ByteMem116:
 	movzx ebx,bl
 	call dword ptr [2*ebx].MemTab
 	push si
@@ -1350,7 +1351,7 @@ Em&op&ByteMem&count&16:
 	call ReadByte
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op al,&count
+	&op al,1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	pop ebx
@@ -1358,52 +1359,52 @@ Em&op&ByteMem&count&16:
 	call WriteByte
 	ret
 
-Em&op&ByteMemReg&count:
+Em&op&ByteMemReg1:
 	and bh,7
 	movzx esi,bh
 	mov esi,dword ptr [4*esi].ByteRegTab
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op byte ptr [ebp+esi], &count
+	&op byte ptr [ebp+esi], 1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	ret
-Em&op&ByteMem&count	Endp
+Em&op&ByteMem1	Endp
 			Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RotateWordMem
+;		NAME:			RotateWordMem1
 ;
-;		DESCRIPTION:	Emulate rotate (d)word, mem, count
+;		DESCRIPTION:	Emulate rotate (d)word, mem, 1
 ;
 ;		PARAMETERS:		SS:EBP	CPU
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RotateWordMem	Macro op, count
+RotateWordMem1	Macro op
 
-	public Em&op&WordMem&count
+	public Em&op&WordMem1
 
-Em&op&WordMem&count	Proc near
+Em&op&WordMem1	Proc near
 	test byte ptr [ebp].em_flags,d32
-	jnz Em&op&DwordMem&count
+	jnz Em&op&DwordMem1
 ;
 	mov bl,al
 	mov bh,bl
 	and bl,0C0h
 	cmp bl,0C0h
-	je Em&op&WordMemReg&count
+	je Em&op&WordMemReg1
 ;
 	shr bl,2
 	and bh,7
 	shl bh,1
 	or bl,bh
 	test byte ptr [ebp].em_flags,a32
-	jz Em&op&WordMem&count&16
+	jz Em&op&WordMem116
 	or bl,40h	
-Em&op&WordMem&count&16:
+Em&op&WordMem116:
 	movzx ebx,bl
 	call dword ptr [2*ebx].MemTab
 	push si
@@ -1412,7 +1413,7 @@ Em&op&WordMem&count&16:
 	mov bx,ax
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op bx,&count
+	&op bx,1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	mov ax,bx
@@ -1421,33 +1422,33 @@ Em&op&WordMem&count&16:
 	call WriteWord
 	ret
 
-Em&op&WordMemReg&count:
+Em&op&WordMemReg1:
 	and bh,7
 	movzx esi,bh
 	mov esi,dword ptr [4*esi].WordRegTab
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op word ptr [ebp+esi], &count
+	&op word ptr [ebp+esi], 1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	ret
-Em&op&WordMem&count	Endp
+Em&op&WordMem1	Endp
 
-Em&op&DwordMem&count	Proc near
+Em&op&DwordMem1	Proc near
 	mov bl,al
 	mov bh,bl
 	and bl,0C0h
 	cmp bl,0C0h
-	je Em&op&DwordMemReg&count
+	je Em&op&DwordMemReg1
 ;
 	shr bl,2
 	and bh,7
 	shl bh,1
 	or bl,bh
 	test byte ptr [ebp].em_flags,a32
-	jz Em&op&DwordMem&count&16
+	jz Em&op&DwordMem116
 	or bl,40h	
-Em&op&DwordMem&count&16:
+Em&op&DwordMem116:
 	movzx ebx,bl
 	call dword ptr [2*ebx].MemTab
 	push si
@@ -1456,7 +1457,7 @@ Em&op&DwordMem&count&16:
 	mov ebx,eax
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op ebx,&count
+	&op ebx,1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	mov eax,ebx
@@ -1465,17 +1466,190 @@ Em&op&DwordMem&count&16:
 	call WriteDword
 	ret
 
-Em&op&DwordMemReg&count:
+Em&op&DwordMemReg1:
 	and bh,7
 	movzx esi,bh
 	mov esi,dword ptr [4*esi].DwordRegTab
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	&op dword ptr [ebp+esi], &count
+	&op dword ptr [ebp+esi], 1
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	ret
-Em&op&DwordMem&count	Endp
+Em&op&DwordMem1	Endp
+
+			Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RotateByteMemCl
+;
+;		DESCRIPTION:	Emulate rotate byte, mem, cl
+;
+;		PARAMETERS:		SS:EBP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RotateByteMemCl	Macro op
+
+	public Em&op&ByteMemCl
+
+Em&op&ByteMemCl	Proc near
+	mov bl,al
+;
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&ByteMemRegCl
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&ByteMemCl16
+	or bl,40h	
+Em&op&ByteMemCl16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	push si
+	push ebx
+	call ReadByte
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op al,cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	pop ebx
+	pop si
+	call WriteByte
+	ret
+
+Em&op&ByteMemRegCl:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].ByteRegTab
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op byte ptr [ebp+esi], cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	ret
+Em&op&ByteMemCl	Endp
+			Endm
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RotateWordMemCl
+;
+;		DESCRIPTION:	Emulate rotate (d)word, mem, cl
+;
+;		PARAMETERS:		SS:EBP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RotateWordMemCl	Macro op
+
+	public Em&op&WordMemCl
+
+Em&op&WordMemCl	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz Em&op&DwordMemCl
+;
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&WordMemRegCl
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&WordMemCl16
+	or bl,40h	
+Em&op&WordMemCl16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	push si
+	push ebx
+	call ReadWord
+	mov bx,ax
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op bx,cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov ax,bx
+	pop ebx
+	pop si
+	call WriteWord
+	ret
+
+Em&op&WordMemRegCl:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].WordRegTab
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op word ptr [ebp+esi], cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	ret
+Em&op&WordMemCl	Endp
+
+Em&op&DwordMemCl	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&DwordMemRegCl
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&DwordMemCl16
+	or bl,40h	
+Em&op&DwordMemCl16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	push si
+	push ebx
+	call ReadDword
+	mov ebx,eax
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op ebx,cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov eax,ebx
+	pop ebx
+	pop si
+	call WriteDword
+	ret
+
+Em&op&DwordMemRegCl:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].DwordRegTab
+	mov cl,byte ptr [ebp].reg_ecx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	&op dword ptr [ebp+esi], cl
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	ret
+Em&op&DwordMemCl	Endp
 
 			Endm
 
@@ -1739,19 +1913,49 @@ ExtByteMem	Macro op
 
 Em&op&ByteMem	Proc near
 	mov bl,al
-	call LoadByteReg
-	mov dl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&ByteMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&ByteMem16
+	or bl,40h	
+Em&op&ByteMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadByte
+	mov  bl,al
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov al,byte ptr [ebp].reg_eax
-	&op dl
+	mov ax,word ptr [ebp].reg_eax	;MUL utilise AL et DIV utilise AX
+	&op bl
+	mov bx,ax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,bx
+	ret
+
+Em&op&ByteMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].ByteRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax	;MUL utilise AL et DIV utilise AX
+	&op byte ptr [ebp+esi]
 	mov cx,ax
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	mov word ptr [ebp].reg_eax,cx
 	ret
 Em&op&ByteMem	Endp
-			Endm
+
+	Endm
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1773,34 +1977,107 @@ Em&op&WordMem	Proc near
 	jnz Em&op&DwordMem
 ;
 	mov bl,al
-	call LoadWordReg
-	mov dx,ax
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&WordMemReg		;One of the the 8 registers mode
+;					 else one of the 24  addressing modes
+;bl=xx000000   bh=yyyyyyyy
+
+	shr bl,2	;bl=00xx0000		
+	and bh,7	;bh=00000yyy
+	shl bh,1	;bh=0000yyy0
+	or bl,bh	;bl=00xxyyy0
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&WordMem16
+	or bl,40h	
+Em&op&WordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadWord
+	mov cx,ax
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov ax,word ptr [ebp].reg_eax
-	&op dx
+	mov ax,word ptr [ebp].reg_eax	;MUL utilise AX 
+	mov dx,word ptr [ebp].reg_edx	;et DIV utilise DX:AX
+
+	&op cx
 	mov cx,ax
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	mov word ptr [ebp].reg_eax,cx
 	mov word ptr [ebp].reg_edx,dx
 	ret
+
+Em&op&WordMemReg:
+	and bh,7	;bh=00000yyy
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].WordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax	;MUL utilise AX 
+	mov dx,word ptr [ebp].reg_edx	;et DIV utilise DX:AX
+	&op word ptr [ebp+esi]
+	mov cx,ax	
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
+	ret
+
 Em&op&WordMem	Endp
 
 Em&op&DwordMem	Proc near
 	mov bl,al
-	call LoadDwordReg
-	mov edx,eax
+	
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je Em&op&DwordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz Em&op&DwordMem16
+	or bl,40h	
+Em&op&DwordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadDword
+
+	mov ecx,eax
 	mov ah,byte ptr [ebp].reg_eflags
 	sahf
-	mov eax,[ebp].reg_eax
-	&op edx
+	mov eax,[ebp].reg_eax	;MUL utilise EAX 
+	mov edx,[ebp].reg_edx	;et DIV utilise EDX:EAX
+
+	&op ecx
 	mov ecx,eax
 	lahf
 	mov byte ptr [ebp].reg_eflags,ah
 	mov [ebp].reg_eax,ecx
 	mov [ebp].reg_edx,edx
 	ret
+	
+Em&op&DwordMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].DwordRegTab
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov eax,[ebp].reg_eax	;MUL utilise EAX 
+	mov edx,[ebp].reg_edx	;et DIV utilise EDX:EAX
+
+	&op dword ptr [ebp+esi]
+	mov ecx,eax	
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
+	ret
+
 Em&op&DwordMem	Endp
 
 			Endm
@@ -2328,14 +2605,321 @@ Em&op&ImMem	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DivByte
+;
+;		DESCRIPTION:	EMULATE div byte
+;
+;		PARAMETERS:		BL		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivByte	Proc near
+	mov ax,word ptr [ebp].reg_eax
+	cmp ah,bl
+	jae DivFault
+;
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax
+	div bl
+	mov cx,ax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	ret
+DivByte	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DivWord
+;
+;		DESCRIPTION:	EMULATE div word
+;
+;		PARAMETERS:		BX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivWord	Proc near
+	mov dx,word ptr [ebp].reg_edx
+	cmp dx,bx
+	jae DivFault
+;
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax
+	div bx
+	mov cx,ax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
+	ret
+DivWord	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DivDword
+;
+;		DESCRIPTION:	EMULATE div dword
+;
+;		PARAMETERS:		EBX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DivDword	Proc near
+	mov edx,[ebp].reg_edx
+	cmp edx,ebx
+	jae DivFault
+;
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov eax,[ebp].reg_eax
+	div ebx
+	mov ecx,eax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
+	ret
+DivDword	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			EmDiv
 ;
 ;		DESCRIPTION:	EMULATE div
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	ExtByteMem Div
-	ExtWordMem Div
+	public EmDivByteMem
+
+EmDivByteMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivByteMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmDivByteMem16
+	or bl,40h	
+EmDivByteMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadByte
+	mov bl,al
+	call DivByte
+	ret
+
+EmDivByteMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].ByteRegTab
+	mov bl,[ebp+esi]
+	call DivByte
+	ret
+EmDivByteMem	Endp
+
+	public EmDivWordMem
+
+EmDivWordMem	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmDivDwordMem
+;
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivWordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmDivWordMem16
+	or bl,40h	
+EmDivWordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadWord
+	mov bx,ax
+	call DivWord
+	ret
+
+EmDivWordMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].WordRegTab
+	mov bx,[ebp+esi]
+	call DivWord
+	ret
+EmDivWordMem	Endp
+
+EmDivDwordMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmDivDwordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmDivDwordMem16
+	or bl,40h	
+EmDivDwordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadDword
+	mov ebx,eax
+	call DivDword
+	ret
+
+EmDivDwordMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].DwordRegTab
+	mov ebx,[ebp+esi]
+	call DivDword
+	ret
+EmDivDwordMem	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivByte
+;
+;		DESCRIPTION:	EMULATE idiv byte
+;
+;		PARAMETERS:		BL		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivByte	Proc near
+	push bx
+	mov ah,byte ptr [ebp+1].reg_eax
+	test ah,80h
+	jz idiv_byte_ah_pos
+;
+	neg ah
+
+idiv_byte_ah_pos:
+	test bl,80h
+	jz idiv_byte_bl_pos
+;
+	neg bl
+
+idiv_byte_bl_pos:
+	cmp ah,bl
+	jae DivFault
+;
+	pop bx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax
+	idiv bl
+	mov cx,ax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	ret
+IdivByte	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivWord
+;
+;		DESCRIPTION:	EMULATE idiv word
+;
+;		PARAMETERS:		BX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivWord	Proc near
+	push bx
+	mov dx,word ptr [ebp].reg_edx
+	test dh,80h
+	jz idiv_word_dx_pos
+;
+	neg dx
+
+idiv_word_dx_pos:
+	test bh,80h
+	jz idiv_word_bx_pos
+;
+	neg bx
+
+idiv_word_bx_pos:
+	cmp dx,bx
+	jae DivFault
+;
+	pop bx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov ax,word ptr [ebp].reg_eax
+	mov dx,word ptr [ebp].reg_edx
+	div bx
+	mov cx,ax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov word ptr [ebp].reg_eax,cx
+	mov word ptr [ebp].reg_edx,dx
+	ret
+IdivWord	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdivDword
+;
+;		DESCRIPTION:	EMULATE idiv dword
+;
+;		PARAMETERS:		EBX		dividend
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdivDword	Proc near
+	push ebx
+	mov edx,[ebp].reg_edx
+	test edx,80000000h
+	jz idiv_dword_edx_pos
+;
+	neg edx
+
+idiv_dword_edx_pos:
+	test ebx,80000000h
+	jz idiv_dword_ebx_pos
+;
+	neg ebx
+
+idiv_dword_ebx_pos:
+	cmp edx,ebx
+	jae DivFault
+;
+	pop ebx
+	mov ah,byte ptr [ebp].reg_eflags
+	sahf
+	mov eax,[ebp].reg_eax
+	mov edx,[ebp].reg_edx
+	div ebx
+	mov ecx,eax
+	lahf
+	mov byte ptr [ebp].reg_eflags,ah
+	mov [ebp].reg_eax,ecx
+	mov [ebp].reg_edx,edx
+	ret
+IdivDword	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2346,8 +2930,105 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	ExtByteMem Idiv
-	ExtWordMem Idiv
+	public EmIdivByteMem
+
+EmIdivByteMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivByteMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmIdivByteMem16
+	or bl,40h	
+EmIdivByteMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadByte
+	mov bl,al
+	call IdivByte
+	ret
+
+EmIdivByteMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].ByteRegTab
+	mov bl,[ebp+esi]
+	call IdivByte
+	ret
+EmIdivByteMem	Endp
+
+	public EmIdivWordMem
+
+EmIdivWordMem	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmIdivDwordMem
+;
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivWordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmIdivWordMem16
+	or bl,40h	
+EmIdivWordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadWord
+	mov bx,ax
+	call IdivWord
+	ret
+
+EmIdivWordMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].WordRegTab
+	mov bx,[ebp+esi]
+	call IdivWord
+	ret
+EmIdivWordMem	Endp
+
+EmIdivDwordMem	Proc near
+	mov bl,al
+	mov bh,bl
+	and bl,0C0h
+	cmp bl,0C0h
+	je EmIdivDwordMemReg
+;
+	shr bl,2
+	and bh,7
+	shl bh,1
+	or bl,bh
+	test byte ptr [ebp].em_flags,a32
+	jz EmIdivDwordMem16
+	or bl,40h	
+EmIdivDwordMem16:
+	movzx ebx,bl
+	call dword ptr [2*ebx].MemTab
+	call ReadDword
+	mov ebx,eax
+	call IdivDword
+	ret
+
+EmIdivDwordMemReg:
+	and bh,7
+	movzx esi,bh
+	mov esi,dword ptr [4*esi].DwordRegTab
+	mov ebx,[ebp+esi]
+	call IdivDword
+	ret
+EmIdivDwordMem	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2358,11 +3039,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Rol, 1
-	RotateByteMem Rol, Cl
+	RotateByteMem1 Rol
+	RotateByteMemCl Rol
 	RotateByteMemIm Rol
-	RotateWordMem Rol, 1
-	RotateWordMem Rol, Cl
+	RotateWordMem1 Rol
+	RotateWordMemCl Rol
 	RotateWordMemIm Rol
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2374,11 +3055,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Ror, 1
-	RotateByteMem Ror, Cl
+	RotateByteMem1 Ror
+	RotateByteMemCl Ror
 	RotateByteMemIm Ror
-	RotateWordMem Ror, 1
-	RotateWordMem Ror, Cl
+	RotateWordMem1 Ror
+	RotateWordMemCl Ror
 	RotateWordMemIm Ror
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2390,11 +3071,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Rcl, 1
-	RotateByteMem Rcl, Cl
+	RotateByteMem1 Rcl
+	RotateByteMemCl Rcl
 	RotateByteMemIm Rcl
-	RotateWordMem Rcl, 1
-	RotateWordMem Rcl, Cl
+	RotateWordMem1 Rcl
+	RotateWordMemCl Rcl
 	RotateWordMemIm Rcl
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2406,11 +3087,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Rcr, 1
-	RotateByteMem Rcr, Cl
+	RotateByteMem1 Rcr
+	RotateByteMemCl Rcr
 	RotateByteMemIm Rcr
-	RotateWordMem Rcr, 1
-	RotateWordMem Rcr, Cl
+	RotateWordMem1 Rcr
+	RotateWordMemCl Rcr
 	RotateWordMemIm Rcr
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2422,11 +3103,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Shl, 1
-	RotateByteMem Shl, Cl
+	RotateByteMem1 Shl
+	RotateByteMemCl Shl
 	RotateByteMemIm Shl
-	RotateWordMem Shl, 1
-	RotateWordMem Shl, Cl
+	RotateWordMem1 Shl
+	RotateWordMemCl Shl
 	RotateWordMemIm Shl
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2438,11 +3119,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Shr, 1
-	RotateByteMem Shr, Cl
+	RotateByteMem1 Shr
+	RotateByteMemCl Shr
 	RotateByteMemIm Shr
-	RotateWordMem Shr, 1
-	RotateWordMem Shr, Cl
+	RotateWordMem1 Shr
+	RotateWordMemCl Shr
 	RotateWordMemIm Shr
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2454,11 +3135,11 @@ Em&op&ImMem	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	RotateByteMem Sar, 1
-	RotateByteMem Sar, Cl
+	RotateByteMem1 Sar
+	RotateByteMemCl Sar
 	RotateByteMemIm Sar
-	RotateWordMem Sar, 1
-	RotateWordMem Sar, Cl
+	RotateWordMem1 Sar
+	RotateWordMemCl Sar
 	RotateWordMemIm Sar
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

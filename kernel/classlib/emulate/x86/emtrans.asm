@@ -817,8 +817,8 @@ EmMoveDwordImToMem	Endp
 
 EmLea	Proc near
 	call ReadCodeByte
-	push bx
 	mov bl,al
+	push bx
 	mov bh,bl
 	and bl,0C0h
 	cmp bl,0C0h
@@ -966,6 +966,74 @@ MovxWordMem	Movzx
 
 MovxByteMem	Movsx
 MovxWordMem	Movsx
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EmEnter
+;
+;		DESCRIPTION:	EMULATE EmEnter x,y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmEnter
+
+EmEnter	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmEnter32
+;
+	mov ax,word ptr [ebp].reg_ebp
+	call PushWord
+	mov ax,word ptr [ebp].reg_esp
+	mov word ptr [ebp].reg_ebp,ax
+	call ReadCodeWord
+	call SubFromStack
+	call ReadCodeByte
+	or al,al
+	jnz EmulateError
+	ret
+
+EmEnter32:
+	mov eax,[ebp].reg_ebp
+	call PushDword
+	mov eax,[ebp].reg_esp
+	mov [ebp].reg_ebp,eax
+	call ReadCodeWord
+	call SubFromStack
+	call ReadCodeByte
+	or al,al
+	jnz EmulateError
+	ret
+EmEnter	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EmLeave
+;
+;		DESCRIPTION:	EMULATE EmLeave
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmLeave
+
+EmLeave	Proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmLeave32
+;
+	mov ax,word ptr [ebp].reg_ebp
+	mov word ptr [ebp].reg_esp,ax
+	call PopWord
+	mov word ptr [ebp].reg_ebp,ax
+	ret
+
+EmLeave32:
+	mov eax,[ebp].reg_ebp
+	mov [ebp].reg_esp,eax
+	call PopDword
+	mov [ebp].reg_ebp,eax
+	ret
+EmLeave	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

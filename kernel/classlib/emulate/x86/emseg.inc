@@ -44,6 +44,7 @@
 
 	extrn TrapFault:near
 	extrn EmulateError:near
+	extrn DivFault:near
 	extrn SegmentFault:near
 	extrn StackFault:near
 	extrn ProtectionFault:near

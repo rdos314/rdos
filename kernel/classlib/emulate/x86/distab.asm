@@ -461,6 +461,7 @@ op_cdt_tab			EQU 0FF7h
 	extrn op_address_size:near
 	extrn op_wait:near
 	extrn op_one:near
+	extrn op_one2:near	
 	extrn op_byte:near
 	extrn op_word:near
 	extrn op_word16:near
@@ -2819,42 +2820,42 @@ opmrC038:
 
 ;
 opmrC100:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET rol_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
 			DD 0FFFFFFFFh
 
 opmrC108:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET ror_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
 			DD 0FFFFFFFFh
 
 opmrC110:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET rcl_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
 			DD 0FFFFFFFFh
 
 opmrC118:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET rcr_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
 			DD 0FFFFFFFFh
 
 opmrC120:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET shl_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
 			DD 0FFFFFFFFh
 
 opmrC128:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET shr_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
@@ -2868,7 +2869,7 @@ opmrC130:
 			DD 0FFFFFFFFh
 
 opmrC138:
-			DD OFFSET opmr_mem_im16
+			DD OFFSET opmr_mem_im8
 			DD OFFSET sar_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET word_ptr_txt - OFFSET mne_tab + blank_sep
 			DD null_tab + blank_sep
@@ -4924,17 +4925,17 @@ oppr0F9F:
 			DD 0FFFFFFFFh
 
 oppr0FA0:
-			DD OFFSET op_one
+			DD OFFSET op_one2
 			DD OFFSET push_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET fs_txt - OFFSET mne_tab + blank_sep
-			DD 0FFFFFFFFh
+			DD null_tab 			
 			DD 0FFFFFFFFh
 
 oppr0FA1:
-			DD OFFSET op_one
+			DD OFFSET op_one2
 			DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET fs_txt - OFFSET mne_tab + blank_sep
-			DD 0FFFFFFFFh
+			DD null_tab 			
 			DD 0FFFFFFFFh
 
 oppr0FA2:
@@ -4980,17 +4981,18 @@ oppr0FA7:
 			DD 0FFFFFFFFh
 
 oppr0FA8:
-			DD OFFSET op_one
+			DD OFFSET op_one2
 			DD OFFSET push_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET gs_txt - OFFSET mne_tab + blank_sep
-			DD 0FFFFFFFFh
+			DD null_tab 			
 			DD 0FFFFFFFFh
 
 oppr0FA9:
-			DD OFFSET op_one
+;			DD OFFSET op_one
+			DD OFFSET op_one2
 			DD OFFSET pop_txt - OFFSET mne_tab + blank_sep
 			DD OFFSET gs_txt - OFFSET mne_tab + blank_sep
-			DD 0FFFFFFFFh
+			DD null_tab 			
 			DD 0FFFFFFFFh
 
 oppr0FAA:
@@ -7443,6 +7445,115 @@ opFF:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 
+		public	cr_tab
+		
+;Control register format
+
+cr_tab:
+
+cr0:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_0 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr1:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr2:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_2 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr3:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_3 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr4:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_4 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr5:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr6:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr7:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+
+		public	dr_tab
+		
+;Debug register format
+
+dr_tab:
+
+dr0:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_0 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr1:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_1 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr2:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_2 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr3:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_3 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr4:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr5:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr6:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_6 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr7:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_7 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
 
 mem8d_16a_tab:
 mod8d_16a_rm00000:

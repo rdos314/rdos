@@ -67,6 +67,9 @@
 	extrn EmLgs:near
 	extrn EmLss:near
 
+	extrn EmEnter:near
+	extrn EmLeave:near
+
 	extrn EmPushMem:near
 	extrn EmPushAx:near
 	extrn EmPushCx:near

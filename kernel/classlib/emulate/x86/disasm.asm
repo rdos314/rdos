@@ -34,6 +34,9 @@ include ..\core\emulate.inc
 include ..\core\empage.inc
 
    extrn dis_ass_one:near
+   extrn op_code_size
+   extrn data_code_size
+   extrn WriteRegs:near
 
 .code
 	
@@ -86,6 +89,48 @@ disass_done:
 	pop ebp
 	ret 4
 DisAssemble	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DIS_ASS_MORE
+;
+;		DESCRIPTION:	DISASSEMBLERA EN INSTRUCTION
+;
+;		CALL			DIS_ASS_MORE (TCpu *cpu,long instruction_nber);
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public Dis_ass_more
+	
+Dis_ass_more	proc near
+
+
+	push 	ebp
+	mov 	ebp,esp
+	pushad
+	mov	ecx,[ebp+0Ch]	;nombre d'instruction à decoder	
+	mov 	ebp,[ebp+8]
+	
+;préparons nous
+	
+@@1:
+	push	ebp
+	call	DisAssemble
+	push	ebp
+	call	WriteRegs
+	mov	eax,op_code_size
+	add	eax,[ebp].reg_eip
+	mov	[ebp].reg_eip,eax
+	loop	@@1
+	
+;On remet tout en place
+		
+	popad
+	pop	 ebp
+	ret 8
+			
+Dis_ass_more	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

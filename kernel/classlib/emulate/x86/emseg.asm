@@ -327,6 +327,28 @@ EmulateError	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DivFault
+;
+;		DESCRIPTION:	Div fault
+;
+;		PARAMETERS:		SS:EBP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public DivFault
+
+DivFault	Proc near
+	int 3
+	ResetFault
+	xor cx,cx
+	mov al,0
+	call ExcFar	
+	ret
+DivFault	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DoubleFault
 ;
 ;		DESCRIPTION:	Double fault
@@ -904,7 +926,7 @@ EqualNormalCode:
 	cmp cl,ch
 	jne ProtectionFault
 ;
-	mov cl,dh
+	mov cl,dl
 	shr cl,5
 	and cl,3
 	cmp cl,ch

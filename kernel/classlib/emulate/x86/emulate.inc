@@ -79,6 +79,22 @@ double_faulted	EQU 20h
 triple_faulted	EQU 40h
 trap_fault		EQU 80h
 
+TLB_REGISTER		EQU 00000001h
+SYSTEM_REGISTER		EQU 00000010h
+DESCRIPTOR_REGISTER	EQU 00000100h
+GENERAL_REGISTER	EQU 00001000h
+CONTROL_REGISTER	EQU 00010000h
+INSTRUCTION_CODE_ONLY	EQU 00100000h
+DISTANCE_INSTRUCTION	EQU 35		;ecart entre instruction et code
+DATA_LINES_NR		EQU 4           ;nombre de ligne de données à afficher
+DISTANCE_DATA		EQU 50		;ecart entre HEX et ASCII
+Tprog_position	struc
+  p_offset	dd ?
+  p_segment	dw ?
+Tprog_position	ends
+
+Tprog_position_	EQU 4+2
+
 seg_es = 0
 seg_cs = 1
 seg_ss = 2

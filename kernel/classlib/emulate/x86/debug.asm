@@ -36,6 +36,16 @@ INCLUDE ..\core\emcom.inc
 	extrn ShowChar:near
 	extrn ShowSizeString:near
 	extrn ShowAsciiz:near
+	extrn _debugflag		;the underscore because of the C language
+	extrn op_code_size
+	extrn data_code_size
+	extrn op_in_code
+
+	public WriteChar
+	public Blank
+	public WriteHexPtr32
+	public WriteHexByte
+	public NewLine		
 
 .code
 
@@ -930,9 +940,46 @@ WriteDwordRegs	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteInstr	Proc near
-	lea edi,[ebp].opcode_text
-	call WriteAsciiz
-	call NewLine
+
+;d'abord on va ecrire l'offset
+;a priori les registres sont sauvegardés
+
+	lea 	ebx,[ebp].reg_cs
+	mov	dx,[ebx].d_selector
+	mov	ebx,[ebp].reg_eip
+	call	WriteHexPtr32
+
+;un peu d'espace
+
+	mov	ecx,1
+	call	Blank
+		
+;maintenant on va copier les bytes d'istruction	
+	mov 	esi,offset op_in_code
+	mov	ecx,op_code_size
+@@1:
+	lodsb
+	call	WriteHexByte
+	push	ecx
+	mov	ecx,1
+	call	Blank
+	pop	ecx
+	loop	@@1		
+	
+;un peu d'espace
+	mov	eax,op_code_size
+	mov	ecx,eax
+	shl	eax,1
+	add	eax,ecx
+	mov	ecx,DISTANCE_INSTRUCTION 
+	inc	eax
+	sub	ecx,eax		;pour aligner les instructions * J'ai des problemes pour aligner
+
+	call	Blank
+;					##GIL END##	
+	lea 	edi,[ebp].opcode_text
+	call 	WriteAsciiz
+	call 	NewLine
 	ret
 WriteInstr	ENDP
 
@@ -1080,23 +1127,53 @@ WriteTime	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteCpuReg	Proc near
-	call WriteTlb
-	call WriteSystemRegs
+;La modification a consisté à mettre les instructions de tests
+
+	test 	_debugflag,INSTRUCTION_CODE_ONLY
+	jnz	short @@6
+
+	test 	_debugflag,TLB_REGISTER
+	jz	short @@1a
+	call	WriteTlb
+@@1a:
+	
+	test 	_debugflag,SYSTEM_REGISTER
+	jz	short @@2
+	call 	WriteSystemRegs
+	
+@@2:	
+	test 	_debugflag,DESCRIPTOR_REGISTER
+	jz	short @@3
 	call WriteDescriptors
 ;
+@@3:
+	test 	_debugflag,GENERAL_REGISTER
+	jz	short @@4
+
 	mov edi,OFFSET dword_reg_tab1
 	call WriteDwordRegs
 ;
 	mov edi,OFFSET dword_reg_tab2
 	call WriteDwordRegs
 ;
+@@4:
+	test 	_debugflag,CONTROL_REGISTER
+	jz	short @@5
+
 	mov edi,OFFSET dword_reg_tab3
 	call WriteDwordRegs
 ;
+@@5:
 	call WriteEflags
 	call WriteCr0
+@@6:	
 	call WriteInstr
+	
+	test 	_debugflag,INSTRUCTION_CODE_ONLY
+	jnz	short @@7
 	call WriteTime
+	
+@@7:	
 	ret
 WriteCpuReg	Endp
 	

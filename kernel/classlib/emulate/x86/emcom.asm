@@ -723,21 +723,39 @@ ReadCodeByte	Proc near
 	jz read_code_byte16
 
 read_code_byte32:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	mov ebx,[ebp].reg_eip
 	push ebx
 	call ReadByte
 	pop ebx
 	inc ebx
 	mov [ebp].reg_eip,ebx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 
 read_code_byte16:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	movzx ebx,word ptr [ebp].reg_eip
 	push bx
 	call ReadByte
 	pop bx
 	inc bx
 	mov word ptr [ebp].reg_eip,bx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 ReadCodeByte	Endp
 
@@ -760,21 +778,39 @@ ReadCodeWord	Proc near
 	jz read_code_word16
 
 read_code_word32:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	mov ebx,[ebp].reg_eip
 	push ebx
 	call ReadWord
 	pop ebx
 	add ebx,2
 	mov [ebp].reg_eip,ebx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 
 read_code_word16:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	movzx ebx,word ptr [ebp].reg_eip
 	push bx
 	call ReadWord
 	pop bx
 	add bx,2
 	mov word ptr [ebp].reg_eip,bx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 ReadCodeWord	Endp
 
@@ -797,21 +833,39 @@ ReadCodeDword	Proc near
 	jz read_code_dword16
 
 read_code_dword32:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	mov ebx,[ebp].reg_eip
 	push ebx
 	call ReadDword
 	pop ebx
 	add ebx,4
 	mov [ebp].reg_eip,ebx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 
 read_code_dword16:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	movzx ebx,word ptr [ebp].reg_eip
 	push bx
 	call ReadDword
 	pop bx
 	add bx,4
 	mov word ptr [ebp].reg_eip,bx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 ReadCodeDword	Endp
 
@@ -834,21 +888,39 @@ ReadCodeFword	Proc near
 	jz read_code_fword16
 
 read_code_fword32:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	mov ebx,[ebp].reg_eip
 	push ebx
 	call ReadFword
 	pop ebx
 	add ebx,6
 	mov [ebp].reg_eip,ebx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 
 read_code_fword16:
+	push cx
+	mov cl,[ebp+esi].d_access
+	mov ch,cl
+	or cl,ACCESS_READ
+	mov [ebp+esi].d_access,cl
+	push cx
 	movzx ebx,word ptr [ebp].reg_eip
 	push bx
 	call ReadFword
 	pop bx
 	add bx,6
 	mov word ptr [ebp].reg_eip,bx
+	pop cx
+	mov [ebp+esi].d_access,ch
+	pop cx
 	ret
 ReadCodeFword	Endp
 

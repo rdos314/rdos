@@ -64,12 +64,33 @@ override		DD ?
 ignore_ptr		DB ?
 op_in_code		DB 50 DUP(?)
 
+;ceci pour garder la taille de l'instruction decodée
+
+op_code_size		DD ?	;ceci represente la somme de :
+;					- la taille du code de l'instruction
+;					   COMMENT LA TROUVER :
+;						* nous pouvons avoir soit un prefixe
+;						* les instructions c'est 1 ou 2 byte pas plus
+;						  - les instructions commencant par 0x0F (protected instructions)
+;						    Nous allons pister ces instructions 	
+;						  - Certaine du co-processeur
+;
+;					- la taille des membres de l'instruction
+;					   (ESI est incrementé de cette valeur après 
+;					 l'interprétation de la synthaxe)
+;
+
+	public op_in_code
+	public op_code_size	
+
 .code
 
 	extrn main_tab:near
 	extrn mne_tab:near
 	extrn sep_tab:near
 	extrn txt_noth:near
+	extrn cr_tab:near
+	extrn dr_tab:near
 
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1010,18 +1031,12 @@ op_string1b	PROC near
 op_string1b32:
 	mov eax,7
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne b_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne edi_txt, rhak_sep
 	ret
 op_string1b16:
 	mov eax,5
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne b_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne di_txt, rhak_sep
 	ret	
 op_string1b	ENDP
 
@@ -1035,18 +1050,12 @@ op_string1w	PROC near
 op_string1w32:
 	mov eax,7
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne w_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne edi_txt, rhak_sep
 	ret
 op_string1w16:
 	mov eax,5
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne w_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne di_txt, rhak_sep
 	ret
 op_string1d:
 	test [ebp].em_flags,a32
@@ -1054,18 +1063,12 @@ op_string1d:
 op_string1d32:
 	mov eax,7
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne d_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne edi_txt, rhak_sep
 	ret
 op_string1d16:
 	mov eax,5
 	call calc_ads_offset
-	mov [ebp].data_sel,OFFSET es_txt
 	add_mne d_txt, blank_sep
-	add_mne es_txt, kolon_par_sep
-	add_mne di_txt, rhak_sep
 	ret	
 op_string1w	ENDP
 
@@ -1209,7 +1212,6 @@ op_reg_mem_byte	PROC near
 	or eax,komma_sep
 	mov [edi-4],eax
 	call decode_mem_mode
-	inc esi
 	ret
 op_reg_mem_byte	ENDP
 
@@ -1232,7 +1234,6 @@ op_reg_mem_word	PROC near
 	or eax,komma_sep
 	mov [edi-4],eax
 	call decode_mem_mode
-	inc esi
 	ret
 op_reg_mem_word	ENDP
 
@@ -1493,31 +1494,135 @@ op_one	PROC near
 	ret
 op_one	ENDP
 
-;
-; ej implementerade f n
-;
+	public op_one2
+
+op_one2	PROC near
+	inc	esi 
+	ret
+op_one2	ENDP
 
 	public op_reg_cr
 
-op_reg_cr	PROC near	
+op_reg_cr	PROC near
+	mov	bl,data_32
+	movzx 	ebx,bl
+	mov 	eax,dword ptr [4*ebx].reg_tab
+	mov 	op_syntax,eax
+	inc	esi
+	mov 	al,[esi+1]
+	and 	eax,0C0h				;the MOD part of the MOD/RM
+	shr 	eax,6
+	mov 	ignore_ptr,1			;ignore pointer
+	call 	decode_opcode
+	
+	mov 	eax,[edi-4]
+	and 	eax,0FFFh
+	or 	eax,komma_sep		;ajoute la virgule
+	mov 	[edi-4],eax
+	
+	mov	ebx,OFFSET cr_tab
+	mov	op_syntax,ebx
+	mov 	al,[esi+1]
+	and	eax,38h
+	shl	eax,3
+	call	decode_opcode
+	inc 	esi				;le dernier byte sera passé au moment
+						;où je recupèrerais la taille
+	
 	ret
 op_reg_cr	ENDP
 
 	public op_cr_reg
 
 op_cr_reg	PROC near
+
+	inc	esi
+	mov	ebx,OFFSET cr_tab
+	mov	op_syntax,ebx
+	mov 	al,[esi+1]
+	and	eax,38h
+	shl	eax,3
+	call	decode_opcode
+
+	mov 	eax,[edi-4]
+	and 	eax,0FFFh
+	or 	eax,komma_sep		;ajoute la virgule
+	mov 	[edi-4],eax
+
+	mov	bl,data_32
+	movzx 	ebx,bl
+	mov 	eax,dword ptr [4*ebx].reg_tab
+	mov 	op_syntax,eax
+	mov 	al,[esi+1]
+	and 	eax,0C0h				;the MOD part of the MOD/RM
+	shr 	eax,6
+	mov 	ignore_ptr,1			;ignore pointer
+	call 	decode_opcode
+	inc 	esi
+	
 	ret
 op_cr_reg	ENDP
+
 
 	public op_reg_dr
 
 op_reg_dr	PROC near
+
+	inc	esi
+	mov	bl,data_32
+	movzx 	ebx,bl
+	mov 	eax,dword ptr [4*ebx].reg_tab
+	mov 	op_syntax,eax
+	mov 	al,[esi+1]
+	and 	eax,0C0h				;the MOD part of the MOD/RM
+	shr 	eax,6
+	mov 	ignore_ptr,1			;ignore pointer
+	call 	decode_opcode
+	
+	mov 	eax,[edi-4]
+	and 	eax,0FFFh
+	or 	eax,komma_sep		;ajoute la virgule
+	mov 	[edi-4],eax
+	
+	mov	ebx,OFFSET cr_tab
+	mov	op_syntax,ebx
+	mov 	al,[esi+1]
+	and	eax,38h
+	shl	eax,3
+	call	decode_opcode
+	inc 	esi
+	
 	ret
 op_reg_dr	ENDP
 
 	public op_dr_reg
 
 op_dr_reg	PROC near
+
+	inc	esi
+	mov	ebx,OFFSET cr_tab
+	mov	op_syntax,ebx
+	mov 	al,[esi+1]
+	and	eax,38h
+	shl	eax,3
+	call	decode_opcode
+
+	mov 	eax,[edi-4]
+	and 	eax,0FFFh
+	or 	eax,komma_sep		;ajoute la virgule
+	mov 	[edi-4],eax
+
+	mov	bl,data_32
+	movzx 	ebx,bl
+	mov 	eax,dword ptr [4*ebx].reg_tab
+	mov 	op_syntax,eax
+	mov 	al,[esi+1]
+	and 	eax,0C0h				;the MOD part of the MOD/RM
+	shr 	eax,6
+	mov 	ignore_ptr,1			;ignore pointer
+	call 	decode_opcode
+	inc 	esi
+
 	ret
 op_dr_reg	ENDP
 
@@ -2159,6 +2264,7 @@ dis_ass_code_ok:
 	pop ecx
 	sub ecx,OFFSET op_in_code
 	inc ecx
+	mov 	op_code_size,ecx
 	pop edi
 	add edi,ecx
 	pop esi
