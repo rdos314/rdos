@@ -373,6 +373,10 @@ HideLine    MACRO x, y
     jle hide_line_done
 ;
     xor cx,cx
+	cmp ax,gs:sp_w
+	jc hide_line_do
+;
+	mov ax,gs:sp_w
     jmp hide_line_do
 
 hide_line_pos:
@@ -433,6 +437,10 @@ SaveLine    MACRO x, y
     jle save_line_done
 ;
     xor cx,cx
+	cmp ax,gs:sp_w
+	jc save_line_do
+;
+	mov ax,gs:sp_w
     jmp save_line_do
 
 save_line_pos:
@@ -497,6 +505,10 @@ ShowLine    MACRO x, y
     jle show_line_done
 ;
     xor cx,cx
+	cmp ax,gs:sp_w
+	jc show_line_do
+;
+	mov ax,gs:sp_w
     jmp show_line_do
 
 show_line_pos:
