@@ -47,174 +47,11 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TExecCommand::TExecCommand(TSession *session, const char *line)
+TExecCommand::TExecCommand(TSession *session, const char *name, int detach)
   : TCommand(session)
 {
-	const char *cp;
-	const char *rest;
-	char *name;
-	char *path;
-	char *ptr;
-	TEnv *env;
-	int result;
-
-	rest = SkipWord((char *)line);
-    cp = Unquote(line, rest);
-
-	FProgName = cp;
-
-	FDetach = FALSE;
-	FValid = FALSE;
-
-	name = (char *)FProgName.GetData();
-
-    if (*name == '@')
-    {
-        name++;
-        FDetach = TRUE;
-    }
-	
-	if (strchr(name, '\\'))
-		FValid = CheckAllExt(name);
-
-	if (!FValid && strchr(name, '/'))
-		FValid = CheckAllExt(name);
-
-	if (!FValid && strchr(name, ':'))
-		FValid = CheckAllExt(name);
-
-    if (!FValid)
-    {
-    	path = new char[512];
-    	env = TEnv::OpenSysEnv();
-	    if (env->Find("PATH", path))
-    	{
-	    	FValid = CheckPathExt(path, name);
-		    delete env;
-    		delete path;
-    	}
-    	else
-    	{	    	
-        	delete env;	
-        	delete path;	
-       }
-    }
-
-    if (!FValid)
-    	FValid = CheckAllExt(name);
-}
-
-/*##########################################################################
-#
-#   Name       : TExecCommand::CheckExt
-#
-#   Purpose....: Check if path is valid file (with given extension)
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::CheckExt(const char *path, const char *ext)
-{
-    FFullPath = TString(path);
-    FFullPath += ext;
-
-	if (FFullPath.IsFile())
-		return TRUE;
-	else
-		return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TExecCommand::CheckAllExt
-#
-#   Purpose....: Check if path is valid file (.exe.com)
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::CheckAllExt(const char *path)
-{
-	if (CheckExt(path, ".com"))
-		return TRUE;
-
-	if (CheckExt(path, ".exe"))
-		return TRUE;
-
-	return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TExecCommand::CheckPath
-#
-#   Purpose....: Check if path + name is a valid file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::CheckPath(const char *path, const char *name)
-{
-	TPathName pn(path);
-	pn += name;
-
-	return CheckAllExt(pn.Get().GetData());
-}
-
-/*##########################################################################
-#
-#   Name       : TExecCommand::CheckPathExt
-#
-#   Purpose....: Find with path var
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::CheckPathExt(char *path, const char *name)
-{
-	char *ptr;
-
-	if (CheckAllExt(name))
-	    return TRUE;
-
-	while (*path)
-	{
-		ptr = strchr(path, ';');
-		if (ptr)
-		{
-			*ptr = 0;
-			if (CheckPath(path, name))
-			    return TRUE;
-
-			path = ptr + 1;
-		}
-		else
-			return CheckPath(path, name);
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TExecCommand::IsValid
-#
-#   Purpose....: Is cmd valid?
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TExecCommand::IsValid()
-{
-    return FValid;
+	FDetach = detach;
+	FProgName = name;
 }
 
 /*##########################################################################
@@ -234,11 +71,11 @@ int TExecCommand::Execute(char *param)
 
 	if (FDetach)
 	{   
-		if (RdosSpawn(FFullPath.Get().GetData(), param, StartupDir.Get().GetData()))
+		if (RdosSpawn(FProgName.GetData(), param, StartupDir.Get().GetData()))
 			return 0;
 		else
 			 return -1;
 	 }
 	 else
-		  return RdosExec(FFullPath.Get().GetData(), param);
+		  return RdosExec(FProgName.GetData(), param);
 }

@@ -20,36 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# exec.h
-# Execute external command class
+# bat.h
+# Batch command class
 #
 ########################################################################*/
 
-#ifndef _EXEC_H
-#define _EXEC_H
+#ifndef _BAT_H
+#define _BAT_H
 
 #include "cmd.h"
 #include "path.h"
 
-class TExecCommand : public TCommand
+class TBatchCommand : public TCommand
 {
 public:
-	TExecCommand(TSession *session, const char *line);
+	TBatchCommand(TSession *session, TPathName &name);
 
-	virtual int Execute(char *param);	
+	virtual int Execute(char *param);
 
 protected:
-	int Start(TPathName *path, const char *param);
-	int CheckExt(TPathName *path, const char *ext);
-	int CheckPath(TPathName *path);
-	TPathName *CheckPath(const char *name);
-	TPathName *CheckPath(const char *path, const char *name);
-	int Load(const char *name, char *param);
-	int Load(char *path, const char *name, char *param);
-
-    int FBatFile;	
-    int FDetach;
-	TString FProgName;
+	TPathName FProgName;
 };
 
 #endif

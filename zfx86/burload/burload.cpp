@@ -86,16 +86,18 @@ int cdecl main(int argc, char **argv)
 		return 1;
 	}
 
-	serial = new TSerialDevice(&wait, PORT, 9600);
+	serial = new TSerialDevice(PORT, 9600);
 
-	serial->Write("speed 115 1");
+	serial->Open();
+	serial->Write("speed 38 1");
 	serial->Write(0xD);
 	EchoUntilSilent(10);
 
 	delete serial;
 
-	serial = new TSerialDevice(&wait, PORT, 115200);
+	serial = new TSerialDevice(PORT, 38400);
 
+	serial->Open();
 	serial->Write(0xD);
 
 	ymodem = new TYModem(serial);
@@ -138,8 +140,10 @@ int cdecl main(int argc, char **argv)
 		RdosWriteString("\r\nFailed sending sdram.bin\r\n");
 
 	serial->OnChar = NewChar;
-	Keyboard = new TKeyboardDevice(&wait);
+	Keyboard = new TKeyboardDevice;
 	Keyboard->OnKeyPress = KeyPress;
+	wait.Add(serial);
+	wait.Add(Keyboard);
 //	Keyboard->OnKeyRelease = KeyRelease;
 	for (;;)
 		wait.WaitForever();

@@ -36,12 +36,15 @@
 #include "cmdfact.h"
 #include "setdrive.h"
 #include "exec.h"
+#include "bat.h"
+#include "errcmd.h"
 #include "env.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
 TCommandFactory *TCommandFactory::FCmdList = 0;
+TPathName TCommandFactory::FFullPath;
 
 /*##########################################################################
 #
@@ -257,6 +260,180 @@ TString TCommandFactory::ExpandEnv(TString &line)
 	return cp;
 }
 
+/*##########################################################################
+#
+#   Name       : TCommandFactory::CheckFileExt
+#
+#   Purpose....: Check if path is valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandFactory::CheckFileExt(const char *path, const char *ext)
+{
+    FFullPath = TString(path);
+    FFullPath += ext;
+
+	if (FFullPath.IsFile())
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandFactory::CheckFileExt
+#
+#   Purpose....: Check if path + name is a valid file (with given extension)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandFactory::CheckFileExt(const char *path, const char *name, const char *ext)
+{
+	TPathName pn(path);
+	pn += name;
+
+	return CheckFileExt(pn.Get().GetData(), ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandFactory::CheckPathFileExt
+#
+#   Purpose....: Find file through with path env var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandFactory::CheckPathFileExt(char *path, const char *name, const char *ext)
+{
+	char *ptr;
+
+	if (CheckFileExt(name, ext))
+	    return TRUE;
+
+	while (*path)
+	{
+		ptr = strchr(path, ';');
+		if (ptr)
+		{
+			*ptr = 0;
+			if (CheckFileExt(path, name, ext))
+			    return TRUE;
+
+			path = ptr + 1;
+		}
+		else
+			return CheckFileExt(path, name, ext);
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandFactory::CheckFile
+#
+#   Purpose....: Check if file is executable
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommandFactory::CheckFile(char *name, const char *ext)
+{
+	char *path;
+	TEnv *env;
+	int ok;
+	
+	if (strchr(name, '\\'))
+		if (CheckFileExt(name, ext))
+		    return TRUE;
+
+	if (strchr(name, '/'))
+		if (CheckFileExt(name, ext))
+			 return TRUE;
+
+	if (strchr(name, ':'))
+		if (CheckFileExt(name, ext))
+			 return TRUE;
+
+	 path = new char[512];
+	 env = TEnv::OpenSysEnv();
+	if (env->Find("PATH", path))
+	 {
+		 ok = CheckPathFileExt(path, name, ext);
+		delete env;
+		  delete path;
+		  if (ok)
+				return TRUE;
+	 }
+	 else
+	 {
+		  delete env;
+		  delete path;
+	 }
+
+	 return CheckFileExt(name, ext);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommandFactory::SkipWord
+#
+#   Purpose....: Skip to next word
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TCommandFactory::SkipWord(char *p)
+{
+	int ch, quote;
+	int isopt;
+	int more;
+
+	isopt = IsOptChar(*p);
+	if (isopt)
+	{
+		p++;
+		while (*p && IsOptChar(*p))
+			p++;
+	}
+
+	quote = 0;
+	for (;;)
+	{
+		ch = *p;
+		if (!ch)
+			break;
+
+		if (isopt)
+			more = !IsOptDelim(ch) || IsOptChar(ch);
+		else
+			more = !IsArgDelim(ch) || IsOptChar(ch);
+
+		if (!quote && !more)
+			break;
+
+		if (quote == ch)
+			quote = 0;
+		else
+			if (strchr("\"", ch))
+				quote = ch;
+
+		p++;
+	}
+	return p;
+}
+
 /*##################  TCommandFactory::Parse  ##########################
 *   Purpose....: Parse a command line and return a command class	    	#
 *   In params..: *                                                          #
@@ -272,10 +449,13 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
 	char *com;
 	char *ptr;
 	int done;
+	char *cp;
+	char *name;
 	TString Line;
 	TCommandFactory *factory = 0;
 	TCommand *cmd;
-	TExecCommand *exec;
+	int detach;
+    int ok;
 
 	Line = TString(LTrim(line));
 
@@ -355,13 +535,39 @@ TCommand *TCommandFactory::Parse(TSession *session, const char *line)
 	}
 	else
 	{
-		exec = new TExecCommand(session, line);
-		if (exec->IsValid())
-			return exec;
-		else
-		{
-			delete exec;
-			return 0;
-		}
+		rest = SkipWord((char *)Line.GetData());
+		cp = Unquote(Line.GetData(), rest);
+		name = cp;
+
+        detach = FALSE;
+        if (*name == '@')
+        {
+            name++;
+            detach = TRUE;
+        }
+	
+		ok = CheckFile(name, ".com");
+        if (!ok)
+            ok = CheckFile(name, ".exe");
+
+        if (ok)
+        {
+            delete cp;
+       		return new TExecCommand(session, FFullPath.Get().GetData(), detach);
+       	}
+
+		ok = CheckFile(name, ".bat");
+        if (!ok)
+            ok = CheckFile(name, ".cmd");
+
+        if (ok)
+        {
+            delete cp;
+       		return new TBatchCommand(session, FFullPath);
+       	}
+
+       	cmd = new TErrorCommand(session, name);
+       	delete cp;
+       	return cmd;
 	}
 }

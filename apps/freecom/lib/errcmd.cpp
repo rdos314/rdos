@@ -20,50 +20,51 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdfact.h
-# Command factory base class
+# errcmd.cpp
+# Error command class
 #
 ########################################################################*/
 
-#ifndef _CMDFACT_H
-#define _CMDFACT_H
+#include <string.h>
 
-#include "cmd.h"
-#include "path.h"
+#include "rdos.h"
+#include "errcmd.h"
+#include "cmdhelp.h"
+#include "lang.h"
 
-class TCommand;
-class TSession;
+#define FALSE 0
+#define TRUE !FALSE
 
-class TCommandFactory
+/*##########################################################################
+#
+#   Name       : TErrorCommand::TErrorCommand
+#
+#   Purpose....: Constructor for TErrorCommand
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TErrorCommand::TErrorCommand(TSession *session, const char *name)
+  : TCommand(session)
 {
-friend class THelpCommand;
-friend class TSession;
-public:
-	 TCommandFactory(const char *name);
-	virtual ~TCommandFactory();
+	FMsg.printf(TEXT_ERROR_BADCOMMAND, name);
+}
 
-	static TCommand *Parse(TSession *session, const char *line);
-
-protected:
-	static const char *FindArg(int no);
-	static TString ExpandEnv(TString &line);
-    static int CheckFileExt(const char *path, const char *ext);
-    static int CheckFileExt(const char *path, const char *name, const char *ext);
-    static int CheckPathFileExt(char *path, const char *name, const char *ext);
-    static int CheckFile(char *name, const char *ext);
-    static char *SkipWord(char *p);
-
-	virtual TCommand *Create(TSession *session, const char *param) = 0;
-	virtual int PassAll();
-    virtual int PassDir();
-	
-	void InsertCommand();
-	void RemoveCommand();
-
-	static TCommandFactory *FCmdList;
-	TCommandFactory *FList;
-	TString FName;
-	static TPathName FFullPath;
-};
-
-#endif
+/*##########################################################################
+#
+#   Name       : TErrorCommand::Execute
+#
+#   Purpose....: Run command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TErrorCommand::Execute(char *param)
+{
+	Write(FMsg.GetData());
+	return 1;
+}

@@ -34,21 +34,13 @@
 class TExecCommand : public TCommand
 {
 public:
-	TExecCommand(TSession *session, const char *line);
+	TExecCommand(TSession *session, const char *name, int detach);
 
 	virtual int Execute(char *param);
-	int IsValid();
 
 protected:
-	int CheckExt(const char *path, const char *ext);
-	int CheckAllExt(const char *name);
-	int CheckPath(const char *path, const char *name);
-	int CheckPathExt(char *path, const char *name);
-
     int FDetach;
-    int FValid;
 	TString FProgName;
-	TPathName FFullPath;
 };
 
 #endif

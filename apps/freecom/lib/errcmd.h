@@ -20,50 +20,22 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdfact.h
-# Command factory base class
+# errcmd.h
+# Error command class
 #
 ########################################################################*/
 
-#ifndef _CMDFACT_H
-#define _CMDFACT_H
+#ifndef _ERRCMD_H
+#define _ERRCMD_H
 
 #include "cmd.h"
-#include "path.h"
 
-class TCommand;
-class TSession;
-
-class TCommandFactory
+class TErrorCommand : public TCommand
 {
-friend class THelpCommand;
-friend class TSession;
 public:
-	 TCommandFactory(const char *name);
-	virtual ~TCommandFactory();
+	TErrorCommand(TSession *session, const char *name);
 
-	static TCommand *Parse(TSession *session, const char *line);
-
-protected:
-	static const char *FindArg(int no);
-	static TString ExpandEnv(TString &line);
-    static int CheckFileExt(const char *path, const char *ext);
-    static int CheckFileExt(const char *path, const char *name, const char *ext);
-    static int CheckPathFileExt(char *path, const char *name, const char *ext);
-    static int CheckFile(char *name, const char *ext);
-    static char *SkipWord(char *p);
-
-	virtual TCommand *Create(TSession *session, const char *param) = 0;
-	virtual int PassAll();
-    virtual int PassDir();
-	
-	void InsertCommand();
-	void RemoveCommand();
-
-	static TCommandFactory *FCmdList;
-	TCommandFactory *FList;
-	TString FName;
-	static TPathName FFullPath;
+	virtual int Execute(char *param);	
 };
 
 #endif
