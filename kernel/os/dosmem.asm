@@ -245,8 +245,11 @@ resize_dos_found:
 	xor ebx,ebx
 	mov bx,[edx].dos_mem_size
 	shl ebx,4
-	cmp ebx,ecx
+	mov eax,ebx
+	sub eax,ecx
 	jc resize_dos_grow
+	je resize_dos_leave
+	cmp eax,10h
 	je resize_dos_leave
 resize_dos_shrink:
 	mov al,4Dh

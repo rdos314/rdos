@@ -807,8 +807,7 @@ write_handle_write:
 	or cx,cx
 	jz set_file_size
 	push di
-	mov di,ds
-	mov es,di
+	mov es,[bp].pm_ds
 	mov di,dx
 	WriteFile
 	pop di
@@ -820,6 +819,7 @@ set_file_size:
 	GetFilePos
 	SetFileSize
 	mov eax,[bp].vm_eax
+	xor ax,ax
 write_handle_ok:
 	and byte ptr [bp].vm_eflags,NOT 1
 write_handle_done:

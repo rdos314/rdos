@@ -2013,7 +2013,14 @@ PAGE
 
 raw_switch_v86:
 	mov sp,stack0_size
+	push ax
+	mov ax,thread_app_sel
 	mov ds,ax
+	test ds:app_bitness,1
+	pop ds
+	jz raw_switch16_v86
+
+raw_switch32_v86:
 	mov es,cx
 	movzx eax,dx
 	push eax
@@ -2029,6 +2036,26 @@ raw_switch_v86:
 	movzx eax,si
 	push eax
 	push edi
+	iretd
+
+raw_switch16_v86:
+	mov es,cx
+	movzx eax,dx
+	push eax
+	movzx eax,bx
+	push eax
+	pushfd
+	pop eax
+	or eax,3200h
+	and eax,NOT 4000h
+	push ds
+	call set_flags
+	pop ds
+	push eax
+	movzx eax,si
+	push eax
+	movzx eax,di
+	push eax
 	iretd
 
 PAGE
