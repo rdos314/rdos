@@ -49,6 +49,8 @@ int TSernetProtocolAnalyser::GetMsg()
 	int Elapsed;
 	char ch;
 	int count;
+	int Size;
+	TComMsg *CurrMsg = FComMsg;
 
 	count = *FRawCount - FRawPos;
 
@@ -58,53 +60,67 @@ int TSernetProtocolAnalyser::GetMsg()
     if (FTime)
         delete FTime;
 
-    FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
+    FTime = new TDateTime(CurrMsg->TimeMSB, FComMsg->TimeLSB);
 
 	str = FMsg;
 	*str = 0;
-	FSize = 0;
+	Size = 0;
 
-	Channel = FComMsg->Channel;
-	LastTime = FComMsg->TimeLSB;
-	ch = FComMsg->ch;
-	FSize++;
-	FComMsg++;
+	Channel = CurrMsg->Channel;
+	LastTime = CurrMsg->TimeLSB;
+	ch = CurrMsg->ch;
+	Size++;
+	CurrMsg++;
 
-	while (count > FSize && ch != ':')
+	while (count > Size && ch != 0x9B)
 	{
-		if (Channel != FComMsg->Channel)
+		if (Channel != CurrMsg->Channel)
+		{
+		    FComMsg = CurrMsg;
+		    FSize = Size;
 			return TRUE;
-
-		Elapsed = FComMsg->TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
-			return TRUE;
-
-		LastTime = FComMsg->TimeLSB;
-		ch = FComMsg->ch;
-		FSize++;
-		FComMsg++;
+		}
+		LastTime = CurrMsg->TimeLSB;
+		ch = CurrMsg->ch;
+		Size++;
+		CurrMsg++;
 	}
 
-	while (count > FSize && ch != '\r')
+	if (Size > 1)
+	{
+        FComMsg = CurrMsg - 1;
+		FSize = Size - 1;
+		return TRUE;
+	}
+
+	while (count > Size)
 	{
 		*str = ch;
 		str++;
 		*str = 0;
 
-		if (Channel != FComMsg->Channel)
+		if (Channel != CurrMsg->Channel)
+		{
+		    FComMsg = CurrMsg;
+		    FSize = Size;
 			return TRUE;
+		}
 		
-		Elapsed = FComMsg->TimeLSB - LastTime;
+		Elapsed = CurrMsg->TimeLSB - LastTime;
 		if (Elapsed > 1193 * 25)
+		{
+		    FComMsg = CurrMsg;
+		    FSize = Size;
 			return TRUE;
+		}
 
-		LastTime = FComMsg->TimeLSB;
-		ch = FComMsg->ch;
-		FSize++;
-		FComMsg++;
+		LastTime = CurrMsg->TimeLSB;
+		ch = CurrMsg->ch;
+		Size++;
+		CurrMsg++;
 	}
 
-	return TRUE;
+	return FALSE;
 }
 
 /*##################  TSernetProtocolAnalyser::ShowMsg ##########################
