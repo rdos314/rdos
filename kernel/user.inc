@@ -1356,6 +1356,14 @@ SetFont        MACRO
 	UserGate set_font_nr
 						ENDM
 
+SetHollowStyle        MACRO
+	UserGate set_hollow_style_nr
+						ENDM
+
+SetFilledStyle        MACRO
+	UserGate set_filled_style_nr
+						ENDM
+
 ;	IN  AL				Char to ask about
 ;	OUT CX				Width of char
 GetCharWidth        MACRO
@@ -1387,6 +1395,22 @@ SetPixel      MACRO
 ;	IN	DX		y2
 DrawLine      MACRO
 	UserGate draw_line_nr
+						ENDM
+
+;	IN  AX		x
+;	IN  BX		y
+;	IN	CX		w
+;	IN	DX		h
+DrawRect      MACRO
+	UserGate draw_rect_nr
+						ENDM
+
+;	IN  AX		x
+;	IN  BX		y
+;	IN	CX		w
+;	IN	DX		h
+DrawEllipse      MACRO
+	UserGate draw_ellipse_nr
 						ENDM
 
 ;	IN  AX		start x

@@ -228,8 +228,12 @@ resize_flat_linear_nr		= 201
 
 set_drawcolor_nr			= 202
 set_lgop_nr					= 203
-get_pixel_nr				= 204
-set_pixel_nr				= 205
-draw_line_nr				= 206
+set_hollow_style_nr			= 204
+set_filled_style_nr			= 205
+get_pixel_nr				= 206
+set_pixel_nr				= 207
+draw_line_nr				= 208
+draw_rect_nr				= 209
+draw_ellipse_nr				= 210
 
-usergate_entries			= 207
+usergate_entries			= 211

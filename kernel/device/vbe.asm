@@ -185,7 +185,7 @@ init_flat_check:
 	mov ax,flat_sel
 	mov es,ax
 	xor eax,eax
-	mov eax,8000h
+;	mov eax,8000h
 	rep stos dword ptr es:[edi]
 	pop es
 ;
@@ -248,7 +248,7 @@ init_linear32:
 	
 init_mode_tab:
 	push ds
-	mov cx,24
+	mov cx,28
 	mov ax,cs
 	mov ds,ax
 	xor di,di

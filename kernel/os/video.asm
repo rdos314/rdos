@@ -885,6 +885,42 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetHollowStyle
+;
+;		DESCRIPTION:	Set hollow style
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_hollow_style_name	DB 'Set Hollow Style',0
+
+set_hollow_style	PROC far
+	CallVideo set_hollow_style_proc
+	retf32
+set_hollow_style	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetFilledStyle
+;
+;		DESCRIPTION:	Set filled style
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_filled_style_name	DB 'Set Filled Style',0
+
+set_filled_style	PROC far
+	CallVideo set_filled_style_proc
+	retf32
+set_filled_style	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GetPixel
 ;
 ;		DESCRIPTION:	Get pixel
@@ -946,6 +982,52 @@ draw_line	PROC far
 	CallVideo draw_line_proc
 	retf32
 draw_line	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawRect
+;
+;		DESCRIPTION:	Draw a rectangle
+;
+;		PARAMETERS:		AX		x
+;						BX		y
+;						CX		w
+;						DX		b
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_rect_name	DB 'Draw Rect',0
+
+draw_rect	PROC far
+	CallVideo draw_rect_proc
+	retf32
+draw_rect	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawEllipse
+;
+;		DESCRIPTION:	Draw a ellipse
+;
+;		PARAMETERS:		AX		x
+;						BX		y
+;						CX		w
+;						DX		b
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_ellipse_name	DB 'Draw Ellipse',0
+
+draw_ellipse	PROC far
+	CallVideo draw_ellipse_proc
+	retf32
+draw_ellipse	ENDP
 
 PAGE
 	
@@ -1974,6 +2056,18 @@ init	PROC far
 	mov ax,set_lgop_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET set_hollow_style
+	mov di,OFFSET set_hollow_style_name
+	xor dx,dx
+	mov ax,set_hollow_style_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_filled_style
+	mov di,OFFSET set_filled_style_name
+	xor dx,dx
+	mov ax,set_filled_style_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET get_pixel
 	mov di,OFFSET get_pixel_name
 	xor dx,dx
@@ -1990,6 +2084,18 @@ init	PROC far
 	mov di,OFFSET draw_line_name
 	xor dx,dx
 	mov ax,draw_line_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET draw_rect
+	mov di,OFFSET draw_rect_name
+	xor dx,dx
+	mov ax,draw_rect_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET draw_ellipse
+	mov di,OFFSET draw_ellipse_name
+	xor dx,dx
+	mov ax,draw_ellipse_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_dos_string

@@ -89,6 +89,7 @@ init_thread	PROC far
 	mov ds,ax
 	mov ds:vt_color,0
 	mov ds:vt_lgop,1
+	mov ds:vt_style,0
 	ret
 init_thread	Endp
 

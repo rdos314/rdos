@@ -82,38 +82,74 @@ test_thread:
 divi	DW 1111h
 	
 init:
-	int 3
-;
 	mov cx,800
 	mov dx,600
 	SetVgaMode
-	int 3
-	mov eax,12345678h
+	mov eax,0FFh
 	SetDrawColor
-;	mov ax,LGOP_ADD
-;	SetLgop
+	SetFilledStyle
+;
 	mov ax,50
 	mov bx,100
-	mov cx,350
-	mov dx,100
-	DrawLine
+	mov cx,200
+	mov dx,150
+	DrawRect
+;
+	mov eax,0FF00h
+	SetDrawColor
+;
+	mov ax,LGOP_ADD
+	SetLgop
+;
+	mov ax,100
+	mov bx,150
+	mov cx,150
+	mov dx,200
+	DrawRect
+;
+	SetHollowStyle
+;
+	mov eax,0FF0000h
+	SetDrawColor
+;
+	mov ax,50
+	mov bx,100
+	mov cx,200
+	mov dx,150
+	DrawRect
+;
+	mov ax,350
+	mov bx,100
 	mov cx,50
 	mov dx,300
 	DrawLine
-	mov ax,350
+;
+        SetFilledStyle
+	mov ax,200
 	mov bx,300
-	mov cx,50
-	mov dx,300
-	DrawLine
-	mov cx,350
-	mov dx,100
-	DrawLine
-	mov ax,350
-	mov bx,300
-	mov cx,50
-	mov dx,100
-	DrawLine
-
+	mov cx,150
+	mov dx,250
+	DrawRect
+	mov eax,0707000h
+	SetDrawColor	
+	mov ax,200
+	DrawEllipse
+;
+	SetHollowStyle
+	mov ax,LGOP_NONE
+	SetLgop
+	mov eax,07070h
+	SetDrawColor
+        mov ax,200	
+	DrawEllipse
+;
+        SetFilledStyle
+        mov ax,300
+        mov bx,50
+        mov cx,250
+        mov dx,250
+        DrawEllipse
+        int 3
 	mov ax,3
 	SetVideoMode
 	int 3
