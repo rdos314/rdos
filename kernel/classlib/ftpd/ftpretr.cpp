@@ -146,9 +146,14 @@ void TRetrCommand::Execute(char *param)
 				TFile file = abspath.OpenFile();
 				char *buf = new char[512];
 				int len = file.Read(buf, 512);
+				long val;
 
 				while (len)
 				{
+					val = *(long *)buf;
+					if (val == 0x209)
+						_asm int 3
+
 					FServer->Write(buf, len);
 					len = file.Read(buf, 512);
 				}

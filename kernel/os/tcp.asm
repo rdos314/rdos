@@ -2612,8 +2612,13 @@ Receive	Proc far
 ;
 	mov al,es:[di].tcp_flags
 	test al,SYN
-	jz receive_no_connection
-;
+	jnz receive_wild_syn
+
+receive_leave_no_connection:
+	LeaveSection ds:tcp_section
+	jmp receive_no_connection
+
+receive_wild_syn:
 	mov ax,es:[di].tcp_source
 	xchg al,ah
 	mov ds:tcp_remote_port,ax
@@ -3971,12 +3976,9 @@ write_tcp_retry:
 	sub dx,ds:tcp_send_count
 	movzx edx,dx
 	cmp edx,ecx
-	jc write_tcp_start
+	jc write_tcp_loop
 ;	
 	mov dx,cx
-
-write_tcp_start:
-	add ds:tcp_send_count,dx
 
 write_tcp_loop:
 	or ecx,ecx
@@ -3991,15 +3993,19 @@ write_tcp_loop:
 	inc edi
 	dec ecx
 	dec dx
+	inc ds:tcp_send_count
 ;	
 	inc bx
 	cmp bx,ds:tcp_buffer_size
-	jnz write_tcp_loop
+	jnz write_tcp_next
+;
 	xor bx,bx
+
+write_tcp_next:
+	mov ds:tcp_send_tail,bx
 	jmp write_tcp_loop
 
 write_tcp_full:
-	mov ds:tcp_send_tail,bx
 	call SendData
 ;
 	ClearSignal
@@ -4015,7 +4021,6 @@ write_tcp_fail:
 	jmp write_tcp_done
 
 write_tcp_ok:
-	mov ds:tcp_send_tail,bx
 	mov ax,ds:tcp_send_count
 	cmp ax,600h
 	jc write_tcp_delay
