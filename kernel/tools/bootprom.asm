@@ -677,8 +677,10 @@ DoBoot:
 	mov ds,ax
 	mov ds:ram1_size,DRAM_SIZE
 	mov ds:ram2_size,0
-	mov ds:rom_base,PROM_BASE
-	mov ds:rom_size,-PROM_BASE
+	mov ds:rom1_base,PROM_BASE
+	mov ds:rom1_size,-PROM_BASE
+	mov ds:rom2_size,0
+	mov ds:rom_shadow,0
 ;
 	mov ax,flat_sel
 	mov ds,ax

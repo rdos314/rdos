@@ -518,8 +518,8 @@ AddAdapter	Endp
 GetAllAdapters  Proc near
     mov ax,system_data_sel
     mov ds,ax
-	mov esi,ds:rom_base
-	mov edi,ds:rom_size
+	mov esi,ds:rom1_base
+	mov edi,ds:rom1_size
 	add edi,esi
     mov ds:rom_modules,0
     mov bx,OFFSET rom_adapters
@@ -875,11 +875,13 @@ prot_init:
 	mov ds:ram1_size,0A0000h
 	mov ds:ram2_base,100000h
 	mov eax,cs:code_base
-	mov ds:rom_base,eax
+	mov ds:rom1_base,eax
 	sub eax,ds:ram2_base
 	mov ds:ram2_size,eax
 	mov eax,cs:code_size
-	mov ds:rom_size,eax
+	mov ds:rom1_size,eax
+	mov ds:rom2_size,0
+	mov ds:rom_shadow,0
 ;
     mov ax,gdt_sel
     mov ss,ax

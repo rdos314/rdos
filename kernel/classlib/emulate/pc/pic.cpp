@@ -80,11 +80,11 @@ void TPic::Set(int Number)
 {
 	char Mask;
 
-	if (FMaster && FIrr == 0)
-		FMaster->Set(FMasterLine);
-
 	Mask = 1 << Number;
 	FIrr = FIrr | Mask;
+
+	if (FMaster && (FIrr & ~FImr) != 0)
+		FMaster->Set(FMasterLine);
 }
 
 /*##################  TPic::Reset  ###############
@@ -100,7 +100,7 @@ void TPic::Reset(int Number)
 	Mask = 1 << Number;
 	FIrr = FIrr & ~Mask;
 
-	if (FMaster && FIrr == 0)
+	if (FMaster && (FIrr & ~FImr) == 0)
 		FMaster->Reset(FMasterLine);
 }
 
@@ -266,10 +266,10 @@ char TPic::GetVector()
 		if (FIcw4 && ICW4_8086)
 			return (FIcw2 & 0xF8) | (char)Number;
 		else
-			return 0;
+			return (FIcw2 & 0xF8) | 7;
 	}
 	else
-		return 0;
+		return (FIcw2 & 0xF8) | 7;
 }
 
 /*##################  TPic::Out  ###############

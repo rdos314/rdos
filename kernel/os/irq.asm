@@ -102,6 +102,7 @@ irq&nr:
 	pushad
 ;
 	call enter_int
+	mov al,nr
 	sti
 irq_mask_done&nr:
 	mov bx,OFFSET irq_arr + nr * SIZE irq_struc

@@ -117,11 +117,14 @@ thread_arr			DW 256 DUP(?)
 
 next_pid			DW ?
 
+rom_shadow			DW ?
 ram1_size			DD ?
 ram2_base			DD ?
 ram2_size			DD ?
-rom_base			DD ?
-rom_size			DD ?
+rom1_base			DD ?
+rom1_size			DD ?
+rom2_base			DD ?
+rom2_size			DD ?
 
 alloc_base			DD ?
 

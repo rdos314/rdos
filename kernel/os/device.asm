@@ -121,15 +121,10 @@ move_adapters	PROC near
 	push fs
 	pushad
 ;
-	mov ax,sys_page_sel
-	mov ds,ax
 	mov ax,gdt_sel
 	mov es,ax
 	mov ax,system_data_sel
 	mov fs,ax
-;
-	mov ebp,kernel_linear
-	sub ebp,fs:rom_base
 ;
 	mov bx,cs
 	mov eax,es:[bx+2]
@@ -151,6 +146,31 @@ move_adapter_loop:
 	push cx
 	push esi
 	push edi
+;
+	cmp fs:rom_shadow,0
+	je move_adapter_shadow_ok
+;
+	push es
+	mov ax,flat_sel
+	mov ds,ax
+	mov es,ax
+;
+	mov edx,kernel_linear
+	mov edi,edx
+	mov esi,fs:[bx].adapter_base
+	mov ecx,fs:[bx].adapter_size
+	add ecx,SIZE rdos_header
+	dec ecx
+	shr ecx,2
+	inc ecx
+	rep movs dword ptr es:[edi],[esi]
+;
+	pop es
+	jmp move_page_done
+
+move_adapter_shadow_ok:
+	mov ax,sys_page_sel
+	mov ds,ax
 	mov ecx,fs:[bx].adapter_size
 	mov esi,fs:[bx].adapter_base
 	mov eax,esi
@@ -158,7 +178,19 @@ move_adapter_loop:
 	sub eax,esi
 	add ecx,eax
 	mov edi,esi
-	add edi,ebp
+;
+	sub edi,fs:rom1_base
+	jc move_adapter_try2
+;
+	cmp edi,fs:rom1_size
+	jc move_adapter_bias
+
+move_adapter_try2:
+	add edi,fs:rom1_base
+	sub edi,fs:rom2_base
+
+move_adapter_bias:
+	add edi,kernel_linear
 	mov edx,edi
 	shr esi,12
 	shl esi,2
@@ -167,6 +199,7 @@ move_adapter_loop:
 	dec ecx
 	add ecx,1000h
 	shr ecx,12
+
 move_page_loop:
 	mov eax,[esi]
 	mov al,5
@@ -174,7 +207,8 @@ move_page_loop:
 	add esi,4
 	add edi,4
 	loop move_page_loop
-;
+
+move_page_done:
 	pop edi
 	pop esi
 	mov eax,esi

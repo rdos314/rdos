@@ -20,47 +20,65 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; GRUBLOAD.ASM
-; GRUB dummy kernel (OS loader)
+; ALIBOOT.ASM
+; Bootloader for Ali6117 based cards
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-		NAME  grubload
+						
+		NAME  aliboot
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
+.model Small
+
 GateSize = 16
 
-INCLUDE ..\os\system.def
-INCLUDE ..\os\port.def
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\system.inc
+INCLUDE \rdos\os\system.def
+INCLUDE \rdos\os\protseg.def
+INCLUDE \rdos\os\system.inc
 
-MB_FLAG_MEM	=	 1
-MB_FLAG_DEV =	 2
-MB_FLAG_CMDLINE= 4
-MB_FLAG_MODULE = 8
+PROM_BASE		EQU 00FE0000h
 
-Multiboot_struc	STRUC
+OpenAli	MACRO
+	mov al,13h
+	out 22h,al
+	jmp short $+2
+	mov al,0C5h
+	out 23h,al
+	jmp short $+2
+		ENDM
 
-mb_flags		DD ?
-mb_mem_lower	DD ?
-mb_mem_upper	DD ?
-mb_boot_dev		DD ?
-mb_cmdline		DD ?
-mb_module_count	DD ?
-mb_module_ads	DD ?
+CloseAli	MACRO
+	mov al,13h
+	out 22h,al
+	jmp short $+2
+	mov al,0
+	out 23h,al
+	jmp short $+2
+		ENDM
 
-Multiboot_struc	ENDS
+; al data
+; ah index
 
-Module_struc	STRUC
+WriteAli	MACRO
+	xchg ah,al
+	out 22h,al
+	jmp short $+2
+	xchg ah,al
+	out 23h,al
+	jmp short $+2
+			ENDM
 
-m_start			DD ?
-m_end			DD ?
-m_param			DD ?
-m_reserved		DD ?
+; al data
+; ah index
 
-Module_struc	ENDS
+ReadAli		MACRO
+	mov al,ah
+	out 22h, al
+	jmp short $+2
+	in al,23h
+			ENDM
+
 
 DefaultIdtEntry		MACRO
 	dw OFFSET DefaultInt
@@ -68,8 +86,6 @@ DefaultIdtEntry		MACRO
 	dw 8E00h
 	dw 0
 					ENDM
-
-IMAGE_BASE EQU 110000h
 
 BootIdtEntry		MACRO Offs
 	dw OFFSET Offs
@@ -102,220 +118,41 @@ BootExceptionNoPar	MACRO Entry
 				ENDM
 
 FindRam     MACRO
-    Local LowRamLoop
-    Local HighRamLoop
-    Local LowRamNext
+    Local RamLoop
+    Local RamNext
     Local RamFound
+
     mov ax,flat_sel
     mov ds,ax
-    jmp LowRamNext
-LowRamLoop:
-    mov eax,AllocMemSign
+	jmp RamNext
+
+RamLoop:
+	mov eax,AllocMemSign
     mov [esi],eax
     cmp eax,[esi]
     je RamFound
-LowRamNext:
+RamNext:
     add esi,1000h
     cmp esi,0A0000h
-    jc LowRamLoop
-    mov esi,100000h
-HighRamLoop:
-    mov eax,AllocMemSign
-    mov [esi],eax
-    cmp eax,[esi]
-    je RamFound
-    add esi,1000h
-    jmp HighRamLoop
+    jc RamLoop
+	stc
 RamFound:
             ENDM
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetVideo
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:		DS:EBX  SCREEN BASE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetVideo    MACRO
-    LOCAL GetVideoLoop
-    LOCAL GetVideoSel
-    mov ax,flat_sel
-    mov ds,ax
-	mov ebx,0B8000h
-	mov ax,720h
-GetVideoLoop:
-	mov [ebx],ax
-	cmp ax,[ebx]
-	je GetVideoSel
-	mov ebx,0B0000h
-GetVideoSel:
-        ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteChar
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:		AL		CHAR
-;						DL		ROW
-;						DH		KOLUMN
-;						DS:EBX  SCREEN BASE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteChar	MACRO
-    mov bp,ax
-	mov cx,dx
-	mov al,80
-	mul ch
-	add al,cl
-	adc ah,0
-	add ax,ax
-    movzx eax,ax
-    mov cx,bp
-    mov ch,7
-    mov [eax+ebx],cx
-	inc dl
-        ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SingleHex
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:		AL		Value in
-;						AX		Value out
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SingleHex	MACRO
-    LOCAL ok_low1
-    LOCAL ok_high1
-	mov ah,al
-	and al,0F0h
-	rol al,1
-	rol al,1
-	rol al,1
-	rol al,1
-	cmp al,0Ah
-	jb ok_low1
-	add al,7
-ok_low1:
-	add al,30h
-	and ah,0Fh
-	cmp ah,0Ah
-	jb ok_high1
-	add ah,7
-ok_high1:
-	add ah,30h
-        ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteHexByte
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:		AL		HEX DATA IN
-;						DL		ROW
-;						DH		KOLUMN
-;						DS:EBX	BASE-ADDRESS TO SCREEN-SEG
-;
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteHexByte    MACRO
-	SingleHex
-    mov di,ax
-    mov al,ah
-	WriteChar
-    mov ax,di
-    WriteChar
-                ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteHexWord
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:		AX		HEX DATA IN
-;						DL		ROW
-;						DH		KOLUMN
-;                       DS:EBX  Screen Base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteHexWord	MACRO
-    mov si,ax
-    shr ax,8
-	SingleHex
-    mov di,ax
-	WriteChar
-    mov ax,di
-    mov al,ah
-    WriteChar
-    mov ax,si
-    SingleHex
-    mov di,ax
-    WriteChar
-    mov ax,di
-    mov al,ah
-    WriteChar
-                ENDM
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WriteRomString
-;
-;		DESCRIPTION:
-;
-;		PARAMETERS:     SI      OFFSET TO STRING
-;                       DL		ROW
-;						DH		KOLUMN
-;                       DS:EBX  Screen Base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WriteRomString	MACRO
-    Local WriteRomStringLoop
-    Local WriteRomStringDone
-WriteRomStringLoop:
-    mov al,cs:[si]
-    or al,al
-    jz WriteRomStringDone
-    WriteChar
-    inc si
-    jmp WriteRomStringLoop
-WriteRomStringDone:
-                ENDM
-
-code SEGMENT byte public 'CODE'
-
-	assume cs:code
-
+.code
 .386p
+
+	org 0F000h
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			CalcCrc
 ;
-;		DESCRIPTION:	Calculate CRC for a byte
+;		DESCRIPTION:	Calculate CRC for one byte
 ;
-;       PARAMETERS:     AL      CRC
-;                       DS:ESI  Data
+;       PARAMETERS:     AX      CRC
+;                       DS:ESI  Address to data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -370,15 +207,11 @@ CalcCrc Endp
 ;		DESCRIPTION:
 ;
 ;		PARAMETERS:     ESI     Adress to start search at
-;						EDI		Max address to search at
 ;
 ;       RETURNS:        ESI     Adapter base
 ;                       ECX     Size of adapter
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SignError	DB 'Rdos Signature Not Found ',0
-SizeError	DB 'To Large Adapter ',0
 
 GetAdapter  Proc near
 	push ds
@@ -390,8 +223,8 @@ GetAdapterSearch:
 	je GetAdapterFound
 GetAdapterNext:
 	add esi,1000h
-	cmp esi,edi
-	jb GetAdapterSearch
+	or esi,esi
+	jne GetAdapterSearch
 	stc
 	jmp GetAdapterDone
 GetAdapterCorrupt:
@@ -402,27 +235,15 @@ GetAdapterFound:
 	xor ecx,ecx
 GetAdapterNextDriver:
 	cmp [esi].sign,RdosSign
-	je GetAdapterSignOk
-    GetVideo
-	mov si,OFFSET SignError
-    mov dh,20
-	mov dl,0
-    WriteRomString
-	jmp GetAdapterCorrupt
-GetAdapterSignOk:
+	jne GetAdapterCorrupt
+;
 	cmp [esi].typ,RdosEnd
 	je GetAdapterOk
 	mov edx,[esi].len
 	add ecx,edx
 	cmp ecx,1000000h
-	jc GetAdapterSizeOk
-    GetVideo
-	mov si,OFFSET SizeError
-    mov dh,20
-	mov dl,0
-    WriteRomString
-	jmp GetAdapterCorrupt
-GetAdapterSizeOk:
+	jnc GetAdapterCorrupt
+;
 	xor ax,ax
 	push ecx
 	push esi
@@ -438,9 +259,8 @@ GetAdapterCrcDone:
 	pop esi
 	pop ecx
 	cmp ax,[esi].crc
-	je GetAdapterCrcOk
-	jmp GetAdapterCorrupt
-GetAdapterCrcOk:
+	jne GetAdapterCorrupt
+;
 	add esi,edx
 	jmp GetAdapterNextDriver
 GetAdapterOk:
@@ -529,28 +349,24 @@ AddAdapter	Endp
 ;
 ;		NAME:			GetAllAdapters
 ;
-;		DESCRIPTION:
+;		DESCRIPTION:	Get all adapters
+;
+;		PARAMETERS:     ESI     Adress to start search at
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetAllAdapters  Proc near
     mov ax,system_data_sel
     mov ds,ax
-	mov esi,ds:rom1_base
-	mov edi,ds:rom1_size
-	add edi,esi
     mov ds:rom_modules,0
     mov bx,OFFSET rom_adapters
+	mov esi,PROM_BASE
 get_adapters_loop:
     call GetAdapter
     jc get_adapters_done
+;
 	call AdapterCrc
 	call AddAdapter
-    add esi,ecx
-    dec esi
-    and si,0F000h
-    add esi,1000h
-    jmp get_adapters_loop
 get_adapters_done:
     ret
 GetAllAdapters  Endp
@@ -628,7 +444,11 @@ StartShutDeviceInitied:
 	sub eax,OFFSET rom_idt
 	add eax,OFFSET boot_idt
 	mov [bx+2],eax
+	mov al,[bx+7]
+	xchg al,[bx+5]
+	db 66h
 	lidt [bx]
+	xchg al,[bx+5]
 	popad
 	pop es
 	pop ds
@@ -690,26 +510,14 @@ GetBootDevice	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Initial GDT & IDT
+;		NAME:			init
+;
+;		DESCRIPTION:	Init (power-up)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ExceptionText DB 'Exception Fault in Boot ',0
-NoBootText DB 'No kernel to boot up',0
-MemFail DB 'Multiboot without memflag',0
-ModuleFail DB 'No module loaded',0
-
 DefaultInt:
-    GetVideo
-    mov dh,23
-	mov dl,0
-    mov si,OFFSET ExceptionText
-    WriteRomString
-Stop:
-    jmp Stop
-
-	public gdt8
-	public gdt10
+	hlt
 
 rom_gdt:
 gdt0:
@@ -718,16 +526,16 @@ gdt0:
 	dw 0
 gdt8:
 	dw 10h*8-1
-	dd 92110000h + OFFSET rom_idt
-	dw 0
+	dd 92FF0000h + OFFSET rom_idt
+	dw 00000h
 gdt10:
 	dw 28h-1
-	dd 92110000h + OFFSET rom_gdt
-	dw 0
+	dd 92FF0000h + OFFSET rom_gdt
+	dw 00000h
 gdt18:
 	dw 0FFFFh
-	dd 9A110000h
-	dw 0
+	dd 9AFF0000h
+	dw 00000h
 gdt20:
 	dw 0FFFFh
 	dd 92000000h
@@ -817,18 +625,67 @@ boot_idt:
 	BootIdtEntry BootE
 	BootIdtEntry BootF
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			prot_init
-;
-;		DESCRIPTION:	16-bit entry point
-;
-;		PARAMETERS:		EBX		Multiboot info
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+idt_reg:
+	dw 10h*8-1
+	dd 00FF0000h + OFFSET rom_idt
 
-	public prot_init
+gdt_reg:
+	dw 28h-1
+	dd 00FF0000h + OFFSET rom_gdt
+
+; memory mode total
+; type pattern memory Type
+
+MemConfigTab:
+	dw 0011h, 0000h, 0001h ; 0
+	dw 1111h, 0010h, 0002h ; 1
+	dw 0311h, 0020h, 0003h ; 2
+	dw 3311h, 0030h, 0005h ; 3
+	dw 0511h, 0040h, 0009h ; 4
+	dw 0002h, 0050h, 0001h ; 5
+	dw 0022h, 0060h, 0002h ; 6
+	dw 0322h, 0070h, 0004h ; 7
+	dw 3322h, 0080h, 0006h ; 8
+	dw 0522h, 0090h, 000ah ; 9	
+	dw 5522h, 00a0h, 0012h ; 10
+	dw 0032h, 00b0h, 0003h ; 11
+	dw 0332h, 00c0h, 0005h ; 12
+	dw 0052h, 00d0h, 0009h ; 13
+	dw 0003h, 00e0h, 0002h ; 14
+	dw 0033h, 00f0h, 0004h ; 15
+	dw 0333h, 0008h, 0006h ; 16
+	dw 3333h, 0018h, 0008h ; 17	
+	dw 0533h, 0028h, 000ch ; 18
+	dw 5533h, 0038h, 0014h ; 19
+	dw 0053h, 0048h, 000ah ; 20
+	dw 0553h, 0058h, 0012h ; 21
+	dw 5553h, 0068h, 001ah ; 22
+	dw 0004h, 0078h, 0004h ; 23
+	dw 0044h, 0088h, 0008h ; 24
+	dw 5544h, 0098h, 0018h ; 25
+	dw 0054h, 00a8h, 000ch ; 26
+	dw 0005h, 00b8h, 0008h ; 27	
+	dw 0055h, 00c8h, 0010h ; 28
+	dw 0555h, 00d8h, 0018h ; 29
+	dw 5555h, 00e8h, 0020h ; 30
+	dw 0066h, 00f8h, 0040h ; 31
+
+init:
+	cli
+	db 66h
+	lgdt fword ptr cs:gdt_reg
+;
+	db 66h
+    lidt fword ptr cs:idt_reg
+;
+	xor ax,ax
+	lahf
+	mov ebx,cr0
+	or bl,1
+	mov cr0,ebx
+	db 0EAh
+	dw OFFSET prot_init
+	dw device_code_sel
 
 prot_init:
     mov ax,flat_sel
@@ -838,6 +695,203 @@ prot_init:
     mov gs,ax
     mov ss,ax
 ;
+	OpenAli
+
+wait_gate1:
+	in al,64h
+	and al,2
+	jnz wait_gate1
+;
+	mov al,0D1h
+	out 64h,al
+
+wait_gate2:
+	in al,64h
+	and al,2
+	jnz wait_gate2
+;
+	mov al,0DFh
+	out 60h,al
+
+wait_gate3:
+	in al,64h
+	and al,2
+	jnz wait_gate3
+;
+	xor cx,cx
+
+gate_wait:
+	inc ax
+	loop gate_wait
+;
+	mov ah,10h
+	ReadAli
+	and al,00000111b
+	or al,01010000b
+	WriteAli
+;
+	mov ah,3Ch
+	ReadAli
+	or al,00000010b
+	WriteAli
+	and al, 11111101b
+;
+	mov word ptr ds:[0h], 0aaaah
+	mov word ptr ds:[1000h], 05555h ; dummy write
+	cmp word ptr ds:[0h], 0aaaah
+	je Is_EDO_type_DRAM
+
+Is_Fast_Page_Mode_Type_DRAM:
+	WriteAli
+	jmp Finish_DRAM_Type_Detection
+
+Is_EDO_Type_DRAM:
+	WriteAli
+;
+	mov ah,37h
+	ReadAli
+	or al,00000001b
+	WriteAli
+
+Finish_DRAM_Type_Detection:
+	mov ah,10h
+	ReadAli
+	and al,00000111b
+	or al,11101000b
+	WriteAli
+	xor dx,dx ; store DRAM mode
+	mov esi,3000h ; A13, A12 enable - bank 3
+
+sizing_bank_23:
+	mov edi,800h ; A11
+	and dl,0f0h
+	or dl,5 ; 5 --- 4M
+	mov word ptr ds:[esi+edi], 0aa99h
+	mov word ptr ds:[esi], 099aah ; dummy write
+	cmp word ptr ds:[esi+edi], 0aa99h
+	jz sizing_bank_23_end ; 4M, go to test next bank
+;
+	mov edi,400h ; A10
+	and dl,0f0h
+	or dl,3 ; 3 --- 1M
+	mov word ptr ds:[esi+edi], 0bb88h
+	mov word ptr ds:[esi], 088bbh ; dummy write
+	cmp word ptr ds:[esi+edi], 0bb88h
+	jz sizing_bank_23_end ; 1M, go to test next bank
+;
+	mov edi,2h ; A1
+	and dl,0f0h
+	or dl,1 ; 1 --- 256K
+	mov word ptr ds:[esi+edi], 0cc77h
+	mov word ptr ds:[esi], 077cch ; dummy write
+	cmp word ptr ds:[esi+edi], 0cc77h
+	jz sizing_bank_23_end ; 256K, go to test next bank
+;
+	and dl,0f0h ; none in this bank
+
+sizing_bank_23_end:
+	cmp esi,2000h
+	jz short sizing_bank_01_begin ; finish sizing bank 3 and 2
+;
+	sub esi,1000h
+	shl dx,4
+	jmp sizing_bank_23 ; go to sizing bank 2
+
+sizing_bank_01_begin:
+	mov ah,10h
+	ReadAli
+	and al,00000111b
+	or al,11111000b
+	WriteAli
+
+sizing_bank_01:
+	shl dx,4 ; next bank
+	mov edi,1000h ; A12
+	and dl,0f0h
+	or dl,6 ; 6 --- 16M
+	mov word ptr ds:[esi+edi], 0dd66h
+	mov word ptr ds:[esi], 066ddh ; dummy write
+	cmp word ptr ds:[esi+edi], 0dd66h
+	jz sizing_bank_01_end ; 16M, go to test next bank
+;
+	mov edi,800h ; A11
+	and dl,0f0h
+	or dl,5 ; 5 --- 4M
+	mov word ptr ds:[esi+edi], 0ee55h
+	mov word ptr ds:[esi], 055eeh ; dummy write
+	cmp word ptr ds:[esi+edi], 0ee55h
+	jz sizing_bank_01_end ; 4M, go to test next bank
+;
+	mov edi,400h ; A10
+	and dl,0f0h
+	or dl,3 ; 3 --- 1M
+	mov word ptr ds:[esi+edi], 0ff44h
+	mov word ptr ds:[esi], 044ffh ; dummy write
+	cmp word ptr ds:[esi+edi], 0ff44h
+	jz short is_1or2M ; 1 or 2M, go to is_1or2M to check
+;
+	mov edi,2 ; A1
+	and dl,0f0h
+	or dl,1 ; 1 --- 256K
+	mov word ptr ds:[esi+edi], 012abh
+	mov word ptr ds:[esi], 0ab12h ; dummy write
+	cmp word ptr ds:[esi+edi], 012abh
+	jz short is_2or5K ; 256 or 512K, go to is_2or5K to check
+;
+	and dl,0f0h ; none in this bank
+	jmp short sizing_bank_01_end
+
+is_1or2M:
+	mov edi,1000000h ; A24
+	mov word ptr ds:[esi+edi],034cdh
+	mov word ptr ds:[esi],0ed34h ; dummy write
+	cmp word ptr ds:[esi+edi],034cdh
+	jnz short sizing_bank_01_end ; 1M
+;
+	and dl,0f0h
+	or dl,4 ; 2M
+	jmp short sizing_bank_01_end
+
+is_2or5K:
+	mov edi,100000 ; A20
+	mov word ptr ds:[esi+edi], 056efh
+	mov word ptr ds:[esi], 0ef56h ; dummy write
+	cmp word ptr ds:[esi+edi], 056efh
+	jnz short sizing_bank_01_end ; 256K
+;
+	and dl,0f0h
+	or dl,2 ; 512K
+
+sizing_bank_01_end:
+	or esi,esi
+	jz short sizing_memory_end
+;
+	xor esi,esi ; bank 0
+	jmp sizing_bank_01
+
+sizing_memory_end:
+	mov si,OFFSET MemConfigTab
+	mov cx,32
+
+check_mode:
+	mov ax,cs:[si]
+	cmp dx,ax
+	jz short check_mode_end
+;
+	add si,6
+	loop check_mode
+
+check_mode_end:
+	mov bx,cs:[si+2]
+	mov ah,10h
+	ReadAli
+	and al,00000111b
+	or al, bl
+	WriteAli
+;
+	movzx ebp,byte ptr cs:[si+4]
+	shl ebp,20
+;	
     xor esi,esi
     FindRam
     mov edx,esi
@@ -850,97 +904,26 @@ prot_init:
     mov ax,flat_sel
     mov ds,ax
     mov esi,edx
-    mov edi,gdt_sel
-    add edi,esi
-    mov word ptr [edi],0FFFh
-    mov [edi+2],esi
-    mov byte ptr [edi+5],92h
-    mov word ptr [edi+6],0
+    mov ebx,gdt_sel
+    add ebx,esi
+    mov word ptr [ebx],0FFFh
+    mov [ebx+2],esi
+    mov byte ptr [ebx+5],92h
+    mov word ptr [ebx+6],0
     lgdt [esi+gdt_sel]
 ;
     FindRam
     mov ax,gdt_sel
     mov ds,ax
-    mov di,system_data_sel
-    mov word ptr [di],0FFFh
-    mov [di+2],esi
-    mov byte ptr [di+5],92h
-    mov word ptr [di+6],0
+    mov bx,system_data_sel
+    mov word ptr [bx],0FFFh
+    mov [bx+2],esi
+    mov byte ptr [bx+5],92h
+    mov word ptr [bx+6],0
 ;
     mov ax,system_data_sel
     mov ds,ax
     mov ds:alloc_base,esi
-	mov edx,es:[ebx].mb_flags
-	test dl,MB_FLAG_MEM
-	jnz MbMemOk
-;
-    GetVideo
-    mov dh,23
-	mov dl,0
-    mov si,OFFSET MemFail
-    WriteRomString
-	jmp DoStop
-
-MbMemOk:
-	mov eax,es:[ebx].mb_mem_lower
-	shl eax,10
-	and ax,0F000h
-	mov ds:ram1_size,eax
-	mov ds:ram2_base,100000h
-	mov eax,es:[ebx].mb_mem_upper
-	shl eax,10
-	mov ds:ram2_size,eax
-;
-	test dl,MB_FLAG_MODULE
-	jnz MbModuleOk
-
-MbModuleFail:
-    GetVideo
-    mov dh,23
-	mov dl,0
-    mov si,OFFSET ModuleFail
-    WriteRomString
-	jmp DoStop
-
-MbModuleOk:
-	mov ecx,es:[ebx].mb_module_count
-	or ecx,ecx
-	jz MbModuleFail
-;
-	mov esi,-1
-	xor edi,edi
-	mov edx,es:[ebx].mb_module_ads
-
-MbModuleLoop:
-	cmp esi,es:[edx].m_start
-	jc MbModuleTestEnd
-;
-	mov esi,es:[edx].m_start
-
-MbModuleTestEnd:
-	cmp edi,es:[edx].m_end
-	jnc MbModuleNext
-;
-	mov edi,es:[edx].m_end
-
-MbModuleNext:
-	add edx,16
-	loop MbModuleLoop
-;
-	and si,0F000h
-	mov ds:rom1_base,esi
-	dec edi
-	and di,0F000h
-	add edi,1000h
-	mov eax,edi
-	sub eax,esi
-	mov ds:rom1_size,eax
-	mov ds:rom2_size,0
-	mov ds:rom_shadow,0
-	add eax,ds:rom1_base
-	sub eax,ds:ram2_base
-	sub ds:ram2_size,eax
-	add ds:ram2_base,eax
 ;
     mov ax,gdt_sel
     mov ss,ax
@@ -950,36 +933,21 @@ MbModuleNext:
 	call StartShutDownDevice
 	call GetBootDevice
 	jnc DoBoot
-    GetVideo
-    mov dh,23
-	mov dl,0
-    mov si,OFFSET NoBootText
-    WriteRomString
-DoStop:
-	jmp DoStop
+	hlt
 DoBoot:
-	push esi
+	mov ax,system_data_sel
+	mov ds,ax
+	mov ds:ram1_size,0A0000h
+	mov ds:ram2_base,100000h
+	sub ebp,100000h
+	mov ds:ram2_size,ebp
+	mov ds:rom1_base,PROM_BASE
+	mov ds:rom1_size,1F000h
+	mov ds:rom2_size,0
+	mov ds:rom_shadow,1
+;
 	mov ax,flat_sel
 	mov ds,ax
-	mov ax,gdt_sel
-	mov es,ax
-;
-	mov ebx,0B8000h
-	mov ax,720h
-GetVideoLoop:
-	mov [ebx],ax
-	cmp ax,[ebx]
-	je GetVideoSel
-	mov ebx,0B0000h
-GetVideoSel:
-	mov si,dosB800
-	mov word ptr es:[si],0FFFh
-	mov es:[si+2],ebx
-	mov byte ptr es:[si+5],92h
-	mov word ptr es:[si+6],0
-
-GetVideoDone:
-	pop esi
 	push kernel_code
 	mov ecx,[esi].len
 	add esi,SIZE rdos_header
@@ -997,6 +965,4 @@ GetVideoDone:
 	mov [bx+6],ax
 	retf
 
-code	ENDS
-
-	END
+	END init

@@ -80,9 +80,9 @@ driver_param	DB 128 DUP(?)
 
 config_text DB ConfigSize DUP(?)
 
-boot_name	DB 'elanboot.exe',0
-bin_name	DB 'elanboot.bin',0
-cfg_name	DB 'elanboot.cfg',0
+boot_name	DB 'aliboot.exe',0
+bin_name	DB 'aliboot.bin',0
+cfg_name	DB 'aliboot.cfg',0
 
 jmp_code	DB 0E9h
 position	DW ?
@@ -99,11 +99,11 @@ DTA_space	DB 80 DUP(?)
 
 .code
 
-exe_error   DB 'cannot find elanboot.exe',0Dh,0Ah,24h
-cfg_error   DB 'cannot find elanboot.cfg file',0Dh,0Ah,24h
-bin_error   DB 'cannot create elanboot.bin',0Dh,0Ah,24h
-cfg_io_error DB 'read error from elanboot.cfg',0Dh,0Ah,24h
-cfg_size_error DB 'to large elanboot.cfg file',0Dh,0Ah,24h
+exe_error   DB 'cannot find aliboot.exe',0Dh,0Ah,24h
+cfg_error   DB 'cannot find aliboot.cfg file',0Dh,0Ah,24h
+bin_error   DB 'cannot create aliboot.bin',0Dh,0Ah,24h
+cfg_io_error DB 'read error from aliboot.cfg',0Dh,0Ah,24h
+cfg_size_error DB 'to large aliboot.cfg file',0Dh,0Ah,24h
 kernel_error DB 'cannot find kernel ',24h
 shutdown_error DB 'cannot find shutdown ',24h
 font_error  DB 'cannot find font-file ',24h
@@ -166,12 +166,13 @@ LoadBoot	PROC near
 	push dx
 	push ax
 	pop eax
-	mov edx,0F0000h
+	mov edx,1F000h
 	sub edx,eax
 
 LoadBootPadLoop:
 	cmp edx,8000h
 	jc LoadBootPadLast
+;
 	push edx
 	mov cx,8000h
 	xor dx,dx
@@ -193,9 +194,11 @@ LoadBootPadLast:
 	mov ax,3D00h
 	int 21h
     jnc load_boot_ok
+;
     mov dx,OFFSET exe_error
     call Log
     jmp load_boot_done
+
 load_boot_ok:
 	mov bx,ax
 ;
@@ -235,15 +238,10 @@ load_boot_ok:
 	mov bx,bin_handle
 	mov ax,SEG Buffer
 	mov ds,ax
-	mov cx,8000h
-	xor dx,dx
+	mov cx,1000h
+	mov dx,0F000h
     mov ah,40h
     int 21h
-;
-	mov dx,8000h
-	mov cx,8000h
-	mov ah,40h
-	int 21h
 load_boot_done:
 	ret
 LoadBoot	ENDP
@@ -1216,7 +1214,7 @@ init_driver_found:
 init_driver_bypass2:
 	lodsb
 	or al,al
-	jz short init_driver_eot
+	jz init_driver_eot
 	cmp al,'='
 	je init_driver_bypass2
 	cmp al,' '

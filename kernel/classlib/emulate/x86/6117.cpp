@@ -79,7 +79,6 @@ void PitSetOut0(void *Data)
 	T6117 *Ali6117 = (T6117 *)Data;
 
 	Ali6117->Pic0->Set(0);
-	Ali6117->Pic1->Set(0);
 }
 
 /*##################  PitResetOut0  ###############
@@ -94,7 +93,6 @@ void PitResetOut0(void *Data)
 	T6117 *Ali6117 = (T6117 *)Data;
 
 	Ali6117->Pic0->Reset(0);
-	Ali6117->Pic1->Reset(0);
 }
 
 /*##################  T6117::T6117  ###############

@@ -54,6 +54,15 @@ vesa_video_mem	DW ?
 
 vesa_info_struc	ENDS
 
+vesa_pm_struc	STRUC
+
+vpm_set_window		DW ?
+vpm_set_disp_start	DW ?
+vpm_set_palette		DW ?
+vpm_table			DW ?
+
+vesa_pm_struc	ENDS
+
 	extrn init_text_mode:near
 	extrn init_bit_mode:near
 
@@ -85,7 +94,7 @@ CheckVesa	Proc near
 ;
 	mov ax,pc_video_data_sel
 	mov ds,ax
-	mov eax,1000h
+	mov eax,10000h
 	AllocateGlobalMem
 	xor di,di
 	push 10h
@@ -107,6 +116,20 @@ CheckVesa	Proc near
 	mov ax,es:vesa_video_mem
 	shl eax,16
 	mov ds:v_video_mem,eax
+;
+	mov al,ds:v_major_ver
+	cmp al,2
+	jc vesa_v86_calls
+;
+	mov ax,4F0Ah
+	xor bl,bl
+	push 10h
+	V86BiosInt
+	cmp ax,4Fh
+	jne vesa_v86_calls
+;
+
+vesa_v86_calls:
 	jmp vesa_check_done
 
 vesa_check_failed:
@@ -115,12 +138,66 @@ vesa_check_failed:
 
 vesa_check_done:
 	FreeMem
-;
 	popad
 	pop es
 	pop ds
 	ret
 CheckVesa	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			test_thread
+;
+;		DESCRIPTION:	Test thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+test_thread_name	DB 'VESA Test',0
+
+test_thread	Proc far
+	int 3
+	call CheckVesa
+	ret
+test_thread	Endp
+		
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			init_sys
+;
+;		DESCRIPTION:	Init tasking
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+			
+init_sys	PROC far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET test_thread
+	mov di,OFFSET test_thread_name
+	mov ax,4
+	mov cx,1024
+	CreateThread
+;
+	popa
+	pop es
+	pop ds
+
+	ret
+init_sys	Endp
 
 PAGE
 
@@ -169,10 +246,14 @@ init	PROC far
 	mov es:v_curr_object,0
 ;
 	mov ax,cs
+	mov ds,ax
 	mov es,ax
 ;
 	mov di,OFFSET init_focus
 	HookEnableFocus
+;
+	mov di,OFFSET init_sys
+	HookInitTasking
 ;
 	call init_text_mode
 	call init_bit_mode

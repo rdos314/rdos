@@ -46,6 +46,10 @@ bootprom_srcs = BOOTPROM.ASM
 bootprom_objs = $(bootprom_srcs:.ASM=.OBJ)
 bootprom_exes = BOOTPROM.EXE
 
+aliboot_srcs = ALIBOOT.ASM
+aliboot_objs = $(aliboot_srcs:.ASM=.OBJ)
+aliboot_exes = ALIBOOT.EXE
+
 elanboot_srcs = ELANBOOT.ASM
 elanboot_objs = $(elanboot_srcs:.ASM=.OBJ)
 elanboot_exes = ELANBOOT.EXE
@@ -103,7 +107,7 @@ test_objs = $(test_srcs:.ASM=.OBJ)
 test_exes = TEST.EXE
 
 srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
-			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs)	\
+			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(test_srcs) $(state_srcs) \
@@ -112,7 +116,7 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
-			$(load_exes) $(bootprom_exes) $(elanboot_exes)	\
+			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
 			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(test_exes) $(state_exes) $(acrloc_exes)	\
@@ -120,7 +124,7 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 
 maps =      $(exes:.EXE=.MAP)
 
-cfgs =      DEMO.CFG ELANBOOT.CFG
+cfgs =      DEMO.CFG ALIBOOT.CFG
 
 bins =      $(cfgs:.CFG=.BIN)
 
@@ -181,6 +185,14 @@ BOOTPROM.EXE : $(bootprom_objs)
 	$(bootprom_objs)
 	BOOTPROM
 	BOOTPROM;
+!
+
+ALIBOOT.EXE : $(aliboot_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(aliboot_objs)
+	ALIBOOT
+	ALIBOOT;
 !
 
 ELANBOOT.EXE : $(elanboot_objs)
@@ -283,7 +295,7 @@ TEST.EXE : $(test_objs)
 DEMO.BIN:   DEMO.CFG $(rdvs) $(exes) $(dlls)
 	cfg2bin demo
 
-ELANBOOT.BIN:   ELANBOOT.CFG $(rdvs) $(exes) $(dlls)
+ALIBOOT.BIN:   ALIBOOT.CFG $(rdvs) $(exes) $(dlls)
 	boot2bin
 
 GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)

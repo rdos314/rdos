@@ -141,6 +141,9 @@ PAGE
 map_flat	Proc near
 	push ds
 	pushad
+;
+	or ecx,ecx
+	jz map_flat_done
 
 map_flat_more:
 	mov bx,sys_dir_sel
@@ -203,7 +206,8 @@ map_flat_loop:
 	pop ecx
 	or ecx,ecx
 	jnz map_flat_more
-;
+
+map_flat_done:
 	popad
 	pop ds
 	ret
@@ -235,10 +239,15 @@ init_paging	PROC near
 	add ecx,1000h
 	call map_flat
 ;
-	mov edx,es:rom_base
-	mov ecx,es:rom_size
+	mov edx,es:rom1_base
+	mov ecx,es:rom1_size
 	call map_flat
 ;
+	mov edx,es:rom2_base
+	mov ecx,es:rom2_size
+	call map_flat
+
+init_paging_ram:
 	mov ecx,es:ram2_size
 	or ecx,ecx
 	jz init_paging_done
@@ -318,8 +327,11 @@ init_process_paging	Proc near
 	mov ds,ax
 	mov ax,system_data_sel
 	mov es,ax
-	mov ecx,es:rom_size
-	mov edx,es:rom_base
+	mov ecx,es:rom1_size
+	or ecx,ecx
+	jz unmap_done1
+;
+	mov edx,es:rom1_base
 	add ecx,edx
 	and dx,0F000h
 	dec ecx
@@ -329,11 +341,32 @@ init_process_paging	Proc near
 	shr edx,10
 	shr ecx,12
 
-unmap_loop:
+unmap_loop1:
 	mov dword ptr [edx],0
 	add edx,4
-	loop unmap_loop
+	loop unmap_loop1
+
+unmap_done1:
+	mov ecx,es:rom2_size
+	or ecx,ecx
+	jz unmap_done2
 ;
+	mov edx,es:rom2_base
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
+	shr edx,10
+	shr ecx,12
+
+unmap_loop2:
+	mov dword ptr [edx],0
+	add edx,4
+	loop unmap_loop2
+
+unmap_done2:
 	mov ax,sys_dir_sel
 	mov ds,ax
 	mov bx,sys_page_linear SHR 20

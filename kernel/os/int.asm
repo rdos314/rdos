@@ -1007,11 +1007,16 @@ call_vm_real_stack_ok:
 	public call_vm_ret
 
 call_vm_ret:
+	cli
 	xor bx,bx
-	mov eax,[bp].vm_eax
+	mov ax,[bp].vm_ds
 	mov ss:[bx+2],ax
-	mov ax,[bp].vm_ebx
+	mov ax,[bp].vm_es
 	mov ss:[bx+4],ax
+	mov eax,[bp].vm_eax
+	mov ss:[bx+6],ax
+	mov ax,[bp].vm_ebx
+	mov ss:[bx+8],ax
 	mov ebx,[bp].vm_ebx
 ;
 	mov ax,thread_int_sel
@@ -1024,12 +1029,7 @@ call_vm_ret:
 	mov bx,ax
 ;
 	mov sp,bx
-	sub sp,4
-	xor bx,bx
-	mov ax,ss:[bx+2]
-	push ax
-	mov ax,ss:[bx+4]
-	push ax
+	sub sp,8
 	push cx
 	push si
 	push di
@@ -1050,15 +1050,49 @@ call_vm_ret:
 	pop di
 	pop si
 	pop cx
-	pop bx
-	pop ax
 ;
-	add sp,8
+	xor bx,bx
+	mov ax,ss:[bx+6]
+	mov bx,ss:[bx+8]
+;
+	add sp,12
 	pop bp
 	pop gs
 	pop fs
 	pop es
 	pop ds
+;
+	push eax
+	push bx
+	push bp
+	xor bx,bx
+	push dword ptr ss:[bx+2]
+	sti
+	mov bp,sp
+	mov bx,ds
+	call translate_selector
+	cmp bx,[bp]
+	je call_vm_ds_done
+;
+	mov bx,[bp]
+	call translate_segment
+	mov ds,bx
+
+call_vm_ds_done:
+	mov bx,es
+	call translate_selector
+	cmp bx,[bp+2]
+	je call_vm_es_done
+;
+	mov bx,[bp+2]
+	call translate_segment
+	mov es,bx
+
+call_vm_es_done:
+	add sp,4
+	pop bp
+	pop bx
+	pop eax
 	ret 4
 call_vm	Endp
 
