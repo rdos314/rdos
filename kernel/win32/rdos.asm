@@ -4816,6 +4816,65 @@ RdosReadAdc	Proc near
 	ret 4
 RdosReadAdc	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosReadDigitalLine
+;
+;       DESCRIPTION:    Read digital input line
+;
+;		PARAMETERS:		Device
+;						Line
+;
+;		RETURNS:		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadDigitalLine
+
+RdosReadDigitalLine	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	UserGate read_digital_line_nr
+	movzx eax,al
+;
+	pop edx
+	pop ebp
+	ret 8
+RdosReadDigitalLine	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosToggleDigitalLine
+;
+;       DESCRIPTION:    Toggle digital line
+;
+;		PARAMETERS:		Device
+;						Line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosToggleDigitalLine
+
+RdosToggleDigitalLine	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	UserGate toggle_digital_line_nr
+;
+	pop edx
+	pop ebp
+	ret 8
+RdosToggleDigitalLine	Endp
+
 ;	extrn Startup:near
 
 ;	public _main

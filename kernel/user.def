@@ -275,4 +275,7 @@ close_adc_nr				= 246
 define_adc_time_nr 			= 247
 read_adc_nr					= 248
 
+read_digital_line_nr		= 249
+toggle_digital_line_nr		= 250
+
 usergate_entries			= 256

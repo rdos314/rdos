@@ -1337,7 +1337,7 @@ CloseFiles   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-boot_name   DB 'boot.exe',0
+boot_name   DB '\rdos\zfx86\burload\boot.exe',0
 
 LoadBoot    Proc near
     push ds

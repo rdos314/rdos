@@ -77,7 +77,7 @@ int cdecl main(int argc, char **argv)
 	RdosWaitMilli(250);
 
 	strcpy(FileName, argv[1]);
-	strcat(FileName, ".bin");
+	strcat(FileName, ".rom");
 
 	File = new TFile(FileName);
 	if (!File->IsOpen())
@@ -103,7 +103,7 @@ int cdecl main(int argc, char **argv)
 	serial->Write("yload 70:0");
 	StartYmodem();
 
-	if (ymodem->SendFile("sdram.bin"))
+	if (ymodem->SendFile("z:\\sdram.bin"))
 	{
 		serial->Write("g 70:0");
 		serial->Write(0xD);
@@ -117,7 +117,7 @@ int cdecl main(int argc, char **argv)
 			serial->Write("yload 70:0");
 			StartYmodem();
 
-			if (ymodem->SendFile("flash.bin"))
+			if (ymodem->SendFile("z:\\flash.bin"))
 			{
 				serial->Write("g 70:0");
 				serial->Write(0xD);

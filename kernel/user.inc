@@ -1664,4 +1664,16 @@ DefineAdcTime      MACRO
 ReadAdc      MACRO
 	UserGate read_adc_nr
 						ENDM
-						
+
+;	IN  DL		Line #
+;	IN  DH		Device #
+;	OUT AL		State
+ReadDigitalLine      MACRO
+	UserGate read_digital_line_nr
+						ENDM
+
+;	IN  DL		Line #
+;	IN  DH		Device #
+ToggleDigitalLine      MACRO
+	UserGate toggle_digital_line_nr
+						ENDM
