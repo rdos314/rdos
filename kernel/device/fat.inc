@@ -29,6 +29,40 @@ fat12				EQU 12
 fat16				EQU 16
 fat32				EQU 32
 
+fe_struc	STRUC
+
+fe_base				dir_entry_data_struc <>
+
+fe_entry_sector		DD ?
+fe_entry_offset		DW ?
+
+fe_struc	ENDS
+
+fde_struc	STRUC
+
+fde_base			dir_dir_entry_data_struc <>
+
+fde_entry_sector	DD ?
+fde_entry_offset	DW ?
+fde_start_cluster	DD ?
+fde_start_sector	DD ?
+
+fde_name		DB ?
+
+fde_struc	ENDS
+
+ffe_struc	STRUC
+
+ffe_base			dir_file_entry_data_struc <>
+
+ffe_entry_sector	DD ?
+ffe_entry_offset	DW ?
+ffe_start_cluster	DD ?
+
+ffe_name			DB ?
+
+ffe_struc	ENDS
+
 fat_file_list_struc	STRUC
 
 ffl_basic			file_list_struc <>
@@ -36,45 +70,6 @@ ffl_sector_ptr		DD ?
 ffl_clusters		DD ?
 
 fat_file_list_struc	ENDS
-
-dir_data_struc	STRUC
-
-dir_section			read_write_section_typ <>
-dir_dir_ptr			DD ?
-dir_file_ptr		DD ?
-dir_deleted_ptr		DD ?
-dir_free_ptr		DD ?
-dir_parent_entry	DD ?
-dir_parent			DW ?
-dir_usage			DW ?
-
-dir_data_struc	ENDS
-
-dir_entry_struc	STRUC
-
-dir_prev		DD ?
-dir_next		DD ?
-dir_handle		DW ?
-dir_sector		DD ?
-dir_offset		DW ?
-dir_name_size	DB ?
-dir_name		DB 13 DUP(?)
-dir_attrib		DB ?
-dir_time		DD ?,?
-dir_cluster		DD ?
-dir_file_size	DD ?
-dir_drive		DB ?
-
-dir_entry_struc	ENDS
-
-FILE_ENTRY_SIZE	EQU 16
-
-file_entry_struc	STRUC
-
-file_next		DD ?
-file_cluster	DD ?,?,?
-
-file_entry_struc	ENDS
 
 drive_data_seg	STRUC
 
