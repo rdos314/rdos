@@ -564,29 +564,6 @@ ctFF8  DB 077h, 0B0h, 032h, 082h, 06Eh, 01Ah, 0E3h, 05Ch
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			LOCK_SECTOR
-;
-;		DESCRIPTION:	LOCK SECTOR
-;
-;		PARAMETERS:		AL			DRIVE
-;						EDX			SECTOR
-;
-;		RETURNS:		EBX			HANDLE
-;						ESI			LOGICAL ADDRESS
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public lock_sector
-
-lock_sector	PROC near
-	LockSector
-	ret
-lock_sector	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			GET_PARAM
 ;
 ;		DESCRIPTION:	READ DRIVE PARAMS FROM BOOT RECORD

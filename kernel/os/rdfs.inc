@@ -25,69 +25,6 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-boot_struc	STRUC
-
-boot_jmp					DB ?,?,?
-boot_name					DB 8 DUP(?)
-boot_bytes_per_sector		DW ?
-boot_resv1					DB ?
-boot_mapping_sectors		DW ?
-boot_resv3					DB ?
-boot_resv4					DW ?
-boot_resv5					DW ?
-boot_media					DB ?
-boot_resv6					DW ?
-boot_sectors_per_cyl		DW ?
-boot_heads					DW ?
-boot_hidden_sectors			DD ?
-boot_sectors				DD ?
-boot_drive_nr				DB ?,?
-boot_signature				DB ?
-boot_serial					DD ?
-boot_volume					DB 11 DUP(?)
-boot_fs						DB 8 DUP(?)
-
-boot_struc		ENDS
-
-dir_data_struc	STRUC
-
-dir_section			section_typ <>
-dir_dir_ptr			DD ?
-dir_file_ptr		DD ?
-dir_free_ptr		DD ?
-dir_parent_entry	DD ?
-dir_parent			DW ?
-dir_usage			DW ?
-
-dir_data_struc	ENDS
-
-dir_entry_struc	STRUC
-
-dir_prev		DD ?
-dir_next		DD ?
-dir_handle		DW ?
-dir_sector		DD ?
-dir_offset		DW ?
-dir_attrib		DB ?
-dir_time		DD ?,?
-dir_cluster		DW ?
-dir_file_size	DD ?
-dir_drive		DB ?
-dir_name_size	DB ?
-dir_name		DB ?
-
-dir_entry_struc	ENDS
-
-file_data_struc	STRUC
-
-file_section		section_typ <>
-file_ptr			DD ?
-file_dir_entry		DD ?
-file_usage			DW ?
-file_parent			DW ?
-
-file_data_struc	ENDS
-
 drive_data_seg	STRUC
 
 mapping_sector		DD ?
@@ -98,3 +35,33 @@ drive_nr			DB ?
 
 drive_data_seg	ENDS
 
+rdfs_dir_ptr_struc	STRUC
+
+rdp_rel_sector		DW ?
+rdp_offset			DW ?
+
+rdfs_dir_ptr_struc	ENDS
+
+rdfs_dir_sector_struc	STRUC
+
+rds_free_list		DW ?
+
+rdfs_dir_sector_struc	ENDS
+
+rdfs_dir_start_sector_struc	STRUC
+
+rdss_base			rdfs_dir_sector_struc <>
+rdss_dir_list		rdfs_dir_ptr_struc <>
+rdss_file_list		rdfs_dir_ptr_struc <>
+
+rdfs_dir_start_sector_struc	ENDS
+
+rdfs_dir_entry_struc	STRUC
+
+rde_time			DD ?,?
+rde_attrib			DW ?
+rde_name_size		DW ?
+rde_name			rdfs_dir_ptr_struc <>
+rde_start_sector	DD ?
+
+rdfs_dir_entry_struc	ENDS

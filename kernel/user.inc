@@ -911,6 +911,14 @@ GetDllProc	MACRO
 					ENDM
 
 ; IN  (E)BX		DLL handle
+; IN  (E)AX		Resource handle
+; IN  (E)DX		Resource type
+; OUT DS:(E)SI	Resource address
+GetDllResource	MACRO
+	UserGate get_dll_resource_nr
+					ENDM
+
+; IN  (E)BX		DLL handle
 ; IN  (E)CX		Max name size
 ; IN  ES:(E)DI	DLL name buffer
 ; OUT (E)AX		Bytes copied

@@ -872,10 +872,65 @@ fs0F	DW OFFSET fs_unknown
 
 InstallPartition	Proc near
 	push es
-	push ax
-	push esi
-	push edi
+	pushad
 ;
+	cmp cl,7
+	jne install_check_type
+;
+	push edx
+	mov eax,200h
+	AllocateSmallLinear
+	mov edi,edx
+	pop edx
+;
+	push edx
+	mov eax,edx
+	xor edx,edx
+	movzx ecx,word ptr fs:drive_sectors_per_unit
+	div ecx
+	mov bx,dx
+	mov edx,eax
+	mov cx,1
+	call ReadDrive
+	pop edx
+;
+	push ds
+	push edx
+	mov eax,10h
+	AllocateSmallGlobalMem
+	mov ax,flat_sel
+	mov ds,ax
+	mov edx,edi
+	lea esi,[edi+36h]
+	xor edi,edi
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	movs dword ptr es:[edi],[esi]
+	xor ecx,ecx
+	FreeLinear
+;
+	pop edx
+	pop ds
+;
+	xor di,di
+	IsFileSystemAvailable
+	jc install_part_free
+;
+	AllocateStaticDrive
+	mov ah,fs:disc_nr
+	OpenDrive
+;
+	InstallFileSystem
+	clc
+
+install_part_free:
+	pushf
+	FreeMem
+	popf
+	jmp install_part_done
+
+install_check_type:
 	cmp cl,10h
 	jnc install_part_done
 ;
@@ -883,6 +938,8 @@ InstallPartition	Proc near
 	mov es,di
 	movzx di,cl
 	shl di,1
+
+install_part_test_avail:
 	mov di,word ptr cs:[di].FsTab
 	IsFileSystemAvailable
 	jc install_part_done
@@ -895,9 +952,7 @@ InstallPartition	Proc near
 	clc
 
 install_part_done:
-	pop edi
-	pop esi
-	pop ax
+	popad
 	pop es
 	ret
 InstallPartition	Endp

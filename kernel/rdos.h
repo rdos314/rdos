@@ -112,6 +112,8 @@ int RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectors
 int RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
 int RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 
+int RdosReadResource(int Module, int ID, char *Buf, int Size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -3451,6 +3451,120 @@ get_dll_handle_done:
 	pop es
 	retf32
 get_dll_handle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDllResource
+;
+;		DESCRIPTION:    Get DLL resource
+;
+;       PARAMETERS:		EBX		Handle
+;						EAX		Resource id
+;						EDX		Resource type
+;						
+;		RETURNS:		DS:ESI	Resource VA
+;						ECX		Resource size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_dll_resource_name	DB 'Get DLL Resource',0
+
+get_dll_resource	Proc far
+	push eax
+	push ebx
+	push edx
+	push edi
+;
+	mov edi,eax
+	mov eax,edx
+	mov ecx,ebx
+	xor cx,cx
+	cmp ecx,LIB_HANDLE
+	jne get_dll_resource_fail
+;
+	push es
+	mov es,bx
+	mov edx,es:lib_base
+	mov esi,es:lib_header
+	mov cx,flat_data_sel
+	mov ds,cx
+	mov ecx,[esi].peh_resource_size
+	mov esi,[esi].peh_resource_va
+	add esi,edx
+	mov edx,esi
+	movzx ecx,[esi].res_ids
+	add esi,OFFSET res_data
+	or ecx,ecx
+	jz get_dll_resource_fail_pop
+
+get_dll_resource_type_loop:
+	cmp eax,[esi]
+	je get_dll_resource_type_found
+;
+	add esi,8
+	loop get_dll_resource_type_loop
+	jmp get_dll_resource_fail_pop
+
+get_dll_resource_type_found:
+	mov eax,[esi+4]
+	test eax,80000000h
+	jz get_dll_resource_fail_pop
+;
+	and eax,7FFFFFFFh
+	mov esi,eax
+	add esi,edx
+	movzx ecx,[esi].res_ids
+	add esi,OFFSET res_data
+	or ecx,ecx
+	jz get_dll_resource_fail_pop
+
+get_dll_resource_id_loop:
+	cmp edi,[esi]
+	je get_dll_resource_id_found
+;
+	add esi,8
+	loop get_dll_resource_id_loop
+	jmp get_dll_resource_fail_pop
+
+get_dll_resource_id_found:
+	mov eax,[esi+4]
+	test eax,80000000h
+	jz get_dll_resource_found
+;
+	and eax,7FFFFFFFh
+	mov esi,eax
+	add esi,edx
+	movzx ecx,[esi].res_ids
+	add esi,OFFSET res_data
+	or ecx,ecx
+	jnz get_dll_resource_id_found
+	jmp get_dll_resource_fail_pop
+
+get_dll_resource_found:
+	add eax,edx
+	mov ecx,[eax+4]
+	mov esi,[eax]
+	add esi,es:lib_base
+	pop es
+	clc
+	jmp get_dll_resource_done
+
+get_dll_resource_fail_pop:
+	pop es
+
+get_dll_resource_fail:
+	xor esi,esi
+	stc
+	jmp get_dll_resource_done
+
+get_dll_resource_done:
+	pop edi
+	pop edx
+	pop ebx
+	pop eax
+	retf32
+get_dll_resource	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3687,6 +3801,12 @@ init	PROC far
 	mov di,OFFSET get_dll_proc_name
 	xor cl,cl
 	mov ax,get_dll_proc_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET get_dll_resource
+	mov di,OFFSET get_dll_resource_name
+	xor cl,cl
+	mov ax,get_dll_resource_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_handle

@@ -50,6 +50,21 @@ attr_arcive			EQU 20h
 
 	extrn get_param:near
 
+	extrn cache_dir:near
+	extrn create_dir:near
+	extrn delete_dir:near
+	extrn delete_file:near
+	extrn rename_file:near
+	extrn create_file:near
+	extrn update_dir:near
+	extrn update_file:near
+
+	extrn set_file_size:near
+	extrn allocate_file_list:near
+	extrn free_file_list:near
+	extrn read_file_block:near
+	extrn write_file_block:near
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -87,6 +102,20 @@ mount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FLUSH
+;
+;		DESCRIPTION:	Flush filesystem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush	PROC far
+	clc
+	ret
+flush	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DISMOUNT
 ;
 ;		DESCRIPTION:	Unmount file system
@@ -118,336 +147,6 @@ get_drive_info	PROC far
 	ret
 get_drive_info	ENDP
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_CUR_DIR
-;
-;		DESCRIPTION:	Set current directory
-;
-;		PARAMETERS:		ES:EDI		PATH NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_cur_dir	PROC far
-	int 3
-	stc
-	ret
-set_cur_dir	ENDP
-
-PAGE 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_CUR_DIR
-;
-;		DESCRIPTION:	Get current directory
-;
-;		PARAMETERS:		ES:EDI		PATH NAME
-;						AL			DRIVE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_cur_dir	PROC far
-	int 3
-	mov cx,flat_sel
-	mov es,cx
-	mov cx,1
-	mov bp,sp
-alloc_loop:
-;	call allocate_sectors
-	push edx
-	inc cx
-	cmp cx,25
-	jne alloc_loop
-	mov cx,1
-free_loop:
-	sub bp,4
-	mov edx,[bp]
-;	call free_sectors
-	inc cx
-	cmp cx,25
-	jne free_loop
-	add sp,25*4
-	ret
-get_cur_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			MAKE_DIR
-;
-;		DESCRIPTION:	Create directory
-;
-;		PARAMETERS:		ES:EDI		DIRECTORY NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-make_dir	PROC far
-	int 3
-	stc
-	ret
-make_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			REMOVE_DIR
-;
-;		DESCRIPTION:	Remove directory
-;
-;		PARAMETERS:		ES:EDI		DIRECTORY NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-remove_dir	PROC far
-	int 3
-	stc
-	ret
-remove_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DELETE_FILE
-;
-;		DESCRIPTION:	Delete file
-;
-;		PARAMETERS:		ES:EDI		FILE NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_file	PROC far
-	int 3
-	stc
-	ret
-delete_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			RENAME_FILE
-;
-;		DESCRIPTION:	Rename a file within filesystem
-;
-;		PARAMETERS:		FS:ESI		CURRENT NAME
-;						ES:EDI		NEW NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-rename_file	PROC far
-	int 3
-	stc
-	ret
-rename_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_ATTRIB
-;
-;		DESCRIPTION:	Get file attributes
-;
-;		PARAMETERS:		ES:EDI		FILENAME
-;						NC			SUCCESS
-;						CX			FILE ATTRIBUTE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_attrib	PROC far
-	int 3
-	stc
-	ret
-get_file_attrib	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_ATTRIB
-;
-;		DESCRIPTION:	Set file attributes
-;
-;		PARAMETERS:		ES:EDI		FILENAME
-;						NC			SUCCESS
-;						CX			FILE ATTRIBUTE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_attrib	PROC far
-	int 3
-	stc
-	ret
-set_file_attrib	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_DIR
-;
-;		DESCRIPTION:	Open directory
-;
-;		PARAMETERS:		ES:EDI		PATH NAME
-;						NC			SUCCESS
-;
-;		RETURNS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_dir	PROC far
-	int 3
-	stc
-	ret
-open_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CLOSE_DIR
-;
-;		DESCRIPTION:	Close directory
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_dir	PROC far
-	int 3
-	stc
-	ret
-close_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			READ_DIR
-;
-;		DESCRIPTION;	Read an entry from directory
-;
-;		PARAMETERS:		BX			HANDLE
-;						DX			ENTRY #
-;						CX			MAX SIZE OF FILENAME
-;						ES:EDI		FILENAME BUFFER
-;		RETURNS:		ECX			FILE SIZE
-;						BX			FILE ATTRIBUTE
-;						EDX:EAX		FILE TIME/DATE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_dir	PROC far
-	int 3
-	stc
-	ret
-read_dir	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_FILE
-;
-;		DESCRIPTION:	Open file
-;
-;		PARAMETERS:		ES:EDI		FILENAME
-;						CL			ACCESS MODE
-;
-;		RETURNS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file	PROC far
-	int 3
-	stc
-	ret
-open_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CREATE_FILE
-;
-;		DESCRIPTION:	Create file
-;
-;		PARAMETERS:		ES:EDI		FILENAME
-;						CX			FILE ATTRIBUTE
-;
-;		RETURNS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file	PROC far
-	int 3
-	stc
-	ret
-create_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CLOSE_FILE
-;
-;		DESCRIPTION:	Close file
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_file	PROC far
-	int 3
-	stc
-	ret
-close_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DUPL_FILE
-;
-;		DESCRIPTION:	Duplicate handle
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file	PROC far
-	int 3
-	stc
-	ret
-dupl_file	ENDP
-
 PAGE 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -469,135 +168,19 @@ get_ioctl_data	PROC far
 	ret
 get_ioctl_data	ENDP
 
-PAGE
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_FILE_SIZE
+;		NAME:			Dummy
 ;
-;		DESCRIPTION:	Get file size
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;		RETURNS:		EDX			FILE SIZE
+;		DESCRIPTION:	Unsupported functions
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_file_size	PROC far
-	int 3
+dummy	PROC far
 	stc
 	ret
-get_file_size	ENDP
-	
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_SIZE
-;
-;		DESCRIPTION:	Set file size
-;
-;		PARAMETERS:		BX			HANDLE
-;						EDX			FILE SIZE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_size	PROC far
-	int 3
-	stc
-	ret
-set_file_size	ENDP
-	
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_TIME
-;
-;		DESCRIPTION:	Get file time & date
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;		RETURNS:		EDX:ECX		FILE TIME
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_time	PROC far
-	int 3
-	stc
-	ret
-get_file_time	ENDP
-	
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_TIME
-;
-;		DESCRIPTION:	Set file time & date
-;
-;		PARAMETERS:		BX			HANDLE
-;						EDX:ECX		FILE TIME
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_time	PROC far
-	int 3
-	stc
-	ret
-set_file_time	ENDP
-	
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			READ_FILE
-;
-;		DESCRIPTION:	Read file
-;
-;		PARAMETERS:		BX			HANDLE TO DEVICE
-;						ES:EDI		BUFFER
-;						ECX			NUMBER OF BYTES TO READ
-;						EDX			POSITION
-;
-;		RETURNS:		EAX			NUMBER OF BYTES READ
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_file	PROC far
-	int 3
-	stc
-	ret
-read_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			WRITE_FILE
-;
-;		DESCRIPTION:	Write file
-;
-;		PARAMETERS:		BX			HANDLE TO DEVICE
-;						ES:EDI		BUFFER
-;						ECX			NUMBER OF BYTES TO READ
-;						EDX			POSITION
-;
-;		RETURNS:		EAX			NUMBER OF BYTES WRITTEN
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_file	PROC far
-	int 3
-	stc
- 	ret
-write_file	ENDP
+dummy	ENDP
 
 PAGE
 
@@ -610,37 +193,29 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dummy	Proc far
-	stc
-	ret
-dummy	Endp
-
 rdfs_name	DB 'RDFS',0
 
 rdfs_ctrl:
 rdfs00	DW OFFSET mount,			rdfs_code_sel
-rdfs01	DW OFFSET dismount,			rdfs_code_sel
-rdfs02	DW OFFSET get_drive_info,	rdfs_code_sel
-rdfs05	DW OFFSET make_dir,			rdfs_code_sel
-rdfs06	DW OFFSET remove_dir,		rdfs_code_sel
-rdfs07	DW OFFSET delete_file,		rdfs_code_sel
-rdfs08	DW OFFSET rename_file,		rdfs_code_sel
-rdfs09	DW OFFSET get_file_attrib,	rdfs_code_sel
-rdfs10	DW OFFSET set_file_attrib,	rdfs_code_sel
-rdfs11	DW OFFSET open_dir,			rdfs_code_sel
-rdfs12	DW OFFSET close_dir,		rdfs_code_sel
-rdfs13	DW OFFSET read_dir,			rdfs_code_sel
-rdfs14	DW OFFSET open_file,		rdfs_code_sel
-rdfs15	DW OFFSET create_file,		rdfs_code_sel
-rdfs16	DW OFFSET close_file,		rdfs_code_sel
-rdfs17	DW OFFSET dupl_file,		rdfs_code_sel
-rdfs18	DW OFFSET get_ioctl_data,	rdfs_code_sel
-rdfs19	DW OFFSET get_file_size,	rdfs_code_sel
-rdfs20	DW OFFSET set_file_size,	rdfs_code_sel
-rdfs21	DW OFFSET get_file_time,	rdfs_code_sel
-rdfs22	DW OFFSET set_file_time,	rdfs_code_sel
-rdfs23	DW OFFSET read_file,		rdfs_code_sel
-rdfs24	DW OFFSET write_file,		rdfs_code_sel
+rdfs01	DW OFFSET flush,			rdfs_code_sel
+rdfs02	DW OFFSET dismount,			rdfs_code_sel
+rdfs03	DW OFFSET get_drive_info,	rdfs_code_sel
+rdfs04	DW OFFSET cache_dir,		rdfs_code_sel
+rdfs05	DW OFFSET update_dir,		rdfs_code_sel
+rdfs06	DW OFFSET update_file,		rdfs_code_sel
+rdfs07	DW OFFSET create_dir,		rdfs_code_sel
+rdfs08	DW OFFSET delete_dir,		rdfs_code_sel
+rdfs09	DW OFFSET delete_file,		rdfs_code_sel
+rdfs10	DW OFFSET rename_file,		rdfs_code_sel
+rdfs11	DW OFFSET create_file,		rdfs_code_sel
+rdfs12	DW OFFSET get_ioctl_data,	rdfs_code_sel
+rdfs13	DW OFFSET set_file_size,	rdfs_code_sel
+rdfs14	DW OFFSET dummy,			rdfs_code_sel
+rdfs15	DW OFFSET dummy,			rdfs_code_sel
+rdfs16	DW OFFSET allocate_file_list,rdfs_code_sel
+rdfs17	DW OFFSET free_file_list,	rdfs_code_sel
+rdfs18	DW OFFSET read_file_block,	rdfs_code_sel
+rdfs19	DW OFFSET write_file_block,	rdfs_code_sel
 
 init	PROC far
 	push ds

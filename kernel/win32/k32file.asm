@@ -146,6 +146,37 @@ Wide2Ansi	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AreFileApisANSI
+;
+;       DESCRIPTION:    Check if file APIs are ANSI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public AreFileApisANSI
+
+AreFileApisANSI	Proc near
+	mov eax,1
+	ret
+AreFileApisANSI	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SetFileApisToOEM
+;
+;       DESCRIPTION:    Set file APIs to OEM
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public SetFileApisToOEM
+
+SetFileApisToOEM	Proc near
+	ret
+SetFileApisToOEM ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           GetDiskFreeSpace
 ;
 ;       DESCRIPTION:    Get free disk space

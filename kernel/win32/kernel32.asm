@@ -1035,6 +1035,133 @@ WritePrivateProfileStringA	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LoadResource
+;
+;       DESCRIPTION:    Load a resource
+;
+;		PARAMETERS:		Module
+;						Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public LoadResource
+
+lrModule	EQU 8
+lrHandle	EQU 12
+
+LoadResource	Proc near
+	int 3
+	push ebp
+	mov ebp,esp
+	mov eax,[ebp].lrHandle
+	mov eax,[eax]
+	pop ebp
+	ret 8
+LoadResource	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           LockResource
+;
+;       DESCRIPTION:    Lock a resource
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public LockResource
+
+lckHandle	EQU	8
+
+LockResource	Proc near
+	push ebp
+	mov ebp,esp
+	mov eax,[ebp].lckHandle
+	pop ebp
+	ret 4
+LockResource	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FreeResource
+;
+;       DESCRIPTION:    Free a resource
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public FreeResource
+
+FreeResource	Proc near
+	mov eax,1
+	ret 4
+FreeResource	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           SizeofResource
+;
+;       DESCRIPTION:    Get size of a resource
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public SizeofResource
+
+srModule	EQU 8
+srHandle	EQU 12
+
+SizeofResource	Proc near
+	int 3
+	push ebp
+	mov ebp,esp
+	mov eax,[ebp].srHandle
+	mov eax,[eax+4]
+	pop ebp
+	ret 8
+SizeofResource	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           FindResourceA
+;
+;       DESCRIPTION:    Find a resource
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public FindResourceA
+
+frModule	EQU 8
+frName		EQU 12
+frType		EQU 16
+
+FindResourceA	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	int 3
+	mov ebx,[ebp].frModule
+	mov eax,[ebp].frName
+	mov edx,[ebp].frType
+	UserGate get_dll_resource_nr	
+;
+	pop ebx
+	pop ebp
+	ret 12
+FindResourceA	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           FormatMessage
 ;
 ;       DESCRIPTION:    Format a message

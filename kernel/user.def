@@ -257,5 +257,6 @@ test_nr							EQU 220
 read_disc_nr					EQU 221
 write_disc_nr					EQU 222
 get_disc_info_nr				EQU 223
+get_dll_resource_nr				EQU 224
 
-usergate_entries			EQU 224
+usergate_entries				EQU 225

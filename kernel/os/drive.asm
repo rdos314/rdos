@@ -3124,7 +3124,6 @@ write_disc_found:
 	pop ecx
 	pop ds
 ;
-	int 3
 	shr ecx,2
 	rep movs dword ptr es:[edi],[esi]
 ;

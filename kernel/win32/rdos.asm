@@ -2691,6 +2691,7 @@ RdosWriteDisc	Proc
 	mov edx,[ebp+12]
 	mov edi,[ebp+16]
 	mov ecx,[ebp+20]
+	int 3
 	UserGate write_disc_nr
 	jc write_disc_fail
 ;
@@ -2706,6 +2707,72 @@ write_disc_done:
 	pop ebp
 	ret 16
 RdosWriteDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadResource
+;
+;       DESCRIPTION:    Read resource
+;
+;		PARAMETERS:		Handle
+;						ID
+;						Buf
+;						Size
+;
+;		RETURNS:		Size read
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadResource
+
+RdosReadResource	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	or ebx,ebx
+	jnz read_resource_handle_ok
+;
+	mov ebx,fs:pvModuleHandle
+
+read_resource_handle_ok:
+	mov eax,[ebp+12]
+	mov edx,10
+	UserGate get_dll_resource_nr
+	jc read_resource_fail
+;
+	cmp ecx,[ebp+20]
+	jbe read_resource_copy
+;
+	mov ecx,[ebp+20]
+
+read_resource_copy:
+	mov edi,[ebp+16]
+	mov eax,ecx
+	push ecx
+	shr ecx,2
+	rep movsd
+	pop ecx
+	and ecx,3
+	rep movsb
+	jmp read_resource_done
+	
+read_resource_fail:
+	xor eax,eax
+
+read_resource_done:
+	pop edi
+	pop esi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosReadResource	Endp
 
 ;	extrn Startup:near
 

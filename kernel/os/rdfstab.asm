@@ -40,7 +40,6 @@ INCLUDE int.def
 INCLUDE system.inc
 INCLUDE rdfs.inc
 
-	extrn lock_sector:near
 
 	.386p
 
@@ -238,7 +237,7 @@ GotoNext	Macro
 	je goto_next_done
 	push ax
 	mov al,ds:drive_nr
-	call lock_sector
+	LockSector
 	pop ax
 goto_next_done:
 			Endm
@@ -255,7 +254,7 @@ GotoPrev	Macro
 	dec edx
 	push ax
 	mov al,ds:drive_nr
-	call lock_sector
+	LockSector
 	pop ax
 	jmp goto_prev_done
 goto_prev_dec:
@@ -290,7 +289,7 @@ allocate_sectors	PROC near
 	mov edx,ds:mapping_sector
 	xor ebp,ebp
 	mov al,ds:drive_nr
-	call lock_sector
+	LockSector
 	push bx
 
 allocate_sector_loop:
@@ -434,7 +433,7 @@ free_sectors	PROC near
 	shr edx,9
 	add edx,ds:mapping_sector
 	mov al,ds:drive_nr
-	call lock_sector
+	LockSector
 	pop ax
 	and ax,1FFh
 	or si,ax

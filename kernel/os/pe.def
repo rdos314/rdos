@@ -178,6 +178,18 @@ imp_first_thunk_va		DD ?
 
 import_descr	ENDS
 
+resource_descr	STRUC
+
+res_flags		DD ?
+res_time		DD ?
+res_major		DW ?
+res_minor		DW ?
+res_names		DW ?
+res_ids			DW ?
+res_data		DD ?
+
+resource_descr	ENDS
+
 pe_data_seg	STRUC
 
 pe_dlls			DW ?
