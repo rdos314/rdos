@@ -641,7 +641,22 @@ STRINGTABLE
  892, "location of FreeCOM to try to load the strings from, e.g.:\r\n";
  893, "C:\\COMMAND.COM\r\n";
  894, "or just hit enter to cancel to load the strings.\r\n";
- 895, "'%s' kan inte ha n†gra parametrar\r\n";
+ 895, "Visar h†rddiskpartitioner\r\n";
+ 896, "\r\n";
+ 897, "SHOWPART /D [disc]\r\n";
+ 898, "  [disc]          Anger en specifik disk\r\n";
+ 899, "  /D              Visar detaljerad information om partitionstabeller\r\n";
+ 900, "Disc %d not found\r\n";
+ 901, "Disc %d %08lX BIOS sectors / cyl %04X, heads %04X\r\n";
+ 902, "Disc %d\r\n";
+ 903, "\r\n";
+ 904, "\r\n";
+ 905, "%08lX-%08lX %15.3f MB\r\n";
+ 906, "  DRV TYPE    SECTORS      FILESYS  TOTAL SIZE      FREE SIZE\r\n";
+ 907, "%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB\r\n";
+ 908, "%d: -- %02hX %08lX-%08lX %8s %15.3f MB\r\n";
+ 909, "%d: -- No entry\r\n";
+ 910, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "256,1";
  TEXT_ERROR_INVALID_LSWITCH, "257,1";
  TEXT_ERROR_ILLFORMED_OPTION, "258,1";
@@ -880,5 +895,15 @@ STRINGTABLE
  TEXT_ERROR_FCOM_IS_DEVICE, "887,1";
  TEXT_ERROR_FCOM_INVALID, "888,2";
  TEXT_ERROR_LOADING_STRINGS, "890,5";
+ TEXT_CMDHELP_SHOWPART, "895,5";
+ TEXT_SHOWPART_DISC_ERROR, "900,1";
+ TEXT_SHOWPART_DISC_LONG, "901,1";
+ TEXT_SHOWPART_DISC_SHORT, "902,2";
+ TEXT_SHOWPART_PART_RANGE, "904,2";
+ TEXT_SHOWPART_HEADER, "906,1";
+ TEXT_SHOWPART_DRIVE_ENTRY, "907,1";
+ TEXT_SHOWPART_UNKNOWN_ENTRY, "908,1";
+ TEXT_SHOWPART_FREE_ENTRY, "909,1";
+ TEXT_ERROR_OPT_ARG , "910,1";
 }
 

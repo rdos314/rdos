@@ -49,7 +49,6 @@ TFile *FOutputFile = new TFile("CON");
 TFile *FErrorFile = new TFile("CON");
 
 static TStringList History;
-static TWait *Wait;
 static TKeyboardDevice *Keyboard;
 
 /*##########################################################################
@@ -620,29 +619,26 @@ int ReadCon(char *str, int maxsize)
 	int Insert = TRUE;
 	TString prev;
 	const char *prevstr;
-    int ok;
-    int GetNext = FALSE;
+	 int ok;
+	 int GetNext = FALSE;
 
 	if (History.GotoFirst())
-        prev = History.Get();
+		  prev = History.Get();
 
-    prevstr = prev.GetData();
+	 prevstr = prev.GetData();
 
 	RdosGetCursorPosition(&OrgY, &OrgX);
 	CurrX = OrgX;
 	CurrY = OrgY;
-	
+
 	memset(str, 0, maxsize);
 
-	if (!Wait)
-		Wait = new TWait;
-
 	if (!Keyboard)
-		Keyboard = new TKeyboardDevice(Wait);
+		Keyboard = new TKeyboardDevice;
 
 	for (;;)
 	{
-		Wait->WaitForever();
+		Keyboard->WaitForever();
 
 		ok = Keyboard->ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode);
 		if (ok)

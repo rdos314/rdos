@@ -20,6 +20,12 @@
 #include "dir.h"
 #include "type.h"
 #include "del.h"
+#include "showpart.h"
+
+#include "part.h"
+#include "rdfspart.h"
+#include "fatpart.h"
+#include "ffspart.h"
 
 TCdFactory *cd;
 TChdirFactory *chdir;
@@ -36,6 +42,7 @@ TPathFactory *path;
 TRdFactory *rd;
 TRmdirFactory *rmdir;
 TSetFactory *set;
+TShowPartitionFactory *showpart;
 TTypeFactory *type;
 TTimeFactory *time;
 
@@ -46,6 +53,14 @@ void Init()
 	int Minor;
 	int Release;
 
+	TFsPartitionFactory *factory;
+
+	factory = new TRdfsPartitionFactory;
+	factory = new TFat12PartitionFactory;
+	factory = new TFat16PartitionFactory;
+	factory = new TFat32PartitionFactory;
+    factory = new TFlashFsPartitionFactory;
+
 	RdosGetVersion(&Major, &Minor, &Release);
 	sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
 
@@ -53,6 +68,7 @@ void Init()
 
 	time = new TTimeFactory;
 	type = new TTypeFactory;
+	showpart = new TShowPartitionFactory;
 	set = new TSetFactory;
 	rmdir = new TRmdirFactory;
 	rd = new TRdFactory;

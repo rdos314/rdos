@@ -1330,3 +1330,11 @@ M†let f”r COPY f†r inte inneh†lla plus ('+') tecken.
 :TEXT_DELETE_FILE#1
 Tar bort fil "%s".
 .
+
+:TEXT_CMDHELP_SHOWPART
+Visar h†rddiskpartitioner
+
+SHOWPART /D [disc]
+  [disc]          Anger en specifik disk
+  /D              Visar detaljerad information om partitionstabeller
+.

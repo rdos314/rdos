@@ -1468,3 +1468,46 @@ location of FreeCOM to try to load the strings from, e.g.:
 C:\\COMMAND.COM
 or just hit enter to cancel to load the strings.
 .
+
+:TEXT_CMDHELP_SHOWPART
+Show harddrive partition information
+
+SHOWPART /D [disc]
+  [disc]          Show partitions on a specified disc
+  /D              Shows detailed information about partition tables
+.
+
+:TEXT_SHOWPART_DISC_ERROR
+Disc %d not found
+.
+
+:TEXT_SHOWPART_DISC_LONG
+Disc %d %08lX BIOS sectors / cyl %04X, heads %04X
+.
+
+:TEXT_SHOWPART_DISC_SHORT
+Disc %d
+
+.
+
+:TEXT_SHOWPART_PART_RANGE
+
+%08lX-%08lX %15.3f MB
+.
+
+:TEXT_SHOWPART_HEADER
+  DRV TYPE    SECTORS      FILESYS  TOTAL SIZE      FREE SIZE
+.
+
+:TEXT_SHOWPART_DRIVE_ENTRY
+%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB
+.
+
+:TEXT_SHOWPART_UNKNOWN_ENTRY
+%d: -- %02hX %08lX-%08lX %8s %15.3f MB
+.
+
+:TEXT_SHOWPART_FREE_ENTRY
+%d: -- No entry
+.
+
