@@ -2230,15 +2230,6 @@ get_raw_switch_name	DB 'Get Raw Switch Adress',0
 raw_switch_prot_begin:
 	RawSwitch
 
-raw_safe_pm16_begin:
-	mov ds,ax
-	mov es,cx
-	mov ss,dx
-	mov sp,bx
-	push si
-	push di
-	retf
-
 raw_switch_prot_end:
 
 raw_switch_v86_begin:

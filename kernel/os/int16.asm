@@ -821,6 +821,7 @@ sim_int_no_push:
 	call set_flags
 	pop bx
 	or eax,20000h
+	and ax,NOT 100h
 	push eax
 	cmp bl,sim_int
 	je sim_get_int_ads
@@ -1019,6 +1020,7 @@ vm_callback_do:
 	push ebx
 	mov ds,cx
 	mov si,es:[di].vcs_sp
+	and byte ptr [bp+2].vm_eflags,NOT 1
 	iretd
 
 	public pm_callback16
