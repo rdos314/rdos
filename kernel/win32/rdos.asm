@@ -1759,7 +1759,7 @@ RdosGetSysTime	Proc
 ;
 	popad
 	pop ebp
-	ret 24
+	ret 28
 RdosGetSysTime	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1837,7 +1837,7 @@ RdosGetTime	Proc
 ;
 	popad
 	pop ebp
-	ret 24
+	ret 28
 RdosGetTime	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
