@@ -32,6 +32,7 @@
 #include "pit.h"
 #include "keyb.h"
 #include "pci.h"
+#include "zfnb.h"
 #include "zfsb.h"
 #include "zfsmi.h"
 #include "zfide.h"
@@ -170,7 +171,7 @@ void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
     if (Address < 0x10000 && Address >= 0xF000)
         *(LowRam + Address) = Value;
     else
-	    Pci.WriteMem(Address, Value);
+		Pci.WriteMem(Address, Value);
 }
 
 /*##################  ReadFromIo  ###############
@@ -193,7 +194,7 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 
         	    default:
         		    return Pci.In(Port);
-        	}
+			}
         	break;
 
 		case 0x40:
@@ -298,9 +299,9 @@ void Reset()
 *##########################################################################*/
 void main(void)
 {
-    OpenScreen("c:\\sim.log");
+	OpenScreen("c:\\sim.log");
 
-//	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
+	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
 	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
 	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);
