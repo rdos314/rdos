@@ -120,8 +120,6 @@ floppy_data    ENDS
 code	SEGMENT byte public 'CODE'
 
 	assume cs:code
-    assume ds:floppy_data
-
 
 .386c
 
@@ -139,12 +137,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 floppy_int	Proc far
-	mov al,IntFlag
+	mov al,ds:IntFlag
 	or al,al
 	jnz floppy_int_done
 	inc al
-	mov IntFlag,al
-	mov bx,FloppyThread
+	mov ds:IntFlag,al
+	mov bx,ds:FloppyThread
 	Signal
 floppy_int_done:
 	ret
@@ -171,7 +169,7 @@ CommandPhase	Proc near
     push dx
 	push si
 	ClearSignal
-	mov IntFlag,0
+	mov ds:IntFlag,0
 	mov si,2000
 	mov bx,OFFSET CmdCode
 CommandPhaseLoop:
@@ -236,9 +234,9 @@ ExecutePhase   Proc near
 	test al,80h
 	clc
 	jnz ExecutePhaseDone
-	mov TimeoutCount,20
+	mov ds:TimeoutCount,20
 	WaitForSignal
-	mov al,IntFlag
+	mov al,ds:IntFlag
 	or al,al
 	clc
 	jnz ExecutePhaseDone
@@ -367,7 +365,7 @@ PAGE
 
 DecodeStatus	Proc near
 	push ax
-	mov al,st0
+	mov al,ds:st0
     test al,0C0h
 	clc
 	jz DecodeStatusDone
@@ -396,7 +394,7 @@ PAGE
 Command   Proc near
 	push ax
 	GetThread
-	mov FloppyThread,ax
+	mov ds:FloppyThread,ax
 	pop ax
 ;
 	call CommandPhase
@@ -410,7 +408,7 @@ Command   Proc near
 	je CommandDone
 	call DecodeStatus
 CommandDone:
-	mov FloppyThread,0
+	mov ds:FloppyThread,0
     ret
 Command   Endp
 
@@ -430,7 +428,7 @@ SenseIntCmd	Proc near
 	push cx
 	mov ax,10
 	WaitMilliSec
-	mov CmdCode,8
+	mov ds:CmdCode,8
 	mov cx,1
 	call CommandPhase
 	jc SenseIntDone
@@ -458,9 +456,9 @@ ExecuteSensePhase   Proc near
 	push di
 	mov ax,ds
 	mov es,ax
-	mov TimeoutCount,20
+	mov ds:TimeoutCount,20
 	WaitForSignal
-	mov al,IntFlag
+	mov al,ds:IntFlag
 	or al,al
 	stc
 	jz ExecuteSenseDone
@@ -543,8 +541,8 @@ PAGE
 
 RecalibrateCmd	Proc near
 	push cx
-	mov CmdCode,7
-	mov DriveHead,al
+	mov ds:CmdCode,7
+	mov ds:DriveHead,al
 	mov cx,2
 	call Command
 	jc RecalibrateDone
@@ -569,12 +567,12 @@ PAGE
 
 ReadIdCmd	Proc near
 	push cx
-	mov CmdCode,4Ah
-	mov DriveHead,al
+	mov ds:CmdCode,4Ah
+	mov ds:DriveHead,al
 	mov cx,2
 	call Command
-	mov cl,sBytesPerSector
-	mov cBytesPerSector,cl
+	mov cl,ds:sBytesPerSector
+	mov ds:cBytesPerSector,cl
 	pop cx
 	ret
 ReadIdCmd	Endp
@@ -599,12 +597,12 @@ ResetController	Proc near
 	mov ax,ds
 	mov es,ax
 	mov cx,100
-	mov cTrack,-1
+	mov ds:cTrack,-1
 	GetThread
-	mov FloppyThread,ax
+	mov ds:FloppyThread,ax
 ResetControllerLoop:
 	ClearSignal
-	mov IntFlag,0
+	mov ds:IntFlag,0
 	mov al,8
 	mov dx,3F2h
 	out dx,al
@@ -614,18 +612,18 @@ ResetControllerLoop:
 	mov al,0Ch
     mov dx,3F2h
     out dx,al
-	mov DriveControl,al
+	mov ds:DriveControl,al
 ;
-	mov TimeoutCount,20
+	mov ds:TimeoutCount,20
 	WaitForSignal
-	mov al,IntFlag
+	mov al,ds:IntFlag
 	or al,al
 	jz ResetControllerFailed
 
 ResetControllerStart:
 	mov al,0Ch
 	out dx,al
-	mov DriveControl,al
+	mov ds:DriveControl,al
 ResetControllerSense:
 	call SenseIntCmd
 	jc ResetControllerFailed
@@ -641,7 +639,7 @@ ResetControllerFailed:
 	loop ResetControllerLoop
 	stc
 ResetControllerDone:
-	mov FloppyThread,0
+	mov ds:FloppyThread,0
 	pop di
 	pop dx
 	pop cx
@@ -739,8 +737,8 @@ InitDrive	Proc near
 	xor al,al
 	stc
 InitDriveOk:
-	mov [bx].Gap,al
-	mov [bx].Tracks,ah
+	mov ds:[bx].Gap,al
+	mov ds:[bx].Tracks,ah
 	pop bx
 	pop ax
 	ret
@@ -769,7 +767,7 @@ SelectDrive	Proc near
 	mov ah,10h
 	rol ah,cl
 	cli
-	mov al,DriveControl
+	mov al,ds:DriveControl
 	test al,ah
 	jnz SelectDriveMotorOn
 ;
@@ -778,23 +776,23 @@ SelectDrive	Proc near
 	jc SelectDriveDone
 ;
 	cli
-	mov [bx].MotorCount,255
-	mov al,DriveControl
+	mov ds:[bx].MotorCount,255
+	mov al,ds:DriveControl
 	and al,0F0h
 	or al,ah
-	or al,DriveControl		
-	mov DriveControl,al
+	or al,ds:DriveControl		
+	mov ds:DriveControl,al
     mov dx,3F2h
     out dx,al
 	sti
 	mov ax,MotorOnWait
 	WaitMilliSec
-	mov al,DriveControl
+	mov al,ds:DriveControl
 	jmp SelectDriveInit
 
 SelectDriveMotorOn:
 	cli
-	mov al,DriveControl
+	mov al,ds:DriveControl
 	mov ah,al
 	and ah,3
 	cmp ah,cl
@@ -806,11 +804,11 @@ SelectDriveInit:
 	or al,cl
     mov dx,3F2h
     out dx,al
-	mov DriveControl,al
+	mov ds:DriveControl,al
 	sti
 	mov ax,100
 	WaitMicroSec
-	mov al,[bx].Gap
+	mov al,ds:[bx].Gap
 	or al,al
 	mov al,bl
 	jnz SelectDriveRecal
@@ -825,7 +823,7 @@ SelectDriveRecal:
 	call RecalibrateCmd
 SelectDriveDone:
 	sti
-	mov [bx].MotorCount,25
+	mov ds:[bx].MotorCount,25
 	pop dx
 	pop cx
 	pop bx
@@ -945,18 +943,18 @@ PAGE
 SeekCmd	Proc near
 	push ax
 	GetThread
-	mov FloppyThread,ax
+	mov ds:FloppyThread,ax
 	pop ax
 	push cx
-	mov CmdCode,0Fh
-	mov DriveHead,al
-	mov cTrack,ah
+	mov ds:CmdCode,0Fh
+	mov ds:DriveHead,al
+	mov ds:cTrack,ah
 	mov cx,3
 	call CommandPhase
 	jc SeekDone
 	call ExecuteSensePhase
 SeekDone:
-	mov FloppyThread,0
+	mov ds:FloppyThread,0
 	pop cx
 	ret
 SeekCmd	Endp
@@ -981,19 +979,19 @@ ReadCmd	Proc near
 	push bx
 	push cx
 	movzx bx,al
-	mov CmdCode,0E6h
-	mov cTrack,ah
-	mov cDriveHead,dh
-	mov cSector,dl
+	mov ds:CmdCode,0E6h
+	mov ds:cTrack,ah
+	mov ds:cDriveHead,dh
+	mov ds:cSector,dl
 	mov cl,dh
 	shl cl,2
 	or cl,al
-	mov DriveHead,cl
-    mov cl,[bx].Gap
-	mov cGap,cl
-	mov cl,[bx].Tracks
-	mov cTracks,cl
-	mov cDataLen,0FFh
+	mov ds:DriveHead,cl
+    mov cl,ds:[bx].Gap
+	mov ds:cGap,cl
+	mov cl,ds:[bx].Tracks
+	mov ds:cTracks,cl
+	mov ds:cDataLen,0FFh
 	mov cx,9
 	call Command
 	pop cx
@@ -1021,19 +1019,19 @@ WriteCmd	Proc near
 	push bx
 	push cx
 	movzx bx,al
-	mov CmdCode,0C5h
-	mov cTrack,ah
-	mov cDriveHead,dh
-	mov cSector,dl
+	mov ds:CmdCode,0C5h
+	mov ds:cTrack,ah
+	mov ds:cDriveHead,dh
+	mov ds:cSector,dl
 	mov cl,dh
 	shl cl,2
 	or cl,al
-	mov DriveHead,cl
-    mov cl,[bx].Gap
-	mov cGap,cl
-	mov cl,[bx].Tracks
-	mov cTracks,cl
-	mov cDataLen,0FFh
+	mov ds:DriveHead,cl
+    mov cl,ds:[bx].Gap
+	mov ds:cGap,cl
+	mov cl,ds:[bx].Tracks
+	mov ds:cTracks,cl
+	mov ds:cDataLen,0FFh
 	mov cx,9
 	call Command
 	pop cx
@@ -1064,7 +1062,7 @@ ReadDrive	Proc near
 	mov si,3
 	call SelectDrive
 	jc ReadDriveRetry
-	cmp ah,cTrack
+	cmp ah,ds:cTrack
 	je ReadDriveSetup
 
 ReadDriveLoop:
@@ -1089,12 +1087,12 @@ ReadDriveSetup:
 	jnc ReadDriveDone
 
 ReadDriveRetry:
-	mov cTrack,-1
+	mov ds:cTrack,-1
 	push ax
 	push dx
 	cli
 	mov al,0Ch
-	mov DriveControl,al
+	mov ds:DriveControl,al
 	mov dx,3F2h
 	out dx,al
 	sti
@@ -1140,7 +1138,7 @@ WriteDrive	Proc near
 	mov si,3
 	call SelectDrive
 	jc WriteDriveRetry
-	cmp ah,cTrack
+	cmp ah,ds:cTrack
 	je WriteDriveSetup
 WriteDriveLoop:
 	call SeekCmd
@@ -1163,12 +1161,12 @@ WriteDriveSetup:
 	call WriteCmd
 	jnc WriteDriveDone
 WriteDriveRetry:
-	mov cTrack,-1
+	mov ds:cTrack,-1
 	push ax
 	push dx
 	cli
 	mov al,0Ch
-	mov DriveControl,al
+	mov ds:DriveControl,al
 	mov dx,3F2h
 	out dx,al
 	sti
@@ -1229,7 +1227,7 @@ ReadBootSector	Proc near
 read_boot_sector_retry:
 	push ax
 	mov al,0Ch
-	mov DriveControl,al
+	mov ds:DriveControl,al
 	mov dx,3F2h
 	out dx,al
 	pop ax
@@ -1245,12 +1243,12 @@ read_boot_sector_retry:
 read_boot_sector_read:
 	mov ah,1
 	call SeekCmd
-	mov cTrack,-1
+	mov ds:cTrack,-1
 	jc read_boot_sector_retry
 ;
 	mov ah,0
 	call SeekCmd
-	mov cTrack,-1
+	mov ds:cTrack,-1
 	jc read_boot_sector_retry
 ;
 	mov dh,0
@@ -1467,7 +1465,7 @@ check_media	Proc near
 	mov bx,floppy_data_sel
 	mov ds,bx
 	movzx bx,al
-	mov bl,[bx].Gap
+	mov bl,ds:[bx].Gap
 	or bl,bl
 	stc
 	jz check_media_done
@@ -1553,9 +1551,9 @@ check_media_proc	Proc far
 	mov ax,floppy_data_sel
 	mov ds,ax
 	mov fs,bx
-	EnterSection FloppySection
+	EnterSection ds:FloppySection
 	call check_media
-	LeaveSection FloppySection
+	LeaveSection ds:FloppySection
 ;
 	pop ax
 	pop fs
@@ -1587,38 +1585,38 @@ floppy_super_loop:
 	mov ah,NOT 10h
 floppy_super_motor_loop:
 	cli
-	mov al,[bx].MotorCount
+	mov al,ds:[bx].MotorCount
 	or al,al
 	jz floppy_super_motor_next
 	sub al,1
-	mov [bx].MotorCount,al
+	mov ds:[bx].MotorCount,al
 	sti
 	jnz floppy_super_motor_next
 	cli
-	mov al,DriveControl
+	mov al,ds:DriveControl
 	and al,ah
 	mov dx,3F2h
 	mov al,0
 	out dx,al
-	mov DriveControl,al
+	mov ds:DriveControl,al
 floppy_super_motor_next:
 	sti
 	inc bx
 	shl ah,1
 	loop floppy_super_motor_loop
 ;
-	mov bx,FloppyThread
+	mov bx,ds:FloppyThread
 	or bx,bx
 	jz floppy_super_wait
 ;
 	cli
-	mov al,IntFlag
+	mov al,ds:IntFlag
 	or al,al
 	jnz floppy_super_signal
 ;
-	mov al,TimeoutCount
+	mov al,ds:TimeoutCount
 	sub al,1
-	mov TimeoutCount,al
+	mov ds:TimeoutCount,al
 	jnz floppy_super_wait
 
 floppy_super_signal:
@@ -1842,9 +1840,9 @@ discbuf_thread:
 
 discbuf_thread_loop:
 	WaitForDiscRequest
-	EnterSection FloppySection
+	EnterSection ds:FloppySection
 	call perform_one
-	LeaveSection FloppySection
+	LeaveSection ds:FloppySection
 	jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1984,6 +1982,13 @@ init	PROC far
 	mov al,1
 	AllocateFixedDrive
 ;
+    mov ax,start_floppy_nr
+    IsValidOsGate
+    jc open_floppy_started
+;
+    StartFloppy
+
+open_floppy_started:    
 	mov dx,3F4h
 	in al,dx
 	cmp al,-1
@@ -2011,7 +2016,7 @@ init	PROC far
 	mov es,bx
 	mov di,OFFSET floppy_int
 	RequestPrivateIrqHandler
-;
+
 init_floppy_done:
 	popa
 	pop es

@@ -83,7 +83,6 @@ ide_data    ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-	assume ds:ide_data
 
 PAGE
 
@@ -99,7 +98,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ide_int	Proc far
-	mov bx,IdeThread
+	mov bx,ds:IdeThread
 	Signal
 	ret
 ide_int	Endp
@@ -473,9 +472,9 @@ ReadDrive	Proc near
 	push bx
 	mov bx,ide_data_sel
 	mov ds,bx
-	EnterSection IdeSection
+	EnterSection ds:IdeSection
 	GetThread
-	mov IdeThread,ax
+	mov ds:IdeThread,ax
 	pop bx
 	cmp fs:drive_lba_mode,0
 	jz ReadDriveIde
@@ -510,8 +509,8 @@ ReadDriveStart:
 
 ReadDriveDone:
 	pushf
-	mov IdeThread,0
-	LeaveSection IdeSection
+	mov ds:IdeThread,0
+	LeaveSection ds:IdeSection
 	popf
 	ret
 ReadDrive	Endp
@@ -535,9 +534,9 @@ WriteDrive	Proc near
 	push bx
 	mov bx,ide_data_sel
 	mov ds,bx
-	EnterSection IdeSection
+	EnterSection ds:IdeSection
 	GetThread
-	mov IdeThread,ax
+	mov ds:IdeThread,ax
 	pop bx
 	cmp fs:drive_lba_mode,0
 	jz WriteDriveIde
@@ -570,8 +569,8 @@ WriteDriveStart:
 	call WriteTaskFile
 WriteDriveDone:
 	pushf
-	mov IdeThread,0
-	LeaveSection IdeSection
+	mov ds:IdeThread,0
+	LeaveSection ds:IdeSection
 	popf
 	ret
 WriteDrive	Endp
@@ -978,12 +977,12 @@ PAGE
 read_drive	Proc near
 	mov ax,ide_data_sel
 	mov ds,ax
-	EnterSection IdeSection
+	EnterSection ds:IdeSection
 
 read_drive_retry_loop:
 	ClearSignal
 	GetThread
-	mov IdeThread,ax
+	mov ds:IdeThread,ax
 ;
 	cmp fs:drive_lba_mode,0
 	jz read_drive_ide
@@ -1057,7 +1056,7 @@ read_drive_check_next:
 	jnz read_sector_loop
 
 read_drive_done:
-	LeaveSection IdeSection
+	LeaveSection ds:IdeSection
 	ret
 read_drive	Endp
 
@@ -1079,7 +1078,7 @@ PAGE
 write_drive	Proc near
 	mov ax,ide_data_sel
 	mov ds,ax
-	EnterSection IdeSection
+	EnterSection ds:IdeSection
 ;
 	mov ax,es:[edi].dh_sector
 	or ax,es:[edi].dh_unit
@@ -1092,7 +1091,7 @@ write_drive_not_zero:
 write_drive_retry_loop:
 	ClearSignal
 	GetThread
-	mov IdeThread,ax
+	mov ds:IdeThread,ax
 ;
 	cmp fs:drive_lba_mode,0
 	jz write_drive_ide
@@ -1169,7 +1168,7 @@ write_drive_check_next:
 	jnz write_sector_loop
 
 write_drive_done:
-	LeaveSection IdeSection
+	LeaveSection ds:IdeSection
 	ret
 write_drive	Endp
 
@@ -1406,12 +1405,12 @@ disc_assign	Proc far
 	mov ax,ide_data_sel
 	mov ds,ax
 	GetThread
-	mov IdeThread,ax
+	mov ds:IdeThread,ax
 	mov al,0
 	call install_unit
 	mov al,1
 	call install_unit
-	mov IdeThread,0
+	mov ds:IdeThread,0
 	ret
 disc_assign	Endp
 

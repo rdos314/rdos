@@ -48,7 +48,7 @@ INCLUDE ..\os\system.inc
 INCLUDE ..\os\pci.inc
 
 outb	Macro port, val
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,port
 	mov al,val
 	out dx,al
@@ -56,7 +56,7 @@ outb	Macro port, val
 		Endm
 
 outw	Macro port, val
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,port
 	mov ax,val
 	out dx,al
@@ -66,13 +66,13 @@ outw	Macro port, val
 		Endm
 
 inb		Macro port
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,port
 	in al,dx
 		Endm
 
 inw		Macro port
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,port
 	in al,dx
 	inc dx
@@ -183,7 +183,7 @@ data	ENDS
 code	SEGMENT byte public 'CODE'
 
 
-	assume cs:code,ds:data
+	assume cs:code
 
 .386p
 
@@ -200,13 +200,13 @@ code	SEGMENT byte public 'CODE'
 
 ConfirmTransmit	proc near
 	inb TransmitStatusReg
-	movzx bx,SendCurrent
+	movzx bx,ds:SendCurrent
 	shl bx,2
-	mov al,[bx].SendHeader.sh_next
-	mov SendCurrent,al
+	mov al,ds:[bx].SendHeader.sh_next
+	mov ds:SendCurrent,al
 	GetSystemTime
-	mov LastConfirm,eax
-	mov LastConfirm+4,edx
+	mov ds:LastConfirm,eax
+	mov ds:LastConfirm+4,edx
 	ret
 ConfirmTransmit	endp
 
@@ -223,20 +223,20 @@ ConfirmTransmit	endp
 
 StartTransmit	proc near
 	cli
-	movzx bx,SendCurrent
-	cmp bl,SendPending
+	movzx bx,ds:SendCurrent
+	cmp bl,ds:SendPending
 	je start_transmit_done
 ;
-	test Mode, OVERFLOW_MODE
+	test ds:Mode, OVERFLOW_MODE
 	jnz start_transmit_done
 ;
 	shl bx,2
-	mov cx,[bx].SendHeader.sh_size
+	mov cx,ds:[bx].SendHeader.sh_size
 	cmp cx,60
 	jnc start_transmit_config
 	mov cx,60
 start_transmit_config:
-	mov bl,SendCurrent
+	mov bl,ds:SendCurrent
 	outb CommandReg, CommandPage0
 	outw TransmitCountReg,cx
 	outb TransmitPageReg,bl
@@ -264,7 +264,7 @@ OverflowTimeout	Proc far
 ;
 	outw RemoteCountReg,0
 	inb InterruptStatusReg
-	test OverflowData, CommandTransmit
+	test ds:OverflowData, CommandTransmit
 	jz overflow_transmit_ok
 ;
 	test al,InterruptStatusTransmit
@@ -273,10 +273,10 @@ OverflowTimeout	Proc far
 	call ConfirmTransmit
 
 overflow_transmit_ok:
-	or Mode, LOOPBACK_MODE
+	or ds:Mode, LOOPBACK_MODE
 	outb TransmitConfigReg,TransmitConfigLoopback
 	outb CommandReg,CommandStart OR CommandPage0
-	mov bx, Handle
+	mov bx, ds:Handle
 	NetReceived
 	ret
 OverflowTimeout	Endp
@@ -303,24 +303,24 @@ NetInt	Proc far
 ;
 	inb InterruptStatusReg
 NetIntLoop:
-	mov ISR,al
+	mov ds:ISR,al
 ;
 	sti
-	test ISR, InterruptStatusOverwrite
+	test ds:ISR, InterruptStatusOverwrite
 	jz NetIntNotOverflow
 ;
-	test Mode, OVERFLOW_MODE
+	test ds:Mode, OVERFLOW_MODE
 	jnz NetIntNext
 ;
-	or Mode, OVERFLOW_MODE
+	or ds:Mode, OVERFLOW_MODE
 	inb CommandReg
-	mov OverflowData,al
+	mov ds:OverflowData,al
 	outb CommandReg, CommandStop
 ;
 	cli
-	mov ah,IMR
+	mov ah,ds:IMR
 	and ah, NOT InterruptStatusOverwrite
-	mov IMR,ah
+	mov ds:IMR,ah
 	outb InterruptMaskReg,ah
 	sti
 ;
@@ -336,7 +336,7 @@ NetIntLoop:
 	jmp NetIntNext
 
 NetIntNotOverflow:
-	test ISR, InterruptStatusTransmitOk
+	test ds:ISR, InterruptStatusTransmitOk
 	jz NetIntNotTransmitOk
 ;
 	call ConfirmTransmit
@@ -344,7 +344,7 @@ NetIntNotOverflow:
 	call StartTransmit
 
 NetIntNotTransmitOk:
-	test ISR, InterruptStatusTransmitError
+	test ds:ISR, InterruptStatusTransmitError
 	jz NetIntNotTransmitError
 ;
 	inb TransmitStatusReg
@@ -358,23 +358,23 @@ NetIntNotTransmitOk:
 	call StartTransmit
 
 NetIntNotTransmitError:
-	test ISR, InterruptStatusReceive
+	test ds:ISR, InterruptStatusReceive
 	jz NetIntNext
 ;
 	cli
-	mov ah,IMR
+	mov ah,ds:IMR
 	and ah, NOT InterruptStatusReceive
-	mov IMR,ah
+	mov ds:IMR,ah
 	outb InterruptMaskReg,ah
 	sti
 ;
-	mov bx, Handle
+	mov bx, ds:Handle
 	NetReceived
 
 NetIntNext:
 	cli
 	inb InterruptStatusReg
-	and al,IMR
+	and al,ds:IMR
 	jnz NetIntLoop
 
 	ret
@@ -394,12 +394,12 @@ NetInt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Reset	Proc near
-	or Mode,OVERFLOW_MODE
-	and Mode,NOT LOOPBACK_MODE
+	or ds:Mode,OVERFLOW_MODE
+	and ds:Mode,NOT LOOPBACK_MODE
 	outb CommandReg, CommandStop
-	mov IMR,0
+	mov ds:IMR,0
 	outb InterruptStatusReg,-1
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,ResetReg
 	in al,dx
 	out dx,al
@@ -434,30 +434,30 @@ Reset	Endp
 
 InitCore	Proc near
 	outb CommandReg, CommandPage0
-	mov al,Mode
+	mov al,ds:Mode
 	and al,1
 	or al,50h
 	outb DataConfigReg,al	
 	outb RemoteCountReg,0
 	outb RemoteCountReg+1,0
 	outb ReceiveConfigReg, ReceiveConfigReset
-	or Mode, LOOPBACK_MODE
+	or ds:Mode, LOOPBACK_MODE
 	outb TransmitConfigReg, TransmitConfigLoopback
 	outb PageStartReg,BUFFER_START
 	outb BoundaryPtrReg,BUFFER_START
-	mov NextPacket,BUFFER_START
-	mov ax,MemSize
+	mov ds:NextPacket,BUFFER_START
+	mov ax,ds:MemSize
 	mov al,ah
 	add al,BUFFER_START
 	dec al
-	mov SendStop,al
+	mov ds:SendStop,al
 	shr ah,1
 	add ah,BUFFER_START
-	mov SendStart,ah
-	mov SendCurrent,ah
-	mov SendPending,ah
+	mov ds:SendStart,ah
+	mov ds:SendCurrent,ah
+	mov ds:SendPending,ah
 	dec ah
-	mov PageStop,ah
+	mov ds:PageStop,ah
 ;
 	outb PageStopReg,ah
 	outb InterruptMaskReg,InterruptMaskDisable
@@ -466,7 +466,7 @@ InitCore	Proc near
 	outb CommandReg, CommandPage1
 	mov cx,6
 	mov dx,PhysicalAddressReg
-	add dx,IoBase
+	add dx,ds:IoBase
 	mov si,OFFSET EthernetAddress
 set_node_loop:
 	mov al,[si]
@@ -477,7 +477,7 @@ set_node_loop:
 ;
 	mov cx,8
 	mov dx,MulticastReg
-	add dx,IoBase
+	add dx,ds:IoBase
 	mov al,-1
 set_multicast_loop:
 	out dx,al
@@ -487,7 +487,7 @@ set_multicast_loop:
 	outb CurrentPageReg,BUFFER_START
 ;
 	outb CommandReg,CommandPage0
-	mov al,Mode
+	mov al,ds:Mode
 	and al,1
 	or al,DataConfigNormal
 	outb DataConfigReg,al	
@@ -541,13 +541,13 @@ CheckSignature	Endp
 
 GetIoWidth	Proc near
 	mov di,BUFFER_START SHL 8
-	mov Mode,0
+	mov ds:Mode,0
 ;
 	outb CommandReg, CommandPage0
 	outw RemoteAddressReg, di
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandWrite
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	mov ax,1A59h
 	out dx,ax
@@ -558,7 +558,7 @@ GetIoWidth	Proc near
 	outw RemoteAddressReg, di
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in ax,dx
 	ror eax,16
@@ -567,12 +567,12 @@ GetIoWidth	Proc near
 	cmp eax,1A595A73h
 	jne get_io_width_done
 ;
-	mov Mode,WORD_MODE
+	mov ds:Mode,WORD_MODE
 	outb CommandReg, CommandPage0
 	outw RemoteAddressReg, di
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandWrite
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	mov eax,45AF6592h
 	out dx,eax
@@ -581,14 +581,14 @@ GetIoWidth	Proc near
 	outw RemoteAddressReg, di
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 ;
 	cmp eax,45AF6592h
 	jne get_io_width_done
 ;
-	mov Mode,WORD_MODE OR DWORD_MODE
+	mov ds:Mode,WORD_MODE OR DWORD_MODE
 
 get_io_width_done:
 	ret
@@ -614,13 +614,13 @@ io_reset_loop:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
-	test Mode,DWORD_MODE
+	test ds:Mode,DWORD_MODE
 	jnz io_reset_dword
 ;
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	jnz io_reset_word
 
 io_reset_byte:
@@ -657,13 +657,13 @@ io_check_loop:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
-	test Mode,DWORD_MODE
+	test ds:Mode,DWORD_MODE
 	jnz io_check_dword
 ;
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	jnz io_check_word
 
 io_check_byte:
@@ -696,13 +696,13 @@ io_check_do:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
-	test Mode,DWORD_MODE
+	test ds:Mode,DWORD_MODE
 	jnz io_mark_dword
 ;
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	jnz io_mark_word
 
 io_mark_byte:
@@ -730,7 +730,7 @@ io_check_next:
 
 io_check_end:
 	sub di,BUFFER_START SHL 8
-	mov MemSize,di
+	mov ds:MemSize,di
 	dec di
 	mov bx,es
 	mov ax,gdt_sel
@@ -754,7 +754,7 @@ GetIoSize	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
 GetIoNode	Proc near
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	jnz get_io_node16
 
 get_io_node8:
@@ -764,7 +764,7 @@ get_io_node8:
 	outw RemoteCountReg, cx
 	outb CommandReg, CommandRead
 	mov dx,IoReg
-	add dx,IoBase
+	add dx,ds:IoBase
 	mov si,OFFSET EthernetAddress
 get_io_node8_loop:
 	in al,dx
@@ -779,7 +779,7 @@ get_io_node16:
 	outw RemoteCountReg, 12
 	outb CommandReg, CommandRead
 	mov dx,IoReg
-	add dx,IoBase
+	add dx,ds:IoBase
 	mov cx,6
 	mov si,OFFSET EthernetAddress
 get_io_node16_loop:
@@ -822,14 +822,14 @@ ConfigIoMode	Endp
 
 GetMemWidth	Proc near
 	xor di,di
-	mov Mode,MEM_MODE
+	mov ds:Mode,MEM_MODE
 	mov ax,1A59h
 	mov es:[di],ax
 	mov word ptr es:[di+2],0AC3Ch
 	cmp ax,es:[di]
 	jne get_mem_width_done
 ;
-	mov Mode,MEM_MODE OR WORD_MODE
+	mov ds:Mode,MEM_MODE OR WORD_MODE
 
 get_mem_width_done:
 	ret
@@ -866,7 +866,7 @@ mem_check_loop:
 	loop mem_check_loop
 
 mem_check_end:
-	mov MemSize,di
+	mov ds:MemSize,di
 	dec di
 	mov bx,es
 	mov ax,gdt_sel
@@ -890,7 +890,7 @@ GetMemSize	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetMemNode	Proc near
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,NodeAddr
 	mov cx,6
 	mov bx,OFFSET EthernetAddress
@@ -928,9 +928,9 @@ ConfigMemMode	Proc near
 	inb ConfigRegA
 	or al,80h
 	outb ConfigRegA, al
-	add IoBase,10h
+	add ds:IoBase,10h
 	inb ATDetect
-	mov Mode,al
+	mov ds:Mode,al
 ;
 	mov eax,10000h
 	AllocateBigLinear
@@ -957,7 +957,7 @@ config_mem_loop:
 	shr ax,9
 	push dx
 	outb Control1,al
-	mov al,Mode
+	mov al,ds:Mode
 	test al,WORD_MODE
 	jz config_mem8
 	outb Control2,0C1h
@@ -981,7 +981,7 @@ config_mem_next:
 	inb ConfigRegA
 	and al,NOT 80h
 	outb ConfigRegA, al
-	sub IoBase,10h
+	sub ds:IoBase,10h
 	stc
 	jmp config_mem_done
 
@@ -1081,7 +1081,7 @@ init_pci_found:
 	mov cl,PCI_interrupt_line
 	ReadPciByte
 ;
-	mov IoBase,dx
+	mov ds:IoBase,dx
 	push ax
 	outb InterruptStatusReg,-1
 	pop ax
@@ -1145,7 +1145,7 @@ init_isa_loop:
 	or dx,dx
 	jz init_isa_next
 ;
-	mov IoBase,dx
+	mov ds:IoBase,dx
 	outb InterruptStatusReg,-1
 	inb ConfigRegA
 	mov ah,al
@@ -1237,13 +1237,13 @@ CheckPointer	Proc near
 	mov ax,si
 	mov bx,cx
 	dec bx
-	mov bl,NextPacket
+	mov bl,ds:NextPacket
 	inc bl
 	add bh,bl
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jb check_pointer_nowrap
 ;
-	sub bh,PageStop
+	sub bh,ds:PageStop
 	add bh,BUFFER_START
 
 check_pointer_nowrap:
@@ -1281,12 +1281,12 @@ CheckPacket	Proc near
 	clc
 	je check_packet_done
 ;
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 	dec ah
 	cmp ah,BUFFER_START
 	jne check_packet_remove
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 check_packet_remove:
@@ -1310,33 +1310,33 @@ CheckPacket	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReceiveEnd	Proc near
-	mov ah,IMR
+	mov ah,ds:IMR
 	or ah,ah
 	jz receive_end_done
 ;
-	test Mode, OVERFLOW_MODE
+	test ds:Mode, OVERFLOW_MODE
 	jnz receive_end_overflow
 ;
 	cli
 	outb InterruptStatusReg, InterruptStatusReceive
-	mov ah,IMR
+	mov ah,ds:IMR
 	or ah, InterruptStatusOverwrite OR InterruptStatusReceive
-	mov IMR,ah
+	mov ds:IMR,ah
 	outb InterruptMaskReg,ah
 	sti
 	jmp receive_end_done
 
 receive_end_overflow:
-	test Mode, LOOPBACK_MODE
+	test ds:Mode, LOOPBACK_MODE
 	jz receive_end_done
 ;
 	cli
-	and Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
+	and ds:Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
 	outb TransmitConfigReg, TransmitConfigNormal
 	outb InterruptStatusReg, InterruptStatusReceive OR InterruptStatusOverwrite
-	mov ah,IMR
+	mov ah,ds:IMR
 	or ah, InterruptStatusOverwrite OR InterruptStatusReceive
-	mov IMR,ah
+	mov ds:IMR,ah
 	outb InterruptMaskReg,ah
 	sti
 	call StartTransmit
@@ -1373,7 +1373,7 @@ prev_io32_loop:
 	inb CurrentPageReg
 	mov bl,al
 	outb CommandReg, CommandPage0
-	cmp bl,NextPacket
+	cmp bl,ds:NextPacket
 	jne prev_io32_data
 ;
 	call ReceiveEnd
@@ -1383,7 +1383,7 @@ prev_io32_loop:
 
 prev_io32_data:
 	sti
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	xor bl,bl
 	cli
 	outb CommandReg, CommandPage0
@@ -1391,7 +1391,7 @@ prev_io32_data:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	sti
@@ -1406,7 +1406,7 @@ prev_io32_data:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	sti
@@ -1458,7 +1458,7 @@ prev_io16_loop:
 	inb CurrentPageReg
 	mov bl,al
 	outb CommandReg, CommandPage0
-	cmp bl,NextPacket
+	cmp bl,ds:NextPacket
 	jne prev_io16_data
 ;
 	call ReceiveEnd
@@ -1468,7 +1468,7 @@ prev_io16_loop:
 
 prev_io16_data:
 	sti
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	xor bl,bl
 	cli
 	outb CommandReg, CommandPage0
@@ -1476,7 +1476,7 @@ prev_io16_data:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in ax,dx
 	mov si,ax
@@ -1491,7 +1491,7 @@ prev_io16_data:
 	outw RemoteCountReg, 2
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in ax,dx
 	sti
@@ -1542,7 +1542,7 @@ prev_io8_loop:
 	inb CurrentPageReg
 	mov bl,al
 	outb CommandReg, CommandPage0
-	cmp bl,NextPacket
+	cmp bl,ds:NextPacket
 	jne prev_io8_data
 ;
 	call ReceiveEnd
@@ -1552,7 +1552,7 @@ prev_io8_loop:
 
 prev_io8_data:
 	sti
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	xor bl,bl
 	cli
 	outb CommandReg, CommandPage0
@@ -1560,7 +1560,7 @@ prev_io8_data:
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in al,dx
 	mov ah,al
@@ -1581,7 +1581,7 @@ prev_io8_data:
 	outw RemoteCountReg, 2
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in al,dx
 	mov ah,al
@@ -1632,7 +1632,7 @@ prev_mem16_loop:
 	inb CurrentPageReg
 	mov bl,al
 	outb CommandReg, CommandPage0
-	cmp bl,NextPacket
+	cmp bl,ds:NextPacket
 	jne prev_mem16_data
 ;
 	call ReceiveEnd
@@ -1642,7 +1642,7 @@ prev_mem16_loop:
 
 prev_mem16_data:
 	sti
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 	mov ax,ether_mem_sel
 	mov ds,ax
@@ -1697,7 +1697,7 @@ prev_mem8_loop:
 	inb CurrentPageReg
 	mov bl,al
 	outb CommandReg, CommandPage0
-	cmp bl,NextPacket
+	cmp bl,ds:NextPacket
 	jne prev_mem8_data
 ;
 	call ReceiveEnd
@@ -1707,7 +1707,7 @@ prev_mem8_loop:
 
 prev_mem8_data:
 	sti
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 	mov ax,ether_mem_sel
 	mov ds,ax
@@ -1759,7 +1759,7 @@ ReceiveIo32	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	pushf
 	cli
@@ -1769,7 +1769,7 @@ ReceiveIo32	Proc far
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	popf
@@ -1793,7 +1793,7 @@ ReceiveIo32	Proc far
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	sub cx,4
@@ -1841,7 +1841,7 @@ receive_io32_large:
 	outb CommandReg, CommandRead
 	pop bx
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	sub cx,4
@@ -1859,7 +1859,7 @@ receive_io32_large:
 receive_io32_large_loop:
 	xor bl,bl
 	inc bh
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jne receive_io32_large_nowrap
 ;
 	mov bh,BUFFER_START
@@ -1875,7 +1875,7 @@ receive_io32_large_nowrap:
 	outw RemoteCountReg, 100h
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	sub cx,100h
@@ -1898,7 +1898,7 @@ receive_io32_large_last:
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	push cx
@@ -1958,7 +1958,7 @@ ReceiveIo16	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	cli
 	mov bl,2
@@ -1967,7 +1967,7 @@ ReceiveIo16	Proc far
 	outw RemoteCountReg, 2
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in ax,dx
 	sti
@@ -1987,7 +1987,7 @@ ReceiveIo16	Proc far
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	push cx
@@ -2014,7 +2014,7 @@ receive_io16_large:
 	outb CommandReg, CommandRead
 	pop bx
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	sub cx,0EEh
@@ -2027,7 +2027,7 @@ receive_io16_large:
 receive_io16_large_loop:
 	xor bl,bl
 	inc bh
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jne receive_io16_large_nowrap
 ;
 	mov bh,BUFFER_START
@@ -2042,7 +2042,7 @@ receive_io16_large_nowrap:
 	outw RemoteCountReg, 100h
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	sub cx,100h
@@ -2063,7 +2063,7 @@ receive_io16_large_last:
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	push cx
@@ -2111,7 +2111,7 @@ ReceiveIo8	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	cli
 	mov bl,2
@@ -2120,7 +2120,7 @@ ReceiveIo8	Proc far
 	outw RemoteCountReg, 2
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in al,dx
 	mov ah,al
@@ -2140,7 +2140,7 @@ ReceiveIo8	Proc far
 	outw RemoteCountReg, cx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	rep insb
 	sti
@@ -2158,7 +2158,7 @@ receive_io8_large:
 	outb CommandReg, CommandRead
 	pop bx
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	sub cx,0EEh
@@ -2171,7 +2171,7 @@ receive_io8_large:
 receive_io8_large_loop:
 	xor bl,bl
 	inc bh
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jne receive_io8_large_nowrap
 ;
 	mov bh,BUFFER_START
@@ -2186,7 +2186,7 @@ receive_io8_large_nowrap:
 	outw RemoteCountReg, 100h
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	sub cx,100h
@@ -2205,7 +2205,7 @@ receive_io8_large_last:
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	rep insb
 	sti
@@ -2243,7 +2243,7 @@ ReceiveMem16	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 ;
 	mov ax,ether_mem_sel
@@ -2283,7 +2283,7 @@ receive_mem16_large_loop:
 	xor bl,bl
 	add bh,BUFFER_START
 	inc bh
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jne receive_mem16_large_nowrap
 ;
 	mov bh,BUFFER_START
@@ -2346,7 +2346,7 @@ ReceiveMem8	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 ;
 	mov ax,ether_mem_sel
@@ -2379,7 +2379,7 @@ receive_mem8_large_loop:
 	xor bl,bl
 	add bh,BUFFER_START
 	inc bh
-	cmp bh,PageStop
+	cmp bh,ds:PageStop
 	jne receive_mem8_large_nowrap
 ;
 	mov bh,BUFFER_START
@@ -2429,7 +2429,7 @@ RemoveIo32	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	xor bl,bl
 	cli
@@ -2438,17 +2438,17 @@ RemoveIo32	Proc far
 	outw RemoteCountReg, 4
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in eax,dx
 	sti
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 ;
 	dec ah
 	cmp ah,BUFFER_START
 	jne rem_io32_do
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 rem_io32_do:
@@ -2481,7 +2481,7 @@ RemoveIo16	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	xor bl,bl
 	cli
@@ -2490,17 +2490,17 @@ RemoveIo16	Proc far
 	outw RemoteCountReg, 2
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in ax,dx
 	sti
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 ;
 	dec ah
 	cmp ah,BUFFER_START
 	jne rem_io16_do
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 rem_io16_do:
@@ -2533,7 +2533,7 @@ RemoveIo8	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 ;
 	mov bl,1
 	cli
@@ -2542,18 +2542,18 @@ RemoveIo8	Proc far
 	outw RemoteCountReg, 1
 	outb CommandReg, CommandRead
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	in al,dx
 	sti
 	mov ah,al
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 ;
 	dec ah
 	cmp ah,BUFFER_START
 	jne rem_io8_do
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 rem_io8_do:
@@ -2590,17 +2590,17 @@ RemoveMem16	Proc far
 	mov ax,ether_mem_sel
 	mov es,ax
 ;
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 	xor bl,bl
 	mov ax,es:[bx]
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 ;
 	dec ah
 	cmp ah,BUFFER_START
 	jne rem_mem16_do
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 rem_mem16_do:
@@ -2640,17 +2640,17 @@ RemoveMem8	Proc far
 	mov es,ax
 ;
 	cli
-	mov bh,NextPacket
+	mov bh,ds:NextPacket
 	sub bh,BUFFER_START
 	mov bl,1
 	mov ah,es:[bx]
-	mov NextPacket,ah
+	mov ds:NextPacket,ah
 ;
 	dec ah
 	cmp ah,BUFFER_START
 	jne rem_mem8_do
 ;
-	mov ah,PageStop
+	mov ah,ds:PageStop
 	dec ah
 
 rem_mem8_do:
@@ -2691,25 +2691,25 @@ WaitForSendBuffer	Proc near
 
 wait_for_send_loop:
 	cli
-	mov bl,SendPending
-	cmp bl,SendCurrent
+	mov bl,ds:SendPending
+	cmp bl,ds:SendCurrent
 	ja wait_for_send_wrapping
 	je wait_for_send_done
 ;
-	mov ah,SendCurrent
+	mov ah,ds:SendCurrent
 	sub ah,bl
 	cmp ah,ch
 	jae wait_for_send_done
 	jmp wait_for_send_wait
 
 wait_for_send_wrapping:
-	mov ah,SendStop
+	mov ah,ds:SendStop
 	sub ah,bl
 	cmp ah,ch
 	jae wait_for_send_done
 ;
-	mov bl,SendStart
-	mov ah,SendCurrent
+	mov bl,ds:SendStart
+	mov ah,ds:SendCurrent
 	sub ah,bl
 	cmp ah,ch
 	jae wait_for_send_done
@@ -2721,8 +2721,8 @@ wait_for_send_wait:
 	je wait_for_send_reset
 ;
 	GetSystemTime
-	sub eax,LastConfirm
-	sbb edx,LastConfirm+4
+	sub eax,ds:LastConfirm
+	sbb edx,ds:LastConfirm+4
 	or edx,edx
 	jnz wait_for_send_reset
 ;
@@ -2740,17 +2740,17 @@ wait_for_send_reset:
 	outb InterruptMaskReg,InterruptMaskEnable
 	outb ReceiveConfigReg,ReceiveConfigNormal
 	outb CommandReg,CommandStart
-	and Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
+	and ds:Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
 	jmp wait_for_send_loop
 
 wait_for_send_done:
 	sti
 	mov al,bl
 	add al,ch
-	cmp al,SendStop
+	cmp al,ds:SendStop
 	jbe wait_for_send_end
 ;
-	mov al,SendStart
+	mov al,ds:SendStart
 
 wait_for_send_end:
 	pop dx
@@ -2795,8 +2795,8 @@ SendIo32	Proc far
 	push dx
 	movzx bx,bl
 	shl bx,2
-	mov [bx].SendHeader.sh_size,cx
-	mov [bx].SendHeader.sh_next,al
+	mov ds:[bx].SendHeader.sh_size,cx
+	mov ds:[bx].SendHeader.sh_next,al
 	sti
 ;
 	shl bx,6
@@ -2806,16 +2806,16 @@ SendIo32	Proc far
 	outw RemoteCountReg, 12
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	mov eax,fs:[esi]
 	out dx,eax
-	mov ax,word ptr EthernetAddress
+	mov ax,word ptr ds:EthernetAddress
 	shl eax,16
 	mov ax,fs:[esi+4]
 	out dx,eax
-	mov eax,dword ptr EthernetAddress+2
+	mov eax,dword ptr ds:EthernetAddress+2
 	out dx,eax
 	sti
 ;
@@ -2833,7 +2833,7 @@ SendIo32	Proc far
 ;
 	pop ax
 	xchg al,ah
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 	sub cx,4
 	jnc send_io32_whole
@@ -2876,7 +2876,7 @@ send_io32_out_final:
 send_io32_done:
 	sti
 	pop ax
-	mov SendPending,al
+	mov ds:SendPending,al
 	LeaveSection ds:SendSection
 	call StartTransmit
 ;
@@ -2928,8 +2928,8 @@ SendIo16	Proc far
 	push dx
 	movzx bx,bl
 	shl bx,2
-	mov [bx].SendHeader.sh_size,cx
-	mov [bx].SendHeader.sh_next,al
+	mov ds:[bx].SendHeader.sh_size,cx
+	mov ds:[bx].SendHeader.sh_next,al
 	sti
 ;
 	shl bx,6
@@ -2939,7 +2939,7 @@ SendIo16	Proc far
 	outw RemoteCountReg, 14
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	mov ax,fs:[esi]
@@ -2948,11 +2948,11 @@ SendIo16	Proc far
 	out dx,ax
 	mov ax,fs:[esi+4]
 	out dx,ax
-	mov ax,word ptr EthernetAddress
+	mov ax,word ptr ds:EthernetAddress
 	out dx,ax
-	mov ax,word ptr EthernetAddress+2
+	mov ax,word ptr ds:EthernetAddress+2
 	out dx,ax
-	mov ax,word ptr EthernetAddress+4
+	mov ax,word ptr ds:EthernetAddress+4
 	out dx,ax
 	pop ax
 	xchg al,ah
@@ -2971,7 +2971,7 @@ SendIo16	Proc far
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	push cx
@@ -2988,7 +2988,7 @@ SendIo16	Proc far
 send_io16_done:
 	sti
 	pop ax
-	mov SendPending,al
+	mov ds:SendPending,al
 	LeaveSection ds:SendSection
 	call StartTransmit
 ;
@@ -3040,8 +3040,8 @@ SendIo8	Proc far
 	push dx
 	movzx bx,bl
 	shl bx,2
-	mov [bx].SendHeader.sh_size,cx
-	mov [bx].SendHeader.sh_next,al
+	mov ds:[bx].SendHeader.sh_size,cx
+	mov ds:[bx].SendHeader.sh_next,al
 	sti
 ;
 	shl bx,6
@@ -3051,7 +3051,7 @@ SendIo8	Proc far
 	outw RemoteCountReg, 14
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	mov al,fs:[esi]
@@ -3066,17 +3066,17 @@ SendIo8	Proc far
 	out dx,al
 	mov al,fs:[esi+5]
 	out dx,al
-	mov al,byte ptr EthernetAddress
+	mov al,byte ptr ds:EthernetAddress
 	out dx,al
-	mov al,byte ptr EthernetAddress+1
+	mov al,byte ptr ds:EthernetAddress+1
 	out dx,al
-	mov al,byte ptr EthernetAddress+2
+	mov al,byte ptr ds:EthernetAddress+2
 	out dx,al
-	mov al,byte ptr EthernetAddress+3
+	mov al,byte ptr ds:EthernetAddress+3
 	out dx,al
-	mov al,byte ptr EthernetAddress+4
+	mov al,byte ptr ds:EthernetAddress+4
 	out dx,al
-	mov al,byte ptr EthernetAddress+5
+	mov al,byte ptr ds:EthernetAddress+5
 	out dx,al
 	pop ax
 	xchg al,ah
@@ -3095,14 +3095,14 @@ SendIo8	Proc far
 	outw RemoteCountReg, bx
 	outb CommandReg, CommandWrite
 ;
-	mov dx,IoBase
+	mov dx,ds:IoBase
 	add dx,IoReg
 ;
 	db 26h		; es override. asm can't handle this
 	rep outsb
 	sti
 	pop ax
-	mov SendPending,al
+	mov ds:SendPending,al
 	LeaveSection ds:SendSection
 	call StartTransmit
 ;
@@ -3157,8 +3157,8 @@ SendMem16	Proc far
 	push dx
 	movzx bx,bl
 	shl bx,2
-	mov [bx].SendHeader.sh_size,cx
-	mov [bx].SendHeader.sh_next,al
+	mov ds:[bx].SendHeader.sh_size,cx
+	mov ds:[bx].SendHeader.sh_next,al
 	sti
 ;
 	shl bx,6
@@ -3176,15 +3176,15 @@ SendMem16	Proc far
 	mov gs:[bx],ax
 	add bx,2
 ;
-	mov ax,word ptr EthernetAddress
+	mov ax,word ptr ds:EthernetAddress
 	mov gs:[bx],ax
 	add bx,2
 ;
-	mov ax,word ptr EthernetAddress+2
+	mov ax,word ptr ds:EthernetAddress+2
 	mov gs:[bx],ax
 	add bx,2
 ;
-	mov ax,word ptr EthernetAddress+4
+	mov ax,word ptr ds:EthernetAddress+4
 	mov gs:[bx],ax
 	add bx,2
 ;
@@ -3214,7 +3214,7 @@ send_mem16_sent:
 	pop es
 	pop ds
 	pop ax
-	mov SendPending,al
+	mov ds:SendPending,al
 	LeaveSection ds:SendSection
 	call StartTransmit
 ;
@@ -3270,8 +3270,8 @@ SendMem8	Proc far
 	push dx
 	movzx bx,bl
 	shl bx,2
-	mov [bx].SendHeader.sh_size,cx
-	mov [bx].SendHeader.sh_next,al
+	mov ds:[bx].SendHeader.sh_size,cx
+	mov ds:[bx].SendHeader.sh_next,al
 	sti
 ;
 	shl bx,6
@@ -3297,27 +3297,27 @@ SendMem8	Proc far
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress
+	mov al,byte ptr ds:EthernetAddress
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress+1
+	mov al,byte ptr ds:EthernetAddress+1
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress+2
+	mov al,byte ptr ds:EthernetAddress+2
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress+3
+	mov al,byte ptr ds:EthernetAddress+3
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress+4
+	mov al,byte ptr ds:EthernetAddress+4
 	mov gs:[bx],al
 	inc bx
 ;
-	mov al,byte ptr EthernetAddress+5
+	mov al,byte ptr ds:EthernetAddress+5
 	mov gs:[bx],al
 	inc bx
 ;
@@ -3342,7 +3342,7 @@ SendMem8	Proc far
 	pop es
 	pop ds
 	pop ax
-	mov SendPending,al
+	mov ds:SendPending,al
 	LeaveSection ds:SendSection
 	call StartTransmit
 ;
@@ -3463,21 +3463,21 @@ init_net	Proc far
 
 	mov ax,ether_data_sel
 	mov ds,ax
-	test Mode,MEM_MODE
+	test ds:Mode,MEM_MODE
 	jz init_net_io
 
 init_net_mem:
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	mov si,OFFSET Mem16Table
 	jnz init_net_register
 	mov si,OFFSET Mem8Table
 	jmp init_net_register
 
 init_net_io:
-	test Mode,DWORD_MODE
+	test ds:Mode,DWORD_MODE
 	mov si,OFFSET Io32Table
 	jnz init_net_register
-	test Mode,WORD_MODE
+	test ds:Mode,WORD_MODE
 	mov si,OFFSET Io16Table
 	jnz init_net_register
 	mov si,OFFSET Io8Table
@@ -3499,7 +3499,7 @@ init_net_register:
 	outb InterruptMaskReg,InterruptMaskEnable
 	outb ReceiveConfigReg,ReceiveConfigNormal
 	outb CommandReg,CommandStart
-	and Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
+	and ds:Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
 
 init_net_done:
 	popa
