@@ -1190,6 +1190,7 @@ dupl_file_info	PROC far
 	push cx
 	mov cx,SIZE file_handle_seg
 	AllocateHandle
+	pop cx
 	mov [bx].file_handle_pos,0
 	mov [bx].file_handle_sel,ax
 	mov [bx].file_handle_access,cl

@@ -43,9 +43,13 @@ INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE fs.inc
+INCLUDE handle.inc
 
 memmap_seg		STRUC
 
+memmap_base		handle_header <>
+
+memmap_prev		DW ?
 memmap_next		DW ?
 memmap_sel		DW ?
 view_offset		DD ?
@@ -66,16 +70,6 @@ map_users		DW ?
 map_name		DB ?
 
 mapped_struc	ENDS
-
-handle_to_offset	MACRO reg
-	shl reg,4
-	add reg,OFFSET handle_list
-					ENDM
-
-offset_to_handle	MACRO reg
-	sub reg,OFFSET handle_list
-	shr reg,4
-					ENDM
 
 	.386p
 
@@ -462,20 +456,48 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateHandle	Proc near
+	push es
 	push ax
-	mov ax,fs_process_sel
-	mov ds,ax
+	push cx
+	push si
+	push di
+;
+	mov cx,SIZE memmap_seg
+	AllocateHandle
+	mov [bx].memmap_sel,es
+	mov [bx].view_offset,0
+	mov [bx].view_base,0
+	mov [bx].view_size,0
+;
 	cli
-	mov bx,ds:handle_free_list
-	mov ax,[bx]
-	mov ds:handle_free_list,ax
+	mov ax,fs_process_sel
+	mov es,ax
+	mov di,es:memmap_list
+	or di,di
+	je create_ins_empty
+;
+	mov si,[di].memmap_prev
+	mov [di].memmap_prev,bx
+	mov [si].memmap_next,bx
+	mov [bx].memmap_next,di
+	mov [bx].memmap_prev,si
+	jmp create_ins_done
+
+create_ins_empty:
+	mov [bx].memmap_next,bx
+	mov [bx].memmap_prev,bx
+	mov es:memmap_list,es
+
+create_ins_done:
 	sti
-	mov ds:[bx].memmap_sel,es
-	mov ds:[bx].view_offset,0
-	mov ds:[bx].view_base,0
-	mov ds:[bx].view_size,0
-	offset_to_handle bx
+	mov [bx].hh_sign,MEMMAP_HANDLE
+	mov bx,[bx].hh_handle
+;
+	pop di
+	pop si
+	pop cx
 	pop ax
+	pop es
 	ret
 CreateHandle	Endp
 
@@ -683,35 +705,41 @@ close_mapping_name DB 'Close Mapping',0
 
 close_mapping	Proc far
 	push ds
+	push es
 	push ax
-	cmp bx,map_num
-	jc cfm_ok
 ;
-	stc
-	jmp cfm_done
-
-cfm_ok:
-	handle_to_offset bx
+	mov ax,MEMMAP_HANDLE
+	DerefHandle
+	jc cfm_done
+;
 	mov ax,fs_process_sel
-	mov ds,ax
-	xor ax,ax
-	xchg ax,ds:[bx].memmap_sel
+	mov es,ax
+	cli
+	mov es:memmap_list,bx
+	mov di,[bx].memmap_next
+	cmp di,bx
+	mov es:memmap_list,di
+	mov si,[bx].memmap_prev
+	mov [di].memmap_prev,si
+	mov [si].memmap_next,di
+	jne close_rem_done
+;
+	mov es:memmap_list,0
+
+close_rem_done:
+	sti
+	mov ax,ds:[bx].memmap_sel
 	or ax,ax
 	jz cfm_done
 ;
 	mov es,ax
 	call CloseMapped
-	mov ax,fs_process_sel
-	mov ds,ax
-	cli
-	mov ax,ds:handle_free_list
-	mov [bx],ax
-	mov ds:handle_free_list,bx
-	sti
+	clc
 
 cfm_done:
 	xor bx,bx
 	pop ax
+	pop es
 	pop ds
 	retf32
 close_mapping	Endp
@@ -802,11 +830,17 @@ map_fault	Proc far
 	push bx
 	push cx
 	push edx
+	push si
 ;
 	mov ax,fs_process_sel
+	mov es,ax
+	mov ax,handle_mem_sel
 	mov ds,ax
-	mov cx,map_num
-	mov bx,OFFSET handle_list
+	mov bx,es:memmap_list
+	or bx,bx
+	jz map_fault_fail
+;
+	mov si,bx
 
 map_fault_loop:
 	mov ax,ds:[bx].memmap_sel
@@ -828,12 +862,15 @@ map_fault_loop:
 	jmp map_fault_done
 
 map_fault_find_next:
-	add bx,16
-	loop map_fault_loop
-;
+	mov bx,[bx].memmap_next
+	cmp bx,si
+	jnz map_fault_loop
+
+map_fault_fail:
 	int 3
 
 map_fault_done:
+	pop si
 	pop edx
 	pop cx
 	pop bx
@@ -867,16 +904,12 @@ map_view	Proc near
 	push edx
 	push di
 ;
-	cmp bx,map_num
-	jc mfm_ok
+	push ax
+	mov ax,MEMMAP_HANDLE
+	DerefHandle
+	pop ax
+	jc mfm_done
 ;
-	stc
-	jmp mfm_done
-
-mfm_ok:
-	handle_to_offset bx
-	mov dx,fs_process_sel
-	mov ds,dx
 	mov dx,ds:[bx].memmap_sel
 	or dx,dx
 	stc
@@ -970,16 +1003,10 @@ unmap_view	Proc far
 	push ecx
 	push edx
 ;
-	cmp bx,map_num
-	jc ufm_ok
+	mov ax,MEMMAP_HANDLE
+	DerefHandle
+	jc ufm_done
 ;
-	stc
-	jmp ufm_done
-
-ufm_ok:
-	handle_to_offset bx
-	mov dx,fs_process_sel
-	mov ds,dx
 	mov dx,ds:[bx].memmap_sel
 	or dx,dx
 	stc
@@ -1046,16 +1073,7 @@ PAGE
 init_memmap_process	PROC near
 	mov ax,fs_process_sel
 	mov es,ax
-;
-	mov cx,map_num
-	mov di,16*map_num + OFFSET handle_list
-init_handle_tab_loop:
-	mov ax,di
-	sub di,16
-	mov es:[di].memmap_next,ax
-	mov es:[di].memmap_sel,0
-	loop init_handle_tab_loop
-	mov es:handle_free_list,di
+	mov es:memmap_list,0
 	ret
 init_memmap_process	Endp
 
@@ -1075,8 +1093,6 @@ PAGE
 	public close_memmap_app
 
 close_memmap_app	PROC near
-	mov ax,fs_process_sel
-	mov es,ax
 	ret
 close_memmap_app	Endp
 

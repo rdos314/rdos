@@ -936,7 +936,7 @@ read_file_do:
 
 read_req_loop:
 	cmp ebx,fs:file_size
-	ja read_file_wait
+	jae read_file_wait
 ;
 	mov edx,es:[ebp]
 	or edx,edx
@@ -945,6 +945,8 @@ read_req_loop:
 	mov edx,es:[ebp-4]
 	mov al,fs:file_drive
 	call next_cluster
+	jc read_file_wait
+;
 	mov es:[ebp],edx
 
 read_file_req_cluster:

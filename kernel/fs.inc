@@ -26,7 +26,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 MAX_DRIVES	EQU 'Z' - 'A' + 1
-map_num = 40h
 
 FILE_ATTRIB_NOBUFFER = 80h
 
@@ -68,9 +67,7 @@ fs_process_seg	STRUC
 
 cur_dir_sel			DW 256 DUP(?)
 curr_drive			DB ?
-resv1				DB ?
-handle_free_list	DW ?
-handle_list			DB 16 * map_num DUP(?)
+memmap_list			DW ?
 
 fs_process_seg	ENDS
 
