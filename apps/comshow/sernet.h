@@ -20,49 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# comshow.cpp
-# Protocol analyzer app. 
+# sernet.h
+# SERNET protocol translator
 #
 ########################################################################*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "rdos.h"
-#include "cbus.h"
-#include "file.h"
-#include "cbus.h"
-#include "sernet.h"
+#ifndef _SERNET_H
+#define _SERNET_H
 
-#define FALSE 0
-#define TRUE !FALSE
+#include "anabase.h"
 
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void cdecl main()
+class TSernetProtocolAnalyser : public TProtocolAnalyser
 {
-	RdosWaitMilli(200);
+public:
+	TSernetProtocolAnalyser(const char *MemMapName, int MaxSize);
+	virtual ~TSernetProtocolAnalyser();
+    
+    virtual int GetMsg();
+    virtual void ShowMsg();
 
-//    TCbusProtocolAnalyser analyzer("comlog", 0x400);
-    TSernetProtocolAnalyser analyzer("comlog", 0x400);
+protected:
+};
 
-    analyzer.DefineLogFile("c:\\comshow.log");
-
-	for (;;)
-	{
-		while (!RdosPollKeyboard())
-		{
-		    if (analyzer.GetMsg())
-		        analyzer.ShowMsg();
-		}
-
-		if ((RdosReadKeyboard() & 0xFF) == 0x1B)
-			return;
-	}
-}
+#endif
