@@ -1454,7 +1454,7 @@ RdosGetTime	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RdosConvertTics
+;		NAME:			RdosTicsToRecord
 ;
 ;		description:	Convert tics to record form
 ;
@@ -1470,7 +1470,7 @@ RdosGetTime	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosConvertTics
+	public RdosTicsToRecord
 
 ctMSB		EQU 8
 ctLSB		EQU 12
@@ -1482,7 +1482,7 @@ ctMin		EQU 32
 ctSec		EQU 36
 ctMilli		EQU 40
 
-RdosConvertTics	Proc
+RdosTicsToRecord	Proc
 	push ebp
 	mov ebp,esp
 	pushad
@@ -1531,7 +1531,69 @@ RdosConvertTics	Proc
 	popad
 	pop ebp
 	ret 32
-RdosConvertTics	Endp
+RdosTicsToRecord	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosRecordToTics
+;
+;		description:	Convert record form to tics
+;
+;		PARAMETERS:		int *MSB
+;						int *LSB
+;						int year
+;						int month
+;						int day
+;						int hour
+;						int min
+;						int sec
+;						int milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosRecordToTics
+
+rtMSB		EQU 8
+rtLSB		EQU 12
+rtYear		EQU 16
+rtMonth		EQU 20
+rtDay		EQU 24
+rtHour		EQU 28
+rtMin		EQU 32
+rtSec		EQU 36
+rtMilli		EQU 40
+
+RdosRecordToTics	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov eax,[ebp].rtMilli
+	mov edx,1192
+	mul edx
+	push eax
+	mov dx,[ebp].rtYear
+	mov ch,[ebp].rtMonth
+	mov cl,[ebp].rtDay
+	mov bh,[ebp].rtHour
+	mov bl,[ebp].rtMin
+	mov ah,[ebp].rtSec
+	UserGate time_to_binary_nr
+	pop ebx
+	add eax,ebx
+	adc edx,0
+;
+	mov esi,[ebp].rtMSB
+	mov [esi],edx
+;
+	mov esi,[ebp].rtLSB
+	mov [esi],eax
+;
+	popad
+	pop ebp
+	ret 32
+RdosRecordToTics	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2084,6 +2146,36 @@ RdosCloseFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosDuplFile
+;
+;		DESCRIPTION:	Duplicate file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDuplFile
+
+RdosDuplFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate dupl_file_nr
+	jc DuplFileFailed
+	mov ax,bx
+	jmp DuplFileDone
+
+DuplFileFailed:
+	xor ax,ax
+
+DuplFileDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosDuplFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosGetFileSize
 ;
 ;		DESCRIPTION:	Get size of a file
@@ -2189,6 +2281,69 @@ RdosSetFilePos	PROC
 	pop ebp
 	ret 8
 RdosSetFilePos	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFileTime
+;
+;		DESCRIPTION:	Get file date & time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFileTime
+
+RdosGetFileTime	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edx
+	push edi
+;
+	mov bx,[ebp+8]
+	UserGate get_file_time_nr
+	jc GetFileTimeDone
+;
+	mov edi,[ebp+12]
+	mov [edi],edx
+;
+	mov edi,[ebp+16]
+	mov [edi],eax
+
+GetFileTimeDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 12
+RdosGetFileTime	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFileTime
+;
+;		DESCRIPTION:	Set date & time for file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFileTime
+
+RdosSetFileTime	PROC
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+	push edx
+;
+	mov bx,[ebp+8]
+	mov edx,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate set_file_time_nr
+;
+	pop edx
+	pop ebx
+	pop eax
+	pop ebp
+	ret 12
+RdosSetFileTime	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

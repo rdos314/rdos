@@ -56,6 +56,18 @@ TPlanetThread::~TPlanetThread()
 
 }
 
+/*##################  TPlanetThread::DeviceName ##########################
+*   Purpose....: Get device name				                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 02-11-06 le                                                #
+*##########################################################################*/
+void TPlanetThread::DeviceName(char *Name, int MaxLen) const
+{
+	strncpy(Name, "Planet", MaxLen);
+}
+
 /*##################  TPlanetThread::RandomPlanet ##########################
 *   Purpose....: Create a random planet		                                #
 *   In params..: *                                                          #

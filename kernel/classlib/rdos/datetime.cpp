@@ -1,0 +1,324 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2002, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# datetime.cpp
+# Date & time class
+#
+########################################################################*/
+
+#include "rdos.h"
+#include "datetime.h"
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor for current date & time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime()
+{
+	RdosGetTics(&FMsb, &FLsb);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from raw format
+#
+#   In params..: msb, lsb		raw rdos format of date & time
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(long Msb, long Lsb)
+{
+	FMsb = Msb;
+	FLsb = Lsb;
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from date
+#
+#   In params..: year, month, day
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(int Year, int Month, int Day)
+{
+	FYear = Year;
+	FMonth = Month;
+	FDay = Day;
+	FHour = 0;
+	FMin = 0;
+	FSec = 0;
+	FMilli = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from date & time
+#
+#   In params..: year, month, day, hour, min, sec
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
+{
+	FYear = Year;
+	FMonth = Month;
+	FDay = Day;
+	FHour = Hour;
+	FMin = Min;
+	FSec = Sec;
+	FMilli = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from date & time
+#
+#   In params..: year, month, day, hour, min, sec, milli
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int Milli)
+{
+	FYear = Year;
+	FMonth = Month;
+	FDay = Day;
+	FHour = Hour;
+	FMin = Min;
+	FSec = Sec;
+	FMilli = Milli;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::SetRawe
+#
+#   Purpose....: Set data in raw format
+#
+#   In params..: msb, lsb		raw rdos format of date & time
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::SetRaw(long Msb, long Lsb)
+{
+	FMsb = Msb;
+	FLsb = Lsb;
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetMsb
+#
+#   Purpose....: Get msb
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: msb
+#
+##########################################################################*/
+long TDateTime::GetMsb() const
+{
+	return FMsb;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetLsb
+#
+#   Purpose....: Get lsb
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: lsb
+#
+##########################################################################*/
+long TDateTime::GetLsb() const
+{
+	return FLsb;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetYear
+#
+#   Purpose....: Get year
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: year
+#
+##########################################################################*/
+int TDateTime::GetYear() const
+{
+	return FYear;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetMonth
+#
+#   Purpose....: Get month
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: year
+#
+##########################################################################*/
+int TDateTime::GetMonth() const
+{
+	return FMonth;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetDay
+#
+#   Purpose....: Get day
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: day
+#
+##########################################################################*/
+int TDateTime::GetDay() const
+{
+	return FDay;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetHour
+#
+#   Purpose....: Get hour
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: hour
+#
+##########################################################################*/
+int TDateTime::GetHour() const
+{
+	return FHour;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetMin
+#
+#   Purpose....: Get minute
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: minute
+#
+##########################################################################*/
+int TDateTime::GetMin() const
+{
+	return FMin;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetSec
+#
+#   Purpose....: Get second
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: second
+#
+##########################################################################*/
+int TDateTime::GetSec() const
+{
+	return FSec;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::GetMilliSec
+#
+#   Purpose....: Get millisecond
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: millisecond
+#
+##########################################################################*/
+int TDateTime::GetMilliSec() const
+{
+	return FMilli;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::RawToRecord
+#
+#   Purpose....: Convert from raw to record format
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::RawToRecord()
+{
+	RdosTicsToRecord(FMsb, FLsb, &FYear, &FMonth, &FDay, &FHour, &FMin, &FSec, &FMilli);
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::RecordToRaw
+#
+#   Purpose....: Convert from record to raw format
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::RecordToRaw()
+{
+	RdosRecordToTics(&FMsb, &FLsb, FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+}

@@ -83,12 +83,15 @@ int __stdcall RdosGetSendBufferSpace(int Handle);
 int __stdcall RdosOpenFile(const char *FileName, char Access);
 int __stdcall RdosCreateFile(const char *FileName, int Attrib);
 void __stdcall RdosCloseFile(int Handle);
+int __stdcall RdosDuplFile(int Handle);
 long __stdcall RdosGetFileSize(int Handle);
 void __stdcall RdosSetFileSize(int Handle, long Size);
 long __stdcall RdosGetFilePos(int Handle);
 void __stdcall RdosSetFilePos(int Handle, long Pos);
 int __stdcall RdosReadFile(int Handle, void *Buf, int Size);
 int __stdcall RdosWriteFile(int Handle, const void *Buf, int Size);
+void __stdcall RdosGetFileTime(int Handle, long *MsbTime, long *LsbTime);
+void __stdcall RdosSetFileTime(int Handle, long MsbTime, long LsbTime);
 
 int __stdcall RdosCreateMapping(int Size);
 int __stdcall RdosCreateNamedMapping(const char *Name, int Size); 
@@ -104,8 +107,9 @@ void __stdcall RdosSetCurDir(const char *PathName);
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();
 void __stdcall RdosWaitMilli(int ms);
-void __stdcall RdosGetTics(int *msb, int *lsb);
-void __stdcall RdosConvertTics(int msb, int lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosGetTics(long *msb, long *lsb);
+void __stdcall RdosTicsToRecord(long msb, long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosRecordToTics(long *msb, long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
 void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 
