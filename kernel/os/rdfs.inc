@@ -37,10 +37,20 @@ ri_hole_size		DD ?
 
 rdfs_info_struc	ENDS
 
+alloc_struc	STRUC
+
+as_base			DD ?
+as_size			DD ?
+as_start		DD ?
+as_sectors		DD ?
+
+alloc_struc	ENDS
+
 drive_data_seg	STRUC
 
 info_sector			rdfs_info_struc <>
 alloc_section		section_typ <>
+alloc_sel			DW ?
 drive_nr			DB ?
 
 drive_data_seg	ENDS
