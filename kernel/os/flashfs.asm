@@ -37,6 +37,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\fs.inc
 INCLUDE flashfs.inc
 
 	.386p
@@ -44,6 +45,7 @@ INCLUDE flashfs.inc
 code	SEGMENT byte public use16 'CODE'
 
 	extrn cache_dir:far
+	extrn create_file:far
 
 	extrn CacheBlock:near
 	extrn GetFreeBlockSectors:near
@@ -326,29 +328,6 @@ rename_file	PROC far
 	stc
 	ret
 rename_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CREATE_FILE
-;
-;		DESCRIPTION:	Create file
-;
-;		PARAMETERS:		ES:EDI		Filename
-;						BX			Dir
-;						CX			Attribute
-;
-;		RETURNS:		EDX			Dir entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file	PROC far
-    int 3
-    stc
-	ret
-create_file	ENDP
 
 PAGE 
 

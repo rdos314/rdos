@@ -37,6 +37,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE ..\fs.inc
 INCLUDE flashfs.inc
 
 	.386p
@@ -233,7 +234,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetSector
+;		NAME:			GetBlockSector
 ;
 ;		DESCRIPTION:	Get a sector
 ;
@@ -245,39 +246,39 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetSector	Proc near
+GetBlockSector	Proc near
 	push di
 ;
 	cmp bl,7Fh
-	jae geFail
+	jae gbeFail
 ;
 	movzx di,bl
 	add di,di
 	mov al,fs:[di].bc_log_sector_arr.bs_type
 	or al,al
-	jz geFail
+	jz gbeFail
 ;
 	movzx edx,fs:[di].bc_log_sector_arr.bs_physical_sector
 	add edx,fs:bc_start_sector
 	clc
-	jmp geDone
+	jmp gbeDone
 
-geFail:
+gbeFail:
 	stc
 
-geDone:
+gbeDone:
 	pop di
 	ret
-GetSector	Endp
+GetBlockSector	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			AllocateSector
+;		NAME:			AllocateBlockSector
 ;
-;		DESCRIPTION:	Allocate a sector
+;		DESCRIPTION:	Allocate a sector in block
 ;
 ;		PARAMETERS:		FS			Block selector
 ;						AL			Entry type
@@ -287,35 +288,37 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateSector	Proc near
+AllocateBlockSector	Proc near
 	push ax
 	push cx
-	push si
+	push esi
 	push di
 ;
 	mov cx,127
 	xor bx,bx
 
-asLogLoop:
+absLogLoop:
 	mov ah,fs:[bx].bc_log_sector_arr.bs_type
 	or ah,ah
-	jne asLogNext
+	jne absLogNext
 ;
 	xor di,di
 	mov cx,127
 
-asPhysLoop:
+absPhysLoop:
 	mov ah,fs:[di].bc_phys_sector_arr
 	cmp ah,-1
-	jne asPhysNext
+	jne absPhysNext
 ;
 	call AllocateSectorEntry
-	jc asDone
+	jc absDone
 ;
 	mov fs:[bx].bc_log_sector_arr.bs_type,al
 	mov es:[esi].le_type,al
 	mov ax,di
 	mov fs:[bx].bc_log_sector_arr.bs_physical_sector,al
+	movzx edx,al
+	add edx,fs:bc_start_sector
 	inc al
 	mov es:[esi].le_physical_sector,al
 	shr bx,1
@@ -326,29 +329,30 @@ asPhysLoop:
 	mov ebx,fs:bc_handle
 	ModifySector
 	pop ebx
+;
 	clc
-	jmp asDone
+	jmp absDone
 
-asPhysNext:
-	inc si
-	loop asPhysLoop
+absPhysNext:
+	inc di
+	loop absPhysLoop
 ;
 	stc
-	jmp asDone
+	jmp absDone
 
-asLogNext:
+absLogNext:
 	add bx,2
-	loop asLogLoop
+	loop absLogLoop
 ;
 	stc
 
-asDone:
+absDone:
 	pop di
-	pop si
+	pop esi
 	pop cx
 	pop ax
 	ret
-AllocateSector	Endp
+AllocateBlockSector	Endp
 
 PAGE
 
@@ -558,18 +562,76 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			CacheRootDir
+;		NAME:			AllocateSector
 ;
-;		DESCRIPTION:	Cache root dir
+;		DESCRIPTION:	Allocate a sector in any block
 ;
-;		PARAMETERS:		EDX		Sector (0)
-;						BX		Dir sel
+;       PARAMETERS:     AL          Entry type
+;
+;       RETURNS:        EBX         Cluster #
+;                       EDX         Sector #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public CacheRootDir
+	public AllocateSector
 
-CacheRootDir	PROC near
+AllocateSector	PROC near
+	push fs
+	push eax
+	push esi
+;
+    xor esi,esi
+
+asBlockLoop:
+    mov bx,si
+	call GetBlock
+	jnc asEntry
+;
+	call AllocateBlock
+	jc asDone
+
+asEntry:
+	call AllocateBlockSector	
+	jnc asOk
+;
+    inc si
+    cmp si,ds:block_count
+    jnz asBlockLoop
+;
+    stc
+    jmp asDone
+
+asOk:
+    shl esi,8
+    movzx ebx,bl
+    or ebx,esi
+    clc
+
+asDone:
+    pop esi
+	pop eax
+	pop fs
+	ret
+AllocateSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetRootDir
+;
+;		DESCRIPTION:	Get root dir
+;
+;		PARAMETERS:		BX		Dir sel
+;
+;       RETURNS:        EDX     Root dir entry sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetRootSector
+
+GetRootSector	PROC near
 	push fs
 	push eax
 	push ebx
@@ -577,55 +639,35 @@ CacheRootDir	PROC near
 ;
 	xor bx,bx
 	call GetBlock
-	jnc crdEntry
+	jnc grsEntry
 ;
 	call AllocateBlock
-	jc crdDone
+	jc grsDone
 
-crdEntry:
+grsEntry:
 	xor bl,bl
-	call GetSector
-	jnc crdCheckEntry
+	call GetBlockSector
+	jnc grsCheckEntry
 ;
 	mov al,LOG_ENTRY_DIR_ENTRY
-	call AllocateSector	
-	jnc crdEntry
-	jmp crdDone
+	call AllocateBlockSector	
+	jnc grsEntry
+	jmp grsDone
 
-crdCheckEntry:
+grsCheckEntry:
 	cmp al,LOG_ENTRY_DIR_ENTRY
 	stc
-	jne crdDone
+	jne grsDone
 ;
 	clc
 
-crdDone:
+grsDone:
 	pop ecx
 	pop ebx
 	pop eax
 	pop fs
 	ret
-CacheRootDir	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CacheSubDir
-;
-;		DESCRIPTION:	Cache sub dir
-;
-;		PARAMETERS:		EDX		Sector
-;						BX		Dir sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public CacheSubDir
-
-CacheSubDir	PROC near
-	ret
-CacheSubDir	Endp
+GetRootSector	Endp
 
 code	ENDS
 

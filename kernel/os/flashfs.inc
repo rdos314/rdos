@@ -25,6 +25,24 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+fde_struc	STRUC
+
+fde_base			dir_dir_entry_data_struc <>
+
+fde_sector          DD ?
+fde_name	    	DB ?
+
+fde_struc	ENDS
+
+ffe_struc	STRUC
+
+ffe_base			dir_file_entry_data_struc <>
+
+ffe_sector          DD ?
+ffe_name			DB ?
+
+ffe_struc	ENDS
+
 drive_data_seg  STRUC
 
 block_count			DW ?
@@ -78,11 +96,11 @@ dir_entry_header_struc	ENDS
 
 dir_entry_struc	STRUC
 
-de_size				DD ?
-de_time				DD ?,?
-de_cluster_entry	DB ?
-de_cluster_block	DW ?
-de_valid			DB ?
+fde_size			DD ?
+fde_time			DD ?,?
+fde_cluster_entry	DB ?
+fde_cluster_block	DW ?
+fde_valid			DB ?
 
 dir_entry_struc	ENDS
 
@@ -100,9 +118,9 @@ CLUSTER_OK = 67h
 
 dir_data_struc	STRUC
 
-dd_cluster_entry	DB ?
-dd_cluster_block	DW ?
-dd_valid			DB ?
+fdd_cluster_entry	DB ?
+fdd_cluster_block	DW ?
+fdd_valid			DB ?
 
 dir_data_struc	ENDS
 
