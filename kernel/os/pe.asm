@@ -934,17 +934,18 @@ find_path_failed:
 	WriteChar
 ;
 	stc
-	jmp open_dll_done
+	jmp open_dll_unlock
 
 find_path_file_ok:
 	FreeMem
 	clc
 	
-open_dll_done:
+open_dll_unlock:
     pushf
     UnlockProcEnv
     popf
-;
+
+open_dll_done:
 	pop edi
 	pop esi
 	pop cx
@@ -3920,7 +3921,6 @@ get_env	Proc far
 	push edx
 	push esi
 ;
-	int 3
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov edi,ds:pe_env

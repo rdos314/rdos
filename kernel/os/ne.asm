@@ -1092,6 +1092,9 @@ open_dll	Proc near
 	push si
 	push di
 ;
+    LockProcEnv
+    mov ds,bx
+;
 	xor di,di
 	mov cx,0F00h
 	push si
@@ -1115,9 +1118,6 @@ open_dll_move_done:
 	xor cl,cl
 	OpenFile
 	jnc open_dll_ok
-;
-    LockProcEnv
-    mov ds,bx
 ;
 	mov bx,si
 	mov ax,es
