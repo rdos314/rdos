@@ -964,7 +964,7 @@ ReadCmd	Proc near
 	or cl,al
 	mov DriveHead,cl
     mov cl,[bx].Gap
-	mov cGap,bl
+	mov cGap,cl
 	mov cl,[bx].Tracks
 	mov cTracks,cl
 	mov cDataLen,0FFh
@@ -1004,7 +1004,7 @@ WriteCmd	Proc near
 	or cl,al
 	mov DriveHead,cl
     mov cl,[bx].Gap
-	mov cGap,bl
+	mov cGap,cl
 	mov cl,[bx].Tracks
 	mov cTracks,cl
 	mov cDataLen,0FFh
