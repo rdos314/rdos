@@ -51,6 +51,7 @@ STATE	.EQU $1E
 BIT		.EQU $1F
 FLREG	.EQU $20
 SEC		.EQU $21
+FLVAL   .EQU $22
 
 VAL0:	.EQU $28
 VAL1:	.EQU $29
@@ -497,7 +498,7 @@ ResClkReg:	decfsz BIT,F
 ;
 			movlw 7
 			movwf STATE
-			clrf VAL
+			clrf FLVAL
 			goto ResClk
 
 ResClkSend:
@@ -527,14 +528,14 @@ ResClkValMore:
 RecBit:		incf STATE,F
 			btfss PORTB,2
 			return
-			bsf VAL,7
+			bsf FLVAL,7
 			return
 
 SetClkVal:	decfsz BIT,F
 			goto SetClkValMore
 ;
 			call RecBit
-			movf VAL,W
+			movf FLVAL,W
 			movwf INDF
 ;
 			clrf STATE
@@ -543,7 +544,8 @@ SetClkVal:	decfsz BIT,F
 
 SetClkValMore:
 			call RecBit
-			rrf VAL,F
+			bcf STATUS,C
+			rrf FLVAL,F
 			bsf PORTB,0
 			return
 			
