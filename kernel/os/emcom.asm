@@ -81,8 +81,8 @@ get_cs_bitness_gdt:
 get_cs_bitness_test:
 	and bx,0FFF8h
 	mov bl,[bx+6]
-	shl bl,1
-	jnc get_cs_bitness_done
+	test bl,40h
+	jz get_cs_bitness_done
 	or byte ptr [bp].em_flags,cs32 OR d32 OR a32
 
 get_cs_bitness_done:
@@ -123,8 +123,8 @@ get_ss_bitness_gdt:
 get_ss_bitness_test:
 	and bx,0FFF8h
 	mov bl,[bx+6]
-	shl bl,1
-	jnc get_ss_bitness_done
+	test bl,40h
+	jz get_ss_bitness_done
 	or byte ptr [bp].em_flags,ss32
 
 get_ss_bitness_done:

@@ -1116,6 +1116,7 @@ free_vm_callback_name	DB 'Free VM Callback',0
 free_vm_callback	PROC far
 	push ecx
 	push edx
+	movzx edx,dx
 	shl edx,4
 	movzx ecx,ax
 	add edx,ecx
