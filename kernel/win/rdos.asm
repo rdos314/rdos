@@ -2562,6 +2562,62 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosEnableAutoRts
+;
+;		description:	Enable auto RTS signal generation for RS485
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosEnableAutoRts
+
+_RdosEnableAutoRts	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	EnableAutoRts
+;
+    pop bx
+	pop bp
+	ret
+_RdosEnableAutoRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDisableAutoCts
+;
+;		description:	Disable auto RTS signal generation for RS485
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDisableAutoRts
+
+_RdosDisableAutoRts	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	DisableAutoRts
+;
+    pop bx
+	pop bp
+	ret
+_RdosDisableAutoRts	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetDtr
 ;
 ;		description:	Set DTR signal

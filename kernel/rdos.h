@@ -93,6 +93,8 @@ char __stdcall RdosReadCom(int Handle);
 int __stdcall RdosWriteCom(int Handle, char Val);
 void __stdcall RdosEnableCts(int Handle);
 void __stdcall RdosDisableCts(int Handle);
+void __stdcall RdosEnableAutoRts(int Handle);
+void __stdcall RdosDisableAutoRts(int Handle);
 void __stdcall RdosSetDtr(int Handle);
 void __stdcall RdosResetDtr(int Handle);
 void __stdcall RdosSetRts(int Handle);

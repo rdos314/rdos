@@ -1520,6 +1520,16 @@ ResetRts       MACRO
 						ENDM
 
 ;	IN  BX		port handle
+EnableAutoRts       MACRO
+	UserGate enable_auto_rts_nr
+						ENDM
+
+;	IN  BX		port handle
+DisableAutoRts       MACRO
+	UserGate disable_auto_rts_nr
+						ENDM
+
+;	IN  BX		port handle
 ;   OUT EAX     free space
 GetComReceiveSpace       MACRO
 	UserGate get_com_receive_space_nr

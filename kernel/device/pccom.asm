@@ -43,6 +43,7 @@ include ..\wait.inc
 IER_BITS        = 8
 
 FLG_ENABLE_CTS  = 1
+FLG_ENABLE_AUTO_RTS  = 2
 
 serial_wait_header	STRUC
 
@@ -78,6 +79,8 @@ rec_buf			DW ?
 send_buf		DW ?
 
 avail_obj   	DW ?
+
+char_time       DD ?
 
 send_wait       DW ?
 
@@ -201,6 +204,54 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RTS_OFF
+;
+;		DESCRIPTION:	Delayed RTS off
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+rts_off	PROC far
+    mov ds,cx
+    mov di,ds:send_count
+    or di,di
+    jnz rts_off_done
+;
+    push ax
+    push dx
+    mov dx,ds:base
+    add dx,5
+    in al,dx
+    test al,40h
+    pop dx
+    pop ax
+    jnz rts_off_dis
+;
+	add eax,ds:char_time
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET rts_off
+	mov bx,cx
+	StartTimer
+	jmp rts_off_done
+        
+rts_off_dis:
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	and al,NOT 2
+	out dx,al
+
+rts_off_done:
+	ret
+rts_off Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TRANS_PR
 ;
 ;		DESCRIPTION:	Send data
@@ -221,6 +272,22 @@ trans_end:
 	inc dx
 	out dx,al
 ;
+    test ds:flgs, FLG_ENABLE_AUTO_RTS
+    jz trans_signal_wait
+;
+	GetSystemTime
+	add eax,ds:char_time
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET rts_off
+	mov bx,ds
+	mov cx,bx
+	StopTimer
+	StartTimer
+	mov es,ds:send_buf
+    		
+trans_signal_wait:
     mov bx,ds:send_wait
     or bx,bx
     jz trans_exit
@@ -457,12 +524,15 @@ open_com	Proc far
     mov dx,[bp].port_base
     StartComPort
 
-open_com_started:    
+open_com_started:   
 	mov al,[bp].port_data_bits
+	mov dl,al
+	inc dl
 	sub al,5
 	and al,3
 ;
 	mov ah,[bp].port_stop_bits
+	add dl,ah
 	dec ah
 	and ah,1
 	shl ah,2
@@ -476,13 +546,39 @@ open_com_started:
 	jmp open_parity_done
 
 open_even:
+    inc dl
 	or al,18h
 	jmp open_parity_done
 
 open_odd:
+    inc dl
 	or al,8
 
 open_parity_done:
+    push eax
+    push ecx
+    push edx
+;
+    push dx
+    movzx ecx,word ptr [bp].baud_divisor    
+    mov eax,115200
+    xor edx,edx
+    div ecx             ; eax = bits / s
+;    
+    mov ecx,eax
+    mov eax,1193000
+    xor edx,edx
+    div ecx             ; eax = 1193000 / baudrate
+;
+    pop dx
+    movzx edx,dl
+    mul edx             ; eax = char tics
+    mov ds:char_time,eax
+;
+    pop edx
+    pop ecx
+    pop eax
+;
 	push ax
 	or al,80h
 	mov dx,ds:base
@@ -667,6 +763,86 @@ disable_cts_done:
     pop ds
     retf32
 disable_cts Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			EnableAutoRts
+;
+;		DESCRIPTION:	Enable automatic RTS on send
+;
+;		PARAMETERS:		BX      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_auto_rts_name DB 'Enable Auto RTS',0
+
+enable_auto_rts	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc enable_auto_rts_done
+;
+	mov ds,[bx].port_sel
+    or ds:flgs,FLG_ENABLE_AUTO_RTS
+;
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	and al,NOT 2
+	out dx,al
+
+enable_auto_rts_done:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+enable_auto_rts Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DisableAutoRts
+;
+;		DESCRIPTION:	Disable automatic RTS on send
+;
+;		PARAMETERS:		BX      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_auto_rts_name DB 'Disable Auto RTS',0
+
+disable_auto_rts	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc disable_auto_rts_done
+;
+	mov ds,[bx].port_sel
+    and ds:flgs,NOT FLG_ENABLE_AUTO_RTS
+;    
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	or al,2
+	out dx,al
+
+disable_auto_rts_done:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+disable_auto_rts Endp
 
 PAGE
 	
@@ -867,6 +1043,19 @@ com_send_no_wrap:
 	jz com_send_ok
 
 com_send_enable:
+    test ds:flgs, FLG_ENABLE_AUTO_RTS
+    jz com_send_start
+;
+	mov bx,ds
+	StopTimer
+;	
+	mov dx,ds:base
+	add dx,4
+	in al,dx
+	or al,2
+	out dx,al
+
+com_send_start:
 	mov dx,ds:base
 	inc dx
 	mov al,IER_BITS + 3
@@ -1384,6 +1573,18 @@ init	Proc far
 	mov di,OFFSET disable_cts_name
 	xor dx,dx
 	mov ax,disable_cts_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET enable_auto_rts
+	mov di,OFFSET enable_auto_rts_name
+	xor dx,dx
+	mov ax,enable_auto_rts_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET disable_auto_rts
+	mov di,OFFSET disable_auto_rts_name
+	xor dx,dx
+	mov ax,disable_auto_rts_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_dtr
