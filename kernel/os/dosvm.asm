@@ -57,6 +57,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn get_virt_psp:near
 	extrn set_virt_psp:near
 	extrn get_prot_psp:near
+	extrn set_prot_psp:near
 	extrn get_virt_dta:near
 	extrn set_virt_dta:near
 	extrn get_prot_dta:near
@@ -300,7 +301,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 keep_process:
-	int 3
 	push ax
 	call get_virt_psp
 	movzx eax,dx
@@ -327,7 +327,10 @@ keep_process:
 	GetSelectorBaseSize
 	movzx edx,ax
 	shl edx,4
+	AllocateLdt
+	or bx,7
 	CreateDataSelector16
+	call set_prot_psp
 ;
 	mov bx,thread_app_sel
 	mov ds,bx

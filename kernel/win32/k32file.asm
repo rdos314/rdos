@@ -801,10 +801,12 @@ ofsDirLoop:
 	sub ecx,1
 	jne ofsDirLoop
 	pop esi
+	push es
 	mov ax,cs
 	mov es,ax
 	mov edi,OFFSET default_dir
 	UserGate open_dir_nr
+	pop es
 	jmp ofsDone
 ofsDirFound:
 	pop esi
@@ -1266,7 +1268,7 @@ fffNoMatch:
 	UserGate free_app_mem_nr
 
 fffFailed:
-	xor eax,eax
+	mov eax,-1
 
 fffDone:
 	pop edi
@@ -1298,7 +1300,12 @@ FindNextFileA Proc near
 	push edi
 ;
 	mov ebx,[ebp].fnfHandle
-	sub dword ptr [ebx-8],SIZE ffStruc
+	lea esi,[ebx-8]
+	mov eax,[esi]
+	or eax,eax
+	jz fnfFailed
+;
+	sub dword ptr [esi],SIZE ffStruc
 	jbe fnfFailed
 ;
 	mov esi,[ebx-4]
@@ -1310,6 +1317,8 @@ FindNextFileA Proc near
 	jmp fnfDone
 
 fnfFailed:
+	mov eax,18
+	mov fs:pvLastError,eax
 	xor eax,eax
 
 fnfDone:

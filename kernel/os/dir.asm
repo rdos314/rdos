@@ -1180,7 +1180,6 @@ parse_file_name_loop:
 	mov al,es:[edi]
 	or al,al
 	jz parse_file_ok
-	jmp parse_file_fail
 
 parse_file_next:
 	pop edi
@@ -1191,12 +1190,6 @@ parse_file_next:
 	xor edx,edx
 	stc
 	jmp parse_file_done	
-
-parse_file_fail:
-	pop edi
-	xor edx,edx
-	stc
-	jmp parse_file_done
 
 parse_file_ok:
 	pop esi

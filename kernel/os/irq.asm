@@ -272,7 +272,7 @@ set_irq_try&nr:
 	mov eax,cr3
 	cmp eax,ds:[bx].owner_cr3
 	je set_irq_do&nr
-	EnterSection ds:[bx].usage_section
+;	EnterSection ds:[bx].usage_section
 	mov ds:[bx].owner_cr3,eax
 set_irq_do&nr:
 	mov ds:[bx].vm_offs,cx
@@ -285,7 +285,7 @@ set_irq_do&nr:
 	mov ax,ds:[bx].pm32_sel
 	cmp ax,ds:irq_pm32_sel
 	jne set_irq_not_free&nr
-	LeaveSection ds:[bx].usage_section
+;	LeaveSection ds:[bx].usage_section
 set_irq_not_free&nr:
 	pop cx
 	pop eax

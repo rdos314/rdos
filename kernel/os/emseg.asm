@@ -358,7 +358,6 @@ IntFarPm:
 IntFarPm16:
 	push ax
 	mov ax,word ptr [bp].reg_eflags
-	GetFlags
 	call PushWord
 	mov ax,[bp].reg_cs
 	rol eax,16
@@ -373,7 +372,6 @@ IntFarPm16:
 IntFarPm32:
 	push ax
 	mov eax,[bp].reg_eflags
-	GetFlags
 	call PushDword
 	mov ax,[bp].reg_cs
 	call PushDword
@@ -424,7 +422,6 @@ ExcFarPm16:
 	call PushWord
 ;	
 	mov ax,word ptr [bp].reg_eflags
-	GetFlags
 	call PushWord
 ;
 	mov ax,[bp].reg_cs
@@ -459,7 +456,6 @@ ExcFarPm32:
 	call PushDword
 ;	
 	mov eax,[bp].reg_eflags
-	GetFlags
 	call PushDword
 ;
 	movzx eax,[bp].reg_cs

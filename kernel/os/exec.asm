@@ -753,12 +753,8 @@ spawn_program32	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 unload_exe_name DB 'Unload Exe',0
-
-unload_exe_retry:
-	int 3
 	
 unload_exe	Proc far
-	int 3
 	push ax
 	UnhookKeyboard
 	UnhookMouse
@@ -771,8 +767,9 @@ unload_exe	Proc far
 	mov ds,ax
 	pop ax
 	or bx,bx
-	jz unload_exe_retry
+	jz unload_exe
 ;
+	xor ah,ah
 	mov ds:app_exit_code,ax
 	RestoreContext
 	push ds

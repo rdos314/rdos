@@ -2314,15 +2314,43 @@ load_pe_cmd_size:
 	jnz load_pe_cmd_size
 ;
 	pop edi
+	xor ebx,ebx
+	push esi
+
+load_pe_name_size:
+	mov al,[esi]
+	inc esi
+	inc ebx
+	or al,al
+	jnz load_pe_name_size
+;
+	pop esi
+;
 	mov eax,ecx
+	add eax,ebx
 	UserGateForce32 allocate_app_mem_nr	
 	mov fs:pe_cmd_line,edx
+;
+	push es
+	push ecx
+	push edi
+	mov ax,flat_data_sel
+	mov es,ax
+	mov edi,edx
+	mov ecx,ebx
+	rep movs byte ptr es:[edi],[esi]
+	mov edx,edi
+	pop edi
+	pop ecx
+	pop es	
+;
 	mov esi,edi
 	mov edi,edx
 	mov ax,es
 	mov ds,ax
 	mov ax,flat_data_sel
 	mov es,ax
+	mov byte ptr es:[edi-1],' '
 	rep movs byte ptr es:[edi],[esi]
 	clc
 	jmp load_pe_done
@@ -2547,7 +2575,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Freehread
+;		NAME:			FreeThread
 ;
 ;		DESCRIPTION:    Free stack
 ;

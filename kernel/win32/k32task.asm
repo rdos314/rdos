@@ -540,6 +540,19 @@ CreateProcessA Proc near
 ;
 	mov esi,[ebp].cpPath
 	mov edi,[ebp].cpCmdLine
+
+cpCmdLoop:
+	mov al,[edi]
+	or al,al
+	jz cpCmdOk
+;
+	cmp al,' '
+	je cpCmdOk
+;
+	inc edi
+	jmp cpCmdLoop
+
+cpCmdOk:
 	mov edx,[ebp].cpFlags
 	test dl,1
 	jz cpNoDebug

@@ -1090,6 +1090,7 @@ open_dll	Proc near
 	push gs
 	push ax
 	push cx
+	push dx
 	push si
 	push di
 ;
@@ -1180,11 +1181,13 @@ find_path_name_move_ext:
 	stosb
 	pop bx
 ;
+	mov dx,bx
 	xor di,di
 	xor cl,cl
 	OpenFile
 	jnc open_dll_ok
 ;
+	mov bx,dx
 	mov al,[si-1]
 	or al,al
 	jnz find_path_move_loop
@@ -1199,6 +1202,7 @@ open_dll_ok:
 open_dll_done:
 	pop di
 	pop si
+	pop dx
 	pop cx
 	pop ax
 	pop gs
