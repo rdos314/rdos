@@ -795,7 +795,10 @@ void TStorageList::Recover()
 			{
 				listnode = new TStorageListNode(buf, FDataSize);
 				listnode->FID = Entry;
-				TListBase::AddFirst(listnode);
+				if (FMaxEntries > 200)
+    				TListBase::AddFirst(listnode);
+    			else
+    				TListBase::AddLast(listnode);
 			}
 			else
 			{
