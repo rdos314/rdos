@@ -72,8 +72,6 @@ code	SEGMENT byte public 'CODE'
 	extrn init_memmap:near
 	extrn init_dir_process:near
 	extrn init_memmap_process:near
-	extrn close_file_app:near
-	extrn close_memmap_app:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -547,31 +545,6 @@ init_process	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CLOSE_APP
-;
-;		DESCRIPTION:	Close app
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_app	PROC far
-	push ds
-	push es
-	pushad
-;
-	call close_file_app
-	call close_memmap_app
-;
-	popad
-	pop es
-	pop ds
-	ret
-close_app	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			Hook_thread
 ;
 ;		DESCRIPTION:	Run all init file system hooks
@@ -767,9 +740,6 @@ init	PROC far
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess
-;
-	mov di,OFFSET close_app
-	HookCloseApp
 ;
 	mov eax,SIZE fs_process_seg
 	mov bx,fs_process_sel

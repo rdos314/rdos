@@ -865,7 +865,7 @@ close_rem_done:
 	clc
 
 cfm_done:
-	xor bx,bx
+	FreeHandle
 	pop ax
 	pop es
 	pop ds
@@ -1203,6 +1203,58 @@ unmap_view	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_handle
+;
+;		DESCRIPTION:	BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push es
+	push ax
+;
+	mov ax,MEMMAP_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	mov ax,fs_process_sel
+	mov es,ax
+	cli
+	mov es:memmap_list,bx
+	mov di,[bx].memmap_next
+	cmp di,bx
+	mov es:memmap_list,di
+	mov si,[bx].memmap_prev
+	mov [di].memmap_prev,si
+	mov [si].memmap_next,di
+	jne delete_handle_rem_done
+;
+	mov es:memmap_list,0
+
+delete_handle_rem_done:
+	sti
+	mov ax,ds:[bx].memmap_sel
+	or ax,ax
+	jz delete_handle_done
+;
+	mov es,ax
+	call CloseMapped
+	clc
+
+delete_handle_done:
+	FreeHandle
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			Open app
@@ -1225,25 +1277,6 @@ init_memmap_process	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Close app
-;
-;		DESCRIPTION:	Init per-process data
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public close_memmap_app
-
-close_memmap_app	PROC near
-	ret
-close_memmap_app	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			Init
@@ -1258,6 +1291,10 @@ init_memmap	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov ax,MEMMAP_HANDLE
+	mov di,OFFSET delete_handle
+	RegisterHandle
 ;
 	mov si,OFFSET create_mapping
 	mov di,OFFSET create_mapping_name

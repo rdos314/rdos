@@ -770,7 +770,12 @@ unload_exe	Proc far
 	jz unload_exe
 ;
 	xor ah,ah
+	sldt dx
+	or dx,dx
+	jz unload_terminate
+;
 	mov ds:app_exit_code,ax
+;
 	RestoreContext
 	push ds
 	mov ax,thread_app_sel
@@ -780,6 +785,9 @@ unload_exe	Proc far
 	clc
 	retf32
 unload_exe	Endp
+
+unload_terminate:
+	TerminateThread
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -634,8 +634,13 @@ init_thread_block	PROC near
 	mov cx,(1000h - thread_linear + thread_block_linear) SHR 2
 	rep movsd
 ;
+	push fs
 	mov ax,ds:p_process_sel
+	mov fs,ax
+	inc fs:ms_thread_count
 	mov es:p_process_sel,ax
+	pop fs
+;
 	mov ax,ds:p_app_sel
 	mov es:p_app_sel,ax
 	mov eax,ds:p_app_page
@@ -690,10 +695,11 @@ PAGE
 
 init_process_block	PROC near
 	push es
-	mov eax,OFFSET ms_size
+	mov eax,SIZE process_seg
 	AllocateSmallGlobalMem
 	mov es:ms_virt_flags,7200h
 	mov es:ms_wait_sti,0
+	mov es:ms_thread_count,1
 	mov ax,es
 	pop es
 	mov es:p_process_sel,ax
@@ -1264,6 +1270,13 @@ terminate_thread	PROC far
 	call ds:p_free_proc
 
 terminate_app_handled:
+	mov ds,ds:p_process_sel
+	sub ds:ms_thread_count,1
+	jnz terminate_proc_handled
+;
+	int 3
+
+terminate_proc_handled:
 	mov ax,system_data_sel
 	mov ds,ax
 	mov es,ax

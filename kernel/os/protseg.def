@@ -133,6 +133,7 @@ __C000				EQU 28Bh
 
 handle_sel			EQU 290h
 handle_mem_sel		EQU 298h
+handle_data_sel		EQU 2A0h
 
 ;
 os_begin_sel		EQU 1800h

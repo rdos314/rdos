@@ -478,10 +478,15 @@ trap_close_app_done:
 	mov ax,thread_sel
 	mov ds,ax
 	mov es,ds:p_app_sel
-	mov ax,es:app_next
+	movzx eax,es:app_next
+	or ax,ax
+	jz close_app_last
+;
 	mov fs,ax
 	mov ds:p_app_sel,ax
 	mov eax,fs:app_page
+
+close_app_last:
 	mov ds:p_app_page,eax
 	FreeMem
 ;
@@ -496,9 +501,22 @@ trap_close_app_done:
 	mov ax,thread_tss_sel
 	mov es,ax
 	cli
+	mov bx,fs
+	or bx,bx
+	jz close_app_ldt_data
+;
 	mov bx,fs:app_ldt_data_sel
+
+close_app_ldt_data:
 	mov ds:p_ldt_sel,bx
+;
+	mov bx,fs
+	or bx,bx
+	jz close_app_ldt
+;
 	mov bx,fs:app_ldt_sel
+
+close_app_ldt:
 	mov es:tss_ldt,bx
 	lldt bx
 	sti

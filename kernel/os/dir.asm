@@ -3061,20 +3061,42 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Test pr
+;		NAME:			Delete handle
 ;
-;		DESCRIPTION:	TEST
+;		DESCRIPTION:	Delete a handle (called from handle module)
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		BX			HANDLE TO DIR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_name	DB 'Test',0
+delete_handle	Proc far
+	push ds
+	push ax
+	push bx
+	push si
+;
+	mov ax,DIR_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	mov si,bx
+	mov bx,[bx].dir_handle_sel
+	or bx,bx
+	stc
+	jz delete_handle_done
+;
+	call CloseDirBase
+	mov bx,si
+	FreeHandle
+	clc
 
-test_pr	PROC far
-	int 3
-	retf32
-test_pr	Endp
+delete_handle_done:
+	pop si
+	pop bx
+	pop ax
+	pop ds
+	ret
+delete_handle	Endp
 
 PAGE
 
@@ -3118,6 +3140,10 @@ init_dir	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET delete_handle
+	mov ax,DIR_HANDLE
+	RegisterHandle
 ;
 	mov si,OFFSET stop_file_system
 	mov di,OFFSET stop_file_system_name
@@ -3396,12 +3422,6 @@ init_dir	PROC near
 	mov dx,virt_es_in
 	mov ax,create_virt_file_nr
 	RegisterVirtUserGate
-;
-	mov si,OFFSET test_pr
-	mov di,OFFSET test_name
-	xor cl,cl
-	mov ax,test_nr
-	RegisterUserGate
 ;
 	ret
 init_dir	ENDP

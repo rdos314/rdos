@@ -867,6 +867,12 @@ WaitSleepTask	MACRO
 					ENDM
 
 ; IN  AX		Signature
+; IN  ES:DI		Delete handle callback
+RegisterHandle	MACRO
+	OsGate register_handle_nr
+					ENDM
+
+; IN  AX		Signature
 ; IN  CX		Size of data
 ; OUT DS:BX		Handle data
 AllocateHandle	MACRO

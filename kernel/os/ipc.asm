@@ -297,7 +297,11 @@ free_mailslot	Proc far
 	jz free_mailslot_done
 ;
 	mov ds,ax
-	dec ds:m_usage
+	sub ds:m_usage,1
+	clc
+	jnz free_mailslot_done
+;
+	FreeHandle
 	clc
 
 free_mailslot_done:
@@ -873,6 +877,46 @@ reply_mailslot16	Proc far
 reply_mailslot16	Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_handle
+;
+;		DESCRIPTION:	Delete handle (called from handle module)
+;
+;		PARAMETERS:		BX			Mailslot handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push ax
+;
+	mov ax,IPC_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	mov ax,[bx].ipc_handle_sel
+	or ax,ax
+	stc
+	jz delete_handle_done
+;
+	mov ds,ax
+	sub ds:m_usage,1
+	clc
+	jnz delete_handle_done
+;
+	FreeHandle
+	clc
+
+delete_handle_done:
+	pop ax
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -931,6 +975,10 @@ init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov ax,IPC_HANDLE
+	mov di,OFFSET delete_handle
+	RegisterHandle
 ;
 	mov si,OFFSET get_local_mailslot32
 	mov di,OFFSET get_local_mailslot_name

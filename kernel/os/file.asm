@@ -1956,21 +1956,48 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Close app
+;		NAME:			Delete_handle
 ;
-;		DESCRIPTION:	Init per-process data
+;		DESCRIPTION:	Delete handle (called from handle module)
 ;
-;		PARAMETERS:		
-;
+;		PARAMETERS:		BX			FILE HANDLE
+;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public close_file_app
+delete_handle	Proc far
+	push ds
+	push bx
+	push si
+;
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	mov si,bx
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
+	or bx,bx
+	stc
+	jz delete_handle_done
+;
+	mov ds,bx
+	sub ds:file_usage,1
+	jnz delete_handle_handle
+;
+;	CallFileSystem close_file_proc
+;	call FreeFileSel
 
-close_file_app	PROC near
-	mov ax,fs_process_sel
-	mov es,ax
+delete_handle_handle:
+	mov bx,si
+	FreeHandle
+	clc
+
+delete_handle_done:
+	pop si
+	pop bx
+	pop ds
 	ret
-close_file_app	Endp
+delete_handle	Endp
 
 PAGE
 
@@ -1989,6 +2016,10 @@ init_file	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET delete_handle
+	mov ax,FILE_HANDLE
+	RegisterHandle
 ;
 	mov si,OFFSET get_file_list_entry
 	mov di,OFFSET get_file_list_entry_name

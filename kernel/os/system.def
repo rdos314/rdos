@@ -217,7 +217,7 @@ process_seg	SEGMENT AT 0
 	ms_virt_flags	DW ?
 	ms_wait_sti		DW ?
 	ms_cli_thread	DW ?
-	ms_size			DB ?
+	ms_thread_count	DW ?
 process_seg	ENDS
 
 tss_seg		SEGMENT AT 0

@@ -59,11 +59,70 @@ handle_arr	DW MAX_HANDLES DUP (?)
 
 handle_seg	ENDS
 
+handle_info	STRUC
+
+hi_link		DW ?
+hi_sign		DW ?
+hi_delete	DD ?
+
+handle_info	ENDS
+
+handle_data_seg	STRUC
+
+hd_list		DW ?
+
+handle_data_seg	ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
 	
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RegisterHandle
+;
+;		DESCRIPTION:	Register a handle
+;
+;		PARAMETERS:		AX		Signature
+;				 		ES:DI	Delete callback
+;					
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_handle_name	DB 'Register Handle',0
+
+register_handle	PROC far
+	push ds
+	push es
+	push ax
+;
+	push es
+	push eax
+	mov eax,SIZE handle_info
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	pop eax
+	pop es
+	mov ds:hi_sign,ax
+	mov word ptr ds:hi_delete,di
+	mov word ptr ds:hi_delete+2,es
+;
+	mov ax,handle_data_sel
+	mov es,ax
+	mov ax,es:hd_list
+	mov ds:hi_link,ax
+	mov es:hd_list,ds
+;
+	pop ax
+	pop es
+	pop ds
+	ret
+register_handle	ENDP
 
 PAGE
 
@@ -491,6 +550,11 @@ init_handle	PROC near
 	push es
 	pusha
 ;
+	mov eax,SIZE handle_data_seg
+	mov bx,handle_data_sel
+	AllocateFixedSystemMem
+	mov es:hd_list,0
+;
 	mov eax,SIZE handle_seg
 	mov bx,handle_sel
 	AllocateFixedProcessMem
@@ -506,6 +570,12 @@ init_handle	PROC near
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess
+;
+	mov si,OFFSET register_handle
+	mov di,OFFSET register_handle_name
+	xor cl,cl
+	mov ax,register_handle_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET allocate_handle
 	mov di,OFFSET allocate_handle_name
