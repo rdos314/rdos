@@ -484,11 +484,56 @@ terminate_process:
 	InitTask
 terminate_process_loop:
 	mov es,ax
+;
+	mov ax,es:p_process_sel
+	push es
+	mov es,ax
+	FreeMem
+	pop es
+;
+	mov cx,400h
+	mov bx,es
+	mov edx,handle_linear
+
+terminate_process_linear_loop:
+	GetThreadPhysicalPage
+	or eax,eax
+	jz terminate_process_linear_next
+;
+	FreePhysical
+
+terminate_process_linear_next:
+	add edx,1000h
+	loop terminate_process_linear_loop
+;
+    mov bx,es:p_page_alias
+	mov ax,sys_page_sel
+	mov ds,ax
+	movzx esi,bx
+	shl esi,10
+	add esi,handle_linear SHR 20
+	mov eax,[esi]
+	or ax,ax
+	jnz tfr
+	int 3
+tfr:
+	FreePhysical
+;
+    mov ax,sys_dir_sel
+    mov ds,ax
+	mov dword ptr [bx],0
+;
+	mov eax,es:p_cr3
+	FreePhysical
+;
 	mov bx,es:p_tss_data_sel
 	FreeGdt
+;
 	mov bx,es:p_tss_sel
 	FreeGdt
+;
 	FreeMem
+;
 	InitTask
 	jmp terminate_process_loop
 	
