@@ -1620,6 +1620,24 @@ NewDiscRequest	MACRO
 					ENDM
 
 ;	IN  BX		Disc sel
+;	IN	AX		Sector
+;	IN	DX		Unit
+;	OUT EDI		Disc handle
+LockDiscRequest	MACRO
+	OsGate lock_disc_request_nr
+					ENDM
+
+;	IN  EDI		Disc handle
+ModifyDiscRequest	MACRO
+	OsGate modify_disc_request_nr
+					ENDM
+
+;	IN  EDI		Disc handle
+UnlockDiscRequest	MACRO
+	OsGate unlock_disc_request_nr
+					ENDM
+
+;	IN  BX		Disc sel
 ;	IN  ECX		Max number of entries
 ;	OUT	ESI		Disc handle array
 ;	OUT ECX		Number of entries

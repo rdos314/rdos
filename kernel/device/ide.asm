@@ -1609,7 +1609,7 @@ install_unit_ok:
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	movzx di,fs:disc_nr
+	movzx di,fs:disc_sub_unit
 	add di,di
 	mov di,word ptr cs:[di].disc_name_tab
 	mov si,OFFSET discbuf_thread

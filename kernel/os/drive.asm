@@ -1434,6 +1434,147 @@ new_disc_req_done:
 new_disc_request	Endp
 
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LOCK_DISC_REQUEST
+;
+;		DESCRIPTION:	Lock disc sector and return handle
+;
+;		PARAMETERS:		BX		Disc selector
+;						AX		Sector
+;						DX		Unit
+;
+;		RETURNS:		EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_disc_request_name	DB 'Lock Disc Request',0
+
+lock_disc_request	PROC far
+	push ds
+	push es
+	push ax
+	push ebx
+	push cx
+	push edx
+;
+	mov ds,bx
+	mov cx,flat_sel
+	mov es,cx
+	mov cx,dx
+	mov dx,ax
+	EnterSection ds:disc_section
+
+lock_disc_loop:
+	call check_buf
+	jnc lock_disc_ok
+;
+	call allocate_handle
+	push edx
+	call allocate_data
+	mov es:[edi].dh_data,edx
+	pop edx
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	mov es:[edi].dh_flags,0
+	call insert_buf
+
+lock_disc_ok:
+    clc
+
+lock_disc_done:
+	pop edx
+	pop cx
+	pop ebx
+	pop ax
+	pop es
+	pop ds
+	ret
+lock_disc_request	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MODIFY_DISC_REQUEST
+;
+;		DESCRIPTION:	Modify disc request
+;
+;		PARAMETERS:		EDI		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+modify_disc_request_name	DB 'Modify Disc Request',0
+
+modify_disc_request	PROC far
+	push ds
+	push es
+	pushad
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov ds,es:[edi].dh_buf_sel
+;	
+	test es:[edi].dh_flags, FLAG_IO_BUSY
+	jnz modify_disc_done
+;	
+	mov al,es:[edi].dh_state
+	cmp al,STATE_USED
+	jne modify_disc_done
+;	
+	GetSystemTime
+	mov es:[edi].dh_time_lsb,eax
+	mov es:[edi].dh_time_msb,dx
+	mov es:[edi].dh_state,STATE_DIRTY
+	call insert_async_write
+	call update_async_timer
+
+modify_disc_done:
+	clc
+;
+	popad
+	pop es
+	pop ds
+	ret
+modify_disc_request	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UNLOCK_DISC_REQUEST
+;
+;		DESCRIPTION:	UNlock disc request
+;
+;		PARAMETERS:		EDI		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_disc_request_name	DB 'Unlock Disc Request',0
+
+unlock_disc_request	PROC far
+	push ds
+;
+	mov ds,es:[edi].dh_buf_sel
+	LeaveSection ds:disc_section
+;
+	pop ds
+	clc
+	ret
+unlock_disc_request	ENDP
+
+PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4089,6 +4230,21 @@ init	PROC far
 	mov si,OFFSET new_disc_request
 	mov di,OFFSET new_disc_request_name
 	mov ax,new_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET lock_disc_request
+	mov di,OFFSET lock_disc_request_name
+	mov ax,lock_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET modify_disc_request
+	mov di,OFFSET modify_disc_request_name
+	mov ax,modify_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET unlock_disc_request
+	mov di,OFFSET unlock_disc_request_name
+	mov ax,unlock_disc_request_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET disc_request_completed

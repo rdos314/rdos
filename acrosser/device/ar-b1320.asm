@@ -259,7 +259,7 @@ AddAdapter	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetAllAdapters  Proc near
-	mov bx,flash_disc_sel
+	mov bx,es
 	GetSelectorBaseSize
 	mov esi,edx
 	mov edi,edx
@@ -636,16 +636,10 @@ init	Proc far
     EnableStatusLED    
 ;
     mov eax,80000h
-    AllocateBigLinear
-    mov bx,flash_disc_sel
-    mov ecx,eax
-    CreateDataSelector32
+    AllocateBigMem
 ;
     mov ax,flat_sel
     mov ds,ax
-;
-    mov ax,flash_disc_sel
-    mov es,ax 
     xor edi,edi
 ;   
     mov dx,210h
@@ -669,6 +663,8 @@ load_loop:
     out dx,al 
 ;
     call GetAllAdapters
+;
+    FreeMem
 ;
 	popa
 	pop es

@@ -407,5 +407,9 @@ unlock_proc_env_nr          EQU 275
 erase_sectors_nr            EQU 276
 flush_sector_nr				EQU 277
 
+lock_disc_request_nr        EQU 278
+modify_disc_request_nr      EQU 279
+unlock_disc_request_nr      EQU 280
+
 osgate_entries				EQU 300
 

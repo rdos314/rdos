@@ -61,6 +61,12 @@ boot_fs						DB 8 DUP(?)
 
 boot_struc		ENDS
 
+flash_disc_data STRUC
+
+flash_section        section_typ <>
+
+flash_disc_data ENDS
+
 disc_struc	STRUC
 
 disc_section			section_typ <>
@@ -98,6 +104,46 @@ demand_mount	Proc far
 demand_mount	Endp
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			map_flash
+;
+;		DESCRIPTION:	Setup flash position
+;
+;		PARAMETERS:		EAX     Offset within flash
+;
+;       RETURNS:        ESI     Flash address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flash   Proc near
+    push eax
+    push bx
+    push cx
+    push dx
+;    
+    mov esi,eax
+    and esi,1FFFh
+    add esi,0C8000h
+;
+    shr eax,13
+    mov bl,40h
+    mov cl,fs:disc_sub_unit
+    shl bl,cl
+    or al,bl
+    mov dx,210h
+    out dx,al 
+;
+    pop dx
+    pop cx
+    pop bx
+    pop eax
+    ret 
+map_flash   Endp   
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -107,13 +153,80 @@ PAGE
 ;		DESCRIPTION:	Erase sectors
 ;
 ;		PARAMETERS:		BX		Disc handle
-;                       EDX     Start sector
-;                       ECX     Number of sectors
+;                       EDX     Flash offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 erase	Proc far
-    clc
+    pushad
+;
+	mov cx,8
+
+EraseLoop:
+    mov eax,edx
+    and eax,0F0000h
+    add eax,5555h
+    call map_flash    
+    mov byte ptr es:[esi],0AAh
+;
+    mov eax,edx
+    and eax,0F0000h
+    add eax,2AAAh
+    call map_flash    
+    mov byte ptr es:[esi],55h
+;    
+    mov eax,edx
+    and eax,0F0000h
+    add eax,5555h
+    call map_flash    
+    mov byte ptr es:[esi],80h
+;    
+    mov eax,edx
+    and eax,0F0000h
+    add eax,5555h
+    call map_flash    
+    mov byte ptr es:[esi],0AAh
+;
+    mov eax,edx
+    and eax,0F0000h
+    add eax,2AAAh
+    call map_flash    
+    mov byte ptr es:[esi],55h
+;
+    mov eax,edx
+    and eax,0F0000h
+    call map_flash    
+    mov byte ptr es:[esi],30h
+;
+    mov ax,10
+    WaitMilliSec
+;
+    mov si,1000    
+
+EraseWait:
+    mov al,byte ptr es:[esi]
+    test al,80h
+	clc
+    jnz EraseDone
+;
+	test al,20h
+	jnz EraseNext
+;
+    mov ax,2
+    WaitMilliSec
+    sub si,1
+    jnz EraseWait
+    jmp EraseFail
+
+EraseNext:
+    sub cx,1
+	jnz EraseLoop
+
+EraseFail:
+	stc
+
+EraseDone:
+    popad
 	ret
 erase	Endp
 
@@ -144,14 +257,100 @@ check_media	Endp
 ;		DESCRIPTION:	Read drive
 ;
 ;		PARAMETERS:		FS		Disc selector
-;						EDI		Disc handle
+;						EDI		Disc handle of first sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_drive	Proc near
+    push eax
+    push bx
+    push cx
+    push dx
+    push esi
+;    
+    mov bl,40h
+    mov cl,fs:disc_sub_unit
+    shl bl,cl
+;
+    mov esi,0C8000h
+    movzx eax,es:[edi].dh_sector
+    shl eax,9
+    and eax,1FFFh
+    add esi,eax
+;
+    mov ax,es:[edi].dh_sector    
+    shr ax,4
+    or bl,al
+;
+    mov ax,es:[edi].dh_unit
+    shl ax,3
+    or bl,al
+;
+    mov dx,210h
+    mov al,bl
+    out dx,al
+;
+    push edi
+    mov edi,es:[edi].dh_data
+    mov ecx,80h
+    rep movs dword ptr es:[edi],es:[esi]
+    pop edi
+;
+    xor al,al
+    out dx,al 
+;    
+    mov es:[edi].dh_state,STATE_USED
+;	
     clc
+;
+    pop esi
+    pop dx
+    pop cx
+    pop bx
+    pop eax
 	ret
 read_drive	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			lock_erase_sectors
+;
+;		DESCRIPTION:	Lock a sectors before an erase
+;
+;		PARAMETERS:		DS		Disc selector
+;						EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_erase_sectors  Proc near
+    pushad
+;    
+    xor ax,ax
+    mov dx,es:[edi].dh_unit
+    mov cx,80h
+
+lock_load_loop:
+    push ax
+    mov bx,fs:disc_sel
+    LockDiscRequest
+    mov al,es:[edi].dh_state
+    cmp al,STATE_EMPTY
+    jne lock_load_modify
+;
+    call read_drive
+
+lock_load_modify:    
+    ModifyDiscRequest
+    UnlockDiscRequest
+;
+    pop ax
+    inc ax
+    loop lock_load_loop
+;
+    popad
+    ret
+lock_erase_sectors  Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -166,7 +365,92 @@ read_drive	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive	Proc near
+
+write_drive_retry:
+    mov dx,es:[edi].dh_sector
+    mov ax,es:[edi].dh_unit
+    shl ax,7
+    or dx,ax
+    movzx edx,dx
+    shl edx,9
+;
+    mov ebx,es:[edi].dh_data    
+    mov cx,200h
+
+write_drive_loop:
+    mov eax,edx
+    call map_flash
+    mov al,es:[ebx]
+    cmp al,es:[esi]
+    je write_drive_next
+;    
+    xor al,es:[esi]
+    and al,es:[ebx]
+    jnz write_drive_erase
+;
+    mov eax,edx
+    and eax,0F0000h
+    add eax,5555h
+    call map_flash    
+    mov byte ptr es:[esi],0AAh
+;
+    mov eax,edx
+    and eax,0F0000h
+    add eax,2AAAh
+    call map_flash
+    mov byte ptr es:[esi],55h
+;
+    mov eax,edx
+    and eax,0F0000h
+    add eax,5555h
+    call map_flash
+    mov byte ptr es:[esi],0A0h
+;
+    mov eax,edx
+    call map_flash
+    mov al,es:[ebx]
+    mov es:[esi],al
+
+write_drive_wait:
+	mov ah,es:[esi]
+	push dx
+	mov dl,ah
+	xor dl,al
+	test dl,80h
+	pop dx
+	jz write_drive_check
+;
+	test ah,20h
+	jz write_drive_wait
+;
+	mov ah,es:[esi]
+	xor ah,al
+	test ah,80h
+	jz write_drive_check
+
+write_drive_erase:
+    call lock_erase_sectors
+    call erase
+    jmp write_drive_retry
+
+write_drive_check:
+    mov al,es:[ebx]
+    cmp al,es:[esi]
+    jne write_drive_loop
+
+write_drive_next:  
+    inc ebx
+    inc edx
+    sub cx,1
+    jnz write_drive_loop 
+;
+    xor al,al
+    out dx,al 
+;    
+	mov es:[edi].dh_state,STATE_USED
     clc
+
+write_drive_done:	
 	ret
 write_drive	Endp
 
@@ -186,6 +470,7 @@ PAGE
 perform_one	Proc near
 
 perform_one_loop:
+	mov bx,fs:disc_sel
 	GetDiscRequest
 	jc perform_one_done
 ;
@@ -237,19 +522,119 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
-    int 3
 	GetThread
 	mov fs:disc_thread,ax
-	mov bx,fs:disc_sel
 ;
+    mov ax,flash_disc_data_sel
+    mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
-	WaitForSignal
 
 discbuf_thread_loop:
+	mov bx,fs:disc_sel
 	WaitForDiscRequest
-	call perform_one
+;
+    EnterSection ds:flash_section
+    push ds
+   	call perform_one
+   	pop ds
+   	LeaveSection ds:flash_section
 	jmp discbuf_thread_loop
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			read_flash
+;
+;		DESCRIPTION:	Read flash position
+;
+;		PARAMETERS:		CL      Device #
+;                       EDX     Offset within flash
+;
+;       RETURNS:        AL      Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_flash   Proc near
+    push es
+    push bx
+    push cx
+    push dx
+    push esi
+;   
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,edx 
+    mov esi,eax
+    and esi,1FFFh
+    add esi,0C8000h
+;
+    shr eax,13
+    mov bl,40h
+    shl bl,cl
+    or al,bl
+    mov dx,210h
+    out dx,al 
+    mov al,es:[esi]
+;
+    pop esi
+    pop dx
+    pop cx
+    pop bx
+    pop es
+    ret 
+read_flash   Endp   
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			write_flash
+;
+;		DESCRIPTION:	Write flash position
+;
+;		PARAMETERS:		CL      Device #
+;                       EDX     Offset within flash
+;                       AL      Data
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_flash   Proc near
+    push es
+    push bx
+    push cx
+    push dx
+    push esi
+;   
+    push ax
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,edx 
+    mov esi,eax
+    and esi,1FFFh
+    add esi,0C8000h
+;
+    shr eax,13
+    mov bl,40h
+    shl bl,cl
+    or al,bl
+    mov dx,210h
+    out dx,al 
+    pop ax
+    mov es:[esi],al
+;
+    pop esi
+    pop dx
+    pop cx
+    pop bx
+    pop es
+    ret 
+write_flash   Endp   
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -263,8 +648,36 @@ discbuf_thread_loop:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+disc0	DB 'Flash Disc 0',0
+disc1	DB 'Flash Disc 1',0
+
+disc_name_tab:
+dnt00	DW OFFSET disc0
+dnt01	DW OFFSET disc1
+
 install_unit	Proc near
-	push ax
+    push ax
+    mov cl,al
+;    
+    mov al,0AAh
+    mov edx,5555h    
+    call write_flash
+; 
+    mov al,55h
+    mov edx,2AAAh
+    call write_flash   
+;    
+    mov al,90h
+    mov edx,5555h    
+    call write_flash
+;
+    mov edx,0
+    call read_flash
+    cmp al,1
+    pop ax
+    jne install_unit_done
+;
+  	push ax
 	mov eax,SIZE disc_struc
 	AllocateSmallGlobalMem
 	mov bx,es
@@ -279,13 +692,25 @@ install_unit	Proc near
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
 ;
+    mov ax,80h
+    mov cx,200h
+    mov dx,8
+    mov si,80h
+    mov di,8
+    SetDiscParam
+;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+	movzx di,fs:disc_sub_unit
+	add di,di
+	mov di,word ptr cs:[di].disc_name_tab
 	mov si,OFFSET discbuf_thread
-	mov ax,4
+	mov ax,1
 	mov cx,100h
 	CreateThread
+	
+install_unit_done:
 	ret
 install_unit	Endp
 
@@ -313,6 +738,7 @@ disc_assign	Proc far
 	mov al,0
 	mov di,OFFSET flash0
 	call install_unit
+;	
 	mov al,1
 	mov di,OFFSET flash1
 	call install_unit
@@ -383,6 +809,11 @@ init	PROC far
 	pusha
 	mov bx,flash_disc_code_sel
 	InitDevice
+;
+	mov eax,SIZE flash_disc_data
+	mov bx,flash_disc_data_sel
+	AllocateFixedSystemMem
+	InitSection es:flash_section
 ;
 	mov ax,cs
 	mov ds,ax
