@@ -1699,6 +1699,36 @@ init_thread	PROC far
 	ret
 init_thread	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Free_process
+;
+;		DESCRIPTION:	free process
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_process	Proc far
+	push ds
+	push bx
+;
+	mov bx,video_local_sel
+	mov ds,bx
+	mov bx,ds:v_handle
+	or bx,bx
+	jz free_process_done
+;
+	mov ds,bx
+	call ds:destruct_proc
+
+free_process_done:
+	pop bx
+	pop ds
+	ret
+free_process	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1758,6 +1788,9 @@ init	PROC far
 ;
 	mov di,OFFSET init_thread
 	HookCreateThread
+;
+	mov di,OFFSET init_thread
+	HookTerminateProcess
 ;
 	mov di,OFFSET init_focus
 	HookEnableFocus

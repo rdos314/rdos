@@ -428,8 +428,7 @@ load_process:
 	SimSti
 	mov ax,exec_sys_sel
 	mov ds,ax
-	mov ax,ds:focus_nr
-	inc ds:focus_nr
+	mov ax,3Bh
 	EnableFocus
 	SetFocus
 	mov es,bx
@@ -523,8 +522,7 @@ spawn_startup	Proc far
 	mov gs,bx
 	mov ax,exec_sys_sel
 	mov ds,ax
-	mov ax,ds:focus_nr
-	inc ds:focus_nr
+	mov ax,3Bh
 	EnableFocus
 	SetFocus
 	SaveContext
@@ -942,7 +940,6 @@ init_exec	PROC near
 	mov eax,SIZE exec_sys_seg
 	mov bx,exec_sys_sel
 	AllocateFixedSystemMem
-	mov es:focus_nr,3Bh
 	mov es:load_exe_hooks,0
 ;
 	mov ax,cs

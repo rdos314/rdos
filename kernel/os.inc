@@ -907,6 +907,15 @@ HookCreateProcess	MACRO
 	OsGate hook_create_process_nr
 					ENDM
 
+;	ES:DI		ADDRESS TILL CALLBACK
+HookTerminateThread	MACRO
+	OsGate hook_terminate_thread_nr
+					ENDM
+
+;	ES:DI		ADDRESS TILL CALLBACK
+HookTerminateProcess	MACRO
+	OsGate hook_terminate_process_nr
+					ENDM
 
 ;	ES:DI		ADDRESS TILL CALLBACK
 HookInitTasking	MACRO

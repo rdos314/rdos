@@ -569,7 +569,8 @@ init_mem_sels	PROC near
 	mov ax,sys_page_sel
 	mov ds,ax
 	AllocatePhysical
-	mov al,7
+	and ax,0F000h
+	or ax,807h
 	mov ebx,fixed_vm_linear SHR 10
 	mov [ebx],eax
 ;

@@ -84,36 +84,49 @@ init_task_tasks	Proc near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
 	mov al,20
 	mov bx,8 * 8
 	mov si,OFFSET double_fault
 	mov di,OFFSET double_fault_name
 	CreateTask
+;
 	mov al,20
 	mov bx,10 * 8
 	mov si,OFFSET tss_fault
 	mov di,OFFSET tss_fault_name
 	CreateTask
+;
 	mov al,20
 	mov bx,12 * 8
 	mov si,OFFSET stack_fault
 	mov di,OFFSET stack_fault_name
 	CreateTask
+;
 	mov al,20
 	mov bx,45h * 8
 	mov si,OFFSET prot_debug
 	mov di,OFFSET prot_debug_name
 	CreateTask
+;
 	mov al,20
 	mov bx,46h * 8
 	mov si,OFFSET virt_debug
 	mov di,OFFSET virt_debug_name
 	CreateTask
+;
 	mov al,20
 	mov bx,47h * 8
-	mov si,OFFSET terminate
-	mov di,OFFSET terminate_name
+	mov si,OFFSET terminate_thread
+	mov di,OFFSET terminate_thread_name
 	CreateTask
+;
+	mov al,20
+	mov bx,48h * 8
+	mov si,OFFSET terminate_process
+	mov di,OFFSET terminate_process_name
+	CreateTask
+;
 	ret
 init_task_tasks	Endp
 
@@ -434,18 +447,18 @@ virt_debug_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			TERMINATE
+;		NAME:			TERMINATE THREAD
 ;
-;		DESCRIPTION:	Terminate process handler
+;		DESCRIPTION:	Terminate thread handler
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-terminate_name	DB 'Terminate',0
+terminate_thread_name	DB 'Terminate Thread',0
 
-terminate:
+terminate_thread:
 	InitTask
-terminate_loop:
+terminate_thread_loop:
 	mov es,ax
 	mov bx,es:p_tss_data_sel
 	FreeGdt
@@ -453,7 +466,31 @@ terminate_loop:
 	FreeGdt
 	FreeMem
 	InitTask
-	jmp terminate_loop
+	jmp terminate_thread_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TERMINATE PROCESS
+;
+;		DESCRIPTION:	Terminate process handler
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+terminate_process_name	DB 'Terminate Process',0
+
+terminate_process:
+	InitTask
+terminate_process_loop:
+	mov es,ax
+	mov bx,es:p_tss_data_sel
+	FreeGdt
+	mov bx,es:p_tss_sel
+	FreeGdt
+	FreeMem
+	InitTask
+	jmp terminate_process_loop
 	
 code	ENDS
 

@@ -103,12 +103,14 @@ code	SEGMENT byte public use16 'CODE'
 	extrn wake_new:near
 
 	extrn init_process_paging:near
+	extrn free_process_paging:near
 	extrn init_process_mem:near
 	extrn init_process_app:near
 	extrn init_process_task:near
 	extrn init_task_traps:near
 	extrn init_task_tasks:near
 	extrn trap_single_step:near
+	extrn free_handle_process:near
 
 	assume cs:code,ds:thread_data_seg
 
@@ -141,7 +143,9 @@ init_thread	PROC near
 	mov ds,bx
 	xor ax,ax
 	mov create_thread_hooks,al
+	mov terminate_thread_hooks,al
 	mov create_process_hooks,al
+	mov terminate_process_hooks,al
 	mov init_tasking_hooks,al
 ;
 	mov ax,system_data_sel
@@ -232,16 +236,31 @@ init_thread	PROC near
 	xor cl,cl
 	mov ax,create_task_nr
 	RegisterOsGate
+;
 	mov si,OFFSET hook_create_thread
 	mov di,OFFSET hook_create_thread_name
 	xor cl,cl
 	mov ax,hook_create_thread_nr
 	RegisterOsGate
+;
+	mov si,OFFSET hook_terminate_thread
+	mov di,OFFSET hook_terminate_thread_name
+	xor cl,cl
+	mov ax,hook_terminate_thread_nr
+	RegisterOsGate
+;
 	mov si,OFFSET hook_create_process
 	mov di,OFFSET hook_create_process_name
 	xor cl,cl
 	mov ax,hook_create_process_nr
 	RegisterOsGate
+;
+	mov si,OFFSET hook_terminate_process
+	mov di,OFFSET hook_terminate_process_name
+	xor cl,cl
+	mov ax,hook_terminate_process_nr
+	RegisterOsGate
+;
 	mov si,OFFSET hook_init_tasking
 	mov di,OFFSET hook_init_tasking_name
 	xor cl,cl
@@ -252,7 +271,6 @@ init_thread	PROC near
 	popa
 	ret
 init_thread	ENDP
-
 
 PAGE
 
@@ -306,6 +324,53 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TRAP_TERMINATE_THREAD
+;
+;		DESCRIPTION:	Handle TerminateThread hooks
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_terminate_thread	PROC near
+	push cx
+	mov ax,proc_data_sel
+	mov ds,ax
+	mov cl,terminate_thread_hooks
+	or cl,cl
+	je trap_terminate_thread_done
+	mov bx,OFFSET terminate_thread_arr
+trap_terminate_thread_loop:
+	push ds
+	push bx
+	push cx
+	call dword ptr [bx]
+	pop cx
+	pop bx
+	pop ds
+	add bx,4
+	dec cl
+	jnz trap_terminate_thread_loop
+trap_terminate_thread_done:
+	mov ax,system_data_sel
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET thread_arr
+	GetThread
+	mov cx,256
+	repne scasw
+	sub di,2
+	xor ax,ax
+	stosw
+	pop cx
+	ret
+trap_terminate_thread	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TRAP_CREATE_PROCESS
 ;
 ;		DESCRIPTION:	Handle CreateProcess hooks
@@ -347,6 +412,43 @@ trap_create_process_done:
 	call trap_create_thread
 	ret
 trap_create_process	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_TERMINATE_PROCESS
+;
+;		DESCRIPTION:	Handle TerminateProcess hooks
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_terminate_process	PROC near
+	push cx
+	mov ax,proc_data_sel
+	mov ds,ax
+	mov cl,terminate_process_hooks
+	or cl,cl
+	je trap_terminate_process_done
+	mov bx,OFFSET terminate_process_arr
+trap_terminate_process_loop:
+	push ds
+	push bx
+	push cx
+	call dword ptr [bx]
+	pop cx
+	pop bx
+	pop ds
+	add bx,4
+	dec cl
+	jnz trap_terminate_process_loop
+trap_terminate_process_done:
+	pop cx
+	ret
+trap_terminate_process	ENDP
 
 PAGE
 
@@ -1260,9 +1362,19 @@ PAGE
 
 terminate_thread_name	DB 'Terminate Thread',0
 
-terminate_thread	PROC far
+terminate_thread:
+	SimSti
 	mov ax,thread_sel
 	mov ds,ax
+	mov es,ds:p_thread_sel
+	mov bx,es:p_stack_sel
+	verr bx
+	jnz no_free_ss
+;
+	mov es,bx
+	FreeMem
+
+no_free_ss:
 	mov eax,ds:p_free_proc
 	or eax,eax
 	jz terminate_app_handled
@@ -1270,35 +1382,21 @@ terminate_thread	PROC far
 	call ds:p_free_proc
 
 terminate_app_handled:
+	call trap_terminate_thread
+;
+	mov ax,thread_sel
+	mov ds,ax
 	mov ds,ds:p_process_sel
 	sub ds:ms_thread_count,1
-	jnz terminate_proc_handled
+	jz terminate_proc
 ;
-	int 3
-
-terminate_proc_handled:
-	mov ax,system_data_sel
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET thread_arr
-	GetThread
-	mov cx,256
-	repne scasw
-	sub di,2
-	xor ax,ax
-	stosw
-;	
-	mov ax,thread_sel
-	mov es,ax
-	mov es,es:p_thread_sel
-	mov bx,es:p_stack_sel
-	verr bx
-	jnz no_free_ss
-	mov es,bx
-	FreeMem
-no_free_ss:
 	int 47h
-terminate_thread	ENDP
+
+terminate_proc:
+	call free_handle_process
+	call trap_terminate_process
+	call free_process_paging
+	int 48h
 
 PAGE
 

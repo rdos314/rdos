@@ -939,6 +939,33 @@ init_thread	ENDP
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			free_thread
+;
+;		DESCRIPTION:	Free thread mailslot
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_thread	PROC far
+	mov ax,ipc_thread_sel
+	mov ds,ax
+	mov ax,ds:ipc_mailslot_sel
+	or ax,ax
+	jz free_thread_done
+;
+	mov es,ax
+	FreeMem
+
+free_thread_done:
+	ret
+free_thread	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			init
@@ -1048,6 +1075,9 @@ init	PROC far
 ;
 	mov di,OFFSET init_thread
 	HookCreateThread
+;
+	mov di,OFFSET free_thread
+	HookTerminateThread
 ;
 	call init_smp
 ;

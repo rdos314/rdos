@@ -2560,6 +2560,38 @@ debug_thread_loop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			free_thread
+;
+;		DESCRIPTION:	Free thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_thread	Proc far
+	GetThread
+	mov bx,ax
+	mov ax,kdebug_data_sel
+	mov ds,ax
+	mov ax,ds:debug_thread
+	cmp ax,bx
+	jne free_thread_done
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov si,OFFSET debug_list
+	mov bx,[si]
+	mov ax,kdebug_data_sel
+	mov ds,ax
+	mov ds:debug_thread,bx
+
+free_thread_done:
+	ret
+free_thread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			init_system
 ;
 ;		DESCRIPTION:	Init system
@@ -2613,6 +2645,9 @@ init	PROC far
 	mov es,ax
 	mov di,OFFSET init_system
 	HookInitTasking
+;
+	mov di,OFFSET free_thread
+	HookTerminateThread
 ;
 	popa
 	pop es

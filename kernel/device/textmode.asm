@@ -166,7 +166,7 @@ switch_mode_done:
 	GetPhysicalPage
 	push eax
 	mov eax,edx
-	or al,7
+	or ax,807h
 	SetPhysicalPage
 ;
 	EnterSection ds:v_section
@@ -175,7 +175,7 @@ switch_mode_done:
 	mov bx,ax
 	mov edx,ds:v_mem_base
 	mov eax,edx
-	or al,7
+	or ax,807h
 	SetThreadPhysicalPage
 ;
 	mov eax,cr3
@@ -204,6 +204,7 @@ switch_mode_done:
 	cmp edx,es:p_cr3
 	je switch_to_done
 ;
+	or ax,807h
 	mov edx,ds:v_mem_base
 	SetPhysicalPage
 	mov eax,cr3
@@ -241,7 +242,7 @@ switch_from	Proc far
 	GetPhysicalPage
 	push eax
 	mov eax,edx
-	or al,7
+	or ax,807h
 	SetPhysicalPage
 ;
 	EnterSection ds:v_section
@@ -262,6 +263,7 @@ switch_from	Proc far
 	mov bx,ax
 	mov edx,ds:v_buf_base
 	GetPhysicalPage
+	or ax,807h
 	mov edx,ds:v_mem_base
 	SetThreadPhysicalPage
 	LeaveSection ds:v_section
@@ -277,6 +279,7 @@ switch_from	Proc far
 	je switch_from_done
 ;
 	mov edx,ds:v_mem_base
+	or ax,807h
 	SetPhysicalPage
 	mov eax,cr3
 	mov cr3,eax
@@ -799,7 +802,7 @@ init_mono_loop:
 ;
 	mov edx,ds:v_buf_base
 	GetPhysicalPage
-	or al,7
+	or ax,807h
 	mov edx,ds:v_mem_base
 	SetPhysicalPage
 ;

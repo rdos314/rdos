@@ -129,6 +129,12 @@ init	PROC far
 	mov di,OFFSET init_focus_process
 	HookCreateProcess
 ;
+	mov di,OFFSET free_focus_process
+	HookTerminateProcess
+;
+	mov di,OFFSET free_thread
+	HookTerminateThread
+;
 	mov si,OFFSET set_focus
 	mov di,OFFSET set_focus_name
 	xor cl,cl
@@ -293,6 +299,46 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			Free_thread
+;
+;		DESCRIPTION:	Handle thread termination
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_thread	Proc far
+	mov bx,focus_sel
+	mov ds,bx
+	mov bx,OFFSET focus_thread
+	mov cx,100h
+	GetThread
+
+free_thread_loop:
+	cmp ax,[bx]
+	jne free_thread_next
+;
+	mov word ptr [bx],0
+	cmp ax,ds:focus_current_thread
+	jne free_thread_done
+;
+	mov ds:focus_switched,0
+	mov ds:focus_current_thread,0
+	jmp free_thread_done
+
+free_thread_next:
+	add bx,2
+	loop free_thread_loop
+
+free_thread_done:
+	ret
+free_thread	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT_FOCUS_PROCESS
 ;
 ;		DESCRIPTION:	Init per-process data
@@ -323,6 +369,47 @@ init_local_loop:
 	pop ds
 	ret
 init_focus_process	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FREE_FOCUS_PROCESS
+;
+;		DESCRIPTION:	Free per-process data
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_focus_process	Proc far
+	push ds
+	push eax
+	push ebx
+	push cx
+;
+	mov ax,process_page_sel
+	mov ds,ax
+	mov ebx,io_local_linear SHR 10
+	mov cx,400h
+free_local_loop:
+	mov eax,[ebx]
+	or eax,eax
+	jz free_local_next
+;
+	FreePhysical
+
+free_local_next:
+	add ebx,4
+	loop free_local_loop	
+;
+	pop cx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+free_focus_process	Endp
 
 PAGE
 
@@ -632,16 +719,36 @@ enable_focus_name	DB 'Enable Focus',0
 enable_focus	PROC far
 	push ds
 	push es
-	pushad
+	push bx
+;
 	mov bx,focus_sel
 	mov ds,bx
 	xor bh,bh
 	mov bl,al
 	GetThread
 	add bx,bx
+
+enable_focus_loop:
+	cmp [bx].focus_thread,0
+	jne enable_focus_next
+;
 	mov [bx].focus_thread,ax
+	jmp enable_focus_done
+
+enable_focus_next:
+	add bx,2
+	cmp bx,200h
+	jne enable_focus_loop
+
+enable_focus_done:
+	pushad
 	call trap_enable_focus
 	popad
+;
+	mov ax,bx
+	shr ax,1
+;
+	pop bx
 	pop es
 	pop ds
 	retf32

@@ -194,7 +194,7 @@ map_flat_start:
 	push ecx
 	mov cx,ax
 	and dx,0F000h
-	or dl,3
+	or dx,803h
 	and di,0F000h
 	or di,bx
 
@@ -402,6 +402,97 @@ free_startup_ram_done:
 	mov cr3,eax
 	ret
 init_process_paging	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			free_process_paging
+;
+;		DESCRIPTION:	Free process paging
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public free_process_paging
+
+free_process_paging	Proc near
+	mov bx,process_page_sel
+	mov ds,bx
+	mov bx,process_dir_sel
+	mov es,bx
+	xor esi,esi
+	mov cx,flat_size SHR 22
+	xor edi,edi
+
+free_process_dir_loop:
+	mov eax,es:[edi]
+	or eax,eax
+	jz free_process_next_dir
+;
+	push cx
+	mov cx,400h
+
+free_process_page_loop:
+	xor eax,eax
+	xchg eax,[esi]
+	test ax,1
+	jz free_process_page_next
+;
+	test ax,800h
+	jnz free_process_page_next
+;
+	FreePhysical
+
+free_process_page_next:
+	add esi,4
+	loop free_process_page_loop
+;
+	pop cx
+	xor eax,eax
+	xchg eax,es:[edi]
+	FreePhysical
+	jmp free_process_next_dir_page
+	
+free_process_next_dir:
+	add esi,1000h
+
+free_process_next_dir_page:
+	add edi,4
+	loop free_process_dir_loop
+;
+	mov cx,400h - (flat_size SHR 22)
+	mov bx,sys_dir_sel
+	mov ds,bx
+
+free_global_loop:
+	mov eax,es:[edi]
+	test al,1
+	jz free_global_next
+;
+	and ax,0F000h
+	mov ebx,[edi]
+	and bx,0F000h
+	cmp eax,ebx
+	je free_global_next
+;
+	cmp edi,fixed_process_linear SHR 20
+	je free_global_next
+;
+	cmp edi,process_page_linear SHR 20
+	je free_global_next
+;
+	xor eax,eax
+	xchg eax,es:[edi]
+	FreePhysical
+
+free_global_next:
+	add edi,4
+	loop free_global_loop
+	ret
+free_process_paging	Endp
 
 PAGE
 
@@ -1325,7 +1416,8 @@ set_kernel_mark:
 	jnz set_kernel_allocated
 	push cs
 	call allocate_physical
-	mov al,3
+	and ax,0F000h
+	or ax,803h
 	mov [edx],eax
 set_kernel_allocated:
 	mov eax,[edx]

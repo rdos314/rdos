@@ -537,6 +537,150 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			verify_mem_list
+;
+;		DESCRIPTION:	Verify handle is in mem list
+;
+;		PARAMETERS:		SI		handle mem block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+verify_mem_list	Proc near
+	push ax
+	push si
+;
+	lea ax,[si-8]
+	xor si,si
+	mov si,es:[si].hs_next
+
+verify_mem_loop:
+	cmp ax,si
+	clc
+	je verify_mem_done
+;
+	mov si,es:[si].hs_next
+	or si,si
+	jnz verify_mem_loop
+;
+	stc
+
+verify_mem_done:
+	pop si
+	pop ax
+	ret
+verify_mem_list	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			delete_handle
+;
+;		DESCRIPTION:	Delete handle
+;
+;		PARAMETERS:		SI		handle mem block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc near
+	push ds
+	push es
+	push ax
+	push bx
+	push dx
+;
+	mov ax,handle_data_sel
+	mov ds,ax
+;
+	mov bx,es:[si].hh_handle
+	mov dx,es:[si].hh_sign
+	mov ax,ds:hd_list
+
+delete_handle_loop:
+	or ax,ax
+	jz delete_handle_done
+;
+	mov es,ax
+	cmp dx,es:hi_sign
+	jne delete_handle_next
+;
+	push ds
+	push es
+	pushad
+	call es:hi_delete
+	popad
+	pop es
+	pop ds
+	jmp delete_handle_done
+
+delete_handle_next:
+	mov ax,es:hi_link
+	jmp delete_handle_loop
+
+delete_handle_done:
+	pop dx
+	pop bx
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FREE_PROCESS
+;
+;		DESCRIPTION:	Free per-process data
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public free_handle_process
+
+free_handle_process	PROC near
+	push ds
+	push es
+	pushad
+;
+	mov ax,handle_sel
+	mov ds,ax
+	mov ax,handle_mem_sel
+	mov es,ax
+	xor bx,bx
+	mov di,OFFSET handle_arr
+	mov cx,MAX_HANDLES
+
+free_handle_loop:
+	mov si,[di]
+	cmp bx,es:[si].hh_handle
+	jne free_handle_next
+;
+	call verify_mem_list
+	jc free_handle_next
+;
+	call delete_handle
+
+free_handle_next:
+	inc bx
+	add di,2
+	loop free_handle_loop
+;
+	popad
+	pop es
+	pop ds
+	ret
+free_handle_process	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			init_handle
 ;
 ;		DESCRIPTION:    Init handle

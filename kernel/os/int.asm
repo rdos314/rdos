@@ -421,6 +421,9 @@ init_exc_loop:
 	mov di,OFFSET init_thread_int
 	HookCreateThread
 ;
+	mov di,OFFSET free_thread_int
+	HookTerminateThread
+;
 	mov di,OFFSET init_process_int
 	HookCreateProcess
 	pop ds
@@ -455,6 +458,58 @@ init_thread_int	PROC far
 	pop ds
 	ret
 init_thread_int	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FREE_THREAD_INT
+;
+;		DESCRIPTION:	Free per-thread data
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_thread_int	PROC far
+	push ds
+	push es
+	push ax
+	push ecx
+	push edx
+;
+	mov ax,thread_int_sel
+	mov ds,ax
+	mov ax,ds:pint_locked_stack
+	or ax,ax
+	jz free_locked_ok
+;
+	mov es,ax
+	FreeMem
+
+free_locked_ok:
+	mov ax,ds:pint_prot16_stack
+	or ax,ax
+	jz free_prot16_ok
+;
+	mov es,ax
+	FreeMem
+
+free_prot16_ok:
+	mov edx,ds:pint_real_stack
+	or edx,edx
+	jz free_real_ok
+;
+	mov ecx,210h
+	FreeLinear
+
+free_real_ok:
+	pop edx
+	pop ecx
+	pop ax
+	pop es
+	pop ds
+	ret
+free_thread_int	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

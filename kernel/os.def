@@ -293,5 +293,7 @@ free_handle_nr				EQU 261
 deref_handle_nr				EQU 262
 set_psp_nr					EQU 263
 register_handle_nr			EQU 264
+hook_terminate_thread_nr	EQU 265
+hook_terminate_process_nr	EQU 266
 
-osgate_entries				EQU 265
+osgate_entries				EQU 267

@@ -2596,6 +2596,11 @@ debug_next:
 	add bx,bx
 	call word ptr cs:[bx].virt_sw_func_tab
 debug_end:
+	xor ax,ax
+	mov ds,ax
+	mov es,ax
+	mov fs,ax
+	mov gs,ax
 	pop edx
 	pop ebx
 	pop eax
