@@ -316,6 +316,8 @@ rbLogLoop:
 rbWriteEntry:
 	mov eax,dword ptr es:[ebx].bs_owner
 	mov dword ptr es:[esi].le_owner,eax	
+	mov al,es:[ebx].bs_status
+	or al,LOG_STATUS_AFTER_ALLOC
 	mov es:[esi].le_status,al
 	mov ax,bp
 	inc ax
@@ -337,7 +339,7 @@ rbWriteEntry:
 	push ecx
 	push esi
 	push edi
-	movzx cx,es:[esi].le_status
+	mov cl,es:[esi].le_status
 	movzx edx,es:[ebx].bs_physical_sector
 	mov es:[ebx].bs_physical_sector,bp
 	add edx,gs:bc_start_sector
@@ -350,7 +352,8 @@ rbWriteEntry:
 	pop edx
 	push ebx
 	LockSector
-	mov ax,cx
+	mov al,cl
+	and al,1Fh
 	call MoveSector
 	UnlockSector
 	pop ebx

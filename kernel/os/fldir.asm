@@ -441,6 +441,7 @@ fdiRetry:
 	cmp cl,DIR_ENTRY_RESTRUCT
 	jne fdiNotRestruct
 ;
+	int 3
     call UndoDirEntry
 	push edi
 	mov edi,esi
@@ -778,7 +779,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Move sector contents
 ;
-;		PARAMETERS:		AX			Sector type
+;		PARAMETERS:		AL			Sector type
 ;						ESI			Source buffer
 ;						EDI			Dest buffer
 ;						
@@ -787,16 +788,16 @@ PAGE
 	public MoveSector
 
 MoveSector	Proc near
-	cmp ax,LOG_ENTRY_DIR_DATA
+	cmp al,LOG_ENTRY_DIR_DATA
 	jz msDirData
 ;
-	cmp ax,LOG_ENTRY_OBJECT
+	cmp al,LOG_ENTRY_OBJECT
 	jz msObject
 ;
-	cmp ax,LOG_ENTRY_DIR_ENTRY
+	cmp al,LOG_ENTRY_DIR_ENTRY
 	jz msDirEntry
 ;
-	cmp ax,LOG_ENTRY_FILE_DATA
+	cmp al,LOG_ENTRY_FILE_DATA
 	jz msFileData
 ;
 	ret
@@ -1346,9 +1347,11 @@ UndoDirObject	Proc near
     push edx
     push esi
 ;
+	mov ecx,fs:fds_entry_sector
     call ObjectLogToPhysSector
     jc udoDone
 ;
+	mov fs:fds_object_sector,edx
     mov al,ds:drive_nr
     LockSector
 ;
@@ -1360,12 +1363,18 @@ udoSectorLoop:
     je udoNext
 ;
     and edx,0FFFFFFh
+	push ecx
     push edx
+	mov ecx,fs:fds_object_sector
     call DirDataLogToPhysSector
     pop edx
+	pop ecx
     jc udoNext
 ;    
+	push ecx
+	mov ecx,fs:fds_object_sector
     call FreeSector
+	pop ecx
     jc udoNext
 ;
     mov dword ptr es:[esi],0
@@ -1422,7 +1431,10 @@ udeLoop:
     call UndoDirObject
     jc udeNext
 ;
+	push ecx
+	mov ecx,fs:fds_entry_sector
     call FreeSector
+	pop ecx
     jc udeNext
 ;
     mov dword ptr es:[esi],0
@@ -1458,12 +1470,13 @@ RedoAddDirEntry	Proc near
     push fs
     push ax
     push ebx
-    push cx
+    push ecx
     push edx
     push esi
 ;
     mov edx,es:[esi]
     and edx,0FFFFFFh
+	mov ecx,fs:fds_object_sector
     call DirDataLogToPhysSector
     jc radeDone
 ;
@@ -1504,7 +1517,7 @@ radeUnlock:
 radeDone:
     pop esi
     pop edx
-    pop cx
+    pop ecx
     pop ebx
     pop ax
     pop fs
@@ -1532,6 +1545,7 @@ RedoAddObject	Proc near
     push edx
     push esi
 ;
+	mov ecx,fs:fds_entry_sector
     call ObjectLogToPhysSector
     jc raoDone
 ;
@@ -1608,6 +1622,7 @@ RedoAddToDir	Proc near
     mov ebp,edx
 
 ratdRetry:
+	mov ecx,fs:fds_owner_sector
     mov edx,fs:fds_entry_sector
     call DirEntryLogToPhysSector
     jc ratdDone
@@ -1628,6 +1643,7 @@ ratdRetry:
 ;
     mov edx,es:[edi]
     and edx,0FFFFFFh
+	mov fs:fds_object_sector,edx
     call RedoAddObject
     jnc ratdUnlock
 
@@ -1777,8 +1793,9 @@ upsSpaceOk:
 	mov es:[edi].fde_valid,DIR_ENTRY_RESTRUCT
 	call WriteSector
     UnlockSector
-;    call RedoDirEntries
-;    call RedoFileEntries
+	int 3
+    call RedoDirEntries
+    call RedoFileEntries
 	clc
 
 rdsDone:
@@ -2124,6 +2141,7 @@ cache_dir	PROC far
 	or edx,edx
 	jnz cache_sub_dir
 ;
+	int 3
 	mov fs:fds_owner_sector,-1
 	call GetRootSector
     jc cache_dir_done
