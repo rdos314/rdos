@@ -103,6 +103,61 @@ init_video_bitmap	Proc far
 	dec si
 	mov es:v_y_max,si
 ;
+	push ax
+	push cx
+	push dx
+;
+	mov ax,1
+	OpenFont
+	jnc init_video_font_found
+;
+	mov es:v_text_font,0
+	mov es:v_pixels_per_row,0
+	mov es:v_pixels_per_col,0
+	jmp init_video_font_done
+
+init_video_font_found:
+	mov es:v_text_font,bx
+	mov al,'M'
+	push es
+	push edi
+	GetCharMask
+	pop edi
+	pop es
+	mov es:v_pixels_per_row,dx
+	mov es:v_pixels_per_col,cx
+;
+	mov ax,es:v_width
+	xor dx,dx
+	div es:v_pixels_per_col
+	mov es:v_col_count,ax
+;
+	mov ax,es:v_height
+	xor dx,dx
+	div es:v_pixels_per_row
+	mov es:v_row_count,ax
+;
+	movzx eax,es:v_row_count
+	movzx edx,es:v_col_count
+	mul edx
+	add eax,eax
+;
+	push es
+	AllocateSmallGlobalMem
+	xor edi,edi
+	mov ecx,eax
+	shr ecx,1
+	mov ax,720h
+	rep stos word ptr es:[edi]
+	mov ax,es
+	pop es
+	mov es:v_text,ax
+
+init_video_font_done:
+	pop dx
+	pop cx
+	pop ax
+;
 	mov si,cs
 	mov ds,si
 ;
@@ -219,6 +274,7 @@ create_bitmap	Proc far
 	mov es:v_color,0
 	mov es:v_lgop,1
 	mov es:v_font,0
+	mov es:v_text_font,0
 	mov es:v_style,0
 	mov es:v_bpp,al
 	mov es:v_width,cx
@@ -228,6 +284,7 @@ create_bitmap	Proc far
 	mov es:v_sprite_sel,0
 	mov es:v_x_min,0
 	mov es:v_y_min,0
+	mov es:v_text,0
 	mov si,cx
 	dec si
 	mov es:v_x_max,si
@@ -594,6 +651,26 @@ delete_bitmap	Proc near
 	sub es:v_usage_count,1
 	jnz delete_bitmap_freed
 ;
+	push bx
+	mov bx,es:v_text_font
+	or bx,bx
+	jz delete_bitmap_font_ok
+;
+	CloseFont
+
+delete_bitmap_font_ok:
+	pop bx
+;
+	mov ax,es:v_text
+	or ax,ax
+	jz delete_bitmap_text_ok
+;
+	push es
+	mov es,ax
+	FreeMem
+	pop es
+
+delete_bitmap_text_ok:
 	mov ecx,es:v_app_size
 	mov edx,es:v_app_base
 	FreeLinear

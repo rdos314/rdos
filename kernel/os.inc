@@ -1844,3 +1844,11 @@ StartComPort	MACRO
 StopComPort	MACRO
 	OsGate stop_com_port_nr
 					ENDM
+
+StartKeyboard	MACRO
+	OsGate start_keyboard_nr
+					ENDM
+
+StopKeyboard	MACRO
+	OsGate stop_keyboard_nr
+					ENDM

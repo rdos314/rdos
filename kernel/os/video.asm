@@ -334,6 +334,7 @@ set_video_mode_ok:
 	mov ax,flat_data_sel
 	mov es,ax
 	movzx ax,ds:v_bpp
+	clc
 
 set_video_mode_done:
 	pop ds

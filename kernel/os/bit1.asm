@@ -450,6 +450,7 @@ SlabSet	Proc near
 	or es:[edi],al
 	sub cx,8
 	add cx,bx
+	jz slab_set_done
 ;
 	mov al,-1
 	xor bl,bl
@@ -525,6 +526,7 @@ SlabReset	Proc near
 	and es:[edi],al
 	sub cx,8
 	add cx,bx
+	jz slab_reset_done
 ;
 	xor al,al
 	xor bl,bl
@@ -586,15 +588,11 @@ SlabCompl	Proc near
 	cmp ax,8
 	jc slab_compl_last_loop
 ;
-	mov al,es:[edi]
-	mov ah,al
-	and al,byte ptr cs:[bx].or_bit_tab
-	not al
-	and ah,byte ptr cs:[bp].and_bit_tab
-	or al,ah
-	mov es:[edi],al
+	mov al,byte ptr cs:[bx].or_bit_tab
+	xor es:[edi],al
 	sub cx,8
 	add cx,bx
+	jz slab_compl_done
 ;
 	mov al,-1
 	xor bl,bl
@@ -3993,6 +3991,256 @@ ellipse_end:
 	ret
 draw_ellipse	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Attr_to_color
+;
+;		DESCRIPTION:	Convert attribute to color
+; 
+;		PARAMETER:		AL		VGA color
+;
+;		RETURNS:		EAX		Color
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AttribColorTab:
+act00	DD 0
+act01	DD 0
+act02	DD 0
+act03	DD 1
+act04	DD 0
+act05	DD 1
+act06	DD 1
+act07	DD 1
+act08	DD 1
+act09	DD 1
+act0A	DD 1
+act0B	DD 1
+act0C	DD 1
+act0D	DD 1
+act0E	DD 1
+act0F	DD 1
+
+attr_to_color	Proc near
+	push bx
+	mov bl,al
+	and bx,0Fh
+	shl bx,2
+	mov eax,dword ptr cs:[bx].AttribColorTab	
+	pop bx
+	ret
+attr_to_color	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Clear
+;
+;		DESCRIPTION:	Clear an area on screen
+; 
+;		PARAMETER:		BL		Fore color
+;						DH		Back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear	Proc far
+	clc
+	ret
+clear	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetCursorPos
+;
+;		DESCRIPTION:	Set cursor position
+; 
+;		PARAMETER:		CX		Column
+;						DX		Row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_cursor_pos	Proc far
+	clc
+	ret
+set_cursor_pos	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteChar
+;
+;		DESCRIPTION:	Write a character
+; 
+;		PARAMETER:		AL		Character
+;						BL		Fore color
+;						BH		Back color
+;						CX		Column
+;						DX		Row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_char	Proc far
+	push es
+	pushad
+	push ds:v_font
+	push ds:v_color
+	push ds:v_lgop
+;
+	push ax
+	push dx
+	movzx edx,dx
+	movzx eax,ds:v_col_count
+	mul edx
+	movzx esi,cx
+	add esi,eax
+	add esi,esi
+	mov es,ds:v_text
+	pop dx	
+	pop ax
+;
+	and bx,0F0Fh
+	shl bh,4
+	mov ah,bl
+	or ah,bh
+	cmp ax,es:[esi]
+	je write_char_done
+;
+	mov es:[esi],ax
+;
+	mov ds:v_lgop, LGOP_NONE
+	xor ah,ah
+	push ax
+;
+	mov ax,dx
+	mul ds:v_pixels_per_row
+;
+	push ax
+	mov ax,cx
+	mul ds:v_pixels_per_col
+	mov cx,ax
+	pop dx
+;
+	mov al,ds:v_style
+	push ax
+;
+	mov ds:v_style,STYLE_FILLED
+	mov al,bh
+	call attr_to_color
+	mov ds:v_color,eax
+;
+	mov si,ds:v_pixels_per_col
+	mov di,ds:v_pixels_per_row
+	call ds:draw_rect_proc
+;
+	pop ax
+	mov ds:v_style,al
+;
+	mov al,bl
+	call attr_to_color
+	mov ds:v_color,eax
+	mov ax,ds:v_text_font
+	mov ds:v_font,ax
+	mov ax,ss
+	mov es,ax
+	movzx edi,sp
+	call ds:draw_string_proc
+;	
+	add sp,2
+
+write_char_done:
+	pop ds:v_lgop
+	pop ds:v_color
+	pop ds:v_font
+	popad
+	pop es
+	ret
+write_char	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadChar
+;
+;		DESCRIPTION:	Read a character
+; 
+;		PARAMETER:		CX		Column
+;						DX		Row
+;
+;		RETURNS:		AL		Character
+;						BL		Fore color
+;						BH		Back color
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_char	Proc far
+	clc
+	ret
+read_char	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ScrollUp
+;
+;		DESCRIPTION:	Scroll screen area up
+; 
+;		PARAMETER:		AX		Number of lines
+;						BL		Blank for color
+;						BH		Blank back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+scroll_up	Proc far
+	clc
+	ret
+scroll_up	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ScrollDown
+;
+;		DESCRIPTION:	Scroll screen area down
+; 
+;		PARAMETER:		AX		Number of lines
+;						BL		Blank for color
+;						BH		Blank back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+scroll_down	Proc far
+	clc
+	ret
+scroll_down	Endp
+
 error	Proc far
 	stc
 	ret
@@ -4004,12 +4252,12 @@ BitmapTab1:
 mt00 DW OFFSET error,				video_code_sel
 mt01 DW OFFSET error,				video_code_sel
 mt02 DW OFFSET error,				video_code_sel
-mt03 DW OFFSET error,				video_code_sel
-mt04 DW OFFSET error,				video_code_sel
-mt05 DW OFFSET error,				video_code_sel
-mt06 DW OFFSET error,				video_code_sel
-mt07 DW OFFSET error,				video_code_sel
-mt08 DW OFFSET error,				video_code_sel
+mt03 DW OFFSET clear,				video_code_sel
+mt04 DW OFFSET set_cursor_pos,		video_code_sel
+mt05 DW OFFSET write_char,			video_code_sel
+mt06 DW OFFSET read_char,			video_code_sel
+mt07 DW OFFSET scroll_up,			video_code_sel
+mt08 DW OFFSET scroll_down,			video_code_sel
 mt09 DW OFFSET error,				video_code_sel
 mt0A DW OFFSET error,				video_code_sel
 mt0B DW OFFSET error,				video_code_sel

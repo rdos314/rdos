@@ -493,7 +493,7 @@ open_font	Proc far
 	push ds
 	push es
 	push eax
-	push cx
+	push ecx
 	push edx
 	push esi
 	push edi
@@ -503,13 +503,24 @@ open_font	Proc far
 	add si,si
 	mov ax,font_data_sel
 	mov ds,ax
-open_font_loop:
+open_font_down_loop:
 	mov ax,[si]
 	or ax,ax
 	jnz open_font_found
 	sub si,2
-	jc open_font_end
-	jmp open_font_loop	
+	jnc open_font_down_loop
+;
+	mov si,2
+
+open_font_up_loop:
+	mov ax,[si]
+	or ax,ax
+	jnz open_font_found
+;
+	add si,2
+	jnc open_font_up_loop	
+;
+	jmp open_font_end
 
 open_font_found:
 	mov ds,ax
@@ -686,13 +697,14 @@ open_font_char_next:
 	mov [bx].fh_buf_sel,es
 	mov [bx].hh_sign,FONT_HANDLE
 	mov bx,[bx].hh_handle
+	clc
 
 open_font_end:
 	pop bp
 	pop edi
 	pop esi
 	pop edx
-	pop cx
+	pop ecx
 	pop eax
 	pop es
 	pop ds

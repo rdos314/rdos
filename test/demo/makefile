@@ -98,6 +98,10 @@ state_srcs = STATEAPP.ASM
 state_objs = $(state_srcs:.ASM=.OBJ)
 state_exes = STATEAPP.EXE
 
+state40_srcs = STATE40.ASM
+state40_objs = $(state40_srcs:.ASM=.OBJ)
+state40_exes = STATE40.EXE
+
 remdebug_srcs = REMDEBUG.ASM
 remdebug_objs = $(remdebug_srcs:.ASM=.OBJ)
 remdebug_exes = REMDEBUG.EXE
@@ -110,7 +114,7 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
-		    $(test_srcs) $(state_srcs) \
+		    $(test_srcs) $(state_srcs) $(state40_srcs) \
 			$(run_srcs) $(remdebug_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -119,7 +123,7 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes) $(aliboot_exes)	\
 			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
-		    $(test_exes) $(state_exes) $(acrloc_exes)	\
+		    $(test_exes) $(state_exes) $(state40_exes) $(acrloc_exes)	\
 			$(run_exes) $(remdebug_exes)
 
 maps =      $(exes:.EXE=.MAP)
@@ -266,6 +270,15 @@ STATEAPP.EXE : $(state_objs)
 	$(state_objs)
 	STATEAPP.EXE
 	STATEAPP,,stateapp;
+!
+
+
+STATE40.EXE : $(state40_objs)
+    tlink @&&!
+	$(prot_opt) +
+	$(state40_objs)
+	STATE40.EXE
+	STATE40,,stateapp;
 !
 
 REMDEBUG.EXE : $(remdebug_objs)

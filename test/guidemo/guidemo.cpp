@@ -251,18 +251,40 @@ void cdecl main()
 
 	vbe = new TVideoGraphicDevice(32, 800, 600);
 
+	RdosSetCursorPosition(0, 0);
+    RdosWriteString("Test av text mode");
+
+	vbe->SetDrawColor(255,255,255);
+	vbe->DrawLine(0, 0, 240, 128);
+	vbe->DrawLine(240, 0, 0, 128);
+
 //	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
 
-	Planets = new TPlanetThread(vbe, 8);
-
-	RdosWaitMilli(2500);
+	RdosWaitMilli(5000);
 
 	vbe->SetDrawColor(255, 127, 80);
 	vbe->SetFilledStyle();
-	vbe->SetLgopAdd();
+	vbe->SetLgopXor();
 	vbe->DrawRect(0, 0, vbe->GetWidth(), vbe->GetHeight());
 
 	RdosWaitMilli(5000);
+
+	vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+	RdosWaitMilli(5000);
+
+	font = new TFont(24);
+	vbe->SetFont(font);
+	vbe->DrawString(0, vbe->GetHeight() / 2, "RDOS operating system");
+
+	RdosWaitMilli(5000);
+
+	vbe->SetHollowStyle();
+	vbe->DrawEllipse(vbe->GetWidth() / 2, vbe->GetHeight() / 2, vbe->GetWidth() / 4, vbe->GetHeight() / 4);
+
+	RdosWaitMilli(5000);
+
+	Planets = new TPlanetThread(vbe, 8);
 
 	bitmap = new TBitmapGraphicDevice(vbe);
 	TestAll(bitmap);

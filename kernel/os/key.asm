@@ -41,7 +41,7 @@ INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
 
-;        NO_MOUSE = 0
+        NO_MOUSE = 0
 
 ; offset in scan-table
 ;
@@ -2426,6 +2426,13 @@ init_keyb_thread	PROC far
 	mov ds,ax
 	mov es,ax
 ;
+    mov ax,start_keyboard_nr
+    IsValidOsGate
+    jc keyb_started
+;
+    StartKeyboard
+
+keyb_started:    
 	mov si,OFFSET keyboard_pr
 	mov di,OFFSET keyboard_name
 	mov cx,500

@@ -1917,7 +1917,7 @@ hide_sprite_line	Proc far
 	jb hide_sprite_l_done
 ;
 	cmp si,ds:v_sprite_max_pos
-	jae hide_done
+	jae hide_sprite_l_done
 ;
 	cmp ds:[si].spl_upper_ind,-1
 	je hide_sprite_l_done

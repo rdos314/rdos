@@ -3203,6 +3203,232 @@ ellipse_end:
 	ret
 draw_ellipse	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Attr_to_color
+;
+;		DESCRIPTION:	Convert attribute to color
+; 
+;		PARAMETER:		AL		VGA color
+;
+;		RETURNS:		EAX		Color
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AttribColorTab:
+act00	DD 00000000h
+act01	DD 00990000h
+act02	DD 00009900h
+act03	DD 00CC6600h
+act04	DD 00000099h
+act05	DD 00990099h
+act06	DD 00009999h
+act07	DD 00CCCCCCh
+act08	DD 00666666h
+act09	DD 00FF6666h
+act0A	DD 0066FF66h
+act0B	DD 00FFFF66h
+act0C	DD 006666FFh
+act0D	DD 00FF66FFh
+act0E	DD 0066FFFFh
+act0F	DD 00FFFFFFh
+
+attr_to_color	Proc near
+	push bx
+	mov bl,al
+	and bx,0Fh
+	shl bx,2
+	mov eax,dword ptr cs:[bx].AttribColorTab	
+	pop bx
+	ret
+attr_to_color	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Clear
+;
+;		DESCRIPTION:	Clear an area on screen
+; 
+;		PARAMETER:		BL		Fore color
+;						DH		Back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear	Proc far
+	clc
+	ret
+clear	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetCursorPos
+;
+;		DESCRIPTION:	Set cursor position
+; 
+;		PARAMETER:		CX		Column
+;						DX		Row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_cursor_pos	Proc far
+	clc
+	ret
+set_cursor_pos	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteChar
+;
+;		DESCRIPTION:	Write a character
+; 
+;		PARAMETER:		AL		Character
+;						BL		Fore color
+;						BH		Back color
+;						CX		Column
+;						DX		Row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_char	Proc far
+	push es
+	pushad
+	push ds:v_font
+	push ds:v_color
+	push ds:v_lgop
+;
+	mov ds:v_lgop, LGOP_NONE
+	xor ah,ah
+	push ax
+;
+	mov ax,cx
+	mul ds:v_pixels_per_col
+	mov cx,ax
+;
+	mov ax,dx
+	mul ds:v_pixels_per_row
+	mov dx,ax
+;
+	mov al,ds:v_style
+	push ax
+;
+	mov ds:v_style,STYLE_FILLED
+	mov al,bh
+	call attr_to_color
+	mov ds:v_color,eax
+;
+	mov si,ds:v_pixels_per_col
+	mov di,ds:v_pixels_per_row
+	call ds:draw_rect_proc
+;
+	pop ax
+	mov ds:v_style,al
+;
+	mov al,bl
+	call attr_to_color
+	mov ds:v_color,eax
+	mov ax,ds:v_text_font
+	mov ds:v_font,ax
+	mov ax,ss
+	mov es,ax
+	movzx edi,sp
+	call ds:draw_string_proc
+;	
+	add sp,2
+	pop ds:v_lgop
+	pop ds:v_color
+	pop ds:v_font
+	popad
+	pop es
+	ret
+write_char	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadChar
+;
+;		DESCRIPTION:	Read a character
+; 
+;		PARAMETER:		CX		Column
+;						DX		Row
+;
+;		RETURNS:		AL		Character
+;						BL		Fore color
+;						BH		Back color
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_char	Proc far
+	clc
+	ret
+read_char	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ScrollUp
+;
+;		DESCRIPTION:	Scroll screen area up
+; 
+;		PARAMETER:		AX		Number of lines
+;						BL		Blank for color
+;						BH		Blank back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+scroll_up	Proc far
+	clc
+	ret
+scroll_up	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ScrollDown
+;
+;		DESCRIPTION:	Scroll screen area down
+; 
+;		PARAMETER:		AX		Number of lines
+;						BL		Blank for color
+;						BH		Blank back color
+;						CX		Upper column
+;						DX		Upper row
+;						SI		Lower column
+;						DI		Lower row
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+scroll_down	Proc far
+	clc
+	ret
+scroll_down	Endp
+
 error	Proc far
 	stc
 	ret
@@ -3214,12 +3440,12 @@ BitmapTab24:
 mt00 DW OFFSET error,				video_code_sel
 mt01 DW OFFSET error,				video_code_sel
 mt02 DW OFFSET error,				video_code_sel
-mt03 DW OFFSET error,				video_code_sel
-mt04 DW OFFSET error,				video_code_sel
-mt05 DW OFFSET error,				video_code_sel
-mt06 DW OFFSET error,				video_code_sel
-mt07 DW OFFSET error,				video_code_sel
-mt08 DW OFFSET error,				video_code_sel
+mt03 DW OFFSET clear,				video_code_sel
+mt04 DW OFFSET set_cursor_pos,		video_code_sel
+mt05 DW OFFSET write_char,			video_code_sel
+mt06 DW OFFSET read_char,			video_code_sel
+mt07 DW OFFSET scroll_up,			video_code_sel
+mt08 DW OFFSET scroll_down,			video_code_sel
 mt09 DW OFFSET error,				video_code_sel
 mt0A DW OFFSET error,				video_code_sel
 mt0B DW OFFSET error,				video_code_sel

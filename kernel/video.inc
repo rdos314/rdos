@@ -261,6 +261,15 @@ v_y_min         	DW ?
 v_x_max         	DW ?
 v_y_max         	DW ?
 
+v_row				DW ?
+v_col				DW ?
+v_row_count			DW ?
+v_col_count			DW ?
+v_text_font			DW ?
+v_pixels_per_row	DW ?
+v_pixels_per_col	DW ?
+v_text				DW ?
+
 v_color 			DD ?
 v_lgop	    		DW ?
 v_font		    	DW ?

@@ -351,5 +351,8 @@ show_sprite_line_nr         EQU 257
 start_com_port_nr           EQU 258
 stop_com_port_nr            EQU 259
 
-osgate_entries				EQU 260
+start_keyboard_nr			EQU 260
+stop_keyboard_nr			EQU 261
+
+osgate_entries				EQU 262
 
