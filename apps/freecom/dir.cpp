@@ -577,8 +577,12 @@ void TDirCommand::WriteDetailed(TDirEntry *entry)
 	size = entry->EntryName.GetSize();
 	strncpy(str, entry->EntryName.GetData(), 30);
 
-	for (i = size; i < 30; i++)
-		str[i] = ' ';
+	if (size < 30)
+	{
+		str[size] = ' ';
+		for (i = size + 1; i < 30; i++)
+			str[i] = 'ú';
+	}
 	str[30] = 0;
 
 	Write(str);
@@ -604,6 +608,49 @@ void TDirCommand::WriteDetailed(TDirEntry *entry)
 
 /*##########################################################################
 #
+#   Name       : TDirCommand::WriteWide
+#
+#   Purpose....: Write wide listing entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirCommand::WriteWide(TDirEntry *entry)
+{
+	int size;
+	int i;
+
+	if (FCurrentCol + FWidth >= 80)
+	{
+		FCurrentRow++;
+		FCurrentCol = 0;
+		Write("\r\n");
+	}
+
+	if (entry->Attribute & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		size = entry->EntryName.GetSize() + 3;
+		Write("[");
+		Write(entry->EntryName.GetData());
+		Write("] ");
+	}
+	else
+	{
+		size = entry->EntryName.GetSize() + 1;
+		Write(entry->EntryName.GetData());
+		Write(" ");
+	}
+
+	for (i = size; i < FWidth; i++)
+		Write(" ");
+
+	FCurrentCol += FWidth;
+}
+
+/*##########################################################################
+#
 #   Name       : TDirCommand::WriteDetailed
 #
 #   Purpose....: Write detailed listing
@@ -621,6 +668,51 @@ void TDirCommand::WriteDetailed()
 	{
 		WriteDetailed(FEntryArr[i]);
 		if (FOptP && (i % 24 == 23))
+		{
+			FMsg.Load(TEXT_MSG_PAUSE);
+			Write(FMsg.GetData());
+			RdosReadKeyboard();
+			Write("\r\n");
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDirCommand::WriteWide
+#
+#   Purpose....: Write wide listing
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDirCommand::WriteWide()
+{
+	int i;
+	int size;
+
+	FCurrentRow = 0;
+	FCurrentCol = 0;
+	FWidth = 1;
+
+	for (i = 0; i < FEntryCount; i++)
+	{
+		size = FEntryArr[i]->EntryName.GetSize();
+		if (FEntryArr[i]->Attribute & FILE_ATTRIBUTE_DIRECTORY)
+			size += 2;
+
+		if (size > FWidth)
+			FWidth = size;
+	}
+
+	FWidth += 2;
+
+	for (i = 0; i < FEntryCount; i++)
+	{
+		WriteWide(FEntryArr[i]);
+		if (FOptP && FCurrentCol == 0 && FCurrentRow == 23)
 		{
 			FMsg.Load(TEXT_MSG_PAUSE);
 			Write(FMsg.GetData());
@@ -692,7 +784,11 @@ int TDirCommand::Execute(char *param)
 
 	CreateEntryArr();
 	Sort();
-	WriteDetailed();
+
+	if (FOptW)
+		WriteWide();
+	else
+		WriteDetailed();
 
 	return 0;
 }

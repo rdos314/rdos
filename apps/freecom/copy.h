@@ -51,7 +51,8 @@ public:
 protected:
 	virtual int IsArgDelim(char ch);
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-    void InitOptions();
+	void InitOptions();
+    int AddSrc(TArg *arg);
 
 	int CopyFile(TString &Src, TString &Dest);
 	int AppendFile(TString &Src, TString &Dest);

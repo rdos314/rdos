@@ -83,6 +83,27 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
+TCommand::TCommand()
+{
+    FArgList = 0;
+    FInputFile = 0;
+    FOutputFile = 0;
+    FErrorFile = 0;
+
+    FRemovePath = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::TCommand
+#
+#   Purpose....: Constructor for command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TCommand::TCommand(const char *param)
   : FCmdLine(param)
 {
@@ -265,133 +286,6 @@ int TCommand::Run()
 
 	delete param;
 	return result;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsArgDelim
-#
-#   Purpose....: Check for argument delimiter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsArgDelim(char ch)
-{
-	return ::IsArgDelim(ch);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::IsOptDelim
-#
-#   Purpose....: Check for option delimiter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TCommand::IsOptDelim(char ch)
-{
-	return ::IsOptDelim(ch);
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::SkipWord
-#
-#   Purpose....: Skip to next word
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TCommand::SkipWord(char *p)
-{
-	int ch, quote;
-	int isopt;
-	int more;
-
-	isopt = IsOptChar(*p);
-	if (isopt)
-	{
-		p++;
-		while (*p && IsOptChar(*p))
-			p++;
-	}
-
-	quote = 0;
-	for (;;)
-	{
-		ch = *p;
-		if (!ch)
-			break;
-
-		if (isopt)
-			more = !IsOptDelim(ch) || IsOptChar(ch);
-		else
-			more = !IsArgDelim(ch) || IsOptChar(ch);
-
-		if (!quote && !more)
-			break;
-
-		if (quote == ch)
-			quote = 0;
-		else
-			if (strchr("\"", ch))
-				quote = ch;
-
-		p++;
-	}
-	return p;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::SkipDelim
-#
-#   Purpose....: Skip to next delimiter
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TCommand::SkipDelim(char *p)
-{
-	int ch, quote;
-	int isopt;
-	int more;
-
-	isopt = IsOptChar(*p);
-	quote = 0;
-	for (;;)
-	{
-		ch = *p;
-
-		if (!ch)
-			break;
-
-		if (isopt)
-			more = IsOptDelim(ch);
-		else
-			more = IsArgDelim(ch);
-
-		if (!quote && !more)
-			break;
-
-		if (quote == ch)
-			quote = 0;
-		else
-			if (strchr("\"", ch))
-				quote = ch;
-		p++;
-	}
-	return p;
 }
 
 /*##########################################################################

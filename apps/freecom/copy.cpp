@@ -309,6 +309,48 @@ int TCopyCommand::AppendFiles()
 
 /*##########################################################################
 #
+#   Name       : TCopyCommand::AddSrc
+#
+#   Purpose....: Add source files
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCopyCommand::AddSrc(TArg *arg)
+{
+	int count;
+	TDir *dir;
+	TDirEntry entry;
+
+	count = 0;
+	dir = new TDir(arg->FName);
+	entry = dir->GotoFirst();
+	while (entry.Valid)
+	{
+		if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			count++;
+			FSrcFiles.Add(entry);
+		}
+		entry = dir->GotoNext();
+	}
+
+	if (count == 0)
+	{
+		FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
+		Write(FMsg.GetData());
+		delete dir;
+		return FALSE;
+	}
+
+	delete dir;
+	return TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TCopyCommand::Run
 #
 #   Purpose....: Run command
@@ -321,9 +363,8 @@ int TCopyCommand::AppendFiles()
 int TCopyCommand::Execute(char *param)
 {
 	TArg *arg;
-	TDir *dir;
-	TDirEntry entry;
-	int count;
+	int HasSrc = FALSE;
+	const char *ptr;
 
 	FDest = 0;
 
@@ -332,41 +373,39 @@ int TCopyCommand::Execute(char *param)
 	if (!ScanCmdLine(param, 0))
 		return 1;
 
-    arg = FArgList;
+	arg = FArgList;
 
 	while (arg)
 	{
-        if (LeadOptions(&arg->ptr, 0) != E_None)
+		if (LeadOptions(&arg->ptr, 0) != E_None)
 			return 1;
 		else
 		{
 			if (arg->FList)
 			{
-				count = 0;
-				dir = new TDir(arg->FName);
-				entry = dir->GotoFirst();
-				while (entry.Valid)
-				{
-					if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
-					{
-						count++;
-						FSrcFiles.Add(entry);
-					}
-					entry = dir->GotoNext();
-				}
-				
-				if (count == 0)
-				{
-					FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
-					Write(FMsg.GetData());
-					delete dir;
+				if (AddSrc(arg))
+					HasSrc = TRUE;
+				else
 					return 1;
-				}
-
-				delete dir;
 			}
 			else
-				FDest = new TPathName(arg->FName);
+			{
+				if (HasSrc)
+				{
+					ptr = arg->FName.GetData();
+					if (strlen(ptr) == 2 && *(ptr+1) == ':')
+						FDest = new TPathName(arg->FName + ".");
+					else
+						FDest = new TPathName(arg->FName);
+				}
+				else
+				{
+					if (AddSrc(arg))
+						FDest = new TPathName(".");
+					else
+						return 1;
+				}
+			}
 
 			arg = arg->FList;
 		}

@@ -61,11 +61,16 @@ protected:
 	void Sort();
 	void WriteDetailed(TDirEntry *entry);
 	void WriteDetailed();
+	void WriteWide(TDirEntry *entry);
+	void WriteWide();
 
 	TFileList FFileList;
 
 	int FEntryCount;
 	TDirEntry **FEntryArr;
+	int FCurrentRow;
+	int FCurrentCol;
+    int FWidth;
 
 	int FOptS;
 	int FOptP;

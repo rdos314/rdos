@@ -50,13 +50,13 @@ void cdecl main()
 {
 	RdosWaitMilli(300);
 
-	TFile RawFile("d:\\r1\\cotex.log");
+	TFile RawFile("c:\\r1\\cotex.log");
 //	TCbusProtocolAnalyser analyzer("comlog", 0x4000);
 	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //  TProtocolAnalyser analyzer(&RawFile, 0x400);
 
-	analyzer.DefineLogFile("d:\\r1\\cotex.txt");
+	analyzer.DefineLogFile("c:\\r1\\cotex.txt");
 
 	for (;;)
 	{

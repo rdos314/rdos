@@ -31,6 +31,7 @@
 #include "langstr.h"
 #include "file.h"
 #include "path.h"
+#include "parser.h"
 
 class TArg
 {
@@ -44,10 +45,11 @@ public:
     TArg *FList;
 };
 
-class TCommand
+class TCommand : public TParser
 {
     friend class TCommandLine;
 public:
+    TCommand();
     TCommand(const char *param);
 	virtual ~TCommand();
 
@@ -62,16 +64,11 @@ public:
 	static int ErrorLevel;
 
 protected:
-	virtual int IsArgDelim(char ch);
-	virtual int IsOptDelim(char ch);
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void OptError(const char *optstr);
 	void ErrorSyntax(const char *str);
 
-	char *SkipDelim(char *p);
-	char *SkipWord(char *p);
 	int ScanOpt(void *ag, char *rest);
-
 	int LeadOptions(char **Xline, void *arg);
 
     void AddArg(const char *name);

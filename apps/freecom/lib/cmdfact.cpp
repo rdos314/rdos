@@ -443,11 +443,7 @@ TCommand *TCommandFactory::Parse(const char *line)
 			}
 
 			if (!factory)
-			{
-				cmd = new TExecCommand(com, rest);
 				delete com;
-				return cmd;
-			}
 		}
 	}
 
@@ -470,11 +466,7 @@ TCommand *TCommandFactory::Parse(const char *line)
 	}
 	else
 	{
-        TLangString msg;
-
-        msg.printf(TEXT_ERROR_SYNTAX, line);
-    	WriteError(msg.GetData());
-    	
-        return 0;
-    }
+		cmd = new TExecCommand(line);
+		return cmd;
+	}
 }
