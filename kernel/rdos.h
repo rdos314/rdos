@@ -8,16 +8,44 @@ extern "C" {
 
 #undef WIN32
 
-void RdosSetVgaMode();
-void RdosSetFont(int Height);
+#define LGOP_NULL  0
+#define LGOP_NONE  1
+#define LGOP_OR  2
+#define LGOP_AND  3
+#define LGOP_XOR  4
+#define LGOP_INVERT  5   
+#define LGOP_INVERT_OR  6
+#define LGOP_INVERT_AND  7
+#define LGOP_INVERT_XOR  8
+#define LGOP_ADD  9
+#define LGOP_SUBTRACT  10
+#define LGOP_MULTIPLY  11
+
+int RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
+void RdosSetDrawColor(int handle, int color);
+void RdosSetLGOP(int handle, int lgop);
+void RdosSetHollowStyle(int handle);
+void RdosSetFilledStyle(int handle);
+int RdosOpenFont(int height);
+void RdosCloseFont(int font);
+void RdosGetStringMetrics(int font, const char *str, int *width, int *height);
+void RdosSetFont(int handle, int font);
+int RdosGetPixel(int handle, int x, int y);
+void RdosSetPixel(int handle, int x, int y, int color);
+void RdosBlit(int SrcHandle, int DestHandle, int width, int height,
+				int SrcX, int SrcY, int DestX, int DestY);
+void RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
+				int SrcX, int SrcY, int DestX, int DestY); 
+void RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
+void RdosDrawString(int handle, int x, int y, const char *str);
+void RdosDrawRect(int handle, int x, int y, int width, int height);
+void RdosDrawEllipse(int handle, int x, int y, int width, int height);
+int RdosCreateBitmap(int BitsPerPixel, int width, int height);
+void RdosCloseBitmap(int handle);
+int RdosCreateStringBitmap(int font, const char *str);
+
 void RdosSetForeColor(int color);
 void RdosSetBackColor(int color);
-void RdosFillRect(int StartX, int StartY, int EndX, int EndY);
-void RdosDrawMonoBitmap(void *Bitmap, int StartX, int StartY, int EndX, int EndY);
-int RdosGetCharWidth(char ch);
-int RdosDrawChar(int x, int y, char ch);
-int RdosGetStringWidth(const char *str);
-int RdosDrawString(int x, int y, const char *str);
 int RdosGetMemSize(void *ptr);
 void *RdosAllocateMem(int Size);
 void RdosFreeMem(void *ptr);

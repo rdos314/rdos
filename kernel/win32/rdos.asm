@@ -301,18 +301,510 @@ RdosLeaveSection	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RdosSetVgaMode
+;		NAME:			RdosSetVBEMode
 ;
-;		description:	SetVgaMode()
+;		description:	int RdosSetVBEMode(int *BitsPerPixel, 
+;						int *xres, int *yres, int *linesize, void **buffer);
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosSetVgaMode
+	public RdosSetVBEMode
 
-RdosSetVgaMode	Proc
-	UserGate set_vga_mode_nr
-	ret
-RdosSetVgaMode	Endp
+RdosSetVBEMode	Proc
+	push ebp
+	mov ebp,esp
+	push bx
+	push cx
+	push dx
+	push si
+	push edi
+;
+	mov edi,[ebp+8]
+	mov ax,[edi]
+	mov edi,[ebp+12]
+	mov cx,[edi]
+	mov edi,[ebp+16]
+	mov dx,[edi]	
+	UserGate set_vbe_mode_nr
+	mov edi,[ebp+8]
+	mov [edi],ax
+	mov edi,[ebp+12]
+	mov [edi],cx
+	mov edi,[ebp+16]
+	mov [edi],dx
+	mov edi,[ebp+20]
+	mov [edi],si
+	pop edi
+	mov eax,[ebp+24]
+	mov [eax],edi
+	movzx eax,bx
+;
+	pop edi
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop ebp
+	ret 20
+RdosSetVBEMode	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetDrawColor
+;
+;		description:	RdosSetDrawColor(handle, color)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetDrawColor
+
+RdosSetDrawColor	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate set_draw_color_nr
+;
+	pop ebx
+	pop eax
+	pop ebp
+	ret 8
+RdosSetDrawColor	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetLGOP
+;
+;		description:	RdosSetLGOP(handle, lgop)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetLGOP
+
+RdosSetLGOP	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	UserGate set_lgop_nr
+;
+	pop ebx
+	pop eax
+	pop ebp
+	ret 8
+RdosSetLGOP	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetHollowStyle
+;
+;		description:	RdosSetHollowStyle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetHollowStyle
+
+RdosSetHollowStyle	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate set_hollow_style_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosSetHollowStyle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetFilledStyle
+;
+;		description:	RdosSetFilledStyle(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFilledStyle
+
+RdosSetFilledStyle	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate set_filled_style_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosSetFilledStyle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosOpenFont
+;
+;		description:	RdosOpenFont(height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenFont
+
+RdosOpenFont	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ax,[ebp+8]
+	UserGate open_font_nr
+	movzx eax,bx
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosOpenFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseFont
+;
+;		description:	RdosCloseFont(font)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseFont
+
+RdosCloseFont	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_font_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetStringMetrics
+;
+;		description:	RdosGetStringMetrics(font, str, &width, &height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetStringMetrics
+
+RdosGetStringMetrics	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate get_string_metrics_nr
+;
+	mov edi,[ebp+16]
+	movzx ecx,cx
+	mov [edi],ecx
+	mov edi,[ebp+20]
+	movzx edx,dx
+	mov [edi],edx
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosGetStringMetrics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetFont
+;
+;		description:	RdosSetFont(handle, font)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFont
+
+RdosSetFont	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	UserGate set_font_nr
+;
+	pop ebx
+	pop eax
+	pop ebp
+	ret 8
+RdosSetFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetPixel
+;
+;		description:	RdosGetPixel(handle, x, y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetPixel
+
+RdosGetPixel	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	UserGate get_get_pixel_nr
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosGetPixel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetPixel
+;
+;		description:	RdosSetPixel(handle, x, y)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetPixel
+
+RdosSetPixel	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	UserGate set_get_pixel_nr
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosSetPixel	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosBlit
+;
+;		description:	RdosBlit(SrcHandle, DestHandle, width, height,
+;								 SrcX, SrcY, DestX, DestY);
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosBlit
+
+RdosBlit	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov ax,[ebp+8]
+	mov bx,[ebp+12]
+	mov cx,[ebp+16]
+	mov dx,[ebp+20]
+	mov si,[ebp+28]
+	shl esi,16
+	mov si,[ebp+24]
+	mov di,[ebp+36]
+	shl edi,16
+	mov di,[ebp+32]
+	UserGate blit_nr
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ebp
+	ret 32
+RdosBlit	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawMask
+;
+;		description:	RdosDrawMask(handle, mask, RowSize, width, height,
+;					 				 SrcX, SrcY, DestX, DestY); 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDrawMask
+
+RdosDrawMask	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ax,[ebp+16]
+	mov si,[ebp+24]
+	shl esi,16
+	mov si,[ebp+20]
+	mov cx,[ebp+32]
+	shl ecx,16
+	mov cx,[ebp+28]
+	mov dx,[ebp+40]
+	shl edx,16
+	mov dx,[ebp+36]
+	UserGate blit_nr
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ebp
+	ret 36
+RdosDrawMask	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawLine
+;
+;		description:	RdosDrawLine(handle, x1, y1, x2, y2)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDrawLine
+
+RdosDrawLine	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	mov si,[ebp+20]
+	mov di,[ebp+24]
+	UserGate draw_line_nr
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 20
+RdosDrawLine	Endp
+
+
+;	IN  CX			x position
+;	IN  DX			y position
+;	IN  ES:(E)DI	String to draw
+DrawString      MACRO
+	UserGate draw_string_nr
+						ENDM
+
+;	IN	BX		Bitmap handle or 0
+;	IN	CX		x
+;	IN	DX		y
+;	IN  SI		width
+;	IN  DI		height
+DrawRect      MACRO
+	UserGate draw_rect_nr
+						ENDM
+
+;	IN	BX		Bitmap handle or 0
+;	IN	CX		x
+;	IN	DX		y
+;	IN  SI		width
+;	IN  DI		height
+DrawEllipse      MACRO
+	UserGate draw_ellipse_nr
+						ENDM
+
+;	IN  AX		Bits per pixel
+;	IN  CX		Width
+;	IN  DX		Height
+;	OUT BX		Bitmap handle
+CreateBitmap      MACRO
+	UserGate create_bitmap_nr
+						ENDM
+
+;	IN  BX		Bitmap handle
+CloseBitmap      MACRO
+	UserGate close_bitmap_nr
+						ENDM
+
+;	IN  ES:E(DI)	String
+;	IN  BX			Font handle
+;	OUT	BX			Bitmap handle
+CreateStringBitmap      MACRO
+	UserGate create_string_bitmap_nr
+						ENDM
+
+;	IN  BX			Bitmap handle
+;	OUT	AL			Bits / pixel
+;	OUT CX			Width
+;	OUT DX			Height
+;	OUT	SI			Line size in bytes
+;	OUT ES:EDI		Buffer address
+GetBitmapInfo      MACRO
+	UserGate get_bitmap_info_nr
+						ENDM
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
