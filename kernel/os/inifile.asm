@@ -88,20 +88,52 @@ code	SEGMENT byte public use16 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SysIniName	DB 'z:\system.ini',0
+DefaultSysIniName	DB 'z:\system.ini', 0
+SysIniVar	DB 'SYSINI', 0
 
 OpenSystemIni	Proc near
+	push ds
+	push es
+	push eax
+	push si
+	push di
+;
+	OpenSysEnv
+;
+	mov eax,1000h
+	AllocateGlobalMem
+	xor di,di
+;
 	mov ax,cs
-	mov es,ax
-	mov di,OFFSET SysIniName
-OpenSystemIniLoop:
+	mov ds,ax
+	mov si,OFFSET SysIniVar
+;
+	FindEnvVar
+	pushf
+	CloseEnv
+	popf
+	jc open_sys_ini_test_file
+;
 	mov cl,0
 	OpenFile
-	jnc OpenSystemIniDone
-	inc byte ptr es:[di]
-	jmp OpenSystemIniLoop
-	
-OpenSystemIniDone:
+
+open_sys_ini_test_file:
+	pushf
+	FreeMem
+	popf
+	jnc open_sys_ini_done
+;	
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET DefaultSysIniName
+	OpenFile
+
+open_sys_ini_done:
+	pop di
+	pop si
+	pop eax
+	pop es
+	pop ds
 	ret
 OpenSystemIni	Endp
 
@@ -124,7 +156,7 @@ OpenSystemIni	Endp
 
 FindIniSection	Proc near
 	mov eax,100h
-	AllocateBigGlobalMem
+	AllocateGlobalMem
 	xor edx,edx
 FindIniSectionNext:
 	mov eax,edx
@@ -165,7 +197,7 @@ FindIniSectionTest:
 	jz FindIniSectionDone
 ;
 	push esi
-	repe cmps byte ptr es:[edi],ds:[esi]
+	repe cmps byte ptr ds:[esi],es:[edi]
 	dec esi
 	dec edi
 	lods byte ptr es:[esi]
@@ -231,7 +263,7 @@ FindIniSection	Endp
 
 FindIniKey	Proc near
 	mov ecx,eax
-	AllocateBigGlobalMem
+	AllocateGlobalMem
 	mov eax,edx
 	SetFilePos
 	xor edi,edi
@@ -257,7 +289,7 @@ FindIniKeyControlPass:
 	
 FindIniKeyScan:
 	push esi
-	repe cmps byte ptr es:[edi],ds:[esi]
+	repe cmps byte ptr ds:[esi],es:[edi]
 	dec esi
 	dec edi
 	inc ecx
@@ -508,6 +540,72 @@ WriteProfileString	Proc far
 	xor ax,ax
 	ret 12
 WriteProfileString	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_thread
+;
+;		DESCRIPTION:	Create thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_thread_name	DB 'Ini File', 0
+
+test_thread:
+	int 3
+	call OpenSystemIni
+
+init_thread	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET test_thread
+	mov di,OFFSET test_thread_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;
+	popad
+	pop es
+	pop ds
+init_thread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           Init
+;
+;       DESCRIPTION:    Init driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init	Proc far
+	mov bx,inifile_code_sel
+	InitDevice
+;
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov di,OFFSET init_thread
+	HookInitTasking
+;
+	popa
+	pop es
+	pop ds
+	ret
+init	Endp
 
 code	ENDS
 
