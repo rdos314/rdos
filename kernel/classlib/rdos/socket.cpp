@@ -112,29 +112,29 @@ void TSocketServer::Cleanup()
 {
 	TSocketServer *ptr;
 	TSocketServer *prev;
-    TSocketServer *temp;
-	
+	TSocketServer *temp;
+
 	prev = 0;
 	FSection.Enter();
 	ptr = FList;
 	while (ptr)
-    {
-        if (ptr->FSocket == 0)
-        {
-            temp = ptr->FNext;
-            delete ptr;
-            if (prev == 0)
-                FList = temp;
-            else
-                prev->FNext = temp;
-            ptr = temp;
-        }            
-        else
-        {
-    		prev = ptr;
-	    	ptr = ptr->FList;
-	    }
-    }
+	{
+		if (ptr->FSocket == 0)
+		{
+			temp = ptr->FNext;
+			delete ptr;
+			if (prev == 0)
+				FList = temp;
+			else
+				prev->FNext = temp;
+			ptr = temp;
+		}
+		else
+		{
+			prev = ptr;
+			ptr = ptr->FNext;
+		}
+	}
 	FSection.Leave();
 }
 

@@ -355,7 +355,7 @@ int TFtpSocketServer::IsOpen()
 ##########################################################################*/
 int TFtpSocketServer::Read(char *buf, int size)
 {
-	if (FDataSocket && FDataSocket->IsOpen())
+	if (FDataSocket)
 		return FDataSocket->Read(buf, size);
 	else
 		return 0;

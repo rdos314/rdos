@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# stor.cpp
-# Stor command class
+# mdtm.cpp
+# Mdtm command class
 #
 ########################################################################*/
 
@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 #include "cmdhelp.h"
-#include "stor.h"
+#include "mdtm.h"
 #include "path.h"
 #include "file.h"
 
@@ -39,23 +39,23 @@
 
 /*##########################################################################
 #
-#   Name       : TStorFactory::TStorFactory
+#   Name       : TMdtmFactory::TMdtmFactory
 #
-#   Purpose....: Constructor for TStorFactory
+#   Purpose....: Constructor for TMdtmFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorFactory::TStorFactory()
-  : TCommandFactory("STOR")
+TMdtmFactory::TMdtmFactory()
+  : TCommandFactory("MDTM")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorFactory::Create
+#   Name       : TMdtmFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -64,45 +64,45 @@ TStorFactory::TStorFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TStorFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TMdtmFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TStorCommand(Server, param);
+	return new TMdtmCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::TStorCommand
+#   Name       : TMdtmCommand::TMdtmCommand
 #
-#   Purpose....: Constructor for TStorCommand
+#   Purpose....: Constructor for TMdtmCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorCommand::TStorCommand(TFtpSocketServer *Server, const char *param)
+TMdtmCommand::TMdtmCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::~TStorCommand
+#   Name       : TMdtmCommand::~TMdtmCommand
 #
-#   Purpose....: Destructor for TStorCommand
+#   Purpose....: Destructor for TMdtmCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorCommand::~TStorCommand()
+TMdtmCommand::~TMdtmCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::Execute
+#   Name       : TMdtmCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -111,12 +111,14 @@ TStorCommand::~TStorCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TStorCommand::Execute(char *param)
+void TMdtmCommand::Execute(char *param)
 {
 	TArg *arg;
 	int ArgCount;
 	TLangString msg;
 	int ok;
+	int year, month, day;
+	int hour, min, sec;
 
 	if (FServer->VerifyUser())
 	{
@@ -131,45 +133,34 @@ void TStorCommand::Execute(char *param)
 				arg = arg->FList;
 			}
 
-			ok = (FArgCount == 1);
+			ok = (FArgCount == 2);
 		}
 
 		if (ok)
 		{
-			TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
+			arg = FArgList;
+
+			ok = (sscanf(arg->FName.GetData(), 
+					"%04d%02d%02d%02d%02d%02d",
+					&year, &month, &day,
+					&hour, &min, &sec) == 6);
+		}
+
+		if (ok)
+		{
+			TDateTime filetime(year, month, day, hour, min, sec);
+
+			arg = FArgList->FList;
+				
+			TPathName relpath = TPathName(FServer->CurrDir) + TString(arg->FName);
 			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
-
-			TFile file = abspath.CreateFile(0);
-			int size;
-
-			if (file.IsOpen())
+			if (abspath.IsFile())
 			{
-				char *buf = new char[512];
-
-    			msg.Load(150);
-	    	    FServer->Reply(&msg);    
-
-				while (FServer->IsOpen())
-				{
-					size = FServer->Read(buf, 512);
-					file.Write(buf, size);
-				}
-
-				size = FServer->Read(buf, 512);
-				while (size)
-				{
-					file.Write(buf, size);
-					size = FServer->Read(buf, 512);
-				}
-
-				delete buf;
-
-				FServer->Push();
-
-		    	msg.Load(226);
+				TFile file = abspath.OpenFile();
+				file.SetTime(filetime);
 			}
-			else
-				msg.Load(450);
+
+	    	msg.Load(250);
 		}
 		else
 			msg.Load(501);

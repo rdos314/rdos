@@ -46,6 +46,7 @@
 #include "type.h"
 #include "retr.h"
 #include "stor.h"
+#include "mdtm.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -131,6 +132,7 @@ void cdecl main()
 	TTypeFactory *type = new TTypeFactory;
 	TRetrFactory *retr = new TRetrFactory;
 	TStorFactory *stor = new TStorFactory;
+	TMdtmFactory *mdtm = new TMdtmFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);

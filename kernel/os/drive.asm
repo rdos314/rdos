@@ -1643,6 +1643,7 @@ completed_wakeup_loop:
 	pop ds
 
 completed_wakeup_done:
+	mov es:[edi].dh_wait,0
 	LeaveSection ds:disc_section
 ;
 	test es:[edi].dh_flags, FLAG_EXT_DATA
