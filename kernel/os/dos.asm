@@ -322,6 +322,33 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SET_PSP
+;
+;		DESCRIPTION:	Write PSP
+;
+;		PARAMETERS:		BX			PSP
+;						
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_psp_name	DB 'Set Psp',0
+
+set_psp_gate	PROC far
+	push ds
+	push ax
+	mov ax,dos_app_sel
+	mov ds,ax
+	mov ds:vm_psp_seg,bx
+	pop ax
+	pop ds
+	ret
+set_psp_gate	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			GET_PSP_SEL
 ;
 ;		DESCRIPTION:	Read protected mode PSP
@@ -1247,6 +1274,12 @@ init	PROC far
 	mov di,OFFSET get_psp_name
 	xor cl,cl
 	mov ax,get_psp_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_psp_gate
+	mov di,OFFSET set_psp_name
+	xor cl,cl
+	mov ax,set_psp_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET get_psp_sel

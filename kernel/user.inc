@@ -1162,6 +1162,13 @@ CreateNamedMapping        MACRO
 
 ;	IN EAX			SIZE OF MAPPING OBJECT
 ;	IN BX			FILE HANDLE
+;	OUT BX			MAPPING HANDLE
+CreateFileMapping        MACRO
+	UserGate create_file_mapping_nr
+						ENDM
+
+;	IN EAX			SIZE OF MAPPING OBJECT
+;	IN BX			FILE HANDLE
 ;	IN ES:(E)DI 	MAPPING NAME
 ;	OUT BX			MAPPING HANDLE
 CreateNamedFileMapping        MACRO

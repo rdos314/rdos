@@ -48,6 +48,7 @@ UserGate      MACRO gate_nr
 
 FF_HANDLE = 0A7650000h
 FILE_HANDLE = 3AB60000h
+MEMMAP_HANDLE = 0BA540000h
 STD_HANDLE = 3AB80000h
 STD_IN = STD_HANDLE
 STD_OUT = STD_HANDLE + 1
@@ -2517,10 +2518,72 @@ cfmName			EQU 28
 CreateFileMappingA Proc near
 	push ebp
 	mov ebp,esp
+	push ebx
+	push edi
 ;
-	mov ebx,[ebp].cfmFile
+	mov eax,[ebp].cfmFile
+	mov bx,ax
+	xor ax,ax
+	cmp eax,FILE_HANDLE
+	mov eax,6
+	jne cfmFailed
+;
+	mov edi,[ebp].cfmName
+	or edi,edi
+	jz cfmUnnamed
+;
+	UserGate get_file_size_nr
+	mov edx,[ebp].cfmMaxSizeLow
+	or edx,edx
+	jz cfmNamedDo
+;
+	cmp eax,edx
+	jc cfmNamedIncr
+;
+	mov eax,edx
+	jmp cfmNamedDo
+
+cfmNamedIncr:
+	mov eax,edx
+	UserGate set_file_size_nr
+
+cfmNamedDo:
+	UserGate create_named_file_mapping_nr
+	jnc cfmOk
+	jmp cfmFailed
+
+cfmUnnamed:
+	UserGate get_file_size_nr
+	mov edx,[ebp].cfmMaxSizeLow
+	or edx,edx
+	jz cfmUnnamedDo
+;
+	cmp eax,edx
+	jc cfmUnnamedIncr
+;
+	mov eax,edx
+	jmp cfmUnnamedDo
+
+cfmUnnamedIncr:
+	mov eax,edx
+	UserGate set_file_size_nr
+
+cfmUnnamedDo:
+	UserGate create_file_mapping_nr
+	jc cfmFailed
+
+cfmOk:
+	movzx eax,bx
+	or eax,MEMMAP_HANDLE
+	jmp cfmDone
+
+cfmFailed:
+	int 3
 	xor eax,eax
-;
+
+cfmDone:
+	pop edi
+	pop ebx
 	pop ebp
 	ret 24
 CreateFileMappingA Endp
@@ -2545,11 +2608,35 @@ mvofSize		EQU 24
 MapViewOfFile Proc near
 	push ebp
 	mov ebp,esp
+	push ebx
+	push edi
 ;
+	mov eax,[ebp].mvofHandle
+	mov bx,ax
+	xor ax,ax
+	cmp eax,MEMMAP_HANDLE
+	mov eax,6
+	jne mvofFailed
+;
+	mov eax,[ebp].mvofSize
+	UserGate allocate_app_mem_nr
+;
+	mov edi,edx
+	mov eax,[ebp].mvofOffsetLow
+	mov ecx,[ebp].mvofSize
+	UserGate map_view_nr
+	jc mvofFailed
+;
+	mov eax,edi
+	jmp mvofDone
+
+mvofFailed:
 	int 3
-	mov ebx,[ebp].mvofHandle
 	xor eax,eax
-;
+
+mvofDone:
+	pop edi
+	pop ebx
 	pop ebp
 	ret 20
 MapViewOfFile Endp

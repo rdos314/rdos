@@ -67,6 +67,7 @@ map_owner		DW ?
 map_size		DD ?
 map_base		DD ?
 map_users		DW ?
+map_file		DW ?
 map_name		DB ?
 
 mapped_struc	ENDS
@@ -76,6 +77,8 @@ mapped_struc	ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+	extrn map_to_file:near
 
 PAGE
 
@@ -107,6 +110,7 @@ CreateUnnamed	Proc near
 	AllocateBigLinear
 	mov es:map_base,edx
 	mov es:map_users,1
+	mov es:map_file,0
 	InitSection es:map_section
 	EnterSection es:map_section
 	mov es:map_owner, OFFSET map_list
@@ -187,6 +191,7 @@ CreateNamed	Proc near
 	AllocateBigLinear
 	mov es:map_base,edx
 	mov es:map_users,1
+	mov es:map_file,0
 	InitSection es:map_section
 	EnterSection es:map_section
 	mov es:map_owner, OFFSET map_named_list
@@ -232,6 +237,72 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CreateUnnamedFile
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						BX			File handle
+;
+;		RETURNS:		ES			File mapping selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUnnamedFile	Proc near
+	push ax
+	push edx
+;
+	push eax
+	mov ax,fs_data_sel
+	mov ds,ax
+	mov eax,OFFSET map_name
+	AllocateSmallGlobalMem
+	pop eax
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:map_size,eax
+	mov es:map_base,0
+	mov es:map_users,1
+	mov es:map_file,bx
+	InitSection es:map_section
+	EnterSection es:map_section
+	mov es:map_owner, OFFSET map_list
+;
+	EnterSection ds:sys_section
+	mov ax,ds:map_list
+	or ax,ax
+	je create_unnamed_file_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:map_prev
+	mov ds:map_prev,es
+	mov ds,si
+	mov ds:map_next,es
+	mov es:map_next,ax
+	mov es:map_prev,si
+	pop si
+	pop ds
+	jmp create_unnamed_file_leave
+
+create_unnamed_file_empty:
+	mov es:map_next,es
+	mov es:map_prev,es
+	mov ds:map_list,es
+
+create_unnamed_file_leave:
+	LeaveSection ds:sys_section
+;
+	pop edx
+	pop ax
+	ret
+CreateUnnamedFile	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			CreateNamedFile
 ;
 ;		DESCRIPTION:	EAX			Size of filemapping object
@@ -270,9 +341,9 @@ CreateNamedFile	Proc near
 	and ax,0F000h
 	add eax,1000h
 	mov es:map_size,eax
-	AllocateBigLinear
-	mov es:map_base,edx
+	mov es:map_base,0
 	mov es:map_users,1
+	mov es:map_file,bx
 	InitSection es:map_section
 	EnterSection es:map_section
 	mov es:map_owner, OFFSET map_named_list
@@ -356,7 +427,12 @@ close_mapped_leave:
 ;
 	mov ecx,es:map_size
 	mov edx,es:map_base
+	or edx,edx
+	jz close_mapped_free_sel
+;
 	FreeLinear
+
+close_mapped_free_sel:
 	FreeMem
 	pop si
 	pop ax
@@ -486,7 +562,7 @@ CreateHandle	Proc near
 create_ins_empty:
 	mov [bx].memmap_next,bx
 	mov [bx].memmap_prev,bx
-	mov es:memmap_list,es
+	mov es:memmap_list,bx
 
 create_ins_done:
 	sti
@@ -522,8 +598,8 @@ create_mapping	Proc far
 	push es
 	call CreateUnnamed
 	call CreateHandle
-	mov ax,es
-	mov ds,ax
+	push es
+	pop ds
 	LeaveSection ds:map_section
 	clc
 	pop es
@@ -555,8 +631,8 @@ create_named_mapping	Proc near
 ;
 	call CreateNamed
 	push ds
-	mov ax,es
-	mov ds,ax
+	push es
+	pop ds
 	LeaveSection ds:map_section
 	pop ds
 
@@ -586,6 +662,47 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			CreateFileMapping
+;
+;		DESCRIPTION:	EAX			Size of filemapping object
+;						BX			File handle to map
+;
+;		RETURNS:		BX			File mapping handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_file_mapping_name DB 'Create File Mapping',0
+
+create_file_mapping	Proc near
+	push ds
+	push es
+;
+	push ax
+	push bx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	pop bx
+	pop ax
+	jc create_file_mapping_done
+;
+	call CreateUnnamedFile
+	call CreateHandle
+	push es
+	pop ds
+	LeaveSection ds:map_section
+	clc
+
+create_file_mapping_done:
+	pop es
+	pop ds
+	retf32
+create_file_mapping	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			CreateNamedFileMapping
 ;
 ;		DESCRIPTION:	EAX			Size of filemapping object
@@ -601,19 +718,30 @@ create_named_file_mapping_name DB 'Create Named File Mapping',0
 create_named_file_mapping	Proc near
 	push ds
 	push es
+;
+	push ax
+	push bx
+	mov ax,FILE_HANDLE
+	DerefHandle
+	pop bx
+	pop ax
+	jc create_named_file_done
+;
 	call FindNamed
 	jnc create_named_file_ok
 ;
 	call CreateNamedFile
 	push ds
-	mov ax,es
-	mov ds,ax
+	push es
+	pop ds
 	LeaveSection ds:map_section
 	pop ds
 
 create_named_file_ok:
 	call CreateHandle
 	clc
+
+create_named_file_done:
 	pop es
 	pop ds
 	ret
@@ -753,26 +881,17 @@ PAGE
 ;
 ;		DESCRIPTION:	Map page from object to user memory
 ;
-;		PARAMETERS:		BX			Handle offset
-;						EAX			Offset within object
-;						EDX			Pagefault address
+;		PARAMETERS:		EAX			Offset within object
+;						EBX			Source linear address
+;						EDX			Pagefault base address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 map_to_user	Proc near
-	push ds
 	push es
 	push eax
 	push ebx
 	push edx
-;
-	add eax,ds:[bx].view_offset
-	and ax,0F000h
-	and dx,0F000h
-	mov ds,ds:[bx].memmap_sel
-	EnterSection ds:map_section
-	mov ebx,ds:map_base
-	add ebx,eax
 ;
 	mov ax,process_page_sel
 	mov es,ax
@@ -801,13 +920,11 @@ map_to_user	Proc near
 map_to_user_do:
 	or ax,807h
 	mov es:[edx],eax
-	LeaveSection ds:map_section
 ;
 	pop edx
 	pop ebx
 	pop eax
 	pop es
-	pop ds
 	ret
 map_to_user	Endp
 
@@ -858,7 +975,26 @@ map_fault_loop:
 	cmp eax,ds:[bx].view_size
 	jnc map_fault_find_next
 ;
+	add eax,ds:[bx].view_offset
+	and ax,0F000h
+	and dx,0F000h
+	mov ds,ds:[bx].memmap_sel
+	EnterSection ds:map_section
+;
+	mov bx,ds:map_file
+	or bx,bx
+	jz map_fault_mem
+;
+	call map_to_file
+	jmp map_fault_leave
+
+map_fault_mem:
+	mov ebx,ds:map_base
+	add ebx,eax
 	call map_to_user
+
+map_fault_leave:
+	LeaveSection ds:map_section
 	jmp map_fault_done
 
 map_fault_find_next:
@@ -1035,9 +1171,18 @@ unmap_view	Proc far
 	mov eax,2
 
 ufm_loop:
-	test word ptr [edx],800h
+	test byte ptr [edx],1
 	jz ufm_next
 ;
+	test word ptr [edx],800h
+	jnz ufm_mark
+;
+	push eax
+	mov eax,[edx]
+	FreePhysical
+	pop eax
+
+ufm_mark:
 	mov [edx],eax
 
 ufm_next:
@@ -1131,6 +1276,12 @@ init_memmap	PROC near
 	xor cl,cl
 	mov ax,create_named_mapping_nr
 	RegisterUserGate32
+;
+	mov si,OFFSET create_file_mapping
+	mov di,OFFSET create_file_mapping_name
+	xor cl,cl
+	mov ax,create_file_mapping_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET create_named_file_mapping16
 	mov di,OFFSET create_named_file_mapping_name

@@ -260,5 +260,6 @@ get_disc_info_nr				EQU 223
 get_dll_resource_nr				EQU 224
 get_rdfs_info_nr				EQU 225
 format_drive_nr					EQU 226
+create_file_mapping_nr			EQU 227
 
-usergate_entries				EQU 227
+usergate_entries				EQU 228

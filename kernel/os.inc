@@ -1155,6 +1155,11 @@ GetPsp	MACRO
 	OsGate get_psp_nr
 					ENDM
 
+;	BX			PSP SEGMENT
+SetPsp	MACRO
+	OsGate set_psp_nr
+					ENDM
+
 ;	AX		Mode nr
 ;	ES:DI	Mode constructor
 RegisterVideoMode	MACRO

@@ -1484,6 +1484,7 @@ set_file_pos_name	DB 'Set File Position',0
 set_file_pos:
 	push ds
 	push bx
+	push eax
 	push edx
 ;
 	mov edx,eax
@@ -1496,6 +1497,7 @@ set_file_pos:
 
 set_file_pos_done:
 	pop edx
+	pop eax
 	pop bx
 	pop ds
 	retf32
@@ -1817,6 +1819,137 @@ write_file16_done:
 	pop ds
 	ret
 write_file16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			map_to_file
+;
+;		DESCRIPTION:	Map page from file to memory object
+;
+;		PARAMETERS:		EAX			Offset within object
+;						BX			File handle
+;						EDX			Pagefault base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public map_to_file
+
+map_to_file	Proc near
+	push ds
+	push es
+	pushad
+;
+	mov edi,edx
+	mov edx,eax
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc map_to_file_done
+;
+	mov si,bx
+	mov al,[bx].file_handle_drive
+	mov bx,[bx].file_handle_sel
+	or bx,bx
+	stc
+	jz map_to_file_done
+;
+	mov ds,bx
+	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+	jnz map_to_file_read
+;
+	mov ax,flat_sel
+	mov es,ax
+;
+	EnterReadSection ds:file_size_section
+	cmp edx,ds:file_size
+	jnc map_to_file_leave
+;
+	mov esi,edx
+	mov cl,ds:file_dir_shift
+	shr esi,cl
+	shl si,2
+	mov ebx,ds:[si].file_entries
+	EnterSection ds:file_list_section
+	or ebx,ebx
+	jnz map_to_file_check_mid
+;
+	call CreateListDir
+	mov ds:[si].file_entries,ebx
+
+map_to_file_check_mid:
+	mov esi,edx
+	mov cl,ds:file_entry_shift
+	shr esi,cl
+	shl si,2
+	and esi,0FFCh
+	mov eax,es:[ebx+esi]
+	or eax,eax
+	jnz map_to_file_check_base
+;
+	lea eax,[ebx+esi]
+	call CreateListEntry
+	mov es:[ebx+esi],eax
+
+map_to_file_check_base:
+	cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
+	jne map_to_file_do_first
+;
+	push edi
+	mov edi,eax
+	call ReadFileListEntry
+	pop edi
+	jnc map_to_file_do_first
+;
+	mov dword ptr es:[ebx+esi],0
+	LeaveSection ds:file_list_section
+	stc
+	jmp map_to_file_leave
+
+map_to_file_do_first:
+	mov esi,es:[ebx+esi]
+	inc es:[esi].fl_ref_count
+	mov ebx,ds:file_block_size
+	mov esi,es:[esi].fl_base
+	mov eax,ebx
+	dec eax
+	and edx,eax
+	add esi,edx
+;
+	mov ax,process_page_sel
+	mov es,ax
+	shr esi,10
+	shr edi,10
+	mov eax,es:[esi]
+	or ax,807h
+	mov es:[edi],eax
+;
+	LeaveSection ds:file_list_section
+	clc
+
+map_to_file_leave:
+	LeaveReadSection ds:file_size_section
+	jmp map_to_file_done
+
+map_to_file_read:
+	push edi
+	mov si,process_page_sel
+	mov es,si
+	shr edi,10
+	mov dword ptr es:[edi],2
+	pop edi
+	mov si,flat_sel
+	mov es,si
+	mov ecx,1000h
+	CallFileSystem read_file_proc
+
+map_to_file_done:
+	popad
+	pop es
+	pop ds
+	ret
+map_to_file	Endp
 
 PAGE
 

@@ -291,5 +291,6 @@ allocate_dma_physical_nr	EQU 259
 allocate_handle_nr			EQU 260
 free_handle_nr				EQU 261
 deref_handle_nr				EQU 262
+set_psp_nr					EQU 263
 
-osgate_entries				EQU 263
+osgate_entries				EQU 264

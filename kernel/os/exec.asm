@@ -285,8 +285,10 @@ load_program16:
 ;
 	movzx esi,si
 	movzx edi,di
+	GetPsp
 	call enter_load
 	OpenApp
+	SetPsp
 	push es
 	push di
 	mov ax,thread_app_sel
