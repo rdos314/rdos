@@ -85,8 +85,11 @@ void __stdcall ShowChar(char ch)
 *##########################################################################*/
 void __stdcall ShowSizeString(char *str, int Size)
 {
-	RdosWriteSizeString(str, Size);
-	RdosWriteFile(handle, str, Size);
+    if (Size > 0)
+    {
+    	RdosWriteSizeString(str, Size);
+	    RdosWriteFile(handle, str, Size);
+	}
 }
 
 /*##################  ShowAsciiz  ###############

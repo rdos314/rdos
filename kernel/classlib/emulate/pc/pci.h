@@ -33,8 +33,8 @@ class TPci;
 class TPciAreaData
 {
 public:
-    int Base;
-    int Size;
+    unsigned long Base;
+    unsigned long Size;
     char *Data;
 };
 
@@ -50,6 +50,8 @@ public:
 
 	virtual void Out(int Num, int Offset, char Value);
 	virtual char In(int Num, int Offset);
+	virtual void WriteMem(int Num, unsigned unsigned long Offset, char Value);
+	virtual char ReadMem(int Num, unsigned unsigned long Offset);
 
 protected:
     void DefineIo(int Num, int Base, int Size, char *Data);
@@ -68,8 +70,8 @@ protected:
 class TPciArea
 {
 public:
-	int Base;
-	int Size;
+	unsigned long Base;
+	unsigned long Size;
 	TPciFunction *func;
 	int Num;
 };
@@ -100,6 +102,9 @@ public:
 
 	void Out(int Port, char Value);
 	char In(int Port);
+	void WriteMem(unsigned long Address, char Value);
+	char ReadMem(unsigned long Address);
+	
 	void RegisterFunction(TPciFunction *func, int Bus, int Device, int Function);
 	void DefineIo(TPciFunction *func, int Num, int Base, int Size);
 	void UndefineIo(TPciFunction *func, int Num);

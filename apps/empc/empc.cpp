@@ -32,6 +32,7 @@
 #include "pit.h"
 #include "keyb.h"
 #include "pci.h"
+#include "zfnb.h"
 #include "zfsb.h"
 #include "zfsmi.h"
 #include "zfide.h"
@@ -51,7 +52,7 @@ TCmos Cmos;
 TPci Pci;
 TCpu Cpu;
 void *Eprom;
-void *Dram;
+char *LowRam;
 
 /*##################  Idle  ###############
 *   Purpose....: Idle								            #
@@ -151,14 +152,10 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 	}
 	else
 	{
-		if (Address < 0x400000)
-		{
-			Source = (char *)Dram;
-			Source += Address;
-			return *Source;
-		}
-		else
-			return 0xFF;
+        if (Address < 0x10000 && Address >= 0xF000)
+            return *(LowRam + Address);
+        else
+	        return Pci.ReadMem(Address);
 	}
 }
 
@@ -171,14 +168,10 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 *##########################################################################*/
 void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 {
-	char *Source;
-
-	if (Address < 0x400000)
-	{
-		Source = (char *)Dram;
-		Source += Address;
-		*Source = Value;
-	}
+    if (Address < 0x10000 && Address >= 0xF000)
+        *(LowRam + Address) = Value;
+    else
+	    Pci.WriteMem(Address, Value);
 }
 
 /*##################  ReadFromIo  ###############
@@ -193,7 +186,16 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 	switch (Port & 0xFFF0)
 	{
 		case 0x20:
-			return Pic0.In(Port & 0xF);
+		    switch (Port)
+		    {
+		        case 0x20:
+		        case 0x21:
+        			return Pic0.In(Port & 1);
+
+        	    default:
+        		    return Pci.In(Port);
+        	}
+        	break;
 
 		case 0x40:
 			return Pit.In(Port & 0xF);
@@ -224,7 +226,20 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 	switch (Port & 0xFFF0)
 	{
 		case 0x20:
-			Pic0.Out(Port & 0xF, Value);
+		    switch (Port)
+		    {
+		        case 0x20:
+		        case 0x21:
+        			Pic0.Out(Port & 1, Value);
+        			break;
+
+        	    default:
+        	        Pci.Out(Port, Value);
+        	        break;
+        	}
+        	break;
+
+
 			break;
 
 		case 0x40:
@@ -259,20 +274,13 @@ void Reset()
 	int i;
 	long l;
 	long *LongPtr;
-	Eprom = new char[0x40000];
-	Dram = new char[0x400000];
+	Eprom = new char[0x10000];
+	LowRam = new char[0x10000];
 
-	LongPtr = (long *)Dram;
-	for (l = 0; l < 0x100000; l++)
-	{
-		*LongPtr = 0x77777777;
-		LongPtr++;
-	}
-
-	file = RdosOpenFile("prmbm.rom", 0);
+	file = RdosOpenFile("rdosbur.bin", 0);
 	if (file)
 	{
-		RdosReadFile(file, ((char *)Eprom) + 0, 0x40000);
+		RdosReadFile(file, ((char *)Eprom) + 0x30000, 0x10000);
 		RdosCloseFile(file);
 	}
 
@@ -291,6 +299,7 @@ void main(void)
 {
     OpenScreen("c:\\sim.log");
 
+	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
 	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
 	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
 	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);

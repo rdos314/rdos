@@ -142,6 +142,43 @@ void TPciFunction::WriteData(int Index, int Data)
     FData[Index + 3] = (char)((Data & 0xFF000000) >> 24);
 }
 
+/*##################  TPciFunction::WriteMem  ###############
+*   Purpose....: Write to data block								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::WriteMem(int Num, unsigned long Offset, char Value)
+{
+    TPciAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+		if (area->Data && Offset >= 0 && Offset < area->Size)
+			*(area->Data + Offset) = Value;
+
+}
+
+/*##################  TPciFunction::ReadMem  ###############
+*   Purpose....: Read from data block								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPciFunction::ReadMem(int Num, unsigned long Offset)
+{
+    TPciAreaData *area;
+
+    area = FMemArr[Num];
+    if (area)
+		if (area->Data && Offset >= 0 && Offset < area->Size)
+			return *(area->Data + Offset);
+
+	return 0xFF;
+}
+
 /*##################  TPciFunction::Out  ###############
 *   Purpose....: Out to data block								            #
 *   In params..: *                                                          #
@@ -777,6 +814,52 @@ void TPci::UndefineMem(TPciFunction *func, int Num)
 				break;
 			}
 	}
+}
+
+/*##################  TPci::WriteMem  ###############
+*   Purpose....: Perform write memory instruction						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::WriteMem(unsigned long Address, char Value)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookMemArr[i];
+		if (area)
+			if (area->Base <= Address && area->Base + area->Size > Address)
+			{
+				area->func->WriteMem(area->Num, Address - area->Base, Value);
+				break;
+			}
+	}
+}
+
+/*##################  TPci::ReadMem  ###############
+*   Purpose....: Perform read memory instruction						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPci::ReadMem(unsigned long Address)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookMemArr[i];
+		if (area)
+			if (area->Base <= Address && area->Base + area->Size > Address)
+				return area->func->ReadMem(area->Num, Address - area->Base);
+	}
+	return 0xFF;
 }
 
 /*##################  TPci::DefaultOut  ###############

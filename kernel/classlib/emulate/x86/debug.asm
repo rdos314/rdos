@@ -257,6 +257,9 @@ Delimiter	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Blank	Proc near
+    test ecx,80000000h
+    jnz blank_done
+;
 	push ax
 	push ecx
 	mov al,' '
@@ -265,6 +268,8 @@ blank_loop:
 	loop blank_loop
 	pop ecx
 	pop ax
+
+blank_done:
 	ret
 Blank	Endp
 
