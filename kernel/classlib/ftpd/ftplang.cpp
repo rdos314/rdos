@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,167 +20,174 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpd.cpp
-# FTP server application for RDOS
+# langstr.cpp
+# Language string class
 #
 ########################################################################*/
 
 #include <stdio.h>
+#include <mem.h>
 #include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <stdarg.h>
 
 #include "rdos.h"
-#include "socket.h"
 #include "langstr.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-class TFtpSocketServerFactory : public TSocketServerFactory
-{
-public:
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
-};
+#define DEFAULT_ID  502
 
-class TFtpSocketServer : public TSocketServer
-{
-public:
-	TFtpSocketServer();
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
-};
+int TLangString::FHandle = 0;
+int TLangString::FIsLocalHandle = TRUE;
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::GetThreadName
+#   Name       : TLangString::TLangString
 #
-#   Purpose....: Return thread name
+#   Purpose....: Constructor for language string
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-char *TFtpSocketServerFactory::GetThreadName()
+TLangString::TLangString()
 {
-	return "FTP";
+    FID = DEFAULT_ID;
 }
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::GetStackSize
+#   Name       : TLangString::TLangString
 #
-#   Purpose....: Return thread stack size
+#   Purpose....: Constructor for language string
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TFtpSocketServerFactory::GetStackSize()
+TLangString::TLangString(int ID)
 {
-	return 0x2000;
+	Load(ID);
 }
 
 /*##########################################################################
 #
-#   Name       : TFtpSocketServerFactory::Create
+#   Name       : TLangString::SetLanguage
 #
-#   Purpose....: Create a socket server instance
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer *TFtpSocketServerFactory::Create()
-{
-	return new TFtpSocketServer;
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServer::TFtpSocketServer
-#
-#   Purpose....: Socket server constructor
+#   Purpose....: Set new language
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServer::TFtpSocketServer()
+void TLangString::SetLanguage(const char *language)
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServer::DeviceName
-#
-#   Purpose....: Device name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
-{
-	strncpy(Name,"FTP",MaxLen);
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServer::HandleSocket
-#
-#   Purpose....: Handle socket
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFtpSocketServer::HandleSocket()
-{
-	int Major;
-	int Minor;
-	int Release;
-	TLangString msg;
-
-	int count;
-	char Buf[513];
-
-	if (FSocket->WaitForConnection(6000))
+	if (FHandle && !FIsLocalHandle)
 	{
+		RdosFreeDll(FHandle);
+		FHandle = 0;
+	}
+	FHandle = RdosLoadDll(language);
+	FIsLocalHandle = FALSE;
+}
 
-		RdosGetVersion(&Major, &Minor, &Release);
-		msg.printf(220, Major, Minor, Release);
-		msg.Write(FSocket);
+/*##########################################################################
+#
+#   Name       : TLangString::Load
+#
+#   Purpose....: Load language string
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLangString::Load(int ID)
+{
+	char str[257];
+	int start;
+	int count;
+	int i;
+	int size;
 
-		count = FSocket->Read(Buf, 512);
-		Buf[count] = 0;
-		printf(Buf);
+	FID = ID;
 
-		msg.Load(502);
-		msg.Write(FSocket);
+	Release();
+
+	start = 0;
+	count = 0;
+
+	if (FHandle == 0)
+	{
+		FIsLocalHandle = TRUE;
+		FHandle = RdosGetModuleHandle();
+	}
+
+	if (FHandle)
+	{
+		size = RdosReadResource(FHandle, ID, str, 256);
+		AllocBuffer(size + 1);
+
+		size = RdosReadResource(FHandle, ID, FBuf, 256);
+		*(FBuf+size) = 0;
+	}
+	else
+	{
+		sprintf(str, "Unknown msg ID %d", ID);
+		size = strlen(str);
+		AllocBuffer(size + 1);
+		memcpy(FBuf, str, size);
+		*(FBuf+size) = 0;
+
+		FID = DEFAULT_ID;
 	}
 }
 
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-
-TFtpSocketServerFactory Factory;
-
-void cdecl main()
+/*##########################################################################
+#
+#   Name       : TLangString::printf
+#
+#   Purpose....: Load & printf on message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLangString::printf(int ID, ...)
 {
-	TSocket::Listen(&Factory, 21, 0x4000);
+	va_list ap;
+	TLangString temp(ID);
+
+	va_start(ap, ID);
+	TString::printf(temp.GetData(), ap);
+	va_end(ap);
+	FID = temp.FID;
+}
+
+/*##########################################################################
+#
+#   Name       : TLangString::Write
+#
+#   Purpose....: Write message to socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLangString::Write(TSocket *Socket)
+{
+	char str[5];
+
+	sprintf(str, "%03d ", FID);
+
+	Socket->Write(str);
+	Socket->Write(GetData());
+	Socket->Push();
 }
 
