@@ -6,6 +6,7 @@
 #include "rdos.h"
 
 #include "str.h"
+#include "path.h"
 
 struct TComMsg
 {
@@ -26,11 +27,14 @@ void cdecl main()
 {
 	TString str1("Part 1");
 	TString str2("Part 2");
+	TPathName path("test.exe");
 
 	str2 = str1 + "," + str2;
 	str2.Upper();
 	str2.Lower();
 	printf(str2.Find(','));
+
+    printf(path.GetFullPathName().GetData());
 
 	TComMsg Msg;
 	char Str[10];

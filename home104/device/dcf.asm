@@ -931,6 +931,7 @@ dcf_time_loop:
 	add si,SIZE save_data_struc
 	loop dcf_time_loop
 ;
+	int 3
 	call GetBestDiff
 	jc dcf_loop
 ;

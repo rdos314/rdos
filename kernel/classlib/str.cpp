@@ -179,9 +179,12 @@ void TString::AllocBuffer(int size)
 void TString::Release()
 {
 	Section.Enter();
-	FData->FRefs--;
-	if (FData->FRefs <= 0)
-    	delete FData;
+	if (FData)
+	{
+		FData->FRefs--;
+		if (FData->FRefs <= 0)
+			delete FData;
+	}
 	Init();
 	Section.Leave();
 }
