@@ -81,6 +81,10 @@ dp83815_srcs = DP83815.ASM
 dp83815_objs = $(dp83815_srcs:.ASM=.OBJ)
 dp83815_rdvs = DP83815.RDV
 
+rtl8139_srcs = RTL8139.ASM
+rtl8139_objs = $(rtl8139_srcs:.ASM=.OBJ)
+rtl8139_rdvs = RTL8139.RDV
+
 ppp_srcs = PPP.ASM
 ppp_objs = $(ppp_srcs:.ASM=.OBJ)
 ppp_rdvs = PPP.RDV
@@ -96,14 +100,14 @@ fat_rdvs = FAT.RDV
 srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(pccom_srcs) $(dp83815_srcs)
+			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
-			$(printer_rdvs) $(pccom_rdvs)
+			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -227,6 +231,14 @@ DP83815.RDV : $(dp83815_objs)
 	$(dp83815_objs)
 	DP83815.RDV
 	DP83815;
+!
+
+RTL8139.RDV : $(rtl8139_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(rtl8139_objs)
+	RTL8139.RDV
+	RTL8139;
 !
 
 FAT.RDV : $(fat_objs)

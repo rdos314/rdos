@@ -849,6 +849,7 @@ BinaryToTime	MACRO
 	UserGate binary_to_time_nr
 				ENDM
 
+; IN  EDX		NTP IP address
 SyncTime		MACRO
 	UserGate sync_time_nr
 			ENDM

@@ -1033,17 +1033,16 @@ ConfigMemMode	Endp
 
 PciVendorTab:
 pci00 DW 10ECh, 8029h
-pci01 DW 10ECh, 8139h
-pci02 DW 1050h, 940h
-pci03 DW 11F6h, 1401h
-pci04 DW 8E2Eh, 3000h
-pci05 DW 4A14h, 5000h
-pci06 DW 1106h, 926h
-pci07 DW 10BDh, 0E34h
-pci08 DW 1050h, 5A5Ah
-pci09 DW 12C3h, 58h
-pci0A DW 12C3h, 5598h
-pci0B DW 0,		0
+pci01 DW 1050h, 940h
+pci02 DW 11F6h, 1401h
+pci03 DW 8E2Eh, 3000h
+pci04 DW 4A14h, 5000h
+pci05 DW 1106h, 926h
+pci06 DW 10BDh, 0E34h
+pci07 DW 1050h, 5A5Ah
+pci08 DW 12C3h, 58h
+pci09 DW 12C3h, 5598h
+pci0A DW 0,		0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
