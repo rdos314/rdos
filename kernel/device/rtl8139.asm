@@ -91,13 +91,17 @@ EE_WRITE_1		= 2
 EE_DATA_READ	= 1	; EEPROM chip data out.
 EE_ENB			= 80h + EE_CS
 EE_DIS			= 80h
+
+RX_BUF_LEN_IDX	= 3 ;	0 = 8k, 1 = 16k, 2 = 32k, 3 = 64k
+TX_BUF_SIZE		= 2048
  
 data	STRUC
 
 IoBase				DW ?
 Handle				DW ?
+RxRing				DD ?
+TxRing				DD 4 DUP(?)
 EthernetAddress		DB 6 DUP(?)
-Is8139				DB ?
 EeAdrLen			DB ?
 
 data	ENDS
@@ -137,11 +141,10 @@ ReadEe	Proc near
 	out dx,al
 ;
 	mov bx,EE_READ_CMD
-	mov cl,ds:EeAdrLen
+	movzx cx,ds:EeAdrLen
 	shl bx,cl
 	or bx,si
 ;
-	movzx cx,ds:EeAdrLen
 	add cx,4
 	mov si,1
 	shl si,cl
@@ -222,8 +225,8 @@ InitChip	Proc near
 	mov ds:EeAdrLen,8 
 	xor bx,bx
 	call ReadEe
-	cmp ax,8129
-	jnz icReadAdr
+	cmp ax,8129h
+	jz icReadAdr
 ;
 	mov ds:EeAdrLen,6
 
@@ -233,7 +236,6 @@ icReadAdr:
 
 icReadLoop:
 	call ReadEe
-	xchg al,ah
 	mov ds:[si],ax
 	add si,2
 	inc bx
@@ -242,6 +244,30 @@ icReadLoop:
 ;
 	ret
 InitChip	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitRing
+;
+;		DESCRIPTION:    Init buffer rings
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitRing	Proc near
+	mov eax,8192 SHL RX_BUF_LEN_IDX + 5 * TX_BUF_SIZE
+	AllocateBigLinear
+	mov ds:RxRing,edx
+	add edx,8192 SHL RX_BUF_LEN_IDX + TX_BUF_SIZE
+	mov ds:TxRing,edx
+	add edx,TX_BUF_SIZE
+	mov ds:TxRing+1,edx
+	add edx,TX_BUF_SIZE
+	mov ds:TxRing+2,edx
+	add edx,TX_BUF_SIZE
+	mov ds:TxRing+3,edx
+	ret
+InitRing	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -392,18 +418,17 @@ DispTable:
 DriverName	DB 'DP83815',0
 
 PciVendorTab:
-pci00	DW 10ECh, 8139h, 1
-pci01	DW 10ECh, 8129h, 0
-pci02	DW 1113h, 1211h, 1
-pci03	DW 1186h, 1300h, 1
-pci04	DW 018Ah, 0106h, 1
-pci05	DW 021Bh, 8139h, 1
-pci06	DW 13D1h, 0AB06h, 1
-pci07	DW 02ACh, 1012h, 1 
-pci08	DW 1432h, 9130h, 1
-pci09	DW 1186h, 1340h, 1
-pci10	DW 1186h, 1300h, 1
-pci11 	DW 0,	  0,     0
+pci00	DW 10ECh, 8139h
+pci02	DW 1113h, 1211h
+pci03	DW 1186h, 1300h
+pci04	DW 018Ah, 0106h
+pci05	DW 021Bh, 8139h
+pci06	DW 13D1h, 0AB06h
+pci07	DW 02ACh, 1012h 
+pci08	DW 1432h, 9130h
+pci09	DW 1186h, 1340h
+pci10	DW 1186h, 1300h
+pci11 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
@@ -418,13 +443,10 @@ init_pci_loop:
 	FindPciDevice
 	jnc init_pci_found
 ;
-	add si,6
+	add si,4
 	jmp init_pci_loop
 
 init_pci_found:
-	mov al,cs:[si+4]
-	mov ds:Is8139,al
-;
 	mov cx,PCI_card_ExCa_base
 	ReadPciDword
 	mov dx,ax
@@ -439,7 +461,9 @@ init_pci_found:
 	mov di,OFFSET NetInt	
 	RequestPrivateIrqHandler
 ;
+	int 3
 	call InitChip
+	call InitRing
 ;
 	push ds
 	mov ax,cs
@@ -475,7 +499,6 @@ InitPciAdapter	Endp
 detect_name	DB 'RTL8139',0
 
 detect_thread	proc far
-	int 3
 	mov ax,ether_data_sel
 	mov ds,ax
 	call InitPciAdapter
