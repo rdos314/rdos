@@ -32,15 +32,15 @@ class TPitCounter
 {
 		friend class TPit;
 	public:
-		TPitCounter();
+		TPitCounter(void *Data);
 
 		void SetClk();
 		void ResetClk();
 		void SetGate();
 		void ResetGate();
 
-		void (*OnSetOut)();
-		void (*OnResetOut)();
+		void (*OnSetOut)(void *Data);
+		void (*OnResetOut)(void *Data);
 
 	protected:
 		void LoadPeriod(char Value);
@@ -62,17 +62,19 @@ class TPitCounter
 		int FLatched;
 		char FByteCounter;
 		char FRl;
+		void *FData;
 };
 
 class TPit
 {
 	public:
-		TPit();
+		TPit(void *Data);
+		~TPit();
 
 		void Out(int Port, char Value);
 		char In(int Port);
 
-		TPitCounter Counter[3];
+		TPitCounter *Counter[3];
 
 	protected:
 	private:

@@ -38,6 +38,13 @@
 *##########################################################################*/
 TPic::TPic()
 {
+	int i;
+
+	for (i = 0; i < 8; i++)
+		FCascade[i] = 0;
+
+	FMaster = 0;
+
 	FIrr = 0;
 	FImr = 0xFF;
 	FIsr = 0;
@@ -50,6 +57,19 @@ TPic::TPic()
 	FLowest = 7;
 }
 
+/*##################  TPic::Cascade  ###############
+*   Purpose....: Cascade a PIC									            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+void TPic::Cascade(int Number, TPic *Pic)
+{
+	FCascade[Number] = Pic;
+	Pic->FMaster = this;
+	Pic->FMasterLine = Number;
+}
+
 /*##################  TPic::Set  ###############
 *   Purpose....: Set IRQ line						            #
 *   In params..: *                                                          #
@@ -59,6 +79,9 @@ TPic::TPic()
 void TPic::Set(int Number)
 {
 	char Mask;
+
+	if (FMaster && FIrr == 0)
+		FMaster->Set(FMasterLine);
 
 	Mask = 1 << Number;
 	FIrr = FIrr | Mask;
@@ -76,6 +99,9 @@ void TPic::Reset(int Number)
 
 	Mask = 1 << Number;
 	FIrr = FIrr & ~Mask;
+
+	if (FMaster && FIrr == 0)
+		FMaster->Reset(FMasterLine);
 }
 
 /*##################  TPic::GetIrr  ###############
@@ -231,6 +257,9 @@ char TPic::GetVector()
 	Number = GetIrr();
 	if (Number >= 0)
 	{
+		if (FCascade[Number])
+			return FCascade[Number]->GetVector();
+
 		Mask = 1 << Number;
 		FIrr = FIrr & ~Mask;
 		FIsr = FIsr | Mask;

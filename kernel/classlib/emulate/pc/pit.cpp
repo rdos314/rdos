@@ -36,7 +36,7 @@
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPitCounter::TPitCounter()
+TPitCounter::TPitCounter(void *Data)
 {
 	OnSetOut = 0;
 	OnResetOut = 0;
@@ -51,6 +51,7 @@ TPitCounter::TPitCounter()
 	FLatched = FALSE;
 	FByteCounter = 0;
 	FRl = 0;
+	FData = Data;
 }
 
 /*##################  TPitCounter::ModifyOut  ###############
@@ -67,12 +68,12 @@ void TPitCounter::ModifyOut(char Value)
 		if (Value)
 		{
 			if (OnSetOut)
-				(*OnSetOut)();
+				(*OnSetOut)(FData);
 		}
 		else
 		{
 			if (OnResetOut)
-				(*OnResetOut)();
+				(*OnResetOut)(FData);
 		}	
 	}
 }
@@ -418,8 +419,26 @@ char TPitCounter::Read()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPit::TPit()
+TPit::TPit(void *Data)
 {
+	int i;
+
+	for (i = 0; i < 3; i++)
+		Counter[i] = new TPitCounter(Data);
+}
+
+/*##################  TPit::~TPit  ###############
+*   Purpose....: Destructor for PIT							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*##########################################################################*/
+TPit::~TPit()
+{
+	int i;
+
+	for (i = 0; i < 3; i++)
+		delete Counter[i];
 }
 
 /*##################  TPit::Out  ###############
@@ -435,20 +454,20 @@ void TPit::Out(int Port, char Value)
 	switch (Port & 3)
 	{
 		case 0:
-			Counter[0].Load(Value);
+			Counter[0]->Load(Value);
 			break;
 
 		case 1:
-			Counter[1].Load(Value);
+			Counter[1]->Load(Value);
 			break;
 
 		case 2:
-			Counter[2].Load(Value);
+			Counter[2]->Load(Value);
 			break;
 
 		case 3:
 			Channel = (Value >> 6) & 3;
-			Counter[Channel].SetMode(Value & 0x3F);
+			Counter[Channel]->SetMode(Value & 0x3F);
 			break;
 			
 	}
@@ -465,13 +484,13 @@ char TPit::In(int Port)
 	switch (Port & 3)
 	{
 		case 0:
-			return Counter[0].Read();
+			return Counter[0]->Read();
 
 		case 1:
-			return Counter[1].Read();
+			return Counter[1]->Read();
 
 		case 2:
-			return Counter[2].Read();
+			return Counter[2]->Read();
 
 	}
 	return 0xFF;

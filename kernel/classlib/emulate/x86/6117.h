@@ -28,30 +28,38 @@
 #ifndef	_6117_H
 #define _6117_H
 
+#include "pit.h"
+#include "cmos.h"
 #include "keyb.h"
-#include "emulate.h"
+#include "cpu.h"
 
-class T6117
+class T6117 : public TCpu
 {
 	public:
-		T6117(TKeyb *Keyb);
+		T6117();
+		~T6117();
+		virtual void Reset();
 
-		void Out(int Port, char Value);
-		char In(int Port);
-		char Read(TCpu *Cpu, unsigned long Address);
-		void Write(TCpu *Cpu, unsigned long Address, char Data);
-
-		void SetClk();
-		void ResetClk();
-
-		void Reset();
 		void DefineDram(int Bank, unsigned long Size);
-		void DefineRom(unsigned long Size, char *FileName);
-		void DefineAdapterRom(unsigned long Size, char *FileName);
+		void DefineRom(char *Buf, unsigned long Size);
 
-		void Show();
+		void ShowInternals();
+
+		TPic *Pic0;
+		TPic *Pic1;
+		TPit *Pit;
+		TCmos *Cmos;
+		TKeyb *Keyb;
 
 	protected:
+		virtual void NotifySetClk();
+		virtual void NotifyResetClk();
+
+		virtual char ReadFromMemory(unsigned long Address);
+		virtual void WriteToMemory(unsigned long Address, char Value);
+		virtual char ReadFromIo(unsigned short int Port);
+		virtual void WriteToIo(unsigned short int Port, char Value);
+
 		char ReadDram(unsigned long Address);
 		void WriteDram(unsigned long Address, char Data);
 		char ReadDram29(unsigned long Address);
@@ -64,15 +72,11 @@ class T6117
 		char FLocked;
 		char FData[0x80];
 
-		TKeyb *FKeyb;
 		int FClkCount;
 		int FRefresh;
 
 		char *FRom;
 		int FRomSize;
-
-		char *FAdapterRom;
-		int FAdapterRomSize;
 
 		int FDramConfigured;
 		int FDramMode;

@@ -25,7 +25,6 @@
 *
 *##########################################################################*/
 
-#include <windows.h>
 #include <stdio.h>
 #include "6117.h"
 
@@ -68,6 +67,36 @@ int MemModeTable[32][4] =
 	{24, 24, 0,  0}
 };
 
+/*##################  PitSetOut0  ###############
+*   Purpose....: Out 0 on PIT set								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void PitSetOut0(void *Data)
+{
+	T6117 *Ali6117 = (T6117 *)Data;
+
+	Ali6117->Pic0->Set(0);
+	Ali6117->Pic1->Set(0);
+}
+
+/*##################  PitResetOut0  ###############
+*   Purpose....: Out 0 on PIT reset								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void PitResetOut0(void *Data)
+{
+	T6117 *Ali6117 = (T6117 *)Data;
+
+	Ali6117->Pic0->Reset(0);
+	Ali6117->Pic1->Reset(0);
+}
+
 /*##################  T6117::T6117  ###############
 *   Purpose....: Constructor for 6117							            #
 *   In params..: *                                                          #
@@ -75,22 +104,139 @@ int MemModeTable[32][4] =
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-T6117::T6117(TKeyb *Keyb)
+T6117::T6117()
 {
 	int i;
 
-	FKeyb = Keyb;
+	Keyb = new TKeyb;
+	Cmos = new TCmos;
+	Pic0 = new TPic;
+	Pic1 = new TPic;
+	Pit = new TPit(this);
+
+	Pic0->Cascade(2, Pic1);
+	Define(Pic0);
+
+	Pit->Counter[0]->OnSetOut = PitSetOut0;
+	Pit->Counter[0]->OnResetOut = PitResetOut0;
+
 	FDramConfigured = FALSE;
 	FDram = 0;
 	FDramSize = 0;
 	FRom = 0;
 	FRomSize = 0;
-	FAdapterRom = 0;
-	FAdapterRomSize = 0;
 	for (i = 0; i < 4; i++)
 		FDramBanks[i] = 0;
+}
 
-	Reset();
+/*##################  T6117::~T6117  ###############
+*   Purpose....: Destructor for 6117							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+T6117::~T6117()
+{
+	if (FDram)
+		delete FDram;
+
+	delete Keyb;
+	delete Cmos;
+	delete Pic0;
+	delete Pic1;
+	delete Pit;
+}
+
+/*##################  T6117::DefineRom  ###############
+*   Purpose....: Define ROM contents (E000:0)					            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void T6117::DefineRom(char *Buf, unsigned long Size)
+{
+	FRom = Buf;
+	FRomSize = Size;
+}
+
+/*##################  T6117::DefineDram  ###############
+*   Purpose....: Define DRAM contents							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void T6117::DefineDram(int Bank, unsigned long Size)
+{
+	int i;
+	int j;
+	int Pot;
+	long *LongPtr;
+	long l;
+	int Found;
+
+	if (Bank < 0 || Bank >= 4)
+		return;
+
+	switch (Size)
+	{
+		case 0x80000:
+			Pot = 18;
+			break;
+
+		case 0x100000:
+			Pot = 19;
+			break;
+
+		case 0x200000:
+			Pot = 20;
+			break;
+
+		case 0x400000:
+			Pot = 21;
+			break;
+
+		case 0x800000:
+			Pot = 22;
+			break;
+
+		default:
+			return;	
+	}		
+
+	FDramBanks[Bank] = Pot;
+	for (i = 0; i < 32; i++)
+	{
+		Found = TRUE;
+		for (j = 0; j < 4; j++)
+			if (FDramBanks[j] != MemModeTable[i][j])
+			{
+				Found = FALSE;
+				break;
+			}
+		if (Found)
+			break;
+	}
+
+	if (!Found)
+		return;
+
+	FDramMode = i;
+	FDramSize += Size;
+
+	if (FDram)
+		delete FDram;
+
+	FDram = new char[Size];
+
+	LongPtr = (long *)FDram;
+	for (l = 0; l < Size / 4; l++)
+	{
+		*LongPtr = 0x77777777;
+		LongPtr++;
+	}
 }
 
 /*##################  T6117::Reset  ###############
@@ -103,6 +249,10 @@ T6117::T6117(TKeyb *Keyb)
 void T6117::Reset()
 {
 	int i;
+
+	TCpu::Reset();
+
+	Reg_cs.base = 0xFF0000;
 
 	for (i = 0; i < 0x80; i++)
 		FData[i] = 0xFF;
@@ -178,7 +328,7 @@ void T6117::Reset()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::SetClk()
+void T6117::NotifySetClk()
 {
 	FClkCount++;
 	if (FClkCount == 16)
@@ -188,216 +338,162 @@ void T6117::SetClk()
 		if (FData[0x20] & 0x80)
 		{
 			FRefresh = !FRefresh;
-			FKeyb->SetRefresh(FRefresh);
+			Keyb->SetRefresh(FRefresh);
 		}
 	}	
+
+	Pit->Counter[0]->SetClk();
+	Pit->Counter[2]->SetClk();
+
+	TCpu::NotifySetClk();
 }
 
 /*##################  T6117::ResetClk  ###############
-*   Purpose....: Reset clk										            #
+*   Purpose....: Reset clk								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::ResetClk()
+void T6117::NotifyResetClk()
 {
+	Pit->Counter[0]->ResetClk();
+	Pit->Counter[2]->ResetClk();
+
+	TCpu::NotifyResetClk();
 }
 
-/*##################  T6117::Out  ###############
-*   Purpose....: Perform out instruction						            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void T6117::Out(int Port, char Value)
-{
-	if (Port & 1)
-	{
-		if (FPort == 0x13)
-		{
-			switch (Value)
-			{
-				case 0xC5:
-					FLocked = FALSE;
-					break;
 
-				case 0:
-					FLocked = TRUE;
-					break;
-
-				default:
-					break;
-			}
-		}
-		else
-		{
-			if (!FLocked)
-				if (FPort >= 0)
-				{
-					FData[FPort] = Value;
-					switch (FPort)
-					{
-						case 0x10:
-							if ((int)((Value >> 3) & 0x1F) == FDramMode)
-								FDramConfigured = TRUE;
-							else
-								FDramConfigured = FALSE;
-							break;
-					}
-				}
-		}
-	}
-	else
-		FPort = Value;
-}
-
-/*##################  T6117::In  ###############
+/*##################  T6117::ReadFromIo  ###############
 *   Purpose....: Perform in instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char T6117::In(int Port)
+char T6117::ReadFromIo(unsigned short Port)
 {
-	if (Port & 1)
+	switch (Port)
 	{
-		if (FLocked || FPort < 0)
-			return 0xFF;
-		else
-			return FData[FPort];
+		case 0x20:
+		case 0x21:
+			return Pic0->In(Port & 1);
+
+		case 0x22:
+			return FPort;
+
+		case 0x23:
+			if (FLocked || FPort < 0)
+				return 0xFF;
+			else
+				return FData[FPort];
+
+		case 0x40:
+		case 0x41:
+		case 0x42:
+		case 0x43:
+			return Pit->In(Port & 0xF);
+
+		case 0x60:
+		case 0x61:
+		case 0x64:
+			return Keyb->In(Port & 0xF);
+
+		case 0x70:
+		case 0x71:
+			return Cmos->In(Port & 0xF);
+
+		case 0xA0:
+		case 0xA1:
+			return Pic1->In(Port & 1);
+
+		default:
+			return TCpu::ReadFromIo(Port);
 	}
-	else
-		return FPort;
 }
 
-/*##################  T6117::DefineRom  ###############
-*   Purpose....: Define ROM contents (E000:0)					            #
+/*##################  T6117::WriteToIo  ###############
+*   Purpose....: Write to io
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::DefineRom(unsigned long Size, char *FileName)
+void T6117::WriteToIo(unsigned short Port, char Value)
 {
-	HFILE file;
-
-	if (FRom)
-		free(FRom);
-
-	FRomSize = Size;
-	FRom = (char *)malloc(Size);
-
-	file = _lopen(FileName, 0);
-	if (file)
+	switch (Port)
 	{
-		_lread(file, FRom, Size);
-		_lclose(file);
-	}
-}
-
-/*##################  T6117::DefineAdapterRom  ###############
-*   Purpose....: Define adapter ROM contents (D000:0)				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void T6117::DefineAdapterRom(unsigned long Size, char *FileName)
-{
-	HFILE file;
-
-	if (FAdapterRom)
-		free(FAdapterRom);
-
-	FAdapterRomSize = Size;
-	FAdapterRom = (char *)malloc(Size);
-
-	file = _lopen(FileName, 0);
-	if (file)
-	{
-		_lread(file, FAdapterRom, Size);
-		_lclose(file);
-	}
-}
-
-/*##################  T6117::DefineDram  ###############
-*   Purpose....: Define DRAM contents							            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void T6117::DefineDram(int Bank, unsigned long Size)
-{
-	int i;
-	int j;
-	int Pot;
-	long *LongPtr;
-	long l;
-	int Found;
-
-	if (Bank < 0 || Bank >= 4)
-		return;
-
-	switch (Size)
-	{
-		case 0x80000:
-			Pot = 18;
+		case 0x20:
+		case 0x21:
+			Pic0->Out(Port & 1, Value);
 			break;
 
-		case 0x100000:
-			Pot = 19;
+		case 0x22:
+			FPort = Value;
 			break;
 
-		case 0x200000:
-			Pot = 20;
+		case 0x23:
+			if (FPort == 0x13)
+			{
+				switch (Value)
+				{
+					case 0xC5:
+						FLocked = FALSE;
+						break;
+
+					case 0:
+						FLocked = TRUE;
+						break;
+
+					default:
+						break;
+				}
+			}
+			else
+			{
+				if (!FLocked)
+					if (FPort >= 0)
+					{
+						FData[FPort] = Value;
+						switch (FPort)
+						{
+							case 0x10:
+								if ((int)((Value >> 3) & 0x1F) == FDramMode)
+									FDramConfigured = TRUE;
+								else
+									FDramConfigured = FALSE;
+								break;
+						}
+					}
+			}
 			break;
 
-		case 0x400000:
-			Pot = 21;
+		case 0x40:
+		case 0x41:
+		case 0x42:
+		case 0x43:
+			Pit->Out(Port & 0xF, Value);
 			break;
 
-		case 0x800000:
-			Pot = 22;
+		case 0x60:
+		case 0x61:
+		case 0x64:
+			Keyb->Out(Port & 0xF, Value);
+			break;
+
+		case 0x70:
+		case 0x71:
+			Cmos->Out(Port & 0xF, Value);
+			break;
+
+		case 0xA0:
+		case 0xA1:
+			Pic1->Out(Port & 1, Value);
 			break;
 
 		default:
-			return;	
-	}		
-
-	FDramBanks[Bank] = Pot;
-	for (i = 0; i < 32; i++)
-	{
-		Found = TRUE;
-		for (j = 0; j < 4; j++)
-			if (FDramBanks[j] != MemModeTable[i][j])
-			{
-				Found = FALSE;
-				break;
-			}
-		if (Found)
+			TCpu::WriteToIo(Port, Value);
 			break;
-	}
-
-	if (!Found)
-		return;
-
-	FDramMode = i;
-	FDramSize += Size;
-
-	if (FDram)
-		free(FDram);
-
-	FDram = (char *)malloc(Size);
-
-	LongPtr = (long *)FDram;
-	for (l = 0; l < Size / 4; l++)
-	{
-		*LongPtr = 0x77777777;
-		LongPtr++;
 	}
 }
 
@@ -726,7 +822,7 @@ char T6117::ReadDram(unsigned long Address)
 		return 0xFF;
 
 	if (Address & 0x100000)
-		if (FKeyb->GetA20Gate() == 0)
+		if (Keyb->GetA20Gate() == 0)
 			Address = Address & 0xFFEFFFFF;
 
 	if (FDramConfigured)
@@ -734,7 +830,7 @@ char T6117::ReadDram(unsigned long Address)
 		if (Address < FDramSize)
 			return *(FDram + Address);
 		else
-			return 0xFF;
+			return TCpu::ReadFromMemory(Address);
 	}
 	else
 	{
@@ -748,7 +844,7 @@ char T6117::ReadDram(unsigned long Address)
 				return ReadDram31(Address);
 
 			default:
-				return 0xFF;
+				return TCpu::ReadFromMemory(Address);
 		}
 	}
 }
@@ -768,13 +864,15 @@ void T6117::WriteDram(unsigned long Address, char Data)
 		return;
 
 	if (Address & 0x100000)
-		if (FKeyb->GetA20Gate() == 0)
+		if (Keyb->GetA20Gate() == 0)
 			Address = Address & 0xFFEFFFFF;
 
 	if (FDramConfigured)
 	{
 		if (Address < FDramSize)
 			*(FDram + Address) = Data;
+		else
+			TCpu::WriteToMemory(Address, Data);
 	}
 	else
 	{
@@ -790,19 +888,20 @@ void T6117::WriteDram(unsigned long Address, char Data)
 				return;
 
 			default:
+				TCpu::WriteToMemory(Address, Data);
 				return;
 		}
 	}
 }
 
-/*##################  T6117::Read  ###############
+/*##################  T6117::ReadFromMemory  ###############
 *   Purpose....: Read from memory								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char T6117::Read(TCpu *Cpu, unsigned long Address)
+char T6117::ReadFromMemory(unsigned long Address)
 {
 	unsigned long Ads = Address & 0xFFFFFF;
 	unsigned long Offset;
@@ -824,40 +923,25 @@ char T6117::Read(TCpu *Cpu, unsigned long Address)
 				if (FData[0x14] & 1)
 					break;
 				else
-				{
-					UserBreak(Cpu);
-					return 0xFF;
-				}
+					return TCpu::ReadFromMemory(Address);
 
 			case 0xC8000:
 				if (FData[0x14] & 4)
 					break;
 				else
-					return 0xFF;
+					return TCpu::ReadFromMemory(Address);
 
 			case 0xD0000:
 				if (FData[0x14] & 0x10)
 					break;
 				else
-				{
-					Offset = Ads & 0xFFFF;
-					if (Offset < FAdapterRomSize)
-						return *(FAdapterRom + Offset);
-					else
-						return 0xFF;
-				}
+					return TCpu::ReadFromMemory(Address);
 
 			case 0xD8000:
 				if (FData[0x14] & 0x40)
 					break;
 				else
-				{
-					Offset = Ads & 0xFFFF;
-					if (Offset < FAdapterRomSize)
-						return *(FAdapterRom + Offset);
-					else
-						return 0xFF;
-				}
+					return TCpu::ReadFromMemory(Address);
 
 			case 0xE0000:
 				if (FData[0x15] & 1)
@@ -900,14 +984,14 @@ char T6117::Read(TCpu *Cpu, unsigned long Address)
 	return ReadDram(Address);
 }
 
-/*##################  T6117::Write  ###############
+/*##################  T6117::WriteToMemory  ###############
 *   Purpose....: Write to memory								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
+void T6117::WriteToMemory(unsigned long Address, char Data)
 {
 	unsigned long Ads = Address & 0xFFFFFF;
 	unsigned long Offset;
@@ -929,32 +1013,44 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 				if (FData[0x14] & 2)
 					break;
 				else
+				{
+					TCpu::WriteToMemory(Address, Data);
 					return;
+				}
 
 			case 0xC8000:
 				if (FData[0x14] & 8)
 					break;
 				else
+				{
+					TCpu::WriteToMemory(Address, Data);
 					return;
+				}
 
 			case 0xD0000:
 				if (FData[0x14] & 0x20)
 					break;
 				else
+				{
+					TCpu::WriteToMemory(Address, Data);
 					return;
+				}
 
 			case 0xD8000:
 				if (FData[0x14] & 0x80)
 					break;
 				else
+				{
+					TCpu::WriteToMemory(Address, Data);
 					return;
+				}
 
 			case 0xE0000:
 				if (FData[0x15] & 2)
 					break;
 				else
 				{
-					UserBreak(Cpu);
+					Break();
 					return;
 				}
 
@@ -963,7 +1059,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
-					UserBreak(Cpu);
+					Break();
 					return;
 				}
 
@@ -972,7 +1068,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
-					UserBreak(Cpu);
+					Break();
 					return;
 				}
 
@@ -981,7 +1077,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
-					UserBreak(Cpu);
+					Break();
 					return;
 				}
 		}
@@ -990,14 +1086,14 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 	WriteDram(Address, Data);
 }
 
-/*##################  T6117::Show  ###############
+/*##################  T6117::ShowInternals  ###############
 *   Purpose....: Show settings									            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::Show()
+void T6117::ShowInternals()
 {
 	int i;
 	int j;

@@ -56,6 +56,7 @@ class TPic
 		void Out(int Port, char Value);
 		char In(int Port);
 
+		void Cascade(int Number, TPic *Pic);
 		void Set(int Number);
 		void Reset(int Number);
 		int IsIntActive();
@@ -66,6 +67,9 @@ class TPic
 		int GetIsr();
 		void Eoi(int Number);
 		void Command(int Command, int Number);
+
+		TPic *FMaster;
+		int FMasterLine;
 
 	private:
 		char FMode;
@@ -78,6 +82,8 @@ class TPic
 		char FIrr;
 		char FIsr;
 		char FImr;
+
+		TPic *FCascade[8];
 };
 
 #endif
