@@ -30,8 +30,136 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "socket.h"
+
 #define FALSE 0
 #define TRUE !FALSE
+
+class TFtpSocketServerFactory : public TSocketServerFactory
+{
+public:
+    virtual char *GetThreadName();
+    virtual int GetStackSize();    
+	virtual TSocketServer *Create();
+};
+
+class TFtpSocketServer : public TSocketServer
+{
+public:
+	TFtpSocketServer();
+	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual void HandleSocket();
+};
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::GetThreadName
+#
+#   Purpose....: Return thread name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *TFtpSocketServerFactory::GetThreadName()
+{
+	return "FTP";
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::GetStackSize
+#
+#   Purpose....: Return thread stack size
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServerFactory::GetStackSize()
+{
+	return 0x2000;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::Create
+#
+#   Purpose....: Create a socket server instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer *TFtpSocketServerFactory::Create()
+{
+	return new TFtpSocketServer;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::TFtpSocketServer
+#
+#   Purpose....: Socket server constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServer::TFtpSocketServer()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::DeviceName
+#
+#   Purpose....: Device name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
+{
+	strncpy(Name,"FTP",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::HandleSocket
+#
+#   Purpose....: Handle socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::HandleSocket()
+{
+	int count;
+	char Buf[513];
+
+	if (FSocket->WaitForConnection(6000))
+	{
+		count = FSocket->Read(Buf, 512);
+		Buf[count] = 0;
+		printf(Buf);
+
+		FSocket->Write("500 Syntax error, command unrecognized.");
+		FSocket->Write("This may include errors such as command line");
+		FSocket->Write("too long.");
+		FSocket->Write(0xd);
+		FSocket->Write(0xa);
+		FSocket->Push();
+	}
+}
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -40,7 +168,11 @@
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
+
+TFtpSocketServerFactory Factory;
+
 void cdecl main()
 {
+	TSocket::Listen(&Factory, 21, 0x4000);
 }
 
