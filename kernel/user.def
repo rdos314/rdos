@@ -323,4 +323,6 @@ ems_handler_nr				EQU 199
 
 test_nr						EQU 200
 
-usergate_entries			EQU 201
+resize_flat_linear_nr		EQU 201
+
+usergate_entries			EQU 202

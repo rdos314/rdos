@@ -319,7 +319,6 @@ page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 create_code_descr_alias	PROC far
-	int 3
 	or bl,3
 	verr bx
 	jnz create_code_alias_fail
@@ -330,18 +329,18 @@ create_code_descr_alias	PROC far
 	mov ds,ds:p_ldt_sel
 	and bl,0F8h
 	push es
-	push si
-	push di
+	push esi
+	push edi
 	mov ax,ds
 	mov es,ax
-	mov si,bx
+	movzx esi,bx
 	AllocateLdt
-	mov di,bx
+	movzx edi,bx
 	movsd
 	movsd
 	mov byte ptr [bx+5],0F2h
-	pop di
-	pop si
+	pop edi
+	pop esi
 	pop es
 	mov ax,bx
 	or al,7
@@ -764,9 +763,17 @@ set_exception	PROC far
 	push es
 	push edi
 	mov al,bl
+	cmp al,1
+	je set_exc_ignore
+;
+	cmp al,3
+	je set_exc_ignore
+;
 	mov es,cx
 	mov edi,edx
 	SetException
+
+set_exc_ignore:
 	pop edi
 	pop es
 	mov ax,[bp].vm_eax
@@ -904,6 +911,7 @@ sim_real_call_int	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_vm_callback	PROC far
+	int 3
 	AllocateVMCallback
 	mov cx,dx
 	mov dx,ax
@@ -1110,8 +1118,45 @@ free_mem	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 resize_mem	PROC far
-	int 3
+	push edx
+;
+	mov ax,flat_sel
+	mov ds,ax
+;
+	mov ax,bx
+	shl eax,16
+	mov ax,cx
+;
+	shl esi,16
+	mov si,di
+	mov ecx,[esi]
+	mov edx,[esi+4]
+	sub edx,local_page_linear
+	ResizeFlatLinear
+	jc resize_mem_fail
+;
+	add edx,local_page_linear
+	mov [esi],eax
+	mov [esi+4],edx
+	mov cx,[esi+4]
+	mov bx,[esi+6]
+	mov di,si
+	shr esi,16
+	and byte ptr [bp].vm_eflags,NOT 1
+	jmp resize_mem_done
+
+resize_mem_fail:
+	mov [esi],ecx
+	mov [esi+4],edx
+	mov cx,[esi+4]
+	mov bx,[esi+6]
+	mov di,si
+	shr esi,16
 	or byte ptr [bp].vm_eflags,1
+	
+resize_mem_done:
+	pop edx
+	mov ds,[bp].pm_ds
 	retf16
 resize_mem	ENDP
 	
@@ -1281,8 +1326,24 @@ get_enable_int	PROC near
 	and al,1
 	mov ah,9
 	and byte ptr [bp].vm_eflags,NOT 1
-	ret
+	retf16
 get_enable_int	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SET_FPU_EMULATION
+;
+;		DESCRIPTION:	Set FPU emulation
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_fpu_emulation	PROC near
+	and byte ptr [bp].vm_eflags,NOT 1
+	retf16
+set_fpu_emulation	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1330,13 +1391,26 @@ ds01	DD OFFSET free_dos_mem
 ds02	DD OFFSET dpmi_error
 
 dpmi_int:
-di_ant	DD 5
+di_ant	DD 12h
 di00	DD OFFSET get_real_int
 di01	DD OFFSET set_real_int
 di02	DD OFFSET get_exception
 di03	DD OFFSET set_exception
 di04	DD OFFSET get_vector
 di05	DD OFFSET set_vector
+di06	DD OFFSET dpmi_error
+di07	DD OFFSET dpmi_error
+di08	DD OFFSET dpmi_error
+di09	DD OFFSET dpmi_error
+di0A	DD OFFSET dpmi_error
+di0B	DD OFFSET dpmi_error
+di0C	DD OFFSET dpmi_error
+di0D	DD OFFSET dpmi_error
+di0E	DD OFFSET dpmi_error
+di0F	DD OFFSET dpmi_error
+di10	DD OFFSET get_exception
+di11	DD OFFSET dpmi_error
+di12	DD OFFSET set_exception
 
 dpmi_translate:
 dt_ant	DD 6
@@ -1399,6 +1473,15 @@ de01	DD OFFSET dpmi_error
 de02	DD OFFSET dpmi_error
 de03	DD OFFSET dpmi_error
 
+dpmi_empty:
+d0_ant	DD 0
+d000	DD OFFSET dpmi_error
+
+dpmi_fpu:
+df_ant	DD 2
+df00	DD OFFSET dpmi_error
+df01	DD OFFSET set_fpu_emulation
+
 dpmi_tab:
 dpmi00	DD OFFSET dpmi_descriptor
 dpmi01	DD OFFSET dpmi_dosmem
@@ -1412,15 +1495,24 @@ dpmi08	DD OFFSET dpmi_physical
 dpmi09	DD OFFSET dpmi_virtint
 dpmi0A	DD OFFSET dpmi_vendorapi
 dpmi0B	DD OFFSET dpmi_debug
+dpmi0C	DD OFFSET dpmi_empty
+dpmi0D	DD OFFSET dpmi_empty
+dpmi0E	DD OFFSET dpmi_fpu
 
 int31:
+	cmp ah,0Fh
+	jae int31_fail
+;
 	movzx ebx,ah
 	mov ebx,dword ptr cs:[ebx*4].dpmi_tab
 	cmp al,cs:[ebx]
 	jz int31_ok
 	jc int31_ok
+
+int31_fail:
 	mov ebx,OFFSET dpmi_error
 	jmp int31_do
+
 int31_ok:
 	movzx eax,al
 	mov ebx,cs:[eax*4+ebx+4]

@@ -218,6 +218,95 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			map_flat_user
+;
+;		DESCRIPTION:	Map a page flat, user access
+;
+;		PARAMETERS:		EDX			Linear base address
+;						ECX			Number of bytes to map
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+map_flat_user	Proc near
+	push ds
+	pushad
+;
+	or ecx,ecx
+	jz map_flat_user_done
+
+map_flat_user_more:
+	mov bx,sys_dir_sel
+	mov ds,bx
+	mov ebx,edx
+	shr ebx,22
+	shl bx,2
+	mov edi,[bx]
+	or edi,edi
+	jnz map_flat_user_do
+;
+	call AllocateRam
+	mov edi,esi
+	or si,7
+	mov [bx],esi
+;
+	mov ax,flat_sel
+	mov ds,ax
+	push cx
+	mov cx,400h
+	xor eax,eax
+map_flat_user_init_loop:
+	mov [edi],eax
+	add edi,4
+	loop map_flat_user_init_loop
+	sub edi,1000h
+	pop cx
+
+map_flat_user_do:
+	mov ax,flat_sel
+	mov ds,ax
+	mov ebx,edx
+	shr ebx,12
+	and ebx,3FFh
+	mov eax,400h
+	shr ecx,12
+	sub eax,ebx
+	sub ecx,eax
+	jnc map_flat_user_start
+;
+	add ecx,eax
+	mov eax,ecx
+	xor ecx,ecx
+
+map_flat_user_start:
+	shl bx,2
+	shl ecx,12
+	push ecx
+	mov cx,ax
+	and dx,0F000h
+	or dx,807h
+	and di,0F000h
+	or di,bx
+
+map_flat_user_loop:
+	mov [edi],edx
+	add edi,4
+	add edx,1000h
+	loop map_flat_user_loop
+	pop ecx
+	or ecx,ecx
+	jnz map_flat_user_more
+
+map_flat_user_done:
+	popad
+	pop ds
+	ret
+map_flat_user	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			init_paging
 ;
 ;		DESCRIPTION:	Create initial paging for system process
@@ -255,7 +344,7 @@ init_paging_ram:
 	mov edx,0A0000h
 	mov ecx,100000h
 	sub ecx,edx
-	call map_flat
+	call map_flat_user
 	
 init_paging_done:
 	ret

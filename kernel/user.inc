@@ -136,6 +136,14 @@ ReservePeMem MACRO
 	UserGate reserve_pe_mem_nr
 						ENDM
 
+; IN  EAX		New size
+; IN  ECX		Old size
+; IN  EDX		Flat offset
+; OUT EDX		Flat offset
+ResizeFlatLinear	MACRO
+	UserGate resize_flat_linear_nr
+					ENDM
+
 ; IN  EAX		Number of bytes
 ; IN  EDX		Flat offset
 SetFlatLinearValid	MACRO

@@ -1159,9 +1159,10 @@ debug_pace	PROC far
 	add bx,2
 	cmp ax,00B0Fh
 	jne debug_pace_not_gate
-	cmp dl,66h
+	and dl,0FEh
+	cmp dl,0D6h
 	jne debug_pace_step
-	inc bx
+	add bx,3
 	jmp debug_pace_step
 debug_pace_not_gate:
 	cmp al,9Ah

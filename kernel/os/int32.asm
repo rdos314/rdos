@@ -1072,7 +1072,6 @@ pm_callback32:
 	iretd	
 
 allocate_vm_callback	PROC far
-	int 3
 	push edx
 	mov eax,16
 	AllocateVMLinear

@@ -443,6 +443,12 @@ init_mem	PROC near
 	mov ax,allocate_local_mem_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET resize_flat_linear
+	mov di,OFFSET resize_flat_linear_name
+	xor dx,dx
+	mov ax,resize_flat_linear_nr
+	RegisterBimodalUserGate
+;
 	pop ds
 	popa
 	ret
@@ -1054,6 +1060,189 @@ reserve_local_linear_done:
 	pop ds
 	ret
 reserve_local_linear	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			RESIZE_FLAT_LINEAR
+;
+;		DESCRIPTION:	Resize flat linear
+;
+;		PARAMETERS:		EAX		New size
+;						ECX		Old size
+;						EDX		Offset in user-mode flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+resize_flat_linear_name	DB 'Resize Flat Linear',0
+
+resize_flat_linear	PROC far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+;
+	mov bx,local_mem_sel
+	mov ds,bx
+	EnterSection ds:local_mem_section
+;
+	add edx,local_page_linear
+	cmp edx,local_page_linear
+	jc resize_flat_leave
+;
+	cmp edx,flat_size
+	jae resize_flat_leave
+;
+	and dx,0F000h
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+;
+	cmp eax,ecx
+	jz resize_flat_leave
+	jc resize_flat_shrink
+
+resize_flat_grow:
+	push eax
+	push ecx
+	push edx
+;
+	add edx,ecx
+	sub eax,ecx
+	mov ecx,eax
+	push ecx
+	shr edx,10
+	shr ecx,12
+	mov ax,process_page_sel
+	mov ds,ax
+;
+	push ecx
+	push edx
+
+resize_flat_test_grow_loop:
+	mov eax,[edx]
+	test al,7
+	jnz resize_flat_grow_copy
+;
+	add edx,4
+	loop resize_flat_test_grow_loop
+;
+	pop edx
+	pop ecx
+;
+	mov eax,2
+
+resize_flat_grow_loop:
+	mov [edx],eax
+	add edx,4
+	loop resize_flat_grow_loop
+;
+	pop ecx
+	mov bx,local_mem_sel
+	mov ds,bx
+	sub ds:local_big_avail_mem,ecx
+	add ds:local_big_used_mem,ecx
+	LeaveSection ds:local_mem_section
+	add sp,12
+	clc
+	jmp resize_flat_done
+
+resize_flat_grow_copy:
+	add sp,12
+	mov bx,local_mem_sel
+	mov ds,bx
+	LeaveSection ds:local_mem_section
+;
+	pop ebx
+	pop ecx
+	pop eax
+	AllocateLocalLinear
+;
+	add sp,4
+	sub edx,local_page_linear
+	push edx
+	add edx,local_page_linear
+;
+	push ebx
+	push ecx
+;
+	shr ebx,10
+	shr edx,10
+	shr ecx,12
+	mov ax,process_page_sel
+	mov ds,ax
+
+resize_flat_grow_copy_loop:
+	cmp ebx,flat_size SHR 10
+	jae resize_flat_grow_copy_done
+;
+	mov eax,2
+	xchg eax,[ebx]
+	mov [edx],eax
+	add ebx,4
+	add edx,4
+	loop resize_flat_grow_copy_loop
+
+resize_flat_grow_copy_done:
+	pop ecx
+	pop edx
+	FreeLinear
+	clc
+	jmp resize_flat_done
+
+resize_flat_shrink:
+	add edx,eax
+	sub ecx,eax
+	add ds:local_big_avail_mem,ecx
+	sub ds:local_big_used_mem,ecx
+	shr edx,10
+	shr ecx,12
+	mov ax,process_page_sel
+	mov ds,ax
+
+resize_flat_shrink_loop:
+	cmp edx,flat_size SHR 10
+	jae resize_flat_leave
+;
+	xor eax,eax
+	xchg eax,[edx]
+	test al,1
+	jz resize_flat_shrink_nopage
+;
+	test ax,800h
+	jnz resize_flat_shrink_nopage
+;
+	FreePhysical
+
+resize_flat_shrink_nopage:
+	add edx,4
+	loop resize_flat_shrink_loop
+;
+	clc
+
+resize_flat_leave:
+	mov bx,local_mem_sel
+	mov ds,bx
+	LeaveSection ds:local_mem_section
+
+resize_flat_done:
+	mov edx,cr3
+	mov cr3,edx
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	retf32
+resize_flat_linear	ENDP
+
 
 PAGE
 
@@ -2263,62 +2452,34 @@ PAGE
 
 resize_linear_name	DB 'Resize Linear',0
 
-resize_local_mem	PROC near
+resize_linear	PROC far
+	cmp edx,flat_size
+	jnc resize_mem_error
+;
 	cmp edx,local_byte_linear
 	jc resize_low_mem
-	jmp resize_error
+;
+	cmp edx,local_page_linear
+	jc resize_mem_error
+;
+	sub edx,local_page_linear
+	ResizeFlatLinear
+	jc resize_mem_error
+;
+	add edx,local_page_linear
+	clc
+	ret
+
 resize_low_mem:
 	cmp edx,vm_linear
-	jc resize_dos_mem
-	jmp resize_error
-resize_local_mem	ENDP
-
-resize_dos_mem	Proc near
+	jnc resize_mem_error
+;
 	ResizeDosLinear
 	ret
-resize_dos_mem	ENDP
-	
-resize_error	PROC near
+
+resize_mem_error:
 	int 3
 	stc
-	ret
-resize_error	ENDP
-
-resize_mem_tab:
-r0	DW OFFSET resize_local_mem
-r1	DW OFFSET resize_error
-r2	DW OFFSET resize_error
-r3	DW OFFSET resize_error
-r4	DW OFFSET resize_error
-r5	DW OFFSET resize_error
-r6	DW OFFSET resize_error
-r7	DW OFFSET resize_error
-r8	DW OFFSET resize_error
-r9	DW OFFSET resize_error
-rA	DW OFFSET resize_error
-rB	DW OFFSET resize_error
-rC	DW OFFSET resize_error
-rD	DW OFFSET resize_error
-rE	DW OFFSET resize_error
-rF	DW OFFSET resize_error
-
-resize_linear	PROC far
-	push ds
-	push es
-	push ecx
-	push esi
-;
-	mov si,mem_sel
-	mov es,si
-	mov esi,edx
-	shr esi,24
-	and si,0F0h
-	shr si,3
-	call word ptr cs:[si].resize_mem_tab
-	pop esi
-	pop ecx
-	pop es
-	pop ds
 	ret
 resize_linear	ENDP
 

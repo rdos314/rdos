@@ -1166,7 +1166,7 @@ get_disable_int	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_enable_int	PROC near
+get_enable_int	PROC far
 	xor ax,ax
 	GetFlags
 	SimSti
@@ -1224,13 +1224,24 @@ ds01	DW OFFSET dpmi_error
 ds02	DW OFFSET dpmi_error
 
 dpmi_int:
-di_ant	DW 5
+di_ant	DW 10h
 di00	DW OFFSET get_real_int
 di01	DW OFFSET set_real_int
 di02	DW OFFSET get_exception
 di03	DW OFFSET set_exception
 di04	DW OFFSET get_vector
 di05	DW OFFSET set_vector
+di06	DW OFFSET dpmi_error
+di07	DW OFFSET dpmi_error
+di08	DW OFFSET dpmi_error
+di09	DW OFFSET dpmi_error
+di0A	DW OFFSET dpmi_error
+di0B	DW OFFSET dpmi_error
+di0C	DW OFFSET dpmi_error
+di0D	DW OFFSET dpmi_error
+di0E	DW OFFSET dpmi_error
+di0F	DW OFFSET dpmi_error
+di10	DW OFFSET get_exception
 
 dpmi_translate:
 dt_ant	DW 6
