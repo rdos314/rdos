@@ -33,11 +33,9 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE fs.inc
 
@@ -1440,20 +1438,12 @@ init	PROC far
 	mov ax,check_device_nr
 	RegisterOsGate
 ;
+	mov bx,OFFSET read_con16
 	mov si,OFFSET read_con32
 	mov di,OFFSET read_con_name
-	xor cl,cl
-	mov ax,read_con_nr
-	RegisterUserGate32
-	mov si,OFFSET read_con16
-	mov di,OFFSET read_con_name
-	xor cl,cl
-	mov ax,read_con_nr
-	RegisterUserGate16
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,read_virt_con_nr
-	RegisterVirtUserGate
+	mov ax,read_con_nr
+	RegisterUserGate
 ;
 	mov ax,OFFSET device_size
 	mov bx,dosdev_data_sel

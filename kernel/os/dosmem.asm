@@ -32,12 +32,10 @@ GateSize = 16
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE dos.inc
 
@@ -778,22 +776,12 @@ init_dos_mem	PROC near
 	mov ax,free_dos_linear_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET allocate_dos_mem16
-	mov di,OFFSET allocate_dos_mem_name
-	xor cl,cl
-	mov ax,allocate_dos_mem_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET allocate_dos_mem16
 	mov si,OFFSET allocate_dos_mem32
 	mov di,OFFSET allocate_dos_mem_name
-	xor cl,cl
-	mov ax,allocate_dos_mem_nr
-	RegisterUserGate32
-;
-	mov bx,ax
 	mov dx,virt_es_out
-	mov ax,allocate_virt_mem_nr
-	RegisterVirtUserGate
+	mov ax,allocate_dos_mem_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET available_dos_linear
 	mov di,OFFSET available_dos_linear_name

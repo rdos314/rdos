@@ -290,8 +290,11 @@ draw_mono_nr				EQU 195
 draw_char_nr				EQU 196
 draw_string_nr				EQU 197
 
+xms_handler_nr				EQU 198
+ems_handler_nr				EQU 199
+
 ; uncategorized & new
 
-test_nr						EQU 198
+test_nr						EQU 200
 
-usergate_entries			EQU 199
+usergate_entries			EQU 201

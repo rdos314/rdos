@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -733,15 +731,15 @@ init	PROC far
 ;
 	mov si,OFFSET get_dns
 	mov di,OFFSET get_dns_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_dns_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_ppp_dns
 	mov di,OFFSET get_ppp_dns_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_ppp_dns_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET create_ip_header
 	mov di,OFFSET create_ip_header_name
@@ -757,9 +755,9 @@ init	PROC far
 ;
 	mov si,OFFSET get_ip_address
 	mov di,OFFSET get_ip_address_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_ip_address_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov cx,4
 	mov dx,800h

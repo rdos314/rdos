@@ -122,33 +122,33 @@ init_app	PROC near
 ;
 	mov si,OFFSET get_exe_name
 	mov di,OFFSET get_exe_name_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_exe_name_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_cmd_line
 	mov di,OFFSET get_cmd_line_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_cmd_line_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_env
 	mov di,OFFSET get_env_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_env_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET allocate_app_mem
 	mov di,OFFSET allocate_app_mem_name
-	xor cl,cl
+	mov dx,virt_es_out
 	mov ax,allocate_app_mem_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET free_app_mem
 	mov di,OFFSET free_app_mem_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,free_app_mem_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov bx,thread_app_sel
 	mov edx,app_linear

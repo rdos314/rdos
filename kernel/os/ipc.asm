@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -1007,71 +1005,46 @@ init	PROC far
 	mov di,OFFSET delete_handle
 	RegisterHandle
 ;
+	mov bx,OFFSET get_local_mailslot16
 	mov si,OFFSET get_local_mailslot32
 	mov di,OFFSET get_local_mailslot_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_local_mailslot_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_local_mailslot16
-	mov di,OFFSET get_local_mailslot_name
-	xor cl,cl
-	mov ax,get_local_mailslot_nr
-	RegisterUserGate16
+	RegisterUserGate
 ;
 	mov si,OFFSET free_mailslot
 	mov di,OFFSET free_mailslot_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,free_mailslot_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET send_mailslot16
 	mov si,OFFSET send_mailslot32
 	mov di,OFFSET send_mailslot_name
-	xor cl,cl
+	mov dx,virt_ds_in OR virt_es_in
 	mov ax,send_mailslot_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET send_mailslot16
-	mov di,OFFSET send_mailslot_name
-	xor cl,cl
-	mov ax,send_mailslot_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET define_mailslot16
 	mov si,OFFSET define_mailslot32
 	mov di,OFFSET define_mailslot_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,define_mailslot_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET define_mailslot16
-	mov di,OFFSET define_mailslot_name
-	xor cl,cl
-	mov ax,define_mailslot_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET receive_mailslot16
 	mov si,OFFSET receive_mailslot32
 	mov di,OFFSET receive_mailslot_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,receive_mailslot_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET receive_mailslot16
-	mov di,OFFSET receive_mailslot_name
-	xor cl,cl
-	mov ax,receive_mailslot_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET reply_mailslot16
 	mov si,OFFSET reply_mailslot32
 	mov di,OFFSET reply_mailslot_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,reply_mailslot_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET reply_mailslot16
-	mov di,OFFSET reply_mailslot_name
-	xor cl,cl
-	mov ax,reply_mailslot_nr
-	RegisterUserGate16
+	RegisterUserGate
 ;
 	mov di,OFFSET init_thread
 	HookCreateThread

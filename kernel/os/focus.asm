@@ -32,12 +32,10 @@ GateSize = 16
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 focus_seg	SEGMENT AT 0
@@ -137,23 +135,15 @@ init	PROC far
 ;
 	mov si,OFFSET set_focus
 	mov di,OFFSET set_focus_name
-	xor cl,cl
-	mov ax,set_focus_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_focus_nr
-	RegisterVirtUserGate
+	mov ax,set_focus_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET enable_focus
 	mov di,OFFSET enable_focus_name
-	xor cl,cl
-	mov ax,enable_focus_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,enable_virt_focus_nr
-	RegisterVirtUserGate
+	mov ax,enable_focus_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET hook_enable_focus
 	mov di,OFFSET hook_enable_focus_name

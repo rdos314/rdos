@@ -32,30 +32,48 @@ FILE_ATTRIB_LABEL = 8
 FILE_ATTRIB_DIR = 10h
 FILE_ATTRIB_ARC = 20h
 
-UserGateVm      MACRO gate_nr
+;
+; Segment transfer flags bits
+;
+
+virt_ds_in		EQU 1
+virt_es_in		EQU 2
+virt_fs_in		EQU 4
+virt_gs_in		EQU 8
+;
+virt_ds_out		EQU 10h
+virt_es_out		EQU 20h
+virt_fs_out		EQU 40h
+virt_gs_out		EQU 80h
+;
+virt_seg_in		EQU 0Fh
+virt_seg_out	EQU 0F0h
+
+gate16_override	EQU 100h
+gate32_override	EQU 200h
+
+UserGate16	MACRO gate_nr
 	db 0Fh
 	db 0Bh
-	cmpsw
-	dw gate_nr
+	db 0D6h
+	dd gate_nr
+	nop
 			ENDM
 
-UserGate16      MACRO gate_nr
-	db 9Ah
-	dw 0
-	dw 1803h + (gate_nr SHL 4)
-			ENDM
-
-UserGate32      MACRO gate_nr
-	db 66h
-	db 9Ah
-	dw 0
-	dw 180Bh + (gate_nr SHL 4)
+UserGate32	MACRO gate_nr
+	db 0Fh
+	db 0Bh
+	db 0D7h
+	dd gate_nr
+	nop
 			ENDM
 
 UserGateForce32 MACRO gate_nr
-	db 9Ah
-	dw 0
-	dw 180Bh + (gate_nr SHL 4)
+	db 0Fh
+	db 0Bh
+	db 0D8h
+	dd gate_nr
+	nop
 			ENDM
 
 UserGate        MACRO gate_nr
@@ -65,7 +83,7 @@ ELSE
 	IF GateSize EQ 32
 		UserGate32 gate_nr
 	ELSE
-		UserGateVm gate_nr
+		UserGate16 gate_nr
 	ENDIF
 ENDIF
 			ENDM
@@ -346,6 +364,14 @@ ReplyMailslot		MACRO
 			ENDM
 
 ;;;;;;;;;;;; PROGRAMS & DLLS ;;;;;;;;;;;;;;;;
+
+EmsHandler	MACRO
+	UserGate ems_handler_nr
+					ENDM
+
+XmsHandler	MACRO
+	UserGate xms_handler_nr
+					ENDM
 
 ; IN  DS:(E)SI	Program name
 ; IN  ES:(E)DI	Command line

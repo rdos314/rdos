@@ -32,10 +32,8 @@ GateSize = 16
 INCLUDE driver.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.def
 INCLUDE int.def
@@ -718,22 +716,12 @@ init	PROC far
 	mov ax,stop_file_system_nr
 	RegisterOsGate
 ;
+	mov bx,OFFSET rename_file16
 	mov si,OFFSET rename_file32
 	mov di,OFFSET rename_file_name
-	xor cl,cl
-	mov ax,rename_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET rename_file16
-	mov di,OFFSET rename_file_name
-	xor cl,cl
-	mov ax,rename_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_ds_in OR virt_es_in
-	mov ax,rename_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,rename_file_nr
+	RegisterUserGate
 ;
 	mov di,OFFSET init_hook_thread
 	HookInitTasking

@@ -32,10 +32,8 @@
 GateSize = 16
 
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE driver.def
 INCLUDE system.inc
@@ -391,33 +389,33 @@ init	PROC far
 ;
 	mov si,OFFSET days_in_month
 	mov di,OFFSET days_in_month_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,days_in_month_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET adjust_time
 	mov di,OFFSET adjust_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,adjust_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET passed_days
 	mov di,OFFSET passed_days_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,passed_days_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET time_to_binary
 	mov di,OFFSET time_to_binary_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,time_to_binary_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET binary_to_time
 	mov di,OFFSET binary_to_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,binary_to_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	ret
 init	ENDP

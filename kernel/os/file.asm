@@ -32,12 +32,10 @@
 GateSize = 16
 
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE user.inc
 INCLUDE driver.def
@@ -2047,126 +2045,71 @@ init_file	PROC near
 ;
 	mov si,OFFSET close_file
 	mov di,OFFSET close_file_name
-	xor cl,cl
-	mov ax,close_file_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,close_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,close_file_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET dupl_file
 	mov di,OFFSET dupl_file_name
-	xor cl,cl
-	mov ax,dupl_file_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,dupl_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,dupl_file_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_ioctl_data
 	mov di,OFFSET get_ioctl_data_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_ioctl_data_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_file_size
 	mov di,OFFSET get_file_size_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_file_size_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_file_size
 	mov di,OFFSET set_file_size_name
-	xor cl,cl
-	mov ax,set_file_size_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_file_size_nr
-	RegisterVirtUserGate
+	mov ax,set_file_size_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_file_pos
 	mov di,OFFSET get_file_pos_name
-	xor cl,cl
-	mov ax,get_file_pos_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_file_pos_nr
-	RegisterVirtUserGate
+	mov ax,get_file_pos_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_file_pos
 	mov di,OFFSET set_file_pos_name
-	xor cl,cl
-	mov ax,set_file_pos_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_file_pos_nr
-	RegisterVirtUserGate
+	mov ax,set_file_pos_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_file_time
 	mov di,OFFSET get_file_time_name
-	xor cl,cl
-	mov ax,get_file_time_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_file_time_nr
-	RegisterVirtUserGate
+	mov ax,get_file_time_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_file_time
 	mov di,OFFSET set_file_time_name
-	xor cl,cl
-	mov ax,set_file_time_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_file_time_nr
-	RegisterVirtUserGate
+	mov ax,set_file_time_nr
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET read_file16
 	mov si,OFFSET read_file32
 	mov di,OFFSET read_file_name
-	xor cl,cl
-	mov ax,read_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET read_file16
-	mov di,OFFSET read_file_name
-	xor cl,cl
-	mov ax,read_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,read_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,read_file_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET write_file16
 	mov si,OFFSET write_file32
 	mov di,OFFSET write_file_name
-	xor cl,cl
-	mov ax,write_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET write_file16
-	mov di,OFFSET write_file_name
-	xor cl,cl
-	mov ax,write_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,write_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,write_file_nr
+	RegisterUserGate
 	ret
 init_file	ENDP
 

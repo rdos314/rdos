@@ -32,12 +32,10 @@
 GateSize = 16
 
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE user.inc
 INCLUDE driver.def
@@ -3194,234 +3192,104 @@ init_dir	PROC near
 ;
 	mov si,OFFSET get_drive_info
 	mov di,OFFSET get_drive_info_name
-	xor cl,cl
-	mov ax,get_drive_info_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_drive_info_nr
-	RegisterVirtUserGate
+	mov ax,get_drive_info_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_cur_drive
 	mov di,OFFSET set_cur_drive_name
-	xor cl,cl
-	mov ax,set_cur_drive_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_cur_drive_nr
-	RegisterVirtUserGate
+	mov ax,set_cur_drive_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_cur_drive
 	mov di,OFFSET get_cur_drive_name
-	xor cl,cl
-	mov ax,get_cur_drive_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_cur_drive_nr
-	RegisterVirtUserGate
+	mov ax,get_cur_drive_nr
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET set_cur_dir16
 	mov si,OFFSET set_cur_dir32
 	mov di,OFFSET set_cur_dir_name
-	xor cl,cl
-	mov ax,set_cur_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET set_cur_dir16
-	mov di,OFFSET set_cur_dir_name
-	xor cl,cl
-	mov ax,set_cur_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,set_virt_cur_dir_nr
-	RegisterVirtUserGate
+	mov ax,set_cur_dir_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET get_cur_dir16
 	mov si,OFFSET get_cur_dir32
 	mov di,OFFSET get_cur_dir_name
-	xor cl,cl
-	mov ax,get_cur_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_cur_dir16
-	mov di,OFFSET get_cur_dir_name
-	xor cl,cl
-	mov ax,get_cur_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,get_virt_cur_dir_nr
-	RegisterVirtUserGate
+	mov ax,get_cur_dir_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET make_dir16
 	mov si,OFFSET make_dir32
 	mov di,OFFSET make_dir_name
-	xor cl,cl
-	mov ax,make_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET make_dir16
-	mov di,OFFSET make_dir_name
-	xor cl,cl
-	mov ax,make_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,make_virt_dir_nr
-	RegisterVirtUserGate
+	mov ax,make_dir_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET remove_dir16
 	mov si,OFFSET remove_dir32
 	mov di,OFFSET remove_dir_name
-	xor cl,cl
-	mov ax,remove_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET remove_dir16
-	mov di,OFFSET remove_dir_name
-	xor cl,cl
-	mov ax,remove_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,remove_virt_dir_nr
-	RegisterVirtUserGate
+	mov ax,remove_dir_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET get_file_attrib16
 	mov si,OFFSET get_file_attrib32
 	mov di,OFFSET get_file_attribute_name
-	xor cl,cl
-	mov ax,get_file_attribute_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_file_attrib16
-	mov di,OFFSET get_file_attribute_name
-	xor cl,cl
-	mov ax,get_file_attribute_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,get_virt_file_attribute_nr
-	RegisterVirtUserGate
+	mov ax,get_file_attribute_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET set_file_attrib16
 	mov si,OFFSET set_file_attrib32
 	mov di,OFFSET set_file_attribute_name
-	xor cl,cl
-	mov ax,set_file_attribute_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET set_file_attrib16
-	mov di,OFFSET set_file_attribute_name
-	xor cl,cl
-	mov ax,set_file_attribute_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,set_virt_file_attribute_nr
-	RegisterVirtUserGate
+	mov ax,set_file_attribute_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET delete_file16
 	mov si,OFFSET delete_file32
 	mov di,OFFSET delete_file_name
-	xor cl,cl
-	mov ax,delete_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET delete_file16
-	mov di,OFFSET delete_file_name
-	xor cl,cl
-	mov ax,delete_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,delete_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,delete_file_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET open_dir16
 	mov si,OFFSET open_dir32
 	mov di,OFFSET open_dir_name
-	xor cl,cl
-	mov ax,open_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET open_dir16
-	mov di,OFFSET open_dir_name
-	xor cl,cl
-	mov ax,open_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,open_virt_dir_nr
-	RegisterVirtUserGate
+	mov ax,open_dir_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET read_dir16
 	mov si,OFFSET read_dir32
 	mov di,OFFSET read_dir_name
-	xor cl,cl
-	mov ax,read_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET read_dir16
-	mov di,OFFSET read_dir_name
-	xor cl,cl
-	mov ax,read_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,read_virt_dir_nr
-	RegisterVirtUserGate
+	mov ax,read_dir_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET close_dir
 	mov di,OFFSET close_dir_name
-	xor cl,cl
-	mov ax,close_dir_nr
-	RegisterUserGate
-;
-	mov bx,ax
 	xor dx,dx
-	mov ax,close_virt_dir_nr
-	RegisterVirtUserGate
+	mov ax,close_dir_nr
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET open_file16
 	mov si,OFFSET open_file32
 	mov di,OFFSET open_file_name
-	xor cl,cl
-	mov ax,open_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET open_file16
-	mov di,OFFSET open_file_name
-	xor cl,cl
-	mov ax,open_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,open_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,open_file_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET create_file16
 	mov si,OFFSET create_file32
 	mov di,OFFSET create_file_name
-	xor cl,cl
-	mov ax,create_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET create_file16
-	mov di,OFFSET create_file_name
-	xor cl,cl
-	mov ax,create_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,create_virt_file_nr
-	RegisterVirtUserGate
+	mov ax,create_file_nr
+	RegisterUserGate
 ;
 	ret
 init_dir	ENDP

@@ -1579,27 +1579,27 @@ init_paging_gates	PROC near
 ;
 	mov si,OFFSET set_flat_linear_invalid
 	mov di,OFFSET set_flat_linear_invalid_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_flat_linear_invalid_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_flat_linear_valid
 	mov di,OFFSET set_flat_linear_valid_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_flat_linear_valid_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_flat_linear_read
 	mov di,OFFSET set_flat_linear_read_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_flat_linear_read_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_flat_linear_readwrite
 	mov di,OFFSET set_flat_linear_readwrite_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_flat_linear_readwrite_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	ret
 init_paging_gates	ENDP

@@ -32,10 +32,8 @@ GateSize = 16
 INCLUDE driver.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.def
 INCLUDE system.inc
@@ -402,17 +400,12 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
+	mov bx,OFFSET get_rdfs_info16
 	mov si,OFFSET get_rdfs_info32
 	mov di,OFFSET get_rdfs_info_name
-	xor cl,cl
+	mov dx,virt_ds_in OR virt_es_in OR virt_gs_in
 	mov ax,get_rdfs_info_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_rdfs_info16
-	mov di,OFFSET get_rdfs_info_name
-	xor cl,cl
-	mov ax,get_rdfs_info_nr
-	RegisterUserGate16
+	RegisterUserGate
 ;
 	mov si,OFFSET rdfs_name
 	mov di,OFFSET rdfs_ctrl

@@ -37,10 +37,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE dos.inc

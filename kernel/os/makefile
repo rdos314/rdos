@@ -185,7 +185,7 @@ p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				\
 
 pgen_srcs = PROTSEG.ASM             SYSTEM.ASM              \
 			TRAPINT.ASM             TSSINT.ASM              LDT.ASM         \
-			OS.ASM                  USER.ASM                VIRT.ASM 
+			OS.ASM                  USER.ASM 
 
 
 pexec_srcs = EXEC.ASM
@@ -222,8 +222,8 @@ objs =      $(srcs:.ASM=.OBJ)
 incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
 			DISC.DEF                BIOSDATA.DEF    \
 			PROTSEG.INC             DRIVER.DEF              \
-			OS.DEF                  USER.DEF                VIRT.DEF        \
-			OS.INC                  USER.INC                VIRT.INC        \
+			OS.DEF                  USER.DEF        \
+			OS.INC                  USER.INC        \
 			DPMI.INC                INT.DEF			       \
 			FAT.INC                 DOS.INC
 

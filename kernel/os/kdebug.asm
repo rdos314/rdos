@@ -36,10 +36,8 @@ INCLUDE ..\os\kdebug.def
 INCLUDE ..\os\driver.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\user.def
-INCLUDE ..\os\virt.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\user.inc
-INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 
 ;	ds = datasegment
@@ -62,17 +60,18 @@ og_name_offset	DW ?
 osgate_entry	ENDS
 
 usergate_entry	STRUC
-ug_name_sel		DW ?
-ug_name_offset	DD ?
-ug_virt_gate_nr	DW ?
+ug_name_sel			DW ?
+ug_name_offset		DW ?
+ug_entry_offset16	DW ?
+ug_entry_sel16		DW ?
+ug_entry_offset32	DW ?
+ug_entry_sel32		DW ?
+ug_entry_offset_v86	DW ?	
+ug_entry_sel_v86	DW ?
+ug_sel16			DW ?
+ug_sel32			DW ?
+ug_transfer			DW ?
 usergate_entry	ENDS
-
-virt_gate_entry	STRUC
-vg_sel			DW ?
-vg_offset		DW ?
-vg_name_offset	DW ?
-vg_seg_transfer	DW ?
-virt_gate_entry	ENDS
 
 code	SEGMENT byte use16 public 'CODE'
 
@@ -836,40 +835,41 @@ illegal_out_os_ok:
 	ret
 GetIllegalOsGate	ENDP
 
-GetVirtGate	PROC near
+GetIllegalUserGate	PROC near
 	push ds
 	push fs
-	mov ax,virtgate_sel
+	mov ax,usergate_sel
 	mov ds,ax
-	mov fs,[bx].vg_sel
-	mov si,[bx].vg_name_offset
+	mov fs,[bx].ug_name_sel
+	mov si,[bx].ug_name_offset
 	mov ax,kdebug_data_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
 	xor bx,bx
-illegal_out_virt_loop:
+illegal_out_user_loop:
 	mov al,fs:[si]
 	or al,al
-	je illegal_out_virt_ok
+	je illegal_out_user_ok
 	stosb
 	inc si
 	inc bx
-	loop illegal_out_virt_loop
-illegal_out_virt_ok:
+	loop illegal_out_user_loop
+illegal_out_user_ok:
 	inc cx
 	mov al,' '
 	rep stosb	
 	pop fs
 	pop ds
 	ret
-GetVirtGate	ENDP
+GetIllegalUserGate	ENDP
 
 ; dx:bx	= call address
 
 GetOsCall	PROC near
 	push ds
 	push fs
+	push si
 	mov ax,gs:tss_eflags+2
 	test ax,2
 	jnz short get_oscall_error
@@ -922,58 +922,88 @@ get_oscall_error:
 	stc
 
 get_oscall_end:
+	pop si
 	pop fs
 	pop ds
 	ret
 GetOsCall	ENDP
 
-GetCallGate	PROC near
+; dx:bx	= call address
+
+GetUserCall	PROC near
 	push ds
 	push fs
-	mov bx,gs:tss_eflags+2
-	test bx,2
-	jnz short test_call_error
-	test dx,4
-	jnz test_call_error	
-	mov bx,dx
-	and bx,0FFF8h
-	sub bx,user_begin_sel
-	jc test_call_error
-	shr bx,4
-	cmp bx,usergate_entries
-	jnc test_call_error
-	shl bx,3
+	push si
+	mov ax,gs:tss_eflags+2
+	test ax,2
+	jnz short get_usercall_error
+;
 	mov ax,usergate_sel
 	mov ds,ax
-	mov esi,[bx].ug_name_offset
-	mov fs,[bx].ug_name_sel
-call_output:
+	xor si,si
+	mov cx,usergate_entries
+
+get_usercall_scan_loop:
+	cmp dx,ds:[si].ug_entry_sel16
+	jne get_usercall_not_entry16
+;
+	cmp bx,ds:[si].ug_entry_offset16
+	je get_usercall_found
+
+get_usercall_not_entry16:
+	cmp dx,ds:[si].ug_entry_sel32
+	jne get_usercall_not_entry32
+;
+	cmp bx,ds:[si].ug_entry_offset32
+	je get_usercall_found
+
+get_usercall_not_entry32:
+	cmp dx,ds:[si].ug_sel16
+	je get_usercall_found
+;
+	cmp dx,ds:[si].ug_sel32
+	je get_usercall_found
+;
+	add si,32
+	loop get_usercall_scan_loop
+;
+	jmp short get_usercall_error
+
+get_usercall_found:
+	mov fs,[si].ug_name_sel
+	mov si,[si].ug_name_offset
 	mov ax,kdebug_data_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
 	mov cx,40
 	xor bx,bx
-call_out_loop:
-	mov al,fs:[esi]
+
+get_usercall_out_loop:
+	mov al,fs:[si]
 	or al,al
-	je call_out_ok
+	je get_usercall_out_ok
+;
 	stosb
-	inc esi
+	inc si
 	inc bx
-	loop call_out_loop
-call_out_ok:
+	loop get_usercall_out_loop
+
+get_usercall_out_ok:
 	inc cx
 	mov al,' '
 	rep stosb	
 	clc
-	jmp test_call_end
-test_call_error:
+	jmp get_usercall_end
+
+get_usercall_error:
 	stc
-test_call_end:
+
+get_usercall_end:
+	pop si
 	pop fs
 	pop ds
 	ret
-GetCallGate	ENDP
+GetUserCall	ENDP
 
 GetMne	PROC near
 	push si
@@ -989,22 +1019,14 @@ GetMne	PROC near
 	inc si
 	mov al,[si+2]
 write_illegal16:
-	cmp al,0F4h
-	je write_illegal_virtgate
-;
 	cmp al,0CAh
 	je write_illegal_osgate
 	cmp al,0CBh
 	je write_illegal_osgate
-	jmp write_special_end
-
-write_illegal_virtgate:
-	mov ax,[si+3]
-	shl ax,3
-	mov bx,ax
-	call GetVirtGate
-	mov op_size,bx
-	clc
+	cmp al,0D6h
+	je write_illegal_usergate
+	cmp al,0D7h
+	je write_illegal_usergate
 	jmp write_special_end
 
 write_illegal_osgate:
@@ -1019,6 +1041,18 @@ write_illegal_osgate:
 	clc
 	jmp write_special_end
 
+write_illegal_usergate:
+	mov eax,[si+3]
+	cmp eax,osgate_entries
+	jnc write_special_fail
+;
+	shl eax,5
+	mov ebx,eax
+	call GetIllegalUserGate
+	mov op_size,bx
+	clc
+	jmp write_special_end
+
 not_illegal_op:
 	cmp al,66h
 	jne not_call16
@@ -1027,19 +1061,22 @@ not_illegal_op:
 not_call16:
 	cmp al,9Ah
 	jne write_special_fail
-	mov dx,[si+3]
-	call GetCallGate
-	mov op_size,bx
-	jnc write_special_end
 ;
 	mov bx,[si+1]
 	mov dx,[si+3]
 	call GetOsCall
 	mov op_size,bx
+	jnc write_special_end
+;
+	mov bx,[si+1]
+	mov dx,[si+3]
+	call GetUserCall
+	mov op_size,bx
 	jmp write_special_end
 
 write_special_fail:
 	stc
+
 write_special_end:
 	pop di
 	pop si

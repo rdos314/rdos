@@ -33,11 +33,9 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 	.386p

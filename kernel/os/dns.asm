@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -829,27 +827,19 @@ init_dns	PROC near
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET name_to_ip16
-	mov di,OFFSET name_to_ip_name
-	xor cl,cl
-	mov ax,name_to_ip_nr
-	RegisterUserGate16
+	mov bx,OFFSET name_to_ip16
 	mov si,OFFSET name_to_ip32
 	mov di,OFFSET name_to_ip_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,name_to_ip_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET ip_to_name16
-	mov di,OFFSET ip_to_name_name
-	xor cl,cl
-	mov ax,ip_to_name_nr
-	RegisterUserGate16
+	mov bx,OFFSET ip_to_name16
 	mov si,OFFSET ip_to_name32
 	mov di,OFFSET ip_to_name_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,ip_to_name_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	ret
 init_dns	ENDP

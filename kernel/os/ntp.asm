@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -245,9 +243,9 @@ init	PROC far
 ;
 	mov si,OFFSET sync_time
 	mov di,OFFSET sync_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,sync_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

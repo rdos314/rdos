@@ -33,11 +33,9 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE int.def
 
@@ -141,55 +139,55 @@ init_int32	PROC near
 ;
 	mov si,OFFSET get_exception_vector
 	mov di,OFFSET get_exception_vector_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_exception_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET set_exception_vector
 	mov di,OFFSET set_exception_vector_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_exception_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_pm_int
 	mov di,OFFSET get_pm_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_pm_int_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET set_pm_int
 	mov di,OFFSET set_pm_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_pm_int_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET dpmi_int
 	mov di,OFFSET dpmi_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,dpmi_int_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET dpmi_call_int
 	mov di,OFFSET dpmi_call_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,dpmi_call_int_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET dpmi_call
 	mov di,OFFSET dpmi_call_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,dpmi_call_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET allocate_vm_callback
 	mov di,OFFSET allocate_vm_callback_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,allocate_vm_callback_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET free_vm_callback
 	mov di,OFFSET free_vm_callback_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,free_vm_callback_nr
 	RegisterUserGate32
 ;

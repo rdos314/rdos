@@ -38,10 +38,8 @@ INCLUDE system.inc
 INCLUDE driver.def
 INCLUDE os.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 
 xms_handle	SEGMENT AT 0
 
@@ -104,10 +102,9 @@ init	PROC far
 ;
 	mov si,OFFSET xms_handler
 	mov di,OFFSET xms_name
-	xor cl,cl
 	mov ax,xms_handler_nr
 	mov dx,virt_ds_in
-	RegisterVirtGate
+	RegisterUserGateV86
 ;
 	mov si,OFFSET query_xms
 	mov di,OFFSET query_xms_name

@@ -33,10 +33,8 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\driver.def
 INCLUDE ..\os\user.def
-INCLUDE ..\os\virt.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\user.inc
-INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.inc
 INCLUDE mouse.inc
@@ -1292,141 +1290,88 @@ init	PROC far
 ;
 	mov si,OFFSET show_mouse
 	mov di,OFFSET show_mouse_name
-	xor cl,cl
-	mov ax,show_mouse_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,show_virt_mouse_nr
-	RegisterVirtUserGate
+	mov ax,show_mouse_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET hide_mouse
 	mov di,OFFSET hide_mouse_name
-	xor cl,cl
-	mov ax,hide_mouse_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,hide_virt_mouse_nr
-	RegisterVirtUserGate
+	mov ax,hide_mouse_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_mouse_position
 	mov di,OFFSET get_mouse_position_name
-	xor cl,cl
-	mov ax,get_mouse_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_mouse_position_nr
-	RegisterVirtUserGate
+	mov ax,get_mouse_position_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_mouse_position
 	mov di,OFFSET set_mouse_position_name
-	xor cl,cl
-	mov ax,set_mouse_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_mouse_position_nr
-	RegisterVirtUserGate
+	mov ax,set_mouse_position_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_mouse_window
 	mov di,OFFSET set_mouse_window_name
-	xor cl,cl
-	mov ax,set_mouse_window_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_mouse_window_nr
-	RegisterVirtUserGate
+	mov ax,set_mouse_window_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_mouse_mickey
 	mov di,OFFSET set_mouse_mickey_name
-	xor cl,cl
-	mov ax,set_mouse_mickey_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,set_virt_mouse_mickey_nr
-	RegisterVirtUserGate
+	mov ax,set_mouse_mickey_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_left_button
 	mov di,OFFSET get_left_button_name
-	xor cl,cl
-	mov ax,get_left_button_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_left_button_nr
-	RegisterVirtUserGate
+	mov ax,get_left_button_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_right_button
 	mov di,OFFSET get_right_button_name
-	xor cl,cl
-	mov ax,get_right_button_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_right_button_nr
-	RegisterVirtUserGate
+	mov ax,get_right_button_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_left_button_press_position
 	mov di,OFFSET get_left_button_press_position_name
-	xor cl,cl
-	mov ax,get_left_button_press_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_left_button_press_position_nr
-	RegisterVirtUserGate
+	mov ax,get_left_button_press_position_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_right_button_press_position
 	mov di,OFFSET get_right_button_press_position_name
-	xor cl,cl
-	mov ax,get_right_button_press_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_right_button_press_position_nr
-	RegisterVirtUserGate
+	mov ax,get_right_button_press_position_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_left_button_release_position
 	mov di,OFFSET get_left_button_release_position_name
-	xor cl,cl
-	mov ax,get_left_button_release_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_left_button_release_position_nr
-	RegisterVirtUserGate
+	mov ax,get_left_button_release_position_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_right_button_release_position
 	mov di,OFFSET get_right_button_release_position_name
-	xor cl,cl
-	mov ax,get_right_button_release_position_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_right_button_release_position_nr
-	RegisterVirtUserGate
+	mov ax,get_right_button_release_position_nr
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET hook_mouse16
-	mov di,OFFSET hook_mouse_name
-	xor cl,cl
-	mov ax,hook_mouse_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET hook_mouse16
 	mov si,OFFSET hook_mouse32
 	mov di,OFFSET hook_mouse_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,hook_mouse_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET unhook_mouse
 	mov di,OFFSET unhook_mouse_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,unhook_mouse_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -1672,13 +1670,13 @@ init	PROC far
 ;
 	mov si,OFFSET load_dll16
 	mov di,OFFSET load_dll_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,load_dll_nr
 	RegisterUserGate16
 ;
 	mov si,OFFSET free_dll16
 	mov di,OFFSET free_dll_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,free_dll_nr
 	RegisterUserGate16
 ;

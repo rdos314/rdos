@@ -35,11 +35,9 @@ INCLUDE driver.def
 INCLUDE port.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 section_num	EQU 64
@@ -570,15 +568,15 @@ timer_free_list_create:
 ;
 	mov si,OFFSET get_thread_pr
 	mov di,OFFSET get_thread_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_thread_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_cpu_time
 	mov di,OFFSET get_cpu_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_cpu_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET init_task_pr
 	mov di,OFFSET init_task_name
@@ -606,63 +604,51 @@ timer_free_list_create:
 ;
 	mov si,OFFSET swap_out
 	mov di,OFFSET swap_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,swap_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET wait_milli_sec
 	mov di,OFFSET wait_milli_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,wait_milli_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,wait_virt_milli_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET wait_micro_sec
 	mov di,OFFSET wait_micro_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,wait_micro_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,wait_virt_micro_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET wait_until
 	mov di,OFFSET wait_until_name
-	xor cl,cl
-	mov ax,wait_until_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,wait_virt_until_nr
-	RegisterVirtUserGate
+	mov ax,wait_until_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_system_time
 	mov di,OFFSET get_system_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_system_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_time
 	mov di,OFFSET get_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET time_to_system_time
 	mov di,OFFSET time_to_system_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,time_to_system_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET system_time_to_time
 	mov di,OFFSET system_time_to_time_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,system_time_to_time_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_system_time
 	mov di,OFFSET set_system_time_name
@@ -726,103 +712,71 @@ timer_free_list_create:
 ;
 	mov si,OFFSET create_user_section
 	mov di,OFFSET create_user_section_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,create_user_section_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET create_blocked_user_section
 	mov di,OFFSET create_blocked_user_section_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,create_blocked_user_section_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET delete_user_section
 	mov di,OFFSET delete_user_section_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,delete_user_section_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET enter_user_section
 	mov di,OFFSET enter_user_section_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,enter_user_section_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET leave_user_section
 	mov di,OFFSET leave_user_section_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,leave_user_section_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_debug_thread16
-	mov di,OFFSET get_debug_thread_name
-	xor cl,cl
-	mov ax,get_debug_thread_nr
-	RegisterUserGate16
+	mov bx,OFFSET get_debug_thread16
 	mov si,OFFSET get_debug_thread32
 	mov di,OFFSET get_debug_thread_name
-	xor cl,cl
-	mov ax,get_debug_thread_nr
-	RegisterUserGate32
-	mov bx,ax
 	xor dx,dx
-	mov ax,get_virt_debug_thread_nr
-	RegisterVirtUserGate
+	mov ax,get_debug_thread_nr
+	RegisterUserGate
 ;
-	mov si,OFFSET get_debug_tss16
-	mov di,OFFSET get_debug_tss_name
-	xor cl,cl
-	mov ax,get_debug_tss_nr
-	RegisterUserGate16
+	mov bx,OFFSET get_debug_tss16
 	mov si,OFFSET get_debug_tss32
 	mov di,OFFSET get_debug_tss_name
-	xor cl,cl
-	mov ax,get_debug_tss_nr
-	RegisterUserGate32
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,get_virt_debug_tss_nr
-	RegisterVirtUserGate
+	mov ax,get_debug_tss_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET debug_trace
 	mov di,OFFSET debug_trace_name
-	xor cl,cl
-	mov ax,debug_trace_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,debug_virt_trace_nr
-	RegisterVirtUserGate
+	mov ax,debug_trace_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET debug_pace
 	mov di,OFFSET debug_pace_name
-	xor cl,cl
-	mov ax,debug_pace_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,debug_virt_pace_nr
-	RegisterVirtUserGate
+	mov ax,debug_pace_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET debug_go
 	mov di,OFFSET debug_go_name
-	xor cl,cl
-	mov ax,debug_go_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,debug_virt_go_nr
-	RegisterVirtUserGate
+	mov ax,debug_go_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET debug_next
 	mov di,OFFSET debug_next_name
-	xor cl,cl
-	mov ax,debug_next_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,debug_virt_next_nr
-	RegisterVirtUserGate
+	mov ax,debug_next_nr
+	RegisterBimodalUserGate
 ;
 	mov di,OFFSET check_list
 	HookState

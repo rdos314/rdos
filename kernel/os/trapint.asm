@@ -360,11 +360,14 @@ trap_5:
 	extrn break_exception16:near
 	extrn default_exception32:near
 	extrn break_exception32:near
-	extrn translate_vm_usergate:near
-	extrn do_virtgate:near
 
 	extrn do_osgate16:near
 	extrn do_osgate32:near
+
+	extrn do_usergate_vm:near
+	extrn do_usergate16:near
+	extrn do_usergate32:near
+	extrn do_usergate_force32:near
 
 	extrn reflect_end:near
 	extrn sim16_end:near
@@ -475,7 +478,7 @@ vm_9E	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_A0	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_A2	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_A4	DW OFFSET emulate_6,			OFFSET emulate_6
-vm_A6	DW OFFSET emulate_6,			OFFSET translate_vm_usergate
+vm_A6	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_A8	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_AA	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_AC	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -499,7 +502,7 @@ vm_CE	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_D0	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_D2	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_D4	DW OFFSET emulate_6,			OFFSET emulate_6
-vm_D6	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D6	DW OFFSET do_usergate_vm,		OFFSET emulate_6
 vm_D8	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_DA	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_DC	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -514,8 +517,8 @@ vm_EC	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_EE	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_F0	DW OFFSET emulate_6,			OFFSET translate_vm_reflect
 vm_F2	DW OFFSET translate_vm_system,	OFFSET emulate_6
-vm_F4	DW OFFSET do_virtgate,			OFFSET emulate_6
-vm_F6	DW OFFSET emulate_6,		OFFSET enter_dpmi
+vm_F4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_F6	DW OFFSET emulate_6,			OFFSET enter_dpmi
 vm_F8	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_FA	DW OFFSET emulate_6,			OFFSET emulate_6
 vm_FC	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -629,8 +632,8 @@ pm16_CE	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_D0	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_D2	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_D4	DW OFFSET emulate_6,			OFFSET emulate_6
-pm16_D6	DW OFFSET emulate_6,			OFFSET emulate_6
-pm16_D8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D6	DW OFFSET do_usergate16,		OFFSET do_usergate32
+pm16_D8	DW OFFSET do_usergate_force32,	OFFSET emulate_6
 pm16_DA	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_DC	DW OFFSET emulate_6,			OFFSET emulate_6
 pm16_DE	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -759,7 +762,7 @@ pm32_CE	DW OFFSET emulate_6,			OFFSET emulate_6
 pm32_D0	DW OFFSET emulate_6,			OFFSET emulate_6
 pm32_D2	DW OFFSET emulate_6,			OFFSET emulate_6
 pm32_D4	DW OFFSET emulate_6,			OFFSET emulate_6
-pm32_D6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D6	DW OFFSET do_usergate16,		OFFSET do_usergate32
 pm32_D8	DW OFFSET emulate_6,			OFFSET emulate_6
 pm32_DA	DW OFFSET emulate_6,			OFFSET emulate_6
 pm32_DC	DW OFFSET emulate_6,			OFFSET emulate_6
@@ -1247,14 +1250,30 @@ pretask6:
 	je pretask_osgate16
 ;
 	cmp al,0CBh
-	jne pretask6_default
+	je pretask_osgate32
+;
+	cmp al,0D6h
+	je pretask_usergate16
+;
+	cmp al,0D7h
+	je pretask_usergate32
+;
+	jmp pretask6_default
+
+pretask_osgate16:
+	call do_osgate16
+	jmp pretask6_retry
 
 pretask_osgate32:
 	call do_osgate32
 	jmp pretask6_retry
 
-pretask_osgate16:
-	call do_osgate16
+pretask_usergate16:
+	call do_usergate16
+	jmp pretask6_retry
+
+pretask_usergate32:
+	call do_usergate32
 
 pretask6_retry:
 	pop ds

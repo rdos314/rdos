@@ -32,11 +32,9 @@ GateSize = 16
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 small_linear_struc	STRUC
@@ -222,9 +220,9 @@ init_mem	PROC near
 ;
 	mov si,OFFSET free_mem
 	mov di,OFFSET free_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,free_mem_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET allocate_big_linear
 	mov di,OFFSET allocate_big_linear_name
@@ -376,29 +374,19 @@ init_mem	PROC near
 	mov ax,free_page_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET read_thread_mem16
-	mov di,OFFSET read_thread_mem_name
-	xor cl,cl
-	mov ax,read_thread_mem_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET read_thread_mem16
 	mov si,OFFSET read_thread_mem32
 	mov di,OFFSET read_thread_mem_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,read_thread_mem_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET write_thread_mem16
-	mov di,OFFSET write_thread_mem_name
-	xor cl,cl
-	mov ax,write_thread_mem_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET write_thread_mem16
 	mov si,OFFSET write_thread_mem32
 	mov di,OFFSET write_thread_mem_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,write_thread_mem_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET allocate_local_linear
 	mov di,OFFSET allocate_local_linear_name
@@ -414,15 +402,15 @@ init_mem	PROC near
 ;
 	mov si,OFFSET available_local_linear
 	mov di,OFFSET available_local_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,available_local_linear_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET used_local_linear
 	mov di,OFFSET used_local_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,used_local_linear_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET allocate_vm_linear
 	mov di,OFFSET allocate_vm_linear_name
@@ -432,15 +420,15 @@ init_mem	PROC near
 ;
 	mov si,OFFSET available_vm_linear
 	mov di,OFFSET available_vm_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,available_vm_linear_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET used_vm_linear
 	mov di,OFFSET used_vm_linear_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,used_vm_linear_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET used_local_linear_thread
 	mov di,OFFSET used_local_linear_thread_name
@@ -448,17 +436,12 @@ init_mem	PROC near
 	mov ax,used_local_linear_thread_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET allocate_local_mem16
-	mov di,OFFSET allocate_local_mem_name
-	xor cl,cl
-	mov ax,allocate_local_mem_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET allocate_local_mem16
 	mov si,OFFSET allocate_local_mem32
 	mov di,OFFSET allocate_local_mem_name
-	xor cl,cl
+	mov dx,virt_es_out
 	mov ax,allocate_local_mem_nr
-	RegisterUserGate32
+	RegisterBimodalUserGate
 ;
 	pop ds
 	popa

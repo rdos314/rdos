@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE pe.def
@@ -3952,61 +3950,61 @@ init	PROC far
 ;
 	mov si,OFFSET wait_for_pe_debug
 	mov di,OFFSET wait_for_pe_debug_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,wait_for_pe_debug_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET continue_pe_debug
 	mov di,OFFSET continue_pe_debug_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,continue_pe_debug_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET notify_pe_exception
 	mov di,OFFSET notify_pe_exception_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,notify_pe_exception_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET load_dll32
 	mov di,OFFSET load_dll_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,load_dll_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET free_dll32
 	mov di,OFFSET free_dll_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,free_dll_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_proc
 	mov di,OFFSET get_dll_proc_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_dll_proc_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_resource
 	mov di,OFFSET get_dll_resource_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_dll_resource_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_handle
 	mov di,OFFSET get_dll_handle_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_dll_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET get_dll_name
 	mov di,OFFSET get_dll_name_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_dll_name_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET reserve_pe_mem
 	mov di,OFFSET reserve_pe_mem_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,reserve_pe_mem_nr
 	RegisterUserGate32
 ;

@@ -37,10 +37,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 
@@ -1085,51 +1083,31 @@ init_exec	PROC near
 	mov ax,hook_load_exe_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET load_program16
-	mov di,OFFSET load_exe_name
-	xor cl,cl
-	mov ax,load_exe_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET load_program16
 	mov si,OFFSET load_program32
-	xor cl,cl
-	mov ax,load_exe_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET load_program16
-	mov bx,ax
+	mov di,OFFSET load_exe_name
 	mov dx,virt_ds_in OR virt_es_in
-	mov ax,load_virt_exe_nr
-	RegisterVirtUserGate
+	mov ax,load_exe_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET unload_exe
 	mov di,OFFSET unload_exe_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,unload_exe_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET spawn_program16
-	mov di,OFFSET spawn_exe_name
-	xor cl,cl
-	mov ax,spawn_exe_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET spawn_program16
 	mov si,OFFSET spawn_program32
 	mov di,OFFSET spawn_exe_name
-	xor cl,cl
-	mov ax,spawn_exe_nr
-	RegisterUserGate32
-;
-	mov bx,ax
 	mov dx,virt_es_in OR virt_ds_in
-	mov ax,spawn_virt_exe_nr
-	RegisterVirtUserGate
+	mov ax,spawn_exe_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET get_exit_code
 	mov di,OFFSET get_exit_code_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_exit_code_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	pop ds
 	popa

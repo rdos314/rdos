@@ -32,10 +32,8 @@ GateSize = 16
 INCLUDE driver.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.def
 INCLUDE int.def
@@ -3925,60 +3923,30 @@ init	PROC far
 ;
 	mov si,OFFSET get_disc_info
 	mov di,OFFSET get_disc_info_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_disc_info_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov bx,ax
-	mov dx,0
-	mov ax,get_virt_disc_info_nr
-	RegisterVirtUserGate
-;
+	mov bx,OFFSET format_drive16
 	mov si,OFFSET format_drive32
 	mov di,OFFSET format_drive_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,format_drive_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET format_drive16
-	mov di,OFFSET format_drive_name
-	xor cl,cl
-	mov ax,format_drive_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET read_disc16
 	mov si,OFFSET read_disc32
 	mov di,OFFSET read_disc_name
-	xor cl,cl
-	mov ax,read_disc_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET read_disc16
-	mov di,OFFSET read_disc_name
-	xor cl,cl
-	mov ax,read_disc_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,read_virt_disc_nr
-	RegisterVirtUserGate
+	mov ax,read_disc_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET write_disc16
 	mov si,OFFSET write_disc32
 	mov di,OFFSET write_disc_name
-	xor cl,cl
-	mov ax,write_disc_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET write_disc16
-	mov di,OFFSET write_disc_name
-	xor cl,cl
-	mov ax,write_disc_nr
-	RegisterUserGate16
-;
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,write_virt_disc_nr
-	RegisterVirtUserGate
+	mov ax,write_disc_nr
+	RegisterUserGate
 ;
 	mov di,OFFSET init_disc
 	HookInitFileSystem

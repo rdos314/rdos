@@ -32,12 +32,10 @@
 GateSize = 16
 
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE user.inc
 INCLUDE driver.def
@@ -1298,81 +1296,61 @@ init_memmap	PROC near
 ;
 	mov si,OFFSET create_mapping
 	mov di,OFFSET create_mapping_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,create_mapping_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET create_named_mapping16
-	mov di,OFFSET create_named_mapping_name
-	xor cl,cl
-	mov ax,create_named_mapping_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET create_named_mapping16
 	mov si,OFFSET create_named_mapping32
 	mov di,OFFSET create_named_mapping_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,create_named_mapping_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET create_file_mapping
 	mov di,OFFSET create_file_mapping_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,create_file_mapping_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET create_named_file_mapping16
-	mov di,OFFSET create_named_file_mapping_name
-	xor cl,cl
-	mov ax,create_named_file_mapping_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET create_named_file_mapping16
 	mov si,OFFSET create_named_file_mapping32
 	mov di,OFFSET create_named_file_mapping_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,create_named_file_mapping_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET open_named_mapping16
-	mov di,OFFSET open_named_mapping_name
-	xor cl,cl
-	mov ax,open_named_mapping_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET open_named_mapping16
 	mov si,OFFSET open_named_mapping32
 	mov di,OFFSET open_named_mapping_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,open_named_mapping_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET sync_mapping
 	mov di,OFFSET sync_mapping_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,sync_mapping_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET close_mapping
 	mov di,OFFSET close_mapping_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,close_mapping_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET map_view16
-	mov di,OFFSET map_view_name
-	xor cl,cl
-	mov ax,map_view_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET map_view16
 	mov si,OFFSET map_view32
 	mov di,OFFSET map_view_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,map_view_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET unmap_view
 	mov di,OFFSET unmap_view_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,unmap_view_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov ax,fs_data_sel
 	mov ds,ax

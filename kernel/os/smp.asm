@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -533,17 +531,12 @@ init_smp	PROC near
 	mov di,OFFSET add_host
 	HookIpCache
 ;
+	mov bx,OFFSET get_remote_mailslot16
 	mov si,OFFSET get_remote_mailslot32
 	mov di,OFFSET get_remote_mailslot_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_remote_mailslot_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_remote_mailslot16
-	mov di,OFFSET get_remote_mailslot_name
-	xor cl,cl
-	mov ax,get_remote_mailslot_nr
-	RegisterUserGate16
+	RegisterUserGate
 	ret
 init_smp	ENDP
 

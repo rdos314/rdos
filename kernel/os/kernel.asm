@@ -70,8 +70,6 @@ INCLUDE os.inc
 	extrn init_osgate:near
 	extrn init_systemgate:near
 	extrn init_usergate:near
-	extrn init_virtgate:near
-	extrn init_virt_pm_usergate:near
 	extrn init_io:near
 	extrn init_int:near
 	extrn init_irq:near
@@ -493,8 +491,6 @@ prot_init:
 	call init_osgate
 	call init_protseg
 	call init_usergate
-	call init_virtgate
-	call init_virt_pm_usergate
 	call init_mem
 	call init_gdt
 	call init_idt

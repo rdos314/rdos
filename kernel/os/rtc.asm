@@ -36,11 +36,9 @@ INCLUDE system.def
 INCLUDE driver.def
 INCLUDE port.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 rtc_init	EQU 0

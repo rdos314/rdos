@@ -35,10 +35,8 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.inc
 INCLUDE dos.inc
@@ -1264,9 +1262,9 @@ init	PROC far
 ;
 	mov si,OFFSET get_psp_sel
 	mov di,OFFSET get_psp_sel_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_psp_sel_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov di,OFFSET open_app
 	HookOpenApp

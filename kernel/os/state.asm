@@ -35,7 +35,6 @@ INCLUDE system.inc
 INCLUDE user.def
 INCLUDE state.def
 INCLUDE os.def
-INCLUDE virt.def
 INCLUDE user.inc
 INCLUDE os.inc
 
@@ -470,48 +469,32 @@ init_state	PROC near
 	mov ax,hook_state_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET get_state16
-	mov di,OFFSET get_state_name
-	xor cl,cl
-	mov ax,get_state_nr
-	RegisterUserGate16
+	mov bx,OFFSET get_state16
 	mov si,OFFSET get_state32
 	mov di,OFFSET get_state_name
-	xor cl,cl
-	mov ax,get_state_nr
-	RegisterUserGate32
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,get_virt_state_nr
-	RegisterVirtUserGate
+	mov ax,get_state_nr
+	RegisterUserGate
 ;
-	mov si,OFFSET get_thread_tss16
-	mov di,OFFSET get_thread_tss_name
-	xor cl,cl
-	mov ax,get_thread_tss_nr
-	RegisterUserGate16
+	mov bx,OFFSET get_thread_tss16
 	mov si,OFFSET get_thread_tss32
 	mov di,OFFSET get_thread_tss_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,get_thread_tss_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET set_thread_tss16
-	mov di,OFFSET set_thread_tss_name
-	xor cl,cl
-	mov ax,set_thread_tss_nr
-	RegisterUserGate16
+	mov bx,OFFSET set_thread_tss16
 	mov si,OFFSET set_thread_tss32
 	mov di,OFFSET set_thread_tss_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,set_thread_tss_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET pause_thread
 	mov di,OFFSET pause_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,pause_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov eax,OFFSET state_data_size
 	mov bx,state_data_sel

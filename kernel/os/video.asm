@@ -33,11 +33,9 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\driver.def
 INCLUDE ..\os\user.def
-INCLUDE ..\os\virt.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\user.inc
-INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 INCLUDE video.inc
 
@@ -1809,89 +1807,53 @@ init	PROC far
 ;
 	mov si,OFFSET set_video_mode
 	mov di,OFFSET set_video_mode_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_video_mode_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_cursor_position
 	mov di,OFFSET set_cursor_pos_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_cursor_position_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,set_virt_cursor_position_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_cursor_position
 	mov di,OFFSET get_cursor_pos_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_cursor_position_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,get_virt_cursor_position_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_forecolor
 	mov di,OFFSET set_forecolor_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_forecolor_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,set_virt_forecolor_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_backcolor
 	mov di,OFFSET set_backcolor_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_backcolor_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,set_virt_backcolor_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_char
 	mov di,OFFSET write_char_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,write_char_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,write_virt_char_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET write_asciiz16
 	mov si,OFFSET write_asciiz32
 	mov di,OFFSET write_asciiz_name
-	xor cl,cl
-	mov ax,write_asciiz_nr
-	RegisterUserGate32
-	mov si,OFFSET write_asciiz16
-	mov di,OFFSET write_asciiz_name
-	xor cl,cl
-	mov ax,write_asciiz_nr
-	RegisterUserGate16
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,write_virt_asciiz_nr
-	RegisterVirtUserGate
+	mov ax,write_asciiz_nr
+	RegisterUserGate
 ;
+	mov bx,OFFSET write_size_string16
 	mov si,OFFSET write_size_string32
 	mov di,OFFSET write_size_string_name
-	xor cl,cl
-	mov ax,write_size_string_nr
-	RegisterUserGate32
-	mov si,OFFSET write_size_string16
-	mov di,OFFSET write_size_string_name
-	xor cl,cl
-	mov ax,write_size_string_nr
-	RegisterUserGate16
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,write_virt_size_string_nr
-	RegisterVirtUserGate
+	mov ax,write_size_string_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET write_dos_string
 	mov di,OFFSET write_dos_string_name

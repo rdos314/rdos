@@ -33,10 +33,8 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE driver.def
 
@@ -742,38 +740,22 @@ init_font_loop:
 ;
 	mov si,OFFSET set_font
 	mov di,OFFSET set_font_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_font_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,set_virt_font_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_char_width
 	mov di,OFFSET get_char_width_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_char_width_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,get_virt_char_width_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
+	mov bx,OFFSET get_string_width16
 	mov si,OFFSET get_string_width32
 	mov di,OFFSET get_string_width_name
-	xor cl,cl
-	mov ax,get_string_width_nr
-	RegisterUserGate32
-	mov si,OFFSET get_string_width16
-	mov di,OFFSET get_string_width_name
-	xor cl,cl
-	mov ax,get_string_width_nr
-	RegisterUserGate16
-	mov bx,ax
 	mov dx,virt_es_in
-	mov ax,get_virt_string_width_nr
-	RegisterVirtUserGate
+	mov ax,get_string_width_nr
+	RegisterUserGate
 ;
 	popa
 	pop ds

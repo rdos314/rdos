@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -4230,73 +4228,65 @@ init	PROC far
 ;
 	mov si,OFFSET open_tcp_connection
 	mov di,OFFSET open_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,open_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET listen_tcp_port32
 	mov di,OFFSET listen_tcp_port_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,listen_tcp_port_nr
 	RegisterUserGate32
 ;
 	mov si,OFFSET wait_for_tcp_connection
 	mov di,OFFSET wait_for_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,wait_for_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET close_tcp_connection
 	mov di,OFFSET close_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,close_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET delete_tcp_connection
 	mov di,OFFSET delete_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,delete_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET is_tcp_connection_closed
 	mov di,OFFSET is_tcp_connection_closed_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,is_tcp_connection_closed_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET abort_tcp_connection
 	mov di,OFFSET abort_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,abort_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET read_tcp_connection16
-	mov di,OFFSET read_tcp_connection_name
-	xor cl,cl
-	mov ax,read_tcp_connection_nr
-	RegisterUserGate16
+	mov bx,OFFSET read_tcp_connection16
 	mov si,OFFSET read_tcp_connection32
 	mov di,OFFSET read_tcp_connection_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,read_tcp_connection_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
-	mov si,OFFSET write_tcp_connection16
-	mov di,OFFSET write_tcp_connection_name
-	xor cl,cl
-	mov ax,write_tcp_connection_nr
-	RegisterUserGate16
+	mov bx,OFFSET write_tcp_connection16
 	mov si,OFFSET write_tcp_connection32
 	mov di,OFFSET write_tcp_connection_name
-	xor cl,cl
+	mov dx,virt_es_in
 	mov ax,write_tcp_connection_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET push_tcp_connection
 	mov di,OFFSET push_tcp_connection_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,push_tcp_connection_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov al,6
 	mov di,OFFSET Receive

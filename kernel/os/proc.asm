@@ -32,11 +32,9 @@ GateSize = 16
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 thread_data_seg	SEGMENT AT 0
@@ -199,31 +197,18 @@ init_thread	PROC near
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET create_thread16
-	mov di,OFFSET create_thread_name
-	xor cl,cl
-	mov ax,create_thread_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET create_thread16
 	mov si,OFFSET create_thread32
 	mov di,OFFSET create_thread_name
-	xor cl,cl
-	mov ax,create_thread_nr
-	RegisterUserGate32
-;
-	mov bx,ax
 	mov dx,virt_seg_in
-	mov ax,create_virt_thread_nr
-	RegisterVirtUserGate
+	mov ax,create_thread_nr
+	RegisterUserGate
+;
 	mov si,OFFSET terminate_thread
 	mov di,OFFSET terminate_thread_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,terminate_thread_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,virt_seg_in
-	mov ax,terminate_virt_thread_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET create_process
 	mov di,OFFSET create_process_name

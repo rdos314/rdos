@@ -32,10 +32,8 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE os.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE driver.def
 INCLUDE system.inc
 
@@ -76,7 +74,7 @@ emm_device_begin:
 	dw OFFSET ems_int - OFFSET emm_device_begin
 	db 'TMMXXXX0'
 	sti
-	EmmHandler
+	EmsHandler
 	retf 2
 ems_strat:
 	retf
@@ -493,10 +491,9 @@ init	PROC far
 	mov es,ax
 	mov si,OFFSET ems_handler
 	mov di,OFFSET ems_name
-	xor cl,cl
 	mov ax,ems_handler_nr
 	mov dx,virt_ds_in OR virt_es_in
-	RegisterVirtGate
+	RegisterUserGateV86
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess

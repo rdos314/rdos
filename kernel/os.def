@@ -31,10 +31,10 @@
 register_osgate_nr			EQU 0
 is_valid_osgate_nr			EQU 1
 register_usergate_nr		EQU 2
-register_usergate16_nr		EQU 3
-register_usergate32_nr		EQU 4
-register_virtgate_nr		EQU 5
-register_vugate_nr			EQU 6
+register_bimodal_usergate_nr	EQU 3
+register_usergate16_nr		EQU 4
+register_usergate32_nr		EQU 5
+register_usergate_v86_nr	EQU 6
 init_device_nr				EQU 7
 alias_code32_nr				EQU 8
 emulate_opcode_nr			EQU 9

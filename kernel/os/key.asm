@@ -36,11 +36,9 @@ INCLUDE system.def
 INCLUDE driver.def
 INCLUDE port.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 
 ;
@@ -2461,57 +2459,40 @@ init	PROC far
 ;
 	mov si,OFFSET read_keyboard
 	mov di,OFFSET read_keyboard_name
-	xor cl,cl
-	mov ax,read_keyboard_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,read_virt_keyboard_nr
-	RegisterVirtUserGate
+	mov ax,read_keyboard_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET poll_keyboard
 	mov di,OFFSET poll_keyboard_name
-	xor cl,cl
-	mov ax,poll_keyboard_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,poll_virt_keyboard_nr
-	RegisterVirtUserGate
+	mov ax,poll_keyboard_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET flush_keyboard
 	mov di,OFFSET flush_keyboard_name
-	xor cl,cl
-	mov ax,flush_keyboard_nr
-	RegisterUserGate
-	mov bx,ax
 	xor dx,dx
-	mov ax,flush_virt_keyboard_nr
-	RegisterVirtUserGate
+	mov ax,flush_keyboard_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_keyboard_state
 	mov di,OFFSET get_keyboard_state_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_keyboard_state_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
-	mov si,OFFSET hook_keyboard16
-	mov di,OFFSET hook_keyboard_name
-	xor cl,cl
-	mov ax,hook_keyboard_nr
-	RegisterUserGate16
-;
+	mov bx,OFFSET hook_keyboard16
 	mov si,OFFSET hook_keyboard32
 	mov di,OFFSET hook_keyboard_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,hook_keyboard_nr
-	RegisterUserGate32
+	RegisterUserGate
 ;
 	mov si,OFFSET unhook_keyboard
 	mov di,OFFSET unhook_keyboard_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,unhook_keyboard_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_keyboard_serial
 	mov di,OFFSET read_keyboard_serial_name

@@ -34,9 +34,7 @@ INCLUDE user.def
 INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
-INCLUDE virt.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.inc
 

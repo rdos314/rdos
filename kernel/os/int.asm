@@ -33,11 +33,9 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE system.inc
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE int.def
 
@@ -340,15 +338,15 @@ init_exc_loop:
 ;
 	mov si,OFFSET get_vm_int
 	mov di,OFFSET get_vm_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_vm_int_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_vm_int
 	mov di,OFFSET set_vm_int_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_vm_int_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET hook_get_vm_int
 	mov di,OFFSET hook_get_vm_int_name
@@ -370,23 +368,21 @@ init_exc_loop:
 ;
 	mov si,OFFSET raw_switch16
 	mov di,OFFSET raw_switch_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,raw_switch_nr
 	RegisterUserGate16
 ;
 	mov si,OFFSET raw_switch_v86
 	mov di,OFFSET raw_switch_name
-	xor cl,cl
 	xor dx,dx
-	mov bx,ax
-	mov ax,virt_raw_switch_nr
-	RegisterVirtUserGate
+	mov ax,raw_switch_nr
+	RegisterUserGateV86
 ;
 	mov si,OFFSET get_raw_switch_ads
 	mov di,OFFSET get_raw_switch_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_raw_switch_ads_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET save_context
 	mov di,OFFSET save_context_name
@@ -2130,11 +2126,11 @@ PAGE
 get_raw_switch_name	DB 'Get Raw Switch Adress',0
 
 raw_switch_prot_begin:
-	UserGate16 raw_switch_nr
+	RawSwitch
 raw_switch_prot_end:
 
 raw_switch_v86_begin:
-	UserGateVm raw_switch_nr
+	RawSwitch
 raw_switch_v86_end:
 
 get_raw_switch_ads	PROC far

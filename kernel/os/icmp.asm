@@ -36,10 +36,8 @@ INCLUDE protseg.def
 INCLUDE driver.def
 INCLUDE int.def
 INCLUDE user.def
-INCLUDE virt.def
 INCLUDE os.def
 INCLUDE user.inc
-INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE exec.def
 INCLUDE ne.def
@@ -404,9 +402,9 @@ init_icmp	PROC near
 ;
 	mov si,OFFSET ping_node
 	mov di,OFFSET ping_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,ping_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 	ret
 init_icmp	ENDP
 
