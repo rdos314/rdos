@@ -37,8 +37,10 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\wait.inc
 INCLUDE ..\..\kernel\handle.inc
 
-IO_OUT	= 289h
-IO_IN	= 28Ah
+IO_OUT	= 378h
+IO_IN	= 379h
+
+IN_MASK = 10h
 
 digio_seg	STRUC
 
@@ -46,6 +48,13 @@ io_section	section_typ <>
 out_val		DB ?
 
 digio_seg	ENDS
+
+WriteSIO    Macro index, data
+    mov al,index
+    out 2Eh,al
+    mov al,data
+    out 2Fh,al
+        ENDM
 
 	.386p
 
@@ -180,7 +189,8 @@ InputBit	Proc near
 	call Delay
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
+	shr al,4
 	and bl,NOT 1
 	or bl,al
 	mov dx,IO_OUT
@@ -252,7 +262,7 @@ out6_crc_loop:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out6_done
 ;
@@ -359,7 +369,7 @@ out24_loop0:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out24_done
 ;
@@ -379,7 +389,7 @@ out24_loop1:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out24_done
 ;
@@ -399,7 +409,7 @@ out24_loop2:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out24_done
 ;
@@ -418,7 +428,7 @@ out24_loop3:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out24_done
 ;
@@ -435,7 +445,7 @@ out24_crc_loop:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz out24_done
 
@@ -506,7 +516,7 @@ cmdline_crc_loop:
 ;
 	mov dx,IO_IN
 	in al,dx
-	and al,1
+	and al,IN_MASK
 	stc
 	jz cmdline_done
 ;
@@ -687,7 +697,7 @@ rslnode_crc_loop:
 	mov dx,IO_IN
 	in al,dx
 	mov dx,IO_OUT
-	and al,1
+	and al,IN_MASK
 	stc
 	jz rsl_leave
 ;
@@ -860,7 +870,7 @@ tslnode_crc_loop:
 	mov dx,IO_IN
 	in al,dx
 	mov dx,IO_OUT
-	and al,1
+	and al,IN_MASK
 	stc
 	jz tsl_done
 ;
@@ -902,7 +912,7 @@ tsldev_crc_loop:
 	mov dx,IO_IN
 	in al,dx
 	mov dx,IO_OUT
-	and al,1
+	and al,IN_MASK
 	stc
 	jz tsl_done
 ;
@@ -1044,9 +1054,14 @@ init	Proc far
 	AllocateFixedSystemMem
 	InitSection es:io_section
 ;
-    mov dx,28Bh
-    mov al,89h
-    out dx,al
+;    mov dx,28Bh
+;    mov al,89h
+;    out dx,al
+;
+    WriteSIO 7, 1
+    WriteSIO 30h, 1
+    WriteSIO 60h, 3
+    WriteSIO 61h, 78h
 ;
 	mov al,-1
 	mov dx,IO_OUT
