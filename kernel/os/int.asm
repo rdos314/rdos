@@ -117,6 +117,10 @@ init_int	PROC near
 	mov bx,vm_int_sel
 	AllocateFixedProcessMem
 ;
+	mov eax,SIZE proc_int_seg
+	mov bx,proc_int_sel
+	AllocateFixedProcessMem
+;
 	mov eax,400h
 	AllocateFixedVMLinear
 	mov ax,int_data_sel
@@ -552,6 +556,11 @@ init_int_loop:
 	mov word ptr [bx+2],0E000h
 	add bx,4
 	loop init_int_loop
+;
+	mov ax,proc_int_sel
+	mov ds,ax
+	InitSection ds:proc_int_section
+;
 	popa
 	pop es
 	pop ds

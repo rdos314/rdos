@@ -77,6 +77,12 @@ pint_seg_size		DB ?
 
 pint_seg	ENDS
 
+proc_int_seg	STRUC
+
+proc_int_section	section_typ <> 
+
+proc_int_seg	ENDS
+
 vm_call_struc	STRUC
 
 vcs_edi		DD ?

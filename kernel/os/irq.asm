@@ -32,9 +32,9 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE ..\driver.def
 INCLUDE port.def
-INCLUDE int.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
+INCLUDE int.def
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc

@@ -1551,6 +1551,18 @@ SetupPmEntry	Proc near
 	push es
 	pushad
 ;
+	mov edx,0A0000h
+	mov eax,edx
+	or eax,7
+;
+	mov cx,30h
+
+setup_video_loop:
+	SetPhysicalPage
+	add edx,1000h
+	add eax,1000h
+	loop setup_video_loop
+;
 	mov bx,__C000
 	mov ds,bx
 	mov eax,10000h
@@ -1668,13 +1680,15 @@ page
 
 vbe_thread_name	DB 'VBE',0
 
-vbe_thread	PROC far
+vbe_thread:
+	mov eax,250
+	WaitMilliSec
 	call SetupPmEntry
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	call ds:v_init_proc
-	ret
-vbe_thread	ENDP
+	int 3
+	TerminateThread
 
 PAGE
 
@@ -1701,7 +1715,7 @@ init_vbe_thread	PROC far
 	mov di,OFFSET vbe_thread_name
 	mov cx,500
 	mov ax,4
-	CreateThread
+	CreateProcess
 ;
 	popa
 	pop es
