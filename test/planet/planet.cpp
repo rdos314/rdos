@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	4
+#define MAX_PLANETS	16
 
 struct TPlanet
 {
@@ -481,7 +481,7 @@ void cdecl main()
 	for (;;)
 	{
 		UpdatePlanets();
-//		RdosWaitMilli(10);
+		RdosWaitMilli(10);
 	}
 }
 
