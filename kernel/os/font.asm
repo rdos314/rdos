@@ -495,7 +495,8 @@ open_font	Proc far
 	push eax
 	push cx
 	push edx
-	push si
+	push esi
+	push edi
 	push bp
 ;
 	mov si,ax
@@ -688,7 +689,8 @@ open_font_char_next:
 
 open_font_end:
 	pop bp
-	pop si
+	pop edi
+	pop esi
 	pop edx
 	pop cx
 	pop eax

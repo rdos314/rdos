@@ -84,68 +84,11 @@ test_thread:
 divi	DW 1111h
 	
 init:
-	int 3
 	mov ax,32
 	mov cx,800
 	mov dx,600
 	SetVBEMode
 	push bx
-;
-    mov ax,1
-    mov cx,30
-    mov dx,30
-    CreateBitmap
-    mov ax,LGOP_NONE
-    SetLgop
-    push cx
-    push dx
-    mov si,cx
-    mov di,dx
-    xor cx,cx
-    xor dx,dx
-    DrawEllipse
-    pop dx
-    pop cx
-    push bx
-;
-    mov ax,16
-    CreateBitmap
-    mov ax,LGOP_NONE
-    SetLgop
-    mov eax,0FFFFh
-    SetDrawColor
-    push cx
-    push dx
-    mov si,cx
-    mov di,dx
-    xor cx,cx
-    xor dx,dx
-    DrawEllipse
-    pop dx
-    pop cx
-;
-    pop ax
-    pop si
-    push bx
-    push cx
-    push dx
-    mov cx,bx
-    mov dx,ax
-    mov bx,si
-    mov ax,LGOP_NONE
-    CreateSprite
-;
-    mov cx,100
-    mov dx,100
-    MoveSprite
-    ShowSprite
-    mov cx,102
-    mov dx,102
-    MoveSprite
-    CloseSprite    
-    pop bx
-    pop dx
-    pop cx
 ;
 	push bx
 	push cx
@@ -275,7 +218,6 @@ init:
 	push bx
 	mov ax,50
 	OpenFont
-	int 3
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET draw_string
@@ -289,6 +231,82 @@ init:
 	mov cx,40
 	mov dx,111
 	DrawString
+;
+	int 3
+	mov bx,4
+	push bx
+    mov ax,1
+    mov cx,30
+    mov dx,30
+    CreateBitmap
+    mov ax,LGOP_NONE
+    SetLgop
+	SetFilledStyle
+    push cx
+    push dx
+    mov si,cx
+    mov di,dx
+    xor cx,cx
+    xor dx,dx
+    DrawEllipse
+    pop dx
+    pop cx
+    push bx
+;
+    mov ax,16
+    CreateBitmap
+    mov ax,LGOP_NONE
+    SetLgop
+    mov eax,07000h
+    SetDrawColor
+	SetFilledStyle
+    push cx
+    push dx
+    mov si,cx
+    mov di,dx
+    xor cx,cx
+    xor dx,dx
+    DrawEllipse
+    pop dx
+    pop cx
+;
+    pop ax
+    pop si
+    push bx
+    push cx
+    push dx
+    mov cx,bx
+    mov dx,ax
+    mov bx,si
+    mov ax,LGOP_NONE
+    CreateSprite
+;
+    mov cx,100
+    mov dx,100
+    MoveSprite
+    ShowSprite
+    mov cx,102
+
+sprite_loop:
+    mov dx,102
+    MoveSprite
+	mov dx,104
+	MoveSprite
+	mov dx,100
+	MoveSprite
+	mov cx,102
+	MoveSprite
+	mov cx,104
+	MoveSprite
+	mov cx,100
+	MoveSprite
+	jmp sprite_loop
+	HideSprite
+    CloseSprite    
+    pop bx
+    pop dx
+    pop cx
+
 ;
 	int 3
 	mov ax,3

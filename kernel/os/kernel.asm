@@ -479,6 +479,13 @@ init:
 
 prot_init:
 	cli
+;
+; test only for math
+;
+	mov eax,cr0
+	or al,4
+	mov cr0,eax
+;
 	call init_pre_tasking
 	call init_boot_system
 	call init_paging

@@ -51,6 +51,12 @@ int RdosCreateStringBitmap(int font, const char *str);
 void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
 					   int *linesize, void **buffer);
 
+int RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
+void RdosCloseSprite(int handle);
+void RdosShowSprite(int handle);
+void RdosHideSprite(int handle);
+void RdosMoveSprite(int handle, int x, int y);
+
 void RdosSetForeColor(int color);
 void RdosSetBackColor(int color);
 int RdosGetMemSize(void *ptr);

@@ -1030,6 +1030,140 @@ RdosGetBitmapInfo	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCreateSprite
+;
+;		description:	RdosCreateSprite(dest, bitmap, mask, lgop)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateSprite
+
+RdosCreateSprite	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	mov ax,[ebp+20]
+	UserGate create_sprite_nr
+	movzx eax,bx
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosCreateSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseSprite
+;
+;		description:	RdosCloseSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseSprite
+
+RdosCloseSprite	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_sprite_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosShowSprite
+;
+;		description:	RdosShowSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosShowSprite
+
+RdosShowSprite	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate show_sprite_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosShowSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosHideSprite
+;
+;		description:	RdosHideSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosHideSprite
+
+RdosHideSprite	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate hide_sprite_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosHideSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosMoveSprite
+;
+;		description:	RdosMoveSprite(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosMoveSprite
+
+RdosMoveSprite	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	UserGate move_sprite_nr
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosMoveSprite	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetForeColor
 ;
 ;		description:	SetForeColor(color)

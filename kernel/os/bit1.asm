@@ -469,7 +469,9 @@ SlabSet	Proc near
 	shr eax,3
 	add edi,eax
 	and bl,7
-	cmp cx,bx
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
 	jc slab_set_last_loop
 ;
 	mov al,byte ptr cs:[bx].or_bit_tab
@@ -541,7 +543,9 @@ SlabReset	Proc near
 	shr eax,3
 	add edi,eax
 	and bl,7
-	cmp cx,bx
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
 	jc slab_reset_last_loop
 ;
 	mov al,byte ptr cs:[bx].and_bit_tab
@@ -603,7 +607,9 @@ SlabCompl	Proc near
 	shr eax,3
 	add edi,eax
 	and bl,7
-	cmp cx,bx
+	mov ax,cx
+	add ax,bx
+	cmp ax,8
 	jc slab_compl_last_loop
 ;
 	mov al,es:[edi]

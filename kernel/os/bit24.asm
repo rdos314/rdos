@@ -1308,13 +1308,98 @@ PAGE
 ;		DESCRIPTION:	Draw a sprite
 ; 
 ;		PARAMETER:		ECX			x + y << 16
-;						EDX			width + height << 16
+;						DX			width
 ;						ES:ESI		sprite data
 ;						ES:EDI		1-bit mask bits
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_sprite_line    Proc far
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+	push ebp
+;
+	push dx
+	movzx ebx,cx
+	ror ecx,16
+	movzx edx,cx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ebx
+	add edx,edx
+	add edx,ebx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov ebp,eax
+	xchg ebp,edi
+	pop cx
+;
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	je draw_sprite_none
+;
+	add bx,bx
+	mov dl,es:[ebp]
+	mov dh,8
+
+draw_sprite_lgop_loop:
+	rcr dl,1
+	jnc draw_sprite_lgop_next
+;
+	mov eax,es:[esi]
+	call word ptr cs:[bx].LgopTab
+
+draw_sprite_lgop_next:
+	add esi,3
+	add edi,3
+	sub cx,1
+	jz draw_sprite_done
+;
+	sub dh,1
+	jnz draw_sprite_lgop_loop
+;
+	inc ebp
+	mov dh,8
+	mov dl,es:[ebp]	
+	jmp draw_sprite_lgop_loop
+
+draw_sprite_none:
+	mov dl,es:[ebp]
+	mov dh,8
+
+draw_sprite_none_loop:
+	rcr dl,1
+	jnc draw_sprite_none_next
+;
+	mov al,es:[esi]
+	mov es:[edi],al
+	mov ax,es:[esi+1]
+	mov es:[edi+1],ax
+
+draw_sprite_none_next:
+	add esi,3
+	add edi,3
+	sub cx,1
+	jz draw_sprite_done
+;
+	sub dh,1
+	jnz draw_sprite_none_loop
+;
+	inc ebp
+	mov dh,8
+	mov dl,es:[ebp]	
+	jmp draw_sprite_none_loop
+
+draw_sprite_done:
+	pop ebp
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
     ret
 draw_sprite_line    Endp
 

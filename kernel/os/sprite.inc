@@ -45,6 +45,8 @@ sp_mask_sel         DW ?
 sp_lgop             DW ?
 sp_x                DW ?
 sp_y                DW ?
+sp_new_x			DW ?
+sp_new_y			DW ?
 sp_w                DW ?
 sp_h                DW ?
 sp_dest_w           DW ?
