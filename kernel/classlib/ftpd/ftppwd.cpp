@@ -97,10 +97,22 @@ void TPwdCommand::Execute(char *param)
 {
 	TLangString msg;
     TString str;
+	const char *ptr;
 
 	if (FServer->VerifyUser())
 	{
-        str = "\"" + FServer->CurrDir + "\"" + " is current directory";
+		str = "\"";
+		ptr = FServer->CurrDir.GetData();
+		while (*ptr)
+		{
+			if (*ptr == '\\')
+				str += '/';
+			else
+				str += *ptr;
+			ptr++;
+		}
+		str += "\"";
+		str += " is current directory";
         msg.printf(257, str.GetData());
     }
    	else

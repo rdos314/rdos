@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cwd.cpp
-# Cwd command class
+# cdup.cpp
+# Cdup command class
 #
 ########################################################################*/
 
@@ -31,7 +31,7 @@
 
 #include "cmdhelp.h"
 #include "dir.h"
-#include "cwd.h"
+#include "cdup.h"
 #include "rdos.h"
 #include "path.h"
 
@@ -40,23 +40,23 @@
 
 /*##########################################################################
 #
-#   Name       : TCwdFactory::TCwdFactory
+#   Name       : TCdupFactory::TCdupFactory
 #
-#   Purpose....: Constructor for TCwdFactory
+#   Purpose....: Constructor for TCdupFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdFactory::TCwdFactory()
-  : TCommandFactory("CWD")
+TCdupFactory::TCdupFactory()
+  : TCommandFactory("CDUP")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdFactory::Create
+#   Name       : TCdupFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -65,45 +65,45 @@ TCwdFactory::TCwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TCwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TCdupFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TCwdCommand(Server, param);
+	return new TCdupCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::TCwdCommand
+#   Name       : TCdupCommand::TCdupCommand
 #
-#   Purpose....: Constructor for TCwdCommand
+#   Purpose....: Constructor for TCdupCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdCommand::TCwdCommand(TFtpSocketServer *Server, const char *param)
+TCdupCommand::TCdupCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::~TCwdCommand
+#   Name       : TCdupCommand::~TCdupCommand
 #
-#   Purpose....: Destructor for TCwdCommand
+#   Purpose....: Destructor for TCdupCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdCommand::~TCwdCommand()
+TCdupCommand::~TCdupCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::Execute
+#   Name       : TCdupCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -112,43 +112,23 @@ TCwdCommand::~TCwdCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCwdCommand::Execute(char *param)
+void TCdupCommand::Execute(char *param)
 {
 	TArg *arg;
 	int ArgCount;
 	TLangString msg;
-	int ok;
 
 	if (FServer->VerifyUser())
 	{
-		ok = ScanCmdLine(param, 0);
-		if (ok)
-		{
-			ArgCount = 0;
-			arg = FArgList;
-			while (arg)
-			{
-				ArgCount++;
-				arg = arg->FList;
-			}
-
-			ok = (FArgCount == 1);
-		}
-
-		if (ok)
-		{
-			TPathName relpath = TPathName(FServer->CurrDir) + TString(FArgList->FName);
-			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
-			if (abspath.IsDir())
-			{
-				FServer->CurrDir = relpath.Get();
-				msg.Load(250);			
-			}
-			else
-				msg.Load(450);
-		}
+		TPathName path = TPathName(FServer->CurrDir);
+		TString base = path.GetBaseName();
+	
+		if (base.GetSize())
+			FServer->CurrDir = base;
 		else
-			msg.Load(501);
+			FServer->CurrDir = "/";
+
+		msg.Load(250);			
 	}
    	else
    	    msg.Load(530);

@@ -264,62 +264,65 @@ void TListCommand::Execute(char *param)
 
 	path += FServer->CurrDir;
 
-	ok = ScanCmdLine(param, 0);
-	if (ok)
+	if (FServer->VerifyUser())
 	{
-		ArgCount = 0;
-		arg = FArgList;
-		while (arg)
+		ok = ScanCmdLine(param, 0);
+		if (ok)
 		{
-			ArgCount++;
-			arg = arg->FList;
-		}
+			ArgCount = 0;
+			arg = FArgList;
+			while (arg)
+			{
+				ArgCount++;
+				arg = arg->FList;
+			}
 	
-    	FFileCount = 0;
-	    FDirCount = 0;
-    	FTotalSize = 0;
+    		FFileCount = 0;
+	    	FDirCount = 0;
+	    	FTotalSize = 0;
 
-        arg = FArgList;
-    
-        FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
-    	FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
-	    FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
-    
-    	if (arg)
-	    {
-    		while (arg)
-	    	{
-			    FFileList.Add(path + arg->FName);
-			    FDirList.Add(path + arg->FName);
-    			arg = arg->FList;
-	    	}
-    	}
-	    else
-		{
-	  		FFileList.Add(path + "*");
-	  		FDirList.Add(path + "*");
-		}
-
-        FFileList.RemoveDuplicates();
-        FDirList.RemoveDuplicates();
-
-        FFileList.Sort();
-        FDirList.Sort();
+    	    arg = FArgList;
     	
-		msg.Load(150);
-        FServer->Reply(&msg);    
+	        FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_DIRECTORY);
+    		FDirList.SetRequiredAttributes(FILE_ATTRIBUTE_DIRECTORY);
+	    	FDirList.SetIgnoredAttributes(FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM);
+    
+	    	if (arg)
+		    {
+    			while (arg)
+		    	{
+				    FFileList.Add(path + arg->FName);
+				    FDirList.Add(path + arg->FName);
+	    			arg = arg->FList;
+		    	}
+    		}
+		    else
+			{
+	  			FFileList.Add(path + "*");
+		  		FDirList.Add(path + "*");
+			}
+	
+	        FFileList.RemoveDuplicates();
+    	    FDirList.RemoveDuplicates();
+	
+	        FFileList.Sort();
+    	    FDirList.Sort();
+    	
+			msg.Load(150);
+    	    FServer->Reply(&msg);    
 
-    	WriteEntry();
+	    	WriteEntry();
+	
+    		FServer->Push();
 
-    	FServer->Push();
-
-    	msg.Load(226);
-        FServer->Reply(&msg);    
+	    	msg.Load(226);
+		}
+		else
+			msg.Load(501);
 	}
 	else
-	{
-		msg.Load(501);
-        FServer->Reply(&msg);    
-    }
+   	    msg.Load(530);
+
+    FServer->Reply(&msg);    
 
 }
