@@ -222,6 +222,128 @@ RemoveLeading	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			WriteTime
+;
+;		DESCRIPTION:	Write time
+;
+;		PARAMETERS:		EDX:EAX		Binary time
+;						ES			Temp storage
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteTime	Proc near
+	pushad
+	xor di,di
+	push eax
+	mov eax,edx
+	xor edx,edx
+	mov ecx,24
+	div ecx
+	mov cx,8
+	call IntToStr
+	call RemoveLeading
+	pushf
+	WriteAsciiz
+	mov al,' '
+	WriteChar
+	mov eax,edx
+	mov cx,2
+	call IntToStr
+	mov al,'.'
+	popf
+	jc SignHour
+	call RemoveLeading
+	jc SignHour
+	mov al,' '
+SignHour:
+	pushf
+	WriteAsciiz
+	WriteChar
+	popf
+	pop eax
+;
+	pushf
+	mov edx,60
+	mul edx
+	popf
+	push eax
+	pushf
+	mov eax,edx
+	mov cx,2
+	call IntToStr
+	mov al,'.'
+	popf
+	jc MinSign
+	call RemoveLeading
+	jc MinSign
+	mov al,' '
+MinSign:
+	pushf
+	WriteAsciiz
+	WriteChar
+	popf
+	pop eax
+;
+	pushf
+	mov edx,60
+	mul edx
+	popf
+	push eax
+	pushf
+	mov eax,edx
+	mov cx,2
+	call IntToStr
+	mov al,','
+	popf
+	jc SecSign
+	call RemoveLeading
+	jc SecSign
+	mov al,' '
+SecSign:
+	pushf
+	WriteAsciiz
+	WriteChar
+	popf
+	pop eax
+;
+	pushf
+	mov edx,1000
+	mul edx
+	popf
+	push eax
+	pushf
+	mov eax,edx
+	mov cx,3
+	call IntToStr
+	mov al,' '
+	popf
+	jc MilliSign
+	call RemoveLeading
+MilliSign:
+	pushf
+	WriteAsciiz
+	WriteChar
+	popf
+	pop eax
+;
+	pushf
+	mov edx,1000
+	mul edx
+	mov eax,edx
+	mov cx,3
+	call IntToStr
+	popf
+	jc MikroSign
+	call RemoveLeading
+MikroSign:
+	WriteAsciiz
+	popad
+	ret
+WriteTime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			start_timer
 ;
 ;		DESCRIPTION:	Start timer
@@ -230,7 +352,7 @@ RemoveLeading	Endp
 
 start_timer   Proc near
     mov dx,28Fh
-    mov al,29h
+    mov al,8
     out dx,al
 ;
     mov dx,28Ch
@@ -244,10 +366,16 @@ start_timer   Proc near
     inc dx
     mov al,98h
     out dx,al
-;
     inc dx
-    mov al,16h
-    out dx,al
+;
+	mov al,2
+	out dx,al
+;
+	mov al,10h
+	out dx,al
+;
+	mov al,4
+	out dx,al	
 ;
     ret
 start_timer   Endp
@@ -321,7 +449,7 @@ dcf_thread_loop:
 	mov dx,28Ah
 	in al,dx
 	and al,10h
-	jnz dcf_thread_loop
+	jz dcf_thread_loop
 ;
 	call start_timer
 	call read_timer
@@ -334,14 +462,12 @@ dcf_wait_loop:
 	mov dx,28Ah
 	in al,dx
 	and al,10h
-	jz dcf_wait_loop	
-;
-	mov ax,50
-	WaitMilliSec
+	jnz dcf_wait_loop	
 ;
     cli	
 	call read_timer
-	mov edi,eax
+	mov edi,989680h
+	sub edi,eax
 	GetSystemTime
     sti
 ;
@@ -367,20 +493,21 @@ dcf_wait_loop:
 	xor dx,dx
 	SetCursorPosition
 ;
+	pop edx
 	pop eax
-	call WriteHexDword
-;
-    pop eax
-    call WriteHexDword
+	call WriteTime
 	
 dcf_meassure_loop:
 	mov ax,50
 	WaitMilliSec
 ;
+	mov dx,28Ah
+	in al,dx
+	and al,10h
+	jz dcf_meassure_loop
+;
 	call read_timer	
-	cmp eax,esi
 	mov esi,eax
-	jne dcf_meassure_loop
 ;
 	xor cx,cx
 	mov dx,1
@@ -454,6 +581,24 @@ init_dcf_thread	PROC far
 	ret
 init_dcf_thread	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			dcf_int
+;
+;		DESCRIPTION:	DCF interrupt
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dcf_int	Proc far
+	mov dx,280h
+	mov al,2
+	out dx,al
+	ret
+dcf_int	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -476,7 +621,7 @@ init	Proc far
 	InitDevice
 ;
     mov dx,284h
-    xor al,al
+    mov al,2
     out dx,al
 ;
     mov dx,28Bh
@@ -486,6 +631,12 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov al,5
+	mov cx,cs
+	mov es,cx
+	mov di,OFFSET dcf_int
+	RequestPrivateIrqHandler
 ;
 	mov di,OFFSET init_dcf_thread
 	HookInitTasking
