@@ -219,8 +219,30 @@ void UpdateHeat()
 	else
 		RdosWriteString("VP OFF ");
 
-	sprintf(str, "VALVE %4.1Lf", heat-> ReadVpValve());
+	sprintf(str, "VALVE %4.1Lf", heat->ReadVpValve());
 	RdosWriteString(str);
+}
+
+void UpdateFuzzy()
+{
+	int val;
+	int chan;
+	long double fval;
+    char str[41];
+
+	RdosSetCursorPosition(12, 0);
+
+	for (chan = 0; chan < 4; chan++)
+	{
+		if (RdosReadSerialVal(0x20, chan, &val))
+		{
+			fval = (long double)val / 0x7FFFFFFF * 100.0;
+			sprintf(str, "%d: %4.1Lf ", chan, fval);
+		}
+		else
+			sprintf(str, "%d: ---- ", chan);
+		RdosWriteString(str);
+	}
 }
 
 void SecClear(TSample *sample)
@@ -294,6 +316,7 @@ void RawProc(TSample *sample)
 				lsmin.Add(&time, val);
 				lsmax.Add(&time, val);
 				UpdateLight(TRUE);
+				UpdateFuzzy();
 				break;
 
 			case 6:
@@ -385,7 +408,7 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 
 		case 0x6C:
 			heat->StopHeat();
-			break;	
+			break;
 	}
 }
 
