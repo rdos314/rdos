@@ -140,11 +140,11 @@ void TRemovePartitionCommand::InitOptions()
 int TRemovePartitionCommand::Confirm(TFsPartition *Part)
 {
     char DriveStr[4];
-    char str[40];
+	char str[40];
 
     if (Part->GetDrive())
     {
-        DriveStr[0] = 'A' + Part->GetDrive();
+        DriveStr[0] = 'A' + Part->GetDrive()->GetDriveNr();
         DriveStr[1] = ':';
         DriveStr[2] = 0;   
 
@@ -157,14 +157,14 @@ int TRemovePartitionCommand::Confirm(TFsPartition *Part)
 	{
 		sprintf(str, "%3.3f MB", Part->GetTotalSpace());
 
-    	FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc);    
-	    Write(FMsg.GetData());
-    }
+		FMsg.printf(TEXT_RMPART_PART_HEAD, FPartNr, FDisc->GetDiscNr());
+		Write(FMsg.GetData());
+	}
 
-    if (FMsg.UserPrompt(PROMPT_RMPART) == 1)
-        return TRUE;
-    
-    return FALSE;
+	if (FMsg.UserPrompt(PROMPT_RMPART) == 1)
+		return TRUE;
+
+	return FALSE;
 }
 
 /*##########################################################################
@@ -228,26 +228,18 @@ int TRemovePartitionCommand::RemovePart()
 ##########################################################################*/
 int TRemovePartitionCommand::RemoveDisc()
 {
-	int SectorSize;
-	long Sectors;
-	int BiosSectorsPerCyl;
-	int BiosHeads;
-
-	if (RdosGetDiscInfo(FDisc, &SectorSize, &Sectors, &BiosSectorsPerCyl, &BiosHeads))
+	if (FDisc->IsValid())
 	{
-		if (SectorSize)
+		FDiscPart = new TDiscPartition(FDisc);
+		if (RemovePart() == 0)
 		{
-			FDiscPart = new TDiscPartition(FDisc);
-			if (RemovePart() == 0)
-			{
-				delete FDiscPart;
-				return 0;
-    	    }
-    		delete FDiscPart;
+			delete FDiscPart;
+			return 0;
 		}
+		delete FDiscPart;
 	}
 
-	FMsg.printf(TEXT_SHOWPART_DISC_ERROR, FDisc);
+	FMsg.printf(TEXT_SHOWPART_DISC_ERROR, FDisc->GetDiscNr());
 	Write(FMsg.GetData());
 	return 1;
 }
@@ -265,6 +257,8 @@ int TRemovePartitionCommand::RemoveDisc()
 ##########################################################################*/
 int TRemovePartitionCommand::Execute(char *param)
 {
+	int ret;
+	int DiscNr;
 	InitOptions();
 
 	if (!ScanCmdLine(param, 0))
@@ -277,18 +271,22 @@ int TRemovePartitionCommand::Execute(char *param)
 		return E_Useage;
 	}
 
-	if (sscanf(FArgList->FName.GetData(), "%d", &FDisc) != 1)
+	if (sscanf(FArgList->FName.GetData(), "%d", &DiscNr) != 1)
 	{
 		ErrorSyntax(0);
 		return 1;
 	}
 
 	if (sscanf(FArgList->FList->FName.GetData(), "%d", &FPartNr) != 1)
-    {
+	{
 		ErrorSyntax(0);
 		return 1;
 	}
 
-	return RemoveDisc();
+	FDisc = new TDisc(DiscNr);
+	ret = RemoveDisc();
+	delete FDisc;
+
+	return ret;
 }
 

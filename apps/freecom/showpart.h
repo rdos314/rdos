@@ -56,7 +56,7 @@ protected:
     void ShowTreeTable(TPartitionTable *Part);
     void ShowTree(TDiscPartition *Part);
     void ShowTable(TDiscPartition *Part);
-    int Show(int Disc);
+    int Show(TDisc *Disc);
 	
 	int FOptD;
 

@@ -28,7 +28,6 @@
 #include <mem.h>
 
 #include "discstor.h"
-#include "rdos.h"
 
 #define FALSE   0
 #define TRUE    !FALSE

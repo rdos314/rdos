@@ -38,13 +38,12 @@ public:
 
     int IsValid();
 	int GetDriveNr();
-	
+
 	long GetFreeSectors();
 	long GetTotalSectors();
 
 	int Read(long Sector, char *buf, int size);
 	int Write(long Sector, const char *buf, int size);
-	int GetDrive(long Start, long Size);
 
 protected:
 	int FDrive;

@@ -56,7 +56,7 @@ protected:
     int RemoveDisc();
 	
 	int FOptY;
-	int FDisc;
+	TDisc *FDisc;
 	int FPartNr;
 	TDiscPartition *FDiscPart;
 

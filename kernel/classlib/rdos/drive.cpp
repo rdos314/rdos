@@ -46,6 +46,9 @@ TDrive::TDrive(int Drive)
 
 	FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
 
+	if (FValid && FBytesPerUnit == 0)
+		FValid = FALSE;
+
 	if (!FValid)
 	{
 	    FBytesPerUnit = 0;

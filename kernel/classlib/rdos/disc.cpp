@@ -43,6 +43,9 @@ TDisc::TDisc(int Disc)
 	FDisc = Disc;
 	FValid = RdosGetDiscInfo(Disc, &FBytesPerSector, &FSectors, &FSectorsPerCyl, &FHeads);
 
+	if (FValid && FBytesPerSector == 0)
+    	FValid = 0;
+
 	if (!FValid)
 	{
 	    FBytesPerSector = 0;

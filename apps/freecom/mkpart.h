@@ -47,7 +47,7 @@ public:
 	virtual int Execute(char *param);	
 
 protected:
-    int Make(int Disc, const char *FsName, int Sectors);
+    int Make(TDisc *Disc, const char *FsName, int Sectors);
 };
 
 #endif
