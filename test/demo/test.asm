@@ -131,6 +131,36 @@ init:
 	mov di,300
 	DrawLine
 ;
+	mov cx,350
+	mov dx,300
+	mov si,50
+	mov di,100
+	DrawLine
+;
+	mov cx,350
+	mov dx,300
+	mov si,350
+	mov di,100
+	DrawLine
+;
+	mov cx,50
+	mov dx,100
+	mov si,50
+	mov di,300
+	DrawLine
+;
+	mov cx,350
+	mov dx,100
+	mov si,50
+	mov di,100
+	DrawLine
+;
+	mov cx,350
+	mov dx,300
+	mov si,50
+	mov di,300
+	DrawLine
+;
     SetFilledStyle
 	mov cx,200
 	mov dx,300
@@ -200,10 +230,49 @@ init:
 	mov di,300
 	DrawLine
 ;
+	mov cx,350
+	mov dx,300
+	mov si,50
+	mov di,100
+	DrawLine
+;
+	mov cx,350
+	mov dx,300
+	mov si,350
+	mov di,100
+	DrawLine
+;
+	mov cx,50
+	mov dx,100
+	mov si,50
+	mov di,300
+	DrawLine
+;
+	mov cx,350
+	mov dx,100
+	mov si,50
+	mov di,100
+	DrawLine
+;
+	mov cx,350
+	mov dx,300
+	mov si,50
+	mov di,300
+	DrawLine
+;
+	SetFilledStyle
+	mov eax,0707000h
+	SetDrawColor	
+	mov cx,200
+	mov dx,300
+	mov si,150
+	mov di,250
+	DrawEllipse
+;
 	mov ax,bx
 	pop bx
 	push ax
-	mov ax,LGOP_ADD
+	mov ax,LGOP_NONE
 	SetLgop
 	pop ax
 	xor esi,esi

@@ -364,7 +364,7 @@ set_rgb	Proc far
 
 set_rgb_loop:
 	mov edx,[esi]
-	cmp edx,-1
+	or edx,edx
 	je set_rgb_next
 ;
 	call word ptr cs:[bx].LgopTab
@@ -462,6 +462,9 @@ SlabSet	Proc near
 	push cx
 	push edi
 ;
+	or cx,cx
+	jz slab_set_done
+;
 	movzx ebx,al
 	shr eax,3
 	add edi,eax
@@ -471,24 +474,28 @@ SlabSet	Proc near
 ;
 	mov al,byte ptr cs:[bx].or_bit_tab
 	or es:[edi],al
-	sub cx,bx
+	sub cx,8
+	add cx,bx
 ;
 	mov al,-1
+	xor bl,bl
 
 slab_set_loop:
 	inc edi
-	xor bl,bl
 	cmp cx,8
 	jb slab_set_last_loop
 ;
 	mov es:[edi],al
-	jmp slab_set_loop
+	sub cx,8
+	jnz slab_set_loop
+	jmp slab_set_done
 	
 slab_set_last_loop:
 	bts es:[edi],ebx
 	inc bl
 	loop slab_set_last_loop
-;
+
+slab_set_done:
 	pop edi
 	pop cx
 	pop ebx
@@ -527,6 +534,9 @@ SlabReset	Proc near
 	push cx
 	push edi
 ;
+	or cx,cx
+	jz slab_reset_done
+;
 	movzx ebx,al
 	shr eax,3
 	add edi,eax
@@ -536,24 +546,28 @@ SlabReset	Proc near
 ;
 	mov al,byte ptr cs:[bx].and_bit_tab
 	and es:[edi],al
-	sub cx,bx
+	sub cx,8
+	add cx,bx
 ;
 	xor al,al
+	xor bl,bl
 
 slab_reset_loop:
 	inc edi
-	xor bl,bl
 	cmp cx,8
 	jb slab_reset_last_loop
 ;
 	mov es:[edi],al
-	jmp slab_reset_loop
+	sub cx,8
+	jnz slab_reset_loop
+	jmp slab_reset_done
 	
 slab_reset_last_loop:
 	btr es:[edi],ebx
 	inc bl
 	loop slab_reset_last_loop
-;
+
+slab_reset_done:
 	pop edi
 	pop cx
 	pop ebx
@@ -582,6 +596,9 @@ SlabCompl	Proc near
 	push cx
 	push edi
 ;
+	or cx,cx
+	jz slab_compl_done
+;
 	movzx ebx,al
 	shr eax,3
 	add edi,eax
@@ -596,24 +613,28 @@ SlabCompl	Proc near
 	and ah,byte ptr cs:[bp].and_bit_tab
 	or al,ah
 	mov es:[edi],al
-	sub cx,bx
+	sub cx,8
+	add cx,bx
 ;
 	mov al,-1
+	xor bl,bl
 
 slab_compl_loop:
 	inc edi
-	xor bl,bl
 	cmp cx,8
 	jb slab_compl_last_loop
 ;
 	xor es:[edi],al
-	jmp slab_compl_loop
+	sub cx,8
+	jnz slab_compl_loop
+	jmp slab_compl_done
 	
 slab_compl_last_loop:
 	btc es:[edi],ebx
 	inc bl
 	loop slab_compl_last_loop
-;
+
+slab_compl_done:
 	pop edi
 	pop cx
 	pop ebx
@@ -1025,20 +1046,17 @@ draw_rect	Proc far
 ;
 	push si
 	push di
-	movzx ecx,cx
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mov esi,eax
 	mul edx
-	mov edi,ecx
-	shl edi,2
-	add edi,eax
-	add edi,ds:v_app_base
-	pop dx
-	pop cx
-;
+	add eax,ds:v_app_base
+	mov edi,eax
 	mov ax,flat_sel
 	mov es,ax
+	movzx eax,cx
+	pop dx
+	pop cx
 ;
 	movzx bx,ds:v_style
 	add bx,bx
@@ -1108,13 +1126,14 @@ de_xoff		EQU -82
 de_yoff		EQU -84
 
 draw_mid_ellipse_hollow	Proc near
-	mov edi,[bp].de_p0
-	mov ax,[bp].de_width
+	mov edi,ds:v_app_base
+	mov eax,[bp].de_p0
+	mov dx,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 ;
-	mov edi,[bp].de_p1
-	mov ax,[bp].de_width
+	mov eax,[bp].de_p1
+	mov dx,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 ;
@@ -1123,11 +1142,12 @@ draw_mid_ellipse_hollow	Proc near
 draw_mid_ellipse_hollow	Endp
 
 draw_mid_ellipse_filled	Proc near
-	mov edi,[bp].de_p0
+	mov edi,ds:v_app_base
+	mov eax,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
 ;
-	mov edi,[bp].de_p1
+	mov eax,[bp].de_p1
 	mov cx,[bp].de_size
 	call FilledLine
 ;
@@ -1136,15 +1156,17 @@ draw_mid_ellipse_filled	Proc near
 draw_mid_ellipse_filled	Endp
 
 draw_last_ellipse_hollow	Proc near
-	mov edi,[bp].de_p0
-	mov ax,[bp].de_width
+	mov edi,ds:v_app_base
+	mov eax,[bp].de_p0
+	mov dx,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 	ret
 draw_last_ellipse_hollow	Endp
 
 draw_last_ellipse_filled	Proc near
-	mov edi,[bp].de_p0
+	mov edi,ds:v_app_base
+	mov eax,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
 	ret
@@ -1270,28 +1292,23 @@ draw_ellipse	Proc far
 	mov [bp+4].de_ddy,dx
 ;
 	movzx esi,ds:v_row_size
+	shl esi,3
 ;
 	movzx ecx,word ptr [bp].de_xoff
 	movzx edx,word ptr [bp].de_yoff
 	sub dx,[bp].de_h
 	mov eax,esi
 	mul edx
-	mov edi,ecx
-	shl edi,2
-	add edi,eax
-	add edi,ds:v_app_base
-	mov [bp].de_p0,edi
+	add eax,ecx
+	mov [bp].de_p0,eax
 ;
 	movzx ecx,word ptr [bp].de_xoff
 	movzx edx,word ptr [bp].de_yoff
 	add dx,[bp].de_h
 	mov eax,esi
 	mul edx
-	mov edi,ecx
-	shl edi,2
-	add edi,eax
-	add edi,ds:v_app_base
-	mov [bp].de_p1,edi
+	add eax,ecx
+	mov [bp].de_p1,eax
 ;
 	mov ax,flat_sel
 	mov es,ax
@@ -1322,8 +1339,8 @@ ellipse_s_neg:
 	add [bp].de_dTx,eax
 	adc [bp+4].de_dTx,dx
 ;
-	sub dword ptr [bp].de_p0,4
-	sub dword ptr [bp].de_p1,4
+	sub dword ptr [bp].de_p0,1
+	sub dword ptr [bp].de_p1,1
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 	jmp ellipse_loop
@@ -1361,8 +1378,8 @@ ellipse_t_neg:
 	add [bp].de_dTy,eax
 	adc [bp+4].de_dTy,dx
 ;
-	sub dword ptr [bp].de_p0,4
-	sub dword ptr [bp].de_p1,4
+	sub dword ptr [bp].de_p0,1
+	sub dword ptr [bp].de_p1,1
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 ;
