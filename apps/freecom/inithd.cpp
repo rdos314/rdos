@@ -34,31 +34,10 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "inithd.h"
+#include "part.h"
 
 #define FALSE 0
 #define TRUE !FALSE
-
-struct TBootParam
-{
-	short int BytesPerSector;
-	char DefaultEntry;
-	short int MappingSectors;
-	char Resv3;
-	short int Resv4;
-	short int SmallSectors;
-	char Media;
-	short int Resv6;
-	short int SectorsPerCyl;
-	short int Heads;
-	int HiddenSectors;
-	int Sectors;
-	char Drive;
-	char Resv7;
-	char Signature;
-	int Serial;
-	char Volume[11];
-	char Fs[8];
-};
 
 /*##########################################################################
 #
@@ -111,6 +90,23 @@ TInitHdCommand::TInitHdCommand(const char *param)
 
 /*##########################################################################
 #
+#   Name       : TInitHdCommand::~TInitHdCommand
+#
+#   Purpose....: Destructor for TInitHdCommand
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TInitHdCommand::~TInitHdCommand()
+{
+    if (FBootLoader)
+        delete FBootLoader;
+}
+
+/*##########################################################################
+#
 #   Name       : TInitHdCommand::OptScan
 #
 #   Purpose....: Opt scan callback
@@ -149,6 +145,27 @@ void TInitHdCommand::InitOptions()
 
 /*##########################################################################
 #
+#   Name       : TInitHdCommand::LoadBootLoader
+#
+#   Purpose....: Load boot loader into memory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TInitHdCommand::LoadBootLoader(TDisc *Disc)
+{
+	FBootLoader = new char[512 * BOOT_LOADER_SECTORS];
+
+	memset(FBootLoader, 0, 512 * BOOT_LOADER_SECTORS);
+	FLoaderSize = RdosReadBinaryResource(0, 101, FBootLoader, 512 * BOOT_LOADER_SECTORS);
+
+	FLoaderSectors = 1 + (FLoaderSize - 1) / 512;
+}
+
+/*##########################################################################
+#
 #   Name       : TInitHdCommand::WriteBootSector
 #
 #   Purpose....: Write boot sector
@@ -166,9 +183,9 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 	bootp.BytesPerSector = Disc->GetBytesPerSector();
 
 	if (FOptR)
-	    bootp.DefaultEntry = 1;
+		bootp.Resv1 = 1;
 	else
-	    bootp.DefaultEntry = 0;
+		bootp.Resv1 = 0;
 	    
 	bootp.MappingSectors = FLoaderSectors;
 	bootp.Resv3 = 0;
@@ -213,27 +230,19 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 ##########################################################################*/
 void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 {
-	char *BootLoader;
-	int size;
 	int Sector;
 	char *ptr;
+	int size;
 
-	BootLoader = new char[512 * BOOT_LOADER_SECTORS];
+	size = FLoaderSize;
+	ptr = FBootLoader;
 
-	memset(BootLoader, 0, 512 * BOOT_LOADER_SECTORS);
-	size = RdosReadBinaryResource(0, 101, BootLoader, 512 * BOOT_LOADER_SECTORS);
-
-	ptr = BootLoader;
-	FLoaderSectors = 0;
 	for (Sector = 1; Sector <= BOOT_LOADER_SECTORS && size >= 0; Sector++)
 	{
 		Disc->Write(Sector, ptr, 512);
-		FLoaderSectors++;
 		ptr += 512;
 		size -= 512;
 	}
-
-	delete BootLoader;
 }
 
 /*##########################################################################
@@ -255,6 +264,8 @@ int TInitHdCommand::Execute(char *param)
 	int SectorsPerCyl;
 	int Heads;
 	TDisc *Disc;
+	TDiscPartition *DiscPart;
+	int ok;
 
 	InitOptions();
 
@@ -263,9 +274,37 @@ int TInitHdCommand::Execute(char *param)
 
 	if (sscanf(param, "%d", &DiscNr) == 1)
 	{
-	    Disc = new TDisc(DiscNr);
-	    if (Disc->IsValid())
-	    {
+		Disc = new TDisc(DiscNr);
+		ok = Disc->IsValid();
+
+		if (ok)
+		{
+			LoadBootLoader(Disc);
+
+			DiscPart = new TDiscPartition(Disc);
+			if (DiscPart->PartArr[0])
+				if (DiscPart->PartArr[0]->Start <= FLoaderSectors + 1)
+					ok = FALSE;
+			delete DiscPart;
+
+			if (!ok)
+			{
+				FMsg.printf(TEXT_INITHD_AVAIL_ERROR, DiscNr);
+				Write(FMsg.GetData());
+				return 0;
+			}
+
+		}
+		else
+		{
+			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);
+			Write(FMsg.GetData());
+			return 0;
+		}
+            
+
+        if (ok)
+        {            		
     	    WriteBootLoader(Disc);
     	    WriteBootSector(Disc);
     	    return 0;

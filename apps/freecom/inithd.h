@@ -45,6 +45,7 @@ class TInitHdCommand : public TCommand
 {
 public:
 	TInitHdCommand(const char *param);
+	virtual ~TInitHdCommand();
 
 	virtual int Execute(char *param);	
 
@@ -52,11 +53,14 @@ protected:
     void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
+    void LoadBootLoader(TDisc *Disc);
 	void WriteBootSector(TDisc *Disc);
 	void WriteBootLoader(TDisc *Disc);
 
     int FLoaderSectors;
 	int FOptR;
+	char *FBootLoader;
+	int FLoaderSize;
 };
 
 #endif

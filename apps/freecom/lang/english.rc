@@ -704,7 +704,8 @@ STRINGTABLE
  955, "INITHD /R disc\r\n";
  956, "  disc            Disc number\r\n";
  957, "  /R              Make RDOS normal boot as default\r\n";
- 958, "'%s' kan inte ha n†gra parametrar\r\n";
+ 958, "Not enough free sectors at the begining of disc %d\r\n";
+ 959, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "256,1";
  TEXT_ERROR_INVALID_LSWITCH, "257,1";
  TEXT_ERROR_ILLFORMED_OPTION, "258,1";
@@ -957,5 +958,6 @@ STRINGTABLE
  TEXT_CMDHELP_MKPART, "943,9";
  TEXT_MKPART_ERROR, "952,1";
  TEXT_CMDHELP_INITHD, "953,5";
+ TEXT_INITHD_AVAIL_ERROR, "958,1";
 }
 

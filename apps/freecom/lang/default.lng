@@ -1550,3 +1550,7 @@ INITHD /R disc
   disc            Disc number
   /R              Make RDOS normal boot as default
 .
+
+:TEXT_INITHD_AVAIL_ERROR
+Not enough free sectors at the begining of disc %d
+.
