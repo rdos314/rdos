@@ -56,9 +56,9 @@ protected:
     void InitOptions();
 
 	void Add(TString &path);
-	void WriteDetailed(TDirEntry *entry);
+	void WriteDetailed(const TDirEntryData &entry);
 	void WriteDetailed();
-	void WriteWide(TDirEntry *entry);
+	void WriteWide(const TDirEntryData &entry);
 	void WriteWide();
 
 	TDirList FFileList;
@@ -68,6 +68,8 @@ protected:
 	int FCurrentCol;
     int FWidth;
 
+	int FRequired;
+    int FIgnored;
 	int FOptS;
 	int FOptP;
 	int FOptW;

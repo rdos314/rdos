@@ -38,8 +38,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define ATTR_DEFAULT FILE_ATTRIBUTE_READONLY | FILE_ATTRIBUTE_ARCHIVE | FILE_ATTRIBUTE_DIRECTORY
-#define ATTR_ALL	0x37;
+#define DEFAULT_SORT_ORDER "NG"
 
 /*##########################################################################
 #
@@ -88,7 +87,6 @@ TDirCommand::TDirCommand(const char *param)
   : TCommand(param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_DIR);
-	FEntryArr = 0;
 }
 
 /*##########################################################################
@@ -104,7 +102,6 @@ TDirCommand::TDirCommand(const char *param)
 ##########################################################################*/
 TDirCommand::~TDirCommand()
 {
-	FreeEntryArr();
 }
 
 /*##########################################################################
@@ -120,13 +117,10 @@ TDirCommand::~TDirCommand()
 ##########################################################################*/
 void TDirCommand::InitOptions()
 {
-	FAttrMask = 0;
-	FAttrMatch = 0;
-	FAttrMay = ATTR_DEFAULT;	
-
+    FRequired = 0;
+    FIgnored = FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM;
     FOptDirFirst = TRUE;
     FOptDirLast = FALSE;
-	FOptO = FALSE;
 	FOptS = FALSE;
 	FOptP = FALSE;
 	FOptW = FALSE;
@@ -147,17 +141,20 @@ void TDirCommand::InitOptions()
 ##########################################################################*/
 int TDirCommand::ScanAttr(const char *p)
 {
-    int attr;
-	int Required = 0;
-	int Ignored = 0;
+	int attr;
+	int done = FALSE;
 
+	FRequired = 0;
+	FIgnored = 0;
+	
 	if (p && *p)
 	{
-		for (--p;;)
+		p--;
+		while (!done)
 		{
 			switch (toupper(*++p))
 			{
-				case 'R': 
+				case 'R':
 					attr = FILE_ATTRIBUTE_READONLY;
 					break;
 
@@ -178,33 +175,30 @@ int TDirCommand::ScanAttr(const char *p)
 					break;
 
 				case 0:
-					FAttrMay &= ~FAttrMask | FAttrMatch;
-					return E_None;
+					done = TRUE;
+					break;
 
 				default:
 					OptError(p);
 					return E_Useage;
 			}
 
-			switch (p[-1])
+			if (!done)
 			{
-				case '-':
-				    Ignored |= attr;
-					break;
+				switch (p[-1])
+				{
+					case '-':
+						FIgnored |= attr;
+						break;
 
-				default:
-				    Required |= attr;
-					break;
-
+					default:
+						FRequired |= attr;
+						break;
+				}
 			}
 		}
 	}
 
-    FDirList.SetRequiredAttributes(Required);
-    FFileList.SetRequiredAttributes(Required);
-    FDirList.SetIgnoredAttributes(Ignored);
-    FFileList.SetIgnoredAttributes(Ignored);
-	
 	return E_None;
 }
 
@@ -401,14 +395,14 @@ int TDirCommand::OptScan(const char *optstr, int ch, int bool, const char *strar
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirCommand::WriteDetailed(TDirEntryData *entry)
+void TDirCommand::WriteDetailed(const TDirEntryData &entry)
 {
 	char str[31];
 	int size;
 	int i;
 
-	size = entry->EntryName.GetSize();
-	strncpy(str, entry->EntryName.GetData(), 30);
+	size = entry.EntryName.GetSize();
+	strncpy(str, entry.EntryName.GetData(), 30);
 
 	if (size < 30)
 	{
@@ -420,21 +414,21 @@ void TDirCommand::WriteDetailed(TDirEntryData *entry)
 
 	Write(str);
 
-	if (entry->Attribute & FILE_ATTRIBUTE_DIRECTORY)
+	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
 		Write("<DIR>         ");
 	else
-		WriteLong(entry->FileSize);
+		WriteLong(entry.FileSize);
 
 	Write("  ");
-	
-	sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d", 
-					entry->Time.GetYear(), 
-					entry->Time.GetMonth(), 
-					entry->Time.GetDay(), 
-					entry->Time.GetHour(), 
-					entry->Time.GetMin(), 
-					entry->Time.GetSec(), 
-					entry->Time.GetMilliSec());
+
+	sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d",
+					entry.Time.GetYear(),
+					entry.Time.GetMonth(),
+					entry.Time.GetDay(),
+					entry.Time.GetHour(),
+					entry.Time.GetMin(),
+					entry.Time.GetSec(),
+					entry.Time.GetMilliSec());
 	Write(str);
 	Write("\r\n");
 
@@ -442,7 +436,7 @@ void TDirCommand::WriteDetailed(TDirEntryData *entry)
 
 	if (FOptP && (FCurrentRow == 23))
 	{
-	    FCurrentRow = 0;
+		FCurrentRow = 0;
 		FMsg.Load(TEXT_MSG_PAUSE);
 		Write(FMsg.GetData());
 		RdosReadKeyboard();
@@ -462,7 +456,7 @@ void TDirCommand::WriteDetailed(TDirEntryData *entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TDirCommand::WriteWide(TDirEntryData *entry)
+void TDirCommand::WriteWide(const TDirEntryData &entry)
 {
 	int size;
 	int i;
@@ -474,17 +468,17 @@ void TDirCommand::WriteWide(TDirEntryData *entry)
 		Write("\r\n");
 	}
 
-	if (entry->Attribute & FILE_ATTRIBUTE_DIRECTORY)
+	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		size = entry->EntryName.GetSize() + 3;
+		size = entry.EntryName.GetSize() + 3;
 		Write("[");
-		Write(entry->EntryName.GetData());
+		Write(entry.EntryName.GetData());
 		Write("] ");
 	}
 	else
 	{
-		size = entry->EntryName.GetSize() + 1;
-		Write(entry->EntryName.GetData());
+		size = entry.EntryName.GetSize() + 1;
+		Write(entry.EntryName.GetData());
 		Write(" ");
 	}
 
@@ -495,7 +489,7 @@ void TDirCommand::WriteWide(TDirEntryData *entry)
 
 	if (FOptP && FCurrentCol == 0 && FCurrentRow == 23)
 	{
-	    FCurrentRow = 0;
+		FCurrentRow = 0;
 		FMsg.Load(TEXT_MSG_PAUSE);
 		Write(FMsg.GetData());
 		RdosReadKeyboard();
@@ -572,7 +566,7 @@ void TDirCommand::WriteWide()
     ok = FDirList.GotoFirst();
     while (ok)        
     {
-        size = FDirList.Get().GetEntryName.GetSize();
+		size = FDirList.Get().GetEntryName().GetSize();
 	    size += 2;
 
 		if (size > FWidth)
@@ -584,8 +578,8 @@ void TDirCommand::WriteWide()
     ok = FFileList.GotoFirst();
     while (ok)        
     {
-        size = FFileList.Get().GetEntryName.GetSize();
-        if (FFileList.Get().GetAttrib() & FILE_ATTRIBUTE_DIRECTORY)
+		size = FFileList.Get().GetEntryName().GetSize();
+        if (FFileList.Get().GetAttribute() & FILE_ATTRIBUTE_DIRECTORY)
 			size += 2;
 
 		if (size > FWidth)
@@ -670,6 +664,15 @@ int TDirCommand::Execute(char *param)
 
     if (FOptDirFirst || FOptDirLast)
     {
+        FFileList.SetRequiredAttributes(FRequired & (~FILE_ATTRIBUTE_DIRECTORY));
+        FFileList.SetIgnoredAttributes(FIgnored | FILE_ATTRIBUTE_DIRECTORY);
+		FDirList.SetRequiredAttributes(FRequired | FILE_ATTRIBUTE_DIRECTORY);
+		FDirList.SetIgnoredAttributes(FIgnored & (~FILE_ATTRIBUTE_DIRECTORY));
+    }
+    else
+    {
+        FFileList.SetRequiredAttributes(FRequired);
+        FFileList.SetIgnoredAttributes(FIgnored);
     }
     
 	if (arg)
@@ -683,8 +686,12 @@ int TDirCommand::Execute(char *param)
 	else
 		Add("*");
 
-    
-	Sort();
+
+    FFileList.RemoveDuplicates();
+    FDirList.RemoveDuplicates();
+
+    FFileList.Sort();
+    FDirList.Sort();
 
 	if (FOptW)
 		WriteWide();

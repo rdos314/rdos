@@ -30,7 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
-#include "filelist.h"
+#include "direntry.h"
 
 class TCopyFactory : public TCommandFactory
 {
@@ -60,7 +60,7 @@ protected:
 	int CopyFiles();
 	int AppendFiles();
 
-	TFileList FSrcFiles;
+	TDirList FSrcFiles;
 	TPathName *FDest;
 
 	int FOptY;

@@ -140,7 +140,7 @@ public:
 	TDirList &operator^=(const TDirList &l);
 	TDirEntry &operator[] (int pos);
 
-	TDirEntry &Get();
+	TDirEntry &Get() const;
 
 	void Add(const char *PathName);
     void Add(const TString &PathName);

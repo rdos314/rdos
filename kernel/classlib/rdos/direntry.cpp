@@ -391,7 +391,7 @@ const TDateTime &TDirEntry::GetTime() const
 ##########################################################################*/
 int TDirEntry::Compare(const TDirEntry &n2) const
 {
-    return TShareObject::Compare(n2);
+    return FEntry->EntryName.Compare(n2.FEntry->EntryName);
 }
 
 /*##########################################################################
@@ -733,7 +733,6 @@ TDirList::TDirList()
   : FPathName("")
 {
 	SetDefaultAttributes();
-	DoSearch();
 }
 
 /*##########################################################################
@@ -822,6 +821,27 @@ TDirList::TDirList(const TDirList &source)
 ##########################################################################*/
 TDirList::~TDirList()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDirList::Get
+#
+#   Purpose....: Get dir entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry &TDirList::Get() const
+{
+	TDirListNode *p = (TDirListNode *)FCurrPos;
+
+	if (p && p->IsValid())
+	    return p->Get();
+	else
+    	return EmptyDir;
 }
 
 /*##########################################################################

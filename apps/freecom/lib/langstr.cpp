@@ -143,7 +143,7 @@ void TLangString::Load(int ID)
 		for (i = start; i < start + count; i++)
 			size += RdosReadResource(FHandle, i, str, 256);
 
-		AllocBuffer(size);
+		AllocBuffer(size + 1);
 
 		ptr = FBuf;
 		for (i = start; i < start + count; i++)
@@ -155,6 +155,7 @@ void TLangString::Load(int ID)
 				ptr += size;
 			}
 		}
+		*ptr = 0;
 	}
 	else
 	{
@@ -162,6 +163,7 @@ void TLangString::Load(int ID)
 		size = strlen(str);
 		AllocBuffer(size);
 		memcpy(FBuf, str, size);
+		*(FBuf+size) = 0;
 	}
 
 }

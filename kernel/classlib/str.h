@@ -69,8 +69,9 @@ public:
 
 	void ConcatCopy(const char *str1, int len1, const char *str2, int len2);
 
-protected:
     virtual int Compare(const TString &str) const;
+
+protected:
     
 	virtual char Upper(char ch); 
 	virtual char Lower(char ch); 

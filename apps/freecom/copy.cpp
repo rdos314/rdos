@@ -258,20 +258,20 @@ int TCopyCommand::AppendFile(TString &Src, TString &Dest)
 ##########################################################################*/
 int TCopyCommand::CopyFiles()
 {
-	TDirEntry *entry;
-	int result;
-
-	entry = FSrcFiles.GotoFirst();
-	while (entry)
+	int ok;
+    int result;
+	
+	ok = FSrcFiles.GotoFirst();
+	while (ok)
 	{
 		TPathName path(*FDest);
-		path += entry->EntryName;
-		result = CopyFile(entry->PathName.Get(), path.Get());
+		path += FSrcFiles.Get().GetEntryName();
+		result = CopyFile(FSrcFiles.Get().GetPathName().Get(), path.Get());
 		if (result)
 			return result;
-		entry = FSrcFiles.GotoNext();
+	    else
+			ok = FSrcFiles.GotoNext();
 	}
-
 	return 0;
 }
 
@@ -288,21 +288,19 @@ int TCopyCommand::CopyFiles()
 ##########################################################################*/
 int TCopyCommand::AppendFiles()
 {
-	TDirEntry *entry;
-	TString file;
-
-	entry = FSrcFiles.GotoFirst();
-	file = entry->PathName.Get();
-
-	if (entry)
+	int ok;
+	
+	ok = FSrcFiles.GotoFirst();
+	if (ok)
 	{
-		CopyFile(entry->PathName.Get(), FDest->Get());
-		entry = FSrcFiles.GotoNext();
-		while (entry)
+		CopyFile(FSrcFiles.Get().GetPathName().Get(), FDest->Get());
+
+		while (ok)
 		{
-			AppendFile(entry->PathName.Get(), FDest->Get());
-			entry = FSrcFiles.GotoNext();
-		}
+    		ok = FSrcFiles.GotoNext();
+    		if (ok)
+    			AppendFile(FSrcFiles.Get().GetPathName().Get(), FDest->Get());
+    	}
 	}
 	return 0;
 }
@@ -320,33 +318,10 @@ int TCopyCommand::AppendFiles()
 ##########################################################################*/
 int TCopyCommand::AddSrc(TArg *arg)
 {
-	int count;
-	TDir *dir;
-	TDirEntry entry;
-
-	count = 0;
-	dir = new TDir(arg->FName);
-	entry = dir->GotoFirst();
-	while (entry.Valid)
-	{
-		if (!(entry.Attribute & FILE_ATTRIBUTE_DIRECTORY))
-		{
-			count++;
-			FSrcFiles.Add(entry);
-		}
-		entry = dir->GotoNext();
-	}
-
-	if (count == 0)
-	{
-		FMsg.printf(TEXT_ERROR_SFILE_NOT_FOUND, dir->FSearchString.GetData());
-		Write(FMsg.GetData());
-		delete dir;
-		return FALSE;
-	}
-
-	delete dir;
-	return TRUE;
+	TPathName path(arg->FName);
+	FSrcFiles.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
+	FSrcFiles.Add(path);
+	return TRUE;	
 }
 
 /*##########################################################################
@@ -410,6 +385,8 @@ int TCopyCommand::Execute(char *param)
 			arg = arg->FList;
 		}
 	}
+
+    FSrcFiles.RemoveDuplicates();
 
 	if (FDest)
 	{

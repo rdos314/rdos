@@ -114,7 +114,7 @@ TCommand *TEraseFactory::Create(const char *param)
 TDelCommand::TDelCommand(const char *param)
   : TCommand(param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_COPY);
+	FHelpScreen.Load(TEXT_CMDHELP_DEL);
 }
 
 /*##########################################################################
@@ -232,12 +232,12 @@ int TDelCommand::Add(TArg *arg)
 	if (path.IsDir() && !FOptP)
 	{
 		if (FMsg.UserPrompt(PROMPT_DELETE_ALL, arg->FName.GetData()) != 1)
-			return 0;
+			return FALSE;
 	}
 
 	FFileList.SetIgnoredAttributes(FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_SYSTEM | FILE_ATTRIBUTE_HIDDEN);
 	FFileList.Add(path);
-	return 1;
+	return TRUE;
 }
 
 /*##########################################################################
@@ -272,7 +272,7 @@ int TDelCommand::Execute(char *param)
 			return 1;
 		else
 		{
-			if (Add(arg))
+			if (!Add(arg))
 				return 1;
 
 			arg = arg->FList;
