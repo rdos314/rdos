@@ -374,8 +374,6 @@ write_stg	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume gs:tss_seg
-
 write_dword_reg	PROC near
 	push cx
 	mov ah,cl
@@ -410,8 +408,6 @@ write_dword_reg	ENDP
 ;						GS		TSS
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	assume gs:tss_seg
 
 write_word_reg	PROC near
 	push cx
@@ -559,8 +555,6 @@ write_fault	ENDP
 ;						ES		Readable GDT
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	assume ds:tss_seg
 
 error_code_tab:
 ke00	DB 'Divide error            '
@@ -756,13 +750,11 @@ abort_task:
 	xor dx,dx
 	mov ax,system_data_sel
 	mov ds,ax
-		assume ds:system_seg
 	mov si,OFFSET debug_list
 remove_next_waiting:
 	mov ax,[si]
 	or ax,ax
 	jz abort_system
-		assume ds:thread_seg,es:thread_seg
 	push si
 	mov es,[si]
 	push di
@@ -772,9 +764,9 @@ remove_next_waiting:
 	mov [si],di
 	mov si,es:p_next
 	mov ds,di
-	mov p_next,si
+	mov ds:p_next,si
 	mov ds,si
-	mov p_prev,di
+	mov ds:p_prev,di
 	pop ds
 	pop di
 	pop si

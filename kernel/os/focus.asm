@@ -107,7 +107,6 @@ init	PROC far
 	mov eax,SIZE focus_seg
 	AllocateFixedSystemMem
 	mov es,bx
-		assume es:focus_seg
 	mov di,OFFSET focus_thread
 	mov cx,256
 	xor ax,ax
@@ -471,12 +470,10 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:focus_seg
-
 trap_enable_focus	PROC near
 	mov ax,focus_sel
 	mov ds,ax
-	mov cl,enable_focus_hooks
+	mov cl,ds:enable_focus_hooks
 	or cl,cl
 	je trap_enable_focus_done
 	mov bx,OFFSET enable_focus_arr
@@ -508,10 +505,8 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:focus_seg
-
 trap_lost_focus	PROC near
-	mov cl,lost_focus_hooks
+	mov cl,ds:lost_focus_hooks
 	or cl,cl
 	je trap_lost_focus_done
 	mov bx,OFFSET lost_focus_arr
@@ -543,10 +538,8 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:focus_seg
-
 trap_got_focus	PROC near
-	mov cl,got_focus_hooks
+	mov cl,ds:got_focus_hooks
 	or cl,cl
 	je trap_got_focus_done
 	mov bx,OFFSET got_focus_arr
@@ -580,15 +573,13 @@ PAGE
 
 hook_enable_focus_name	DB 'Hook Enable Focus',0
 
-	assume ds:focus_seg
-
 hook_enable_focus	PROC far
 	push ds
 	push ax
 	push bx
 	mov ax,focus_sel
 	mov ds,ax
-	mov al,enable_focus_hooks
+	mov al,ds:enable_focus_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -596,7 +587,7 @@ hook_enable_focus	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov enable_focus_hooks,al
+	mov ds:enable_focus_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -618,15 +609,13 @@ PAGE
 
 hook_lost_focus_name	DB 'Hook Lost Focus',0
 
-	assume ds:focus_seg
-
 hook_lost_focus	PROC far
 	push ds
 	push ax
 	push bx
 	mov ax,focus_sel
 	mov ds,ax
-	mov al,lost_focus_hooks
+	mov al,ds:lost_focus_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -634,7 +623,7 @@ hook_lost_focus	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov lost_focus_hooks,al
+	mov ds:lost_focus_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -656,15 +645,13 @@ PAGE
 
 hook_got_focus_name	DB 'Hook Got Focus',0
 
-	assume ds:focus_seg
-
 hook_got_focus	PROC far
 	push ds
 	push ax
 	push bx
 	mov ax,focus_sel
 	mov ds,ax
-	mov al,got_focus_hooks
+	mov al,ds:got_focus_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -672,7 +659,7 @@ hook_got_focus	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov got_focus_hooks,al
+	mov ds:got_focus_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -704,18 +691,18 @@ set_focus	PROC far
 	xor bh,bh
 	mov bl,al
 	add bx,bx
-	mov ax,[bx].focus_thread
+	mov ax,ds:[bx].focus_thread
 	or ax,ax
 	jz set_focus_done
 	mov bx,ax
-	cmp focus_switched,0
+	cmp ds:focus_switched,0
 	jz set_focus_no_lost
 	push bx
 	call trap_lost_focus
 	pop bx
 set_focus_no_lost:
-	mov focus_switched,1
-	mov focus_current_thread,bx
+	mov ds:focus_switched,1
+	mov ds:focus_current_thread,bx
 	mov ds,bx
 	mov eax,cr3
 	push eax
@@ -761,8 +748,6 @@ PAGE
 
 enable_focus_name	DB 'Enable Focus',0
 
-	assume ds:focus_seg
-
 enable_focus	PROC far
 	push ds
 	push es
@@ -776,10 +761,10 @@ enable_focus	PROC far
 	add bx,bx
 
 enable_focus_loop:
-	cmp [bx].focus_thread,0
+	cmp ds:[bx].focus_thread,0
 	jne enable_focus_next
 ;
-	mov [bx].focus_thread,ax
+	mov ds:[bx].focus_thread,ax
 	jmp enable_focus_done
 
 enable_focus_next:

@@ -316,7 +316,6 @@ init_pre_tasking	PROC near
 ;
 	call AllocateRam
 	mov cr3,esi
-		assume es:thread_seg
 	mov es:p_thread_sel,es
 	mov es:p_tss_sel,kernel_tss
 	mov es:p_tss_data_sel,0
@@ -343,15 +342,13 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:system_seg
-
 init_boot_system	PROC near
 	mov ax,system_data_sel
 	mov ds,ax
 	xor ax,ax
-	mov debug_list,ax
-	mov math_tss,ax
-	mov check_point,0
+	mov ds:debug_list,ax
+	mov ds:math_tss,ax
+	mov ds:check_point,0
 	ret
 init_boot_system	ENDP
 

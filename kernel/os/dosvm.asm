@@ -423,11 +423,10 @@ country_data	PROC far
 	stosb
 	mov ax,dos_vm_sel
 	mov ds,ax
-		assume ds:dos_vm_seg
 	mov ax,OFFSET case_map
 	sub ax,OFFSET doscallback_start
 	stosw
-	mov ax,dos_callback_seg
+	mov ax,ds:dos_callback_seg
 	stosw
 	mov al,','
 	stosw
@@ -545,11 +544,10 @@ extended_country_general:
 	add dx,4
 	mov ax,dos_vm_sel
 	mov ds,ax
-		assume ds:dos_vm_seg
 	mov ax,OFFSET case_map
 	sub ax,OFFSET doscallback_start
 	stosw
-	mov ax,dos_callback_seg
+	mov ax,ds:dos_callback_seg
 	stosw
 ;
 	sub cx,2
@@ -581,11 +579,10 @@ extended_country_ucase:
 ;
 	mov ax,dos_vm_sel
 	mov ds,ax
-		assume ds:dos_vm_seg
 	mov ax,OFFSET ucase_tab
 	sub ax,OFFSET doscallback_start
 	stosw
-	mov ax,dos_callback_seg
+	mov ax,ds:dos_callback_seg
 	stosw
 ;	
 	pop di
@@ -606,11 +603,10 @@ extended_country_file_ucase:
 ;
 	mov ax,dos_vm_sel
 	mov ds,ax
-		assume ds:dos_vm_seg
 	mov ax,OFFSET file_ucase_tab
 	sub ax,OFFSET doscallback_start
 	stosw
-	mov ax,dos_callback_seg
+	mov ax,ds:dos_callback_seg
 	stosw
 ;	
 	pop di
@@ -631,11 +627,10 @@ extended_country_collate:
 ;
 	mov ax,dos_vm_sel
 	mov ds,ax
-		assume ds:dos_vm_seg
 	mov ax,OFFSET collate_tab
 	sub ax,OFFSET doscallback_start
 	stosw
-	mov ax,dos_callback_seg
+	mov ax,ds:dos_callback_seg
 	stosw
 ;	
 	pop di
@@ -949,8 +944,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume es:psp_seg
-
 create_handle	PROC far
 	push di
 	call get_prot_psp
@@ -1143,8 +1136,6 @@ PAGE
 ;						AL				ACCESS CODE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	assume es:psp_seg
 
 open_handle	PROC far
 	push cx

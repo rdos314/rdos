@@ -44,8 +44,7 @@ INCLUDE system.inc
 
 code	SEGMENT byte public use32 'CODE'
 
-	assume cs:code,ds:dpmi_data_seg
-	
+	assume cs:code	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

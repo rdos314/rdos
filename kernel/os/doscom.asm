@@ -309,8 +309,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:dos_vm_seg
-
 	public control_c_check
 
 control_c_check	PROC far
@@ -323,10 +321,10 @@ control_c_check	PROC far
 	mov al,0FFh
 	jmp control_c_done
 control_c_get:
-	mov dl,control_c_flag
+	mov dl,ds:control_c_flag
 	jmp control_c_done
 control_c_set:
-	mov control_c_flag,dl
+	mov ds:control_c_flag,dl
 control_c_done:
 	mov bx,[bp].vm_ebx
 	ret

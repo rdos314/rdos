@@ -29,7 +29,7 @@
 
 INCLUDE ..\os\kdebug.def
 
-	assume cs:code,ds:debug_seg
+	assume cs:code
 
 code	SEGMENT byte public 'CODE'
 

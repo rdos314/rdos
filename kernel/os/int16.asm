@@ -78,7 +78,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn allocate_switch_stack:near
 	extrn allocate_locked_stack16:near
 
-	assume cs:code,ds
+	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -694,8 +694,6 @@ sim16_end	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:pint_seg
-
 sim16_begin:
 	push ds
 	push es
@@ -715,7 +713,7 @@ sim16_begin:
 sim_no_cli:
 	mov bx,thread_int_sel
 	mov ds,bx
-	mov bx,pint_locked_stack
+	mov bx,ds:pint_locked_stack
 	or bx,bx
 	jnz sim_int_save_pm
 	call allocate_switch_stack
@@ -757,12 +755,12 @@ sim_int_save_pm:
 	push ds
 	mov ax,thread_int_sel
 	mov ds,ax
-	mov edx,pint_real_stack
+	mov edx,ds:pint_real_stack
 	or edx,edx
 	jnz sim_int_stack_ok
 	mov eax,210h
 	AllocateVMLinear
-	mov pint_real_stack,edx
+	mov ds:pint_real_stack,edx
 sim_int_stack_ok:
 	mov eax,edx
 	shr eax,4
@@ -980,7 +978,7 @@ vm_callback16:
 ;
 	mov bx,thread_int_sel
 	mov ds,bx
-	mov bx,pint_locked_stack
+	mov bx,ds:pint_locked_stack
 	or bx,bx
 	jnz vm_callback_do
 	call allocate_switch_stack
@@ -1051,7 +1049,7 @@ pm_callback16:
 	push es:[di].vcs_ip
 	mov bx,thread_int_sel
 	mov ds,bx
-	mov ds,pint_locked_stack
+	mov ds,ds:pint_locked_stack
 	xor bx,bx
 	mov si,[bx]
 	add si,8

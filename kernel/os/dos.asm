@@ -1298,25 +1298,23 @@ init	PROC far
 	CreateDataSelector16
 ;
 	mov ds,bx
-		assume ds:dos_vm_seg
-	mov indos_flag,0
-	mov critical_flag,0
-	mov control_c_flag,1
+	mov ds:indos_flag,0
+	mov ds:critical_flag,0
+	mov ds:control_c_flag,1
 	mov ax,system_data_sel
 	mov es,ax
-		assume es:system_seg
-	mov dos_first_dpb,-1
-	mov dos_first_dpb+2,-1
-	mov dos_first_sft,-1
-	mov dos_first_sft+2,-1
-	mov dos_clock,-1
-	mov dos_clock+2,-1
-	mov dos_con,-1
-	mov dos_con+2,-1
+	mov ds:dos_first_dpb,-1
+	mov ds:dos_first_dpb+2,-1
+	mov ds:dos_first_sft,-1
+	mov ds:dos_first_sft+2,-1
+	mov ds:dos_clock,-1
+	mov ds:dos_clock+2,-1
+	mov ds:dos_con,-1
+	mov ds:dos_con+2,-1
 	pop edx
 	mov edi,edx
 	shr edx,4
-	mov dos_callback_seg,dx
+	mov ds:dos_callback_seg,dx
 	mov ax,cs
 	mov ds,ax
 	mov ax,flat_sel

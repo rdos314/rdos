@@ -42,7 +42,7 @@ INCLUDE dpmi.inc
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:dpmi_data_seg
+	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

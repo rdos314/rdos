@@ -354,5 +354,8 @@ stop_com_port_nr            EQU 259
 start_keyboard_nr			EQU 260
 stop_keyboard_nr			EQU 261
 
-osgate_entries				EQU 262
+start_floppy_nr				EQU 262
+stop_floppy_nr				EQU 263
+
+osgate_entries				EQU 264
 

@@ -83,7 +83,7 @@ device_process_seg	ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:device_seg
+	assume cs:code
 
 PAGE
 
@@ -103,8 +103,6 @@ PAGE
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 register_device_name	DB 'Register Device',0
-
-	assume es:device_seg
 
 register_device	PROC far
 	push ds
@@ -223,10 +221,9 @@ find_device	PROC far
 ;
 	mov ax,dosdev_data_sel
 	mov ds,ax
-		assume ds:device_seg
 	mov bx,OFFSET char_tab
 	mov si,OFFSET devices
-	mov cx,device_last
+	mov cx,ds:device_last
 	sub cx,si
 	shr cx,4
 
@@ -337,7 +334,7 @@ cache_dir	PROC far
 	mov es,ax
 ;
 	mov esi,OFFSET devices
-	mov cx,device_last
+	mov cx,ds:device_last
 	sub cx,si
 	shr cx,4
 
@@ -466,7 +463,6 @@ read_file	PROC far
 	mov bx,[ebx].devfe_data
 	mov ax,dosdev_data_sel
 	mov ds,ax
-		assume ds:device_seg
 	push [bx].device_code
 	push [bx].device_read
 	ret
@@ -498,7 +494,6 @@ write_file	PROC far
 	mov bx,[ebx].devfe_data
 	mov ax,dosdev_data_sel
 	mov ds,ax
-		assume ds:device_seg
 	push [bx].device_code
 	push [bx].device_write
  	ret
@@ -1149,7 +1144,6 @@ con_io	PROC near
 	mov esi,edi
 	mov ax,dosdev_process_sel
 	mov ds,ax
-		assume ds:device_process_seg
 con_io_loop:
 	ReadKeyboard
 	movzx bx,al
@@ -1238,9 +1232,8 @@ con_read_line	PROC near
 	push edi
 	mov ax,dosdev_process_sel
 	mov es,ax
-		assume es:device_process_seg
 	mov edi,OFFSET con_buf
-	mov con_buf_start,di
+	mov ds:con_buf_start,di
 	mov ecx,256
 	call con_io
 	add di,ax
@@ -1248,7 +1241,7 @@ con_read_line	PROC near
 	mov al,0Ah
 	stosb
 	WriteChar
-	mov con_buf_end,di
+	mov ds:con_buf_end,di
 	pop edi
 	pop ecx
 	pop es
@@ -1262,15 +1255,14 @@ con_read	PROC far
 	push edi
 	mov ax,dosdev_process_sel
 	mov ds,ax
-		assume ds:device_process_seg
-	movzx esi,con_buf_start
-	movzx eax,con_buf_end
+	movzx esi,ds:con_buf_start
+	movzx eax,ds:con_buf_end
 	sub eax,esi
 	or eax,eax
 	jnz con_read_do
 	call con_read_line
-	movzx esi,con_buf_start
-	movzx eax,con_buf_end
+	movzx esi,ds:con_buf_start
+	movzx eax,ds:con_buf_end
 	sub eax,esi
 con_read_do:
 	pop edi
@@ -1284,15 +1276,15 @@ con_read_all:
 	rep movs byte ptr es:[edi],[esi]
 	pop edi
 	pop ecx
-	mov con_buf_start,OFFSET con_buf
-	mov con_buf_end,OFFSET con_buf
+	mov ds:con_buf_start,OFFSET con_buf
+	mov ds:con_buf_end,OFFSET con_buf
 	jmp con_read_done
 con_read_partial:
 	push ecx
 	push edi
 	mov eax,ecx
 	rep movs byte ptr es:[edi],[esi]
-	mov con_buf_start,si
+	mov ds:con_buf_start,si
 	pop edi
 	pop ecx
 con_read_done:
@@ -1331,9 +1323,8 @@ init_device_process	PROC far
 	pusha
 	mov ax,dosdev_process_sel
 	mov ds,ax
-		assume ds:device_process_seg
-	mov con_buf_start,OFFSET con_buf
-	mov con_buf_end,OFFSET con_buf
+	mov ds:con_buf_start,OFFSET con_buf
+	mov ds:con_buf_end,OFFSET con_buf
 ;
 	mov ax,cs
 	mov es,ax
@@ -1464,7 +1455,6 @@ init	PROC far
 	shr edx,4
 	mov ax,dosdev_data_sel
 	mov es,ax
-		assume es:device_seg
 	mov es:device_chain,dx
 	mov ax,cs
 	mov ds,ax

@@ -1852,3 +1852,11 @@ StartKeyboard	MACRO
 StopKeyboard	MACRO
 	OsGate stop_keyboard_nr
 					ENDM
+
+StartFloppy	MACRO
+	OsGate start_floppy_nr
+					ENDM
+
+StopFloppy	MACRO
+	OsGate stop_floppy_nr
+					ENDM

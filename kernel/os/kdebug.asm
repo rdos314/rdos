@@ -78,7 +78,7 @@ code	SEGMENT byte use16 public 'CODE'
 	extrn dis_ass_one:near
 	extrn float_to_string:near
 
-	assume cs:code,ds:debug_seg
+	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -382,15 +382,12 @@ WriteEflags	PROC near
 	mov ax,gs:tss_eflags
 	push ds
 	mov ds,gs:tss_thread
-		assume ds:thread_seg
-	mov ds,p_process_sel
-		assume ds:process_seg
+	mov ds,ds:p_process_sel
 	and ax,NOT 200h
-	mov bx,ms_virt_flags
+	mov bx,ds:ms_virt_flags
 	and bx,200h
 	or ax,bx
 	pop ds
-		assume ds:debug_seg
 	mov di,OFFSET eflags_tab
 	mov cx,19
 eflags_loop:
@@ -747,11 +744,11 @@ WriteData	PROC near
 	push ds
 	mov ax,kdebug_data_sel
 	mov ds,ax
-	mov al,data_good
+	mov al,ds:data_good
 	or al,al
 	jz data_no_good
-	mov ax,data_sel
-	mov ebx,data_off
+	mov ax,ds:data_sel
+	mov ebx,ds:data_off
 	call WriteDataRow
 	jmp data_next
 data_no_good:
@@ -781,7 +778,6 @@ data_next:
 	call NewLine
 ;
 	mov es,gs:tss_thread
-		assume es:thread_seg
 	push gs:tss_eflags+2
 	mov gs:tss_eflags+2,0
 	mov ax,es:p_pm_deb_sel
@@ -1072,7 +1068,7 @@ write_illegal_osgate:
 	shl ax,3
 	mov bx,ax
 	call GetIllegalOsGate
-	mov op_size,bx
+	mov ds:op_size,bx
 	clc
 	jmp write_special_end
 
@@ -1084,7 +1080,7 @@ write_illegal_usergate:
 	shl eax,5
 	mov ebx,eax
 	call GetIllegalUserGate
-	mov op_size,bx
+	mov ds:op_size,bx
 	clc
 	jmp write_special_end
 
@@ -1106,7 +1102,7 @@ not_illegal_op:
 	shl eax,5
 	mov ebx,eax
 	call GetIllegalUserGate
-	mov op_size,bx
+	mov ds:op_size,bx
 	clc
 	jmp write_special_end
 	
@@ -1114,26 +1110,26 @@ not_call32:
 	mov bx,[si+1]
 	mov dx,[si+5]
 	call GetOsCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jnc write_special_end
 ;
 	mov bx,[si+1]
 	mov dx,[si+5]
 	call GetUserCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jmp write_special_end
 
 write_call_far16:
 	mov bx,[si+1]
 	mov dx,[si+3]
 	call GetOsCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jnc write_special_end
 ;
 	mov bx,[si+1]
 	mov dx,[si+3]
 	call GetUserCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jmp write_special_end
 
 not_call_far:
@@ -1148,7 +1144,7 @@ not_call_far:
 	add ebx,dword ptr gs:tss_eip
 	add ebx,5
 	call GetUserCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jmp write_special_end
 	
 write_call_near16:
@@ -1157,7 +1153,7 @@ write_call_near16:
 	add bx,gs:tss_eip
 	add bx,3
 	call GetOsCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jnc write_special_end
 ;
 	mov bx,[si+1]
@@ -1165,7 +1161,7 @@ write_call_near16:
 	add bx,gs:tss_eip
 	add bx,3
 	call GetUserCall
-	mov op_size,bx
+	mov ds:op_size,bx
 	jmp write_special_end
 
 write_special_fail:
@@ -1556,48 +1552,46 @@ WriteCpu	ENDP
 ;						Uses all registers
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-		
-	assume ds:debug_seg
 
 	public ds_sel
 ds_sel	PROC near
 	mov ax,gs:tss_ds
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 ds_sel	ENDP
 
 	public ss_sel
 ss_sel	PROC near
 	mov ax,gs:tss_ss
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 ss_sel	ENDP
 
 	public cs_sel
 cs_sel	PROC near
 	mov ax,gs:tss_cs
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 cs_sel	ENDP
 
 	public es_sel
 es_sel	PROC near
 	mov ax,gs:tss_es
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 es_sel	ENDP
 
 	public fs_sel
 fs_sel	PROC near
 	mov ax,gs:tss_fs
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 fs_sel	ENDP
 
 	public gs_sel
 gs_sel	PROC near
 	mov ax,gs:tss_gs
-	mov data_sel,ax
+	mov ds:data_sel,ax
 	ret
 gs_sel	ENDP
 
@@ -1678,8 +1672,6 @@ esp_adr	PROC near
 	mov eax,dword ptr gs:tss_esp
 	ret
 esp_adr	ENDP
-	
-	assume ds:tss_seg
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1868,8 +1860,6 @@ interact_set_value	ENDP
 ;						DX:ESI		Adress to data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	assume gs:tss_seg
 
 incdec	PROC near
 	mov fs,dx
@@ -2243,7 +2233,6 @@ mem_pm	PROC near
 	push gs:tss_eflags+2
 	mov gs:tss_eflags+2,0
 	mov es,gs:tss_thread
-		assume es:thread_seg
 	mov dx,es:p_pm_deb_sel
 	mov esi,es:p_pm_deb_offs
 	call mem_do
@@ -2294,7 +2283,6 @@ mem_vm	PROC near
 	push gs:tss_eflags+2
 	mov gs:tss_eflags+2,2
 	mov es,gs:tss_thread
-		assume es:thread_seg
 	mov dx,es:p_vm_deb_sel
 	mov esi,es:p_vm_deb_offs
 	call mem_do
@@ -2580,9 +2568,6 @@ pace_sw	PROC near
 	ret
 pace_sw	ENDP
 
-	assume ds:debug_seg
-	assume gs:tss_seg
-
 reg_sw	PROC near
 	mov es,gs:tss_thread
 	mov gs,es:p_tss_data_sel
@@ -2594,8 +2579,6 @@ next_sw	PROC near
 	DebugNext
 	ret
 next_sw	ENDP
-
-	assume ds:tss_seg
 
 error_sw	PROC near
 	ret
@@ -2617,17 +2600,17 @@ virt_sw_run	PROC near
 	mov [bx+6],dx	
 	pop ds
 	mov ax,[bp].vm_ebx
-	xchg ax,tss_eip
-	xchg bx,tss_cs
+	xchg ax,ds:tss_eip
+	xchg bx,ds:tss_cs
 	push es
 	push bx
-	mov bx,tss_ss
+	mov bx,ds:tss_ss
 	mov es,bx
 	pop bx
 	xor edx,edx
-	mov dx,tss_esp
+	mov dx,ds:tss_esp
 	sub dx,4
-	mov tss_esp,dx
+	mov ds:tss_esp,dx
 	mov es:[edx],ax
 	mov es:[edx+2],bx
 	pop es
@@ -2927,9 +2910,8 @@ no_wait_debug:
 	je debug_next 
 	mov ax,kdebug_data_sel
 	mov ds,ax
-		assume ds:debug_seg
 	mov si,OFFSET debug_list
-	mov cx,debug_thread
+	mov cx,ds:debug_thread
 	verr cx
 	jz debug_found
 	mov ax,system_data_sel
@@ -2937,7 +2919,7 @@ no_wait_debug:
 	mov cx,[si]
 	mov ax,kdebug_data_sel
 	mov ds,ax
-	mov debug_thread,cx
+	mov ds:debug_thread,cx
 	mov ax,[bp].vm_eax
 	mov al,'R'
 	mov [bp].vm_eax,ax
@@ -2961,8 +2943,7 @@ debug_error:
 	jmp debug_end
 debug_do:
 	mov ds,ax
-		assume ds:thread_seg,es:tss_seg
-	mov ax,p_tss_data_sel
+	mov ax,ds:p_tss_data_sel
 	mov ds,ax
 	mov gs,ax
 debug_next:

@@ -56,7 +56,7 @@ code	SEGMENT byte public 'CODE'
 
 .386c
 
-	assume cs:code,ds:debug_seg,es:debug_seg
+	assume cs:code
 
 	extrn main_tab:near
 	extrn mne_tab:near
@@ -189,35 +189,35 @@ PAGE
 
 calc_ads_offset	PROC near
 	push ax
-	mov bl,gaddr_mode
+	mov bl,ds:gaddr_mode
 	cmp bl,addr_32
 	je c_a_ad32
 c_a_ad16:
 	mov bx,OFFSET adr_16a_tab
 	cmp ax,18h
 	jae calc_out_o_r
-	mov data_good,1
+	mov ds:data_good,1
 	add ax,ax
 	add ax,ax
 	add bx,ax
 	call word ptr cs:[bx]
-	add data_off,eax
+	add ds:data_off,eax
 	call word ptr cs:[bx+2]
-	add data_off,eax
-	mov word ptr data_off+2,0
+	add ds:data_off,eax
+	mov word ptr ds:data_off+2,0
 	jmp calc_out_o_r
 c_a_ad32:
 	mov bx,OFFSET adr_32a_tab
 	cmp ax,18h
 	jae calc_out_o_r
-	mov data_good,1
+	mov ds:data_good,1
 	add ax,ax
 	add ax,ax
 	add bx,ax
 	call word ptr cs:[bx]
-	add data_off,eax
+	add ds:data_off,eax
 	call word ptr cs:[bx+2]
-	add data_off,eax
+	add ds:data_off,eax
 calc_out_o_r:
 	pop ax
 	ret
@@ -239,29 +239,29 @@ PAGE
 	extrn mod_rm_tab:near
 
 decode_mem_mode	PROC near
-	mov bl,gaddr_mode
+	mov bl,ds:gaddr_mode
 	mov bh,bl
 	add bl,bl
 	add bl,bh
-	mov al,data_mode
+	mov al,ds:data_mode
 	or al,al
 	je data_8_sel
-	add al,gdata_mode
+	add al,ds:gdata_mode
 data_8_sel:
-	mov edata_mode,al
+	mov ds:edata_mode,al
 	add bl,al
 	xor bh,bh
 	add bx,bx
 	add bx,OFFSET mod_rm_tab
 	mov ax,cs:[bx]
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	mov al,[si+1]
 	mov ah,al
 	and al,7
 	and ah,0C0h
 	cmp ah,0C0h
 	jne dec_mem_no_ignore
-	mov ignore_ptr,1
+	mov ds:ignore_ptr,1
 dec_mem_no_ignore:
 	shr ah,3
 	or al,ah
@@ -288,22 +288,22 @@ PAGE
 	extrn st_txt:near
 
 decode_math_mem	PROC near
-	mov bl,gaddr_mode
+	mov bl,ds:gaddr_mode
 	mov bh,bl
 	add bl,bl
 	add bl,bh
-	mov al,data_mode
+	mov al,ds:data_mode
 	or al,al
 	je mdata_8_sel
-	add al,gdata_mode
+	add al,ds:gdata_mode
 mdata_8_sel:
-	mov edata_mode,al
+	mov ds:edata_mode,al
 	add bl,al
 	xor bh,bh
 	add bx,bx
 	add bx,OFFSET mod_rm_tab
 	mov ax,cs:[bx]
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	mov al,[si+1]
 	mov ah,al
 	and al,7
@@ -348,19 +348,19 @@ PAGE
 	extrn reg_tab:near
 
 decode_reg	PROC near
-	mov bl,data_mode
+	mov bl,ds:data_mode
 	or bl,bl
 	je rdata_8_sel
-	add bl,gdata_mode
+	add bl,ds:gdata_mode
 rdata_8_sel:
 	xor bh,bh
 	add bx,bx
 	add bx,OFFSET reg_tab
 	mov cx,cs:[bx]
-	mov op_syntax,cx
+	mov ds:op_syntax,cx
 	and ax,38h
 	shr ax,3
-	mov ignore_ptr,1
+	mov ds:ignore_ptr,1
 	call decode_opcode
 	ret
 decode_reg	ENDP
@@ -408,9 +408,9 @@ PAGE
 
 override_cs	PROC near
 	mov ax,OFFSET cs_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -423,9 +423,9 @@ override_cs	ENDP
 
 override_ds	PROC near
 	mov ax,OFFSET ds_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -438,9 +438,9 @@ override_ds	ENDP
 
 override_ss	PROC near
 	mov ax,OFFSET ss_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -453,9 +453,9 @@ override_ss	ENDP
 
 override_es	PROC near
 	mov ax,OFFSET es_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -468,9 +468,9 @@ override_es	ENDP
 
 override_fs	PROC near
 	mov ax,OFFSET fs_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -483,9 +483,9 @@ override_fs	ENDP
 
 override_gs	PROC near
 	mov ax,OFFSET gs_txt
-	mov override,ax
+	mov ds:override,ax
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -505,7 +505,7 @@ op_byte	ENDP
 	public op_word
 
 op_word	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_w16
 op_w32:
@@ -523,20 +523,20 @@ op_word	ENDP
 	public op_word_mem
 
 op_word_mem	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_wm16
 op_wm32:
 	mov eax,[si+1]
-	mov data_good,1
-	mov data_off,eax
+	mov ds:data_good,1
+	mov ds:data_off,eax
 	call add_hex_dword
 	add si,4
 	ret
 op_wm16:	
 	movzx eax,word ptr [si+1]
-	mov data_good,1
-	mov data_off,eax
+	mov ds:data_good,1
+	mov ds:data_off,eax
 	call add_hex_word
 	add si,2
 	ret
@@ -552,7 +552,7 @@ op_short	PROC near
 	mov ah,0FFh
 not_op_back:
 	add ax,2
-	add ax,op_ads
+	add ax,ds:op_ads
 	call add_hex_word
 	add si,2
 	ret
@@ -561,20 +561,20 @@ op_short	ENDP
 	public op_near
 
 op_near	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_near16
 op_near32:
 	mov eax,[si+1]
 	add eax,3
-	add eax,dword ptr op_ads
+	add eax,dword ptr ds:op_ads
 	call add_hex_dword
 	add si,4
 	ret
 op_near16:	
 	mov ax,[si+1]
 	add ax,3
-	add ax,op_ads
+	add ax,ds:op_ads
 	call add_hex_word
 	add si,2
 	ret
@@ -583,20 +583,20 @@ op_near	ENDP
 	public op_near2
 
 op_near2	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_near16_2
 op_near32_2:
 	mov eax,[si+2]
 	add eax,4
-	add eax,dword ptr op_ads
+	add eax,dword ptr ds:op_ads
 	call add_hex_dword
 	add si,5
 	ret
 op_near16_2:	
 	mov ax,[si+2]
 	add ax,4
-	add ax,op_ads
+	add ax,ds:op_ads
 	call add_hex_word
 	add si,3
 	ret
@@ -605,7 +605,7 @@ op_near2	ENDP
 	public op_far
 
 op_far	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_far16
 op_far32:
@@ -616,7 +616,7 @@ op_far32:
 	add ax,kolon_sep
 	mov [di-2],ax
 	mov eax,[si+1]
-	add eax,dword ptr op_ads
+	add eax,dword ptr ds:op_ads
 	call add_hex_dword
 	add si,6
 	ret
@@ -652,8 +652,8 @@ op_enter	ENDP
 
 op_address_size	PROC near
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
-	xor gaddr_mode,1
+	mov ds:op_syntax,bx
+	xor ds:gaddr_mode,1
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -665,8 +665,8 @@ op_address_size	ENDP
 
 op_data_size	PROC near
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
-	xor gdata_mode,1
+	mov ds:op_syntax,bx
+	xor ds:gdata_mode,1
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -678,7 +678,7 @@ op_data_size	ENDP
 
 op_wait	PROC near
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -690,7 +690,7 @@ op_wait	ENDP
 
 op_rep	PROC near
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	inc si
 	mov al,[si]
 	xor ah,ah
@@ -713,13 +713,13 @@ add_mne	MACRO com_txt, sep
 	public op_string2b
 
 op_string2b	PROC near
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_stringb16
 op_stringb32:
 	mov ax,6
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne b_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, par_komma_sep
@@ -729,7 +729,7 @@ op_stringb32:
 op_stringb16:
 	mov ax,4
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne b_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, par_komma_sep
@@ -741,16 +741,16 @@ op_string2b	ENDP
 	public op_string2w
 
 op_string2w	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_string2d
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_string2w16
 op_string2w32:
 	mov ax,6
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne w_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, par_komma_sep
@@ -760,7 +760,7 @@ op_string2w32:
 op_string2w16:
 	mov ax,4
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne w_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, par_komma_sep
@@ -768,13 +768,13 @@ op_string2w16:
 	add_mne si_txt, rhak_sep
 	ret
 op_string2d:
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_string2d16
 op_string2d32:
 	mov ax,6
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne d_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, par_komma_sep
@@ -784,7 +784,7 @@ op_string2d32:
 op_string2d16:
 	mov ax,4
 	call calc_ads_offset
-	mov data_sel,OFFSET ds_txt
+	mov ds:data_sel,OFFSET ds_txt
 	add_mne d_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, par_komma_sep
@@ -797,13 +797,13 @@ op_string2w	ENDP
 	public op_string1b
 
 op_string1b	PROC near
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_string1b16
 op_string1b32:
 	mov ax,7
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne b_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, rhak_sep
@@ -811,7 +811,7 @@ op_string1b32:
 op_string1b16:
 	mov ax,5
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne b_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, rhak_sep
@@ -821,16 +821,16 @@ op_string1b	ENDP
 	public op_string1w
 
 op_string1w	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_string1d
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_string1w16
 op_string1w32:
 	mov ax,7
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne w_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, rhak_sep
@@ -838,19 +838,19 @@ op_string1w32:
 op_string1w16:
 	mov ax,5
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne w_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, rhak_sep
 	ret
 op_string1d:
-	mov al,gaddr_mode
+	mov al,ds:gaddr_mode
 	or al,al
 	jz op_string1d16
 op_string1d32:
 	mov ax,7
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne d_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne edi_txt, rhak_sep
@@ -858,7 +858,7 @@ op_string1d32:
 op_string1d16:
 	mov ax,5
 	call calc_ads_offset
-	mov data_sel,OFFSET es_txt
+	mov ds:data_sel,OFFSET es_txt
 	add_mne d_txt, blank_sep
 	add_mne es_txt, kolon_par_sep
 	add_mne di_txt, rhak_sep
@@ -871,7 +871,7 @@ op_string1w	ENDP
 	public op_add_opsize
 
 op_add_opsize	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jz op_add16
 op_add32:
@@ -895,7 +895,7 @@ op_word16	ENDP
 	public op_math_reg
 
 op_math_reg	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	call decode_math_mem
 	ret
 op_math_reg	ENDP
@@ -903,7 +903,7 @@ op_math_reg	ENDP
 	public opmr_mem8
 
 opmr_mem8	PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	call decode_mem_mode
 	ret
 opmr_mem8	ENDP
@@ -911,7 +911,7 @@ opmr_mem8	ENDP
 	public opmr_mem16
 
 opmr_mem16	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	call decode_mem_mode
 	ret
 opmr_mem16	ENDP
@@ -919,7 +919,7 @@ opmr_mem16	ENDP
 	public opmr_mem2
 
 opmr_mem2	PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	inc si
 	call decode_mem_mode
 	ret
@@ -928,10 +928,10 @@ opmr_mem2	ENDP
 	public opmr_mem3
 
 opmr_mem3	PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	inc si
 	call decode_mem_mode
-	mov edata_mode,data_48
+	mov ds:edata_mode,data_48
 	ret
 opmr_mem3	ENDP
 
@@ -946,7 +946,7 @@ op_mem_byte3	ENDP
 	public opmr_mem_im8
 
 opmr_mem_im8	PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	call decode_mem_mode
 	call add_komma_to_mem
 	mov al,[si+1]
@@ -958,10 +958,10 @@ opmr_mem_im8	ENDP
 	public opmr_mem_im16
 
 opmr_mem_im16	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	call decode_mem_mode
 	call add_komma_to_mem
-	mov al,edata_mode
+	mov al,ds:edata_mode
 	cmp al,data_32
 	jne not_opmr32
 	mov eax,[si+1]
@@ -978,10 +978,10 @@ opmr_mem_im16	ENDP
 	public opmr_mem_extend_im16
 
 opmr_mem_extend_im16	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	call decode_mem_mode
 	call add_komma_to_mem
-	mov al,edata_mode
+	mov al,ds:edata_mode
 	cmp al,data_32
 	jne not_eopmr32
 	movzx eax,byte ptr [si+1]
@@ -998,7 +998,7 @@ opmr_mem_extend_im16	ENDP
 	public op_reg_mem_byte
 
 op_reg_mem_byte	PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	mov al,[si+1]
 	call decode_reg
 	mov ax,[di-2]
@@ -1021,7 +1021,7 @@ op_reg_mem_byte2	ENDP
 	public op_reg_mem_word
 
 op_reg_mem_word	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	mov al,[si+1]
 	call decode_reg
 	mov ax,[di-2]
@@ -1052,7 +1052,7 @@ op_reg_mem2_word	ENDP
 	public op_mem_reg_byte
 
 op_mem_reg_byte PROC near
-	mov data_mode,data_8
+	mov ds:data_mode,data_8
 	mov al,[si+1]
 	push ax
 	call decode_mem_mode
@@ -1065,7 +1065,7 @@ op_mem_reg_byte	ENDP
 	public op_mem_reg_word
 
 op_mem_reg_word	PROC near
-	mov data_mode,data_16
+	mov ds:data_mode,data_16
 	mov al,[si+1]
 	push ax
 	call decode_mem_mode
@@ -1087,7 +1087,7 @@ op_mem_reg2	ENDP
 
 mem_im8	PROC near
 	movsx eax,byte ptr [si+1]
-	add data_off,eax
+	add ds:data_off,eax
 	test al,80h
 	je mem_im8_pos
 	neg eax
@@ -1115,7 +1115,7 @@ mem_im8	ENDP
 
 mem_im16	PROC near
 	movsx eax,word ptr [si+1]
-	add data_off,eax
+	add ds:data_off,eax
 	test ax,8000h
 	je mem_im16_pos
 	neg eax
@@ -1143,7 +1143,7 @@ mem_im16	ENDP
 
 mem_im32	PROC near
 	mov eax,[si+1]
-	add data_off,eax
+	add ds:data_off,eax
 	test eax,80000000h
 	jz mem_im32_pos
 	neg eax
@@ -1199,7 +1199,7 @@ add_sib_ads	PROC near
 	shl ax,2
 	mov bx,ax
 	call cs:word ptr [bx].adr_sib_tab
-	add data_off,eax
+	add ds:data_off,eax
 	mov al,[si]
 	and al,38h
 	shr al,3
@@ -1211,7 +1211,7 @@ add_sib_ads	PROC near
 	and cl,0C0h
 	shr cl,6
 	shl eax,cl
-	add data_off,eax
+	add ds:data_off,eax
 	ret
 add_sib_ads	ENDP
 
@@ -1240,7 +1240,7 @@ sib_d32	DW OFFSET sib_im32
 
 mem_sib	PROC near
 	mov ax,OFFSET mem_sib0_tab
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	mov ax,[si]
 ; al = mod
 ; ah = sib-byte
@@ -1252,13 +1252,13 @@ mem_sib	PROC near
 	inc si
 	call decode_opcode
 	mov ax,OFFSET sib_index_tab
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	mov al,[si]
 	and ax,38h
 	shr ax,3
 	call decode_opcode	
 	mov ax,OFFSET sib_scale_tab
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	mov al,[si]
 	and ax,0C0h
 	shr ax,6
@@ -1344,7 +1344,7 @@ error_next	PROC near
 error_next	ENDP
 
 null_next	PROC near
-	call word ptr op_syntax
+	call word ptr ds:op_syntax
 	ret
 null_next	ENDP
 
@@ -1424,7 +1424,7 @@ mem_op_next		ENDP
 	extrn edi_txt:near
 
 ax_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_eax
 op_ax:
@@ -1444,7 +1444,7 @@ op_eax:
 ax_next	ENDP
 
 bx_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_ebx
 op_bx:
@@ -1464,7 +1464,7 @@ op_ebx:
 bx_next	ENDP
 
 cx_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_ecx
 op_cx:
@@ -1484,7 +1484,7 @@ op_ecx:
 cx_next	ENDP
 
 dx_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_edx
 op_dx:
@@ -1504,7 +1504,7 @@ op_edx:
 dx_next	ENDP
 
 sp_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_esp
 op_sp:
@@ -1524,7 +1524,7 @@ op_esp:
 sp_next	ENDP
 
 bp_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_ebp
 op_bp:
@@ -1544,7 +1544,7 @@ op_ebp:
 bp_next	ENDP
 
 si_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_esi
 op_si:
@@ -1564,7 +1564,7 @@ op_esi:
 si_next	ENDP
 
 di_next	PROC near
-	mov al,gdata_mode
+	mov al,ds:gdata_mode
 	or al,al
 	jnz op_edi
 op_di:
@@ -1683,9 +1683,9 @@ decode_opcode	PROC near
 	add bx,bx
 	add bx,ax
 	add bx,bx
-	add bx,op_syntax
+	add bx,ds:op_syntax
 	mov ax,cs:[bx]
-	mov op_syntax,ax
+	mov ds:op_syntax,ax
 	add bx,2
 	mov ax,cs:[bx]
 	mov [di],ax
@@ -1730,7 +1730,7 @@ move_mne_loop:
 move_mne_not_end:
 	cmp al,' '
 	jne move_mne_ok
-	mov ah,ignore_ptr
+	mov ah,ds:ignore_ptr
 	or ah,ah
 	je move_mne_ok
 	mov ah,cs:[bx]
@@ -1775,7 +1775,7 @@ wr_op_next:
 	add bx,OFFSET mne_tab
 	cmp bx,OFFSET word_ptr_txt
 	jne not_put_dwptr
-	mov al,edata_mode
+	mov al,ds:edata_mode
 	cmp al,data_32
 	jne not_put_dwptr
 	mov bx,OFFSET dword_ptr_txt
@@ -1785,15 +1785,15 @@ not_put_dwptr:
 	cmp bx,OFFSET ss_txt
 	jne not_seg_reg
 seg_reg_ov:
-	mov data_sel,bx
-	mov cx,override
+	mov ds:data_sel,bx
+	mov cx,ds:override
 	or cx,cx
 	jz not_seg_reg
 	cmp cx,0FFFFh
 	jz not_seg_reg
 	mov bx,cx
-	mov override,0FFFFh
-	mov data_sel,bx
+	mov ds:override,0FFFFh
+	mov ds:data_sel,bx
 not_seg_reg:
 	call move_mne_to_buf
 	add si,2
@@ -1814,7 +1814,7 @@ wr_op_sep_empt:
 wr_op_sep_null:
 	jmp wr_op_next
 wr_op_end:
-	mov ax,override
+	mov ax,ds:override
 	or ax,ax
 	je wr_ov_klar
 	cmp ax,0FFFFh
@@ -1856,7 +1856,7 @@ PAGE
 	extrn gs_sel:near
 
 decode_data_sel	PROC near
-	mov ax,data_sel
+	mov ax,ds:data_sel
 	cmp ax,OFFSET ds_txt
 	jnz not_ds_ads
 	call ds_sel
@@ -1923,15 +1923,15 @@ dis_ass_one	PROC near
 	mov al,[si]
 	xor ah,ah
 	mov bx,OFFSET main_tab
-	mov op_syntax,bx
+	mov ds:op_syntax,bx
 	mov di,OFFSET op_codes
-	mov gaddr_mode,dl
-	mov gdata_mode,dl
-	mov ignore_ptr,0
-	mov override,0
-	mov data_sel,0
-	mov data_off,0
-	mov data_good,0
+	mov ds:gaddr_mode,dl
+	mov ds:gdata_mode,dl
+	mov ds:ignore_ptr,0
+	mov ds:override,0
+	mov ds:data_sel,0
+	mov ds:data_off,0
+	mov ds:data_good,0
 ;
 ; si = opcode
 ; di = resultat
@@ -1948,7 +1948,7 @@ dis_ass_one	PROC near
 	neg cx
 	mov al,20h
 	rep stosb
-	mov op_size,80
+	mov ds:op_size,80
 	pop cx
 	sub cx,OFFSET op_in_code
 	inc cx

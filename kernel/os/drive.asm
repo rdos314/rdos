@@ -125,7 +125,6 @@ disc_seq_struc	ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-	assume ds:disc_data_seg
 
 CheckPending	Proc near
 	xor cx,cx

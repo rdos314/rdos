@@ -403,8 +403,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume es:psp_seg
-
 create_handle	PROC far
 	push es
 	push di
@@ -458,8 +456,6 @@ PAGE
 ;						AL				ACCESS CODE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	assume es:psp_seg
 
 open_handle	PROC far
 	push es

@@ -110,7 +110,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn trap_single_step:near
 	extrn free_handle_process:near
 
-	assume cs:code,ds:thread_data_seg
+	assume cs:code
 
 PAGE
 
@@ -140,11 +140,11 @@ init_thread	PROC near
 	AllocateFixedSystemMem
 	mov ds,bx
 	xor ax,ax
-	mov create_thread_hooks,al
-	mov terminate_thread_hooks,al
-	mov create_process_hooks,al
-	mov terminate_process_hooks,al
-	mov init_tasking_hooks,al
+	mov ds:create_thread_hooks,al
+	mov ds:terminate_thread_hooks,al
+	mov ds:create_process_hooks,al
+	mov ds:terminate_process_hooks,al
+	mov ds:init_tasking_hooks,al
 ;
 	mov ax,system_data_sel
 	mov ds,ax
@@ -275,7 +275,7 @@ trap_create_thread	PROC near
 	push cx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov cl,create_thread_hooks
+	mov cl,ds:create_thread_hooks
 	or cl,cl
 	je trap_create_thread_done
 	mov bx,OFFSET create_thread_arr
@@ -321,7 +321,7 @@ trap_terminate_thread	PROC near
 	push cx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov cl,terminate_thread_hooks
+	mov cl,ds:terminate_thread_hooks
 	or cl,cl
 	je trap_terminate_thread_done
 	mov bx,OFFSET terminate_thread_arr
@@ -375,7 +375,7 @@ trap_create_process	PROC near
 ;
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov cl,create_process_hooks
+	mov cl,ds:create_process_hooks
 	or cl,cl
 	je trap_create_process_done
 	mov bx,OFFSET create_process_arr
@@ -415,7 +415,7 @@ trap_terminate_process	PROC near
 	push cx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov cl,terminate_process_hooks
+	mov cl,ds:terminate_process_hooks
 	or cl,cl
 	je trap_terminate_process_done
 	mov bx,OFFSET terminate_process_arr
@@ -455,7 +455,7 @@ trap_init_tasking	PROC near
 	push cx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov cl,init_tasking_hooks
+	mov cl,ds:init_tasking_hooks
 	or cl,cl
 	je trap_init_tasking_done
 	mov bx,OFFSET init_tasking_arr
@@ -496,7 +496,7 @@ hook_create_thread	PROC far
 	push bx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov al,create_thread_hooks
+	mov al,ds:create_thread_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -504,7 +504,7 @@ hook_create_thread	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov create_thread_hooks,al
+	mov ds:create_thread_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -532,7 +532,7 @@ hook_terminate_thread	PROC far
 	push bx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov al,terminate_thread_hooks
+	mov al,ds:terminate_thread_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -540,7 +540,7 @@ hook_terminate_thread	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov terminate_thread_hooks,al
+	mov ds:terminate_thread_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -570,7 +570,7 @@ hook_create_process	PROC far
 	push bx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov al,create_process_hooks
+	mov al,ds:create_process_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -578,7 +578,7 @@ hook_create_process	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov create_process_hooks,al
+	mov ds:create_process_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -606,7 +606,7 @@ hook_terminate_process	PROC far
 	push bx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov al,terminate_process_hooks
+	mov al,ds:terminate_process_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -614,7 +614,7 @@ hook_terminate_process	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov terminate_process_hooks,al
+	mov ds:terminate_process_hooks,al
 	pop bx
 	pop ax
 	pop ds
@@ -642,7 +642,7 @@ hook_init_tasking	PROC far
 	push bx
 	mov ax,proc_data_sel
 	mov ds,ax
-	mov al,init_tasking_hooks
+	mov al,ds:init_tasking_hooks
 	mov bl,al
 	xor bh,bh
 	shl bx,2
@@ -650,7 +650,7 @@ hook_init_tasking	PROC far
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov init_tasking_hooks,al
+	mov ds:init_tasking_hooks,al
 	pop bx
 	pop ax
 	pop ds

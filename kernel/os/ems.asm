@@ -187,7 +187,6 @@ ems_allocate_do:
 	push di
 	mov ax,ems_process_sel
 	mov ds,ax
-		assume ds:ems_process_seg
 	mov si,OFFSET ems_handles
 	mov cx,0FFh
 	add si,2
@@ -209,7 +208,6 @@ ems_allocate_handle:
 	shl eax,4
 	add ax,OFFSET ems_handle_pages
 	AllocateLocalMem
-		assume es:ems_handle_seg
 	xor di,di
 	mov cx,ax
 	xor al,al
@@ -248,7 +246,6 @@ ems_free	PROC far
 	push si
 	mov ax,ems_process_sel
 	mov ds,ax
-		assume ds:ems_process_seg
 	mov si,dx
 	add si,si
 	add si,OFFSET ems_handles
@@ -263,8 +260,7 @@ ems_free_do:
 	mov word ptr [si],0
 	push es
 	mov es,ax
-		assume es:ems_handle_seg
-	mov cx,ems_page_count
+	mov cx,es:ems_page_count
 	shl cx,2
 	mov si,OFFSET ems_handle_pages
 	push eax
@@ -426,8 +422,7 @@ init_process	PROC far
 	pusha
 	mov ax,ems_data_sel
 	mov ds,ax
-		assume ds:ems_data_seg
-	mov dx,device_seg
+	mov dx,ds:device_seg
 	mov ax,vm_int_sel
 	mov ds,ax
 	mov bx,67h SHL 2
@@ -436,7 +431,6 @@ init_process	PROC far
 ;
 	mov ax,ems_process_sel
 	mov es,ax
-		assume es:ems_process_seg
 	mov cx,100h
 	mov di,OFFSET ems_handles
 	xor ax,ax
@@ -479,8 +473,7 @@ init	PROC far
 	mov bx,ems_data_sel
 	AllocateFixedSystemMem
 	mov ds,bx
-		assume ds:ems_data_seg
-	mov device_seg,dx
+	mov ds:device_seg,dx
 ;
 	mov eax,OFFSET ems_process_size
 	mov bx,ems_process_sel

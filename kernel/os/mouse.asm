@@ -45,8 +45,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-	assume ds:mouse_seg
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -67,7 +65,7 @@ hide_marker	PROC near
 	push cx
 	push dx
 ;
-	mov ax,m_cursor_flag
+	mov ax,ds:m_cursor_flag
 	or ax,ax
 	jz hide_marker_done
 ;
@@ -128,7 +126,7 @@ show_marker	PROC near
 	push cx
 	push dx
 ;
-	mov ax,m_cursor_flag
+	mov ax,ds:m_cursor_flag
 	or ax,ax
 	jz show_marker_done
 ;
@@ -226,16 +224,16 @@ PAGE
 	
 check_horiz_position	PROC near
 	push ax
-	mov ax,m_horiz_pos
-	cmp ax,m_horiz_min
+	mov ax,ds:m_horiz_pos
+	cmp ax,ds:m_horiz_min
 	jge set_horiz_min_ok
-	mov ax,m_horiz_min
+	mov ax,ds:m_horiz_min
 set_horiz_min_ok:
-	cmp ax,m_horiz_max
+	cmp ax,ds:m_horiz_max
 	jle set_horiz_max_ok
-	mov ax,m_horiz_max
+	mov ax,ds:m_horiz_max
 set_horiz_max_ok:
-	mov m_horiz_pos,ax
+	mov ds:m_horiz_pos,ax
 	pop ax
 	ret
 check_horiz_position	ENDP
@@ -255,16 +253,16 @@ PAGE
 
 check_vert_position	PROC near
 	push ax
-	mov ax,m_vert_pos
-	cmp ax,m_vert_min
+	mov ax,ds:m_vert_pos
+	cmp ax,ds:m_vert_min
 	jge set_vert_min_ok
-	mov ax,m_vert_min
+	mov ax,ds:m_vert_min
 set_vert_min_ok:
-	cmp ax,m_vert_max
+	cmp ax,ds:m_vert_max
 	jle set_vert_max_ok
-	mov ax,m_vert_max
+	mov ax,ds:m_vert_max
 set_vert_max_ok:
-	mov m_vert_pos,ax
+	mov ds:m_vert_pos,ax
 	pop ax
 	ret
 check_vert_position	ENDP
@@ -284,29 +282,29 @@ PAGE
 
 refresh_mouse	Proc near
 	mov ax,es:md_buttons
-	mov dx,m_botton_status
+	mov dx,ds:m_botton_status
 	mov dh,al
 	xor dl,al
 	jz mouse_buttons_done
 ;
-	mov m_botton_status,ax
+	mov ds:m_botton_status,ax
 	test dl,1
 	jz mouse_button1_handled
 ;
 	test dh,1
 	jz mouse_button1_released
 mouse_button1_pressed:
-	mov ax,m_horiz_pos
-	mov m_horiz_press0,ax
-	mov ax,m_vert_pos
-	mov m_vert_press0,ax
+	mov ax,ds:m_horiz_pos
+	mov ds:m_horiz_press0,ax
+	mov ax,ds:m_vert_pos
+	mov ds:m_vert_press0,ax
 	jmp mouse_button1_handled
 
 mouse_button1_released:	
-	mov ax,m_horiz_pos
-	mov m_horiz_rel0,ax
-	mov ax,m_vert_pos
-	mov m_vert_rel0,ax
+	mov ax,ds:m_horiz_pos
+	mov ds:m_horiz_rel0,ax
+	mov ax,ds:m_vert_pos
+	mov ds:m_vert_rel0,ax
 
 mouse_button1_handled:
 	test dl,2
@@ -316,17 +314,17 @@ mouse_button1_handled:
 	jz mouse_button2_released
 
 mouse_button2_pressed:
-	mov ax,m_horiz_pos
-	mov m_horiz_press1,ax
-	mov ax,m_vert_pos
-	mov m_vert_press1,ax
+	mov ax,ds:m_horiz_pos
+	mov ds:m_horiz_press1,ax
+	mov ax,ds:m_vert_pos
+	mov ds:m_vert_press1,ax
 	jmp mouse_buttons_done
 
 mouse_button2_released:	
-	mov ax,m_horiz_pos
-	mov m_horiz_rel1,ax
-	mov ax,m_vert_pos
-	mov m_vert_rel1,ax
+	mov ax,ds:m_horiz_pos
+	mov ds:m_horiz_rel1,ax
+	mov ax,ds:m_vert_pos
+	mov ds:m_vert_rel1,ax
 
 mouse_buttons_done:
 	xor cx,cx
@@ -334,8 +332,8 @@ mouse_buttons_done:
 	or cx,cx
 	jz update_not_horiz
 ;
-	add m_horiz_motion,cx
-	add m_horiz_pos,cx
+	add ds:m_horiz_motion,cx
+	add ds:m_horiz_pos,cx
 	call check_horiz_position
 
 update_not_horiz:
@@ -344,8 +342,8 @@ update_not_horiz:
 	or dx,dx
 	jz update_not_vert
 ;
-	add m_vert_motion,dx
-	add m_vert_pos,dx
+	add ds:m_vert_motion,dx
+	add ds:m_vert_pos,dx
 	call check_vert_position
 
 update_not_vert:
@@ -372,41 +370,41 @@ reset	PROC near
 	mov ax,mouse_local_sel
 	mov ds,ax
 	xor ax,ax
-	mov m_notify_thread,ax
-	mov m_cursor_flag,ax
-	mov m_horiz_pos,ax
-	mov m_vert_pos,ax
-	mov m_botton_status,ax
-	mov m_horiz_motion,ax
-	mov m_vert_motion,ax
+	mov ds:m_notify_thread,ax
+	mov ds:m_cursor_flag,ax
+	mov ds:m_horiz_pos,ax
+	mov ds:m_vert_pos,ax
+	mov ds:m_botton_status,ax
+	mov ds:m_horiz_motion,ax
+	mov ds:m_vert_motion,ax
 ;
-	mov m_horiz_mickey,8
-	mov m_vert_mickey,8
+	mov ds:m_horiz_mickey,8
+	mov ds:m_vert_mickey,8
 ;
-	mov m_horiz_min,ax
-	mov m_horiz_max,639
-	mov m_vert_min,ax
-	mov m_vert_max,199
+	mov ds:m_horiz_min,ax
+	mov ds:m_horiz_max,639
+	mov ds:m_vert_min,ax
+	mov ds:m_vert_max,199
 ;
-	mov m_horiz_press0,ax
-	mov m_vert_press0,ax
-	mov m_count_press0,ax
+	mov ds:m_horiz_press0,ax
+	mov ds:m_vert_press0,ax
+	mov ds:m_count_press0,ax
 ;
-	mov m_horiz_press1,ax
-	mov m_vert_press1,ax
-	mov m_count_press1,ax
+	mov ds:m_horiz_press1,ax
+	mov ds:m_vert_press1,ax
+	mov ds:m_count_press1,ax
 ;
-	mov m_horiz_rel0,ax
-	mov m_vert_rel0,ax
-	mov m_count_rel0,ax
+	mov ds:m_horiz_rel0,ax
+	mov ds:m_vert_rel0,ax
+	mov ds:m_count_rel0,ax
 ;
-	mov m_horiz_rel1,ax
-	mov m_vert_rel1,ax
-	mov m_count_rel1,ax
+	mov ds:m_horiz_rel1,ax
+	mov ds:m_vert_rel1,ax
+	mov ds:m_count_rel1,ax
 ;
-	mov m_cursor_type,ax
-	mov m_screen_mask,0FFFFh
-	mov m_cursor_mask,077FFh
+	mov ds:m_cursor_type,ax
+	mov ds:m_screen_mask,0FFFFh
+	mov ds:m_cursor_mask,077FFh
 ;
 	pop ax
 	pop ds
@@ -437,7 +435,7 @@ show	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	inc m_cursor_flag
+	inc ds:m_cursor_flag
 	call show_marker
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
@@ -448,7 +446,7 @@ hide	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	dec m_cursor_flag
+	dec ds:m_cursor_flag
 	call show_marker
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
@@ -458,9 +456,9 @@ hide	ENDP
 get_position	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov bx,m_botton_status
-	mov cx,m_horiz_pos
-	mov dx,m_vert_pos	
+	mov bx,ds:m_botton_status
+	mov cx,ds:m_horiz_pos
+	mov dx,ds:m_vert_pos	
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	ret
@@ -470,8 +468,8 @@ set_position	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	mov m_horiz_pos,cx
-	mov m_vert_pos,dx
+	mov ds:m_horiz_pos,cx
+	mov ds:m_vert_pos,dx
 	call check_horiz_position
 	call check_vert_position
 	call show_marker
@@ -483,19 +481,19 @@ set_position	ENDP
 get_press_info	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov ax,m_botton_status
+	mov ax,ds:m_botton_status
 	or bl,bl
 	jz get_press0
 get_press1:
-	mov bx,m_count_press1
-	mov cx,m_horiz_press1
-	mov dx,m_vert_press1
+	mov bx,ds:m_count_press1
+	mov cx,ds:m_horiz_press1
+	mov dx,ds:m_vert_press1
 	mov ds,[bp].pm_ds
 	ret
 get_press0:
-	mov bx,m_count_press0
-	mov cx,m_horiz_press0
-	mov dx,m_vert_press0
+	mov bx,ds:m_count_press0
+	mov cx,ds:m_horiz_press0
+	mov dx,ds:m_vert_press0
 	mov ds,[bp].pm_ds
 	ret
 get_press_info	ENDP
@@ -503,19 +501,19 @@ get_press_info	ENDP
 get_rel_info	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov ax,m_botton_status
+	mov ax,ds:m_botton_status
 	or bl,bl
 	jz get_rel0
 get_rel1:
-	mov bx,m_count_rel1
-	mov cx,m_horiz_rel1
-	mov dx,m_vert_rel1
+	mov bx,ds:m_count_rel1
+	mov cx,ds:m_horiz_rel1
+	mov dx,ds:m_vert_rel1
 	mov ds,[bp].pm_ds
 	ret
 get_rel0:
-	mov bx,m_count_rel0
-	mov cx,m_horiz_rel0
-	mov dx,m_vert_rel0
+	mov bx,ds:m_count_rel0
+	mov cx,ds:m_horiz_rel0
+	mov dx,ds:m_vert_rel0
 	mov ds,[bp].pm_ds
 	ret
 get_rel_info	ENDP
@@ -526,12 +524,12 @@ set_horiz_area	PROC far
 	call hide_marker
 	cmp dx,cx
 	jge set_horiz_noswap
-	mov m_horiz_min,dx
-	mov m_horiz_max,cx
+	mov ds:m_horiz_min,dx
+	mov ds:m_horiz_max,cx
 	jmp set_horiz_test_pos
 set_horiz_noswap:
-	mov m_horiz_min,cx
-	mov m_horiz_max,dx
+	mov ds:m_horiz_min,cx
+	mov ds:m_horiz_max,dx
 set_horiz_test_pos:
 	call check_horiz_position
 	call show_marker
@@ -546,12 +544,12 @@ set_vert_area	PROC far
 	call hide_marker
 	cmp dx,cx
 	jge set_vert_noswap
-	mov m_vert_min,dx
-	mov m_vert_max,cx
+	mov ds:m_vert_min,dx
+	mov ds:m_vert_max,cx
 	jmp set_vert_test_pos
 set_vert_noswap:
-	mov m_vert_min,cx
-	mov m_vert_max,dx
+	mov ds:m_vert_min,cx
+	mov ds:m_vert_max,dx
 set_vert_test_pos:
 	call check_vert_position
 	call show_marker
@@ -571,9 +569,9 @@ set_cursor_type	PROC far
 	mov ax,[bp].vm_ebx
 	or ax,ax
 	jnz set_cursor_not_supported
-	mov m_cursor_type,ax
-	mov m_screen_mask,cx
-	mov m_cursor_mask,dx
+	mov ds:m_cursor_type,ax
+	mov ds:m_screen_mask,cx
+	mov ds:m_cursor_mask,dx
 set_cursor_not_supported:
 	call show_marker
 	mov ax,[bp].vm_eax
@@ -585,9 +583,9 @@ read_motion_counter	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	xor cx,cx
-	xchg cx,m_horiz_motion
+	xchg cx,ds:m_horiz_motion
 	xor dx,dx
-	xchg dx,m_vert_motion
+	xchg dx,ds:m_vert_motion
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	ret
@@ -596,8 +594,8 @@ read_motion_counter	ENDP
 set_mickey	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov m_horiz_mickey,cx
-	mov m_vert_mickey,dx
+	mov ds:m_horiz_mickey,cx
+	mov ds:m_vert_mickey,dx
 	mov ax,[bp].vm_eax
 	mov ds,[bp].pm_ds
 	ret
@@ -672,7 +670,7 @@ show_mouse	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	inc m_cursor_flag
+	inc ds:m_cursor_flag
 	call show_marker
 ;
 	pop ax
@@ -702,7 +700,7 @@ hide_mouse	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	dec m_cursor_flag
+	dec ds:m_cursor_flag
 	call show_marker
 ;
 	pop ax
@@ -732,8 +730,8 @@ get_mouse_position	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov cx,m_horiz_pos
-	mov dx,m_vert_pos	
+	mov cx,ds:m_horiz_pos
+	mov dx,ds:m_vert_pos	
 ;
 	pop ax
 	pop ds
@@ -763,8 +761,8 @@ set_mouse_position	PROC far
 	mov ax,mouse_local_sel
 	mov ds,ax
 	call hide_marker
-	mov m_horiz_pos,cx
-	mov m_vert_pos,dx
+	mov ds:m_horiz_pos,cx
+	mov ds:m_vert_pos,dx
 	call check_horiz_position
 	call check_vert_position
 	call show_marker
@@ -795,7 +793,7 @@ get_left_button	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov ax,m_botton_status
+	mov ax,ds:m_botton_status
 	rcr al,1
 	cmc
 ;
@@ -825,7 +823,7 @@ get_right_button	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov ax,m_botton_status
+	mov ax,ds:m_botton_status
 	rcr al,2
 	cmc
 ;
@@ -856,8 +854,8 @@ get_left_button_press_position	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov cx,m_horiz_press0
-	mov dx,m_vert_press0
+	mov cx,ds:m_horiz_press0
+	mov dx,ds:m_vert_press0
 ;
 	pop ax
 	pop ds
@@ -886,8 +884,8 @@ get_right_button_press_position	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov cx,m_horiz_press1
-	mov dx,m_vert_press1
+	mov cx,ds:m_horiz_press1
+	mov dx,ds:m_vert_press1
 ;
 	pop ax
 	pop ds
@@ -916,8 +914,8 @@ get_left_button_release_position	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov cx,m_horiz_rel0
-	mov dx,m_vert_rel0
+	mov cx,ds:m_horiz_rel0
+	mov dx,ds:m_vert_rel0
 ;
 	pop ax
 	pop ds
@@ -946,8 +944,8 @@ get_right_button_release_position	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov cx,m_horiz_rel1
-	mov dx,m_vert_rel1
+	mov cx,ds:m_horiz_rel1
+	mov dx,ds:m_vert_rel1
 ;
 	pop ax
 	pop ds
@@ -978,10 +976,10 @@ set_mouse_window	PROC far
 	push mouse_local_sel
 	pop ds
 	call hide_marker
-	mov m_horiz_min,ax
-	mov m_horiz_max,cx
-	mov m_vert_min,bx
-	mov m_vert_max,dx
+	mov ds:m_horiz_min,ax
+	mov ds:m_horiz_max,cx
+	mov ds:m_vert_min,bx
+	mov ds:m_vert_max,dx
 ;
 	call check_horiz_position
 	call check_vert_position
@@ -1013,8 +1011,8 @@ set_mouse_mickey	PROC far
 ;
 	mov ax,mouse_local_sel
 	mov ds,ax
-	mov m_horiz_mickey,cx
-	mov m_vert_mickey,dx
+	mov ds:m_horiz_mickey,cx
+	mov ds:m_vert_mickey,dx
 ;
 	pop ax
 	pop ds

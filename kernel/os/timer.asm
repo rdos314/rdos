@@ -78,8 +78,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-	assume ds:timer_data_seg
-
 reload_timer	PROC near
 	push edx
 	mov ax,[bx].timer_period
@@ -267,10 +265,10 @@ timer_pr:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	mov timer_thread,ax
+	mov ds:timer_thread,ax
 	GetSystemTime
-	mov timer0.timer_time,eax
-	mov timer0.timer_time+4,edx
+	mov ds:timer0.timer_time,eax
+	mov ds:timer0.timer_time+4,edx
 	mov eax,110h
 	AllocateVMLinear
 	add edx,10h
@@ -314,26 +312,26 @@ timer_tics_entry:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	cmp ax,timer_thread
+	cmp ax,ds:timer_thread
 	je timer_wait_loop
 	TerminateThread
 timer_wait_loop:
-	mov eax,timer0.timer_time
-	mov edx,timer0.timer_time+4
-	movzx ecx,timer0.timer_period
-	mov timer0.timer_count,cx
+	mov eax,ds:timer0.timer_time
+	mov edx,ds:timer0.timer_time+4
+	movzx ecx,ds:timer0.timer_period
+	mov ds:timer0.timer_count,cx
 	add ecx,eax
-	mov timer0.timer_time,ecx
+	mov ds:timer0.timer_time,ecx
 	mov ecx,0
 	adc ecx,edx
-	mov timer0.timer_time+4,ecx
+	mov ds:timer0.timer_time+4,ecx
 	WaitUntil
 ;
-	mov ax,timer_int_seg
+	mov ax,ds:timer_int_seg
 	cmp ax,0E000h
 	jz timer_tics
 	mov [bp].vm_cs,ax
-	mov ax,timer_int_offs
+	mov ax,ds:timer_int_offs
 	mov [bp].vm_eip,ax
 ;
 	mov ax,flat_sel
@@ -357,15 +355,15 @@ timer_int_entry:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	cmp ax,timer_thread
+	cmp ax,ds:timer_thread
 	je timer_tics
 	TerminateThread
 timer_tics:
-	mov ax,timer_tics_seg
+	mov ax,ds:timer_tics_seg
 	cmp ax,0E000h
 	jz timer_wait_loop
 	mov [bp].vm_cs,ax
-	mov ax,timer_tics_offs
+	mov ax,ds:timer_tics_offs
 	mov [bp].vm_eip,ax
 ;
 	mov ax,flat_sel
@@ -387,19 +385,19 @@ timer_tics:
 	jmp timer_tics_entry
 
 check_timer_state	PROC near
-	cmp timer_int_seg,0E000h
+	cmp ds:timer_int_seg,0E000h
 	jnz check_timer_on
-	cmp timer_tics_seg,0E000h
+	cmp ds:timer_tics_seg,0E000h
 	jnz check_timer_on
 check_timer_off:
-	mov timer_thread,0
+	mov ds:timer_thread,0
 	ret
 check_timer_on:
-	cmp timer_thread,0
+	cmp ds:timer_thread,0
 	jz check_timer_start
 	ret
 check_timer_start:
-	dec timer_thread
+	dec ds:timer_thread
 	push ds
 	push es
 	pusha
@@ -420,8 +418,8 @@ check_timer_state	ENDP
 get_vm_timer	PROC far
 	mov bx,timer_data_sel
 	mov ds,bx
-	mov bx,timer_int_offs
-	mov dx,timer_int_seg
+	mov bx,ds:timer_int_offs
+	mov dx,ds:timer_int_seg
 	ret
 get_vm_timer	ENDP
 
@@ -430,8 +428,8 @@ set_vm_timer	PROC far
 	mov ax,timer_data_sel
 	mov ds,ax
 	pop ax
-	mov timer_int_offs,bx
-	mov timer_int_seg,dx
+	mov ds:timer_int_offs,bx
+	mov ds:timer_int_seg,dx
 	call check_timer_state
 	ret
 set_vm_timer	ENDP
@@ -439,8 +437,8 @@ set_vm_timer	ENDP
 get_vm_timer_tick	PROC far
 	mov bx,timer_data_sel
 	mov ds,bx
-	mov bx,timer_tics_offs
-	mov dx,timer_tics_seg
+	mov bx,ds:timer_tics_offs
+	mov dx,ds:timer_tics_seg
 	ret
 get_vm_timer_tick	ENDP
 
@@ -449,8 +447,8 @@ set_vm_timer_tick	PROC far
 	mov ax,timer_data_sel
 	mov ds,ax
 	pop ax
-	mov timer_tics_offs,bx
-	mov timer_tics_seg,dx
+	mov ds:timer_tics_offs,bx
+	mov ds:timer_tics_seg,dx
 	call check_timer_state
 	ret
 set_vm_timer_tick	ENDP
@@ -459,10 +457,10 @@ timer16_pr:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	mov timer_thread16,ax
+	mov ds:timer_thread16,ax
 	GetSystemTime
-	mov timer0.timer_time,eax
-	mov timer0.timer_time+4,edx
+	mov ds:timer0.timer_time,eax
+	mov ds:timer0.timer_time+4,edx
 	mov eax,100h
 	AllocateLocalMem
 ; ss
@@ -492,26 +490,26 @@ timer_tics16_entry:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	cmp ax,timer_thread16
+	cmp ax,ds:timer_thread16
 	je timer_wait16_loop
 	TerminateThread
 timer_wait16_loop:
-	mov eax,timer0.timer_time
-	mov edx,timer0.timer_time+4
-	movzx ecx,timer0.timer_period
-	mov timer0.timer_count,cx
+	mov eax,ds:timer0.timer_time
+	mov edx,ds:timer0.timer_time+4
+	movzx ecx,ds:timer0.timer_period
+	mov ds:timer0.timer_count,cx
 	add ecx,eax
-	mov timer0.timer_time,ecx
+	mov ds:timer0.timer_time,ecx
 	mov ecx,0
 	adc ecx,edx
-	mov timer0.timer_time+4,ecx
+	mov ds:timer0.timer_time+4,ecx
 	WaitUntil
 ;
-	mov ax,timer_int16_sel
+	mov ax,ds:timer_int16_sel
 	cmp ax,callb_int16_sel
 	jz timer_tics16
 	mov [bp].vm_cs,ax
-	mov ax,timer_int16_offs
+	mov ax,ds:timer_int16_offs
 	mov [bp].vm_eip,ax
 ;
 	mov ds,[bp].vm_ss
@@ -532,15 +530,15 @@ timer_int16_entry:
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetThread
-	cmp ax,timer_thread16
+	cmp ax,ds:timer_thread16
 	je timer_tics16
 	TerminateThread
 timer_tics16:
-	mov ax,timer_tics16_sel
+	mov ax,ds:timer_tics16_sel
 	cmp ax,callb_int16_sel
 	jz timer_wait16_loop
 	mov [bp].vm_cs,ax
-	mov ax,timer_tics16_offs
+	mov ax,ds:timer_tics16_offs
 	mov [bp].vm_eip,ax
 ;
 	mov ds,[bp].vm_ss
@@ -559,19 +557,19 @@ timer_tics16:
 	jmp timer_tics16_entry
 
 check_timer16_state	PROC near
-	cmp timer_int16_sel,callb_int16_sel
+	cmp ds:timer_int16_sel,callb_int16_sel
 	jnz check_timer16_on
-	cmp timer_tics16_sel,callb_int16_sel
+	cmp ds:timer_tics16_sel,callb_int16_sel
 	jnz check_timer16_on
 check_timer16_off:
-	mov timer_thread16,0
+	mov ds:timer_thread16,0
 	ret
 check_timer16_on:
-	cmp timer_thread16,0
+	cmp ds:timer_thread16,0
 	jz check_timer16_start
 	ret
 check_timer16_start:
-	dec timer_thread16
+	dec ds:timer_thread16
 	push ds
 	push es
 	pusha
@@ -592,8 +590,8 @@ check_timer16_state	ENDP
 get_pm_timer	PROC far
 	mov bx,timer_data_sel
 	mov ds,bx
-	mov bx,timer_int16_offs
-	mov dx,timer_int16_sel
+	mov bx,ds:timer_int16_offs
+	mov dx,ds:timer_int16_sel
 	ret
 get_pm_timer	ENDP
 
@@ -602,8 +600,8 @@ set_pm_timer	PROC far
 	mov ax,timer_data_sel
 	mov ds,ax
 	pop ax
-	mov timer_int16_offs,bx
-	mov timer_int16_sel,dx
+	mov ds:timer_int16_offs,bx
+	mov ds:timer_int16_sel,dx
 	call check_timer16_state
 	ret
 set_pm_timer	ENDP
@@ -611,8 +609,8 @@ set_pm_timer	ENDP
 get_pm_timer_tick	PROC far
 	mov bx,timer_data_sel
 	mov ds,bx
-	mov di,timer_tics16_offs
-	mov es,timer_tics16_sel
+	mov di,ds:timer_tics16_offs
+	mov es,ds:timer_tics16_sel
 	ret
 get_pm_timer_tick	ENDP
 
@@ -621,8 +619,8 @@ set_pm_timer_tick	PROC far
 	mov ax,timer_data_sel
 	mov ds,ax
 	pop ax
-	mov timer_tics16_offs,di
-	mov timer_tics16_sel,es
+	mov ds:timer_tics16_offs,di
+	mov ds:timer_tics16_sel,es
 	call check_timer16_state
 	ret
 set_pm_timer_tick	ENDP
@@ -631,22 +629,22 @@ init_timer_process	PROC far
 	mov ax,timer_data_sel
 	mov ds,ax
 	GetSystemTime
-	mov timer0.timer_state,36h
-	mov timer0.timer_transfer,timer_lsb
-	mov timer0.timer_period,0FFFFh
-	mov timer0.timer_count,0FFFFh
-	mov timer0.timer_time,eax
-	mov timer0.timer_time+4,edx
-	mov timer_int_seg,0E000h
-	mov timer_int_offs,8*4
-	mov timer_tics_seg,0E000h
-	mov timer_tics_offs,1Ch*4
-	mov timer_thread,0
-	mov timer_int16_sel,callb_int16_sel
-	mov timer_int16_offs,8*4
-	mov timer_tics16_sel,callb_int16_sel
-	mov timer_tics16_offs,1Ch*4
-	mov timer_thread16,0
+	mov ds:timer0.timer_state,36h
+	mov ds:timer0.timer_transfer,timer_lsb
+	mov ds:timer0.timer_period,0FFFFh
+	mov ds:timer0.timer_count,0FFFFh
+	mov ds:timer0.timer_time,eax
+	mov ds:timer0.timer_time+4,edx
+	mov ds:timer_int_seg,0E000h
+	mov ds:timer_int_offs,8*4
+	mov ds:timer_tics_seg,0E000h
+	mov ds:timer_tics_offs,1Ch*4
+	mov ds:timer_thread,0
+	mov ds:timer_int16_sel,callb_int16_sel
+	mov ds:timer_int16_offs,8*4
+	mov ds:timer_tics16_sel,callb_int16_sel
+	mov ds:timer_tics16_offs,1Ch*4
+	mov ds:timer_thread16,0
 	ret
 init_timer_process	ENDP
 

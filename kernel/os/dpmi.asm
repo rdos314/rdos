@@ -46,7 +46,7 @@ INCLUDE dpmi.inc
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:dpmi_data_seg
+	assume cs:code
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -211,8 +211,7 @@ not_test_dpmi:
 	jne not_dpmi_entry
 	mov di,dpmi_data_sel
 	mov ds,di
-		assume ds:dpmi_data_seg
-	mov di,dpmi_handler_seg
+	mov di,ds:dpmi_handler_seg
 	mov [bp].vm_es,di
 	xor di,di
 	mov bx,1
@@ -270,7 +269,7 @@ dpmi_handler_move:
 	shr edx,4
 	mov ax,dpmi_data_sel
 	mov ds,ax
-	mov dpmi_handler_seg,dx
+	mov ds:dpmi_handler_seg,dx
 ;
 	mov ax,cs
 	mov ds,ax

@@ -47,7 +47,7 @@ INCLUDE os.inc
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:system_seg
+	assume cs:code
 
 PAGE
 
@@ -172,7 +172,7 @@ init_physical	PROC near
 	mov ax,system_data_sel
 	mov ds,ax
 ;
-	InitSection phys_section
+	InitSection ds:phys_section
 	mov bx,phys_page_sel
 	mov edx,phys_page_linear
 	mov ecx,ds:phys_free_pages
@@ -280,34 +280,34 @@ allocate_physical	PROC far
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection phys_section
+	EnterSection ds:phys_section
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
 	mov es,dx
-	mov ebx,free_phys_list
+	mov ebx,ds:free_phys_list
 	or ebx,ebx
 	jnz allocate_normal
 ;
-	mov ebx,free_dma_phys_list
+	mov ebx,ds:free_dma_phys_list
 	mov edx,es:[ebx]
-	mov free_dma_phys_list,edx
+	mov ds:free_dma_phys_list,edx
 	jmp allocate_mark
 
 allocate_normal:
 	mov edx,es:[ebx]
-	mov free_phys_list,edx
+	mov ds:free_phys_list,edx
 
 allocate_mark:
-	mov edx,unused_phys_list
+	mov edx,ds:unused_phys_list
 	mov es:[ebx],edx
-	mov unused_phys_list,ebx
+	mov ds:unused_phys_list,ebx
 	mov ax,phys_page_sel
 	mov ds,ax
 	mov eax,ebx
 	mov eax,[eax]
 	xor al,al
 	pop ds
-	LeaveSection phys_section
+	LeaveSection ds:phys_section
 	pop edx
 	pop ebx
 	pop es
@@ -338,23 +338,23 @@ allocate_dma_physical	PROC far
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection phys_section
+	EnterSection ds:phys_section
 	dec ds:phys_free_pages
 	mov dx,phys_list_sel
 	mov es,dx
-	mov ebx,free_dma_phys_list
+	mov ebx,ds:free_dma_phys_list
 	mov edx,es:[ebx]
-	mov free_dma_phys_list,edx
-	mov edx,unused_phys_list
+	mov ds:free_dma_phys_list,edx
+	mov edx,ds:unused_phys_list
 	mov es:[ebx],edx
-	mov unused_phys_list,ebx
+	mov ds:unused_phys_list,ebx
 	mov ax,phys_page_sel
 	mov ds,ax
 	mov eax,ebx
 	mov eax,[eax]
 	xor al,al
 	pop ds
-	LeaveSection phys_section
+	LeaveSection ds:phys_section
 	pop edx
 	pop ebx
 	pop es
@@ -387,33 +387,33 @@ free_physical	PROC far
 	mov bx,system_data_sel
 	mov ds,bx
 	push ds
-	EnterSection phys_section
+	EnterSection ds:phys_section
 	inc ds:phys_free_pages
 	xor ebx,ebx
 	mov dx,phys_list_sel
 	mov es,dx
-	mov ebx,unused_phys_list
+	mov ebx,ds:unused_phys_list
 	mov edx,es:[ebx]
-	mov unused_phys_list,edx
+	mov ds:unused_phys_list,edx
 	cmp eax,1000000h
 	jc free_dma_phys
 ;
-	mov edx,free_phys_list
+	mov edx,ds:free_phys_list
 	mov es:[ebx],edx
-	mov free_phys_list,ebx
+	mov ds:free_phys_list,ebx
 	jmp free_link_page
 
 free_dma_phys:
-	mov edx,free_dma_phys_list
+	mov edx,ds:free_dma_phys_list
 	mov es:[ebx],edx
-	mov free_dma_phys_list,ebx
+	mov ds:free_dma_phys_list,ebx
 
 free_link_page:
 	mov dx,phys_page_sel
 	mov ds,dx
 	mov [ebx],eax
 	pop ds
-	LeaveSection phys_section
+	LeaveSection ds:phys_section
 	pop edx
 	pop ebx
 	pop es
