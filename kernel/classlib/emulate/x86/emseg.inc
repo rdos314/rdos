@@ -43,6 +43,7 @@
 	extrn ValidateTssCs:near
 
 	extrn TrapFault:near
+	extrn OpcodeFault:near
 	extrn EmulateError:near
 	extrn DivFault:near
 	extrn SegmentFault:near

@@ -79,6 +79,11 @@ void TKeyb::Out(int Port, char Value)
 				case 0xAE:
 					FEnabled = TRUE;
 					break;
+
+				case 0xC0:
+					FHasData = TRUE;
+					FData = 0x70;
+					break;
 			}
 			break;
 

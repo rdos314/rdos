@@ -1757,6 +1757,7 @@ EmPopfdPm:
 	jc EmPopfdDone
 
 EmPopfdDo:
+	and eax,NOT EFLAGS_UNDEF
 	mov [ebp].reg_eflags,eax
 
 EmPopfdDone:

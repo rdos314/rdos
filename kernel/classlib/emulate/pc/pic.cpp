@@ -39,7 +39,7 @@
 TPic::TPic()
 {
 	FIrr = 0;
-	FImr = 0;
+	FImr = 0xFF;
 	FIsr = 0;
 	FIcw1 = 0;
 	FIcw2 = 0;

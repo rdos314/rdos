@@ -945,6 +945,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
+					_asm int 3
 					UserBreak(Cpu);
 					return;
 				}
@@ -954,6 +955,7 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 					break;
 				else
 				{
+					_asm int 3
 					UserBreak(Cpu);
 					return;
 				}

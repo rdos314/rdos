@@ -379,6 +379,29 @@ DivFault	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			OpcodeFault
+;
+;		DESCRIPTION:	Invalid opcode fault
+;
+;		PARAMETERS:		SS:EBP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public OpcodeFault
+
+OpcodeFault	Proc near
+	int 3
+	or [ebp].em_flags,single_faulted
+	ResetFault
+	xor cx,cx
+	mov al,6
+	call ExcFar	
+	ret
+OpcodeFault	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DoubleFault
 ;
 ;		DESCRIPTION:	Double fault
@@ -1074,6 +1097,7 @@ TransferHigherVm:
 	mov [ebp].reg_esp,eax
 ;
 	pop eax
+	and eax,NOT EFLAGS_UNDEF
 	mov [ebp].reg_eflags,eax
 ;	
 	pop ax
@@ -1196,6 +1220,7 @@ HigherLoadIt:
 	pop ecx
 	jc TransferHigherFlagsDone
 ;
+	and ecx,NOT EFLAGS_UNDEF
 	mov [ebp].reg_eflags,ecx
 
 TransferHigherFlagsDone:
@@ -2585,14 +2610,13 @@ ExcFarReal:
 
 ExcRealErrorOk:
 	pop bx
-	movzx ebx,bx
+	movzx ebx,bl
 	shl ebx,2
 	add ebx,[ebp].reg_idt.d_base
 	call ReadLinearDword
-	push eax
-	pop ax
-	movzx eax,ax
-	pop dx
+	movzx esi,ax
+	shr eax,16
+	mov bx,ax
 	call TransferReal
 	and word ptr [ebp].reg_eflags,NOT (EFLAGS_IF AND EFLAGS_TF)
 	ret

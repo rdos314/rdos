@@ -406,7 +406,7 @@ em0F9A	DD OFFSET EmSetp,				OFFSET EmSetnp
 em0F9C	DD OFFSET EmSetl,				OFFSET EmSetnl
 em0F9E	DD OFFSET EmSetle,				OFFSET EmSetnle
 em0FA0	DD OFFSET EmPushFs,				OFFSET EmPopFs
-em0FA2	DD OFFSET EmulateError,			OFFSET EmBtMemReg
+em0FA2	DD OFFSET OpcodeFault,			OFFSET EmBtMemReg
 em0FA4	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FA6	DD OFFSET EmulateError,			OFFSET EmulateError
 em0FA8	DD OFFSET EmPushGs,				OFFSET EmPopGs
