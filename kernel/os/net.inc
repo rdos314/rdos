@@ -57,28 +57,29 @@ d_thread		DW ?
 d_packet_size	DD ?
 d_class			DW ?
 
-;	NC		Data available
-;	ECX		Size
-;	EDX		Packet type
-;	DS:ESI	Source address
+; OUT NC		Data available
+; OUT ECX		Size (0 means do not preallocate)
+; OUT EDX		Packet type
 d_preview			DD ?
 
-;	ECX		Size
-;	DS:ESI	Source address
-;	ES:EDI	Data buffer
+; IN      ECX		Size
+; IN/OUT  ES:EDI	Data buffer
 d_receive		DD ?
 
-;	ECX		Size
-;	DS:ESI	Source address
+; IN  ECX		Size
 d_remove		DD ?
 
-;	ECX		Size of data
-;	DX		Packet type
-;	DS:ESI	Dest address
-;	ES:EDI	Data buffer
+; IN  ECX		Size
+; OUT ES:EDI	Data buffer. EDI must be >= 2!
+d_get_buffer	DD ?
+
+; IN  ECX		Size of data
+; IN  DX		Packet type
+; IN  DS:ESI	Dest address
+; IN  ES		Data buffer selector
 d_send			DD ?
 
-;	DS:ESI	Node address
+; IN  DS:ESI	Node address buffer
 d_address		DD ?
 
 driver_data	ENDS

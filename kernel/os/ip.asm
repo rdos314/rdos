@@ -222,10 +222,12 @@ create_ip_header_name	DB 'Create IP Header',0
 
 create_ip_header	Proc far
 	push ds
+	push fs
 	push eax
 	push bx
 	push ecx
 	push esi
+	push ebp
 ;
 	push ds
 	push ax
@@ -240,6 +242,7 @@ create_header_opt_loop:
 	inc cx
 	cmp al,1
 	jz create_header_opt_loop
+;
 	movzx eax,byte ptr [esi]
 	dec al
 	add cx,ax
@@ -254,32 +257,11 @@ create_header_alloc:
 	add cx,4
 	movzx eax,cx
 	pop cx
-	add eax,ecx
-	AllocateSmallGlobalMem
 ;
 	push ax
-	mov ax,bx
-	dec ax
-	shr ax,2
-	inc ax
-	or al,40h
-	mov es:ip_hdr_ver,al
-	mov es:ip_tos,0
-	pop ax
-	xchg al,ah
-	mov es:ip_size,ax
-	mov es:ip_frags,0
-	pop ax
-	mov es:ip_ttl,ah
-	mov es:ip_proto,al
-	mov es:ip_checksum,0
-	mov ax,ip_data_sel
-	mov ds,ax
-	mov ax,ds:curr_id
-	inc ds:curr_id
-	xchg al,ah
-	mov es:ip_id,ax
-	mov es:ip_dest,edx
+	mov bx,ip_data_sel
+	mov fs,bx
+	mov bx,fs:ip_handle
 ;
 	push edx
 	and edx,ds:ip_mask
@@ -297,20 +279,42 @@ create_header_alloc:
 	jnz create_header_not_ppp
 
 create_header_ppp:
-	push edx
-	GetPppIp
-	mov es:ip_source,edx
-	pop edx
-	jmp create_header_ip_done
+	GetPppBuffer
+	jmp create_header_fill
 
 create_header_not_ppp:
-	mov eax,ds:my_ip
-	mov es:ip_source,eax
+	GetNetBuffer
+
+create_header_fill:
+	mov bp,di
+	mov es:[0],di
+	mov ax,bx
+	dec ax
+	shr ax,2
+	inc ax
+	or al,40h
+	mov es:[di].ip_hdr_ver,al
+	mov es:[di].ip_tos,0
+	pop ax
+	xchg al,ah
+	mov es:[di].ip_size,ax
+	mov es:[di].ip_frags,0
+	pop ax
+	mov es:[di].ip_ttl,ah
+	mov es:[di].ip_proto,al
+	mov es:[di].ip_checksum,0
+	mov ax,ip_data_sel
+	mov ds,ax
+	mov ax,ds:curr_id
+	inc ds:curr_id
+	xchg al,ah
+	mov es:[di].ip_id,ax
+	mov es:[di].ip_dest,edx
 
 create_header_ip_done:
 	pop ds
 ;
-	mov edi,SIZE ip_header
+	add edi,SIZE ip_header
 create_header_copy_opt:
 	mov al,[esi]
 	or al,al
@@ -323,18 +327,23 @@ create_header_copy_opt:
 	jmp create_header_copy_opt
 
 create_header_pad:
+	mov si,di
+	sub si,bp
 	xor al,al
 create_header_pad_loop:
-	test di,3
+	test si,3
 	jz create_header_done
 	stos byte ptr es:[edi]
+	inc si
 	jmp create_header_pad_loop		
 
 create_header_done:
+	pop ebp
 	pop esi
 	pop ecx
 	pop bx
 	pop eax
+	pop fs
 	pop ds	
 	ret
 create_ip_header	Endp
@@ -361,15 +370,17 @@ send_ip_data	Proc far
 	push dx
 	push ecx
 	push esi
+	push edi
 ;
 	mov ax,es
 	mov ds,ax
+	mov di,ds:[0]
 ;
-	mov ds:ip_checksum,0
-	movzx cx,es:ip_hdr_ver
+	mov ds:[di].ip_checksum,0
+	movzx cx,es:[di].ip_hdr_ver
 	and cl,0Fh
 	shl cl,1
-	xor si,si
+	mov si,di
 	xor	dx,dx
 	clc
 send_checksum_loop:
@@ -379,15 +390,15 @@ send_checksum_loop:
     adc dx,0
     adc dx,0
 	not dx
-	mov ds:ip_checksum,dx
+	mov ds:[di].ip_checksum,dx
 ;
-	movzx ecx,ds:ip_size
+	movzx ecx,ds:[di].ip_size
 	xchg cl,ch
 ;
 	mov ax,ip_data_sel
 	mov fs,ax
 	mov bx,fs:ip_handle
-	mov eax,ds:ip_dest
+	mov eax,ds:[di].ip_dest
 	cmp eax,fs:my_ip
 	je send_self
 ;
@@ -395,7 +406,7 @@ send_checksum_loop:
 	je send_self
 ;
 	and eax,fs:ip_mask
-	mov esi,ds:ip_source
+	mov esi,fs:my_ip
 	and esi,fs:ip_mask
 	cmp eax,esi
 	je send_local_net
@@ -405,21 +416,21 @@ send_checksum_loop:
 	jnz send_gateway
 
 send_ppp:	
+	GetPppIp
+	mov es:[di].ip_source,edx
 	SendPpp
-	xor ax,ax
-	mov ds,ax
-	FreeMem
 	jmp send_done
 
 send_gateway:
-	mov ax,ip_data_sel
-	mov ds,ax
+	mov eax,fs:my_ip
+	mov es:[di].ip_source,eax
 	mov esi,OFFSET gateway
 	SendNet
-	FreeMem
 	jmp send_done
 
 send_self:
+	mov eax,fs:my_ip
+	mov es:[di].ip_source,eax
 	xor ax,ax
 	mov ds,ax
 	push cs
@@ -427,13 +438,13 @@ send_self:
 	jmp send_done
 
 send_local_net:
+	mov eax,fs:my_ip
+	mov es:[di].ip_source,eax
 	mov esi,OFFSET ip_dest
 	SendNet
-	xor ax,ax
-	mov ds,ax
-	FreeMem
 
 send_done:
+	pop edi
 	pop esi
 	pop ecx
 	pop dx
@@ -455,7 +466,7 @@ PAGE
 ;	Parameters:		ECX		size
 ;					DX		packet type
 ;					DS:SI	source address
-;					ES		data selector, IP datagram
+;					ES:EDI	data selector, IP datagram
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -467,19 +478,19 @@ receive	Proc far
 	push ecx
 	push esi
 ;
-	mov ax,es:ip_size
+	mov ax,es:[di].ip_size
 	xchg al,ah
 	cmp ax,cx
 	ja receive_done
 ;
-	movzx cx,es:ip_hdr_ver
+	movzx cx,es:[di].ip_hdr_ver
 	and cl,0Fh
 	cmp cl,5
 	jc receive_done
 ;
 	shl cl,1
 	xor bx,bx
-	xor si,si
+	mov si,di
 	clc
 receive_checksum_loop:
 	lods word ptr es:[si]
@@ -494,7 +505,7 @@ receive_checksum_loop:
 receive_check_ok:
 	mov ax,ip_data_sel
 	mov ds,ax
-	mov eax,es:ip_dest
+	mov eax,es:[di].ip_dest
 	cmp eax,ds:my_ip
 	je receive_this_node
 	cmp eax,-1
@@ -517,20 +528,21 @@ receive_prot_loop:
 	mov al,fs:prot_id
 	cmp al,es:ip_proto
 	jne receive_prot_next
+;
 	mov ax,es
 	mov ds,ax
-	mov bx,ds:ip_id
+	mov bx,ds:[di].ip_id
 	xchg bl,bh
-	mov cx,ds:ip_size
+	mov cx,ds:[di].ip_size
 	xchg cl,ch
-	mov al,ds:ip_hdr_ver
+	mov al,ds:[di].ip_hdr_ver
 	and al,0Fh
 	shl al,2
 	xor ah,ah
 	sub cx,ax
 	sub ch,0
 	mov esi,SIZE ip_header
-	mov edi,esi
+	add edi,esi
 	sub ax,SIZE ip_header
 	add di,ax
 	mov edx,ds:ip_source
@@ -546,9 +558,10 @@ receive_forward:
 	mov bx,ds:ip_handle
 	mov ax,es
 	mov ds,ax
-	movzx ecx,es:ip_size
+	movzx ecx,es:[di].ip_size
 	xchg cl,ch
 	mov esi,OFFSET ip_dest
+	add esi,edi
 ;	SendNet
 	jmp receive_fail
 

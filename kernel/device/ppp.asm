@@ -4040,6 +4040,29 @@ Remove	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetBuffer
+;
+;		DESCRIPTION:    Get a buffer
+;
+;       PARAMETERS:     ECX		size
+;
+;		RETURNS			ES:EDI	data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBuffer	Proc far
+	push eax
+	mov eax,ecx
+	add eax,2
+	AllocateSmallGlobalMem
+	mov edi,2
+	pop eax
+	ret
+GetBuffer	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Send
 ;
 ;		DESCRIPTION:    Send data
@@ -4082,7 +4105,7 @@ send_set_tail:
 	push di
 	push cx
 ;
-	xor si,si
+	mov si,2
 	add di,2
 ;
 	mov ax,es:send_hdlc_len
@@ -4245,6 +4268,7 @@ DispatchTable:
 	DW OFFSET Preview,	 	ppp_code_sel
 	DW OFFSET Receive,		ppp_code_sel
 	DW OFFSET Remove,		ppp_code_sel
+	DW OFFSET GetBuffer,	ppp_code_sel
 	DW OFFSET Send,			ppp_code_sel
 	DW OFFSET GetAddress,	ppp_code_sel
 

@@ -1113,18 +1113,33 @@ RegisterPppDriver	MACRO
 	OsGate register_ppp_driver_nr
 						ENDM
 
-;	BX		PROTOCOL HANDLE
-;	ECX		SIZE
-;	DS:ESI	DEST ADDRESS
-;	ES		DATA
-;	NC		SUCCESS
+; IN  BX		PROTOCOL HANDLE
+; IN  ECX		SIZE
+; OUT ES:EDI	DATA BUFFER TO USE
+; OUT NC		SUCCESS
+GetNetBuffer	MACRO
+	OsGate get_net_buffer_nr
+						ENDM
+
+; IN  BX		PROTOCOL HANDLE
+; IN  ECX		SIZE
+; IN  DS:ESI	DEST ADDRESS
+; IN  ES		DATA
+; OUT NC		SUCCESS
 SendNet	MACRO
 	OsGate send_net_nr
 						ENDM
 
-;	ECX		SIZE
-;	ES		DATA
-;	NC		SUCCESS
+; IN  ECX		SIZE
+; OUT ES:EDI	DATA BUFFER TO USE
+; OUT NC		SUCCESS
+GetPppBuffer	MACRO
+	OsGate get_ppp_buffer_nr
+						ENDM
+
+; IN  ECX		SIZE
+; IN  ES		DATA
+; OUT NC		SUCCESS
 SendPpp	MACRO
 	OsGate send_ppp_nr
 						ENDM

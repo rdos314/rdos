@@ -362,233 +362,6 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			ForwardArpRequest
-;
-;	Purpose:		Forward arp request to all nodes, except the one it's received from
-;
-;	Parameters:		BX		Driver arp is received from
-;					DS		Protocol
-;					ES		Receive ARP
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ForwardArpRequest	Proc near
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
-;
-	mov dx,bx
-	mov ax,es
-	mov fs,ax
-	mov ax,ds
-	mov gs,ax
-	mov ax,net_data_sel
-	mov ds,ax
-	mov cx,ds:class_count
-	mov bx,OFFSET class_arr
-	or cx,cx
-	jz forward_arp_req_done
-forward_arp_req_class_loop:
-	push ds
-	push bx
-	push cx
-	mov ds,ds:[bx]
-	mov cx,ds:driver_count
-	mov bx,OFFSET driver_arr
-	or cx,cx
-	jz forward_arp_req_class_next
-	mov eax,4
-	add al,gs:p_logical_addr_len
-	adc ah,0
-	add al,ds:addr_len
-	adc ah,0
-	add ax,ax
-	mov ebp,eax
-	AllocateSmallGlobalMem
-;
-	mov ah,ds:class_id
-	xor al,al
-	mov es:arp_class,ax
-	mov ax,gs:p_packet_type
-	xchg al,ah
-	mov es:arp_type,ax
-	mov al,ds:addr_len
-	mov es:arp_hw_len,al
-	mov al,gs:p_logical_addr_len
-	mov es:arp_prot_len,al
-	mov es:arp_op,100h
-	mov esi,SIZE arp_data + OFFSET ar_data
-	mov edi,SIZE arp_data
-;
-	movzx cx,fs:ar_data.arp_hw_len
-	add si,cx
-	movzx cx,ds:addr_len
-	add di,cx
-;
-	movzx cx,fs:ar_data.arp_prot_len
-	rep movs byte ptr es:[di],fs:[si]
-;
-	movzx cx,fs:ar_data.arp_hw_len
-	add si,cx
-	movzx cx,ds:addr_len
-	xor al,al
-	rep stosb
-;
-	movzx cx,fs:ar_data.arp_prot_len
-	rep movs byte ptr es:[di],fs:[si]
-;
-	push fs
-	mov cx,ds:driver_count
-	mov bx,OFFSET driver_arr
-forward_arp_req_driver_loop:
-	push cx
-	cmp dx,[bx]
-	je forward_arp_req_driver_next
-	push dx
-	mov fs,ds:[bx]
-	movzx ecx,ds:addr_len
-	push ds
-	call fs:d_address
-	mov edi,SIZE arp_data
-	rep movs byte ptr es:[edi],ds:[esi]
-	pop ds
-	mov esi,OFFSET broadcast_addr
-	xor di,di
-	mov ecx,ebp
-	mov dx,806h
-	call fs:d_send
-	pop dx
-forward_arp_req_driver_next:
-	add bx,2
-	pop cx
-	loop forward_arp_req_driver_loop
-	pop fs
-	FreeMem
-forward_arp_req_class_next:	
-	pop cx
-	pop bx
-	pop ds
-	add bx,2
-	sub cx,1
-	jnz forward_arp_req_class_loop
-;
-forward_arp_req_done:
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	ret
-ForwardArpRequest	Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			ForwardArpReply
-;
-;	Purpose:		Forward arp reply to target node
-;
-;	Parameters:		DS		Protocol
-;					ES		Receive ARP
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ForwardArpReply	Proc near
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
-;
-	mov ax,ds
-	mov gs,ax
-	mov ax,es
-	mov fs,ax
-	mov esi,SIZE arp_data + OFFSET ar_data
-	movzx cx,fs:ar_data.arp_hw_len
-	add si,cx
-	add si,cx
-	movzx cx,fs:ar_data.arp_prot_len
-	add si,cx
-	call FindAddress
-	jc forward_arp_reply_done
-;
-	mov ds,ax
-	mov gs,ds:prot_class
-;
-	mov eax,4
-	add al,ds:prot_logical_addr_len
-	adc ah,0
-	add al,ds:prot_hardware_addr_len
-	adc ah,0
-	add ax,ax
-	push eax
-	AllocateSmallGlobalMem
-;
-	mov ah,gs:class_id
-	xor al,al
-	mov es:arp_class,ax
-	mov ax,fs:ar_data.arp_type
-	mov es:arp_type,ax
-	mov al,ds:prot_hardware_addr_len
-	mov es:arp_hw_len,al
-	mov al,ds:prot_logical_addr_len
-	mov es:arp_prot_len,al
-	mov es:arp_op,200h
-	mov si,SIZE arp_data + OFFSET ar_data
-	movzx edi,si
-;
-	movzx cx,fs:ar_data.arp_hw_len
-	add si,cx
-	push ds
-	push si
-	movzx ecx,ds:prot_hardware_addr_len
-	mov ds,ds:prot_driver
-	call ds:d_address
-	mov edi,SIZE arp_data
-	rep movs byte ptr es:[edi],ds:[esi]
-	pop si
-	pop ds
-;
-	movzx cx,fs:ar_data.arp_prot_len
-	rep movs byte ptr es:[di],fs:[si]
-;
-	movzx cx,fs:ar_data.arp_hw_len
-	add si,cx
-	push si
-	movzx cx,ds:prot_hardware_addr_len
-	movzx si,ds:prot_logical_addr_len
-	add si,OFFSET prot_logical_addr
-	rep movsb
-	pop si
-;
-	movzx cx,fs:ar_data.arp_prot_len
-	rep movs byte ptr es:[di],fs:[si]
-;
-	pop ecx
-	movzx esi,ds:prot_logical_addr_len
-	add esi,OFFSET prot_logical_addr
-	xor di,di
-	mov fs,ds:prot_driver
-	mov dx,806h
-	call fs:d_send
-
-forward_arp_reply_done:
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	ret
-ForwardArpReply	Endp
-
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; 	Name:			SendArp
 ;
 ;	Purpose:		Send arp request to all drivers
@@ -622,6 +395,7 @@ send_arp_class_loop:
 	mov bx,OFFSET driver_arr
 	or cx,cx
 	jz send_arp_class_next
+;
 	mov eax,4
 	add al,gs:p_logical_addr_len
 	adc ah,0
@@ -629,21 +403,30 @@ send_arp_class_loop:
 	adc ah,0
 	add ax,ax
 	mov ebp,eax
-	AllocateSmallGlobalMem
+;
+	push fs
+	mov cx,ds:driver_count
+	mov bx,OFFSET driver_arr
+send_arp_driver_loop:
+	push cx
+	mov fs,ds:[bx]
+;
+	mov ecx,ebp
+	call fs:d_get_buffer
 ;
 	mov ah,ds:class_id
 	xor al,al
-	mov es:arp_class,ax
+	mov es:[di].arp_class,ax
 	mov dx,gs:p_packet_type
 	xchg dl,dh
-	mov es:arp_type,dx
+	mov es:[di].arp_type,dx
 	xchg dl,dh
 	mov al,ds:addr_len
-	mov es:arp_hw_len,al
+	mov es:[di].arp_hw_len,al
 	mov al,gs:p_logical_addr_len
-	mov es:arp_prot_len,al
-	mov es:arp_op,100h
-	mov edi,SIZE arp_data
+	mov es:[di].arp_prot_len,al
+	mov es:[di].arp_op,100h
+	add edi,SIZE arp_data
 	movzx cx,ds:addr_len
 	add di,cx
 	movzx cx,gs:p_logical_addr_len
@@ -658,13 +441,6 @@ send_arp_class_loop:
 	push esi
 	rep movs byte ptr es:[edi],fs:[esi]
 ;
-	push fs
-	mov cx,ds:driver_count
-	mov bx,OFFSET driver_arr
-send_arp_driver_loop:
-	push cx
-	mov fs,ds:[bx]
-	movzx ecx,ds:addr_len
 	push ds
 	call fs:d_address
 	mov edi,SIZE arp_data
@@ -677,10 +453,11 @@ send_arp_driver_loop:
 	call fs:d_send
 	add bx,2
 	pop cx
-	loop send_arp_driver_loop
+	sub cx,1
+	jnz send_arp_driver_loop
 	pop fs
 	pop esi
-	FreeMem
+
 send_arp_class_next:	
 	pop cx
 	pop bx
@@ -714,6 +491,7 @@ PAGE
 ReceivedArp	Proc near
 	push ds
 	push fs
+	push gs
 	push ax
 	push bx
 	push cx
@@ -774,64 +552,65 @@ receive_arp_check_dest:
 	repz cmps byte ptr [si],es:[di]
 	jnz receive_arp_forward_req
 ;
-	mov es:ar_data.arp_op,200h
-	mov si,SIZE arp_data + OFFSET ar_data
-	mov di,si
-	xor ch,ch
-	mov cl,es:ar_data.arp_hw_len
-	add cl,es:ar_data.arp_prot_len
-	adc ch,0
-	add di,cx
-	rep movs byte ptr es:[di],es:[si]
-;
+	int 3
 	mov fs,bx
-	movzx ecx,es:ar_data.arp_hw_len
+	mov ax,es
+	mov gs,ax
+;
+	mov cx,SIZE arp_data
+	xor ah,ah
+	mov al,gs:ar_data.arp_hw_len
+	add cx,ax
+	add cx,ax
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
+	call fs:d_get_buffer
+;
+	mov bp,di
+	mov cx,SIZE arp_data
+	mov si,OFFSET ar_data
+	rep movs byte ptr es:[di],gs:[si]
+	mov es:[bp].arp_op,200h
+;
+	movzx ecx,gs:ar_data.arp_hw_len
 	push ds
 	call fs:d_address
-	mov edi,SIZE arp_data + OFFSET ar_data
 	rep movs byte ptr es:[edi],ds:[esi]
 	pop ds
 ;
-	xor ch,ch
-	mov cl,es:ar_data.arp_prot_len
+	movzx ecx,gs:ar_data.arp_prot_len
 	mov si,OFFSET p_logical_my_addr
 	rep movsb
 ;
+	mov bp,di
+	movzx ecx,gs:ar_data.arp_hw_len
+	add cl,gs:ar_data.arp_prot_len
+	adc ch,0
+	mov si,SIZE arp_data + OFFSET ar_data
+	rep movs byte ptr es:[di],gs:[si]
+;
 	mov ax,es
 	mov ds,ax
-	mov ecx,edi
-	mov esi,edi
+	movzx esi,bp
+	mov cx,SIZE arp_data
 	xor ah,ah
-	mov al,es:ar_data.arp_hw_len
+	mov al,gs:ar_data.arp_hw_len
 	add cx,ax
-	mov al,es:ar_data.arp_prot_len
 	add cx,ax
-	mov di,OFFSET ar_data
-	sub cx,di
+	mov al,gs:ar_data.arp_prot_len
+	add cx,ax
+	add cx,ax
 	mov dx,806h
 	call fs:d_send
 	jmp receive_arp_done
 
 receive_arp_forward_req:
-	call ForwardArpRequest
 	jmp receive_arp_done
 
 receive_arp_not_req:
 	cmp ax,2
 	jne receive_arp_done
-; 
-	mov di,SIZE arp_data + OFFSET ar_data
-	xor ch,ch
-	mov cl,es:ar_data.arp_hw_len
-	add di,cx
-	add di,cx
-	mov cl,es:ar_data.arp_prot_len
-	add di,cx
-	mov si,OFFSET p_logical_my_addr
-	repz cmps byte ptr [si],es:[di]
-	jz receive_arp_done
-;
-	call ForwardArpReply
 
 receive_arp_done:
 	pop bp
@@ -839,6 +618,7 @@ receive_arp_done:
 	pop cx
 	pop bx
 	pop ax
+	pop gs
 	pop fs
 	pop ds
 	ret
@@ -987,11 +767,12 @@ receive_data_loop:
 	call fs:d_preview
 	jc receive_data_done
 	mov edi,ecx
-	or ecx,ecx
-	jz receive_data_remove
 ;
 	cmp dx,806h
 	jne receive_data_not_arp
+;
+	or ecx,ecx
+	jz receive_data_arp_rec
 ;
 	mov eax,ecx
 	mov edi,OFFSET ar_data
@@ -999,7 +780,29 @@ receive_data_loop:
 	AllocateSmallGlobalMem
 	call fs:d_receive
 	call fs:d_remove
+	jmp receive_data_handle_arp
+
+receive_data_arp_rec:
+	call fs:d_receive
+	call fs:d_remove
 ;
+	push ds
+	mov esi,edi
+	mov ax,es
+	mov ds,ax
+	mov eax,ecx
+	mov edi,OFFSET ar_data
+	add eax,edi
+	AllocateSmallGlobalMem
+	rep movs byte ptr es:[edi],[esi]
+	mov bx,es
+	mov ax,ds
+	mov es,ax
+	pop ds
+	FreeMem
+	mov es,bx
+
+receive_data_handle_arp:
 	mov es:ar_driver,fs
 	EnterSection ds:arp_section
 	mov ax,ds:arp_rec_list
@@ -1023,6 +826,8 @@ ins_ar_empty:
 	mov ds:arp_rec_list,es
 
 ins_ar_done:
+	xor ax,ax
+	mov es,ax
 	LeaveSection ds:arp_section
 	mov bx,ds:arp_thread
 	Signal
@@ -1038,10 +843,15 @@ receive_data_prot_loop:
 	cmp dx,gs:p_packet_type
 	jne receive_data_prot_next
 ;
+	or edi,edi
+	jz receive_data_norm_rec
+;
 	mov ecx,edi
 	mov eax,ecx
 	AllocateSmallGlobalMem
 	xor di,di
+
+receive_data_norm_rec:
 	call fs:d_receive
 	call fs:d_remove
 	call gs:p_callback
@@ -1222,6 +1032,35 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			GetNetBuffer
+;
+;	Purpose:		Get network buffer
+;
+;	Parameters:		BX		protocol handle
+;					ECX		size of data
+;
+;	returns:		ES:EDI	address of data
+;					NC	success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_net_buffer_name	DB 'Get Net Buffer',0
+
+get_net_buffer	Proc far
+	push fs
+;
+	mov fs,bx
+	mov fs,fs:prot_driver
+	call fs:d_get_buffer
+;
+	pop fs
+	ret
+get_net_buffer	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			SendNet
 ;
 ;	Purpose:		Send data to network
@@ -1271,14 +1110,16 @@ send_net	Proc far
 	movzx cx,al
 	rep movs byte ptr es:[di],fs:[si]
 	pop cx
-	push ds
 	mov ds,dx
 	xor si,si
 	rep movsb
-	pop ds
-;
 	mov ax,net_data_sel
 	mov ds,ax
+	push es
+	mov es,dx
+	FreeMem
+	pop es
+;
 	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
 	or ax,ax
@@ -1329,6 +1170,41 @@ send_done:
 	pop ds
 	ret
 send_net	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetPppBuffer
+;
+;	Purpose:		Get PPP buffer
+;
+;	Parameters:		BX		protocol handle
+;					ECX		size of data
+;
+;	returns:		ES:EDI	address of data
+;					NC	success
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ppp_buffer_name	DB 'Get Ppp Buffer',0
+
+get_ppp_buffer	Proc far
+	push fs
+;
+	mov ax,net_data_sel
+	mov fs,ax
+	mov ax,fs:ppp_handle
+	or ax,ax
+	jz get_ppp_done
+;
+	mov fs,ax
+	call fs:d_get_buffer
+
+get_ppp_done:
+	pop fs
+	ret
+get_ppp_buffer	Endp
 
 PAGE
 	    
@@ -1582,6 +1458,7 @@ arp_answ_handle:
 	call FindAddress
 	jc arp_rec_loop
 ;
+	int 3
 	mov dx,ds:p_packet_type
 	mov ds,ax
 	mov fs,ds:prot_driver
@@ -1589,7 +1466,7 @@ arp_answ_handle:
 	mov esi,OFFSET prot_logical_addr
 	add esi,eax
 	call fs:d_send
-	FreeMem
+;	FreeMem
 	jmp arp_rec_loop
 	
 arp_answ_done:
@@ -1695,10 +1572,22 @@ init	PROC far
 	mov ax,register_ppp_driver_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET get_net_buffer
+	mov di,OFFSET get_net_buffer_name
+	xor cl,cl
+	mov ax,get_net_buffer_nr
+	RegisterOsGate
+;
 	mov si,OFFSET send_net
 	mov di,OFFSET send_net_name
 	xor cl,cl
 	mov ax,send_net_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_ppp_buffer
+	mov di,OFFSET get_ppp_buffer_name
+	xor cl,cl
+	mov ax,get_ppp_buffer_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET send_ppp

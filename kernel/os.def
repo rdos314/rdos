@@ -411,5 +411,8 @@ lock_disc_request_nr        EQU 278
 modify_disc_request_nr      EQU 279
 unlock_disc_request_nr      EQU 280
 
+get_net_buffer_nr			EQU 281
+get_ppp_buffer_nr			EQU 282
+
 osgate_entries				EQU 300
 

@@ -1,0 +1,987 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; DP83815.ASM
+; DP83815 network driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		NAME dp83815
+
+GateSize = 16
+
+INCLUDE ..\driver.def
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
+INCLUDE ..\os\pci.inc
+
+CR = 0h
+CFG = 04h
+MEAR = 08h
+PTSCR = 0Ch
+ISR = 10h
+IMR = 14h
+IER = 18h
+TXDP = 20h
+TXCFG = 24h
+RXDP = 30h
+RXCFG = 34h
+CCSR = 3Ch
+WCSR = 40h
+PCR = 44h
+RFCR = 48h
+RFDR = 4Ch
+
+IMR_Val = 00000009h
+
+descriptor_struc	STRUC
+
+dh_link				DD ?
+dh_stat				DD ?
+dh_data				DD ?
+dh_link_linear		DD ?
+dh_data_sel			DW ?
+
+descriptor_struc	ENDS
+ 
+data	SEGMENT AT 0
+
+IoBase				DW ?
+OperationRegSel		DW ?
+EthernetAddress		DB 6 DUP(?)
+FreeList			DD ?
+RxList				DD ?
+Handle				DW ?
+ListSection			section_typ <>
+SendSection			section_typ <>
+
+net_seg_size		DB ?
+
+data	ENDS
+
+code	SEGMENT byte public 'CODE'
+
+
+	assume cs:code
+
+.386p
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateDescriptor
+;
+;		DESCRIPTION:	Allocate new descriptor
+;						
+;		RETURNS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateDescriptor	PROC near
+	push eax
+	push edx
+;
+	mov edi,ds:FreeList
+	or edi,edi
+	jnz allocate_descr_get
+;
+	push cx
+	mov eax,1000h
+	AllocateBigLinear
+	mov ds:FreeList,edx
+	pop cx
+
+allocate_init_descr_loop:
+	add edx,32
+	mov es:[edx-32].dh_link_linear,edx
+	test dx,0FFFh
+	jnz allocate_init_descr_loop
+;
+	mov es:[edx-32].dh_link_linear,0
+	mov edi,ds:FreeList
+
+allocate_descr_get:
+	mov eax,es:[edi].dh_link_linear
+	mov ds:FreeList,eax
+;
+	pop edx
+	pop eax
+	ret
+AllocateDescriptor	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeDescriptor
+;
+;		DESCRIPTION:	Free descriptor
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDescriptor	PROC near
+	push eax
+	mov eax,ds:FreeList
+	mov es:[edi].dh_link_linear,eax
+	mov ds:FreeList,edi
+	pop eax
+	ret
+FreeDescriptor	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateReceiveEntry
+;
+;		DESCRIPTION:	Create a new receive buffer entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateReceiveEntry	Proc near
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+;
+	mov ax,flat_sel
+	mov es,ax
+	EnterSection ds:ListSection
+	call AllocateDescriptor
+	LeaveSection ds:ListSection
+;
+	mov eax,1000h
+	AllocateBigLinear
+	AllocateGdt
+	mov ecx,eax
+	CreateDataSelector16
+	mov al,es:[edx]
+	GetPhysicalPage
+;
+	and ax,0F000h
+	mov es:[edi].dh_link,0
+	mov es:[edi].dh_link_linear,0
+	mov es:[edi].dh_stat,0FFFh
+	mov es:[edi].dh_data,eax
+	mov es:[edi].dh_data_sel,bx
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop eax
+	pop es
+	ret
+CreateReceiveEntry	Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeReceiveEntry
+;
+;		DESCRIPTION:	Free a receive buffer entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeReceiveEntry	Proc near
+	push es
+	push eax
+;
+	mov ax,flat_sel
+	mov es,ax
+	EnterSection ds:ListSection
+	call FreeDescriptor
+	LeaveSection ds:ListSection
+;
+	pop eax
+	pop es
+	ret
+FreeReceiveEntry	Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertReceiveEntry
+;
+;		DESCRIPTION:	Insert receive entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertReceiveEntry	Proc near
+	push es
+	push eax
+	push ecx
+	push edx
+;
+	mov ax,flat_sel
+	mov es,ax
+;
+	EnterSection ds:ListSection
+	mov eax,ds:RxList
+	or eax,eax
+	jz ireEmpty
+
+ireGetTail:
+	mov edx,eax
+	mov eax,es:[eax].dh_link_linear
+	or eax,eax
+	jnz ireGetTail
+;
+	mov es:[edx].dh_link_linear,edi
+	push edx
+	mov edx,edi
+	and dx,0F000h
+	GetPhysicalPage
+	and ax,0F000h
+	mov dx,di
+	and dx,0FFFh
+	or ax,dx
+	pop edx
+	mov es:[edx].dh_link,eax
+	jmp ireDone
+
+ireEmpty:
+	mov ds:RxList,edi
+;
+	mov edx,edi
+	and dx,0F000h
+	GetPhysicalPage
+	and ax,0F000h
+	mov dx,di
+	and dx,0FFFh
+	or ax,dx
+	mov ecx,eax
+;
+	mov dx,ds:IoBase
+	add dx,RXDP
+	in eax,dx
+	or eax,eax
+	jnz ireDone
+;
+	mov eax,ecx
+	out dx,eax
+
+ireDone:
+	LeaveSection ds:ListSection
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	ret
+InsertReceiveEntry	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NetInt
+;
+;		DESCRIPTION:    Network card interrupt
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NetInt	Proc far
+niLoop:
+	mov dx,ds:IoBase
+	add dx,ISR
+	in eax,dx
+	or eax,eax
+	jz niDone
+;
+	test al,1
+	jz niNotReceive
+;
+	mov bx, ds:Handle
+	or bx,bx
+	jz niNotReceive
+;
+	NetReceived
+
+niNotReceive:
+	jmp niLoop
+
+niDone:
+	ret
+NetInt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitForNegotiate
+;
+;		DESCRIPTION:    Wait until auto-negotiate is done
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForNegotiate	Proc near
+	push eax
+	push cx
+	push dx
+;
+	xor cx,cx
+
+wfnLoop:
+	mov dx,ds:IoBase
+	add dx,CFG
+	in eax,dx
+	test eax,08000000h
+	clc
+	jnz wfnDone
+;
+	push cx
+	xor cx,cx
+wfnDelay:
+	loop wfnDelay
+	pop cx
+;
+	loop wfnLoop
+;
+	stc	
+
+wfnDone:
+	pop dx
+	pop cx
+	pop eax
+	ret
+WaitForNegotiate	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitAddress
+;
+;		DESCRIPTION:    Init ethernet address
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitAddress	Proc near
+	push eax
+	push ecx
+	push dx
+;
+	mov dx,ds:IoBase
+	add dx,RFCR
+	in eax,dx
+	and eax, NOT 3FFh
+	mov ecx,eax
+	out dx,eax
+;
+	add dx,4
+	in eax,dx
+	mov word ptr ds:EthernetAddress,ax
+	sub dx,4
+;
+	add cx,2
+	mov eax,ecx
+	out dx,eax
+;
+	add dx,4
+	in eax,dx
+	mov word ptr ds:EthernetAddress+2,ax
+	sub dx,4
+;
+	add cx,2
+	mov eax,ecx
+	out dx,eax
+;
+	add dx,4
+	in eax,dx
+	mov word ptr ds:EthernetAddress+4,ax
+;
+	pop dx
+	pop ecx
+	pop eax
+	ret
+InitAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitRegisters
+;
+;		DESCRIPTION:    Init registers
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitRegisters	Proc near
+	push eax
+	push ecx
+	push dx
+;
+	mov dx,ds:IoBase
+	add dx,CFG
+	in eax,dx
+	mov ecx,eax
+;
+	mov dx,ds:IoBase
+	add dx,0CCh
+	mov ax,1
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,0E4h
+	mov ax,189Ch
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,0FCh
+	mov ax,0h
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,0F4h
+	mov ax,5040h
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,0F8h
+	mov ax,008Ch
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,0C0h
+	in ax,dx
+;
+	mov dx,ds:IoBase
+	add dx,0C4h
+	mov ax,0002h
+	out dx,ax
+;
+	mov dx,ds:IoBase
+	add dx,ISR
+	in eax,dx
+;
+	mov dx,ds:IoBase
+	add dx,TXCFG
+	mov eax,10D01002h				; MXDMA = 64, FLT = 512, DRTH = 64
+	test ecx,20000000h
+	jz init_tx_not_full
+;
+	or eax,0C0000000h
+
+init_tx_not_full:
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,RXCFG
+	mov eax,48500020h				; MXDMA = 64, DRTH = 256
+	test ecx,20000000h
+	jz init_rx_not_full
+;
+	or eax,10000000h
+
+init_rx_not_full:
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,CCSR
+	in eax,dx
+	and ax,NOT 10h
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,IMR
+	mov eax,0
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,IER
+	mov eax,1
+	out dx,eax
+;
+	pop dx
+	pop ecx
+	pop eax
+	ret
+InitRegisters	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitReceive
+;
+;		DESCRIPTION:    Init receive ring
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitReceive	Proc near
+	push eax
+	push cx
+	push edx
+;
+	mov cx,64
+irLoop:
+	call CreateReceiveEntry
+	call InsertReceiveEntry
+	loop irLoop
+;
+	mov dx,ds:IoBase
+	add dx,CR
+	mov eax,4
+	out dx,eax
+;
+	pop edx
+	pop cx
+	pop eax
+	ret
+InitReceive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Preview
+;
+;		DESCRIPTION:    Return size of block or no more data
+;
+;		RETURNS:		NC		Data available
+;						ECX		Size of data (0)
+;						DX		Packet type
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Preview	Proc far
+	push ds
+	push es
+	push eax
+	push edi
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edi,ds:RxList
+	mov eax,es:[edi].dh_stat
+	test eax,80000000h
+	stc
+	jz pvDone
+;	
+	xor ecx,ecx
+	mov es,es:[edi].dh_data_sel
+	mov dx,es:[12]
+	xchg dl,dh
+	clc
+
+pvDone:
+	pop edi
+	pop eax
+	pop es
+	pop ds
+	ret
+Preview	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Receive
+;
+;		DESCRIPTION:    Receive data
+;
+;       RETURNS: 	    ES:EDI		data buffer
+;						ECX			size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Receive	Proc far
+	push ds
+	push eax
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edi,ds:RxList
+	mov eax,es:[edi].dh_stat
+	mov ecx,eax
+	and ecx,0FFFh
+;	
+	mov es,es:[edi].dh_data_sel
+	mov edi,14
+;
+	pop eax
+	pop ds
+	ret
+Receive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Remove
+;
+;		DESCRIPTION:    Remove data from buffer ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Remove	Proc far
+	push ds
+	push es
+	push eax
+	push edi
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edi,ds:RxList
+	mov eax,es:[edi].dh_link_linear
+	mov ds:RxList,eax
+;
+	call FreeReceiveEntry
+	call CreateReceiveEntry
+	call InsertReceiveEntry
+;
+	pop edi
+	pop eax
+	pop es
+	pop ds
+	ret
+Remove	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetBuffer
+;
+;		DESCRIPTION:    Get buffer
+;
+;       PARAMETERS:     ECX		size
+;
+;		RETURNS:		ES:EDI	data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBuffer	Proc far
+	push eax
+	mov eax,14
+	add eax,ecx
+	AllocateGlobalMem
+	mov edi,14
+	pop eax
+	ret
+GetBuffer	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Send
+;
+;		DESCRIPTION:    Send data
+;
+;       PARAMETERS:     ECX		size
+;						DX		packet type
+;						DS:ESI	dest address
+;						ES:EDI	data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Send	Proc far
+	push ds
+	push fs
+	push eax
+;
+	int 3
+	mov ax,ds
+	mov fs,ax
+	mov ax,ether_data_sel
+	mov ds,ax
+;
+	pop eax
+	pop fs
+	pop ds
+	ret
+Send	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetAddress
+;
+;		DESCRIPTION:    Get adapter address
+;
+;		RETURNS:		DS:ESI	address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAddress	Proc far
+	mov si,ether_data_sel
+	mov ds,si
+	mov esi,OFFSET EthernetAddress	
+	ret
+GetAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DispatchTable
+;
+;		DESCRIPTION:    Driver dispatch table
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DispTable:
+	DW OFFSET Preview,	 	ether_code_sel
+	DW OFFSET Receive,		ether_code_sel
+	DW OFFSET Remove,		ether_code_sel
+	DW OFFSET GetBuffer,	ether_code_sel
+	DW OFFSET Send,			ether_code_sel
+	DW OFFSET GetAddress,	ether_code_sel
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitPciAdapter
+;
+;		DESCRIPTION:    Init PCI adapter if found
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		NC		Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DriverName	DB 'DP83815',0
+
+PciVendorTab:
+pci00 DW 100Bh, 20h
+pci0B DW 0,		0
+
+InitPciAdapter	Proc near
+	mov si,OFFSET PciVendorTab
+init_pci_loop:
+	xor ax,ax
+	mov dx,cs:[si]
+	mov cx,cs:[si+2]
+	or dx,dx
+	stc
+	jz init_pci_done
+;
+	FindPciDevice
+	jnc init_pci_found
+;
+	add si,4
+	jmp init_pci_loop
+
+init_pci_found:
+	mov cx,PCI_card_ExCa_base
+	ReadPciDword
+	mov dx,ax
+	and dx,0FFE0h
+	mov ds:IoBase,dx
+;
+	call WaitForNegotiate
+	jc init_pci_done
+;
+	AllocatePhysical
+	mov cx,PCI_card_cap_ptr
+	WritePciDword
+;
+	push eax
+	mov eax,1000h
+	AllocateBigLinear
+	pop eax
+	or al,7
+	SetPhysicalPage
+;
+	push bx
+	AllocateGdt
+	mov ecx,1000h
+	CreateDataSelector16
+	mov ds:OperationRegSel,bx
+	pop bx
+;
+	xor ch,ch
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET NetInt	
+	RequestPrivateIrqHandler
+;
+	mov dx,ds:IoBase
+	add dx,ISR
+	in eax,dx
+;
+	call InitAddress
+	call InitRegisters
+	call InitReceive
+;
+	mov dx,ds:IoBase
+	add dx,IMR
+	mov eax,IMR_Val
+	out dx,eax
+;
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET DispTable
+	mov di,OFFSET DriverName
+	mov al,1
+	mov dx,0
+	mov ecx,1600
+	RegisterNetDriver
+	pop ds
+	mov ds:Handle,bx
+	clc
+
+init_pci_done:
+	ret
+InitPciAdapter	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_net
+;
+;		DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dp83815_name	DB 'DP83815-TEST',0
+
+dp83815_thread	proc far
+	int 3
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov dx,ds:IoBase
+	add dx,ISR
+	in eax,dx
+	ret
+dp83815_thread	endp
+	
+init_net	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	call InitPciAdapter
+;	jmp init_net_done
+
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET dp83815_name
+	mov si,OFFSET dp83815_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+
+init_net_done:
+	popa
+	pop es
+	pop ds
+	ret
+init_net	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init
+;
+;		DESCRIPTION:    init device
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Init	Proc far
+	push ds
+	push es
+	pusha
+	mov bx,ether_code_sel
+	InitDevice
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov eax,OFFSET net_seg_size
+	mov bx,ether_data_sel
+	AllocateFixedSystemMem
+	mov ds,bx
+	mov es,bx
+	mov cx,ax
+	xor di,di
+	xor al,al
+	rep stosb
+	InitSection es:ListSection
+	InitSection es:SendSection
+	mov es:FreeList,0
+	mov es:RxList,0
+	mov es:Handle,0
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET init_net
+	HookInitTasking
+
+init_fail:
+	popa
+	pop es
+	pop ds
+	ret
+Init	Endp
+
+ENDS
+
+	END init

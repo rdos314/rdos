@@ -77,6 +77,10 @@ ne2000_srcs = NE2000.ASM
 ne2000_objs = $(ne2000_srcs:.ASM=.OBJ)
 ne2000_rdvs = NE2000.RDV
 
+dp83815_srcs = DP83815.ASM
+dp83815_objs = $(dp83815_srcs:.ASM=.OBJ)
+dp83815_rdvs = DP83815.RDV
+
 ppp_srcs = PPP.ASM
 ppp_objs = $(ppp_srcs:.ASM=.OBJ)
 ppp_rdvs = PPP.RDV
@@ -92,13 +96,13 @@ fat_rdvs = FAT.RDV
 srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(pccom_srcs)
+			$(pccom_srcs) $(dp83815_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
-			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) \
+			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -215,6 +219,14 @@ NE2000.RDV : $(ne2000_objs)
 	$(ne2000_objs)
 	NE2000.RDV
 	NE2000;
+!
+
+DP83815.RDV : $(dp83815_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(dp83815_objs)
+	DP83815.RDV
+	DP83815;
 !
 
 FAT.RDV : $(fat_objs)
