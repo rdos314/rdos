@@ -38,6 +38,13 @@ INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
+data_seg    STRUC
+
+PicThread1  DW ?
+PicVal1     DB ?
+
+data_seg    ENDS
+
     LCD_WIDTH = 240
     LCD_HEIGHT = 128
 
@@ -777,6 +784,104 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			pic_int
+;
+;		DESCRIPTION:	PIC interrupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pic_int Proc far
+    mov dx,3B2h
+    in al,dx
+    test al,2
+    jnz pic_int_done
+;
+    mov dx,3BAh
+	in al,dx
+	mov ds:PicVal1,al
+;	
+	mov bx,ds:PicThread1
+	Signal
+	jmp pic_int
+
+pic_int_done:
+    ret
+pic_int Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			Test thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+test_name	DB 'PICLCD',0
+
+test_thread	proc far
+    int 3
+    mov ax,piclcd_data_sel
+    mov ds,ax
+;    
+    GetThread
+    mov ds:PicThread1,ax
+;    
+    ClearSignal
+
+test_thread_loop:
+	mov al,55h
+	mov dx,3BAh
+	out dx,al
+	WaitForSignal
+	mov al,ds:PicVal1
+    jmp test_thread_loop
+	ret
+test_thread	endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitDriver
+;
+;		DESCRIPTION:	Init Driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitDriver  Proc far
+    push ds
+    push es
+    pushad
+;    
+	mov al,10
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET pic_int
+	RequestPrivateIrqHandler
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET test_name
+	mov si,OFFSET test_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+    popad
+    pop es
+    pop ds
+    ret
+InitDriver  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init device
@@ -791,6 +896,11 @@ init	PROC far
 ;
 	mov bx,piclcd_code_sel
 	InitDevice
+;
+	mov eax,SIZE data_seg
+	mov bx,piclcd_data_sel
+	AllocateFixedSystemMem
+	mov es:PicThread1,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -810,6 +920,11 @@ init	PROC far
 	RegisterVideoMode
 ;
     call InitLCD
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET InitDriver
+	HookInitTasking
 ;
 	popa
 	pop ds

@@ -1189,7 +1189,7 @@ init_pci_found:
 ;
 	xor ch,ch
 	mov cl,PCI_interrupt_line
-	ReadPciByte
+    ReadPciByte
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET NetInt	

@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	32
+#define MAX_PLANETS	5
 
 struct TPlanet
 {
@@ -450,9 +450,9 @@ void cdecl main()
 	int i;
 
 	RdosWaitMilli(250);
-	bpp = 32;
-	width = 800;
-	height = 600;
+	bpp = 1;
+	width = 240;
+	height = 128;
 	VbeHandle = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &buf);
 	if (VbeHandle == 0)
 	{
@@ -468,9 +468,11 @@ void cdecl main()
 	randomize();
 #endif
 
-	font = RdosOpenFont(15);
+	font = RdosOpenFont(50);
 	RdosSetFont(VbeHandle, font);
 	RdosSetFilledStyle(VbeHandle);
+	RdosSetDrawColor(VbeHandle, mkcolor(255, 255, 255));
+	RdosDrawString(VbeHandle, 0, 0, "RDOS Test");
 
 	for (i = 0; i < MAX_PLANETS; i++)
 	{

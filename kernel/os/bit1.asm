@@ -2702,6 +2702,9 @@ get_line	Proc far
 	mul edx
 	add eax,ds:v_app_base
 	mov edi,eax
+	movzx eax,cx
+	shr eax,3
+	add edi,eax
 	mov ax,flat_sel
 	mov es,ax
 	movzx eax,cx
