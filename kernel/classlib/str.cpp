@@ -272,7 +272,7 @@ void TString::CopyBeforeWrite()
 		    OldData = FData;
     		OldBuf = FBuf;
 	    	Release();
-		    AllocBuffer(FData->FDataSize);
+		    AllocBuffer(OldData->FDataSize);
     		memcpy(FBuf, OldBuf, OldData->FDataSize+1);
 	    }
 	}

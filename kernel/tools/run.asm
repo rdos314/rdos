@@ -93,6 +93,9 @@ InitParam	Proc
 	mov es,ax
 	mov di,OFFSET FileName
 	mov cl,[si]
+	or cl,cl
+	jz init_fail
+;
 	inc si
 	xor ch,ch
 init_check:

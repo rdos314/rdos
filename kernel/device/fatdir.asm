@@ -142,6 +142,7 @@ PAGE
 	public free_dir_sel
 
 free_dir_sel	PROC far
+	push ds
 	push es
 	push eax
 	push ecx

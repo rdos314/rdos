@@ -446,6 +446,77 @@ void WriteError(const char *str)
 
 /*##########################################################################
 #
+#   Name       : WriteNumber
+#
+#   Purpose....: Write number to standard output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void WriteLong(long value)
+{
+	char str[4];
+	int tmp;
+	int use = FALSE;
+
+	tmp = value / 1000000000;
+	if (tmp)
+	{
+		use = TRUE;
+		sprintf(str, "%2d", tmp);
+	}
+	else
+		strcpy(str, "  ");
+	Write(str);
+	Write(" ");
+	value = value % 1000000000;
+
+	tmp = value / 1000000;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+	{
+		if (tmp)
+		{
+			use = TRUE;
+			sprintf(str, "%3d", tmp);
+		}
+		else
+			strcpy(str, "   ");
+	}
+	Write(str);
+	Write(" ");
+	value = value % 1000000;
+
+	tmp = value / 1000;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+	{
+		if (tmp)
+		{
+			use = TRUE;
+			sprintf(str, "%3d", tmp);
+		}
+		else
+			strcpy(str, "   ");
+	}
+	Write(str);
+	Write(" ");
+	value = value % 1000;
+
+	tmp = value;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+		sprintf(str, "%3d", tmp);
+	Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : Read
 #
 #   Purpose....: Read a character from standard input

@@ -20,66 +20,63 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdhelp.h
-# Command base class
+# dir.h
+# Dir command class
 #
 ########################################################################*/
 
-#ifndef _CMDHELP_H
-#define _CMDHELP_H
+#ifndef _DIR_H
+#define _DIR_H
 
-#include "file.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
+#include "filelist.h"
 
-enum InternalErrorCodes
+class TDirFactory : public TCommandFactory
 {
-	E_None = 0,
-	E_Useage = 1,
-	E_Other = 2,
-	E_CBreak = 3,
-	E_NoMem,
-	E_CorruptMemory,
-	E_NoOption,
-	E_Exit,
-	E_Ignore,			/* Error that can be ignored */
-	E_Empty,
-	E_Syntax,
-	E_Range,				/* Numbers out of range */
-	E_NoItems,
-	E_Help,		/* Help screen */
-	E_User		/* MUST be the last one */
+public:
+	TDirFactory();
+	virtual TCommand *Create(const char *param);
+
+protected:
 };
 
-void SetInputFile(TFile *File);
-void SetOutputFile(TFile *File);
-void SetErrorFile(TFile *File);
+class TDirCommand : public TCommand
+{
+public:
+	TDirCommand(const char *param);
+	virtual ~TDirCommand();
 
-TFile *GetInputFile();
-TFile *GetOutputFile();
-TFile *GetErrorFile();
+	virtual int Execute(char *param);
 
-int IsEmpty(const char *s);
-int IsArgDelim(char ch);
-int IsOptDelim(char ch);
-int IsOptChar(char ch);
-int IsFileNameChar(char c);
-const char *LTrimsp(const char *str);
-const char *LTrim(const char *str);
-void RTrim(char *str);
-char *Unquote(const char *str, const char *end);
-int MatchToken(char **Xp, const char *word, int len);
+protected:
+	int ScanAttr(const char *p);
+	int ScanOrder(const char *p);
+	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    void InitOptions();
 
-void Write(char ch);
-void Write(const char *str);
+	void AddFiles(TString &path);
+	void CreateEntryArr();
+	void FreeEntryArr();
+	void Sort();
+	void WriteDetailed(TDirEntry *entry);
+	void WriteDetailed();
 
-void WriteError(char ch);
-void WriteError(const char *str);
+	TFileList FFileList;
 
-void WriteLong(long Value);
+	int FEntryCount;
+	TDirEntry **FEntryArr;
 
-char Read();
-int Read(char *str, int maxsize);
+	int FOptS;
+	int FOptP;
+	int FOptW;
+	int FOptB;
+	int FOptL;
+	int FOptO;
 
-void DisplayPrompt();
+	int FAttrMask;
+	int FAttrMatch;
+	int FAttrMay;
+};
 
 #endif

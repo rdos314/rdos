@@ -44,6 +44,68 @@
 #   Returns....: *
 #
 ##########################################################################*/
+TPathName::TPathName()
+{
+	char *str;
+	int drive;
+
+	str = new char[512];
+
+	drive = RdosGetCurDrive();
+	*str = drive + 'a';
+	*(str+1) = ':';
+	*(str+2) = '\\';
+	RdosGetCurDir(drive, str + 3);
+
+	if (*(str + 3) == '\\')
+		*(str + 3) = 0;
+
+	FPathName = str;
+
+	delete str;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::TPathName
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPathName::TPathName(int Drive)
+{
+	char *str;
+
+	str = new char[512];
+
+	*str = Drive + 'a';
+	*(str+1) = ':';
+	*(str+2) = '\\';
+	RdosGetCurDir(Drive, str + 3);
+
+	if (*(str + 3) == '\\')
+		*(str + 3) = 0;
+
+	FPathName = str;
+
+	delete str;
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::TPathName
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TPathName::TPathName(const char *PathName)
   : FPathName(PathName)
 {
@@ -181,24 +243,30 @@ const TPathName &TPathName::operator+=(const TString &str)
 
 	path = FPathName.GetData();
 	ptr = str.GetData();
-	pos = strlen(path);
-	if (pos)
-		pos--;
 
-	switch (path[pos])
+	if (!strcmp(path, "."))
+		FPathName = str;
+	else
 	{
-		case '\\':
-		case '/':
-			FPathName += str;
-			break;
+		pos = strlen(path);
+		if (pos)
+			pos--;
 
-		default:
-			if (*path && *ptr != '.')
-				FPathName += "\\" + str;
-			else
+		switch (path[pos])
+		{
+			case '\\':
+			case '/':
 				FPathName += str;
-			break;
-	}	
+				break;
+	
+			default:
+				if (*path && *ptr != '.')
+					FPathName += "\\" + str;
+				else
+					FPathName += str;
+				break;
+		}	
+	}
     return *this;
 }
 
@@ -219,24 +287,31 @@ const TPathName &TPathName::operator+=(const char *str)
 	int pos;
 
 	path = FPathName.GetData();
-	pos = strlen(path);
-	if (pos)
-		pos--;
 
-	switch (path[pos])
+	if (!strcmp(path, "."))
+		FPathName = TString(str);
+	else
 	{
-		case '\\':
-		case '/':
-			FPathName += TString(str);
-			break;
 
-		default:
-			if (*path && *str != '.')
-				FPathName += "\\" + TString(str);
-			else
+		pos = strlen(path);
+		if (pos)
+			pos--;
+
+		switch (path[pos])
+		{
+			case '\\':
+			case '/':
 				FPathName += TString(str);
-			break;
-	}	
+				break;
+
+			default:
+				if (*path && *str != '.')
+					FPathName += "\\" + TString(str);
+				else
+					FPathName += TString(str);
+				break;
+		}	
+	}
     return *this;
 }
 
@@ -424,6 +499,13 @@ TString TPathName::GetBaseName() const
 			break;
 	}
 
+	if (size == 0)
+	{
+		ch = *str;
+		if (ch == '\\' || ch == '/')
+			size++;
+	}
+
 	size += str - ptr;
 	newstr = new char[size + 1];
 	memcpy(newstr, ptr, size);
@@ -461,7 +543,8 @@ TString TPathName::GetEntryName() const
 			size -= 2;
 		}
 
-	str += size - 1;
+	size--;
+	str += size;
 	while (size)
 	{
 		size--;
@@ -474,6 +557,10 @@ TString TPathName::GetEntryName() const
 		else
 			str--;
 	}
+
+	ch = *str;
+	if (ch == '\\' || ch == '/')
+		str++;
 
 	return TString(str);
 }
@@ -844,10 +931,10 @@ int TPathName::AppendFile(const TPathName &NewName) const
 
     ok = FALSE;
     dst = 0;
-    src = new TFile(NewName.FPathName.GetData());
+	src = new TFile(FPathName.GetData());
     if (src->IsOpen())
     {
-        dst = new TFile(FPathName.GetData());
+        dst = new TFile(NewName.FPathName.GetData());
         if (dst->IsOpen())
         {
             fsize = dst->GetSize();
@@ -963,7 +1050,11 @@ TDir TPathName::Find() const
 ##########################################################################*/
 TDir TPathName::Find(const char *SearchString) const
 {
-    return TDir(FPathName, TString(SearchString));
+	TPathName path(*this);
+
+	path += SearchString;
+
+	return TDir(path);
 }
 
 /*##########################################################################
@@ -979,7 +1070,11 @@ TDir TPathName::Find(const char *SearchString) const
 ##########################################################################*/
 TDir TPathName::Find(const TString &SearchString) const
 {
-    return TDir(FPathName, SearchString);
+	TPathName path(*this);
+
+	path += SearchString;
+
+	return TDir(path);
 }
 
 /*##########################################################################
@@ -1107,24 +1202,6 @@ TDir::TDir(const TPathName &PathName)
 
 /*##########################################################################
 #
-#   Name       : TDir::TDir
-#
-#   Purpose....: constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TDir::TDir(const TPathName &PathName, const TString &SearchString)
-  : FPathName(PathName.Get()),
-    FSearchString(SearchString)
-{
-    Init();
-}
-
-/*##########################################################################
-#
 #   Name       : TDir::Init
 #
 #   Purpose....: Init class
@@ -1136,7 +1213,24 @@ TDir::TDir(const TPathName &PathName, const TString &SearchString)
 ##########################################################################*/
 void TDir::Init()
 {
-	FDirHandle = RdosOpenDir(FPathName.GetData());
+	if (FPathName.IsDir())
+	{
+		FBaseString = FPathName.Get();
+		FSearchString = "*";
+	}
+	else
+	{
+		FBaseString = FPathName.GetBaseName();
+		FSearchString = FPathName.GetEntryName();
+
+		if (FBaseString.GetSize() == 0)
+			FBaseString = ".";
+
+		if (FSearchString.GetSize() == 0)
+			FSearchString = "*";
+	}
+
+	FDirHandle = RdosOpenDir(FBaseString.GetData());
     FIndex = 0;
 }
 
@@ -1155,6 +1249,118 @@ TDir::~TDir()
 {
     if (FDirHandle)
         RdosCloseDir(FDirHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::IsMatch
+#
+#   Purpose....: Check if file matches search criteria
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDir::IsMatch(const char *FileName)
+{
+	TString FileStr(FileName);
+	TString SearchStr(FSearchString);
+	const char *FilePtr;
+	const char *SearchPtr;
+	char ch;
+	const char *LastFilePtr = 0;
+	const char *LastSearchPtr = 0;
+
+	FileStr.Upper();
+	SearchStr.Upper();
+
+	if (SearchStr.GetSize() == 0)
+		return TRUE;
+
+	FilePtr = FileStr.GetData();
+	SearchPtr = SearchStr.GetData();
+
+	if (!strcmp(SearchPtr, "*.*"))
+		return TRUE;
+
+	if (!strcmp(SearchPtr, "*."))
+	{
+		if (strchr(FilePtr, '.'))
+			return FALSE;
+		else
+			return TRUE;
+	}
+
+	for (;;)
+	{
+		while (*SearchPtr && *FilePtr)
+		{
+			switch (*SearchPtr)
+			{
+				case '*':
+					ch = *(SearchPtr + 1);
+					if (ch)
+					{
+						if (ch == *FilePtr)
+						{
+							LastSearchPtr = SearchPtr;
+							SearchPtr += 2;
+							FilePtr++;
+							LastFilePtr = FilePtr;
+						}
+						else
+							FilePtr++;
+					}
+					else
+						FilePtr++;
+					break;
+	
+				case '?':
+					SearchPtr++;
+					FilePtr++;
+					break;
+
+				default:
+					if (*SearchPtr == *FilePtr)
+					{
+						SearchPtr++;
+						FilePtr++;
+					}
+					else
+					{
+						if (LastFilePtr)
+						{
+							FilePtr = LastFilePtr;
+							SearchPtr = LastSearchPtr;
+							LastFilePtr = 0;
+							LastSearchPtr = 0;
+						}
+						else
+							return FALSE;
+					}
+					break;
+			}
+		}
+
+		if (*SearchPtr == 0 && *FilePtr == 0)
+			return TRUE;
+		else
+		{
+			if (*SearchPtr == '*' && *(SearchPtr+1) == 0)
+				return TRUE;
+
+			if (LastFilePtr)
+			{
+				FilePtr = LastFilePtr;
+				SearchPtr = LastSearchPtr;
+				LastFilePtr = 0;
+				LastSearchPtr = 0;
+			}
+			else
+				return FALSE;
+		}
+	}
 }
 
 /*##########################################################################
@@ -1197,18 +1403,29 @@ TDirEntry TDir::GotoNext()
     int Attrib;
 	unsigned long msb;
 	unsigned long lsb;
+	int ok;
         
     if (FDirHandle)
     {
         Name = new char[512];
-        if (RdosReadDir(FDirHandle, FIndex, 512, Name, &FileSize, &Attrib, &msb, &lsb))
-        {
-            TString Entry(Name);
-            TPathName Path(FPathName + "\\" + Entry);
-            TDateTime Time(msb, lsb);
-            TDirEntry entry(Path, Entry, Time, FileSize, Attrib);
-            FIndex++;
-            return entry;
+
+		ok = TRUE;
+		while (ok)
+		{
+	        ok = RdosReadDir(FDirHandle, FIndex, 512, Name, &FileSize, &Attrib, &msb, &lsb);
+			if (ok)
+			{
+        		FIndex++;
+				if (IsMatch(Name))
+				{
+		            TString Entry(Name);
+					TPathName Path(FBaseString);
+					Path += Entry;
+		            TDateTime Time(msb, lsb);
+		            TDirEntry entry(Path, Entry, Time, FileSize, Attrib);
+		            return entry;
+				}
+			}
         }
         delete Name;
        

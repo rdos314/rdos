@@ -19,12 +19,14 @@
 #include "chdir.h"
 #include "mkdir.h"
 #include "rmdir.h"
+#include "dir.h"
 
 TCdFactory *cd;
 TChdirFactory *chdir;
 TClsFactory *cls;
 TCopyFactory *cpy;
 TDateFactory *date;
+TDirFactory *dir;
 THelpFactory *help;
 TMdFactory *md;
 TMkdirFactory *mkdir;
@@ -49,6 +51,7 @@ void Init()
 	path = new TPathFactory;
 	mkdir = new TMkdirFactory;
 	md = new TMdFactory;
+	dir = new TDirFactory;
 	date = new TDateFactory;
 	cpy = new TCopyFactory;
 	cls = new TClsFactory;

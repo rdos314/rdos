@@ -37,6 +37,8 @@ class TDir;
 class TPathName
 {
 public:
+	TPathName();
+	TPathName(int Drive);
     TPathName(const char *PathName);
     TPathName(const TString &PathName);
     TPathName(int Drive, const TString &PathName);
@@ -105,20 +107,22 @@ public:
 	TDir(const char *PathName);
 	TDir(const TString &PathName);
 	TDir(const TPathName &PathName);
-	TDir(const TPathName &PathName, const TString &SearchStr);
 	~TDir();
 
     TDirEntry GotoFirst();
     TDirEntry GotoNext();
+
+	TPathName FPathName;
+	TString FBaseString;
+	TString FSearchString;
     
 protected:
+	int IsMatch(const char *FileName);
 
 private:
     void Init();
 
 	int FDirHandle;
-	TString FPathName;
-	TString FSearchString;
     int FIndex;
 	
 };
