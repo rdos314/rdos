@@ -343,7 +343,7 @@ AddObjectEntry	Proc near
     push edx
 ;
     push ebx
-    mov al,LOG_ENTRY_DIR_DATA
+    mov ax,LOG_ENTRY_DIR_DATA
     call AllocateSector
     mov eax,ebx
     pop ebx
@@ -414,7 +414,7 @@ adeTake:
     jne adeUnlock
 ;
     push ebx
-    mov al,LOG_ENTRY_DIR_ENTRY
+    mov ax,LOG_ENTRY_DIR_ENTRY
     call AllocateSector
     mov eax,ebx
     pop ebx
@@ -605,7 +605,7 @@ gdMoveDone:
 
 gdAllocObjectSector:
     push ebx
-	mov al,LOG_ENTRY_OBJECT
+	mov ax,LOG_ENTRY_OBJECT
 	call AllocateSector
 	mov eax,ebx
 	pop ebx
@@ -1057,6 +1057,7 @@ CacheDirSel   Proc near
 	mov ecx,es:[esi].fde_size
     shr ecx,16
     or ecx,ecx
+	clc
     jz cdUnlock
 ;
     lea edi,[esi].fde_valid
@@ -1104,6 +1105,7 @@ cache_dir	PROC far
 	push eax
 	push edx
 ;
+	int 3
 	mov ax,flat_sel
 	mov es,ax
 ;
@@ -1407,6 +1409,7 @@ PAGE
     public create_file
     
 create_file	PROC far
+	int 3
     call CreateFileEntry
 ;
 	push eax

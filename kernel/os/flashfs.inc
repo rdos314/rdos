@@ -62,12 +62,12 @@ block_seg	STRUC
 
 bc_alloc_handle		DD ?
 bc_start_sector		DD ?
-bc_logical_block	DW ?
-bc_version          DD ?
 bc_handle_ptr		DD ?
 bc_data_ptr			DD ?
 bc_log_sector_ptr	DD ?
 bc_phys_sector_ptr	DD ?
+bc_version          DW ?
+bc_logical_block	DB ?
 
 block_seg	ENDS
 

@@ -129,10 +129,27 @@ mount	PROC far
 	push edx
 	push edi
 ;
-    int 3
-	GetDriveParam
-	shr ecx,7
 	push ax
+;
+	push ecx
+	GetDriveParam
+	pop ecx
+;
+	mov eax,ecx
+	xor edx,edx
+	movzx esi,si
+	div esi
+	mov ecx,eax
+
+mount_block_norm:
+	cmp ecx,100h
+	jb mount_block_ok
+;
+	shr ecx,1
+	shl esi,1
+	jmp mount_block_norm
+
+mount_block_ok:		
 	mov eax,SIZE drive_data_seg
 	add eax,ecx
 	add eax,ecx
@@ -141,10 +158,22 @@ mount	PROC far
 	mov ds,ax
 	pop ax
 ;
-	mov ds:block_count,cx
+	mov ds:block_count,cl
+	mov ds:block_sectors,si
 	mov ds:drive_nr,al
 ;
-    movzx eax,cx
+	mov ax,ds:block_sectors
+	shr ax,6
+	inc ax
+	mov dx,ax
+	shr dx,1
+	add ax,dx
+	mov ds:control_sectors,ax
+	mov dx,ds:block_sectors
+	sub dx,ax
+	mov ds:data_sectors,dx
+;
+    movzx eax,ds:block_count
     add eax,eax
     AllocateSmallGlobalMem
 ;
@@ -169,7 +198,7 @@ mount_cache_loop:
     or ax,ax
     jz mount_cache_next
 ;
-    mov bx,fs:bc_logical_block
+    movzx bx,fs:bc_logical_block
     add bx,bx
 ;
     mov ax,es:[bx]
@@ -211,12 +240,13 @@ mount_cache_save:
 
 mount_cache_next:	
 	add di,2
-    add edx,80h
+	movzx eax,ds:block_sectors
+    add edx,eax
     loop mount_cache_loop
 ;
     xor bx,bx
     xor si,si
-    mov cx,ds:block_count
+    movzx cx,ds:block_count
     dec cx
 
 mount_init_loop:
@@ -238,7 +268,7 @@ mount_init_next:
 ;
     xor si,si
     mov di,SIZE drive_data_seg
-    mov cx,ds:block_count
+    movzx cx,ds:block_count
     dec cx
 
 mount_move_loop:
@@ -311,13 +341,13 @@ get_drive_info	PROC far
 	push di
 ;
 	xor edx,edx
-	mov cx,ds:block_count
+	movzx cx,ds:block_count
 	mov di,SIZE drive_data_seg
 
 get_info_loop:
 	mov ax,ds:[di]
 	or ax,ax
-	jz get_info_full
+	jz get_info_next
 ;	
 	push cx
 	mov fs,ax
@@ -326,17 +356,17 @@ get_info_loop:
 	pop cx
 	jmp get_info_next
 
-get_info_full:
-	add edx,127
-
 get_info_next:
 	add di,2
     loop get_info_loop
 ;
-	mov eax,edx
+	push edx
 	mov cx,512
-	movzx edx,ds:block_count
-	shl edx,7
+	movzx eax,ds:block_count
+	movzx edx,ds:data_sectors
+	mul edx
+	mov edx,eax
+	pop eax
 	clc
 ;
 	pop di

@@ -93,6 +93,7 @@ aseLoop:
 	add esi,ebx
 	sub edi,fs:bc_data_ptr
 	add edi,fs:bc_handle_ptr
+	mov edi,es:[edi]
 	mov fs:bc_alloc_handle,edi
 	clc
 	jmp aseDone
@@ -118,8 +119,8 @@ aseCheckLast:
 
 aseDone:
 	pop edi
-	pop ebx
 	pop cx
+	pop ebx
 	pop ax
 	ret
 AllocateSectorEntry	Endp
@@ -261,7 +262,7 @@ GetFreeBlockSectors	Proc near
 	mov ax,flat_sel
 	mov es,ax
 	xor edx,edx
-	mov cx,ds:control_sectors
+	mov cx,ds:data_sectors
 	mov edi,fs:bc_phys_sector_ptr
 
 gfbsLoop:
@@ -381,6 +382,7 @@ absPhysLoop:
 	add edx,fs:bc_start_sector
 	inc ax
 	mov es:[esi].le_physical_sector,ax
+	sub ebx,fs:bc_log_sector_ptr
 	shr ebx,2
 	mov es:[edi],bx
 	mov es:[esi].le_logical_entry,bx
@@ -413,7 +415,8 @@ absBlankLoop:
 
 absPhysNext:
 	add edi,2
-	loop absPhysLoop
+	sub cx,1
+	jnz absPhysLoop
 ;
 	stc
 	jmp absDone
@@ -460,7 +463,7 @@ AllocateBlockSel	Proc near
 	pop es
 ;	
 	push edx
-	movzx eax,ds:control_sectors
+	movzx eax,ds:data_sectors
 	add eax,eax
 	AllocateSmallLinear
 	mov fs:bc_phys_sector_ptr,edx
@@ -468,7 +471,7 @@ AllocateBlockSel	Proc near
 	AllocateSmallLinear
 	mov fs:bc_log_sector_ptr,edx
 ;
-	movzx eax,ds:data_sectors
+	movzx eax,ds:control_sectors
 	shl eax,2
 	AllocateSmallLinear
 	mov fs:bc_handle_ptr,edx
@@ -494,7 +497,7 @@ absLockLoop:
 	add edi,4
 	add ebp,4
 	inc edx
-	loop cbLockLoop
+	loop absLockLoop
 ;
 	mov edi,fs:bc_log_sector_ptr
 	movzx ecx,ds:data_sectors
@@ -584,7 +587,7 @@ GetBlock	Proc near
 	push di
 ;
 	mov di,SIZE drive_data_seg
-	mov cx,ds:block_count
+	movzx cx,ds:block_count
 
 gbScanLoop:
 	mov ax,ds:[di]
@@ -637,7 +640,7 @@ AllocateBlock	Proc near
 	push di
 ;
 	mov di,SIZE drive_data_seg
-	mov cx,ds:block_count
+	movzx cx,ds:block_count
 	xor edx,edx
 
 abScanLoop:
@@ -647,7 +650,8 @@ abScanLoop:
 ;
 	push bx
 	push edx
-	add edx,ds:block_sectors
+	movzx eax,ds:block_sectors
+	add edx,eax
 	dec edx
 	mov al,ds:drive_nr
 	LockSector
@@ -666,7 +670,8 @@ abScanLoop:
 	jmp abDone
 
 abScanNext:
-	add edx,ds:block_sectors
+	movzx eax,ds:block_sectors
+	add edx,eax
 	add di,2
 	sub cx,1
 	jnz abScanLoop

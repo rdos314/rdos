@@ -66,7 +66,7 @@ EraseBlock	Proc near
     push ecx
 ;
     mov al,ds:drive_nr
-    mov ecx,128
+    movzx ecx,ds:block_sectors
     EraseSectors
 ;
     pop ecx
