@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,36 +20,37 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# thread.h
-# Thread class
+# cmdfact.h
+# Command factory base class
 #
 ########################################################################*/
 
-#ifndef _THREAD_H
-#define _THREAD_H
+#ifndef _CMDFACT_H
+#define _CMDFACT_H
 
-#include "section.h"
+#include "cmd.h"
 
-class TThread
+class TCommandFactory
 {
+friend class THelpCommand;
+    
 public:
-    TThread();
-	TThread(const char *ThreadName, int StackSize);
-	~TThread();
+    TCommandFactory(const char *name);
+	virtual ~TCommandFactory();
 
-	virtual void Run();
-	void Stop();
+	static TCommand *Parse(TFtpSocketServer *Server, const char *line);
 
 protected:
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param) = 0;
+	virtual int PassAll();
+    virtual int PassDir();
+	
+	void InsertCommand();
+	void RemoveCommand();
 
-	void Start(const char *ThreadName, int StackSize);
-	virtual void Execute();
-
-    int FInstalled;
-
-private:
-	int FThreadRunning;
+	static TCommandFactory *FCmdList;
+	TCommandFactory *FList;
+	TString FName;
 };
 
 #endif
-

@@ -32,6 +32,8 @@
 #include "socket.h"
 #include "ftpserv.h"
 #include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -84,6 +86,7 @@ void TFtpSocketServer::HandleSocket()
 	int Minor;
 	int Release;
 	TLangString msg;
+	TCommand *cmd;
 
 	int count;
 	char Buf[513];
@@ -99,7 +102,14 @@ void TFtpSocketServer::HandleSocket()
 		Buf[count] = 0;
 		printf(Buf);
 
-		msg.Load(502);
-		msg.Write(FSocket);
+        cmd = TCommandFactory::Parse(Buf);
+
+        if (cmd)
+            cmd->Run();
+        else
+        {
+    		msg.Load(502);
+	    	msg.Write(FSocket);
+	    }
 	}
 }

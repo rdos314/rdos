@@ -82,9 +82,9 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(TSocket *Socket)
+TCommand::TCommand(TFtpSocketServer *Server)
 {
-    FSocket = Socket;
+    FServer = Server;
     FArgList = 0;
 }
 
@@ -99,10 +99,10 @@ TCommand::TCommand(TSocket *Socket)
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(TSocket *Socket, const char *param)
+TCommand::TCommand(TFtpSocketServer *Server, const char *param)
   : FCmdLine(param)
 {
-    FSocket = Socket;
+    FServer = Server;
     FArgList = 0;
 }
 

@@ -31,7 +31,7 @@
 #include "file.h"
 #include "path.h"
 #include "parser.h"
-#include "socket.h"
+#include "ftpserv.h"
 
 class TArg
 {
@@ -48,8 +48,8 @@ public:
 class TCommand : public TParser
 {
 public:
-    TCommand(TSocket *Socket);
-    TCommand(TSocket *Socket, const char *param);
+    TCommand(TFtpSocketServer *Server);
+    TCommand(TFtpSocketServer *Server, const char *param);
 	virtual ~TCommand();
 	
 	int Run();
@@ -70,7 +70,7 @@ protected:
 	TArg *FArgList;
 	int FArgCount;
 
-	TSocket *FSocket;
+	TFtpSocketServer *FServer;
 };
 
 #endif

@@ -68,8 +68,6 @@ protected:
 	int IsReseted() const;
 	void ClearReset();
 
-	int FInstalled;
-
 private:
 	void Init();
 	void InsertDevice();
