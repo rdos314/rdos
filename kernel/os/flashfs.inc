@@ -130,8 +130,8 @@ fde_valid			DB ?
 dir_entry_struc	ENDS
 
 DIR_ENTRY_OK =			0B5h
-DIR_ENTRY_RESTRUCT =	0F5h	; must be possible to convert to OK without
-								; changing 0s to 1s!!
+DIR_ENTRY_RESTRUCT =	0FDh	; must be possible to convert to Free
+DIR_ENTRY_FREE =        0F5h    ; must be possible to convert to OK
 
 object_struc	STRUC
 

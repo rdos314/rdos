@@ -1102,7 +1102,7 @@ AliasSector	PROC near
 ;
     and ecx,0FFFFFFh
 	mov ebp,ecx
-    mov edx,edx
+    mov edx,ebx
     shr ebx,16
     call GetBlock
     jc alsDone

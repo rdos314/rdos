@@ -328,14 +328,15 @@ RedoDirEntry	Proc near
 	push fs
 	pushad
 ;
+    push edx
 	mov ebx,edx
 	mov ecx,fs:fds_owner_sector
 	call DirEntryLogToPhysSector
-	jc rdeFail
+	jc rdeDone
 ;
 	mov ebp,edx
 	call AliasSector
-	jc rdeFail
+	jc rdeDone
 ;
 	mov al,ds:drive_nr
 	LockSector
@@ -350,8 +351,29 @@ RedoDirEntry	Proc near
 	pop ebx
 	call WriteSector
 	UnlockSector
+;
+    pop edx
+    push edx
+    mov al,ds:drive_nr
+    LockSector
+;
+    call FindDirInfo
+    jc rdeUnlock
+;
+	mov dx,ax
+	sub dx,si
+	mov fs:fds_info_offset,dx
+    clc
+    jmp rdeDone 
 
-rdeFail:
+rdeUnlock:
+    pushf
+    UnlockSector
+    popf
+
+rdeDone:
+    pop edx
+;
 	popad
 	pop fs
 	ret
@@ -379,6 +401,8 @@ FindDirInfo	Proc near
 	push ecx
 	push edi
 	push ebp
+;
+	push edx
 
 fdiRedo:
     call QueryDirEntrySector
@@ -478,6 +502,7 @@ fdiRestructRetry:
 	jmp fdiInit
 
 fdiRestructSave:
+    mov edi,ebp
 	mov eax,es:[esi].fde_size
 	shr eax,16
 	mov ecx,eax
@@ -537,10 +562,14 @@ fdiDone:
 fdiFail:
     int 3
 	UnlockSector
+	pop edx
+	push edx
 	call RedoDirEntry
 	jnc fdiRedo
 
 fdiEnd:
+	pop edx
+;
 	pop ebp
 	pop edi
 	pop ecx
@@ -1384,9 +1413,9 @@ UndoDirObject	Proc near
     call ObjectLogToPhysSector
     jc udoDone
 ;
-	mov fs:fds_object_sector,edx
     mov al,ds:drive_nr
     LockSector
+    push ebx
 ;
     mov cx,80h
 
@@ -1402,13 +1431,19 @@ udoSectorLoop:
     call DirDataLogToPhysSector
     pop edx
 	pop ecx
-    jc udoNext
-;    
+	jnc udoFree
+
+udoZero:
+    mov dword ptr es:[esi],0
+    call WriteSector
+    jmp udoNext
+
+udoFree:    
 	push ecx
 	mov ecx,fs:fds_object_sector
     call FreeSector
 	pop ecx
-    jc udoNext
+	jc udoZero
 ;
     mov dword ptr es:[esi],0
     call WriteSectorFree
@@ -1461,6 +1496,7 @@ UndoDirEntry	Proc near
 udeLoop:
     mov edx,es:[esi]
     and edx,0FFFFFFh
+	mov fs:fds_object_sector,edx
     call UndoDirObject
     jc udeNext
 ;
@@ -1651,7 +1687,6 @@ PAGE
 RedoAddToDir	Proc near
     pushad
 ;
-    int 3
     mov ebp,edx
 
 ratdRetry:
@@ -1718,17 +1753,17 @@ RedoDirEntries	Proc near
     mov edi,fs:ds_dir_ptr
     mov ebp,edi
     or edi,edi
-    jz rdeDone
+    jz rdesDone
 
-rdeLoop:
+rdesLoop:
     mov edx,es:[edi].fde_entry_sector
     call RedoAddToDir
 ;
     mov edi,es:[edi].de_next
     cmp edi,ebp
-    jne rdeLoop
+    jne rdesLoop
 
-rdeDone:
+rdesDone:
     pop ebp
     pop edi
     ret
@@ -1826,9 +1861,9 @@ upsSpaceOk:
 	mov es:[edi].fde_valid,DIR_ENTRY_RESTRUCT
 	call WriteSector
     UnlockSector
-;	int 3
-;    call RedoDirEntries
-;    call RedoFileEntries
+	int 3
+    call RedoDirEntries
+    call RedoFileEntries
 	clc
 
 rdsDone:
@@ -1857,7 +1892,6 @@ PAGE
 UpdateDirSel	Proc near
 	push eax
 ;
-	mov eax,fs:fds_used_entries
 	mov eax,fs:fds_deleted_entries
 	cmp eax,128
 	jc udsDone
@@ -2291,7 +2325,7 @@ FindDirObject	Proc near
 fdoSectorLoop:
 	mov al,es:[esi].o_valid
 	cmp al,OBJECT_OK
-	jnz cdoNext
+	jnz fdoNext
 ;
 	push ebx
 	push esi
@@ -2463,6 +2497,7 @@ delete_file	PROC far
 	push ecx
 	push edi
 ;
+    int 3
 	mov ax,flat_sel
 	mov es,ax
 	mov edi,es:[edx].ffe_entry_sector
