@@ -776,6 +776,7 @@ allocate_cluster12	PROC near
 	push edi
 ;
 	EnterSection ds:cluster_section
+    dec ds:free_clusters
 	mov edx,ds:fat1_sector
 	xor edi,edi
 ;
@@ -931,6 +932,7 @@ allocate_cluster16	PROC near
 	push edi
 ;
 	EnterSection ds:cluster_section
+    dec ds:free_clusters
 	mov edx,ds:fat1_sector
 	xor edi,edi
 ;
@@ -1010,6 +1012,19 @@ allocate_cluster32	PROC near
 	push edi
 ;
 	EnterSection ds:cluster_section
+    dec ds:free_clusters
+    mov edx,ds:info_sector
+    or edx,edx
+    jz allocate_cluster32_do
+;
+    mov al,ds:drive_nr
+    LockSector
+    mov edx,ds:free_clusters
+    mov es:[esi].fi_free_clusters,edx
+    ModifySector
+    UnlockSector
+
+allocate_cluster32_do:
 	mov edx,ds:fat1_sector
 	xor edi,edi
 ;
@@ -1085,8 +1100,6 @@ allocate_cluster32	ENDP
 	public allocate_cluster
 
 allocate_cluster	Proc near
-    dec ds:free_clusters
-;
 	cmp ds:fat_type,fat12
 	je alloc12
 ;
@@ -1136,19 +1149,41 @@ free_cluster	Proc near
 free32:
 	xor ecx,ecx
 	call update_cluster_link32
+;	
+    pushf
+    push ebx
+    push edx
+    push esi
+    inc ds:free_clusters
+    mov edx,ds:info_sector
+    or edx,edx
+    jz free_cluster32_done
+;
+    LockSector
+    mov edx,ds:free_clusters
+    mov es:[esi].fi_free_clusters,edx
+    ModifySector
+    UnlockSector
+
+free_cluster32_done:
+    pop esi
+    pop edx
+    pop ebx
+    popf
 	jmp free_cluster_done
 
 free16:
 	xor ecx,ecx
 	call update_cluster_link16
+    inc ds:free_clusters
 	jmp free_cluster_done
 
 free12:
 	xor ecx,ecx
 	call update_cluster_link12
+    inc ds:free_clusters
 
 free_cluster_done:
-    inc ds:free_clusters
 	LeaveSection ds:cluster_section
 	pop ecx
 	ret

@@ -69,7 +69,9 @@ MAX_DRIVES		EQU 'Z' -'A' + 1
 	extrn format16:near
 	extrn format32:near
 
-	extrn get_param:near
+	extrn get_param12:near
+	extrn get_param16:near
+	extrn get_param32:near
 
 	.386p
 
@@ -100,7 +102,7 @@ mount12	PROC far
 	mov es,ax
 	pop ax
 	mov ds:fat_type,fat12
-	call get_param
+	call get_param12
 ;
 	pop es
 	ret
@@ -129,7 +131,7 @@ mount16	PROC far
 	mov es,ax
 	pop ax
 	mov ds:fat_type,fat16
-	call get_param
+	call get_param16
 ;
 	pop es
 	ret
@@ -158,7 +160,7 @@ mount32	PROC far
 	mov es,ax
 	pop ax
 	mov ds:fat_type,fat32
-	call get_param
+	call get_param32
 ;
 	pop es
 	ret

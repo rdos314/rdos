@@ -29,6 +29,17 @@ fat12				EQU 12
 fat16				EQU 16
 fat32				EQU 32
 
+fat_info_struc  STRUC
+
+fi_ext_sign         DD ?
+fi_resv             DB 480 DUP(?)
+fi_info_sign        DD ?
+fi_free_clusters    DD ?
+fi_next_cluster     DD ?
+fi_info_resv        DB 12 DUP(?)
+fi_info_end         DD ?
+
+fat_info_struc  ENDS
 
 MAX_LFN_ENTRIES = 20
 
@@ -135,6 +146,7 @@ fat_file_list_struc	ENDS
 
 drive_data_seg	STRUC
 
+info_sector         DD ?
 fat1_sector			DD ?
 fat2_sector			DD ?
 start_sector		DD ?

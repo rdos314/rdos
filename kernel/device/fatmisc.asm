@@ -114,7 +114,7 @@ lock_sector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_PARAM
+;		NAME:			GET_PARAM12/16
 ;
 ;		DESCRIPTION:	Read drive parameters from boot-record
 ;
@@ -123,9 +123,11 @@ lock_sector	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public get_param
+	public get_param12
+	public get_param16
 
-get_param	Proc near
+get_param12	Proc near
+get_param16:
 	push ax
 	push ebx
 	push ecx
@@ -141,41 +143,19 @@ get_param	Proc near
 	LockSector
 	mov cl,es:[esi].boot_sectors_per_cluster
 	mov ch,0
-get_param_shift_loop:
+get_param1216_shift_loop:
 	rcr cl,1	
-	jc get_param_shift_ok
+	jc get_param1216_shift_ok
 	inc ch
-	jmp get_param_shift_loop
-get_param_shift_ok:
+	jmp get_param1216_shift_loop
+
+get_param1216_shift_ok:
 	mov ds:fat_cluster_shift,ch
 	mov cx,es:[esi].boot_root_dirs
 	mov ds:root_entries,cx
 	movzx edx,es:[esi].boot_resv_sectors
 	mov ds:fat1_sector,edx
 	movzx ecx,es:[esi].boot_fat_sectors16
-	or cx,cx
-	jnz get_param_fat_sectors16
-;
-	mov ax,es:[esi].boot_root_dirs
-	or ax,ax
-	jnz get_param_fat_sectors16
-
-get_param_fat_sectors32:
-	mov ecx,es:[esi].boot_fat_sectors
-	add edx,ecx
-	mov ds:fat2_sector,edx
-	add edx,ecx
-	mov ds:start_sector,edx
-	mov edx,es:[esi].boot_root_cluster
-	sub edx,2
-	mov cl,ds:fat_cluster_shift
-	shl edx,cl
-	add edx,ds:start_sector
-	mov ds:root_sector,edx
-	mov edx,es:[esi].boot_sectors
-	jmp get_param_total_ok
-
-get_param_fat_sectors16:
 	add edx,ecx
 	mov ds:fat2_sector,edx
 	add edx,ecx
@@ -186,15 +166,17 @@ get_param_fat_sectors16:
 	mov ds:start_sector,edx
 	movzx edx,es:[esi].boot_sectors16
 	or edx,edx
-	jnz get_param_total_ok
+	jnz get_param1216_total_ok
+;
 	mov edx,es:[esi].boot_sectors
 
-get_param_total_ok:
+get_param1216_total_ok:
 	sub edx,ds:start_sector
 	mov cl,ds:fat_cluster_shift
 	shr edx,cl
 	add edx,2
 	mov ds:clusters,edx
+    mov ds:info_sector,0
 	UnlockSector
 ;
     mov al,ds:drive_nr
@@ -208,7 +190,127 @@ get_param_total_ok:
 	pop ebx
 	pop ax
 	ret
-get_param	Endp
+get_param12	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_PARAM32
+;
+;		DESCRIPTION:	Read drive parameters from boot-record
+;
+;		RETRUNS:		DS			Drive data
+;						ES			FLAT_SEL
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public get_param32
+
+get_param32	Proc near
+	push ax
+	push ebx
+	push ecx
+	push edx
+	push esi
+;
+	InitSection ds:cluster_section
+	mov ds:drive_root_handle,0
+	mov ds:drive_nr,al
+	mov ds:file_list_ptr,0
+	mov ds:file_free_ptr,0
+	xor edx,edx
+	LockSector
+	mov cl,es:[esi].boot_sectors_per_cluster
+	mov ch,0
+get_param32_shift_loop:
+	rcr cl,1	
+	jc get_param32_shift_ok
+	inc ch
+	jmp get_param32_shift_loop
+
+get_param32_shift_ok:
+	mov ds:fat_cluster_shift,ch
+	mov ds:root_entries,0
+	movzx edx,es:[esi].boot_resv_sectors
+	mov ds:fat1_sector,edx
+	mov ecx,es:[esi].boot_fat_sectors
+	add edx,ecx
+	mov ds:fat2_sector,edx
+	add edx,ecx
+	mov ds:start_sector,edx
+	mov edx,es:[esi].boot_root_cluster
+	sub edx,2
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	add edx,ds:start_sector
+	mov ds:root_sector,edx
+	mov edx,es:[esi].boot_sectors
+	sub edx,ds:start_sector
+	mov cl,ds:fat_cluster_shift
+	shr edx,cl
+	add edx,2
+	mov ds:clusters,edx
+    movzx edx,es:[esi].boot_info_sector
+    cmp dx,-1
+    jne get_param32_info_ok
+;
+    xor edx,edx    
+
+get_param32_info_ok:
+    mov ds:info_sector,edx	
+	UnlockSector
+;   
+    mov edx,ds:info_sector
+    or edx,edx
+    jz get_param32_count_clusters
+;
+	mov al,ds:drive_nr
+	LockSector
+	mov eax,es:[esi].fi_ext_sign
+	cmp eax,41615252h  ; AaRR
+	jne get_param32_info_fail
+;
+    mov eax,es:[esi].fi_info_sign
+    cmp eax,61417272h  ; aArr
+    jne get_param32_info_fail
+;
+    mov eax,es:[esi].fi_info_end
+    cmp eax,0AA550000h
+    jne get_param32_info_fail
+;
+    mov eax,es:[esi].fi_free_clusters
+    mov ds:free_clusters,eax  
+	UnlockSector
+    jmp get_param32_count_clusters      ; change this later!!
+
+get_param32_info_fail:
+    mov ds:info_sector,0
+	UnlockSector
+        
+get_param32_count_clusters:    
+    mov al,ds:drive_nr
+    call get_free_clusters	
+	mov ds:free_clusters,edx
+;
+    mov edx,ds:info_sector
+    or edx,edx
+    jz get_param32_done
+;
+    mov al,ds:drive_nr
+    LockSector
+    mov edx,ds:free_clusters
+    mov es:[esi].fi_free_clusters,edx
+    ModifySector
+    UnlockSector
+    	
+get_param32_done:	
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop ax
+	ret
+get_param32	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -366,7 +468,7 @@ format_root_dir_loop12:
 	mov es,ax
 	mov ax,bp
 	mov ds:fat_type,fat12
-    call get_param
+    call get_param12
 ;
     clc    
     popad
@@ -533,7 +635,7 @@ format_root_dir_loop16:
 	mov es,ax
 	mov ax,bp
 	mov ds:fat_type,fat16
-    call get_param
+    call get_param16
 ;
     clc    
     popad
@@ -737,7 +839,7 @@ format_root_dir_loop32:
 	mov es,ax
 	mov ax,bp
 	mov ds:fat_type,fat32
-    call get_param
+    call get_param32
 ;
     clc    
     popad

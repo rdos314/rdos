@@ -2159,6 +2159,20 @@ write_file32:
 ;
 	push ds
 	mov ds,bx
+;
+    push eax
+    push edx
+    push esi	
+	mov esi,ds:file_dir_entry
+	GetSystemTime
+	mov es:[esi].de_time,eax
+	mov es:[esi].de_time+4,edx
+	mov edx,esi
+	CallFileSystem update_file_proc
+	pop esi
+	pop edx
+	pop eax
+;	
 	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
 	jz write_file32_buf
 ;
@@ -2205,6 +2219,20 @@ write_file16	PROC far
 ;
 	push ds
 	mov ds,bx
+;
+    push eax
+    push edx
+    push esi	
+	mov esi,ds:file_dir_entry
+	GetSystemTime
+	mov es:[esi].de_time,eax
+	mov es:[esi].de_time+4,edx
+	mov edx,esi
+	CallFileSystem update_file_proc
+	pop esi
+	pop edx
+	pop eax
+;	
 	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
 	jz write_file16_buf
 ;
