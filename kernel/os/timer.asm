@@ -50,7 +50,7 @@ timer_resvd		DW ?
 timer_time		DD ?,?
 timer_struc	ENDS
 
-timer_data_seg	SEGMENT AT 0
+timer_data_seg	STRUC
 
 timer0		timer_struc <>
 

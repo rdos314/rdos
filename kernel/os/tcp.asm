@@ -829,7 +829,7 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			Ignore
+; 	Name:			IgnoreDummy
 ;
 ;	Purpose:		Igonre (dummy proc)
 ;
@@ -837,9 +837,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Ignore	Proc near
+IgnoreDummy	Proc near
 	ret
-Ignore	Endp
+IgnoreDummy	Endp
 
 PAGE
 	    
@@ -1238,11 +1238,11 @@ rt0	DW OFFSET RetransmitSynSent
 rt1 DW OFFSET RetransmitSynRcvd
 rt2 DW OFFSET RetransmitData
 rt3	DW OFFSET RetransmitData
-rt4	DW OFFSET Ignore
+rt4	DW OFFSET IgnoreDummy
 rt5 DW OFFSET RetransmitData
 rt6 DW OFFSET RetransmitData
-rt7 DW OFFSET Ignore
-rt8 DW OFFSET Ignore
+rt7 DW OFFSET IgnoreDummy
+rt8 DW OFFSET IgnoreDummy
 
 Retransmit	Proc near
 	push es
@@ -3171,12 +3171,12 @@ close_tab:
 cl0	DW OFFSET CloseDelete
 cl1 DW OFFSET CloseNormal
 cl2 DW OFFSET CloseNormal
-cl3	DW OFFSET Ignore
-cl4	DW OFFSET Ignore
+cl3	DW OFFSET IgnoreDummy
+cl4	DW OFFSET IgnoreDummy
 cl5 DW OFFSET CloseCloseWait
-cl6 DW OFFSET Ignore
-cl7 DW OFFSET Ignore
-cl8 DW OFFSET Ignore
+cl6 DW OFFSET IgnoreDummy
+cl7 DW OFFSET IgnoreDummy
+cl8 DW OFFSET IgnoreDummy
 
 close_tcp_connection	Proc far
 	push ds

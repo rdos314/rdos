@@ -3089,29 +3089,29 @@ scroll_down	Proc far
 	ret
 scroll_down	Endp
 
-error	Proc far
+errorp	Proc far
 	stc
 	ret
-error	Endp
+errorp	Endp
 
 	public BitmapTab32
 
 BitmapTab32:
-mt00 DW OFFSET error,				video_code_sel
-mt01 DW OFFSET error,				video_code_sel
-mt02 DW OFFSET error,				video_code_sel
+mt00 DW OFFSET errorp,				video_code_sel
+mt01 DW OFFSET errorp,				video_code_sel
+mt02 DW OFFSET errorp,				video_code_sel
 mt03 DW OFFSET clear,				video_code_sel
 mt04 DW OFFSET set_cursor_pos,		video_code_sel
 mt05 DW OFFSET write_char,			video_code_sel
 mt06 DW OFFSET read_char,			video_code_sel
 mt07 DW OFFSET scroll_up,			video_code_sel
 mt08 DW OFFSET scroll_down,			video_code_sel
-mt09 DW OFFSET error,				video_code_sel
-mt0A DW OFFSET error,				video_code_sel
-mt0B DW OFFSET error,				video_code_sel
-mt0C DW OFFSET error,				video_code_sel
-mt0D DW OFFSET error,				video_code_sel
-mt0E DW OFFSET error,				video_code_sel
+mt09 DW OFFSET errorp,				video_code_sel
+mt0A DW OFFSET errorp,				video_code_sel
+mt0B DW OFFSET errorp,				video_code_sel
+mt0C DW OFFSET errorp,				video_code_sel
+mt0D DW OFFSET errorp,				video_code_sel
+mt0E DW OFFSET errorp,				video_code_sel
 mt0F DW OFFSET translate_color,		video_code_sel
 mt10 DW OFFSET set_base,   			video_code_sel
 mt11 DW OFFSET slab,    			video_code_sel

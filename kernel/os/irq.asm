@@ -62,14 +62,14 @@ usage_section	section_typ <>
 
 irq_struc	ENDS
 
-irq_proc_seg	SEGMENT AT 0
+irq_proc_seg	STRUC
 
 mask0			DB ?
 mask1			DB ?
 
 irq_proc_seg	ENDS
 
-irq_sys_seg	SEGMENT AT 0
+irq_sys_seg	STRUC
 
 irq_vm_seg		DW ?
 irq_pm16_sel	DW ?
@@ -85,8 +85,17 @@ irq_eflags	EQU 10
 irq_cs		EQU 6
 irq_eip		EQU 2
 irq_bp		EQU 0
+		
+	.386p
 
-irq	MACRO nr
+code	SEGMENT byte public use16 'CODE'
+
+	assume cs:code
+
+	extrn enter_int:near
+	extrn leave_int:near
+
+irqmac	MACRO nr
 
 irq_thread&nr:
 	int 3
@@ -292,15 +301,6 @@ set_irq_not_free&nr:
 set_irq&nr	Endp
 
 	ENDM
-		
-	.386p
-
-code	SEGMENT byte public use16 'CODE'
-
-	assume cs:code
-
-	extrn enter_int:near
-	extrn leave_int:near
 
 irq_offs_table:
 	DW OFFSET irq_arr
@@ -508,20 +508,20 @@ init_process	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	irq 1
-	irq 3
-	irq 4
-	irq 5
-	irq 6
-	irq 7
-	irq 8
-	irq 9
-	irq 10
-	irq 11
-	irq 12
-	irq 13
-	irq 14
-	irq 15
+	irqmac 1
+	irqmac 3
+	irqmac 4
+	irqmac 5
+	irqmac 6
+	irqmac 7
+	irqmac 8
+	irqmac 9
+	irqmac 10
+	irqmac 11
+	irqmac 12
+	irqmac 13
+	irqmac 14
+	irqmac 15
 
 PAGE
 

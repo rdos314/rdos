@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dos_vm_seg	SEGMENT AT 0
+dos_vm_seg	STRUC
 
 indos_flag			DB ?
 critical_flag		DB ?
@@ -40,14 +40,14 @@ dos_vm_size			DB ?
 
 dos_vm_seg	ENDS
 
-dos_data_seg	SEGMENT AT 0
+dos_data_seg	STRUC
 
 load_dos_exe_hooks	DB ?
 load_dos_exe_arr	DW 2*16 DUP(?)
 
 dos_data_seg	ENDS
 
-dos_process_seg	SEGMENT AT 0
+dos_process_seg	STRUC
 
 dos_mem_section		section_typ <>
 

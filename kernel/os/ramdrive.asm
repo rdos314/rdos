@@ -81,13 +81,13 @@ rfe_name		DB ?
 
 rfe_struc	ENDS
 
-fs_data_seg	STRUC
+rfs_data_seg	STRUC
 
 drive_count		DW ?
 drive_arr		DW 26 DUP(?)
 drive_sel_arr	DW MAX_RAM_DRIVES DUP(?)
  
-fs_data_seg	ENDS
+rfs_data_seg	ENDS
 
 drive_data_seg	STRUC
 

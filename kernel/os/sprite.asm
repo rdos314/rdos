@@ -37,7 +37,6 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.inc
 INCLUDE os.inc
-INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE handle.inc
@@ -980,7 +979,7 @@ hide_sprite_loop:
 	jb hide_sprite_line_next
 ;
 	cmp si,gs:v_sprite_max_pos
-	jae hide_done
+	jae hide_donep
 ;
 	mov bx,gs:[si].spl_upper_ind
 	shl bx,4
@@ -1051,7 +1050,7 @@ hide_sprite_line_next:
     cmp bp,fs:sp_h
     jnz hide_sprite_loop
 
-hide_done:
+hide_donep:
     and fs:sp_flags,NOT SP_FLAG_VISIBLE
 	ret
 hide	Endp

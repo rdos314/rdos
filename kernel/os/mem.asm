@@ -51,7 +51,7 @@ vms_prev	DW ?
 vms_next	DW ?
 vm_linear_struc	ENDS
 
-mem_seg	SEGMENT AT 0
+mem_seg	STRUC
 
 big_avail_mem		DD ?
 small_avail_mem		DD ?
@@ -69,7 +69,7 @@ fixed_vm_base		DD ?
 
 mem_seg	ENDS
 
-local_mem_seg	SEGMENT AT 0
+local_mem_seg	STRUC
 
 local_avail_mem		DD ?
 local_used_mem		DD ?
@@ -111,8 +111,6 @@ PAGE
 
 	public create_mem
 
-	assume ds:mem_seg
-
 create_mem	PROC near
 	push ds
 	push eax
@@ -127,7 +125,7 @@ create_mem	PROC near
 ;
 	mov ds,bx
 	add edx,SIZE mem_seg
-	mov system_alloc_base,edx
+	mov ds:system_alloc_base,edx
 ;
 	pop edx
 	pop bx
@@ -175,20 +173,19 @@ init_mem	PROC near
 ;
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
 	mov edx,global_page_size
-	mov big_avail_mem,edx
-	InitSection big_section
+	mov ds:big_avail_mem,edx
+	InitSection ds:big_section
 ;
 	mov edx,global_byte_size - 10h
-	mov small_avail_mem,edx
-	InitSection small_section
+	mov ds:small_avail_mem,edx
+	InitSection ds:small_section
 ;
-	mov big_used_mem,0
-	mov small_used_mem,0
-	mov process_alloc_base,fixed_process_linear + SIZE process_seg
-	mov thread_alloc_base,thread_linear
-	mov fixed_vm_base,fixed_vm_linear
+	mov ds:big_used_mem,0
+	mov ds:small_used_mem,0
+	mov ds:process_alloc_base,fixed_process_linear + SIZE process_seg
+	mov ds:thread_alloc_base,thread_linear
+	mov ds:fixed_vm_base,fixed_vm_linear
 ;
 	mov ax,cs
 	mov ds,ax
@@ -473,8 +470,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:local_mem_seg
-
 	public init_process_mem
 
 init_process_mem	PROC near
@@ -500,12 +495,12 @@ init_process_mem	PROC near
 ;
 	mov ax,local_mem_sel
 	mov ds,ax
-	mov local_avail_mem,edx
-	mov local_used_mem,0
-	mov local_big_avail_mem,flat_size - local_page_linear
-	mov local_big_used_mem,0
-	InitSection local_mem_section
-	InitSection vm_mem_section
+	mov ds:local_avail_mem,edx
+	mov ds:local_used_mem,0
+	mov ds:local_big_avail_mem,flat_size - local_page_linear
+	mov ds:local_big_used_mem,0
+	InitSection ds:local_mem_section
+	InitSection ds:vm_mem_section
 ;
 	mov ax,process_page_sel
 	mov es,ax
@@ -530,8 +525,8 @@ init_process_mem	PROC near
 ;
 	mov ax,local_mem_sel
 	mov ds,ax
-	mov vm_avail_mem,dx
-	mov vm_used_mem,0
+	mov ds:vm_avail_mem,dx
+	mov ds:vm_used_mem,0
 ;
 	pop di
 	pop edx
@@ -615,8 +610,6 @@ PAGE
 
 allocate_big_linear_name	DB 'Allocate Big Linear',0
 
-	assume ds:mem_seg
-
 allocate_big_linear	PROC far
 	push ds
 	push es
@@ -626,9 +619,7 @@ allocate_big_linear	PROC far
 	mov dx,mem_sel
 	mov ds,dx
 	mov es,dx
-		assume ds:mem_seg
-	EnterSection big_section
-		assume es:mem_seg
+	EnterSection es:big_section
 	mov ebx,global_page_size
 	sub ebx,es:big_avail_mem
     add ebx,global_page_linear
@@ -675,8 +666,7 @@ allocate_global_mark:
 ;
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
-	LeaveSection big_section
+	LeaveSection ds:big_section
 	shl edx,10
 	pop ebx
 	pop eax
@@ -712,9 +702,7 @@ allocate_small_linear	PROC far
 	mov dx,mem_sel
 	mov ds,dx
 	mov es,dx
-		assume ds:mem_seg
-	EnterSection small_section
-		assume es:mem_seg
+	EnterSection ds:small_section
 	mov edx,es:small_avail_mem
 	add es:small_used_mem,eax
 	sub edx,eax
@@ -788,8 +776,7 @@ no_small_biggest_block:
 	mov [edx].slf_next,eax
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
-	LeaveSection small_section
+	LeaveSection ds:small_section
 	add edx,global_byte_linear + 10h
 	pop ecx
 	pop ebx
@@ -830,16 +817,13 @@ allocate_local_linear	PROC far
 	mov dx,local_mem_sel
 	mov ds,dx
 	mov es,dx
-		assume ds:local_mem_seg
-	EnterSection local_mem_section
-	mov edx,local_avail_mem
-	add local_used_mem,eax
+	EnterSection ds:local_mem_section
+	mov edx,ds:local_avail_mem
+	add ds:local_used_mem,eax
 	sub edx,eax
 	sub edx,10h
 	add eax,10h
-	mov local_avail_mem,edx
-		assume ds:mem_seg
-		assume es:local_mem_seg
+	mov ds:local_avail_mem,edx
 ;
 	mov dx,local_linear_sel
 	mov ds,dx
@@ -907,8 +891,7 @@ no_local_biggest_block:
 	mov [edx].slf_next,eax
 	mov ax,local_mem_sel
 	mov ds,ax
-		assume ds:local_mem_seg
-	LeaveSection local_mem_section
+	LeaveSection ds:local_mem_section
 	add edx,local_byte_linear + 10h
 	pop ecx
 	pop ebx
@@ -923,16 +906,13 @@ allocate_page_local_linear:
 	mov dx,local_mem_sel
 	mov ds,dx
 	mov es,dx
-		assume ds:local_mem_seg
-	EnterSection local_mem_section
+	EnterSection ds:local_mem_section
 	mov ebx,local_page_linear
 	shr ebx,10
 	add ebx,4
-	add local_big_used_mem,eax
-	sub local_big_avail_mem,eax
+	add ds:local_big_used_mem,eax
+	sub ds:local_big_avail_mem,eax
 	shr eax,12
-		assume ds:mem_seg
-		assume es:local_mem_seg
 	mov dx,process_page_sel
 	mov ds,dx
 	xor dx,dx
@@ -968,8 +948,7 @@ allocate_blocal_mark:
 ;
 	mov ax,local_mem_sel
 	mov ds,ax
-		assume ds:local_mem_seg
-	LeaveSection local_mem_section
+	LeaveSection ds:local_mem_section
 	shl edx,10
 	pop ecx
 	pop ebx
@@ -1007,8 +986,7 @@ reserve_local_linear	PROC far
 	add eax,1000h
 	mov bx,local_mem_sel
 	mov ds,bx
-		assume ds:local_mem_seg
-	EnterSection local_mem_section
+	EnterSection ds:local_mem_section
 	cmp edx,local_page_linear
 	jc reserve_local_linear_inv_range
 	cmp edx,flat_size
@@ -1055,8 +1033,7 @@ reserve_local_linear_done:
 	pushf
 	mov ax,local_mem_sel
 	mov ds,ax
-		assume ds:local_mem_seg
-	LeaveSection local_mem_section
+	LeaveSection ds:local_mem_section
 	popf
 ;
 	pop edx
@@ -1278,9 +1255,7 @@ allocate_vm_linear	PROC far
 	mov dx,local_mem_sel
 	mov ds,dx
 	mov es,dx
-		assume ds:local_mem_seg
-	EnterSection vm_mem_section
-		assume es:local_mem_seg
+	EnterSection ds:vm_mem_section
 	mov dx,es:vm_avail_mem
 	add es:vm_used_mem,ax
 	sub dx,ax
@@ -1354,8 +1329,7 @@ no_vm_biggest_block:
 	mov [si].vmf_next,di
 	mov bx,local_mem_sel
 	mov ds,bx
-		assume local_mem_seg
-	LeaveSection vm_mem_section
+	LeaveSection ds:vm_mem_section
 	movzx edx,si
 	add edx,vm_linear + 8
 	pop di
@@ -1382,13 +1356,11 @@ PAGE
 
 available_big_linear_name	DB 'Available Big Linear',0
 
-	assume ds:mem_seg
-
 available_big_linear	PROC far
 	push ds
 	mov ax,mem_sel
 	mov ds,ax
-	mov eax,big_avail_mem
+	mov eax,ds:big_avail_mem
 	pop ds
 	ret
 available_big_linear	ENDP
@@ -1412,7 +1384,7 @@ available_small_linear	PROC far
 	push ds
 	mov ax,mem_sel
 	mov ds,ax
-	mov eax,small_avail_mem
+	mov eax,ds:small_avail_mem
 	pop ds
 	ret
 available_small_linear	ENDP
@@ -1436,8 +1408,7 @@ available_local_linear	PROC far
 	push ds
 	mov ax,local_mem_sel
 	mov ds,ax
-		assume ds:local_mem_seg
-	mov eax,local_avail_mem
+	mov eax,ds:local_avail_mem
 	pop ds
 	retf32
 available_local_linear	ENDP
@@ -1461,8 +1432,7 @@ available_vm_linear	PROC far
 	push ds
 	mov ax,local_mem_sel
 	mov ds,ax
-		assume ds:local_mem_seg
-	movzx eax,vm_avail_mem
+	movzx eax,ds:vm_avail_mem
 	pop ds
 	retf32
 available_vm_linear	ENDP
@@ -1482,13 +1452,11 @@ PAGE
 
 used_big_linear_name	DB 'Used Big Linear',0
 
-	assume ds:mem_seg
-
 used_big_linear	PROC far
 	push ds
 	mov ax,mem_sel
 	mov ds,ax
-	mov eax,big_used_mem
+	mov eax,ds:big_used_mem
 	pop ds
 	ret
 used_big_linear	ENDP
@@ -1512,7 +1480,7 @@ used_small_linear	PROC far
 	push ds
 	mov ax,mem_sel
 	mov ds,ax
-	mov eax,small_used_mem
+	mov eax,ds:small_used_mem
 	pop ds
 	ret
 used_small_linear	ENDP
@@ -1532,13 +1500,11 @@ PAGE
 
 used_local_linear_name	DB 'Used Local Linear',0
 
-	assume ds:local_mem_seg
-
 used_local_linear	PROC far
 	push ds
 	mov ax,local_mem_sel
 	mov ds,ax
-	mov eax,local_used_mem
+	mov eax,ds:local_used_mem
 	pop ds
 	retf32
 used_local_linear	ENDP
@@ -1558,13 +1524,11 @@ PAGE
 
 used_vm_linear_name	DB 'Used VM Linear',0
 
-	assume ds:local_mem_seg
-
 used_vm_linear	PROC far
 	push ds
 	mov ax,local_mem_sel
 	mov ds,ax
-	movzx eax,vm_used_mem
+	movzx eax,ds:vm_used_mem
 	pop ds
 	retf32
 used_vm_linear	ENDP
@@ -1637,8 +1601,6 @@ PAGE
 
 allocate_global_name	DB 'Allocate Global Memory',0
 
-	assume ds:mem_seg
-
 allocate_global_mem	PROC far
 	push ds
 	push bx
@@ -1672,8 +1634,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_page_name	DB 'Allocate Page',0
-
-	assume ds:mem_seg
 
 allocate_page	PROC far
 	push ds
@@ -1711,8 +1671,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_page_name	DB 'Free Page',0
-
-	assume ds:mem_seg
 
 free_page	PROC far
 	push ds
@@ -1851,9 +1809,7 @@ free_big_mem	PROC near
 	add ecx,1000h
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
-	EnterSection big_section
-		assume es:mem_seg
+	EnterSection ds:big_section
 	add es:big_avail_mem,ecx
 	sub es:big_used_mem,ecx
 	shr ecx,12
@@ -1875,8 +1831,7 @@ free_big_nopage:
 	loop free_big_loop
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
-	LeaveSection big_section
+	LeaveSection ds:big_section
 	mov edx,cr3
 	mov cr3,edx
 	ret
@@ -1886,9 +1841,7 @@ free_small_mem	PROC near
 	sub edx,global_byte_linear + 10h
 	mov ax,mem_sel
 	mov ds,ax
-		assume ds:mem_seg
-	EnterSection small_section
-		assume es:mem_seg
+	EnterSection ds:small_section
 	mov ax,small_mem_sel
 	mov ds,ax
 	mov eax,[edx].sls_next
@@ -1988,8 +1941,7 @@ free_small_not_limit_page:
 ;	call free_pages
 	mov bx,mem_sel
 	mov ds,bx
-		assume ds:mem_seg
-	LeaveSection small_section
+	LeaveSection ds:small_section
 	ret
 free_small_mem	ENDP
 
@@ -2010,11 +1962,9 @@ free_local_mem	PROC near
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov es,ax
-		assume ds:local_mem_seg
-	EnterSection local_mem_section
+	EnterSection ds:local_mem_section
 	sub edx,local_byte_linear
 	sub edx,10h
-		assume es:local_mem_seg
 	mov ax,local_linear_sel
 	mov ds,ax
 	mov eax,[edx].sls_next
@@ -2111,8 +2061,7 @@ free_local_not_limit_page:
 ;	call free_pages
 	mov bx,local_mem_sel
 	mov ds,bx
-		assume ds:local_mem_seg
-	LeaveSection local_mem_section
+	LeaveSection ds:local_mem_section
 	ret
 free_local_mem	ENDP
 
@@ -2128,9 +2077,7 @@ free_vm_mem	PROC near
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov es,ax
-		assume ds:local_mem_seg
-	EnterSection vm_mem_section
-		assume es:local_mem_seg
+	EnterSection ds:vm_mem_section
 	sub edx,vm_linear
 	mov si,dx
 	sub si,8
@@ -2214,20 +2161,15 @@ free_vm_not_limit_page:
 ;	call free_pages
 	mov bx,local_mem_sel
 	mov ds,bx
-		assume ds:local_mem_seg
-	LeaveSection vm_mem_section
+	LeaveSection ds:vm_mem_section
 	ret
 free_vm_mem	ENDP
-
-	assume es:thread_seg
 
 free_big_local_mem	PROC near
 	mov ax,local_mem_sel
 	mov ds,ax
 	mov es,ax
-		assume ds:local_mem_seg
-	EnterSection local_mem_section
-		assume es:local_mem_seg
+	EnterSection ds:local_mem_section
 	shr edx,10
 	dec ecx
 	and cx,0F000h
@@ -2253,8 +2195,7 @@ free_blocal_nopage:
 	loop free_blocal_loop
 	mov bx,local_mem_sel
 	mov ds,bx
-		assume ds:local_mem_seg
-	LeaveSection local_mem_section
+	LeaveSection ds:local_mem_section
 	mov edx,cr3
 	mov cr3,edx
 	ret
@@ -2282,8 +2223,6 @@ fC	DW OFFSET free_error
 fD	DW OFFSET free_error
 fE	DW OFFSET free_system
 fF	DW OFFSET free_system
-
-		assume es:mem_seg
 
 free_mem	PROC far
 	push ds
@@ -2959,14 +2898,12 @@ PAGE
 
 allocate_thread_linear_name	DB 'Allocate Thread Linear',0
 
-	assume ds:mem_seg
-
 allocate_thread_linear	PROC far
 	push ds
 	mov dx,mem_sel
 	mov ds,dx
-	mov edx,thread_alloc_base
-	add thread_alloc_base,eax
+	mov edx,ds:thread_alloc_base
+	add ds:thread_alloc_base,eax
 	pop ds
 	ret
 allocate_thread_linear	ENDP
@@ -2992,8 +2929,8 @@ allocate_process_linear	PROC far
 	push ds
 	mov dx,mem_sel
 	mov ds,dx
-	mov edx,process_alloc_base
-	add process_alloc_base,eax
+	mov edx,ds:process_alloc_base
+	add ds:process_alloc_base,eax
 	pop ds
 	ret
 allocate_process_linear	ENDP
@@ -3019,8 +2956,8 @@ allocate_system_linear	PROC near
 	push ds
 	mov dx,mem_sel
 	mov ds,dx
-	mov edx,system_alloc_base
-	add system_alloc_base,eax
+	mov edx,ds:system_alloc_base
+	add ds:system_alloc_base,eax
 	pop ds
 	retf
 allocate_system_linear	ENDP
@@ -3050,8 +2987,8 @@ allocate_fixed_vm_linear	PROC near
 	and al,0F0h
 	add eax,10h
 	mov ds,dx
-	mov edx,fixed_vm_base
-	add fixed_vm_base,eax
+	mov edx,ds:fixed_vm_base
+	add ds:fixed_vm_base,eax
 	pop eax
 	pop ds
 	retf

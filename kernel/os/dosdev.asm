@@ -57,7 +57,7 @@ device_attr		DW ?
 
 device_struc	ENDS
 
-device_seg		SEGMENT AT 0
+device_seg		STRUC
 
 device_chain		DW ?
 
@@ -69,7 +69,7 @@ device_size			DB ?
   
 device_seg		ENDS
 
-device_process_seg	SEGMENT AT 0
+device_process_seg	STRUC
 
 con_buf			DB 256 DUP(?)
 con_buf_start	DW ?

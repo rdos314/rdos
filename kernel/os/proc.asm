@@ -37,7 +37,7 @@ INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
 
-thread_data_seg	SEGMENT AT 0
+thread_data_seg	STRUC
 
 create_thread_hooks		DB ?
 terminate_thread_hooks	DB ?
@@ -55,7 +55,7 @@ proc_data_sel_size		DB ?
 
 thread_data_seg	ENDS
 
-process_callback_seg	SEGMENT AT 0
+process_callback_seg	STRUC
 cm_mode		DW ?
 cm_stack	DD ?
 cm_process	DW ?

@@ -291,7 +291,7 @@ set_descr_limit	PROC far
 	or byte ptr [bx+6],80h
 	jmp set_descr_lim_do
 set_descr_small:
-	and byte ptr [bx+6],NOT 80h
+	and byte ptr [bx+6],7Fh
 set_descr_lim_do:
 	mov [bx],ax
 	shr eax,16

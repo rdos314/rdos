@@ -31,24 +31,24 @@
 
 code	SEGMENT byte public 'CODE'
 
-	.386c
-	.387
+.386p
+.387
 	
 	assume cs:code
 
-dt0		DT 1e1
-dt1		DT 1e2
-dt2		DT 1e4
-dt3		DT 1e8
-dt4		DT 1e16
-dt5		DT 1e32
-dt6		DT 1e64
-dt7		DT 1e128
-dt8		DT 1e256
-dt9		DT 1e512
-dt10	DT 1e1024
-dt11	DT 1e2048
-dt12	DT 1e4096
+dt0		DT 1.0e+1
+dt1		DT 1.0e+2
+dt2		DT 1.0e+4
+dt3		DT 1.0e+8
+dt4		DT 1.0e+16
+dt5		DT 1.0e+32
+dt6		DT 1.0e+64
+dt7		DT 1.0e+128
+dt8		DT 1.0e+256
+dt9		DT 1.0e+512
+dt10	DT 1.0e+1024
+dt11	DT 1.0e+2048
+dt12	DT 1.0e+4096
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

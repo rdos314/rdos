@@ -39,21 +39,6 @@ INCLUDE os.def
 INCLUDE os.inc
 INCLUDE protseg.def
 
-vm_gs		EQU 38
-vm_fs		EQU 34
-vm_ds		EQU 30
-vm_es		EQU 26
-vm_ss		EQU 22
-vm_esp		EQU 18
-vm_eflags	EQU 14
-vm_cs		EQU 10
-vm_eip		EQU 6
-vm_err		EQU 2
-vm_bp		EQU 0
-vm_eax		EQU -4
-vm_ebx		EQU -8
-pm_ds		EQU -10
-
 
 .386p
 

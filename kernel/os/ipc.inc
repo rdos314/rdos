@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ipc_data	SEGMENT AT 0
+ipc_data	STRUC
 
 ipc_section			section_typ <>
 ipc_mailslot_list	DW ?
@@ -39,7 +39,7 @@ super_mailslot_list	DW ?
 
 ipc_data	ENDS
 
-ipc_thread_data	SEGMENT AT 0
+ipc_thread_data	STRUC
 
 ipc_mailslot_sel	DW ?
 

@@ -97,7 +97,7 @@ timer_sel		DW ?
 timer_owner		DW ?
 timer_struc	ENDS
 
-task_seg	SEGMENT AT 0
+task_seg	STRUC
 
 ptab			DW 256 DUP(?)
 
@@ -142,7 +142,7 @@ UpdateClock	MACRO
 	in al,TIMER2
 	xchg al,ah
 	mov dx,ax
-	xchg ax,clock_tics
+	xchg ax,ds:clock_tics
 	sub ax,dx
 	movzx eax,ax
 	add ds:system_time,eax
@@ -173,12 +173,12 @@ GetUpdateTics	MACRO
 	movzx eax,ax
 	add eax,eax
 	add eax,eax
-	mov update_tics,eax
+	mov ds:update_tics,eax
 					ENDM
 
 LocalGetSystemTime	MACRO
-	mov eax,system_time
-	mov edx,system_time+4
+	mov eax,ds:system_time
+	mov edx,ds:system_time+4
 					ENDM
 
 LocalReloadTimer	MACRO
@@ -196,9 +196,9 @@ LocalRemoveTimer	MACRO
 	local timer_return
 
 	cli
-	mov bx,timer_head
+	mov bx,ds:timer_head
 	mov ax,[bx].timer_next
-	mov timer_head,ax
+	mov ds:timer_head,ax
 	sti
 	mov cx,[bx].timer_id
 	mov eax,[bx].timer_lsb
@@ -217,19 +217,19 @@ timer_return:
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov ax,timer_free
+	mov ax,ds:timer_free
 	mov [bx].timer_next,ax
-	mov timer_free,bx
+	mov ds:timer_free,bx
 	sti
 					ENDM
 
 LocalStartTimer	MACRO
 	LOCAL start_try_next
 	LOCAL start_insert
-	mov si,timer_free
+	mov si,ds:timer_free
 	mov [si].timer_owner,bx
 	mov bx,[si].timer_next
-	mov timer_free,bx
+	mov ds:timer_free,bx
 	mov [si].timer_lsb,eax
 	mov [si].timer_msb,edx
 	mov [si].timer_id,cx
@@ -267,9 +267,9 @@ timer_stop_next:
 timer_stop_this:
 	mov ax,[bx].timer_next
 	mov [si].timer_next,ax
-	mov ax,timer_free
+	mov ax,ds:timer_free
 	mov [bx].timer_next,ax
-	mov timer_free,bx
+	mov ds:timer_free,bx
 timer_stop_done:
 				ENDM
 
@@ -278,7 +278,7 @@ GetPrioThread	MACRO
 	LOCAL find_prio_loop
 	LOCAL find_prio_done
 	LOCAL find_prio_end
-	mov si,prio_act
+	mov si,ds:prio_act
 	mov ax,[si]
 	or ax,ax
 	je find_prio_lower
@@ -298,7 +298,7 @@ find_prio_loop:
 	jnc find_prio_loop
 	ShutDownTask
 find_prio_done:
-	mov prio_act,si
+	mov ds:prio_act,si
 find_prio_end:
 				ENDM
 
@@ -437,7 +437,7 @@ SetEnviroment	MACRO
 
 code	SEGMENT byte public use16 'CODE'
 
-	assume cs:code,ds:task_seg
+	assume cs:code
 
 PAGE
 
@@ -467,15 +467,15 @@ init_task	PROC near
 ;
 	mov ax,task_sel
 	mov ds,ax
-	mov timer_nesting,-1
-	mov signal_list,0
-	mov help_call_ip,0
-	mov system_time,0
-	mov system_time+4,0
-	mov time_diff,0
-	mov time_diff+4,0
+	mov ds:timer_nesting,-1
+	mov ds:signal_list,0
+	mov ds:help_call_ip,0
+	mov ds:system_time,0
+	mov ds:system_time+4,0
+	mov ds:time_diff,0
+	mov ds:time_diff+4,0
 	mov bx,OFFSET ptab
-	mov prio_act,bx
+	mov ds:prio_act,bx
 	mov cx,256
 ptab_init:
 	mov word ptr [bx],0
@@ -487,13 +487,13 @@ ptab_init:
 	mov [bx].timer_next,0
 	mov [bx].timer_msb,0FFFFFFFFh
 	mov [bx].timer_lsb,0FFFFFFFFh
-	mov timer_head,bx
+	mov ds:timer_head,bx
 ;
-	mov update_tics,0
+	mov ds:update_tics,0
 ;
 	mov cx,0FFh
 	add bx,SIZE timer_struc
-	mov timer_free,bx
+	mov ds:timer_free,bx
 timer_free_list_create:
 	mov ax,bx
 	add ax,SIZE timer_struc
@@ -501,7 +501,7 @@ timer_free_list_create:
 	mov bx,ax
 	loop timer_free_list_create
 ;
-	mov thread_act,virt_thread_sel
+	mov ds:thread_act,virt_thread_sel
 ;
 	mov eax,SIZE section_proc_seg
 	mov bx,section_proc_sel
@@ -1623,7 +1623,7 @@ get_next_int_loop:
 	cmp ax,es:ms_cli_thread
 	jz get_next_int_ok
 	mov ax,es
-	mov si,prio_act
+	mov si,ds:prio_act
 	RemoveBlock              
 	push ds  
 	mov ds,ax
@@ -1635,8 +1635,8 @@ get_next_int_ok:
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
-	mov preempt_lsb,eax
-	mov preempt_msb,edx
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
 	pop es
 	ret
 GetNextThread	Endp
@@ -1655,23 +1655,23 @@ PAGE
 
 UpdateTimer	Proc near
 	cli
-	add timer_nesting,1
+	add ds:timer_nesting,1
 	jc update_timer_loop
-	dec timer_nesting
+	dec ds:timer_nesting
 	jmp update_timer_done
 update_timer_loop:
-	mov es,thread_act
+	mov es,ds:thread_act
 	cli
 	UpdateClock
 	LocalGetSystemTime
-	add eax,update_tics
+	add eax,ds:update_tics
 	adc edx,0
-	mov bx,timer_head
-	mov ecx,preempt_msb
+	mov bx,ds:timer_head
+	mov ecx,ds:preempt_msb
 	cmp ecx,[bx].timer_msb
 	jc check_preempt
 	jnz check_timer
-	mov ecx,preempt_lsb
+	mov ecx,ds:preempt_lsb
 	cmp ecx,[bx].timer_lsb
 	jc check_preempt
 
@@ -1683,8 +1683,8 @@ check_timer:
 	jmp update_timer_loop
 
 check_preempt:
-	sub eax,preempt_lsb
-	sbb edx,preempt_msb
+	sub eax,ds:preempt_lsb
+	sbb edx,ds:preempt_msb
 	jc reload_timer
 	sti
 	nop
@@ -1694,24 +1694,24 @@ check_preempt:
 	jmp update_timer_loop
 
 reload_timer:
-	sub timer_nesting,1
+	sub ds:timer_nesting,1
 	jnc update_timer_done
 	neg eax
 	LocalReloadTimer
 ;
-	mov si,prio_act
+	mov si,ds:prio_act
 	mov ax,[si]
-	cmp ax,thread_act
+	cmp ax,ds:thread_act
 	je update_timer_done
 	UpdateClock
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
-	mov preempt_lsb,eax
-	mov preempt_msb,edx
-	mov si,prio_act
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
+	mov si,ds:prio_act
 	mov es,[si]
-	mov thread_act,es
+	mov ds:thread_act,es
 	str ax
 	mov si,es:p_tss_sel
 	cmp ax,si
@@ -1720,8 +1720,8 @@ reload_timer:
 	mov ax,task_sel
 	mov ds,ax
 	mov es,ax
-	mov help_call_cs,si
-	jmp dword ptr help_call_ip
+	mov ds:help_call_cs,si
+	jmp dword ptr ds:help_call_ip
 update_timer_done:
 	ret
 UpdateTimer	Endp
@@ -1919,7 +1919,7 @@ init_first_thread	Proc near
 	mov ax,task_sel
 	mov ds,ax
 	mov di,es:p_prio
-	mov prio_act,di
+	mov ds:prio_act,di
 	InsertBlock
 ;
 	mov ax,30h
@@ -1933,7 +1933,7 @@ init_first_thread	Proc near
 	out TIMER2,al
 	jmp short $+2
 	out TIMER2,al
-	mov clock_tics,0
+	mov ds:clock_tics,0
 	jmp short $+2
 	mov al,0Dh
 	out 61h,al
@@ -2004,7 +2004,7 @@ init_task_pr:
 	push di
 	mov si,task_sel
 	mov ds,si
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov fs,es:p_tss_data_sel
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
@@ -2028,7 +2028,7 @@ wait_sleep_task:
 	push ax
 	mov si,task_sel
 	mov ds,si
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov fs,es:p_tss_data_sel
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
@@ -2056,7 +2056,7 @@ wait_run_task	Proc far
 	push ax
 	mov si,task_sel
 	mov ds,si
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov fs,es:p_tss_data_sel
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
@@ -2069,16 +2069,16 @@ wait_run_task	Proc far
 	push ax
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb schedule_task
-	mov prio_act,di
+	mov ds:prio_act,di
 	jmp leave_task_end
 schedule_task:
 	call GetNextThread
-	mov si,prio_act
+	mov si,ds:prio_act
 	mov es,[si]
 leave_task_end:
-	mov thread_act,es
+	mov ds:thread_act,es
 	mov si,es:p_tss_sel
 	mov fs:tss_back_link,si
 	pushf
@@ -2100,7 +2100,7 @@ leave_task_end:
 	je enter_task_no_error_code
 	pop edx
 enter_task_no_error_code:
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,0
@@ -2111,7 +2111,7 @@ enter_task_no_error_code:
 	push ax
 	mov di,es:p_prio
 	InsertBlock
-	mov thread_act,es
+	mov ds:thread_act,es
 	push ds
 	SetEnviroment
 	pop ds
@@ -2125,9 +2125,9 @@ enter_task_no_error_code:
 	and ax,NOT 4000h
 	push ax
 	popf
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb enter_prio_lower
-	mov prio_act,di
+	mov ds:prio_act,di
 	sti
 	jmp enter_task_end
 enter_prio_lower:
@@ -2167,9 +2167,9 @@ wake_new	PROC near
 	cli
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb cr_prio_lower
-	mov prio_act,di
+	mov ds:prio_act,di
 	xor ax,ax
 	mov es,ax
 	call GetNextThread
@@ -2241,9 +2241,9 @@ wake_thread	PROC far
 	mov di,es:p_prio
 	mov es:p_data,eax
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb wake_done
-	mov prio_act,di
+	mov ds:prio_act,di
 	call GetNextThread
 	call UpdateTimer
 wake_done:
@@ -2284,7 +2284,7 @@ sleep_thread	PROC far
 	mov si,task_sel
 	mov ds,si
 	cli
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 	mov ds,cx
@@ -2294,7 +2294,7 @@ sleep_thread	PROC far
 	call GetNextThread
 	call UpdateTimer
 	sti
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov eax,es:p_data
 ;
 	pop edi
@@ -2338,9 +2338,9 @@ wake32_thread	PROC far
 	mov di,es:p_prio
 	mov es:p_data,eax
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb wake32_done
-	mov prio_act,di
+	mov ds:prio_act,di
 	call GetNextThread
 	call UpdateTimer
 wake32_done:
@@ -2382,7 +2382,7 @@ sleep32_thread	PROC far
 	mov si,task_sel
 	mov ds,si
 	cli
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 	mov ds,cx
@@ -2392,7 +2392,7 @@ sleep32_thread	PROC far
 	call GetNextThread
 	call UpdateTimer
 	sti
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov eax,es:p_data
 ;
 	pop edi
@@ -2478,9 +2478,9 @@ find_signal_wake:
 	RemoveBlock
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jbe find_signal_done
-	mov prio_act,di
+	mov ds:prio_act,di
 	call GetNextThread
 	call UpdateTimer
 
@@ -2515,7 +2515,7 @@ wait_for_signal	PROC far
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov es,thread_act
+	mov es,ds:thread_act
 	xor al,al
 	xchg al,es:p_signal
 	or al,al
@@ -2530,7 +2530,7 @@ wait_for_signal	PROC far
 ;
 	mov ax,task_sel
 	mov ds,ax
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov es:p_signal,0
 	
 wait_for_signal_done:
@@ -2568,7 +2568,7 @@ enter_section	PROC far
 	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	cli
 	RemoveBlock
@@ -2652,9 +2652,9 @@ leave_section_empty:
 	mov ds,ax
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb leave_section_done
-	mov prio_act,di
+	mov ds:prio_act,di
 	xor ax,ax
 	mov es,ax
 	call GetNextThread
@@ -2696,7 +2696,7 @@ leave_section_sleep	PROC far
 	mov ax,task_sel
 	mov ds,ax
 	cli
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 	mov ds,cx
@@ -2724,9 +2724,9 @@ leave_section_sleep_empty:
 	mov ds,ax
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb leave_section_sleep_done
-	mov prio_act,di
+	mov ds:prio_act,di
 leave_section_sleep_done:
 	call GetNextThread
 	call UpdateTimer
@@ -2931,7 +2931,7 @@ enter_user_section_block:
 	mov fs,ax
 	mov ax,task_sel
 	mov ds,ax
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	RemoveBlock
 ;
@@ -3043,10 +3043,10 @@ leave_user_section_empty:
 	mov ds,ax
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jb leave_user_section_pop
 ;
-	mov prio_act,di
+	mov ds:prio_act,di
 	xor ax,ax
 	mov es,ax
 	call GetNextThread
@@ -3090,7 +3090,7 @@ get_thread_pre_tasking:
 	jmp get_thread_done
 get_thread_norm:
 	mov ds,ax
-	mov ax,thread_act
+	mov ax,ds:thread_act
 	verr ax
 	jnz get_thread_pre_tasking
 get_thread_done:
@@ -3117,7 +3117,7 @@ get_thread_pr	PROC far
 	push ds
 	mov ax,task_sel
 	mov ds,ax
-	mov ax,thread_act
+	mov ax,ds:thread_act
 	pop ds
 	retf32
 get_thread_pr	ENDP
@@ -3173,11 +3173,11 @@ wait_until	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,thread_act
+	mov cx,ds:thread_act
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,1
@@ -3199,14 +3199,14 @@ wake_until	PROC far
 	cli
 	mov di,es:p_prio
 	InsertBlock
-	cmp di,prio_act
+	cmp di,ds:prio_act
 	jbe wake_until_lower
-	mov prio_act,di
+	mov ds:prio_act,di
 	LocalGetSystemTime
 	add eax,1193
 	adc edx,0
-	mov preempt_lsb,eax
-	mov preempt_msb,edx
+	mov ds:preempt_lsb,eax
+	mov ds:preempt_msb,edx
 wake_until_lower:
 	sti
 	ret
@@ -3239,7 +3239,7 @@ wait_milli_sec	PROC far
 	push dx
 	push ax
 	pop ebx
-	mov es,thread_act
+	mov es,ds:thread_act
 	cli
 	UpdateClock
 	LocalGetSystemTime
@@ -3249,11 +3249,11 @@ wait_milli_sec	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,thread_act
+	mov cx,ds:thread_act
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,1
@@ -3297,7 +3297,7 @@ wait_micro_sec	PROC far
 	push eax
 	pop ax
 	pop ebx
-	mov es,thread_act
+	mov es,ds:thread_act
 	cli
 	UpdateClock
 	LocalGetSystemTime
@@ -3307,11 +3307,11 @@ wait_micro_sec	PROC far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET wake_until
-	mov cx,thread_act
+	mov cx,ds:thread_act
 	xor bx,bx
 	cli
 	LocalStartTimer
-	mov es,thread_act
+	mov es,ds:thread_act
 	mov si,es:p_prio
 	mov es:p_sleep_sel,0
 	mov es:p_sleep_offset,1
@@ -3444,7 +3444,7 @@ get_system_time	PROC far
 	push es
 	mov ax,task_sel
 	mov ds,ax
-	mov es,thread_act
+	mov es,ds:thread_act
 	cli
 	UpdateClock
 	LocalGetSystemTime
@@ -3474,12 +3474,12 @@ get_time	PROC far
 	push es
 	mov ax,task_sel
 	mov ds,ax
-	mov es,thread_act
+	mov es,ds:thread_act
 	cli
 	UpdateClock
 	LocalGetSystemTime
-	add eax,time_diff
-	adc edx,time_diff+4
+	add eax,ds:time_diff
+	adc edx,ds:time_diff+4
 	sti
 	pop es
 	pop ds
@@ -3505,8 +3505,8 @@ time_to_system_time_name	DB 'Time To System Time',0
 
 time_to_system_time	PROC far
 	cli
-	sub eax,time_diff
-	sbb edx,time_diff+4
+	sub eax,ds:time_diff
+	sbb edx,ds:time_diff+4
 	sti
 	retf32
 time_to_system_time	ENDP
@@ -3530,8 +3530,8 @@ system_time_to_time_name	DB 'System Time To Time',0
 
 system_time_to_time	PROC far
 	cli
-	add eax,time_diff
-	adc edx,time_diff+4
+	add eax,ds:time_diff
+	adc edx,ds:time_diff+4
 	sti
 	retf32
 system_time_to_time	ENDP
@@ -3557,8 +3557,8 @@ set_system_time	PROC far
 	push bx
 	mov bx,task_sel
 	mov ds,bx
-	mov system_time,eax
-	mov system_time+4,edx
+	mov ds:system_time,eax
+	mov ds:system_time+4,edx
 	pop bx
 	pop ds
 	ret
@@ -3585,8 +3585,8 @@ update_time	PROC far
 	mov bx,task_sel
 	mov ds,bx
 	cli
-	mov time_diff,eax
-	mov time_diff+4,edx
+	mov ds:time_diff,eax
+	mov ds:time_diff+4,edx
 	sti
 	UpdateRtc
 	pop bx

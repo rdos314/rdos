@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-int_seg	SEGMENT AT 0
+int_seg	STRUC
 
 vm_int_handlers		DW 100h DUP(?,?)
 
@@ -66,7 +66,7 @@ int_seg_size		DB ?
 
 int_seg	ENDS
 
-pint_seg	SEGMENT AT 0
+pint_seg	STRUC
 
 pint_locked_stack	DW ?
 pint_prot16_stack	DW ?

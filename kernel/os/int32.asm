@@ -429,7 +429,7 @@ set_exception_vector	PROC far
 	movzx bx,al
 	shl bx,3
 	mov ds:[bx].app_pm_exc,edi
-	mov ds:[bx+4].app_pm_exc,es
+	mov word ptr ds:[bx+4].app_pm_exc,es
 	pop bx
 	pop ds
 	retf32
@@ -485,7 +485,7 @@ default_set_pm_int	PROC far
 	movzx bx,al
 	shl bx,3
 	mov ds:[bx].app_pm_int,edi
-	mov ds:[bx+4].app_pm_int,es
+	mov word ptr ds:[bx+4].app_pm_int,es
 	pop bx
 	pop ds
 	ret
@@ -1287,7 +1287,7 @@ prot_exc32_step_ok:
 	mov [ebx],eax
 ;
 	sub ebx,4
-	mov word ptr [ebx], OFFSET callb_exc32_sel
+	mov word ptr [ebx],callb_exc32_sel
 ;
 	sub ebx,4
 	pop ax

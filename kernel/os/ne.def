@@ -132,7 +132,7 @@ lib_tables				DB ?
 
 library_header	ENDS
 
-ne_data_seg	SEGMENT AT 0
+ne_data_seg	STRUC
 
 lib_modules			DW ?
 lib_module_section	section_typ <>

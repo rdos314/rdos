@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-dpmi_data_seg	SEGMENT AT 0
+dpmi_data_seg	STRUC
 
 dpmi_handler_seg	DW ?
 

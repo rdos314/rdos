@@ -37,7 +37,6 @@ INCLUDE system.def
 INCLUDE protseg.def
 INCLUDE user.inc
 INCLUDE os.inc
-INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 INCLUDE handle.inc

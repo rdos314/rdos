@@ -44,7 +44,7 @@ INCLUDE dos.inc
 mode_vm	EQU 2
 mode_pm EQU 0
 
-dos_app_seg	SEGMENT AT 0
+dos_app_seg	STRUC
 
 vm_psp_seg		DW ?
 pm_psp_sel		DW ?

@@ -38,7 +38,7 @@ INCLUDE os.inc
 INCLUDE user.def
 INCLUDE user.inc
 
-app_data_seg	SEGMENT AT 0
+app_data_seg	STRUC
 
 app_alloc_base		DD ?
 

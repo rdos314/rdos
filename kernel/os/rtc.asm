@@ -45,7 +45,7 @@ rtc_init	EQU 0
 rtc_sync	EQU 1
 rtc_ready	EQU 2
 
-rtc_data_seg	SEGMENT AT 0
+rtc_data_seg	STRUC
 
 system_tics		DW ?,?
 
@@ -68,8 +68,6 @@ rtc_data_seg	ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-
-	assume ds:rtc_data_seg
 
 PAGE
 	
@@ -391,8 +389,8 @@ cmos_read_tics	PROC near
 	push edx
 	push eax
 	GetTime
-	sub eax,cmos_tics_base
-	sbb edx,cmos_tics_base+4
+	sub eax,ds:cmos_tics_base
+	sbb edx,ds:cmos_tics_base+4
 	shr eax,16
 	mov bx,ax
 	pop eax
@@ -414,14 +412,14 @@ cmos_set_tics	PROC near
 	GetTime
 	mov ebx,edx
 	pop edx
-	mov cmos_tics_base,eax
+	mov ds:cmos_tics_base,eax
 	shr eax,16
 	add ax,dx
 	adc ebx,0
-	mov word ptr cmos_tics_base+2,ax
+	mov word ptr ds:cmos_tics_base+2,ax
 	movzx eax,cx
 	add eax,ebx
-	mov cmos_tics_base+4,eax
+	mov ds:cmos_tics_base+4,eax
 	pop ebx
 	pop eax
 	ret

@@ -38,7 +38,7 @@ INCLUDE os.def
 INCLUDE user.inc
 INCLUDE os.inc
 
-state_data_seg	SEGMENT AT 0
+state_data_seg	STRUC
 
 state_hooks		DW ?
 state_arr		DW 2*32 DUP(?)

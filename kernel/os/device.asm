@@ -38,7 +38,7 @@ INCLUDE os.inc
 	
 code	SEGMENT byte public 'CODE'
 
-.386c
+.386
 
 	assume cs:code
 

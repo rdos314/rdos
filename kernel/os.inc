@@ -612,30 +612,30 @@ InitSection     MACRO section
 						ENDM
 
 EnterSection    MACRO section
-	LOCAL enter_section_done
+	LOCAL enter_section_donep
 	pushf
 	cli
 	sub section.cs_value,1
-	jc enter_section_done
+	jc enter_section_donep
 	push esi
 	lea esi,section
 	OsGate enter_section_nr
 	pop esi
-enter_section_done:
+enter_section_donep:
 	popf
 						ENDM
 
 LeaveSection    MACRO section
-	LOCAL leave_section_done
+	LOCAL leave_section_donep
 	pushf
 	cli
 	add section.cs_value,1
-	jc leave_section_done
+	jc leave_section_donep
 	push esi
 	lea esi,section
 	OsGate leave_section_nr
 	pop esi
-leave_section_done:
+leave_section_donep:
 	popf
 						ENDM
 

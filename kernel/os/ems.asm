@@ -37,7 +37,7 @@ INCLUDE user.inc
 INCLUDE driver.def
 INCLUDE system.inc
 
-ems_data_seg	SEGMENT AT 0
+ems_data_seg	STRUC
 
 device_seg	DW ?
 
@@ -45,7 +45,7 @@ ems_data_size	DB ?
 
 ems_data_seg	ENDS
 
-ems_handle_seg	SEGMENT AT 0
+ems_handle_seg	STRUC
 
 ems_page_count		DW ?
 ems_handle_name		DB 8 DUP(?)
@@ -53,7 +53,7 @@ ems_handle_pages	DB ?
 
 ems_handle_seg	ENDS
 
-ems_process_seg	SEGMENT AT 0
+ems_process_seg	STRUC
 
 ems_handles		DW 256 DUP(?)
 

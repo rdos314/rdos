@@ -39,7 +39,7 @@ INCLUDE os.inc
 INCLUDE driver.def
 INCLUDE handle.inc
 
-font_seg	SEGMENT AT 0
+font_seg	STRUC
 
 font_id					DW ?
 font_point_size			DW ?
@@ -68,7 +68,10 @@ font_fheight			DW ?
 
 font_org_data			DB ?
 
-	ORG 0E0h
+fsp						DB 8Bh DUP(?)
+
+; this should be offset E0
+
 font_next				DD ?
 font_type				DW ?
 
@@ -112,8 +115,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:font_seg
-
 install_font	PROC near
 	push ds
 	push ax
@@ -129,7 +130,7 @@ install_font	PROC near
 	CreateDataSelector16
 ;
 	mov ds,bx
-	mov si,font_fheight
+	mov si,ds:font_fheight
 	add si,si
 	mov ax,font_data_sel
 	mov ds,ax
@@ -146,7 +147,7 @@ fill_font_loop:
 	jz fill_font_do
 	push ds
 	mov ds,ax
-	mov ax,font_fheight
+	mov ax,ds:font_fheight
 	add ax,ax
 	pop ds
 	cmp ax,dx

@@ -265,6 +265,7 @@ kit_modules =   $(maps) $(bats) $(bins)
 
 .asm.obj:
      tasm /M4 /Zi /w+ICG /w+PRO $<,$@;
+#     wasm -dt=dos -d1 -fpi87 $<
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # TARGET

@@ -75,7 +75,7 @@ status_mouse_req	EQU 2
 status_key_ack		EQU 4
 status_mouse_ack	EQU 8
 
-key_proc_seg	SEGMENT AT 0
+key_proc_seg	STRUC
 
 key_proc_wait		DW ?
 extend_key			DB ?
@@ -95,7 +95,7 @@ key_notify_offs		DD ?
 
 key_proc_seg	ENDS
 
-key_data_seg	SEGMENT AT 0
+key_data_seg	STRUC
 
 shift_states	DW ?
 mode_thread		DW ?

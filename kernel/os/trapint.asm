@@ -107,8 +107,6 @@ emulate	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	assume ds:tss_seg
-
 trap_0:
 	push dword ptr 0
 	push bp
@@ -178,18 +176,16 @@ trap_1:
 	mov dr6,eax
 	mov ax,thread_tss_sel
 	mov ds,ax
-		assume ds:tss_seg
-	mov tss_t,0
+	mov ds:tss_t,0
 	mov ax,thread_sel
 	mov ds,ax
-		assume ds:thread_seg
-	call dword ptr p_trap_ads
+	call dword ptr ds:p_trap_ads
 	jmp t1_ret
 trap_no_task_switch:
 	sti
 	mov ax,thread_sel
 	mov ds,ax
-	call dword ptr p_step_ads
+	call dword ptr ds:p_step_ads
 t1_ret:
 	pop ds
 	pop ebx
@@ -877,24 +873,21 @@ math_emulate_fpu:
 math_real_fpu:
 	mov ax,thread_sel
 	mov ds,ax
-		assume ds:thread_seg
-	mov bx,p_tss_data_sel
+	mov bx,ds:p_tss_data_sel
 ;
 	mov ax,system_data_sel
 	mov ds,ax
-		assume ds:system_seg
-	mov ax,math_tss
+	mov ax,ds:math_tss
 	clts
 	cmp ax,bx
 	je math_done
 ;
-	mov math_tss,bx
+	mov ds:math_tss,bx
 	or ax,ax
 	jz math_reload
 ;
 	mov ds,ax
 	push bx
-		assume ds:tss_seg
 	mov bx,OFFSET math_control
 	db 9Bh, 66h, 0DDh, 37h          ;	32-bit fsave [bx]
 	pop bx

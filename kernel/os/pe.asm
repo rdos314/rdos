@@ -2879,7 +2879,7 @@ wait_for_pe_debug Proc far
 	push ecx
 	push esi
 ;
-	mov ds,fs:pvModuleHandle
+	mov ds,word ptr fs:pvModuleHandle
 	EnterSection ds:lib_section
 	ClearSignal
 	GetThread
@@ -3048,7 +3048,7 @@ notify_pe_exception	Proc far
 	push ds
 	push dx
 ;
-	mov ds,fs:pvModuleHandle
+	mov ds,word ptr fs:pvModuleHandle
 	mov dx,ds:lib_debug_lib
 	or dx,dx
 	jz neDone
@@ -3064,7 +3064,7 @@ notify_pe_exception	Proc far
 	push ds
 	push es
 ;
-	mov ds,fs:pvModuleHandle
+	mov ds,word ptr fs:pvModuleHandle
 	call ExceptionEvent
 ;
 	mov ds,[bp].vm_ss
@@ -3393,7 +3393,7 @@ load_dll32	Proc far
 	mov al,es:[edi]
 	mov esi,edi
 	mov ax,es
-	mov es,fs:pvModuleHandle
+	mov es,word ptr fs:pvModuleHandle
 	mov fs,ax
 	call LoadPeDll
 	jc load_dll32_done

@@ -99,9 +99,7 @@ swrite_value	DW ?
 swrite_list		DW ?
 read_write_section_typ	ENDS
 
-system_seg	SEGMENT AT 0
-
-	ORG 0
+system_seg	STRUC
 
 math_tss			DW ?
 
@@ -139,7 +137,7 @@ system_size			DB ?
 
 system_seg	ENDS
 
-app_seg	SEGMENT AT 0
+app_seg	STRUC
 
 app_next			DW ?
 app_sel				DW ?
@@ -173,14 +171,12 @@ app_exe_name		DB 100h DUP(?)
 
 app_seg	ENDS
 
-block_seg	SEGMENT AT 0
-	ORG 0
+block_seg	STRUC
 	b_next			DW ?
 	b_prev			DW ?
 block_seg	ENDS
 
-thread_seg	SEGMENT AT 0
-	ORG 0
+thread_seg	STRUC
 	p_next			DW ?
 	p_prev			DW ?
 	p_prio			DW ?
@@ -220,16 +216,14 @@ thread_seg	SEGMENT AT 0
 	thread_name		DB 32 DUP(?)
 thread_seg	ENDS
 
-process_seg	SEGMENT AT 0
-	ORG 0
+process_seg	STRUC
 	ms_virt_flags	DW ?
 	ms_wait_sti		DW ?
 	ms_cli_thread	DW ?
 	ms_thread_count	DW ?
 process_seg	ENDS
 
-tss_seg		SEGMENT AT 0
-	ORG 0
+tss_seg		STRUC
 tss_back_link	DW ?,?
 tss_esp0		DW ?,?
 tss_ess0		DW ?,?

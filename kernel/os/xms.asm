@@ -49,13 +49,13 @@ lock_count			DB ?
 
 xms_handle_seg	ENDS
 
-xms_system_seg	SEGMENT AT 0
+xms_system_seg	STRUC
 
 xms_handler_seg	DW ?
 
 xms_system_seg	ENDS
 
-xms_local_seg	SEGMENT AT 0
+xms_local_seg	STRUC
 
 xms_hma_state	DB ?
 xms_free_mem	DD ?

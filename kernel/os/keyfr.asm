@@ -75,7 +75,7 @@ INCLUDE ..\os\user.inc
 ; I've try to use GetKeyboardState but the result was wrong
 ; that's why I put this here only for shift_states
 
-key_data_seg	SEGMENT AT 0
+key_data_seg	STRUC
 
 shift_states	DW ?
 mode_thread	DW ?

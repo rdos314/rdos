@@ -38,7 +38,7 @@ INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
 
-focus_seg	SEGMENT AT 0
+focus_seg	STRUC
 
 focus_thread			DW 256 DUP(?)
 

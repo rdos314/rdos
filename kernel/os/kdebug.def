@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-debug_seg	SEGMENT AT 0
+debug_seg	STRUC
 
 op_syntax	DW ?
 op_codes	DW 100 DUP(?)

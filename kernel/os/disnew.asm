@@ -9400,49 +9400,49 @@ adr_sibi_111:
 
 cr_tab:
 
-cr0:
+tcr0:
 			DD OFFSET op_one
 			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_0 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr1:
+tcr1:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr2:
+tcr2:
 			DD OFFSET op_one
 			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_2 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr3:
+tcr3:
 			DD OFFSET op_one
 			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_3 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr4:
+tcr4:
 			DD OFFSET op_one
 			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_4 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr5:
+tcr5:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr6:
+tcr6:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-cr7:
+tcr7:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
@@ -9455,49 +9455,49 @@ cr7:
 
 dr_tab:
 
-dr0:
+tdr0:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_0 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr1:
+tdr1:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_1 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr2:
+tdr2:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_2 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr3:
+tdr3:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_3 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr4:
+tdr4:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr5:
+tdr5:
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr6:
+tdr6:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_6 - OFFSET mne_tab 
 			DD 0FFFFFFFFh
 			DD 0FFFFFFFFh
-dr7:
+tdr7:
 			DD OFFSET op_one
 			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
 			DD OFFSET txt_7 - OFFSET mne_tab 

@@ -43,13 +43,11 @@ INCLUDE ..\os\os.inc
 ;	ds = datasegment
 
 .386p
+.387
 ;
 ; offsets in trapgate, vmode
 ;
 
-vm_bp		EQU 0
-vm_eax		EQU -4
-vm_ebx		EQU -8
 vm_edx		EQU -12
 
 osgate_entry	STRUC
@@ -434,12 +432,25 @@ WriteEflags	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 word_reg_tab1:
-	DB ' TR=',0
-	DB ' DT=',OFFSET tss_ldt,0
+	DB ' TR='
+	DW 0
+	DB ' DT='
+	DW OFFSET tss_ldt
+	DB 0
 word_reg_tab2:
-	DB ' CS=',OFFSET tss_cs,' DS=',OFFSET tss_ds
-	DB ' ES=',OFFSET tss_es,' FS=',OFFSET tss_fs
-	DB ' GS=',OFFSET tss_gs,' SS=',OFFSET tss_ss,0
+	DB ' CS='
+	DW OFFSET tss_cs
+	DB ' DS='
+	DW OFFSET tss_ds
+	DB ' ES='
+	DW OFFSET tss_es
+	DB ' FS='
+	DW OFFSET tss_fs
+	DB ' GS='
+	DW OFFSET tss_gs
+	DB ' SS='
+	DW OFFSET tss_ss
+	DB 0
 
 WriteWordRegs	PROC near
 word_write_loop:
@@ -449,18 +460,17 @@ word_write_loop:
 	mov cx,4
 	WriteSizeString
 	add di,4
-	mov bl,es:[di]
-	or bl,bl
+	mov bx,es:[di]
+	or bx,bx
 	jnz word_write_norm
 	mov ax,gs
 	call WriteHexWord
 	jmp word_write_cont
 word_write_norm:
-	xor bh,bh
 	mov ax,gs:[bx]
 	call WriteHexWord	
 word_write_cont:
-	inc di
+	add di,2
 	jmp word_write_loop
 word_write_end:
 	ret
@@ -478,13 +488,29 @@ WriteWordRegs	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dword_reg_tab1:
-	DB ' EAX=',OFFSET tss_eax,' EBX=',OFFSET tss_ebx
-	DB ' ECX=',OFFSET tss_ecx,' EDX=',OFFSET tss_edx,0
+	DB ' EAX='
+	DW OFFSET tss_eax
+	DB ' EBX='
+	DW OFFSET tss_ebx
+	DB ' ECX='
+	DW OFFSET tss_ecx
+	DB ' EDX='
+	DW OFFSET tss_edx
+	DB 0
 dword_reg_tab2:
-	DB ' ESI=',OFFSET tss_esi,' EDI=',OFFSET tss_edi
-	DB ' ESP=',OFFSET tss_esp,' EBP=',OFFSET tss_ebp,0
+	DB ' ESI='
+	DW OFFSET tss_esi
+	DB ' EDI='
+	DW OFFSET tss_edi
+	DB ' ESP='
+	DW OFFSET tss_esp
+	DB ' EBP='
+	DW OFFSET tss_ebp
+	DB 0
 dword_reg_tab3:
-	DB ' EPC=',OFFSET tss_eip,0
+	DB ' EPC='
+	DW OFFSET tss_eip
+	DB 0
 
 WriteDwordRegs	PROC near
 dword_write_loop:
@@ -494,11 +520,10 @@ dword_write_loop:
 	mov cx,5
 	WriteSizeString
 	add di,5
-	mov bl,es:[di]
-	xor bh,bh
+	mov bx,es:[di]
 	mov eax,gs:[bx]
 	call WriteHexDword
-	inc di
+	add di,2
 	jmp dword_write_loop
 dword_write_end:
 	ret

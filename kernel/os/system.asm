@@ -140,11 +140,10 @@ translate_pm_system	PROC near
 	mov bx,ax
 	mov ax,thread_tss_sel
 	mov ds,ax
-		assume ds:tss_seg
-	mov ax,tss_esp0
+	mov ax,ds:tss_esp0
 	push ax
 	mov ax,sp
-	mov tss_esp0,ax
+	mov ds:tss_esp0,ax
 	mov ax,virt_idt_sel
 	mov ds,ax
 	shl bx,2

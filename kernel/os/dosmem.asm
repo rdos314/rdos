@@ -833,7 +833,7 @@ init_process_mem	PROC near
 	mov eax,env_sel
 	mov ds,ax	
 	xor esi,esi
-	mov edi,OFFSET DOS_MEM_START SHL 4 + 10h
+	mov edi,DOS_MEM_START SHL 4 + 10h
 	lsl ecx,eax
 	rep movs byte ptr es:[edi],[esi]
 	xor ax,ax

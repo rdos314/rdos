@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-mouse_seg	SEGMENT AT 0
+mouse_seg	STRUC
 
 m_cursor_flag	DW ?
 
@@ -73,7 +73,7 @@ m_end	DB ?
 
 mouse_seg	ENDS
 
-mouse_data_seg	SEGMENT AT 0
+mouse_data_seg	STRUC
 
 md_buttons		DW ?
 md_dx			DW ?

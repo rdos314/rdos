@@ -1294,7 +1294,7 @@ prot_exc16_step_ok:
 	mov [bx],ax
 ;
 	sub bx,2
-	mov word ptr [bx], OFFSET callb_exc16_sel
+	mov word ptr [bx], callb_exc16_sel
 ;
 	sub bx,2
 	pop ax

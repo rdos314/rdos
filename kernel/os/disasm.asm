@@ -54,7 +54,7 @@ addr_32		EQU 1
 
 code	SEGMENT byte public 'CODE'
 
-.386c
+.386p
 
 	assume cs:code
 
