@@ -20,61 +20,49 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# waitdev.h
-# A waitable device class
+# keyboard.h
+# Keyboard device class
 #
 ########################################################################*/
 
-#ifndef _WAIT_DEV_H
-#define _WAIT_DEV_H
+#ifndef _KEYBOARD_H
+#define _KEYBOARD_H
 
-#include "device.h"
+#define KEY_NUM_ACTIVE		0x200
+#define KEY_CAPS_ACTIVE		0x100
+#define KEY_PRINT_PRESSED	0x20
+#define KEY_SCROLL_PRESSED	0x10
+#define KEY_PAUSE_PRESSED	0x8
+#define KEY_CTRL_PRESSED	0x4
+#define KEY_ALT_PRESSED		0x2
+#define KEY_SHIFT_PRESSED	0x1
 
-class TWait;
+#include "waitdev.h"
 
-class TWaitDevice : public TDevice
+class TKeyboardDevice : public TWaitDevice
 {
-friend class TWait;
 public:
-	TWaitDevice();
-	TWaitDevice(const char *IniSection);
-	virtual ~TWaitDevice();
+	TKeyboardDevice(TWait *Wait);
+	TKeyboardDevice(const char *IniSection, TWait *Wait);
+	virtual ~TKeyboardDevice();
 
-	int ID;
+	virtual void DeviceName(char *Name, int MaxLen) const;
 
+	void Clear();
+	int PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+	int ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+
+	void (*OnKeyPress)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+	void (*OnKeyRelease)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+	
 protected:
-	int RegisterWait(TWait *Wait);
-	virtual void SignalNewData() = 0;
+	virtual void KeyPress(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+	virtual void KeyRelease(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
+
+	virtual void SignalNewData();
 
 private:
-    void Init();
-
-    TWait *FWait;
-};
-
-class TWait
-{
-friend class TWaitDevice;
-public:
-	TWait();
-	virtual ~TWait();
-
-	void StartThreadHandler(const char *ThreadName, int StackSize);
-	virtual void Execute();
-
-	TWaitDevice *Check();
-	TWaitDevice *WaitForever();
-	TWaitDevice *WaitTimeout(int MilliSec);
-	void Abort();
-
-protected:
-    int GetHandle();
-	void Remove(TWaitDevice *dev);
-
-private:
-    int FHandle;
-	int FThreadRunning;
-	int FInstalled;
+    void Init(TWait *Wait);
 };
 
 #endif

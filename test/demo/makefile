@@ -128,7 +128,7 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 
 maps =      $(exes:.EXE=.MAP)
 
-cfgs =      DEMO.CFG ALIBOOT.CFG
+cfgs =      DEMO.CFG GUIDEMO.CFG ALIBOOT.CFG
 
 bins =      $(cfgs:.CFG=.BIN)
 
@@ -307,6 +307,9 @@ TEST.EXE : $(test_objs)
 
 DEMO.BIN:   DEMO.CFG $(rdvs) $(exes) $(dlls)
 	cfg2bin demo
+
+GUIDEMO.BIN:   GUIDEMO.CFG $(rdvs) $(exes) $(dlls)
+	cfg2bin guidemo
 
 ALIBOOT.BIN:   ALIBOOT.CFG $(rdvs) $(exes) $(dlls)
 	boot2bin

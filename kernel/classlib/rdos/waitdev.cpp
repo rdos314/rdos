@@ -34,6 +34,22 @@
 
 /*##########################################################################
 #
+#   Name       : ThreadStartup
+#
+#   Purpose....: Startup procedure for thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ThreadStartup(void *ptr)
+{
+	((TWait *)ptr)->Execute();
+}
+
+/*##########################################################################
+#
 #   Name       : TWaitDevice::TWaitDevice
 #
 #   Purpose....: Constructor for TWaitDevice		                          
@@ -43,9 +59,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice::TWaitDevice(TWait *Wait)
+TWaitDevice::TWaitDevice()
 {
-	Init(Wait);
+	Init();
 }
 
 /*##########################################################################
@@ -59,10 +75,10 @@ TWaitDevice::TWaitDevice(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice::TWaitDevice(const char *IniSection, TWait *Wait)
+TWaitDevice::TWaitDevice(const char *IniSection)
   : TDevice(IniSection)
 {
-	Init(Wait);
+	Init();
 }
 
 /*##########################################################################
@@ -75,10 +91,25 @@ TWaitDevice::TWaitDevice(const char *IniSection, TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-void TWaitDevice::Init(TWait *Wait)
+void TWaitDevice::Init()
 {
-    FWait = Wait;
-    Wait->Add(this);
+    FWait = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TWaitDevice::RegisterWait
+#
+#   Purpose....: Register with wait
+#   In params..: *
+#   Out params.: *
+#   Returns....: handle to wait
+#
+##########################################################################*/
+int TWaitDevice::RegisterWait(TWait *Wait)
+{	
+	FWait = Wait;
+    return FWait->GetHandle();
 }
 
 /*##########################################################################
@@ -94,7 +125,8 @@ void TWaitDevice::Init(TWait *Wait)
 ##########################################################################*/
 TWaitDevice::~TWaitDevice()
 {
-    FWait->Remove(this);
+	if (FWait)
+	    FWait->Remove(this);
 }
 
 /*##########################################################################
@@ -111,6 +143,8 @@ TWaitDevice::~TWaitDevice()
 TWait::TWait()
 {
     FHandle = RdosCreateWait();
+	FInstalled = TRUE;
+	FThreadRunning = FALSE;
 }
 
 /*##########################################################################
@@ -126,6 +160,13 @@ TWait::TWait()
 ##########################################################################*/
 TWait::~TWait()
 {
+	FInstalled = FALSE;
+	if (FThreadRunning)
+		RdosStopWait(FHandle);
+
+	while (FThreadRunning)
+		RdosWaitMilli(25);
+
     RdosCloseWait(FHandle);
 }
 
@@ -140,9 +181,9 @@ TWait::~TWait()
 #   Returns....: *
 #
 ##########################################################################*/
-void TWait::Add(TWaitDevice *dev)
+int TWait::GetHandle()
 {
-    dev->Add(FHandle, this);
+    return FHandle;
 }
 
 /*##########################################################################
@@ -159,6 +200,22 @@ void TWait::Add(TWaitDevice *dev)
 void TWait::Remove(TWaitDevice *dev)
 {
 	RdosRemoveWait(FHandle, dev);
+}
+
+/*##########################################################################
+#
+#   Name       : TWait::StartThreadHandler
+#
+#   Purpose....: Start a thread that handles wait object
+#
+#   In params..: StackSize		Size of stack
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWait::StartThreadHandler(const char *ThreadName, int StackSize)
+{
+	RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
 }
 
 /*##########################################################################
@@ -190,7 +247,13 @@ TWaitDevice *TWait::Check()
 ##########################################################################*/
 TWaitDevice *TWait::WaitForever()
 {
-    return (TWaitDevice *)RdosWaitForever(FHandle);
+	TWaitDevice *Wait;
+
+    Wait = (TWaitDevice *)RdosWaitForever(FHandle);
+	if (Wait)
+		Wait->SignalNewData();
+
+	return Wait;
 }
 
 /*##########################################################################
@@ -206,7 +269,13 @@ TWaitDevice *TWait::WaitForever()
 ##########################################################################*/
 TWaitDevice *TWait::WaitTimeout(int MilliSec)
 {
-    return (TWaitDevice *)RdosWaitTimeout(FHandle, MilliSec);
+	TWaitDevice *Wait;
+
+    Wait = (TWaitDevice *)RdosWaitTimeout(FHandle, MilliSec);
+	if (Wait)
+		Wait->SignalNewData();
+
+	return Wait;
 }
 
 /*##########################################################################
@@ -223,4 +292,27 @@ TWaitDevice *TWait::WaitTimeout(int MilliSec)
 void TWait::Abort()
 {
     RdosStopWait(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TWait::Execute
+#
+#   Purpose....: Thread based handler
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWait::Execute()
+{
+	TWaitDevice *Wait;
+
+	while (FInstalled)
+	{
+	    Wait = (TWaitDevice *)RdosWaitForever(FHandle);
+		if (Wait)
+			Wait->SignalNewData();
+	}
 }
