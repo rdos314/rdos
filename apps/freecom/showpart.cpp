@@ -31,6 +31,7 @@
 #include "rdos.h"
 #include "cmdhelp.h"
 #include "lang.h"
+#include "idedisc.h"
 #include "showpart.h"
 
 #define FALSE 0
@@ -338,9 +339,9 @@ int TShowPartitionCommand::Execute(char *param)
 	/* if no parameters, show all */
 	if (*param == 0)
 	{
-		for (DiscNr = 0; DiscNr < 25; DiscNr++)
+		for (DiscNr = 0; DiscNr < 4; DiscNr++)
 		{
-			Disc = new TDisc(DiscNr);
+			Disc = new TIdeDisc(DiscNr);
 			if (Disc->IsValid())
 				Show(Disc);
 			delete Disc;
@@ -350,7 +351,7 @@ int TShowPartitionCommand::Execute(char *param)
 
 	if (sscanf(param, "%d", &DiscNr) == 1)
 	{
-		Disc = new TDisc(DiscNr);
+		Disc = new TIdeDisc(DiscNr);
 		if (!Show(Disc))
 		{
 			FMsg.printf(TEXT_SHOWPART_DISC_ERROR, DiscNr);

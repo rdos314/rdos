@@ -34,6 +34,7 @@
 #include "cmdhelp.h"
 #include "lang.h"
 #include "part.h"
+#include "fddisc.h"
 #include "initfd.h"
 
 #define FALSE 0
@@ -179,13 +180,13 @@ void TInitFdCommand::WriteBootSector(TDisc *Disc)
 	bootp.MappingSectors = FLoaderSectors;
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;
-	bootp.SmallSectors = 2884;
-	bootp.Media = 0xF8;
+	bootp.SmallSectors = 2880;
+	bootp.Media = 0xF0;
 	bootp.Resv6 = 0;
-	bootp.SectorsPerCyl = 15;
+	bootp.SectorsPerCyl = 18;
 	bootp.Heads = 2;
-	bootp.HiddenSectors = FLoaderSectors;
-	bootp.Sectors = 2884;
+	bootp.HiddenSectors = 0;
+	bootp.Sectors = 2880;
 	bootp.Drive = 0;
 	bootp.Resv7 = 0;
 	bootp.Signature = 0;
@@ -252,7 +253,7 @@ int TInitFdCommand::Execute(char *param)
 	long Sectors;
 	int SectorsPerCyl;
 	int Heads;
-	TDisc *Disc;
+	TFloppyDisc *Disc;
 	TDiscPartition *DiscPart;
 	TPartition *Part;
 	int ok;
@@ -264,7 +265,7 @@ int TInitFdCommand::Execute(char *param)
 
 	if (sscanf(param, "%d", &DiscNr) == 1)
 	{
-		Disc = new TDisc(DiscNr);
+		Disc = new TFloppyDisc(DiscNr, 512, 2880, 18, 2);
 		ok = Disc->IsValid();
 
 		if (ok)
@@ -280,8 +281,8 @@ int TInitFdCommand::Execute(char *param)
         if (ok)
         {            		
     	    WriteBootLoader(Disc);
-    	    WriteBootSector(Disc);
-    	    return 0;
+			WriteBootSector(Disc);
+			Disc->Format(2880 - 1 - FLoaderSectors);
     	}
 	}
 

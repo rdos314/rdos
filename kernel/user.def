@@ -347,5 +347,7 @@ get_drive_disc_param_nr     = 297
 
 get_ide_disc_nr             = 298
 get_floppy_disc_nr          = 299
+demand_load_drive_nr        = 300
+set_disc_info_nr            = 301
 
-usergate_entries			= 300
+usergate_entries			= 340

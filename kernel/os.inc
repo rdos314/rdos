@@ -1767,11 +1767,6 @@ AllocateDynamicDrive	MACRO
 					ENDM
 
 ;	IN	AL		Drive #
-DemandLoadDrive	MACRO
-	OsGate demand_load_drive_nr
-					ENDM
-
-;	IN	AL		Drive #
 ;	IN	AH		Disc # or 0
 ;	IN	EDX		Start sector
 ;	IN	ECX		Number of sectors

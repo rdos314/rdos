@@ -45,7 +45,7 @@ boot_sectors_per_cyl		DW 15
 boot_heads					DW 2
 boot_hidden_sectors			DD 16
 boot_sectors				DD 2884
-boot_drive_nr				DB 80h,0
+boot_drive_nr				DB 0,0
 boot_signature				DB ?
 boot_serial					DD ?
 boot_volume					DB 11 DUP(?)

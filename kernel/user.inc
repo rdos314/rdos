@@ -1055,6 +1055,20 @@ GetDiscInfo     MACRO
 	UserGate get_disc_info_nr
 						ENDM
 
+; IN   AL           Disc #
+; IN   CX			Bytes / sector
+; IN   EDX          Total # of sectors
+; IN   SI           BIOS sectors / cylinder
+; IN   DI           BIOS heads
+SetDiscInfo     MACRO
+	UserGate set_disc_info_nr
+						ENDM
+
+;	IN	AL		Drive #
+DemandLoadDrive	MACRO
+	UserGate demand_load_drive_nr
+					ENDM
+
 ;	IN	AL			Disc #
 ;	IN	EDX			Start sector
 ;	IN	ECX			Number of sectors

@@ -5876,6 +5876,55 @@ RdosGetDiscInfo	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosSetDiscInfo
+;
+;		DESCRIPTION:	Set disc info
+;
+;		PARAMETER:		Disc #
+;						Bytes / sector
+;						Total sectors
+;						BIOS sectors / cyl
+;						BIOS heads
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetDiscInfo
+
+RdosSetDiscInfo	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edx
+	push esi
+	push edi
+;
+	mov al,[ebp+8]
+	mov ecx,[ebp+12]
+	mov edx,[ebp+16]
+	mov esi,[ebp+20]
+	mov edi,[ebp+24]
+	UserGate set_disc_info_nr
+	jc set_disc_info_fail
+;
+	mov eax,1
+	jmp set_disc_info_done
+
+set_disc_info_fail:
+	xor eax,eax
+
+set_disc_info_done:
+	pop edi
+	pop esi
+	pop edx
+	pop ebx
+	pop ebp
+	ret 20
+RdosSetDiscInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosReadDisc
 ;
 ;		DESCRIPTION:	Read from disc
@@ -6049,6 +6098,30 @@ get_drive_info_done:
 	pop ebp
 	ret 16
 RdosGetDriveInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDemandLoadDrive
+;
+;       DESCRIPTION:    Demand-load drive (removable media)
+;
+;		PARAMETERS:		Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosDemandLoadDrive
+
+RdosDemandLoadDrive	Proc near
+	push ebp
+	mov ebp,esp
+;
+	mov al,[ebp+8]
+	UserGate demand_load_drive_nr
+;
+	pop ebp
+	ret 4
+RdosDemandLoadDrive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

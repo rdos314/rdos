@@ -34,6 +34,9 @@ class TFloppyDisc : public TDisc
 {
 public:
 	TFloppyDisc(int Unit);
+	TFloppyDisc(int Unit, int SectorSize, long Sectors, int SectorsPerCyl, int Heads);
+
+	void Format(long Sectors);
 };
 
 #endif

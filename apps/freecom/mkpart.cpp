@@ -30,6 +30,7 @@
 
 #include "rdos.h"
 #include "cmdhelp.h"
+#include "idedisc.h"
 #include "lang.h"
 #include "mkpart.h"
 
@@ -166,7 +167,7 @@ int TMakePartitionCommand::Execute(char *param)
 	}
 
 	ret = 1;
-	Disc = new TDisc(DiscNr);
+	Disc = new TIdeDisc(DiscNr);
 	if (Disc->IsValid())
 		ret = Make(Disc, FsName, Size * 0x800);
 	delete Disc;

@@ -42,3 +42,33 @@ TFloppyDisc::TFloppyDisc(int Unit)
     if (Disc >= 0)
         Define(Disc);
 }
+
+/*##################  TFloppyDisc::TFloppyDisc  #############
+*   Purpose....: Floppy disc constructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TFloppyDisc::TFloppyDisc(int Unit, int SectorSize, long Sectors, int SectorsPerCyl, int Heads)
+{
+    int Disc = RdosGetFloppyDisc(Unit);
+
+    if (Disc >= 0)
+    {
+        RdosSetDiscInfo(Disc, SectorSize, Sectors, SectorsPerCyl, Heads);
+        Define(Disc);
+    }
+}
+
+/*##################  TFloppyDisc::Format  #############
+*   Purpose....: Format disc							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+void TFloppyDisc::Format(long Sectors)
+{
+    RdosFormatDrive(FDisc, 0, Sectors, "FAT12");
+}

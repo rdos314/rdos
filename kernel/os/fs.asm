@@ -344,6 +344,7 @@ install_file_system	Proc far
 	mov cx,fs_data_sel
 	mov ds,cx
 	call GetFileSystem
+	jc install_file_sys_done
 ;
 	movzx bx,al
 	add bx,bx
@@ -379,6 +380,7 @@ init_file_old_freed:
 	mov si,ds
 	pop ds
 	mov ds:[bx].fs_sel,si
+	clc
 
 install_file_sys_done:
 	pop di

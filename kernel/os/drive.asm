@@ -2569,7 +2569,10 @@ flush_unit_done:
 ;
 	xor ebx,ebx
 	inc esi
-	jmp flush_loop
+	movzx eax,ds:disc_units
+	cmp esi,eax
+	jb flush_loop
+	jmp flush_leave
 
 flush_next_unit:
 	mov edx,ebp
@@ -2579,20 +2582,10 @@ flush_next_unit:
 ;
 	xor ebx,ebx
 	inc esi
-	jmp flush_loop
-
-flush_next:
-	inc ebx
-	cmp si,ds:disc_sectors_per_unit
-	jne flush_unit_ok
-
-flush_adv_unit:
-	xor esi,esi
-	inc ebx
-
-flush_unit_ok:
-	sub ecx,1
-	jnz flush_loop
+	movzx eax,ds:disc_units
+	cmp esi,eax
+	jb flush_loop
+	jmp flush_leave
 
 flush_leave:
 	LeaveSection ds:disc_section
@@ -3872,6 +3865,68 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SET_DISC_INFO
+;
+;		DESCRIPTION:	Set disc info
+;
+;		PARAMETERS:		AL			Disc #
+;                   	CX			Bytes / sector
+;						EDX			Total sectors
+;						SI			BIOS sectors / cylinder
+;						DI			BIOS heads
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_disc_info_name	DB 'Set Disc Info',0
+
+set_disc_info	PROC far
+	push ds
+	push eax
+	push ebx
+	push edx
+;
+	cmp al,MAX_DRIVES
+	jae set_disc_info_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,ds:[bx].disc_def_arr
+	or bx,bx
+	jz set_disc_info_fail
+;
+    push bx
+    mov ax,si
+    push edx
+    mul di
+    movzx ebx,ax
+    pop eax
+    xor edx,edx
+    div ebx
+    mov dx,bx
+    pop bx
+    xchg ax,dx
+    SetDiscParam
+	clc
+	jmp set_disc_info_done
+
+set_disc_info_fail:
+	stc
+
+set_disc_info_done:
+    pop edx
+	pop ebx
+	pop eax
+	pop ds	
+	retf32
+set_disc_info	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			READ_DISC
 ;
 ;		DESCRIPTION:	Read disc
@@ -4307,23 +4362,11 @@ format_perf:
     mov dx,cs
     mov ds,dx
 	xor edx,edx
-	NewSector
-;	
-    push ecx
-    push esi
-    push edi
-    mov edi,esi
-    xor esi,esi
-    mov ecx,80h
-    rep movs dword ptr es:[edi],[esi]
-    pop edi
-    pop esi
-    pop ecx
+	LockSector
 ;
-	mov es:[esi].boot_param.boot_drive_nr,ah
-	add es:[esi].boot_param.boot_drive_nr,80h
+    movzx edx,es:[esi].boot_param.boot_mapping_sectors
+    sub ecx,edx
     mov edx,ecx
-    dec edx
 	mov es:[esi].boot_param.boot_sectors,edx
 	cmp edx,10000h
 	jae format_no_small
@@ -4648,7 +4691,7 @@ demand_load_drive_fail:
 demand_load_drive_done:
 	popad
 	pop ds
-	ret
+	retf32
 demand_load_drive	Endp
 
 PAGE
@@ -4784,11 +4827,6 @@ init	PROC far
 	mov ax,allocate_dynamic_drive_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET demand_load_drive
-	mov di,OFFSET demand_load_drive_name
-	mov ax,demand_load_drive_nr
-	RegisterOsGate
-;
 	mov si,OFFSET open_drive
 	mov di,OFFSET open_drive_name
 	mov ax,open_drive_nr
@@ -4880,10 +4918,21 @@ init	PROC far
 	mov ax,get_disc_info_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET set_disc_info
+	mov di,OFFSET set_disc_info_name
+	xor dx,dx
+	mov ax,set_disc_info_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET get_drive_disc_param
 	mov di,OFFSET get_drive_disc_param_name
 	xor dx,dx
 	mov ax,get_drive_disc_param_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET demand_load_drive
+	mov di,OFFSET demand_load_drive_name
+	mov ax,demand_load_drive_nr
 	RegisterBimodalUserGate
 ;
 	mov bx,OFFSET format_drive16

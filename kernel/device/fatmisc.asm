@@ -251,8 +251,7 @@ format_cluster_ok12:
 ;    
     movzx eax,al
     mul ecx
-	mov es:[esi].boot_sectors,eax
-	mov es:[esi].boot_sectors16,0
+	mov es:[esi].boot_sectors16,ax
 ;
     dec ecx
     shr ecx,9
@@ -261,19 +260,20 @@ format_cluster_ok12:
     add ecx,eax
     inc ecx
     mov es:[esi].boot_fat_sectors16,cx
-    mov es:[esi].boot_fat_sectors,ecx
 ;
     mov es:[esi].boot_fats,2
     mov es:[esi].boot_root_dirs,100h
 	mov es:[esi].boot_fs_version,0
 	mov es:[esi].boot_root_cluster,2
+;	
+    mov cx,es:[esi].boot_fat_sectors16
+    movzx edx,es:[esi].boot_resv_sectors
+;    
 	ModifySector
 	UnlockSector
 ;
-    mov cx,es:[esi].boot_fat_sectors16
     push cx
     mov ax,bp
-    mov edx,1
     NewSector
 ;
     push cx
@@ -432,13 +432,15 @@ format_cluster_ok16:
     mov es:[esi].boot_root_dirs,100h
 	mov es:[esi].boot_fs_version,0
 	mov es:[esi].boot_root_cluster,2
+;	
+    mov cx,es:[esi].boot_fat_sectors16
+    movzx edx,es:[esi].boot_resv_sectors
+;    
 	ModifySector
 	UnlockSector
 ;
-    mov cx,es:[esi].boot_fat_sectors16
     push cx
     mov ax,bp
-    mov edx,1
     NewSector
 ;
     push cx

@@ -33,6 +33,7 @@
 #include "lang.h"
 #include "rmpart.h"
 #include "part.h"
+#include "idedisc.h"
 
 #define PROMPT_BUFFER_SIZE	256
 
@@ -182,7 +183,7 @@ int TRemovePartitionCommand::Remove(TFsPartition *Part)
 {
     if (!FOptY)
         if (!Confirm(Part))
-            return 1;
+			return 1;
 
     FDiscPart->Delete(FPartNr);
     return 0;
@@ -283,7 +284,7 @@ int TRemovePartitionCommand::Execute(char *param)
 		return 1;
 	}
 
-	FDisc = new TDisc(DiscNr);
+	FDisc = new TIdeDisc(DiscNr);
 	ret = RemoveDisc();
 	delete FDisc;
 

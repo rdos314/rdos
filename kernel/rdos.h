@@ -249,11 +249,13 @@ int __stdcall RdosPing(long Node, long Timeout);
 int __stdcall RdosGetIdeDisc(int UnitNr);
 int __stdcall RdosGetFloppyDisc(int UnitNr);
 
+int __stdcall RdosSetDiscInfo(int DiscNr, int SectorSize, long Sectors, int BiosSectorsPerCyl, int BiosHeads);
 int __stdcall RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
 int __stdcall RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
 int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 
 void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
+void __stdcall RdosDemandLoadDrive(int DriveNr);
 int __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
 int __stdcall RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);

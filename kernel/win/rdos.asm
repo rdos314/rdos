@@ -5225,6 +5225,55 @@ _RdosGetDiscInfo	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosSetDiscInfo
+;
+;		DESCRIPTION:	Set disc info
+;
+;		PARAMETER:		Disc #
+;						Bytes / sector
+;						Total sectors
+;						BIOS sectors / cyl
+;						BIOS heads
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetDiscInfo
+
+_RdosSetDiscInfo	Proc far
+	push bp
+	mov bp,sp
+	push bx
+	push edx
+	push si
+	push di
+;
+	mov al,[bp+6]
+    mov cx,[bp+8]
+    mov edx,[bp+10]
+    mov si,[bp+12]
+    mov di,[bp+14]
+    SetDiscInfo
+	jc set_disc_info_fail
+;
+	mov ax,1
+	jmp set_disc_info_done
+
+set_disc_info_fail:
+	xor ax,ax
+
+set_disc_info_done:
+	pop di
+	pop si
+	pop edx
+	pop bx
+	pop bp
+	ret
+_RdosSetDiscInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosReadDisc
 ;
 ;		DESCRIPTION:	Read from disc
@@ -5312,6 +5361,29 @@ write_disc_done:
 	pop bp
 	ret
 _RdosWriteDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosDemandLoadDrive
+;
+;		DESCRIPTION:	Demand load drive
+;
+;		PARAMETER:		Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDemandLoadDrive
+
+_RdosDemandLoadDrive	Proc far
+	push bp
+	mov bp,sp
+;
+	mov al,[bp+6]
+    GetDemandLoadDrive
+;    
+	pop bp
+	ret
+_RdosDemandLoadDrive	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

@@ -88,7 +88,9 @@ TimeoutCount	DB ?
 Gap			  	DB 4 DUP(?)
 Tracks			DB 4 DUP(?)
 MotorCount		DB 4 DUP(?)
+BootValid       DB 4 DUP(?)
 DiscArr         DW 2 DUP(?)
+
 
 CmdCode			DB ?
 DriveHead		DB ?
@@ -1285,6 +1287,7 @@ read_boot_sector_done:
 	mov ecx,1000h
 	FreeLinear
 	popf
+	mov ds:[bx].BootValid,1
 ;
 	pop edi
 	pop esi
@@ -1332,7 +1335,6 @@ install_main_fat12:
 	mov di,OFFSET fat12
 install_main_fs:
 	InstallFileSystem
-	clc
 ;
 	pop di
 	pop edx
@@ -1413,6 +1415,7 @@ demand_mount	Proc far
 	jc drive_assign_done1
 ;
 	call InstallMain
+	pushf
 	mov ax,es:boot_sectors_per_cyl
 	mul es:boot_heads
 	mov cx,es:boot_bytes_per_sector
@@ -1424,6 +1427,8 @@ demand_mount	Proc far
 ;
 	mov bx,es:disc_thread
 	Signal
+	popf
+	jc drive_assign_done1
 ;
 	mov bx,es:disc_sel
 	StartDisc
@@ -1791,6 +1796,23 @@ perform_one_loop:
 	GetDiscRequest
 	jc perform_one_done
 ;
+	mov al,fs:disc_sub_unit
+	movzx bx,al
+	mov bl,ds:[bx].BootValid
+	or bl,bl
+	jnz perform_mounted
+;
+    push es
+    push edi
+    mov bx,fs
+	mov es,bx
+	mov al,es:disc_sub_unit
+	mov edi,OFFSET boot_sect
+    call ReadBootSector
+    pop edi
+    pop es
+
+perform_mounted:
 	mov al,es:[edi].dh_state
 	cmp al,STATE_EMPTY
 	je perform_one_read
@@ -1853,7 +1875,7 @@ discbuf_thread:
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
-	WaitForSignal
+;	WaitForSignal
 
 discbuf_thread_loop:
 	WaitForDiscRequest
