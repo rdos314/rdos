@@ -28,6 +28,8 @@
 #ifndef _STRING_H
 #define _STRING_H
 
+#include <stdarg.h>
+
 class TStringData
 {
 friend class TString;
@@ -42,13 +44,16 @@ public:
     TString();
 	TString(const TString &source);
 	TString(const char *str);
-	~TString();
+	virtual ~TString();
 
 	const TString &operator=(const TString &src);
 	const TString &operator=(const char *str);
 	const TString &operator+=(const char *str);
 	const TString &operator+=(char ch);
 	const TString &operator+=(const TString& str);
+
+	int printf(const char *fmt, ...);
+	int printf(const char *frm, va_list args);
 
 	const char *GetData() const;
 	int GetSize() const;
@@ -57,12 +62,18 @@ public:
 	const char *Find(const char *str) const;
 	void Upper();
 	void Lower();
+	void RemoveCrLf();
 
 	void ConcatCopy(int len1, const char *str1, int len2, const char *str2);
 
 protected:
 	virtual char Upper(char ch); 
 	virtual char Lower(char ch); 
+
+	void Pad(int count, const char *str);
+	void Append(char ch);
+	void Append(const char *str, int size);
+	int Number(long num, int base, int size, int precision, int type);
 
 	void Init();
 	void AllocBuffer(int size);

@@ -3947,6 +3947,41 @@ _RdosSetMouseMickey	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetCursorPosition
+;
+;		DESCRIPTION:	Get cursor position
+;
+;		PARAMETER:		row
+;						col
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetCursorPosition
+
+_RdosGetCursorPosition	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push dx
+	push di
+;
+    GetCursorPosition
+	les di,[bp+6]
+	mov es:[di],dx
+	les di,[bp+10]
+	mov es:[di],cx
+;
+    pop di
+	pop dx
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetCursorPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosSetCursorPosition
 ;
 ;		DESCRIPTION:	Set cursor position

@@ -44,11 +44,15 @@ public:
 	void StopHeat();
 	void UpdateEp(long double value);
 
+	void SetEpLimit(long double limit);
+	void EnableEpTop();
+	void DisableEpTop();
+
 	void StartCirc();
 	void StopCirc();
 	int IsCircStarted();
 	void WriteCircValve(long double value);
-    long double ReadCircValve();
+	long double ReadCircValve();
 
 	int IsEpStarted();
 	int IsVpStarted();
@@ -76,13 +80,15 @@ private:
 	int FStat;
 	long double FEpTemp;
 	int FUpdate;
-    int FCircValve;
+	int FCircValve;
 	int FEpValve;
 	int FVpValve;
 	int FHeatOn;
 	int FEpPending;
 	int FEpStart;
 	int FCircOn;
+	int FEpTopEnabled;
+	long double FEpLimit;
 };
 
 #endif

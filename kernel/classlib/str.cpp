@@ -27,11 +27,20 @@
 
 #include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include "str.h"
 #include "section.h"
 
 TSection Section;
+
+#define ZEROPAD	1		/* pad with zero */
+#define SIGN	2		/* unsigned/signed long */
+#define PLUS	4		/* show plus */
+#define SPACE	8		/* space if plus */
+#define LEFT	16		/* left justified */
+#define SPECIAL	32		/* 0x */
+#define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
 /*##########################################################################
 #
@@ -710,4 +719,513 @@ void TString::Lower()
 			ptr++;
 		}
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TString::RemoveCrLf
+#
+#   Purpose....: Remove trailing CR and LF
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::RemoveCrLf()
+{
+	int i;
+	char *ptr;
+	char ch;
+
+	if (FData)
+	{
+		ptr = FBuf + FData->FDataSize - 1;
+		if (*ptr == 0xd || *ptr == 0xa)
+		{
+			CopyBeforeWrite();
+
+			while (*ptr == 0xd || *ptr == 0xa)
+			{
+				*ptr = 0;
+				FData->FDataSize--;
+
+				if (ptr == FBuf)
+				{
+					Release();
+					break;
+				}
+				else
+					ptr--;
+			}
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : skip_atoi
+#
+#   Purpose....: Skip atoi
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static int skip_atoi(const char **s)
+{
+	int i = 0;
+
+	while (isdigit(**s))
+		i = i*10 + *((*s)++) - '0';
+	return i;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Append
+#
+#   Purpose....: Append character to string (printf)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TString::Append(char ch)
+{
+	if (FData == 0)
+	{
+		AllocBuffer(0x10);
+		FData->FDataSize = 0;
+	}
+
+	if (FData->FDataSize + 1 > FData->FAllocSize)
+	{
+		TStringData* OldData = FData;
+		char *ptr = FBuf;
+
+		AllocBuffer(OldData->FDataSize + 0x10);
+		memcpy(FBuf, ptr, OldData->FDataSize);
+		FData->FDataSize = OldData->FDataSize;
+
+		Release(OldData);
+	}
+	*(FBuf+FData->FDataSize) = ch;
+	FData->FDataSize++;
+	*(FBuf+FData->FDataSize) = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::Number
+#
+#   Purpose....: Handle number for printf
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::Number(long num, int base, int size, int precision, int type)
+{
+	char c,sign,tmp[16];
+	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
+	int i, n = 0;
+	int ind;
+
+	if (type & LARGE)
+		digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+	if (type & LEFT)
+		type &= ~ZEROPAD;
+
+	if (base < 2 || base > 36)
+		return 0;
+
+	c = (type & ZEROPAD) ? '0' : ' ';
+	sign = 0;
+	if (type & SIGN)
+	{
+		if (num < 0)
+		{
+			sign = '-';
+			num = -num;
+			size--;
+		}
+		else 
+			if (type & PLUS)
+			{
+				sign = '+';
+				size--;
+			}
+			else
+				if (type & SPACE)
+				{
+					sign = ' ';
+					size--;
+				}
+	}
+
+	if (type & SPECIAL)
+	{
+		if (base == 16)
+			size -= 2;
+
+		else if (base == 8)
+			size--;
+	}
+
+	i = 0;
+	if (num == 0)
+		tmp[i++]='0';
+	else 
+		while (num != 0)
+		{
+			ind = ((unsigned long)num) % (unsigned)base;
+			num = ((unsigned long)num) / (unsigned)base;
+			tmp[i++] = digits[ind];
+		}
+
+	if (i > precision)
+		precision = i;
+
+	size -= precision;
+	if (!(type&(ZEROPAD+LEFT)))
+		while(size-->0)
+		{
+			Append(' ');
+			n++;
+		}
+
+	if (sign)
+	{
+		Append(sign);
+		n++;
+	}
+
+	if (type & SPECIAL)
+	{
+		if (base==8)
+		{
+			Append('0');
+			n++;
+		}
+		else
+			if (base==16)
+			{
+				Append('0');
+				Append(digits[33]);
+				n += 2;
+			}
+		}
+	
+	if (!(type & LEFT))
+		while (size-- > 0)
+		{
+			Append(c);
+			n++;
+		}
+
+	while (i < precision--)
+	{
+		Append('0');
+		n++;
+	}
+
+	while (i-- > 0)
+	{
+		Append(tmp[i]);
+		n++;
+	}
+
+	while (size-- > 0)
+	{
+		Append(' ');
+		n++;
+	}
+
+	return n;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::printf
+#
+#   Purpose....: printf
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::printf(const char *fmt, va_list args)
+{
+	int len, n;
+	unsigned long num;
+	int i, base;
+	const char *s;
+
+	Release();
+
+	int flags;		/* flags to number() */
+
+	int field_width;	/* width of output field */
+	int precision;		/* min. # of digits for integers; max
+				   number of chars for from string */
+	int qualifier;		/* 'h', 'l', or 'L' for integer fields */
+	                        /* 'z' support added 23/7/1999 S.H.    */
+				/* 'z' changed to 'Z' --davidm 1/25/99 */
+
+	
+	for (n = 0 ; *fmt ; ++fmt) {
+		if (*fmt != '%')
+		{
+			Append(*fmt);
+			n++;
+			continue;
+		}
+			
+		/* process flags */
+		flags = 0;
+		repeat:
+			++fmt;		/* this also skips first '%' */
+			switch (*fmt)
+			{
+				case '-': flags |= LEFT; goto repeat;
+				case '+': flags |= PLUS; goto repeat;
+				case ' ': flags |= SPACE; goto repeat;
+				case '#': flags |= SPECIAL; goto repeat;
+				case '0': flags |= ZEROPAD; goto repeat;
+			}
+		
+		/* get field width */
+		field_width = -1;
+		if (isdigit(*fmt))
+			field_width = skip_atoi(&fmt);
+
+		else
+			if (*fmt == '*')
+			{
+				++fmt;
+				/* it's the next argument */
+				field_width = va_arg(args, int);
+				if (field_width < 0)
+				{
+					field_width = -field_width;
+					flags |= LEFT;
+				}
+			}
+
+		/* get the precision */
+		precision = -1;
+		if (*fmt == '.')
+		{
+			++fmt;	
+			if (isdigit(*fmt))
+				precision = skip_atoi(&fmt);
+			else if (*fmt == '*')
+			{
+				++fmt;
+				/* it's the next argument */
+				precision = va_arg(args, int);
+			}
+
+			if (precision < 0)
+				precision = 0;
+		}
+
+		/* get the conversion qualifier */
+		qualifier = -1;
+		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt =='Z')
+		{
+			qualifier = *fmt;
+			++fmt;
+		}
+
+		/* default base */
+		base = 10;
+
+		switch (*fmt)
+		{
+			case 'c':
+				if (!(flags & LEFT))
+					while (--field_width > 0)
+					{
+						Append(' ');
+						n++;
+					}
+		
+				Append((unsigned char) va_arg(args, int));
+				n++;
+				while (--field_width > 0)
+				{
+					Append(' ');
+					n++;
+				}
+				continue;
+
+			case 's':
+				s = va_arg(args, char *);
+				if (!s)
+					s = "<NULL>";
+
+				len = strlen(s);
+				if (precision != -1 && len > precision)
+					len = precision;
+
+				if (!(flags & LEFT))
+					while (len < field_width--)
+					{
+						Append(' ');
+						n++;
+					}
+		
+				for (i = 0; i < len; ++i)
+				{
+					Append(*s++);
+					n++;
+				}
+
+				while (len < field_width--)
+				{
+					Append(' ');
+					n++;
+				}
+				continue;
+
+			case 'p':
+				if (field_width == -1)
+				{
+					field_width = 2*sizeof(void *);
+					flags |= ZEROPAD;
+				}
+				n += Number((unsigned long) va_arg(args, void *), 16,
+						field_width, precision, flags);
+				continue;
+
+			case 'n':
+				if (qualifier == 'l')
+				{
+					long * ip = va_arg(args, long *);
+					*ip = n;
+				}
+				else
+					if (qualifier == 'Z')
+					{
+						size_t * ip = va_arg(args, size_t *);
+						*ip = n;
+					}
+					else 
+					{
+						int * ip = va_arg(args, int *);
+						*ip = n;
+					}
+				continue;
+
+			case '%':
+				Append('%');
+				n++;
+				continue;
+
+			case 'I':
+				{
+					union
+					{
+						long		l;
+						unsigned char	c[4];
+					} u;
+
+					u.l = va_arg(args, long);
+					printf("%d.%d.%d.%d", u.c[0], u.c[1], u.c[2], u.c[3]);
+				}
+				continue;
+
+			/* integer number formats - set up the flags and "break" */
+			case 'o':
+				base = 8;
+				break;
+
+			case 'X':
+				flags |= LARGE;
+
+			case 'x':
+				base = 16;
+				break;
+
+			case 'd':
+			case 'i':
+				flags |= SIGN;
+
+			case 'u':
+				break;
+
+			default:
+				Append('%');
+				n++;
+				if (*fmt)
+				{
+					Append(*fmt);
+					n++;
+				}
+				else
+					--fmt;
+				continue;
+		}
+
+		if (qualifier == 'L')
+			num = va_arg(args, long);
+		else
+			if (qualifier == 'l')
+			{
+				num = va_arg(args, unsigned long);
+				if (flags & SIGN)
+					num = (signed long) num;
+			}
+			else
+				if (qualifier == 'Z')
+				{
+					num = va_arg(args, size_t);
+				}
+				else
+					if (qualifier == 'h')
+					{
+						num = (unsigned short) va_arg(args, int);
+						if (flags & SIGN)
+							num = (signed short) num;
+					}
+					else
+					{
+						num = va_arg(args, unsigned int);
+						if (flags & SIGN)
+							num = (signed int) num;
+					}
+
+		n += Number(num, base, field_width, precision, flags);
+	}
+	return n;
+}
+
+/*##########################################################################
+#
+#   Name       : TString::printf
+#
+#   Purpose....: printf
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TString::printf(const char *fmt, ...)
+{
+	va_list args;
+	int result;
+
+	va_start(args, fmt);
+	result = printf(fmt, args);
+	va_end(args);
+
+	return result;
 }

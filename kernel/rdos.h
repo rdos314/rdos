@@ -203,6 +203,7 @@ void __stdcall RdosGetRightButtonPressPosition(int *x, int *y);
 void __stdcall RdosGetLeftButtonReleasePosition(int *x, int *y);
 void __stdcall RdosGetRightButtonReleasePosition(int *x, int *y);
 
+void __stdcall RdosGetCursorPosition(int *Row, int *Col);
 void __stdcall RdosSetCursorPosition(int Row, int Col);
 void __stdcall RdosWriteChar(char ch);
 void __stdcall RdosWriteSizeString(const char *Buf, int Size);

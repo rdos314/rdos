@@ -471,6 +471,16 @@ void UpdateFuzzy()
 
 			heat->WriteCircValve(fval);
 
+			if (night)
+				heat->EnableEpTop();
+			else
+				heat->DisableEpTop();
+
+			if (tv[0] > 5.0)
+				heat->SetEpLimit(55.0);
+			else
+				heat->SetEpLimit(65.0);
+
 			RdosSetCursorPosition(8, 20);
 			sprintf(str, "MOT %6.2Lf %6.2Lf", MotLast, fval);
 			RdosWriteString(str);

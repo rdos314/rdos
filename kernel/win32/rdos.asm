@@ -3890,6 +3890,39 @@ RdosSetMouseMickey	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetCursorPosition
+;
+;		DESCRIPTION:	Get cursor position
+;
+;		PARAMETER:		row
+;						col
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetCursorPosition
+
+RdosGetCursorPosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	UserGate get_cursor_position_nr
+	movzx ecx,cx
+	movzx edx,dx
+	mov eax,[ebp+8]
+	mov [eax],edx
+	mov eax,[ebp+12]
+	mov [eax],ecx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosGetCursorPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosSetCursorPosition
 ;
 ;		DESCRIPTION:	Set cursor position

@@ -806,6 +806,7 @@ read_resource_name_loop:
     shl eax,cl
 ;
     push es
+	push cx
     push edi
     AllocateLocalMem
     mov ecx,eax
@@ -813,6 +814,7 @@ read_resource_name_loop:
     UserGateForce32 read_file_nr
     mov ax,es
     pop edi
+	pop cx
     pop es            
 ;
     mov es:[si].rn_sel,ax
@@ -1764,6 +1766,27 @@ get_dll_resource_type_loop:
 ;
     mov dx,es:[di].rt_resource_count
     add di,SIZE resource_type_struc
+
+get_dll_resource_entry_loop:
+	mov ax,es:[di].rn_id
+	test ax,8000h
+	jz get_dll_resource_entry_next
+;
+	and ax,7FFFh
+	shl ax,4
+	cmp si,ax
+	jb get_dll_resource_name_search
+
+get_dll_resource_entry_next:
+	add di,SIZE resource_name_struc
+	sub dx,1
+	jnz get_dll_resource_entry_loop
+	jmp get_dll_resource_fail
+
+get_dll_resource_name_search:
+	sub ax,10h
+	sub si,ax
+	jc get_dll_resource_fail
 
 get_dll_resource_name_loop:
     mov ds,es:[di].rn_sel

@@ -55,6 +55,9 @@ THeat::THeat()
 	FEpStart = FALSE;
 	FCircOn = FALSE;
 
+	FEpTopEnabled = FALSE;
+	FEpLimit = 55.0;
+
 	Start("HEAT", 0x2000);
 }
 
@@ -446,6 +449,51 @@ void THeat::StopVp()
 
 /*##########################################################################
 #
+#   Name       : THeat::SetEpLimit
+#
+#   Purpose....: Set limit for EP temperature
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::SetEpLimit(long double limit)
+{
+	FEpLimit = limit;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::EnableEpTop
+#
+#   Purpose....: Enable EP top on expense of VP
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::EnableEpTop()
+{
+	FEpTopEnabled = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::DisableEpTop
+#
+#   Purpose....: Disable EP top on expense of VP
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::DisableEpTop()
+{
+	FEpTopEnabled = FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : THeat::UpdateEp
 #
 #   Purpose....: Update EP temp
@@ -492,17 +540,27 @@ void THeat::Update()
 		{
 			FEpStart = TRUE;
 
-			if (FVpValve > 0x40000000)
+//			if (FEpTopEnabled)
+//			{
+//				StopVp();
+//				if (IsVpStarted())
+//					ToggleVpLine();
+//			}
+//			else
 			{
-				FHeatOn = TRUE;
-				StopVp();
-			}
 
-			if (FEpTemp > 55.0)
-			{
-				FEpPending = FALSE;
-				FEpStart = FALSE;
-				StopEp();
+				if (FVpValve > 0x40000000)
+				{
+					FHeatOn = TRUE;
+					StopVp();
+				}
+
+				if (FEpTemp > FEpLimit)
+				{
+					FEpPending = FALSE;
+					FEpStart = FALSE;
+					StopEp();
+				}
 			}
 		}
 		else
