@@ -767,6 +767,7 @@ HideLineBuffer  MACRO y
     local lower_loop
     local done
 
+    int 3
     add dx,fs:&y
     mov si,dx
     shl si,2
@@ -846,6 +847,7 @@ ShowLineBuffer  MACRO y
     local not_upper
     local done
 
+    int 3
     add dx,fs:&y
     mov si,dx
     shl si,2

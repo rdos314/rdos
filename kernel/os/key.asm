@@ -933,12 +933,39 @@ init_mouse	Proc far
 	call CheckAux
 	jc init_mouse_done
 ;
+    int 3
+    
+init_check_aux_loop:
+	in al,64h
+	test al,2
+	jz init_check_aux_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_check_aux_loop
+
+init_check_aux_do:
+	mov al,0A9h
+	out 64h,al
+
+init_check_loop1:
+	in al,64h
+	test al,2
+	jz init_check_read
+;
+	mov eax,10
+	WaitMilliSec
+	jmp init_check_loop1
+
+init_check_read:
+    in al,60h
+    int 3
+;
 	mov al,12
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET keyb_int
 	RequestPrivateIrqHandler
-
+    
 init_enable_aux_loop:
 	in al,64h
 	test al,2
@@ -974,6 +1001,7 @@ init_enable_loop2:
 init_enable_do:
 	mov al,47h
 	out 60h,al
+
 IFDEF NO_MOUSE
 	jmp init_mouse_revoke ; activate this to disable non-existent mouse !!
 ENDIF
