@@ -5,6 +5,8 @@
 #include "serial.h"
 #include "rdos.h"
 
+#include "str.h"
+
 struct TComMsg
 {
 	int Channel;
@@ -22,6 +24,14 @@ struct TComMsg
 *##########################################################################*/
 void cdecl main()
 {
+	TString str1("Part 1");
+	TString str2("Part 2");
+
+	str2 = str1 + "," + str2;
+	str2.Upper();
+	str2.Lower();
+	printf(str2.Find(','));
+
 	TComMsg Msg;
 	char Str[10];
 	int Mapping;
