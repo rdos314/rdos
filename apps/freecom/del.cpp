@@ -178,7 +178,7 @@ int TDelCommand::Del(TPathName &path)
 		{
 			case 4:
 				FBreak = TRUE;
-				return 0;
+				return FALSE;
 
 			case 3:
 				FOptP = FALSE;
@@ -188,11 +188,24 @@ int TDelCommand::Del(TPathName &path)
 				break;
 
 			default:
-				return 0;
+				return FALSE;
 		}
 	}
+    
+	if (!FOptP)
+	{
+        FMsg.printf(TEXT_DELETE_FILE, path.Get().GetData());
+		Write(FMsg.GetData());
+	}
 
-	return TRUE;
+    if (path.DeleteFile())
+        return TRUE;
+    else
+    {
+	    FMsg.printf(TEXT_ERROR_DIRFCT_FAILED, "DEL", path.Get().GetData());
+		Write(FMsg.GetData());
+    	return FALSE;
+    }
 }
 
 /*##########################################################################
@@ -213,7 +226,7 @@ int TDelCommand::Del(TArg *arg)
 	TDirEntry entry;
 	TPathName path(arg->FName);
 
-	if (path.IsDir())
+	if (path.IsDir() && !FOptP)
 	{
 		if (FMsg.UserPrompt(PROMPT_DELETE_ALL, arg->FName.GetData()) != 1)
 			return 0;
@@ -288,5 +301,15 @@ int TDelCommand::Execute(char *param)
 		}
 	}
 
-	return 0;
+	if (total)
+	{
+		ShowCount(TEXT_MSG_DEL_CNT_FILES, total);
+		return 0;
+	}
+	else
+	{
+		FMsg.Load(TEXT_ERROR_REQ_PARAM_MISSING);
+		Write(FMsg.GetData());
+		return E_Useage;
+	}
 }

@@ -76,6 +76,8 @@ protected:
     void Split(char *s);
     int ParseOptions(void *arg);
     int ScanCmdLine(char *line, void *arg);
+
+    void ShowCount(int BaseId, int count);
 	
 	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 

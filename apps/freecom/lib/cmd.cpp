@@ -509,6 +509,36 @@ int TCommand::LeadOptions(char **Xline, void *arg)
 
 /*##########################################################################
 #
+#   Name       : TCommand::ShowCount
+#
+#   Purpose....: Show count with 3 IDs
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::ShowCount(int BaseId, int count)
+{
+    switch (count)
+    {
+        case 0:
+            FMsg.Load(BaseId);
+            break;
+                
+	    case 1:
+	        FMsg.Load(BaseId + 1);
+	        break;
+	            
+	    default:
+	        FMsg.printf(BaseId + 2, count);
+	        break;
+    }
+	Write(FMsg.GetData());        
+}
+
+/*##########################################################################
+#
 #   Name       : TCommand::AddArg
 #
 #   Purpose....: Add an argument
