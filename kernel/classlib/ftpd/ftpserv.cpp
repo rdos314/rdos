@@ -220,6 +220,23 @@ void TFtpSocketServer::Write(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TFtpSocketServer::Write
+#
+#   Purpose....: Write buffer to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Write(const char *buf, int size)
+{
+	if (FDataSocket && FDataSocket->IsOpen())
+		FDataSocket->Write(buf, size);
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpSocketServer::WriteLong
 #
 #   Purpose....: Write number to standard output

@@ -20,46 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpserv.h
-# Ftp socket server class
+# retr.h
+# Retr command class
 #
 ########################################################################*/
 
-#ifndef _FTPSERV_H
-#define _FTPSERV_H
+#ifndef _RETR_H
+#define _RETR_H
 
-#include "str.h"
-#include "socket.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TFtpSocketServer : public TSocketServer
+class TRetrFactory : public TCommandFactory
 {
 public:
-	TFtpSocketServer();
-	~TFtpSocketServer();
+	TRetrFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
+protected:
+};
 
-    void Write(char ch);
-    void Write(const char *str);
-    void Write(const char *buf, int size);
-    void WriteLong(long value);
-    void Push();
+class TRetrCommand : public TCommand
+{
+public:
+	TRetrCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TRetrCommand();
 
-	int VerifyUser();
-	int OpenDataConnection(long IP, int port);
-	void ListenForDataConnection(long *IP, int *port);
-	void Quit();
+	virtual void Execute(char *param);
 
-	void Reply(TLangString *Msg);
-
-	TString User;
-	TString Pass;
-	TString CurrDir;
-	TString RootDir;
-
-	TSocket *FDataSocket;
+protected:
 };
 
 #endif
