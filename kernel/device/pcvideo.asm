@@ -141,6 +141,20 @@ vmi_lfb				DD ?
 
 vesa_mode_info	ENDS
 
+vbe_object	STRUC
+
+vo_base			video_api_struc <>
+vo_lfb			DD ?
+vo_lfb_size		DD ?
+vo_lfb_sel		DW ?
+vo_lfb_base		DD ?
+vo_mem_base		DD ?
+vo_flags		DB ?
+vo_has_focus	DB ?
+vo_mode_info	vesa_mode_info <>
+
+vbe_object	ENDS
+
 	extrn init_text_mode:near
 	extrn init_bit_mode:near
 
@@ -150,15 +164,159 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete
+;
+;		DESCRIPTION:	Delete flat video mode
+;
+;		RETURNS:		DS		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete	Proc far
+	push ax
+	push bx
+	push ecx
+	push edx
+;
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov es:v_curr_object,-1
+;
+	mov bx,ds:vo_lfb_sel
+	FreeGdt
+	mov ecx,ds:vo_lfb_size
+	mov edx,ds:vo_lfb_base
+	FreeLinear
+	mov edx,ds:vo_mem_base
+	FreeLinear
+;
+	mov ax,ds
+	mov es,ax
+	xor ax,ax
+	mov ds,ax
+	FreeMem
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	ret
+delete	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			switch_to
+;
+;		DESCRIPTION:	Enter focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_to	Proc far
+	push es
+	pushad
+;
+	int 3
+;
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov ax,es:v_curr_object
+	or ax,ax
+	jz switch_to_set
+;
+	cmp ax,-1
+	je switch_to_set
+;
+	mov es,ax
+	mov ax,es:v_mode
+	cmp ax,ds:v_mode
+	je switch_to_active
+
+switch_to_set:
+	mov bx,ds:v_mode
+	test ds:vo_flags, VIDEO_MODE_FLAGS_PM
+	jnz switch_to_pm
+
+switch_to_v86:
+	push ds
+	xor ax,ax
+	mov ds,ax
+	mov es,ax
+	or bx,4000h
+	mov ax,4F02h
+	push 10h
+	V86BiosInt
+	pop ds
+	jmp switch_to_active
+
+switch_to_pm:
+	mov ax,es:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+;
+	or bx,4000h
+	mov ax,4F02h
+	call es:v_pm16_entry
+;
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+
+switch_to_active:
+	EnterSection ds:v_section
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov es:v_curr_object,ds
+	mov ds:vo_has_focus,1
+	LeaveSection ds:v_section
+;
+	popad
+	pop es
+	ret
+switch_to	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SwitchFrom
+;
+;		DESCRIPTION:	Leave focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+switch_from	Proc far
+	push es
+	pushad
+;
+	mov ds:vo_has_focus,1
+;
+	popad
+	pop es
+	ret
+switch_from	Endp
+
+
 error	Proc far
 	stc
 	ret
 error	Endp
 
 ModeTab:
-mt00 DW OFFSET error,			pc_video_code_sel
-mt01 DW OFFSET error,			pc_video_code_sel
-mt02 DW OFFSET error,			pc_video_code_sel
+mt00 DW OFFSET delete,			pc_video_code_sel
+mt01 DW OFFSET switch_to,		pc_video_code_sel
+mt02 DW OFFSET switch_from,		pc_video_code_sel
 mt03 DW OFFSET error,			pc_video_code_sel
 mt04 DW OFFSET error,			pc_video_code_sel
 mt05 DW OFFSET error,			pc_video_code_sel
@@ -185,12 +343,149 @@ PAGE
 ;
 ;		DESCRIPTION:	Init flat video-mode
 ;
+;		PARAMETERS:		AX		Mode #
+;
 ;		RETURNS:		AX		Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init_flat_mode	Proc far
+	push ds
+	push es
+	push bx
+	push cx
+	push dx
+	push si
+	push di
+	push bp
+;
+	mov bx,pc_video_data_sel
+	mov ds,bx
+	mov bx,ds:v_video_resol_list
+	or bx,bx
+	jz init_flat_fail
+
+init_flat_resol_loop:
+	mov es,bx
+;
+	mov dl,es:vr_flat32_flags
+	cmp ax,es:vr_flat32_mode
+	je init_flat_found
+;
+	mov dl,es:vr_flat24_flags
+	cmp ax,es:vr_flat24_mode
+	je init_flat_found
+;
+	mov dl,es:vr_flat16_flags
+	cmp ax,es:vr_flat16_mode
+	je init_flat_found
+;
+	mov bx,es:vr_next
+	or bx,bx
+	jnz init_flat_resol_loop
+;
+	jmp init_flat_fail
+
+init_flat_found:
+	mov bx,ax
+	mov cx,ax
+	mov eax,1000h
+	AllocateGlobalMem
+	xor di,di
+	test dl, VIDEO_MODE_FLAGS_PM
+	jnz init_flat_pm
+
+init_flat_v86:
+	mov ax,4F01h
+	push 10h
+	V86BiosInt
+	mov si,ax
+	jmp init_flat_check
+
+init_flat_pm:
+	mov ax,pc_video_data_sel
+	mov ds,ax
+	mov ax,ds:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+;
+	mov ax,4F01h
+	call ds:v_pm16_entry
+	mov si,ax
+;
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+
+init_flat_check:
+	int 3
+	cmp si,4Fh
+	jne init_flat_free_fail
+;
+	mov ax,es
+	mov ds,ax
+	mov eax,SIZE vbe_object
+	AllocateSmallGlobalMem
+	mov eax,ds:vmi_lfb
+	mov es:vo_lfb,eax
+	mov es:vo_flags,dl
+	mov es:vo_has_focus,0
+	mov es:v_mode,bx
+	InitSection es:v_section
+;
+	movzx eax,ds:vmi_scan_lines
+	movzx edx,ds:vmi_y_pixels
+	mul edx
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov es:vo_lfb_size,eax
+	AllocateBigLinear
+	mov es:vo_lfb_base,edx
+	AllocateGdt
+	mov ecx,eax
+	CreateDataSelector16
+	mov es:vo_lfb_sel,bx
+	AllocateBigLinear
+	mov es:vo_mem_base,edx
+;
+	mov di,OFFSET vo_mode_info
+	xor si,si
+	mov cx,SIZE vesa_mode_info
+	rep movsb
+;
+	push ds
+	mov cx,18
+	mov ax,cs
+	mov ds,ax
+	mov si,OFFSET ModeTab
+	xor di,di
+	rep movsd
+	mov ax,es
+	pop es
+	FreeMem
+	clc
+	jmp init_flat_done
+
+init_flat_free_fail:
+	FreeMem
+
+init_flat_fail:
 	xor ax,ax
+	stc
+
+init_flat_done:
+	pop bp
+	pop di
+	pop si
+	pop dx
+	pop cx
+	pop bx
+	pop es
+	pop ds
 	ret
 init_flat_mode	Endp
 
@@ -314,7 +609,11 @@ AddVideo	MACRO mode
 
 add_do:
 	mov es:vr_&mode&_mode,cx
-	or es:vr_&mode&_flags, VIDEO_MODE_FLAGS_PM OR VIDEO_MODE_FLAGS_LFB
+	or es:vr_&mode&_flags, VIDEO_MODE_FLAGS_LFB
+	or ax,ax
+	jz add_video_done
+;
+	or es:vr_&mode&_flags, VIDEO_MODE_FLAGS_PM
 	jmp add_video_done
 
 add_v86:
@@ -334,6 +633,7 @@ AddVideoMode	Proc near
 	mov fs,dx
 	push ax
 	push cx
+	push di
 ;
 	mov ax,cs
 	mov es,ax	
@@ -349,6 +649,7 @@ AddVideoMode	Proc near
 	call AddResolution
 
 add_video_found:
+	pop di
 	pop cx
 	pop ax
 ;
@@ -1347,7 +1648,8 @@ page
 ;
 ;		DESCRIPTION:	Set VBE mode
 ;
-;		PARAMETERS:		AX		Mode number
+;		PARAMETERS:		CX		x-resolution
+;						DX		y-resolution
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1356,12 +1658,49 @@ set_vbe_mode_name	DB 'Set VBE Mode',0
 set_vbe_mode	PROC far
 	mov ax,pc_video_data_sel
 	mov ds,ax
+	mov ax,ds:v_init_proc
+	or ax,ax
+	jnz set_vbe_mode_find
+;
+	push cx
+	push dx
 	call SetupPmEntry
 	call ds:v_init_proc
+	pop dx
+	pop cx
+
+set_vbe_mode_find:
+	call FindResolution
+	jc set_vbe_mode_done
 ;
-	xor bx,bx
-	xor dx,dx
-	call ds:v_set_window_proc
+	mov dl,es:vr_flat32_flags
+	test dl, VIDEO_MODE_FLAGS_LFB
+	jz set_vbe_mode24
+;
+	mov ax,es:vr_flat32_mode
+	jmp set_vbe_mode_do
+
+set_vbe_mode24:
+	mov dl,es:vr_flat24_flags
+	test dl, VIDEO_MODE_FLAGS_LFB
+	jz set_vbe_mode16
+;
+	mov ax,es:vr_flat24_mode
+	jmp set_vbe_mode_do
+	
+set_vbe_mode16:
+	mov dl,es:vr_flat16_flags
+	test dl, VIDEO_MODE_FLAGS_LFB
+	stc
+	jz set_vbe_mode_done
+;
+	mov ax,es:vr_flat16_mode
+
+set_vbe_mode_do:
+	SetVideoMode
+	clc
+
+set_vbe_mode_done:
 	retf32
 set_vbe_mode	ENDP
 
@@ -1411,6 +1750,7 @@ init	PROC far
 	AllocateFixedSystemMem
 	mov es:v_curr_object,0
 	mov es:v_video_resol_list,0
+	mov es:v_init_proc,0
 ;
 	mov ax,cs
 	mov ds,ax

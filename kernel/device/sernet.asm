@@ -584,29 +584,33 @@ data_timeout_save:
 	jmp data_timeout_done
 
 data_send_dummy:
-	cli
-	mov dx,ds:base
-	mov al,'A'
-	out dx,al
+;	cli
+;	mov dx,ds:base
+;	mov al,'A'
+;	out dx,al
 ;
-	inc dx
-	mov al,3
-	out dx,al
+;	inc dx
+;	mov al,3
+;	out dx,al
 ;
-	add dx,3
-	mov al,0Bh
-	out dx,al				; modem control, DTR = high, RTS = high
-	sti
+;	add dx,3
+;	mov al,0Bh
+;	out dx,al				; modem control, DTR = high, RTS = high
+;	sti
 	jmp data_timeout_done
 
 data_reinit:
+	test ds:Mode, MODE_REC_BUSY OR MODE_SEND_BUSY
+	jnz data_timeout_reload
+;
 	push eax
 	push edx
 	call SendInitMsg
 	pop edx
 	pop eax
 	jnc data_timeout_done
-;
+
+data_timeout_reload:
 	add eax,ds:FrameBase
 	adc edx,ds:FrameBase+4
 	add eax,ds:FramePeriod
@@ -1494,7 +1498,11 @@ init_net	Proc far
 	mov al,ch
 	out dx,al				; output MSB divisor latch
 ;
-	add dx,2
+	inc dx
+	mov al,1
+	out dx,al				; enable FIFO, 1 bit trig level.
+;
+	inc dx
 	mov al,3
 	out dx,al				; set line control to 8 bits, 1 stop and no parity
 ;

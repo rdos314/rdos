@@ -138,6 +138,9 @@ switch_to	Proc far
 	jmp switch_set_mode
 
 switch_check_mode:
+	cmp ax,-1
+	je switch_set_mode
+;
 	mov es,ax
 	mov ax,es:v_mode
 	cmp ax,ds:v_mode
@@ -831,6 +834,10 @@ delete_mode3	Proc far
 	push bx
 	push ecx
 	push edx
+;
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov es:v_curr_object,0
 ;
 	mov bx,ds:v_buf_sel
 	FreeGdt

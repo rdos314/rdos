@@ -179,6 +179,25 @@ set_video_mode_loop:
 
 set_mode_no_descruct:
 	mov ds:v_handle,ax
+	GetFocusThread
+	or ax,ax
+	jz set_video_mode_done
+;
+	push es
+	push edx
+	mov es,ax
+	mov edx,es:p_cr3
+	GetThread
+	mov es,ax
+	cmp edx,es:p_cr3
+	pop edx
+	pop es
+	jne set_video_mode_done
+;
+	push ds
+	mov ds,ds:v_handle
+	call ds:switch_to_proc
+	pop ds
 	clc
 	jmp set_video_mode_done
 

@@ -1367,8 +1367,15 @@ handle_req_check_reply:
 	mov ebx,eax
 	EnterSection ds:h_reply_section
 	call FindReply
-	jnc handle_reply_leave
+	jc handle_reply_reset
 ;
+	mov bx,ds:h_mailslot
+	mov eax,es:l_ack
+	mov es:l_pos,eax
+	call SendData
+	jmp handle_req_done
+
+handle_reply_reset:
 	push ds
 	mov eax,es:[di].sh_connection
 	Reverse

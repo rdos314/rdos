@@ -2498,39 +2498,15 @@ DebugFunc	Proc near
 	cmp al,'N'
 	je debug_next 
 ;
-	mov dx,ipc_debug_data_sel
-	mov ds,dx
-	mov si,OFFSET debug_list
-	mov cx,ds:debug_thread
-	verr cx
-	jz debug_found
-;
-	mov dx,system_data_sel
-	mov ds,dx
-	mov cx,[si]
-	mov dx,ipc_debug_data_sel
-	mov ds,dx
-	mov ds:debug_thread,cx
-
-debug_found:
-	mov dx,system_data_sel
-	mov ds,dx
-	mov bx,[si]
-	mov dx,bx
-	or dx,dx
-	jz debug_err
-
-debug_try_next:
-	cmp bx,cx
-	je debug_do
-;
-	mov ds,bx
-	mov bx,ds:p_next
-	cmp dx,bx
-	jne debug_try_next
-	jmp debug_err
+	push ax
+	GetDebugThread
+	mov bx,ax
+	pop ax
 
 debug_do:
+	or bx,bx
+	jz debug_err
+;
 	mov ds,bx
 	mov dx,ds:p_tss_data_sel
 	mov ds,dx

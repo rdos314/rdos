@@ -74,8 +74,13 @@ test_thread:
 divi	DW 1111h
 	
 init:
-	mov ax,101h
+	int 3
+	mov cx,800
+	mov dx,600
 	SetVgaMode
+	int 3
+	mov ax,3
+	SetVideoMode
 	int 3
 	mov ax,-5050
 	mov bl,-4
