@@ -62,6 +62,10 @@ em_srcs = EMULATE.ASM EMCOM.ASM EMMEM.ASM EMTRANS.ASM EMARITHM.ASM	\
 em_objs = $(em_srcs:.ASM=.OBJ)
 em_rdvs = EMULATE.RDV
 
+wait_srcs = WAIT.ASM
+wait_objs = $(wait_srcs:.ASM=.OBJ)
+wait_rdvs = $(wait_srcs:.ASM=.RDV)
+
 timer_srcs = TIMER.ASM
 timer_objs = $(timer_srcs:.ASM=.OBJ)
 timer_rdvs = $(timer_srcs:.ASM=.RDV)
@@ -223,7 +227,7 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs)
+			$(focus_srcs) $(rtc_srcs) $(wait_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -250,7 +254,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
 			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
 			$(ntp_rdvs) $(keyboard_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) \
-			$(time_rdvs) $(focus_rdvs)	\
+			$(time_rdvs) $(focus_rdvs) $(wait_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -461,6 +465,14 @@ EMULATE.RDV : $(em_objs)
 	$(em_objs)
 	EMULATE.RDV
 	EMULATE;
+!
+
+WAIT.RDV : $(wait_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(wait_objs)
+	WAIT.RDV
+	WAIT;
 !
 
 TIMER.RDV : $(timer_objs)
