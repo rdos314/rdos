@@ -86,6 +86,7 @@ logical_entry_struc	ENDS
 LOG_ENTRY_DIR_DATA =	04Ch
 LOG_ENTRY_DIR_ENTRY =	05Ah
 LOG_ENTRY_FILE_DATA =	0C4h
+LOG_ENTRY_ERASE =		02Fh
 
 dir_entry_header_struc	STRUC
 

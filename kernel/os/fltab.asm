@@ -289,11 +289,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AllocateBlockSector	Proc near
-	push ax
+	push eax
 	push cx
 	push esi
 	push di
-;
+	push ebp
+
+absRetry:
 	mov cx,127
 	xor bx,bx
 
@@ -326,12 +328,30 @@ absPhysLoop:
 	mov es:[esi].le_logical_entry,bl
 ;
 	push ebx
-	mov ebx,fs:bc_handle
-	ModifySector
-	pop ebx
+	push esi
+	push ax
+	mov al,ds:drive_nr
+	LockSector
+	pop ax
+	mov ebp,-1
+	mov cx,80h
+
+absBlankLoop:
+	and ebp,es:[esi]
+	add esi,4
+	loop absBlankLoop
 ;
+	UnlockSector
+	pop esi
+	pop ebx
+	inc ebp
+	or ebp,ebp
 	clc
-	jmp absDone
+	jz absDone
+;
+	mov fs:[bx].bc_log_sector_arr.bs_type,LOG_ENTRY_ERASE
+	clc
+	jmp absRetry
 
 absPhysNext:
 	inc di
@@ -342,15 +362,17 @@ absPhysNext:
 
 absLogNext:
 	add bx,2
-	loop absLogLoop
+	sub cx,1
+	jnz absLogLoop
 ;
 	stc
 
 absDone:
+	pop ebp
 	pop di
 	pop esi
 	pop cx
-	pop ax
+	pop eax
 	ret
 AllocateBlockSector	Endp
 
@@ -570,13 +592,13 @@ PAGE
 ;
 ;       RETURNS:        EBX         Cluster #
 ;                       EDX         Sector #
+;						FS			Block (for modify operation)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public AllocateSector
 
 AllocateSector	PROC near
-	push fs
 	push eax
 	push esi
 ;
@@ -610,7 +632,6 @@ asOk:
 asDone:
     pop esi
 	pop eax
-	pop fs
 	ret
 AllocateSector	Endp
 
@@ -651,8 +672,11 @@ grsEntry:
 ;
 	mov al,LOG_ENTRY_DIR_ENTRY
 	call AllocateBlockSector	
-	jnc grsEntry
-	jmp grsDone
+	jc grsDone
+;
+	mov ebx,fs:bc_handle
+	ModifySector
+	jmp grsEntry
 
 grsCheckEntry:
 	cmp al,LOG_ENTRY_DIR_ENTRY

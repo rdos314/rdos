@@ -158,6 +158,100 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FindLastDirInfo
+;
+;		DESCRIPTION:    Find position of last dir entry info
+;
+;		PARAMETERS:		ESI			Dir entry data
+;
+;		RETURNS:		EAX			Offset to last valid dir info
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindLastDirInfo	Proc near
+	push es
+	push cx
+	push esi
+;
+	mov ax,flat_sel
+	mov es,ax
+	inc esi
+	mov cx,1FFh
+
+fldiNameLoop:
+	mov al,es:[esi]
+	or al,al
+	jz fldiNameEnd
+;
+	inc esi
+	loop fldiNameLoop
+;
+	dec esi
+	jmp fldiDone
+
+fldiNameEnd:
+	inc esi
+	dec ecx
+
+fldiSpaceLoop:
+	mov al,es:[esi]
+	cmp al,-1
+	jne fldiDone
+;
+	inc esi
+	loop fldiSpaceLoop
+;
+	dec esi
+
+fldiDone:
+	mov eax,esi
+;
+	pop esi
+	pop cx
+	pop es
+	ret
+FindLastDirInfo	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ExtendDir
+;
+;		DESCRIPTION:    Extend directory, and add entry
+;
+;		PARAMETERS:		BX			Dir selector
+;                       ES:EDI      File name
+;                       CX          Attribute
+;                       EDX         Dir file entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExtendDir	Proc near
+	push fs
+	push ax
+	push edx
+;
+    mov fs,bx
+    mov edx,fs:ds_sector
+    mov al,ds:drive_nr
+    LockSector
+	call FindLastDirInfo
+    UnlockSector
+	clc
+;
+	pop edx
+	pop ax
+	pop fs
+	ret
+ExtendDir	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			AddFileEntry
 ;
 ;		DESCRIPTION:    Add file entry
@@ -169,10 +263,10 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 AddFileEntry  Proc near
     push es
     push fs
+	push gs
     push ax
     push ebx
     push edx
@@ -180,16 +274,22 @@ AddFileEntry  Proc near
     push edi
     push ebp
 ;
+	call ExtendDir
+	jc afeDone
+;
     mov ebp,edx
     mov ax,es
-    mov fs,ax
+    mov gs,ax
     mov ax,flat_sel
     mov es,ax
 ;
 	mov al,LOG_ENTRY_DIR_ENTRY
+	push ebx
 	call AllocateSector
+	pop ebx
 	jc afeDone
 ;
+	push ebx
     mov al,ds:drive_nr
     LockSector
 ;
@@ -197,7 +297,7 @@ AddFileEntry  Proc near
     inc esi
 
 afeLoop:
-    mov al,fs:[edi]
+    mov al,gs:[edi]
     mov es:[esi],al
     inc esi
     inc edi
@@ -216,6 +316,10 @@ afeLoop:
     mov es:[esi].fde_valid,DIR_ENTRY_OK
     ModifySector
     UnlockSector
+	pop ebx
+;
+	mov ebx,fs:bc_handle
+	ModifySector
     clc
     
 afeDone:
@@ -225,42 +329,11 @@ afeDone:
     pop edx
     pop ebx
     pop ax
+	pop gs
     pop fs
     pop es
     ret
 AddFileEntry  Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			AddFileToDir
-;
-;		DESCRIPTION:    Add file entry into directory
-;
-;		PARAMETERS:		BX			Dir selector
-;                       ES:EDI      File name
-;                       CX          Attribute
-;                       EDX         Dir file entry
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-AddFileToDir Proc near
-    push fs
-    pushad
-;
-    mov fs,bx
-    mov edx,fs:ds_sector
-    mov al,ds:drive_nr
-    LockSector
-    UnlockSector
-;    
-    popad
-    pop fs       
-    clc 
-    ret
-AddFileToDir Endp
 
 PAGE
 
@@ -313,8 +386,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CacheDirEntry   Proc near
+	push fs
     pushad
 ;
+    mov fs,bx
     mov al,ds:drive_nr
     LockSector
     mov al,es:[esi+1FFh]
@@ -322,10 +397,7 @@ CacheDirEntry   Proc near
     je cdeFail
 ;
     UnlockSector
-    push fs
-    mov fs,bx
     mov fs:ds_sector,edx
-    pop fs
     clc
     jmp cdeDone
 
@@ -335,6 +407,7 @@ cdeFail:
 
 cdeDone:
     popad
+    pop fs
     ret
 CacheDirEntry   Endp
 
@@ -414,7 +487,6 @@ create_file	PROC far
 ;
     
 	InsertFileEntry	
-	call AddFileToDir
 	jmp cfDone
 
 cfFail:
