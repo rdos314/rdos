@@ -143,8 +143,8 @@ InsertApp	Proc near
 ;	mov word ptr ds:app_get_env_proc+2,cs 
 ;	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
 ;	mov word ptr ds:app_get_exe_proc+2,cs 
-;	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
-;	mov word ptr ds:app_get_cmd_line_proc+2,cs 
+	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
+	mov word ptr ds:app_get_cmd_line_proc+2,cs 
 	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
 	mov word ptr ds:app_allocate_mem_proc+2,cs 
 	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
@@ -760,6 +760,70 @@ load_elf	Proc far
 	add edx,es:lib_reloc
 	call RunImage
 ;
+	pop edi
+	pop esi
+	pop fs
+	pop es
+	pop ds
+;
+	push ds
+	push es
+	push fs
+	push esi
+	push edi
+;
+	mov ax,elf_app_sel
+	mov fs,ax
+;
+	xor ecx,ecx
+	push edi
+
+load_elf_cmd_size:
+	mov al,es:[edi]
+	inc edi
+	inc ecx
+	or al,al
+	jnz load_elf_cmd_size
+;
+	pop edi
+	xor ebx,ebx
+	push esi
+
+load_elf_name_size:
+	mov al,[esi]
+	inc esi
+	inc ebx
+	or al,al
+	jnz load_elf_name_size
+;
+	pop esi
+;
+	mov eax,ecx
+	add eax,ebx
+	UserGateForce32 allocate_app_mem_nr	
+	mov fs:elf_cmd_line,edx
+;
+	push es
+	push ecx
+	push edi
+	mov ax,flat_data_sel
+	mov es,ax
+	mov edi,edx
+	mov ecx,ebx
+	rep movs byte ptr es:[edi],[esi]
+	mov edx,edi
+	pop edi
+	pop ecx
+	pop es	
+;
+	mov esi,edi
+	mov edi,edx
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_data_sel
+	mov es,ax
+	mov byte ptr es:[edi-1],' '
+	rep movs byte ptr es:[edi],[esi]
 	clc
 	jmp load_elf_done
 
@@ -973,6 +1037,24 @@ free_mem_done:
 	pop ds
 	ret
 free_mem	ENDP
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetCmdLine
+;
+;		DESCRIPTION:    Get command line
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cmd_line	Proc far
+	push ds
+	mov di,elf_app_sel
+	mov ds,di
+	mov edi,ds:elf_cmd_line
+	pop ds
+	ret
+get_cmd_line	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
