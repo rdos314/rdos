@@ -441,8 +441,8 @@ GetMotor:	movf MOT,W
 			movwf VAL
 			return
 			
-Wait:		btfss PORTB,7
-			call Poll
+Wait:		call Poll
+			btfss PORTB,7
 			goto Wait
 ;			
 			PAGE1
