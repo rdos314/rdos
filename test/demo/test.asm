@@ -88,7 +88,7 @@ init:
 	mov ax,32
 	mov cx,800
 	mov dx,600
-	SetVBEMode
+	SetVideoMode
 	push bx
 ;
 	push bx

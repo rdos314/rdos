@@ -429,6 +429,13 @@ write_time	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+unknown_state_str   DB 'Unkn'
+debug_state_str     DB 'Debu'
+
+first_part_str  DB ' -- ', 0
+last_part_str   DB ' -- ', 0
+
 dump_thread	Proc near
 	pusha
 ;
@@ -438,21 +445,49 @@ dump_thread	Proc near
 	WriteSizeString
 	pop di
 ;
+    mov eax,dword ptr es:[di].st_list
+    cmp eax,dword ptr cs:unknown_state_str
+    je dump_address
+;
+    cmp eax,dword ptr cs:debug_state_str
+    je dump_address
+;
 	mov edx,es:[di].st_time
 	mov eax,es:[di].st_time+4
 	call write_time
 	mov al,' '
 	WriteChar
+	jmp dump_state
+
+dump_address:	
+    push es
+    push di
+    mov di,OFFSET first_part_str
+    mov ax,cs
+    mov es,ax
+    WriteAsciiz
+    pop di
+    pop es
 ;
+	mov eax,es:[di].st_offs
+	mov bx,es:[di].st_sel
+	call write_hex_address
+;
+    push es
+    push di
+    mov di,OFFSET last_part_str
+    mov ax,cs
+    mov es,ax
+    WriteAsciiz
+    pop di
+    pop es
+
+dump_state:
 	push di
 	add di,OFFSET st_list
 	mov cx,10
 	WriteSizeString
 	pop di
-;
-	mov eax,es:[di].st_offs
-	mov bx,es:[di].st_sel
-	call write_hex_address
 ;
 	mov al,13
 	WriteChar
@@ -477,7 +512,7 @@ state3_name DB 'State 3',0
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-blank_row DB '                                                                                   ',0
+blank_row DB '                                        ',0
 
 Dump	Proc near
 	push es
@@ -493,24 +528,29 @@ Dump	Proc near
 state_thread_loop:
 	GetState
 	jc state_thread_next
+;
 	mov [si].RowId,ax
 	add si,2
 	call dump_thread
+	
 state_thread_next:
+    cmp si,2 * 16
+    je state_pad_done
+;
 	inc ax
 	cmp ax,256
 	jne state_thread_loop	
-
+;
 	shr si,1
 state_pad_loop:
-	cmp si,25
+	cmp si,16
 	je state_pad_done
 ;
 	inc si
 	mov ax,cs
 	mov es,ax
 	mov edi,OFFSET blank_row
-	mov ecx,80
+	mov ecx,40
 	WriteSizeString
 ;
 	mov al,13
@@ -684,14 +724,14 @@ HandleMouse	Endp
 init:
 	xor ax,ax
 	xor bx,bx
-	mov cx,639
-	mov dx,199
+	mov cx,239
+	mov dx,127
 	SetMouseWindow
-	mov cx,8
+	mov cx,6
 	mov dx,8
 	SetMouseMickey
 ;	
-;	ShowMouse
+	ShowMouse
 state_start:
 	mov ax,_data
 	mov ds,ax

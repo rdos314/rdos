@@ -35,12 +35,15 @@ units = G:\BP\UNITS
 
 # DEFINE GROUPS OF MODULES
 
-kdebug_srcs =   DEBUGIO.ASM             KDEBUG.ASM              DISNEW.ASM              \
-				DISASM.ASM              MATH.ASM                                        
+debug_srcs =  DISNEW.ASM  DISASM.ASM    MATH.ASM                                        
+kdebug_srcs = DEBUGIO.ASM   KDEBUG.ASM    $(debug_srcs)
+kdeb40_srcs = DEBUG40.ASM   KDEB40.ASM    $(debug_srcs)
 kdebug_objs = $(kdebug_srcs:.ASM=.OBJ)
+kdeb40_objs = $(kdeb40_srcs:.ASM=.OBJ)
 kdebug_rdvs = DEBUGIO.RDV
+kdeb40_rdvs = DEBUG40.RDV
 
-ipcdebug_srcs =   IPCDEBUG.ASM DISNEW.ASM	DISASM.ASM
+ipcdebug_srcs = IPCDEBUG.ASM  $(debug_srcs)
 ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
 ipcdebug_rdvs = IPCDEBUG.RDV
 
@@ -208,7 +211,7 @@ prot_objs = $(kernel_objs) $(p1_objs) $(p2_objs) $(pgen_objs) $(pexec_objs)
 prot_exes = KERNEL.EXE
 
 srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
-			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(pci_srcs) \
+			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
 			$(net_srcs) $(udp_srcs) $(ip_srcs) $(tcp_srcs) \
 			$(ipc_srcs) $(ntp_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
@@ -236,7 +239,7 @@ fonts =     SYS8.GFT                SYS12.GFT               SYS14.GFT       \
 exes =      $(prot_exes) $(pcshut_exes)
 
 rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
-			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(pci_rdvs)     \
+			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
@@ -582,6 +585,14 @@ DEBUGIO.RDV : $(kdebug_objs)
 	$(kdebug_objs)
 	DEBUGIO.RDV
 	DEBUGIO;
+!
+
+DEBUG40.RDV : $(kdeb40_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(kdeb40_objs)
+	DEBUG40.RDV
+	DEBUG40;
 !
 
 IPCDEBUG.RDV : $(ipcdebug_objs)
