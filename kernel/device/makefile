@@ -57,10 +57,6 @@ pccom_srcs = PCCOM.ASM
 pccom_objs = $(pccom_srcs:.ASM=.OBJ)
 pccom_rdvs = PCCOM.RDV
 
-neccom_srcs = NECCOM.ASM
-neccom_objs = $(neccom_srcs:.ASM=.OBJ)
-neccom_rdvs = NECCOM.RDV
-
 printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
@@ -93,14 +89,14 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) \
 			$(floppy_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(pccom_srcs) $(neccom_srcs)
+			$(pccom_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) \
-			$(printer_rdvs) $(pccom_rdvs) $(neccom_rdvs)
+			$(printer_rdvs) $(pccom_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -176,14 +172,6 @@ SERNET.RDV : $(sernet_objs)
 	$(sernet_objs)
 	SERNET.RDV
 	SERNET;       
-!
-
-NECCOM.RDV : $(neccom_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(neccom_objs)
-	NECCOM.RDV
-	NECCOM;       
 !
 
 PRINTER.RDV : $(printer_objs)
