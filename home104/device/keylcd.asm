@@ -63,7 +63,14 @@ kd_curr_high_line   DB 8 DUP(?)
 kd_prev_low_line    DB 8 DUP(?)
 kd_prev_high_line   DB 8 DUP(?)
 
+kd_curr_low_shift   DB ?
+kd_curr_high_shift  DB ?
+
+kd_prev_low_shift   DB ?
+kd_prev_high_shift  DB ?
+
 kd_key_stable_count DB ?
+kd_shift_stable_count DB ?
 
 key_data_seg    ENDS
 
@@ -662,138 +669,141 @@ high_key_released	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			shift_press_scan
+;		NAME:			ReadShiftLines
 ;
-;		DESCRIPTION:	Handle Shift pressed
-;
-;		PARAMETERS:		AL		scan code
+;		DESCRIPTION:	Read all shift lines
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-shift_press_scan	PROC near
-    push ax
-    GetKeyboardState
-	or ax,shift_pressed
-	SetKeyboardState
-	pop ax
-    clc
-	ret
-shift_press_scan	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+ReadShiftLines    Proc near
+    mov dx,3B3h
+    mov al,10h
+    out dx,al
+	Swap
+	Swap
+	Swap
+	Swap
+	Swap
 ;
-;		NAME:			shift_rel_scan
+    in al,dx
+    and al,3Fh
+    mov ds:kd_curr_low_shift,al
 ;
-;		DESCRIPTION:	Handle Shift released
+    mov al,0
+    out dx,al
+	Swap
 ;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-shift_rel_scan	PROC near
-    push ax
-    GetKeyboardState
-	and ax,NOT shift_pressed
-	SetKeyboardState
-	pop ax
-    clc
-	ret
-shift_rel_scan	ENDP
+    in al,dx
+    and al,1Fh
+    mov ds:kd_curr_high_shift,al
+;        
+    ret
+ReadShiftLines    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			alt_press_scan
+;		NAME:			DebounceShift
 ;
-;		DESCRIPTION:	Handle Alt pressed
+;		DESCRIPTION:	Debounce shift keys
 ;
-;		PARAMETERS:		AL		scan code
+;       RETURNS:        NC      Shift keys stable
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-alt_press_scan	PROC near
-    push ax
-    GetKeyboardState
-	or ax,alt_pressed
-	SetKeyboardState
-	pop ax
+DebounceShift    Proc near
+    xor dx,dx
+    mov al,ds:kd_curr_low_shift
+    cmp al,ds:kd_prev_low_shift
+    je debounce_shift_high
+;
+    inc dx
+
+debounce_shift_high:
+    mov al,ds:kd_curr_high_shift
+    cmp al,ds:kd_prev_high_shift
+    je debounce_shift_check
+;
+    inc dx
+
+debounce_shift_check:
+    or dx,dx
+    jz debounce_shift_same
+;
+    mov ds:kd_shift_stable_count,0
+    stc
+    ret
+
+debounce_shift_same:
+    mov al,ds:kd_shift_stable_count
+    inc al
+    cmp al,2
+    jbe debounce_shift_more
+;
     clc
-	ret
-alt_press_scan	ENDP
+    ret
+
+debounce_shift_more:
+    mov ds:kd_shift_stable_count,al
+    stc
+    ret
+DebounceShift    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			alt_rel_scan
+;		NAME:			ScanShift
 ;
-;		DESCRIPTION:	Handle Alt released
-;
-;		PARAMETERS:		AL		scan code
+;		DESCRIPTION:	Scan shift keys
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-alt_rel_scan	PROC near
-    push ax
+
+ScanShift    Proc near
+    call ReadShiftLines
+    call DebounceShift
+    jc scan_shift_done
+;
     GetKeyboardState
-	and ax,NOT alt_pressed
-	SetKeyboardState
-	pop ax
-    clc
-	ret
-alt_rel_scan	ENDP
+;
+    mov cl,ds:kd_curr_low_shift
+    mov ch,ds:kd_curr_high_shift
+    test cx,21h
+    jz scan_alt_rel
+;
+  	or ax,alt_pressed
+  	jmp scan_alt_done
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			ctrl_press_scan
-;
-;		DESCRIPTION:	Handle Ctrl pressed
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+scan_alt_rel:
+    and ax,NOT alt_pressed
 
-ctrl_press_scan	PROC near
-    push ax
-    GetKeyboardState
-	or ax,ctrl_pressed
-	SetKeyboardState
-	pop ax
-    clc
-	ret
-ctrl_press_scan	ENDP
+scan_alt_done:
+    test cx,102h
+    jz scan_ctrl_rel
+;
+    or ax,ctrl_pressed
+    jmp scan_ctrl_done
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			ctrl_rel_scan
-;
-;		DESCRIPTION:	Handle Ctrl released
-;
-;		PARAMETERS:		AL		scan code
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ctrl_rel_scan	PROC near
-    push ax
-    GetKeyboardState
+scan_ctrl_rel:
 	and ax,NOT ctrl_pressed
+
+scan_ctrl_done:
+    test cx,18h
+    jz scan_shift_rel
+;
+    or ax,shift_pressed
+    jmp scan_shift_set
+
+scan_shift_rel:
+	and ax,NOT shift_pressed
+
+scan_shift_set:
 	SetKeyboardState
-	pop ax
-    clc
-	ret
-ctrl_rel_scan	ENDP
 
-; ALT
-; LCTRL
-; FN
-; LSH
-; RSH
-; ALTGR
-; ---
-; RCTRL
-
+scan_shift_done:
+    ret
+ScanShift    Endp
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -1180,6 +1190,51 @@ KeyRelease	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ScanKeys
+;
+;		DESCRIPTION:	Scan normal keys
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ScanKeys    Proc near
+    call ReadKeyLines
+    call DebounceKeys
+    jc scan_keys_done
+;
+    call GetPressedKeys
+    or ax,ax
+    je scan_keys_no_key
+;
+    cmp ax,1
+    jne scan_keys_done
+
+scan_keys_one_key:
+	call IsKeyPressed
+	jc scan_keys_press
+;
+	call IsSameKey
+	jnc scan_keys_done
+;
+	call KeyRelease
+
+scan_keys_press:
+	call KeyPress
+    jmp scan_keys_done
+
+scan_keys_no_key:
+	call IsKeyPressed
+	jc scan_keys_done
+;
+	call KeyRelease
+
+scan_keys_done:
+    ret
+ScanKeys    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			keyb_thread
 ;
 ;		DESCRIPTION:	Keyboard thread
@@ -1195,36 +1250,9 @@ keyb_thread:
 keyb_thread_loop:
 	mov ax,10
 	WaitMilliSec
-    call ReadKeyLines
-    call DebounceKeys
-    jc keyb_thread_loop
-;
-    call GetPressedKeys
-    or ax,ax
-    je keyb_thread_no_key
-;
-    cmp ax,1
-    jne keyb_thread_loop
-
-keyb_thread_one_key:
-	call IsKeyPressed
-	jc keyb_thread_press
-;
-	call IsSameKey
-	jnc keyb_thread_loop
-;
-	call KeyRelease
-
-keyb_thread_press:
-	call KeyPress
-    jmp keyb_thread_loop
-
-keyb_thread_no_key:
-	call IsKeyPressed
-	jc keyb_thread_loop
-;
-	call KeyRelease
-    jmp keyb_thread_loop
+	call ScanShift
+	call ScanKeys
+	jmp keyb_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1301,6 +1329,10 @@ init	PROC far
     mov ds:kd_low_key,-1
     mov ds:kd_high_key,-1
     mov ds:kd_key_stable_count,0
+;
+    mov ds:kd_prev_low_shift,0
+    mov ds:kd_prev_high_shift,0
+    mov ds:kd_shift_stable_count,0
 ;
 	popa
 	pop es
