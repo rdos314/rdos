@@ -90,7 +90,7 @@ RdosSectors		    DW 0,0
 CurrSector		    DW 0,0
 SectorsPerCyl	    DW 15
 Heads			    DW 2
-DriveNr			    DB 80h
+DriveNr			    DB 81h
 BootSector          DD 0
 FatSector           DD 0
 DataSector          DD 0
