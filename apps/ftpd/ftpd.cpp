@@ -43,6 +43,7 @@
 #include "list.h"
 #include "cwd.h"
 #include "cdup.h"
+#include "type.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -125,6 +126,7 @@ void cdecl main()
 	TListFactory *list = new TListFactory;
     TCwdFactory *cwd = new TCwdFactory;
     TCdupFactory *cdup = new TCdupFactory;
+    TTypeFactory *type = new TTypeFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);
