@@ -147,6 +147,7 @@ set_rgb_row_proc		DD ?
 get_line_proc			DD ?
 
 ; IN  AX			source row size
+; IN  EBX			color
 ; IN  ECX			source x + y << 16
 ; IN  EDX			dest x + y << 16
 ; IN  SI			width

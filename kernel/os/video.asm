@@ -1279,9 +1279,12 @@ blit_do:
 	cmp ax,[bp].blit_dest_sel
 	je blit_same_bitmap
 ;
-	mov ds,[bp].blit_dest_sel
-	mov al,ds:v_bpp
 	mov ds,[bp].blit_src_sel
+	mov al,ds:v_bpp
+	cmp al,1
+	je blit1
+;
+	mov ds,[bp].blit_dest_sel
 	cmp al,ds:v_bpp
 	je blit_same_bpp
 ;
@@ -1405,6 +1408,29 @@ blit_same_line_loop:
 	jnz blit_same_line_loop
 ;
 	FreeMem
+	clc
+	jmp blit_done
+
+blit1:
+	int 3
+	mov ds,[bp].blit_src_sel
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,ds:v_app_base
+	mov ax,ds:v_row_size
+	mov ecx,[bp].blit_src_x
+	mov edx,[bp].blit_dest_x
+	mov si,[bp].blit_width
+	mov ebx,ds:v_color
+	mov ds,[bp].blit_dest_sel
+
+blit1_line_loop:
+	call ds:draw_mask_line_proc
+	add ecx,10000h
+	add edx,10000h
+	sub word ptr [bp].blit_height,1
+	jnz blit1_line_loop
+;
 	clc
 	jmp blit_done
 

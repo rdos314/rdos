@@ -216,37 +216,20 @@ init:
 	push bx
 	mov ax,50
 	OpenFont
-;
 	int 3
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET draw_string
-	GetStringMetrics
-	push bx
-	mov ax,1
-	CreateBitmap
-	mov eax,0FFFFh
-	SetDrawColor
-	mov ax,LGOP_NONE
-	SetLgop
-	pop ax
-	SetFont
-	xor cx,cx
-	xor dx,dx
-	DrawString
-	GetBitmapInfo
 	mov ax,bx
 	pop bx
-;
-	push ax
-	mov ax,LGOP_ADD
+	SetFont
+	mov ax,LGOP_NONE
 	SetLgop
-	pop ax
-	xor esi,esi
-	xor edi,edi
-	Blit
-	mov bx,ax
-	CloseBitmap
+	mov eax,0FFFFh
+	SetDrawColor
+	mov cx,40
+	mov dx,111
+	DrawString
 ;
 	int 3
 	mov ax,3

@@ -1212,6 +1212,7 @@ PAGE
 ;		DESCRIPTION:	Draw a mask
 ; 
 ;		PARAMETER:		AX			source row size
+;						EBX			color
 ;						ECX			source x + y << 16
 ;						EDX			dest x + y << 16
 ;						SI			width
@@ -1220,6 +1221,75 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_mask_line	Proc far
+	push es
+	push fs
+	pushad
+;
+	push ebx
+	xchg ecx,edx
+	movzx ebx,dx
+	ror edx,16
+	movzx edx,dx
+	movzx eax,ax
+	mul edx
+	shl eax,3
+	add eax,ebx
+	push eax
+;
+	movzx ebp,cx
+	ror ecx,16
+	movzx edx,cx
+	movzx eax,ds:v_row_size
+	mul edx
+	mov edx,ebp
+	add edx,edx
+	add edx,ebp
+	add eax,edx
+	add eax,ds:v_app_base
+;
+	pop ebp
+	mov cl,bl
+	and cl,7
+	shr ebp,3
+	add ebp,edi
+;
+	xchg esi,ebp
+	mov edi,eax
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov bx,ds:v_lgop
+	add bx,bx
+	pop eax
+
+draw_mask_line_loop:
+	mov ch,8
+	mov dx,fs:[esi]
+	ror dx,cl
+
+draw_mask_bit_loop:
+	rcr dl,1
+	jnc draw_mask_line_next
+;
+	call word ptr cs:[bx].LgopTab
+
+draw_mask_line_next:
+	add edi,3
+	sub bp,1
+	jz draw_mask_line_done
+;
+	sub ch,1
+	jnz draw_mask_bit_loop
+;
+	inc esi
+	jmp draw_mask_line_loop
+
+draw_mask_line_done:
+	popad
+	pop fs
+	pop es
 	ret
 draw_mask_line	Endp
 
@@ -1238,7 +1308,184 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-draw_string	Proc near
+ds_dest_y		EQU -2
+ds_dest_x		EQU -4
+ds_cnt			EQU -6
+ds_src_x		EQU -8
+ds_row_size		EQU -10
+ds_width		EQU -12
+
+draw_string	Proc far
+	push bp
+	mov bp,sp
+	sub sp,12
+;
+	push es
+	push fs
+	push gs
+	pushad
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov [bp].ds_dest_x,cx
+	mov [bp].ds_dest_y,dx
+
+draw_string_loop:
+	mov al,fs:[edi]
+	or al,al
+	jz draw_string_ok
+;
+	inc edi
+	push edi
+;
+	mov bx,ds:v_font
+	GetCharMask
+	jc draw_string_char_next
+;
+	mov ax,es
+	mov gs,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov [bp].ds_row_size,si
+	mov word ptr [bp].ds_src_x,0
+	mov [bp].ds_width,cx
+	mov cx,dx
+	or cx,cx
+	jz draw_string_char_next
+;
+	movzx esi,word ptr [bp].ds_src_x
+	shr esi,3
+	add esi,edi
+;
+	movzx ebx,word ptr [bp].ds_dest_x
+	movzx edx,word ptr [bp].ds_dest_y
+	movzx eax,word ptr ds:v_row_size
+	mul edx
+	mov edx,ebx
+	add edx,edx
+	add edx,ebx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov edi,eax
+;
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	je draw_string_none
+;
+	add bx,bx
+
+draw_string_char_loop:
+	push cx
+	push esi
+	push edi
+	mov cx,[bp].ds_width
+	mov eax,ds:v_color
+
+draw_string_line_loop:
+	mov dh,8
+	mov dl,gs:[esi]
+
+draw_string_bit_loop:
+	rcr dl,1
+	jnc draw_string_bit_next
+;
+	call word ptr cs:[bx].LgopTab
+
+draw_string_bit_next:
+	add edi,3
+	sub cx,1
+	jz draw_string_line_next
+;
+	sub dh,1
+	jnz draw_string_bit_loop
+;
+	inc esi
+	jmp draw_string_line_loop
+
+draw_string_line_next:
+	pop edi
+	pop esi
+	pop cx
+	movzx eax,ds:v_row_size
+	add edi,eax
+	movzx eax,word ptr [bp].ds_row_size
+	add esi,eax
+	sub cx,1
+	jnz draw_string_char_loop
+
+draw_string_char_done:
+	mov ax,[bp].ds_width
+	add [bp].ds_dest_x,ax
+
+draw_string_char_next:
+	pop edi
+	jmp draw_string_loop
+
+draw_string_none:
+
+draw_string_none_char_loop:
+	push cx
+	push esi
+	push edi
+	mov cx,[bp].ds_width
+	mov eax,ds:v_color
+
+draw_string_none_line_loop:
+	mov dh,8
+	mov dl,gs:[esi]
+
+draw_string_none_bit_loop:
+	rcr dl,1
+	jnc draw_string_none_bit_next
+;
+	mov es:[edi],al
+	ror eax,8
+	mov es:[edi+1],ax
+	rol eax,8
+
+draw_string_none_bit_next:
+	add edi,3
+	sub cx,1
+	jz draw_string_none_line_next
+;
+	sub dh,1
+	jnz draw_string_none_bit_loop
+;
+	inc esi
+	jmp draw_string_none_line_loop
+
+draw_string_none_line_next:
+	pop edi
+	pop esi
+	pop cx
+	movzx eax,ds:v_row_size
+	add edi,eax
+	movzx eax,word ptr [bp].ds_row_size
+	add esi,eax
+	sub cx,1
+	jnz draw_string_none_char_loop
+
+draw_string_none_char_done:
+	mov ax,[bp].ds_width
+	add [bp].ds_dest_x,ax
+
+draw_string_none_char_next:
+	pop edi
+	jmp draw_string_loop
+
+draw_string_ok:
+	clc
+
+draw_string_done:
+	popad
+	pop gs
+	pop fs
+	pop es
+	add sp,12
+	pop bp
 	ret
 draw_string	Endp
 
