@@ -20,46 +20,43 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# comshow.cpp
-# Protocol analyzer app. 
+# cbus.h
+# CBUS protocol translator
 #
 ########################################################################*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "rdos.h"
-#include "cbus.h"
-#include "file.h"
-#include "cbus.h"
+#ifndef _CBUS_H
+#define _CBUS_H
 
-#define FALSE 0
-#define TRUE !FALSE
+#include "anabase.h"
 
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void cdecl main()
+struct TCbusMsg
 {
-	RdosWaitMilli(200);
+	char Adr;
+	char MessCode;
+	char MsgData[128];
+};
 
-    TCbusProtocolAnalyser analyzer("comlog", 0x400);
-    analyzer.DefineLogFile("c:\\comshow.log");
+class TCbusProtocolAnalyser : public TProtocolAnalyser
+{
+public:
+	TCbusProtocolAnalyser(const char *MemMapName, int MaxSize);
+	virtual ~TCbusProtocolAnalyser();
+    
+    virtual int GetMsg();
+    virtual void ShowMsg();
 
-	for (;;)
-	{
-		while (!RdosPollKeyboard())
-		{
-		    if (analyzer.GetMsg())
-		        analyzer.ShowMsg();
-		}
+protected:
+    void ShowDefault(TCbusMsg *Msg);
+    void ShowCbusPumpReqText();
+    void ShowCbusPumpReplyText();
+    void ShowAddress(char Adr);
+    void ShowCode(char Code);
+    void UpdatePump();
+    void ShowPumpMsg(char ToAdr, char FromAdr, char MessCode, const char *MsgData);
 
-		if ((RdosReadKeyboard() & 0xFF) == 0x1B)
-			return;
-	}
-}
+    TCbusMsg *FCbusReqMsg;
+    TCbusMsg *FCbusReplyMsg;
+};
+
+#endif

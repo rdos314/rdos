@@ -20,46 +20,58 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# comshow.cpp
-# Protocol analyzer app. 
+# anabase.h
+# Protocol analysis base class
 #
 ########################################################################*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include "rdos.h"
-#include "cbus.h"
+#ifndef _ANABASE_H
+#define _ANABASE_H
+
 #include "file.h"
-#include "cbus.h"
 
-#define FALSE 0
-#define TRUE !FALSE
-
-/*##################  main ##########################
-*   Purpose....: Program entry-point	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void cdecl main()
+struct TComMsg
 {
-	RdosWaitMilli(200);
+	int Channel;
+	int TimeLSB;
+	int TimeMSB;
+	char ch;
+};
 
-    TCbusProtocolAnalyser analyzer("comlog", 0x400);
-    analyzer.DefineLogFile("c:\\comshow.log");
+class TProtocolAnalyser
+{
+public:
+	TProtocolAnalyser(const char *MemMapName, int MaxSize);
+	virtual ~TProtocolAnalyser();
 
-	for (;;)
-	{
-		while (!RdosPollKeyboard())
-		{
-		    if (analyzer.GetMsg())
-		        analyzer.ShowMsg();
-		}
+	void DefineLogFile(const char *LogFileName);
 
-		if ((RdosReadKeyboard() & 0xFF) == 0x1B)
-			return;
-	}
-}
+    virtual int GetMsg();
+    virtual void ShowMsg() = 0;
+
+protected:
+    void Write(const char *str);
+    void ShowShortTime(TDateTime *time);
+    void ShowLongTime(TDateTime *time);
+    void ShowHexMsg();
+    void ShowMneMsg();
+    void ShowAsciiMsg();
+
+    TComMsg *FComMsg;
+    char *FMsg;
+    int FSize;
+    int FMaxSize;
+
+    int *FRawCount;
+    int FRawPos;
+
+    TDateTime *FTime;
+
+private:
+    TFile *FLogFile;
+    int FMapping;
+    char *FRawBuf;
+};
+
+#endif
+
