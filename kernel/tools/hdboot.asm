@@ -104,6 +104,7 @@ BootLoadInit:
 ReadCount	    	DW 0
 RdosSectors		    DW 0,0
 DriveNr			    DB 80h
+DefaultBoot         DB 0
 BootSector          DD 0
 FatSector           DD 0
 RootSector          DD 0
@@ -118,7 +119,11 @@ SectorsPerCluster   DW 0
 ImageSize           DD 0
 CurrFatSector       DD 0
 
+Tics                DD ?
+
+OrgTimerVect        DD ?
 OrgIdeVect          DD ?
+
 IntFlag             DB ?
 DiscSubUnit         DB ?
 LbaMode             DB ?
@@ -254,6 +259,32 @@ WriteAsciizDone:
 	ret
 WriteAsciiz	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TimerInt
+;
+;		DESCRIPTION:	TIMER INTERRUPT
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+TimerInt:
+    push eax
+    mov eax,cs:Tics
+    or eax,eax
+    jz tiDone
+;
+    dec eax
+    mov cs:Tics,eax
+
+tiDone:
+    pop eax
+    jmp cs:OrgTimerVect
+    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -687,6 +718,12 @@ InitIrq Proc near
     mov cs:DiscSubUnit,0
     xor ax,ax
     mov ds,ax
+    mov bx,8 SHL 2
+    mov eax,[bx]
+    mov cs:OrgTimerVect,eax
+    mov word ptr [bx],OFFSET TimerInt
+    mov [bx+2],cs
+;
     mov bx,76h SHL 2
     mov eax,[bx]
     mov cs:OrgIdeVect,eax
@@ -1482,6 +1519,22 @@ UnmarkEntry   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleMenu  Proc near    
+    mov cs:Tics, 5 * 17
+    movzx ax,cs:DefaultBoot
+    mov cs:CurrEntry,ax
+
+hmWaitKey:
+    mov ah,1
+    int 16h
+    jnz hmWait
+;
+    mov eax,cs:Tics
+    or eax,eax
+    jne hmWaitKey
+;
+    jmp hmOk
+        
+hmWait:
     mov ax,0
     int 16h 
     cmp al,0Dh
@@ -1493,30 +1546,30 @@ HandleMenu  Proc near
 hmUp:
     mov ax,cs:CurrEntry
     or ax,ax
-    jz HandleMenu
+    jz hmWait
 ;
     call UnmarkEntry
     dec ax
     call MarkEntry
     mov cs:CurrEntry,ax
-    jmp HandleMenu    
+    jmp hmWait   
 
 hmNotUp:
     cmp ax,5000h
-    jne HandleMenu
+    jne hmWait
 
 hmDown:
     mov ax,cs:CurrEntry
     inc ax
     cmp ax,cs:MenuEntries
-    je HandleMenu
+    je hmWait
 ;
     dec ax
     call UnmarkEntry    
     inc ax
     call MarkEntry
     mov cs:CurrEntry,ax
-    jmp HandleMenu
+    jmp hmWait
 
 hmOk: 
     mov si,cs:CurrEntry
@@ -1885,12 +1938,14 @@ part_stop:
 ;		DESCRIPTION:	Second stage boot-loader entry point
 ;
 ;		RETURNS:	    DL          Bios disc #
+;                       AL          Default boot #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Start:
 	sti
 	mov cs:DriveNr,dl
+	mov cs:DefaultBoot,al
 	mov ax,DATA_SEG
 	mov ds,ax
     xor bx,bx
@@ -1974,7 +2029,13 @@ boot_data_sector_ok:
     call FindRdosFiles
     call WriteMenu
 ;
+    movzx ax,cs:DefaultBoot
+    cmp ax,cs:MenuEntries
+    jb LoadDefaultOk
+;
     xor ax,ax
+
+LoadDefaultOk:
     mov cs:CurrEntry,ax
     call MarkEntry
     call HandleMenu       
@@ -1991,6 +2052,10 @@ boot_data_sector_ok:
     mov edx,cs:BootSector
     mov bx,7C00h
     call ReadSector
+;
+    mov bx,8 SHL 2
+    mov eax,cs:OrgTimerVect
+    mov [bx],eax
 ;
     mov bx,76h SHL 2
     mov eax,cs:OrgIdeVect

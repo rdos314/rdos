@@ -41,7 +41,7 @@
 struct TBootParam
 {
 	short int BytesPerSector;
-	char Resv1;
+	char DefaultEntry;
 	short int MappingSectors;
 	char Resv3;
 	short int Resv4;
@@ -122,6 +122,11 @@ TInitHdCommand::TInitHdCommand(const char *param)
 ##########################################################################*/
 int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
+	switch(ch)
+	{
+		case 'R':
+			return OptScanBool(optstr, bool, strarg, &FOptR);
+	}
 	OptError(optstr);
 	return E_Useage;
 }
@@ -139,6 +144,7 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 ##########################################################################*/
 void TInitHdCommand::InitOptions()
 {
+    FOptR = 0;
 }
 
 /*##########################################################################
@@ -158,7 +164,12 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 	TBootParam bootp;
 
 	bootp.BytesPerSector = Disc->GetBytesPerSector();
-	bootp.Resv1 = 0;
+
+	if (FOptR)
+	    bootp.DefaultEntry = 1;
+	else
+	    bootp.DefaultEntry = 0;
+	    
 	bootp.MappingSectors = FLoaderSectors;
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;

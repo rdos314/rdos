@@ -34,7 +34,7 @@
 boot_struc	STRUC
 
 boot_bytes_per_sector		DW 512
-boot_resv1					DB ?
+boot_default_entry			DB 0
 boot_mapping_sectors		DW 1
 boot_resv3					DB ?
 boot_resv4					DW ?
@@ -106,6 +106,8 @@ BootSectorOk:
     mov dl,cs:BootMedia.boot_drive_nr
 	mov ax,cs
 	mov es,ax
+    mov al,cs:BootMedia.boot_default_entry
+    
 	db 0EAh
 
 	public BootLoadOffset

@@ -1546,11 +1546,7 @@ Unable to create partition. Invalid size of filesystem name
 :TEXT_CMDHELP_INITHD
 Init harddrive partition table and write RDOS bootloader
 
-INITHD disc [filesys size]
+INITHD /R disc
   disc            Disc number
-  filesys         Filesystem name on boot partition
-  size            Partition size in MB
-
-Currently supported filesystem names are:
-FAT12, FAT16, FAT32, RDFS and FLASHFS
+  /R              Make RDOS normal boot as default
 .

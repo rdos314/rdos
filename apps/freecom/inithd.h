@@ -55,7 +55,8 @@ protected:
 	void WriteBootSector(TDisc *Disc);
 	void WriteBootLoader(TDisc *Disc);
 
-   int FLoaderSectors;
+    int FLoaderSectors;
+	int FOptR;
 };
 
 #endif
