@@ -768,57 +768,57 @@ init	Proc far
 ;
 	mov si,OFFSET open_com
 	mov di,OFFSET open_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,open_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET close_com
 	mov di,OFFSET close_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,close_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET flush_com
 	mov di,OFFSET flush_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,flush_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET poll_com
 	mov di,OFFSET poll_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,poll_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET wait_for_com
 	mov di,OFFSET wait_for_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,wait_for_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_com
 	mov di,OFFSET read_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,read_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_com
 	mov di,OFFSET write_com_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,write_com_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_dtr
 	mov di,OFFSET set_dtr_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,set_dtr_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET reset_dtr
 	mov di,OFFSET reset_dtr_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,reset_dtr_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

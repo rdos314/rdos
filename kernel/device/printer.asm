@@ -33,10 +33,8 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
 INCLUDE ..\os\driver.def
 INCLUDE ..\os\user.def
-INCLUDE ..\os\virt.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\user.inc
-INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.inc
 
@@ -360,33 +358,21 @@ init	PROC far
 ;
 	mov si,OFFSET init_printer
 	mov di,OFFSET init_printer_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,init_printer_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,init_virt_printer_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET check_printer
 	mov di,OFFSET check_printer_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,check_printer_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,check_virt_printer_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_printer
 	mov di,OFFSET write_printer_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,write_printer_nr
-	RegisterUserGate
-	mov bx,ax
-	mov dx,0
-	mov ax,write_virt_printer_nr
-	RegisterVirtUserGate
+	RegisterBimodalUserGate
 ;
 	pop ds
 	popa

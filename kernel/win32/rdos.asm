@@ -49,11 +49,12 @@ pvTLSArray			DD ?
 
 tib_data	ENDS
 
-UserGate      MACRO gate_nr
-	db 66h
-	db 9Ah
-	dw 0
-	dw 180Bh + (gate_nr SHL 4)
+UserGate	MACRO gate_nr
+	db 0Fh
+	db 0Bh
+	db 0D7h
+	dd gate_nr
+	nop
 			ENDM
 
 		NAME system

@@ -36,10 +36,8 @@ INCLUDE ..\os\protseg.def
 INCLUDE ..\os\driver.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\user.def
-INCLUDE ..\os\virt.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\user.inc
-INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\ip.inc
@@ -4627,9 +4625,9 @@ init_baud_ok:
 ;
 	mov si,OFFSET get_ppp_dns
 	mov di,OFFSET get_ppp_dns_name
-	xor cl,cl
+	xor dx,dx
 	mov ax,get_ppp_dns_nr
-	RegisterUserGate
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET open_ppp
 	mov di,OFFSET open_ppp_name
