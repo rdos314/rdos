@@ -62,51 +62,15 @@ PAGE
     public EraseBlock
     
 EraseBlock	Proc near
-    push es
-    push eax
-    push ebx
+    push ax
     push ecx
-    push edx
-    push esi
-    push edi
-    push bp
-;
-    mov ax,flat_sel
-    mov es,ax
 ;
     mov al,ds:drive_nr
     mov ecx,128
     EraseSectors
-    CreateDiscSeq
-    mov bp,ax
-
-erase_loop:
-    mov al,ds:drive_nr
-    NewSector
-    mov edi,esi
-    push ecx
-    mov eax,-1
-    mov ecx,80h
-    rep stos dword ptr es:[edi]
-    pop ecx 
-    mov ax,bp   
-    ModifySeqSector
 ;
-    inc edx
-    loop erase_loop
-;    
-    int 3
-    mov ax,bp
-    PerformDiscSeq
-;
-    pop bp
-    pop edi
-    pop esi
-    pop edx
     pop ecx
-    pop ebx
-    pop eax
-	pop es
+    pop ax
 	ret
 EraseBlock	Endp
 
@@ -129,7 +93,6 @@ WriteSector	Proc near
     push ax
     push cx
 ;
-    int 3
     mov cx,1
     CreateDiscSeq
     ModifySeqSector
@@ -161,7 +124,6 @@ WriteSectorAlloc	Proc near
     push ebx
     push cx
 ;
-    int 3
     mov cx,2
     CreateDiscSeq
     ModifySeqSector

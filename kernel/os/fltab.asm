@@ -431,6 +431,8 @@ CacheBlock	Proc near
 ;
 	mov ax,es:[esi].fc_logical_block
 	push ax
+	mov ax,es:[esi].fc_version
+	push ax
 	push es
 	mov eax,SIZE block_seg
 	AllocateSmallGlobalMem
@@ -441,6 +443,8 @@ CacheBlock	Proc near
 	mov fs:bc_handle,ebx
 	mov fs:bc_ptr,esi
 	mov fs:bc_start_sector,edx
+	pop ax
+	mov fs:bc_version,ax
 	pop ax
 	mov fs:bc_logical_block,ax
 	call CacheSectorArr
@@ -530,6 +534,8 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public AllocateBlock
+    
 AllocateBlock	Proc near
 	push ax
 	push ebx

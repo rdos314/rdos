@@ -48,6 +48,8 @@ code	SEGMENT byte public use16 'CODE'
 	extrn create_file:far
 	extrn delete_file:far
 
+    extrn EraseBlock:near
+    extrn AllocateBlock:near
 	extrn CacheBlock:near
 	extrn GetFreeBlockSectors:near
 
@@ -127,6 +129,7 @@ mount	PROC far
 	push edx
 	push edi
 ;
+    int 3
 	shr ecx,7
 	push ax
 	mov eax,SIZE drive_data_seg
@@ -135,25 +138,118 @@ mount	PROC far
 	AllocateSmallGlobalMem
 	mov ax,es
 	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
 	pop ax
 ;
 	mov ds:block_count,cx
 	mov ds:drive_nr,al
 ;
+    movzx eax,cx
+    add eax,eax
+    AllocateSmallGlobalMem
+;
+    push cx    
+    xor di,di
+    xor ax,ax
+    rep stosw
+    pop cx
+;
     xor edx,edx
 	mov di,SIZE drive_data_seg
 
-mount_loop:
+mount_cache_loop:
+    push es
+	mov ax,flat_sel
+	mov es,ax
 	call CacheBlock
+	pop es
+	mov word ptr ds:[di],0
+;	
+    mov ax,fs
+    or ax,ax
+    jz mount_cache_next
+;
+    mov bx,fs:bc_logical_block
+    add bx,bx
+;
+    mov ax,es:[bx]
+    or ax,ax
+    jz mount_cache_save
+;
+    push es
+    mov es,ax
+    mov ax,es:bc_version
+    pop es
+    cmp ax,fs:bc_version
+    jg mount_cache_save_this
+;
+    push es
+    push edx
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    mov edx,es:bc_start_sector
+    call EraseBlock
+    FreeMem
+    pop es
+    jmp mount_cache_next
+    
+mount_cache_save_this:
+    push es
+    push edx
+    mov es,es:[bx]
+    mov edx,es:bc_start_sector
+    call EraseBlock
+    FreeMem
+    pop edx
+    pop es
+
+mount_cache_save:
+    mov es:[bx],fs
 	mov ds:[di],fs
 
-mount_next:
+mount_cache_next:	
 	add di,2
     add edx,80h
-    loop mount_loop
+    loop mount_cache_loop
 ;
+    xor bx,bx
+    xor si,si
+    mov cx,ds:block_count
+    dec cx
+
+mount_init_loop:
+    mov ax,es:[si]
+    or ax,ax
+    jnz mount_init_next
+;
+    push es
+    mov ax,flat_sel
+    mov es,ax
+    call AllocateBlock
+    pop es
+    mov es:[si],fs
+
+mount_init_next:
+    add si,2
+    inc bx
+    loop mount_init_loop
+;
+    xor si,si
+    mov di,SIZE drive_data_seg
+    mov cx,ds:block_count
+    dec cx
+
+mount_move_loop:
+    mov ax,es:[si]
+    mov [di],ax
+    add si,2
+    add di,2
+    loop mount_move_loop
+;
+    mov word ptr [di],0
+;
+    FreeMem
 	xor si,si
 ;
 	pop edi

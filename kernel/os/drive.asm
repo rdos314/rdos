@@ -699,7 +699,6 @@ update_disc_seq	PROC far
 	or ax,ax
 	jz update_seq_done
 ;
-	int 3
 	push fs
 	pushad
 ;
@@ -2954,24 +2953,46 @@ erase_sectors_name	DB 'Erase Sectors',0
 
 erase_sectors   Proc far
 	push ds
+	push es
 	pushad
 ;
 	mov bx,disc_data_sel
 	mov ds,bx
 	movzx bx,al
 	add bx,bx
-	mov ax,[bx].drive_def_arr
-	or ax,ax
+	mov bx,[bx].drive_def_arr
+	or bx,bx
 	jz erase_sectors_fail
 ;
-	cmp ax,-1
+	cmp bx,-1
 	je erase_sectors_fail
 ;
-	mov ds,ax
+	mov ds,bx
 	mov ds,ds:drive_disc
 	mov bx,ds:disc_handle
 	lds si,ds:disc_param
 	call [si].erase_proc
+	jnc erase_sectors_done
+;
+    mov bx,flat_sel
+    mov es,bx
+
+erase_loop:
+    NewSector
+    mov edi,esi
+    push ecx
+    push eax
+    mov eax,-1
+    mov ecx,80h
+    rep stos dword ptr es:[edi]
+    pop eax
+    pop ecx 
+    ModifySector
+;
+    inc edx
+    loop erase_loop
+;
+    clc
 	jmp erase_sectors_done
 
 erase_sectors_fail:
@@ -2979,6 +3000,7 @@ erase_sectors_fail:
 
 erase_sectors_done:
 	popad
+	pop es  
 	pop ds
     ret
 erase_sectors   Endp

@@ -62,6 +62,7 @@ bc_handle			DD ?
 bc_ptr				DD ?
 bc_start_sector		DD ?
 bc_logical_block	DW ?
+bc_version          DW ?
 bc_log_sector_arr	DB 127 * SIZE block_sector_struc DUP (?)
 bc_phys_sector_arr	DB 127 DUP (?)
 
