@@ -48,10 +48,6 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-; PIN 21 = Gate 0
-; PIN 28 = DGND
-; PIN 34 = AOUTGND
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -127,6 +123,101 @@ WriteHexDword	PROC near
 	call WriteHexByte
 	ret
 WriteHexDword	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IntToStr
+;
+;		DESCRIPTION:	Convert long to asciiz string
+;
+;		PARAMETERS:		EAX			Value
+;						CX			Number of position
+;						ES:DI		String
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dec_tab:
+	DD 1
+	DD 10
+	DD 100
+	DD 1000
+	DD 10000
+	DD 100000
+	DD 1000000
+	DD 10000000
+	DD 100000000
+	DD 1000000000
+
+IntToStr	PROC near
+	push ax
+	push bx
+	push ecx
+	push edx
+	push di
+	mov edx,eax
+	mov ah,cl
+	mov bx,cx
+	dec bx
+	shl bx,2
+loop_omv_dec:
+	mov ecx,dword ptr cs:[bx].dec_tab
+	xor al,al
+loop_dec_dig:
+	inc al
+	sub edx,ecx
+	jnc loop_dec_dig
+	add edx,ecx
+	dec al
+	sub bx,4
+	add al,'0'
+	stosb
+	dec ah
+	jne loop_omv_dec
+	xor al,al
+	stosb
+	pop di
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	ret
+IntToStr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RemoveLeading
+;
+;		DESCRIPTION:	Remove leading zeros
+;
+;		PARAMETERS:		ES:DI		STRING
+;
+;		RETURNS:		CY		Significant digits found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveLeading	Proc near
+	push ax
+	push di
+RemoveLeadingLoop:
+	mov al,es:[di]
+	or al,al
+	clc
+	jz RemoveLeadingDone
+	cmp al,'0'
+	stc
+	jnz RemoveLeadingDone
+	mov byte ptr es:[di],' '
+	inc di
+	jmp RemoveLeadingLoop
+RemoveLeadingDone:
+	pop di
+	pop ax
+	ret
+RemoveLeading	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -219,6 +310,9 @@ dcf_thread:
 	sti
 	mov ax,43h
 	EnableFocus
+;
+    mov eax,16
+    AllocateSmallMem
 
 dcf_thread_loop:
 	mov ax,50
@@ -232,7 +326,6 @@ dcf_thread_loop:
 	call start_timer
 	call read_timer
 	mov esi,eax
-	mov edi,eax
 
 dcf_wait_loop:
 	mov ax,50
@@ -242,22 +335,92 @@ dcf_wait_loop:
 	in al,dx
 	and al,10h
 	jz dcf_wait_loop	
-
-dcf_meassure_loop:
+;
 	mov ax,50
 	WaitMilliSec
+;
+    cli	
 	call read_timer
-	cmp eax,esi
-	mov esi,eax
-	jne dcf_meassure_loop
+	mov edi,eax
+	GetSystemTime
+    sti
+;
+    push edx
+    push eax
+;
+    mov eax,edi
+    mov ecx,1193046
+    mul ecx
+    mov ecx,10000000
+    div ecx
+    mov ecx,eax
+;
+    pop eax
+    add eax,ecx
+    pop edx
+    adc edx,0
+;
+    push eax
+    push edx
 ;
 	xor cx,cx
 	xor dx,dx
 	SetCursorPosition
 ;
-	sub edi,esi
-	mov eax,edi
+	pop eax
 	call WriteHexDword
+;
+    pop eax
+    call WriteHexDword
+	
+dcf_meassure_loop:
+	mov ax,50
+	WaitMilliSec
+;
+	call read_timer	
+	cmp eax,esi
+	mov esi,eax
+	jne dcf_meassure_loop
+;
+	xor cx,cx
+	mov dx,1
+	SetCursorPosition
+;
+	mov eax,esi
+	push eax
+	call WriteHexDword
+	pop eax
+;
+    xor di,di
+    push eax
+    mov cx,10
+    call IntToStr
+    call RemoveLeading
+    pop eax
+;
+	xor cx,cx
+	mov dx,2
+	SetCursorPosition
+;
+	WriteAsciiz
+;
+    mov ecx,1193046
+    mul ecx
+    mov ecx,10000000
+    div ecx
+;
+    xor di,di
+    push eax
+    mov cx,10
+    call IntToStr
+    call RemoveLeading
+    pop eax
+;
+	xor cx,cx
+	mov dx,3
+	SetCursorPosition
+;
+	WriteAsciiz
 	jmp dcf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -317,7 +480,7 @@ init	Proc far
     out dx,al
 ;
     mov dx,28Bh
-    mov al,1Bh
+    mov al,9Bh
     out dx,al
 ;
 	mov ax,cs
