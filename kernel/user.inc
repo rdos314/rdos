@@ -1070,6 +1070,21 @@ SetDiscInfo     MACRO
 	UserGate set_disc_info_nr
 						ENDM
 
+;	OUT	AL		Drive #
+AllocateStaticDrive	MACRO
+	UserGate allocate_static_drive_nr
+					ENDM
+
+;	IN	AL		Drive #
+AllocateFixedDrive	MACRO
+	UserGate allocate_fixed_drive_nr
+					ENDM
+
+;	OUT	AL		Drive #
+AllocateDynamicDrive	MACRO
+	UserGate allocate_dynamic_drive_nr
+					ENDM
+
 ;	IN	AL		Drive #
 DemandLoadDrive	MACRO
 	UserGate demand_load_drive_nr

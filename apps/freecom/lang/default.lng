@@ -1577,9 +1577,8 @@ Ping timeout
 :TEXT_CMDHELP_INITFD
 Init floppy and write RDOS bootloader
 
-INITFD [disc] [/F filename]
+INITFD [disc]
   disc          Floppy disc number (0 is first drive)
-  /F filename   Write image to a file.
 .
 
 :TEXT_CMDHELP_STATE
@@ -1628,4 +1627,12 @@ Copy floppy disc raw data to a file
 FD2FILE disc pathname
   disc            Floppy disc number
   pathname        File to copy to
+.
+
+:TEXT_CMDHELP_MOUNT
+Mount a file containing a file system onto a drive
+
+MOUNT [/D drive[:]] pathname
+  /D drive        Mount to specified drive
+  pathname        File containing raw file system
 .

@@ -1636,7 +1636,7 @@ get_lfn_name_delete:
 
 get_lfn_name_size_start:
     mov bx,OFFSET lfn_name
-    xor cx,cx
+    xor ecx,ecx
     mov dx,255
 
 get_lfn_name_size_loop:

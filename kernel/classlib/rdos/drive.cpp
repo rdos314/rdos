@@ -31,6 +31,57 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+/*##################  TDrive::AllocateFixed  #############
+*   Purpose....: Allocate fixed drive							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TDrive *TDrive::AllocateFixed(int DriveNr)
+{
+    if (RdosAllocateFixedDrive(DriveNr))
+        return new TDrive(DriveNr);
+    else
+        return 0;
+}
+
+/*##################  TDrive::AllocateStatic  #############
+*   Purpose....: Allocate static drive							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TDrive *TDrive::AllocateStatic()
+{
+	int DriveNr;
+
+	DriveNr = RdosAllocateStaticDrive();
+	if (DriveNr)
+		return new TDrive(DriveNr);
+	else
+		return 0;
+}
+
+/*##################  TDrive::AllocateDynamic  #############
+*   Purpose....: Allocate dynamic drive							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TDrive *TDrive::AllocateDynamic()
+{
+    int DriveNr;
+
+    DriveNr = RdosAllocateDynamicDrive();
+    if (DriveNr)
+        return new TDrive(DriveNr);
+    else
+        return 0;
+}
+
 /*##################  TDrive::TDrive  #############
 *   Purpose....: Drive constructor							                    #
 *   In params..: *                                                          #

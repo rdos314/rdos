@@ -277,6 +277,10 @@ void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab
 void __stdcall RdosDemandLoadDrive(int DriveNr);
 int __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
+int __stdcall RdosAllocateFixedDrive(int DriveNr);
+int __stdcall RdosAllocateStaticDrive();
+int __stdcall RdosAllocateDynamicDrive();
+
 int __stdcall RdosGetDriveInfo(int DriveNr, long *FreeUnits, int *BytesPerUnit, long *TotalUnits);
 int __stdcall RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector, long *TotalSectors);
 

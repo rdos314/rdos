@@ -316,9 +316,6 @@ poll_disc_request_nr		EQU 206
 disc_request_completed_nr	EQU 207
 new_disc_request_nr			EQU 208
 get_disc_request_array_nr	EQU 209
-allocate_static_drive_nr	EQU 210
-allocate_fixed_drive_nr		EQU 211
-allocate_dynamic_drive_nr	EQU 212
 open_drive_nr				EQU 214
 close_drive_nr				EQU 215
 flush_drive_nr				EQU 216

@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2002, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,42 +20,40 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# drive.h
-# Direct drive access class
+# mount.h
+# Mount file onto a new drive command class
 #
 ########################################################################*/
 
-#ifndef _DRIVE_H
-#define _DRIVE_H
+#ifndef _MOUNT_H
+#define _MOUNT_H
 
-#include "str.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TDrive
+class TMountFactory : public TCommandFactory
 {
 public:
-	TDrive(int Drive);
-	~TDrive();
+	TMountFactory();
+	virtual TCommand *Create(TSession *session, const char *param);
+};
 
-    int IsValid();
-	int GetDriveNr();
+class TMountCommand : public TCommand
+{
+public:
+	TMountCommand(TSession *session, const char *param);
+	virtual ~TMountCommand();
 
-	long GetFreeSectors();
-	long GetTotalSectors();
-
-	int Read(long Sector, char *buf, int size);
-	int Write(long Sector, const char *buf, int size);
-
-	static TDrive *AllocateFixed(int DriveNr);
-	static TDrive *AllocateStatic();
-	static TDrive *AllocateDynamic();
+	virtual int Execute(char *param);	
 
 protected:
-	int FDrive;
+	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
+    void InitOptions();
 
-    int FValid;
-	long FUnits;
-	int FBytesPerUnit;
+    int Mount(TString filename);
+
+    TDrive *FDrive;
+	int FOptD;
 };
 
 #endif
-

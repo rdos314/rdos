@@ -2293,17 +2293,26 @@ allocate_fixed_drive_name	DB 'Allocate Fixed Drive',0
 
 allocate_fixed_drive	Proc far
 	push ds
+	push ax
 	push bx
 ;
 	mov bx,disc_data_sel
 	mov ds,bx
 	movzx bx,al
 	shl bx,1
+	mov ax,[bx].drive_def_arr
+	or ax,ax
+	stc
+	jnz afdDone
+;	
 	mov word ptr [bx].drive_def_arr,-1
-;
+	clc
+
+afdDone:
 	pop bx
+	pop ax
 	pop ds
-	ret
+	retf32
 allocate_fixed_drive	Endp
 
 PAGE
@@ -2344,12 +2353,12 @@ allocate_static_drive_next:
 	add si,2
 	loop allocate_static_drive_loop
 	stc
+
 allocate_static_drive_done:
-;
 	pop si
 	pop cx
 	pop ds
-	ret
+	retf32
 allocate_static_drive	Endp
 
 PAGE
@@ -2390,12 +2399,12 @@ allocate_dynamic_drive_next:
 	sub si,2
 	loop allocate_dynamic_drive_loop
 	stc
+	
 allocate_dynamic_drive_done:
-;
 	pop si
 	pop cx
 	pop ds
-	ret
+	retf32
 allocate_dynamic_drive	Endp
 
 PAGE
@@ -4812,21 +4821,6 @@ init	PROC far
 	mov ax,get_disc_request_array_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET allocate_fixed_drive
-	mov di,OFFSET allocate_fixed_drive_name
-	mov ax,allocate_fixed_drive_nr
-	RegisterOsGate
-;
-	mov si,OFFSET allocate_static_drive
-	mov di,OFFSET allocate_static_drive_name
-	mov ax,allocate_static_drive_nr
-	RegisterOsGate
-;
-	mov si,OFFSET allocate_dynamic_drive
-	mov di,OFFSET allocate_dynamic_drive_name
-	mov ax,allocate_dynamic_drive_nr
-	RegisterOsGate
-;
 	mov si,OFFSET open_drive
 	mov di,OFFSET open_drive_name
 	mov ax,open_drive_nr
@@ -4922,6 +4916,24 @@ init	PROC far
 	mov di,OFFSET set_disc_info_name
 	xor dx,dx
 	mov ax,set_disc_info_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET allocate_fixed_drive
+	mov di,OFFSET allocate_fixed_drive_name
+	xor dx,dx
+	mov ax,allocate_fixed_drive_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET allocate_static_drive
+	mov di,OFFSET allocate_static_drive_name
+	xor dx,dx
+	mov ax,allocate_static_drive_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET allocate_dynamic_drive
+	mov di,OFFSET allocate_dynamic_drive_name
+	xor dx,dx
+	mov ax,allocate_dynamic_drive_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_drive_disc_param

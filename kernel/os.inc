@@ -1746,21 +1746,6 @@ GetDiscRequestArray	MACRO
 	OsGate get_disc_request_array_nr
 					ENDM
 
-;	OUT	AL		Drive #
-AllocateStaticDrive	MACRO
-	OsGate allocate_static_drive_nr
-					ENDM
-
-;	IN	AL		Drive #
-AllocateFixedDrive	MACRO
-	OsGate allocate_fixed_drive_nr
-					ENDM
-
-;	OUT	AL		Drive #
-AllocateDynamicDrive	MACRO
-	OsGate allocate_dynamic_drive_nr
-					ENDM
-
 ;	IN	AL		Drive #
 ;	IN	AH		Disc # or 0
 ;	IN	EDX		Start sector

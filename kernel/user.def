@@ -355,4 +355,8 @@ resume_thread_nr	    	= 304
 
 update_time_nr				= 305
 
+allocate_static_drive_nr	= 306
+allocate_fixed_drive_nr		= 307
+allocate_dynamic_drive_nr	= 308
+
 usergate_entries			= 340

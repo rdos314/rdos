@@ -68,6 +68,7 @@
 #include "move.h"
 #include "synctime.h"
 #include "fd2file.h"
+#include "mount.h"
 
 #include "file.h"
 #include "path.h"
@@ -105,6 +106,7 @@ static TCommandFactory *inithd;
 static TCommandFactory *md;
 static TCommandFactory *mkdir;
 static TCommandFactory *mkpart;
+static TCommandFactory *mount;
 static TCommandFactory *move;
 static TCommandFactory *ping;
 static TCommandFactory *prompt;
@@ -171,6 +173,7 @@ TSession::TSession()
     	path = new TPathFactory;
     	showpart = new TShowPartitionFactory;
     	move = new TMoveFactory;
+    	mount = new TMountFactory;
     	mkpart = new TMakePartitionFactory;
     	mkdir = new TMkdirFactory;
     	md = new TMdFactory;
@@ -285,6 +288,7 @@ TSession::~TSession()
     	delete pause;
     	delete showpart;
     	delete move;
+    	delete mount;
     	delete mkpart;
     	delete mkdir;
     	delete md;

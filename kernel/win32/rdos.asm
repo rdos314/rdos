@@ -6273,6 +6273,91 @@ write_disc_done:
 RdosWriteDisc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAllocateFixedDrive
+;
+;		DESCRIPTION:	Allocate fixed drive
+;
+;		PARAMETER:		Drive #
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAllocateFixedDrive
+
+RdosAllocateFixedDrive	Proc
+	push ebp
+	mov ebp,esp
+;
+	mov al,[ebp+8]
+	UserGate allocate_fixed_drive_nr
+	jc allocate_fixed_drive_fail
+;
+	mov eax,1
+	jmp allocate_fixed_drive_done
+
+allocate_fixed_drive_fail:
+	xor eax,eax
+
+allocate_fixed_drive_done:
+	pop ebp
+	ret 4
+RdosAllocateFixedDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAllocateStaticDrive
+;
+;		DESCRIPTION:	Allocate static drive
+;
+;		RETURNS:		Drive # or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAllocateStaticDrive
+
+RdosAllocateStaticDrive	Proc
+	UserGate allocate_static_drive_nr
+	jc allocate_static_drive_fail
+;
+    movzx eax,al
+	jmp allocate_static_drive_done
+
+allocate_static_drive_fail:
+	xor eax,eax
+
+allocate_static_drive_done:
+	ret
+RdosAllocateStaticDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAllocateDynamicDrive
+;
+;		DESCRIPTION:	Allocate dynamic drive
+;
+;		RETURNS:		Drive # or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAllocateDynamicDrive
+
+RdosAllocateDynamicDrive	Proc
+	UserGate allocate_dynamic_drive_nr
+	jc allocate_dynamic_drive_fail
+;
+    movzx eax,al
+	jmp allocate_dynamic_drive_done
+
+allocate_dynamic_drive_fail:
+	xor eax,eax
+
+allocate_dynamic_drive_done:
+	ret
+RdosAllocateDynamicDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
 ;       NAME:           RdosGetRdfsInfo
