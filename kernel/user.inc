@@ -607,20 +607,16 @@ FindEnvVar	MACRO
 	        ENDM
 
 ; IN  BX            Env handle
-; IN  DS:(E)SI      Env var name
-; IN  ES:(E)DI      Env var data
-GetFirstEnvVar	MACRO
-	UserGate get_first_env_var_nr
+; IN  ES:(E)DI      Env data buffer
+GetEnvData	MACRO
+	UserGate get_env_data_nr
 	        ENDM
-	
+
 ; IN  BX            Env handle
-; IN  BX            Env handle
-; IN  DS:(E)SI      Env var name
-; IN  ES:(E)DI      Env var data
-GetNextEnvVar	MACRO
-	UserGate get_next_env_var_nr
+; IN  ES:(E)DI      Env data buffer
+SetEnvData	MACRO
+	UserGate set_env_data_nr
 	        ENDM
-	
 
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 

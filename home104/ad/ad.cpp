@@ -382,23 +382,27 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 void DaProc(void *param)
 {
 	int i;
-	long double bias = 0;
-	const long double pi = 3.1415926;
+	int channel;
 	long double val;
 
+	channel = 0;
 	for (;;)
 	{
-		for (i = 0; i < 8; i++)
+
+		for (channel = 0; channel < 8; channel++)
 		{
-			val = 1.0 + sin(bias + i / 7 * pi);
-			RdosWriteSerialVal(2, i, (int)(val * (long double)0x3FFFFFFF));
+			for (i = 0; i < 64; i++)
+			{
+				RdosWriteSerialVal(2, channel, 4 * i);
+				RdosWaitMilli(937);
+			}
+
+			for (i = 62; i >= 0; i++)
+			{
+				RdosWriteSerialVal(2, channel, 4 * i);
+				RdosWaitMilli(937);
+			}
 		}
-
-		bias += pi / 16;
-		if (bias > pi)
-			bias -= 2 * pi;
-
-		RdosWaitMilli(250);
 	}
 }
 

@@ -215,6 +215,15 @@ int __stdcall RdosToggleSerialLine(int device, int line);
 int __stdcall RdosReadSerialVal(int device, int line, int *val);
 int __stdcall RdosWriteSerialVal(int device, int line, int val);
 
+int __stdcall RdosOpenSysEnv();
+int __stdcall RdosOpenProcessEnv();
+void __stdcall RdosCloseEnv(int handle);
+void __stdcall RdosAddEnvVar(int handle, const char *var, const char *value);
+void __stdcall RdosDeleteEnvVar(int handle, const char *var);
+int __stdcall RdosFindEnvVar(int handle, const char *var, char *value);
+void __stdcall RdosGetEnvData(int handle, char *buf);
+void __stdcall RdosSetEnvData(int handle, const char *buf);
+
 #ifdef __cplusplus
 }
 #endif

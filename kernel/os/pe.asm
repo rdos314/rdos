@@ -3920,6 +3920,7 @@ get_env	Proc far
 	push edx
 	push esi
 ;
+	int 3
 	mov ax,pe_app_sel
 	mov ds,ax
 	mov edi,ds:pe_env

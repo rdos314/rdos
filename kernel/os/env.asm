@@ -48,12 +48,9 @@ env_handle_seg	STRUC
 
 env_handle_base	handle_header <>
 
-env_handle_sel  DW ?
-env_handle_pos  DW ?
 env_handle_mode	DB ?
 
 env_handle_seg	ENDS
-
 
 env_sys_seg  STRUC
 
@@ -313,8 +310,6 @@ open_sys_env    Proc far
 ;
 	mov cx,SIZE env_handle_seg
 	AllocateHandle
-	mov [bx].env_handle_pos,0
-	mov [bx].env_handle_sel,0
 	mov [bx].env_handle_mode,ENV_MODE_GLOBAL
 	mov [bx].hh_sign,ENV_HANDLE
 	mov bx,[bx].hh_handle
@@ -345,8 +340,6 @@ open_proc_env    Proc far
 ;
 	mov cx,SIZE env_handle_seg
 	AllocateHandle
-	mov [bx].env_handle_pos,0
-	mov [bx].env_handle_sel,0
 	mov [bx].env_handle_mode,ENV_MODE_PROCESS
 	mov [bx].hh_sign,ENV_HANDLE
 	mov bx,[bx].hh_handle
@@ -380,14 +373,6 @@ close_env   Proc far
 	DerefHandle
 	jc close_env_done
 ;
-    mov ax,[bx].env_handle_sel
-    or ax,ax
-    jz close_env_sel_ok
-;
-    mov es,ax
-    FreeMem
-
-close_env_sel_ok:
 	FreeHandle
 	clc
 
@@ -417,6 +402,7 @@ add_env_base	Proc near
     push es
     push edi
 ;
+    mov es,bx
     mov ebp,esi
     xor edi,edi
 
@@ -570,7 +556,6 @@ add_env_var    Proc near
 	je add_sys_env
 ;
     LockProcEnv
-    mov es,bx
 	call add_env_base
     pushf
     UnlockProcEnv
@@ -579,7 +564,6 @@ add_env_var    Proc near
 
 add_sys_env:
     LockSysEnv
-    mov es,bx
 	call add_env_base
     pushf
     UnlockSysEnv
@@ -882,73 +866,162 @@ find_env_var32:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    GetFirstEnvVar
+;		NAME:		    GetEnvData
 ;
-;		DESCRIPTION:	Get to the first envvar
+;		DESCRIPTION:	Get raw env data
 ;
 ;		PARAMETERS:		BX			Handle
-;                       DS:(E)SI    Env var name buffer
-;                       ES:(E)DI    Env var data buffer
+;                       ES:(E)DI    Env data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_first_env_var_name	DB 'Get First Env Var',0
+get_env_data_name	DB 'Get Env Data',0
 
-get_first_env_var    Proc near
+get_env_data_base	Proc near	
+	xor esi,esi
+
+get_env_var_data_loop:
+	lods byte ptr [esi]
+	stos byte ptr es:[edi]
+	or al,al
+	jnz get_env_var_data_loop
+;
+	mov al,[esi]
+	or al,al
+	jnz get_env_var_data_loop
+;
+	stos byte ptr es:[edi]
+	ret
+get_env_data_base	Endp
+
+get_env_data    Proc near
+    push ds
+    push es
+    pushad
+;
+	mov ax,ENV_HANDLE
+	DerefHandle
+	jc get_env_data_done
+;
+	mov al,ds:[bx].env_handle_mode
+	cmp al,ENV_MODE_GLOBAL
+	je get_sys_env
+;
+    LockProcEnv
+	mov ds,bx
+	call get_env_data_base
+    UnlockProcEnv
+	clc
+	jmp get_env_data_done
+
+get_sys_env:
+    LockSysEnv
+	mov ds,bx
+	call get_env_data_base
+    UnlockSysEnv
+	clc
+
+get_env_data_done:
+    popad
+    pop es
+    pop ds
     ret
-get_first_env_var    Endp
+get_env_data    Endp
 
-get_first_env_var16  Proc far
-    push esi
+get_env_data16  Proc far
     push edi
 ;
-    movzx esi,si
     movzx edi,di
-    call get_first_env_var
+    call get_env_data
 ;
     pop edi
-    pop esi
     ret
-get_first_env_var16  Endp
+get_env_data16  Endp
 
-get_first_env_var32:
-    call get_first_env_var
+get_env_data32:
+    call get_env_data
     retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    GetNextEnvVar
+;		NAME:		    SetEnvData
 ;
-;		DESCRIPTION:	Get to the next envvar
+;		DESCRIPTION:	Set raw env data
 ;
 ;		PARAMETERS:		BX			Handle
-;                       DS:(E)SI    Env var name buffer
-;                       ES:(E)DI    Env var data buffer
+;                       ES:(E)DI    Env data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_next_env_var_name	DB 'Get Next Env Var',0
+set_env_data_name	DB 'Set Env Data',0
 
-get_next_env_var    Proc near
+set_env_data_base	Proc near	
+	xor edi,edi
+
+set_env_var_data_loop:
+	lods byte ptr [esi]
+	stos byte ptr es:[edi]
+	or al,al
+	jnz set_env_var_data_loop
+;
+	mov al,[esi]
+	or al,al
+	jnz set_env_var_data_loop
+;
+	stos byte ptr es:[edi]
+	ret
+set_env_data_base	Endp
+
+set_env_data    Proc near
+    push ds
+    push es
+    pushad
+;
+	mov esi,edi
+	push es
+	mov ax,ENV_HANDLE
+	DerefHandle
+	mov al,ds:[bx].env_handle_mode
+	pop ds
+	jc set_env_data_done
+;
+	cmp al,ENV_MODE_GLOBAL
+	je set_sys_env
+;
+    LockProcEnv
+	mov es,bx
+	call set_env_data_base
+    UnlockProcEnv
+	clc
+	jmp set_env_data_done
+
+set_sys_env:
+    LockSysEnv
+	mov es,bx
+	call set_env_data_base
+    UnlockSysEnv
+	clc
+
+set_env_data_done:
+    popad
+    pop es
+    pop ds
     ret
-get_next_env_var    Endp
+set_env_data    Endp
 
-get_next_env_var16  Proc far
-    push esi
+set_env_data16  Proc far
     push edi
 ;
-    movzx esi,si
     movzx edi,di
-    call get_next_env_var
+    call set_env_data
 ;
     pop edi
-    pop esi
     ret
-get_next_env_var16  Endp
+set_env_data16  Endp
 
-get_next_env_var32:
-    call get_next_env_var
+set_env_data32:
+    call set_env_data
     retf32
 
 PAGE
@@ -973,14 +1046,6 @@ delete_handle	Proc far
 	DerefHandle
 	jc delete_handle_done
 ;
-    mov ax,[bx].env_handle_sel
-    or ax,ax
-    jz delete_handle_sel_ok
-;
-    mov es,ax
-    FreeMem
-
-delete_handle_sel_ok:
 	FreeHandle
 	clc
 
@@ -1163,18 +1228,18 @@ init_device_loop:
 	mov ax,find_env_var_nr
 	RegisterUserGate
 ;    
-	mov bx,OFFSET get_first_env_var16
-	mov si,OFFSET get_first_env_var32
-	mov di,OFFSET get_first_env_var_name
-	mov dx,virt_ds_in OR virt_es_in
-	mov ax,get_first_env_var_nr
+	mov bx,OFFSET get_env_data16
+	mov si,OFFSET get_env_data32
+	mov di,OFFSET get_env_data_name
+	mov dx,virt_es_in
+	mov ax,get_env_data_nr
 	RegisterUserGate
 ;    
-	mov bx,OFFSET get_next_env_var16
-	mov si,OFFSET get_next_env_var32
-	mov di,OFFSET get_next_env_var_name
-	mov dx,virt_ds_in OR virt_es_in
-	mov ax,get_next_env_var_nr
+	mov bx,OFFSET set_env_data16
+	mov si,OFFSET set_env_data32
+	mov di,OFFSET set_env_data_name
+	mov dx,virt_es_in
+	mov ax,set_env_data_nr
 	RegisterUserGate
 ;	
 	popa

@@ -4186,6 +4186,273 @@ _RdosReplyMailslot	Proc far
 	ret
 _RdosReplyMailslot	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenSysEnv
+;
+;       DESCRIPTION:    Open systen environment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosOpenSysEnv
+
+_RdosOpenSysEnv	Proc far
+	push bx
+;
+	OpenSysEnv
+	jc oseFail
+;
+	mov ax,bx
+	jmp oseDone
+
+oseFail:
+	xor ax,ax
+
+oseDone:
+	pop bx
+	ret
+_RdosOpenSysEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenProcessEnv
+;
+;       DESCRIPTION:    Open process environment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosOpenProcessEnv
+
+_RdosOpenProcessEnv	Proc far
+	push bx
+;
+	OpenProcEnv
+	jc opeFail
+;
+	mov ax,bx
+	jmp opeDone
+
+opeFail:
+	xor ax,ax
+
+opeDone:
+	pop bx
+	ret
+_RdosOpenProcessEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseEnv
+;
+;       DESCRIPTION:    Close environment
+;
+;		PARAMETERS:		handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosCloseEnv
+
+_RdosCloseEnv	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseEnv
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosAddEnvVar
+;
+;       DESCRIPTION:    Add environment var
+;
+;		PARAMETERS:		handle
+;						var
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosAddEnvVar
+
+_RdosAddEnvVar	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push es
+	push bx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	lds si,[bp+8]
+	les di,[bp+12]
+	AddEnvVar
+;
+	pop di
+	pop si
+	pop bx
+	pop es
+	pop ds
+	pop bp
+	ret
+_RdosAddEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDeleteEnvVar
+;
+;       DESCRIPTION:    Delete environment var
+;
+;		PARAMETERS:		handle
+;						var
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosDeleteEnvVar
+
+_RdosDeleteEnvVar	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push bx
+	push si
+;
+	mov bx,[bp+6]
+	lds si,[bp+8]
+	DeleteEnvVar
+;
+	pop si
+	pop bx
+	pop ds
+	pop bp
+	ret
+_RdosDeleteEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosFindEnvVar
+;
+;       DESCRIPTION:    Find environment var
+;
+;		PARAMETERS:		handle
+;						var
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosFindEnvVar
+
+_RdosFindEnvVar	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push es
+	push bx
+	push si
+	push di
+;
+	mov bx,[bp+6]
+	lds si,[bp+8]
+	les di,[bp+12]
+	FindEnvVar
+	jc fevFail
+;
+	mov ax,1
+	jmp fevDone
+
+fevFail:
+	xor ax,ax
+
+fevDone:
+	pop di
+	pop si
+	pop bx
+	pop es
+	pop ds
+	pop bp
+	ret
+_RdosFindEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetEnvData
+;
+;       DESCRIPTION:    Get raw environment data
+;
+;		PARAMETERS:		handle
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosGetEnvData
+
+_RdosGetEnvData	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	mov bx,[bp+6]
+	les di,[bp+8]
+	GetEnvData
+	jnc gedDone
+;
+	xor ax,ax
+	stosw
+
+gedDone:
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosGetEnvData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosSetEnvData
+;
+;       DESCRIPTION:    Set raw environment data
+;
+;		PARAMETERS:		handle
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosSetEnvData
+
+_RdosSetEnvData	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	mov bx,[bp+6]
+	les di,[bp+8]
+	SetEnvData
+;
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosSetEnvData	Endp
+
 code	ENDS
 
 	END

@@ -20,7 +20,7 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# env.cpp
+# env.h
 # Environment handling
 #
 ########################################################################*/
@@ -28,22 +28,19 @@
 #ifndef _ENV_H
 #define _ENV_H
 
-
 class TEnvVar
 {
 friend class TEnv;
 public:
-    const char *GetName();
-    const char *GetValue();
-    void SetValue(const char *Value);
-
-protected:
-    TEnvVar(TEnv *Env, const char *Name, const char *Value);
+    TEnvVar(const char *Name, const char *Value);
     ~TEnvVar();
 
+    const char *GetName();
+    const char *GetValue();
+
+protected:
     char *FName;
     char *FValue;
-    TEnv *FOwner;
     TEnvVar *Next;
 };
 
@@ -51,26 +48,26 @@ class TEnv
 {
 friend class TEnvVar;
 public:
-    TEnv();
+    TEnv(int handle);
     ~TEnv();
+
+	static TEnv *OpenSysEnv();
+	static TEnv *OpenProcessEnv();
 
     void Add(const char *Name, const char *Value);
     void Delete(const char *Name);
+    int Find(const char *Name, char *Value);
 
     TEnvVar *GotoFirst();
     TEnvVar *GotoNext();
 
-    TEnvVar *Find(const char *Name);
-
-    void Update();
-
 protected:
-    void SetDirty();
+	void Free();
+	void Cache();
 
+	int FHandle;
     TEnvVar *FVarList;
-    TEnvVar *FCurrent;
-    
-    
+    TEnvVar *FCurrent;    
 };
 
 #endif

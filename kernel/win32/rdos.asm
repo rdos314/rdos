@@ -4975,6 +4975,260 @@ rwvDone:
 	ret 12
 RdosWriteSerialVal	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenSysEnv
+;
+;       DESCRIPTION:    Open systen environment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenSysEnv
+
+RdosOpenSysEnv	Proc near
+	push ebx
+;
+	UserGate open_sys_env_nr
+	jc oseFail
+;
+	movzx eax,bx
+	jmp oseDone
+
+oseFail:
+	xor eax,eax
+
+oseDone:
+	pop ebx
+	ret
+RdosOpenSysEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenProcessEnv
+;
+;       DESCRIPTION:    Open process environment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenProcessEnv
+
+RdosOpenProcessEnv	Proc near
+	push ebx
+;
+	UserGate open_proc_env_nr
+	jc opeFail
+;
+	movzx eax,bx
+	jmp opeDone
+
+opeFail:
+	xor eax,eax
+
+opeDone:
+	pop ebx
+	ret
+RdosOpenProcessEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseEnv
+;
+;       DESCRIPTION:    Close environment
+;
+;		PARAMETERS:		handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCloseEnv
+
+RdosCloseEnv	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate close_env_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseEnv	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosAddEnvVar
+;
+;       DESCRIPTION:    Add environment var
+;
+;		PARAMETERS:		handle
+;						var
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosAddEnvVar
+
+RdosAddEnvVar	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate add_env_var_nr
+;
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDeleteEnvVar
+;
+;       DESCRIPTION:    Delete environment var
+;
+;		PARAMETERS:		handle
+;						var
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosDeleteEnvVar
+
+RdosDeleteEnvVar	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	UserGate delete_env_var_nr
+;
+	pop esi
+	pop ebx
+	pop ebp
+	ret 8
+RdosDeleteEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosFindEnvVar
+;
+;       DESCRIPTION:    Find environment var
+;
+;		PARAMETERS:		handle
+;						var
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosFindEnvVar
+
+RdosFindEnvVar	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov esi,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate find_env_var_nr
+	jc fevFail
+;
+	mov eax,1
+	jmp fevDone
+
+fevFail:
+	xor eax,eax
+
+fevDone:
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+	ret 12
+RdosFindEnvVar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetEnvData
+;
+;       DESCRIPTION:    Get raw environment data
+;
+;		PARAMETERS:		handle
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetEnvData
+
+RdosGetEnvData	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate get_env_data_nr
+	jnc gedDone
+;
+	xor ax,ax
+	stosw
+
+gedDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosGetEnvData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosSetEnvData
+;
+;       DESCRIPTION:    Set raw environment data
+;
+;		PARAMETERS:		handle
+;						data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosSetEnvData
+
+RdosSetEnvData	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov ebx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate set_env_data_nr
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosSetEnvData	Endp
+
+
 ;	extrn Startup:near
 
 ;	public _main

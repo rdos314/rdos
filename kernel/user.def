@@ -294,7 +294,7 @@ close_env_nr                = 259
 add_env_var_nr              = 260
 delete_env_var_nr           = 261
 find_env_var_nr             = 262
-get_first_env_var_nr        = 263
-get_next_env_var_nr         = 264
+get_env_data_nr     	    = 263
+set_env_data_nr 	        = 264
 
 usergate_entries			= 300
