@@ -134,7 +134,7 @@ int TCbusProtocolAnalyser::GetMsg()
     if (FTime)
         delete FTime;
 
-    FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
+	FTime = new TDateTime(FComMsg->TimeMSB, FComMsg->TimeLSB);
 
 	str = FMsg;
 	*str = 0;
@@ -195,7 +195,7 @@ void TCbusProtocolAnalyser::ShowDefault(TCbusMsg *Msg)
     char str[80];
     
 	sprintf(str, "%02X <%s>", Msg->MessCode, Msg->MsgData);
-	Write(str);
+//	Write(str);
 }
 
 /*##################  TCbusProtocolAnalyser::GetCbusPumpReqText ##########################
@@ -207,7 +207,7 @@ void TCbusProtocolAnalyser::ShowDefault(TCbusMsg *Msg)
 *##########################################################################*/
 void TCbusProtocolAnalyser::ShowCbusPumpReqText()
 {
-    char str[80];
+	char str[80];
 	int MaxPulses;
 	int MaxAmount;
 	int Price0;
@@ -294,9 +294,9 @@ void TCbusProtocolAnalyser::ShowCbusPumpReplyText()
 			{
 				data = HexToBinaryByte(&FCbusReplyMsg->MsgData[0]);
 				if (data & 1)
-					Write("Lifted");
+					Write(" Lifted");
 				else
-					Write("Not lifted");
+					Write(" Not lifted");
 
 				if (data & 2)
 					Write(", Fuel on");
@@ -370,10 +370,10 @@ void TCbusProtocolAnalyser::ShowCbusPumpReplyText()
 *##########################################################################*/
 void TCbusProtocolAnalyser::ShowAddress(char Adr)
 {
-    char str[30];
-    
+	char str[30];
+
 	sprintf(str, " %d ", Adr);
-    Write(str);
+	Write(str);
 }
 
 /*##################  TCbusProtocolAnalyser::ShowCode ##########################
@@ -425,10 +425,10 @@ void TCbusProtocolAnalyser::ShowCode(char Code)
 *##########################################################################*/
 void TCbusProtocolAnalyser::UpdatePump()
 {
-	ShowLongTime(FTime);
-	
 	if (FCbusReqMsg || FCbusReplyMsg)
 	{
+		ShowLongTime(FTime);
+
 		if (FCbusReqMsg)
 		{
 			ShowAddress(FCbusReqMsg->Adr);
@@ -450,15 +450,17 @@ void TCbusProtocolAnalyser::UpdatePump()
 		else
 			Write("*** NO ANSWER ***");
 
+		Write("\r\n");
+
+		if (FCbusReqMsg)
+			delete FCbusReqMsg;
+		FCbusReqMsg = 0;
+
+		if (FCbusReplyMsg)
+			delete FCbusReplyMsg;
+		FCbusReplyMsg = 0;
+
 	}
-
-	if (FCbusReqMsg)
-	    delete FCbusReqMsg;
-
-	if (FCbusReplyMsg)
-	    delete FCbusReplyMsg;
-	    
-	Write("\r\n");
 }
 
 /*##################  TCbusProtocolAnalyser::ShowPumpMsg ##########################
@@ -478,7 +480,7 @@ void TCbusProtocolAnalyser::ShowPumpMsg(char ToAdr, char FromAdr, char MessCode,
 
 	if (MessCode & 1)
 	{
-	    CbusMsg->Adr = FromAdr;
+		CbusMsg->Adr = FromAdr;
 		if (FCbusReqMsg)
 			UpdatePump();
 		FCbusReqMsg = CbusMsg;
@@ -530,19 +532,19 @@ void TCbusProtocolAnalyser::ShowMsg()
 				MsgData[Len] = 0;
 				if (MessCode >= 0x50 && MessCode < 0x60)
 					ShowPumpMsg(ToAdr, FromAdr, MessCode, MsgData);
-				else
-					ShowHexMsg();
+//				else
+//					ShowHexMsg();
 			}
-			else
-			    ShowHexMsg();
+//			else
+//				ShowHexMsg();
 		}
-		else
-		    ShowHexMsg();
+//		else
+//			ShowHexMsg();
 	}
 	else
 	{
 		UpdatePump();
-	    ShowHexMsg();
+//		ShowHexMsg();
 	}
 }
 
@@ -556,8 +558,8 @@ void TCbusProtocolAnalyser::ShowMsg()
 TCbusProtocolAnalyser::TCbusProtocolAnalyser(const char *MemMapName, int MaxSize)
   : TProtocolAnalyser(MemMapName, MaxSize)
 {
-    FCbusReqMsg = 0;
-    FCbusReplyMsg = 0;
+	FCbusReqMsg = 0;
+	FCbusReplyMsg = 0;
 }
 
 /*##################  TCbusProtocolAnalyser::~TCbusProtocolAnalyser ##########################
@@ -569,7 +571,7 @@ TCbusProtocolAnalyser::TCbusProtocolAnalyser(const char *MemMapName, int MaxSize
 *##########################################################################*/
 TCbusProtocolAnalyser::~TCbusProtocolAnalyser()
 {
-    if (FCbusReqMsg)
+	if (FCbusReqMsg)
         delete FCbusReqMsg;
 
     if (FCbusReplyMsg)

@@ -49,10 +49,10 @@ void cdecl main()
 {
 	RdosWaitMilli(200);
 
-//    TCbusProtocolAnalyser analyzer("comlog", 0x400);
-    TSernetProtocolAnalyser analyzer("comlog", 0x4000);
+	TCbusProtocolAnalyser analyzer("comlog", 0x400);
+//    TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 
-    analyzer.DefineLogFile("c:\\comshow.log");
+	analyzer.DefineLogFile("c:\\comshow.log");
 
 	for (;;)
 	{
