@@ -235,7 +235,6 @@ FreeListEntry	Proc near
 	jmp free_list_done
 
 free_small_list:
-	int 3
 	push esi
 
 free_small_start_loop:

@@ -934,7 +934,20 @@ get_drive_norm_loop:
 	shl bx,1
 	shr edx,1
 	shr eax,1
-	jmp get_drive_norm_loop
+	cmp bx,40h
+	jc get_drive_norm_loop
+;
+	cmp eax,10000h
+	jc get_drive_ax_ok
+;
+	mov eax,0FFFFh
+
+get_drive_ax_ok:
+	cmp edx,10000h
+	jc get_drive_norm_done
+;
+	mov edx,0FFFFh
+
 get_drive_norm_done:
 	xchg ax,bx
 	and byte ptr [bp].vm_eflags, NOT 1
