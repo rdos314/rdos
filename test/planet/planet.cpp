@@ -460,6 +460,8 @@ void cdecl main()
 		exit(1);
 	}
 
+//	RdosSetClipRect(VbeHandle, 100, 100, width - 100, height - 100);
+
 #ifdef DEBUG
 	height -= 100;
 #else

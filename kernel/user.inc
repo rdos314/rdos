@@ -1382,15 +1382,29 @@ SetVBEMode      MACRO
 						ENDM
 
 ;	IN  EAX           	RGB color
-;	IN	BX				Bitmap handle or 0
+;	IN	BX				Bitmap handle
 SetDrawColor        MACRO
 	UserGate set_drawcolor_nr
 						ENDM
 
 ;	IN  AX              LGOP
-;	IN	BX				Bitmap handle or 0
+;	IN	BX				Bitmap handle
 SetLgop        MACRO
 	UserGate set_lgop_nr
+						ENDM
+
+;	IN	BX		Bitmap handle
+;	IN	CX		min x
+;	IN	DX	    min y
+;	IN  SI		max x
+;	IN  DI	    max y
+SetClipRect        MACRO
+	UserGate set_clip_rect_nr
+						ENDM
+
+;	IN	BX		Bitmap handle
+ClearClipRect        MACRO
+	UserGate clear_clip_rect_nr
 						ENDM
 
 ;	IN	BX				Bitmap handle or 0

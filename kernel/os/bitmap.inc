@@ -33,6 +33,10 @@ bitmap_struc	STRUC
 bm_base		handle_header <>
 bm_sel		DW ?
 bm_flag		DW ?
+bm_x_min    DW ?
+bm_y_min    DW ?
+bm_x_max    DW ?
+bm_y_max    DW ?
 bm_color 	DD ?
 bm_lgop	   	DW ?
 bm_font	    DW ?

@@ -211,6 +211,11 @@ v_sprite_sel    DW ?
 
 v_usage_count   DW ?
 
+v_x_min         DW ?
+v_y_min         DW ?
+v_x_max         DW ?
+v_y_max         DW ?
+
 v_color 		DD ?
 v_lgop	    	DW ?
 v_font		    DW ?

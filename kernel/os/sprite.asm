@@ -205,22 +205,19 @@ create_sprite	Proc far
     pop ax
     mov es:sp_lgop,ax
 ;
-	or bx,bx
-	jnz create_sprite_bmp
-;
-	mov ax,video_local_sel
-	mov ds,ax
-	mov ax,ds:v_handle
-	jmp create_sprite_dest_ok
-
-create_sprite_bmp:
 	mov ax,BITMAP_HANDLE
 	DerefHandle
 	jc create_sprite_fail
 ;
+    mov ax,[bx].bm_x_min
+    mov es:sp_x_min,ax
+    mov ax,[bx].bm_y_min
+    mov es:sp_y_min,ax
+    mov ax,[bx].bm_x_max
+    mov es:sp_x_max,ax
+    mov ax,[bx].bm_y_max
+    mov es:sp_y_max,ax
 	mov ax,[bx].bm_sel
-
-create_sprite_dest_ok:
     mov es:sp_dest_sel,ax
     mov ds,ax
     mov al,ds:v_bpp
@@ -1101,6 +1098,16 @@ hide_sprite	Proc far
     test fs:sp_flags,SP_FLAG_VISIBLE
     jz hide_sprite_leave
 ;
+    mov ax,fs:sp_x_min
+    mov ds:v_x_min,ax
+    mov ax,fs:sp_y_min
+    mov ds:v_y_min,ax
+    mov ax,fs:sp_x_max
+    mov ds:v_x_max,ax
+    mov ax,fs:sp_y_max
+    mov ds:v_y_max,ax
+    mov ax,fs:sp_lgop
+    mov ds:v_lgop,ax
 	call hide
 
 hide_sprite_leave:
@@ -1149,6 +1156,16 @@ show_sprite	Proc far
     test fs:sp_flags,SP_FLAG_VISIBLE
     jnz show_sprite_leave
 ;
+    mov ax,fs:sp_x_min
+    mov ds:v_x_min,ax
+    mov ax,fs:sp_y_min
+    mov ds:v_y_min,ax
+    mov ax,fs:sp_x_max
+    mov ds:v_x_max,ax
+    mov ax,fs:sp_y_max
+    mov ds:v_y_max,ax
+    mov ax,fs:sp_lgop
+    mov ds:v_lgop,ax
 	call show
 
 show_sprite_leave:
@@ -1293,6 +1310,17 @@ move_sprite	Proc far
     mov fs,ds:[bx].sp_sel
     mov ds,fs:sp_dest_sel
     EnterSection ds:v_section
+;
+    mov ax,fs:sp_x_min
+    mov ds:v_x_min,ax
+    mov ax,fs:sp_y_min
+    mov ds:v_y_min,ax
+    mov ax,fs:sp_x_max
+    mov ds:v_x_max,ax
+    mov ax,fs:sp_y_max
+    mov ds:v_y_max,ax
+    mov ax,fs:sp_lgop
+    mov ds:v_lgop,ax
 ;    
     mov fs:sp_new_x,cx
     mov fs:sp_new_y,dx
@@ -1411,9 +1439,22 @@ delete_sprite	Proc near
     push ds
     push bx
 ;
+    mov ds,fs:sp_dest_sel
+    EnterSection ds:v_section
+;
 	test fs:sp_flags,SP_FLAG_VISIBLE
     jz delete_sprite_hidden
 ;
+    mov ax,fs:sp_x_min
+    mov ds:v_x_min,ax
+    mov ax,fs:sp_y_min
+    mov ds:v_y_min,ax
+    mov ax,fs:sp_x_max
+    mov ds:v_x_max,ax
+    mov ax,fs:sp_y_max
+    mov ds:v_y_max,ax
+    mov ax,fs:sp_lgop
+    mov ds:v_lgop,ax
 	call hide
 
 delete_sprite_hidden:
@@ -1491,6 +1532,8 @@ delete_sprite_spl_next:
     add si,4
     loop delete_sprite_spl_loop
 ;
+    mov ds,fs:sp_dest_sel
+    LeaveSection ds:v_section
     mov ax,fs
     mov es,ax
     xor ax,ax

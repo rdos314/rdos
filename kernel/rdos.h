@@ -27,6 +27,8 @@ extern "C" {
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
 int RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
+void RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
+void RdosClearClipRect(int handle);
 void RdosSetDrawColor(int handle, int color);
 void RdosSetLGOP(int handle, int lgop);
 void RdosSetHollowStyle(int handle);

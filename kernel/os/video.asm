@@ -113,9 +113,17 @@ CallBitmapParam	MACRO	call_proc
     push [bx].bm_color
     push [bx].bm_lgop
     push [bx].bm_font
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
     mov al,[bx].bm_style
 	mov ds,[bx].bm_sel
 	mov ds:v_style,al
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
 	pop ds:v_font
 	pop ds:v_lgop
 	pop ds:v_color
@@ -916,6 +924,91 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetClipRect
+;
+;		DESCRIPTION:	Set clipping rectangle
+;
+;		PARAMETERS:		BX			Bitmap handle
+;                       CX          X min
+;                       DX          Y min
+;                       SI          X max
+;                       DI          Y max
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_clip_rect_name	DB 'Set Clip Rect',0
+
+set_clip_rect	PROC far
+	push ds
+	push bx
+;
+    int 3
+	push ax
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+    pop ax
+	jc set_clip_rect_done
+;
+    mov [bx].bm_x_min,cx
+    mov [bx].bm_y_min,dx
+    mov [bx].bm_x_max,si
+    mov [bx].bm_y_max,di
+    
+set_clip_rect_done:
+	pop bx
+	pop ds
+	retf32
+set_clip_rect	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearClipRect
+;
+;		DESCRIPTION:	Clear clipping rectangle
+;
+;		PARAMETERS:		BX			Bitmap handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_clip_rect_name	DB 'Clear Clip Rect',0
+
+clear_clip_rect	PROC far
+	push ds
+	push es
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc clear_clip_rect_done
+;
+    mov es,[bx].bm_sel
+    mov [bx].bm_x_min,0
+    mov [bx].bm_y_min,0
+    mov ax,es:v_width
+    dec ax
+    mov [bx].bm_x_max,ax
+    mov ax,es:v_height
+    dec ax
+    mov [bx].bm_y_max,ax
+    clc
+    
+clear_clip_rect_done:
+	pop bx
+    pop ax
+	pop es
+	pop ds
+	retf32
+clear_clip_rect	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SetDrawColor
 ;
 ;		DESCRIPTION:	Set draw color
@@ -1198,6 +1291,18 @@ blit_dest_bmp:
 	mov dx,[bx].bm_sel
 	mov [bp].blit_dest_sel,dx
 	mov si,[bx].bm_lgop
+;
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
 
 blit_get_src:
 	mov bx,ax
@@ -2593,6 +2698,18 @@ init	PROC far
 	mov dx,virt_es_in
 	mov ax,write_size_string_nr
 	RegisterUserGate
+;
+	mov si,OFFSET set_clip_rect
+	mov di,OFFSET set_clip_rect_name
+	xor dx,dx
+	mov ax,set_clip_rect_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET clear_clip_rect
+	mov di,OFFSET clear_clip_rect_name
+	xor dx,dx
+	mov ax,clear_clip_rect_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_draw_color
 	mov di,OFFSET set_draw_color_name

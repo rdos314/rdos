@@ -373,6 +373,66 @@ RdosSetVBEMode	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSetClipRect
+;
+;		description:	RdosSetClipRect(handle, xmin, xmax, ymin, ymax)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetClipRect
+
+RdosSetClipRect	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov dx,[ebp+16]
+	mov si,[ebp+20]
+	mov di,[ebp+24]
+	UserGate set_clip_rect_nr
+;
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 20
+RdosSetClipRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosClearClipRect
+;
+;		description:	RdosClearClipRect(handle)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosClearClipRect
+
+RdosClearClipRect	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate clear_clip_rect_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosClearClipRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetDrawColor
 ;
 ;		description:	RdosSetDrawColor(handle, color)

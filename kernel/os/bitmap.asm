@@ -93,6 +93,14 @@ init_video_bitmap	Proc far
 	mov es:v_sprite_count,0
 	mov es:v_sprite_size,0
 	mov es:v_sprite_sel,0
+	mov es:v_x_min,0
+	mov es:v_y_min,0
+	mov si,cx
+	dec si
+	mov es:v_x_max,si
+	mov si,dx
+	dec si
+	mov es:v_y_max,si
 ;
 	mov si,cs
 	mov ds,si
@@ -140,6 +148,14 @@ init_video_done:
 	mov ds:[bx].bm_lgop,1
 	mov ds:[bx].bm_font,0
 	mov ds:[bx].bm_style,0
+	mov ds:[bx].bm_x_min,0
+	mov ds:[bx].bm_y_min,0
+	mov ax,es:v_width
+	dec ax
+	mov ds:[bx].bm_x_max,ax
+	mov ax,es:v_height
+	dec ax
+	mov ds:[bx].bm_y_max,ax
 	mov bx,[bx].hh_handle
 	mov es:v_bitmap,bx
 ;
@@ -198,6 +214,14 @@ create_bitmap	Proc far
     mov es:v_sprite_count,0
 	mov es:v_sprite_size,0
 	mov es:v_sprite_sel,0
+	mov es:v_x_min,0
+	mov es:v_y_min,0
+	mov si,cx
+	dec si
+	mov es:v_x_max,si
+	mov si,dx
+	dec si
+	mov es:v_y_max,si
 ;
 	mov si,cs
 	mov ds,si
@@ -292,6 +316,14 @@ cr_bitmap_copy:
 	mov ds:[bx].bm_lgop,1
 	mov ds:[bx].bm_font,0
 	mov ds:[bx].bm_style,0
+	mov ds:[bx].bm_x_min,0
+	mov ds:[bx].bm_y_min,0
+	mov ax,es:v_width
+	dec ax
+	mov ds:[bx].bm_x_max,ax
+	mov ax,es:v_height
+	dec ax
+	mov ds:[bx].bm_y_max,ax
 	mov bx,[bx].hh_handle
 	mov es:v_bitmap,bx
 	clc
@@ -345,6 +377,14 @@ dup_bitmap_handle	Proc far
 	mov ds:[bx].bm_lgop,1
 	mov ds:[bx].bm_font,0
 	mov ds:[bx].bm_style,0
+	mov ds:[bx].bm_x_min,0
+	mov ds:[bx].bm_y_min,0
+	mov ax,es:v_width
+	dec ax
+	mov ds:[bx].bm_x_max,ax
+	mov ax,es:v_height
+	dec ax
+	mov ds:[bx].bm_y_max,ax
 	mov bx,[bx].hh_handle
 	inc es:v_usage_count
 	clc

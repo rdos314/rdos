@@ -74,6 +74,10 @@ sp_h                DW ?
 sp_dest_w           DW ?
 sp_dest_h           DW ?
 sp_index            DW ?
+sp_x_min            DW ?
+sp_y_min            DW ?
+sp_x_max            DW ?
+sp_y_max            DW ?
 sp_bpp              DB ?
 sp_flags            DB ?
 

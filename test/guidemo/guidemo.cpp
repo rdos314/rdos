@@ -82,9 +82,10 @@ void cdecl main()
 {
 	RdosWaitMilli(250);
 	bpp = 32;
-	width = 1024;
-	height = 768;
+	width = 800;
+	height = 600;
 	VbeHandle = RdosSetVBEMode(&bpp, &width, &height, &rowsize, &buf);
+	RdosSetClipRect(VbeHandle, 100, 100, width - 100, height - 100);
 	font = RdosOpenFont(60);
 	RdosSetFont(VbeHandle, font);
 	for (;;)

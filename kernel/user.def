@@ -248,5 +248,7 @@ hide_sprite_nr              = 223
 move_sprite_nr              = 224
 
 dup_bitmap_handle_nr        = 225
+set_clip_rect_nr            = 226
+clear_clip_rect_nr          = 227
 
-usergate_entries			= 226
+usergate_entries			= 228

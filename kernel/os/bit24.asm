@@ -49,6 +49,18 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
+;			Global parameter usage
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+curr_x  EQU -4
+curr_y  EQU -2
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
 ;		NAME:			LgopNull
 ;
@@ -581,6 +593,23 @@ set_pixel	Proc far
 	push bx
 	push edx
 	push edi
+	push bp
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx	
+;
+    cmp cx,ds:v_x_min
+    jl set_pixel_done
+;
+    cmp dx,ds:v_y_min
+    jl set_pixel_done
+;
+    cmp cx,ds:v_x_max
+    jg set_pixel_done
+;
+    cmp dx,ds:v_y_max
+    jg set_pixel_done
 ;
 	movzx ecx,cx
 	movzx edx,dx
@@ -597,7 +626,10 @@ set_pixel	Proc far
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].LgopTab
-;
+
+set_pixel_done:
+    add sp,4
+    pop bp
 	pop edi
 	pop edx
 	pop bx
@@ -772,12 +804,41 @@ PAGE
 set_native	Proc far
 	push ds
 	push es
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push edi
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+    cmp dx,ds:v_y_min
+    jl set_native_done
+;
+    cmp dx,ds:v_y_max
+    jg set_native_done
+
+set_native_buf_loop:
+    cmp cx,ds:v_x_min
+    jge set_native_start_ok
+
+set_native_adv_buf:
+    inc cx
+    add edi,3
+    sub ax,1
+    jnz set_native_buf_loop
+    jmp set_native_done
+
+set_native_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,cx
+    inc bx
+    cmp ax,bx
+    jc set_native_do
+;
+    mov ax,bx
+    
+set_native_do:
+    or ax,ax
+    jz set_native_done
 ;
 	push ax
 	mov esi,edi
@@ -813,6 +874,7 @@ set_native_loop:
 	add esi,3
 	call word ptr cs:[bx].LgopTab
 	add edi,3
+	inc word ptr [bp].curr_x
 	loop set_native_loop
 	jmp set_native_done
 
@@ -850,12 +912,8 @@ set_native_last:
 	rep movs byte ptr es:[edi],[esi]
 
 set_native_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop bx	
-	pop eax
+    add sp,4
+	popad
 	pop es
 	pop ds
 	ret
@@ -880,12 +938,41 @@ PAGE
 set_rgb	Proc far
 	push ds
 	push es
-	push eax
-	push bx
-	push ecx
-	push edx
-	push esi
-	push edi
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+    cmp dx,ds:v_y_min
+    jl set_rgb_done
+;
+    cmp dx,ds:v_y_max
+    jg set_rgb_done
+
+set_rgb_buf_loop:
+    cmp cx,ds:v_x_min
+    jge set_rgb_start_ok
+
+set_rgb_adv_buf:
+    inc cx
+    add edi,3
+    sub ax,1
+    jnz set_rgb_buf_loop
+    jmp set_rgb_done
+
+set_rgb_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,cx
+    inc bx
+    cmp ax,bx
+    jc set_rgb_do
+;
+    mov ax,bx
+    
+set_rgb_do:
+    or ax,ax
+    jz set_rgb_done
 ;
 	push ax
 	mov esi,edi
@@ -915,15 +1002,12 @@ set_rgb_loop:
 	lods dword ptr [esi]
 	call word ptr cs:[bx].LgopTab
 	add edi,3
+	inc word ptr [bp].curr_x
 	loop set_rgb_loop
 
 set_rgb_done:
-	pop edi
-	pop esi
-	pop edx
-	pop ecx
-	pop bx	
-	pop eax
+    add sp,4
+	popad
 	pop es
 	pop ds
 	ret
@@ -1229,7 +1313,49 @@ draw_mask_line	Proc far
 	push es
 	push fs
 	pushad
+	mov bp,sp
+	sub sp,4	
+	mov [bp].curr_x,edx
 ;
+    push ax
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl draw_mask_pop_done
+;
+    cmp ax,ds:v_y_max
+    jg draw_mask_pop_done
+
+draw_mask_buf_loop:
+    cmp dx,ds:v_x_min
+    jge draw_mask_start_ok
+
+draw_mask_adv_buf:
+    inc cx
+    inc dx
+    sub si,1
+    jnz draw_mask_buf_loop
+    jmp draw_mask_pop_done
+
+draw_mask_start_ok:
+    mov ax,ds:v_x_max
+    sub ax,dx
+    inc ax
+    cmp si,ax
+    jc draw_mask_do
+;
+    mov ax,bx
+    jmp draw_mask_do
+
+draw_mask_pop_done:
+    pop ax
+    jmp draw_mask_line_done
+    
+draw_mask_do:
+    pop ax
+    or si,si
+    jz draw_mask_line_done
+;
+    push bp
 	push ebx
 	xchg ecx,edx
 	movzx ebx,dx
@@ -1265,9 +1391,9 @@ draw_mask_line	Proc far
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
-	mov bx,ds:v_lgop
-	add bx,bx
 	pop eax
+	mov bx,bp
+	pop bp
 
 draw_mask_line_loop:
 	mov ch,8
@@ -1278,11 +1404,16 @@ draw_mask_bit_loop:
 	rcr dl,1
 	jnc draw_mask_line_next
 ;
+    push bx
+	mov bx,ds:v_lgop
+	add bx,bx
 	call word ptr cs:[bx].LgopTab
+	pop bx
 
 draw_mask_line_next:
 	add edi,3
-	sub bp,1
+    inc word ptr [bp].curr_x
+	sub bx,1
 	jz draw_mask_line_done
 ;
 	sub ch,1
@@ -1292,6 +1423,7 @@ draw_mask_line_next:
 	jmp draw_mask_line_loop
 
 draw_mask_line_done:
+    add sp,4
 	popad
 	pop fs
 	pop es
@@ -1316,6 +1448,15 @@ PAGE
 
 draw_sprite_line    Proc far
 	pushad
+	sub sp,4
+	mov [bp].curr_x,ecx
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_min
+    jl draw_sprite_done
+;
+    cmp bx,ds:v_y_max
+    jg draw_sprite_done
 ;
     push ax
 	push dx
@@ -1329,24 +1470,22 @@ draw_sprite_line    Proc far
 	add edx,ebx
 	add eax,edx
 	add eax,ds:v_app_base
-	mov ebp,eax
-	xchg ebp,edi
+	mov ebx,eax
+	xchg ebx,edi
 	pop cx
 	pop dx
     and dl,7
 ;
-	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
+	mov ax,ds:v_lgop
+	cmp ax,LGOP_NONE
 	je draw_sprite_none
-;
-	add bx,bx
 ;
     or dl,dl
     jz draw_sprite_lgop_prep
 ;
     push cx
     mov cl,dl
-    mov dl,es:[ebp]
+    mov dl,es:[ebx]
     rcr dl,cl
     mov dh,8
     sub dh,cl
@@ -1355,27 +1494,39 @@ draw_sprite_line    Proc far
 
 draw_sprite_lgop_prep:
     mov dh,8
-	mov dl,es:[ebp]
+	mov dl,es:[ebx]
 
 draw_sprite_lgop_loop:
 	rcr dl,1
 	jnc draw_sprite_lgop_next
 ;
-	mov ax,es:[esi]
+    mov ax,[bp].curr_x
+    cmp ax,ds:v_x_min
+    jl draw_sprite_lgop_next
+;
+    cmp ax,ds:v_x_max
+    jg draw_sprite_lgop_next
+;
+	mov eax,es:[esi]
+    push bx
+	mov bx,ds:v_lgop
+	add bx,bx
 	call word ptr cs:[bx].LgopTab
+	pop bx
 
 draw_sprite_lgop_next:
 	add esi,3
 	add edi,3
+	inc word ptr [bp].curr_x
 	sub cx,1
 	jz draw_sprite_done
 ;
 	sub dh,1
 	jnz draw_sprite_lgop_loop
 ;
-	inc ebp
+	inc ebx
 	mov dh,8
-	mov dl,es:[ebp]	
+	mov dl,es:[ebx]	
 	jmp draw_sprite_lgop_loop
 
 draw_sprite_none:
@@ -1384,7 +1535,7 @@ draw_sprite_none:
 ;
     push cx
     mov cl,dl
-    mov dl,es:[ebp]
+    mov dl,es:[ebx]
     rcr dl,cl
     mov dh,8
     sub dh,cl
@@ -1392,12 +1543,19 @@ draw_sprite_none:
     jmp draw_sprite_none_loop
 
 draw_sprite_none_prep:
-	mov dl,es:[ebp]
+	mov dl,es:[ebx]
 	mov dh,8
 
 draw_sprite_none_loop:
 	rcr dl,1
 	jnc draw_sprite_none_next
+;
+    mov ax,[bp].curr_x
+    cmp ax,ds:v_x_min
+    jl draw_sprite_none_next
+;
+    cmp ax,ds:v_x_max
+    jg draw_sprite_none_next
 ;
 	mov al,es:[esi]
 	mov es:[edi],al
@@ -1407,18 +1565,20 @@ draw_sprite_none_loop:
 draw_sprite_none_next:
 	add esi,3
 	add edi,3
+	inc word ptr [bp].curr_x
 	sub cx,1
 	jz draw_sprite_done
 ;
 	sub dh,1
 	jnz draw_sprite_none_loop
 ;
-	inc ebp
+	inc ebx
 	mov dh,8
-	mov dl,es:[ebp]	
+	mov dl,es:[ebx]	
 	jmp draw_sprite_none_loop
 
 draw_sprite_done:
+    add sp,4
 	popad
     ret
 draw_sprite_line    Endp
@@ -1438,28 +1598,28 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ds_dest_y		EQU -2
-ds_dest_x		EQU -4
-ds_cnt			EQU -6
-ds_src_x		EQU -8
-ds_row_size		EQU -10
-ds_width		EQU -12
+ds_dest_y		EQU -6
+ds_dest_x		EQU -8
+ds_cnt			EQU -10
+ds_src_x		EQU -12
+ds_row_size		EQU -14
+ds_width		EQU -16
 
 draw_string	Proc far
-	push bp
-	mov bp,sp
-	sub sp,12
-;
 	push es
 	push fs
 	push gs
 	pushad
+	mov bp,sp
+	sub sp,16
 ;
 	mov ax,es
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
 ;
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 	mov [bp].ds_dest_x,cx
 	mov [bp].ds_dest_y,dx
 
@@ -1491,7 +1651,9 @@ draw_string_loop:
 	add esi,edi
 ;
 	movzx ebx,word ptr [bp].ds_dest_x
+	mov [bp].curr_x,bx
 	movzx edx,word ptr [bp].ds_dest_y
+	mov [bp].curr_y,dx
 	movzx eax,word ptr ds:v_row_size
 	mul edx
 	mov edx,ebx
@@ -1504,13 +1666,19 @@ draw_string_loop:
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	je draw_string_none
-;
-	add bx,bx
 
 draw_string_char_loop:
 	push cx
 	push esi
 	push edi
+;
+    mov cx,[bp].curr_y
+    cmp cx,ds:v_y_min
+    jl draw_string_line_next
+;
+    cmp cx,ds:v_y_max
+    jg draw_string_line_next
+;
 	mov cx,[bp].ds_width
 	mov eax,ds:v_color
 
@@ -1522,10 +1690,20 @@ draw_string_bit_loop:
 	rcr dl,1
 	jnc draw_string_bit_next
 ;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl draw_string_bit_next
+;
+    cmp bx,ds:v_x_max
+    jg draw_string_bit_next
+;
+	mov bx,ds:v_lgop
+	add bx,bx
 	call word ptr cs:[bx].LgopTab
 
 draw_string_bit_next:
 	add edi,3
+	inc word ptr [bp].curr_x
 	sub cx,1
 	jz draw_string_line_next
 ;
@@ -1536,6 +1714,9 @@ draw_string_bit_next:
 	jmp draw_string_line_loop
 
 draw_string_line_next:
+    mov ax,[bp].ds_dest_x
+    mov [bp].curr_x,ax
+    inc word ptr [bp].curr_y
 	pop edi
 	pop esi
 	pop cx
@@ -1560,6 +1741,14 @@ draw_string_none_char_loop:
 	push cx
 	push esi
 	push edi
+;
+    mov cx,[bp].curr_y
+    cmp cx,ds:v_y_min
+    jl draw_string_none_line_next
+;
+    cmp cx,ds:v_y_max
+    jg draw_string_none_line_next
+;
 	mov cx,[bp].ds_width
 	mov eax,ds:v_color
 
@@ -1571,6 +1760,13 @@ draw_string_none_bit_loop:
 	rcr dl,1
 	jnc draw_string_none_bit_next
 ;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl draw_string_none_bit_next
+;
+    cmp bx,ds:v_x_max
+    jg draw_string_none_bit_next
+;
 	mov es:[edi],al
 	ror eax,8
 	mov es:[edi+1],ax
@@ -1578,6 +1774,7 @@ draw_string_none_bit_loop:
 
 draw_string_none_bit_next:
 	add edi,3
+	inc word ptr [bp].curr_x
 	sub cx,1
 	jz draw_string_none_line_next
 ;
@@ -1588,6 +1785,9 @@ draw_string_none_bit_next:
 	jmp draw_string_none_line_loop
 
 draw_string_none_line_next:
+    mov ax,[bp].ds_dest_x
+    mov [bp].curr_x,ax
+    inc word ptr [bp].curr_y
 	pop edi
 	pop esi
 	pop cx
@@ -1610,12 +1810,11 @@ draw_string_ok:
 	clc
 
 draw_string_done:
+	add sp,16
 	popad
 	pop gs
 	pop fs
 	pop es
-	add sp,12
-	pop bp
 	ret
 draw_string	Endp
 
@@ -1635,10 +1834,16 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
+dl_pos EQU -8
+
 draw_line	Proc far
 	push ds
 	push es
 	pushad
+	sub sp,8
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 ;
 	cmp si,cx
 	je line_vert
@@ -1666,7 +1871,7 @@ line_bresen_magn_ok:
 	add ebx,ecx
 	add ebx,eax
 	add ebx,ds:v_app_base
-	mov ebp,ebx
+	mov [bp].dl_pos,ebx
 	pop dx
 	pop bx
 	pop ax
@@ -1717,8 +1922,8 @@ line_bresen_do:
 	pop dx
 	pop cx
 ;
-	push ebp
-	mov ebp,edi
+	push dword ptr [bp].dl_pos
+	mov [bp].dl_pos,edi
 	mov edi,ebx
 	mov ebx,esi
 ;
@@ -1754,18 +1959,18 @@ line_bresen_dx_fract_pos:
 	jmp line_bresen_dx_plot
 
 line_bresen_dx_fract_neg:
-	add edi,ebp
+	add edi,[bp].dl_pos
 	add ax,cx
 
 line_bresen_dx_plot:
 	cmp edi,ds:v_app_base
 	jb line_done
 ;
-	sub esi,ebp
+	sub esi,[bp].dl_pos
 	cmp esi,edi
 	jae line_done
 ;
-	add esi,ebp
+	add esi,[bp].dl_pos
 	push ax
 	push bx
 	mov bx,ds:v_lgop
@@ -1790,7 +1995,7 @@ line_bresen_dy_loop:
 	jnz line_bresen_dy_fract_neg
 
 line_bresen_dy_fract_pos:
-	add edi,ebp
+	add edi,[bp].dl_pos
 	sub ax,cx
 	jmp line_bresen_dy_plot
 
@@ -1802,11 +2007,11 @@ line_bresen_dy_plot:
 	cmp edi,ds:v_app_base
 	jb line_done
 ;
-	sub esi,ebp
+	sub esi,[bp].dl_pos
 	cmp esi,edi
 	jae line_done
 ;
-	add esi,ebp
+	add esi,[bp].dl_pos
 	push ax
 	push bx
 	mov bx,ds:v_lgop
@@ -1876,6 +2081,7 @@ line_horiz_do:
 	call FilledLine
 
 line_done:
+    add sp,8
 	popad
 	pop es
 	pop ds
@@ -1910,6 +2116,10 @@ draw_rect	Proc far
 	push ds
 	push es
 	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 ;
 	or si,si
 	jz rect_done
@@ -1959,6 +2169,7 @@ rect_bottom:
 	call word ptr cs:[bx].rect_border_style_tab
 
 rect_done:
+    add sp,4
 	popad
 	pop es
 	pop ds
@@ -1981,26 +2192,26 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-de_h2		EQU -4
-de_w2		EQU -8
-de_m		EQU -14
-de_S		EQU -20
-de_T		EQU -26
-de_dSx		EQU -32
-de_dTx		EQU -38
-de_dSy		EQU -44
-de_dTy		EQU -50
-de_ddx		EQU -56
-de_ddy		EQU -62
-de_cnt		EQU -64
-de_w		EQU -66
-de_h		EQU -68
-de_p0		EQU -72
-de_p1		EQU -76
-de_width	EQU -78
-de_size		EQU -80
-de_xoff		EQU -82
-de_yoff		EQU -84
+de_h2		EQU -8
+de_w2		EQU -12
+de_m		EQU -18
+de_S		EQU -24
+de_T		EQU -30
+de_dSx		EQU -36
+de_dTx		EQU -42
+de_dSy		EQU -48
+de_dTy		EQU -54
+de_ddx		EQU -60
+de_ddy		EQU -66
+de_cnt		EQU -68
+de_w		EQU -70
+de_h		EQU -72
+de_p0		EQU -76
+de_p1		EQU -80
+de_width	EQU -82
+de_size		EQU -84
+de_xoff		EQU -86
+de_yoff		EQU -88
 
 draw_mid_ellipse_hollow	Proc near
 	mov edi,[bp].de_p0
@@ -2058,7 +2269,9 @@ draw_ellipse	Proc far
 	push es
 	pushad
 	mov bp,sp
-	sub sp,84
+	sub sp,88
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 ;
 	cmp si,2
 	jbe ellipse_end
@@ -2312,7 +2525,7 @@ ellipse_done:
 	call word ptr cs:[bx].ellipse_last_style_tab
 
 ellipse_end:
-	add sp,84
+	add sp,88
 	popad
 	pop es
 	pop ds
