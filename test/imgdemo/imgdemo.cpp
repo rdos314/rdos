@@ -3,6 +3,7 @@
 
 #include "rdos.h"
 #include "bmp.h"
+#include "jpeg.h"
 #include "videodev.h"
 #include "keyboard.h"
 #include "mouse.h"
@@ -260,9 +261,9 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 			break;
 
 		case 'S':
-			SaveBmp("g:\\facemask.bmp", facemask);
-			SaveBmp("g:\\backmask.bmp", backmask);
-			SaveBmp("g:\\neander2.bmp", neander);
+			SaveBmp("c:\\facemask.bmp", facemask);
+			SaveBmp("c:\\backmask.bmp", backmask);
+			SaveJPEG("c:\\neander2.jpg", neander);
 			break;
 
 		case VK_ESCAPE:
@@ -996,15 +997,16 @@ void main()
 	TGraphicDevice *MouseBitmap;
 	int ext, state, vk, sc;
 	char str[80];
+	TBitmapGraphicDevice *jessica;
 
 	RdosWaitMilli(250);
 
 	Wait = new TWait();
 
-	redhead = CreateBmp("redhead.bmp");
+	redhead = CreateJPEG("redhead.jpg");
 	GetRedheadColors();
 
-	orgneander = CreateBmp("neander.bmp");
+	orgneander = CreateJPEG("neander.jpg");
 	neander = new TBitmapGraphicDevice(orgneander);
 	neander->Blit(orgneander, 0, 0, 0, 0, orgneander->GetWidth(), orgneander->GetHeight());
 
@@ -1014,8 +1016,8 @@ void main()
 	if (facemask == 0 && backmask == 0)
 	{
 		GetNeanderMasks();
-		SaveBmp("g:\\facemask.bmp", facemask);
-		SaveBmp("g:\\backmask.bmp", backmask);
+		SaveBmp("c:\\facemask.bmp", facemask);
+		SaveBmp("c:\\backmask.bmp", backmask);
 	}
 
 	GetNeanderColors();
@@ -1023,10 +1025,13 @@ void main()
 	FixupBorders();
 
 	ProcessNeander();
+	SaveJPEG("c:\\neander2.jpg", neander);
 
-	SaveBmp("g:\\neander2.bmp", neander);
+	jessica = CreateJPEG("d:\\linnea.jpg");
 
-	vbe = new TVideoGraphicDevice(24, 800, 600);
+	vbe = new TVideoGraphicDevice(24, 1280, 1024);
+
+	vbe->Blit(jessica, 0, 0, 0, 0, jessica->GetWidth(), jessica->GetHeight());
 
 	font = new TFont(20);
 	vbe->SetFont(font);
