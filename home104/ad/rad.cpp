@@ -59,6 +59,7 @@ TRadiator::TRadiator(int channel)
 	FRef = 20.0;
 	FTemp = 20.0;
 	FMotor = 0.0;
+	FRefType = 0;
 
 	sprintf(str, "RAD %d", channel);
 
@@ -96,6 +97,38 @@ void TRadiator::DeviceName(char *Name, int MaxLen) const
 
 	sprintf(str, "RAD %d", FChannel);
 	strncpy(Name, str, MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TRadiator::SetDayRef
+#
+#   Purpose....: Set day time reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRadiator::SetDayRef()
+{
+	FRefType = 0;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRadiator::SetNightRef
+#
+#   Purpose....: Set night time reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRadiator::SetNightRef()
+{
+	FRefType = 1;
+	FUpdateRefType = TRUE;
 }
 
 /*##########################################################################
@@ -208,18 +241,21 @@ void TRadiator::GetSettings()
 
 	ok = TRUE;
 
-	if (RdosReadSerialVal(FChannel, 1, &val))
-	{
-		val = val >> 23;
-		FTemp = (long double)val / 10.0;
-	}
+	if (RdosReadSerialRaw(FChannel, 0, &val))
+		FRef = (long double)val / 10.0;
 	else
 		ok = FALSE;
 
-	if (RdosReadSerialVal(FChannel, 2, &val))
+	if (RdosReadSerialRaw(FChannel, 1, &val))
+		FTemp = (long double)val / 10.0;
+	else
+		ok = FALSE;
+
+	if (RdosReadSerialRaw(FChannel, 2, &val))
 	{
-		val = val >> 23;
 		FMotor = (long double)val / 25.0;
+		if (FMotor >= 10.0)
+			FMotor = 9.9;
 	}
 	else
 		ok = FALSE;
@@ -255,23 +291,27 @@ void TRadiator::Execute()
 		if (FUpdateRef)
 		{
 			val = (int)(10.0 * FRef + 0.5);
-			val = val << 23;			
-			FUpdateRef = !RdosWriteSerialVal(FChannel, 0, val);
+			FUpdateRef = !RdosWriteSerialRaw(FChannel, 0, val);
 		}
 
 		if (FUpdateInten)
 		{
-			val = (int)(FRef * 0.15 + 0.5);
-			val = val << 27;
-			FUpdateInten = !RdosWriteSerialVal(FChannel, 3, val);
+			val = (int)(0.15 * FInten + 0.5);
+			if (val < 8)
+				val = 8;
+			if (val > 15)
+				val = 15;
+			FUpdateInten = !RdosWriteSerialRaw(FChannel, 3, val);
 		}
 
 		if (FUpdateAmbient)
 		{
 			val = 127 + (int)(FAmbient - FRef);
-			val = val << 23;
-			FUpdateAmbient = !RdosWriteSerialVal(FChannel, 4, val);
+			FUpdateAmbient = !RdosWriteSerialRaw(FChannel, 4, val);
 		}
+
+		if (FUpdateRefType)
+			FUpdateRefType = !RdosWriteSerialRaw(FChannel, 5, FRefType);
 
 		if (RunUntil->HasExpired())
 		{
@@ -288,3 +328,4 @@ void TRadiator::Execute()
 		RdosWaitMilli(5000);
 	}
 }
+

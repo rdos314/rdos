@@ -5351,6 +5351,7 @@ RdosReadSerialVal	Proc near
 	UserGate read_serial_val_nr
 	jc rdvFail
 ;
+	shl eax,8
 	mov esi,[ebp+16]
 	mov [esi],eax
 	mov eax,1
@@ -5389,6 +5390,7 @@ RdosWriteSerialVal	Proc near
 	mov dh,[ebp+8]
 	mov dl,[ebp+12]
 	mov eax,[ebp+16]
+	sar eax,8
 	UserGate write_serial_val_nr
 	jc rwvFail
 ;
@@ -5403,6 +5405,87 @@ rwvDone:
 	pop ebp
 	ret 12
 RdosWriteSerialVal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosReadSerialRaw
+;
+;       DESCRIPTION:    Read serial raw
+;
+;		PARAMETERS:		Device
+;						Line
+;						Raw value ptr
+;
+;		RETURNS:		TRUE if successful
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadSerialRaw
+
+RdosReadSerialRaw	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+	push esi
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	UserGate read_serial_val_nr
+	jc rdrFail
+;
+	mov esi,[ebp+16]
+	mov [esi],eax
+	mov eax,1
+	jmp rdrDone
+
+rdrFail:
+	xor eax,eax
+
+rdrDone:
+	pop esi
+	pop edx
+	pop ebp
+	ret 12
+RdosReadSerialRaw	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosWriteSerialRaw
+;
+;       DESCRIPTION:    Write serial raw
+;
+;		PARAMETERS:		Device
+;						Line
+;						Raw value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosWriteSerialRaw
+
+RdosWriteSerialRaw	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate write_serial_val_nr
+	jc rwrFail
+;
+	mov eax,1
+	jmp rwrDone
+
+rwrFail:
+	xor eax,eax
+
+rwrDone:
+	pop edx
+	pop ebp
+	ret 12
+RdosWriteSerialRaw	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

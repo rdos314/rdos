@@ -237,6 +237,7 @@ void UpdateFuzzy()
 	TDateTime time;
 	int hour;
 	int min;
+	int night;
 
 	RdosSetCursorPosition(11, 0);
 	RdosWriteString("TEMP ");
@@ -250,29 +251,22 @@ void UpdateFuzzy()
 	hour = time.GetHour();
 	min = time.GetMin();
 
+	night = FALSE;
 	if (hour >= 20)
-	{
-		hour = hour - 20;
-		fval = 20.0 - (long double)hour / 2.0 - (long double)min / 120.0;
-	}
+		night = TRUE;
 	else
 	{
-		if (hour >= 6)
-		{
-			if (hour < 10)
-			{
-				hour = hour - 6;
-				fval = 18.0 + (long double)hour / 2.0 + (long double)min / 120.0;
-			}
-			else
-				fval = 20.0;
-		}
-		else
-			fval = 18.0;
+		if (hour < 6)
+			night = TRUE;
 	}
 
+	if (night)
+		radiator[0]->SetNightRef();
+	else
+		radiator[0]->SetDayRef();
+
+	fval = radiator[0]->GetRef();
 	RdosSetCursorPosition(12, 5);
-	radiator[0]->SetRef(fval);
 	sprintf(str, "%4.1Lf ", fval);
 	RdosWriteString(str);
 

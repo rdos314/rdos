@@ -234,6 +234,8 @@ int __stdcall RdosReadSerialLines(int device, int *val);
 int __stdcall RdosToggleSerialLine(int device, int line);
 int __stdcall RdosReadSerialVal(int device, int line, int *val);
 int __stdcall RdosWriteSerialVal(int device, int line, int val);
+int __stdcall RdosReadSerialRaw(int device, int line, int *val);
+int __stdcall RdosWriteSerialRaw(int device, int line, int val);
 
 int __stdcall RdosOpenSysEnv();
 int __stdcall RdosOpenProcessEnv();

@@ -38,6 +38,8 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
+	void SetDayRef();
+	void SetNightRef();
 	void SetRef(long double Temp);
 	void SetIntensity(long double rel);
 	void SetAmbient(long double rel);
@@ -50,6 +52,7 @@ protected:
 	virtual void Execute();
 
 private:
+	int FUpdateRefType;
 	int FUpdateRef;
 	int FUpdateInten;
 	int FUpdateAmbient;
@@ -60,6 +63,7 @@ private:
 	long double FRef;
 	long double FTemp;
 	long double FMotor;
+	int FRefType;
 };
 
 #endif

@@ -947,9 +947,6 @@ read_serial_val	Proc far
 	call OutputCmdLine
 ;
 	call Input24
-	pushf
-	shl eax,8
-	popf
 
 rsv_leave:
 	call CloseSession
@@ -991,7 +988,6 @@ write_serial_val	Proc far
 	jc wsv_leave
 ;
 	mov eax,edi
-	sar eax,8
 	call Output24
 	
 wsv_leave:
