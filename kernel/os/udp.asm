@@ -720,19 +720,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			init
+;		NAME:			init_udp
 ;
-;		DESCRIPTION:    Init tcp driver
+;		DESCRIPTION:    Init udp driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init	PROC far
+	public init_udp
+
+init_udp	PROC near
 	push ds
 	push es
 	pusha
-;
-	mov bx,udp_code_sel
-	InitDevice
 ;
 	mov eax,SIZE udp_data
 	mov bx,udp_data_sel
@@ -779,8 +778,8 @@ query_list_create:
 	pop es
 	pop ds
 	ret
-init	ENDP
+init_udp	ENDP
 
 code    ENDS
 
-        END init
+        END

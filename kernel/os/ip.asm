@@ -44,6 +44,8 @@ INCLUDE	ip.inc
 	extrn init_dns:near
 	extrn init_icmp:near
 	extrn init_cache:near
+	extrn init_udp:near
+	extrn init_dhcp:near
 
 code	SEGMENT byte public 'CODE'
 
@@ -881,6 +883,7 @@ init	PROC far
 	call init_cache
 	call init_dns
 	call init_icmp
+	call init_udp
 ;
 	popa
 	pop es

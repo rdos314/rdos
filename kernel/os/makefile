@@ -114,13 +114,9 @@ net_srcs = NET.ASM
 net_objs = $(net_srcs:.ASM=.OBJ)
 net_rdvs = NET.RDV
 
-ip_srcs = IP.ASM DNS.ASM ICMP.ASM IPCACHE.ASM
+ip_srcs = IP.ASM DNS.ASM ICMP.ASM IPCACHE.ASM DHCP.ASM UDP.ASM
 ip_objs = $(ip_srcs:.ASM=.OBJ)
 ip_rdvs = IP.RDV
-
-udp_srcs = UDP.ASM
-udp_objs = $(udp_srcs:.ASM=.OBJ)
-udp_rdvs = UDP.RDV
 
 ipc_srcs = IPC.ASM IPCREC.ASM IPCSEND.ASM	\
 		   SMP.ASM SMPREC.ASM SMPSEND.ASM SMPRESP.ASM
@@ -236,7 +232,7 @@ prot_exes = KERNEL.EXE
 
 srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs) $(inifile_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
-			$(net_srcs) $(udp_srcs) $(ip_srcs) $(tcp_srcs) $(keym_srcs) \
+			$(net_srcs) $(ip_srcs) $(tcp_srcs) $(keym_srcs) \
 			$(ipc_srcs) $(ntp_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
@@ -265,7 +261,7 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
-			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
+			$(net_rdvs) $(ip_rdvs) $(tcp_rdvs) \
 			$(ntp_rdvs) $(keyboard_rdvs) $(inifile_rdvs) \
 			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
 			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
@@ -487,14 +483,6 @@ IP.RDV : $(ip_objs)
 	$(ip_objs)
 	IP.RDV
 	IP;
-!
-
-UDP.RDV : $(udp_objs)
-    tlink @&&!
-	$(link_opt) +
-	$(udp_objs)
-	UDP.RDV
-	UDP;
 !
 
 IPC.RDV : $(ipc_objs)
