@@ -118,6 +118,12 @@ void __stdcall RdosTicsToRecord(long msb, long lsb, int *year, int *month, int *
 void __stdcall RdosRecordToTics(long *msb, long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
 void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosAddTics(long *msb, long *lsb, long tics);
+void __stdcall RdosAddMilli(long *msb, long *lsb, long ms);
+void __stdcall RdosAddSec(long *msb, long *lsb, long sec);
+void __stdcall RdosAddMin(long *msb, long *lsb, long min);
+void __stdcall RdosAddHour(long *msb, long *lsb, long hour);
+void __stdcall RdosAddDay(long *msb, long *lsb, long day);
 
 int __stdcall RdosCreateSection();
 void __stdcall RdosDeleteSection(int Handle);
@@ -134,6 +140,7 @@ void __stdcall RdosRemoveWait(int Handle, void *ID);
 void __stdcall RdosAddWaitForKeyboard(int Handle, void *ID);
 void __stdcall RdosAddWaitForMouse(int Handle, void *ID);
 void __stdcall RdosAddWaitForCom(int Handle, int ComHandle, void *ID);
+void __stdcall RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID);
 
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
@@ -197,7 +204,10 @@ void __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const cha
 
 int __stdcall RdosReadResource(int Module, int ID, char *Buf, int Size);
 
-int __stdcall RdosReadAD(int channel);
+int __stdcall RdosOpenAdc(int channel);
+void __stdcall RdosCloseAdc(int handle);
+void __stdcall RdosDefineAdcTime(int handle, long msg, long lsb);
+long __stdcall RdosReadAdc(int handle);
 
 #ifdef __cplusplus
 }

@@ -398,6 +398,13 @@ AddWaitForCom       MACRO
 	UserGate add_wait_for_com_nr
 						ENDM
 
+; IN  AX        ADC handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForAdc       MACRO
+	UserGate add_wait_for_adc_nr
+						ENDM
+
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
 ;	IN  ES:(E)DI	Mailslot name
@@ -1635,9 +1642,26 @@ MoveSprite      MACRO
 	UserGate move_sprite_nr
 						ENDM
 
-;	IN  AX		AD channel
+;	IN  AX		Adc channel
+;	OUT BX		Adc handle
+OpenAdc      MACRO
+	UserGate open_adc_nr
+						ENDM
+						
+;	IN  BX		Adc handle
+CloseAdc      MACRO
+	UserGate close_adc_nr
+						ENDM
+						
+;	IN  BX		Adc handle
+;   IN  EDX:EAX	Time to do next ADC conversion
+DefineAdcTime      MACRO
+	UserGate define_adc_time_nr
+						ENDM
+												
+;	IN  BX		Adc handle
 ;   OUT	EAX     Value
-ReadAD      MACRO
-	UserGate read_ad_nr
+ReadAdc      MACRO
+	UserGate read_adc_nr
 						ENDM
 						

@@ -25,7 +25,7 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+ADC_HANDLE =	015FCh 
 SPRITE_HANDLE = 02CF5h
 FILE_HANDLE = 	03AB6h
 SERIAL_HANDLE = 05A45h
@@ -36,7 +36,6 @@ DIR_HANDLE = 	0A765h
 XMS_HANDLE =	0A560h
 MEMMAP_HANDLE =	0BA54h
 BITMAP_HANDLE =	0DB57h
-
 
 handle_header	STRUC
 

@@ -250,6 +250,71 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			Delete_handle
+;
+;		DESCRIPTION:	Delete handle (called from handle module)
+;
+;		PARAMETERS:		BX			COM HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push es
+	push ax
+	push dx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc delete_handle_done
+;
+    push [bx].port_sel
+    FreeHandle
+    pop ds
+;
+    mov ax,stop_com_port_nr
+    IsValidOsGate
+    jc delete_handle_stopped
+;
+    mov dx,ds:base
+    StopComPort
+
+delete_handle_stopped:
+	mov al,ds:irq
+	ReleasePrivateIrqHandler
+;
+	mov dx,ds:base
+	inc bx
+	mov al,0
+	out dx,al				; disable rx, tx, line and modem ints
+;
+	mov es,ds:send_buf
+	FreeMem
+	mov es,ds:rec_buf
+	FreeMem
+;
+	mov ax,ds
+	xor bx,bx
+	mov ds,bx
+	mov es,ax
+	FreeMem
+;
+	mov ax,500
+	WaitMilliSec
+
+delete_handle_done:
+	pop dx
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			open_com
 ;
 ;		description:	Open a serial port
@@ -1091,6 +1156,10 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET delete_handle
+	mov ax,SERIAL_HANDLE
+	RegisterHandle
 ;
 	mov si,OFFSET add_wait_for_com
 	mov di,OFFSET add_wait_for_com_name

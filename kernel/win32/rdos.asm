@@ -595,6 +595,34 @@ RdosAddWaitForCom	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosAddWaitForAdc
+;
+;		description:	void RdosAddWaitForAdc(int Handle, int AdcHandle, void *ID)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForAdc
+
+RdosAddWaitForAdc	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate add_wait_for_adc_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddWaitForAdc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosSetTextMode
 ;
 ;		description:	int RdosSetTextMode();
@@ -1945,6 +1973,208 @@ RdosGetTics	Proc
 	pop ebp
 	ret 8
 RdosGetTics	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddTics
+;
+;		description:	add tics to time
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddTics
+
+RdosAddTics	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov ebx,[ebp+12]
+	add [ebx],eax
+	mov ebx,[ebp+8]
+	adc dword ptr [ebx],0	
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddTics	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddMilli
+;
+;		description:	add milli seconds
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddMilli
+
+RdosAddMilli	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov edx,1193
+	mul edx
+	mov ebx,[ebp+12]
+	add [ebx],eax
+	mov ebx,[ebp+8]
+	adc [ebx],edx
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddMilli	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddSec
+;
+;		description:	add seconds
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long sec
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddSec
+
+RdosAddSec	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov edx,1193000
+	mul edx
+	mov ebx,[ebp+12]
+	add [ebx],eax
+	mov ebx,[ebp+8]
+	adc [ebx],edx
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddSec	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddMin
+;
+;		description:	add minute
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long min
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddMin
+
+RdosAddMin	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov edx,1193046*60
+	mul edx
+	mov ebx,[ebp+12]
+	add [ebx],eax
+	mov ebx,[ebp+8]
+	adc [ebx],edx
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddMin	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddHour
+;
+;		description:	add hour
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long hour
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddHour
+
+RdosAddHour	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov ebx,[ebp+8]
+	add [ebx],eax
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddHour	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAddDay
+;
+;		description:	add days
+;
+;		PARAMETERS:		long *msb
+;						long *lsb
+;						long day
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddDay
+
+RdosAddDay	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+16]
+	mov edx,24
+	mul edx
+	mov ebx,[ebp+8]
+	add [ebx],eax
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddDay	Endp
 
 PAGE
 
@@ -4476,28 +4706,115 @@ RdosReadResource	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           ReadAD
+;       NAME:           RdosOpenAdc
 ;
-;       DESCRIPTION:    Read ADC channel
+;       DESCRIPTION:    Open handle to ADC channel
 ;
 ;		PARAMETERS:		Channel
+;
+;		RETURNS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenAdc
+
+RdosOpenAdc	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+8]
+	UserGate open_adc_nr
+	mov ax,bx
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosOpenAdc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseAdc
+;
+;       DESCRIPTION:    Close ADC handle
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCloseAdc
+
+RdosCloseAdc	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate close_adc_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseAdc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosDefineAdcTime
+;
+;       DESCRIPTION:    Define ADC conversion time
+;
+;		PARAMETERS:		Handle
+;						Msb
+;						Lsb
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosDefineAdcTime
+
+RdosDefineAdcTime	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	mov edx,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate define_adc_time_nr
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosDefineAdcTime	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosReadAdc
+;
+;       DESCRIPTION:    Read ADC
+;
+;		PARAMETERS:		Handle
 ;
 ;		RETURNS:		Value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public RdosReadAD
+		public RdosReadAdc
 
-RdosReadAD	Proc near
+RdosReadAdc	Proc near
 	push ebp
 	mov ebp,esp
+	push ebx
 ;
-	mov ax,[ebp+8]
-	UserGate read_ad_nr
+	mov ebx,[ebp+8]
+	UserGate read_adc_nr
 ;
+	pop ebx
 	pop ebp
 	ret 4
-RdosReadAD	Endp
+RdosReadAdc	Endp
 
 ;	extrn Startup:near
 

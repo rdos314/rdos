@@ -20,56 +20,34 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datetime.h
-# Date & time class
+# sample.h
+# Sampling base class
 #
 ########################################################################*/
 
-#ifndef _DATETIME_H
-#define _DATETIME_H
+#ifndef _SECSAMP_H
+#define _SECSAMP_H
 
-class TDateTime
+#include "sample.h"
+#include "datetime.h"
+
+class TSecSample : public TSample
 {
 public:
-	TDateTime();
-	TDateTime(TDateTime &Source);
-	TDateTime(long Msb, long Lsb);
-	TDateTime(int Year, int Month, int Day);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
+	TSecSample();
+	virtual ~TSecSample();
 
-	long GetMsb() const;
-	long GetLsb() const;
-    void SetRaw(long Msb, long Lsb);
-	void AddTics(long tics);
-	void AddMilli(long ms);
-	void AddSec(long sec);
-	void AddMin(long min);
-	void AddHour(long hour);
-	void AddDay(long day);
-
-	int GetYear() const;
-	int GetMonth() const;
-	int GetDay() const;
-	int GetHour() const;
-	int GetMin() const;
-	int GetSec() const;
-	int GetMilliSec() const;
+	virtual void Add(TDateTime *time, long double value);
 
 protected:
-	void RawToRecord();
-	void RecordToRaw();
+    int FPrevYear;
+    int FPrevMonth;
+    int FPrevDay;
+    int FPrevHour;
+    int FPrevMin;
+    int FPrevSec;
 
 private:
-	long FMsb;
-	long FLsb;
-	int FYear;
-	int FMonth;
-	int FDay;
-	int FHour;
-	int FMin;
-	int FSec;
-	int FMilli;
 };
 
 #endif

@@ -49,6 +49,24 @@ TDateTime::TDateTime()
 #
 #   Name       : TDateTime::TDateTime
 #
+#   Purpose....: Copy constructor
+#
+#   In params..: source		TDateTime to copy
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(TDateTime &source)
+{
+	FMsb = source.FMsb;
+	FLsb = source.FLsb;
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
 #   Purpose....: Constructor from raw format
 #
 #   In params..: msb, lsb		raw rdos format of date & time
@@ -131,7 +149,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 
 /*##########################################################################
 #
-#   Name       : TDateTime::SetRawe
+#   Name       : TDateTime::SetRaw
 #
 #   Purpose....: Set data in raw format
 #
@@ -321,4 +339,106 @@ void TDateTime::RawToRecord()
 void TDateTime::RecordToRaw()
 {
 	RdosRecordToTics(&FMsb, &FLsb, FYear, FMonth, FDay, FHour, FMin, FSec, FMilli);
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddTics
+#
+#   Purpose....: Add tics to time
+#
+#   In params..: tics		tics to add
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddTics(long tics)
+{
+	RdosAddTics(&FMsb, &FLsb, tics);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddMilli
+#
+#   Purpose....: Add milliseconds
+#
+#   In params..: ms		milliseconds
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddMilli(long ms)
+{
+	RdosAddMilli(&FMsb, &FLsb, ms);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddSec
+#
+#   Purpose....: Add seconds
+#
+#   In params..: sec	seconds
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddSec(long sec)
+{
+	RdosAddSec(&FMsb, &FLsb, sec);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddMin
+#
+#   Purpose....: Add minutes
+#
+#   In params..: min	minute
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddMin(long min)
+{
+	RdosAddMin(&FMsb, &FLsb, min);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddHour
+#
+#   Purpose....: Add hours
+#
+#   In params..: hour	hours
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddHour(long hour)
+{
+	RdosAddHour(&FMsb, &FLsb, hour);
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddDay
+#
+#   Purpose....: Add days
+#
+#   In params..: day	days
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddDay(long day)
+{
+	RdosAddDay(&FMsb, &FLsb, day);
+	RawToRecord();
 }

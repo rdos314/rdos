@@ -20,56 +20,62 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datetime.h
-# Date & time class
+# sample.h
+# Sampling base class
 #
 ########################################################################*/
 
-#ifndef _DATETIME_H
-#define _DATETIME_H
+#ifndef _SAMPLE_H
+#define _SAMPLE_H
 
-class TDateTime
+#include "section.h"
+#include "datetime.h"
+
+struct TSampleEntry
+{
+    long MsbTime;
+    long LsbTime;
+    long double Value;
+    TSampleEntry *NextTime;
+    TSampleEntry *NextAmp;
+};
+
+class TSample
 {
 public:
-	TDateTime();
-	TDateTime(TDateTime &Source);
-	TDateTime(long Msb, long Lsb);
-	TDateTime(int Year, int Month, int Day);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
+	TSample();
+	virtual ~TSample();
 
-	long GetMsb() const;
-	long GetLsb() const;
-    void SetRaw(long Msb, long Lsb);
-	void AddTics(long tics);
-	void AddMilli(long ms);
-	void AddSec(long sec);
-	void AddMin(long min);
-	void AddHour(long hour);
-	void AddDay(long day);
+    int GetCount();
+    
+	int GotoFirst(TDateTime *time, long double *value);
+	int GotoNext(TDateTime *time, long double *value);
 
-	int GetYear() const;
-	int GetMonth() const;
-	int GetDay() const;
-	int GetHour() const;
-	int GetMin() const;
-	int GetSec() const;
-	int GetMilliSec() const;
+	int GotoSmallest(TDateTime *time, long double *value);
+	int GotoLarger(TDateTime *time, long double *value);
+
+	void ExcludeSmallest(int count);
+    void ExcludeLargest(int count);
+
+	long double GetMean();
+	long double GetMin();
+	long double GetMax();
+	
+    void Clear();
+	virtual void Add(TDateTime *time, long double value);
+
+	void (*BeforeClear)(TSample *Sample);
 
 protected:
-	void RawToRecord();
-	void RecordToRaw();
+    int FExSmallCount;
+    int FExLargeCount;
+    int FSampleCount;
+    TSampleEntry *FSampleTimeList;
+    TSampleEntry *FSampleAmpList;
+    TSampleEntry *FCurrent;
+    TSection FSection;
 
 private:
-	long FMsb;
-	long FLsb;
-	int FYear;
-	int FMonth;
-	int FDay;
-	int FHour;
-	int FMin;
-	int FSec;
-	int FMilli;
 };
 
 #endif

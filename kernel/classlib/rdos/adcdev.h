@@ -20,56 +20,56 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# datetime.h
-# Date & time class
+# adcdev.h
+# A/D converter channel class
 #
 ########################################################################*/
 
-#ifndef _DATETIME_H
-#define _DATETIME_H
+#ifndef _ADCDEV_H
+#define _ADCDEV_H
 
-class TDateTime
+#include "waitdev.h"
+#include "sample.h"
+#include "datetime.h"
+
+class TAdcDevice : public TWaitDevice
 {
 public:
-	TDateTime();
-	TDateTime(TDateTime &Source);
-	TDateTime(long Msb, long Lsb);
-	TDateTime(int Year, int Month, int Day);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
-	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
+	TAdcDevice(TWait *Wait, int channel);
+	TAdcDevice(const char *IniSection, TWait *Wait, int channel);
+	~TAdcDevice();
 
-	long GetMsb() const;
-	long GetLsb() const;
-    void SetRaw(long Msb, long Lsb);
-	void AddTics(long tics);
-	void AddMilli(long ms);
-	void AddSec(long sec);
-	void AddMin(long min);
-	void AddHour(long hour);
-	void AddDay(long day);
+	int GetChannel();
+	void Define(TSample *sample);
+	void DefineInterval(long tics);
+	void DefineInterval(long day, long hour, long min, long sec, long milli);
+	void DefineStart(TDateTime &StartTime);
 
-	int GetYear() const;
-	int GetMonth() const;
-	int GetDay() const;
-	int GetHour() const;
-	int GetMin() const;
-	int GetSec() const;
-	int GetMilliSec() const;
+	virtual void DeviceName(char *Name, int MaxLen) const;
+	long double Sample();
+
+	void (*OnSample)(TAdcDevice *Adc, TDateTime *time, long double value);
 
 protected:
-	void RawToRecord();
-	void RecordToRaw();
+	void NotifySample(long double value);
+
+	virtual void SignalNewData();
+	virtual long double MvToReal(long double mv);
+
+	TDateTime FNextSample;
+	TSample *FSample;
+	long FDay;
+	long FHour;
+	long FMin;
+	long FSec;
+	long FMilli;
+	long FTics;
 
 private:
-	long FMsb;
-	long FLsb;
-	int FYear;
-	int FMonth;
-	int FDay;
-	int FHour;
-	int FMin;
-	int FSec;
-	int FMilli;
+	void Init(TWait *Wait, int channel);
+
+	int FChannel;
+	int FHandle;
 };
 
 #endif

@@ -269,6 +269,10 @@ read_key_event_nr           = 241
 add_wait_for_mouse_nr		= 242
 remove_wait_nr              = 243
 
-read_ad_nr					= 244
+add_wait_for_adc_nr			= 244
+open_adc_nr					= 245
+close_adc_nr				= 246
+define_adc_time_nr 			= 247
+read_adc_nr					= 248
 
 usergate_entries			= 256
