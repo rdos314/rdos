@@ -295,7 +295,8 @@ cbus_code_sel		EQU 768h
 
 ramdrive_code_sel	EQU 770h
 ramdrive_data_sel	EQU 778h
-ramdrive_process_sel	EQU 780h
+ramdrive_process_sel EQU 780h
+flashfs_code_sel	EQU 788h
 
 ne_code_sel			EQU 790h
 ne_app_sel			EQU 798h
@@ -339,24 +340,26 @@ pc_video_code_sel	EQU 8A0h
 pc_video_data_sel	EQU 8A8h
 pc_video_thread_sel	EQU 8B0h
 
-power_code_sel          EQU 8C0h
-power_data_sel          EQU 8C8h
+power_code_sel      EQU 8C0h
+power_data_sel      EQU 8C8h
 
-pc_key_code_sel         EQU 8D0h
-pc_key_data_sel         EQU 8D8h
+pc_key_code_sel     EQU 8D0h
+pc_key_data_sel     EQU 8D8h
 
-wait_code_sel           EQU 8E0h
+wait_code_sel       EQU 8E0h
 
-anio_code_sel			EQU 8F0h
+anio_code_sel		EQU 8F0h
 
-ser_key_code_sel        EQU 900h
-ser_key_data_sel        EQU 908h
+ser_key_code_sel    EQU 900h
+ser_key_data_sel    EQU 908h
 
-dcf_code_sel			EQU 910h
-dcf_data_sel			EQU 918h
+dcf_code_sel		EQU 910h
+dcf_data_sel		EQU 918h
 
-digio_code_sel			EQU 920h
-digio_data_sel			EQU 928h
+digio_code_sel		EQU 920h
+digio_data_sel		EQU 928h
+
+file_disc_code_sel  EQU 930h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h

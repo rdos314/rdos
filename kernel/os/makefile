@@ -165,6 +165,14 @@ rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM \
 rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
 rdfs_rdvs = RDFS.RDV
 
+flashfs_srcs = FLASHFS.ASM
+flashfs_objs = $(flashfs_srcs:.ASM=.OBJ)
+flashfs_rdvs = FLASHFS.RDV
+
+filedisc_srcs = FILEDISC.ASM
+filedisc_objs = $(filedisc_srcs:.ASM=.OBJ)
+filedisc_rdvs = FILEDISC.RDV
+
 dosdev_srcs = DOSDEV.ASM
 dosdev_objs = $(dosdev_srcs:.ASM=.OBJ)
 dosdev_rdvs = DOSDEV.RDV
@@ -230,8 +238,8 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
 			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) $(keyboard_srcs) \
-			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs)	\
-			$(focus_srcs) $(rtc_srcs) $(wait_srcs)
+			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs) $(flashfs_srcs)	\
+			$(focus_srcs) $(rtc_srcs) $(wait_srcs) $(filedisc_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -255,8 +263,8 @@ rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
 			$(ntp_rdvs) $(keyboard_rdvs) \
-			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) \
-			$(time_rdvs) $(focus_rdvs) $(wait_rdvs)	\
+			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) $(flashfs_rdvs) \
+			$(time_rdvs) $(focus_rdvs) $(wait_rdvs) $(filedisc_rdvs)	\
 			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
@@ -596,6 +604,22 @@ RDFS.RDV : $(rdfs_objs)
 	$(rdfs_objs)
 	RDFS.RDV
 	RDFS;
+!
+
+FLASHFS.RDV : $(flashfs_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(flashfs_objs)
+	FLASHFS.RDV
+	FLASHFS;
+!
+
+FILEDISC.RDV : $(filedisc_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(filedisc_objs)
+	FILEDISC.RDV
+	FILEDISC;
 !
 
 DOSDEV.RDV : $(dosdev_objs)

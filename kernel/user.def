@@ -280,4 +280,7 @@ free_v86_nr                 = 249
 read_digital_nr				= 250
 toggle_digital_line_nr		= 251
 
+create_file_drive_nr        = 252
+open_file_drive_nr          = 253
+
 usergate_entries			= 256

@@ -29,6 +29,7 @@
 
 GateSize = 16
 
+INCLUDE ..\driver.def
 INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
@@ -201,6 +202,208 @@ get_param_total_ok:
 	pop ax
 	ret
 get_param	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Format12
+;
+;		DESCRIPTION:	Format FAT12 filesystem
+;
+;		PARAMETERS:		AL			Drive
+;						ES:DI		FS name
+;						ECX			Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public format12
+    
+format12	PROC far
+    int 3
+	stc
+	ret
+format12	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Format16
+;
+;		DESCRIPTION:	Format FAT16 filesystem
+;
+;		PARAMETERS:		AL			Drive
+;						ES:DI		FS name
+;						ECX			Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public format16
+    
+format16	PROC far
+    push es
+    pushad
+;
+    int 3
+    mov bp,ax
+    mov dx,flat_sel
+    mov es,dx
+	xor edx,edx
+	NewSector
+;
+    mov al,1
+
+format_cluster_loop16:
+    cmp ecx,10000h
+    jb format_cluster_ok16
+;
+    shl al,1
+    shr ecx,1
+    jmp format_cluster_loop16
+
+format_cluster_ok16:
+    mov es:[esi].boot_sectors_per_cluster,al
+;    
+    movzx eax,al
+    mul ecx
+	mov es:[esi].boot_sectors,eax
+	mov es:[esi].boot_sectors16,0
+;
+    dec ecx
+    shr ecx,8
+    inc ecx
+    mov es:[esi].boot_fat_sectors16,cx
+    mov es:[esi].boot_fat_sectors,ecx
+;
+    mov es:[esi].boot_media,0F8h
+    mov es:[esi].boot_fats,2
+    mov es:[esi].boot_root_dirs,100h
+    mov es:[esi].boot_bytes_per_sector,200h
+    mov es:[esi].boot_name,0
+	mov es:[esi].boot_resv_sectors,1
+	mov es:[esi].boot_sectors_per_cyl,1
+	mov es:[esi].boot_heads,1
+	mov es:[esi].boot_hidden_sectors,0
+	mov es:[esi].boot_ext_flags,0
+	mov es:[esi].boot_fs_version,1
+	mov es:[esi].boot_root_cluster,2
+	mov es:[esi].boot_info_sector,0
+	mov es:[esi].boot_backup_sector,0
+	ModifySector
+	UnlockSector
+;
+    mov cx,es:[esi].boot_fat_sectors16
+    push cx
+    mov ax,bp
+    mov edx,1
+    NewSector
+;
+    push cx
+    mov word ptr es:[esi],0FFF8h
+    mov word ptr es:[esi+2],0FFFFh
+    lea edi,[esi+4]
+    mov ecx,7Eh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop cx
+    
+format_fat1_loop16:
+    sub cx,1
+    jz format_fat1_done16
+;
+    push cx
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop cx
+    jmp format_fat1_loop16    
+
+format_fat1_done16:
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov word ptr es:[esi],0FFF8h
+    mov word ptr es:[esi+2],0FFFFh
+    lea edi,[esi+4]
+    mov ecx,7Eh
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+;    
+    pop cx
+
+format_fat2_loop16:
+    sub cx,1
+    jz format_fat2_done16
+;
+    push cx
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop cx
+    jmp format_fat2_loop16    
+
+format_fat2_done16:
+    mov cx,10h
+
+format_root_dir_loop16:    
+    push cx
+    mov ax,bp
+    inc edx
+    NewSector
+;
+    mov edi,esi
+    mov ecx,80h
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    ModifySector
+    UnlockSector
+    pop cx
+    loop format_root_dir_loop16    
+;
+    clc    
+    popad
+    pop es
+	ret
+format16	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Format32
+;
+;		DESCRIPTION:	Format FAT32 filesystem
+;
+;		PARAMETERS:		AL			Drive
+;						ES:DI		FS name
+;						ECX			Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public format32
+    
+format32	PROC far
+    int 3
+	stc
+	ret
+format32	Endp
 
 code	ENDS
 

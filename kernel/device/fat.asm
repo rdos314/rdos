@@ -62,6 +62,10 @@ MAX_DRIVES		EQU 'Z' -'A' + 1
 	extrn read_file_block:near
 	extrn write_file_block:near
 
+	extrn format12:near
+	extrn format16:near
+	extrn format32:near
+
 	extrn get_param:near
 
 	.386p
@@ -69,24 +73,6 @@ MAX_DRIVES		EQU 'Z' -'A' + 1
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Format
-;
-;		DESCRIPTION:	Format filesystem
-;
-;		PARAMETERS:		AL			Drive
-;						ES:DI		FS name
-;						ECX			Number of sectors
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-format	PROC far
-	stc
-	ret
-format	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -265,7 +251,7 @@ dummy	Endp
 fs12_name	DB 'FAT12',0
 
 fs12_ctrl:
-f12s00	DW OFFSET format,			fat_code_sel
+f12s00	DW OFFSET format12,			fat_code_sel
 f12s01	DW OFFSET mount12,			fat_code_sel
 f12s02	DW OFFSET flush,			fat_code_sel
 f12s03	DW OFFSET dismount,			fat_code_sel
@@ -290,7 +276,7 @@ f12s20	DW OFFSET write_file_block,	fat_code_sel
 fs16_name	DB 'FAT16',0
 
 fs16_ctrl:
-f16s00	DW OFFSET format,			fat_code_sel
+f16s00	DW OFFSET format16,			fat_code_sel
 f16s01	DW OFFSET mount16,			fat_code_sel
 f16s02	DW OFFSET flush,			fat_code_sel
 f16s03	DW OFFSET dismount,			fat_code_sel
@@ -315,7 +301,7 @@ f16s20	DW OFFSET write_file_block,	fat_code_sel
 fs32_name	DB 'FAT32',0
 
 fs32_ctrl:
-f32s00	DW OFFSET format,			fat_code_sel
+f32s00	DW OFFSET format32,			fat_code_sel
 f32s01	DW OFFSET mount32,			fat_code_sel
 f32s02	DW OFFSET flush,			fat_code_sel
 f32s03	DW OFFSET dismount,			fat_code_sel

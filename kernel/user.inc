@@ -905,6 +905,20 @@ GetDriveInfo     MACRO
 	UserGate get_drive_info_nr
 						ENDM
 
+;   IN  (E)CX       Size of filesystem
+;	IN	DS:(E)EI	File system name
+;	IN	ES:(E)DI	Filename
+;   OUT AL          Drive #   
+CreateFileDrive     MACRO
+	UserGate format_file_drive_nr
+						ENDM
+
+;	IN	ES:(E)DI	Filename
+;   OUT AL          Drive #   
+OpenFileDrive     MACRO
+	UserGate open_file_drive_nr
+						ENDM
+
 ;;;;;;;;;;;;;; DIRECTORY ;;;;;;;;;;;;;
 
 ; 	IN	AL              Drive #

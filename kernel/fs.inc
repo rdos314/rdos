@@ -166,9 +166,10 @@ file_system_struc 	STRUC
 
 ;	IN	ES:DI		FS name
 ;	IN	ECX			Number of sectors
+;	IN	FS:EDX		DRIVE DATA
 format_proc				DD ?
 
-;	IN	DX			DRIVE DATA
+;	IN	FS:EDX		DRIVE DATA
 mount_proc				DD ?
 
 flush_proc				DD ?

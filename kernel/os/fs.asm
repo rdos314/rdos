@@ -399,7 +399,8 @@ install_file_system	Endp
 ;
 ;		PARAMETERS:		AL			Drive #
 ;						ECX			Drive size
-;						ES:DI		FILE SYSTEM NAME
+;						ES:DI		File system name
+;                       FS:EDX      Format data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -424,7 +425,8 @@ format_file_system	Endp
 ;
 ;		DESCRIPTION:	Start file system
 ;
-;		PARAMETERS:		AL			DRIVE NR
+;		PARAMETERS:		AL			Drive #
+;                       FS:EDX      Mount data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

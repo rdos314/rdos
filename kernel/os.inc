@@ -1652,7 +1652,9 @@ ModifySector	MACRO
 					ENDM
 
 ;	AL		Drive #
+;	EBX		Handle
 ;	EDX		Sector
+;	ESI		Logical address of data
 NewSector	MACRO
 	OsGate new_sector_nr
 					ENDM
@@ -1736,13 +1738,15 @@ InstallFileSystem	MACRO
 	OsGate install_file_system_nr
 					ENDM
 
-;	AL			DRIVE #
-;	ES:DI		FILE SYSTEM NAME
+;	AL			Drive #
+;	ES:DI		File system name
+;   FS:EDX      Format data
 FormatFileSystem	MACRO
 	OsGate format_file_system_nr
 					ENDM
 
-;	AL			DRIVE #
+;	AL			Drive #
+;   FS:EDX      Mount data
 StartFileSystem	MACRO
 	OsGate start_file_system_nr
 					ENDM
