@@ -1267,8 +1267,8 @@ DioReq   Proc near
     mov eax,es:dqe_data
     mov bl,es:dqe_stat
     FreeMem
-    stc
     test bl,DQE_STAT_SUCCESS
+    stc
     jz drDone
 ;
     clc
