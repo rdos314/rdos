@@ -30,8 +30,14 @@
 
 #include "bitdev.h"
 
-TBitmapGraphicDevice *CreatePNG(const char *FileName);
-int SavePNG(const char *FileName, TBitmapGraphicDevice *bitmap);
+class TPngBitmapDevice : public TBitmapGraphicDevice
+{
+public:
+	TPngBitmapDevice(int bpp, int width, int height);
+
+	static TPngBitmapDevice *Create(const char *FileName);
+	int Save(const char *FileName);
+};
 
 #endif
 

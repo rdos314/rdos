@@ -30,7 +30,13 @@
 
 #include "bitdev.h"
 
-TBitmapGraphicDevice *CreateGIF(const char *FileName);
+class TGifBitmapDevice : public TBitmapGraphicDevice
+{
+public:
+	TGifBitmapDevice(int bpp, int width, int height);
+
+	static TGifBitmapDevice *Create(const char *FileName);
+};
 
 #endif
 

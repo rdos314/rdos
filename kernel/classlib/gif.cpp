@@ -1110,7 +1110,7 @@ void DGifHandleScanLine(GifFileType *GifFile, char *RgbData, char *GifData)
 /******************************************************************************
 *   DGifCreateBitmap
 ******************************************************************************/
-static TBitmapGraphicDevice *DGifCreateBitmap(GifFileType *GifFile)
+static TGifBitmapDevice *DGifCreateBitmap(GifFileType *GifFile)
 {
 	int Row;
 	int Col;
@@ -1122,7 +1122,7 @@ static TBitmapGraphicDevice *DGifCreateBitmap(GifFileType *GifFile)
     GifRecordType RecordType;
 	unsigned char *Extension;
     int ExtCode;
-	TBitmapGraphicDevice *dev;
+	TGifBitmapDevice *dev;
 	int FileLineSize;
     char *bits;
 	int LineSize;
@@ -1150,7 +1150,7 @@ static TBitmapGraphicDevice *DGifCreateBitmap(GifFileType *GifFile)
 
 				buf = new char[Width];
 
-				dev = new TBitmapGraphicDevice(24, Width, Height);
+				dev = new TGifBitmapDevice(24, Width, Height);
 				bits = (char *)dev->GetLinear();
 				LineSize = dev->GetLineSize();
 		
@@ -1211,7 +1211,25 @@ static TBitmapGraphicDevice *DGifCreateBitmap(GifFileType *GifFile)
 
 /*##########################################################################
 #
-#   Name       : CreateGIF
+#   Name       : TGifBitmapDevice::TGifBitmapDevice
+#
+#   Purpose....: Constructor for TGifBitmapDevice
+#
+#   In params..: bpp		bits per pixel
+#				 width
+#				 height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TGifBitmapDevice::TGifBitmapDevice(int bpp, int width, int height)
+  : TBitmapGraphicDevice(bpp, width, height)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TGifBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a GIF file
 #
@@ -1220,11 +1238,11 @@ static TBitmapGraphicDevice *DGifCreateBitmap(GifFileType *GifFile)
 #   Returns....: bitmap handle
 #
 ##########################################################################*/
-TBitmapGraphicDevice *CreateGIF(const char *FileName)
+TGifBitmapDevice *TGifBitmapDevice::Create(const char *FileName)
 {
     int FileHandle;
     GifFileType *GifFile;
-	TBitmapGraphicDevice *dev;
+	TGifBitmapDevice *dev;
 
 	FileHandle = RdosOpenFile(FileName, 0);
 	if (FileHandle)

@@ -20,7 +20,7 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# jpeg.cpp
+# jpeg.h
 # JPEG interface
 #
 ########################################################################*/
@@ -30,8 +30,14 @@
 
 #include "bitdev.h"
 
-TBitmapGraphicDevice *CreateJPEG(const char *FileName);
-int SaveJPEG(const char *FileName, TBitmapGraphicDevice *bitmap);
+class TJpegBitmapDevice : public TBitmapGraphicDevice
+{
+public:
+	TJpegBitmapDevice(int bpp, int width, int height);
+
+	static TJpegBitmapDevice *Create(const char *FileName);
+	int Save(const char *FileName);
+};
 
 #endif
 

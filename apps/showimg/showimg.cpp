@@ -34,13 +34,13 @@ int main(int argc, char **argv)
 	bitmap = 0;
 
 	if (strstr(FileName, ".png"))
-		bitmap = CreatePNG(FileName);
+		bitmap = TPngBitmapDevice::Create(FileName);
 
 	if (!bitmap && strstr(FileName, ".gif"))
-		bitmap = CreateGIF(FileName);
+		bitmap = TGifBitmapDevice::Create(FileName);
 
 	if (!bitmap && strstr(FileName, ".jpg"))
-		bitmap = CreateJPEG(FileName);
+		bitmap = TJpegBitmapDevice::Create(FileName);
 
 	if (!bitmap && strstr(FileName, ".bmp"))
 		bitmap = TBmpBitmapDevice::Create(FileName);
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
 	{
 		strcpy(FileName, argv[1]);
 		strcat(FileName, ".jpg");
-		bitmap = CreateJPEG(FileName);
+		bitmap = TJpegBitmapDevice::Create(FileName);
 	}
 
 	if (!bitmap)
@@ -63,14 +63,14 @@ int main(int argc, char **argv)
 	{
 		strcpy(FileName, argv[1]);
 		strcat(FileName, ".png");
-		bitmap = CreatePNG(FileName);
+		bitmap = TPngBitmapDevice::Create(FileName);
 	}
 
 	if (!bitmap)
 	{
 		strcpy(FileName, argv[1]);
 		strcat(FileName, ".gif");
-		bitmap = CreateGIF(FileName);
+		bitmap = TGifBitmapDevice::Create(FileName);
 	}
 
 	if (bitmap)

@@ -35,7 +35,25 @@
 
 /*##########################################################################
 #
-#   Name       : CreateJPEG
+#   Name       : TJpegBitmapDevice::TJpegBitmapDevice
+#
+#   Purpose....: Constructor for TJpegBitmapDevice
+#
+#   In params..: bpp		bits per pixel
+#				 width
+#				 height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TJpegBitmapDevice::TJpegBitmapDevice(int bpp, int width, int height)
+  : TBitmapGraphicDevice(bpp, width, height)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TJpegBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a JPEG file
 #
@@ -44,9 +62,9 @@
 #   Returns....: bitmap handle
 #
 ##########################################################################*/
-TBitmapGraphicDevice *CreateJPEG(const char *FileName)
+TJpegBitmapDevice *TJpegBitmapDevice::Create(const char *FileName)
 {
-	TBitmapGraphicDevice *dev;
+	TJpegBitmapDevice *dev;
 	unsigned char *bits;
 	int LineSize;
 	int Line;
@@ -64,7 +82,7 @@ TBitmapGraphicDevice *CreateJPEG(const char *FileName)
 		jpeg_read_header(&cinfo, TRUE);
 		jpeg_start_decompress(&cinfo);
 
-		dev = new TBitmapGraphicDevice(	24,
+		dev = new TJpegBitmapDevice(	24,
 										cinfo.output_width,
 										cinfo.output_height);
 
@@ -88,7 +106,7 @@ TBitmapGraphicDevice *CreateJPEG(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : SaveJPEG
+#   Name       : TJpegBitmapDevice::Save
 #
 #   Purpose....: Save a bitmap to a JPEG file
 #
@@ -98,26 +116,28 @@ TBitmapGraphicDevice *CreateJPEG(const char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-int SaveJPEG(const char *FileName, TBitmapGraphicDevice *bitmap)
+int TJpegBitmapDevice::Save(const char *FileName)
 {
 	unsigned char *bits;
 	unsigned char *ptr;
 	int LineSize;
 	int Line;
 	int handle;
-	TBitmapGraphicDevice *dev;
 	struct jpeg_compress_struct cinfo;
 	struct jpeg_error_mgr jerr;
+	TBitmapGraphicDevice *dev;
+	int FreeDev = FALSE;
 
 	handle = RdosCreateFile(FileName, 0);
 	if (handle)
 	{
-		if (bitmap->GetBpp() == 24)
-			dev = bitmap;
+		if (GetBpp() == 24)
+			dev = this;
 		else
 		{
-			dev = new TBitmapGraphicDevice(24, bitmap->GetWidth(), bitmap->GetHeight());
-			dev->Blit(bitmap, 0, 0, 0, 0, dev->GetWidth(), dev->GetHeight());
+			FreeDev = TRUE;
+			dev = new TBitmapGraphicDevice(24, GetWidth(), GetHeight());
+			dev->Blit(this, 0, 0, 0, 0, GetWidth(), GetHeight());
 		}
 
 		cinfo.err = jpeg_std_error(&jerr);
@@ -125,8 +145,8 @@ int SaveJPEG(const char *FileName, TBitmapGraphicDevice *bitmap)
 
 		jpeg_stdio_dest(&cinfo, handle);
 
-		cinfo.image_width = dev->GetWidth();
-		cinfo.image_height = dev->GetHeight();
+		cinfo.image_width = GetWidth();
+		cinfo.image_height = GetHeight();
 		cinfo.input_components = 3;
 		cinfo.in_color_space = JCS_RGB;
 
@@ -147,7 +167,7 @@ int SaveJPEG(const char *FileName, TBitmapGraphicDevice *bitmap)
 
 		RdosCloseFile(handle);
 
-		if (bitmap != dev)
+		if (FreeDev)
 			delete dev;
 	}
 

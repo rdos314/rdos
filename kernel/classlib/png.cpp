@@ -34,10 +34,27 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+/*##########################################################################
+#
+#   Name       : TPngBitmapDevice::TPngBitmapDevice
+#
+#   Purpose....: Constructor for TPngBitmapDevice
+#
+#   In params..: bpp		bits per pixel
+#				 width
+#				 height
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPngBitmapDevice::TPngBitmapDevice(int bpp, int width, int height)
+  : TBitmapGraphicDevice(bpp, width, height)
+{
+}
 
 /*##########################################################################
 #
-#   Name       : CreatePNG
+#   Name       : TPngBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a PNG file
 #
@@ -46,13 +63,13 @@
 #   Returns....: bitmap handle
 #
 ##########################################################################*/
-TBitmapGraphicDevice *CreatePNG(const char *FileName)
+TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName)
 {
 	int FileHandle;
 	png_structp png_ptr = 0;
 	png_infop info_ptr = 0;
 	png_infop end_info = 0;
-	TBitmapGraphicDevice *dev = 0;
+	TPngBitmapDevice *dev = 0;
 	unsigned char *bits;
 	int LineSize;
 	int Line;
@@ -127,7 +144,7 @@ TBitmapGraphicDevice *CreatePNG(const char *FileName)
 			    png_set_interlace_handling(png_ptr);
 				png_read_update_info(png_ptr, info_ptr);
 
-				dev = new TBitmapGraphicDevice(24, width, height);
+				dev = new TPngBitmapDevice(24, width, height);
 				bits = (unsigned char *)dev->GetLinear();
 				LineSize = dev->GetLineSize();
 
@@ -153,7 +170,7 @@ TBitmapGraphicDevice *CreatePNG(const char *FileName)
 
 /*##########################################################################
 #
-#   Name       : SavePNG
+#   Name       : TPngBitmapDevice::Save
 #
 #   Purpose....: Save a bitmap to a PNG file
 #
@@ -163,7 +180,7 @@ TBitmapGraphicDevice *CreatePNG(const char *FileName)
 #   Returns....: *
 #
 ##########################################################################*/
-int SavePNG(const char *FileName, TBitmapGraphicDevice *bitmap)
+int TPngBitmapDevice::Save(const char *FileName)
 {
 	int FileHandle;
 	png_structp png_ptr = 0;
@@ -210,7 +227,7 @@ int SavePNG(const char *FileName, TBitmapGraphicDevice *bitmap)
 				png_set_compression_method(png_ptr, 8);
 				png_set_compression_buffer_size(png_ptr, 8192);
 				png_set_IHDR(	png_ptr, info_ptr,
-								bitmap->GetWidth(), bitmap->GetHeight(),
+								GetWidth(), GetHeight(),
 								8, PNG_COLOR_TYPE_RGB, PNG_INTERLACE_NONE,
 								PNG_COMPRESSION_TYPE_DEFAULT,
 								PNG_FILTER_TYPE_DEFAULT);
@@ -218,12 +235,12 @@ int SavePNG(const char *FileName, TBitmapGraphicDevice *bitmap)
 				png_write_info(png_ptr, info_ptr);
 				png_set_bgr(png_ptr);
 
-				bits = (unsigned char *)bitmap->GetLinear();
-				LineSize = bitmap->GetLineSize();
+				bits = (unsigned char *)GetLinear();
+				LineSize = GetLineSize();
 
-				row_pointers = new unsigned char *[bitmap->GetHeight()];
+				row_pointers = new unsigned char *[GetHeight()];
 
-				for (Line = 0; Line < bitmap->GetHeight(); Line++)
+				for (Line = 0; Line < GetHeight(); Line++)
 				{
 					ptr = bits + Line * LineSize;
 					*(row_pointers + Line) = ptr;
