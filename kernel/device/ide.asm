@@ -245,7 +245,7 @@ CheckStatus	Endp
 ;		DESCRIPTION:	Setup IDE comp. task file
 ;
 ;		PARAMETERS:		DS		IDE_DATA
-;						AL		Sub-unit #
+;						FS		Disc sel
 ;						AH		Precomp
 ;						BH		Head #
 ;						BL		Sector
@@ -262,7 +262,6 @@ SetupIdeTaskFile	Proc near
 	mov IntFlag,0
 	call CheckReady
 	jc SetupIdeTaskDone
-	push ax
 	push dx
 	mov dx,1F1h
 ;
@@ -291,8 +290,7 @@ SetupIdeTaskFile	Proc near
 	out dx,al
 	inc dx
 ;
-	pop ax
-	jmp short $+2
+	mov al,fs:disc_sub_unit
 	shl al,4
 	or al,bh
 	or al,0A0h
@@ -314,7 +312,7 @@ SetupIdeTaskFile	Endp
 ;		DESCRIPTION:	Setup LBA comp. task file
 ;
 ;		PARAMETERS:		DS		IDE_DATA
-;						AL		Sub-unit #
+;						FS		Disc sel
 ;						AH		Precomp
 ;						CX		Number of sectors
 ;						EDX		Sector #
@@ -329,7 +327,7 @@ SetupLbaTaskFile	Proc near
 	mov IntFlag,0
 	call CheckReady
 	jc SetupLbaTaskDone
-	push ax
+;
 	push edx
 	mov dx,1F1h
 ;
@@ -359,8 +357,7 @@ SetupLbaTaskFile	Proc near
 	inc dx
 ;
 	mov bl,ah
-	pop ax
-	jmp short $+2
+	mov al,fs:disc_sub_unit
 	shl al,4
 	or al,bl
 	or al,0E0h
@@ -520,40 +517,33 @@ ReadDrive	Proc near
 	jz ReadDriveIde
 
 ReadDriveLba:
-	push ax
 	push edx
-	push ax
 	movzx eax,fs:drive_sectors_per_unit
 	mul edx
 	movzx ebx,bx
 	add eax,ebx
 	mov edx,eax
-	pop ax
 	mov ah,fs:drive_precomp
 	call SetupLbaTaskFile
 	pop edx
-	pop ax
 	jmp ReadDriveStart
+
 ReadDriveIde:
-	push ax
 	push bx
-	push ax
 	mov ax,bx
 	div byte ptr fs:drive_sectors_per_cyl
 	mov bh,al
 	mov bl,ah
 	inc bl
-	pop ax
 	mov ah,fs:drive_precomp
 	call SetupIdeTaskFile
 	pop bx
-	pop ax
+
 ReadDriveStart:
 	jc ReadDriveDone
-	push ax
 	mov al,20h
 	call ReadTaskFile
-	pop ax
+
 ReadDriveDone:
 	pushf
 	mov IdeThread,0
@@ -569,7 +559,7 @@ ReadDrive	Endp
 ;
 ;		DESCRIPTION:	Write data
 ;
-;		PARAMETERS:		AL		Sub-unit #
+;		PARAMETERS:		FS		Disc sel
 ;						BX		Sector #
 ;						CX		Number of sectors
 ;						EDX		Unit #
@@ -582,51 +572,38 @@ WriteDrive	Proc near
 	mov bx,ide_data_sel
 	mov ds,bx
 	EnterSection IdeSection
-	push ax
 	GetThread
 	mov IdeThread,ax
-	pop ax
-	movzx bx,al
-	shl bx,1
-	mov fs,ds:[bx].DriveSelArr
 	pop bx
 	cmp fs:drive_lba_mode,0
 	jz WriteDriveIde
 WriteDriveLba:
-	push ax
 	push edx
-	push ax
 	movzx eax,fs:drive_sectors_per_unit
 	mul edx
 	movzx ebx,bx
 	add eax,ebx
 	mov edx,eax
-	pop ax
 	mov ah,fs:drive_precomp
 	call SetupLbaTaskFile
 	pop edx
-	pop ax
 	jmp WriteDriveStart
+
 WriteDriveIde:
-	push ax
 	push bx
-	push ax
 	mov ax,bx
 	div byte ptr fs:drive_sectors_per_cyl
 	mov bh,al
 	mov bl,ah
 	inc bl
-	pop ax
 	mov ah,fs:drive_precomp
 	call SetupIdeTaskFile
 	pop bx
-	pop ax
+
 WriteDriveStart:
 	jc WriteDriveDone
-	push ax
 	mov al,30h
 	call WriteTaskFile
-	pop ax
 WriteDriveDone:
 	pushf
 	mov IdeThread,0
@@ -647,13 +624,11 @@ PAGE
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						ES		FLAT_SEL
 ;						FS		DRIVE SEL
-;						AL		Sub-unit #
 ;						ES:EDI	200H BUFFER
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDriveParam	Proc near
-	push ax
 	xor dx,dx
 	xor bx,bx
 	mov cx,1
@@ -661,24 +636,20 @@ GetDriveParam	Proc near
 	call SetupIdeTaskFile
 	jc get_drive_param_done
 ;
-	push ax
 	mov al,0ECh
 	call ReadTaskFile
-	pop ax
 	jc get_drive_param_done
 ;
 	mov dx,word ptr es:[edi+2]
 	mov fs:drive_cyls,dx
 	mov bx,es:[edi+6]
 	mov fs:drive_heads,bx
-	push ax
 	push dx
 	mov ax,es:[edi+12]
 	mov fs:drive_sectors_per_cyl,ax
 	mul fs:drive_heads
 	mov fs:drive_sectors_per_unit,ax
 	pop dx
-	pop ax
 	mov bh,byte ptr fs:drive_heads
 	dec bh
 	mov bl,byte ptr fs:drive_sectors_per_cyl
@@ -698,10 +669,8 @@ GetDriveParam	Proc near
 	call SetupLbaTaskFile
 	jc get_drive_param_done
 ;
-	push ax
 	mov al,20h
 	call ReadTaskFile	
-	pop ax
 	jnc get_drive_param_done
 ;
 	mov fs:drive_lba_mode,0
@@ -712,12 +681,9 @@ GetDriveParam	Proc near
 	call SetupIdeTaskFile
 	jc get_drive_param_done
 ;
-	push ax
 	mov al,20h
 	call ReadTaskFile
-	pop ax
 get_drive_param_done:
-	pop ax
 	ret
 GetDriveParam	Endp
 
@@ -732,8 +698,7 @@ PAGE
 ;
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						ES		FLAT_SEL
-;						AL		SUB-UNIT #
-;						AH		DISC #
+;						FS		Disc sel
 ;						CL		PARTITION TYPE
 ;						EDX		START SECTOR
 ;
@@ -771,9 +736,8 @@ InstallPartition	Proc near
 	LeaveSection IdeSection
 	push ds
 ;
-	mov bx,ax
 	AllocateStaticDrive
-	mov ah,bh
+	mov ah,fs:disc_nr
 	OpenDrive
 ;
 	mov di,cs
@@ -805,8 +769,6 @@ PAGE
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						ES		FLAT_SEL
 ;						FS		Disc sel
-;						AL		Sub-unit #
-;						AH		Disc #
 ;						EDX		Current sector
 ;						EDI		200H buffer with partition sector
 ;						ESI		Partition offset
@@ -886,8 +848,7 @@ PAGE
 ;
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						ES		FLAT_SEL
-;						AL		Sub-unit #
-;						AH		Disc #
+;						FS		Disc sel
 ;						EDX		Current sector
 ;						EDI		200H buffer with partition sector
 ;
@@ -952,8 +913,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Open up a drive
 ;
-;		PARAMETERS:		AL		Sub-unit #
-;						AH		Disc #
+;		PARAMETERS:		FS		Disc sel
 ;						
 ;		RETURNS:		AX		Sectors / unit
 ;						CX		Bytes / sector
@@ -962,30 +922,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_drive	Proc near
-	push fs
 	push ebx
 	push edi
 ;
-	movzx bx,al
-	push ax
 	mov ax,ide_data_sel
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
-	shl bx,1
 	EnterSection IdeSection
-	mov fs,ds:[bx].DriveSelArr
 	GetThread
 	mov IdeThread,ax
 	mov eax,200h
 	AllocateSmallLinear
 	mov edi,edx
-	pop ax
 ;
 	call GetDriveParam
 	jc open_drive_done
+;
 	call InstallMain
 	LeaveSection IdeSection
+;
 	EnterSection IdeSection
 	GetThread
 	mov IdeThread,ax
@@ -994,12 +950,13 @@ open_drive	Proc near
 	mov cx,512
 	movzx edx,fs:drive_cyls	
 	clc
+
 open_drive_done:
 	pushf
-	push cx
-	push edx
 	mov IdeThread,0
 	LeaveSection IdeSection
+	push cx
+	push edx
 	mov ecx,200h
 	mov edx,edi
 	FreeLinear
@@ -1011,7 +968,6 @@ open_drive_done:
 ;
 	pop edi
 	pop ebx
-	pop fs
 	ret
 open_drive	Endp
 
@@ -1031,11 +987,8 @@ PAGE
 discinit_thread_name	DB 'Disc Init',0
 
 discinit_thread	Proc far
-	int 3
 	mov ax,ide_data_sel
 	mov ds,ax
-	mov al,fs:disc_sub_unit
-	mov ah,fs:disc_nr
 	call open_drive
 	jc discinit_thread_done
 ;
@@ -1076,7 +1029,7 @@ read_drive_loop:
 	movzx ebx,es:[edi].dh_sector
 	movzx edx,es:[edi].dh_unit
 	mov edi,es:[edi].dh_data
-	mov cx,200h
+	mov cx,1
 	call ReadDrive
 ;
 	pop edi
@@ -1139,6 +1092,7 @@ write_drive_loop:
 	movzx ebx,es:[edi].dh_sector
 	movzx edx,es:[edi].dh_unit
 	mov edi,es:[edi].dh_data
+	mov cx,1
 	call WriteDrive
 ;
 	pop edi
@@ -1172,7 +1126,6 @@ PAGE
 perform_one	Proc near
 
 perform_one_loop:
-	int 3
 	GetDiscRequest
 	jc perform_one_done
 ;

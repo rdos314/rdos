@@ -1144,7 +1144,7 @@ install_disc_loop:
 	pop di
 	pop es
 	mov bx,ds
-	mov al,es:disc_nr
+	mov al,ds:disc_nr
 	clc
 	jmp install_disc_done
 
