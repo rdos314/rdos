@@ -30,11 +30,11 @@
 GateSize = 16
 
 INCLUDE protseg.def
-INCLUDE os.def
-INCLUDE user.def
-INCLUDE os.inc
-INCLUDE user.inc
-INCLUDE driver.def
+INCLUDE ..\os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\driver.def
 INCLUDE system.inc
 
 ems_data_seg	STRUC

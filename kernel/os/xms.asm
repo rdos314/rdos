@@ -32,11 +32,11 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE system.def
 INCLUDE system.inc
-INCLUDE driver.def
-INCLUDE os.def
-INCLUDE user.def
-INCLUDE os.inc
-INCLUDE user.inc
+INCLUDE ..\driver.def
+INCLUDE ..\os.def
+INCLUDE ..\user.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.inc
 INCLUDE handle.inc
 
 xms_handle_seg	STRUC
