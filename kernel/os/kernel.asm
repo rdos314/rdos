@@ -512,9 +512,9 @@ prot_init:
 ;
 ; enable FPU emulation!!
 ;
-;    mov eax,cr0
-;    or al,4
-;    mov cr0,eax
+    mov eax,cr0
+    or al,4
+    mov cr0,eax
 ;
 	cli
 	call init_pre_tasking

@@ -1393,6 +1393,31 @@ void TCotexProtocolAnalyser::WriteVarName(TCotexVar *var)
 			Write("TimeToUseAlternativeIP");
 			break;
 
+		case COFLEX_VAR_MenuTimeout:
+			Write("MenuTimeout");
+			break;
+
+
+		case COFLEX_VAR_DialUp1:
+			Write("DialUp1");
+			break;
+
+		case COFLEX_VAR_DialUp2:
+			Write("DialUp2");
+			break;
+
+		case COFLEX_VAR_MaxPulseDifference:
+			Write("MaxPulseDifference");
+			break;
+
+		case COFLEX_VAR_StartFillTimeout:
+			Write("StartFillTimeout");
+			break;
+
+		case COFLEX_VAR_OfflineFillingDialLimit:
+			Write("OfflineFillingDialLimit");
+			break;
+
 		default:
 			sprintf(str, "<Unknown Variable (%d)>", var->GetID());
 			Write(str);
@@ -1859,7 +1884,7 @@ void TCotexProtocolAnalyser::ShowCotex(TCotex *doc)
 *##########################################################################*/
 void TCotexProtocolAnalyser::ShowMsg()
 {
-	TCotex doc;
+	TCotex doc(0x4000);
 
     if (doc.Parse(FMsg, FSize + 8))
         ShowCotex(&doc);

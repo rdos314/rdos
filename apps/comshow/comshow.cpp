@@ -50,26 +50,30 @@
 void cdecl main()
 {
 	RdosWaitMilli(300);
-	TDateTime CbusTime;
-	TDateTime BarTime;
-	int HasCbus;
-	int HasBar;
+//	TDateTime CbusTime;
+//	TDateTime BarTime;
+//	int HasCbus;
+//	int HasBar;
 
-	TFile RawCbusFile("z:\\cbus.dat");
-	TFile RawBarFile("z:\\bar.dat");
+//	TFile RawCbusFile("z:\\cbus.dat");
+//	TFile RawBarFile("z:\\bar.dat");
+	TFile RawFile("z:\\raw.dat");
 
-	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
-	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
+//	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 
-	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
+//	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
+//	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
+	analyzer.DefineLogFile("c:\\comshow.log");
 
 	for (;;)
 	{
 		while (!RdosPollKeyboard())
 		{
+
+/* for Volvo
 			HasCbus = CbusAnalyzer.GetMsg();
 			if (HasCbus)
 				CbusTime = CbusAnalyzer.GetMsgTime();
@@ -97,6 +101,12 @@ void cdecl main()
 				if (HasBar)
 					BarAnalyzer.ShowMsg();
 			}
+*/
+			if (analyzer.GetMsg())
+				analyzer.ShowMsg();
+			else
+				RdosWaitMilli(100);
+
 		}
 
 		if ((RdosReadKeyboard() & 0xFF) == 0x1B)

@@ -22,10 +22,11 @@ void cdecl main()
 	TWaitDevice *WaitDevice;
 	TWait Wait;
 	TSerialDevice Port1(&Wait, 1, 9600);
-	TSerialDevice Port2(&Wait, 2, 1200);
+	TSerialDevice Port2(&Wait, 2, 9600);
 
-	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
-	TFile *BarFile = new TFile("z:\\bar.dat", 0);
+//	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
+//	TFile *BarFile = new TFile("z:\\bar.dat", 0);
+	TFile *File = new TFile("z:\\raw.dat", 0);
 
 	for (;;)
 	{
@@ -35,7 +36,7 @@ void cdecl main()
 			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
 			Debug.Channel = 1;
 			Debug.ch = Port1.Read();
-			CbusFile->Write(&Debug, sizeof(Debug));
+			File->Write(&Debug, sizeof(Debug));
 			RdosSetForeColor(9);
 		}
 
@@ -44,7 +45,7 @@ void cdecl main()
 			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
 			Debug.Channel = 2;
 			Debug.ch = Port2.Read();
-			BarFile->Write(&Debug, sizeof(Debug));
+			File->Write(&Debug, sizeof(Debug));
 			RdosSetForeColor(11);
 		}
 
