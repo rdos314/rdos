@@ -933,36 +933,35 @@ wait_for_disc_request_name	DB 'Wait For Disc Request', 0
 
 wait_for_disc_request	Proc far
 	push ds
-	push eax
-	push bx
+	push es
+	pushad
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
 ;
 	ClearSignal
-	mov ds,bx
 	GetThread
 	mov ds:disc_thread,ax
 
 wait_for_disc_req_loop:
+	EnterSection ds:disc_section
+	call update_async_write
+	call update_async_timer
+	LeaveSection ds:disc_section
+;
 	mov ebx,ds:disc_pend_list
 	or ebx,ebx
 	jnz wait_for_disc_req_done
 ;
 	WaitForSignal
-;
-	push es
-	pushad
-	mov ax,flat_sel
-	mov es,ax
-	EnterSection ds:disc_section
-	call update_async_write
-	call update_async_timer
-	LeaveSection ds:disc_section
-	popad
-	pop es
 	jmp wait_for_disc_req_loop
 		
 wait_for_disc_req_done:
-	pop bx
-	pop eax
+	mov ds:disc_thread,0
+;
+	popad
+	pop es
 	pop ds
 	ret
 wait_for_disc_request	Endp
@@ -1058,6 +1057,68 @@ get_disc_req_done:
 	pop ds
 	ret
 get_disc_request	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			new_disc_request
+;
+;		DESCRIPTION:	Create a new disc request and return the handle
+;
+;		PARAMETERS:		BX		Disc selector
+;						AX		Sector
+;						DX		Unit
+;
+;		RETURNS:		EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+new_disc_request_name	DB 'New Disc Request', 0
+
+new_disc_request	Proc far
+	push ds
+	push es
+	push cx
+;
+	mov ds,bx
+	mov cx,flat_sel
+	mov es,cx
+	mov cx,dx
+	mov dx,ax
+	EnterSection ds:disc_section
+;
+	call check_buf
+	jnc new_disc_req_fail
+;
+	call allocate
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	call insert_buf
+	LeaveSection ds:disc_section
+	clc
+	jmp new_disc_req_done
+
+new_disc_req_fail:
+	LeaveSection ds:disc_section
+	stc
+
+new_disc_req_done:
+	pop cx
+	pop es
+	pop ds
+	ret
+new_disc_request	Endp
 
 PAGE
 	
@@ -1169,8 +1230,7 @@ install_disc_loop:
 	mov ds:disc_free,0
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
-	GetThread
-	mov ds:disc_thread,ax
+	mov ds:disc_thread,0
 	InitSection ds:disc_section
 	pop di
 	pop es
@@ -2030,6 +2090,11 @@ init	PROC far
 	mov si,OFFSET get_disc_request
 	mov di,OFFSET get_disc_request_name
 	mov ax,get_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET new_disc_request
+	mov di,OFFSET new_disc_request_name
+	mov ax,new_disc_request_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET disc_request_completed

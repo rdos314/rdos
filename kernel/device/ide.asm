@@ -73,7 +73,6 @@ drive_data		ENDS
 ide_data    SEGMENT AT 0
 
 IdeThread		DW ?
-IntFlag			DB ?
 DriveSelArr		DW 2 DUP(?)
 IdeSection		section_typ <>
 
@@ -100,37 +99,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ide_int	Proc far
-	mov IntFlag,1
 	mov bx,IdeThread
-	or bx,bx
-	jz ide_int_done
 	Signal
-ide_int_done:
 	ret
 ide_int	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WaitInt
-;
-;		DESCRIPTION:	Wait for int
-;
-;		PARAMETERS:		DS		IDE_DATA
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-WaitInt	PROC near
-	push ax
-	WaitForSignal
-	mov al,IntFlag
-	rcr al,1
-	cmc
-	sti
-	pop ax
-	jc WaitInt
-	ret
-WaitInt	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -259,7 +231,6 @@ SetupIdeTaskFile	Proc near
 	push bx
 	push dx
 ;
-	mov IntFlag,0
 	call CheckReady
 	jc SetupIdeTaskDone
 	push dx
@@ -323,7 +294,6 @@ SetupLbaTaskFile	Proc near
 	push bx
 	push dx
 ;
-	mov IntFlag,0
 	call CheckReady
 	jc SetupLbaTaskDone
 ;
@@ -384,10 +354,9 @@ SetupLbaTaskFile	Endp
 
 RunTaskFile	Proc near
 	push dx
-	mov IntFlag,0
 	mov dx,1F7h
 	out dx,al
-	call WaitInt
+	WaitForSignal
 	jc RunTaskFileDone
 	call CheckStatus
 RunTaskFileDone:
@@ -414,12 +383,11 @@ ReadTaskFile	Proc near
 	push dx
 	push di
 ;
-	mov IntFlag,0
+	ClearSignal
 	mov dx,1F7h
 	out dx,al
 ReadTaskFileInt:
-	call WaitInt
-	jc ReadTaskFileDone
+	WaitForSignal
 	push cx
 	mov dx,1F0h
 	mov cx,256
@@ -459,7 +427,7 @@ WriteTaskFile	PROC near
 	push dx
 	push di
 ;
-	mov IntFlag,0
+	ClearSignal
 	mov dx,1F7h
 	out dx,al
 WriteTaskFileInt:
@@ -474,8 +442,7 @@ WriteTaskFileLoop:
 	out dx,ax
 	loop WriteTaskFileLoop
 	pop cx
-	call WaitInt
-	jc WriteTaskFileDone
+	WaitForSignal
 	call CheckStatus
 	jc WriteTaskFileDone
 	loop WriteTaskFileInt
@@ -1020,6 +987,7 @@ read_drive	Proc near
 	EnterSection IdeSection
 
 read_drive_retry_loop:
+	ClearSignal
 	GetThread
 	mov IdeThread,ax
 ;
@@ -1036,6 +1004,7 @@ read_drive_lba:
 	mov ah,fs:drive_precomp
 	push cx
 	mov cx,255
+	mov si,cx
 	call SetupLbaTaskFile
 	pop cx
 	jmp read_drive_start
@@ -1050,6 +1019,7 @@ read_drive_ide:
 	mov ah,fs:drive_precomp
 	push cx
 	mov cx,255
+	mov si,cx
 	call SetupIdeTaskFile
 	pop cx
 
@@ -1057,14 +1027,15 @@ read_drive_start:
 	jc read_drive_fail
 ;
 	mov cx,3
-	mov IntFlag,0
 	mov al,20h
 	mov dx,1F7h
 	out dx,al
-	call WaitInt
-	jc read_drive_fail
+	WaitForSignal
 
 read_sector_loop:
+	call CheckStatus
+	jc read_drive_retry
+;
 	push cx
 	push edi
 	mov edi,es:[edi].dh_data
@@ -1075,9 +1046,7 @@ read_sector_loop:
 	insw
 	pop edi
 	pop cx
-;
-	call CheckStatus
-	jnc read_drive_ok
+	jmp read_drive_ok
 
 read_drive_retry:
 	sub cx,1
@@ -1095,34 +1064,77 @@ read_drive_ok:
 	mov dx,es:[edi].dh_unit
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
-;
-	call WaitInt
-	jc read_drive_end
+
+read_drive_check_next:
+	inc ax
+	sub si,1
+	jz read_drive_done
 ;
 	PollDiscRequest
 	jc read_drive_end
 ;
-	inc ax
+	mov cl,es:[edi].dh_state
+	cmp cl,STATE_EMPTY
+	jne read_drive_end
+;
 	cmp ax,es:[edi].dh_sector
 	jne read_drive_end
 ;
 	cmp dx,es:[edi].dh_unit
 	jne read_drive_end
 ;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	jne read_drive_end
-;
 	GetDiscRequest
+	WaitForSignal
 	mov cx,3
-	jnc read_sector_loop
+	jmp read_sector_loop
 
 read_drive_end:
-	xor al,al
-	mov dx,1F7h
+	NewDiscRequest
+	jc read_drive_bypass
+;
+	WaitForSignal
+	mov cx,3
+;
+	mov dx,1F2h
+	in al,dx
+	cmp al,1
+	jbe read_sector_loop
+;
+	mov si,2
+	mov al,1
 	out dx,al
-	call WaitInt
+	jmp read_sector_loop
+
+read_drive_bypass:
+	WaitForSignal
+	push ax
+	push dx
+;
+	mov dx,1F2h
+	in al,dx
+	cmp al,1
+	jbe read_drive_do_bypass
+;
+	mov si,2
+	mov al,1
+	out dx,al
+
+read_drive_do_bypass:
 	call CheckStatus
+	pop dx
+	pop ax
+	jc read_drive_done
+;
+	push ax
+	push dx
+	mov cx,256
+	mov dx,1F0h
+read_drive_bypass_loop:
+	in ax,dx
+	loop read_drive_bypass_loop
+	pop dx
+	pop ax
+	jmp read_drive_check_next
 
 read_drive_done:
 	LeaveSection IdeSection
@@ -1267,7 +1279,6 @@ discbuf_thread:
 ;
 	mov ax,flat_sel
 	mov es,ax
-	WaitForSignal
 
 discbuf_thread_loop:
 	WaitForDiscRequest
@@ -1289,12 +1300,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 install_unit	Proc near
-	mov IntFlag,0
+	ClearSignal
 	call CheckReady
 	jc install_unit_done
 	push ax
-;
-	mov IntFlag,0
 ;
 	mov dx,1F6h
 	shl al,4
@@ -1306,9 +1315,8 @@ install_unit	Proc near
 	mov al,0ECh
 	out dx,al
 ;
-	call WaitInt
+	WaitForSignal
 	pop ax
-	jc install_unit_done
 ;
 	push ax
 	mov dx,1F0h

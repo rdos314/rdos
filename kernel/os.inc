@@ -1125,6 +1125,14 @@ DiscRequestCompleted	MACRO
 	OsGate disc_request_completed_nr
 					ENDM
 
+;	IN  BX		Disc sel
+;	IN	AX		Sector
+;	IN	DX		Unit
+;	OUT EDI		Disc handle
+NewDiscRequest	MACRO
+	OsGate new_disc_request_nr
+					ENDM
+
 ;	OUT	AL		Drive #
 AllocateStaticDrive	MACRO
 	OsGate allocate_static_drive_nr
