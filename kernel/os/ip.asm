@@ -1054,7 +1054,6 @@ define_ip	Proc near
 	push esi
 	push di
 ;
-    int 3
     push ds
 	mov dx,ip_data_sel
 	mov ds,dx
