@@ -139,6 +139,24 @@ InsertApp	Proc near
 	mov ds,ax
 	mov word ptr ds:app_loader_name,OFFSET elf_loader_name
 	mov word ptr ds:app_loader_name+2,cs
+;	mov word ptr ds:app_get_env_proc,OFFSET get_env
+;	mov word ptr ds:app_get_env_proc+2,cs 
+;	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
+;	mov word ptr ds:app_get_exe_proc+2,cs 
+;	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
+;	mov word ptr ds:app_get_cmd_line_proc+2,cs 
+	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
+	mov word ptr ds:app_allocate_mem_proc+2,cs 
+	mov word ptr ds:app_free_mem_proc,OFFSET free_mem
+	mov word ptr ds:app_free_mem_proc+2,cs 
+;	mov word ptr ds:app_init_thread_proc,OFFSET init_thread
+;	mov word ptr ds:app_init_thread_proc+2,cs
+;	mov word ptr ds:app_free_thread_proc,OFFSET free_thread
+;	mov word ptr ds:app_free_thread_proc+2,cs
+;	mov word ptr ds:app_spawn_proc,OFFSET spawn_proc
+;	mov word ptr ds:app_spawn_proc+2,cs
+;	mov word ptr ds:app_close_proc,OFFSET close_proc
+;	mov word ptr ds:app_close_proc+2,cs
 ;
 	pop ax
 	pop ds
@@ -232,7 +250,6 @@ load_object	Proc far
 	mov eax,1
 	UnhookPage
 	sub edx,local_page_linear
-	and dx,0F000h
 ;
 	call FindLib
 	jc load_object_done
@@ -243,15 +260,15 @@ load_object	Proc far
 
 load_object_loop:
 	push cx
-	cmp edx,[si].ep_va
-	ja load_object_next
-;
 	mov eax,[si].ep_va
-	add eax,[si].ep_mem_size
-	sub eax,1000h
 	cmp edx,eax
 	jb load_object_next
 ;
+	add eax,[si].ep_mem_size
+	cmp edx,eax
+	jae load_object_next
+;
+	and dx,0F000h
 	mov bx,es:lib_file_handle
 	mov edi,edx
 	cmp edi,[si].ep_va
@@ -304,7 +321,6 @@ load_object_next:
 	jnz load_object_loop
 
 load_object_done:
-	int 3
 	popad
 	pop es
 	pop ds
@@ -452,6 +468,17 @@ InitStack	Proc near
 	push eax
 	push edx
 ;
+	push fs
+	mov eax,SIZE app_fs_data
+	AllocateLocalLinear
+	AllocateLdt
+	or bx,7
+	mov ecx,eax	
+	CreateDataSelector32
+	mov [bp].load_fs,bx
+	mov fs,bx
+	pop fs
+;
 	mov eax,100000h
 	AllocateLocalLinear
 	sub edx,local_page_linear
@@ -558,7 +585,6 @@ dt22	DW OFFSET DummyDynamic
 dt23	DW OFFSET SetupProcTable
 
 InitDynamic	Proc near
-	int 3
 	push ds
 	push eax
 	push ebx
@@ -603,7 +629,7 @@ init_dynamic_entry_next:
 init_dynamic_next:
 	add si,es:lib_object_size	
 	sub cx,1
-	jnz hook_object_loop
+	jnz init_dynamic_loop
 ;
 	pop si
 	pop edx
@@ -765,6 +791,7 @@ open_app	Proc far
 	mov ds,ax
 	mov ds:elf_app,0
 	mov ds:elf_dlls,0
+	mov ds:elf_mem_blocks,0
 	InitSection ds:elf_section
 	pop ds
 	ret
@@ -786,6 +813,166 @@ close_app	Proc far
 close_app_done:
 	ret
 close_app	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AllocateMem
+;
+;		DESCRIPTION:	Allocate memory
+;
+;		PARAMETERS:		EAX	Number of bytes
+;
+;		RETURNS:		EDX Offset within flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_mem	PROC far
+	push ds
+	push es
+	push eax
+	push ecx
+;
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov ecx,eax
+	AllocateLocalLinear
+	sub edx,local_page_linear
+;
+	mov eax,SIZE elf_mem_struc
+	AllocateLocalMem
+	mov es:mem_base,edx
+	mov es:mem_size,ecx
+	mov ax,elf_app_sel
+	mov ds,ax
+	EnterSection ds:elf_section
+;
+	mov ax,ds:elf_mem_blocks
+	or ax,ax
+	je alloc_ins_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:mem_prev
+	mov ds:mem_prev,es
+	mov ds,si
+	mov ds:mem_next,es
+	mov es:mem_next,ax
+	mov es:mem_prev,si
+	pop si
+	pop ds
+	jmp alloc_ins_done
+
+alloc_ins_empty:
+	mov es:mem_next,es
+	mov es:mem_prev,es
+
+alloc_ins_done:
+	mov ds:elf_mem_blocks,es
+	LeaveSection ds:elf_section
+;
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	ret
+allocate_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeMem
+;
+;		DESCRIPTION:	Free memory
+;
+;		PARAMETERS:		EAX	Number of bytes
+;						EDX Offset within flat selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_mem	PROC far
+	push ds
+	push es
+	push eax
+	push ecx
+	push edx
+	push si
+	push edi
+;
+	mov edi,eax
+	mov ax,elf_app_sel
+	mov ds,ax
+	EnterSection ds:elf_section
+
+free_mem_more:
+	mov ax,ds:elf_mem_blocks
+	or ax,ax
+	jz free_mem_failed
+	mov si,ax
+free_mem_loop:
+	mov es,ax
+	mov ecx,es:mem_base
+	add ecx,es:mem_size
+	cmp edx,ecx
+	jae free_mem_next
+;
+	mov ecx,edx
+	add ecx,edi
+	cmp ecx,es:mem_base
+	ja free_mem_ok
+
+free_mem_next:
+	mov ax,es:mem_next
+	cmp ax,si
+	jne free_mem_loop
+
+free_mem_failed:
+	jmp free_mem_done
+
+free_mem_ok:
+	push edx
+	mov edx,es:mem_base
+	add edx,local_page_linear
+	mov ecx,es:mem_size
+	FreeLinear
+	pop edx
+	mov ds:elf_mem_blocks,es
+	mov ax,es:mem_prev
+	cmp ax,ds:elf_mem_blocks
+	pushf
+	push ds
+	mov ds:elf_mem_blocks,ax
+	mov si,es:mem_next
+	mov ds,ax
+	mov ds:mem_next,si
+	mov ds,si
+	mov ds:mem_prev,ax
+	pop ds
+	FreeMem
+	popf
+	jne free_mem_more
+
+free_mem_last_block:
+	mov ds:elf_mem_blocks,0
+
+free_mem_done:
+	LeaveSection ds:elf_section
+;
+	pop edi
+	pop si
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	ret
+free_mem	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

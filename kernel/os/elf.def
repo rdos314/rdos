@@ -25,6 +25,12 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+app_fs_data	STRUC
+
+afs_reent	DD ?
+
+app_fs_data	ENDS
+
 EFC32 = 1
 EELSB = 1
 
@@ -110,5 +116,6 @@ elf_data_seg	STRUC
 elf_dlls		DW ?
 elf_app			DW ?
 elf_section		section_typ <>
+elf_mem_blocks	DW ?
 
 elf_data_seg	ENDS
