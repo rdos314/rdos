@@ -241,4 +241,10 @@ create_string_bitmap_nr		= 217
 get_bitmap_info_nr			= 218
 draw_mask_nr				= 219
 
-usergate_entries			= 220
+create_sprite_nr            = 220
+close_sprite_nr             = 221
+show_sprite_nr              = 222
+hide_sprite_nr              = 223
+move_sprite_nr              = 224
+
+usergate_entries			= 225

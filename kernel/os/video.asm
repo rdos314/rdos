@@ -49,18 +49,6 @@ mode_create		DD ?
 
 video_mode_entry	ENDS
 
-video_data_seg	STRUC
-
-v_list			DW ?
-
-video_data_seg	ENDS
-
-video_focus_seg	STRUC
-
-v_handle		DW ?
-
-video_focus_seg	ENDS
-
 video_thread_seg	STRUC
 
 vt_forecolor	DB ?
@@ -130,6 +118,7 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn init_bitmap:near
+	extrn init_sprite:near
 
 page
 	
@@ -1290,7 +1279,7 @@ blit_do:
 ;
 	movzx eax,word ptr [bp].blit_width
 	shl eax,2
-	AllocateSmallGlobalMem
+	AllocateGlobalMem
 
 blit_diff_loop:
 	mov ds,[bp].blit_src_sel
@@ -1387,7 +1376,7 @@ blit_forward:
 blit_same_line:
 	movzx eax,word ptr [bp].blit_width
 	shl eax,2
-	AllocateSmallGlobalMem
+	AllocateGlobalMem
 
 blit_same_line_loop:
 	mov ax,[bp].blit_width
@@ -1412,7 +1401,6 @@ blit_same_line_loop:
 	jmp blit_done
 
 blit1:
-	int 3
 	mov ds,[bp].blit_src_sel
 	mov ax,flat_sel
 	mov es,ax
@@ -2731,6 +2719,7 @@ init	PROC far
 	HookSetBiosData
 ;
 	call init_bitmap
+	call init_sprite
 ;
 	pop ds
 	popa

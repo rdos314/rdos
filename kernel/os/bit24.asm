@@ -1303,6 +1303,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			DrawSprite
+;
+;		DESCRIPTION:	Draw a sprite
+; 
+;		PARAMETER:		ECX			x + y << 16
+;						EDX			width + height << 16
+;						ES:ESI		sprite data
+;						ES:EDI		1-bit mask bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_sprite_line    Proc far
+    ret
+draw_sprite_line    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			DrawString
 ;
 ;		DESCRIPTION:	Draw a string
@@ -2226,10 +2246,11 @@ mt14 DW OFFSET set_native,			video_code_sel
 mt15 DW OFFSET set_rgb,				video_code_sel
 mt16 DW OFFSET get_line,			video_code_sel
 mt17 DW OFFSET draw_mask_line,		video_code_sel
-mt18 DW OFFSET draw_string,			video_code_sel
-mt19 DW OFFSET draw_line,			video_code_sel
-mt1A DW OFFSET draw_rect,			video_code_sel
-mt1B DW OFFSET draw_ellipse,		video_code_sel
+mt18 DW OFFSET draw_sprite_line,	video_code_sel
+mt19 DW OFFSET draw_string,			video_code_sel
+mt1A DW OFFSET draw_line,			video_code_sel
+mt1B DW OFFSET draw_rect,			video_code_sel
+mt1C DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

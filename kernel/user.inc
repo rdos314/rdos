@@ -1507,3 +1507,35 @@ CreateStringBitmap      MACRO
 GetBitmapInfo      MACRO
 	UserGate get_bitmap_info_nr
 						ENDM
+
+;   IN  AX      LGOP
+;   IN  BX      Dest bitmap handle or 0
+;	IN  CX		Main bitmap
+;	IN  DX		Mask (1-bit bitmap)
+;	OUT BX		Sprite handle
+CreateSprite      MACRO
+	UserGate create_sprite_nr
+						ENDM
+
+;	IN  BX		Sprite handle
+CloseSprite      MACRO
+	UserGate close_sprite_nr
+						ENDM
+
+;	IN  BX		Sprite handle
+ShowSprite      MACRO
+	UserGate show_sprite_nr
+						ENDM
+
+;	IN  BX		Sprite handle
+HideSprite      MACRO
+	UserGate hide_sprite_nr
+						ENDM
+
+;	IN  BX		Sprite handle
+;   IN  CX      x
+;   IN  DX      y
+MoveSprite      MACRO
+	UserGate move_sprite_nr
+						ENDM
+						

@@ -343,5 +343,7 @@ update_mouse_nr				EQU 253
 
 init_video_bitmap_nr		EQU 254
 
-osgate_entries				EQU 255
+allocate_small_kernel_mem_nr EQU 255
+
+osgate_entries				EQU 256
 

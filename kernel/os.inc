@@ -386,6 +386,12 @@ AllocateSmallMem	MACRO
 					ENDM
 
 ;	EAX	ANTAL BYTE
+;	ES	LDT SELECTOR WITH KERNEL ONLY ACCESS
+AllocateSmallKernelMem	MACRO
+	OsGate allocate_small_kernel_mem_nr
+					ENDM
+
+;	EAX	ANTAL BYTE
 ;	ES	LINEAR BASE ADDRESS
 AllocateBigMem	MACRO
 	OsGate allocate_big_mem_nr

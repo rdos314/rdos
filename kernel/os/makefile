@@ -48,7 +48,8 @@ font_srcs = FONT.ASM
 font_objs = $(font_srcs:.ASM=.OBJ)
 font_rdvs = FONT.RDV
 
-video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM
+video_srcs = VIDEO.ASM BITMAP.ASM BIT1.ASM BIT16.ASM BIT24.ASM BIT32.ASM \
+             SPRITE.ASM
 video_objs = $(video_srcs:.ASM=.OBJ)
 video_rdvs = VIDEO.RDV
 

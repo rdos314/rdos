@@ -28,6 +28,18 @@
 STYLE_HOLLOW			EQU 0
 STYLE_FILLED			EQU 1
 
+video_data_seg	STRUC
+
+v_list			DW ?
+
+video_data_seg	ENDS
+
+video_focus_seg	STRUC
+
+v_handle		DW ?
+
+video_focus_seg	ENDS
+
 ; DS 		Video handle
 
 video_api_struc	STRUC
@@ -153,6 +165,12 @@ get_line_proc			DD ?
 ; IN  SI			width
 ; IN  ES:EDI		1-bit mask
 draw_mask_line_proc			DD ?
+
+; IN  ECX			x + y << 16
+; IN  EDX			width + height << 16
+; IN  ESI   		sprite bits
+; IN  ES:EDI		1-bit mask bits
+draw_sprite_line_proc			DD ?
 
 ; IN  CX		x position
 ; IN  DX		y position

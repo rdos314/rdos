@@ -1,0 +1,606 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2002, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; SPRITE.ASM
+; Sprite module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME bitmap
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+GateSize = 16
+
+INCLUDE user.def
+INCLUDE os.def
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE user.inc
+INCLUDE os.inc
+INCLUDE user.inc
+INCLUDE driver.def
+INCLUDE system.inc
+INCLUDE handle.inc
+INCLUDE bitmap.inc
+INCLUDE sprite.inc
+INCLUDE video.inc
+
+code	SEGMENT byte public use16 'CODE'
+
+	.386
+
+	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:           CreateSprite
+;
+;		DESCRIPTION:	Create a new sprite
+;
+;		PARAMETERS:		AX		LGOP
+;                       BX      Dest bitmap handle or 0
+;                       CX      Main bitmap
+;                       DX      Mask (1-bit bitmap)
+;
+;		RETURNS:		BX      Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_sprite_name	DB 'Create Sprite', 0
+
+create_sprite	Proc far
+    push es
+    push eax
+    push cx
+    push dx
+;
+    push ax
+    mov eax,SIZE sprite_sel_struc
+    AllocateSmallKernelMem
+    pop ax
+    mov es:sp_lgop,ax
+;
+	or bx,bx
+	jnz create_sprite_bmp
+;
+	mov ax,video_local_sel
+	mov ds,ax
+	mov ax,ds:v_handle
+	jmp create_sprite_dest_ok
+
+create_sprite_bmp:
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc create_sprite_fail
+;
+	mov ax,[bx].bm_sel
+
+create_sprite_dest_ok:
+    mov es:sp_dest_sel,ax
+    mov ds,ax
+    mov al,ds:v_bpp
+    mov es:sp_bpp,al
+    mov ax,ds:v_width
+    mov es:sp_dest_w,ax
+    mov ax,ds:v_height
+    mov es:sp_dest_h,ax
+;
+    mov bx,cx
+	mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc create_sprite_fail
+;
+    mov ax,[bx].bm_sel
+    mov es:sp_bitmap_sel,ax
+    mov ds,ax
+    mov ax,ds:v_width
+    cmp ax,es:sp_dest_w
+    ja create_sprite_fail
+    mov es:sp_w,ax
+;
+    mov ax,ds:v_height
+    cmp ax,es:sp_dest_h
+    ja create_sprite_fail
+    mov es:sp_h,ax
+;
+    mov es:sp_bitmap_handle,0
+    mov al,ds:v_bpp
+    cmp al,es:sp_bpp
+    je create_sprite_mask
+;
+    push cx
+    push dx
+    mov cx,es:sp_w
+    mov dx,es:sp_h
+    movzx ax,es:sp_bpp
+    CreateBitmap
+    pop dx
+    pop cx
+;
+    mov ax,LGOP_NONE
+    SetLgop
+;
+    push cx
+    push dx
+    push esi
+    push edi
+    mov ax,cx
+    mov cx,es:sp_w
+    mov dx,es:sp_h
+    xor esi,esi
+    xor edi,edi
+    Blit
+    pop edi
+    pop esi
+    pop dx
+    pop cx
+;
+    mov es:sp_bitmap_handle,bx
+	mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc create_sprite_fail
+;
+    mov ax,[bx].bm_sel
+    mov es:sp_bitmap_sel,ax
+
+
+create_sprite_mask:
+    mov bx,dx
+	mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc create_sprite_fail
+;
+    mov ax,[bx].bm_sel
+    mov es:sp_mask_sel,ax
+    mov ds,ax
+    cmp ds:v_bpp,1
+    jne create_sprite_fail
+;
+    mov ax,ds:v_width
+    cmp ax,es:sp_w
+    jb create_sprite_fail
+;
+    mov ax,ds:v_height
+    cmp ax,es:sp_h
+    jb create_sprite_fail
+;
+    movzx ax,es:sp_bpp
+    mov cx,es:sp_w
+    mov dx,es:sp_h
+    CreateBitmap
+    jc create_sprite_fail
+;
+    mov ax,LGOP_NONE
+    SetLgop
+;
+    mov es:sp_back_handle,bx
+	mov ax,BITMAP_HANDLE
+    DerefHandle
+    jc create_sprite_fail
+;
+    mov ax,[bx].bm_sel
+    mov es:sp_back_sel,ax
+    mov es:sp_flags,0
+    mov es:sp_x,0
+    mov es:sp_y,0
+;
+	mov cx,SIZE sprite_struc
+	AllocateHandle
+	mov ds:[bx].sp_sel,es
+	mov [bx].hh_sign,SPRITE_HANDLE
+	mov bx,[bx].hh_handle
+    clc
+    jmp create_sprite_done
+
+create_sprite_fail:
+    FreeMem
+    stc    
+   
+create_sprite_done:
+    pop dx
+    pop cx
+    pop eax
+    pop es
+	retf32
+create_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:		    show_sprite_sel
+;
+;		DESCRIPTION:	Show sprite
+;
+;		PARAMETERS:		FS      sprite sel
+;                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_sprite_sel	Proc near
+    push ecx
+    push edx
+    push esi
+    push edi
+    push bp
+;
+    or fs:sp_flags,SP_FLAG_VISIBLE
+    xor bp,bp
+
+show_sprite_loop:
+    mov ds,fs:sp_dest_sel
+    mov cx,fs:sp_x
+    mov dx,fs:sp_y
+    call ds:get_line_proc
+;
+    mov ds,fs:sp_back_sel
+    mov ax,fs:sp_w
+    xor cx,cx
+    mov dx,bp
+    call ds:set_native_row_proc
+;
+
+    mov ds,fs:sp_bitmap_sel
+    xor cx,cx
+    mov dx,bp
+    call ds:get_line_proc
+    mov esi,edi
+;
+    mov ds,fs:sp_mask_sel
+	movzx edx,bp
+	movzx eax,ds:v_row_size
+	mul edx
+	shl eax,3
+	add eax,ds:v_app_base
+    mov edi,eax
+;
+    push ds:v_lgop
+    mov ax,fs:sp_lgop
+    mov ds:v_lgop,ax
+    mov ecx,dword ptr fs:sp_x
+    mov edx,dword ptr fs:sp_w
+    call ds:draw_sprite_line_proc
+    pop ds:v_lgop
+;
+    inc bp
+    cmp bp,fs:sp_h
+    jnz show_sprite_loop
+;
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+	ret
+show_sprite_sel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:		    hide_sprite
+;
+;		DESCRIPTION:	Hide sprite
+;
+;		PARAMETERS:		FS      sprite sel
+;                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hide_sprite_sel	Proc near
+    and fs:sp_flags,NOT SP_FLAG_VISIBLE
+	ret
+hide_sprite_sel	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ShowSprite
+;
+;		DESCRIPTION:	Show sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_sprite_name	DB 'Show Sprite', 0
+
+show_sprite	Proc far
+	push ds
+	push es
+	push fs
+	push ax
+	push bx
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc show_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jnz show_sprite_done
+;
+	call show_sprite_sel
+
+show_sprite_done:
+	pop bx
+	pop ax
+	pop fs
+	pop es
+	pop ds
+	retf32
+show_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HideSprite
+;
+;		DESCRIPTION:	Hide sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hide_sprite_name	DB 'Hide Sprite', 0
+
+hide_sprite	Proc far
+	push ds
+	push es
+	push fs
+	push ax
+	push bx
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc hide_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jz hide_sprite_done
+;
+	call hide_sprite_sel
+
+hide_sprite_done:
+	pop bx
+	pop ax
+	pop fs
+	pop es
+	pop ds
+	retf32
+hide_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MoveSprite
+;
+;		DESCRIPTION:	Move sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;                       CX      x
+;                       DX      y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_sprite_name	DB 'Move Sprite', 0
+
+move_sprite	Proc far
+	push ds
+	push es
+	push fs
+	push ax
+	push bx
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc move_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jz move_sprite_hidden
+;
+	call hide_sprite_sel
+	mov fs:sp_x,cx
+	mov fs:sp_y,dx
+	call show_sprite_sel
+	jmp move_sprite_done
+
+move_sprite_hidden:
+    mov fs:sp_x,cx
+    mov fs:sp_y,dx
+
+move_sprite_done:
+	pop bx
+	pop ax
+	pop fs
+	pop es
+	pop ds
+	retf32
+move_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_sprite
+;
+;		DESCRIPTION:	Delete sprite
+;
+;		PARAMETERS:		DS:BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_sprite	Proc near
+    push es
+    mov es,[bx].sp_sel
+    push bx
+    mov bx,es:sp_back_handle
+    CloseBitmap
+    mov bx,es:sp_bitmap_handle
+    or bx,bx
+    jz delete_sprite_bitmap_closed
+;
+    CloseBitmap
+
+delete_sprite_bitmap_closed:
+    pop bx
+    FreeMem
+	FreeHandle
+	pop es
+	clc
+	ret
+delete_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseSprite
+;
+;		DESCRIPTION:	Close sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_sprite_name	DB 'Close Sprite', 0
+
+close_sprite	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc cl_sprite_done
+;
+	call delete_sprite
+
+cl_sprite_done:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+close_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_handle
+;
+;		DESCRIPTION:	BX			Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	call delete_sprite
+
+delete_handle_done:
+	pop bx
+	pop ax
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Init
+;
+;		DESCRIPTION:	Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_sprite
+
+init_sprite	PROC near
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov ax,SPRITE_HANDLE
+	mov di,OFFSET delete_handle
+	RegisterHandle
+;
+	mov si,OFFSET create_sprite
+	mov di,OFFSET create_sprite_name
+	xor dx,dx
+	mov ax,create_sprite_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET show_sprite
+	mov di,OFFSET show_sprite_name
+	xor dx,dx
+	mov ax,show_sprite_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET hide_sprite
+	mov di,OFFSET hide_sprite_name
+	xor dx,dx
+	mov ax,hide_sprite_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET move_sprite
+	mov di,OFFSET move_sprite_name
+	xor dx,dx
+	mov ax,move_sprite_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_sprite
+	mov di,OFFSET close_sprite_name
+	xor dx,dx
+	mov ax,close_sprite_nr
+	RegisterBimodalUserGate
+;
+	ret
+init_sprite	ENDP
+
+code	ENDS
+
+	END

@@ -90,6 +90,64 @@ init:
 	mov dx,600
 	SetVBEMode
 	push bx
+;
+    mov ax,1
+    mov cx,30
+    mov dx,30
+    CreateBitmap
+    mov ax,LGOP_NONE
+    SetLgop
+    push cx
+    push dx
+    mov si,cx
+    mov di,dx
+    xor cx,cx
+    xor dx,dx
+    DrawEllipse
+    pop dx
+    pop cx
+    push bx
+;
+    mov ax,16
+    CreateBitmap
+    mov ax,LGOP_NONE
+    SetLgop
+    mov eax,0FFFFh
+    SetDrawColor
+    push cx
+    push dx
+    mov si,cx
+    mov di,dx
+    xor cx,cx
+    xor dx,dx
+    DrawEllipse
+    pop dx
+    pop cx
+;
+    pop ax
+    pop si
+    push bx
+    push cx
+    push dx
+    mov cx,bx
+    mov dx,ax
+    mov bx,si
+    mov ax,LGOP_NONE
+    CreateSprite
+;
+    mov cx,100
+    mov dx,100
+    MoveSprite
+    ShowSprite
+    mov cx,102
+    mov dx,102
+    MoveSprite
+    CloseSprite    
+    pop bx
+    pop dx
+    pop cx
+;
+	push bx
 	push cx
 	push dx
 	CreateBitmap

@@ -117,7 +117,7 @@ init_video32:
 	jmp init_video_copy
 
 init_video_copy:
-	mov cx,28
+	mov cx,29
 	xor di,di
 	rep movsd
 
@@ -167,7 +167,7 @@ create_bitmap	Proc far
 ;
 	push eax
 	mov eax,SIZE video_api_struc
-	AllocateSmallGlobalMem
+	AllocateSmallKernelMem
 	pop eax
 ;
 	InitSection es:v_section
@@ -233,7 +233,7 @@ cr_bitmap32:
 	jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-	mov cx,28
+	mov cx,29
 	xor di,di
 	rep movsd
 ;

@@ -212,6 +212,12 @@ init_mem	PROC near
 	mov ax,allocate_small_mem_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET allocate_small_kernel_mem
+	mov di,OFFSET allocate_small_kernel_mem_name
+	xor cl,cl
+	mov ax,allocate_small_kernel_mem_nr
+	RegisterOsGate
+;
 	mov si,OFFSET allocate_big_mem
 	mov di,OFFSET allocate_big_mem_name
 	xor cl,cl
@@ -2545,6 +2551,45 @@ alloc_small_big_seg_ok:
 	pop ds
 	ret
 allocate_small_mem	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ALLOCATE_SMALL_KERNEL_MEM
+;
+;		DESCRIPTION:    Allocate byte-aligned process memory with kernel-only access
+;
+;		PARAMETERS:		EAX		Number of bytes
+;
+;		RETURNS:		ES		Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_small_kernel_mem_name	DB 'Allocate Small Kernel Memory',0
+
+allocate_small_kernel_mem	PROC far
+	push ds
+	push eax
+	push bx
+	push ecx
+	push edx
+	mov ecx,eax
+;
+	AllocateSmallLinear
+	AllocateLdt
+	or bx,4
+	CreateDataSelector16
+	mov es,bx
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop eax
+	pop ds
+	ret
+allocate_small_kernel_mem	ENDP
 
 PAGE
 

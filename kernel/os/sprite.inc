@@ -20,24 +20,36 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; HANDLE.INC
-; Handle definition
+; SPRITE.INC
+; Sprite interface definition
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+SP_FLAG_VISIBLE  EQU 1
 
-SPRITE_HANDLE = 02CF5h
-FILE_HANDLE = 	03AB6h
-IPC_HANDLE =	07B5Ah
-FONT_HANDLE =	09AF4h
-DIR_HANDLE = 	0A765h
-XMS_HANDLE =	0A560h
-MEMMAP_HANDLE =	0BA54h
-BITMAP_HANDLE =	0DB57h
+sprite_struc	STRUC
 
-handle_header	STRUC
+sp_base		    handle_header <>
+sp_sel              DW ?
 
-hh_sign			DW ?
-hh_handle		DW ?
+sprite_struc	ENDS
 
-handle_header	ENDS
+sprite_sel_struc  STRUC
+
+sp_back_handle      DW ?
+sp_back_sel         DW ?
+sp_dest_sel         DW ?
+sp_bitmap_handle    DW ?
+sp_bitmap_sel       DW ?
+sp_mask_sel         DW ?
+sp_lgop             DW ?
+sp_x                DW ?
+sp_y                DW ?
+sp_w                DW ?
+sp_h                DW ?
+sp_dest_w           DW ?
+sp_dest_h           DW ?
+sp_bpp              DB ?
+sp_flags            DB ?
+
+sprite_sel_struc    ENDS
