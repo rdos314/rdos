@@ -31,8 +31,8 @@
 
 GateSize = 16
 
-INCLUDE ..\os\user.def
-INCLUDE ..\os\user.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 
 psp_seg		STRUC
 psp_int20		DW ?

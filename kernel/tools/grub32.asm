@@ -31,7 +31,7 @@
 
 .386p
 
-INCLUDE ..\os\protseg.def
+INCLUDE ..\driver.def
 
 IMAGE_BASE = 110000h
 

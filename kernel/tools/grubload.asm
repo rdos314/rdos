@@ -31,9 +31,10 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
+INCLUDE ..\os.def
+INCLUDE ..\driver.def
 INCLUDE ..\os\port.def
-INCLUDE ..\os\protseg.def
+INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
 
 MB_FLAG_MEM	=	 1

@@ -35,7 +35,7 @@ ConfigSize = 2000h
 
 GateSize = 16
 
-INCLUDE ..\os\protseg.def
+INCLUDE ..\os.def
 INCLUDE ..\os\system.def
 
 exeh_seg	SEGMENT AT 0

@@ -33,9 +33,10 @@
 
 GateSize = 16
 
-INCLUDE \rdos\os\system.def
-INCLUDE \rdos\os\protseg.def
-INCLUDE \rdos\os\system.inc
+INCLUDE ..\os.def
+INCLUDE ..\driver.def
+INCLUDE ..\os\system.def
+INCLUDE ..\os\system.inc
 
 DRAM_BASE		EQU 00000000h
 FLASH_BASE		EQU 02000000h

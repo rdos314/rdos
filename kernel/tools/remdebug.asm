@@ -29,9 +29,9 @@
 
 GateSize = 16
 
-INCLUDE ..\os\os.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\user.inc
+INCLUDE ..\os.def
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\os\ipcdebug.inc
 INCLUDE ..\os\system.def
 INCLUDE remdebug.inc

@@ -30,8 +30,8 @@
 GateSize = 16
 
 INCLUDE ..\os\state.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\user.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 
 .model small
 
