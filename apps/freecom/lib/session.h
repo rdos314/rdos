@@ -20,48 +20,51 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdhelp.h
-# Command base class
+# session.h
+# Session class
 #
 ########################################################################*/
 
-#ifndef _CMDHELP_H
-#define _CMDHELP_H
+#ifndef _SESSION_H
+#define _SESSION_H
 
 #include "file.h"
-#include "langstr.h"
 
-enum InternalErrorCodes
+class TSession
 {
-	E_None = 0,
-	E_Useage = 1,
-	E_Other = 2,
-	E_CBreak = 3,
-	E_NoMem,
-	E_CorruptMemory,
-	E_NoOption,
-	E_Exit,
-	E_Ignore,			/* Error that can be ignored */
-	E_Empty,
-	E_Syntax,
-	E_Range,				/* Numbers out of range */
-	E_NoItems,
-	E_Help,		/* Help screen */
-	E_User		/* MUST be the last one */
+public:
+    TSession();
+    ~TSession();
+    
+    void Write(char ch);
+    void Write(const char *str);
+
+    void WriteError(char ch);
+    void WriteError(const char *str);
+
+    void WriteLong(long Value);
+
+    char Read();
+    int Read(char *str, int maxsize);
+    int ReadCmd(char *str, int maxsize);
+
+    void DisplayPrompt();
+
+    void SetCmdFile(TFile *File);
+    void SetInputFile(TFile *File);
+    void SetOutputFile(TFile *File);
+    void SetErrorFile(TFile *File);
+
+    TFile *GetCmdFile();
+    TFile *GetInputFile();
+    TFile *GetOutputFile();
+    TFile *GetErrorFile();
+
+protected:
+    TFile *FCmdFile;
+    TFile *FInputFile;
+    TFile *FOutputFile;
+    TFile *FErrorFile;
 };
-
-int IsEmpty(const char *s);
-int IsArgDelim(char ch);
-int IsOptDelim(char ch);
-int IsOptChar(char ch);
-int IsFileNameChar(char c);
-const char *LTrimsp(const char *str);
-const char *LTrim(const char *str);
-void RTrim(char *str);
-char *Unquote(const char *str, const char *end);
-int MatchToken(char **Xp, const char *word, int len);
-
-int ReadCon(char *str, int maxsize);
-void DisplayPrompt();
 
 #endif

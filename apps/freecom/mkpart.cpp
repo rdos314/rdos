@@ -64,9 +64,9 @@ TMakePartitionFactory::TMakePartitionFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TMakePartitionFactory::Create(const char *param)
+TCommand *TMakePartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TMakePartitionCommand(param);
+	return new TMakePartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -80,8 +80,8 @@ TCommand *TMakePartitionFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TMakePartitionCommand::TMakePartitionCommand(const char *param)
-  : TCommand(param)
+TMakePartitionCommand::TMakePartitionCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_MKPART);
 }

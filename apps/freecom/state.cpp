@@ -63,9 +63,9 @@ TStateFactory::TStateFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TStateFactory::Create(const char *param)
+TCommand *TStateFactory::Create(TSession *session, const char *param)
 {
-	return new TStateCommand(param);
+	return new TStateCommand(session, param);
 }
 
 /*##########################################################################
@@ -79,8 +79,8 @@ TCommand *TStateFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TStateCommand::TStateCommand(const char *param)
-  : TCommand(param)
+TStateCommand::TStateCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_STATE);
 }
@@ -98,6 +98,11 @@ TStateCommand::TStateCommand(const char *param)
 ##########################################################################*/
 int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg)
 {
+	switch(ch)
+	{
+		case 'S':
+			return OptScanBool(optstr, bool, strarg, &FOptS);
+	}
 	OptError(optstr);
 	return E_Useage;
 }
@@ -115,6 +120,7 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 ##########################################################################*/
 void TStateCommand::InitOptions()
 {
+    FOptS = FALSE;
 }
 
 /*##########################################################################
@@ -130,6 +136,114 @@ void TStateCommand::InitOptions()
 ##########################################################################*/
 void TStateCommand::WriteOne(ThreadState *State)
 {
+    char str[40];
+    int len;
+	unsigned long temp;
+	int day;
+	int hour;
+	int min;
+	int sec;
+	int milli;
+	int micro;
+	int started;
+    int i;
+
+	sprintf(str, "%04hX ", State->ID);
+	Write(str);
+
+	memcpy(str, State->Name, 20);
+	str[20] = 0;
+	len = strlen(str);
+
+	for (i = len; i < 20; i++)
+        str[i] = ' ';
+
+	Write(str);
+
+	RdosDecodeMsbTics(State->MsbTime, &day, &hour);
+	RdosDecodeLsbTics(State->LsbTime, &min, &sec, &milli, &micro);
+
+	started = FALSE;
+	if (day)
+	{
+        sprintf(str, "%3d ", day);
+        Write(str);
+        started = TRUE;
+    }
+    else
+        Write("    ");
+
+    if (hour || started)
+    {
+        if (started)
+				sprintf(str, "%02d.", hour);
+		  else
+				sprintf(str, "%2d.", hour);
+		  Write(str);
+		  started = TRUE;
+	 }
+	 else
+		  Write("   ");
+
+	 if (min || started)
+	 {
+		  if (started)
+				sprintf(str, "%02d.", min);
+		  else
+				sprintf(str, "%2d.", min);
+		  Write(str);
+		  started = TRUE;
+	 }
+	 else
+		  Write("   ");
+
+	 if (sec || started)
+	 {
+		  if (started)
+				sprintf(str, "%02d,", sec);
+		  else
+				sprintf(str, "%2d,", sec);
+		  Write(str);
+		  started = TRUE;
+	 }
+	 else
+		  Write("   ");
+
+	 if (milli || started)
+	 {
+		  if (started)
+				sprintf(str, "%03d ", milli);
+		  else
+				sprintf(str, "%3d ", milli);
+		  Write(str);
+		  started = TRUE;
+	 }
+	 else
+		  Write("    ");
+
+	 if (started)
+		  sprintf(str, "%03d ", micro);
+	 else
+		  sprintf(str, "%3d ", micro);
+	 Write(str);
+
+	memcpy(str, State->List, 20);
+	str[20] = 0;
+	len = strlen(str);
+
+	for (i = len; i < 20; i++)
+		  str[i] = ' ';
+
+	Write(str);
+
+	sprintf(str, "%04hX:", State->Sel);
+	Write(str);
+
+	sprintf(str, "%08lX", State->Offset);
+	Write(str);
+
+	 Write("\r\n");
+
 }
 
 /*##########################################################################
@@ -147,20 +261,52 @@ int TStateCommand::Execute(char *param)
 {
     int i;
     ThreadState state;
+    short int ID;
+    TArg *arg;
 
 	InitOptions();
 
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
 
-	i = 0;
+	if (!ScanCmdLine(param, 0))
+		return 1;
 
-	while (RdosGetThreadState(i, &state))
+	if (FArgCount == 0)
 	{
-	    WriteOne(&state);
-	    i++;
-	}
+        for (i = 0; i < 256; i++)
+	        if (RdosGetThreadState(i, &state))
+        	    WriteOne(&state);
+        	        
+        return 0;
+    }
+    else
+    {
+        arg = FArgList;
 
-	return 0;
+		while (arg)
+		{
+        	if (sscanf(arg->FName.GetData(), "%4hX", &ID) == 1)
+            {        	
+                for (i = 0; i < 256; i++)
+                {
+	                if (RdosGetThreadState(i, &state))
+	                {
+	                    if (state.ID == ID)
+	                    {
+                		    if (FOptS)
+                		    {
+                		        RdosSuspendThread(i);
+                		        RdosWaitMilli(50);
+                		    }
+	                        WriteOne(&state);
+	                    }
+	                }
+	            }
+	        }
+			arg = arg->FList;
+		}
+		return 0;
+	}
 }
 

@@ -255,7 +255,7 @@ RdosGetThreadState	PROC
 ;	
     mov eax,[ebp+8]
     mov edi,[ebp+12]
-	UserGate get_state_nr
+	UserGate get_thread_state_nr
 	jc rgtsFail
 ;	
     mov eax,1
@@ -270,6 +270,39 @@ rgtsDone:
 	ret 8
 	ret
 RdosGetThreadState	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSuspendThread
+;
+;		description:	Suspend thread
+;
+;       parameters:     Thread #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSuspendThread
+
+RdosSuspendThread	PROC
+	push ebp
+	mov ebp,esp
+;	
+    mov eax,[ebp+8]
+	UserGate suspend_thread_nr
+	jc rsfFail
+;	
+    mov eax,1
+    jmp rsfDone
+    
+rsfFail:
+    xor eax,eax
+
+rsfDone:
+	pop ebp
+	ret 4
+	ret
+RdosSuspendThread	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2390,6 +2423,100 @@ RdosRecordToTics	Proc
 	pop ebp
 	ret 36
 RdosRecordToTics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDecodeMsbTics
+;
+;		description:	Convert MSB tics to days & hours
+;
+;		PARAMETERS:		int MSB
+;						int *day
+;						int *hour
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDecodeMsbTics
+
+dmtMSB		EQU 8
+dmtDay		EQU 12
+dmtHour		EQU 16
+
+RdosDecodeMsbTics	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov eax,[ebp].dmtMSB
+	xor edx,edx
+	mov ecx,24
+	div ecx
+;
+    mov ebx,[ebp].dmtDay
+    mov [ebx],eax
+;
+    mov ebx,[ebp].dmtHour
+    mov [ebx],edx 
+;
+	popad
+	pop ebp
+	ret 12
+RdosDecodeMsbTics	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDecodeLsbTics
+;
+;		description:	Convert LSB tics to min, sec, milli & micro
+;
+;		PARAMETERS:		int LSB
+;						int *min
+;						int *sec
+;                       int *milli
+;                       int *micro
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDecodeLsbTics
+
+dltLSB		EQU 8
+dltMin		EQU 12
+dltSec		EQU 16
+dltMilli    EQU 20
+dltMicro    EQU 24
+
+RdosDecodeLsbTics	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov eax,[ebp].dltLSB
+	mov edx,60
+	mul edx
+    mov ebx,[ebp].dltMin
+    mov [ebx],edx
+;
+    mov edx,60
+    mul edx
+    mov ebx,[ebp].dltSec
+    mov [ebx],edx
+;
+    mov edx,1000
+    mul edx
+    mov ebx,[ebp].dltMilli
+    mov [ebx],edx
+;
+    mov edx,1000
+    mul edx
+    mov ebx,[ebp].dltMicro
+    mov [ebx],edx                
+;
+	popad
+	pop ebp
+	ret 20
+RdosDecodeLsbTics	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

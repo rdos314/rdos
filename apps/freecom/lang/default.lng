@@ -1592,5 +1592,6 @@ INITFD
 :TEXT_CMDHELP_STATE
 List running threads
 
-STATE
+STATE [/S] [thread-ID]
+  /S              Suspend thread
 .

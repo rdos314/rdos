@@ -36,13 +36,13 @@ class TRemovePartitionFactory : public TCommandFactory
 {
 public:
 	TRemovePartitionFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TRemovePartitionCommand : public TCommand
 {
 public:
-	TRemovePartitionCommand(const char *param);
+	TRemovePartitionCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 

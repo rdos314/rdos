@@ -32,6 +32,7 @@
 #include "file.h"
 #include "path.h"
 #include "parser.h"
+#include "session.h"
 
 class TArg
 {
@@ -49,14 +50,25 @@ class TCommand : public TParser
 {
     friend class TCommandLine;
 public:
-    TCommand();
-    TCommand(const char *param);
+    TCommand(TSession *session);
+    TCommand(TSession *session, const char *param);
 	virtual ~TCommand();
 
 	void DefineInput(TString &name, int remove);
 	void DefineOutput(TString &name);
 	void DefineAppend(TString &name);
 	void DefineError(TString &name);
+    
+    void Write(char ch);
+    void Write(const char *str);
+
+    void WriteError(char ch);
+    void WriteError(const char *str);
+
+    void WriteLong(long Value);
+
+    char Read();
+    int Read(char *str, int maxsize);
 	
 	int Run();
 	virtual int Execute(char *param) = 0;
@@ -81,6 +93,7 @@ protected:
 	
 	int OptScanBool(const char *optstr, int bool, const char *arg, int *value);
 
+    TSession *FSession;
 	TLangString FMsg;
 	TString FCmdLine;
 	TLangString FHelpScreen;

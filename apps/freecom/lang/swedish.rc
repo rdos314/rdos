@@ -695,8 +695,9 @@ STRINGTABLE
  1714, "INITFD \r\n";
  1715, "List running threads\r\n";
  1716, "\r\n";
- 1717, "STATE\r\n";
- 1718, "'%s' kan inte ha n†gra parametrar\r\n";
+ 1717, "STATE [/S] [thread-ID]\r\n";
+ 1718, "  /S              Suspend thread\r\n";
+ 1719, "'%s' kan inte ha n†gra parametrar\r\n";
  TEXT_ERROR_INVALID_SWITCH, "1024,1";
  TEXT_ERROR_INVALID_LSWITCH, "1025,1";
  TEXT_ERROR_ILLFORMED_OPTION, "1026,1";
@@ -957,7 +958,7 @@ STRINGTABLE
  TEXT_PING_OK, "1710,1";
  TEXT_PING_TIMEOUT, "1711,1";
  TEXT_CMDHELP_INITFD, "1712,3";
- TEXT_CMDHELP_STATE, "1715,3";
- TEXT_ERROR_OPT_ARG , "1718,1";
+ TEXT_CMDHELP_STATE, "1715,4";
+ TEXT_ERROR_OPT_ARG , "1719,1";
 }
 

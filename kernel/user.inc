@@ -748,13 +748,13 @@ DebugNext       MACRO
 
 ; IN  ES:(E)DI   	State buffer
 ; IN  AX           	Thread #
-GetState     MACRO
-	UserGate get_state_nr
+GetThreadState     MACRO
+	UserGate get_thread_state_nr
 						ENDM
 
 ; IN  AX            Thread #
-Pause     MACRO
-	UserGate pause_nr
+SuspendThread     MACRO
+	UserGate suspend_thread_nr
 						ENDM
 
 ;  IN  EAX	Timeout in milliseconds

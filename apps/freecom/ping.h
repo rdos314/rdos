@@ -35,13 +35,13 @@ class TPingFactory : public TCommandFactory
 {
 public:
 	TPingFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TPingCommand : public TCommand
 {
 public:
-	TPingCommand(const char *param);
+	TPingCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 

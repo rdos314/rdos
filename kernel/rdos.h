@@ -37,8 +37,8 @@ struct ThreadState
 {
     short int ID;
     char Name[32];
-    long LsbTime;
-    long MsbTime;
+    unsigned long MsbTime;
+    unsigned long LsbTime;
     char List[32];
     long Offset;
     short int Sel;
@@ -152,6 +152,7 @@ void __stdcall RdosCloseDir(int Handle);
 int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
 int __stdcall RdosGetThreadState(int ThreadNr, ThreadState *State);
+int __stdcall RdosSuspendThread(int ThreadNr);
 
 void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);
@@ -173,6 +174,9 @@ void __stdcall RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
 void __stdcall RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
 void __stdcall RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
 void __stdcall RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
+
+void __stdcall RdosDecodeMsbTics(unsigned long msb, int *days, int *hours);
+void __stdcall RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
 
 int __stdcall RdosCreateSection();
 void __stdcall RdosDeleteSection(int Handle);

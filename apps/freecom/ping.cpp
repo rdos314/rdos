@@ -64,9 +64,9 @@ TPingFactory::TPingFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPingFactory::Create(const char *param)
+TCommand *TPingFactory::Create(TSession *session, const char *param)
 {
-	return new TPingCommand(param);
+	return new TPingCommand(session, param);
 }
 
 /*##########################################################################
@@ -80,8 +80,8 @@ TCommand *TPingFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TPingCommand::TPingCommand(const char *param)
-  : TCommand(param)
+TPingCommand::TPingCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_PING);
 }

@@ -36,7 +36,7 @@ class TTypeFactory : public TCommandFactory
 {
 public:
 	TTypeFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TTypeCommand : public TCommand
 {
 public:
-	TTypeCommand(const char *param);
+	TTypeCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);
 

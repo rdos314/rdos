@@ -63,9 +63,9 @@ TTypeFactory::TTypeFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TTypeFactory::Create(const char *param)
+TCommand *TTypeFactory::Create(TSession *session, const char *param)
 {
-	return new TTypeCommand(param);
+	return new TTypeCommand(session, param);
 }
 
 /*##########################################################################
@@ -79,8 +79,8 @@ TCommand *TTypeFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TTypeCommand::TTypeCommand(const char *param)
-  : TCommand(param)
+TTypeCommand::TTypeCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_TYPE);
 }

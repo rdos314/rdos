@@ -30,18 +30,19 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "rdos.h" 
 
 class TStateFactory : public TCommandFactory
 {
 public:
 	TStateFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 };
 
 class TStateCommand : public TCommand
 {
 public:
-	TStateCommand(const char *param);
+	TStateCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 
@@ -50,6 +51,9 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
 	void WriteOne(ThreadState *state);
+
+    int FOptR;
+    int FOptS;
 };
 
 #endif

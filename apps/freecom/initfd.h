@@ -36,7 +36,7 @@ class TInitFdFactory : public TCommandFactory
 {
 public:
 	TInitFdFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TInitFdCommand : public TCommand
 {
 public:
-	TInitFdCommand(const char *param);
+	TInitFdCommand(TSession *session, const char *param);
 	virtual ~TInitFdCommand();
 
 	virtual int Execute(char *param);	

@@ -36,7 +36,7 @@ class TInitHdFactory : public TCommandFactory
 {
 public:
 	TInitHdFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TInitHdCommand : public TCommand
 {
 public:
-	TInitHdCommand(const char *param);
+	TInitHdCommand(TSession *session, const char *param);
 	virtual ~TInitHdCommand();
 
 	virtual int Execute(char *param);	

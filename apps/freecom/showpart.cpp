@@ -64,9 +64,9 @@ TShowPartitionFactory::TShowPartitionFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TShowPartitionFactory::Create(const char *param)
+TCommand *TShowPartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TShowPartitionCommand(param);
+	return new TShowPartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -80,8 +80,8 @@ TCommand *TShowPartitionFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TShowPartitionCommand::TShowPartitionCommand(const char *param)
-  : TCommand(param)
+TShowPartitionCommand::TShowPartitionCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_SHOWPART);
 }

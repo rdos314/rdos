@@ -36,7 +36,7 @@ class TShowPartitionFactory : public TCommandFactory
 {
 public:
 	TShowPartitionFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -44,7 +44,7 @@ protected:
 class TShowPartitionCommand : public TCommand
 {
 public:
-	TShowPartitionCommand(const char *param);
+	TShowPartitionCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
 

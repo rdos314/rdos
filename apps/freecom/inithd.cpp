@@ -67,9 +67,9 @@ TInitHdFactory::TInitHdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TInitHdFactory::Create(const char *param)
+TCommand *TInitHdFactory::Create(TSession *session, const char *param)
 {
-	return new TInitHdCommand(param);
+	return new TInitHdCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,8 +83,8 @@ TCommand *TInitHdFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TInitHdCommand::TInitHdCommand(const char *param)
-  : TCommand(param)
+TInitHdCommand::TInitHdCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_INITHD);
 }

@@ -124,7 +124,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GET_STATE
+;		NAME:			GetThreadState
 ;
 ;		DESCRIPTION:	Get state of a thread
 ;
@@ -134,9 +134,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_state_name DB 'Get State',0
+get_thread_state_name DB 'Get Thread State',0
 
-get_state	Proc far
+get_thread_state	Proc far
 	push ds
 	push eax
 	push ebx
@@ -156,7 +156,7 @@ get_state	Proc far
 	mov ds,ax
 	mov ax,ds:p_id
 	mov es:[edi].st_id,ax
-	mov si,OFFSET thread_name
+	mov esi,OFFSET thread_name
 	mov ecx,32
 	push edi
 	add edi,OFFSET st_name
@@ -218,37 +218,37 @@ get_state_done:
 	pop eax
 	pop ds
 	ret
-get_state	Endp
+get_thread_state	Endp
 
-get_state16	Proc far
+get_thread_state16	Proc far
 	push edi
 	movzx edi,di
-	call get_state
+	call get_thread_state
 	pop edi
 	ret
-get_state16	Endp
+get_thread_state16	Endp
 
-get_state32	Proc far
-	call get_state
+get_thread_state32	Proc far
+	call get_thread_state
 	Retf32
-get_state32	Endp
+get_thread_state32	Endp
 
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			Pause_thread
+;		NAME:			SuspendThread
 ;
-;		DESCRIPTION:	Pause thread (put it in debugger)
+;		DESCRIPTION:	Suspend thread (put it in debugger)
 ;
 ;		PARAMETER:		AX		Thread #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-pause_name	DB 'Pause',0
+suspend_thread_name	DB 'Suspend Thread',0
 
-pause_thread	PROC far
+suspend_thread	PROC far
 	push ds
 	push ax
 	push bx
@@ -261,21 +261,21 @@ pause_thread	PROC far
 	mov ax,ds:[bx].thread_arr
 	or ax,ax
 	stc
-	jz pause_done
+	jz suspend_done
 	mov ds,ax
 	mov ds:p_trap_ads,OFFSET trap_single_step
 	mov ds:p_trap_ads+2,cs
 	mov ds,ds:p_tss_data_sel
 	mov ds:tss_t,1
 	clc
-pause_done:
+suspend_done:
 	sti
 ;
 	pop bx
 	pop ax
 	pop ds
 	retf32
-pause_thread	ENDP
+suspend_thread	ENDP
 
 PAGE
 
@@ -549,11 +549,11 @@ init_state	PROC near
 	mov ax,hook_state_nr
 	RegisterOsGate
 ;
-	mov bx,OFFSET get_state16
-	mov si,OFFSET get_state32
-	mov di,OFFSET get_state_name
+	mov bx,OFFSET get_thread_state16
+	mov si,OFFSET get_thread_state32
+	mov di,OFFSET get_thread_state_name
 	mov dx,virt_es_in
-	mov ax,get_state_nr
+	mov ax,get_thread_state_nr
 	RegisterUserGate
 ;
 	mov bx,OFFSET get_thread_tss16
@@ -570,10 +570,10 @@ init_state	PROC near
 	mov ax,set_thread_tss_nr
 	RegisterUserGate
 ;
-	mov si,OFFSET pause_thread
-	mov di,OFFSET pause_name
+	mov si,OFFSET suspend_thread
+	mov di,OFFSET suspend_thread_name
 	xor dx,dx
-	mov ax,pause_nr
+	mov ax,suspend_thread_nr
 	RegisterBimodalUserGate
 ;
 	mov eax,OFFSET state_data_size

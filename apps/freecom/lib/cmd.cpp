@@ -83,9 +83,10 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand()
+TCommand::TCommand(TSession *session)
 {
     FArgList = 0;
+    FSession = session;    
     FInputFile = 0;
     FOutputFile = 0;
     FErrorFile = 0;
@@ -104,10 +105,11 @@ TCommand::TCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(const char *param)
+TCommand::TCommand(TSession *session, const char *param)
   : FCmdLine(param)
 {
     FArgList = 0;
+    FSession = session;
     FInputFile = 0;
     FOutputFile = 0;
     FErrorFile = 0;
@@ -152,6 +154,118 @@ TCommand::~TCommand()
 		FRemovePath->DeleteFile();
 		delete FRemovePath;
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Write
+#
+#   Purpose....: Write to std output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::Write(char ch)
+{
+    FSession->Write(ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Write
+#
+#   Purpose....: Write to std output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::Write(const char *str)
+{
+    FSession->Write(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::WriteError
+#
+#   Purpose....: Write to std error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::WriteError(char ch)
+{
+    FSession->WriteError(ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::WriteError
+#
+#   Purpose....: Write to std error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::WriteError(const char *str)
+{
+    FSession->WriteError(str);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::WriteLong
+#
+#   Purpose....: Write long to std error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommand::WriteLong(long Value)
+{
+    FSession->WriteLong(Value);
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Read
+#
+#   Purpose....: Read a single character from std input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char TCommand::Read()
+{
+    return FSession->Read();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::Read
+#
+#   Purpose....: Read a line from std input
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::Read(char *str, int maxsize)
+{
+    return FSession->Read(str, maxsize);
 }
 
 /*##########################################################################

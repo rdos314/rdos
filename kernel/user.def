@@ -72,8 +72,7 @@ debug_trace_nr				= 62
 debug_pace_nr				= 63
 debug_go_nr					= 64
 debug_next_nr				= 65
-get_state_nr				= 66
-pause_nr					= 67
+
 wait_for_pe_debug_nr		= 68
 continue_pe_debug_nr		= 69
 notify_pe_exception_nr		= 70
@@ -349,5 +348,9 @@ get_ide_disc_nr             = 298
 get_floppy_disc_nr          = 299
 demand_load_drive_nr        = 300
 set_disc_info_nr            = 301
+
+get_thread_state_nr			= 302
+suspend_thread_nr	    	= 303
+resume_thread_nr	    	= 304
 
 usergate_entries			= 340

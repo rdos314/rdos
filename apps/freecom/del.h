@@ -36,7 +36,7 @@ class TDelFactory : public TCommandFactory
 {
 public:
 	TDelFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -45,7 +45,7 @@ class TEraseFactory : public TCommandFactory
 {
 public:
 	TEraseFactory();
-	virtual TCommand *Create(const char *param);
+	virtual TCommand *Create(TSession *session, const char *param);
 
 protected:
 };
@@ -53,7 +53,7 @@ protected:
 class TDelCommand : public TCommand
 {
 public:
-	TDelCommand(const char *param);
+	TDelCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);
 

@@ -63,9 +63,9 @@ TDelFactory::TDelFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TDelFactory::Create(const char *param)
+TCommand *TDelFactory::Create(TSession *session, const char *param)
 {
-	return new TDelCommand(param);
+	return new TDelCommand(session, param);
 }
 
 /*##########################################################################
@@ -95,9 +95,9 @@ TEraseFactory::TEraseFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TEraseFactory::Create(const char *param)
+TCommand *TEraseFactory::Create(TSession *session, const char *param)
 {
-	return new TDelCommand(param);
+	return new TDelCommand(session, param);
 }
 
 /*##########################################################################
@@ -111,8 +111,8 @@ TCommand *TEraseFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TDelCommand::TDelCommand(const char *param)
-  : TCommand(param)
+TDelCommand::TDelCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_DEL);
 }

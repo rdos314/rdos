@@ -496,7 +496,7 @@ Dump	Proc near
 	SetCursorPosition
 	xor ax,ax
 state_thread_loop:
-	GetState
+	GetThreadState
 	jc state_thread_next
 	mov [si].RowId,ax
 	add si,2
@@ -556,7 +556,7 @@ DoFunc	Proc near
 	mov bx,dx
 	shl bx,1
 	mov ax,[bx].RowId
-	Pause
+	SuspendThread
 do_func_end:
 	pop dx
 	pop cx

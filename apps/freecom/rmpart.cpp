@@ -67,9 +67,9 @@ TRemovePartitionFactory::TRemovePartitionFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TRemovePartitionFactory::Create(const char *param)
+TCommand *TRemovePartitionFactory::Create(TSession *session, const char *param)
 {
-	return new TRemovePartitionCommand(param);
+	return new TRemovePartitionCommand(session, param);
 }
 
 /*##########################################################################
@@ -83,8 +83,8 @@ TCommand *TRemovePartitionFactory::Create(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TRemovePartitionCommand::TRemovePartitionCommand(const char *param)
-  : TCommand(param)
+TRemovePartitionCommand::TRemovePartitionCommand(TSession *session, const char *param)
+  : TCommand(session, param)
 {
 	FHelpScreen.Load(TEXT_CMDHELP_RMPART);
 }

@@ -433,14 +433,19 @@ TCommand *TCommandFactory::Parse(const char *line)
 			}
 			*ptr = 0;
 
-			factory = FCmdList;
-			while (factory)
-			{
-				if (!strcmp(factory->FName.GetData(), com))
-					break;
+            if (*com == '@')
+                factory = 0;
+            else
+            {
+    			factory = FCmdList;
+	    		while (factory)
+		    	{
+    				if (!strcmp(factory->FName.GetData(), com))
+	    				break;
 
-				factory = factory->FList;
-			}
+		    		factory = factory->FList;
+			    }
+			 }
 
 			if (!factory)
 				delete com;
