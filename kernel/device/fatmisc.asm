@@ -281,7 +281,8 @@ get_param32_info_ok:
     mov eax,es:[esi].fi_free_clusters
     mov ds:free_clusters,eax  
 	UnlockSector
-    jmp get_param32_count_clusters      ; change this later!!
+    jmp get_param32_done
+    jmp get_param32_count_clusters      ; for updating info-sector
 
 get_param32_info_fail:
     mov ds:info_sector,0

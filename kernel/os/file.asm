@@ -2160,18 +2160,24 @@ write_file32:
 	push ds
 	mov ds,bx
 ;
-    push eax
+    push es
     push edx
-    push esi	
+;    
+    push eax
+    push esi
+    mov ax,flat_sel
+    mov es,ax
 	mov esi,ds:file_dir_entry
 	GetSystemTime
 	mov es:[esi].de_time,eax
 	mov es:[esi].de_time+4,edx
 	mov edx,esi
-	CallFileSystem update_file_proc
 	pop esi
-	pop edx
 	pop eax
+	CallFileSystem update_file_proc
+;	
+	pop edx
+	pop es
 ;	
 	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
 	jz write_file32_buf
@@ -2220,18 +2226,24 @@ write_file16	PROC far
 	push ds
 	mov ds,bx
 ;
-    push eax
+    push es
     push edx
-    push esi	
+;    
+    push eax
+    push esi
+    mov ax,flat_sel
+    mov es,ax
 	mov esi,ds:file_dir_entry
 	GetSystemTime
 	mov es:[esi].de_time,eax
 	mov es:[esi].de_time+4,edx
 	mov edx,esi
-	CallFileSystem update_file_proc
 	pop esi
-	pop edx
 	pop eax
+	CallFileSystem update_file_proc
+;	
+	pop edx
+	pop es
 ;	
 	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
 	jz write_file16_buf
