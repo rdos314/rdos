@@ -44,11 +44,21 @@ flash_srcs  = FLASH.ASM
 flash_objs = $(flash_srcs:.ASM=.OBJ)
 flash_exes = FLASH.EXE
 
-srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs)
+cfg2rom_srcs = CFG2ROM.ASM
+cfg2rom_objs = $(cfg2rom_srcs:.ASM=.OBJ)
+cfg2rom_exes = CFG2ROM.EXE
+
+boot_srcs = BOOT.ASM
+boot_objs = $(boot_srcs:.ASM=.OBJ)
+boot_exes = BOOT.EXE
+
+srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs) $(cfg2rom_srcs) \
+            $(boot_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
-exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes)
+exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes) $(cfg2rom_exes) \
+            $(boot_exes)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -95,5 +105,22 @@ FLASH.EXE : $(flash_objs)
 	FLASH;
 !
 
+CFG2ROM.EXE : $(cfg2rom_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(cfg2rom_objs)
+	CFG2ROM
+	CFG2ROM;
+!
+
+BOOT.EXE : $(boot_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(boot_objs)
+	BOOT
+	BOOT;
+!
+
 RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes)
 	bur2bin
+	cfg2rom demo

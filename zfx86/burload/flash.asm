@@ -850,10 +850,6 @@ wait_erase_loop:
     test al,40h
     jz wait_erase_done
 ;
-    push ax
-    mov al,'.'
-    call SerSend2
-    pop ax
     mov al,ah
     jmp wait_erase_loop
 
@@ -873,6 +869,7 @@ WaitForErase    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Erase   Proc near
+    push ecx
     or ecx,ecx
     jz erase_done
     test cl,1
@@ -894,6 +891,7 @@ erase_more:
     call WaitForErase
 
 erase_done:
+    pop ecx
     ret
 Erase   Endp
 
@@ -924,7 +922,6 @@ Program   Proc near
 program_even:
     mov edx,200000h
     sub edx,ecx
-    and dx,0F000h
 
 program_more:
     mov ax,gs:[edi]
@@ -969,10 +966,6 @@ Main	Proc far
 	call MapFlash
 	call IdentifyFlash
     jc done
-;
-    mov ax,3333h
-    call SerOut16
-    call CRLF
 ;
 	xor cx,cx
 	push cs

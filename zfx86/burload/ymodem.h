@@ -20,42 +20,33 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# file.h
-# File class
+# ymodem.h
+# Ymodem class
 #
 ########################################################################*/
 
-#ifndef _FILE_H
-#define _FILE_H
+#ifndef _YMODEM_H
+#define _YMODEM_H
 
-#include "datetime.h"
+#include "serial.h"
+#include "file.h"
 
-class TFile
+class TYModem
 {
 public:
-	TFile(const char *FileName);
-	TFile(const char *FileName, int Attrib);
-	TFile(const TFile &file);
-	~TFile();
+    TYModem(TSerialDevice *Serial);
 
-	int IsOpen();
-	const char *GetFileName();
-
-	long GetSize();
-	void SetSize(long Size);
-	long GetPos();
-	void SetPos(long Pos);
-	void GetTime(TDateTime *time);
-	void SetTime(const TDateTime *time);
-
-	int Read(void *Buf, int Size);
-	int Write(const void *Buf, int Size);
+    int SendFile(const char *FileName);
+    int SendFile(TFile *File);
 
 protected:
+    int Startup();
+    int SendPacket(char *Buffer, int Size);
 
-private:
-	int FHandle;
-	char *FFileName;
+    TSerialDevice *FSerial;
+    int FPacketNr;
+    char FNCG;    
+    int FCrcTable[256];
 };
 
 #endif

@@ -248,7 +248,7 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 
 		case 0x60:
 		    if (Pci.IsKeyboardEnabled())
-    			Keyb.Out(Port & 0xF, Value);
+				Keyb.Out(Port & 0xF, Value);
 			break;
 
 		case 0x70:
@@ -256,8 +256,8 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 			break;
 
 		default:
-		    Pci.Out(Port, Value);
-		    break;
+			Pci.Out(Port, Value);
+			break;
 	}
 }
 
@@ -274,13 +274,15 @@ void Reset()
 	int i;
 	long l;
 	long *LongPtr;
+	int size;
 	Eprom = new char[0x10000];
 	LowRam = new char[0x10000];
 
-	file = RdosOpenFile("rdosbur.bin", 0);
+	file = RdosOpenFile("demo.rom", 0);
 	if (file)
 	{
-		RdosReadFile(file, ((char *)Eprom) + 0x30000, 0x10000);
+		size = RdosGetFileSize(file);
+		RdosReadFile(file, ((char *)Eprom) + 0x40000 - size - 1, size);
 		RdosCloseFile(file);
 	}
 

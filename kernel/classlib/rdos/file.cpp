@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <string.h>
 #include "file.h"
 #include "rdos.h"
 
@@ -44,6 +45,12 @@
 ##########################################################################*/
 TFile::TFile(const char *FileName)
 {
+    int len;
+
+    len = strlen(FileName);
+    FFileName = new char[len + 1];
+    strcpy(FFileName, FileName);
+
 	FHandle = RdosOpenFile(FileName, 0);
 }
 
@@ -61,6 +68,12 @@ TFile::TFile(const char *FileName)
 ##########################################################################*/
 TFile::TFile(const char *FileName, int Attrib)
 {
+    int len;
+
+    len = strlen(FileName);
+    FFileName = new char[len + 1];
+    strcpy(FFileName, FileName);
+
 	FHandle = RdosCreateFile(FileName, Attrib);
 }
 
@@ -77,6 +90,12 @@ TFile::TFile(const char *FileName, int Attrib)
 ##########################################################################*/
 TFile::TFile(const TFile &file)
 {
+    int len;
+
+    len = strlen(file.FFileName);
+    FFileName = new char[len + 1];
+    strcpy(FFileName, file.FFileName);
+
 	if (file.FHandle)
 		FHandle = RdosDuplFile(file.FHandle);
 	else
@@ -98,6 +117,9 @@ TFile::~TFile()
 {
 	if (FHandle)
 		RdosCloseFile(FHandle);
+
+    if (FFileName)
+        delete FFileName;
 }
 
 /*##########################################################################
@@ -117,6 +139,22 @@ int TFile::IsOpen()
 		return TRUE;
 	else
 		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFile::GetFileName
+#
+#   Purpose....: Get file name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Filename
+#
+##########################################################################*/
+const char *TFile::GetFileName()
+{
+    return FFileName;
 }
 
 /*##########################################################################

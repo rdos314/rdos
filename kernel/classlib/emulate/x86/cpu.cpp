@@ -192,7 +192,7 @@ void TCpu::Reset()
 	Reg_ebp = 0x12345678;
 	Reg_esp = 0x0;
 	Reg_eflags = 2;
-	Reg_eip = 0x0000;
+	Reg_eip = 0xFFF0;
 	Reg_cs.selector = 0xF000;
 	Reg_cs.base = 0xFFFF0000;
 	Reg_cs.limit = 0xFFFF;
