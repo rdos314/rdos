@@ -762,7 +762,7 @@ sim_int_save_pm:
 	mov edx,pint_real_stack
 	or edx,edx
 	jnz sim_int_stack_ok
-	mov eax,200h
+	mov eax,210h
 	AllocateVMLinear
 	mov pint_real_stack,edx
 sim_int_stack_ok:

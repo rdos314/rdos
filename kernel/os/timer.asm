@@ -273,8 +273,9 @@ timer_pr:
 	GetSystemTime
 	mov timer0.timer_time,eax
 	mov timer0.timer_time+4,edx
-	mov eax,100h
+	mov eax,110h
 	AllocateVMLinear
+	add edx,10h
 	shr edx,4
 ; gs
 	push 0

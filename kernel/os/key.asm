@@ -2113,8 +2113,9 @@ keyboard_emul_pr:
 	mov ds,ax
 	GetThread
 	mov ds:key_emul_thread,ax
-	mov eax,100h
+	mov eax,110h
 	AllocateVMLinear
+	add edx,10h
 	shr edx,4
 ; gs
 	push 0

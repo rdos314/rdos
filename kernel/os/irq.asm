@@ -171,17 +171,20 @@ irq_not_context16_&nr:
 	mov edx,es:pint_real_stack
 	or edx,edx
 	jnz irq_real_stack_ok&nr
-	mov eax,200h
+	mov eax,210h
 	AllocateVMLinear
 	mov es:pint_real_stack,edx
 irq_real_stack_ok&nr:
 	mov ax,flat_sel
 	mov es,ax
+	mov eax,edx
 	shr edx,4
+	and eax,0Fh
+	add eax,200h-6
 	mov [bp].vm_ss,dx
-	mov word ptr [bp].vm_esp,1FAh
+	mov [bp].vm_esp,eax
 	shl edx,4
-	add edx,1FAh
+	add edx,eax
 	mov ax,ds:[bx].vm_offs
 	mov es:[edx],ax
 	mov ax,ds:[bx].vm_seg

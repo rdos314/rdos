@@ -967,15 +967,18 @@ call_vm_save_context:
 	mov edx,ds:pint_real_stack
 	or edx,edx
 	jnz call_vm_real_stack_ok
-	mov eax,200h
+	mov eax,210h
 	AllocateVMLinear
 	mov ds:pint_real_stack,edx
 call_vm_real_stack_ok:
 	mov eax,edx
 	shr eax,4
-	push eax
-	push dword ptr 200h-6
+	and edx,0Fh
 	add edx,200h-6
+	push eax
+	push edx
+	shl eax,4
+	add edx,eax
 	mov ax,int_data_sel
 	mov ds,ax
 	mov bx,ds:call_vm_ret_seg
@@ -1070,7 +1073,9 @@ call_vm_ret:
 	sti
 	mov bp,sp
 	mov bx,ds
+	push ds
 	call translate_selector
+	pop ds
 	cmp bx,[bp]
 	je call_vm_ds_done
 ;
@@ -1080,7 +1085,9 @@ call_vm_ret:
 
 call_vm_ds_done:
 	mov bx,es
+	push ds
 	call translate_selector
+	pop ds
 	cmp bx,[bp+2]
 	je call_vm_es_done
 ;
@@ -1620,7 +1627,7 @@ reflect_pm_locked_move:
 	mov edx,ds:pint_real_stack
 	or edx,edx
 	jnz refl_pm_to_vm_stack_ok
-	mov eax,200h
+	mov eax,210h
 	AllocateVMLinear
 	mov ds:pint_real_stack,edx
 refl_pm_to_vm_stack_ok:

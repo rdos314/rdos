@@ -45,8 +45,8 @@ INCLUDE pcvideo.inc
 vesa_info_struc	STRUC
 
 vesa_name		DB 4 DUP(?)
-vesa_major_ver	DB ?
 vesa_minor_ver	DB ?
+vesa_major_ver	DB ?
 vesa_oem_ptr	DD ?
 vesa_cap		DD ?
 vesa_modes		DD ?
@@ -128,6 +128,22 @@ CheckVesa	Proc near
 	cmp ax,4Fh
 	jne vesa_v86_calls
 ;
+	mov bx,es:[di].vpm_table
+
+vesa_io_loop:
+	mov ax,[bx]
+	add bx,2
+	cmp ax,-1
+	jne vesa_io_loop
+;
+	mov ax,[bx]
+	cmp ax,-1
+	je vesa_memory_done
+;
+	mov edx,[bx]
+	movzx ecx,word ptr [bx+4]
+
+vesa_memory_done:
 
 vesa_v86_calls:
 	jmp vesa_check_done

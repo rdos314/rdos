@@ -254,6 +254,54 @@ HandleInputSel	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HandleOutputSel	Proc near
+	mov ax,ds
+	or ax,ax
+	jz handle_output_es
+;
+	cmp ax,v86_bios_ds_sel
+	je handle_output_ds_same
+;
+	mov bx,fs:list_ds
+	call DecodeSelector
+	jc handle_output_es
+;
+	mov ax,process_page_sel
+	mov gs,ax
+	mov edi,edx
+	shr edi,10
+;
+	mov bx,ds
+	push ecx
+	GetSelectorBaseSize
+	pop ecx
+	mov esi,edx
+	shr esi,10
+	dec ecx
+	shr ecx,12
+	inc cx
+	cmp cx,10h
+	jbe handle_output_ds_copy
+;
+	mov cx,10h
+
+handle_output_ds_copy:
+	mov eax,gs:[edi]
+	and ax,0F000h
+	or eax,eax
+	jz handle_output_ds_copy_next
+;
+	FreePhysical
+
+handle_output_ds_copy_next:
+	mov eax,gs:[esi]
+	mov gs:[edi],eax
+	add esi,4
+	add edi,4
+	loop handle_output_ds_copy
+;
+	jmp handle_output_es
+
+handle_output_ds_same:
 	mov bx,fs:list_ds
 	call DecodeSelector
 	jc handle_output_es
@@ -280,6 +328,54 @@ handle_output_ds_move:
 	loop handle_output_ds_move
 
 handle_output_es:
+	mov ax,es
+	or ax,ax
+	jz handle_output_done
+;
+	cmp ax,v86_bios_es_sel
+	je handle_output_es_same
+;
+	mov bx,fs:list_es
+	call DecodeSelector
+	jc handle_output_done
+;
+	mov ax,process_page_sel
+	mov gs,ax
+	mov edi,edx
+	shr edi,10
+;
+	mov bx,es
+	push ecx
+	GetSelectorBaseSize
+	pop ecx
+	mov esi,edx
+	shr esi,10
+	dec ecx
+	shr ecx,12
+	inc cx
+	cmp cx,10h
+	jbe handle_output_es_copy
+;
+	mov cx,10h
+
+handle_output_es_copy:
+	mov eax,gs:[edi]
+	and ax,0F000h
+	or eax,eax
+	jz handle_output_es_copy_next
+;
+	FreePhysical
+
+handle_output_es_copy_next:
+	mov eax,gs:[esi]
+	mov gs:[edi],eax
+	add esi,4
+	add edi,4
+	loop handle_output_es_copy
+;
+	jmp handle_output_done
+
+handle_output_es_same:
 	mov bx,fs:list_es
 	call DecodeSelector
 	jc handle_output_done
@@ -356,6 +452,44 @@ bios_loop:
 	xor ax,ax
 	mov cx,4
 	rep stosw	
+;
+	mov ax,flat_sel
+	mov ds,ax
+	xor al,al
+	mov cx,9
+	xor si,si
+bios_int_loop1:
+	mov bx,[si]
+	add si,2
+	mov dx,[si]
+	add si,2
+	SetVMInt
+	inc al
+	loop bios_int_loop1
+;
+	mov al,10h
+	mov cx,68h
+	mov si,10h * 4
+bios_int_loop2:
+	mov bx,[si]
+	add si,2
+	mov dx,[si]
+	add si,2
+	SetVMInt
+	inc al
+	loop bios_int_loop2
+;
+	mov al,80h
+	mov cx,80h
+	mov si,80h * 4
+bios_int_loop3:
+	mov bx,[si]
+	add si,2
+	mov dx,[si]
+	add si,2
+	SetVMInt
+	inc al
+	loop bios_int_loop3
 ;
 	mov ax,v86_bios_data_sel
 	mov ds,ax

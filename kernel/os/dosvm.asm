@@ -656,7 +656,11 @@ allocate_memory	PROC far
 	jz allocate_normal
 	movzx eax,bx
 	shl eax,4
+	add eax,10h
 	AllocateVMLinear
+	dec edx
+	and dl,0F0h
+	add edx,10h
 	jmp allocate_mem_ok
 allocate_normal:
 	movzx eax,bx
