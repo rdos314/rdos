@@ -43,6 +43,7 @@ friend class TList;
 public:
 	TListNode();
 	TListNode(const void *x, int size);
+	TListNode(const TListNode &source);
 	virtual ~TListNode();
 
 	int IsValid() const;
@@ -55,6 +56,10 @@ public:
 	int operator<(const TListNode &dest) const;
 	int operator<=(const TListNode &dest) const;
 
+	int GetSize() const;
+	const void *GetData() const;
+	void SetData(const void *x, int size);
+
 protected:
 	void Init();
 	void AllocBuffer(int size);
@@ -65,10 +70,10 @@ protected:
 	void AllocBeforeWrite(int size);
 	void AssignCopy(const void *x, int size);
 
+    TListNode *Clone();
 	virtual int Compare(const TListNode &n2) const;
 
 	int FValid;
-    int FRefCount;
 	char *FBuf;
 	TListData *FData;
     TListNode *FNext;
@@ -77,65 +82,70 @@ protected:
 class TList
 {
 public:
-    TList();
-    ~TList();
+	TList();
+	TList(const TList &source);
+	~TList();
 
-    int GotoFirst();
-    int GotoNext();
-    int GotoPrev();
-    int GotoLast();
-    int Goto(int pos);
+	int GotoFirst();
+	int GotoNext();
+	int GotoPrev();
+	int GotoLast();
+	int Goto(int pos);
+	int Find(const TListNode &ln);
 
 	TListNode &Get();
 
-	int operator== (const TList &l) const;
-    int operator!= (const TList &l) const;
-    TList *operator= (const TList &l);
-    TListNode *operator[] (int pos);
+	int operator==(const TList &dest) const;
+	int operator!=(const TList &dest) const;
+	int operator>(const TList &dest) const;
+	int operator>=(const TList &dest) const;
+	int operator<(const TList &dest) const;
+	int operator<=(const TList &dest) const;
+	TList &operator=(const TList &l);
+	TList &operator+=(const TList &l);
+	TList &operator&=(const TList &l);
+	TList &operator|=(const TList &l);
+	TList &operator^=(const TList &l);
+	TListNode &operator[] (int pos);
 
-    void Clear();
-    int IsEmpty();
-    int GetSize();
-    int GetPosition();
-    void Duplicate(const TList &l);
+	void Clear();
+	int IsEmpty();
+	int GetSize();
+	int GetPosition();
 
-    TList &Copy();
-    TList &Reverse();
-    static TList &Concat(const TList &l1, const TList &l2);
-    static TList &Intersection(const TList &l1, const TList &l2);
-    static TList &Union(const TList &l1, const TList &l2);
-    static TList &Difference(const TList &l1, const TList &l2);
-    static TList &Xor(const TList &l1, const TList &l2);
+	void AddFirst(TListNode &newln);
+	void AddLast(TListNode &newln);
+	void AddAt(int n, TListNode &newln);
 
+	int RemoveFirst();
+	int RemoveLast();
+	int RemoveCurrent();
+	int Remove(int n);
+
+    int Replace(int n, TListNode &newln);
+
+    void Concat(const TList &src1, const TList &src2); 
+    void Intersect(const TList &src1, const TList &src2); 
+    void Union(const TList &src1, const TList &src2); 
+    void Difference(const TList &src1, const TList &src2); 
+
+    void Reverse();
     void RemoveDuplicates();
 
 protected:
-    void Reference(TListNode *n);
-    void Dereference(TListNode *n);
-    void FreeNodes(TListNode *n);
+    void Init();
+    void Invalidate(TListNode *ln);
 
-    virtual TList *Create(TListNode *n);
-    virtual TList *InsertBefore(const void *v, TListNode *n);
-    virtual TList *InsertAfter(const void *v, TListNode *n);
+	int Compare(const TList &l) const;
 
-    int Find(const void *x);
-
-    int AddFirst(const void *x);
-    int AddLast(const void *x);
-
-    TListNode *RemoveFirst();
-    TListNode *RemoveCurrent();
-    TListNode *RemoveOne(const void *x);
-
-    int ReplaceOne(const void *x, const void *newx);
-    int ReplaceAll(const void *x, const void *newx);
-
-    int InsertBefore(const void *x);
-    int InsertAfter(const void *);
-    
     TListNode *FList;
     TListNode *FCurrPos;
     TListNode *FPrevPos;
 };
+
+TList operator+(const TList& list1, const TList& list2);
+TList operator&(const TList& list1, const TList& list2);
+TList operator|(const TList& list1, const TList& list2);
+TList operator^(const TList& list1, const TList& list2);
 
 #endif

@@ -43,12 +43,48 @@ TSysSetFactory *sysset;
 TTypeFactory *type;
 TTimeFactory *time;
 
+#include "list.h"
+
+void TestList()
+{
+	TList list1;
+	TList list2;
+	TList list3;
+	TListNode node;
+
+	list1.AddFirst(TListNode("abc", 3));
+	list1.AddLast(TListNode("cde", 3));
+	list1.AddFirst(TListNode("ferg", 4));
+
+	list2.AddFirst(TListNode("x", 1));
+	list2.AddFirst(TListNode("abc", 3));
+	list2.AddLast(TListNode("y", 1));
+
+	list3 = list1 & list2;
+
+	list3.AddFirst(TListNode("abc", 3));
+	list3.RemoveDuplicates();
+
+	list3.GotoFirst();
+	node = list3.Get();
+	while (node.IsValid())
+	{
+		list3.GotoNext();
+		node = list3.Get();
+	}
+
+	node = list3[3];
+	list1 = list3;
+}
+
 void Init()
 {
 	char VersionStr[16];
 	int Major;
 	int Minor;
 	int Release;
+
+    TestList();
 
 	RdosGetVersion(&Major, &Minor, &Release);
 	sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);

@@ -112,7 +112,7 @@ public:
 	~TDir();
 
     TDirEntry GotoFirst();
-    TDirEntry GotoNext();
+	TDirEntry GotoNext();
 
 	TPathName FPathName;
 	TString FBaseString;

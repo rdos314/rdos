@@ -67,12 +67,36 @@ TListNode::TListNode()
 ##########################################################################*/
 TListNode::TListNode(const void *x, int size)
 {
+    Init();
+    
     AllocBuffer(size);
 	memcpy(FBuf, x, size);
-	FRefCount = 1;
 	FNext = 0;
 
+	FValid = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TListNode::TListNode
+#
+#   Purpose....: Copy constructor for list-node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode::TListNode(const TListNode &src)
+{
     Init();
+    
+	FData = src.FData;
+	if (FData)
+	{
+		FBuf = src.FBuf;
+		src.FData->FRefs++;
+	}
 	FValid = TRUE;
 }
 
@@ -123,6 +147,67 @@ void TListNode::Init()
 int TListNode::IsValid() const
 {
 	return FValid;
+}
+
+/*##########################################################################
+#
+#   Name       : TListNode::GetSize
+#
+#   Purpose....: Get size of data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TListNode::GetSize() const
+{
+    if (FValid && FData)
+        return FData->FDataSize;
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TListNode::GetData
+#
+#   Purpose....: Get data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const void *TListNode::GetData() const
+{
+    if (FValid && FData)
+        return FBuf;
+    else
+        return "";
+}
+
+/*##########################################################################
+#
+#   Name       : TListNode::SetData
+#
+#   Purpose....: Set data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListNode::SetData(const void *x, int size)
+{
+	AllocBeforeWrite(size);
+	if (size)
+	{
+		memcpy(FBuf, x, size);
+	    FData->FDataSize = size;
+	}
+	else
+		Init();
 }
 
 /*##########################################################################
@@ -340,6 +425,28 @@ int TListNode::Compare(const TListNode &n2) const
 
 /*##########################################################################
 #
+#   Name       : TListNode::Clone
+#
+#   Purpose....: Clone entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode *TListNode::Clone()
+{
+	if (FData)
+	{
+		FData->FRefs++;
+	    return new TListNode(FBuf, FData->FDataSize);
+    }
+    else
+        return new TListNode(0, 0);
+}
+
+/*##########################################################################
+#
 #   Name       : TListNode::operator=
 #
 #   Purpose....: Assignment operator
@@ -478,7 +585,85 @@ int TListNode::operator<=(const TListNode &dest) const
 
 /*##########################################################################
 #
-#   Name       : TList::operator==
+#   Name       : TNode::TNode
+#
+#   Purpose....: Constructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList::TList()
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::TList
+#
+#   Purpose....: Copy constructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList::TList(const TList &src)
+{
+    TListNode *p;
+
+    Init();
+
+    FSection.Enter();
+    p = src.FList;
+
+    while (p)
+    {
+        AddLast(*p->Clone());
+        p = p->FNext;
+    }
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::~TList
+#
+#   Purpose....: Destructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList::~TList()
+{
+    Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Init
+#
+#   Purpose....: Init list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Init()
+{
+    FList = 0;
+    FCurrPos = 0;
+    FPrevPos = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Compare
 #
 #   Purpose....: Compare lists
 #
@@ -487,7 +672,7 @@ int TListNode::operator<=(const TListNode &dest) const
 #   Returns....: *
 #
 ##########################################################################*/
-int TList::operator== (const TList &l) const
+int TList::Compare(const TList &l) const
 {
 	TListNode *p1;
 	TListNode *p2;
@@ -496,7 +681,7 @@ int TList::operator== (const TList &l) const
 	FSection.Enter();
 
 	if (this == &l)
-		res = TRUE;
+		res = 0;
 	else
 	{
 		p1 = FList;
@@ -508,16 +693,14 @@ int TList::operator== (const TList &l) const
 			{
 				if (p1 == p2)
 				{
-					res = TRUE;
+					res = 0;
 					break;
 				}
 				else
 				{
-					if (p1->Compare(*p2) != 0)
-					{
-						res = FALSE;
+				    res = p1->Compare(*p2);				    
+					if (res != 0)
 						break;
-					}
 				}
 				p1 = p1->FNext;
 				p2 = p2->FNext;
@@ -526,14 +709,38 @@ int TList::operator== (const TList &l) const
 		else
 		{
 			if (p1 == 0 && p2 == 0)
-				res = TRUE;
+				res = 0;
 			else
-				res = FALSE;
+			{
+			    if (p1)
+			        res = 1;
+			    else
+			        res = -1;
+			}
 		}
 	}
 	FSection.Leave();
 
 	return res;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator==
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::operator==(const TList &l) const
+{
+    if (Compare(l) == 0)
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -549,89 +756,234 @@ int TList::operator== (const TList &l) const
 ##########################################################################*/
 int TList::operator!= (const TList &l) const
 {
-    TListNode *p1;
-    TListNode *p2;
-    int res;
-
-    FSection.Enter();
-    
-    if (this == &l)
-        res = FALSE;
+    if (Compare(l) != 0)
+        return TRUE;
     else
-    {
-		p1 = FList;
-        p2 = l.FList;
-
-		if (p1 && p2)
-        {
-            while (p1 && p2)
-            {
-                if (p1 == p2)
-                {
-                    res = FALSE;
-                    break;
-                }
-                else
-                {
-					if (p1->Compare(*p2) != 0)
-                    {
-                        res = TRUE;
-                        break;
-                    }
-                }
-                p1 = p1->FNext;
-				p2 = p2->FNext;
-            }
-        }
-		else
-        {
-            if (p1 == 0 && p2 == 0)        
-                res = FALSE;
-            else
-                res = TRUE;
-        }
-    }
-    FSection.Leave();
-
-    return res;
+        return FALSE;
 }    
 
 /*##########################################################################
 #
-#   Name       : TList::Reference
+#   Name       : TList::operator>
 #
-#   Purpose....: Increment reference count
+#   Purpose....: Compare lists
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TList::Reference(TListNode *n)
+int TList::operator>(const TList &dest) const
 {
-    if (n)
-        n->FRefCount++;
+	if (Compare(dest) > 0)
+		return TRUE;
+	else
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TList::Dereference
+#   Name       : TList::operator<
 #
-#   Purpose....: Decrement reference count
+#   Purpose....: Compare lists
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TList::Dereference(TListNode *n)
+int TList::operator<(const TList &dest) const
 {
-    if (n)
+	if (Compare(dest) < 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator>=
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::operator>=(const TList &dest) const
+{
+	if (Compare(dest) >= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator<=
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::operator<=(const TList &dest) const
+{
+	if (Compare(dest) <= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList &TList::operator=(const TList &src)
+{
+    TListNode *p;
+    
+    Clear();    
+
+    FSection.Enter();
+
+    if (FList != src.FList)
     {
-        n->FRefCount--;
-        if (n->FRefCount <= 0)
-            FreeNodes(n);
+        p = src.FList;
+
+        while (p)
+        {
+            AddLast(*p->Clone());
+            p = p->FNext;
+        }
     }
+
+    FSection.Leave();
+
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator+=
+#
+#   Purpose....: Concat operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList &TList::operator+=(const TList &l)
+{
+	TList list;
+	list.Concat(*this, l);
+	*this = list;
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator&=
+#
+#   Purpose....: Intersec operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList &TList::operator&=(const TList &l)
+{
+	TList list;
+	list.Intersect(*this, l);
+	*this = list;
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator|=
+#
+#   Purpose....: Union operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList &TList::operator|=(const TList &l)
+{
+	TList list;
+	list.Union(*this, l);
+	*this = list;
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator^=
+#
+#   Purpose....: Difference operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList &TList::operator^=(const TList &l)
+{
+	TList list;
+	list.Difference(*this, l);
+	*this = list;
+    return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator[]
+#
+#   Purpose....: Vector operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListNode &TList::operator[](int pos)
+{
+    TListNode *p;
+    int n = 0;
+
+    FSection.Enter();
+    
+    if (FList)
+    {
+        p = FList;
+
+        while (p && n < pos)
+        {
+            p = p->FNext;
+            n++;
+        }
+    }
+
+    FSection.Leave();
+
+    if (p)
+        return *p;
+    else
+        return EmptyList;
 }
 
 /*##########################################################################
@@ -647,12 +999,17 @@ void TList::Dereference(TListNode *n)
 ##########################################################################*/
 void TList::Clear()
 {
+    TListNode *p;
+
     FSection.Enter();
 
-    FCurrPos = 0;
-    FPrevPos = 0;
-    Dereference(FList);
-    FList = 0;
+    while (FList)
+    {
+        p = FList;
+        FList = FList->FNext;
+        delete p;
+    }
+    Init();
 
     FSection.Leave();
 }
@@ -674,6 +1031,26 @@ int TList::IsEmpty()
         return FALSE;
     else
         return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Invalidate
+#
+#   Purpose....: Invalidate pointers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Invalidate(TListNode *ln)
+{
+    if (FCurrPos == ln)
+        FCurrPos = 0;
+
+    if (FPrevPos == ln)
+        FPrevPos = 0;
 }
 
 /*##########################################################################
@@ -774,8 +1151,6 @@ int TList::GotoFirst()
 ##########################################################################*/
 int TList::GotoNext()
 {
-    TListNode *p;
-
     FSection.Enter();
 
     if (FCurrPos)
@@ -887,6 +1262,31 @@ int TList::Goto(int pos)
 
 /*##########################################################################
 #
+#   Name       : TList::Find
+#
+#   Purpose....: Find specific data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::Find(const TListNode &ln)
+{
+    FSection.Enter();
+
+    FCurrPos = FList;
+
+	while (FCurrPos && *FCurrPos != ln)
+		FCurrPos = FCurrPos->FNext;
+
+    FSection.Leave();    
+
+    return FCurrPos != 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TList::Get
 #
 #   Purpose....: Get current data
@@ -902,4 +1302,674 @@ TListNode &TList::Get()
 		return *FCurrPos;
 	else
 		return EmptyList;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::AddFirst
+#
+#   Purpose....: Add entry as first entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddFirst(TListNode &newln)
+{
+    TListNode *p;
+
+    FSection.Enter();
+    p = new TListNode(newln);
+    p->FNext = FList;
+    FList = p;
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::AddLast
+#
+#   Purpose....: Add entry as last entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddLast(TListNode &newln)
+{
+    TListNode *p;
+    TListNode *tp;
+
+    FSection.Enter();
+    p = new TListNode(newln);
+
+    if (FList)
+    {
+        tp = FList;
+        while (tp->FNext)
+            tp = tp->FNext;
+
+        tp->FNext = p;
+    }
+    else
+        FList = p;
+        
+    p->FNext = 0;
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::AddAt
+#
+#   Purpose....: Add entry at specified position, if possible.
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddAt(int n, TListNode &newln)
+{
+    TListNode *p;
+    TListNode *tp;
+    int pos = 0;
+
+    FSection.Enter();
+    p = new TListNode(newln);
+
+    if (FList)
+    {
+        tp = FList;
+        while (tp->FNext && pos < n)
+        {
+            pos++;
+            tp = tp->FNext;
+        }
+
+        if (tp->FNext)
+        {
+            p->FNext = tp->FNext;
+            tp->FNext = p;
+        }
+        else
+        {
+            tp->FNext = p;
+            p->FNext = 0;
+        }
+    }
+    else
+    {
+        FList = p;
+        p->FNext = 0;
+    }
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::RemoveFirst
+#
+#   Purpose....: Remove first entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::RemoveFirst()
+{
+    int success;
+    TListNode *p;
+
+    FSection.Enter();
+
+    if (FList)
+    {
+        p = FList;
+        FList = FList->FNext;
+        Invalidate(p);
+        delete p;
+        success = TRUE;
+
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::RemoveLast
+#
+#   Purpose....: Remove last entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::RemoveLast()
+{
+    int success;
+    TListNode *p;
+    TListNode *prev;
+
+    FSection.Enter();
+
+    if (FList)
+    {
+        prev = 0;
+        p = FList;
+        while (p->FNext)
+        {
+            prev = p;
+            p = p->FNext;
+        }
+
+        if (prev)
+            prev->FNext = 0;    
+        else
+            FList = 0;
+
+        Invalidate(p);
+        delete p;
+        
+        success = TRUE;
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::RemoveCurrent
+#
+#   Purpose....: Remove current entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::RemoveCurrent()
+{
+    int success;
+    TListNode *p;
+    TListNode *prev;
+
+    FSection.Enter();
+
+    if (FList && FCurrPos)
+    {
+        prev = 0;
+        p = FList;
+        while (p && p->FNext != FCurrPos)
+        {
+            prev = p;
+            p = p->FNext;
+        }
+
+        if (p)
+        {
+            if (prev)
+                prev->FNext = p->FNext;    
+            else
+                FList = p->FNext;
+
+            Invalidate(p);
+            delete p;
+            
+            success = TRUE;
+        }
+        else
+            success = FALSE;
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Remove
+#
+#   Purpose....: Remove specified entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::Remove(int pos)
+{
+    int success;
+    TListNode *p;
+    TListNode *prev;
+    int n = 0;
+
+    FSection.Enter();
+
+    if (FList)
+    {
+        prev = 0;
+        p = FList;
+        while (p && n < pos)
+        {
+            n++;
+            prev = p;
+            p = p->FNext;
+        }
+
+        if (p)
+        {
+            if (prev)
+                prev->FNext = p->FNext;    
+            else
+                FList = p->FNext;
+
+            Invalidate(p);
+            delete p;
+            
+            success = TRUE;
+        }
+        else
+            success = FALSE;
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Replace
+#
+#   Purpose....: Replace specified entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TList::Replace(int pos, TListNode &newln)
+{
+    int success;
+    TListNode *p;
+    int n = 0;
+
+    FSection.Enter();
+
+    if (FList)
+    {
+        p = FList;
+        while (p && n < pos)
+        {
+            n++;
+            p = p->FNext;
+        }
+
+        if (p)
+        {
+            *p = newln;
+            success = TRUE;
+        }
+        else
+            success = FALSE;
+    }
+    else
+        success = FALSE;
+        
+    FSection.Leave();
+
+    return success;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Concat
+#
+#   Purpose....: Concat in this list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Concat(const TList &list1, const TList& list2)
+{
+	TListNode *p;
+
+    Clear();
+    FSection.Enter();
+
+    p = list1.FList;
+
+    while (p)
+    {
+        AddLast(*p->Clone());
+        p = p->FNext;
+    }
+
+    p = list2.FList;
+
+    while (p)
+    {
+        AddLast(*p->Clone());
+        p = p->FNext;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Intersect
+#
+#   Purpose....: Intersection
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Intersect(const TList &list1, const TList& list2)
+{
+	TListNode *p1;
+	TListNode *p2;
+
+    Clear();
+    FSection.Enter();
+
+    p1 = list1.FList;
+
+    while (p1)
+    {
+
+        p2 = list2.FList;
+
+    	while (p2 && *p1 != *p2)
+    	    p2 = p2->FNext;
+
+        if (p2)
+            AddLast(*p1->Clone());
+            
+        p1 = p1->FNext;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Union
+#
+#   Purpose....: Union
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Union(const TList &list1, const TList& list2)
+{
+	TListNode *p1;
+	TListNode *p2;
+
+    Clear();
+
+    FSection.Enter();
+
+    p1 = list1.FList;
+
+    while (p1)
+    {
+        AddLast(*p1->Clone());
+        p1 = p1->FNext;
+    }
+
+    p2 = list2.FList;
+
+    while (p2)
+    {
+
+        p1 = list1.FList;
+
+    	while (p1 && *p1 != *p2)
+    	    p1 = p1->FNext;
+
+        if (!p1)
+            AddLast(*p2->Clone());
+            
+        p2 = p2->FNext;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Difference
+#
+#   Purpose....: Difference operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Difference(const TList &list1, const TList& list2)
+{
+	TListNode *p1;
+	TListNode *p2;
+
+    Clear();
+
+    FSection.Enter();
+
+    p1 = list1.FList;
+
+    while (p1)
+    {
+
+        p2 = list2.FList;
+
+    	while (p2 && *p1 != *p2)
+    	    p2 = p2->FNext;
+
+        if (!p2)
+            AddLast(*p1->Clone());
+            
+        p1 = p1->FNext;
+    }
+
+    p2 = list2.FList;
+
+    while (p2)
+    {
+
+        p1 = list1.FList;
+
+    	while (p1 && *p1 != *p2)
+    	    p1 = p1->FNext;
+
+        if (!p1)
+            AddLast(*p2->Clone());
+            
+        p2 = p2->FNext;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::Reverse
+#
+#   Purpose....: Reverse list in place
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::Reverse()
+{
+    TListNode *p;
+    TListNode *tp;
+
+    FSection.Enter();
+
+    p = FList;
+    Init();
+
+    while (p)
+    {
+        tp = p->FNext;
+        p->FNext = FList;
+        FList = p;
+        p = tp;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::RemoveDuplicates
+#
+#   Purpose....: Remove duplicates from list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::RemoveDuplicates()
+{
+    TListNode *p;
+    TListNode *tp;
+    TListNode *insp;
+    TListNode *np;
+
+    FSection.Enter();
+
+    p = FList;
+    Init();
+    insp = 0;
+
+    while (p)
+    {
+        np = p->FNext;
+        
+        tp = FList;
+    	while (tp && *tp != *p)
+    		tp = tp->FNext;
+
+        if (tp)
+            delete p;
+        else
+        {
+            if (insp)
+            {
+                insp->FNext = p;
+                p->FNext = 0;
+            }
+            else
+                FList = p;
+                
+            insp = p;
+        }
+
+        p = np;
+    }
+
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : operator+
+#
+#   Purpose....: Concatenation operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList operator+(const TList &list1, const TList& list2)
+{
+	TList list;
+    list.Concat(list1, list2);
+    return list;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator&
+#
+#   Purpose....: Intersection operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList operator&(const TList &list1, const TList& list2)
+{
+	TList list;
+    list.Intersect(list1, list2);
+    return list;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator|
+#
+#   Purpose....: Union operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList operator|(const TList &list1, const TList& list2)
+{
+	TList list;
+    list.Union(list1, list2);
+    return list;
+}
+
+/*##########################################################################
+#
+#   Name       : TList::operator^
+#
+#   Purpose....: Difference operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TList operator^(const TList &list1, const TList& list2)
+{
+	TList list;
+    list.Difference(list1, list2);
+    return list;
 }
