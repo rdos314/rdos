@@ -383,9 +383,11 @@ void DaProc(void *param)
 {
 	int i;
 	int channel;
-	long double val;
 
-	channel = 0;
+	_asm int 3
+	for (channel = 0; channel < 8; channel++)
+		RdosWriteSerialVal(2, channel, 255);
+
 	for (;;)
 	{
 
@@ -449,7 +451,7 @@ void cdecl main()
 
 #endif
 
-//	RdosCreateThread(DaProc, "DA", 0, 0x2000);
+	RdosCreateThread(DaProc, "DA", 0, 0x2000);
 
 	for (;;)
 		Wait.WaitForever();
