@@ -8,12 +8,6 @@
 #include "str.h"
 #include "file.h"
 
-struct TSerialDebug
-{
-	long Time;
-	int Channel;
-	char ch;
-};
 
 void Log(TSerialDebug *Debug)
 {
@@ -50,7 +44,7 @@ void cdecl main()
 	{
 		if (Port1.Poll())
 		{
-			Debug.Time = GetTickCount();
+			Win32GetTics(GetTickCount(), &Debug.TimeMSB, &Debug.TimeLSB);
 			Debug.Channel = 1;
 			Debug.ch = Port1.Read();
 			File->Write(&Debug, sizeof(Debug));
@@ -60,7 +54,7 @@ void cdecl main()
 
 		if (Port2.Poll())
 		{
-			Debug.Time = GetTickCount();
+			Win32GetTics(GetTickCount(), &Debug.TimeMSB, &Debug.TimeLSB);
 			Debug.Channel = 2;
 			Debug.ch = Port2.Read();
 			File->Write(&Debug, sizeof(Debug));

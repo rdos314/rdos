@@ -4,6 +4,15 @@
 #include "windows.h"
 #include "device.h"
 
+class TSerialDebug
+{
+public:
+	short int Channel;
+	unsigned long TimeLSB;
+	unsigned long TimeMSB;
+	char ch;
+};
+
 class TSerialDevice : public TDevice
 {
 public:

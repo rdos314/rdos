@@ -29,7 +29,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "rdos.h"
+//#include "rdos.h"
 #include "anabase.h"
 #include "datetime.h"
 
