@@ -432,6 +432,22 @@ LocalFree Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetProcessHeap
+;
+;       DESCRIPTION:    Get process heap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetProcessHeap
+
+GetProcessHeap PROC near
+	mov eax,1 
+	ret
+GetProcessHeap ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           HeapCreate
 ;
 ;       DESCRIPTION:    Create a heap

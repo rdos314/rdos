@@ -89,6 +89,7 @@ EXPORTS
     GetPrivateProfileIntA
     GetPrivateProfileStringA
     GetProcAddress
+    GetProcessHeap
 	GetProfileIntA
 	GetProfileStringA
     GetStartupInfoA

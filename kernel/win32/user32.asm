@@ -333,6 +333,23 @@ CharUpperA ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           wsprintfA
+;
+;       DESCRIPTION:    wsprintf
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public wsprintfA
+
+wsprintfA Proc near
+    int 3
+    xor eax,eax
+    ret
+wsprintfA Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           MessageBox
 ;
 ;       DESCRIPTION:    Message box

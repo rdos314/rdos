@@ -249,7 +249,7 @@ HDIMG.EXE : $(hdimg_objs)
 
 GRUBIMG.EXE : $(grubimg_objs)
     tlink @&&!
-	$(link_opt) +
+	$(prot_opt) +
 	$(grubimg_objs)
 	GRUBIMG
 	GRUBIMG;
