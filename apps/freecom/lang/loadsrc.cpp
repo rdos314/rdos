@@ -66,9 +66,9 @@
 #define KEY_PDOWN	SCANCODE(81)
 
 #define KEY_TAB	ASCIICODE('\t')
-#define KEY_NL	ASCIICODE('\n')
-#define KEY_CR	ASCIICODE('\r')
-#define KEY_ENTER	ASCIICODE('\r')
+#define KEY_NL	ASCIICODE(0xFF)
+#define KEY_CR	ASCIICODE(0xFE)
+#define KEY_ENTER	ASCIICODE(0xFE)
 #define KEY_BS	ASCIICODE('\b')
 #define KEY_ESC	ASCIICODE(27)
 
