@@ -220,11 +220,12 @@ video_thread_sel	EQU 868h
 video_local_sel		EQU 870h
 video_focus_sel		EQU 878h
 
-pc_video_code_sel	EQU 880h
-pc_video_data_sel	EQU 888h
-
 ipc_debug_code_sel	EQU 890h
 ipc_debug_data_sel	EQU 898h
+
+pc_video_code_sel	EQU 8A0h
+pc_video_data_sel	EQU 8A8h
+pc_video_thread_sel	EQU 8B0h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h

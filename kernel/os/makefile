@@ -82,9 +82,9 @@ pci_srcs = PCI.ASM
 pci_objs = $(pci_srcs:.ASM=.OBJ)
 pci_rdvs = PCI.RDV
 
-key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM
+key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
-key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV
+key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV
 
 mouse_srcs = MOUSE.ASM 
 mouse_objs = $(mouse_srcs:.ASM=.OBJ)
@@ -372,6 +372,14 @@ KEYUK.RDV : $(key_objs)
 	KEY+KEYUK
 	KEYUK.RDV
 	KEYUK;
+!
+
+KEYFR.RDV : $(key_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEY+KEYFR
+	KEYFR.RDV
+	KEYFR;
 !
 
 MOUSE.RDV : $(mouse_objs)

@@ -164,7 +164,7 @@ init_mode12	Proc far
 ;
 	mov eax,SIZE video_object
 	AllocateSmallGlobalMem
-	mov cx,18
+	mov cx,24
 	mov ax,cs
 	mov ds,ax
 	mov si,OFFSET ModeTab
@@ -308,6 +308,11 @@ mt0F DW OFFSET error,			pc_video_code_sel
 mt10 DW OFFSET error,			pc_video_code_sel
 mt11 DW OFFSET error,			pc_video_code_sel
 mt12 DW OFFSET error,			pc_video_code_sel
+mt13 DW OFFSET error,			pc_video_code_sel
+mt14 DW OFFSET error,			pc_video_code_sel
+mt15 DW OFFSET error,			pc_video_code_sel
+mt16 DW OFFSET error,			pc_video_code_sel
+mt17 DW OFFSET error,			pc_video_code_sel
 
 PAGE
 

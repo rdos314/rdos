@@ -48,7 +48,9 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-	extrn TrueModeTab:near
+	extrn LinearTab16:near
+	extrn LinearTab24:near
+	extrn LinearTab32:near
 
 PAGE
 
@@ -85,14 +87,17 @@ init_flat_resol_loop:
 	mov es,bx
 ;
 	mov dl,es:vr_flat32_flags
+	mov dh,32
 	cmp ax,es:vr_flat32_mode
 	je init_flat_found
 ;
 	mov dl,es:vr_flat24_flags
+	mov dh,24
 	cmp ax,es:vr_flat24_mode
 	je init_flat_found
 ;
 	mov dl,es:vr_flat16_flags
+	mov dh,16
 	cmp ax,es:vr_flat16_mode
 	je init_flat_found
 ;
@@ -144,9 +149,12 @@ init_flat_check:
 	mov ds,ax
 	mov eax,SIZE vbe_object
 	AllocateSmallGlobalMem
+	mov ax,ds:vmi_scan_lines
+	mov es:vo_row_size,ax
 	mov eax,ds:vmi_lfb
 	mov es:vo_lfb,eax
 	mov es:vo_flags,dl
+	mov es:vo_bpp,dh
 	mov es:vo_has_focus,0
 	mov es:v_mode,bx
 	InitSection es:v_section
@@ -215,11 +223,34 @@ init_lfb_map_loop:
 ;
 	pop ds
 ;
+	mov al,es:vo_bpp
+	cmp al,16
+	je init_linear16
+;
+	cmp al,24
+	je init_linear24
+;
+	cmp al,32
+	je init_linear32
+;
+	jmp init_flat_free_fail
+
+init_linear16:
+	mov si,OFFSET LinearTab16
+	jmp init_mode_tab
+
+init_linear24:
+	mov si,OFFSET LinearTab24
+	jmp init_mode_tab
+
+init_linear32:
+	mov si,OFFSET LinearTab32
+	
+init_mode_tab:
 	push ds
-	mov cx,18
+	mov cx,24
 	mov ax,cs
 	mov ds,ax
-	mov si,OFFSET TrueModeTab
 	xor di,di
 	rep movsd
 	mov ax,es
@@ -246,6 +277,250 @@ init_flat_done:
 	pop ds
 	ret
 init_flat_mode	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_linear
+;
+;		DESCRIPTION:	Delete flat video mode
+;
+;		RETURNS:		DS		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public delete_linear
+
+delete_linear	Proc far
+	push ax
+	push bx
+	push ecx
+	push edx
+	push edi
+;
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov es:v_curr_object,-1
+	mov ax,process_page_sel
+	mov es,ax
+;
+	mov edi,ds:vo_lfb_base
+	shr edi,10
+	mov ecx,ds:vo_lfb_size
+	shr ecx,12
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+;
+	mov edi,ds:vo_app_base
+	shr edi,10
+	mov ecx,ds:vo_lfb_size
+	shr ecx,12
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+;
+	mov ecx,ds:vo_lfb_size
+	mov edx,ds:vo_lfb_base
+	FreeLinear
+	mov edx,ds:vo_mem_base
+	FreeLinear
+	mov edx,ds:vo_app_base
+	FreeLinear
+;
+	mov ax,ds
+	mov es,ax
+	xor ax,ax
+	mov ds,ax
+	FreeMem
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	ret
+delete_linear	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			switch_to_linear
+;
+;		DESCRIPTION:	Enter focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public switch_to_linear
+
+switch_to_linear	Proc far
+	push es
+	pushad
+;
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov ax,es:v_curr_object
+	or ax,ax
+	jz switch_to_set
+;
+	cmp ax,-1
+	je switch_to_set
+;
+	mov es,ax
+	mov ax,es:v_mode
+	cmp ax,ds:v_mode
+	je switch_to_active
+
+switch_to_set:
+	mov bx,ds:v_mode
+	test ds:vo_flags, VIDEO_MODE_FLAGS_PM
+	jnz switch_to_pm
+
+switch_to_v86:
+	push ds
+	xor ax,ax
+	mov ds,ax
+	mov es,ax
+	or bx,4000h
+	or bx,8000h
+	mov ax,4F02h
+	push 10h
+	V86BiosInt
+	pop ds
+	jmp switch_to_active
+
+switch_to_pm:
+	mov ax,es:v_pm16_stack
+	mov bp,sp
+	mov ss,ax
+	mov sp,1024
+	push bp
+;
+	or bx,4000h
+	or bx,8000h
+	mov ax,4F02h
+	call es:v_pm16_entry
+;
+	pop bp
+	mov ax,thread_ss0_sel
+	mov ss,ax
+	mov sp,bp
+
+switch_to_active:
+	EnterSection ds:v_section
+	mov ax,pc_video_data_sel
+	mov es,ax
+	mov es:v_curr_object,ds
+	mov ds:vo_has_focus,1
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov esi,ds:vo_mem_base
+	mov edi,ds:vo_lfb_base
+	mov ecx,ds:vo_lfb_size
+	shr ecx,2
+	rep movs dword ptr es:[edi],es:[esi]
+;
+	mov esi,ds:vo_lfb_base
+	shr esi,10
+	mov edi,ds:vo_app_base
+	mov ecx,ds:vo_lfb_size
+	GetFocusThread
+	mov es,ax
+	mov bx,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov dx,process_dir_sel
+	mov es,dx
+	or ax,803h
+	SimCli
+	mov es:[bx],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+	mov eax,alias_linear
+	shr edi,10
+	and di,0FFFCh
+	add edi,eax
+	shr ecx,12
+	push ds
+	mov bx,process_page_sel
+	mov ds,bx
+	mov bx,flat_sel
+	mov es,bx
+	rep movs dword ptr es:[edi],[esi]
+	SimSti
+	pop ds
+	LeaveSection ds:v_section
+;
+	popad
+	pop es
+	ret
+switch_to_linear	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SwitchFrom
+;
+;		DESCRIPTION:	Leave focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public switch_from_linear
+
+switch_from_linear	Proc far
+	push es
+	pushad
+;
+	EnterSection ds:v_section
+	mov ds:vo_has_focus,1
+	mov ax,flat_sel
+	mov es,ax
+	mov esi,ds:vo_lfb_base
+	mov edi,ds:vo_mem_base
+	mov ecx,ds:vo_lfb_size
+	shr ecx,2
+	rep movs dword ptr es:[edi],es:[esi]
+;
+	mov esi,ds:vo_mem_base
+	shr esi,10
+	mov edi,ds:vo_app_base
+	mov ecx,ds:vo_lfb_size
+	GetFocusThread
+	mov es,ax
+	mov bx,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov dx,process_dir_sel
+	mov es,dx
+	or ax,803h
+	SimCli
+	mov es:[bx],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+	mov eax,alias_linear
+	shr edi,10
+	and di,0FFFCh
+	add edi,eax
+	shr ecx,12
+	push ds
+	mov bx,process_page_sel
+	mov ds,bx
+	mov bx,flat_sel
+	mov es,bx
+	rep movs dword ptr es:[edi],[esi]
+	SimSti
+	pop ds
+	LeaveSection ds:v_section
+;
+	popad
+	pop es
+	ret
+switch_from_linear	Endp
 
 page
 	

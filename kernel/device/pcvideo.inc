@@ -64,3 +64,10 @@ v_set_palette_proc	DW ?
 v_video_resol_list	DW ?
 
 video_data_seg	ENDS
+
+video_thread_seg	STRUC
+
+vt_color		DD ?
+vt_lgop			DW ?
+
+video_thread_seg	ENDS

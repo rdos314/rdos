@@ -88,6 +88,32 @@ init:
 	mov dx,600
 	SetVgaMode
 	int 3
+	mov eax,12345678h
+	SetDrawColor
+;	mov ax,LGOP_ADD
+;	SetLgop
+	mov ax,50
+	mov bx,100
+	mov cx,350
+	mov dx,100
+	DrawLine
+	mov cx,50
+	mov dx,300
+	DrawLine
+	mov ax,350
+	mov bx,300
+	mov cx,50
+	mov dx,300
+	DrawLine
+	mov cx,350
+	mov dx,100
+	DrawLine
+	mov ax,350
+	mov bx,300
+	mov cx,50
+	mov dx,100
+	DrawLine
+
 	mov ax,3
 	SetVideoMode
 	int 3

@@ -973,6 +973,7 @@ init_enable_loop2:
 init_enable_do:
 	mov al,47h
 	out 60h,al
+	jmp init_mouse_revoke
 ;
 	mov al,0F3h
 	call SendMouseCommand
@@ -1000,8 +1001,20 @@ init_enable_do:
 	jmp init_mouse_done
 
 init_mouse_revoke:
-	mov al,0FFh
-	call SendCommand
+	mov al,60h
+	out 64h,al
+
+init_disable_loop2:
+	in al,64h
+	test al,2
+	jz init_disable_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_disable_loop2
+
+init_disable_do:
+	mov al,65h
+	out 60h,al
 ;
 	mov al,12
 	ReleasePrivateIrqHandler

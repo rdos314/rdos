@@ -226,4 +226,10 @@ test_nr						= 200
 
 resize_flat_linear_nr		= 201
 
-usergate_entries			= 202
+set_drawcolor_nr			= 202
+set_lgop_nr					= 203
+get_pixel_nr				= 204
+set_pixel_nr				= 205
+draw_line_nr				= 206
+
+usergate_entries			= 207

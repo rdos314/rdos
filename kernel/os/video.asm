@@ -845,6 +845,113 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetDrawColor
+;
+;		DESCRIPTION:	Set draw color
+;
+;		PARAMETERS:		EAX			RGB color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_draw_color_name	DB 'Set Draw Color',0
+
+set_draw_color	PROC far
+	CallVideo set_draw_color_proc
+	retf32
+set_draw_color	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetLgop
+;
+;		DESCRIPTION:	Set LGOP
+;
+;		PARAMETERS:		AX			LGOP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_lgop_name	DB 'Set LGOP',0
+
+set_lgop	PROC far
+	CallVideo set_lgop_proc
+	retf32
+set_lgop	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetPixel
+;
+;		DESCRIPTION:	Get pixel
+;
+;		PARAMETERS:		CX		x
+;						DX		y
+;
+;		RETURNS:		EAX		RGB color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pixel_name	DB 'Get Pixel',0
+
+get_pixel	PROC far
+	CallVideo get_pixel_proc
+	retf32
+get_pixel	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetPixel
+;
+;		DESCRIPTION:	Set pixel
+;
+;		PARAMETERS:		CX		x
+;						DX		y
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_pixel_name	DB 'Set Pixel',0
+
+set_pixel	PROC far
+	CallVideo set_pixel_proc
+	retf32
+set_pixel	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DrawLine
+;
+;		DESCRIPTION:	Draw a line
+;
+;		PARAMETERS:		AX		x1
+;						BX		y1
+;						CX		x2
+;						DX		y2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+draw_line_name	DB 'Draw Line',0
+
+draw_line	PROC far
+	CallVideo draw_line_proc
+	retf32
+draw_line	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SetCursorPosition
 ;
 ;		DESCRIPTION:	Set cursor position
@@ -1854,6 +1961,36 @@ init	PROC far
 	mov dx,virt_es_in
 	mov ax,write_size_string_nr
 	RegisterUserGate
+;
+	mov si,OFFSET set_draw_color
+	mov di,OFFSET set_draw_color_name
+	xor dx,dx
+	mov ax,set_drawcolor_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_lgop
+	mov di,OFFSET set_lgop_name
+	xor dx,dx
+	mov ax,set_lgop_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_pixel
+	mov di,OFFSET get_pixel_name
+	xor dx,dx
+	mov ax,get_pixel_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET set_pixel
+	mov di,OFFSET set_pixel_name
+	xor dx,dx
+	mov ax,set_pixel_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET draw_line
+	mov di,OFFSET draw_line_name
+	xor dx,dx
+	mov ax,draw_line_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_dos_string
 	mov di,OFFSET write_dos_string_name

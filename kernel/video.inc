@@ -124,6 +124,27 @@ draw_bitmap_proc		DD ?
 ; IN  DX		end y
 fill_rect_proc			DD ?
 
+; IN  EAX		RGB color
+set_draw_color_proc		DD ?
+
+; IN  AX		LGOP
+set_lgop_proc			DD ?
+
+; IN  CX			x
+; IN  DX			y
+; OUT EAX			RGB color
+get_pixel_proc			DD ?
+
+; IN  CX			x
+; IN  DX			y
+set_pixel_proc			DD ?
+
+; IN  AX			x1
+; IN  BX			y1
+; IN  CX			x2
+; IN  DX			y2
+draw_line_proc			DD ?
+
 v_section	section_typ <>
 v_mode		DW ?
 

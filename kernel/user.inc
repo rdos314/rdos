@@ -32,6 +32,21 @@ FILE_ATTRIB_LABEL = 8
 FILE_ATTRIB_DIR = 10h
 FILE_ATTRIB_ARC = 20h
 
+LGOP_NULL = 0
+LGOP_NONE = 1
+LGOP_OR = 2
+LGOP_AND = 3
+LGOP_XOR = 4
+LGOP_INVERT = 5   
+LGOP_INVERT_OR = 6
+LGOP_INVERT_AND = 7
+LGOP_INVERT_XOR = 8
+LGOP_ADD = 9
+LGOP_SUBTRACT = 10
+LGOP_MULTIPLY = 11
+LGOP_STIPPLE = 12
+LGOP_ALPHA = 13
+
 ;
 ; Segment transfer flags bits
 ;
@@ -1289,6 +1304,16 @@ GetCursorPosition    MACRO
 	UserGate get_cursor_position_nr
 						ENDM
 
+;	IN  AL              Color number
+SetForeColor        MACRO
+	UserGate set_forecolor_nr
+						ENDM
+
+;	IN  AL              Color number. 0FFh is transparent
+SetBackColor        MACRO
+	UserGate set_backcolor_nr
+						ENDM
+
 ;	IN  AL              Char
 WriteChar       MACRO
 	UserGate write_char_nr
@@ -1316,14 +1341,14 @@ SetVgaMode      MACRO
 	UserGate set_vga_mode_nr
 						ENDM
 
-;	IN  AL              Color number
-SetForeColor        MACRO
-	UserGate set_forecolor_nr
+;	IN  EAX           	RGB color
+SetDrawColor        MACRO
+	UserGate set_drawcolor_nr
 						ENDM
 
-;	IN  AL              Color number. 0FFh is transparent
-SetBackColor        MACRO
-	UserGate set_backcolor_nr
+;	IN  AX              LGOP
+SetLgop        MACRO
+	UserGate set_lgop_nr
 						ENDM
 
 ;	IN  AX              Requested font height
@@ -1341,6 +1366,27 @@ GetCharWidth        MACRO
 ;	OUT CX				Width of string
 GetStringWidth        MACRO
 	UserGate get_string_width_nr
+						ENDM
+
+;	IN  CX		x
+;	IN  DX		y
+;	OUT EAX		RGB value
+GetPixel      MACRO
+	UserGate get_pixel_nr
+						ENDM
+
+;	IN  CX		x
+;	IN  DX		y
+SetPixel      MACRO
+	UserGate set_pixel_nr
+						ENDM
+
+;	IN  AX		x1
+;	IN  BX		y1
+;	IN	CX		x2
+;	IN	DX		y2
+DrawLine      MACRO
+	UserGate draw_line_nr
 						ENDM
 
 ;	IN  AX		start x
