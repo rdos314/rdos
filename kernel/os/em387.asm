@@ -993,17 +993,6 @@ PopReal	Proc near
 	and ax,NOT STATUS_TOP
 	or ax,bx
 	mov fs:math_status,ax
-	add cl,cl
-	mov ax,11b
-	shl ax,cl
-	mov bx,fs:math_tag
-	and bx,ax
-	cmp ax,bx
-	jne PopNoOv
-;
-	call StackUnderflowFault
-
-PopNoOv:
 	ret
 PopReal	Endp
 
@@ -1825,7 +1814,6 @@ EmFldl2e	Endp
 ConstPi		DW	0C235h,	02168h,	0DAA2h,	0C90Fh,	4000h
 
 EmFldpi	Proc near
-        int 3
 	mov eax,dword ptr cs:ConstPi
 	mov edx,dword ptr cs:ConstPi+4
 	mov cx,word ptr cs:ConstPi+8
@@ -2761,6 +2749,47 @@ EmFCompStSti	Proc near
 	ret
 EmFCompStSti	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EmFTst
+;
+;		DESCRIPTION:	Emulate ftst st(0)
+;
+;		PARAMETERS:
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmFTst	Proc near
+	xor bl,bl
+	call GetReal
+	push cx
+	push edx
+	push eax
+;
+    xor eax,eax
+    xor edx,edx
+    xor cx,cx
+	mov bx,sp
+	push cx
+	push edx
+	push eax
+	mov ax,sp
+	push ss
+	push ax
+	push ss
+	push bx
+	call CmpReal
+	add sp,20
+;
+	mov dx,fs:math_status
+	and dx,NOT (STATUS_C0 OR STATUS_C1 OR STATUS_C2 OR STATUS_C3)
+	or dx,ax
+	mov fs:math_status,dx
+	ret
+EmFTst	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -3685,7 +3714,7 @@ emD9DC	DW OFFSET EmulateError,			OFFSET EmulateError
 emD9DE	DW OFFSET EmulateError,			OFFSET EmulateError
 emD9E0	DW OFFSET EmFchs,				OFFSET EmFabs
 emD9E2	DW OFFSET EmulateError,			OFFSET EmulateError
-emD9E4	DW OFFSET EmulateError,			OFFSET EmFxam
+emD9E4	DW OFFSET EmFtst,   			OFFSET EmFxam
 emD9E6	DW OFFSET EmulateError,			OFFSET EmulateError
 emD9E8	DW OFFSET EmFld1,				OFFSET EmFldl2t
 emD9EA	DW OFFSET EmFldl2e,				OFFSET EmFldpi

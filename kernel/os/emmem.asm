@@ -628,12 +628,15 @@ MemSib0	PROC near
 	and di,0Eh
 	mov di,word ptr cs:[di].SibIndexTab
 	or di,di
-	jz EmulateError
+	jz MemSib0Done
 ;
 	mov eax,[bp+di]
 	shl eax,cl
 	add ebx,eax
+
+MemSib0Done:
 	ret
+
 MemSib0	ENDP
  
 MemSib1	PROC near
@@ -652,11 +655,13 @@ MemSib1	PROC near
 	and di,0Eh
 	mov di,word ptr cs:[di].SibIndexTab
 	or di,di
-	jz EmulateError
+	jz MemSib1Done
 ;
 	mov eax,[bp+di]
 	shl eax,cl
 	add ebx,eax
+
+MemSib1Done:
 	ret
 MemSib1	ENDP
 
@@ -676,11 +681,13 @@ MemSib2	PROC near
 	and di,0Eh
 	mov di,word ptr cs:[di].SibIndexTab
 	or di,di
-	jz EmulateError
+	jz MemSib2Done
 ;
 	mov eax,[bp+di]
 	shl eax,cl
 	add ebx,eax
+
+MemSib2Done:
 	ret
 MemSib2	ENDP
 

@@ -115,11 +115,9 @@ req_tss	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 req_thread	PROC near
-	mov ds,gs:tss_thread
-	mov cx,SIZE thread_seg
+	mov bx,gs:tss_thread
 	xor di,di
-	xor si,si
-	rep movsb
+	GetThreadTss
 ;
 	mov cx,SIZE thread_seg
 	xor di,di

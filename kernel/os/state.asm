@@ -321,14 +321,54 @@ get_thread_tss_loop:
 	jmp get_thread_tss_done
 
 get_thread_tss_found:
+    fnop
 	push ecx
 	push esi
 	push edi
 	mov ds,ax
 	mov ds,ds:p_tss_data_sel
 	xor esi,esi
-	mov ecx,OFFSET tss_thread
+	mov ecx,OFFSET math_st0
 	rep movs byte ptr es:[edi],[esi]
+;
+    mov eax,cr0
+    test al,4
+    jz get_thread_real_fpu
+
+get_thread_emul_fpu:
+	mov ax,ds:math_status
+	shr ax,3
+	mov al,ah
+	and ax,7
+	add ax,ax
+	mov si,ax
+	shl ax,2
+	add si,ax
+	add si,OFFSET math_st0
+	shr ax,3
+	mov dx,8
+
+get_thread_emul_loop:
+    mov ecx,10
+    rep movs byte ptr es:[edi],[esi]
+;
+    inc al
+    cmp al,8
+    jne get_thread_emul_next
+;
+    xor al,al
+    mov si,OFFSET math_st0
+
+get_thread_emul_next:
+    sub dx,1
+    jnz get_thread_emul_loop   
+    jmp get_thread_fpu_done
+
+get_thread_real_fpu:
+    mov ecx,2 * 10
+	rep movs dword ptr es:[edi],[esi]
+
+get_thread_fpu_done:
 	pop edi
 	pop esi
 	pop ecx
@@ -411,8 +451,47 @@ set_thread_tss_found:
 	mov es,es:p_tss_data_sel
 	mov esi,edi
 	xor edi,edi
-	mov ecx,OFFSET tss_thread
+	mov ecx,OFFSET math_st0
 	rep movs byte ptr es:[edi],[esi]
+;
+    mov eax,cr0
+    test al,4
+    jz set_thread_real_fpu
+
+set_thread_emul_fpu:
+	mov ax,es:math_status
+	shr ax,3
+	mov al,ah
+	and ax,7
+	add ax,ax
+	mov di,ax
+	shl ax,2
+	add di,ax
+	add di,OFFSET math_st0
+	shr ax,3
+	mov dx,8
+
+set_thread_emul_loop:
+    mov ecx,10
+    rep movs byte ptr es:[edi],[esi]
+;
+    inc al
+    cmp al,8
+    jne set_thread_emul_next
+;
+    xor al,al
+    mov di,OFFSET math_st0
+
+set_thread_emul_next:
+    sub dx,1
+    jnz set_thread_emul_loop   
+    jmp set_thread_fpu_done
+
+set_thread_real_fpu:
+    mov ecx,2 * 10
+	rep movs dword ptr es:[edi],[esi]
+
+set_thread_fpu_done:
 	pop edi
 	pop esi
 	pop ecx

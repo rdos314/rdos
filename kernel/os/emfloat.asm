@@ -2850,6 +2850,12 @@ calc_prem_small:
 	lea ax,[bp].CalcPRem_tmp
 	push ax
 	call SubReal
+;
+	lds si,[bp].CalcPRem_y
+	mov si,[si+8]
+	and si,8000h
+	and cx,NOT 8000h
+	or cx,si
 	jmp calc_prem_done
 
 calc_prem_big:
