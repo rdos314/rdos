@@ -644,76 +644,75 @@ void TCompacProtocolAnalyser::ShowMsg()
 	char status;
 
     MsgLen = strlen(FMsg);
-    str = FMsg;
+	str = FMsg;
 
-    if (MsgLen >= 7)
-    {
+	ShowLongTime(FTime);
+	ShowHexMsg();
 
-        lrc = CalcLrc(str+2, MsgLen-3);
+	if (MsgLen >= 7)
+	{
 
-        if (lrc == *(str+MsgLen-1))
-            ok = TRUE;
+		lrc = CalcLrc(str+2, MsgLen-3);
+
+		if (lrc == *(str+MsgLen-1))
+			ok = TRUE;
 		else
-        {
-            ShowLongTime(FTime);
-            ShowHexMsg();
-            ok = FALSE;
-        }
+		{
+			ShowLongTime(FTime);
+			ShowHexMsg();
+			ok = FALSE;
+		}
 
 		if (ok)
 		{
 			switch (*(str+1))
 			{
 				case 'T':
-                    master = TRUE;
-                    ok = TRUE;
-                    break;
+					master = TRUE;
+					ok = TRUE;
+					break;
 
-                case 'F':
-                    master = FALSE;
-                    ok = TRUE;
+				case 'F':
+					master = FALSE;
+					ok = TRUE;
 					break;
 
 				default:
-                	ShowLongTime(FTime);
-                    ShowHexMsg();
 					ok = FALSE;
-                    break;
-            }
-        }
+					break;
+			}
+		}
 
-        if (ok)
+		if (ok)
 		{
 			switch (*(str+2))
 			{
-                case '1':
+				case '1':
 				case '2':
 				case '3':
-                case '4':
-                case '5':
-                case '6':
-                case '7':
-                case '8':
-                case '9':
-                case ':':
+				case '4':
+				case '5':
+				case '6':
+				case '7':
+				case '8':
+				case '9':
+				case ':':
 				case ';':
-                case '<':
+				case '<':
 				case '=':
-                case '>':
-                case '?':
+				case '>':
+				case '?':
 				case '@':
-                    pump = *(str+2) - '0';
-                    ok = TRUE;
-                    break;
+					pump = *(str+2) - '0';
+					ok = TRUE;
+					break;
 
-                case '!':
+				case '!':
 					pump = 0;
 					ok = TRUE;
 					break;
 
 				default:
-					ShowLongTime(FTime);
-					ShowHexMsg();
 					ok = FALSE;
 					break;
 			}
@@ -734,8 +733,6 @@ void TCompacProtocolAnalyser::ShowMsg()
 					break;
 
 				default:
-					ShowLongTime(FTime);
-					ShowHexMsg();
 					ok = FALSE;
 					break;
 			}
@@ -767,8 +764,6 @@ void TCompacProtocolAnalyser::ShowMsg()
 					break;
 
 				default:
-					ShowLongTime(FTime);
-					ShowHexMsg();
 					ok = FALSE;
 					break;
 			}

@@ -249,7 +249,10 @@ void TFile::SetSize(long Size)
 ##########################################################################*/
 long TFile::GetPos()
 {
-	return 0;
+	if (FHandle)
+		return SetFilePointer(FHandle, 0, 0, FILE_CURRENT);
+	else
+		return 0;
 }
 
 /*##########################################################################
