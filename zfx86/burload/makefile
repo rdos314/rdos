@@ -28,6 +28,7 @@
 # DEFINE SYSTEM VERSION  
 version = V1_0
 
+prot_opt = /l/s/3/Twe
 link_opt = /l/s/3
 
 # DEFINE GROUPS OF MODULES
@@ -56,13 +57,17 @@ shutdown_srcs = SHUTDOWN.ASM
 shutdown_objs = $(shutdown_srcs:.ASM=.OBJ)
 shutdown_exes = SHUTDOWN.EXE
 
+test_srcs = TEST.ASM ..\OS\MATH.ASM
+test_objs = $(test_srcs:.ASM=.OBJ)
+test_exes = TEST.EXE
+
 srcs =      $(bur2bin_srcs) $(sdram_srcs) $(flash_srcs) $(cfg2rom_srcs) \
-            $(boot_srcs) $(shutdown_srcs)
+            $(boot_srcs) $(shutdown_srcs) $(test_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(bur2bin_exes) $(sdram_exes) $(flash_exes) $(cfg2rom_exes) \
-            $(boot_exes) $(shutdown_exes)
+            $(boot_exes) $(shutdown_exes) $(test_exes)
 
 
 maps =      $(exes:.EXE=.MAP)
@@ -132,6 +137,14 @@ SHUTDOWN.EXE : $(shutdown_objs)
 	$(shutdown_objs)
 	SHUTDOWN
 	SHUTDOWN;
+!
+
+TEST.EXE : $(test_objs)
+    tlink @&&!
+	$(prot_opt) +
+	$(test_objs)
+	TEST
+	TEST,,test;
 !
 
 RDOSBUR.BIN:   BUR2BIN.EXE $(srcs) $(objs) $(exes)

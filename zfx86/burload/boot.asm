@@ -849,7 +849,6 @@ GetBootDevice	Endp
 BootExceptionOnePar	MACRO Entry
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -861,7 +860,6 @@ BootExceptionNoPar	MACRO Entry
 	push dword ptr 0
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1144,7 +1142,6 @@ size_flash_found:
 	call StartShutDownDevice
 	call GetBootDevice
 ;
-	int 3
 	mov ax,flat_sel
 	mov ds,ax
 	push kernel_code

@@ -704,8 +704,6 @@ not_empty_r:
 	add di,OFFSET error_code_tab
 	mov cx,24
 	call WriteSizeString
-	call WriteCRLF
-	call WriteCRLF
 	call WriteFault
 	call WriteCRLF
 ;
