@@ -970,26 +970,10 @@ CLS
 .
 
 :TEXT_CMDHELP_COMMAND
-Starts a new copy of the FreeDOS command shell.
+Starts a new copy of the command shell.
 
-COMMAND [[drive:]path] [device] [/E:nnnnn] [/L:nnnn] [/U:nnn] [/P] [/MSG]
-                       [/LOW] [/Y [/[C|K] command]]
-  [drive:]path    Specifies the directory containing COMMAND.COM.
-  device          Specifies the device to use for command input and output.
-  /E:nnnnn        Sets the initial environment size to nnnnn bytes.
-                  (nnnnn should be between 256 and 32,768).
-  /L:nnnn         Specifies internal buffers length (requires /P as well).
-                  (nnnn should be between 128 and 1,024).
-  /U:nnn          Specifies the input buffer length (requires /P as well).
-                  (nnn should be between 128 and 255).
-  /P              Makes the new command shell permanent (can't exit).
-  /MSG            Stores all error messages in memory (requires /P as well).
-  /LOW            Forces the command shell to keep its resident data in
-                  low memory.
-  /Y              Steps through the batch program specified by /C or /K.
+COMMAND [/C command]
   /C command      Executes the specified command and returns.
-  /K command      Executes the specified command and continues running.
-.
 
 :TEXT_CMDHELP_COPY
 Copies one or more files to another location.
@@ -1621,4 +1605,16 @@ Destination file (%s) already exists.
 
 :TEXT_ERROR_MOVE_MULTIPLE
 Cannot move multiple files to a single destination.
+.
+
+:TEXT_CMDHELP_SYNCTIME
+Synchronize with NTP server
+
+SYNCTIME [ip-address] [host name]
+  ip-address      IP address to sync with
+  host name       Host name to sync with
+.
+
+:TEXT_SYNCTIME_FAIL
+Failed to synchronize with NTP server %d.%d.%d.%d
 .

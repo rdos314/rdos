@@ -2881,6 +2881,44 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSyncTime
+;
+;		description:	Synchronize time with NTP
+;
+;		PARAMETERS:		long IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSyncTime
+
+rstIP		EQU 8
+
+RdosSyncTime	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	mov edx,[ebp].dltLSB
+	UserGate sync_time_nr
+	jc RdosSyncTimeFail
+;
+	mov eax,1
+	jmp RdosSyncTimeDone
+
+RdosSyncTimeFail:
+	xor eax,eax
+
+RdosSyncTimeDone:
+	popad
+	pop ebp
+	ret 4
+RdosSyncTime	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosOpenCom
 ;
 ;		description:	Open comport

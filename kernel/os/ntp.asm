@@ -132,7 +132,8 @@ sync_time	Proc far
 	mov ds:ntp_req.ntp_orginate_timestamp,edx		; t1
 	pop edx
 ;
-	mov cx,SIZE ntp_header
+	mov edi,OFFSET ntp_req
+	mov ecx,SIZE ntp_header
 	mov bx,123
 	mov eax,2000
 	QueryUdp

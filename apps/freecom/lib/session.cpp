@@ -66,6 +66,7 @@
 #include "prompt.h"
 #include "rem.h"
 #include "move.h"
+#include "synctime.h"
 
 #include "file.h"
 #include "path.h"
@@ -106,6 +107,7 @@ static TCommandFactory *move;
 static TCommandFactory *ping;
 static TCommandFactory *prompt;
 static TCommandFactory *showpart;
+static TCommandFactory *synctime;
 static TCommandFactory *pause;
 static TCommandFactory *path;
 static TCommandFactory *rd;
@@ -154,6 +156,7 @@ TSession::TSession()
     	wait = new TWaitFactory;
     	time = new TTimeFactory;
     	type = new TTypeFactory;
+    	synctime = new TSyncTimeFactory;
     	state = new TStateFactory;
     	set = new TSetFactory;
     	rmpart = new TRemovePartitionFactory;
@@ -266,6 +269,7 @@ TSession::~TSession()
         delete wait;
     	delete time;
 	    delete type;
+	    delete synctime;
     	delete state;
     	delete set;
     	delete rmpart;

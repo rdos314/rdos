@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ping.cpp
-# Ping command class
+# synctime.cpp
+# Synctime command class
 #
 ########################################################################*/
 
@@ -32,30 +32,30 @@
 #include "rdos.h"
 #include "cmdhelp.h"
 #include "lang.h"
-#include "ping.h"
+#include "synctime.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
 /*##########################################################################
 #
-#   Name       : TPingFactory::TPingFactory
+#   Name       : TSyncTimeFactory::TSyncTimeFactory
 #
-#   Purpose....: Constructor for TPingFactory
+#   Purpose....: Constructor for TSyncTimeFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPingFactory::TPingFactory()
-  : TCommandFactory("PING")
+TSyncTimeFactory::TSyncTimeFactory()
+  : TCommandFactory("SYNCTIME")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPingFactory::Create
+#   Name       : TSyncTimeFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -64,31 +64,31 @@ TPingFactory::TPingFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPingFactory::Create(TSession *session, const char *param)
+TCommand *TSyncTimeFactory::Create(TSession *session, const char *param)
 {
-	return new TPingCommand(session, param);
+	return new TSyncTimeCommand(session, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPingCommand::TPingCommand
+#   Name       : TSyncTimeCommand::TSyncTimeCommand
 #
-#   Purpose....: Constructor for TPingCommand
+#   Purpose....: Constructor for TSyncTimeCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPingCommand::TPingCommand(TSession *session, const char *param)
+TSyncTimeCommand::TSyncTimeCommand(TSession *session, const char *param)
   : TCommand(session, param)
 {
-	FHelpScreen.Load(TEXT_CMDHELP_PING);
+	FHelpScreen.Load(TEXT_CMDHELP_SYNCTIME);
 }
 
 /*##########################################################################
 #
-#   Name       : TPingCommand::Execute
+#   Name       : TSyncTimeCommand::Execute
 #
 #   Purpose....: Execute command
 #
@@ -97,7 +97,7 @@ TPingCommand::TPingCommand(TSession *session, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-int TPingCommand::Execute(char *param)
+int TSyncTimeCommand::Execute(char *param)
 {
 	const char *NodeName;
 	int n0,n1,n2,n3;
@@ -150,21 +150,12 @@ int TPingCommand::Execute(char *param)
 		n1 = Temp & 0xFF;
 		Temp = Temp >> 8;
 		n0 = Temp & 0xFF;
-		FMsg.printf(TEXT_PING_NODE, n3, n2, n1, n0);
-		Write(FMsg.GetData());
 
-		for (i = 0; i < 10; i++)
+		if (!RdosSyncTime(Node))
 		{
-			if (RdosPing(Node, 2000))
-			{
-				FMsg.Load(TEXT_PING_OK);
-				Write(FMsg.GetData());
-			}
-			else
-			{
-				FMsg.Load(TEXT_PING_TIMEOUT);
-				Write(FMsg.GetData());
-			}
+    		FMsg.printf(TEXT_SYNCTIME_FAIL, n3, n2, n1, n0);
+			Write(FMsg.GetData());
+			return 1;
 		}
 		return 0;
     }

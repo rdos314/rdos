@@ -175,6 +175,7 @@ void __stdcall RdosAddSec(unsigned long *msb, unsigned long *lsb, long sec);
 void __stdcall RdosAddMin(unsigned long *msb, unsigned long *lsb, long min);
 void __stdcall RdosAddHour(unsigned long *msb, unsigned long *lsb, long hour);
 void __stdcall RdosAddDay(unsigned long *msb, unsigned long *lsb, long day);
+int __stdcall RdosSyncTime(long IP);
 
 void __stdcall RdosDecodeMsbTics(unsigned long msb, int *days, int *hours);
 void __stdcall RdosDecodeLsbTics(unsigned long lsb, int *min, int *sec, int *milli, int *micro); 
