@@ -299,7 +299,7 @@ create_dir	PROC far
 	mov es:[edi].de_name_size,cx
 	mov al,ds:drive_nr
 	mov es:[edi].de_drive,al
-	mov es:[edi].de_usage,0
+	mov es:[edi].de_usage,1
 	mov es:[edi].de_attrib,10h
 ;
 	push esi
@@ -479,7 +479,7 @@ create_file	PROC far
 	mov es:[edi].de_name_size,cx
 	mov al,ds:drive_nr
 	mov es:[edi].de_drive,al
-	mov es:[edi].de_usage,0
+	mov es:[edi].de_usage,1
 ;
 	push esi
 	push edi

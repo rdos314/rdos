@@ -221,3 +221,10 @@ event_proc_id	DD ?
 event_thread_id	DD ?
 
 event_struc ENDS
+
+pe_process_seg	STRUC
+
+ppe_dlls		DW ?
+ppe_section		section_typ <>
+
+pe_process_seg	ENDS

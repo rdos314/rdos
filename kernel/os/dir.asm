@@ -1504,7 +1504,14 @@ get_file_attrib_file:
 
 get_file_attrib_dir:
 	mov edx,ds:ds_handle
+	or edx,edx
+	jz get_file_attrib_root
+;
 	movzx cx,fs:[edx].de_attrib
+	jmp get_file_attrib_ok
+
+get_file_attrib_root:
+	mov cx,FILE_ATTRIB_DIR
 	jmp get_file_attrib_ok
 
 get_file_attrib_fail:

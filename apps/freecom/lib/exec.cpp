@@ -47,10 +47,16 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TExecCommand::TExecCommand(const char *name, const char *param)
-  : TCommand(param),
-	FProgName(name)
+TExecCommand::TExecCommand(const char *line)
 {
+	const char *cp;
+	const char *rest;
+
+	rest = SkipWord((char *)line);
+    cp = Unquote(line, rest);
+
+	FProgName = cp;
+	FCmdLine = rest;
 }
 
 /*##########################################################################
@@ -221,8 +227,7 @@ int TExecCommand::Load(char *path, const char *name, char *param)
 	TPathName *pn = 0;
 	int result;
 
-	if (strchr(path, '.'))
-		pn = CheckPath(name);
+	pn = CheckPath(name);
 
 	while (*path && !pn)
 	{

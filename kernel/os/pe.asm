@@ -112,6 +112,8 @@ ExcFirstChance	DD ?
 
 exc_event_struc ENDS
 
+SYS_BASE EQU 0DE000000h
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -542,6 +544,57 @@ InsertDll	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InsertSysDll
+;
+;		DESCRIPTION:    Insert system DLL image into module list
+;
+;		PARAMETERS:     ES		Lib handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSysDll	Proc near
+	push ds
+	push ax
+	push si
+;
+	mov ax,pe_process_sel
+	mov ds,ax
+	EnterSection ds:ppe_section
+;
+	mov ax,ds:ppe_dlls
+	or ax,ax
+	je ins_sysdll_empty
+;
+	push ds
+	push si
+	mov ds,ax
+	mov si,ds:lib_prev
+	mov ds:lib_prev,es
+	mov ds,si
+	mov ds:lib_next,es
+	mov es:lib_next,ax
+	mov es:lib_prev,si
+	pop si
+	pop ds
+	jmp ins_sysdll_done
+
+ins_sysdll_empty:
+	mov es:lib_next,es
+	mov es:lib_prev,es
+
+ins_sysdll_done:
+	mov ds:ppe_dlls,es
+	LeaveSection ds:ppe_section
+;
+	pop si
+	pop ax
+	pop ds
+	ret
+InsertSysDll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InsertApp
 ;
 ;		DESCRIPTION:    Insert App image into module list
@@ -610,6 +663,36 @@ FindLib	Proc near
 	push ecx
 	push si
 ;
+	mov ax,pe_process_sel
+	mov ds,ax
+	EnterSection ds:ppe_section
+	mov ax,ds:ppe_dlls
+	or ax,ax
+	jz find_lib_not_sys
+	mov si,ax
+find_syslib_dll_loop:
+	mov es,ax
+	mov ecx,edx
+	sub ecx,es:lib_base
+	jc find_syslib_dll_next
+	cmp ecx,es:lib_size
+	jc find_syslib_ok
+find_syslib_dll_next:
+	mov ax,es:lib_next
+	cmp ax,si
+	jne find_syslib_dll_loop
+
+find_lib_not_sys:
+	LeaveSection ds:ppe_section
+	jmp find_lib_app
+
+find_syslib_ok:
+	mov edi,es:lib_base
+	LeaveSection ds:ppe_section
+	clc
+	jmp find_lib_done
+
+find_lib_app:
 	mov ax,pe_app_sel
 	mov ds,ax
 	EnterSection ds:pe_section
@@ -661,7 +744,7 @@ FindLib	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FindDll / FindApp
+;		NAME:			FindDll / FindSysDll / FindApp
 ;
 ;		DESCRIPTION:    get DLL or app from name
 ;
@@ -764,6 +847,65 @@ find_dll_end:
 	pop ds
 	ret
 FindDll	Endp
+
+FindSysDll	Proc near
+	push ds
+	push ax
+	push bx
+	push dx
+;
+	mov ax,pe_process_sel
+	mov ds,ax
+	EnterSection ds:ppe_section
+	mov ax,ds:ppe_dlls
+	or ax,ax
+	jz find_sysdll_fail
+	mov dx,ax
+find_sysdll_check_dll:
+	mov es,ax
+	mov di,OFFSET lib_name
+	push esi
+find_sysdll_check_name:
+	mov al,es:[di]
+	movzx bx,al
+	mov al,byte ptr cs:[bx].UCaseTab
+	mov ah,fs:[esi]
+	movzx bx,ah
+	mov ah,byte ptr cs:[bx].UCaseTab
+	cmp al,ah
+	jne find_sysdll_next
+	or al,al
+	je find_sysdll_ok
+	inc esi
+	inc di
+	jmp find_sysdll_check_name
+
+find_sysdll_next:
+	pop esi
+	mov ax,es:lib_next
+	cmp ax,dx
+	jne find_sysdll_check_dll
+
+find_sysdll_fail:
+	stc
+	jmp find_sysdll_end
+
+find_sysdll_ok:
+	pop esi
+	mov edi,es:lib_base
+	clc
+
+find_sysdll_end:
+	pushf
+	LeaveSection ds:ppe_section
+	popf
+;
+	pop dx
+	pop bx
+	pop ax
+	pop ds
+	ret
+FindSysDll	Endp
 
 FindApp	Proc near
 	push ds
@@ -1427,8 +1569,16 @@ free_import_dlls_loop:
 	mov ax,ds
 	mov fs,ax
 	add esi,edi
+	call FindSysDll
+	jnc free_do
+;
 	call FindDll
+	jc fidf
+
+free_do:
 	call FreePeDll
+
+fidf:
 	pop edi
 	pop fs
 	pop es
@@ -1462,9 +1612,13 @@ NotifyDll	Proc near
 	push edi
 ;
 	mov dx,es:lib_debug_lib
+	call FindSysDll
+	jnc notify_check_debug
+;
 	call FindDll
 	jc notify_dll_done
-;
+
+notify_check_debug:
 	xchg dx,es:lib_debug_lib
 	or dx,dx
 	jnz notify_dll_done
@@ -1572,9 +1726,13 @@ StartDll	Proc near
 	push edi
 ;
 	mov dx,es:lib_init_param
+	call FindSysDll
+	jnc start_dll_found
+;
 	call FindDll
 	jc start_dll_done
-;
+
+start_dll_found:
 	mov ax,1
 	xchg ax,es:lib_run_now
 	or ax,ax
@@ -1680,9 +1838,13 @@ LoadPeDll	PROC near
 	push esi
 	push bp
 ;
+	call FindSysDll
+	jnc load_dll_usage
+;
 	call FindDll
 	jc load_dll_do
-;
+
+load_dll_usage:
 	inc es:lib_usage_count
 	mov edi,es:lib_base
 	jmp load_dll_done
@@ -1725,7 +1887,17 @@ load_dll_do:
 	FreeMem
 	call CreateLib
 	call CreateImage
+	mov edi,es:lib_base
+	cmp edi,SYS_BASE
+	jae load_pe_ins_sys
+;
 	call InsertDll
+	jmp load_pe_ins_done
+
+load_pe_ins_sys:
+	call InsertSysDll
+
+load_pe_ins_done:
 	mov es:lib_debug_lib,dx
 	mov es:lib_run_now,bp
 	mov ecx,es:lib_size
@@ -3619,6 +3791,9 @@ get_dll_handle	Proc far
 	mov fs,si
 	mov esi,edi
 ;
+	call FindSysDll
+	jnc get_dll_handle_ok
+;
 	call FindDll
 	jnc get_dll_handle_ok
 ;
@@ -3768,6 +3943,25 @@ get_dll_resource_done:
 	pop eax
 	retf32
 get_dll_resource	Endp
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitProcess
+;
+;		DESCRIPTION:    init a process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_process	Proc far
+	push ds
+	mov ax,pe_process_sel
+	mov ds,ax
+	mov ds:ppe_dlls,0
+	InitSection ds:ppe_section
+	pop ds
+	ret
+init_process	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4012,9 +4206,16 @@ init	PROC far
 	mov eax,SIZE pe_data_seg
 	AllocateFixedAppMem
 ;
+	mov bx,pe_process_sel
+	mov eax,SIZE pe_process_seg
+	AllocateFixedProcessMem
+;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov di,OFFSET init_process
+	HookCreateProcess
 ;
 	mov di,OFFSET start_thread
 	HookCreateThread

@@ -494,13 +494,19 @@ FreeFileSel	PROC near
 	push ebx
 	push ecx
 	push si
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov edi,ds:file_dir_entry
+	mov cx,es:[edi].de_usage
+	or cx,cx
+	jnz free_file_sel_done
 ;
 	mov ecx,ds:file_block_size
 	or ecx,ecx
 	jz free_file_sel
 ;
-	mov ax,flat_sel
-	mov es,ax
 	mov cx,ds:file_dir_entries
 	mov si,OFFSET file_entries
 
@@ -523,10 +529,12 @@ free_file_sel:
 	mov ds,ax
 	mov ds:[ecx].dfe_file_sel,0
 	FreeMem
-;
+
+free_file_sel_done:
 	xor ax,ax
 	mov ds,ax
 ;
+	pop edi
 	pop si
 	pop ecx
 	pop ebx

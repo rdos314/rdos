@@ -314,6 +314,8 @@ ether_code_sel		EQU 7B0h
 ether_data_sel		EQU 7B8h
 ether_mem_sel		EQU 7C0h
 
+pe_process_sel		EQU 7C8h
+
 ppp_code_sel		EQU 7D0h
 ppp_data_sel		EQU 7D8h
 
