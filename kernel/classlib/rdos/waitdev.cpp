@@ -83,6 +83,26 @@ TWaitDevice::TWaitDevice(const char *IniSection)
 
 /*##########################################################################
 #
+#   Name       : TWaitDevice::~TWaitDevice
+#
+#   Purpose....: Destructor for TDevice		                          
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWaitDevice::~TWaitDevice()
+{
+	if (FWait)
+	{
+    	RdosRemoveWait(FWait->GetHandle(), this);
+	    delete FWait;
+	}
+}
+
+/*##########################################################################
+#
 #   Name       : TWaitDevice::Init
 #
 #   Purpose....: Init method for class
@@ -98,50 +118,78 @@ void TWaitDevice::Init()
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::RegisterWait
+#   Name       : TWaitDevice::CreateWait
 #
-#   Purpose....: Register with wait
-#   In params..: *
-#   Out params.: *
-#   Returns....: handle to wait
-#
-##########################################################################*/
-int TWaitDevice::RegisterWait(TWait *Wait)
-{	
-	FWait = Wait;
-    return FWait->GetHandle();
-}
-
-/*##########################################################################
-#
-#   Name       : TWaitDevice::~TWaitDevice
-#
-#   Purpose....: Destructor for TDevice		                          
-#
+#   Purpose....: Create a local wait object
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TWaitDevice::~TWaitDevice()
-{
-	if (FWait)
-	    FWait->Remove(this);
+void TWaitDevice::CreateWait()
+{	
+    if (!FWait)
+    {
+        FWait = new TWait;
+		Add(FWait);
+	}
 }
 
 /*##########################################################################
 #
-#   Name       : TWaitDevice::GetWait
+#   Name       : TWaitDevice::Remove
 #
-#   Purpose....: Get wait
+#   Purpose....: Remove wait
 #   In params..: *
 #   Out params.: *
-#   Returns....: handle to wait
+#   Returns....: *
 #
 ##########################################################################*/
-TWait *TWaitDevice::GetWait()
+void TWaitDevice::Remove(TWait *Wait)
+{
+	RdosRemoveWait(Wait->GetHandle(), this);
+}
+
+/*##########################################################################
+#
+#   Name       : TWaitDevice::WaitForever
+#
+#   Purpose....: Wait forever
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWaitDevice *TWaitDevice::WaitForever()
 {	
-	return FWait;
+    if (!FWait)
+        CreateWait();
+
+    if (FWait)
+        return FWait->WaitForever();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TWaitDevice::WaitTimeout
+#
+#   Purpose....: Wait timeout
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
+{	
+    if (!FWait)
+        CreateWait();
+
+    if (FWait)
+        return FWait->WaitTimeout(MilliSec);
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -175,6 +223,8 @@ TWait::TWait()
 ##########################################################################*/
 TWait::~TWait()
 {
+    TWaitList *ptr;
+
 	FInstalled = FALSE;
 	if (FThreadRunning)
 		RdosStopWait(FHandle);
@@ -182,14 +232,22 @@ TWait::~TWait()
 	while (FThreadRunning)
 		RdosWaitMilli(25);
 
+    while (FWaitList)
+    {
+        ptr = FWaitList->List;
+		  ptr->WaitDev->Remove(this);
+        delete FWaitList;
+        FWaitList = ptr;
+    }
+
     RdosCloseWait(FHandle);
 }
 
 /*##########################################################################
 #
-#   Name       : TWait::Add
+#   Name       : TWait::GetHandle
 #
-#   Purpose....: Add a new waitable object
+#   Purpose....: Get wait handle
 #
 #   In params..: *
 #   Out params.: *
@@ -199,6 +257,30 @@ TWait::~TWait()
 int TWait::GetHandle()
 {
     return FHandle;
+}
+
+/*##########################################################################
+#
+#   Name       : TWait::Add
+#
+#   Purpose....: Add a waitable object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWait::Add(TWaitDevice *dev)
+{
+    TWaitList *entry = new TWaitList;
+    
+    dev->Add(this);
+
+	FListSection.Enter();
+    entry->WaitDev = dev;
+	entry->List = FWaitList;
+	FWaitList = entry;
+	FListSection.Leave();
 }
 
 /*##########################################################################
@@ -214,7 +296,32 @@ int TWait::GetHandle()
 ##########################################################################*/
 void TWait::Remove(TWaitDevice *dev)
 {
-	RdosRemoveWait(FHandle, dev);
+	TWaitList *ptr;
+	TWaitList *prev;
+	
+	FListSection.Enter();	
+
+	prev = 0;
+	ptr = FWaitList;
+	while (ptr && ptr->WaitDev != dev)
+    {
+		prev = ptr;
+		ptr = ptr->List;
+    }
+
+    if (ptr->WaitDev == dev)
+    {
+	 	 dev->Remove(this);
+
+		 if (prev == 0)
+			 FWaitList = FWaitList->List;
+		else
+		    prev->List = ptr->List;
+
+		delete ptr;
+    }
+    
+	FListSection.Leave();
 }
 
 /*##########################################################################

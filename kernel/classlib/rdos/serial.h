@@ -43,14 +43,14 @@ public:
 class TSerialDevice : public TWaitDevice
 {
 public:
-	TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate);
-	TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate);
-	TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(TWait *Wait, int Port, long Baudrate);
-	TSerialDevice(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate);
-	TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(const char *IniSection, int Port, long Baudrate);
+	TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate);
+	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(int Port, long Baudrate);
+	TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	TSerialDevice(int Port, int Irq, long Baudrate);
+	TSerialDevice(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	TSerialDevice(const char *IniSection);
 	TSerialDevice();
 	~TSerialDevice();
@@ -98,10 +98,11 @@ public:
 
 protected:
 	virtual void SignalNewData();
+	virtual void Add(TWait *Wait);
 
 private:
-	void Init(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	void Init(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
+	void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
+	void Init(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	int CalcBase(int Port);
 	int CalcIrq(int Port);
 	void OpenPort();
@@ -109,7 +110,6 @@ private:
 	TSection FSection;
 	int FHandle;
 
-    TWait *FCurrWait;
     int FPort;
 	int FIrq;
 	int FBase;

@@ -348,19 +348,16 @@ void cdecl main()
 	TGraphicDevice *MouseMask;
 	TGraphicDevice *MouseBitmap;
 	TPlanetThread *Planets;
-	TWait *Wait;
 	TKeyboardDevice *Keyboard;
 	TMouseDevice *Mouse;
 
 	RdosWaitMilli(250);
 
-	Wait = new TWait();
-
-	Keyboard = new TKeyboardDevice(Wait);
+	Keyboard = new TKeyboardDevice;
 	Keyboard->OnKeyPress = KeyPress;
 	Keyboard->OnKeyRelease = KeyRelease;
 
-	Mouse = new TMouseDevice(Wait);
+	Mouse = new TMouseDevice;
 	Mouse->OnMove = MouseMove;
 	Mouse->OnLeftUp = LeftUp;
 	Mouse->OnLeftDown = LeftDown;
@@ -394,7 +391,11 @@ void cdecl main()
 	font = new TFont(35);
 	KeyVideo->SetFont(font);
 
-	Wait->StartThreadHandler("IO Thread", 0x1000);
+	TWait Wait;
+
+	Wait.Add(Keyboard);
+	Wait.Add(Mouse);
+	Wait.StartThreadHandler("IO Thread", 0x1000);
 
 	vbe->SetDrawColor(255,255,255);
 	vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());

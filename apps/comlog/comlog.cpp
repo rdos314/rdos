@@ -21,8 +21,12 @@ void cdecl main()
 	char Str[10];
 	TWaitDevice *WaitDevice;
 	TWait Wait;
-	TSerialDevice Port1(&Wait, 1, 9600, 'N', 8, 1);
-	TSerialDevice Port2(&Wait, 3, 9600, 'N', 8, 1);
+
+	TSerialDevice Port1(1, 9600, 'N', 8, 1);
+	TSerialDevice Port2(3, 9600, 'N', 8, 1);
+
+	Wait.Add(&Port1);
+	Wait.Add(&Port2);
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);

@@ -35,8 +35,8 @@ class TSocketServerFactory;
 class TSocket : public TWaitDevice
 {
 public:
-    TSocket(TWait *Wait, int Handle);
-    TSocket(TWait *Wait, long IP, int Port, int Timeout, int BufferSize);
+    TSocket(int Handle);
+    TSocket(long IP, int Port, int Timeout, int BufferSize);
     ~TSocket();
 
     static void Listen(TSocketServerFactory *Factory, int Port, int BufferSize);
@@ -65,6 +65,7 @@ public:
 
 protected:
 	virtual void SignalNewData();
+	virtual void Add(TWait *Wait);
 
 	int FHandle;
 };
@@ -87,7 +88,6 @@ protected:
     static TSocketServer *FList;
     TSocketServer *FNext;
 
-    TWait *FWait;
 	TSocket *FSocket;
 };
 

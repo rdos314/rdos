@@ -44,8 +44,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TLightDevice::TLightDevice(TWait *Wait, int channel)
- : TAdcDevice(Wait, channel)
+TLightDevice::TLightDevice(int channel)
+ : TAdcDevice(channel)
 {
 }
 
@@ -60,8 +60,8 @@ TLightDevice::TLightDevice(TWait *Wait, int channel)
 #   Returns....: *
 #
 ##########################################################################*/
-TLightDevice::TLightDevice(const char *IniSection, TWait *Wait, int channel)
-  : TAdcDevice(IniSection, Wait, channel)
+TLightDevice::TLightDevice(const char *IniSection, int channel)
+  : TAdcDevice(IniSection, channel)
 {
 }
 

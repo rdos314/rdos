@@ -33,8 +33,8 @@
 class TSignalDevice : public TWaitDevice
 {
 public:
-	TSignalDevice(TWait *Wait);
-	TSignalDevice(const char *IniSection, TWait *Wait);
+	TSignalDevice();
+	TSignalDevice(const char *IniSection);
 	virtual ~TSignalDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
@@ -47,9 +47,10 @@ public:
 
 protected:
 	virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
 
 private:
-    void Init(TWait *Wait);
+    void Init();
 
     int FHandle;
 };

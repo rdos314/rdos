@@ -35,28 +35,39 @@ class TWait;
 class TWaitDevice : public TDevice
 {
 friend class TWait;
+
 public:
 	TWaitDevice();
 	TWaitDevice(const char *IniSection);
 	virtual ~TWaitDevice();
 
+	TWaitDevice *WaitForever();
+	TWaitDevice *WaitTimeout(int MilliSec);
+
 	int ID;
 
-    TWait *GetWait();
-
 protected:
-	int RegisterWait(TWait *Wait);
+	void CreateWait();
+
 	virtual void SignalNewData() = 0;
+	virtual void Add(TWait *Wait) = 0;
+	virtual void Remove(TWait *Wait);
+
+	TWait *FWait;
 
 private:
-    void Init();
+void Init();
+};
 
-    TWait *FWait;
+class TWaitList
+{
+public:
+    TWaitDevice *WaitDev;
+    TWaitList *List;
 };
 
 class TWait
 {
-friend class TWaitDevice;
 public:
 	TWait();
 	virtual ~TWait();
@@ -69,11 +80,15 @@ public:
 	TWaitDevice *WaitTimeout(int MilliSec);
 	void Abort();
 
-protected:
-    int GetHandle();
+	void Add(TWaitDevice *dev);
 	void Remove(TWaitDevice *dev);
 
+	int GetHandle();
+
 private:
+    TWaitList *FWaitList;
+    TSection FListSection;
+    
     int FHandle;
 	int FThreadRunning;
 	int FInstalled;

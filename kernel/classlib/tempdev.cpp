@@ -44,8 +44,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TTempDevice::TTempDevice(TWait *Wait, int channel)
- : TAdcDevice(Wait, channel)
+TTempDevice::TTempDevice(int channel)
+ : TAdcDevice(channel)
 {
 }
 
@@ -60,8 +60,8 @@ TTempDevice::TTempDevice(TWait *Wait, int channel)
 #   Returns....: *
 #
 ##########################################################################*/
-TTempDevice::TTempDevice(const char *IniSection, TWait *Wait, int channel)
-  : TAdcDevice(IniSection, Wait, channel)
+TTempDevice::TTempDevice(const char *IniSection, int channel)
+  : TAdcDevice(IniSection, channel)
 {
 }
 

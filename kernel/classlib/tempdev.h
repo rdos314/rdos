@@ -33,8 +33,8 @@
 class TTempDevice : public TAdcDevice
 {
 public:
-	TTempDevice(TWait *Wait, int channel);
-	TTempDevice(const char *IniSection, TWait *Wait, int channel);
+	TTempDevice(int channel);
+	TTempDevice(const char *IniSection, int channel);
 	~TTempDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

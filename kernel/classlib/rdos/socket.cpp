@@ -35,7 +35,7 @@
 class TThreadListen
 {
 public:
-	 TSocketServerFactory *Factory;
+	TSocketServerFactory *Factory;
     int Port;
     int BufferSize;
 };
@@ -92,19 +92,16 @@ TSocketServer::~TSocketServer()
 ##########################################################################*/
 void TSocketServer::ThreadStartup(int Handle)
 {
-    FWait = new TWait;
-	FSocket = new TSocket(FWait, Handle);
+	FSocket = new TSocket(Handle);
 
     Cleanup();
-	Insert();    
+	Insert();
 
 	HandleSocket();
 
 	FSocket->Push();
 	FSocket->Close();
     delete FSocket;
-    delete FWait;
-    FWait = 0;
     FSocket = 0;	
 }
 
@@ -277,18 +274,14 @@ void TSocket::Listen(const char *ThreadName, TSocketServerFactory *Factory, int 
 #
 #   Purpose....: Constructor
 #
-#   In params..: Wait       Wait device
-#                Handle     Socket handle
+#   In params..: Handle     Socket handle
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSocket::TSocket(TWait *Wait, int Handle)
+TSocket::TSocket(int Handle)
 {
 	FHandle = Handle;
-
-	if (FHandle)
-		RdosAddWaitForTcpConnection(RegisterWait(Wait), FHandle, this);
 }
 
 /*##########################################################################
@@ -306,14 +299,9 @@ TSocket::TSocket(TWait *Wait, int Handle)
 #   Returns....: *
 #
 ##########################################################################*/
-TSocket::TSocket(TWait *Wait, long IP, int Port, int Timeout, int BufferSize)
+TSocket::TSocket(long IP, int Port, int Timeout, int BufferSize)
 {
-	FHandle = 0;
-
 	FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
-
-	if (FHandle)
-		RdosAddWaitForTcpConnection(RegisterWait(Wait), FHandle, this);
 }
 
 /*##########################################################################
@@ -350,6 +338,24 @@ TSocket::~TSocket()
 void TSocket::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"Socket",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait       Wait device
+#                Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Add(TWait *Wait)
+{
+	if (FHandle)
+		RdosAddWaitForTcpConnection(Wait->GetHandle(), FHandle, this);
 }
 
 /*##################  TSocket::IsOpen  ############################
@@ -532,10 +538,11 @@ int TSocket::Poll()
 ##########################################################################*/
 int TSocket::WaitForChar(long Timeout)
 {
-	TWait *Wait = GetWait();
+    if (!FWait)
+        CreateWait();
 
-	if (Wait)
-		if (Wait->WaitTimeout(Timeout) == this)
+	if (FWait)
+		if (FWait->WaitTimeout(Timeout) == this)
 			return TRUE;
 
     return FALSE;

@@ -35,8 +35,8 @@
 class TAdcDevice : public TWaitDevice
 {
 public:
-	TAdcDevice(TWait *Wait, int channel);
-	TAdcDevice(const char *IniSection, TWait *Wait, int channel);
+	TAdcDevice(int channel);
+	TAdcDevice(const char *IniSection, int channel);
 	~TAdcDevice();
 
 	int GetChannel();
@@ -55,6 +55,7 @@ protected:
 	void NotifySample(long double value);
 
 	virtual void SignalNewData();
+	virtual void Add(TWait *Wait);
 	virtual long double MvToReal(long double mv);
 
 	TDateTime FNextSample;
@@ -68,7 +69,7 @@ protected:
 	int FChannel;
 
 private:
-	void Init(TWait *Wait, int channel);
+	void Init(int channel);
 
 	int FHandle;
 };

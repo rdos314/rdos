@@ -44,9 +44,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TKeyboardDevice::TKeyboardDevice(TWait *Wait)
+TKeyboardDevice::TKeyboardDevice()
 {
-	Init(Wait);
+	Init();
 }
 
 /*##########################################################################
@@ -60,28 +60,10 @@ TKeyboardDevice::TKeyboardDevice(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-TKeyboardDevice::TKeyboardDevice(const char *IniSection, TWait *Wait)
+TKeyboardDevice::TKeyboardDevice(const char *IniSection)
   : TWaitDevice(IniSection)
 {
-	Init(Wait);
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyboardDevice::Init
-#
-#   Purpose....: Init method for class
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TKeyboardDevice::Init(TWait *Wait)
-{
-	OnKeyPress = 0;
-	OnKeyRelease = 0;
-	KeyPreview = 0;
-	RdosAddWaitForKeyboard(RegisterWait(Wait), this);
+	Init();
 }
 
 /*##########################################################################
@@ -97,6 +79,38 @@ void TKeyboardDevice::Init(TWait *Wait)
 ##########################################################################*/
 TKeyboardDevice::~TKeyboardDevice()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TKeyboardDevice::Init
+#
+#   Purpose....: Init method for class
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TKeyboardDevice::Init()
+{
+	OnKeyPress = 0;
+	OnKeyRelease = 0;
+	KeyPreview = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TKeyboardDevice::Add
+#
+#   Purpose....: Add this object to wait list
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TKeyboardDevice::Add(TWait *Wait)
+{
+	RdosAddWaitForKeyboard(Wait->GetHandle(), this);
 }
 
 /*##########################################################################
@@ -361,7 +375,6 @@ void TKeyboardDevice::SignalNewData()
 	int KeyState;
 	int VirtualKey;
 	int ScanCode;
-
 
     if (KeyPreview)
     {

@@ -46,9 +46,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcDevice::TAdcDevice(TWait *Wait, int channel)
+TAdcDevice::TAdcDevice(int channel)
 {
-	Init(Wait, channel);
+	Init(channel);
 }
 
 /*##########################################################################
@@ -62,38 +62,10 @@ TAdcDevice::TAdcDevice(TWait *Wait, int channel)
 #   Returns....: *
 #
 ##########################################################################*/
-TAdcDevice::TAdcDevice(const char *IniSection, TWait *Wait, int channel)
+TAdcDevice::TAdcDevice(const char *IniSection, int channel)
   : TWaitDevice(IniSection)
 {
-	Init(Wait, channel);
-}
-
-/*##########################################################################
-#
-#   Name       : TAdcDevice::Init
-#
-#   Purpose....: Init ADC device channel
-#
-#   In params..: Wait
-#				 Channel #
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TAdcDevice::Init(TWait *Wait, int channel)
-{
-	FHandle = RdosOpenAdc(channel);
-	RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
-	FChannel = channel;
-	FSample = 0;
-	FDay = 0;
-	FHour = 0;
-	FMin = 0;
-	FSec = 1;
-	FMilli = 0;
-	FTics = 0;
-	OnSample = 0;
-	RdosAddWaitForAdc(RegisterWait(Wait), FHandle, this);
+	Init(channel);
 }
 
 /*##########################################################################
@@ -110,6 +82,50 @@ void TAdcDevice::Init(TWait *Wait, int channel)
 TAdcDevice::~TAdcDevice()
 {
 	RdosCloseAdc(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcDevice::Init
+#
+#   Purpose....: Init ADC device channel
+#
+#   In params..: Wait
+#				 Channel #
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcDevice::Init(int channel)
+{
+	FHandle = RdosOpenAdc(channel);
+	RdosDefineAdcTime(FHandle, FNextSample.GetMsb(), FNextSample.GetLsb());
+	FChannel = channel;
+	FSample = 0;
+	FDay = 0;
+	FHour = 0;
+	FMin = 0;
+	FSec = 1;
+	FMilli = 0;
+	FTics = 0;
+	OnSample = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TAdcDevice::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: Wait
+#				 Channel #
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAdcDevice::Add(TWait *Wait)
+{
+	RdosAddWaitForAdc(Wait->GetHandle(), FHandle, this);
 }
 
 /*##########################################################################

@@ -36,8 +36,8 @@
 class TMouseDevice : public TWaitDevice
 {
 public:
-	TMouseDevice(TWait *Wait);
-	TMouseDevice(const char *IniSection, TWait *Wait);
+	TMouseDevice();
+	TMouseDevice(const char *IniSection);
 	virtual ~TMouseDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
@@ -67,9 +67,10 @@ protected:
 	virtual void RightUp(int x, int y, int ButtonState, int KeyState);
 
 	virtual void SignalNewData();
+	virtual void Add(TWait *Wait);
 
 private:
-    void Init(TWait *Wait);
+    void Init();
 
 	int FState;
 };

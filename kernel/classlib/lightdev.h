@@ -33,8 +33,8 @@
 class TLightDevice : public TAdcDevice
 {
 public:
-	TLightDevice(TWait *Wait, int channel);
-	TLightDevice(const char *IniSection, TWait *Wait, int channel);
+	TLightDevice(int channel);
+	TLightDevice(const char *IniSection, int channel);
 	~TLightDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;

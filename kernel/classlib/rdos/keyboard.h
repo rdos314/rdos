@@ -165,8 +165,8 @@
 class TKeyboardDevice : public TWaitDevice
 {
 public:
-	TKeyboardDevice(TWait *Wait);
-	TKeyboardDevice(const char *IniSection, TWait *Wait);
+	TKeyboardDevice();
+	TKeyboardDevice(const char *IniSection);
 	virtual ~TKeyboardDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
@@ -186,7 +186,6 @@ public:
 	void (*OnKeyRelease)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 	int (*KeyPreview)(TKeyboardDevice *Keyboard, int ch);
-
 	
 protected:
 
@@ -194,9 +193,10 @@ protected:
 	virtual void KeyRelease(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 	virtual void SignalNewData();
+   virtual void Add(TWait *Wait);
 
 private:
-    void Init(TWait *Wait);
+    void Init();
 };
 
 #endif

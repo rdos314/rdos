@@ -351,7 +351,7 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 		if (FDataSocket)
 			delete FDataSocket;
 
-		FDataSocket = new TSocket(FWait, IP, port, 6000, 0x2000);
+		FDataSocket = new TSocket(IP, port, 6000, 0x2000);
 
 		if (FDataSocket->WaitForConnection(6000))
 			return TRUE;
@@ -382,7 +382,7 @@ void TFtpSocketServer::ListenForDataConnection(long *IP, int *port)
 	if (FDataSocket)
 		delete FDataSocket;
 
-	FDataSocket = new TSocket(FWait, FSocket->GetRemoteIP(), 0, 6000, 0x2000);
+	FDataSocket = new TSocket(FSocket->GetRemoteIP(), 0, 6000, 0x2000);
 	*port = FDataSocket->GetLocalPort();
 }
 

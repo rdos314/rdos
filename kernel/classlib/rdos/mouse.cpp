@@ -44,9 +44,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TMouseDevice::TMouseDevice(TWait *Wait)
+TMouseDevice::TMouseDevice()
 {
-	Init(Wait);
+	Init();
 }
 
 /*##########################################################################
@@ -60,31 +60,10 @@ TMouseDevice::TMouseDevice(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-TMouseDevice::TMouseDevice(const char *IniSection, TWait *Wait)
+TMouseDevice::TMouseDevice(const char *IniSection)
   : TWaitDevice(IniSection)
 {
-	Init(Wait);
-}
-
-/*##########################################################################
-#
-#   Name       : TMouseDevice::Init
-#
-#   Purpose....: Init method for class
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TMouseDevice::Init(TWait *Wait)
-{
-	OnMove = 0;
-	OnLeftUp = 0;
-	OnLeftDown = 0;
-	OnRightUp = 0;
-	OnRightDown = 0;
-	FState = 0;
-	RdosAddWaitForMouse(RegisterWait(Wait), this);
+	Init();
 }
 
 /*##########################################################################
@@ -100,6 +79,41 @@ void TMouseDevice::Init(TWait *Wait)
 ##########################################################################*/
 TMouseDevice::~TMouseDevice()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TMouseDevice::Init
+#
+#   Purpose....: Init method for class
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMouseDevice::Init()
+{
+	OnMove = 0;
+	OnLeftUp = 0;
+	OnLeftDown = 0;
+	OnRightUp = 0;
+	OnRightDown = 0;
+	FState = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TMouseDevice::Add
+#
+#   Purpose....: Add object to wait
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TMouseDevice::Add(TWait *Wait)
+{
+	RdosAddWaitForMouse(Wait->GetHandle(), this);
 }
 
 /*##########################################################################

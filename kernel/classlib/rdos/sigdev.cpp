@@ -44,9 +44,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSignalDevice::TSignalDevice(TWait *Wait)
+TSignalDevice::TSignalDevice()
 {
-	Init(Wait);
+	Init();
 }
 
 /*##########################################################################
@@ -60,26 +60,10 @@ TSignalDevice::TSignalDevice(TWait *Wait)
 #   Returns....: *
 #
 ##########################################################################*/
-TSignalDevice::TSignalDevice(const char *IniSection, TWait *Wait)
+TSignalDevice::TSignalDevice(const char *IniSection)
   : TWaitDevice(IniSection)
 {
-    Init(Wait);
-}
-
-/*##########################################################################
-#
-#   Name       : TSignalDevice::Init
-#
-#   Purpose....: Init method for class
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSignalDevice::Init(TWait *Wait)
-{
-	FHandle = RdosCreateSignal();
-	RdosAddWaitForSignal(RegisterWait(Wait), FHandle, this);
+    Init();
 }
 
 /*##########################################################################
@@ -100,6 +84,21 @@ TSignalDevice::~TSignalDevice()
 
 /*##########################################################################
 #
+#   Name       : TSignalDevice::Init
+#
+#   Purpose....: Init method for class
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSignalDevice::Init()
+{
+	FHandle = RdosCreateSignal();
+}
+
+/*##########################################################################
+#
 #   Name       : TSignalDevice::DeviceName
 #
 #   Purpose....: Device name		                          
@@ -112,6 +111,22 @@ TSignalDevice::~TSignalDevice()
 void TSignalDevice::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name, "SIGNAL", MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TSignalDevice::Add
+#
+#   Purpose....: Add object to wait
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSignalDevice::Add(TWait *Wait)
+{
+    if (FHandle)
+    	RdosAddWaitForSignal(Wait->GetHandle(), FHandle, this);
 }
 
 /*##########################################################################

@@ -331,7 +331,7 @@ int TSerialDevice::CalcIrq(int Port)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSerialDevice::Init(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
     OnChar = 0;    
 
@@ -342,7 +342,6 @@ void TSerialDevice::Init(TWait *Wait, int Port, long Baudrate, char Parity, int 
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
-    FCurrWait = Wait;
 	FDebugFile = 0;
 	FUseCts = FALSE;
 	
@@ -365,7 +364,7 @@ void TSerialDevice::Init(TWait *Wait, int Port, long Baudrate, char Parity, int 
 #   Returns....: *
 #
 ##########################################################################*/
-void TSerialDevice::Init(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
+void TSerialDevice::Init(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
 {
     int Base;
 
@@ -379,8 +378,8 @@ void TSerialDevice::Init(TWait *Wait, int Port, int Irq, long Baudrate, char Par
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
-    FCurrWait = Wait;
     FUseCts = FALSE;
+    FHandle = 0;
 	
 	OpenPort();
 }
@@ -405,8 +404,8 @@ TSerialDevice::TSerialDevice()
     FParity = 0;
     FDataBits = 0;
     FStopBits = 0;
-    FCurrWait = 0;
     FUseCts = FALSE;
+    FHandle = 0;
 }
 
 /*##########################################################################
@@ -430,8 +429,8 @@ TSerialDevice::TSerialDevice(const char *IniSection)
     FParity = 0;
     FDataBits = 0;
     FStopBits = 0;
-    FCurrWait = 0;
     FUseCts = FALSE;
+    FHandle = 0;
 }
 
 /*##########################################################################
@@ -447,10 +446,10 @@ TSerialDevice::TSerialDevice(const char *IniSection)
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate)
+TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate)
 	: TWaitDevice(IniSection)
 {
-	Init(Wait, Port, Baudrate, 'N', 8, 1);
+	Init(Port, Baudrate, 'N', 8, 1);
 }
 
 /*##########################################################################
@@ -469,10 +468,10 @@ TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, long
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 	: TWaitDevice(IniSection)
 {
-	Init(Wait, Port, Baudrate, Parity, DataBits, StopBits);
+	Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -489,10 +488,10 @@ TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, long
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate)
+TSerialDevice::TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate)
 	: TWaitDevice(IniSection)
 {
-	Init(Wait, Port, Irq, Baudrate, 'N', 8, 1);
+	Init(Port, Irq, Baudrate, 'N', 8, 1);
 }
 
 /*##########################################################################
@@ -512,10 +511,10 @@ TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, int 
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
+TSerialDevice::TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
 	: TWaitDevice(IniSection)
 {
-	Init(Wait, Port, Irq, Baudrate, Parity, DataBits, StopBits);
+	Init(Port, Irq, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -530,9 +529,9 @@ TSerialDevice::TSerialDevice(const char *IniSection, TWait *Wait, int Port, int 
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(TWait *Wait, int Port, long Baudrate)
+TSerialDevice::TSerialDevice(int Port, long Baudrate)
 {
-	Init(Wait, Port, Baudrate, 'N', 8, 1);
+	Init(Port, Baudrate, 'N', 8, 1);
 }
 
 /*##########################################################################
@@ -550,9 +549,9 @@ TSerialDevice::TSerialDevice(TWait *Wait, int Port, long Baudrate)
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(TWait *Wait, int Port, long Baudrate, char Parity, int DataBits, int StopBits)
+TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
-	Init(Wait, Port, Baudrate, Parity, DataBits, StopBits);
+	Init(Port, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -568,9 +567,9 @@ TSerialDevice::TSerialDevice(TWait *Wait, int Port, long Baudrate, char Parity, 
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate)
+TSerialDevice::TSerialDevice(int Port, int Irq, long Baudrate)
 {
-	Init(Wait, Port, Irq, Baudrate, 'N', 8, 1);
+	Init(Port, Irq, Baudrate, 'N', 8, 1);
 }
 
 /*##########################################################################
@@ -589,9 +588,9 @@ TSerialDevice::TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate)
 #   Returns....: *
 #
 ##########################################################################*/
-TSerialDevice::TSerialDevice(TWait *Wait, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
+TSerialDevice::TSerialDevice(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
 {
-	Init(Wait, Port, Irq, Baudrate, Parity, DataBits, StopBits);
+	Init(Port, Irq, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -659,6 +658,22 @@ void TSerialDevice::DeviceName(char *Name, int MaxLen) const
 	strncpy(Name,"Serial device",MaxLen);
 }
 
+/*##########################################################################
+#
+#   Name       : TSerialDevice::Add
+#
+#   Purpose....: Add object to wait
+#
+#   In params..: wait
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::Add(TWait *Wait)
+{
+    if (FHandle)
+        RdosAddWaitForCom(FWait->GetHandle(), FHandle, this);
+}
 
 /*##########################################################################
 #
@@ -695,8 +710,6 @@ void TSerialDevice::OpenPort()
             RdosEnableCts(FHandle);
         else
             RdosDisableCts(FHandle);
-            
-    	RdosAddWaitForCom(RegisterWait(FCurrWait), FHandle, this);
     }
 }
 
@@ -754,7 +767,8 @@ void TSerialDevice::Close()
 ##########################################################################*/
 void TSerialDevice::Clear()
 {
-	RdosFlushCom(FHandle);
+    if (FHandle)
+    	RdosFlushCom(FHandle);
 }
 
 /*##################  TSerialDevice::SetBaudrate  #####################
@@ -976,7 +990,8 @@ void TSerialDevice::DisableCts()
 ##########################################################################*/
 void TSerialDevice::ResetDtr()
 {
-	RdosResetDtr(FHandle);
+    if (FHandle)
+    	RdosResetDtr(FHandle);
 }
 
 /*##########################################################################
@@ -992,7 +1007,8 @@ void TSerialDevice::ResetDtr()
 ##########################################################################*/
 void TSerialDevice::SetDtr()
 {
-	RdosSetDtr(FHandle);
+    if (FHandle)
+    	RdosSetDtr(FHandle);
 }
 
 /*##########################################################################
@@ -1008,7 +1024,8 @@ void TSerialDevice::SetDtr()
 ##########################################################################*/
 void TSerialDevice::ResetRts()
 {
-    RdosResetRts(FHandle);
+    if (FHandle)
+        RdosResetRts(FHandle);
 }
 
 /*##########################################################################
@@ -1024,7 +1041,8 @@ void TSerialDevice::ResetRts()
 ##########################################################################*/
 void TSerialDevice::SetRts()
 {
-    RdosSetRts(FHandle);
+    if (FHandle)
+        RdosSetRts(FHandle);
 }
 
 /*##########################################################################
@@ -1040,7 +1058,8 @@ void TSerialDevice::SetRts()
 ##########################################################################*/
 void TSerialDevice::EnableAutoRts()
 {
-    RdosEnableAutoRts(FHandle);
+    if (FHandle)
+        RdosEnableAutoRts(FHandle);
 }
 
 /*##########################################################################
@@ -1056,7 +1075,8 @@ void TSerialDevice::EnableAutoRts()
 ##########################################################################*/
 void TSerialDevice::DisableAutoRts()
 {
-    RdosDisableAutoRts(FHandle);
+    if (FHandle)
+        RdosDisableAutoRts(FHandle);
 }
 
 /*##########################################################################
@@ -1074,14 +1094,17 @@ void TSerialDevice::Write(char ch)
 {
     TSerialDebug Debug;
 
-	RdosWriteCom(FHandle, ch);
+    if (FHandle)
+    {
+    	RdosWriteCom(FHandle, ch);
 
-	if (FDebugFile && FOutChannel)
-	{
-	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
-	    Debug.Channel = FOutChannel;
-	    Debug.ch = ch;
-	    FDebugFile->Write(&Debug, sizeof(Debug));
+    	if (FDebugFile && FOutChannel)
+	    {
+    	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+	        Debug.Channel = FOutChannel;
+	        Debug.ch = ch;
+    	    FDebugFile->Write(&Debug, sizeof(Debug));
+	    }
 	}	
 }
 
@@ -1140,7 +1163,8 @@ void TSerialDevice::Write(const char *str)
 ##########################################################################*/
 void TSerialDevice::WaitForSendCompleted()
 {
-    RdosWaitForSendCompletedCom(FHandle);
+    if (FHandle)
+        RdosWaitForSendCompletedCom(FHandle);
 }
 
 /*##########################################################################
@@ -1156,10 +1180,11 @@ void TSerialDevice::WaitForSendCompleted()
 ##########################################################################*/
 int TSerialDevice::WaitForChar(long Timeout)
 {
-	TWait *Wait = GetWait();
+    if (!FWait)
+        CreateWait();
 
-	if (Wait)
-		if (Wait->WaitTimeout(Timeout) == this)
+	if (FWait)
+		if (FWait->WaitTimeout(Timeout) == this)
 			return TRUE;
 
     return FALSE;
@@ -1178,19 +1203,22 @@ int TSerialDevice::WaitForChar(long Timeout)
 ##########################################################################*/
 char TSerialDevice::Read()
 {
-    char ch;
+    char ch = 0;
     TSerialDebug Debug;
+
+    if (FHandle)
+    {
+    	ch = RdosReadCom(FHandle);
+
+    	if (FDebugFile && FInChannel)
+	    {
+    	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+	        Debug.Channel = FInChannel;
+	        Debug.ch = ch;
+    	    FDebugFile->Write(&Debug, sizeof(Debug));
+	    }	
+    }
     
-	ch = RdosReadCom(FHandle);
-
-	if (FDebugFile && FInChannel)
-	{
-	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
-	    Debug.Channel = FInChannel;
-	    Debug.ch = ch;
-	    FDebugFile->Write(&Debug, sizeof(Debug));
-	}	
-
 	return ch;
 }
 
