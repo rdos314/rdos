@@ -93,9 +93,6 @@ scroll_up_proc			DD ?
 ; IN  DI		Lower Row
 scroll_down_proc		DD ?
 
-; IN  AX        Font handle
-set_font_proc  			DD ?
-
 ; IN  CX		Number of palette entries
 ; IN  ES:EDI	Palette
 define_palette_proc		DD ?
@@ -116,9 +113,53 @@ clear_mask_proc			DD ?
 ; IN  ES:EDI	bitmap
 add_mask_proc			DD ?
 
+; IN  AX        Font handle
+set_font_proc  			DD ?
+
 ; IN  EAX			RGB color
 ; OUT EAX           internal color
 translate_color_proc	DD ?
+
+;
+; device-dependent functions
+;
+
+; IN  EAX			Internal color
+; IN  EDI	    	Position
+set_proc          		DD ?
+
+; IN  EAX			Internal color
+; IN  EDI	    	Position
+; IN  CX			Number of pixels
+slab_proc               DD ?
+
+; IN  FS:ESI	    Source pixels
+; IN  EDI	    	Position
+; IN  CX			Number of pixels
+copy_proc               DD ?
+
+; IN  EAX           Internal Color
+; IN  CX			number of pixels
+; IN  DL            Start bit number
+; IN  GS:EBX        Mask bits
+; IN  EDI		    Dest buffer
+mask_set_proc               DD ?
+
+; IN  CX			number of pixels
+; IN  DL            Start bit number
+; IN  GS:EBX        Mask bits
+; IN  FS:ESI        Source pixels
+; IN  EDI		    Dest buffer
+mask_copy_proc               DD ?
+
+;
+; device-independent functions
+;
+
+; IN  CX			x
+; IN  DX			y
+; OUT EDI   		Position
+get_line_proc			DD ?
 
 ; IN  CX			x
 ; IN  DX			y
@@ -132,31 +173,26 @@ set_pixel_proc			DD ?
 ; IN  AX			number of pixels
 ; IN  CX			x
 ; IN  DX			y
-; IN  ES:EDI		line buffer
+; IN  EDI		Position
 get_native_row_proc		DD ?
 
 ; IN  AX			number of pixels
 ; IN  CX			x
 ; IN  DX			y
-; IN  ES:EDI		line buffer
+; IN  EDI   		Position
 get_rgb_row_proc		DD ?
 
 ; IN  AX			number of pixels
 ; IN  CX			x
 ; IN  DX			y
-; IN  ES:EDI		line buffer
+; IN  EDI   		Position
 set_native_row_proc		DD ?
 
 ; IN  AX			number of pixels
 ; IN  CX			x
 ; IN  DX			y
-; IN  ES:EDI		line buffer
+; IN  EDI   		Position
 set_rgb_row_proc		DD ?
-
-; IN  CX			x
-; IN  DX			y
-; OUT ES:EDI		line buffer
-get_line_proc			DD ?
 
 ; IN  AX			source row size
 ; IN  EBX			color

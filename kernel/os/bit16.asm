@@ -544,130 +544,695 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetPixel
+;		NAME:			SetBase
 ;
-;		DESCRIPTION:	Get pixel
+;		DESCRIPTION:	Basic set pixel
 ;
-;		PARAMETER:		CX			x
-;						DX			y
+;		PARAMETER:		EAX         Color
+;						EDI         Position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pixel	Proc far
-	push ds
-	push bx
-	push edx
-	movsx ecx,cx
-	movsx edx,dx
-	movzx eax,ds:v_row_size
-	imul edx
-	mov edx,ecx
-	add edx,edx
-	add eax,edx
-	add eax,ds:v_app_base
-	mov dx,flat_sel
-	mov ds,dx
-	mov ax,[eax]
-	mov bx,ax
-	movzx eax,bx
-	and ax,0F800h
-	shl eax,8
-	mov dx,bx
-	and dx,7E0h
-	shl dx,5
-	or ax,dx
-	and bx,1Fh
-	shl bx,3
-	or ax,bx
-;
-	pop edx
-	pop bx	
-	pop ds
-	ret
-get_pixel	Endp
+set_base	Proc far
+    push bx
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].LgopTab
+	pop bx
+    ret
+set_base    Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SetPixel
+;		NAME:			Slab
 ;
-;		DESCRIPTION:	Set pixel
+;		DESCRIPTION:	Fill line
 ;
-;		PARAMETER:		CX			x
-;						DX			y
+;		PARAMETERS:		AX			Color
+;						ES:EDI		Dest buffer
+;						CX			number of pixels
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_pixel	Proc far
-	push ds
-	push es
-	push eax
-	push bx
-	push edx
+slab	Proc far
+    push bx
+    push cx
+	push dx
 	push edi
-	push bp
-	mov bp,sp
-	sub sp,4
-	mov [bp].curr_x,cx
-	mov [bp].curr_y,dx
-	EnterSection ds:v_sprite_section
 ;
-    cmp cx,ds:v_x_min
-    jl set_pixel_done
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	jne slab_lgop
 ;
-    cmp dx,ds:v_y_min
-    jl set_pixel_done
+	mov dx,ax
+	shl eax,16
+	mov ax,dx
 ;
-    cmp cx,ds:v_x_max
-    jg set_pixel_done
+	test di,2
+	jz slab_lgop_none_double
+
+slab_lgop_none_word:
+	stos word ptr es:[edi]
+	sub cx,1
+	jz slab_done
+
+slab_lgop_none_double:
+	cmp cx,1
+	je slab_lgop_none_word
 ;
-    cmp dx,ds:v_y_max
-    jg set_pixel_done
+	stos dword ptr es:[edi]
+	sub cx,2
+	jnz slab_lgop_none_double
 ;
-	movsx ecx,cx
-	movsx edx,dx
-	movzx eax,ds:v_row_size
-	imul edx
-	mov edi,ecx
-	add edi,edi
-	add edi,eax
-	add edi,ds:v_app_base
-	mov ax,flat_sel
-	mov es,ax
-	cmp ds:v_sprite_count,0
-	jz set_pixel_no_sprite
+    jmp slab_done
+
+slab_lgop:
+	add bx,bx
+
+slab_lgop_loop:
+	call word ptr cs:[bx].LgopTab
+    add edi,2
+	inc word ptr [bp].curr_x
+    loop slab_lgop_loop
+
+slab_done:
+    pop edi
+	pop dx
+	pop cx
+	pop bx
+	ret
+slab	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
-    mov ax,1
-    HideSpriteLine
+;		NAME:			Copy
 ;
-	mov eax,ds:v_color
+;		DESCRIPTION:	Copy line
+;
+;		PARAMETERS:		FS:ESI      Source pixels
+;						ES:EDI		Dest buffer
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy	Proc far
+    push ax
+    push bx
+    push cx
+    push esi
+    push edi
+;
+	mov bx,ds:v_lgop
+	cmp bx,LGOP_NONE
+	je copy_none
+;
+	add bx,bx
+
+copy_loop:
+	lods word ptr fs:[esi]
+	call word ptr cs:[bx].LgopTab
+	add edi,2
+	inc word ptr [bp].curr_x
+	loop copy_loop
+	jmp copy_done
+
+copy_none:
+	test di,2
+	jz copy_double
+;
+	movs word ptr es:[edi],fs:[esi]
+	sub cx,1
+	jz copy_done
+
+copy_double:
+	push cx
+	movzx ecx,cx
+	shr ecx,1
+	rep movs dword ptr es:[edi],fs:[esi]
+	pop cx
+	test cx,1
+	jz copy_done
+;	
+	movs word ptr es:[edi],fs:[esi]
+
+copy_done:
+    pop edi
+    pop esi
+    pop cx
+    pop bx
+    pop ax
+    ret
+copy    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSet
+;
+;		DESCRIPTION:	Set mask line
+;
+;		PARAMETERS:		EAX         Color
+;						CX			number of pixels
+;                       DL          Start bit number
+;                       GS:EBX      Mask bits
+;						ES:EDI		Dest buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mask_set	Proc far
+    push ebx
+    push cx
+    push dx
+    push esi
+    push edi
+;
+    mov si,cx
+    mov cl,dl        
+	    
+mask_set_line_loop:
+	mov ch,8
+	mov dx,gs:[ebx]
+	ror dx,cl
+
+mask_set_bit_loop:
+	rcr dl,1
+	jnc mask_set_line_next
+;
+    push bx
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].LgopTab
+	pop bx
+
+mask_set_line_next:
+	add edi,2
+    inc word ptr [bp].curr_x
+	sub si,1
+	jz mask_set_line_done
+;
+	sub ch,1
+	jnz mask_set_bit_loop
+;
+	inc ebx
+	jmp mask_set_line_loop
+
+mask_set_line_done:
+    pop edi
+    pop esi
+    pop dx
+    pop cx
+    pop ebx
+    ret
+mask_set    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskCopy
+;
+;		DESCRIPTION:	Copy mask line
+;
+;		PARAMETERS:		CX			number of pixels
+;                       DL          Start bit number
+;                       FS:ESI      Source pixels
+;                       GS:EBX      Mask bits 
+;						ES:EDI		Dest buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+mask_copy	Proc far
+    push ebx
+    push cx
+    push dx
+    push esi
+    push edi
+;
+    or dl,dl
+    jz mask_copy_prep
+;
+    push cx
+    mov cl,dl
+    mov dl,gs:[ebx]
+    rcr dl,cl
+    mov dh,8
+    sub dh,cl
+    pop cx
+    jmp mask_copy_loop
+
+mask_copy_prep:
+    mov dh,8
+	mov dl,gs:[ebx]
+
+mask_copy_loop:
+	rcr dl,1
+	jnc mask_copy_next
+;
+    mov ax,[bp].curr_x
+    cmp ax,ds:v_x_min
+    jl mask_copy_next
+;
+    cmp ax,ds:v_x_max
+    jg mask_copy_next
+;
+	mov ax,fs:[esi]
+	push bx
+	mov bx,ds:v_lgop
+	add bx,bx
+	call word ptr cs:[bx].LgopTab
+	pop bx
+
+mask_copy_next:
+	add esi,2
+	add edi,2
+	inc word ptr [bp].curr_x
+	sub cx,1
+	jz mask_copy_done
+;
+	sub dh,1
+	jnz mask_copy_loop
+;
+	inc ebx
+	jmp mask_copy_prep
+
+mask_copy_done:
+    pop edi
+    pop esi
+    pop dx
+    pop cx
+    pop ebx
+    ret
+mask_copy    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetMask
+;
+;		DESCRIPTION:	Set mask and process sprites & limits
+;
+;		PARAMETER:		DL          First bit
+;						CX			Number of pixels
+;						GS:EBX      Mask to process
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetMask	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push ebx
+	push cx
+	push si
+	push edi
+;
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl set_mask_done
+;
+    cmp ax,ds:v_y_max
+    jg set_mask_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg set_mask_done
+    
+set_mask_buf_loop:
+    cmp ax,ds:v_x_min
+    jge set_mask_start_ok
+
+set_mask_adv_buf:
+    inc ax
+    add edi,2
+    sub cx,1
+    jnz set_mask_buf_loop
+    jmp set_mask_done
+
+set_mask_start_ok:
+    mov si,ds:v_x_max
+    sub si,ax
+    inc si
+    cmp cx,si
+    jc set_mask_do
+;
+    mov cx,si
+    
+set_mask_do:
+    cmp ds:v_sprite_count,0
+    jz set_mask_draw
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+set_mask_draw:
+	mov eax,ds:v_color
+    call ds:mask_set_proc
+;
+    cmp ds:v_sprite_count,0
+    jz set_mask_done
 ;
     ShowSpriteLine
-    jmp set_pixel_done
 
-set_pixel_no_sprite:
-	mov eax,ds:v_color
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
-
-set_pixel_done:
-	LeaveSection ds:v_sprite_section
-    add sp,4
-    pop bp
+set_mask_done:
 	pop edi
-	pop edx
-	pop bx
-	pop eax
-	pop es
-	pop ds
+	pop si
+	pop cx
+	pop ebx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
 	ret
-set_pixel	Endp
+SetMask Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HollowLine
+;
+;		DESCRIPTION:	Draw a hollow line
+; 
+;		PARAMETER:		CX			width
+;						EDI			position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HollowLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
+	push edi
+;
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl hollow_line_done
+;
+    cmp ax,ds:v_y_max
+    jg hollow_line_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg hollow_line_done
+;
+    cmp ax,ds:v_x_min
+    jl hollow_line_first_done
+;
+    cmp ds:v_sprite_count,0
+    jz hollow_line_first_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,1
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y    
+    HideSpriteLine
+    pop dx
+    pop cx
+;
+	mov eax,ds:v_color
+    call ds:set_proc
+;
+    ShowSpriteLine
+	jmp hollow_line_first_done
+
+hollow_line_first_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:set_proc
+
+hollow_line_first_done:
+	mov ax,cx
+	dec ax
+	movsx eax,ax
+	add eax,eax
+	add edi,eax
+;
+    mov ax,[bp].curr_x
+    add ax,cx
+    dec ax
+    mov [bp].curr_x,ax
+    cmp ax,ds:v_x_min
+    jl hollow_line_done
+;
+    cmp ax,ds:v_x_max
+    jg hollow_line_done
+;
+    cmp ds:v_sprite_count,0
+    jz hollow_line_last_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,1
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y    
+    HideSpriteLine
+    pop dx
+    pop cx
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+;
+    ShowSpriteLine
+    jmp hollow_line_done
+
+hollow_line_last_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:set_proc
+
+hollow_line_done:
+	pop edi
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+HollowLine	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FilledLine
+;
+;		DESCRIPTION:	Draw a filled line
+; 
+;		PARAMETER:		CX			width
+;						EDI			position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FilledLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
+	push edi
+;
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl filled_line_done
+;
+    cmp ax,ds:v_y_max
+    jg filled_line_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg filled_line_done
+    
+filled_line_buf_loop:
+    cmp ax,ds:v_x_min
+    jge filled_line_start_ok
+
+filled_line_adv_buf:
+    inc ax
+    add edi,2
+    sub cx,1
+    jnz filled_line_buf_loop
+    jmp filled_line_done
+
+filled_line_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,ax
+    inc bx
+    cmp cx,bx
+    jc filled_line_do
+;
+    mov cx,bx
+    
+filled_line_do:
+	or cx,cx
+	jz filled_line_done
+;
+    mov [bp].curr_x,ax
+    cmp ds:v_sprite_count,0
+    jz filled_line_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+;
+	mov eax,ds:v_color
+	call ds:slab_proc
+;
+    ShowSpriteLine
+    jmp filled_line_done
+
+filled_line_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:slab_proc
+
+filled_line_done:
+	pop edi
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+FilledLine	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SplitLine
+;
+;		DESCRIPTION:	Draw a split line
+; 
+;		PARAMETER:		AX			line width
+;						CX			gap
+;						EDI			position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SplitLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
+	push dx
+	push edi
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_min
+    jl split_line_done
+;
+    cmp bx,ds:v_y_max
+    jg split_line_done
+;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_max
+    jg split_line_done
+;
+	sub cx,ax
+	sub cx,ax
+	mov dx,ax
+;
+	push cx
+	mov cx,dx
+;
+    cmp ds:v_sprite_count,0
+    jz split_left_loop
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+split_left_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_left_next
+;
+    cmp bx,ds:v_x_max
+    jg split_left_next
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+
+split_left_next:
+	inc word ptr [bp].curr_x
+	add edi,2
+	loop split_left_loop
+;
+    cmp ds:v_sprite_count,0
+    jz split_left_sprite_done
+;
+    ShowSpriteLine
+
+split_left_sprite_done:
+	pop cx
+    add [bp].curr_x,cx
+;
+	movsx eax,cx
+	add eax,eax
+	add edi,eax
+;
+	mov cx,dx
+;
+    cmp ds:v_sprite_count,0
+    jz split_right_loop
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+split_right_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_right_next
+;
+    cmp bx,ds:v_x_max
+    jg split_right_next
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+
+split_right_next:
+	inc word ptr [bp].curr_x
+	add edi,2
+	loop split_right_loop
+;
+    cmp ds:v_sprite_count,0
+    jz split_line_done
+;
+    ShowSpriteLine
+
+split_line_done:
+	pop edi
+	pop dx
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+SplitLine	Endp
 
 PAGE
 
@@ -826,8 +1391,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_native	Proc far
-	push ds
 	push es
+	push fs
 	pushad
 	mov bp,sp
 	sub sp,4
@@ -895,46 +1460,11 @@ set_native_do:
     pop cx
 
 set_native_sprite_hidden:
-    push ds
 	mov ax,es
-	mov ds,ax
+	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
-;
-	cmp bx,LGOP_NONE
-	je set_native_none
-;
-	add bx,bx
-
-set_native_loop:
-	lods word ptr [esi]
-	call word ptr cs:[bx].LgopTab
-	add edi,2
-	inc word ptr [bp].curr_x
-	loop set_native_loop
-	jmp set_native_show_sprite
-
-set_native_none:
-	test di,2
-	jz set_native_double
-;
-	movs word ptr es:[edi],[esi]
-	sub cx,1
-	jz set_native_show_sprite
-
-set_native_double:
-	push cx
-	movzx ecx,cx
-	shr ecx,1
-	rep movs dword ptr es:[edi],[esi]
-	pop cx
-	test cx,1
-	jz set_native_show_sprite
-;	
-	movs word ptr es:[edi],[esi]
-
-set_native_show_sprite:
-    pop ds
+	call ds:copy_proc
     cmp ds:v_sprite_count,0
     jz set_native_done
 ;
@@ -944,8 +1474,8 @@ set_native_done:
 	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
+	pop fs
 	pop es
-	pop ds
 	ret
 set_native	Endp
 
@@ -1059,7 +1589,7 @@ set_rgb_loop:
 	or bp,dx
 	mov ax,bp
 	pop bp
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	add edi,2
 	inc word ptr [bp].curr_x
 	loop set_rgb_loop
@@ -1078,6 +1608,89 @@ set_rgb_done:
 	pop ds
 	ret
 set_rgb	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetSprite
+;
+;		DESCRIPTION:	Set sprite in native format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_sprite	Proc far
+	push es
+	push fs
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+    cmp dx,ds:v_y_min
+    jl set_sprite_done
+;
+    cmp dx,ds:v_y_max
+    jg set_sprite_done
+
+set_sprite_buf_loop:
+    cmp cx,ds:v_x_min
+    jge set_sprite_start_ok
+
+set_sprite_adv_buf:
+    inc cx
+    add edi,2
+    sub ax,1
+    jnz set_sprite_buf_loop
+    jmp set_sprite_done
+
+set_sprite_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,cx
+    inc bx
+    cmp ax,bx
+    jc set_sprite_do
+;
+    mov ax,bx
+    
+set_sprite_do:
+    or ax,ax
+    jz set_sprite_done
+;
+	push ax
+	mov esi,edi
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	mov edx,ecx
+	add edx,edx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov edi,eax
+	pop cx
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+    call ds:copy_proc
+
+set_sprite_done:
+    add sp,4
+	popad
+	pop fs
+	pop es
+	ret
+set_sprite	Endp
 
 PAGE
 
@@ -1125,399 +1738,126 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SlabLgopNone
+;		NAME:			GetPixel
 ;
-;		DESCRIPTION:	Copy line
+;		DESCRIPTION:	Get pixel
 ;
-;		PARAMETERS:		AX			Color
-;						ES:EDI		Dest buffer (LFB)
-;						CX			number of pixels
+;		PARAMETER:		CX			x
+;						DX			y
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SlabLgopNone	Proc near
-	push dx
-	mov dx,ax
-	shl eax,16
-	mov ax,dx
+get_pixel	Proc far
+	push ds
+	push bx
+	push edx
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	mov edx,ecx
+	add edx,edx
+	add eax,edx
+	add eax,ds:v_app_base
+	mov dx,flat_sel
+	mov ds,dx
+	mov ax,[eax]
+	mov bx,ax
+	movzx eax,bx
+	and ax,0F800h
+	shl eax,8
+	mov dx,bx
+	and dx,7E0h
+	shl dx,5
+	or ax,dx
+	and bx,1Fh
+	shl bx,3
+	or ax,bx
 ;
-	test di,2
-	jz slab_lgop_none_double
-
-slab_lgop_none_word:
-	stos word ptr es:[edi]
-	sub cx,1
-	jz slab_lgop_none_done
-
-slab_lgop_none_double:
-	cmp cx,1
-	je slab_lgop_none_word
-;
-	stos dword ptr es:[edi]
-	sub cx,2
-	jnz slab_lgop_none_double
-
-slab_lgop_none_done:
-	pop dx
+	pop edx
+	pop bx	
+	pop ds
 	ret
-SlabLgopNone	Endp
+get_pixel	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			HollowLine
+;		NAME:			SetPixel
 ;
-;		DESCRIPTION:	Draw a hollow line
-; 
-;		PARAMETER:		CX			width
-;						EDI			position
+;		DESCRIPTION:	Set pixel
+;
+;		PARAMETER:		CX			x
+;						DX			y
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HollowLine	Proc near
-	EnterSection ds:v_sprite_section
-	push word ptr [bp].curr_x
-	push cx
+set_pixel	Proc far
+	push ds
+	push es
+	push eax
+	push bx
+	push edx
 	push edi
+	push bp
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+	EnterSection ds:v_sprite_section
 ;
-    mov ax,[bp].curr_y
-    cmp ax,ds:v_y_min
-    jl hollow_line_done
+    cmp cx,ds:v_x_min
+    jl set_pixel_done
 ;
-    cmp ax,ds:v_y_max
-    jg hollow_line_done
+    cmp dx,ds:v_y_min
+    jl set_pixel_done
 ;
-    mov ax,[bp].curr_x
-	cmp ax,ds:v_x_max
-	jg hollow_line_done
+    cmp cx,ds:v_x_max
+    jg set_pixel_done
 ;
-    cmp ax,ds:v_x_min
-    jl hollow_line_first_done
+    cmp dx,ds:v_y_max
+    jg set_pixel_done
 ;
-    cmp ds:v_sprite_count,0
-    jz hollow_line_first_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,1
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y    
-    HideSpriteLine
-    pop dx
-    pop cx
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-;
-    ShowSpriteLine
-	jmp hollow_line_first_done
-
-hollow_line_first_sprite_hidden:
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-
-hollow_line_first_done:
-	mov ax,cx
-	dec ax
-	movsx eax,ax
-	add eax,eax
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	mov edi,ecx
+	add edi,edi
 	add edi,eax
+	add edi,ds:v_app_base
+	mov ax,flat_sel
+	mov es,ax
+	cmp ds:v_sprite_count,0
+	jz set_pixel_no_sprite
 ;
-    mov ax,[bp].curr_x
-    add ax,cx
-    dec ax
-    mov [bp].curr_x,ax
-    cmp ax,ds:v_x_min
-    jl hollow_line_done
-;
-    cmp ax,ds:v_x_max
-    jg hollow_line_done
-;
-    cmp ds:v_sprite_count,0
-    jz hollow_line_last_sprite_hidden
-;
-    push cx
-    push dx
     mov ax,1
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y    
     HideSpriteLine
-    pop dx
-    pop cx
 ;
-	mov bx,ds:v_lgop
-	add bx,bx
 	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-;
+	call ds:set_proc
     ShowSpriteLine
-    jmp hollow_line_done
+    jmp set_pixel_done
 
-hollow_line_last_sprite_hidden:
-	mov bx,ds:v_lgop
-	add bx,bx
+set_pixel_no_sprite:
 	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
+    call ds:set_proc
 
-hollow_line_done:
-	pop edi
-	pop cx
-	pop word ptr [bp].curr_x
+set_pixel_done:
 	LeaveSection ds:v_sprite_section
-	ret
-HollowLine	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
 ;
-;		NAME:			FilledLine
-;
-;		DESCRIPTION:	Draw a filled line
-; 
-;		PARAMETER:		CX			width
-;						EDI			position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FilledLine	Proc near
-	EnterSection ds:v_sprite_section
-	push word ptr [bp].curr_x
-	push cx
-	push edi
-;
-    mov ax,[bp].curr_y
-    cmp ax,ds:v_y_min
-    jl filled_line_done
-;
-    cmp ax,ds:v_y_max
-    jg filled_line_done
-;
-    mov ax,[bp].curr_x
-	cmp ax,ds:v_x_max
-	jg filled_line_done
-    
-filled_line_buf_loop:
-    cmp ax,ds:v_x_min
-    jge filled_line_start_ok
-
-filled_line_adv_buf:
-    inc ax
-    add edi,2
-    sub cx,1
-    jnz filled_line_buf_loop
-    jmp filled_line_done
-
-filled_line_start_ok:
-    mov bx,ds:v_x_max
-    sub bx,ax
-    inc bx
-    cmp cx,bx
-    jc filled_line_do
-;
-    mov cx,bx
-    
-filled_line_do:
-	or cx,cx
-	jz filled_line_done
-;
-    mov [bp].curr_x,ax
-    cmp ds:v_sprite_count,0
-    jz filled_line_sprite_hidden
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-;
-	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
-	je filled_line_sprite_lgop
-;
-	add bx,bx
-	mov eax,ds:v_color
-
-filled_line_sprite_loop:
-	call word ptr cs:[bx].LgopTab
-	inc word ptr [bp].curr_x
-	add edi,2
-	loop filled_line_sprite_loop
-	jmp filled_line_sprite_done
-
-filled_line_sprite_lgop:
-	mov eax,ds:v_color
-	call SlabLgopNone
-
-filled_line_sprite_done:
-    ShowSpriteLine
-    jmp filled_line_done
-
-filled_line_sprite_hidden:
-	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
-	je filled_line_lgop
-;
-	add bx,bx
-	mov eax,ds:v_color
-
-filled_line_loop:
-	call word ptr cs:[bx].LgopTab
-	inc word ptr [bp].curr_x
-	add edi,2
-	loop filled_line_loop
-	jmp filled_line_done
-
-filled_line_lgop:
-	mov eax,ds:v_color
-	call SlabLgopNone
-
-filled_line_done:
+    add sp,4
+    pop bp
 	pop edi
-	pop cx
-	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
+	pop edx
+	pop bx
+	pop eax
+	pop es
+	pop ds
 	ret
-FilledLine	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SplitLine
-;
-;		DESCRIPTION:	Draw a split line
-; 
-;		PARAMETER:		AX			line width
-;						CX			gap
-;						EDI			position
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SplitLine	Proc near
-	EnterSection ds:v_sprite_section
-	push word ptr [bp].curr_x
-	push cx
-	push dx
-	push edi
-;
-    mov bx,[bp].curr_y
-    cmp bx,ds:v_y_min
-    jl split_line_done
-;
-    cmp bx,ds:v_y_max
-    jg split_line_done
-;
-    mov bx,[bp].curr_x
-    cmp bx,ds:v_x_max
-    jg split_line_done
-;
-	sub cx,ax
-	sub cx,ax
-	mov dx,ax
-;
-	push cx
-	mov cx,dx
-;
-    cmp ds:v_sprite_count,0
-    jz split_left_loop
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-
-split_left_loop:
-    mov bx,[bp].curr_x
-    cmp bx,ds:v_x_min
-    jl split_left_next
-;
-    cmp bx,ds:v_x_max
-    jg split_left_next
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-
-split_left_next:
-	inc word ptr [bp].curr_x
-	add edi,2
-	loop split_left_loop
-;
-    cmp ds:v_sprite_count,0
-    jz split_left_sprite_done
-;
-    ShowSpriteLine
-
-split_left_sprite_done:
-	pop cx
-    add [bp].curr_x,cx
-;
-	movsx eax,cx
-	add eax,eax
-	add edi,eax
-;
-	mov cx,dx
-;
-    cmp ds:v_sprite_count,0
-    jz split_right_loop
-;
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-
-split_right_loop:
-    mov bx,[bp].curr_x
-    cmp bx,ds:v_x_min
-    jl split_right_next
-;
-    cmp bx,ds:v_x_max
-    jg split_right_next
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,ds:v_color
-	call word ptr cs:[bx].LgopTab
-
-split_right_next:
-	inc word ptr [bp].curr_x
-	add edi,2
-	loop split_right_loop
-;
-    cmp ds:v_sprite_count,0
-    jz split_line_done
-;
-    ShowSpriteLine
-
-split_line_done:
-	pop edi
-	pop dx
-	pop cx
-	pop word ptr [bp].curr_x
-	LeaveSection ds:v_sprite_section
-	ret
-SplitLine	Endp
+set_pixel	Endp
 
 PAGE
 
@@ -1539,7 +1879,7 @@ PAGE
 
 draw_mask_line	Proc far
 	push es
-	push fs
+	push gs
 	pushad
 	mov bp,sp
 	sub sp,4	
@@ -1634,57 +1974,31 @@ draw_mask_do:
 	mov edi,eax
 ;
 	mov ax,es
-	mov fs,ax
+	mov gs,ax
 	mov ax,flat_sel
 	mov es,ax
-	mov bx,ds:v_lgop
-	add bx,bx
 	pop ax
 	mov bx,bp
 	pop bp
 ;
     cmp ds:v_sprite_count,0
-    jz draw_mask_line_loop
+    jz draw_mask_line_do
 ;
     push ax
     push cx
-    push dx
     mov ax,bp
     mov cx,[bp].curr_x
     mov dx,[bp].curr_y
     HideSpriteLine
-    pop dx
     pop cx
     pop ax
 
-draw_mask_line_loop:
-	mov ch,8
-	mov dx,fs:[esi]
-	ror dx,cl
-
-draw_mask_bit_loop:
-	rcr dl,1
-	jnc draw_mask_line_next
+draw_mask_line_do:
+    mov dl,cl
+    mov cx,bx
+    mov ebx,esi
+    call ds:mask_set_proc
 ;
-    push bx
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
-	pop bx
-
-draw_mask_line_next:
-	add edi,2
-    inc word ptr [bp].curr_x
-	sub bx,1
-	jz draw_mask_line_show_sprite
-;
-	sub ch,1
-	jnz draw_mask_bit_loop
-;
-	inc esi
-	jmp draw_mask_line_loop
-
-draw_mask_line_show_sprite:
     cmp ds:v_sprite_count,0
     jz draw_mask_line_done
 ;
@@ -1694,110 +2008,10 @@ draw_mask_line_done:
 	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
-	pop fs
+	pop gs
 	pop es
 	ret
 draw_mask_line	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SetSprite
-;
-;		DESCRIPTION:	Set sprite in native format
-;
-;		PARAMETER:		AX			number of pixels
-;						CX			x
-;						DX			y
-;						ES:EDI		line buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_sprite	Proc far
-	push ds
-	push es
-	pushad
-	mov bp,sp
-	sub sp,4
-	mov [bp].curr_x,cx
-	mov [bp].curr_y,dx
-;
-    cmp dx,ds:v_y_min
-    jl set_sprite_done
-;
-    cmp dx,ds:v_y_max
-    jg set_sprite_done
-
-set_sprite_buf_loop:
-    cmp cx,ds:v_x_min
-    jge set_sprite_start_ok
-
-set_sprite_adv_buf:
-    inc cx
-    add edi,2
-    sub ax,1
-    jnz set_sprite_buf_loop
-    jmp set_sprite_done
-
-set_sprite_start_ok:
-    mov bx,ds:v_x_max
-    sub bx,cx
-    inc bx
-    cmp ax,bx
-    jc set_sprite_do
-;
-    mov ax,bx
-    
-set_sprite_do:
-    or ax,ax
-    jz set_sprite_done
-;
-	push ax
-	mov esi,edi
-	movsx ecx,cx
-	movsx edx,dx
-	movzx eax,ds:v_row_size
-	imul edx
-	mov edx,ecx
-	add edx,edx
-	add eax,edx
-	add eax,ds:v_app_base
-	mov edi,eax
-	pop cx
-;
-	mov ax,es
-	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
-;
-	test di,2
-	jz set_sprite_double
-;
-	movs word ptr es:[edi],[esi]
-	sub cx,1
-	jz set_sprite_done
-
-set_sprite_double:
-	push cx
-	movzx ecx,cx
-	shr ecx,1
-	rep movs dword ptr es:[edi],[esi]
-	pop cx
-	test cx,1
-	jz set_sprite_done
-;	
-	movs word ptr es:[edi],[esi]
-
-set_sprite_done:
-    add sp,4
-	popad
-	pop es
-	pop ds
-	ret
-	ret
-set_sprite	Endp
 
 PAGE
 
@@ -1817,6 +2031,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_sprite_line    Proc far
+    push es
+    push fs
+    push gs
 	pushad
 	mov bp,sp
 	sub sp,4
@@ -1845,109 +2062,20 @@ draw_sprite_line    Proc far
 	pop cx
 	pop dx
     and dl,7
-;
-	mov ax,ds:v_lgop
-	cmp ax,LGOP_NONE
-	je draw_sprite_none
-;
-    or dl,dl
-    jz draw_sprite_lgop_prep
-;
-    push cx
-    mov cl,dl
-    mov dl,es:[ebx]
-    rcr dl,cl
-    mov dh,8
-    sub dh,cl
-    pop cx
-    jmp draw_sprite_lgop_loop
-
-draw_sprite_lgop_prep:
-    mov dh,8
-	mov dl,es:[ebx]
-
-draw_sprite_lgop_loop:
-	rcr dl,1
-	jnc draw_sprite_lgop_next
-;
-    mov ax,[bp].curr_x
-    cmp ax,ds:v_x_min
-    jl draw_sprite_lgop_next
-;
-    cmp ax,ds:v_x_max
-    jg draw_sprite_lgop_next
-;
-	mov ax,es:[esi]
-    push bx
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
-	pop bx
-
-draw_sprite_lgop_next:
-	add esi,2
-	add edi,2
-	inc word ptr [bp].curr_x
-	sub cx,1
-	jz draw_sprite_done
-;
-	sub dh,1
-	jnz draw_sprite_lgop_loop
-;
-	inc ebx
-	mov dh,8
-	mov dl,es:[ebx]	
-	jmp draw_sprite_lgop_loop
-
-draw_sprite_none:
-    or dl,dl
-    jz draw_sprite_none_prep
-;
-    push cx
-    mov cl,dl
-    mov dl,es:[ebx]
-    rcr dl,cl
-    mov dh,8
-    sub dh,cl
-    pop cx
-    jmp draw_sprite_none_loop
-
-draw_sprite_none_prep:
-	mov dl,es:[ebx]
-	mov dh,8
-
-draw_sprite_none_loop:
-	rcr dl,1
-	jnc draw_sprite_none_next
-;
-    mov ax,[bp].curr_x
-    cmp ax,ds:v_x_min
-    jl draw_sprite_none_next
-;
-    cmp ax,ds:v_x_max
-    jg draw_sprite_none_next
-;
-	mov ax,es:[esi]
-	mov es:[edi],ax
-
-draw_sprite_none_next:
-	add esi,2
-	add edi,2
-	inc word ptr [bp].curr_x
-	sub cx,1
-	jz draw_sprite_done
-;
-	sub dh,1
-	jnz draw_sprite_none_loop
-;
-	inc ebx
-	mov dh,8
-	mov dl,es:[ebx]	
-	jmp draw_sprite_none_loop
+;    
+    mov ax,es
+    mov gs,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov fs,ax
+    call ds:mask_copy_proc
 
 draw_sprite_done:
     add sp,4
 	popad
+	pop gs
+	pop fs
+	pop es
     ret
 draw_sprite_line    Endp
 
@@ -2014,105 +2142,34 @@ draw_string_loop:
 	or cx,cx
 	jz draw_string_char_next
 ;
-	movsx esi,word ptr [bp].ds_src_x
-	sar esi,3
-	add esi,edi
+	movsx ebx,word ptr [bp].ds_src_x
+	sar ebx,3
+	add ebx,edi
 ;
-	movsx ebx,word ptr [bp].ds_dest_x
-	mov [bp].curr_x,bx
+	movsx esi,word ptr [bp].ds_dest_x
+	mov [bp].curr_x,si
 	movsx edx,word ptr [bp].ds_dest_y
 	mov [bp].curr_y,dx
 	movzx eax,word ptr ds:v_row_size
 	imul edx
-	mov edx,ebx
+	mov edx,esi
 	add edx,edx
 	add eax,edx
 	add eax,ds:v_app_base
 	mov edi,eax
-;
-	mov bx,ds:v_lgop
-	cmp bx,LGOP_NONE
-	je draw_string_none
 
 draw_string_char_loop:
-	push cx
-	push esi
-	push edi
-;
-	EnterSection ds:v_sprite_section
-    mov cx,[bp].curr_y
-    cmp cx,ds:v_y_min
-    jl draw_string_line_next
-;
-    cmp cx,ds:v_y_max
-    jg draw_string_line_next
-;
-	mov cx,[bp].ds_width
-	mov eax,ds:v_color
-;
-    cmp ds:v_sprite_count,0
-    jz draw_string_line_loop
-;
-    push ax
     push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
+	mov cx,[bp].ds_width
+	xor dl,dl
+    call SetMask
     pop cx
-    pop ax
-
-draw_string_line_loop:
-	mov dh,8
-	mov dl,gs:[esi]
-
-draw_string_bit_loop:
-	rcr dl,1
-	jnc draw_string_bit_next
 ;
-    mov bx,[bp].curr_x
-    cmp bx,ds:v_x_min
-    jl draw_string_bit_next
-;
-    cmp bx,ds:v_x_max
-    jg draw_string_bit_next
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
-
-draw_string_bit_next:
-	add edi,2
-	inc word ptr [bp].curr_x
-	sub cx,1
-	jz draw_string_show_sprite
-;
-	sub dh,1
-	jnz draw_string_bit_loop
-;
-	inc esi
-	jmp draw_string_line_loop
-
-draw_string_show_sprite:
-    cmp ds:v_sprite_count,0
-    jz draw_string_line_next
-;
-    ShowSpriteLine
-
-draw_string_line_next:
-	LeaveSection ds:v_sprite_section
-    mov ax,[bp].ds_dest_x
-    mov [bp].curr_x,ax
     inc word ptr [bp].curr_y
-	pop edi
-	pop esi
-	pop cx
 	movzx eax,ds:v_row_size
 	add edi,eax
 	movzx eax,word ptr [bp].ds_row_size
-	add esi,eax
+	add ebx,eax
 	sub cx,1
 	jnz draw_string_char_loop
 
@@ -2121,96 +2178,6 @@ draw_string_char_done:
 	add [bp].ds_dest_x,ax
 
 draw_string_char_next:
-	pop edi
-	jmp draw_string_loop
-
-draw_string_none:
-
-draw_string_none_char_loop:
-	push cx
-	push esi
-	push edi
-;
-	EnterSection ds:v_sprite_section
-    mov cx,[bp].curr_y
-    cmp cx,ds:v_y_min
-    jl draw_string_none_line_next
-;
-    cmp cx,ds:v_y_max
-    jg draw_string_none_line_next
-;
-	mov cx,[bp].ds_width
-	mov eax,ds:v_color
-;
-    cmp ds:v_sprite_count,0
-    jz draw_string_none_line_loop
-;
-    push ax
-    push cx
-    push dx
-    mov ax,cx
-    mov cx,[bp].curr_x
-    mov dx,[bp].curr_y
-    HideSpriteLine
-    pop dx
-    pop cx
-    pop ax
-
-draw_string_none_line_loop:
-	mov dh,8
-	mov dl,gs:[esi]
-
-draw_string_none_bit_loop:
-	rcr dl,1
-	jnc draw_string_none_bit_next
-;
-    mov bx,[bp].curr_x
-    cmp bx,ds:v_x_min
-    jl draw_string_none_bit_next
-;
-    cmp bx,ds:v_x_max
-    jg draw_string_none_bit_next
-;
-	mov es:[edi],ax
-
-draw_string_none_bit_next:
-	add edi,2
-	inc word ptr [bp].curr_x
-	sub cx,1
-	jz draw_string_none_line_next
-;
-	sub dh,1
-	jnz draw_string_none_bit_loop
-;
-	inc esi
-	jmp draw_string_none_line_loop
-
-draw_string_none_line_next:
-    cmp ds:v_sprite_count,0
-    jz draw_string_none_sprite_shown
-;
-    ShowSpriteLine
-
-draw_string_none_sprite_shown:
-	LeaveSection ds:v_sprite_section
-    mov ax,[bp].ds_dest_x
-    mov [bp].curr_x,ax
-    inc word ptr [bp].curr_y
-	pop edi
-	pop esi
-	pop cx
-	movzx eax,ds:v_row_size
-	add edi,eax
-	movzx eax,word ptr [bp].ds_row_size
-	add esi,eax
-	sub cx,1
-	jnz draw_string_none_char_loop
-
-draw_string_none_char_done:
-	mov ax,[bp].ds_width
-	add [bp].ds_dest_x,ax
-
-draw_string_none_char_next:
 	pop edi
 	jmp draw_string_loop
 
@@ -2466,9 +2433,7 @@ line_bresen_dx_sprite_loop:
 	mov ax,1
 	HideSpriteLine
 	mov eax,ds:v_color
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	ShowSpriteLine
 	pop ax
 	LeaveSection ds:v_sprite_section
@@ -2512,9 +2477,7 @@ line_bresen_dy_sprite_loop:
 	mov ax,1
 	HideSpriteLine
 	mov eax,ds:v_color
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	ShowSpriteLine
 	pop ax
 	LeaveSection ds:v_sprite_section
@@ -2561,9 +2524,7 @@ line_bresen_no_sprite:
 line_bresen_dx_loop:
 	push ax
 	mov eax,ds:v_color
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	pop ax
 ;
 	cmp cx,[bp].dl_x2
@@ -2602,9 +2563,7 @@ line_bresen_dx_next:
 line_bresen_dy_loop:
 	push ax
 	mov eax,ds:v_color
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	pop ax
 ;
 	cmp dx,[bp].dl_y2
@@ -2671,8 +2630,6 @@ line_vert_do:
 	inc cx
 	mov dx,flat_sel
 	mov es,dx
-	mov bx,ds:v_lgop
-	add bx,bx
 	mov eax,ds:v_color
 	cmp ds:v_sprite_count,0
 	je line_vert_loop
@@ -2690,7 +2647,7 @@ line_vert_sprite_loop:
     mov ax,1
     HideSpriteLine
     pop ax
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 	ShowSpriteLine
 	LeaveSection ds:v_sprite_section
 
@@ -2708,7 +2665,7 @@ line_vert_loop:
     cmp dx,ds:v_y_max
     jg line_vert_next
 ;
-	call word ptr cs:[bx].LgopTab
+	call ds:set_proc
 
 line_vert_next:
 	add edi,esi
@@ -3233,20 +3190,25 @@ mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
 mt0F DW OFFSET translate_color,		video_code_sel
-mt10 DW OFFSET get_pixel,			video_code_sel
-mt11 DW OFFSET set_pixel,			video_code_sel
-mt12 DW OFFSET get_native,			video_code_sel
-mt13 DW OFFSET get_rgb,				video_code_sel
-mt14 DW OFFSET set_native,			video_code_sel
-mt15 DW OFFSET set_rgb,				video_code_sel
-mt16 DW OFFSET get_line,			video_code_sel
-mt17 DW OFFSET draw_mask_line,		video_code_sel
-mt18 DW OFFSET set_sprite,			video_code_sel
-mt19 DW OFFSET draw_sprite_line,	video_code_sel
-mt1A DW OFFSET draw_string,			video_code_sel
-mt1B DW OFFSET draw_line,			video_code_sel
-mt1C DW OFFSET draw_rect,			video_code_sel
-mt1D DW OFFSET draw_ellipse,		video_code_sel
+mt10 DW OFFSET set_base,   			video_code_sel
+mt11 DW OFFSET slab,    			video_code_sel
+mt12 DW OFFSET copy,    			video_code_sel
+mt13 DW OFFSET mask_set,    		video_code_sel
+mt14 DW OFFSET mask_copy,  			video_code_sel
+mt15 DW OFFSET get_line,			video_code_sel
+mt16 DW OFFSET get_pixel,			video_code_sel
+mt17 DW OFFSET set_pixel,			video_code_sel
+mt18 DW OFFSET get_native,			video_code_sel
+mt19 DW OFFSET get_rgb,				video_code_sel
+mt1A DW OFFSET set_native,			video_code_sel
+mt1B DW OFFSET set_rgb,				video_code_sel
+mt1C DW OFFSET draw_mask_line,		video_code_sel
+mt1D DW OFFSET set_sprite,			video_code_sel
+mt1E DW OFFSET draw_sprite_line,	video_code_sel
+mt1F DW OFFSET draw_string,			video_code_sel
+mt20 DW OFFSET draw_line,			video_code_sel
+mt21 DW OFFSET draw_rect,			video_code_sel
+mt22 DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

@@ -41,6 +41,10 @@ pcvideo_srcs = PCVIDEO.ASM  TEXTMODE.ASM	BITMODE.ASM	VBE.ASM
 pcvideo_objs = $(pcvideo_srcs:.ASM=.OBJ)
 pcvideo_rdvs = PCVIDEO.RDV
 
+ewlcd_srcs = EWLCD.ASM
+ewlcd_objs = $(ewlcd_srcs:.ASM=.OBJ)
+ewlcd_rdvs = EWLCD.RDV
+
 pmouse_srcs = PMOUSE.ASM
 pmouse_objs = $(pmouse_srcs:.ASM=.OBJ)
 pmouse_rdvs = PMOUSE.RDV
@@ -85,7 +89,7 @@ fat_srcs = FAT.ASM FATMISC.ASM FATTAB.ASM FATDIR.ASM FATFILE.ASM
 fat_objs = $(fat_srcs:.ASM=.OBJ)
 fat_rdvs = FAT.RDV
 
-srcs =      $(ide_srcs) $(pcvideo_srcs) \
+srcs =      $(ide_srcs) $(pcvideo_srcs) $(ewlcd_srcs) \
 			$(floppy_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
@@ -93,7 +97,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) \
 
 objs =      $(srcs:.ASM=.OBJ)
 
-rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) \
+rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(ewlcd_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs)
@@ -123,6 +127,14 @@ PCVIDEO.RDV : $(pcvideo_objs)
 	$(pcvideo_objs)
 	PCVIDEO.RDV
 	PCVIDEO;       
+!
+
+EWLCD.RDV : $(ewlcd_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ewlcd_objs)
+	EWLCD.RDV
+	EWLCD;       
 !
 
 PMOUSE.RDV : $(pmouse_objs)

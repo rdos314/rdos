@@ -106,6 +106,9 @@ init_video_bitmap	Proc far
 	mov si,cs
 	mov ds,si
 ;
+    cmp al,1
+    je init_video1
+;
 	cmp al,16
 	je init_video16
 ;
@@ -117,6 +120,10 @@ init_video_bitmap	Proc far
 ;
 	jmp init_video_done
 
+init_video1:
+    mov si,OFFSET BitmapTab1
+    jmp init_video_copy
+    
 init_video16:
 	mov si,OFFSET BitmapTab16
 	jmp init_video_copy
@@ -130,7 +137,7 @@ init_video32:
 	jmp init_video_copy
 
 init_video_copy:
-	mov cx,30
+	mov cx,35
 	xor di,di
 	rep movsd
 ;
@@ -280,7 +287,7 @@ cr_bitmap32:
 	jmp cr_bitmap_copy
 
 cr_bitmap_copy:
-	mov cx,30
+	mov cx,35
 	xor di,di
 	rep movsd
 ;

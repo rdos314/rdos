@@ -1890,20 +1890,25 @@ mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
 mt0F DW OFFSET translate_color,		video_code_sel
-mt10 DW OFFSET get_pixel,			video_code_sel
-mt11 DW OFFSET set_pixel,			video_code_sel
-mt12 DW OFFSET get_rgb,				video_code_sel
-mt13 DW OFFSET get_rgb,				video_code_sel
-mt14 DW OFFSET set_rgb,				video_code_sel
-mt15 DW OFFSET set_rgb,				video_code_sel
-mt16 DW OFFSET get_line,			video_code_sel
-mt17 DW OFFSET set_sprite,			video_code_sel
-mt18 DW OFFSET draw_mask_line,		video_code_sel
-mt19 DW OFFSET draw_sprite_line,	video_code_sel
-mt1A DW OFFSET draw_string,			video_code_sel
-mt1B DW OFFSET draw_line,			video_code_sel
-mt1C DW OFFSET draw_rect,			video_code_sel
-mt1D DW OFFSET draw_ellipse,		video_code_sel
+mt10 DW OFFSET error,     			video_code_sel
+mt11 DW OFFSET error,    			video_code_sel
+mt12 DW OFFSET error,    			video_code_sel
+mt13 DW OFFSET error,	    		video_code_sel
+mt14 DW OFFSET error,   			video_code_sel
+mt15 DW OFFSET get_line,			video_code_sel
+mt16 DW OFFSET get_pixel,			video_code_sel
+mt17 DW OFFSET set_pixel,			video_code_sel
+mt18 DW OFFSET get_rgb,	    		video_code_sel
+mt19 DW OFFSET get_rgb,				video_code_sel
+mt1A DW OFFSET set_rgb, 			video_code_sel
+mt1B DW OFFSET set_rgb,				video_code_sel
+mt1C DW OFFSET draw_mask_line,		video_code_sel
+mt1D DW OFFSET set_sprite,			video_code_sel
+mt1E DW OFFSET draw_sprite_line,	video_code_sel
+mt1F DW OFFSET draw_string,			video_code_sel
+mt20 DW OFFSET draw_line,			video_code_sel
+mt21 DW OFFSET draw_rect,			video_code_sel
+mt22 DW OFFSET draw_ellipse,		video_code_sel
 
 code	ENDS
 

@@ -20,8 +20,8 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; BIT1.ASM
-; Linear 1-bit graphics
+; EWLCD.ASM
+; EW LCD driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 						
@@ -50,9 +50,148 @@ v_col		DW ?
 
 video_object	ENDS
 
+WriteControl    Macro
+    local wait
+    
+    push ax
+    mov dx,3B1h
+
+wait:
+    in al,dx
+    and al,3
+    cmp al,3
+    jne wait    
+;
+    pop ax
+    out dx,al
+                Endm
+
+                
+WriteData    Macro
+    local wait
+
+    push ax
+    mov dx,3B1h
+
+wait:
+    in al,dx
+    and al,3
+    cmp al,3
+    jne wait
+;
+    pop ax        
+    dec dx
+    out dx,al
+                Endm
+
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+;
+; test only
+;
+    mov al,81h      ; CGROM mode, OR mode
+    WriteControl
+;
+    xor al,al
+    WriteData
+    xor al,al
+    WriteData
+    mov al,42h
+    WriteControl    ; set graphics home = 0000
+;
+    mov al,28h
+    WriteData
+    xor al,al
+    WriteData
+    mov al,43h
+    WriteControl    ; set graphics area = 0028
+;
+    xor al,al
+    WriteData
+    mov al,20h
+    WriteData
+    mov al,40h
+    WriteControl    ; set text home = 2000
+;
+    mov al,28h
+    WriteData
+    xor al,al
+    WriteData
+    mov al,41h
+    WriteControl    ; set text area = 0028
+;
+    mov al,3
+    WriteData
+    xor al,al
+    WriteData
+    mov al,22h
+    WriteControl    ; set CGRAM offset = 03
+;
+    mov al,9Ah
+    WriteControl    ; graphics on, text on, cursor off
+;
+    xor al,al
+    WriteData
+    xor al,al
+    WriteData
+    mov al,24h
+    WriteControl
+;
+    mov al,0B0h
+    WriteControl
+;
+    xor si,si
+
+ylo:
+    xor di,di
+
+ilo:
+    cmp di,1
+    je ilo_ff
+;
+    cmp di,28
+    je ilo_ff
+;
+    cmp si,1
+    jle ilo_norm
+;
+    cmp si,8
+    jg ilo_norm
+
+ilo_ff:
+    mov al,0FFh
+    WriteData
+    jmp ilo_next
+
+ilo_norm:
+    cmp di,15
+    jne ilo_00
+    cmp si, 8 * 8
+    jge ilo_00
+;
+    mov al,55h
+    WriteData
+    jmp ilo_next
+
+ilo_00:
+    xor al,al
+    WriteData
+
+ilo_next:
+    inc di    
+    cmp di,40
+    jb ilo
+
+ylo_next:
+    inc si
+    cmp si,16 * 8
+    jb ylo
+;
+    mov al,0B2h
+    WriteControl
+
 
 PAGE
 
@@ -1881,36 +2020,41 @@ error	Proc far
 error	Endp
 
 ModeTab:
-mt00 DW OFFSET error,				pc_video_code_sel
-mt01 DW OFFSET error,				pc_video_code_sel
-mt02 DW OFFSET error,				pc_video_code_sel
-mt03 DW OFFSET error,				pc_video_code_sel
-mt04 DW OFFSET error,				pc_video_code_sel
-mt05 DW OFFSET error,				pc_video_code_sel
-mt06 DW OFFSET error,				pc_video_code_sel
-mt07 DW OFFSET error,				pc_video_code_sel
-mt08 DW OFFSET error,				pc_video_code_sel
-mt09 DW OFFSET error,				pc_video_code_sel
-mt0A DW OFFSET error,				pc_video_code_sel
-mt0B DW OFFSET error,				pc_video_code_sel
-mt0C DW OFFSET error,				pc_video_code_sel
-mt0D DW OFFSET error,				pc_video_code_sel
-mt0E DW OFFSET error,				pc_video_code_sel
-mt0F DW OFFSET translate_color,		pc_video_code_sel
-mt10 DW OFFSET get_pixel,			pc_video_code_sel
-mt11 DW OFFSET set_pixel,			pc_video_code_sel
-mt12 DW OFFSET get_rgb,				pc_video_code_sel
-mt13 DW OFFSET get_rgb,				pc_video_code_sel
-mt14 DW OFFSET set_rgb,				pc_video_code_sel
-mt15 DW OFFSET set_rgb,				pc_video_code_sel
-mt16 DW OFFSET get_line,			pc_video_code_sel
-mt17 DW OFFSET set_sprite,			pc_video_code_sel
-mt18 DW OFFSET draw_mask_line,		pc_video_code_sel
-mt19 DW OFFSET draw_sprite_line,	pc_video_code_sel
-mt1A DW OFFSET draw_string,			pc_video_code_sel
-mt1B DW OFFSET draw_line,			pc_video_code_sel
-mt1C DW OFFSET draw_rect,			pc_video_code_sel
-mt1D DW OFFSET draw_ellipse,		pc_video_code_sel
+mt00 DW OFFSET error,				video_code_sel
+mt01 DW OFFSET error,				video_code_sel
+mt02 DW OFFSET error,				video_code_sel
+mt03 DW OFFSET error,				video_code_sel
+mt04 DW OFFSET error,				video_code_sel
+mt05 DW OFFSET error,				video_code_sel
+mt06 DW OFFSET error,				video_code_sel
+mt07 DW OFFSET error,				video_code_sel
+mt08 DW OFFSET error,				video_code_sel
+mt09 DW OFFSET error,				video_code_sel
+mt0A DW OFFSET error,				video_code_sel
+mt0B DW OFFSET error,				video_code_sel
+mt0C DW OFFSET error,				video_code_sel
+mt0D DW OFFSET error,				video_code_sel
+mt0E DW OFFSET error,				video_code_sel
+mt0F DW OFFSET translate_color,		video_code_sel
+mt10 DW OFFSET error,   			video_code_sel
+mt11 DW OFFSET error,    			video_code_sel
+mt12 DW OFFSET error,    			video_code_sel
+mt13 DW OFFSET error,        		video_code_sel
+mt14 DW OFFSET error,     			video_code_sel
+mt15 DW OFFSET get_line,			video_code_sel
+mt16 DW OFFSET get_pixel,			video_code_sel
+mt17 DW OFFSET set_pixel,			video_code_sel
+mt18 DW OFFSET get_rgb,			    video_code_sel
+mt19 DW OFFSET get_rgb,				video_code_sel
+mt1A DW OFFSET set_rgb,		    	video_code_sel
+mt1B DW OFFSET set_rgb,				video_code_sel
+mt1C DW OFFSET draw_mask_line,		video_code_sel
+mt1D DW OFFSET set_sprite,			video_code_sel
+mt1E DW OFFSET draw_sprite_line,	video_code_sel
+mt1F DW OFFSET draw_string,			video_code_sel
+mt20 DW OFFSET draw_line,			video_code_sel
+mt21 DW OFFSET draw_rect,			video_code_sel
+mt22 DW OFFSET draw_ellipse,		video_code_sel
 
 PAGE
 
@@ -1925,188 +2069,55 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-WriteControl    Macro
-    local wait
-    
-    push ax
-    mov dx,3B1h
-
-wait:
-    in al,dx
-    and al,3
-    cmp al,3
-    jne wait    
-;
-    pop ax
-    out dx,al
-                Endm
-
-                
-WriteData    Macro
-    local wait
-
-    push ax
-    mov dx,3B1h
-
-wait:
-    in al,dx
-    and al,3
-    cmp al,3
-    jne wait
-;
-    pop ax        
-    dec dx
-    out dx,al
-                Endm
-
 init_mode	Proc far
 	push ds
 	push es
 	push cx
+	push dx
 	push si
 	push di
 ;
-    int 3
-	mov eax,SIZE video_api_struc
+	mov ax,es
+	mov ds,ax
+	mov ax,128
+	shl ax,2
+	add ax,SIZE video_object
+	movzx eax,ax
 	AllocateSmallGlobalMem
-	mov cx,30
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET ModeTab
-	xor di,di
-	rep movsd
+    mov es:v_sprite_lines,SIZE video_object
 ;
-	push es
-	pop ax
-;
-	mov ds,ax
-	mov ds:v_mode,3
-	mov ds:v_has_focus,0
-	mov ds:v_row,0
-	mov ds:v_col,0
-	InitSection ds:v_section
-;
+    int 3
 	mov al,1
 	mov cx,240
 	mov dx,128
 	InitVideoBitmap
 ;
+	mov es:v_mode,3
+	mov es:v_has_focus,0
+	mov es:v_row,0
+	mov es:v_col,0
 ;
-; test only
-;
-	xor al,al
-	mov dx,3B2h
-	out dx,al
-;
-    mov al,81h      ; CGROM mode, OR mode
-    WriteControl
-;
-    xor al,al
-    WriteData
-    xor al,al
-    WriteData
-    mov al,42h
-    WriteControl    ; set graphics home = 0000
-;
-    mov al,28h
-    WriteData
-    xor al,al
-    WriteData
-    mov al,43h
-    WriteControl    ; set graphics area = 0028
-;
-    xor al,al
-    WriteData
-    mov al,20h
-    WriteData
-    mov al,40h
-    WriteControl    ; set text home = 2000
-;
-    mov al,28h
-    WriteData
-    xor al,al
-    WriteData
-    mov al,41h
-    WriteControl    ; set text area = 0028
-;
-    mov al,3
-    WriteData
-    xor al,al
-    WriteData
-    mov al,22h
-    WriteControl    ; set CGRAM offset = 03
-;
-    mov al,9Ah
-    WriteControl    ; graphics on, text on, cursor off
-;
-    xor al,al
-    WriteData
-    xor al,al
-    WriteData
-    mov al,24h
-    WriteControl
-;
-    mov al,0B0h
-    WriteControl
-;
-    xor si,si
+	mov cx,35
+	mov si,OFFSET ModeTab
+	xor di,di
 
-ylo:
-    xor di,di
-
-ilo:
-    cmp di,1
-    je ilo_ff
+patch_mode_loop:
+    mov eax,cs:[si]
+    cmp ax,OFFSET error
+    je patch_mode_next
 ;
-    cmp di,28
-    je ilo_ff
+    mov es:[di],eax
+
+patch_mode_next:
+    add si,4
+    add di,4
+    loop patch_mode_loop
 ;
-    cmp si,1
-    jle ilo_norm
-;
-    cmp si,8
-    jg ilo_norm
-
-ilo_ff:
-    mov al,0FFh
-    WriteData
-    jmp ilo_next
-
-ilo_norm:
-    cmp di,15
-    jne ilo_00
-    cmp si, 8 * 8
-    jge ilo_00
-;
-    mov al,55h
-    WriteData
-    jmp ilo_next
-
-ilo_00:
-    xor al,al
-    WriteData
-
-ilo_next:
-    inc di    
-    cmp di,40
-    jb ilo
-
-ylo_next:
-    inc si
-    cmp si,16 * 8
-    jb ylo
-;
-    mov al,0B2h
-    WriteControl
-
-stopl:
-	jmp stopl
-
-
 	clc
 ;
 	pop di
 	pop si
+	pop dx
 	pop cx
 	pop es
 	pop ds
@@ -2127,7 +2138,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 			
 init_focus	PROC far
-    int 3
 	push ax
 	mov ax,3
 	SetVideoMode
@@ -2152,7 +2162,10 @@ init	PROC far
 	push ds
 	pusha
 ;
-    int 3
+	xor al,al
+	mov dx,3B2h
+	out dx,al
+;
 	mov bx,pc_video_code_sel
 	InitDevice
 ;
