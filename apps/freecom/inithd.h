@@ -30,6 +30,7 @@
 
 #include "cmd.h"
 #include "cmdfact.h"
+#include "disc.h"
 
 class TInitHdFactory : public TCommandFactory
 {
@@ -51,8 +52,8 @@ protected:
     void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-	void WriteBootSector(int Disc);
-	void WriteBootLoader(int Disc);
+	void WriteBootSector(TDisc *Disc);
+	void WriteBootLoader(TDisc *Disc);
 
    int FLoaderSectors;
 };

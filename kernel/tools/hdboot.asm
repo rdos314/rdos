@@ -58,6 +58,19 @@ boot_backup_sector			DW ?
 
 boot_struc		ENDS
 
+part_struc	STRUC
+
+part_status				DB ?
+part_start_head			DB ?
+part_start_cyl_sector	DW ?
+part_type				DB ?
+part_end_head			DB ?
+part_end_cyl_sector		DW ?
+part_start_sector		DD ?
+part_sectors			DD ?
+
+part_struc	ENDS
+
 fat_dir_struc	STRUC
 
 fat_base		DB 8 DUP(?)
@@ -89,9 +102,6 @@ BootLoadInit:
 
 ReadCount	    	DW 0
 RdosSectors		    DW 0,0
-CurrSector		    DW 0,0
-SectorsPerCyl	    DW 15
-Heads			    DW 2
 DriveNr			    DB 80h
 BootSector          DD 0
 FatSector           DD 0
@@ -105,7 +115,16 @@ FatSize             DB 0
 SafeBoot            DB 0
 SectorsPerCluster   DW 0
 ImageSize           DD 0
-CurrSector2         DD 0
+CurrFatSector       DD 0
+
+IntFlag             DB ?
+DiscSubUnit         DB ?
+LbaMode             DB ?
+Precomp             DB ?
+LbaSectors          DD ?
+DiscCyls            DW ?
+DiscHeads           DW ?
+SectorsPerCyl       DW ?
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -227,158 +246,492 @@ WriteAsciizDone:
 	ret
 WriteAsciiz	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdeInt
+;
+;		DESCRIPTION:	IDE INTERRUPT
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdeInt:
+    push ax
+	mov al,62h
+	out 20h,al
+    mov cs:IntFlag,1
+;    
+	mov al,66h
+	out 0A0h,al
+	pop ax
+    iret
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckReady
+;
+;		DESCRIPTION:	Wait for ready
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckReady	PROC near
+	push ax
+	push cx
+	push dx
+;
+	mov dx,1F7h
+	xor cx,cx
+CheckReadyLoop:
+	in al,dx
+	test al,80h
+	clc
+	jz CheckReadyDone
+;	
+	loop CheckReadyLoop
+	stc
+CheckReadyDone:
+	pop dx
+	pop cx
+	pop ax
+	ret
+CheckReady	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitDrq
+;
+;		DESCRIPTION:	Wait for data request
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitDrq	Proc near
+	push ax
+	push cx
+	push dx
+;
+	mov cx,100h
+	mov dx,1F7h
+WaitDrqLoop:
+	in al,dx
+	test al,8
+	clc
+	jnz WaitDrqDone
+	loop WaitDrqLoop
+	stc
+WaitDrqDone:
+	pop dx
+	pop cx
+	pop ax
+	ret
+WaitDrq	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckStatus
+;
+;		DESCRIPTION:	Check transfer status
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckStatus	Proc near
+	push ax
+	push dx
+;
+	mov dx,1F7h
+	in al,dx
+	test al,80h
+	jnz CheckStatusFail
+	test al,20h
+	jnz CheckStatusFail
+	test al,40h
+	jz CheckStatusFail
+	test al,10h
+	jz CheckStatusFail
+	test al,1
+	clc
+	jz CheckStatusDone
+	mov dx,1F1h
+	in al,dx
+CheckStatusFail:
+	stc
+CheckStatusDone:
+	pop dx
+	pop ax
+	ret
+CheckStatus	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetupIdeTaskFile
+;
+;		DESCRIPTION:	Setup IDE comp. task file
+;
+;		PARAMETERS:		AH		Precomp
+;						BH		Head #
+;						BL		Sector
+;						CX		Number of sectors
+;						DX		Cylinder
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupIdeTaskFile	Proc near
+	push ax
+	push bx
+	push dx
+;
+	call CheckReady
+	jc SetupIdeTaskDone
+;	
+	push dx
+	mov dx,1F1h
+;
+	jmp short $+2
+	mov al,ah
+	out dx,al
+	inc dx
+;
+	jmp short $+2
+	mov ax,cx
+	out dx,al
+	inc dx
+;
+	jmp short $+2
+	mov al,bl
+	out dx,al
+	inc dx
+;
+	pop ax
+	jmp short $+2
+	out dx,al
+	inc dx
+;
+	jmp short $+2
+	mov al,ah
+	out dx,al
+	inc dx
+;
+	mov al,cs:DiscSubUnit
+	shl al,4
+	or al,bh
+	or al,0A0h
+	out dx,al
+	clc
+SetupIdeTaskDone:
+	pop dx
+	pop bx
+	pop ax
+	ret
+SetupIdeTaskFile	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetupLbaTaskFile
+;
+;		DESCRIPTION:	Setup LBA comp. task file
+;
+;		PARAMETERS:		AH		Precomp
+;						CX		Number of sectors
+;						EDX		Sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupLbaTaskFile	Proc near
+	push ax
+	push bx
+	push dx
+;
+	call CheckReady
+	jc SetupLbaTaskDone
+;
+	push edx
+	mov dx,1F1h
+;
+	jmp short $+2
+	mov al,ah
+	out dx,al
+	inc dx
+;
+	jmp short $+2
+	mov al,cl
+	out dx,al
+	inc dx
+;
+	pop ax
+	jmp short $+2
+	out dx,al
+	inc dx
+;
+	mov al,ah
+	jmp short $+2
+	out dx,al
+	inc dx
+;
+	pop ax
+	jmp short $+2
+	out dx,al
+	inc dx
+;
+	mov bl,ah
+	mov al,cs:DiscSubUnit
+	shl al,4
+	or al,bl
+	or al,0E0h
+	out dx,al
+	clc
+	
+SetupLbaTaskDone:
+	pop dx
+	pop bx
+	pop ax
+	ret
+SetupLbaTaskFile	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RunTaskFile
+;
+;		DESCRIPTION:	Run command
+;
+;		PARAMETERS:		AL		COMMAND CODE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RunTaskFile	Proc near
+	push dx
+	mov dx,1F7h
+	out dx,al
+
+rtfWait:
+    mov al,cs:IntFlag
+    or al,al
+    jz rtfWait
+;	
+	call CheckStatus
+	
+RunTaskFileDone:
+	pop dx
+	ret
+RunTaskFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ReadTaskFile
+;
+;		DESCRIPTION:	Read data from device
+;
+;		PARAMETERS:		AL		COMMAND CODE
+;						CX		Number of sectors
+;						ES:DI	Logical address of buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReadTaskFile	Proc near
+	push cx
+	push dx
+	push di
+;
+    mov cs:IntFlag,0
+	mov dx,1F7h
+	out dx,al
+	
+ReadTaskFileInt:
+    mov al,cs:IntFlag
+    or al,al
+    jz ReadTaskFileInt
+;    
+	push cx
+	mov dx,1F0h
+	mov cx,256
+	rep insw
+	pop cx
+	call CheckStatus
+	jc ReadTaskFileDone
+;	
+	loop ReadTaskFileInt
+	clc
+	
+ReadTaskFileDone:
+	pop di
+	pop dx
+	pop cx
+	ret
+ReadTaskFile	ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			ReadSector
 ;
-;		DESCRIPTION:	Read a sector (to DATA_SEG:0)
+;		DESCRIPTION:	Read data
 ;
-;		PARAMETERS:		EAX	Sector #
+;		PARAMETERS:		EDX		Sector #
+;						DS:BX	Address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector	Proc near
     push es
-    pusha
-;
-    push eax
-    pop ax
-    pop dx
+    pushad
 ;    
-	push ax
-	mov ax,cs:ReadCount
-	inc cs:ReadCount
-	and ax,0Fh
-	jnz ReadSectorNoLog
-;	
-	mov al,'.'
-	mov ah,0Eh
-	mov bx,7
-	int 10h
-ReadSectorNoLog:
-	pop ax
-;
-	mov cx,3
-ReadSectorRetry:
-	push ax
-	push cx
-	push dx
-	div cs:SectorsPerCyl
-	inc dl
-	mov bl,dl
-	xor dx,dx
-	div cs:Heads
-	mov bh,dl
-	mov dx,ax
-	mov ax,201h
-	mov cl,6
-	shl dh,cl
-	or dh,bl
-	mov cx,dx
-	xchg ch,cl
-	mov dl,cs:DriveNr
-	mov dh,bh
-	mov bx,DATA_SEG
-	mov es,bx
-	xor bx,bx
-	int 13h
-	pop dx
-	pop cx
-	pop ax
-;
-	jnc ReadSectorOk
-	push ax
-	mov ax,0
-	int 13h
-	pop ax
-	loop ReadSectorRetry	
-	stc
+    mov ax,ds
+    mov es,ax
+    mov di,bx
+    mov cx,1
+;    
+	cmp cs:LbaMode,0
+	jz ReadIde
 
-ReadSectorOk:
-	popa
-	pop es
+ReadLba:
+	mov ah,cs:Precomp
+	call SetupLbaTaskFile
+	jmp ReadStart
+
+ReadIde:
+    push edx
+    mov eax,edx
+    xor edx,edx
+    movzx ecx,cs:DiscHeads
+    div ecx
+;    
+    push ax
+	mov ax,dx
+	div byte ptr cs:SectorsPerCyl
+	mov bh,al
+	mov bl,ah
+	inc bl
+	mov ah,cs:Precomp
+	pop dx
+	call SetupIdeTaskFile
+	pop edx
+
+ReadStart:
+	jc ReadDone
+;	
+	mov al,20h
+	call ReadTaskFile
+
+ReadDone:
+    popad
+    pop es
 	ret
 ReadSector	Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ReadSector2
+;		NAME:			ReadFatSector
 ;
-;		DESCRIPTION:	Read a sector (to DATA_SEG:200)
+;		DESCRIPTION:	Read fat sector
 ;
-;		PARAMETERS:		EAX	Sector #
+;		PARAMETERS:		EDX		Sector #
+;						DS:200	Address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ReadSector2	Proc near
-    push es
-    pusha
-;
-    cmp eax,cs:CurrSector2
+ReadFatSector	Proc near
+    cmp edx,cs:CurrFatSector
     clc
-    je ReadSectorOk2
-;    
-    mov cs:CurrSector2,eax
-    push eax
-    pop ax
-    pop dx
-;    
-	push ax
-	mov ax,cs:ReadCount
-	inc cs:ReadCount
-	and ax,0Fh
-	jnz ReadSectorNoLog2
-;	
-	mov al,'.'
-	mov ah,0Eh
-	mov bx,7
-	int 10h
-ReadSectorNoLog2:
-	pop ax
+    je ReadFatSectorDone
 ;
-	mov cx,3
-ReadSectorRetry2:
-	push ax
-	push cx
-	push dx
-	div cs:SectorsPerCyl
-	inc dl
-	mov bl,dl
-	xor dx,dx
-	div cs:Heads
-	mov bh,dl
-	mov dx,ax
-	mov ax,201h
-	mov cl,6
-	shl dh,cl
-	or dh,bl
-	mov cx,dx
-	xchg ch,cl
-	mov dl,cs:DriveNr
-	mov dh,bh
-	mov bx,DATA_SEG
-	mov es,bx
-	mov bx,200h
-	int 13h
-	pop dx
-	pop cx
-	pop ax
-;
-	jnc ReadSectorOk2
-	push ax
-	mov ax,0
-	int 13h
-	pop ax
-	loop ReadSectorRetry2	
-	stc
+    call ReadSector
+    mov cs:CurrFatSector,edx
 
-ReadSectorOk2:
-	popa
-	pop es
+ReadFatSectorDone:
 	ret
-ReadSector2	Endp
+ReadFatSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitIrq
+;
+;		DESCRIPTION:	Init IDE IRQ
+;
+;		PARAMETERS:		DS:BX       Sector 0 buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitIrq Proc near
+    push ds
+    push es
+    push bx
+;    
+    mov ax,ds
+    mov es,ax
+    mov di,bx
+;    
+    mov cs:IntFlag,0
+    mov cs:DiscSubUnit,0
+    xor ax,ax
+    mov ds,ax
+    mov bx,76h SHL 2
+    mov word ptr [bx],OFFSET IdeInt
+    mov [bx+2],cs
+;
+	mov cs:Precomp,0FFh
+	xor dx,dx
+	xor bx,bx
+	mov cx,1
+	mov ah,cs:Precomp
+	call SetupIdeTaskFile
+	jc init_irq_done
+;
+	mov al,0ECh
+	call ReadTaskFile
+	jc init_irq_done
+;
+	mov eax,es:[di+120]
+	mov cs:LbaSectors,eax
+	mov ax,word ptr es:[di+2]
+	mov cs:DiscCyls,ax
+	mov ax,es:[di+6]
+	mov cs:DiscHeads,ax
+	mov ax,es:[di+12]
+	mov cs:SectorsPerCyl,ax
+;
+	mov cs:LbaMode,1
+	mov cx,1
+	mov ah,cs:Precomp
+	xor edx,edx
+	call SetupLbaTaskFile
+	jc init_irq_done
+;
+	mov al,20h
+	call ReadTaskFile	
+	jnc init_irq_done
+;
+	mov cs:LbaMode,0
+	mov bh,0
+	mov bl,1
+	mov cx,1
+	xor dx,dx
+	call SetupIdeTaskFile
+	jc init_irq_done
+;
+	mov al,20h
+	call ReadTaskFile
+
+init_irq_done:
+    pop bx
+    pop es
+    pop ds
+    ret
+InitIrq Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -405,8 +758,8 @@ NextCluster12	PROC near
 	clc
 	rcr cx,1
 	pushf
-	mov eax,edx
-	call ReadSector2
+	mov bx,200h
+	call ReadFatSector
 	jnc nc12Locked
 	popf
 	stc
@@ -422,11 +775,9 @@ nc12Locked:
 	test bx,1FFh
 	jnz nc12LowOk
 	inc edx
-	mov eax,edx
-	call ReadSector2
+	mov bx,200h
+	call ReadFatSector
 	jc nc12Done
-;
-    mov bx,200h
 
 nc12LowOk:
 	mov ch,[bx]
@@ -440,9 +791,8 @@ nc12High:
 	test bx,1FFh
 	jnz nc12HighOk
 	inc edx
-	mov eax,edx
 	mov bx,200h
-	call ReadSector2
+	call ReadFatSector
 	jc nc12Done
 
 nc12HighOk:
@@ -470,21 +820,20 @@ NextCluster12	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NextCluster16	PROC near
-	push ebx
+    push bx
 	push cx
 ;
+    mov bx,200h
     mov edx,cs:CurrentCluster
 	add edx,edx
 	mov cx,dx
 	shr edx,9
 	add edx,cs:FatSector
 	and cx,1FFh
-	mov eax,edx
-	call ReadSector2
+	call ReadFatSector
 	jc nc16Done
-
-	mov bx,cx
-	add bx,200h
+;
+    add bx,cx
 	movzx edx,word ptr [bx]
 	mov cs:CurrentCluster,edx
 	cmp edx,0FFF8h
@@ -492,7 +841,7 @@ NextCluster16	PROC near
 
 nc16Done:
 	pop cx
-	pop ebx
+	pop bx
 	ret
 NextCluster16	ENDP
 
@@ -506,21 +855,20 @@ NextCluster16	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NextCluster32	PROC near
-	push ebx
+    push bx
 	push cx
 ;
+    mov bx,200h
     mov edx,cs:CurrentCluster
 	shl edx,2
 	mov cx,dx
 	shr edx,9
 	add edx,cs:FatSector
 	and cx,1FFh
-	mov eax,edx
-	call ReadSector2
+	call ReadFatSector
 	jc nc32Done
-
-	mov bx,cx
-	add bx,200h
+;
+    add bx,cx
 	mov edx,[bx]
 	and edx,0FFFFFFFh
 	mov cs:CurrentCluster,edx
@@ -529,7 +877,7 @@ NextCluster32	PROC near
 
 nc32Done:
 	pop cx
-	pop ebx
+	pop bx
 	ret
 NextCluster32	ENDP
 
@@ -597,7 +945,6 @@ GetCurrentSector	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScanDir Proc near
-    push ds
     push es
     push eax
     push cx
@@ -605,17 +952,17 @@ ScanDir Proc near
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,DATA_SEG
-    mov ds,ax
 
 sdClusterLoop:
     call GetCurrentSector
-    mov eax,edx
     mov cx,cs:SectorsPerCluster    
 
 sdSectorLoop:
     mov si,200h
-    call ReadSector2
+    push bx
+    mov bx,si
+    call ReadSector
+    pop bx
 
 sdLoop:
     push cx
@@ -632,7 +979,7 @@ sdLoop:
     test si,1FFh
     jnz sdLoop
 ;
-    inc eax
+    inc edx
     loop sdSectorLoop
 ;
     call NextCluster
@@ -659,7 +1006,6 @@ sdDone:
     pop cx
     pop eax
     pop es
-    pop ds       
     ret
 ScanDir Endp
 
@@ -677,19 +1023,19 @@ ScanDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ScanRootDir Proc near
-    push ds
     push es
     push eax
     push cx
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,DATA_SEG
-    mov ds,ax
     xor si,si
     mov cx,cs:RootEntries
-    mov eax,cs:RootSector
+    mov edx,cs:RootSector
+    push bx
+    xor bx,bx
     call ReadSector
+    pop bx
 
 srdLoop:
     push cx
@@ -707,8 +1053,12 @@ srdLoop:
     jnz srdNextEntry
 ;
     xor si,si
-    inc eax
+    inc edx
+;    
+    push bx
+    xor bx,bx
     call ReadSector
+    pop bx
 
 srdNextEntry:
     loop srdLoop
@@ -727,7 +1077,6 @@ srdDone:
     pop cx
     pop eax
     pop es
-    pop ds       
     ret
 ScanRootDir Endp
 
@@ -933,35 +1282,32 @@ LoadAdapter	Proc near
 ;    
     mov ax,cs
     mov es,ax
-    mov ax,DATA_SEG
-    mov ds,ax
 
 laClusterLoop:
     call GetCurrentSector
-    mov eax,edx
-    push eax
-    pop bx
-    pop bx
     mov cx,cs:SectorsPerCluster    
 
 laSectorLoop:
     xor si,si
+    push bx
+    xor bx,bx
     call ReadSector
+    pop bx
     jc laError
 ;
-    push eax
+    push edx
     push cx
 	mov esi,16 * DATA_SEG
     mov ecx,512
 	call MoveData
 	add edi,ecx
 	pop cx
-	pop eax
+	pop edx
 ;
     sub cs:ImageSize,200h
     jbe laDone
 ;
-    inc eax
+    inc edx
     loop laSectorLoop
 ;
     call NextCluster
@@ -1087,55 +1433,34 @@ Start:
 	sti
 	mov cs:DriveNr,dl
 	mov ax,DATA_SEG
-	mov es,ax
-	xor bx,bx
-	mov ax,201h
-	xor dx,dx
-	mov dl,cs:DriveNr
-	mov cx,1
-	int 13h
+	mov ds,ax
+    xor bx,bx
+    call InitIrq
+    jc read_part_error
 ;
     mov bx,1BEh
     mov si,bx
-    mov al,es:[bx+4]
+    mov al,[bx].part_type
     mov cs:PartType,al
-    mov cx,es:[bx+2]
-    mov dh,es:[bx+1]
-	mov ax,201h
-	mov dl,cs:DriveNr
-	mov bx,200h
-	int 13h
+;    
+    mov edx,[bx].part_start_sector
+    mov cs:BootSector,edx
+    xor bx,bx
+    call ReadSector
 	jc read_part_error
 ;
-    mov ax,es:[bx].boot_sectors_per_cyl
-    mov cs:SectorsPerCyl,ax
-    mov ax,es:[bx].boot_heads
-    mov cs:Heads,ax
-;    
-    mov al,es:[si+3]
-    mov ah,es:[si+2]
-    shr ah,6
-    mov cx,cs:Heads
-    mul cx
-    add al,es:[si+1]
-    adc ah,0
-    mul cs:SectorsPerCyl
-    mov cl,es:[si+2]
-    and cl,3Fh
-    dec cl
-    add al,cl
-    adc ah,0
-    adc dx,0
+    cmp cs:LbaMode,0
+    jne boot_check_part_type
 ;
-    mov cs:CurrSector2,-1
+    mov ax,ds:boot_sectors_per_cyl
+    cmp ax,cs:SectorsPerCyl
+    jne read_part_error
 ;    
-    mov word ptr cs:BootSector,ax
-    mov word ptr cs:BootSector+2,dx
-    mov eax,cs:BootSector
-;        
-    call ReadSector
-    jc read_part_error
-;
+    mov ax,ds:boot_heads
+    cmp ax,cs:DiscHeads
+    jne read_part_error
+
+boot_check_part_type:
     mov al,cs:PartType
     cmp al,10h
     jae read_part_error
@@ -1147,44 +1472,44 @@ Start:
 ;
     mov cs:FatSize,al     
 ;    
-    movzx eax,es:boot_resv_sectors
+    movzx eax,ds:boot_resv_sectors
     add eax,cs:BootSector
     mov cs:FatSector,eax
 ;
-    movzx eax,es:boot_fat_sectors16
+    movzx eax,ds:boot_fat_sectors16
     or ax,ax
     jnz boot_fat_sectors_ok
 ;
-    mov eax,es:boot_fat_sectors
+    mov eax,ds:boot_fat_sectors
 
 boot_fat_sectors_ok:
     mov cs:SectorsPerFat,eax
     mov eax,cs:FatSector
 ;
-    mov cl,es:boot_fats
+    mov cl,ds:boot_fats
     or cl,cl
     jz read_part_error
 
 boot_fat_adv_loop:
     add eax,cs:SectorsPerFat
-    sub es:boot_fats,1
+    sub ds:boot_fats,1
     jnz boot_fat_adv_loop
 ;
     cmp cs:FatSize,32
     je boot_data_sector_ok
 ;
     mov cs:RootSector,eax
-    movzx ecx,es:boot_root_dirs
+    movzx ecx,ds:boot_root_dirs
     shr ecx,4
     add eax,ecx
 
 boot_data_sector_ok:    
     mov cs:DataSector,eax
-    mov eax,es:boot_root_cluster
+    mov eax,ds:boot_root_cluster
     mov cs:CurrentCluster,eax
-    mov ax,es:boot_root_dirs
+    mov ax,ds:boot_root_dirs
     mov cs:RootEntries,ax
-    movzx ax,es:boot_sectors_per_cluster
+    movzx ax,ds:boot_sectors_per_cluster
     mov cs:SectorsPerCluster,ax
     call FindImageFile
     jnc LoadStart

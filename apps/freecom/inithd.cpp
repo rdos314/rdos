@@ -152,48 +152,41 @@ void TInitHdCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitHdCommand::WriteBootSector(int Disc)
+void TInitHdCommand::WriteBootSector(TDisc *Disc)
 {
 	char *BootSector;
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-	int Heads;
 	TBootParam bootp;
 
-	if (RdosGetDiscInfo(Disc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
-	{
-		bootp.BytesPerSector = BytesPerSector;
-		bootp.Resv1 = 0;
-		bootp.MappingSectors = FLoaderSectors;
-		bootp.Resv3 = 0;
-		bootp.Resv4 = 0;
-		bootp.SmallSectors = 0;
-		bootp.Media = 0xF0;
-		bootp.Resv6 = 0;
-		bootp.SectorsPerCyl = SectorsPerCyl;
-		bootp.Heads = Heads;
-		bootp.HiddenSectors = FLoaderSectors;
-		bootp.Sectors = Sectors;
-		bootp.Drive = 0x80;
-		bootp.Resv7 = 0;
-		bootp.Signature = 0;
-		bootp.Serial = 0;
-		memset(bootp.Volume, 0, 11);
-		memcpy(bootp.Fs, "RDOS    ", 8);
+	bootp.BytesPerSector = Disc->GetBytesPerSector();
+	bootp.Resv1 = 0;
+	bootp.MappingSectors = FLoaderSectors;
+	bootp.Resv3 = 0;
+	bootp.Resv4 = 0;
+	bootp.SmallSectors = 0;
+	bootp.Media = 0xF0;
+	bootp.Resv6 = 0;
+	bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
+	bootp.Heads = Disc->GetHeads();
+	bootp.HiddenSectors = FLoaderSectors;
+	bootp.Sectors = Disc->GetTotalSectors();
+	bootp.Drive = 0x80;
+	bootp.Resv7 = 0;
+	bootp.Signature = 0;
+	bootp.Serial = 0;
+	memset(bootp.Volume, 0, 11);
+	memcpy(bootp.Fs, "RDOS    ", 8);
 
-		BootSector = new char[512];
+	BootSector = new char[512];
 
-		RdosReadDisc(Disc, 0, BootSector, 512);
-		memset(BootSector, 0, 0x1BE);
-		RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
+	Disc->Read(0, BootSector, 512);
+	memset(BootSector, 0, 0x1BE);
+	RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
-		memcpy(BootSector + 11, &bootp, sizeof(bootp));
+	memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
-		RdosWriteDisc(Disc, 0, BootSector, 512);
+	Disc->Write(0, BootSector, 512);
 
-		delete BootSector;
-	}
+	delete BootSector;
 }
 
 /*##########################################################################
@@ -207,7 +200,7 @@ void TInitHdCommand::WriteBootSector(int Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitHdCommand::WriteBootLoader(int Disc)
+void TInitHdCommand::WriteBootLoader(TDisc *Disc)
 {
 	char *BootLoader;
 	int size;
@@ -223,7 +216,7 @@ void TInitHdCommand::WriteBootLoader(int Disc)
 	FLoaderSectors = 0;
 	for (Sector = 1; Sector <= BOOT_LOADER_SECTORS && size >= 0; Sector++)
 	{
-		RdosWriteDisc(Disc, Sector, ptr, 512);
+		Disc->Write(Sector, ptr, 512);
 		FLoaderSectors++;
 		ptr += 512;
 		size -= 512;
@@ -245,26 +238,27 @@ void TInitHdCommand::WriteBootLoader(int Disc)
 ##########################################################################*/
 int TInitHdCommand::Execute(char *param)
 {
-	int Disc;
+	int DiscNr;
 	int BytesPerSector;
 	long Sectors;
 	int SectorsPerCyl;
 	int Heads;
+	TDisc *Disc;
 
 	InitOptions();
 
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
 
-	if (sscanf(param, "%d", &Disc) == 1)
+	if (sscanf(param, "%d", &DiscNr) == 1)
 	{
-    	if (RdosGetDiscInfo(Disc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
-    	    if (BytesPerSector == 512)
-    	    {
-    	        WriteBootLoader(Disc);
-    	        WriteBootSector(Disc);
-    	        return 0;
-    	    }
+	    Disc = new TDisc(DiscNr);
+	    if (Disc->IsValid())
+	    {
+    	    WriteBootLoader(Disc);
+//    	    WriteBootSector(Disc);
+    	    return 0;
+    	}
 	}
 
 	ErrorSyntax(0);
