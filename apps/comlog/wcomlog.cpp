@@ -1,0 +1,64 @@
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include "serial.h"
+#include "win32.h"
+
+#include "str.h"
+#include "file.h"
+
+struct TSerialDebug
+{
+	long Time;
+	int Channel;
+	char ch;
+};
+
+/*##################  main ##########################
+*   Purpose....: Program entry-point	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void cdecl main()
+{
+	HANDLE console = GetStdHandle(STD_OUTPUT_HANDLE);
+	TSerialDebug Debug;
+	char Str[10];
+	TSerialDevice Port1(1, 9600, 'N', 8, 1);
+	TSerialDevice Port2(3, 9600, 'N', 8, 1);
+
+	TFile *File = new TFile("raw.dat", 0);
+
+	for (;;)
+	{
+		if (Port1.Poll())
+		{
+			Debug.Time = GetTickCount();
+			Debug.Channel = 1;
+			Debug.ch = Port1.Read();
+			File->Write(&Debug, sizeof(Debug));
+			SetConsoleTextAttribute(console, 9);
+		}
+
+		if (Port2.Poll())
+		{
+			Debug.Time = GetTickCount();
+			Debug.Channel = 2;
+			Debug.ch = Port2.Read();
+			File->Write(&Debug, sizeof(Debug));
+			SetConsoleTextAttribute(console, 11);
+		}
+
+		sprintf(Str, "%04hX", Debug.ch);
+		Str[0] = Str[2];
+		Str[1] = Str[3];
+		Str[2] = ' ';
+		Str[3] = ' ';
+		Str[4] = 0;
+		printf(Str);
+	}
+}
+
