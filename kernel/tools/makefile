@@ -82,6 +82,10 @@ hdimg_srcs = BOOTSEC.ASM HDIMG.ASM
 hdimg_objs = $(hdimg_srcs:.ASM=.OBJ)
 hdimg_exes = HDIMG.EXE
 
+acrimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM ACRIMG.ASM
+acrimg_objs = $(acrimg_srcs:.ASM=.OBJ)
+acrimg_exes = ACRIMG.EXE
+
 grubimg_srcs = GRUBIMG.ASM
 grubimg_objs = $(grubimg_srcs:.ASM=.OBJ)
 grubimg_exes = GRUBIMG.EXE
@@ -110,7 +114,7 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs) $(acrprom_srcs) $(aliboot_srcs)	\
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdimg_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
-		    $(state_srcs) $(state40_srcs) \
+		    $(state_srcs) $(state40_srcs) $(acrimg_srcs) \
 			$(run_srcs) $(remdebug_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
@@ -120,7 +124,7 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(rdfsboot_exes) $(grubload_exes) $(hdimg_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(state_exes) $(state40_exes) $(acrloc_exes)	\
-			$(run_exes) $(remdebug_exes)
+			$(run_exes) $(remdebug_exes) $(acrimg_exes)
 
 maps =      $(exes:.EXE=.MAP)
 
@@ -237,6 +241,14 @@ HDIMG.EXE : $(hdimg_objs)
 	$(hdimg_objs)
 	HDIMG
 	HDIMG;
+!
+
+ACRIMG.EXE : $(acrimg_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(acrimg_objs)
+    ACRIMG
+	ACRIMG;
 !
 
 GRUBIMG.EXE : $(grubimg_objs)

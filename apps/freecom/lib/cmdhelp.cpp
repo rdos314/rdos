@@ -37,6 +37,10 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define MAX_X   79
+#define MAX_Y   24
+#define MAX_HISTORY 100
+
 int FStdInput = TRUE;
 int FStdOutput = TRUE;
 
@@ -45,8 +49,8 @@ TFile *FOutputFile = new TFile("CON");
 TFile *FErrorFile = new TFile("CON");
 
 static TStringList History;
-static TWait *wait;
-static TKeyboardDevice *keyboard;
+static TWait *Wait;
+static TKeyboardDevice *Keyboard;
 
 /*##########################################################################
 #
@@ -602,289 +606,267 @@ int Read(char *str, int maxsize)
 ##########################################################################*/
 int ReadCon(char *str, int maxsize)
 {
-	char insert = 1;
-	char ch;
-	int histLevel = 0;
-	int curx;
-	int cury;
-	int count;
-	int current = 0;
-	int charcount = 0;
-
 	int OrgX;
 	int OrgY;
+	int CurrX;
+	int CurrY;
 	int ExtKey;
 	int State;
 	int VirtKey;
 	int ScanCode;
+	int Count = 0;
+	int CurrPos = 0;
+	int i;
+	int Insert = TRUE;
+	TString prev;
+	const char *prevstr;
+    int ok;
+    int GetNext = FALSE;
+
+	if (History.GotoFirst())
+        prev = History.Get();
+
+    prevstr = prev.GetData();
 
 	RdosGetCursorPosition(&OrgY, &OrgX);
+	CurrX = OrgX;
+	CurrY = OrgY;
+	
 	memset(str, 0, maxsize);
 
 	if (!Wait)
 		Wait = new TWait;
 
 	if (!Keyboard)
-		Keyboard = new TKeyboard(Wait);
+		Keyboard = new TKeyboardDevice(Wait);
 
-	do
+	for (;;)
 	{
-		Wait->WaitForEver();
-		if (ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode))
+		Wait->WaitForever();
+
+		ok = Keyboard->ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode);
+		if (ok)
+		    ok = Keyboard->IsStdKey(ExtKey, VirtKey);
+
+		if (ok)
 		{
+            switch (VirtKey)
+            {
+                case VK_BACK:
+                    if (Count && CurrPos)
+                    {
+                        if (Count == CurrPos)
+                        {
+                            str[CurrPos - 1] = 0;
+                            
+                            if (CurrX)
+                                CurrX--;
+                            else
+                            {
+                                CurrX = MAX_X;
+                                CurrY--;
+                            }                                
+                            RdosWriteChar(' ');
+                            RdosSetCursorPosition(CurrY, CurrX);
+                        }
+                        else
+                        {
+                            for (i = CurrPos - 1; i < Count; i++)
+                                str[i] = str[i + 1];
 
-		if(cbreak)
-			ch = KEY_CTL_C;
+                            if (CurrX)
+                                CurrX--;
+                            else
+                            {
+                                CurrX = MAX_X;
+                                CurrY--;
+                            }
+                            RdosWriteString(&str[CurrPos - 1]);
+                            RdosWriteChar(' ');
+                            RdosSetCursorPosition(CurrY, CurrX);
+                        }
+                        CurrPos--;
+                        Count--;
+                        str[Count] = 0;
+                    }
+                    break;
 
-		switch(ch) {
-		case KEY_BS:               /* delete character to left of cursor */
 
-			if(current > 0 && charcount > 0) {
-			  if(current == charcount) {     /* if at end of line */
-				str[current - 1] = 0;
-				if (wherex() != 1)
-				  outs("\b \b");
-				else
-				{
-				  goxy(MAX_X, wherey() - 1);
-				  outblank();
-				  goxy(MAX_X, wherey() - 1);
-				}
-			  }
-			  else
-			  {
-				for (count = current - 1; count < charcount; count++)
-				  str[count] = str[count + 1];
-				if (wherex() != 1)
-				  goxy(wherex() - 1, wherey());
-				else
-				  goxy(MAX_X, wherey() - 1);
-				curx = wherex();
-				cury = wherey();
-				outsblank(&str[current - 1]);
-				goxy(curx, cury);
-			  }
-			  charcount--;
-			  current--;
-			}
-			break;
+                case VK_INSERT:
+                    Insert = !Insert;
+                    break;
 
-		case KEY_INSERT:           /* toggle insert/overstrike mode */
-			insert ^= 1;
-			if (insert)
-			  _setcursortype(_NORMALCURSOR);
-			else
-			  _setcursortype(_SOLIDCURSOR);
-			break;
+                case VK_DELETE:
+                    if (Count && CurrPos != Count)
+                    {
+                        for (i = CurrPos; i < Count; i++)
+                            str[i] = str[i + 1];
+                        Count--;
+                        str[Count] = 0;
+                        RdosWriteString(&str[CurrPos - 1]);
+                        RdosWriteChar(' ');
+                        RdosSetCursorPosition(CurrY, CurrX);
+                    }
+                    break;
 
-		case KEY_DELETE:           /* delete character under cursor */
+                case VK_HOME:
+                    if (CurrPos)
+                    {
+                        CurrX = OrgX;
+                        CurrY = OrgY;
+                        RdosSetCursorPosition(CurrY, CurrX);
+                        CurrPos = 0;
+                    }
+                    break;
 
-			if (current != charcount && charcount > 0)
-			{
-			  for (count = current; count < charcount; count++)
-				str[count] = str[count + 1];
-			  charcount--;
-			  curx = wherex();
-			  cury = wherey();
-			  outsblank(&str[current]);
-			  goxy(curx, cury);
-			}
-			break;
+                case VK_END:
+                    if (CurrPos != Count)
+                    {
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                    	RdosGetCursorPosition(&CurrY, &CurrX);
+                    }
+                    break;
 
-		case KEY_HOME:             /* goto beginning of string */
+                case VK_RETURN:
+                    if (Count)
+                    {
+                        History.AddFirst(str);
+                        if (History.GetSize() >= MAX_HISTORY)
+                            History.RemoveLast();
+                    }
+                    RdosWriteString("\r\n");
+                    return TRUE;
 
-			if (current != 0)
-			{
-			  goxy(orgx, orgy);
-			  current = 0;
-			}
-			break;
+                case VK_ESCAPE:
+                    return FALSE;
+                    
 
-		case KEY_END:              /* goto end of string */
+                case VK_RIGHT:
+                    if (CurrPos != Count)
+                    {
+                        CurrPos++;
+                        if (CurrX == MAX_X)
+                        {
+                            CurrX = 1;
+                            CurrY++;
+                        }
+                        else
+                            CurrX++;
+                        RdosSetCursorPosition(CurrY, CurrX);
+                        break;
+                    }
 
-			if (current != charcount)
-			{
-			  goxy(orgx, orgy);
-			  outs(str);
-			  current = charcount;
-			}
-			break;
+                case VK_F1:
+                    if (CurrPos < strlen(prevstr))
+                    {
+                        str[CurrPos] = prevstr[CurrPos];
+                        RdosWriteChar(str[CurrPos]);
+                    	RdosGetCursorPosition(&CurrY, &CurrX);
+                        CurrPos++;
+                        Count = CurrPos;
+                        str[Count] = 0;
+                    }
+                    break;
 
-#ifdef FEATURE_FILENAME_COMPLETION
-		case KEY_TAB:		 /* expand current file name */
-			if(current == charcount) {      /* only works at end of line */
-			  if(lastch != KEY_TAB) { /* if first TAB, complete filename */
-				complete_filename(str, charcount);
-				charcount = strlen(str);
-				current = charcount;
+                case VK_F3:
+                	memset(str, 0, Count);
+                    RdosSetCursorPosition(OrgY, OrgX);
+                    RdosWriteString(str);
+                	
+                    strcpy(str, prevstr);
+                    RdosSetCursorPosition(OrgY, OrgX);
+                    RdosWriteString(str);
+                    RdosGetCursorPosition(&CurrY, &CurrX);
+                    Count = strlen(str);
+                    CurrPos = Count;
+                    break;
 
-				goxy(orgx, orgy);
-				outs(str);
-				if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
-				  orgy--;
-			  } else {                 /* if second TAB, list matches */
-				if (show_completion_matches(str, charcount))
-				{
-				  printprompt();
-				  orgx = wherex();
-				  orgy = wherey();
-				  outs(str);
-				}
-			  }
-			}
-			else
-			  beep();
-			break;
-#endif
+                case VK_UP:
+                    if (GetNext)
+                        ok = History.GotoNext();
+                    else
+                    {
+                        ok = History.GotoFirst();
+                        GetNext = TRUE;
+                    }
+                    
+                    if (ok)
+                    {
+                    	memset(str, 0, Count);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                	
+                        prev = History.Get();
+                        prevstr = prev.GetData();
+                        strcpy(str, prevstr);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        Count = strlen(str);
+                        CurrPos = Count;
+                    }
+                    break;
 
-		case KEY_ENTER:            /* end input, return to main */
+                case VK_DOWN:
+                    if (History.GotoPrev())
+                    {
+                    	memset(str, 0, Count);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                	
+                        prev = History.Get();
+                        prevstr = prev.GetData();
+                        strcpy(str, prevstr);
+                        RdosSetCursorPosition(OrgY, OrgX);
+                        RdosWriteString(str);
+                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        Count = strlen(str);
+                        CurrPos = Count;
+                    }
+                    break;
 
-#ifdef FEATURE_HISTORY
-			if(str[0])
-			  histSet(0, str);      /* add to the history */
-#endif
+                case VK_LEFT:
+                    if (CurrPos)
+                    {
+                        CurrPos--;
+                        if (CurrX)
+                            CurrX--;
+                        else
+                        {
+                            CurrX = MAX_X;
+                            CurrY--;
+                        }
+                        RdosSetCursorPosition(CurrY, CurrX);
+                    }
+                    break;
 
-			outc('\n');
-			break;
-
-		case KEY_CTL_C:       		/* ^C */
-		case KEY_ESC:              /* clear str  Make this callable! */
-
-			clrcmdline(str, maxlen, orgx, orgy);
-			current = charcount = 0;
-
-			if(ch == KEY_CTL_C && !echo) {
-			  /* enable echo to let user know that's this
-				is the command line */
-			  echo = 1;
-			  printprompt();
-			}
-			break;
-
-		case KEY_RIGHT:            /* move cursor right */
-
-			if (current != charcount)
-			{
-			  current++;
-			  if (wherex() == MAX_X)
-				goxy(1, wherey() + 1);
-			  else
-				goxy(wherex() + 1, wherey());
-				break;
-			}
-			/* cursor-right at end of string grabs the next character
-				from the previous line */
-			/* FALL THROUGH */
-
-#ifndef FEATURE_HISTORY
-			break;
-#else
-		case KEY_F1:       /* get character from last command buffer */
-			  if (current < strlen(prvLine)) {
-				 outc(str[current] = prvLine[current]);
-				 charcount = ++current;
-			  }
-			  break;
-			  
-		case KEY_F3:               /* get previous command from buffer */
-			if(charcount < strlen(prvLine)) {
-				outs(strcpy(&str[charcount], &prvLine[charcount]));
-			   current = charcount = strlen(str);
-		   }
-		   break;
-
-		case KEY_UP:               /* get previous command from buffer */
-			if(!histGet(--histLevel, prvLine, sizeof(prvLine)))
-				++histLevel;		/* failed -> keep current command line */
-			else {
-				clrcmdline(str, maxlen, orgx, orgy);
-				strcpy(str, prvLine);
-				current = charcount = strlen(str);
-				outs(str);
-				histGet(histLevel - 1, prvLine, sizeof(prvLine));
-			}
-			break;
-
-		case KEY_DOWN:             /* get next command from buffer */
-			if(histLevel) {
-				clrcmdline(str, maxlen, orgx, orgy);
-				strcpy(prvLine, str);
-				histGet(++histLevel, str, maxlen);
-				current = charcount = strlen(str);
-				outs(str);
-			}
-			break;
-
-		case KEY_F5: /* keep cmdline in F3/UP buffer and move to next line */
-			strcpy(prvLine, str);
-			clrcmdline(str, maxlen, orgx, orgy);
-			outc('@');
-			if(orgy >= MAX_Y) {
-				outc('\n');			/* Force scroll */
-				orgy = MAX_Y;
-			} else {
-				++orgy;
-			}
-			goxy(orgx, orgy);
-			current = charcount = 0;
-
-			break;
-
-#endif
-
-		case KEY_LEFT:             /* move cursor left */
-
-			if (current > 0)
-			{
-			  current--;
-			  if (wherex() == 1)
-				goxy(MAX_X, wherey() - 1);
-			  else
-				goxy(wherex() - 1, wherey());
-			}
-#if 0
-			else
-				   beep();
-#endif
-			break;
-
-		default:                 /* insert character into string... */
-
-			if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
-			{
-			  if (insert && current != charcount)
-			  {
-				for (count = charcount; count > current; count--)
-				  str[count] = str[count - 1];
-				str[current++] = ch;
-				curx = wherex() + 1;
-				cury = wherey();
-				outs(&str[current - 1]);
-				if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
-				  cury--;
-				goxy(curx, cury);
-				charcount++;
-			  }
-			  else
-			  {
-				if (current == charcount)
-				  charcount++;
-				str[current++] = ch;
-				outc(ch);
-			  }
-			  if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
-				orgy--;
-			}
-			else
-			  beep();
-			break;
-		}
-#ifdef FEATURE_FILENAME_COMPLETION
-		lastch = ch;
-#endif
-	} while(ch != KEY_ENTER);
-
-	_setcursortype(_NORMALCURSOR);
+                default:
+                    if (VirtKey >= ' ' && Count < maxsize - 1)
+                    {
+                        if (Insert && CurrPos != Count)
+                        {
+                            for (i = Count; i > CurrPos; i--)
+                                str[i] = str[i - 1];
+                        }
+                        else
+                        {
+                            if (CurrPos == Count)
+                                Count++;
+                        }
+                        str[CurrPos] = (char)VirtKey;
+                        RdosWriteChar(str[CurrPos]);
+                        RdosGetCursorPosition(&CurrY, &CurrX);
+                        if (CurrX == 0)
+                        	OrgY--;
+                        CurrPos++;
+                        Count++;
+                        str[Count] = 0;
+                    }
+                    break;
+            }
+        }
+    }
 }
 
 /*##########################################################################
