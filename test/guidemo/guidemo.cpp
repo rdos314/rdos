@@ -8,11 +8,18 @@
 #include "videodev.h"
 #include "planthr.h"
 #include "waitdev.h"
+#include "keyboard.h"
+#include "mouse.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
 int count = 0;
+TSprite *NormalSprite;
+TSprite *LeftSprite;
+TSprite *RightSprite;
+TSprite *MouseSprite;
+TGraphicDevice *KeyVideo;
 
 void RandomColor(TGraphicDevice *dev)
 {
@@ -188,29 +195,6 @@ void Pattern3(TGraphicDevice *dev)
 		dev->DrawLine(0, 3 * i, dev->GetHeight() - 3 * i, dev->GetWidth());
 }
 
-void Pattern4(TGraphicDevice *dev)
-{
-	TBitmapGraphicDevice mono(1, 400, 100);
-	TFont font(24);
-
-	mono.SetLgopNone();
-	mono.SetFilledStyle();
-	mono.DrawEllipse(50, 50, 50, 50);
-	mono.SetLgopInv();
-	mono.DrawRect(40, 40, 60, 60);
-	mono.SetHollowStyle();
-	mono.SetLgopXor();
-	mono.DrawEllipse(50, 50, 20, 20);
-	mono.DrawRect(20, 20, 80, 80);
-	mono.DrawLine(0, 0, 100, 100);
-	mono.DrawLine(0, 100, 100, 0);
-	mono.SetFont(&font);
-	mono.DrawString(100, 75, "1-bit mono");
-
-	dev->SetLgopNone();
-	dev->Blit(&mono, 0, 0, 300, 300, 400, 100);
-}
-
 void TestAll(TGraphicDevice *dev)
 {
 	dev->SetLgopNone();
@@ -248,29 +232,175 @@ void TestAll(TGraphicDevice *dev)
 	dev->DrawEllipse(425, 175, 125, 125);
 }
 
+TBitmapGraphicDevice *CreateMouseMask()
+{
+	TBitmapGraphicDevice *mono;
+
+	mono = new TBitmapGraphicDevice(1, 40, 40);
+	mono->SetLgopNone();
+	mono->SetFilledStyle();
+	mono->DrawEllipse(20, 20, 20, 20);
+	mono->SetLgopInv();
+	mono->DrawRect(15, 15, 25, 25);
+	mono->SetHollowStyle();
+	mono->SetLgopXor();
+	mono->DrawEllipse(20, 20, 15, 15);
+	mono->DrawRect(10, 10, 30, 30);
+	mono->SetLgopNone();
+	mono->DrawLine(0, 0, 40, 40);
+	mono->DrawLine(0, 40, 40, 0);
+	mono->DrawLine(0, 0, 39, 39);
+	mono->DrawLine(0, 39, 39, 0);
+	mono->DrawLine(1, 1, 41, 41);
+	mono->DrawLine(1, 41, 41, 1);
+	mono->DrawLine(1, 1, 40, 40);
+	mono->DrawLine(1, 40, 40, 1);
+
+	return mono;
+}
+
+TBitmapGraphicDevice *CreateMouseBitmap(TGraphicDevice *dev, int r, int g, int b)
+{
+	TBitmapGraphicDevice *bitmap;
+
+	bitmap = new TBitmapGraphicDevice(dev->GetBpp(), 40, 40);
+	bitmap->SetLgopNone();
+	bitmap->SetFilledStyle();
+	bitmap->SetDrawColor(r, g, b);
+	bitmap->DrawRect(0, 0, 40, 40);
+
+	return bitmap;
+}
+
+void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+	char str[120];
+
+	sprintf(str, "ExtKey = %04hX, KeyState = %04hX, VK = %02hX, Scan = %02hX, Pressed", ExtKey, KeyState, VirtualKey, ScanCode);
+	KeyVideo->SetFilledStyle();
+	KeyVideo->SetDrawColor(0, 0, 0);
+	KeyVideo->DrawRect(0, KeyVideo->GetHeight() - 35, KeyVideo->GetWidth(), KeyVideo->GetHeight());
+	KeyVideo->SetDrawColor(255, 255, 255);
+	KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
+}
+
+void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+{
+	char str[120];
+
+	sprintf(str, "ExtKey = %04hX, KeyState = %04hX, VK = %02hX, Scan = %02hX, Released", ExtKey, KeyState, VirtualKey, ScanCode);
+	KeyVideo->SetFilledStyle();
+	KeyVideo->SetDrawColor(0, 0, 0);
+	KeyVideo->DrawRect(0, KeyVideo->GetHeight() - 35, KeyVideo->GetWidth(), KeyVideo->GetHeight());
+	KeyVideo->SetDrawColor(255, 255, 255);
+	KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
+}
+
+void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
+{
+	MouseSprite->Move(x, y);
+}
+
+void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
+{
+	MouseSprite->Hide();
+	if (MouseButton & MOUSE_RIGHT_BUTTON)
+		MouseSprite = RightSprite;
+	else
+		MouseSprite = NormalSprite;
+	MouseSprite->Move(x, y);
+	MouseSprite->Show();
+}
+
+void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
+{
+	MouseSprite->Hide();
+	MouseSprite = LeftSprite;
+	MouseSprite->Move(x, y);
+	MouseSprite->Show();
+}
+
+void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
+{
+	MouseSprite->Hide();
+	if (MouseButton & MOUSE_LEFT_BUTTON)
+		MouseSprite = RightSprite;
+	else
+		MouseSprite = NormalSprite;
+	MouseSprite->Move(x, y);
+	MouseSprite->Show();
+}
+
+void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
+{
+	MouseSprite->Hide();
+	MouseSprite = RightSprite;
+	MouseSprite->Move(x, y);
+	MouseSprite->Show();
+}
+
 void cdecl main()
 {
 	int i;
 	TGraphicDevice *vbe;
 	TGraphicDevice *bitmap;
 	TFont *font;
+	TGraphicDevice *MouseMask;
+	TGraphicDevice *MouseBitmap;
 	TPlanetThread *Planets;
 	TWait *Wait;
+	TKeyboardDevice *Keyboard;
+	TMouseDevice *Mouse;
 
 	RdosWaitMilli(250);
 
 	Wait = new TWait();
 
+	Keyboard = new TKeyboardDevice(Wait);
+	Keyboard->OnKeyPress = KeyPress;
+	Keyboard->OnKeyRelease = KeyRelease;
+
+	Mouse = new TMouseDevice(Wait);
+	Mouse->OnMove = MouseMove;
+	Mouse->OnLeftUp = LeftUp;
+	Mouse->OnLeftDown = LeftDown;
+	Mouse->OnRightUp = RightUp;
+	Mouse->OnRightDown = RightDown;
+
 	vbe = new TVideoGraphicDevice(32, 800, 600);
 
-	RdosSetCursorPosition(0, 0);
-	RdosWriteString("Test av text mode");
+	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
+	Mouse->SetMickey(1, 1);
+	Mouse->SetPosition(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+	MouseMask = CreateMouseMask();
+
+	MouseBitmap = CreateMouseBitmap(vbe, 255, 255, 255);
+	NormalSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
+	NormalSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+	MouseBitmap = CreateMouseBitmap(vbe, 64, 128, 255);
+	LeftSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
+	LeftSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+	MouseBitmap = CreateMouseBitmap(vbe, 255, 0, 0);
+	RightSprite = vbe->CreateSprite(MouseBitmap, MouseMask, 20, 20);
+	RightSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
+
+	MouseSprite = NormalSprite;
+	MouseSprite->Show();
+
+	KeyVideo = new TGraphicDevice(*vbe);
+	font = new TFont(35);
+	KeyVideo->SetFont(font);
+
+	Wait->StartThreadHandler("IO Thread", 0x1000);
 
 	vbe->SetDrawColor(255,255,255);
 	vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
 	vbe->DrawLine(240, 0, 0, 128);
 
-//	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
+	vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
 
 	Planets = new TPlanetThread(vbe, 8);
 
@@ -327,9 +457,6 @@ void cdecl main()
 	RdosWaitMilli(5000);
 
 	Pattern3(vbe);
-	RdosWaitMilli(5000);
-
-	Pattern4(vbe);
 	RdosWaitMilli(5000);
 
 	font = new TFont(60);
