@@ -151,7 +151,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 switch_to	Proc far
-    pop es
+    push es
 	pushad
 ;
 	EnterSection ds:v_section
@@ -203,13 +203,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 switch_from	Proc far
-	pushad
-;
-	EnterSection ds:v_section
 	mov ds:vl_has_focus,0
-	LeaveSection ds:v_section
-;
-	popad
 	ret
 switch_from	Endp
 
@@ -648,7 +642,7 @@ init_mode	Proc far
 	and ax,0F000h
 	add eax,1000h
 	mov es:v_app_size,eax
-	AllocateLocalLinear
+	AllocateSmallLinear
 	mov es:v_app_base,edx
 ;
 	push es

@@ -256,4 +256,6 @@ reset_rts_nr                = 229
 get_com_receive_space_nr    = 230
 get_com_send_space_nr       = 231
 
+get_char_attrib_nr			= 232
+
 usergate_entries			= 256

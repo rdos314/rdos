@@ -1336,6 +1336,13 @@ SetBackColor        MACRO
 	UserGate set_backcolor_nr
 						ENDM
 
+;	OUT AL       	Char
+;	OUT BL			Back color
+;   OUT BH			Fore color
+GetCharAttrib       MACRO
+	UserGate get_char_attrib_nr
+						ENDM
+
 ;	IN  AL              Char
 WriteChar       MACRO
 	UserGate write_char_nr

@@ -707,6 +707,40 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			GetCharAttrib
+;
+;		DESCRIPTION:	Get char & attribute
+;
+;		PARAMETERS:		AL		Character
+;						BL		Back color
+;						BH		Fore color
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_char_attrib_name	DB 'Get Character & Attribute',0
+
+get_char_attrib	PROC far
+	push ds
+	push cx
+	push dx
+;
+	mov dx,video_thread_sel
+	mov ds,dx
+	mov dx,ds:vt_row
+	mov cx,ds:vt_col
+	CallVideo read_char_proc
+;
+	pop dx
+	pop cx
+	pop ds
+	retf32
+get_char_attrib	ENDP
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			WriteChar
 ;
 ;		DESCRIPTION:	Write one character to screen
@@ -3061,6 +3095,12 @@ init	PROC far
 	mov di,OFFSET set_backcolor_name
 	xor dx,dx
 	mov ax,set_backcolor_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_char_attrib
+	mov di,OFFSET get_char_attrib_name
+	xor dx,dx
+	mov ax,get_char_attrib_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_char

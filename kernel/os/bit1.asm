@@ -4139,6 +4139,7 @@ write_char	Proc far
 ;
 	mov ds:v_style,STYLE_FILLED
 	mov al,bh
+	shr al,4
 	call attr_to_color
 	mov ds:v_color,eax
 ;
@@ -4189,7 +4190,25 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_char	Proc far
+	push es
+	push esi
+;
+	movzx edx,dx
+	movzx eax,ds:v_col_count
+	mul edx
+	movzx esi,cx
+	add esi,eax
+	add esi,esi
+	mov es,ds:v_text
+	mov ax,es:[esi]
+	mov bl,ah
+	mov bh,ah
+	shr bh,4
+	and bx,0F0Fh
 	clc
+;
+	pop esi
+	pop es
 	ret
 read_char	Endp
 

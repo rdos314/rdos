@@ -62,16 +62,23 @@ code	SEGMENT byte public 'CODE'
 
 DoFunc	PROC near
 	HideMouse
-	shr cx,3
+	push ax
+	mov ax,cx
+	mov cl,6
+	div cl
+	movzx cx,al
+	pop ax
 	shr dx,3
 	mov dh,dl
 	mov dl,cl
 	call debug_call_pr
 	mov al,'r'
 	call debug_call_pr
-	movzx cx,dl
+	mov al,dl
 	movzx dx,dh
-	shl cx,3
+	mov ah,6
+	mul ah
+	mov cx,ax
 	shl dx,3
 	SetMousePosition
 	ShowMouse
@@ -128,7 +135,7 @@ no_down_arrow:
 
 left_arrow:
 	GetMousePosition
-	sub cx,8
+	sub cx,6
 	SetMousePosition
 	jmp handle_key_end
 
@@ -138,7 +145,7 @@ no_left_arrow:
 
 right_arrow:
 	GetMousePosition
-	add cx,8
+	add cx,6
 	SetMousePosition
 
 handle_key_end:

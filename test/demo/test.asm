@@ -85,6 +85,28 @@ divi	DW 1111h
 	
 init:
         int 3
+;
+	GetCursorPosition
+	push cx
+	push dx
+;
+	mov ax,10
+	mov cx,ax
+;
+	mov ax,20
+	mov dx,ax
+;
+	SetCursorPosition
+	GetCharAttrib
+	push ax
+	mov al,bh
+	SetForeColor
+	mov al,bl
+	SetBackColor
+	pop ax
+	WriteChar
+;
+	int 3
 	mov ax,32
 	mov cx,800
 	mov dx,600

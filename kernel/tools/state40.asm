@@ -731,7 +731,7 @@ init:
 	mov dx,8
 	SetMouseMickey
 ;	
-	ShowMouse
+;	ShowMouse
 state_start:
 	mov ax,_data
 	mov ds,ax

@@ -64,33 +64,44 @@ hide_marker	PROC near
 	push ds
 	push ax
 	push bx
+	push cx
 	push dx
 ;
 	mov ax,m_cursor_flag
 	or ax,ax
 	jz hide_marker_done
 ;
+	GetCursorPosition
+	push cx
+	push dx
+;
+	mov ax,ds:m_horiz_pos
+	xor dx,dx
+	div ds:m_horiz_mickey
+	mov cx,ax
+;
 	mov ax,ds:m_vert_pos
 	xor dx,dx
 	div ds:m_vert_mickey
-	mov dx,80
-	mul dx
-	mov bx,ax
+	mov dx,ax
 ;
-	mov ax,ds:m_horiz_pos
-	div ds:m_horiz_mickey
+	SetCursorPosition
+	GetCharAttrib
+	push ax
+	mov al,bh
+	SetForeColor
+	mov al,bl
+	SetBackColor
+	pop ax
+	WriteChar
 ;
-	add bx,ax
-	add bx,bx
-	inc bx
-	mov ax,dosB800
-	mov ds,ax
-	mov al,[bx]
-	not al
-	mov [bx],al
+	pop dx
+	pop cx
+	SetCursorPosition
 
 hide_marker_done:
 	pop dx
+	pop cx
 	pop bx
 	pop ax
 	pop ds
@@ -114,33 +125,44 @@ show_marker	PROC near
 	push ds
 	push ax
 	push bx
+	push cx
 	push dx
 ;
 	mov ax,m_cursor_flag
 	or ax,ax
 	jz show_marker_done
 ;
+	GetCursorPosition
+	push cx
+	push dx
+;
+	mov ax,ds:m_horiz_pos
+	xor dx,dx
+	div ds:m_horiz_mickey
+	mov cx,ax
+;
 	mov ax,ds:m_vert_pos
 	xor dx,dx
 	div ds:m_vert_mickey
-	mov dx,80
-	mul dx
-	mov bx,ax
+	mov dx,ax
 ;
-	mov ax,ds:m_horiz_pos
-	div ds:m_horiz_mickey
+	SetCursorPosition
+	GetCharAttrib
+	push ax
+	mov al,bh
+	SetForeColor
+	mov al,bl
+	SetBackColor
+	pop ax
+	WriteChar
 ;
-	add bx,ax
-	add bx,bx
-	inc bx
-	mov ax,dosB800
-	mov ds,ax
-	mov al,[bx]
-	not al
-	mov [bx],al
+	pop dx
+	pop cx
+	SetCursorPosition
 
 show_marker_done:
 	pop dx
+	pop cx
 	pop bx
 	pop ax
 	pop ds
