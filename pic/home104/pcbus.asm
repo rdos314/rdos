@@ -87,6 +87,10 @@ WAIT:
     btfsc STATUS,Z
     goto WAIT
 ;
+    call CmdProc
+    goto WAIT    
+
+CmdProc:
 	movf CMD,W
 	andlw 7
 	addwf PCL,F
