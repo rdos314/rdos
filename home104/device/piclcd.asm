@@ -40,8 +40,11 @@ INCLUDE ..\..\kernel\video.inc
 
 data_seg    STRUC
 
-PicThread1  DW ?
+PicThread   DW ?
+PicStatus   DB ?
 PicVal1     DB ?
+PicVal2     DB ?
+PicVal3     DB ?
 
 data_seg    ENDS
 
@@ -791,18 +794,47 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pic_int Proc far
+
+pic_int_loop:
     mov dx,3B2h
     in al,dx
     test al,2
-    jnz pic_int_done
+    jnz pic_int_not1
 ;
     mov dx,3BAh
 	in al,dx
 	mov ds:PicVal1,al
+	or ds:PicStatus,2
 ;	
-	mov bx,ds:PicThread1
+	mov bx,ds:PicThread
 	Signal
-	jmp pic_int
+	jmp pic_int_loop
+
+pic_int_not1:
+    test al,4
+    jnz pic_int_not2
+;    
+    mov dx,3BCh
+	in al,dx
+	mov ds:PicVal2,al
+	or ds:PicStatus,4
+;	
+	mov bx,ds:PicThread
+	Signal
+	jmp pic_int_loop
+
+pic_int_not2:
+    test al,8
+    jnz pic_int_done
+;    
+    mov dx,3BEh
+	in al,dx
+	mov ds:PicVal3,al
+	or ds:PicStatus,8
+;	
+	mov bx,ds:PicThread
+	Signal
+	jmp pic_int_loop
 
 pic_int_done:
     ret
@@ -824,16 +856,63 @@ test_thread	proc far
     mov ds,ax
 ;    
     GetThread
-    mov ds:PicThread1,ax
+    mov ds:PicThread,ax
+    mov ds:PicStatus,0
+;    
+    mov dx,3BAh
+	in al,dx
+;    
+    mov dx,3BCh
+	in al,dx
+;
+    mov dx,3BEh
+    in al,dx
 ;    
     ClearSignal
-
-test_thread_loop:
+;    
 	mov al,55h
 	mov dx,3BAh
 	out dx,al
-	WaitForSignal
+;
+    mov al,0AAh
+    mov dx,3BCh
+    out dx,al
+;
+    mov al,0
+    mov dx,3BEh
+    out dx,al
+
+test_thread_loop:
+    xor ah,ah
+    xchg ah,ds:PicStatus
+    test ah,2
+    jz test_thread_not2
+; 
+	mov al,55h
+	mov dx,3BAh
+	out dx,al
 	mov al,ds:PicVal1
+
+test_thread_not2:
+    test ah,4
+    jz test_thread_not3
+;
+    mov al,0AAh
+    mov dx,3BCh
+    out dx,al
+	mov al,ds:PicVal2
+
+test_thread_not3:	
+    test ah,4
+    jz test_thread_not4
+;
+    mov al,0
+    mov dx,3BEh
+    out dx,al
+	mov al,ds:PicVal3
+
+test_thread_not4:
+	WaitForSignal
     jmp test_thread_loop
 	ret
 test_thread	endp
@@ -900,7 +979,7 @@ init	PROC far
 	mov eax,SIZE data_seg
 	mov bx,piclcd_data_sel
 	AllocateFixedSystemMem
-	mov es:PicThread1,0
+	mov es:PicThread,0
 ;
 	mov ax,cs
 	mov ds,ax
