@@ -244,7 +244,7 @@ void __stdcall RdosSetEnvData(int handle, const char *buf);
 int __stdcall RdosOpenSysIni();
 void __stdcall RdosCloseIni(int handle);
 int __stdcall RdosGotoIniSection(int handle, const char *name);
-int __stdcall RdosRemoveIniSection(int handle, const char *name);
+int __stdcall RdosRemoveIniSection(int handle);
 int __stdcall RdosReadIni(int handle, const char *var, char *str, int maxsize);
 int __stdcall RdosWriteIni(int handle, const char *var, const char *str);
 int __stdcall RdosDeleteIni(int handle, const char *var);

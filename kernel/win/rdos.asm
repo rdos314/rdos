@@ -5132,7 +5132,6 @@ _RdosGotoIniSection	Endp
 ;       DESCRIPTION:    Remove ini section
 ;
 ;		PARAMETERS:		handle
-;						SectionName
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5141,12 +5140,9 @@ _RdosGotoIniSection	Endp
 _RdosRemoveIniSection	Proc far
 	push bp
 	mov bp,sp
-	push es
 	push bx
-	push di
 ;
 	mov bx,[bp+6]
-	les di,[bp+8]
 	RemoveIniSection
 	jc risFail
 ;
@@ -5157,9 +5153,7 @@ risFail:
 	xor ax,ax
 
 risDone:
-	pop di
 	pop bx
-	pop es
 	pop bp
 	ret
 _RdosRemoveIniSection	Endp

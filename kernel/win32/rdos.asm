@@ -5757,7 +5757,6 @@ RdosGotoIniSection	Endp
 ;       DESCRIPTION:    Remove ini section
 ;
 ;		PARAMETERS:		handle
-;					    SectionName
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -5767,10 +5766,8 @@ RdosRemoveIniSection	Proc near
 	push ebp
 	mov ebp,esp
 	push ebx
-	push edi
 ;
 	mov ebx,[ebp+8]
-	mov edi,[ebp+12]
 	UserGate remove_ini_section_nr
 	jc risFail
 ;
@@ -5781,10 +5778,9 @@ risFail:
 	xor eax,eax
 
 risDone:
-	pop edi
 	pop ebx
 	pop ebp
-	ret 8
+	ret 4
 RdosRemoveIniSection	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

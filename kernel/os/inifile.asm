@@ -49,8 +49,10 @@ ih_file_size    DD ?
 ih_mmap_handle	DW ?
 ih_name_sel     DW ?
 ih_name_size    DD ?
+ih_sect_start   DD ?
 ih_sect_base	DD ?
 ih_sect_size	DD ?
+ih_entry_start  DD ?
 ih_entry_base	DD ?
 ih_entry_size	DD ?
 
@@ -276,6 +278,7 @@ UnlockIni	Endp
 FindIniSection Proc near
     push ds
     push es
+    push fs
     push ax
     push esi
 ;
@@ -283,7 +286,7 @@ FindIniSection Proc near
 	mov es,ax
 	mov edi,ds:[bx].ih_base
 	mov ecx,ds:[bx].ih_file_size
-	mov ds,ds:[bx].ih_name_sel
+	mov fs,ds:[bx].ih_name_sel
 ;	
     or ecx,ecx
     stc
@@ -293,6 +296,7 @@ FindIniSection Proc near
     cmp al,'['
     jne FindIniSectionScan
 ;
+    mov ds:[bx].ih_sect_start,edi
     inc edi
     dec ecx
     jmp FindIniSectionCheck
@@ -304,6 +308,10 @@ FindIniSectionScan:
 	stc
 	jne FindIniSectionDone
 ;	
+    mov eax,edi
+    dec eax
+    mov ds:[bx].ih_sect_start,eax
+;
     mov al,es:[edi-2]
     cmp al,0Dh
     je FindIniSectionCheck
@@ -312,11 +320,11 @@ FindIniSectionScan:
 
 FindIniSectionCheck:
 	xor esi,esi
-	repe cmps byte ptr ds:[esi],es:[edi]
+	repe cmps byte ptr fs:[esi],es:[edi]
 	dec esi
 	dec edi
 	inc ecx
-	lods byte ptr [esi]
+	lods byte ptr fs:[esi]
 	or al,al
 	jne FindIniSectionScan
 ;
@@ -356,6 +364,7 @@ FindIniSectionSize:
 FindIniSectionDone:
     pop esi
     pop ax
+    pop fs
     pop es
     pop ds
     ret
@@ -368,7 +377,8 @@ FindIniSection Endp
 ;
 ;       DESCRIPTION:    Find key in section
 ;
-;		PARAMETERS:		FS:ESI      Key name
+;		PARAMETERS:		DS:BX	    Handle data
+;                       FS:ESI      Key name
 ;                       EDI         Start of section
 ;                       ECX         Size of section
 ;
@@ -403,6 +413,7 @@ FindIniKeyControlPass:
 	jmp FindIniKeyDone
 	
 FindIniKeyScan:
+    mov ds:[bx].ih_entry_start,edi
 	push esi
 	repe cmps byte ptr fs:[esi],es:[edi]
 	dec esi
@@ -1014,19 +1025,102 @@ goto_ini_section32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           DeleteSection
+;
+;       DESCRIPTION:    Delete entire section
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       EDI         Start of section
+;                       ECX         Size of section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteSection	Proc near
+    push es
+    push ax
+    push ecx
+    push esi
+    push edi
+;	
+    or ecx,ecx
+    jz dsDone
+;
+    mov ax,flat_data_sel
+    mov es,ax
+;
+    push ecx
+    mov esi,edi
+    add esi,ecx
+    mov ecx,ds:[bx].ih_file_size
+    sub ecx,esi
+    add ecx,ds:[bx].ih_base
+    rep movs byte ptr es:[edi],es:[esi]
+    pop ecx
+    mov al,' '
+    rep stos byte ptr es:[edi]
+
+dsDone:
+    pop edi
+    pop esi
+    pop ecx
+    pop ax
+    pop es
+	ret
+DeleteSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RemoveIniSection
 ;
 ;       DESCRIPTION:    Remove a ini section
 ;
 ;       PARAMETERS:     BX          Ini handle
-;                       ES:(E)DI    Section name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_ini_section_name	DB 'Remove Ini Section', 0
 
 remove_ini_section	Proc near
+    push ds
+    push eax
+    push bx
+    push esi
+;
+    push ecx
+    push edi
+;
+	mov ax,INI_HANDLE
+	DerefHandle
+	jc rmiDone
+;
+    mov ax,ds:[bx].ih_name_sel
+    or ax,ax
     stc
+    jz rmiDone
+;
+    call LockIni
+    call FindIniSection    
+    jc rmiDone
+;
+    mov eax,edi
+    sub eax,ds:[bx].ih_sect_start
+;
+    sub edi,eax
+    add ecx,eax
+	call DeleteSection
+
+rmiDone:
+    pop edi
+    pop ecx
+    pushf
+    call UnlockIni
+    popf
+;    
+    pop esi
+    pop bx
+    pop eax
+    pop ds
     ret
 remove_ini_section    Endp
 
@@ -1194,6 +1288,41 @@ GetEntrySize	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetDataSize
+;
+;       DESCRIPTION:    Get required size of data
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       ES:EBP	    Buffer
+;
+;		RETURNS:		ECX			Required size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDataSize	Proc near
+	push ax
+    push ebp
+;
+	xor ecx,ecx
+
+gdsBufLoop:
+    mov al,es:[ebp]
+    or al,al
+    je gdsSizeOk
+;    
+    inc ebp
+    inc ecx
+    jmp gdsBufLoop
+
+gdsSizeOk:
+    pop ebp
+	pop ax
+	ret
+GetDataSize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           DeleteEntryData
 ;
 ;       DESCRIPTION:    Delete entry data part
@@ -1214,16 +1343,21 @@ DeleteEntryData	Proc near
     mov ax,flat_data_sel
     mov es,ax
     call FindKeySize
+    or ecx,ecx
+    jz dedDone
+;
     push ecx
     mov esi,edi
     add esi,ecx
     mov ecx,ds:[bx].ih_file_size
     sub ecx,esi
+    add ecx,ds:[bx].ih_base
     rep movs byte ptr es:[edi],es:[esi]
     pop ecx
     mov al,' '
     rep stos byte ptr es:[edi]
-;
+
+dedDone:
     pop edi
     pop esi
     pop ecx
@@ -1231,6 +1365,55 @@ DeleteEntryData	Proc near
     pop es
 	ret
 DeleteEntryData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MoveForData
+;
+;       DESCRIPTION:    Move to make space for data
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       FS:ESI      Var name
+;                       ES:EBP	    Buffer
+;                       EDI         Insert point
+;                       ECX         Space needed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveForData	Proc near
+    push es
+	push eax
+	push ecx
+	push esi
+	push edi
+;
+    mov esi,ds:[bx].ih_base
+    add esi,ds:[bx].ih_file_size
+	cmp edi,esi
+	je mfeDone
+;
+    dec esi
+    mov ax,flat_data_sel
+    mov es,ax
+    mov eax,esi
+    sub esi,ecx
+    mov ecx,esi
+    sub ecx,edi
+    mov edi,eax
+    inc ecx
+    std
+    rep movs byte ptr es:[edi],es:[esi]
+    cld
+
+mfdDone:
+	pop edi
+	pop esi
+	pop ecx
+	pop eax
+	pop es
+	ret
+MoveForData	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1246,18 +1429,19 @@ DeleteEntryData	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CacheEntryAttrib	Proc near
+    push es
 	push ax
 	push ecx
 	push edi
 ;
-    mov ax,flat_data_sel
-    mov es,ax
     call GetIniFreeSize
 	mov edi,ds:[bx].ih_base
 	add edi,ds:[bx].ih_file_size
 	sub edi,ecx
 	dec edi
 	call GetEntrySize
+    mov ax,flat_data_sel
+    mov es,ax
 	add ecx,2
 	mov al,es:[edi]
 	cmp al,0Ah
@@ -1280,6 +1464,7 @@ ceaDone:
 	pop edi
 	pop ecx
 	pop ax
+	pop es
 	ret
 CacheEntryAttrib	Endp
 
@@ -1293,6 +1478,7 @@ CacheEntryAttrib	Endp
 ;       PARAMETERS:     DS:BX       Ini handle data
 ;                       FS:ESI      Var name
 ;                       ES:EBP	    Buffer
+;                       ECX         Space needed
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1395,6 +1581,42 @@ AddEntry	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           AddData
+;
+;       DESCRIPTION:    Add data
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       ES:EBP	    Buffer
+;                       EDI         Insert point
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddData	Proc near
+	push ds
+	pushad
+;
+	mov ax,flat_data_sel
+	mov ds,ax
+
+adBufLoop:
+    mov al,es:[ebp]
+    or al,al
+    je adDone
+;    
+	mov ds:[edi],al
+    inc ebp
+    inc edi
+    jmp adBufLoop
+
+adDone:
+	popad
+	pop ds
+	ret
+AddData	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WriteIni
 ;
 ;       DESCRIPTION:    Write ini var
@@ -1444,8 +1666,23 @@ wiFindVar:
     jc wiAdd
 
 wiRepl:
-    int 3
     call DeleteEntryData
+    call GetDataSize
+    mov edx,ecx
+    call GetIniFreeSize
+    cmp ecx,edx
+    jae wiReplDo
+;
+    sub ecx,edx
+    neg ecx
+    call GrowIni
+    jmp wiFindLoop
+
+wiReplDo:
+    mov ecx,edx
+    call MoveForData
+    call AddData
+    jmp wiDone
 
 wiAdd:
 	call CacheEntryAttrib
