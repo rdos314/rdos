@@ -844,6 +844,51 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;		NAME:			SignalTimeout
+;
+;		description:	Sends a signal when a timeout expires
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SignalTimeout	Proc far
+;    
+    mov dx,3BAh
+	in al,dx
+;    
+    mov dx,3BCh
+	in al,dx
+;
+    mov dx,3BEh
+    in al,dx
+;    
+	mov bx,piclcd_data_sel
+	mov ds,bx
+    mov bx,ds:PicThread
+    Signal
+    ret
+
+	
+	push eax
+	push edx
+	push cs
+	call near ptr pic_int
+	pop edx
+	pop eax
+	add eax,1193 * 100
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET SignalTimeout
+	mov bx,ds:PicThread
+	StartTimer	
+	ret
+SignalTimeout	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			Test thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -851,7 +896,9 @@ PAGE
 test_name	DB 'PICLCD',0
 
 test_thread	proc far
-    int 3
+    mov eax,4000
+    WaitMilliSec
+;    
     mov ax,piclcd_data_sel
     mov ds,ax
 ;    
@@ -912,7 +959,16 @@ test_thread_not3:
 	mov al,ds:PicVal3
 
 test_thread_not4:
+	GetSystemTime
+	add eax,1193 * 100
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET SignalTimeout
+	mov bx,ds:PicThread
+	StartTimer
 	WaitForSignal
+	StopTimer
     jmp test_thread_loop
 	ret
 test_thread	endp
