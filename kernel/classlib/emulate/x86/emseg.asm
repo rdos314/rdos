@@ -674,6 +674,7 @@ TransferReal	Proc near
 	movzx ebx,bx
 	shl ebx,4
 	mov [ebp].reg_cs.d_base,ebx
+	mov [ebp].reg_cs.d_access,ACCESS_READ OR ACCESS_WRITE
 	ret
 TransferReal	Endp
 

@@ -81,6 +81,7 @@
 	extrn EmCallFar:near
 	extrn EmCallFarMem:near
 	extrn EmRetFar:near
+	extrn EmRetFarN:near
 
 	extrn EmInt3:near
 	extrn EmInt:near

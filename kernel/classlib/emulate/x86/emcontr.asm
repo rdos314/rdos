@@ -457,7 +457,34 @@ EmRetNear	endp
 	public EmRetNearN
 
 EmRetNearN	proc near
-	int 3
+	test byte ptr [ebp].em_flags,d32
+	jnz EmRetNearN32
+
+EmRetNearN16:
+	call ReadCodeWord
+	push ax
+	call PopWord
+	movzx eax,ax
+	cmp eax,[ebp].reg_cs.d_limit
+	jnc AccessFault
+;
+	mov word ptr [ebp].reg_eip,ax
+	pop ax
+	movzx eax,ax
+	call AddToStack	
+	ret
+
+EmRetNearN32:
+	call ReadCodeWord
+	push ax
+	call PopDword
+	cmp eax,[ebp].reg_cs.d_limit
+	jnc AccessFault
+;
+	mov [ebp].reg_eip,eax
+	pop ax
+	movzx eax,ax
+	call AddToStack	
 	ret
 EmRetNearN	endp
 	
@@ -614,6 +641,42 @@ EmRetFar32:
 	call RetFar32
 	ret
 EmRetFar	endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EmRetFarN
+;
+;		DESCRIPTION:	EMULATE retf n
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public EmRetFarN
+
+EmRetFarN	proc near
+	test byte ptr [ebp].em_flags,d32
+	jnz EmRetFarN32
+
+EmRetFarN16:
+	call ReadCodeWord
+	push ax
+	xor cl,cl
+	call RetFar16
+	pop ax
+	movzx eax,ax
+	call AddToStack	
+	ret
+
+EmRetFarN32:
+	call ReadCodeWord
+	push ax
+	xor cl,cl
+	call RetFar32
+	pop ax
+	movzx eax,ax
+	call AddToStack	
+	ret
+EmRetFarN	endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

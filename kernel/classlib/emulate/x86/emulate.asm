@@ -963,7 +963,7 @@ emtC2	DD OFFSET EmRetNearN,			OFFSET EmRetNear
 emtC4	DD OFFSET EmLes,				OFFSET EmLds
 emtC6	DD OFFSET EmMoveByteImToMem,	OFFSET EmMoveWordImToMem
 emtC8	DD OFFSET EmEnter,				OFFSET EmLeave
-emtCA	DD OFFSET EmulateError,			OFFSET EmRetFar
+emtCA	DD OFFSET EmRetFarN,			OFFSET EmRetFar
 emtCC	DD OFFSET EmInt3,				OFFSET EmInt
 emtCE	DD OFFSET EmulateError,			OFFSET EmIret
 emtD0	DD OFFSET EmD0,					OFFSET EmD1

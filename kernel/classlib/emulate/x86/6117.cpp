@@ -915,10 +915,19 @@ char T6117::ReadFromMemory(unsigned long Address)
 	if (Ads >= 0x100000)
 		return ReadDram(Address);
 
-	if (Ads >= 0xC0000)
+	if (Ads >= 0xA0000)
 	{
 		switch (Ads & 0xF8000)
 		{
+			case 0xA0000:
+			case 0xA8000:
+			case 0xB0000:
+			case 0xB8000:
+				if ((FData[0x3C] & 8) && (FData[0x12] & 2))
+					break;
+				else
+					return TCpu::ReadFromMemory(Address);
+
 			case 0xC0000:
 				if (FData[0x14] & 1)
 					break;
@@ -1005,10 +1014,22 @@ void T6117::WriteToMemory(unsigned long Address, char Data)
 		return;
 	}
 
-	if (Ads >= 0xC0000)
+	if (Ads >= 0xA0000)
 	{
 		switch (Ads & 0xF8000)
 		{
+			case 0xA0000:
+			case 0xA8000:
+			case 0xB0000:
+			case 0xB8000:
+				if ((FData[0x3C] & 8) && (FData[0x12] & 2))
+					break;
+				else
+				{
+					TCpu::WriteToMemory(Address, Data);
+					return;
+				}
+
 			case 0xC0000:
 				if (FData[0x14] & 2)
 					break;
