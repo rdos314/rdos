@@ -49,8 +49,6 @@ attr_dir			EQU 10h
 attr_arcive			EQU 20h
 
 	extrn get_param:near
-	extrn allocate_sectors:near
-	extrn free_sectors:near
 
 	.386p
 
@@ -162,7 +160,7 @@ get_cur_dir	PROC far
 	mov cx,1
 	mov bp,sp
 alloc_loop:
-	call allocate_sectors
+;	call allocate_sectors
 	push edx
 	inc cx
 	cmp cx,25
@@ -171,7 +169,7 @@ alloc_loop:
 free_loop:
 	sub bp,4
 	mov edx,[bp]
-	call free_sectors
+;	call free_sectors
 	inc cx
 	cmp cx,25
 	jne free_loop
