@@ -827,6 +827,10 @@ init	PROC far
 	mov di,OFFSET init_focus
 	HookEnableFocus
 ;
+	mov dx,3B3h
+	xor al,al
+	out dx,al
+;
 	mov ax,cs
 	mov es,ax	
 	mov ax,3

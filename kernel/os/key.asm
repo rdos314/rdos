@@ -1162,6 +1162,7 @@ keyb_int_loop:
 	or al,al
 	je keyb_int_loop
 ;
+	int 3
 	test ds:status,status_key_req
 	jz keyb_int_not_resend
 ;
@@ -1250,22 +1251,6 @@ init_keyb_thread	PROC far
 	push ds
 	push es
 	pusha
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-;
-    mov ax,start_keyboard_nr
-    IsValidOsGate
-    jc keyb_started
-;
-    StartKeyboard
-
-keyb_started:    
-	mov si,OFFSET mode_pr
-	mov di,OFFSET mode_name
-	mov cx,500
-	mov ax,4
-	CreateThread
 ;
 	mov bx,pc_key_data_sel
 	mov ds,bx
@@ -1274,6 +1259,22 @@ keyb_started:
 	mov es,bx
 	mov di,OFFSET keyb_int
 	RequestPrivateIrqHandler
+;
+    mov ax,start_keyboard_nr
+    IsValidOsGate
+    jc keyb_started
+;
+    StartKeyboard
+
+keyb_started:    
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET mode_pr
+	mov di,OFFSET mode_name
+	mov cx,500
+	mov ax,4
+	CreateThread
 ;
 	popa
 	pop es

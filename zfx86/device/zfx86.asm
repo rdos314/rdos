@@ -52,6 +52,57 @@ ReadSIO    Macro index
     in al,2Fh
         ENDM
 
+WriteZflByte    Macro index, data
+    mov al,index
+    mov dx,218h
+    out dx,al
+    mov al,data
+    inc dx
+    out dx,al
+                Endm
+
+ReadZflByte Macro index
+    mov al,index
+    mov dx,218h
+    out dx,al
+    inc dx
+    in al,dx
+            Endm
+
+WriteZflWord    Macro index, data
+    mov al,index
+    mov dx,218h
+    out dx,al
+    mov ax,data
+    mov dx,21Ah
+    out dx,ax
+                Endm
+
+ReadZflWord Macro index
+    mov al,index
+    mov dx,218h
+    out dx,al
+    mov dx,21Ah
+    in ax,dx
+            Endm
+
+WriteZflDword   Macro index, data
+    mov al,index
+    mov dx,218h
+    out dx,al
+    mov eax,data
+    mov dx,21Ah
+    out dx,eax
+                Endm
+
+ReadZflDword    Macro index
+    mov al,index
+    mov dx,218h
+    out dx,al
+    mov dx,21Ah
+    in eax,dx
+                Endm  
+
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
@@ -168,8 +219,43 @@ start_keyboard	Proc far
     WriteSIO 63h, 64h
     WriteSIO 70h, 1
     WriteSIO 71h, 2
+;
+	cli
+	mov al,0EDh
+	out 60h,al
+
+send_wait1:
+	in al,64h
+	test al,2
+	jnz send_wait1
+;
+	mov al,6
+	out 60h,al
+
+send_wait2:
+	in al,64h
+	test al,2
+	jnz send_wait2
+
+wait_key:
+	in al,64h
+	test al,1
+	jz wait_key
+;
+	in al,60h
+	mov ah,al
+	in al,64h
+	mov si,ax
+;
+	in al,21h
+	mov ah,al
+	in al,20h
+	mov di,ax
+;	
+	int 3
 	ret
 start_keyboard	Endp
+
 
 PAGE
 	
@@ -236,77 +322,6 @@ stop_floppy	Proc far
 	ret
 stop_floppy	Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Init_test
-;
-;		DESCRIPTION:    init test
-;
-;       PARAMETERS:     
-;
-;		RETURNS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-thread1_name    DB 'Thread 1',0
-
-thread1:
-	int 3
-	finit
-	fldln2
-	fldpi
-;
-    mov ax,10
-    WaitMilliSec
-    int 3
-	fmul st(1),st(0)
-	retf
-
-thread2_name    DB 'Thread 2',0
-
-thread2:
-    int 3
-    finit
-    fldpi
-    fld1
-;
-    mov ax,20
-    WaitMilliSec
-    int 3
-    fadd st(1),st(0)
-    retf
-
-init_test	Proc far
-	push ds
-	push es
-	pusha
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET thread1
-	mov di,OFFSET thread1_name
-	mov ax,3
-	mov cx,256
-	CreateThread
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET thread2
-	mov di,OFFSET thread2_name
-	mov ax,3
-	mov cx,256
-	CreateThread
-;
-	popa
-	pop es
-	pop ds
-	ret
-init_test	Endp
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -331,9 +346,6 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-;	mov di,OFFSET init_test
-;	HookInitTasking
 ;
 	mov si,OFFSET start_com_port
 	mov di,OFFSET start_com_port_name

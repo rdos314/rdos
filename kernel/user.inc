@@ -1639,4 +1639,10 @@ HideSprite      MACRO
 MoveSprite      MACRO
 	UserGate move_sprite_nr
 						ENDM
+
+;	IN  AX		AD channel
+;   OUT	EAX     Value
+ReadAD      MACRO
+	UserGate read_ad_nr
+						ENDM
 						

@@ -673,9 +673,9 @@ remove_next_waiting:
 	mov [si],di
 	mov si,es:p_next
 	mov ds,di
-	mov p_next,si
+	mov ds:p_next,si
 	mov ds,si
-	mov p_prev,di
+	mov ds:p_prev,di
 	pop ds
 	pop di
 	pop si
