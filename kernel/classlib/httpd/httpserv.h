@@ -59,6 +59,15 @@ public:
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual void HandleSocket();
 
+    void Write(char ch);
+    void Write(const char *str);
+    void Write(const char *buf, int size);
+    void Push();
+
+	int IsOpen();
+//	int Read(char *buf, int size);
+    char *ReadLine();
+
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 
     static int IsEmpty(const char *s);
@@ -71,6 +80,13 @@ public:
     static int MatchToken(char **Xp, const char *word, int len);
 
 	TString RootDir;
+
+protected:
+
+    char *FSocketBuf;
+    int FBufCount;
+    int FBufPos;
+    
 };
 
 #endif

@@ -249,6 +249,7 @@ int THttpSocketServer::MatchToken(char **Xp, const char *word, int len)
 THttpSocketServer::THttpSocketServer()
 {
 	OnCommand = 0;
+	FSocketBuf = 0;
 }
 
 /*##########################################################################
@@ -264,6 +265,8 @@ THttpSocketServer::THttpSocketServer()
 ##########################################################################*/
 THttpSocketServer::~THttpSocketServer()
 {
+    if (FSocketBuf)
+        delete FSocketBuf;
 }
 
 /*##########################################################################
@@ -284,6 +287,172 @@ void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : THttpSocketServer::Write
+#
+#   Purpose....: Write character to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServer::Write(char ch)
+{
+	char str[2];
+
+	str[0] = ch;
+	str[1] = 0;
+
+	if (FSocket->IsOpen())
+		FSocket->Write(str, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::Write
+#
+#   Purpose....: Write string to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServer::Write(const char *str)
+{
+	int size = strlen(str);
+
+	if (FSocket->IsOpen())
+		FSocket->Write(str, size);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::Write
+#
+#   Purpose....: Write buffer to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServer::Write(const char *buf, int size)
+{
+	if (FSocket->IsOpen())
+		FSocket->Write(buf, size);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::Push
+#
+#   Purpose....: Push data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServer::Push()
+{
+    FSocket->Push();
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::IsOpen
+#
+#   Purpose....: Check if data socket is open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpSocketServer::IsOpen()
+{
+	return FSocket->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::ReadLine
+#
+#   Purpose....: Read a single line from socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+char *THttpSocketServer::ReadLine()
+{
+#define BUF_SIZE	513
+	char *ptr;
+	char *result;
+	int pos;
+
+	if (FSocketBuf == 0)
+	{
+		FSocketBuf = new char[BUF_SIZE + 1];
+		FBufCount = 0;
+		FBufPos = 0;
+	}
+
+	if (FBufCount <= FBufPos)
+	{
+		FBufPos -= FBufCount;
+
+		if (FSocket->Poll())
+		{
+			FBufCount = FSocket->Read(FSocketBuf, BUF_SIZE);
+			FSocketBuf[FBufCount] = 0;
+
+			if (OnCommand)
+				(*OnCommand)(this, FSocketBuf);
+		}
+		else
+			return 0;
+	}
+
+	ptr = strchr(&FSocketBuf[FBufPos], 0xd);
+
+	while (!ptr)
+	{
+		if (FBufPos == 0)
+			return 0;
+
+		if (FSocket->Poll() == 0)
+		{
+			result = &FSocketBuf[FBufPos];
+			FBufPos = 0;
+			FBufCount = 0;
+			return result;
+		}
+
+		memcpy(FSocketBuf, &FSocketBuf[FBufPos], FBufCount - FBufPos);
+		FBufCount -= FBufPos;
+		FBufPos = 0;
+		pos = FBufCount;
+		FBufCount += FSocket->Read(&FSocketBuf[pos], BUF_SIZE - FBufCount);
+		FSocketBuf[FBufCount] = 0;
+
+		if (OnCommand)
+			(*OnCommand)(this, &FSocketBuf[pos]);
+
+		ptr = strchr(&FSocketBuf[pos], 0xd);
+	}
+
+	*ptr = 0;
+	result = &FSocketBuf[FBufPos];
+	FBufPos = ptr - FSocketBuf + 2;
+
+	return result;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpSocketServer::HandleSocket
 #
 #   Purpose....: Handle socket
@@ -296,7 +465,6 @@ void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 void THttpSocketServer::HandleSocket()
 {
 	int count;
-	char Buf[2049];
 	THttpCommand *cmd;
 	char *ptr;
 
@@ -304,23 +472,15 @@ void THttpSocketServer::HandleSocket()
 	{
 		while (FSocket->IsOpen())
 		{
-			count = FSocket->Read(Buf, 2048);
-			Buf[count] = 0;
-
-			if (count == 0)
-				break;
-
-            if (OnCommand)
-                (*OnCommand)(this, Buf);
-
-			ptr = strchr(Buf, 0xd);
-			if (ptr)
-			    *ptr = 0;
-
-			cmd = THttpCommandFactory::Parse(this, Buf);
-
-			if (cmd)
-				cmd->Run(ptr + 2);
+		    ptr = ReadLine();
+		    if (ptr)
+		    {
+                cmd = THttpCommandFactory::Parse(this, ptr);
+    			if (cmd)
+	    			cmd->Run();
+	    	}
+	    	else
+	    	    break;
 		}
 	}
 }

@@ -20,50 +20,44 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpfact.h
-# HTTP Command factory base class
+# httpopt.h
+# Http option base class
 #
 ########################################################################*/
 
-#ifndef _HTTPFACT_H
-#define _HTTPFACT_H
+#ifndef _HTTPOPT_H
+#define _HTTPOPT_H
 
-#include "httpcmd.h"
+#include "file.h"
+#include "path.h"
+#include "httppars.h"
 
-class THttpSocketServer;
+class THttpArg;
 
-class THttpCommandFactory
+class THttpOption : public THttpParser
 {
-public:
-	THttpCommandFactory(const char *name);
-	virtual ~THttpCommandFactory();
+	friend class THttpCommand;
 
-	static THttpCommand *Parse(THttpSocketServer *Server, const char *line);
+public:
+    THttpOption(const char *Name, char *Param);
+	virtual ~THttpOption();
+
+	virtual int IsArgDelim(char ch);
+
+	static int ErrorLevel;
 
 protected:
-	virtual THttpCommand *Create(THttpSocketServer *Server, const char *param) = 0;
+    void AddArg(const char *name);
+    void AddArg(char *sBeg, char **sEnd);
+    void Split(char *s);
+    int Parse(void *arg);
+    int ScanCmdLine(char *line, void *arg);
 
-	void InsertCommand();
-	void RemoveCommand();
-
-	static THttpCommandFactory *FCmdList;
-	THttpCommandFactory *FList;
 	TString FName;
-};
-
-class THttpSocketServerFactory : public TSocketServerFactory
-{
-public:
-	THttpSocketServerFactory::THttpSocketServerFactory();
-
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
-
-	void (*OnCommand)(THttpSocketServer *server, const char *str);
-
-protected:
-	void Init();
+	THttpOption *FList;
+	
+	THttpArg *FArgList;
+	int FArgCount;
 };
 
 #endif

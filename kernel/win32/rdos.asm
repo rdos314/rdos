@@ -5086,6 +5086,33 @@ RdosPushTcpConnection	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosPollTcpConnection
+;
+;		DESCRIPTION:	Poll connection
+;
+;		PARAMETER:		Handle
+;
+;       RETURNS:        Available bytes in receive buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPollTcpConnection
+
+RdosPollTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate poll_tcp_connection_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosPollTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosIsTcpConnectionClosed
 ;
 ;		DESCRIPTION:	Check if other side closed the connection

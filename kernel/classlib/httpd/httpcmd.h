@@ -32,6 +32,7 @@
 #include "path.h"
 #include "httppars.h"
 #include "httpserv.h"
+#include "httpopt.h"
 
 class THttpArg
 {
@@ -52,23 +53,29 @@ public:
     THttpCommand(THttpSocketServer *Server, const char *param);
 	virtual ~THttpCommand();
 
-	void Run(char *opt);
-	virtual void Execute(char *param) = 0;
+	void Run();
+	virtual void Execute(const char *Name) = 0;
 
 	static int ErrorLevel;
 
 protected:
     void AddArg(const char *name);
     void AddArg(char *sBeg, char **sEnd);
-    void Split(char *s);
-    int Parse(void *arg);
-    int ScanCmdLine(char *line, void *arg);
+	void Split(char *s);
+	int Parse(void *arg);
+	int ScanCmdLine(char *line, void *arg);
+
+    char *SkipOptDelim(char *p);
+	void AddOpt(char *name, char *param);
 
 	TString FCmdLine;
 	THttpCommand *FList;
 	
 	THttpArg *FArgList;
 	int FArgCount;
+
+	THttpOption *FOptList;
+	int FOptCount;
 
 	THttpSocketServer *FServer;
 };

@@ -115,30 +115,6 @@ void THttpCommandFactory::RemoveCommand()
 		prev->FList = ptr->FList;
 }
 
-/*##################  THttpCommandFactory::PassAll  ##########################
-*   Purpose....: Pass all characters to commandline                         #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-int THttpCommandFactory::PassAll()
-{
-	 return FALSE;
-}
-
-/*##################  THttpCommandFactory::PassDir  ##########################
-*   Purpose....: Pass dir characters to commandline                         #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-int THttpCommandFactory::PassDir()
-{
-	 return FALSE;
-}
-
 /*##################  THttpCommandFactory::Parse  ##########################
 *   Purpose....: Parse a command line and return a command class	    	#
 *   In params..: *                                                          #
@@ -205,14 +181,7 @@ THttpCommand *THttpCommandFactory::Parse(THttpSocketServer *Server, const char *
 
 	if (factory)
 	{
-		done = factory->PassAll();
-
-		if (!done && factory->PassDir())
-			done = *rest == '/' || *rest == '.' || *rest == ':';
-
-		if (!done)
-			done = (!*rest || *rest == '/');
-
+		done = *rest == 0 || *rest == '/' || *rest == '.' || *rest == ':';
 		if (!done)
 			if (THttpSocketServer::IsArgDelim(*rest))
 				rest = THttpSocketServer::LTrim(rest);

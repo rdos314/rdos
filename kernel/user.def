@@ -329,9 +329,12 @@ get_remote_tcp_connection_ip_nr        = 284
 get_remote_tcp_connection_port_nr      = 285
 get_local_tcp_connection_port_nr       = 286
 
-enable_auto_rts_nr          EQU 287
-disable_auto_rts_nr         EQU 288
+enable_auto_rts_nr          = 287
+disable_auto_rts_nr         = 288
 
-put_keyboard_code_nr        EQU 289
+put_keyboard_code_nr        = 289
+
+poll_tcp_connection_nr		= 290
+
 
 usergate_entries			= 300

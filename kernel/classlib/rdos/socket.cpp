@@ -504,6 +504,21 @@ void TSocket::Write(const char *str)
         RdosWriteTcpConnection(FHandle, str, strlen(str));
 }
 
+/*##################  TSocket::Poll  ############################
+*   Purpose....: Check available bytes in receive buffer	                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::Poll()
+{
+	if (FHandle)
+		return RdosPollTcpConnection(FHandle);
+	else
+		return 0;
+}
+
 /*##########################################################################
 #
 #   Name       : TSocket::WaitForChar

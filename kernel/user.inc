@@ -969,6 +969,12 @@ PushTcpConnection		MACRO
 	UserGate push_tcp_connection_nr
 			ENDM
 
+; IN  BX		connection handle
+; OUT (E)AX     number of available bytes in buffer
+PollTcpConnection		MACRO
+	UserGate poll_tcp_connection_nr
+			ENDM
+
 ; OUT EDX		My IP address
 GetIpAddress	MACRO
 	UserGate get_ip_address_nr

@@ -58,6 +58,7 @@ public:
 	void Write(const char *buf, int count);
 	void Write(const char *str);
 
+	int Poll();
 	int WaitForChar(long Timeout);
 	char Read();
 	int Read(char *buf, int size);

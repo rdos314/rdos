@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpcmd.cpp
-# HTTP Command base class
+# httpopt.cpp
+# HTTP Option base class
 #
 ########################################################################*/
 
@@ -29,51 +29,17 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "httpopt.h"
 #include "httpcmd.h"
-#include "httpserv.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-int THttpCommand::ErrorLevel = 0;
+int THttpOption::ErrorLevel = 0;
 
 /*##########################################################################
 #
-#   Name       : THttpArg::THttpArg
-#
-#   Purpose....: Constructor for THttpArg
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpArg::THttpArg(const char *name)
-  : FName(name)
-{
-    ptr = (char *)FName.GetData();
-    
-    FList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpArg::~THttpArg
-#
-#   Purpose....: Destructor for THttpArg
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpArg::~THttpArg()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::THttpCommand
+#   Name       : THttpOption::THttpOption
 #
 #   Purpose....: Constructor for command
 #
@@ -82,35 +48,17 @@ THttpArg::~THttpArg()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCommand::THttpCommand(THttpSocketServer *Server)
+THttpOption::THttpOption(const char *Name, char *Param)
+  : FName(Name)
 {
-    FServer = Server;
     FArgList = 0;
+
+	ScanCmdLine(Param, 0);
 }
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::THttpCommand
-#
-#   Purpose....: Constructor for command
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpCommand::THttpCommand(THttpSocketServer *Server, const char *param)
-  : FCmdLine(param)
-{
-    FServer = Server;
-    FArgList = 0;
-	FOptCount = 0;
-	FOptList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::~THttpCommand
+#   Name       : THttpOption::~THttpOption
 #
 #   Purpose....: Destructor for command
 #
@@ -119,10 +67,9 @@ THttpCommand::THttpCommand(THttpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCommand::~THttpCommand()
+THttpOption::~THttpOption()
 {
     THttpArg *arg;
-    THttpOption *opt;
 
     arg = FArgList;
     while (arg)
@@ -131,114 +78,27 @@ THttpCommand::~THttpCommand()
         delete arg;
         arg = FArgList;
 	}
-
-    opt = FOptList;
-    while (opt)
-    {
-        FOptList = opt->FList;
-        delete opt;
-        opt = FOptList;
-	}
 }
 
 /*##########################################################################
 #
-#   Name       : THttpParser::SkipOptDelim
+#   Name       : THttpOption::IsArgDelim
 #
-#   Purpose....: Skip to next option delimiter
+#   Purpose....: Check for argument delimiter
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-char *THttpCommand::SkipOptDelim(char *p)
+int THttpOption::IsArgDelim(char ch)
 {
-	int ch, quote;
-	int more;
-
-	quote = 0;
-	for (;;)
-	{
-		ch = *p;
-
-		if (!ch)
-			break;
-
-		more = !(iscntrl(ch) || ch == ':');
-
-		if (!quote && !more)
-			break;
-
-		if (quote == ch)
-			quote = 0;
-		else
-			if (strchr("\"", ch))
-				quote = ch;
-		p++;
-	}
-	return p;
-}
-
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::Run
-#
-#   Purpose....: Run command
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpCommand::Run()
-{
-	char *param;
-	char *ptr;
-	int size;
-	THttpArg *arg;
-	int ArgCount;
-	char *start;
-
-    ptr = FServer->ReadLine();
-	while (ptr && *ptr != 0)
-	{
-        start = SkipOptDelim(ptr);
-        if (*start == ':')
-        {
-            *start = 0;
-            start++;
-            AddOpt(ptr, start);
-        }
-            
-	    ptr = FServer->ReadLine();
-	}
-
-	size = FCmdLine.GetSize();
-	param = new char[size + 1];
-	memcpy(param, FCmdLine.GetData(), size + 1);
-
-	if (ScanCmdLine(param, 0))
-	{
-    	ArgCount = 0;
-    	arg = FArgList;
-    	while (arg)
-	    {
-    		ArgCount++;
-	    	arg = arg->FList;
-    	}
-
-    	if (ArgCount == 2)
-        	Execute(FArgList->FName.GetData());
-    }
-
-	delete param;
+	return iscntrl(ch) || ch == ',';
 }
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::AddArg
+#   Name       : THttpOption::AddArg
 #
 #   Purpose....: Add an argument
 #
@@ -247,7 +107,7 @@ void THttpCommand::Run()
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCommand::AddArg(const char *name)
+void THttpOption::AddArg(const char *name)
 {
     THttpArg *arg = new THttpArg(name);
     THttpArg *curr;
@@ -268,7 +128,7 @@ void THttpCommand::AddArg(const char *name)
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::AddArg
+#   Name       : THttpOption::AddArg
 #
 #   Purpose....: Add an argument
 #
@@ -277,7 +137,7 @@ void THttpCommand::AddArg(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCommand::AddArg(char *sBeg, char **sEnd)
+void THttpOption::AddArg(char *sBeg, char **sEnd)
 { 
     char *arg;
 
@@ -289,37 +149,7 @@ void THttpCommand::AddArg(char *sBeg, char **sEnd)
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::AddOpt
-#
-#   Purpose....: Add an option
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpCommand::AddOpt(char *name, char *param)
-{
-	THttpOption *opt = new THttpOption(name, param);
-	THttpOption *curr;
-
-    opt->FList = 0;
-	curr = FOptList;
-   
-	if (curr)
-	{
-		while (curr->FList)
-			curr = curr->FList;
-
-		curr->FList = opt;
-	}
-	else
-		FOptList = opt;    
-}
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::Split
+#   Name       : THttpOption::Split
 #
 #   Purpose....: Split line into arguments
 #
@@ -328,7 +158,7 @@ void THttpCommand::AddOpt(char *name, char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCommand::Split(char *s)
+void THttpOption::Split(char *s)
 {
 	char *start;
 
@@ -345,7 +175,7 @@ void THttpCommand::Split(char *s)
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::Parse
+#   Name       : THttpOption::Parse
 #
 #   Purpose....: Parse arguments
 #
@@ -354,7 +184,7 @@ void THttpCommand::Split(char *s)
 #   Returns....: *
 #
 ##########################################################################*/
-int THttpCommand::Parse(void *arg)
+int THttpOption::Parse(void *arg)
 {
     THttpArg *argv;
 
@@ -372,7 +202,7 @@ int THttpCommand::Parse(void *arg)
 
 /*##########################################################################
 #
-#   Name       : THttpCommand::ScanCmdLine
+#   Name       : THttpOption::ScanCmdLine
 #
 #   Purpose....: Scan cmd line
 #
@@ -381,7 +211,7 @@ int THttpCommand::Parse(void *arg)
 #   Returns....: *
 #
 ##########################################################################*/
-int THttpCommand::ScanCmdLine(char *line, void *arg)
+int THttpOption::ScanCmdLine(char *line, void *arg)
 {
 	Split(line);
 

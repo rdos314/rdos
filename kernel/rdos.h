@@ -195,6 +195,7 @@ int __stdcall RdosGetRemoteTcpConnectionPort(int Handle);
 int __stdcall RdosGetLocalTcpConnectionPort(int Handle);
 int __stdcall RdosReadTcpConnection(int Handle, void *Buf, int Size);
 int __stdcall RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
+int __stdcall RdosPollTcpConnection(int Handle);
 
 int __stdcall RdosGetLocalMailslot(const char *Name);
 int __stdcall RdosGetRemoteMailslot(long Ip, const char *Name);

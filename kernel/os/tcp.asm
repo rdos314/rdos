@@ -4130,7 +4130,6 @@ read_tcp_fail:
 
 read_tcp_ok:
 	call update_receive
-	and ds:tcp_pending, NOT FLAG_REC_PUSH
 	clc
 
 read_tcp_done:
@@ -4487,6 +4486,47 @@ push_tcp_done:
 	pop ds
 	retf32
 push_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			PollTcpConnection
+;
+;	Purpose:		Poll connection
+;
+;	Parameters:		BX		Connection handle
+;
+;   Returns:        EAX     Number of bytes in receive buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_tcp_connection_name DB 'Poll TCP Connection',0
+
+poll_tcp_connection	Proc far
+	push ds
+	push bx
+;
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc poll_tcp_done
+;
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	stc
+	jz poll_tcp_done
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx eax,ds:tcp_receive_count
+	LeaveSection ds:tcp_section
+	clc
+
+poll_tcp_done:
+    pop bx
+	pop ds
+	retf32
+poll_tcp_connection	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4870,6 +4910,12 @@ init_tcp	PROC near
 	mov di,OFFSET push_tcp_connection_name
 	xor dx,dx
 	mov ax,push_tcp_connection_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET poll_tcp_connection
+	mov di,OFFSET poll_tcp_connection_name
+	xor dx,dx
+	mov ax,poll_tcp_connection_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET add_wait_for_tcp_connection
