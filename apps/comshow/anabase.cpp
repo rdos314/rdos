@@ -160,6 +160,21 @@ int TProtocolAnalyser::GetMsg()
 	return TRUE;
 }
 
+/*##################  TProtocolAnalyser::GetMsgTime ##########################
+*   Purpose....: Get time of pending message	 		    	      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TDateTime TProtocolAnalyser::GetMsgTime()
+{
+    if (FTime)
+        return *FTime;
+    else
+        return TDateTime();
+}
+
 /*##################  TProtocolAnalyser::ShowHexMsg ##########################
 *   Purpose....: Show msg in hex  	   					      	        #
 *   In params..: *                                                          #

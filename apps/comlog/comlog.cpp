@@ -8,14 +8,6 @@
 #include "str.h"
 #include "path.h"
 
-struct TComMsg
-{
-	int Channel;
-	long TimeLSB;
-	long TimeMSB;
-	char ch;
-};
-
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -25,51 +17,44 @@ struct TComMsg
 *##########################################################################*/
 void cdecl main()
 {
-	TComMsg Msg;
+	TSerialDebug Debug;
 	char Str[10];
-	int Mapping;
-	char *Buf;
-	int *BufSize;
-	TComMsg *BufMsg;
 	TWaitDevice *WaitDevice;
 	TWait Wait;
 	TSerialDevice Port1(&Wait, 1, 9600);
 	TSerialDevice Port2(&Wait, 2, 1200);
 
-	Mapping = RdosCreateNamedMapping("comlog", 0x800000);
-	Buf = (char *)RdosAllocateMem(0x800000);
-	BufSize = (int *)Buf;
-	BufMsg = (TComMsg *)(Buf + 4);
-	RdosMapView(Mapping, 0, Buf, 0x800000);
-	*BufSize = 0;
+	TFile *CbusFile = new TFile("c:\\volvo\\cbus.dat", 0);
+	TFile *BarFile = new TFile("c:\\volvo\\bar.dat", 0);
 
 	for (;;)
 	{
 		WaitDevice = Wait.WaitForever();
-		RdosGetTics((unsigned long *)&BufMsg->TimeMSB, (unsigned long *)&BufMsg->TimeLSB);
 		if (WaitDevice == &Port1)
 		{
-			BufMsg->Channel = 1;
-			BufMsg->ch = Port1.Read();
+			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+			Debug.Channel = 1;
+			Debug.ch = Port1.Read();
+			CbusFile->Write(&Debug, sizeof(Debug));
 			RdosSetForeColor(9);
 		}
 
 		if (WaitDevice == &Port2)
 		{
-			BufMsg->Channel = 2;
-			BufMsg->ch = Port2.Read();
+			RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
+			Debug.Channel = 2;
+			Debug.ch = Port2.Read();
+			BarFile->Write(&Debug, sizeof(Debug));
 			RdosSetForeColor(11);
 		}
 
-		sprintf(Str, "%04hX", BufMsg->ch);
+		sprintf(Str, "%04hX", Debug.ch);
 		Str[0] = Str[2];
 		Str[1] = Str[3];
 		Str[2] = ' ';
 		Str[3] = ' ';
 		Str[4] = 0;
 		RdosWriteString(Str);
-		BufMsg++;
-		(*BufSize)++;
 	}
 }
 

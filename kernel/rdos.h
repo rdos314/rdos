@@ -33,8 +33,12 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
-#if sizeof(int) == 2
+#ifdef __GNUC__
 #define __stdcall
+#else
+#if (sizeof(int) == 2)
+#define __stdcall
+#endif
 #endif
 
 void __stdcall RdosSetTextMode();

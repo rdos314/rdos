@@ -40,6 +40,8 @@ public:
 	void DefineLogFile(const char *LogFileName);
 
 	virtual int GetMsg();
+    TDateTime GetMsgTime();
+    
 	virtual void ShowMsg();
 
 protected:
