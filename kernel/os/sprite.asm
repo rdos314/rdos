@@ -1189,8 +1189,6 @@ move_sprite_new_ind:
     mov bx,ax
 
 move_sprite_ind_ok:
-    mov bx,cx
-    dec bx
 	shl bx,4
 	push bx
 
@@ -1291,9 +1289,7 @@ move_sprite	Proc far
     je move_sprite_coord
 
 move_sprite_move:
-	call CheckSprite
     mov gs,fs:sp_dest_sel
-    mov cx,gs:v_sprite_count
     mov ds,gs:v_sprite_sel
     mov si,fs:sp_y
     shl si,2
@@ -1310,13 +1306,11 @@ move_sprite_down:
     xor bp,bp
 
 move_sprite_down_loop:
-    push cx
     push si
     push di
 	call MoveSpriteLine
 	pop di
 	pop si
-	pop cx
 	add si,4
 	add di,4
     inc bp
@@ -1325,19 +1319,21 @@ move_sprite_down_loop:
 	jmp move_sprite_coord
 
 move_sprite_up:
-	mov bp,fs:sp_h
-	dec bp
+	mov ax,fs:sp_h
+	dec ax
+	mov bp,ax
+	shl ax,2
+	add si,ax
+	add di,ax
 
 move_sprite_up_loop:
-    push cx
     push si
     push di
 	call MoveSpriteLine
 	pop di
 	pop si
-	pop cx
-	add si,4
-	add di,4
+	sub si,4
+	sub di,4
 	sub bp,1
 	jnc move_sprite_up_loop
 
