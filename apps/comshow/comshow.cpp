@@ -37,6 +37,7 @@
 #include "cotana.h"
 #include "bar.h"
 #include "compac.h"
+#include "waynecl.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -58,17 +59,20 @@ void cdecl main()
 
 //	TFile RawCbusFile("z:\\cbus.dat");
 //	TFile RawBarFile("z:\\bar.dat");
-	TFile RawFile("z:\\raw.dat");
+//	TFile RawFile("z:\\raw.dat");
+	TFile RawFile("z:\\rawcl.dat");
 
 //	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
-	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
+	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-	analyzer.DefineLogFile("cotex.txt");
+//	analyzer.DefineLogFile("cotex.txt");
+	analyzer.DefineLogFile("waynecl.txt");
 
 	for (;;)
 	{

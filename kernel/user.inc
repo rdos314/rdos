@@ -1459,6 +1459,11 @@ WriteCom       MACRO
 						ENDM
 
 ;	IN  BX		port handle
+WaitForSendCompletedCom       MACRO
+	UserGate wait_for_send_completed_com_nr
+						ENDM
+
+;	IN  BX		port handle
 EnableCts       MACRO
 	UserGate enable_cts_nr
 						ENDM

@@ -1125,6 +1125,22 @@ void TSerialDevice::Write(const char *str)
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::WaitForSendCompleted
+#
+#   Purpose....: Wait until send buffer is empty
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: character
+#
+##########################################################################*/
+void TSerialDevice::WaitForSendCompleted()
+{
+    RdosWaitForSendCompletedCom(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::WaitForChar
 #
 #   Purpose....: Read a single character

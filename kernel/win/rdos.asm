@@ -2478,6 +2478,34 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosWaitForSendCompletedCom
+;
+;		description:	Wait until send is completed
+;
+;		PARAMETERS:		hport		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWaitForSendCompletedCom
+
+_RdosWaitForSendCompletedCom	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	WaitForSendCompletedCom
+;
+    pop bx
+	pop bp
+	ret
+_RdosWaitForSendCompletedCom	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosEnableCts
 ;
 ;		description:	Enable CTS signal

@@ -96,6 +96,7 @@ void __stdcall RdosSetRts(int Handle);
 void __stdcall RdosResetRts(int Handle);
 int __stdcall RdosGetReceiveBufferSpace(int Handle);
 int __stdcall RdosGetSendBufferSpace(int Handle);
+void __stdcall RdosWaitForSendCompletedCom(int Handle);
 
 int __stdcall RdosOpenFile(const char *FileName, char Access);
 int __stdcall RdosCreateFile(const char *FileName, int Attrib);

@@ -79,6 +79,8 @@ send_buf		DW ?
 
 avail_obj   	DW ?
 
+send_wait       DW ?
+
 irq				DB ?
 flgs            DB ?
 base			DW ?
@@ -218,6 +220,12 @@ trans_end:
 	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
+;
+    mov bx,ds:send_wait
+    or bx,bx
+    jz trans_exit
+;
+    Signal
 	jmp trans_exit
 	
 trans_not_empty:	
@@ -430,6 +438,7 @@ open_com	Proc far
 	mov ds:rec_head,0
 	mov ds:rec_tail,0
 	mov ds:avail_obj,0
+	mov ds:send_wait,0
 ;
 	mov ax,[bp].port_base
 	mov ds:base,ax
@@ -890,6 +899,51 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			wait_for_send_completed_com
+;
+;		description:	Wait until send buffer is empty
+;
+;		PARAMETERS:		BX			Port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_send_completed_com_name DB 'Wait For Send Completed Com',0
+
+wait_for_send_completed_com	PROC far
+	push ds
+	push bx
+	push cx
+;
+    push ax
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    pop ax
+    jc wait_for_send_completed_done
+;
+	mov ds,[bx].port_sel
+    GetThread
+    mov ds:send_wait,ax
+;    
+	ClearSignal
+
+	mov cx,ds:send_count
+	or cx,cx
+	jz wait_for_send_completed_done
+;
+    WaitForSignal
+
+wait_for_send_completed_done:
+	pop cx
+	pop bx
+	pop ds
+	retf32
+wait_for_send_completed_com	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			get_com_send_space
 ;
 ;		description:	Get space in send buffer
@@ -1312,6 +1366,12 @@ init	Proc far
 	mov di,OFFSET write_com_name
 	xor dx,dx
 	mov ax,write_com_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET wait_for_send_completed_com
+	mov di,OFFSET wait_for_send_completed_com_name
+	xor dx,dx
+	mov ax,wait_for_send_completed_com_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET enable_cts

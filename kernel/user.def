@@ -321,4 +321,6 @@ cpu_reset_nr                = 279
 enable_cts_nr               = 280
 disable_cts_nr              = 281
 
+wait_for_send_completed_com_nr  = 282
+
 usergate_entries			= 300
