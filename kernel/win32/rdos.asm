@@ -61,6 +61,89 @@ UserGate	MACRO gate_nr
 
 	.code
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSwapShort
+;
+;		description:	Byte reverse a short int
+;
+;		returns:		Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSwapShort
+
+RdosSwapShort	Proc
+	push ebp
+	mov ebp,esp
+	mov ax,[ebp+8]
+	xchg al,ah
+	pop ebp
+	ret 4
+RdosSwapShort	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSwapLong
+;
+;		description:	Byte reverse a long int
+;
+;		returns:		Result
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSwapLong
+
+RdosSwapLong	Proc
+	push ebp
+	mov ebp,esp
+;	
+    mov eax,[ebp+8]
+	xchg al,ah
+	rol eax,16
+	xchg al,ah
+;
+	pop ebp
+	ret 4
+RdosSwapLong	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LocalToNetworkLong
+;
+;		description:	Convert a local long to network format
+;
+;		returns:		Network format
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IFNDEF LOADER
+
+	public _LocalToNetworkLong
+
+_LocalToNetworkLong	Proc
+	push bp
+	mov bp,sp
+	mov dx,[bp+6]
+	xchg dl,dh
+	mov ax,[bp+8]
+	xchg al,ah
+	pop bp
+	ret
+_LocalToNetworkLong	Endp
+
+ENDIF
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -4938,6 +5021,101 @@ rptcDone:
 	pop ebp
 	ret 4
 RdosIsTcpConnectionClosed	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRemoteTcpConnectionIP
+;
+;		DESCRIPTION:	Get remote IP of connection
+;
+;		PARAMETER:		Handle
+;
+;		RETURNS:		IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRemoteTcpConnectionIP
+
+RdosGetRemoteTcpConnectionIP	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_remote_tcp_connection_ip_nr
+	jnc grtciDone
+;
+	mov eax,-1
+	
+grtciDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetRemoteTcpConnectionIP	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRemoteTcpConnectionPort
+;
+;		DESCRIPTION:	Get remote port of connection
+;
+;		PARAMETER:		Handle
+;
+;		RETURNS:		port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRemoteTcpConnectionPort
+
+RdosGetRemoteTcpConnectionPort	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_remote_tcp_connection_port_nr
+	jnc grtcpDone
+;
+	mov eax,0
+	
+grtcpDone:
+    movzx eax,ax
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetRemoteTcpConnectionPort	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLocalTcpConnectionPort
+;
+;		DESCRIPTION:	Get local port of connection
+;
+;		PARAMETER:		Handle
+;
+;		RETURNS:		port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLocalTcpConnectionPort
+
+RdosGetLocalTcpConnectionPort	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_local_tcp_connection_port_nr
+	jnc gltcpDone
+;
+	mov eax,0
+	
+gltcpDone:
+    movzx eax,ax
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetLocalTcpConnectionPort	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

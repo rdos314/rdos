@@ -310,6 +310,51 @@ int TSocket::IsOpen() const
 	    return FALSE;
 }
 
+/*##################  TSocket::GetRemoteIP  ############################
+*   Purpose....: Get remote IP          		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long TSocket::GetRemoteIP() const
+{
+	if (FHandle)
+		return RdosGetRemoteTcpConnectionIP(FHandle);
+	else
+		return -1;
+}
+
+/*##################  TSocket::GetRemotePort  ############################
+*   Purpose....: Get remote port          		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::GetRemotePort() const
+{
+	if (FHandle)
+		return RdosGetRemoteTcpConnectionPort(FHandle);
+	else
+		return 0;
+}
+
+/*##################  TSocket::GetLocalPort  ############################
+*   Purpose....: Get local port          		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::GetLocalPort() const
+{
+	if (FHandle)
+		return RdosGetLocalTcpConnectionPort(FHandle);
+	else
+	    return 0;
+}
+
 /*##################  TSocket::Push  ############################
 *   Purpose....: Push connection        		                            #
 *   In params..: *                                                          #

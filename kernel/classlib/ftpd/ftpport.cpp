@@ -20,15 +20,16 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pwd.cpp
-# Pwd command class
+# path.cpp
+# Path command class
 #
 ########################################################################*/
 
+#include <stdio.h>
 #include <string.h>
 
 #include "cmdhelp.h"
-#include "pwd.h"
+#include "port.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -36,23 +37,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::TPwdFactory
+#   Name       : TPortFactory::TPortFactory
 #
-#   Purpose....: Constructor for TPwdFactory
+#   Purpose....: Constructor for TPortFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdFactory::TPwdFactory()
-  : TCommandFactory("PWD")
+TPortFactory::TPortFactory()
+  : TCommandFactory("PORT")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::Create
+#   Name       : TPortFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +62,30 @@ TPwdFactory::TPwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TPortFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPwdCommand(Server, param);
+	return new TPortCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::TPwdCommand
+#   Name       : TPortCommand::TPortCommand
 #
-#   Purpose....: Constructor for TPwdCommand
+#   Purpose....: Constructor for TPortCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
+TPortCommand::TPortCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::Run
+#   Name       : TPortCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,18 +94,80 @@ TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPwdCommand::Execute(char *param)
+void TPortCommand::Execute(char *param)
 {
+	TArg *arg;
+	int ArgCount;
 	TLangString msg;
-    TString str;
+	int ok;
+	long IP;
+	int port;
+	int i;
+	int val;
+	const char *ptr;
 
-	if (FServer->VerifyUser())
+	ok = ScanCmdLine(param, 0);
+	if (ok)
 	{
-        str = "\"" + FServer->CurrDir + "\"" + " is current directory";
-        msg.printf(257, str.GetData());
-    }
-   	else
-   	    msg.Load(530);
+		ArgCount = 0;
+		arg = FArgList;
+		while (arg)
+		{
+			ArgCount++;
+			arg = arg->FList;
+		}
+
+		ok = (FArgCount == 6);
+	}
+
+	if (ok)
+	{
+    	if (FServer->VerifyUser())
+		{
+			arg = FArgList;
+			IP = 0;
+			for (i = 0; i < 4 && ok; i++)
+			{
+				ptr = arg->FName.GetData();
+				if (sscanf(ptr, "%d", &val) == 1)
+				{
+					IP = (IP << 8) | val;
+					arg = arg->FList;
+				}
+				else
+					ok = FALSE;
+			}
+			IP = RdosSwapLong(IP);
+
+			port = 0;
+			for (i = 0; i < 2 && ok; i++)
+			{
+				ptr = arg->FName.GetData();
+				if (sscanf(ptr, "%d", &val) == 1)
+				{
+					port = (port << 8) | val;
+					arg = arg->FList;
+				}
+				else
+					ok = FALSE;
+			}
+
+			if (ok)
+			{
+				if (FServer->OpenDataConnection(IP, port))
+					msg.Load(225);
+				else
+					msg.Load(426);
+			}
+			else
+				msg.Load(501);
+		}
+		else
+			msg.Load(530);
+	}
+	else
+		msg.Load(501);
 
     FServer->Reply(&msg);    
 }
+

@@ -3204,6 +3204,132 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			GetRemoteTcpConnectionIP
+;
+;	Purpose:		Get remote IP of connection
+;
+;	Parameters:		BX		Connection handle
+;
+;   Returns:        EAX     IP
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_remote_tcp_connection_ip_name DB 'Get Remote TCP Connection IP',0
+
+get_remote_tcp_connection_ip	Proc far
+	push ds
+	push bx
+;
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc get_rem_ip_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz get_rem_ip_fail
+;
+    mov ds,ax
+    mov eax,ds:tcp_remote_ip
+	clc
+	jmp get_rem_ip_done
+
+get_rem_ip_fail:
+	stc
+
+get_rem_ip_done:
+	pop bx
+	pop ds
+	retf32
+get_remote_tcp_connection_ip	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetRemoteTcpConnectionPort
+;
+;	Purpose:		Get remote port of connection
+;
+;	Parameters:		BX		Connection handle
+;
+;   Returns:        AX      port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_remote_tcp_connection_port_name DB 'Get Remote TCP Connection Port',0
+
+get_remote_tcp_connection_port	Proc far
+	push ds
+	push bx
+;
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc get_rem_port_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz get_rem_port_fail
+;
+    mov ds,ax
+    mov ax,ds:tcp_remote_port
+	clc
+	jmp get_rem_port_done
+
+get_rem_port_fail:
+	stc
+
+get_rem_port_done:
+	pop bx
+	pop ds
+	retf32
+get_remote_tcp_connection_port	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetLocalTcpConnectionPort
+;
+;	Purpose:		Get local port of connection
+;
+;	Parameters:		BX		Connection handle
+;
+;   Returns:        AX      port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_local_tcp_connection_port_name DB 'Get Local TCP Connection Port',0
+
+get_local_tcp_connection_port	Proc far
+	push ds
+	push bx
+;
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc get_local_port_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz get_local_port_fail
+;
+    mov ds,ax
+    mov ax,ds:tcp_port
+	clc
+	jmp get_local_port_done
+
+get_local_port_fail:
+	stc
+
+get_local_port_done:
+	pop bx
+	pop ds
+	retf32
+get_local_tcp_connection_port	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			AbortDelete
 ;
 ;	Purpose:		Delete abort
@@ -4249,6 +4375,24 @@ init	PROC far
 	mov di,OFFSET is_tcp_connection_closed_name
 	xor dx,dx
 	mov ax,is_tcp_connection_closed_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_remote_tcp_connection_ip
+	mov di,OFFSET get_remote_tcp_connection_ip_name
+	xor dx,dx
+	mov ax,get_remote_tcp_connection_ip_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_remote_tcp_connection_port
+	mov di,OFFSET get_remote_tcp_connection_port_name
+	xor dx,dx
+	mov ax,get_remote_tcp_connection_port_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_local_tcp_connection_port
+	mov di,OFFSET get_local_tcp_connection_port_name
+	xor dx,dx
+	mov ax,get_local_tcp_connection_port_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET abort_tcp_connection

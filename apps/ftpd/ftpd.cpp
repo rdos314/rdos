@@ -36,6 +36,10 @@
 #include "ftpserv.h"
 #include "user.h"
 #include "pass.h"
+#include "pwd.h"
+#include "syst.h"
+#include "port.h"
+#include "quit.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -108,9 +112,13 @@ TFtpSocketServerFactory Factory;
 
 void cdecl main()
 {
-    TUserFactory *user = new TUserFactory;
-    TPassFactory *pass = new TPassFactory;
-    
+	TUserFactory *user = new TUserFactory;
+	TPassFactory *pass = new TPassFactory;
+	TPwdFactory *pwd = new TPwdFactory;
+	TSystFactory *syst = new TSystFactory;
+	TPortFactory *port = new TPortFactory;
+	TQuitFactory *quit = new TQuitFactory;
+
 	TSocket::Listen(&Factory, 21, 0x4000);
 }
 

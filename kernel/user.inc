@@ -926,6 +926,24 @@ IsTcpConnectionClosed	MACRO
 			ENDM
 
 ; IN  BX		connection handle
+; OUT EAX       IP
+GetRemoteTcpConnectionIP	MACRO
+	UserGate get_remote_tcp_connection_ip_nr
+			ENDM
+
+; IN  BX		connection handle
+; OUT AX        port
+GetRemoteTcpConnectionPort	MACRO
+	UserGate get_remote_tcp_connection_port_nr
+			ENDM
+
+; IN  BX		connection handle
+; OUT AX        port
+GetLocalTcpConnectionPort	MACRO
+	UserGate get_local_tcp_connection_port_nr
+			ENDM
+
+; IN  BX		connection handle
 AbortTcpConnection	MACRO
 	UserGate abort_tcp_connection_nr
 			ENDM

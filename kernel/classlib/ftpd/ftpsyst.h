@@ -20,38 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpserv.h
-# Ftp socket server class
+# syst.h
+# Syst command class
 #
 ########################################################################*/
 
-#ifndef _FTPSERV_H
-#define _FTPSERV_H
+#ifndef _SYST_H
+#define _SYST_H
 
-#include "str.h"
-#include "socket.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TFtpSocketServer : public TSocketServer
+class TSystFactory : public TCommandFactory
 {
 public:
-	TFtpSocketServer();
-	~TFtpSocketServer();
+	TSystFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
+protected:
+};
 
-	int VerifyUser();
-	int OpenDataConnection(long IP, int port);
-	void Quit();
+class TSystCommand : public TCommand
+{
+public:
+	TSystCommand(TFtpSocketServer *Server, const char *param);
 
-	void Reply(TLangString *Msg);
-
-	TString User;
-	TString Pass;
-	TString CurrDir;
-
-	TSocket *FDataSocket;
+	virtual void Execute(char *param);
 };
 
 #endif

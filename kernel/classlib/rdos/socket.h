@@ -43,6 +43,10 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual int IsOpen() const;
+	
+	long GetRemoteIP() const;
+	int GetRemotePort() const;
+	int GetLocalPort() const;
 
     void Push();
     int WaitForConnection(int Timeout);

@@ -20,15 +20,15 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pwd.cpp
-# Pwd command class
+# quit.cpp
+# Quit command class
 #
 ########################################################################*/
 
 #include <string.h>
 
 #include "cmdhelp.h"
-#include "pwd.h"
+#include "quit.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::TPwdFactory
+#   Name       : TQuitFactory::TQuitFactory
 #
-#   Purpose....: Constructor for TPwdFactory
+#   Purpose....: Constructor for TQuitFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdFactory::TPwdFactory()
-  : TCommandFactory("PWD")
+TQuitFactory::TQuitFactory()
+  : TCommandFactory("QUIT")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::Create
+#   Name       : TQuitFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TPwdFactory::TPwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TQuitFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPwdCommand(Server, param);
+	return new TQuitCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::TPwdCommand
+#   Name       : TQuitCommand::TQuitCommand
 #
-#   Purpose....: Constructor for TPwdCommand
+#   Purpose....: Constructor for TQuitCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
+TQuitCommand::TQuitCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::Run
+#   Name       : TQuitCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,18 +93,11 @@ TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPwdCommand::Execute(char *param)
+void TQuitCommand::Execute(char *param)
 {
 	TLangString msg;
-    TString str;
 
-	if (FServer->VerifyUser())
-	{
-        str = "\"" + FServer->CurrDir + "\"" + " is current directory";
-        msg.printf(257, str.GetData());
-    }
-   	else
-   	    msg.Load(530);
-
+	msg.Load(221);
     FServer->Reply(&msg);    
+    FServer->Quit();
 }

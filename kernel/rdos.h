@@ -41,6 +41,9 @@ extern "C" {
 #endif
 #endif
 
+short int __stdcall RdosSwapShort(short int val);
+long __stdcall RdosSwapLong(long val);
+
 void __stdcall RdosSetTextMode();
 int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
@@ -184,6 +187,9 @@ void __stdcall RdosDeleteTcpConnection(int Handle);
 void __stdcall RdosAbortTcpConnection(int Handle);
 void __stdcall RdosPushTcpConnection(int Handle);
 int __stdcall RdosIsTcpConnectionClosed(int Handle);
+long __stdcall RdosGetRemoteTcpConnectionIP(int Handle);
+int __stdcall RdosGetRemoteTcpConnectionPort(int Handle);
+int __stdcall RdosGetLocalTcpConnectionPort(int Handle);
 int __stdcall RdosReadTcpConnection(int Handle, void *Buf, int Size);
 int __stdcall RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
 

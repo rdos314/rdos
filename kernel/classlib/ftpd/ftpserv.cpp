@@ -52,6 +52,24 @@
 TFtpSocketServer::TFtpSocketServer()
 {
 	CurrDir = "/";
+	FDataSocket = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::~TFtpSocketServer
+#
+#   Purpose....: Socket server destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServer::~TFtpSocketServer()
+{
+    if (FDataSocket)
+        delete FDataSocket;
 }
 
 /*##########################################################################
@@ -103,6 +121,54 @@ int TFtpSocketServer::VerifyUser()
         return TRUE;
     else
         return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::OpenDataConnection
+#
+#   Purpose....: Open data connection to client
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::OpenDataConnection(long IP, int port)
+{
+	if (IP == FSocket->GetRemoteIP())
+	{
+        if (FDataSocket)
+            delete FDataSocket;
+            
+	    FDataSocket = new TSocket(FWait, IP, port, 6000, 0x2000);
+	    
+	    if (FDataSocket->WaitForConnection(6000))
+        	return TRUE;
+        else
+        {
+            delete FDataSocket;
+            FDataSocket = 0;
+        }
+	}
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::Quit
+#
+#   Purpose....: Quit session
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Quit()
+{
+    FSocket->Close();
 }
 
 /*##########################################################################

@@ -20,38 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpserv.h
-# Ftp socket server class
+# quit.h
+# Quit command class
 #
 ########################################################################*/
 
-#ifndef _FTPSERV_H
-#define _FTPSERV_H
+#ifndef _QUIT_H
+#define _QUIT_H
 
-#include "str.h"
-#include "socket.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TFtpSocketServer : public TSocketServer
+class TQuitFactory : public TCommandFactory
 {
 public:
-	TFtpSocketServer();
-	~TFtpSocketServer();
+	TQuitFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
+protected:
+};
 
-	int VerifyUser();
-	int OpenDataConnection(long IP, int port);
-	void Quit();
+class TQuitCommand : public TCommand
+{
+public:
+	TQuitCommand(TFtpSocketServer *Server, const char *param);
 
-	void Reply(TLangString *Msg);
-
-	TString User;
-	TString Pass;
-	TString CurrDir;
-
-	TSocket *FDataSocket;
+	virtual void Execute(char *param);
 };
 
 #endif

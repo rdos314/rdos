@@ -20,15 +20,15 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pwd.cpp
-# Pwd command class
+# syst.cpp
+# Syst command class
 #
 ########################################################################*/
 
 #include <string.h>
 
 #include "cmdhelp.h"
-#include "pwd.h"
+#include "syst.h"
 #include "rdos.h"
 
 #define FALSE 0
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::TPwdFactory
+#   Name       : TSystFactory::TSystFactory
 #
-#   Purpose....: Constructor for TPwdFactory
+#   Purpose....: Constructor for TSystFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdFactory::TPwdFactory()
-  : TCommandFactory("PWD")
+TSystFactory::TSystFactory()
+  : TCommandFactory("SYST")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::Create
+#   Name       : TSystFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TPwdFactory::TPwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TCommand *TSystFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPwdCommand(Server, param);
+	return new TSystCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::TPwdCommand
+#   Name       : TSystCommand::TSystCommand
 #
-#   Purpose....: Constructor for TPwdCommand
+#   Purpose....: Constructor for TSystCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
+TSystCommand::TSystCommand(TFtpSocketServer *Server, const char *param)
   : TCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::Run
+#   Name       : TSystCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,16 +93,12 @@ TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPwdCommand::Execute(char *param)
+void TSystCommand::Execute(char *param)
 {
 	TLangString msg;
-    TString str;
 
 	if (FServer->VerifyUser())
-	{
-        str = "\"" + FServer->CurrDir + "\"" + " is current directory";
-        msg.printf(257, str.GetData());
-    }
+    	msg.Load(215);
    	else
    	    msg.Load(530);
 
