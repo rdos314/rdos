@@ -56,19 +56,18 @@ void cdecl main()
 //	int HasCbus;
 //	int HasBar;
 
-//	TFile RawCbusFile("z:\\cbus.dat");
 //	TFile RawBarFile("z:\\bar.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
 //	TFile RawFile("z:\compacpu.dat");
-	TFile RawFile("z:\zap.dat");
+	TFile RawFile("z:\raw.dat");
 
-//	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
+	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-	TProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 
@@ -77,7 +76,7 @@ void cdecl main()
 //	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
 //	analyzer.DefineLogFile("compac.txt");
-	analyzer.DefineLogFile("zap.txt");
+	analyzer.DefineLogFile("pump.txt");
 
 	for (;;)
 	{
