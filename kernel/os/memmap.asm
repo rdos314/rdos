@@ -1284,9 +1284,6 @@ map_view	Proc near
 	jnz mfm_done
 ;
 	mov ecx,eax
-	sub eax,ds:[bx].view_offset
-	jc mfm_done
-;
 	mov es,ds:[bx].memmap_sel
 	cmp es:map_size,eax
 	jc mfm_done
