@@ -3073,23 +3073,32 @@ validate_thread_ldt:
 	mov ax,[bx]
 	cmp ax,dx
 	jc validate_ldt_thread_done
+;
 	mov ds,bx
 	mov bx,dx
 	and bx,0FFF8h
 	call validate_descriptor
+
 validate_ldt_thread_done:
 	pop bx
 	pop ax
 	pop ds
 	jmp validate_thread_done
+
 validate_thread_gdt:
 	push ds
 	push bx
 	mov bx,gdt_sel
 	mov ds,bx
+	mov ax,[bx]
+	cmp ax,dx
+	jc validate_gdt_thread_done
+;
 	mov bx,dx	
 	and bx,0FFF8h
 	call validate_descriptor
+
+validate_gdt_thread_done:
 	pop bx
 	pop ds
 	jmp validate_thread_done

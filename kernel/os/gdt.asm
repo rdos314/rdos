@@ -30,6 +30,7 @@
 GateSize = 16
 
 INCLUDE protseg.def
+INCLUDE system.def
 INCLUDE user.def
 INCLUDE os.def
 INCLUDE user.inc
@@ -42,8 +43,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
-	extrn create_data_selector:near
-	extrn allocate_fixed_system_mem:near
+	extrn create_data_sel16:near
 
 PAGE
 
@@ -67,10 +67,13 @@ create_gdt	PROC near
 ;
 	mov bx,gdt_sel
 	mov ds,bx
-	mov eax,10000h
 	mov bx,temp_sel
+	mov ecx,10000h
+	mov edx,gdt_linear
 	push cs
-	call allocate_fixed_system_mem
+	call create_data_sel16
+	mov es,bx
+;
 	xor si,si
 	xor di,di
 	mov cx,1000h
@@ -85,10 +88,7 @@ create_gdt	PROC near
 	movsd
 	movsd
 ;
-	mov eax,[bx+2]
-	mov cl,[bx+7]
-	mov [bx+4],eax
-	mov [bx+7],cl
+	mov dword ptr [bx+4],gdt_linear
 	mov ax,[bx]
 	mov [bx+2],ax
 	db 66h
@@ -109,6 +109,10 @@ init_free_dt_loop:
 	mov si,bx
 	xor bx,bx
 	mov [bx],si
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	InitSection ds:gdt_section
 ;
 	popa
 	pop es
@@ -209,21 +213,25 @@ allocate_name	DB 'Allocate Gdt',0
 
 allocate_gdt	PROC far
 	push ds
+	push es
 	push si
 	push di
-	mov si,gdt_sel
+;
+	mov si,system_data_sel
 	mov ds,si
-	pushf
+	EnterSection ds:gdt_section
+;
+	mov si,gdt_sel
+	mov es,si
 	xor di,di
-	cli
-	mov si,[di]
+	mov si,es:[di]
 	or si,si
 	jnz alloc_gdt_room
 ;
-	int 3
+	push ax
 	push cx
 	mov si,gdt_sel
-	mov cx,[si]
+	mov cx,es:[si]
 	inc cx
 	or cx,cx
 	jnz alloc_gdt_not_full
@@ -231,44 +239,48 @@ allocate_gdt	PROC far
 	int 3
 
 alloc_gdt_not_full:
-	add word ptr [si],1000h
+	add word ptr es:[si],1000h
 ;
 	xor bx,bx
-	mov eax,[si+2]
-	mov cl,[si+7]
-	mov [bx+4],eax
-	mov [bx+7],cl
-	mov ax,[si]
-	mov [bx+2],ax
+	mov dword ptr es:[bx+4],gdt_linear
+	mov ax,es:[si]
+	mov es:[bx+2],ax
 	db 66h
-	lgdt [bx+2]
+	lgdt es:[bx+2]
 	mov bx,gdt_sel
-	mov ds,bx
+	mov es,bx
 ;
-	mov si,[bx]
-	inc si
-	add si,1000h
+	mov di,es:[bx]
+	and di,0F000h
 	mov cx,1000h SHR 3
 	xor bx,bx
 
 extend_gdt_loop:
-	mov [si],bx
-	mov bx,si
-	add si,8
+	mov ax,bx
+	mov bx,di
+	stosw
+	xor ax,ax
+	stosw
+	stosw
+	stosw
 	loop extend_gdt_loop
 ;
 	mov si,bx
 	xor bx,bx
-	mov [bx],si
+	mov es:[bx],si
 	pop cx
+	pop ax
+	xor di,di
 
 alloc_gdt_room:
 	mov bx,si
-	mov si,[si]
-	mov [di],si
-	popf
+	mov si,es:[si]
+	mov es:[di],si
+	LeaveSection ds:gdt_section
+;
 	pop di
 	pop si
+	pop es
 	pop ds
 	ret
 allocate_gdt	ENDP
@@ -290,19 +302,24 @@ free_name	DB 'Free Gdt',0
 
 free_gdt	PROC far
 	push ds
+	push es
 	push si
-	mov si,gdt_sel
+;
+	mov si,system_data_sel
 	mov ds,si
-	mov byte ptr [bx+5],0
-	pushf
-	cli
+	EnterSection ds:gdt_section
+	mov si,gdt_sel
+	mov es,si
+	mov byte ptr es:[bx+5],0
 	xor si,si
-	mov si,[si]
-	mov [bx],si
+	mov si,es:[si]
+	mov es:[bx],si
 	xor si,si
-	mov [si],bx
-	popf
+	mov es:[si],bx
+	LeaveSection ds:gdt_section
+;
 	pop si
+	pop es
 	pop ds
 	ret
 free_gdt	ENDP

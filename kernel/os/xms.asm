@@ -29,9 +29,6 @@
 
 GateSize = 16
 
-MaxHandles	= 16
-HandleBias = 0A560h
-
 INCLUDE protseg.def
 INCLUDE system.def
 INCLUDE system.inc
@@ -40,14 +37,17 @@ INCLUDE os.def
 INCLUDE user.def
 INCLUDE os.inc
 INCLUDE user.inc
+INCLUDE handle.inc
 
-xms_handle	SEGMENT AT 0
+xms_handle_seg	STRUC
 
-block_base		DD ?
-block_size		DD ?
-lock_count		DB ?
+xms_handle_base		handle_header <>
 
-xms_handle	ENDS
+block_base			DD ?
+block_size			DD ?
+lock_count			DB ?
+
+xms_handle_seg	ENDS
 
 xms_system_seg	SEGMENT AT 0
 
@@ -59,7 +59,6 @@ xms_local_seg	SEGMENT AT 0
 
 xms_hma_state	DB ?
 xms_free_mem	DD ?
-xms_handles		DW MaxHandles DUP(?)
 
 xms_local_seg	ENDS
 
@@ -137,110 +136,49 @@ init_xms_process	PROC far
 	GetFreePhysical
 	sub eax,100000h
 	mov ds:xms_free_mem,eax
-	mov di,OFFSET xms_handles
-	xor ax,ax
-	mov cx,MaxHandles
-	rep stosw
+;
+	mov di,OFFSET delete_handle
+	mov ax,FILE_HANDLE
+	RegisterHandle
 	ret
 init_xms_process	ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
 ;
-;		NAME:			DEREF_HANDLE
 ;
-;		DESCRIPTION:	DEREFERENCE XMS-HANDLE
+;		NAME:			Delete_handle
 ;
-;		PARAMETERS:		DX		XMS HANDLE
+;		DESCRIPTION:	Delete handle (called from handle module)
 ;
-;		RETURNS:		DS		XMS_LOCAL_SEL
-;						NC	ES	XMS SELECTOR
-;						CY	BL	ERROR CODE
-;
+;		PARAMETERS:		BX			XMS HANDLE
+;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-deref_handle	MACRO
-	Local deref_handle_inv
-	Local deref_handle_done
+delete_handle	Proc far
+	ret
+	push ds
 	push bx
-	mov bx,xms_local_sel
-	mov ds,bx
-	mov bx,dx
-	sub bx,HandleBias
-	jc deref_handle_inv
-	cmp bx,MaxHandles
-	jz deref_handle_inv
-	jnc deref_handle_inv
-	add bx,bx	
-	mov bx,ds:[bx].xms_handles
-	or bx,bx
-	jz deref_handle_inv
-	mov es,bx
-	pop bx
-	clc
-	jmp deref_handle_done
-deref_handle_inv:
-	pop bx
-	mov bl,0A2h
-	stc
-deref_handle_done:
-				ENDM
+	push si
+;
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	mov ecx,ds:[bx].block_size
+	mov edx,ds:[bx].block_base
+	or ecx,ecx
+	jz delete_handle_done
+;
+	FreeLinear
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			ALLOCATE_HANDLE
-;
-;		DESCRIPTION:	ALLOKERA XMS-HANDLE
-;
-;		PARAMETERS:		DS		XMS_LOCAL_SEL
-;
-;		RETURNS:		NC	DX		XMS HANDLE
-;							ES		XMS SELECTOR
-;						CY	BL		ERROR CODE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-allocate_handle	MACRO
-	Local allocate_handle_loop
-	Local allocate_handle_done
-	Local allocate_handle_end
-	push eax
-	push bx
-	push cx
-	mov bx,OFFSET xms_handles
-	mov cx,MaxHandles
-allocate_handle_loop:
-	mov ax,[bx]
-	or ax,ax
-	jz allocate_handle_done
-	add bx,2
-	loop allocate_handle_loop
-	mov bl,0A1h
-	xor dx,dx
-	stc
-	pop cx
-	pop ax
-	pop eax
-	jmp allocate_handle_end
-allocate_handle_done:
-	mov eax,SIZE xms_handle
-	AllocateSmallGlobalMem
-	mov [bx],es
-	mov dx,bx
-	sub dx,OFFSET xms_handles
-	shr dx,1
-	add dx,HandleBias
-	clc
-	pop cx
+delete_handle_done:
+	pop si
 	pop bx
-	pop eax
-allocate_handle_end:
-		ENDM
+	pop ds
+	ret
+delete_handle	Endp
 
 xms_version	PROC near
 	mov ax,300h
@@ -301,78 +239,106 @@ xms_query_size	PROC near
 xms_query_size	ENDP
 
 xms_allocate	PROC near
-	push es
+	int 3
+	push bx
 	mov bx,xms_local_sel
 	mov ds,bx
 	movzx eax,dx
 	shl eax,10
 	sub ds:xms_free_mem,eax
 	jnc xms_allocate_do
+;
 	add ds:xms_free_mem,eax
+	pop bx
 	mov bl,0A0h
-xms_allocate_fail:
-	pop es
 	xor ax,ax
 	ret
+
 xms_allocate_do:
-	allocate_handle
-	jc xms_allocate_fail
+	mov cx,SIZE xms_handle_seg
+	AllocateHandle
+	jnc xms_allocate_handle_ok
+;
+	pop bx
+	mov bl,0A1h
+	xor ax,ax
+	ret
+
+xms_allocate_handle_ok:
 	or eax,eax
 	jz xms_allocate_zero
+;
 	push edx
 	AllocateLocalLinear
-	mov es:block_base,edx
+	mov ds:[bx].block_base,edx
 	pop edx
+
 xms_allocate_zero:
-	mov es:block_size,eax
-	mov es:lock_count,0
-	pop es
+	mov ds:[bx].block_size,eax
+	mov ds:[bx].lock_count,0
+	mov ds:[bx].hh_sign,XMS_HANDLE
+	mov dx,ds:[bx].hh_handle
+	pop bx
 	mov ax,1
 	ret
 xms_allocate	ENDP
 
 xms_free	PROC near
-	push es
-	deref_handle
-	jc xms_free_fail
-	mov al,es:lock_count
-	or al,al
-	mov bl,0ABh
-	jnz xms_free_fail
+	int 3
 	push bx
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_free_deref_ok
+;
+	pop bx
+	mov bl,0A2h
+	xor ax,ax
+	ret
+
+xms_free_deref_ok:
+	mov al,ds:[bx].lock_count
+	or al,al
+	jz xms_free_lock_ok
+;
+	pop bx
+	mov bl,0ABh
+	xor ax,ax
+	ret
+
+xms_free_lock_ok:
 	push ecx
 	push edx
-	mov bx,dx
-	sub bx,HandleBias
-	add bx,bx
-	mov word ptr ds:[bx].xms_handles,0
-	mov ecx,es:block_size
-	mov edx,es:block_base
-	add ds:xms_free_mem,ecx
+	mov ecx,ds:[bx].block_size
+	mov edx,ds:[bx].block_base
+;
 	or ecx,ecx
 	jz xms_free_global
+;
 	FreeLinear
+
 xms_free_global:
-	FreeMem
+	mov bx,ds:[bx].hh_handle
+	FreeHandle
+	mov bx,xms_local_sel
+	mov ds,bx
+	add ds:xms_free_mem,ecx
+;
 	pop edx
 	pop ecx
 	pop bx
 	mov ax,1
-	jmp xms_free_done
-xms_free_fail:
-	mov ax,0
-xms_free_done:
-	pop es
 	ret
 xms_free	ENDP
 
 xms_move	PROC near
-	push es
+	int 3
 	push ebx
 	push ecx
 	push edx
 	push esi
 	push edi
+;
 	mov bx,si
 	mov ecx,[bx]
 	mov dx,[bx+4]
@@ -383,23 +349,37 @@ xms_move	PROC near
 	movzx esi,word ptr [bx+6]
 	add esi,eax
 	jmp xms_dest
+
 xms_source_high:
 	push ds
 	push bx
-	deref_handle
+;
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_source_ok
+;
 	pop bx
 	pop ds
 	mov al,0A3h
-	jc xms_move_error
-	mov esi,es:block_base
-	mov edx,es:block_size
+	jmp xms_move_error
+
+xms_source_ok:
+	mov esi,ds:[bx].block_base
+	mov edx,ds:[bx].block_size
+	pop bx
+	pop ds
+;
 	mov al,0A4h
 	sub edx,ecx
 	jc xms_move_error
+;
 	mov al,0A7h
 	sub edx,[bx+6]
 	jc xms_move_error
+;
 	add esi,[bx+6]
+
 xms_dest:
 	mov dx,[bx+10]
 	or dx,dx
@@ -409,23 +389,37 @@ xms_dest:
 	movzx edi,word ptr [bx+12]
 	add edi,eax
 	jmp xms_move_do
+
 xms_dest_high:
 	push ds
 	push bx
-	deref_handle
+;
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_dest_ok
+;
 	pop bx
 	pop ds
 	mov al,0A5h
-	jc xms_move_error
-	mov edi,es:block_base
-	mov edx,es:block_size
+	jmp xms_move_error
+
+xms_dest_ok:
+	mov edi,ds:[bx].block_base
+	mov edx,ds:[bx].block_size
+	pop bx
+	pop ds
+;
 	mov al,0A6h
 	sub edx,ecx
 	jc xms_move_error
+;
 	mov al,0A7h
 	sub edx,[bx+12]
 	jc xms_move_error
+;
 	add edi,[bx+12]
+
 xms_move_do:
 	push ds
 	mov ax,flat_sel
@@ -435,17 +429,21 @@ xms_move_do:
 	shr ecx,2
 	or ecx,ecx
 	jz xms_move_done
+;
 	rep movs dword ptr es:[edi],[esi]
+
 xms_move_done:
 	mov cx,dx
 	and cx,3
 	jz xms_move_ok
+
 xms_small_move_loop:
 	mov al,[esi]
 	mov es:[edi],al
 	inc esi
 	inc edi
 	loop xms_small_move_loop
+
 xms_move_ok:
 	pop ds
 ;
@@ -455,7 +453,8 @@ xms_move_ok:
 	pop ecx
 	pop ebx
 	mov ax,1
-	jmp xms_move_end
+	ret
+
 xms_move_error:
 	pop edi
 	pop esi
@@ -464,72 +463,85 @@ xms_move_error:
 	pop ebx
 	mov bl,al
 	mov ax,0
-xms_move_end:
-	pop es
 	ret
 xms_move	ENDP
 
 xms_lock	PROC near
-	push es
-	deref_handle
-	mov ax,0
-	jc xms_lock_end
-	mov al,es:lock_count
+	push bx
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_lock_deref_ok
+;
+	pop bx
+	mov bl,0A2h
+	xor ax,ax
+	ret
+
+xms_lock_deref_ok:
+	movzx ax,ds:[bx].lock_count
 	add al,1
 	jnz xms_lock_do
+;
+	pop bx
 	mov bl,0ACh
-	jmp xms_lock_end
+	ret
+
 xms_lock_do:
-	mov es:lock_count,al
-	mov dx,word ptr es:block_base+2
-	mov bx,word ptr es:block_base
+	mov ds:[bx].lock_count,al
+	mov dx,word ptr ds:[bx].block_base+2
+	mov bx,word ptr ds:[bx].block_base
+	pop ax
 	mov ax,1
-xms_lock_end:
-	pop es
 	ret
 xms_lock	ENDP
 
 xms_unlock	PROC near
-	push es
-	deref_handle
-	mov ax,0
-	jc xms_unlock_end
-	mov al,es:lock_count
+	push bx
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_unlock_deref_ok
+;
+	pop bx
+	mov bl,0A2h
+	xor ax,ax
+	ret
+
+xms_unlock_deref_ok:
+	movzx ax,ds:[bx].lock_count
 	or al,al
 	jnz xms_unlock_do
+;
+	pop bx
 	mov bl,0AAh
-	jmp xms_unlock_end
+	ret
+
 xms_unlock_do:
 	dec al
-	mov es:lock_count,al
+	mov ds:[bx].lock_count,al
+	pop bx
 	mov ax,1
-xms_unlock_end:
-	pop es
 	ret
 xms_unlock	ENDP
 
 xms_info	PROC near
-	push es
-	deref_handle
-	mov ax,0
-	jc xms_info_end
-	mov bh,es:lock_count
-	mov edx,es:block_size
+	mov bx,dx
+	mov ax,XMS_HANDLE
+	DerefHandle
+	jnc xms_info_deref_ok
+;
+	pop bx
+	mov bl,0A2h
+	xor ax,ax
+	ret
+
+xms_info_deref_ok:
+	mov edx,ds:[bx].block_size
+	mov bh,ds:[bx].lock_count
 	shr edx,10
-	push si
-	push cx
-	xor bl,bl
-	mov si,OFFSET xms_handles
-xms_info_free_loop:
-	lodsw
-	or ax,ax
-	jnz xms_info_free_next
-	inc bl
-xms_info_free_next:
-	loop xms_info_free_loop
+	mov bl,10
 	mov ax,1
-xms_info_end:
-	pop es
 	ret
 xms_info	ENDP
 
