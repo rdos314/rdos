@@ -151,6 +151,15 @@
 #define VK_LMENU          0xA4
 #define VK_RMENU          0xA5
 
+#define	KEY_YES		VK_Y
+#define KEY_NO		VK_N
+#define KEY_PRINT	VK_PRINT
+#define KEY_LANG	VK_L
+#define KEY_F1          VK_F1
+#define KEY_F2          VK_F2
+#define KEY_F3          VK_F3
+#define KEY_F4          VK_F4
+
 #include "waitdev.h"
 
 class TKeyboardDevice : public TWaitDevice
@@ -162,10 +171,10 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
-	void Clear();
-	int Poll();
-	int Get();
-	void Put(int ch);
+	virtual void Clear();
+	virtual int Poll() const;
+	virtual int Get();
+	virtual void Put(int ch);
 
 	virtual int IsPinPad();
 	

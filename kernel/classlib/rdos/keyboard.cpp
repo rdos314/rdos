@@ -215,7 +215,7 @@ int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey)
 #   Returns....: TRUE if data available
 #
 ##########################################################################*/
-int TKeyboardDevice::Poll()
+int TKeyboardDevice::Poll() const
 {
     int ExtKey;
     int KeyState;
