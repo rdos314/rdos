@@ -132,9 +132,8 @@ __A000				EQU 283h
 
 ;
 os_begin_sel		EQU 1800h
-user_begin_sel		EQU 2000h
-
-mem_begin_sel		EQU 3000h
+user_begin_sel		EQU 2800h
+mem_begin_sel		EQU 4800h
 
 gdt_size			EQU 8000h
 

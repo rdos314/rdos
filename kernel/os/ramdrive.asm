@@ -149,6 +149,20 @@ mount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FLUSH
+;
+;		DESCRIPTION:	Flush filesystem
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+flush	PROC far
+	stc
+	ret
+flush	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DISMOUNT
 ;
 ;		DESCRIPTION:	Unmount filesystem
@@ -1062,24 +1076,25 @@ fs_name	DB 'MEMORY',0
 
 fs_ctrl:
 fs00	DW OFFSET mount,			ramdrive_code_sel
-fs01	DW OFFSET dismount,			ramdrive_code_sel
-fs02	DW OFFSET get_drive_info,	ramdrive_code_sel
-fs03	DW OFFSET cache_dir,		ramdrive_code_sel
-fs04	DW OFFSET update_dir,		ramdrive_code_sel
-fs05	DW OFFSET update_file,		ramdrive_code_sel
-fs06	DW OFFSET create_dir,		ramdrive_code_sel
-fs07	DW OFFSET delete_dir,		ramdrive_code_sel
-fs08	DW OFFSET delete_file,		ramdrive_code_sel
-fs09	DW OFFSET rename_file,		ramdrive_code_sel
-fs10	DW OFFSET create_file,		ramdrive_code_sel
-fs11	DW OFFSET get_ioctl_data,	ramdrive_code_sel
-fs12	DW OFFSET set_file_size,	ramdrive_code_sel
-fs13	DW OFFSET read_file,		ramdrive_code_sel
-fs14	DW OFFSET write_file,		ramdrive_code_sel
-fs15	DW OFFSET allocate_file_list,ramdrive_code_sel
-fs16	DW OFFSET free_file_list,	ramdrive_code_sel
-fs17	DW OFFSET read_file_block,	ramdrive_code_sel
-fs18	DW OFFSET write_file_block,	ramdrive_code_sel
+fs01	DW OFFSET flush,			ramdrive_code_sel
+fs02	DW OFFSET dismount,			ramdrive_code_sel
+fs03	DW OFFSET get_drive_info,	ramdrive_code_sel
+fs04	DW OFFSET cache_dir,		ramdrive_code_sel
+fs05	DW OFFSET update_dir,		ramdrive_code_sel
+fs06	DW OFFSET update_file,		ramdrive_code_sel
+fs07	DW OFFSET create_dir,		ramdrive_code_sel
+fs08	DW OFFSET delete_dir,		ramdrive_code_sel
+fs09	DW OFFSET delete_file,		ramdrive_code_sel
+fs10	DW OFFSET rename_file,		ramdrive_code_sel
+fs11	DW OFFSET create_file,		ramdrive_code_sel
+fs12	DW OFFSET get_ioctl_data,	ramdrive_code_sel
+fs13	DW OFFSET set_file_size,	ramdrive_code_sel
+fs14	DW OFFSET read_file,		ramdrive_code_sel
+fs15	DW OFFSET write_file,		ramdrive_code_sel
+fs16	DW OFFSET allocate_file_list,ramdrive_code_sel
+fs17	DW OFFSET free_file_list,	ramdrive_code_sel
+fs18	DW OFFSET read_file_block,	ramdrive_code_sel
+fs19	DW OFFSET write_file_block,	ramdrive_code_sel
 
 init	PROC far
 	push ds
@@ -1110,7 +1125,7 @@ init	PROC far
 	AllocateDynamicDrive
 	mov di,OFFSET fs_name
 	InstallFileSystem
-	InitFileSystem
+	StartFileSystem
 ;
 	popad
 	pop gs

@@ -954,17 +954,17 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FLUSH_DISC
+;		NAME:			START_DISC
 ;
-;		DESCRIPTION:	Flush disc
+;		DESCRIPTION:	Start disc
 ;
 ;		PARAMETERS:		BX		Disc sel
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_disc_name	DB 'Flush Disc',0
+start_disc_name	DB 'Start Disc',0
 
-flush_disc	Proc far
+start_disc	Proc far
 	push ds
 	push es
 	pusha
@@ -974,32 +974,84 @@ flush_disc	Proc far
 	mov cx,MAX_DRIVES
 	mov si,OFFSET drive_def_arr
 
-flush_drives_loop:
+start_drives_loop:
 	mov ax,[si]
 	or ax,ax
-	jz flush_drives_next
+	jz start_drives_next
 ;
 	cmp ax,-1
-	je flush_drives_next
+	je start_drives_next
 ;
 	mov es,ax
 	cmp bx,es:drive_disc
-	jne flush_drives_next
+	jne start_drives_next
 ;
 	mov ax,si
 	sub ax,OFFSET drive_def_arr
 	shr ax,1
-	InitFileSystem
+	StartFileSystem
 
-flush_drives_next:
+start_drives_next:
 	add si,2
-	loop flush_drives_loop	
+	loop start_drives_loop	
 ;
 	popa
 	pop es
 	pop ds
 	ret
-flush_disc	Endp
+start_disc	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			STOP_DISC
+;
+;		DESCRIPTION:	Stop disc
+;
+;		PARAMETERS:		BX		Disc sel
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_disc_name	DB 'Stop Disc',0
+
+stop_disc	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,disc_data_sel
+	mov ds,ax
+	mov cx,MAX_DRIVES
+	mov si,OFFSET drive_def_arr
+
+stop_drives_loop:
+	mov ax,[si]
+	or ax,ax
+	jz stop_drives_next
+;
+	cmp ax,-1
+	je stop_drives_next
+;
+	mov es,ax
+	cmp bx,es:drive_disc
+	jne stop_drives_next
+;
+	mov ax,si
+	sub ax,OFFSET drive_def_arr
+	shr ax,1
+	StopFileSystem
+
+stop_drives_next:
+	add si,2
+	loop stop_drives_loop	
+;
+	popa
+	pop es
+	pop ds
+	ret
+stop_disc	Endp
 
 PAGE
 
@@ -3080,9 +3132,14 @@ init	PROC far
 	mov ax,register_disc_change_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET flush_disc
-	mov di,OFFSET flush_disc_name
-	mov ax,flush_disc_nr
+	mov si,OFFSET start_disc
+	mov di,OFFSET start_disc_name
+	mov ax,start_disc_nr
+	RegisterOsGate
+;
+	mov si,OFFSET stop_disc
+	mov di,OFFSET stop_disc_name
+	mov ax,stop_disc_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET wait_for_disc_request

@@ -1045,16 +1045,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadDrive	Proc near
-	EnterSection FloppySection
 	push si
 	mov si,3
 	call SelectDrive
 	jc ReadDriveRetry
 	cmp ah,cTrack
 	je ReadDriveSetup
+
 ReadDriveLoop:
 	call SeekCmd
+	pushf
+	call check_media
+	jnc ReadDriveMediaOk
+;
+	popf
+	jmp ReadDriveRetry
+
+ReadDriveMediaOk:
+	popf
 	jc ReadDriveRetry
+
 ReadDriveSetup:
 	push ax
 	mov al,46h
@@ -1062,7 +1072,9 @@ ReadDriveSetup:
 	pop ax
 	call ReadCmd
 	jnc ReadDriveDone
+
 ReadDriveRetry:
+	mov cTrack,-1
 	push ax
 	push dx
 	cli
@@ -1075,15 +1087,17 @@ ReadDriveRetry:
 	pop ax
 	sub si,1
 	jc ReadDriveDone
-	call SelectDrive
+;
+	call check_media
 	jc ReadDriveRetry
+;
 	push ax
 	mov ax,250
 	WaitMilliSec
 	pop ax
 	jmp ReadDriveLoop
+
 ReadDriveDone:
-	LeaveSection FloppySection
 	pop si
 	ret
 ReadDrive	Endp
@@ -1107,7 +1121,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteDrive	Proc near
-	EnterSection FloppySection
 	push si
 	mov si,3
 	call SelectDrive
@@ -1116,7 +1129,17 @@ WriteDrive	Proc near
 	je WriteDriveSetup
 WriteDriveLoop:
 	call SeekCmd
+	pushf
+	call check_media
+	jnc WriteDriveMediaOk
+;
+	popf
+	jmp WriteDriveRetry
+
+WriteDriveMediaOk:
+	popf
 	jc WriteDriveRetry
+
 WriteDriveSetup:
 	push ax
 	mov al,4Ah
@@ -1125,6 +1148,7 @@ WriteDriveSetup:
 	call WriteCmd
 	jnc WriteDriveDone
 WriteDriveRetry:
+	mov cTrack,-1
 	push ax
 	push dx
 	cli
@@ -1137,15 +1161,17 @@ WriteDriveRetry:
 	pop ax
 	sub si,1
 	jc WriteDriveDone
-	call SelectDrive
+;
+	call check_media
 	jc WriteDriveRetry
+;
 	push ax
 	mov ax,250
 	WaitMilliSec
 	pop ax
 	jmp WriteDriveLoop
+
 WriteDriveDone:
-	LeaveSection FloppySection
 	pop si
 	ret
 WriteDrive	Endp
@@ -1203,14 +1229,14 @@ read_boot_sector_retry:
 read_boot_sector_read:
 	mov ah,1
 	call SeekCmd
+	mov cTrack,-1
 	jc read_boot_sector_retry
 ;
-	mov cTrack,ah
 	mov ah,0
 	call SeekCmd
+	mov cTrack,-1
 	jc read_boot_sector_retry
 ;
-	mov cTrack,ah
 	mov dh,0
 	mov dl,1
 	mov cx,200h
@@ -1385,7 +1411,7 @@ demand_mount	Proc far
 	Signal
 ;
 	mov bx,es:disc_sel
-	FlushDisc
+	StartDisc
 
 drive_assign_done1:
 	popad
@@ -1420,22 +1446,23 @@ check_media	Proc near
 	mov al,fs:boot_drive_nr
 	mov bx,floppy_data_sel
 	mov ds,bx
-	EnterSection FloppySection
 	movzx bx,al
 	mov bl,[bx].Gap
 	or bl,bl
 	stc
-	jz check_media_leave
+	jz check_media_done
+;
 	call SelectDrive
-	jc check_media_leave
+	jc check_media_do
 ;
 	push ax
     mov dx,3F7h
     in al,dx
     shl al,1
 	pop ax
-	jnc check_media_leave
-;
+	jnc check_media_done
+
+check_media_do:
 	push es
 	push ecx
 	push esi
@@ -1456,6 +1483,8 @@ check_media_retry:
 	clc
 	jz check_media_free
 ;
+	mov bx,fs:disc_sel
+	StopDisc
 	push ax
 	mov ax,250
 	WaitMilliSec
@@ -1471,9 +1500,6 @@ check_media_free:
 	pop ecx
 	pop es
 	
-check_media_leave:
-	LeaveSection FloppySection
-
 check_media_done:
 	mov bx,fs
 	mov ds,bx
@@ -1500,10 +1526,20 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 check_media_proc	Proc far
+	push ds
 	push fs
+	push ax
+;
+	mov ax,floppy_data_sel
+	mov ds,ax
 	mov fs,bx
+	EnterSection FloppySection
 	call check_media
+	LeaveSection FloppySection
+;
+	pop ax
 	pop fs
+	pop ds
 	ret
 check_media_proc	Endp
 
@@ -1604,8 +1640,6 @@ read_drive_loop:
 	inc dl
 	mov al,fs:boot_drive_nr
 ;
-	mov bx,floppy_data_sel
-	mov ds,bx
 	mov cx,200h
 	mov ebx,edi
 	call ReadDrive
@@ -1678,8 +1712,6 @@ write_drive_loop:
 	inc dl
 	mov al,fs:boot_drive_nr
 ;
-	mov bx,floppy_data_sel
-	mov ds,bx
 	mov cx,200h
 	mov ebx,edi
 	call WriteDrive
@@ -1755,7 +1787,7 @@ perform_one_fail:
 	int 3
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
-	FlushDisc
+;	FlushDisc
 
 perform_one_done:
 	ret
@@ -1787,7 +1819,9 @@ discbuf_thread:
 
 discbuf_thread_loop:
 	WaitForDiscRequest
+	EnterSection FloppySection
 	call perform_one
+	LeaveSection FloppySection
 	jmp discbuf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

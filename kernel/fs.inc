@@ -41,8 +41,10 @@ fs_drive_seg	STRUC
 
 fs_sys_arr			DD 2*256 DUP(?)
 fs_root_dir_sel		DW ?
+fs_mount_id			DD ?
 fs_list_section		section_typ <>
 fs_access_section	read_write_section_typ <>
+fs_access_parse		DB ?
 
 fs_drive_seg	ENDS
 
@@ -155,14 +157,27 @@ ds_free_ptr			DD ?
 ds_usage			DW ?
 ds_parent			DW ?
 ds_handle			DD ?
+ds_mount_id			DD ?
 ds_drive			DB ?
 
 dir_sel_data_struc	ENDS
+
+dir_handle_struc	STRUC
+
+dhs_count			DW ?
+dhs_drive			DB ?
+dhs_pad				DB ?
+dhs_mount_id		DD ?
+dhs_data			DB ?
+
+dir_handle_struc	ENDS
 
 file_system_struc 	STRUC
 
 ;	IN	DX			DRIVE DATA
 mount_proc				DD ?
+
+flush_proc				DD ?
 
 dismount_proc			DD ?
 

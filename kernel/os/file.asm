@@ -556,6 +556,39 @@ FreeFileSel	ENDP
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeFile
+;
+;		DESCRIPTION:	Free file selector
+;
+;		PARAMETERS:		BX		File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public FreeFile
+
+FreeFile	PROC near
+	push ds
+	push ax
+;
+	mov ds,bx
+	mov ax,ds:file_usage
+	or ax,ax
+	stc
+	jnz free_file_done
+;
+	call FreeFileSel
+
+free_file_done:
+	pop ax
+	pop ds
+	ret
+FreeFile	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			GetFileListEntry

@@ -31,9 +31,10 @@
 
 GateSize = 16
 
+include os.def
+include user.def
 include protseg.def
 include system.def
-include os.def
 include os.inc
 
 

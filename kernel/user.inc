@@ -42,20 +42,20 @@ UserGateVm      MACRO gate_nr
 UserGate16      MACRO gate_nr
 	db 9Ah
 	dw 0
-	dw 2003h + (gate_nr SHL 4)
+	dw 2803h + (gate_nr SHL 4)
 			ENDM
 
 UserGate32      MACRO gate_nr
 	db 66h
 	db 9Ah
 	dw 0
-	dw 200Bh + (gate_nr SHL 4)
+	dw 280Bh + (gate_nr SHL 4)
 			ENDM
 
 UserGateForce32 MACRO gate_nr
 	db 9Ah
 	dw 0
-	dw 200Bh + (gate_nr SHL 4)
+	dw 280Bh + (gate_nr SHL 4)
 			ENDM
 
 UserGate        MACRO gate_nr

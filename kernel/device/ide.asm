@@ -1384,7 +1384,7 @@ drive_assign_free2:
 	FreeLinear
 ;
 	mov bx,fs:disc_sel
-	FlushDisc
+	StartDisc
 	clc
 	ret
 drive_assign2	Endp

@@ -378,7 +378,9 @@ init_file_old_freed:
 	mov dword ptr ds:fs_sys_arr+4,0
 	InitSection ds:fs_list_section
 	InitReadWriteSection ds:fs_access_section
+	mov ds:fs_access_parse,0
 	mov ds:fs_root_dir_sel,0
+	mov ds:fs_mount_id,1
 	mov si,ds
 	pop ds
 	mov ds:[bx].fs_sel,si
@@ -396,17 +398,17 @@ install_file_system	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_FILE_SYSTEM
+;		NAME:			START_FILE_SYSTEM
 ;
-;		DESCRIPTION:	Init file system
+;		DESCRIPTION:	Start file system
 ;
 ;		PARAMETERS:		AL			DRIVE NR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_file_system_name	DB 'Init File System',0
+start_file_system_name	DB 'Start File System',0
 
-init_file_system	Proc far
+start_file_system	Proc far
 	push ds
 	push es
 	push si
@@ -429,7 +431,36 @@ init_file_system	Proc far
 	pop es
 	pop ds
 	ret
-init_file_system	Endp
+start_file_system	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			STOP_FILE_SYSTEM
+;
+;		DESCRIPTION:	Stop file system
+;
+;		PARAMETERS:		AL			DRIVE NR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_file_system_name	DB 'Stop File System',0
+
+stop_file_system	Proc far
+	push ds
+	push es
+	push si
+	push di
+;
+	mov si,fs_data_sel
+	mov es,si
+;
+	pop di
+	pop si
+	pop es
+	pop ds
+	ret
+stop_file_system	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -674,9 +705,14 @@ init	PROC far
 	mov ax,install_file_system_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET init_file_system
-	mov di,OFFSET init_file_system_name
-	mov ax,init_file_system_nr
+	mov si,OFFSET start_file_system
+	mov di,OFFSET start_file_system_name
+	mov ax,start_file_system_nr
+	RegisterOsGate
+;
+	mov si,OFFSET stop_file_system
+	mov di,OFFSET stop_file_system_name
+	mov ax,stop_file_system_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET rename_file32

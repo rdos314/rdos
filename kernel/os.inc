@@ -1284,8 +1284,13 @@ RegisterDiscChange	MACRO
 					ENDM
 
 ;	IN  BX		Disc sel
-FlushDisc	MACRO
-	OsGate flush_disc_nr
+StartDisc	MACRO
+	OsGate start_disc_nr
+					ENDM
+
+;	IN  BX		Disc sel
+StopDisc	MACRO
+	OsGate stop_disc_nr
 					ENDM
 
 ;	IN  AX		Sectors per unit
@@ -1486,8 +1491,13 @@ InstallFileSystem	MACRO
 					ENDM
 
 ;	AL			DRIVE #
-InitFileSystem	MACRO
-	OsGate init_file_system_nr
+StartFileSystem	MACRO
+	OsGate start_file_system_nr
+					ENDM
+
+;	AL			DRIVE #
+StopFileSystem	MACRO
+	OsGate stop_file_system_nr
 					ENDM
 
 ;	BX			File selector

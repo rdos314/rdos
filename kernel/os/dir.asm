@@ -102,6 +102,7 @@ code	SEGMENT byte public use16 'CODE'
 	extrn CreateFileHandle:near
 	extrn CreateFileSel:near
 	extrn FreeFileSel:near
+	extrn FreeFile:near
 
 char_tab:
 ct00 DB	0,		0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
@@ -219,7 +220,10 @@ cache_dir_name DB 'Cache Dir', 0
 cache_dir	PROC far
 	push ds
 	push es
+	push fs
 	push ax
+	push si
+	push ebp
 ;
 	mov ds,bx
 	mov ax,flat_sel
@@ -231,12 +235,24 @@ cache_dir	PROC far
 ;
 	mov al,ds:ds_drive
 	mov bx,ds
+;
+	mov si,fs_data_sel
+	mov ds,si
+	movzx si,al
+	add si,si
+	mov si,ds:[si].fs_sel
+	mov ds,si
+	mov ebp,ds:fs_mount_id
+;
 	call CreateDirSel
 	CallFileSystem cache_dir_proc
 	mov es:[edx].de_sel,bx
 
 cache_dir_done:
+	pop ebp
+	pop si
 	pop ax
+	pop fs
 	pop es
 	pop ds
 	ret
@@ -566,6 +582,7 @@ PAGE
 ;		PARAMETERS:		AL			Drive
 ;						BX			Parent dir selector
 ;						EDX			Parent dir entry
+;						EBP			Mount id
 ;
 ;		RETURNS:		BX			Dir selector
 ;
@@ -594,6 +611,7 @@ CreateDirSel	PROC near
 	mov ds:ds_parent,bx
 	pop eax
 	mov ds:ds_handle,eax
+	mov ds:ds_mount_id,ebp
 	mov bx,ds
 ;
 	pop dx
@@ -631,8 +649,14 @@ FreeDirSel	PROC near
 
 free_dir_dir_loop:
 	mov eax,es:[edx].de_next
+	mov cx,es:[edx].de_usage
+	or cx,cx
+	jnz free_dir_dir_next
+;
 	xor ecx,ecx
 	FreeLinear
+
+free_dir_dir_next:
 	mov edx,eax
 	cmp edx,ds:ds_dir_ptr
 	jne free_dir_dir_loop
@@ -644,8 +668,14 @@ free_dir_file:
 
 free_dir_file_loop:
 	mov eax,es:[edx].de_next
+	mov cx,es:[edx].de_usage
+	or cx,cx
+	jnz free_dir_file_next
+;
 	xor ecx,ecx
 	FreeLinear
+
+free_dir_file_next:
 	mov edx,eax
 	cmp edx,ds:ds_file_ptr
 	jne free_dir_file_loop
@@ -695,6 +725,38 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FreeDir
+;
+;		DESCRIPTION:	Free dir if idle
+;
+;		PARAMETERS:		BX			Dir selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeDir	PROC near
+	push ds
+	push ax
+;
+	mov ds,bx
+	mov ax,ds:ds_usage
+	or ax,ax
+	stc
+	jnz free_dir_done
+;
+	call FreeDirSel
+	clc
+
+free_dir_done:
+	pop ax
+	pop ds
+	ret
+FreeDir	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CreateDirHandle
 ;
 ;		DESCRIPTION:	Create dir handle
@@ -724,24 +786,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UpdateDirEntry
-;
-;		DESCRIPTION:	Update dir entry
-;
-;		PARAMETERS:		FS		Flat sel
-;						EDX		Dir entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateDirEntry	Proc near
-	ret
-UpdateDirEntry	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			ParseDir
 ;
 ;		DESCRIPTION:	Parse pathname
@@ -760,6 +804,7 @@ ParseDir	Proc near
 	push cx
 	push edx
 	push esi
+	push ebp
 ;
 	mov bx,fs_process_sel
 	mov ds,bx
@@ -809,13 +854,33 @@ parse_dir_rel:
 	or bx,bx
 	jz parse_dir_root
 ;
+	mov ds,bx
+	mov edx,ds:ds_mount_id
 	mov si,fs_data_sel
 	mov ds,si
 	movzx si,al
 	add si,si
 	mov ds,ds:[si].fs_sel
+	cmp edx,ds:fs_mount_id
+	jne parse_dir_root
+;
 	EnterReadSection ds:fs_access_section
 	jmp parse_dir_start
+
+parse_dir_old:
+	int 3
+	mov ds,bx
+	sub ds:ds_usage,1
+	jnz parse_dir_old_zero
+;
+	call FreeDir
+
+parse_dir_old_zero:
+	mov bx,fs_process_sel
+	mov ds,bx
+	movzx si,al
+	add si,si
+	mov ds:[si].cur_dir_sel,0
 
 parse_dir_root:
 	mov bx,fs_data_sel
@@ -828,6 +893,7 @@ parse_dir_root:
 ;
 	mov ds,bx
 	EnterSection ds:fs_list_section
+	mov ebp,ds:fs_mount_id
 	mov bx,ds:fs_root_dir_sel
 	or bx,bx
 	jnz parse_dir_buffered
@@ -838,6 +904,8 @@ parse_dir_root:
 	mov ds:fs_root_dir_sel,bx
 ;
 	push ds
+	mov ds,bx
+	inc ds:ds_usage
 	mov dx,fs_process_sel
 	mov ds,dx
 	mov ds:[si].cur_dir_sel,bx
@@ -848,6 +916,7 @@ parse_dir_buffered:
 	LeaveSection ds:fs_list_section
 
 parse_dir_start:
+	mov ds:fs_access_parse,1
 	mov ds,bx
 	mov bx,flat_sel
 	mov fs,bx
@@ -978,6 +1047,7 @@ parse_dir_fail:
 	stc
 
 parse_dir_done:
+	pop ebp
 	pop esi
 	pop edx
 	pop cx
@@ -1010,6 +1080,8 @@ ParseEnd	Proc near
 	mov ax,fs_data_sel
 	mov ds,ax
 	mov ds,ds:[si].fs_sel
+	cli
+	mov ds:fs_access_parse,0
 	LeaveReadSection ds:fs_access_section
 ;
 	pop si
@@ -1037,6 +1109,7 @@ GetDeviceRoot	Proc near
 	push cx
 	push edx
 	push si
+	push ebp
 ;
 	mov al,80h
 	mov bx,fs_data_sel
@@ -1050,6 +1123,7 @@ GetDeviceRoot	Proc near
 	or bx,bx
 	jnz get_device_root_done
 ;
+	xor ebp,ebp
 	xor edx,edx
 	call CreateDirSel
 	CallFileSystem cache_dir_proc
@@ -1065,6 +1139,7 @@ get_device_root_done:
 	LeaveSection ds:fs_list_section
 	mov ds,bx
 ;
+	pop ebp
 	pop si
 	pop edx
 	pop cx
@@ -1245,11 +1320,14 @@ search_scan_file_loop:
 search_scan_file_done:	
 	movzx eax,cx
 	shl eax,2
-	add eax,4
+	add eax,OFFSET dhs_data
 	AllocateGlobalMem
-	movzx eax,cx
-	xor di,di
-	stosd
+	mov es:dhs_count,cx
+	mov al,ds:ds_drive
+	mov es:dhs_drive,al
+	mov eax,ds:ds_mount_id
+	mov es:dhs_mount_id,eax
+	mov di,OFFSET dhs_data
 ;
 	mov eax,ds:ds_dir_ptr
 	or eax,eax
@@ -1304,6 +1382,7 @@ GetCurDirBase	Proc near
 	push eax
 	push bx
 	push ecx
+	push edx
 	push esi
 ;
 	call ValidateDrive
@@ -1315,6 +1394,8 @@ GetCurDirBase	Proc near
 	add bx,bx
 	mov ds,ds:[bx].fs_sel
 	EnterReadSection ds:fs_access_section
+	mov ds:fs_access_parse,1
+	mov edx,ds:fs_mount_id
 ;
 	mov si,fs_process_sel
 	mov ds,si
@@ -1327,6 +1408,9 @@ GetCurDirBase	Proc near
 	je get_cur_dir_ok
 ;
 	mov ds,bx
+	cmp edx,ds:ds_mount_id
+	jne get_cur_dir_ok
+;
 	EnterReadSection ds:ds_access_section
 
 get_cur_dir_loop:
@@ -1398,11 +1482,14 @@ get_cur_dir_ok:
 	movzx bx,al
 	add bx,bx
 	mov ds,ds:[bx].fs_sel
+	cli
+	mov ds:fs_access_parse,0
 	LeaveReadSection ds:fs_access_section
 	clc
 
 get_cur_dir_done:
 	pop esi
+	pop edx
 	pop ecx
 	pop bx
 	pop eax
@@ -1997,8 +2084,6 @@ ReadDirBase	Proc near
 	push fs
 	push esi
 ;
-	mov ax,flat_sel
-	mov fs,ax
 	mov ax,fs_process_sel
 	mov ds,ax
 	dir_to_offset bx
@@ -2007,12 +2092,28 @@ ReadDirBase	Proc near
 	jz read_dir_fail
 ;
 	mov ds,bx
+	mov al,ds:dhs_drive
+	mov si,fs_data_sel
+	mov fs,si
+	movzx si,al
+	add si,si
+	mov si,fs:[si].fs_sel
+	or si,si
+	jz read_dir_fail
+;
+	mov fs,si
+	mov esi,fs:fs_mount_id
+	cmp esi,ds:dhs_mount_id
+	jne read_dir_fail
+;
+	mov ax,flat_sel
+	mov fs,ax
 	mov bx,dx
-	cmp bx,ds:[0]
+	cmp bx,ds:dhs_count
 	jnc read_dir_fail
 ;
 	shl bx,2
-	add bx,4
+	add bx,OFFSET dhs_data
 	mov esi,[bx]
 	mov ax,fs:[esi].de_name_size
 	cmp ax,cx
@@ -2076,22 +2177,41 @@ CloseDirBase	Proc near
 	push bx
 	push cx
 	push edx
+	push ebp
 ;
+	mov ebp,-1
+	mov es,bx
+	mov al,es:dhs_drive
+	mov bx,fs_data_sel
+	mov fs,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,fs:[bx].fs_sel
+	or bx,bx
+	jz close_dir_do
+;
+	mov fs,bx
+	mov ebp,fs:fs_mount_id
+
+close_dir_do:
 	mov ax,flat_sel
 	mov fs,ax
-	mov es,bx
-	mov cx,es:[0]
+	mov cx,es:dhs_count
 	or cx,cx
 	jz close_dir_unlock_free
 ;
-	mov bx,4
+	mov bx,OFFSET dhs_data
 
 close_dir_unlock_loop:
 	mov edx,es:[bx]
 	sub fs:[edx].de_usage,1
 	jnz close_dir_next
 ;
-	call UpdateDirEntry
+	cmp ebp,es:dhs_mount_id
+	je close_dir_next
+;
+	int 3
+	FreeMem
 
 close_dir_next:
 	add bx,4
@@ -2100,6 +2220,7 @@ close_dir_next:
 close_dir_unlock_free:
 	FreeMem
 ;
+	pop ebp
 	pop edx	
 	pop cx
 	pop bx
@@ -2768,6 +2889,198 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			IsFlushable
+;
+;		DESCRIPTION:	Check if directory is flushable
+;
+;		PARAMETERS:		BX		Dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsFlushable	Proc near
+	mov fs,bx
+
+isflush_dir_list_loop:
+	mov edi,fs:ds_dir_ptr
+	or edi,edi
+	jz isflush_dir_list_done
+
+isflush_dir_list_check:
+	mov bx,es:[edi].de_sel
+	or bx,bx
+	jz isflush_dir_list_next
+;
+	push fs
+	push edi
+	call IsFlushable
+	pop edi
+	pop fs
+	jc isflush_dir_done
+
+isflush_dir_list_next:
+	mov edi,es:[edi].de_next
+	cmp edi,fs:ds_dir_ptr
+	jne isflush_dir_list_check
+
+isflush_dir_list_done:
+	mov edi,fs:ds_file_ptr
+	or edi,edi
+	jz isflush_file_list_done
+
+isflush_file_list_check:
+	mov bx,es:[edi].dfe_file_sel
+	or bx,bx
+	jz isflush_file_list_next
+;
+	call FreeFile
+	jc isflush_dir_done
+;
+	mov es:[edi].dfe_file_sel,0
+
+isflush_file_list_next:
+	mov edi,es:[edi].de_next
+	cmp edi,fs:ds_file_ptr
+	jne isflush_file_list_check
+
+isflush_file_list_done:
+	clc
+
+isflush_dir_done:
+	ret
+IsFlushable	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Flush
+;
+;		DESCRIPTION:	Flush directory
+;
+;		PARAMETERS:		BX		Dir handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Flush	Proc near
+	mov fs,bx
+
+flush_dir_list_loop:
+	mov edi,fs:ds_dir_ptr
+	or edi,edi
+	jz flush_dir_list_done
+
+flush_dir_list_check:
+	mov bx,es:[edi].de_sel
+	or bx,bx
+	jz flush_dir_list_next
+;
+	push fs
+	push edi
+	call Flush
+	pop edi
+	pop fs
+	mov es:[edi].de_sel,0
+
+flush_dir_list_next:
+	mov edi,es:[edi].de_next
+	cmp edi,fs:ds_dir_ptr
+	jne flush_dir_list_check
+
+flush_dir_list_done:
+	mov bx,fs
+	xor di,di
+	mov fs,di
+	call FreeDir
+
+flush_dir_done:
+	ret
+Flush	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			STOP_FILE_SYSTEM
+;
+;		DESCRIPTION:	Stop file system
+;
+;		PARAMETERS:		AL			DRIVE NR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_file_system_name	DB 'Stop File System',0
+
+stop_file_system	Proc far
+	push ds
+	push es
+	push fs
+	pushad
+;
+	mov bx,fs_data_sel
+	mov ds,bx
+	mov bx,flat_sel
+	mov es,bx
+	cli
+	mov al,ds:fs_access_parse
+	or al,al
+	jz stop_file_enter
+;
+	sti
+	stc
+	jmp stop_done
+
+stop_file_enter:
+	EnterWriteSection ds:fs_access_section
+;
+	CallFileSystem flush_proc
+	jc stop_leave_done
+;
+	movzx si,al
+	add si,si
+	mov bx,ds:[si].fs_sel
+	or bx,bx
+	clc
+	jz stop_leave_done
+;
+	push ds
+	mov ds,bx
+	mov bx,ds:fs_root_dir_sel
+	or bx,bx
+	clc
+	jz stop_leave_pop_done
+;
+	int 3
+	push bx
+	call IsFlushable
+	pop bx
+	jc stop_leave_pop_done
+;
+	call Flush
+	mov ds:fs_root_dir_sel,0
+	inc ds:fs_mount_id
+	clc
+
+stop_leave_pop_done:
+	pop ds
+
+stop_leave_done:
+	LeaveWriteSection ds:fs_access_section
+	
+stop_done:
+	popad
+	pop fs
+	pop es
+	pop ds
+	ret
+stop_file_system	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Test pr
 ;
 ;		DESCRIPTION:	TEST
@@ -2780,10 +3093,6 @@ test_name	DB 'Test',0
 
 test_pr	PROC far
 	int 3
-	mov al,19h
-	call CreateDirSel
-	xor edx,edx
-	CallFileSystem cache_dir_proc
 	retf32
 test_pr	Endp
 
@@ -2838,6 +3147,11 @@ init_dir	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET stop_file_system
+	mov di,OFFSET stop_file_system_name
+	mov ax,stop_file_system_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET cache_dir
 	mov di,OFFSET cache_dir_name
