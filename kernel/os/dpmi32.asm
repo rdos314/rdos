@@ -769,6 +769,9 @@ set_exception	PROC far
 	cmp al,3
 	je set_exc_ignore
 ;
+	cmp al,0Dh
+	je set_exc_ignore
+;
 	mov es,cx
 	mov edi,edx
 	SetException
@@ -911,7 +914,6 @@ sim_real_call_int	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 allocate_vm_callback	PROC far
-	int 3
 	AllocateVMCallback
 	mov cx,dx
 	mov dx,ax

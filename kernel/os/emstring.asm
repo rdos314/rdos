@@ -296,7 +296,6 @@ count32:
 	sub dword ptr [bp].reg_ecx,1
 
 done:
-	pop ax
 		ENDM
 
 CheckDone	MACRO

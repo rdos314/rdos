@@ -1078,6 +1078,9 @@ reloc_object_fixup_search:
 	or esi,esi
 	jz reloc_object_done
 	mov eax,[esi].fixup_va
+	or eax,eax
+	je reloc_object_done
+;
 	add eax,edi
 	cmp eax,edx
 	je reloc_object_fixup_found

@@ -39,24 +39,25 @@ INCLUDE user.inc
 INCLUDE os.inc
 INCLUDE int.def
 
-sim_ss		EQU 56
-sim_pesp	EQU 52
+sim_ss		EQU 52
+sim_psp		EQU 50
 sim_cs		EQU 48
-sim_eip		EQU 44
-sim_type	EQU 42
-sim_ds		EQU 40
-sim_es		EQU 38
-sim_fs		EQU 36
-sim_gs		EQU 34
-sim_flags	EQU 32
-sim_eax		EQU 28
-sim_ecx		EQU 24
-sim_edx		EQU 20
-sim_ebx		EQU 16
-sim_esp		EQU 12
-sim_ebp		EQU 8
-sim_esi		EQU 4
-sim_edi		EQU 0
+sim_ip		EQU 46
+sim_type	EQU 44
+sim_ds		EQU 42
+sim_es		EQU 40
+sim_fs		EQU 38
+sim_gs		EQU 36
+sim_flags	EQU 34
+sim_eax		EQU 30
+sim_ecx		EQU 26
+sim_edx		EQU 22
+sim_ebx		EQU 18
+sim_esp		EQU 14
+sim_ebp		EQU 10
+sim_esi		EQU 6
+sim_edi		EQU 2
+sim_client	EQU 0
 
 sim_int		EQU 0
 sim_iret	EQU 1
@@ -72,6 +73,8 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn get_flags:near
 	extrn set_flags:near
+
+	extrn allocate_switch_stack:near
 
 	assume cs:code
 
@@ -651,7 +654,7 @@ sim32_end	PROC far
 	mov ds,es:pint_locked_stack
 	mov si,bx
 	mov di,[si].sim_esp
-	sub di,20h
+	sub di,22h
 	mov cx,stack0_size
 	sub cx,di
 	mov sp,di
@@ -661,6 +664,9 @@ sim32_end	PROC far
 	rep movsw
 	xor bx,bx
 	mov [bx],si
+	mov ax,thread_sel
+	mov ds,ax
+	pop ax
 	popad
 	popf
 	pop gs
@@ -691,6 +697,9 @@ sim32_begin:
 	push gs
 	pushf
 	pushad
+	mov ax,thread_sel
+	mov ds,ax
+	push word ptr 0
 	mov bp,sp
 	cld
 	cmp word ptr [bp].sim_type,sim_ret
@@ -703,12 +712,7 @@ sim_no_cli:
 	mov bx,ds:pint_locked_stack
 	or bx,bx
 	jnz sim_int_save_pm
-	mov eax,1000h
-	AllocateGlobalMem
-	mov ds:pint_locked_stack,es
-	xor bx,bx
-	mov word ptr es:[bx],1000h
-	mov bx,es
+	call allocate_switch_stack
 sim_int_save_pm:
 	mov cx,stack0_size
 	sub cx,sp
@@ -814,6 +818,7 @@ sim_int_no_push:
 	call set_flags
 	pop bx
 	or eax,20000h
+	and ax,NOT 100h
 	push eax
 	cmp bl,sim_int
 	je sim_get_int_ads
@@ -841,7 +846,6 @@ sim_load_regs:
 	mov ebp,es:[edi].vcs_ebp
 	mov esi,es:[edi].vcs_esi
 	mov edi,es:[edi].vcs_edi
-	and byte ptr [bp+2].vm_eflags,NOT 1
 	iretd
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1110,13 +1114,12 @@ allocate_vm_callback	ENDP
 free_vm_callback_name	DB 'Free VM Callback',0
 
 free_vm_callback	PROC far
-	int 3
 	push ecx
 	push edx
-	push dx
-	push ax
-	pop edx
-	mov ecx,12
+	shl edx,4
+	movzx ecx,ax
+	add edx,ecx
+	mov ecx,16
 	FreeLinear
 	pop edx
 	pop ecx

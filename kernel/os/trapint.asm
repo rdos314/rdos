@@ -789,6 +789,7 @@ trap_6:
 	push bp
 	mov bp,sp
 	sti
+	cld
 	push eax
 	push ebx
 	push ds

@@ -1059,6 +1059,9 @@ ofsDirFound:
 	push eax
 	xor edi,edi
 	rep movs byte ptr es:[edi],[esi]
+	or di,di
+	jz ofsDirNotRoot
+;
 	mov al,es:[di-1]
 	cmp al,':'
 	jne ofsDirNotRoot
@@ -1615,11 +1618,15 @@ find_next_file	Proc near
 	push edi
 ;
 	call get_find_sel
+	or bx,bx
+	jz fnfFail
+;
 	mov ds,bx
 	xor esi,esi
 	sub dword ptr [esi+4],SIZE dir_cache
 	ja fnfOk
-;
+
+fnfFail:
 	stc
 	jmp fnfDone
 
