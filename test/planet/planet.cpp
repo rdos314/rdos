@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define DEBUG	1
+
 #define FALSE	0
 #define TRUE	!FALSE
 
@@ -15,8 +17,9 @@ int height;
 int rowsize;
 int sprite;
 void *buf;
+int counter = 0;
 
-#define MAX_PLANETS	4
+#define MAX_PLANETS	16
 
 struct TPlanet
 {
@@ -98,19 +101,6 @@ void CreateSprite(TPlanet *planet)
 
 	if (planet->y > (height - planet->r - 2) * 100)
 		planet->y = 100 * (height - planet->r - 2);
-
-#ifdef DEBUG
-	RdosSetDrawColor(VbeHandle, 0);
-	RdosDrawRect(VbeHandle, 0, height + MAX_PLANETS * 20, width, 20);
-	sprintf(	str,
-				"r=%d, x=%d, y=%d, vx=%d, vy=%d, gx=%d, gy=%d",
-				planet->r,
-				planet->x / 100, planet->y / 100,
-				planet->vx, planet->vy,
-				planet->gx, planet->gy);
-	RdosSetDrawColor(VbeHandle, mkcolor(255, 0, 0));
-	RdosDrawString(VbeHandle, 0, height + MAX_PLANETS * 20, str);
-#endif
 
 	RdosMoveSprite(planet->handle, planet->x / 100 - planet->r, planet->y / 100 - planet->r);
 }
@@ -401,24 +391,38 @@ void UpdatePlanets()
 	}
 
 #ifdef DEBUG
+
+	counter++;
+	RdosSetDrawColor(VbeHandle, 0);
+	RdosDrawRect(VbeHandle, 0, height + MAX_PLANETS / 4 * 15, width, 15);
+	sprintf(str, "%d", counter);
+	RdosSetDrawColor(VbeHandle, mkcolor(0, 255, 0));
+	RdosDrawString(VbeHandle, 0, height + MAX_PLANETS / 4 * 15, str);
+
 	for (i = 0; i < MAX_PLANETS; i++)
 	{
 		planet = PlanetArr[i];
 		if (planet)
 		{
-			RdosSetDrawColor(VbeHandle, 0);
-			RdosDrawRect(VbeHandle, 0, height + i * 20, width, 20);
+			if (i % 4 == 0)
+			{
+				RdosSetDrawColor(VbeHandle, 0);
+				RdosDrawRect(VbeHandle, 0, height + i / 4 * 15, width, 15);
+			}
+
 			sprintf(	str,
-							"%d, r=%d, x=%d, y=%d, vx=%d, vy=%d, gx=%d, gy=%d",
+							"%d, r=%d, x=%d, y=%d",
 							i,
 							PlanetArr[i]->r,
-							PlanetArr[i]->x / 100, PlanetArr[i]->y / 100,
-							PlanetArr[i]->vx, PlanetArr[i]->vy,
-							PlanetArr[i]->gx, PlanetArr[i]->gy);
+							PlanetArr[i]->x / 100, PlanetArr[i]->y / 100);
 			RdosSetDrawColor(VbeHandle, mkcolor(255, 0, 0));
-			RdosDrawString(VbeHandle, 0, height + i * 20, str);
+			RdosDrawString(VbeHandle, (i % 4) * width / 4, height + i / 4 * 15, str);
 		}
 	}
+
+	if (counter == 1302)
+		_asm int 3
+
 #endif
 
 	for (i = 0; i < MAX_PLANETS; i++)
@@ -438,7 +442,7 @@ void cdecl main()
 	int i;
 
 	RdosWaitMilli(250);
-	bpp = 32;
+	bpp = 16;
 	width = 800;
 	height = 600;
 	VbeHandle = RdosSetVBEMode(&bpp, &width, &height, &rowsize, &buf);
@@ -450,9 +454,10 @@ void cdecl main()
 
 #ifdef DEBUG
 	height -= 100;
+#else
+	randomize();
 #endif
 
-	randomize();
 	font = RdosOpenFont(15);
 	RdosSetFont(VbeHandle, font);
 	RdosSetFilledStyle(VbeHandle);

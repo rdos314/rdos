@@ -41,7 +41,8 @@ INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE os.inc
 
-;
+;	DEFINE	NO_MOUSE 0
+
 ; offset in scan-table
 ;
 normal_code		EQU 0
@@ -973,7 +974,9 @@ init_enable_loop2:
 init_enable_do:
 	mov al,47h
 	out 60h,al
+IFDEF NO_MOUSE
 	jmp init_mouse_revoke ; activate this to disable non-existent mouse !!
+ENDIF
 ;
 	mov al,0F3h
 	call SendMouseCommand

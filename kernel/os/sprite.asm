@@ -295,7 +295,6 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 SaveAndShowWholeLine    MACRO seg
     mov ds,seg:sp_dest_sel
     mov cx,seg:sp_new_x
@@ -350,12 +349,14 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 HideLine    MACRO seg
     local hide_line_done
     local hide_line_pos
     local hide_line_do
 
+	cmp dx,seg:sp_h
+	jae hide_line_done
+;
     test ch,80h
     jz hide_line_pos
 ;
@@ -369,9 +370,6 @@ HideLine    MACRO seg
 hide_line_pos:
     cmp cx,seg:sp_w
     jae hide_line_done
-;
-	cmp dx,seg:sp_h
-	jae hide_line_done
 ;
     mov ax,seg:sp_w
     sub ax,cx
@@ -409,6 +407,9 @@ SaveLine    MACRO seg
     local save_line_pos
     local save_line_do
 
+	cmp dx,seg:sp_h
+	jae save_line_done
+;
     test ch,80h
     jz save_line_pos
 ;
@@ -422,9 +423,6 @@ SaveLine    MACRO seg
 save_line_pos:
     cmp cx,seg:sp_w
     jae save_line_done
-;
-	cmp dx,seg:sp_h
-	jae save_line_done
 ;
     mov ax,seg:sp_w
     sub ax,cx
@@ -468,6 +466,9 @@ ShowLine    MACRO seg
     local show_line_pos
     local show_line_do
 
+	cmp dx,seg:sp_h
+	jae show_line_done
+;
     test ch,80h
     jz show_line_pos
 ;
@@ -481,9 +482,6 @@ ShowLine    MACRO seg
 show_line_pos:
     cmp cx,seg:sp_w
     jae show_line_done
-;
-	cmp dx,seg:sp_h
-	jae show_line_done
 ;
     mov ax,seg:sp_w
     sub ax,cx
