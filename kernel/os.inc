@@ -1785,6 +1785,7 @@ FormatFileSystem	MACRO
 					ENDM
 
 ;	AL			Drive #
+;	ECX			Number of sectors
 ;   FS:EDX      Mount data
 StartFileSystem	MACRO
 	OsGate start_file_system_nr

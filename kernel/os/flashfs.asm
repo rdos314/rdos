@@ -43,6 +43,11 @@ INCLUDE flashfs.inc
 
 code	SEGMENT byte public use16 'CODE'
 
+	extrn cache_dir:far
+
+	extrn CacheBlock:near
+	extrn GetFreeBlockSectors:near
+
 	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -61,26 +66,36 @@ code	SEGMENT byte public use16 'CODE'
 
 format	PROC far
     push ds
-    push ecx
-    push edx
+	push es
+    pushad
 ;
-    int 3
-    mov dx,fs
-    mov ds,dx
+	mov dx,flat_sel
+	mov es,dx
 ;
     xor edx,edx
-    mov ecx,ds:fd_sector_count
 
 format_loop:
-    call ds:fd_erase_proc
+	NewSector
+	push eax
+	push ecx
+;
+	mov edi,esi
+	mov ecx,80h
+	mov eax,-1
+	rep stos dword ptr es:[edi]
+;
+	pop ecx
+	pop eax	
+;
+	ModifySector
+	UnlockSector
+;
     inc edx
-    sub ecx,1
-    jnz format_loop
+    loop format_loop
 ;    
-    int 3
     clc
-    pop edx
-    pop ecx
+    popad
+    pop es
     pop ds
 	ret
 format	Endp
@@ -93,6 +108,7 @@ format	Endp
 ;		DESCRIPTION:	Mount filesystem
 ;
 ;       PARAMETERS:     AL          Drive
+;						ECX			Number of sectors
 ;                       FS:EDX      Mount data
 ;
 ;		RETRUNS:		DS:SI		ADDRESS TO DRIVE DATA
@@ -100,9 +116,50 @@ format	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mount	PROC far
-    mov ax,fs
-    mov ds,ax
-    mov si,dx
+	push es
+	push fs
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push edi
+;
+	shr ecx,7
+	push ax
+	mov eax,SIZE drive_data_seg
+	add eax,ecx
+	add eax,ecx
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	pop ax
+;
+	mov ds:block_count,cx
+	mov ds:drive_nr,al
+;
+    xor edx,edx
+	mov di,SIZE drive_data_seg
+
+mount_loop:
+	call CacheBlock
+	mov ds:[di],fs
+
+mount_next:
+	add di,2
+    add edx,80h
+    loop mount_loop
+;
+	xor si,si
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop fs
+	pop es
     clc
 	ret
 mount	ENDP
@@ -150,11 +207,40 @@ dismount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_drive_info	PROC far
-    int 3
-    xor eax,eax
-    mov cx,ds:fd_sector_size
-    mov edx,ds:fd_sector_count
+	push fs
+	push di
+;
+	xor edx,edx
+	mov cx,ds:block_count
+	mov di,SIZE drive_data_seg
+
+get_info_loop:
+	mov ax,ds:[di]
+	or ax,ax
+	jz get_info_full
+;	
+	push cx
+	mov fs,ax
+	call GetFreeBlockSectors
+	add edx,ecx
+	pop cx
+	jmp get_info_next
+
+get_info_full:
+	add edx,127
+
+get_info_next:
+	add di,2
+    loop get_info_loop
+;
+	mov eax,edx
+	mov cx,512
+	movzx edx,ds:block_count
+	shl edx,7
 	clc
+;
+	pop di
+	pop fs
 	ret
 get_drive_info	ENDP
 
@@ -473,29 +559,6 @@ write_file_block	PROC far
 	ret
 write_file_block	ENDP
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			Cache_dir
-;
-;		DESCRIPTION:	Cache dir
-;
-;		PARAMETERS:		EDX			Dir entry to cache or 0
-;						BX			Cached dir selector
-;
-;		RETURNS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-cache_dir	PROC far
-    int 3
-    stc
-	ret
-cache_dir	Endp
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -510,157 +573,6 @@ dummy	PROC far
 	stc
 	ret
 dummy	ENDP
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			init_flash_thread
-;
-;		DESCRIPTION:	Init flash threads
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-flash_name  DB 'FLASH', 0
-flash_file  DB 'd:\flash.dat', 0
-fat_fs      DB 'FAT12', 0
-
-flash_thread:
-    int 3
-    mov cx,7168h
-    mov dx,1409h
-    xor ax,ax
-    FindPciDevice
-;
-    xor ch,ch
-    mov cl,10h        
-    ReadPciDword
-;
-    mov ch,1
-    mov cl,10h
-    ReadPciDword
-;
-    xor ch,ch
-    mov cl,3Ch
-    ReadPciByte
-;
-    xor ch,ch
-    mov cl,3Dh
-    ReadPciByte
-;
-    mov ax,cs
-    mov ds,ax
-    mov es,ax
-    mov edi,OFFSET flash_file
-    mov esi,OFFSET fat_fs
-    mov ecx,100000h
-    UserGateForce32 create_file_drive_nr
-	int 3
-;
-    OpenFileDrive
-	int 3
-;
-    mov ax,cs
-    mov es,ax
-;    
-	AllocateDynamicDrive
-	mov di,OFFSET flashfs_name
-	InstallFileSystem
-;
-    push es
-    push eax
-	mov eax,SIZE flash_data_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov fs,ax
-	pop eax
-	pop es
-	mov fs:fd_drive_nr,al
-;
-    xor cx,cx
-    mov di,OFFSET flash_file
-    OpenFile
-    jnc flash_thread_exist
-;
-    CreateFile
-    jc flash_thread_done
-;
-    mov eax,100000h
-    SetFileSize
-;
-    GetFileSize
-    push bx
-    xor edx,edx
-    mov ebx,1000h
-    mov fs:fd_sector_size,bx
-    mov fs:fd_size,eax
-    div ebx
-    mov fs:fd_sector_count,eax
-    pop bx
-;
-    GetFileInfo
-    mov fs:fd_access,cl
-    mov fs:fd_selector,ax
-;
-    mov ecx,fs:fd_size
-    mov al,fs:fd_drive_nr
-    mov di,OFFSET flashfs_name
-    FormatFileSystem
-    jmp flash_thread_start
-
-flash_thread_exist:
-    GetFileSize
-    push bx
-    xor edx,edx
-    mov ebx,1000h
-    mov fs:fd_sector_size,bx
-    mov fs:fd_size,eax
-    div ebx
-    mov fs:fd_sector_count,eax
-    pop bx
-;
-    GetFileInfo
-    mov fs:fd_access,cl
-    mov fs:fd_selector,ax
-
-flash_thread_start:	
-    mov al,fs:fd_drive_nr
-	StartFileSystem
-;
-
-flash_thread_done:
-	retf
-
-    
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			init_flash_thread
-;
-;		DESCRIPTION:	Init flash threads
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_flash_thread	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET flash_thread
-	mov di,OFFSET flash_name
-	mov cx,500
-	mov ax,4
-	CreateThread
-;
-	popa
-	pop es
-	pop ds
-	ret
-init_flash_thread	ENDP
 
 PAGE
 
@@ -711,9 +623,6 @@ init	PROC far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov di,OFFSET init_flash_thread
-	HookInitTasking
 ;
 	mov si,OFFSET flashfs_name
 	mov di,OFFSET flashfs_ctrl

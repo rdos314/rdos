@@ -43,8 +43,8 @@ INCLUDE ..\drive.inc
 MAX_DRIVES = 'Z' - 'A' + 1
 DRIVE_WAIT_NUM = 32
 
-POLL_TIMEOUT EQU 2 * 1192000
-MIN_TIMEOUT EQU 2 * 1192000
+POLL_TIMEOUT EQU 119200
+MIN_TIMEOUT EQU 119200
 
 drive_wait_struc	STRUC
 
@@ -1001,10 +1001,13 @@ start_drives_loop:
 	cmp bx,es:drive_disc
 	jne start_drives_next
 ;
+	push ecx
+	mov ecx,es:drive_sectors
 	mov ax,si
 	sub ax,OFFSET drive_def_arr
 	shr ax,1
 	StartFileSystem
+	pop ecx
 
 start_drives_next:
 	add si,2

@@ -1142,6 +1142,7 @@ init	PROC far
 	AllocateDynamicDrive
 	mov di,OFFSET fs_name
 	InstallFileSystem
+	mov ecx,-1
 	StartFileSystem
 ;
 	popad

@@ -389,6 +389,10 @@ cfdSave:
     mov di,OFFSET fh_fs_name
 	FormatFileSystem
 	InstallFileSystem
+;
+	mov ecx,es:fh_size
+	shr ecx,9
+	dec ecx
 	StartFileSystem
 	jmp cfdDone
 
@@ -512,6 +516,10 @@ open_file_drive Proc near
 	mov al,es:fd_drive_nr
     mov di,OFFSET fh_fs_name
 	InstallFileSystem
+;
+	mov ecx,es:fh_size
+	shr ecx,9
+	dec ecx
 	StartFileSystem
 	clc
 	jmp ofdDone

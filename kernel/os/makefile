@@ -169,7 +169,7 @@ rdfs_srcs = RDFS.ASM RDFSDIR.ASM RDFSFILE.ASM RDFSCRYP.ASM RDFSMISC.ASM \
 rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
 rdfs_rdvs = RDFS.RDV
 
-flashfs_srcs = FLASHFS.ASM
+flashfs_srcs = FLASHFS.ASM FLDIR.ASM FLTAB.ASM
 flashfs_objs = $(flashfs_srcs:.ASM=.OBJ)
 flashfs_rdvs = FLASHFS.RDV
 

@@ -426,6 +426,7 @@ format_file_system	Endp
 ;		DESCRIPTION:	Start file system
 ;
 ;		PARAMETERS:		AL			Drive #
+;						ECX			Number of sectors to mount
 ;                       FS:EDX      Mount data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
