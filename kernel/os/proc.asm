@@ -2184,6 +2184,7 @@ init_first_process_callback:
 	sti
 	
 null_loop:
+	int 3
 	hlt
 	jmp null_loop
 	

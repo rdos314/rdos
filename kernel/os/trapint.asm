@@ -1199,7 +1199,6 @@ pretask0:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1210,7 +1209,6 @@ pretask1:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1221,7 +1219,6 @@ pretask2:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1232,7 +1229,6 @@ pretask3:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1243,7 +1239,6 @@ pretask4:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1254,7 +1249,6 @@ pretask5:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1325,7 +1319,6 @@ pretask7:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1335,7 +1328,6 @@ pretask7:
 pretask8:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1346,7 +1338,6 @@ pretask9:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1356,7 +1347,6 @@ pretask9:
 pretask10:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1366,7 +1356,6 @@ pretask10:
 pretask11:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1377,7 +1366,6 @@ pretask12:
 	sub sp,4
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1387,7 +1375,6 @@ pretask12:
 pretask13:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1397,7 +1384,6 @@ pretask13:
 prepaging14:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds
@@ -1407,7 +1393,6 @@ prepaging14:
 pretask16:
 	push bp
 	mov bp,sp
-	sti
 	push eax
 	push ebx
 	push ds

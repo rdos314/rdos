@@ -330,10 +330,25 @@ init_paging	PROC near
 ;
 	mov edx,es:rom1_base
 	mov ecx,es:rom1_size
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
 	call map_flat
 ;
 	mov edx,es:rom2_base
 	mov ecx,es:rom2_size
+	or ecx,ecx
+	jz init_paging_ram
+;
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
 	call map_flat
 
 init_paging_ram:

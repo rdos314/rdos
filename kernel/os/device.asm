@@ -217,9 +217,9 @@ move_page_done:
 	jnc move_not_current_adapter
 ;
 	push edx
-	mov cx,word ptr fs:[bx].adapter_base
-	and cx,0FFFh
-	or dx,cx
+;	mov cx,word ptr fs:[bx].adapter_base
+;	and cx,0FFFh
+;	or dx,cx
 	add edx,eax
 	call move_kernel_code
 	pop edx
@@ -230,16 +230,16 @@ move_not_current_adapter:
 	cmp eax,fs:[bx].adapter_size
 	jnc move_not_shutdown_adapter
 	push edx
-	mov cx,word ptr fs:[bx].adapter_base
-	and cx,0FFFh
-	or dx,cx
+;	mov cx,word ptr fs:[bx].adapter_base
+;	and cx,0FFFh
+;	or dx,cx
 	add edx,eax
 	call move_shutdown_code
 	pop edx
 move_not_shutdown_adapter:
-	mov ax,word ptr fs:[bx].adapter_base
-	and ax,0FFFh
-	or dx,ax
+;	mov ax,word ptr fs:[bx].adapter_base
+;	and ax,0FFFh
+;	or dx,ax
 	mov fs:[bx].adapter_base,edx
 	add bx,SIZE adapter_typ
 	pop cx
