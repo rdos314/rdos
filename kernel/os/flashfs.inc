@@ -29,7 +29,10 @@ flash_dir_sel_data_struc	STRUC
 
 fds_base			dir_sel_data_struc <>
 
+fds_owner_sector	DD ?
 fds_entry_sector	DD ?
+fds_object_sector	DD ?
+fds_data_sector		DD ?
 fds_used_entries	DD ?
 fds_deleted_entries	DD ?
 fds_info_offset		DW ?
@@ -89,7 +92,7 @@ fc_logical_block	EQU 1F8h
 fc_version			EQU 1FAh
 fc_signature		EQU 1FCh
 
-FLASH_SIGN_OK	EQU	3AF6CD5Eh
+FLASH_SIGN_OK	EQU	3AF6CD5Dh
 
 logical_entry_struc	STRUC
 

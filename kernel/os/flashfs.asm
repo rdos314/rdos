@@ -125,7 +125,7 @@ format	Endp
 
 mount	PROC far
 	push es
-	push fs
+	push gs
 	push eax
 	push ebx
 	push ecx
@@ -197,7 +197,7 @@ mount_cache_loop:
 	pop es
 	mov word ptr ds:[di],0
 ;	
-    mov ax,fs
+    mov ax,gs
     or ax,ax
     jnz mount_cache_check
 ;
@@ -205,7 +205,7 @@ mount_cache_loop:
 	jmp mount_cache_next
 
 mount_cache_check:
-    movzx bx,fs:bc_logical_block
+    movzx bx,gs:bc_logical_block
     add bx,bx
 ;
     mov ax,es:[bx]
@@ -216,15 +216,15 @@ mount_cache_check:
     mov es,ax
     mov ax,es:bc_version
     pop es
-    cmp ax,fs:bc_version
+    cmp ax,gs:bc_version
     jl mount_cache_save_this
 ;
     push es
     push edx
-    mov ax,fs
+    mov ax,gs
     mov es,ax
     xor ax,ax
-    mov fs,ax
+    mov gs,ax
     mov edx,es:bc_start_sector
 	mov ds:spare_sector,edx
     call EraseBlock
@@ -244,8 +244,8 @@ mount_cache_save_this:
     pop es
 
 mount_cache_save:
-    mov es:[bx],fs
-	mov ds:[di],fs
+    mov es:[bx],gs
+	mov ds:[di],gs
 
 mount_cache_next:	
 	add di,2
@@ -269,12 +269,12 @@ mount_init_loop:
     mov es,ax
     call AllocateBlock
     pop es
-    mov es:[si],fs
+    mov es:[si],gs
     jmp mount_init_next
 
 mount_init_cache:
     push es
-    mov fs,ax
+    mov gs,ax
 	mov ax,flat_sel
 	mov es,ax
 	call CacheBlock
@@ -307,7 +307,7 @@ mount_move_loop:
 	pop ecx
 	pop ebx
 	pop eax
-	pop fs
+	pop gs
 	pop es
     clc
 	ret
@@ -356,7 +356,7 @@ dismount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_drive_info	PROC far
-	push fs
+	push gs
 	push di
 ;
 	xor edx,edx
@@ -369,7 +369,7 @@ get_info_loop:
 	jz get_info_next
 ;	
 	push cx
-	mov fs,ax
+	mov gs,ax
 	call GetFreeBlockSectors
 	add edx,ecx
 	pop cx
@@ -389,7 +389,7 @@ get_info_next:
 	clc
 ;
 	pop di
-	pop fs
+	pop gs
 	ret
 get_drive_info	ENDP
 

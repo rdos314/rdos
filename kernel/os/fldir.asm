@@ -125,8 +125,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Create directory entry
 ;
-;		PARAMETERS:		BX			Dir selector
-;                       ES:EDI      Dir name
+;		PARAMETERS:		ES:EDI      Dir name
 ;                       CX          Attribute
 ;
 ;		RETURNS:		EDX			Dir dir entry
@@ -202,8 +201,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Create file entry
 ;
-;		PARAMETERS:		BX			Dir selector
-;                       ES:EDI      File name
+;		PARAMETERS:		ES:EDI      File name
 ;                       CX          Attribute
 ;
 ;		RETURNS:		EDX			Dir file entry
@@ -385,9 +383,7 @@ FindDirInfo	Proc near
 	push ebp
 
 fdiRedo:
-    call QueryDirEntrySector
-    jc fdiEnd
-;
+	mov ecx,fs:fds_owner_sector
     call DirEntryLogToPhysSector
 	jc fdiEnd
 ;
@@ -836,14 +832,16 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddObjectEntry	Proc near
-    push fs
     push ax
     push ebx
+	push ecx
     push edx
 ;
     push ebx
+	mov ecx,fs:fds_object_sector
     mov ax,LOG_ENTRY_DIR_DATA
     call AllocateSector
+	mov fs:fds_data_sector,ebx
     mov eax,ebx
     pop ebx
     jc adoeDone
@@ -855,9 +853,9 @@ AddObjectEntry	Proc near
 
 adoeDone:
     pop edx
+	pop ecx
     pop ebx
     pop ax
-    pop fs
     ret
 AddObjectEntry Endp
     
@@ -870,24 +868,22 @@ PAGE
 ;
 ;		DESCRIPTION:    Add entry to dir data sector
 ;
-;		PARAMETERS:		ECX         Owner logical sector
-;                       ESI         Object sector address
+;		PARAMETERS:		ESI         Object sector address
 ;                       EBP         Dir file entry
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddDirEntry	Proc near
-    push fs
     push eax
     push ebx
-    push cx
+    push ecx
     push edx
     push esi
 	push edi
 ;
+	mov ecx,fs:fds_object_sector
     mov edx,es:[esi]
     and edx,0FFFFFFh
-	mov edi,edx
     call DirDataLogToPhysSector
     jc adeDone
 ;
@@ -916,9 +912,10 @@ adeTake:
     jne adeUnlock
 ;
     push ebx
-	mov ecx,edi
+	mov ecx,fs:fds_object_sector
     mov ax,LOG_ENTRY_DIR_ENTRY
     call AllocateSector
+	mov fs:fds_data_sector,ebx
     mov eax,ebx
     pop ebx
     jc adeUnlock
@@ -938,10 +935,9 @@ adeDone:
 	pop edi
     pop esi
     pop edx
-    pop cx
+    pop ecx
     pop ebx
     pop eax
-    pop fs
     ret
 AddDirEntry Endp
     
@@ -955,7 +951,6 @@ PAGE
 ;		DESCRIPTION:    Allocate dir entry 
 ;
 ;		PARAMETERS:		EDX			Logical object sector
-;                       EDI			Owner logical sector
 ;						EBP         Dir file entry
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -968,8 +963,7 @@ AllocateDirObject	Proc near
     push esi
     push edi
 ;
-	mov ecx,edi
-    mov edi,edx
+	mov ecx,fs:fds_entry_sector
     call ObjectLogToPhysSector
     jc adoDone
 ;
@@ -995,10 +989,7 @@ adoTake:
     cmp al,OBJECT_OK
     jne adoTakeNext
 ;
-    push ecx
-    mov ecx,edi
     call AddDirEntry
-    pop ecx
     jnc adoUnlock
 
 adoTakeNext:
@@ -1011,10 +1002,7 @@ adoTakeThis:
     call AddObjectEntry
     jc adoUnlock
 ;
-    push ecx
-    mov ecx,edi
     call AddDirEntry
-    pop ecx
 
 adoUnlock:
     pushf
@@ -1040,24 +1028,20 @@ PAGE
 ;
 ;		DESCRIPTION:    Grow directory
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GrowDir	Proc near
 	push es
-	push fs
 	pushad
 ;
 	mov ax,flat_sel
 	mov es,ax
-    mov fs,bx
 
 gdRedo:
+	mov ecx,fs:fds_owner_sector
     mov edx,fs:fds_entry_sector
-	call QueryDirEntrySector
-	jc gdDone
-;
     call DirEntryLogToPhysSector
     jc gdDone
 ;
@@ -1117,7 +1101,7 @@ gdMoveLoop:
 
 gdMoveDone:
 	xor ax,ax
-	mov fs,ax
+	mov gs,ax
 	pop ecx
 	or cx,cx
 	jnz gdMakeValid
@@ -1137,7 +1121,7 @@ gdAllocObjectSector:
 gdMakeValid:
     mov al,es:[esi]
 	mov es:[edi],al	
-	mov ax,fs
+	mov ax,gs
 	or ax,ax
 	jz gdWrite
 ;
@@ -1156,7 +1140,6 @@ gdUnlock:
 
 gdDone:
 	popad
-	pop fs
 	pop es
 	ret
 GrowDir	Endp
@@ -1170,7 +1153,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Add entry to directory
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;                       EDX         Dir file entry
 ;
 ;						
@@ -1178,19 +1161,15 @@ PAGE
 
 AddToDir	Proc near
     push es
-    push fs
     pushad
 ;
     mov ebp,edx
 	mov ax,flat_sel
 	mov es,ax
-    mov fs,bx
 
 atdRetry:    
+	mov ecx,fs:fds_owner_sector
     mov edx,fs:fds_entry_sector
-	call QueryDirEntrySector
-	jc atdDone
-;
     call DirEntryLogToPhysSector
     jc atdDone
 ;    
@@ -1210,15 +1189,12 @@ atdRetry:
 ;
     mov edx,es:[edi]
     and edx,0FFFFFFh
-    mov edi,fs:fds_entry_sector
+	mov fs:fds_object_sector,edx
     call AllocateDirObject
     jnc atdUnlock
 
 atdGrow: 
-    push bx
-    mov bx,fs
     call GrowDir
-    pop bx
     pushf
     UnlockSector
     popf
@@ -1232,7 +1208,6 @@ atdUnlock:
 
 atdDone:
     popad
-    pop fs
     pop es
     ret
 AddToDir   Endp
@@ -1246,7 +1221,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Add file entry
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;                       ES:EDI      File name
 ;                       CX          Attribute
 ;                       EDX         Dir file entry
@@ -1255,8 +1230,6 @@ PAGE
 
 AddFileEntry  Proc near
     push es
-    push fs
-	push gs
     push ax
     push ebx
     push edx
@@ -1309,8 +1282,6 @@ afeDone:
     pop edx
     pop ebx
     pop ax
-	pop gs
-    pop fs
     pop es
     ret
 AddFileEntry  Endp
@@ -1324,7 +1295,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Init root dir entry
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;                       EDX         Logical sector
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1620,7 +1591,7 @@ PAGE
 ;
 ;		DESCRIPTION:    Add entry to directory
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;                       EDX         Dir entry logical sector
 ;
 ;						
@@ -1657,10 +1628,7 @@ ratdRetry:
     jnc ratdUnlock
 
 ratdGrow: 
-    push bx
-    mov bx,fs
     call GrowDir
-    pop bx
     pushf
     UnlockSector
     popf
@@ -2069,16 +2037,14 @@ PAGE
 ;
 ;		DESCRIPTION:    Cache dir
 ;
-;		PARAMETERS:		BX			Dir selector
+;		PARAMETERS:		FS			Dir selector
 ;                       EDX         Logical sector
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CacheDirSel   Proc near
-	push fs
     pushad
 ;
-    mov fs,bx
     mov fs:fds_entry_sector,edx
     call FindDirInfo
     jc cdDone
@@ -2112,7 +2078,6 @@ cdUnlock:
 
 cdDone:
     popad
-    pop fs
     ret
 CacheDirSel   Endp
 
@@ -2136,16 +2101,20 @@ PAGE
 
 cache_dir	PROC far
 	push es
+	push fs
+	push gs
 	push eax
 	push edx
 ;
 	mov ax,flat_sel
 	mov es,ax
+	mov fs,bx
 ;
 	or edx,edx
 	jnz cache_sub_dir
 ;
 	int 3
+	mov fs:fds_owner_sector,-1
 	call GetRootSector
     jc cache_dir_done
 ;
@@ -2160,6 +2129,8 @@ cache_sub_dir:
 cache_dir_done:
     pop edx
 	pop eax
+	pop gs
+	pop fs
 	pop es
 	ret
 cache_dir	Endp
@@ -2421,6 +2392,7 @@ PAGE
 delete_file	PROC far
 	push es
 	push fs
+	push gs
 	push eax
 	push edi
 ;
@@ -2450,6 +2422,7 @@ dfUnlock:
 dfDone:
 	pop edi
 	pop eax
+	pop gs
 	pop fs
 	pop es
 	ret
@@ -2476,15 +2449,16 @@ PAGE
     
 create_file	PROC far
 	push fs
+	push gs
 ;
 	int 3
+	mov fs,bx
     call CreateFileEntry
     call InitFileEntry
     call AddFileEntry
     jc cfFail
 ;    
 	InsertFileEntry	
-	mov fs,bx
 	inc fs:fds_used_entries
 	jmp cfDone
 
@@ -2494,6 +2468,7 @@ cfFail:
     stc
 
 cfDone:
+	pop gs
 	pop fs
 	ret
 create_file	ENDP

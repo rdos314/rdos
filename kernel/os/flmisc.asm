@@ -113,7 +113,7 @@ PAGE
 ;		DESCRIPTION:	Write a sector & allocation table
 ;
 ;		PARAMETERS:		EBX     Sector handle
-;						FS		Allocate selector
+;						GS		Allocate selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -126,7 +126,7 @@ WriteSectorAlloc	Proc near
     push esi
 ;
     int 3
-    mov esi,fs:bc_op_ads
+    mov esi,gs:bc_op_ads
 	mov al,es:[esi].le_status
 	and al,1Fh
 	or al,LOG_STATUS_BEFORE_ALLOC
@@ -135,7 +135,7 @@ WriteSectorAlloc	Proc near
     push ebx
     mov cx,1
     CreateDiscSeq
-    mov ebx,fs:bc_op_handle
+    mov ebx,gs:bc_op_handle
     ModifySeqSector
     PerformDiscSeq
     pop ebx
@@ -145,7 +145,7 @@ WriteSectorAlloc	Proc near
     ModifySeqSector
     PerformDiscSeq
 ;    
-    mov ebx,fs:bc_op_handle
+    mov ebx,gs:bc_op_handle
 	WaitForSector
 ;
 	mov al,es:[esi].le_status
@@ -175,7 +175,7 @@ PAGE
 ;		DESCRIPTION:	Write a sector & allocation table
 ;
 ;		PARAMETERS:		EBX     Sector handle
-;						FS		Free selector
+;						GS		Free selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -188,7 +188,7 @@ WriteSectorFree	Proc near
     push esi
 ;
     int 3
-    mov esi,fs:bc_op_ads
+    mov esi,gs:bc_op_ads
 	mov al,es:[esi].le_status
 	and al,1Fh
 	or al,LOG_STATUS_BEFORE_FREE
@@ -196,7 +196,7 @@ WriteSectorFree	Proc near
     push ebx
     mov cx,1
     CreateDiscSeq
-    mov ebx,fs:bc_op_handle
+    mov ebx,gs:bc_op_handle
     ModifySeqSector
     PerformDiscSeq
     pop ebx
@@ -206,7 +206,7 @@ WriteSectorFree	Proc near
     ModifySeqSector
     PerformDiscSeq
 ;    
-    mov ebx,fs:bc_op_handle
+    mov ebx,gs:bc_op_handle
 	WaitForSector
 ;
     mov es:[esi].le_status,0
