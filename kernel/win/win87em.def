@@ -1,0 +1,5 @@
+NAME    WIN87EM
+EXETYPE OS2
+EXPORTS 
+
+		__fpmath	@1

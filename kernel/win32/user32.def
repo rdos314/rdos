@@ -1,0 +1,9 @@
+NAME    USER32
+EXPORTS
+	Borland32
+	CharUpperBuffA
+	EnumThreadWindows
+	GetKeyboardType
+	GetSystemMetrics
+	LoadStringA
+	MessageBoxA

@@ -1,0 +1,1928 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; RDOS.ASM
+; 32-bit interface for RDOS API for Win32 compilers
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+	NAME  rdos
+
+	.386
+	.model flat
+
+include c:\rdos\os\user.def
+
+tib_data	STRUC
+
+pvFirstExcept		DD ?
+pvStackUserTop		DD ?
+pvStackUserBottom	DD ?
+pvLastError			DD ?
+pvStackUserSize		DD ?
+pvArbitrary			DD ?
+pvTEB				DD ?
+pvProcessHandle		DD ?
+pvThreadHandle		DD ?
+pvModuleHandle		DD ?
+pvTLSBitmap			DD ?
+pvTLSArray			DD ?
+
+tib_data	ENDS
+
+UserGate      MACRO gate_nr
+	db 66h
+	db 9Ah
+	dw 0
+	dw 200Bh + (gate_nr SHL 4)
+			ENDM
+
+		NAME system
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+	.code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TASK_END
+;
+;		description:	Termination of task
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+task_end:
+	UserGate terminate_thread_nr
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TASK_START
+;
+;		description:	Task startup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+task_start	proc
+	mov ax,ds
+	mov es,ax
+	push fs:pvArbitrary
+	push OFFSET task_end
+	push edx
+	ret
+task_start	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCreateThread
+;
+;		description:	Create a new thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateThread
+
+task_callb	EQU 8
+task_name	EQU 12
+task_data	EQU 16
+task_stack	EQU 20
+
+RdosCreateThread	PROC
+	push ebp
+	mov ebp,esp
+	push ds
+	pushad
+;
+	mov edx,[ebp].task_callb
+	mov ax,cs
+	mov ds,ax
+	mov esi,OFFSET task_start
+	mov ecx,[ebp].task_stack
+	mov edi,[ebp].task_name
+	mov eax,[ebp].task_data
+	mov fs:pvArbitrary,eax
+	mov bx,fs
+	mov ax,2
+	UserGate create_thread_nr
+;
+	mov eax,10
+	UserGate wait_milli_nr
+;
+	popad
+	pop ds
+	pop ebp
+	ret 16
+RdosCreateThread	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitMilli
+;
+;		description:	Wait a number of milliseconds
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitMilli
+
+RdosWaitMilli	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+;
+	mov eax,[ebp+8]
+	UserGate wait_milli_nr
+;
+	pop eax
+	pop ebp
+	ret 4
+RdosWaitMilli	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosEnterSection
+;
+;		description:	Enter section
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosEnterSection
+
+RdosEnterSection	Proc
+	push ebp
+	mov ebp,esp
+	push esi
+;
+	mov esi,[ebp+8]
+	sub word ptr [esi],1
+	jc enter_done
+	UserGate enter_section_nr
+enter_done:
+	pop esi
+	pop ebp
+	ret 4
+RdosEnterSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosLeaveSection
+;
+;		description:	LEAVE SECTION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosLeaveSection
+
+RdosLeaveSection	Proc
+	push ebp
+	mov ebp,esp
+	push esi
+;
+	mov esi,[ebp+8]
+	add word ptr [esi],1
+	jc leave_done
+	UserGate leave_section_nr
+leave_done:
+	pop esi
+	pop ebp
+	ret 4
+RdosLeaveSection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetVgaMode
+;
+;		description:	SetVgaMode()
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetVgaMode
+
+RdosSetVgaMode	Proc
+	UserGate set_vga_mode_nr
+	ret
+RdosSetVgaMode	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetForeColor
+;
+;		description:	SetForeColor(color)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetForeColor
+
+RdosSetForeColor	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+;
+	mov al,[ebp+8]
+	UserGate set_forecolor_nr
+;
+	pop eax
+	pop ebp
+	ret 4
+RdosSetForeColor	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetBackColor
+;
+;		description:	SetBackColor(color)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetBackColor
+
+RdosSetBackColor	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+;
+	mov al,[ebp+8]
+	UserGate set_backcolor_nr
+;
+	pop eax
+	pop ebp
+	ret 4
+RdosSetBackColor	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetFont
+;
+;		description:	SetFont(height)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFont
+
+RdosSetFont	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+;
+	mov ax,[ebp+8]
+	UserGate set_font_nr
+;
+	pop eax
+	pop ebp
+	ret 4
+RdosSetFont	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosFillRect
+;
+;		description:	int FillRect(startX, startY, endX, endY)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFillRect
+
+frStartX	EQU 8
+frStartY	EQU 12
+frEndX		EQU 16
+frEndY		EQU 20
+
+RdosFillRect	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+;
+	mov ax,[ebp].frStartX
+	mov bx,[ebp].frStartY
+	mov cx,[ebp].frEndX
+	mov dx,[ebp].frEndY
+	UserGate fill_rect_nr
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ebp
+	ret 16
+RdosFillRect	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawMonoBitmap
+;
+;		description:	ivoid DrawMonoBitmap(bitmap, startX, startY, endX, endY)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDrawMonoBitmap
+
+dmBitmap	EQU 8
+dmStartX	EQU 12
+dmStartY	EQU 16
+dmEndX		EQU 20
+dmEndY		EQU 24
+
+RdosDrawMonoBitmap	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push edi
+;
+	int 3
+	mov ax,[ebp].dmStartX
+	mov bx,[ebp].dmStartY
+	mov cx,[ebp].dmEndX
+	mov dx,[ebp].dmEndY
+	mov edi,[ebp].dmBitmap
+	UserGate draw_mono_nr
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ebp
+	ret 20
+RdosDrawMonoBitmap	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetCharWidth
+;
+;		description:	int GetCharWidth(ch)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetCharWidth
+
+RdosGetCharWidth	Proc
+	push ebp
+	mov ebp,esp
+	push ecx
+;
+	mov al,[ebp+8]
+	UserGate get_char_width_nr
+	movzx eax,cx
+;
+	pop ecx
+	pop ebp
+	ret 4
+RdosGetCharWidth	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawChar
+;
+;		description:	int DrawChar(x, y, ch)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDrawChar
+
+dcX		EQU 8
+dcY		EQU 12
+dcCh	EQU 16
+
+RdosDrawChar	Proc
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	mov cx,[ebp].dcX
+	mov dx,[ebp].dcY
+	mov al,[ebp].dcCh
+	UserGate draw_char_nr
+	movzx eax,cx
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 10
+RdosDrawChar	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetStringWidth
+;
+;		description:	int GetStringWidth(str)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetStringWidth
+
+RdosGetStringWidth	Proc
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate get_string_width_nr
+	movzx eax,cx
+;
+	pop edi
+	pop ecx
+	pop ebp
+	ret 4
+RdosGetStringWidth	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosDrawString
+;
+;		description:	int DrawString(x, y, str)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDrawString
+
+dsX		EQU 8
+dsY		EQU 12
+dsStr	EQU 16
+
+RdosDrawString	Proc
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+	push edi
+;
+	mov cx,[ebp].dsX
+	mov dx,[ebp].dsY
+	mov edi,[ebp].dsStr
+	UserGate draw_string_nr
+	movzx eax,cx
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop ebp
+	ret 12
+RdosDrawString	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetSysTime
+;
+;		description:	gets system time in record form
+;
+;		PARAMETERS:		int *year
+;						int *month
+;						int *day
+;						int *hour
+;						int *min
+;						int *sec
+;						int *milli
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetSysTime
+
+gtrtYear	EQU 8
+gtrtMonth	EQU 12
+gtrtDay		EQU 16
+gtrtHour	EQU 20
+gtrtMin		EQU 24
+gtrtSec		EQU 28
+gtrtMilli	EQU 32
+
+RdosGetSysTime	Proc
+	push ebp
+	mov ebp,esp
+	pushad
+;
+	UserGate get_system_time_nr
+	push eax
+	UserGate binary_to_time_nr
+	push edx
+;
+	mov esi,[ebp].gtrtYear
+	movzx edx,dx
+	mov [esi],edx
+;
+	mov esi,[ebp].gtrtMonth
+	movzx edx,ch
+	mov [esi],edx
+;
+	mov esi,[ebp].gtrtDay
+	movzx edx,cl
+	mov [esi],edx
+;
+	mov esi,[ebp].gtrtHour
+	movzx edx,bh
+	mov [esi],edx
+;
+	mov esi,[ebp].gtrtMin
+	movzx edx,bl
+	mov [esi],edx
+;
+	mov esi,[ebp].gtrtSec
+	movzx edx,ah
+	mov [esi],edx
+;
+	pop edx
+	UserGate time_to_binary_nr
+	mov ebx,eax
+	pop eax
+	sub eax,ebx
+	xor edx,edx
+	mov ebx,1192
+	div ebx
+	mov esi,[ebp].gtrtMilli
+	movzx eax,ax
+	mov [esi],eax
+;
+	popad
+	pop ebp
+	ret 24
+RdosGetSysTime	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosOpenCom
+;
+;		description:	™ppnar comport
+;
+;		PARAMETERS:		port_base		basadress till com port
+;						port_irq		irq till com port
+;						baud_divisor	baudrate divisor
+;						parity			parity 'N', 'E' or 'O'
+;						data_bits		# of data bits
+;						stop_bits		# of stop bits
+;						send_buf_size	size of transmit buffer
+;						rec_buf_size	size of receive buffer
+;
+;		RETURNS:		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenCom
+
+port_base		EQU 8
+port_irq		EQU 12
+baud_divisor	EQU 16
+parity			EQU 20
+data_bits		EQU 24
+stop_bits		EQU 28
+send_buf_size	EQU 32
+rec_buf_size	EQU 36
+
+RdosOpenCom	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov dx,[ebp].port_base
+	mov al,[ebp].port_irq
+	mov ah,[ebp].data_bits
+	mov bl,[ebp].stop_bits
+	mov bh,[ebp].parity
+	mov cx,[ebp].baud_divisor
+	mov si,[ebp].send_buf_size
+	mov di,[ebp].rec_buf_size
+	UserGate open_com_nr
+	mov ax,bx
+;
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 32
+RdosOpenCom	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosCloseCom
+;
+;		description:	St„nger comport
+;
+;		PARAMETERS:		port_handle		port handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseCom
+
+RdosCloseCom	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_com_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseCom	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosFlushCom
+;
+;		description:	Rensar rx och tx k”
+;
+;		PARAMETERS:		port_handler	handle till port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFlushCom
+
+RdosFlushCom	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate flush_com_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosFlushCom	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosPollCom
+;
+;		description:	Testa om det finns n†got tecken fr†n serieport
+;
+;		PARAMETERS:		hport		com handle
+;
+;		RETURNS:		> 0			antal tecken i buffert
+;						FALSE		buffer empty
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPollCom
+
+RdosPollCom	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate poll_com_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosPollCom	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWaitForCom
+;
+;		description:	V„nta p† tecken
+;
+;		PARAMETERS:		hport		com handle
+;						timeout		ms timeout
+;
+;		RETURNS:		> 0			antal tecken i buffert
+;						FALSE		buffer empty
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitForCom
+
+RdosWaitForCom	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate wait_for_com_nr
+	movzx eax,ax
+;
+	pop ebx
+	pop ebp
+	ret 8
+RdosWaitForCom	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosReadCom
+;
+;		description:	L„s tecken fr†n serieport
+;
+;		PARAMETERS:		hport		com handle
+;
+;		RETURNS:		ch			received char
+;						-1			buffer empty
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadCom
+
+RdosReadCom	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate read_com_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosReadCom	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosWriteCom
+;
+;		description:	S„nd tecken till serieport
+;
+;		PARAMETERS:		hport		com handle
+;						ch			tecken
+;
+;		RETURNS:		0			s„ndning ok
+;						-1			buffer full
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteCom
+
+RdosWriteCom	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov al,[ebp+12]
+	UserGate write_com_nr
+	movzx eax,al
+;
+	pop ebx
+	pop ebp
+	ret 8
+RdosWriteCom	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosSetDtr
+;
+;		description:	S„tt DTR on
+;
+;		PARAMETERS:		hport		com handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetDtr
+
+RdosSetDtr	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate set_dtr_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosSetDtr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosResetDtr
+;
+;		description:	S„tt DTR off
+;
+;		PARAMETERS:		hport		com handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosResetDtr
+
+RdosResetDtr	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate reset_dtr_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosResetDtr	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenFile
+;
+;		DESCRIPTION:	Opens a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenFile
+
+RdosOpenFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov cl,[ebp+12]
+	UserGate open_file_nr
+	jc OpenFileFailed
+	mov ax,bx
+	jmp OpenFileDone
+
+OpenFileFailed:
+	xor ax,ax
+
+OpenFileDone:
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosOpenFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseFile
+;
+;		DESCRIPTION:	Close a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseFile
+
+RdosCloseFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_file_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFileSize
+;
+;		DESCRIPTION:	Get size of a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFileSize
+
+RdosGetFileSize	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_file_size_nr
+	jnc GetFileSizeDone
+
+GetFileSizeFail:
+	xor eax,eax
+
+GetFileSizeDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetFileSize	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFileSize
+;
+;		DESCRIPTION:	Set size of file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFileSize
+
+RdosSetFileSize	PROC
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate set_file_size_nr
+;
+	pop ebx
+	pop eax
+	pop ebp
+	ret 8
+RdosSetFileSize	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFilePos
+;
+;		DESCRIPTION:	Get position in a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFilePos
+
+RdosGetFilePos	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate get_file_pos_nr
+	jnc GetFilePosDone
+
+GetFilePosFail:
+	xor eax,eax
+
+GetFilePosDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetFilePos	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFilePos
+;
+;		DESCRIPTION:	Set position in file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetFilePos
+
+RdosSetFilePos	PROC
+	push ebp
+	mov ebp,esp
+	push eax
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate set_file_pos_nr
+;
+	pop ebx
+	pop eax
+	pop ebp
+	ret 8
+RdosSetFilePos	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadFile
+;
+;		DESCRIPTION:	Read data from file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadFile
+
+RdosReadFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate read_file_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosReadFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteFile
+;
+;		DESCRIPTION:	Write data to file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteFile
+
+RdosWriteFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate write_file_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetCurDir
+;
+;		DESCRIPTION:	Set current directory
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetCurDir
+
+RdosSetCurDir	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate set_cur_dir_nr
+;
+	pop edi
+	pop ebp
+	ret 4
+RdosSetCurDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosClearKeyboard
+;
+;		DESCRIPTION:	Clear keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosClearKeyboard
+
+RdosClearKeyboard	PROC
+	UserGate flush_keyboard_nr
+	ret
+RdosClearKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPollKeyboard
+;
+;		DESCRIPTION:	Poll keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPollKeyboard
+
+RdosPollKeyboard	PROC
+	UserGate poll_keyboard_nr
+	jc rpkEmpty
+;
+	mov eax,1
+	ret
+
+rpkEmpty:
+	xor eax,eax
+	ret
+RdosPollKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadKeyboard
+;
+;		DESCRIPTION:	Read keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadKeyboard
+
+RdosReadKeyboard	PROC
+	UserGate read_keyboard_nr
+	movzx eax,ax
+	ret
+RdosReadKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetCursorPosition
+;
+;		DESCRIPTION:	Set cursor position
+;
+;		PARAMETER:		Row
+;						Col
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSetCursorPosition
+
+RdosSetCursorPosition	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+;
+	mov dx,[ebp+8]
+	mov cx,[ebp+12]
+	UserGate set_cursor_position_nr
+;
+	pop edx
+	pop ecx
+	pop ebp
+	ret 8
+RdosSetCursorPosition	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadLine
+;
+;		DESCRIPTION:	Read a line from keyboard
+;
+;		PARAMETERS:		Buffer
+;						Buffer size
+;
+;		RETURNS:		Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadLine
+
+RdosReadLine	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate read_con_nr
+;
+	pop edi
+	pop ecx
+	pop ebp
+	ret 8
+RdosReadLine	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteString
+;
+;		DESCRIPTION:	Write a string to screen
+;
+;		PARAMETER:		String
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteString
+
+RdosWriteString	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate write_asciiz_nr
+;
+	pop edi
+	pop ebp
+	ret 4
+RdosWriteString	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosNameToIp
+;
+;		DESCRIPTION:	Convert host name to IP address
+;
+;		PARAMETER:		Pathname
+;						IP address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosNameToIp
+
+RdosNameToIp	PROC
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate name_to_ip_nr
+	jc rntiFail
+;
+	mov eax,edx
+	jmp rntiDone
+
+rntiFail:
+	xor eax,eax
+
+rntiDone:
+	pop edi
+	pop ebp
+	ret 4
+RdosNameToIp	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosIpToName
+;
+;		DESCRIPTION:	Convert IP address to host name
+;
+;		PARAMETER:		IP address
+;						Host name
+;						Max size of name
+;
+;		RETURNS:		Number of bytes returned
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosIpToName
+
+RdosIpToName	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+	push edi
+;
+	mov edx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate ip_to_name_nr
+	jnc ritnDone
+
+ritnFail:
+	xor eax,eax
+
+ritnDone:
+	pop edi
+	pop edx
+	pop ecx
+	pop ebp
+	ret 12
+RdosIpToName	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPing
+;
+;		DESCRIPTION:	Ping node
+;
+;		PARAMETER:		Node
+;						Timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPing
+
+RdosPing	PROC
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov edx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate ping_nr
+	jc ping_failed
+;
+	mov eax,1
+	jmp ping_done
+
+ping_failed:
+	xor eax,eax
+
+ping_done:
+	pop edx
+	pop ebp
+	ret 8
+RdosPing	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenConnection
+;
+;		DESCRIPTION:	Open an active connection over TCP
+;
+;		PARAMETER:		RemoteIp
+;						LocalPort
+;						RemotePort
+;						Timeout in ms
+;						BufferSize
+;
+;		RETURNS:		Connection handle						
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenTcpConnection
+
+RdosOpenTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+	mov edx,[ebp+8]
+	mov si,[ebp+12]
+	mov di,[ebp+16]
+	mov eax,[ebp+20]
+	mov ecx,[ebp+24]
+	UserGate open_tcp_connection_nr
+	mov eax,0
+	jc rotcDone
+	mov eax,ebx
+rotcDone:
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+	ret 20
+RdosOpenTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosListenTcpPort
+;
+;		DESCRIPTION:	Initialize listen on passive port
+;
+;		PARAMETER:		Port
+;						BufferSize
+;						Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ListenCallback	Proc
+	push ebx
+	push OFFSET lcDone
+	push eax
+	ret
+lcDone:
+	ret
+ListenCallback	Endp
+
+	public RdosListenTcpPort
+
+RdosListenTcpPort	Proc
+	push ebp
+	mov ebp,esp
+	push esi
+	push edi
+;
+	mov edi,OFFSET ListenCallback
+	mov si,[ebp+8]
+	mov ecx,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate listen_tcp_port_nr
+;
+	pop edi
+	pop esi
+	pop ebp
+	ret 12
+RdosListenTcpPort	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWaitForTcpConnection
+;
+;		DESCRIPTION:	Wait for a passive connection to establish
+;
+;		PARAMETER:		Handle
+;						Timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitForTcpConnection
+
+RdosWaitForTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate wait_for_tcp_connection_nr
+	mov eax,1
+	jnc wftcDone
+	xor eax,eax
+wftcDone:
+	pop ebx
+	pop ebp
+	ret 8
+RdosWaitForTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseTcpConnection
+;
+;		DESCRIPTION:	Close connection
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseTcpConnection
+
+RdosCloseTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_tcp_connection_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosDeleteTcpConnection
+;
+;		DESCRIPTION:	Delete connection handle
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDeleteTcpConnection
+
+RdosDeleteTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate delete_tcp_connection_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosDeleteTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAbortTcpConnection
+;
+;		DESCRIPTION:	Abort connection
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAbortTcpConnection
+
+RdosAbortTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate abort_tcp_connection_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosAbortTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPushTcpConnection
+;
+;		DESCRIPTION:	Push connection
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPushTcpConnection
+
+RdosPushTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate push_tcp_connection_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosPushTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosIsTcpConnectionClosed
+;
+;		DESCRIPTION:	Check if other side closed the connection
+;
+;		PARAMETER:		Handle
+;
+;		RETURNS:		FALSE		Connection still alive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosIsTcpConnectionClosed
+
+RdosIsTcpConnectionClosed	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate is_tcp_connection_closed_nr
+	jc rptcClosed
+;
+	xor eax,eax
+	jmp rptcDone
+
+rptcClosed:
+	mov eax,1
+	
+rptcDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosIsTcpConnectionClosed	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadTcpConnection
+;
+;		DESCRIPTION:	Read data from connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadTcpConnection
+
+RdosReadTcpConnection	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate read_tcp_connection_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosReadTcpConnection	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteTcpConnection
+;
+;		DESCRIPTION:	Write data to connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteTcpConnection
+
+RdosWriteTcpConnection	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edi,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate write_tcp_connection_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteTcpConnection	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetLocalMailslot
+;
+;		DESCRIPTION:	Get local mailslot from name
+;
+;		PARAMETER:		Name
+;
+;		RETURNS:		Mailslot
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetLocalMailslot
+
+RdosGetLocalMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate get_local_mailslot_nr
+	jc rglmFail
+;
+	movzx eax,bx
+	jmp rglmDone
+
+rglmFail:
+	xor eax,eax
+
+rglmDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 4
+RdosGetLocalMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetRemoteMailslot
+;
+;		DESCRIPTION:	Get remote mailslot from name
+;
+;		PARAMETER:		Ip
+;						Name
+;
+;		RETURNS:		Mailslot
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetRemoteMailslot
+
+RdosGetRemoteMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edx
+	push edi
+;
+	mov edx,[ebp+8]
+	mov edi,[ebp+12]
+	UserGate get_remote_mailslot_nr
+	jc rgrmFail
+;
+	movzx eax,bx
+	jmp rgrmDone
+
+rgrmFail:
+	xor eax,eax
+
+rgrmDone:
+	pop edi
+	pop edx
+	pop ebx
+	pop ebp
+	ret 8
+RdosGetRemoteMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosFreeMailslot
+;
+;		DESCRIPTION:	Free mailslot handle
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFreeMailslot
+
+RdosFreeMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate free_mailslot_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosFreeMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSendMailslot
+;
+;		DESCRIPTION:	Send to mailslot and wait for reply
+;
+;		PARAMETER:		Handle
+;						Msg
+;						Size
+;						ReplyBuf
+;						MaxReplySize
+;
+;		RETURNS:		Reply size or -1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSendMailslot
+
+RdosSendMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push esi
+	push edi
+;
+	mov bx,[ebp+8]
+	mov esi,[ebp+12]
+	mov ecx,[ebp+16]
+	mov edi,[ebp+20]
+	mov eax,[ebp+24]
+	UserGate send_mailslot_nr
+	jc smFail
+;
+	mov eax,ecx
+	jmp smDone
+
+smFail:
+	mov eax,-1
+
+smDone:
+	pop edi
+	pop esi
+	pop ebx
+	pop ebp
+	ret 20
+RdosSendMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosDefineMailslot
+;
+;		DESCRIPTION:	Define mailslot for current thread
+;
+;		PARAMETER:		Name
+;						Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDefineMailslot
+
+RdosDefineMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate define_mailslot_nr
+;
+	pop edi
+	pop ebp
+	ret 8
+RdosDefineMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReceiveMailslot
+;
+;		DESCRIPTION:	Receive from mailslot
+;
+;		PARAMETER:		Msg buffer
+;
+;		RETURNS:		Message size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReceiveMailslot
+
+RdosReceiveMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate receive_mailslot_nr
+	mov eax,ecx
+;
+	pop edi
+	pop ebp
+	ret 4
+RdosReceiveMailslot	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReplyMailslot
+;
+;		DESCRIPTION:	Receive from mailslot
+;
+;		PARAMETER:		Msg
+;						Size
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReplyMailslot
+
+RdosReplyMailslot	Proc
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate reply_mailslot_nr
+;
+	pop edi
+	pop ebp
+	ret 8
+RdosReplyMailslot	Endp
+
+;	extrn Startup:near
+
+;	public _main
+
+;_main:
+;	jmp Startup
+
+	END
