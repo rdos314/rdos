@@ -318,7 +318,7 @@ create_alias16_dt_ok:
 	shr ecx,16
 	and cx,0Fh
 	or ch,al
-	or cl,10
+	or cl,10h
 	mov [bx+6],cx
 	jmp create_alias16_done
 

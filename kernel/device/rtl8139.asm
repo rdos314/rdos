@@ -118,6 +118,8 @@ RX_FIFO_THRESH = 4
 RX_DMA_BURST = 3
 TX_DMA_BURST = 3
 
+TX_FIFO_THRESH = 256
+
 ; The EEPROM commands include the alway-set leading bit.
 
 EE_WRITE_CMD = 5
@@ -147,10 +149,9 @@ RxRingLinear		DD ?
 RxRingSize			DD ?
 RxRingSel			DW ?
 RxRingPtr           DW ?
-TxRingPhys			DD ?
-TxRingLinear		DD ?
-TxRingSize			DD ?
-TxRingSel			DW ?
+TxSelArr            DW 4 DUP(?)
+TxThread            DW ?
+TxSection           section_typ <>
 EthernetAddress		DB 6 DUP(?)
 EeAdrLen			DB ?
 
@@ -346,32 +347,6 @@ al_arxring_loop:
 	AllocateGdt
 	CreateDataSelector16
 	mov ds:RxRingSel,bx
-;
-	mov ecx,2
-	AllocateMultiplePhysical
-	jc arDone
-;
-	mov ds:TxRingPhys,eax
-	mov eax,ecx
-	shl eax,12
-	AllocateBigLinear
-	mov ds:TxRingLinear,edx
-	mov ds:TxRingSize,eax
-;
-	mov eax,ds:TxRingPhys
-	or al,7
-
-al_txring_loop:
-	SetPhysicalPage
-	add eax,1000h
-	add edx,1000h
-	loop al_txring_loop
-;
-	mov ecx,ds:TxRingSize
-	mov edx,ds:TxRingLinear
-	AllocateGdt
-	CreateDataSelector16
-	mov ds:TxRingSel,bx
 
 arDone:
 	ret
@@ -463,7 +438,7 @@ ihResetDone:
 ;
 	mov dx,ds:IoBase
 	add dx,IntrMask
-	mov ax, TxErr OR TxOK OR RxOK OR RxUnderrun
+	mov ax,RxOk OR RxErr OR TxOK OR TxErr  
 	out dx,ax 
 	clc
 
@@ -485,7 +460,8 @@ InitHardware	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt	Proc far
-	mov dx,ds:IoBase
+niLoop:
+   	mov dx,ds:IoBase
 	add dx,IntrStatus
 	in ax,dx
 	mov bx,ax
@@ -501,8 +477,7 @@ niNotUnderrun:
 	add dx,IntrStatus
 	mov ax,bx
 	out dx,ax
-;
-    test bx,RxOK OR RxUnderrun OR RxOverflow OR RxFIFOOver
+    test bx,RxOK OR RxErr OR RxUnderrun OR RxOverflow OR RxFIFOOver
     jz niNotRx
 ;
 	mov bx,ds:Handle
@@ -510,9 +485,21 @@ niNotUnderrun:
 	jz niNotRx
 ;
 	NetReceived
+	jmp niLoop
 
 niNotRx:
-	
+    test bx,TxOK OR TxErr
+    jz niNotTx
+;
+    mov bx,ds:TxThread
+    or bx,bx
+    jz niNotTx
+;
+    Signal
+    jmp niLoop
+
+niNotTx:
+
 	ret
 NetInt	Endp
 
@@ -531,9 +518,13 @@ NetInt	Endp
 
 Preview	Proc far
     push ds
+    push fs
+    push ebx
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+
+preview_loop:
 	mov dx,ds:IoBase
 	add dx,ChipCmd
 	in al,dx
@@ -541,17 +532,36 @@ Preview	Proc far
 	stc
 	jnz preview_done
 ;    
-    push ebx
+    mov fs,ds:RxRingSel
     xor ebx,ebx
     mov bx,ds:RxRingPtr
-	mov ds,ds:RxRingSel
-	mov dx,ds:[ebx+12+4]	
+    mov ax,fs:[ebx]
+    test al,RxOK
+    jnz preview_ok
+;    
+    mov cx,fs:[ebx+2]
+    add bx,cx
+    add bx,4
+    dec bx
+    and bx,0FFFCh
+    add bx,4
+    mov ds:RxRingPtr,bx
+    mov ax,bx
+    sub ax,16
+    mov ds,ds:IoBase
+    add dx,RxBufPtr
+    out dx,ax
+    jmp preview_loop
+
+preview_ok:    
+	mov dx,fs:[ebx+12+4]	
 	xchg dl,dh
     xor ecx,ecx
-    pop ebx
     clc
 
 preview_done:
+    pop ebx
+    pop fs
     pop ds
 	ret
 Preview	Endp
@@ -569,27 +579,27 @@ Preview	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Receive	Proc far
-    int 3
     push ds
     push fs
-    push ebx
+    push bx
+    push edx
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
 	mov fs,ds:RxRingSel
-	xor ebx,ebx
-    mov bx,ds:RxRingPtr
-    mov ax,fs:[ebx]
-    movzx ecx,word ptr fs:[ebx+2]
-    test al,RxOK
-    stc
-    jz rDone
-;        
-	clc
-
-rDone:
-    stc
-    pop ebx
+	xor edx,edx
+    mov dx,ds:RxRingPtr
+    mov ax,fs:[edx]
+    movzx ecx,word ptr fs:[edx+2]
+    AllocateGdt
+    add edx,4    
+    add edx,ds:RxRingLinear
+    CreateAliasSelector16
+    mov es,bx
+    xor edi,edi
+;
+    pop edx
+    pop bx
 	pop fs
 	pop ds
 	ret
@@ -612,6 +622,7 @@ Remove	Proc far
 ;
 	mov ax,ether_data_sel
 	mov ds,ax
+;
     mov dx,ds:IoBase
     xor ebx,ebx
     mov bx,ds:RxRingPtr
@@ -624,6 +635,7 @@ Remove	Proc far
     and bx,0FFFCh
     add bx,4
     mov ax,bx
+    sub ax,16
     add dx,RxBufPtr
     out dx,ax
     pop ds
@@ -650,8 +662,22 @@ Remove	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetBuffer	Proc far
+	push eax
+	mov eax,14
+	add eax,ecx
+	cmp eax,64
+	jae gbSizeOk
+
+    mov eax,64
+
+gbSizeOk:	
+    add eax,4
+	AllocateGlobalMem
+	mov edi,14
+	pop eax
 	ret
 GetBuffer	Endp
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -668,6 +694,99 @@ GetBuffer	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send	Proc far
+	push ds
+	push eax
+	push bx
+	push ecx
+	push dx
+	push edi
+;
+	xor di,di
+	mov ax,ds:[esi]
+	stosw
+	mov ax,[esi+2]
+	stosw
+	mov ax,[esi+4]
+	stosw
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov ax,word ptr ds:EthernetAddress
+	stosw
+	mov ax,word ptr ds:EthernetAddress+2
+	stosw
+	mov ax,word ptr ds:EthernetAddress+4
+	stosw
+;
+	mov ax,dx
+	xchg al,ah
+	stosw
+;
+	add ecx,14
+    mov bx,es
+	push ecx
+	GetSelectorBaseSize
+	pop ecx
+	GetPhysicalPage
+	and ax,0F000h
+	and ecx,0FFFh
+;
+	EnterSection ds:TxSection
+	or ecx,80000h
+	push ecx
+	push eax
+;
+    GetThread
+    mov ds:TxThread,ax
+    ClearSignal 
+
+ssRetry:
+    mov cx,4
+    mov dx,ds:IoBase
+    add dx,TxStatus0
+    mov bx,OFFSET TxSelArr
+
+ssLoop:
+    in eax,dx
+    test ax,2000h
+    jnz ssFound
+    add dx,4
+    add bx,2
+    loop ssLoop
+;
+    WaitForSignal
+    jmp ssRetry 
+
+ssFound:
+    mov ds:TxThread,0
+    mov ax,ds:[bx]
+    mov ds:[bx],es
+    or ax,ax
+    jz ssNoPrev
+;
+    mov es,ax
+    FreeMem
+
+ssNoPrev:    
+    xor ax,ax
+    mov es,ax
+    pop eax
+    sub dx,TxStatus0
+    add dx,TxAddr0
+    out dx,eax
+;
+    pop eax
+    sub dx,TxAddr0
+    add dx,TxStatus0
+    out dx,eax
+	LeaveSection ds:TxSection
+;
+	pop edi
+	pop dx
+	pop ecx
+	pop bx
+	pop eax
+	pop ds
 	ret
 Send	Endp
 
@@ -683,6 +802,9 @@ Send	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetAddress	Proc far
+	mov si,ether_data_sel
+	mov ds,si
+	mov esi,OFFSET EthernetAddress	
 	ret
 GetAddress	Endp
 
@@ -887,6 +1009,7 @@ Init	Proc far
 	rep stosb
 ;
 	mov ds:EeAdrLen,8
+	InitSection ds:TxSection
 ;
 	mov ax,cs
 	mov es,ax
