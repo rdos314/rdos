@@ -190,10 +190,23 @@ PAGE
 create_enviroment	PROC near
 	push es
 	push fs
+	push ax
 	push cx
 	push esi
 	push edi
 ;
+    mov ax,bx
+    LockEnv
+    or ax,ax
+    jz create_env_start
+;
+    mov bx,ax
+	cmp fs:psp_mode,mode_pm
+	jz create_env_start
+;
+	SegmentToSelector
+
+create_env_start:    
 	mov ax,dos_app_sel
 	mov fs,ax
 	push ds
@@ -204,18 +217,8 @@ not_load_com_start:
 	lods byte ptr [esi]
 	or al,al
 	jnz not_load_com_start
-	or bx,bx
-	jnz create_env_check_mode
-;
-	mov bx,env_sel
-	jmp create_env_load
 		
 create_env_check_mode:
-	cmp fs:psp_mode,mode_pm
-	jz create_env_load
-	SegmentToSelector
-
-create_env_load:
 	mov ds,bx
 	xor esi,esi
 create_env_find_sep:
@@ -246,8 +249,8 @@ create_env_find_sep:
 	jz create_env_no_free
 ;
 	mov ax,ds
-	cmp ax,env_sel
-	je create_env_no_free
+	test al,3
+	jz create_env_no_free
 ;
 	push es
 	mov es,ax
@@ -282,9 +285,14 @@ create_env_no_fail_free:
 	stc
 
 create_env_done:
+    pushf
+    UnlockEnv
+    popf
+;
 	pop edi
 	pop esi
 	pop cx
+	pop ax
 	pop fs
 	pop es
 	ret

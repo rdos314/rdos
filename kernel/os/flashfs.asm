@@ -525,12 +525,24 @@ flash_name  DB 'FLASH', 0
 flash_file  DB 'd:\flash.dat', 0
 fat_fs      DB 'FAT12', 0
 
+search_path DB 'FLASH', 0
+new_path    DB 'z:\;c:\dos', 0
+
 flash_thread:
+	int 3
+	OpenEnv
+	mov ax,cs
+	mov ds,ax
+	mov es,ax 
+	mov si,OFFSET search_path
+	mov di,OFFSET new_path
+	AddEnvVar
+    CloseEnv
+;	
+    int 3
     mov ax,cs
     mov ds,ax
     mov es,ax
-;
-	int 3
     mov edi,OFFSET flash_file
     mov esi,OFFSET fat_fs
     mov ecx,100000h

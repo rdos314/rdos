@@ -71,7 +71,6 @@ local_linear_sel	EQU 0C8h
 dosb800				EQU 0D0h
 bios_data			EQU 0D8h
 proc_data_sel		EQU 0E0h
-env_sel				EQU 0E8h
 ;
 task_sel			EQU 0F0h
 io_bitmap_sel		EQU 0F8h
@@ -98,6 +97,8 @@ kernel_tss			EQU 178h
 kernel_stack		EQU 188h
 ;
 virt_tss			EQU 198h
+;
+env_sys_sel         EQU 1A0h
 ;
 flat_code_sel		EQU 1B3h
 flat_data_sel		EQU 1BBh

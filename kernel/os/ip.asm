@@ -592,8 +592,8 @@ GetIPNumber	Proc near
 	push cx
 	push si
 ;
-	mov ax,env_sel
-	mov ds,ax
+    LockEnv
+	mov ds,bx
 	xor si,si
 find_ip:
 	push di
@@ -649,6 +649,10 @@ find_ip_save:
 	clc
 
 find_ip_done:
+    pushf
+    UnlockEnv
+    popf
+;
 	pop si
 	pop cx
 	pop ebx

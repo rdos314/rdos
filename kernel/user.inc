@@ -571,6 +571,52 @@ GetPspSel	MACRO
 	UserGate get_psp_sel_nr
 					ENDM
 
+; OUT BX            Env handle
+OpenEnv	MACRO
+	UserGate open_env_nr
+	        ENDM
+
+; IN  BX            Env handle
+CloseEnv	MACRO
+	UserGate close_env_nr
+	        ENDM
+
+; IN  BX            Env handle
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+AddEnvVar	MACRO
+	UserGate add_env_var_nr
+	        ENDM
+
+; IN  BX            Env handle
+; IN  DS:(E)SI      Env var name
+DeleteEnvVar	MACRO
+	UserGate delete_env_var_nr
+	        ENDM
+
+; IN  BX            Env handle
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+FindEnvVar	MACRO
+	UserGate find_env_var_nr
+	        ENDM
+
+; IN  BX            Env handle
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+GetFirstEnvVar	MACRO
+	UserGate get_first_env_var_nr
+	        ENDM
+	
+; IN  BX            Env handle
+; IN  BX            Env handle
+; IN  DS:(E)SI      Env var name
+; IN  ES:(E)DI      Env var data
+GetNextEnvVar	MACRO
+	UserGate get_next_env_var_nr
+	        ENDM
+	
+
 ;;;;;;;;;;;;;; DEBUGGING ;;;;;;;;;;;
 
 ; IN  ES:(E)DI        TSS data buffer

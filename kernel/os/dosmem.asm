@@ -835,10 +835,11 @@ init_process_mem	PROC near
 	mov ds,ax
 	InitSection ds:dos_mem_section
 ;
+    LockEnv
+    mov ds,bx
 	mov ax,flat_sel
 	mov es,ax
-	mov eax,env_sel
-	mov ds,ax	
+	movzx eax,bx
 	xor esi,esi
 	mov edi,DOS_MEM_START SHL 4 + 10h
 	lsl ecx,eax
@@ -851,6 +852,7 @@ init_process_mem	PROC near
 	add edx,10h
 	mov ebx,edx
 	shr ebx,4
+	UnlockEnv
 ;
 	mov edi,DOS_HANDLER_START SHL 4
 	mov ax,cs

@@ -1368,6 +1368,15 @@ CheckDevice	MACRO
 
 ;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
 
+; OUT BX        Env sys sel
+LockEnv	    MACRO
+	OsGate lock_env_nr
+			ENDM
+
+UnlockEnv	MACRO
+	OsGate unlock_env_nr
+			ENDM
+
 ;	EAX		# BYTES
 ;	EDX		BASE ADDRESS
 AllocateFixedAppLinear	MACRO

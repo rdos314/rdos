@@ -1116,11 +1116,12 @@ open_dll_move_done:
 	OpenFile
 	jnc open_dll_ok
 ;
+    LockEnv
+    mov ds,bx
+;
 	mov bx,si
 	mov ax,es
 	mov gs,ax
-	mov ax,env_sel
-	mov ds,ax
 	xor si,si
 	mov ax,cs
 	mov es,ax
@@ -1198,6 +1199,10 @@ open_dll_ok:
 	clc
 	
 open_dll_done:
+    pushf
+    UnlockEnv
+    popf
+;
 	pop di
 	pop si
 	pop dx

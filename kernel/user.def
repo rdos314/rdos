@@ -288,4 +288,12 @@ open_file_drive_nr          = 255
 
 dos_ext_exec_nr				= 256
 
+open_env_nr                 = 257
+close_env_nr                = 258
+add_env_var_nr              = 259
+delete_env_var_nr           = 260
+find_env_var_nr             = 261
+get_first_env_var_nr        = 262
+get_next_env_var_nr         = 263
+
 usergate_entries			= 300

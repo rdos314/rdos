@@ -595,8 +595,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetEnvString	proc near
-	mov ax,env_sel
-	mov ds,ax
+    push bx
+    LockEnv
+	mov ds,bx
 	xor si,si
 	mov ax,cs
 find_var_str_loop:
@@ -627,6 +628,11 @@ find_var_str_found:
 	inc si
 	clc
 find_var_str_done:
+    pushf
+    UnlockEnv
+    popf
+;
+    pop bx
 	ret
 GetEnvString	Endp
 
