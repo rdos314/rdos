@@ -226,6 +226,12 @@ GetModuleFileNameA Proc near
 	push edi
 ;
 	mov ebx,[ebp].gmfHandle
+	or ebx,ebx
+	jnz gmfaGet
+;
+	mov ebx,fs:pvModuleHandle
+
+gmfaGet:
 	mov ecx,[ebp].gmfSize
 	mov edi,[ebp].gmfBuf
 	UserGate get_dll_name_nr

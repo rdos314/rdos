@@ -384,7 +384,18 @@ load_program16:
 	mov es,ax
 	mov es:app_context,bx
 ;
-	mov di,si
+	push si
+	mov di,OFFSET app_exe_name
+
+load_copy_exe_loop16:
+	lodsb
+	stosb
+	or al,al
+	jne load_copy_exe_loop16
+;
+	pop di
+;
+	movzx esi,di
 	mov ax,ds
 	mov es,ax
 	xor cx,cx
@@ -452,8 +463,20 @@ load_program32:
 	push edi
 	mov ax,thread_app_sel
 	mov es,ax
-	mov es:app_context,bx	
-	mov edi,esi
+	mov es:app_context,bx
+;
+	push esi
+	mov edi,OFFSET app_exe_name
+
+load_copy_exe_loop32:
+	lods byte ptr [esi]
+	stos byte ptr es:[edi]
+	or al,al
+	jne load_copy_exe_loop32
+;
+	pop edi
+;
+	mov esi,edi
 	mov ax,ds
 	mov es,ax
 	xor cx,cx
@@ -540,22 +563,25 @@ load_process_default_drive:
 	push eax
 	push eax
 ;
-	push ds
-	mov ax,thread_app_sel
-	mov ds,ax
-	mov ds:app_context,bx
 	mov ax,es
 	mov ds,ax
 	mov si,di
+	mov ax,thread_app_sel
+	mov es,ax
+	mov es:app_context,bx
+	push si
+	mov di,OFFSET app_exe_name
+	mov cx,100h
+	rep movsb
+	pop di
 	xor bx,bx
-	pop ds
+	mov ax,ds
+	mov es,ax
 	movzx edi,di
 	xor cl,cl
 	OpenFile
 	jc load_process_fail
 ;
-	mov ax,es
-	mov ds,ax
 	xor esi,esi
 	mov ax,cs
 	mov es,ax
@@ -623,12 +649,21 @@ spawn_startup	Proc far
 	push eax
 	push eax
 ;
+	push es
 	mov ax,thread_app_sel
-	mov ds,ax
-	mov ds:app_context,bx
-	mov ax,es
-	mov ds,ax
-	mov si,di
+	mov es,ax
+	mov es:app_context,bx
+	xor si,si
+	mov ds,gs:s_name	
+	mov di,OFFSET app_exe_name
+
+spawn_copy_exe_loop:
+	lodsb
+	stosb
+	or al,al
+	jne spawn_copy_exe_loop
+;
+	pop ds
 	xor bx,bx
 ;
 	mov ax,thread_sel

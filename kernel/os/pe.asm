@@ -560,11 +560,14 @@ InsertApp	Proc near
 	mov ds,ax
 	mov ds:pe_app,es
 	mov ds:pe_env,0
+	mov ds:pe_exe_name,0
 ;
 	mov ax,thread_app_sel
 	mov ds,ax
 	mov word ptr ds:app_get_env_proc,OFFSET get_env
 	mov word ptr ds:app_get_env_proc+2,cs 
+	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
+	mov word ptr ds:app_get_exe_proc+2,cs 
 	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
 	mov word ptr ds:app_get_cmd_line_proc+2,cs 
 	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
@@ -3837,6 +3840,62 @@ unload_no_tls:
 close_app_done:
 	ret
 close_app	Endp
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetExeName
+;
+;		DESCRIPTION:    Get exe-file name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exe_name	Proc far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+;
+	mov ax,pe_app_sel
+	mov ds,ax
+	mov edi,ds:pe_exe_name
+	or edi,edi
+	jnz get_exe_done
+;	
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov si,OFFSET app_exe_name
+
+get_exe_size_loop:
+	lodsb
+	or al,al
+	jnz get_exe_size_loop
+;
+	mov ax,si
+	sub ax,OFFSET app_exe_name
+	movzx eax,ax
+	mov ecx,eax
+	UserGateForce32 allocate_app_mem_nr
+	mov edi,edx
+	mov esi,OFFSET app_exe_name
+	rep movs byte ptr es:[edi],[esi]
+;
+	mov ax,pe_app_sel
+	mov ds,ax
+	mov ds:pe_exe_name,edx
+	mov edi,edx
+
+get_exe_done:
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+get_exe_name	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

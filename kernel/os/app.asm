@@ -319,7 +319,7 @@ run_open_hooks	Proc near
 ;
 	mov ax,thread_app_sel
 	mov ds,ax
-	mov ds:app_get_exe_name_proc,0
+	mov ds:app_get_exe_proc,0
 	mov ds:app_get_cmd_line_proc,0
 	mov ds:app_get_env_proc,0
 	mov ds:app_allocate_mem_proc,0
@@ -554,13 +554,13 @@ get_exe_name	PROC far
 	push eax
 	mov ax,thread_app_sel
 	mov ds,ax
-	mov eax,ds:app_get_exe_name_proc
+	mov eax,ds:app_get_exe_proc
 	or eax,eax
 	pop eax
 	stc
 	jz get_exe_name_done
 ;
-	call ds:app_get_exe_name_proc
+	call ds:app_get_exe_proc
 
 get_exe_name_done:
 	pop ds
@@ -626,7 +626,7 @@ get_env	PROC far
 	or eax,eax
 	pop eax
 	stc
-	jz get_exe_name_done
+	jz get_env_done
 ;
 	call ds:app_get_env_proc
 
