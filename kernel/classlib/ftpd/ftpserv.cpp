@@ -102,7 +102,7 @@ void TFtpSocketServer::HandleSocket()
 		Buf[count] = 0;
 		printf(Buf);
 
-        cmd = TCommandFactory::Parse(Buf);
+		cmd = TCommandFactory::Parse(this, Buf);
 
         if (cmd)
             cmd->Run();

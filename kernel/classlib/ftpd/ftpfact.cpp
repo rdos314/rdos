@@ -215,7 +215,7 @@ TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 			if (IsArgDelim(*rest))
 				rest = LTrim(rest);
 
-		return factory->Create(rest);
+		return factory->Create(Server, rest);
 
 	}
 	else

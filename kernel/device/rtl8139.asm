@@ -75,6 +75,49 @@ CSCR = 74h				; Chip Status and Configuration Register.
 PARA78 = 78h
 PARA7C = 7ch
 
+CmdReset = 10h
+CmdRxEnb = 8
+CmdTxEnb = 4
+RxBufEmpty = 1
+
+PCIErr = 8000h
+PCSTimeout = 4000h
+RxFIFOOver = 40h
+RxUnderrun = 20h
+RxOverflow = 10h
+TxErr = 8
+TxOK = 4
+RxErr = 2
+RxOK = 1
+
+TxHostOwns = 2000h
+TxUnderrun = 4000h
+TxStatOK = 8000h
+TxOutOfWindow EQU 20000000h
+TxAborted EQU 40000000h
+TxCarrierLost EQU 80000000h
+
+RxMulticast = 8000h
+RxPhysical = 4000h
+RxBroadcast = 2000h
+RxBadSymbol = 20h
+RxRunt = 10h
+RxTooLong = 8
+RxCRCErr = 4
+RxBadAlign = 2
+RxStatusOK = 1
+
+AcceptErr = 20h
+AcceptRunt = 10h
+AcceptBroadcast = 8
+AcceptMulticast = 4
+AcceptMyPhys = 2
+AcceptAllPhys = 1
+
+RX_FIFO_THRESH = 4
+RX_DMA_BURST = 3
+TX_DMA_BURST = 3
+
 ; The EEPROM commands include the alway-set leading bit.
 
 EE_WRITE_CMD = 5
@@ -221,35 +264,35 @@ ReadEe	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitChip
+;		NAME:			ReadEthernetAddress
 ;
-;		DESCRIPTION:    Init chip
+;		DESCRIPTION:    Read the ethernet address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitChip	Proc near
+ReadEthernetAddress	Proc near
 	mov ds:EeAdrLen,8 
 	xor bx,bx
 	call ReadEe
 	cmp ax,8129h
-	jz icReadAdr
+	jz reaReadAdr
 ;
 	mov ds:EeAdrLen,6
 
-icReadAdr:
+reaReadAdr:
 	mov bx,7
 	mov si,OFFSET EthernetAddress
 
-icReadLoop:
+reaReadLoop:
 	call ReadEe
 	mov ds:[si],ax
 	add si,2
 	inc bx
 	cmp bx,10
-	jne icReadLoop
+	jne reaReadLoop
 ;
 	ret
-InitChip	Endp
+ReadEthernetAddress	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -316,6 +359,100 @@ al_txring_loop:
 arDone:
 	ret
 AllocateRing	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitHardware
+;
+;		DESCRIPTION:    Initialize hardware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitHardware	Proc near
+	mov dx,ds:IoBase
+	add dx,ChipCmd
+	mov al,CmdReset
+	out dx,al
+;
+	mov cx,10000
+
+ihResetWait:
+	in al,dx
+	test al,CmdReset
+	jz ihResetDone
+	loop ihResetWait
+;
+	stc
+	jmp ihDone
+
+ihResetDone:
+	mov dx,ds:IoBase
+	add dx,Cfg9346
+	mov al,0C0h
+	out dx,al
+;
+	mov dx,ds:IoBase
+	add dx,MAC0
+	mov eax,dword ptr ds:EthernetAddress
+	out dx,eax
+	add dx,4
+	mov ax,word ptr ds:EthernetAddress+4
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,ChipCmd
+	mov al,CmdRxEnb OR CmdTxEnb
+	out dx,al
+;
+	mov dx,ds:IoBase
+	add dx,RxConfig
+	mov eax,RX_FIFO_THRESH SHR 13
+	or eax,RX_BUF_LEN_IDX SHR 11
+	or eax,RX_DMA_BURST SHR 8
+	mov ebx,eax
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,TxConfig
+	mov eax,TX_DMA_BURST SHR 8
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,Cfg9346
+	xor al,al
+	out dx,al
+;
+	mov dx,ds:IoBase
+	add dx,RxBuf
+	mov eax,ds:RxRingPhys
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,RxMissed
+	xor eax,eax
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,RxConfig
+	mov eax,ebx
+	or eax,AcceptBroadcast OR AcceptMyPhys
+	out dx,eax
+;
+	mov dx,ds:IoBase
+	add dx,ChipCmd
+	mov al,CmdRxEnb OR CmdTxEnb
+	out dx,al
+;
+	mov dx,ds:IoBase
+	add dx,IntrMask
+	mov ax, TxErr OR TxOK OR RxOK
+	out dx,ax 
+	clc
+
+ihDone:
+	ret
+InitHardware	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -530,9 +667,10 @@ init_pci_found:
 	mov di,OFFSET NetInt	
 	RequestPrivateIrqHandler
 ;
-	int 3
-	call InitChip
+	call ReadEthernetAddress
 	call AllocateRing
+	int 3
+	call InitHardware
 ;
 	push ds
 	mov ax,cs
