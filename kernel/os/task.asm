@@ -2910,7 +2910,7 @@ enter_user_section	PROC far
 	mov ax,section_proc_sel
 	mov ds,ax
 	section_to_offset bx
-	mov ax,[bx]
+	mov ax,[bx].ucs_value
 	dec ax
 	test ah,80h
 	jz enter_user_section_fail
@@ -2961,6 +2961,7 @@ enter_user_ins_empty:
 	mov es:p_next,es
 	mov es:p_prev,es
 	mov fs:[bx].ucs_list,es
+
 enter_user_inserted:
 	mov ax,task_sel
 	mov ds,ax
@@ -3007,7 +3008,7 @@ leave_user_section	PROC far
 	mov ax,section_proc_sel
 	mov ds,ax
 	section_to_offset bx
-	mov ax,[bx]
+	mov ax,[bx].ucs_value
 	test ah,80h
 	jz leave_user_section_done
 ;
@@ -3018,6 +3019,7 @@ leave_user_section	PROC far
 	add ds:[bx].ucs_value,1
 	jc leave_user_section_done
 ;
+    mov ds:[bx].ucs_owner,-1
 	push es
 	push fs
 	pushad
