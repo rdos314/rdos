@@ -1595,8 +1595,6 @@ draw_line	Proc far
 	pushad
 	mov bp,sp
 	sub sp,8
-	mov [bp].curr_x,cx
-	mov [bp].curr_y,dx
 ;
 	cmp si,cx
 	je line_vert
@@ -1612,6 +1610,8 @@ line_bresen:
 	xchg dx,di
 
 line_bresen_magn_ok:
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 	push si
 	push di
 	push dx
@@ -1781,6 +1781,15 @@ line_vert:
 	xchg bx,dx
 
 line_vert_do:
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+	cmp cx,ds:v_x_max
+	jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
 	movsx ecx,cx
 	movsx edx,dx
 	sub bx,dx
@@ -1800,8 +1809,18 @@ line_vert_do:
 	mov eax,ds:v_color
 
 line_vert_loop:
+	mov dx,[bp].curr_y
+    cmp dx,ds:v_y_min
+    jl line_vert_next
+;
+    cmp dx,ds:v_y_max
+    jg line_vert_next
+;
 	call word ptr cs:[bx].LgopTab
+
+line_vert_next:
 	add edi,esi
+	inc word ptr [bp].curr_y
 	loop line_vert_loop
 	jmp line_done
 
@@ -1813,6 +1832,8 @@ line_horiz:
 	xchg ax,cx
 
 line_horiz_do:
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 	movsx ecx,cx
 	movsx edx,dx
 	movzx ebx,ax
