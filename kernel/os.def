@@ -271,4 +271,7 @@ enter_section_nr			EQU 239
 leave_section_nr			EQU 240
 leave_section_sleep_nr		EQU 241
 
-osgate_entries				EQU 242
+insert_dir_entry_nr			EQU 242
+insert_file_entry_nr		EQU 243
+
+osgate_entries				EQU 244

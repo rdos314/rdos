@@ -152,7 +152,7 @@ dosdev_srcs = DOSDEV.ASM
 dosdev_objs = $(dosdev_srcs:.ASM=.OBJ)
 dosdev_rdvs = DOSDEV.RDV
 
-fs_srcs = FS.ASM FILE.ASM MEMMAP.ASM
+fs_srcs = FS.ASM DIR.ASM FILE.ASM MEMMAP.ASM
 fs_objs = $(fs_srcs:.ASM=.OBJ)
 fs_rdvs = FS.RDV
 

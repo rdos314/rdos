@@ -87,9 +87,10 @@ CallFileSystem	MACRO	call_proc
 	mov si,fs_data_sel
 	mov ds,si
 	movzx si,al
-	shl si,3
-	lgs bp,ds:[si].file_sys_arr
-	lds si,ds:[si].file_sys_arr+4
+	add si,si
+	mov ds,ds:[si].fs_sel
+	lgs bp,ds:fs_sys_arr
+	lds si,ds:fs_sys_arr+4
 	call gs:[bp].&call_proc
 	pop si
 	pop bp
@@ -394,6 +395,7 @@ PAGE
 ;		PARAMETERS:		AL			Drive
 ;						AH			Attribute
 ;						ECX			File size
+;						EDX			File ptr
 ;
 ;		RETURNS:		BX			File selector
 ;
@@ -405,10 +407,10 @@ create_file_selector	PROC far
 	push ds
 	push es
 	push eax
-	push edx
 	push di
 ;
 	push ecx
+	push edx
 	mov bx,ax
 	mov al,bl
 	GetDriveParam
@@ -461,6 +463,7 @@ cfs_skip_lists:
 	mov ds:file_dir_entries,0
 
 cfs_init:
+	pop edx
 	pop ecx
 	InitReadWriteSection ds:file_size_section
 	InitSection ds:file_list_section
@@ -468,15 +471,113 @@ cfs_init:
 	mov ds:file_drive,bl
 	mov ds:file_attrib,bh
 	mov ds:file_size,ecx
+	mov ds:file_dir_entry,edx
 	mov bx,ds
 ;
 	pop di
-	pop edx
 	pop eax
 	pop es
 	pop ds
 	ret
 create_file_selector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateFileSelector
+;
+;		DESCRIPTION:	Open a file handle
+;
+;		PARAMETERS:		AL			Drive
+;						AH			Attribute
+;						ECX			File size
+;						EDX			File dir entry
+;
+;		RETURNS:		BX			File selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public CreateFileSel
+
+CreateFileSel	PROC near
+	push ds
+	push es
+	push eax
+	push di
+;
+	push ecx
+	push edx
+	mov bx,ax
+	mov al,bl
+	GetDriveParam
+	or eax,eax
+	jz crfs_skip_lists
+;
+	mov edx,ecx
+	dec eax
+	xor cl,cl
+
+crfs_block_loop:
+	inc cl
+	shr eax,1
+	jnz crfs_block_loop
+;
+	mov eax,1
+	shl eax,cl
+	dec edx
+	add cl,10
+	shr edx,cl
+	inc edx
+;
+	push eax
+	mov eax,edx
+	shl eax,2
+	add eax,SIZE file_data_struc - 4
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	pop eax
+;
+	mov ds:file_block_size,eax
+	mov ds:file_dir_entries,dx
+	mov ds:file_dir_shift,cl
+	sub cl,10
+	mov ds:file_entry_shift,cl
+;
+	mov cx,dx
+	mov di,OFFSET file_entries
+	xor eax,eax
+	rep stosd
+	jmp crfs_init
+
+crfs_skip_lists:
+	mov eax,SIZE file_data_struc - 4
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	mov ds:file_block_size,0
+	mov ds:file_dir_entries,0
+
+crfs_init:
+	pop edx
+	pop ecx
+	InitReadWriteSection ds:file_size_section
+	InitSection ds:file_list_section
+	mov ds:file_usage,0
+	mov ds:file_drive,bl
+	mov ds:file_attrib,bh
+	mov ds:file_size,ecx
+	mov ds:file_dir_entry,edx
+	mov bx,ds
+;
+	pop di
+	pop eax
+	pop es
+	pop ds
+	ret
+CreateFileSel	ENDP
 
 PAGE
 
@@ -1182,7 +1283,7 @@ PAGE
 
 close_file_name	DB 'Close File',0
 
-close_file:
+close_file:	
 	push ds
 	push bx
 	push si

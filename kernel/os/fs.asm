@@ -42,13 +42,6 @@ INCLUDE int.def
 INCLUDE system.inc
 INCLUDE fs.inc
 
-dir_handle_seg		STRUC
-
-dir_handle			DW ?
-dir_drive			DB ?
-
-dir_handle_seg		ENDS
-
 CallFileSystem	MACRO	call_proc
 	push ds
 	push gs
@@ -57,41 +50,16 @@ CallFileSystem	MACRO	call_proc
 	mov si,fs_data_sel
 	mov ds,si
 	movzx si,al
-	shl si,3
-	lgs bp,ds:[si].file_sys_arr
-	lds si,ds:[si].file_sys_arr+4
+	add si,si
+	mov ds,ds:[si].fs_sel
+	lgs bp,ds:fs_sys_arr
+	lds si,ds:fs_sys_arr+4
 	call gs:[bp].&call_proc
 	pop si
 	pop bp
 	pop gs
 	pop ds
 				ENDM
-
-dir_to_offset	MACRO reg
-	shl reg,2
-	add reg,OFFSET dir_list	
-					ENDM
-
-offset_to_dir	MACRO reg
-	sub reg,OFFSET dir_list
-	shr reg,2
-					ENDM
-
-allocate_dir	MACRO
-	push ax
-	mov bx,ds:dir_free_list
-	mov ax,[bx]
-	mov ds:dir_free_list,ax
-	pop ax
-				ENDM
-
-free_dir	MACRO
-	push ax
-	mov ax,ds:dir_free_list
-	mov [bx],ax
-	mov ds:dir_free_list,bx
-	pop ax
-			ENDM
 
 code	SEGMENT byte public 'CODE'
 
@@ -100,13 +68,17 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 	extrn init_file:near
+	extrn init_dir:near
 	extrn init_memmap:near
 	extrn init_file_process:near
+	extrn init_dir_process:near
 	extrn init_memmap_process:near
 	extrn close_file_app:near
 	extrn close_memmap_app:near
 
 	extrn CreateFileHandle:near
+
+	extrn OpenFileBase:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -217,7 +189,9 @@ install_file_system	Proc far
 	mov ds,cx
 	movzx cx,ds:file_defs
 	mov bx,OFFSET file_def_arr
-	jcxz install_file_sys_done
+	or cx,cx
+	jz install_file_sys_done
+
 install_file_sys_find:
 	push ds
 	push ax
@@ -243,13 +217,36 @@ install_file_sys_ok:
 	pop ax
 	pop ds
 	les di,[bx+4]
-	CallFileSystem dismount_proc
 	movzx bx,al
-	shl bx,3
-	mov word ptr ds:[bx].file_sys_arr,di
-	mov word ptr ds:[bx+2].file_sys_arr,es
-	mov dword ptr ds:[bx+4].file_sys_arr,0
+	add bx,bx
+	push ds
+	push es
+	push eax
+	mov si,ds:[bx].fs_sel
+	or si,si
+	jz init_file_old_freed
 ;
+	CallFileSystem dismount_proc
+	mov es,si
+	FreeMem
+
+init_file_old_freed:
+	mov eax,SIZE fs_drive_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov ds,ax
+	pop eax
+	pop es
+	mov word ptr ds:fs_sys_arr,di
+	mov word ptr ds:fs_sys_arr+2,es
+	mov dword ptr ds:fs_sys_arr+4,0
+	InitSection ds:fs_list_section
+	InitReadWriteSection ds:fs_access_section
+	mov ds:fs_root_dir_sel,0
+	mov si,ds
+	pop ds
+	mov ds:[bx].fs_sel,si
+
 install_file_sys_done:
 	pop di
 	pop si
@@ -282,11 +279,14 @@ init_file_system	Proc far
 	mov si,fs_data_sel
 	mov es,si
 	movzx di,al
-	shl di,3
-	lds si,es:[di].file_sys_arr
+	add di,di
+	mov ds,es:[di].fs_sel
+	push ds
+	lds si,ds:fs_sys_arr
 	call ds:[si].mount_proc
-	mov word ptr es:[di+4].file_sys_arr,si
-	mov word ptr es:[di+6].file_sys_arr,ds
+	pop es
+	mov word ptr es:fs_sys_arr+4,si
+	mov word ptr es:fs_sys_arr+6,ds
 ;
 	pop di
 	pop si
@@ -436,6 +436,7 @@ get_cur_drive:
 set_cur_dir_name	DB 'Set Current Directory',0
 
 set_cur_dir32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -449,6 +450,7 @@ set_cur_dir32_done:
 	retf32
 
 set_cur_dir16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -479,10 +481,12 @@ set_cur_dir16	ENDP
 get_cur_dir_name	DB 'Get Current Directory',0
 
 get_cur_dir32:
+	int 3
 	CallFileSystem get_cur_dir_proc
 	retf32
 
 get_cur_dir16	PROC far
+	int 3
 	push edi
 	movzx edi,di
 	CallFileSystem get_cur_dir_proc
@@ -505,6 +509,7 @@ get_cur_dir16	ENDP
 make_dir_name	DB 'Make Directory',0
 
 make_dir32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -518,6 +523,7 @@ make_dir32_done:
 	retf32
 
 make_dir16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -547,6 +553,7 @@ make_dir16	ENDP
 remove_dir_name	DB 'Remove Directory',0
 
 remove_dir32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -560,6 +567,7 @@ remove_dir32_done:
 	retf32
 
 remove_dir16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -590,6 +598,7 @@ remove_dir16	ENDP
 rename_file_name	DB 'Rename File',0
 
 rename_file32:
+	int 3
 	push ds
 	push fs
 	push bx
@@ -625,6 +634,7 @@ rename_file32_done:
 	retf32
 
 rename_file16	PROC far
+	int 3
 	push ds
 	push fs
 	push ebx
@@ -678,6 +688,7 @@ rename_file16	ENDP
 delete_file_name	DB 'Delete File',0
 
 delete_file32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -691,6 +702,7 @@ delete_file32_done:
 	retf32
 
 delete_file16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -722,6 +734,7 @@ delete_file16	ENDP
 get_file_attribute_name	DB 'Get File Attribute',0
 
 get_file_attrib32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -735,6 +748,7 @@ get_file_attrib32_done:
 	retf32
 
 get_file_attrib16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -765,6 +779,7 @@ get_file_attrib16	ENDP
 set_file_attribute_name	DB 'Set File Attribute',0
 
 set_file_attrib32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -778,6 +793,7 @@ set_file_attrib32_done:
 	retf32
 
 set_file_attrib16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -791,218 +807,6 @@ set_file_attrib16_done:
 	pop ds
 	ret
 set_file_attrib16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_DIR
-;
-;		DESCRIPTION:	Opens a directory
-;
-;		PARAMETERS:		ES:(E)DI	PATH NAME
-;						NC			SUCCESS
-;
-;		RETURNS:		BX			HANDLE TO DIR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_dir_name	DB 'Open Directory',0
-
-open_dir32:
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc open_dir32_done
-	CallFileSystem open_dir_proc
-	jc open_dir32_done
-	push si
-	mov si,bx
-	allocate_dir
-	mov ds:[bx].dir_handle,si
-	mov ds:[bx].dir_drive,al
-	offset_to_dir bx
-	pop si
-	clc
-open_dir32_done:	
-	pop edi
-	pop ds
-	retf32
-
-open_dir16	PROC far
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc open_dir16_done
-	CallFileSystem open_dir_proc
-	jc open_dir16_done
-	push si
-	mov si,bx
-	allocate_dir
-	mov ds:[bx].dir_handle,si
-	mov ds:[bx].dir_drive,al
-	offset_to_dir bx
-	pop si
-	clc
-open_dir16_done:	
-	pop edi
-	pop ds
-	ret
-open_dir16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CLOSE_DIR
-;
-;		DESCRIPTION:	Close a directory
-;
-;		PARAMETERS:		BX			HANDLE TO DIR
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_dir_name	DB 'Close Directory',0
-
-close_dir:
-	push ds
-	push bx
-	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	dir_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].dir_drive
-	mov bx,ds:[bx].dir_handle
-	or bx,bx
-	stc
-	jz close_dir_done
-	CallFileSystem close_dir_proc
-	mov bx,si
-	mov ds:[bx].dir_handle,0
-	free_dir
-	clc
-close_dir_done:
-	pop si
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			READ_DIR
-;
-;		DESCRIPTION:	Retrieves a directory entry
-;
-;		PARAMETERS:		BX			HANDLE TO DIR
-;						DX			ENTRY #
-;						CX			MAX SIZE OF FILENAME
-;						ES:(E)DI	BUFFER
-;
-;		RETURNS:		ECX			FILE SIZE
-;						BX			FILE ATTRIBUTE
-;						EDX:EAX		FILE TIME/DATE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_dir_name	DB 'Read Directory',0
-
-read_dir32:
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	dir_to_offset bx
-	mov al,ds:[bx].dir_drive
-	mov bx,ds:[bx].dir_handle
-	or bx,bx
-	stc
-	jz read_dir32_done
-	CallFileSystem read_dir_proc
-read_dir32_done:
-	pop edi
-	pop ds
-	retf32
-
-read_dir16	PROC far
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	dir_to_offset bx
-	mov al,ds:[bx].dir_drive
-	mov bx,ds:[bx].dir_handle
-	or bx,bx
-	stc
-	jz read_dir16_done
-	CallFileSystem read_dir_proc
-read_dir16_done:
-	pop edi
-	pop ds
-	ret
-read_dir16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_FILE
-;
-;		DESCRIPTION:	Open file
-;
-;		PARAMETERS:		ES:(E)DI	FILENAME
-;						CL			ACCESS CODE
-;						
-;		RETURNS:		BX			FILE HANDLE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file_name	DB 'Open File',0
-
-open_file32:
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc open_file32_done
-;
-	CallFileSystem open_file_proc	
-	jc open_file32_done
-;
-	call CreateFileHandle
-
-open_file32_done:
-	pop edi
-	pop ds
-	retf32
-
-open_file16	PROC far
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc open_file16_done
-;
-	CallFileSystem open_file_proc	
-	jc open_file16_done
-;
-	call CreateFileHandle
-
-open_file16_done:
-	pop edi
-	pop ds
-	ret
-open_file16	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1022,6 +826,7 @@ open_file16	ENDP
 create_file_name	DB 'Create File',0
 
 create_file32:
+	int 3
 	push ds
 	push edi
 	mov ax,fs_process_sel
@@ -1040,6 +845,7 @@ create_file32_done:
 	retf32
 
 create_file16	PROC far
+	int 3
 	push ds
 	push edi
 	movzx edi,di
@@ -1085,15 +891,7 @@ init_process	PROC far
 ;
 	mov es:curr_drive,MAX_DRIVES - 1
 ;
-	mov cx,dir_num
-	mov di,4*dir_num + OFFSET dir_list
-init_dir_tab_loop:
-	mov ax,di
-	sub di,4
-	mov es:[di],ax
-	loop init_dir_tab_loop
-	mov es:dir_free_list,di
-;
+	call init_dir_process
 	call init_file_process
 	call init_memmap_process
 ;
@@ -1350,51 +1148,6 @@ init	PROC far
 	mov ax,rename_virt_file_nr
 	RegisterVirtUserGate
 ;
-	mov si,OFFSET open_dir32
-	mov di,OFFSET open_dir_name
-	xor cl,cl
-	mov ax,open_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET open_dir16
-	mov di,OFFSET open_dir_name
-	xor cl,cl
-	mov ax,open_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,open_virt_dir_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET close_dir
-	mov di,OFFSET close_dir_name
-	xor cl,cl
-	mov ax,close_dir_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,close_virt_dir_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET read_dir32
-	mov di,OFFSET read_dir_name
-	xor cl,cl
-	mov ax,read_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET read_dir16
-	mov di,OFFSET read_dir_name
-	xor cl,cl
-	mov ax,read_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,read_virt_dir_nr
-	RegisterVirtUserGate
-;
 	mov si,OFFSET get_file_attrib32
 	mov di,OFFSET get_file_attribute_name
 	xor cl,cl
@@ -1427,23 +1180,6 @@ init	PROC far
 	mov bx,ax
 	mov dx,virt_es_in
 	mov ax,set_virt_file_attribute_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET open_file32
-	mov di,OFFSET open_file_name
-	xor cl,cl
-	mov ax,open_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET open_file16
-	mov di,OFFSET open_file_name
-	xor cl,cl
-	mov ax,open_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,open_virt_file_nr
 	RegisterVirtUserGate
 ;
 	mov si,OFFSET create_file32
@@ -1479,18 +1215,12 @@ init	PROC far
 ;
 	mov es:file_defs,0
 ;
-	mov di,OFFSET file_sys_arr
+	mov di,OFFSET fs_sel
 	mov cx,256
-init_fs_loop:
-	mov ax,OFFSET default_fs
-	stosw
-	mov ax,cs
-	stosw
 	xor ax,ax
-	stosw
-	stosw
-	loop init_fs_loop
+	rep stosw
 ;
+	call init_dir
 	call init_file
 	call init_memmap
 ;	

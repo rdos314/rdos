@@ -1475,6 +1475,26 @@ FreeFileListEntry	MACRO
 					ENDM
 
 ;	AL			DRIVE #
+;	ES:EDI		NAME
+;	CX			NAME SIZE
+;	EDX			DIR ENTRY
+AllocateDirEntry	MACRO
+	OsGate allocate_dir_entry_nr
+					ENDM
+
+;	BX			DIR SELECTOR
+;	EDX			DIR ENTRY
+InsertDirEntry	MACRO
+	OsGate insert_dir_entry_nr
+					ENDM
+
+;	BX			DIR SELECTOR
+;	EDX			FILE ENTRY
+InsertFileEntry	MACRO
+	OsGate insert_file_entry_nr
+					ENDM
+
+;	AL			DRIVE #
 ;	EDX			CURRENT DIRECTORY PTR
 GetCurDirPtr	MACRO
 	OsGate get_cur_dir_ptr_nr

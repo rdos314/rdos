@@ -41,6 +41,14 @@ INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE fs.inc
 
+devfe_struc	STRUC
+
+devfe_base		dir_file_entry_data_struc <>
+devfe_data		DW ?
+devfe_name		DB ?
+
+devfe_struc	ENDS
+
 device_struc	STRUC
 
 device_name		DB 8 DUP(?)
@@ -58,7 +66,6 @@ device_chain		DW ?
 device_last			DW ?
 
 devices				DB 16*16 DUP(?)
-device_handles		DW 16 DUP(?)
 
 device_size			DB ?
   
@@ -311,46 +318,106 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			Cache_dir
+;
+;		DESCRIPTION:	Cache dir
+;
+;		PARAMETERS:		EDX			Dir entry to cache or 0
+;						BX			Cached dir selector
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_dir	PROC far
+	push es
+	pushad
+;
+	mov ax,dosdev_data_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov esi,OFFSET devices
+	mov cx,device_last
+	sub cx,si
+	shr cx,4
+
+cache_dir_loop:
+	push cx
+;
+	mov eax,SIZE devfe_struc + 8
+	AllocateSmallLinear
+	mov es:[edx].de_drive,80h
+	mov es:[edx].de_usage,0
+	push esi
+	push edi
+	lea edi,[edx].devfe_name
+	mov es:[edx].de_name,edi
+	mov cx,8
+	mov es:[edx].de_name_size,0
+
+cache_name_loop:
+	lods byte ptr [esi]
+	cmp al,' '
+	je cache_name_done
+;
+	inc es:[edx].de_name_size
+	stos byte ptr es:[edi]
+	loop cache_name_loop
+
+cache_name_done:
+	xor al,al
+	stos byte ptr es:[edi]
+	pop edi
+	pop esi
+	mov es:[edx].de_sel,bx
+	mov es:[edx].de_attrib,80h
+	mov es:[edx].de_time,0
+	mov es:[edx+4].de_time,0
+	mov es:[edx].dfe_data_size,0
+	mov es:[edx].dfe_file_sel,0
+	mov es:[edx].devfe_data,si
+	InsertFileEntry
+;
+	add esi,16
+	pop cx
+	sub cx,1
+	jnz cache_dir_loop
+;
+	popad
+	pop es
+	clc
+	ret
+cache_dir	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			OPEN_FILE
 ;
 ;		DESCRIPTION:	Open file
 ;
 ;		PARAMETERS:		ES:EDI		FILE NAME
-;						CL			ACCESS MODE
 ;
-;		RETURNS:		BX			FILE HANDLE
+;		RETURNS:		AH			FILE ATTRIBUTE
+;						ECX			FILE SIZE
+;						DX			FILE PTR
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_file	PROC far
-	push dx
 	call find_device
 	jc open_file_done
 ;
 	mov dx,bx
-	sub bx,OFFSET devices
-	shr bx,3
-	mov bx,[bx].device_handles
-	or bx,bx
-	clc
-	jnz open_file_done
-;
-	push ds
-	push si
-	push ecx
-	mov si,bx
 	xor ecx,ecx
 	mov ah,80h
-	CreateFileSelector
-	mov [si].device_handles,bx
-	mov ds,bx
-	mov ds:file_ptr,edx
-	pop ecx
-	pop si
-	pop ds
+	clc
 
 open_file_done:
-	pop dx
 	ret
 open_file	Endp
 
@@ -395,7 +462,10 @@ PAGE
 
 read_file	PROC far
 	mov ds,bx
-	mov ebx,ds:file_ptr
+	mov ebx,ds:file_dir_entry
+	mov ax,flat_sel
+	mov ds,ax
+	mov bx,[ebx].devfe_data
 	mov ax,dosdev_data_sel
 	mov ds,ax
 		assume ds:device_seg
@@ -424,7 +494,10 @@ PAGE
 
 write_file	PROC far
 	mov ds,bx
-	mov ebx,ds:file_ptr
+	mov ebx,ds:file_dir_entry
+	mov ax,flat_sel
+	mov ds,ax
+	mov bx,[ebx].devfe_data
 	mov ax,dosdev_data_sel
 	mov ds,ax
 		assume ds:device_seg
@@ -1349,6 +1422,7 @@ fs24	DW OFFSET dummy,			dosdev_code_sel
 fs25	DW OFFSET dummy,			dosdev_code_sel
 fs26	DW OFFSET dummy,			dosdev_code_sel
 fs27	DW OFFSET dummy,			dosdev_code_sel
+fs28	DW OFFSET cache_dir,		dosdev_code_sel
 	
 init	PROC far
 	pusha
@@ -1425,11 +1499,6 @@ init	PROC far
 	mov ax,8004h
 	stosw
 	mov es:device_last,di
-;
-	mov di,OFFSET device_handles
-	xor ax,ax
-	mov cx,16
-	rep stosw
 ;
 	mov ax,cs
 	mov ds,ax

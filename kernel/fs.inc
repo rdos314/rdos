@@ -37,6 +37,15 @@ FILE_LIST_STATE_USED = 04Ah
 
 FILE_LIST_FLAG_READAHEAD = 1
 
+fs_drive_seg	STRUC
+
+fs_sys_arr			DD 2*256 DUP(?)
+fs_root_dir_sel		DW ?
+fs_list_section		section_typ <>
+fs_access_section	read_write_section_typ <>
+
+fs_drive_seg	ENDS
+
 fs_data_seg		STRUC
 
 map_list			DW ?
@@ -45,19 +54,20 @@ sys_section			section_typ <>
 
 file_defs			DB ?
 file_def_arr		DD 2*32 DUP(?)
-file_sys_arr		DD 2*256 DUP(?)
+fs_sel				DW 256 DUP(?)
 
 fs_data_seg		ENDS
 
 fs_process_seg	STRUC
 
+cur_dir_sel			DW 256 DUP(?)
 cur_dir_ptr			DD MAX_DRIVES DUP(?)
 curr_drive			DB ?
 resv1				DB ?
 dir_free_list		DW ?
 file_free_list		DW ?
 handle_free_list	DW ?
-dir_list			DB 4*dir_num DUP(?)
+dir_list			DB 4 * dir_num DUP(?)
 file_list			DB 8 * file_num DUP(?)
 handle_list			DB 16 * map_num DUP(?)
 file_handle_section	section_typ <>
@@ -100,6 +110,50 @@ file_dir_entries	DW ?
 file_entries		DD ?
 
 file_data_struc	ENDS
+
+dir_entry_data_struc	STRUC
+
+de_prev				DD ?
+de_next				DD ?
+de_usage			DW ?
+de_size				DW ?
+de_sel				DW ?
+de_time				DD ?,?
+de_attrib			DB ?
+de_drive			DB ?
+de_name_size		DW ?
+de_name				DD ?
+
+dir_entry_data_struc	ENDS
+
+dir_dir_entry_data_struc	STRUC
+
+dde_base			dir_entry_data_struc <>
+
+dir_dir_entry_data_struc	ENDS
+
+dir_file_entry_data_struc	STRUC
+
+dfe_base			dir_entry_data_struc <>
+dfe_data_size		DD ?
+dfe_file_sel		DW ?
+
+dir_file_entry_data_struc	ENDS
+
+dir_sel_data_struc	STRUC
+
+ds_access_section	read_write_section_typ <>
+ds_list_section		section_typ <>
+ds_dir_ptr			DD ?
+ds_file_ptr			DD ?
+ds_deleted_ptr		DD ?
+ds_free_ptr			DD ?
+ds_usage			DW ?
+ds_parent			DW ?
+ds_handle			DD ?
+ds_drive			DB ?
+
+dir_sel_data_struc	ENDS
 
 file_system_struc 	STRUC
 
@@ -156,9 +210,10 @@ close_dir_proc			DD ?
 ;	OUT	EDX:EAX		FILE TIME/DATE
 read_dir_proc			DD ?
 
-;	IN	ES:EDI		PATH NAME
-;	IN	CL			ACCESS MODE
-;	OUT	BX			FILE HANDLE
+;	IN  ES:EDI		PATH NAME
+;	IO  AH			FILE ATTRIBUTE
+;	IO  ECX			FILE SIZE
+;	IO	EDX			FILE PTR
 open_file_proc			DD ?
 
 ;	IN	ES:EDI		PATH NAME
@@ -221,6 +276,10 @@ read_file_block_proc			DD ?
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
 write_file_block_proc			DD ?
+
+;	IN  BX			DIR SELECTOR
+;	IN	EDX			DIR ENTRY OR 0
+cache_dir_proc				DD ?
 
 file_system_struc	ENDS
 

@@ -252,4 +252,6 @@ delete_user_section_nr			EQU 221
 enter_user_section_nr			EQU 222
 leave_user_section_nr			EQU 223
 
-usergate_entries			EQU 224
+test_nr							EQU 224
+
+usergate_entries			EQU 225

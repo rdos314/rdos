@@ -64,6 +64,28 @@ entry_name		DB ?
 
 dir_entry_struc	ENDS
 
+rde_struc	STRUC
+
+rde_base	dir_dir_entry_data_struc <>
+
+rde_ptr			DD ?
+rde_data		DD ?
+rde_type		DB ?
+rde_name		DB ?
+
+rde_struc	ENDS
+
+rfe_struc	STRUC
+
+rfe_base	dir_file_entry_data_struc <>
+
+rfe_ptr			DD ?
+rfe_data		DD ?
+rfe_type		DB ?
+rfe_name		DB ?
+
+rfe_struc	ENDS
+
 handle_seg	STRUC
 
 handle_usage	DW ?
@@ -751,51 +773,6 @@ parse_file_complete:
 	pop ds
 	ret
 parse_file	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_FILE_HANDLE
-;
-;		DESCRIPTION:	Open file
-;
-;		PARAMETERS:		DS		DRIVE_DATA_SEG
-;						EDX		LOGICAL ADDRESS OF DIR ENTRY
-;
-;		RETURNS:		BX		HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file_handle	Proc near
-	push ds
-	push es
-	mov al,ds:drive_nr
-	mov bx,flat_sel
-	mov ds,bx
-	mov bx,[edx].entry_sel
-	or bx,bx
-	jne open_file_handle_done
-;
-	push ecx
-	mov ecx,[edx].entry_data_size
-	mov ah,[edx].entry_attrib
-	cmp [edx].entry_type,1
-;	jne open_file_crsel  ; fix later!!
-;
-	or ah,80h
-
-open_file_crsel:
-	CreateFileSelector
-	mov es,bx
-	mov es:file_ptr,edx
-	mov [edx].entry_sel,bx
-	pop ecx
-
-open_file_handle_done:
-	pop es
-	pop ds
-	ret
-open_file_handle	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1575,27 +1552,11 @@ PAGE
 ;
 ;		DESCRIPTION:	Open file
 ;
-;		PARAMETERS:		ES:EDI		FILENAME
-;						CL			ACCESS MODE
-;
-;		RETURNS:		BX			HANDLE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_file	PROC far
-	push eax
-	push edx
-	push edi
-	call parse_dir
-	call parse_file
-	pop edi
-	jc open_file_fail
-	mov edx,eax
-	call open_file_handle
 	clc
-open_file_fail:
-	pop edx
-	pop eax
 	ret
 open_file	ENDP
 
@@ -1647,7 +1608,7 @@ create_file_non_exist:
 	pop ds
 create_file_handle:
 	mov edx,eax
-	call open_file_handle
+;	call open_file_handle
 	clc
 create_file_done:
 	pop edi
@@ -1733,9 +1694,10 @@ get_file_size	PROC far
 	push ds
 	push ax
 	mov ds,bx
-	mov edx,ds:file_ptr
+	mov edx,ds:file_dir_entry
 	mov ax,flat_sel
 	mov ds,ax
+	mov edx,[edx].rfe_data
 	mov edx,ds:[edx].entry_data_size
 	clc
 	pop ax
@@ -1762,7 +1724,10 @@ set_file_size	PROC far
 	push eax
 	push ecx
 	mov ds,bx
-	mov eax,ds:file_ptr
+	mov eax,ds:file_dir_entry
+	push flat_sel
+	pop ds
+	mov eax,[eax].rfe_data
 	mov ecx,edx
 	call set_size
 	pop ecx
@@ -1790,9 +1755,10 @@ get_file_time	PROC far
 	push ds
 	push ax
 	mov ds,bx
-	mov edx,ds:file_ptr
+	mov edx,ds:file_dir_entry
 	mov ax,flat_sel
 	mov ds,ax
+	mov edx,[edx].rfe_data
 	mov ecx,ds:[edx].entry_time
 	mov edx,ds:[edx].entry_time+4
 	clc
@@ -1820,9 +1786,10 @@ set_file_time	PROC far
 	push ax
 	push esi
 	mov ds,bx
-	mov esi,ds:file_ptr
+	mov esi,ds:file_dir_entry
 	mov ax,flat_sel
 	mov ds,ax
+	mov esi,[esi].rfe_data
 	mov ds:[esi].entry_time,ecx
 	mov ds:[esi].entry_time+4,edx
 	clc
@@ -1858,9 +1825,10 @@ read_file	PROC far
 	push edi
 ;
 	mov ds,bx
-	mov esi,ds:file_ptr
+	mov esi,ds:file_dir_entry
 	mov ax,flat_sel
 	mov ds,ax
+	mov esi,[esi].rfe_data
 	mov eax,[esi].entry_data_size
 	sub eax,edx
 	jc read_file_fail
@@ -1996,7 +1964,10 @@ write_file	PROC far
 ;
 	push ds
 	mov ds,bx
-	mov esi,ds:file_ptr
+	mov esi,ds:file_dir_entry
+	mov ax,flat_sel
+	mov ds,ax
+	mov esi,[esi].rfe_data
 	mov ax,flat_sel
 	mov ds,ax
 	mov al,ds:[esi].entry_type
@@ -2195,6 +2166,121 @@ write_file_block	PROC far
 	clc
 	ret
 write_file_block	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Cache_dir
+;
+;		DESCRIPTION:	Cache dir
+;
+;		PARAMETERS:		EDX			Dir entry to cache or 0
+;						BX			Cached dir selector
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_dir	PROC far
+	push es
+	pushad
+;
+	or edx,edx
+	jnz cache_dir_entry_ok
+;
+	mov edx,ds:drive_root_ptr
+
+cache_dir_entry_ok:
+	mov ax,flat_sel
+	mov es,ax
+
+cache_dir_start:
+	push edx
+	mov edi,es:[edx].dir_dir_ptr
+	or edi,edi
+	jz cache_file_start
+
+cache_dir_loop:
+	movzx ecx,es:[edi].entry_name_size
+	lea esi,[edi].entry_name
+	mov eax,SIZE rde_struc
+	add eax,ecx
+	AllocateSmallLinear
+	mov al,ds:drive_nr
+	mov es:[edx].de_drive,al
+	mov es:[edx].de_usage,0
+	mov es:[edx].de_name_size,cx
+	push edi
+	lea edi,[edx].rde_name
+	mov es:[edx].de_name,edi
+	rep movs byte ptr es:[edi],es:[esi]
+	mov byte ptr es:[edi],0
+	pop edi
+	mov es:[edx].de_sel,bx
+	mov al,es:[edi].entry_type
+	mov es:[edx].rde_type,al
+	mov al,es:[edi].entry_attrib
+	mov es:[edx].de_attrib,al
+	mov eax,es:[edi].entry_time
+	mov es:[edx].de_time,eax
+	mov eax,es:[edi+4].entry_time
+	mov es:[edx+4].de_time,eax
+	mov eax,es:[esi].entry_data
+	mov es:[edx].rde_data,eax
+	InsertDirEntry
+	mov edi,es:[edi].entry_ptr
+	or edi,edi
+	jnz cache_dir_loop
+	
+cache_file_start:
+	pop edx
+	mov edi,es:[edx].dir_file_ptr
+	or edi,edi
+	jz cache_dir_done
+
+cache_file_loop:
+	movzx ecx,es:[edi].entry_name_size
+	lea esi,[edi].entry_name
+	mov eax,SIZE rfe_struc
+	add eax,ecx
+	AllocateSmallLinear
+	mov al,ds:drive_nr
+	mov es:[edx].de_drive,al
+	mov es:[edx].de_usage,0
+	mov es:[edx].de_name_size,cx
+	push edi
+	lea edi,[edx].rfe_name
+	mov es:[edx].de_name,edi
+	rep movs byte ptr es:[edi],es:[esi]
+	mov byte ptr es:[edi],0
+	pop edi
+	mov es:[edx].de_sel,bx
+	mov al,es:[edi].entry_type
+	mov es:[edx].rfe_type,al
+	mov al,es:[edi].entry_attrib
+	or al,80h
+	mov es:[edx].de_attrib,al
+	mov eax,es:[edi].entry_time
+	mov es:[edx].de_time,eax
+	mov eax,es:[edi+4].entry_time
+	mov es:[edx+4].de_time,eax
+	mov eax,es:[edi].entry_data_size
+	mov es:[edx].dfe_data_size,eax
+	mov es:[edx].dfe_file_sel,0
+	mov es:[edx].rfe_data,edi
+	InsertFileEntry
+	mov edi,es:[edi].entry_ptr
+	or edi,edi
+	jnz cache_file_loop
+
+cache_dir_done:
+	popad
+	pop es
+	clc
+	ret
+cache_dir	ENDP
 
 PAGE
 
@@ -2401,6 +2487,7 @@ fs24	DW OFFSET allocate_file_list,ramdrive_code_sel
 fs25	DW OFFSET free_file_list,	ramdrive_code_sel
 fs26	DW OFFSET read_file_block,	ramdrive_code_sel
 fs27	DW OFFSET write_file_block,	ramdrive_code_sel
+fs28	DW OFFSET cache_dir,		ramdrive_code_sel
 
 init	PROC far
 	push ds
