@@ -49,17 +49,21 @@ anio_srcs = ANIO.ASM
 anio_objs = $(anio_srcs:.ASM=.OBJ)
 anio_rdvs = ANIO.RDV
 
+digio_srcs = DIGIO.ASM
+digio_objs = $(digio_srcs:.ASM=.OBJ)
+digio_rdvs = DIGIO.RDV
+
 dcf_srcs = DCF.ASM
 dcf_objs = $(dcf_srcs:.ASM=.OBJ)
 dcf_rdvs = DCF.RDV
 
 srcs =      $(ewlcd_srcs) $(keylcd_srcs) \
-			$(anio_srcs) $(dcf_srcs)
+			$(anio_srcs) $(digio_srcs) $(dcf_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(ewlcd_rdvs) $(keylcd_rdvs)\
-			$(anio_rdvs) $(dcf_rdvs)
+			$(anio_rdvs) $(digio_rdvs) $(dcf_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -102,6 +106,14 @@ ANIO.RDV : $(anio_objs)
 	$(anio_objs)
 	ANIO.RDV
 	ANIO;
+!
+
+DIGIO.RDV : $(digio_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(digio_objs)
+	DIGIO.RDV
+	DIGIO;
 !
 
 DCF.RDV : $(dcf_objs)

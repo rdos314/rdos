@@ -39,6 +39,16 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\wait.inc
 INCLUDE ..\..\kernel\handle.inc
 
+save_data_struc	STRUC
+
+sd_day		DD ?
+sd_hour		DB ?
+sd_min		DB ?
+sd_us		DD ?
+
+save_data_struc	ENDS
+
+
 dcf_data	STRUC
 
 int_time		DD ?,?
@@ -59,7 +69,9 @@ curr_diff		DD ?
 val_arr			DB 60 DUP(?)
 diff_arr		DD 60 DUP(?)
 
-temp_buf	DB 32 DUP(?)
+save_buf		DB 20 * SIZE save_data_struc DUP(?)
+
+temp_buf		DB 32 DUP(?)
 
 dcf_data	ENDS
 
@@ -429,44 +441,6 @@ dcf_int	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ShowPulse
-;
-;		DESCRIPTION:	Show a pulse
-;
-;		PARAMETERS:		EDX:EAX		Pulse time
-;						BX			Row
-;						CL			Pulse value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ShowPulse	Proc near
-	pushad
-;
-	push cx
-	push dx
-	xor cx,cx
-	mov dx,bx
-	SetCursorPosition
-	pop dx
-	pop cx
-;
-	mov di,OFFSET temp_buf
-	call WriteTime
-;
-	mov al,' '
-	WriteChar
-	WriteChar
-;
-	mov al,cl
-	add al,'0'
-	WriteChar
-;
-	popad
-ShowPulse	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			WaitForPulse
 ;
 ;		DESCRIPTION:	Wait for a single pulse
@@ -706,7 +680,7 @@ GetSample	Endp
 ;
 ;		DESCRIPTION:	Process a full minute of samples
 ;
-;		PARAMETERS:		NC
+;		RETURNS:		NC
 ;						EDX:EAX		Diff
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -725,45 +699,6 @@ ProcessSamples	Proc near
 	mov dx,1
 	or al,al
 	jz process_samples_failed
-;
-	mov bx,21
-	mov cx,8
-	xor al,al
-
-process_check_p1_loop:	
-	add al,ds:[bx].val_arr
-	inc bx
-	loop process_check_p1_loop
-;
-	test al,1
-	mov dx,2
-	jnz process_samples_failed
-;
-	mov bx,29
-	mov cx,7
-	xor al,al
-
-process_check_p2_loop:	
-	add al,ds:[bx].val_arr
-	inc bx
-	loop process_check_p2_loop
-;
-	test al,1
-	mov dx,3
-	jnz process_samples_failed
-;
-	mov bx,36
-	mov cx,23
-	xor al,al
-
-process_check_p3_loop:	
-	add al,ds:[bx].val_arr
-	inc bx
-	loop process_check_p3_loop
-;
-	test al,1
-	mov dx,4
-	jnz process_samples_failed
 ;
 	mov cx,2000
 	xor ah,ah
@@ -957,13 +892,15 @@ RestartSample	Endp
 ;
 ;		DESCRIPTION:	Get difference from time
 ;
-;		PARAMETERS:		EDX:EAX		Diff
+;		RETURNS:		EDX:EAX		Diff
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDiff	Proc near
 	push bx
+	push cx
 	push esi
+	push ebp
 
 get_diff_loop:
 	call GetSample
@@ -1005,7 +942,9 @@ get_diff_restart:
 	jmp get_diff_loop
 
 get_diff_done:
+	pop ebx
 	pop esi
+	pop cx
 	pop bx
 	ret
 GetDiff	Endp
@@ -1013,71 +952,264 @@ GetDiff	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			show_pulse
+;		NAME:			SaveDiff
 ;
-;		DESCRIPTION:	show pulse time & length
+;		DESCRIPTION:	Save difference from time
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		EDX:EAX		Diff
+;						DS:SI		Buf to save in
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-show_pulse:
-    mov dx,28Bh
-    mov al,9Bh
-    out dx,al
+SaveDiff	Proc near
+	pushad
+;
+	test edx,80000000h
+	jz save_diff_pos
+;
+	push eax
+	not eax
+	not edx
+	mov eax,edx
+	xor edx,edx
+	mov ecx,24
+	div ecx
+	inc eax
+	neg eax
+	mov ds:[si].sd_day,eax
+	mov al,23
+	sub al,dl
+	mov ds:[si].sd_hour,al
+	pop eax
+	jmp save_diff_min
 
-dcf_it_init_loop:
-	mov ax,10
-	WaitMilliSec
-;
-	mov dx,28Ah
-	in al,dx
-	test al,10h
-	jz dcf_it_init_loop	
+save_diff_pos:
+	push eax
+	mov eax,edx
+	xor edx,edx
+	mov ecx,24
+	div ecx
+	mov ds:[si].sd_day,eax
+	mov ds:[si].sd_hour,dl
+	pop eax
 
-dcf_it_high_loop:
-	mov ax,10
-	WaitMilliSec
+save_diff_min:
+	mov edx,60
+	mul edx
+	mov ds:[si].sd_min,dl
 ;
-	mov dx,28Ah
-	in al,dx
-	test al,10h
-	jnz dcf_it_high_loop	
+	mov edx,60000000
+	mul edx
+	mov ds:[si].sd_us,edx
 ;
+	popad
+	ret
+SaveDiff	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ShowDiff
+;
+;		DESCRIPTION:	Show difference from time
+;
+;		PARAMETERS:		DS:SI		Buf to saved in
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowDiff	Proc near
+	pushad
+;
+	mov di,OFFSET temp_buf
 	xor cx,cx
-	xor dx,dx
+	mov dx,5
 	SetCursorPosition
 ;
-	mov ax,dcf_data_sel
-	mov es,ax
-	mov di,OFFSET temp_buf
-	GetSystemTime
-	call WriteTime
+	mov eax,ds:[si].sd_day
+	test eax,80000000h
+	jz show_diff_do
+;
+	push ax
+	mov al,'-'
+	WriteChar
+	pop ax
+
+show_diff_do:
+	mov cx,8
+	call IntToStr
+	call RemoveLeading
+	WriteAsciiz
 	mov al,' '
 	WriteChar
+;
+	movzx eax,ds:[si].sd_hour
+	mov cx,2
+	call IntToStr
+	call RemoveLeading
+	WriteAsciiz
+	mov al,'.'
 	WriteChar
 ;
-	xor esi,esi
-
-dcf_it_low_loop:
-	mov ax,10
-	WaitMilliSec
-;
-	inc esi
-;
-	mov dx,28Ah
-	in al,dx
-	test al,10h
-	jz dcf_it_low_loop	
-;
-	mov eax,esi
-	mov edx,10
-	mul edx
-	mov cx,3
-	mov di,OFFSET temp_buf
+	movzx eax,ds:[si].sd_min
+	mov cx,2
 	call IntToStr
+	call RemoveLeading
 	WriteAsciiz
-	jmp dcf_it_high_loop
+	mov al,'.'
+	WriteChar
+;
+	mov eax,ds:[si].sd_us
+	mov cx,8
+	call IntToStr
+	call RemoveLeading
+	WriteAsciiz
+;
+	mov al,' '
+	WriteChar
+	mov al,' '
+	WriteChar
+	mov al,' '
+	WriteChar
+;
+	popad
+	ret
+ShowDiff	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CalcMeanDiff
+;
+;		DESCRIPTION:	Calc the mean difference
+;
+;		RETURNS:		NC		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcMeanDiff	Proc near
+	pushad
+;
+	mov si,OFFSET save_buf
+	mov cx,20
+
+calc_day_loop:
+	mov eax,ds:[si].sd_day
+;
+	push cx
+	push si
+	mov dx,1
+
+calc_day_iloop:
+	add si,SIZE save_data_struc
+	cmp eax,ds:[si].sd_day
+	jne	calc_day_next
+;
+	inc dx
+
+calc_day_next:
+	loop calc_day_iloop
+;
+	pop si
+	pop cx
+	cmp dx,10
+	jae calc_day_ok
+;
+	add si,SIZE save_data_struc
+	loop calc_day_loop
+;
+	jmp calc_fail
+
+calc_day_ok:
+	mov si,OFFSET save_buf
+	mov ds:[si].sd_day,eax
+	mov cx,20
+	
+calc_hour_loop:
+	mov al,ds:[si].sd_hour
+;
+	push cx
+	push si
+	mov dx,1
+
+calc_hour_iloop:
+	add si,SIZE save_data_struc
+	cmp al,ds:[si].sd_hour
+	jne	calc_hour_next
+;
+	inc dx
+
+calc_hour_next:
+	loop calc_hour_iloop
+;
+	pop si
+	pop cx
+	cmp dx,10
+	jae calc_hour_ok
+;
+	add si,SIZE save_data_struc
+	loop calc_hour_loop
+;
+	jmp calc_fail
+
+calc_hour_ok:
+	mov si,OFFSET save_buf
+	mov ds:[si].sd_hour,al
+	mov cx,20
+	
+calc_min_loop:
+	mov al,ds:[si].sd_min
+;
+	push cx
+	push si
+	mov dx,1
+
+calc_min_iloop:
+	add si,SIZE save_data_struc
+	cmp al,ds:[si].sd_min
+	jne	calc_min_next
+;
+	inc dx
+
+calc_min_next:
+	loop calc_min_iloop
+;
+	pop si
+	pop cx
+	cmp dx,10
+	jae calc_min_ok
+;
+	add si,SIZE save_data_struc
+	loop calc_min_loop
+;
+	jmp calc_fail
+
+calc_min_ok:
+	mov si,OFFSET save_buf
+	mov ds:[si].sd_min,al
+	mov cx,20
+;
+	xor eax,eax
+
+calc_us_loop:
+	add eax,[si].sd_us
+	add si,SIZE save_data_struc
+	loop calc_us_loop
+;
+	xor edx,edx
+	mov ecx,20
+	div ecx
+;
+	mov [si].sd_us,eax
+	clc
+	jmp calc_done
+
+calc_fail:
+	stc
+
+calc_done:
+	popad
+	ret
+CalcMeanDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1113,7 +1245,7 @@ dcf_thread:
     out dx,al
 ;
     mov dx,28Bh
-    mov al,9Bh
+    mov al,8Bh
     out dx,al
 ;
 	mov ax,dcf_data_sel
@@ -1123,34 +1255,24 @@ dcf_sync_loop:
 	call ClearSample
 	call SyncToDcf
 	mov ds:curr_sec,0
+;
+	mov si,OFFSET save_buf
+	mov cx,20
 
-dcf_thread_loop:
+dcf_time_loop:
 	call GetDiff
+	call SaveDiff
+	call ShowDiff
+	add si,SIZE save_data_struc
+	loop dcf_time_loop
 ;
-	push dx
-	xor cx,cx
-	mov dx,5
-	SetCursorPosition
-	pop dx
+	int 3
+	call CalcMeanDiff
+	jc dcf_sync_loop
 ;
-	test edx,80000000h
-	jz dcf_show_diff
-;
-	push ax
-	mov al,'-'
-	WriteChar
-	pop ax
-	not eax
-	not edx
-	add eax,1
-	adc edx,0
-
-dcf_show_diff:
-	mov di,OFFSET temp_buf
-	call WriteTime
-	mov al,' '
-	WriteChar
-	jmp dcf_thread_loop
+	mov si,OFFSET save_buf
+	call ShowDiff
+	int 3
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
