@@ -32,6 +32,7 @@
 .model Small
 
 DATA_SEG = 6000h
+MAX_IMAGES = 20
 
 boot_struc	STRUC
 
@@ -125,6 +126,9 @@ LbaSectors          DD ?
 DiscCyls            DW ?
 DiscHeads           DW ?
 SectorsPerCyl       DW ?
+
+EntryCount          DW 0
+EntryArr            DB MAX_IMAGES * 32 DUP(0)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -933,14 +937,82 @@ GetCurrentSector    Proc near
 	ret
 GetCurrentSector	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckDirEntry
+;
+;		DESCRIPTION:	Check a directory entry for a RDOS image file
+;
+;       PARAMETERS:     DS:SI       Dir entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDirEntry   Proc near
+    push es
+    pushad
+;
+    mov ax,word ptr [si].fat_ext
+    cmp ax,'IB'
+    jne cdeDone
+;
+    mov al,[si].fat_ext+2
+    cmp al,'N'
+    jne cdeDone
+;
+    mov al,[si].fat_attrib
+    test al,10h
+    jnz cdeDone
+;
+    push cs:CurrentCluster
+;    
+    movzx edx,ds:[si].fat_cluster
+    cmp cs:FatSize,32
+    jnz cdeClustOk
+;
+    movzx eax,ds:[si].fat_cluster_hi
+    shl eax,16
+    or edx,eax
+
+cdeClustOk:       
+    mov cs:CurrentCluster,edx
+;
+    call GetCurrentSector
+    mov bx,400h
+    call ReadSector
+    mov eax,[bx]    
+    cmp eax,5A1E75D4h
+    jne cdeNotRdos
+;
+    mov cx,cs:EntryCount
+    mov di,OFFSET EntryArr
+    mov ax,cx
+    shl ax,5
+    add di,ax
+    mov ax,cs
+    mov es,ax
+    mov cx,10h
+    rep movsw        
+    inc cs:EntryCount
+
+cdeNotRdos:
+    pop cs:CurrentCluster       
+
+cdeDone:    
+    popad
+    pop es
+    ret
+CheckDirEntry   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			ScanDir
 ;
-;		DESCRIPTION:	Scan a directory
+;		DESCRIPTION:	Scan directory for RDOS .bin files
 ;
-;       PARAMETERS:     DI          File to scan for
+;       PARAMETERS:     
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -965,16 +1037,7 @@ sdSectorLoop:
     pop bx
 
 sdLoop:
-    push cx
-    push si
-    push di    
-    mov cx,11
-    repz cmps byte ptr [si],es:[di]    
-    pop di
-    pop si
-    pop cx
-    jz sdFound
-;
+    call CheckDirEntry
     add si,20h
     test si,1FFh
     jnz sdLoop
@@ -984,22 +1047,6 @@ sdLoop:
 ;
     call NextCluster
     jnc sdClusterLoop
-    jmp sdDone
-
-sdFound:
-    movzx edx,ds:[si].fat_cluster
-    cmp cs:FatSize,32
-    jnz sdClustOk
-;
-    movzx eax,ds:[si].fat_cluster_hi
-    shl eax,16
-    or edx,eax
-
-sdClustOk:       
-    mov cs:CurrentCluster,edx
-    mov eax,ds:[si].fat_file_size
-    mov cs:ImageSize,eax
-    clc
 
 sdDone:
     pop bp
@@ -1038,16 +1085,7 @@ ScanRootDir Proc near
     pop bx
 
 srdLoop:
-    push cx
-    push si
-    push di    
-    mov cx,11
-    repz cmps byte ptr [si],es:[di]    
-    pop di
-    pop si
-    pop cx
-    jz srdFound
-;
+    call CheckDirEntry
     add si,20h
     test si,1FFh
     jnz srdNextEntry
@@ -1062,16 +1100,6 @@ srdLoop:
 
 srdNextEntry:
     loop srdLoop
-;
-    stc
-    jmp srdDone
-
-srdFound:
-    movzx edx,ds:[si].fat_cluster
-    mov cs:CurrentCluster,edx
-    mov eax,ds:[si].fat_file_size
-    mov cs:ImageSize,eax
-    clc
 
 srdDone:
     pop cx
@@ -1083,40 +1111,24 @@ ScanRootDir Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FindImageFile
+;		NAME:			FindRdosFiles
 ;
-;		DESCRIPTION:	Find boot image file
-;
-;       RETURNS:        EDX     Cluster #
+;		DESCRIPTION:	Find RDOS bootable files
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-NormalImage DB 'RDOS    BIN'
-SafeImage   DB 'SAFE    BIN'
-
-FindImageFile   Proc near
-    mov al,cs:SafeBoot
-    or al,al
-    jz fifNormal
-;
-    mov di,OFFSET SafeImage
-    jmp fifType 
-
-fifNormal:
-    mov di,OFFSET NormalImage
-
-fifType:
+FindRdosFiles   Proc near
     mov al,cs:FatSize
     cmp al,32
-    je fif32
+    je frf32
 ;
     call ScanRootDir
     ret
 
-fif32:
+frf32:
     call ScanDir
     ret
-FindImageFile   Endp
+FindRdosFiles   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1511,7 +1523,8 @@ boot_data_sector_ok:
     mov cs:RootEntries,ax
     movzx ax,ds:boot_sectors_per_cluster
     mov cs:SectorsPerCluster,ax
-    call FindImageFile
+    mov cs:EntryCount,0
+    call FindRdosFiles
     jnc LoadStart
 ;    
     mov si,OFFSET BootNotFound
