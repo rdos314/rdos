@@ -117,7 +117,8 @@ clear_mask_proc			DD ?
 add_mask_proc			DD ?
 
 ; IN  EAX			RGB color
-set_color_proc			DD ?
+; OUT EAX           internal color
+translate_color_proc	DD ?
 
 ; IN  CX			x
 ; IN  DX			y

@@ -503,15 +503,17 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SetColor
+;		NAME:			TranslateColor
 ;
-;		DESCRIPTION:	Set color
+;		DESCRIPTION:	Translate color
 ;
 ;		PARAMETER:		EAX			RGB color
 ;
+;       RETURNS:        EAX         Internal color
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_color	Proc far
+translate_color	Proc far
 	push bx
 	push edx
 ;
@@ -529,12 +531,12 @@ set_color	Proc far
 	shr dx,3
 	and dx,1Fh
 	or bx,dx
-	mov ds:v_color,ebx
+	movzx eax,bx
 ;
 	pop edx
 	pop bx
 	ret
-set_color	Endp
+translate_color	Endp
 
 PAGE
 
@@ -2755,7 +2757,7 @@ mt0B DW OFFSET error,				video_code_sel
 mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
-mt0F DW OFFSET set_color,			video_code_sel
+mt0F DW OFFSET translate_color,		video_code_sel
 mt10 DW OFFSET get_pixel,			video_code_sel
 mt11 DW OFFSET set_pixel,			video_code_sel
 mt12 DW OFFSET get_native,			video_code_sel

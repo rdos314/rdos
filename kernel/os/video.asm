@@ -69,80 +69,6 @@ CallVideo	MACRO	call_proc
 	pop ds
 				ENDM
 
-CallBitmap	MACRO	call_proc
-	local done
-	local fail
-
-	push ds
-	push ax
-	push bx
-;
-	mov ax,BITMAP_HANDLE
-	DerefHandle
-	jc fail
-;
-	mov ds,[bx].bm_sel
-	pop bx
-	pop ax
-	EnterSection ds:v_section
-	call ds:&call_proc
-	LeaveSection ds:v_section
-	pop ds	
-	jmp done
-
-fail:
-	pop bx
-	pop ax
-	pop ds
-
-done:
-				ENDM
-
-CallBitmapParam	MACRO	call_proc
-	local done
-	local fail
-
-	push ds
-	push ax
-	push bx
-;
-	mov ax,BITMAP_HANDLE
-	DerefHandle
-	jc fail
-;
-    push [bx].bm_color
-    push [bx].bm_lgop
-    push [bx].bm_font
-    push [bx].bm_x_min
-    push [bx].bm_y_min
-    push [bx].bm_x_max
-    push [bx].bm_y_max
-    mov al,[bx].bm_style
-	mov ds,[bx].bm_sel
-	mov ds:v_style,al
-	pop ds:v_y_max
-	pop ds:v_x_max
-	pop ds:v_y_min
-	pop ds:v_x_min
-	pop ds:v_font
-	pop ds:v_lgop
-	pop ds:v_color
-	pop bx
-	pop ax
-	EnterSection ds:v_section
-	call ds:&call_proc
-	LeaveSection ds:v_section
-	pop ds	
-	jmp done
-
-fail:
-	pop bx
-	pop ax
-	pop ds
-
-done:
-				ENDM
-
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -1077,7 +1003,7 @@ PAGE
 ;		DESCRIPTION:	Set draw color
 ;
 ;		PARAMETERS:		EAX			RGB color
-;						BX			Bitmap handle or 0
+;						BX			Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1093,6 +1019,10 @@ set_draw_color	PROC far
     pop ax
 	jc set_draw_color_done
 ;
+    push ds
+	mov ds,[bx].bm_sel
+    call ds:translate_color_proc
+    pop ds
     mov [bx].bm_color,eax
     
 set_draw_color_done:
@@ -1111,7 +1041,7 @@ PAGE
 ;		DESCRIPTION:	Set LGOP
 ;
 ;		PARAMETERS:		AX			LGOP
-;						BX			Bitmap handle or 0
+;						BX			Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1149,7 +1079,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Set hollow style
 ;
-;		PARAMETERS:		BX			Bitmap handle or 0
+;		PARAMETERS:		BX			Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1182,7 +1112,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Set filled style
 ;
-;		PARAMETERS:		BX			Bitmap handle or 0
+;		PARAMETERS:		BX			Bitmap handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1215,7 +1145,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Set font
 ;
-;		PARAMETERS:		BX			Bitmap handle or 0
+;		PARAMETERS:		BX			Bitmap handle
 ;						AX			Font
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1249,7 +1179,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Get pixel
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x
 ;						DX		y
 ;
@@ -1260,7 +1190,27 @@ PAGE
 get_pixel_name	DB 'Get Pixel',0
 
 get_pixel	PROC far
-	CallBitmap get_pixel_proc
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc get_pixel_fail
+;
+	mov ds,[bx].bm_sel
+	pop bx
+	pop ax
+	EnterSection ds:v_section
+	call ds:get_pixel_proc
+	LeaveSection ds:v_section
+	pop ds	
+    retf32
+
+get_pixel_fail:
+	pop bx
+	pop ax
+	pop ds
 	retf32
 get_pixel	ENDP
 
@@ -1273,7 +1223,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Set pixel
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x
 ;						DX		y
 ;
@@ -1282,7 +1232,39 @@ PAGE
 set_pixel_name	DB 'Set Pixel',0
 
 set_pixel	PROC far
-	CallBitmapParam set_pixel_proc
+	push ds
+	push eax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc set_pixel_fail
+;
+    mov eax,[bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+	mov ds:v_color,eax
+	pop bx
+	pop eax
+	call ds:set_pixel_proc
+	LeaveSection ds:v_section
+	pop ds
+	retf32	
+
+set_pixel_fail:
+	pop bx
+	pop eax
+	pop ds
 	retf32
 set_pixel	ENDP
 
@@ -1295,8 +1277,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Blit
 ;
-;		PARAMETERS:		AX		Source bitmap handle or 0
-;						BX		Dest bitmap handle or 0
+;		PARAMETERS:		AX		Source bitmap handle
+;						BX		Dest bitmap handle
 ;						CX		Width
 ;						DX		Height
 ;						ESI		Source x + y << 16
@@ -1335,17 +1317,19 @@ blit_pr	PROC far
 	mov [bp].blit_width,cx
 	mov [bp].blit_height,dx
 ;
-	or bx,bx
-	jnz blit_dest_bmp
-;
-	mov dx,video_local_sel
-	mov ds,dx
-	mov dx,ds:v_handle
-	mov [bp].blit_dest_sel,dx
-	jmp blit_get_src
-
-blit_dest_bmp:
+    mov cx,bx
 	push ax
+	mov bx,ax
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	pop ax
+	jc blit_failed
+;
+	mov dx,[bx].bm_sel
+	mov [bp].blit_src_sel,dx
+;
+    push ax
+    mov bx,cx
 	mov ax,BITMAP_HANDLE
 	DerefHandle
 	pop ax
@@ -1353,40 +1337,13 @@ blit_dest_bmp:
 ;
 	mov dx,[bx].bm_sel
 	mov [bp].blit_dest_sel,dx
-	mov si,[bx].bm_lgop
 ;
     push [bx].bm_lgop
     push [bx].bm_x_min
     push [bx].bm_y_min
     push [bx].bm_x_max
     push [bx].bm_y_max
-	mov ds,[bx].bm_sel
-	pop ds:v_y_max
-	pop ds:v_x_max
-	pop ds:v_y_min
-	pop ds:v_x_min
-	pop ds:v_lgop
-
-blit_get_src:
-	mov bx,ax
-	or bx,bx
-	jnz blit_src_bmp
 ;
-	mov dx,video_local_sel
-	mov ds,dx
-	mov dx,ds:v_handle
-	mov [bp].blit_src_sel,dx
-	jmp blit_do
-
-blit_src_bmp:
-	mov ax,BITMAP_HANDLE
-	DerefHandle
-	jc blit_failed
-;
-	mov dx,[bx].bm_sel
-	mov [bp].blit_src_sel,dx
-
-blit_do:
 	mov ax,[bp].blit_src_sel
 	cmp ax,[bp].blit_dest_sel
 	je blit_same_bitmap
@@ -1396,15 +1353,25 @@ blit_do:
 blit_take_src_first:
     mov ds,[bp].blit_src_sel
 	EnterSection ds:v_section
+;
 	mov ds,[bp].blit_dest_sel
 	EnterSection ds:v_section
-    mov ds:v_lgop,si
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
     jmp blit_entered
 
 blit_take_dest_first:
 	mov ds,[bp].blit_dest_sel
 	EnterSection ds:v_section
-    mov ds:v_lgop,si
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+;
     mov ds,[bp].blit_src_sel
 	EnterSection ds:v_section
     	
@@ -1415,7 +1382,6 @@ blit_entered:
 	je blit1
 ;
 	mov ds,[bp].blit_dest_sel
-	mov ds:v_lgop,si
 	cmp al,ds:v_bpp
 	je blit_same_bpp
 ;
@@ -1478,6 +1444,12 @@ blit_same_bpp:
 blit_same_bitmap:
 	mov ds,[bp].blit_src_sel
 	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+;
 	mov dx,[bp].blit_src_y
 	cmp dx,[bp].blit_dest_y
 	je blit_same_line
@@ -1606,7 +1578,7 @@ PAGE
 ;		DESCRIPTION:	Draw a mask line
 ;
 ;		PARAMETERS:		AX		row size
-;						BX		Bitmap handle or 0
+;						BX		Bitmap handle
 ;						ECX		source x + y << 16
 ;						EDX		dest x + y << 16
 ;						ESI		width + height << 16
@@ -1622,19 +1594,54 @@ draw_mask	PROC far
 	push esi
 	push edi
 ;
+	push ds
+	push eax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_mask_fail
+;
+    mov eax,[bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+	mov ds:v_color,eax
+	pop bx
+	pop eax
+
 	movzx eax,ax
 
 draw_mask_loop:
 	ror esi,16
 	or si,si
-	jz draw_mask_done
+	jz draw_mask_leave
 ;
 	ror esi,16
-	CallBitmapParam draw_mask_line_proc
+	call ds:draw_mask_line_proc
 	add ecx,10000h
 	add edx,10000h
 	sub esi,10000h
 	jmp draw_mask_loop
+
+draw_mask_leave:
+	LeaveSection ds:v_section
+	pop ds	
+	jmp draw_mask_done
+
+draw_mask_fail:
+	pop bx
+	pop eax
+	pop ds
 
 draw_mask_done:
 	pop edi
@@ -1653,7 +1660,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a string
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x
 ;						DX		y
 ;						ES:EDI	string
@@ -1665,13 +1672,84 @@ draw_string_name	DB 'Draw String',0
 draw_string16	PROC far
 	push edi
 	movzx edi,di
-	CallBitmapParam draw_string_proc
+;
+	push ds
+	push eax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_string16_fail
+;
+    mov eax,[bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_font
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_font
+	pop ds:v_lgop
+	mov ds:v_color,eax
+	pop bx
+	pop eax
+	call ds:draw_string_proc
+	LeaveSection ds:v_section
+	pop ds	
+	jmp draw_string16_done
+
+draw_string16_fail:
+	pop bx
+	pop eax
+	pop ds
+
+draw_string16_done:
 	pop edi
 	ret
 draw_string16	ENDP
 
 draw_string32	PROC far
-	CallBitmapParam draw_string_proc
+	push ds
+	push eax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_string32_fail
+;
+    mov eax,[bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_font
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_font
+	pop ds:v_lgop
+	mov ds:v_color,eax
+	pop bx
+	pop eax
+	call ds:draw_string_proc
+	LeaveSection ds:v_section
+	pop ds
+	retf32
+
+draw_string32_fail:
+	pop bx
+	pop eax
+	pop ds
 	retf32
 draw_string32	ENDP
 
@@ -1684,7 +1762,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a line
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x1
 ;						DX		y1
 ;						SI		x2
@@ -1695,7 +1773,39 @@ PAGE
 draw_line_name	DB 'Draw Line',0
 
 draw_line	PROC far
-	CallBitmapParam draw_line_proc
+	push ds
+	push eax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_line_fail
+;
+    mov eax,[bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+	mov ds:v_color,eax
+	pop bx
+	pop eax
+	call ds:draw_line_proc
+	LeaveSection ds:v_section
+	pop ds	
+	retf32
+
+draw_line_fail:
+	pop bx
+	pop eax
+	pop ds
 	retf32
 draw_line	ENDP
 
@@ -1708,7 +1818,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a rectangle
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x
 ;						DX		y
 ;						SI		w
@@ -1719,7 +1829,41 @@ PAGE
 draw_rect_name	DB 'Draw Rect',0
 
 draw_rect	PROC far
-	CallBitmapParam draw_rect_proc
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_rect_fail
+;
+    push [bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+    mov al,[bx].bm_style
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	mov ds:v_style,al
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+	pop ds:v_color
+	pop bx
+	pop ax
+	call ds:draw_rect_proc
+	LeaveSection ds:v_section
+	pop ds	
+	retf32
+
+draw_rect_fail:
+	pop bx
+	pop ax
+	pop ds
 	retf32
 draw_rect	ENDP
 
@@ -1732,7 +1876,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a ellipse
 ;
-;		PARAMETERS:		BX		Bitmap handle or 0
+;		PARAMETERS:		BX		Bitmap handle
 ;						CX		x
 ;						DX		y
 ;						SI		w
@@ -1743,7 +1887,41 @@ PAGE
 draw_ellipse_name	DB 'Draw Ellipse',0
 
 draw_ellipse	PROC far
-	CallBitmapParam draw_ellipse_proc
+	push ds
+	push ax
+	push bx
+;
+	mov ax,BITMAP_HANDLE
+	DerefHandle
+	jc draw_ellipse_fail
+;
+    push [bx].bm_color
+    push [bx].bm_lgop
+    push [bx].bm_x_min
+    push [bx].bm_y_min
+    push [bx].bm_x_max
+    push [bx].bm_y_max
+    mov al,[bx].bm_style
+	mov ds,[bx].bm_sel
+	EnterSection ds:v_section
+	mov ds:v_style,al
+	pop ds:v_y_max
+	pop ds:v_x_max
+	pop ds:v_y_min
+	pop ds:v_x_min
+	pop ds:v_lgop
+	pop ds:v_color
+	pop bx
+	pop ax
+	call ds:draw_ellipse_proc
+	LeaveSection ds:v_section
+	pop ds	
+	retf32
+
+draw_ellipse_fail:
+	pop bx
+	pop ax
+	pop ds
 	retf32
 draw_ellipse	ENDP
 
