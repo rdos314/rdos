@@ -57,6 +57,7 @@ arp_list_struc	STRUC
 arp_prev				DW ?
 arp_next				DW ?
 arp_timeout				DD ?,?
+arp_owner               DW ?
 arp_retries				DW ?
 arp_protocol			DW ?
 arp_logical_addr_len	DB ?
@@ -205,6 +206,9 @@ move_answ_arp_empty:
 	mov ds:arp_answ_list,es
 
 move_answ_arp_done:
+    mov bx,es:arp_owner
+    Signal
+;    
 	mov bx,ds:arp_thread
 	Signal
 ;
@@ -1079,9 +1083,11 @@ get_net_buffer	Proc far
 	add ax,OFFSET arp_logical_addr
 	AllocateSmallGlobalMem
 	mov es:arp_protocol,ds
-	mov es:arp_retries,10
+	mov es:arp_retries,3
 	mov es:arp_timeout,0
 	mov es:arp_timeout+4,0
+	GetThread
+	mov es:arp_owner,ax
 	mov al,ds:p_logical_addr_len
 	mov es:arp_logical_addr_len,al
 	mov di,OFFSET arp_logical_addr
@@ -1095,6 +1101,7 @@ get_net_buffer	Proc far
 	or ax,ax
 	je get_buf_arp_empty
 ;
+    push fs
 	mov fs,ax
 	mov si,fs:arp_prev
 	mov fs:arp_prev,es
@@ -1102,6 +1109,7 @@ get_net_buffer	Proc far
 	mov fs:arp_next,es
 	mov es:arp_next,ax
 	mov es:arp_prev,si
+	pop fs
 	jmp get_buf_arp_done
 
 get_buf_arp_empty:
@@ -1117,8 +1125,11 @@ get_buf_arp_done:
 	mov bx,ds:arp_thread
 	Signal
 	pop bx
-	stc
-	jmp get_net_buf_done
+;	
+	mov ds,bx
+	WaitForSignal
+	call FindAddress
+	jc get_net_buf_done
 
 get_net_buffer_do:
 	mov ds,ax
@@ -1171,9 +1182,11 @@ send_net	Proc far
 	add ax,OFFSET arp_logical_addr
 	AllocateSmallGlobalMem
 	mov es:arp_protocol,ds
-	mov es:arp_retries,10
+	mov es:arp_retries,3
 	mov es:arp_timeout,0
 	mov es:arp_timeout+4,0
+	GetThread
+	mov es:arp_owner,ax
 	mov al,ds:p_logical_addr_len
 	mov es:arp_logical_addr_len,al
 	mov di,OFFSET arp_logical_addr
@@ -1187,6 +1200,7 @@ send_net	Proc far
 	or ax,ax
 	je ins_arp_empty
 ;
+    push fs
 	mov fs,ax
 	mov si,fs:arp_prev
 	mov fs:arp_prev,es
@@ -1194,6 +1208,7 @@ send_net	Proc far
 	mov fs:arp_next,es
 	mov es:arp_next,ax
 	mov es:arp_prev,si
+	pop fs
 	jmp ins_arp_done
 
 ins_arp_empty:
@@ -1209,7 +1224,11 @@ ins_arp_done:
 	mov bx,ds:arp_thread
 	Signal
 	pop bx
-	jmp send_done
+;
+    WaitForSignal
+    mov ds,bx	
+    call FindAddress
+    jc send_done
 
 send_start:
 	push dx
@@ -1472,6 +1491,8 @@ arp_send_remove:
 
 arp_send_remove_done:
 	LeaveSection ds:arp_section
+	mov bx,es:arp_owner
+	Signal
 	xor ax,ax
 	mov fs,ax
 	FreeMem

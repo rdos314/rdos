@@ -521,7 +521,6 @@ Receive	Proc far
 	push si
 	push di
 ;
-    int 3
 	push di
 	mov dx,cx
 	xchg dl,dh

@@ -2267,6 +2267,12 @@ free_not_huge:
 	FreeLdt
 	jmp free_lin_mem
 free_descr_gdt:
+	cmp ecx,10000000h
+	jc fbm_do
+;
+    int 3
+
+fbm_do:	
 	FreeGdt
 free_lin_mem:
 	test al,10h

@@ -1007,6 +1007,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 page_fault_error2:
+	int 3
 	pop ax
 	mov eax,cr2
 	pop edi
@@ -1018,7 +1019,6 @@ page_fault_error2:
 	pop eax
 	pop bp
 	add sp,12
-	int 3
 	mov al,14
 	int 46h
 

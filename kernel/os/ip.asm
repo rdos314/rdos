@@ -506,12 +506,10 @@ send_ppp:
 	jmp send_done
 
 send_gateway:
-    push ds
     mov ax,fs
     mov ds,ax
 	mov esi,OFFSET gateway
 	SendNet
-	pop ds
 	jmp send_done
 
 send_self:
@@ -522,9 +520,12 @@ send_self:
 	jmp send_done
 
 send_local_net:
-	mov esi,OFFSET ip_dest
-	add esi,edi
+    push ds:[di].ip_dest
+    mov ax,ss
+    mov ds,ax
+	movzx esi,sp
 	SendNet
+	pop eax
 
 send_done:
 	pop edi
