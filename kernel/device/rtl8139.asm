@@ -311,8 +311,10 @@ AllocateRing	Proc near
 	mov ds:RxRingPhys,eax
 	mov eax,ecx
 	shl eax,12
+	add eax,eax
 	AllocateBigLinear
 	mov ds:RxRingLinear,edx
+	shr eax,1
 	mov ds:RxRingSize,eax
 ;
 	mov eax,ds:RxRingPhys
@@ -324,7 +326,17 @@ al_rxring_loop:
 	add edx,1000h
 	loop al_rxring_loop
 ;
+	mov eax,ds:RxRingPhys
+	or al,7
+
+al_arxring_loop:
+	SetPhysicalPage
+	add eax,1000h
+	add edx,1000h
+	loop al_arxring_loop
+;
 	mov ecx,ds:RxRingSize
+	add ecx,ecx
 	mov edx,ds:RxRingLinear
 	AllocateGdt
 	CreateDataSelector16
@@ -484,6 +496,18 @@ niNotUnderrun:
 	add dx,IntrStatus
 	mov ax,bx
 	out dx,ax
+;
+    test bx,RxOK OR RxUnderrun OR RxOverflow OR RxFIFOOver
+    jz niNotRx
+;
+	mov bx,ds:Handle
+	or bx,bx
+	jz niNotRx
+;
+	NetReceived
+
+niNotRx:
+	
 	ret
 NetInt	Endp
 
@@ -501,7 +525,15 @@ NetInt	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Preview	Proc far
+    int 3
+    push ds
+    push fs
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov fs,ds:RxRingSel
 	stc
+	pop fs
+	pop ds
 	ret
 Preview	Endp
 
@@ -518,6 +550,7 @@ Preview	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Receive	Proc far
+    int 3
 	ret
 Receive	Endp
 
@@ -641,16 +674,18 @@ DriverName	DB 'RTL8139',0
 
 PciVendorTab:
 pci00	DW 10ECh, 8139h
-pci02	DW 1113h, 1211h
+pci01	DW 10ECh, 8138h
+pci02	DW 10ECh, 8129h
 pci03	DW 1186h, 1300h
-pci04	DW 018Ah, 0106h
-pci05	DW 021Bh, 8139h
-pci06	DW 13D1h, 0AB06h
-pci07	DW 02ACh, 1012h 
-pci08	DW 1432h, 9130h
-pci09	DW 1186h, 1340h
-pci10	DW 1186h, 1300h
-pci11 	DW 0,	  0
+pci04	DW 1113h, 1211h
+pci05	DW 1186h, 1300h
+pci06	DW 018Ah, 0106h
+pci07	DW 021Bh, 8139h
+pci08	DW 13D1h, 0AB06h
+pci09	DW 02ACh, 1012h 
+pci10	DW 1432h, 9130h
+pci11	DW 1186h, 1340h
+pci12 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
