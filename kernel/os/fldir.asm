@@ -433,7 +433,6 @@ fdiSpaceLoop:
 	dec esi
 
 fdiCheck:
-    int 3
 	mov ebp,esi
 
 fdiRetry:
@@ -884,9 +883,11 @@ AddDirEntry	Proc near
     push cx
     push edx
     push esi
+	push edi
 ;
     mov edx,es:[esi]
     and edx,0FFFFFFh
+	mov edi,edx
     call DirDataLogToPhysSector
     jc adeDone
 ;
@@ -915,6 +916,7 @@ adeTake:
     jne adeUnlock
 ;
     push ebx
+	mov ecx,edi
     mov ax,LOG_ENTRY_DIR_ENTRY
     call AllocateSector
     mov eax,ebx
@@ -933,6 +935,7 @@ adeUnlock:
     popf
 
 adeDone:
+	pop edi
     pop esi
     pop edx
     pop cx
@@ -952,7 +955,8 @@ PAGE
 ;		DESCRIPTION:    Allocate dir entry 
 ;
 ;		PARAMETERS:		EDX			Logical object sector
-;                       EBP         Dir file entry
+;                       EDI			Owner logical sector
+;						EBP         Dir file entry
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -964,6 +968,7 @@ AllocateDirObject	Proc near
     push esi
     push edi
 ;
+	mov ecx,edi
     mov edi,edx
     call ObjectLogToPhysSector
     jc adoDone
@@ -1050,6 +1055,9 @@ GrowDir	Proc near
 
 gdRedo:
     mov edx,fs:fds_entry_sector
+	call QueryDirEntrySector
+	jc gdDone
+;
     call DirEntryLogToPhysSector
     jc gdDone
 ;
@@ -1116,6 +1124,7 @@ gdMoveDone:
 
 gdAllocObjectSector:
     push ebx
+	mov ecx,edx
 	mov ax,LOG_ENTRY_OBJECT
 	call AllocateSector
 	mov eax,ebx
@@ -1179,6 +1188,9 @@ AddToDir	Proc near
 
 atdRetry:    
     mov edx,fs:fds_entry_sector
+	call QueryDirEntrySector
+	jc atdDone
+;
     call DirEntryLogToPhysSector
     jc atdDone
 ;    
@@ -1198,6 +1210,7 @@ atdRetry:
 ;
     mov edx,es:[edi]
     and edx,0FFFFFFh
+    mov edi,fs:fds_entry_sector
     call AllocateDirObject
     jnc atdUnlock
 
@@ -2132,6 +2145,7 @@ cache_dir	PROC far
 	or edx,edx
 	jnz cache_sub_dir
 ;
+	int 3
 	call GetRootSector
     jc cache_dir_done
 ;
@@ -2463,6 +2477,7 @@ PAGE
 create_file	PROC far
 	push fs
 ;
+	int 3
     call CreateFileEntry
     call InitFileEntry
     call AddFileEntry

@@ -211,9 +211,13 @@ csaCache:
 	movzx edi,es:[ebx+esi].le_logical_entry
 	shl edi,3
 	add edi,fs:bc_log_sector_ptr
-	mov es:[edi].bs_type,al
+	mov es:[edi].bs_status,al
 	dec bp
 	mov es:[edi].bs_physical_sector,bp
+;
+	mov eax,dword ptr es:[ebx+esi].le_owner
+	and eax,0FFFFFFh
+	mov es:[edi].bs_owner,eax
 ;
 	movzx edi,bp
 	add edi,edi
@@ -293,7 +297,7 @@ rbRelockLoop:
 	xor bp,bp
 
 rbLogLoop:
-	mov al,es:[ebx].bs_type
+	mov al,es:[ebx].bs_status
 	cmp al,LOG_ENTRY_OBJECT
 	je rbWriteEntry
 ;
@@ -306,7 +310,7 @@ rbLogLoop:
 	cmp al,LOG_ENTRY_FILE_DATA
 	je rbWriteEntry
 ;
-	mov es:[ebx].bs_type,-1
+	mov es:[ebx].bs_status,-1
 	jmp rbLogNext
 
 rbWriteEntry:
@@ -333,7 +337,7 @@ rbWriteEntry:
 	push ecx
 	push esi
 	push edi
-	movzx cx,es:[esi].le_type
+	movzx cx,es:[esi].le_status
 	movzx edx,es:[ebx].bs_physical_sector
 	mov es:[ebx].bs_physical_sector,bp
 	add edx,fs:bc_start_sector
@@ -540,22 +544,23 @@ AllocateBlockSector	Proc near
 	push ebp
 ;
     mov edx,ecx
+	mov bp,ax
 
 absRetry:
 	mov cx,ds:data_sectors
 	mov ebx,fs:bc_log_sector_ptr
 
 absLogLoop:
-	mov bp,es:[ebx].bs_type
-	or bp,bp
+	mov al,es:[ebx].bs_status
+	or al,al
 	jne absLogNext
 ;
 	mov edi,fs:bc_phys_sector_ptr
 	mov cx,ds:data_sectors
 
 absPhysLoop:
-	mov bp,es:[edi]
-	cmp bp,-1
+	mov ax,es:[edi]
+	cmp ax,-1
 	jne absPhysNext
 ;
 	call AllocateSectorEntry
@@ -563,10 +568,12 @@ absPhysLoop:
 ;
     mov dword ptr es:[esi].le_owner,edx
     mov es:[ebx].bs_owner,edx
+	mov ax,bp
 	mov es:[ebx].bs_status,al
 	or al,LOG_STATUS_BEFORE_ALLOC
 	mov es:[esi].le_status,al
 ;	
+	push edx
 	mov eax,edi
 	sub eax,fs:bc_phys_sector_ptr
 	shr eax,1
@@ -582,26 +589,24 @@ absPhysLoop:
 ;
 	push ebx
 	push esi
-	push ax
 	mov al,ds:drive_nr
 	LockSector
-	pop ax
-	mov ebp,-1
+	mov eax,-1
 	mov cx,80h
 
 absBlankLoop:
-	and ebp,es:[esi]
+	and eax,es:[esi]
 	add esi,4
 	loop absBlankLoop
 ;
 	UnlockSector
 	pop esi
 	pop ebx
-	inc ebp
-	or ebp,ebp
-	clc
-	jz absDone
+	inc eax
+	or eax,eax
+	jz absPopOk
 ;
+	pop edx
 	shl ebx,3
 	mov es:[ebx].bs_status,LOG_ENTRY_ERASE
 ;
@@ -624,6 +629,11 @@ absLogNext:
 	jnz absLogLoop
 ;
 	stc
+	jmp absDone
+
+absPopOk:
+	add sp,4
+	clc
 
 absDone:
 	pop ebp
@@ -673,7 +683,7 @@ albsPhysLoop:
 	call AllocateSectorEntry
 	jc albsDone
 ;
-    mov es:[esi].le_owner,edx
+    mov dword ptr es:[esi].le_owner,edx
     or al,LOG_STATUS_BEFORE_ALLOC
 	mov es:[esi].le_status,al
 ;
@@ -709,7 +719,7 @@ albsBlankLoop:
 	clc
 	jz albsDone
 ;
-	mov es:[esi].le_type,0
+	mov es:[esi].le_status,0
 	push ebx
 	mov ebx,fs:bc_op_handle
 	call WriteSector
@@ -800,7 +810,7 @@ absLockLoop:
 absLoop:
     mov es:[edi].bs_owner,0
     mov es:[edi].bs_physical_sector,0
-    mov es:[edi].bs_status,-1
+    mov es:[edi].bs_status,0
     add edi,8
     loop absLoop
 ;
@@ -1056,6 +1066,7 @@ PAGE
 ;		DESCRIPTION:	Alias a sector
 ;
 ;       PARAMETERS:     EBX			Logical sector #
+;						ECX			Owner logical sector
 ;
 ;       RETURNS:        EBX         Logical sector #
 ;                       EDX         Physical sector #
@@ -1069,7 +1080,9 @@ AliasSector	PROC near
 	push eax
 	push ebx
 	push ecx
+	push ebp
 ;
+	mov ebp,ecx
     mov edx,edx
     shr ebx,16
     call GetBlock
@@ -1078,6 +1091,10 @@ AliasSector	PROC near
     mov bx,dx
     call GetBlockSector
     jc alsDone
+;
+	cmp ebp,ecx
+	stc
+	jne alsDone
 ;
 	call AliasBlockSector
 	jnc alsOk
@@ -1092,6 +1109,7 @@ alsOk:
     clc
 
 alsDone:
+	pop ebp
     pop ecx
 	pop ebx
 	pop eax
@@ -1107,7 +1125,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Free a sector
 ;
-;       PARAMETERS:     EDX			Logical sector #
+;       PARAMETERS:     ECX			Owner logical sector
+;						EDX			Logical sector #
 ;
 ;       RETURNS:        FS          Block for modify operation
 ;
@@ -1126,6 +1145,11 @@ FreeSector	PROC near
 	movzx edi,dx
 	shl edi,3
 	add edi,fs:bc_log_sector_ptr
+	cmp ecx,es:[edi].bs_owner
+	stc
+	jne fsDone
+;
+	mov edx,ecx
 	mov es:[edi].bs_status,0
 	movzx edi,es:[edi].bs_physical_sector
 	add edi,edi
@@ -1140,13 +1164,18 @@ fsSectorLoop:
 	xor esi,esi
 
 fsLoop:
-	mov ax,es:[esi+ebp].le_type
-	or ax,ax
+	mov al,es:[esi+ebp].le_status
+	or al,al
 	jz fsNext
 ;
-	cmp ax,-1
+	cmp al,-1
 	stc
 	je fsDone
+;
+	mov eax,dword ptr es:[esi+ebp].le_owner
+	and eax,0FFFFFFh
+	cmp edx,eax
+	jne fsNext
 ;
 	cmp bx,es:[esi+ebp].le_logical_entry
 	jne fsNext
@@ -1234,7 +1263,7 @@ grsEntry:
     mov al,es:[esi].le_status
     and al,1Fh
     or al,LOG_STATUS_AFTER_ALLOC
-    mov es:[esi].le_status
+    mov es:[esi].le_status,al
 	mov ebx,fs:bc_op_handle
 	call WriteSector
 ;
@@ -1242,7 +1271,8 @@ grsEntry:
 	jmp grsEntry
 
 grsCheckEntry:
-	cmp ax,LOG_ENTRY_DIR_ENTRY
+	and al,1Fh
+	cmp al,LOG_ENTRY_DIR_ENTRY
 	stc
 	jne grsDone
 ;

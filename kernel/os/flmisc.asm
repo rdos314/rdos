@@ -127,8 +127,11 @@ WriteSectorAlloc	Proc near
 ;
     int 3
     mov esi,fs:bc_op_ads
-    mov es:[esi].le_alloc_state,55h
-;    
+	mov al,es:[esi].le_status
+	and al,1Fh
+	or al,LOG_STATUS_BEFORE_ALLOC
+	mov es:[esi].le_status,al
+; 
     push ebx
     mov cx,1
     CreateDiscSeq
@@ -142,10 +145,16 @@ WriteSectorAlloc	Proc near
     ModifySeqSector
     PerformDiscSeq
 ;    
-    mov es:[esi].le_alloc_state,0
+    mov ebx,fs:bc_op_handle
+	WaitForSector
+;
+	mov al,es:[esi].le_status
+	and al,1Fh
+	or al,LOG_STATUS_AFTER_ALLOC
+    mov es:[esi].le_status,al
+;
     mov cx,1
     CreateDiscSeq
-    mov ebx,fs:bc_op_handle
     ModifySeqSector
     PerformDiscSeq
 ;
@@ -180,7 +189,9 @@ WriteSectorFree	Proc near
 ;
     int 3
     mov esi,fs:bc_op_ads
-    mov es:[esi].le_free_state,55h
+	mov al,es:[esi].le_status
+	and al,1Fh
+	or al,LOG_STATUS_BEFORE_FREE
 ;    
     push ebx
     mov cx,1
@@ -195,11 +206,13 @@ WriteSectorFree	Proc near
     ModifySeqSector
     PerformDiscSeq
 ;    
-    mov es:[esi].le_free_state,0
-	mov es:[esi].le_type,0
+    mov ebx,fs:bc_op_handle
+	WaitForSector
+;
+    mov es:[esi].le_status,0
+;
     mov cx,1
     CreateDiscSeq
-    mov ebx,fs:bc_op_handle
     ModifySeqSector
     PerformDiscSeq
 ;

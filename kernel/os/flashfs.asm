@@ -132,7 +132,6 @@ mount	PROC far
 	push edx
 	push edi
 ;
-    int 3
 	push ax
 ;
 	push ecx

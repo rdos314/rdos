@@ -89,14 +89,13 @@ fc_logical_block	EQU 1F8h
 fc_version			EQU 1FAh
 fc_signature		EQU 1FCh
 
-FLASH_SIGN_OK	EQU	3AF6CD51h
+FLASH_SIGN_OK	EQU	3AF6CD5Eh
 
 logical_entry_struc	STRUC
 
 le_physical_sector	DW ?
 le_logical_entry	DW ?
-le_owner_entry		DW ?
-le_owner_block      DB ?
+le_owner			DB ?,?,?
 le_status			DB ?
 
 logical_entry_struc	ENDS
