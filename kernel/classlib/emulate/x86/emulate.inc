@@ -79,6 +79,9 @@ double_faulted	EQU 20h
 triple_faulted	EQU 40h
 trap_fault		EQU 80h
 
+DEBUG_BREAK		EQU 1
+DEBUG_RESUME	EQU 2
+
 TLB_REGISTER		EQU 00000001h
 SYSTEM_REGISTER		EQU 00000010h
 DESCRIPTOR_REGISTER	EQU 00000100h
@@ -206,6 +209,7 @@ org_esp			DD ?
 org_stack		DD ?
 
 em_flags		DB ?
+em_debug		DB ?
 em_sreg			DB ?
 em_pl			DB ?
 em_transfer		DB ?

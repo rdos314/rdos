@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Em486 CPU emulator
 ; Copyright (C) 1998-2000, Leif Ekblad
 ;
@@ -269,6 +269,34 @@ Done:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			UserBreak
+;
+;		DESCRIPTION:	User break
+;
+;		PARAMETERS:		SS:EBP	CPU
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public UserBreak
+
+UserBreak	Proc near
+	push ebp
+	mov ebp,[esp+8]
+	test [ebp].em_debug, DEBUG_RESUME
+	jnz user_break_done
+;
+	or [ebp].em_debug, DEBUG_BREAK OR DEBUG_RESUME
+	ResetFault
+	ret
+
+user_break_done:
+	pop ebp
+	ret 4
+UserBreak	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			TripleFault
 ;
 ;		DESCRIPTION:	Triple fault
@@ -282,6 +310,7 @@ Done:
 TripleFault	Proc near
 	int 3
 	or [ebp].em_flags,triple_faulted
+	or [ebp].em_debug,DEBUG_BREAK
 	ResetFault
 	ret
 TripleFault	Endp
@@ -321,6 +350,7 @@ EmulateError	Proc near
 	int 3
 	ResetFault
 	or [ebp].em_flags,triple_faulted
+	or [ebp].em_debug,DEBUG_BREAK
 	ret
 EmulateError	Endp
 

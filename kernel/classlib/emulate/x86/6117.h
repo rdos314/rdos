@@ -29,6 +29,7 @@
 #define _6117_H
 
 #include "keyb.h"
+#include "emulate.h"
 
 class T6117
 {
@@ -37,8 +38,8 @@ class T6117
 
 		void Out(int Port, char Value);
 		char In(int Port);
-		char Read(unsigned long Address);
-		void Write(unsigned long Address, char Data);
+		char Read(TCpu *Cpu, unsigned long Address);
+		void Write(TCpu *Cpu, unsigned long Address, char Data);
 
 		void SetClk();
 		void ResetClk();

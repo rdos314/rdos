@@ -293,7 +293,7 @@ void Reset(TCpu *Cpu)
 	file = _lopen("\\rdos\\app\\bootprom.bin", 0);
 	if (file)
 	{
-		_lread(file, Cpu->Eprom, 0x100000);
+		_lread(file, ((char *)Cpu->Dram) + 0x12100, 0x400);
 		_lclose(file);
 	}
 
@@ -307,21 +307,21 @@ void Reset(TCpu *Cpu)
 	Cpu->Reg_ebp = 0x12345678;
 	Cpu->Reg_esp = 0x12345678;
 	Cpu->Reg_eflags = 2;
-	Cpu->Reg_eip = 0xFFF0;
-	Cpu->Reg_cs.selector = 0xF000;
-	Cpu->Reg_cs.base = 0xFFFF0000;
+	Cpu->Reg_eip = 0x100;
+	Cpu->Reg_cs.selector = 0x1200;
+	Cpu->Reg_cs.base = 0x12000;
 	Cpu->Reg_cs.limit = 0xFFFF;
 	Cpu->Reg_cs.access =	ACCESS_READ | ACCESS_WRITE;
-	Cpu->Reg_ss.selector = 0;
-	Cpu->Reg_ss.base = 0;
+	Cpu->Reg_ss.selector = 0x1200;
+	Cpu->Reg_ss.base = 0x12000;
 	Cpu->Reg_ss.limit = 0xFFFF;
 	Cpu->Reg_ss.access = 	ACCESS_READ | ACCESS_WRITE;
-	Cpu->Reg_ds.selector = 0;
-	Cpu->Reg_ds.base = 0;
+	Cpu->Reg_ds.selector = 0x1200;
+	Cpu->Reg_ds.base = 0x12000;
 	Cpu->Reg_ds.limit = 0xFFFF;
 	Cpu->Reg_ds.access = 	ACCESS_READ | ACCESS_WRITE;
-	Cpu->Reg_es.selector = 0;
-	Cpu->Reg_es.base = 0;
+	Cpu->Reg_es.selector = 0x1200;
+	Cpu->Reg_es.base = 0x12000;
 	Cpu->Reg_es.limit = 0xFFFF;
 	Cpu->Reg_es.access = 	ACCESS_READ | ACCESS_WRITE;
 	Cpu->Reg_fs.selector = 0;
@@ -347,6 +347,7 @@ void Reset(TCpu *Cpu)
 
 	Cpu->Running = FALSE;
 	Cpu->PendingInt = 0;
+	Cpu->EmDebug = 0;
 
 	Pit.Counter[0].OnSetOut = PitSetOut0;
 	Pit.Counter[1].OnResetOut = PitResetOut0;
@@ -482,7 +483,7 @@ void On_P_Char()
 		if (!Done)
 		{
 			Emulate(&Cpu);
-			if (Cpu.EmFlags & TRIPLE_FAULT)
+			if (Cpu.EmDebug & DEBUG_BREAK)
 				Done = TRUE;
 			else
 			{
@@ -520,7 +521,7 @@ void On_G_Char()
 	while (!Done)
 	{
 		Emulate(&Cpu);
-		if (Cpu.EmFlags & TRIPLE_FAULT)
+		if (Cpu.EmDebug & DEBUG_BREAK)
 			Done = TRUE;
 		ReadInstruction(&Cpu);
 		if (Cpu.ReqBuffer[0] == 0xCC)

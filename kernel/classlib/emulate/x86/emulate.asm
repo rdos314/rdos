@@ -1019,6 +1019,7 @@ Emulate	Proc near
 	call	setvalue
 ;
 	mov [ebp].running,1
+	and [ebp].em_debug, NOT DEBUG_BREAK
 	mov al,[ebp].reg_cs.d_access
 	and al,ACCESS_RPL
 	mov [ebp].em_pl,al
@@ -1069,6 +1070,10 @@ emulate_no_trap:
 	movzx ebx,al
 	shl ebx,2
 	call dword ptr [ebx].EmulateTab
+	test [ebp].em_debug, DEBUG_BREAK
+	jnz emulate_done
+;
+	and [ebp].em_debug, NOT DEBUG_RESUME
 
 emulate_done:
 	mov [ebp].running,0

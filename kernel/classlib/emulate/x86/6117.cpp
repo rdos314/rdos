@@ -766,7 +766,7 @@ void T6117::WriteDram(unsigned long Address, char Data)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char T6117::Read(unsigned long Address)
+char T6117::Read(TCpu *Cpu, unsigned long Address)
 {
 	unsigned long Ads = Address & 0xFFFFFF;
 	unsigned long Offset;
@@ -786,6 +786,12 @@ char T6117::Read(unsigned long Address)
 		return *(FRom + Offset);
 	}
 
+	if (Ads >= 0xA0000)
+	{
+		UserBreak(Cpu);
+		return 0xFF;
+	}
+
 	return ReadDram(Address);
 }
 
@@ -796,7 +802,7 @@ char T6117::Read(unsigned long Address)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void T6117::Write(unsigned long Address, char Data)
+void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 {
 	unsigned long Ads = Address & 0xFFFFFF;
 	unsigned long Offset;
@@ -810,8 +816,11 @@ void T6117::Write(unsigned long Address, char Data)
 		return;
 	}
 
-	if (Ads >= 0xE0000)
+	if (Ads >= 0xA0000)
+	{
+		UserBreak(Cpu);
 		return;
+	}
 
 	WriteDram(Address, Data);
 }
