@@ -20,49 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpserv.h
-# Ftp socket server class
+# stor.h
+# Stor command class
 #
 ########################################################################*/
 
-#ifndef _FTPSERV_H
-#define _FTPSERV_H
+#ifndef _STOR_H
+#define _STOR_H
 
-#include "str.h"
-#include "socket.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
 
-class TFtpSocketServer : public TSocketServer
+class TStorFactory : public TCommandFactory
 {
 public:
-	TFtpSocketServer();
-	~TFtpSocketServer();
+	TStorFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
+protected:
+};
 
-    void Write(char ch);
-    void Write(const char *str);
-    void Write(const char *buf, int size);
-    void WriteLong(long value);
-    void Push();
+class TStorCommand : public TCommand
+{
+public:
+	TStorCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TStorCommand();
 
-	int IsOpen();
-	int Read(char *buf, int size);
+	virtual void Execute(char *param);
 
-	int VerifyUser();
-	int OpenDataConnection(long IP, int port);
-	void ListenForDataConnection(long *IP, int *port);
-	void Quit();
-
-	void Reply(TLangString *Msg);
-
-	TString User;
-	TString Pass;
-	TString CurrDir;
-	TString RootDir;
-
-	TSocket *FDataSocket;
+protected:
 };
 
 #endif

@@ -328,6 +328,41 @@ void TFtpSocketServer::Push()
 
 /*##########################################################################
 #
+#   Name       : TFtpSocketServer::IsOpen
+#
+#   Purpose....: Check if data socket is open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::IsOpen()
+{
+	return FDataSocket && FDataSocket->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::Read
+#
+#   Purpose....: Read buffer from data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFtpSocketServer::Read(char *buf, int size)
+{
+	if (FDataSocket && FDataSocket->IsOpen())
+		return FDataSocket->Read(buf, size);
+	else
+		return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpSocketServer::Quit
 #
 #   Purpose....: Quit session
