@@ -63,6 +63,7 @@ drive_sectors_per_cyl		DW ?
 drive_heads					DW ?
 drive_cyls					DW ?
 drive_sectors_per_unit		DW ?
+drive_lba_sectors			DD ?
 disc_sel					DW ?
 disc_thread					DW ?
 disc_sub_unit				DB ?
@@ -612,6 +613,8 @@ GetDriveParams	Proc near
 	call ReadTaskFile
 	jc get_drive_param_done
 ;
+	mov eax,es:[edi+120]
+	mov fs:drive_lba_sectors,eax
 	mov dx,word ptr es:[edi+2]
 	mov fs:drive_cyls,dx
 	mov bx,es:[edi+6]
@@ -714,6 +717,9 @@ InstallPartition	Proc near
 	push ax
 	push esi
 	push edi
+;
+	cmp cl,10h
+	jnc install_part_done
 ;
 	mov di,cs
 	mov es,di
@@ -1142,8 +1148,65 @@ install_unit_ok:
 ;
 	mov ax,fs:drive_sectors_per_cyl
 	mul fs:drive_heads
+	movzx eax,ax
+	mov esi,eax
+	movzx edi,fs:drive_cyls	
+	mul edi
+	mov edi,eax
+;
+	mov cl,fs:drive_lba_mode
+	or cl,cl
+	jz install_unit_chs
+;
+	cmp edi,fs:drive_lba_sectors
+	jae install_unit_chs
+;
+	mov eax,1
+	mov edx,fs:drive_lba_sectors
+
+install_unit_lba_norm_loop:
+	shl eax,1
+	shr edx,1
+	cmp eax,edx
+	jc install_unit_lba_norm_loop
+
+install_unit_lba_normed:
+	mov esi,edx
+	mov ebx,esi
+	mov ecx,edx
+
+install_unit_lba_loop:
+	xor edx,edx
+	mov eax,fs:drive_lba_sectors
+	div esi
+	cmp ecx,edx
+	jc install_unit_lba_next
+;	
+	mov ecx,edx
+	mov ebx,esi
+	or edx,edx
+	jz install_unit_lba_do
+
+install_unit_lba_next:
+	inc esi
+	cmp esi,eax
+	jbe install_unit_lba_loop
+
+install_unit_lba_do:
+	mov edx,eax
+	mov eax,ebx
+	jmp install_unit_set_param
+	
+install_unit_chs:
+	xor edx,edx
+	mov eax,edi
+	div esi
+	mov edx,esi
+	xchg eax,edx
+
+install_unit_set_param:
+	mov fs:drive_sectors_per_unit,ax
 	mov cx,512
-	movzx edx,fs:drive_cyls	
 	mov bx,fs:disc_sel
 	SetDiscParam
 ;
@@ -1226,10 +1289,6 @@ drive_assign_loop1:
 	mov cl,es:[esi+edi].part_type
 	or cl,cl
 	jz drive_assign_free1
-;
-	cmp cl,10h
-	cmc
-	jc drive_assign_next_part1
 ;
 	mov edx,es:[esi+edi].part_start_sector
 	call InstallPartition

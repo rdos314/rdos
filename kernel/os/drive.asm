@@ -3033,6 +3033,108 @@ PAGE
 write_disc_name	DB 'Write Disc',0
 
 write_disc	PROC near
+	push ds
+	push es
+	pushad
+;
+	cmp al,MAX_DRIVES
+	jae write_disc_fail
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov bx,ds:[bx].disc_def_arr
+	or bx,bx
+	jz write_disc_fail
+;
+	mov ds,bx
+	push ds
+	push es
+	push ecx
+	push edi
+;
+	mov ax,flat_sel
+	mov es,ax
+	push edx
+	pop ax
+	pop dx
+	div ds:disc_sectors_per_unit
+	mov cx,ax
+	EnterSection ds:disc_section
+
+write_disc_loop:
+	call check_buf
+	jnc write_disc_found
+;
+	ClearSignal
+	call allocate_handle
+	push edx
+	call allocate_data
+	mov es:[edi].dh_data,edx
+	pop edx
+	mov es:[edi].dh_buf_sel,ds
+	mov es:[edi].dh_sector,dx
+	mov es:[edi].dh_unit,cx
+	mov es:[edi].dh_wait,0
+	mov es:[edi].dh_thread,0
+	mov es:[edi].dh_lock_count,0
+	mov es:[edi].dh_state,STATE_EMPTY
+	mov es:[edi].dh_usage,0
+	mov es:[edi].dh_flags,0
+	mov es:[edi].dh_time_lsb,0
+	mov es:[edi].dh_time_msb,0
+	mov es:[edi].dh_flags,0
+	call insert_buf
+	call insert_pending
+
+write_disc_signal:
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	clc
+	jne write_disc_found
+
+write_disc_block:
+	call block
+	jmp write_disc_loop
+
+write_disc_found:
+	test es:[edi].dh_flags, FLAG_IO_BUSY
+	jnz write_disc_block
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je write_disc_signal
+;	
+	mov ebx,edi
+	mov edi,es:[edi].dh_data
+	pop esi
+	pop ecx
+	pop ds
+;
+	int 3
+	shr ecx,2
+	rep movs dword ptr es:[edi],[esi]
+;
+	mov edi,ebx
+	pop ds
+	GetSystemTime
+	mov es:[edi].dh_time_lsb,eax
+	mov es:[edi].dh_time_msb,dx
+	mov es:[edi].dh_state,STATE_DIRTY
+	call insert_async_write
+	call update_async_timer
+	LeaveSection ds:disc_section
+	clc
+	jmp write_disc_done
+
+write_disc_fail:
+	stc
+
+write_disc_done:
+	popad
+	pop es
+	pop ds
 	ret
 write_disc	ENDP
 
