@@ -43,6 +43,8 @@ public:
     int GetBpp();
     int GetWidth();
     int GetHeight();
+	void *GetLinear();
+	int GetLineSize();
 
     void SetFont(TFont *font);
     TSprite *CreateSprite(TGraphicDevice *bitmap, TGraphicDevice *mask, int hotx, int hoty);

@@ -155,6 +155,38 @@ int TGraphicDevice::GetHeight()
 
 /*##########################################################################
 #
+#   Name       : TGraphicDevice::GetLinear
+#
+#   Purpose....: Get linear
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Linear address
+#
+##########################################################################*/
+void *TGraphicDevice::GetLinear()
+{
+    return FLinear;
+}
+
+/*##########################################################################
+#
+#   Name       : TGraphicDevice::GetLineSize
+#
+#   Purpose....: Get size of a line
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Size of line
+#
+##########################################################################*/
+int TGraphicDevice::GetLineSize()
+{
+    return FRowSize;
+}
+
+/*##########################################################################
+#
 #   Name       : TGraphicDevice::SetFont
 #
 #   Purpose....: Set current font
