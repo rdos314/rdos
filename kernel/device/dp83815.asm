@@ -37,7 +37,7 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
 INCLUDE ..\os\net.inc
 
-debug EQU 1
+; debug EQU 1
 
 CR = 0h
 CFG = 04h
@@ -1257,7 +1257,7 @@ IFDEF debug
 	CloseFile
 ENDIF
 	
-;	jmp init_net_done
+	jmp init_net_done
 
 	mov ax,cs
 	mov ds,ax

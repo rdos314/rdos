@@ -879,8 +879,17 @@ receive_data_prot_next:
 	loop receive_data_prot_loop
 
 receive_data_remove:
+	or edi,edi
+	jz receive_data_norm_remove
+;
 	mov ecx,edi
+    call fs:d_remove
+    jmp receive_data_loop
+
+receive_data_norm_remove:
+	call fs:d_receive
 	call fs:d_remove
+	FreeMem
 	jmp receive_data_loop
 
 receive_data_done:

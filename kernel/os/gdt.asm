@@ -255,7 +255,6 @@ alloc_gdt_not_full:
 	lgdt es:[bx+2]
 	mov bx,gdt_sel
 	mov ds,bx
-	mov es,bx
 ;
 	mov si,es:[bx]
 	inc si
