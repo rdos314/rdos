@@ -825,25 +825,54 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl hollow_line_done
+;
+    cmp ax,ds:v_y_max
+    jg hollow_line_done
+;
 	push cx
 	push edi
+;
+    mov ax,[bp].curr_x
+    cmp ax,ds:v_x_min
+    jl hollow_line_first_done
+;
+    cmp ax,ds:v_x_max
+    jg hollow_line_first_done
+;
 	mov bx,ds:v_lgop
 	add bx,bx
 	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
-;
+
+hollow_line_first_done:
 	mov ax,cx
 	dec ax
 	movzx eax,ax
 	shl eax,2
 	add edi,eax
 ;
+    mov ax,[bp].curr_x
+    add ax,cx
+    dec ax
+    cmp ax,ds:v_x_min
+    jl hollow_line_second_done
+;
+    cmp ax,ds:v_x_max
+    jg hollow_line_second_done
+;
 	mov bx,ds:v_lgop
 	add bx,bx
 	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
+
+hollow_line_second_done:
 	pop edi
 	pop cx
+
+hollow_line_done:
 	ret
 HollowLine	Endp
 
@@ -862,8 +891,40 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl filled_line_done
+;
+    cmp ax,ds:v_y_max
+    jg filled_line_done
+;
+    mov ax,[bp].curr_x
+    
+filled_line_buf_loop:
+    cmp ax,ds:v_x_min
+    jge filled_line_start_ok
+
+filled_line_adv_buf:
+    inc ax
+    add edi,4
+    sub cx,1
+    jnz filled_line_buf_loop
+    jmp filled_line_done
+
+filled_line_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,ax
+    inc bx
+    cmp cx,bx
+    jc filled_line_do
+;
+    mov cx,bx
+    
+filled_line_do:
 	or cx,cx
 	jz filled_line_done
+;
+    mov [bp].curr_x,ax
 ;
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
@@ -877,6 +938,7 @@ FilledLine	Proc near
 
 filled_line_loop:
 	call word ptr cs:[bx].LgopTab
+	inc word ptr [bp].curr_x
 	add edi,4
 	loop filled_line_loop
 ;
@@ -913,6 +975,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_min
+    jl split_line_done
+;
+    cmp bx,ds:v_y_max
+    jg split_line_done
+;
 	push cx
 	push dx
 	push edi
@@ -925,14 +994,25 @@ SplitLine	Proc near
 	mov cx,dx
 
 split_left_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_left_next
+;
+    cmp bx,ds:v_x_max
+    jg split_left_next
+;
 	mov bx,ds:v_lgop
 	add bx,bx
 	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
+
+split_left_next:
+	inc word ptr [bp].curr_x
 	add edi,4
 	loop split_left_loop
 ;
 	pop cx
+    add [bp].curr_x,cx
 ;
 	movzx eax,cx
 	shl eax,2
@@ -941,16 +1021,28 @@ split_left_loop:
 	mov cx,dx
 
 split_right_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_right_next
+;
+    cmp bx,ds:v_x_max
+    jg split_right_next
+;
 	mov bx,ds:v_lgop
 	add bx,bx
 	mov eax,ds:v_color
 	call word ptr cs:[bx].LgopTab
+
+split_right_next:
+	inc word ptr [bp].curr_x
 	add edi,4
 	loop split_right_loop
 ;
 	pop edi
 	pop dx
 	pop cx
+
+split_line_done:
 	ret
 SplitLine	Endp
 
@@ -1800,6 +1892,7 @@ draw_rect	Proc far
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].rect_border_style_tab
+	inc word ptr [bp].curr_y
 	add edi,esi
 	sub dx,1
 	jz rect_done
@@ -1811,6 +1904,7 @@ rect_mid_loop:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].rect_mid_style_tab
+	inc word ptr [bp].curr_y
 	add edi,esi
 	dec dx
 	jmp rect_mid_loop
@@ -1862,15 +1956,19 @@ de_p0		EQU -76
 de_p1		EQU -80
 de_width	EQU -82
 de_size		EQU -84
-de_xoff		EQU -86
-de_yoff		EQU -88
+de_y0		EQU -86
+de_y1		EQU -88
 
 draw_mid_ellipse_hollow	Proc near
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p0
 	mov ax,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 ;
+    mov ax,[bp].de_y1
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p1
 	mov ax,[bp].de_width
 	mov cx,[bp].de_size
@@ -1881,10 +1979,14 @@ draw_mid_ellipse_hollow	Proc near
 draw_mid_ellipse_hollow	Endp
 
 draw_mid_ellipse_filled	Proc near
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
 ;
+    mov ax,[bp].de_y1
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p1
 	mov cx,[bp].de_size
 	call FilledLine
@@ -1894,6 +1996,8 @@ draw_mid_ellipse_filled	Proc near
 draw_mid_ellipse_filled	Endp
 
 draw_last_ellipse_hollow	Proc near
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p0
 	mov ax,[bp].de_width
 	mov cx,[bp].de_size
@@ -1902,6 +2006,8 @@ draw_last_ellipse_hollow	Proc near
 draw_last_ellipse_hollow	Endp
 
 draw_last_ellipse_filled	Proc near
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
 	mov edi,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
@@ -1922,8 +2028,6 @@ draw_ellipse	Proc far
 	pushad
 	mov bp,sp
 	sub sp,88
-	mov [bp].curr_x,cx
-	mov [bp].curr_y,dx
 ;
 	cmp si,2
 	jbe ellipse_end
@@ -1943,9 +2047,10 @@ draw_ellipse	Proc far
 	mov [bp].de_cnt,di
 ;
 	add cx,si
-	mov [bp].de_xoff,cx
+	mov [bp].curr_x,cx
 	add dx,di
-	mov [bp].de_yoff,dx
+	mov [bp].de_y0,dx
+	mov [bp].de_y1,dx
 ;
 	mov ax,di
 	mul di
@@ -2037,8 +2142,8 @@ draw_ellipse	Proc far
 ;
 	movzx esi,ds:v_row_size
 ;
-	movzx ecx,word ptr [bp].de_xoff
-	movzx edx,word ptr [bp].de_yoff
+	movzx ecx,word ptr [bp].curr_x
+	movzx edx,word ptr [bp].de_y0
 	sub dx,[bp].de_h
 	mov eax,esi
 	mul edx
@@ -2048,8 +2153,8 @@ draw_ellipse	Proc far
 	add edi,ds:v_app_base
 	mov [bp].de_p0,edi
 ;
-	movzx ecx,word ptr [bp].de_xoff
-	movzx edx,word ptr [bp].de_yoff
+	movzx ecx,word ptr [bp].curr_x
+	movzx edx,word ptr [bp].de_y1
 	add dx,[bp].de_h
 	mov eax,esi
 	mul edx
@@ -2088,6 +2193,7 @@ ellipse_s_neg:
 	add [bp].de_dTx,eax
 	adc [bp+4].de_dTx,dx
 ;
+    dec word ptr [bp].curr_x
 	sub dword ptr [bp].de_p0,4
 	sub dword ptr [bp].de_p1,4
 	inc word ptr [bp].de_width
@@ -2127,6 +2233,7 @@ ellipse_t_neg:
 	add [bp].de_dTy,eax
 	adc [bp+4].de_dTy,dx
 ;
+    dec word ptr [bp].curr_x
 	sub dword ptr [bp].de_p0,4
 	sub dword ptr [bp].de_p1,4
 	inc word ptr [bp].de_width
@@ -2135,6 +2242,8 @@ ellipse_t_neg:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].ellipse_mid_style_tab
+    inc word ptr [bp].de_y0
+    dec word ptr [bp].de_y1
 	add [bp].de_p0,esi
 	sub [bp].de_p1,esi
 ;
@@ -2163,6 +2272,8 @@ ellipse_t_pos:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].ellipse_mid_style_tab
+    inc word ptr [bp].de_y0
+    dec word ptr [bp].de_y1
 	add [bp].de_p0,esi
 	sub [bp].de_p1,esi
 ;
