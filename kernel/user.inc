@@ -572,8 +572,13 @@ GetPspSel	MACRO
 					ENDM
 
 ; OUT BX            Env handle
-OpenEnv	MACRO
-	UserGate open_env_nr
+OpenSysEnv	MACRO
+	UserGate open_sys_env_nr
+	        ENDM
+
+; OUT BX            Env handle
+OpenProcEnv	MACRO
+	UserGate open_proc_env_nr
 	        ENDM
 
 ; IN  BX            Env handle

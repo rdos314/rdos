@@ -99,6 +99,7 @@ kernel_stack		EQU 188h
 virt_tss			EQU 198h
 ;
 env_sys_sel         EQU 1A0h
+env_proc_sel        EQU 1A8h
 ;
 flat_code_sel		EQU 1B3h
 flat_data_sel		EQU 1BBh

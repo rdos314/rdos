@@ -592,7 +592,7 @@ GetIPNumber	Proc near
 	push cx
 	push si
 ;
-    LockEnv
+    LockSysEnv
 	mov ds,bx
 	xor si,si
 find_ip:
@@ -650,7 +650,7 @@ find_ip_save:
 
 find_ip_done:
     pushf
-    UnlockEnv
+    UnlockSysEnv
     popf
 ;
 	pop si

@@ -852,7 +852,7 @@ OpenDll	Proc near
 	UserGateForce32 open_file_nr
 	jnc open_dll_done
 ;
-    LockEnv
+    LockProcEnv
     mov ds,bx
 	mov ebx,esi
 	xor si,si
@@ -942,7 +942,7 @@ find_path_file_ok:
 	
 open_dll_done:
     pushf
-    UnlockEnv
+    UnlockProcEnv
     popf
 ;
 	pop edi
@@ -3926,7 +3926,7 @@ get_env	Proc far
 	or edi,edi
 	jnz get_env_done
 ;	
-    LockEnv
+    LockProcEnv
 	mov ds,bx
 	xor si,si
 
@@ -3951,7 +3951,7 @@ get_env_size_loop:
 	mov ds:pe_env,edx
 	mov edi,edx
 ;
-    UnlockEnv
+    UnlockProcEnv
 
 get_env_done:
 	pop esi

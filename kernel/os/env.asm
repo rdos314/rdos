@@ -41,23 +41,35 @@ INCLUDE ..\handle.inc
 
 	.386p
 
+ENV_MODE_GLOBAL		= 1
+ENV_MODE_PROCESS	= 2
+
 env_handle_seg	STRUC
 
 env_handle_base	handle_header <>
 
 env_handle_sel  DW ?
 env_handle_pos  DW ?
+env_handle_mode	DB ?
 
 env_handle_seg	ENDS
 
 
 env_sys_seg  STRUC
 
-env_section     section_typ <>
+env_sys_section     section_typ <>
 
-env_sel         DW ?
+env_sys_raw_sel         DW ?
 
 env_sys_seg  ENDS
+
+env_proc_seg  STRUC
+
+env_proc_section     section_typ <>
+
+env_proc_raw_sel         DW ?
+
+env_proc_seg  ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -179,70 +191,123 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    LockEnv
+;		NAME:		    LockSysEnv
 ;
-;		DESCRIPTION:	Lock env and return raw data selector
+;		DESCRIPTION:	Lock system env and return raw data selector
 ;
 ;		RETURNS:		BX			Selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lock_env_name	DB 'Lock Env',0
+lock_sys_env_name	DB 'Lock Sys Env',0
 
-lock_env    Proc far
+lock_sys_env    Proc far
     push ds
 ;
     mov bx,env_sys_sel
     mov ds,bx
-    EnterSection ds:env_section
-    mov bx,ds:env_sel
+    EnterSection ds:env_sys_section
+    mov bx,ds:env_sys_raw_sel
 ;
     pop ds
     ret
-lock_env    Endp
+lock_sys_env    Endp
    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    UnlockEnv
+;		NAME:		    UnlockSysEnv
 ;
-;		DESCRIPTION:	Unlock env
+;		DESCRIPTION:	Unlock system env
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-unlock_env_name	DB 'Unlock Env',0
+unlock_sys_env_name	DB 'Unlock Sys Env',0
 
-unlock_env    Proc far
+unlock_sys_env    Proc far
     push ds
     push bx
 ;
     mov bx,env_sys_sel
     mov ds,bx
-    LeaveSection ds:env_section
+    LeaveSection ds:env_sys_section
 ;
     pop bx
     pop ds
     ret
-unlock_env    Endp
+unlock_sys_env    Endp
    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    OpenEnv
+;		NAME:		    LockProcEnv
 ;
-;		DESCRIPTION:	Open envvar handle
+;		DESCRIPTION:	Lock process env and return raw data selector
+;
+;		RETURNS:		BX			Selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_proc_env_name	DB 'Lock Proc Env',0
+
+lock_proc_env    Proc far
+    push ds
+;
+    mov bx,env_proc_sel
+    mov ds,bx
+    EnterSection ds:env_proc_section
+    mov bx,ds:env_proc_raw_sel
+;
+    pop ds
+    ret
+lock_proc_env    Endp
+   
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    UnlockProcEnv
+;
+;		DESCRIPTION:	Unlock process env
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_proc_env_name	DB 'Unlock Proc Env',0
+
+unlock_proc_env    Proc far
+    push ds
+    push bx
+;
+    mov bx,env_proc_sel
+    mov ds,bx
+    LeaveSection ds:env_proc_section
+;
+    pop bx
+    pop ds
+    ret
+unlock_proc_env    Endp
+   
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    OpenSysEnv
+;
+;		DESCRIPTION:	Open system envvar handle
 ;
 ;		RETURNS:		BX			Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_env_name	DB 'Open Env',0
+open_sys_env_name	DB 'Open Sys Env',0
 
-open_env    Proc far
+open_sys_env    Proc far
     push ds
 	push cx
 ;
@@ -250,13 +315,48 @@ open_env    Proc far
 	AllocateHandle
 	mov [bx].env_handle_pos,0
 	mov [bx].env_handle_sel,0
+	mov [bx].env_handle_mode,ENV_MODE_GLOBAL
 	mov [bx].hh_sign,ENV_HANDLE
 	mov bx,[bx].hh_handle
 ;
 	pop cx
 	pop ds
     retf32
-open_env    Endp
+open_sys_env    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    OpenProcEnv
+;
+;		DESCRIPTION:	Open process envvar handle
+;
+;		RETURNS:		BX			Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_proc_env_name	DB 'Open Proc Env',0
+
+open_proc_env    Proc far
+    push ds
+	push cx
+;
+	mov cx,SIZE env_handle_seg
+	AllocateHandle
+	mov [bx].env_handle_pos,0
+	mov [bx].env_handle_sel,0
+	mov [bx].env_handle_mode,ENV_MODE_PROCESS
+	mov [bx].hh_sign,ENV_HANDLE
+	mov bx,[bx].hh_handle
+;
+	pop cx
+	pop ds
+    retf32
+open_proc_env    Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -313,22 +413,9 @@ close_env   Endp
 
 add_env_var_name	DB 'Add Env Var',0
 
-add_env_var    Proc near
-    push ds
-    push es
-    pushad
-;
-    push ds
-	mov ax,ENV_HANDLE
-	DerefHandle
-	pop ds
-	jc add_env_var_done
-;
+add_env_base	Proc near
     push es
     push edi
-;
-    LockEnv
-    mov es,bx
 ;
     mov ebp,esi
     xor edi,edi
@@ -434,7 +521,7 @@ add_env_data_size_loop:
 ;
     rep movs byte ptr es:[edi],[esi]
     clc
-    jmp add_env_unlock
+    jmp add_env_base_done
 
 add_env_new:
 	mov esi,ebp
@@ -463,9 +550,39 @@ add_env_new_data:
     xor al,al
     stos byte ptr es:[edi]
 
-add_env_unlock:    
+add_env_base_done:
+	ret
+add_env_base	Endp
+
+add_env_var    Proc near
+    push ds
+    push es
+    pushad
+;
+    push ds
+	mov ax,ENV_HANDLE
+	DerefHandle
+	mov al,[bx].env_handle_mode
+	pop ds
+	jc add_env_var_done
+;
+	cmp al,ENV_MODE_GLOBAL
+	je add_sys_env
+;
+    LockProcEnv
+    mov es,bx
+	call add_env_base
     pushf
-    UnlockEnv
+    UnlockProcEnv
+    popf
+	jmp add_env_var_done
+
+add_sys_env:
+    LockSysEnv
+    mov es,bx
+	call add_env_base
+    pushf
+    UnlockSysEnv
     popf
 
 add_env_var_done:    
@@ -506,19 +623,125 @@ add_env_var32:
 
 delete_env_var_name	DB 'Delete Env Var',0
 
+delete_env_base	Proc near
+    mov ebp,esi
+    xor edi,edi
+	xor ecx,ecx
+	xor ebx,ebx
+
+del_env_search_loop:
+	cmps byte ptr ds:[esi],es:[edi]
+	jnz del_env_next
+;
+	inc ebx
+	mov al,[esi]
+	or al,al
+	jnz del_env_search_loop
+;
+	mov al,es:[edi]
+	cmp al,'='
+	je del_env_var_found
+
+del_env_next:
+    mov al,es:[edi]
+    inc edi
+	or al,al
+	jnz del_env_next
+;
+	mov esi,ebp
+	xor ebx,ebx
+	mov al,es:[edi]
+	or al,al
+	jne del_env_search_loop
+;
+	stc
+	jmp del_env_base_done
+
+del_env_var_found:
+	mov eax,edi
+	sub eax,ebx
+	push eax
+    inc edi
+	inc ebx
+
+del_env_data_loop:
+    inc edi
+    inc ebx
+    mov al,es:[edi]
+    or al,al
+    jnz del_env_data_loop
+;
+    inc ebx
+    jmp del_env_check_end
+
+del_env_size_var_loop:
+    inc edi
+    inc ecx
+    mov al,es:[edi]
+    or al,al
+    jnz del_env_size_var_loop
+
+del_env_check_end:
+    inc edi
+    inc ecx
+    mov al,es:[edi]
+    or al,al
+    jnz del_env_size_var_loop
+;
+    pop edi
+;
+    mov edx,ecx
+    mov esi,edi
+    add esi,ebx
+    rep movs byte ptr es:[edi],es:[esi]
+    clc
+
+del_env_base_done:
+	ret
+delete_env_base	Endp    
+
 delete_env_var    Proc near
+    push ds
+    push es
+    pushad
+;
+    push ds
+	mov ax,ENV_HANDLE
+	DerefHandle
+	mov al,[bx].env_handle_mode
+	pop ds
+	jc del_env_var_done
+;
+	cmp al,ENV_MODE_GLOBAL
+	je del_sys_env
+;
+    LockProcEnv
+    mov es,bx
+	call delete_env_base
+    pushf
+    UnlockProcEnv
+    popf
+	jmp del_env_var_done
+
+del_sys_env:
+    LockSysEnv
+    mov es,bx
+	call delete_env_base
+    pushf
+    UnlockSysEnv
+    popf
+
+del_env_var_done:    
+    popad
+    pop es
+    pop ds
     ret
 delete_env_var    Endp
 
 delete_env_var16  Proc far
     push esi
-    push edi
-;
     movzx esi,si
-    movzx edi,di
     call delete_env_var
-;
-    pop edi
     pop esi
     ret
 delete_env_var16  Endp
@@ -675,6 +898,58 @@ delete_handle_done:
 	ret
 delete_handle	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			InitProcess
+;
+;		DESCRIPTION:	Init process
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_process	Proc far
+	push ds
+	push es
+	pushad
+;
+	LockSysEnv
+	mov ds,bx
+	xor si,si
+;
+	mov eax,4000h
+	AllocateGlobalMem
+	xor di,di
+
+init_proc_var_loop:
+	lodsb
+	stosb
+	or al,al
+	jnz init_proc_var_loop
+;
+	mov al,[si]
+	or al,al
+	jnz init_proc_var_loop
+;
+	xor al,al
+	stosb
+;
+	UnlockSysEnv
+;
+	mov ax,env_proc_sel
+	mov ds,ax
+	InitSection ds:env_proc_section
+	mov ds:env_proc_raw_sel,es
+;
+	popad
+	pop es
+	pop ds
+	ret
+init_process	Endp
+
+PAGE
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -714,33 +989,58 @@ init_device_loop:
 	mov bx,env_sys_sel
 	AllocateFixedSystemMem
 ;
-    InitSection es:env_section
-    mov es:env_sel,dx
+    InitSection es:env_sys_section
+    mov es:env_sys_raw_sel,dx
+;
+	mov eax,SIZE env_proc_seg
+	mov bx,env_proc_sel
+	AllocateFixedProcessMem
 ;
     mov ax,cs
     mov ds,ax
     mov es,ax
 ;
+	mov di,OFFSET init_process
+	HookCreateProcess
+;
 	mov di,OFFSET delete_handle
 	mov ax,ENV_HANDLE
 	RegisterHandle
 ;
-	mov si,OFFSET lock_env
-	mov di,OFFSET lock_env_name
+	mov si,OFFSET lock_sys_env
+	mov di,OFFSET lock_sys_env_name
 	xor cl,cl
-	mov ax,lock_env_nr
+	mov ax,lock_sys_env_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET unlock_env
-	mov di,OFFSET unlock_env_name
+	mov si,OFFSET unlock_sys_env
+	mov di,OFFSET unlock_sys_env_name
 	xor cl,cl
-	mov ax,unlock_env_nr
+	mov ax,unlock_sys_env_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET open_env
-	mov di,OFFSET open_env_name
+	mov si,OFFSET lock_proc_env
+	mov di,OFFSET lock_proc_env_name
+	xor cl,cl
+	mov ax,lock_proc_env_nr
+	RegisterOsGate
+;
+	mov si,OFFSET unlock_proc_env
+	mov di,OFFSET unlock_proc_env_name
+	xor cl,cl
+	mov ax,unlock_proc_env_nr
+	RegisterOsGate
+;
+	mov si,OFFSET open_sys_env
+	mov di,OFFSET open_sys_env_name
 	xor dx,dx
-	mov ax,open_env_nr
+	mov ax,open_sys_env_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET open_proc_env
+	mov di,OFFSET open_proc_env_name
+	xor dx,dx
+	mov ax,open_proc_env_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET close_env

@@ -596,7 +596,7 @@ PAGE
 
 GetEnvString	proc near
     push bx
-    LockEnv
+    LockSysEnv
 	mov ds,bx
 	xor si,si
 	mov ax,cs
@@ -629,7 +629,7 @@ find_var_str_found:
 	clc
 find_var_str_done:
     pushf
-    UnlockEnv
+    UnlockSysEnv
     popf
 ;
     pop bx

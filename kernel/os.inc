@@ -1369,12 +1369,21 @@ CheckDevice	MACRO
 ;;;;;;;;;;;;;; APP ;;;;;;;;;;;;;;;;;;
 
 ; OUT BX        Env sys sel
-LockEnv	    MACRO
-	OsGate lock_env_nr
+LockSysEnv	    MACRO
+	OsGate lock_sys_env_nr
 			ENDM
 
-UnlockEnv	MACRO
-	OsGate unlock_env_nr
+UnlockSysEnv	MACRO
+	OsGate unlock_sys_env_nr
+			ENDM
+
+; OUT BX        Env process sel
+LockProcEnv	    MACRO
+	OsGate lock_proc_env_nr
+			ENDM
+
+UnlockProcEnv	MACRO
+	OsGate unlock_proc_env_nr
 			ENDM
 
 ;	EAX		# BYTES

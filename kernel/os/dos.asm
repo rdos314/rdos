@@ -196,7 +196,7 @@ create_enviroment	PROC near
 	push edi
 ;
     mov ax,bx
-    LockEnv
+    LockProcEnv
     or ax,ax
     jz create_env_start
 ;
@@ -286,7 +286,7 @@ create_env_no_fail_free:
 
 create_env_done:
     pushf
-    UnlockEnv
+    UnlockProcEnv
     popf
 ;
 	pop edi

@@ -1116,7 +1116,7 @@ open_dll_move_done:
 	OpenFile
 	jnc open_dll_ok
 ;
-    LockEnv
+    LockProcEnv
     mov ds,bx
 ;
 	mov bx,si
@@ -1200,7 +1200,7 @@ open_dll_ok:
 	
 open_dll_done:
     pushf
-    UnlockEnv
+    UnlockProcEnv
     popf
 ;
 	pop di

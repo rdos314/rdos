@@ -525,18 +525,22 @@ flash_name  DB 'FLASH', 0
 flash_file  DB 'd:\flash.dat', 0
 fat_fs      DB 'FAT12', 0
 
-search_path DB 'FLASH', 0
-new_path    DB 'z:\;c:\dos', 0
+del_path1	DB 'IP', 0
+del_path2	DB 'SERNET.NODE', 0
+del_path3	DB 'PATH', 0
 
 flash_thread:
 	int 3
-	OpenEnv
+	OpenProcEnv
 	mov ax,cs
 	mov ds,ax
 	mov es,ax 
-	mov si,OFFSET search_path
-	mov di,OFFSET new_path
-	AddEnvVar
+	mov si,OFFSET del_path1
+	DeleteEnvVar
+	mov si,OFFSET del_path2
+	DeleteEnvVar
+	mov si,OFFSET del_path3
+	DeleteEnvVar
     CloseEnv
 ;	
     int 3

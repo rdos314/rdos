@@ -402,8 +402,11 @@ load_dos_exe_nr				EQU 269
 get_exception_stack16_nr	EQU 270
 get_exception_stack32_nr	EQU 271
 
-lock_env_nr                 EQU 272
-unlock_env_nr               EQU 273
+lock_sys_env_nr             EQU 272
+unlock_sys_env_nr           EQU 273
+
+lock_proc_env_nr            EQU 274
+unlock_proc_env_nr          EQU 275
 
 osgate_entries				EQU 300
 
