@@ -1074,6 +1074,97 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DO_USERCALL16
+;
+;		DESCRIPTION:	Translate a 16-bit protected mode user call
+;
+;		PARAMETERS:		DS:EBX		Fault address
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public do_usercall16
+
+do_usercall16	PROC near
+	push es
+	push ecx
+	push edx
+	push edi
+;
+	movzx edi,word ptr ds:[ebx+1]
+	shl edi,5
+	mov ax,usergate_sel
+	mov es,ax
+;
+	push ebx
+	mov bx,ds
+	push cs
+	call get_selector_base_size
+	pop ebx
+	add	ebx,edx
+	mov ax,flat_sel
+	mov ds,ax
+;
+	test es:[edi].gate_transfer, gate16_override
+	jnz do16_call_to32
+
+do16_call_to16:
+	mov ax,es:[edi].gate_sel16
+	or ax,ax
+	jnz do16_call_defined
+;
+	push ds
+	push bx
+	push esi
+	AllocateGdt
+	or bx,3
+	mov es:[edi].gate_sel16,bx
+	movzx esi,es:[edi].gate_entry_offset16
+	mov ds,es:[edi].gate_entry_sel16
+	xor cl,cl
+	CreateCallGateSelector16
+	mov ax,bx
+	pop esi
+	pop bx
+	pop ds
+	jmp do16_call_defined
+
+do16_call_to32:
+	mov ax,es:[edi].gate_sel32
+	or ax,ax
+	jnz do16_call_defined
+;
+	push ds
+	push bx
+	push esi
+	AllocateGdt
+	or bx,3
+	mov es:[edi].gate_sel32,bx
+	movzx esi,es:[edi].gate_entry_offset32
+	mov ds,es:[edi].gate_entry_sel32
+	xor cl,cl
+	CreateCallGateSelector32
+	mov ax,bx
+	pop esi
+	pop bx
+	pop ds
+
+do16_call_defined:
+	mov word ptr ds:[ebx+1],0
+	mov ds:[ebx+3],ax
+;
+	pop edi
+	pop edx
+	pop ecx
+	pop es
+	clc
+	ret
+do_usercall16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DO_USERCALL32
 ;
 ;		DESCRIPTION:	Translate a 32-bit protected mode user call

@@ -1004,6 +1004,7 @@ segment_not_present	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+	extrn do_usercall16:near
 	extrn do_usercall32:near
 
 trap_13:
@@ -1025,9 +1026,18 @@ trap_13:
 ;
 	mov ax,[ebx+5]
 	cmp ax,2
-	jne t13_default
+	jne t13_test16
 ;
 	call do_usercall32
+	jnc t13_end
+	jmp t13_default
+
+t13_test16:
+	mov ax,[ebx+3]
+	cmp ax,1
+	jne t13_default
+;
+	call do_usercall16
 	jnc t13_end
 
 t13_default:
