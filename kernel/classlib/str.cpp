@@ -225,11 +225,14 @@ void TString::Release(TStringData *Data)
 ##########################################################################*/
 void TString::Empty()
 {
-	if (FData->FDataSize)
-	{
-		if (FData->FRefs >= 0)
-			Release();
-	}
+    if (FData)
+    {
+    	if (FData->FDataSize)
+	    {
+		    if (FData->FRefs >= 0)
+			    Release();
+    	}
+    }
 }
 
 /*##########################################################################
@@ -248,13 +251,16 @@ void TString::CopyBeforeWrite()
 	TStringData* OldData;
 	char* OldBuf;
 
-	if (FData->FRefs > 1)
-	{
-		OldData = FData;
-		OldBuf = FBuf;
-		Release();
-		AllocBuffer(FData->FDataSize);
-		memcpy(FBuf, OldBuf, OldData->FDataSize+1);
+    if (FData)
+    {
+    	if (FData->FRefs > 1)
+	    {
+		    OldData = FData;
+    		OldBuf = FBuf;
+	    	Release();
+		    AllocBuffer(FData->FDataSize);
+    		memcpy(FBuf, OldBuf, OldData->FDataSize+1);
+	    }
 	}
 }
 
@@ -271,11 +277,14 @@ void TString::CopyBeforeWrite()
 ##########################################################################*/
 void TString::AllocBeforeWrite(int size)
 {
-	if (FData->FRefs > 1 || size > FData->FAllocSize)
-	{
-		Release();
-		AllocBuffer(size);
-	}
+    if (FData)
+    {
+    	if (FData->FRefs > 1 || size > FData->FAllocSize)
+	    {
+    		Release();
+	    	AllocBuffer(size);
+    	}
+    }
 }
 
 /*##########################################################################
@@ -320,9 +329,12 @@ void TString::AllocCopy(TString& dest, int CopyLen, int CopyIndex, int ExtraLen)
 void TString::AssignCopy(int len, const char *str)
 {
 	AllocBeforeWrite(len);
-	memcpy(FBuf, str, len);
-	FData->FDataSize = len;
-	*(FBuf+len) = 0;
+	if (len)
+	{
+    	memcpy(FBuf, str, len);
+	    FData->FDataSize = len;
+    	*(FBuf+len) = 0;
+    }
 }
 
 /*##########################################################################
@@ -343,7 +355,8 @@ const TString &TString::operator=(const TString &src)
 		Release();
 		FBuf = src.FBuf;
         FData = src.FData;
-		FData->FRefs++;
+        if (FData)
+    		FData->FRefs++;
 	}
 	return *this;
 }

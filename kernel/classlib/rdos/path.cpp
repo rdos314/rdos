@@ -44,6 +44,22 @@
 #   Returns....: *
 #
 ##########################################################################*/
+TPathName::TPathName(const char *PathName)
+  : FPathName(PathName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TPathName::TPathName
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
 TPathName::TPathName(const TString &PathName)
   : FPathName(PathName)
 {
@@ -174,7 +190,7 @@ const TPathName &TPathName::operator+=(const TString &src)
 #   Returns....: *
 #
 ##########################################################################*/
-TString TPathName::Get()
+TString TPathName::Get() const
 {
 	return FPathName;
 }
@@ -190,7 +206,7 @@ TString TPathName::Get()
 #   Returns....: *
 #
 ##########################################################################*/
-TString TPathName::GetFullPathName()
+TString TPathName::GetFullPathName() const
 {
 	TString s;
 	const char *str;
@@ -251,4 +267,222 @@ TString TPathName::GetFullPathName()
 		delete path;
 	}
 	return s;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::TDirEntry
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry::TDirEntry(const TPathName &LPathName, const TString &LEntryName, const TDateTime &LTime, long LFileSize, int LAttribute)
+  : PathName(LPathName),
+    EntryName(LEntryName),
+	Time(LTime)
+{
+    FileSize = LFileSize;
+    Attribute = LAttribute;
+    Valid = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::TDirEntry
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry::TDirEntry()
+  : PathName("")
+{
+    FileSize = 0;
+    Attribute = -1;
+	Valid = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDirEntry::~TDirEntry
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry::~TDirEntry()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::TDir
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::TDir()
+  : FPathName("")
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::TDir
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::TDir(const char *PathName)
+  : FPathName(PathName)
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::TDir
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::TDir(const TString &PathName)
+  : FPathName(PathName)
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::TDir
+#
+#   Purpose....: constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::TDir(const TPathName &PathName)
+  : FPathName(PathName.Get())
+{
+    Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::Init
+#
+#   Purpose....: Init class
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDir::Init()
+{
+	FDirHandle = RdosOpenDir(FPathName.GetData());
+    FIndex = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::~TDir
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDir::~TDir()
+{
+    if (FDirHandle)
+        RdosCloseDir(FDirHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::GotoFirst
+#
+#   Purpose....: Goto first entry & return entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry TDir::GotoFirst()
+{
+    if (FDirHandle)
+    {
+        FIndex = 0;
+        return GotoNext();
+    }
+    else
+        return TDirEntry();
+}
+
+/*##########################################################################
+#
+#   Name       : TDir::GotoNext
+#
+#   Purpose....: Goto next entry & return entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDirEntry TDir::GotoNext()
+{
+    char *Name;
+    long FileSize;
+    int Attrib;
+    long msb;
+    long lsb;
+        
+    if (FDirHandle)
+    {
+        Name = new char[512];
+        if (RdosReadDir(FDirHandle, FIndex, 512, Name, &FileSize, &Attrib, &msb, &lsb))
+        {
+            TString Entry(Name);
+            TPathName Path(FPathName + "\\" + Entry);
+            TDateTime Time(msb, lsb);
+            TDirEntry entry(Path, Entry, Time, FileSize, Attrib);
+            FIndex++;
+            return entry;
+        }
+        delete Name;
+       
+        return TDirEntry();
+    }
+    else
+        return TDirEntry();
 }

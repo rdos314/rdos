@@ -528,10 +528,10 @@ process_ms_loop:
 	mov bl,ds:curr_min
 	xor ah,ah
 	TimeToBinary			; edx:eax = time in message
-	add eax,60 * 1193046
-	adc edx,0				; time + 1 min
+	sub eax,60 * 1193046
+	sbb edx,0				; time - 1 min
 	sub eax,ds:first_pulse
-	sbb edx,ds:first_pulse+4	; time + 1 min - first_pulse - average-diff
+	sbb edx,ds:first_pulse+4	; time - 1 min - first_pulse - average-diff
 ;
     mov ds:curr_sys_diff,eax
     mov ds:curr_sys_diff+4,edx
@@ -931,7 +931,6 @@ dcf_time_loop:
 	add si,SIZE save_data_struc
 	loop dcf_time_loop
 ;
-	int 3
 	call GetBestDiff
 	jc dcf_loop
 ;

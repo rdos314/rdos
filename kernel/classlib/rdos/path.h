@@ -34,6 +34,7 @@
 class TPathName
 {
 public:
+    TPathName(const char *PathName);
     TPathName(const TString &PathName);
     TPathName(int Drive, const TString &PathName);
     TPathName(int Drive, const TString &DirName, const TString &EntryName);
@@ -44,58 +45,50 @@ public:
 	const TPathName &operator=(const TString &src);
 	const TPathName &operator+=(const TString &src);
 
-	TString Get();
-	TString GetFullPathName();
+	TString Get() const;
+	TString GetFullPathName() const;
 
 private:
     TString FPathName;
 };
 
-/*
 class TDirEntry
 {
 public:
     TDirEntry();
+    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
     ~TDirEntry();
-
+    
     TPathName PathName;
+    TString EntryName;
     long FileSize;
     int Attribute;
-    TDateTime time;
+    TDateTime Time;
+    int Valid;
 };
 
 class TDir
 {
 public:
+    TDir();
+	TDir(const char *PathName);
 	TDir(const TString &PathName);
 	TDir(const TPathName &PathName);
 	~TDir();
 
-	const TString &GetFullPathName();
-	int GetDrive();
-	const TString &GetDirName();
-	const TString &GetEntryName();
-
-    int Exists();
-	int MakeDir();
-    int RemoveDir();
-    int RenameFile(const char *ToEntry, const char *FromEntry);
-    int DeleteFile(const char *FileName);
-    int GetFileAttribute(const char *FileName, int *Attribute);
-    int SetFileAttribute(const char *FileName, int Attribute);
-
-    const TDirEntry &GotoFirst();
-    const TDirEntry &GotoNext();
+    TDirEntry GotoFirst();
+    TDirEntry GotoNext();
     
 protected:
 
 private:
-	int FDirHandle;
-	TPathName *FPathName;
-	int FIsLocal;
-};
+    void Init();
 
-*/
+	int FDirHandle;
+	TString FPathName;
+    int FIndex;
+	
+};
 
 #endif
 

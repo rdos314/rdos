@@ -56,7 +56,7 @@ TDateTime::TDateTime()
 #   Returns....: *
 #
 ##########################################################################*/
-TDateTime::TDateTime(TDateTime &source)
+TDateTime::TDateTime(const TDateTime &source)
 {
 	FMsb = source.FMsb;
 	FLsb = source.FLsb;

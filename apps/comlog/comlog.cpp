@@ -28,13 +28,33 @@ void cdecl main()
 	TString str1("Part 1");
 	TString str2("Part 2");
 	TPathName path("test.exe");
+	TDirEntry entry;
 
 	str2 = str1 + "," + str2;
 	str2.Upper();
 	str2.Lower();
 	printf(str2.Find(','));
+	printf(path.GetFullPathName().GetData());
+	printf("\r\n");
 
-    printf(path.GetFullPathName().GetData());
+	TDir dir("c:\\dos");
+
+	entry = dir.GotoFirst();
+	while (entry.Valid)
+	{
+		printf(entry.PathName.GetFullPathName().GetData());
+		printf(" %04d-%02d-%02d %02d.%02d.%02d,%03d",
+				entry.Time.GetYear(),
+				entry.Time.GetMonth(),
+				entry.Time.GetDay(),
+				entry.Time.GetHour(),
+				entry.Time.GetMin(),
+				entry.Time.GetSec(),
+				entry.Time.GetMilliSec());
+		printf(" %d", entry.FileSize);
+		printf("\r\n");
+		entry = dir.GotoNext();
+	}
 
 	TComMsg Msg;
 	char Str[10];

@@ -32,7 +32,7 @@ class TDateTime
 {
 public:
 	TDateTime();
-	TDateTime(TDateTime &Source);
+	TDateTime(const TDateTime &Source);
 	TDateTime(long Msb, long Lsb);
 	TDateTime(int Year, int Month, int Day);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
