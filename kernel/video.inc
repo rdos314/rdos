@@ -146,7 +146,6 @@ copy_proc               DD ?
 ; IN  EDI		    Dest buffer
 mask_set_proc               DD ?
 
-; IN  EAX           Source base
 ; IN  CX			number of pixels
 ; IN  DL            Start bit number
 ; IN  GS:EBX        Mask bits

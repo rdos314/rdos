@@ -66,7 +66,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Null draw
 ;
-;		PARAMETERS:		EDI		    position
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -79,63 +80,235 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopSet
+;		NAME:			LgopNorm
 ;
-;		DESCRIPTION:	Set drawing color
+;		DESCRIPTION:	Lgop normal
 ;
-;		PARAMETERS:		EDI 		    position
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopSet	Proc near
-    push eax
-    mov eax,ds:v_app_base
-	bts es:[eax],edi
-	pop eax
+LgopNorm	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+    or eax,eax
+    jnz lgop_norm_set
+
+lgop_norm_reset:
+    btr es:[edx],edi
+    jmp lgop_norm_done
+
+lgop_norm_set:
+    bts es:[edx],edi
+
+lgop_norm_done:
+    pop edx
 	ret
-LgopSet	Endp
+LgopNorm	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopCompl
+;		NAME:			LgopAnd
 ;
-;		DESCRIPTION:	Complement
+;		DESCRIPTION:	LGOP anding source & dest
 ;
-;		PARAMETERS:		EDI 	        position
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopCompl	Proc near
-    push eax
-    mov eax,ds:v_app_base
-	btc es:[eax],edi
-	pop eax
+LgopAnd	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+	jnz lgop_and_done
+;
+    btr es:[edx],edi
+
+lgop_and_done:
+	pop edx
 	ret
-LgopCompl	Endp
+LgopAnd	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			LgopReset
+;		NAME:			LgopOr
 ;
-;		DESCRIPTION:	Reset draw
+;		DESCRIPTION:	Lgop oring source & dest
 ;
-;		PARAMETERS:		EDI		    position
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-LgopReset	Proc near
-    push eax
-    mov eax,ds:v_app_base
-	btr es:[eax],edi
-    pop eax
+LgopOr	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+    jz lgop_or_done
+
+lgop_or_set:
+    bts es:[edx],edi
+
+lgop_or_done:
+	pop edx
 	ret
-LgopReset	Endp
+LgopOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LgopXor
+;
+;		DESCRIPTION:	LGOP xoring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LgopXor	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+    jz lgop_xor_done
+;
+    btc es:[edx],edi
+
+lgop_xor_done:
+    pop edx
+	ret
+LgopXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LgopInvert
+;
+;		DESCRIPTION:	LGOP inverted
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LgopInvert	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+	jnz lgop_inv_reset
+
+lgop_inv_set:
+    bts es:[edx],edi
+    jmp lgop_inv_done
+
+lgop_inv_reset:
+    btr es:[edx],edi
+
+lgop_inv_done:
+    pop edx
+	ret
+LgopInvert	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LgopInvertAnd
+;
+;		DESCRIPTION:	LGOP inverting & anding source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LgopInvertAnd	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+    jz lgop_inv_done
+;
+    btr es:[edx],edi
+
+lgop_inv_and_done:
+    pop edx
+	ret
+LgopInvertAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LgopInvertOr
+;
+;		DESCRIPTION:	LGOP inverting & oring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LgopInvertOr	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+    jnz lgop_inv_or_done
+;
+    bts es:[edx],edi
+
+lgop_inv_or_done:
+    pop edx
+	ret
+LgopInvertOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LgopInvertXor
+;
+;		DESCRIPTION:	LGOP inverting & xoring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+LgopInvertXor	Proc near
+	push edx
+;
+	mov edx,ds:v_app_base
+	or eax,eax
+    jnz lgop_inv_xor_done
+;
+    btc es:[edx],edi
+
+lgop_inv_xor_done:
+    pop edx
+	ret
+LgopInvertXor	Endp
 
 PAGE
 
@@ -150,19 +323,21 @@ PAGE
 
 LgopTab:
 lgt00	DW OFFSET LgopNull
-lgt01	DW OFFSET LgopSet
-lgt02	DW OFFSET LgopSet
-lgt03	DW OFFSET LgopNull
-lgt04	DW OFFSET LgopCompl
-lgt05	DW OFFSET LgopReset
-lgt06	DW OFFSET LgopNull
-lgt07	DW OFFSET LgopReset
-lgt08	DW OFFSET LgopNull
-lgt09	DW OFFSET LgopSet
-lgt0A	DW OFFSET LgopReset
-lgt0B	DW OFFSET LgopNull
-lgt0C	DW OFFSET LgopSet
-lgt0D	DW OFFSET LgopSet
+lgt01	DW OFFSET LgopNorm
+lgt02	DW OFFSET LgopOr
+lgt03	DW OFFSET LgopAnd
+lgt04	DW OFFSET LgopXor
+lgt05	DW OFFSET LgopInvert
+lgt06	DW OFFSET LgopInvertOr
+lgt07	DW OFFSET LgopInvertAnd
+lgt08	DW OFFSET LgopInvertXor
+lgt09	DW OFFSET LgopOr
+lgt0A	DW OFFSET LgopAnd
+lgt0B	DW OFFSET LgopAnd
+lgt0C	DW OFFSET LgopNull
+lgt0D	DW OFFSET LgopNull
+lgt0E	DW OFFSET LgopNull
+lgt0F	DW OFFSET LgopNull
 
 PAGE
 
@@ -180,6 +355,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 translate_color	Proc far
+	push dx
+;
+	movzx dx,al
+	shr eax,8
+	add dl,al
+	adc dh,0
+	shr eax,8
+	add dl,al
+	adc dh,0
+;
+	cmp dx,3 * 128
+	jc translate_zero
+;
+	mov eax,1
+	jmp translate_done
+
+translate_zero:
+	xor eax,eax
+
+translate_done:
+	pop dx
 	ret
 translate_color	Endp
 
@@ -205,24 +401,6 @@ set_base	Proc far
 	pop bx
     ret
 set_base    Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SlabNull
-;
-;		DESCRIPTION:	Null line
-;
-;		PARAMETERS:		EDI 		position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-SlabNull	Proc near
-	ret
-SlabNull	Endp
 
 PAGE
 
@@ -449,6 +627,234 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SlabNull
+;
+;		DESCRIPTION:	Null slab
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabNull	Proc near
+	ret
+SlabNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabNorm
+;
+;		DESCRIPTION:	Slab normal
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabNorm	Proc near
+	or eax,eax
+	jz slab_norm_reset
+;
+	call SlabSet
+	jmp slab_norm_done
+
+slab_norm_reset:
+	call SlabReset
+
+slab_norm_done:
+	ret
+SlabNorm	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabAnd
+;
+;		DESCRIPTION:	Slab anding source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabAnd	Proc near
+	or eax,eax
+	jnz slab_and_done
+;
+	call SlabReset
+
+slab_and_done:
+	ret
+SlabAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabOr
+;
+;		DESCRIPTION:	Slab oring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabOr	Proc near
+	or eax,eax
+    jz slab_or_done
+;
+	call SlabSet
+
+slab_or_done:
+	ret
+SlabOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabXor
+;
+;		DESCRIPTION:	Slab xoring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabXor	Proc near
+	or eax,eax
+    jz slab_xor_done
+;
+	call SlabCompl
+
+slab_xor_done:
+	ret
+SlabXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabInvert
+;
+;		DESCRIPTION:	Slab inverted
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabInvert	Proc near
+	or eax,eax
+	jnz slab_inv_reset
+
+slab_inv_set:
+	call SlabSet
+    jmp slab_inv_done
+
+slab_inv_reset:
+	call SlabReset
+
+slab_inv_done:
+	ret
+SlabInvert	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabInvertAnd
+;
+;		DESCRIPTION:	Slab inverting & anding source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabInvertAnd	Proc near
+	or eax,eax
+    jz slab_inv_and_done
+;
+	call SlabReset
+
+slab_inv_and_done:
+	ret
+SlabInvertAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabInvertOr
+;
+;		DESCRIPTION:	Slab inverting & oring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabInvertOr	Proc near
+	or eax,eax
+    jnz slab_inv_or_done
+;
+	call SlabSet
+
+slab_inv_or_done:
+	ret
+SlabInvertOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SlabInvertXor
+;
+;		DESCRIPTION:	Slab inverting & xoring source & dest
+;
+;		PARAMETERS:		EAX			Color
+;						EDI		    position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SlabInvertXor	Proc near
+	or eax,eax
+    jnz slab_inv_xor_done
+;
+	call SlabCompl
+
+slab_inv_xor_done:
+	ret
+SlabInvertXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SlabTab
 ;
 ;		DESCRIPTION:	Slab LGOP table
@@ -457,19 +863,19 @@ PAGE
 
 SlabTab:
 st00	DW OFFSET SlabNull
-st01	DW OFFSET SlabSet
-st02	DW OFFSET SlabSet
-st03	DW OFFSET SlabNull
-st04	DW OFFSET SlabCompl
-st05	DW OFFSET SlabReset
-st06	DW OFFSET SlabNull
-st07	DW OFFSET SlabReset
-st08	DW OFFSET SlabNull
-st09	DW OFFSET SlabSet
-st0A	DW OFFSET SlabReset
-st0B	DW OFFSET SlabNull
-st0C	DW OFFSET SlabSet
-st0D	DW OFFSET SlabSet
+st01	DW OFFSET SlabNorm
+st02	DW OFFSET SlabOr
+st03	DW OFFSET SlabAnd
+st04	DW OFFSET SlabXor
+st05	DW OFFSET SlabInvert
+st06	DW OFFSET SlabInvertOr
+st07	DW OFFSET SlabInvertAnd
+st08	DW OFFSET SlabInvertXor
+st09	DW OFFSET SlabOr
+st0A	DW OFFSET SlabAnd
+st0B	DW OFFSET SlabAnd
+st0C	DW OFFSET SlabNull
+st0D	DW OFFSET SlabNull
 st0E	DW OFFSET SlabNull
 st0F	DW OFFSET SlabNull
 
@@ -593,12 +999,8 @@ CopyAnd	Proc near
 
 copy_and_loop:
     bt fs:[eax],esi
-    jnc copy_and_reset
-;
-    bt es:[edx],edi
     jc copy_and_next
-
-copy_and_reset:
+;
     btr es:[edx],edi
 
 copy_and_next:
@@ -639,13 +1041,9 @@ CopyOr	Proc near
     jz copy_or_done
 
 copy_or_loop:
-    bt es:[edx],edi
-    jc copy_or_next
-;
     bt fs:[eax],esi
     jnc copy_or_next
-
-copy_or_set:
+;
     bts es:[edx],edi
 
 copy_or_next:
@@ -778,12 +1176,8 @@ CopyInvertAnd	Proc near
 
 copy_inv_and_loop:
     bt fs:[eax],esi
-    jc copy_inv_and_reset
+    jnc copy_inv_and_next
 ;
-    bt es:[edx],edi
-    jc copy_inv_and_next
-
-copy_inv_and_reset:
     btr es:[edx],edi
 
 copy_inv_and_next:
@@ -824,13 +1218,9 @@ CopyInvertOr	Proc near
     jz copy_inv_or_done
 
 copy_inv_or_loop:
-    bt es:[edx],edi
-    jc copy_inv_or_next
-;
     bt fs:[eax],esi
     jc copy_inv_or_next
-
-copy_inv_or_set:
+;
     bts es:[edx],edi
 
 copy_inv_or_next:
@@ -952,6 +1342,457 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			MaskSetNull
+;
+;		DESCRIPTION:	Null mask set
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetNull	Proc near
+	ret
+MaskSetNull	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetNorm
+;
+;		DESCRIPTION:	Mask set normally
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetNorm	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_norm_done
+;
+	or eax,eax
+	jz mask_set_norm_reset_loop
+
+mask_set_norm_set_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_norm_set_next
+;
+	bts es:[edx],edi
+
+mask_set_norm_set_next:
+	inc esi
+	inc edi
+	loop mask_set_norm_set_loop
+	jmp mask_set_norm_done
+
+mask_set_norm_reset_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_norm_reset_next
+;
+	btr es:[edx],edi
+
+mask_set_norm_reset_next:
+	inc esi
+	inc edi
+	loop mask_set_norm_reset_loop
+
+mask_set_norm_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetNorm	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetAnd
+;
+;		DESCRIPTION:	Mask set by anding source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      source bitmap
+;                       ESI         source position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetAnd	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_and_done
+;
+	or eax,eax
+	jnz mask_set_and_done
+
+mask_set_and_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_and_next
+;
+    btr es:[edx],edi
+
+mask_set_and_next:
+    inc esi
+    inc edi
+    loop mask_set_and_loop
+
+mask_set_and_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetOr
+;
+;		DESCRIPTION:	Mask set by oring source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetOr	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_or_done
+;
+	or eax,eax
+	jz mask_set_or_done
+
+mask_set_or_loop: 
+    bt gs:[ebp],esi
+    jnc mask_set_or_next
+;
+    bts es:[edx],edi
+
+mask_set_or_next:
+    inc esi
+    inc edi
+    loop mask_set_or_loop
+
+mask_set_or_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetXor
+;
+;		DESCRIPTION:	Mask set by xoring source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetXor	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_xor_done
+;
+	or eax,eax
+	jz mask_set_xor_done
+
+mask_set_xor_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_xor_next
+;
+    btc es:[edx],edi
+
+mask_set_xor_next:
+    inc esi
+    inc edi
+    loop mask_set_xor_loop
+
+mask_set_xor_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetInvert
+;
+;		DESCRIPTION:	Mask set inverted
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetInvert	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_inv_done
+;
+	or eax,eax
+	jnz mask_set_inv_reset_loop
+
+mask_set_inv_set_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_inv_set_next
+;
+	bts es:[edx],edi
+
+mask_set_inv_set_next:
+	inc esi
+	inc edi
+	loop mask_set_inv_set_loop
+	jmp mask_set_inv_done
+
+mask_set_inv_reset_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_inv_reset_next
+;
+	btr es:[edx],edi
+
+mask_set_inv_reset_next:
+	inc esi
+	inc edi
+	loop mask_set_inv_reset_loop
+
+mask_set_inv_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetInvert	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetInvertAnd
+;
+;		DESCRIPTION:	Mask set by inverting & anding source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetInvertAnd	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_inv_and_done
+;
+	or eax,eax
+	jz mask_set_inv_and_done
+
+mask_set_inv_and_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_inv_and_next
+;
+    btr es:[edx],edi
+
+mask_set_inv_and_next:
+    inc esi
+    inc edi
+    loop mask_set_inv_and_loop
+
+mask_set_inv_and_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetInvertAnd	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetInvertOr
+;
+;		DESCRIPTION:	Mask set by inverting & oring source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetInvertOr	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_inv_or_done
+;
+	or eax,eax
+	jnz mask_set_inv_or_done
+
+mask_set_inv_or_loop: 
+    bt gs:[ebp],esi
+    jnc mask_set_inv_or_next
+;
+    bts es:[edx],edi
+
+mask_set_inv_or_next:
+    inc esi
+    inc edi
+    loop mask_set_inv_or_loop
+
+mask_set_inv_or_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetInvertOr	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetInvertXor
+;
+;		DESCRIPTION:	Mask set by inverting & xoring source & dest
+;
+;		PARAMETERS:		EAX			color
+;						GS:EBP      mask
+;                       ESI         mask position
+;                       ES:EDX      dest bitmap
+;                       EDI 		dest position
+;						CX			number of pixels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetInvertXor	Proc near
+    push cx
+    push esi
+    push edi
+;
+    or cx,cx
+    jz mask_set_inv_xor_done
+;
+	or eax,eax
+	jnz mask_set_inv_xor_done
+
+mask_set_inv_xor_loop:
+    bt gs:[ebp],esi
+    jnc mask_set_inv_xor_next
+;
+    btc es:[edx],edi
+
+mask_set_inv_xor_next:
+    inc esi
+    inc edi
+    loop mask_set_inv_xor_loop
+
+mask_set_inv_xor_done:
+    pop edi
+    pop esi
+    pop cx
+	ret
+MaskSetInvertXor	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			MaskSetTab
+;
+;		DESCRIPTION:	Mask set LGOP table
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MaskSetTab:
+mst00	DW OFFSET MaskSetNull
+mst01	DW OFFSET MaskSetNorm
+mst02	DW OFFSET MaskSetOr
+mst03	DW OFFSET MaskSetAnd
+mst04	DW OFFSET MaskSetXor
+mst05	DW OFFSET MaskSetInvert
+mst06	DW OFFSET MaskSetInvertOr
+mst07	DW OFFSET MaskSetInvertAnd
+mst08	DW OFFSET MaskSetInvertXor
+mst09	DW OFFSET MaskSetOr
+mst0A	DW OFFSET MaskSetAnd
+mst0B	DW OFFSET MaskSetAnd
+mst0C	DW OFFSET MaskSetNull
+mst0D	DW OFFSET MaskSetNull
+mst0E	DW OFFSET MaskSetNull
+mst0F	DW OFFSET MaskSetNull
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			MaskSet
 ;
 ;		DESCRIPTION:	Set mask line
@@ -964,555 +1805,26 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-MaskSetTab:
-mst00	DW OFFSET CopyNull
-mst01	DW OFFSET CopyAnd
-mst02	DW OFFSET CopyAnd
-mst03	DW OFFSET CopyNull
-mst04	DW OFFSET CopyInvertAnd
-mst05	DW OFFSET CopyInvertAnd
-mst06	DW OFFSET CopyNull
-mst07	DW OFFSET CopyInvertAnd
-mst08	DW OFFSET CopyNull
-mst09	DW OFFSET CopyAnd
-mst0A	DW OFFSET CopyInvertAnd
-mst0B	DW OFFSET CopyNull
-mst0C	DW OFFSET CopyAnd
-mst0D	DW OFFSET CopyAnd
-mst0E	DW OFFSET CopyNull
-mst0F	DW OFFSET CopyNull
-
 mask_set	Proc far
-    push fs
-    push eax
     push bx
     push edx
     push esi
+	push ebp
 ;
-    mov ax,gs
-    mov fs,ax
-    mov eax,ebx
-    movzx esi,dl
-    mov edx,ds:v_app_base
+	mov ebp,ebx
+	movzx esi,dl
+	mov edx,ds:v_app_base
 ;
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].MaskSetTab
 ;
+	pop ebp
     pop esi
     pop edx
     pop bx
-    pop eax
-    pop fs
     ret
 mask_set    Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			MaskCopyNull
-;
-;		DESCRIPTION:	Masked null copy
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyNull	Proc near
-	ret
-CopyNull	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyNorm
-;
-;		DESCRIPTION:	Copy normally
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyNorm	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_norm_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_norm_loop:
-    bt es:[esi],eax
-    jc copy_norm_set
-
-copy_norm_reset:
-    btr es:[edi],edx
-    jmp copy_norm_next
-
-copy_norm_set:
-    bts es:[edi],edx
-
-copy_norm_next:
-    inc eax
-    inc edx
-    loop copy_norm_loop
-
-copy_norm_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyNorm	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyAnd
-;
-;		DESCRIPTION:	Copy by anding source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyAnd	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_and_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_and_loop:
-    bt es:[esi],eax
-    jnc copy_and_reset
-;
-    bt es:[edi],edx
-    jc copy_and_next
-
-copy_and_reset:
-    btr es:[edi],edx
-
-copy_and_next:
-    inc eax
-    inc edx
-    loop copy_and_loop
-
-copy_and_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyAnd	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyOr
-;
-;		DESCRIPTION:	Copy by oring source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyOr	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_or_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_or_loop:
-    bt es:[edi],edx
-    jc copy_or_next
-;
-    bt es:[esi],eax
-    jnc copy_or_next
-
-copy_or_set:
-    bts es:[edi],edx
-
-copy_or_next:
-    inc eax
-    inc edx
-    loop copy_or_loop
-
-copy_or_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyOr	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyXor
-;
-;		DESCRIPTION:	Copy by xoring source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyXor	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_xor_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_xor_loop:
-    bt es:[esi],eax
-    jnc copy_xor_next
-;
-    btc es:[edi],edx
-
-copy_xor_next:
-    inc eax
-    inc edx
-    loop copy_xor_loop
-
-copy_xor_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyXor	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyInvert
-;
-;		DESCRIPTION:	Copy inverted
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyInvert	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_inv_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_inv_loop:
-    bt es:[esi],eax
-    jc copy_inv_reset
-
-copy_inv_set:
-    bts es:[edi],edx
-    jmp copy_inv_next
-
-copy_inv_reset:
-    btr es:[edi],edx
-
-copy_inv_next:
-    inc eax
-    inc edx
-    loop copy_inv_loop
-
-copy_inv_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyInvert	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyInvertAnd
-;
-;		DESCRIPTION:	Copy by inverting & anding source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyInvertAnd	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_inv_and_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_inv_and_loop:
-    bt es:[esi],eax
-    jc copy_inv_and_reset
-;
-    bt es:[edi],edx
-    jc copy_inv_and_next
-
-copy_inv_and_reset:
-    btr es:[edi],edx
-
-copy_inv_and_next:
-    inc eax
-    inc edx
-    loop copy_inv_and_loop
-
-copy_inv_and_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyInvertAnd	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyInvertOr
-;
-;		DESCRIPTION:	Copy by inverting & oring source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyInvertOr	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_inv_or_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_inv_or_loop:
-    bt es:[edi],edx
-    jc copy_inv_or_next
-;
-    bt es:[esi],eax
-    jc copy_inv_or_next
-
-copy_inv_or_set:
-    bts es:[edi],edx
-
-copy_inv_or_next:
-    inc eax
-    inc edx
-    loop copy_inv_or_loop
-
-copy_inv_or_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyInvertOr	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyInvertXor
-;
-;		DESCRIPTION:	Copy by inverting & xoring source & dest
-;
-;		PARAMETERS:		EBP         mask position
-;                       ESI         source position
-;                       EDI 		dest position
-;						CX			number of pixels
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyInvertXor	Proc near
-    push eax
-    push cx
-    push edx
-    push esi
-    push edi
-;
-    or cx,cx
-    jz copy_inv_xor_done
-;
-    mov ax,si
-	and eax,7
-	shr esi,3
-;
-    mov dx,di
-    and edx,7
-    shr edi,3
-
-copy_inv_xor_loop:
-    bt es:[esi],eax
-    jc copy_inv_xor_next
-;
-    btc es:[edi],edx
-
-copy_inv_xor_next:
-    inc eax
-    inc edx
-    loop copy_inv_xor_loop
-
-copy_inv_xor_done:
-    pop edi
-    pop esi
-    pop edx
-    pop cx
-    pop eax
-	ret
-CopyInvertXor	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			CopyTab
-;
-;		DESCRIPTION:	Copy LGOP table
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CopyTab:
-ct00	DW OFFSET CopyNull
-ct01	DW OFFSET CopyNorm
-ct02	DW OFFSET CopyOr
-ct03	DW OFFSET CopyAnd
-ct04	DW OFFSET CopyXor
-ct05	DW OFFSET CopyInvert
-ct06	DW OFFSET CopyInvertOr
-ct07	DW OFFSET CopyInvertAnd
-ct08	DW OFFSET CopyInvertXor
-ct09	DW OFFSET CopyOr
-ct0A	DW OFFSET CopyAnd
-ct0B	DW OFFSET CopyAnd
-ct0C	DW OFFSET CopyNull
-ct0D	DW OFFSET CopyNull
-ct0E	DW OFFSET CopyNull
-ct0F	DW OFFSET CopyNull
 
 PAGE
 
@@ -1525,72 +1837,78 @@ PAGE
 ;
 ;		PARAMETERS:		CX			number of pixels
 ;                       DL          Start bit number
-;                       ESI         Source position
+;                       FS:ESI      Source pixels
 ;                       GS:EBX      Mask bits 
-;						EDI	    	Dest position
+;						ES:EDI		Dest buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mask_copy	Proc far
-    push ebx
-    push cx
-    push dx
-    push esi
-    push edi
+	pushad
 ;
-    or dl,dl
-    jz mask_copy_prep
+    or cx,cx
+    jz mask_copy_done
 ;
-    push cx
-    mov cl,dl
-    mov dl,gs:[ebx]
-    rcr dl,cl
-    mov dh,8
-    sub dh,cl
-    pop cx
-    jmp mask_copy_loop
-
-mask_copy_prep:
-    mov dh,8
-	mov dl,gs:[ebx]
-
+	mov ax,ds:v_lgop
+	cmp ax,LGOP_NONE
+	je mask_copy_none
+;
+	mov edx,ebx
+	movzx ebx,dl
+	
 mask_copy_loop:
-	rcr dl,1
-	jnc mask_copy_next
+    bt gs:[edx],ebx
+    jnc mask_copy_next
 ;
-    mov ax,[bp].curr_x
-    cmp ax,ds:v_x_min
-    jl mask_copy_next
-;
-    cmp ax,ds:v_x_max
-    jg mask_copy_next
-;
-	mov ax,fs:[esi]
 	push bx
+;
+	bt fs:[esi],ebx
+	jc mask_copy_set
+;
+	xor eax,eax
+	jmp mask_copy_do
+
+mask_copy_set:
+	mov eax,1
+
+mask_copy_do:
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].LgopTab
+;
 	pop bx
 
 mask_copy_next:
-	add esi,2
-	add edi,2
-	inc word ptr [bp].curr_x
-	sub cx,1
-	jz mask_copy_done
-;
-	sub dh,1
-	jnz mask_copy_loop
-;
 	inc ebx
-	jmp mask_copy_prep
+	inc edi
+	loop mask_copy_loop
+	jmp mask_copy_done
+
+mask_copy_none:
+	mov ebp,ebx
+	movzx ebx,dl
+	mov edx,ds:v_app_base
+	
+mask_copy_none_loop:
+    bt gs:[ebp],ebx
+    jnc mask_copy_none_next
+;
+	bt fs:[esi],ebx
+	jc mask_copy_none_set
+;
+	btr es:[edx],edi
+	jmp mask_copy_none_next
+
+mask_copy_none_set:
+	bts es:[edx],edi
+
+mask_copy_none_next:
+	inc ebx
+	inc edi
+	loop mask_copy_none_loop
 
 mask_copy_done:
-    pop edi
-    pop esi
-    pop dx
-    pop cx
-    pop ebx
+	popad
     ret
 mask_copy    Endp
 
@@ -1635,7 +1953,7 @@ set_mask_buf_loop:
 
 set_mask_adv_buf:
     inc ax
-    add edi,2
+	inc edi
     sub cx,1
     jnz set_mask_buf_loop
     jmp set_mask_done
@@ -1686,82 +2004,384 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetPixel
+;		NAME:			HollowLine
 ;
-;		DESCRIPTION:	Get pixel
-;
-;		PARAMETER:		CX			x
-;						DX			y
+;		DESCRIPTION:	Draw a hollow line
+; 
+;		PARAMETER:		CX			width
+;						EDI			position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_pixel	Proc far
-	push es
-	push edx
-	movzx ecx,cx
-	movzx edx,dx
-	movzx eax,ds:v_row_size
-	mul edx
-	add eax,ds:v_app_base
-	mov dx,flat_sel
-	mov es,dx
-	bt es:[eax],ecx
-	jc get_pixel_set
+HollowLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
+	push edi
 ;
-	xor eax,eax
-	jmp get_pixel_done
-
-get_pixel_set:
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl hollow_line_done
+;
+    cmp ax,ds:v_y_max
+    jg hollow_line_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg hollow_line_done
+;
+    cmp ax,ds:v_x_min
+    jl hollow_line_first_done
+;
+    cmp ds:v_sprite_count,0
+    jz hollow_line_first_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,1
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y    
+    HideSpriteLine
+    pop dx
+    pop cx
+;
 	mov eax,ds:v_color
+    call ds:set_proc
+;
+    ShowSpriteLine
+	jmp hollow_line_first_done
 
-get_pixel_done:
-	pop edx	
-	pop es
+hollow_line_first_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:set_proc
+
+hollow_line_first_done:
+	mov ax,cx
+	dec ax
+	movsx eax,ax
+	add edi,eax
+;
+    mov ax,[bp].curr_x
+    add ax,cx
+    dec ax
+    mov [bp].curr_x,ax
+    cmp ax,ds:v_x_min
+    jl hollow_line_done
+;
+    cmp ax,ds:v_x_max
+    jg hollow_line_done
+;
+    cmp ds:v_sprite_count,0
+    jz hollow_line_last_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,1
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y    
+    HideSpriteLine
+    pop dx
+    pop cx
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+;
+    ShowSpriteLine
+    jmp hollow_line_done
+
+hollow_line_last_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:set_proc
+
+hollow_line_done:
+	pop edi
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
 	ret
-get_pixel	Endp
+HollowLine	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SetPixel
+;		NAME:			FilledLine
 ;
-;		DESCRIPTION:	Set pixel
-;
-;		PARAMETER:		CX			x
-;						DX			y
+;		DESCRIPTION:	Draw a filled line
+; 
+;		PARAMETER:		CX			width
+;						EDI			position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_pixel	Proc far
-	push ds
-	push es
-	push eax
-	push bx
-	push edx
+FilledLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
 	push edi
 ;
+    mov ax,[bp].curr_y
+    cmp ax,ds:v_y_min
+    jl filled_line_done
+;
+    cmp ax,ds:v_y_max
+    jg filled_line_done
+;
+    mov ax,[bp].curr_x
+	cmp ax,ds:v_x_max
+	jg filled_line_done
+    
+filled_line_buf_loop:
+    cmp ax,ds:v_x_min
+    jge filled_line_start_ok
+
+filled_line_adv_buf:
+    inc ax
+	inc edi
+    sub cx,1
+    jnz filled_line_buf_loop
+    jmp filled_line_done
+
+filled_line_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,ax
+    inc bx
+    cmp cx,bx
+    jc filled_line_do
+;
+    mov cx,bx
+    
+filled_line_do:
+	or cx,cx
+	jz filled_line_done
+;
+    mov [bp].curr_x,ax
+    cmp ds:v_sprite_count,0
+    jz filled_line_sprite_hidden
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+;
+	mov eax,ds:v_color
+	call ds:slab_proc
+;
+    ShowSpriteLine
+    jmp filled_line_done
+
+filled_line_sprite_hidden:
+	mov eax,ds:v_color
+	call ds:slab_proc
+
+filled_line_done:
+	pop edi
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+FilledLine	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SplitLine
+;
+;		DESCRIPTION:	Draw a split line
+; 
+;		PARAMETER:		CX			gap
+;						DX			line width
+;						EDI			position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SplitLine	Proc near
+	EnterSection ds:v_sprite_section
+	push word ptr [bp].curr_x
+	push cx
+	push dx
+	push edi
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_min
+    jl split_line_done
+;
+    cmp bx,ds:v_y_max
+    jg split_line_done
+;
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_max
+    jg split_line_done
+;
+	sub cx,ax
+	sub cx,ax
+	mov dx,ax
+;
+	push cx
+	mov cx,dx
+;
+    cmp ds:v_sprite_count,0
+    jz split_left_loop
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+split_left_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_left_next
+;
+    cmp bx,ds:v_x_max
+    jg split_left_next
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+
+split_left_next:
+	inc word ptr [bp].curr_x
+	inc edi
+	loop split_left_loop
+;
+    cmp ds:v_sprite_count,0
+    jz split_left_sprite_done
+;
+    ShowSpriteLine
+
+split_left_sprite_done:
+	pop cx
+    add [bp].curr_x,cx
+;
+	movsx eax,cx
+	add edi,eax
+;
+	mov cx,dx
+;
+    cmp ds:v_sprite_count,0
+    jz split_right_loop
+;
+    push cx
+    push dx
+    mov ax,cx
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+    HideSpriteLine
+    pop dx
+    pop cx
+
+split_right_loop:
+    mov bx,[bp].curr_x
+    cmp bx,ds:v_x_min
+    jl split_right_next
+;
+    cmp bx,ds:v_x_max
+    jg split_right_next
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+
+split_right_next:
+	inc word ptr [bp].curr_x
+	inc edi
+	loop split_right_loop
+;
+    cmp ds:v_sprite_count,0
+    jz split_line_done
+;
+    ShowSpriteLine
+
+split_line_done:
+	pop edi
+	pop dx
+	pop cx
+	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
+	ret
+SplitLine	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetNative
+;
+;		DESCRIPTION:	Get pixels in internal format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_native	Proc far
+	push ds
+	pushad
+;
+	push ax
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
 	add eax,ds:v_app_base
-	mov edi,eax
+	mov esi,eax
 	mov ax,flat_sel
-	mov es,ax
+	mov ds,ax
 	movzx eax,cx
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+	shr eax,3
+	add esi,eax
+	and cl,7
+	pop dx
 ;
-	pop edi
-	pop edx
-	pop bx
-	pop eax
-	pop es
+	or dx,dx
+	jz get_native_done
+;
+	xor ebx,ebx
+	lods byte ptr [esi]
+	shr al,cl
+	mov ch,8
+	sub ch,cl
+
+get_native_loop:
+	rcr al,1
+	jc get_native_set
+
+get_native_reset:
+	btr es:[edi],ebx
+	jmp get_native_next
+
+get_native_set:
+	bts es:[edi],ebx
+
+get_native_next:
+	inc ebx
+	sub dx,1
+	jz get_native_done
+;
+	sub ch,1
+	jnz get_native_loop
+;
+	lods byte ptr [esi]
+	mov ch,8
+	jmp get_native_loop
+
+get_native_done:
+	popad
 	pop ds
 	ret
-set_pixel	Endp
+get_native	Endp
 
 PAGE
 
@@ -1789,7 +2409,6 @@ get_rgb	Proc far
 	mul edx
 	add eax,ds:v_app_base
 	mov esi,eax
-	mov ebp,ds:v_color
 	mov ax,flat_sel
 	mov ds,ax
 	movzx eax,cx
@@ -1815,7 +2434,7 @@ get_rgb_reset:
 	jmp get_rgb_next
 
 get_rgb_set:
-	mov es:[edi],ebp
+	mov dword ptr es:[edi],0FFFFFFh
 
 get_rgb_next:
 	add edi,4
@@ -1840,6 +2459,74 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetNative
+;
+;		DESCRIPTION:	Set pixels in internal format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						ES:EDI		line buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_native	Proc far
+	push ds
+	push es
+	push fs
+	pushad
+;
+	push ax
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov esi,edi
+;
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	shl eax,3
+	movzx ecx,cx
+	add eax,ecx
+	mov edi,eax
+	pop cx
+;
+	or cx,cx
+	jz set_native_done
+;
+	xor ebx,ebx
+
+set_native_loop:
+	bt fs:[esi],ebx
+	jnc set_native_zero
+;
+	mov eax,1
+	jmp set_native_do
+
+set_native_zero:
+	xor eax,eax
+
+set_native_do:
+	call ds:set_proc
+;
+	inc ebx
+	inc edi
+	loop set_native_loop
+
+set_native_done:
+	popad
+	pop fs
+	pop es
+	pop ds
+	ret
+set_native	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SetRGB
 ;
 ;		DESCRIPTION:	Set pixels in RGB format
@@ -1854,48 +2541,142 @@ PAGE
 set_rgb	Proc far
 	push ds
 	push es
+	push fs
 	pushad
 ;
 	push ax
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
 	mov esi,edi
+;
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
-	add eax,ds:v_app_base
+	shl eax,3
+	movzx ecx,cx
+	add eax,ecx
 	mov edi,eax
-	mov ax,flat_sel
-	mov es,ax
-	movzx eax,cx
-	mov bx,ds:v_lgop
-	mov dx,es
-	mov ds,dx
-	mov dx,flat_sel
-	mov es,dx
 	pop cx
 ;
 	or cx,cx
 	jz set_rgb_done
-;
-	add bx,bx
 
 set_rgb_loop:
-	mov edx,[esi]
-	or edx,edx
-	je set_rgb_next
+	mov eax,fs:[esi]
+	movzx dx,al
+	shr eax,8
+	add dl,al
+	adc dh,0
+	shr eax,8
+	add dl,al
+	adc dh,0
 ;
-	call word ptr cs:[bx].LgopTab
+	cmp dx,3 * 128
+	jc set_rgb_zero
+;
+	mov eax,1
+	jmp set_rgb_do
 
-set_rgb_next:
+set_rgb_zero:
+	xor eax,eax
+
+set_rgb_do:
+	call ds:set_proc
+;
 	add esi,4
-	inc eax
+	inc edi
 	loop set_rgb_loop
 
 set_rgb_done:
 	popad
+	pop fs
 	pop es
 	pop ds
 	ret
 set_rgb	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetSprite
+;
+;		DESCRIPTION:	Set sprite in native format
+;
+;		PARAMETER:		AX			number of pixels
+;						CX			x
+;						DX			y
+;						EDI			position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_sprite	Proc far
+	push es
+	push fs
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+    cmp dx,ds:v_y_min
+    jl set_sprite_done
+;
+    cmp dx,ds:v_y_max
+    jg set_sprite_done
+
+set_sprite_buf_loop:
+    cmp cx,ds:v_x_min
+    jge set_sprite_start_ok
+
+set_sprite_adv_buf:
+    inc cx
+    inc edi
+    sub ax,1
+    jnz set_sprite_buf_loop
+    jmp set_sprite_done
+
+set_sprite_start_ok:
+    mov bx,ds:v_x_max
+    sub bx,cx
+    inc bx
+    cmp ax,bx
+    jc set_sprite_do
+;
+    mov ax,bx
+    
+set_sprite_do:
+    or ax,ax
+    jz set_sprite_done
+;
+	push ax
+	mov esi,edi
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	shl eax,3
+	mov edi,eax
+	add edi,ecx
+	pop cx
+;
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+;
+    call ds:copy_proc
+
+set_sprite_done:
+    add sp,4
+	popad
+	pop fs
+	pop es
+	ret
+set_sprite	Endp
 
 PAGE
 
@@ -1933,105 +2714,118 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			HollowLine
+;		NAME:			GetPixel
 ;
-;		DESCRIPTION:	Draw a hollow line
-; 
-;		PARAMETER:		EAX			bit #
-;						CX			width
-;						EDI			position
+;		DESCRIPTION:	Get pixel
+;
+;		PARAMETER:		CX			x
+;						DX			y
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HollowLine	Proc near
-	push eax
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].LgopTab
+get_pixel	Proc far
+	push es
+	push edx
 	movzx ecx,cx
-	add eax,ecx
-	dec eax
-	call word ptr cs:[bx].LgopTab
-	pop eax
+	movzx edx,dx
+	movzx eax,ds:v_row_size
+	mul edx
+	add eax,ds:v_app_base
+	mov dx,flat_sel
+	mov es,dx
+	bt es:[eax],ecx
+	jc get_pixel_set
+;
+	xor eax,eax
+	jmp get_pixel_done
+
+get_pixel_set:
+	mov eax,0FFFFFFh
+
+get_pixel_done:
+	pop edx	
+	pop es
 	ret
-HollowLine	Endp
+get_pixel	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			FilledLine
+;		NAME:			SetPixel
 ;
-;		DESCRIPTION:	Draw a filled line
-; 
-;		PARAMETER:		EAX			bit #
-;						CX			width
-;						EDI			position
+;		DESCRIPTION:	Set pixel
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-FilledLine	Proc near
-	or cx,cx
-	jz filled_line_done
-;
-	mov bx,ds:v_lgop
-	add bx,bx
-	call word ptr cs:[bx].SlabTab
-
-filled_line_done:
-	ret
-FilledLine	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SplitLine
-;
-;		DESCRIPTION:	Draw a split line
-; 
-;		PARAMETER:		EAX			bit #
-;						CX			gap
-;						DX			line width
-;						EDI			position
+;		PARAMETER:		CX			x
+;						DX			y
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SplitLine	Proc near
+set_pixel	Proc far
+	push ds
+	push es
 	push eax
-	push cx
+	push bx
+	push edx
+	push edi
+	push bp
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+	EnterSection ds:v_sprite_section
 ;
-	sub cx,dx
-	sub cx,dx
-	mov bx,ds:v_lgop
-	add bx,bx
+    cmp cx,ds:v_x_min
+    jl set_pixel_done
 ;
-	push cx
-	mov cx,dx
+    cmp dx,ds:v_y_min
+    jl set_pixel_done
+;
+    cmp cx,ds:v_x_max
+    jg set_pixel_done
+;
+    cmp dx,ds:v_y_max
+    jg set_pixel_done
+;
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	shl eax,3
+	mov edi,eax
+	add edi,ecx
+;
+	mov ax,flat_sel
+	mov es,ax
+	cmp ds:v_sprite_count,0
+	jz set_pixel_no_sprite
+;
+    mov ax,1
+    HideSpriteLine
+;
+	mov eax,ds:v_color
+	call ds:set_proc
+    ShowSpriteLine
+    jmp set_pixel_done
 
-split_left_loop:
-	call word ptr cs:[bx].LgopTab
-	inc eax
-	loop split_left_loop
-;
-	pop cx
-;
-	movzx ecx,cx
-	add eax,ecx
-;
-	mov cx,dx
+set_pixel_no_sprite:
+	mov eax,ds:v_color
+    call ds:set_proc
 
-split_right_loop:
-	call word ptr cs:[bx].LgopTab
-	inc eax
-	loop split_right_loop
+set_pixel_done:
+	LeaveSection ds:v_sprite_section
 ;
-	pop cx
+    add sp,4
+    pop bp
+	pop edi
+	pop edx
+	pop bx
 	pop eax
+	pop es
+	pop ds
 	ret
-SplitLine	Endp
+set_pixel	Endp
 
 PAGE
 
@@ -2043,6 +2837,7 @@ PAGE
 ;		DESCRIPTION:	Draw a mask
 ; 
 ;		PARAMETER:		AX			source row size
+;						EBX			color
 ;						ECX			source x + y << 16
 ;						EDX			dest x + y << 16
 ;						SI			width
@@ -2050,212 +2845,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-last_bit_tab:
-lbt0	DB 0FFh
-lbt1	DB 1
-lbt2	DB 3
-lbt3	DB 7
-lbt4	DB 0Fh
-lbt5	DB 1Fh
-dlbt6	DB 3Fh
-lbt7	DB 7Fh
-
-MaskNull	Proc near
-	ret
-MaskNull	Endp
-
-MaskNone	Proc near
-	push bx
-	push dx
-;
-	mov dx,es:[edi]
-	mov bx,0FF00h
-	rol bx,cl
-	and dx,bx
-	xor ah,ah
-	rol ax,cl
-	or ax,dx
-	mov es:[edi],ax
-;
-	pop dx
-	pop bx
-	ret
-MaskNone	Endp
-
-MaskOr	Proc near
-	xor ah,ah
-	rol ax,cl
-	or es:[edi],ax
-	ret
-MaskOr	Endp
-
-MaskAnd	Proc near
-	mov ah,0FFh
-	rol ax,cl
-	and es:[edi],ax
-	ret
-MaskAnd	Endp
-
-MaskXor	Proc near
-	xor ah,ah
-	rol ax,cl
-	xor es:[edi],ax
-	ret
-MaskXor	Endp
-
-MaskInvert	Proc near
-	push bx
-	push dx
-;
-	not al
-	mov dx,es:[edi]
-	mov bx,0FF00h
-	rol bx,cl
-	and dx,bx
-	xor ah,ah
-	rol ax,cl
-	or ax,dx
-	mov es:[edi],ax
-;
-	pop dx
-	pop bx
-	ret
-MaskInvert	Endp
-
-MaskInvertOr	Proc near
-	not al
-	xor ah,ah
-	rol ax,cl
-	or es:[edi],ax
-	ret
-MaskInvertOr	Endp
-
-MaskInvertAnd	Proc near
-	not al
-	mov ah,0FFh
-	rol ax,cl
-	and es:[edi],ax
-	ret
-MaskInvertAnd	Endp
-
-MaskInvertXor	Proc near
-	not al
-	xor ah,ah
-	rol ax,cl
-	xor es:[edi],ax
-	ret
-MaskInvertXor	Endp
-
-MaskTab:
-mtl00	DW OFFSET MaskNull
-mtl01	DW OFFSET MaskNone
-mtl02	DW OFFSET MaskOr
-mtl03	DW OFFSET MaskAnd
-mtl04	DW OFFSET MaskXor
-mtl05	DW OFFSET MaskInvert
-mtl06	DW OFFSET MaskInvertOr
-mtl07	DW OFFSET MaskInvertAnd
-mtl08	DW OFFSET MaskInvertXor
-mtl09	DW OFFSET MaskOr
-mtl0A	DW OFFSET MaskAnd
-mtl0B	DW OFFSET MaskAnd
-
 draw_mask_line	Proc far
-	push es
-	push fs
-	pushad
-;
-	xchg ecx,edx
-	movzx ebx,dx
-	ror edx,16
-	movzx edx,dx
-	movzx eax,ax
-	mul edx
-	shl eax,3
-	add eax,ebx
-	push eax
-;
-	movzx ebp,cx
-	ror ecx,16
-	movzx edx,cx
-	movzx eax,ds:v_row_size
-	mul edx
-	shl eax,3
-	add eax,ebp
-	mov cl,al
-	shr eax,3
-	add eax,ds:v_app_base
-;
-	pop ebp
-	mov ch,bl
-	and cx,707h
-	shr ebp,3
-	add ebp,edi
-;
-	mov di,si
-	add di,bx
-	and di,7
-	mov dl,byte ptr cs:[di].last_bit_tab
-;
-	add si,bx
-	dec si
-	shr si,3
-	inc si
-	shr bx,3
-	sub si,bx
-;
-	xchg esi,ebp
-	mov edi,eax
-;
-	mov ax,es
-	mov fs,ax
-	mov ax,flat_sel
-	mov es,ax
-	mov bx,ds:v_lgop
-	add bx,bx
-
-draw_mask_line_loop:
-	mov ax,fs:[esi]
-	xchg cl,ch
-	ror ax,cl
-	xchg cl,ch
-	cmp bp,1
-	jnz draw_mask_save
-;
-	and al,dl
-
-draw_mask_save:
-	call word ptr cs:[bx].MaskTab
-	inc esi
-	inc edi
-	sub bp,1
-	jnz draw_mask_line_loop
-;
-	popad
-	pop fs
-	pop es
 	ret
 draw_mask_line	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SetSprite
-;
-;		DESCRIPTION:	Set pixels in native format
-;
-;		PARAMETER:		AX			number of pixels
-;						CX			x
-;						DX			y
-;						ES:EDI		line buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_sprite	Proc far
-    ret
-set_sprite  Endp
 
 PAGE
 
@@ -2266,14 +2858,57 @@ PAGE
 ;
 ;		DESCRIPTION:	Draw a sprite
 ; 
-;		PARAMETER:		ECX			x + y << 16
-;						EDX			width + height << 16
+;		PARAMETER:		AL          mask offset bit
+;                       ECX			x + y << 16
+;						DX			width
 ;						ESI			sprite data
-;						ES:EDI		1-bit mask bits
+;						ES:EDI		1-bit mask bits for row
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 draw_sprite_line    Proc far
+    push es
+    push fs
+    push gs
+	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,ecx
+;
+    mov bx,[bp].curr_y
+    cmp bx,ds:v_y_min
+    jl draw_sprite_done
+;
+    cmp bx,ds:v_y_max
+    jg draw_sprite_done
+;
+    push ax
+	push dx
+	movsx ebx,cx
+	ror ecx,16
+	movsx edx,cx
+	movzx eax,ds:v_row_size
+	imul edx
+	shl eax,3
+	add ebx,eax
+	xchg ebx,edi
+	pop cx
+	pop dx
+    and dl,7
+;    
+    mov ax,es
+    mov gs,ax
+    mov ax,flat_sel
+    mov es,ax
+    mov fs,ax
+    call ds:mask_copy_proc
+
+draw_sprite_done:
+    add sp,4
+	popad
+	pop gs
+	pop fs
+	pop es
     ret
 draw_sprite_line    Endp
 
@@ -2292,30 +2927,28 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ds_dest_y		EQU -2
-ds_dest_x		EQU -4
-ds_cnt			EQU -6
-ds_src_x		EQU -8
-ds_row_size		EQU -10
-ds_width		EQU -12
-ds_height		EQU -14
-ds_line_cnt		EQU -16
+ds_dest_y		EQU -6
+ds_dest_x		EQU -8
+ds_cnt			EQU -10
+ds_src_x		EQU -12
+ds_row_size		EQU -14
+ds_width		EQU -16
 
 draw_string	Proc far
-	push bp
-	mov bp,sp
-	sub sp,16
-;
 	push es
 	push fs
 	push gs
 	pushad
+	mov bp,sp
+	sub sp,16
 ;
 	mov ax,es
 	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
 ;
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 	mov [bp].ds_dest_x,cx
 	mov [bp].ds_dest_y,dx
 
@@ -2338,70 +2971,38 @@ draw_string_loop:
 	mov [bp].ds_row_size,si
 	mov word ptr [bp].ds_src_x,0
 	mov [bp].ds_width,cx
-	mov [bp].ds_height,dx
-	movzx eax,word ptr [bp].ds_row_size
-	mov cx,[bp].ds_height
+	mov cx,dx
 	or cx,cx
 	jz draw_string_char_next
 ;
-	mov [bp].ds_line_cnt,cx
+	movsx ebx,word ptr [bp].ds_src_x
+	sar ebx,3
+	add ebx,edi
 ;
-	movzx esi,word ptr [bp].ds_src_x
-	shr esi,3
-	add esi,edi
-;
-	movzx ebx,word ptr [bp].ds_dest_x
-	movzx edx,word ptr [bp].ds_dest_y
+	movsx esi,word ptr [bp].ds_dest_x
+	mov [bp].curr_x,si
+	movsx edx,word ptr [bp].ds_dest_y
+	mov [bp].curr_y,dx
 	movzx eax,word ptr ds:v_row_size
-	mul edx
+	imul edx
 	shl eax,3
-	add eax,ebx
-	mov cl,al
-	and cl,7
-	shr eax,3
-	add eax,ds:v_app_base
+	add eax,esi
 	mov edi,eax
-;
-	mov bx,[bp].ds_width
-	add bx,[bp].ds_src_x
-	mov ax,bx
-	and bx,7
-	mov dl,byte ptr cs:[bx].last_bit_tab
-	dec ax
-	shr ax,3
-	inc ax
-	mov bx,[bp].ds_src_x
-	shr bx,3
-	sub ax,bx
-	mov [bp].ds_cnt,ax
-;
-	mov bx,ds:v_lgop
-	add bx,bx
 
 draw_string_char_loop:
-	push bp
-	push edi
-	mov bp,[bp].ds_cnt
-
-draw_string_line_loop:
-	mov al,gs:[esi]
-	cmp bp,1
-	jnz draw_string_line_save
+    push cx
+	mov cx,[bp].ds_width
+	xor dl,dl
+    call SetMask
+    pop cx
 ;
-	and al,dl
-
-draw_string_line_save:
-	call word ptr cs:[bx].MaskTab
-	inc esi
-	inc edi
-	sub bp,1
-	jnz draw_string_line_loop
-;
-	pop edi
-	pop bp
+    inc word ptr [bp].curr_y
 	movzx eax,ds:v_row_size
+	shl eax,3
 	add edi,eax
-	sub word ptr [bp].ds_line_cnt,1
+	movzx eax,word ptr [bp].ds_row_size
+	add ebx,eax
+	sub cx,1
 	jnz draw_string_char_loop
 
 draw_string_char_done:
@@ -2416,12 +3017,11 @@ draw_string_ok:
 	clc
 
 draw_string_done:
+	add sp,16
 	popad
 	pop gs
 	pop fs
 	pop es
-	add sp,16
-	pop bp
 	ret
 draw_string	Endp
 
@@ -2441,41 +3041,72 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+dl_phys_add_x   EQU -8
+dl_phys_add_y   EQU -12
+dl_log_add_x    EQU -14
+dl_log_add_y    EQU -16
+dl_dx           EQU -18
+dl_dy           EQU -20
+dl_inc_low      EQU -22
+dl_x2			EQU -24
+dl_y2			EQU -26
+
 draw_line	Proc far
 	push ds
 	push es
 	pushad
-;
-	cmp si,cx
-	je line_vert
+	mov bp,sp
+	sub sp,26
 ;
 	cmp di,dx
 	je line_horiz
 
 line_bresen:
-	cmp di,dx
-	jae line_bresen_magn_ok
+	jg line_bresen_magn_ok
 ;
 	xchg cx,si
 	xchg dx,di
 
 line_bresen_magn_ok:
-	push si
-	push di
-	push dx
-	movzx ecx,cx
-	movzx edx,dx
-	movzx eax,ds:v_row_size
-	mul edx
-	shl eax,3
-	add eax,ecx
-	mov ebp,eax
-	pop dx
-	pop bx
-	pop ax
+	cmp si,cx
+	je line_vert
 ;
-	sub cx,ax
-	sub dx,bx
+    jg line_bresen_check_pos
+
+line_bresen_check_neg:
+    cmp si,ds:v_x_max
+    jg line_done
+;
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
+    cmp di,ds:v_y_min
+    jl line_done
+;
+    jmp line_bresen_check_done
+
+line_bresen_check_pos:
+    cmp cx,ds:v_x_max
+    jg line_done
+;
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp si,ds:v_x_min
+    jl line_done
+;
+    cmp di,ds:v_y_min
+    jl line_done
+
+line_bresen_check_done:
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+	sub cx,si
+	sub dx,di
 ;
 	test ch,80h
 	jz line_bresen_dx_pos
@@ -2483,12 +3114,16 @@ line_bresen_magn_ok:
 line_bresen_dx_neg:
 	add cx,cx
 	neg cx
-	mov esi,-1
+	mov [bp].dl_dx,cx
+	mov word ptr [bp].dl_log_add_x,1
+	mov dword ptr [bp].dl_phys_add_x,1
 	jmp line_bresen_dy
 
 line_bresen_dx_pos:
 	add cx,cx
-	mov esi,1
+	mov [bp].dl_dx,cx
+	mov word ptr [bp].dl_log_add_x,-1
+	mov dword ptr [bp].dl_phys_add_x,-1
 
 line_bresen_dy:
 	test dh,80h
@@ -2497,136 +3132,302 @@ line_bresen_dy:
 line_bresen_dy_neg:
 	add dx,dx
 	neg dx
-	movzx edi,ds:v_row_size
-	shl edi,3
-	neg edi
-	jmp line_bresen_do
+	mov [bp].dl_dy,dx
+	mov word ptr [bp].dl_log_add_y,1
+	movzx ebx,ds:v_row_size
+    mov [bp].dl_phys_add_y,ebx
+	jmp line_bresen_calc_inc
 
 line_bresen_dy_pos:
 	add dx,dx
-	movzx edi,ds:v_row_size
-	shl edi,3
+	mov [bp].dl_dy,dx
+	mov word ptr [bp].dl_log_add_y,-1
+	movzx ebx,ds:v_row_size
+	neg ebx
+	mov [bp].dl_phys_add_y,ebx
 
-line_bresen_do:
-	push cx
-	push dx
-	movzx ecx,ax
-	movzx edx,bx
-	movzx eax,ds:v_row_size
-	mul edx
-	shl eax,3
-	add eax,ecx
-	mov ebx,eax
-	pop dx
-	pop cx
-;
-	push ebp
-	mov ebp,edi
-	mov edi,ebx
-	mov ebx,esi
-;
-	push bx
-	mov ax,flat_sel
-	mov es,ax
-	mov bx,ds:v_lgop
-	add bx,bx
-	mov eax,edi
-	push edi
-	mov edi,ds:v_app_base
-	call word ptr cs:[bx].LgopTab
-	pop edi
-	pop bx
-	pop esi
-;
+line_bresen_calc_inc:
 	cmp cx,dx
-	jb line_bresen_dx_bigger
+	jb line_bresen_calc_dy_inc
 
-line_bresen_dx_bigger:
+line_bresen_calc_dx_inc:
 	mov ax,cx
 	shr ax,1
 	sub ax,dx
+	jmp line_bresen_calc_save
+
+line_bresen_calc_dy_inc:
+	mov ax,dx
+	shr ax,1
+	sub ax,cx
+
+line_bresen_calc_save:
 	neg ax
+	mov [bp].dl_inc_low,ax
+;
+    mov cx,[bp].curr_x
+    mov dx,[bp].curr_y
+;
+    cmp cx,si
+    jne line_more_low
+;
+    cmp dx,di
+    je line_done
+
+line_more_low:
+    cmp cx,ds:v_x_min
+    jl line_skip_low
+;
+	cmp cx,ds:v_x_max
+	jg line_skip_low
+;
+    cmp dx,ds:v_y_min
+	jl line_skip_low
+;
+	cmp dx,ds:v_y_max
+	jg line_skip_low
+;
+    jmp line_inrange_bresen
+
+line_skip_low:
+    mov ax,[bp].dl_dx
+	cmp ax,[bp].dl_dy
+	jb line_skip_dy_low
+
+line_skip_dx_low:
+	mov ax,[bp].dl_inc_low
+	test ah,80h
+	jnz line_skip_dx_fract_neg_low
+
+line_skip_dx_fract_pos_low:
+    mov ax,[bp].dl_dy
+	sub [bp].dl_inc_low,ax
+    add cx,[bp].dl_log_add_x
+    cmp cx,si
+    jne line_more_low
+	jmp line_done
+
+line_skip_dx_fract_neg_low:
+    mov ax,[bp].dl_dx
+	add [bp].dl_inc_low,ax
+    add dx,[bp].dl_log_add_y
+	jmp line_more_low
+
+line_skip_dy_low:
+	mov ax,[bp].dl_inc_low
+	test ah,80h
+	jnz line_skip_dy_fract_neg_low
+
+line_skip_dy_fract_pos_low:
+    mov ax,[bp].dl_dx
+	sub [bp].dl_inc_low,ax
+	add dx,[bp].dl_log_add_y
+    cmp dx,di
+    jne line_more_low
+	jmp line_done
+
+line_skip_dy_fract_neg_low:
+    mov ax,[bp].dl_dy
+	add [bp].dl_inc_low,ax
+	add cx,[bp].dl_log_add_x
+    jmp line_more_low
+
+line_inrange_bresen:    
+    mov [bp].curr_x,cx
+    mov [bp].curr_y,dx
+	mov [bp].dl_x2,si
+	mov [bp].dl_y2,di
+	movsx ecx,cx
+	movsx edx,dx
+	movzx eax,ds:v_row_size
+	imul edx
+	shl eax,3
+	mov edi,eax
+	add edi,ecx
+;
+    mov ax,flat_sel
+    mov es,ax
+	mov ax,[bp].dl_inc_low
+	mov dx,[bp].curr_y
+	cmp ds:v_sprite_count,0
+	je line_bresen_no_sprite
+
+line_bresen_sprite:
+    mov bx,[bp].dl_dx
+	cmp bx,[bp].dl_dy
+	jb line_bresen_dy_sprite_next
+	jmp line_bresen_dx_sprite_next
+
+line_bresen_dx_sprite_loop:
+	EnterSection ds:v_sprite_section
+	push ax
+	mov ax,1
+	HideSpriteLine
+	mov eax,ds:v_color
+	call ds:set_proc
+	ShowSpriteLine
+	pop ax
+	LeaveSection ds:v_sprite_section
+;
+	cmp cx,[bp].dl_x2
+	je line_done
+;
+	test ah,80h
+	jnz line_bresen_dx_sprite_fract_neg
+
+line_bresen_dx_sprite_fract_pos:
+	add edi,[bp].dl_phys_add_x
+    add cx,[bp].dl_log_add_x
+	mov [bp].curr_x,cx
+	sub ax,[bp].dl_dy
+	jmp line_bresen_dx_sprite_next
+
+line_bresen_dx_sprite_fract_neg:
+	add edi,[bp].dl_phys_add_y
+    add dx,[bp].dl_log_add_y
+    mov [bp].curr_y,dx
+	add ax,[bp].dl_dx
+
+line_bresen_dx_sprite_next:
+    cmp cx,ds:v_x_max
+    jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp dx,ds:v_y_min
+    jl line_done
+	jmp line_bresen_dx_sprite_loop
+
+line_bresen_dy_sprite_loop:
+	EnterSection ds:v_sprite_section
+	push ax
+	mov ax,1
+	HideSpriteLine
+	mov eax,ds:v_color
+	call ds:set_proc
+	ShowSpriteLine
+	pop ax
+	LeaveSection ds:v_sprite_section
+;
+	cmp dx,[bp].dl_y2
+	je line_done
+;
+	test ah,80h
+	jnz line_bresen_dy_sprite_fract_neg
+
+line_bresen_dy_sprite_fract_pos:
+	add edi,[bp].dl_phys_add_y
+	add dx,[bp].dl_log_add_y
+	mov [bp].curr_y,dx
+	sub ax,[bp].dl_dx
+	jmp line_bresen_dy_sprite_next
+
+line_bresen_dy_sprite_fract_neg:
+	add edi,[bp].dl_phys_add_x
+	add cx,[bp].dl_log_add_x
+	mov [bp].curr_x,cx
+	add ax,[bp].dl_dy
+
+line_bresen_dy_sprite_next:
+    cmp cx,ds:v_x_max
+    jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp dx,ds:v_y_min
+    jl line_done
+	jmp line_bresen_dy_sprite_loop
+
+line_bresen_no_sprite:
+    mov bx,[bp].dl_dx
+	cmp bx,[bp].dl_dy
+	jb line_bresen_dy_next
+	jmp line_bresen_dx_next
 
 line_bresen_dx_loop:
-	cmp esi,edi
+	push ax
+	mov eax,ds:v_color
+	call ds:set_proc
+	pop ax
+;
+	cmp cx,[bp].dl_x2
 	je line_done
 ;
 	test ah,80h
 	jnz line_bresen_dx_fract_neg
 
 line_bresen_dx_fract_pos:
-	add edi,ebx
-	sub ax,dx
-	jmp line_bresen_dx_plot
+	add edi,[bp].dl_phys_add_x
+    add cx,[bp].dl_log_add_x
+	mov [bp].curr_x,cx
+	sub ax,[bp].dl_dy
+	jmp line_bresen_dx_next
 
 line_bresen_dx_fract_neg:
-	add edi,ebp
-	add ax,cx
+	add edi,[bp].dl_phys_add_y
+    add dx,[bp].dl_log_add_y
+    mov [bp].curr_y,dx
+	add ax,[bp].dl_dx
 
-line_bresen_dx_plot:
-	cmp edi,ds:v_app_base
-	jb line_done
+line_bresen_dx_next:
+    cmp cx,ds:v_x_max
+    jg line_done
 ;
-	sub esi,ebp
-	cmp esi,edi
-	jae line_done
+    cmp cx,ds:v_x_min
+    jl line_done
 ;
-	add esi,ebp
-	push ax
-	push bx
-	mov bx,ds:v_lgop
-	add bx,bx
-	push edi
-	mov eax,edi
-	mov edi,ds:v_app_base
-	call word ptr cs:[bx].LgopTab
-	pop edi
-	pop bx
-	pop ax
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp dx,ds:v_y_min
+    jl line_done
 	jmp line_bresen_dx_loop
 
-line_bresen_dy_bigger:
-	mov ax,dx
-	shr ax,1
-	sub ax,cx
-	neg ax
-
 line_bresen_dy_loop:
-	cmp esi,edi
+	push ax
+	mov eax,ds:v_color
+	call ds:set_proc
+	pop ax
+;
+	cmp dx,[bp].dl_y2
 	je line_done
 ;
 	test ah,80h
 	jnz line_bresen_dy_fract_neg
 
 line_bresen_dy_fract_pos:
-	add edi,ebp
-	sub ax,cx
-	jmp line_bresen_dy_plot
+	add edi,[bp].dl_phys_add_y
+	add dx,[bp].dl_log_add_y
+	mov [bp].curr_y,dx
+	sub ax,[bp].dl_dx
+	jmp line_bresen_dy_next
 
 line_bresen_dy_fract_neg:
-	add edi,ebx
-	add ax,dx
+	add edi,[bp].dl_phys_add_x
+	add cx,[bp].dl_log_add_x
+	mov [bp].curr_x,cx
+	add ax,[bp].dl_dy
 
-line_bresen_dy_plot:
-	cmp edi,ds:v_app_base
-	jb line_done
+line_bresen_dy_next:
+    cmp cx,ds:v_x_max
+    jg line_done
 ;
-	sub esi,ebp
-	cmp esi,edi
-	jae line_done
+    cmp cx,ds:v_x_min
+    jl line_done
 ;
-	add esi,ebp
-	push ax
-	push bx
-	mov bx,ds:v_lgop
-	add bx,bx
-	push edi
-	mov eax,edi
-	mov edi,ds:v_app_base
-	call word ptr cs:[bx].LgopTab
-	pop edi
-	pop bx
-	pop ax
+    cmp dx,ds:v_y_max
+    jg line_done
+;
+    cmp dx,ds:v_y_min
+    jl line_done
 	jmp line_bresen_dy_loop
 
 line_vert:
@@ -2637,24 +3438,69 @@ line_vert:
 	xchg bx,dx
 
 line_vert_do:
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+;
+	cmp cx,ds:v_x_max
+	jg line_done
+;
+    cmp cx,ds:v_x_min
+    jl line_done
+;
+	movsx ecx,cx
+	movsx edx,dx
 	sub bx,dx
-	movzx edx,dx
 	movzx eax,ds:v_row_size
+	shl eax,3
 	mov esi,eax
-	mul edx
-	add eax,ds:v_app_base
+	imul edx
+	shl eax,3
 	mov edi,eax
-	mov ax,flat_sel
-	mov es,ax
-	movzx eax,cx
+	add edi,ecx
 	mov cx,bx
 	inc cx
-	mov bx,ds:v_lgop
-	add bx,bx
+	mov dx,flat_sel
+	mov es,dx
+	mov eax,ds:v_color
+	cmp ds:v_sprite_count,0
+	je line_vert_loop
+
+line_vert_sprite_loop:
+	mov dx,[bp].curr_y
+    cmp dx,ds:v_y_min
+    jl line_vert_sprite_next
+;
+    cmp dx,ds:v_y_max
+    jg line_vert_sprite_next
+;
+	EnterSection ds:v_sprite_section
+    push ax
+    mov ax,1
+    HideSpriteLine
+    pop ax
+	call ds:set_proc
+	ShowSpriteLine
+	LeaveSection ds:v_sprite_section
+
+line_vert_sprite_next:
+	add edi,esi
+	inc word ptr [bp].curr_y
+	loop line_vert_sprite_loop
+	jmp line_done
 
 line_vert_loop:
-	call word ptr cs:[bx].LgopTab
+	mov dx,[bp].curr_y
+    cmp dx,ds:v_y_min
+    jl line_vert_next
+;
+    cmp dx,ds:v_y_max
+    jg line_vert_next
+;
+	call ds:set_proc
+
+line_vert_next:
 	add edi,esi
+	inc word ptr [bp].curr_y
 	loop line_vert_loop
 	jmp line_done
 
@@ -2666,14 +3512,16 @@ line_horiz:
 	xchg ax,cx
 
 line_horiz_do:
-	movzx ecx,cx
-	movzx edx,dx
-	movzx ebx,ax
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
+	movsx ecx,cx
+	movsx edx,dx
+	movsx ebx,ax
 	movzx eax,ds:v_row_size
-	mul edx
+	imul edx
 	shl eax,3
-	add eax,ecx
-	mov edi,ds:v_app_base
+	mov edi,eax
+	add edi,ecx
 	sub cx,bx
 	neg cx
 	inc cx
@@ -2682,6 +3530,7 @@ line_horiz_do:
 	call FilledLine
 
 line_done:
+    add sp,26
 	popad
 	pop es
 	pop ds
@@ -2716,6 +3565,10 @@ draw_rect	Proc far
 	push ds
 	push es
 	pushad
+	mov bp,sp
+	sub sp,4
+	mov [bp].curr_x,cx
+	mov [bp].curr_y,dx
 ;
 	or si,si
 	jz rect_done
@@ -2725,21 +3578,25 @@ draw_rect	Proc far
 ;
 	push si
 	push di
-	movzx edx,dx
+	movsx ecx,cx
+	movsx edx,dx
 	movzx eax,ds:v_row_size
+	shl eax,3
 	mov esi,eax
-	mul edx
-	add eax,ds:v_app_base
+	imul edx
+	shl eax,3
 	mov edi,eax
-	mov ax,flat_sel
-	mov es,ax
-	movzx eax,cx
+	add edi,ecx
 	pop dx
 	pop cx
+;
+	mov ax,flat_sel
+	mov es,ax
 ;
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].rect_border_style_tab
+	inc word ptr [bp].curr_y
 	add edi,esi
 	sub dx,1
 	jz rect_done
@@ -2751,6 +3608,7 @@ rect_mid_loop:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].rect_mid_style_tab
+	inc word ptr [bp].curr_y
 	add edi,esi
 	dec dx
 	jmp rect_mid_loop
@@ -2761,6 +3619,7 @@ rect_bottom:
 	call word ptr cs:[bx].rect_border_style_tab
 
 rect_done:
+    add sp,4
 	popad
 	pop es
 	pop ds
@@ -2783,36 +3642,39 @@ PAGE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-de_h2		EQU -4
-de_w2		EQU -8
-de_m		EQU -14
-de_S		EQU -20
-de_T		EQU -26
-de_dSx		EQU -32
-de_dTx		EQU -38
-de_dSy		EQU -44
-de_dTy		EQU -50
-de_ddx		EQU -56
-de_ddy		EQU -62
-de_cnt		EQU -64
-de_w		EQU -66
-de_h		EQU -68
-de_p0		EQU -72
-de_p1		EQU -76
-de_width	EQU -78
-de_size		EQU -80
-de_xoff		EQU -82
-de_yoff		EQU -84
+de_h2		EQU -8
+de_w2		EQU -12
+de_m		EQU -18
+de_S		EQU -24
+de_T		EQU -30
+de_dSx		EQU -36
+de_dTx		EQU -42
+de_dSy		EQU -48
+de_dTy		EQU -54
+de_ddx		EQU -60
+de_ddy		EQU -66
+de_cnt		EQU -68
+de_w		EQU -70
+de_h		EQU -72
+de_p0		EQU -76
+de_p1		EQU -80
+de_width	EQU -82
+de_size		EQU -84
+de_y0	    EQU -86
+de_y1       EQU -88
 
 draw_mid_ellipse_hollow	Proc near
-	mov edi,ds:v_app_base
-	mov eax,[bp].de_p0
-	mov dx,[bp].de_width
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p0
+	mov ax,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 ;
-	mov eax,[bp].de_p1
-	mov dx,[bp].de_width
+    mov ax,[bp].de_y1
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p1
+	mov ax,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 ;
@@ -2821,12 +3683,15 @@ draw_mid_ellipse_hollow	Proc near
 draw_mid_ellipse_hollow	Endp
 
 draw_mid_ellipse_filled	Proc near
-	mov edi,ds:v_app_base
-	mov eax,[bp].de_p0
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
 ;
-	mov eax,[bp].de_p1
+    mov ax,[bp].de_y1
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p1
 	mov cx,[bp].de_size
 	call FilledLine
 ;
@@ -2835,17 +3700,19 @@ draw_mid_ellipse_filled	Proc near
 draw_mid_ellipse_filled	Endp
 
 draw_last_ellipse_hollow	Proc near
-	mov edi,ds:v_app_base
-	mov eax,[bp].de_p0
-	mov dx,[bp].de_width
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p0
+	mov ax,[bp].de_width
 	mov cx,[bp].de_size
 	call SplitLine
 	ret
 draw_last_ellipse_hollow	Endp
 
 draw_last_ellipse_filled	Proc near
-	mov edi,ds:v_app_base
-	mov eax,[bp].de_p0
+    mov ax,[bp].de_y0
+    mov [bp].curr_y,ax
+	mov edi,[bp].de_p0
 	mov cx,[bp].de_size
 	call FilledLine
 	ret
@@ -2864,7 +3731,7 @@ draw_ellipse	Proc far
 	push es
 	pushad
 	mov bp,sp
-	sub sp,84
+	sub sp,88
 ;
 	cmp si,2
 	jbe ellipse_end
@@ -2884,9 +3751,11 @@ draw_ellipse	Proc far
 	mov [bp].de_cnt,di
 ;
 	add cx,si
-	mov [bp].de_xoff,cx
+	mov [bp].curr_x,cx
+	mov [bp].de_y0,dx
 	add dx,di
-	mov [bp].de_yoff,dx
+	add dx,di
+	mov [bp].de_y1,dx
 ;
 	mov ax,di
 	mul di
@@ -2979,21 +3848,21 @@ draw_ellipse	Proc far
 	movzx esi,ds:v_row_size
 	shl esi,3
 ;
-	movzx ecx,word ptr [bp].de_xoff
-	movzx edx,word ptr [bp].de_yoff
-	sub dx,[bp].de_h
+	movsx ecx,word ptr [bp].curr_x
+	movsx edx,word ptr [bp].de_y0
 	mov eax,esi
-	mul edx
-	add eax,ecx
-	mov [bp].de_p0,eax
+	imul edx
+	mov edi,eax
+	add edi,ecx
+	mov [bp].de_p0,edi
 ;
-	movzx ecx,word ptr [bp].de_xoff
-	movzx edx,word ptr [bp].de_yoff
-	add dx,[bp].de_h
+	movsx ecx,word ptr [bp].curr_x
+	movsx edx,word ptr [bp].de_y1
 	mov eax,esi
-	mul edx
-	add eax,ecx
-	mov [bp].de_p1,eax
+	imul edx
+	mov edi,eax
+	add edi,ecx
+	mov [bp].de_p1,edi
 ;
 	mov ax,flat_sel
 	mov es,ax
@@ -3024,8 +3893,9 @@ ellipse_s_neg:
 	add [bp].de_dTx,eax
 	adc [bp+4].de_dTx,dx
 ;
-	sub dword ptr [bp].de_p0,1
-	sub dword ptr [bp].de_p1,1
+    dec word ptr [bp].curr_x
+	dec dword ptr [bp].de_p0
+	dec dword ptr [bp].de_p1
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 	jmp ellipse_loop
@@ -3063,14 +3933,17 @@ ellipse_t_neg:
 	add [bp].de_dTy,eax
 	adc [bp+4].de_dTy,dx
 ;
-	sub dword ptr [bp].de_p0,1
-	sub dword ptr [bp].de_p1,1
+    dec word ptr [bp].curr_x
+	dec dword ptr [bp].de_p0
+	dec dword ptr [bp].de_p1
 	inc word ptr [bp].de_width
 	add word ptr [bp].de_size,2
 ;
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].ellipse_mid_style_tab
+    inc word ptr [bp].de_y0
+    dec word ptr [bp].de_y1
 	add [bp].de_p0,esi
 	sub [bp].de_p1,esi
 ;
@@ -3099,6 +3972,8 @@ ellipse_t_pos:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].ellipse_mid_style_tab
+	inc word ptr [bp].de_y0
+	dec word ptr [bp].de_y1
 	add [bp].de_p0,esi
 	sub [bp].de_p1,esi
 ;
@@ -3111,7 +3986,7 @@ ellipse_done:
 	call word ptr cs:[bx].ellipse_last_style_tab
 
 ellipse_end:
-	add sp,84
+	add sp,88
 	popad
 	pop es
 	pop ds
@@ -3142,17 +4017,17 @@ mt0C DW OFFSET error,				video_code_sel
 mt0D DW OFFSET error,				video_code_sel
 mt0E DW OFFSET error,				video_code_sel
 mt0F DW OFFSET translate_color,		video_code_sel
-mt10 DW OFFSET error,     			video_code_sel
-mt11 DW OFFSET error,    			video_code_sel
-mt12 DW OFFSET error,    			video_code_sel
-mt13 DW OFFSET error,	    		video_code_sel
-mt14 DW OFFSET error,   			video_code_sel
+mt10 DW OFFSET set_base,   			video_code_sel
+mt11 DW OFFSET slab,    			video_code_sel
+mt12 DW OFFSET copy,    			video_code_sel
+mt13 DW OFFSET mask_set,    		video_code_sel
+mt14 DW OFFSET mask_copy,  			video_code_sel
 mt15 DW OFFSET get_line,			video_code_sel
 mt16 DW OFFSET get_pixel,			video_code_sel
 mt17 DW OFFSET set_pixel,			video_code_sel
-mt18 DW OFFSET get_rgb,	    		video_code_sel
+mt18 DW OFFSET get_native,    		video_code_sel
 mt19 DW OFFSET get_rgb,				video_code_sel
-mt1A DW OFFSET set_rgb, 			video_code_sel
+mt1A DW OFFSET set_native, 			video_code_sel
 mt1B DW OFFSET set_rgb,				video_code_sel
 mt1C DW OFFSET draw_mask_line,		video_code_sel
 mt1D DW OFFSET set_sprite,			video_code_sel

@@ -716,7 +716,7 @@ copy_none:
 	test di,1
 	jz copy_even
 ;
-	movs byte ptr es:[edi],[esi]
+	movs byte ptr es:[edi],fs:[esi]
 	sub ecx,1
 	jz copy_done
 

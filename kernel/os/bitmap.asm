@@ -121,6 +121,7 @@ init_video_bitmap	Proc far
 	jmp init_video_done
 
 init_video1:
+	mov es:v_color,1
     mov si,OFFSET BitmapTab1
     jmp init_video_copy
     
@@ -153,7 +154,8 @@ init_video_done:
 	mov ds:[bx].bm_sel,es
 	mov ds:[bx].bm_flag,BM_FLAG_VIDEO
 	mov ds:[bx].hh_sign,BITMAP_HANDLE
-	mov ds:[bx].bm_color,0
+	mov eax,es:v_color
+	mov ds:[bx].bm_color,eax
 	mov ds:[bx].bm_lgop,1
 	mov ds:[bx].bm_font,0
 	mov ds:[bx].bm_style,0
@@ -253,6 +255,7 @@ create_bitmap	Proc far
 	jmp cr_bitmap_end
 
 cr_bitmap1:
+	mov es:v_color,1
 	mov si,OFFSET BitmapTab1
 	mov ax,es:v_width
 	dec ax
@@ -323,7 +326,8 @@ cr_bitmap_copy:
 	mov ds:[bx].bm_sel,es
 	mov ds:[bx].bm_flag,BM_FLAG_BITMAP
 	mov ds:[bx].hh_sign,BITMAP_HANDLE
-	mov ds:[bx].bm_color,0
+	mov eax,es:v_color
+	mov ds:[bx].bm_color,eax
 	mov ds:[bx].bm_lgop,1
 	mov ds:[bx].bm_font,0
 	mov ds:[bx].bm_style,0
