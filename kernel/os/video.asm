@@ -1537,6 +1537,7 @@ blit_pr	PROC far
 	mov [bp].blit_dest_sel,dx
 ;
     push [bx].bm_lgop
+    push [bx].bm_color
     push [bx].bm_x_min
     push [bx].bm_y_min
     push [bx].bm_x_max
@@ -1558,6 +1559,7 @@ blit_take_src_first:
 	pop ds:v_x_max
 	pop ds:v_y_min
 	pop ds:v_x_min
+	pop ds:v_color
 	pop ds:v_lgop
     jmp blit_entered
 
@@ -1568,6 +1570,7 @@ blit_take_dest_first:
 	pop ds:v_x_max
 	pop ds:v_y_min
 	pop ds:v_x_min
+	pop ds:v_color
 	pop ds:v_lgop
 ;
     mov ds,[bp].blit_src_sel
@@ -1577,12 +1580,19 @@ blit_entered:
 	mov ds,[bp].blit_src_sel
 	mov al,ds:v_bpp
 	cmp al,1
-	je blit1
+	je blit_check1
 ;
 	mov ds,[bp].blit_dest_sel
 	cmp al,ds:v_bpp
 	je blit_same_bpp
-;
+    jmp blit_diff_bpp
+
+blit_check1:
+	mov ds,[bp].blit_dest_sel
+	cmp al,ds:v_bpp
+	jne blit1
+
+blit_diff_bpp:
 	movzx eax,word ptr [bp].blit_width
 	shl eax,2
 	AllocateGlobalMem
@@ -1592,6 +1602,12 @@ blit_diff_loop:
 	mov ax,[bp].blit_width
 	mov cx,[bp].blit_src_x
 	mov dx,[bp].blit_src_y
+	cmp dx,0
+	jl blit_diff_next
+;
+    cmp dx,ds:v_width
+    jge blit_diff_next
+;
 	xor edi,edi
 	call ds:get_rgb_row_proc
 ;
@@ -1601,7 +1617,8 @@ blit_diff_loop:
 	mov dx,[bp].blit_dest_y
 	xor edi,edi
 	call ds:set_rgb_row_proc
-;
+
+blit_diff_next:
 	inc word ptr [bp].blit_src_y
 	inc word ptr [bp].blit_dest_y
 	sub word ptr [bp].blit_height,1
@@ -1646,6 +1663,7 @@ blit_same_bitmap:
 	pop ds:v_x_max
 	pop ds:v_y_min
 	pop ds:v_x_min
+	pop ds:v_color
 	pop ds:v_lgop
 ;
 	mov dx,[bp].blit_src_y
@@ -1737,8 +1755,8 @@ blit1:
 	mov ecx,[bp].blit_src_x
 	mov edx,[bp].blit_dest_x
 	mov si,[bp].blit_width
-	mov ebx,ds:v_color
 	mov ds,[bp].blit_dest_sel
+	mov ebx,ds:v_color
 
 blit1_line_loop:
 	call ds:draw_mask_line_proc
