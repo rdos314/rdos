@@ -29,8 +29,6 @@
 #include <string.h>
 #include "device.h"
 
-#include <rdos.h>
-
 #define FALSE 0
 #define TRUE !FALSE
 
