@@ -1770,16 +1770,13 @@ DuplFileInfo	MACRO
 
 ;;;;;;;;;;;; VIDEO ;;;;;;;;;;;
 
-;	AL		char
-;	BX		char mask selector
-;	CX		width
-GetCharMask	MACRO
-	OsGate get_char_mask_nr
-					ENDM
-
+;	EAX		size of char bitmap
+;	BX		font handle
 ;	ES:EDI	string
-;	BX		string mask selector
+;	ESI		1-bit char bitmap
 ;	CX		width
+;	DX		height
+;	BP		row size
 GetStringMask	MACRO
 	OsGate get_string_mask_nr
 					ENDM

@@ -165,7 +165,6 @@ rtc_data_sel		EQU 6F8h
 
 state_code_sel		EQU 700h
 
-font_thread_sel		EQU 708h
 font_code_sel		EQU 710h
 font_data_sel		EQU 718h
 

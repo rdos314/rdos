@@ -1330,6 +1330,27 @@ WriteSizeString MACRO
 	UserGate write_size_string_nr
 						ENDM
 
+;;;;;;;;;;; FONT ;;;;;;;;;;
+
+;	IN  AX              Requested font height
+;	OUT	BX				Font handle
+OpenFont        MACRO
+	UserGate open_font_nr
+						ENDM
+
+;	IN	BX				Font handle
+CloseFont        MACRO
+	UserGate close_font_nr
+						ENDM
+
+;	IN  ES:E(DI)		String to ask about
+;	IN	BX				Font handle
+;	OUT CX				Width of string
+;	OUT DX				Height of char
+GetStringMetrics        MACRO
+	UserGate get_string_metrics_nr
+						ENDM
+
 ;;;;;;;;;;; SCREEN, GRAPHICS MODE ;;;;;;;;;;
 
 ;	IN  AX		Requested mode
@@ -1372,12 +1393,6 @@ SetLgop        MACRO
 	UserGate set_lgop_nr
 						ENDM
 
-;	IN  AX              Requested font height
-;	IN	BX				Bitmap handle or 0
-SetFont        MACRO
-	UserGate set_font_nr
-						ENDM
-
 ;	IN	BX				Bitmap handle or 0
 SetHollowStyle        MACRO
 	UserGate set_hollow_style_nr
@@ -1386,18 +1401,6 @@ SetHollowStyle        MACRO
 ;	IN	BX				Bitmap handle or 0
 SetFilledStyle        MACRO
 	UserGate set_filled_style_nr
-						ENDM
-
-;	IN  AL				Char to ask about
-;	OUT CX				Width of char
-GetCharWidth        MACRO
-	UserGate get_char_width_nr
-						ENDM
-
-;	IN  ES:E(DI)		String to ask about
-;	OUT CX				Width of string
-GetStringWidth        MACRO
-	UserGate get_string_width_nr
 						ENDM
 
 ;	IN	BX		Bitmap handle or 0
@@ -1456,6 +1459,8 @@ DrawEllipse      MACRO
 ;	IN  CX		Width
 ;	IN  DX		Height
 ;	OUT BX		Bitmap handle
+;	OUT SI		Line size
+;	OUT ES:EDI	Buffer ptr
 CreateBitmap      MACRO
 	UserGate create_bitmap_nr
 						ENDM
@@ -1463,6 +1468,17 @@ CreateBitmap      MACRO
 ;	IN  BX		Bitmap handle
 CloseBitmap      MACRO
 	UserGate close_bitmap_nr
+						ENDM
+
+;	IN  ES:E(DI)	String
+;	IN  BX			Font handle
+;	OUT	BX			Bitmap handle
+;	OUT CX			Width
+;	OUT DX			Height
+;	OUT SI			Line size
+;	OUT ES:EDI		Buffer ptr
+CreateStringBitmap      MACRO
+	UserGate create_string_bitmap_nr
 						ENDM
 
 ;	IN  AX		start x

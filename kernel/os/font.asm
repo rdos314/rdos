@@ -37,14 +37,7 @@ INCLUDE os.def
 INCLUDE user.inc
 INCLUDE os.inc
 INCLUDE driver.def
-
-mask_struc	STRUC
-
-mask_width	DW ?
-mask_height	DW ?
-mask_data	DB ?
-
-mask_struc	ENDS
+INCLUDE handle.inc
 
 font_seg	SEGMENT AT 0
 
@@ -83,17 +76,276 @@ font_data				DB ?
 
 font_seg	ENDS
 
-font_thread_struc	STRUC
+font_handle_struc	STRUC
 
-current_font			DW ?
+fh_base		handle_header <>
+fh_sel		DW ?
 
-font_thread_struc	ENDS
+font_handle_struc	ENDS
 
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+bit_rev_tab:
+brt00	DB	00000000b
+brt01	DB	10000000b
+brt02	DB	01000000b
+brt03	DB	11000000b
+brt04	DB	00100000b
+brt05	DB	10100000b
+brt06	DB	01100000b
+brt07	DB	11100000b
+brt08	DB	00010000b
+brt09	DB	10010000b
+brt0A	DB	01010000b
+brt0B	DB	11010000b
+brt0C	DB	00110000b
+brt0D	DB	10110000b
+brt0E	DB	01110000b
+brt0F	DB	11110000b
+brt10	DB	00001000b
+brt11	DB	10001000b
+brt12	DB	01001000b
+brt13	DB	11001000b
+brt14	DB	00101000b
+brt15	DB	10101000b
+brt16	DB	01101000b
+brt17	DB	11101000b
+brt18	DB	00011000b
+brt19	DB	10011000b
+brt1A	DB	01011000b
+brt1B	DB	11011000b
+brt1C	DB	00111000b
+brt1D	DB	10111000b
+brt1E	DB	01111000b
+brt1F	DB	11111000b
+brt20	DB	00000100b
+brt21	DB	10000100b
+brt22	DB	01000100b
+brt23	DB	11000100b
+brt24	DB	00100100b
+brt25	DB	10100100b
+brt26	DB	01100100b
+brt27	DB	11100100b
+brt28	DB	00010100b
+brt29	DB	10010100b
+brt2A	DB	01010100b
+brt2B	DB	11010100b
+brt2C	DB	00110100b
+brt2D	DB	10110100b
+brt2E	DB	01110100b
+brt2F	DB	11110100b
+brt30	DB	00001100b
+brt31	DB	10001100b
+brt32	DB	01001100b
+brt33	DB	11001100b
+brt34	DB	00101100b
+brt35	DB	10101100b
+brt36	DB	01101100b
+brt37	DB	11101100b
+brt38	DB	00011100b
+brt39	DB	10011100b
+brt3A	DB	01011100b
+brt3B	DB	11011100b
+brt3C	DB	00111100b
+brt3D	DB	10111100b
+brt3E	DB	01111100b
+brt3F	DB	11111100b
+brt40	DB	00000010b
+brt41	DB	10000010b
+brt42	DB	01000010b
+brt43	DB	11000010b
+brt44	DB	00100010b
+brt45	DB	10100010b
+brt46	DB	01100010b
+brt47	DB	11100010b
+brt48	DB	00010010b
+brt49	DB	10010010b
+brt4A	DB	01010010b
+brt4B	DB	11010010b
+brt4C	DB	00110010b
+brt4D	DB	10110010b
+brt4E	DB	01110010b
+brt4F	DB	11110010b
+brt50	DB	00001010b
+brt51	DB	10001010b
+brt52	DB	01001010b
+brt53	DB	11001010b
+brt54	DB	00101010b
+brt55	DB	10101010b
+brt56	DB	01101010b
+brt57	DB	11101010b
+brt58	DB	00011010b
+brt59	DB	10011010b
+brt5A	DB	01011010b
+brt5B	DB	11011010b
+brt5C	DB	00111010b
+brt5D	DB	10111010b
+brt5E	DB	01111010b
+brt5F	DB	11111010b
+brt60	DB	00000110b
+brt61	DB	10000110b
+brt62	DB	01000110b
+brt63	DB	11000110b
+brt64	DB	00100110b
+brt65	DB	10100110b
+brt66	DB	01100110b
+brt67	DB	11100110b
+brt68	DB	00010110b
+brt69	DB	10010110b
+brt6A	DB	01010110b
+brt6B	DB	11010110b
+brt6C	DB	00110110b
+brt6D	DB	10110110b
+brt6E	DB	01110110b
+brt6F	DB	11110110b
+brt70	DB	00001110b
+brt71	DB	10001110b
+brt72	DB	01001110b
+brt73	DB	11001110b
+brt74	DB	00101110b
+brt75	DB	10101110b
+brt76	DB	01101110b
+brt77	DB	11101110b
+brt78	DB	00011110b
+brt79	DB	10011110b
+brt7A	DB	01011110b
+brt7B	DB	11011110b
+brt7C	DB	00111110b
+brt7D	DB	10111110b
+brt7E	DB	01111110b
+brt7F	DB	11111110b
+brt80	DB	00000001b
+brt81	DB	10000001b
+brt82	DB	01000001b
+brt83	DB	11000001b
+brt84	DB	00100001b
+brt85	DB	10100001b
+brt86	DB	01100001b
+brt87	DB	11100001b
+brt88	DB	00010001b
+brt89	DB	10010001b
+brt8A	DB	01010001b
+brt8B	DB	11010001b
+brt8C	DB	00110001b
+brt8D	DB	10110001b
+brt8E	DB	01110001b
+brt8F	DB	11110001b
+brt90	DB	00001001b
+brt91	DB	10001001b
+brt92	DB	01001001b
+brt93	DB	11001001b
+brt94	DB	00101001b
+brt95	DB	10101001b
+brt96	DB	01101001b
+brt97	DB	11101001b
+brt98	DB	00011001b
+brt99	DB	10011001b
+brt9A	DB	01011001b
+brt9B	DB	11011001b
+brt9C	DB	00111001b
+brt9D	DB	10111001b
+brt9E	DB	01111001b
+brt9F	DB	11111001b
+brtA0	DB	00000101b
+brtA1	DB	10000101b
+brtA2	DB	01000101b
+brtA3	DB	11000101b
+brtA4	DB	00100101b
+brtA5	DB	10100101b
+brtA6	DB	01100101b
+brtA7	DB	11100101b
+brtA8	DB	00010101b
+brtA9	DB	10010101b
+brtAA	DB	01010101b
+brtAB	DB	11010101b
+brtAC	DB	00110101b
+brtAD	DB	10110101b
+brtAE	DB	01110101b
+brtAF	DB	11110101b
+brtB0	DB	00001101b
+brtB1	DB	10001101b
+brtB2	DB	01001101b
+brtB3	DB	11001101b
+brtB4	DB	00101101b
+brtB5	DB	10101101b
+brtB6	DB	01101101b
+brtB7	DB	11101101b
+brtB8	DB	00011101b
+brtB9	DB	10011101b
+brtBA	DB	01011101b
+brtBB	DB	11011101b
+brtBC	DB	00111101b
+brtBD	DB	10111101b
+brtBE	DB	01111101b
+brtBF	DB	11111101b
+brtC0	DB	00000011b
+brtC1	DB	10000011b
+brtC2	DB	01000011b
+brtC3	DB	11000011b
+brtC4	DB	00100011b
+brtC5	DB	10100011b
+brtC6	DB	01100011b
+brtC7	DB	11100011b
+brtC8	DB	00010011b
+brtC9	DB	10010011b
+brtCA	DB	01010011b
+brtCB	DB	11010011b
+brtCC	DB	00110011b
+brtCD	DB	10110011b
+brtCE	DB	01110011b
+brtCF	DB	11110011b
+brtD0	DB	00001011b
+brtD1	DB	10001011b
+brtD2	DB	01001011b
+brtD3	DB	11001011b
+brtD4	DB	00101011b
+brtD5	DB	10101011b
+brtD6	DB	01101011b
+brtD7	DB	11101011b
+brtD8	DB	00011011b
+brtD9	DB	10011011b
+brtDA	DB	01011011b
+brtDB	DB	11011011b
+brtDC	DB	00111011b
+brtDD	DB	10111011b
+brtDE	DB	01111011b
+brtDF	DB	11111011b
+brtE0	DB	00000111b
+brtE1	DB	10000111b
+brtE2	DB	01000111b
+brtE3	DB	11000111b
+brtE4	DB	00100111b
+brtE5	DB	10100111b
+brtE6	DB	01100111b
+brtE7	DB	11100111b
+brtE8	DB	00010111b
+brtE9	DB	10010111b
+brtEA	DB	01010111b
+brtEB	DB	11010111b
+brtEC	DB	00110111b
+brtED	DB	10110111b
+brtEE	DB	01110111b
+brtEF	DB	11110111b
+brtF0	DB	00001111b
+brtF1	DB	10001111b
+brtF2	DB	01001111b
+brtF3	DB	11001111b
+brtF4	DB	00101111b
+brtF5	DB	10101111b
+brtF6	DB	01101111b
+brtF7	DB	11101111b
+brtF8	DB	00011111b
+brtF9	DB	10011111b
+brtFA	DB	01011111b
+brtFB	DB	11011111b
+brtFC	DB	00111111b
+brtFD	DB	10111111b
+brtFE	DB	01111111b
+brtFF	DB	11111111b
 
 PAGE
 
@@ -205,17 +457,19 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SetFont
+;		NAME:			OpenFont
 ;
-;		DESCRIPTION:	Set graphics mode font
+;		DESCRIPTION:	Open a font and return handle
 ;
 ;		PARAMETERS:		AX		Font height
 ;
+;		RETURNS:		BX		Font handle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_font_name	DB 'Set Font',0
+open_font_name	DB 'Open Font',0
 
-set_font	Proc far
+open_font	Proc far
 	push ds
 	push ax
 	push si
@@ -224,253 +478,140 @@ set_font	Proc far
 	add si,si
 	mov ax,font_data_sel
 	mov ds,ax
-set_font_loop:
+open_font_loop:
 	mov ax,[si]
 	or ax,ax
-	jnz set_font_found
+	jnz open_font_found
 	sub si,2
-	jc set_font_end
-	jmp set_font_loop	
+	jc open_font_end
+	jmp open_font_loop	
 
-set_font_found:
-	mov si,font_thread_sel
-	mov ds,si
-	mov ds:current_font,ax
-set_font_end:
+open_font_found:
+	mov cx,SIZE font_handle_struc
+	AllocateHandle
+	mov [bx].fh_sel,ax
+	mov [bx].hh_sign,FONT_HANDLE
+	mov bx,[bx].hh_handle
+
+open_font_end:
 	pop si
 	pop ax
 	pop ds
 	retf32
-set_font	Endp
+open_font	Endp
 	
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetCharWidth
+;		NAME:			CloseFont
 ;
-;		DESCRIPTION:	Get width of char in current font
+;		DESCRIPTION:	Close a font handle
 ;
-;		PARAMETERS:		AL		char
-;
-;		RETURNS:		CX		width
+;		PARAMETERS:		BX		Font handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_char_width_name	DB 'Get Char Width',0
+close_font_name	DB 'Close Font',0
 
-get_char_width	Proc far
+close_font	Proc far
 	push ds
 	push ax
-	push ebx
+	push bx
 ;
-	mov bx,font_thread_sel
-	mov ds,bx
-	mov bx,ds:current_font
-	or bx,bx
-	jz get_char_width_fail
-	mov ds,bx
-	xor ah,ah
-	cmp ax,ds:font_maxch
-	ja get_char_width_fail
-	sub ax,ds:font_minch
-	jb get_char_width_fail
-	movzx ebx,al
-	add ebx,ebx
-	add ebx,ds:font_cotptr
-	mov cx,[ebx+2]
-	sub cx,[ebx]
-	jmp get_char_width_done
+	mov ax,FONT_HANDLE
+	DerefHandle
+	jc cl_font_done
+;
+	FreeHandle
+	clc
 
-get_char_width_fail:
-	xor cx,cx
-get_char_width_done:
-	pop ebx	
+cl_font_done:
+	pop bx
 	pop ax
 	pop ds
 	retf32
-get_char_width	Endp
-	
+close_font	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			GetStringWidth
+;		NAME:			GetStringMetrics
 ;
-;		DESCRIPTION:	Get width of string in current font
+;		DESCRIPTION:	Get width & height of string
 ;
 ;		PARAMETERS:		ES:(E)DI	String 
 ;
 ;		RETURNS:		CX			Width
+;						DX			Height
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-get_string_width_name	DB 'Get String Width',0
+get_string_metrics_name	DB 'Get String Metrics',0
 
-get_string_width	Proc near
+get_string_metrics	Proc near
 	push ds
 	push ax
 	push ebx
 	push edi
 ;
-	mov bx,font_thread_sel
-	mov ds,bx
-	mov bx,ds:current_font
-	or bx,bx
-	jz get_string_width_fail
-	mov ds,bx
+	mov ax,FONT_HANDLE
+	DerefHandle
+	jc get_string_metr_fail
+;
+	mov ds,[bx].fh_sel
 	xor cx,cx
-get_string_width_loop:
+	mov dx,ds:font_fheight
+
+get_string_metr_loop:
 	xor ah,ah
 	mov al,es:[edi]
 	inc edi
 	or al,al
-	jz get_string_width_done
+	clc
+	jz get_string_metr_done
+;
 	cmp ax,ds:font_maxch
-	ja get_string_width_loop
+	ja get_string_metr_loop
+;
 	sub ax,ds:font_minch
-	jb get_string_width_loop
+	jb get_string_metr_loop
+;
 	movzx ebx,al
 	add ebx,ebx
 	add ebx,ds:font_cotptr
 	add cx,[ebx+2]
 	sub cx,[ebx]
-	jmp get_string_width_loop
+	jmp get_string_metr_loop
 
-get_string_width_fail:
+get_string_metr_fail:
 	xor cx,cx
-get_string_width_done:
+	stc
+
+get_string_metr_done:
 	pop edi
 	pop ebx
 	pop ax
 	pop ds
 	ret
-get_string_width	Endp
+get_string_metrics	Endp
 
-get_string_width32	Proc far
-	call get_string_width
+get_string_metrics32	Proc far
+	call get_string_metrics
 	retf32
-get_string_width32	Endp
+get_string_metrics32	Endp
 
-get_string_width16	Proc far
+get_string_metrics16	Proc far
 	push edi
 	movzx edi,di
-	call get_string_width
+	call get_string_metrics
 	pop edi
 	ret
-get_string_width16	Endp	
+get_string_metrics16	Endp	
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			GetCharMask
-;
-;		DESCRIPTION:	Get mask for char
-;
-;		PARAMETERS:		AL		char
-;
-;		RETURNS:		BX		mask selector
-;						CX		width
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_char_mask_name	DB 'Get Char Mask',0
-
-get_char_mask	Proc far
-	push ds
-	push es
-	push eax
-	push dx
-	push esi
-	push di
-;
-	mov bx,font_thread_sel
-	mov ds,bx
-	mov bx,ds:current_font
-	or bx,bx
-	jz get_char_mask_fail
-	mov ds,bx
-	xor cx,cx
-	xor ah,ah
-	cmp ax,ds:font_maxch
-	ja get_char_mask_alloc
-	sub ax,ds:font_minch
-	jb get_char_mask_alloc
-	movzx ebx,al
-	add ebx,ebx
-	add ebx,ds:font_cotptr
-	mov cx,[ebx+2]
-	sub cx,[ebx]
-get_char_mask_alloc:
-	mov ax,cx
-	dec ax
-	shr ax,3
-	inc ax
-	push ax
-	mul ds:font_fheight
-	push dx
-	push ax
-	pop eax
-	add eax,OFFSET mask_data + 1
-	AllocateSmallGlobalMem
-	pop ax
-	push cx
-	mov es:mask_width,ax
-	mov cx,ax
-	mov dx,ds:font_fheight
-	mov es:mask_height,dx
-	or cx,cx
-	jz get_char_mask_copied
-	mov di,OFFSET mask_data	
-	xor esi,esi
-	mov si,[ebx]
-	mov ax,si
-	shr si,3
-	and al,7
-	mov ch,cl
-	mov cl,al
-	add esi,ds:font_bufptr
-get_char_mask_loop:
-	push cx
-	push esi
-get_char_mask_row_loop:
-	mov ax,[esi]
-	xchg al,ah
-	shl ax,cl
-	mov es:[di],ah
-	inc esi
-	inc di
-	sub ch,1
-	jnz get_char_mask_row_loop	
-	pop esi
-	pop cx
-;
-	movzx eax,ds:font_fwidth
-	add esi,eax
-	sub dx,1
-	jnz get_char_mask_loop
-get_char_mask_copied:
-	pop cx
-	mov bx,es
-	jmp get_char_mask_done
-
-get_char_mask_fail:
-	xor cx,cx
-	xor bx,bx
-get_char_mask_done:
-	pop di
-	pop esi
-	pop dx
-	pop eax
-	pop es
-	pop ds
-	ret
-get_char_mask	Endp
-	
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -481,94 +622,113 @@ PAGE
 ;		DESCRIPTION:	Get mask for string
 ;
 ;		PARAMETERS:		ES:EDI		string
+;						BX			font handle
 ;
-;		RETURNS:		BX			mask selector
+;		RETURNS:		EAX			size of bitmap
+;						ESI			1-bit string bitmap
 ;						CX			width
+;						DX			height
+;						BP			row size
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_string_mask_name	DB 'Get String Mask',0
 
+gsm_pos			EQU -4
+gsm_mask		EQU -8
+gsm_width		EQU -10
+gsm_row_size	EQU -14
+gsm_size		EQU -18
+
 get_string_mask	Proc far
+	mov bp,sp
+	sub sp,18
+;
 	push ds
 	push es
 	push fs
-	push eax
-	push dx
-	push esi
 	push edi
-	push ebp
 ;
-	mov ebp,edi
-	mov bx,es
-	mov fs,bx
-	mov bx,font_thread_sel
-	mov ds,bx
-	mov bx,ds:current_font
-	or bx,bx
-	jz get_string_mask_fail
-	mov ds,bx
+	mov [bp].gsm_pos,edi
+	mov ax,es
+	mov fs,ax
+	mov ax,FONT_HANDLE
+	DerefHandle
+	jc get_string_mask_fail
+;
+	mov ds,[bx].fh_sel
 	xor cx,cx
 	xor ah,ah
+
 get_string_mask_size_loop:
 	mov al,es:[edi]
 	inc edi
 	or al,al
 	jz get_string_mask_alloc
+;
 	cmp ax,ds:font_maxch
 	ja get_string_mask_size_loop
+;
 	sub ax,ds:font_minch
 	jb get_string_mask_size_loop
+;
 	movzx ebx,al
 	add ebx,ebx
 	add ebx,ds:font_cotptr
 	add cx,[ebx+2]
 	sub cx,[ebx]
 	jmp get_string_mask_size_loop
+
 get_string_mask_alloc:
-	push cx
+	mov [bp].gsm_width,cx
 	mov ax,cx
 	dec ax
 	shr ax,3
 	inc ax
-	push ax
-	mul ds:font_fheight
-	push dx
-	push ax
-	pop eax
-	add eax,OFFSET mask_data + 1
-	AllocateSmallGlobalMem
-	xor di,di
-	mov cx,ax
-	xor al,al
-	rep stosb
-	pop ax
-	mov es:mask_width,ax
-	mov cx,ax
-	mov dx,ds:font_fheight
-	mov es:mask_height,dx
+	movzx eax,ax
+	mov [bp].gsm_row_size,eax
+	movzx edx,ds:font_fheight
+	mul edx
+	dec eax
+	and ax,0F000h
+	add eax,1000h
+	mov [bp].gsm_size,eax
+	AllocateLocalLinear
+	mov ax,flat_sel
+	mov es,ax
+	mov [bp].gsm_mask,edx
+;
+	mov cx,[bp].gsm_width
 	or cx,cx
 	jz get_string_mask_copied
+;
 	xor cx,cx
+
 get_string_mask_char_loop:
-	xor ah,ah
-	mov al,fs:[ebp]
-	inc ebp
+	push esi
+	mov esi,[bp].gsm_pos
+	movzx ax,byte ptr fs:[esi]
+	inc esi
+	mov [bp].gsm_pos,esi
+	pop esi
 	or al,al
 	jz get_string_mask_copied
+;
 	cmp ax,ds:font_maxch
 	ja get_string_mask_char_loop
+;
 	sub ax,ds:font_minch
 	jb get_string_mask_char_loop
+;
 	movzx ebx,al
 	add ebx,ebx
 	add ebx,ds:font_cotptr
 ;
 ; cx bit #
 ;
-	mov di,cx
-	shr di,3
-	add di,OFFSET mask_data
+	movzx edi,cx
+	shr edi,3
+	add edi,[bp].gsm_mask
 	mov dx,cx
 	and dx,7
 	add cx,[ebx+2]
@@ -601,58 +761,76 @@ get_string_mask_char_loop:
 ; dl shift count to mask
 ; dh mask of last byte
 ;
-	mov bx,es:mask_height
+	mov bx,ds:font_fheight
+
 get_string_mask_loop:
+	push bx
+	mov bx,OFFSET bit_rev_tab
 	push cx
 	push esi
-	push di
+	push edi
+
 get_string_mask_row_loop:
-	mov ax,[esi]
-	xchg al,ah
+	mov al,[esi]
+	xlat byte ptr cs:bit_rev_tab
+	mov ah,al
+	mov al,[esi+1]
+	xlat byte ptr cs:bit_rev_tab
 	shl ax,cl
 	xor al,al
 	xchg cl,dl
 	cmp ch,1
 	jne get_string_mask_shift
+;
 	and ah,dh
+
 get_string_mask_shift:
 	shr ax,cl
 	xchg cl,dl
-	or es:[di],ah
-	inc di
-	or es:[di],al
+	or es:[edi],al
+	inc edi
+	or es:[edi],ah
 	inc esi
 	sub ch,1
 	jnz get_string_mask_row_loop	
-	pop di
+;
+	pop edi
 	pop esi
 	pop cx
+	pop bx
 ;
 	movzx eax,ds:font_fwidth
 	add esi,eax
-	add di,es:mask_width
+	add edi,[bp].gsm_row_size
 	sub bx,1
 	jnz get_string_mask_loop
+;
 	pop cx
 	jmp get_string_mask_char_loop
 
 get_string_mask_copied:
-	pop cx
-	mov bx,es
+	mov cx,[bp].gsm_width
+	mov dx,ds:font_fheight
+	mov esi,[bp].gsm_mask
+	mov eax,[bp].gsm_size
+	mov bp,[bp].gsm_row_size
+	clc
 	jmp get_string_mask_done
 
 get_string_mask_fail:
 	xor cx,cx
+	xor dx,dx
 	xor bx,bx
+	xor esi,esi
+	stc
+
 get_string_mask_done:
-	pop ebp
 	pop edi
-	pop esi
-	pop dx
-	pop eax
 	pop fs
 	pop es
 	pop ds
+;
+	add sp,18
 	ret
 get_string_mask	Endp
 
@@ -661,20 +839,30 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			INIT_THREAD
+;		NAME:			delete_handle
 ;
-;		DESCRIPTION:	Init per thread font info
-;
-;		PARAMETERS:		
+;		DESCRIPTION:	BX			Font handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_thread	PROC far
-	mov ax,font_thread_sel
-	mov ds,ax
-	mov ds:current_font,0
+delete_handle	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,FONT_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+	FreeHandle
+	clc
+
+delete_handle_done:
+	pop bx
+	pop ax
+	pop ds
 	ret
-init_thread	ENDP
+delete_handle	Endp
 
 PAGE
 
@@ -716,21 +904,12 @@ init_font_loop:
 	add bx,SIZE adapter_typ
 	loop init_font_loop	
 ;
-	mov eax,SIZE font_thread_struc
-	mov bx,font_thread_sel
-	AllocateFixedThreadMem
-;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov di,OFFSET init_thread
-	HookCreateThread
-;
-	mov si,OFFSET get_char_mask
-	mov di,OFFSET get_char_mask_name
-	xor cl,cl
-	mov ax,get_char_mask_nr
-	RegisterOsGate
+	mov ax,FONT_HANDLE
+	mov di,OFFSET delete_handle
+	RegisterHandle
 ;
 	mov si,OFFSET get_string_mask
 	mov di,OFFSET get_string_mask_name
@@ -738,23 +917,23 @@ init_font_loop:
 	mov ax,get_string_mask_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET set_font
-	mov di,OFFSET set_font_name
+	mov si,OFFSET open_font
+	mov di,OFFSET open_font_name
 	xor dx,dx
-	mov ax,set_font_nr
+	mov ax,open_font_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET get_char_width
-	mov di,OFFSET get_char_width_name
+	mov si,OFFSET close_font
+	mov di,OFFSET close_font_name
 	xor dx,dx
-	mov ax,get_char_width_nr
+	mov ax,close_font_nr
 	RegisterBimodalUserGate
 ;
-	mov bx,OFFSET get_string_width16
-	mov si,OFFSET get_string_width32
-	mov di,OFFSET get_string_width_name
+	mov bx,OFFSET get_string_metrics16
+	mov si,OFFSET get_string_metrics32
+	mov di,OFFSET get_string_metrics_name
 	mov dx,virt_es_in
-	mov ax,get_string_width_nr
+	mov ax,get_string_metrics_nr
 	RegisterUserGate
 ;
 	popa

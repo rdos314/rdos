@@ -281,6 +281,95 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			GetStringBitmap
+;
+;		DESCRIPTION:	Create string bitmap
+;
+;		PARAMETERS:		ES:(E)DI	String
+;						BX			Font handle
+;
+;		RETURNS:		BX		Bitmap handle
+;						CX		Width
+;						DX		Height
+;						SI		Line size
+;						ES:EDI	Buffer ptr
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_string_bitmap_name	DB 'Create String Bitmap', 0
+
+create_string_bitmap	Proc near
+	push ds
+	push eax
+	push bp
+;
+	GetStringMask
+	jc crs_bitmap_done
+;
+	push eax
+	mov eax,SIZE video_api_struc
+	AllocateSmallGlobalMem
+	pop eax
+;
+	InitSection es:v_section
+	mov es:v_app_size,eax
+	mov es:v_app_base,esi
+	mov es:v_color,0
+	mov es:v_lgop,1
+	mov es:v_style,0
+	mov es:v_bpp,1
+	mov es:v_width,cx
+	mov es:v_height,dx
+	mov es:v_row_size,bp
+;
+	mov si,cs
+	mov ds,si
+	mov si,OFFSET BitmapTab1
+	mov cx,30
+	xor di,di
+	rep movsd
+;
+	mov cx,SIZE bitmap_struc
+	AllocateHandle
+	mov ds:[bx].bm_sel,es
+	mov ds:[bx].bm_flag,BM_FLAG_BITMAP
+	mov [bx].hh_sign,BITMAP_HANDLE
+	mov bx,[bx].hh_handle
+	mov es:v_bitmap,bx
+	mov cx,es:v_width
+	mov dx,es:v_height
+	mov si,es:v_row_size
+	mov edi,es:v_app_base
+	sub edi,local_page_linear
+	mov ax,flat_data_sel
+	mov es,ax
+	clc
+
+crs_bitmap_done:
+	pop bp
+	pop eax
+	pop ds
+	ret
+create_string_bitmap	Endp
+
+create_string_bitmap32	Proc far
+	call create_string_bitmap
+	retf32
+create_string_bitmap32	Endp
+
+create_string_bitmap16	Proc far
+	push edi
+	movzx edi,di
+	call create_string_bitmap
+	pop edi
+	ret
+create_string_bitmap16	Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			delete_bitmap
 ;
 ;		DESCRIPTION:	Delete bitmap
@@ -412,6 +501,13 @@ init_bitmap	PROC near
 	xor dx,dx
 	mov ax,close_bitmap_nr
 	RegisterBimodalUserGate
+;
+	mov bx,OFFSET create_string_bitmap16
+	mov si,OFFSET create_string_bitmap32
+	mov di,OFFSET create_string_bitmap_name
+	mov dx,virt_es_in
+	mov ax,create_string_bitmap_nr
+	RegisterUserGate
 ;
 	ret
 init_bitmap	ENDP

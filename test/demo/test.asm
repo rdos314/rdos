@@ -64,6 +64,8 @@ filename	DB 'e:\rdos\test\kernel.map',0
 
 test_name	DB 'Test Section Thread', 0
 
+draw_string	DB 'RDOS', 0
+
 int21Handler:
 	int 3
 	iret
@@ -213,61 +215,16 @@ init:
 ;
 	int 3
 	push bx
-	mov cx,600
-	mov dx,800
-	mov ax,1
-	CreateBitmap
+	mov ax,20
+	OpenFont
 ;
-	mov ax,LGOP_OR
-	SetLgop
-;
-	mov ax,0FF00h
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET draw_string
+	GetStringMetrics
+	CreateStringBitmap
+	mov eax,0FFFFh
 	SetDrawColor
-;
-	mov cx,350
-	mov dx,100
-	mov si,50
-	mov di,300
-	DrawLine
-;
-	mov cx,350
-	mov dx,300
-	mov si,50
-	mov di,100
-	DrawLine
-;
-	mov cx,350
-	mov dx,300
-	mov si,350
-	mov di,100
-	DrawLine
-;
-	mov cx,50
-	mov dx,100
-	mov si,50
-	mov di,300
-	DrawLine
-;
-	mov cx,350
-	mov dx,100
-	mov si,50
-	mov di,100
-	DrawLine
-;
-	mov cx,350
-	mov dx,300
-	mov si,50
-	mov di,300
-	DrawLine
-;
-	SetFilledStyle
-	mov eax,0707000h
-	SetDrawColor	
-	mov cx,200
-	mov dx,300
-	mov si,150
-	mov di,250
-	DrawEllipse
 ;
 	mov ax,bx
 	pop bx
@@ -277,8 +234,6 @@ init:
 	pop ax
 	xor esi,esi
 	xor edi,edi
-	mov cx,600
-	mov dx,600
 	Blit
 	mov bx,ax
 	CloseBitmap
