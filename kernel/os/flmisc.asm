@@ -51,6 +51,69 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			EraseBlock
+;
+;		DESCRIPTION:	Erase a block
+;
+;		PARAMETERS:		EDX     start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public EraseBlock
+    
+EraseBlock	Proc near
+    push es
+    push eax
+    push ebx
+    push ecx
+    push edx
+    push esi
+    push edi
+    push bp
+;
+    int 3
+    mov ax,flat_sel
+    mov es,ax
+;
+    mov al,ds:drive_nr
+    mov ecx,128
+    EraseSectors
+    CreateDiscSeq
+    mov bp,ax
+
+erase_loop:
+    mov al,ds:drive_nr
+    NewSector
+    mov edi,esi
+    push ecx
+    mov eax,-1
+    mov ecx,80h
+    rep stos dword ptr es:[edi]
+    pop ecx 
+    mov ax,bp   
+    ModifySeqSector
+;
+    inc edx
+    loop erase_loop
+;    
+    mov ax,bp
+    PerformDiscSeq
+;
+    pop bp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop eax
+	ret
+EraseBlock	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			WriteSector
 ;
 ;		DESCRIPTION:	Write a sector
@@ -62,7 +125,17 @@ PAGE
     public WriteSector
     
 WriteSector	Proc near
-    ModifySector
+    push ax
+    push cx
+;
+    int 3
+    mov cx,1
+    CreateDiscSeq
+    ModifySeqSector
+    PerformDiscSeq
+;    
+    pop cx
+    pop ax
 	ret
 WriteSector	Endp
 
@@ -83,13 +156,21 @@ PAGE
     public WriteSectorAlloc
     
 WriteSectorAlloc	Proc near
-	push ebx
+    push ax
+    push ebx
+    push cx
 ;
-    ModifySector
+    int 3
+    mov cx,2
+    CreateDiscSeq
+    ModifySeqSector
     mov ebx,fs:bc_handle
-    ModifySector
-;
-	pop ebx
+    ModifySeqSector
+    PerformDiscSeq
+;    
+    pop cx
+    pop ebx
+    pop ax
 	ret
 WriteSectorAlloc	Endp
 

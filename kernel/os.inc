@@ -1731,6 +1731,13 @@ DefineSector	MACRO
 	OsGate define_sector_nr
 					ENDM
 
+;	AL		Drive #
+;	ECX		Number of sectors
+;	EDX		Start sector
+EraseSectors	MACRO
+	OsGate erase_sectors_nr
+					ENDM
+
 ;	EBX		Handle
 WaitForSector	MACRO
 	OsGate wait_for_sector_nr

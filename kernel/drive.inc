@@ -71,4 +71,9 @@ drive_assign2_proc	DD ?
 ;	BX	Disc handle
 demand_mount_proc	DD ?
 
+;   BX  Disc handle
+;   EDX Start sector
+;   ECX Number of sectors
+erase_proc          DD ?
+
 disc_system_struc	ENDS

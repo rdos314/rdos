@@ -408,5 +408,7 @@ unlock_sys_env_nr           EQU 273
 lock_proc_env_nr            EQU 274
 unlock_proc_env_nr          EQU 275
 
+erase_sectors_nr            EQU 276
+
 osgate_entries				EQU 300
 

@@ -44,6 +44,7 @@ INCLUDE flashfs.inc
 
 code	SEGMENT byte public use16 'CODE'
 
+    extrn EraseBlock:near
     extrn WriteSector:near
 
 	assume cs:code
@@ -426,7 +427,7 @@ CacheBlock	Proc near
 	sub edx,7Fh
 	mov ax,es:[esi].fc_signature
 	cmp ax,FLASH_SIGN_OK
-	jne cbFail
+	jne cbErase
 ;
 	mov ax,es:[esi].fc_logical_block
 	push ax
@@ -445,6 +446,14 @@ CacheBlock	Proc near
 	call CacheSectorArr
 	clc
 	jmp cbDone
+
+cbErase:
+    UnlockSector
+    sub edx,7Fh
+    call EraseBlock
+    xor ax,ax
+    mov fs,ax
+    jmp cbDone
 
 cbFail:
 	UnlockSector

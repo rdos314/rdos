@@ -1439,6 +1439,25 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ERASE
+;
+;		DESCRIPTION:	Erase sectors
+;
+;		PARAMETERS:		BX		Disc handle
+;                       EDX     Start sector
+;                       ECX     Number of sectors
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+erase	Proc far
+	ret
+erase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			check_media
 ;
 ;		DESCRIPTION:	Check for media change
@@ -1965,6 +1984,7 @@ dct00	DW OFFSET disc_assign,		floppy_code_sel
 dct01	DW OFFSET drive_assign1,	floppy_code_sel
 dct02	DW OFFSET drive_assign2,	floppy_code_sel
 dct03	DW OFFSET demand_mount,		floppy_code_sel
+dct04   DW OFFSET erase,            floppy_code_sel
 
 init	PROC far
 	push ds

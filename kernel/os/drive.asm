@@ -2445,7 +2445,7 @@ create_disc_seq	PROC far
 	movzx eax,cx
 	lea eax,[4*eax].dss_arr
 	AllocateSmallGlobalMem
-	mov di,OFFSET dss_arr
+	mov edi,OFFSET dss_arr
 	xor eax,eax
 	rep stos dword ptr es:[edi]
 	mov es:dss_buf_sel,0
@@ -2926,6 +2926,54 @@ define_done:
 	pop ds
 	ret
 define_sector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EraseSectors
+;
+;		DESCRIPTION:	Erase a number of sectors
+;
+;		PARAMETERS:		AL		Drive #
+;                       ECX     Number of sectors
+;						EDX		Start sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+erase_sectors_name	DB 'Erase Sectors',0
+
+erase_sectors   Proc far
+	push ds
+	pushad
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov ax,[bx].drive_def_arr
+	or ax,ax
+	jz erase_sectors_fail
+;
+	cmp ax,-1
+	je erase_sectors_fail
+;
+	mov ds,ax
+	mov ds,ds:drive_disc
+	mov bx,ds:disc_handle
+	lds si,ds:disc_param
+	call [si].erase_proc
+	jmp erase_sectors_done
+
+erase_sectors_fail:
+	stc
+
+erase_sectors_done:
+	popad
+	pop ds
+    ret
+erase_sectors   Endp
 
 PAGE
 
@@ -3911,6 +3959,11 @@ init	PROC far
 	mov si,OFFSET define_sector
 	mov di,OFFSET define_sector_name
 	mov ax,define_sector_nr
+	RegisterOsGate
+;
+	mov si,OFFSET erase_sectors
+	mov di,OFFSET erase_sectors_name
+	mov ax,erase_sectors_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET wait_for_sector
