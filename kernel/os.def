@@ -101,6 +101,7 @@ vm_emulate_opcode_nr		EQU 71
 allocate_physical_nr		EQU 72
 free_physical_nr			EQU 73
 fire_event_sleep_nr			EQU 74
+set_disc_param_nr			EQU 75
 lock_sector_nr				EQU 77
 unlock_sector_nr			EQU 78
 modify_sector_nr			EQU 79
@@ -275,5 +276,6 @@ insert_deleted_entry_nr		EQU 245
 get_free_entry_nr			EQU 246
 get_deleted_entry_nr		EQU 247
 cache_dir_nr				EQU 248
+hook_init_file_system_nr	EQU 249
 
-osgate_entries				EQU 249
+osgate_entries				EQU 250

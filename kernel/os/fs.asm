@@ -79,6 +79,43 @@ code	SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			HOOK_INIT_FILE_SYSTEM
+;
+;		DESCRIPTION:	Hook init file system
+;
+;		PARAMETERS:		ES:DI		CALLBACK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_init_file_system_name	DB 'Hook Init File System',0
+
+hook_init_file_system	Proc far
+	push ds
+	push ax
+	push bx
+	push cx
+	mov cx,ds
+	mov ax,fs_data_sel
+	mov ds,ax
+	mov al,ds:fs_init_hooks
+	mov bl,al
+	xor bh,bh
+	shl bx,2
+	add bx,OFFSET fs_init_hook_arr
+	mov [bx],di
+	mov [bx+2],es
+	inc al
+	mov ds:fs_init_hooks,al
+	pop cx
+	pop bx
+	pop ax
+	pop ds
+	ret
+hook_init_file_system	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			REGISTER_FILE_SYSTEM
 ;
 ;		DESCRIPTION:	Register a file system
@@ -356,6 +393,73 @@ close_app	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			Hook_thread
+;
+;		DESCRIPTION:	Run all init file system hooks
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_thread_name DB 'Init File System', 0
+
+hook_thread	PROC far
+	mov ax,fs_data_sel
+	mov ds,ax
+	mov cl,ds:fs_init_hooks
+	or cl,cl
+	je hook_thread_done
+;
+	mov bx,OFFSET fs_init_hook_arr
+hook_thread_loop:
+	push ds
+	push bx
+	push cx
+	call dword ptr [bx]
+	pop cx
+	pop bx
+	pop ds
+	add bx,4
+	dec cl
+	jnz hook_thread_loop
+
+hook_thread_done:
+	ret
+hook_thread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_hook_thread
+;
+;		DESCRIPTION:	Create hook thread
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_hook_thread	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET hook_thread
+	mov di,OFFSET hook_thread_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;
+	popad
+	pop es
+	pop ds
+init_hook_thread	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INIT
 ;
 ;		DESCRIPTION:	Init driver
@@ -415,6 +519,11 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET hook_init_file_system
+	mov di,OFFSET hook_init_file_system_name
+	mov ax,hook_init_file_system_nr
+	RegisterOsGate
+;
 	mov si,OFFSET register_file_system
 	mov di,OFFSET register_file_system_name
 	mov ax,register_file_system_nr
@@ -458,6 +567,9 @@ init	PROC far
 	mov ax,rename_virt_file_nr
 	RegisterVirtUserGate
 ;
+	mov di,OFFSET init_hook_thread
+	HookInitTasking
+;
 	mov di,OFFSET init_process
 	HookCreateProcess
 ;
@@ -473,6 +585,7 @@ init	PROC far
 	AllocateFixedSystemMem
 ;
 	mov es:file_defs,0
+	mov es:fs_init_hooks,0
 ;
 	mov di,OFFSET fs_sel
 	mov cx,256

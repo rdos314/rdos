@@ -53,7 +53,9 @@ map_named_list		DW ?
 sys_section			section_typ <>
 
 file_defs			DB ?
+fs_init_hooks		DB ?
 file_def_arr		DD 2*32 DUP(?)
+fs_init_hook_arr	DD 32 DUP(?)
 fs_sel				DW 256 DUP(?)
 
 fs_data_seg		ENDS

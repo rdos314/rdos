@@ -380,7 +380,7 @@ RunTaskFile	ENDP
 ReadTaskFile	Proc near
 	push cx
 	push dx
-	push di
+	push edi
 ;
 	ClearSignal
 	mov dx,1F7h
@@ -400,7 +400,7 @@ ReadTaskFileInt:
 	clc
 ReadTaskFileDone:
 ;
-	pop di
+	pop edi
 	pop dx
 	pop cx
 	ret
@@ -424,7 +424,7 @@ WriteTaskFile	PROC near
 	push ax
 	push cx
 	push dx
-	push di
+	push edi
 ;
 	ClearSignal
 	mov dx,1F7h
@@ -447,7 +447,7 @@ WriteTaskFileLoop:
 	loop WriteTaskFileInt
 	clc
 WriteTaskFileDone:
-	pop di
+	pop edi
 	pop dx
 	pop cx
 	pop ax
@@ -586,13 +586,21 @@ PAGE
 ;		DESCRIPTION:	Get drive param
 ;
 ;		PARAMETERS:		DS		IDE SEGMENT
-;						ES		FLAT_SEL
 ;						FS		DRIVE SEL
-;						ES:EDI	200H BUFFER
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetDriveParams	Proc near
+	push es
+	pushad
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov eax,200h
+	AllocateSmallLinear
+	mov edi,edx
+;
+	mov fs:drive_precomp,0FFh
 	xor dx,dx
 	xor bx,bx
 	mov cx,1
@@ -647,7 +655,16 @@ GetDriveParams	Proc near
 ;
 	mov al,20h
 	call ReadTaskFile
+
 get_drive_param_done:
+	pushf
+	mov ecx,200h
+	mov edx,edi
+	FreeLinear
+	popf
+;
+	popad
+	pop es
 	ret
 GetDriveParams	Endp
 
@@ -697,9 +714,6 @@ InstallPartition	Proc near
 	push ax
 	push di
 ;
-	LeaveSection IdeSection
-	push ds
-;
 	AllocateStaticDrive
 	mov ah,fs:disc_nr
 	OpenDrive
@@ -710,9 +724,6 @@ InstallPartition	Proc near
 	shl di,1
 	mov di,word ptr cs:[di].FsTab
 	InstallFileSystem
-;
-	pop ds
-	EnterSection IdeSection
 	clc
 ;
 	pop di
@@ -720,251 +731,6 @@ InstallPartition	Proc near
 	pop es
 	ret
 InstallPartition	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			InstallExtended
-;
-;		DESCRIPTION:	Install extended partion on drive
-;
-;		PARAMETERS:		DS		IDE SEGMENT
-;						ES		FLAT_SEL
-;						FS		Disc sel
-;						EDX		Current sector
-;						EDI		200H buffer with partition sector
-;						ESI		Partition offset
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InstallExtended	Proc near
-	pushad
-;
-	push ax
-	push edx
-	mov eax,200h
-	AllocateSmallLinear
-	mov edi,edx
-	pop edx
-	pop ax
-;
-	mov esi,edx
-
-InstallExtendedLoop:
-	push edx
-	push eax
-	mov eax,esi
-	xor edx,edx
-	movzx ecx,word ptr fs:drive_sectors_per_unit
-	div ecx
-	mov bx,dx
-	mov edx,eax
-	pop eax
-;
-	mov cx,1
-	LeaveSection IdeSection
-	call ReadDrive
-	EnterSection IdeSection
-	pop edx
-;
-	mov cl,es:[edi+1BEh].part_type
-	or cl,cl
-	jz InstallExtendedDone
-;
-	cmp cl,10h
-	cmc
-	jc InstallExtendedNextPart
-;
-	push edx
-	mov edx,esi
-	add edx,es:[edi+1BEh].part_start_sector
-	call InstallPartition
-	pop edx
-
-InstallExtendedNextPart:
-	mov cl,es:[edi+1CEh].part_type
-	cmp cl,5
-	jne InstallExtendedDone
-;
-	mov esi,edx
-	add esi,es:[edi+1CEh].part_start_sector
-	jmp InstallExtendedLoop
-
-InstallExtendedDone:
-	mov ecx,200h
-	mov edx,edi
-	FreeLinear
-;
-	popad
-	ret
-InstallExtended	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			InstallMain
-;
-;		DESCRIPTION:	Install main parition on drive
-;
-;		PARAMETERS:		DS		IDE SEGMENT
-;						ES		FLAT_SEL
-;						FS		Disc sel
-;						EDX		Current sector
-;						EDI		200H buffer with partition sector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InstallMain	Proc near
-	push ax
-	push bx
-	push cx
-	push edx
-	push esi
-;
-	mov esi,1BEh
-
-InstallMainLoop:
-	mov cl,es:[esi+edi].part_type
-	or cl,cl
-	jz InstallMainDone
-;
-	cmp cl,10h
-	cmc
-	jc InstallMainNextPart
-;
-	push edx
-	add edx,es:[esi+edi].part_start_sector
-	call InstallPartition
-	pop edx
-
-InstallMainNextPart:
-	add si,10h
-	cmp si,1FEh
-	je InstallMainDone
-;
-	mov cl,es:[esi+edi].part_type
-	or cl,cl
-	jz InstallMainDone
-;
-	cmp cl,5
-	jne InstallMainLoop
-;
-	push edx
-	add edx,es:[esi+edi].part_start_sector
-	call InstallExtended
-	pop edx
-	jmp InstallMainNextPart
-
-InstallMainDone:
-	pop esi
-	pop edx
-	pop cx
-	pop bx
-	pop ax
-	ret
-InstallMain	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			open_drive
-;
-;		DESCRIPTION:	Open up a drive
-;
-;		PARAMETERS:		FS		Disc sel
-;						
-;		RETURNS:		AX		Sectors / unit
-;						CX		Bytes / sector
-;						EDX		Units
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_drive	Proc near
-	push ebx
-	push edi
-;
-	mov ax,ide_data_sel
-	mov ds,ax
-	mov ax,flat_sel
-	mov es,ax
-	EnterSection IdeSection
-	GetThread
-	mov IdeThread,ax
-	mov eax,200h
-	AllocateSmallLinear
-	mov edi,edx
-;
-	call GetDriveParams
-	jc open_drive_done
-;
-	call InstallMain
-	LeaveSection IdeSection
-;
-	EnterSection IdeSection
-	GetThread
-	mov IdeThread,ax
-	mov ax,fs:drive_sectors_per_cyl
-	mul fs:drive_heads
-	mov cx,512
-	movzx edx,fs:drive_cyls	
-	clc
-
-open_drive_done:
-	pushf
-	mov IdeThread,0
-	LeaveSection IdeSection
-	push cx
-	push edx
-	mov ecx,200h
-	mov edx,edi
-	FreeLinear
-	xor dx,dx
-	mov ds,dx
-	pop edx
-	pop cx
-	popf
-;
-	pop edi
-	pop ebx
-	ret
-open_drive	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DISCINIT_THREAD
-;
-;		DESCRIPTION:	Thread to open a disc drive
-;
-;		PARAMETERS:		FS		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-discinit_thread_name	DB 'Disc Init',0
-
-discinit_thread	Proc far
-	mov ax,ide_data_sel
-	mov ds,ax
-	call open_drive
-	jc discinit_thread_done
-;
-	mov bx,fs:disc_thread
-	Signal
-;
-	mov bx,fs:disc_sel
-	FlushDisc
-
-discinit_thread_done:
-	ret
-discinit_thread	Endp
 
 PAGE
 	
@@ -1238,26 +1004,12 @@ PAGE
 discbuf_thread:
 	mov ax,ide_data_sel
 	mov ds,ax
-	mov ecx,10000h
-	InstallDisc
-	mov fs:disc_sel,bx
-	mov fs:disc_nr,al
-	GetThread
-	mov fs:disc_thread,ax
-	push ds
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET discinit_thread
-	mov di,OFFSET discinit_thread_name
-	mov ax,4
-	mov cx,100h
-	CreateThread
-	pop ds
-;
 	mov ax,flat_sel
 	mov es,ax
-	WaitForSignal
+;
+	GetThread
+	mov fs:disc_thread,ax
+	mov bx,fs:disc_sel
 
 discbuf_thread_loop:
 	WaitForDiscRequest
@@ -1302,19 +1054,22 @@ PAGE
 ;		DESCRIPTION:	Install a unit
 ;
 ;		PARAMETERS:		AL		UNIT #
-;						DI		NAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc0	DB 'Ide Drive 0',0
+disc1	DB 'Ide Drive 1',0
+
+disc_name_tab:
+dnt00	DW OFFSET disc0
+dnt01	DW OFFSET disc1
 
 install_unit	Proc near
 	ClearSignal
 	call CheckReady
 	jc install_unit_done
 ;
-	push bx
-	push es
 	push ax
-	push di
 	GetSystemTime
 	add eax,119300
 	adc edx,0
@@ -1323,9 +1078,7 @@ install_unit	Proc near
 	mov di,OFFSET install_timeout
 	mov bx,cs
 	StartTimer
-	pop di
 	pop ax
-	pop es
 ;
 	push ax
 ;
@@ -1342,7 +1095,6 @@ install_unit	Proc near
 	WaitForSignal
 	StopTimer
 	pop ax
-	pop bx
 ;
 	push ax
 	mov dx,1F0h
@@ -1362,24 +1114,46 @@ install_unit_read:
 	pop ax
 ;
 	mov fs:disc_sub_unit,al
-	mov fs:drive_precomp,0FFh
-	mov fs:drive_cyls,-1
-	mov fs:drive_heads,-1
-	mov fs:drive_sectors_per_cyl,-1
+	call GetDriveParams
+	jnc install_unit_ok
 ;
+	xor ax,ax
+	mov fs,ax
+	FreeMem
+	stc
+	jmp install_unit_done
+
+install_unit_ok:
 	movzx bx,al
 	shl bx,1
-	mov ds:[bx].DriveSelArr,es
+	mov ds:[bx].DriveSelArr,fs
+;
+	mov ecx,10000h
+	mov bx,fs
+	InstallDisc
+	mov fs:disc_sel,bx
+	mov fs:disc_nr,al
+;
+	mov ax,fs:drive_sectors_per_cyl
+	mul fs:drive_heads
+	mov cx,512
+	movzx edx,fs:drive_cyls	
+	mov bx,fs:disc_sel
+	SetDiscParam
 ;
 	push ds
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+	movzx di,fs:disc_nr
+	add di,di
+	mov di,word ptr cs:[di].disc_name_tab
 	mov si,OFFSET discbuf_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
 	pop ds
+	clc
 
 install_unit_done:
 	ret
@@ -1390,33 +1164,238 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_DISC
+;		NAME:			DISC_ASSIGN
 ;
-;		DESCRIPTION:	Init disc callback
+;		DESCRIPTION:	Assign discs
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc0	DB 'Ide Drive 0',0
-disc1	DB 'Ide Drive 1',0
-
-init_disc	Proc far
+disc_assign	Proc far
 	mov ax,ide_data_sel
 	mov ds,ax
-	EnterSection IdeSection
 	GetThread
 	mov IdeThread,ax
 	mov al,0
-	mov di,OFFSET disc0
 	call install_unit
 	mov al,1
-	mov di,OFFSET disc1
 	call install_unit
 	mov IdeThread,0
-	LeaveSection IdeSection
 	ret
-init_disc	Endp
+disc_assign	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DRIVE_ASSIGN1
+;
+;		DESCRIPTION:	Drive assign, pass 1
+;
+;		PARAMETERS:		BX		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign1	Proc far
+	mov ax,ide_data_sel
+	mov ds,ax
+	mov fs,bx
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov eax,200h
+	AllocateSmallLinear
+	mov edi,edx
+;
+	mov cx,1
+	xor bx,bx
+	xor edx,edx
+	call ReadDrive
+;
+	mov esi,1BEh
+
+drive_assign_loop1:
+	mov cl,es:[esi+edi].part_type
+	or cl,cl
+	jz drive_assign_free1
+;
+	cmp cl,5
+	je drive_assign_next_part1
+;
+	cmp cl,10h
+	cmc
+	jc drive_assign_next_part1
+;
+	mov edx,es:[esi+edi].part_start_sector
+	call InstallPartition
+
+drive_assign_next_part1:
+	add si,10h
+	cmp si,1FEh
+	jne drive_assign_loop1
+
+drive_assign_free1:
+	mov ecx,200h
+	mov edx,edi
+	FreeLinear
+;
+	ret
+drive_assign1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InstallExtended
+;
+;		DESCRIPTION:	Install extended partion on drive
+;
+;		PARAMETERS:		DS		IDE SEGMENT
+;						ES		FLAT_SEL
+;						FS		Disc sel
+;						EDX		Current sector
+;						EDI		200H buffer with partition sector
+;						ESI		Partition offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InstallExtended	Proc near
+	pushad
+;
+	push ax
+	push edx
+	mov eax,200h
+	AllocateSmallLinear
+	mov edi,edx
+	pop edx
+	pop ax
+;
+	mov esi,edx
+
+InstallExtendedLoop:
+	push edx
+	push eax
+	mov eax,esi
+	xor edx,edx
+	movzx ecx,word ptr fs:drive_sectors_per_unit
+	div ecx
+	mov bx,dx
+	mov edx,eax
+	pop eax
+;
+	mov cx,1
+	call ReadDrive
+	pop edx
+;
+	mov cl,es:[edi+1BEh].part_type
+	or cl,cl
+	jz InstallExtendedDone
+;
+	cmp cl,10h
+	cmc
+	jc InstallExtendedNextPart
+;
+	push edx
+	mov edx,esi
+	add edx,es:[edi+1BEh].part_start_sector
+	call InstallPartition
+	pop edx
+
+InstallExtendedNextPart:
+	mov cl,es:[edi+1CEh].part_type
+	cmp cl,5
+	jne InstallExtendedDone
+;
+	mov esi,edx
+	add esi,es:[edi+1CEh].part_start_sector
+	jmp InstallExtendedLoop
+
+InstallExtendedDone:
+	mov ecx,200h
+	mov edx,edi
+	FreeLinear
+;
+	popad
+	ret
+InstallExtended	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DRIVE_ASSIGN2
+;
+;		DESCRIPTION:	Assign disc drives, pass 2
+;
+;		PARAMETERS:		BX		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign2	Proc far
+	mov ax,ide_data_sel
+	mov ds,ax
+	mov ax,flat_sel
+	mov es,ax
+	mov fs,bx
+;
+	mov eax,200h
+	AllocateSmallLinear
+	mov edi,edx
+;
+	mov cx,1
+	xor bx,bx
+	xor edx,edx
+	call ReadDrive
+;
+	mov esi,1BEh
+
+drive_assign_loop2:
+	mov cl,es:[esi+edi].part_type
+	or cl,cl
+	jz drive_assign_free2
+;
+	cmp cl,5
+	jne drive_assign_next_part2
+;
+	mov edx,es:[esi+edi].part_start_sector
+	call InstallExtended
+
+drive_assign_next_part2:
+	add si,10h
+	cmp si,1FEh
+	jne drive_assign_loop2
+
+drive_assign_free2:
+	mov ecx,200h
+	mov edx,edi
+	FreeLinear
+;
+	mov bx,fs:disc_sel
+	FlushDisc
+	clc
+	ret
+drive_assign2	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEMAND_MOUNT
+;
+;		DESCRIPTION:	Mount disc drive on demand
+;
+;		PARAMETERS:		BX		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_mount	Proc far
+	ret
+demand_mount	Endp
 
 PAGE
 
@@ -1430,6 +1409,12 @@ PAGE
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_ctrl:
+dct00	DW OFFSET disc_assign,		ide_code_sel
+dct01	DW OFFSET drive_assign1,	ide_code_sel
+dct02	DW OFFSET drive_assign2,	ide_code_sel
+dct03	DW OFFSET demand_mount,		ide_code_sel
 
 init	PROC far
 	push ds
@@ -1447,7 +1432,7 @@ init	PROC far
 	cmp al,-1
 	je init_ide_done
 ;
-	mov di,OFFSET init_disc
+	mov di,OFFSET disc_ctrl
 	HookInitDisc
 ;
 	mov eax,SIZE ide_data

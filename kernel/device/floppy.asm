@@ -1274,34 +1274,81 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			open_drive
+;		NAME:			DRIVE_ASSIGN1
 ;
-;		DESCRIPTION:	Open up a drive
+;		DESCRIPTION:	Assign disc drives, pass 1
 ;
-;		PARAMETERS:		AL		Sub-unit #
-;						AH		Disc #
-;						ES		Disc handle
-;					
-;		RETURNS:		AX		Sectors / unit
-;						CX		Bytes / sector
-;						EDX		Units
+;		PARAMETERS:		BX		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_drive	Proc near
+drive_assign1	Proc far
+	ret
+drive_assign1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DRIVE_ASSIGN2
+;
+;		DESCRIPTION:	Assign disc drives, pass 2
+;
+;		PARAMETERS:		BX		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+drive_assign2	Proc far
+	ret
+drive_assign2	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEMAND_MOUNT
+;
+;		DESCRIPTION:	Mount disc drive on demand
+;
+;		PARAMETERS:		BX		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_mount	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov es,bx
+	mov ax,floppy_data_sel
+	mov ds,ax
+	mov al,es:disc_sub_unit
+	mov ah,es:disc_nr
 	call GetDriveParams
-	jc open_drive_done
+	jc drive_assign_done1
 ;
 	call InstallMain
 	mov ax,es:boot_sectors_per_cyl
 	mul es:boot_heads
 	mov cx,es:boot_bytes_per_sector
 	mov edx,80
-	clc
+	mov bx,es:disc_sel
+	SetDiscParam
+;
+	mov bx,es:disc_thread
+	Signal
+;
+	mov bx,es:disc_sel
+	FlushDisc
 
-open_drive_done:
+drive_assign_done1:
+	popad
+	pop es
+	pop ds
 	ret
-open_drive	Endp
+demand_mount	Endp
 
 PAGE
 
@@ -1412,40 +1459,6 @@ floppy_super_wait:
 	WaitMilliSec
 	jmp floppy_super_loop
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DISCINIT_THREAD
-;
-;		DESCRIPTION:	Thread to open a disc drive
-;
-;		PARAMETERS:		FS		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-discinit_thread_name	DB 'Disc Init',0
-
-discinit_thread	Proc far
-	mov ax,fs
-	mov es,ax
-	mov ax,floppy_data_sel
-	mov ds,ax
-	mov al,es:disc_sub_unit
-	mov ah,es:disc_nr
-	call open_drive
-	jc discinit_thread_done
-;
-	mov bx,es:disc_thread
-	Signal
-;
-	mov bx,es:disc_sel
-	FlushDisc
-
-discinit_thread_done:
-	ret
-discinit_thread	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1647,25 +1660,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
-	mov ax,floppy_data_sel
-	mov ds,ax
-	mov ecx,200h
-	InstallDisc
-	mov fs:disc_sel,bx
-	mov fs:disc_nr,al
 	GetThread
 	mov fs:disc_thread,ax
-	push ds
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET discinit_thread
-	mov di,OFFSET discinit_thread_name
-	mov ax,4
-	mov cx,100h
-	CreateThread
-	pop ds
 ;
+	mov ax,floppy_data_sel
+	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
 	WaitForSignal
@@ -1696,6 +1695,12 @@ install_unit	Proc near
 	pop ax
 	mov fs:disc_sub_unit,al
 ;
+	mov ecx,200h
+	mov bx,fs
+	InstallDisc
+	mov fs:disc_sel,bx
+	mov fs:disc_nr,al
+;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -1711,9 +1716,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_DISC
+;		NAME:			disc_assign
 ;
-;		DESCRIPTION:	Init disc callbacks
+;		DESCRIPTION:	Assign discs
 ;
 ;		PARAMETERS:		
 ;
@@ -1722,7 +1727,20 @@ PAGE
 floppy0	DB 'Floppy Drive 0',0
 floppy1	DB 'Floppy Drive 1',0
 
-init_disc	Proc far
+disc_assign	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET floppy_super
+	mov di,OFFSET floppy_super_name
+	mov ax,4
+	mov cx,256
+	CreateThread
+;
 	in al,INT0_MASK
 	and al,NOT 40h
 	out INT0_MASK,al
@@ -1737,41 +1755,12 @@ init_disc	Proc far
 	mov al,1
 	mov di,OFFSET floppy1
 ;	call install_unit
-	ret
-init_disc	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			INIT_FLOPPY
-;
-;		DESCRIPTION:	Init local threads
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_floppy	Proc far
-	push ds
-	push es
-	pusha
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET floppy_super
-	mov di,OFFSET floppy_super_name
-	mov ax,4
-	mov cx,256
-	CreateThread
 ;
 	popa
 	pop es
 	pop ds	
 	ret
-init_floppy	Endp
+disc_assign	Endp
 
 PAGE
 
@@ -1785,6 +1774,12 @@ PAGE
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_ctrl:
+dct00	DW OFFSET disc_assign,		floppy_code_sel
+dct01	DW OFFSET drive_assign1,	floppy_code_sel
+dct02	DW OFFSET drive_assign2,	floppy_code_sel
+dct03	DW OFFSET demand_mount,		floppy_code_sel
 
 init	PROC far
 	push ds
@@ -1815,10 +1810,7 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov di,OFFSET init_floppy
-	HookInitTasking
-;
-	mov di,OFFSET init_disc
+	mov di,OFFSET disc_ctrl
 	HookInitDisc
 ;
 	mov al,6

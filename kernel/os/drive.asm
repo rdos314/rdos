@@ -57,8 +57,9 @@ drive_wait_struc	ENDS
 
 disc_data_seg		STRUC
 
-init_disc_hooks		DB ?
-init_disc_hook_arr	DD MAX_DRIVES DUP(?)
+disc_params			DB ?
+disc_curr_param		DW ?
+disc_param_arr		DD MAX_DRIVES DUP(?)
 disc_def_arr		DW MAX_DRIVES DUP(?)
 drive_def_arr		DW MAX_DRIVES DUP(?)
 drive_wait_arr		DB 4*DRIVE_WAIT_NUM DUP(?)
@@ -86,7 +87,8 @@ disc_awrite_timer		DW ?
 disc_awrite_timeout		DD ?,?
 disc_swrite_list		DD ?
 disc_swrite_first		DD ?
-; disc_buf				DW ?
+disc_param				DD ?
+disc_handle				DW ?
 disc_unit_arr			DD ?
 
 disc_def_struc		ENDS
@@ -951,23 +953,21 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FLUSH_DRIVES
+;		NAME:			FLUSH_DISC
 ;
-;		DESCRIPTION:	Flush all drives assocated with a disc #
+;		DESCRIPTION:	Flush disc
 ;
-;		PARAMETERS:		DS		Disc def struc
-;
+;		PARAMETERS:		BX		Disc sel
+;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_drives	Proc near
+flush_disc_name	DB 'Flush Disc',0
+
+flush_disc	Proc far
 	push ds
 	push es
-	push ax
-	push bx
-	push cx
-	push si
+	pusha
 ;
-	mov bx,ds
 	mov ax,disc_data_sel
 	mov ds,ax
 	mov cx,MAX_DRIVES
@@ -994,23 +994,20 @@ flush_drives_next:
 	add si,2
 	loop flush_drives_loop	
 ;
-	pop si
-	pop cx
-	pop bx
-	pop ax
+	popa
 	pop es
 	pop ds
 	ret
-flush_drives	Endp
+flush_disc	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			FLUSH_DISC
+;		NAME:			SET_DISC_PARAM
 ;
-;		DESCRIPTION:	Flush disc
+;		DESCRIPTION:	Set disc parameters
 ;
 ;		PARAMETERS:		AX		Sectors per unit
 ;						BX		Disc sel
@@ -1019,19 +1016,20 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_disc_name	DB 'Flush Disc',0
+set_disc_param_name	DB 'Set Disc Param',0
 
-flush_disc	Proc far
+set_disc_param	Proc far
 	push ds
+	push es
+	push eax
+	push ecx
+	push si
+	push edi
+;
 	mov ds,bx
 	mov ds:disc_sectors_per_unit,ax
 	mov ds:disc_bytes_per_sector,cx
 	mov ds:disc_units,dx
-;
-	push es
-	push ecx
-	push si
-	push di
 ;
 	mov ecx,OFFSET disc_unit_arr
 	movzx eax,dx
@@ -1061,20 +1059,14 @@ flush_disc	Proc far
 	mov es,di
 	FreeMem
 ;
-	pop di
+	pop edi
 	pop si
 	pop ecx
+	pop eax
 	pop es
-;
-	push es
-	push di
-	call flush_drives
-	pop di
-	pop es
-;
 	pop ds
 	ret
-flush_disc	Endp
+set_disc_param	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1557,7 +1549,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Install disc unit
 ;
-;		PARAMETERS:		ECX		Readahead
+;		PARAMETERS:		BX		Handle
+;						ECX		Readahead
 ;
 ;		RETURNS:		AL		Disc #
 ;						BX		Disc sel
@@ -1583,14 +1576,15 @@ install_disc_loop:
 	or ax,ax
 	jnz install_disc_next
 ;
+	push bx
+	mov bx,ds:disc_curr_param
+	push dword ptr [bx]
 	mov eax,SIZE disc_def_struc
 	AllocateSmallGlobalMem
-	push di
 	xor di,di
 	mov cx,ax
 	xor al,al
 	rep stosb
-	pop di
 	mov [si],es
 	mov ax,es
 	mov ds,ax
@@ -1611,6 +1605,8 @@ install_disc_loop:
 	mov ds:disc_free,0
 	mov ds:disc_timer_id,0
 	mov ds:disc_thread,0
+	pop ds:disc_param
+	pop ds:disc_handle
 	pop cx
 	mov ds:disc_readahead,ecx
 	InitSection ds:disc_section
@@ -2737,7 +2733,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Add an InitDisc hook
 ;
-;		PARAMETERS:		ES:DI		Callback
+;		PARAMETERS:		ES:DI		Parameter block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2750,15 +2746,15 @@ hook_init_disc	Proc far
 	push cx
 	mov ax,disc_data_sel
 	mov ds,ax
-	mov al,ds:init_disc_hooks
+	mov al,ds:disc_params
 	mov bl,al
 	xor bh,bh
 	shl bx,2
-	add bx,OFFSET init_disc_hook_arr
+	add bx,OFFSET disc_param_arr
 	mov [bx],di
 	mov [bx+2],es
 	inc al
-	mov ds:init_disc_hooks,al
+	mov ds:disc_params,al
 	pop cx
 	pop bx
 	pop ax
@@ -2771,68 +2767,182 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DISC_HOOK_THREAD
+;		NAME:			RUN_DISC_ASSIGN
 ;
-;		DESCRIPTION:	Disc callback thread
+;		DESCRIPTION:	Run all disc-assign hooks
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_thread_name DB 'Disc',0
-
-disc_hook_thread	Proc far
+run_disc_assign	Proc near
+	push ds
+	push ax
+	push bx
+	push cx
+;
 	mov ax,disc_data_sel
 	mov ds,ax
-	movzx cx,ds:init_disc_hooks
-	mov bx,OFFSET init_disc_hook_arr
-	jcxz disc_hook_thread_done
-disc_hook_thread_init_loop:
+	movzx cx,ds:disc_params
+	mov bx,OFFSET disc_param_arr
+	jcxz run_disc_assign_done
+
+run_disc_assign_loop:
 	push ds
 	push bx
 	push cx
-	call dword ptr [bx]
+	mov ds:disc_curr_param,bx
+	lds bx,[bx]
+	call [bx].disc_assign_proc
 	pop cx
 	pop bx
 	pop ds
 	add bx,4
-	loop disc_hook_thread_init_loop	
-disc_hook_thread_done:
+	loop run_disc_assign_loop	
+
+run_disc_assign_done:
+	pop cx
+	pop bx
+	pop ax
+	pop ds	
 	ret
-disc_hook_thread	Endp
+run_disc_assign	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_DISC_THREAD
+;		NAME:			RUN_DRIVE_ASSIGN1
 ;
-;		DESCRIPTION:	Create disc thread
+;		DESCRIPTION:	Run drive assign pass 1 for all discs
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_disc_thread	Proc far
+run_drive_assign1	Proc near
 	push ds
-	push es
-	pusha
+	push ax
+	push bx
+	push cx
+	push si
 ;
-	mov ax,cs
+	mov ax,disc_data_sel
 	mov ds,ax
-	mov es,ax
-	mov si,OFFSET disc_hook_thread
-	mov di,OFFSET disc_thread_name
-	mov ax,3
-	mov cx,256
-	CreateThread
+	xor si,si
+	mov cx,MAX_DRIVES
+
+run_drive_assign1_loop:
+	mov bx,[si].disc_def_arr
+	or bx,bx
+	jz run_drive_assign1_next
 ;
-	popa
-	pop es
-	pop ds	
+	push ds
+	push bx
+	push cx
+	push si
+;
+	mov ds,bx
+	mov bx,ds:disc_handle
+	lds si,ds:disc_param
+	call [si].drive_assign1_proc
+;
+	pop si
+	pop cx
+	pop bx
+	pop ds
+
+run_drive_assign1_next:
+	add si,2
+	sub cx,1
+	jnz run_drive_assign1_loop
+;
+	pop si
+	pop cx
+	pop bx
+	pop ax
+	pop ds
 	ret
-init_disc_thread	Endp
+run_drive_assign1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RUN_DRIVE_ASSIGN2
+;
+;		DESCRIPTION:	Run drive assign pass 2 for all discs
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+run_drive_assign2	Proc near
+	push ds
+	push ax
+	push bx
+	push cx
+	push si
+;
+	mov ax,disc_data_sel
+	mov ds,ax
+	xor si,si
+	mov cx,MAX_DRIVES
+
+run_drive_assign2_loop:
+	mov bx,[si].disc_def_arr
+	or bx,bx
+	jz run_drive_assign2_next
+;
+	push ds
+	push bx
+	push cx
+	push si
+;
+	mov ds,bx
+	mov bx,ds:disc_handle
+	lds si,ds:disc_param
+	call [si].drive_assign2_proc
+;
+	pop si
+	pop cx
+	pop bx
+	pop ds
+
+run_drive_assign2_next:
+	add si,2
+	sub cx,1
+	jnz run_drive_assign2_loop
+;
+	pop si
+	pop cx
+	pop bx
+	pop ax
+	pop ds
+	ret
+run_drive_assign2	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INIT_DISC
+;
+;		DESCRIPTION:	Init discs
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_disc	Proc far
+	call run_disc_assign
+	call run_drive_assign1
+	call run_drive_assign2
+	ret
+init_disc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2864,6 +2974,11 @@ init	PROC far
 	mov si,OFFSET install_disc
 	mov di,OFFSET install_disc_name
 	mov ax,install_disc_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_disc_param
+	mov di,OFFSET set_disc_param_name
+	mov ax,set_disc_param_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET flush_disc
@@ -2981,13 +3096,13 @@ init	PROC far
 	mov ax,reset_drive_nr
 	RegisterOsGate
 ;
-	mov di,OFFSET init_disc_thread
-	HookInitTasking
+	mov di,OFFSET init_disc
+	HookInitFileSystem
 ;
 	mov eax,SIZE disc_data_seg
 	mov bx,disc_data_sel
 	AllocateFixedSystemMem
-	mov es:init_disc_hooks,0
+	mov es:disc_params,0
 	mov cx,MAX_DRIVES
 	mov di,OFFSET disc_def_arr
 	xor ax,ax

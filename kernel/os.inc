@@ -1269,22 +1269,25 @@ HookInitDisc	MACRO
 	OsGate hook_init_disc_nr
 					ENDM
 
-;	IN	AX		Sub-unit #
-;	IN	BX		Disc handle
+;	IN	BX		Handle
 ;	IN	ECX		Read-ahead
-;	IN	DS:SI	Disc name
-;	IN	ES:DI	Disc struc
 ;	OUT	AL		Disc #
+;	OUT	BX		Disc sel
 InstallDisc	MACRO
 	OsGate install_disc_nr
+					ENDM
+
+;	IN  BX		Disc sel
+FlushDisc	MACRO
+	OsGate flush_disc_nr
 					ENDM
 
 ;	IN  AX		Sectors per unit
 ;	IN  BX		Disc sel
 ;	IN  CX		Bytes per sector
 ;	IN  DX		Units
-FlushDisc	MACRO
-	OsGate flush_disc_nr
+SetDiscParam	MACRO
+	OsGate set_disc_param_nr
 					ENDM
 
 ;	IN  BX		Disc sel
@@ -1435,6 +1438,11 @@ GetFileInfo	MACRO
 ;	BX		FILE HANDLE
 DuplFileInfo	MACRO
 	OsGate dupl_file_info_nr
+					ENDM
+
+;	ES:DI		INIT CALLBACK
+HookInitFileSystem	MACRO
+	OsGate hook_init_file_system_nr
 					ENDM
 
 ;	DS:SI		FILE SYSTEM NAME

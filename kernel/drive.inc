@@ -57,3 +57,18 @@ dh_time_msb			DW ?
 dh_data				DD ?
 
 discbuf_handle		ENDS
+
+disc_system_struc 	STRUC
+
+disc_assign_proc	DD ?
+
+;	BX	Disc handle
+drive_assign1_proc	DD ?
+
+;	BX	Disc handle
+drive_assign2_proc	DD ?
+
+;	BX	Disc handle
+demand_mount_proc	DD ?
+
+disc_system_struc	ENDS
