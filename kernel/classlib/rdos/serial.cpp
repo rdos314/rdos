@@ -344,6 +344,7 @@ void TSerialDevice::Init(TWait *Wait, int Port, long Baudrate, char Parity, int 
     FStopBits = StopBits;
     FCurrWait = Wait;
 	FDebugFile = 0;
+	FUseCts = FALSE;
 	
 	OpenPort();
 }
@@ -379,6 +380,7 @@ void TSerialDevice::Init(TWait *Wait, int Port, int Irq, long Baudrate, char Par
     FDataBits = DataBits;
     FStopBits = StopBits;
     FCurrWait = Wait;
+    FUseCts = FALSE;
 	
 	OpenPort();
 }
@@ -404,6 +406,7 @@ TSerialDevice::TSerialDevice()
     FDataBits = 0;
     FStopBits = 0;
     FCurrWait = 0;
+    FUseCts = FALSE;
 }
 
 /*##########################################################################
@@ -428,6 +431,7 @@ TSerialDevice::TSerialDevice(const char *IniSection)
     FDataBits = 0;
     FStopBits = 0;
     FCurrWait = 0;
+    FUseCts = FALSE;
 }
 
 /*##########################################################################
@@ -686,7 +690,14 @@ void TSerialDevice::OpenPort()
 	FHandle = RdosOpenCom(FBase, FIrq, (int)(115200L / FBaudrate), FParity, FDataBits, FStopBits, 0x4000, 0x4000);
 
     if (FHandle)
+    {
+        if (FUseCts)
+            RdosEnableCts(FHandle);
+        else
+            RdosDisableCts(FHandle);
+            
     	RdosAddWaitForCom(RegisterWait(FCurrWait), FHandle, this);
+    }
 }
 
 /*##################  TSerialDevice::IsOpen  ############################
@@ -916,6 +927,44 @@ int TSerialDevice::GetReceiveBufferSpace()
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::EnableCts
+#
+#   Purpose....: Enable CTS signal
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::EnableCts()
+{
+    FUseCts = TRUE;
+    
+    if (FHandle)
+    	RdosEnableCts(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDevice::DisableCts
+#
+#   Purpose....: Disable CTS signal
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::DisableCts()
+{
+    FUseCts = FALSE;
+
+    if (FHandle)
+    	RdosDisableCts(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::ResetDtr
 #
 #   Purpose....: Reset DTR signal
@@ -1020,7 +1069,7 @@ void TSerialDevice::DisableAutoRts()
 void TSerialDevice::Write(char ch)
 {
     TSerialDebug Debug;
-    
+
 	RdosWriteCom(FHandle, ch);
 
 	if (FDebugFile && FOutChannel)

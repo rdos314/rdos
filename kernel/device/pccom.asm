@@ -39,6 +39,11 @@ include ..\wait.inc
 						
 		NAME pccom
 
+
+IER_BITS        = 8
+
+FLG_ENABLE_CTS  = 1
+
 serial_wait_header	STRUC
 
 sw_obj			wait_obj_header <>
@@ -75,6 +80,7 @@ send_buf		DW ?
 avail_obj   	DW ?
 
 irq				DB ?
+flgs            DB ?
 base			DW ?
 
 port_struc	ENDS
@@ -103,6 +109,23 @@ modem	Proc near
 	mov dx,ds:base
 	add dx,6
 	in al,dx
+;	
+	test al,10h
+	jz modem_no_cts
+;
+    test ds:flgs, FLG_ENABLE_CTS
+    jz modem_no_cts
+;    
+	mov cx,ds:send_count
+	or cx,cx
+	jz modem_no_cts
+;
+	mov dx,ds:base
+	inc dx
+	mov al,IER_BITS + 3
+	out dx,al
+
+modem_no_cts:	
 	ret
 modem	Endp
 
@@ -190,11 +213,24 @@ trans_pr	PROC near
 	mov cx,ds:send_count
 	or cx,cx					;  buffer empty ?
 	jnz trans_not_empty
-	mov al,1
+
+trans_end:	
+	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
 	jmp trans_exit
-trans_not_empty:
+	
+trans_not_empty:	
+    test ds:flgs, FLG_ENABLE_CTS
+    jz trans_send
+;
+	add dx,6
+	in al,dx
+	sub dx,6
+	test al,10h
+	jz trans_end
+
+trans_send:
 	dec cx
 	mov ds:send_count,cx
 	mov bx,ds:send_head				; get head pointer
@@ -399,6 +435,7 @@ open_com	Proc far
 	mov ds:base,ax
 	mov al,[bp].port_irq
 	mov ds:irq,al
+	mov ds:flgs,0
 	mov cx,cs
 	mov es,cx
 	mov di,OFFSET com_int
@@ -460,8 +497,8 @@ open_parity_done:
 	out dx,al				; set line control 
 ;
 	sub dx,2
-	mov al,1
-	out dx,al				; enable rx ints, disable tx, line and modem ints
+	mov al,IER_BITS + 1
+	out dx,al				; enable rx ints and delta ints, disable tx, line ints
 ;
 	add dx,3
 	mov al,0Bh
@@ -559,6 +596,74 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			EnableCts
+;
+;		DESCRIPTION:	Enable CTS signal
+;
+;		PARAMETERS:		BX      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+enable_cts_name DB 'Enable CTS',0
+
+enable_cts	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc enable_cts_done
+;
+	mov ds,[bx].port_sel
+    or ds:flgs,FLG_ENABLE_CTS
+
+enable_cts_done:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+enable_cts Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DisableCts
+;
+;		DESCRIPTION:	Disable CTS signal
+;
+;		PARAMETERS:		BX      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disable_cts_name DB 'Disable CTS',0
+
+disable_cts	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov ax,SERIAL_HANDLE
+    DerefHandle
+    jc disable_cts_done
+;
+	mov ds,[bx].port_sel
+    and ds:flgs,NOT FLG_ENABLE_CTS
+
+disable_cts_done:
+    pop bx
+    pop ax
+    pop ds
+    retf32
+disable_cts Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			FlushCom
 ;
 ;		DESCRIPTION:	Flush com
@@ -581,7 +686,7 @@ flush_com	PROC far
 	cli
 ;
 	mov dx,ds:base
-	mov al,1
+	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
 ;
@@ -731,6 +836,7 @@ write_com	PROC far
 	mov cx,ds:send_count
 	cmp cx,ds:send_size
 	je com_send_full
+;	
 	mov bx,ds:send_tail
 	mov es:[bx],al
 	inc bx
@@ -742,13 +848,25 @@ com_send_no_wrap:
 	or cx,cx
 	jnz com_send_ok
 ;
+    test ds:flgs, FLG_ENABLE_CTS
+    jz com_send_enable
+;
+	mov dx,ds:base
+	add dx,6
+	in al,dx
+	test al,10h
+	jz com_send_ok
+
+com_send_enable:
 	mov dx,ds:base
 	inc dx
-	mov al,3
+	mov al,IER_BITS + 3
 	out dx,al
+	
 com_send_ok:
 	inc cx
 	mov ds:send_count,cx
+	
 com_send_ok_done:
 	sti
 	xor ax,ax
@@ -1194,6 +1312,18 @@ init	Proc far
 	mov di,OFFSET write_com_name
 	xor dx,dx
 	mov ax,write_com_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET enable_cts
+	mov di,OFFSET enable_cts_name
+	xor dx,dx
+	mov ax,enable_cts_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET disable_cts
+	mov di,OFFSET disable_cts_name
+	xor dx,dx
+	mov ax,disable_cts_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_dtr

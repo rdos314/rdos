@@ -90,6 +90,9 @@ public:
 	virtual char Read();
 	virtual int WaitForChar(long Timeout);
 
+    void EnableCts();
+    void DisableCts();
+
 	void (*OnChar)(TSerialDevice *Serial, char ch);
 
 protected:
@@ -115,6 +118,7 @@ private:
 	int FStopBits;
 	int FDataMask;
 	int FAutoRts;
+	int FUseCts;
 	
 	TFile *FDebugFile;
 	int FInChannel;

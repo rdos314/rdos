@@ -87,7 +87,9 @@ int __stdcall RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char Data
 void __stdcall RdosCloseCom(int Handle);
 void __stdcall RdosFlushCom(int Handle);
 char __stdcall RdosReadCom(int Handle);
-void __stdcall RdosWriteCom(int Handle, char Val);
+int __stdcall RdosWriteCom(int Handle, char Val);
+void __stdcall RdosEnableCts(int Handle);
+void __stdcall RdosDisableCts(int Handle);
 void __stdcall RdosSetDtr(int Handle);
 void __stdcall RdosResetDtr(int Handle);
 void __stdcall RdosSetRts(int Handle);

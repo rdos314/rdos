@@ -1459,6 +1459,16 @@ WriteCom       MACRO
 						ENDM
 
 ;	IN  BX		port handle
+EnableCts       MACRO
+	UserGate enable_cts_nr
+						ENDM
+
+;	IN  BX		port handle
+DisableCts       MACRO
+	UserGate disable_cts_nr
+						ENDM
+
+;	IN  BX		port handle
 SetDtr       MACRO
 	UserGate set_dtr_nr
 						ENDM
