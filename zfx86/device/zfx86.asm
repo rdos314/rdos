@@ -190,6 +190,52 @@ stop_keyboard	Proc far
 	ret
 stop_keyboard	Endp
 
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartFloppy
+;
+;		DESCRIPTION:	start floppy
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_floppy_name	DB 'Start Floppy', 0
+
+start_floppy	Proc far
+    WriteSIO 7, 0
+    WriteSIO 30h, 1
+    WriteSIO 60h, 3
+    WriteSIO 61h, 0F0h
+    WriteSIO 70h, 6
+    WriteSIO 71h, 3
+	WriteSIO 74h, 2
+	WriteSIO 75h, 4
+	WriteSIO 0F0h, 24h
+	WriteSIO 0F1h, 0
+	ret
+start_floppy	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopFloppy
+;
+;		DESCRIPTION:	stop floppy
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_floppy_name	DB 'Stop Floppy', 0
+
+stop_floppy	Proc far
+    WriteSIO 7, 0
+    WriteSIO 30h, 0
+	ret
+stop_floppy	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -307,6 +353,16 @@ init	Proc far
 	mov si,OFFSET stop_keyboard
 	mov di,OFFSET stop_keyboard_name
 	mov ax,stop_keyboard_nr
+	RegisterOsGate
+;
+	mov si,OFFSET start_floppy
+	mov di,OFFSET start_floppy_name
+	mov ax,start_floppy_nr
+	RegisterOsGate
+;
+	mov si,OFFSET stop_floppy
+	mov di,OFFSET stop_floppy_name
+	mov ax,stop_floppy_nr
 	RegisterOsGate
 ;
 	popa
