@@ -67,6 +67,7 @@ psp_seg		ENDS
 FileName	DB 256 DUP(0)
 CmdLine		DB 256 DUP(0)
 SearchName	DB 256 DUP(?)
+CurrDir		DB 256 DUP(?)
 
 .code
 
@@ -280,6 +281,7 @@ find_path_next:
 	ret
 
 find_path_found:
+	inc si
 	clc
 	ret
 FindEnvPath	Endp
@@ -306,8 +308,7 @@ SetupNextPath	Proc
 	or al,al
 	stc
 	jz setup_next_done
-;
-	inc si
+
 setup_next_move_loop:
 	lodsb
 	or al,al
@@ -338,6 +339,16 @@ SetupNextPath	Endp
 init:
 	call InitParam
 	jc failed
+;
+	mov di,OFFSET CurrDir
+	GetCurDrive
+	push ax
+	add al,'A'
+	stosb
+	mov ax,'\:'
+	stosw
+	pop ax
+	GetCurDir
 ;
 	mov di,OFFSET SearchName
 	GetCurDrive
@@ -373,6 +384,9 @@ spawn_do:
 	mov ax,SEG CmdLine
 	mov es,ax
 	mov di,OFFSET CmdLine 
+	mov ax,SEG CurrDir
+	mov fs,ax
+	mov bx,OFFSET CurrDir
 	xor dx,dx
 	SpawnExe
 	mov ax,4C00h
