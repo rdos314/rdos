@@ -29,14 +29,11 @@
 
 GateSize = 16
 
-include ..\os\system.def
-include ..\os\system.inc
-include ..\os\os.def
-include ..\os\os.inc
-include ..\os\user.def
-include ..\os\user.inc
-include ..\os\driver.def
-include ..\os\protseg.def
+include ..\os.def
+include ..\os.inc
+include ..\user.def
+include ..\user.inc
+include ..\driver.def
 						
 		NAME sernet
 

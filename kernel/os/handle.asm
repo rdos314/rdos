@@ -36,6 +36,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE ..\handle.inc
 
 MAX_HANDLES = 400h

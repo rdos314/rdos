@@ -36,6 +36,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 
 thread_data_seg	STRUC
 

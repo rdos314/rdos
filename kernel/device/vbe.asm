@@ -29,16 +29,15 @@
 
 GateSize = 16
 
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\video.inc
+INCLUDE ..\handle.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\driver.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\system.inc
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\video.inc
-INCLUDE ..\os\handle.inc
 INCLUDE pcvideo.inc
 INCLUDE vbe.inc
 

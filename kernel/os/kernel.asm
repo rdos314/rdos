@@ -35,6 +35,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE protseg.def
 INCLUDE system.def
+INCLUDE ..\driver.def
 INCLUDE ..\os.inc
 
 .386p

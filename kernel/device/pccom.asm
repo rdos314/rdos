@@ -29,14 +29,13 @@
 
 GateSize = 16
 
-include ..\os\system.inc
-include ..\os\os.def
-include ..\os\os.inc
-include ..\os\user.def
-include ..\os\user.inc
-include ..\os\driver.def
-include ..\os\handle.inc
-include ..\os\wait.inc
+include ..\os.def
+include ..\os.inc
+include ..\user.def
+include ..\user.inc
+include ..\driver.def
+include ..\handle.inc
+include ..\wait.inc
 						
 		NAME pccom
 

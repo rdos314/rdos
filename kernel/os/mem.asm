@@ -36,6 +36,7 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 
 small_linear_struc	STRUC
 slf_prev	DD ?

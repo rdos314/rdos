@@ -35,6 +35,7 @@ INCLUDE state.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 

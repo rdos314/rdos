@@ -25,30 +25,6 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-Retf16	MACRO
-	db 66h
-	db 0CBh
-		ENDM
-
-Retf32	MACRO
-	db 66h
-	db 0CBh
-		ENDM
-
-Callf16	MACRO	sel,offs
-	db 66h
-	db 9Ah
-	dd sel SHL 16 + OFFSET offs
-		ENDM
-
-Callf32	MACRO	sel,offs
-	db 66h
-	db 9Ah
-	dw OFFSET offs
-	dw 0
-	dw sel
-		ENDM
-
 ReflectEnd	MACRO
 	db 0Fh
 	db 0Bh

@@ -35,6 +35,7 @@ INCLUDE protseg.def
 INCLUDE port.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE system.def
 INCLUDE system.inc
 

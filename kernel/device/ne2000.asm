@@ -37,14 +37,11 @@ BUFFER_START	EQU 40h
 
 GateSize = 16
 
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\driver.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\user.def
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\system.def
-INCLUDE ..\os\system.inc
+INCLUDE ..\driver.def
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.def
+INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
 
 outb	Macro port, val

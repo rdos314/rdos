@@ -36,6 +36,7 @@ GateSize = 16
 INCLUDE protseg.def
 INCLUDE ..\os.def
 INCLUDE ..\os.inc
+INCLUDE ..\driver.def
 INCLUDE system.def
 
 code	SEGMENT byte use16 public 'CODE'

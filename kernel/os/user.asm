@@ -34,6 +34,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.inc
+INCLUDE ..\driver.def
 INCLUDE system.def
 
 gate_entry	STRUC
