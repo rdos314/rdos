@@ -4195,6 +4195,7 @@ PAGE
 
 read_char	Proc far
 	push es
+	push edx
 	push esi
 ;
 	movzx edx,dx
@@ -4212,6 +4213,7 @@ read_char	Proc far
 	clc
 ;
 	pop esi
+	pop edx
 	pop es
 	ret
 read_char	Endp

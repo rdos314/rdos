@@ -238,6 +238,8 @@ anio_code_sel			EQU 8F0h
 
 ser_key_code_sel        EQU 900h
 
+dcf_code_sel			EQU 910h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

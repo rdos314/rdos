@@ -310,15 +310,15 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 	char str[40];
 
 	sprintf(str, "Key press info:");
-	RdosSetCursorPosition(5, 0);
+	RdosSetCursorPosition(9, 0);
 	RdosWriteString(str);
 
 	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
-	RdosSetCursorPosition(6, 0);
+	RdosSetCursorPosition(10, 0);
 	RdosWriteString(str);
 
 	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
-	RdosSetCursorPosition(6, 0);
+	RdosSetCursorPosition(11, 0);
 	RdosWriteString(str);
 }
 
@@ -327,15 +327,15 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 	char str[40];
 
 	sprintf(str, "Key release info:");
-	RdosSetCursorPosition(5, 0);
+	RdosSetCursorPosition(9, 0);
 	RdosWriteString(str);
 
 	sprintf(str, "ExtKey = %02hX, State = %04hX", ExtKey, KeyState);
-	RdosSetCursorPosition(6, 0);
+	RdosSetCursorPosition(10, 0);
 	RdosWriteString(str);
 
 	sprintf(str, "VK = %02hX, ScanCode = %02hX", VirtualKey, ScanCode);
-	RdosSetCursorPosition(6, 0);
+	RdosSetCursorPosition(11, 0);
 	RdosWriteString(str);
 }
 
@@ -353,6 +353,8 @@ void cdecl main()
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;
 	Keyboard->OnKeyRelease = KeyRelease;
+
+#ifndef TEST
 
 	light = new TLightDevice(&Wait, 7);
 	CreateChannel(light);
@@ -377,6 +379,8 @@ void cdecl main()
 
 	adc = new TAdcDevice(&Wait, 0);
 	CreateChannel(adc);
+
+#endif
 
 	for (;;)
 		Wait.WaitForever();

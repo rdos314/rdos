@@ -259,7 +259,7 @@ caps_scan	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     
 num_scan	PROC near
-	mov ah,cs:[bx]
+	movzx ax,byte ptr cs:[bx]
     PutKeyboardCode
 	ret
 num_scan	ENDP
