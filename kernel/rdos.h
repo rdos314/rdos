@@ -197,6 +197,8 @@ void __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const cha
 
 int __stdcall RdosReadResource(int Module, int ID, char *Buf, int Size);
 
+int __stdcall RdosReadAD(int channel);
+
 #ifdef __cplusplus
 }
 #endif

@@ -4473,6 +4473,32 @@ read_resource_done:
 	ret 16
 RdosReadResource	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           ReadAD
+;
+;       DESCRIPTION:    Read ADC channel
+;
+;		PARAMETERS:		Channel
+;
+;		RETURNS:		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadAD
+
+RdosReadAD	Proc near
+	push ebp
+	mov ebp,esp
+;
+	mov ax,[ebp+8]
+	UserGate read_ad_nr
+;
+	pop ebp
+	ret 4
+RdosReadAD	Endp
+
 ;	extrn Startup:near
 
 ;	public _main

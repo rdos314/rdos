@@ -36,6 +36,7 @@ INCLUDE ..\os\os.def
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\user.inc
 INCLUDE ..\os\driver.def
+INCLUDE ..\os\system.inc
 
 	.386p
 
@@ -112,15 +113,22 @@ PAGE
 read_ad_name	DB 'ReadAD', 0
 
 read_ad	Proc far
+	push bx
+	push dx
+;
+	mov bx,ax
+;
 	mov dx,28Fh
 	in al,dx
 ;
 	mov dx,282h
-	mov al,0
+	mov al,bl
+	shl al,4
+	or al,bl
 	out dx,al
 ;
 	inc dx
-	mov al,2
+	mov al,0
 	out dx,al
 
 read_ad_settle:
@@ -145,8 +153,11 @@ read_ad_wait:
 	inc dx
 	in al,dx
 	xchg al,ah
-	movzx eax,ax
-	ret
+	movsx eax,ax
+;
+	pop dx
+	pop bx
+	retf32
 read_ad	Endp
 
 PAGE
