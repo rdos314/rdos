@@ -985,7 +985,11 @@ get_disc_request_name	DB 'Get Disc Request', 0
 get_disc_request	Proc far
 	push ds
 	push es
-	pushad
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
 ;
 	mov ax,flat_sel
 	mov es,ax
@@ -1014,7 +1018,11 @@ get_disc_req_ok:
 	clc
 	
 get_disc_req_done:
-	popad
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
 	pop es
 	pop ds
 	ret

@@ -40,6 +40,7 @@ INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\drive.inc
 
 part_struc	STRUC
 
@@ -62,6 +63,10 @@ drive_sectors_per_cyl		DW ?
 drive_heads					DW ?
 drive_cyls					DW ?
 drive_sectors_per_unit		DW ?
+disc_sel					DW ?
+disc_thread					DW ?
+disc_sub_unit				DB ?
+disc_nr						DB ?
 
 drive_data		ENDS
 
@@ -495,7 +500,7 @@ WriteTaskFile	ENDP
 ;
 ;		DESCRIPTION:	Read data
 ;
-;		PARAMETERS:		AL		Sub-unit #
+;		PARAMETERS:		FS		Disc sel
 ;						BX		Sector #
 ;						CX		Number of sectors
 ;						EDX		Unit #
@@ -508,16 +513,12 @@ ReadDrive	Proc near
 	mov bx,ide_data_sel
 	mov ds,bx
 	EnterSection IdeSection
-	push ax
 	GetThread
 	mov IdeThread,ax
-	pop ax
-	movzx bx,al
-	shl bx,1
-	mov fs,ds:[bx].DriveSelArr
 	pop bx
 	cmp fs:drive_lba_mode,0
 	jz ReadDriveIde
+
 ReadDriveLba:
 	push ax
 	push edx
@@ -803,6 +804,7 @@ PAGE
 ;
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						ES		FLAT_SEL
+;						FS		Disc sel
 ;						AL		Sub-unit #
 ;						AH		Disc #
 ;						EDX		Current sector
@@ -812,7 +814,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InstallExtended	Proc near
-	push fs
 	pushad
 ;
 	push ax
@@ -823,11 +824,6 @@ InstallExtended	Proc near
 	pop edx
 	pop ax
 ;
-	push bx
-	movzx bx,al
-	shl bx,1
-	mov fs,ds:[bx].DriveSelArr
-	pop bx
 	mov esi,edx
 
 InstallExtendedLoop:
@@ -876,7 +872,6 @@ InstallExtendedDone:
 	FreeLinear
 ;
 	popad
-	pop fs
 	ret
 InstallExtended	Endp
 
@@ -959,7 +954,6 @@ PAGE
 ;
 ;		PARAMETERS:		AL		Sub-unit #
 ;						AH		Disc #
-;						BX		Disc handle (Sub-unit #)
 ;						
 ;		RETURNS:		AX		Sectors / unit
 ;						CX		Bytes / sector
@@ -967,17 +961,17 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_drive	Proc far
+open_drive	Proc near
 	push fs
 	push ebx
 	push edi
 ;
+	movzx bx,al
 	push ax
 	mov ax,ide_data_sel
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
-	movzx bx,bl
 	shl bx,1
 	EnterSection IdeSection
 	mov fs,ds:[bx].DriveSelArr
@@ -1026,99 +1020,228 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			close_drive
+;		NAME:			DISCINIT_THREAD
 ;
-;		DESCRIPTION:	Close a drive
+;		DESCRIPTION:	Thread to open a disc drive
 ;
-;		PARAMETERS:		BX		Disc handle (Sub-unit #)
-;					
+;		PARAMETERS:		FS		Disc handle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_drive	Proc far
+discinit_thread_name	DB 'Disc Init',0
+
+discinit_thread	Proc far
+	int 3
+	mov ax,ide_data_sel
+	mov ds,ax
+	mov al,fs:disc_sub_unit
+	mov ah,fs:disc_nr
+	call open_drive
+	jc discinit_thread_done
+;
+	mov bx,fs:disc_sel
+	FlushDisc
+;
+	mov bx,fs:disc_thread
+	Signal
+
+discinit_thread_done:
 	ret
-close_drive	Endp
+discinit_thread	Endp
 
 PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			check_media
-;
-;		DESCRIPTION:	Check for media change
-;
-;		PARAMETERS:		BX		Sub-unit #
-;
-;		RETURNS:		AX      Status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-check_media	Proc far
-	clc
-	ret
-check_media	Endp
-
-PAGE
-
+	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
 ;		NAME:			read_drive
 ;
-;		DESCRIPTION:	Read sector(s) from drive
+;		DESCRIPTION:	Read drive
 ;
-;		PARAMETERS:		AX		Sector
-;						BX		Disc handle (Sub-unit #)
-;						EDX		Unit
-;						CX		Number of sectors
-;						EDI		Logical address of buffer, must be page aligned
-;
-;		RETURNS:		AX      Status
+;		PARAMETERS:		FS		Disc selector
+;						EDI		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_drive	Proc far
-	push es
-	push bx
-	xchg ax,bx
-	push flat_sel
-	pop es
+read_drive	Proc near
+	push cx
+	mov cx,3
+
+read_drive_loop:
+	push eax
+	push cx
+	push edx
+	push edi
+;
+	movzx ebx,es:[edi].dh_sector
+	movzx edx,es:[edi].dh_unit
+	mov edi,es:[edi].dh_data
+	mov cx,200h
 	call ReadDrive
-	pop bx
-	pop es
+;
+	pop edi
+	pop edx
+	pop cx
+	pop eax
+	jnc read_drive_ok
+;
+	loop read_drive_loop
+;
+	mov es:[edi].dh_state,STATE_BAD
+	stc
+	jmp read_drive_done
+
+read_drive_ok:
+	mov es:[edi].dh_state,STATE_USED
+
+read_drive_done:
+	pop cx
 	ret
 read_drive	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			write_drive
+;
+;		DESCRIPTION:	Perform a write request
+;
+;		PARAMETERS:		DS		Disc selector
+;						EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_drive	Proc near
+	mov es:[edi].dh_state,STATE_USED
+	push cx
+;
+	or dx,dx
+	jnz write_drive_do
+;
+	or ax,ax
+	jnz write_drive_do
+;
+	int 3
+	stc
+	jmp write_drive_done
+
+write_drive_do:
+	mov cx,3
+
+write_drive_loop:
+	push eax
+	push cx
+	push edx
+	push edi
+;
+	movzx ebx,es:[edi].dh_sector
+	movzx edx,es:[edi].dh_unit
+	mov edi,es:[edi].dh_data
+	call WriteDrive
+;
+	pop edi
+	pop edx
+	pop cx
+	pop eax
+	jnc write_drive_done
+;
+	loop write_drive_loop
+;
+	stc
+
+write_drive_done:
+	pop cx
+	ret
+write_drive	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			perform_one
+;
+;		DESCRIPTION:	Perform one request
+;
+;		PARAMETERS:		FS		Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_one	Proc near
+
+perform_one_loop:
+	int 3
+	GetDiscRequest
+	jc perform_one_done
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je perform_one_read
+;
+	cmp al,STATE_DIRTY
+	je perform_one_write
+;
+	cmp al,STATE_SEQ
+	jne perform_one_done
+
+perform_one_write:
+	call write_drive
+	jmp perform_one_completed
+
+perform_one_read:
+	call read_drive
+
+perform_one_completed:
+	mov bx,fs:disc_sel
+	DiscRequestCompleted
+	jmp perform_one_loop
+
+perform_one_done:
+	ret
+perform_one	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			write_drive
+;		NAME:			DISCBUF_THREAD
 ;
-;		DESCRIPTION:	Write sector(s) to drive
+;		DESCRIPTION:	Thread to handle disc buffer queue
 ;
-;		PARAMETERS:		AX		Sector
-;						BX		Disc handle (Sub-unit #)
-;						EDX		Unit
-;						CX		Number of sectors
-;						EDI		Logical address of buffer, must be page aligned
-;
-;		RETURNS:		AX      Status
+;		PARAMETERS:		FS		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_drive	Proc far
-	push es
-	push bx
-	xchg ax,bx
-	push flat_sel
-	pop es
-	call WriteDrive
-	pop bx
-	pop es
-	ret
-write_drive	Endp
+discbuf_thread:
+	mov ax,ide_data_sel
+	mov ds,ax
+	InstallDisc
+	mov fs:disc_sel,bx
+	mov fs:disc_nr,al
+	GetThread
+	mov fs:disc_thread,ax
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET discinit_thread
+	mov di,OFFSET discinit_thread_name
+	mov ax,4
+	mov cx,100h
+	CreateThread
+	pop ds
+;
+	mov ax,flat_sel
+	mov es,ax
+	WaitForSignal
+
+discbuf_thread_loop:
+	WaitForDiscRequest
+	call perform_one
+	jmp discbuf_thread_loop
 
 PAGE
 
@@ -1130,7 +1253,7 @@ PAGE
 ;		DESCRIPTION:	Install a unit
 ;
 ;		PARAMETERS:		AL		UNIT #
-;						SI		NAME
+;						DI		NAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1155,6 +1278,7 @@ install_unit	Proc near
 	call WaitInt
 	pop ax
 	jc install_unit_done
+;
 	push ax
 	mov dx,1F0h
 	mov cx,256
@@ -1168,33 +1292,30 @@ install_unit_read:
 	push ax
 	mov eax,SIZE drive_data
 	AllocateSmallGlobalMem
+	mov ax,es
+	mov fs,ax
 	pop ax
-	push ds
-	push es
-	push ax
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	pop ax
-	mov bx,ax
-	InstallDisc
-	pop es
-	pop ds
-	mov cx,SIZE drive_data
-	push ax
-	push di
-	xor di,di
-	xor al,al
-	rep stosb
-	pop di
-	pop ax
+;
+	mov fs:disc_sub_unit,al
+	mov fs:drive_precomp,0FFh
+	mov fs:drive_cyls,-1
+	mov fs:drive_heads,-1
+	mov fs:drive_sectors_per_cyl,-1
+;
 	movzx bx,al
 	shl bx,1
 	mov ds:[bx].DriveSelArr,es
-	mov es:drive_precomp,0FFh
-	mov es:drive_cyls,-1
-	mov es:drive_heads,-1
-	mov es:drive_sectors_per_cyl,-1
+;
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET discbuf_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+	pop ds
+
 install_unit_done:
 	ret
 install_unit	Endp
@@ -1215,25 +1336,17 @@ PAGE
 disc0	DB 'Ide Drive 0',0
 disc1	DB 'Ide Drive 1',0
 
-drive_ctrl:
-dc00	DW OFFSET open_drive,		ide_code_sel
-dc01	DW OFFSET close_drive,		ide_code_sel
-dc02	DW OFFSET check_media,		ide_code_sel
-dc03	DW OFFSET read_drive,		ide_code_sel
-dc04	DW OFFSET write_drive,		ide_code_sel
-
 init_disc	Proc far
 	mov ax,ide_data_sel
 	mov ds,ax
 	EnterSection IdeSection
 	GetThread
 	mov IdeThread,ax
-	mov di,OFFSET drive_ctrl
 	mov al,0
-	mov si,OFFSET disc0
+	mov di,OFFSET disc0
 	call install_unit
 	mov al,1
-	mov si,OFFSET disc1
+	mov di,OFFSET disc1
 ;	call install_unit
 	mov IdeThread,0
 	LeaveSection IdeSection
@@ -1285,7 +1398,7 @@ init	PROC far
 	mov es,bx
 	mov di,OFFSET ide_int
 	RequestPrivateIrqHandler
-;
+
 init_ide_done:
 	popa
 	pop es

@@ -1428,7 +1428,6 @@ PAGE
 discinit_thread_name	DB 'Disc Init',0
 
 discinit_thread	Proc far
-	int 3
 	mov ax,fs
 	mov es,ax
 	mov ax,floppy_data_sel
@@ -1621,10 +1620,12 @@ perform_one_read:
 	call read_drive
 
 perform_one_completed:
+	mov bx,fs:disc_sel
 	DiscRequestCompleted
 	jmp perform_one_loop
 
 perform_one_fail:
+	mov bx,fs:disc_sel
 	DiscRequestCompleted
 	FlushDisc
 
@@ -1646,7 +1647,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
-	int 3
 	mov ax,floppy_data_sel
 	mov ds,ax
 	InstallDisc
@@ -1722,7 +1722,6 @@ floppy0	DB 'Floppy Drive 0',0
 floppy1	DB 'Floppy Drive 1',0
 
 init_disc	Proc far
-	int 3
 	in al,INT0_MASK
 	and al,NOT 40h
 	out INT0_MASK,al
