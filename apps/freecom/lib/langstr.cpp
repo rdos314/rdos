@@ -33,7 +33,11 @@
 #include "rdos.h"
 #include "langstr.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 int TLangString::FHandle = 0;
+int TLangString::FIsLocalHandle = TRUE;
 
 /*##########################################################################
 #
@@ -79,12 +83,13 @@ TLangString::TLangString(int ID)
 ##########################################################################*/
 void TLangString::SetLanguage(const char *language)
 {
-	if (FHandle)
+	if (FHandle && !FIsLocalHandle)
 	{
 		RdosFreeDll(FHandle);
 		FHandle = 0;
 	}
 	FHandle = RdosLoadDll(language);
+	FIsLocalHandle = FALSE;
 }
 
 /*##########################################################################
@@ -113,7 +118,10 @@ void TLangString::Load(int ID)
 	count = 0;
 
 	if (FHandle == 0)
+	{
+		FIsLocalHandle = TRUE;
 		FHandle = RdosGetModuleHandle();
+	}
 
 	if (FHandle)
 	{

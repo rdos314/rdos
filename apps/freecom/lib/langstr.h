@@ -47,6 +47,7 @@ protected:
 	const char *GetPromptString();
 	const char *GetFormatString();
 
+    static int FIsLocalHandle;
 	static int FHandle;
 };
 
