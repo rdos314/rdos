@@ -40,6 +40,14 @@ public:
     virtual void ShowMsg();
 
 protected:
+	void ShowInitMsg(const char *Msg, int Size);
+	void ShowReqMsg(const char *Msg, int Size);
+	void ShowReplyMsg(const char *Msg, int Size);
+	void ShowDataMsg(const char *Msg, int Size);
+	int CheckCrc();
+	void ShowAll(const char *Msg, int Size);
+
+    int FCrcTable[256];
 };
 
 #endif

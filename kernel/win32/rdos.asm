@@ -1530,7 +1530,7 @@ RdosTicsToRecord	Proc
 ;
 	popad
 	pop ebp
-	ret 32
+	ret 36
 RdosTicsToRecord	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -168,7 +168,11 @@ void TProtocolAnalyser::ShowHexMsg()
 	for (i = 0; i < FSize; i++)
 	{
 		ch = *str;
-			sprintf(tempstr, " %02X ", ch);
+		sprintf(tempstr, "%04hX", ch);
+		tempstr[0] = tempstr[2];
+		tempstr[1] = tempstr[3];
+		tempstr[2] = ' ';
+		tempstr[3] = 0;
 		Write(tempstr);
 		str++;
 	}
@@ -195,10 +199,21 @@ void TProtocolAnalyser::ShowMneMsg()
 	{
 		ch = *str;
 		if (ch >= 0x20)
+		{
 			sprintf(tempstr, "%c", ch);
+			Write(tempstr);
+		}
 		else
-			sprintf(tempstr, " <%02X> ", ch);
-		Write(tempstr);
+		{
+			sprintf(tempstr, "%04hX", ch);
+			tempstr[0] = tempstr[2];
+			tempstr[1] = tempstr[3];
+			tempstr[2] = ' ';
+			tempstr[3] = 0;
+			Write(" <");
+			Write(tempstr);
+			Write("> ");
+		}
 		str++;
 	}
 	Write("\r\n");
@@ -234,6 +249,7 @@ TProtocolAnalyser::TProtocolAnalyser(const char *MemMapName, int MaxSize)
     FRawPos = 0;
 
 	FLogFile = 0;
+	FTime = 0;
 	
 	FMaxSize = MaxSize;
 	FMsg = new char[MaxSize + 1];
