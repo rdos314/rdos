@@ -313,15 +313,11 @@ RdosLeaveSection	Endp
 RdosSetVideoMode	Proc
 	push ebp
 	mov ebp,esp
-	push bx
+	push ebx
 	push ecx
 	push edx
 	push esi
 	push edi
-;
-	mov al,0FFh
-	mov dx,3B2h
-	out dx,al
 ;
 	mov edi,[ebp+8]
 	mov ax,[edi]
@@ -332,24 +328,8 @@ RdosSetVideoMode	Proc
 	UserGate get_video_mode_nr
 	jc set_video_fail
 ;
-	push ax
-	push dx
-	mov al,0
-	mov dx,3B2h
-	out dx,al
-	pop dx
-	pop ax
-;
     UserGate set_video_mode_nr
     jc set_video_fail
-;
-	push ax
-	push dx
-	mov al,0FFh
-	mov dx,3B2h
-	out dx,al
-	pop dx
-	pop ax
 ;
 	push edi
 	mov edi,[ebp+8]
@@ -388,7 +368,7 @@ set_video_done:
 	pop esi
 	pop edx
 	pop ecx
-	pop bx
+	pop ebx
 	pop ebp
 	ret 20
 RdosSetVideoMode	Endp

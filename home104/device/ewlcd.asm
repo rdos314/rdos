@@ -426,6 +426,8 @@ init_mode	Proc far
 	mov es:vl_has_focus,0
 	mov es:vl_row,0
 	mov es:vl_col,0
+	mov es:v_app_base,0
+	mov es:v_row_size,LCD_WIDTH / 8
 ;
     mov bx,cs
     shl ebx,16
