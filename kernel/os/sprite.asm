@@ -360,152 +360,20 @@ ShowLine    MACRO seg
 
 show_line_done:
             ENDM
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			ShowSprite
-;
-;		DESCRIPTION:	Show sprite
-;
-;		PARAMETERS:		BX		Sprite handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-show_sprite_name	DB 'Show Sprite', 0
-
-show_sprite	Proc far
-	push ds
-	push es
-	push fs
-	push gs
-	pushad
-;
-	mov ax,SPRITE_HANDLE
-	DerefHandle
-	jc show_sprite_done
-;
-    mov fs,ds:[bx].sp_sel
-    test fs:sp_flags,SP_FLAG_VISIBLE
-    jnz show_sprite_done
-;
-    or fs:sp_flags,SP_FLAG_VISIBLE
-    xor bp,bp
-
-show_sprite_loop:
-    mov ds,fs:sp_dest_sel
-	mov gs,ds:v_sprites
-	mov ax,gs:sp_prev
-
-show_sprite_ovl_hide_loop:
-	mov dx,fs
-	cmp ax,dx
-	je show_sprite_curr
-;
-	mov gs,ax
-	test gs:sp_flags,SP_FLAG_VISIBLE
-	jz show_sprite_ovl_hide_next
-;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-    jc show_sprite_ovl_hide_next
-;
-    mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc show_sprite_ovl_hide_next
-;
-    HideLine gs
-
-show_sprite_ovl_hide_next:
-	mov ax,gs:sp_prev
-	jmp show_sprite_ovl_hide_loop
-
-show_sprite_curr:
-    xor cx,cx
-    mov dx,bp
-    ShowLine fs
-;
-    mov ds,fs:sp_dest_sel
-	mov ax,fs:sp_next
-
-show_sprite_ovl_show_loop:
-	cmp ax,ds:v_sprites
-	je show_sprite_line_done
-;
-	mov gs,ax
-	push ds
-;
-	test gs:sp_flags,SP_FLAG_VISIBLE
-	jz show_sprite_ovl_show_next
-;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-    jc show_sprite_ovl_show_next
-;
-    mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc show_sprite_ovl_show_next
-;
-    ShowLine gs
-
-show_sprite_ovl_show_next:
-	pop ds
-	mov ax,gs:sp_next
-	jmp show_sprite_ovl_show_loop
-
-show_sprite_line_done:
-    inc bp
-    cmp bp,fs:sp_h
-    jnz show_sprite_loop
-
-show_sprite_done:
-	popad
-	pop gs
-	pop fs
-	pop es
-	pop ds
-	retf32
-show_sprite	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			HideSprite
+;		NAME:			hide
 ;
 ;		DESCRIPTION:	Hide sprite
 ;
-;		PARAMETERS:		BX		Sprite handle
+;		PARAMETERS:		FS		Sprite
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-hide_sprite_name	DB 'Hide Sprite', 0
-
-hide_sprite	Proc far
-	push ds
-	push es
-	push fs
-	push gs
-	push ax
-	push bx
-    push ecx
-    push edx
-	push edi
-    push bp
-;
-	mov ax,SPRITE_HANDLE
-	DerefHandle
-	jc hide_sprite_done
-;
-    mov fs,ds:[bx].sp_sel
-    test fs:sp_flags,SP_FLAG_VISIBLE
-    jz hide_sprite_done
-;
+hide	Proc near
     xor bp,bp
 
 hide_sprite_loop:
@@ -577,20 +445,178 @@ hide_sprite_line_done:
     jnz hide_sprite_loop
 ;
     and fs:sp_flags,NOT SP_FLAG_VISIBLE
+	ret
+hide	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			show
+;
+;		DESCRIPTION:	Show sprite
+;
+;		PARAMETERS:		FS		Sprite
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show	Proc near
+    or fs:sp_flags,SP_FLAG_VISIBLE
+    xor bp,bp
+
+show_sprite_loop:
+    mov ds,fs:sp_dest_sel
+	mov gs,ds:v_sprites
+	mov ax,gs:sp_prev
+
+show_sprite_ovl_hide_loop:
+	mov dx,fs
+	cmp ax,dx
+	je show_sprite_curr
+;
+	mov gs,ax
+	test gs:sp_flags,SP_FLAG_VISIBLE
+	jz show_sprite_ovl_hide_next
+;
+    mov cx,fs:sp_x
+    sub cx,gs:sp_x
+    jc show_sprite_ovl_hide_next
+;
+    mov dx,bp
+	add dx,fs:sp_y
+	sub dx,gs:sp_y
+	jc show_sprite_ovl_hide_next
+;
+    HideLine gs
+
+show_sprite_ovl_hide_next:
+	mov ax,gs:sp_prev
+	jmp show_sprite_ovl_hide_loop
+
+show_sprite_curr:
+    xor cx,cx
+    mov dx,bp
+    ShowLine fs
+;
+    mov ds,fs:sp_dest_sel
+	mov ax,fs:sp_next
+
+show_sprite_ovl_show_loop:
+	cmp ax,ds:v_sprites
+	je show_sprite_line_done
+;
+	mov gs,ax
+	push ds
+;
+	test gs:sp_flags,SP_FLAG_VISIBLE
+	jz show_sprite_ovl_show_next
+;
+    mov cx,fs:sp_x
+    sub cx,gs:sp_x
+    jc show_sprite_ovl_show_next
+;
+    mov dx,bp
+	add dx,fs:sp_y
+	sub dx,gs:sp_y
+	jc show_sprite_ovl_show_next
+;
+    ShowLine gs
+
+show_sprite_ovl_show_next:
+	pop ds
+	mov ax,gs:sp_next
+	jmp show_sprite_ovl_show_loop
+
+show_sprite_line_done:
+    inc bp
+    cmp bp,fs:sp_h
+    jnz show_sprite_loop
+;
+	ret
+show	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HideSprite
+;
+;		DESCRIPTION:	Hide sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hide_sprite_name	DB 'Hide Sprite', 0
+
+hide_sprite	Proc far
+	push ds
+	push es
+	push fs
+	push gs
+	pushad
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc hide_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jz hide_sprite_done
+;
+	call hide
 
 hide_sprite_done:
-    pop bp
-	pop edi
-    pop edx
-    pop ecx
-	pop bx
-	pop ax
+	popad
 	pop gs
 	pop fs
 	pop es
 	pop ds
 	retf32
 hide_sprite	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ShowSprite
+;
+;		DESCRIPTION:	Show sprite
+;
+;		PARAMETERS:		BX		Sprite handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_sprite_name	DB 'Show Sprite', 0
+
+show_sprite	Proc far
+	push ds
+	push es
+	push fs
+	push gs
+	pushad
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc show_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jnz show_sprite_done
+;
+	call show
+
+show_sprite_done:
+	popad
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	retf32
+show_sprite	Endp
 
 PAGE
 
@@ -923,10 +949,10 @@ PAGE
 
 delete_sprite	Proc near
 	push ds
-    push es
-	push ax
-	push ecx
-	push edx
+	push es
+    push fs
+	push gs
+	pushad
 ;
     mov ax,[bx].sp_sel
 	mov es,ax
@@ -960,13 +986,24 @@ delete_sprite_do:
     CloseBitmap
 
 delete_sprite_bitmap_closed:
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jz delete_sprite_free
+;
+	mov ax,es
+	mov fs,ax
+	call hide
+	xor ax,ax
+	mov fs,ax
+	mov gs,ax
+
+delete_sprite_free:
     pop bx
     FreeMem
 	FreeHandle
 ;
-	pop edx
-	pop ecx
-	pop ax
+	popad
+	pop gs
+	pop fs
 	pop es
 	pop ds
 	clc
