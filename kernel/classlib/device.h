@@ -55,7 +55,7 @@ public:
 	void (*OnIdle)(TDevice *Device);
 	void (*OnBusy)(TDevice *Device);
 
-	void Run();
+	virtual void Run();
 	void Stop();
 
 protected:

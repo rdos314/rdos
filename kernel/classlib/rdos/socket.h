@@ -61,13 +61,24 @@ protected:
 	int FHandle;
 };
 
-class TSocketServer : public TDevice
+class TSocketServer
 {
 public:
-	TSocketServer(const char *ThreadName, int Handle);
+	TSocketServer();
 	virtual ~TSocketServer();
 
+    void ThreadStartup(int Handle);
+    
 protected:
+    virtual void HandleSocket() = 0;
+
+    void Insert();
+	void Cleanup();
+
+    static TSection FSection;    
+    static TSocketServer *FList;
+    TSocketServer *FNext;
+
     TWait *FWait;
 	TSocket *FSocket;
 };
@@ -75,7 +86,12 @@ protected:
 class TSocketServerFactory
 {
 public:
-	virtual TSocketServer *Create(int Handle) = 0;
+    virtual char *GetThreadName() = 0;
+    virtual int GetStackSize() = 0;    
+	virtual TSocketServer *Create() = 0;
+
+    int Handle;
+	
 };
 
 #endif

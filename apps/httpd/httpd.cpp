@@ -9,24 +9,35 @@
 class THttpSocketServerFactory : public TSocketServerFactory
 {
 public:
-	virtual TSocketServer *Create(int Handle);
+    virtual char *GetThreadName();
+    virtual int GetStackSize();    
+	virtual TSocketServer *Create();
 };
 
 class THttpSocketServer : public TSocketServer
 {
 public:
-	THttpSocketServer(const char *ThreadName, int Handle);
+	THttpSocketServer();
 	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void Execute();
+	virtual void HandleSocket();
 };
 
-TSocketServer *THttpSocketServerFactory::Create(int Handle)
+char *THttpSocketServerFactory::GetThreadName()
 {
-	return new THttpSocketServer("HTTP", Handle);
+	return "HTTP";
 }
 
-THttpSocketServer::THttpSocketServer(const char *ThreadName, int Handle)
-  : TSocketServer(ThreadName, Handle)
+int THttpSocketServerFactory::GetStackSize()
+{
+	return 0x2000;
+}
+
+TSocketServer *THttpSocketServerFactory::Create()
+{
+	return new THttpSocketServer;
+}
+
+THttpSocketServer::THttpSocketServer()
 {
 }
 
@@ -35,7 +46,7 @@ void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
 	strncpy(Name,"HTTP",MaxLen);
 }
 
-void THttpSocketServer::Execute()
+void THttpSocketServer::HandleSocket()
 {
 	int count;
 	char Buf[513];
@@ -63,16 +74,12 @@ void THttpSocketServer::Execute()
 		}
 		FSocket->Push();
 	}
-	FSocket->Close();
-
-	FInstalled = FALSE;
-
-	delete this;
 }
+
+THttpSocketServerFactory Factory;
 
 void cdecl main()
 {
-	THttpSocketServerFactory Factory;
     TSocket::Listen(&Factory, 80, 0x4000);
 }
 

@@ -32,6 +32,11 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+TSection TSocketServer::FSection;
+TSocketServer *TSocketServer::FList = 0;
+
+static TSection ConnectionSection;
+
 /*##########################################################################
 #
 #   Name       : TSocketServer::TSocketServer
@@ -44,12 +49,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer::TSocketServer(const char *ThreadName, int Handle)
+TSocketServer::TSocketServer()
 {
-    FWait = new TWait;
-	FSocket = new TSocket(FWait, Handle);
-    
-    Start(ThreadName, 0x2000);
 }
 
 /*##########################################################################
@@ -65,9 +66,117 @@ TSocketServer::TSocketServer(const char *ThreadName, int Handle)
 ##########################################################################*/
 TSocketServer::~TSocketServer()
 {
-    Stop();
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::ThreadStartup
+#
+#   Purpose....: Startup of socket server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::ThreadStartup(int Handle)
+{
+    FWait = new TWait;
+	FSocket = new TSocket(FWait, Handle);
+
+    Cleanup();
+	Insert();    
+
+	HandleSocket();
+
+	FSocket->Push();
+	FSocket->Close();
     delete FSocket;
     delete FWait;
+    FWait = 0;
+    FSocket = 0;	
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::Clearup
+#
+#   Purpose....: Cleanup terminated socket servers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::Cleanup()
+{
+	TSocketServer *ptr;
+	TSocketServer *prev;
+    TSocketServer *temp;
+	
+	prev = 0;
+	FSection.Enter();
+	ptr = FList;
+	while (ptr)
+    {
+        if (ptr->FSocket == 0)
+        {
+            temp = ptr->FNext;
+            delete ptr;
+            if (prev == 0)
+                FList = temp;
+            else
+                prev->FNext = temp;
+            ptr = temp;
+        }            
+        else
+        {
+    		prev = ptr;
+	    	ptr = ptr->FList;
+	    }
+    }
+	FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::Insert
+#
+#   Purpose....: Insert into socket server list
+#				 Should only done in constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::Insert()
+{
+	FSection.Enter();
+	FNext = FList;
+	FList = this;
+	FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : ConnectionThread
+#
+#   Purpose....: Connection thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+static void ConnectionThread(void *Data)
+{
+	TSocketServerFactory *Factory = (TSocketServerFactory *)Data;
+	int Handle = Factory->Handle;
+	
+    ConnectionSection.Leave();
+	TSocketServer *Server = Factory->Create();
+    Server->ThreadStartup(Handle);
 }
 
 /*##########################################################################
@@ -81,11 +190,13 @@ TSocketServer::~TSocketServer()
 #   Returns....: *
 #
 ##########################################################################*/
-
 static void __stdcall NewConnection(int Handle, void *Data)
 {
 	TSocketServerFactory *Factory = (TSocketServerFactory *)Data;
-	Factory->Create(Handle);
+	
+    ConnectionSection.Enter();
+    Factory->Handle = Handle;    	
+	RdosCreateThread(ConnectionThread, Factory->GetThreadName(), Data, Factory->GetStackSize());
 }
 
 /*##########################################################################

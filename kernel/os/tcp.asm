@@ -361,6 +361,7 @@ CreateConnection	Proc near
 	mov eax,SIZE tcp_connection
 	AllocateSmallGlobalMem
 	pop eax
+	mov es:tcp_owner,0
 	mov es:tcp_wait,0
 	mov es:tcp_options,0
 	mov es:tcp_port,si
