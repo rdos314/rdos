@@ -71,7 +71,6 @@ EraseBlock	Proc near
     push edi
     push bp
 ;
-    int 3
     mov ax,flat_sel
     mov es,ax
 ;
@@ -96,6 +95,7 @@ erase_loop:
     inc edx
     loop erase_loop
 ;    
+    int 3
     mov ax,bp
     PerformDiscSeq
 ;
@@ -106,6 +106,7 @@ erase_loop:
     pop ecx
     pop ebx
     pop eax
+	pop es
 	ret
 EraseBlock	Endp
 

@@ -72,7 +72,6 @@ format	PROC far
 	push es
     pushad
 ;
-    int 3
 	mov dx,flat_sel
 	mov es,dx
 ;
@@ -128,7 +127,6 @@ mount	PROC far
 	push edx
 	push edi
 ;
-    int 3
 	shr ecx,7
 	push ax
 	mov eax,SIZE drive_data_seg

@@ -382,13 +382,13 @@ ReadTaskFile	Proc near
 	out dx,al
 ReadTaskFileInt:
 	WaitForSignal
-	push cx
+	push ecx
 	mov dx,1F0h
-	mov cx,256
+	mov ecx,256
 	rep
 	db 67h
 	insw
-	pop cx
+	pop ecx
 	call CheckStatus
 	jc ReadTaskFileDone
 	loop ReadTaskFileInt
@@ -1922,6 +1922,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 erase	Proc far
+	stc
 	ret
 erase	Endp
 

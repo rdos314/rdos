@@ -743,7 +743,12 @@ update_seq_discard_loop:
 update_seq_free:
 	FreeMem
 	pop es
-	jmp update_seq_next
+	mov ax,ds:disc_seq_list
+	or ax,ax
+	jz update_seq_pop_done
+;
+	mov bp,ax
+	jmp update_seq_loop
 
 update_seq_move_loop:
 	mov dx,es:[edi].dh_sector
@@ -756,6 +761,9 @@ update_seq_move_loop:
 update_seq_moved:
 	inc bx
 	inc dx
+	cmp bx,fs:dss_insert_index
+	je update_seq_pop_done	
+;
 	mov edi,fs:[4*ebx].dss_arr
 	cmp ax,es:[edi].dh_unit
 	jne update_seq_next
@@ -767,7 +775,8 @@ update_seq_next:
 	mov ax,fs:dss_next
 	cmp ax,bp
 	jne update_seq_loop
-;
+
+update_seq_pop_done:
 	popad
 	pop fs
 
@@ -2538,7 +2547,6 @@ perform_disc_seq	PROC far
 	push eax
 	push ebx
 ;
-	int 3
 	mov es,ax
 	mov ax,es:dss_buf_sel
 	or ax,ax

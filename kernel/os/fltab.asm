@@ -449,7 +449,6 @@ CacheBlock	Proc near
 
 cbErase:
     UnlockSector
-    sub edx,7Fh
     call EraseBlock
     xor ax,ax
     mov fs,ax
