@@ -14,7 +14,7 @@ PORTB:  .EQU 6
 TRISA:  .EQU 5
 TRISB:  .EQU 6
 
-NODEID:	.EQU $22
+NODEID:	.EQU $24
 DELAY_TICS:	.EQU 200
 
 W:      .EQU 0          ;Working

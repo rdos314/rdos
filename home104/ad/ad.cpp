@@ -539,6 +539,8 @@ void cdecl main()
 	radiator[0] = new TRadiator(0x20);
 	radiator[1] = new TRadiator(0x21);
 	radiator[2] = new TRadiator(0x22);
+	radiator[3] = new TRadiator(0x23);
+	radiator[4] = new TRadiator(0x24);
 
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;
