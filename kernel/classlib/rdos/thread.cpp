@@ -61,7 +61,7 @@ static void ThreadStartup(void *ptr)
 ##########################################################################*/
 TThread::TThread()
 {
-	FInstalled = FALSE;
+	FInstalled = TRUE;
 	FThreadRunning = FALSE;
 }
 
