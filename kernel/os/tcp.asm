@@ -579,6 +579,81 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			FindWildConnection
+;
+;	Purpose:		Look for a connection with zero in remote port
+;
+;	Parameters:		EDX		remote ip
+;					SI		local port
+;
+;	Returns:		NC		connection found
+;					DS		connection, locked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindWildConnection	Proc near
+	push es
+	push ax
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	EnterSection ds:ListSection
+	mov ax,ds:ConnectionList
+
+find_wild_connection_loop:
+	or ax,ax
+	jz find_wild_connection_fail
+	mov es,ax
+	cmp edx,es:tcp_remote_ip
+	jne find_wild_connection_next
+	cmp si,es:tcp_port
+	jne find_wild_connection_next
+	mov ax,es:tcp_remote_port
+	or ax,ax
+	je find_wild_connection_ok
+
+find_wild_connection_next:
+	mov ax,es:tcp_next
+	jmp find_wild_connection_loop
+
+find_wild_connection_fail:
+	LeaveSection ds:ListSection
+	stc
+	jmp find_wild_connection_done
+
+find_wild_connection_ok:
+	mov ax,es
+	push ax
+	mov ds,ax
+	EnterSection ds:tcp_section
+	test ds:tcp_pending,FLAG_DELETE
+	jz find_wild_connection_not_deleted
+;
+	pop ax
+	LeaveSection ds:tcp_section
+	mov ax,tcp_data_sel
+	mov ds,ax
+	LeaveSection ds:ListSection
+	stc
+	jmp find_wild_connection_done
+
+find_wild_connection_not_deleted:
+	mov ax,tcp_data_sel
+	mov ds,ax
+	LeaveSection ds:ListSection
+	pop ds
+	clc
+
+find_wild_connection_done:
+	pop ax
+	pop es
+	ret
+FindWildConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			FindListen
 ;
 ;	Purpose:		Look for a listen request
@@ -939,6 +1014,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RetransmitSynSent	Proc near
+	mov ax,ds:tcp_remote_port
+	or ax,ax
+	jz rssDone
+;
 	xor ecx,ecx
 	call CreateSegment
 	mov es:[di].tcp_flags, SYN
@@ -946,6 +1025,8 @@ RetransmitSynSent	Proc near
 	Reverse
 	mov es:[di].tcp_seq,eax
 	call SendSegment
+
+rssDone:
 	ret
 RetransmitSynSent	Endp
 
@@ -2524,8 +2605,21 @@ Receive	Proc far
 	jnc receive_connection
 ;
 	call FindListen
+	jnc receive_listen
+;
+	call FindWildConnection
 	jc receive_no_connection
 ;
+	mov al,es:[di].tcp_flags
+	test al,SYN
+	jz receive_no_connection
+;
+	mov ax,es:[di].tcp_source
+	xchg al,ah
+	mov ds:tcp_remote_port,ax
+	jmp receive_connection
+	
+receive_listen:
 	mov al,es:[di].tcp_flags
 	test al,RST
 	jnz receive_free
@@ -2849,8 +2943,8 @@ PAGE
 ;	Parameters:		EAX		Timeout in milliseconds for connection
 ;					ECX		buffer size
 ;					EDX		ip address
-;					SI		local port
-;					DI		remote port
+;					SI		local port (or 0 for random port)
+;					DI		remote port (or 0 to accept any port)
 ;
 ;	Returns:		NC		ok
 ;					BX		connection handle
@@ -2905,6 +2999,9 @@ open_tcp_create:
 	or ds:tcp_pending,FLAG_WAIT
 	LeaveSection ds:tcp_section
 ;
+	or di,di
+	jz open_tcp_handle
+;
 	xor ecx,ecx
 	call CreateSegment
 	mov es:[di].tcp_flags, SYN
@@ -2918,8 +3015,9 @@ open_tcp_create:
 	cmp ds:tcp_state,STATE_ESTAB
 	jne open_tcp_fail
 	LeaveSection ds:tcp_section
+
+open_tcp_handle:
 	mov dx,ds
-;
     mov ax,TCP_HANDLE
 	mov cx,SIZE tcp_handle_seg
 	AllocateHandle
