@@ -176,15 +176,16 @@ int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 
 int __stdcall RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-void __stdcall RdosListenTcpPort(int Port, int BufferSize, void __stdcall (*Callb)(int Handle));
+void __stdcall RdosListenTcpPort(int Port, int BufferSize, void __stdcall (*Callb)(int Handle, void *Data), void *Data);
 int __stdcall RdosWaitForTcpConnection(int Handle, long Timeout);
+void __stdcall RdosAddWaitForTcpConnection(int Handle, int ConHandle, void *ID);
 void __stdcall RdosCloseTcpConnection(int Handle);
 void __stdcall RdosDeleteTcpConnection(int Handle);
 void __stdcall RdosAbortTcpConnection(int Handle);
 void __stdcall RdosPushTcpConnection(int Handle);
 int __stdcall RdosIsTcpConnectionClosed(int Handle);
 int __stdcall RdosReadTcpConnection(int Handle, void *Buf, int Size);
-int __stdcall RdosWriteTcpConnection(int Handle, void *Buf, int Size);
+int __stdcall RdosWriteTcpConnection(int Handle, const void *Buf, int Size);
 
 int __stdcall RdosGetLocalMailslot(const char *Name);
 int __stdcall RdosGetRemoteMailslot(long Ip, const char *Name);

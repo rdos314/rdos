@@ -1,49 +1,78 @@
-#include "rdos.h"
+#include "socket.h"
+#include "file.h"
 #include <string.h>
 #include <stdio.h>
 
-void ConnectionThread(void *TcpHandle)
+#define FALSE 0
+#define TRUE !FALSE
+
+class THttpSocketServerFactory : public TSocketServerFactory
+{
+public:
+	virtual TSocketServer *Create(int Handle);
+};
+
+class THttpSocketServer : public TSocketServer
+{
+public:
+	THttpSocketServer(const char *ThreadName, int Handle);
+	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual void Execute();
+};
+
+TSocketServer *THttpSocketServerFactory::Create(int Handle)
+{
+	return new THttpSocketServer("HTTP", Handle);
+}
+
+THttpSocketServer::THttpSocketServer(const char *ThreadName, int Handle)
+  : TSocketServer(ThreadName, Handle)
+{
+}
+
+void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
+{
+	strncpy(Name,"HTTP",MaxLen);
+}
+
+void THttpSocketServer::Execute()
 {
 	int count;
 	char Buf[513];
-	int FileHandle;
 
-	int Handle = (int)TcpHandle;
-
-	if (RdosWaitForTcpConnection(Handle, 6000))
+	if (FSocket->WaitForConnection(6000))
 	{
 		do
 		{
-			count = RdosReadTcpConnection(Handle, Buf, 512);
+			count = FSocket->Read(Buf, 512);
 			Buf[count] = 0;
 			printf(Buf);
 		}
 		while (count == 512);
 
-		FileHandle = RdosOpenFile("z:\\index.htm", 0);
-		if (FileHandle)
+		TFile file("z:\\index.htm");
+
+		if (file.IsOpen())
 		{
 			do
 			{
-				count = RdosReadFile(FileHandle, Buf, 512);
-				RdosWriteTcpConnection(Handle, Buf, count);
+				count = file.Read(Buf, 512);
+				FSocket->Write(Buf, count);
 			}
 			while (count);
-			RdosCloseFile(FileHandle);
 		}
-		RdosPushTcpConnection(Handle);
-		RdosCloseTcpConnection(Handle);
-		RdosDeleteTcpConnection(Handle);
+		FSocket->Push();
 	}
-}
+	FSocket->Close();
 
-void __stdcall NewConnection(int Handle)
-{
-	RdosCreateThread(ConnectionThread, "HTTP", (void *)Handle, 0x2000);
+	FInstalled = FALSE;
+
+	delete this;
 }
 
 void cdecl main()
 {
-	RdosListenTcpPort(80, 0x4000, NewConnection);
+	THttpSocketServerFactory Factory;
+    TSocket::Listen(&Factory, 80, 0x4000);
 }
 

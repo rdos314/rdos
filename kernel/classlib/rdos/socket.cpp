@@ -1,0 +1,359 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2002, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# socket.cpp
+# Socket class
+#
+########################################################################*/
+
+#include <string.h>
+#include "socket.h"
+#include "rdos.h"
+
+#define FALSE 0
+#define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::TSocketServer
+#
+#   Purpose....: Constructor for socket server
+#
+#   In params..: ThreadName     Name of server thread
+#				 Socket         Socket to handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer::TSocketServer(const char *ThreadName, int Handle)
+{
+    FWait = new TWait;
+	FSocket = new TSocket(FWait, Handle);
+    
+    Start(ThreadName, 0x2000);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::~TSocketServer
+#
+#   Purpose....: Destructor for socket server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer::~TSocketServer()
+{
+    Stop();
+    delete FSocket;
+    delete FWait;
+}
+
+/*##########################################################################
+#
+#   Name       : NewConnection
+#
+#   Purpose....: New connection callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+
+static void __stdcall NewConnection(int Handle, void *Data)
+{
+	TSocketServerFactory *Factory = (TSocketServerFactory *)Data;
+	Factory->Create(Handle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Listen
+#
+#   Purpose....: Listen for connections on a specified port
+#
+#   In params..: Port       local port to listen on
+#				 BufferSize	socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Listen(TSocketServerFactory *Factory, int Port, int BufferSize)
+{
+	for (;;)
+		RdosListenTcpPort(Port, BufferSize, NewConnection, Factory);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::TSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: Wait       Wait device
+#                Handle     Socket handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocket::TSocket(TWait *Wait, int Handle)
+{
+	FHandle = Handle;
+
+	if (FHandle)
+		RdosAddWaitForTcpConnection(RegisterWait(Wait), FHandle, this);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::TSocket
+#
+#   Purpose....: Constructor
+#
+#   In params..: Wait       Wait device
+#                IP         Remote IP address
+#                Port       local port to listen on
+#				 Timeout	establish timeout in ms
+#				 BufferSize	socket buffer size
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocket::TSocket(TWait *Wait, long IP, int Port, int Timeout, int BufferSize)
+{
+	FHandle = 0;
+
+	FHandle = RdosOpenTcpConnection(IP, 0, Port, Timeout, BufferSize);
+
+	if (FHandle)
+		RdosAddWaitForTcpConnection(RegisterWait(Wait), FHandle, this);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::~TSocket
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocket::~TSocket()
+{
+    if (FHandle)
+        RdosCloseTcpConnection(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::DeviceName
+#
+#   Purpose....: Returns device-name
+#
+#   In params..: MaxLen max size of name
+#   Out params.: Name   device name
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::DeviceName(char *Name, int MaxLen) const
+{
+	strncpy(Name,"Socket",MaxLen);
+}
+
+/*##################  TSocket::IsOpen  ############################
+*   Purpose....: Check if socket is open		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::IsOpen() const
+{
+	if (FHandle)
+		return !RdosIsTcpConnectionClosed(FHandle);
+	else
+	    return FALSE;
+}
+
+/*##################  TSocket::Push  ############################
+*   Purpose....: Push connection        		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSocket::Push()
+{
+	if (FHandle)
+	    RdosPushTcpConnection(FHandle);
+}
+
+/*##################  TSocket::WaitForConnection  ############################
+*   Purpose....: Wait for a connection		                            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSocket::WaitForConnection(int Timeout)
+{
+	if (FHandle)
+		return RdosWaitForTcpConnection(FHandle, Timeout);
+	else
+	    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Write
+#
+#   Purpose....: Write a char
+#
+#   In params..: ch     char to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Write(char ch)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, &ch, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Write
+#
+#   Purpose....: Write a buffer
+#
+#   In params..: buf     buffer to write
+#                count   count to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Write(const char *buf, int count)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, buf, count);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Write
+#
+#   Purpose....: Write a string
+#
+#   In params..: str    string to write
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::Write(const char *str)
+{
+    if (FHandle)
+        RdosWriteTcpConnection(FHandle, str, strlen(str));
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::WaitForChar
+#
+#   Purpose....: Wait for something in the receive buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: TRUE if available
+#
+##########################################################################*/
+int TSocket::WaitForChar(long Timeout)
+{
+	TWait *Wait = GetWait();
+
+	if (Wait)
+		if (Wait->WaitTimeout(Timeout) == this)
+			return TRUE;
+
+    return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Read
+#
+#   Purpose....: Read a single character
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: character
+#
+##########################################################################*/
+char TSocket::Read()
+{
+    char ch = 0;
+
+    if (FHandle)
+        RdosReadTcpConnection(FHandle, &ch, 1);
+
+    return ch;    
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::Read
+#
+#   Purpose....: Read to buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: read chars
+#
+##########################################################################*/
+int TSocket::Read(char *buf, int size)
+{
+    char ch = 0;
+
+    if (FHandle)
+        return RdosReadTcpConnection(FHandle, buf, size);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocket::SignalNewData
+#
+#   Purpose....: Signal new data is available
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocket::SignalNewData()
+{
+}

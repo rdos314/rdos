@@ -406,6 +406,13 @@ AddWaitForCom       MACRO
 	UserGate add_wait_for_com_nr
 						ENDM
 
+; IN  AX        Tcp connection handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForTcpConnection       MACRO
+	UserGate add_wait_for_tcp_connection_nr
+						ENDM
+
 ; IN  AX        ADC handle
 ; IN  BX		Wait handle
 ; IN  ECX       Object ID

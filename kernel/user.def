@@ -323,4 +323,6 @@ disable_cts_nr              = 281
 
 wait_for_send_completed_com_nr  = 282
 
+add_wait_for_tcp_connection_nr  = 283
+
 usergate_entries			= 300

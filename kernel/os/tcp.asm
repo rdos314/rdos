@@ -37,6 +37,8 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\handle.inc
+include ..\wait.inc
 INCLUDE exec.def
 INCLUDE system.inc
 INCLUDE ip.inc
@@ -48,53 +50,20 @@ Reverse	MACRO
 	xchg al,ah
 		ENDM
 
-handle_num EQU 128
+tcp_wait_header	STRUC
 
-tcp_handle	STRUC
+tw_obj			wait_obj_header <>
+tw_handle		DW ?
 
-tcp_handle_next		DW ?
-tcp_handle_sel		DW ?
+tcp_wait_header	ENDS
 
-tcp_handle	ENDS
 
-tcp_process_seg	STRUC
+tcp_handle_seg		STRUC
 
-tcp_handle_free_list	DW ?
-tcp_handles				DB 4*handle_num DUP(?)
+tcp_handle_base	    handle_header <>
+tcp_handle_sel      DW ?
 
-tcp_process_seg	ENDS
-
-HandleToOffset	MACRO reg
-	dec reg
-	shl reg,2
-	add reg,OFFSET tcp_handles	
-					ENDM
-
-OffsetToHandle	MACRO reg
-	sub reg,OFFSET tcp_handles
-	shr reg,2
-	inc reg
-					ENDM
-
-AllocateTcpHandle	MACRO
-	push ax
-	cli
-	mov bx,ds:tcp_handle_free_list
-	mov ax,[bx]
-	mov ds:tcp_handle_free_list,ax
-	sti
-	pop ax
-				ENDM
-
-FreeTcpHandle	MACRO
-	push ax
-	cli
-	mov ax,ds:tcp_handle_free_list
-	mov [bx],ax
-	mov ds:tcp_handle_free_list,bx
-	sti
-	pop ax
-			ENDM
+tcp_handle_seg		ENDS
 
 code	SEGMENT byte public 'CODE'
 
@@ -392,6 +361,7 @@ CreateConnection	Proc near
 	mov eax,SIZE tcp_connection
 	AllocateSmallGlobalMem
 	pop eax
+	mov es:tcp_wait,0
 	mov es:tcp_options,0
 	mov es:tcp_port,si
 	mov es:tcp_remote_ip,edx
@@ -1852,6 +1822,16 @@ process_data_check_fin:
 process_data_wake:
 	mov bx,ds:tcp_owner
 	Signal
+;
+    mov bx,ds:tcp_wait	
+    or bx,bx
+    jz process_data_done
+;
+    push es
+    mov es,bx
+    SignalWait
+	mov ds:tcp_wait,0
+	pop es
 
 process_data_done:
 	ret
@@ -2753,11 +2733,13 @@ listen_tcp_leave:
 	push edi
 ;
 	push eax
-	mov ax,tcp_process_sel
-	mov ds,ax
-	AllocateTcpHandle
+;
+    mov ax,TCP_HANDLE
+	mov cx,SIZE tcp_handle_seg
+	AllocateHandle
 	mov [bx].tcp_handle_sel,es
-	OffsetToHandle bx
+	mov [bx].hh_sign,TCP_HANDLE
+	mov bx,[bx].hh_handle
 	pop eax
 	push eax
 	push edi
@@ -2795,22 +2777,14 @@ wait_for_tcp_connection	Proc far
 	push es
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz wait_tcp_inv
-	cmp bx,handle_num
-	jbe wait_tcp_valid
-
-wait_tcp_inv:
-	stc
-	jmp wait_tcp_done
-
-wait_tcp_valid:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc wait_tcp_done
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz wait_tcp_inv
+	stc
+	jz wait_tcp_done
 ;
 	push bx
 	mov ds,ax
@@ -2844,10 +2818,7 @@ wait_tcp_fail:
 	or ds:tcp_pending,FLAG_DELETE
 	LeaveSection ds:tcp_section
 	pop bx
-	mov ax,tcp_process_sel
-	mov ds,ax
-	mov word ptr [bx].tcp_handle_sel,0
-	FreeHandle
+    FreeHandle
 	stc
 
 wait_tcp_done:
@@ -2937,11 +2908,13 @@ open_tcp_create:
 	jne open_tcp_fail
 	LeaveSection ds:tcp_section
 	mov dx,ds
-	mov bx,tcp_process_sel
-	mov ds,bx
-	AllocateTcpHandle
+;
+    mov ax,TCP_HANDLE
+	mov cx,SIZE tcp_handle_seg
+	AllocateHandle
 	mov [bx].tcp_handle_sel,dx
-	OffsetToHandle bx
+	mov [bx].hh_sign,TCP_HANDLE
+	mov bx,[bx].hh_handle
 	clc
 	jmp open_tcp_done
 
@@ -3049,22 +3022,14 @@ close_tcp_connection	Proc far
 	push es
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz close_tcp_fail
-	cmp bx,handle_num
-	jbe close_tcp_ok
-
-close_tcp_fail:
-	stc
-	jmp close_tcp_done
-
-close_tcp_ok:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc close_tcp_done
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz close_tcp_fail
+	stc
+	jz close_tcp_done
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -3072,6 +3037,15 @@ close_tcp_ok:
 	add bx,bx
 	call word ptr cs:[bx].close_tab
 	LeaveSection ds:tcp_section
+;
+    mov bx,ds:tcp_wait	
+    or bx,bx
+    clc
+    jz close_tcp_done
+;
+    mov es,bx
+    SignalWait
+	mov ds:tcp_wait,0
 	clc
 
 close_tcp_done:
@@ -3080,6 +3054,53 @@ close_tcp_done:
 	pop ds
 	retf32
 close_tcp_connection	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_handle
+;
+;		DESCRIPTION:	Delete handle (called from handle module)
+;
+;		PARAMETERS:		BX			TCP CONNECTION HANDLE
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push es
+	push ax
+	push dx
+;
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc delete_handle_done
+;
+    push [bx].tcp_handle_sel
+    FreeHandle
+    pop ds
+;    
+    or ax,ax
+    stc
+    jz delete_handle_done
+;    
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].close_tab
+	LeaveSection ds:tcp_section
+	clc
+
+delete_handle_done:
+	pop dx
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_handle	Endp
 
 PAGE
 	    
@@ -3100,29 +3121,21 @@ delete_tcp_connection	Proc far
 	push ax
 	push bx
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz delete_tcp_done
-;
-	cmp bx,handle_num
-	ja delete_tcp_done
-;
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc delete_tcp_done
+;    
 	xor ax,ax
 	xchg ax,[bx].tcp_handle_sel
 	or ax,ax
+	stc
 	jz delete_tcp_done
 ;
 	mov ds,ax
-	mov ax,tcp_process_sel
-	cli
 	mov ds:tcp_delete_ok,1
-	mov ds,ax
-	sti
 ;
-	mov ds,ax
-	FreeTcpHandle
+	FreeHandle
+	clc
 
 delete_tcp_done:
 	pop bx
@@ -3150,15 +3163,10 @@ is_tcp_connection_closed	Proc far
 	push ax
 	push bx
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz is_tcp_closed_fail
-;
-	cmp bx,handle_num
-	ja is_tcp_closed_fail
-;
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc is_tcp_closed_done
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
 	jz is_tcp_closed_fail
@@ -3252,22 +3260,14 @@ abort_tcp_connection	Proc far
 	push es
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz abort_tcp_fail
-	cmp bx,handle_num
-	jbe abort_tcp_ok
-
-abort_tcp_fail:
-	stc
-	jmp abort_tcp_done
-
-abort_tcp_ok:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc abort_tcp_done
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz abort_tcp_fail
+	stc
+	jz abort_tcp_done
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -3298,6 +3298,196 @@ Failed	Proc near
 	stc
 	ret
 Failed	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForConnection
+;
+;		DESCRIPTION:	Start a wait for connection
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_connection	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc start_wait_for_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz start_wait_for_done
+;
+	mov ds,ax
+	mov ds:tcp_wait,es
+	mov ax,ds:tcp_receive_count
+	or ax,ax
+	jnz start_wait_signal
+;
+	mov al,ds:tcp_state
+	cmp al,STATE_ESTAB
+    jbe start_wait_for_done
+
+start_wait_signal:
+	mov ds:tcp_wait,0
+    SignalWait
+
+start_wait_for_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_connection Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForConnection
+;
+;		DESCRIPTION:	Stop a wait for connection
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_connection	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc stop_wait_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	jz stop_wait_done
+;
+	mov ds,ax
+	mov ds:tcp_wait,0
+
+stop_wait_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+stop_wait_for_connection Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearConnection
+;
+;		DESCRIPTION:	Clear tcp connection
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_connection	PROC far
+    ret
+clear_connection Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsConnectionIdle
+;
+;		DESCRIPTION:	Check if connection is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_connection_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc is_idle_done
+;    
+	mov ax,[bx].tcp_handle_sel
+	or ax,ax
+	stc
+	jz is_idle_done
+;
+	mov ds,ax
+	mov ds:tcp_wait,es
+	mov ax,ds:tcp_receive_count
+	or ax,ax
+	clc
+	je is_idle_done
+;
+	stc
+
+is_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_connection_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForTcpConnection
+;
+;		DESCRIPTION:	Add a wait for TCP connection
+;
+;		PARAMETERS:		AX      Connection handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_tcp_connection_name	DB 'Add Wait For TCP Connection',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_connection,    tcp_code_sel
+aw1 DW OFFSET stop_wait_for_connection,		tcp_code_sel
+aw2	DW OFFSET clear_connection,				tcp_code_sel
+aw3	DW OFFSET is_connection_idle,		    tcp_code_sel
+
+add_wait_for_tcp_connection	PROC far
+	push ds
+	push es
+	push eax
+	push di
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE tcp_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+    pop ax
+    jc add_wait_done
+;
+	mov es:tw_handle,ax
+
+add_wait_done:
+    pop di
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_tcp_connection	ENDP
 
 PAGE
 	    
@@ -3446,22 +3636,14 @@ read_tcp_connection16	Proc far
 	push esi
 	push edi
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz read_tcp_fail16
-	cmp bx,handle_num
-	jbe read_tcp_ok16
-
-read_tcp_fail16:
-	stc
-	jmp read_tcp_done16
-
-read_tcp_ok16:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc read_tcp_done16
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz read_tcp_fail16
+	stc
+	jz read_tcp_done16
 ;
 	mov ds,ax
 	movzx ecx,cx
@@ -3496,22 +3678,14 @@ read_tcp_connection32	Proc far
 	push esi
 	push edi
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz read_tcp_fail32
-	cmp bx,handle_num
-	jbe read_tcp_ok32
-
-read_tcp_fail32:
-	stc
-	jmp read_tcp_done32
-
-read_tcp_ok32:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc read_tcp_done32
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz read_tcp_fail32
+	stc
+	jz read_tcp_done32
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -3654,22 +3828,14 @@ write_tcp_connection16	Proc far
 	push fs
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz write_tcp_fail16
-	cmp bx,handle_num
-	jbe write_tcp_ok16
-
-write_tcp_fail16:
-	stc
-	jmp write_tcp_done16
-
-write_tcp_ok16:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc write_tcp_done16
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz write_tcp_fail16
+	stc
+	jz write_tcp_done16
 ;
 	mov ds,ax
 	movzx ecx,cx
@@ -3697,22 +3863,14 @@ write_tcp_connection32	Proc far
 	push fs
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz write_tcp_fail32
-	cmp bx,handle_num
-	jbe write_tcp_ok32
-
-write_tcp_fail32:
-	stc
-	jmp write_tcp_done32
-
-write_tcp_ok32:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc write_tcp_done32
+;    
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz write_tcp_fail32
+	stc
+	jz write_tcp_done32
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -3750,22 +3908,14 @@ push_tcp_connection	Proc far
 	push es
 	pushad
 ;
-	mov ax,tcp_process_sel
-	mov ds,ax
-	or bx,bx
-	jz push_tcp_fail
-	cmp bx,handle_num
-	jbe push_tcp_ok
-
-push_tcp_fail:
-	stc
-	jmp push_tcp_done
-
-push_tcp_ok:
-	HandleToOffset bx
+    mov ax,TCP_HANDLE
+    DerefHandle
+    jc push_tcp_done
+;
 	mov ax,[bx].tcp_handle_sel
 	or ax,ax
-	jz push_tcp_fail
+	stc
+	jz push_tcp_done
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -4014,41 +4164,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_PROCESS
-;
-;		DESCRIPTION:	INITERA PROCESSENS HANDLE-TABELL
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_process	PROC far
-	push ds
-	push es
-	pushad
-;
-	mov ax,tcp_process_sel
-	mov es,ax
-	mov cx,handle_num
-	mov di,4*handle_num + OFFSET tcp_handles
-init_handle_tab_loop:
-	mov ax,di
-	sub di,4
-	mov es:[di],ax
-	loop init_handle_tab_loop
-	mov es:tcp_handle_free_list,di
-;
-	popad
-	pop es
-	pop ds
-	ret
-init_process	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			init
 ;
 ;		DESCRIPTION:    Init tcp driver
@@ -4062,10 +4177,6 @@ init	PROC far
 ;
 	mov bx,tcp_code_sel
 	InitDevice
-;	
-	mov eax,SIZE tcp_process_seg
-	mov bx,tcp_process_sel
-	AllocateFixedProcessMem
 ;
 	mov eax,SIZE tcp_data
 	mov bx,tcp_data_sel
@@ -4088,8 +4199,9 @@ init	PROC far
 	mov di,OFFSET init_tcp
 	HookInitTasking
 ;
-	mov di,OFFSET init_process
-	HookCreateProcess
+	mov di,OFFSET delete_handle
+	mov ax,TCP_HANDLE
+	RegisterHandle
 ;
 	mov si,OFFSET open_tcp_connection
 	mov di,OFFSET open_tcp_connection_name
@@ -4151,6 +4263,12 @@ init	PROC far
 	mov di,OFFSET push_tcp_connection_name
 	xor dx,dx
 	mov ax,push_tcp_connection_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET add_wait_for_tcp_connection
+	mov di,OFFSET add_wait_for_tcp_connection_name
+	xor dx,dx
+	mov ax,add_wait_for_tcp_connection_nr
 	RegisterBimodalUserGate
 ;
 	mov al,6

@@ -4691,13 +4691,22 @@ RdosOpenTcpConnection	Endp
 ;		PARAMETER:		Port
 ;						BufferSize
 ;						Callback
+;                       Callback param
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+lcbStruc    STRUC
+
+lcbAds      DD ?
+lcbData     DD ?
+
+lcbStruc    ENDS
+
 ListenCallback	Proc
+    push [eax].lcbData
 	push ebx
 	push OFFSET lcDone
-	push eax
+	push [eax].lcbAds
 	ret
 lcDone:
 	ret
@@ -4711,16 +4720,26 @@ RdosListenTcpPort	Proc
 	push esi
 	push edi
 ;
+	mov eax,8
+	UserGate allocate_app_mem_nr
+	mov eax,[ebp+16]
+	mov [edx].lcbAds,eax
+	mov eax,[ebp+20]
+	mov [edx].lcbData,eax
+;	
 	mov edi,OFFSET ListenCallback
 	mov si,[ebp+8]
 	mov ecx,[ebp+12]
-	mov eax,[ebp+16]
+	mov eax,edx
 	UserGate listen_tcp_port_nr
+;
+	mov edx,[ebp+8]
+	UserGate free_app_mem_nr
 ;
 	pop edi
 	pop esi
 	pop ebp
-	ret 12
+	ret 16
 RdosListenTcpPort	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -4752,6 +4771,38 @@ wftcDone:
 	pop ebp
 	ret 8
 RdosWaitForTcpConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAddWaitForTcpConnection
+;
+;		DESCRIPTION:	Add wait object to tcp connection
+;
+;		PARAMETER:		WaitHandle
+;                       ConHandle
+;						ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForTcpConnection
+
+RdosAddWaitForTcpConnection	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate add_wait_for_tcp_connection_nr
+	mov eax,1
+	jnc awftcDone
+	xor eax,eax
+awftcDone:
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddWaitForTcpConnection	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
