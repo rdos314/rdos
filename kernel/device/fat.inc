@@ -29,6 +29,49 @@ fat12				EQU 12
 fat16				EQU 16
 fat32				EQU 32
 
+
+MAX_LFN_ENTRIES = 20
+
+lfn_pos_struc   STRUC
+
+lfnp_sector     DD ?
+lfnp_offset     DD ?
+
+lfn_pos_struc   ENDS
+
+lfn_struc   STRUC
+
+lfn_entries         DW ?
+lfn_entry_arr       DD 2 * MAX_LFN_ENTRIES DUP (?)
+lfn_seq             DB ?
+lfn_chksum          DB ?
+lfn_name            DB 256 DUP(?)
+
+lfn_struc   ENDS
+
+lfn_entry_struc STRUC
+
+lfne_seq    DB ?
+lfne_char1  DB ?,?
+lfne_char2  DB ?,?
+lfne_char3  DB ?,?
+lfne_char4  DB ?,?
+lfne_char5  DB ?,?
+lfne_attrib DB ?
+lfne_type   DB ?
+lfne_chksum DB ?
+lfne_char6  DB ?,?
+lfne_char7  DB ?,?
+lfne_char8  DB ?,?
+lfne_char9  DB ?,?
+lfne_char10 DB ?,?
+lfne_char11 DB ?,?
+lfne_clust  DW ?
+lfne_char12 DB ?,?
+lfne_char13 DB ?,?
+
+lfn_entry_struc ENDS
+
 fat_dir_sel_data_struc	STRUC
 
 fds_base			dir_sel_data_struc <>
@@ -55,6 +98,7 @@ fde_entry_sector	DD ?
 fde_entry_offset	DW ?
 fde_start_cluster	DD ?
 fde_start_sector	DD ?
+fde_fat_name        DB 13 DUP(?)
 
 fde_name		DB ?
 
@@ -67,6 +111,7 @@ ffe_base			dir_file_entry_data_struc <>
 ffe_entry_sector	DD ?
 ffe_entry_offset	DW ?
 ffe_start_cluster	DD ?
+ffe_fat_name        DB 13 DUP(?)
 
 ffe_name			DB ?
 

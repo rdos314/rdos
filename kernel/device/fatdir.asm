@@ -102,6 +102,40 @@ ctE8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 ctF0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 ctF8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
 
+lower_tab:
+lt00 DB	0,		0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+lt08 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+lt10 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+lt18 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+lt20 DB ' ',	'!',	0FFh,	'#',	'$',	'%',	'&',	27h
+lt28 DB '(',	')',	0FFh,	0FFh,	0FFh,	'-',	'.',	0
+lt30 DB '0',	'1',	'2',	'3',	'4',	'5',	'6',	'7'
+lt38 DB '8',	'9',	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+lt40 DB '@',	'a',	'b',	'c',	'd',	'e',	'f',	'g'
+lt48 DB 'h',	'i',	'j',	'k',	'l',	'm',	'n',	'o'
+lt50 DB 'p',	'q',	'r',	's',	't',	'u',	'v',	'w'
+lt58 DB	'x',	'y',	'z',	0FFh,	0,		0FFh,	'^',	'_'
+lt60 DB 60h,	'a',	'b',	'c',	'd',	'e',	'f',	'g'
+lt68 DB 'h',	'i',	'j',	'k',	'l',	'm',	'n',	'o'
+lt70 DB 'p',	'q',	'r',	's',	't',	'u',	'v',	'w'
+lt78 DB 'x',	'y',	'z',	'{',	0FFh,	'}',	'~',	0FFh
+lt80 DB	0FFh,	0FFh,	0FFh,	0FFh,	'é',	0FFh,	'è',	0FFh
+lt88 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	'é',	'è'
+lt90 DB	0FFh,	0FFh,	0FFh,	0FFh,	'ô',	0FFh,	0FFh,	0FFh
+lt98 DB	0FFh,	'ô',	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltA0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltA8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltB0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltB8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltC0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltC8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltD0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltD8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltE0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltE8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltF0 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+ltF8 DB	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -452,7 +486,9 @@ get_entry_name_size	Endp
 ;		DESCRIPTION:	Copy entry name
 ;
 ;		PARAMETERS:		ESI		Entry data
-;						EDI		Dir entry name
+;						EDI		Dir entry name offset
+;
+;       RETURNS:        CX      Size of name
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -461,7 +497,6 @@ copy_entry_name	Proc near
 	push esi
 	push edi
 ;
-	mov edi,es:[edi].de_name
 	xor ecx,ecx
 	xor dx,dx
 	mov cx,8
@@ -505,12 +540,148 @@ copy_name_add_zero:
 	xor al,al
 	stos byte ptr es:[edi]
 ;
+	mov cx,dx
 	pop edi
-	mov es:[edi].de_name_size,dx
 	pop esi
 	pop dx
 	ret
 copy_entry_name	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			copy_entry_xlat
+;
+;		DESCRIPTION:	Copy entry name & translate
+;
+;		PARAMETERS:		ESI		Entry data
+;						EDI		Dir entry name offset
+;                       BX      Table
+;
+;       RETURNS:        CX      Size of name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+copy_entry_xlat	Proc near
+	push dx
+	push esi
+	push edi
+;
+	xor ecx,ecx
+	xor dx,dx
+	mov cx,8
+xcopy_name_base_loop:
+	lods byte ptr es:[esi]
+	xlat byte ptr cs:char_tab
+	cmp al,' '
+	je xcopy_name_base_ok
+;
+	inc dx
+	stos byte ptr es:[edi]
+	loop xcopy_name_base_loop
+;
+	inc esi
+
+xcopy_name_base_ok:
+	dec esi
+	add esi,ecx
+	mov al,'.'
+	inc dx
+	stos byte ptr es:[edi]
+;
+	mov cx,3
+xcopy_name_ext_loop:
+	lods byte ptr es:[esi]
+	xlat cs:byte ptr char_tab
+	cmp al,' '
+	je xcopy_name_ext_ok
+;
+	inc dx
+	stos byte ptr es:[edi]
+	loop xcopy_name_ext_loop
+
+xcopy_name_ext_ok:
+	mov al,es:[edi-1]
+	cmp al,'.'
+	jne xcopy_name_add_zero
+;
+	dec edi
+	dec dx
+
+xcopy_name_add_zero:
+	xor al,al
+	stos byte ptr es:[edi]
+;
+	mov cx,dx
+	pop edi
+	pop esi
+	pop dx
+	ret
+copy_entry_xlat	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_lfn_name_size
+;
+;		DESCRIPTION:	Get LFN name size
+;
+;		PARAMETERS:		DI			Cached dir selector
+;                       FS          LFN data
+;
+;		RETURNS:		NC          LFN valid
+;                           ECX		Size of LFN name
+;                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_lfn_name_size	Proc near
+    push ax
+    push bx
+    push dx
+;
+    mov ax,fs
+    or ax,ax    
+    stc
+    jz get_lfn_name_size_done
+;
+    mov al,fs:lfn_seq
+    cmp al,1
+    je get_lfn_name_size_start
+;
+    call delete_lfn_entries
+    stc
+    jmp get_lfn_name_size_done
+
+get_lfn_name_size_start:
+    mov bx,OFFSET lfn_name
+    xor cx,cx
+    mov dx,255
+
+get_lfn_name_size_loop:
+    mov al,fs:[bx]
+    or al,al
+    jz get_lfn_name_size_ok
+;
+    cmp al,-1
+    je get_lfn_name_size_ok
+;
+    inc cx
+    inc bx
+    sub dx,1
+    jnz get_lfn_name_size_loop
+;
+    mov byte ptr fs:[bx],0    
+
+get_lfn_name_size_ok:
+    clc
+
+get_lfn_name_size_done:
+    pop dx
+    pop bx
+    pop ax
+    ret
+get_lfn_name_size   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -947,6 +1118,52 @@ cache_file_entry	Proc near
 	push edi
 ;
 	mov bx,di
+    call get_lfn_name_size
+    jc cache_file_83
+;
+	mov eax,SIZE ffe_struc
+	add eax,ecx
+	push edx
+	AllocateSmallLinear
+	mov edi,edx
+	add edx,OFFSET ffe_name
+	mov es:[edi].de_name,edx
+	pop edx
+	mov al,ds:drive_nr
+	mov es:[edi].de_drive,al
+	mov es:[edi].de_usage,0
+	mov al,es:[esi].fat_attrib
+	mov es:[edi].de_attrib,al
+	mov es:[edi].ffe_entry_sector,edx
+	mov ax,si
+	and ax,1FFh
+	mov es:[edi].ffe_entry_offset,ax
+;	
+    push cx
+    push edi
+	lea edi,[edi].ffe_fat_name
+	call copy_entry_name
+	pop edi
+	pop cx
+;	
+	push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,cx
+    mov esi,OFFSET lfn_name
+	mov edi,es:[edi].de_name
+	rep movs byte ptr es:[edi],fs:[esi]
+	xor al,al
+	stos byte ptr es:[edi]
+;	
+	pop edi
+	pop esi
+	pop ecx
+	mov es:[edi].de_name_size,cx
+    jmp cache_file_time
+
+cache_file_83:	
 	call get_entry_name_size
 	mov eax,SIZE ffe_struc
 	add eax,ecx
@@ -965,7 +1182,22 @@ cache_file_entry	Proc near
 	mov ax,si
 	and ax,1FFh
 	mov es:[edi].ffe_entry_offset,ax
+;	
+    push edi
+	lea edi,[edi].ffe_fat_name
 	call copy_entry_name
+	pop edi
+;	
+    push bx
+    push edi
+	mov edi,es:[edi].de_name
+	mov bx,OFFSET lower_tab
+	call copy_entry_xlat
+	pop edi
+	pop bx
+	mov es:[edi].de_name_size,cx
+
+cache_file_time:
 	call get_entry_time
 	mov es:[edi].de_time,eax
 	mov es:[edi+4].de_time,edx
@@ -1017,6 +1249,52 @@ cache_dir_entry	Proc near
 	push edi
 ;
 	mov bx,di
+    call get_lfn_name_size
+    jc cache_dir_83
+;
+	mov eax,SIZE fde_struc
+	add eax,ecx
+	push edx
+	AllocateSmallLinear
+	mov edi,edx
+	add edx,OFFSET fde_name
+	mov es:[edi].de_name,edx
+	pop edx
+	mov al,ds:drive_nr
+	mov es:[edi].de_drive,al
+	mov es:[edi].de_usage,0
+	mov al,es:[esi].fat_attrib
+	mov es:[edi].de_attrib,al
+	mov es:[edi].fde_entry_sector,edx
+	mov ax,si
+	and ax,1FFh
+	mov es:[edi].fde_entry_offset,ax
+;	
+    push cx
+    push edi
+	lea edi,[edi].fde_fat_name
+	call copy_entry_name
+	pop edi
+	pop cx
+;	
+	push ecx
+    push esi
+    push edi
+;    
+    movzx ecx,cx
+    mov esi,OFFSET lfn_name
+	mov edi,es:[edi].de_name
+	rep movs byte ptr es:[edi],fs:[esi]
+	xor al,al
+	stos byte ptr es:[edi]
+;	
+	pop edi
+	pop esi
+	pop ecx
+	mov es:[edi].de_name_size,cx
+    jmp cache_dir_time
+
+cache_dir_83:	
 	call get_entry_name_size
 	mov eax,SIZE fde_struc
 	add eax,ecx
@@ -1035,7 +1313,22 @@ cache_dir_entry	Proc near
 	mov ax,si
 	and ax,1FFh
 	mov es:[edi].fde_entry_offset,ax
+;	
+    push edi
+	lea edi,[edi].fde_fat_name
 	call copy_entry_name
+	pop edi
+;	
+    push bx
+    push edi
+	mov edi,es:[edi].de_name
+	mov bx,OFFSET lower_tab
+	call copy_entry_xlat
+	pop edi
+	pop bx
+	mov es:[edi].de_name_size,cx
+
+cache_dir_time:
 	call get_entry_time
 	mov es:[edi].de_time,eax
 	mov es:[edi+4].de_time,edx
@@ -1072,6 +1365,221 @@ cache_dir_entry	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CACHE_LFN_ENTRY
+;
+;		DESCRIPTION:	Cache LFN entry
+;
+;		PARAMETERS:		DI			Cached dir selector
+;						EDX			Sector
+;						ESI			Entry data
+;                       FS          LFN cache
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_lfn_entry	Proc near
+    push es
+    push eax
+    push bx
+    push ecx
+;
+    mov bx,fs
+    mov ax,flat_sel
+    mov fs,ax
+    mov es,bx
+;
+    or bx,bx
+    jnz cache_lfn_check_seq
+
+cache_lfn_retry:
+    test fs:[esi].lfne_seq,40h
+    jz cache_lfn_done
+;
+    mov eax,SIZE lfn_struc
+    AllocateSmallGlobalMem
+;    
+    push di
+    mov di,OFFSET lfn_name
+    mov cx,40h
+    mov eax,-1
+    rep stosd
+    pop di
+;    
+    mov es:lfn_entries,0
+    mov es:lfn_chksum,0
+    mov al,fs:[esi].lfne_seq
+    and al,3Fh
+    jmp cache_lfn_seq_ok
+
+cache_lfn_check_seq:
+    mov es,bx
+    mov al,fs:[esi].lfne_seq
+    mov ah,es:lfn_seq
+    dec ah
+    cmp al,ah
+    je cache_lfn_seq_ok
+
+cache_lfn_error:
+    call delete_lfn_entries    
+    jmp cache_lfn_retry
+    
+cache_lfn_seq_ok:
+    mov es:lfn_seq,al
+    mov bx,es:lfn_entries
+    cmp bx,20
+    jae cache_lfn_error
+;
+    shl bx,3    
+    mov es:lfn_entry_arr.[bx].lfnp_sector,edx
+    mov eax,esi
+    and eax,1FFh
+    mov es:lfn_entry_arr.[bx].lfnp_offset,eax    
+    inc es:lfn_entries
+;
+    push di
+    push si
+    std
+    mov si,OFFSET lfn_name + 255 - 13
+    mov di,OFFSET lfn_name + 255
+    mov cx,256 - 13
+    rep movs byte ptr es:[di],es:[si]    
+    cld
+    mov di,OFFSET lfn_name
+    mov al,-1
+    mov cx,13
+    rep stosb
+    pop si
+;
+    mov di,OFFSET lfn_name
+    mov al,fs:[esi].lfne_char1
+    stosb
+    mov al,fs:[esi].lfne_char2
+    stosb
+    mov al,fs:[esi].lfne_char3
+    stosb
+    mov al,fs:[esi].lfne_char4
+    stosb
+    mov al,fs:[esi].lfne_char5
+    stosb
+    mov al,fs:[esi].lfne_char6
+    stosb
+    mov al,fs:[esi].lfne_char7
+    stosb
+    mov al,fs:[esi].lfne_char8
+    stosb
+    mov al,fs:[esi].lfne_char9
+    stosb
+    mov al,fs:[esi].lfne_char10
+    stosb
+    mov al,fs:[esi].lfne_char11
+    stosb
+    mov al,fs:[esi].lfne_char12
+    stosb
+    mov al,fs:[esi].lfne_char13
+    stosb        
+    pop di
+
+cache_lfn_done:
+    mov ax,es
+    mov fs,ax
+;
+    pop ecx
+    pop bx
+    pop eax
+    pop es
+    ret
+cache_lfn_entry Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DELETE_LFN_ENTRIES
+;
+;		DESCRIPTION:	Delete LFN entries
+;
+;		PARAMETERS:		DI          Cached dir selector
+;                       FS          LFN cache
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_lfn_entries	Proc near
+    push es
+    pushad
+;
+    int 3
+;
+    mov bp,di
+    mov cx,fs:lfn_entries
+    mov di,OFFSET lfn_entry_arr
+
+delete_lfn_loop:
+    mov edx,fs:[di].lfnp_sector
+	mov al,ds:drive_nr
+	LockSector
+	or esi,fs:[di].lfnp_offset
+;	
+	push ecx
+	push edi
+	mov edi,esi
+	mov ecx,8
+	xor eax,eax
+    rep stos dword ptr es:[edi]
+;    
+    mov di,bp
+    call cache_free_entry
+;
+    pop edi
+    pop ecx
+;
+    ModifySector
+    UnlockSector
+;
+    add di,8 
+    loop delete_lfn_loop    
+;    
+    mov ax,fs
+    mov es,ax    
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+;
+    popad
+    pop es
+    ret
+delete_lfn_entries  Endp    
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CACHE_FREE_LFN
+;
+;		DESCRIPTION:	Free LFN entry
+;
+;		PARAMETERS:		FS          LFN cache
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_free_lfn	Proc near
+    push es
+    push ax
+;
+    mov ax,fs
+    or ax,ax
+    jz cache_free_lfn_done
+;
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem 
+
+cache_free_lfn_done:   
+    pop ax
+    pop es    
+    ret
+cache_free_lfn Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CACHE_ENTRY
 ;
 ;		DESCRIPTION:	Cache an entry
@@ -1079,6 +1587,7 @@ cache_dir_entry	Endp
 ;		PARAMETERS:		DI			Cached dir selector
 ;						EDX			Sector
 ;						ESI			Entry data
+;                       FS          LFN info
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1097,7 +1606,7 @@ cache_entry	Proc near
 	mov ah,al
 	and ah,0Fh
 	cmp ah,0Fh
-	je cache_entry_done
+	je cache_entry_lfn
 ;
 	test al,10h
 	jz cache_entry_file
@@ -1112,6 +1621,10 @@ cache_entry_file:
 	call cache_file_entry
 	pop edx
 	jmp cache_entry_done
+
+cache_entry_lfn:
+    call cache_lfn_entry
+    jmp cache_entry_done
 
 cache_entry_deleted:
 	call cache_deleted_entry
@@ -1137,6 +1650,7 @@ cache_entry	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cache_root_dir	Proc near
+    push fs
 	push ax
 	push ebx
 	push cx
@@ -1144,6 +1658,8 @@ cache_root_dir	Proc near
 	push esi
 	push di
 ;
+    xor di,di
+    mov fs,di
 	mov di,bx
 	mov cx,ds:root_entries
 	shr cx,4
@@ -1165,12 +1681,15 @@ cache_root_dir_next:
 	inc edx
 	loop cache_root_sector_loop
 ;
+    call cache_free_lfn
+;    
 	pop di
 	pop esi
 	pop edx
 	pop cx
 	pop ebx
 	pop ax
+	pop fs
 	clc
 	ret
 cache_root_dir	Endp
@@ -1191,12 +1710,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 cache_sub_dir	Proc near
+    push fs
 	push ax
 	push ebx
 	push edx
 	push esi
 	push di
 ;
+    xor di,di
+    mov fs,di
 	mov di,bx
 
 cache_sub_dir_sector_loop:
@@ -1216,11 +1738,14 @@ cache_sub_dir_next:
 	call next_sector
 	jnc cache_sub_dir_sector_loop
 ;
+    call cache_free_lfn
+;
 	pop di
 	pop esi
 	pop edx
 	pop ebx
 	pop ax
+	pop fs
 	clc
 	ret
 cache_sub_dir	Endp
