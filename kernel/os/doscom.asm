@@ -1513,13 +1513,13 @@ find_first_file	PROC near
 	mov ax,ds
 	mov es,ax
 	mov edi,esi
-	UserGateForce32 open_dir_nr
-	jc fffSearch
+;	UserGateForce32 open_dir_nr
+;	jc fffSearch
 ;
-	call GetAllFiles
-	or cx,cx
-	jz fffNoMatch
-	jmp fffFirst
+;	call GetAllFiles
+;	or cx,cx
+;	jz fffNoMatch
+;	jmp fffFirst
 
 fffSearch:
 	call OpenFileSearch

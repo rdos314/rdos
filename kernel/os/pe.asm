@@ -801,12 +801,12 @@ OpenDll	Proc near
 	mov di,fs
 	mov es,di
 	mov edi,esi
-	mov ebx,esi
 ;
 	xor cl,cl
 	UserGateForce32 open_file_nr
 	jnc open_dll_done
 ;
+	mov ebx,esi
 	mov ax,env_sel
 	mov ds,ax
 	xor si,si

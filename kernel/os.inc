@@ -1454,14 +1454,6 @@ InitFileSystem	MACRO
 	OsGate init_file_system_nr
 					ENDM
 
-;	AL			DRIVE #
-;	AH			ATTRIB
-;	BX			FILE SELECTOR
-;	ECX			FILE SIZE
-CreateFileSelector	MACRO
-	OsGate create_file_selector_nr
-					ENDM
-
 ;	BX			File selector
 ;	EDX			Position
 GetFileListEntry	MACRO
@@ -1484,6 +1476,12 @@ AllocateDirEntry	MACRO
 
 ;	BX			DIR SELECTOR
 ;	EDX			DIR ENTRY
+CacheDir	MACRO
+	OsGate cache_dir_nr
+					ENDM
+
+;	BX			DIR SELECTOR
+;	EDX			DIR ENTRY
 InsertDirEntry	MACRO
 	OsGate insert_dir_entry_nr
 					ENDM
@@ -1494,16 +1492,28 @@ InsertFileEntry	MACRO
 	OsGate insert_file_entry_nr
 					ENDM
 
-;	AL			DRIVE #
-;	EDX			CURRENT DIRECTORY PTR
-GetCurDirPtr	MACRO
-	OsGate get_cur_dir_ptr_nr
+;	BX			DIR SELECTOR
+;	EDX			FREE ENTRY
+InsertFreeEntry	MACRO
+	OsGate insert_free_entry_nr
 					ENDM
 
-;	AL			DRIVE #
-;	EDX			CURRENT DIRECTORY PTR
-SetCurDirPtr	MACRO
-	OsGate set_cur_dir_ptr_nr
+;	BX			DIR SELECTOR
+;	EDX			DELETED ENTRY
+InsertDeletedEntry	MACRO
+	OsGate insert_deleted_entry_nr
+					ENDM
+
+;	BX			DIR SELECTOR
+;	EDX			DELETED ENTRY
+GetFreeEntry	MACRO
+	OsGate get_free_entry_nr
+					ENDM
+
+;	BX			DIR SELECTOR
+;	EDX			DELETED ENTRY
+GetDeletedEntry	MACRO
+	OsGate get_deleted_entry_nr
 					ENDM
 
 ;	DS:BX		DEVICE HEADER

@@ -61,7 +61,6 @@ fs_data_seg		ENDS
 fs_process_seg	STRUC
 
 cur_dir_sel			DW 256 DUP(?)
-cur_dir_ptr			DD MAX_DRIVES DUP(?)
 curr_drive			DB ?
 resv1				DB ?
 dir_free_list		DW ?
@@ -82,6 +81,7 @@ fl_usage			DW ?
 fl_ref_count		DW ?
 fl_base				DD ?
 fl_size				DD ?
+fl_pos				DD ?
 fl_sel				DW ?
 fl_state			DB ?
 fl_flags			DB ?
@@ -94,12 +94,10 @@ file_data_struc	STRUC
 
 file_size_section	read_write_section_typ <>
 file_list_section	section_typ <>
-file_ptr			DD ?
 file_dir_entry		DD ?
 file_usage			DW ?
 file_drive			DB ?
 file_attrib			DB ?
-file_parent			DW ?
 file_cache_entry	DD ?
 file_cache_ads		DD ?
 file_size			DD ?
@@ -167,19 +165,27 @@ dismount_proc			DD ?
 ;	OUT	EDX			TOTAL NUMBER OF UNITS
 info_proc				DD ?
 
-;	IN	ES:EDI		PATH NAME
-set_cur_dir_proc		DD ?
+;	IN  BX			DIR SELECTOR
+;	IN	EDX			DIR ENTRY OR 0
+cache_dir_proc				DD ?
+
+;	IN	EDX			DIR DIR ENTRY
+update_dir_proc		DD ?
+
+;	IN	EDX			DIR FILE ENTRY
+update_file_proc		DD ?
 
 ;	IN	ES:EDI		PATH NAME
-get_cur_dir_proc		DD ?
+;	IN  BX			DIR SELECTOR
+;	OUT	EDX			DIR ENTRY
+create_dir_proc			DD ?
 
-;	IN	ES:EDI		PATH NAME
-make_dir_proc			DD ?
+;	IN  BX			DIR SELECTOR
+;	IN	EDX			DIR ENTRY TO DELETE
+delete_dir_proc			DD ?
 
-;	IN	ES:EDI		PATH NAME
-remove_dir_proc			DD ?
-
-;	IN	ES:EDI		PATH NAME
+;	IN  BX			DIR SELECTOR
+;	IN	EDX			FILE ENTRY TO DELETE
 delete_file_proc		DD ?
 
 ;	IN	FS:ESI		CURRENT NAME
@@ -187,62 +193,18 @@ delete_file_proc		DD ?
 rename_file_proc		DD ?
 
 ;	IN	ES:EDI		PATH NAME
-;	OUT	CX			FILE ATTRIBUTE
-get_file_attrib_proc	DD ?
-
-;	IN	ES:EDI		PATH NAME
+;	IN  BX			DIR SELECTOR
 ;	IN	CX			FILE ATTRIBUTE
-set_file_attrib_proc	DD ?
-
-;	IN	ES:EDI		PATH NAME
-;	OUT	BX			DIR HANDLE
-open_dir_proc			DD ?
-
-;	IN	BX			DIR HANDLE
-close_dir_proc			DD ?
-
-;	IN	BX			DIR HANDLE
-;	IN	DX			ENTRY #
-;	IN	CX			MAX SIZE OF FILENAME
-;	IN	ES:EDI		FILENAME BUFFER
-;	OUT	ECX			FILE SIZE
-;	OUT	BX			FILE ATTRIBUTE
-;	OUT	EDX:EAX		FILE TIME/DATE
-read_dir_proc			DD ?
-
-;	IN  ES:EDI		PATH NAME
-;	IO  AH			FILE ATTRIBUTE
-;	IO  ECX			FILE SIZE
-;	IO	EDX			FILE PTR
-open_file_proc			DD ?
-
-;	IN	ES:EDI		PATH NAME
-;	IN	CX			FILE ATTRIBUTE
-;	OUT	BX			FILE HANDLE
+;	OUT	EDX			DIR ENTRY
 create_file_proc		DD ?
-
-;	IN	BX			FILE HANDLE
-close_file_proc			DD ?
 
 ;	IN	BX			FILE HANDLE
 ;	OUT	DX			IOCTL DATA
 get_ioctl_data_proc		DD ?
 
 ;	IN	BX			FILE HANDLE
-;	OUT	EDX			FILE SIZE
-get_file_size_proc		DD ?
-
-;	IN	BX			FILE HANDLE
 ;	IN	EDX			FILE SIZE
 set_file_size_proc		DD ?
-
-;	IN	BX			FILE HANDLE
-;	OUT	EDX:ECX		FILE TIME
-get_file_time_proc		DD ?
-
-;	IN	BX			FILE HANDLE
-;	IN	EDX:ECX		FILE TIME
-set_file_time_proc		DD ?
 
 ;	IN	BX			FILE HANDLE
 ;	IN	ECX			NUMBER OF BYTES
@@ -276,10 +238,6 @@ read_file_block_proc			DD ?
 ;	IN	EDX			POSITION
 ;	IN	EDI			FILE LIST ENTRY
 write_file_block_proc			DD ?
-
-;	IN  BX			DIR SELECTOR
-;	IN	EDX			DIR ENTRY OR 0
-cache_dir_proc				DD ?
 
 file_system_struc	ENDS
 

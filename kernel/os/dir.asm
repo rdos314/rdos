@@ -101,6 +101,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn CreateFileHandle:near
 	extrn CreateFileSel:near
+	extrn FreeFileSel:near
 
 char_tab:
 ct00 DB	0,		0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh,	0FFh
@@ -141,6 +142,50 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CacheDirEntry
+;
+;		DESCRIPTION:	Cache dir entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;						EDX			Dir entry
+;
+;		RETURNS:		BX			Cached dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+cache_dir_name DB 'Cache Dir', 0
+
+cache_dir	PROC far
+	push ds
+	push es
+	push ax
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov bx,es:[edx].de_sel
+	or bx,bx
+	jnz cache_dir_done
+;
+	mov al,ds:ds_drive
+	mov bx,ds
+	call CreateDirSel
+	CallFileSystem cache_dir_proc
+	mov es:[edx].de_sel,bx
+
+cache_dir_done:
+	pop ax
+	pop es
+	pop ds
+	ret
+cache_dir	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InsertDirEntry
 ;
 ;		DESCRIPTION:	Insert dir entry structure
@@ -161,6 +206,8 @@ insert_dir_entry	PROC far
 	mov ds,bx
 	mov ax,flat_sel
 	mov es,ax
+;
+	mov es:[edx].de_sel,0
 ;
 	mov eax,ds:ds_dir_ptr
 	or eax,eax
@@ -243,12 +290,221 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CreateDirSelector
+;		NAME:			InsertFreeEntry
+;
+;		DESCRIPTION:	Insert free entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;						EDX			Free entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+insert_free_entry_name DB 'Insert Free Entry', 0
+
+insert_free_entry	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,ds:ds_free_ptr
+	or eax,eax
+	jne insert_free_used
+
+insert_free_empty:
+	mov es:[edx].de_prev,edx
+	mov es:[edx].de_next,edx
+	mov ds:ds_free_ptr,edx
+	jmp insert_free_done
+
+insert_free_used:
+	mov ebx,es:[eax].de_prev
+	mov es:[eax].de_prev,edx
+	mov es:[ebx].de_next,edx
+	mov es:[edx].de_prev,ebx
+	mov es:[edx].de_next,eax	
+
+insert_free_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+insert_free_entry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertDeletedEntry
+;
+;		DESCRIPTION:	Insert deleted entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;						EDX			Deleted entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+insert_deleted_entry_name DB 'Insert Deleted Entry', 0
+
+insert_deleted_entry	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,ds:ds_deleted_ptr
+	or eax,eax
+	jne insert_deleted_used
+
+insert_deleted_empty:
+	mov es:[edx].de_prev,edx
+	mov es:[edx].de_next,edx
+	mov ds:ds_deleted_ptr,edx
+	jmp insert_deleted_done
+
+insert_deleted_used:
+	mov ebx,es:[eax].de_prev
+	mov es:[eax].de_prev,edx
+	mov es:[ebx].de_next,edx
+	mov es:[edx].de_prev,ebx
+	mov es:[edx].de_next,eax	
+
+insert_deleted_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+insert_deleted_entry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFreeEntry
+;
+;		DESCRIPTION:	Get free entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;
+;		RETURNS:		EDX			Entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_free_entry_name DB 'Get Free Entry', 0
+
+get_free_entry	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edx,ds:ds_free_ptr
+	or edx,edx
+	stc
+	jz get_free_done
+;
+	mov eax,es:[edx].de_next
+	mov ebx,es:[edx].de_prev
+	mov es:[ebx].de_next,eax
+	mov es:[eax].de_prev,ebx
+	mov ds:ds_free_ptr,eax
+	cmp eax,edx
+	jne get_free_list_ok
+;
+	mov ds:ds_free_ptr,0
+
+get_free_list_ok:
+	clc
+
+get_free_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+get_free_entry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDeletedEntry
+;
+;		DESCRIPTION:	Get deleted entry structure
+;
+;		PARAMETERS:		BX			Dir selector
+;
+;		RETURNS:		EDX			Entry
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_deleted_entry_name DB 'Get Deleted Entry', 0
+
+get_deleted_entry	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	mov ds,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edx,ds:ds_deleted_ptr
+	or edx,edx
+	stc
+	jz get_deleted_done
+;
+	mov eax,es:[edx].de_next
+	mov ebx,es:[edx].de_prev
+	mov es:[ebx].de_next,eax
+	mov es:[eax].de_prev,ebx
+	mov ds:ds_deleted_ptr,eax
+	cmp eax,edx
+	jne get_deleted_list_ok
+;
+	mov ds:ds_deleted_ptr,0
+
+get_deleted_list_ok:
+	clc
+
+get_deleted_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+get_deleted_entry	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateDirSel
 ;
 ;		DESCRIPTION:	Create a dir selector
 ;
 ;		PARAMETERS:		AL			Drive
 ;						BX			Parent dir selector
+;						EDX			Parent dir entry
 ;
 ;		RETURNS:		BX			Dir selector
 ;
@@ -260,6 +516,7 @@ CreateDirSel	PROC near
 	push eax
 	push dx
 ;
+	push edx
 	mov dl,al
 	mov eax,SIZE dir_sel_data_struc
 	AllocateSmallGlobalMem
@@ -274,6 +531,8 @@ CreateDirSel	PROC near
 	mov ds:ds_usage,0
 	mov ds:ds_drive,dl
 	mov ds:ds_parent,bx
+	pop eax
+	mov ds:ds_handle,eax
 	mov bx,ds
 ;
 	pop dx
@@ -298,15 +557,74 @@ PAGE
 
 FreeDirSel	PROC near
 	push es
-	push ax
+	push eax
+	push ecx
+	push edx
 ;
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov edx,ds:ds_dir_ptr
+	or edx,edx
+	jz free_dir_file
+
+free_dir_dir_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:ds_dir_ptr
+	jne free_dir_dir_loop
+
+free_dir_file:
+	mov edx,ds:ds_file_ptr
+	or edx,edx
+	jz free_dir_deleted
+
+free_dir_file_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:ds_file_ptr
+	jne free_dir_file_loop
+
+free_dir_deleted:
+	mov edx,ds:ds_deleted_ptr
+	or edx,edx
+	jz free_dir_free
+
+free_dir_deleted_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:ds_deleted_ptr
+	jne free_dir_deleted_loop
+
+free_dir_free:
+	mov edx,ds:ds_free_ptr
+	or edx,edx
+	jz free_dir_del
+
+free_dir_free_loop:
+	mov eax,es:[edx].de_next
+	xor ecx,ecx
+	FreeLinear
+	mov edx,eax
+	cmp edx,ds:ds_free_ptr
+	jne free_dir_free_loop
+
+free_dir_del:
 	mov ax,ds
 	mov es,ax
 	xor ax,ax
 	mov ds,ax
 	FreeMem
 ;
-	pop ax
+	pop edx
+	pop ecx
+	pop eax
 	pop es
 	ret
 FreeDirSel	ENDP
@@ -485,6 +803,9 @@ parse_dir_entry_loop:
 
 parse_dir_name_loop:
 	mov al,es:[edi]
+	cmp al,'.'
+	je parse_dir_dot
+;
 	xlat byte ptr cs:char_tab
 	mov ah,al
 	mov al,fs:[esi]
@@ -506,6 +827,47 @@ parse_dir_name_loop:
 ;
 	cmp al,'/'
 	je parse_dir_tree_next
+	jmp parse_dir_next
+
+parse_dir_dot:
+	pop esi
+	pop esi
+	inc edi
+
+parse_dir_dot_loop:
+	mov al,es:[edi]
+	cmp al,'.'
+	jne parse_dir_dot_ended
+;
+	inc edi
+	EnterSection ds:ds_list_section
+	mov bx,ds:ds_parent
+	LeaveSection ds:ds_list_section
+	or bx,bx
+	jz parse_dir_fail
+;
+	mov ax,ds
+	mov ds,bx
+	EnterReadSection ds:ds_access_section
+	mov ds,ax
+	LeaveReadSection ds:ds_access_section
+	mov ds,bx
+	jmp parse_dir_dot_loop
+
+parse_dir_dot_ended:
+	or al,al
+	jz parse_dir_ok
+;
+	inc edi
+	cmp al,'\'
+	je parse_dir_tree_loop
+;
+	cmp al,'/'
+	je parse_dir_tree_loop
+
+parse_dir_dot_fail:
+	LeaveReadSection ds:ds_access_section
+	jmp parse_dir_fail
 
 parse_dir_next:
 	pop edi
@@ -523,10 +885,12 @@ parse_dir_tree_next:
 	or bx,bx
 	jnz parse_dir_tree_cached
 ;
+	mov al,ds:ds_drive
 	mov bx,ds
 	mov edx,esi
 	call CreateDirSel
 	CallFileSystem cache_dir_proc
+	mov fs:[esi].de_sel,bx
 
 parse_dir_tree_cached:
 	LeaveSection ds:ds_list_section
@@ -724,6 +1088,52 @@ parse_file_done:
 	ret
 ParseFile	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ParseName
+;
+;		DESCRIPTION:	Parse pathname for a valid name
+;
+;		PARAMETERS:		FS		Flat sel
+;						ES:EDI	Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ParseName	Proc near
+	push ax
+	push bx
+	push edi
+;
+	mov bx,OFFSET char_tab
+	mov al,es:[edi]
+	or al,al
+	jz parse_name_fail
+
+parse_name_loop:
+	mov al,es:[edi]
+	inc edi
+	xlat byte ptr cs:char_tab
+	or al,al
+	jz parse_name_ok
+;
+	add al,1
+	jnc parse_name_loop
+
+parse_name_fail:
+	stc
+	jmp parse_name_done
+
+parse_name_ok:
+	clc
+
+parse_name_done:
+	pop edi
+	pop bx
+	pop ax
+	ret
+ParseName	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -858,6 +1268,11 @@ get_cur_dir_loop:
 	jz get_cur_dir_leave
 ;
 	mov si,ds
+	mov ds,bx
+	EnterReadSection ds:ds_access_section
+	mov ds,si
+	LeaveReadSection ds:ds_access_section
+	mov ds,bx
 	mov eax,ds:ds_dir_ptr
 
 get_cur_dir_node_loop:
@@ -889,7 +1304,6 @@ get_cur_dir_node_found:
 	add ecx,eax
 	inc ecx
 ;
-	push ax
 	push ecx
 	push edi
 	mov esi,fs:[esi].de_name
@@ -905,20 +1319,11 @@ get_cur_dir_no_slash:
 	stos byte ptr es:[edi]
 	pop edi
 	pop ecx
-	pop ax
-	or bx,bx
-	je get_cur_dir_leave
-;
-	mov si,ds
-	mov ds,bx
-	EnterReadSection ds:ds_access_section
-	mov ds,si
-	LeaveReadSection ds:ds_access_section
-	mov ds,bx
 	jmp get_cur_dir_loop
 
 get_cur_dir_leave:
 	LeaveReadSection ds:ds_access_section
+	mov al,ds:ds_drive
 
 get_cur_dir_done:
 	mov bx,fs_data_sel
@@ -964,22 +1369,33 @@ SetCurDirBase	Proc near
 	jne set_cur_dir_fail
 ;
 	push es
-	push dx
+	push bx
+	push si
+;
 	mov bx,fs_process_sel
 	mov es,bx
 	mov bx,ds
 	mov al,ds:ds_drive
 	movzx si,al
 	add si,si
-	mov es:[si].cur_dir_sel,bx
-	pop dx
+	xchg bx,es:[si].cur_dir_sel
+	or bx,bx
+	jz set_cur_dir_setup
+;
+	push ds
+	mov ds,bx
+	dec ds:ds_usage	
+	pop ds
+
+set_cur_dir_setup:
+	pop si
+	pop bx
 	pop es
 	call ParseEnd
 	clc
 	jmp set_cur_dir_done
 
 set_cur_dir_fail:
-	dec ds:ds_usage
 	call ParseEnd
 	stc
 
@@ -989,6 +1405,449 @@ set_cur_dir_done:
 	pop ds
 	ret
 SetCurDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateDirBase
+;
+;		DESCRIPTION:	Create a new directory
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;
+;		RETURNS:		CX			FILE ATTRIBUTE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateDirBase	Proc near
+	push ds
+	push fs
+	push ax
+	push edx
+;
+	mov bx,flat_sel
+	mov fs,bx
+;
+	push edi
+	call ParseDir
+	jc create_dir_pop_failed
+;
+	EnterWriteSection ds:ds_access_section
+	dec ds:ds_usage
+	call ParseFile
+	jc create_dir_check
+
+create_dir_leave_fail:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+	jmp create_dir_pop_failed
+
+create_dir_check:
+	call ParseName
+	jc create_dir_pop_failed
+;
+	mov al,ds:ds_drive
+	mov bx,ds
+	CallFileSystem create_dir_proc
+	jc create_dir_leave_fail
+;
+	LeaveWriteSection ds:ds_access_section
+	pop edi
+	call ParseEnd
+	clc
+	jmp create_dir_done
+
+create_dir_pop_failed:
+	pop edi
+	stc
+
+create_dir_done:
+	pop edx
+	pop ax
+	pop fs
+	pop ds
+	ret
+CreateDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DeleteDirBase
+;
+;		DESCRIPTION:	Delete a directory
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;
+;		RETURNS:		NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteDirBase	Proc near
+	push ds
+	push es
+	push fs
+	push eax
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov fs,ax
+;
+	call ParseDir
+	jc delete_dir_done
+;
+	EnterWriteSection ds:ds_access_section
+	dec ds:ds_usage
+	mov edx,ds:ds_handle
+	mov bx,ds:ds_parent
+	or bx,bx
+	jz delete_dir_fail
+;
+	mov ax,ds:ds_usage
+	or ax,ax
+	jnz delete_dir_fail
+;
+	mov eax,ds:ds_dir_ptr
+	or eax,eax
+	jnz delete_dir_fail
+;
+	mov eax,ds:ds_file_ptr
+	or eax,eax
+	jnz delete_dir_fail
+;
+	push ds
+	mov ds,bx
+	EnterWriteSection ds:ds_access_section
+;
+	mov ax,fs:[edx].de_usage
+	or ax,ax
+	jnz delete_dir_pop_fail
+;
+	push ebx
+	mov eax,fs:[edx].de_next
+	mov ebx,fs:[edx].de_prev
+	mov fs:[ebx].de_next,eax
+	mov fs:[eax].de_prev,ebx
+	pop ebx
+	cmp eax,edx
+	jne delete_dir_unlink
+;
+	mov ds:ds_dir_ptr,0
+	jmp delete_dir_leave
+
+delete_dir_unlink:
+	cmp edx,ds:ds_dir_ptr
+	jne delete_dir_leave
+;
+	mov ds:ds_dir_ptr,eax
+	
+delete_dir_leave:
+	LeaveWriteSection ds:ds_access_section
+	mov al,ds:ds_drive
+	CallFileSystem delete_dir_proc
+	pop ds
+	call ParseEnd
+	call FreeDirSel
+	clc
+	jmp delete_dir_done
+
+delete_dir_pop_fail:
+	LeaveWriteSection ds:ds_access_section
+	pop ds
+
+delete_dir_fail:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+	stc
+
+delete_dir_done:
+	pop edi
+	pop edx
+	pop eax
+	pop fs
+	pop es
+	pop ds
+	ret
+DeleteDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFileAttribBase
+;
+;		DESCRIPTION:	Get file attribute
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;
+;		RETURNS:		CX			FILE ATTRIBUTE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileAttribBase	Proc near
+	push ds
+	push es
+	push fs
+	push ax
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov fs,ax
+;
+	call ParseDir
+	jc get_file_attrib_done
+;
+	EnterReadSection ds:ds_access_section
+	dec ds:ds_usage
+	mov al,es:[edi]
+	or al,al
+	je get_file_attrib_dir
+
+get_file_attrib_file:
+	call ParseFile
+	jc get_file_attrib_fail
+;
+	movzx cx,fs:[edx].de_attrib
+	jmp get_file_attrib_ok
+
+get_file_attrib_dir:
+	mov edx,ds:ds_handle
+	movzx cx,fs:[edx].de_attrib
+	jmp get_file_attrib_ok
+
+get_file_attrib_fail:
+	LeaveReadSection ds:ds_access_section
+	call ParseEnd
+	stc
+	jmp get_file_attrib_done
+
+get_file_attrib_ok:
+	LeaveReadSection ds:ds_access_section
+	call ParseEnd
+	clc
+
+get_file_attrib_done:
+	pop edi
+	pop edx
+	pop ax
+	pop fs
+	pop es
+	pop ds
+	ret
+GetFileAttribBase	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetFileAttribBase
+;
+;		DESCRIPTION:	Set file attributes
+;
+;		PARAMETERS:		ES:EDI		FILENAME
+;						CX			FILE ATTRIBUTE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetFileAttribBase	Proc near
+	push ds
+	push es
+	push fs
+	push ax
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov fs,ax
+;
+	call ParseDir
+	jc set_file_attrib_done
+;
+	EnterWriteSection ds:ds_access_section
+	dec ds:ds_usage
+	mov al,es:[edi]
+	or al,al
+	je set_file_attrib_dir
+
+set_file_attrib_file:
+	call ParseFile
+	jc set_file_attrib_fail
+;
+	test cl,10h
+	jnz set_file_attrib_fail
+;
+	mov fs:[edx].de_attrib,cl
+	mov al,ds:ds_drive
+	CallFileSystem update_file_proc
+	jmp set_file_attrib_ok
+
+set_file_attrib_dir:
+	mov edx,ds:ds_handle
+	test cl,10h
+	jz set_file_attrib_fail
+;
+	mov fs:[edx].de_attrib,cl
+	mov al,ds:ds_drive
+	CallFileSystem update_dir_proc
+	jmp set_file_attrib_ok
+
+set_file_attrib_fail:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+	stc
+	jmp set_file_attrib_done
+
+set_file_attrib_ok:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+	clc
+
+set_file_attrib_done:
+	pop edi
+	pop edx
+	pop ax
+	pop fs
+	pop es
+	pop ds
+	ret
+SetFileAttribBase	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DeleteFilePhysical
+;
+;		DESCRIPTION:	Delete file in physical file system
+;
+;		PARAMETERS:		EDX			Dir entry
+;						DS			Directory selector
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteFilePhysical	Proc near
+	push ds
+	push ax
+	push bx
+	push ecx
+;
+	mov al,ds:ds_drive
+	mov bx,fs:[edx].dfe_file_sel
+	or bx,bx
+	jnz delete_file_phys_opened
+;
+	mov ah,fs:[edx].de_attrib
+	mov ecx,fs:[edx].dfe_data_size
+	call CreateFileSel
+	mov fs:[edx].dfe_file_sel,bx
+
+delete_file_phys_opened:
+	push edx
+	xor edx,edx
+	CallFileSystem set_file_size_proc
+	pop edx
+;
+	push bx
+	mov bx,ds
+	CallFileSystem delete_file_proc
+	pop bx
+;
+	mov ds,bx
+	call FreeFileSel
+;
+	pop ecx
+	pop bx
+	pop ax
+	pop ds
+	ret
+DeleteFilePhysical	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DeleteFileBase
+;
+;		DESCRIPTION:	Delete file
+;
+;		PARAMETERS:		ES:EDI		FILE NAME
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteFileBase	Proc near
+	push ds
+	push es
+	push fs
+	push eax
+	push edx
+	push edi
+;
+	mov ax,flat_sel
+	mov fs,ax
+;
+	call ParseDir
+	jc delete_file_done
+;
+	EnterWriteSection ds:ds_access_section
+	dec ds:ds_usage
+	mov al,es:[edi]
+	or al,al
+	je delete_file_fail
+;
+	call ParseFile
+	jc delete_file_fail
+;
+	mov ax,fs:[edx].de_usage
+	or ax,ax
+	jnz delete_file_fail
+;
+	push ebx
+	mov eax,fs:[edx].de_next
+	mov ebx,fs:[edx].de_prev
+	mov fs:[ebx].de_next,eax
+	mov fs:[eax].de_prev,ebx
+	pop ebx
+	cmp eax,edx
+	jne delete_file_unlink
+;
+	mov ds:ds_file_ptr,0
+	jmp delete_file_leave
+
+delete_file_unlink:
+	cmp edx,ds:ds_file_ptr
+	jne delete_file_leave
+;
+	mov ds:ds_file_ptr,eax
+
+delete_file_leave:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+;
+	call DeleteFilePhysical
+	jmp delete_file_done
+
+delete_file_fail:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+	stc
+
+delete_file_done:
+	pop edi
+	pop edx
+	pop eax
+	pop fs
+	pop es
+	pop ds
+	ret
+DeleteFileBase	Endp
 
 PAGE
 
@@ -1154,6 +2013,9 @@ CloseDirBase	Proc near
 	mov fs,ax
 	mov es,bx
 	mov cx,es:[0]
+	or cx,cx
+	jz close_dir_unlock_free
+;
 	mov bx,4
 
 close_dir_unlock_loop:
@@ -1166,7 +2028,8 @@ close_dir_unlock_loop:
 close_dir_next:
 	add bx,4
 	loop close_dir_unlock_loop
-;
+
+close_dir_unlock_free:
 	FreeMem
 ;
 	pop edx	
@@ -1177,6 +2040,44 @@ close_dir_next:
 	pop es
 	ret
 CloseDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetupFileSel
+;
+;		DESCRIPTION:	Setup file selector
+;
+;		PARAMETERS:		DS		Dir
+;						EDX		Dir file entry
+;
+;		RETURNS:		BX		File sel
+;						AL		Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetupFileSel	Proc near
+	push ecx
+;
+	mov al,ds:ds_drive
+	EnterSection ds:ds_list_section
+	mov bx,fs:[edx].dfe_file_sel
+	or bx,bx
+	jnz setup_file_sel_leave
+;
+	mov ah,fs:[edx].de_attrib
+	mov ecx,fs:[edx].dfe_data_size
+	call CreateFileSel
+	mov fs:[edx].dfe_file_sel,bx
+
+setup_file_sel_leave:
+	LeaveSection ds:ds_list_section
+;
+	pop ecx
+	ret
+SetupFileSel	Endp
 
 PAGE
 
@@ -1210,7 +2111,9 @@ OpenFileBase	Proc near
 	jc open_file_normal
 ;
 	EnterReadSection ds:ds_access_section
-	jmp open_file_do
+	call SetupFileSel
+	LeaveReadSection ds:ds_access_section
+	jmp open_file_handle
 
 open_file_normal:
 	call ParseEnd
@@ -1224,24 +2127,10 @@ open_file_normal:
 	jc open_file_leave_failed
 ;
 	pop edi
-
-open_file_do:
-	mov al,ds:ds_drive
-	EnterSection ds:ds_list_section
-	mov bx,fs:[edx].dfe_file_sel
-	or bx,bx
-	jnz open_file_ok
-;
-	push ecx
-	mov ah,fs:[edx].de_attrib
-	mov ecx,fs:[edx].dfe_data_size
-	call CreateFileSel
-	mov fs:[edx].dfe_file_sel,bx
-	pop ecx
-
-open_file_ok:
-	LeaveSection ds:ds_list_section
+	call SetupFileSel
 	LeaveReadSection ds:ds_access_section
+
+open_file_handle:
 	call CreateFileHandle
 	call ParseEnd
 	clc
@@ -1262,6 +2151,96 @@ open_file_done:
 	pop ds
 	ret
 OpenFileBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateFileBase
+;
+;		DESCRIPTION:	Create a file
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;						CX			Attribute
+;
+;		RETURNS:		BX			FILE HANDLE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFileBase	Proc near
+	push ds
+	push fs
+	push ax
+	push edx
+;
+	mov bx,flat_sel
+	mov fs,bx
+;
+	push edi
+	call GetDeviceRoot
+	call ParseFile
+	pop edi
+	jc create_file_normal
+;
+	EnterReadSection ds:ds_access_section
+	call SetupFileSel
+	LeaveReadSection ds:ds_access_section
+	jmp create_file_handle
+
+create_file_normal:
+	call ParseEnd
+	push edi
+	call ParseDir
+	jc create_file_pop_failed
+;
+	EnterWriteSection ds:ds_access_section
+	dec ds:ds_usage
+	call ParseFile
+	jnc create_file_truncate
+;
+	call ParseName
+	jc create_file_leave_failed
+;
+	mov al,ds:ds_drive
+	mov bx,ds
+	CallFileSystem create_file_proc
+	call SetupFileSel
+	LeaveWriteSection ds:ds_access_section
+	pop edi
+	jmp create_file_handle
+
+create_file_truncate:
+	pop edi
+	call SetupFileSel
+	push edx
+	xor edx,edx
+	CallFileSystem set_file_size_proc
+	pop edx
+	LeaveWriteSection ds:ds_access_section
+
+create_file_handle:
+	call CreateFileHandle
+	call ParseEnd
+	clc
+	jmp create_file_done
+
+create_file_leave_failed:
+	LeaveWriteSection ds:ds_access_section
+	call ParseEnd
+
+create_file_pop_failed:
+	pop edi
+	stc
+
+create_file_done:
+	pop edx
+	pop ax
+	pop fs
+	pop ds
+	ret
+CreateFileBase	Endp
 
 PAGE
 
@@ -1366,6 +2345,149 @@ get_cur_dir16	PROC far
 	pop edi
 	ret
 get_cur_dir16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			MAKE_DIR
+;
+;		DESCRIPTION:	Create directory
+;
+;		PARAMETERS:		ES:(E)DI	DIRECTORY NAME
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+make_dir_name	DB 'Make Directory',0
+
+make_dir32:
+	call CreateDirBase
+	retf32
+
+make_dir16	PROC far
+	push edi
+	movzx edi,di
+	call CreateDirBase
+	pop edi
+	ret
+make_dir16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			REMOVE_DIR
+;
+;		DESCRIPTION:	Remove directory
+;
+;		PARAMETERS:		ES:(E)DI	DIRECTORY NAME
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+remove_dir_name	DB 'Remove Directory',0
+
+remove_dir32:
+	call DeleteDirBase
+	retf32
+
+remove_dir16	PROC far
+	push edi
+	movzx edi,di
+	call DeleteDirBase
+	pop edi
+	ret
+remove_dir16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_FILE_ATTRIBUTE
+;
+;		DESCRIPTION:	Get file attributes
+;
+;		PARAMETERS:		ES:(E)DI	FILENAME
+;
+;		RETURNS:		CX			FILE ATTRIBUTE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+get_file_attribute_name	DB 'Get File Attribute',0
+
+get_file_attrib32:
+	call GetFileAttribBase
+	retf32
+
+get_file_attrib16	PROC far
+	push edi
+	movzx edi,di
+	call GetFileAttribBase
+	pop edi
+	ret
+get_file_attrib16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SET_FILE_ATTRIBUTE
+;
+;		DESCRIPTION:	Set file attributes
+;
+;		PARAMETERS:		ES:(E)DI	FILENAME
+;						CX			FILE ATTRIBUTE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+set_file_attribute_name	DB 'Set File Attribute',0
+
+set_file_attrib32:
+	call SetFileAttribBase
+	retf32
+
+set_file_attrib16	PROC far
+	push edi
+	movzx edi,di
+	call SetFileAttribBase
+	pop edi
+	ret
+set_file_attrib16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DELETE_FILE
+;
+;		DESCRIPTION:	Delete file
+;
+;		PARAMETERS:		ES:(E)DI	FILE NAME
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_file_name	DB 'Delete File',0
+
+delete_file32:
+	call DeleteFileBase
+	retf32
+
+delete_file16	PROC far
+	push edi
+	movzx edi,di
+	call DeleteFileBase
+	pop edi
+	ret
+delete_file16	ENDP
 
 PAGE
 
@@ -1510,6 +2632,41 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CREATE_FILE
+;
+;		DESCRIPTION:	Create file
+;
+;		PARAMETERS:		ES:(E)DI	FILENAME
+;						CX			ATTRIBUTE
+;
+;		RETURNS:		BX			FILE HANDLE
+;						NC			SUCCESS
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_file_name	DB 'Create File',0
+
+create_file32_done:
+	pop edi
+	pop ds
+
+create_file32:
+	call CreateFileBase
+	retf32
+
+create_file16	PROC far
+	push edi
+	movzx edi,di
+	call CreateFileBase
+	pop edi
+	ret
+create_file16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Test pr
 ;
 ;		DESCRIPTION:	TEST
@@ -1581,6 +2738,12 @@ init_dir	PROC near
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET cache_dir
+	mov di,OFFSET cache_dir_name
+	xor cl,cl
+	mov ax,cache_dir_nr
+	RegisterOsGate
+;
 	mov si,OFFSET insert_dir_entry
 	mov di,OFFSET insert_dir_entry_name
 	xor cl,cl
@@ -1591,6 +2754,30 @@ init_dir	PROC near
 	mov di,OFFSET insert_file_entry_name
 	xor cl,cl
 	mov ax,insert_file_entry_nr
+	RegisterOsGate
+;
+	mov si,OFFSET insert_free_entry
+	mov di,OFFSET insert_free_entry_name
+	xor cl,cl
+	mov ax,insert_free_entry_nr
+	RegisterOsGate
+;
+	mov si,OFFSET insert_deleted_entry
+	mov di,OFFSET insert_deleted_entry_name
+	xor cl,cl
+	mov ax,insert_deleted_entry_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_free_entry
+	mov di,OFFSET get_free_entry_name
+	xor cl,cl
+	mov ax,get_free_entry_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_deleted_entry
+	mov di,OFFSET get_deleted_entry_name
+	xor cl,cl
+	mov ax,get_deleted_entry_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET set_cur_drive
@@ -1647,6 +2834,91 @@ init_dir	PROC near
 	mov bx,ax
 	mov dx,virt_es_in
 	mov ax,get_virt_cur_dir_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET make_dir32
+	mov di,OFFSET make_dir_name
+	xor cl,cl
+	mov ax,make_dir_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET make_dir16
+	mov di,OFFSET make_dir_name
+	xor cl,cl
+	mov ax,make_dir_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,make_virt_dir_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET remove_dir32
+	mov di,OFFSET remove_dir_name
+	xor cl,cl
+	mov ax,remove_dir_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET remove_dir16
+	mov di,OFFSET remove_dir_name
+	xor cl,cl
+	mov ax,remove_dir_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,remove_virt_dir_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET get_file_attrib32
+	mov di,OFFSET get_file_attribute_name
+	xor cl,cl
+	mov ax,get_file_attribute_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET get_file_attrib16
+	mov di,OFFSET get_file_attribute_name
+	xor cl,cl
+	mov ax,get_file_attribute_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,get_virt_file_attribute_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET set_file_attrib32
+	mov di,OFFSET set_file_attribute_name
+	xor cl,cl
+	mov ax,set_file_attribute_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET set_file_attrib16
+	mov di,OFFSET set_file_attribute_name
+	xor cl,cl
+	mov ax,set_file_attribute_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,set_virt_file_attribute_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET delete_file32
+	mov di,OFFSET delete_file_name
+	xor cl,cl
+	mov ax,delete_file_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET delete_file16
+	mov di,OFFSET delete_file_name
+	xor cl,cl
+	mov ax,delete_file_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,delete_virt_file_nr
 	RegisterVirtUserGate
 ;
 	mov si,OFFSET open_dir32
@@ -1709,6 +2981,23 @@ init_dir	PROC near
 	mov bx,ax
 	mov dx,virt_es_in
 	mov ax,open_virt_file_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET create_file32
+	mov di,OFFSET create_file_name
+	xor cl,cl
+	mov ax,create_file_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET create_file16
+	mov di,OFFSET create_file_name
+	xor cl,cl
+	mov ax,create_file_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,create_virt_file_nr
 	RegisterVirtUserGate
 ;
 	mov si,OFFSET test_pr

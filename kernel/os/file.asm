@@ -158,6 +158,7 @@ PAGE
 ;		DESCRIPTION:	Create a new list entry
 ;
 ;		PARAMETERS:		DS			File selector
+;						EAX			Position entry
 ;
 ;		RETURNS:		EAX			Base address
 ;
@@ -167,8 +168,10 @@ CreateListEntry	Proc near
 	push bx
 	push ecx
 	push edx
+	push esi
 	push edi
 ;
+	mov esi,eax
 	mov al,ds:file_drive
 	mov bx,ds
 	CallFileSystem allocate_file_list_proc
@@ -182,9 +185,11 @@ CreateListEntry	Proc near
 	mov es:[edi].fl_flags,0
 	mov es:[edi].fl_prev_small,0
 	mov es:[edi].fl_next_small,0
+	mov es:[edi].fl_pos,esi
 	mov eax,edi
 ;
 	pop edi
+	pop esi
 	pop edx
 	pop ecx
 	pop bx
@@ -213,11 +218,10 @@ FreeListEntry	Proc near
 	push edi
 ;
 	mov edi,eax
+	mov eax,es:[edi].fl_pos
+	mov dword ptr es:[eax],0
+	push edi
 	mov edx,es:[edi].fl_base
-	mov al,ds:file_drive
-	mov bx,ds
-	CallFileSystem free_file_list_proc
-;
 	or edx,edx
 	jz free_list_done
 ;
@@ -290,6 +294,11 @@ free_small_fail:
 	pop esi
 
 free_list_done:
+	pop edi
+	mov al,ds:file_drive
+	mov bx,ds
+	CallFileSystem free_file_list_proc
+;
 	pop edi
 	pop edx
 	pop ecx
@@ -395,104 +404,6 @@ PAGE
 ;		PARAMETERS:		AL			Drive
 ;						AH			Attribute
 ;						ECX			File size
-;						EDX			File ptr
-;
-;		RETURNS:		BX			File selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file_selector_name DB 'Create File Selector', 0
-
-create_file_selector	PROC far
-	push ds
-	push es
-	push eax
-	push di
-;
-	push ecx
-	push edx
-	mov bx,ax
-	mov al,bl
-	GetDriveParam
-	or eax,eax
-	jz cfs_skip_lists
-;
-	mov edx,ecx
-	dec eax
-	xor cl,cl
-
-cfs_block_loop:
-	inc cl
-	shr eax,1
-	jnz cfs_block_loop
-;
-	mov eax,1
-	shl eax,cl
-	dec edx
-	add cl,10
-	shr edx,cl
-	inc edx
-;
-	push eax
-	mov eax,edx
-	shl eax,2
-	add eax,SIZE file_data_struc - 4
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
-	pop eax
-;
-	mov ds:file_block_size,eax
-	mov ds:file_dir_entries,dx
-	mov ds:file_dir_shift,cl
-	sub cl,10
-	mov ds:file_entry_shift,cl
-;
-	mov cx,dx
-	mov di,OFFSET file_entries
-	xor eax,eax
-	rep stosd
-	jmp cfs_init
-
-cfs_skip_lists:
-	mov eax,SIZE file_data_struc - 4
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov ds,ax
-	mov ds:file_block_size,0
-	mov ds:file_dir_entries,0
-
-cfs_init:
-	pop edx
-	pop ecx
-	InitReadWriteSection ds:file_size_section
-	InitSection ds:file_list_section
-	mov ds:file_usage,0
-	mov ds:file_drive,bl
-	mov ds:file_attrib,bh
-	mov ds:file_size,ecx
-	mov ds:file_dir_entry,edx
-	mov bx,ds
-;
-	pop di
-	pop eax
-	pop es
-	pop ds
-	ret
-create_file_selector	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CreateFileSelector
-;
-;		DESCRIPTION:	Open a file handle
-;
-;		PARAMETERS:		AL			Drive
-;						AH			Attribute
-;						ECX			File size
 ;						EDX			File dir entry
 ;
 ;		RETURNS:		BX			File selector
@@ -509,12 +420,19 @@ CreateFileSel	PROC near
 ;
 	push ecx
 	push edx
+;
 	mov bx,ax
+	test ah,80h
+	jnz crfs_skip_lists
+;
 	mov al,bl
 	GetDriveParam
-	or eax,eax
-	jz crfs_skip_lists
+	jnc crfs_ok_params
 ;
+	mov eax,1000h
+	mov ecx,1000h
+
+crfs_ok_params:
 	mov edx,ecx
 	dec eax
 	xor cl,cl
@@ -584,7 +502,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			free_file_selector
+;		NAME:			FreeFileSel
 ;
 ;		DESCRIPTION:	Free file selector
 ;
@@ -592,7 +510,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-free_file_selector	PROC near
+	public FreeFileSel
+
+FreeFileSel	PROC near
 	push es
 	push ax
 	push ebx
@@ -632,7 +552,7 @@ free_file_sel:
 	pop ax
 	pop es
 	ret
-free_file_selector	ENDP
+FreeFileSel	ENDP
 
 PAGE
 
@@ -692,6 +612,7 @@ get_list_check_mid:
 	clc
 	jnz get_list_done
 ;
+	lea eax,[ebx+esi]
 	call CreateListEntry
 	mov es:[ebx+esi],eax
 	clc
@@ -913,6 +834,7 @@ read_file_check_mid:
 	or eax,eax
 	jnz read_file_check_base
 ;
+	lea eax,[ebx+esi]
 	call CreateListEntry
 	mov es:[ebx+esi],eax
 
@@ -1079,6 +1001,7 @@ write_file_check_mid:
 	or eax,eax
 	jnz write_file_check_base
 ;
+	lea eax,[ebx+esi]
 	call CreateListEntry
 	mov es:[ebx+esi],eax
 
@@ -1303,7 +1226,7 @@ close_file:
 	jnz close_file_handle
 ;
 ;	CallFileSystem close_file_proc
-;	call free_file_selector
+;	call FreeFileSel
 
 close_file_handle:
 	pop ds
@@ -1428,9 +1351,8 @@ get_file_size:
 ;
 	mov ds,bx
 	EnterReadSection ds:file_size_section
-	CallFileSystem get_file_size_proc
+	mov eax,ds:file_size
 	LeaveReadSection ds:file_size_section
-	mov eax,edx
 
 get_file_size_done:
 	pop edx
@@ -1466,6 +1388,7 @@ set_file_size:
 	stc
 	jz set_file_size_done
 ;
+	mov ds,bx
 	EnterWriteSection ds:file_size_section
 	CallFileSystem set_file_size_proc
 	LeaveWriteSection ds:file_size_section
@@ -1558,21 +1481,31 @@ get_file_time_name	DB 'Get File Time',0
 
 get_file_time:
 	push ds
+	push es
 	push bx
 	push ecx
+;
 	mov dx,fs_process_sel
 	mov ds,dx
+	mov dx,flat_sel
+	mov es,dx
 	file_to_offset bx
 	mov al,ds:[bx].file_handle_drive
 	mov bx,ds:[bx].file_handle_sel
 	or bx,bx
 	stc
 	jz get_file_time_done
-	CallFileSystem get_file_time_proc
-	mov eax,ecx
+;
+	mov ds,bx
+	mov edx,ds:file_dir_entry
+	mov eax,es:[edx].de_time
+	mov edx,es:[edx].de_time+4
+	clc
+
 get_file_time_done:
 	pop ecx
 	pop bx
+	pop es
 	pop ds
 	retf32
 
@@ -1592,10 +1525,15 @@ set_file_time_name	DB 'Set File Time',0
 
 set_file_time:
 	push ds
+	push es
 	push bx
 	push ecx
+	push edx
+	push edi
 	mov cx,fs_process_sel
 	mov ds,cx
+	mov cx,flat_sel
+	mov es,cx
 	mov ecx,eax
 	file_to_offset bx
 	mov al,ds:[bx].file_handle_drive
@@ -1603,10 +1541,21 @@ set_file_time:
 	or bx,bx
 	stc
 	jz set_file_time_done
-	CallFileSystem set_file_time_proc
+;
+	mov fs,bx
+	mov edi,fs:file_dir_entry
+	mov es:[edi].de_time,ecx
+	mov es:[edi].de_time+4,edx
+	mov edx,edi
+	CallFileSystem update_file_proc
+	clc
+
 set_file_time_done:
+	pop edi
+	pop edx
 	pop ecx
 	pop bx
+	pop es
 	pop ds
 	retf32
 
@@ -1889,12 +1838,6 @@ init_file	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov si,OFFSET create_file_selector
-	mov di,OFFSET create_file_selector_name
-	xor cl,cl
-	mov ax,create_file_selector_nr
-	RegisterOsGate
 ;
 	mov si,OFFSET get_file_list_entry
 	mov di,OFFSET get_file_list_entry_name

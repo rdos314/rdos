@@ -101,8 +101,6 @@ vm_emulate_opcode_nr		EQU 71
 allocate_physical_nr		EQU 72
 free_physical_nr			EQU 73
 fire_event_sleep_nr			EQU 74
-get_cur_dir_ptr_nr			EQU 75
-set_cur_dir_ptr_nr			EQU 76
 lock_sector_nr				EQU 77
 unlock_sector_nr			EQU 78
 modify_sector_nr			EQU 79
@@ -252,7 +250,6 @@ req_sector_nr				EQU 221
 define_sector_nr			EQU 222
 wait_for_sector_nr			EQU 223
 get_selector_base_size_nr	EQU 224
-create_file_selector_nr		EQU 225
 get_drive_param_nr			EQU 226
 get_file_list_entry_nr		EQU 227
 free_file_list_entry_nr		EQU 228
@@ -273,5 +270,10 @@ leave_section_sleep_nr		EQU 241
 
 insert_dir_entry_nr			EQU 242
 insert_file_entry_nr		EQU 243
+insert_free_entry_nr		EQU 244
+insert_deleted_entry_nr		EQU 245
+get_free_entry_nr			EQU 246
+get_deleted_entry_nr		EQU 247
+cache_dir_nr				EQU 248
 
-osgate_entries				EQU 244
+osgate_entries				EQU 249

@@ -76,52 +76,6 @@ code	SEGMENT byte public 'CODE'
 	extrn close_file_app:near
 	extrn close_memmap_app:near
 
-	extrn CreateFileHandle:near
-
-	extrn OpenFileBase:near
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_DRIVE_FROM_PATH
-;
-;		DESCRIPTION:	Get drive from pathname
-;
-;		PARAMETERS:		ES:EDI		PATH NAME / RETURNED POINTER TO REST
-;						AL			DRIVE
-;						NC			OK, VALID DRIVE AND SECTOR
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_drive_from_path	PROC near
-	push bx
-	mov al,ds:curr_drive
-	mov bx,es:[edi]
-	or bl,bl
-	clc
-	je get_drive_done
-	cmp bh,':'
-	jne get_drive_success
-	sub bl,'A'
-	jc get_drive_done
-	cmp bl,26
-	jc get_drive_ok
-	sub bl,20h
-	jc get_drive_done
-	cmp bl,26
-	cmc
-	jc get_drive_done
-get_drive_ok:
-	mov al,bl
-	add edi,2
-get_drive_success:
-	CheckDevice
-	clc
-get_drive_done:
-	pop bx
-	ret
-get_drive_from_path	ENDP
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -298,61 +252,6 @@ init_file_system	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_CUR_DIR_PTR
-;
-;		DESCRIPTION:	Get current directory pointer
-;
-;		PARAMETERS:		AL			DRIVE #
-;
-;		RETURNS:		EDX			CURRENT DIRECTORY
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_cur_dir_ptr_name	DB 'Get Current Directory Ptr',0
-
-get_cur_dir_ptr	Proc far
-	push ds
-	push bx
-	mov bx,fs_process_sel
-	mov ds,bx
-	movzx bx,al
-	shl bx,2
-	mov edx,ds:[bx].cur_dir_ptr
-	pop bx
-	pop ds
-	ret
-get_cur_dir_ptr	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_CUR_DIR_PTR
-;
-;		DESCRIPTION:	Set current directory pointer
-;
-;		PARAMETERS:		AL			DRIVE #
-;						EDX			CURRENT DIRECTORY
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_cur_dir_ptr_name	DB 'Set Current Directory Ptr',0
-
-set_cur_dir_ptr	Proc far
-	push ds
-	push bx
-	mov bx,fs_process_sel
-	mov ds,bx
-	movzx bx,al
-	shl bx,2
-	mov ds:[bx].cur_dir_ptr,edx
-	pop bx
-	pop ds
-	ret
-set_cur_dir_ptr	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			GET_DRIVE_INFO
 ;
 ;		DESCRIPTION:	Get drive info
@@ -375,94 +274,6 @@ get_drive_info:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			MAKE_DIR
-;
-;		DESCRIPTION:	Create directory
-;
-;		PARAMETERS:		ES:(E)DI	DIRECTORY NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-make_dir_name	DB 'Make Directory',0
-
-make_dir32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc make_dir32_done
-	CallFileSystem make_dir_proc
-make_dir32_done:
-	pop edi
-	pop ds
-	retf32
-
-make_dir16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc make_dir16_done
-	CallFileSystem make_dir_proc
-make_dir16_done:
-	pop edi
-	pop ds
-	ret
-make_dir16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			REMOVE_DIR
-;
-;		DESCRIPTION:	Remove directory
-;
-;		PARAMETERS:		ES:(E)DI	DIRECTORY NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-remove_dir_name	DB 'Remove Directory',0
-
-remove_dir32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc remove_dir32_done
-	CallFileSystem remove_dir_proc
-remove_dir32_done:
-	pop edi
-	pop ds
-	retf32
-
-remove_dir16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc remove_dir16_done
-	CallFileSystem remove_dir_proc
-remove_dir16_done:
-	pop edi
-	pop ds
-	ret
-remove_dir16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			RENAME_FILE
 ;
 ;		DESCRIPTION:	Rename file
@@ -477,271 +288,14 @@ rename_file_name	DB 'Rename File',0
 
 rename_file32:
 	int 3
-	push ds
-	push fs
-	push bx
-	push esi
-	push edi
-;
-	push es
-	push edi
-	mov ax,ds
-	mov es,ax
-	mov fs,ax
-	mov edi,esi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	mov esi,edi
-	pop edi
-	pop es
-	jc rename_file32_done
-	mov bx,ax
-	call get_drive_from_path
-	jc rename_file32_done
-	cmp al,bl
 	stc
-	jne	rename_file32_done
-	CallFileSystem rename_file_proc
-rename_file32_done:
-	pop edi
-	pop esi
-	pop bx
-	pop fs
-	pop ds
 	retf32
 
 rename_file16	PROC far
 	int 3
-	push ds
-	push fs
-	push ebx
-	push esi
-	push edi
-;
-	movzx esi,si
-	movzx edi,di
-	push es
-	push edi
-	mov ax,ds
-	mov es,ax
-	mov fs,ax
-	mov edi,esi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	mov esi,edi
-	pop edi
-	pop es
-	jc rename_file16_done
-	mov bx,ax
-	call get_drive_from_path
-	jc rename_file16_done
-	cmp al,bl
 	stc
-	jne	rename_file16_done
-	mov ebx,esi
-	CallFileSystem rename_file_proc
-rename_file16_done:
-	pop edi
-	pop esi
-	pop ebx
-	pop fs
-	pop ds
 	ret
 rename_file16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DELETE_FILE
-;
-;		DESCRIPTION:	Delete file
-;
-;		PARAMETERS:		ES:(E)DI	FILE NAME
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_file_name	DB 'Delete File',0
-
-delete_file32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc delete_file32_done
-	CallFileSystem delete_file_proc
-delete_file32_done:
-	pop edi
-	pop ds
-	retf32
-
-delete_file16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc delete_file16_done
-	CallFileSystem delete_file_proc
-delete_file16_done:
-	pop edi
-	pop ds
-	ret
-delete_file16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_ATTRIBUTE
-;
-;		DESCRIPTION:	Get file attributes
-;
-;		PARAMETERS:		ES:(E)DI	FILENAME
-;
-;		RETURNS:		CX			FILE ATTRIBUTE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-get_file_attribute_name	DB 'Get File Attribute',0
-
-get_file_attrib32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc get_file_attrib32_done
-	CallFileSystem get_file_attrib_proc
-get_file_attrib32_done:
-	pop edi
-	pop ds
-	retf32
-
-get_file_attrib16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc get_file_attrib16_done
-	CallFileSystem get_file_attrib_proc
-get_file_attrib16_done:
-	pop edi
-	pop ds
-	ret
-get_file_attrib16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_ATTRIBUTE
-;
-;		DESCRIPTION:	Set file attributes
-;
-;		PARAMETERS:		ES:(E)DI	FILENAME
-;						CX			FILE ATTRIBUTE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-set_file_attribute_name	DB 'Set File Attribute',0
-
-set_file_attrib32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc set_file_attrib32_done
-	CallFileSystem set_file_attrib_proc
-set_file_attrib32_done:
-	pop edi
-	pop ds
-	retf32
-
-set_file_attrib16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc set_file_attrib16_done
-	CallFileSystem set_file_attrib_proc
-set_file_attrib16_done:
-	pop edi
-	pop ds
-	ret
-set_file_attrib16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CREATE_FILE
-;
-;		DESCRIPTION:	Create file
-;
-;		PARAMETERS:		ES:(E)DI	FILENAME
-;						CX			ATTRIBUTE
-;
-;		RETURNS:		BX			FILE HANDLE
-;						NC			SUCCESS
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-create_file_name	DB 'Create File',0
-
-create_file32:
-	int 3
-	push ds
-	push edi
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc create_file32_done
-;
-	CallFileSystem create_file_proc	
-	jc create_file32_done
-;
-	call CreateFileHandle
-
-create_file32_done:
-	pop edi
-	pop ds
-	retf32
-
-create_file16	PROC far
-	int 3
-	push ds
-	push edi
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	call get_drive_from_path
-	jc create_file16_done
-;
-	CallFileSystem create_file_proc	
-	jc create_file16_done
-;
-	call CreateFileHandle
-
-create_file16_done:
-	pop edi
-	pop ds
-	ret
-create_file16	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -761,11 +315,6 @@ init_process	PROC far
 ;
 	mov ax,fs_process_sel
 	mov es,ax
-;
-	mov cx,MAX_DRIVES
-	mov di,OFFSET cur_dir_ptr
-	xor eax,eax
-	rep stosd
 ;
 	mov es:curr_drive,MAX_DRIVES - 1
 ;
@@ -881,16 +430,6 @@ init	PROC far
 	mov ax,init_file_system_nr
 	RegisterOsGate
 ;
-	mov si,OFFSET get_cur_dir_ptr
-	mov di,OFFSET get_cur_dir_ptr_name
-	mov ax,get_cur_dir_ptr_nr
-	RegisterOsGate
-;
-	mov si,OFFSET set_cur_dir_ptr
-	mov di,OFFSET set_cur_dir_ptr_name
-	mov ax,set_cur_dir_ptr_nr
-	RegisterOsGate
-;
 	mov si,OFFSET get_drive_info
 	mov di,OFFSET get_drive_info_name
 	xor cl,cl
@@ -900,57 +439,6 @@ init	PROC far
 	mov bx,ax
 	xor dx,dx
 	mov ax,get_virt_drive_info_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET make_dir32
-	mov di,OFFSET make_dir_name
-	xor cl,cl
-	mov ax,make_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET make_dir16
-	mov di,OFFSET make_dir_name
-	xor cl,cl
-	mov ax,make_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,make_virt_dir_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET remove_dir32
-	mov di,OFFSET remove_dir_name
-	xor cl,cl
-	mov ax,remove_dir_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET remove_dir16
-	mov di,OFFSET remove_dir_name
-	xor cl,cl
-	mov ax,remove_dir_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,remove_virt_dir_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET delete_file32
-	mov di,OFFSET delete_file_name
-	xor cl,cl
-	mov ax,delete_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET delete_file16
-	mov di,OFFSET delete_file_name
-	xor cl,cl
-	mov ax,delete_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,delete_virt_file_nr
 	RegisterVirtUserGate
 ;
 	mov si,OFFSET rename_file32
@@ -968,57 +456,6 @@ init	PROC far
 	mov bx,ax
 	mov dx,virt_ds_in OR virt_es_in
 	mov ax,rename_virt_file_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET get_file_attrib32
-	mov di,OFFSET get_file_attribute_name
-	xor cl,cl
-	mov ax,get_file_attribute_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET get_file_attrib16
-	mov di,OFFSET get_file_attribute_name
-	xor cl,cl
-	mov ax,get_file_attribute_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,get_virt_file_attribute_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET set_file_attrib32
-	mov di,OFFSET set_file_attribute_name
-	xor cl,cl
-	mov ax,set_file_attribute_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET set_file_attrib16
-	mov di,OFFSET set_file_attribute_name
-	xor cl,cl
-	mov ax,set_file_attribute_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,set_virt_file_attribute_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET create_file32
-	mov di,OFFSET create_file_name
-	xor cl,cl
-	mov ax,create_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET create_file16
-	mov di,OFFSET create_file_name
-	xor cl,cl
-	mov ax,create_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,create_virt_file_nr
 	RegisterVirtUserGate
 ;
 	mov di,OFFSET init_process
