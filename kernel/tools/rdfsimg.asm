@@ -41,36 +41,36 @@ exeh_reloc_ant		DW ?
 exeh_size_header	DW ?
 exeh_minalloc		DW ?
 exeh_maxalloc		DW ?
-exeh_ss				DW ?
-exeh_sp				DW ?
+exeh_ss			DW ?
+exeh_sp			DW ?
 exeh_checksum		DW ?
-exeh_ip				DW ?
-exeh_cs				DW ?
+exeh_ip			DW ?
+exeh_cs			DW ?
 exeh_reloc_offs		DW ?
-exeh_ov_nr			DW ?
+exeh_ov_nr		DW ?
 exeh_seg	ENDS
 
 boot_struc	STRUC
 
-boot_jmp					DB ?,?,?
-boot_name					DB 8 DUP(?)
+boot_jmp			DB ?,?,?
+boot_name			DB 8 DUP(?)
 boot_bytes_per_sector		DW ?
-boot_resv1					DB ?
+boot_resv1			DB ?
 boot_mapping_sectors		DW ?
-boot_resv3					DB ?
-boot_resv4					DW ?
-boot_small_sectors			DW ?
-boot_media					DB ?
-boot_resv6					DW ?
+boot_resv3			DB ?
+boot_resv4			DW ?
+boot_small_sectors		DW ?
+boot_media			DB ?
+boot_resv6			DW ?
 boot_sectors_per_cyl		DW ?
-boot_heads					DW ?
-boot_hidden_sectors			DD ?
-boot_sectors				DD ?
-boot_drive_nr				DB ?,?
-boot_signature				DB ?
-boot_serial					DD ?
-boot_volume					DB 11 DUP(?)
-boot_fs						DB 8 DUP(?)
+boot_heads			DW ?
+boot_hidden_sectors		DD ?
+boot_sectors			DD ?
+boot_drive_nr			DB ?,?
+boot_signature			DB ?
+boot_serial			DD ?
+boot_volume			DB 11 DUP(?)
+boot_fs				DB 8 DUP(?)
 
 boot_struc		ENDS
 
@@ -79,14 +79,14 @@ boot_struc		ENDS
 .data
 
 CurrentSector	DW ?
-BinHandle		DW ?
-RomHandle		DW ?
+BinHandle	DW ?
+RomHandle	DW ?
 
 BootBuf		DB 512 DUP(?)
 
 BootSector	DB 512 Dup(0)
 
-Buf			DB 1000h DUP(?)
+Buf		DB 1000h DUP(?)
 
 .code
 
@@ -98,15 +98,18 @@ Buf			DB 1000h DUP(?)
 
 FormatStart:
 
-read_boot_error	DB 'cannot read bootsector',0Dh,0Ah,24h
+read_boot_error		DB 'cannot read bootsector',0Dh,0Ah,24h
 write_boot_error	DB 'cannot write bootsector',0Dh,0Ah,24h
 write_sector_error	DB 'cannot read sector',0Dh,0Ah,24h
-exe_error   DB 'cannot find bootsec.exe',0Dh,0Ah,24h
-rdosload_error	DB 'cannot find rdosload.exe',0Dh,0Ah,24h
-rdossys_error	DB 'cannot create rdos.sys',0Dh,0Ah,24h
-rdosbin_error	DB 'cannot create rdos.bin',0Dh,0Ah,24h
-bin_error   DB 'cannot find .bin file',0Dh,0Ah,24h
-rom_error   DB 'cannot find .rom file',0Dh,0Ah,24h
+exe_error   		DB 'cannot find bootsec.exe',0Dh,0Ah,24h
+rdosload_error		DB 'cannot find rdosload.exe',0Dh,0Ah,24h
+rdossys_error		DB 'cannot create rdos.sys',0Dh,0Ah,24h
+rdosbin_error		DB 'cannot create rdos.bin',0Dh,0Ah,24h
+bin_error   		DB 'cannot find .bin file',0Dh,0Ah,24h
+rom_error   		DB 'cannot find .rom file',0Dh,0Ah,24h
+wait1 db 'Creating floppy [',24h
+wait2 db '.',24h
+wait3 db '] Done',0Dh,0Ah,24h
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -326,7 +329,95 @@ copy_sys_loop:
 copy_sys_done:
 	ret
 CopySys	Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FloppyImg
+;
+;		DESCRIPTION:	Create a floppy image
+;               PARAMATER  :    ds:dx filename
+;               RETURN     :    AX handle
+;                               CY error AX = -1
+;                               NC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+BUFFER_SIZE EQU 2880
+SECTOR_SIZE EQU 512
 
+hfile  equ word ptr [bp-2]
+count equ word ptr [bp-4]
+
+FloppyImg	proc near
+	push bp
+	mov bp,sp
+	sub sp,4
+	push di
+	push bx
+	push cx
+	push dx
+	push es
+	xor cx,cx
+	mov ah,3Ch
+	int 21h
+	jc fi_end1
+;
+	mov hfile,ax
+;	
+	mov count,0
+	mov cx,SECTOR_SIZE
+	mov dx,offset wait1
+	call Log
+fi_empty:
+	push cx
+	push ds
+	mov cx,BUFFER_SIZE
+	mov bx,hfile
+	mov ax,cs
+	mov dx,offset fi_buf
+	mov ds,ax                                                                                               
+	mov ah,40h
+	int 21h
+	pop ds
+	jc short fi_end2
+	inc count
+	test count,64
+	jz short fi_go_on
+	mov dx,offset wait2
+	call Log
+	mov count,0
+fi_go_on:
+	pop cx
+	loop fi_empty
+;
+	mov bx,hfile
+	xor dx,dx
+	xor cx,cx
+	mov ax,4200h
+	int 21h
+;	
+	mov dx,offset wait3
+	call Log
+	mov ax,hfile
+	clc
+	jmp fi_ret
+fi_end2:
+ 	mov bx,hfile
+ 	mov ah,3Eh
+ 	int 21h	
+fi_end1:
+ 	mov ax,-1
+ 	stc
+fi_ret:
+ 	pop es
+ 	pop dx
+ 	pop cx
+ 	pop bx
+ 	pop di
+ 	add sp,4
+ 	mov sp,bp
+ 	pop bp
+ 	ret
+FloppyImg	endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -432,9 +523,7 @@ OpenBinOk:
 	xor ax,ax
 	stosw
 	lea dx,[bp].opn_name
-	xor cx,cx
-	mov ah,3Ch
-	int 21h
+	call FloppyImg
     jnc OpenRomOk
     mov dx,OFFSET rom_error
     call Log
@@ -524,6 +613,44 @@ CreateRoot	Proc near
 	call WriteSector
 	ret
 CreateRoot	Endp
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Signe image
+;
+;		DESCRIPTION:	put 0x55AA at 0x1FE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sign DW 0AA55h
+
+SignImg	proc near
+        
+        push bx
+        push cx
+        push dx
+        
+	mov bx,RomHandle
+	mov dx,1FEh
+	xor cx,cx
+	mov ax,4200h
+	int 21h
+;
+	push ds
+	mov cx,2
+	mov bx,RomHandle
+	mov ax,cs
+	mov dx,offset sign
+	mov ds,ax                                                                                               
+	mov ah,40h
+	int 21h
+        pop ds
+        
+        pop dx
+        pop cx
+        pop bx        
+        ret
+SignImg	endp
 
 init:
 	mov ax,_data
@@ -538,10 +665,12 @@ init:
 	call SaveBootRecord
 	call CreateMapping
 	call CreateRoot
+	call SignImg
 	call CloseFiles
 ;
 	mov ah,4Ch
 	int 21h
+fi_buf          DB 3000 dup(0F6h)
 
 	END init
 
