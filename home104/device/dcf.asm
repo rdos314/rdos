@@ -41,9 +41,11 @@ INCLUDE ..\..\kernel\handle.inc
 
 save_data_struc	STRUC
 
+sd_sign     DB ?
 sd_day		DD ?
 sd_hour		DB ?
 sd_min		DB ?
+sd_fract    DD ?
 
 save_data_struc	ENDS
 
@@ -62,6 +64,7 @@ end_pulse		DD ?,?
 first_pulse		DD ?,?
 curr_pulse		DD ?,?
 curr_sec		DW ?
+curr_sys_diff   DD ?,?
 
 curr_year		DW ?
 curr_month		DB ?
@@ -69,6 +72,11 @@ curr_day		DB ?
 curr_hour		DB ?
 curr_min		DB ?
 curr_diff		DD ?
+
+diff_day        DD ?
+diff_hour       DB ?
+diff_min        DB ?
+diff_sign       DB ?
 
 val_arr			DB 60 DUP(?)
 diff_arr		DD 60 DUP(?)
@@ -314,6 +322,7 @@ sync_dcf_loop:
 ;
 	mov ds:first_pulse,eax
 	mov ds:first_pulse+4,edx
+	mov ds:curr_sec,0
 ;
 	popad
 	ret
@@ -347,34 +356,28 @@ get_sample_loop:
 	mov edi,eax					; edi = curr_pulse - first_pulse
 	xor edx,edx
 	mov ebx,3600
-	mul ebx
-	mov si,dx
+	mul ebx                     ; edx:eax = 3600 * (curr_pulse - first_pulse)
+	mov si,dx                   ; si = seconds since first pulse
 ;
 	mov ebx,1000000
-	mul ebx
-	mov eax,edx
+	mul ebx                     ; edx:eax = 3600 * 1e6 * (curr_pulse - first_pulse)
+	mov eax,edx                 ; eax = pulse diff in microseconds
 ;
 	cmp eax,200000
 	jb get_sample_valid
 ;
-	inc si
 	cmp eax,800000
-	ja get_sample_valid
+	jb get_sample_loop
 ;
-	jmp get_sample_loop
+	inc si
 
 get_sample_valid:
-	mov ax,si
-	xor dx,dx
-	mov bx,60
-	div bx
-	mov bx,dx
-;
+	mov bx,si                   ; bx = current second in DCF message
 	movzx eax,bx
 	mov edx,1193000
-	mul edx					; eax = curr_sec * 1193000
-	sub edi,eax				; edi = curr_pulse - first_pulse - curr_sec * 1193000
-	mov ebp,edi				; ebp = diff from expected
+	mul edx				    	; eax = curr_sec as timedate
+	sub edi,eax				    ; edi = diff from curr_sec as timedate
+	mov ebp,edi				    ; ebp = diff from curr_sec
 ;
 	pop edi
 	pop si
@@ -386,29 +389,25 @@ GetSample	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ProcessSamples
+;		NAME:			ProcessMinSamples
 ;
 ;		DESCRIPTION:	Process a full minute of samples
 ;
 ;		RETURNS:		NC
-;						EDX:EAX		Diff system time
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-ProcessSamples	Proc near
-	push ebx
-	push ecx
-	push esi
-	push edi
+ProcessMinSamples	Proc near
+	pushad
 ;
 	mov al,ds:val_arr
 	or al,al
-	jnz process_samples_failed
+	jnz process_ms_failed
 ;
 	mov al,ds:val_arr+20
 	mov dx,1
 	or al,al
-	jz process_samples_failed
+	jz process_ms_failed
 ;
 	mov cx,2000
 	xor ah,ah
@@ -509,10 +508,10 @@ ProcessSamples	Proc near
 	xor eax,eax				; sum = 0
 	xor bx,bx				; sec = 0
 
-process_diff_loop:
+process_ms_loop:
 	add eax,ds:[bx].diff_arr		; sum += diff[sec]
 	add bx,4						; sec++
-	loop process_diff_loop
+	loop process_ms_loop
 ;
 	cdq								; edx:eax = sum
 	mov ebx,59
@@ -533,33 +532,33 @@ process_diff_loop:
 	adc edx,0				; time + 1 min
 	sub eax,ds:first_pulse
 	sbb edx,ds:first_pulse+4	; time + 1 min - first_pulse - average-diff
+;
+    mov ds:curr_sys_diff,eax
+    mov ds:curr_sys_diff+4,edx
 	clc
-	jmp process_samples_done
+	jmp process_ms_done
 
-process_samples_failed:
+process_ms_failed:
 	stc
 
-process_samples_done:
-	pop edi
-	pop esi
-	pop ecx
-	pop ebx
+process_ms_done:
+	popad
 	ret
-ProcessSamples	Endp
+ProcessMinSamples	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RestartSample
+;		NAME:			RestartMinSamples
 ;
-;		DESCRIPTION:	Restart sampling
+;		DESCRIPTION:	Restart minute sampling
 ;
 ;		PARAMETERS:		EBP		Last Diff
 ;						CL		Last pulse value
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RestartSample	Proc near
+RestartMinSamples	Proc near
 	push edx
 	mov edx,ds:curr_pulse
 	mov ds:first_pulse,edx
@@ -569,36 +568,31 @@ RestartSample	Proc near
 	mov ds:val_arr,cl
 	pop edx
 	ret
-RestartSample	Endp
+RestartMinSamples	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDiff
+;		NAME:			GetMinSamples
 ;
-;		DESCRIPTION:	Get difference from time
-;
-;		RETURNS:		EDX:EAX		Diff
+;		DESCRIPTION:	Fill up diff arr of one minute
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDiff	Proc near
-	push bx
-	push cx
-	push esi
-	push ebp
+GetMinSamples	Proc near
+    pushad
 
-get_diff_loop:
+get_ms_loop:
 	call GetSample
 	mov dx,ds:curr_sec
-	cmp dx,bx
-	je get_diff_loop
-;
 	inc dx
 	cmp dx,bx
-	jne get_diff_restart
+	jne get_ms_restart
 
-get_diff_ok:
+get_ms_ok:
+    cmp bx,59
+    jae get_ms_restart
+;
 	mov ds:curr_sec,bx
 	mov ds:[bx].val_arr,cl
 	mov si,bx
@@ -606,31 +600,27 @@ get_diff_ok:
 	mov ds:[si].diff_arr,ebp
 ;
 	cmp bx,58
-	jne get_diff_loop
+	jne get_ms_loop
 ;
 	mov ds:diff_arr,0
-	call ProcessSamples
-	jc get_diff_retry
+	call ProcessMinSamples
+	jc get_ms_retry
 ;
-	call RestartSample
-	xor bx,bx
-	jmp get_diff_done
+    call GetSample
+	call RestartMinSamples
+	jmp get_ms_done
 
-get_diff_retry:
+get_ms_retry:
 	call GetSample
 
-get_diff_restart:
-	call RestartSample
-	xor bx,bx
-	jmp get_diff_loop
+get_ms_restart:
+	call RestartMinSamples
+	jmp get_ms_loop
 
-get_diff_done:
-	pop ebx
-	pop esi
-	pop cx
-	pop bx
+get_ms_done:
+    popad
 	ret
-GetDiff	Endp
+GetMinSamples	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -639,7 +629,7 @@ GetDiff	Endp
 ;
 ;		DESCRIPTION:	Update difference from time
 ;
-;		PARAMETERS:		EDX:EAX		Diff
+;		PARAMETERS:		DS:SI		Buf to save in
 ;
 ;		RETURNS:		New diff
 ;
@@ -648,30 +638,43 @@ GetDiff	Endp
 UpdateDiff	Proc near
 	pushad
 ;
+    mov eax,ds:curr_sys_diff
+    mov edx,ds:curr_sys_diff+4
 	sub eax,ds:sys_diff
 	sbb edx,ds:sys_diff+4
 ;
+    test edx,80000000h
+    jz upd_diff_pos
+;
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
+    mov cl,-1
+    jmp upd_diff_sign_ok
+
+upd_diff_pos:
+    xor cl,cl
+
+upd_diff_sign_ok:
 	mov ebx,60
 	mul ebx
-;
-	xor edx,edx
-	test eax,80000000h
-	jz update_calc_pos
-;
-	dec edx
-
-update_calc_pos:
+	cdq
 	idiv ebx
+	cdq
 ;
-	xor edx,edx
-	test eax,80000000h
-	jz update_save_pos
+    test cl,80h
+    jz upd_diff_update
 ;
-	dec edx
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
 
-update_save_pos:
+upd_diff_update:
 	add ds:sys_diff,eax
 	adc ds:sys_diff+4,edx
+;
 	mov bx,ds:rtc_id
 	Signal
 ;
@@ -682,38 +685,36 @@ UpdateDiff	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			SaveDiff
+;		NAME:			UpdateDiff
 ;
-;		DESCRIPTION:	Save difference from time
+;		DESCRIPTION:	Update difference from time
 ;
-;		PARAMETERS:		EDX:EAX		Diff
-;						DS:SI		Buf to save in
+;		PARAMETERS:		DS:SI		Buf to save in
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveDiff	Proc near
+UpdateDiff	Proc near
 	pushad
 ;
-	test edx,80000000h
-	jz save_diff_pos
+    mov eax,ds:curr_sys_diff
+    mov edx,ds:curr_sys_diff+4
+    add eax,02222222h                ; 30 seconds
+    adc edx,0
 ;
-	push eax
-	not eax
-	not edx
-	mov eax,edx
-	xor edx,edx
-	mov ecx,24
-	div ecx
-	inc eax
-	neg eax
-	mov ds:[si].sd_day,eax
-	mov al,23
-	sub al,dl
-	mov ds:[si].sd_hour,al
-	pop eax
-	jmp save_diff_min
+	test edx,80000000h
+	jz upd_diff_pos
+;
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
+    mov ds:[si].sd_sign,-1
+    jmp upd_diff_sign_ok
 
-save_diff_pos:
+upd_diff_pos:
+    mov ds:[si].sd_sign,0
+
+upd_diff_sign_ok:
 	push eax
 	mov eax,edx
 	xor edx,edx
@@ -723,10 +724,64 @@ save_diff_pos:
 	mov ds:[si].sd_hour,dl
 	pop eax
 
-save_diff_min:
+upd_diff_min:
 	mov edx,60
 	mul edx
 	mov ds:[si].sd_min,dl
+	cdq
+	idiv ebx
+	cdq
+	sub eax,02222222h
+	mov ds:[si].sd_fract,eax
+;
+	mov cl,ds:[si].sd_sign	
+	mov eax,ds:sys_diff
+	mov edx,ds:sys_diff+4
+	mov ebx,eax
+	or ebx,edx
+	jz upd_diff_sys_sign_ok
+;	
+    test edx,80000000h
+    jz upd_diff_sys_pos
+;
+    cmp cl,-1
+    jne upd_diff_done
+;
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
+    jmp upd_diff_sys_sign_ok
+
+upd_diff_sys_pos:
+    or cl,cl
+    jne upd_diff_done
+;
+    xor cl,cl
+
+; MORE TO DO HERE!!!
+
+upd_diff_sys_exit_sign_ok:
+	mov ebx,60
+	mul ebx
+	xor eax,eax
+	div ebx
+;
+    test cl,80h
+    jz upd_diff_update
+;
+    not eax
+    not edx
+    add eax,1
+    adc edx,0
+
+upd_diff_update:
+	add ds:sys_diff,eax
+	adc ds:sys_diff+4,edx
+;
+	mov bx,ds:rtc_id
+	Signal
+
 ;
 	popad
 	ret
@@ -735,124 +790,124 @@ SaveDiff	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CalcMeanDiff
+;		NAME:			GetBestDiff
 ;
-;		DESCRIPTION:	Calc the mean difference
+;		DESCRIPTION:	Get the best difference
 ;
 ;		RETURNS:		NC		OK
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CalcMeanDiff	Proc near
+GetBestDiff	Proc near
 	pushad
 ;
 	mov si,OFFSET save_buf
 	mov cx,20
 
-calc_day_loop:
+gbd_day_loop:
 	mov eax,ds:[si].sd_day
 ;
 	push cx
 	push si
 	mov dx,1
 
-calc_day_iloop:
+gbd_day_iloop:
 	add si,SIZE save_data_struc
 	cmp eax,ds:[si].sd_day
-	jne	calc_day_next
+	jne	gbd_day_next
 ;
 	inc dx
 
-calc_day_next:
-	loop calc_day_iloop
+gbd_day_next:
+	loop gbd_day_iloop
 ;
 	pop si
 	pop cx
 	cmp dx,10
-	jae calc_day_ok
+	jae gbd_day_ok
 ;
 	add si,SIZE save_data_struc
-	loop calc_day_loop
+	loop gbd_day_loop
 ;
-	jmp calc_fail
+	jmp gbd_fail
 
-calc_day_ok:
+gbd_day_ok:
 	mov si,OFFSET save_buf
 	mov ds:[si].sd_day,eax
 	mov cx,20
 	
-calc_hour_loop:
+gbd_hour_loop:
 	mov al,ds:[si].sd_hour
 ;
 	push cx
 	push si
 	mov dx,1
 
-calc_hour_iloop:
+gbd_hour_iloop:
 	add si,SIZE save_data_struc
 	cmp al,ds:[si].sd_hour
-	jne	calc_hour_next
+	jne	gbd_hour_next
 ;
 	inc dx
 
-calc_hour_next:
+gbd_hour_next:
 	loop calc_hour_iloop
 ;
 	pop si
 	pop cx
 	cmp dx,10
-	jae calc_hour_ok
+	jae gbd_hour_ok
 ;
 	add si,SIZE save_data_struc
-	loop calc_hour_loop
+	loop gbd_hour_loop
 ;
-	jmp calc_fail
+	jmp gbd_fail
 
-calc_hour_ok:
+gbd_hour_ok:
 	mov si,OFFSET save_buf
 	mov ds:[si].sd_hour,al
 	mov cx,20
 	
-calc_min_loop:
+gbd_min_loop:
 	mov al,ds:[si].sd_min
 ;
 	push cx
 	push si
 	mov dx,1
 
-calc_min_iloop:
+gbd_min_iloop:
 	add si,SIZE save_data_struc
 	cmp al,ds:[si].sd_min
-	jne	calc_min_next
+	jne	gbd_min_next
 ;
 	inc dx
 
-calc_min_next:
-	loop calc_min_iloop
+gbd_min_next:
+	loop gbd_min_iloop
 ;
 	pop si
 	pop cx
 	cmp dx,10
-	jae calc_min_ok
+	jae gbd_min_ok
 ;
 	add si,SIZE save_data_struc
-	loop calc_min_loop
+	loop gbd_min_loop
 ;
-	jmp calc_fail
+	jmp gbd_fail
 
-calc_min_ok:
+gbd_min_ok:
 	mov si,OFFSET save_buf
 	mov ds:[si].sd_min,al
 	clc
-	jmp calc_done
+	jmp gbd_done
 
-calc_fail:
+gbd_fail:
 	stc
 
-calc_done:
+gbd_done:
 	popad
 	ret
-CalcMeanDiff	Endp
+GetBestDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -942,21 +997,20 @@ dcf_thread:
 
 dcf_sync_loop:
 	call SyncToDcf
-	mov ds:curr_sec,0
 
 dcf_loop:
 	mov si,OFFSET save_buf
 	mov cx,20
 
 dcf_time_loop:
-	call GetDiff
+	call GetMinSamples
 	call UpdateDiff
 	call SaveDiff
 	add si,SIZE save_data_struc
 	loop dcf_time_loop
 ;
-	call CalcMeanDiff
-	jc dcf_sync_loop
+	call GetBestDiff
+	jc dcf_loop
 ;
 	mov si,OFFSET save_buf
 	call SetTimeDiff
