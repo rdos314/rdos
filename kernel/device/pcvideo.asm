@@ -146,9 +146,9 @@ vbe_object	STRUC
 vo_base			video_api_struc <>
 vo_lfb			DD ?
 vo_lfb_size		DD ?
-vo_lfb_sel		DW ?
 vo_lfb_base		DD ?
 vo_mem_base		DD ?
+vo_app_base		DD ?
 vo_flags		DB ?
 vo_has_focus	DB ?
 vo_mode_info	vesa_mode_info <>
@@ -187,12 +187,12 @@ delete	Proc far
 	mov es,ax
 	mov es:v_curr_object,-1
 ;
-	mov bx,ds:vo_lfb_sel
-	FreeGdt
 	mov ecx,ds:vo_lfb_size
 	mov edx,ds:vo_lfb_base
 	FreeLinear
 	mov edx,ds:vo_mem_base
+	FreeLinear
+	mov edx,ds:vo_app_base
 	FreeLinear
 ;
 	mov ax,ds
@@ -223,8 +223,6 @@ switch_to	Proc far
 	push es
 	pushad
 ;
-	int 3
-;
 	mov ax,pc_video_data_sel
 	mov es,ax
 	mov ax,es:v_curr_object
@@ -250,6 +248,7 @@ switch_to_v86:
 	mov ds,ax
 	mov es,ax
 	or bx,4000h
+	or bx,8000h
 	mov ax,4F02h
 	push 10h
 	V86BiosInt
@@ -264,6 +263,7 @@ switch_to_pm:
 	push bp
 ;
 	or bx,4000h
+	or bx,8000h
 	mov ax,4F02h
 	call es:v_pm16_entry
 ;
@@ -278,12 +278,40 @@ switch_to_active:
 	mov es,ax
 	mov es:v_curr_object,ds
 	mov ds:vo_has_focus,1
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov esi,ds:vo_mem_base
+	mov edi,ds:vo_lfb_base
+	mov ecx,ds:vo_lfb_size
+	shr ecx,2
+	rep movs dword ptr es:[edi],es:[esi]
+;
+	mov esi,ds:vo_lfb_base
+	shr esi,10
+	mov edi,ds:vo_app_base
+	mov ecx,ds:vo_lfb_size
+	GetFocusThread
+	mov es,ax
+    movzx eax,es:p_page_alias
+	shl eax,20
+	shr edi,10
+	add edi,eax
+	shr ecx,12
+	push ds
+	mov bx,process_page_sel
+	mov ds,bx
+	mov bx,flat_sel
+	mov es,bx
+	rep movs dword ptr es:[edi],[esi]
+	pop ds
 	LeaveSection ds:v_section
 ;
 	popad
 	pop es
 	ret
 switch_to	Endp
+
 
 PAGE
 
@@ -300,7 +328,35 @@ switch_from	Proc far
 	push es
 	pushad
 ;
+	EnterSection ds:v_section
 	mov ds:vo_has_focus,1
+	mov ax,flat_sel
+	mov es,ax
+	mov esi,ds:vo_lfb_base
+	mov edi,ds:vo_mem_base
+	mov ecx,ds:vo_lfb_size
+	shr ecx,2
+	rep movs dword ptr es:[edi],es:[esi]
+;
+	mov esi,ds:vo_mem_base
+	shr esi,10
+	mov edi,ds:vo_app_base
+	mov ecx,ds:vo_lfb_size
+	GetFocusThread
+	mov es,ax
+    movzx eax,es:p_page_alias
+	shl eax,20
+	shr edi,10
+	add edi,eax
+	shr ecx,12
+	push ds
+	mov bx,process_page_sel
+	mov ds,bx
+	mov bx,flat_sel
+	mov es,bx
+	rep movs dword ptr es:[edi],[esi]
+	pop ds
+	LeaveSection ds:v_section
 ;
 	popad
 	pop es
@@ -421,7 +477,6 @@ init_flat_pm:
 	mov sp,bp
 
 init_flat_check:
-	int 3
 	cmp si,4Fh
 	jne init_flat_free_fail
 ;
@@ -436,6 +491,11 @@ init_flat_check:
 	mov es:v_mode,bx
 	InitSection es:v_section
 ;
+	mov di,OFFSET vo_mode_info
+	xor si,si
+	mov cx,SIZE vesa_mode_info
+	rep movsb
+;
 	movzx eax,ds:vmi_scan_lines
 	movzx edx,ds:vmi_y_pixels
 	mul edx
@@ -445,17 +505,54 @@ init_flat_check:
 	mov es:vo_lfb_size,eax
 	AllocateBigLinear
 	mov es:vo_lfb_base,edx
-	AllocateGdt
-	mov ecx,eax
-	CreateDataSelector16
-	mov es:vo_lfb_sel,bx
 	AllocateBigLinear
 	mov es:vo_mem_base,edx
+	AllocateLocalLinear
+	mov es:vo_app_base,edx
 ;
-	mov di,OFFSET vo_mode_info
-	xor si,si
-	mov cx,SIZE vesa_mode_info
-	rep movsb
+	push es
+	mov edi,es:vo_mem_base
+	mov ecx,eax
+	shr ecx,2
+	mov ax,flat_sel
+	mov es,ax
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	pop es
+;
+	push ds
+	push es
+	mov esi,es:vo_mem_base
+	shr esi,10
+	mov edi,es:vo_app_base
+	shr edi,10
+	mov ecx,es:vo_lfb_size
+	shr ecx,12
+	mov bx,process_page_sel
+	mov ds,bx
+	mov es,bx
+	rep movs dword ptr es:[edi],[esi]
+	pop es
+	pop ds
+;
+	push ds
+	mov edi,es:vo_lfb_base
+	shr edi,10
+	mov ecx,es:vo_lfb_size
+	shr ecx,12
+	mov bx,process_page_sel
+	mov ds,bx
+	mov edx,es:vo_lfb
+	or dl,7
+
+init_lfb_map_loop:
+	mov ds:[edi],edx
+	add edi,4
+	add edx,1000h
+	sub ecx,1
+	jnz init_lfb_map_loop
+;
+	pop ds
 ;
 	push ds
 	mov cx,18
