@@ -674,17 +674,48 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
         WriteLongOption("Content-Length", file.GetSize());
         WriteEndHeader();
 
-	    count = file.Read(Buf, 512);
-    	while (count)
-	    {
-            FServer->Write(Buf, count);
-            count = file.Read(Buf, 512);
-        }
-        delete Buf;
-        
-    }
+		count = file.Read(Buf, 512);
+		while (count)
+		{
+			FServer->Write(Buf, count);
+			count = file.Read(Buf, 512);
+		}
+		delete Buf;
+
+	}
 }
-    
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::GetFile
+#
+#   Purpose....: Get file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::GetFile(const char *Name)
+{
+	TPathName path;
+
+	path = TPathName(FServer->RootDir);
+
+	if (*Name)
+		path += TString(Name);
+
+	if (path.IsDir())
+		path += TString("index.htm");
+
+	if (path.IsFile())
+		WriteFile(path, "text/html");
+	else
+		WriteError(404);
+
+	FServer->Push();
+}
+
 /*##########################################################################
 #
 #   Name       : THttpCommand::Get
@@ -703,28 +734,11 @@ void THttpCommand::Get(const char *Name)
 	if (cust)
 	{
 		THttpCustomPage *page = cust->Create(this);
-		page->Execute();
+		page->Get(Name);
 		delete page;
 	}
 	else
-	{
-		TPathName path;
-
-		path = TPathName(FServer->RootDir);
-
-		if (*Name)
-			path += TString(Name);
-
-		if (path.IsDir())
-			path += TString("index.htm");
-
-        if (path.IsFile())
-            WriteFile(path, "text/html");
-        else
-            WriteError(404);
-
-		FServer->Push();
-    }
+		GetFile(Name);
 }
 
 /*##########################################################################
@@ -740,7 +754,16 @@ void THttpCommand::Get(const char *Name)
 ##########################################################################*/
 void THttpCommand::Post(const char *Name)
 {
-    Get(Name);
+	THttpCustomPageFactory *cust = FServer->Find(Name);
+
+	if (cust)
+	{
+		THttpCustomPage *page = cust->Create(this);
+		page->Post(Name);
+		delete page;
+	}
+	else
+		GetFile(Name);
 }
 
 /*##########################################################################
@@ -756,10 +779,10 @@ void THttpCommand::Post(const char *Name)
 ##########################################################################*/
 void THttpCommand::Execute(const char *Name)
 {
-    if (FMethod == "POST")
-        Post(Name);
-    else
-        Get(Name);
+	if (FMethod == "POST")
+		Post(Name);
+	else
+		Get(Name);
 }
 
 /*##########################################################################

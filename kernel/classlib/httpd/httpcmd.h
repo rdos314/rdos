@@ -57,13 +57,13 @@ public:
 
 	void Run();
 
-	virtual void Execute(const char *Name);
-
 	static int ErrorLevel;
 
 protected:
-    virtual void Get(const char *Name);
-    virtual void Post(const char *Name);
+	void GetFile(const char *Name);
+	void Get(const char *Name);
+    void Post(const char *Name);
+	void Execute(const char *Name);
 
 	void AddArg(const char *name);
 	void AddArg(char *sBeg, char **sEnd);

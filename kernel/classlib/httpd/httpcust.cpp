@@ -105,16 +105,16 @@ void THttpCustomPage::Write(TFile &File, int ErrorCode, const char *ContentType)
 
 /*##########################################################################
 #
-#   Name       : THttpCustomPage::Execute
+#   Name       : THttpCustomPage::Get
 #
-#   Purpose....: Execute page
+#   Purpose....: Get page
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCustomPage::Execute()
+void THttpCustomPage::Get(const char *Name)
 {
 	TFile File(FFileName.GetData(), 0);
 
@@ -125,6 +125,22 @@ void THttpCustomPage::Execute()
 	File.Write("</body></html>\r\n");
 
 	Write(File, 200, "text/html");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::Post
+#
+#   Purpose....: Post page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::Post(const char *Name)
+{
+    Get(Name);
 }
 
 /*##########################################################################

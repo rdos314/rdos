@@ -20,58 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# httpcmd.h
-# Http command base class
+# httpdata.h
+# Http Posted data class
 #
 ########################################################################*/
 
-#ifndef _HTTPCUST_H
-#define _HTTPCUST_H
+#ifndef _HTTPDATA_H
+#define _HTTPDATA_H
 
 #include "file.h"
 #include "path.h"
+#include "httppars.h"
 
-class THttpCommand;
-class THttpSocketServer;
-class THttpSocketServerFactory;
+class THttpArg;
 
-class THttpCustomPage
+class THttpData : public THttpParser
 {
-friend class THttpCustomPageFactory;
+	friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *FileName);
-	virtual ~THttpCustomPage();
+	THttpData(char *param);
+	virtual ~THttpData();
 
-	virtual void Get(const char *Name);
-	virtual void Post(const char *Name);
-
-protected:
-	void Write(TFile &File, int ErrorCode, const char *ContentType);
-
-	THttpCommand *FCmd;
-	TString FFileName;
-};
-
-class THttpCustomPageFactory
-{
-friend class THttpSocketServer;
-friend class THttpSocketServerFactory;
-
-public:
-	THttpCustomPageFactory(const char *ReqName);
-	virtual ~THttpCustomPageFactory();
-
-	virtual THttpCustomPage *Create(THttpCommand *cmd);
-
-	TString FReqName;
+	virtual int IsArgDelim(char ch);
 
 protected:
-    TString CreateUniqueFile(THttpCommand *Cmd);
-
-	THttpCustomPageFactory *FList;
-	THttpCommand *FCmd;
+	TString FName;
+	TString FVal;
+	
+	THttpData *FList;
 };
 
 #endif
-
