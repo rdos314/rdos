@@ -552,7 +552,7 @@ receive_arp_check_dest:
 	repz cmps byte ptr [si],es:[di]
 	jnz receive_arp_forward_req
 ;
-	int 3
+	push es
 	mov fs,bx
 	mov ax,es
 	mov gs,ax
@@ -603,6 +603,7 @@ receive_arp_check_dest:
 	add cx,ax
 	mov dx,806h
 	call fs:d_send
+	pop es
 	jmp receive_arp_done
 
 receive_arp_forward_req:

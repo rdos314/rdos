@@ -478,6 +478,8 @@ receive	Proc far
 	push ecx
 	push esi
 ;
+	int 3
+	mov es:[0],di
 	mov ax,es:[di].ip_size
 	xchg al,ah
 	cmp ax,cx
@@ -526,7 +528,7 @@ receive_this_node:
 receive_prot_loop:
 	mov fs,[bx]
 	mov al,fs:prot_id
-	cmp al,es:ip_proto
+	cmp al,es:[di].ip_proto
 	jne receive_prot_next
 ;
 	mov ax,es
@@ -540,12 +542,11 @@ receive_prot_loop:
 	shl al,2
 	xor ah,ah
 	sub cx,ax
-	sub ch,0
-	mov esi,SIZE ip_header
-	add edi,esi
+	mov edx,ds:[di].ip_source
+	add edi,SIZE ip_header
+	mov esi,edi
 	sub ax,SIZE ip_header
 	add di,ax
-	mov edx,ds:ip_source
 	call fs:prot_callback
 	jmp receive_done
 

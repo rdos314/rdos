@@ -53,7 +53,7 @@ PCR = 44h
 RFCR = 48h
 RFDR = 4Ch
 
-IMR_Val = 00000009h
+IMR_Val = 00000041h
 
 descriptor_struc	STRUC
 
@@ -72,6 +72,7 @@ OperationRegSel		DW ?
 EthernetAddress		DB 6 DUP(?)
 FreeList			DD ?
 RxList				DD ?
+TxList				DD ?
 Handle				DW ?
 ListSection			section_typ <>
 SendSection			section_typ <>
@@ -307,6 +308,162 @@ ireDone:
 	ret
 InsertReceiveEntry	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateSendEntry
+;
+;		DESCRIPTION:	Create a new send buffer entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;						ES		Send selector
+;						ECX		Size of send data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSendEntry	Proc near
+	push es
+	push eax
+	push bx
+	push ecx
+	push edx
+;
+	mov bx,es
+	mov ax,flat_sel
+	mov es,ax
+	EnterSection ds:ListSection
+	call AllocateDescriptor
+	LeaveSection ds:ListSection
+;
+	push ecx
+	GetSelectorBaseSize
+	pop ecx
+	GetPhysicalPage
+	and ax,0F000h
+	or ecx,80000000h
+	mov es:[edi].dh_link,0
+	mov es:[edi].dh_link_linear,0
+	mov es:[edi].dh_stat,ecx
+	mov es:[edi].dh_data,eax
+	mov es:[edi].dh_data_sel,bx
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop eax
+	pop es
+	ret
+CreateSendEntry	Endp	
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertSendEntry
+;
+;		DESCRIPTION:	Insert send entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertSendEntry	Proc near
+	push es
+	push eax
+	push ecx
+	push edx
+;
+	mov ax,flat_sel
+	mov es,ax
+;
+	EnterSection ds:ListSection
+	mov eax,ds:TxList
+	or eax,eax
+	jz iteEmpty
+
+iteGetTail:
+	mov edx,eax
+	mov eax,es:[eax].dh_link_linear
+	or eax,eax
+	jnz iteGetTail
+;
+	mov es:[edx].dh_link_linear,edi
+	push edx
+	mov edx,edi
+	and dx,0F000h
+	GetPhysicalPage
+	and ax,0F000h
+	mov dx,di
+	and dx,0FFFh
+	or ax,dx
+	pop edx
+	mov es:[edx].dh_link,eax
+	jmp iteDone
+
+iteEmpty:
+	mov ds:TxList,edi
+	mov edi,ds:TxList
+	mov edx,edi
+	and dx,0F000h
+	GetPhysicalPage
+	and ax,0F000h
+	mov dx,di
+	and dx,0FFFh
+	or ax,dx
+;
+	mov dx,ds:IoBase
+	add dx,TXDP
+	out dx,eax
+
+iteDone:
+	mov dx,ds:IoBase
+	add dx,CR
+	mov eax,1
+	out dx,eax
+;
+	LeaveSection ds:ListSection
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	ret
+InsertSendEntry	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeSendEntry
+;
+;		DESCRIPTION:	Free a send buffer entry
+;
+;		PARAMETERS:		EDI		Descriptor linear
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeSendEntry	Proc near
+	push es
+	push eax
+;
+	mov ax,flat_sel
+	mov es,ax
+	push es
+	mov es,es:[edi].dh_data_sel
+	FreeMem
+	pop es
+	EnterSection ds:ListSection
+	call FreeDescriptor
+	LeaveSection ds:ListSection
+;
+	pop eax
+	pop es
+	ret
+FreeSendEntry	Endp	
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -331,14 +488,21 @@ niLoop:
 	test al,1
 	jz niNotReceive
 ;
-	mov bx, ds:Handle
+	mov bx,ds:Handle
 	or bx,bx
 	jz niNotReceive
 ;
 	NetReceived
 
 niNotReceive:
+	test al,40h
+	jz niNotSend
+;
+	mov bx,ds:Handle
+	NetReceived
 	jmp niLoop
+
+niNotSend:
 
 niDone:
 	ret
@@ -597,8 +761,29 @@ Preview	Proc far
 	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
+
+pvCheckTx:
+	EnterSection ds:ListSection
+	mov edi,ds:TxList
+	or edi,edi
+	jz pvCheckRx
 ;
+	mov eax,es:[edi].dh_stat
+	test eax,80000000h
+	jnz pvCheckRx
+;
+	mov edi,ds:TxList
+	mov eax,es:[edi].dh_link_linear
+	mov ds:TxList,eax
+	LeaveSection ds:ListSection
+	call FreeSendEntry
+	jmp pvCheckTx	
+
+pvCheckRx:
 	mov edi,ds:RxList
+	or edi,edi
+	jz pvDone
+;
 	mov eax,es:[edi].dh_stat
 	test eax,80000000h
 	stc
@@ -611,6 +796,7 @@ Preview	Proc far
 	clc
 
 pvDone:
+	LeaveSection ds:ListSection
 	pop edi
 	pop eax
 	pop es
@@ -726,17 +912,38 @@ GetBuffer	Endp
 
 Send	Proc far
 	push ds
-	push fs
 	push eax
+	push ecx
+	push edi
 ;
-	int 3
-	mov ax,ds
-	mov fs,ax
+	xor di,di
+	mov ax,ds:[esi]
+	stosw
+	mov ax,[esi+2]
+	stosw
+	mov ax,[esi+4]
+	stosw
+;
 	mov ax,ether_data_sel
 	mov ds,ax
+	mov ax,word ptr ds:EthernetAddress
+	stosw
+	mov ax,word ptr ds:EthernetAddress+2
+	stosw
+	mov ax,word ptr ds:EthernetAddress+4
+	stosw
 ;
+	mov ax,dx
+	xchg al,ah
+	stosw
+;
+	add ecx,14
+	call CreateSendEntry
+	call InsertSendEntry
+;
+	pop edi
+	pop ecx
 	pop eax
-	pop fs
 	pop ds
 	ret
 Send	Endp
@@ -968,6 +1175,7 @@ Init	Proc far
 	InitSection es:SendSection
 	mov es:FreeList,0
 	mov es:RxList,0
+	mov es:TxList,0
 	mov es:Handle,0
 ;
 	mov ax,cs

@@ -184,9 +184,10 @@ ReceiveEchoReq	Proc near
 ;
 	xor ax,ax
 	mov ds,ax
-	mov eax,es:ip_source
-	xchg eax,es:ip_dest
-	mov es:ip_source,eax
+	mov di,es:[0]
+	mov eax,es:[di].ip_source
+	xchg eax,es:[di].ip_dest
+	mov es:[di].ip_source,eax
 	SendIp
 	ret
 ReceiveEchoReq	Endp
