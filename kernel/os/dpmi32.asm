@@ -31,12 +31,12 @@ GateSize = 32
 
 INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE driver.def
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
 INCLUDE int.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE dpmi.inc
 INCLUDE system.inc
 

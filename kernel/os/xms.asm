@@ -37,7 +37,7 @@ INCLUDE ..\os.def
 INCLUDE ..\user.def
 INCLUDE ..\os.inc
 INCLUDE ..\user.inc
-INCLUDE handle.inc
+INCLUDE ..\handle.inc
 
 xms_handle_seg	STRUC
 

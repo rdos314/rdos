@@ -31,12 +31,12 @@ GateSize = 16
 
 INCLUDE system.def
 INCLUDE kdebug.def
-INCLUDE driver.def
+INCLUDE ..\driver.def
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE system.inc
 
 code	SEGMENT byte public 'CODE'

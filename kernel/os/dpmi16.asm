@@ -31,11 +31,11 @@ GateSize = 16
 
 INCLUDE system.def
 INCLUDE protseg.def
-INCLUDE driver.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE dpmi.inc
 
 	.386p
