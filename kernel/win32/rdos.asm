@@ -5102,6 +5102,86 @@ RdosFormatDrive	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RdosLoadDll
+;
+;       DESCRIPTION:    Load a DLL
+;
+;		PARAMETERS:		DLL name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosLoadDll
+
+RdosLoadDll	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate load_dll_nr
+	jc rldllFail
+;
+    mov eax,ebx
+    jmp rldllDone
+
+rldllFail:
+    xor eax,eax
+
+rldllDone:
+	pop edi
+	pop ebx
+	pop ebp
+	ret 4
+RdosLoadDll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosFreeDll
+;
+;       DESCRIPTION:    Free a DLL
+;
+;		PARAMETERS:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosFreeDll
+
+RdosFreeDll	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate free_dll_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosFreeDll	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosGetModuleHandle
+;
+;       DESCRIPTION:    Get handle of executable
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetModuleHandle
+
+RdosGetModuleHandle	Proc near
+	mov eax,fs:pvModuleHandle
+	ret
+RdosGetModuleHandle	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           ReadResource
 ;
 ;       DESCRIPTION:    Read resource
@@ -5133,7 +5213,7 @@ RdosReadResource	Proc near
 
 read_resource_handle_ok:
 	mov eax,[ebp+12]
-	mov edx,10
+	mov edx,6
 	UserGate get_dll_resource_nr
 	jc read_resource_fail
 ;
@@ -5145,12 +5225,12 @@ read_resource_handle_ok:
 read_resource_copy:
 	mov edi,[ebp+16]
 	mov eax,ecx
-	push ecx
-	shr ecx,2
-	rep movsd
-	pop ecx
-	and ecx,3
-	rep movsb
+
+read_resource_copy_loop:
+    movs byte ptr es:[edi],[esi]
+    inc esi
+    loop read_resource_copy_loop
+;    
 	jmp read_resource_done
 	
 read_resource_fail:

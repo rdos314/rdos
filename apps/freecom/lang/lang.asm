@@ -1,11 +1,11 @@
-
-.model large
+.386
+.model flat
 
 .code
 
 	public LibEntry
 
-LibEntry	Proc far
+LibEntry	Proc near
 	ret
 LibEntry	Endp
 

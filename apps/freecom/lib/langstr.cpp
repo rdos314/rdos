@@ -112,6 +112,9 @@ void TLangString::Load(int ID)
 	start = 0;
 	count = 0;
 
+	if (FHandle == 0)
+		FHandle = RdosGetModuleHandle();
+
 	if (FHandle)
 	{
 		size = RdosReadResource(FHandle, ID, str, 256);

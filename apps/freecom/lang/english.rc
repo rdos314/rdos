@@ -667,23 +667,6 @@ STRINGTABLE
  918, "C:\\COMMAND.COM\r\n";
  919, "or just hit enter to cancel to load the strings.\r\n";
  920, "'%s' kan inte ha n†gra parametrar\r\n";
- 921, "(!) CTTY non Š stato ancora implementato.\r\n";
- 922, "Entrez une nouvelle date (mm-jj-[aa]aa):\r\n";
- 923, "(?) State per cancellare tutti i files presenti nella directory corrente.\r\n";
- 924, "    Sei sicuro di voler continuare (Y/N)?";
- 925, "\r\n";
- 926, "(i) The FreeDOS Command Shell comes with ABSOLUTELY NO WARRANTY.\r\n";
- 927, "    For details type: \"ver /w\". This is free software, and you are\r\n";
- 928, "    welcome to redistribute it under certain conditions; type \"ver /d\"\r\n";
- 929, "    for details.  Type \"ver /c\" for a listing of credits.\r\n";
- 930, "\r\n";
- 931, "    Send bug reports to commandgcfl.net.\r\n";
- 932, "    Updates are available from http://www.gcfl.net/FreeDOS/command.com\r\n";
- 933, "    Traduzione in italiano di Alessio P. (www.khet.net/freedos)\r\n";
- 934, "(!) Errore nello spazio di ambiente, probabilmente spazio esaurito.\r\n";
- 935, "(!) Non posso copiare un file su esso stesso.\r\n";
- 936, "(i) Copyright (C) 1994-1998 Tim Norman and others.\r\n";
- 937, "Especificaci¢n de variable no v lida.\r\n";
  TEXT_ERROR_INVALID_SWITCH, "256,1";
  TEXT_ERROR_INVALID_LSWITCH, "257,1";
  TEXT_ERROR_ILLFORMED_OPTION, "258,1";
@@ -922,13 +905,5 @@ STRINGTABLE
  TEXT_ERROR_FCOM_IS_DEVICE, "912,1";
  TEXT_ERROR_FCOM_INVALID, "913,2";
  TEXT_ERROR_LOADING_STRINGS, "915,5";
- TEXT_ERROR_NO_CTTY_CMD, "921,1";
- TEXT_MSG_ENTER_DATE, "922,1";
- TEXT_MSG_DELETE_ALL, "923,2";
- TEXT_MSG_VER_BASIC, "925,9";
- TEXT_ERROR_ENVIRONMENT_ERR, "934,1";
- TEXT_ERROR_COPIED_ONTO_SELF, "935,1";
- TEXT_MSG_VER_COPYRIGHT, "936,1";
- TEXT_ERROR_BAD_VERABLE, "937,1";
 }
 

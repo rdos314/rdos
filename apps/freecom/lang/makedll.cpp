@@ -276,14 +276,5 @@ breakLogFile:
 int main(int argc, char **argv)
 {
 	MakeDll("swedish");
-	MakeDll("dutch");
-	MakeDll("french");
-	MakeDll("german");
-	MakeDll("italian");
-	MakeDll("pt_br");
-	MakeDll("russian");
-	MakeDll("serbian");
-	MakeDll("spanish");
-	MakeDll("yu437");
 	MakeDll("english");
 }

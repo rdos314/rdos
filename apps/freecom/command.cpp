@@ -12,7 +12,7 @@
 
 void main()
 {
-	TLangString::SetLanguage("lang\\swedish");
+//	TLangString::SetLanguage("swedish.dll");
 	char param[256];
 	int size;
 

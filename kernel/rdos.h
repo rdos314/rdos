@@ -222,6 +222,7 @@ void __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const cha
 int __stdcall RdosCreateFileDrive(long Size, const char *FsName, const char *FileName);
 int __stdcall RdosOpenFileDrive(const char *FileName);
 
+int __stdcall RdosGetModuleHandle();
 int __stdcall RdosLoadDll(const char *Name);
 void __stdcall RdosFreeDll(int handle);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);

@@ -3712,9 +3712,13 @@ get_dll_resource_type_found:
 	add esi,OFFSET res_data
 	or ecx,ecx
 	jz get_dll_resource_fail_pop
+;
+    mov eax,edi
+    shr eax,4
+    inc eax
 
 get_dll_resource_id_loop:
-	cmp edi,[esi]
+	cmp eax,[esi]
 	je get_dll_resource_id_found
 ;
 	add esi,8
@@ -3722,6 +3726,7 @@ get_dll_resource_id_loop:
 	jmp get_dll_resource_fail_pop
 
 get_dll_resource_id_found:
+    and edi,0Fh
 	mov eax,[esi+4]
 	test eax,80000000h
 	jz get_dll_resource_found
@@ -3740,6 +3745,20 @@ get_dll_resource_found:
 	mov ecx,[eax+4]
 	mov esi,[eax]
 	add esi,es:lib_base
+
+get_dll_resource_entry_loop:
+    movzx ecx,word ptr [esi]
+    or edi,edi
+    jz get_dll_resource_ok
+;
+    add esi,ecx
+    add esi,ecx
+    add esi,2
+    dec edi
+    jmp get_dll_resource_entry_loop
+
+get_dll_resource_ok:    
+    add esi,2
 	pop es
 	clc
 	jmp get_dll_resource_done

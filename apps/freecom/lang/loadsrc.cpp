@@ -402,7 +402,7 @@ strnameFound:
 			}
 			vstring.length = text.length = 0;
 			version = (vers && *++vers)? atoi(vers): 0;
-			if(strchr(vers, '%'))
+			if(vers && strchr(vers, '%'))
 				strg[cnt].flags |= PERFORM_VALIDATION;
 
 			if(memcmp(strg[cnt].name, promptID, promptIDlen) == 0)
