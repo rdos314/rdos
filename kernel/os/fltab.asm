@@ -67,36 +67,59 @@ PAGE
 AllocateSectorEntry	Proc near
 	push ax
 	push ebx
+	push cx
+	push edi
 ;
-	mov ebx,fs:bc_ptr
+	mov cx,ds:control_sectors
+	mov edi,fs:bc_data_ptr
+
+aseSectorLoop:
+	mov ebx,es:[edi]
 	xor esi,esi
 
 aseLoop:
-	mov al,es:[ebx+esi].le_type
-	cmp al,-1
+	mov ax,es:[ebx+esi].le_type
+	cmp ax,-1
 	jne aseNext
 ;
-	mov al,es:[ebx+esi].le_physical_sector
-	cmp al,-1
+	mov ax,es:[ebx+esi].le_physical_sector
+	cmp ax,-1
 	jne aseNext
 ;
-	mov al,es:[ebx+esi].le_logical_entry
-	cmp al,-1
+	mov ax,es:[ebx+esi].le_logical_entry
+	cmp ax,-1
 	jne aseNext
 ;
 	add esi,ebx
+	sub edi,fs:bc_data_ptr
+	add edi,fs:bc_handle_ptr
+	mov fs:bc_alloc_handle,edi
 	clc
 	jmp aseDone
 
 aseNext:
-	add esi,3
+	or cx,cx
+	jz aseCheckLast
+;
+	add esi,8
+	test si,1F8h
+	jnz aseLoop
+;
+	add edi,4
+	dec cx
+	jmp aseSectorLoop
+
+aseCheckLast:
+	add esi,8
 	cmp esi,fc_logical_block
 	jb aseLoop
 ;
 	stc
 
 aseDone:
+	pop edi
 	pop ebx
+	pop cx
 	pop ax
 	ret
 AllocateSectorEntry	Endp
@@ -115,95 +138,100 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CacheSectorArr	Proc near
-	push ax
-	push ebx
-	push cx
-	push esi
-	push edi
+	pushad
 ;
-	push es
-	mov ax,fs
-	mov es,ax
-	mov di,OFFSET bc_log_sector_arr
-	mov cx,127
-	mov ax,0FFh
-	rep stosw
-;
-	mov di,OFFSET bc_phys_sector_arr
-	mov cx,127
-	mov al,-1
-	rep stosb
-	pop es
-;
-	mov ebx,fs:bc_ptr
+	mov cx,ds:control_sectors
+	mov edi,fs:bc_data_ptr
+
+csaSectorLoop:
+	mov ebx,es:[edi]
 	xor esi,esi
 
 csaLoop:
-	mov al,es:[ebx+esi].le_type
-	or al,al
+	mov ax,es:[ebx+esi].le_type
+	or ax,ax
 	jnz csaNotDeleted
 ;
-	mov al,es:[ebx+esi].le_physical_sector
-	or al,al
+	mov ax,es:[ebx+esi].le_physical_sector
+	or ax,ax
 	jz csaNext
 ;
-	test al,80h
-	jnz csaNext
+	cmp ax,ds:data_sectors
+	ja csaNext
 ;
-	dec al
-	movzx di,al
-	mov al,fs:[di].bc_phys_sector_arr
-	cmp al,-1
-	jne csaNext
+	push edi
+	dec ax
+	movzx eax,ax
+	mov edi,fs:bc_phys_sector_ptr
+	lea edi,[2*eax+edi]
+	mov ax,es:[edi]
+	cmp ax,-1
+	jne csaPop
 ;
-	mov fs:[di].bc_phys_sector_arr,0
+	mov word ptr es:[edi],0
+
+csaPop:
+	pop edi
 	jmp csaNext
 
 csaNotDeleted:
-	cmp al,-1
+	cmp ax,-1
 	je csaDone
 ;
-	cmp al,LOG_ENTRY_OBJECT
+	cmp ax,LOG_ENTRY_OBJECT
 	je csaCache
 ;
-	cmp al,LOG_ENTRY_DIR_DATA
+	cmp ax,LOG_ENTRY_DIR_DATA
 	je csaCache
 ;
-	cmp al,LOG_ENTRY_DIR_ENTRY
+	cmp ax,LOG_ENTRY_DIR_ENTRY
 	je csaCache
 ;
-	cmp al,LOG_ENTRY_FILE_DATA
+	cmp ax,LOG_ENTRY_FILE_DATA
 	jne csaNext
 
 csaCache:
-	movzx di,es:[ebx+esi].le_logical_entry
-	add di,di
-	mov ah,es:[ebx+esi].le_physical_sector
-	or ah,ah
+	mov bp,es:[ebx+esi].le_physical_sector
+	or bp,bp
 	jz csaNext
 ;
-	test ah,80h
-	jnz csaNext
+	cmp bp,ds:data_sectors
+	ja csaNext
 ;
-	mov fs:[di].bc_log_sector_arr.bs_type,al
-	dec ah
-	mov fs:[di].bc_log_sector_arr.bs_physical_sector,ah
+	push edi
+	movzx edi,es:[ebx+esi].le_logical_entry
+	shl edi,2
+	add edi,fs:bc_log_sector_ptr
+	mov es:[edi].bs_type,ax
+	dec bp
+	mov es:[edi].bs_physical_sector,bp
 ;
-	movzx di,ah
-	mov al,es:[ebx+esi].le_logical_entry
-	mov fs:[di].bc_phys_sector_arr,al
+	movzx edi,bp
+	add edi,edi
+	mov ax,es:[ebx+esi].le_logical_entry
+	add edi,fs:bc_phys_sector_ptr
+	mov es:[edi],ax
+	pop edi
 
 csaNext:
-	add esi,3
+	or cx,cx
+	jz csaCheckLast
+;
+	add esi,8
+	test si,1F8h
+	jnz csaLoop
+;
+	add edi,4
+	dec cx
+	jmp csaSectorLoop
+
+csaCheckLast:
+	add esi,8
 	cmp esi,fc_logical_block
 	jb csaLoop
 
 csaDone:	
-	pop edi
-	pop esi
-	pop cx
-	pop ebx
-	pop ax
+	popad
 	ret
 CacheSectorArr	Endp
 
@@ -225,30 +253,34 @@ PAGE
 	public GetFreeBlockSectors
 
 GetFreeBlockSectors	Proc near
+	push es
 	push ax
 	push edx
-	push di
+	push edi
 ;
+	mov ax,flat_sel
+	mov es,ax
 	xor edx,edx
-	mov cx,127
-	mov di,OFFSET bc_phys_sector_arr
+	mov cx,ds:control_sectors
+	mov edi,fs:bc_phys_sector_ptr
 
 gfbsLoop:
-	mov al,fs:[di]
-	cmp al,-1
+	mov ax,es:[edi]
+	cmp ax,-1
 	jne gfbsNext
 ;
 	inc edx
 
 gfbsNext:
-	inc di
+	add edi,2
 	loop gfbsLoop
 ;
 	mov ecx,edx
 ;
-	pop di
+	pop edi
 	pop edx
 	pop ax
+	pop es
 	ret
 GetFreeBlockSectors	Endp
 
@@ -261,27 +293,28 @@ PAGE
 ;
 ;		DESCRIPTION:	Get a sector
 ;
-;		PARAMETERS:		BL			Entry #
+;		PARAMETERS:		BX			Entry #
 ;						FS			Block selector
 ;
 ;		RETURNS:		EDX			Physical sector
-;						AL			Entry type
+;						AX			Entry type
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetBlockSector	Proc near
-	push di
+	push edi
 ;
-	cmp bl,7Fh
+	cmp bx,ds:data_sectors
 	jae gbeFail
 ;
-	movzx di,bl
-	add di,di
-	mov al,fs:[di].bc_log_sector_arr.bs_type
-	or al,al
+	movzx edi,bx
+	shl edi,2
+	add edi,fs:bc_log_sector_ptr
+	mov ax,es:[edi].bs_type
+	or ax,ax
 	jz gbeFail
 ;
-	movzx edx,fs:[di].bc_log_sector_arr.bs_physical_sector
+	movzx edx,es:[edi].bs_physical_sector
 	add edx,fs:bc_start_sector
 	clc
 	jmp gbeDone
@@ -290,7 +323,7 @@ gbeFail:
 	stc
 
 gbeDone:
-	pop di
+	pop edi
 	ret
 GetBlockSector	Endp
 
@@ -304,10 +337,10 @@ PAGE
 ;		DESCRIPTION:	Allocate a sector in block
 ;
 ;		PARAMETERS:		FS			Block selector
-;						AL			Entry type
+;						AX			Entry type
 ;
 ;		RETURNS:		EDX			Physical sector
-;						BL			Entry #
+;						BX			Entry #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -315,40 +348,42 @@ AllocateBlockSector	Proc near
 	push eax
 	push cx
 	push esi
-	push di
+	push edi
 	push ebp
 
 absRetry:
-	mov cx,127
-	xor bx,bx
+	mov cx,ds:data_sectors
+	mov ebx,fs:bc_log_sector_ptr
 
 absLogLoop:
-	mov ah,fs:[bx].bc_log_sector_arr.bs_type
-	or ah,ah
+	mov bp,es:[ebx].bs_type
+	or bp,bp
 	jne absLogNext
 ;
-	xor di,di
-	mov cx,127
+	mov edi,fs:bc_phys_sector_ptr
+	mov cx,ds:data_sectors
 
 absPhysLoop:
-	mov ah,fs:[di].bc_phys_sector_arr
-	cmp ah,-1
+	mov bp,es:[edi]
+	cmp bp,-1
 	jne absPhysNext
 ;
 	call AllocateSectorEntry
 	jc absDone
 ;
-	mov fs:[bx].bc_log_sector_arr.bs_type,al
-	mov es:[esi].le_type,al
-	mov ax,di
-	mov fs:[bx].bc_log_sector_arr.bs_physical_sector,al
-	movzx edx,al
+	mov es:[ebx].bs_type,ax
+	mov es:[esi].le_type,ax
+	mov eax,edi
+	sub eax,fs:bc_phys_sector_ptr
+	shr eax,1
+	mov es:[ebx].bs_physical_sector,ax
+	movzx edx,ax
 	add edx,fs:bc_start_sector
-	inc al
-	mov es:[esi].le_physical_sector,al
-	shr bx,1
-	mov fs:[di].bc_phys_sector_arr,bl
-	mov es:[esi].le_logical_entry,bl
+	inc ax
+	mov es:[esi].le_physical_sector,ax
+	shr ebx,2
+	mov es:[edi],bx
+	mov es:[esi].le_logical_entry,bx
 ;
 	push ebx
 	push esi
@@ -372,19 +407,19 @@ absBlankLoop:
 	clc
 	jz absDone
 ;
-	mov fs:[bx].bc_log_sector_arr.bs_type,LOG_ENTRY_ERASE
-	clc
+	shl ebx,2
+	mov es:[ebx].bs_type,LOG_ENTRY_ERASE
 	jmp absRetry
 
 absPhysNext:
-	inc di
+	add edi,2
 	loop absPhysLoop
 ;
 	stc
 	jmp absDone
 
 absLogNext:
-	add bx,2
+	add ebx,4
 	sub cx,1
 	jnz absLogLoop
 ;
@@ -392,12 +427,88 @@ absLogNext:
 
 absDone:
 	pop ebp
-	pop di
+	pop edi
 	pop esi
 	pop cx
 	pop eax
 	ret
 AllocateBlockSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AllocateBlockSel
+;
+;		DESCRIPTION:	Allocate block selector
+;
+;		RETURNS:		EDX			Physical sector
+;
+;		RETURNS:		FS			Block selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBlockSel	Proc near
+	pushad
+;
+	push es
+	mov eax,SIZE block_seg
+	AllocateSmallGlobalMem
+	mov ax,es
+	mov fs,ax
+	pop es
+;	
+	push edx
+	movzx eax,ds:control_sectors
+	add eax,eax
+	AllocateSmallLinear
+	mov fs:bc_phys_sector_ptr,edx
+	add eax,eax
+	AllocateSmallLinear
+	mov fs:bc_log_sector_ptr,edx
+;
+	movzx eax,ds:data_sectors
+	shl eax,2
+	AllocateSmallLinear
+	mov fs:bc_handle_ptr,edx
+	AllocateSmallLinear
+	mov fs:bc_data_ptr,edx
+	pop edx
+;
+	mov edi,fs:bc_handle_ptr
+	mov ebp,fs:bc_data_ptr
+	mov fs:bc_start_sector,edx
+;
+	mov cx,ds:control_sectors
+	mov ax,ds:block_sectors
+	sub ax,cx
+	movzx eax,ax
+	add edx,eax
+
+absLockLoop:
+	mov al,ds:drive_nr
+	LockSector
+	mov es:[edi],ebx
+	mov es:[ebp],esi
+	add edi,4
+	add ebp,4
+	inc edx
+	loop cbLockLoop
+;
+	mov edi,fs:bc_log_sector_ptr
+	movzx ecx,ds:data_sectors
+	mov eax,0FFFFh
+	rep stos dword ptr es:[edi]
+;
+	mov edi,fs:bc_phys_sector_ptr
+	movzx ecx,ds:data_sectors
+	mov ax,-1
+	rep stos word ptr es:[edi]
+;
+	popad
+	ret
+AllocateBlockSel	Endp
 
 PAGE
 
@@ -417,57 +528,38 @@ PAGE
 	public CacheBlock
 
 CacheBlock	Proc near
-	push eax
-	push ebx
-	push esi
+	pushad
 ;
+	movzx eax,ds:block_sectors
+	push edx
+	add edx,eax
+	dec edx
 	mov al,ds:drive_nr
-	add edx,7Fh
 	LockSector
-	sub edx,7Fh
-	mov ax,es:[esi].fc_signature
-	cmp ax,FLASH_SIGN_OK
+	pop edx
+	mov eax,es:[esi].fc_signature
+	UnlockSector
+	cmp eax,FLASH_SIGN_OK
 	jne cbErase
 ;
-	mov ax,es:[esi].fc_logical_block
+	mov al,es:[esi].fc_logical_block
 	push ax
 	mov ax,es:[esi].fc_version
-	push ax
-	push es
-	mov eax,SIZE block_seg
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov fs,ax
-	pop es
-;	
-	mov fs:bc_handle,ebx
-	mov fs:bc_ptr,esi
-	mov fs:bc_start_sector,edx
-	pop ax
+	call AllocateBlockSel
 	mov fs:bc_version,ax
 	pop ax
-	mov fs:bc_logical_block,ax
+	mov fs:bc_logical_block,al
 	call CacheSectorArr
 	clc
 	jmp cbDone
 
 cbErase:
-    UnlockSector
     call EraseBlock
     xor ax,ax
     mov fs,ax
-    jmp cbDone
-
-cbFail:
-	UnlockSector
-	xor ax,ax
-	mov fs,ax
-	stc
 
 cbDone:
-	pop esi
-	pop ebx
-	pop eax
+	popad
 	ret
 CacheBlock	Endp
 
@@ -480,7 +572,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Get a block
 ;
-;		PARAMETERS:		BX		Logical block #
+;		PARAMETERS:		BL		Logical block #
 ;
 ;		RETURNS:		FS		Block selector
 ;
@@ -500,7 +592,7 @@ gbScanLoop:
 	jz gbScanNext
 ;
 	mov fs,ax
-	cmp bx,fs:bc_logical_block
+	cmp bl,fs:bc_logical_block
 	clc
 	je gbDone
 
@@ -528,7 +620,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Allocate a new block
 ;
-;		PARAMETERS:		BX		Logical block #
+;		PARAMETERS:		BL		Logical block #
 ;
 ;		RETURNS:		FS		Block selector
 ;
@@ -554,43 +646,19 @@ abScanLoop:
 	jnz abScanNext
 ;
 	push bx
-	add edx,7Fh
+	push edx
+	add edx,ds:block_sectors
+	dec edx
 	mov al,ds:drive_nr
 	LockSector
-	sub edx,7Fh
+	pop edx
 	pop ax
-	mov es:[esi].fc_logical_block,ax
-	mov byte ptr es:[esi].fc_version,1
-	mov word ptr es:[esi].fc_signature,FLASH_SIGN_OK
+	mov es:[esi].fc_logical_block,al
+	mov word ptr es:[esi].fc_version,1
+	mov dword ptr es:[esi].fc_signature,FLASH_SIGN_OK
 ;
-	push ax
-	push es
-	mov eax,SIZE block_seg
-	AllocateSmallGlobalMem
-;
-	push cx
-	push di
-	mov di,OFFSET bc_log_sector_arr
-	mov ax,0FFh
-	mov cx,127
-	rep stosw
-;
-	mov di,OFFSET bc_phys_sector_arr
-	mov al,-1
-	mov cx,127
-	rep stosb
-	pop di
-	pop cx
-;
-	mov ax,es
-	mov fs,ax
-	pop es
-;
-	mov fs:bc_handle,ebx
-	mov fs:bc_ptr,esi
-	mov fs:bc_start_sector,edx
-	pop ax
-	mov fs:bc_logical_block,ax
+	call AllocateBlockSel
+	mov fs:bc_logical_block,al
 	mov ds:[di],fs
 ;
 	call WriteSector
@@ -598,7 +666,7 @@ abScanLoop:
 	jmp abDone
 
 abScanNext:
-	add edx,80h
+	add edx,ds:block_sectors
 	add di,2
 	sub cx,1
 	jnz abScanLoop
@@ -624,7 +692,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Allocate a sector in any block
 ;
-;       PARAMETERS:     AL          Entry type
+;       PARAMETERS:     AX          Entry type
 ;
 ;       RETURNS:        EBX         Logical sector #
 ;                       EDX         Physical sector #
@@ -639,9 +707,9 @@ AllocateSector	PROC near
 	push esi
 ;
     xor esi,esi
+    mov bx,si
 
 asBlockLoop:
-    mov bx,si
 	call GetBlock
 	jnc asEntry
 ;
@@ -653,16 +721,17 @@ asEntry:
 	jnc asOk
 ;
     inc si
-    cmp si,ds:block_count
+	mov bx,si
+    cmp bl,ds:block_count
     jnz asBlockLoop
 ;
     stc
     jmp asDone
 
 asOk:
-    shl esi,8
-    movzx ebx,bl
-    or ebx,esi
+    shl esi,16
+	mov si,bx
+	mov ebx,esi
     clc
 
 asDone:
@@ -691,40 +760,60 @@ FreeSector	PROC near
 	pushad
 ;
 	push ebx
-	shr ebx,8
+	shr ebx,16
 	call GetBlock
 	pop ebx
 	jc fsDone
 ;
-	movzx di,bl
-	add di,di
-	mov fs:[di].bc_log_sector_arr.bs_type,0
-	movzx di,fs:[di].bc_log_sector_arr.bs_physical_sector
-	mov fs:[di].bc_phys_sector_arr,0
+	movzx edi,bx
+	shl edi,2
+	add edi,fs:bc_log_sector_ptr
+	mov es:[edi].bs_type,0
+	movzx edi,es:[edi].bs_physical_sector
+	add edi,edi
+	add edi,fs:bc_phys_sector_ptr
+	mov word ptr es:[edi],0
 ;
-	mov edi,fs:bc_ptr
+	mov cx,ds:control_sectors
+	mov edi,fs:bc_data_ptr
+
+fsSectorLoop:
+	mov ebp,es:[edi]
 	xor esi,esi
 
 fsLoop:
-	mov al,es:[esi+edi].le_type
-	or al,al
+	mov ax,es:[esi+ebp].le_type
+	or ax,ax
 	jz fsNext
 ;
-	cmp al,-1
+	cmp ax,-1
 	je fsUpdate
 ;
-	cmp bl,es:[esi+edi].le_logical_entry
+	cmp bx,es:[esi+ebp].le_logical_entry
 	jne fsNext
 ;
-	mov es:[esi+edi].le_type,0
+	mov es:[esi+ebp].le_type,0
 
 fsNext:
-	add esi,3
+	or cx,cx
+	jz fsCheckLast
+;
+	add esi,8
+	test si,1F8h
+	jnz fsLoop
+;
+	add edi,4
+	dec cx
+	jmp fsSectorLoop
+
+fsCheckLast:
+	add esi,8
 	cmp esi,fc_logical_block
 	jb fsLoop
 
 fsUpdate:
-	mov ebx,fs:bc_handle
+	sub edi,fs:bc_data_ptr
+	add edi,fs:bc_handle_ptr
 	call WriteSector
 
 fsDone:	
@@ -764,20 +853,20 @@ GetRootSector	PROC near
 	jc grsDone
 
 grsEntry:
-	xor bl,bl
+	xor bx,bx
 	call GetBlockSector
 	jnc grsCheckEntry
 ;
-	mov al,LOG_ENTRY_DIR_ENTRY
+	mov ax,LOG_ENTRY_DIR_ENTRY
 	call AllocateBlockSector	
 	jc grsDone
 ;
-	mov ebx,fs:bc_handle
+	mov ebx,fs:bc_alloc_handle
 	call WriteSector
 	jmp grsEntry
 
 grsCheckEntry:
-	cmp al,LOG_ENTRY_DIR_ENTRY
+	cmp ax,LOG_ENTRY_DIR_ENTRY
 	stc
 	jne grsDone
 ;
@@ -815,15 +904,15 @@ DirEntryLogToPhysSector Proc near
     push ebx
 ;
     mov ebx,edx
-    shr ebx,8
+    shr ebx,16
     call GetBlock
     jc delpDone
 ;
-    mov bl,dl
+    mov bx,dx
     call GetBlockSector
     jc delpDone
 ;
-    cmp al,LOG_ENTRY_DIR_ENTRY
+    cmp ax,LOG_ENTRY_DIR_ENTRY
     stc
     jne delpDone
 ;
@@ -859,15 +948,15 @@ ObjectLogToPhysSector Proc near
     push ebx
 ;
     mov ebx,edx
-    shr ebx,8
+    shr ebx,16
     call GetBlock
     jc olpDone
 ;
-    mov bl,dl
+    mov bx,dx
     call GetBlockSector
     jc olpDone
 ;
-    cmp al,LOG_ENTRY_OBJECT
+    cmp ax,LOG_ENTRY_OBJECT
     stc
     jne olpDone
 ;
@@ -903,15 +992,15 @@ DirDataLogToPhysSector Proc near
     push ebx
 ;
     mov ebx,edx
-    shr ebx,8
+    shr ebx,16
     call GetBlock
     jc ddlpDone
 ;
-    mov bl,dl
+    mov bx,dx
     call GetBlockSector
     jc ddlpDone
 ;
-    cmp al,LOG_ENTRY_DIR_DATA
+    cmp ax,LOG_ENTRY_DIR_DATA
     stc
     jne ddlpDone
 ;
@@ -947,15 +1036,15 @@ FileDataLogToPhysSector Proc near
     push ebx
 ;
     mov ebx,edx
-    shr ebx,8
+    shr ebx,16
     call GetBlock
     jc fdlpDone
 ;
-    mov bl,dl
+    mov bx,dx
     call GetBlockSector
     jc fdlpDone
 ;
-    cmp al,LOG_ENTRY_FILE_DATA
+    cmp ax,LOG_ENTRY_FILE_DATA
     stc
     jne fdlpDone
 ;

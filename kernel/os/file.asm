@@ -399,7 +399,11 @@ CreateFileSel	PROC near
 	jnz crfs_skip_lists
 ;
 	mov al,bl
+	push si
+	push di
 	GetDriveParam
+	pop di
+	pop si
 	jnc crfs_ok_params
 ;
 	mov eax,1000h

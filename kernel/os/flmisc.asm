@@ -127,7 +127,7 @@ WriteSectorAlloc	Proc near
     mov cx,2
     CreateDiscSeq
     ModifySeqSector
-    mov ebx,fs:bc_handle
+    mov ebx,fs:bc_alloc_handle
     ModifySeqSector
     PerformDiscSeq
 ;    

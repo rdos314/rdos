@@ -43,50 +43,54 @@ ffe_struc	ENDS
 
 drive_data_seg  STRUC
 
-block_count			DW ?
+block_count			DB ?
 drive_nr			DB ?
-resv				DB ?
+block_sectors		DW ?
+control_sectors		DW ?
+data_sectors		DW ?
 
 drive_data_seg	ENDS
 
 block_sector_struc	STRUC
 
-bs_physical_sector	DB ?
-bs_type				DB ?
+bs_physical_sector	DW ?
+bs_type				DW ?
 
 block_sector_struc	ENDS
 
 block_seg	STRUC
 
-bc_handle			DD ?
-bc_ptr				DD ?
+bc_alloc_handle		DD ?
 bc_start_sector		DD ?
 bc_logical_block	DW ?
-bc_version          DW ?
-bc_log_sector_arr	DB 127 * SIZE block_sector_struc DUP (?)
-bc_phys_sector_arr	DB 127 DUP (?)
+bc_version          DD ?
+bc_handle_ptr		DD ?
+bc_data_ptr			DD ?
+bc_log_sector_ptr	DD ?
+bc_phys_sector_ptr	DD ?
 
 block_seg	ENDS
 
-fc_logical_block	EQU 1FBh
-fc_version			EQU 1FDh
-fc_signature		EQU 1FEh
+fc_logical_block	EQU 1F8h
+fc_version			EQU 1FAh
+fc_signature		EQU 1FCh
 
-FLASH_SIGN_OK	=	0CD05h
+FLASH_SIGN_OK	EQU	3AF6CD50h
 
 logical_entry_struc	STRUC
 
-le_physical_sector	DB ?
-le_logical_entry	DB ?
-le_type				DB ?
+le_physical_sector	DW ?
+le_logical_entry	DW ?
+le_resv				DW ?
+le_type				DW ?
 
 logical_entry_struc	ENDS
 
-LOG_ENTRY_DIR_DATA =	04Ch
-LOG_ENTRY_OBJECT =      0A6h
-LOG_ENTRY_DIR_ENTRY =	05Ah
-LOG_ENTRY_FILE_DATA =	0C4h
-LOG_ENTRY_ERASE =		02Fh
+LOG_ENTRY_DIR_DATA =	04C58h
+LOG_ENTRY_OBJECT =      0A6ADh
+LOG_ENTRY_DIR_ENTRY =	05A74h
+LOG_ENTRY_FILE_DATA =	0C4D5h
+LOG_ENTRY_ERASE =		02F5Ah
 
 dir_entry_header_struc	STRUC
 
@@ -107,8 +111,8 @@ DIR_ENTRY_OK =	0B5h
 
 object_struc	STRUC
 
-o_log_entry		    DB ?
-o_log_block	    	DW ?
+o_log_entry		    DW ?
+o_log_block	    	DB ?
 o_valid				DB ?
 
 object_struc	ENDS
@@ -117,8 +121,8 @@ OBJECT_OK = 67h
 
 dir_data_struc	STRUC
 
-fdd_log_entry	    DB ?
-fdd_log_block   	DW ?
+fdd_log_entry	    DW ?
+fdd_log_block   	DB ?
 fdd_valid			DB ?
 
 dir_data_struc	ENDS

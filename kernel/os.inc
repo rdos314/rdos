@@ -1668,6 +1668,8 @@ FlushDrive	MACRO
 ;	IN	AL		Drive #
 ;	OUT	EAX		Readahead
 ;	OUT ECX		Size
+;	OUT SI		Sectors per unit
+;	OUT DI		Units
 GetDriveParam	MACRO
 	OsGate get_drive_param_nr
 					ENDM

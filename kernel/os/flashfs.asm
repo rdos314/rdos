@@ -130,6 +130,7 @@ mount	PROC far
 	push edi
 ;
     int 3
+	GetDriveParam
 	shr ecx,7
 	push ax
 	mov eax,SIZE drive_data_seg

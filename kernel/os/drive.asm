@@ -2064,6 +2064,8 @@ PAGE
 ;
 ;		RETURNS:		EAX		Readahead
 ;						ECX		Size
+;						SI		Sectors per unit
+;						DI		Units
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2107,12 +2109,16 @@ get_drive_param	PROC far
 get_param_size_ok:
 	mov ecx,eax
 	mov eax,ds:disc_readahead
+	mov si,ds:disc_sectors_per_unit
+	mov di,ds:disc_units
 	clc
 	jmp get_drive_param_done
 
 get_drive_param_fail:
 	xor eax,eax
 	xor ecx,ecx
+	xor si,si
+	xor di,di
 	stc
 
 get_drive_param_done:
