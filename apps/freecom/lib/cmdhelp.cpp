@@ -29,7 +29,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "rdos.h"
 #include "file.h"
+#include "strlist.h"
+#include "keyboard.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -40,6 +43,10 @@ int FStdOutput = TRUE;
 TFile *FInputFile = new TFile("CON");
 TFile *FOutputFile = new TFile("CON");
 TFile *FErrorFile = new TFile("CON");
+
+static TStringList History;
+static TWait *wait;
+static TKeyboardDevice *keyboard;
 
 /*##########################################################################
 #
@@ -584,6 +591,304 @@ int Read(char *str, int maxsize)
 
 /*##########################################################################
 #
+#   Name       : ReadCon
+#
+#   Purpose....: Read a string from console
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int ReadCon(char *str, int maxsize)
+{
+	char insert = 1;
+	char ch;
+	int histLevel = 0;
+	int curx;
+	int cury;
+	int count;
+	int current = 0;
+	int charcount = 0;
+
+	int OrgX;
+	int OrgY;
+	int ExtKey;
+	int State;
+	int VirtKey;
+	int ScanCode;
+
+	RdosGetCursorPosition(&OrgY, &OrgX);
+	memset(str, 0, maxsize);
+
+	if (!Wait)
+		Wait = new TWait;
+
+	if (!Keyboard)
+		Keyboard = new TKeyboard(Wait);
+
+	do
+	{
+		Wait->WaitForEver();
+		if (ReadEvent(&ExtKey, &State, &VirtKey, &ScanCode))
+		{
+
+		if(cbreak)
+			ch = KEY_CTL_C;
+
+		switch(ch) {
+		case KEY_BS:               /* delete character to left of cursor */
+
+			if(current > 0 && charcount > 0) {
+			  if(current == charcount) {     /* if at end of line */
+				str[current - 1] = 0;
+				if (wherex() != 1)
+				  outs("\b \b");
+				else
+				{
+				  goxy(MAX_X, wherey() - 1);
+				  outblank();
+				  goxy(MAX_X, wherey() - 1);
+				}
+			  }
+			  else
+			  {
+				for (count = current - 1; count < charcount; count++)
+				  str[count] = str[count + 1];
+				if (wherex() != 1)
+				  goxy(wherex() - 1, wherey());
+				else
+				  goxy(MAX_X, wherey() - 1);
+				curx = wherex();
+				cury = wherey();
+				outsblank(&str[current - 1]);
+				goxy(curx, cury);
+			  }
+			  charcount--;
+			  current--;
+			}
+			break;
+
+		case KEY_INSERT:           /* toggle insert/overstrike mode */
+			insert ^= 1;
+			if (insert)
+			  _setcursortype(_NORMALCURSOR);
+			else
+			  _setcursortype(_SOLIDCURSOR);
+			break;
+
+		case KEY_DELETE:           /* delete character under cursor */
+
+			if (current != charcount && charcount > 0)
+			{
+			  for (count = current; count < charcount; count++)
+				str[count] = str[count + 1];
+			  charcount--;
+			  curx = wherex();
+			  cury = wherey();
+			  outsblank(&str[current]);
+			  goxy(curx, cury);
+			}
+			break;
+
+		case KEY_HOME:             /* goto beginning of string */
+
+			if (current != 0)
+			{
+			  goxy(orgx, orgy);
+			  current = 0;
+			}
+			break;
+
+		case KEY_END:              /* goto end of string */
+
+			if (current != charcount)
+			{
+			  goxy(orgx, orgy);
+			  outs(str);
+			  current = charcount;
+			}
+			break;
+
+#ifdef FEATURE_FILENAME_COMPLETION
+		case KEY_TAB:		 /* expand current file name */
+			if(current == charcount) {      /* only works at end of line */
+			  if(lastch != KEY_TAB) { /* if first TAB, complete filename */
+				complete_filename(str, charcount);
+				charcount = strlen(str);
+				current = charcount;
+
+				goxy(orgx, orgy);
+				outs(str);
+				if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
+				  orgy--;
+			  } else {                 /* if second TAB, list matches */
+				if (show_completion_matches(str, charcount))
+				{
+				  printprompt();
+				  orgx = wherex();
+				  orgy = wherey();
+				  outs(str);
+				}
+			  }
+			}
+			else
+			  beep();
+			break;
+#endif
+
+		case KEY_ENTER:            /* end input, return to main */
+
+#ifdef FEATURE_HISTORY
+			if(str[0])
+			  histSet(0, str);      /* add to the history */
+#endif
+
+			outc('\n');
+			break;
+
+		case KEY_CTL_C:       		/* ^C */
+		case KEY_ESC:              /* clear str  Make this callable! */
+
+			clrcmdline(str, maxlen, orgx, orgy);
+			current = charcount = 0;
+
+			if(ch == KEY_CTL_C && !echo) {
+			  /* enable echo to let user know that's this
+				is the command line */
+			  echo = 1;
+			  printprompt();
+			}
+			break;
+
+		case KEY_RIGHT:            /* move cursor right */
+
+			if (current != charcount)
+			{
+			  current++;
+			  if (wherex() == MAX_X)
+				goxy(1, wherey() + 1);
+			  else
+				goxy(wherex() + 1, wherey());
+				break;
+			}
+			/* cursor-right at end of string grabs the next character
+				from the previous line */
+			/* FALL THROUGH */
+
+#ifndef FEATURE_HISTORY
+			break;
+#else
+		case KEY_F1:       /* get character from last command buffer */
+			  if (current < strlen(prvLine)) {
+				 outc(str[current] = prvLine[current]);
+				 charcount = ++current;
+			  }
+			  break;
+			  
+		case KEY_F3:               /* get previous command from buffer */
+			if(charcount < strlen(prvLine)) {
+				outs(strcpy(&str[charcount], &prvLine[charcount]));
+			   current = charcount = strlen(str);
+		   }
+		   break;
+
+		case KEY_UP:               /* get previous command from buffer */
+			if(!histGet(--histLevel, prvLine, sizeof(prvLine)))
+				++histLevel;		/* failed -> keep current command line */
+			else {
+				clrcmdline(str, maxlen, orgx, orgy);
+				strcpy(str, prvLine);
+				current = charcount = strlen(str);
+				outs(str);
+				histGet(histLevel - 1, prvLine, sizeof(prvLine));
+			}
+			break;
+
+		case KEY_DOWN:             /* get next command from buffer */
+			if(histLevel) {
+				clrcmdline(str, maxlen, orgx, orgy);
+				strcpy(prvLine, str);
+				histGet(++histLevel, str, maxlen);
+				current = charcount = strlen(str);
+				outs(str);
+			}
+			break;
+
+		case KEY_F5: /* keep cmdline in F3/UP buffer and move to next line */
+			strcpy(prvLine, str);
+			clrcmdline(str, maxlen, orgx, orgy);
+			outc('@');
+			if(orgy >= MAX_Y) {
+				outc('\n');			/* Force scroll */
+				orgy = MAX_Y;
+			} else {
+				++orgy;
+			}
+			goxy(orgx, orgy);
+			current = charcount = 0;
+
+			break;
+
+#endif
+
+		case KEY_LEFT:             /* move cursor left */
+
+			if (current > 0)
+			{
+			  current--;
+			  if (wherex() == 1)
+				goxy(MAX_X, wherey() - 1);
+			  else
+				goxy(wherex() - 1, wherey());
+			}
+#if 0
+			else
+				   beep();
+#endif
+			break;
+
+		default:                 /* insert character into string... */
+
+			if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
+			{
+			  if (insert && current != charcount)
+			  {
+				for (count = charcount; count > current; count--)
+				  str[count] = str[count - 1];
+				str[current++] = ch;
+				curx = wherex() + 1;
+				cury = wherey();
+				outs(&str[current - 1]);
+				if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
+				  cury--;
+				goxy(curx, cury);
+				charcount++;
+			  }
+			  else
+			  {
+				if (current == charcount)
+				  charcount++;
+				str[current++] = ch;
+				outc(ch);
+			  }
+			  if ((strlen(str) > (MAX_X - orgx)) && (orgy == MAX_Y + 1))
+				orgy--;
+			}
+			else
+			  beep();
+			break;
+		}
+#ifdef FEATURE_FILENAME_COMPLETION
+		lastch = ch;
+#endif
+	} while(ch != KEY_ENTER);
+
+	_setcursortype(_NORMALCURSOR);
+}
+
+/*##########################################################################
+#
 #   Name       : ReadCmd
 #
 #   Purpose....: Read a command string from standard input
@@ -595,4 +900,8 @@ int Read(char *str, int maxsize)
 ##########################################################################*/
 int ReadCmd(char *str, int maxsize)
 {
+	if (FInputFile->IsDevice())
+		return ReadCon(str, maxsize);
+	else
+		return Read(str, maxsize);
 }

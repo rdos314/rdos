@@ -485,6 +485,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			GET_IOCTL_DATA
+;
+;		DESCRIPTION:	Get IOCTL data
+;
+;		PARAMETERS:		BX			FILE HANDLE
+;
+;		RETURNS:		DX			IOCTL DATA
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_ioctl_data	PROC far
+	mov dx,0C0D3h
+	clc
+	ret
+get_ioctl_data	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			READ_FILE
 ;
 ;		DESCRIPTION:	Read from device
@@ -1443,7 +1464,7 @@ fs11	DW OFFSET dummy,			dosdev_code_sel
 fs12	DW OFFSET dummy,			dosdev_code_sel
 fs13	DW OFFSET dummy,			dosdev_code_sel
 fs14	DW OFFSET dummy,			dosdev_code_sel
-fs15	DW OFFSET dummy,			dosdev_code_sel
+fs15	DW OFFSET get_ioctl_data,	dosdev_code_sel
 fs16	DW OFFSET dummy,			dosdev_code_sel
 fs17	DW OFFSET read_file,		dosdev_code_sel
 fs18	DW OFFSET write_file,		dosdev_code_sel

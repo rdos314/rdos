@@ -37,10 +37,13 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\wait.inc
 INCLUDE ..\..\kernel\handle.inc
 
+IO_OUT	= 3B3h
+IO_IN	= 3B3h
 
 digio_seg	STRUC
 
 io_section	section_typ <>
+out_val		DB ?
 
 digio_seg	ENDS
 
@@ -125,26 +128,29 @@ OutputBit	Proc near
 	and ah,1
 	shl ah,2
 ;
-	mov dx,288h
+	mov dx,IO_OUT
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 4
 	or al,ah
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	or al,2
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 2
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
@@ -172,24 +178,26 @@ InputBit	Proc near
 	mov bl,al
 ;
 	call Delay
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	and bl,NOT 1
 	or bl,al
-	sub dx,2
+	mov dx,IO_OUT
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	or al,2
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 2
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
@@ -242,7 +250,7 @@ out6_crc_loop:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -349,7 +357,7 @@ out24_loop0:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -369,7 +377,7 @@ out24_loop1:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -389,7 +397,7 @@ out24_loop2:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -408,7 +416,7 @@ out24_loop3:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -425,7 +433,7 @@ out24_crc_loop:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -496,7 +504,7 @@ cmdline_crc_loop:
 	xor al,al
 	call OutputBit
 ;
-	mov dx,28Ah
+	mov dx,IO_IN
 	in al,dx
 	and al,1
 	stc
@@ -535,11 +543,12 @@ OpenSession	Proc near
 	EnterSection ds:io_section
 ;
 	push ax
-	mov dx,288h
+	mov dx,IO_OUT
 	cli
-	in al,dx
+	mov al,ds:out_val
 	or al,1
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
@@ -580,17 +589,19 @@ CloseSession	Proc near
 	call OutputBit
 ;
 	cli
-	mov dx,288h
-	in al,dx
+	mov dx,IO_OUT
+	mov al,ds:out_val
 	and al,NOT 6
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 7
 	out dx,al
+	mov ds:out_val,al
 	sti
 	LeaveSection ds:io_section
 	popf
@@ -627,12 +638,13 @@ read_serial_lines	Proc far
 	EnterSection ds:io_section
 ;
 	mov si,dx
-	mov dx,288h
+	mov dx,IO_OUT
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	or al,1
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
@@ -672,9 +684,9 @@ rslnode_crc_loop:
 	xor al,al
 	call OutputBit
 ;
-	add dx,2
+	mov dx,IO_IN
 	in al,dx
-	sub dx,2
+	mov dx,IO_OUT
 	and al,1
 	stc
 	jz rsl_leave
@@ -745,17 +757,20 @@ rsl_leave:
 	push ax
 	pushf
 ;
+	mov dx,IO_OUT
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 6
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 7
 	out dx,al
+	mov ds:out_val,al
 	sti
 	popf
 	pop ax
@@ -796,12 +811,13 @@ toggle_serial_line	Proc far
 	EnterSection ds:io_section
 ;
 	mov si,dx
-	mov dx,288h
+	mov dx,IO_OUT
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	or al,1
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
@@ -841,9 +857,9 @@ tslnode_crc_loop:
 	xor al,al
 	call OutputBit
 ;
-	add dx,2
+	mov dx,IO_IN
 	in al,dx
-	sub dx,2
+	mov dx,IO_OUT
 	and al,1
 	stc
 	jz tsl_done
@@ -883,9 +899,9 @@ tsldev_crc_loop:
 	call OutputBit
 	call Delay
 ;
-	add dx,2
+	mov dx,IO_IN
 	in al,dx
-	sub dx,2
+	mov dx,IO_OUT
 	and al,1
 	stc
 	jz tsl_done
@@ -894,17 +910,20 @@ tsldev_crc_loop:
 
 tsl_done:
 	pushf
+	mov dx,IO_OUT
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 6
 	out dx,al
+	mov ds:out_val,al
 	sti
 	call Delay
 ;
 	cli
-	in al,dx
+	mov al,ds:out_val
 	and al,NOT 7
 	out dx,al
+	mov ds:out_val,al
 	sti
 	popf
 	LeaveSection ds:io_section
@@ -1025,13 +1044,14 @@ init	Proc far
 	AllocateFixedSystemMem
 	InitSection es:io_section
 ;
-    mov dx,28Bh
-    mov al,8Bh
-    out dx,al
+;    mov dx,28Bh
+;    mov al,89h
+;    out dx,al
 ;
-	mov dx,288h
-	in al,dx
+	mov al,-1
+	mov dx,IO_OUT
 	and al,NOT 7
+	mov es:out_val,al
 	out dx,al
 ;
 	mov ax,cs

@@ -2805,8 +2805,16 @@ RdosIsDevice	PROC
 ;
 	mov bx,[ebp+8]
 	UserGate get_ioctl_data_nr
-	movzx eax,dx
+	test dx,8000h
+	jz ridFail
 ;
+	mov eax,1
+	jmp ridDone
+
+ridFail:
+	xor eax,eax
+
+ridDone:
 	pop ebx
 	pop ebp
 	ret 4
