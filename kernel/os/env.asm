@@ -765,7 +765,100 @@ delete_env_var32:
 
 find_env_var_name	DB 'Find Env Var',0
 
+find_env_base	Proc near
+    push es
+    push edi
+;
+    mov es,bx
+    mov ebp,esi
+    xor edi,edi
+
+find_env_search_loop:
+	cmps byte ptr ds:[esi],es:[edi]
+	jnz find_env_next
+;
+	mov al,[esi]
+	or al,al
+	jnz find_env_search_loop
+;
+	mov al,es:[edi]
+	cmp al,'='
+	je find_env_var_found
+
+find_env_next:
+    mov al,es:[edi]
+    inc edi
+	or al,al
+	jnz find_env_next
+;
+	mov esi,ebp
+	mov al,es:[edi]
+	or al,al
+	jne find_env_search_loop
+;
+    pop edi
+    pop es
+;
+    xor al,al
+    stos byte ptr es:[edi]
+	stc
+	jmp find_env_base_done
+
+find_env_var_found:    
+    mov bx,es
+    mov ds,bx
+    mov esi,edi
+;
+    pop edi
+    pop es
+;
+    inc esi
+
+find_env_copy_loop:
+    lods byte ptr [esi]
+    stos byte ptr es:[edi]
+    or al,al
+    jnz find_env_copy_loop
+;
+    clc
+
+find_env_base_done:
+	ret
+find_env_base	Endp    
+
 find_env_var    Proc near
+    push ds
+    push es
+    pushad
+;
+    push ds
+	mov ax,ENV_HANDLE
+	DerefHandle
+	mov al,[bx].env_handle_mode
+	pop ds
+	jc find_env_var_done
+;
+	cmp al,ENV_MODE_GLOBAL
+	je find_sys_env
+;
+    LockProcEnv
+	call find_env_base
+    pushf
+    UnlockProcEnv
+    popf
+	jmp find_env_var_done
+
+find_sys_env:
+    LockSysEnv
+	call find_env_base
+    pushf
+    UnlockSysEnv
+    popf
+
+find_env_var_done:    
+    popad
+    pop es
+    pop ds
     ret
 find_env_var    Endp
 
