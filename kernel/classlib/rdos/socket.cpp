@@ -59,6 +59,7 @@ static TSection ConnectionSection;
 ##########################################################################*/
 TSocketServer::TSocketServer()
 {
+    FSocket = 0;
 }
 
 /*##########################################################################
@@ -74,6 +75,8 @@ TSocketServer::TSocketServer()
 ##########################################################################*/
 TSocketServer::~TSocketServer()
 {
+    if (FSocket)
+        delete FSocket;
 }
 
 /*##########################################################################
@@ -327,7 +330,10 @@ TSocket::TSocket(TWait *Wait, long IP, int Port, int Timeout, int BufferSize)
 TSocket::~TSocket()
 {
     if (FHandle)
+    {
         RdosCloseTcpConnection(FHandle);
+        RdosDeleteTcpConnection(FHandle);
+    }
 }
 
 /*##########################################################################

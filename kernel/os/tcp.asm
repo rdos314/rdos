@@ -332,6 +332,113 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; 	Name:			CreateBuffer
+;
+;	Purpose:		Create a buffer
+;
+;	Parameters:		ECX     Buffer size
+;
+;	Returns:		AX      Buffer selector     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBuffer    Proc near
+    push es
+	push bx
+	push ecx
+	push edx
+	push esi
+	push edi
+	push ebp
+;
+    mov edi,ecx
+	add ecx,ecx
+	mov eax,ecx
+	AllocateBigLinear
+	mov ebp,edx
+	AllocateGdt
+	mov ecx,eax
+    CreateDataSelector16	
+;
+    mov ecx,edi
+    push ecx
+    mov es,bx	
+    xor edi,edi
+    shr ecx,2
+    xor eax,eax
+    rep stos dword ptr es:[edi]
+    pop ecx
+;
+    shr ecx,12
+    xor esi,esi
+
+cbAlias:
+    lea edx,[esi+ebp]
+    GetPhysicalPage
+;
+    lea edx,[edi+ebp]
+    SetPhysicalPage
+;
+    add esi,1000h
+    add edi,1000h
+    loop cbAlias    
+;
+    mov ax,bx    
+    pop ebp
+    pop edi
+    pop esi
+    pop edx
+    pop ecx
+	pop bx
+	pop es
+	ret
+CreateBuffer    Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			FreeBuffer
+;
+;	Purpose:		Free buffer
+;
+;	Parameters:		AX      Buffer selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBuffer    Proc near
+    push es
+	push bx
+	push ecx
+	push edx
+;
+    mov bx,ax
+    GetSelectorBaseSize
+;
+    shr ecx,1
+    add edx,ecx
+    shr ecx,12
+
+fbAlias:
+    xor eax,eax
+    SetPhysicalPage
+    add edx,1000h
+    loop fbAlias    
+;
+    mov es,bx
+    FreeMem
+;    
+    pop edx
+    pop ecx
+	pop bx
+	pop es
+	ret
+FreeBuffer    Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; 	Name:			CreateConnection
 ;
 ;	Purpose:		Create a connection and link it
@@ -353,9 +460,8 @@ CreateConnection	Proc near
 	push edx
 ;
 	dec ecx
-	shr ecx,3
-	inc ecx
-	shl ecx,3
+	and cx,0F000h
+	add ecx,1000h
 ;
 	push eax
 	mov eax,SIZE tcp_connection
@@ -383,23 +489,19 @@ CreateConnection	Proc near
 	mov es:tcp_delete_ok,0
 	mov es:tcp_send_timeout,0
 	mov es:tcp_delete_timeout,0
-	mov eax,ecx
-	push es
-	AllocateSmallGlobalMem
-	mov dx,es
-	pop es
-	mov es:tcp_receive_buffer,dx
+;
+	call CreateBuffer
+	mov es:tcp_receive_buffer,ax
 	mov es:tcp_receive_count,0
 	mov es:tcp_receive_head,0
 	mov es:tcp_receive_tail,0
-	push es
-	AllocateSmallGlobalMem
-	mov dx,es
-	pop es
-	mov es:tcp_send_buffer,dx
+;
+    call CreateBuffer
+	mov es:tcp_send_buffer,ax
 	mov es:tcp_send_count,0
 	mov es:tcp_send_head,0
 	mov es:tcp_send_tail,0
+;	
 	InitSection es:tcp_section
 	EnterSection es:tcp_section
 ;
@@ -462,11 +564,11 @@ DeleteConnection	Proc near
 	mov si,ds:tcp_port
 	call FreePort
 ;
-	mov es,ds:tcp_receive_buffer
-	FreeMem
+	mov ax,ds:tcp_receive_buffer
+	call FreeBuffer
 ;
-	mov es,ds:tcp_send_buffer
-	FreeMem
+	mov ax,ds:tcp_send_buffer
+	call FreeBuffer
 ;
 	mov dx,ds:tcp_next
 	mov bx,ds
@@ -2644,15 +2746,6 @@ rt08 DW OFFSET ReceiveTimeWait
 Receive	Proc far
 	call ReceiveChecksum
 	jc receive_free
-;
-    push ds
-    push bx
-	mov ax,tcp_data_sel
-	mov ds,ax
-	mov bx,ds:TcpThread
-	Signal
-	pop bx
-	pop ds
 ;   
 	push di
 	mov ax,es:[di].tcp_dest
@@ -2707,8 +2800,11 @@ receive_listen:
 	call CreateConnection
 	pop di
 	pop ecx
+;
+    push es
 	call ProcessOptions
 	call ReceiveListen
+	pop es
 	LeaveSection ds:tcp_section
 ;
 	mov bx,ds
@@ -2727,10 +2823,12 @@ receive_listen:
 	jmp receive_free
 
 receive_connection:
+    push es
 	call ProcessOptions
 	movzx bx,ds:tcp_state
 	add bx,bx
 	call word ptr cs:[bx].ReceiveTab
+	pop es
 	mov ax,ds:tcp_pending
 	test ax,FLAG_ACK
 	jz receive_no_ack
@@ -2779,7 +2877,7 @@ receive_no_connection:
 	pop si
 	pop cx
 	pop ds
-	jc receive_free
+	jc receive_rst_done
 ;	
 	mov ax,ds:[si].tcp_dest
 	mov es:[di].tcp_source,ax
@@ -2829,6 +2927,8 @@ receive_rst_do:
 	not ax
 	mov es:[di].tcp_checksum,ax
 	SendIp
+
+receive_rst_done:
 	mov ax,ds
 	mov es,ax
 
@@ -2985,7 +3085,6 @@ wait_tcp_ok:
 	jmp wait_tcp_done
 
 wait_tcp_fail:
-	mov ds:tcp_delete_ok,1
 	or ds:tcp_pending,FLAG_DELETE
 	LeaveSection ds:tcp_section
 	pop bx
@@ -3304,15 +3403,7 @@ delete_tcp_connection	Proc far
     DerefHandle
     jc delete_tcp_done
 ;    
-	xor ax,ax
-	xchg ax,[bx].tcp_handle_sel
-	or ax,ax
-	stc
-	jz delete_tcp_done
-;
-	mov ds,ax
-	mov ds:tcp_delete_ok,1
-;
+	mov [bx].tcp_handle_sel,0
 	FreeHandle
 	clc
 
