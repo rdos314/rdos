@@ -48,6 +48,7 @@
 #include "stor.h"
 #include "mdtm.h"
 #include "dele.h"
+#include "mkd.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -135,6 +136,7 @@ void cdecl main()
 	TStorFactory *stor = new TStorFactory;
 	TMdtmFactory *mdtm = new TMdtmFactory;
 	TDeleFactory *dele = new TDeleFactory;
+	TMkdFactory *mkd = new TMkdFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);
