@@ -1036,16 +1036,17 @@ ConfigMemMode	Endp
 
 PciVendorTab:
 pci00 DW 10ECh, 8029h
-pci01 DW 1050h, 940h
-pci02 DW 11F6h, 1401h
-pci03 DW 8E2Eh, 3000h
-pci04 DW 4A14h, 5000h
-pci05 DW 1106h, 926h
-pci06 DW 10BDh, 0E34h
-pci07 DW 1050h, 5A5Ah
-pci08 DW 12C3h, 58h
-pci09 DW 12C3h, 5598h
-pci0A DW 0,		0
+pci01 DW 10ECh, 8139h
+pci02 DW 1050h, 940h
+pci03 DW 11F6h, 1401h
+pci04 DW 8E2Eh, 3000h
+pci05 DW 4A14h, 5000h
+pci06 DW 1106h, 926h
+pci07 DW 10BDh, 0E34h
+pci08 DW 1050h, 5A5Ah
+pci09 DW 12C3h, 58h
+pci0A DW 12C3h, 5598h
+pci0B DW 0,		0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
@@ -3434,11 +3435,32 @@ Io32Table:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+ne2000_name	DB 'NE2000',0
+
+ne2000_thread	proc far
+	int 3
+	mov bx,ether_data_sel
+	mov ds,bx
+	mov es,bx
+	call InitAdapter
+	ret
+ne2000_thread	endp
+	
 init_net	Proc far
 	push ds
 	push es
 	pusha
 ;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET ne2000_name
+	mov si,OFFSET ne2000_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+	jmp init_net_done
+
 	mov ax,ether_data_sel
 	mov ds,ax
 	test Mode,MEM_MODE
@@ -3478,7 +3500,8 @@ init_net_register:
 	outb ReceiveConfigReg,ReceiveConfigNormal
 	outb CommandReg,CommandStart
 	and Mode, NOT (OVERFLOW_MODE OR LOOPBACK_MODE)
-;
+
+init_net_done:
 	popa
 	pop es
 	pop ds
@@ -3522,8 +3545,8 @@ Init	Proc far
 	rep stosb
 	InitSection es:SendSection
 ;
-	call InitAdapter
-	jc init_fail
+;	call InitAdapter
+;	jc init_fail
 ;
 	mov ax,cs
 	mov es,ax
