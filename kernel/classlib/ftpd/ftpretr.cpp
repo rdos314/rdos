@@ -140,36 +140,32 @@ void TRetrCommand::Execute(char *param)
 			TPathName abspath = TPathName(FServer->RootDir) + relpath.Get();
 			if (abspath.IsFile())
 			{
-    			msg.Load(150);
-	    	    FServer->Reply(&msg);    
+				msg.Load(150);
+				FServer->Reply(&msg);
 
 				TFile file = abspath.OpenFile();
-				char *buf = new char[512];
-				int len = file.Read(buf, 512);
+				char *buf = new char[0x1000];
+				int len = file.Read(buf, 0x1000);
 				long val;
 
 				while (len)
 				{
-					val = *(long *)buf;
-					if (val == 0x209)
-						_asm int 3
-
 					FServer->Write(buf, len);
-					len = file.Read(buf, 512);
+					len = file.Read(buf, 0x1000);
 				}
 
 				delete buf;
 				FServer->Push();
 			}
 
-	    	msg.Load(226);
+			msg.Load(226);
 		}
 		else
 			msg.Load(501);
 	}
 	else
-   	    msg.Load(530);
+		msg.Load(530);
 
-    FServer->Reply(&msg);    
+	FServer->Reply(&msg);
 
 }

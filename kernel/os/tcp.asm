@@ -453,11 +453,33 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyFromBuffer    Proc near
-    push eax
     push cx
 ;
+    cmp cx,10h
+    jb cfbSmall
+;
+    push esi
+    movzx ecx,cx
+    movzx esi,bx
+    push cx
+    shr cx,2
+    rep movs dword ptr es:[edi],fs:[esi]
+    pop cx
+    and cx,3
+    rep movs byte ptr es:[edi],fs:[esi]
+    mov bx,si
+    pop esi
+    cmp bx,ds:tcp_buffer_size
+    jb cfbDone
+;
+    sub bx,ds:tcp_buffer_size
+    jmp cfbDone
+
+cfbSmall:
     or cx,cx
     jz cfbDone
+;    
+    push eax
 
 cfbLoop:
 	mov al,fs:[bx]
@@ -471,10 +493,11 @@ cfbLoop:
 	
 cfbWrapDone:
 	loop cfbLoop
+;	
+    pop eax
 
 cfbDone:
     pop cx
-    pop eax
     ret
 CopyFromBuffer  Endp
 
@@ -500,6 +523,39 @@ CopyToBuffer    Proc near
     push eax
     push cx
 ;
+    cmp cx,10h
+    jb ctbSmall
+;
+    push ds
+    push es
+    push edi
+;        
+    movzx edi,bx
+    movzx ecx,cx
+    mov ax,es
+    mov ds,ax
+    mov ax,fs
+    mov es,ax
+;
+    push cx
+    shr cx,2
+    rep movs dword ptr es:[edi],[esi]
+    pop cx
+    and cx,3
+    rep movs byte ptr es:[edi],[esi]
+    mov bx,di
+;
+    pop edi
+    pop es
+    pop ds
+;    
+    cmp bx,ds:tcp_buffer_size
+    jb ctbDone
+;
+    sub bx,ds:tcp_buffer_size
+    jmp ctbDone
+
+ctbSmall:
     or cx,cx
     jz ctbDone    
 
@@ -1573,6 +1629,21 @@ InitConnection	Proc near
 
 init_con_nowait:
 	movzx eax,ds:tcp_mtu
+	add eax,eax
+	mov edx,eax
+	cmp edx,4380
+	ja iw_max_ok
+;
+    mov edx,4380	
+
+iw_max_ok:
+    add eax,eax
+    cmp eax,edx
+    jb iw_min_ok
+;
+    mov eax,edx    
+
+iw_min_ok:
 	mov ds:tcp_cwnd,eax
 	mov ds:tcp_ssthresh,10000h
 	mov ds:tcp_dup_acks,0
@@ -1641,7 +1712,7 @@ new_ack_congestion:
 	sub eax,ds:tcp_send_una
 	mul eax
 	div ds:tcp_cwnd
-	mov ds:tcp_cwnd,eax
+	add ds:tcp_cwnd,eax
 	jmp new_ack_done
 
 new_ack_slow_start:
@@ -4000,7 +4071,7 @@ update_receive	Endp
 
 ReadNormal	Proc near
 	mov fs,ds:tcp_receive_buffer
-	xor eax,eax
+	xor ebp,ebp
 
 read_tcp_loop:
 	or ecx,ecx
@@ -4018,6 +4089,7 @@ read_tcp_retry:
     mov ecx,eax
 
 read_tcp_size_ok:
+    add ebp,ecx
     sub ds:tcp_receive_count,cx
     mov bx,ds:tcp_receive_head
     call CopyFromBuffer
@@ -4038,7 +4110,6 @@ read_tcp_wait:
 	test ds:tcp_pending, FLAG_CLOSED
 	jnz read_tcp_ok
 ;
-	push eax
 	push ecx
 	push edi
 	call update_receive
@@ -4050,7 +4121,6 @@ read_tcp_wait:
 	mov ds:tcp_owner,0
 	pop edi
 	pop ecx
-	pop eax
 	EnterSection ds:tcp_section
 	jmp read_tcp_retry
 
@@ -4059,13 +4129,12 @@ read_tcp_fail:
 	jmp read_tcp_done
 
 read_tcp_ok:
-	push eax
 	call update_receive
-	pop eax
 	and ds:tcp_pending, NOT FLAG_REC_PUSH
 	clc
 
 read_tcp_done:
+    mov eax,ebp
 	ret
 ReadNormal	Endp
 	    
@@ -4239,7 +4308,11 @@ write_tcp_size_ok:
     jmp write_tcp_retry
 
 write_tcp_full:
+    push eax
+    push edi
 	call SendData
+	pop edi
+	pop ecx
 ;
 	ClearSignal
 	GetThread
@@ -4398,9 +4471,14 @@ push_tcp_connection	Proc far
 ;
 	mov ds,ax
 	EnterSection ds:tcp_section
+	test ds:tcp_pending,FLAG_SEND_PUSH
+	jnz push_send_done
+;	
 	mov ds:tcp_push_timeout,5
 	or ds:tcp_pending,FLAG_SEND_PUSH
 	call SendData
+
+push_send_done:
 	LeaveSection ds:tcp_section
 
 push_tcp_done:
@@ -4456,7 +4534,6 @@ update_con_check_push:
 	jmp update_con_push_done
 
 update_con_push_do:
-	and dx,NOT FLAG_SEND_PUSH
 	mov ds:tcp_pending,dx
 	call SendData
 	mov dx,ds:tcp_pending
