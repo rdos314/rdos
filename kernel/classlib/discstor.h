@@ -28,13 +28,14 @@
 #ifndef _DISCSTOR_H
 #define _DISCSTOR_H
 
+#include "disc.h"
 #include "store.h"
 
 class TDiscStorage : public TStorage
 {
 public:
-    TDiscStorage(int DiscNr);
-    TDiscStorage(int DiscNr, long StartSector, int SectorCount);
+    TDiscStorage(TDisc *Disc);
+    TDiscStorage(TDisc *Disc, long StartSector, int SectorCount);
     ~TDiscStorage();
     
     virtual long Size();
@@ -42,7 +43,7 @@ public:
     virtual int Write(long offset, const char *buf, int size);
 
 private:
-    int FDiscNr;
+    TDisc *FDisc;
     long FStartSector;
     int FSectorCount;
 
