@@ -1948,15 +1948,15 @@ line_bresen_dx_neg:
 	add cx,cx
 	neg cx
 	mov [bp].dl_dx,cx
-	mov word ptr [bp].dl_log_add_x,-1
-	mov dword ptr [bp].dl_phys_add_x,-2
+	mov word ptr [bp].dl_log_add_x,1
+	mov dword ptr [bp].dl_phys_add_x,2
 	jmp line_bresen_dy
 
 line_bresen_dx_pos:
 	add cx,cx
 	mov [bp].dl_dx,cx
-	mov word ptr [bp].dl_log_add_x,1
-	mov dword ptr [bp].dl_phys_add_x,2
+	mov word ptr [bp].dl_log_add_x,-1
+	mov dword ptr [bp].dl_phys_add_x,-2
 
 line_bresen_dy:
 	test dh,80h
@@ -1966,17 +1966,17 @@ line_bresen_dy_neg:
 	add dx,dx
 	neg dx
 	mov [bp].dl_dy,dx
-	mov word ptr [bp].dl_log_add_y,-1
+	mov word ptr [bp].dl_log_add_y,1
 	movzx ebx,ds:v_row_size
-	neg ebx
     mov [bp].dl_phys_add_y,ebx
 	jmp line_bresen_calc_inc
 
 line_bresen_dy_pos:
 	add dx,dx
 	mov [bp].dl_dy,dx
-	mov word ptr [bp].dl_log_add_y,1
+	mov word ptr [bp].dl_log_add_y,-1
 	movzx ebx,ds:v_row_size
+	neg ebx
 	mov [bp].dl_phys_add_y,ebx
 
 line_bresen_calc_inc:
