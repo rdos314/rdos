@@ -4,6 +4,20 @@ interface
 
 procedure RdosWaitMilli(ms : Integer);
 
+function RdosSetCurDrive(Drive : integer) : boolean;
+function RdosGetCurDrive : integer;
+function RdosSetCurDir(PathName : AnsiString) : boolean;
+function RdosGetCurDir(Drive : Integer) : AnsiString;
+function RdosMakeDir(PathName : AnsiString) : boolean;
+function RdosRemoveDir(PathName : AnsiString) : boolean;
+function RdosRenameFile(OldPath : AnsiString; NewPath : AnsiString) : boolean;
+function RdosDeleteFile(PathName : AnsiString) : boolean;
+function RdosGetFileAttribute(PathName : AnsiString; var Attribute : integer) : boolean;
+function RdosSetFileAttribute(PathName : AnsiString; Attribute : integer) : boolean;
+function RdosOpenDir(PathName : AnsiString) : longint;
+procedure RdosCloseDir(Handle : longint);
+function RdosReadDir(Handle : longint; Entry : integer; Name : AnsiString; var FileSize : longint; var Attribute : integer; var TimeDate : Int64) : boolean;
+
 function RdosGetLocalMailslot(const MailslotName : AnsiString) : longint;
 function RdosGetRemoteMailslot(Ip : longint; const MailslotName : AnsiString) : longint;
 procedure RdosFreeMailslot(Handle : longint);
