@@ -89,7 +89,9 @@ init_video_bitmap	Proc far
 	mov es:v_bpp,al
 	mov es:v_width,cx
 	mov es:v_height,dx
-	mov es:v_sprites,0
+	mov es:v_sprite_count,0
+	mov es:v_sprite_size,0
+	mov es:v_sprite_sel,0
 ;
 	mov si,cs
 	mov ds,si
@@ -121,6 +123,11 @@ init_video_copy:
 	mov cx,29
 	xor di,di
 	rep movsd
+;
+    mov di,es:v_sprite_lines
+	mov cx,dx
+	mov eax,-1
+	rep stosd
 
 init_video_done:
 	mov cx,SIZE bitmap_struc
@@ -167,7 +174,10 @@ create_bitmap	Proc far
 	push edi
 ;
 	push eax
-	mov eax,SIZE video_api_struc
+	mov ax,dx
+    shl ax,2	
+	add ax,SIZE video_api_struc
+	movzx eax,ax
 	AllocateSmallKernelMem
 	pop eax
 ;
@@ -179,7 +189,9 @@ create_bitmap	Proc far
 	mov es:v_bpp,al
 	mov es:v_width,cx
 	mov es:v_height,dx
-	mov es:v_sprites,0
+    mov es:v_sprite_count,0
+	mov es:v_sprite_size,0
+	mov es:v_sprite_sel,0
 ;
 	mov si,cs
 	mov ds,si
@@ -238,6 +250,12 @@ cr_bitmap_copy:
 	mov cx,29
 	xor di,di
 	rep movsd
+;
+    mov di,SIZE video_api_struc
+    mov es:v_sprite_lines,di
+	mov cx,es:v_height
+	mov eax,-1
+	rep stosd
 ;
 	movzx eax,es:v_row_size
 	movzx edx,es:v_height

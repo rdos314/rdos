@@ -40,7 +40,6 @@ v_handle		DW ?
 
 video_focus_seg	ENDS
 
-; DS 		Video handle
 
 video_api_struc	STRUC
 
@@ -196,20 +195,25 @@ draw_rect_proc			DD ?
 ; IN  DX			b
 draw_ellipse_proc			DD ?
 
-v_section	section_typ <>
-v_mode		DW ?
-v_width		DW ?
-v_height	DW ?
-v_row_size	DW ?
-v_app_base	DD ?
-v_app_size	DD ?
-v_bpp		DB ?
-v_bitmap    DW ?
-v_sprites   DW ?
+v_section   	section_typ <>
+v_mode	    	DW ?
+v_width	    	DW ?
+v_height    	DW ?
+v_row_size	    DW ?
+v_app_base	    DD ?
+v_app_size	    DD ?
+v_bpp   		DB ?
+v_bitmap        DW ?
 
-v_color		DD ?
-v_lgop		DW ?
-v_font		DW ?
-v_style		DB ?
+v_sprite_count  DW ?
+v_sprite_size   DW ?
+v_sprite_sel    DW ?
+
+v_color 		DD ?
+v_lgop	    	DW ?
+v_font		    DW ?
+v_style 		DB ?
+
+v_sprite_lines  DW ?
 
 video_api_struc	ENDS

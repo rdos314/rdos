@@ -32,9 +32,29 @@ SP_FLAG_OVL_NEW  EQU 4
 sprite_struc	STRUC
 
 sp_base		    handle_header <>
-sp_sel              DW ?
+sp_sel          DW ?
 
 sprite_struc	ENDS
+
+sprite_info_struc   STRUC
+
+spi_x_min       DW ?
+spi_y_min       DW ?
+spi_x_max       DW ?
+spi_y_max       DW ?
+spi_width       DW ?
+spi_height      DW ?
+spi_sel         DW ?
+spi_flags       DB ?
+
+sprite_info_struc   ENDS
+
+sprite_line_struc   STRUC
+
+spl_lower_ind       DW ?
+spl_upper_ind       DW ?
+
+sprite_line_struc   ENDS
 
 sprite_sel_struc  STRUC
 
@@ -53,8 +73,7 @@ sp_w                DW ?
 sp_h                DW ?
 sp_dest_w           DW ?
 sp_dest_h           DW ?
-sp_next             DW ?
-sp_prev             DW ?
+sp_index            DW ?
 sp_bpp              DB ?
 sp_flags            DB ?
 

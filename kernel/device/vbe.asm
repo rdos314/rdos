@@ -148,8 +148,12 @@ init_flat_check:
 ;
 	mov ax,es
 	mov ds,ax
-	mov eax,SIZE vbe_object
+	mov ax,ds:vmi_y_pixels
+	shl ax,2
+	add ax,SIZE vbe_object
+	movzx eax,ax
 	AllocateSmallGlobalMem
+    mov es:v_sprite_lines,SIZE vbe_object
 ;
 	push bx
 	mov al,dh
