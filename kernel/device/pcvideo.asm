@@ -979,6 +979,7 @@ InitV86	Proc near
 	mov eax,11000h
 	AllocateGlobalMem
 	xor di,di
+;
 	push 10h
 	mov ax,4F00h
 	V86BiosInt
@@ -1014,7 +1015,6 @@ InitV86	Proc near
 	xor bl,bl
 	push 10h
 	V86BiosInt
-	int 3
 ;
 	mov bx,es
 	GetSelectorBaseSize
@@ -1140,7 +1140,7 @@ init_v86_calls:
 	mov edi,edx
 	shr edi,10
 	shr ecx,12
-	xor edx,edx
+	mov edx,2
 
 init_v86_free_loop:
 	mov ds:[edi],edx
@@ -1287,22 +1287,22 @@ SetupPmDone:
 	ret
 SetupPmEntry	Endp
 
-PAGE
-
+page
+	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			test_thread
+;		NAME:			SetVbeMode
 ;
-;		DESCRIPTION:	Test thread
+;		DESCRIPTION:	Set VBE mode
 ;
-;		PARAMETERS:		
+;		PARAMETERS:		AX		Mode number
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-test_thread_name	DB 'VESA Test',0
 
-test_thread	Proc far
+set_vbe_mode_name	DB 'Set VBE Mode',0
+
+set_vbe_mode	PROC far
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	call SetupPmEntry
@@ -1311,42 +1311,8 @@ test_thread	Proc far
 	xor bx,bx
 	xor dx,dx
 	call ds:v_set_window_proc
-	ret
-test_thread	Endp
-		
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			init_sys
-;
-;		DESCRIPTION:	Init tasking
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-			
-init_sys	PROC far
-	push ds
-	push es
-	pusha
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET test_thread
-	mov di,OFFSET test_thread_name
-	mov ax,4
-	mov cx,1024
-	CreateThread
-;
-	popa
-	pop es
-	pop ds
-
-	ret
-init_sys	Endp
+	retf32
+set_vbe_mode	ENDP
 
 PAGE
 
@@ -1402,8 +1368,11 @@ init	PROC far
 	mov di,OFFSET init_focus
 	HookEnableFocus
 ;
-	mov di,OFFSET init_sys
-	HookInitTasking
+	mov si,OFFSET set_vbe_mode
+	mov di,OFFSET set_vbe_mode_name
+	xor cl,cl
+	mov ax,set_vga_mode_nr
+	RegisterUserGate
 ;
 	call init_text_mode
 	call init_bit_mode

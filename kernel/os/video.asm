@@ -194,30 +194,6 @@ set_video_mode_done:
 	retf32
 set_video_mode	ENDP
 
-page
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			SetVgaMode
-;
-;		DESCRIPTION:	Set VGA mode
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_vga_mode_name	DB 'Test call',0
-
-set_vga_mode	PROC far
-	int 3
-	push 10h
-	mov ax,3
-	V86BiosInt
-	int 3
-	retf32
-set_vga_mode	ENDP
-
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1783,12 +1759,6 @@ init	PROC far
 	mov di,OFFSET set_video_mode_name
 	xor cl,cl
 	mov ax,set_video_mode_nr
-	RegisterUserGate
-;
-	mov si,OFFSET set_vga_mode
-	mov di,OFFSET set_vga_mode_name
-	xor cl,cl
-	mov ax,set_vga_mode_nr
 	RegisterUserGate
 ;
 	mov si,OFFSET set_cursor_position

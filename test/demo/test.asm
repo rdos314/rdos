@@ -74,8 +74,9 @@ test_thread:
 divi	DW 1111h
 	
 init:
+	mov ax,101h
+	SetVgaMode
 	int 3
-	UserGate test_nr
 	mov ax,-5050
 	mov bl,-4
 ;	div cs:divi

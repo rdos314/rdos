@@ -86,7 +86,7 @@ Spec2			EQU 2
 
 floppy_data    SEGMENT AT 0
 
-FloppyIntList	DW ?
+FloppyThread	DW ?
 
 DriveControl	DB ?
 IntFlag			DB ?
@@ -146,8 +146,8 @@ floppy_int	Proc far
 	jnz floppy_int_done
 	inc al
 	mov IntFlag,al
-	mov si,OFFSET FloppyIntList
-	Wake
+	mov bx,FloppyThread
+	Signal
 floppy_int_done:
 	ret
 floppy_int	Endp
@@ -172,6 +172,7 @@ CommandPhase	Proc near
 	push bx
     push dx
 	push si
+	ClearSignal
 	mov IntFlag,0
 	mov si,2000
 	mov bx,OFFSET CmdCode
@@ -237,15 +238,8 @@ ExecutePhase   Proc near
 	test al,80h
 	clc
 	jnz ExecutePhaseDone
-	mov di,OFFSET FloppyIntList
-	cli
-	mov al,IntFlag
-	or al,al
-	clc
-	jnz ExecutePhaseDone
 	mov TimeoutCount,20
-	Sleep
-	sti
+	WaitForSignal
 	mov al,IntFlag
 	or al,al
 	clc
@@ -402,6 +396,11 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Command   Proc near
+	push ax
+	GetThread
+	mov FloppyThread,ax
+	pop ax
+;
 	call CommandPhase
 	jc CommandDone
 	call ExecutePhase
@@ -413,6 +412,7 @@ Command   Proc near
 	je CommandDone
 	call DecodeStatus
 CommandDone:
+	mov FloppyThread,0
     ret
 Command   Endp
 
@@ -460,15 +460,8 @@ ExecuteSensePhase   Proc near
 	push di
 	mov ax,ds
 	mov es,ax
-	mov di,OFFSET FloppyIntList
-	cli
-	mov al,IntFlag
-	or al,al
-	clc
-	jnz ExecuteSenseCmd
 	mov TimeoutCount,20
-	Sleep
-	sti
+	WaitForSignal
 	mov al,IntFlag
 	or al,al
 	stc
@@ -609,14 +602,14 @@ ResetController	Proc near
 	mov es,ax
 	mov cx,100
 	mov cTrack,-1
+	GetThread
+	mov FloppyThread,ax
 ResetControllerLoop:
-	mov di,OFFSET FloppyIntList
-	cli
+	ClearSignal
 	mov IntFlag,0
 	mov al,8
 	mov dx,3F2h
 	out dx,al
-	sti
 	mov ax,250
 	WaitMicroSec
 ;
@@ -625,14 +618,12 @@ ResetControllerLoop:
     out dx,al
 	mov DriveControl,al
 ;
-	mov al,IntFlag
-	or al,al
-	jnz ResetControllerStart
 	mov TimeoutCount,20
-	Sleep
+	WaitForSignal
 	mov al,IntFlag
 	or al,al
 	jz ResetControllerFailed
+
 ResetControllerStart:
 	mov al,0Ch
 	out dx,al
@@ -652,6 +643,7 @@ ResetControllerFailed:
 	loop ResetControllerLoop
 	stc
 ResetControllerDone:
+	mov FloppyThread,0
 	pop di
 	pop dx
 	pop cx
@@ -953,6 +945,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SeekCmd	Proc near
+	push ax
+	GetThread
+	mov FloppyThread,ax
+	pop ax
 	push cx
 	mov CmdCode,0Fh
 	mov DriveHead,al
@@ -962,6 +958,7 @@ SeekCmd	Proc near
 	jc SeekDone
 	call ExecuteSensePhase
 SeekDone:
+	mov FloppyThread,0
 	pop cx
 	ret
 SeekCmd	Endp
@@ -1226,6 +1223,7 @@ ReadBootSector	Proc near
 	AllocateBigLinear
 	pop ax
 ;
+	push edx
 	mov ebx,edx
 	call SelectDrive
 	jnc read_boot_sector_read
@@ -1289,6 +1287,7 @@ read_boot_sector_read:
 	clc
 
 read_boot_sector_done:
+	pop edx
 	pushf
 	mov ecx,1000h
 	FreeLinear
@@ -1610,20 +1609,23 @@ floppy_super_motor_next:
 	shl ah,1
 	loop floppy_super_motor_loop
 ;
-	mov si,OFFSET FloppyIntList
-	mov ax,[si]
-	or ax,ax
+	mov bx,FloppyThread
+	or bx,bx
 	jz floppy_super_wait
+;
 	cli
 	mov al,IntFlag
 	or al,al
-	jnz floppy_super_wake
+	jnz floppy_super_signal
+;
 	mov al,TimeoutCount
 	sub al,1
 	mov TimeoutCount,al
 	jnz floppy_super_wait
-floppy_super_wake:
-	Wake
+
+floppy_super_signal:
+	Signal
+
 floppy_super_wait:
 	sti
 	mov ax,100
@@ -1929,7 +1931,7 @@ disc_assign	Proc far
 	mov si,OFFSET floppy_super
 	mov di,OFFSET floppy_super_name
 	mov ax,4
-	mov cx,256
+	mov cx,1024
 	CreateThread
 ;
 	in al,INT0_MASK

@@ -1124,12 +1124,15 @@ set_disc_param	Proc far
 	mov di,es
 	mov ax,gdt_sel
 	mov ds,ax
+	cli
 	mov eax,[si]
 	xchg eax,[di]
 	mov [si],eax
 	mov eax,[si+4]
 	xchg eax,[di+4]
 	mov [si+4],eax
+	sti
+	jmp short $+2
 	mov ds,si
 	mov es,di
 	FreeMem

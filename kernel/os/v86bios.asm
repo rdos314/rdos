@@ -148,7 +148,7 @@ HandleInputSel	Proc near
 	mov cx,10h
 
 handle_input_ds_move:
-	xor eax,eax
+	mov eax,2
 	xchg eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
@@ -182,7 +182,7 @@ handle_input_es:
 	mov cx,10h
 
 handle_input_es_move:
-	xor eax,eax
+	mov eax,2
 	xchg eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
@@ -270,7 +270,7 @@ handle_output_ds_same:
 	mov cx,10h
 
 handle_output_ds_move:
-	xor eax,eax
+	mov eax,2
 	xchg eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
@@ -331,7 +331,7 @@ handle_output_es_same:
 	mov cx,10h
 
 handle_output_es_move:
-	xor eax,eax
+	mov eax,2
 	xchg eax,gs:[esi]
 	mov gs:[edi],eax
 	add esi,4
@@ -343,13 +343,14 @@ handle_output_done:
 	mov cx,20h
 
 handle_output_zero:
-	xor eax,eax
+	mov eax,2
 	xchg eax,gs:[edi]
 	and ax,0F000h
 	or eax,eax
 	jz handle_output_zero_next
 ;
-;	FreePhysical
+	int 3
+	FreePhysical
 
 handle_output_zero_next:
 	add esi,4
@@ -402,15 +403,15 @@ bios_loop:
 ;
 	mov ax,thread_tss_sel
 	mov es,ax
-	mov di,OFFSET tss_bitmap_space + 3A0h SHR 3
+	mov di,OFFSET tss_bitmap_space + (200h SHR 3)
 	xor ax,ax
-	mov cx,4
+	mov cx,20h
 	rep stosw	
 ;
 	mov ax,flat_sel
 	mov ds,ax
 	xor al,al
-	mov cx,9
+	mov cx,8
 	xor si,si
 bios_int_loop1:
 	mov bx,[si]
