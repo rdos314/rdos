@@ -50,9 +50,7 @@ THeat::THeat()
 	FStat = 0;
 	FStarted = FALSE;
 	FUpdate = FALSE;
-	FStartReq = FALSE;
-	FStopReq = FALSE;
-	FVpStopTime = 0;
+	FHeatOn = FALSE;
 	FEpPending = FALSE;
 	FEpStart = FALSE;
 
@@ -72,8 +70,6 @@ THeat::THeat()
 ##########################################################################*/
 THeat::~THeat()
 {
-	if (FVpStopTime)
-		delete FVpStopTime;
 }
 
 /*##########################################################################
@@ -191,47 +187,9 @@ void THeat::WriteEpValve(int value)
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::StartHeat(TDateTime &RunUntil)
+void THeat::StartHeat()
 {
-	FStopReq = FALSE;
-
-	if (FVpStopTime)
-		delete FVpStopTime;
-	FVpStopTime = new TDateTime(RunUntil);
-		
-	FStartReq = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : THeat::UpdateStart
-#
-#   Purpose....: Update start
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THeat::UpdateStart()
-{
-	if (FVpStopTime)
-	{
-		if (FVpStopTime->HasExpired())
-			FStartReq = FALSE;
-	}
-	else
-		FStartReq = FALSE;
-
-	if (FStartReq)
-	{
-		if (FVpValve < 0x40000000)
-		{
-			if (IsVpStarted())
-				FStartReq = FALSE;
-			else
-				ToggleVpLine();
-		}
-	}
+	FHeatOn = TRUE;
 }
 
 /*##########################################################################
@@ -246,30 +204,34 @@ void THeat::UpdateStart()
 ##########################################################################*/
 void THeat::StopHeat()
 {
-	FStartReq = FALSE;
-	if (FVpStopTime)
-	{
-		delete FVpStopTime;
-		FVpStopTime = 0;
-	}
-	FStopReq = TRUE;
+	FHeatOn = FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : THeat::UpdateStop
+#   Name       : THeat::UpdateHeat
 #
-#   Purpose....: Update stop
+#   Purpose....: Update heat
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THeat::UpdateStop()
+void THeat::UpdateHeat()
 {
-	if (IsVpStarted())
-		if (FVpValve < 0x40000000)
-			ToggleVpLine();
+	if (FVpValve < 0x40000000 && !IsEpStarted())
+	{	
+		if (FHeatOn)
+		{
+			if (!IsVpStarted())
+				ToggleVpLine();
+		}
+		else
+		{
+			if (IsVpStarted())
+				ToggleVpLine();
+		}
+	}
 }
 
 /*##########################################################################
@@ -428,11 +390,7 @@ void THeat::Update()
 
 			if (FVpValve > 0x40000000)
 			{
-				if (FVpStopTime == 0)
-				{
-					FVpStopTime = new TDateTime;
-					FVpStopTime->AddHour(1);
-				}
+				FHeatOn = TRUE;
 				StopVp();
 			}
 
@@ -476,6 +434,9 @@ void THeat::Execute()
 	int lines;
 	int vp;
 	int ep;
+	int first;
+
+	first = TRUE;
 
 	while (FInstalled)
 	{
@@ -485,17 +446,17 @@ void THeat::Execute()
 
 		if (lines && vp && ep)
 		{
-			if (FVpStopTime && FVpStopTime->HasExpired())
-				StopHeat();
+
+			if (first)
+			{
+				FHeatOn = IsVpStarted();
+				first = FALSE;
+			}
 
 			if (FUpdate)
 				Update();
 
-			if (FStartReq)
-				UpdateStart();
-
-			if (FStopReq)
-				UpdateStop();
+			UpdateHeat();
 
 			RdosWaitMilli(15000);
 

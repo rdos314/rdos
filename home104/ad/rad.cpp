@@ -244,6 +244,7 @@ void TRadiator::Execute()
 {
 	TDateTime *RunUntil;
 	int val;
+	long double temp;
 
 	Offline();
 
@@ -267,8 +268,8 @@ void TRadiator::Execute()
 
 		if (FUpdateAmbient)
 		{
-			val = (int)(10.0 * FAmbient + 0.5);
-			val = val << 23;			
+			val = 127 + (int)(FAmbient - FRef);
+			val = val << 23;
 			FUpdateAmbient = !RdosWriteSerialVal(FChannel, 4, val);
 		}
 

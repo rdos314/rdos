@@ -140,6 +140,10 @@ SendAmbient:
 			call Send1
 			return
 
+StartTemp:	movlw 7
+			call Send0
+			return
+
 StartFuzzy:	movlw 7
 			call Send1
 			return
@@ -149,30 +153,30 @@ HandlePend:
 			movf SEC,W
 			incf SEC,F
 			addwf PCL,F
-			goto RecTemp		; 0
-			goto SendAmbient	; 1
-			goto SendRef0		; 2
-			goto SendRef1		; 3
-			goto SendInten	 	; 4
-			goto SendTemp		; 5
-			return      		; 6
-			goto StartFuzzy    	; 7
-			return      		; 8
-			return				; 9
-			return				; 10
-			return				; 11
-			return				; 12
-			return				; 13
-			return 				; 14
-			return				; 15
-			return				; 16
-			return				; 17
-			return				; 18
-			return				; 19
-			return				; 20
-			return				; 21
-			return				; 22
-			return				; 23
+			goto StartTemp      ; 0
+			goto StartTemp      ; 1
+			goto StartTemp      ; 2
+			goto StartTemp      ; 3
+			goto StartTemp      ; 4
+			goto StartTemp      ; 5
+			goto StartTemp      ; 6
+			goto StartTemp      ; 7
+			goto StartTemp      ; 8
+			goto StartTemp      ; 9
+			goto StartTemp      ; 10
+			goto StartTemp      ; 11
+			goto StartTemp      ; 12
+			goto StartTemp      ; 13
+			goto StartTemp      ; 14
+			goto StartTemp      ; 15
+			goto RecTemp		; 16
+			goto SendAmbient	; 17
+			goto SendRef0		; 18
+			goto SendRef1		; 19
+			goto SendInten	 	; 20
+			goto SendTemp		; 21
+			goto StartFuzzy    	; 22
+			return      		; 23
 			return 				; 24
 			return				; 25
 			return				; 26

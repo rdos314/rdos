@@ -31,7 +31,7 @@ INTCON: .EQU $0B
 RefVal	    .EQU $0F
 TempVal		.EQU $10
 MotorVal	.EQU $11
-AmbientVal  .EQU $12
+Da0			.EQU $12
 Da1			.EQU $13
 Reg			.EQU $14
 Val			.EQU $15
@@ -93,7 +93,7 @@ GetVal:
 	goto GetTemp    	; 1
 	goto GetMotor	    ; 2
 	return	    		; 3
-	goto GetAmbient  	; 4
+	return			  	; 4
 	return			    ; 5
 	return	    		; 6
 	return		    	; 7
@@ -406,20 +406,20 @@ TempErrorNM:
 
 TempErrorZ:
 	movf ErrorIndex, W
-	sublw 136
+	sublw 134
 	btfss STATUS, C
 	retlw 0
-	sublw 18
+	sublw 14
 	btfss STATUS, C
 	retlw 0
-	sublw 9
+	sublw 7
 	btfsc STATUS, Z
 	retlw 255
 	movwf FuzzyCount
-	movlw 28
+	movlw 36
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 28
+	movlw 36
 	goto CalcMidHighSlope
 
 TempErrorPM:
@@ -595,32 +595,32 @@ TempAmbientH:
 
 TempOutputNXL:
 	movf FuzzyIndex, W
-	sublw 9
+	sublw 6
 	btfss STATUS, C
 	retlw 0
-	sublw 4
+	sublw 14
 	btfss STATUS, C
 	retlw 255
 	movwf FuzzyCount
-	movlw 51
+	movlw 17
 	goto CalcLowSlope
 
 TempOutputNL:
 	movf FuzzyIndex, W
-	sublw 15
+	sublw 13
 	btfss STATUS, C
 	retlw 0
-	sublw 8
+	sublw 17
 	btfss STATUS, C
 	retlw 0
-	sublw 1
+	sublw 5
 	btfsc STATUS, Z
 	retlw 255
 	movwf FuzzyCount
-	movlw 128
+	movlw 51
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 36
+	movlw 21
 	goto CalcMidHighSlope
 
 TempOutputNM:
@@ -628,17 +628,17 @@ TempOutputNM:
 	sublw 16
 	btfss STATUS, C
 	retlw 0
-	sublw 6
+	sublw 12
 	btfss STATUS, C
 	retlw 0
-	sublw 3
+	sublw 6
 	btfsc STATUS, Z
 	retlw 255
 	movwf FuzzyCount
-	movlw 64
+	movlw 42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 85
+	movlw 42
 	goto CalcMidHighSlope
 
 TempOutputZ:
@@ -710,17 +710,12 @@ TempOutputPXL:
 
 UpdateFuzzy:
     movf RefVal,W
-    subwf AmbientVal,W
-    addlw 127
-    movwf AmbientIndex
-;    
-    movf RefVal,W
 	subwf TempVal, W
 	addlw 127
 	movwf ErrorIndex
 ;
-	movf ErrorIndex, W
-	subwf PrevErrorIndex, W
+	movf PrevErrorIndex, W
+	subwf ErrorIndex, W
 	addlw 127
 	movwf DeltaIndex
 ;
@@ -895,11 +890,13 @@ DivNext:
 	btfss STATUS, Z
 	goto DivLoop
 ;
-	movf NumHigh, W
-	sublw 16
+	movlw 16
+	subwf NumHigh, W
+;	movf NumHigh, W
+;	sublw 16
 	btfsc STATUS, C
 	goto IncMotor
-;
+
 DecMotor:
 	addwf MotorVal, F
 	btfss STATUS, C
@@ -915,6 +912,8 @@ IncMotor:
 	movwf MotorVal
 
 MotorDone:
+	movf MotorVal,W
+	movwf Da0
     call LoadMotor0
 	return
 
@@ -935,6 +934,8 @@ Main:
 	movwf ErrorIndex
 	movwf PrevErrorIndex
 	movwf DeltaIndex
+;
+	movlw 100
 	movwf AmbientIndex
 ;
 	movlw $C0
@@ -973,7 +974,7 @@ SetTemp:
 
 SetAmbient:
 	movf Val,W
-	movwf AmbientVal
+	movwf AmbientIndex
 	return
 
 GetRef:
@@ -988,11 +989,6 @@ GetTemp:
 
 GetMotor:
 	movf MotorVal,W
-	movwf Val
-	return
-
-GetAmbient:
-	movf AmbientVal,W
 	movwf Val
 	return
 			
@@ -1131,7 +1127,7 @@ Delay:
 LoadMotor0:	
 	movlw %00001001
 	movwf Contr
-	movf MotorVal,W
+	movf Da0,W
 	movwf Val
 	goto LoadMotor
 

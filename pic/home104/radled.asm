@@ -28,21 +28,27 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-TEMP	.EQU $0F
-COUNT	.EQU $10
-V0		.EQU $11
-V1		.EQU $12
-D0		.EQU $13
-D1		.EQU $14
-D2		.EQU $15
-REF		.EQU $16
-TEM0	.EQU $18
-TEM1	.EQU $19
-MOT		.EQU $1A
-REG		.EQU $1B
-VAL		.EQU $1C
-BIT		.EQU $1D
-INTEN	.EQU $1E
+TEMP		.EQU $0F
+COUNT		.EQU $10
+V0			.EQU $11
+V1			.EQU $12
+D0			.EQU $13
+D1			.EQU $14
+D2			.EQU $15
+REF			.EQU $16
+AD0			.EQU $17
+AD1			.EQU $18
+SumLow1		.EQU $19
+SumHi1		.EQU $1A
+TEM0		.EQU $1B
+TEM1		.EQU $1C
+MOT			.EQU $1D
+REG			.EQU $1E
+VAL			.EQU $1F
+BIT			.EQU $20
+INTEN		.EQU $21
+AdcLsb		.EQU $22
+AdcMsb		.EQU $23
 
 
 	        .ORG 4
@@ -57,10 +63,17 @@ RESET:		PAGE1
 			PAGE0
 			clrf PORTA
 ;
+			movlw %00001000
+			movwf PORTB
+;
 			clrf REF
 ;
-			clrf TEM0
+			movlw 40
+			movwf TEM0
 			clrf TEM1
+;
+			clrf SumLow1
+			clrf SumHi1
 ;
 			movlw $C0
 			movwf MOT
@@ -73,7 +86,6 @@ LP:			call Wait
 			call WRITEREF
 			call WRITETEM
 			call WRITEMOT
-			incf TEM0,F
 			goto LP
 
 STOP:		goto STOP
@@ -125,6 +137,28 @@ GETMOT1:	andlw $F
 			retlw 20  ; 0.8
 			retlw 23  ; 0.9			
 			retlw 255
+
+SetVal:		movf REG,W
+			addwf PCL,F
+			goto SetRef		; 0
+			return			; 1
+			goto SetMotor	; 2
+			goto SetInten	; 3
+			return			; 4
+			return			; 5
+			return			; 6
+			goto GetAdc		; 7
+
+GetVal:		movf REG,W
+			addwf PCL,F
+			goto GetRef		; 0
+			goto GetTemp	; 1
+			goto GetMotor	; 2
+			return			; 3
+			return			; 4
+			return			; 5
+			return			; 6
+			return			; 7
 
 INITLED:	movlw $C
 			call SENDBYTE
@@ -238,6 +272,94 @@ WRITEMOT:	call DECMOT
 			call LOADLED
 			return
 
+AdcDelay:	return
+
+ReadAdc0:	movlw %10001000
+			goto ReadAdc
+
+ReadAdc1:	movlw %10011000
+
+ReadAdc:	movwf TEMP
+			movlw 7
+			movwf COUNT
+;
+			movlw %00001100
+			movwf PORTB
+			call AdcDelay
+;
+			bcf PORTB,3
+			call AdcDelay
+
+AdcControlLoop:
+			btfss TEMP,7
+			goto ResAdcControl
+
+SetAdcControl:
+			bsf PORTB,2
+			goto NextAdcControl
+
+ResAdcControl:
+			bcf PORTB,2
+			
+NextAdcControl:
+			rlf TEMP,F
+;
+			bsf PORTB,0
+			call AdcDelay
+;
+			bcf PORTB,0
+;
+			decfsz COUNT,F
+			goto AdcControlLoop
+;
+			clrf AdcMsb
+			movlw 4
+			movwf COUNT
+
+AdcMsbLoop:
+			bcf STATUS,C
+			rlf AdcMsb,F
+;
+			btfsc PORTB,1
+			bsf AdcMsb,0
+;
+			bsf PORTB,0
+			call AdcDelay
+			bcf PORTB,0
+;
+			decfsz COUNT,F
+			goto AdcMsbLoop
+
+			clrf AdcLsb
+			movlw 8
+			movwf COUNT
+
+AdcLsbLoop:
+			bcf STATUS,C
+			rlf AdcLsb,F
+;
+			btfsc PORTB,1
+			bsf AdcLsb,0
+;
+			bsf PORTB,0
+			call AdcDelay
+			bcf PORTB,0
+;
+			decfsz COUNT,F
+			goto AdcLsbLoop
+;
+			bsf PORTB,3
+			return
+
+GetAdc:		call ReadAdc1
+			movf AdcLsb,W
+			addwf SumLow1,F
+			btfsc STATUS,C
+			incf SumHi1,F
+			movf AdcMsb,W
+			addwf SumHi1,F
+			return
+
 WaitClk:
 WaitClkHi:	btfss PORTB,7
 			return
@@ -269,39 +391,41 @@ SetInten:	rrf VAL,F
 			movwf INTEN
 			return
 
-SetVal:		movf REG,W
-			addwf PCL,F
-			goto SetRef		; 0
-			return			; 1
-			goto SetMotor	; 2
-			goto SetInten	; 3
-			return			; 4
-			return			; 5
-			return			; 6
-			return			; 7
-
 GetRef:		movf REF,W
 			movwf VAL
 			return
 
-GetTemp:	movf TEM0,W
+GetTemp:	bcf STATUS,C
+			rrf SumHi1,F
+			rrf SumLow1,F	
+;
+			bcf STATUS,C
+			rrf SumHi1,F
+			rrf SumLow1,F	
+;
+			bcf STATUS,C
+			rrf SumHi1,F
+			rrf SumLow1,F	
+;
+			bcf STATUS,C
+			rrf SumHi1,F
+			rrf SumLow1,F	
+;
+			movf SumLow1,W
+			movwf TEM0
+			movf SumHi1,W
+			movwf TEM1
+;
+			clrf SumLow1
+			clrf SumHi1
+;
+			movf TEM0,W
 			movwf VAL
 			return
 
 GetMotor:	movf MOT,W
 			movwf VAL
 			return
-
-GetVal:		movf REG,W
-			addwf PCL,F
-			goto GetRef		; 0
-			goto GetTemp	; 1
-			goto GetMotor	; 2
-			return			; 3
-			return			; 4
-			return			; 5
-			return			; 6
-			return			; 7
 			
 Wait:		btfss PORTB,7
 			goto Wait

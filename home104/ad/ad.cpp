@@ -38,6 +38,9 @@ TSample rsmin[4], rsmax[4];
 THeat *heat;
 TRadiator *radiator[16];
 
+int HeatStartCount;
+int HeatStopCount;
+
 void UpdateTime()
 {
 	TDateTime CurrentTime;
@@ -292,6 +295,29 @@ void UpdateFuzzy()
 		fval = radiator[0]->GetMotor();
 		sprintf(str, " %3.1Lf ", fval);
 		RdosWriteString(str);
+
+		if (fval >= 8.5)
+		{
+			if (HeatStartCount >= 5)
+				heat->StartHeat();
+			HeatStartCount++;
+			HeatStopCount = 0;
+		}
+		else
+		{
+			if (fval <= 5.0)
+			{
+				if (HeatStopCount >= 5)
+					heat->StopHeat();
+				HeatStartCount = 0;
+				HeatStopCount++;
+			}
+			else
+			{
+				HeatStartCount = 0;
+				HeatStopCount = 0;
+			}
+		}
 	}
 	else
 		RdosWriteString(" --- ");
@@ -449,19 +475,16 @@ void CreateChannel(TAdcDevice *dev)
 
 void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-	TDateTime RunUntil;
-
-	switch (VirtualKey)
-	{
-		case 0x60:
-			RunUntil.AddHour(3);
-			heat->StartHeat(RunUntil);
-			break;
-
-		case 0x6C:
-			heat->StopHeat();
-			break;
-	}
+//	switch (VirtualKey)
+//	{
+//		case 0x60:
+//			heat->StartHeat();
+//			break;
+//
+//		case 0x6C:
+//			heat->StopHeat();
+//			break;
+//	}
 }
 
 void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
@@ -476,6 +499,9 @@ void cdecl main()
 	TTempDevice *temp;
 	TLightDevice *light;
 	TKeyboardDevice *Keyboard;
+
+	HeatStartCount = 0;
+	HeatStopCount = 0;
 
 	RdosWaitMilli(250);
 

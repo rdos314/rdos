@@ -40,7 +40,7 @@ public:
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
-	void StartHeat(TDateTime &RunUntil);
+	void StartHeat();
 	void StopHeat();
 	void UpdateEp(long double value);
 
@@ -55,8 +55,7 @@ protected:
 	void WriteEpValve(int value);
 	void WriteVpValve(int value);
 
-	void UpdateStart();
-	void UpdateStop();
+	void UpdateHeat();
 	void Update();
 	virtual void Execute();
 
@@ -70,11 +69,9 @@ private:
 	int FStat;
 	long double FEpTemp;
 	int FUpdate;
-	int FStartReq;
-	int FStopReq;
 	int FEpValve;
 	int FVpValve;
-	TDateTime *FVpStopTime;
+	int FHeatOn;
 	int FEpPending;
 	int FEpStart;
 };
