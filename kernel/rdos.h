@@ -211,6 +211,7 @@ void __stdcall RdosClearKeyboard();
 int __stdcall RdosPollKeyboard();
 int __stdcall RdosReadKeyboard();
 int __stdcall RdosGetKeyboardState();
+int __stdcall RdosPutKeyboard(int KeyCode, int VirtualKey, int ScanCode);
 int __stdcall RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 int __stdcall RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 

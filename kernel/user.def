@@ -332,4 +332,6 @@ get_local_tcp_connection_port_nr       = 286
 enable_auto_rts_nr          EQU 287
 disable_auto_rts_nr         EQU 288
 
+put_keyboard_code_nr        EQU 289
+
 usergate_entries			= 300

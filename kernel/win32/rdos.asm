@@ -4068,6 +4068,31 @@ RdosGetKeyboardState	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosPutKeyboard
+;
+;		DESCRIPTION:	Put code in keyboard buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPutKeyboard
+
+RdosPutKeyboard	PROC
+    push ebp
+    mov ebp,esp
+    push edx
+;
+    mov ax,[ebp+8]
+    mov dl,[ebp+12]
+    mov dh,[ebp+16]        
+	UserGate put_keyboard_code_nr
+;
+    pop edx
+    pop ebp
+    ret 12	
+RdosPutKeyboard	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosPeekKeyEvent
 ;
 ;		DESCRIPTION:	Peek keyboard event

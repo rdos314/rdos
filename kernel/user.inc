@@ -1315,6 +1315,13 @@ FlushKeyboard   MACRO
 	UserGate flush_keyboard_nr
 						ENDM
 
+; IN  AX          Keyboard code
+; IN  DL          Virtual key code
+; IN  DH          Scan code
+PutKeyboardCode	MACRO
+	UserGate put_keyboard_code_nr
+					ENDM
+
 ; OUT AX			Character read
 ; OUT CX            Keyboard state
 ; OUT DL            Virtual key code

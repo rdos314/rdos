@@ -351,7 +351,7 @@ put_keyboard_code	PROC far
     pop bx
     pop ax
     pop ds
-    ret
+    retf32
 put_keyboard_code   ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1287,6 +1287,12 @@ init	PROC far
 	mov ax,read_key_event_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET put_keyboard_code
+	mov di,OFFSET put_keyboard_code_name
+	xor cl,cl
+	mov ax,put_keyboard_code_nr
+	RegisterBimodalUserGate
+;
 	mov si,OFFSET read_keyboard_serial
 	mov di,OFFSET read_keyboard_serial_name
 	xor cl,cl
@@ -1303,12 +1309,6 @@ init	PROC far
 	mov di,OFFSET set_keyboard_state_name
 	xor cl,cl
 	mov ax,set_keyboard_state_nr
-	RegisterOsGate
-;
-	mov si,OFFSET put_keyboard_code
-	mov di,OFFSET put_keyboard_code_name
-	xor cl,cl
-	mov ax,put_keyboard_code_nr
 	RegisterOsGate
 ;
 	mov ax,key_data_sel
