@@ -146,6 +146,50 @@ stop_com_done:
 	ret
 stop_com_port	Endp
 
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartKeyboard
+;
+;		DESCRIPTION:	start keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_keyboard_name	DB 'Start Keyboard', 0
+
+start_keyboard	Proc far
+    WriteSIO 7, 6
+    WriteSIO 30h, 1
+    WriteSIO 60h, 0
+    WriteSIO 61h, 60h
+    WriteSIO 62h, 0
+    WriteSIO 63h, 64h
+    WriteSIO 70h, 1
+    WriteSIO 71h, 2
+	ret
+start_keyboard	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopKeyboard
+;
+;		DESCRIPTION:	stop keyboard
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_keyboard_name	DB 'Stop Keyboard', 0
+
+stop_keyboard	Proc far
+    WriteSIO 7, 6
+    WriteSIO 30h, 0
+	ret
+stop_keyboard	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -253,6 +297,16 @@ init	Proc far
 	mov si,OFFSET stop_com_port
 	mov di,OFFSET stop_com_port_name
 	mov ax,stop_com_port_nr
+	RegisterOsGate
+;
+	mov si,OFFSET start_keyboard
+	mov di,OFFSET start_keyboard_name
+	mov ax,start_keyboard_nr
+	RegisterOsGate
+;
+	mov si,OFFSET stop_keyboard
+	mov di,OFFSET stop_keyboard_name
+	mov ax,stop_keyboard_nr
 	RegisterOsGate
 ;
 	popa

@@ -47,8 +47,6 @@ v_buf_sel	DW ?
 v_buf_base	DD ?
 v_mem_base	DD ?
 v_has_focus	DB ?
-v_row		DW ?
-v_col		DW ?
 
 video_object	ENDS
 

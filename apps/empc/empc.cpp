@@ -173,7 +173,7 @@ void main(void)
 {
 	TFile FlashFile("demo.rom");
 
-	OpenScreen("g:\\sim.log");
+	OpenScreen("c:\\sim.log");
 
 	Flash.LoadTop(&FlashFile);
 	ZFLogic.DefineMemCs(&Flash, 0);
