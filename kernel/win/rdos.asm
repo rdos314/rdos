@@ -5030,6 +5030,60 @@ read_resource_done:
 	ret
 _RdosReadResource	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenSysIni
+;
+;       DESCRIPTION:    Open system ini file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosOpenSysIni
+
+_RdosOpenSysIni	Proc far
+	push bx
+;
+	OpenSysIni
+	jc osiFail
+;
+	mov ax,bx
+	jmp osiDone
+
+osiFail:
+	xor ax,ax
+
+osiDone:
+	pop bx
+	ret
+_RdosOpenSysIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseIni
+;
+;       DESCRIPTION:    Close ini file
+;
+;		PARAMETERS:		handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosCloseIni
+
+_RdosCloseIni	Proc far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseIni
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseIni	Endp
+
 code	ENDS
 
 	END

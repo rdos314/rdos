@@ -5657,6 +5657,59 @@ RdosSetEnvData	Proc near
 	ret 8
 RdosSetEnvData	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenSysIni
+;
+;       DESCRIPTION:    Open system ini file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenSysIni
+
+RdosOpenSysIni	Proc near
+	push ebx
+;
+	UserGate open_sys_ini_nr
+	jc osiFail
+;
+	movzx eax,bx
+	jmp osiDone
+
+osiFail:
+	xor eax,eax
+
+osiDone:
+	pop ebx
+	ret
+RdosOpenSysIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseIni
+;
+;       DESCRIPTION:    Close ini file
+;
+;		PARAMETERS:		handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCloseIni
+
+RdosCloseIni	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ebx,[ebp+8]
+	UserGate close_ini_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseIni	Endp
 
 ;	extrn Startup:near
 

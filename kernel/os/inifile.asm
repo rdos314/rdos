@@ -375,38 +375,6 @@ CreateIniHandle	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           CreateSysIni
-;
-;       DESCRIPTION:    Create system ini object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateSysIni	Proc near
-	push ds
-	push es
-	push ax
-	push bx
-;
-	call OpenSystemIni
-	jc csiDone
-;
-	call CreateIniSel
-;
-	mov ax,inifile_sys_sel
-	mov es,ax
-	mov es:is_sys_sel,ds
-
-csiDone:
-	pop bx
-	pop ax
-	pop es
-	pop ds
-	ret
-CreateSysIni	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;       
-;
 ;       NAME:           OpenSysIni
 ;
 ;       DESCRIPTION:    Open system ini file
@@ -893,48 +861,6 @@ WriteProfileString	Proc far
 	xor ax,ax
 	ret 12
 WriteProfileString	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			Init_thread
-;
-;		DESCRIPTION:	Create thread
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-test_thread_name	DB 'Ini File', 0
-
-test_thread:
-	int 3
-	OpenSysIni
-	mov dx,bx
-	OpenSysIni
-	CloseIni
-	mov bx,dx
-	CloseIni
-
-init_thread	Proc far
-	push ds
-	push es
-	pushad
-;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET test_thread
-	mov di,OFFSET test_thread_name
-	mov ax,3
-	mov cx,256
-	CreateThread
-;
-	popad
-	pop es
-	pop ds
-init_thread	Endp
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -994,9 +920,6 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov di,OFFSET init_thread
-	HookInitTasking
 ;
 	mov si,OFFSET open_sys_ini
 	mov di,OFFSET open_sys_ini_name

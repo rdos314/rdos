@@ -241,6 +241,9 @@ int __stdcall RdosFindEnvVar(int handle, const char *var, char *value);
 void __stdcall RdosGetEnvData(int handle, char *buf);
 void __stdcall RdosSetEnvData(int handle, const char *buf);
 
+int __stdcall RdosOpenSysIni();
+void __stcall RdosCloseIni();
+
 #ifdef __cplusplus
 }
 #endif
