@@ -41,6 +41,8 @@ data	SEGMENT byte public 'DATA'
 
 float_string	DB 256 DUP(?)
 
+buf		DW 4096 DUP(?)
+
 data	ENDS
 
 code    SEGMENT byte public 'CODE'
@@ -56,17 +58,116 @@ host_ip		DB 192,168,12,108
 
 val	DT 4.566
 
+FilemapName	DB 'Test', 0
+
+filename	DB 'e:\rdos\test\kernel.map',0
+
+test_name	DB 'Test Section Thread', 0
+
+test_thread:
+	int 3
+	LeaveUserSection
+	EnterUserSection
+	jmp test_thread
+	
 init:
 	int 3
-	finit
-	fld tbyte ptr cs:val
-	mov di,OFFSET float_string
-	mov dl,18
-	mov cl,100
-	call float_to_string
+	CreateBlockedUserSection
 ;
-	mov ax,12h
-	SetVideoMode
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET test_thread
+	mov di,OFFSET test_name
+	mov ax,2
+	mov cx,1000h
+	CreateThread
+;	
+	EnterUserSection
+	EnterUserSection
+	LeaveUserSection
+	LeaveUserSection
+	int 3
+;
+	DeleteUserSection
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET filename
+	OpenFile
+;
+	mov eax,22222h
+	SetFileSize
+;
+	mov eax,22221h
+	SetFileSize
+;
+	mov eax,22223h
+	SetFileSize
+;
+	mov eax,1C001h
+	SetFileSize
+;
+	mov eax,1C000h
+	SetFileSize
+;
+	mov eax,1C001h
+	SetFileSize
+;
+	CloseFile
+;
+	xor cx,cx
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET filename
+	CreateFile
+;
+	mov eax,12345h
+	SetFilePos
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET host_name
+	mov cx,13
+	WriteFile
+;
+	mov eax,12345h
+	SetFilePos
+;
+	mov ax,SEG data
+	mov es,ax
+	mov di,OFFSET buf
+	mov cx,13
+	ReadFile
+;
+	CloseFile
+;
+	mov eax,3000h
+	CreateMapping
+	push bx
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET FilemapName
+	mov eax,3000h
+	CreateNamedMapping
+	push bx
+	OpenNamedMapping
+	CloseMapping
+	pop bx
+	mov eax,3000h
+	AllocateAppMem
+	xor di,di
+	xor eax,eax
+	mov ecx,3000h
+	MapView
+	mov di,1FFFh
+	mov ax,2345h
+	stosw
+	SyncMapping
+	UnmapView
+	FreeMem
+	CloseMapping
+	pop bx
+	CloseMapping
 	int 3
 
 	mov ax,cs

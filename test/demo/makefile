@@ -54,6 +54,10 @@ load_srcs = BOOTVECT.ASM LOAD.ASM BOOT.ASM
 load_objs = $(load_srcs:.ASM=.OBJ)
 load_exes = LOAD.EXE
 
+grubload_srcs = GRUB32.ASM	GRUBLOAD.ASM
+grubload_objs = $(grubload_srcs:.ASM=.OBJ)
+grubload_exes = GRUBLOAD.EXE
+
 rdfsboot_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSBOOT.ASM
 rdfsboot_objs = $(rdfsboot_srcs:.ASM=.OBJ)
 rdfsboot_exes = RDFSBOOT.EXE
@@ -61,6 +65,10 @@ rdfsboot_exes = RDFSBOOT.EXE
 rdfsimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM RDFSIMG.ASM
 rdfsimg_objs = $(rdfsimg_srcs:.ASM=.OBJ)
 rdfsimg_exes = RDFSIMG.EXE
+
+grubimg_srcs = GRUBIMG.ASM
+grubimg_objs = $(grubimg_srcs:.ASM=.OBJ)
+grubimg_exes = GRUBIMG.EXE
 
 progfl_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM PROGFL.ASM
 progfl_objs = $(progfl_srcs:.ASM=.OBJ)
@@ -84,8 +92,8 @@ test_exes = TEST.EXE
 
 srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs)    \
 			$(bootprom_srcs) $(elanboot_srcs)	\
-			$(rdfsboot_srcs) \
-			$(rdfsimg_srcs) $(progfl_srcs) \
+			$(rdfsboot_srcs) $(grubload_srcs) \
+			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(test_srcs) $(state_srcs) \
 			$(run_srcs) $(remdebug_srcs)
 
@@ -93,8 +101,8 @@ objs =      $(srcs:.ASM=.OBJ)
 
 exes =      $(cfg2bin_exes) $(boot2bin_exes)  \
 			$(load_exes) $(bootprom_exes) $(elanboot_exes)	\
-			$(rdfsboot_exes) \
-			$(rdfsimg_exes) $(progfl_exes) \
+			$(rdfsboot_exes) $(grubload_exes) \
+			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(test_exes) $(state_exes)	\
 			$(run_exes) $(remdebug_exes)
 
@@ -108,7 +116,7 @@ bins =      $(cfgs:.CFG=.BIN)
 vaxset_modules = $(srcs) $(incs) $(fonts) $(bats)
 
 # DEFINE MODULES FOR SYSTEM VERSION
-kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE
+kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # DEFAULT RULES
@@ -121,7 +129,7 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins)
+MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN
 
 CFG2BIN.EXE : $(cfg2bin_objs)
     tlink @&&!
@@ -145,6 +153,14 @@ LOAD.EXE : $(load_objs)
 	$(load_objs)
 	LOAD
 	LOAD;
+!
+
+GRUBLOAD.EXE : $(grubload_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(grubload_objs)
+	GRUBLOAD
+	GRUBLOAD;
 !
 
 BOOTPROM.EXE : $(bootprom_objs)
@@ -177,6 +193,14 @@ RDFSIMG.EXE : $(rdfsimg_objs)
 	$(rdfsimg_objs)
 	RDFSIMG
 	RDFSIMG;
+!
+
+GRUBIMG.EXE : $(grubimg_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(grubimg_objs)
+	GRUBIMG
+	GRUBIMG;
 !
 
 PROGFL.EXE : $(progfl_objs)
@@ -225,3 +249,7 @@ DEMO.BIN:   DEMO.CFG $(rdvs) $(exes) $(dlls)
 
 ELANBOOT.BIN:   ELANBOOT.CFG $(rdvs) $(exes) $(dlls)
 	boot2bin
+
+GRUBLOAD.BIN:	GRUBLOAD.EXE $(grubload_srcs)
+	grubimg
+
