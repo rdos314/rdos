@@ -115,7 +115,7 @@ int TFloppyToFileCommand::CopyToFile(TDisc *Disc, TString &Dest)
 
     for (sector = 0; sector < 2880; sector++)
     {
-		Disc->Read(0, buf, 512);
+		Disc->Read(sector, buf, 512);
 		file.Write(buf, 512);
 	}
 

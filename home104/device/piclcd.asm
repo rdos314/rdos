@@ -38,13 +38,29 @@ INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
+DQE_STAT_DONE       = 1
+DQE_STAT_TIMEOUT    = 2
+
+digio_queue_entry   STRUC
+
+dqe_prev    DW ?
+dqe_next    DW ?
+
+dqe_stat    DB ?
+dqe_channel DB ?
+dqe_val     DB ?
+dqe_timeout DD ?
+dqe_proc    DW ?
+
+digio_queue_entry   ENDS
+
 data_seg    STRUC
 
 PicThread   DW ?
 PicStatus   DB ?
-PicVal1     DB ?
-PicVal2     DB ?
-PicVal3     DB ?
+
+DioQueue    DW ?,?,?
+DioCurr     DW ?,?,?
 
 data_seg    ENDS
 
@@ -803,9 +819,14 @@ pic_int_loop:
 ;
     mov dx,3BAh
 	in al,dx
-	mov ds:PicVal1,al
-	or ds:PicStatus,2
-;	
+    mov dx,ds:DioCurr
+    or dx,dx
+    jz pic_int_loop
+;
+    mov es,dx
+    mov es:dqe_val,al
+    or es:dqe_stat,DQE_STAT_DONE    	
+;    
 	mov bx,ds:PicThread
 	Signal
 	jmp pic_int_loop
@@ -816,8 +837,13 @@ pic_int_not1:
 ;    
     mov dx,3BCh
 	in al,dx
-	mov ds:PicVal2,al
-	or ds:PicStatus,4
+	mov dx,ds:DioCurr+2
+	or dx,dx
+	jz pic_int_loop
+;	
+    mov es,dx
+    mov es:dqe_val,al
+    or es:dqe_stat,DQE_STAT_DONE
 ;	
 	mov bx,ds:PicThread
 	Signal
@@ -829,8 +855,13 @@ pic_int_not2:
 ;    
     mov dx,3BEh
 	in al,dx
-	mov ds:PicVal3,al
-	or ds:PicStatus,8
+	mov dx,ds:DioCurr+4
+	or dx,dx
+	jz pic_int_loop
+;
+    mov es,dx
+    mov es:dqe_val,al
+    or es:dqe_stat,DQE_STAT_DONE
 ;	
 	mov bx,ds:PicThread
 	Signal
@@ -843,135 +874,387 @@ pic_int Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
+;		NAME:			DioInsert
 ;
-;		NAME:			SignalTimeout
+;		DESCRIPTION:	Insert entry into digital-io queue
 ;
-;		description:	Sends a signal when a timeout expires
+;       PARAMETERS:     DS:DI       Queue
+;                       ES          Entry
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SignalTimeout	Proc far
-;    
-    mov dx,3BAh
-	in al,dx
-;    
-    mov dx,3BCh
-	in al,dx
-;
-    mov dx,3BEh
-    in al,dx
-;    
-	mov bx,piclcd_data_sel
-	mov ds,bx
-    mov bx,ds:PicThread
-    Signal
-    ret
-
+DioInsert	Proc near
+	push di
+	mov di,[di]
+	or di,di
+	je ins_empty
+;	
+	push ds
+	push si
+	mov ds,di
+	mov si,ds:dqe_prev
+	mov ds:dqe_prev,es
+	mov ds,si
+	mov ds:dqe_next,es
+	mov es:dqe_next,di
+	mov es:dqe_prev,si
+	pop si
+	pop ds
+	pop di
+	jmp ins_done
 	
-	push eax
-	push edx
-	push cs
-	call near ptr pic_int
-	pop edx
-	pop eax
-	add eax,1193 * 100
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET SignalTimeout
-	mov bx,ds:PicThread
-	StartTimer	
-	ret
-SignalTimeout	Endp
+ins_empty:
+	mov es:dqe_next,es
+	mov es:dqe_prev,es
+	pop di
+	mov [di],es
+
+ins_done:
+    ret
+DioInsert   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DioRemove
+;
+;		DESCRIPTION:	Remove head entry from digital-io queue
+;
+;       PARAMETERS:     DS:SI       Queue
+;
+;       RETURNS:        ES          Entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioRemove	Proc near
+	push si
+	mov es,[si]
+	push di
+	push ds
+	mov di,es:dqe_next
+	cmp di,[si]
+	mov [si],di
+	mov si,es:dqe_prev
+	mov ds,di
+	mov ds:dqe_prev,si
+	mov ds,si
+	mov ds:dqe_next,di
+	pop ds
+	pop di
+	pop si
+	jne rem_done
+	
+	mov word ptr [si],0
+
+rem_done:
+    ret
+DioRemove   Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			Test thread
+;
+;		NAME:			DioTimeout
+;
+;		description:	Sends a signal when a timeout expires
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-test_name	DB 'PICLCD',0
-
-test_thread	proc far
-    mov eax,4000
-    WaitMilliSec
+DioTimeout	Proc far
+    push es
 ;    
-    mov ax,piclcd_data_sel
-    mov ds,ax
-;    
-    GetThread
-    mov ds:PicThread,ax
-    mov ds:PicStatus,0
-;    
-    mov dx,3BAh
-	in al,dx
-;    
-    mov dx,3BCh
-	in al,dx
+    mov es,cx
+    or es:dqe_stat,DQE_STAT_TIMEOUT
 ;
-    mov dx,3BEh
+	mov bx,piclcd_data_sel
+	mov ds,bx
+    mov bx,ds:PicThread
+    Signal
+;
+    pop es    
+    ret
+DioTimeout  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioStartReq
+;
+;		description:	Start a request
+;
+;       PARAMETERS:     AX      Queue #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioStartReq Proc near
+    push es
+    pushad
+;    
+    mov si,ax
+    add si,si
+    add si,OFFSET DioQueue
+    mov di,[si]
+    or di,di
+    jz dsrDone
+
+dsrClearLoop:
+    push ax
+    mov cl,al
+    mov ah,2
+    shl ah,cl
+;    
+    mov dx,3B2h
     in al,dx
-;    
-    ClearSignal
-;    
-	mov al,55h
-	mov dx,3BAh
-	out dx,al
+    test al,ah
+    pop ax
+    jnz dsrDo
 ;
-    mov al,0AAh
-    mov dx,3BCh
+    mov dx,3BAh
+    add dx,ax
+    add dx,ax
+    push ax
+    in al,dx
+    pop ax
+    jmp dsrClearLoop
+
+dsrDo:
+    call DioRemove
+    mov es:dqe_stat,0
+    add si,OFFSET DioQueue
+    add si,OFFSET DioCurr
+    mov [si],es
+;   
+    mov dx,3BAh
+    add dx,ax
+    add dx,ax
+    mov al,es:dqe_val
     out dx,al
 ;
-    mov al,0
-    mov dx,3BEh
-    out dx,al
-
-test_thread_loop:
-    xor ah,ah
-    xchg ah,ds:PicStatus
-    test ah,2
-    jz test_thread_not2
-; 
-	mov al,55h
-	mov dx,3BAh
-	out dx,al
-	mov al,ds:PicVal1
-
-test_thread_not2:
-    test ah,4
-    jz test_thread_not3
-;
-    mov al,0AAh
-    mov dx,3BCh
-    out dx,al
-	mov al,ds:PicVal2
-
-test_thread_not3:	
-    test ah,4
-    jz test_thread_not4
-;
-    mov al,0
-    mov dx,3BEh
-    out dx,al
-	mov al,ds:PicVal3
-
-test_thread_not4:
+    mov cx,es
 	GetSystemTime
-	add eax,1193 * 100
+	add eax,es:dqe_timeout
 	adc edx,0
 	mov bx,cs
 	mov es,bx
-	mov di,OFFSET SignalTimeout
-	mov bx,ds:PicThread
+	mov di,OFFSET DioTimeout
+	mov bx,cx
 	StartTimer
+
+dsrDone:
+    popad
+    pop es
+    ret
+DioStartReq Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioCheckReq
+;
+;		description:	Check current req
+;
+;       PARAMETERS:     AX      Queue #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioCheckReq Proc near
+    push es
+    pushad
+;    
+    mov si,ax
+    add si,si
+    add si,OFFSET DioCurr
+    mov es,[si]
+;
+    test es:dqe_stat,DQE_STAT_DONE
+    jnz dcrRemove
+;
+    test es:dqe_stat,DQE_STAT_TIMEOUT
+    jz dcrDone
+;
+    push ax
+    mov cl,al
+    mov ah,2
+    shl ah,cl
+;    
+    mov dx,3B2h
+    in al,dx
+    test al,ah
+    pop ax
+    jnz dcrRemove
+;
+    mov dx,3BAh
+    add dx,ax
+    add dx,ax
+    in al,dx
+    mov es:dqe_val,al
+    or es:dqe_stat,DQE_STAT_DONE
+
+dcrRemove:
+    mov word ptr [si],0
+    mov bx,es
+    StopTimer
+    call es:dqe_proc
+
+dcrDone:
+    popad
+    pop es
+    ret
+DioCheckReq Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioUpdate
+;
+;		description:	Dio Update
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioUpdate   Proc near
+    push ax
+    push cx
+    push dx
+    push si
+;    
+    mov cx,3
+    xor ax,ax
+    mov si,OFFSET DioCurr
+
+duLoop:
+    mov dx,[si]
+    or dx,dx
+    jz duFree
+;
+    call DioCheckReq
+    mov dx,[si]
+    or dx,dx
+    jnz duNext
+
+duFree:
+    call DioStartReq
+
+duNext:   
+    add si,2
+    inc ax
+    loop duLoop
+;
+    pop si
+    pop dx
+    pop cx
+    pop ax
+    ret
+DioUpdate   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioCreateReq
+;
+;		description:	Dio create req
+;
+;       PARAMETERS:     AX      Queue #
+;                       EDX     Timeout in tics
+;                       DI      Offset to first proc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioCreateReq   Proc near
+    push es
+    push di
+;    
+    push ax
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    pop ax
+    mov es:dqe_channel,al
+    mov es:dqe_timeout,edx
+    mov es:dqe_proc,di
+    call es:dqe_proc
+;
+    mov di,OFFSET DioQueue
+    add di,ax
+    add di,ax
+    call DioInsert
+;
+    pop di
+    pop es    
+    ret
+DioCreateReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			PIC thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+; es    dio block
+
+first_proc   Proc near
+    mov es:dqe_val,55h
+    mov es:dqe_proc, OFFSET requeue_proc    
+    ret
+first_proc   Endp
+
+requeue_proc    Proc near
+    push ax
+    push si
+;    
+    movzx ax,es:dqe_channel
+    mov si,OFFSET DioQueue
+    add si,ax
+    add si,ax    
+    call DioInsert
+;
+    pop si
+    pop ax    
+    ret
+requeue_proc    Endp
+
+pic_name	DB 'PICLCD',0
+
+pic_thread:
+    mov eax,4000
+    WaitMilliSec
+    int 3
+;    
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    GetThread
+    mov ds:PicThread,ax    
+    ClearSignal
+;
+    xor ax,ax
+    mov di,OFFSET first_proc
+    mov edx,1193 * 100
+    call DioCreateReq
+;    
+    inc ax
+    call DioCreateReq
+;
+    inc ax
+    mov edx,1193 * 1000
+    call DioCreateReq
+
+pic_thread_loop: 
+    call DioUpdate   
 	WaitForSignal
-	StopTimer
-    jmp test_thread_loop
-	ret
-test_thread	endp
+    jmp pic_thread_loop
 
 PAGE
 
@@ -1000,8 +1283,8 @@ InitDriver  Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov di,OFFSET test_name
-	mov si,OFFSET test_thread
+	mov di,OFFSET pic_name
+	mov si,OFFSET pic_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -1036,6 +1319,12 @@ init	PROC far
 	mov bx,piclcd_data_sel
 	AllocateFixedSystemMem
 	mov es:PicThread,0
+	mov es:DioQueue,0
+	mov es:DioQueue+2,0
+	mov es:DioQueue+4,0
+	mov es:DioCurr,0
+	mov es:DioCurr+2,0
+	mov es:DioCurr+4,0
 ;
 	mov ax,cs
 	mov ds,ax
