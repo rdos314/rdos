@@ -1490,7 +1490,7 @@ load_ne	Proc far
 	mov ds:p_lib_sel,es
 	pop es
 	FreeMem
-	mov [bp].load_es,0
+	mov word ptr [bp].load_es,0
 	mov ax,thread_app_sel
 	mov ds,ax
 	mov word ptr ds:app_loader_name,OFFSET ne_loader_name

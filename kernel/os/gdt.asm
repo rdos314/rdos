@@ -88,7 +88,10 @@ create_gdt	PROC near
 	movsd
 	movsd
 ;
-	mov dword ptr [bx+4],gdt_linear
+	mov eax,[bx+2]
+	mov cl,[bx+7]
+	mov [bx+4],eax
+	mov [bx+7],cl
 	mov ax,[bx]
 	mov [bx+2],ax
 	db 66h
@@ -219,16 +222,15 @@ allocate_gdt	PROC far
 ;
 	mov si,system_data_sel
 	mov ds,si
-	EnterSection ds:gdt_section
-;
 	mov si,gdt_sel
 	mov es,si
+	EnterSection ds:gdt_section
 	xor di,di
 	mov si,es:[di]
 	or si,si
 	jnz alloc_gdt_room
 ;
-	push ax
+	int 3
 	push cx
 	mov si,gdt_sel
 	mov cx,es:[si]
@@ -242,35 +244,33 @@ alloc_gdt_not_full:
 	add word ptr es:[si],1000h
 ;
 	xor bx,bx
-	mov dword ptr es:[bx+4],gdt_linear
+	mov eax,es:[si+2]
+	mov cl,es:[si+7]
+	mov es:[bx+4],eax
+	mov es:[bx+7],cl
 	mov ax,es:[si]
 	mov es:[bx+2],ax
 	db 66h
 	lgdt es:[bx+2]
 	mov bx,gdt_sel
-	mov es,bx
+	mov ds,bx
 ;
-	mov di,es:[bx]
-	and di,0F000h
+	mov si,es:[bx]
+	inc si
+	add si,1000h
 	mov cx,1000h SHR 3
 	xor bx,bx
 
 extend_gdt_loop:
-	mov ax,bx
-	mov bx,di
-	stosw
-	xor ax,ax
-	stosw
-	stosw
-	stosw
+	mov es:[si],bx
+	mov bx,si
+	add si,8
 	loop extend_gdt_loop
 ;
 	mov si,bx
 	xor bx,bx
 	mov es:[bx],si
 	pop cx
-	pop ax
-	xor di,di
 
 alloc_gdt_room:
 	mov bx,si
@@ -307,9 +307,10 @@ free_gdt	PROC far
 ;
 	mov si,system_data_sel
 	mov ds,si
-	EnterSection ds:gdt_section
 	mov si,gdt_sel
 	mov es,si
+;
+	EnterSection ds:gdt_section
 	mov byte ptr es:[bx+5],0
 	xor si,si
 	mov si,es:[si]

@@ -110,6 +110,10 @@ init	PROC far
 	xor cl,cl
 	mov ax,query_xms_nr
 	RegisterOsGate
+;
+	mov di,OFFSET delete_handle
+	mov ax,FILE_HANDLE
+	RegisterHandle
 	pop ds
 	popa
 	ret
@@ -136,10 +140,6 @@ init_xms_process	PROC far
 	GetFreePhysical
 	sub eax,100000h
 	mov ds:xms_free_mem,eax
-;
-	mov di,OFFSET delete_handle
-	mov ax,FILE_HANDLE
-	RegisterHandle
 	ret
 init_xms_process	ENDP
 
@@ -157,7 +157,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 delete_handle	Proc far
-	ret
 	push ds
 	push bx
 	push si
@@ -239,7 +238,6 @@ xms_query_size	PROC near
 xms_query_size	ENDP
 
 xms_allocate	PROC near
-	int 3
 	push bx
 	mov bx,xms_local_sel
 	mov ds,bx
@@ -284,7 +282,6 @@ xms_allocate_zero:
 xms_allocate	ENDP
 
 xms_free	PROC near
-	int 3
 	push bx
 	mov bx,dx
 	mov ax,XMS_HANDLE
@@ -318,7 +315,6 @@ xms_free_lock_ok:
 	FreeLinear
 
 xms_free_global:
-	mov bx,ds:[bx].hh_handle
 	FreeHandle
 	mov bx,xms_local_sel
 	mov ds,bx
@@ -332,7 +328,6 @@ xms_free_global:
 xms_free	ENDP
 
 xms_move	PROC near
-	int 3
 	push ebx
 	push ecx
 	push edx
