@@ -315,7 +315,7 @@
  */
 #ifdef __TURBOC__
 #  include <mem.h>
-#  include "alloc.h"
+#  include "malloc.h"
 #endif
 
 #if defined(_MSC_VER) && (defined(WIN32) || defined(_Windows) || \
