@@ -563,7 +563,7 @@ void THeat::Update()
 	{
 		WriteVpValve(0);
 
-		if (FEpTemp < 55.0)
+		if (FEpTemp < 47.0)
 			StartEp();
 
 		if (FEpTemp > 65.0)

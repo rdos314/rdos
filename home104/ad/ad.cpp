@@ -487,7 +487,7 @@ void UpdateFuzzy()
 			else
 				heat->SetEpLimit(65.0);
 
-			if (tv[0] < 0.0)
+			if (tv[0] < -2.5)
 				heat->EpExclusiveHotWater();
 			else
 				heat->SharedHotWater();
