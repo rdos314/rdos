@@ -663,6 +663,10 @@ void TCpu::Go()
 				if (Reg_cs.selector == FBreakpoints[i]->Selector && Reg_eip == FBreakpoints[i]->Offset)
 					Done = TRUE;
 
+// fixed breakpoints for ZFX86
+		if (Reg_eip == 0x2514)
+			Done = TRUE;
+
 		if (!Done)
 		{
 			ReadInstruction(this);

@@ -28,61 +28,84 @@
 #ifndef	_PCI_H
 #define _PCI_H
 
+class TPci;
 
 class TPciFunction
 {
-	public:
-		TPciFunction();
+public:
+	TPciFunction(TPci *Pci);
 
-        virtual int ReadConfig(int Index);
-        virtual int ReadData(int Index);
-        virtual void WriteConfig(int Index, int Data);
-        virtual void WriteData(int Index, int Data);
+    virtual int ReadConfig(int Index);
+    virtual int ReadData(int Index);
+    virtual void WriteConfig(int Index, int Data);
+    virtual void WriteData(int Index, int Data);
 
-    protected:
-        char FConfig[256];
-        char FData[256];
+	virtual void Out(int Num, int Offset, char Value);
+	virtual char In(int Num, int Offset);
+
+protected:
+	TPci *FPci;
+    char FConfig[256];
+    char FData[256];
+};
+
+class TPciArea
+{
+public:
+	int Base;
+	int Size;
+	TPciFunction *func;
+	int Num;
 };
 
 class TPciDevice
 {
-    public:
-        TPciDevice();
-        ~TPciDevice();
+public:
+    TPciDevice();
+    ~TPciDevice();
 
-        TPciFunction *FunctionArr[8];
+    TPciFunction *FunctionArr[8];
 };
 
 class TPciBus
 {
-    public:
-        TPciBus();
-        ~TPciBus();
+public:
+    TPciBus();
+    ~TPciBus();
 
-        TPciDevice *DeviceArr[32];
+    TPciDevice *DeviceArr[32];
 };
 
 class TPci
 {
-	public:
-		TPci();
-		~TPci();
+public:
+	TPci();
+	~TPci();
 
-		void Out(int Port, char Value);
-		char In(int Port);
-		void RegisterFunction(TPciFunction *func, int Bus, int Device, int Function);
+	void Out(int Port, char Value);
+	char In(int Port);
+	void RegisterFunction(TPciFunction *func, int Bus, int Device, int Function);
+	void DefineIo(TPciFunction *func, int Num, int Base, int Size);
+	void UndefineIo(TPciFunction *func, int Num);
+	void DefineMem(TPciFunction *func, int Num, int Base, int Size);
+	void UndefineMem(TPciFunction *func, int Num);
 
-	protected:
-	    int ReadData(int Index);
-	    void WriteData(int Index, int Data);
+protected:
+	int ReadData(int Index);
+	void WriteData(int Index, int Data);
 
-	private:
-	    long FIndex;
-	    long FValue;
-	    int FIndexChanged;
-	    int FDataChanged;
+	void DefaultOut(int Port, char Value);
+	char DefaultIn(int Port);
+		
+private:
+	long FIndex;
+	long FValue;
+	int FIndexChanged;
+	int FDataChanged;
 
-        TPciBus *FBusArr[256];
+    TPciBus *FBusArr[256];
+	TPciArea *FHookIoArr[256];
+	TPciArea *FHookMemArr[256];
 	    
 };
 

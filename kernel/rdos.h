@@ -26,146 +26,148 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
-int RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
-void RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
-void RdosClearClipRect(int handle);
-void RdosSetDrawColor(int handle, int color);
-void RdosSetLGOP(int handle, int lgop);
-void RdosSetHollowStyle(int handle);
-void RdosSetFilledStyle(int handle);
-int RdosOpenFont(int height);
-void RdosCloseFont(int font);
-void RdosGetStringMetrics(int font, const char *str, int *width, int *height);
-void RdosSetFont(int handle, int font);
-int RdosGetPixel(int handle, int x, int y);
-void RdosSetPixel(int handle, int x, int y);
-void RdosBlit(int SrcHandle, int DestHandle, int width, int height,
+int __stdcall RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
+void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
+void __stdcall RdosClearClipRect(int handle);
+void __stdcall RdosSetDrawColor(int handle, int color);
+void __stdcall RdosSetLGOP(int handle, int lgop);
+void __stdcall RdosSetHollowStyle(int handle);
+void __stdcall RdosSetFilledStyle(int handle);
+int __stdcall RdosOpenFont(int height);
+void __stdcall RdosCloseFont(int font);
+void __stdcall RdosGetStringMetrics(int font, const char *str, int *width, int *height);
+void __stdcall RdosSetFont(int handle, int font);
+int __stdcall RdosGetPixel(int handle, int x, int y);
+void __stdcall RdosSetPixel(int handle, int x, int y);
+void __stdcall RdosBlit(int SrcHandle, int DestHandle, int width, int height,
 				int SrcX, int SrcY, int DestX, int DestY);
-void RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
+void __stdcall RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
 				int SrcX, int SrcY, int DestX, int DestY); 
-void RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
-void RdosDrawString(int handle, int x, int y, const char *str);
-void RdosDrawRect(int handle, int x, int y, int width, int height);
-void RdosDrawEllipse(int handle, int x, int y, int width, int height);
-int RdosCreateBitmap(int BitsPerPixel, int width, int height);
-int RdosDuplicateBitmapHandle(int handle);
-void RdosCloseBitmap(int handle);
-int RdosCreateStringBitmap(int font, const char *str);
-void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
+void __stdcall RdosDrawLine(int handle, int x1, int y1, int x2, int y2);
+void __stdcall RdosDrawString(int handle, int x, int y, const char *str);
+void __stdcall RdosDrawRect(int handle, int x, int y, int width, int height);
+void __stdcall RdosDrawEllipse(int handle, int x, int y, int width, int height);
+int __stdcall RdosCreateBitmap(int BitsPerPixel, int width, int height);
+int __stdcall RdosDuplicateBitmapHandle(int handle);
+void __stdcall RdosCloseBitmap(int handle);
+int __stdcall RdosCreateStringBitmap(int font, const char *str);
+void __stdcall RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
 					   int *linesize, void **buffer);
 
-int RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
-void RdosCloseSprite(int handle);
-void RdosShowSprite(int handle);
-void RdosHideSprite(int handle);
-void RdosMoveSprite(int handle, int x, int y);
+int __stdcall RdosCreateSprite(int DestHandle, int BitmapHandle, int MaskHandle, int lgop); 
+void __stdcall RdosCloseSprite(int handle);
+void __stdcall RdosShowSprite(int handle);
+void __stdcall RdosHideSprite(int handle);
+void __stdcall RdosMoveSprite(int handle, int x, int y);
 
-void RdosSetForeColor(int color);
-void RdosSetBackColor(int color);
-int RdosGetMemSize(void *ptr);
-void *RdosAllocateMem(int Size);
-void RdosFreeMem(void *ptr);
+void __stdcall RdosSetForeColor(int color);
+void __stdcall RdosSetBackColor(int color);
+int __stdcall RdosGetMemSize(void *ptr);
+void *__stdcall RdosAllocateMem(int Size);
+void __stdcall RdosFreeMem(void *ptr);
 
-int RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
-void RdosCloseCom(int Handle);
-void RdosFlushCom(int Handle);
-int RdosPollCom(int Handle);
-int RdosWaitForCom(int Handle, int Timeout);
-char RdosReadCom(int Handle);
-void RdosWriteCom(int Handle, char Val);
-void RdosSetDtr(int Handle);
-void RdosResetDtr(int Handle);
+int __stdcall RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
+void __stdcall RdosCloseCom(int Handle);
+void __stdcall RdosFlushCom(int Handle);
+int __stdcall RdosPollCom(int Handle);
+int __stdcall RdosWaitForCom(int Handle, int Timeout);
+char __stdcall RdosReadCom(int Handle);
+void __stdcall RdosWriteCom(int Handle, char Val);
+void __stdcall RdosSetDtr(int Handle);
+void __stdcall RdosResetDtr(int Handle);
 
-int RdosOpenFile(const char *FileName, char Access);
-int RdosCreateFile(const char *FileName, int Attrib);
-void RdosCloseFile(int Handle);
-long RdosGetFileSize(int Handle);
-void RdosSetFileSize(int Handle, long Size);
-long RdosGetFilePos(int Handle);
-void RdosSetFilePos(int Handle, long Pos);
-int RdosReadFile(int Handle, void *Buf, int Size);
-int RdosWriteFile(int Handle, const void *Buf, int Size);
+int __stdcall RdosOpenFile(const char *FileName, char Access);
+int __stdcall RdosCreateFile(const char *FileName, int Attrib);
+void __stdcall RdosCloseFile(int Handle);
+long __stdcall RdosGetFileSize(int Handle);
+void __stdcall RdosSetFileSize(int Handle, long Size);
+long __stdcall RdosGetFilePos(int Handle);
+void __stdcall RdosSetFilePos(int Handle, long Pos);
+int __stdcall RdosReadFile(int Handle, void *Buf, int Size);
+int __stdcall RdosWriteFile(int Handle, const void *Buf, int Size);
 
-int RdosCreateMapping(int Size);
-int RdosCreateNamedMapping(const char *Name, int Size); 
-int RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
-int RdosOpenNamedMapping(const char *Name);
-void RdosSyncMapping(int Handle);
-void RdosCloseMapping(int Handle);
-void RdosMapView(int Handle, int Offset, void *Base, int Size);
-void RdosUnmapView(int Handle);
+int __stdcall RdosCreateMapping(int Size);
+int __stdcall RdosCreateNamedMapping(const char *Name, int Size); 
+int __stdcall RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
+int __stdcall RdosOpenNamedMapping(const char *Name);
+void __stdcall RdosSyncMapping(int Handle);
+void __stdcall RdosCloseMapping(int Handle);
+void __stdcall RdosMapView(int Handle, int Offset, void *Base, int Size);
+void __stdcall RdosUnmapView(int Handle);
 
-void RdosSetCurDir(const char *PathName);
+void __stdcall RdosSetCurDir(const char *PathName);
 
-void RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
-void RdosTerminateThread();
-void RdosWaitMilli(int ms);
-void RdosGetTics(int *msb, int *lsb);
-void RdosConvertTics(int msb, int lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
-void RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
+void __stdcall RdosTerminateThread();
+void __stdcall RdosWaitMilli(int ms);
+void __stdcall RdosGetTics(int *msb, int *lsb);
+void __stdcall RdosConvertTics(int msb, int lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
+void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 
-int RdosCreateSection();
-void RdosDeleteSection(int Handle);
-void RdosEnterSection(int Handle);
-void RdosLeaveSection(int Handle);
+int __stdcall RdosCreateSection();
+void __stdcall RdosDeleteSection(int Handle);
+void __stdcall RdosEnterSection(int Handle);
+void __stdcall RdosLeaveSection(int Handle);
 
-int RdosNameToIp(const char *HostName);
-int RdosIpToName(int Ip, char *HostName, int MaxSize);
+int __stdcall RdosNameToIp(const char *HostName);
+int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 
-int RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-void RdosListenTcpPort(int Port, int BufferSize, void (*Callb)(int Handle));
-int RdosWaitForTcpConnection(int Handle, long Timeout);
-void RdosCloseTcpConnection(int Handle);
-void RdosDeleteTcpConnection(int Handle);
-void RdosAbortTcpConnection(int Handle);
-void RdosPushTcpConnection(int Handle);
-int RdosIsTcpConnectionClosed(int Handle);
-int RdosReadTcpConnection(int Handle, void *Buf, int Size);
-int RdosWriteTcpConnection(int Handle, void *Buf, int Size);
+int __stdcall RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
+void __stdcall RdosListenTcpPort(int Port, int BufferSize, void (*Callb)(int Handle));
+int __stdcall RdosWaitForTcpConnection(int Handle, long Timeout);
+void __stdcall RdosCloseTcpConnection(int Handle);
+void __stdcall RdosDeleteTcpConnection(int Handle);
+void __stdcall RdosAbortTcpConnection(int Handle);
+void __stdcall RdosPushTcpConnection(int Handle);
+int __stdcall RdosIsTcpConnectionClosed(int Handle);
+int __stdcall RdosReadTcpConnection(int Handle, void *Buf, int Size);
+int __stdcall RdosWriteTcpConnection(int Handle, void *Buf, int Size);
 
-int RdosGetLocalMailslot(const char *Name);
-int RdosGetRemoteMailslot(long Ip, const char *Name);
-void RdosFreeMailslot(int Handle);
-int RdosSendMailslot(int Handle, const void *Msg, int Size, void *ReplyBuf, int MaxReplySize);
+int __stdcall RdosGetLocalMailslot(const char *Name);
+int __stdcall RdosGetRemoteMailslot(long Ip, const char *Name);
+void __stdcall RdosFreeMailslot(int Handle);
+int __stdcall RdosSendMailslot(int Handle, const void *Msg, int Size, void *ReplyBuf, int MaxReplySize);
 
-void RdosDefineMailslot(const char *Name, int MaxSize);
-int RdosReceiveMailslot(void *Msg);
-void RdosReplyMailslot(const void *Msg, int Size);
+void __stdcall RdosDefineMailslot(const char *Name, int MaxSize);
+int __stdcall RdosReceiveMailslot(void *Msg);
+void __stdcall RdosReplyMailslot(const void *Msg, int Size);
 
-void RdosSetFocus(char FocusKey);
+void __stdcall RdosSetFocus(char FocusKey);
 
-void RdosClearKeyboard();
-int RdosPollKeyboard();
-int RdosReadKeyboard();
+void __stdcall RdosClearKeyboard();
+int __stdcall RdosPollKeyboard();
+int __stdcall RdosReadKeyboard();
 
-void RdosHideMouse();
-void RdosShowMouse();
-void RdosGetMousePosition(int *x, int *y);
-void RdosSetMousePosition(int x, int y);
-void RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
-void RdosSetMouseMickey(int x, int y);
-int RdosGetLeftButton();
-int RdosGetRightButton();
-void RdosGetLeftButtonPressPosition(int *x, int *y);
-void RdosGetRightButtonPressPosition(int *x, int *y);
-void RdosGetLeftButtonReleasePosition(int *x, int *y);
-void RdosGetRightButtonReleasePosition(int *x, int *y);
+void __stdcall RdosHideMouse();
+void __stdcall RdosShowMouse();
+void __stdcall RdosGetMousePosition(int *x, int *y);
+void __stdcall RdosSetMousePosition(int x, int y);
+void __stdcall RdosSetMouseWindow(int StartX, int StartY, int EndX, int EndY);
+void __stdcall RdosSetMouseMickey(int x, int y);
+int __stdcall RdosGetLeftButton();
+int __stdcall RdosGetRightButton();
+void __stdcall RdosGetLeftButtonPressPosition(int *x, int *y);
+void __stdcall RdosGetRightButtonPressPosition(int *x, int *y);
+void __stdcall RdosGetLeftButtonReleasePosition(int *x, int *y);
+void __stdcall RdosGetRightButtonReleasePosition(int *x, int *y);
 
-void RdosSetCursorPosition(int Row, int Col);
-void RdosWriteString(const char *Buf);
-int RdosReadLine(char *Buf, int MaxSize);
+void __stdcall RdosSetCursorPosition(int Row, int Col);
+void __stdcall RdosWriteChar(char ch);
+void __stdcall RdosWriteSizeString(const char *Buf, int Size);
+void __stdcall RdosWriteString(const char *Buf);
+int __stdcall RdosReadLine(char *Buf, int MaxSize);
 
-int RdosPing(long Node, long Timeout);
+int __stdcall RdosPing(long Node, long Timeout);
 
-int RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
-int RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
-int RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
+int __stdcall RdosGetDiscInfo(int DiscNr, int *SectorSize, long *Sectors, int *BiosSectorsPerCyl, int *BiosHeads);
+int __stdcall RdosReadDisc(int DiscNr, long Sector, char *Buf, int Size);
+int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 
-void RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
-void RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
+void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
+void __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
-int RdosReadResource(int Module, int ID, char *Buf, int Size);
+int __stdcall RdosReadResource(int Module, int ID, char *Buf, int Size);
 
 #ifdef __cplusplus
 }

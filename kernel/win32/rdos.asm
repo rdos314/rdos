@@ -2824,6 +2824,58 @@ RdosReadLine	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosWriteChar
+;
+;		DESCRIPTION:	Write a single character to screen
+;
+;		PARAMETER:		Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteChar
+
+RdosWriteChar	PROC
+	push ebp
+	mov ebp,esp
+;
+	mov al,[ebp+8]
+	UserGate write_char_nr
+;
+	pop ebp
+	ret 4
+RdosWriteChar	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteSizeString
+;
+;		DESCRIPTION:	Write a fixed number of characters to screen
+;
+;		PARAMETER:		String
+;						Count
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteSizeString
+
+RdosWriteSizeString	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov ecx,[ebp+12]
+	UserGate write_size_string_nr
+;
+	pop edi
+	pop ecx
+	pop ebp
+	ret 8
+RdosWriteSizeString	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosWriteString
 ;
 ;		DESCRIPTION:	Write a string to screen

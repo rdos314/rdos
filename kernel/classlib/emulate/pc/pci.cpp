@@ -37,7 +37,7 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TPciFunction::TPciFunction()
+TPciFunction::TPciFunction(TPci *Pci)
 {
     int i;
 
@@ -46,6 +46,8 @@ TPciFunction::TPciFunction()
         FConfig[i] = 0;
         FData[i] = 0xFF;
     }
+
+	FPci = Pci;
 }
 
 /*##################  TPciFunction::ReadConfig  ###############
@@ -138,6 +140,29 @@ void TPciFunction::WriteData(int Index, int Data)
     FData[Index + 3] = (char)((Data & 0xFF000000) >> 24);
 }
 
+/*##################  TPciFunction::Out  ###############
+*   Purpose....: Out to data block								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPciFunction::Out(int Num, int Port, char Value)
+{
+}
+
+/*##################  TPciFunction::In  ###############
+*   Purpose....: In from data block								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPciFunction::In(int Num, int Port)
+{
+	return 0xFF;
+}
+
 /*##################  TPciDevice::TPciDevice  ###############
 *   Purpose....: Constructor for PCI device							            #
 *   In params..: *                                                          #
@@ -217,7 +242,11 @@ TPci::TPci()
     FDataChanged = FALSE;
 
     for (i = 0; i < 256; i++)
+	{
         FBusArr[i] = 0;
+		FHookIoArr[i] = 0;
+		FHookMemArr[i] = 0;
+	}
 }
 
 /*##################  TPci::~TPci  ###############
@@ -231,9 +260,17 @@ TPci::~TPci()
 {
     int i;
 
-    for (i = 0; i < 32; i++)
+    for (i = 0; i < 256; i++)
+	{
         if (FBusArr[i])
             delete FBusArr[i];
+
+		if (FHookIoArr[i])
+			delete FHookIoArr[i];
+
+		if (FHookMemArr[i])
+			delete FHookMemArr[i];
+	}
 }
 
 /*##################  TPci::RegisterFunction  ###############
@@ -276,9 +313,9 @@ void TPci::Out(int Port, char Value)
 
     LVal = (long)Value & 0xFF;
     
-    switch (Port & 0xF)
+    switch (Port)
     {
-        case 8:
+        case 0xCF8:
             if (FDataChanged)
             {
                 WriteData(FIndex, FValue);
@@ -288,7 +325,7 @@ void TPci::Out(int Port, char Value)
             FIndexChanged = TRUE;
             break;
 
-        case 9:
+        case 0xCF9:
             if (FDataChanged)
             {
                 WriteData(FIndex, FValue);
@@ -298,7 +335,7 @@ void TPci::Out(int Port, char Value)
             FIndexChanged = TRUE;
             break;
 
-        case 0xA:
+        case 0xCFA:
             if (FDataChanged)
             {
                 WriteData(FIndex, FValue);
@@ -308,7 +345,7 @@ void TPci::Out(int Port, char Value)
             FIndexChanged = TRUE;
             break;
 
-        case 0xB:
+        case 0xCFB:
             if (FDataChanged)
             {
                 WriteData(FIndex, FValue);
@@ -318,7 +355,7 @@ void TPci::Out(int Port, char Value)
             FIndexChanged = TRUE;
             break;
 
-        case 0xC:
+        case 0xCFC:
             FDataChanged = TRUE;
             if (FIndexChanged)
             {
@@ -329,7 +366,7 @@ void TPci::Out(int Port, char Value)
 			FValue |= LVal;
 			break;
 
-		case 0xD:
+		case 0xCFD:
 			FDataChanged = TRUE;
 			if (FIndexChanged)
 			{
@@ -340,7 +377,7 @@ void TPci::Out(int Port, char Value)
 			FValue |= LVal << 8;
 			break;
 
-		case 0xE:
+		case 0xCFE:
 			FDataChanged = TRUE;
 			if (FIndexChanged)
 			{
@@ -351,7 +388,7 @@ void TPci::Out(int Port, char Value)
 			FValue |= LVal << 16;
 			break;
 
-		case 0xF:
+		case 0xCFF:
 			if (FIndexChanged)
 			{
 				FValue = ReadData(FIndex);
@@ -361,6 +398,10 @@ void TPci::Out(int Port, char Value)
 			FValue |= LVal << 24;
 			WriteData(FIndex, FValue);
 			FDataChanged = FALSE;
+			break;
+
+		default:
+			DefaultOut(Port, Value);
 			break;
 
 	}
@@ -375,21 +416,21 @@ void TPci::Out(int Port, char Value)
 *##########################################################################*/
 char TPci::In(int Port)
 {
-	switch (Port & 0xF)
+	switch (Port)
 	{
-		case 8:
+		case 0xCF8:
 			return (char)(FIndex & 0xFF);
 
-		case 9:
+		case 0xCF9:
 			return (char)((FIndex >> 8) & 0xFF);
 
-		case 0xA:
+		case 0xCFA:
 			return (char)((FIndex >> 16) & 0xFF);
 
-		case 0xB:
+		case 0xCFB:
             return (char)((FIndex >> 24) & 0xFF);
 
-        case 0xC:
+        case 0xCFC:
             if (FIndexChanged)
             {
 				FValue = ReadData(FIndex);
@@ -397,7 +438,7 @@ char TPci::In(int Port)
             }
             return (char)(FValue & 0xFF);
 
-        case 0xD:
+        case 0xCFD:
             if (FIndexChanged)
             {
 				FValue = ReadData(FIndex);
@@ -405,7 +446,7 @@ char TPci::In(int Port)
             }
             return (char)((FValue >> 8) & 0xFF);
 
-		case 0xE:
+		case 0xCFE:
 			if (FIndexChanged)
 			{
 				FValue = ReadData(FIndex);
@@ -413,7 +454,7 @@ char TPci::In(int Port)
 			}
 			return (char)((FValue >> 16) & 0xFF);
 
-		case 0xF:
+		case 0xCFF:
 			if (FIndexChanged)
 			{
 				FValue = ReadData(FIndex);
@@ -421,8 +462,9 @@ char TPci::In(int Port)
 			}
 			return (char)((FValue >> 24) & 0xFF);
 
+		default:
+			return DefaultIn(Port);
 	}
-	return 0xFF;
 }
 
 /*##################  TPci::ReadData  ###############
@@ -506,4 +548,152 @@ void TPci::WriteData(int Index, int Data)
             }
         }
     }
+}
+
+/*##################  TPci::DefineIo  ###############
+*   Purpose....: Define an IO area						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::DefineIo(TPciFunction *func, int Num, int Base, int Size)
+{
+	TPciArea *area;
+	int i;
+
+	area = new TPciArea;
+	area->Base = Base;
+	area->Size = Size;
+	area->func = func;
+	area->Num = Num;
+
+	for (i = 0; i < 256; i++)
+		if (FHookIoArr[i] == 0)
+		{
+			FHookIoArr[i] = area;
+			break;
+		}
+}
+
+/*##################  TPci::UndefineIo  ###############
+*   Purpose....: Undefine an IO area						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::UndefineIo(TPciFunction *func, int Num)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookIoArr[i];
+		if (area)
+			if (area->func == func && area->Num == Num)
+			{
+				delete area;
+				FHookIoArr[i] = 0;
+				break;
+			}
+	}
+}
+
+/*##################  TPci::DefineMem  ###############
+*   Purpose....: Define a memory area						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::DefineMem(TPciFunction *func, int Num, int Base, int Size)
+{
+	TPciArea *area;
+	int i;
+
+	area = new TPciArea;
+	area->Base = Base;
+	area->Size = Size;
+	area->func = func;
+	area->Num = Num;
+
+	for (i = 0; i < 256; i++)
+		if (FHookMemArr[i] == 0)
+		{
+			FHookMemArr[i] = area;
+			break;
+		}
+}
+
+/*##################  TPci::UndefineMem  ###############
+*   Purpose....: Undefine a memory area						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::UndefineMem(TPciFunction *func, int Num)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookMemArr[i];
+		if (area)
+			if (area->func == func && area->Num == Num)
+			{
+				delete area;
+				FHookMemArr[i] = 0;
+				break;
+			}
+	}
+}
+
+/*##################  TPci::DefaultOut  ###############
+*   Purpose....: Perform default out instruction						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TPci::DefaultOut(int Port, char Value)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookIoArr[i];
+		if (area)
+			if (area->Base <= Port && area->Base + area->Size > Port)
+			{
+				area->func->Out(area->Num, Port - area->Base, Value);
+				break;
+			}
+	}
+}
+
+/*##################  TPci::DefaultIn  ###############
+*   Purpose....: Perform default in instruction						            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TPci::DefaultIn(int Port)
+{
+	TPciArea *area;
+	int i;
+
+	for (i = 0; i < 256; i++)
+	{
+		area = FHookIoArr[i];
+		if (area)
+			if (area->Base <= Port && area->Base + area->Size > Port)
+				return area->func->In(area->Num, Port - area->Base);
+	}
+	return 0xFF;
 }

@@ -37,7 +37,8 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TZfxXbus::TZfxXbus()
+TZfxXbus::TZfxXbus(TPci *Pci)
+  : TPciFunction(Pci)
 {
     FConfig[0] = 0x78;
     FConfig[1] = 0x10;

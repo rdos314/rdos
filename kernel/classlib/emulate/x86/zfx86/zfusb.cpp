@@ -37,7 +37,8 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TZfxUsb::TZfxUsb()
+TZfxUsb::TZfxUsb(TPci *Pci)
+  : TPciFunction(Pci)
 {
     FConfig[0] = 0x11;
     FConfig[1] = 0xE;

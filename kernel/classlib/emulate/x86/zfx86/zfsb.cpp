@@ -37,8 +37,11 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TZfxSouthBridge::TZfxSouthBridge()
+TZfxSouthBridge::TZfxSouthBridge(TPci *Pci)
+  : TPciFunction(Pci)
 {
+	int i;
+
     FConfig[0] = 0x78;
     FConfig[1] = 0x10;
     FConfig[3] = 0x4;
@@ -67,4 +70,61 @@ TZfxSouthBridge::TZfxSouthBridge()
     FConfig[0x5B] = 0x20;
     FConfig[0x6E] = 0xF0;
     FConfig[0x6F] = 0xFF;
+
+	for (i = 0; i < 0x40; i++)
+		FIoArea[i] = 0;
+}
+
+/*##################  TZfxSouthBridge::WriteConfig  ###############
+*   Purpose....: Write config							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TZfxSouthBridge::WriteConfig(int Index, int Data)
+{
+	int val;
+
+	TPciFunction::WriteConfig(Index, Data);
+
+	switch (Index)
+	{
+		case 0x10:
+		case 0x11:
+		case 0x12:
+		case 0x13:
+			val = FConfig[0x10] & 0xFF;
+			val |= (FConfig[0x11] & 0xFF) << 8;
+			val |= (FConfig[0x12] & 0xFF) << 16;
+			val |= (FConfig[0x13] & 0xFF) << 24;			
+			FPci->UndefineIo(this, 0);
+			if (val >= 0x400)
+				FPci->DefineIo(this, 0, val, 0x40);
+			break;
+	}			
+}
+
+/*##################  TZfxSouthBridge::Out  ###############
+*   Purpose....: Out							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TZfxSouthBridge::Out(int Num, int Offset, char Value)
+{
+	FIoArea[Offset] = Value;
+}
+
+/*##################  TZfxSouthBridge::In  ###############
+*   Purpose....: In							            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TZfxSouthBridge::In(int Num, int Offset)
+{
+	return FIoArea[Offset];
 }

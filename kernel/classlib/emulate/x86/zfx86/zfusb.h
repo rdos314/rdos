@@ -33,7 +33,7 @@
 class TZfxUsb : public TPciFunction
 {
 	public:
-	    TZfxUsb();
+	    TZfxUsb(TPci *Pci);
 };
 
 #endif

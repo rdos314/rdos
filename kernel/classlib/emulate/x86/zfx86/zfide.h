@@ -33,7 +33,7 @@
 class TZfxIde : public TPciFunction
 {
 	public:
-	    TZfxIde();
+	    TZfxIde(TPci *Pci);
 };
 
 #endif

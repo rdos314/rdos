@@ -202,11 +202,8 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 		case 0x70:
 			return Cmos.In(Port & 0xF);
 
-		case 0xCF0:
-		    return Pci.In(Port & 0xF);
-
 		default:
-			return 0;
+		    return Pci.In(Port & 0xF);
 	}
 }
 
@@ -237,7 +234,7 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 			Cmos.Out(Port & 0xF, Value);
 			break;
 
-		case 0xCF0:
+		default:
 		    Pci.Out(Port & 0xF, Value);
 		    break;
 	}
@@ -286,11 +283,11 @@ void Reset()
 *##########################################################################*/
 void main(void)
 {
-	Pci.RegisterFunction(new TZfxSouthBridge, 0, 0x12, 0);
-	Pci.RegisterFunction(new TZfxSmi, 0, 0x12, 1);
-	Pci.RegisterFunction(new TZfxIde, 0, 0x12, 2);
-	Pci.RegisterFunction(new TZfxXbus, 0, 0x12, 3);
-	Pci.RegisterFunction(new TZfxUsb, 0, 0x13, 0);
+	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
+	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
+	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);
+	Pci.RegisterFunction(new TZfxXbus(&Pci), 0, 0x12, 3);
+	Pci.RegisterFunction(new TZfxUsb(&Pci), 0, 0x13, 0);
 
 	Cpu.OnIdle = Idle;
 	Cpu.OnReadFromMemory = ReadFromMemory;

@@ -25,7 +25,7 @@
 *
 *##########################################################################*/
 
-#include <stdio.h>
+#include <rdos.h>
 
 extern "C"
 {
@@ -45,11 +45,7 @@ void __stdcall ShowAsciiz(char *str);
 *##########################################################################*/
 void __stdcall ShowChar(char ch)
 {
-	char str[2];
-
-	str[0] = ch;
-	str[1] = 0;
-	printf(str);
+	RdosWriteChar(ch);
 }
 
 /*##################  ShowSizeString  ###############
@@ -61,16 +57,7 @@ void __stdcall ShowChar(char ch)
 *##########################################################################*/
 void __stdcall ShowSizeString(char *str, int Size)
 {
-	char locstr[2];
-	int i;
-
-	locstr[1] = 0;
-	for (i = 0; i < Size; i++)
-	{
-		locstr[0] = *str;
-		str++;
-		printf(locstr);
-	}
+	RdosWriteSizeString(str, Size);
 }
 
 /*##################  ShowAsciiz  ###############
@@ -82,5 +69,5 @@ void __stdcall ShowSizeString(char *str, int Size)
 *##########################################################################*/
 void __stdcall ShowAsciiz(char *str)
 {
-	printf(str);
+	RdosWriteString(str);
 }

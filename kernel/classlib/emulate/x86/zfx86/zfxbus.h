@@ -33,7 +33,7 @@
 class TZfxXbus : public TPciFunction
 {
 	public:
-	    TZfxXbus();
+	    TZfxXbus(TPci *Pci);
 };
 
 #endif
