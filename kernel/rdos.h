@@ -8,6 +8,13 @@ extern "C" {
 
 #undef WIN32
 
+#define FILE_ATTRIBUTE_READONLY         0x1
+#define FILE_ATTRIBUTE_HIDDEN           0x2
+#define FILE_ATTRIBUTE_SYSTEM           0x4
+#define FILE_ATTRIBUTE_DIRECTORY        0x10
+#define FILE_ATTRIBUTE_ARCHIVE          0x20
+#define FILE_ATTRIBUTE_NORMAL           0x80
+
 #define LGOP_NULL  0
 #define LGOP_NONE  1
 #define LGOP_OR  2

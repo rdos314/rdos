@@ -1288,6 +1288,10 @@ set_native_do:
 ;
 	push ax
 	mov esi,edi
+	mov ax,es
+	mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
 	movsx ecx,cx
 	movsx edx,dx
 	movzx eax,ds:v_row_size
@@ -1316,10 +1320,6 @@ set_native_do:
     pop cx
 
 set_native_sprite_hidden:
-	mov ax,es
-	mov fs,ax
-	mov ax,flat_sel
-	mov es,ax
 	call ds:copy_proc
     cmp ds:v_sprite_count,0
     jz set_native_done

@@ -31,6 +31,7 @@
 #include "bitdev.h"
 
 TBitmapGraphicDevice *CreateBmp(const char *FileName);
+int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap);
 
 #endif
 
