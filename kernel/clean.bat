@@ -4,22 +4,26 @@ del *.exe
 del *.rdv
 del *.map
 del *.zip
-del *.~??
-del *.csm
-del *.dsw
-del *.obr
-del *.rws
-del *.res
-
-cd jpeg
+cd os
 command /c clean
 cd ..
 
-cd png
+cd device
 command /c clean
 cd ..
 
-cd zlib
+cd win
 command /c clean
 cd ..
 
+cd win32
+command /c clean
+cd ..
+
+cd tools
+command /c clean
+cd ..
+
+cd classlib
+command /c clean
+cd ..
