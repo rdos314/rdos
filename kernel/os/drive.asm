@@ -73,6 +73,7 @@ disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
 disc_pend_list			DD ?
+disc_pend_first			DD ?
 disc_awrite_list		DD ?
 disc_awrite_timer		DW ?
 disc_awrite_timeout		DD ?,?
@@ -222,7 +223,7 @@ insert_pending	PROC near
 	push cx
 	push dx
 ;
-	mov eax,ds:disc_pend_list
+	mov eax,ds:disc_pend_first
 	or eax,eax
 	jne insert_pend_used
 
@@ -230,6 +231,7 @@ insert_pend_empty:
 	mov es:[edi].dh_prev,edi
 	mov es:[edi].dh_next,edi
 	mov ds:disc_pend_list,edi
+	mov ds:disc_pend_first,edi
 	jmp insert_pend_done
 
 insert_pend_used:
@@ -243,12 +245,12 @@ insert_pend_used:
 	jnc insert_pend_search_loop
 
 insert_pend_first:
-	mov ds:disc_pend_list,edi
+	mov ds:disc_pend_first,edi
 	jmp insert_pend_link
 
 insert_pend_search_loop:
 	mov eax,es:[eax].dh_next
-	cmp eax,ds:disc_pend_list
+	cmp eax,ds:disc_pend_first
 	je insert_pend_link
 ;
 	cmp cx,es:[eax].dh_unit
@@ -303,12 +305,19 @@ get_pending	PROC near
 	cmp eax,edi
 	jne get_pend_unlink
 ;
-	mov dword ptr ds:disc_pend_list,0
+	mov ds:disc_pend_list,0
+	mov ds:disc_pend_first,0
 	clc
 	jmp get_pend_done
 
 get_pend_unlink:
 	mov ds:disc_pend_list,eax
+	cmp edi,ds:disc_pend_first
+	jne get_pend_first_ok
+;
+	mov ds:disc_pend_first,eax
+
+get_pend_first_ok:
 	clc
 
 get_pend_done:
@@ -755,7 +764,6 @@ block	Proc near
 	push ax
 	push bx
 	push dx
-	mov bx,ds:disc_thread
 	cli
 	mov ax,es:[edi].dh_thread
 	or ax,ax
@@ -941,8 +949,6 @@ wait_for_disc_request	Proc far
 	mov es,ax
 ;
 	ClearSignal
-	GetThread
-	mov ds:disc_thread,ax
 
 wait_for_disc_req_loop:
 	EnterSection ds:disc_section
@@ -950,15 +956,21 @@ wait_for_disc_req_loop:
 	call update_async_timer
 	LeaveSection ds:disc_section
 ;
+	GetThread
+	cli
+	mov ds:disc_thread,ax
 	mov ebx,ds:disc_pend_list
 	or ebx,ebx
 	jnz wait_for_disc_req_done
 ;
+	sti
 	WaitForSignal
+	mov ds:disc_thread,0
 	jmp wait_for_disc_req_loop
 		
 wait_for_disc_req_done:
 	mov ds:disc_thread,0
+	sti
 ;
 	popad
 	pop es
@@ -1092,6 +1104,12 @@ new_disc_request	Proc far
 	call check_buf
 	jnc new_disc_req_fail
 ;
+	cmp dx,ds:disc_sectors_per_unit
+	jae new_disc_req_fail
+;
+	cmp cx,ds:disc_units
+	jae new_disc_req_fail
+;
 	call allocate
 	mov es:[edi].dh_buf_sel,ds
 	mov es:[edi].dh_sector,dx
@@ -1221,6 +1239,7 @@ install_disc_loop:
 	mov ds:disc_current,0
 	mov ds:disc_list,0
 	mov ds:disc_pend_list,0
+	mov ds:disc_pend_first,0
 	mov ds:disc_awrite_list,0
 	mov ds:disc_awrite_timer,0
 	mov ds:disc_awrite_timeout,0
