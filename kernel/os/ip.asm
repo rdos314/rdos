@@ -209,7 +209,7 @@ PAGE
 ;	Purpose:		create an IP header, and allocate space for data
 ;
 ;	Parameters:		AL		Protocol
-;					AH		Time to line
+;					AH		Time to live
 ;					ECX		Size of data
 ;					EDX		Destination IP
 ;					DS:ESI	Options
@@ -257,16 +257,19 @@ create_header_alloc:
 	add cx,4
 	movzx eax,cx
 	pop cx
+	add ax,cx
 ;
 	push ax
+	push bx
+	mov cx,ax
 	mov bx,ip_data_sel
 	mov fs,bx
 	mov bx,fs:ip_handle
 ;
 	push edx
-	and edx,ds:ip_mask
-	mov eax,ds:my_ip
-	and eax,ds:ip_mask
+	and edx,fs:ip_mask
+	mov eax,fs:my_ip
+	and eax,fs:ip_mask
 	cmp eax,edx
 	pop edx
 	je create_header_not_ppp
@@ -274,21 +277,45 @@ create_header_alloc:
 	cmp dl,127
 	je create_header_not_ppp
 ;
-	mov eax,ds:gateway
+	mov eax,fs:gateway
 	or eax,eax
-	jnz create_header_not_ppp
+	jz create_header_ppp
+;
+	push ds
+	push esi
+	push eax
+	mov ax,ss
+	mov ds,ax
+	movzx esi,sp
+	GetNetBuffer
+	pop eax
+	pop esi
+	pop ds
+	jnc create_header_fill
+	jmp create_header_fail_pop
 
 create_header_ppp:
 	GetPppBuffer
 	jmp create_header_fill
 
 create_header_not_ppp:
+	push ds
+	push esi
+	push edx
+	mov ax,ss
+	mov ds,ax
+	movzx esi,sp
 	GetNetBuffer
+	pop edx
+	pop esi
+	pop ds
+	jnc create_header_fill
+	jmp create_header_fail_pop
 
 create_header_fill:
 	mov bp,di
 	mov es:[0],di
-	mov ax,bx
+	pop ax
 	dec ax
 	shr ax,2
 	inc ax
@@ -332,10 +359,24 @@ create_header_pad:
 	xor al,al
 create_header_pad_loop:
 	test si,3
-	jz create_header_done
+	jz create_header_ok
 	stos byte ptr es:[edi]
 	inc si
 	jmp create_header_pad_loop		
+
+create_header_fail_pop:
+	xor ax,ax
+	mov es,ax
+	xor edi,edi
+	pop ax
+	pop ax
+	pop ax
+	pop ds
+	stc
+	jmp create_header_done
+
+create_header_ok:
+	clc
 
 create_header_done:
 	pop ebp

@@ -35,6 +35,9 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
+INCLUDE ..\os\net.inc
+
+debug EQU 1
 
 CR = 0h
 CFG = 04h
@@ -76,6 +79,7 @@ TxList				DD ?
 Handle				DW ?
 ListSection			section_typ <>
 SendSection			section_typ <>
+LogSection			section_typ <>
 
 net_seg_size		DB ?
 
@@ -87,6 +91,91 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 .386p
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LogEntry
+;
+;		DESCRIPTION:	Log net entry
+;						
+;		RETURNS:		ES		Selector
+;						CX		Size of data
+;						AL		Type of entry
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+net_log	DB 'z:\net.log', 0
+
+LogEntry	PROC near
+	push ds
+	push es
+	push ax
+	push bx
+	push di
+;
+	mov bx,ether_data_sel
+	mov ds,bx
+	EnterSection ds:LogSection
+;
+	push es
+	push eax
+	push cx
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET net_log
+	xor cl,cl
+	OpenFile
+	GetFileSize
+	SetFilePos
+	pop cx
+	pop eax
+	pop es
+;
+	push es
+	push ax
+	push cx
+	mov cx,3
+	mov ax,ss
+	mov es,ax
+	mov di,sp
+	WriteFile
+	pop cx
+	pop ax
+	pop es
+;
+	push es
+	push cx
+	GetSystemTime
+	push edx
+	push eax
+	mov cx,8
+	mov ax,ss
+	mov es,ax
+	mov di,sp
+	WriteFile
+	pop eax
+	pop edx
+	pop cx
+	pop es	
+;
+	xor di,di
+	WriteFile
+	CloseFile
+;
+	mov bx,ether_data_sel
+	mov ds,bx
+	LeaveSection ds:LogSection
+;
+	pop di
+	pop bx
+	pop ax
+	pop es
+	pop ds
+	ret
+LogEntry	Endp
 
 PAGE
 
@@ -330,6 +419,12 @@ CreateSendEntry	Proc near
 	push ecx
 	push edx
 ;
+	cmp ecx,64
+	jae cseSizeOK
+;
+	mov ecx,64
+
+cseSizeOK:
 	mov bx,es
 	mov ax,flat_sel
 	mov es,ax
@@ -832,6 +927,11 @@ Receive	Proc far
 ;	
 	mov es,es:[edi].dh_data_sel
 	mov edi,14
+
+IFDEF debug
+	mov al,LS_TYPE_RECEIVED
+	call LogEntry	
+ENDIF
 ;
 	pop eax
 	pop ds
@@ -938,7 +1038,15 @@ Send	Proc far
 	stosw
 ;
 	add ecx,14
+
+IFDEF debug
+	mov al,LS_TYPE_SENT
+	call LogEntry
+ENDIF
+
 	call CreateSendEntry
+	xor ax,ax
+	mov es,ax
 	call InsertSendEntry
 ;
 	pop edi
@@ -1106,6 +1214,16 @@ dp83815_thread	proc far
 	int 3
 	mov ax,ether_data_sel
 	mov ds,ax
+
+	InitSection ds:LogSection
+	mov ax,cs
+	mov es,ax
+	mov edi,OFFSET net_log
+	xor cx,cx
+	CreateFile
+	CloseFile
+
+
 	mov dx,ds:IoBase
 	add dx,ISR
 	in eax,dx
@@ -1120,6 +1238,17 @@ init_net	Proc far
 	mov ax,ether_data_sel
 	mov ds,ax
 	call InitPciAdapter
+;
+IFDEF debug
+	InitSection ds:LogSection
+	mov ax,cs
+	mov es,ax
+	mov edi,OFFSET net_log
+	xor cx,cx
+	CreateFile
+	CloseFile
+ENDIF
+	
 ;	jmp init_net_done
 
 	mov ax,cs

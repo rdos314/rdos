@@ -321,6 +321,7 @@ query_udp	Proc far
 	push bx
 	push dx
 	push esi
+;
 	push es
 	push ecx
 	push edi
@@ -332,8 +333,7 @@ query_udp	Proc far
 	mov ds,bx
 	call AllocateQuery
 	or bx,bx
-	stc
-	jz udp_query_done
+	jz udp_query_pop_fail
 ;
 	push ds
 	push ax
@@ -348,6 +348,7 @@ query_udp	Proc far
 	pop esi
 	pop ax
 	pop ds
+	jc udp_query_pop_fail
 ;	
 	pop dx
 	xchg dl,dh
@@ -418,6 +419,14 @@ udp_query_port_ok:
 	add sp,10
 	clc
 	jmp udp_query_done
+	pop edi
+	pop ecx
+	pop es
+	stc
+	jmp udp_query_done
+
+udp_query_pop_fail:
+	pop dx
 
 udp_query_failed:
 	call FreeQuery
@@ -597,6 +606,7 @@ receive_not_query:
 	movzx ecx,cx
 	CreateIpHeader
 	pop si
+	jc receive_pop_free
 ;
 	push cx
 	push si
@@ -640,6 +650,10 @@ receive_not_query:
 	mov es,ax
 	xor ax,ax
 	mov ds,ax
+	jmp receive_free
+
+receive_pop_free:
+	pop es
 
 receive_free:
 	FreeMem

@@ -280,21 +280,24 @@ void LogOne(TLog &log)
 	int i;
 	TDateTime time;
 
-	for (i = 0; i < 7; i++)
-		LogRad(radiator[i], log.rad[i]);
+	if (time.GetSec() % 5 == 0)
+	{
+		for (i = 0; i < 7; i++)
+			LogRad(radiator[i], log.rad[i]);
 
-	log.LsbTime = time.GetLsb();
-	log.MsbTime = time.GetMsb();
-	log.epon = heat->IsEpStarted();
-	log.vpon = heat->IsVpStarted();
-	log.circon = heat->IsCircStarted();
-	log.epvalve = (int)(100.0 * heat->ReadEpValve());
-	log.vpvalve = (int)(100.0 * heat->ReadVpValve());
-	log.circvalve = (int)(100.0 * heat->ReadCircValve());
-	log.light = (int)(100.0 * lv);
-	log.tout = (int)(100.0 * tv[0]);
-	log.ttank = (int)(100.0 * tv[1]);
-	log.tpanna = (int)(100.0 * tv[2]);
+		log.LsbTime = time.GetLsb();
+		log.MsbTime = time.GetMsb();
+		log.epon = heat->IsEpStarted();
+		log.vpon = heat->IsVpStarted();
+		log.circon = heat->IsCircStarted();
+		log.epvalve = (int)(100.0 * heat->ReadEpValve());
+		log.vpvalve = (int)(100.0 * heat->ReadVpValve());
+		log.circvalve = (int)(100.0 * heat->ReadCircValve());
+		log.light = (int)(100.0 * lv);
+		log.tout = (int)(100.0 * tv[0]);
+		log.ttank = (int)(100.0 * tv[1]);
+		log.tpanna = (int)(100.0 * tv[2]);
+	}
 }
 
 void UpdateFuzzy()
@@ -463,16 +466,16 @@ void UpdateFuzzy()
 
 			fval = (MotMax + MotLast) / 2.0;
 
-			if (fval >= 7.5)
+			if (fval >= 5.0)
 				heat->StartHeat();
 
-			if (fval <= 5.0)
+			if (fval <= 2.5)
 				heat->StopHeat();
 
-			if (fval <= 2.0)
+			if (fval <= 1.0)
 				heat->StopCirc();
 
-			if (fval >= 3.0)
+			if (fval >= 1.5)
 				heat->StartCirc();
 
 			heat->WriteCircValve(fval);

@@ -152,6 +152,7 @@ ReceiveEchoReply	Proc near
 	mov eax,ds:ping_id
 	cmp eax,dword ptr es:[edi].icmp_data
 	jne receive_echo_reply_done
+;
 	mov ds:ping_status,1
 	Signal
 
@@ -313,14 +314,13 @@ ping_node Proc far
 	mov dx,cs
 	mov ds,dx
 	mov esi,OFFSET PingOptions
-	xor edx,edx
-	mov ecx,1000
-	div ecx
 	pop edx
-	or ah,al
+	mov ah,20h
 	mov al,1
 	mov ecx,40
 	CreateIpHeader
+	jc ping_pop_fail
+;
 	mov es:[di].icmp_type,8
 	mov es:[di].icmp_code,0
 	mov es:[di].icmp_checksum,0
@@ -361,7 +361,16 @@ ping_node Proc far
 	or al,al
 	stc
 	jz ping_done
+;
 	clc
+	jmp ping_done
+
+ping_pop_fail:
+	mov ax,ip_data_sel
+	mov ds,ax
+	LeaveSection ds:ping_section
+	pop eax
+
 ping_done:
 	pop ebp
 	pop edi

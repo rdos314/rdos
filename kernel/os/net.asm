@@ -60,7 +60,6 @@ arp_timeout				DD ?,?
 arp_retries				DW ?
 arp_protocol			DW ?
 arp_logical_addr_len	DB ?
-arp_data_size			DD ?
 arp_logical_addr		DB ?		; variable size
 
 arp_list_struc	ENDS
@@ -404,15 +403,16 @@ send_arp_class_loop:
 	add ax,ax
 	mov ebp,eax
 ;
-	push fs
 	mov cx,ds:driver_count
 	mov bx,OFFSET driver_arr
 send_arp_driver_loop:
 	push cx
-	mov fs,ds:[bx]
 ;
 	mov ecx,ebp
+	push fs
+	mov fs,ds:[bx]
 	call fs:d_get_buffer
+	pop fs
 ;
 	mov ah,ds:class_id
 	xor al,al
@@ -441,6 +441,9 @@ send_arp_driver_loop:
 	push esi
 	rep movs byte ptr es:[edi],fs:[esi]
 ;
+	movzx cx,ds:addr_len
+	push fs
+	mov fs,ds:[bx]
 	push ds
 	call fs:d_address
 	mov edi,SIZE arp_data
@@ -451,12 +454,12 @@ send_arp_driver_loop:
 	xor di,di
 	mov dx,806h
 	call fs:d_send
+	pop fs
+	pop esi
 	add bx,2
 	pop cx
 	sub cx,1
 	jnz send_arp_driver_loop
-	pop fs
-	pop esi
 
 send_arp_class_next:	
 	pop cx
@@ -1041,6 +1044,7 @@ PAGE
 ;
 ;	Parameters:		BX		protocol handle
 ;					ECX		size of data
+;					DS:ESI	dest address
 ;
 ;	returns:		ES:EDI	address of data
 ;					NC	success
@@ -1051,11 +1055,72 @@ get_net_buffer_name	DB 'Get Net Buffer',0
 
 get_net_buffer	Proc far
 	push fs
+	push eax
 ;
-	mov fs,bx
-	mov fs,fs:prot_driver
+	mov ax,ds
+	mov fs,ax
+	mov ds,bx
+	call FindAddress
+	jnc get_net_buffer_do
+;
+	push bx
+	push es
+	push cx
+	push si
+;
+	movzx eax,ds:p_logical_addr_len
+	add ax,OFFSET arp_logical_addr
+	AllocateSmallGlobalMem
+	mov es:arp_protocol,ds
+	mov es:arp_retries,10
+	mov es:arp_timeout,0
+	mov es:arp_timeout+4,0
+	mov al,ds:p_logical_addr_len
+	mov es:arp_logical_addr_len,al
+	mov di,OFFSET arp_logical_addr
+	movzx cx,al
+	rep movs byte ptr es:[di],fs:[si]
+;
+	mov ax,net_data_sel
+	mov ds,ax
+	EnterSection ds:arp_section
+	mov ax,ds:arp_send_list
+	or ax,ax
+	je get_buf_arp_empty
+;
+	mov fs,ax
+	mov si,fs:arp_prev
+	mov fs:arp_prev,es
+	mov fs,si
+	mov fs:arp_next,es
+	mov es:arp_next,ax
+	mov es:arp_prev,si
+	jmp get_buf_arp_done
+
+get_buf_arp_empty:
+	mov es:arp_next,es
+	mov es:arp_prev,es
+	mov ds:arp_send_list,es
+
+get_buf_arp_done:
+	LeaveSection ds:arp_section
+	pop si
+	pop cx
+	pop es
+	mov bx,ds:arp_thread
+	Signal
+	pop bx
+	stc
+	jmp get_net_buf_done
+
+get_net_buffer_do:
+	mov ds,ax
+	mov fs,ds:prot_driver
 	call fs:d_get_buffer
-;
+	clc
+
+get_net_buf_done:
+	pop eax
 	pop fs
 	ret
 get_net_buffer	Endp
@@ -1095,12 +1160,9 @@ send_net	Proc far
 	push cx
 	push si
 ;
-	mov dx,es
 	movzx eax,ds:p_logical_addr_len
 	add ax,OFFSET arp_logical_addr
-	add eax,ecx
 	AllocateSmallGlobalMem
-	mov es:arp_data_size,ecx
 	mov es:arp_protocol,ds
 	mov es:arp_retries,10
 	mov es:arp_timeout,0
@@ -1108,20 +1170,11 @@ send_net	Proc far
 	mov al,ds:p_logical_addr_len
 	mov es:arp_logical_addr_len,al
 	mov di,OFFSET arp_logical_addr
-	push cx
 	movzx cx,al
 	rep movs byte ptr es:[di],fs:[si]
-	pop cx
-	mov ds,dx
-	xor si,si
-	rep movsb
+;
 	mov ax,net_data_sel
 	mov ds,ax
-	push es
-	mov es,dx
-	FreeMem
-	pop es
-;
 	EnterSection ds:arp_section
 	mov ax,ds:arp_send_list
 	or ax,ax
@@ -1371,7 +1424,6 @@ arp_rec_done:
 	jz arp_send_done
 ;
 	mov cx,bx
-	mov cx,bx
 	GetSystemTime
 
 arp_send_loop:
@@ -1452,25 +1504,6 @@ arp_send_done:
 
 arp_answ_handle:
 	LeaveSection ds:arp_section
-	mov esi,OFFSET arp_logical_addr
-	movzx edi,es:arp_logical_addr_len
-	add edi,esi
-	mov ecx,es:arp_data_size
-	mov ds,es:arp_protocol
-	mov ax,es
-	mov fs,ax
-	call FindAddress
-	jc arp_rec_loop
-;
-	int 3
-	mov dx,ds:p_packet_type
-	mov ds,ax
-	mov fs,ds:prot_driver
-	movzx eax,ds:prot_logical_addr_len
-	mov esi,OFFSET prot_logical_addr
-	add esi,eax
-	call fs:d_send
-;	FreeMem
 	jmp arp_rec_loop
 	
 arp_answ_done:

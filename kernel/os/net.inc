@@ -105,3 +105,14 @@ prot_logical_addr		DB ?		; variable size
 prot_hardware_addr		DB ?		; variable size
 
 protocol_entry	ENDS
+
+LS_TYPE_RECEIVED = 1
+LS_TYPE_SENT = 2
+
+log_struc	STRUC
+
+ls_size		DW ?
+ls_type		DB ?
+ls_time		DD ?,?
+
+log_struc	ENDS
