@@ -114,47 +114,99 @@ TListCommand::~TListCommand()
 ##########################################################################*/
 void TListCommand::WriteEntry(const TDirEntryData &entry)
 {
+    TDateTime CurrTime;
 	char str[31];
 	int size;
 	int i;
 
-	size = entry.EntryName.GetSize();
-	strncpy(str, entry.EntryName.GetData(), 30);
-
-	if (size < 30)
-	{
-		str[size] = ' ';
-		for (i = size + 1; i < 30; i++)
-			str[i] = 'ú';
-	}
-	str[30] = 0;
-
-	FServer->Write(str);
-
 	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		FDirCount++;
-		FServer->Write("<DIR>         ");
+    	FServer->Write("drw-rw-rw- ");
+   		FDirCount++;
 	}
 	else
 	{
+    	FServer->Write("-rw-rw-rw- ");
 		FFileCount++;
 		FTotalSize += entry.FileSize;
 
-		FServer->WriteLong(entry.FileSize);
 	}
 
-	FServer->Write("  ");
+	FServer->Write(" 0 pg92075 ");
 
-	sprintf(str, "%04d-%02d-%02d %02d.%02d.%02d,%03d",
-					entry.Time.GetYear(),
-					entry.Time.GetMonth(),
+	if (entry.Attribute & FILE_ATTRIBUTE_DIRECTORY)
+	    FServer->WriteLong(4096);
+	else
+    	FServer->WriteLong(entry.FileSize);
+
+    switch (entry.Time.GetMonth())
+    {
+        case 1:
+            FServer->Write(" Jan ");
+            break;
+
+        case 2:
+            FServer->Write(" Feb ");
+            break;
+
+        case 3:
+            FServer->Write(" Mar ");
+            break;
+
+        case 4:
+            FServer->Write(" Apr ");
+            break;
+
+        case 5:
+            FServer->Write(" May ");
+            break;
+
+        case 6:
+            FServer->Write(" Jun ");
+            break;
+
+        case 7:
+            FServer->Write(" Jul ");
+            break;
+
+        case 8:
+            FServer->Write(" Aug ");
+            break;
+
+        case 9:
+            FServer->Write(" Sep ");
+            break;
+
+        case 10:
+            FServer->Write(" Oct ");
+            break;
+
+        case 11:
+            FServer->Write(" Nov ");
+            break;
+
+        case 12:
+            FServer->Write(" Dec ");
+            break;
+    }
+
+    if (CurrTime.GetYear() == entry.Time.GetYear())
+    	sprintf(str, "%02d %02d:%02d ",
 					entry.Time.GetDay(),
 					entry.Time.GetHour(),
-					entry.Time.GetMin(),
-					entry.Time.GetSec(),
-					entry.Time.GetMilliSec());
+					entry.Time.GetMin());
+    else
+    	sprintf(str, "%02d %04d ",
+					entry.Time.GetDay(),
+					entry.Time.GetYear());
+					
 	FServer->Write(str);
+
+	size = entry.EntryName.GetSize();
+	strncpy(str, entry.EntryName.GetData(), 30);
+
+	FServer->Write(str);
+
 	FServer->Write("\r\n");
 }
 
@@ -259,13 +311,21 @@ void TListCommand::Execute(char *param)
 
         FFileList.Sort();
         FDirList.Sort();
+    	
+		msg.Load(150);
+        FServer->Reply(&msg);    
 
     	WriteEntry();
-    	
-		msg.Load(331);
+
+    	FServer->Push();
+
+    	msg.Load(226);
+        FServer->Reply(&msg);    
 	}
 	else
+	{
 		msg.Load(501);
+        FServer->Reply(&msg);    
+    }
 
-    FServer->Reply(&msg);    
 }

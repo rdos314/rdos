@@ -269,6 +269,23 @@ void TFtpSocketServer::WriteLong(long value)
 
 /*##########################################################################
 #
+#   Name       : TFtpSocketServer::Push
+#
+#   Purpose....: Push data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Push()
+{
+	if (FDataSocket)
+		FDataSocket->Push();
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpSocketServer::Quit
 #
 #   Purpose....: Quit session

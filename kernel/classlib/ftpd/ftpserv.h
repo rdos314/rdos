@@ -44,6 +44,7 @@ public:
     void Write(char ch);
     void Write(const char *str);
     void WriteLong(long value);
+    void Push();
 
 	int VerifyUser();
 	int OpenDataConnection(long IP, int port);
