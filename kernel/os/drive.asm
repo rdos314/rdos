@@ -87,8 +87,7 @@ disc_pend_first			DD ?
 disc_awrite_list		DD ?
 disc_awrite_timer		DW ?
 disc_awrite_timeout		DD ?,?
-disc_swrite_list		DD ?
-disc_swrite_first		DD ?
+disc_seq_list			DW ?
 disc_param				DD ?
 disc_handle				DW ?
 disc_change_proc		DD ?
@@ -110,6 +109,18 @@ drive_start_sector		DD ?
 drive_sectors			DD ?
 
 drive_def_struc	ENDS
+
+disc_seq_struc	STRUC
+
+dss_prev			DW ?
+dss_next			DW ?
+dss_buf_sel			DW ?
+dss_insert_index	DW ?
+dss_perform_index	DW ?
+
+dss_arr				DD ?
+
+disc_seq_struc	ENDS
 
 	.386p
 
@@ -677,91 +688,95 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT_SEQ_WRITE
+;		NAME:			UPDATE_DISC_SEQ
 ;
-;		DESCRIPTION:	Insert block into seq write request list
-;
-;		PARAMETERS:		DS		DiscBuf handle
-;						ES		Flat_sel
-;						EDI		DiscBlock handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-insert_seq_write	PROC near
-	push eax
-	push ebx
-;
-	mov eax,ds:disc_swrite_first
-	or eax,eax
-	jnz insert_seq_list
-;
-	mov ds:disc_swrite_first,edi
-	call insert_pending
-	jmp insert_seq_done
-
-insert_seq_list:
-	mov eax,ds:disc_swrite_list
-	or eax,eax
-	jne insert_seq_used
-
-insert_seq_empty:
-	mov es:[edi].dh_prev,edi
-	mov es:[edi].dh_next,edi
-	jmp insert_seq_save
-
-insert_seq_used:
-	mov ebx,es:[eax].dh_prev
-	mov es:[eax].dh_prev,edi
-	mov es:[ebx].dh_next,edi
-	mov es:[edi].dh_prev,ebx
-	mov es:[edi].dh_next,eax	
-
-insert_seq_save:
-	mov ds:disc_swrite_list,edi
-
-insert_seq_done:
-	pop ebx
-	pop eax
-	ret
-insert_seq_write	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UPDATE_SEQ_WRITE
-;
-;		DESCRIPTION:	Update seq write list
+;		DESCRIPTION:	Update seq write lists
 ;
 ;		PARAMETERS:		DS		Disc selector
 ;						ES		Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-update_seq_write	PROC far
-	mov edi,ds:disc_swrite_list
-	or edi,edi
-	mov ds:disc_swrite_first,edi
+update_disc_seq	PROC far
+	mov ax,ds:disc_seq_list
+	or ax,ax
 	jz update_seq_done
 ;
-	mov edi,es:[edi].dh_prev
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edi].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edi
-	jne update_seq_insert
+	int 3
+	push fs
+	pushad
 ;
-	mov dword ptr ds:disc_swrite_list,0
+	mov bp,ax
 
-update_seq_insert:
-	mov ds:disc_swrite_first,edi
+update_seq_loop:
+	mov fs,ax
+	movzx ebx,fs:dss_perform_index
+
+update_seq_discard_loop:
+	mov edi,fs:[4*ebx].dss_arr
+	cmp es:[edi].dh_state,STATE_SEQ
+	je update_seq_move_loop
+;
+	mov fs:[4*ebx].dss_arr,0
+	inc bx
+	mov fs:dss_perform_index,bx
+	cmp bx,fs:dss_insert_index
+	jne update_seq_discard_loop	
+;
+	push es
+	mov ax,fs
+	mov es,ax
+	xor ax,ax
+	mov fs,ax
+	mov ds:disc_seq_list,es
+	push ds
+	mov di,es:dss_next
+	cmp di,ds:disc_seq_list
+	mov ds:disc_seq_list,di
+	mov si,es:dss_prev
+	mov ds,di
+	mov ds:dss_prev,si
+	mov ds,si
+	mov ds:dss_next,di
+	pop ds
+	jne update_seq_free
+;
+	mov ds:disc_seq_list,0
+
+update_seq_free:
+	FreeMem
+	pop es
+	jmp update_seq_next
+
+update_seq_move_loop:
+	mov dx,es:[edi].dh_sector
+	mov ax,es:[edi].dh_unit
+	test es:[edi].dh_flags,FLAG_IO_PENDING
+	jnz update_seq_moved
+;
 	call insert_pending
+
+update_seq_moved:
+	inc bx
+	inc dx
+	mov edi,fs:[4*ebx].dss_arr
+	cmp ax,es:[edi].dh_unit
+	jne update_seq_next
+;
+	cmp dx,es:[edi].dh_sector
+	je update_seq_move_loop
+
+update_seq_next:
+	mov ax,fs:dss_next
+	cmp ax,bp
+	jne update_seq_loop
+;
+	popad
+	pop fs
 
 update_seq_done:
 	ret
-update_seq_write	ENDP
+update_disc_seq	ENDP
 
 PAGE
 
@@ -1270,15 +1285,9 @@ get_disc_request	Proc far
 	EnterSection ds:disc_section
 	call update_async_write
 	call update_async_timer
+	call update_disc_seq
 	call get_pending
 	jc get_disc_req_fail
-;
-	mov al,es:[edi].dh_state
-	cmp al,STATE_SEQ
-	jne get_disc_req_ok
-;
-	call update_seq_write
-	jmp get_disc_req_ok
 
 get_disc_req_fail:
 	LeaveSection ds:disc_section
@@ -1492,6 +1501,7 @@ get_disc_request_array	Proc far
 	EnterSection ds:disc_section
 	call update_async_write
 	call update_async_timer
+	call update_disc_seq
 	xor ecx,ecx
 	mov edi,ds:disc_pend_list
 	or edi,edi
@@ -1509,24 +1519,6 @@ get_disc_request_array	Proc far
 	mov al,es:[edi].dh_state
 	cmp al,STATE_EMPTY
 	je get_disc_req_arr_read
-;
-	cmp al,STATE_DIRTY
-	je get_disc_req_arr_write
-;
-	cmp al,STATE_SEQ
-	jne get_disc_req_arr_write
-
-get_disc_req_arr_seq:
-	or es:[edi].dh_flags,FLAG_IO_BUSY
-	push ebx
-	push ecx
-	push edx
-	push esi
-	call update_seq_write
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
 
 get_disc_req_arr_write:
 	inc edx
@@ -1557,7 +1549,7 @@ get_disc_req_arr_write:
 
 get_disc_req_arr_check_seq:
 	cmp al,STATE_SEQ
-	je get_disc_req_arr_seq
+	je get_disc_req_arr_write
 	jmp get_disc_req_arr_unlink
 
 get_disc_req_arr_read:
@@ -1689,8 +1681,7 @@ install_disc_loop:
 	mov ds:disc_awrite_timer,0
 	mov ds:disc_awrite_timeout,0
 	mov ds:disc_awrite_timeout+4,0
-	mov ds:disc_swrite_list,0
-	mov ds:disc_swrite_first,0
+	mov ds:disc_seq_list,0
 	mov ds:disc_free,0
 	mov ds:disc_timer_id,0
 	mov ds:disc_thread,0
@@ -2430,21 +2421,61 @@ modify_sector	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			CREATE_DISC_SEQ
+;
+;		DESCRIPTION:	Create a sequence
+;
+;		PARAMETERS:		CX		Max number of sectors in sequence
+;
+;		RETURNS:		AX		Sequence handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+create_disc_seq_name	DB 'Create Disc Seq',0
+
+create_disc_seq	PROC far
+	push es
+	push cx
+	push di
+;
+	movzx eax,cx
+	lea eax,[4*eax].dss_arr
+	AllocateSmallGlobalMem
+	mov di,OFFSET dss_arr
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	mov es:dss_buf_sel,0
+	mov es:dss_insert_index,0
+	mov es:dss_perform_index,0
+	mov ax,es
+;
+	pop di
+	pop cx
+	pop es
+	ret
+create_disc_seq	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			MODIFY_SEQ_SECTOR
 ;
 ;		DESCRIPTION:	Modify sequential sector contents
 ;
-;		PARAMETERS:		EBX		Handle
+;		PARAMETERS:		AX			Seq handle
+;						EBX			Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-modify_seq_sector_name	DB 'Modify Seq Write Sector',0
+modify_seq_sector_name	DB 'Modify Seq Sector',0
 
 modify_seq_sector	PROC far
 	push ds
 	push es
+	push fs
 	pushad
 ;
+	mov fs,ax
 	mov ax,flat_sel
 	mov es,ax
 	mov edi,ebx
@@ -2455,33 +2486,105 @@ modify_seq_sector	PROC far
 modify_seq_try_again:
 	test es:[edi].dh_flags, FLAG_IO_BUSY
 	jz modify_seq_not_busy
-;
+
+modify_seq_block:
 	call block
 	jmp modify_seq_try_again
 
 modify_seq_not_busy:
 	mov al,es:[edi].dh_state
 	cmp al,STATE_USED
-	jne modify_seq_done
+	jne modify_seq_block
 
 modify_seq_clean:
-	GetSystemTime
-	mov es:[edi].dh_time_lsb,eax
-	mov es:[edi].dh_time_msb,dx
 	mov es:[edi].dh_state,STATE_SEQ
-	call insert_seq_write
+	mov bx,fs:dss_insert_index
+	shl bx,2
+	mov fs:[bx].dss_arr,edi
+	inc fs:dss_insert_index
+	mov fs:dss_buf_sel,ds
 
 modify_seq_done:
 	LeaveSection ds:disc_section
-	mov bx,ds:disc_thread
-	Signal
 	clc
 ;
 	popad
+	pop fs
 	pop es
 	pop ds
 	ret
 modify_seq_sector	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PERFORM_DISC_SEQ
+;
+;		DESCRIPTION:	Perform a sequence
+;
+;		PARAMETERS:		AX			Sequence handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_disc_seq_name	DB 'Perform Disc Seq',0
+
+perform_disc_seq	PROC far
+	push ds
+	push es
+	push eax
+	push ebx
+;
+	int 3
+	mov es,ax
+	mov ax,es:dss_buf_sel
+	or ax,ax
+	jz perform_disc_fail
+;
+	mov ds,ax
+	EnterSection ds:disc_section
+;
+	mov bx,ds:disc_seq_list
+	or bx,bx
+	je perform_disc_empty
+;
+	push ds
+	push si
+	mov ds,bx
+	mov si,ds:dss_prev
+	mov ds:dss_prev,es
+	mov ds,si
+	mov ds:dss_next,es
+	mov es:dss_next,bx
+	mov es:dss_prev,si
+	pop si
+	pop ds
+	jmp perform_disc_do
+
+perform_disc_empty:
+	mov es:dss_next,es
+	mov es:dss_prev,es
+	mov ds:disc_seq_list,es
+
+perform_disc_do:
+	call update_disc_seq
+	jmp perform_disc_leave
+
+perform_disc_fail:
+	FreeMem
+	jmp perform_disc_done
+
+perform_disc_leave:
+	LeaveSection ds:disc_section
+	mov bx,ds:disc_thread
+	Signal
+
+perform_disc_done:
+	pop ebx
+	pop eax
+	pop es
+	pop ds
+	ret
+perform_disc_seq	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3778,9 +3881,19 @@ init	PROC far
 	mov ax,modify_sector_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET create_disc_seq
+	mov di,OFFSET create_disc_seq_name
+	mov ax,create_disc_seq_nr
+	RegisterOsGate
+;
 	mov si,OFFSET modify_seq_sector
 	mov di,OFFSET modify_seq_sector_name
 	mov ax,modify_seq_sector_nr
+	RegisterOsGate
+;
+	mov si,OFFSET perform_disc_seq
+	mov di,OFFSET perform_disc_seq_name
+	mov ax,perform_disc_seq_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET req_sector

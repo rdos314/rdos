@@ -25,15 +25,28 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+INFO_STATE_NONE =	0
+INFO_STATE_ALLOC =	1
+INFO_STATE_FREE =	2
+
 rdfs_info_struc	STRUC
 
+ri_first_id			DD ?
 ri_free_arr			DD ?
 ri_free_arr_size	DD ?
-ri_root_dir			DD ?
+ri_start_sector		DD ?
 ri_total_sectors	DD ?
+ri_root_dir			DD ?
+ri_data_sectors		DD ?
 ri_free_sectors		DD ?
 ri_hole_start		DD ?
 ri_hole_size		DD ?
+ri_target_sector	DD ?
+ri_target_offset	DW ?
+ri_state			DW ?
+ri_sector			DD ?
+
+ri_last_id			DD ?
 
 rdfs_info_struc	ENDS
 

@@ -285,5 +285,7 @@ start_file_system_nr		EQU 253
 stop_file_system_nr			EQU 254
 format_file_system_nr		EQU 255
 flush_drive_nr				EQU 256
+create_disc_seq_nr			EQU 257
+perform_disc_seq_nr			EQU 258
 
-osgate_entries				EQU 257
+osgate_entries				EQU 259

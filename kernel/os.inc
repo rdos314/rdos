@@ -1411,9 +1411,21 @@ NewSector	MACRO
 	OsGate new_sector_nr
 					ENDM
 
+;	CX		Max number of entries
+;	AX		Seq handle
+CreateDiscSeq	MACRO
+	OsGate create_disc_seq_nr
+					ENDM
+
+;	AX		Seq handle
 ;	EBX		Handle
 ModifySeqSector	MACRO
 	OsGate modify_seq_sector_nr
+					ENDM
+
+;	AX		Seq handle
+PerformDiscSeq	MACRO
+	OsGate perform_disc_seq_nr
 					ENDM
 
 ;	AL		DRIVE #

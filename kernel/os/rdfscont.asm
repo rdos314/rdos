@@ -40,6 +40,7 @@ INCLUDE int.def
 INCLUDE system.inc
 INCLUDE rdfs.inc
 
+	extrn AllocateSectors:near
 
 	.386p
 
@@ -124,6 +125,76 @@ ep70	DD 1E824199h, 23EEBB50h, 2A520B6Ch, 31D813A6h
 ep74	DD 3AB482D0h, 452437D9h, 516EE3F5h, 5FE8F71Ah
 ep78	DD 70F5E40Bh, 850ACB7Eh, 9CB1A0BAh, 0B88CDD38h
 ep7C	DD 0D95BDCC3h, 0FFFFFFFFh
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateControlSector
+;
+;		DESCRIPTION:	Create control sector
+;
+;		PARAMETERS:		DS			Drive
+;						AX			Disc seq handle
+;						EDX			Sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControlSector	Proc near
+	pushad
+;
+	push ax
+	mov al,ds:drive_nr
+	NewSector
+	mov edi,esi
+	mov ecx,128
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	pop ax
+	ModifySeqSector
+	UnlockSector
+;
+	inc edx
+	push ax
+	mov al,ds:drive_nr
+	NewSector
+	mov edi,esi
+	mov ecx,128
+	xor eax,eax
+	rep stos dword ptr es:[edi]
+	pop ax
+	ModifySeqSector
+	UnlockSector
+	PerformDiscSeq
+;
+	popad
+	ret
+CreateControlSector	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateRootDir
+;
+;		DESCRIPTION:	Create root dir on drive
+;
+;		PARAMETERS:		DS			Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public CreateRootDir
+
+CreateRootDir	Proc near
+	mov ecx,2
+	mov eax,-1
+	EnterSection ds:alloc_section
+	mov ds:info_sector.ri_target_sector,0
+	mov ds:info_sector.ri_target_offset,0
+	mov ds:info_sector.ri_state,INFO_STATE_ALLOC
+	call AllocateSectors
+	call CreateControlSector
+	LeaveSection ds:alloc_section
+	ret
+CreateRootDir	Endp
 
 code	ENDS
 

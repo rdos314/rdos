@@ -55,7 +55,7 @@ attr_arcive			EQU 20h
 	extrn FormatInfoSector:near
 	extrn FormatAllocationArr:near
 	extrn FreeAllocationArr:near
-	extrn AllocateSectors:near
+	extrn CreateRootDir:near
 
 	extrn cache_dir:near
 	extrn create_dir:near
@@ -173,17 +173,22 @@ CreateDrive	Proc near
 	mov ax,es
 	mov ds,ax
 ;
-	mov ds:info_sector.ri_free_arr,2
+	mov ds:info_sector.ri_first_id,1
+	mov ds:info_sector.ri_last_id,1
+	mov ds:info_sector.ri_state, INFO_STATE_NONE
+	mov ds:info_sector.ri_free_arr,3
+	mov ds:info_sector.ri_total_sectors,ecx
 	mov edx,ecx
 	shr edx,7
 	inc edx
 	mov ds:info_sector.ri_free_arr_size,edx
-	add edx,2
+	add edx,3
+	mov ds:info_sector.ri_start_sector,edx
 	mov ds:info_sector.ri_root_dir,edx
 	mov ds:info_sector.ri_hole_start,edx
 	sub edx,ecx
 	neg edx
-	mov ds:info_sector.ri_total_sectors,edx
+	mov ds:info_sector.ri_data_sectors,edx
 	mov ds:info_sector.ri_free_sectors,edx
 	mov ds:info_sector.ri_hole_size,edx
 	InitSection ds:alloc_section
@@ -214,16 +219,13 @@ format	PROC far
 	push es
 	pushad
 ;
-	int 3
 	mov bx,flat_sel
 	mov es,bx
 	call CreateDrive
 	call FreeAllocationArr
 	call FormatInfoSector
 	call FormatAllocationArr
-	mov ecx,2
-	mov eax,-1
-	call AllocateSectors
+	call CreateRootDir
 ;
 	mov bx,ds
 	mov es,bx
@@ -310,7 +312,7 @@ dismount	ENDP
 
 get_drive_info	PROC far
 	mov eax,ds:ri_free_sectors
-	mov edx,ds:ri_total_sectors
+	mov edx,ds:ri_data_sectors
 	mov cx,200h
 	clc
 	ret
