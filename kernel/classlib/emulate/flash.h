@@ -39,6 +39,7 @@ public:
 	~TFlash();
 
 	virtual int GetSize();
+	virtual void WriteMem(int Num, unsigned unsigned long Offset, char Value);
 
 	void LoadTop(TFile *File);
 	void LoadBottom(TFile *File);

@@ -96,6 +96,17 @@ int TFlash::GetSize()
     return FSize;
 }
 
+/*##################  TFlash::WriteMem  ###############
+*   Purpose....: Write to data block								            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TFlash::WriteMem(int Num, unsigned long Offset, char Value)
+{
+}
+
 /*##################  TFlash::LoadTop ###############
 *   Purpose....: Load image at top						            #
 *   In params..: *                                                          #

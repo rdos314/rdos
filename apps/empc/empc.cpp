@@ -53,7 +53,7 @@ TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 TKeyb Keyb(&Isa, 0x60);
 TCmos Cmos(&Isa, 0x70);
-TFlash Flash(0x40000);
+TFlash Flash(0x400000);
 TZFLogic ZFLogic(&Isa, 0x218);
 TCpu Cpu;
 void *Eprom;

@@ -46,14 +46,16 @@ TZfxNorthBridge::TZfxNorthBridge(TPci *Pci)
 
 	for (i = 0; i < 4; i++)
 	{
-    	FDram[i] = new char[0x40000];
-    	LongPtr = (long *)FDram[i];
-    	for (l = 0; l < 0x10000; l++)
-    	{
-	    	*LongPtr = 0x77777777;
-		    LongPtr++;
-    	}
-    }
+		FDram[i] = 0;
+	}
+
+	FDram[0] = new char[0x100000];
+	LongPtr = (long *)FDram[0];
+	for (l = 0; l < 0x40000; l++)
+	{
+		*LongPtr = 0x77777777;
+		LongPtr++;
+	}
 
 	for (i = 0; i < 0x400; i++)
 		FData[i] = 0;
@@ -66,9 +68,9 @@ TZfxNorthBridge::TZfxNorthBridge(TPci *Pci)
 	FData[0x20D] = 0xFFFF;
 	FData[0x20F] = 1;
 	FData[0x211] = 0x30A0;
-    FData[0x213] = 0x320;
-    FData[0x239] = 0xFFFF;
-    
+	FData[0x213] = 0x320;
+	FData[0x239] = 0xFFFF;
+
 	FPort = 0;
 
 	DefineIo(0, 0x24, 4, 0);
@@ -87,9 +89,9 @@ TZfxNorthBridge::~TZfxNorthBridge()
 	int i;
 
 	for (i = 0; i < 4; i++)
-        if (FDram[i])
-            delete FDram[i];
-	
+		if (FDram[i])
+			delete FDram[i];
+
 }
 
 /*##################  TZfxNorthBridge::Out  ###############
@@ -101,26 +103,26 @@ TZfxNorthBridge::~TZfxNorthBridge()
 *##########################################################################*/
 void TZfxNorthBridge::Out(int Num, int Offset, char Value)
 {
-    long LVal;
+	long LVal;
 
-    LVal = (long)Value & 0xFF;
+	LVal = (long)Value & 0xFF;
 
 	switch (Offset)
 	{
 		case 0:
-            FPort = LVal;
+			FPort = LVal;
 			break;
 
-        case 1:
-            FPort |= LVal << 8;
-            break;
-            
+		case 1:
+			FPort |= LVal << 8;
+			break;
+
 		case 2:
 			FData[FPort] &= 0xFF00;
 			FData[FPort] |= LVal;
 			break;
 
-        case 3:
+		case 3:
 			FData[FPort] &= 0x00FF;
 			FData[FPort] |= LVal << 8;
 			UpdateData(FPort);
@@ -151,10 +153,10 @@ char TZfxNorthBridge::In(int Num, int Offset)
 			return (char)((FPort >> 8) & 0xFF);
 
 		case 2:
-            return (char)(FData[FPort] & 0xFF);
+			return (char)(FData[FPort] & 0xFF);
 
-        case 3:
-            return (char)((FData[FPort] >> 8) & 0xFF);
+		case 3:
+			return (char)((FData[FPort] >> 8) & 0xFF);
 
 		default:
 			return 0xFF;
@@ -170,50 +172,50 @@ char TZfxNorthBridge::In(int Num, int Offset)
 *##########################################################################*/
 void TZfxNorthBridge::UpdateData(int Index)
 {
-    short int Mask;
-    unsigned long Base;
-    
-    switch (Index)
-    {
-        case 0x202:
-        case 0x205:
-        case 0x208:
-        case 0x20B:
-        case 0x20F:
-            Mask = FData[0x20F];
-            if (Mask & 0x8)
-            {
-                Base = (FData[0x20B] & 0xF) << 20;
-                DefineMem(3, Base, 0x40000, FDram[3]);
-            }
-            else
-                UndefineMem(3);
-                
-            if (Mask & 0x4)
-            {
-                Base = (FData[0x208] & 0xF) << 20;
-                DefineMem(2, Base, 0x40000, FDram[2]);
-            }
-            else
-                UndefineMem(2);
+	short int Mask;
+	unsigned long Base;
 
-            if (Mask & 0x200)
-            {
-                Base = (FData[0x205] & 0xF) << 20;
-                DefineMem(1, Base, 0x40000, FDram[1]);
-            }
-            else
-                UndefineMem(1);
+	switch (Index)
+	{
+		case 0x202:
+		case 0x205:
+		case 0x208:
+		case 0x20B:
+		case 0x20F:
+			Mask = FData[0x20F];
+			if (Mask & 0x1)
+			{
+				Base = (FData[0x202] & 0xF) << 20;
+				DefineMem(0, Base, 0x100000, FDram[0]);
+			}
+			else
+				UndefineMem(0);
 
-            if (Mask & 0x100)
-            {
-                Base = (FData[0x202] & 0xF) << 20;
-                DefineMem(0, Base, 0x40000, FDram[0]);
-            }
-            else
-                UndefineMem(0);
+			if (Mask & 0x2)
+			{
+				Base = (FData[0x205] & 0xF) << 20;
+				DefineMem(1, Base, 0x100000, FDram[0]);
+			}
+			else
+				UndefineMem(1);
 
-            break;
-                  
-    }
+			if (Mask & 0x4)
+			{
+				Base = (FData[0x208] & 0xF) << 20;
+				DefineMem(2, Base, 0x100000, FDram[0]);
+			}
+			else
+				UndefineMem(2);
+
+			if (Mask & 0x8)
+			{
+				Base = (FData[0x20B] & 0xF) << 20;
+				DefineMem(3, Base, 0x100000, FDram[0]);
+			}
+			else
+				UndefineMem(3);
+
+			break;
+
+	}
 }
