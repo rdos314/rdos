@@ -42,7 +42,7 @@ int WriteRcFile(const char *filename)
 	FILE *file;
 	int i, j;
 	char str[2];
-	const char *ptr;
+	const unsigned char *ptr;
 	int id;
 
 	str[1] = 0;
@@ -64,20 +64,28 @@ int WriteRcFile(const char *filename)
 		fprintf(file, " %d, \"", id);
 		id++;
 
-		ptr = lang.strg[i].text;
+		ptr = (const unsigned char *)lang.strg[i].text;
 		while(*ptr)
 		{
 			switch (*ptr)
 			{
 				case 0xd:
 				case 0xa:
-					fprintf(file, "\\r");
+					fprintf(file, "\\r\\n");
 					if (*(ptr + 1))
 					{
 						fprintf(file, "\";\n");
 						fprintf(file, " %d, \"", id);
 						id++;
 					}
+					break;
+
+				case 0xFE:
+					fprintf(file, "\\r");
+					break;
+
+				case 0xFF:
+					fprintf(file, "\\n");
 					break;
 
 				case '\\':
@@ -97,7 +105,7 @@ int WriteRcFile(const char *filename)
 					fprintf(file, str);
 					break;
 			}
-            ptr++;
+			ptr++;
 		}
 
 		lang.strg[i].count = id - lang.strg[i].count;
@@ -105,8 +113,8 @@ int WriteRcFile(const char *filename)
 	}
 
 	for (i = 0; i < lang.maxCnt; i++)
-		fprintf(file, " %s, \"%d,%d\";\n", 
-				lang.strg[i].name, 
+		fprintf(file, " %s, \"%d,%d\";\n",
+				lang.strg[i].name,
 				lang.strg[i].id, lang.strg[i].count);
 
 	fprintf(file, "}\n");
