@@ -310,6 +310,22 @@ code SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			multiboot header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gmb_magic			DD 1BADB002h
+gmb_flags			DD 00010001h
+gmb_checksum			DD 0			; calculated by grubimg
+gmb_header_addr		DD IMAGE_BASE
+gmb_load_addr		DD 0			; calculated by grubimg
+gmb_load_end_addr	DD 0			; calculated by grubimg
+gmb_bss_end_addr		DD 0			; calculated by grubimg
+gmb_entry_addr		DD 0			; calculated by grubimg
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CalcCrc
 ;
 ;		DESCRIPTION:	Calculate CRC for a byte

@@ -320,6 +320,7 @@ PAGE
 init_paging	PROC near
 	mov ax,system_data_sel
 	mov es,ax
+;
 	call init_flat_dir
 	call map_dir
 ;

@@ -572,8 +572,8 @@ LoadStart:
 	sub edi,ecx
 	and di,0F000h
 	push edi
-	call LoadAdapter
 	push ecx
+	call LoadAdapter
 	mov dx,3F2h
 	mov al,0
 	out dx,al

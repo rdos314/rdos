@@ -58,7 +58,7 @@ load_srcs = BOOTVECT.ASM LOAD.ASM BOOT.ASM
 load_objs = $(load_srcs:.ASM=.OBJ)
 load_exes = LOAD.EXE
 
-grubload_srcs = GRUB32.ASM	GRUBLOAD.ASM
+grubload_srcs = GRUB32.ASM      GRUBLOAD.ASM    	
 grubload_objs = $(grubload_srcs:.ASM=.OBJ)
 grubload_exes = GRUBLOAD.EXE
 
@@ -249,7 +249,7 @@ HDIMG.EXE : $(hdimg_objs)
 
 GRUBIMG.EXE : $(grubimg_objs)
     tlink @&&!
-	$(prot_opt) +
+	$(link_opt) +
 	$(grubimg_objs)
 	GRUBIMG
 	GRUBIMG;
