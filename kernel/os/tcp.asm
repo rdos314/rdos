@@ -2912,6 +2912,7 @@ wait_for_tcp_connection	Proc far
 	LeaveSection ds:tcp_section
 ;
 	WaitForSignal
+	mov ds:tcp_owner,0
 	EnterSection ds:tcp_section
 	cmp ds:tcp_state,STATE_ESTAB
 	jb wait_tcp_fail
@@ -3016,12 +3017,14 @@ open_tcp_create:
 	call SendSegment
 ;
 	WaitForSignal
+	mov ds:tcp_owner,0
 	EnterSection ds:tcp_section
 	cmp ds:tcp_state,STATE_ESTAB
 	jne open_tcp_fail
 	LeaveSection ds:tcp_section
 
 open_tcp_handle:
+	mov ds:tcp_owner,0
 	mov dx,ds
     mov ax,TCP_HANDLE
 	mov cx,SIZE tcp_handle_seg
@@ -3814,6 +3817,7 @@ read_tcp_wait:
 	mov ds:tcp_owner,ax
 	LeaveSection ds:tcp_section
 	WaitForSignal
+	mov ds:tcp_owner,0
 	pop edi
 	pop ecx
 	pop eax

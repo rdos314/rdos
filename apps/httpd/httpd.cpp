@@ -61,17 +61,18 @@ void THttpSocketServer::HandleSocket()
 		}
 		while (count == 512);
 
-		TFile file("z:\\index.htm");
+		FSocket->Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=1>");
+		FSocket->Write("<title>Document ONE</title>");
+		FSocket->Write("<h1>RDOS web-server</h1>");
+		FSocket->Write("Dynamic reload demo");
 
-		if (file.IsOpen())
-		{
-			do
-			{
-				count = file.Read(Buf, 512);
-				FSocket->Write(Buf, count);
-			}
-			while (count);
-		}
+		TDateTime time;
+		char str[80];
+
+		sprintf(str, "Nuvarande tid är %4d-%02d-%02d %02d.%02d.%02d,%02d",
+						time.GetYear(), time.GetMonth(), time.GetDay(),
+						time.GetHour(), time.GetMin(), time.GetSec(), time.GetMilliSec());
+		FSocket->Write(str);
 		FSocket->Push();
 	}
 }
