@@ -245,6 +245,7 @@ GetThreadContext Proc near
 	test edx,10000h
 	jz gtcFail
 ;
+    fnop
 	UserGate get_thread_tss_nr
 	jc gtcFail
 ;
@@ -391,6 +392,7 @@ SetThreadContext Proc near
 	test edx,10000h
 	jz stcFail
 ;
+    fnop
 	UserGate get_thread_tss_nr
 	jc stcFail
 ;

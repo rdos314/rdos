@@ -1258,12 +1258,59 @@ math5	DB 'ST(5)=  ',0
 math6	DB 'ST(6)=  ',0
 math7	DB 'ST(7)=  ',0
 
+zero    DB 'Zero                                            ',0
+nan     DB 'NAN                                             ',0
+empty   DB 'EMPTY                                           ',0
+
+; ax = tag word
+
 write_math	PROC near	
 	WriteAsciiz
-	finit
+	mov cl,al
+	and cl,3
+	jz write_math_norm
+;
+    cmp cl,1
+    je write_math_zero
+;
+    cmp cl,2
+    je write_math_nan
+
+write_math_empty:
+    push es
+    mov di,cs
+    mov es,di
+    mov di,OFFSET Empty
+    WriteAsciiz
+    call NewLine
+    pop es
+    ret
+
+write_math_nan:
+    push es
+    mov di,cs
+    mov es,di
+    mov di,OFFSET nan
+    WriteAsciiz
+    call NewLine
+    pop es
+    ret
+
+write_math_zero:
+    push es
+    mov di,cs
+    mov es,di
+    mov di,OFFSET zero
+    WriteAsciiz
+    call NewLine
+    pop es
+    ret
+
+write_math_norm:	
 	fld tbyte ptr gs:[si]
 	push es
 	push ax
+;
 	mov ax,kdebug_data_sel
 	mov es,ax
 	mov di,OFFSET op_in_text
@@ -1284,6 +1331,7 @@ write_math	ENDP
 WriteCoproc	Proc near
 	mov ax,cs
 	mov es,ax
+	finit
 	mov dx,gs:math_tag
 	mov ax,gs:math_status
 	shr ax,3
@@ -1291,36 +1339,120 @@ WriteCoproc	Proc near
 	and cl,7
 	add cl,cl
 	ror dx,cl
+	mov edi,cr0
+	test di,4
+	jz write_real_math
+;
+	movzx si,cl
+	mov ax,si
+	shl ax,2
+	add si,ax
+	add si,OFFSET math_st0
+	jmp write_math_do
+
+write_real_math:
+    mov si,OFFSET math_st0
+
+write_math_do:
 	mov ax,dx
-	mov si,OFFSET math_st0
 	mov di,OFFSET math0
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st1
+    cmp si,OFFSET math_st7
+    jne write_inc_st1
+;
+    mov si,OFFSET math_st0
+    jmp write_st1
+
+write_inc_st1:
+    add si,10
+
+write_st1:
 	mov di,OFFSET math1
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st2
+    cmp si,OFFSET math_st7
+    jne write_inc_st2
+;
+    mov si,OFFSET math_st0
+    jmp write_st2
+
+write_inc_st2:
+    add si,10
+
+write_st2:
 	mov di,OFFSET math2
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st3
+    cmp si,OFFSET math_st7
+    jne write_inc_st3
+;
+    mov si,OFFSET math_st0
+    jmp write_st3
+
+write_inc_st3:
+    add si,10
+
+write_st3:
 	mov di,OFFSET math3
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st4
+    cmp si,OFFSET math_st7
+    jne write_inc_st4
+;
+    mov si,OFFSET math_st0
+    jmp write_st4
+
+write_inc_st4:
+    add si,10
+
+write_st4:
 	mov di,OFFSET math4
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st5
+    cmp si,OFFSET math_st7
+    jne write_inc_st5
+;
+    mov si,OFFSET math_st0
+    jmp write_st5
+
+write_inc_st5:
+    add si,10
+
+write_st5:
 	mov di,OFFSET math5
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st6
+    cmp si,OFFSET math_st7
+    jne write_inc_st6
+;
+    mov si,OFFSET math_st0
+    jmp write_st6
+
+write_inc_st6:
+    add si,10
+
+write_st6:
 	mov di,OFFSET math6
 	call write_math
+;
 	ror ax,2
-	mov si,OFFSET math_st7
+    cmp si,OFFSET math_st7
+    jne write_inc_st7
+;
+    mov si,OFFSET math_st0
+    jmp write_st7
+
+write_inc_st7:
+    add si,10
+
+write_st7:
 	mov di,OFFSET math7
 	call write_math
 	ret

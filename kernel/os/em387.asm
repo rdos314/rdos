@@ -1825,6 +1825,7 @@ EmFldl2e	Endp
 ConstPi		DW	0C235h,	02168h,	0DAA2h,	0C90Fh,	4000h
 
 EmFldpi	Proc near
+        int 3
 	mov eax,dword ptr cs:ConstPi
 	mov edx,dword ptr cs:ConstPi+4
 	mov cx,word ptr cs:ConstPi+8

@@ -875,7 +875,6 @@ math_emulate_fpu:
 	jmp math_done
 
 math_real_fpu:
-	clts
 	mov ax,thread_sel
 	mov ds,ax
 		assume ds:thread_seg
@@ -885,6 +884,7 @@ math_real_fpu:
 	mov ds,ax
 		assume ds:system_seg
 	mov ax,math_tss
+	clts
 	cmp ax,bx
 	je math_done
 ;
@@ -896,15 +896,13 @@ math_real_fpu:
 	push bx
 		assume ds:tss_seg
 	mov bx,OFFSET math_control
-	db 66h
-	fsave [bx]
+	db 9Bh, 66h, 0DDh, 37h          ;	32-bit fsave [bx]
 	pop bx
 
 math_reload:
 	mov ds,bx
 	mov bx,OFFSET math_control
-	db 66h
-	frstor [bx]
+	db 9Bh, 66h, 0DDh, 27h          ;	32-bit frstor [bx]
 
 math_done:
 	pop ds

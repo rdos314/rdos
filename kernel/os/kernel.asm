@@ -408,6 +408,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 init:
+    mov eax,cr0
+    or al,22h
+    mov cr0,eax
+;
 	call ZeroRam
 	call MarkupRam
 ;
