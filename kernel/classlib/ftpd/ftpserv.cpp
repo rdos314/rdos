@@ -157,6 +157,118 @@ int TFtpSocketServer::OpenDataConnection(long IP, int port)
 
 /*##########################################################################
 #
+#   Name       : TFtpSocketServer::Write
+#
+#   Purpose....: Write character to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Write(char ch)
+{
+	char str[2];
+
+	str[0] = ch;
+	str[1] = 0;
+
+	if (FDataSocket)
+		FDataSocket->Write(str, 1);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::Write
+#
+#   Purpose....: Write string to data socket
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::Write(const char *str)
+{
+	int size = strlen(str);
+
+	if (FDataSocket)
+		FDataSocket->Write(str, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServer::WriteLong
+#
+#   Purpose....: Write number to standard output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFtpSocketServer::WriteLong(long value)
+{
+	char str[4];
+	int tmp;
+	int use = FALSE;
+
+	tmp = value / 1000000000;
+	if (tmp)
+	{
+		use = TRUE;
+		sprintf(str, "%2d", tmp);
+	}
+	else
+		strcpy(str, "  ");
+	Write(str);
+	Write(" ");
+	value = value % 1000000000;
+
+	tmp = value / 1000000;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+	{
+		if (tmp)
+		{
+			use = TRUE;
+			sprintf(str, "%3d", tmp);
+		}
+		else
+			strcpy(str, "   ");
+	}
+	Write(str);
+	Write(" ");
+	value = value % 1000000;
+
+	tmp = value / 1000;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+	{
+		if (tmp)
+		{
+			use = TRUE;
+			sprintf(str, "%3d", tmp);
+		}
+		else
+			strcpy(str, "   ");
+	}
+	Write(str);
+	Write(" ");
+	value = value % 1000;
+
+	tmp = value;
+	if (use)
+		sprintf(str, "%03d", tmp);
+	else
+		sprintf(str, "%3d", tmp);
+	Write(str);
+}
+
+/*##########################################################################
+#
 #   Name       : TFtpSocketServer::Quit
 #
 #   Purpose....: Quit session

@@ -20,42 +20,49 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ftpserv.h
-# Ftp socket server class
+# list.h
+# List command class
 #
 ########################################################################*/
 
-#ifndef _FTPSERV_H
-#define _FTPSERV_H
+#ifndef _LIST_H
+#define _LIST_H
 
-#include "str.h"
-#include "socket.h"
-#include "langstr.h"
+#include "cmd.h"
+#include "cmdfact.h"
+#include "direntry.h"
 
-class TFtpSocketServer : public TSocketServer
+class TListFactory : public TCommandFactory
 {
 public:
-	TFtpSocketServer();
-	~TFtpSocketServer();
+	TListFactory();
+	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-	virtual void HandleSocket();
+protected:
+};
 
-    void Write(char ch);
-    void Write(const char *str);
-    void WriteLong(long value);
+class TListCommand : public TCommand
+{
+public:
+	TListCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TListCommand();
 
-	int VerifyUser();
-	int OpenDataConnection(long IP, int port);
-	void Quit();
+	virtual void Execute(char *param);
 
-	void Reply(TLangString *Msg);
+protected:
+	void WriteHeader(TString &str);
+	void WriteFooter();
 
-	TString User;
-	TString Pass;
-	TString CurrDir;
+	void Add(TString &path);
+	void WriteEntry(const TDirEntryData &entry);
+	void WriteEntry();
 
-	TSocket *FDataSocket;
+	TDirList FFileList;
+	TDirList FDirList;
+
+	int FFileCount;
+	int FDirCount;
+	long FTotalSize;
 };
 
 #endif

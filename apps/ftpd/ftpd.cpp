@@ -39,6 +39,7 @@
 #include "pwd.h"
 #include "syst.h"
 #include "port.h"
+#include "list.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -117,6 +118,7 @@ void cdecl main()
 	TPwdFactory *pwd = new TPwdFactory;
 	TSystFactory *syst = new TSystFactory;
 	TPortFactory *port = new TPortFactory;
+	TListFactory *list = new TListFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);
