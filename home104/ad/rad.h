@@ -40,6 +40,7 @@ public:
 
 	void SetDayRef();
 	void SetNightRef();
+	void SetWinterRef();
 	void SetRef(long double Temp);
 	void SetAmbient(long double rel);
 	long double GetRef();

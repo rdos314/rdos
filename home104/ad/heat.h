@@ -48,6 +48,9 @@ public:
 	void EnableEpTop();
 	void DisableEpTop();
 
+	void EpExclusiveHotWater();
+	void SharedHotWater();
+
 	void StartCirc();
 	void StopCirc();
 	int IsCircStarted();
@@ -89,6 +92,7 @@ private:
 	int FCircOn;
 	int FEpTopEnabled;
 	long double FEpLimit;
+	int FEpExclusiveHotWater;
 };
 
 #endif

@@ -56,6 +56,7 @@ THeat::THeat()
 	FCircOn = FALSE;
 
 	FEpTopEnabled = FALSE;
+	FEpExclusiveHotWater = FALSE;
 	FEpLimit = 55.0;
 
 	Start("HEAT", 0x2000);
@@ -252,7 +253,7 @@ void THeat::UpdateHeat()
 		}
 	}
 	else
-		if (!IsVpStarted())
+		if (!IsVpStarted() || IsEpStarted())
 			WriteVpValve(0);
 }
 
@@ -497,6 +498,36 @@ void THeat::DisableEpTop()
 
 /*##########################################################################
 #
+#   Name       : THeat::EpExclusiveHotWater
+#
+#   Purpose....: EP is used exclusively to make hot water
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::EpExclusiveHotWater()
+{
+	FEpExclusiveHotWater = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::SharedHotWater
+#
+#   Purpose....: Shared (EP & VP) to make hot water
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::SharedHotWater()
+{
+	FEpExclusiveHotWater = FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : THeat::UpdateEp
 #
 #   Purpose....: Update EP temp
@@ -528,29 +559,35 @@ void THeat::Update()
 	if (FEpValve > 0x70000000)
 		WriteEpValve(0);
 
-	if (IsEpStarted())
-		FEpPending = TRUE;
-
-	if (FEpValve > 0x40000000)
-		FEpPending = TRUE;
-
-	if (FEpPending)
+	if (FEpExclusiveHotWater)
 	{
-		if (FEpTemp < 39.0)
+		WriteVpValve(0);
+
+		if (FEpTemp < 55.0)
 			StartEp();
 
-		if (FEpTemp > 47.0)
-		{
-			FEpStart = TRUE;
+		if (FEpTemp > 65.0)
+			StopEp();
+		else
+			if (FEpPending)
+				StartEp();
+	}
+	else
+	{
+		if (IsEpStarted())
+			FEpPending = TRUE;
 
-//			if (FEpTopEnabled)
-//			{
-//				StopVp();
-//				if (IsVpStarted())
-//					ToggleVpLine();
-//			}
-//			else
+		if (FEpValve > 0x40000000)
+			FEpPending = TRUE;
+
+		if (FEpPending)
+		{
+			if (FEpTemp < 39.0)
+				StartEp();
+
+			if (FEpTemp > 47.0)
 			{
+				FEpStart = TRUE;
 
 				if (FVpValve > 0x40000000)
 				{
@@ -565,21 +602,22 @@ void THeat::Update()
 					StopEp();
 				}
 			}
+			else
+				if (!IsEpStarted())
+					StartVp();
+
+			if (FEpStart)
+				if (!IsVpStarted())
+					StartEp();
+
 		}
 		else
-			StartVp();
-
-		if (FEpStart)
-			if (!IsVpStarted())
-				StartEp();
-
-	}
-	else
-	{
-		if (FEpTemp < 42.0)
 		{
-			FEpPending = TRUE;
-			StartVp();
+			if (FEpTemp < 42.0)
+			{
+				FEpPending = TRUE;
+				StartVp();
+			}
 		}
 	}
 }

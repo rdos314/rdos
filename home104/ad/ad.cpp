@@ -56,6 +56,7 @@ long double MotMax;
 
 int HeatStartCount;
 int HeatStopCount;
+int WinterRef;
 
 void UpdateTime()
 {
@@ -362,7 +363,12 @@ void UpdateFuzzy()
 			}
 
 			if (night)
-				radiator[i]->SetNightRef();
+			{
+				if (tv[0] < 0.0)
+					radiator[i]->SetWinterRef();
+				else
+					radiator[i]->SetNightRef();
+			}
 			else
 				radiator[i]->SetDayRef();
 
@@ -471,15 +477,20 @@ void UpdateFuzzy()
 
 			heat->WriteCircValve(fval);
 
-			if (night)
-				heat->EnableEpTop();
-			else
-				heat->DisableEpTop();
+//			if (night)
+//				heat->EnableEpTop();
+//			else
+//				heat->DisableEpTop();
 
 			if (tv[0] > 5.0)
 				heat->SetEpLimit(55.0);
 			else
 				heat->SetEpLimit(65.0);
+
+			if (tv[0] < 0.0)
+				heat->EpExclusiveHotWater();
+			else
+				heat->SharedHotWater();
 
 			RdosSetCursorPosition(8, 20);
 			sprintf(str, "MOT %6.2Lf %6.2Lf", MotLast, fval);

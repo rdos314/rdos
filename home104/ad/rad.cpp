@@ -133,6 +133,22 @@ void TRadiator::SetNightRef()
 
 /*##########################################################################
 #
+#   Name       : TRadiator::SetWinterRef
+#
+#   Purpose....: Set winter time (night) reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRadiator::SetWinterRef()
+{
+	FRefType = 2;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
 #   Name       : TRadiator::SetRef
 #
 #   Purpose....: Set reference temperature
