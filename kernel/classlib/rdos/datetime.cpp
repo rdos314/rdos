@@ -126,6 +126,7 @@ TDateTime::TDateTime(int Year, int Month, int Day)
 	FMin = 0;
 	FSec = 0;
 	FMilli = 0;
+	RecordToRaw();
 }
 
 /*##########################################################################
@@ -148,6 +149,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec)
 	FMin = Min;
 	FSec = Sec;
 	FMilli = 0;
+	RecordToRaw();
 }
 
 /*##########################################################################
@@ -170,6 +172,7 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 	FMin = Min;
 	FSec = Sec;
 	FMilli = Milli;
+	RecordToRaw();
 }
 
 /*##########################################################################
