@@ -237,6 +237,7 @@ wait_code_sel           EQU 8E0h
 anio_code_sel			EQU 8F0h
 
 ser_key_code_sel        EQU 900h
+ser_key_data_sel        EQU 908h
 
 dcf_code_sel			EQU 910h
 
