@@ -5755,15 +5755,15 @@ _RdosRemoveIniSection	Proc far
 ;
 	mov bx,[bp+6]
 	RemoveIniSection
-	jc risFail
+	jc rrisFail
 ;
 	mov ax,1
-	jmp risDone
+	jmp rrisDone
 
-risFail:
+rrisFail:
 	xor ax,ax
 
-risDone:
+rrisDone:
 	pop bx
 	pop bp
 	ret
