@@ -23,7 +23,7 @@ TPlanet::TPlanet(TGraphicDevice *dest, int radius)
 	int CR, CG, CB;
 
 	r = radius;
-	w = 2 * r + 1;
+	w = 2 * r + 2;
 	FBitmap = new TBitmapGraphicDevice(dest->GetBpp(), w, w);
 
 	FBitmap->SetLgopNone();

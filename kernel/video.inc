@@ -196,7 +196,8 @@ draw_rect_proc			DD ?
 ; IN  DX			b
 draw_ellipse_proc			DD ?
 
-v_section   	section_typ <>
+v_section   	    section_typ <>
+v_sprite_section    section_typ <>
 v_mode	    	DW ?
 v_width	    	DW ?
 v_height    	DW ?
@@ -225,5 +226,9 @@ v_sprite_pending	DB ?
 
 v_sprite_lines  	DW ?
 v_sprite_max_pos	DW ?
+
+v_sprite_show_size  DW ?
+v_sprite_show_x     DW ?
+v_sprite_show_y     DW ?
 
 video_api_struc	ENDS

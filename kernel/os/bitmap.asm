@@ -82,6 +82,7 @@ init_video_bitmap	Proc far
 	push di
 ;
 	InitSection es:v_section
+	InitSection es:v_sprite_section
 	mov es:v_usage_count,1
 	mov es:v_color,0
 	mov es:v_lgop,1
@@ -205,6 +206,7 @@ create_bitmap	Proc far
 	pop eax
 ;
 	InitSection es:v_section
+	InitSection es:v_sprite_section
 	mov es:v_usage_count,1
 	mov es:v_color,0
 	mov es:v_lgop,1

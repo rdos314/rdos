@@ -424,8 +424,8 @@ LgopMul	Proc near
 	push ax
 	push dx
 	push si
-	push di
 ;
+    push di
 	mov si,ax
 	mov di,es:[edi]
 ;
@@ -462,9 +462,10 @@ LgopMul	Proc near
 	and di,NOT 1Fh
 	or di,ax
 ;
+    mov dx,di
+    pop di
 	mov es:[edi],dx
 ;
-	pop di
 	pop si
 	pop dx
 	pop ax
@@ -611,6 +612,7 @@ set_pixel	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
+	EnterSection ds:v_sprite_section
 ;
     cmp cx,ds:v_x_min
     jl set_pixel_done
@@ -655,6 +657,7 @@ set_pixel_no_sprite:
 	call word ptr cs:[bx].LgopTab
 
 set_pixel_done:
+	LeaveSection ds:v_sprite_section
     add sp,4
     pop bp
 	pop edi
@@ -831,6 +834,13 @@ set_native	Proc far
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
 ;
+    cli
+	cmp ds:v_sprite_pending,1
+	je set_native_sprite_entered
+	EnterSection ds:v_sprite_section
+
+set_native_sprite_entered:
+    sti
     cmp dx,ds:v_y_min
     jl set_native_done
 ;
@@ -943,6 +953,13 @@ set_native_show_sprite:
     ShowSpriteLine
 
 set_native_done:
+    cli
+	cmp ds:v_sprite_pending,1
+	je set_native_sprite_left
+	LeaveSection ds:v_sprite_section
+
+set_native_sprite_left:
+    sti
     add sp,4
 	popad
 	pop es
@@ -974,6 +991,7 @@ set_rgb	Proc far
 	sub sp,4
 	mov [bp].curr_x,cx
 	mov [bp].curr_y,dx
+	EnterSection ds:v_sprite_section
 ;
     cmp dx,ds:v_y_min
     jl set_rgb_done
@@ -1071,6 +1089,7 @@ set_rgb_loop:
     ShowSpriteLine
 
 set_rgb_done:
+	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
 	pop es
@@ -1176,6 +1195,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 HollowLine	Proc near
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -1267,6 +1287,7 @@ hollow_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
 	ret
 HollowLine	Endp
 
@@ -1285,6 +1306,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push edi
@@ -1348,7 +1370,7 @@ filled_line_sprite_loop:
 	call word ptr cs:[bx].LgopTab
 	inc word ptr [bp].curr_x
 	add edi,2
-	loop filled_line_loop
+	loop filled_line_sprite_loop
 	jmp filled_line_sprite_done
 
 filled_line_sprite_lgop:
@@ -1382,6 +1404,7 @@ filled_line_done:
 	pop edi
 	pop cx
 	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
 	ret
 FilledLine	Endp
 
@@ -1401,6 +1424,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SplitLine	Proc near
+	EnterSection ds:v_sprite_section
 	push word ptr [bp].curr_x
 	push cx
 	push dx
@@ -1509,6 +1533,7 @@ split_line_done:
 	pop dx
 	pop cx
 	pop word ptr [bp].curr_x
+	LeaveSection ds:v_sprite_section
 	ret
 SplitLine	Endp
 
@@ -1537,6 +1562,7 @@ draw_mask_line	Proc far
 	mov bp,sp
 	sub sp,4	
 	mov [bp].curr_x,edx
+	EnterSection ds:v_sprite_section
 ;
     push ax
     mov ax,[bp].curr_y
@@ -1683,6 +1709,7 @@ draw_mask_line_show_sprite:
     ShowSpriteLine
 
 draw_mask_line_done:
+	LeaveSection ds:v_sprite_section
     add sp,4
 	popad
 	pop fs
@@ -1930,6 +1957,7 @@ draw_string_char_loop:
 	push esi
 	push edi
 ;
+	EnterSection ds:v_sprite_section
     mov cx,[bp].curr_y
     cmp cx,ds:v_y_min
     jl draw_string_line_next
@@ -1977,7 +2005,7 @@ draw_string_bit_next:
 	add edi,2
 	inc word ptr [bp].curr_x
 	sub cx,1
-	jz draw_string_line_next
+	jz draw_string_show_sprite
 ;
 	sub dh,1
 	jnz draw_string_bit_loop
@@ -1985,13 +2013,14 @@ draw_string_bit_next:
 	inc esi
 	jmp draw_string_line_loop
 
-draw_string_line_next:
+draw_string_show_sprite:
     cmp ds:v_sprite_count,0
-    jz draw_string_sprite_shown
+    jz draw_string_line_next
 ;
     ShowSpriteLine
 
-draw_string_sprite_shown:
+draw_string_line_next:
+	LeaveSection ds:v_sprite_section
     mov ax,[bp].ds_dest_x
     mov [bp].curr_x,ax
     inc word ptr [bp].curr_y
@@ -2020,6 +2049,7 @@ draw_string_none_char_loop:
 	push esi
 	push edi
 ;
+	EnterSection ds:v_sprite_section
     mov cx,[bp].curr_y
     cmp cx,ds:v_y_min
     jl draw_string_none_line_next
@@ -2080,6 +2110,7 @@ draw_string_none_line_next:
     ShowSpriteLine
 
 draw_string_none_sprite_shown:
+	LeaveSection ds:v_sprite_section
     mov ax,[bp].ds_dest_x
     mov [bp].curr_x,ax
     inc word ptr [bp].curr_y
@@ -2348,6 +2379,7 @@ line_bresen_sprite:
 	jmp line_bresen_dx_sprite_next
 
 line_bresen_dx_sprite_loop:
+	EnterSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2357,6 +2389,7 @@ line_bresen_dx_sprite_loop:
 	call word ptr cs:[bx].LgopTab
 	ShowSpriteLine
 	pop ax
+	LeaveSection ds:v_sprite_section
 ;
 	cmp cx,[bp].dl_x2
 	je line_done
@@ -2392,6 +2425,7 @@ line_bresen_dx_sprite_next:
 	jmp line_bresen_dx_sprite_loop
 
 line_bresen_dy_sprite_loop:
+	EnterSection ds:v_sprite_section
 	push ax
 	mov ax,1
 	HideSpriteLine
@@ -2401,6 +2435,7 @@ line_bresen_dy_sprite_loop:
 	call word ptr cs:[bx].LgopTab
 	ShowSpriteLine
 	pop ax
+	LeaveSection ds:v_sprite_section
 ;
 	cmp dx,[bp].dl_y2
 	je line_done
@@ -2568,12 +2603,14 @@ line_vert_sprite_loop:
     cmp dx,ds:v_y_max
     jg line_vert_sprite_next
 ;
+	EnterSection ds:v_sprite_section
     push ax
     mov ax,1
     HideSpriteLine
     pop ax
 	call word ptr cs:[bx].LgopTab
 	ShowSpriteLine
+	LeaveSection ds:v_sprite_section
 
 line_vert_sprite_next:
 	add edi,esi
