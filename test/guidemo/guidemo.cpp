@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "bitdev.h"
-#include "vbedev.h"
+#include "videodev.h"
 #include "planthr.h"
 
 #define FALSE	0
@@ -51,7 +51,7 @@ void RandomLgop(TGraphicDevice *dev)
             break;
 
         case 7:
-            dev->SetLgopInvAnd();
+			dev->SetLgopInvAnd();
 			break;
 
         case 8:
@@ -179,6 +179,29 @@ void Pattern3(TGraphicDevice *dev)
 		dev->DrawLine(0, 3 * i, dev->GetHeight() - 3 * i, dev->GetWidth());
 }
 
+void Pattern4(TGraphicDevice *dev)
+{
+	TBitmapGraphicDevice mono(1, 400, 100);
+	TFont font(24);
+
+	mono.SetLgopNone();
+	mono.SetFilledStyle();
+	mono.DrawEllipse(50, 50, 50, 50);
+	mono.SetLgopInv();
+	mono.DrawRect(40, 40, 60, 60);
+	mono.SetHollowStyle();
+	mono.SetLgopXor();
+	mono.DrawEllipse(50, 50, 20, 20);
+	mono.DrawRect(20, 20, 80, 80);
+	mono.DrawLine(0, 0, 100, 100);
+	mono.DrawLine(0, 100, 100, 0);
+	mono.SetFont(&font);
+	mono.DrawString(100, 75, "1-bit mono");
+
+	dev->SetLgopNone();
+	dev->Blit(&mono, 0, 0, 300, 300, 400, 100);
+}
+
 void TestAll(TGraphicDevice *dev)
 {
 	dev->SetLgopNone();
@@ -226,7 +249,7 @@ void cdecl main()
 
 	RdosWaitMilli(250);
 
-	vbe = new TVbeGraphicDevice(16, 800, 600);
+	vbe = new TVideoGraphicDevice(32, 800, 600);
 
 //	vbe->SetClipRect(100, 100, vbe->GetWidth() - 100, vbe-GetHeight() - 100);
 
@@ -270,6 +293,10 @@ void cdecl main()
 	RdosWaitMilli(5000);
 
 	Pattern3(vbe);
+	RdosWaitMilli(5000);
+
+	Pattern4(vbe);
+	RdosWaitMilli(5000);
 
 	font = new TFont(60);
 	vbe->SetFont(font);

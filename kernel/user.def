@@ -213,6 +213,7 @@ set_forecolor_nr			= 189
 set_backcolor_nr			= 190
 get_string_metrics_nr		= 193
 set_font_nr					= 194
+get_video_mode_nr           = 195
 draw_string_nr				= 197
 
 xms_handler_nr				= 198
@@ -234,7 +235,6 @@ draw_ellipse_nr				= 210
 create_bitmap_nr			= 211
 close_bitmap_nr				= 212
 blit_nr						= 213
-set_vbe_mode_nr				= 214
 open_font_nr				= 215
 close_font_nr				= 216
 create_string_bitmap_nr		= 217

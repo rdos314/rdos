@@ -1375,6 +1375,14 @@ GetStringMetrics        MACRO
 
 ;;;;;;;;;;; SCREEN, GRAPHICS MODE ;;;;;;;;;;
 
+;	IN  AX		bits / pixel
+;	IN  CX		x-resolution
+;	IN  DX		y-resolution
+;	OUT AX		Requested mode
+GetVideoMode      MACRO
+	UserGate get_video_mode_nr
+						ENDM
+
 ;	IN  AX		Requested mode
 ;	OUT AX		bits / pixel
 ;	OUT BX		bitmap handle
@@ -1388,19 +1396,6 @@ SetVideoMode      MACRO
 
 SetVgaMode      MACRO
 	UserGate set_vga_mode_nr
-						ENDM
-
-;	IN  AX		bits / pixel
-;	IN  CX		x-resolution
-;	IN  DX		y-resolution
-;	OUT AX		bits / pixel
-;	OUT BX		bitmap handle
-;	OUT CX		x-resolution
-;	OUT DX		y-resolution
-;	OUT SI		line size
-;	OUT	ES:EDI	video buffer
-SetVBEMode      MACRO
-	UserGate set_vbe_mode_nr
 						ENDM
 
 ;	IN  EAX           	RGB color

@@ -301,16 +301,16 @@ RdosLeaveSection	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RdosSetVBEMode
+;		NAME:			RdosSetVideoMode
 ;
-;		description:	int RdosSetVBEMode(int *BitsPerPixel, 
+;		description:	int RdosSetVideoMode(int *BitsPerPixel, 
 ;						int *xres, int *yres, int *linesize, void **buffer);
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosSetVBEMode
+	public RdosSetVideoMode
 
-RdosSetVBEMode	Proc
+RdosSetVideoMode	Proc
 	push ebp
 	mov ebp,esp
 	push bx
@@ -325,8 +325,11 @@ RdosSetVBEMode	Proc
 	mov cx,[edi]
 	mov edi,[ebp+16]
 	mov dx,[edi]	
-	UserGate set_vbe_mode_nr
-	jc set_vbe_fail
+	UserGate get_video_mode_nr
+	jc set_video_fail
+;
+    UserGate set_video_mode_nr
+    jc set_video_fail
 ;
 	push edi
 	mov edi,[ebp+8]
@@ -345,9 +348,9 @@ RdosSetVBEMode	Proc
 	mov eax,[ebp+24]
 	mov [eax],edi
 	movzx eax,bx
-	jmp set_vbe_done
+	jmp set_video_done
 
-set_vbe_fail:
+set_video_fail:
 	xor eax,eax
 	mov edi,[ebp+8]
 	mov [edi],eax
@@ -360,7 +363,7 @@ set_vbe_fail:
 	mov edi,[ebp+24]
 	mov [edi],eax
 
-set_vbe_done:
+set_video_done:
 	pop edi
 	pop esi
 	pop edx
@@ -368,7 +371,7 @@ set_vbe_done:
 	pop bx
 	pop ebp
 	ret 20
-RdosSetVBEMode	Endp
+RdosSetVideoMode	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

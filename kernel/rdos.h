@@ -26,7 +26,7 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
-int __stdcall RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
+int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
 void __stdcall RdosClearClipRect(int handle);
 void __stdcall RdosSetDrawColor(int handle, int color);

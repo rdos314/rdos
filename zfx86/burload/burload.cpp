@@ -2,7 +2,7 @@
 #include "rdos.h"
 #include "ymodem.h"
 
-TSerialDevice serial(2, 9600);
+TSerialDevice serial(1, 9600);
 
 void EchoUntilSilent(int MaxWait)
 {

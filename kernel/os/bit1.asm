@@ -3135,6 +3135,7 @@ line_bresen_dy_neg:
 	mov [bp].dl_dy,dx
 	mov word ptr [bp].dl_log_add_y,1
 	movzx ebx,ds:v_row_size
+	shl ebx,3
     mov [bp].dl_phys_add_y,ebx
 	jmp line_bresen_calc_inc
 
@@ -3143,6 +3144,7 @@ line_bresen_dy_pos:
 	mov [bp].dl_dy,dx
 	mov word ptr [bp].dl_log_add_y,-1
 	movzx ebx,ds:v_row_size
+	shl ebx,3
 	neg ebx
 	mov [bp].dl_phys_add_y,ebx
 
@@ -3454,7 +3456,6 @@ line_vert_do:
 	shl eax,3
 	mov esi,eax
 	imul edx
-	shl eax,3
 	mov edi,eax
 	add edi,ecx
 	mov cx,bx
@@ -3584,7 +3585,6 @@ draw_rect	Proc far
 	shl eax,3
 	mov esi,eax
 	imul edx
-	shl eax,3
 	mov edi,eax
 	add edi,ecx
 	pop dx

@@ -654,11 +654,12 @@ AddVideoMode	Proc near
 	mov ax,cs
 	mov es,ax	
 	mov ax,cx
+	mov bl,fs:vmi_bits_per_pixel
+	mov cx,fs:vmi_x_pixels
+	mov dx,fs:vmi_y_pixels
 	mov di,OFFSET init_flat_mode
 	RegisterVideoMode
 ;
-	mov cx,fs:vmi_x_pixels
-	mov dx,fs:vmi_y_pixels
 	call FindResolution
 	jnc add_video_found
 ;
@@ -1660,109 +1661,54 @@ page
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			SetVbeMode
+;		NAME:			VBE thread
 ;
-;		DESCRIPTION:	Set VBE mode
-;
-;		PARAMETERS:		AX		bits / pixel
-;						CX		x-resolution
-;						DX		y-resolution
-;
-;		RETURNS:		AX		bits / pixel
-;						BX		bitmap handle
-;						CX		x-resolution
-;						DX		y-resolution
-;						SI		line size
-;						ES:EDI	user buffer
+;		DESCRIPTION:	Init VBE modes
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_vbe_mode_name	DB 'Set VBE Mode',0
+vbe_thread_name	DB 'VBE',0
 
-set_vbe_mode	PROC far
-	push ds
-	push ax
-	push dx
-;
-	mov bx,ax
+vbe_thread	PROC far
+	call SetupPmEntry
 	mov ax,pc_video_data_sel
 	mov ds,ax
-	mov ax,ds:v_init_proc
-	or ax,ax
-	jnz set_vbe_mode_find
-;
-	push cx
-	push dx
-	call SetupPmEntry
 	call ds:v_init_proc
-	pop dx
-	pop cx
+	ret
+vbe_thread	ENDP
 
-set_vbe_mode_find:
-	call FindResolution
-	jc set_vbe_mode_fail
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
 ;
-	cmp bl,24
-	ja set_vbe_high
+;		NAME:			init_vbe_thread
 ;
-	cmp bl,16
-	ja set_vbe24
-
-set_vbe16:
-	mov dl,es:vr_flat16_flags
-	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe24
+;		DESCRIPTION:	Create initial VBE thread
 ;
-	mov ax,es:vr_flat16_mode
-	jmp set_vbe_mode_do
-
-set_vbe24:
-	mov dl,es:vr_flat24_flags
-	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe_high
+;		PARAMETERS:		
 ;
-	mov ax,es:vr_flat24_mode
-	jmp set_vbe_mode_do
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_vbe_high:
-	mov dl,es:vr_flat32_flags
-	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe_high_mode24
+init_vbe_thread	PROC far
+	push ds
+	push es
+	pusha
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
 ;
-	mov ax,es:vr_flat32_mode
-	jmp set_vbe_mode_do
-
-set_vbe_high_mode24:
-	mov dl,es:vr_flat24_flags
-	test dl, VIDEO_MODE_FLAGS_LFB
-	jz set_vbe_high_mode16
+	mov si,OFFSET vbe_thread
+	mov di,OFFSET vbe_thread_name
+	mov cx,500
+	mov ax,4
+	CreateThread
 ;
-	mov ax,es:vr_flat24_mode
-	jmp set_vbe_mode_do
-	
-set_vbe_high_mode16:
-	mov dl,es:vr_flat16_flags
-	test dl, VIDEO_MODE_FLAGS_LFB
-	stc
-	jz set_vbe_mode_fail
-;
-	mov ax,es:vr_flat16_mode
-
-set_vbe_mode_do:
-	add sp,4
-	SetVideoMode
-	clc
-	jmp set_vbe_mode_done
-
-set_vbe_mode_fail:
-	stc
-	pop dx
-	pop ax
-
-set_vbe_mode_done:
+	popa
+	pop es
 	pop ds
-	retf32
-set_vbe_mode	ENDP
+	ret
+init_vbe_thread	ENDP
 
 PAGE
 
@@ -1789,11 +1735,8 @@ init_vbe	PROC near
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET set_vbe_mode
-	mov di,OFFSET set_vbe_mode_name
-	xor dx,dx
-	mov ax,set_vbe_mode_nr
-	RegisterBimodalUserGate
+	mov di,OFFSET init_vbe_thread
+	HookInitTasking
 	ret
 init_vbe	Endp
 

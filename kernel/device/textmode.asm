@@ -928,6 +928,9 @@ init_text_mode	Proc near
 	mov ax,cs
 	mov es,ax	
 	mov ax,3
+	xor bl,bl
+	mov cx,80
+	mov dx,25
 	mov di,OFFSET init_mode3
 	RegisterVideoMode
 	ret

@@ -342,8 +342,11 @@ init_bit_mode	Proc near
 	mov ax,cs
 	mov es,ax	
 	mov ax,12h
+	xor bl,bl
+	mov cx,640
+	mov dx,480
 	mov di,OFFSET init_mode12
-	RegisterVideoMode
+;	RegisterVideoMode
 	ret
 init_bit_mode	Endp
 

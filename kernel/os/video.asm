@@ -46,6 +46,10 @@ video_mode_entry	STRUC
 mode_link		DW ?
 mode_nr			DW ?
 mode_create		DD ?
+mode_x_resol    DW ?
+mode_y_resol    DW ?
+mode_bpp        DB ?
+mode_resv       DB ?
 
 video_mode_entry	ENDS
 
@@ -88,6 +92,9 @@ page
 ;		DESCRIPTION:	Register a video mode
 ;
 ;		PARAMETERS:		AX		Mode
+;                       BL      BPP
+;                       CX      x-resolution
+;                       DX      y-resolution
 ;						ES:DI	Mode constructor
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -97,28 +104,145 @@ register_video_mode_name	DB 'Register Video Mode',0
 register_video_mode	PROC far
 	push ds
 	push es
-	push bx
-;
-	mov bx,es
 	push eax
+;
+	push es
+	push ax
 	mov ax,video_data_sel
 	mov ds,ax
 	mov eax,SIZE video_mode_entry
 	AllocateSmallGlobalMem
-	pop eax
+	pop ax
 	mov es:mode_nr,ax
 	mov word ptr es:mode_create,di
-	mov word ptr es:mode_create+2,bx
+	pop ax
+	mov word ptr es:mode_create+2,ax
+	mov es:mode_bpp,bl
+	mov es:mode_x_resol,cx
+	mov es:mode_y_resol,dx
 ;
-	mov bx,ds:v_list
-	mov es:mode_link,bx
+	mov ax,ds:v_list
+	mov es:mode_link,ax
 	mov ds:v_list,es
 ;
-	pop bx
+	pop eax
 	pop es
 	pop ds
 	ret
 register_video_mode	ENDP
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetVideoMode
+;
+;		DESCRIPTION:	Get video mode
+;
+;		PARAMETERS:		AX		bits / pixel
+;						CX		x-resolution
+;						DX		y-resolution
+;
+;       RETURNS:        AX      mode # or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_video_mode_name	DB 'Get Video Mode',0
+
+get_video_mode	PROC far
+    push ds
+    push es
+    push bx
+    push si
+    push di
+;
+    mov si,cx
+    add si,dx
+    xor di,di
+    xor ah,ah
+;
+	mov bx,video_data_sel
+	mov ds,bx
+	mov bx,ds:v_list
+
+get_video_loop:
+	or bx,bx
+	jz get_video_done
+;
+	mov es,bx
+;
+    mov bl,es:mode_bpp
+    or bl,bl
+    jz get_video_next
+;
+    push ax
+    mov ax,cx
+    sub ax,es:mode_x_resol
+    jnc get_video_x_ok
+;
+    neg ax
+
+get_video_x_ok:
+    mov bx,ax
+;
+    mov ax,dx
+    sub ax,es:mode_y_resol
+    jnc get_video_y_ok
+;
+    neg ax 
+
+get_video_y_ok:
+    add bx,ax
+    pop ax
+;
+    cmp bx,si
+    ja get_video_next
+    jne get_video_select
+;
+    cmp al,ah
+    je get_video_next
+    jb get_video_want_smaller
+
+get_video_want_larger:
+    cmp ah,es:mode_bpp
+    jc get_video_select
+    jmp get_video_next
+
+get_video_want_smaller:
+    cmp ah,es:mode_bpp
+    jc get_video_next
+;
+    cmp al,es:mode_bpp
+    jbe get_video_select
+    jmp get_video_next
+
+get_video_select:
+    mov ah,es:mode_bpp
+    mov si,bx
+    mov di,es
+
+get_video_next:
+	mov bx,es:mode_link
+	or bx,bx
+	jnz get_video_loop
+
+get_video_done:
+    xor ax,ax
+    or di,di
+    jz get_video_leave
+;
+    mov es,di
+    mov ax,es:mode_nr
+
+get_video_leave:
+    pop di
+    pop si
+    pop bx
+    pop es    
+    pop ds
+    retf32
+get_video_mode  Endp
 
 page
 	
@@ -2901,6 +3025,12 @@ init	PROC far
 	xor cl,cl
 	mov ax,register_video_mode_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_video_mode
+	mov di,OFFSET get_video_mode_name
+	xor dx,dx
+	mov ax,get_video_mode_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_video_mode
 	mov di,OFFSET set_video_mode_name

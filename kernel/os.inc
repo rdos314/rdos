@@ -1786,7 +1786,10 @@ GetCharMask	MACRO
 	OsGate get_char_mask_nr
 					ENDM
 
-;	AX		Mode nr
+;	IN  AX		Mode nr
+;	IN  BL		bits / pixel
+;	IN  CX		x-resolution
+;	IN  DX		y-resolution
 ;	ES:DI	Mode constructor
 RegisterVideoMode	MACRO
 	OsGate register_video_mode_nr

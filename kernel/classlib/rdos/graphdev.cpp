@@ -46,11 +46,14 @@
 ##########################################################################*/
 TGraphicDevice::TGraphicDevice(int bpp, int width, int height)
 {
-    FBpp = bpp;
-    FWidth = width;
-    FHeight = height;
+	FBpp = bpp;
+	FWidth = width;
+	FHeight = height;
 	FBitmapHandle = 0;
-	FColor = 0;
+	if (bpp == 1)
+		FColor = 0xFFFFFF;
+	else
+		FColor = 0;
 	FLgop = LGOP_NONE;
 	FFilledStyle = FALSE;
 }
@@ -59,7 +62,7 @@ TGraphicDevice::TGraphicDevice(int bpp, int width, int height)
 #
 #   Name       : TGraphicDevice::TGraphicDevice
 #
-#   Purpose....: Copy constructor for TGraphicDevice		                          
+#   Purpose....: Copy constructor for TGraphicDevice
 #
 #   In params..: dev		graphic device to alias
 #   Out params.: *
@@ -73,7 +76,10 @@ TGraphicDevice::TGraphicDevice(const TGraphicDevice &dev)
 	FHeight = dev.FHeight;
 	FRowSize = dev.FRowSize;
 	FLinear = dev.FLinear;
-	FColor = 0;
+	if (FBpp == 1)
+		FColor = 0xFFFFFF;
+	else
+		FColor = 0;
 	FLgop = LGOP_NONE;
 	FFilledStyle = FALSE;
 	if (dev.FBitmapHandle)
@@ -86,7 +92,7 @@ TGraphicDevice::TGraphicDevice(const TGraphicDevice &dev)
 #
 #   Name       : TGraphicDevice::~TGraphicDevice
 #
-#   Purpose....: Destructor for TGraphicDevice		                          
+#   Purpose....: Destructor for TGraphicDevice
 #
 #   In params..: *
 #   Out params.: *
@@ -103,7 +109,7 @@ TGraphicDevice::~TGraphicDevice()
 #
 #   Name       : TGraphicDevice::GetBpp
 #
-#   Purpose....: Get bits per pixel		                          
+#   Purpose....: Get bits per pixel
 #
 #   In params..: *
 #   Out params.: *
@@ -119,7 +125,7 @@ int TGraphicDevice::GetBpp()
 #
 #   Name       : TGraphicDevice::GetWidth
 #
-#   Purpose....: Get width                         
+#   Purpose....: Get width
 #
 #   In params..: *
 #   Out params.: *
