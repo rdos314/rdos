@@ -2884,15 +2884,7 @@ open_tcp_create:
 	inc eax
 	mov ds:tcp_send_next,eax
 	mov ds:tcp_state,STATE_SYN_SENT
-;
-	xor ecx,ecx
-	call CreateSegment
-	mov es:[di].tcp_flags, SYN
-	mov eax,ds:tcp_iss
-	Reverse
-	mov es:[di].tcp_seq,eax
-	call SendSegment
-;
+;	
 	ClearSignal
 	GetThread
 	mov ds:tcp_owner,ax
@@ -2903,6 +2895,15 @@ open_tcp_create:
 	mov ds:tcp_user_timeout,ax
 	or ds:tcp_pending,FLAG_WAIT
 	LeaveSection ds:tcp_section
+;
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	call SendSegment
+;
 	WaitForSignal
 	EnterSection ds:tcp_section
 	cmp ds:tcp_state,STATE_ESTAB

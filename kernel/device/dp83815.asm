@@ -369,6 +369,8 @@ ireGetTail:
 
 ireEmpty:
 	mov ds:RxList,edi
+    mov eax,cr3
+    mov cr3,eax
 ;
 	mov edx,edi
 	and dx,0F000h
@@ -987,7 +989,7 @@ GetBuffer	Proc far
 	add eax,ecx
 	cmp eax,64
 	jae gbSizeOk
-;
+
     mov eax,64
 
 gbSizeOk:	
@@ -1040,10 +1042,10 @@ Send	Proc far
 	stosw
 ;
 	add ecx,14
-	cmp ecx,64
-	jae sSizeOk
+;	cmp ecx,64
+;	jae sSizeOk
 ;
-    mov ecx,64
+;    mov ecx,64
 
 sSizeOk:
 
