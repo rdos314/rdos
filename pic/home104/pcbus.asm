@@ -87,8 +87,17 @@ WAIT:
     btfsc STATUS,Z
     goto WAIT
 ;
-    call Write24
-    goto WAIT
+	movf CMD,W
+	andlw 7
+	addwf PCL,F
+	goto WAIT      ; 0
+	goto WAIT      ; 1
+	goto Read24    ; 2
+	goto Write24   ; 3
+	goto WAIT      ; 4
+	goto WAIT      ; 5
+	goto WAIT      ; 6
+	goto WAIT      ; 7
 
 ;;;;;;;;;;
 ; Delay
@@ -185,6 +194,23 @@ BitDone:
     return
 
 ;;;;;;;;;;;;
+; InputBit
+;;;;;;;;;;;;
+
+InputBit:
+    call Delay
+    btfsc PORTA,4
+    bsf VAL,6
+;    
+    bsf PORTA,2
+    call Delay
+;
+    bcf PORTA,2
+    call Delay
+;
+    return
+
+;;;;;;;;;;;;
 ; Preamp
 ;;;;;;;;;;;;
 
@@ -205,11 +231,35 @@ PreampLoop:
     return
 
 ;;;;;;;;;;;;
-; UpdateCrc
+; UpdateOutCrc
 ;;;;;;;;;;;;
 
-UpdateCrc:	
+UpdateOutCrc:	
     movf VAL,W
+    andlw 1
+	movwf BITS
+	clrf TEMP
+	bcf STATUS,C
+	rlf CRC,F
+	rlf TEMP,W
+	xorwf BITS,W
+	btfsc STATUS,Z
+	return
+
+	movlw $26
+	xorwf CRC,F
+	return
+
+;;;;;;;;;;;;
+; UpdateInCrc
+;;;;;;;;;;;;
+
+UpdateInCrc:
+    movf VAL,W
+    movwf TEMP
+    rlf TEMP,F
+    rlf TEMP,F
+    rlf TEMP,W
     andlw 1
 	movwf BITS
 	clrf TEMP
@@ -236,7 +286,7 @@ Output6:
 
 OutDataLoop6:
     call OutputBit
-    call UpdateCrc
+    call UpdateOutCrc
     rrf VAL,F
     decf COUNT,F
     btfss STATUS,Z
@@ -264,7 +314,7 @@ OutCrcLoop6:
     return                                                  
 
 ;;;;;;;;;;;;
-; Output24
+; Write24
 ;;;;;;;;;;;;
 
 Write24:
@@ -279,7 +329,7 @@ OutByteLoop24:
 
 OutDataLoop24:
     call OutputBit
-    call UpdateCrc
+    call UpdateOutCrc
     rrf VAL,F
     decf COUNT,F
     btfss STATUS,Z
@@ -338,6 +388,55 @@ OutCrcLoop24:
     bcf VAL,0
     call OutputBit
     call Delay
+    return
+
+;;;;;;;;;;;;
+; Read24
+;;;;;;;;;;;;
+
+Read24:
+    clrf CRC
+    movlw 4
+    movwf CMDLEN
+
+InByteLoop24:
+    movlw 6
+    movwf COUNT
+    call ReadPort
+
+InDataLoop24:
+    call InputBit
+    call UpdateInCrc
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto InDataLoop24
+;
+    movf VAL,W
+    call WritePort
+;    
+    decf CMDLEN,F
+    btfss STATUS,Z
+    goto InByteLoop24
+;
+    call ReadPort
+    movlw 8
+    movwf COUNT
+
+InCrcLoop24:
+    call InputBit
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto InCrcLoop24
+;
+    movlw $A5
+    xorwf CRC,W
+    movlw 1
+    btfss STATUS,Z    
+    movlw 0
+    movwf VAL
+    call WritePort
     return
             
         .END

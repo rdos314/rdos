@@ -1427,29 +1427,12 @@ wr3_proc    Proc near
     shr eax,18
     and al,3Fh
     mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr4_proc
+    mov es:dqe_proc,OFFSET wr_check_proc
     clc
 
 wr3_done:
     ret
 wr3_proc    Endp
-
-wr4_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz wr4_done
-;    
-    mov eax,es:dqe_data
-    shr eax,18
-    and al,3Fh
-    mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr_check_proc
-    clc
-
-wr4_done:
-    ret
-wr4_proc    Endp
 
 wr_check_proc    Proc near
     mov al,es:dqe_val
@@ -1457,9 +1440,9 @@ wr_check_proc    Proc near
     jz wr_check_done
 ;    
     or es:dqe_stat,DQE_STAT_SUCCESS
-    stc
 
 wr_check_done:    
+    stc
     ret
 wr_check_proc    Endp
 
