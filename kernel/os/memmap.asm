@@ -76,6 +76,7 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 	extrn map_to_file:near
+	extrn sync_memmap:near
 
 PAGE
 
@@ -388,13 +389,31 @@ PAGE
 ;
 ;		NAME:			SyncOnePage
 ;
-;		DESCRIPTION:    DS:BX       Mapping handle
+;		DESCRIPTION:    BX			Map file
 ;                       ES:EDX      Page table entry
-;                       EDI
+;                       EDI			File offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SyncOnePage Proc near
+	push eax
+	push bx
+	push edx
+;
+	or bx,bx
+	jz sopDone
+;
+	test word ptr es:[edx],40h
+	jz sopDone
+;
+	shl edx,10
+	mov eax,edi
+	call sync_memmap
+
+sopDone:
+	pop edx
+	pop bx
+	pop eax
     ret
 SyncOnePage Endp
 
@@ -411,16 +430,12 @@ PAGE
 
 FreeView    Proc near
     push es
-    push eax
-    push bx
-    push ecx
-    push edx
-    push si
-    push edi
+	pushad
 ;
     mov si,bx
-    mov bx,ds:[si].map_file
-	add edi,ds:[si].view_offset
+	mov es,ds:[si].memmap_sel
+    mov bx,es:map_file
+	mov edi,ds:[si].view_offset
 	and di,0F000h
 	mov dx,ds:[si].memmap_sel
 	or dx,dx
@@ -472,12 +487,7 @@ fw_next:
 
 fw_done:
     clc
-    pop edi
-    pop si
-    pop edx
-    pop ecx
-    pop bx
-    pop eax    
+	popad
     pop es
     ret
 FreeView    Endp
@@ -503,11 +513,12 @@ UpdateView    Proc near
     push edi
 ;
     mov si,bx
-    mov bx,ds:[si].map_file
+	mov es,ds:[si].memmap_sel
+    mov bx,es:map_file
     or bx,bx
     jz uw_done
 ;       
-	add edi,ds:[si].view_offset
+	mov edi,ds:[si].view_offset
 	and di,0F000h
 	mov dx,ds:[si].memmap_sel
 	or dx,dx

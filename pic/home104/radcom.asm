@@ -15,6 +15,7 @@ TRISA:  .EQU 5
 TRISB:  .EQU 6
 
 NODEID:	.EQU $20
+DELAY_TICS:	.EQU 200
 
 W:      .EQU 0          ;Working
 F:      .EQU 1          ;File
@@ -46,12 +47,10 @@ T1:		.EQU $1A
 T2:		.EQU $1B
 TMRCNT	.EQU $1C
 CLKCNT	.EQU $1D
-STATE0	.EQU $1E
-STATE1	.EQU $1F
-BIT0	.EQU $20
-BIT1	.EQU $21
-FLREG0	.EQU $22
-FLREG1	.EQU $23
+STATE	.EQU $1E
+BIT		.EQU $1F
+FLREG	.EQU $20
+SEC		.EQU $21
 
 VAL0:	.EQU $28
 VAL1:	.EQU $29
@@ -86,19 +85,132 @@ RESET:		PAGE1
 			movlw $FF
 			movwf TEMP
 ;
-			movlw 16
+			movlw DELAY_TICS
 			movwf CLKCNT
 
-			clrf STATE0
-			clrf STATE1
-			clrf VAL0
-			clrf VAL1
+			clrf STATE
+			clrf SEC
+;
+			movlw 200
+			movwf VAL0
+			movwf VAL1
+;
 			clrf VAL2
-			clrf VAL3
+;
+			movlw $C0
+			movwf VAL3
+;
 			clrf VAL4
 			clrf VAL5
 			clrf VAL6
 			clrf VAL7
+			goto ILOOP
+
+SendRef0:	movlw 0
+			call Send0
+			return
+
+SendRef1:	movlw 0
+			call Send1
+			return
+
+RecTemp:	movlw 1
+			call Rec0
+			return
+
+RecMotor:	movlw 2
+			call Rec1
+			return
+
+SendTemp:	movlw 1
+			call Send1
+			return
+
+SendMotor:	movlw 2
+			call Send0
+			return
+
+SendInten:	movlw 3
+			call Send0
+			return
+
+HandlePend:
+			bcf SEC,7
+			movf SEC,W
+			incf SEC,F
+			addwf PCL,F
+			goto RecTemp		; 0
+			goto RecMotor		; 1
+			goto SendRef0		; 2
+			goto SendRef1		; 3
+			goto SendMotor	 	; 4
+			goto SendTemp		; 5
+			goto SendInten		; 6
+			return				; 7
+			return				; 8
+			return				; 9
+			return				; 10
+			return				; 11
+			return				; 12
+			return				; 13
+			return 				; 14
+			return				; 15
+			return				; 16
+			return				; 17
+			return				; 18
+			return				; 19
+			return				; 20
+			return				; 21
+			return				; 22
+			return				; 23
+			return 				; 24
+			return				; 25
+			return				; 26
+			return				; 27
+			return				; 28
+			return				; 29
+			return				; 30
+			return				; 31
+			return				; 32
+			return				; 33
+			return 				; 34
+			return				; 35
+			return				; 36
+			return				; 37
+			return				; 38
+			return				; 39
+			return				; 40
+			return				; 41
+			return				; 42
+			return				; 43
+			return 				; 44
+			return				; 45
+			return				; 46
+			return				; 47
+			return				; 48
+			return				; 49
+			return				; 50
+			return				; 51
+			return				; 52
+			return				; 53
+			return 				; 54
+			return				; 55
+			return				; 56
+			return				; 57
+			return				; 58
+			clrf SEC			; 59
+			return
+
+HandleSt:	movf STATE,W
+			addwf PCL,F
+			goto SetClk
+			goto ResClkOp
+			goto SetClk
+			goto ResClkReg
+			goto SetClk
+			goto ResClkVal
+			goto SetClkVal
+			goto ResClk
 
 ILOOP:		call POLLTIMER
 			btfss PORTA,0
@@ -249,96 +361,160 @@ LOOPH:		call POLLTIMER
 			goto LOOPH
 			goto ILOOP
 
-HANDLEST0:	movf STATE0,W
-			addwf PCL,F
-			goto SCLK0
-			goto RCLKOP0
-			goto SCLK0
-			goto RCLKREG0
+ResClk:		decf STATE,F
+			bcf PORTB,0
+			return
 
-SCLK0:		incf STATE0,F
+SetClk:		incf STATE,F
 			bsf PORTB,0
 			return
 
-RCLKOP0:	incf STATE0,F
-			btfss FLREG0,0
-			goto RCLKOPC
+OutFl:		btfss FLREG,0
+			goto OutFlRes
 
 			bsf PORTB,1
-			goto RCLKOPD
+			goto OutFlDone
 
-RCLKOPC:	bcf PORTB,1
-RCLKOPD:	rrf FLREG0,F
+OutFlRes:	bcf PORTB,1
+OutFlDone:	rrf FLREG,F
+			call DELAY
+			bcf PORTB,0
+			return
+
+ResClkOp:	incf STATE,F
 			movlw 3
-			movwf BIT0
+			movwf BIT
+			call OutFl
 			return
 
-RCLKREG0:	decf STATE0,F
-			decfsz BIT0,F
-			goto RCLKREGM
+ResClkReg:	decfsz BIT,F
+			goto ResClkRegMore
 ;
-			clrf STATE0
-			bcf PORTB,0
-			bcf PORTB,3
+			movlw 8
+			movwf BIT
+;
+			btfsc FLREG,0
+			goto ResClkSend
+;
+			movlw 7
+			movwf STATE
+			clrf VAL
+			goto ResClk
+
+ResClkSend:
+			incf STATE,F
+			movf INDF,W
+			movwf FLREG
+			call OutFl
 			return
 
-RCLKREGM:	btfss FLREG0,0
-			goto RCLKREGC
-
-			bsf PORTB,1
-			goto RCLKREGD
-
-RCLKREGC:	bcf PORTB,1
-RCLKREGD:	rrf FLREG0,F
+ResClkRegMore:
+			decf STATE,F
+			call OutFl
 			return
 
-HANDLEST1:	movf STATE1,W
-			addwf PCL,F
-			goto SETCLK1
-			goto RESCLK1
+ResClkVal:	decfsz BIT,F
+			goto ResClkValMore
+;
+			clrf STATE
+			clrf PORTB
+			return
 
-SETCLK1:	incf STATE1,F
+ResClkValMore:
+			decf STATE,F
+			call OutFl
+			return
+
+RecBit:		incf STATE,F
+			btfss PORTB,2
+			return
+			bsf VAL,7
+			return
+
+SetClkVal:	decfsz BIT,F
+			goto SetClkValMore
+;
+			call RecBit
+			movf VAL,W
+			movwf INDF
+;
+			clrf STATE
+			clrf PORTB
+			return
+
+SetClkValMore:
+			call RecBit
+			rrf VAL,F
 			bsf PORTB,0
-			return
-
-RESCLK1:	clrf STATE1
-			bcf PORTB,0
-			bcf PORTB,4
 			return
 			
 POLLTIMER:	decfsz CLKCNT,F
-			goto POLLTIM
+			return
 ;
-			movlw 16
+			movlw DELAY_TICS
 			movwf CLKCNT
 ;
+			btfsc SEC,7
+			goto HandlePend
+;
 			btfsc PORTB,3
-			call HANDLEST0
+			goto HandleSt
 ;
 			btfsc PORTB,4
-			call HANDLEST1
+			goto HandleSt
 
 POLLTIM:	btfss INTCON,2
 			return
 
 			bcf INTCON,2
-;
+
 			decfsz TMRCNT,F
 			return
 ;
-			movlw 16
+			movlw DELAY_TICS
 			movwf CLKCNT
 			
 			movlw 153
 			movwf TMRCNT
 ;
-			movlw 0
-			movwf FLREG0
-			bsf FLREG0,7
-			bsf PORTB,1
-;
-			bsf PORTB,3
-			incf VAL0,F
+			bsf SEC,7
+			return
+
+; W = register #
+Send0:		movwf FLREG
+			addlw VAL0
+			movwf FSR
+			clrf STATE
+			bsf FLREG,3
+			movlw %00001010
+			movwf PORTB
+			return
+
+Send1:		movwf FLREG
+			addlw VAL0
+			movwf FSR
+			clrf STATE
+			bsf FLREG,3
+			movlw %00010010
+			movwf PORTB
+			return
+
+Rec0:		movwf FLREG
+			addlw VAL0
+			movwf FSR
+			clrf STATE
+			bcf FLREG,3
+			movlw %00001000
+			movwf PORTB
+			return
+
+Rec1:		movwf FLREG
+			addlw VAL0
+			movwf FSR
+			clrf STATE
+			bcf FLREG,3
+			movlw %00010000
+			movwf PORTB
 			return
 
 DELAY:		return

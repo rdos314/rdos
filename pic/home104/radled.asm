@@ -39,6 +39,10 @@ REF		.EQU $16
 TEM0	.EQU $18
 TEM1	.EQU $19
 MOT		.EQU $1A
+REG		.EQU $1B
+VAL		.EQU $1C
+BIT		.EQU $1D
+INTEN	.EQU $1E
 
 
 	        .ORG 4
@@ -48,26 +52,28 @@ RESET:		PAGE1
 			movlw $18
 			movwf TRISA
 
-			movlw %11010010
+			movlw %11110010
 			movwf TRISB
 			PAGE0
 			clrf PORTA
-
-			call WAIT
-			call INITLED
 ;
 			clrf REF
 			clrf TEM0
 			clrf TEM1
 			clrf MOT
 ;
-LP:			call WRITEREF
+			movlw 12
+			movwf INTEN
+;
+			movlw 100
+			movwf MOT
+
+LP:			call Wait
+			call INITLED
+			call WRITEREF
 			call WRITETEM
 			call WRITEMOT
-			call WAIT
 			incf TEM0,F
-			btfsc STATUS,Z
-			incf TEM1,F
 			goto LP
 
 STOP:		goto STOP
@@ -134,7 +140,7 @@ INITLED:	movlw $C
 ;
 			movlw $A
 			call SENDBYTE
-			movlw 8
+			movf INTEN,W
 			call SENDBYTE
 			call LOADLED
 ;
@@ -232,25 +238,198 @@ WRITEMOT:	call DECMOT
 			call LOADLED
 			return
 
-WAIT:		btfss PORTB,7
-			goto WAIT
-
-WAITSC:		btfss PORTB,7
-			return
-
-			btfss PORTB,4
-			goto WAITSC
-;
-			incf REF,F
-			incf MOT,F
-
-WAITSS:		btfss PORTB,7
+WaitClk:
+WaitClkHi:	btfss PORTB,7
 			return
 
 			btfsc PORTB,4
-			goto WAITSS
-			goto WAITSC
+			goto WaitClk
+
+WaitClkLow:	btfss PORTB,7
+			return
+
+			btfss PORTB,4
+			goto WaitClkLow
+
+			return
+
+SetRef:		movf VAL,W
+			movwf REF
+			return
+
+SetMotor:	movf VAL,W
+			movwf MOT
+			return
+
+SetInten:	rrf VAL,F
+			rrf VAL,F
+			rrf VAL,F
+			rrf VAL,W
+			andlw $F
+			movwf INTEN
+			return
+
+SetVal:		movf REG,W
+			addwf PCL,F
+			goto SetRef		; 0
+			return			; 1
+			goto SetMotor	; 2
+			goto SetInten	; 3
+			return			; 4
+			return			; 5
+			return			; 6
+			return			; 7
+
+GetRef:		movf REF,W
+			movwf VAL
+			return
+
+GetTemp:	movf TEM0,W
+			movwf VAL
+			return
+
+GetMotor:	movf MOT,W
+			movwf VAL
+			return
+
+GetVal:		movf REG,W
+			addwf PCL,F
+			goto GetRef		; 0
+			goto GetTemp	; 1
+			goto GetMotor	; 2
+			return			; 3
+			return			; 4
+			return			; 5
+			return			; 6
+			return			; 7
 			
+Wait:		btfss PORTB,7
+			goto Wait
+;			
+			PAGE1
+			movlw %10110010
+			movwf TRISB
+			PAGE0
+;
+			clrf VAL
+			clrf REG
+
+			call WaitClk
+			btfss PORTB,5
+			goto WaitRec
+
+WaitSend:
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,0
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,1
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,2
+;
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,0
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,1
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,2
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,3
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,4
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,5
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,6
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf VAL,7
+
+			btfss PORTB,7
+			goto WaitEnd
+
+			call SetVal
+			goto WaitEnd
+
+WaitRec:
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,0
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,1
+
+			call WaitClk
+			btfsc PORTB,5
+			bsf REG,2
+;
+			call GetVal
+;
+			movlw 8
+			movwf BIT
+
+			btfss PORTB,7
+			goto WaitEnd
+
+WaitRecLoop:
+			btfss VAL,0
+			goto WaitRecReset
+
+			bsf PORTB,6
+			goto WaitRecShift
+
+WaitRecReset:
+			bcf PORTB,6
+
+WaitRecShift:
+			rrf VAL,F
+
+WaitRecHi:
+			btfss PORTB,7
+			goto WaitEnd
+
+			btfsc PORTB,4
+			goto WaitRecHi
+
+WaitRecLow:	
+			btfss PORTB,7
+			goto WaitEnd
+
+			btfss PORTB,4
+			goto WaitRecLow
+
+			decfsz BIT,F
+			goto WaitRecLoop
+
+WaitEnd:
+			PAGE1
+			movlw %11110010
+			movwf TRISB
+			PAGE0
+
+WaitHi:		btfss PORTB,7
+			return
+			goto WaitHi
+		
 DECODE:		clrf D1
 			clrf D2
 			movlw 100

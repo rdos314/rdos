@@ -1922,6 +1922,7 @@ map_to_file_do_first:
 	shr edi,10
 	mov eax,es:[esi]
 	or ax,807h
+	and al,NOT 40h
 	mov es:[edi],eax
 ;
 	LeaveSection ds:file_list_section
@@ -1961,7 +1962,6 @@ PAGE
 ;
 ;		PARAMETERS:		EAX			Offset within file
 ;						BX			File handle
-;						EDX			Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1972,6 +1972,55 @@ sync_memmap	Proc near
 	push es
 	pushad
 ;
+	mov ebp,eax
+	mov ax,FILE_HANDLE
+	DerefHandle
+	jc sync_memmap_done
+;
+	mov si,bx
+	mov al,[bx].file_handle_drive
+	mov edx,[bx].file_handle_pos
+	mov bx,[bx].file_handle_sel
+	or bx,bx
+	stc
+	jz sync_memmap_done
+;
+	mov ds,bx
+	test ds:file_attrib, FILE_ATTRIB_NOBUFFER
+	clc
+	jnz sync_memmap_done
+;
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov esi,ebp
+	mov cl,ds:file_dir_shift
+	shr esi,cl
+	shl si,2
+	mov ebx,ds:[si].file_entries
+	or ebx,ebx
+	clc
+	jz sync_memmap_done
+;
+	mov esi,ebp
+	mov cl,ds:file_entry_shift
+	shr esi,cl
+	shl si,2
+	and esi,0FFCh
+	mov edi,es:[ebx+esi]
+	or edi,edi
+	clc
+	jz sync_memmap_done
+;
+	push bx
+	mov ecx,1000h
+	mov edx,ebp
+	mov al,ds:file_drive
+	mov bx,ds
+	CallFileSystem write_file_block_proc
+	pop bx
+
+sync_memmap_done:
     popad
     pop es
     pop ds

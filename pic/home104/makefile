@@ -50,8 +50,11 @@ radled_objs		= RADLED.OBJ
 radcom_srcs		= RADCOM.ASM
 radcom_objs		= RADCOM.OBJ
 
+radfuzzy_srcs	= RADFUZZY.ASM
+radfuzzy_objs	= RADFUZZY.OBJ
+
 srcs =      $(serda_srcs) $(siodrive_srcs) $(siokeyb_srcs)	\
-			$(radled_srcs) $(radcom_srcs)
+			$(radled_srcs) $(radcom_srcs) $(radfuzzy_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 

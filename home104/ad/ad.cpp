@@ -19,6 +19,7 @@
 #include "videodev.h"
 #include "keyboard.h"
 #include "heat.h"
+#include "rad.h"
 
 
 #define FALSE	0
@@ -35,6 +36,7 @@ long double rv[4];
 TSample rsmin[4], rsmax[4];
 
 THeat *heat;
+TRadiator *radiator[16];
 
 void UpdateTime()
 {
@@ -212,7 +214,7 @@ void UpdateHeat()
 	sprintf(str, "VALVE %4.1Lf", heat->ReadEpValve());
 	RdosWriteString(str);
 
-	RdosSetCursorPosition(10, 0);
+	RdosSetCursorPosition(9, 20);
 
 	if (heat->IsVpStarted())
 		RdosWriteString("VP ON  ");
@@ -226,23 +228,72 @@ void UpdateHeat()
 void UpdateFuzzy()
 {
 	int val;
-	int chan;
 	long double fval;
-    char str[41];
+	int chan;
+	char str[41];
+	TDateTime time;
+	int hour;
+	int min;
+
+	RdosSetCursorPosition(11, 0);
+	RdosWriteString("TEMP ");
 
 	RdosSetCursorPosition(12, 0);
+	RdosWriteString("REF  ");
 
-	for (chan = 0; chan < 4; chan++)
+	RdosSetCursorPosition(13, 0);
+	RdosWriteString("MOT  ");
+
+	hour = time.GetHour();
+	min = time.GetMin();
+
+	if (hour >= 20)
 	{
-		if (RdosReadSerialVal(0x20, chan, &val))
+		hour = hour - 20;
+		fval = 20.0 - (long double)hour / 2.0 - (long double)min / 120.0;
+	}
+	else
+	{
+		if (hour >= 6)
 		{
-			fval = (long double)val / 0x7FFFFFFF * 100.0;
-			sprintf(str, "%d: %4.1Lf ", chan, fval);
+			if (hour < 10)
+			{
+				hour = hour - 6;
+				fval = 18.0 + (long double)hour / 2.0 + (long double)min / 120.0;
+			}
+			else
+				fval = 20.0;
 		}
 		else
-			sprintf(str, "%d: ---- ", chan);
+			fval = 18.0;
+	}
+
+	RdosSetCursorPosition(12, 5);
+	radiator[0]->SetRef(fval);
+	sprintf(str, "%4.1Lf ", fval);
+	RdosWriteString(str);
+
+	radiator[0]->SetIntensity(50.0 + lv * 25.0);
+
+	RdosSetCursorPosition(11, 5);
+	if (radiator[0]->IsOnline())
+	{
+		fval = radiator[0]->GetTemp();
+		sprintf(str, "%4.1Lf ", fval);
 		RdosWriteString(str);
 	}
+	else
+		RdosWriteString("---- ");
+
+	RdosSetCursorPosition(13, 5);
+	if (radiator[0]->IsOnline())
+	{
+		fval = radiator[0]->GetMotor();
+		sprintf(str, " %3.1Lf ", fval);
+		RdosWriteString(str);
+	}
+	else
+		RdosWriteString(" --- ");
 }
 
 void SecClear(TSample *sample)
@@ -402,7 +453,7 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 	switch (VirtualKey)
 	{
 		case 0x60:
-			RunUntil.AddHour(1);
+			RunUntil.AddHour(3);
 			heat->StartHeat(RunUntil);
 			break;
 
@@ -414,34 +465,6 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 
 void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
-}
-
-void DaProc(void *param)
-{
-	int i;
-	int channel;
-
-	for (channel = 0; channel < 8; channel++)
-		RdosWriteSerialVal(2, channel, 0x7FFFFFFF);
-
-	for (;;)
-	{
-
-		for (channel = 0; channel < 8; channel++)
-		{
-			for (i = 0; i <= 50; i++)
-			{
-				RdosWriteSerialVal(2, channel, 0x7FFFFFFF / 50 * i);
-				RdosWaitMilli(250);
-			}
-
-			for (i = 49; i >= 0; i--)
-			{
-				RdosWriteSerialVal(2, channel, 0x7FFFFFFF / 50 * i);
-				RdosWaitMilli(250);
-			}
-		}
-	}
 }
 
 void cdecl main()
@@ -456,6 +479,7 @@ void cdecl main()
 	RdosWaitMilli(250);
 
 	heat = new THeat;
+	radiator[0] = new TRadiator(0x20);
 
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;

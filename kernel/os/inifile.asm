@@ -49,6 +49,10 @@ ih_file_size    DD ?
 ih_mmap_handle	DW ?
 ih_name_sel     DW ?
 ih_name_size    DD ?
+ih_sect_base	DD ?
+ih_sect_size	DD ?
+ih_entry_base	DD ?
+ih_entry_size	DD ?
 
 ini_handle_seg	ENDS
 
@@ -202,6 +206,7 @@ LockIni	Proc near
 ;
 	mov ax,flat_data_sel
 	mov es,ax
+	xor eax,eax
 	mov edi,ds:[si].ih_base
 	mov ecx,ds:[si].ih_size
 	UserGateForce32 map_view_nr
@@ -933,6 +938,7 @@ goto_ini_section_name	DB 'Goto Ini Section', 0
 
 goto_ini_section	Proc near
     push ds
+	push es
     push eax
     push bx
     push ecx
@@ -987,6 +993,7 @@ gisDone:
     pop ecx
     pop bx
     pop eax
+	pop es
     pop ds
     ret
 goto_ini_section    Endp
@@ -1140,6 +1147,211 @@ read_ini32  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           GetEntrySize
+;
+;       DESCRIPTION:    Get required size of entry
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       FS:ESI      Var name
+;                       ES:EBP	    Buffer
+;
+;		RETURNS:		ECX			Required size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetEntrySize	Proc near
+	push ax
+    push esi
+    push ebp
+;
+	mov ecx,3
+
+gesVarLoop:
+    mov al,fs:[esi]
+    or al,al
+    je gesBufLoop
+;
+    inc esi
+    inc ecx
+    jmp gesVarLoop
+
+gesBufLoop:
+    mov al,es:[ebp]
+    or al,al
+    je gesSizeOk
+;    
+    inc ebp
+    inc ecx
+    jmp gesBufLoop
+
+gesSizeOk:
+    pop ebp
+    pop esi
+	pop ax
+	ret
+GetEntrySize	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           CacheEntryAttrib
+;
+;       DESCRIPTION:    Cache entry attributes
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       FS:ESI      Var name
+;                       ES:EBP	    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CacheEntryAttrib	Proc near
+	push ax
+	push ecx
+	push edi
+;
+    call GetIniFreeSize
+	mov edi,ds:[bx].ih_base
+	add edi,ds:[bx].ih_file_size
+	sub edi,ecx
+	dec edi
+	call GetEntrySize
+	add ecx,2
+	mov al,es:[edi]
+	cmp al,0Ah
+	jne ceaDone
+;
+	dec ecx
+	dec edi
+	mov al,es:[edi]
+	cmp al,0Dh
+	jne ceaDone
+;
+	dec ecx
+	dec edi
+
+ceaDone:
+	inc edi
+	mov ds:[bx].ih_entry_base,edi
+	mov ds:[bx].ih_entry_size,ecx
+;
+	pop edi
+	pop ecx
+	pop ax
+	ret
+CacheEntryAttrib	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           MoveForEntry
+;
+;       DESCRIPTION:    Move to make space for entry
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       FS:ESI      Var name
+;                       ES:EBP	    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MoveForEntry	Proc near
+    push es
+	push eax
+	push ecx
+	push esi
+	push edi
+;
+	mov edi,ds:[bx].ih_sect_base
+    add edi,ds:[bx].ih_sect_size
+    mov esi,ds:[bx].ih_base
+    add esi,ds:[bx].ih_file_size
+	cmp edi,esi
+	je mfeDone
+;
+    dec esi
+    mov ax,flat_data_sel
+    mov es,ax
+    mov eax,esi
+    sub esi,ecx
+    mov ecx,esi
+    sub ecx,edi
+    mov edi,eax
+    inc ecx
+    std
+    rep movs byte ptr es:[edi],es:[esi]
+    cld
+
+mfeDone:
+	pop edi
+	pop esi
+	pop ecx
+	pop eax
+	pop es
+	ret
+MoveForEntry	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           AddEntry
+;
+;       DESCRIPTION:    Add entry
+;
+;       PARAMETERS:     DS:BX       Ini handle data
+;                       FS:ESI      Var name
+;                       ES:EBP	    Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddEntry	Proc near
+	push ds
+	pushad
+;
+	mov edx,ds:[bx].ih_entry_base
+	mov ax,flat_data_sel
+	mov ds,ax
+;
+	mov ax,0A0Dh
+	mov ds:[edx],ax
+	inc edx
+	inc edx
+
+aeVarLoop:
+    mov al,fs:[esi]
+    or al,al
+    je aeBuf
+;
+	mov ds:[edx],al
+    inc esi
+	inc edx
+    jmp aeVarLoop
+
+aeBuf:
+	mov al,'='
+	mov ds:[edx],al
+	inc edx
+
+aeBufLoop:
+    mov al,es:[ebp]
+    or al,al
+    je aeFooter
+;    
+	mov ds:[edx],al
+    inc ebp
+    inc edx
+    jmp aeBufLoop
+
+aeFooter:
+	mov ax,0A0Dh
+	mov ds:[edx],ax
+;
+	popad
+	pop ds
+	ret
+AddEntry	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           WriteIni
 ;
 ;       DESCRIPTION:    Write ini var
@@ -1153,13 +1365,11 @@ read_ini32  Endp
 write_ini_name	DB 'Write Ini', 0
 
 write_ini	Proc near
-    int 3
     push ds
     push fs
     pushad
 ;
     mov ebp,edi
-    push ecx
     mov ax,ds
     mov fs,ax
 ;    
@@ -1185,82 +1395,29 @@ wiFindLoop:
     jc wiDone
 
 wiFindVar:
+	mov ds:[bx].ih_sect_base,edi
+	mov ds:[bx].ih_sect_size,ecx
     call FindIniKey
     jc wiAdd
 ;
     jmp wiDone
 
 wiAdd:
-    mov ecx,3
-    push esi
-    push ebp
-
-wiAddVarLoop:
-    mov al,fs:[esi]
-    or al,al
-    je wiAddBufLoop
-;
-    inc esi
-    inc ecx
-    jmp wiAddVarLoop
-
-wiAddBufLoop:
-    mov al,es:[ebp]
-    or al,al
-    je wiAddSizeOk
-;    
-    inc ebp
-    inc ecx
-    jmp wiAddBufLoop
-
-wiAddSizeOk:
-    pop ebp
-    pop esi
-;
-    mov eax,ecx
+	call CacheEntryAttrib
     call GetIniFreeSize
-    xchg eax,ecx
-    cmp eax,ecx
-    jae wiAddDo
+	cmp ecx,ds:[bx].ih_entry_size
+	jae wiSizeOk
 ;
-    sub ecx,eax
+    sub ecx,ds:[bx].ih_entry_size
+	neg ecx
     call GrowIni
     jmp wiFindLoop
 
-wiAddDo:
-    mov edx,ecx
-    call FindIniSection
-    jc wiDone
-;    
-    add edi,ecx
-    push es
-    mov ax,flat_data_sel
-    mov es,ax
-    mov esi,ds:[bx].ih_base
-    add esi,ds:[bx].ih_file_size
-    dec esi
-    mov eax,esi
-    sub esi,edx
-    mov ecx,esi
-    sub ecx,edi
-    jc wiSyncFile
-;    
-    mov edi,eax
-    inc ecx
-    std
-    rep movs byte ptr es:[edi],es:[esi]
-    cld
-
-wiSyncFile:
-    pop es
-;
-    push bx
-    mov bx,ds:[bx].ih_mmap_handle
-    SyncMapping
-    pop bx
+wiSizeOk:
+	call MoveForEntry
+	call AddEntry
 
 wiDone:
-    pop ecx
     pushf
     call UnlockIni
     popf
@@ -1268,7 +1425,6 @@ wiDone:
     popad
     pop fs
     pop ds
-    stc
     ret
 write_ini    Endp
 
