@@ -123,19 +123,92 @@ WriteSectorAlloc	Proc near
     push ax
     push ebx
     push cx
+    push esi
 ;
-    mov cx,2
+    int 3
+    mov esi,fs:bc_op_ads
+    mov es:[esi].le_alloc_state,55h
+;    
+    push ebx
+    mov cx,1
     CreateDiscSeq
+    mov ebx,fs:bc_op_handle
     ModifySeqSector
-    mov ebx,fs:bc_alloc_handle
+    PerformDiscSeq
+    pop ebx
+;
+    mov cx,1
+    CreateDiscSeq
     ModifySeqSector
     PerformDiscSeq
 ;    
+    mov es:[esi].le_alloc_state,0
+    mov cx,1
+    CreateDiscSeq
+    mov ebx,fs:bc_op_handle
+    ModifySeqSector
+    PerformDiscSeq
+;
+    pop esi
     pop cx
     pop ebx
     pop ax
 	ret
 WriteSectorAlloc	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteSectorFree
+;
+;		DESCRIPTION:	Write a sector & allocation table
+;
+;		PARAMETERS:		EBX     Sector handle
+;						FS		Free selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteSectorFree
+    
+WriteSectorFree	Proc near
+    push ax
+    push ebx
+    push cx
+    push esi
+;
+    int 3
+    mov esi,fs:bc_op_ads
+    mov es:[esi].le_free_state,55h
+;    
+    push ebx
+    mov cx,1
+    CreateDiscSeq
+    mov ebx,fs:bc_op_handle
+    ModifySeqSector
+    PerformDiscSeq
+    pop ebx
+;
+    mov cx,1
+    CreateDiscSeq
+    ModifySeqSector
+    PerformDiscSeq
+;    
+    mov es:[esi].le_free_state,0
+	mov es:[esi].le_type,0
+    mov cx,1
+    CreateDiscSeq
+    mov ebx,fs:bc_op_handle
+    ModifySeqSector
+    PerformDiscSeq
+;
+    pop esi
+    pop cx
+    pop ebx
+    pop ax
+	ret
+WriteSectorFree	Endp
 
 code	ENDS
 

@@ -65,14 +65,16 @@ drive_data_seg	ENDS
 
 block_sector_struc	STRUC
 
+bs_owner            DD ?
 bs_physical_sector	DW ?
-bs_type				DW ?
+bs_status			DB ?
 
 block_sector_struc	ENDS
 
 block_seg	STRUC
 
-bc_alloc_handle		DD ?
+bc_op_handle		DD ?
+bc_op_ads           DD ?
 bc_start_sector		DD ?
 bc_handle_ptr		DD ?
 bc_data_ptr			DD ?
@@ -93,16 +95,22 @@ logical_entry_struc	STRUC
 
 le_physical_sector	DW ?
 le_logical_entry	DW ?
-le_resv				DW ?
-le_type				DW ?
+le_owner_entry		DW ?
+le_owner_block      DB ?
+le_status			DB ?
 
 logical_entry_struc	ENDS
 
-LOG_ENTRY_DIR_DATA =	04C58h
-LOG_ENTRY_OBJECT =      0A6ADh
-LOG_ENTRY_DIR_ENTRY =	05A74h
-LOG_ENTRY_FILE_DATA =	0C4D5h
-LOG_ENTRY_ERASE =		02F5Ah
+LOG_ENTRY_DIR_DATA =	00010100b
+LOG_ENTRY_OBJECT =      00001010b
+LOG_ENTRY_DIR_ENTRY =	00000101b
+LOG_ENTRY_FILE_DATA =	00011100b
+LOG_ENTRY_ERASE =		00001011b
+
+LOG_STATUS_BEFORE_ALLOC = 11100000b
+LOG_STATUS_AFTER_ALLOC  = 11000000b
+LOG_STATUS_BEFORE_FREE  = 10000000b
+LOG_STATUS_AFTER_FREE   = 00000000b
 
 dir_entry_header_struc	STRUC
 

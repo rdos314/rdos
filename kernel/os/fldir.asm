@@ -46,9 +46,18 @@ code	SEGMENT byte public use16 'CODE'
 
     extrn WriteSector:near
 	extrn WriteSectorAlloc:near
+	extrn WriteSectorFree:near
+
+	extrn QueryDirEntrySector:near
+    extrn QueryObjectSector:near
+    extrn QueryDirDataSector:near
+    extrn QueryFileDataSector:near
+	
     extrn DirEntryLogToPhysSector:near
     extrn ObjectLogToPhysSector:near
     extrn DirDataLogToPhysSector:near
+    extrn FileDataLogToPhysSector:near
+    
     extrn AllocateSector:near
 	extrn AliasSector:near
 	extrn FreeSector:near
@@ -321,8 +330,10 @@ RedoDirEntry	Proc near
 	push fs
 	pushad
 ;
-	int 3
 	mov ebx,edx
+	call QueryDirEntrySector
+	jc rdeFail
+;
 	call DirEntryLogToPhysSector
 	jc rdeFail
 ;
@@ -369,11 +380,14 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FindDirInfo	Proc near
-	push cx
+	push ecx
 	push edi
 	push ebp
 
 fdiRedo:
+    call QueryDirEntrySector
+    jc fdiEnd
+;
     call DirEntryLogToPhysSector
 	jc fdiEnd
 ;
@@ -419,6 +433,7 @@ fdiSpaceLoop:
 	dec esi
 
 fdiCheck:
+    int 3
 	mov ebp,esi
 
 fdiRetry:
@@ -431,6 +446,7 @@ fdiRetry:
 	cmp cl,DIR_ENTRY_RESTRUCT
 	jne fdiNotRestruct
 ;
+    call UndoDirEntry
 	push edi
 	mov edi,esi
 
@@ -531,7 +547,7 @@ fdiFail:
 fdiEnd:
 	pop ebp
 	pop edi
-	pop cx
+	pop ecx
 	ret
 FindDirInfo	Endp
 
@@ -855,14 +871,15 @@ PAGE
 ;
 ;		DESCRIPTION:    Add entry to dir data sector
 ;
-;		PARAMETERS:		ESI         Object sector address
+;		PARAMETERS:		ECX         Owner logical sector
+;                       ESI         Object sector address
 ;                       EBP         Dir file entry
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddDirEntry	Proc near
     push fs
-    push ax
+    push eax
     push ebx
     push cx
     push edx
@@ -920,7 +937,7 @@ adeDone:
     pop edx
     pop cx
     pop ebx
-    pop ax
+    pop eax
     pop fs
     ret
 AddDirEntry Endp
@@ -945,7 +962,9 @@ AllocateDirObject	Proc near
     push ecx
     push edx
     push esi
+    push edi
 ;
+    mov edi,edx
     call ObjectLogToPhysSector
     jc adoDone
 ;
@@ -971,7 +990,10 @@ adoTake:
     cmp al,OBJECT_OK
     jne adoTakeNext
 ;
+    push ecx
+    mov ecx,edi
     call AddDirEntry
+    pop ecx
     jnc adoUnlock
 
 adoTakeNext:
@@ -984,7 +1006,10 @@ adoTakeThis:
     call AddObjectEntry
     jc adoUnlock
 ;
+    push ecx
+    mov ecx,edi
     call AddDirEntry
+    pop ecx
 
 adoUnlock:
     pushf
@@ -992,6 +1017,7 @@ adoUnlock:
     popf
 
 adoDone:
+    pop edi
     pop esi
     pop edx
     pop ecx
@@ -1053,6 +1079,10 @@ gdRedo:
 
 gdSpaceOk:	
 	pop ecx
+	mov ax,di
+	and ax,1FFh
+	mov fs:fds_info_offset,ax
+;
 	mov eax,es:[esi].fde_size
 	add eax,10000h
 	mov es:[edi].fde_size,eax
@@ -1096,7 +1126,8 @@ gdAllocObjectSector:
 	add edi,3
 
 gdMakeValid:
-	mov byte ptr es:[edi],DIR_ENTRY_OK	
+    mov al,es:[esi]
+	mov es:[edi],al	
 	mov ax,fs
 	or ax,ax
 	jz gdWrite
@@ -1175,7 +1206,9 @@ atdGrow:
     mov bx,fs
     call GrowDir
     pop bx
+    pushf
     UnlockSector
+    popf
     jnc atdRetry
     jmp atdDone
 
@@ -1310,6 +1343,404 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			UndoDirObject
+;
+;		DESCRIPTION:    Undo (free) dir object entries
+;
+;		PARAMETERS:		EDX			Logical object sector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UndoDirObject	Proc near
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    call ObjectLogToPhysSector
+    jc udoDone
+;
+    mov al,ds:drive_nr
+    LockSector
+;
+    mov cx,80h
+
+udoSectorLoop:    
+    mov edx,es:[esi]
+    cmp edx,-1
+    je udoNext
+;
+    and edx,0FFFFFFh
+    push edx
+    call DirDataLogToPhysSector
+    pop edx
+    jc udoNext
+;    
+    call FreeSector
+    jc udoNext
+;
+    mov dword ptr es:[esi],0
+    call WriteSectorFree
+
+udoNext:
+    add esi,4
+    loop udoSectorLoop
+;    
+    pop ebx
+    UnlockSector
+    clc
+
+udoDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    ret
+UndoDirObject   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UndoDirEntry
+;
+;		DESCRIPTION:    Undo dir entry
+;
+;		PARAMETERS:		EBX			Sector handle
+;                       ESI         Offset to dir info
+;
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UndoDirEntry	Proc near
+    push ebx
+    push ecx
+    push edx
+    push esi
+;    
+	mov ecx,es:[esi].fde_size
+    shr ecx,16
+    or ecx,ecx
+    jz udeDone
+;
+    add esi,OFFSET fde_valid
+
+udeLoop:
+    mov edx,es:[esi]
+    and edx,0FFFFFFh
+    call UndoDirObject
+    jc udeNext
+;
+    call FreeSector
+    jc udeNext
+;
+    mov dword ptr es:[esi],0
+    call WriteSectorFree
+
+udeNext:
+    add esi,4
+    loop udeLoop
+
+udeDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    ret
+UndoDirEntry   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoAddDirEntry
+;
+;		DESCRIPTION:    Add entry to dir data sector
+;
+;		PARAMETERS:		ESI         Object sector address
+;                       EBP         Dir entry logical sector 
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoAddDirEntry	Proc near
+    push fs
+    push ax
+    push ebx
+    push cx
+    push edx
+    push esi
+;
+    mov edx,es:[esi]
+    and edx,0FFFFFFh
+    call DirDataLogToPhysSector
+    jc radeDone
+;
+    mov al,ds:drive_nr
+    LockSector
+;
+    add esi,200h
+    mov cx,80h
+
+radeSectorLoop:    
+    sub esi,4
+    mov edx,es:[esi]
+    cmp edx,-1
+    je radeNext
+;
+	add esi,4
+	jmp radeTake
+
+radeNext:
+    loop radeSectorLoop
+
+radeTake:
+	mov edx,es:[esi]
+    cmp edx,-1
+    stc
+    jne radeUnlock
+;
+    mov es:[esi],ebp
+    mov byte ptr es:[esi+3],DIR_DATA_OK
+    call WriteSector
+    clc
+
+radeUnlock:
+    pushf    
+    UnlockSector
+    popf
+
+radeDone:
+    pop esi
+    pop edx
+    pop cx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+RedoAddDirEntry Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoAddObject
+;
+;		DESCRIPTION:    Add to dir object
+;
+;		PARAMETERS:		EDX			Logical object sector
+;                       EBP         Dir entry logical sector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoAddObject	Proc near
+    push ax
+    push ebx
+    push ecx
+    push edx
+    push esi
+;
+    call ObjectLogToPhysSector
+    jc raoDone
+;
+    mov al,ds:drive_nr
+    LockSector
+;
+    add esi,200h
+    mov cx,80h
+
+raoSectorLoop:    
+    sub esi,4
+    mov edx,es:[esi]
+    cmp edx,-1
+    jne raoTake
+;
+    loop raoSectorLoop
+
+raoTake:
+    mov al,es:[esi+3]
+    cmp al,-1
+    je raoTakeThis
+;
+    cmp al,OBJECT_OK
+    jne raoTakeNext
+;
+    call RedoAddDirEntry
+    jnc raoUnlock
+
+raoTakeNext:
+    add esi,4
+    test si,1FFh
+    stc
+    jz raoUnlock
+
+raoTakeThis:
+    call AddObjectEntry
+    jc adoUnlock
+;
+    call RedoAddDirEntry
+
+raoUnlock:
+    pushf
+    UnlockSector
+    popf
+
+raoDone:
+    pop esi
+    pop edx
+    pop ecx
+    pop ebx
+    pop ax
+    ret
+RedoAddObject   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoAddToDir
+;
+;		DESCRIPTION:    Add entry to directory
+;
+;		PARAMETERS:		BX			Dir selector
+;                       EDX         Dir entry logical sector
+;
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoAddToDir	Proc near
+    pushad
+;
+    int 3
+    mov ebp,edx
+
+ratdRetry:
+    mov edx,fs:fds_entry_sector
+    call DirEntryLogToPhysSector
+    jc ratdDone
+;    
+    mov al,ds:drive_nr
+    LockSector
+	add si,fs:fds_info_offset
+	mov ecx,es:[esi].fde_size
+    shr ecx,16
+    or ecx,ecx
+    jz ratdGrow
+;
+    lea edi,[esi].fde_valid
+    add edi,ecx
+    add ecx,ecx
+    add edi,ecx
+    sub edi,3
+;
+    mov edx,es:[edi]
+    and edx,0FFFFFFh
+    call RedoAddObject
+    jnc ratdUnlock
+
+ratdGrow: 
+    push bx
+    mov bx,fs
+    call GrowDir
+    pop bx
+    pushf
+    UnlockSector
+    popf
+    jnc ratdRetry
+    jmp ratdDone
+
+ratdUnlock:
+    pushf
+    UnlockSector
+    popf
+
+ratdDone:
+    popad
+    ret
+RedoAddToDir   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoDirEntries
+;
+;		DESCRIPTION:    Recreate directory entries
+;
+;		PARAMETERS:		FS			Dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoDirEntries	Proc near
+    push edi
+    push ebp
+;
+    mov edi,fs:ds_dir_ptr
+    mov ebp,edi
+    or edi,edi
+    jz rdeDone
+
+rdeLoop:
+    mov edx,es:[edi].fde_entry_sector
+    call RedoAddToDir
+;
+    mov edi,es:[edi].de_next
+    cmp edi,ebp
+    jne rdeLoop
+
+rdeDone:
+    pop ebp
+    pop edi
+    ret
+RedoDirEntries  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RedoFileEntries
+;
+;		DESCRIPTION:    Recreate file entries
+;
+;		PARAMETERS:		FS			Dir selector
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RedoFileEntries	Proc near
+    push edi
+    push ebp
+;
+    mov edi,fs:ds_file_ptr
+    mov ebp,edi
+    or edi,edi
+    jz rfeDone
+
+rfeLoop:
+    mov edx,es:[edi].ffe_entry_sector
+    call RedoAddToDir
+;
+    mov edi,es:[edi].de_next
+    cmp edi,ebp
+    jne rfeLoop
+
+rfeDone:
+    pop ebp
+    pop edi
+    ret
+RedoFileEntries  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RedoDirSel
 ;
 ;		DESCRIPTION:    Recreate directory selector
@@ -1327,6 +1758,9 @@ RedoDirSel	Proc near
 
 rdsRedo:
 	mov edx,fs:fds_entry_sector
+    call DirEntryLogToPhysSector
+    jc rdsDone
+;
     mov al,ds:drive_nr
     LockSector
 	add si,fs:fds_info_offset
@@ -1337,12 +1771,17 @@ rdsRedo:
 	call CheckDirInfoSpace
 	jnc upsSpaceOk
 ;
+    int 3
 	UnlockSector
 	call RedoDirEntry
 	jc rdsDone
 	jmp rdsRedo
 
-upsSpaceOk:	
+upsSpaceOk:
+    mov ax,di
+	and ax,1FFh
+	mov fs:fds_info_offset,ax
+;	
 	mov es:[edi].fde_size,0
 	mov eax,es:[esi].fde_time
 	mov es:[edi].fde_time,eax
@@ -1351,6 +1790,8 @@ upsSpaceOk:
 	mov es:[edi].fde_valid,DIR_ENTRY_RESTRUCT
 	call WriteSector
     UnlockSector
+    call RedoDirEntries
+    call RedoFileEntries
 	clc
 
 rdsDone:
@@ -1976,17 +2417,20 @@ delete_file	PROC far
 	call FindDirSel
 	jc dfDone
 ;
-	push ebx
-	mov ebx,edi
+	push edx
+	mov edx,edi
 	call FreeSector
-	pop ebx
+	pop edx
+	jc dfUnlock
 ;
 	mov es:[esi].fdd_valid,0
-	call WriteSector
+    call WriteSectorFree
+
+dfUnlock:
 	UnlockSector
 ;
 	inc fs:fds_deleted_entries
-	call UpdateDirSel
+;	call UpdateDirSel
 	clc
 
 dfDone:

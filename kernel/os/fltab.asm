@@ -80,8 +80,8 @@ aseSectorLoop:
 	xor esi,esi
 
 aseLoop:
-	mov ax,es:[ebx+esi].le_type
-	cmp ax,-1
+	mov al,es:[ebx+esi].le_status
+	cmp al,-1
 	jne aseNext
 ;
 	mov ax,es:[ebx+esi].le_physical_sector
@@ -93,10 +93,11 @@ aseLoop:
 	jne aseNext
 ;
 	add esi,ebx
+	mov fs:bc_op_ads,esi
 	sub edi,fs:bc_data_ptr
 	add edi,fs:bc_handle_ptr
 	mov edi,es:[edi]
-	mov fs:bc_alloc_handle,edi
+	mov fs:bc_op_handle,edi
 	clc
 	jmp aseDone
 
@@ -134,7 +135,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			CacheSectorArr
+;		NAME:			CacheBlock
 ;
 ;		DESCRIPTION:	Cache sector array in block
 ;
@@ -142,7 +143,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CacheSectorArr	Proc near
+    public CacheBlock
+    
+CacheBlock	Proc near
 	pushad
 ;
 	mov cx,ds:control_sectors
@@ -153,8 +156,8 @@ csaSectorLoop:
 	xor esi,esi
 
 csaLoop:
-	mov ax,es:[ebx+esi].le_type
-	or ax,ax
+	mov al,es:[ebx+esi].le_status
+	or al,al
 	jnz csaNotDeleted
 ;
 	mov ax,es:[ebx+esi].le_physical_sector
@@ -180,19 +183,20 @@ csaPop:
 	jmp csaNext
 
 csaNotDeleted:
-	cmp ax,-1
+	cmp al,-1
 	je csaDone
 ;
-	cmp ax,LOG_ENTRY_OBJECT
+    and al,1Fh
+	cmp al,LOG_ENTRY_OBJECT
 	je csaCache
 ;
-	cmp ax,LOG_ENTRY_DIR_DATA
+	cmp al,LOG_ENTRY_DIR_DATA
 	je csaCache
 ;
-	cmp ax,LOG_ENTRY_DIR_ENTRY
+	cmp al,LOG_ENTRY_DIR_ENTRY
 	je csaCache
 ;
-	cmp ax,LOG_ENTRY_FILE_DATA
+	cmp al,LOG_ENTRY_FILE_DATA
 	jne csaNext
 
 csaCache:
@@ -205,9 +209,9 @@ csaCache:
 ;
 	push edi
 	movzx edi,es:[ebx+esi].le_logical_entry
-	shl edi,2
+	shl edi,3
 	add edi,fs:bc_log_sector_ptr
-	mov es:[edi].bs_type,ax
+	mov es:[edi].bs_type,al
 	dec bp
 	mov es:[edi].bs_physical_sector,bp
 ;
@@ -240,7 +244,7 @@ csaCheckLast:
 csaDone:	
 	popad
 	ret
-CacheSectorArr	Endp
+CacheBlock	Endp
 
 PAGE
 
@@ -256,7 +260,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RedoBlock	Proc near
-	push gs
 	pushad
 ;
 	mov edx,ds:spare_sector
@@ -290,31 +293,33 @@ rbRelockLoop:
 	xor bp,bp
 
 rbLogLoop:
-	mov ax,es:[ebx].bs_type
-	cmp ax,LOG_ENTRY_OBJECT
+	mov al,es:[ebx].bs_type
+	cmp al,LOG_ENTRY_OBJECT
 	je rbWriteEntry
 ;
-	cmp ax,LOG_ENTRY_DIR_DATA
+	cmp al,LOG_ENTRY_DIR_DATA
 	je rbWriteEntry
 ;
-	cmp ax,LOG_ENTRY_DIR_ENTRY
+	cmp al,LOG_ENTRY_DIR_ENTRY
 	je rbWriteEntry
 ;
-	cmp ax,LOG_ENTRY_FILE_DATA
+	cmp al,LOG_ENTRY_FILE_DATA
 	je rbWriteEntry
 ;
 	mov es:[ebx].bs_type,-1
 	jmp rbLogNext
 
 rbWriteEntry:
-	mov es:[esi].le_type,ax
+	mov eax,dword ptr es:[ebx].bs_owner
+	mov dword ptr es:[esi].le_owner,eax	
+	mov es:[esi].le_status,al
 	mov ax,bp
 	inc ax
 	mov es:[esi].le_physical_sector,ax
 ;
 	push ebx
 	sub ebx,fs:bc_log_sector_ptr
-	shr ebx,2
+	shr ebx,3
 	mov es:[esi].le_logical_entry,bx
 	push esi
 	movzx esi,bp
@@ -328,7 +333,7 @@ rbWriteEntry:
 	push ecx
 	push esi
 	push edi
-	mov cx,es:[esi].le_type
+	movzx cx,es:[esi].le_type
 	movzx edx,es:[ebx].bs_physical_sector
 	mov es:[ebx].bs_physical_sector,bp
 	add edx,fs:bc_start_sector
@@ -369,7 +374,7 @@ rbWriteEntry:
 	mov esi,es:[edi]
 
 rbLogNext:
-	add ebx,4
+	add ebx,8
 	sub cx,1
 	jnz rbLogLoop
 ;
@@ -380,6 +385,22 @@ rbLogNext:
 	mov ebx,es:[ebx]
 	call WriteSector
 	pop ebx
+;
+    int 3
+    mov edx,ds:spare_sector
+	movzx eax,ds:block_sectors
+	add edx,eax
+	dec edx
+	mov al,ds:drive_nr
+	LockSector
+	mov al,fs:bc_logical_block
+	mov es:[esi].fc_logical_block,al
+	mov ax,fs:bc_version
+	inc ax
+	mov es:[esi].fc_version,ax
+	mov dword ptr es:[esi].fc_signature,FLASH_SIGN_OK
+	call WriteSector
+    UnlockSector
 ;
 	movzx eax,bp
 	mov edi,fs:bc_phys_sector_ptr
@@ -396,7 +417,6 @@ rbLogNext:
 	clc
 ;
 	popad
-	pop gs
 	ret
 RedoBlock	Endp
 
@@ -462,7 +482,8 @@ PAGE
 ;						FS			Block selector
 ;
 ;		RETURNS:		EDX			Physical sector
-;						AX			Entry type
+;						AL			Entry type
+;                       ECX         Owner
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -473,10 +494,11 @@ GetBlockSector	Proc near
 	jae gbeFail
 ;
 	movzx edi,bx
-	shl edi,2
+	shl edi,3
 	add edi,fs:bc_log_sector_ptr
-	mov ax,es:[edi].bs_type
-	or ax,ax
+	mov al,es:[edi].bs_status
+	mov ecx,es:[edi].bs_owner
+	or al,al
 	jz gbeFail
 ;
 	movzx edx,es:[edi].bs_physical_sector
@@ -503,6 +525,7 @@ PAGE
 ;
 ;		PARAMETERS:		FS			Block selector
 ;						AX			Entry type
+;                       ECX         Owner logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;						BX			Entry #
@@ -515,6 +538,8 @@ AllocateBlockSector	Proc near
 	push esi
 	push edi
 	push ebp
+;
+    mov edx,ecx
 
 absRetry:
 	mov cx,ds:data_sectors
@@ -536,8 +561,12 @@ absPhysLoop:
 	call AllocateSectorEntry
 	jc absDone
 ;
-	mov es:[ebx].bs_type,ax
-	mov es:[esi].le_type,ax
+    mov dword ptr es:[esi].le_owner,edx
+    mov es:[ebx].bs_owner,edx
+	mov es:[ebx].bs_status,al
+	or al,LOG_STATUS_BEFORE_ALLOC
+	mov es:[esi].le_status,al
+;	
 	mov eax,edi
 	sub eax,fs:bc_phys_sector_ptr
 	shr eax,1
@@ -547,7 +576,7 @@ absPhysLoop:
 	inc ax
 	mov es:[esi].le_physical_sector,ax
 	sub ebx,fs:bc_log_sector_ptr
-	shr ebx,2
+	shr ebx,3
 	mov es:[edi],bx
 	mov es:[esi].le_logical_entry,bx
 ;
@@ -573,11 +602,11 @@ absBlankLoop:
 	clc
 	jz absDone
 ;
-	shl ebx,2
-	mov es:[ebx].bs_type,LOG_ENTRY_ERASE
+	shl ebx,3
+	mov es:[ebx].bs_status,LOG_ENTRY_ERASE
 ;
-	mov es:[esi].le_type,0
-	mov ebx,fs:bc_alloc_handle
+	mov es:[esi].le_status,0
+	mov ebx,fs:bc_op_handle
 	call WriteSector
 	jmp absRetry
 
@@ -590,7 +619,7 @@ absPhysNext:
 	jmp absDone
 
 absLogNext:
-	add ebx,4
+	add ebx,8
 	sub cx,1
 	jnz absLogLoop
 ;
@@ -617,6 +646,7 @@ PAGE
 ;		PARAMETERS:		FS			Block selector
 ;						AX			Entry type
 ;						BX			Entry #
+;                       ECX         Owner logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;
@@ -628,6 +658,8 @@ AliasBlockSector	Proc near
 	push esi
 	push edi
 	push ebp
+;
+    mov edx,ecx
 
 albsRetry:
 	mov cx,ds:data_sectors
@@ -641,7 +673,10 @@ albsPhysLoop:
 	call AllocateSectorEntry
 	jc albsDone
 ;
-	mov es:[esi].le_type,ax
+    mov es:[esi].le_owner,edx
+    or al,LOG_STATUS_BEFORE_ALLOC
+	mov es:[esi].le_status,al
+;
 	mov eax,edi
 	sub eax,fs:bc_phys_sector_ptr
 	shr eax,1
@@ -676,7 +711,7 @@ albsBlankLoop:
 ;
 	mov es:[esi].le_type,0
 	push ebx
-	mov ebx,fs:bc_alloc_handle
+	mov ebx,fs:bc_op_handle
 	call WriteSector
 	pop ebx
 	jmp albsRetry
@@ -727,7 +762,7 @@ AllocateBlockSel	Proc near
 	add eax,eax
 	AllocateSmallLinear
 	mov fs:bc_phys_sector_ptr,edx
-	add eax,eax
+	shl eax,2
 	AllocateSmallLinear
 	mov fs:bc_log_sector_ptr,edx
 ;
@@ -760,9 +795,14 @@ absLockLoop:
 	loop absLockLoop
 ;
 	mov edi,fs:bc_log_sector_ptr
-	movzx ecx,ds:data_sectors
-	mov eax,0FFFFh
-	rep stos dword ptr es:[edi]
+	mov cx,ds:data_sectors
+
+absLoop:
+    mov es:[edi].bs_owner,0
+    mov es:[edi].bs_physical_sector,0
+    mov es:[edi].bs_status,-1
+    add edi,8
+    loop absLoop
 ;
 	mov edi,fs:bc_phys_sector_ptr
 	movzx ecx,ds:data_sectors
@@ -778,9 +818,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			CacheBlock
+;		NAME:			InitBlock
 ;
-;		DESCRIPTION:	Cache a block
+;		DESCRIPTION:	Init a block
 ;
 ;		PARAMETERS:		EDX			Start sector of block
 ;
@@ -788,9 +828,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public CacheBlock
+	public InitBlock
 
-CacheBlock	Proc near
+InitBlock	Proc near
 	pushad
 ;
 	movzx eax,ds:block_sectors
@@ -803,7 +843,7 @@ CacheBlock	Proc near
 	mov eax,es:[esi].fc_signature
 	UnlockSector
 	cmp eax,FLASH_SIGN_OK
-	jne cbErase
+	jne ibErase
 ;
 	mov al,es:[esi].fc_logical_block
 	push ax
@@ -812,19 +852,19 @@ CacheBlock	Proc near
 	mov fs:bc_version,ax
 	pop ax
 	mov fs:bc_logical_block,al
-	call CacheSectorArr
 	clc
-	jmp cbDone
+    jmp ibDone
 
-cbErase:
+ibErase:
     call EraseBlock
     xor ax,ax
     mov fs,ax
+    stc
 
-cbDone:
+ibDone:
 	popad
 	ret
-CacheBlock	Endp
+InitBlock	Endp
 
 PAGE
 
@@ -958,6 +998,7 @@ PAGE
 ;		DESCRIPTION:	Allocate a sector in any block
 ;
 ;       PARAMETERS:     AX          Entry type
+;                       ECX         Owner logical sector
 ;
 ;       RETURNS:        EBX         Logical sector #
 ;                       EDX         Physical sector #
@@ -1027,6 +1068,7 @@ PAGE
 AliasSector	PROC near
 	push eax
 	push ebx
+	push ecx
 ;
     mov edx,edx
     shr ebx,16
@@ -1040,7 +1082,6 @@ AliasSector	PROC near
 	call AliasBlockSector
 	jnc alsOk
 ;
-	int 3
 	call RedoBlock
 	jc alsDone
 ;
@@ -1051,6 +1092,7 @@ alsOk:
     clc
 
 alsDone:
+    pop ecx
 	pop ebx
 	pop eax
 	ret
@@ -1065,26 +1107,26 @@ PAGE
 ;
 ;		DESCRIPTION:	Free a sector
 ;
-;       PARAMETERS:     EBX			Logical sector #
+;       PARAMETERS:     EDX			Logical sector #
+;
+;       RETURNS:        FS          Block for modify operation
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public FreeSector
 
 FreeSector	PROC near
-	push fs
 	pushad
 ;
-	push ebx
+    mov ebx,edx
 	shr ebx,16
 	call GetBlock
-	pop ebx
 	jc fsDone
 ;
-	movzx edi,bx
-	shl edi,2
+	movzx edi,dx
+	shl edi,3
 	add edi,fs:bc_log_sector_ptr
-	mov es:[edi].bs_type,0
+	mov es:[edi].bs_status,0
 	movzx edi,es:[edi].bs_physical_sector
 	add edi,edi
 	add edi,fs:bc_phys_sector_ptr
@@ -1103,19 +1145,21 @@ fsLoop:
 	jz fsNext
 ;
 	cmp ax,-1
+	stc
 	je fsDone
 ;
 	cmp bx,es:[esi+ebp].le_logical_entry
 	jne fsNext
 ;
-    push ebx
-	mov es:[esi+ebp].le_type,0
+    add esi,ebp
+    mov fs:bc_op_ads,esi
     mov ebx,edi
 	sub ebx,fs:bc_data_ptr
 	add ebx,fs:bc_handle_ptr
 	mov ebx,es:[ebx]
-	call WriteSector
-	pop ebx
+	mov fs:bc_op_handle,ebx
+	clc
+	jmp fsDone
 
 fsNext:
 	or cx,cx
@@ -1135,10 +1179,11 @@ fsCheckLast:
 	and ax,1FFh
 	cmp ax,fc_logical_block
 	jb fsLoop
+;
+    stc
 
 fsDone:	
 	popad
-	pop fs
 	ret
 FreeSector	Endp
 
@@ -1164,6 +1209,7 @@ GetRootSector	PROC near
 	push eax
 	push ebx
 	push ecx
+	push esi
 ;
 	xor bx,bx
 	call GetBlock
@@ -1173,15 +1219,23 @@ GetRootSector	PROC near
 	jc grsDone
 
 grsEntry:
+    push ecx
 	xor bx,bx
 	call GetBlockSector
+	pop ecx
 	jnc grsCheckEntry
 ;
+    xor ecx,ecx
 	mov ax,LOG_ENTRY_DIR_ENTRY
 	call AllocateBlockSector	
 	jc grsDone
 ;
-	mov ebx,fs:bc_alloc_handle
+    mov esi,fs:bc_op_ads
+    mov al,es:[esi].le_status
+    and al,1Fh
+    or al,LOG_STATUS_AFTER_ALLOC
+    mov es:[esi].le_status
+	mov ebx,fs:bc_op_handle
 	call WriteSector
 ;
     call InitRootDirEntry
@@ -1196,6 +1250,7 @@ grsCheckEntry:
 	clc
 
 grsDone:
+    pop esi
 	pop ecx
 	pop ebx
 	pop eax
@@ -1212,7 +1267,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Convert dir entry log sector to physical sector
 ;
-;		PARAMETERS:	    EDX         Logical sector
+;		PARAMETERS:	    ECX         Owner logical sector
+;                       EDX         Logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;
@@ -1224,7 +1280,10 @@ DirEntryLogToPhysSector Proc near
     push fs
     push ax
     push ebx
+    push ecx
+    push ebp
 ;
+    mov ebp,ecx
     mov ebx,edx
     shr ebx,16
     call GetBlock
@@ -1234,13 +1293,19 @@ DirEntryLogToPhysSector Proc near
     call GetBlockSector
     jc delpDone
 ;
-    cmp ax,LOG_ENTRY_DIR_ENTRY
+    cmp al,LOG_ENTRY_DIR_ENTRY
+    stc
+    jne delpDone
+;
+    cmp ebp,ecx
     stc
     jne delpDone
 ;
     clc
 
 delpDone:
+    pop ebp
+    pop ecx
     pop ebx
     pop ax
     pop fs
@@ -1256,7 +1321,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Convert object log sector to physical sector
 ;
-;		PARAMETERS:	    EDX         Logical sector
+;		PARAMETERS:	    ECX         Owner logical sector
+;                       EDX         Logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;
@@ -1268,7 +1334,10 @@ ObjectLogToPhysSector Proc near
     push fs
     push ax
     push ebx
+    push ecx
+    push ebp
 ;
+    mov ebp,ecx
     mov ebx,edx
     shr ebx,16
     call GetBlock
@@ -1278,13 +1347,19 @@ ObjectLogToPhysSector Proc near
     call GetBlockSector
     jc olpDone
 ;
-    cmp ax,LOG_ENTRY_OBJECT
+    cmp al,LOG_ENTRY_OBJECT
+    stc
+    jne olpDone
+;
+    cmp ebp,ecx
     stc
     jne olpDone
 ;
     clc
 
 olpDone:
+    pop ebp
+    pop ecx
     pop ebx
     pop ax
     pop fs
@@ -1300,7 +1375,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Convert dir data log sector to physical sector
 ;
-;		PARAMETERS:	    EDX         Logical sector
+;		PARAMETERS:	    ECX         Owner logical sector
+;                       EDX         Logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;
@@ -1312,7 +1388,10 @@ DirDataLogToPhysSector Proc near
     push fs
     push ax
     push ebx
+    push ecx
+    push ebp
 ;
+    mov ebp,ecx
     mov ebx,edx
     shr ebx,16
     call GetBlock
@@ -1322,13 +1401,19 @@ DirDataLogToPhysSector Proc near
     call GetBlockSector
     jc ddlpDone
 ;
-    cmp ax,LOG_ENTRY_DIR_DATA
+    cmp al,LOG_ENTRY_DIR_DATA
+    stc
+    jne ddlpDone
+;
+    cmp ebp,ecx
     stc
     jne ddlpDone
 ;
     clc
 
 ddlpDone:
+    pop ebp
+    pop ecx
     pop ebx
     pop ax
     pop fs
@@ -1344,7 +1429,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Convert file data log sector to physical sector
 ;
-;		PARAMETERS:	    EDX         Logical sector
+;		PARAMETERS:	    ECX         Owner logical sector
+;                       EDX         Logical sector
 ;
 ;		RETURNS:		EDX			Physical sector
 ;
@@ -1356,7 +1442,10 @@ FileDataLogToPhysSector Proc near
     push fs
     push ax
     push ebx
+    push ecx
+    push ebp
 ;
+    mov ebp,ecx
     mov ebx,edx
     shr ebx,16
     call GetBlock
@@ -1370,14 +1459,205 @@ FileDataLogToPhysSector Proc near
     stc
     jne fdlpDone
 ;
+    cmp ebp,ecx
+    stc
+    jne fdlpDone
+;
     clc
 
 fdlpDone:
+    pop ebp
+    pop eax
     pop ebx
     pop ax
     pop fs
     ret
 FileDataLogToPhysSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			QueryDirEntrySector
+;
+;		DESCRIPTION:	Query dir entry sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		ECX         Owner logical sector
+;                       
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public QueryDirEntrySector
+    
+QueryDirEntrySector Proc near
+    push fs
+    push ax
+    push ebx
+    push edx
+;
+    mov ebx,edx
+    shr ebx,16
+    call GetBlock
+    jc qdesDone
+;
+    mov bx,dx
+    call GetBlockSector
+    jc qdesDone
+;
+    cmp al,LOG_ENTRY_DIR_ENTRY
+    stc
+    jne qdesDone
+;
+    clc
+
+qdesDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+QueryDirEntrySector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			QueryObjectSector
+;
+;		DESCRIPTION:	Query object sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		ECX         Owner logical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public QueryObjectSector
+    
+QueryObjectSector Proc near
+    push fs
+    push ax
+    push ebx
+    push edx
+;
+    mov ebx,edx
+    shr ebx,16
+    call GetBlock
+    jc qosDone
+;
+    mov bx,dx
+    call GetBlockSector
+    jc qosDone
+;
+    cmp al,LOG_ENTRY_OBJECT
+    stc
+    jne qosDone
+;
+    clc
+
+qosDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+QueryObjectSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			QueryDirDataSector
+;
+;		DESCRIPTION:	Query dir data sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		ECX         Owner logical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public QueryDirDataSector
+    
+QueryDirDataSector Proc near
+    push fs
+    push ax
+    push ebx
+    push edx
+;
+    mov ebx,edx
+    shr ebx,16
+    call GetBlock
+    jc qddsDone
+;
+    mov bx,dx
+    call GetBlockSector
+    jc qddsDone
+;
+    cmp al,LOG_ENTRY_DIR_DATA
+    stc
+    jne qddsDone
+;
+    clc
+
+qddsDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+QueryDirDataSector Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			QueryFileDataSector
+;
+;		DESCRIPTION:	Query file data sector
+;
+;		PARAMETERS:	    EDX         Logical sector
+;
+;		RETURNS:		ECX         Owner logical sector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public QueryFileDataSector
+    
+QueryFileDataSector Proc near
+    push fs
+    push ax
+    push ebx
+    push edx
+;
+    mov ebx,edx
+    shr ebx,16
+    call GetBlock
+    jc qfdsDone
+;
+    mov bx,dx
+    call GetBlockSector
+    jc qfdsDone
+;
+    cmp ax,LOG_ENTRY_FILE_DATA
+    stc
+    jne qfdsDone
+;
+    clc
+
+qfdsDone:
+    pop edx
+    pop ebx
+    pop ax
+    pop fs
+    ret
+QueryFileDataSector Endp
 
 
 code	ENDS

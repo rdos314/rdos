@@ -52,6 +52,7 @@ code	SEGMENT byte public use16 'CODE'
 
     extrn EraseBlock:near
     extrn AllocateBlock:near
+    extrn InitBlock:near
 	extrn CacheBlock:near
 	extrn GetFreeBlockSectors:near
 
@@ -131,6 +132,7 @@ mount	PROC far
 	push edx
 	push edi
 ;
+    int 3
 	push ax
 ;
 	push ecx
@@ -192,7 +194,7 @@ mount_cache_loop:
     push es
 	mov ax,flat_sel
 	mov es,ax
-	call CacheBlock
+	call InitBlock
 	pop es
 	mov word ptr ds:[di],0
 ;	
@@ -216,7 +218,7 @@ mount_cache_check:
     mov ax,es:bc_version
     pop es
     cmp ax,fs:bc_version
-    jg mount_cache_save_this
+    jl mount_cache_save_this
 ;
     push es
     push edx
@@ -225,6 +227,7 @@ mount_cache_check:
     xor ax,ax
     mov fs,ax
     mov edx,es:bc_start_sector
+	mov ds:spare_sector,edx
     call EraseBlock
     FreeMem
     pop es
@@ -236,6 +239,7 @@ mount_cache_save_this:
     mov es,es:[bx]
     mov edx,es:bc_start_sector
     call EraseBlock
+	mov ds:spare_sector,edx
     FreeMem
     pop edx
     pop es
@@ -259,7 +263,7 @@ mount_cache_next:
 mount_init_loop:
     mov ax,es:[si]
     or ax,ax
-    jnz mount_init_next
+    jnz mount_init_cache
 ;
     push es
     mov ax,flat_sel
@@ -267,6 +271,15 @@ mount_init_loop:
     call AllocateBlock
     pop es
     mov es:[si],fs
+    jmp mount_init_next
+
+mount_init_cache:
+    push es
+    mov fs,ax
+	mov ax,flat_sel
+	mov es,ax
+	call CacheBlock
+	pop es
 
 mount_init_next:
     add si,2
