@@ -966,7 +966,7 @@ emtC0	DW OFFSET EmC0,					OFFSET EmC1
 emtC2	DW OFFSET EmRetNearN,			OFFSET EmRetNear
 emtC4	DW OFFSET EmLes,				OFFSET EmLds
 emtC6	DW OFFSET EmMoveByteImToMem,	OFFSET EmMoveWordImToMem
-emtC8	DW OFFSET EmulateError,			OFFSET EmulateError
+emtC8	DW OFFSET EmEnter,				OFFSET EmLeave
 emtCA	DW OFFSET EmulateError,			OFFSET EmRetFar
 emtCC	DW OFFSET EmInt3,				OFFSET EmInt
 emtCE	DW OFFSET EmulateError,			OFFSET EmIret

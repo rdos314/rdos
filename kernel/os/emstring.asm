@@ -178,6 +178,7 @@ DestByte	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz dest32
 ;
@@ -204,6 +205,7 @@ up32:
 	inc [bp].reg_edi
 
 done:
+	pop ax
 				ENDM
 
 DestWord	MACRO
@@ -212,6 +214,7 @@ DestWord	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz dest32
 ;
@@ -238,6 +241,7 @@ up32:
 	add [bp].reg_edi,2
 
 done:
+	pop ax
 				ENDM
 
 DestDword	MACRO
@@ -246,6 +250,7 @@ DestDword	MACRO
 	local done
 	local up32
 
+	push ax
 	test byte ptr [bp].em_flags,a32
 	jnz dest32
 ;
@@ -291,6 +296,7 @@ count32:
 	sub dword ptr [bp].reg_ecx,1
 
 done:
+	pop ax
 		ENDM
 
 CheckDone	MACRO
