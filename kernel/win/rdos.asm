@@ -628,7 +628,10 @@ _RdosRemoveWait	Endp
 	public _RdosCreateSignal
 
 _RdosCreateSignal	Proc far
+    push bx
 	CreateSignal
+	mov ax,bx
+	pop bx
 	ret
 _RdosCreateSignal	Endp
 

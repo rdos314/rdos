@@ -778,7 +778,10 @@ RdosRemoveWait	Endp
 	public RdosCreateSignal
 
 RdosCreateSignal	Proc
+    push bx
 	UserGate create_signal_nr
+	movzx eax,bx
+	pop bx
 	ret
 RdosCreateSignal	Endp
 
