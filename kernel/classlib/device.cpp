@@ -288,7 +288,6 @@ void TDevice::SaveProperty(const char *Name, long Value)
 ##########################################################################*/
 TDevice::~TDevice()
 {
-	Stop();
 	RemoveDevice();
 }
 
@@ -316,8 +315,6 @@ void TDevice::Init()
 	OnBusy = 0;
 	InsertDevice();
 	FOpen = LoadProperty("Open", FALSE);
-	FInstalled = TRUE;
-	FThreadRunning = FALSE;
 }
 
 /*##########################################################################
@@ -597,77 +594,3 @@ int TDevice::IsBusy() const
 {
 	return FBusy;
 }
-
-/*##########################################################################
-#
-#   Name       : TDevice::Stop
-#
-#   Purpose....: Stop thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::Stop()
-{
-	FInstalled = FALSE;
-	while (FThreadRunning)
-		RdosWaitMilli(250);
-}
-
-/*##########################################################################
-#
-#   Name       : TDevice::Start
-#
-#   Purpose....: Start thread
-#
-#   In params..: ThreadName     name of thread
-#                StackSize      size of stack
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::Start(const char *ThreadName, int StackSize)
-{
-	RdosCreateThread(ThreadStartup, ThreadName, this, StackSize);
-}
-
-/*##########################################################################
-#
-#   Name       : TDevice::Run
-#
-#   Purpose....: Run thread (from internal callback)
-#
-#   In params..: *
-#                *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::Run()
-{
-	if (!FThreadRunning)
-	{
-		FThreadRunning = TRUE;
-		Execute();
-		FThreadRunning = FALSE;
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TDevice::Execute
-#
-#   Purpose....: Default execute method
-#
-#   In params..: *
-#                *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::Execute()
-{
-}
-

@@ -593,7 +593,6 @@ receive_check_ok:
 	mov ax,ip_data_sel
 	mov ds,ax
 ;
-	int 3
 	mov bx,ds:ip_handle
 	push edi
 	lea edi,[di].ip_source

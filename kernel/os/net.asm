@@ -333,7 +333,7 @@ InsertAddress	Proc near
 	mov di,OFFSET prot_logical_addr
 	movzx cx,ds:p_logical_addr_len
 	rep movs byte ptr es:[di],fs:[si]
-	mov di,bp
+	mov si,bp
 	movzx cx,gs:addr_len
 	rep movs byte ptr es:[di],fs:[si]
 ;
@@ -1066,6 +1066,7 @@ PAGE
 ;
 ;	Parameters:		BX		protocol handle
 ;					ES		packet
+;                   FS      driver
 ;					EDI		source address offset
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1080,7 +1081,6 @@ add_net_source_address	Proc far
 	push edi
 	push bp
 ;
-	int 3
 	mov bp,fs
 	mov ds,bx
 	mov ax,es
@@ -1089,17 +1089,15 @@ add_net_source_address	Proc far
 	call FindAddress
 	jnc add_src_address_done
 ;
-	push fs
-	push esi
 	mov fs,bp
+	push esi
 	call fs:d_get_address
 	mov edi,esi
 	pop esi
-	pop fs
-;
 	call InsertAddress
 
 add_src_address_done:
+    pop bp
 	pop edi
 	pop esi
 	pop ax
