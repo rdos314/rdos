@@ -40,6 +40,11 @@ public:
     virtual void ShowMsg();
 
 protected:
+    void ShowIpData(unsigned char Protocol, const char *Msg, int Size);
+    void ShowSmp(const char *Msg, int Size);
+    void ShowArp(const char *Msg, int Size);
+    void ShowIp(const char *Msg, int Size);
+    void ShowUnknown(int DataType, const char *Msg, int Size);    
 	void ShowInitMsg(const char *Msg, int Size);
 	void ShowReqMsg(const char *Msg, int Size);
 	void ShowReplyMsg(const char *Msg, int Size);

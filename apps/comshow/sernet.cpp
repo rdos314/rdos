@@ -34,6 +34,21 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+struct TIpHeader
+{
+    char HdrVer;
+    char Tos;
+    short int Size;
+    short int Id;
+    short int Frags;
+    char Ttl;
+    char Protocol;
+    short int Checksum;
+    unsigned char Source[4];
+    unsigned char Dest[4];
+};
+
+
 /*##################  TSernetProtocolAnalyser::GetMsg ##########################
 *   Purpose....: Get next CBUS message	   					      	        #
 *   In params..: *                                                          #
@@ -127,6 +142,170 @@ int TSernetProtocolAnalyser::GetMsg()
 	return FALSE;
 }
 
+/*##################  TSernetProtocolAnalyser::ShowIpData ##########################
+*   Purpose....: Show IP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSernetProtocolAnalyser::ShowIpData(unsigned char Protocol, const char *Msg, int Size)
+{
+	char tempstr[100];
+	char ch;
+	int i;
+
+	sprintf(tempstr, "%d: ", Protocol);
+	Write(tempstr);
+
+	for (i = 0; i < Size; i++)
+	{
+		ch = *Msg;
+		sprintf(tempstr, "%04hX", ch);
+		tempstr[0] = tempstr[2];
+		tempstr[1] = tempstr[3];
+		tempstr[2] = ' ';
+		tempstr[3] = 0;
+		Write(tempstr);
+		Msg++;
+	}
+	Write("\r\n");
+
+}
+
+/*##################  TSernetProtocolAnalyser::ShowSmp ##########################
+*   Purpose....: Show SMP message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSernetProtocolAnalyser::ShowSmp(const char *Msg, int Size)
+{
+	char tempstr[100];
+	char ch;
+	int i;
+
+	Write("SMP: ");
+
+	for (i = 0; i < Size; i++)
+	{
+		ch = *Msg;
+		sprintf(tempstr, "%04hX", ch);
+		tempstr[0] = tempstr[2];
+		tempstr[1] = tempstr[3];
+		tempstr[2] = ' ';
+		tempstr[3] = 0;
+		Write(tempstr);
+		Msg++;
+	}
+	Write("\r\n");
+
+}
+
+/*##################  TSernetProtocolAnalyser::ShowArp ##########################
+*   Purpose....: Show ARP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSernetProtocolAnalyser::ShowArp(const char *Msg, int Size)
+{
+	char tempstr[100];
+	char ch;
+	int i;
+
+	Write("ARP: ");
+
+	for (i = 0; i < Size; i++)
+	{
+		ch = *Msg;
+		sprintf(tempstr, "%04hX", ch);
+		tempstr[0] = tempstr[2];
+		tempstr[1] = tempstr[3];
+		tempstr[2] = ' ';
+		tempstr[3] = 0;
+		Write(tempstr);
+		Msg++;
+	}
+	Write("\r\n");
+
+}
+
+/*##################  TSernetProtocolAnalyser::ShowIp ##########################
+*   Purpose....: Show IP data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSernetProtocolAnalyser::ShowIp(const char *Msg, int Size)
+{
+	char str[80];
+	TIpHeader *IpHeader = (TIpHeader *)Msg;
+
+    Msg += sizeof(TIpHeader);
+    Size -= sizeof(TIpHeader);
+
+    sprintf(str, "%d.%d.%d.%d->",
+                IpHeader->Source[0],
+                IpHeader->Source[1],
+                IpHeader->Source[2],
+                IpHeader->Source[3]);
+
+    Write(str);
+
+    sprintf(str, "%d.%d.%d.%d ",
+                IpHeader->Dest[0],
+                IpHeader->Dest[1],
+                IpHeader->Dest[2],
+                IpHeader->Dest[3]);
+
+    Write(str);
+
+    switch (IpHeader->Protocol)
+    {
+        case 121:
+            ShowSmp(Msg, Size);
+            break;
+
+        default:
+            ShowIpData(IpHeader->Protocol, Msg, Size);
+            break;
+    }
+}
+
+/*##################  TSernetProtocolAnalyser::ShowUnknown ##########################
+*   Purpose....: Show unknown data message		   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TSernetProtocolAnalyser::ShowUnknown(int DataType, const char *Msg, int Size)
+{
+	char tempstr[100];
+	char ch;
+	int i;
+
+	sprintf(tempstr, "Data %04hX: ", DataType);
+	Write(tempstr);
+
+	for (i = 0; i < Size; i++)
+	{
+		ch = *Msg;
+		sprintf(tempstr, "%04hX", ch);
+		tempstr[0] = tempstr[2];
+		tempstr[1] = tempstr[3];
+		tempstr[2] = ' ';
+		tempstr[3] = 0;
+		Write(tempstr);
+		Msg++;
+	}
+	Write("\r\n");
+}
+
 /*##################  TSernetProtocolAnalyser::ShowInitMsg ##########################
 *   Purpose....: Show init message		   					      	        #
 *   In params..: *                                                          #
@@ -139,7 +318,7 @@ void TSernetProtocolAnalyser::ShowInitMsg(const char *Msg, int Size)
 	int Source = *Msg - 0x2C;
 	char str[40];
 
-	sprintf(str, "Init %d\r\n", Source);
+	sprintf(str, "%02d Init\r\n", Source);
 	Write(str);
 }
 
@@ -155,7 +334,7 @@ void TSernetProtocolAnalyser::ShowReqMsg(const char *Msg, int Size)
 	int Source = *Msg - 0x2C;
 	char str[40];
 
-	sprintf(str, "Request %d\r\n", Source);
+	sprintf(str, "%02d Request\r\n", Source);
 	Write(str);
 }
 
@@ -171,7 +350,7 @@ void TSernetProtocolAnalyser::ShowReplyMsg(const char *Msg, int Size)
 	int Source = *Msg - 0x2C;
 	char str[40];
 
-	sprintf(str, "Reply %d\r\n", Source);
+	sprintf(str, "%02d Reply\r\n", Source);
 	Write(str);
 }
 
@@ -187,15 +366,57 @@ void TSernetProtocolAnalyser::ShowDataMsg(const char *Msg, int Size)
 	int Source;
 	int Dest;
 	char str[40];
+	int DataSize;
+	int DataType;
 
 	Source = *Msg - 0x2C;
 	Msg++;
 	Size--;
 
-	Dest = *Msg - 0xAC;
+	Dest = (unsigned char)*Msg - (unsigned char)0xAC;
+	Msg++;
+	Size--;
 
-	sprintf(str, "Data %d->%d\r\n", Source, Dest);
+	DataSize = (unsigned char)*Msg << 8;
+	Msg++;
+	Size--;
+
+	DataSize |= (unsigned char)*Msg;
+	Msg++;
+	Size--;
+
+	DataType = (unsigned char)*Msg << 8;
+	Msg++;
+	Size--;
+
+	DataType |= (unsigned char)*Msg;
+	Msg++;
+	Size--;
+
+    if (Size < DataSize)
+        DataSize = Size;
+
+    if (Dest >= 0)
+        sprintf(str, "%02d->%02d ", Source, Dest);
+	else
+    	sprintf(str, "%02d->All ", Source);
 	Write(str);
+
+    switch (DataType)
+    {
+	    case 0x800:
+		    ShowIp(Msg, DataSize);
+			break;
+
+    	case 0x806:
+	    	ShowArp(Msg, DataSize);
+            break;
+
+        default:
+            ShowUnknown(DataType, Msg, DataSize);
+            break;
+            
+    }	
 }
 
 /*##################  TSernetProtocolAnalyser::CheckCrc ##########################
