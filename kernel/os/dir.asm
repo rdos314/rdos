@@ -810,6 +810,78 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetCurDirBase
+;
+;		DESCRIPTION:	Set current directory
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetCurDirBase	Proc near
+	int 3
+	CallFileSystem get_cur_dir_proc
+	ret
+GetCurDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SetCurDirBase
+;
+;		DESCRIPTION:	Set current directory
+;
+;		PARAMETERS:		ES:EDI		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetCurDirBase	Proc near
+	int 3
+	push ds
+	push ax
+	push edi
+;
+	call ParseDir
+	jc set_cur_dir_done
+;
+	mov al,es:[edi]
+	or al,al
+	jne set_cur_dir_fail
+;
+	push es
+	push dx
+	mov bx,fs_process_sel
+	mov es,bx
+	mov bx,ds
+	mov al,ds:ds_drive
+	movzx si,al
+	add si,si
+	mov es:[si].cur_dir_sel,bx
+	pop dx
+	pop es
+	call ParseEnd
+	clc
+	jmp set_cur_dir_done
+
+set_cur_dir_fail:
+	dec ds:ds_usage
+	call ParseEnd
+	stc
+
+set_cur_dir_done:
+	pop edi
+	pop ax
+	pop ds
+	ret
+SetCurDirBase	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			OpenDirBase
 ;
 ;		DESCRIPTION:	Open a directory
@@ -1083,6 +1155,110 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			SET_CUR_DRIVE
+;
+;		DESCRIPTION:	Set current drive
+;
+;		PARAMETERS:		AL			DRIVE NR
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_cur_drive_name	DB 'Set Current Drive',0
+
+set_cur_drive:
+	push ds
+	push si
+	mov si,fs_process_sel
+	mov ds,si
+	mov ds:curr_drive,al
+	clc
+	pop si
+	pop ds
+	retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_CUR_DRIVE
+;
+;		DESCRIPTION:	Get current drive
+;
+;		PARAMETERS:		AL			DRIVE NR. 0 = DEFAULT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cur_drive_name	DB 'Get Current Drive',0
+
+get_cur_drive:
+	push ds
+	push si
+	mov si,fs_process_sel
+	mov ds,si
+	mov al,ds:curr_drive
+	clc
+	pop si
+	pop ds
+	retf32
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SET_CUR_DIR
+;
+;		DESCRIPTION:	Set current directory
+;
+;		PARAMETERS:		ES:E(DI)	PATH NAME
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_cur_dir_name	DB 'Set Current Directory',0
+
+set_cur_dir32:
+	call SetCurDirBase
+	retf32
+
+set_cur_dir16	PROC far
+	push edi
+	movzx edi,di
+	call SetCurDirBase
+	pop edi
+	ret
+set_cur_dir16	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_CUR_DIR
+;
+;		DESCRIPTION:	Get current directory
+;
+;		PARAMETERS:		ES:E(DI)	PATH NAME
+;						AL			DRIVE
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_cur_dir_name	DB 'Get Current Directory',0
+
+get_cur_dir32:
+	call GetCurDirBase
+	retf32
+
+get_cur_dir16	PROC far
+	push edi
+	movzx edi,di
+	call GetCurDirBase
+	pop edi
+	ret
+get_cur_dir16	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			OPEN_DIR
 ;
 ;		DESCRIPTION:	Opens a directory
@@ -1304,6 +1480,62 @@ init_dir	PROC near
 	xor cl,cl
 	mov ax,insert_file_entry_nr
 	RegisterOsGate
+;
+	mov si,OFFSET set_cur_drive
+	mov di,OFFSET set_cur_drive_name
+	xor cl,cl
+	mov ax,set_cur_drive_nr
+	RegisterUserGate
+;
+	mov bx,ax
+	xor dx,dx
+	mov ax,set_virt_cur_drive_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET get_cur_drive
+	mov di,OFFSET get_cur_drive_name
+	xor cl,cl
+	mov ax,get_cur_drive_nr
+	RegisterUserGate
+;
+	mov bx,ax
+	xor dx,dx
+	mov ax,get_virt_cur_drive_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET set_cur_dir32
+	mov di,OFFSET set_cur_dir_name
+	xor cl,cl
+	mov ax,set_cur_dir_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET set_cur_dir16
+	mov di,OFFSET set_cur_dir_name
+	xor cl,cl
+	mov ax,set_cur_dir_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,set_virt_cur_dir_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET get_cur_dir32
+	mov di,OFFSET get_cur_dir_name
+	xor cl,cl
+	mov ax,get_cur_dir_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET get_cur_dir16
+	mov di,OFFSET get_cur_dir_name
+	xor cl,cl
+	mov ax,get_cur_dir_nr
+	RegisterUserGate16
+;
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,get_virt_cur_dir_nr
+	RegisterVirtUserGate
 ;
 	mov si,OFFSET open_dir32
 	mov di,OFFSET open_dir_name
