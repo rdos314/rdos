@@ -127,11 +127,7 @@ ReadEe	Proc near
 	push cx
 	push si
 ;
-	mov cl,ds:EeAdrLen
-	mov ax,EE_READ_CMD
-	shl ax,cl
-	or bx,ax
-;
+	mov si,bx
 	mov dx,ds:IoBase
 	add dx,Cfg9346
 ;
@@ -140,10 +136,16 @@ ReadEe	Proc near
 	mov al,EE_ENB
 	out dx,al
 ;
-	xor ch,ch
+	mov bx,EE_READ_CMD
+	mov cl,ds:EeAdrLen
+	shl bx,cl
+	or bx,si
+;
+	movzx cx,ds:EeAdrLen
 	add cx,4
 	mov si,1
 	shl si,cl
+	inc cx
 
 reSetupLoop:
 	test bx,si
