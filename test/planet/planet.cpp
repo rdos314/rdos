@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define DEBUG	1
+//#define DEBUG	1
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	16
+#define MAX_PLANETS	4
 
 struct TPlanet
 {
@@ -391,13 +391,12 @@ void UpdatePlanets()
 	}
 
 #ifdef DEBUG
-
-	counter++;
 	RdosSetDrawColor(VbeHandle, 0);
 	RdosDrawRect(VbeHandle, 0, height + MAX_PLANETS / 4 * 15, width, 15);
 	sprintf(str, "%d", counter);
 	RdosSetDrawColor(VbeHandle, mkcolor(0, 255, 0));
 	RdosDrawString(VbeHandle, 0, height + MAX_PLANETS / 4 * 15, str);
+	counter++;
 
 	for (i = 0; i < MAX_PLANETS; i++)
 	{
@@ -420,8 +419,8 @@ void UpdatePlanets()
 		}
 	}
 
-	if (counter == 1302)
-		_asm int 3
+//	if (counter == 1400)
+//		_asm int 3
 
 #endif
 
@@ -435,6 +434,73 @@ void UpdatePlanets()
 		}
 	}
 
+}
+
+struct TPos
+{
+    int x1;
+    int y1;
+    int x2;
+    int y2;
+};
+
+#define POS_COUNT   12
+
+TPos Pos[POS_COUNT] =
+            {
+                {552,     201,     567,     185},
+                {551,     201,     567,     186},
+                {551,     201,     567,     187},
+                {551,     200,     567,     188},
+                {550,     200,     568,     189},
+                {550,     200,     568,     189},
+                {549,     199,     568,     190},
+                {549,     199,     569,     191},
+                {548,     199,     568,     192},
+                {548,     199,     568,     193},
+                {548,     198,     569,     194},
+                {547,     198,     569,     195}
+            };
+            
+
+void SimPos()
+{
+    int i;
+
+    TPlanet *planet1;
+    TPlanet *planet2;
+
+    planet1 = new TPlanet;
+    planet2 = new TPlanet;
+
+    planet1->r = 10;
+    planet2->r = 8;
+
+    planet1->x = Pos[0].x1;
+    planet1->y = Pos[0].y1;
+    planet2->x = Pos[0].x2;
+    planet2->y = Pos[0].y2;
+
+    CreateSprite(planet1);
+    CreateSprite(planet2);
+
+	RdosShowSprite(planet1->handle);
+	RdosShowSprite(planet2->handle);
+
+
+    for (i = 1; i < POS_COUNT; i++)
+	{
+		RdosReadKeyboard();
+        planet1->x = Pos[i].x1;
+        planet1->y = Pos[i].y1;
+        planet2->x = Pos[i].x2;
+        planet2->y = Pos[i].y2;
+        RdosMoveSprite(planet1->handle, planet1->x - planet1->r, planet1->y - planet1->r);
+        RdosMoveSprite(planet2->handle, planet2->x - planet2->r, planet2->y - planet2->r);
+    }        
+
+    for (;;)
+        RdosWaitMilli(10);
 }
 
 void cdecl main()
@@ -461,6 +527,8 @@ void cdecl main()
 	font = RdosOpenFont(15);
 	RdosSetFont(VbeHandle, font);
 	RdosSetFilledStyle(VbeHandle);
+
+//	SimPos();
 
 	for (i = 0; i < MAX_PLANETS; i++)
 	{

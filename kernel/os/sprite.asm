@@ -262,21 +262,21 @@ PAGE
 ;
 ;		DESCRIPTION:	Hide a whole line in a sprite macro
 ;
-;		PARAMETERS:		SEG		Sprite handle
+;		PARAMETERS:		FS		Sprite handle
 ;                       DX      Y relative position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-HideWholeLine    MACRO seg
-    mov ds,seg:sp_back_sel
+HideWholeLine    MACRO
+    mov ds,fs:sp_back_sel
     xor cx,cx
-    mov ax,seg:sp_w
+    mov ax,fs:sp_w
     call ds:get_line_proc
 ;
-    mov ds,seg:sp_dest_sel
-    mov cx,seg:sp_x
-    add dx,seg:sp_y
+    mov ds,fs:sp_dest_sel
+    mov cx,fs:sp_x
+    add dx,fs:sp_y
     call ds:set_native_row_proc
             ENDM
 
@@ -290,29 +290,29 @@ PAGE
 ;
 ;		DESCRIPTION:	Save & show a whole line in a sprite macro
 ;
-;		PARAMETERS:		SEG		Sprite handle
+;		PARAMETERS:		FS		Sprite handle
 ;                       DX      Y relative position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-SaveAndShowWholeLine    MACRO seg
-    mov ds,seg:sp_dest_sel
-    mov cx,seg:sp_new_x
-    add dx,seg:sp_new_y
+SaveAndShowWholeLine    MACRO
+    mov ds,fs:sp_dest_sel
+    mov cx,fs:sp_new_x
+    add dx,fs:sp_new_y
     call ds:get_line_proc
 ;
-    mov ds,seg:sp_back_sel
+    mov ds,fs:sp_back_sel
     xor cx,cx
-    sub dx,seg:sp_new_y
-    mov ax,seg:sp_w
+    sub dx,fs:sp_new_y
+    mov ax,fs:sp_w
     call ds:set_native_row_proc
 ;
-    mov ds,seg:sp_bitmap_sel
+    mov ds,fs:sp_bitmap_sel
     call ds:get_line_proc
     mov esi,edi
 ;
     push dx
-    mov ds,seg:sp_mask_sel
+    mov ds,fs:sp_mask_sel
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
@@ -320,15 +320,15 @@ SaveAndShowWholeLine    MACRO seg
     mov edi,eax
     pop dx
 ;
-	mov ds,seg:sp_dest_sel
-    mov ax,seg:sp_lgop
+	mov ds,fs:sp_dest_sel
+    mov ax,fs:sp_lgop
     push ds:v_lgop
     mov ds:v_lgop,ax
-    add dx,seg:sp_new_y
+    add dx,fs:sp_new_y
     movzx ecx,dx
 	shl ecx,16
-	mov cx,seg:sp_new_x
-    mov dx,seg:sp_w
+	mov cx,fs:sp_new_x
+    mov dx,fs:sp_w
 	xor al,al
     call ds:draw_sprite_line_proc
     pop ds:v_lgop
@@ -343,24 +343,32 @@ PAGE
 ;
 ;		DESCRIPTION:	Hide a line in a sprite macro
 ;
-;		PARAMETERS:		SEG		Sprite handle
+;		PARAMETERS:		X       x in current sprite
+;                       Y       y in current sprite
+;                       FS		Current sprite
+;                       GS      Hiding sprite
 ;                       CX      X relative position
 ;                       DX      Y relative position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-HideLine    MACRO seg
+HideLine    MACRO x, y
     local hide_line_done
     local hide_line_pos
     local hide_line_do
 
-	cmp dx,seg:sp_h
+	add dx,fs:&y
+	sub dx,gs:sp_y
+	jc hide_line_done
+;
+	cmp dx,gs:sp_h
 	jae hide_line_done
 ;
-    test ch,80h
-    jz hide_line_pos
+    mov cx,fs:&x
+    sub cx,gs:sp_x
+    jge hide_line_pos
 ;
-    mov ax,seg:sp_w
+    mov ax,fs:sp_w
     add ax,cx
     jle hide_line_done
 ;
@@ -368,19 +376,19 @@ HideLine    MACRO seg
     jmp hide_line_do
 
 hide_line_pos:
-    cmp cx,seg:sp_w
+    cmp cx,gs:sp_w
     jae hide_line_done
 ;
-    mov ax,seg:sp_w
+    mov ax,gs:sp_w
     sub ax,cx
 
 hide_line_do:
-    mov ds,seg:sp_back_sel
+    mov ds,gs:sp_back_sel
     call ds:get_line_proc
 ;
-    mov ds,seg:sp_dest_sel
-    add cx,seg:sp_x
-    add dx,seg:sp_y
+    mov ds,gs:sp_dest_sel
+    add cx,gs:sp_x
+    add dx,gs:sp_y
     call ds:set_native_row_proc
 
 hide_line_done:
@@ -395,25 +403,32 @@ PAGE
 ;
 ;		DESCRIPTION:	Save a line in a sprite macro
 ;
-;		PARAMETERS:		SEG		Sprite handle
-;                       CX      X relative position
+;		PARAMETERS:		X       x in current sprite
+;                       Y       y in current sprite
+;                       FS      Current sprite
+;                       GS      Save sprite
 ;                       DX      Y relative position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-SaveLine    MACRO seg
+SaveLine    MACRO x, y
     local save_line_done
     local save_line_pos
     local save_line_do
 
-	cmp dx,seg:sp_h
+	add dx,fs:&y
+	sub dx,gs:sp_y
+	jc save_line_done
+;
+	cmp dx,gs:sp_h
 	jae save_line_done
 ;
-    test ch,80h
-    jz save_line_pos
+    mov cx,fs:&x
+    sub cx,gs:sp_x
+    jge save_line_pos
 ;
-    mov ax,seg:sp_w
+    mov ax,fs:sp_w
     add ax,cx
     jle save_line_done
 ;
@@ -421,25 +436,23 @@ SaveLine    MACRO seg
     jmp save_line_do
 
 save_line_pos:
-    cmp cx,seg:sp_w
+    cmp cx,gs:sp_w
     jae save_line_done
 ;
-    mov ax,seg:sp_w
+    mov ax,gs:sp_w
     sub ax,cx
 
 save_line_do:
-    mov ds,seg:sp_dest_sel
-    add cx,seg:sp_new_x
-    add dx,seg:sp_new_y
+    mov ds,gs:sp_dest_sel
+    add cx,gs:sp_new_x
+    add dx,gs:sp_new_y
     push ax
     call ds:get_line_proc
     pop ax
 ;
-    mov ds,seg:sp_back_sel
-    sub cx,seg:sp_new_x
-    sub dx,seg:sp_new_y
-    jbe save_line_done
-;
+    mov ds,gs:sp_back_sel
+    sub cx,gs:sp_new_x
+    sub dx,gs:sp_new_y
     call ds:set_native_row_proc
 
 save_line_done:
@@ -454,25 +467,32 @@ PAGE
 ;
 ;		DESCRIPTION:	Show a line in a sprite macro
 ;
-;		PARAMETERS:		SEG		Sprite handle
-;                       CX      X relative position
+;		PARAMETERS:		X       x in current sprite
+;                       Y       y in current sprite
+;                       FS      Current sprite
+;                       GS      Show sprite
 ;                       DX      Y relative position
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-ShowLine    MACRO seg
+ShowLine    MACRO x, y
     local show_line_done
     local show_line_pos
     local show_line_do
 
-	cmp dx,seg:sp_h
+	add dx,fs:&y
+	sub dx,gs:sp_y
+	jc show_line_done
+;
+	cmp dx,gs:sp_h
 	jae show_line_done
 ;
-    test ch,80h
-    jz show_line_pos
+    mov cx,fs:&x
+    sub cx,gs:sp_x
+    jge show_line_pos
 ;
-    mov ax,seg:sp_w
+    mov ax,fs:sp_w
     add ax,cx
     jle show_line_done
 ;
@@ -480,22 +500,22 @@ ShowLine    MACRO seg
     jmp show_line_do
 
 show_line_pos:
-    cmp cx,seg:sp_w
+    cmp cx,gs:sp_w
     jae show_line_done
 ;
-    mov ax,seg:sp_w
+    mov ax,gs:sp_w
     sub ax,cx
 
 show_line_do:
     push bp
     mov bp,ax
 ;
-    mov ds,seg:sp_bitmap_sel
+    mov ds,gs:sp_bitmap_sel
     call ds:get_line_proc
     mov esi,edi
 ;
     push dx
-    mov ds,seg:sp_mask_sel
+    mov ds,gs:sp_mask_sel
 	movzx edx,dx
 	movzx eax,ds:v_row_size
 	mul edx
@@ -506,15 +526,15 @@ show_line_do:
     add edi,edx
     pop dx
 ;
-	mov ds,seg:sp_dest_sel
-    mov ax,seg:sp_lgop
+	mov ds,gs:sp_dest_sel
+    mov ax,gs:sp_lgop
     push ds:v_lgop
     mov ds:v_lgop,ax
-    add dx,seg:sp_new_y
+    add dx,gs:sp_new_y
 	shl edx,16
 	mov al,cl
 	and al,7
-	add cx,seg:sp_new_x
+	add cx,gs:sp_new_x
 	movzx ecx,cx
 	or ecx,edx
 	mov dx,bp
@@ -555,15 +575,8 @@ hide_sprite_ovl_loop:
 	test gs:sp_flags,SP_FLAG_VISIBLE
 	jz hide_sprite_ovl_next
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc hide_sprite_ovl_next
-;
-    HideLine gs
+    HideLine sp_x, sp_y
 
 hide_sprite_ovl_next:
 	mov ax,gs:sp_prev
@@ -571,7 +584,7 @@ hide_sprite_ovl_next:
 
 hide_sprite_curr:
     mov dx,bp
-    HideWholeLine fs
+    HideWholeLine
 ;
     mov ds,fs:sp_dest_sel
 	mov ax,fs:sp_next
@@ -586,24 +599,11 @@ hide_sprite_ovl_show_loop:
 	test gs:sp_flags,SP_FLAG_VISIBLE
 	jz hide_sprite_ovl_show_next
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
+    mov dx,bp
+    SaveLine sp_x, sp_y
 ;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc hide_sprite_ovl_show_next
-;
-    SaveLine gs
-;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
-    mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-;
-    ShowLine gs
+    ShowLine sp_x, sp_y
 
 hide_sprite_ovl_show_next:
 	pop ds
@@ -650,15 +650,8 @@ show_sprite_ovl_hide_loop:
 	test gs:sp_flags,SP_FLAG_VISIBLE
 	jz show_sprite_ovl_hide_next
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc show_sprite_ovl_hide_next
-;
-    HideLine gs
+    HideLine sp_x, sp_y
 
 show_sprite_ovl_hide_next:
 	mov ax,gs:sp_prev
@@ -666,7 +659,7 @@ show_sprite_ovl_hide_next:
 
 show_sprite_curr:
     mov dx,bp
-    SaveAndShowWholeLine fs
+    SaveAndShowWholeLine
 ;
     mov ds,fs:sp_dest_sel
 	mov ax,fs:sp_next
@@ -681,24 +674,11 @@ show_sprite_ovl_show_loop:
 	test gs:sp_flags,SP_FLAG_VISIBLE
 	jz show_sprite_ovl_show_next
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
+    mov dx,bp
+    SaveLine sp_x, sp_y
 ;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc show_sprite_ovl_show_next
-;
-    SaveLine gs
-;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
-    mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-;
-    ShowLine gs
+    ShowLine sp_x, sp_y
 
 show_sprite_ovl_show_next:
 	pop ds
@@ -826,29 +806,15 @@ move_sprite_ovl_hide_loop:
 	test gs:sp_flags,SP_FLAG_OVL_OLD
 	jz move_sprite_ovl_hide_new
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_hide_new
-;
-    HideLine gs
+    HideLine sp_x, sp_y
 
 move_sprite_ovl_hide_new:
 	test gs:sp_flags,SP_FLAG_OVL_NEW
 	jz move_sprite_ovl_hide_next
 ;
-    mov cx,fs:sp_new_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_new_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_hide_next
-;
-    HideLine gs
+    HideLine sp_new_x, sp_new_y
 
 move_sprite_ovl_hide_next:
 	mov ax,gs:sp_prev
@@ -856,10 +822,10 @@ move_sprite_ovl_hide_next:
 
 move_sprite_ovl_hide_curr:
     mov dx,bp
-    HideWholeLine fs
+    HideWholeLine
 ;
     mov dx,bp
-    SaveAndShowWholeLine fs
+    SaveAndShowWholeLine
 ;
     mov ds,fs:sp_dest_sel
 	mov ax,fs:sp_next
@@ -874,57 +840,29 @@ move_sprite_ovl_show_loop:
 	test gs:sp_flags,SP_FLAG_OVL_OLD
 	jz move_sprite_ovl_save_new
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_save_new
-;
-    SaveLine gs
+    SaveLine sp_x, sp_y
 
 move_sprite_ovl_save_new:
 	test gs:sp_flags,SP_FLAG_OVL_NEW
 	jz move_sprite_ovl_save_done
 ;
-    mov cx,fs:sp_new_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_new_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_save_done
-;
-    SaveLine gs
+    SaveLine sp_new_x, sp_new_y
 
 move_sprite_ovl_save_done:
 	test gs:sp_flags,SP_FLAG_OVL_OLD
 	jz move_sprite_ovl_show_new
 ;
-    mov cx,fs:sp_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_show_new
-;
-    ShowLine gs
+    ShowLine sp_x, sp_y
 
 move_sprite_ovl_show_new:
 	test gs:sp_flags,SP_FLAG_OVL_NEW
 	jz move_sprite_ovl_show_next
 ;
-    mov cx,fs:sp_new_x
-    sub cx,gs:sp_x
-;
     mov dx,bp
-	add dx,fs:sp_new_y
-	sub dx,gs:sp_y
-	jc move_sprite_ovl_show_next
-;
-    ShowLine gs
+    ShowLine sp_new_x, sp_new_y
 
 move_sprite_ovl_show_next:
 	pop ds
@@ -1050,10 +988,10 @@ move_sprite_down:
 
 move_sprite_down_loop:
     mov dx,bp
-    HideWholeLine fs
+    HideWholeLine
 ;
     mov dx,bp
-    SaveAndShowWholeLine fs
+    SaveAndShowWholeLine
 ;
     inc bp
     cmp bp,fs:sp_h
@@ -1066,10 +1004,10 @@ move_sprite_up:
 
 move_sprite_up_loop:
     mov dx,bp
-    HideWholeLine fs
+    HideWholeLine
 ;
     mov dx,bp
-    SaveAndShowWholeLine fs
+    SaveAndShowWholeLine
 ;
 	sub bp,1
 	jnc move_sprite_up_loop
