@@ -34,6 +34,7 @@ INCLUDE protseg.def
 INCLUDE user.def
 INCLUDE virt.def
 INCLUDE os.def
+INCLUDE system.inc
 INCLUDE user.inc
 INCLUDE virt.inc
 INCLUDE os.inc
@@ -531,6 +532,8 @@ get_thread_physical_page	Proc far
 	push es
 	push ebx
 	push edx
+	push si
+;
 	and dx,0F000h
 	cmp edx,thread_block_linear
 	jne get_thread_phys_not_thread_block
@@ -548,18 +551,41 @@ get_thread_phys_not_thread_block:
 	jmp get_thread_phys_done
 
 get_thread_phys_not_client:
+	SimCli
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov es,bx
+	mov eax,es:p_cr3
+	or ax,803h
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+	mov eax,alias_linear
+	shr edx,10
+	and dl,0FCh
+	add edx,eax
+	mov ebx,edx
+	shr edx,10
+	and dl,0FCh
+	mov ax,process_page_sel
+	mov ds,ax
+	mov eax,[edx]
+	test al,1
+	jnz get_thread_phys_do
+;
+	xor eax,eax
+	jmp get_thread_phys_done
+
+get_thread_phys_do:	
     mov ax,flat_sel
     mov ds,ax
-	mov es,bx
-    mov ax,es:p_page_alias
-	movzx eax,ax
-	shl eax,20
-	mov ebx,edx
-	shr ebx,10
-	and bl,0FCh
-	add ebx,eax
 	mov eax,[ebx]
+
 get_thread_phys_done:
+	SimSti
+	pop si
 	pop edx
 	pop ebx
 	pop es
@@ -574,11 +600,11 @@ PAGE
 ;
 ;		NAME:			SetThreadPhysicalPage
 ;
-;		DESCRIPTION:	Set physical page for linear address in other thread
+;		DESCRIPTION:	Set physical page for linear address in other thread.
 ;
 ;		PARAMETERS:		BX		Thread
 ;						EDX		Linear address
-;						EAX		Physical address or 0						
+;						EAX		Physical address
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -588,19 +614,48 @@ set_thread_physical_page	Proc far
 	push ds
 	push es
 	push ebx
+	push edx
+	push si
+;
 	push eax
+	SimCli
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov es,bx
+	mov eax,es:p_cr3
+	or ax,803h
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+	mov eax,alias_linear
+	shr edx,10
+	and dl,0FCh
+	add edx,eax
+	mov ebx,edx
+	shr edx,10
+	and dl,0FCh
+	mov ax,process_page_sel
+	mov ds,ax
+	mov eax,[edx]
+	test al,1
+	jnz set_thread_phys_do
+;
+	pop eax
+	jmp set_thread_phys_done
+
+set_thread_phys_do:	
     mov ax,flat_sel
     mov ds,ax
-	mov es,bx
-    mov ax,es:p_page_alias
-	movzx eax,ax
-	shl eax,20
-	mov ebx,edx
-	shr ebx,10
-	and bl,0FCh
-	add ebx,eax
 	pop eax
 	mov [ebx],eax
+
+set_thread_phys_done:
+	SimSti
+;
+	pop si
+	pop edx
 	pop ebx
 	pop es
 	pop ds

@@ -174,19 +174,6 @@ local_page_linear		EQU 01000000h
 
 flat_size				EQU 60000000h
 
-handle_linear			EQU 60000000h
-fixed_process_linear	EQU 60010000h
-
-focus_size		        EQU 00400000h
-
-io_focus_linear			EQU 70000000h
-video_mem_focus_linear	EQU 70200000h
-
-io_local_linear			EQU 80000000h
-video_mem_local_linear	EQU 80200000h
-
-process_alias_linear 	EQU 90000000h
-
 system_mem_start		EQU 0E0000000h
 
 global_byte_linear		EQU 0E0000000h
@@ -195,24 +182,35 @@ global_byte_size		EQU 008000000h
 global_page_linear		EQU 0E8000000h
 global_page_size		EQU 008000000h
 
-sys_page_linear			EQU 0F0000000h
-process_page_linear		EQU 0F0400000h
+handle_linear			EQU 0FC000000h
+fixed_process_linear	EQU 0FC010000h
 
-phys_list_linear		EQU 0F0800000h
-phys_page_linear		EQU 0F0C00000h
+io_focus_linear			EQU 0FC400000h
+video_mem_focus_linear	EQU 0FC600000h
 
-thread_block_linear		EQU 0F1000000h
-thread_data_linear		EQU 0F1000100h
-thread_tss_linear		EQU 0F1000200h
-thread_ss0_linear		EQU 0F1000600h
-thread_linear			EQU 0F1000800h
+io_local_linear			EQU 0FC800000h
+video_mem_local_linear	EQU 0FCA00000h
 
-app_linear				EQU 0F1001000h
+alias_linear			EQU 0FCC00000h
 
-page0_linear			EQU 0F1002000h
-system_linear			EQU 0F1003000h
-system_linear_size		EQU 000FFD000h
+sys_page_linear			EQU 0FD000000h
+process_page_linear		EQU 0FD400000h
+
+phys_list_linear		EQU 0FD800000h
+phys_page_linear		EQU 0FDC00000h
 
 video_focus_linear		EQU 0FE000000h
+
+thread_block_linear		EQU 0FE020000h
+thread_data_linear		EQU 0FE020100h
+thread_tss_linear		EQU 0FE020200h
+thread_ss0_linear		EQU 0FE020600h
+thread_linear			EQU 0FE020800h
+
+app_linear				EQU 0FE021000h
+
+page0_linear			EQU 0FE022000h
+system_linear			EQU 0FE023000h
+system_linear_size		EQU 000FDD000h
 
 kernel_linear			EQU 0FF000000h

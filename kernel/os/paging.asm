@@ -429,8 +429,11 @@ free_process_paging	Proc near
 
 free_process_dir_loop:
 	mov eax,es:[edi]
-	or eax,eax
+	test al,1
 	jz free_process_next_dir
+;
+	test ax,800h
+	jnz free_process_next_dir
 ;
 	push cx
 	mov cx,400h
@@ -438,7 +441,7 @@ free_process_dir_loop:
 free_process_page_loop:
 	xor eax,eax
 	xchg eax,[esi]
-	test ax,1
+	test al,1
 	jz free_process_page_next
 ;
 	test ax,800h
@@ -453,6 +456,7 @@ free_process_page_next:
 	pop cx
 	xor eax,eax
 	xchg eax,es:[edi]
+;
 	FreePhysical
 	jmp free_process_next_dir_page
 	
@@ -471,6 +475,9 @@ free_global_loop:
 	mov eax,es:[edi]
 	test al,1
 	jz free_global_next
+;
+	test ax,800h
+	jnz free_global_next
 ;
 	and ax,0F000h
 	mov ebx,[edi]
@@ -638,6 +645,7 @@ process_dir_fault_move	Proc near
 	test cl,1
 	jnz sys_dir_valid
 	push bx
+	cli
 	mov eax,edx
 	add eax,sys_page_linear
 	call sys_dir_fault
@@ -696,6 +704,31 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			process_dir_fault_kernel
+;
+;		DESCRIPTION:	pagefault in kernel process page dir
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+process_dir_fault_kernel:
+	mov edi,eax
+	and edi,0FFC00000h
+;
+	cmp edi,handle_linear
+	je process_dir_fault_local
+;
+	cmp edi,io_local_linear
+	je process_dir_fault_local
+;
+	jmp process_dir_fault_move
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			process_dir_fault
 ;
 ;		DESCRIPTION:	Pagefault in process page directory
@@ -720,9 +753,15 @@ jfB	DW OFFSET process_dir_fault_move
 jfC	DW OFFSET process_dir_fault_move
 jfD	DW OFFSET process_dir_fault_move
 jfE	DW OFFSET process_dir_fault_move
-jfF	DW OFFSET process_dir_fault_move
+jfF	DW OFFSET process_dir_fault_kernel
 
 process_dir_fault	Proc near
+	mov ax,[bp].vm_eflags
+	and ax,NOT 4500h
+	push ax
+	mov eax,cr2
+	popf
+;
 	push edx
 	push edi
 	sub eax,process_page_linear
@@ -736,137 +775,6 @@ process_dir_fault	Proc near
 	pop edx
 	ret
 process_dir_fault	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			alias_dir_fault_user
-;
-;		DESCRIPTION:	Pagefault in user alias page directory
-;
-;		PARAMETERS:		EAX		page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_dir_fault_move	Proc near
-	mov bx,sys_dir_sel
-	mov ds,bx
-	mov ebx,eax
-	shr ebx,20
-	and bx,0FFCh
-	mov ecx,[bx]
-	test cl,1
-	jnz alias_sys_dir_valid
-	push bx
-	mov eax,edx
-	add eax,sys_page_linear
-	call sys_dir_fault
-	pop bx
-	mov ax,sys_dir_sel
-	mov ds,ax
-	mov ecx,[bx]
-alias_sys_dir_valid:
-	mov ax,process_page_sel
-	mov ds,ax
-	mov [ebx+esi],ecx
-	ret
-alias_dir_fault_move	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			alias_dir_fault_local
-;
-;		DESCRIPTION:	Pagefault in local alias page directory
-;
-;		PARAMETERS:		EAX		page fault address (not in dir)
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_dir_fault_local	Proc near
-	push eax
-	mov bx,process_page_sel
-	mov ds,bx
-	shr eax,20
-	and ax,0FFCh
-	mov ebx,eax
-	push cs
-	call allocate_physical
-	mov al,7
-	mov [ebx+esi],eax	
-	pop eax
-;
-	mov ebx,esi
-	shl ebx,10
-	shr eax,10
-	add eax,ebx
-	and ax,0F000h
-	mov bx,flat_sel
-	mov ds,bx
-	mov cx,400h
-	xor ebx,ebx
-alias_dir_fault_local_init:
-	mov [eax],ebx
-	add eax,4
-	loop alias_dir_fault_local_init
-	ret
-alias_dir_fault_local	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			alias_dir_fault
-;
-;		DESCRIPTION:	Pagefault in alias page directory
-;
-;		PARAMETERS:		EAX		page fault address
-;						ESI		page directory base address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_dir_fault_tab:
-af0	DW OFFSET alias_dir_fault_local
-af1	DW OFFSET alias_dir_fault_local
-af2	DW OFFSET alias_dir_fault_local
-af3	DW OFFSET alias_dir_fault_local
-af4	DW OFFSET alias_dir_fault_local
-af5	DW OFFSET alias_dir_fault_local
-af6	DW OFFSET alias_dir_fault_local
-af7	DW OFFSET alias_dir_fault_move
-af8	DW OFFSET alias_dir_fault_local
-af9	DW OFFSET alias_dir_fault_move
-afA	DW OFFSET alias_dir_fault_move
-afB	DW OFFSET alias_dir_fault_move
-afC	DW OFFSET alias_dir_fault_move
-afD	DW OFFSET alias_dir_fault_move
-afE	DW OFFSET alias_dir_fault_move
-afF	DW OFFSET alias_dir_fault_move
-
-alias_dir_fault	Proc near
-	push edx
-	push esi
-	push edi
-	mov esi,eax
-	and esi,0FFC00000h
-	sub eax,esi
-	shr esi,10
-	mov edx,eax
-	shl eax,10
-	mov edi,eax
-	shr edi,28
-	add di,di
-	call word ptr cs:[di].alias_dir_fault_tab
-	pop edi
-	pop esi
-	pop edx
-	ret
-alias_dir_fault	Endp
 
 PAGE
 
@@ -977,22 +885,6 @@ page_fault_system	PROC near
 	push ax
 	mov eax,cr2
 	popf
-	cmp eax,sys_page_linear
-	jz page_fault_in_sys_dir
-	jc page_fault_not_sys_dir
-	cmp eax,sys_page_linear+400000h
-	jnc page_fault_not_sys_dir
-page_fault_in_sys_dir:
-	jmp sys_dir_fault
-page_fault_not_sys_dir:
-	cmp eax,process_page_linear
-	jz page_fault_in_process_dir
-	jc page_fault_not_process_dir
-	cmp eax,process_page_linear+400000h
-	jnc page_fault_not_process_dir
-page_fault_in_process_dir:
-	jmp process_dir_fault
-page_fault_not_process_dir:
 	mov bx,process_page_sel
 	mov ds,bx
 	mov ebx,eax
@@ -1001,6 +893,7 @@ page_fault_not_process_dir:
 	mov al,[ebx]
 	test al,1
 	jnz page_fault_system_retry
+;
 	push cs
 	call allocate_physical
 	mov al,7
@@ -1014,60 +907,39 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			page_fault_alias
+;		NAME:			page_fault_kernel
 ;
-;		DESCRIPTION:	Pagefault in aliased memory
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-page_fault_alias	PROC near
-	mov ax,[bp].vm_eflags
-	and ax,NOT 4500h
-	push ax
-	mov eax,cr2
-	popf
-	mov bx,process_page_sel
-	mov ds,bx
-	mov ebx,eax
-	shr ebx,10
-	and bx,0FFFCh
-	mov al,[ebx]
-	test al,1
-	jnz page_fault_alias_retry
-	call alias_dir_fault
-page_fault_alias_retry:
-	ret
-page_fault_alias	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			page_fault_dir
-;
-;		DESCRIPTION:	pagefault in page-alloc memory
+;		DESCRIPTION:	pagefault in kernel memory
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-page_fault_dir	PROC near
+page_fault_kernel:
+	mov eax,cr2
+	and eax,0FFC00000h
+;
+	cmp eax,handle_linear
+	je page_fault_user
+;
+	cmp eax,io_focus_linear
+	je page_fault_user
+;
+	cmp eax,io_local_linear
+	je page_fault_user
+;
+	cmp eax,process_page_linear
+	je process_dir_fault
+;
+	cmp eax,sys_page_linear
+	jne page_fault_system
+;
 	mov ax,[bp].vm_eflags
 	and ax,NOT 4500h
 	push ax
 	mov eax,cr2
 	popf
-	mov bx,process_page_sel
-	mov ds,bx
-	mov ebx,eax
-	shr ebx,10
-	and bx,0FFFCh
-	mov eax,[ebx]
-	ret
-page_fault_dir	ENDP
+	jmp sys_dir_fault
 
 PAGE
 
@@ -1153,13 +1025,13 @@ pf5	DW OFFSET page_fault_user
 pf6	DW OFFSET page_fault_user
 pf7	DW OFFSET page_fault_user
 pf8	DW OFFSET page_fault_user
-pf9	DW OFFSET page_fault_alias
-pfA	DW OFFSET page_fault_alias
+pf9	DW OFFSET page_fault_error2
+pfA	DW OFFSET page_fault_error2
 pfB	DW OFFSET page_fault_error2
 pfC	DW OFFSET page_fault_error2
 pfD	DW OFFSET page_fault_error2
 pfE	DW OFFSET page_fault_system
-pfF	DW OFFSET page_fault_system
+pfF	DW OFFSET page_fault_kernel
 
 pagefault_trap:
 	push bp

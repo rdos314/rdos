@@ -751,8 +751,6 @@ init_thread_block	PROC near
 	mov es:p_ldt_sel,ax
 	mov ax,ds:p_lib_sel
 	mov es:p_lib_sel,ax
-	mov ax,ds:p_page_alias
-	mov es:p_page_alias,ax
 	mov es:p_signal,0
 ;
 	add dx,dx
@@ -1685,39 +1683,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			alias_cr3
-;
-;		DESCRIPTION:	create an alias for this process
-;
-;		PARAMETERS:		es		tr†d selector
-;                       eax     cr3 value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-alias_cr3	PROC near
-	push ds
-    mov bx,sys_dir_sel
-    mov ds,bx
-    mov bx,process_alias_linear SHR 20
-alias_cr3_next:
-    mov cl,[bx]
-    test cl,1
-    jz alias_cr3_found
-    add bx,4
-    jmp alias_cr3_next
-alias_cr3_found:
-    mov [bx],eax
-	or byte ptr [bx],3
-    mov es:p_page_alias,bx
-	pop ds
-	ret
-alias_cr3	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			CREATE_ENVIROMENT
 ;
 ;		DESCRIPTION:	Create paging environment
@@ -1834,7 +1799,6 @@ create_process	PROC far
 	mov ds,es:p_tss_data_sel
 	call init_default_tss
 	call create_enviroment
-	call alias_cr3
 	mov ax,[bp].cr_mode
 	test ax,1
 	jz create_mod_prot
@@ -2185,7 +2149,6 @@ init_first_process	Proc near
 	mov ds,es:p_tss_data_sel
 	call init_first_tss
 	call create_enviroment
-	call alias_cr3
 	mov ds:tss_es,fs
 	ret
 init_first_process	Endp

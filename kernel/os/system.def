@@ -208,7 +208,6 @@ thread_seg	SEGMENT AT 0
 	p_stack_sel		DW ?
 	p_sleep_sel		DW ?
 	p_sleep_offset	DD ?
-	p_page_alias	DW ?
 	thread_name		DB 32 DUP(?)
 thread_seg	ENDS
 

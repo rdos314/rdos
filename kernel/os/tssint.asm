@@ -491,37 +491,36 @@ terminate_process_loop:
 	FreeMem
 	pop es
 ;
-	mov cx,400h
 	mov bx,es
-	mov edx,handle_linear
+	mov ax,process_dir_sel
+	mov ds,ax
+	mov si,alias_linear SHR 20
+	mov eax,es:p_cr3
+	mov [si],eax
+	mov eax,cr3
+	mov cr3,eax
+;
+    mov ax,flat_sel
+    mov ds,ax
+	mov cx,400h
+	mov edx,alias_linear + (handle_linear SHR 10)
 
 terminate_process_linear_loop:
-	GetThreadPhysicalPage
-	or eax,eax
+	mov eax,[edx]
+	test al,1
 	jz terminate_process_linear_next
 ;
 	FreePhysical
 
 terminate_process_linear_next:
-	add edx,1000h
+	add edx,4
 	loop terminate_process_linear_loop
 ;
-    mov bx,es:p_page_alias
-	mov ax,sys_page_sel
+	mov ax,process_page_sel
 	mov ds,ax
-	movzx esi,bx
-	shl esi,10
-	add esi,handle_linear SHR 20
-	mov eax,[esi]
-	or ax,ax
-	jnz tfr
-	int 3
-tfr:
+	mov edx,(alias_linear + (handle_linear SHR 10)) SHR 10
+	mov eax,[edx]
 	FreePhysical
-;
-    mov ax,sys_dir_sel
-    mov ds,ax
-	mov dword ptr [bx],0
 ;
 	mov eax,es:p_cr3
 	FreePhysical
