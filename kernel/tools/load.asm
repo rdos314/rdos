@@ -1012,6 +1012,9 @@ GetAdapterSize	Endp
 	extrn init:near
 
 load:
+    mov ax,3
+    int 10h
+;    
 	call CheckVect
 	call GateA20
 	call InitGdt

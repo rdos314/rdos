@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "rdos.h"
 #include "httpcust.h"
 #include "httpcmd.h"
 
@@ -72,7 +73,7 @@ THttpCustomPage::~THttpCustomPage()
 
 /*##########################################################################
 #
-#   Name       : THttpCustomPage::Write
+#   Name       : THttpCustomPage::WriteFile
 #
 #   Purpose....: Write header & file
 #
@@ -81,26 +82,41 @@ THttpCustomPage::~THttpCustomPage()
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpCustomPage::Write(TFile &File, int ErrorCode, const char *ContentType)
+void THttpCustomPage::WriteFile(TPathName &path, const char *ContentType)
 {
-	char *Buf = new char[256];
-	int count;
+    FCmd->WriteFile(path, ContentType);
+}
 
-	FCmd->WriteStartHeader(ErrorCode);
-	FCmd->WriteOption("Accept-Ranges", "bytes");
-	FCmd->WriteOption("Content-Type", ContentType);
-	FCmd->WriteLongOption("Content-Length", File.GetSize());
-	FCmd->WriteEndHeader();
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::StartPush
+#
+#   Purpose....: Start server push
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::StartPush()
+{
+    FCmd->StartPush();
+}
 
-	File.SetPos(0);
-
-	count = File.Read(Buf, 256);
-	while (count)
-	{
-		FCmd->FServer->Write(Buf, count);
-		count = File.Read(Buf, 256);
-	}
-	delete Buf;
+/*##########################################################################
+#
+#   Name       : THttpCustomPage::PushFile
+#
+#   Purpose....: Push header & file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCustomPage::PushFile(TPathName &path, const char *ContentType)
+{
+    return FCmd->PushFile(path, ContentType);
 }
 
 /*##########################################################################
@@ -116,15 +132,36 @@ void THttpCustomPage::Write(TFile &File, int ErrorCode, const char *ContentType)
 ##########################################################################*/
 void THttpCustomPage::Get(const char *Name)
 {
+	int i = 0;
+	char str[50];
+
+	StartPush();
+
 	TFile File(FFileName.GetData(), 0);
 
-	File.Write("<html><body><h2>RDOS Webserver</h2>\r\n");
-	File.Write("Default page for (");
-	File.Write(FFileName.GetData());
-	File.Write(")<br>\r\n");
-	File.Write("</body></html>\r\n");
+	while (FCmd->IsOpen())
+	{
+		File.SetSize(0);
+		File.SetPos(0);
 
-	Write(File, 200, "text/html");
+		File.Write("<html><body><h2>RDOS Webserver</h2>\r\n");
+		File.Write("Default page for (");
+		File.Write(FFileName.GetData());
+		File.Write(")<br>\r\n");
+
+		sprintf(str, "%d", i);
+		i++;
+
+		File.Write(str);
+		File.Write("<br>\r\n");
+
+		File.Write("</body></html>\r\n");
+
+		if (!PushFile(FFileName.GetData(), "text/html"))
+		    break;
+
+		RdosWaitMilli(1000);
+	}
 }
 
 /*##########################################################################

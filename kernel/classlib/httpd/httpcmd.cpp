@@ -347,6 +347,9 @@ void THttpCommand::AddOpt(char *name, char *param)
 	THttpOption *opt = new THttpOption(name, param);
 	THttpOption *curr;
 
+	if (!strcmp(name, "User-Agent"))
+	    FUserAgent = param;
+
     opt->FList = 0;
 	curr = FOptList;
    
@@ -433,6 +436,47 @@ int THttpCommand::ScanCmdLine(char *line, void *arg)
 		return FALSE;
 	else
 	    return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::IsOpen
+#
+#   Purpose....: Check if socket is open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCommand::IsOpen()
+{
+    return FServer->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::IsMSIE
+#
+#   Purpose....: Check if browser is Internet Explorer (doesn't handle
+#                server push!)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCommand::IsMSIE()
+{
+    const char *ptr = FUserAgent.GetData();
+
+    if (strstr(ptr, "Opera"))
+        return FALSE;
+
+    if (strstr(ptr, "MSIE"))
+        return TRUE;
+    else
+        return FALSE;
 }
 
 /*##########################################################################
@@ -554,7 +598,7 @@ void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
 ##########################################################################*/
 const char *THttpCommand::GetErrorText(int ErrorCode)
 {
-    switch (ErrorCode)
+	 switch (ErrorCode)
     {
         case 200:
             return "OK";
@@ -563,7 +607,7 @@ const char *THttpCommand::GetErrorText(int ErrorCode)
             return "NOT MODIFIED";
             
         case 404:
-            return "NOT FOUND";
+				return "NOT FOUND";
 
         default:
             return "UNKNOWN ERROR";
@@ -586,7 +630,7 @@ void THttpCommand::WriteStartHeader(int ErrorCode)
     char str[80];
     TDateTime CurrTime;
 
-    if (FMajor)
+	 if (FMajor)
     {
         sprintf(str, "HTTP/%d.%d %d ", FMajor, FMinor, ErrorCode);
         FServer->Write(str);
@@ -632,7 +676,7 @@ void THttpCommand::WriteError(int ErrorCode)
 
     sprintf(str, "<html><body><h2>RDOS Webserver</h2>%s (%d)</body></html>",
             GetErrorText(ErrorCode), ErrorCode);
-    
+
     WriteStartHeader(ErrorCode);
     WriteOption("Content-Type", "text/html");
     WriteLongOption("Content-Length", strlen(str));
@@ -653,26 +697,26 @@ void THttpCommand::WriteError(int ErrorCode)
 ##########################################################################*/
 void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 {
-	int count;
+    int count;
 
-    TFile file = path.OpenFile();	
-    TDateTime time(file.GetTime());
+	TFile file = path.OpenFile();
+	TDateTime time(file.GetTime());
 
-    if (time == GetModifiedSince())
-    {
-	    WriteStartHeader(304);
-        WriteEndHeader();
-    }
-    else
-    {
-    	char *Buf = new char[512];
-    	
+	if (time == GetModifiedSince())
+	{
+        WriteStartHeader(304);
+		WriteEndHeader();
+	}
+	else
+	{
+	    char *Buf = new char[512];
+
 		WriteStartHeader(200);
-        WriteTimeOption("Last-Modified", time);
-        WriteOption("Accept-Ranges", "bytes");
-        WriteOption("Content-Type", ContentType);
-        WriteLongOption("Content-Length", file.GetSize());
-        WriteEndHeader();
+		WriteTimeOption("Last-Modified", time);
+		WriteOption("Accept-Ranges", "bytes");
+		WriteOption("Content-Type", ContentType);
+		WriteLongOption("Content-Length", file.GetSize());
+		WriteEndHeader();
 
 		count = file.Read(Buf, 512);
 		while (count)
@@ -683,6 +727,73 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 		delete Buf;
 
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::StartPush
+#
+#   Purpose....: Start server push
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::StartPush()
+{
+	int MSIE = IsMSIE();
+
+	WriteStartHeader(200);
+
+	if (!MSIE)
+	{
+    	WriteOption("Content-type", "multipart/x-mixed-replace;boundary=ThisRandomString");
+    	WriteEndHeader();
+    	FServer->Write("--ThisRandomString\r\n");
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::PushFile
+#
+#   Purpose....: Push a file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THttpCommand::PushFile(TPathName &path, const char *ContentType)
+{
+	int count;
+	char *Buf = new char[512];
+	int MSIE = IsMSIE();
+
+	TFile file = path.OpenFile();
+	TDateTime time(file.GetTime());
+
+	WriteOption("Content-Type", ContentType);
+	WriteLongOption("Content-Length", file.GetSize());
+	WriteEndHeader();
+
+	 count = file.Read(Buf, 512);
+	 while (count)
+	 {
+		  FServer->Write(Buf, count);
+		  count = file.Read(Buf, 512);
+	 }
+	 delete Buf;
+
+	 if (MSIE)
+		  FServer->Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=1>\r\n");
+	 else
+		  FServer->Write("--ThisRandomString\r\n");
+
+	 FServer->Push();
+
+	 return !MSIE;
 }
 
 /*##########################################################################

@@ -56,6 +56,8 @@ public:
 	virtual ~THttpCommand();
 
 	void Run();
+	int IsOpen();
+	int IsMSIE();
 
 	static int ErrorLevel;
 
@@ -86,6 +88,9 @@ protected:
 	void WriteFile(TPathName &path, const char *ContentType);
 	void WriteError(int ErrorCode);
 
+	void StartPush();
+	int PushFile(TPathName &path, const char *ContentType);
+
 	char *SkipOptDelim(char *p);
 	void AddOpt(char *name, char *param);
 
@@ -99,6 +104,8 @@ protected:
 
 	int FMajor;
 	int FMinor;
+
+    TString FUserAgent;
 
 	TString FMethod;
 	TString FCmdLine;

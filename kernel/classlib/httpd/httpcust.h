@@ -47,7 +47,9 @@ public:
 	virtual void Post(const char *Name);
 
 protected:
-	void Write(TFile &File, int ErrorCode, const char *ContentType);
+	void WriteFile(TPathName &path, const char *ContentType);
+	void StartPush();
+	int PushFile(TPathName &path, const char *ContentType);
 
 	THttpCommand *FCmd;
 	TString FFileName;

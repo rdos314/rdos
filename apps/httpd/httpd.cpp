@@ -63,7 +63,7 @@ void WriteCommand(THttpSocketServer *server, const char *str)
 void cdecl main()
 {
 	Factory.OnCommand = WriteCommand;
-	Factory.RootDir = "e:\\wwwroot";
+	Factory.RootDir = "d:\\wwwroot";
 	Factory.AddCustomPage(&def);
 	TSocket::Listen(&Factory, 80, 0x4000);
 }
