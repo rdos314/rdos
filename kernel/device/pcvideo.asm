@@ -150,6 +150,50 @@ code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
 
+error	Proc far
+	stc
+	ret
+error	Endp
+
+ModeTab:
+mt00 DW OFFSET error,			pc_video_code_sel
+mt01 DW OFFSET error,			pc_video_code_sel
+mt02 DW OFFSET error,			pc_video_code_sel
+mt03 DW OFFSET error,			pc_video_code_sel
+mt04 DW OFFSET error,			pc_video_code_sel
+mt05 DW OFFSET error,			pc_video_code_sel
+mt06 DW OFFSET error,			pc_video_code_sel
+mt07 DW OFFSET error,			pc_video_code_sel
+mt08 DW OFFSET error,			pc_video_code_sel
+mt09 DW OFFSET error,			pc_video_code_sel
+mt0A DW OFFSET error,			pc_video_code_sel
+mt0B DW OFFSET error,			pc_video_code_sel
+mt0C DW OFFSET error,			pc_video_code_sel
+mt0D DW OFFSET error,			pc_video_code_sel
+mt0E DW OFFSET error,			pc_video_code_sel
+mt0F DW OFFSET error,			pc_video_code_sel
+mt10 DW OFFSET error,			pc_video_code_sel
+mt11 DW OFFSET error,			pc_video_code_sel
+mt12 DW OFFSET error,			pc_video_code_sel
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			init_flat_mode
+;
+;		DESCRIPTION:	Init flat video-mode
+;
+;		RETURNS:		AX		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_flat_mode	Proc far
+	xor ax,ax
+	ret
+init_flat_mode	Endp
+
 page
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -286,11 +330,17 @@ AddVideoMode	Proc near
 	push es
 	push fs
 ;
-	int 3
 	mov dx,es
 	mov fs,dx
 	push ax
 	push cx
+;
+	mov ax,cs
+	mov es,ax	
+	mov ax,cx
+	mov di,OFFSET init_flat_mode
+	RegisterVideoMode
+;
 	mov cx,fs:vmi_x_pixels
 	mov dx,fs:vmi_y_pixels
 	call FindResolution
@@ -622,6 +672,7 @@ page
 
 SetWindowPm16	Proc near
 	push ds
+	push si
 	push bp
 ;
 	xor bh,bh
