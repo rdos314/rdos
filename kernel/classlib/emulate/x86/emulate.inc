@@ -231,4 +231,6 @@ total_cycles	DD ?
 
 running			DB ?
 
+code_fetch      DB ?
+
 cpu_struc	ENDS

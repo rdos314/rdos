@@ -731,10 +731,12 @@ read_code_byte32:
 	push cx
 	mov ebx,[ebp].reg_eip
 	push ebx
+	mov [ebp].code_fetch,1
 	call ReadByte
+	mov [ebp].code_fetch,0
 	pop ebx
-	inc ebx
 	mov [ebp].reg_eip,ebx
+	inc ebx
 	pop cx
 	mov [ebp+esi].d_access,ch
 	pop cx
@@ -749,7 +751,9 @@ read_code_byte16:
 	push cx
 	movzx ebx,word ptr [ebp].reg_eip
 	push bx
+	mov [ebp].code_fetch,1
 	call ReadByte
+	mov [ebp].code_fetch,0
 	pop bx
 	inc bx
 	mov word ptr [ebp].reg_eip,bx

@@ -144,6 +144,10 @@ UsedVMLinear    MACRO
 
 ;;;;;;;;;;; PAGING ;;;;;;;;;;;;;;
 
+FreeV86	MACRO
+	UserGate free_v86_nr
+					ENDM
+
 ; IN  EAX     	Size
 ; IN  BX		Owner
 ; IN  EDX      	Flat offset

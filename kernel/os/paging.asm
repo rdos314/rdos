@@ -1332,6 +1332,44 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			FreeV86
+;
+;		DESCRIPTION:	Free adapter areas in V86 process (C0000-FFFFF)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_v86_name	DB 'Free V86',0
+
+free_v86	PROC far
+	push ds
+	push eax
+	push ecx
+	push edx
+;
+	mov ax,process_page_sel
+	mov ds,ax
+;	
+    mov edx,0A0000h SHR 10
+	mov ecx,060000h SHR 12
+	mov eax,2
+
+free_v86_loop:
+    mov [edx],eax
+	add edx,4
+	loop free_v86_loop
+;
+	pop edx
+	pop ecx
+	pop eax
+	pop ds
+	retf32
+free_v86	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SET_FLAT_LINEAR_VALID
 ;
 ;		DESCRIPTION:	Set flat page to valid
@@ -1682,6 +1720,12 @@ init_paging_gates	PROC near
 	xor cl,cl
 	mov ax,set_page_kernel_nr
 	RegisterOsGate
+;
+	mov si,OFFSET free_v86
+	mov di,OFFSET free_v86_name
+	xor dx,dx
+	mov ax,free_v86_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET set_flat_linear_invalid
 	mov di,OFFSET set_flat_linear_invalid_name

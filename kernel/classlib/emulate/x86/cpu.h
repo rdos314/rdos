@@ -148,6 +148,7 @@ public:
 	virtual void Reset();
 
 	char GetIntVector();
+	void ReadCode(void *Buffer, unsigned long Address, int Size);
 	void ReadFromMemory(void *Buffer, unsigned long Address, int Size);
 	void WriteToMemory(void *Buffer, unsigned long Address, int Size);
 	void ReadFromIo(void *Buffer, unsigned short int Port, int Size);
@@ -226,6 +227,7 @@ public:
 	char DataValid;
 	long TotalCycles;
 	char Running;
+	char CodeFetch;
 
 // end of common variables with emulate.inc
 	void (*OnIdle)(TCpu *Cpu);
@@ -245,6 +247,7 @@ protected:
 	virtual void NotifyIdle();
 	virtual void NotifySetClk();
 	virtual void NotifyResetClk();
+	virtual char ReadCode(unsigned long Address);
 	virtual char ReadFromMemory(unsigned long Address);
 	virtual void WriteToMemory(unsigned long Address, char Value);
 	virtual char ReadFromIo(unsigned short int Port);

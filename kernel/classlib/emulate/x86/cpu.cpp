@@ -49,6 +49,7 @@ void __stdcall WriteRegs(TCpu *Cpu);
 void __stdcall WriteFpuRegs(TCpu *Cpu);
 void __stdcall Emulate(TCpu *Cpu);
 char __stdcall GetIntVector(TCpu *Cpu);
+void __stdcall ReadCode(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
 void __stdcall ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
 void __stdcall WriteToMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size);
 void __stdcall ReadFromIo(TCpu *Cpu, void *Buffer, unsigned short int Port, int Size);
@@ -83,7 +84,10 @@ char __stdcall GetIntVector(TCpu *Cpu)
 *##########################################################################*/
 void __stdcall ReadFromMemory(TCpu *Cpu, void *Buffer, unsigned long Address, int Size)
 {
-	Cpu->ReadFromMemory(Buffer, Address, Size);
+    if (Cpu->CodeFetch)
+    	Cpu->ReadCode(Buffer, Address, Size);
+    else
+	    Cpu->ReadFromMemory(Buffer, Address, Size);
 }
 
 /*##################  WriteToMemory  ###############
@@ -132,6 +136,8 @@ void __stdcall WriteToIo(TCpu *Cpu, void *Buffer, unsigned short Port, int Size)
 TCpu::TCpu()
 {
 	int i;
+
+	CodeFetch = 0;
 
 	for (i = 0; i < MAX_BREAKPOINTS; i++)
 		FBreakpoints[i] = 0;
@@ -334,6 +340,18 @@ char TCpu::GetIntVector()
 		return 0;
 }
 
+/*##################  TCpu::ReadCode  ###############
+*   Purpose....: Read code                      				            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+char TCpu::ReadCode(unsigned long Address)
+{
+    return ReadFromMemory(Address);
+}
+
 /*##################  TCpu::ReadFromMemory  ###############
 *   Purpose....: Read from memory				            #
 *   In params..: *                                                          #
@@ -388,6 +406,31 @@ void TCpu::WriteToIo(unsigned short Port, char Value)
 {
 	if (OnWriteToIo)
 		(*OnWriteToIo)(this, Port, Value);
+}
+
+/*##################  TCpu::ReadCode  ###############
+*   Purpose....: Read code				            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-30 le                                                #
+*##########################################################################*/
+void TCpu::ReadCode(void *Buffer, unsigned long Address, int Size)
+{
+	int i;
+	char *Dest;
+
+	if (Running)
+		AddCycles((Size - 1) / 4 + 1);
+
+	Dest = (char *)Buffer;
+
+	for (i = 0; i < Size; i++)
+	{
+		*Dest = ReadCode(Address);
+		Address++;
+		Dest++;
+	}
 }
 
 /*##################  TCpu::ReadFromMemory  ###############
