@@ -266,7 +266,6 @@ math_st4		DT ?
 math_st5		DT ?
 math_st6		DT ?
 math_st7		DT ?
-math_used		DW ?
 math_prev_op	DB ?,?
 tss_thread		DW ?
 tss_error_code	DW ?

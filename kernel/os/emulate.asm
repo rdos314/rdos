@@ -975,7 +975,7 @@ emtD2	DW OFFSET EmD2,					OFFSET EmD3
 emtD4	DW OFFSET EmulateError,			OFFSET EmulateError
 emtD6	DW OFFSET EmulateError,			OFFSET EmXlat
 emtD8	DW OFFSET EmD8,					OFFSET EmD9
-emtDA	DW OFFSET EmDA,					OFFSET EmDA
+emtDA	DW OFFSET EmDA,					OFFSET EmDB
 emtDC	DW OFFSET EmDC,					OFFSET EmDD
 emtDE	DW OFFSET EmDE,					OFFSET EmDF
 emtE0	DW OFFSET EmLoopnzShort,		OFFSET EmLoopzShort

@@ -85,20 +85,13 @@ disc_block_count		DW ?
 disc_timer_id			DW ?
 disc_current			DD ?
 disc_queue				DD ?
+disc_pending			DD ?
 disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
-disc_unit_arr			DD ?
+disc_buf				DW ?
 
 disc_def_struc		ENDS
-
-disc_unit_struc	STRUC
-
-disc_sectors			DW ?
-disc_unit_pad			DW ?
-disc_sector_arr			DD ?
-
-disc_unit_struc	ENDS
 
 drive_def_struc	STRUC
 
@@ -154,9 +147,9 @@ allocate_list	PROC near
 	mov eax,1000h
 	AllocateBigLinear
 	mov ds:disc_list,edx
-	pop edx
-	pop ecx
 	pop eax
+	pop ecx
+	pop edx
 	ret
 allocate_list	ENDP
 
@@ -291,23 +284,26 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 check_buf	PROC near
-	push esi
-	movzx esi,cx
-	mov edi,ds:[4*esi].disc_unit_arr
+	push ds
+	push si
+	mov si,cx
+	shl si,2
+	mov ds,ds:disc_buf
+	mov edi,ds:[si]
 	or edi,edi
-	jz check_buf_fail
-;
-	movzx esi,dx
-	mov edi,es:[4*esi+edi].disc_sector_arr
-	or edi,edi
-	clc
-	jnz check_buf_done
-	
-check_buf_fail:
 	stc
-
+	jz check_buf_done
+check_buf_loop:
+	cmp dx,es:[edi].dh_sector
+	jbe check_buf_done
+check_buf_next:
+	mov edi,es:[edi].dh_next
+	cmp edi,[si]
+	jne check_buf_loop
+	stc
 check_buf_done:
-	pop esi
+	pop si
+	pop ds
 	ret
 check_buf	ENDP
 
@@ -431,39 +427,48 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 insert_buf	PROC near
+	push ds
 	push eax
-	push edx
-	push esi
+	push ebx
+	push dx
+	push si
 ;
-	movzx esi,es:[edi].dh_unit
-	mov edx,ds:[4*esi].disc_unit_arr
-	or edx,edx
+	mov si,es:[edi].dh_unit
+	shl si,2
+	mov ds,ds:disc_buf
+	mov eax,ds:[si]
+	or eax,eax
 	jne insert_buf_used
-;
-	push ecx
-	push edi
-	mov edi,OFFSET disc_sector_arr
-	movzx ecx,ds:disc_sectors_per_unit
-	mov eax,ecx
-	shl eax,2
-	add eax,edi
-	AllocateSmallLinear
-	mov ds:[4*esi].disc_unit_arr,edx
-	mov es:[edx].disc_sectors,0
-	add edi,edx
-	xor eax,eax
-	rep stos dword ptr es:[edi]
-	pop edi
-	pop ecx
-
+insert_buf_empty:
+	mov es:[edi].dh_prev,edi
+	mov es:[edi].dh_next,edi
+	mov ds:[si],edi
+	jmp insert_buf_done
 insert_buf_used:
-	inc es:[edx].disc_sectors
-	movzx esi,es:[edi].dh_sector
-	mov es:[4*esi+edx].disc_sector_arr,edi
-;
-	pop esi
-	pop edx
+	mov dx,es:[edi].dh_sector
+	cmp dx,es:[eax].dh_sector
+	jnc insert_buf_search_loop
+insert_buf_first:
+	mov ds:[si],edi
+	jmp insert_buf_link
+insert_buf_search_loop:
+	mov eax,es:[eax].dh_next
+	cmp eax,ds:[si]
+	je insert_buf_link
+	cmp dx,es:[eax].dh_sector
+	jnc insert_buf_search_loop
+insert_buf_link:	
+	mov ebx,es:[eax].dh_prev
+	mov es:[eax].dh_prev,edi
+	mov es:[ebx].dh_next,edi
+	mov es:[edi].dh_prev,ebx
+	mov es:[edi].dh_next,eax	
+insert_buf_done:
+	pop si
+	pop dx
+	pop ebx
 	pop eax
+	pop ds
 	ret
 insert_buf	ENDP
 
@@ -521,30 +526,31 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 remove_buf	PROC near
-	push ecx
-	push edx
-	push esi
+	push ds
+	push eax
+	push ebx
+	push si
 ;
-	movzx esi,es:[edi].dh_unit
-	mov edx,ds:[4*esi].disc_unit_arr
-	or edx,edx
-	jz remove_buf_done
-;
-	movzx ecx,es:[edi].dh_sector
-	mov es:[4*ecx+edx].disc_sector_arr,0
-	sub es:[edx].disc_sectors,1
-	jnz remove_buf_done
-;
-	mov ds:[4*esi].disc_unit_arr,0
-	movzx ecx,ds:disc_sectors_per_unit
-	shl ecx,2
-	add ecx,OFFSET disc_sector_arr
-	FreeLinear
-
+	mov si,es:[edi].dh_unit
+	shl si,2
+	mov ds,ds:disc_buf
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edi].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edi
+	jne remove_buf_more
+	mov dword ptr ds:[si],0
+	jmp remove_buf_done
+remove_buf_more:
+	cmp edi,ds:[si]
+	jne remove_buf_done
+	mov ds:[si],eax
 remove_buf_done:
-	pop esi
-	pop edx
-	pop ecx
+	pop si
+	pop ebx
+	pop eax
+	pop ds
 	ret
 remove_buf	ENDP
 
@@ -599,6 +605,88 @@ block_cont:
 	EnterSection ds:disc_section
 	ret
 block	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TIMEOUT_CALLBACK
+;
+;		DESCRIPTION:	Timeout callback
+;
+;		PARAMETERS:		CX		Disc selector
+;						EDX:EAX	Timeout time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+timeout_callback	Proc far
+	mov ds,cx
+	mov ds:disc_timer_id,0
+	mov ebx,ds:disc_pending
+	or ebx,ebx
+	jz timeout_callback_done
+	push eax
+	push edx
+	mov bx,ds:disc_thread
+	Signal
+	mov ax,cs
+	mov es,ax
+	GetThread
+	mov bx,ax
+	pop edx
+	pop eax
+	add eax,1193000
+	adc edx,0
+	mov di,OFFSET timeout_callback
+	mov ds:disc_timer_id,cx
+	StartTimer
+timeout_callback_done:
+	ret
+timeout_callback	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			REFRESH_TIMER
+;
+;		DESCRIPTION:	Refresh timer
+;
+;		PARAMETERS:		DS		Disc selector
+;						ES		Flat_sel
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+refresh_timer	Proc near
+	push eax
+	mov ax,ds:disc_timer_id
+	or ax,ax
+	jnz refresh_timer_done
+	push es
+	push cx
+	push edx
+	push di
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET timeout_callback
+	mov cx,ds
+	GetThread
+	mov bx,ax
+	GetSystemTime
+	add eax,1193000
+	adc edx,0
+	mov ds:disc_timer_id,cx
+	StartTimer
+	pop di
+	pop edx
+	pop cx
+	pop es	
+refresh_timer_done:
+	pop eax
+	ret
+refresh_timer	Endp
 
 PAGE
 
@@ -676,51 +764,19 @@ open_disc	Proc near
 	pop si
 	pop ds
 	jc open_disc_done
-;
 	mov ds:disc_sectors_per_unit,ax
 	mov ds:disc_bytes_per_sector,cx
 	mov ds:disc_units,dx
-;
 	push es
-	push ecx
-	push si
 	push di
-;
-	mov ecx,OFFSET disc_unit_arr
 	movzx eax,dx
 	shl eax,2
-	add eax,ecx
 	AllocateSmallGlobalMem
+	mov ds:disc_buf,es
 	xor di,di
-	xor si,si
-	rep movsb
-;
 	xor eax,eax
-	movzx edi,di
-	movzx ecx,dx
-	rep stos dword ptr es:[edi]
-;
-	mov si,ds
-	mov di,es
-	mov ax,gdt_sel
-	mov ds,ax
-	mov eax,[si]
-	xchg eax,[di]
-	mov [si],eax
-	mov eax,[si+4]
-	xchg eax,[di+4]
-	mov [si+4],eax
-	mov ds,si
-	mov es,di
-	FreeMem
-;
-	pop di
-	pop si
-	pop ecx
-	pop es
-;
-	push es
-	push di
+	mov cx,dx
+	rep stosd	
 	call init_drives
 	pop di
 	pop es
@@ -729,6 +785,64 @@ open_disc_done:
 	ret
 open_disc	Endp
 	
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UPDATE_PENDING
+;
+;		DESCRIPTION:	Start I/O an pending requests older than 1 sec
+;
+;		PARAMETERS:		DS		Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_pending	Proc near
+	GetSystemTime
+	sub eax,1193000
+	sbb dx,0
+	mov si,OFFSET disc_pending
+	mov edi,[si]
+	or edi,edi
+	jz update_pending_done	
+	mov ecx,edi
+update_pending_loop:
+	mov ebx,es:[edi].dh_time_lsb
+	sub ebx,eax
+	mov bx,es:[edi].dh_time_msb
+	sbb bx,dx
+	jg update_pending_skip
+	mov ebx,es:[edi].dh_next
+	mov [si],edi
+	call remove
+	push si
+	mov si,OFFSET disc_queue
+	call insert
+	pop si
+	cmp edi,ebx
+	je update_pending_done
+;
+	cmp ecx,edi
+	jne update_pending_not_head
+;
+	mov edi,ebx
+	mov ecx,edi
+	jmp update_pending_loop
+
+update_pending_not_head:
+	mov edi,ebx
+	jmp update_pending_next
+
+update_pending_skip:
+	mov edi,es:[edi].dh_next
+update_pending_next:
+	cmp edi,ecx
+	jne update_pending_loop
+update_pending_done:
+	ret
+update_pending	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -794,7 +908,9 @@ perform_io_do_write:
 	EnterSection ds:disc_section
 	popf
 	mov edi,ds:disc_current
-	mov es:[edi].dh_state,STATE_USED
+	jnc perform_io_insert
+	mov si,OFFSET disc_pending
+	call insert
 	jmp perform_io_completed
 perform_io_read:
 	mov edi,es:[edi].dh_data
@@ -809,8 +925,10 @@ perform_io_cont1:
 	EnterSection ds:disc_section
 	popf
 	mov edi,ds:disc_current
-	jc perform_io_completed
+	jc perform_io_insert
 	mov es:[edi].dh_state,STATE_USED
+perform_io_insert:
+	call insert_buf
 perform_io_completed:
 	mov ds:disc_current,0
 ;
@@ -884,8 +1002,13 @@ discbuf_thread:
 	mov ds,ax
 	GetThread
 	mov ds:disc_thread,ax
-;
+	mov ax,flat_sel
+	mov es,ax
+discbuf_thread_loop:
+	cmp ds:disc_buf,0
+	jne discbuf_thread_opened
 	push ds
+	push es
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
@@ -894,12 +1017,11 @@ discbuf_thread:
 	mov ax,4
 	mov cx,100h
 	CreateThread
+	pop es
 	pop ds
 	WaitForSignal
-	mov ax,flat_sel
-	mov es,ax
-
-discbuf_thread_loop:
+	jmp discbuf_thread_loop
+discbuf_thread_opened:
 	cli
 	cmp ds:disc_block_count,0
 	jne discbuf_thread_process
@@ -908,6 +1030,7 @@ discbuf_thread_process:
 	sti
 	EnterSection ds:disc_section
 	mov ds:disc_block_count,0
+	call update_pending
 	call perform_io
 	LeaveSection ds:disc_section
 	jmp discbuf_thread_loop
@@ -973,11 +1096,13 @@ install_disc_loop:
 	mov word ptr ds:disc_proc+2,cx
 	mov ds:disc_current,0
 	mov ds:disc_queue,0
+	mov ds:disc_pending,0
 	mov ds:disc_list,0
 	mov ds:disc_free,0
 	mov ds:disc_thread,-1
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
+	mov ds:disc_buf,0
 	InitSection ds:disc_section
 	pop di
 	pop es
@@ -1244,6 +1369,9 @@ lock_loop:
 	jnc lock_found
 	call check_current
 	jnc lock_read_signal
+	mov si,OFFSET disc_pending
+	call check
+	jnc lock_found
 	mov si,OFFSET disc_queue
 	call check
 	jnc lock_read_signal
@@ -1337,9 +1465,10 @@ modify_try_again:
 modify_not_current:
 	call check_buf
 	jc modify_done
-;
-	mov bx,ds:disc_thread
-	Signal
+	call remove_buf
+	mov si,OFFSET disc_pending
+	call insert
+	call refresh_timer
 modify_done:
 	LeaveSection ds:disc_section
 	clc

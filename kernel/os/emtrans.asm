@@ -1542,8 +1542,8 @@ EmPopf	endp
 	public EmLahf
 
 EmLahf	proc near
-	mov al,byte ptr [bp].reg_eax+1
-	mov byte ptr [bp].reg_eflags,al
+	mov al,byte ptr [bp].reg_eflags
+	mov byte ptr [bp].reg_eax+1,al
 	ret
 EmLahf	endp
 	
@@ -1559,8 +1559,8 @@ EmLahf	endp
 	public EmSahf
 
 EmSahf	proc near
-	mov al,byte ptr [bp].reg_eflags
-	mov byte ptr [bp].reg_eax+1,al
+	mov al,byte ptr [bp].reg_eax+1
+	mov byte ptr [bp].reg_eflags,al
 	ret
 EmSahf	endp
 	

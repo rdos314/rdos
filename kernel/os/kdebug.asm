@@ -1016,15 +1016,9 @@ math7	DB 'ST(7)=  ',0
 
 write_math	PROC near	
 	WriteAsciiz
-	mov dx,gs:math_used
-	or dx,dx
-	jmp write_math_end		; fix this !!!
-	jz write_math_end
-	and dl,3
-	cmp dl,3
-	je write_math_end
 	finit
 	fld tbyte ptr gs:[si]
+	push es
 	push ax
 	mov ax,kdebug_data_sel
 	mov es,ax
@@ -1032,12 +1026,13 @@ write_math	PROC near
 	mov al,' '
 	mov cx,35
 	rep stosb
+	mov cx,35
 	mov di,OFFSET op_in_text	
 	mov dl,18
 	call float_to_string
 	WriteSizeString
 	pop ax
-write_math_end:
+	pop es
 	call NewLine
 	ret
 write_math	ENDP

@@ -914,25 +914,26 @@ init_default_tss	PROC near
 ; dr0 - dr7
 ;
 	xor edx,edx
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
+	mov ds:tss_dr0,edx
+	mov ds:tss_dr1,edx
+	mov ds:tss_dr2,edx
+	mov ds:tss_dr3,edx
+	mov ds:tss_dr7,edx
 ;
-; 387 status,  tr†d block
+; 387 status
 ;
-	mov bx,OFFSET math_used
-	mov [bx],dx
-	mov [bx+2],es
-	add bx,4
-	mov [bx],dx
-	mov [bx+2],dx
+	mov ds:math_control,37Fh
+	mov ds:math_status,0
+	mov ds:math_tag,0FFFFh
+	mov ds:math_eip,0
+	mov ds:math_cs,0
+	mov ds:math_data_offs,0
+	mov ds:math_data_sel,0
+;
+; thread control
+;
+	mov ds:tss_thread,es
+	mov ds:tss_error_code,dx
 ;
 	push ds
 	push es
@@ -1376,33 +1377,32 @@ init_task_tss	PROC near
 	xor dx,dx
 	mov [bx],dx
 	mov word ptr [bx+2],-1
-	add bx,4
 ;
 ; dr0 - dr7
 ;
-	xor dx,dx
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
+	xor edx,edx
+	mov ds:dr0,edx
+	mov ds:dr1,edx
+	mov ds:dr2,edx
+	mov ds:dr3,edx
+	mov ds:dr7,edx
 ;
-; 387 status,  tr†d block
+; 387 status
 ;
-	mov bx,OFFSET math_used
-	mov [bx],dx
-	mov [bx+2],es
-	add bx,4
-	mov [bx],dx
-	mov [bx+2],dx
+	mov ds:math_control,37Fh
+	mov ds:math_status,0
+	mov ds:math_tag,0FFFFh
+	mov ds:math_eip,0
+	mov ds:math_cs,0
+	mov ds:math_data_offs,0
+	mov ds:math_data_sel,0
+;
+; thread control
+;
+	mov ds:tss_thread,es
+	mov ds:tss_error_code,dx
 	ret
 init_task_tss	ENDP
-
 
 PAGE
 	
@@ -1996,29 +1996,30 @@ init_first_tss	PROC near
 ;
 ; dr0 - dr7
 ;
-	mov bx,OFFSET tss_dr0
 	xor edx,edx
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
-	mov [bx],edx
-	add bx,4
+	mov ds:tss_dr0,edx
+	mov ds:tss_dr1,edx
+	mov ds:tss_dr2,edx
+	mov ds:tss_dr3,edx
+	mov ds:tss_dr7,edx
 ;
-; 387 status, tr†d block
+; 387 status
 ;
-	mov bx,OFFSET math_used
-	mov [bx],dx
-	mov [bx+2],es
-	add bx,4
-	mov [bx],dx
-	mov [bx+2],dx
-	add bx,4
-	mov al,0
+	mov ds:math_control,37Fh
+	mov ds:math_status,0
+	mov ds:math_tag,0FFFFh
+	mov ds:math_eip,0
+	mov ds:math_cs,0
+	mov ds:math_data_offs,0
+	mov ds:math_data_sel,0
+;
+; thread control
+;
+	mov ds:tss_thread,es
+	mov ds:tss_error_code,dx
+;
+	mov bx,OFFSET tss_bitmap_space
+	xor al,al
 	mov cx,tss_size
 fill_bm_mod_more:
 	mov [bx],al

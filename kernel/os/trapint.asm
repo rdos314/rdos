@@ -846,19 +846,28 @@ t6_ret:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
 trap_7:
 	push dword ptr 0
 	push bp
 	mov bp,sp
 	sti
-	push ds
 	push eax
-	push bx
+	push ebx
+	push ds
 	mov ax,thread_tss_sel
 	mov ds,ax
 	mov ax,[bp].vm_err
 	mov ds:tss_error_code,ax
+	mov eax,cr0
+	test al,4
+	jz math_real_fpu
+
+math_emulate_fpu:
+	mov al,7
+	call emulate
+	jmp math_done
+
+math_real_fpu:
 	clts
 	mov ax,thread_sel
 	mov ds,ax
@@ -870,33 +879,30 @@ trap_7:
 		assume ds:system_seg
 	mov ax,math_tss
 	cmp ax,bx
-	je math_same_tss
+	je math_done
+;
 	mov math_tss,bx
 	or ax,ax
 	jz math_reload
+;
 	mov ds,ax
 	push bx
 		assume ds:tss_seg
 	mov bx,OFFSET math_control
 	db 66h
 	fsave [bx]
-	mov math_used,1
 	pop bx
+
 math_reload:
 	mov ds,bx
 	mov bx,OFFSET math_control
-	mov ax,math_used
-	or ax,ax
-	jz math_init
 	db 66h
 	frstor [bx]
-	jmp math_same_tss
-math_init:
-	finit
-math_same_tss:
-	pop bx
-	pop eax
+
+math_done:
 	pop ds
+	pop ebx
+	pop eax
 	cli
 	and byte ptr [bp+2].vm_eflags, NOT 1
 	pop bp

@@ -143,8 +143,9 @@ EmFi&op&Word	Proc near
 	push ax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call IntToReal
 	add sp,2
 	push cx
@@ -157,8 +158,9 @@ EmFi&op&Word	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call op&Real
@@ -190,8 +192,9 @@ EmFi&op&Dword	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call LongToReal
 	add sp,4
 	push cx
@@ -204,8 +207,9 @@ EmFi&op&Dword	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call op&Real
@@ -237,8 +241,9 @@ EmF&op&Single	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call FloatToReal
 	add sp,4
 	push cx
@@ -251,8 +256,9 @@ EmF&op&Single	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call op&Real
@@ -285,8 +291,9 @@ EmF&op&Double	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call DoubleToReal
 	add sp,8
 	push cx
@@ -299,8 +306,9 @@ EmF&op&Double	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call op&Real
@@ -340,10 +348,11 @@ EmF&op&StiSt	Proc near
 	push cx
 	push edx
 	push eax
-	push ss
-	push sp
+	mov ax,sp
 	push ss
 	push bx
+	push ss
+	push ax
 	call op&Real
 	add sp,20
 ;
@@ -380,8 +389,9 @@ EmF&op&StSti	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call op&Real
@@ -434,8 +444,9 @@ EmFi&op&rWord	Proc near
 	push ax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call IntToReal
 	add sp,2
 	push cx
@@ -482,8 +493,9 @@ EmFi&op&rDword	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call LongToReal
 	add sp,4
 	push cx
@@ -530,8 +542,9 @@ EmF&op&rSingle	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call FloatToReal
 	add sp,4
 	push cx
@@ -579,8 +592,9 @@ EmF&op&rDouble	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call DoubleToReal
 	add sp,8
 	push cx
@@ -637,9 +651,9 @@ EmF&op&rStiSt	Proc near
 	push eax
 	mov ax,sp
 	push ss
-	push bx
-	push ss
 	push ax
+	push ss
+	push bx
 	call op&Real
 	add sp,20
 ;
@@ -1892,8 +1906,9 @@ EmFildWord	Proc near
 	push ax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call IntToReal
 	add sp,2
 	call PushReal
@@ -1917,8 +1932,9 @@ EmFildDword	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call LongToReal
 	add sp,4
 	call PushReal
@@ -1943,8 +1959,9 @@ EmFildQword	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call QwordToReal
 	add sp,8
 	call PushReal
@@ -1968,8 +1985,9 @@ EmFldSingle	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call FloatToReal
 	add sp,4
 	call PushReal
@@ -1994,8 +2012,9 @@ EmFldDouble	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call DoubleToReal
 	add sp,8
 	call PushReal
@@ -2039,8 +2058,9 @@ EmFbld	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call BcdToReal
 	add sp,10
 	call PushReal
@@ -2084,8 +2104,9 @@ EmFistWord	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push fs:math_control
 	call RealToInt
 	jnc EmFistWordSave
@@ -2134,8 +2155,9 @@ EmFistDword	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push fs:math_control
 	call RealToLong
 	jnc EmFistDwordSave
@@ -2184,8 +2206,9 @@ EmFistpQword	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push fs:math_control
 	call RealToQword
 	jnc EmFistpQwordSave
@@ -2218,8 +2241,9 @@ EmFstSingle	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call RealToFloat
 	jnc EmFstSingleSave
 ;
@@ -2267,8 +2291,9 @@ EmFstDouble	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call RealToDouble
 	jnc EmFstDoubleSave
 ;
@@ -2342,8 +2367,9 @@ EmFbstp	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call RealToBcd
@@ -2493,8 +2519,9 @@ EmFiComWord	Proc near
 	push ax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call IntToReal
 	add sp,2
 	push cx
@@ -2507,8 +2534,9 @@ EmFiComWord	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2544,8 +2572,9 @@ EmFiComDword	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call LongToReal
 	add sp,4
 	push cx
@@ -2558,8 +2587,9 @@ EmFiComDword	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2595,8 +2625,9 @@ EmFComSingle	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call FloatToReal
 	add sp,4
 	push cx
@@ -2609,8 +2640,9 @@ EmFComSingle	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2647,8 +2679,9 @@ EmFComDouble	Proc near
 	push eax
 	mov fs:math_data_offs,ebx
 	mov fs:math_data_sel,si
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call DoubleToReal
 	add sp,8
 	push cx
@@ -2661,8 +2694,9 @@ EmFComDouble	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2705,8 +2739,9 @@ EmFComStSti	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2747,8 +2782,9 @@ EmFCompp	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CmpReal
@@ -2893,8 +2929,9 @@ EmFrndint	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push fs:math_control
 	call RealToQword
 	jnc EmFrndintDo
@@ -2907,8 +2944,9 @@ EmFrndintDo:
 	add sp,10
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call QwordToReal
 	add sp,8
 	xor bl,bl
@@ -3035,8 +3073,9 @@ EmFsqrt	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcSqrt
 	add sp,10
 	xor bl,bl
@@ -3059,8 +3098,9 @@ EmFscale	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	mov eax,RC_CHOP
 	push eax
 	call RealToInt
@@ -3149,8 +3189,9 @@ EmFxtract	Proc near
 	push edx
 	push eax
 	push bx
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call IntToReal
 	add sp,2
 	xor bl,bl
@@ -3198,8 +3239,9 @@ EmFprem	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	push fs:math_control
@@ -3231,8 +3273,9 @@ EmFprem1	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	push fs:math_control
@@ -3258,8 +3301,9 @@ EmF2xm1	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcExp2M1
 	add sp,10
 	xor bl,bl
@@ -3282,8 +3326,9 @@ EmFyl2x	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcLog2
 	add sp,10
 ;
@@ -3298,8 +3343,9 @@ EmFyl2x	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call MulReal
@@ -3329,8 +3375,9 @@ EmFyl2xp1	Proc near
 	push word ptr cs:Const1+8
 	push dword ptr cs:Const1+4
 	push dword ptr cs:Const1
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call AddReal
@@ -3339,8 +3386,9 @@ EmFyl2xp1	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcLog2
 	add sp,10
 ;
@@ -3355,8 +3403,9 @@ EmFyl2xp1	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call MulReal
@@ -3382,8 +3431,9 @@ EmFsin	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcSin
 	add sp,10
 	xor bl,bl
@@ -3406,8 +3456,9 @@ EmFcos	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcCos
 	add sp,10
 	xor bl,bl
@@ -3430,13 +3481,15 @@ EmFsincos	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcSin
 	xor bl,bl
 	call PutReal
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcCos
 	add sp,10
 	call PushReal
@@ -3458,8 +3511,9 @@ EmFptan	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	call CalcCos
 ;
 	mov bx,sp
@@ -3474,8 +3528,9 @@ EmFptan	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call DivReal
@@ -3512,8 +3567,9 @@ EmFpatan	Proc near
 	push cx
 	push edx
 	push eax
+	mov ax,sp
 	push ss
-	push sp
+	push ax
 	push ss
 	push bx
 	call CalcAtan
@@ -3536,38 +3592,38 @@ EmFpatan	Endp
 	public EmD8
 
 EmD8HiTab:
-EmD8C0	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C2	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C4	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C6	DD OFFSET EmFAddStSti,			OFFSET EmFAddStSti
-EmD8C8	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CA	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CC	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8CE	DD OFFSET EmFMulStSti,			OFFSET EmFMulStSti
-EmD8D0	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D2	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D4	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D6	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmD8D8	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DA	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DC	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8DE	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmD8E0	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E2	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E4	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E6	DD OFFSET EmFSubStSti,			OFFSET EmFSubStSti
-EmD8E8	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EA	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EC	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8EE	DD OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
-EmD8F0	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F2	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F4	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F6	DD OFFSET EmFDivStSti,			OFFSET EmFDivStSti
-EmD8F8	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FA	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FC	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
-EmD8FE	DD OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
+EmD8C0	DW OFFSET EmFAddStSti,			OFFSET EmFAddStSti
+EmD8C2	DW OFFSET EmFAddStSti,			OFFSET EmFAddStSti
+EmD8C4	DW OFFSET EmFAddStSti,			OFFSET EmFAddStSti
+EmD8C6	DW OFFSET EmFAddStSti,			OFFSET EmFAddStSti
+EmD8C8	DW OFFSET EmFMulStSti,			OFFSET EmFMulStSti
+EmD8CA	DW OFFSET EmFMulStSti,			OFFSET EmFMulStSti
+EmD8CC	DW OFFSET EmFMulStSti,			OFFSET EmFMulStSti
+EmD8CE	DW OFFSET EmFMulStSti,			OFFSET EmFMulStSti
+EmD8D0	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmD8D2	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmD8D4	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmD8D6	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmD8D8	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmD8DA	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmD8DC	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmD8DE	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmD8E0	DW OFFSET EmFSubStSti,			OFFSET EmFSubStSti
+EmD8E2	DW OFFSET EmFSubStSti,			OFFSET EmFSubStSti
+EmD8E4	DW OFFSET EmFSubStSti,			OFFSET EmFSubStSti
+EmD8E6	DW OFFSET EmFSubStSti,			OFFSET EmFSubStSti
+EmD8E8	DW OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
+EmD8EA	DW OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
+EmD8EC	DW OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
+EmD8EE	DW OFFSET EmFSubrStSti,			OFFSET EmFSubrStSti
+EmD8F0	DW OFFSET EmFDivStSti,			OFFSET EmFDivStSti
+EmD8F2	DW OFFSET EmFDivStSti,			OFFSET EmFDivStSti
+EmD8F4	DW OFFSET EmFDivStSti,			OFFSET EmFDivStSti
+EmD8F6	DW OFFSET EmFDivStSti,			OFFSET EmFDivStSti
+EmD8F8	DW OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
+EmD8FA	DW OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
+EmD8FC	DW OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
+EmD8FE	DW OFFSET EmFDivrStSti,			OFFSET EmFDivrStSti
 
 EmD8:
 	SaveFp
@@ -3578,25 +3634,25 @@ EmD8:
 
 EmD8Hi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmD8HiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmD8HiTab
 
 EmD8LowTab:
-EmD8_000	DD OFFSET EmFAddSingle
-EmD8_001	DD OFFSET EmFMulSingle
-EmD8_010	DD OFFSET EmFComSingle
-EmD8_011	DD OFFSET EmFCompSingle
-EmD8_100	DD OFFSET EmFSubSingle
-EmD8_101	DD OFFSET EmFSubrSingle
-EmD8_110	DD OFFSET EmFDivSingle
-EmD8_111	DD OFFSET EmFDivrSingle
+EmD8_000	DW OFFSET EmFAddSingle
+EmD8_001	DW OFFSET EmFMulSingle
+EmD8_010	DW OFFSET EmFComSingle
+EmD8_011	DW OFFSET EmFCompSingle
+EmD8_100	DW OFFSET EmFSubSingle
+EmD8_101	DW OFFSET EmFSubrSingle
+EmD8_110	DW OFFSET EmFDivSingle
+EmD8_111	DW OFFSET EmFDivrSingle
 
 EmD8Low:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmD8LowTab
+	jmp word ptr cs:[bx].EmD8LowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3610,38 +3666,38 @@ EmD8Low:
 	public EmD9
 
 EmD9HiTab:
-emD9C0	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C2	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C4	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C6	DD OFFSET EmFldSt,				OFFSET EmFldSt
-emD9C8	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CA	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CC	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9CE	DD OFFSET EmFxch,				OFFSET EmFxch
-emD9D0	DD OFFSET EmFnop,				OFFSET EmulateError
-emD9D2	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D4	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D6	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9D8	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DA	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DC	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9DE	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E0	DD OFFSET EmFchs,				OFFSET EmFabs
-emD9E2	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E4	DD OFFSET EmulateError,			OFFSET EmFxam
-emD9E6	DD OFFSET EmulateError,			OFFSET EmulateError
-emD9E8	DD OFFSET EmFld1,				OFFSET EmFldl2t
-emD9EA	DD OFFSET EmFldl2e,				OFFSET EmFldpi
-emD9EC	DD OFFSET EmFldlg2,				OFFSET EmFldln2
-emD9EE	DD OFFSET EmFldz,				OFFSET EmulateError
-emD9F0	DD OFFSET EmF2xm1,				OFFSET EmFyl2x
-emD9F2	DD OFFSET EmFptan,				OFFSET EmFpatan
-emD9F4	DD OFFSET EmFxtract,			OFFSET EmFprem1
-emD9F6	DD OFFSET EmFdecstp,			OFFSET EmFincstp
-emD9F8	DD OFFSET EmFprem,				OFFSET EmFyl2xp1
-emD9FA	DD OFFSET EmFsqrt,				OFFSET EmFsincos
-emD9FC	DD OFFSET EmFrndint,			OFFSET EmFscale
-emD9FE	DD OFFSET EmFsin,				OFFSET EmFcos
+emD9C0	DW OFFSET EmFldSt,				OFFSET EmFldSt
+emD9C2	DW OFFSET EmFldSt,				OFFSET EmFldSt
+emD9C4	DW OFFSET EmFldSt,				OFFSET EmFldSt
+emD9C6	DW OFFSET EmFldSt,				OFFSET EmFldSt
+emD9C8	DW OFFSET EmFxch,				OFFSET EmFxch
+emD9CA	DW OFFSET EmFxch,				OFFSET EmFxch
+emD9CC	DW OFFSET EmFxch,				OFFSET EmFxch
+emD9CE	DW OFFSET EmFxch,				OFFSET EmFxch
+emD9D0	DW OFFSET EmFnop,				OFFSET EmulateError
+emD9D2	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9D4	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9D6	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9D8	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9DA	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9DC	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9DE	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9E0	DW OFFSET EmFchs,				OFFSET EmFabs
+emD9E2	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9E4	DW OFFSET EmulateError,			OFFSET EmFxam
+emD9E6	DW OFFSET EmulateError,			OFFSET EmulateError
+emD9E8	DW OFFSET EmFld1,				OFFSET EmFldl2t
+emD9EA	DW OFFSET EmFldl2e,				OFFSET EmFldpi
+emD9EC	DW OFFSET EmFldlg2,				OFFSET EmFldln2
+emD9EE	DW OFFSET EmFldz,				OFFSET EmulateError
+emD9F0	DW OFFSET EmF2xm1,				OFFSET EmFyl2x
+emD9F2	DW OFFSET EmFptan,				OFFSET EmFpatan
+emD9F4	DW OFFSET EmFxtract,			OFFSET EmFprem1
+emD9F6	DW OFFSET EmFdecstp,			OFFSET EmFincstp
+emD9F8	DW OFFSET EmFprem,				OFFSET EmFyl2xp1
+emD9FA	DW OFFSET EmFsqrt,				OFFSET EmFsincos
+emD9FC	DW OFFSET EmFrndint,			OFFSET EmFscale
+emD9FE	DW OFFSET EmFsin,				OFFSET EmFcos
 
 EmD9:
 	SaveFp
@@ -3652,25 +3708,25 @@ EmD9:
 
 EmD9Hi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmD9HiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmD9HiTab
 
 EmD9LowTab:
-emD9_000	DD OFFSET EmFldSingle
-emD9_001	DD OFFSET EmulateError
-emD9_010	DD OFFSET EmFstSingle
-emD9_011	DD OFFSET EmFstpSingle
-emD9_100	DD OFFSET EmFldenv
-emD9_101	DD OFFSET EmFldcw
-emD9_110	DD OFFSET EmFstenv
-emD9_111	DD OFFSET EmFstcw
+emD9_000	DW OFFSET EmFldSingle
+emD9_001	DW OFFSET EmulateError
+emD9_010	DW OFFSET EmFstSingle
+emD9_011	DW OFFSET EmFstpSingle
+emD9_100	DW OFFSET EmFldenv
+emD9_101	DW OFFSET EmFldcw
+emD9_110	DW OFFSET EmFstenv
+emD9_111	DW OFFSET EmFstcw
 
 EmD9Low:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmD9LowTab
+	jmp word ptr cs:[bx].EmD9LowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3684,38 +3740,38 @@ EmD9Low:
 	public EmDA
 
 EmDAHiTab:
-EmDAC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDACE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDADE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAE8	DD OFFSET EmulateError,			OFFSET EmFCompp
-EmDAEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDAFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDAC0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAC2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAC4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAC6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAC8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDACA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDACC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDACE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAD0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAD2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAD4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAD6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAD8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDADA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDADC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDADE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAE0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAE2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAE4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAE6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAE8	DW OFFSET EmulateError,			OFFSET EmFCompp
+EmDAEA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAEC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAEE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAF0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAF2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAF4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAF6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAF8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAFA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAFC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDAFE	DW OFFSET EmulateError,			OFFSET EmulateError
 
 EmDA:
 	SaveFp
@@ -3726,25 +3782,25 @@ EmDA:
 
 EmDAHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDAHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDAHiTab
 
 EmDALowTab:
-EmDA_000	DD OFFSET EmFiAddDword
-EmDA_001	DD OFFSET EmFiMulDword
-EmDA_010	DD OFFSET EmFiComDword
-EmDA_011	DD OFFSET EmFiCompDword
-EmDA_100	DD OFFSET EmFiSubDword
-EmDA_101	DD OFFSET EmFiSubrDword
-EmDA_110	DD OFFSET EmFiDivDword
-EmDA_111	DD OFFSET EmFiDivrDword
+EmDA_000	DW OFFSET EmFiAddDword
+EmDA_001	DW OFFSET EmFiMulDword
+EmDA_010	DW OFFSET EmFiComDword
+EmDA_011	DW OFFSET EmFiCompDword
+EmDA_100	DW OFFSET EmFiSubDword
+EmDA_101	DW OFFSET EmFiSubrDword
+EmDA_110	DW OFFSET EmFiDivDword
+EmDA_111	DW OFFSET EmFiDivrDword
 
 EmDALow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDALowTab
+	jmp word ptr cs:[bx].EmDALowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3758,38 +3814,38 @@ EmDALow:
 	public EmDB
 
 EmDBHiTab:
-EmDBC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE2	DD OFFSET EmFclex,				OFFSET EmFinit
-EmDBE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBE8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDBFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDBC0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBC2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBC4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBC6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBC8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBCA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBCC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBCE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBD0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBD2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBD4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBD6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBD8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBDA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBDC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBDE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBE0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBE2	DW OFFSET EmFclex,				OFFSET EmFinit
+EmDBE4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBE6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBE8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBEA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBEC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBEE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBF0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBF2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBF4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBF6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBF8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBFA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBFC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDBFE	DW OFFSET EmulateError,			OFFSET EmulateError
 
 EmDB:
 	SaveFp
@@ -3800,25 +3856,25 @@ EmDB:
 
 EmDBHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDBHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDBHiTab
 
 EmDBLowTab:
-emDB_000	DD OFFSET EmFildDword
-emDB_001	DD OFFSET EmulateError
-emDB_010	DD OFFSET EmFistDword
-emDB_011	DD OFFSET EmFistpDword
-emDB_100	DD OFFSET EmulateError
-emDB_101	DD OFFSET EmFldExtended
-emDB_110	DD OFFSET EmulateError
-emDB_111	DD OFFSET EmFstpExtended
+emDB_000	DW OFFSET EmFildDword
+emDB_001	DW OFFSET EmulateError
+emDB_010	DW OFFSET EmFistDword
+emDB_011	DW OFFSET EmFistpDword
+emDB_100	DW OFFSET EmulateError
+emDB_101	DW OFFSET EmFldExtended
+emDB_110	DW OFFSET EmulateError
+emDB_111	DW OFFSET EmFstpExtended
 
 EmDBLow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDBLowTab
+	jmp word ptr cs:[bx].EmDBLowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3832,38 +3888,38 @@ EmDBLow:
 	public EmDC
 
 EmDCHiTab:
-EmDCC0	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC2	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC4	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC6	DD OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
-EmDCC8	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCA	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCC	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCCE	DD OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
-EmDCD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDCE0	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE2	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE4	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE6	DD OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
-EmDCE8	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEA	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEC	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCEE	DD OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
-EmDCF0	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF2	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF4	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF6	DD OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
-EmDCF8	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFA	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFC	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
-EmDCFE	DD OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
+EmDCC0	DW OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
+EmDCC2	DW OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
+EmDCC4	DW OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
+EmDCC6	DW OFFSET EmFAddStiSt,			OFFSET EmFAddStiSt
+EmDCC8	DW OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
+EmDCCA	DW OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
+EmDCCC	DW OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
+EmDCCE	DW OFFSET EmFMulStiSt,			OFFSET EmFMulStiSt
+EmDCD0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCD2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCD4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCD6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCD8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCDA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCDC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCDE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDCE0	DW OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
+EmDCE2	DW OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
+EmDCE4	DW OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
+EmDCE6	DW OFFSET EmFSubrStiSt,			OFFSET EmFSubrStiSt
+EmDCE8	DW OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
+EmDCEA	DW OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
+EmDCEC	DW OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
+EmDCEE	DW OFFSET EmFSubStiSt,			OFFSET EmFSubStiSt
+EmDCF0	DW OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
+EmDCF2	DW OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
+EmDCF4	DW OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
+EmDCF6	DW OFFSET EmFDivrStiSt,			OFFSET EmFDivrStiSt
+EmDCF8	DW OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
+EmDCFA	DW OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
+EmDCFC	DW OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
+EmDCFE	DW OFFSET EmFDivStiSt,			OFFSET EmFDivStiSt
 
 EmDC:
 	SaveFp
@@ -3874,25 +3930,25 @@ EmDC:
 
 EmDCHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDCHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDCHiTab
 
 EmDCLowTab:
-EmDC_000	DD OFFSET EmFAddDouble
-EmDC_001	DD OFFSET EmFMulDouble
-EmDC_010	DD OFFSET EmFComDouble
-EmDC_011	DD OFFSET EmFCompDouble
-EmDC_100	DD OFFSET EmFSubDouble
-EmDC_101	DD OFFSET EmFSubrDouble
-EmDC_110	DD OFFSET EmFDivDouble
-EmDC_111	DD OFFSET EmFDivrDouble
+EmDC_000	DW OFFSET EmFAddDouble
+EmDC_001	DW OFFSET EmFMulDouble
+EmDC_010	DW OFFSET EmFComDouble
+EmDC_011	DW OFFSET EmFCompDouble
+EmDC_100	DW OFFSET EmFSubDouble
+EmDC_101	DW OFFSET EmFSubrDouble
+EmDC_110	DW OFFSET EmFDivDouble
+EmDC_111	DW OFFSET EmFDivrDouble
 
 EmDCLow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDCLowTab
+	jmp word ptr cs:[bx].EmDCLowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3906,38 +3962,38 @@ EmDCLow:
 	public EmDD
 
 EmDDHiTab:
-EmDDC0	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC2	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC4	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC6	DD OFFSET EmFfreeSt,			OFFSET EmFfreeSt
-EmDDC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDD0	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD2	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD4	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD6	DD OFFSET EmFstSt,				OFFSET EmFstSt
-EmDDD8	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDA	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDC	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDDE	DD OFFSET EmFstpSt,				OFFSET EmFstpSt
-EmDDE0	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE2	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE4	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE6	DD OFFSET EmFComStSti,			OFFSET EmFComStSti
-EmDDE8	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEA	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEC	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDEE	DD OFFSET EmFCompStSti,			OFFSET EmFCompStSti
-EmDDF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDDFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDDC0	DW OFFSET EmFfreeSt,			OFFSET EmFfreeSt
+EmDDC2	DW OFFSET EmFfreeSt,			OFFSET EmFfreeSt
+EmDDC4	DW OFFSET EmFfreeSt,			OFFSET EmFfreeSt
+EmDDC6	DW OFFSET EmFfreeSt,			OFFSET EmFfreeSt
+EmDDC8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDCA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDCC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDCE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDD0	DW OFFSET EmFstSt,				OFFSET EmFstSt
+EmDDD2	DW OFFSET EmFstSt,				OFFSET EmFstSt
+EmDDD4	DW OFFSET EmFstSt,				OFFSET EmFstSt
+EmDDD6	DW OFFSET EmFstSt,				OFFSET EmFstSt
+EmDDD8	DW OFFSET EmFstpSt,				OFFSET EmFstpSt
+EmDDDA	DW OFFSET EmFstpSt,				OFFSET EmFstpSt
+EmDDDC	DW OFFSET EmFstpSt,				OFFSET EmFstpSt
+EmDDDE	DW OFFSET EmFstpSt,				OFFSET EmFstpSt
+EmDDE0	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmDDE2	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmDDE4	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmDDE6	DW OFFSET EmFComStSti,			OFFSET EmFComStSti
+EmDDE8	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmDDEA	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmDDEC	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmDDEE	DW OFFSET EmFCompStSti,			OFFSET EmFCompStSti
+EmDDF0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDF2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDF4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDF6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDF8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDFA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDFC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDDFE	DW OFFSET EmulateError,			OFFSET EmulateError
 
 EmDD:
 	SaveFp
@@ -3948,25 +4004,25 @@ EmDD:
 
 EmDDHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDDHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDDHiTab
 
 EmDDLowTab:
-EmDD_000	DD OFFSET EmFldDouble
-EmDD_001	DD OFFSET EmulateError
-EmDD_010	DD OFFSET EmFstDouble
-EmDD_011	DD OFFSET EmFstpDouble
-EmDD_100	DD OFFSET EmFRstor
-EmDD_101	DD OFFSET EmulateError
-EmDD_110	DD OFFSET EmFSave
-EmDD_111	DD OFFSET EmFstsw
+EmDD_000	DW OFFSET EmFldDouble
+EmDD_001	DW OFFSET EmulateError
+EmDD_010	DW OFFSET EmFstDouble
+EmDD_011	DW OFFSET EmFstpDouble
+EmDD_100	DW OFFSET EmFRstor
+EmDD_101	DW OFFSET EmulateError
+EmDD_110	DW OFFSET EmFSave
+EmDD_111	DW OFFSET EmFstsw
 
 EmDDLow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDDLowTab
+	jmp word ptr cs:[bx].EmDDLowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -3980,38 +4036,38 @@ EmDDLow:
 	public EmDE
 
 EmDEHiTab:
-EmDEC0	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC2	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC4	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC6	DD OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
-EmDEC8	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECA	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECC	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDECE	DD OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
-EmDED0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDED8	DD OFFSET EmulateError,			OFFSET EmFCompp
-EmDEDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDEE0	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE2	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE4	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE6	DD OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
-EmDEE8	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEA	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEC	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEEE	DD OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
-EmDEF0	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF2	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF4	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF6	DD OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
-EmDEF8	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFA	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFC	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
-EmDEFE	DD OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
+EmDEC0	DW OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
+EmDEC2	DW OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
+EmDEC4	DW OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
+EmDEC6	DW OFFSET EmFAddpStiSt,			OFFSET EmFAddpStiSt
+EmDEC8	DW OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
+EmDECA	DW OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
+EmDECC	DW OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
+EmDECE	DW OFFSET EmFMulpStiSt,			OFFSET EmFMulpStiSt
+EmDED0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDED2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDED4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDED6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDED8	DW OFFSET EmulateError,			OFFSET EmFCompp
+EmDEDA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDEDC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDEDE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDEE0	DW OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
+EmDEE2	DW OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
+EmDEE4	DW OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
+EmDEE6	DW OFFSET EmFSubrpStiSt,		OFFSET EmFSubrpStiSt
+EmDEE8	DW OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
+EmDEEA	DW OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
+EmDEEC	DW OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
+EmDEEE	DW OFFSET EmFSubpStiSt,			OFFSET EmFSubpStiSt
+EmDEF0	DW OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
+EmDEF2	DW OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
+EmDEF4	DW OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
+EmDEF6	DW OFFSET EmFDivrpStiSt,		OFFSET EmFDivrpStiSt
+EmDEF8	DW OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
+EmDEFA	DW OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
+EmDEFC	DW OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
+EmDEFE	DW OFFSET EmFDivpStiSt,			OFFSET EmFDivpStiSt
 
 EmDE:
 	SaveFp
@@ -4022,25 +4078,25 @@ EmDE:
 
 EmDEHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDEHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDEHiTab
 
 EmDELowTab:
-EmDE_000	DD OFFSET EmFiAddWord
-EmDE_001	DD OFFSET EmFiMulWord
-EmDE_010	DD OFFSET EmFiComWord
-EmDE_011	DD OFFSET EmFiCompWord
-EmDE_100	DD OFFSET EmFiSubWord
-EmDE_101	DD OFFSET EmFiSubrWord
-EmDE_110	DD OFFSET EmFiDivWord
-EmDE_111	DD OFFSET EmFiDivrWord
+EmDE_000	DW OFFSET EmFiAddWord
+EmDE_001	DW OFFSET EmFiMulWord
+EmDE_010	DW OFFSET EmFiComWord
+EmDE_011	DW OFFSET EmFiCompWord
+EmDE_100	DW OFFSET EmFiSubWord
+EmDE_101	DW OFFSET EmFiSubrWord
+EmDE_110	DW OFFSET EmFiDivWord
+EmDE_111	DW OFFSET EmFiDivrWord
 
 EmDELow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDELowTab
+	jmp word ptr cs:[bx].EmDELowTab
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -4054,38 +4110,38 @@ EmDELow:
 	public EmDF
 
 EmDFHiTab:
-EmDFC0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFC8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFCE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFD8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFDE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE0	DD OFFSET EmFstswAx,			OFFSET EmulateError
-EmDFE2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFE8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFEE	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF0	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF2	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF4	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF6	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFF8	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFA	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFC	DD OFFSET EmulateError,			OFFSET EmulateError
-EmDFFE	DD OFFSET EmulateError,			OFFSET EmulateError
+EmDFC0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFC2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFC4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFC6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFC8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFCA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFCC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFCE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFD0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFD2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFD4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFD6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFD8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFDA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFDC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFDE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFE0	DW OFFSET EmFstswAx,			OFFSET EmulateError
+EmDFE2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFE4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFE6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFE8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFEA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFEC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFEE	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFF0	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFF2	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFF4	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFF6	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFF8	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFFA	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFFC	DW OFFSET EmulateError,			OFFSET EmulateError
+EmDFFE	DW OFFSET EmulateError,			OFFSET EmulateError
 
 EmDF:
 	SaveFp
@@ -4096,25 +4152,25 @@ EmDF:
 
 EmDFHi:
 	sub al,0C0h
-	movzx ebx,al
-	shl ebx,2
-	jmp dword ptr [ebx].EmDFHiTab
+	movzx bx,al
+	add bx,bx
+	jmp word ptr cs:[bx].EmDFHiTab
 
 EmDFLowTab:
-EmDF_000	DD OFFSET EmFildWord
-EmDF_001	DD OFFSET EmulateError
-EmDF_010	DD OFFSET EmFistWord
-EmDF_011	DD OFFSET EmFistpWord
-EmDF_100	DD OFFSET EmFbld
-EmDF_101	DD OFFSET EmFildQword
-EmDF_110	DD OFFSET EmFbstp
-EmDF_111	DD OFFSET EmFistpQword
+EmDF_000	DW OFFSET EmFildWord
+EmDF_001	DW OFFSET EmulateError
+EmDF_010	DW OFFSET EmFistWord
+EmDF_011	DW OFFSET EmFistpWord
+EmDF_100	DW OFFSET EmFbld
+EmDF_101	DW OFFSET EmFildQword
+EmDF_110	DW OFFSET EmFbstp
+EmDF_111	DW OFFSET EmFistpQword
 
 EmDFLow:
-	movzx ebx,al
+	movzx bx,al
 	shr bl,2
 	and bl,0Eh
-	jmp dword ptr [2*ebx].EmDFLowTab
+	jmp word ptr cs:[bx].EmDFLowTab
 
 code	ENDS
 
