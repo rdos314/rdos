@@ -20,34 +20,38 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ffspart.h
-# FLASHFS partition class
+# drive.h
+# Direct drive access class
 #
 ########################################################################*/
 
-#ifndef _FFSPART_H
-#define _FFSPART_H
+#ifndef _DRIVE_H
+#define _DRIVE_H
 
-#include "part.h"
+#include "str.h"
 
-class TFlashFsPartition : public TFsPartition
+class TDrive
 {
 public:
-	TFlashFsPartition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TDrive(int Drive);
+	~TDrive();
 
-	virtual const char *GetPartName();
-	virtual int Format();
-};
+    int IsValid();
+	int GetDriveNr();
+	
+	long GetFreeSectors();
+	long GetTotalSectors();
 
-class TFlashFsPartitionFactory : public TFsPartitionFactory
-{
-public:
-	TFlashFsPartitionFactory();
-	virtual ~TFlashFsPartitionFactory();
+	int Read(long Sector, char *buf, int size);
+	int Write(long Sector, const char *buf, int size);
+	int GetDrive(long Start, long Size);
 
 protected:
-	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	int FDrive;
+
+    int FValid;
+	long FUnits;
+	int FBytesPerUnit;
 };
 
 #endif

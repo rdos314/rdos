@@ -33,13 +33,13 @@
 class TFatPartition : public TFsPartition
 {
 public:
-	TFatPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TFatPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
 };
 
 class TFat12Partition : public TFatPartition
 {
 public:
-	TFat12Partition(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TFat12Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
 	virtual int Format();
 };
@@ -47,7 +47,7 @@ public:
 class TFat16Partition : public TFatPartition
 {
 public:
-	TFat16Partition(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TFat16Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
 	virtual int Format();
 };
@@ -55,7 +55,7 @@ public:
 class TFat32Partition : public TFatPartition
 {
 public:
-	TFat32Partition(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TFat32Partition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
 	virtual int Format();
 };
@@ -67,8 +67,8 @@ public:
 	virtual ~TFat12PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 };
 
 class TFat16PartitionFactory : public TFsPartitionFactory
@@ -78,8 +78,8 @@ public:
 	virtual ~TFat16PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 };
 
 class TFat32PartitionFactory : public TFsPartitionFactory
@@ -89,8 +89,8 @@ public:
 	virtual ~TFat32PartitionFactory();
 
 protected:
-	virtual TFsPartition *Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 };
 
 #endif

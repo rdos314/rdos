@@ -20,103 +20,107 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ffspart.cpp
-# FLASHFS partition class
+# drive.cpp
+# Direct drive access class
 #
 ########################################################################*/
 
-#include <mem.h>
-#include <stdio.h>
-
 #include "rdos.h"
-#include "ffspart.h"
+#include "drive.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
-/*##################  TFlashFsPartition::TFlashFsPartition  #############
-*   Purpose....: Partition FLASHFS constructor							                    #
+/*##################  TDrive::TDrive  #############
+*   Purpose....: Drive constructor							                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFlashFsPartition::TFlashFsPartition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
- : TFsPartition(Disc, 0xAF, Parent, Entry, Start, Size)
+TDrive::TDrive(int Drive)
 {
+    long FreeUnits;
+
+	FDrive = Drive;
+
+	FValid = RdosGetDriveInfo(FDrive, &FreeUnits, &FBytesPerUnit, &FUnits);
+
+	if (!FValid)
+	{
+	    FBytesPerUnit = 0;
+	    FUnits = 0;
+	}
 }
 
-/*##################  TFlashFsPartition::GetPartName  #############
-*   Purpose....: Get partition name						                    #
+/*##################  TDrive::~TDrive  #############
+*   Purpose....: Drive destructor							                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-const char *TFlashFsPartition::GetPartName()
+TDrive::~TDrive()
 {
-	return "FLASHFS";
 }
 
-/*##################  TFlashFsPartition::Format  #############
-*   Purpose....: Format FLASHFS partition					                    #
+/*##################  TDrive::IsValid  #############
+*   Purpose....: Is drive valid?						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TFlashFsPartition::Format()
+int TDrive::IsValid()
 {
-	return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "FLASHFS");
+    return FValid;
 }
 
-/*##################  TFlashFsPartitionFactory::TFlashFsPartitionFactory  #############
-*   Purpose....: FLASHFS partition factory constructor							                    #
+/*##################  TDrive::GetDriveNr  #############
+*   Purpose....: Get drive #						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFlashFsPartitionFactory::TFlashFsPartitionFactory()
-  : TFsPartitionFactory(0xAF, "FLASHFS")
+int TDrive::GetDriveNr()
 {
+    if (FValid)
+    	return FDrive;
+    else
+        return 0;
 }
 
-/*##################  TFlashFsPartitionFactory::~TFlashFsPartitionFactory  #############
-*   Purpose....: FLASHFS partition factory destructor							                    #
+/*##################  TDrive::GetFreeSectors  #############
+*   Purpose....: Get free sectors on drive						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFlashFsPartitionFactory::~TFlashFsPartitionFactory()
+long TDrive::GetFreeSectors()
 {
+    long FreeUnits;
+    int BytesPerUnit;
+	long Units;
+
+    if (FValid)
+    {
+		RdosGetDriveInfo(FDrive, &FreeUnits, &BytesPerUnit, &Units);
+	    return FBytesPerUnit * FreeUnits;
+	}
+	else
+	    return 0;
 }
 
-/*##################  TFlashFsPartitionFactory::Open  #############
-*   Purpose....: Open FLASHFS partition
-*   In params..: *                                                        #
+/*##################  TDrive::GetTotalSectors  #############
+*   Purpose....: Get total sectors on drive						                    #
+*   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFlashFsPartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+long TDrive::GetTotalSectors()
 {
-    return new TFlashFsPartition(Disc, Parent, Entry, Start, Size);
-}
-
-/*##################  TFlashFsPartitionFactory::Create  #############
-*   Purpose....: Create FLASHFS partition
-*   In params..: *                                                        #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-02 le                                                #
-*##########################################################################*/
-TFsPartition *TFlashFsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
-{
-	TFlashFsPartition *FatPart;
-
-    FatPart = new TFlashFsPartition(Disc, Parent, Entry, Start, Size);
-    FatPart->Format();
-	return FatPart;
+	return FBytesPerUnit * FUnits;
 }

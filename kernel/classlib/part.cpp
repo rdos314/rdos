@@ -28,7 +28,6 @@
 #include <mem.h>
 #include <stdio.h>
 
-#include "rdos.h"
 #include "part.h"
 
 #define FALSE	0
@@ -43,7 +42,7 @@ TFsPartitionFactory *TFsPartitionFactory::FPartList = 0;
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
+TPartition::TPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
 {
 	FDisc = Disc;
 	FDrive = 0;
@@ -54,6 +53,20 @@ TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, in
 	Size = PSize;
     DriveSectors = Size;
     FreeSectors = 0;
+    FDrive = 0;
+}
+
+/*##################  TPartition::~TPartition  #############
+*   Purpose....: Partition destructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TPartition::~TPartition()
+{
+    if (FDrive)
+        delete FDrive;
 }
 
 /*##################  TPartition::GetPartName  #############
@@ -75,7 +88,7 @@ const char *TPartition::GetPartName()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartition::GetDisc()
+TDisc *TPartition::GetDisc()
 {
 	return FDisc;
 }
@@ -87,7 +100,7 @@ int TPartition::GetDisc()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartition::GetDrive()
+TDrive *TPartition::GetDrive()
 {
 	return FDrive;
 }
@@ -113,13 +126,8 @@ unsigned char TPartition::GetType()
 *##########################################################################*/
 int TPartition::GetBytesPerSector()
 {
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-    int Heads;
-
-	if (RdosGetDiscInfo(FDisc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
-		return BytesPerSector;
+    if (FDisc)
+		return FDisc->GetBytesPerSector();
 	else
 		return 0;
 }
@@ -199,7 +207,7 @@ void TPartition::WriteToTable(TPartitionTable *Owner)
 	if (!FParent)
 		return;
 
-	RdosReadDisc(FDisc, FParent->Start, Buf, 512);
+	FDisc->Read(FParent->Start, Buf, 512);
 	switch (FControlEntry)
 	{
 		case 0:
@@ -220,13 +228,13 @@ void TPartition::WriteToTable(TPartitionTable *Owner)
 	}
 
 	*PartPtr = 0;
-	Owner->LbaToChs(Start, PartPtr + 1);
+	FDisc->LbaToChs(Start, PartPtr + 1);
 	*(PartPtr + 4) = FType;
-	Owner->LbaToChs(Start + Size - 1, PartPtr + 5);
+	FDisc->LbaToChs(Start + Size - 1, PartPtr + 5);
 	*(long *)(PartPtr + 8) = Start - Owner->Start;
 	*(long *)(PartPtr + 0xC) = Size;
 
-	RdosWriteDisc(FDisc, FParent->Start, Buf, 512);
+	FDisc->Write(FParent->Start, Buf, 512);
 }
 
 /*##################  TPartition::DeleteFromTable  #############
@@ -244,7 +252,7 @@ void TPartition::DeleteFromTable(TPartitionTable *Owner)
 	if (!FParent)
 		return;
 
-	RdosReadDisc(FDisc, FParent->Start, Buf, 512);
+	FDisc->Read(FParent->Start, Buf, 512);
 	switch (FControlEntry)
 	{
 		case 0:
@@ -266,7 +274,7 @@ void TPartition::DeleteFromTable(TPartitionTable *Owner)
 
 	memset(PartPtr, 0, 16);
 
-	RdosWriteDisc(FDisc, FParent->Start, Buf, 512);
+	FDisc->Write(FParent->Start, Buf, 512);
 }
 
 /*##################  TFsPartition::TFsPartition  #############
@@ -276,38 +284,21 @@ void TPartition::DeleteFromTable(TPartitionTable *Owner)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition::TFsPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
+TFsPartition::TFsPartition(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
  : TPartition(Disc, Type, Parent, Entry, PStart, PSize)
 {
-    int DriveNr;
-    int DiscNr;
-    long StartSector;
-    long DriveSize;
-    long FreeUnits;
-    int BytesPerUnit;
-    long TotalUnits;
-    int Clusters;
+	int DriveNr;
 
-	 for (DriveNr = 0; DriveNr < 25; DriveNr++)
-	 {
-		  if (RdosGetDriveDiscParam(DriveNr, &DiscNr, &StartSector, &DriveSize))
-		  {
-				if (DiscNr == Disc)
-				{
-					 if (PStart <= StartSector && PStart + PSize >= StartSector + DriveSize)
-					 {
-						  FDrive = DriveNr;
-						  if (RdosGetDriveInfo(DriveNr, &FreeUnits, &BytesPerUnit, &TotalUnits))
-						  {
-								Clusters = BytesPerUnit / 512;
-								DriveSectors = Clusters * TotalUnits;
-								FreeSectors = Clusters * FreeUnits;
-						  }
-						  break;
-					 }
-				}
-		  }
-	 }
+	DriveNr = FDisc->GetDrive(PStart, PSize);
+
+	if (DriveNr)
+		FDrive = new TDrive(DriveNr);
+
+	if (FDrive)
+	{
+	    DriveSectors = FDrive->GetTotalSectors();
+	    FreeSectors = FDrive->GetFreeSectors();
+	}
 }
 
 /*##################  TFsPartitionEntry::GetPartName  #############
@@ -378,7 +369,7 @@ int TFsPartition::Read(long Sector, char *Buf, int Count)
 	if (Sector < 0 || Sector >= Size)
 		return 0;
 
-	return RdosReadDisc(FDisc, Start + Sector, Buf, Count);
+	return FDisc->Read(Start + Sector, Buf, Count);
 }
 
 /*##################  TFsPartition::Write  #############
@@ -393,7 +384,7 @@ int TFsPartition::Write(long Sector, const char *Buf, int Count)
 	if (Sector < 0 || Sector >= Size)
 		return 0;
 
-	return RdosWriteDisc(FDisc, Start + Sector, Buf, Count);
+	return FDisc->Write(Start + Sector, Buf, Count);
 }
 
 /*##################  TFsPartition::Format  #############
@@ -415,7 +406,7 @@ int TFsPartition::Format()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFreePartition::TFreePartition(int Disc)
+TFreePartition::TFreePartition(TDisc *Disc)
  : TPartition(Disc, 0, 0, 0, 0, 0)
 {
 }
@@ -451,7 +442,7 @@ int TFreePartition::IsFree()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionTable::TPartitionTable(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
+TPartitionTable::TPartitionTable(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
  : TPartition(Disc, Type, Parent, Entry, PStart, PSize)
 {
 	int i;
@@ -642,7 +633,7 @@ void TPartitionTable::Process()
 
 	if (Start < FTotalSectors)
 	{
-		RdosReadDisc(FDisc, Start, Buf, 512);
+		FDisc->Read(Start, Buf, 512);
 		ProcessOne(0, &Buf[0x1BE]);
 		ProcessOne(1, &Buf[0x1CE]);
 		ProcessOne(2, &Buf[0x1DE]);
@@ -675,7 +666,7 @@ TPartitionTable *TPartitionTable::Create(int Entry, TFreePartition *FreePart)
 	memset(Buf, 0, 512);
 	Buf[510] = 0x55;
 	Buf[511] = 0xAA;
-	RdosWriteDisc(FDisc, PartTable->Start, Buf, 512);
+	FDisc->Write(PartTable->Start, Buf, 512);
 	PartArr[Entry] = PartTable;
 	PartTable->WriteToTable(this);
 
@@ -833,22 +824,18 @@ TFsPartitionFactory::~TFsPartitionFactory()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TString TFsPartitionFactory::GetFs(int Disc, long Start)
+TString TFsPartitionFactory::GetFs(TDisc *Disc, long Start)
 {
-    TString str;
+	TString str;
 	char Buf[512];
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-	int Heads;
 	char Name[9];
 	int i;
 
-	if (RdosGetDiscInfo(Disc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
+	if (Disc->IsValid())
 	{
-		if (Start < Sectors)
+		if (Start < Disc->GetTotalSectors())
 		{
-			RdosReadDisc(Disc, Start, Buf, 512);
+			Disc->Read(Start, Buf, 512);
 			memcpy(Name, &Buf[0x36], 8);
 			Name[8] = 0;
 
@@ -860,7 +847,7 @@ TString TFsPartitionFactory::GetFs(int Disc, long Start)
 			str = Name;
 		}
 	}
-	
+
 	return str;
 }
 
@@ -871,7 +858,7 @@ TString TFsPartitionFactory::GetFs(int Disc, long Start)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFsPartitionFactory::Parse(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TFsPartitionFactory::Parse(TDisc *Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size)
 {
 	TFsPartition *part;
 	TFsPartitionFactory *factory = 0;
@@ -913,7 +900,7 @@ TFsPartition *TFsPartitionFactory::Parse(int Disc, unsigned char Type, TPartitio
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TFsPartitionFactory::Format(int Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TFsPartitionFactory::Format(TDisc *Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size)
 {
 	TFsPartition *part;
 	TFsPartitionFactory *factory = 0;
@@ -979,7 +966,7 @@ void TFsPartitionFactory::Remove()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TDiscPartition::TDiscPartition(int Disc)
+TDiscPartition::TDiscPartition(TDisc *Disc)
 {
 	int i;
 
@@ -1028,7 +1015,7 @@ void TDiscPartition::Free()
 *##########################################################################*/
 int TDiscPartition::GetParams()
 {
-	return RdosGetDiscInfo(FDisc, &BytesPerSector, &TotalSectors, &SectorsPerCyl, &Heads);
+	return FDisc->IsValid();
 }
 
 /*##################  TDiscPartition::InsertEntry  #############
@@ -1156,7 +1143,7 @@ void TDiscPartition::AddFree()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TDiscPartition::GetDisc()
+TDisc *TDiscPartition::GetDisc()
 {
 	return FDisc;
 }
@@ -1182,7 +1169,7 @@ void TDiscPartition::Update()
 		PartRoot->FHeads = Heads;
 		PartRoot->FSectorsPerCyl = SectorsPerCyl;
 		PartRoot->Size = PartRoot->FTotalSectors;
-		RdosReadDisc(FDisc, 0, Buf, 512);
+		FDisc->Read(0, Buf, 512);
 		PartRoot->ProcessOne(0, &Buf[0x1BE]);
 		PartRoot->ProcessOne(1, &Buf[0x1CE]);
 		PartRoot->ProcessOne(2, &Buf[0x1DE]);

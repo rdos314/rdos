@@ -115,7 +115,7 @@ struct TKey
 class TRdfsPartition : public TFsPartition
 {
 public:
-	TRdfsPartition(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TRdfsPartition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual const char *GetPartName();
 	virtual int Format();
 
@@ -129,19 +129,19 @@ public:
 	TRdfsPartitionFactory();
 	virtual ~TRdfsPartitionFactory();
 
-    char CryptTab[4096];
-    TKey KeyTab[2048];
-    long ExtentSizeTab[128];
-    char BootSector[512];
+	char CryptTab[4096];
+	TKey KeyTab[2048];
+	long ExtentSizeTab[128];
+	char BootSector[512];
 
 protected:
-	virtual TFsPartition *Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
 
 	int FBootSectorID;
 
 private:
-    void Init();
+	void Init();
 };
 
 #endif

@@ -41,7 +41,7 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TRdfsPartition::TRdfsPartition(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TRdfsPartition::TRdfsPartition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
  : TFsPartition(Disc, 7, Parent, Entry, Start, Size)
 {
 }
@@ -67,7 +67,7 @@ const char *TRdfsPartition::GetPartName()
 *##########################################################################*/
 int TRdfsPartition::Format()
 {
-	return RdosFormatDrive(FDisc, Start, Size, "RDFS");
+	return RdosFormatDrive(FDisc->GetDiscNr(), Start, Size, "RDFS");
 }
 
 /*##################  TRdfsPartitionFactory::TRdfsPartitionFactory  #############
@@ -80,7 +80,7 @@ int TRdfsPartition::Format()
 TRdfsPartitionFactory::TRdfsPartitionFactory()
   : TFsPartitionFactory(7, "RDFS")
 {
-    FBootSectorID = 0;
+	FBootSectorID = 0;
 	memset(BootSector, 0, 512);
 	Init();
 }
@@ -106,8 +106,8 @@ TRdfsPartitionFactory::~TRdfsPartitionFactory()
 TRdfsPartitionFactory::TRdfsPartitionFactory(int BootSectorID)
   : TFsPartitionFactory(7, "RDFS")
 {
-    FBootSectorID = BootSectorID;
-    memset(BootSector, 0, 512);
+	FBootSectorID = BootSectorID;
+	memset(BootSector, 0, 512);
 	RdosReadResource(0, BootSectorID, BootSector, 512);
 	Init();
 }
@@ -131,9 +131,9 @@ void TRdfsPartitionFactory::Init()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TRdfsPartitionFactory::Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TRdfsPartitionFactory::Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
 {
-    return new TRdfsPartition(Disc, Parent, Entry, Start, Size);
+	return new TRdfsPartition(Disc, Parent, Entry, Start, Size);
 }
 
 /*##################  TRdfsPartitionFactory::Create  #############
@@ -143,11 +143,11 @@ TFsPartition *TRdfsPartitionFactory::Open(int Disc, TPartitionTable *Parent, int
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TRdfsPartitionFactory::Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
+TFsPartition *TRdfsPartitionFactory::Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size)
 {
 	TRdfsPartition *RdfsPart;
 
-    RdfsPart = new TRdfsPartition(Disc, Parent, Entry, Start, Size);
-    RdfsPart->Format();
+	RdfsPart = new TRdfsPartition(Disc, Parent, Entry, Start, Size);
+	RdfsPart->Format();
 	return RdfsPart;
 }

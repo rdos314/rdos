@@ -20,34 +20,43 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ffspart.h
-# FLASHFS partition class
+# disc.h
+# Direct disc access classes
 #
 ########################################################################*/
 
-#ifndef _FFSPART_H
-#define _FFSPART_H
+#ifndef _DISC_H
+#define _DISC_H
 
-#include "part.h"
+#include "str.h"
 
-class TFlashFsPartition : public TFsPartition
+class TDisc
 {
 public:
-	TFlashFsPartition(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	TDisc(int Disc);
+	~TDisc();
 
-	virtual const char *GetPartName();
-	virtual int Format();
-};
+    int IsValid();
+	int GetDiscNr();
+	int GetBytesPerSector();
+	long GetTotalSectors();
+	int GetSectorsPerCyl();
+	int GetHeads();
 
-class TFlashFsPartitionFactory : public TFsPartitionFactory
-{
-public:
-	TFlashFsPartitionFactory();
-	virtual ~TFlashFsPartitionFactory();
+	int Read(long Sector, char *buf, int size);
+	int Write(long Sector, const char *buf, int size);
+	int GetDrive(long Start, long Size);
+
+	long ChsToLba(const char *Data);
+	void LbaToChs(long Sector, char *Data);
 
 protected:
-	virtual TFsPartition *Open(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
-	virtual TFsPartition *Create(TDisc *Disc, TPartitionTable *Parent, int Entry, long Start, long Size);
+	int FDisc;
+	int FBytesPerSector;
+	long FSectors;
+	int FSectorsPerCyl;
+	int FHeads;
+	int FValid;
 };
 
 #endif
