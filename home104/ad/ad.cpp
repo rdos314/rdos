@@ -20,10 +20,14 @@
 #include "keyboard.h"
 #include "heat.h"
 #include "rad.h"
-
+#include "file.h"
+#include "ymodem.h"
+#include "log.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
+
+TFile *file;
 
 int lvcnt = 0;
 long double lv;
@@ -37,6 +41,18 @@ TSample rsmin[4], rsmax[4];
 
 THeat *heat;
 TRadiator *radiator[16];
+
+int TInDiffOk;
+long double TInLast;
+long double TInDiff;
+long double TInSum;
+int InCount;
+
+int MotDiffOk;
+long double MotLast;
+long double MotDiff;
+long double MotSum;
+long double MotMax;
 
 int HeatStartCount;
 int HeatStopCount;
@@ -214,18 +230,70 @@ void UpdateHeat()
 	else
 		RdosWriteString("EP OFF ");
 
-	sprintf(str, "VALVE %4.1Lf", heat->ReadEpValve());
+	sprintf(str, "%4.1Lf", heat->ReadEpValve());
 	RdosWriteString(str);
 
-	RdosSetCursorPosition(9, 20);
+	RdosSetCursorPosition(9, 12);
 
 	if (heat->IsVpStarted())
 		RdosWriteString("VP ON  ");
 	else
 		RdosWriteString("VP OFF ");
 
-	sprintf(str, "VALVE %4.1Lf", heat->ReadVpValve());
+	sprintf(str, "%4.1Lf", heat->ReadVpValve());
 	RdosWriteString(str);
+
+	RdosSetCursorPosition(9, 24);
+
+	if (heat->IsCircStarted())
+		RdosWriteString("CIRC ON  ");
+	else
+		RdosWriteString("CIRC OFF ");
+
+}
+
+void LogRad(TRadiator *rad, TRadLog &log)
+{
+	if (rad && rad->IsOnline())
+	{
+		log.valid = TRUE;
+		log.t = (int)(100.0 * rad->GetTemp());
+		log.ref = (int)(100.0 * rad->GetRef());
+		log.taux = (int)(100.0 * rad->GetAuxTemp());
+		log.motor = (int)(100.0 * rad->GetMotor());
+		log.light = (int)(100.0 * rad->GetLight());
+	}
+	else
+	{
+		log.valid = FALSE;
+		log.t = -1;
+		log.ref = -1;
+		log.taux = -1;
+		log.motor = -1;
+		log.light = -1;
+	}
+}
+
+void LogOne(TLog &log)
+{
+	int i;
+	TDateTime time;
+
+	for (i = 0; i < 7; i++)
+		LogRad(radiator[i], log.rad[i]);
+
+	log.LsbTime = time.GetLsb();
+	log.MsbTime = time.GetMsb();
+	log.epon = heat->IsEpStarted();
+	log.vpon = heat->IsVpStarted();
+	log.circon = heat->IsCircStarted();
+	log.epvalve = (int)(100.0 * heat->ReadEpValve());
+	log.vpvalve = (int)(100.0 * heat->ReadVpValve());
+	log.circvalve = (int)(100.0 * heat->ReadCircValve());
+	log.light = (int)(100.0 * lv);
+	log.tout = (int)(100.0 * tv[0]);
+	log.ttank = (int)(100.0 * tv[1]);
+	log.tpanna = (int)(100.0 * tv[2]);
 }
 
 void UpdateFuzzy()
@@ -239,6 +307,15 @@ void UpdateFuzzy()
 	int min;
 	int night;
 	int i;
+	long double tsum;
+	long double msum;
+	int tcount;
+	long double motmax;
+
+	tcount = 0;
+	tsum = 0.0;
+	msum = 0.0;
+	motmax = 0.0;
 
 	RdosSetCursorPosition(10, 0);
 	RdosWriteString("TEMP ");
@@ -272,6 +349,18 @@ void UpdateFuzzy()
 		if (radiator[i])
 		{
 
+			if (radiator[i]->IsOnline())
+			{
+				fval = radiator[i]->GetMotor();
+
+				tcount++;
+				tsum += radiator[i]->GetTemp() - radiator[i]->GetRef();
+				msum += fval;
+
+				if (fval > motmax)
+					motmax = fval;
+			}
+
 			if (night)
 				radiator[i]->SetNightRef();
 			else
@@ -290,6 +379,7 @@ void UpdateFuzzy()
 				fval = radiator[i]->GetTemp();
 				sprintf(str, "%4.1Lf ", fval);
 				RdosWriteString(str);
+
 			}
 			else
 				RdosWriteString("---- ");
@@ -321,35 +411,86 @@ void UpdateFuzzy()
 				sprintf(str, " %3.1Lf ", fval);
 				RdosWriteString(str);
 
-				if (i == 0)
-				{
-					if (fval >= 8.5)
-					{
-						if (HeatStartCount >= 5)
-							heat->StartHeat();
-						HeatStartCount++;
-						HeatStopCount = 0;
-					}
-					else
-					{
-						if (fval <= 5.0)
-						{
-							if (HeatStopCount >= 5)
-								heat->StopHeat();
-							HeatStartCount = 0;
-							HeatStopCount++;
-						}
-						else
-						{
-							HeatStartCount = 0;
-							HeatStopCount = 0;
-						}
-					}
-				}
 			}
 			else
 				RdosWriteString(" --- ");
 		}
+	}
+
+	if (tcount)
+	{
+		tsum = tsum / tcount;
+		msum = msum / tcount;
+
+		TInSum += tsum;
+		InCount++;
+
+		MotSum += msum;
+
+		if (MotMax < motmax)
+			MotMax = motmax;
+
+		if (InCount == 10)
+		{
+			TInSum = TInSum / InCount;
+
+			if (TInDiffOk)
+				TInDiff = TInSum - TInLast;
+
+			TInLast = TInSum;
+
+			RdosSetCursorPosition(8, 0);
+
+			if (TInDiffOk)
+				sprintf(str, "TERR %6.2Lf %6.2Lf", TInLast, TInDiff);
+			else
+				sprintf(str, "TERR %6.2Lf", TInLast);
+
+			RdosWriteString(str);
+
+			MotSum = MotSum / InCount;
+
+			if (MotDiffOk)
+				MotDiff = MotSum - MotLast;
+
+			MotLast = MotSum;
+
+			fval = (MotMax + MotLast) / 2.0;
+
+			if (fval >= 7.5)
+				heat->StartHeat();
+
+			if (fval <= 5.0)
+				heat->StopHeat();
+
+			if (fval <= 2.0)
+				heat->StopCirc();
+
+			if (fval >= 3.0)
+				heat->StartCirc();
+
+			heat->WriteCircValve(fval);
+
+			RdosSetCursorPosition(8, 20);
+			sprintf(str, "MOT %6.2Lf %6.2Lf", MotLast, fval);
+			RdosWriteString(str);
+
+			TInDiffOk = TRUE;
+			InCount = 0;
+			TInSum = 0.0;
+			MotMax = 0.0;
+			MotDiffOk = TRUE;
+			MotSum = 0.0;
+		}
+	}
+
+	TLog log;
+
+	if (file->IsOpen())
+	{
+		LogOne(log);
+		file->SetPos(file->GetSize());
+		file->Write(&log, sizeof(TLog));
 	}
 }
 
@@ -521,6 +662,36 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 {
 }
 
+void Stat(void *param)
+{
+	TDateTime *time;
+	TWait wait;
+	TSerialDevice serial(&wait, 1, 19200);
+	TYModem ymodem(&serial);
+	char ch;
+
+	RdosWaitMilli(2000);
+
+	serial.Open();
+	serial.Enable();
+
+	for (;;)
+	{
+		if (serial.WaitForChar(2000))
+		{
+			ch = serial.Read();
+
+			if (ch == 'D')
+			{
+				if (!ymodem.SendFile("z:\\raw.log"))
+					serial.Write("Failed");
+			}
+			else
+				serial.Write(ch);
+		}
+	}	
+}
+
 void cdecl main()
 {
 	int channel;
@@ -530,10 +701,26 @@ void cdecl main()
 	TLightDevice *light;
 	TKeyboardDevice *Keyboard;
 
+	TInDiffOk = FALSE;
+	InCount = 0;
+	TInSum = 0.0;
+	TInLast = 0.0;
+	TInDiff = 0.0;
+
+	MotDiffOk = FALSE;
+	MotSum = 0.0;
+	MotLast = 0.0;
+	MotDiff = 0.0;
+	MotMax = 0.0;
+
 	HeatStartCount = 0;
 	HeatStopCount = 0;
 
 	RdosWaitMilli(250);
+
+	file = new TFile("z:\\raw.log", 0);
+
+	RdosCreateThread(Stat, "STAT", 0, 0x10000);
 
 	heat = new THeat;
 	radiator[0] = new TRadiator(0x20);
@@ -541,6 +728,8 @@ void cdecl main()
 	radiator[2] = new TRadiator(0x22);
 	radiator[3] = new TRadiator(0x23);
 	radiator[4] = new TRadiator(0x24);
+	radiator[5] = new TRadiator(0x25);
+	radiator[6] = new TRadiator(0x26);
 
 	Keyboard = new TKeyboardDevice(&Wait);
 	Keyboard->OnKeyPress = KeyPress;

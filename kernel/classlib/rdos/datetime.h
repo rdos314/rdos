@@ -34,10 +34,13 @@ public:
 	TDateTime();
 	TDateTime(const TDateTime &Source);
 	TDateTime(unsigned long Msb, unsigned long Lsb);
+    TDateTime(long double real);
 	TDateTime(int Year, int Month, int Day);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec);
 	TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, int ms);
 
+	operator long double () const;
+ 
 	long GetMsb() const;
 	long GetLsb() const;
     void SetRaw(unsigned long Msb, unsigned long Lsb);

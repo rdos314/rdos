@@ -20,69 +20,43 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heat.h
-# Heat class
+# ymodem.h
+# Ymodem class
 #
 ########################################################################*/
 
-#ifndef _HEAT_H
-#define _HEAT_H
+#ifndef _YMODEM_H
+#define _YMODEM_H
 
-#include "minsamp.h"
-#include "datetime.h"
-#include "device.h"
+#include "serial.h"
+#include "file.h"
 
-class THeat : public TDevice
+class TYModem
 {
 public:
-	THeat();
-	virtual ~THeat();
+    TYModem(TSerialDevice *Serial);
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+    int SendFile(const char *FileName);
+    int SendFile(TFile *File);
 
-	void StartHeat();
-	void StopHeat();
-	void UpdateEp(long double value);
+    int RecFile(const char *FileName);
+    int RecFile(TFile *File);
 
-	void StartCirc();
-	void StopCirc();
-	int IsCircStarted();
-	void WriteCircValve(long double value);
-    long double ReadCircValve();
-
-	int IsEpStarted();
-	int IsVpStarted();
-	long double ReadEpValve();
-	long double ReadVpValve();
+	void (*OnHeader)(TYModem *ymodem, char Header);
 
 protected:
-	void ToggleCircLine();
-	void ToggleEpLine();
-	void ToggleVpLine();
-	void WriteEpValve(int value);
-	void WriteVpValve(int value);
+	void NotifyHeader(char header);
+    int SendStartup();
+	int SendPacket(char *Buffer, int Size);
+    int RecType();
+	int RecStartup();
+    int RecPacket(char *Buffer, int *Size);
 
-	void UpdateHeat();
-	void Update();
-	virtual void Execute();
-
-private:
-	void StartEp();
-	void StopEp();
-	void StartVp();
-	void StopVp();
-
-	int FStarted;
-	int FStat;
-	long double FEpTemp;
-	int FUpdate;
-    int FCircValve;
-	int FEpValve;
-	int FVpValve;
-	int FHeatOn;
-	int FEpPending;
-	int FEpStart;
-	int FCircOn;
+    TSerialDevice *FSerial;
+    int FPacketNr;
+    char FNCG;    
+	char FPacketType;
+    int FCrcTable[256];
 };
 
 #endif

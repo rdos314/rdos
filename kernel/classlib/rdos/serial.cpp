@@ -343,6 +343,7 @@ void TSerialDevice::Init(TWait *Wait, int Port, long Baudrate, char Parity, int 
     FDataBits = DataBits;
     FStopBits = StopBits;
     FCurrWait = Wait;
+	FDebugFile = 0;
 	
 	OpenPort();
 }

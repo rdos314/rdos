@@ -20,70 +20,54 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heat.h
-# Heat class
+# axis.h
+# Axis base class
 #
 ########################################################################*/
 
-#ifndef _HEAT_H
-#define _HEAT_H
+#ifndef _AXIS_H
+#define _AXIS_H
 
-#include "minsamp.h"
-#include "datetime.h"
-#include "device.h"
+#include "graphdev.h"
 
-class THeat : public TDevice
+class TAxis
 {
 public:
-	THeat();
-	virtual ~THeat();
+	TAxis();
+    virtual ~TAxis();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual int IsXAxis();
+	virtual int IsYAxis();
 
-	void StartHeat();
-	void StopHeat();
-	void UpdateEp(long double value);
+	void Define(TGraphicDevice *dev);
+	void SetWindow(int xmin, int ymin, int xmax, int ymax);
+	void Define(long double min, long double max);
+	void SetMin(long double min);
+	void SetMax(long double max);
+	
+	virtual long double PhysToLog(long double val) = 0;
+	virtual long double LogToPhys(long double rel) = 0;
 
-	void StartCirc();
-	void StopCirc();
-	int IsCircStarted();
-	void WriteCircValve(long double value);
-    long double ReadCircValve();
+	virtual int LogToPixel(long double rel);
+	virtual long double PixelToLog(int pixel);
 
-	int IsEpStarted();
-	int IsVpStarted();
-	long double ReadEpValve();
-	long double ReadVpValve();
+	virtual int PhysToPixel(long double val);
+	virtual long double PixelToPhys(int pixel);
+
+	virtual void Draw();
 
 protected:
-	void ToggleCircLine();
-	void ToggleEpLine();
-	void ToggleVpLine();
-	void WriteEpValve(int value);
-	void WriteVpValve(int value);
+	virtual void Update();
 
-	void UpdateHeat();
-	void Update();
-	virtual void Execute();
+	TGraphicDevice *FDev;
+	int FXMin;
+	int FXMax;
+	int FYMin;
+	int FYMax;
+	long double FValMin;
+	long double FValMax;
 
 private:
-	void StartEp();
-	void StopEp();
-	void StartVp();
-	void StopVp();
-
-	int FStarted;
-	int FStat;
-	long double FEpTemp;
-	int FUpdate;
-    int FCircValve;
-	int FEpValve;
-	int FVpValve;
-	int FHeatOn;
-	int FEpPending;
-	int FEpStart;
-	int FCircOn;
 };
 
 #endif
-

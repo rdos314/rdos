@@ -656,40 +656,40 @@ TempOutputZ:
 	movlw 128
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 255
+	movlw 128
 	goto CalcMidHighSlope
 
 TempOutputPM:
 	movf FuzzyIndex, W
-	sublw 21
+	sublw 28
 	btfss STATUS, C
 	retlw 0
-	sublw 4
+	sublw 12
 	btfss STATUS, C
 	retlw 0
-	sublw 1
+	sublw 6
 	btfsc STATUS, Z
 	retlw 255
 	movwf FuzzyCount
-	movlw 128
+	movlw 42
 	btfsc STATUS, C
 	goto CalcMidLowSlope
-	movlw 85
+	movlw 42
 	goto CalcMidHighSlope
 
 TempOutputPL:
 	movf FuzzyIndex, W
-	sublw 26
+	sublw 36
 	btfss STATUS, C
 	retlw 0
-	sublw 6
+	sublw 17
 	btfss STATUS, C
 	retlw 0
-	sublw 1
+	sublw 12
 	btfsc STATUS, Z
 	retlw 255
 	movwf FuzzyCount
-	movlw 128
+	movlw 21
 	btfsc STATUS, C
 	goto CalcMidLowSlope
 	movlw 51
@@ -697,15 +697,15 @@ TempOutputPL:
 
 TempOutputPXL:
 	movf FuzzyIndex, W
-	sublw 27
+	sublw 40
 	btfss STATUS, C
 	retlw 255
-	sublw 4
+	sublw 14
 	btfss STATUS, C
 	retlw 0
-	sublw 5
+	sublw 15
 	movwf FuzzyCount
-	movlw 51
+	movlw 17
 	goto CalcHighSlope
 
 UpdateFuzzy:
@@ -896,13 +896,9 @@ DivNext:
 	goto IncMotor
 
 DecMotor:
-	addwf MotorVal, F
-	btfss STATUS, C
-	goto MotorMin
-;
-	addwf MotorVal, F
-	btfss STATUS, C
-	goto MotorMin
+;	addwf MotorVal, F
+;	btfss STATUS, C
+;	goto MotorMin
 ;
 	addwf MotorVal, F
 	btfss STATUS, C
@@ -914,13 +910,9 @@ MotorMin:
 	goto MotorDone
 
 IncMotor:
-	addwf MotorVal, F
-	btfsc STATUS, C
-	goto MotorMax
-;
-	addwf MotorVal, F
-	btfsc STATUS, C
-	goto MotorMax
+;	addwf MotorVal, F
+;	btfsc STATUS, C
+;	goto MotorMax
 ;
 	addwf MotorVal, F
 	btfsc STATUS, C

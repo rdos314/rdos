@@ -25,6 +25,8 @@
 #
 ########################################################################*/
 
+#include <math.h>
+
 #include "rdos.h"
 #include "datetime.h"
 
@@ -81,6 +83,24 @@ TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 {
 	FMsb = Msb;
 	FLsb = Lsb;
+	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::TDateTime
+#
+#   Purpose....: Constructor from real
+#
+#   In params..: real
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::TDateTime(long double real)
+{
+	FMsb = (unsigned long)floorl(real);
+	FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
 	RawToRecord();
 }
 
@@ -148,6 +168,25 @@ TDateTime::TDateTime(int Year, int Month, int Day, int Hour, int Min, int Sec, i
 	FMin = Min;
 	FSec = Sec;
 	FMilli = Milli;
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::operator long double
+#
+#   Purpose....: Convert to long double
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime::operator long double () const
+{
+	long double fract;
+
+	fract = (long double)FLsb / 65536.0 / 65536.0;
+	return (long double)FMsb + fract;
 }
 
 /*##########################################################################

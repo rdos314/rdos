@@ -20,70 +20,47 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heat.h
-# Heat class
+# chart.h
+# Chart class
 #
 ########################################################################*/
 
-#ifndef _HEAT_H
-#define _HEAT_H
+#ifndef _CHART_H
+#define _CHART_H
 
-#include "minsamp.h"
-#include "datetime.h"
-#include "device.h"
+#include "xaxis.h"
+#include "yaxis.h"
 
-class THeat : public TDevice
+class TChart
 {
 public:
-	THeat();
-	virtual ~THeat();
+	TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y);
+    virtual ~TChart();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+    void SetWindow(int xmin, int ymin, int xmax, int ymax);
+    void SetColor(int r, int g, int b);
 
-	void StartHeat();
-	void StopHeat();
-	void UpdateEp(long double value);
-
-	void StartCirc();
-	void StopCirc();
-	int IsCircStarted();
-	void WriteCircValve(long double value);
-    long double ReadCircValve();
-
-	int IsEpStarted();
-	int IsVpStarted();
-	long double ReadEpValve();
-	long double ReadVpValve();
+    void Plot(long double x, long double y);
+	void LineTo(long double x, long double y);
 
 protected:
-	void ToggleCircLine();
-	void ToggleEpLine();
-	void ToggleVpLine();
-	void WriteEpValve(int value);
-	void WriteVpValve(int value);
+	void SetupForDraw();
 
-	void UpdateHeat();
-	void Update();
-	virtual void Execute();
+	TGraphicDevice *FDev;
+	TXAxis *FXAxis;
+    TYAxis *FYAxis;
+	int FR;
+	int FG;
+	int FB;
+	int FXMin;
+	int FYMin;
+	int FXMax;
+	int FYMax;
+	int FCurrValid;
+	long double FCurrX;
+	long double FCurrY;
 
 private:
-	void StartEp();
-	void StopEp();
-	void StartVp();
-	void StopVp();
-
-	int FStarted;
-	int FStat;
-	long double FEpTemp;
-	int FUpdate;
-    int FCircValve;
-	int FEpValve;
-	int FVpValve;
-	int FHeatOn;
-	int FEpPending;
-	int FEpStart;
-	int FCircOn;
 };
 
 #endif
-

@@ -53,6 +53,7 @@ THeat::THeat()
 	FHeatOn = FALSE;
 	FEpPending = FALSE;
 	FEpStart = FALSE;
+	FCircOn = FALSE;
 
 	Start("HEAT", 0x2000);
 }
@@ -115,6 +116,21 @@ long double THeat::ReadEpValve()
 long double THeat::ReadVpValve()
 {
 	return (long double)FVpValve / 0x7FFFFFFF * 10.0;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ToggleCircLine
+#
+#   Purpose....: Toggle circulation line
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::ToggleCircLine()
+{
+	RdosToggleSerialLine(1, 4);
 }
 
 /*##########################################################################
@@ -232,6 +248,94 @@ void THeat::UpdateHeat()
 				ToggleVpLine();
 		}
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::IsCircStarted
+#
+#   Purpose....: Check if started circulation
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int THeat::IsCircStarted()
+{
+	if (FStat & 0x10)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StartCirc
+#
+#   Purpose....: Start circulation
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StartCirc()
+{
+	if (!IsCircStarted())
+		ToggleCircLine();
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::StopCirc
+#
+#   Purpose....: Stop circulation
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::StopCirc()
+{
+	if (IsCircStarted())
+		ToggleCircLine();
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::WriteCircValve
+#
+#   Purpose....: Write Circ valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THeat::WriteCircValve(long double value)
+{
+	int temp;
+
+	FCircValve = value;
+
+	temp = (int)(value / 10.0 * (long double)0x7FFFFFFF);
+	if (temp < 0)
+		temp = 0x7FFFFFFF;
+
+	RdosWriteSerialVal(2, 2, temp);
+}
+
+/*##########################################################################
+#
+#   Name       : THeat::ReadCircValve
+#
+#   Purpose....: Read voltage on circ valve
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double THeat::ReadCircValve()
+{
+	return (long double)FCircValve / 0x7FFFFFFF * 10.0;
 }
 
 /*##########################################################################
@@ -443,6 +547,7 @@ void THeat::Execute()
 		lines = RdosReadSerialLines(1, &FStat);
 		vp = RdosReadSerialVal(2, 0, &FVpValve);
 		ep = RdosReadSerialVal(2, 1, &FEpValve);
+		RdosReadSerialVal(2, 2, &FCircValve);
 
 		if (lines && vp && ep)
 		{

@@ -20,70 +20,58 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heat.h
-# Heat class
+# yaxis.cpp
+# Y-axis base class
 #
 ########################################################################*/
 
-#ifndef _HEAT_H
-#define _HEAT_H
+#include "yaxis.h"
 
-#include "minsamp.h"
-#include "datetime.h"
-#include "device.h"
+#define     FALSE	0
+#define     TRUE	!FALSE
 
-class THeat : public TDevice
+/*##########################################################################
+#
+#   Name       : TYAxis::TYAxis
+#
+#   Purpose....: Constructor for TYAxis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TYAxis::TYAxis()
 {
-public:
-	THeat();
-	virtual ~THeat();
+}
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
+/*##########################################################################
+#
+#   Name       : TYAxis::~TYAxis
+#
+#   Purpose....: Destructor for TYAxis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TYAxis::~TYAxis()
+{
+}
 
-	void StartHeat();
-	void StopHeat();
-	void UpdateEp(long double value);
-
-	void StartCirc();
-	void StopCirc();
-	int IsCircStarted();
-	void WriteCircValve(long double value);
-    long double ReadCircValve();
-
-	int IsEpStarted();
-	int IsVpStarted();
-	long double ReadEpValve();
-	long double ReadVpValve();
-
-protected:
-	void ToggleCircLine();
-	void ToggleEpLine();
-	void ToggleVpLine();
-	void WriteEpValve(int value);
-	void WriteVpValve(int value);
-
-	void UpdateHeat();
-	void Update();
-	virtual void Execute();
-
-private:
-	void StartEp();
-	void StopEp();
-	void StartVp();
-	void StopVp();
-
-	int FStarted;
-	int FStat;
-	long double FEpTemp;
-	int FUpdate;
-    int FCircValve;
-	int FEpValve;
-	int FVpValve;
-	int FHeatOn;
-	int FEpPending;
-	int FEpStart;
-	int FCircOn;
-};
-
-#endif
-
+/*##########################################################################
+#
+#   Name       : TYAxis::IsYAxis
+#
+#   Purpose....: Check if object is y-axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TYAxis::IsYAxis()
+{
+	return TRUE;
+}

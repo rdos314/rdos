@@ -577,7 +577,9 @@ SetInten:
 			rrf INTEN,F
 			rrf INTEN,W
 			andlw $F
+			addlw 2
 			movwf INTEN
+			btfss INTEN,4			
 			return
 
 SetMaxInten:	

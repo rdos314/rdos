@@ -20,70 +20,25 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# heat.h
-# Heat class
+# xaxis.h
+# X-axis base class
 #
 ########################################################################*/
 
-#ifndef _HEAT_H
-#define _HEAT_H
+#ifndef _XAXIS_H
+#define _XAXIS_H
 
-#include "minsamp.h"
-#include "datetime.h"
-#include "device.h"
+#include "axis.h"
 
-class THeat : public TDevice
+class TXAxis : public TAxis
 {
 public:
-	THeat();
-	virtual ~THeat();
+	TXAxis();
+    ~TXAxis();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-
-	void StartHeat();
-	void StopHeat();
-	void UpdateEp(long double value);
-
-	void StartCirc();
-	void StopCirc();
-	int IsCircStarted();
-	void WriteCircValve(long double value);
-    long double ReadCircValve();
-
-	int IsEpStarted();
-	int IsVpStarted();
-	long double ReadEpValve();
-	long double ReadVpValve();
+	virtual int IsXAxis();
 
 protected:
-	void ToggleCircLine();
-	void ToggleEpLine();
-	void ToggleVpLine();
-	void WriteEpValve(int value);
-	void WriteVpValve(int value);
-
-	void UpdateHeat();
-	void Update();
-	virtual void Execute();
-
-private:
-	void StartEp();
-	void StopEp();
-	void StartVp();
-	void StopVp();
-
-	int FStarted;
-	int FStat;
-	long double FEpTemp;
-	int FUpdate;
-    int FCircValve;
-	int FEpValve;
-	int FVpValve;
-	int FHeatOn;
-	int FEpPending;
-	int FEpStart;
-	int FCircOn;
 };
 
 #endif
-
