@@ -51,7 +51,7 @@
 ##########################################################################*/
 TFtpSocketServer::TFtpSocketServer()
 {
-	RootDir = "d:\\";
+	RootDir = "e:\\";
 	CurrDir = "/";
 	FDataSocket = 0;
 }
