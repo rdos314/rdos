@@ -288,6 +288,10 @@ create_header_alloc:
 	mov ds,ax
 	movzx esi,sp
 	GetNetBuffer
+;	
+	mov eax,fs:my_ip
+	mov es:[di].ip_source,eax
+;
 	pop eax
 	pop esi
 	pop ds
@@ -296,6 +300,11 @@ create_header_alloc:
 
 create_header_ppp:
 	GetPppBuffer
+;	
+	push edx
+	GetPppIp
+	mov es:[di].ip_source,edx
+	pop edx
 	jmp create_header_fill
 
 create_header_not_ppp:
@@ -306,6 +315,10 @@ create_header_not_ppp:
 	mov ds,ax
 	movzx esi,sp
 	GetNetBuffer
+;	
+	mov eax,fs:my_ip
+	mov es:[di].ip_source,eax
+;
 	pop edx
 	pop esi
 	pop ds
@@ -447,6 +460,7 @@ PAGE
 send_ip_data_name	DB 'Send IP Data',0
 
 send_ip_data	Proc far
+    push ds
 	push fs
 	push eax
 	push bx
@@ -458,6 +472,7 @@ send_ip_data	Proc far
 	mov ax,es
 	mov ds,ax
 	mov di,ds:[0]
+    call CalcChecksum
 ;
 	movzx ecx,ds:[di].ip_size
 	xchg cl,ch
@@ -483,24 +498,19 @@ send_ip_data	Proc far
 	jnz send_gateway
 
 send_ppp:	
-	GetPppIp
-	mov es:[di].ip_source,edx
-    call CalcChecksum
 	SendPpp
 	jmp send_done
 
 send_gateway:
-	mov eax,fs:my_ip
-	mov es:[di].ip_source,eax
-    call CalcChecksum
+    push ds
+    mov ax,fs
+    mov ds,ax
 	mov esi,OFFSET gateway
 	SendNet
+	pop ds
 	jmp send_done
 
 send_self:
-	mov eax,fs:my_ip
-	mov es:[di].ip_source,eax
-    call CalcChecksum
 	xor ax,ax
 	mov ds,ax
 	push cs
@@ -508,9 +518,6 @@ send_self:
 	jmp send_done
 
 send_local_net:
-	mov eax,fs:my_ip
-	mov es:[di].ip_source,eax
-    call CalcChecksum
 	mov esi,OFFSET ip_dest
 	add esi,edi
 	SendNet
@@ -523,6 +530,7 @@ send_done:
 	pop bx
 	pop eax
 	pop fs
+	pop ds
 	ret
 send_ip_data	Endp
 
