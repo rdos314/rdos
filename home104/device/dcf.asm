@@ -31,16 +31,37 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\driver.def
-INCLUDE ..\os\system.inc
-INCLUDE ..\os\wait.inc
-INCLUDE ..\os\handle.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\driver.def
+INCLUDE ..\wait.inc
+INCLUDE ..\handle.inc
+
+dcf_data	STRUC
+
+int_time		DD ?,?
+thread_id		DW ?
+curr_level		DB ?
+
+first_pulse		DD ?,?
+curr_pulse		DD ?,?
+curr_sec		DW ?
+
+curr_year		DW ?
+curr_month		DB ?
+curr_day		DB ?
+curr_hour		DB ?
+curr_min		DB ?
+curr_diff		DD ?
+
+val_arr			DB 60 DUP(?)
+diff_arr		DD 60 DUP(?)
+
+temp_buf	DB 32 DUP(?)
+
+dcf_data	ENDS
 
 	.386p
 
@@ -227,13 +248,12 @@ RemoveLeading	Endp
 ;		DESCRIPTION:	Write time
 ;
 ;		PARAMETERS:		EDX:EAX		Binary time
-;						ES			Temp storage
+;						ES:DI		Temp storage
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 WriteTime	Proc near
 	pushad
-	xor di,di
 	push eax
 	mov eax,edx
 	xor edx,edx
@@ -344,82 +364,720 @@ WriteTime	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			start_timer
+;		NAME:			dcf_timeout
 ;
-;		DESCRIPTION:	Start timer
+;		DESCRIPTION:	DCF timeout. Check level + wake-up processing thread
+;
+;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_timer   Proc near
-    mov dx,28Fh
-    mov al,8
-    out dx,al
+dcf_timeout	Proc far
+	push ds
 ;
-    mov dx,28Ch
-    mov al,80h
-    out dx,al
+	mov ax,dcf_data_sel
+	mov ds,ax
 ;
-    inc dx
-    mov al,96h
-    out dx,al
+	mov dx,28Ah
+	in al,dx
+	and al,10h
+	jz dcf_long
+
+dcf_short:
+	mov ds:curr_level,0
+	jmp dcf_timeout_signal
+
+dcf_long:
+	mov ds:curr_level,1
+
+dcf_timeout_signal:
+	mov bx,ds:thread_id
+	Signal
 ;
-    inc dx
-    mov al,98h
-    out dx,al
-    inc dx
+	pop ds
+	ret
+dcf_timeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;		NAME:			dcf_int
+;
+;		DESCRIPTION:	DCF interrupt
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dcf_int	Proc far
+	GetSystemTime
+	mov ds:int_time,eax
+	mov ds:int_time+4,edx
+;
+	add eax,125 * 1192
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET dcf_timeout
+	mov bx,ds:thread_id
+	mov cx,bx
+	StartTimer
+;
+	ret
+dcf_int	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ShowPulse
+;
+;		DESCRIPTION:	Show a pulse
+;
+;		PARAMETERS:		EDX:EAX		Pulse time
+;						BX			Row
+;						CL			Pulse value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowPulse	Proc near
+	pushad
+;
+	push cx
+	push dx
+	xor cx,cx
+	mov dx,bx
+	SetCursorPosition
+	pop dx
+	pop cx
+;
+	mov di,OFFSET temp_buf
+	call WriteTime
+;
+	mov al,' '
+	WriteChar
+	WriteChar
+;
+	mov al,cl
+	add al,'0'
+	WriteChar
+;
+	popad
+ShowPulse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitForPulse
+;
+;		DESCRIPTION:	Wait for a single pulse
+;
+;		RETURNS:		EDX:EAX		Pulse time
+;						CL			Pulse value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForPulse	Proc near
+	WaitForSignal
+;
+	mov eax,ds:int_time
+	mov edx,ds:int_time+4
+	mov cl,ds:curr_level
+;
+	push ax
+	push dx
+
+wait_pulse_clear_wait:
+	mov dx,28Ah
+	in al,dx
+	test al,10h
+	jnz wait_pulse_clear_int
+;
+	mov ax,50
+	WaitMilliSec
+	jmp wait_pulse_clear_wait
+
+wait_pulse_clear_int:
+	mov dx,280h
 	mov al,2
-	out dx,al
-;
-	mov al,10h
-	out dx,al
-;
-	mov al,4
 	out dx,al	
 ;
-    ret
-start_timer   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			read_timer
-;
-;		DESCRIPTION:	Read timer
-;
-;		RETURNS:		EAX		Value
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_timer   Proc near
-	push ecx
-	push dx
-;
-    mov dx,28Fh
-    mov al,40h
-    out dx,al
-;
-    xor ecx,ecx
-;
-    dec dx
-    in al,dx
-    mov cl,al
-;
-    shl ecx,8
-    dec dx
-    in al,dx
-    mov cl,al
-;
-    shl ecx,8
-    dec dx
-    in al,dx
-    mov cl,al
-;
-    mov eax,ecx
 	pop dx
+	pop ax
+	ret
+WaitForPulse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SyncToDcf
+;
+;		DESCRIPTION:	Synchronize to DCF
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SyncToDcf	Proc near
+	pushad
+;
+	call WaitForPulse
+
+sync_dcf_loop:
+	push eax
+	call WaitForPulse
+	mov ebx,eax
+	pop esi
+	sub ebx,esi
+	cmp ebx,1192 * 800
+	jb sync_dcf_loop
+;
+	cmp ebx,1192 * 1200
+	ja sync_dcf_loop
+;
+	mov ds:first_pulse,eax
+	mov ds:first_pulse+4,edx
+;
+	popad
+	ret
+SyncToDcf	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ClearSamples
+;
+;		DESCRIPTION:	Clear samples
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClearSample	Proc near
+	pushad
+	xor cx,cx
+	xor dx,dx	
+	SetCursorPosition
+;
+	mov cx,30
+	mov al,' '
+
+clear_sample0:
+	WriteChar
+	loop clear_sample0
+;
+	xor cx,cx
+	mov dx,1
+	SetCursorPosition
+;
+	mov cx,30
+	mov al,' '
+
+clear_sample1:
+	WriteChar
+	loop clear_sample1
+;
+	popad	
+	ret
+ClearSample	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ShowSample
+;
+;		DESCRIPTION:	Show a sample
+;
+;		PARAMETERS:		BX		Offset within minute
+;						CL		Value (pulse length)					
+;						EBP		Diff from normal
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ShowSample	Proc near
+	pushad
+;
+	push cx
+;
+	xor cx,cx
+	mov dx,6
+	SetCursorPosition
+;
+	test ebp,80000000h
+	jz show_sample_diff
+;
+	mov al,'-'
+	WriteChar
+	neg ebp
+
+show_sample_diff:
+	mov eax,ebp
+	xor edx,edx
+	mov di,OFFSET temp_buf
+	call WriteTime
+;
+	mov al,' '
+	WriteChar
+;
+	xor dx,dx
+	cmp bx,30
+	jb show_sample_pos_ok
+;
+	sub bx,30
+	inc dx
+
+show_sample_pos_ok:
+	mov cx,bx
+	SetCursorPosition
+;
+	pop ax
+	add al,'0'
+	WriteChar
+;
+	popad	
+	ret
+ShowSample	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetSample
+;
+;		DESCRIPTION:	Get a sample (after sync is achieved)
+;
+;		RETURNS:		BX		Offset with minute
+;						CL		Value (pulse length)					
+;						EBP		Diff from reference (in tics)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSample	Proc near
+	push eax
+	push edx
+	push si
+	push edi
+
+get_sample_loop:
+	call WaitForPulse
+	mov ds:curr_pulse,eax
+	mov ds:curr_pulse+4,edx
+;
+	sub eax,ds:first_pulse
+	mov edi,eax	
+	xor edx,edx
+	mov ebx,3600
+	mul ebx
+	mov si,dx
+;
+	mov ebx,1000000
+	mul ebx
+	mov eax,edx
+;
+	cmp eax,200000
+	jb get_sample_valid
+;
+	inc si
+	cmp eax,800000
+	ja get_sample_valid
+;
+	jmp get_sample_loop
+
+get_sample_valid:
+	mov ax,si
+	xor dx,dx
+	mov bx,60
+	div bx
+	mov bx,dx
+;
+	movzx eax,bx
+	mov edx,1193000
+	mul edx
+	sub edi,eax
+	mov ebp,edi
+;
+	pop edi
+	pop si
+	pop edx
+	pop eax
+	ret
+GetSample	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			ProcessSamples
+;
+;		DESCRIPTION:	Process a full minute of samples
+;
+;		PARAMETERS:		NC
+;						EDX:EAX		Diff
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessSamples	Proc near
+	push ebx
+	push ecx
+	push esi
+	push edi
+;
+	mov al,ds:val_arr
+	or al,al
+	jnz process_samples_failed
+;
+	mov al,ds:val_arr+20
+	mov dx,1
+	or al,al
+	jz process_samples_failed
+;
+	mov bx,21
+	mov cx,8
+	xor al,al
+
+process_check_p1_loop:	
+	add al,ds:[bx].val_arr
+	inc bx
+	loop process_check_p1_loop
+;
+	test al,1
+	mov dx,2
+	jnz process_samples_failed
+;
+	mov bx,29
+	mov cx,7
+	xor al,al
+
+process_check_p2_loop:	
+	add al,ds:[bx].val_arr
+	inc bx
+	loop process_check_p2_loop
+;
+	test al,1
+	mov dx,3
+	jnz process_samples_failed
+;
+	mov bx,36
+	mov cx,23
+	xor al,al
+
+process_check_p3_loop:	
+	add al,ds:[bx].val_arr
+	inc bx
+	loop process_check_p3_loop
+;
+	test al,1
+	mov dx,4
+	jnz process_samples_failed
+;
+	mov cx,2000
+	xor ah,ah
+	mov al,ds:val_arr+53
+	add al,al
+	add al,ds:val_arr+52
+	add al,al
+	add al,ds:val_arr+51
+	add al,al
+	add al,ds:val_arr+50
+	add cx,ax
+;
+	mov al,ds:val_arr+57
+	add al,al
+	mov al,ds:val_arr+56
+	add al,al
+	mov al,ds:val_arr+55
+	add al,al
+	add al,ds:val_arr+54
+	mov ah,10
+	mul ah
+	add cx,ax
+	mov ds:curr_year,cx
+;
+	xor ah,ah
+	mov al,ds:val_arr+48
+	add al,al
+	add al,ds:val_arr+47
+	add al,al
+	add al,ds:val_arr+46
+	add al,al
+	add al,ds:val_arr+45
+	mov cx,ax
+;
+	mov al,ds:val_arr+49
+	mov ah,10
+	mul ah
+	add cx,ax
+	mov ds:curr_month,cl
+;
+	xor ah,ah
+	mov al,ds:val_arr+39
+	add al,al
+	add al,ds:val_arr+38
+	add al,al
+	add al,ds:val_arr+37
+	add al,al
+	add al,ds:val_arr+36
+	mov cx,ax
+;
+	mov al,ds:val_arr+41
+	add al,al
+	add al,ds:val_arr+40
+	mov ah,10
+	mul ah
+	add cx,ax
+	mov ds:curr_day,cl
+;
+	xor ah,ah
+	mov al,ds:val_arr+32
+	add al,al
+	add al,ds:val_arr+31
+	add al,al
+	add al,ds:val_arr+30
+	add al,al
+	add al,ds:val_arr+29
+	mov cx,ax
+;
+	mov al,ds:val_arr+34
+	add al,al
+	add al,ds:val_arr+33
+	mov ah,10
+	mul ah
+	add cx,ax
+	mov ds:curr_hour,cl
+;
+	xor ah,ah
+	mov al,ds:val_arr+24
+	add al,al
+	add al,ds:val_arr+23
+	add al,al
+	add al,ds:val_arr+22
+	add al,al
+	add al,ds:val_arr+21
+	mov cx,ax
+;
+	mov al,ds:val_arr+27
+	add al,al
+	add al,ds:val_arr+26
+	add al,al
+	add al,ds:val_arr+25
+	mov ah,10
+	mul ah
+	add cx,ax
+	mov ds:curr_min,cl
+;
+	mov cx,59
+	xor eax,eax
+	xor bx,bx
+
+process_diff_loop:
+	add eax,ds:[bx].diff_arr
+	add bx,4
+	loop process_diff_loop
+;
+	xor cx,cx
+	mov dx,2
+	SetCursorPosition
+;
+	cdq
+	mov ebx,59
+	idiv ebx
+	cdq
+	mov ds:curr_diff,eax
+	add ds:first_pulse,eax
+	adc ds:first_pulse+4,edx
+;
+	test edx,80000000h
+	jz process_show_time
+;
+	mov al,'-'
+	WriteChar
+	not eax
+	not edx
+	add eax,1
+	adc edx,0
+
+process_show_time:
+	mov di,OFFSET temp_buf
+	call WriteTime	
+;
+	mov dx,ds:curr_year
+	mov ch,ds:curr_month
+	mov cl,ds:curr_day
+	mov bh,ds:curr_hour
+	mov bl,ds:curr_min
+	xor ah,ah
+	TimeToBinary
+	add eax,60 * 1193000
+	adc edx,0
+	sub eax,ds:first_pulse
+	sbb edx,ds:first_pulse+4
+	clc
+	jmp process_samples_done
+
+process_samples_failed:
+	mov ax,dx
+	xor cx,cx
+	mov dx,2
+	SetCursorPosition
+	call WriteHexByte
+	stc
+
+process_samples_done:
+	pop edi
+	pop esi
 	pop ecx
-    ret
-read_timer    Endp
+	pop ebx
+	ret
+ProcessSamples	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RestartSample
+;
+;		DESCRIPTION:	Restart sampling
+;
+;		PARAMETERS:		EBP		Last Diff
+;						CL		Last pulse value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RestartSample	Proc near
+	push edx
+	mov edx,ds:curr_pulse
+	mov ds:first_pulse,edx
+	mov edx,ds:curr_pulse+4
+	mov ds:first_pulse+4,edx
+	mov ds:curr_sec,0
+	mov ds:val_arr,cl
+	call ClearSample
+	pop edx
+	ret
+RestartSample	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetDiff
+;
+;		DESCRIPTION:	Get difference from time
+;
+;		PARAMETERS:		EDX:EAX		Diff
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDiff	Proc near
+	push bx
+	push esi
+
+get_diff_loop:
+	call GetSample
+	mov dx,ds:curr_sec
+	cmp dx,bx
+	je get_diff_loop
+;
+	inc dx
+	cmp dx,bx
+	jne get_diff_restart
+
+get_diff_ok:
+	mov ds:curr_sec,bx
+	mov ds:[bx].val_arr,cl
+	mov si,bx
+	shl si,2
+	mov ds:[si].diff_arr,ebp
+	call ShowSample
+;
+	cmp bx,58
+	jne get_diff_loop
+;
+	mov ds:diff_arr,0
+	call ProcessSamples
+	jc get_diff_retry
+;
+	call RestartSample
+	xor bx,bx
+	call ShowSample
+	jmp get_diff_done
+
+get_diff_retry:
+	call GetSample
+
+get_diff_restart:
+	call RestartSample
+	xor bx,bx
+	call ShowSample
+	jmp get_diff_loop
+
+get_diff_done:
+	pop esi
+	pop bx
+	ret
+GetDiff	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			show_pulse
+;
+;		DESCRIPTION:	show pulse time & length
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+show_pulse:
+    mov dx,28Bh
+    mov al,9Bh
+    out dx,al
+
+dcf_it_init_loop:
+	mov ax,10
+	WaitMilliSec
+;
+	mov dx,28Ah
+	in al,dx
+	test al,10h
+	jz dcf_it_init_loop	
+
+dcf_it_high_loop:
+	mov ax,10
+	WaitMilliSec
+;
+	mov dx,28Ah
+	in al,dx
+	test al,10h
+	jnz dcf_it_high_loop	
+;
+	xor cx,cx
+	xor dx,dx
+	SetCursorPosition
+;
+	mov ax,dcf_data_sel
+	mov es,ax
+	mov di,OFFSET temp_buf
+	GetSystemTime
+	call WriteTime
+	mov al,' '
+	WriteChar
+	WriteChar
+;
+	xor esi,esi
+
+dcf_it_low_loop:
+	mov ax,10
+	WaitMilliSec
+;
+	inc esi
+;
+	mov dx,28Ah
+	in al,dx
+	test al,10h
+	jz dcf_it_low_loop	
+;
+	mov eax,esi
+	mov edx,10
+	mul edx
+	mov cx,3
+	mov di,OFFSET temp_buf
+	call IntToStr
+	WriteAsciiz
+	jmp dcf_it_high_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -438,116 +1096,60 @@ dcf_thread:
 	sti
 	mov ax,43h
 	EnableFocus
+	mov ax,dcf_data_sel
+	mov ds,ax
 ;
-    mov eax,16
-    AllocateSmallMem
+	GetThread
+	mov ds:thread_id,ax
+;
+	mov al,5
+	mov cx,cs
+	mov es,cx
+	mov di,OFFSET dcf_int
+	RequestPrivateIrqHandler
+;
+    mov dx,284h
+    mov al,2
+    out dx,al
+;
+    mov dx,28Bh
+    mov al,9Bh
+    out dx,al
+;
+	mov ax,dcf_data_sel
+	mov es,ax
+
+dcf_sync_loop:
+	call ClearSample
+	call SyncToDcf
+	mov ds:curr_sec,0
 
 dcf_thread_loop:
-	mov ax,50
-	WaitMilliSec
+	call GetDiff
 ;
-	mov dx,28Ah
-	in al,dx
-	and al,10h
-	jz dcf_thread_loop
+	push dx
+	xor cx,cx
+	mov dx,5
+	SetCursorPosition
+	pop dx
 ;
-	call start_timer
-	call read_timer
-	mov esi,eax
+	test edx,80000000h
+	jz dcf_show_diff
+;
+	push ax
+	mov al,'-'
+	WriteChar
+	pop ax
+	not eax
+	not edx
+	add eax,1
+	adc edx,0
 
-dcf_wait_loop:
-	mov ax,50
-	WaitMilliSec
-;
-	mov dx,28Ah
-	in al,dx
-	and al,10h
-	jnz dcf_wait_loop	
-;
-    cli	
-	call read_timer
-	mov edi,989680h
-	sub edi,eax
-	GetSystemTime
-    sti
-;
-    push edx
-    push eax
-;
-    mov eax,edi
-    mov ecx,1193046
-    mul ecx
-    mov ecx,10000000
-    div ecx
-    mov ecx,eax
-;
-    pop eax
-    add eax,ecx
-    pop edx
-    adc edx,0
-;
-    push eax
-    push edx
-;
-	xor cx,cx
-	xor dx,dx
-	SetCursorPosition
-;
-	pop edx
-	pop eax
+dcf_show_diff:
+	mov di,OFFSET temp_buf
 	call WriteTime
-	
-dcf_meassure_loop:
-	mov ax,50
-	WaitMilliSec
-;
-	mov dx,28Ah
-	in al,dx
-	and al,10h
-	jz dcf_meassure_loop
-;
-	call read_timer	
-	mov esi,eax
-;
-	xor cx,cx
-	mov dx,1
-	SetCursorPosition
-;
-	mov eax,esi
-	push eax
-	call WriteHexDword
-	pop eax
-;
-    xor di,di
-    push eax
-    mov cx,10
-    call IntToStr
-    call RemoveLeading
-    pop eax
-;
-	xor cx,cx
-	mov dx,2
-	SetCursorPosition
-;
-	WriteAsciiz
-;
-    mov ecx,1193046
-    mul ecx
-    mov ecx,10000000
-    div ecx
-;
-    xor di,di
-    push eax
-    mov cx,10
-    call IntToStr
-    call RemoveLeading
-    pop eax
-;
-	xor cx,cx
-	mov dx,3
-	SetCursorPosition
-;
-	WriteAsciiz
+	mov al,' '
+	WriteChar
 	jmp dcf_thread_loop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -581,24 +1183,6 @@ init_dcf_thread	PROC far
 	ret
 init_dcf_thread	ENDP
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			dcf_int
-;
-;		DESCRIPTION:	DCF interrupt
-;
-;		PARAMETERS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dcf_int	Proc far
-	mov dx,280h
-	mov al,2
-	out dx,al
-	ret
-dcf_int	Endp
-
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -620,23 +1204,13 @@ init	Proc far
 	mov bx,dcf_code_sel
 	InitDevice
 ;
-    mov dx,284h
-    mov al,2
-    out dx,al
-;
-    mov dx,28Bh
-    mov al,9Bh
-    out dx,al
+	mov eax,SIZE dcf_data
+	mov bx,dcf_data_sel
+	AllocateFixedSystemMem
 ;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov al,5
-	mov cx,cs
-	mov es,cx
-	mov di,OFFSET dcf_int
-	RequestPrivateIrqHandler
 ;
 	mov di,OFFSET init_dcf_thread
 	HookInitTasking

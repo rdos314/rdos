@@ -29,14 +29,11 @@
 
 GateSize = 16
 
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\system.def
-INCLUDE ..\os\int.def
-INCLUDE ..\os\system.inc
-INCLUDE ..\os\fs.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\fs.inc
 INCLUDE fat.inc
 
 boot_struc	STRUC

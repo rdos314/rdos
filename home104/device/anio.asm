@@ -29,16 +29,13 @@
 
 GateSize = 16
 
-INCLUDE ..\os\system.def
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\driver.def
-INCLUDE ..\os\system.inc
-INCLUDE ..\os\wait.inc
-INCLUDE ..\os\handle.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\os.inc
+INCLUDE ..\user.inc
+INCLUDE ..\driver.def
+INCLUDE ..\wait.inc
+INCLUDE ..\handle.inc
 
 	.386p
 

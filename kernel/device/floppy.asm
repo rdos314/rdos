@@ -29,17 +29,13 @@
 
 GateSize = 16
 
-INCLUDE ..\os\driver.def
-INCLUDE ..\os\protseg.def
-INCLUDE ..\os\user.def
-INCLUDE ..\os\os.def
-INCLUDE ..\os\user.inc
-INCLUDE ..\os\os.inc
-INCLUDE ..\os\system.def
-INCLUDE ..\os\int.def
-INCLUDE ..\os\system.inc
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\drive.inc
 INCLUDE ..\os\port.def
-INCLUDE ..\os\drive.inc
 
 boot_struc	STRUC
 
