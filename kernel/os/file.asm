@@ -478,6 +478,66 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GrowFileSel
+;
+;		DESCRIPTION:	Grow file selector
+;
+;		PARAMETERS:     BX          File selector to grow
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GrowFileSel	PROC near
+    push es
+    push eax
+    push ecx
+    push edx
+    push si
+    push di
+;
+    push ds
+    mov si,bx
+    GetSelectorBaseSize
+    AllocateGdt
+    CreateDataSelector16
+    mov ds,bx
+;    
+    mov bx,si
+    movzx eax,ds:file_dir_entries
+    shl eax,2
+	add eax,SIZE file_data_struc
+    AllocateSmallLinear
+	mov ecx,eax
+	CreateDataSelector16
+    mov es,bx
+;
+    xor di,di
+    xor si,si
+    mov cx,ax
+    sub cx,4
+    rep movsb
+    xor eax,eax
+    stosd
+    inc es:file_dir_entries
+    mov bx,es
+    mov ax,ds
+    mov es,ax
+    pop ds
+    FreeMem
+;
+    pop di
+    pop si
+    pop edx
+    pop ecx
+    pop eax
+    pop es
+    ret
+GrowFileSel ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			FreeFileSel
 ;
 ;		DESCRIPTION:	Free file selector
@@ -1004,6 +1064,17 @@ write_file_loop:
 	mov esi,edx
 	mov cl,ds:file_dir_shift
 	shr esi,cl
+
+write_file_retry_entry:
+    cmp si,ds:file_dir_entries
+    jb write_file_entries_ok
+;
+    mov bx,ds
+    call GrowFileSel
+    mov ds,bx
+    jmp write_file_retry_entry
+
+write_file_entries_ok:	
 	shl si,2
 	mov ebx,ds:[si].file_entries
 	or ebx,ebx
