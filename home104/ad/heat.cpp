@@ -251,6 +251,9 @@ void THeat::UpdateHeat()
 				ToggleVpLine();
 		}
 	}
+	else
+		if (!IsVpStarted())
+			WriteVpValve(0);
 }
 
 /*##########################################################################
