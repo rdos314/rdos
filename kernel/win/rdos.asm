@@ -62,13 +62,10 @@ task_end:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 task_start:
-	pop si
-	pop di
+    movzx ebp,bp
 	mov ds,bp
 	push fs
 	push bx
-	push di
-	push si
 	push cs
 	push OFFSET task_end
 	push gs
@@ -139,7 +136,7 @@ _RdosAllocateMem	Proc far
 	push bp
 	mov bp,sp
 	push es
-	mov eax,[bp+6]
+	movzx eax,word ptr [bp+6]
 	AllocateLocalMem
 	mov dx,es
 	xor ax,ax
@@ -434,7 +431,6 @@ _RdosWaitTimeout	Proc far
 	mov bp,sp
 	push bx
 	push cx
-	push dx
 ;
 	movzx eax,word ptr [bp+8]
 	mov edx,1193
@@ -460,7 +456,6 @@ rwtFail:
     xor dx,dx
 
 rwtDone:
-    pop dx
     pop cx
 	pop bx
 	pop bp
@@ -1661,7 +1656,7 @@ _SetBackColor	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetSysTime
+;		NAME:			RdosGetSysTime
 ;
 ;		description:	gets system time in record form
 ;
@@ -1675,7 +1670,7 @@ _SetBackColor	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _GetSysTime
+	public _RdosGetSysTime
 
 gtrtYear	EQU 6
 gtrtMonth	EQU 10
@@ -1685,7 +1680,7 @@ gtrtMin		EQU 22
 gtrtSec		EQU 26
 gtrtMilli	EQU 30
 
-_GetSysTime	Proc far
+_RdosGetSysTime	Proc far
 	push bp
 	mov bp,sp
 	push ds
@@ -1727,12 +1722,12 @@ _GetSysTime	Proc far
 	pop ds
 	pop bp
 	ret
-_GetSysTime	Endp
+_RdosGetSysTime	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetTime
+;		NAME:			RdosGetTime
 ;
 ;		description:	gets time in record form
 ;
@@ -1746,7 +1741,7 @@ _GetSysTime	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public _GetTime
+	public _RdosGetTime
 
 grtYear	EQU 6
 grtMonth	EQU 10
@@ -1756,7 +1751,7 @@ grtMin		EQU 22
 grtSec		EQU 26
 grtMilli	EQU 30
 
-_GetTime	Proc far
+_RdosGetTime	Proc far
 	push bp
 	mov bp,sp
 	push ds
@@ -1798,7 +1793,7 @@ _GetTime	Proc far
 	pop ds
 	pop bp
 	ret
-_GetTime	Endp
+_RdosGetTime	Endp
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
