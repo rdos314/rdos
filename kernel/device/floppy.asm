@@ -1153,7 +1153,6 @@ PAGE
 ;		DESCRIPTION:	Get boot-record and drive parameters
 ;
 ;		PARAMETERS:		AL		Sub-unit #
-;						AH		Disc #
 ;						ES		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1228,7 +1227,6 @@ PAGE
 ;		DESCRIPTION:	Install main drive
 ;
 ;		PARAMETERS:		AL		Sub-unit #
-;						AH		Disc #
 ;						ES		Boot sector
 ;						FS		Disc handle
 ;
@@ -1243,9 +1241,6 @@ InstallMain	Proc near
 	push cx
 	push edx
 	push di
-;
-	xor edx,edx
-	OpenDrive
 ;
 	mov cl,es:boot_media
 	cmp cl,0F0h
@@ -1283,6 +1278,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1	Proc far
+	mov es,bx
+	mov al,es:disc_sub_unit
+	mov ah,es:disc_nr
+	xor edx,edx
+	OpenDrive
+	DemandLoadFileSystem
 	ret
 drive_assign1	Endp
 
@@ -1325,7 +1326,6 @@ demand_mount	Proc far
 	mov ax,floppy_data_sel
 	mov ds,ax
 	mov al,es:disc_sub_unit
-	mov ah,es:disc_nr
 	call GetDriveParams
 	jc drive_assign_done1
 ;

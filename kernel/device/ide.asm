@@ -714,18 +714,22 @@ InstallPartition	Proc near
 	push ax
 	push di
 ;
-	AllocateStaticDrive
-	mov ah,fs:disc_nr
-	OpenDrive
-;
 	mov di,cs
 	mov es,di
 	movzx di,cl
 	shl di,1
 	mov di,word ptr cs:[di].FsTab
+	IsFileSystemAvailable
+	jc install_part_done
+;
+	AllocateStaticDrive
+	mov ah,fs:disc_nr
+	OpenDrive
+;
 	InstallFileSystem
 	clc
-;
+
+install_part_done:
 	pop di
 	pop ax
 	pop es

@@ -156,6 +156,142 @@ register_file_system	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DEMAND_LOAD_FILE_SYSTEM
+;
+;		DESCRIPTION:	Set file-system to demand-load mode
+;
+;		PARAMETERS:		AL			DRIVE #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_load_file_system_name	DB 'Demand Load File System',0
+
+demand_load_file_system	Proc far
+	push ds
+	push es
+	push bx
+	push si
+;
+	mov bx,fs_data_sel
+	mov ds,bx
+;
+	movzx bx,al
+	add bx,bx
+	mov si,ds:[bx].fs_sel
+	or si,si
+	jz demand_load_old_freed
+;
+	cmp si,-1
+	je demand_load_old_freed
+;
+	CallFileSystem dismount_proc
+	mov es,si
+	FreeMem
+
+demand_load_old_freed:
+	mov ds:[bx].fs_sel,-1
+;
+	pop si
+	pop bx
+	pop es
+	pop ds
+	ret
+demand_load_file_system	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetFileSystem
+;
+;		DESCRIPTION:	Get a file system
+;
+;		PARAMETERS:		ES:DI		FILE SYSTEM NAME
+;
+;		RETURNS:		ED:DI		FILE SYSTEM CONTROL TABLE
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetFileSystem	Proc near
+	push ds
+	push ax
+	push bx
+	push cx
+;
+	mov cx,fs_data_sel
+	mov ds,cx
+	movzx cx,ds:file_defs
+	mov bx,OFFSET file_def_arr
+	or cx,cx
+	jz get_file_sys_fail
+
+get_file_sys_find:
+	push ds
+	push di
+	lds si,[bx]
+
+get_file_sys_check:
+	lodsb
+	or al,al
+	jz get_file_sys_ok
+;
+	cmp al,es:[di]
+	jne get_file_sys_next
+;
+	inc di
+	jmp get_file_sys_check
+
+get_file_sys_next:
+	pop di
+	pop ds
+	add bx,8
+	loop get_file_sys_find
+;
+	jmp get_file_sys_fail
+
+get_file_sys_ok:
+	pop di
+	pop ds
+	les di,[bx+4]
+	clc
+	jmp get_file_sys_done
+
+get_file_sys_fail:
+	stc
+
+get_file_sys_done:
+	pop cx
+	pop bx
+	pop ax
+	pop ds
+	ret
+GetFileSystem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IS_FILE_SYSTEM_AVAILABLE
+;
+;		DESCRIPTION:	Check if file system is available
+;
+;		PARAMETERS:		AL			DRIVE #
+;						ES:DI		FILE SYSTEM NAME
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_file_system_available_name	DB 'Is File System Available',0
+
+is_file_system_available	Proc far
+	push es
+	push di
+	call GetFileSystem
+	pop di
+	pop es
+	ret
+is_file_system_available	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INSTALL_FILE_SYSTEM
 ;
 ;		DESCRIPTION:	Install a file system
@@ -178,36 +314,8 @@ install_file_system	Proc far
 ;
 	mov cx,fs_data_sel
 	mov ds,cx
-	movzx cx,ds:file_defs
-	mov bx,OFFSET file_def_arr
-	or cx,cx
-	jz install_file_sys_done
-
-install_file_sys_find:
-	push ds
-	push ax
-	push di
-	lds si,[bx]
-install_file_sys_check:
-	lodsb
-	or al,al
-	jz install_file_sys_ok
-	cmp al,es:[di]
-	jne install_file_sys_next
-	inc di
-	jmp install_file_sys_check
-install_file_sys_next:
-	pop di
-	pop ax
-	pop ds
-	add bx,8
-	loop install_file_sys_find
-	jmp install_file_sys_done
-install_file_sys_ok:
-	pop di
-	pop ax
-	pop ds
-	les di,[bx+4]
+	call GetFileSystem
+;
 	movzx bx,al
 	add bx,bx
 	push ds
@@ -216,6 +324,9 @@ install_file_sys_ok:
 	mov si,ds:[bx].fs_sel
 	or si,si
 	jz init_file_old_freed
+;
+	cmp si,-1
+	je init_file_old_freed
 ;
 	CallFileSystem dismount_proc
 	mov es,si
@@ -285,28 +396,6 @@ init_file_system	Proc far
 	pop ds
 	ret
 init_file_system	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_DRIVE_INFO
-;
-;		DESCRIPTION:	Get drive info
-;
-;		PARAMETERS:		AL			DRIVE NR
-;
-;		RETURNS:		EAX			FREE UNITS
-;						CX			BYTES / UNIT
-;						EDX			TOTAL # OF UNITS
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_drive_info_name	DB 'Get Drive Info',0
-
-get_drive_info:
-	CallFileSystem info_proc
-	retf32
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -424,6 +513,8 @@ hook_thread_loop:
 	jnz hook_thread_loop
 
 hook_thread_done:
+	mov ds:fs_init_done,1
+	LeaveSection ds:fs_init_section
 	ret
 hook_thread	Endp
 
@@ -529,6 +620,16 @@ init	PROC far
 	mov ax,register_file_system_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET demand_load_file_system
+	mov di,OFFSET demand_load_file_system_name
+	mov ax,demand_load_file_system_nr
+	RegisterOsGate
+;
+	mov si,OFFSET is_file_system_available
+	mov di,OFFSET is_file_system_available_name
+	mov ax,is_file_system_available_nr
+	RegisterOsGate
+;
 	mov si,OFFSET install_file_system
 	mov di,OFFSET install_file_system_name
 	mov ax,install_file_system_nr
@@ -538,17 +639,6 @@ init	PROC far
 	mov di,OFFSET init_file_system_name
 	mov ax,init_file_system_nr
 	RegisterOsGate
-;
-	mov si,OFFSET get_drive_info
-	mov di,OFFSET get_drive_info_name
-	xor cl,cl
-	mov ax,get_drive_info_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,get_virt_drive_info_nr
-	RegisterVirtUserGate
 ;
 	mov si,OFFSET rename_file32
 	mov di,OFFSET rename_file_name
@@ -584,6 +674,9 @@ init	PROC far
 	mov bx,fs_data_sel
 	AllocateFixedSystemMem
 ;
+	InitSection es:fs_init_section
+	EnterSection es:fs_init_section
+	mov es:fs_init_done,0
 	mov es:file_defs,0
 	mov es:fs_init_hooks,0
 ;

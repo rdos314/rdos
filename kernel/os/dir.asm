@@ -142,6 +142,58 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ValidateDrive
+;
+;		DESCRIPTION:	Validate drive
+;
+;		PARAMETERS:		AL			Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ValidateDrive	Proc near
+	push ds
+	push bx
+	push si
+;
+	mov si,fs_data_sel
+	mov ds,si
+	movzx si,al
+	add si,si
+
+validate_drive_retry:
+	mov bx,ds:[si].fs_sel
+	or bx,bx
+	jnz validate_drive_defined
+;
+	mov bl,ds:fs_init_done
+	or bl,bl
+	stc
+	jnz validate_drive_done
+;
+	EnterSection ds:fs_init_section
+	LeaveSection ds:fs_init_section
+	jmp validate_drive_retry
+
+validate_drive_defined:
+	cmp bx,-1
+	clc
+	jnz validate_drive_done
+;
+	DemandLoadDrive
+	jmp validate_drive_retry
+
+validate_drive_done:
+	pop si
+	pop bx
+	pop ds
+	ret
+ValidateDrive	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CacheDirEntry
 ;
 ;		DESCRIPTION:	Cache dir entry structure
@@ -711,19 +763,22 @@ ParseDir	Proc near
 	jne parse_drive_done
 ;
 	sub bl,'A'
-	jc parse_drive_done
+	jc parse_dir_fail
 ;
 	cmp bl,26
 	jc parse_drive_ok
 ;
 	sub bl,20h
-	jc parse_drive_done
+	jc parse_dir_fail
 ;
 	cmp bl,26
-	jnc parse_drive_done
+	jnc parse_dir_fail
 
 parse_drive_ok:
 	mov al,bl
+	call ValidateDrive
+	jc parse_dir_fail
+;
 	add edi,2
 
 parse_drive_done:
@@ -1242,6 +1297,9 @@ GetCurDirBase	Proc near
 	push ecx
 	push esi
 ;
+	call ValidateDrive
+	jc get_cur_dir_done
+;
 	mov bx,fs_data_sel
 	mov ds,bx
 	movzx bx,al
@@ -1257,7 +1315,7 @@ GetCurDirBase	Proc near
 	xor ecx,ecx
 	mov byte ptr es:[edi],0
 	or bx,bx
-	je get_cur_dir_done
+	je get_cur_dir_ok
 ;
 	mov ds,bx
 	EnterReadSection ds:ds_access_section
@@ -1325,7 +1383,7 @@ get_cur_dir_leave:
 	LeaveReadSection ds:ds_access_section
 	mov al,ds:ds_drive
 
-get_cur_dir_done:
+get_cur_dir_ok:
 	mov bx,fs_data_sel
 	mov ds,bx
 	movzx bx,al
@@ -1333,7 +1391,8 @@ get_cur_dir_done:
 	mov ds,ds:[bx].fs_sel
 	LeaveReadSection ds:fs_access_section
 	clc
-;
+
+get_cur_dir_done:
 	pop esi
 	pop ecx
 	pop bx
@@ -2247,6 +2306,35 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GET_DRIVE_INFO
+;
+;		DESCRIPTION:	Get drive info
+;
+;		PARAMETERS:		AL			DRIVE NR
+;
+;		RETURNS:		EAX			FREE UNITS
+;						CX			BYTES / UNIT
+;						EDX			TOTAL # OF UNITS
+;						NC			SUCCESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_drive_info_name	DB 'Get Drive Info',0
+
+get_drive_info:
+	call ValidateDrive
+	jc get_drive_info_done
+;
+	CallFileSystem info_proc
+
+get_drive_info_done:
+	retf32
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			SET_CUR_DRIVE
 ;
 ;		DESCRIPTION:	Set current drive
@@ -2263,8 +2351,12 @@ set_cur_drive:
 	push si
 	mov si,fs_process_sel
 	mov ds,si
+	call ValidateDrive
+	jc set_cur_drive_done
+;
 	mov ds:curr_drive,al
-	clc
+
+set_cur_drive_done:
 	pop si
 	pop ds
 	retf32
@@ -2779,6 +2871,17 @@ init_dir	PROC near
 	xor cl,cl
 	mov ax,get_deleted_entry_nr
 	RegisterOsGate
+;
+	mov si,OFFSET get_drive_info
+	mov di,OFFSET get_drive_info_name
+	xor cl,cl
+	mov ax,get_drive_info_nr
+	RegisterUserGate
+;
+	mov bx,ax
+	xor dx,dx
+	mov ax,get_virt_drive_info_nr
+	RegisterVirtUserGate
 ;
 	mov si,OFFSET set_cur_drive
 	mov di,OFFSET set_cur_drive_name

@@ -277,5 +277,8 @@ get_free_entry_nr			EQU 246
 get_deleted_entry_nr		EQU 247
 cache_dir_nr				EQU 248
 hook_init_file_system_nr	EQU 249
+is_file_system_available_nr	EQU 250
+demand_load_file_system_nr	EQU 251
+demand_load_drive_nr		EQU 252
 
-osgate_entries				EQU 250
+osgate_entries				EQU 253

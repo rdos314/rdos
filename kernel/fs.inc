@@ -51,6 +51,8 @@ fs_data_seg		STRUC
 map_list			DW ?
 map_named_list		DW ?
 sys_section			section_typ <>
+fs_init_section		section_typ <>
+fs_init_done		DB ?
 
 file_defs			DB ?
 fs_init_hooks		DB ?

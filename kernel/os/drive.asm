@@ -2929,6 +2929,52 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DEMAND_LOAD_DRIVE
+;
+;		DESCRIPTION:	Run demand-load for disc exporting drive
+;
+;		PARAMETERS:		AL		Drive #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+demand_load_drive_name	DB 'Demand Load Drive', 0
+
+demand_load_drive	Proc far
+	push ds
+	pushad
+;
+	mov bx,disc_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov ax,[bx].drive_def_arr
+	or ax,ax
+	jz demand_load_drive_fail
+;
+	cmp ax,-1
+	je demand_load_drive_fail
+;
+	mov ds,ax
+	mov ds,ds:drive_disc
+	mov bx,ds:disc_handle
+	lds si,ds:disc_param
+	call [si].demand_mount_proc
+	jmp demand_load_drive_done
+
+demand_load_drive_fail:
+	stc
+
+demand_load_drive_done:
+	popad
+	pop es
+	ret
+demand_load_drive	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INIT_DISC
 ;
 ;		DESCRIPTION:	Init discs
@@ -3029,6 +3075,11 @@ init	PROC far
 	mov si,OFFSET allocate_dynamic_drive
 	mov di,OFFSET allocate_dynamic_drive_name
 	mov ax,allocate_dynamic_drive_nr
+	RegisterOsGate
+;
+	mov si,OFFSET demand_load_drive
+	mov di,OFFSET demand_load_drive_name
+	mov ax,demand_load_drive_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET open_drive

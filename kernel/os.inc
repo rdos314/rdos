@@ -1345,6 +1345,11 @@ AllocateDynamicDrive	MACRO
 					ENDM
 
 ;	IN	AL		Drive #
+DemandLoadDrive	MACRO
+	OsGate demand_load_drive_nr
+					ENDM
+
+;	IN	AL		Drive #
 ;	IN	AH		Disc # or 0
 ;	IN	EDX		Start sector
 OpenDrive	MACRO
@@ -1449,6 +1454,16 @@ HookInitFileSystem	MACRO
 ;	ES:DI		FILE SYSTEM STRUC
 RegisterFileSystem	MACRO
 	OsGate register_file_system_nr
+					ENDM
+
+;	AL			DRIVE #
+DemandLoadFileSystem	MACRO
+	OsGate demand_load_file_system_nr
+					ENDM
+
+;	ES:DI		FILE SYSTEM NAME
+IsFileSystemAvailable	MACRO
+	OsGate is_file_system_available_nr
 					ENDM
 
 ;	AL			DRIVE #
