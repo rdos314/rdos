@@ -248,6 +248,7 @@ PAGE
 ;		DESCRIPTION:	Create a dir selector
 ;
 ;		PARAMETERS:		AL			Drive
+;						BX			Parent dir selector
 ;
 ;		RETURNS:		BX			Dir selector
 ;
@@ -257,8 +258,9 @@ CreateDirSel	PROC near
 	push ds
 	push es
 	push eax
+	push dx
 ;
-	mov bl,al
+	mov dl,al
 	mov eax,SIZE dir_sel_data_struc
 	AllocateSmallGlobalMem
 	mov ax,es
@@ -270,9 +272,11 @@ CreateDirSel	PROC near
 	mov ds:ds_deleted_ptr,0
 	mov ds:ds_free_ptr,0
 	mov ds:ds_usage,0
-	mov ds:ds_drive,bl
+	mov ds:ds_drive,dl
+	mov ds:ds_parent,bx
 	mov bx,ds
 ;
+	pop dx
 	pop eax
 	pop es
 	pop ds
@@ -517,8 +521,9 @@ parse_dir_tree_next:
 	EnterSection ds:ds_list_section
 	mov bx,fs:[esi].de_sel
 	or bx,bx
-	jz parse_dir_tree_cached
+	jnz parse_dir_tree_cached
 ;
+	mov bx,ds
 	mov edx,esi
 	call CreateDirSel
 	CallFileSystem cache_dir_proc
@@ -814,13 +819,122 @@ PAGE
 ;
 ;		DESCRIPTION:	Set current directory
 ;
-;		PARAMETERS:		ES:EDI		Pathname
+;		PARAMETERS:		AL			Drive
+;						ES:EDI		Pathname
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetCurDirBase	Proc near
-	int 3
-	CallFileSystem get_cur_dir_proc
+	push ds
+	push fs
+	push eax
+	push bx
+	push ecx
+	push esi
+;
+	mov bx,fs_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov ds,ds:[bx].fs_sel
+	EnterReadSection ds:fs_access_section
+;
+	mov si,fs_process_sel
+	mov ds,si
+	mov si,flat_sel
+	mov fs,si
+	mov bx,ds:[bx].cur_dir_sel
+	xor ecx,ecx
+	mov byte ptr es:[edi],0
+	or bx,bx
+	je get_cur_dir_done
+;
+	mov ds,bx
+	EnterReadSection ds:ds_access_section
+
+get_cur_dir_loop:
+	mov bx,ds:ds_parent
+	or bx,bx
+	jz get_cur_dir_leave
+;
+	mov si,ds
+	mov eax,ds:ds_dir_ptr
+
+get_cur_dir_node_loop:
+	cmp si,fs:[eax].de_sel
+	je get_cur_dir_node_found
+;
+	mov eax,fs:[eax].de_next
+	jmp get_cur_dir_node_loop
+
+get_cur_dir_node_found:
+	push eax
+	push ecx
+	push edi
+	movzx eax,fs:[eax].de_name_size
+	inc eax
+	mov esi,edi
+	add edi,eax
+	add esi,ecx
+	add edi,ecx
+	dec esi
+	dec edi
+	std
+	rep movs byte ptr es:[edi],es:[esi]
+	cld
+	pop edi
+	pop ecx
+	pop esi
+	movzx eax,fs:[esi].de_name_size
+	add ecx,eax
+	inc ecx
+;
+	push ax
+	push ecx
+	push edi
+	mov esi,fs:[esi].de_name
+	mov ecx,eax
+	mov al,es:[edi]
+	rep movs byte ptr es:[edi],fs:[esi]
+	or al,al
+	je get_cur_dir_no_slash
+;
+	mov al,'\'
+
+get_cur_dir_no_slash:
+	stos byte ptr es:[edi]
+	pop edi
+	pop ecx
+	pop ax
+	or bx,bx
+	je get_cur_dir_leave
+;
+	mov si,ds
+	mov ds,bx
+	EnterReadSection ds:ds_access_section
+	mov ds,si
+	LeaveReadSection ds:ds_access_section
+	mov ds,bx
+	jmp get_cur_dir_loop
+
+get_cur_dir_leave:
+	LeaveReadSection ds:ds_access_section
+
+get_cur_dir_done:
+	mov bx,fs_data_sel
+	mov ds,bx
+	movzx bx,al
+	add bx,bx
+	mov ds,ds:[bx].fs_sel
+	LeaveReadSection ds:fs_access_section
+	clc
+;
+	pop esi
+	pop ecx
+	pop bx
+	pop eax
+	pop fs
+	pop ds
 	ret
 GetCurDirBase	Endp
 
@@ -838,7 +952,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SetCurDirBase	Proc near
-	int 3
 	push ds
 	push ax
 	push edi
@@ -1336,7 +1449,6 @@ PAGE
 close_dir_name	DB 'Close Directory',0
 
 close_dir	Proc far
-	int 3
 	push ds
 	push bx
 	push si
