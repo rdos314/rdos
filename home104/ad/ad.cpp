@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 
 #include "adcdev.h"
 #include "tempdev.h"
@@ -72,28 +73,28 @@ void UpdateLight(int all)
 	{
 		lvcnt = 90;
 
-		if (RdosReadDigital(1, &diostat))
+		if (RdosReadSerialLines(1, &diostat))
 		{
 			if (diostat & 1)
 			{
 				if (lv > 0.050)
-					RdosToggleDigitalLine(1, 0);
+					RdosToggleSerialLine(1, 0);
 			}
 			else
 			{
 				if (lv < 0.030)
-					RdosToggleDigitalLine(1, 0);
+					RdosToggleSerialLine(1, 0);
 			}
 
 			if (diostat & 0x80)
 			{
 				if (lv > 0.200)
-					RdosToggleDigitalLine(1, 7);
+					RdosToggleSerialLine(1, 7);
 			}
 			else
 			{
 				if (lv < 0.120)
-					RdosToggleDigitalLine(1, 7);
+					RdosToggleSerialLine(1, 7);
 			}
 		}
 	}
@@ -378,6 +379,29 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 	RdosWriteString(str);
 }
 
+void DaProc(void *param)
+{
+	int i;
+	long double bias = 0;
+	const long double pi = 3.1415926;
+	long double val;
+
+	for (;;)
+	{
+		for (i = 0; i < 8; i++)
+		{
+			val = 1.0 + sin(bias + i / 7 * pi);
+			RdosWriteSerialVal(2, i, (int)(val * (long double)0x3FFFFFFF));
+		}
+
+		bias += pi / 16;
+		if (bias > pi)
+			bias -= 2 * pi;
+
+		RdosWaitMilli(250);
+	}
+}
+
 void cdecl main()
 {
 	int channel;
@@ -420,6 +444,8 @@ void cdecl main()
 	CreateChannel(adc);
 
 #endif
+
+	RdosCreateThread(DaProc, "DA", 0, 0x2000);
 
 	for (;;)
 		Wait.WaitForever();

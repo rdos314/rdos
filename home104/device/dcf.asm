@@ -631,83 +631,23 @@ GetMinSamples	Endp
 ;
 ;		PARAMETERS:		DS:SI		Buf to save in
 ;
-;		RETURNS:		New diff
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UpdateDiff	Proc near
 	pushad
 ;
-    mov eax,ds:curr_sys_diff
-    mov edx,ds:curr_sys_diff+4
-	sub eax,ds:sys_diff
-	sbb edx,ds:sys_diff+4
-;
-    test edx,80000000h
-    jz upd_diff_pos
-;
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
-    mov cl,-1
-    jmp upd_diff_sign_ok
-
-upd_diff_pos:
-    xor cl,cl
-
-upd_diff_sign_ok:
-	mov ebx,60
-	mul ebx
-	cdq
-	idiv ebx
-	cdq
-;
-    test cl,80h
-    jz upd_diff_update
-;
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
-
-upd_diff_update:
-	add ds:sys_diff,eax
-	adc ds:sys_diff+4,edx
-;
-	mov bx,ds:rtc_id
-	Signal
-;
-	popad
-	ret
-UpdateDiff	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UpdateDiff
-;
-;		DESCRIPTION:	Update difference from time
-;
-;		PARAMETERS:		DS:SI		Buf to save in
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UpdateDiff	Proc near
-	pushad
-;
-    mov eax,ds:curr_sys_diff
-    mov edx,ds:curr_sys_diff+4
-    add eax,02222222h                ; 30 seconds
-    adc edx,0
+    mov eax,ds:curr_sys_diff		; eax = -1s = FFEDCBD8h
+    mov edx,ds:curr_sys_diff+4		; edx = -1h = FFFFFFFEh
+    add eax,02222222h                ; 30 seconds = 20FEDFAh
+    adc edx,0						; edx = FFFFFFFFh
 ;
 	test edx,80000000h
 	jz upd_diff_pos
 ;
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
+    not eax						; FDF01205H
+    not edx						; 0
+    add eax,1					; FDF01206h
+    adc edx,0					; edx = 0, eax = FDF01206h
     mov ds:[si].sd_sign,-1
     jmp upd_diff_sign_ok
 
@@ -715,28 +655,36 @@ upd_diff_pos:
     mov ds:[si].sd_sign,0
 
 upd_diff_sign_ok:
-	push eax
-	mov eax,edx
+	push eax				; push FDF01206h
+	mov eax,edx				; eax = 0
 	xor edx,edx
 	mov ecx,24
 	div ecx
-	mov ds:[si].sd_day,eax
-	mov ds:[si].sd_hour,dl
-	pop eax
+	mov ds:[si].sd_day,eax	; 0
+	mov ds:[si].sd_hour,dl	; 0
+	pop eax					; eax = FDF01206h
 
 upd_diff_min:
 	mov edx,60
-	mul edx
-	mov ds:[si].sd_min,dl
-	cdq
-	idiv ebx
-	cdq
-	sub eax,02222222h
-	mov ds:[si].sd_fract,eax
-;
+	mul edx					; edx = 3Bh, eax = 84443968h
+	mov ds:[si].sd_min,dl	; 0
+	cdq						; edx = FFFFFFFFh, eax = 84443968h
+	idiv ebx				; edx = 0, eax = FDF01206h
 	mov cl,ds:[si].sd_sign	
-	mov eax,ds:sys_diff
-	mov edx,ds:sys_diff+4
+	or cl,cl
+	jz upd_diff_fract_pos
+;
+	add eax,02222222h		; 1193000
+	jmp upd_diff_fract_save
+
+upd_diff_fract_pos:
+	sub eax,02222222h		; eax = -1193000 (1s)
+
+upd_diff_fract_save:
+	mov ds:[si].sd_fract,eax	; 1193000
+;
+	mov eax,ds:sys_diff			; eax = 0
+	mov edx,ds:sys_diff+4		; edx = 0
 	mov ebx,eax
 	or ebx,edx
 	jz upd_diff_sys_sign_ok
@@ -756,36 +704,44 @@ upd_diff_min:
 upd_diff_sys_pos:
     or cl,cl
     jne upd_diff_done
-;
-    xor cl,cl
 
-; MORE TO DO HERE!!!
-
-upd_diff_sys_exit_sign_ok:
+upd_diff_sys_sign_ok:
 	mov ebx,60
-	mul ebx
+	mul ebx					; edx = eax = 0
 	xor eax,eax
-	div ebx
+	div ebx					; edx = eax = 0
+;
+	mov ebx,eax				; ebx = 0
+	mov eax,ds:[si].sd_fract	; eax = 1193000
+	cdq						; edx = 0
 ;
     test cl,80h
-    jz upd_diff_update
+    jz upd_diff_update_pos
 ;
-    not eax
-    not edx
-    add eax,1
-    adc edx,0
+	sub eax,ebx				; eax = 1193000
+	sbb edx,ds:sys_diff+4	; edx = 0
+;
+    not eax					; -1s
+    not edx					; -1
+    add eax,1				
+    adc edx,0				
+	jmp upd_diff_update
+
+upd_diff_update_pos:
+	add eax,ebx				; eax = 1193000
+	adc edx,ds:sys_diff+4	; edx = 0
 
 upd_diff_update:
-	add ds:sys_diff,eax
-	adc ds:sys_diff+4,edx
+	mov ds:sys_diff,eax
+	mov ds:sys_diff+4,edx
 ;
 	mov bx,ds:rtc_id
 	Signal
 
-;
+upd_diff_done:
 	popad
 	ret
-SaveDiff	Endp
+UpdateDiff	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -851,7 +807,7 @@ gbd_hour_iloop:
 	inc dx
 
 gbd_hour_next:
-	loop calc_hour_iloop
+	loop gbd_hour_iloop
 ;
 	pop si
 	pop cx
@@ -961,6 +917,12 @@ dcf_thread_name		DB 'DCF',0
 
 dcf_thread:
 	sti
+;
+	int 3
+	mov dh,2
+	mov dl,2
+	ReadSerialVal
+;
 	mov ax,dcf_data_sel
 	mov ds,ax
 ;
@@ -1004,8 +966,8 @@ dcf_loop:
 
 dcf_time_loop:
 	call GetMinSamples
+	int 3
 	call UpdateDiff
-	call SaveDiff
 	add si,SIZE save_data_struc
 	loop dcf_time_loop
 ;

@@ -93,7 +93,7 @@ int THeat::IsStartedEP()
 void THeat::StartEP()
 {
 	if (!IsStartedEP())
-		RdosToggleDigitalLine(1, 6);
+		RdosToggleSerialLine(1, 6);
 }
 
 /*##########################################################################
@@ -109,7 +109,7 @@ void THeat::StartEP()
 void THeat::StopEP()
 {
 	if (IsStartedEP())
-		RdosToggleDigitalLine(1, 6);
+		RdosToggleSerialLine(1, 6);
 }
 
 /*##########################################################################
@@ -143,7 +143,7 @@ int THeat::IsStartedVP()
 void THeat::StartVP()
 {
 	if (!IsStartedVP())
-		RdosToggleDigitalLine(1, 5);
+		RdosToggleSerialLine(1, 5);
 }
 
 /*##########################################################################
@@ -159,7 +159,7 @@ void THeat::StartVP()
 void THeat::StopVP()
 {
 	if (IsStartedVP())
-		RdosToggleDigitalLine(1, 5);
+		RdosToggleSerialLine(1, 5);
 }
 
 /*##########################################################################
@@ -223,7 +223,7 @@ void THeat::NotifyBeforeClear()
 {
 	TDateTime time;
 
-	if (RdosReadDigital(1, &FStat))
+	if (RdosReadSerialLines(1, &FStat))
 	{
 		RdosSetCursorPosition(12, 0);
 

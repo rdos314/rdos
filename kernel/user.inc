@@ -1685,12 +1685,26 @@ ReadAdc      MACRO
 
 ;	IN  DH		Device #
 ;	OUT AL		State
-ReadDigital      MACRO
-	UserGate read_digital_nr
+ReadSerialLines      MACRO
+	UserGate read_serial_lines_nr
 						ENDM
 
-;	IN  DL		Line #
 ;	IN  DH		Device #
-ToggleDigitalLine      MACRO
-	UserGate toggle_digital_line_nr
+;	IN  DL		Line #
+ToggleSerialLine      MACRO
+	UserGate toggle_serial_line_nr
+						ENDM
+
+;	IN  DH		Device #
+;	IN	DL		Line #
+;	OUT EAX		Value
+ReadSerialVal      MACRO
+	UserGate read_serial_val_nr
+						ENDM
+
+;	IN  DH		Device #
+;	IN  DL		Line #
+;	IN  EAX		Value
+WriteSerialVal      MACRO
+	UserGate write_serial_val_nr
 						ENDM

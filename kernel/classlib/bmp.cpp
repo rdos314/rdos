@@ -119,6 +119,22 @@ TBmpBitmapDevice::TBmpBitmapDevice(int bpp, int width, int height)
 
 /*##########################################################################
 #
+#   Name       : TBmpBitmapDevice::TBmpBitmapDevice
+#
+#   Purpose....: Copy constructor for TBmpBitmapDevice
+#
+#   In params..: dev		bitmap to copy
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBmpBitmapDevice::TBmpBitmapDevice(TGraphicDevice *dev)
+  : TBitmapGraphicDevice(dev)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TBmpBitmapDevice::Create
 #
 #   Purpose....: Create a bitmap from a bmp file

@@ -37,6 +37,13 @@ INCLUDE ..\..\kernel\driver.def
 INCLUDE ..\..\kernel\wait.inc
 INCLUDE ..\..\kernel\handle.inc
 
+
+digio_seg	STRUC
+
+io_section	section_typ <>
+
+digio_seg	ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -118,6 +125,7 @@ OutputBit	Proc near
 	and ah,1
 	shl ah,2
 ;
+	mov dx,288h
 	cli
 	in al,dx
 	and al,NOT 4
@@ -196,9 +204,409 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			ReadDigitalLine
+;		NAME:			Output6
 ;
-;		DESCRIPTION:	Read digital input
+;		DESCRIPTION:	Output 6 bits
+;
+;		PARAMETERS:		AL		Value to output
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Output6	Proc near
+	push ax
+	push bx
+	push cx
+	push dx
+;
+	mov cx,6
+	xor bl,bl
+	and al,3Fh
+
+out6_loop:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop out6_loop	
+;
+	xor al,al
+	call OutputBit
+;
+	mov cx,6
+	mov al,bl
+
+out6_crc_loop:
+	call OutputBit
+	shr al,1
+	loop out6_crc_loop
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out6_done
+;
+	clc
+
+out6_done:
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+Output6	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Input24
+;
+;		DESCRIPTION:	Input 24 bits
+;
+;		RETURNS:		EAX		24 bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Input24	Proc near
+	push bx
+	push cx
+	push dx
+;
+	mov cx,24
+	xor eax,eax
+	xor bl,bl
+
+in24_loop:
+	call InputBit
+	call UpdateCrc
+	ror eax,1
+	loop in24_loop
+;
+	shr eax,8
+	push eax
+;
+	mov cx,8
+	xor al,al
+
+in24_crc_loop:
+	call InputBit
+	ror al,1
+	loop in24_crc_loop
+;
+	xor bl,0A5h
+	cmp al,bl
+	pop eax
+	stc
+	jne in24_done
+;
+	clc
+
+in24_done:
+	pop dx
+	pop cx
+	pop bx
+	ret
+Input24	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Output24
+;
+;		DESCRIPTION:	Output 24 bits
+;
+;		PARAMETERS:		EAX		24 bits
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Output24	Proc near
+	push ax
+	push bx
+	push cx
+	push dx
+	push edi
+;
+	mov edi,eax
+;
+	mov cx,6
+	xor bl,bl
+	mov ax,di
+	shr edi,6
+	and al,3Fh
+
+out24_loop0:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop out24_loop0
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out24_done
+;
+	mov cx,6
+	mov ax,di
+	shr edi,6
+	and al,3Fh
+
+out24_loop1:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop out24_loop1	
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out24_done
+;
+	mov cx,6
+	mov ax,di
+	shr edi,6
+	and al,3Fh
+
+out24_loop2:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop out24_loop2	
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out24_done
+;
+	mov cx,6
+	mov ax,di
+	and al,3Fh
+
+out24_loop3:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop out24_loop3	
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out24_done
+;
+	mov cx,6
+	mov al,bl
+
+out24_crc_loop:
+	call OutputBit
+	shr al,1
+	loop out24_crc_loop
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz out24_done
+
+	clc
+
+out24_done:
+	pop edi
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+Output24	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			OutputCmdLine
+;
+;		DESCRIPTION:	Output cmd & line #
+;
+;		PARAMETERS:		AH			Cmd #
+;						AL			Line #			
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OutputCmdLine	Proc near
+	push ax
+	push bx
+	push cx
+	push dx
+;
+	push ax
+	mov cx,3
+	xor bl,bl
+	mov al,ah
+	and al,7
+
+cmd_loop:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop cmd_loop	
+;
+	pop ax
+	mov cx,3
+	and al,7
+
+line_loop:
+	call UpdateCrc
+	call OutputBit
+	shr al,1
+	loop line_loop	
+;
+	xor al,al
+	call OutputBit
+;
+	mov cx,6
+	mov al,bl
+
+cmdline_crc_loop:
+	call OutputBit
+	shr al,1
+	loop cmdline_crc_loop
+;
+	xor al,al
+	call OutputBit
+;
+	mov dx,28Ah
+	in al,dx
+	and al,1
+	stc
+	jz cmdline_done
+;
+	clc
+
+cmdline_done:
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+OutputCmdLine	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			OpenSession
+;
+;		DESCRIPTION:	Output common message header
+;
+;		PARAMETERS:		AL			Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenSession	Proc near
+	push ax
+	push cx
+	push dx
+;
+	mov cx,digio_data_sel
+	mov ds,cx
+	EnterSection ds:io_section
+;
+	push ax
+	mov dx,288h
+	cli
+	in al,dx
+	or al,1
+	out dx,al
+	sti
+	call Delay
+;
+	mov cx,14
+
+preamp_loop:
+	mov al,1
+	call OutputBit
+	loop preamp_loop
+;
+	xor al,al
+	call OutputBit
+;
+	pop ax
+	call Output6
+;
+	pop dx
+	pop cx
+	pop ax
+	ret
+OpenSession	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseSession
+;
+;		DESCRIPTION:	Close a session
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseSession	Proc near
+	push ax
+	push dx
+	pushf
+;
+	xor al,al
+	call OutputBit
+;
+	cli
+	mov dx,288h
+	in al,dx
+	and al,NOT 6
+	out dx,al
+	sti
+	call Delay
+;
+	cli
+	in al,dx
+	and al,NOT 7
+	out dx,al
+	sti
+	LeaveSection ds:io_section
+	popf
+	pop dx
+	pop ax
+	ret
+CloseSession	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadSerialLines
+;
+;		DESCRIPTION:	Read serial lines
 ;
 ;		PARAMETERS:		DH		Device #
 ;
@@ -206,12 +614,17 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_digital_name	DB 'Read Digital', 0
+read_serial_lines_name	DB 'Read Serial Lines', 0
 
-read_digital	Proc far
+read_serial_lines	Proc far
+	push ds
 	push bx
 	push dx
 	push si
+;
+	mov si,digio_data_sel
+	mov ds,si
+	EnterSection ds:io_section
 ;
 	mov si,dx
 	mov dx,288h
@@ -225,10 +638,10 @@ read_digital	Proc far
 ;
 	mov cx,14
 
-rpreamp_loop:
+rslpreamp_loop:
 	mov al,1
 	call OutputBit
-	loop rpreamp_loop
+	loop rslpreamp_loop
 ;
 	xor al,al
 	call OutputBit
@@ -239,11 +652,11 @@ rpreamp_loop:
 	mov al,ah
 	and al,3Fh
 
-rnode_loop:
+rslnode_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop rnode_loop	
+	loop rslnode_loop	
 ;
 	xor al,al
 	call OutputBit
@@ -251,10 +664,10 @@ rnode_loop:
 	mov cx,6
 	mov al,bl
 
-rnode_crc_loop:
+rslnode_crc_loop:
 	call OutputBit
 	shr al,1
-	loop rnode_crc_loop
+	loop rslnode_crc_loop
 ;
 	xor al,al
 	call OutputBit
@@ -264,27 +677,27 @@ rnode_crc_loop:
 	sub dx,2
 	and al,1
 	stc
-	jz read_digital_leave
+	jz rsl_leave
 ;
 	mov cx,3
 	xor bl,bl
 	mov al,5 ; READ CMD
 
-rcmd_loop:
+rslcmd_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop rcmd_loop	
+	loop rslcmd_loop	
 ;
 	mov cx,3
 	xor al,al ; sub-cmd
 	and al,7
 
-rsub_loop:
+rslsub_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop rsub_loop	
+	loop rslsub_loop	
 ;
 	xor al,al
 	call OutputBit
@@ -292,10 +705,10 @@ rsub_loop:
 	mov cx,6
 	mov al,bl
 
-rdev_crc_loop:
+rsldev_crc_loop:
 	call OutputBit
 	shr al,1
-	loop rdev_crc_loop
+	loop rsldev_crc_loop
 ;
 	xor al,al
 	call OutputBit
@@ -304,31 +717,31 @@ rdev_crc_loop:
 	xor al,al
 	xor bl,bl
 
-rin_loop:
+rslin_loop:
 	call InputBit
 	call UpdateCrc
 	ror al,1
-	loop rin_loop
+	loop rslin_loop
 ;
 	mov ah,al
 ;
 	mov cx,8
 	xor al,al
 
-rin_crc_loop:
+rslin_crc_loop:
 	call InputBit
 	ror al,1
-	loop rin_crc_loop
+	loop rslin_crc_loop
 ;
 	xor bl,5Ah
 	cmp al,bl
 	stc
-	jne read_digital_leave
+	jne rsl_leave
 ;
 	clc
 	mov al,ah
 
-read_digital_leave:
+rsl_leave:
 	push ax
 	pushf
 ;
@@ -346,34 +759,41 @@ read_digital_leave:
 	sti
 	popf
 	pop ax
+	LeaveSection ds:io_section
 ;
 	pop si
 	pop dx
 	pop bx
+	pop ds
 	retf32
-read_digital	Endp
+read_serial_lines	Endp
 
 PAGE
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			ToggleDigitalLine
+;		NAME:			ToggleSerialLine
 ;
-;		DESCRIPTION:	Toggle digital input line
+;		DESCRIPTION:	Toggle serial input line
 ;
 ;		PARAMETERS:		DL		Line #
 ;						DH		Device #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-toggle_digital_line_name	DB 'Toggle Digital Line', 0
+toggle_serial_line_name	DB 'Toggle Serial Line', 0
 
-toggle_digital_line	Proc far
+toggle_serial_line	Proc far
+	push ds
 	push ax
 	push bx
 	push dx
 	push si
+;
+	mov si,digio_data_sel
+	mov ds,si
+	EnterSection ds:io_section
 ;
 	mov si,dx
 	mov dx,288h
@@ -387,10 +807,10 @@ toggle_digital_line	Proc far
 ;
 	mov cx,14
 
-tpreamp_loop:
+tslpreamp_loop:
 	mov al,1
 	call OutputBit
-	loop tpreamp_loop
+	loop tslpreamp_loop
 ;
 	xor al,al
 	call OutputBit
@@ -401,11 +821,11 @@ tpreamp_loop:
 	mov al,ah
 	and al,3Fh
 
-tnode_loop:
+tslnode_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop tnode_loop	
+	loop tslnode_loop	
 ;
 	xor al,al
 	call OutputBit
@@ -413,10 +833,10 @@ tnode_loop:
 	mov cx,6
 	mov al,bl
 
-tnode_crc_loop:
+tslnode_crc_loop:
 	call OutputBit
 	shr al,1
-	loop tnode_crc_loop
+	loop tslnode_crc_loop
 ;
 	xor al,al
 	call OutputBit
@@ -426,27 +846,27 @@ tnode_crc_loop:
 	sub dx,2
 	and al,1
 	stc
-	jz toggle_digital_done
+	jz tsl_done
 ;
 	mov cx,3
 	xor bl,bl
 	mov al,4 ; TOGGLE CMD
 
-tcmd_loop:
+tslcmd_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop tcmd_loop	
+	loop tslcmd_loop	
 ;
 	mov cx,3
 	mov ax,si
 	and al,7
 
-tchan_loop:
+tslchan_loop:
 	call UpdateCrc
 	call OutputBit
 	shr al,1
-	loop tchan_loop	
+	loop tslchan_loop	
 ;
 	xor al,al
 	call OutputBit
@@ -454,10 +874,10 @@ tchan_loop:
 	mov cx,6
 	mov al,bl
 
-tdev_crc_loop:
+tsldev_crc_loop:
 	call OutputBit
 	shr al,1
-	loop tdev_crc_loop
+	loop tsldev_crc_loop
 ;
 	xor al,al
 	call OutputBit
@@ -468,11 +888,11 @@ tdev_crc_loop:
 	sub dx,2
 	and al,1
 	stc
-	jz toggle_digital_done
+	jz tsl_done
 ;
 	clc
 
-toggle_digital_done:
+tsl_done:
 	pushf
 	cli
 	in al,dx
@@ -487,13 +907,101 @@ toggle_digital_done:
 	out dx,al
 	sti
 	popf
+	LeaveSection ds:io_section
 ;
 	pop si
 	pop dx
 	pop bx
 	pop ax
+	pop ds
 	retf32
-toggle_digital_line	Endp
+toggle_serial_line	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadSerialVal
+;
+;		DESCRIPTION:	Read serial val
+;
+;		PARAMETERS:		DL		Line #
+;						DH		Device #
+;
+;		RETURNS:		EAX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_val_name	DB 'Read Serial Value', 0
+
+read_serial_val	Proc far
+	push ds
+;
+	mov al,dh
+	call OpenSession
+	jc rsv_leave
+;
+	mov ah,2	; READ VAL CMD
+	mov al,dl
+	call OutputCmdLine
+;
+	call Input24
+	pushf
+	shl eax,8
+	popf
+
+rsv_leave:
+	call CloseSession
+;
+	pop ds
+	retf32
+read_serial_val	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteSerialVal
+;
+;		DESCRIPTION:	Write serial value
+;
+;		PARAMETERS:		DL		Line #
+;						DH		Device #
+;						EAX		Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_serial_val_name	DB 'Write Serial Value', 0
+
+write_serial_val	Proc far
+	push ds
+	push ax
+	push edi
+;
+	mov edi,eax
+	mov al,dh
+	call OpenSession
+	jc wsv_leave	
+;
+	mov ah,3	; WRITE VAL CMD
+	mov al,dl
+	call OutputCmdLine
+	jc wsv_leave
+;
+	mov eax,edi
+	sar eax,8
+	call Output24
+	
+wsv_leave:
+	call CloseSession
+;
+	pop edi
+	pop ax
+	pop ds
+	retf32
+write_serial_val	Endp
 
 PAGE
 
@@ -516,6 +1024,11 @@ init	Proc far
 	mov bx,digio_code_sel
 	InitDevice
 ;
+	mov eax,SIZE digio_seg
+	mov bx,digio_data_sel
+	AllocateFixedSystemMem
+	InitSection es:io_section
+;
     mov dx,28Bh
     mov al,8Bh
     out dx,al
@@ -529,14 +1042,24 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
-	mov si,OFFSET read_digital
-	mov di,OFFSET read_digital_name
-	mov ax,read_digital_nr
+	mov si,OFFSET read_serial_lines
+	mov di,OFFSET read_serial_lines_name
+	mov ax,read_serial_lines_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET toggle_digital_line
-	mov di,OFFSET toggle_digital_line_name
-	mov ax,toggle_digital_line_nr
+	mov si,OFFSET toggle_serial_line
+	mov di,OFFSET toggle_serial_line_name
+	mov ax,toggle_serial_line_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET read_serial_val
+	mov di,OFFSET read_serial_val_name
+	mov ax,read_serial_val_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET write_serial_val
+	mov di,OFFSET write_serial_val_name
+	mov ax,write_serial_val_nr
 	RegisterBimodalUserGate
 ;
 	popa

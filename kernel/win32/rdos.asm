@@ -4819,9 +4819,9 @@ RdosReadAdc	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RdosReadDigital
+;       NAME:           RdosReadSerialLines
 ;
-;       DESCRIPTION:    Read digital input
+;       DESCRIPTION:    Read serial lines
 ;
 ;		PARAMETERS:		Device
 ;						Value ptr
@@ -4830,69 +4830,150 @@ RdosReadAdc	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public RdosReadDigital
+		public RdosReadSerialLines
 
-RdosReadDigital	Proc near
+RdosReadSerialLines	Proc near
 	push ebp
 	mov ebp,esp
 	push edx
 	push esi
 ;
 	mov dh,[ebp+8]
-	UserGate read_digital_nr
-	jc rddFail
+	UserGate read_serial_lines_nr
+	jc rdsFail
 ;
 	movzx eax,al
 	mov esi,[ebp+12]
 	mov [esi],eax
 	mov eax,1
-	jmp rddDone
+	jmp rdsDone
 
-rddFail:
+rdsFail:
 	xor eax,eax
 
-rddDone:
+rdsDone:
 	pop esi
 	pop edx
 	pop ebp
 	ret 8
-RdosReadDigital	Endp
+RdosReadSerialLines	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
-;       NAME:           RdosToggleDigitalLine
+;       NAME:           RdosToggleSerialLine
 ;
-;       DESCRIPTION:    Toggle digital line
+;       DESCRIPTION:    Toggle serial line
 ;
 ;		PARAMETERS:		Device
 ;						Line
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public RdosToggleDigitalLine
+		public RdosToggleSerialLine
 
-RdosToggleDigitalLine	Proc near
+RdosToggleSerialLine	Proc near
 	push ebp
 	mov ebp,esp
 	push edx
 ;
 	mov dh,[ebp+8]
 	mov dl,[ebp+12]
-	UserGate toggle_digital_line_nr
-	jc rtdFail
+	UserGate toggle_serial_line_nr
+	jc rtsFail
 ;
 	mov eax,1
-	jmp rtdDone
+	jmp rtsDone
 
-rtdFail:
+rtsFail:
 	xor eax,eax
 
-rtdDone:
+rtsDone:
 	pop edx
 	pop ebp
 	ret 8
-RdosToggleDigitalLine	Endp
+RdosToggleSerialLine	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosReadSerialVal
+;
+;       DESCRIPTION:    Read serial value
+;
+;		PARAMETERS:		Device
+;						Line
+;						Value ptr
+;
+;		RETURNS:		TRUE if successful
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosReadSerialVal
+
+RdosReadSerialVal	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+	push esi
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	UserGate read_serial_val_nr
+	jc rdvFail
+;
+	mov esi,[ebp+16]
+	mov [esi],eax
+	mov eax,1
+	jmp rdvDone
+
+rdvFail:
+	xor eax,eax
+
+rdvDone:
+	pop esi
+	pop edx
+	pop ebp
+	ret 12
+RdosReadSerialVal	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosWriteSerialVal
+;
+;       DESCRIPTION:    Write serial value
+;
+;		PARAMETERS:		Device
+;						Line
+;						Value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosWriteSerialVal
+
+RdosWriteSerialVal	Proc near
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov dh,[ebp+8]
+	mov dl,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate write_serial_val_nr
+	jc rwvFail
+;
+	mov eax,1
+	jmp rwvDone
+
+rwvFail:
+	xor eax,eax
+
+rwvDone:
+	pop edx
+	pop ebp
+	ret 12
+RdosWriteSerialVal	Endp
 
 ;	extrn Startup:near
 
