@@ -31,10 +31,10 @@ GateSize = 16
 
 INCLUDE ..\os\system.def
 INCLUDE ..\os\protseg.def
-INCLUDE ..\os\driver.def
+INCLUDE ..\os\user.def
 INCLUDE ..\os\os.def
 INCLUDE ..\os\os.inc
-
+INCLUDE ..\os\driver.def
 
 	.386p
 
@@ -62,45 +62,43 @@ PAGE
 ;
 ;		NAME:			StartComPort
 ;
-;		DESCRIPTION:	Start com port
+;		DESCRIPTION:	start serial port
 ;
-;       PARAMETERS:     DX      port
+;		PARAMETERS:		AX		port #
+;						DX		base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_com_port_name DB 'Start Com Port', 0
+start_com_port_name	DB 'Start Com Port', 0
 
 start_com_port	Proc far
-    push ax
-    push cx
-    push dx
+	push ax
+	push dx
 ;
-    mov cx,dx
-    cmp dx,3F8h
-    je start_com1
+	cmp dx,3F8h
+	je start_com1
 ;
-    cmp dx,2F8h
-    je start_com2
+	cmp dx,2F8h
+	je start_com2
 ;
-    jmp start_done
+	jmp start_com_done
 
 start_com1:
     WriteSIO 7, 3
     WriteSIO 30h, 1
-    WriteSIO 60h, ch
-    WriteSIO 61h, cl
-    jmp start_done
+    WriteSIO 60h, dh
+    WriteSIO 61h, dl
+	jmp start_com_done
 
 start_com2:
     WriteSIO 7, 2
     WriteSIO 30h, 1
-    WriteSIO 60h, ch
-    WriteSIO 61h, cl
+    WriteSIO 60h, dh
+    WriteSIO 61h, dl
 
-start_done:
-    pop dx
-    pop cx
-    pop ax
+start_com_done:
+	pop dx
+	pop ax
 	ret
 start_com_port	Endp
 
@@ -111,39 +109,39 @@ PAGE
 ;
 ;		NAME:			StopComPort
 ;
-;		DESCRIPTION:	Stop com port
+;		DESCRIPTION:	stop serial port
 ;
-;       PARAMETERS:     DX      port
+;		PARAMETERS:		AX		port #
+;						DX		base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_com_port_name DB 'Stop Com Port', 0
+stop_com_port_name	DB 'Stop Com Port', 0
 
 stop_com_port	Proc far
-    push ax
-    push cx
-    push dx
+	push ax
+	push dx
 ;
-    cmp dx,3F8h
-    je stop_com1
+	cmp dx,3F8h
+	je stop_com1
 ;
-    cmp dx,2F8h
-    je stop_com2
+	cmp dx,2F8h
+	je stop_com2
 ;
-    jmp stop_done
+	jmp stop_com_done
 
 stop_com1:
     WriteSIO 7, 3
     WriteSIO 30h, 0
-    jmp stop_done
+	jmp stop_com_done
 
 stop_com2:
     WriteSIO 7, 2
     WriteSIO 30h, 0
 
-stop_done:
-    pop dx
-    pop ax
+stop_com_done:
+	pop dx
+	pop ax
 	ret
 stop_com_port	Endp
 
@@ -164,31 +162,30 @@ init	Proc far
 	push ds
 	push es
 	pusha
+;
 	mov bx,power_code_sel
 	InitDevice
-;	
+;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
 ;
 	mov si,OFFSET start_com_port
 	mov di,OFFSET start_com_port_name
-	xor cl,cl
 	mov ax,start_com_port_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET stop_com_port
 	mov di,OFFSET stop_com_port_name
-	xor cl,cl
 	mov ax,stop_com_port_nr
 	RegisterOsGate
 ;
 	popa
 	pop es
-	pop ds		
+	pop ds
 	ret
 init	Endp
 
 code	ENDS
 
-    END init
+	END init
