@@ -852,6 +852,101 @@ void TList::Invalidate(TListNode *ln)
 
 /*##########################################################################
 #
+#   Name       : TList::AddFirst
+#
+#   Purpose....: Add entry as first entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddFirst(TListNode *p)
+{
+    FSection.Enter();
+    p->FNext = FList;
+    FList = p;
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::AddLast
+#
+#   Purpose....: Add entry as last entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddLast(TListNode *p)
+{
+    TListNode *tp;
+
+    FSection.Enter();
+    if (FList)
+    {
+        tp = FList;
+        while (tp->FNext)
+            tp = tp->FNext;
+
+        tp->FNext = p;
+    }
+    else
+        FList = p;
+        
+    p->FNext = 0;
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TList::AddAt
+#
+#   Purpose....: Add entry at specified position, if possible.
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TList::AddAt(int n, TListNode *p)
+{
+    TListNode *tp;
+    int pos = 0;
+
+    FSection.Enter();
+    if (FList)
+    {
+        tp = FList;
+        while (tp->FNext && pos < n)
+        {
+            pos++;
+            tp = tp->FNext;
+        }
+
+        if (tp->FNext)
+        {
+            p->FNext = tp->FNext;
+            tp->FNext = p;
+        }
+        else
+        {
+            tp->FNext = p;
+            p->FNext = 0;
+        }
+    }
+    else
+    {
+        FList = p;
+        p->FNext = 0;
+    }
+    FSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TList::GetSize
 #
 #   Purpose....: Get # of elements in list
@@ -1115,12 +1210,8 @@ TListNode &TList::Get()
 void TList::AddFirst(TListNode &newln)
 {
     TListNode *p;
-
-    FSection.Enter();
     p = new TListNode(newln);
-    p->FNext = FList;
-    FList = p;
-    FSection.Leave();
+	AddFirst(p);
 }
 
 /*##########################################################################
@@ -1137,24 +1228,8 @@ void TList::AddFirst(TListNode &newln)
 void TList::AddLast(TListNode &newln)
 {
     TListNode *p;
-    TListNode *tp;
-
-    FSection.Enter();
     p = new TListNode(newln);
-
-    if (FList)
-    {
-        tp = FList;
-        while (tp->FNext)
-            tp = tp->FNext;
-
-        tp->FNext = p;
-    }
-    else
-        FList = p;
-        
-    p->FNext = 0;
-    FSection.Leave();
+	AddLast(p);
 }
 
 /*##########################################################################
@@ -1171,38 +1246,8 @@ void TList::AddLast(TListNode &newln)
 void TList::AddAt(int n, TListNode &newln)
 {
     TListNode *p;
-    TListNode *tp;
-    int pos = 0;
-
-    FSection.Enter();
     p = new TListNode(newln);
-
-    if (FList)
-    {
-        tp = FList;
-        while (tp->FNext && pos < n)
-        {
-            pos++;
-            tp = tp->FNext;
-        }
-
-        if (tp->FNext)
-        {
-            p->FNext = tp->FNext;
-            tp->FNext = p;
-        }
-        else
-        {
-            tp->FNext = p;
-            p->FNext = 0;
-        }
-    }
-    else
-    {
-        FList = p;
-        p->FNext = 0;
-    }
-    FSection.Leave();
+	AddAt(n, p);
 }
 
 /*##########################################################################

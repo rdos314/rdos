@@ -118,6 +118,9 @@ protected:
     void Init();
     void Invalidate(TListNode *ln);
 	void Load(const TList &src);
+	void AddFirst(TListNode *newln);
+	void AddLast(TListNode *newln);
+	void AddAt(int n, TListNode *newln);
 	TListNode *Get(int n);
 
 	int Compare(const TList &l) const;

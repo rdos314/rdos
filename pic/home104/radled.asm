@@ -894,7 +894,8 @@ CHKWRT:		btfss EECON1,4
         	bcf INTCON,6
 			return
 
-Poll:		decfsz DelayMs,F
+Poll:		return				; temporary to disallow manipulation
+			decfsz DelayMs,F
 			return
 ;
 			movlw $FF

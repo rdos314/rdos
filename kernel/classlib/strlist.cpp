@@ -429,7 +429,8 @@ TString &TStringList::Get()
 ##########################################################################*/
 void TStringList::AddFirst(TString &str)
 {
-	TList::AddFirst(TStringListNode(str));
+	TListNode *p = new TStringListNode(str);
+	TList::AddFirst(p);
 }
 
 /*##########################################################################
@@ -445,7 +446,8 @@ void TStringList::AddFirst(TString &str)
 ##########################################################################*/
 void TStringList::AddLast(TString &str)
 {
-	TList::AddLast(TStringListNode(str));
+	TListNode *p = new TStringListNode(str);
+	TList::AddLast(p);
 }
 
 /*##########################################################################
@@ -461,7 +463,8 @@ void TStringList::AddLast(TString &str)
 ##########################################################################*/
 void TStringList::AddAt(int n, TString &str)
 {
-	TList::AddAt(n, TStringListNode(str));
+	TListNode *p = new TStringListNode(str);
+	TList::AddAt(n, p);
 }
 
 /*##########################################################################
@@ -477,7 +480,8 @@ void TStringList::AddAt(int n, TString &str)
 ##########################################################################*/
 int TStringList::Replace(int pos, TString &str)
 {
-	return TList::Replace(pos, TStringListNode(str));
+	TStringListNode p = TStringListNode(str);
+	return TList::Replace(pos, p);
 }
 
 /*##########################################################################
