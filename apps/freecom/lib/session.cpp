@@ -122,6 +122,7 @@ int TSession::Count = 0;
 ##########################################################################*/
 TSession::TSession()
 {
+    FArgList = 0;
     FCmdFile = new TFile("CON");
     FInputFile = new TFile("CON");
     FOutputFile = new TFile("CON");
@@ -187,6 +188,7 @@ TSession::TSession(const TSession &src)
 {
     Count++;
 
+    FArgList = 0;
     
 	if (src.FCmdFile->IsDevice())
         FCmdFile = new TFile("CON");
@@ -1093,6 +1095,88 @@ int TSession::Read(char *str, int maxsize)
 
 /*##########################################################################
 #
+#   Name       : TSession::GetArg
+#
+#   Purpose....: Get an argument # (1-based)
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TSession::GetArg(int ArgNr)
+{
+    int i;
+    TArg *arg;
+
+    i = 1;
+    arg = FArgList;
+
+    while(i != ArgNr && arg)
+        arg = arg->FList; 
+
+    if (arg)
+        return arg->FName.GetData();
+    else
+        return "";   
+}
+
+/*##########################################################################
+#
+#   Name       : TSession::ExpandParam
+#
+#   Purpose....: Expand parameters
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString TSession::ExpandParam(const char *param)
+{
+    TString str;
+
+    while (*param)
+    {
+        if (*param == '%')
+        {
+            param++;
+            switch (*param)
+            {
+                case '0':
+                    str += FName;
+                    break;
+
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                    str += GetArg(*param - '0');
+                    break;
+
+                default:
+                    str += '%';
+                    str += *param;
+            }
+            param++;
+                    
+        }
+        else
+        {
+            str += *param;
+            param++;
+        }    
+    }
+    return str;
+}
+
+/*##########################################################################
+#
 #   Name       : TSession::Run
 #
 #   Purpose....: Run session
@@ -1166,6 +1250,44 @@ void TSession::Run(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSession::Run(TPathName &bat, const char *param)
+int TSession::Run(const char *name, TArg *ArgList)
 {
+	char param[256];
+	int ok;
+	TCommandLine *cmd;
+	TString CmdStr;
+	const char *ptr;
+
+    FArgList = ArgList;
+    FName = name;
+
+    if (FCmdFile)
+        delete FCmdFile;
+
+    FCmdFile = new TFile(name);
+
+	while (FCmdFile->GetPos() != FCmdFile->GetSize())
+	{
+		DisplayPrompt();
+		ok = ReadCmd(param, 256);
+		if (ok)
+		{
+            CmdStr = ExpandParam(param);
+            ptr = CmdStr.GetData();		
+			cmd = new TCommandLine(this, ptr);
+			if (cmd->IsExit())
+			{
+			    delete cmd;
+			    break;
+			}
+			else
+            {	    		
+    			cmd->Run();
+	    		delete cmd;
+	    	}
+		}
+		else
+		    return 1;
+	}
+    return 0;
 }

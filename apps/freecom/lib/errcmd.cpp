@@ -47,7 +47,7 @@
 #
 ##########################################################################*/
 TErrorCommand::TErrorCommand(TSession *session, const char *name)
-  : TCommand(session)
+  : TCommand(session, "")
 {
 	FMsg.printf(TEXT_ERROR_BADCOMMAND, name);
 }

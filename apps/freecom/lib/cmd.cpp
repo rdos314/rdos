@@ -83,28 +83,6 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(TSession *session)
-{
-    FArgList = 0;
-    FSession = session;    
-    FInputFile = 0;
-    FOutputFile = 0;
-    FErrorFile = 0;
-
-    FRemovePath = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TCommand::TCommand
-#
-#   Purpose....: Constructor for command
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 TCommand::TCommand(TSession *session, const char *param)
   : FCmdLine(param)
 {
@@ -205,7 +183,7 @@ int TCommand::Command(const char *param)
 {
 	TSession session(*FSession);
 	session.Run(param);
-    return 0;
+	return 0;
 }
 
 /*##########################################################################
@@ -219,11 +197,10 @@ int TCommand::Command(const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::RunBatch(TPathName &path, const char *param)
+int TCommand::RunBatch(const char *name)
 {
 	TSession session(*FSession);
-	session.Run(path, param);
-    return 0;
+	return session.Run(name, FArgList);
 }
 
 /*##########################################################################

@@ -52,7 +52,6 @@ class TCommand : public TParser
 {
     friend class TCommandLine;
 public:
-    TCommand(TSession *session);
     TCommand(TSession *session, const char *param);
 	virtual ~TCommand();
 
@@ -60,7 +59,6 @@ public:
 
 	int Command();
 	int Command(const char *param);
-    int RunBatch(TPathName &path, const char *param);
 
 	void DefineInput(TString &name, int remove);
 	void DefineOutput(TString &name);
@@ -84,6 +82,8 @@ public:
 	static int ErrorLevel;
 
 protected:
+    int RunBatch(const char *name);
+    
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void OptError(const char *optstr);
 	void ErrorSyntax(const char *str);

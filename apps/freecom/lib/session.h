@@ -29,10 +29,13 @@
 #define _SESSION_H
 
 #include "file.h"
+#include "cmd.h"
 #include "cmdfact.h"
 #include "part.h"
 #include "strlist.h"
 #include "keyboard.h"
+
+class TArg;
 
 class TSession
 {
@@ -43,7 +46,7 @@ public:
 
     void Run();
     void Run(const char *param);
-    void Run(TPathName &bat, const char *param);
+    int Run(const char *name, TArg *ArgList);
     
     void Write(char ch);
     void Write(const char *str);
@@ -75,11 +78,17 @@ protected:
 	TString FormatTime(TDateTime &time);
 	TString FormatLongDate(TDateTime &date);
 
+	const char *GetArg(int ArgNr);
+	TString ExpandParam(const char *param);
+
 	TFile *FCmdFile;
 	TFile *FInputFile;
 	TFile *FOutputFile;
 	TFile *FErrorFile;
 
+    TString FName;
+    TArg *FArgList;
+    
 	static Count;
 
 };

@@ -65,5 +65,8 @@ TBatchCommand::TBatchCommand(TSession *session, TPathName &name, const char *par
 ##########################################################################*/
 int TBatchCommand::Execute(char *param)
 {
-    return RunBatch(FProgName, param);
+	if (!ScanCmdLine(param, 0))
+		return 1;
+    
+	return RunBatch(FProgName.Get().GetData());
 }
