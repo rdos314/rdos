@@ -2975,6 +2975,122 @@ RdosReadKeyboard	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetKeyboardState
+;
+;		DESCRIPTION:	Get keyboard state
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetKeyboardState
+
+RdosGetKeyboardState	PROC
+	UserGate get_keyboard_state_nr
+	movzx eax,ax
+	ret
+RdosGetKeyboardState	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosPeekKeyEvent
+;
+;		DESCRIPTION:	Peek keyboard event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosPeekKeyEvent
+
+RdosPeekKeyEvent	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+	push edi
+;
+	UserGate peek_key_event_nr
+	jc rpeFail
+;
+	mov edi,[ebp+8]
+	movzx eax,ax
+	mov [edi],eax
+;
+	mov edi,[ebp+12]
+	movzx eax,cx
+	mov [edi],eax
+;
+	mov edi,[ebp+16]
+	movzx eax,dl
+	mov [edi],eax
+;
+	mov edi,[ebp+20]
+	movzx eax,dh
+	mov [edi],eax
+;
+	mov eax,1
+	jmp rpeDone
+
+rpeFail:
+	xor eax,eax
+
+rpeDone:
+	pop edi
+	pop edx
+	pop ecx
+	pop ebp
+	ret 16
+RdosPeekKeyEvent	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadKeyEvent
+;
+;		DESCRIPTION:	Read keyboard event
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadKeyEvent
+
+RdosReadKeyEvent	PROC
+	push ebp
+	mov ebp,esp
+	push ecx
+	push edx
+	push edi
+;
+	UserGate read_key_event_nr
+	jc rkeFail
+;
+	mov edi,[ebp+8]
+	movzx eax,ax
+	mov [edi],eax
+;
+	mov edi,[ebp+12]
+	movzx eax,cx
+	mov [edi],eax
+;
+	mov edi,[ebp+16]
+	movzx eax,dl
+	mov [edi],eax
+;
+	mov edi,[ebp+20]
+	movzx eax,dh
+	mov [edi],eax
+;
+	mov eax,1
+	jmp rkeDone
+
+rkeFail:
+	xor eax,eax
+
+rkeDone:
+	pop edi
+	pop edx
+	pop ecx
+	pop ebp
+	ret 16
+RdosReadKeyEvent	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosHideMouse
 ;
 ;		DESCRIPTION:	Hide mouse
@@ -3083,6 +3199,8 @@ RdosSetMousePosition	ENDP
 RdosSetMouseWindow	PROC
 	push ebp
 	mov ebp,esp
+	push eax
+	push ebx
 	push ecx
 	push edx
 ;
@@ -3094,6 +3212,8 @@ RdosSetMouseWindow	PROC
 ;
 	pop edx
 	pop ecx
+	pop ebx
+	pop eax
 	pop ebp
 	ret 16
 RdosSetMouseWindow	ENDP

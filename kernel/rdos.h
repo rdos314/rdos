@@ -156,6 +156,9 @@ void __stdcall RdosSetFocus(char FocusKey);
 void __stdcall RdosClearKeyboard();
 int __stdcall RdosPollKeyboard();
 int __stdcall RdosReadKeyboard();
+int __stdcall RdosGetKeyboardState();
+int __stdcall RdosPeekKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
+int __stdcall RdosReadKeyEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 
 void __stdcall RdosHideMouse();
 void __stdcall RdosShowMouse();
