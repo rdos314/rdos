@@ -31,14 +31,14 @@ GateSize = 16
 
 INCLUDE protseg.def
 INCLUDE system.def
-INCLUDE driver.def
-INCLUDE user.def
-INCLUDE os.def
+INCLUDE ..\driver.def
+INCLUDE ..\user.def
+INCLUDE ..\os.def
 INCLUDE system.inc
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE handle.inc
-INCLUDE wait.inc
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\handle.inc
+INCLUDE ..\wait.inc
 
 wait_handle_seg STRUC
 

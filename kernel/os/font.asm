@@ -32,12 +32,12 @@ GateSize = 16
 INCLUDE system.def
 INCLUDE system.inc
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
-INCLUDE driver.def
-INCLUDE handle.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
+INCLUDE ..\driver.def
+INCLUDE ..\handle.inc
 
 font_seg	STRUC
 

@@ -29,16 +29,16 @@
 
 GateSize = 16
 
-INCLUDE driver.def
+INCLUDE ..\driver.def
 INCLUDE protseg.def
-INCLUDE user.def
-INCLUDE os.def
-INCLUDE user.inc
-INCLUDE os.inc
+INCLUDE ..\user.def
+INCLUDE ..\os.def
+INCLUDE ..\user.inc
+INCLUDE ..\os.inc
 INCLUDE system.def
 INCLUDE int.def
 INCLUDE system.inc
-INCLUDE drive.inc
+INCLUDE ..\drive.inc
 
 MAX_DRIVES = 'Z' - 'A' + 1
 DRIVE_WAIT_NUM = 32
