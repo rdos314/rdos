@@ -132,7 +132,6 @@ CheckReadyLoop:
 	loop CheckReadyLoop
 	stc
 CheckReadyDone:
-;
 	pop dx
 	pop cx
 	pop ax
@@ -957,11 +956,11 @@ discinit_thread	Proc far
 	call open_drive
 	jc discinit_thread_done
 ;
-	mov bx,fs:disc_sel
-	FlushDisc
-;
 	mov bx,fs:disc_thread
 	Signal
+;
+	mov bx,fs:disc_sel
+	FlushDisc
 
 discinit_thread_done:
 	ret
@@ -985,6 +984,39 @@ read_drive	Proc near
 	mov ax,ide_data_sel
 	mov ds,ax
 	EnterSection IdeSection
+;
+	push edi
+	mov si,1
+	mov ax,es:[edi].dh_sector
+	mov dx,es:[edi].dh_unit
+	mov bx,fs:disc_sel
+	PollDiscRequest
+	jc read_drive_size_found
+
+read_drive_size_loop:
+	inc ax
+	cmp ax,fs:drive_sectors_per_unit
+	jae read_drive_size_found
+;
+	mov cl,es:[edi].dh_state
+	cmp cl,STATE_EMPTY
+	jne read_drive_size_found
+;
+	cmp ax,es:[edi].dh_sector
+	jne read_drive_size_found
+;
+	cmp dx,es:[edi].dh_unit
+	jne read_drive_size_found
+;
+	cmp si,255
+	jae read_drive_size_found
+;
+	inc si
+	mov edi,es:[edi].dh_next
+	jmp read_drive_size_loop
+
+read_drive_size_found:
+	pop edi
 
 read_drive_retry_loop:
 	ClearSignal
@@ -1003,8 +1035,7 @@ read_drive_lba:
 	mov edx,eax
 	mov ah,fs:drive_precomp
 	push cx
-	mov cx,255
-	mov si,cx
+	mov cx,si
 	call SetupLbaTaskFile
 	pop cx
 	jmp read_drive_start
@@ -1018,8 +1049,7 @@ read_drive_ide:
 	inc bl
 	mov ah,fs:drive_precomp
 	push cx
-	mov cx,255
-	mov si,cx
+	mov cx,si
 	call SetupIdeTaskFile
 	pop cx
 
@@ -1036,6 +1066,38 @@ read_sector_loop:
 	call CheckStatus
 	jc read_drive_retry
 ;
+	cmp si,1
+	jnz read_sector_input
+;
+	push edi
+	mov ax,es:[edi].dh_sector
+	mov dx,es:[edi].dh_unit
+	mov bx,fs:disc_sel
+	PollDiscRequest
+	jc read_drive_pop_input
+;
+	mov cl,es:[edi].dh_state
+	cmp cl,STATE_EMPTY
+	jne read_drive_pop_input
+;
+	inc ax
+	cmp ax,es:[edi].dh_sector
+	jne read_drive_pop_input
+;
+	cmp dx,es:[edi].dh_unit
+	jne read_drive_pop_input
+;
+	int 3
+	mov dx,1F1h
+	in al,dx
+	inc al
+	out dx,al
+	inc si
+
+read_drive_pop_input:
+	pop edi
+
+read_sector_input:
 	push cx
 	push edi
 	mov edi,es:[edi].dh_data
@@ -1070,71 +1132,26 @@ read_drive_check_next:
 	sub si,1
 	jz read_drive_done
 ;
-	PollDiscRequest
-	jc read_drive_end
+	mov bx,fs:disc_sel
+	GetDiscRequest
+	jc read_drive_error
 ;
 	mov cl,es:[edi].dh_state
 	cmp cl,STATE_EMPTY
-	jne read_drive_end
+	jne read_drive_error
 ;
 	cmp ax,es:[edi].dh_sector
-	jne read_drive_end
+	jne read_drive_error
 ;
 	cmp dx,es:[edi].dh_unit
-	jne read_drive_end
+	jne read_drive_error
 ;
-	GetDiscRequest
 	WaitForSignal
 	mov cx,3
 	jmp read_sector_loop
 
-read_drive_end:
-	NewDiscRequest
-	jc read_drive_bypass
-;
-	WaitForSignal
-	mov cx,3
-;
-	mov dx,1F2h
-	in al,dx
-	cmp al,1
-	jbe read_sector_loop
-;
-	mov si,2
-	mov al,1
-	out dx,al
-	jmp read_sector_loop
-
-read_drive_bypass:
-	WaitForSignal
-	push ax
-	push dx
-;
-	mov dx,1F2h
-	in al,dx
-	cmp al,1
-	jbe read_drive_do_bypass
-;
-	mov si,2
-	mov al,1
-	out dx,al
-
-read_drive_do_bypass:
-	call CheckStatus
-	pop dx
-	pop ax
-	jc read_drive_done
-;
-	push ax
-	push dx
-	mov cx,256
-	mov dx,1F0h
-read_drive_bypass_loop:
-	in ax,dx
-	loop read_drive_bypass_loop
-	pop dx
-	pop ax
-	jmp read_drive_check_next
+read_drive_error:
+	int 3
 
 read_drive_done:
 	LeaveSection IdeSection
@@ -1156,46 +1173,165 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive	Proc near
-	mov es:[edi].dh_state,STATE_USED
-	push cx
+	mov ax,ide_data_sel
+	mov ds,ax
+	EnterSection IdeSection
 ;
-	or dx,dx
-	jnz write_drive_do
-;
-	or ax,ax
-	jnz write_drive_do
+	push edi
+	mov si,1
+	mov ax,es:[edi].dh_sector
+	mov dx,es:[edi].dh_unit
+	mov cx,ax
+	or cx,dx
+	jnz write_drive_not_zero
 ;
 	int 3
-	stc
+
+write_drive_not_zero:
+	mov bx,fs:disc_sel
+	PollDiscRequest
+	jc write_drive_size_found
+
+write_drive_size_loop:
+	inc ax
+	cmp ax,fs:drive_sectors_per_unit
+	jae write_drive_size_found
+;
+	mov cl,es:[edi].dh_state
+	cmp cl,STATE_DIRTY
+	je write_drive_size_is_write
+;
+	cmp cl,STATE_SEQ
+	jne write_drive_size_found
+
+write_drive_size_is_write:
+	cmp ax,es:[edi].dh_sector
+	jne write_drive_size_found
+;
+	cmp dx,es:[edi].dh_unit
+	jne write_drive_size_found
+;
+	cmp si,255
+	jae write_drive_size_found
+;
+	inc si
+	mov edi,es:[edi].dh_next
+	jmp write_drive_size_loop
+
+write_drive_size_found:
+	pop edi
+
+write_drive_retry_loop:
+	ClearSignal
+	GetThread
+	mov IdeThread,ax
+;
+	cmp fs:drive_lba_mode,0
+	jz write_drive_ide
+
+write_drive_lba:
+	movzx edx,es:[edi].dh_unit
+	movzx eax,fs:drive_sectors_per_unit
+	mul edx
+	movzx ebx,es:[edi].dh_sector
+	add eax,ebx
+	mov edx,eax
+	mov ah,fs:drive_precomp
+	push cx
+	mov cx,si
+	call SetupLbaTaskFile
+	pop cx
+	jmp write_drive_start
+
+write_drive_ide:
+	mov dx,es:[edi].dh_unit
+	mov ax,es:[edi].dh_sector
+	div byte ptr fs:drive_sectors_per_cyl
+	mov bh,al
+	mov bl,ah
+	inc bl
+	mov ah,fs:drive_precomp
+	push cx
+	mov cx,si
+	call SetupIdeTaskFile
+	pop cx
+
+write_drive_start:
+	jc write_drive_retry
+;
+	mov cx,3
+	mov al,30h
+	mov dx,1F7h
+	out dx,al
+
+write_sector_loop:
+	call WaitDrq
+	jc write_drive_retry
+;
+	push cx
+	push esi
+	mov esi,es:[edi].dh_data
+	mov dx,1F0h
+	mov ecx,256
+	rep
+	db 26h
+	db 67h
+	outsw
+	pop esi
+	pop cx
+;
+	WaitForSignal
+	call CheckStatus
+	jnc write_drive_ok
+
+write_drive_retry:
+	sub cx,1
+	jnz write_drive_retry_loop
+
+write_drive_fail:
+	mov es:[edi].dh_state,STATE_BAD
+	mov bx,fs:disc_sel
+	DiscRequestCompleted
 	jmp write_drive_done
 
-write_drive_do:
-	mov cx,3
+write_drive_ok:
+	mov es:[edi].dh_state,STATE_USED
+	mov ax,es:[edi].dh_sector
+	mov dx,es:[edi].dh_unit
+	mov bx,fs:disc_sel
+	DiscRequestCompleted
 
-write_drive_loop:
-	push eax
-	push cx
-	push edx
-	push edi
+write_drive_check_next:
+	inc ax
+	sub si,1
+	jz write_drive_done
 ;
-	movzx ebx,es:[edi].dh_sector
-	movzx edx,es:[edi].dh_unit
-	mov edi,es:[edi].dh_data
-	mov cx,1
-	call WriteDrive
+	mov bx,fs:disc_sel
+	GetDiscRequest
+	jc write_drive_error
 ;
-	pop edi
-	pop edx
-	pop cx
-	pop eax
-	jnc write_drive_done
+	mov cl,es:[edi].dh_state
+	cmp cl,STATE_DIRTY
+	je write_drive_is_write
 ;
-	loop write_drive_loop
+	cmp cl,STATE_SEQ
+	jne write_drive_error
+
+write_drive_is_write:
+	cmp ax,es:[edi].dh_sector
+	jne write_drive_error
 ;
-	stc
+	cmp dx,es:[edi].dh_unit
+	jne write_drive_error
+;
+	mov cx,3
+	jmp write_sector_loop
+
+write_drive_error:
+	int 3
 
 write_drive_done:
-	pop cx
+	LeaveSection IdeSection
 	ret
 write_drive	Endp
 
@@ -1230,15 +1366,10 @@ perform_one_loop:
 
 perform_one_write:
 	call write_drive
-	jmp perform_one_completed
+	jmp perform_one_loop
 
 perform_one_read:
 	call read_drive
-	jmp perform_one_loop
-
-perform_one_completed:
-	mov bx,fs:disc_sel
-	DiscRequestCompleted
 	jmp perform_one_loop
 
 perform_one_done:
@@ -1279,6 +1410,7 @@ discbuf_thread:
 ;
 	mov ax,flat_sel
 	mov es,ax
+	WaitForSignal
 
 discbuf_thread_loop:
 	WaitForDiscRequest
