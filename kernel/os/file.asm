@@ -692,12 +692,12 @@ ReadFileListEntry	Proc near
 	cmp eax,1000h
 	jc read_alloc_small
 ;
-	push cx
+	push ecx
 	push edx
 	AllocateBigLinear
 	mov es:[edi].fl_base,edx
 	pop edx
-	pop cx
+	pop ecx
 	jmp read_file_list_do
 
 read_alloc_small:
@@ -706,13 +706,13 @@ read_alloc_small:
 	push esi
 	push edi
 ;
-	push cx
+	push ecx
 	push edx
 	mov eax,1000h
 	AllocateBigLinear
 	mov esi,edx
 	pop edx
-	pop cx
+	pop ecx
 ;
 	mov bx,ds
 	mov eax,ds:file_block_size
@@ -1022,12 +1022,12 @@ write_file_check_base:
 	push edi
 	mov edi,eax
 	mov eax,ds:file_block_size
-	push cx
+	push ecx
 	push edx
 	AllocateBigLinear
 	mov es:[edi].fl_base,edx
 	pop edx
-	pop cx
+	pop ecx
 	neg eax
 	and edx,eax
 	push bx

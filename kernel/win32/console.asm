@@ -1203,7 +1203,7 @@ scmOutput:
 scmInput:
 	mov InputMode,eax
 	test eax,ENABLE_MOUSE_INPUT OR ENABLE_WINDOW_INPUT
-	jz scmNoKeyHook
+;	jz scmNoKeyHook
 ;
 	mov EventHead,0
 	mov EventTail,0
