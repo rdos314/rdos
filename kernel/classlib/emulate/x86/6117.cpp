@@ -780,16 +780,82 @@ char T6117::Read(TCpu *Cpu, unsigned long Address)
 	if (Ads >= 0x100000)
 		return ReadDram(Address);
 
-	if (Ads >= 0xE0000)
+	if (Ads >= 0xC0000)
 	{
-		Offset = Ads & 0x1FFFF;
-		return *(FRom + Offset);
-	}
+		switch (Ads & 0xF8000)
+		{
+			case 0xC0000:
+				if (FData[0x14] & 1)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return 0xFF;
+				}
 
-	if (Ads >= 0xA0000)
-	{
-		UserBreak(Cpu);
-		return 0xFF;
+			case 0xC8000:
+				if (FData[0x14] & 4)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return 0xFF;
+				}
+
+			case 0xD0000:
+				if (FData[0x14] & 0x10)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return 0xFF;
+				}
+
+			case 0xD8000:
+				if (FData[0x14] & 0x40)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return 0xFF;
+				}
+
+			case 0xE0000:
+				if (FData[0x15] & 1)
+					break;
+				else
+				{
+					Offset = Ads & 0x1FFFF;
+					return *(FRom + Offset);
+				}
+
+			case 0xE8000:
+				if (FData[0x15] & 4)
+					break;
+				else
+				{
+					Offset = Ads & 0x1FFFF;
+					return *(FRom + Offset);
+				}
+
+			case 0xF0000:
+				if (FData[0x15] & 0x10)
+					break;
+				else
+				{
+					Offset = Ads & 0x1FFFF;
+					return *(FRom + Offset);
+				}
+
+			case 0xF8000:
+				if (FData[0x15] & 0x40)
+					break;
+				else
+				{
+					Offset = Ads & 0x1FFFF;
+					return *(FRom + Offset);
+				}
+		}
 	}
 
 	return ReadDram(Address);
@@ -816,10 +882,82 @@ void T6117::Write(TCpu *Cpu, unsigned long Address, char Data)
 		return;
 	}
 
-	if (Ads >= 0xA0000)
+	if (Ads >= 0xC0000)
 	{
-		UserBreak(Cpu);
-		return;
+		switch (Ads & 0xF8000)
+		{
+			case 0xC0000:
+				if (FData[0x14] & 2)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xC8000:
+				if (FData[0x14] & 8)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xD0000:
+				if (FData[0x14] & 0x20)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xD8000:
+				if (FData[0x14] & 0x80)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xE0000:
+				if (FData[0x15] & 2)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xE8000:
+				if (FData[0x15] & 8)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xF0000:
+				if (FData[0x15] & 0x20)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+
+			case 0xF8000:
+				if (FData[0x15] & 0x80)
+					break;
+				else
+				{
+					UserBreak(Cpu);
+					return;
+				}
+		}
 	}
 
 	WriteDram(Address, Data);
