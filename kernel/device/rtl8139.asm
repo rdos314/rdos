@@ -637,7 +637,7 @@ DispTable:
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DriverName	DB 'DP83815',0
+DriverName	DB 'RTL8139',0
 
 PciVendorTab:
 pci00	DW 10ECh, 8139h
