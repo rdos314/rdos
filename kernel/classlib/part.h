@@ -28,6 +28,8 @@
 #ifndef _PART_H
 #define _PART_H
 
+#include "str.h"
+
 #define MAX_PART_COUNT	100
 
 struct TBootParam
@@ -53,30 +55,31 @@ struct TBootParam
 };
 
 class TPartitionTable;
-class TPartitionData;
+class TDiscPartition;
+class TFsPartition;
 
 class TPartition
 {
 friend class TPartitionTable;
-friend class TPartitionData;
+friend class TDiscPartition;
 public:
-	TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry);
+	TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
 	int GetDisc();
 	unsigned char GetType();
 	int GetBytesPerSector();
 	double GetSpace();
 
-	virtual char *GetPartName();
+	virtual const char *GetPartName();
 	virtual int IsTable();
-	virtual int IsEntry();
+	virtual int IsFs();
 	virtual int IsFree();
 
 	long Start;
 	long Size;
 
 protected:
-	void Write(TPartitionTable *Owner);
-	void Delete(TPartitionTable *Owner);
+	void WriteToTable(TPartitionTable *Owner);
+	void DeleteFromTable(TPartitionTable *Owner);
 
 	int FDisc;
 	unsigned char FType;
@@ -84,27 +87,12 @@ protected:
 	int FControlEntry;
 };
 
-class TPartitionEntry : public TPartition
-{
-friend class TPartitionTable;
-public:
-	TPartitionEntry(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry);
-
-	virtual char *GetPartName();
-	virtual int IsEntry();
-
-	char FsName[9];
-
-protected:
-	virtual void GetFs();
-};
-
-class TPartitionFree : public TPartition
+class TFreePartition : public TPartition
 {
 public:
-	TPartitionFree(int Disc);
+	TFreePartition(int Disc);
 
-	virtual char *GetPartName();
+	virtual const char *GetPartName();
 	virtual int IsFree();
 
 protected:
@@ -112,15 +100,15 @@ protected:
 
 class TPartitionTable : public TPartition
 {
-friend class TPartitionData;
+friend class TDiscPartition;
 friend class TPartition;
 public:
-	TPartitionTable(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry);
+	TPartitionTable(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
 	virtual ~TPartitionTable();
 
-	TPartitionTable *Create(int Entry, TPartitionFree *PartFree);
+	TPartitionTable *Create(int Entry, TFreePartition *FreePart);
 
-	virtual char *GetPartName();
+	virtual const char *GetPartName();
 	virtual int IsTable();
 
 	TPartition *PartArr[4];
@@ -130,7 +118,7 @@ protected:
 	void LbaToChs(long Sector, char *Data);
 	void Process();
 	void ProcessOne(int Entry, const char *Data);
-	TPartitionEntry *AllocateEntry(unsigned char Type, TPartitionFree *PartFree, long Size);
+	TFsPartition *InsertFs(const char *FsName, TFreePartition *FreePart, long Size);
 	void FreeEntry(int Entry);
 
 	int FSectorsPerCyl;
@@ -139,13 +127,60 @@ protected:
 
 };
 
-class TPartitionData
+class TFsPartition : public TPartition
+{
+friend class TPartitionTable;
+friend class TFsPartitionFactory;
+public:
+	TFsPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
+
+	virtual const char *GetPartName();
+	virtual int IsFs();
+	virtual int Format();
+
+	int Read(long Sector, char *Buf, int Size);
+	int Write(long Sector, const char *Buf, int Size);
+
+	TString FsName;
+
+protected:
+};
+
+class TFsPartitionFactory
 {
 public:
-	TPartitionData(int Disc);
+	TFsPartitionFactory(unsigned char Type, const char *FsName);
+	virtual ~TFsPartitionFactory();
+
+	static TFsPartition *Parse(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size);
+	static TFsPartition *Format(int Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size);
+
+protected:
+	virtual TFsPartition *Open(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size) = 0;
+	virtual TFsPartition *Create(int Disc, TPartitionTable *Parent, int Entry, long Start, long Size) = 0;
+
+    static TString GetFs(int Disc, long Start);
+
+	void Insert();
+	void Remove();
+
+	static TFsPartitionFactory *FPartList;
+	TFsPartitionFactory *FList;
+
+	unsigned char FType;
+	TString FFsName;
+};
+
+class TDiscPartition
+{
+public:
+	TDiscPartition(int Disc);
 
 	void Update();
 	int GetDisc();
+
+	void Delete(int Entry);
+	TFsPartition *Add(const char *FsName, long Size);
 
 	TPartitionTable *PartRoot;
 	TPartition *PartArr[MAX_PART_COUNT];
@@ -163,8 +198,6 @@ protected:
 	void CreateArr();
 	void Sort();
 	void AddFree();
-	void Delete(int Entry);
-	TPartitionEntry *Add(unsigned char Type, long Size);
 
 	int FDisc;
 	char FBootSector[512];

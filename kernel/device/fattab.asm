@@ -536,13 +536,6 @@ next_cluster32_done:
 	LeaveSection ds:cluster_section
 	popf
 ;
-    pushf
-    cmp edx,0FFFFh
-    jc nxcl32ok
-    int 3
-nxcl32ok:    
-    popf
-;
 	pop esi
 	pop cx
 	pop ebx

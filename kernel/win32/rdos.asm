@@ -5954,7 +5954,15 @@ RdosFormatDrive	Proc near
 	mov ecx,[ebp+16]
 	mov edi,[ebp+20]
 	UserGate format_drive_nr
+	jc rfdFail
 ;
+    mov eax,1
+    jmp rfdDone
+
+rfdFail:
+    xor eax,eax
+
+rfdDone:
 	pop edi
 	pop ebp
 	ret 16

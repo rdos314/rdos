@@ -2,11 +2,12 @@
 
 #include "rdos.h"
 #include "part.h"
+#include "rdfspart.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
 
-TPartitionData *Part[2];
+TDiscPartition *Part[2];
 
 void ShowTreeTable(TPartitionTable *Part)
 {
@@ -31,7 +32,7 @@ void ShowTreeTable(TPartitionTable *Part)
 			Typ = Entry->GetType();
 			Space = Entry->GetSpace();
 
-			if (Entry->IsEntry() || Entry->IsTable())
+			if (Entry->IsFs() || Entry->IsTable())
 				printf("%d: %02hX %08lX-%08lX %8s %15.3f MB\r\n",
 						i,
 						Typ,
@@ -54,14 +55,14 @@ void ShowTreeTable(TPartitionTable *Part)
 	}
 }
 
-void ShowTree(TPartitionData *Part)
+void ShowTree(TDiscPartition *Part)
 {
 	printf("\r\nDisc %d\r\n", Part->GetDisc());
 	if (Part->PartRoot)
 		ShowTreeTable(Part->PartRoot);
 }
 
-void ShowTable(TPartitionData *Part)
+void ShowTable(TDiscPartition *Part)
 {
 	int i;
 	TPartition *Entry;
@@ -78,7 +79,7 @@ void ShowTable(TPartitionData *Part)
 		Entry = Part->PartArr[i];
 		if (Entry)
 		{
-			if (Entry->IsEntry())
+			if (Entry->IsFs())
 				printf("%d: %02hX %08lX-%08lX %8s %15.3f MB\r\n",
 						i,
 						(unsigned int)Entry->GetType(),
@@ -100,11 +101,19 @@ void ShowTable(TPartitionData *Part)
 void cdecl main()
 {
 	int i;
-    
-	for (i = 0; i < 2; i++)
-		Part[i] = new TPartitionData(i);
+	TFsPartitionFactory *factory;
 
-    ShowTree(Part[0]);
-    ShowTree(Part[1]);
+	factory = new TRdfsPartitionFactory;
+
+	for (i = 0; i < 2; i++)
+		Part[i] = new TDiscPartition(i);
+
+	 ShowTree(Part[0]);
+	 ShowTree(Part[1]);
+	 ShowTable(Part[0]);
+	 ShowTable(Part[1]);
+
+	 Part[0]->Add("RDFS", 0x00100000);
+	 Part[0]->Delete(3);
 }
 

@@ -34,6 +34,8 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+TFsPartitionFactory *TFsPartitionFactory::FPartList = 0;
+
 /*##################  TPartition::TPartition  #############
 *   Purpose....: Partition constructor							                    #
 *   In params..: *                                                          #
@@ -41,14 +43,14 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry)
+TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
 {
 	FDisc = Disc;
 	FParent = Parent;
 	FControlEntry = Entry;
 	FType = Type;
-	Start = 0;
-	Size = 0;
+	Start = PStart;
+	Size = PSize;
 }
 
 /*##################  TPartition::GetPartName  #############
@@ -58,7 +60,7 @@ TPartition::TPartition(int Disc, unsigned char Type, TPartitionTable *Parent, in
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-char *TPartition::GetPartName()
+const char *TPartition::GetPartName()
 {
 	return "Free    ";
 }
@@ -131,14 +133,14 @@ int TPartition::IsTable()
 	return FALSE;
 }
 
-/*##################  TPartition::IsEntry  #############
-*   Purpose....: Check if entry is entry				                    #
+/*##################  TPartition::IsFs  #############
+*   Purpose....: Check if entry is a filesystem			                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartition::IsEntry()
+int TPartition::IsFs()
 {
 	return FALSE;
 }
@@ -155,14 +157,14 @@ int TPartition::IsFree()
 	return FALSE;
 }
 
-/*##################  TPartition::Write  #############
+/*##################  TPartition::WriteToTable  #############
 *   Purpose....: Write partition entry to disc
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartition::Write(TPartitionTable *Owner)
+void TPartition::WriteToTable(TPartitionTable *Owner)
 {
 	char Buf[512];
 	char *PartPtr;
@@ -200,14 +202,14 @@ void TPartition::Write(TPartitionTable *Owner)
 	RdosWriteDisc(FDisc, FParent->Start, Buf, 512);
 }
 
-/*##################  TPartition::Delete  #############
+/*##################  TPartition::DeleteFromTable  #############
 *   Purpose....: Delete partition entry on disc
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartition::Delete(TPartitionTable *Owner)
+void TPartition::DeleteFromTable(TPartitionTable *Owner)
 {
 	char Buf[512];
 	char *PartPtr;
@@ -240,133 +242,148 @@ void TPartition::Delete(TPartitionTable *Owner)
 	RdosWriteDisc(FDisc, FParent->Start, Buf, 512);
 }
 
-/*##################  TPartitionEntry::TPartitionEntry  #############
-*   Purpose....: Partition entry constructor							                    #
+/*##################  TFsPartition::TFsPartition  #############
+*   Purpose....: Partition filesystem constructor							                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionEntry::TPartitionEntry(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry)
- : TPartition(Disc, Type, Parent, Entry)
+TFsPartition::TFsPartition(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
+ : TPartition(Disc, Type, Parent, Entry, PStart, PSize)
 {
-	FsName[0] = 0;
 }
 
-/*##################  TPartitionEntry::GetPartName  #############
+/*##################  TFsPartitionEntry::GetPartName  #############
 *   Purpose....: Get partition name						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-char *TPartitionEntry::GetPartName()
+const char *TFsPartition::GetPartName()
 {
-	if (FsName[0])
-		return FsName;
+	if (FsName.GetSize())
+		return FsName.GetData();
 	else
 	{
 		switch (FType)
 		{
 			case 1:
-				return "FAT12   ";
+				return "FAT12";
 
 			case 4:
 			case 6:
-				return "FAT16   ";
+				return "FAT16";
 
 			case 7:
-				return "Custom  ";
+				return "Custom";
 
 			case 0xB:
 			case 0xC:
-				return "FAT32   ";
+				return "FAT32";
 
 			case 0x81:
-				return "Linux   ";
+				return "Linux";
 
 			case 0x82:
-				return "Swap    ";
+				return "Swap";
 
 			case 0x83:
-				return "EXT2FS  ";
+				return "EXT2FS";
 
 			default:
-				return "???     ";
+				return "???";
 		}
 	}
 }
 
-/*##################  TPartitionEntry::IsEntry  #############
-*   Purpose....: Check if entry is entry				                    #
+/*##################  TFsPartition::IsFs  #############
+*   Purpose....: Check for filesystem   				                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartitionEntry::IsEntry()
+int TFsPartition::IsFs()
 {
 	return TRUE;
 }
 
-/*##################  TPartitionEntry::GetFs  #############
-*   Purpose....: Get partition FS name						                    #
+/*##################  TFsPartition::Read  #############
+*   Purpose....: Read data from partition   			                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionEntry::GetFs()
+int TFsPartition::Read(long Sector, char *Buf, int Count)
 {
-	char Buf[512];
-	int BytesPerSector;
-	long Sectors;
-	int SectorsPerCyl;
-	int Heads;
+	if (Sector < 0 || Sector >= Size)
+		return 0;
 
-	if (RdosGetDiscInfo(FDisc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
-	{
-		if (Start < Sectors)
-		{
-			RdosReadDisc(FDisc, Start, Buf, 512);
-			memcpy(FsName, &Buf[0x36], 8);
-			FsName[8] = 0;
-		}
-	}
+	return RdosReadDisc(FDisc, Start + Sector, Buf, Count);
 }
 
-/*##################  TPartitionFree::TPartitionFree  #############
+/*##################  TFsPartition::Write  #############
+*   Purpose....: Write data to partition			                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TFsPartition::Write(long Sector, const char *Buf, int Count)
+{
+	if (Sector < 0 || Sector >= Size)
+		return 0;
+
+	return RdosWriteDisc(FDisc, Start + Sector, Buf, Count);
+}
+
+/*##################  TFsPartition::Format  #############
+*   Purpose....: Format partition					                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+int TFsPartition::Format()
+{
+    return FALSE;
+}
+
+/*##################  TFreePartition::TFreePartition  #############
 *   Purpose....: Partition free constructor							                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionFree::TPartitionFree(int Disc)
- : TPartition(Disc, 0, 0, 0)
+TFreePartition::TFreePartition(int Disc)
+ : TPartition(Disc, 0, 0, 0, 0, 0)
 {
 }
 
-/*##################  TPartitionFree::GetPartName  #############
+/*##################  TFreePartition::GetPartName  #############
 *   Purpose....: Get partition name						                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-char *TPartitionFree::GetPartName()
+const char *TFreePartition::GetPartName()
 {
-	return "Free    ";
+	return "Free";
 }
 
-/*##################  TPartitionFree::IsFree  #############
+/*##################  TFreePartition::IsFree  #############
 *   Purpose....: Check if entry is free				                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartitionFree::IsFree()
+int TFreePartition::IsFree()
 {
 	return TRUE;
 }
@@ -378,8 +395,8 @@ int TPartitionFree::IsFree()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionTable::TPartitionTable(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry)
- : TPartition(Disc, Type, Parent, Entry)
+TPartitionTable::TPartitionTable(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long PStart, long PSize)
+ : TPartition(Disc, Type, Parent, Entry, PStart, PSize)
 {
 	int i;
 
@@ -425,9 +442,9 @@ int TPartitionTable::IsTable()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-char *TPartitionTable::GetPartName()
+const char *TPartitionTable::GetPartName()
 {
-	return "Table   ";
+	return "Table";
 }
 
 /*##################  TPartitionTable::ChsToLba  #############
@@ -506,45 +523,44 @@ void TPartitionTable::ProcessOne(int Entry, const char *Data)
 {
 	unsigned char Type;
 	TPartition *Part;
-	TPartitionEntry *EntryPart = 0;
+	TFsPartition *FsPart = 0;
 	TPartitionTable *TablePart = 0;
+	long PStart;
+	long PSize;
+
+	PStart = ChsToLba(Data + 1);
+	if (PStart)
+	{
+		PSize = ChsToLba(Data + 5);
+		if (PSize)
+			PSize = PSize - PStart + 1;
+		else
+			PSize = *(long *)(Data + 0xC);
+	}
+	else
+	{
+		PStart = Start + *(long *)(Data + 8);
+		PSize = *(long *)(Data + 0xC);
+	}
 
 	Type = *(Data + 4);
 	switch (Type)
 	{
 		case 0:
-			Part = new TPartition(FDisc, Type, 0, Entry);
+			Part = new TPartition(FDisc, Type, 0, Entry, PStart, PSize);
 			break;
 
 		case 5:
 		case 0xF:
-			TablePart = new TPartitionTable(FDisc, Type, this, Entry);
+			TablePart = new TPartitionTable(FDisc, Type, this, Entry, PStart, PSize);
 			Part = TablePart;
 			break;
 
 		default:
-			EntryPart = new TPartitionEntry(FDisc, Type, this, Entry);
-			Part = EntryPart;
+			FsPart = TFsPartitionFactory::Parse(FDisc, Type, this, Entry, PStart, PSize);
+			Part = FsPart;
 			break;
 	}
-
-	Part->Start = ChsToLba(Data + 1);
-	if (Part->Start)
-	{
-		Part->Size = ChsToLba(Data + 5);
-		if (Part->Size)
-			Part->Size = Part->Size - Part->Start + 1;
-		else
-			Part->Size = *(long *)(Data + 0xC);
-	}
-	else
-	{
-		Part->Start = Start + *(long *)(Data + 8);
-		Part->Size = *(long *)(Data + 0xC);
-	}
-
-	if (EntryPart)
-		EntryPart->GetFs();
 
 	if (TablePart)
 	{
@@ -585,51 +601,49 @@ void TPartitionTable::Process()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionTable *TPartitionTable::Create(int Entry, TPartitionFree *PartFree)
+TPartitionTable *TPartitionTable::Create(int Entry, TFreePartition *FreePart)
 {
 	TPartitionTable *PartTable;
 	int i;
 	char Buf[512];
 
-	PartTable = new TPartitionTable(FDisc, 0xF, this, Entry);
+	PartTable = new TPartitionTable(FDisc, 0xF, this, Entry, FreePart->Start, FreePart->Size);
 	PartTable->FTotalSectors = FTotalSectors;
 	PartTable->FHeads = FHeads;
 	PartTable->FSectorsPerCyl = FSectorsPerCyl;
-	PartTable->Start = PartFree->Start;
-	PartTable->Size = PartFree->Size;
-	PartFree->Start++;
-	PartFree->Size--;
+	FreePart->Start++;
+	FreePart->Size--;
 	for (i = 0; i < 4; i++)
-		PartTable->PartArr[i] = new TPartition(FDisc, 0, 0, i);
+		PartTable->PartArr[i] = new TPartition(FDisc, 0, 0, i, 0, 0);
 
 	memset(Buf, 0, 512);
 	Buf[510] = 0x55;
 	Buf[511] = 0xAA;
 	RdosWriteDisc(FDisc, PartTable->Start, Buf, 512);
 	PartArr[Entry] = PartTable;
-	PartTable->Write(this);
+	PartTable->WriteToTable(this);
 
 	return PartTable;
 }
 
-/*##################  TPartitionTable::AllocateEntry  #############
+/*##################  TPartitionTable::InsertFs  #############
 *   Purpose....: Allocate partition entry
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionEntry *TPartitionTable::AllocateEntry(unsigned char NewType, TPartitionFree *PartFree, long NewSize)
+TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *FreePart, long NewSize)
 {
 	int i;
-	TPartitionEntry *PartEntry;
+	TFsPartition *FsPart;
 	TPartitionTable *PartTable;
 	int FreeEntries;
 
-	if (Start > PartFree->Start)
+	if (Start > FreePart->Start)
 		return 0;
 
-	if (Start + Size < PartFree->Start)
+	if (Start + Size < FreePart->Start)
 		return 0;
 
 	for (i = 0; i < 4; i++)
@@ -637,42 +651,40 @@ TPartitionEntry *TPartitionTable::AllocateEntry(unsigned char NewType, TPartitio
 		{
 			if (PartArr[i]->IsTable())
 			{
-				if (PartArr[i]->Start <= PartFree->Start && PartArr[i]->Start + PartArr[i]->Size >= PartFree->Start)
-					return ((TPartitionTable *)PartArr[i])->AllocateEntry(NewType, PartFree, NewSize);
+				if (PartArr[i]->Start <= FreePart->Start && PartArr[i]->Start + PartArr[i]->Size >= FreePart->Start)
+					return ((TPartitionTable *)PartArr[i])->InsertFs(FsName, FreePart, NewSize);
 			}
 		}
 
 	FreeEntries = 0;
 	for (i = 0; i < 4; i++)
 		if (PartArr[i])
-			if (!PartArr[i]->IsEntry() && !PartArr[i]->IsTable())
+			if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
 				FreeEntries++;
 
 	if (FreeEntries <= 2)
 	{
 		for (i = 0; i < 4; i++)
 			if (PartArr[i])
-				if (!PartArr[i]->IsEntry() && !PartArr[i]->IsTable())
+				if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
 				{
 					delete PartArr[i];
-					PartTable = Create(i, PartFree);
+					PartTable = Create(i, FreePart);
 					PartArr[i] = PartTable;
-					return PartTable->AllocateEntry(NewType, PartFree, NewSize);
+					return PartTable->InsertFs(FsName, FreePart, NewSize);
 				}
 	}
 
 	for (i = 0; i < 4; i++)
 		if (PartArr[i])
 		{
-			if (!PartArr[i]->IsEntry() && !PartArr[i]->IsTable())
+			if (!PartArr[i]->IsFs() && !PartArr[i]->IsTable())
 			{
 				delete PartArr[i];
-				PartEntry = new TPartitionEntry(FDisc, NewType, this, i);
-				PartEntry->Start = PartFree->Start;
-				PartEntry->Size = NewSize;
-				PartArr[i] = PartEntry;
-				PartEntry->Write(this);
-				return PartEntry;
+				FsPart = TFsPartitionFactory::Format(FDisc, FsName, this, i, FreePart->Start, NewSize);
+				PartArr[i] = FsPart;
+				FsPart->WriteToTable(this);
+				return FsPart;
 			}
 		}
 	return 0;
@@ -692,16 +704,16 @@ void TPartitionTable::FreeEntry(int Entry)
 	int Count;
 
 	Part = PartArr[Entry];
-	if (Part->IsEntry() || Part->IsTable())
+	if (Part->IsFs() || Part->IsTable())
 	{
-		PartArr[Entry] = new TPartition(FDisc, 0, 0, Entry);
-		Part->Delete(this);
+		PartArr[Entry] = new TPartition(FDisc, 0, 0, Entry, 0, 0);
+		Part->DeleteFromTable(this);
 		delete Part;
 	}
 
 	Count = 0;
 	for (i = 0; i < 4; i++)
-		if (PartArr[i]->IsEntry() || PartArr[i]->IsTable())
+		if (PartArr[i]->IsFs() || PartArr[i]->IsTable())
 			Count++;
 
 	if (Count == 0)
@@ -712,14 +724,171 @@ void TPartitionTable::FreeEntry(int Entry)
 		}
 }
 
-/*##################  TPartitionData::TPartitionData  #############
-*   Purpose....: Partition data constructor							                    #
+/*##################  TFsPartitionFactory::TFsPartitionFactory  #############
+*   Purpose....: Filesystem partition factory constructor							                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionData::TPartitionData(int Disc)
+TFsPartitionFactory::TFsPartitionFactory(unsigned char Type, const char *FsName)
+  : FFsName(FsName)
+{
+	 FType = Type;
+	 Insert();
+}
+
+/*##################  TFsPartitionFactory::~TFsPartitionFactory  #############
+*   Purpose....: Filesystem partition factory destructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TFsPartitionFactory::~TFsPartitionFactory()
+{
+	Remove();
+}
+
+/*##################  TFsPartitionFactory::GetFs  #############
+*   Purpose....: Get partition FS name						                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TString TFsPartitionFactory::GetFs(int Disc, long Start)
+{
+    TString str;
+	char Buf[512];
+	int BytesPerSector;
+	long Sectors;
+	int SectorsPerCyl;
+	int Heads;
+	char Name[9];
+	int i;
+
+	if (RdosGetDiscInfo(Disc, &BytesPerSector, &Sectors, &SectorsPerCyl, &Heads))
+	{
+		if (Start < Sectors)
+		{
+			RdosReadDisc(Disc, Start, Buf, 512);
+			memcpy(Name, &Buf[0x36], 8);
+			Name[8] = 0;
+
+			for (i = 7; i; i--)
+				if (Name[i] == ' ')
+					Name[i] = 0;
+				else
+					break;
+			str = Name;
+		}
+	}
+	
+	return str;
+}
+
+/*##################  TFsPartitionFactory::Parse  #############
+*   Purpose....: Parse entry for filesystem					                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TFsPartition *TFsPartitionFactory::Parse(int Disc, unsigned char Type, TPartitionTable *Parent, int Entry, long Start, long Size)
+{
+	TFsPartition *part;
+	TFsPartitionFactory *factory = 0;
+	TString FsName;
+
+	FsName = GetFs(Disc, Start);
+
+	factory = FPartList;
+    while (factory)
+	{
+	    if (factory->FType == Type)
+	    {
+	        if (Type == 7)
+	        {
+	            if (FsName == factory->FFsName)
+	                break;
+	        }
+	        else
+    			break;
+        }    			
+		factory = factory->FList;
+	}
+
+    if (factory)
+        part = factory->Open(Disc, Parent, Entry, Start, Size);
+    else
+    	part = new TFsPartition(Disc, Type, Parent, Entry, Start, Size);
+
+	if (part)
+	    part->FsName = FsName;
+
+	return part;
+}
+
+/*##################  TFsPartitionFactory::Format  #############
+*   Purpose....: Format a filesystem					                #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TFsPartition *TFsPartitionFactory::Format(int Disc, const char *FsName, TPartitionTable *Parent, int Entry, long Start, long Size)
+{
+	 return 0;
+}
+
+/*##################  TFsPartitionFactory::Insert  ##########################
+*   Purpose....: Insert partition factory into list							#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TFsPartitionFactory::Insert()
+{
+	FList = FPartList;
+	FPartList = this;
+}
+
+/*##################  TFsPartitionFactory::Remove  ##########################
+*   Purpose....: Remove partition factory from list								#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+void TFsPartitionFactory::Remove()
+{
+	TFsPartitionFactory *ptr;
+	TFsPartitionFactory *prev;
+	prev = 0;
+
+	ptr = FPartList;
+	while ((ptr != 0) && (ptr != this))
+	{
+		prev = ptr;
+		ptr = ptr->FList;
+	}
+	
+	if (prev == 0)
+		FPartList = FPartList->FList;
+	else
+		prev->FList = ptr->FList;
+}
+
+/*##################  TDiscPartition::TDiscPartition  #############
+*   Purpose....: Disc partition constructor							                    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-10-02 le                                                #
+*##########################################################################*/
+TDiscPartition::TDiscPartition(int Disc)
 {
 	int i;
 
@@ -733,14 +902,14 @@ TPartitionData::TPartitionData(int Disc)
 	Update();
 }
 
-/*##################  TPartitionData::Free  #############
+/*##################  TDiscPartition::Free  #############
 *   Purpose....: Free partition table
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::Free()
+void TDiscPartition::Free()
 {
 	int i;
 
@@ -759,42 +928,42 @@ void TPartitionData::Free()
 	}
 }
 
-/*##################  TPartitionData::GetParams  #############
+/*##################  TDiscPartition::GetParams  #############
 *   Purpose....: Get partition params					                    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartitionData::GetParams()
+int TDiscPartition::GetParams()
 {
 	return RdosGetDiscInfo(FDisc, &BytesPerSector, &TotalSectors, &SectorsPerCyl, &Heads);
 }
 
-/*##################  TPartitionData::InsertEntry  #############
+/*##################  TDiscPartition::InsertEntry  #############
 *   Purpose....: Insert partition entry
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::InsertEntry(TPartition *Part)
+void TDiscPartition::InsertEntry(TPartition *Part)
 {
-	if (Part->IsEntry())
+	if (Part->IsFs())
 	{
 		PartArr[PartCount] = Part;
 		PartCount++;
 	}
 }
 
-/*##################  TPartitionData::InsertTable  #############
+/*##################  TDiscPartition::InsertTable  #############
 *   Purpose....: Insert partition table
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::InsertTable(TPartitionTable *PartTable)
+void TDiscPartition::InsertTable(TPartitionTable *PartTable)
 {
 	int i;
 
@@ -808,26 +977,26 @@ void TPartitionData::InsertTable(TPartitionTable *PartTable)
 		}
 }
 
-/*##################  TPartitionData::CreateArr  #############
+/*##################  TDiscPartition::CreateArr  #############
 *   Purpose....: Create partition array
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::CreateArr()
+void TDiscPartition::CreateArr()
 {
 	InsertTable(PartRoot);
 }
 
-/*##################  TPartitionData::Sort  #############
+/*##################  TDiscPartition::Sort  #############
 *   Purpose....: Sort partition array
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::Sort()
+void TDiscPartition::Sort()
 {
 	int i;
 	int Changed;
@@ -851,14 +1020,14 @@ void TPartitionData::Sort()
 	}
 }
 
-/*##################  TPartitionData::AddFree  #############
+/*##################  TDiscPartition::AddFree  #############
 *   Purpose....: Add free entries partition array
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::AddFree()
+void TDiscPartition::AddFree()
 {
 	int i;
 	int j;
@@ -872,7 +1041,7 @@ void TPartitionData::AddFree()
 		{
 			for (j = PartCount; j > i; j--)
 				PartArr[j] = PartArr[j-1];
-			PartArr[i] = new TPartitionFree(FDisc);
+			PartArr[i] = new TFreePartition(FDisc);
 			PartArr[i]->Start = Start;
 			PartArr[i]->Size = PartArr[i+1]->Start - Start - 1;
 			PartCount++;
@@ -882,39 +1051,39 @@ void TPartitionData::AddFree()
 
 	if (Start + 1024 < TotalSectors)
 	{
-		PartArr[i] = new TPartitionFree(FDisc);
+		PartArr[i] = new TFreePartition(FDisc);
 		PartArr[i]->Start = Start;
 		PartArr[i]->Size = TotalSectors - Start;
 		PartCount++;
 	}
 }
 
-/*##################  TPartitionData::GetDisc  #############
+/*##################  TDiscPartition::GetDisc  #############
 *   Purpose....: Get disc
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-int TPartitionData::GetDisc()
+int TDiscPartition::GetDisc()
 {
 	return FDisc;
 }
 
-/*##################  TPartitionData::Update  #############
+/*##################  TDiscPartition::Update  #############
 *   Purpose....: Update partition table
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::Update()
+void TDiscPartition::Update()
 {
 	char Buf[512];
 
 	Free();
 
-	PartRoot = new TPartitionTable(FDisc, 0, 0, 0);
+	PartRoot = new TPartitionTable(FDisc, 0, 0, 0, 0, 0);
 	PartRoot->Start = 0;
 	if (GetParams() && BytesPerSector)
 	{
@@ -939,46 +1108,46 @@ void TPartitionData::Update()
 	}
 }
 
-/*##################  TPartitionData::Add  #############
+/*##################  TDiscPartition::Add  #############
 *   Purpose....: Add partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TPartitionEntry *TPartitionData::Add(unsigned char Type, long Sectors)
+TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors)
 {
 	int i;
-	TPartitionEntry *PartEntry;
+	TFsPartition *FsPart;
 
 	for (i = 0; i < PartCount; i++)
 		if (PartArr[i]->IsFree())
 		{
 			if (PartArr[i]->Size >= Sectors)
 			{
-				PartEntry = PartRoot->AllocateEntry(Type, (TPartitionFree *)PartArr[i], Sectors);
-				if (PartEntry)
+				FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors);
+				if (FsPart)
 				{
 					PartArr[i]->Size -= Sectors;
 					PartArr[i]->Start += Sectors;
-					PartArr[PartCount] = PartEntry;
+					PartArr[PartCount] = FsPart;
 					PartCount++;
 					Sort();
-					return PartEntry;
+					return FsPart;
 				}
 			}
 		}
 	return 0;
 }
 
-/*##################  TPartitionData::Delete  #############
+/*##################  TDiscPartition::Delete  #############
 *   Purpose....: Delete partition
 *   In params..: *                                                        #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartitionData::Delete(int Entry)
+void TDiscPartition::Delete(int Entry)
 {
 	TPartition *Part;
 	int i;
