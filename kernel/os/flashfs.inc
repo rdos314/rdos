@@ -25,20 +25,14 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+flash_boot_sector	STRUC
+
+flash_boot_sector	ENDS
+
+fi_start_sector		DD ?
+fi_total_sectors	DD ?
+fi_root_dir			DD ?
+
 flash_data_seg  STRUC
-
-fd_erase_proc   DD ?
-
-fd_read_proc    DD ?
-
-fd_write_proc   DD ?
-
-fd_sector_size  DW ?
-fd_sector_count DD ?
-fd_size         DD ?
-fd_drive_nr     DB ?
-
-fd_access       DB ?
-fd_selector     DW ?
 
 flash_data_seg  ENDS

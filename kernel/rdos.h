@@ -218,6 +218,9 @@ int __stdcall RdosWriteDisc(int DiscNr, long Sector, const char *Buf, int Size);
 void __stdcall RdosGetRdfsInfo(void *CryptTab, void *KeyTab, void *ExtentSizeTab);
 void __stdcall RdosFormatDrive(int DiscNr, long StartSector, int Size, const char *FsName);
 
+int __stdcall RdosCreateFileDrive(long Size, const char *FsName, const char *FileName);
+int __stdcall RdosOpenFileDrive(const char *FileName);
+
 int __stdcall RdosLoadDll(const char *Name);
 void __stdcall RdosFreeDll(int handle);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);

@@ -265,7 +265,7 @@ PAGE
 ;
 ;		PARAMETERS:		DS:(E)SI            Requested filesystem
 ;                       ES:(E)DI            Filename to use
-;                       (E)CX               Size of filesystem
+;                       ECX	                Size of filesystem
 ;
 ;       RETURNS:        AL                  Drive #
 ;
@@ -416,16 +416,13 @@ create_file_drive32 Proc far
 create_file_drive32 Endp
 
 create_file_drive16 Proc far
-    push ecx
     push esi
     push edi
-    movzx ecx,cx
     movzx esi,si
     movzx edi,di
     call create_file_drive
     pop edi
     pop esi
-    pop ecx
     ret
 create_file_drive16 Endp
 

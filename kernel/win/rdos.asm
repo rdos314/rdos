@@ -5294,6 +5294,84 @@ diDone:
 	ret
 _RdosDeleteIni	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCreateFileDrive
+;
+;       DESCRIPTION:    Create file drive
+;
+;		PARAMETERS:		Size
+;						FsName
+;						FileName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosCreateFileDrive
+
+_RdosCreateFileDrive	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push es
+	push ecx
+	push si
+	push di
+;
+	mov ecx,[bp+6]
+	lds si,[bp+10]
+	les di,[bp+14]
+	CreateFileDrive
+	jnc cfdDone
+;
+	xor al,al
+
+cfdDone:
+	movzx ax,al
+;
+	pop di
+	pop si
+	pop cx
+	pop es
+	pop ds
+	pop bp
+	ret
+_RdosCreateFileDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenFileDrive
+;
+;       DESCRIPTION:    Open file drive
+;
+;		PARAMETERS:		FileName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public _RdosOpenFileDrive
+
+_RdosOpenFileDrive	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	OpenFileDrive
+	jnc ofdDone
+;
+	xor al,al
+
+ofdDone:
+	movzx ax,al
+;
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosOpenFileDrive	Endp
+
 code	ENDS
 
 	END

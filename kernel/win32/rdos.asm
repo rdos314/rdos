@@ -5909,6 +5909,77 @@ diDone:
 	ret 8
 RdosDeleteIni	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCreateFileDrive
+;
+;       DESCRIPTION:    Create a new file drive
+;
+;		PARAMETERS:		Size
+;					    FsName
+;						FileName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCreateFileDrive
+
+RdosCreateFileDrive	Proc near
+	push ebp
+	mov ebp,esp
+	push ecx
+	push esi
+	push edi
+;
+	mov ecx,[ebp+8]
+	mov esi,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate create_file_drive_nr
+	jnc cfdDone
+;
+	xor al,al
+
+cfdDone:
+	movzx eax,al
+;
+	pop edi
+	pop esi
+	pop ecx
+	pop ebp
+	ret 12
+RdosCreateFileDrive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosOpenFileDrive
+;
+;       DESCRIPTION:    Open a new file drive
+;
+;		PARAMETERS:		FsName
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenFileDrive
+
+RdosOpenFileDrive	Proc near
+	push ebp
+	mov ebp,esp
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate open_file_drive_nr
+	jnc ofdDone
+;
+	xor al,al
+
+ofdDone:
+	movzx eax,al
+;
+	pop edi
+	pop ebp
+	ret 4
+RdosOpenFileDrive	Endp
 
 ;	extrn Startup:near
 
