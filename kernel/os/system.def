@@ -1,0 +1,273 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; SYSTEM.DEF
+; System-wide structure & constant definitions
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;
+; rom modules in RDOS
+;
+
+BootMemSign		EQU 675E4B72h
+AllocMemSign	EQU 9AE58C5Dh
+
+RdosSign EQU 5A1E75D4h
+
+RdosKernel = 0
+RdosFont = 1
+RdosDevice = 2
+RdosShutDown = 3
+RdosFile = 6
+RdosCommand = 7
+RdosSet = 8
+RdosPath = 9
+RdosDll = 10
+
+RdosEnd = 0E5E5h
+
+adapter_typ	STRUC
+adapter_base	DD ?
+adapter_size	DD ?
+adapter_crc		DW ?
+adapter_typ	ENDS
+
+rdos_header  STRUC
+
+sign    DD ?
+len     DD ?
+typ     DW ?
+crc     DW ?
+
+rdos_header  ENDS
+
+device_header   STRUC
+
+init_ip DW ?
+
+device_header   ENDS
+
+;
+; offsets in trapgate, vmode
+;
+vm_gs		EQU 38
+vm_fs		EQU 34
+vm_ds		EQU 30
+vm_es		EQU 26
+vm_ss		EQU 22
+vm_esp		EQU 18
+vm_eflags	EQU 14
+vm_cs		EQU 10
+vm_eip		EQU 6
+vm_err		EQU 2
+vm_bp		EQU 0
+vm_eax		EQU -4
+vm_ebx		EQU -8
+pm_ds		EQU -10
+pm_call		EQU -12
+
+section_typ	STRUC
+cs_value	DW ?
+cs_list		DW ?
+section_typ	ENDS
+
+read_write_section_typ	STRUC
+ssync_value		DW ?
+ssync_list		DW ?
+sread_value		DW ?
+swrite_value	DW ?
+swrite_list		DW ?
+read_write_section_typ	ENDS
+
+system_seg	SEGMENT AT 0
+
+	ORG 0
+
+math_tss			DW ?
+
+phys_free_pages		DD ?
+
+free_phys_list		DD ?
+unused_phys_list	DD ?
+phys_section		section_typ <>
+
+debug_list			DW ?
+
+thread_arr			DW 256 DUP(?)
+
+next_pid			DW ?
+
+ram1_size			DD ?
+ram2_base			DD ?
+ram2_size			DD ?
+rom_base			DD ?
+rom_size			DD ?
+
+alloc_base			DD ?
+
+rom_modules			DW ?
+rom_adapters		DD 16 DUP(?,?,?)
+
+check_point			DW ?
+
+system_size			DB ?
+
+system_seg	ENDS
+
+app_seg	SEGMENT AT 0
+
+app_next			DW ?
+app_sel				DW ?
+app_page			DD ?
+
+app_get_exe_name_proc	DD ?
+app_get_cmd_line_proc	DD ?
+app_get_env_proc		DD ?
+app_allocate_mem_proc	DD ?
+app_free_mem_proc		DD ?
+app_init_thread_proc	DD ?
+app_free_thread_proc	DD ?
+app_spawn_proc			DD ?
+app_loader_name			DD ?
+
+app_exit_code			DW ?
+
+app_ldt_section		section_typ <>
+app_ldt_data_sel	DW ?
+app_ldt_free		DW ?
+app_ldt_sel			DW ?
+
+app_context			DW ?
+app_bitness			DB ?
+
+app_pm_int			DD 100h DUP(?,?)
+app_pm_exc			DD 20h DUP(?,?)
+
+app_seg	ENDS
+
+block_seg	SEGMENT AT 0
+	ORG 0
+	b_next			DW ?
+	b_prev			DW ?
+block_seg	ENDS
+
+thread_seg	SEGMENT AT 0
+	ORG 0
+	p_next			DW ?
+	p_prev			DW ?
+	p_prio			DW ?
+	p_lsb_tics		DD ?
+	p_msb_tics		DD ?
+	p_data			DD ?
+	p_tss_sel		DW ?
+	p_tss_data_sel	DW ?
+	p_387_sel		DW ?
+	p_thread_sel	DW ?
+	p_thread_page	DD ?
+	p_app_sel		DW ?
+	p_app_page		DD ?
+	p_free_proc		DD ?
+	p_cr3			DD ?
+	p_error_code	DW ?
+	p_vm_deb_sel	DW ?
+	p_vm_deb_offs	DD ?
+	p_pm_deb_sel	DW ?
+	p_pm_deb_offs	DD ?
+	p_id			DW ?
+	p_trap_ads		DW ?,?
+	p_events		DW ?
+	p_process_sel	DW ?
+	p_step_ads		DW ?,?
+	p_ldt_sel		DW ?
+	p_signal		DB ?
+	p_lib_sel		DW ?
+	p_stack_sel		DW ?
+	p_sleep_sel		DW ?
+	p_sleep_offset	DD ?
+	p_page_alias	DW ?
+	thread_name		DB 32 DUP(?)
+thread_seg	ENDS
+
+process_seg	SEGMENT AT 0
+	ORG 0
+	ms_virt_flags	DW ?
+	ms_wait_sti		DW ?
+	ms_cli_thread	DW ?
+	ms_size			DB ?
+process_seg	ENDS
+
+tss_seg		SEGMENT AT 0
+	ORG 0
+tss_back_link	DW ?,?
+tss_esp0		DW ?,?
+tss_ess0		DW ?,?
+tss_esp1		DW ?,?
+tss_ess1		DW ?,?
+tss_esp2		DW ?,?
+tss_ess2		DW ?,?
+tss_cr3			DW ?,?
+tss_eip			DW ?,?
+tss_eflags		DW ?,?
+tss_eax			DW ?,?
+tss_ecx			DW ?,?
+tss_edx			DW ?,?
+tss_ebx			DW ?,?
+tss_esp			DW ?,?
+tss_ebp			DW ?,?
+tss_esi			DW ?,?
+tss_edi			DW ?,?
+tss_es			DW ?,?
+tss_cs			DW ?,?
+tss_ss			DW ?,?
+tss_ds			DW ?,?
+tss_fs			DW ?,?
+tss_gs			DW ?,?
+tss_ldt			DW ?,?
+tss_t			DW ?
+tss_bitmap		DW ?
+tss_dr0			DD ?
+tss_dr1			DD ?
+tss_dr2			DD ?
+tss_dr3			DD ?
+tss_dr7			DD ?
+math_control	DW ?
+math_status		DW ?
+math_tag		DW ?
+math_ip			DW ?
+math_cs			DW ?
+math_data_offs	DW ?
+math_data_sel	DW ?
+math_st0		DT ?
+math_st1		DT ?
+math_st2		DT ?
+math_st3		DT ?
+math_st4		DT ?
+math_st5		DT ?
+math_st6		DT ?
+math_st7		DT ?
+math_used		DW ?
+tss_thread		DW ?
+tss_error_code	DW ?
+tss_res_space	DB 18 DUP(?)
+tss_bitmap_space DW ?
+tss_seg		ENDS

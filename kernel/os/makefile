@@ -1,0 +1,594 @@
+######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2000, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# MAKEFILE
+# Makefile for Borland MAKE.
+#
+######################################################################
+
+# DEFINE SYSTEM VERSION  
+version = V8_0
+
+prot_opt = /l/s/3/Twe
+link_opt = /l/s/3
+
+units = G:\BP\UNITS
+
+# DEFINE GROUPS OF MODULES
+
+kdebug_srcs =   DEBUGIO.ASM             KDEBUG.ASM              DISNEW.ASM              \
+				DISASM.ASM              MATH.ASM                                        
+kdebug_objs = $(kdebug_srcs:.ASM=.OBJ)
+kdebug_rdvs = DEBUGIO.RDV
+
+ipcdebug_srcs =   IPCDEBUG.ASM DISNEW.ASM	DISASM.ASM
+ipcdebug_objs = $(ipcdebug_srcs:.ASM=.OBJ)
+ipcdebug_rdvs = IPCDEBUG.RDV
+
+font_srcs = FONT.ASM        
+font_objs = $(font_srcs:.ASM=.OBJ)
+font_rdvs = FONT.RDV
+
+video_srcs = VIDEO.ASM        
+video_objs = $(video_srcs:.ASM=.OBJ)
+video_rdvs = VIDEO.RDV
+
+em_srcs = EMULATE.ASM EMCOM.ASM EMMEM.ASM EMTRANS.ASM EMARITHM.ASM	\
+		  EMSTRING.ASM EMCONTR.ASM EM387.ASM EMPROT.ASM EMSEG.ASM
+em_objs = $(em_srcs:.ASM=.OBJ)
+em_rdvs = EMULATE.RDV
+
+timer_srcs = TIMER.ASM
+timer_objs = $(timer_srcs:.ASM=.OBJ)
+timer_rdvs = $(timer_srcs:.ASM=.RDV)
+
+rtc_srcs = RTC.ASM
+rtc_objs = $(rtc_srcs:.ASM=.OBJ)
+rtc_rdvs = RTC.RDV
+
+xms_srcs = XMS.ASM 
+xms_objs = $(xms_srcs:.ASM=.OBJ)
+xms_rdvs = XMS.RDV
+
+ems_srcs = EMS.ASM 
+ems_objs = $(ems_srcs:.ASM=.OBJ)
+ems_rdvs = EMS.RDV
+
+dpmi_srcs = DPMI.ASM    DPMI16.ASM      DPMI32.ASM
+dpmi_objs = $(dpmi_srcs:.ASM=.OBJ)
+dpmi_rdvs = DPMI.RDV
+
+pci_srcs = PCI.ASM
+pci_objs = $(pci_srcs:.ASM=.OBJ)
+pci_rdvs = PCI.RDV
+
+key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM
+key_objs = $(key_srcs:.ASM=.OBJ)
+key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV
+
+mouse_srcs = MOUSE.ASM 
+mouse_objs = $(mouse_srcs:.ASM=.OBJ)
+mouse_rdvs = MOUSE.RDV
+
+net_srcs = NET.ASM
+net_objs = $(net_srcs:.ASM=.OBJ)
+net_rdvs = NET.RDV
+
+ip_srcs = IP.ASM DNS.ASM ICMP.ASM IPCACHE.ASM
+ip_objs = $(ip_srcs:.ASM=.OBJ)
+ip_rdvs = IP.RDV
+
+udp_srcs = UDP.ASM
+udp_objs = $(udp_srcs:.ASM=.OBJ)
+udp_rdvs = UDP.RDV
+
+ipc_srcs = IPC.ASM IPCREC.ASM IPCSEND.ASM	\
+		   SMP.ASM SMPREC.ASM SMPSEND.ASM SMPRESP.ASM
+ipc_objs = $(ipc_srcs:.ASM=.OBJ)
+ipc_rdvs = IPC.RDV
+
+tcp_srcs = TCP.ASM
+tcp_objs = $(tcp_srcs:.ASM=.OBJ)
+tcp_rdvs = TCP.RDV
+
+ntp_srcs = NTP.ASM
+ntp_objs = $(ntp_srcs:.ASM=.OBJ)
+ntp_rdvs = NTP.RDV
+
+dos_srcs = DOS.ASM	DOSMEM.ASM	DOSCOM.ASM	DOSEXEC.ASM	\
+		   DOSVM.ASM	DOS16.ASM	DOS32.ASM
+dos_objs = $(dos_srcs:.ASM=.OBJ)
+dos_rdvs = DOS.RDV
+
+focus_srcs =     FOCUS.ASM
+focus_objs = $(focus_srcs:.ASM=.OBJ)
+focus_rdvs = FOCUS.RDV
+
+bios_srcs = BIOS.ASM
+bios_objs = $(bios_srcs:.ASM=.OBJ)
+bios_rdvs = BIOS.RDV
+
+v86bios_srcs = V86BIOS.ASM
+v86bios_objs = $(v86bios_srcs:.ASM=.OBJ)
+v86bios_rdvs = V86BIOS.RDV
+
+multiplx_srcs = MULTIPLX.ASM
+multiplx_objs = $(multiplx_srcs:.ASM=.OBJ)
+multiplx_rdvs = MULTIPLX.RDV
+
+drive_srcs = drive.ASM
+drive_objs = $(drive_srcs:.ASM=.OBJ)
+drive_rdvs = drive.RDV
+
+ramdrive_srcs = RAMDRIVE.ASM
+ramdrive_objs = $(ramdrive_srcs:.ASM=.OBJ)
+ramdrive_rdvs = RAMDRIVE.RDV
+
+rdfs_srcs = RDFS.ASM RDFSMISC.ASM RDFSTAB.ASM
+rdfs_objs = $(rdfs_srcs:.ASM=.OBJ)
+rdfs_rdvs = RDFS.RDV
+
+dosdev_srcs = DOSDEV.ASM
+dosdev_objs = $(dosdev_srcs:.ASM=.OBJ)
+dosdev_rdvs = DOSDEV.RDV
+
+fs_srcs = FS.ASM
+fs_objs = $(fs_srcs:.ASM=.OBJ)
+fs_rdvs = FS.RDV
+
+ne_srcs = NE.ASM
+ne_objs = $(ne_srcs:.ASM=.OBJ)
+ne_rdvs = NE.RDV
+
+pe_srcs = PE.ASM
+pe_objs = $(pe_srcs:.ASM=.OBJ)
+pe_rdvs = PE.RDV
+
+elf_srcs = ELF.ASM
+elf_objs = $(elf_srcs:.ASM=.OBJ)
+elf_rdvs = ELF.RDV
+
+time_srcs = TIME.ASM
+time_objs = $(time_srcs:.ASM=.OBJ)
+time_rdvs = TIME.RDV
+
+kernel_srcs =   KERNEL.ASM
+
+p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
+			DEVICE.ASM				IO.ASM             \
+			PROC.ASM 				ENV.ASM					APP.ASM
+
+p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				\
+			MEM.ASM                 GDT.ASM                 \
+			INT.ASM                 INT16.ASM               INT32.ASM       
+
+pgen_srcs = PROTSEG.ASM             SYSTEM.ASM              \
+			TRAPINT.ASM             TSSINT.ASM              LDT.ASM         \
+			OS.ASM                  USER.ASM                VIRT.ASM 
+
+
+pexec_srcs = EXEC.ASM
+
+kernel_objs = $(kernel_srcs:.ASM=.OBJ)
+p1_objs =       $(p1_srcs:.ASM=.OBJ)
+p2_objs =       $(p2_srcs:.ASM=.OBJ)
+pgen_objs =     $(pgen_srcs:.ASM=.OBJ)
+pexec_objs =	$(pexec_srcs:.ASM=.OBJ)
+
+pcshut_srcs = PCSHUT.ASM
+pcshut_objs = $(pcshut_srcs:.ASM=.OBJ)
+pcshut_exes = PCSHUT.EXE
+
+prot_srcs = $(kernel_srcs) $(p1_srcs) $(p2_srcs) $(pgen_srcs) $(pexec_srcs)
+
+prot_objs = $(kernel_objs) $(p1_objs) $(p2_objs) $(pgen_objs) $(pexec_objs)
+
+prot_exes = KERNEL.EXE
+
+srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
+			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(pci_srcs) \
+			$(net_srcs) $(udp_srcs) $(ip_srcs) $(tcp_srcs) \
+			$(ipc_srcs) $(ntp_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
+			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
+			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
+			$(prot_srcs) $(timer_srcs) $(em_srcs) \
+			$(dosdev_srcs) $(v86bios_srcs) \
+			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs)	\
+			$(focus_srcs) $(rtc_srcs)
+
+objs =      $(srcs:.ASM=.OBJ)
+
+incs =      SYSTEM.DEF              PROTSEG.DEF             SYSTEM.INC      \
+			DISC.DEF                BIOSDATA.DEF    \
+			PROTSEG.INC             DRIVER.DEF              \
+			OS.DEF                  USER.DEF                VIRT.DEF        \
+			OS.INC                  USER.INC                VIRT.INC        \
+			DPMI.INC                INT.DEF			       \
+			FAT.INC                 DOS.INC
+
+fonts =     SYS8.GFT                SYS12.GFT               SYS14.GFT       \
+			SYS16.GFT               SYS17.GFT               SYS22.GFT       \
+			SYS27.GFT               SYS30.GFT               SYS36.GFT       \
+			SYS43.GFT
+
+exes =      $(prot_exes) $(pcshut_exes)
+
+rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
+			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(pci_rdvs)     \
+			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
+		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	 \
+			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
+			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
+			$(ntp_rdvs) \
+			$(drive_rdvs) $(ramdrive_rdvs) $(rdfs_rdvs) \
+			$(time_rdvs) $(focus_rdvs)	\
+			$(rtc_rdvs) $(font_rdvs) $(video_rdvs)
+
+maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
+
+bats =      RDOS.BAT
+
+# DEFINE MODULES FOR CMS
+vaxset_modules = $(srcs) $(incs) $(fonts) $(bats)
+
+# DEFINE MODULES FOR SYSTEM VERSION
+kit_modules =   $(maps) $(bats) $(bins)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# DEFAULT RULES
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+.asm.obj:
+     tasm /M2 /Zi /w+ICG /w+PRO $<,$@;
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# TARGET
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# +++++++++
+# PROJ
+# +++++++++
+
+!IFDEF VER
+
+VSMS:
+	sort >vsm <<!
+$(vaxset_modules)
+!
+	sort >kit <<!
+$(kit_modules)
+!
+	sort >ver <<!
+$(version)
+!
+
+!ENDIF
+
+
+MAIN:   $(rdvs) $(exes)
+
+userint.obj:    userint.asm
+
+OS.OBJ :        os.def
+
+USER.OBJ :      user.def
+
+PCSHUT.EXE : $(pcshut_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(pcshut_objs)
+	PCSHUT
+	PCSHUT;       
+!
+
+FONT.RDV : $(font_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(font_objs)
+	FONT.RDV
+	FONT;
+!
+
+VIDEO.RDV : $(video_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(video_objs)
+	VIDEO.RDV
+	VIDEO;
+!
+
+EMS.RDV : $(ems_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ems_objs)
+	EMS.RDV
+	EMS;
+!
+
+XMS.RDV : $(xms_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(xms_objs)
+	XMS.RDV
+	XMS;
+!
+
+DPMI.RDV : $(dpmi_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(dpmi_objs)
+	DPMI.RDV
+	DPMI;
+!
+
+PCI.RDV : $(pci_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(pci_objs)
+	PCI.RDV
+	PCI;
+!
+
+KEYSW.RDV : $(key_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEY+KEYSW
+	KEYSW.RDV
+	KEYSW;
+!
+
+KEYUS.RDV : $(key_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEY+KEYUS
+	KEYUS.RDV
+	KEYUS;
+!
+
+KEYUK.RDV : $(key_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEY+KEYUK
+	KEYUK.RDV
+	KEYUK;
+!
+
+MOUSE.RDV : $(mouse_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(mouse_objs)
+	MOUSE.RDV
+	MOUSE;
+!
+
+NET.RDV : $(net_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(net_objs)
+	NET.RDV
+	NET;
+!
+
+IP.RDV : $(ip_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ip_objs)
+	IP.RDV
+	IP;
+!
+
+UDP.RDV : $(udp_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(udp_objs)
+	UDP.RDV
+	UDP;
+!
+
+IPC.RDV : $(ipc_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ipc_objs)
+	IPC.RDV
+	IPC;
+!
+
+TCP.RDV : $(tcp_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(tcp_objs)
+	TCP.RDV
+	TCP;
+!
+
+NTP.RDV : $(ntp_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ntp_objs)
+	NTP.RDV
+	NTP;
+!
+
+EMULATE.RDV : $(em_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(em_objs)
+	EMULATE.RDV
+	EMULATE;
+!
+
+TIMER.RDV : $(timer_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(timer_objs)
+	TIMER.RDV
+	TIMER;
+!
+
+RTC.RDV : $(rtc_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(rtc_objs)
+	RTC.RDV
+	RTC;
+!
+
+DOS.RDV : $(dos_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(dos_objs)
+	DOS.RDV
+	DOS;
+!
+
+FOCUS.RDV : $(focus_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(focus_objs)
+	FOCUS.RDV
+	FOCUS;
+!
+
+BIOS.RDV : $(bios_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(bios_objs)
+	BIOS.RDV
+	BIOS;
+!
+
+V86BIOS.RDV : $(v86bios_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(v86bios_objs)
+	V86BIOS.RDV
+	V86BIOS;
+!
+
+MULTIPLX.RDV : $(multiplx_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(multiplx_objs)
+	MULTIPLX.RDV
+	MULTIPLX;
+!
+
+
+drive.RDV : $(drive_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(drive_objs)
+	drive.RDV
+	drive;
+!
+
+RAMDRIVE.RDV : $(ramdrive_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ramdrive_objs)
+	RAMDRIVE.RDV
+	RAMDRIVE;
+!
+
+RDFS.RDV : $(rdfs_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(rdfs_objs)
+	RDFS.RDV
+	RDFS;
+!
+
+DOSDEV.RDV : $(dosdev_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(dosdev_objs)
+	DOSDEV.RDV
+	DOSDEV;
+!
+
+FS.RDV : $(fs_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(fs_objs)
+	FS.RDV
+	FS;
+!
+
+NE.RDV : $(ne_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ne_objs)
+	NE.RDV
+	NE;
+!
+
+PE.RDV : $(pe_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(pe_objs)
+	PE.RDV
+	PE;
+!
+
+ELF.RDV : $(elf_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(elf_objs)
+	ELF.RDV
+	ELF;
+!
+
+DEBUGIO.RDV : $(kdebug_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(kdebug_objs)
+	DEBUGIO.RDV
+	DEBUGIO;
+!
+
+IPCDEBUG.RDV : $(ipcdebug_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ipcdebug_objs)
+	IPCDEBUG.RDV
+	IPCDEBUG;
+!
+
+TIME.RDV : $(time_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(time_objs)
+	TIME.RDV
+	TIME;
+!
+
+KERNEL.EXE : $(prot_objs)
+    tlink @&&!
+	$(link_opt) +
+	kernel.obj+
+	$(pgen_objs)+
+	$(p1_objs)+
+	$(p2_objs)+
+	$(pexec_objs)
+	KERNEL
+	KERNEL;
+!

@@ -1,0 +1,235 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; DRIVER.DEF
+; Device driver fixed GDT selectors. All selectors must be in the
+; range 400h-0FFFh and the least 3 significant bits should be 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+key_code_sel		EQU 400h
+key_data_sel		EQU 408h
+
+ide_code_sel		EQU 410h
+ide_data_sel		EQU 418h
+
+fat_code_sel		EQU 420h
+rdfs_code_sel		EQU 428h
+
+dos_data_sel		EQU 430h
+mon_video_data_sel	EQU 438h
+
+mail_code_sel		EQU 440h
+xms_code_sel		EQU 448h
+
+mon_video_code_sel	EQU 450h
+video_pos_sel		EQU 458h
+
+dos_code_sel		EQU 460h
+dos_app_sel			EQU 468h
+dos_process_sel		EQU 470h
+dos_vm_sel			EQU 47Bh
+
+mouse_code_sel		EQU 480h
+mouse_data_sel		EQU 488h
+
+kdebug_code_sel		EQU 490h
+kdebug_data_sel		EQU 498h
+
+bios_code_sel		EQU 4A0h
+bios_data_sel		EQU 4A8h
+
+key_focus_sel		EQU 4B0h
+key_local_sel		EQU 4B8h
+
+video_state_focus_sel	EQU 4C0h
+video_state_local_sel	EQU 4C8h
+
+mouse_local_sel		EQU 4D0h
+mouse_focus_sel		EQU 4D8h
+
+timer_code_sel		EQU 4E0h
+timer_data_sel		EQU 4E8h
+
+pci_code_sel		EQU 4F0h
+pci_data_sel		EQU 4F8h
+
+dpmi_data_sel		EQU 500h
+raw_switch_sel		EQU 50Bh
+
+dpmi_code16_sel		EQU 510h
+dpmi_code32_sel		EQU 518h
+
+state_save_sel		EQU 523h
+
+discbuf_code_sel	EQU 530h
+tcp_process_sel		EQU 538h
+
+emulator_code_sel	EQU 540h
+emulator_data_sel	EQU 548h
+
+sernet_code_sel		EQU 550h
+sernet_data_sel		EQU 558h
+
+ip_code_sel			EQU 560h
+ip_data_sel			EQU 568h
+
+tcp_code_sel		EQU 570h
+tcp_data_sel		EQU 578h
+
+socket_code_sel		EQU 580h
+socket_data_sel		EQU 588h
+
+ems_code_sel		EQU 590h
+ems_data_sel		EQU 598h
+ems_process_sel		EQU 5A0h
+
+fs_code_sel			EQU 5B0h
+fs_data_sel			EQU 5B8h
+fs_process_sel		EQU 5C0h
+
+disc_drive_sel		EQU 5C8h
+
+multiplx_code_sel	EQU 5D0h
+
+dosdev_process_sel	EQU 5D8h
+dosdev_code_sel		EQU 5E0h
+dosdev_data_sel		EQU 5E8h
+
+debug_code_sel		EQU 5F0h
+
+test_sel			EQU 5F8h
+
+time_code_sel		EQU 600h
+
+mail_local_sel		EQU 610h
+mail_global_sel		EQU 618h
+
+mousedev_code_sel	EQU 620h
+mousedev_data_sel	EQU 628h
+
+disc_code_sel		EQU 630h
+disc_data_sel		EQU 638h
+
+elf_code_sel		EQU 640h
+elf_app_sel			EQU 648h
+
+debug_tss_sel		EQU 650h
+
+cd_code_sel			EQU 660h
+cd_data_sel			EQU 668h
+
+net_code_sel		EQU 670h
+net_data_sel		EQU 678h
+net_mem_sel			EQU 680h
+
+focus_code_sel		EQU 690h
+focus_sel			EQU 698h
+;
+video_mem_focus_sel	EQU 6A0h
+video_mem_local_sel	EQU 6A8h
+
+video_x_focus_sel	EQU 6B0h
+video_x_local_sel	EQU 6B8h
+
+rs485_code_sel		EQU 6C0h
+rs485_data_sel		EQU 6C8h
+rs485_task_sel		EQU 6D0h
+
+serial_code_sel		EQU 6E0h
+serial_data_sel		EQU 6E8h
+
+rtc_code_sel		EQU 6F0h
+rtc_data_sel		EQU 6F8h
+
+state_code_sel		EQU 700h
+
+font_thread_sel		EQU 708h
+font_code_sel		EQU 710h
+font_data_sel		EQU 718h
+
+floppy_code_sel		EQU 720h
+floppy_data_sel		EQU 728h
+
+printer_code_sel	EQU 730h
+
+xms_local_sel		EQU 740h
+xms_system_sel		EQU 748h
+
+cbus_data_sel		EQU 758h
+com_code_sel		EQU 760h
+cbus_code_sel		EQU 768h
+
+ramdrive_code_sel	EQU 770h
+ramdrive_data_sel	EQU 778h
+ramdrive_process_sel	EQU 780h
+
+ne_code_sel			EQU 790h
+ne_app_sel			EQU 798h
+
+pe_code_sel			EQU 7A0h
+pe_app_sel			EQU 7A8h
+
+ether_code_sel		EQU 7B0h
+ether_data_sel		EQU 7B8h
+ether_mem_sel		EQU 7C0h
+
+ppp_code_sel		EQU 7D0h
+ppp_data_sel		EQU 7D8h
+
+udp_code_sel		EQU 7E0h
+udp_data_sel		EQU 7E8h
+
+ntp_code_sel		EQU 800h
+ntp_data_sel		EQU 808h
+
+ipc_code_sel		EQU 810h
+ipc_data_sel		EQU 818h
+ipc_process_sel		EQU 820h
+ipc_thread_sel		EQU 828h
+
+v86_bios_code_sel	EQU 830h
+v86_bios_data_sel	EQU 838h
+v86_bios_ds_sel		EQU 840h
+v86_bios_es_sel		EQU 848h
+
+video_code_sel		EQU 850h
+video_data_sel		EQU 858h
+video_proc_sel		EQU 860h
+video_thread_sel	EQU 868h
+video_local_sel		EQU 870h
+video_focus_sel		EQU 878h
+
+pc_video_code_sel	EQU 880h
+pc_video_data_sel	EQU 888h
+
+ipc_debug_code_sel	EQU 890h
+ipc_debug_data_sel	EQU 898h
+
+video_page0_sel		EQU 0F00h
+video_page1_sel		EQU 0F08h
+video_page2_sel		EQU 0F10h
+video_page3_sel		EQU 0F18h
+video_page4_sel		EQU 0F20h
+video_page5_sel		EQU 0F28h
+video_page6_sel		EQU 0F30h
+video_page7_sel		EQU 0F38h

@@ -1,0 +1,101 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; INT.DEF
+; Common software interrupt related types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+int_seg	SEGMENT AT 0
+
+vm_int_handlers		DW 100h DUP(?,?)
+
+pm16_int_handlers	DW 100h DUP(?,?)
+pm32_int_handlers	DW 100h DUP(?,?)
+
+get_vm_int_handlers	DW 100h DUP(?,?)
+set_vm_int_handlers	DW 100h DUP(?,?)
+
+get_pm16_int_handlers	DW 100h DUP(?,?)
+set_pm16_int_handlers	DW 100h DUP(?,?)
+
+get_pm32_int_handlers	DW 100h DUP(?,?)
+set_pm32_int_handlers	DW 100h DUP(?,?)
+
+vm_reflect_ads		DD ?
+vm_reflect_seg		DW ?
+
+pm_reflect_ads		DD ?
+pm_reflect_seg		DW ?
+
+sim_int16_offs		DW ?
+sim_int16_seg		DW ?
+
+sim_int32_offs		DW ?
+sim_int32_seg		DW ?
+
+pm_to_vm_done_ads	DD ?
+pm_to_vm_done_seg	DW ?
+
+call_vm_ret_seg		DW ?
+call_pm16_ret_sel	DW ?
+
+v86_raw_offs		DW ?
+v86_raw_seg			DW ?
+
+int_seg_size		DB ?
+
+int_seg	ENDS
+
+pint_seg	SEGMENT AT 0
+
+pint_locked_stack	DW ?
+pint_prot16_stack	DW ?
+pint_real_stack		DD ?
+
+pint_seg_size		DB ?
+
+pint_seg	ENDS
+
+vm_call_struc	STRUC
+
+vcs_edi		DD ?
+vcs_esi		DD ?
+vcs_ebp		DD ?
+vcs_res		DD ?
+vcs_ebx		DD ?
+vcs_edx		DD ?
+vcs_ecx		DD ?
+vcs_eax		DD ?
+vcs_flags	DW ?
+vcs_es		DW ?
+vcs_ds		DW ?
+vcs_fs		DW ?
+vcs_gs		DW ?
+vcs_ip		DW ?
+vcs_cs		DW ?
+vcs_sp		DW ?
+vcs_ss		DW ?
+
+vm_call_struc	ENDS
+
+

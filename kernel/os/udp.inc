@@ -1,0 +1,68 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; UDP.INC
+; UDP protocol common data types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UDP_QUERY_ENTRIES EQU 32
+
+udp_header	STRUC
+
+udp_source		DW ?
+udp_dest		DW ?
+udp_len			DW ?
+udp_checksum	DW ?
+
+udp_header	ENDS
+
+udp_query	STRUC
+
+udp_query_next		DW ?
+udp_query_port		DW ?
+udp_query_thread	DW ?
+udp_query_sel		DW ?
+udp_query_offset	DW ?
+
+udp_query	ENDS
+
+udp_listen	STRUC
+
+udp_listen_section		section_typ <>
+udp_listen_next			DW ?
+udp_listen_port			DW ?
+udp_listen_callback		DW ?,?
+
+udp_listen	ENDS
+
+udp_data	STRUC
+
+curr_port		DW ?
+query_free		DW ?
+query_head		DW ?
+udp_section		section_typ <>
+listen_list		DW ?
+udp_queries		DB UDP_QUERY_ENTRIES * SIZE udp_query DUP(?)
+
+udp_data	ENDS
+

@@ -1,0 +1,210 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; PE.DEF
+; Common PE loader types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+tib_data	STRUC
+
+pvFirstExcept		DD ?
+pvStackUserTop		DD ?
+pvStackUserBottom	DD ?
+pvLastError			DD ?
+pvStackUserSize		DD ?
+pvArbitrary			DD ?
+pvTEB				DD ?
+pvProcessHandle		DD ?
+pvThreadHandle		DD ?
+pvModuleHandle		DD ?
+pvTLSBitmap			DD ?
+pvTLSArray			DD ?
+pvBase				DD ?
+
+tib_data	ENDS
+
+fixup_table	STRUC
+
+fixup_va	DD ?
+fixup_size	DD ?
+fixup_data	DD ?
+
+fixup_table	ENDS
+
+tls_table	STRUC
+
+tls_start_data_va		DD ?
+tls_end_data_va			DD ?
+tls_index_va			DD ?
+tls_callback_va			DD ?
+
+tls_table	ENDS
+
+pe_header	STRUC
+
+peh_signature			DD ?
+peh_cpu					DW ?
+peh_objects				DW ?
+peh_timedate			DD ?
+peh_resv1				DD ?,?
+peh_nthdr_size			DW ?
+peh_flags				DW ?
+peh_resv2				DW ?
+peh_lmajor				DW ?
+peh_lminor				DW ?
+peh_resv3				DW ?
+peh_resv4				DD ?,?
+peh_entry_point			DD ?
+peh_resv5				DD ?,?
+peh_image_base			DD ?
+peh_object_align		DD ?
+peh_file_align			DD ?
+peh_osmajor				DW ?
+peh_osminor				DW ?
+peh_usermajor			DW ?
+peh_userminor			DW ?
+peh_subsysmajor			DW ?
+peh_subsysminor			DW ?
+peh_resv6				DD ?
+peh_image_size			DD ?
+peh_header_size			DD ?
+peh_file_checksum		DD ?
+peh_subsys				DW ?
+peh_dllflags			DW ?
+peh_stack_reserve_size	DD ?
+peh_stack_commit_size	DD ?
+peh_heap_reserve_size	DD ?
+peh_heap_commit_size	DD ?
+peh_resv7				DD ?
+peh_int_va_sizes		DD ?
+peh_export_va			DD ?
+peh_export_size			DD ?
+peh_import_va			DD ?
+peh_import_size			DD ?
+peh_resource_va		DD ?
+peh_resource_size		DD ?
+peh_exception_va		DD ?
+peh_exception_size		DD ?
+peh_security_va		DD ?
+peh_security_size		DD ?
+peh_fixup_va			DD ?
+peh_fixup_size			DD ?
+peh_debug_va			DD ?
+peh_debug_size			DD ?
+peh_descr_va			DD ?
+peh_descr_size			DD ?
+peh_machine_va			DD ?
+peh_machine_size		DD ?
+peh_tls_va				DD ?
+peh_tls_size			DD ?
+
+pe_header	ENDS
+
+object_struc	STRUC
+
+o_name				DB 8 DUP(?)
+o_virt_size			DD ?
+o_va				DD ?
+o_phys_size			DD ?
+o_phys_offset		DD ?
+o_resv1				DD ?,?,?
+o_flags				DD ?
+
+object_struc	ENDS
+
+lib_struc STRUC
+
+lib_prev			DW ?
+lib_next			DW ?
+lib_base			DD ?
+lib_size			DD ?
+lib_header			DD ?
+lib_objects			DD ?
+lib_file_handle		DW ?
+lib_usage_count		DW ?
+lib_process			DW ?
+lib_debug_lib		DW ?
+lib_debug_thread	DW ?
+lib_events			DW ?
+lib_section			section_typ <>
+lib_run_now			DW ?
+lib_init_param		DW ?
+lib_name			DB ?
+
+lib_struc ENDS
+
+export_descr	STRUC
+
+exp_flags				DD ?
+exp_time_stamp			DD ?
+exp_ver					DD ?
+exp_dll_name_va			DD ?
+exp_ordinal_base		DD ?
+exp_entry_point_count	DD ?
+exp_name_count			DD ?
+exp_entry_point_va		DD ?
+exp_name_va				DD ?
+exp_ordinal_va			DD ?
+
+export_descr	ENDS
+
+import_descr	STRUC
+
+imp_rva					DD ?
+imp_time_stamp			DD ?
+imp_forwarder_index		DD ?
+imp_dll_name_va			DD ?
+imp_first_thunk_va		DD ?
+
+import_descr	ENDS
+
+pe_data_seg	STRUC
+
+pe_dlls			DW ?
+pe_app			DW ?
+pe_env			DD ?
+pe_cmd_line		DD ?
+pe_mem_blocks	DW ?
+pe_section		section_typ <>
+
+pe_data_seg	ENDS
+
+pe_mem_struc STRUC
+
+mem_prev	DW ?
+mem_next	DW ?
+mem_base	DD ?
+mem_size	DD ?
+
+pe_mem_struc ENDS
+
+event_struc	STRUC
+
+event_prev		DW ?
+event_next		DW ?
+event_size		DD ?
+event_code		DD ?
+event_proc_id	DD ?
+event_thread_id	DD ?
+
+event_struc ENDS

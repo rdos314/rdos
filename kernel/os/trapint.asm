@@ -1,0 +1,1496 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; TRAPINT.ASM
+; Trap gate handling
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME  trapint
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+GateSize = 16
+
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE port.def
+INCLUDE os.def
+INCLUDE os.inc
+INCLUDE system.inc
+
+;
+seg_es	EQU 0
+seg_cs	EQU 1
+seg_ss	EQU 2
+seg_ds	EQU 3
+seg_fs	EQU 4
+seg_gs	EQU 5
+seg_def	EQU 7
+
+op_word		EQU 0
+op_byte		EQU 8
+op_dword	EQU 10h
+
+adr16	EQU 0
+adr32	EQU 20h
+
+code16	EQU 0
+code32	EQU 40h
+
+op_extend	EQU 40h
+
+CheckIt	MACRO
+	local trap_no_stop
+
+;	mov al,[bp].vm_eflags+2
+;	test al,2
+;	jz trap_no_stop
+;	mov ax,[bp].vm_eflags
+;	test ax,200h
+;	jnz trap_no_stop
+;	int 3
+trap_no_stop:
+		ENDM
+
+.386p
+
+code	SEGMENT byte use16 public 'CODE'
+
+
+	extrn create_data_sel16:near
+	extrn create_call_gate_sel16:near
+	extrn create_int_gate_sel:near
+	extrn create_tss_sel:near
+
+	extrn timer_int:near
+
+	extrn allocate_physical:near
+	extrn get_thread:near
+	extrn prot_exception:near
+	extrn virt_exception:near
+
+	assume cs:code
+
+emulate	PROC near
+	EmulateOpcode
+	ret
+emulate	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_0
+;
+;		DESCRIPTION:	Divide by zero
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	assume ds:tss_seg
+
+trap_0:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,0
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_1
+;
+;		DESCRIPTION:	Single step
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public trap_single_step
+
+trap_single_step	PROC far
+	mov eax,[bp].vm_eflags
+	or eax,10100h
+	mov [bp].vm_eflags,eax
+	test eax,20000h
+	jnz ts_vm
+	pop ax
+	add sp,2
+	push ax
+	mov al,1
+	jmp prot_exception
+
+ts_vm:
+	mov al,1
+	call virt_exception
+ts_ret:
+	ret
+trap_single_step	ENDP
+
+trap_1:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+;
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov eax,dr6
+	test ax,8000h
+	jz trap_no_task_switch
+	and ax,7FFFh
+	mov dr6,eax
+	mov ax,thread_tss_sel
+	mov ds,ax
+		assume ds:tss_seg
+	mov tss_t,0
+	mov ax,thread_sel
+	mov ds,ax
+		assume ds:thread_seg
+	call dword ptr p_trap_ads
+	jmp t1_ret
+trap_no_task_switch:
+	sti
+	mov ax,thread_sel
+	mov ds,ax
+	call dword ptr p_step_ads
+t1_ret:
+	pop ds
+	pop ebx
+	pop eax
+	cli
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_2
+;
+;		DESCRIPTION:	NMI
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_2:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov al,2
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t2_vm
+	call prot_exception
+	jmp t2_ret
+t2_vm:
+	call virt_exception
+t2_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_3
+;
+;		DESCRIPTION:	Breakpoint
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_3:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov eax,[bp].vm_eflags
+	test eax,20000h
+	jnz t3_vm
+	mov al,3
+	call prot_exception
+	jmp t3_ret
+t3_vm:
+	mov al,3
+	call virt_exception
+t3_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_4
+;
+;		DESCRIPTION:	INTO
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_4:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,4
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_5
+;
+;		DESCRIPTION:	BOUND
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+trap_5:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,5
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_6
+;
+;		DESCRIPTION:	Invalid instruction
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+	extrn translate_vm_system:near
+	extrn translate_vm_reflect:near
+	extrn translate_pm16_reflect:near
+	extrn translate_pm32_reflect:near
+	extrn default_exception16:near
+	extrn break_exception16:near
+	extrn default_exception32:near
+	extrn break_exception32:near
+	extrn translate_vm_usergate:near
+	extrn do_virtgate:near
+
+	extrn reflect_end:near
+	extrn sim16_end:near
+	extrn sim32_end:near
+	extrn vm_callback16:near
+	extrn pm_callback16:near
+	extrn vm_callback32:near
+	extrn pm_callback32:near
+	extrn reflect_pm_to_vm_done:near
+	extrn call_vm_ret:near
+	extrn call_pm16_ret:near
+	extrn call_pm32_ret:near
+
+	extrn irq_vm:near
+	extrn irq_pm16:near
+	extrn irq_pm32:near
+
+emulate_6:
+	mov al,6
+	jmp emulate
+
+enter_dpmi	PROC near
+	EnterDpmi
+	ret
+enter_dpmi	ENDP
+
+vm_call_tab:
+vm_00	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_02	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_04	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_06	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_08	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_0A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_0C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_0E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_10	DW OFFSET reflect_end,			OFFSET sim16_end
+vm_12	DW OFFSET sim32_end,			OFFSET vm_callback16
+vm_14	DW OFFSET vm_callback32,		OFFSET reflect_pm_to_vm_done
+vm_16	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_18	DW OFFSET irq_vm,				OFFSET emulate_6
+vm_1A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_1C	DW OFFSET call_vm_ret,			OFFSET emulate_6
+vm_1E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_20	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_22	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_24	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_26	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_28	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_2A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_2C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_2E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_30	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_32	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_34	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_36	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_38	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_3A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_3C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_3E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_40	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_42	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_44	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_46	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_48	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_4A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_4C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_4E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_50	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_52	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_54	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_56	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_58	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_5A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_5C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_5E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_60	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_62	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_64	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_66	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_68	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_6A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_6C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_6E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_70	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_72	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_74	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_76	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_78	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_7A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_7C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_7E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_80	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_82	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_84	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_86	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_88	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_8A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_8C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_8E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_90	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_92	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_94	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_96	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_98	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_9A	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_9C	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_9E	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_A0	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_A2	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_A4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_A6	DW OFFSET emulate_6,			OFFSET translate_vm_usergate
+vm_A8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_AA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_AC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_AE	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_B0	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_B2	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_B4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_B6	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_B8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_BA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_BC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_BE	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_C0	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_C2	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_C4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_C6	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_C8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_CA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_CC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_CE	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D0	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D2	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D6	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_D8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_DA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_DC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_DE	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_E0	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_E2	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_E4	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_E6	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_E8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_EA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_EC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_EE	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_F0	DW OFFSET emulate_6,			OFFSET translate_vm_reflect
+vm_F2	DW OFFSET translate_vm_system,	OFFSET emulate_6
+vm_F4	DW OFFSET do_virtgate,			OFFSET emulate_6
+vm_F6	DW OFFSET emulate_6,		OFFSET enter_dpmi
+vm_F8	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_FA	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_FC	DW OFFSET emulate_6,			OFFSET emulate_6
+vm_FE	DW OFFSET emulate_6,			OFFSET emulate_6
+
+pm16_call_tab:
+pm16_00	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_02	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_04	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_06	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_08	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_0A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_0C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_0E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_10	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_12	DW OFFSET emulate_6,			OFFSET pm_callback16
+pm16_14	DW OFFSET pm_callback32,		OFFSET emulate_6
+pm16_16	DW OFFSET translate_pm16_reflect,OFFSET translate_pm32_reflect
+pm16_18	DW OFFSET emulate_6,			OFFSET irq_pm16
+pm16_1A	DW OFFSET irq_pm32,				OFFSET emulate_6
+pm16_1C	DW OFFSET call_pm16_ret,		OFFSET call_pm32_ret
+pm16_1E	DW OFFSET default_exception16, 	OFFSET break_exception16
+pm16_20	DW OFFSET default_exception32,	OFFSET break_exception32
+pm16_22	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_24	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_26	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_28	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_2A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_2C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_2E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_30	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_32	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_34	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_36	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_38	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_3A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_3C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_3E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_40	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_42	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_44	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_46	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_48	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_4A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_4C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_4E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_50	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_52	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_54	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_56	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_58	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_5A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_5C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_5E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_60	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_62	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_64	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_66	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_68	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_6A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_6C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_6E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_70	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_72	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_74	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_76	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_78	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_7A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_7C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_7E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_80	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_82	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_84	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_86	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_88	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_8A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_8C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_8E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_90	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_92	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_94	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_96	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_98	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_9A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_9C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_9E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_A0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_A2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_A4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_A6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_A8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_AA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_AC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_AE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_B0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_B2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_B4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_B6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_B8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_BA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_BC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_BE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_C0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_C2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_C4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_C6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_C8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_CA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_CC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_CE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_D8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_DA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_DC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_DE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_E0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_E2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_E4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_E6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_E8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_EA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_EC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_EE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_F0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_F2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_F4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_F6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_F8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_FA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_FC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm16_FE	DW OFFSET emulate_6,			OFFSET emulate_6
+
+pm32_call_tab:
+pm32_00	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_02	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_04	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_06	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_08	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_0A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_0C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_0E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_10	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_12	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_14	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_16	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_18	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_1A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_1C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_1E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_20	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_22	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_24	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_26	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_28	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_2A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_2C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_2E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_30	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_32	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_34	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_36	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_38	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_3A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_3C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_3E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_40	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_42	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_44	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_46	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_48	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_4A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_4C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_4E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_50	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_52	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_54	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_56	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_58	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_5A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_5C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_5E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_60	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_62	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_64	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_66	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_68	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_6A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_6C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_6E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_70	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_72	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_74	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_76	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_78	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_7A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_7C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_7E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_80	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_82	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_84	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_86	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_88	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_8A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_8C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_8E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_90	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_92	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_94	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_96	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_98	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_9A	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_9C	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_9E	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_A0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_A2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_A4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_A6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_A8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_AA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_AC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_AE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_B0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_B2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_B4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_B6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_B8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_BA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_BC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_BE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_C0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_C2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_C4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_C6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_C8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_CA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_CC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_CE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_D8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_DA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_DC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_DE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_E0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_E2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_E4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_E6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_E8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_EA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_EC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_EE	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_F0	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_F2	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_F4	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_F6	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_F8	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_FA	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_FC	DW OFFSET emulate_6,			OFFSET emulate_6
+pm32_FE	DW OFFSET emulate_6,			OFFSET emulate_6
+
+trap_6:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t6_vm
+	mov ds,[bp].vm_cs
+	mov ebx,[bp].vm_eip
+	mov ax,[ebx]
+	cmp ax,00B0Fh
+	jne emulate_62
+	sti
+	movzx eax,byte ptr [ebx+2]
+	cmp al,66h
+	je t6_pm32
+	call word ptr cs:[eax*2].pm16_call_tab
+	jmp t6_ret
+t6_pm32:
+	movzx eax,byte ptr [ebx+3]
+	call word ptr cs:[eax*2].pm32_call_tab
+	jmp t6_ret
+emulate_62:
+	mov al,6
+	call emulate
+	jmp t6_ret
+t6_vm:
+	xor ebx,ebx
+	mov bx,[bp].vm_cs
+	shl ebx,4
+	add ebx,[bp].vm_eip
+	mov ax,flat_sel
+	mov ds,ax
+	mov ax,[ebx]
+	cmp ax,00B0Fh
+	jne emulate_6
+	add ebx,2
+	sti
+	movzx eax,byte ptr [ebx]
+	call word ptr cs:[eax*2].vm_call_tab
+t6_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_7
+;
+;		DESCRIPTION:	Co-processor fault
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+trap_7:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push ds
+	push eax
+	push bx
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	clts
+	mov ax,thread_sel
+	mov ds,ax
+		assume ds:thread_seg
+	mov bx,p_tss_data_sel
+;
+	mov ax,system_data_sel
+	mov ds,ax
+		assume ds:system_seg
+	mov ax,math_tss
+	cmp ax,bx
+	je math_same_tss
+	mov math_tss,bx
+	or ax,ax
+	jz math_reload
+	mov ds,ax
+	push bx
+		assume ds:tss_seg
+	mov bx,OFFSET math_control
+	fsave [bx]
+	mov math_used,1
+	pop bx
+math_reload:
+	mov ds,bx
+	mov bx,OFFSET math_control
+	mov ax,math_used
+	or ax,ax
+	jz math_init
+	frstor [bx]
+	jmp math_same_tss
+math_init:
+	finit
+math_same_tss:
+	pop bx
+	pop eax
+	pop ds
+	cli
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_9
+;
+;		DESCRIPTION:	Co-processor overrun error
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_9:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,9
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_11
+;
+;		DESCRIPTION:	Segment not present fault
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	extrn define_usergate:near
+
+trap_11:
+	sti
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov ax,thread_tss_sel
+	mov ds,ax
+	mov ax,[bp].vm_err
+	mov ds:tss_error_code,ax
+	mov al,11
+	test byte ptr [bp+2].vm_eflags,2
+	jnz t11_vm
+	SegmentNotPresent
+	jnc t11_ret
+t11_vm:
+	mov al,11
+	call emulate
+t11_ret:
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+segment_not_present_name DB 'Segment Not Present',0
+
+segment_not_present	PROC far
+	stc
+	ret
+segment_not_present	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_13
+;
+;		DESCRIPTION:	General protection fault
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_13:
+	sti
+	push bp
+	mov bp,sp
+	push eax
+	push ebx
+	push ds
+	mov al,13
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRAP_16
+;
+;		DESCRIPTION:	Co-processor error
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_16:
+	push dword ptr 0
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,16
+	call emulate
+	pop ds
+	pop ebx
+	pop eax
+	and byte ptr [bp+2].vm_eflags, NOT 1
+	pop bp
+	add sp,4
+	iretd
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEFAULT_INT1
+;
+;		DESCRIPTION:	Default int 1
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_int1:
+	push ax
+	mov al,20h
+	out INT0_CONTROL,al
+	pop ax
+	iretd
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEFAULT_INT2
+;
+;		DESCRIPTION:	Default int 2
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_int2:
+	push ax
+	mov al,20h
+	out INT0_CONTROL,al
+	jmp short $+2
+	out INT1_CONTROL,al
+	pop ax
+	iretd
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INIT_IDT_TRAPS
+;
+;		DESCRIPTION:	Install all trap-gates
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+idt_trap_tab:
+;
+;			int #	Entry					Selector		Dpl
+;
+tg0		DW	0,		OFFSET trap_0,			kernel_code,	0
+tg1		DW 	1,		OFFSET trap_1,			kernel_code,	0
+tg2		DW 	2,		OFFSET trap_2,			kernel_code,	0
+tg3		DW 	3,		OFFSET trap_3,			kernel_code,	0
+tg4		DW	4,		OFFSET trap_4,			kernel_code,	0
+tg5		DW	5,		OFFSET trap_5,			kernel_code,	0
+tg6		DW	6,		OFFSET trap_6,			kernel_code,	0
+tg7		DW	7,		OFFSET trap_7,			kernel_code,	0
+tg9		DW	9,		OFFSET trap_9,			kernel_code,	0
+tg11	DW	11,		OFFSET trap_11,			kernel_code,	0
+tg13	DW	13,		OFFSET trap_13,			kernel_code,	0
+tg16	DW	16,		OFFSET trap_16,			kernel_code,	0
+tg7_end	DW	0FFFFh
+
+;
+; tabell offsets
+;
+ig_nr		EQU 0
+ig_entry	EQU 2
+ig_sel		EQU 4
+ig_dpl		EQU 6
+
+;
+
+	public init_task_traps
+
+init_task_traps	PROC near
+	mov di,OFFSET idt_trap_tab
+init_task_trap_next:
+	mov ax,cs:[di]
+	cmp ax,0FFFFh
+	jz init_task_trap_end
+	mov ax,cs:[di].ig_sel
+	mov ds,ax
+	mov al,cs:[di].ig_nr
+	mov bl,cs:[di].ig_dpl
+	movzx esi,word ptr cs:[di].ig_entry
+	CreateIntGateSelector
+	add di,8
+	jmp init_task_trap_next
+init_task_trap_end:
+	ret
+init_task_traps	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PRETASKING_GATE0, PRETASKING_GATE4
+;
+;		DESCRIPTION:	Pretasking gates
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pretask0:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,0
+	ShutDownPreTask
+
+pretask1:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,1
+	ShutDownPreTask
+
+pretask2:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,2
+	ShutDownPreTask
+
+pretask3:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,3
+	ShutDownPreTask
+
+pretask4:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,4
+	ShutDownPreTask
+
+pretask5:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,5
+	ShutDownPreTask
+
+pretask6:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,6
+	ShutDownPreTask
+
+pretask7:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,7
+	ShutDownPreTask
+
+pretask8:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,8
+	ShutDownPreTask
+
+pretask9:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,9
+	ShutDownPreTask
+
+pretask10:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,10
+	ShutDownPreTask
+
+pretask11:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,11
+	ShutDownPreTask
+
+pretask12:
+	sub sp,4
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,12
+	ShutDownPreTask
+
+pretask13:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,13
+	ShutDownPreTask
+
+prepaging14:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,14
+	ShutDownPreTask
+
+pretask16:
+	push bp
+	mov bp,sp
+	sti
+	push eax
+	push ebx
+	push ds
+	mov al,16
+	ShutDownPreTask
+
+pretask_int_tab:
+;
+;			int #	Entry					Selector		Dpl
+;
+pg0		DW	0,		OFFSET pretask0,		kernel_code,	0
+pg1		DW 	1,		OFFSET pretask1,		kernel_code,	0
+pg2		DW 	2,		OFFSET pretask2,		kernel_code,	0
+pg3		DW 	3,		OFFSET pretask3,		kernel_code,	0
+pg4		DW	4,		OFFSET pretask4,		kernel_code,	0
+pg5		DW	5,		OFFSET pretask5,		kernel_code,	0
+pg6		DW	6,		OFFSET pretask6,		kernel_code,	0
+pg7		DW	7,		OFFSET pretask7,		kernel_code,	0
+pg8		DW	8,		OFFSET pretask8,		kernel_code,	0
+pg9		DW	9,		OFFSET pretask9,		kernel_code,	0
+pg10	DW	10,		OFFSET pretask10,		kernel_code,	0
+pg11	DW	11,		OFFSET pretask11,		kernel_code,	0
+pg12	DW	12,		OFFSET pretask12,		kernel_code,	0
+pg13	DW	13,		OFFSET pretask13,		kernel_code,	0
+pg14	DW	14,		OFFSET prepaging14,		kernel_code,	0
+pg16	DW	16,		OFFSET pretask16,		kernel_code,	0
+ri0		DW	28h,	OFFSET timer_int,		kernel_code,	0
+ri1		DW	29h,	OFFSET default_int1,	kernel_code,	0
+ri2		DW	2Ah,	OFFSET default_int1,	kernel_code,	0
+ri3		DW	2Bh,	OFFSET default_int1,	kernel_code,	0
+ri4		DW	2Ch,	OFFSET default_int1,	kernel_code,	0
+ri5		DW	2Dh,	OFFSET default_int1,	kernel_code,	0
+ri6		DW	2Eh,	OFFSET default_int1,	kernel_code,	0
+ri7		DW	2Fh,	OFFSET default_int1,	kernel_code,	0
+ri10	DW	38h,	OFFSET default_int2,	kernel_code,	0
+ri11	DW	39h,	OFFSET default_int2,	kernel_code,	0
+ri12	DW	3Ah,	OFFSET default_int2,	kernel_code,	0
+ri13	DW	3Bh,	OFFSET default_int2,	kernel_code,	0
+ri14	DW	3Ch,	OFFSET default_int2,	kernel_code,	0
+ri15	DW	3Dh,	OFFSET default_int2,	kernel_code,	0
+ri17	DW	3Fh,	OFFSET default_int2,	kernel_code,	0
+pg7_end	DW	0FFFFh
+
+	public init_pretask_traps
+
+init_pretask_traps	PROC near
+	mov ax,idt_sel
+	mov ds,ax
+;
+	xor bx,bx
+	mov cx,100h
+init_pretask_zero:
+	mov byte ptr [bx+5],0
+	add bx,8
+	loop init_pretask_zero
+;
+	mov di,OFFSET pretask_int_tab
+init_pretask_next:
+	mov ax,cs:[di]
+	cmp ax,0FFFFh
+	jz init_pretask_end
+	mov ax,cs:[di].ig_sel
+	mov ds,ax
+	mov al,cs:[di].ig_nr
+	mov bl,cs:[di].ig_dpl
+	movzx esi,word ptr cs:[di].ig_entry
+	push cs
+	call create_int_gate_sel
+	add di,8
+	jmp init_pretask_next
+init_pretask_end:
+	ret
+init_pretask_traps	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INIT_IDT
+;
+;		DESCRIPTION:	Move IDT from boot area to kernel area
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_idt
+
+init_idt	Proc near
+	push ds
+	push es
+	pusha
+	mov bx,idt_sel
+	mov ds,bx
+	mov cx,idt_size
+	movzx eax,cx
+	mov bx,temp_sel
+	AllocateFixedSystemMem
+	xor si,si
+	xor di,di
+	rep movsb
+	mov si,bx
+	mov di,idt_sel
+	mov ax,gdt_sel
+	mov ds,ax
+	mov es,ax
+	movsd
+	movsd	
+	mov al,[bx+7]
+	mov [bx+5],al
+	db 66h
+	lidt [bx]
+	popa
+	pop es
+	pop ds
+	ret
+init_idt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INIT_TRAP_VECTORS
+;
+;		DESCRIPTION:	Init default software ints
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	extrn vm_exception_handler:near
+	extrn pm_exception_handler:near
+
+	public init_trap_vectors
+
+init_trap_vectors	PROC near
+	xor cx,cx
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET vm_exception_handler
+	mov al,0
+	HookVMInt
+	mov al,1
+	HookVMInt
+	mov al,3
+	HookVMInt
+	mov al,4
+	HookVMInt
+	mov al,5
+	HookVMInt
+	mov al,6
+	HookVMInt
+	mov al,8
+	HookVMInt
+	mov al,9
+	HookVMInt
+	mov al,11
+	HookVMInt
+	mov al,12
+	HookVMInt
+	mov al,13
+	HookVMInt
+;
+	mov di,OFFSET pm_exception_handler
+	mov al,3
+	HookProt16Int
+;
+	mov di,OFFSET pm_exception_handler
+	mov al,3
+	HookProt32Int
+;
+	mov si,OFFSET segment_not_present
+	mov di,OFFSET segment_not_present_name
+	xor cl,cl
+	mov ax,segment_not_present_nr
+	RegisterOsGate
+	ret
+init_trap_vectors	ENDP
+
+
+code	ENDS
+
+	END

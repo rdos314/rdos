@@ -1,0 +1,1381 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; INT32.ASM
+; 32-bit protected mode interrupt handling module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME int32
+
+GateSize = 16
+
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE driver.def
+INCLUDE user.def
+INCLUDE virt.def
+INCLUDE os.def
+INCLUDE system.inc
+INCLUDE user.inc
+INCLUDE virt.inc
+INCLUDE os.inc
+INCLUDE int.def
+
+sim_ss		EQU 56
+sim_pesp	EQU 52
+sim_cs		EQU 48
+sim_eip		EQU 44
+sim_type	EQU 42
+sim_ds		EQU 40
+sim_es		EQU 38
+sim_fs		EQU 36
+sim_gs		EQU 34
+sim_flags	EQU 32
+sim_eax		EQU 28
+sim_ecx		EQU 24
+sim_edx		EQU 20
+sim_ebx		EQU 16
+sim_esp		EQU 12
+sim_ebp		EQU 8
+sim_esi		EQU 4
+sim_edi		EQU 0
+
+sim_int		EQU 0
+sim_iret	EQU 1
+sim_ret		EQU 2
+
+	.386p
+
+code	SEGMENT byte public use16 'CODE'
+
+	extrn create_ldt:near
+
+	extrn create_data_selector:near
+
+	extrn get_flags:near
+	extrn set_flags:near
+
+	assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			INIT_INT32
+;
+;		DESCRIPTION:	Init module
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pm_reflect0:
+	ReflectPM32 0
+
+pm_break_exc0:
+	BreakException32 0
+
+pm_default_exc0:
+	DefaultException32 0
+
+sim_int_end:
+	SimVM32End
+
+	public init_int32
+
+init_int32	PROC near
+	mov eax,4
+	AllocateFixedVMLinear
+	mov ax,flat_sel
+	mov ds,ax
+	mov eax,dword ptr cs:sim_int_end
+	mov [edx],eax
+	mov ax,int_data_sel
+	mov ds,ax
+	mov eax,edx
+	shr eax,4
+	mov ds:sim_int32_seg,ax
+	and dx,0Fh
+	mov ds:sim_int32_offs,dx
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET hook_pm_int
+	mov di,OFFSET hook_pm_int_name
+	xor cl,cl
+	mov ax,hook_pm32_int_nr
+	RegisterOsGate
+;
+	mov si,OFFSET hook_get_pm_int
+	mov di,OFFSET hook_get_pm_int_name
+	xor cl,cl
+	mov ax,hook_get_pm32_int_nr
+	RegisterOsGate
+;
+	mov si,OFFSET hook_set_pm_int
+	mov di,OFFSET hook_set_pm_int_name
+	xor cl,cl
+	mov ax,hook_set_pm32_int_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_exception_vector
+	mov di,OFFSET get_exception_vector_name
+	xor cl,cl
+	mov ax,get_exception_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET set_exception_vector
+	mov di,OFFSET set_exception_vector_name
+	xor cl,cl
+	mov ax,set_exception_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET get_pm_int
+	mov di,OFFSET get_pm_int_name
+	xor cl,cl
+	mov ax,get_pm_int_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET set_pm_int
+	mov di,OFFSET set_pm_int_name
+	xor cl,cl
+	mov ax,set_pm_int_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET dpmi_int
+	mov di,OFFSET dpmi_int_name
+	xor cl,cl
+	mov ax,dpmi_int_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET dpmi_call_int
+	mov di,OFFSET dpmi_call_int_name
+	xor cl,cl
+	mov ax,dpmi_call_int_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET dpmi_call
+	mov di,OFFSET dpmi_call_name
+	xor cl,cl
+	mov ax,dpmi_call_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET allocate_vm_callback
+	mov di,OFFSET allocate_vm_callback_name
+	xor cl,cl
+	mov ax,allocate_vm_callback_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET free_vm_callback
+	mov di,OFFSET free_vm_callback_name
+	xor cl,cl
+	mov ax,free_vm_callback_nr
+	RegisterUserGate32
+;
+; create default reflection
+;
+	mov eax,400h
+	AllocateFixedVMLinear
+	mov ecx,eax
+	mov bx,callb_int32_sel
+	CreateDataSelector32
+;
+	mov ax,int_data_sel
+	mov ds,ax
+	mov cx,100h
+	mov bx,OFFSET get_pm32_int_handlers
+	mov ax,OFFSET default_get_pm_int
+init_get_pm_int_loop:
+	mov [bx],ax
+	mov [bx+2],cs
+	add bx,4
+	loop init_get_pm_int_loop
+;
+	mov ax,int_data_sel
+	mov ds,ax
+	mov cx,100h
+	mov bx,OFFSET set_pm32_int_handlers
+	mov ax,OFFSET default_set_pm_int
+init_set_pm_int_loop:
+	mov [bx],ax
+	mov [bx+2],cs
+	add bx,4
+	loop init_set_pm_int_loop
+;
+	mov cx,100h
+	mov ax,callb_int32_sel
+	mov ds,ax
+	xor bx,bx
+	mov eax,dword ptr cs:pm_reflect0
+init_reflect_loop:
+	mov [bx],eax
+	add bx,4
+	add eax,1000000h
+	loop init_reflect_loop
+;
+	mov bx,gdt_sel
+	mov ds,bx
+	mov bx,callb_int32_sel AND 0FFF8h
+	mov byte ptr [bx+5],0FAh
+;
+	mov eax,100h
+	AllocateFixedVMLinear
+	mov ecx,eax
+	mov bx,callb_exc32_sel
+	CreateDataSelector32
+;
+	mov cx,20h
+	mov ax,callb_exc32_sel
+	mov ds,ax
+	xor bx,bx
+	mov eax,dword ptr cs:pm_break_exc0
+	mov edx,dword ptr cs:pm_default_exc0
+init_exc_loop:
+	mov [bx],eax
+	add bx,4
+	mov [bx],edx
+	add bx,4
+	add eax,1000000h
+	add edx,1000000h
+	loop init_exc_loop
+;
+	mov bx,gdt_sel
+	mov ds,bx
+	mov bx,callb_exc32_sel AND 0FFF8h
+	mov byte ptr [bx+5],0FAh
+;
+; create vm callback ret
+;
+	mov ax,gdt_sel
+	mov ds,ax
+	mov es,ax
+	mov bx,callb_vm32_sel
+	and bl,0F8h
+	mov di,bx
+	xor si,si
+	mov si,cs
+	movsd
+	movsd
+	mov edx,[bx+2]
+	add edx,OFFSET vm_callback_begin
+	mov [bx+2],edx
+	mov al,[bx+5]
+	or al,60h
+	mov [bx+5],al
+	mov ax,OFFSET vm_callback_end - vm_callback_begin
+	dec ax
+	mov [bx],ax
+;
+	ret
+init_int32	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			setup_idt32
+;
+;		DESCRIPTION:	Setup a default 32-bit IDT
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public setup_idt32
+
+setup_idt32	PROC near
+	push ds
+	push ax
+	push bx
+	push cx
+	push edx
+;
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov bx,OFFSET app_pm_int
+	mov cx,100h
+	xor edx,edx
+setup_int_loop:
+	mov [bx],edx
+	add bx,4
+	mov word ptr [bx],callb_int32_sel
+	add bx,4
+	add edx,4
+	loop setup_int_loop
+;
+	mov bx,OFFSET app_pm_exc
+	mov cx,20h
+	mov edx,4
+setup_pm_exception_loop:
+	mov [bx],edx
+	add bx,4
+	mov word ptr [bx],callb_exc32_sel
+	add bx,4
+	add edx,8
+	loop setup_pm_exception_loop
+;
+	pop edx
+	pop cx
+	pop bx
+	pop ax
+	pop ds
+	ret
+setup_idt32	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HOOK_PM_INT
+;
+;		DESCRIPTION:	Add default protected mode interrupt handler
+;
+;		PARAMETERS:		AL		Int #
+;						DS:DI	Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_pm_int_name	DB 'Hook Prot32 Int',0
+
+hook_pm_int	PROC far
+	push ds
+	push es
+	push bx
+	mov bx,int_data_sel
+	mov es,bx
+	movzx bx,al
+	shl bx,2
+	mov es:[bx].pm32_int_handlers,di
+	mov es:[bx+2].pm32_int_handlers,ds
+	pop bx
+	pop es
+	pop ds
+	ret
+hook_pm_int	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GET_EXCEPTION_VECTOR
+;
+;		DESCRIPTION:	Get exception vector
+;
+;		PARAMETERS:		AL		Exception #
+;
+;		RETURNS:		ES:EDI	Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exception_vector_name	DB 'Get Exception Vector',0
+
+get_exception_vector	PROC far
+	push ds
+	push bx
+	mov bx,thread_app_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,3
+	les edi,fword ptr ds:[bx].app_pm_exc
+	pop bx
+	pop ds
+	retf32
+get_exception_vector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SET_EXCEPTION_VECTOR
+;
+;		DESCRIPTION:	Set exception vector
+;
+;		PARAMETERS:		AL		Exception #
+;						ES:EDI	Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_exception_vector_name	DB 'Set Exception Vector',0
+
+set_exception_vector	PROC far
+	push ds
+	push bx
+	mov bx,thread_app_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,3
+	mov ds:[bx].app_pm_exc,edi
+	mov ds:[bx+4].app_pm_exc,es
+	pop bx
+	pop ds
+	retf32
+set_exception_vector	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DEFAULT_GET_PM_INT
+;
+;		DESCRIPTION:	Default get interrpt vector
+;
+;		PARAMETERS:		AL		Int #
+;
+;		RETURNS:		ES:EDI	Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_get_pm_int	PROC far
+	push ds
+	push bx
+	mov bx,thread_app_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,3
+	les edi,fword ptr ds:[bx].app_pm_int
+	pop bx
+	pop ds
+	ret
+default_get_pm_int	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DEFAULT_SET_PM_INT
+;
+;		DESCRIPTION:	Default set interrupt vector
+;
+;		PARAMETERS:		AL		Int #
+;						ES:EDI	Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_set_pm_int	PROC far
+	push ds
+	push bx
+	mov bx,thread_app_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,3
+	mov ds:[bx].app_pm_int,edi
+	mov ds:[bx+4].app_pm_int,es
+	pop bx
+	pop ds
+	ret
+default_set_pm_int	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GET_PM_INT
+;
+;		DESCRIPTION:	Get interrupt vector
+;
+;		PARAMETERS:		AL			Int #
+;
+;		RETURNS:		ES:EDI		Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_pm_int_name	DB 'Get Prot Int',0
+
+get_pm_int	PROC far
+	push ds
+	push si
+	mov si,int_data_sel
+	mov ds,si
+	movzx si,al
+	shl si,2
+	call dword ptr ds:[si].get_pm32_int_handlers
+	pop si
+	pop ds
+	retf32
+get_pm_int	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SET_PM_INT
+;
+;		DESCRIPTION:	Set interrupt vector
+;
+;		PARAMETERS:		AL			Int #
+;						ES:EDI		Selector:offset
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_pm_int_name	DB 'Set Prot Int',0
+
+set_pm_int	PROC far
+	push ds
+	push si
+	mov si,int_data_sel
+	mov ds,si
+	movzx si,al
+	shl si,2
+	call dword ptr ds:[si].set_pm32_int_handlers
+	pop si
+	pop ds
+	retf32
+set_pm_int	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HOOK_GET_PM_INT
+;
+;		DESCRIPTION:	Add GetPmInt hook
+;
+;		PARAMETERS:		ES:DI		Callback
+;						AL			Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_get_pm_int_name	DB 'Hook Get Prot Int',0
+
+hook_get_pm_int	PROC far
+	push ds
+	push si
+	mov si,int_data_sel
+	mov ds,si
+	movzx si,al
+	shl si,2
+	mov ds:[si].get_pm32_int_handlers,di
+	mov ds:[si+2].get_pm32_int_handlers,es
+	pop si
+	pop ds
+	ret
+hook_get_pm_int	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HOOK_SET_PM_INT
+;
+;		DESCRIPTION:	Add SetPmInt hook
+;
+;		PARAMETERS:		ES:DI		Callback
+;						AL			Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_set_pm_int_name	DB 'Hook Set Prot Int',0
+
+hook_set_pm_int	PROC far
+	push ds
+	push si
+	mov si,int_data_sel
+	mov ds,si
+	movzx si,al
+	shl si,2
+	mov ds:[si].set_pm32_int_handlers,di
+	mov ds:[si+2].set_pm32_int_handlers,es
+	pop si
+	pop ds
+	ret
+hook_set_pm_int	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SIM32_END
+;
+;		DESCRIPTION:	End V86 mode reflection
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public sim32_end
+
+sim32_end	PROC far
+	mov ax,thread_int_sel
+	mov ds,ax
+	mov es,ax
+	mov ds,ds:pint_locked_stack
+	xor bx,bx
+	mov bx,[bx]
+	mov eax,[bx].sim_edi
+	mov ds,[bx].sim_es
+	mov [eax].vcs_ecx,ecx
+	mov [eax].vcs_edx,edx
+	mov [eax].vcs_esi,esi
+	mov [eax].vcs_edi,edi
+	mov esi,eax
+	mov ax,[bp].vm_gs
+	mov [esi].vcs_gs,ax
+	mov ax,[bp].vm_fs
+	mov [esi].vcs_fs,ax
+	mov ax,[bp].vm_es
+	mov [esi].vcs_es,ax
+	mov ax,[bp].vm_ds
+	mov [esi].vcs_ds,ax
+	mov ax,[bp].vm_eflags
+	push ds
+	push bx
+	call get_flags
+	pop bx
+	pop ds
+	mov [esi].vcs_flags,ax
+	mov eax,[bp].vm_eax
+	mov [esi].vcs_eax,eax
+	mov eax,[bp].vm_ebx
+	mov [esi].vcs_ebx,ebx
+	mov bp,[bp].vm_bp
+	mov [esi].vcs_ebp,ebp
+;
+	mov ds,es:pint_locked_stack
+	mov si,bx
+	mov di,[si].sim_esp
+	sub di,20h
+	mov cx,stack0_size
+	sub cx,di
+	mov sp,di
+	mov ax,ss
+	mov es,ax
+	shr cx,1
+	rep movsw
+	xor bx,bx
+	mov [bx],si
+	popad
+	popf
+	pop gs
+	pop fs
+	pop es
+	pop ds
+	add sp,2
+	retf32
+sim32_end	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SIM32_BEGIN
+;
+;		DESCRIPTION:	Reflect to V86 mode
+;
+;		PARAMETERS:		CX			Number of words to copy
+;						DS:ESI		Parameters
+;						ES:EDI		VM_CALL_STRUC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sim32_begin:
+	push ds
+	push es
+	push fs
+	push gs
+	pushf
+	pushad
+	mov bp,sp
+	cld
+	cmp word ptr [bp].sim_type,sim_ret
+	je sim_no_cli
+	xor ax,ax
+	call set_flags
+sim_no_cli:
+	mov bx,thread_int_sel
+	mov ds,bx
+	mov bx,ds:pint_locked_stack
+	or bx,bx
+	jnz sim_int_save_pm
+	mov eax,1000h
+	AllocateGlobalMem
+	mov ds:pint_locked_stack,es
+	xor bx,bx
+	mov word ptr es:[bx],1000h
+	mov bx,es
+sim_int_save_pm:
+	mov cx,stack0_size
+	sub cx,sp
+	mov es,bx
+	xor bx,bx
+	sub es:[bx],cx
+	mov di,es:[bx]
+	mov ax,ss
+	mov ds,ax
+	mov si,sp
+	shr cx,1
+	rep movsw
+	mov esi,[bp].sim_esi
+	mov fs,[bp].sim_ds
+	mov cx,[bp].sim_ecx
+	mov es,[bp].sim_es
+	mov edi,[bp].sim_edi
+	mov bl,[bp].sim_type
+	mov bh,[bp].sim_eax
+	mov sp,stack0_size
+	mov ax,flat_sel
+	mov ds,ax
+	xor eax,eax
+	mov ax,es:[edi].vcs_gs
+	push eax
+	mov ax,es:[edi].vcs_fs
+	push eax
+	mov ax,es:[edi].vcs_ds
+	push eax
+	mov ax,es:[edi].vcs_es
+	push eax
+	mov ax,es:[edi].vcs_ss
+	movzx edx,es:[edi].vcs_sp
+	or ax,ax
+	jnz sim_int_push_stack
+	push ds
+	mov ax,thread_int_sel
+	mov ds,ax
+	mov edx,ds:pint_real_stack
+	or edx,edx
+	jnz sim_int_stack_ok
+	mov eax,200h
+	AllocateVMLinear
+	mov ds:pint_real_stack,edx
+sim_int_stack_ok:
+	mov eax,edx
+	shr eax,4
+	and edx,0Fh
+	add edx,200h
+	pop ds
+sim_int_push_stack:
+	cmp bl,sim_ret
+	je sim_ret_ss
+	sub dx,6
+	sub dx,cx
+	sub dx,cx
+	push eax
+	push edx
+	shl eax,4
+	add edx,eax
+	mov ax,int_data_sel
+	mov gs,ax
+	mov ax,es:[edi].vcs_flags
+	push ds
+	push bx
+	call get_flags
+	pop bx
+	pop ds
+	mov [edx+4],ax
+	mov ax,gs:sim_int32_seg
+	mov [edx+2],ax
+	mov ax,gs:sim_int32_offs
+	mov [edx],ax
+	add edx,6
+	jmp sim_push_test
+sim_ret_ss:
+	sub dx,4
+	sub dx,cx
+	sub dx,cx
+	push eax
+	push edx
+	shl eax,4
+	add edx,eax
+	mov ax,int_data_sel
+	mov gs,ax
+	mov ax,gs:sim_int32_seg
+	mov [edx+2],ax
+	mov ax,gs:sim_int32_offs
+	mov [edx],ax
+	add edx,4
+sim_push_test:
+	or cx,cx
+	jz sim_int_no_push
+sim_int_push:
+	mov ax,fs:[esi]
+	mov [edx],ax
+	add esi,2
+	add edx,2
+	loop sim_int_push
+sim_int_no_push:
+	movzx eax,word ptr es:[edi].vcs_flags
+	push bx
+	call set_flags
+	pop bx
+	or eax,20000h
+	push eax
+	cmp bl,sim_int
+	je sim_get_int_ads
+	xor eax,eax
+	mov ax,es:[edi].vcs_cs
+	push eax
+	mov ax,es:[edi].vcs_ip
+	push eax
+	jmp sim_load_regs
+sim_get_int_ads:
+	mov ax,flat_sel
+	mov ds,ax
+	movzx bx,bh
+	shl bx,2
+	xor eax,eax
+	mov ax,[bx+2]
+	push eax
+	mov ax,[bx]
+	push eax
+sim_load_regs:
+	mov eax,es:[edi].vcs_eax
+	mov ebx,es:[edi].vcs_ebx
+	mov ecx,es:[edi].vcs_ecx
+	mov edx,es:[edi].vcs_edx
+	mov ebp,es:[edi].vcs_ebp
+	mov esi,es:[edi].vcs_esi
+	mov edi,es:[edi].vcs_edi
+	and byte ptr [bp+2].vm_eflags,NOT 1
+	iretd
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DPMI_INT
+;
+;		DESCRIPTION:	Call V86 int from protected mode
+;
+;		PARAMETERS:		AL			Int #
+;						CX			Number of words to copy
+;						DS:ESI		Parameters
+;						ES:EDI		VM_CALL_STRUC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dpmi_int_name	DB 'Dpmi Int',0
+
+dpmi_int:
+	push sim_int
+	jmp sim32_begin
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DPMI_CALL_INT
+;
+;		DESCRIPTION:	Call V86 int frame from protected mode
+;
+;		PARAMETERS:		CX			Number of words to copy
+;						DS:ESI		Parameters
+;						ES:EDI		VM_CALL_STRUC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dpmi_call_int_name	DB 'Dpmi Call Int',0
+
+dpmi_call_int:
+	push sim_iret
+	jmp sim32_begin
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DPMI_CALL
+;
+;		DESCRIPTION:	Call V86 procedure from protected mode
+;
+;		PARAMETERS:		CX			Number of words to copy
+;						DS:ESI		Parameters
+;						ES:EDI		VM_CALL_STRUC
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dpmi_call_name	DB 'Dpmi Call',0
+
+dpmi_call:
+	push sim_ret
+	jmp sim32_begin
+
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ALLOCATE_VM_CALLBACK
+;
+;		DESCRIPTION:	Allocate V86 callback frame
+;
+;		PARAMETERS:		DS:ESI		Protected mode procedure
+;						ES:EDI		VM_CALL_STRUC
+;						DX:AX		V86 call address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_vm_callback_name	DB 'Allocate VM Callback',0
+
+vm_callback_begin:
+	VMCallback32
+vm_callback_end:
+
+	public vm_callback32
+
+vm_callback32:
+	int 3
+	push ds
+	push ebx
+	lds ebx,[ebx+8]
+	mov [ebx].vcs_ecx,ecx
+	mov [ebx].vcs_edx,edx
+	mov [ebx].vcs_esi,esi
+	mov [ebx].vcs_edi,edi
+	mov ax,[bp].vm_gs
+	mov [ebx].vcs_gs,ax
+	mov ax,[bp].vm_fs
+	mov [ebx].vcs_fs,ax
+	mov ax,[bp].vm_ds
+	mov [ebx].vcs_ds,ax
+	mov ax,[bp].vm_es
+	mov [ebx].vcs_es,ax
+	mov ax,[bp].vm_ss
+	mov [ebx].vcs_ss,ax
+	mov ax,[bp].vm_esp
+	mov [ebx].vcs_sp,ax
+	mov ax,[bp].vm_eflags
+	push ds
+	push bx
+	call get_flags
+	pop bx
+	pop ds
+	mov [ebx].vcs_flags,ax
+	mov ax,[bp].vm_cs
+	mov [ebx].vcs_cs,ax
+	mov ax,[bp].vm_eip
+	mov [ebx].vcs_ip,ax
+	mov eax,[bp].vm_eax
+	mov [ebx].vcs_eax,eax
+	mov eax,[bp].vm_ebx
+	mov [ebx].vcs_ebx,eax
+	mov bp,[bp].vm_bp
+	mov [ebx].vcs_ebp,ebp
+	mov edi,ebx
+	mov ax,ds
+	mov es,ax
+	pop esi
+	pop fs
+	mov sp,stack0_size
+;
+	mov bx,thread_int_sel
+	mov ds,bx
+	mov bx,ds:pint_locked_stack
+	or bx,bx
+	jnz vm_callback_do
+	push es
+	push eax
+	mov eax,1000h
+	AllocateGlobalMem
+	mov ds:pint_locked_stack,es
+	xor bx,bx
+	mov word ptr es:[bx],1000h
+	mov bx,es
+	pop eax
+	pop es
+vm_callback_do:
+	push 0
+	push bx
+;
+	push bx
+	movzx edx,es:[edi].vcs_ss
+	shl edx,4
+	AllocateLdt
+	mov word ptr [bx],0FFFFh
+	mov [bx+2],edx
+	mov dl,0F2h
+	xchg dl,[bx+5]
+	xor ax,ax
+	or ah,dl
+	mov [bx+6],ax
+	or bl,7
+	mov cx,bx
+	pop ds
+	xor ebx,ebx
+	mov bx,[bx]
+	pushf
+	pop ax
+	mov [bx-2],cx
+	mov word ptr [bx-4],0
+	mov [bx-6],ax
+	mov dword ptr [bx-10],callb_vm32_sel
+	mov dword ptr [bx-14],0
+	sub bx,14
+	push ebx
+	xor dx,dx
+	xchg dx,bx
+	mov [bx],dx
+	pushfd
+	mov bx,fs:[esi+6]
+	push ebx
+	mov ebx,fs:[esi+2]
+	push ebx
+	mov ds,cx
+	movzx esi,es:[edi].vcs_sp
+	and byte ptr [bp+2].vm_eflags,NOT 1
+	iretd
+
+	public pm_callback32
+
+pm_callback32:
+	int 3
+	mov sp,stack0_size
+	push 0
+	push es:[edi].vcs_gs
+	push 0
+	push es:[edi].vcs_fs
+	push 0
+	push es:[edi].vcs_ds
+	push 0
+	push es:[edi].vcs_es
+	push 0
+	push es:[edi].vcs_ss
+	push 0
+	push es:[edi].vcs_sp
+	movzx eax,es:[edi].vcs_flags
+	call set_flags
+	or eax,20000h
+	push eax
+	push 0
+	push es:[edi].vcs_cs
+	push 0
+	push es:[edi].vcs_ip
+	mov bx,thread_int_sel
+	mov ds,bx
+	mov ds,ds:pint_locked_stack
+	xor bx,bx
+	mov si,[bx]
+	add si,14
+	mov [bx],si
+	mov bx,[si-2]
+	and bl,0F8h
+	FreeLdt
+	mov eax,es:[edi].vcs_eax
+	mov ebx,es:[edi].vcs_ebx
+	mov ecx,es:[edi].vcs_ecx
+	mov edx,es:[edi].vcs_edx
+	mov ebp,es:[edi].vcs_ebp
+	mov esi,es:[edi].vcs_esi
+	mov edi,es:[edi].vcs_edi
+	and byte ptr [bp+2].vm_eflags,NOT 1
+	iretd	
+
+allocate_vm_callback	PROC far
+	int 3
+	push edx
+	mov eax,16
+	AllocateVMLinear
+	push fs
+	mov ax,flat_sel
+	mov fs,ax
+	mov ax,word ptr cs:vm_callback_begin
+	mov fs:[edx],ax
+	mov ax,word ptr cs:vm_callback_begin+2
+	mov fs:[edx+2],ax
+	mov fs:[edx+4],esi
+	mov fs:[edx+8],ds
+	mov fs:[edx+10],edi
+	mov fs:[edx+14],es
+	pop fs
+	mov ax,dx
+	shr edx,4
+	add sp,2
+	push dx
+	pop edx
+	and ax,0Fh
+	retf32
+allocate_vm_callback	ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FREE_VM_CALLBACK
+;
+;		DESCRIPTION:	Free V86 callback
+;
+;		PARAMETERS:		DX:AX		V86 call address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_vm_callback_name	DB 'Free VM Callback',0
+
+free_vm_callback	PROC far
+	int 3
+	push ecx
+	push edx
+	push dx
+	push ax
+	pop edx
+	mov ecx,12
+	FreeLinear
+	pop edx
+	pop ecx
+	retf32
+free_vm_callback	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BREAK_EXCEPTION32
+;
+;		DESCRIPTION:	Break exception handler chain
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public break_exception32
+
+break_exception32	PROC near
+	mov al,[ebx+3]
+	mov [bp+2].vm_err,al
+;
+	mov ds,[bp].vm_ss
+	mov ebx,[bp].vm_esp
+	add ebx,4
+;
+	mov eax,[ebx]
+	mov [bp].vm_eip,eax
+	add ebx,4
+;
+	mov ax,[ebx]
+	mov [bp].vm_cs,ax
+	add ebx,4
+;
+	mov eax,[ebx]
+	push ds
+	push bx
+	call set_flags
+	pop bx
+	pop ds
+	mov [bp].vm_eflags,ax
+	add ebx,4
+;
+	add ebx,8
+	mov [bp].vm_esp,ebx
+	ret
+break_exception32	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEFAULT_EXCEPTION32
+;
+;		DESCRIPTION:	Default exception handler
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public default_exception32
+
+default_exception32:
+	mov al,[ebx+3]
+	push ax
+	mov [bp+2].vm_err,al
+;
+	mov ds,[bp].vm_ss
+	mov ebx,[bp].vm_esp
+	add ebx,12
+;
+	mov eax,[ebx]
+	mov [bp].vm_eip,eax
+	add ebx,4
+;
+	mov ax,[ebx]
+	mov [bp].vm_cs,ax
+	add ebx,4
+;
+	mov eax,[ebx]
+	push ds
+	push bx
+	call set_flags
+	pop bx
+	pop ds
+	mov [bp].vm_eflags,ax
+	add ebx,4
+;
+	add ebx,8
+	mov [bp].vm_esp,ebx
+	pop ax
+
+run_default_exception:
+	mov bx,def_exception_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,2
+	jmp dword ptr [bx]
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PROT_EXCEPTION32
+;
+;		DESCRIPTION:	Exception handler
+;
+;		PARAMETERS:		AL		INT NUMMER
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public prot_exception32
+
+prot_exception32	PROC near
+	mov bx,[bp].vm_cs
+	and bl,3
+	cmp bl,3
+	jne run_default_exception
+	mov bx,thread_app_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,3
+	cmp word ptr ds:[bx+4].app_pm_exc,callb_exc32_sel
+	je run_default_exception
+;
+	push word ptr ds:[bx+4].app_pm_exc
+	push ds:[bx].app_pm_exc
+	push ax
+;
+	mov ds,[bp].vm_ss
+	mov ebx,[bp].vm_esp
+;
+	mov [ebx-4],ds
+	mov [ebx-8],ebx
+	sub ebx,8
+;
+	cmp al,1
+	mov eax,[bp].vm_eflags
+	jne prot_exc32_step_ok
+;
+	push ax
+	and ax,NOT 100h
+	mov [bp].vm_eflags,ax
+	pop ax
+
+prot_exc32_step_ok:
+	push ds
+	push bx
+	call get_flags
+	pop bx
+	pop ds
+	sub ebx,4
+	mov [ebx],eax
+;
+	sub ebx,4
+	mov ax,[bp].vm_cs
+	mov [ebx],ax
+;
+	sub ebx,4
+	mov eax,[bp].vm_eip
+	mov [ebx],eax
+;
+	sub ebx,4
+	mov eax,[bp].vm_err
+	mov [ebx],eax
+;
+	sub ebx,4
+	mov word ptr [ebx], OFFSET callb_exc32_sel
+;
+	sub ebx,4
+	pop ax
+	movzx eax,al
+	shl eax,3
+	mov [ebx],eax
+;
+	mov [bp].vm_esp,ebx
+	pop dword ptr [bp].vm_eip
+	pop word ptr [bp].vm_cs	
+prot_exception_do:
+	ret
+prot_exception32	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TRANSLATE_PM32_REFLECT
+;
+;		DESCRIPTION:	Run default int
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public translate_pm32_reflect
+
+translate_pm32_reflect	PROC near
+	mov al,[ebx+3]
+	mov [bp+2].vm_err,al
+	mov bx,int_data_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,2
+	push cs
+	push OFFSET reflect_to_pm_done
+	push dword ptr ds:[bx].pm32_int_handlers
+;
+	mov ds,[bp].vm_ss
+	mov ebx,[bp].vm_esp
+	mov eax,[ebx]
+	mov [bp].vm_eip,eax
+	mov ax,[ebx+4]
+	mov [bp].vm_cs,ax
+	mov ax,[ebx+8]
+	add ebx,12
+	mov [bp].vm_esp,ebx
+	call set_flags
+	mov [bp].vm_eflags,ax
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	retf
+reflect_to_pm_done:
+	mov [bp].pm_ds,ds
+	mov [bp].vm_eax,eax
+	mov [bp].vm_ebx,ebx
+	mov al,[bp+2].vm_err
+	ret
+translate_pm32_reflect	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DEFAULT_INT
+;
+;		DESCRIPTION:	Default interrupt handler
+;
+;		PARAMETERS:		AL		Int #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+default_int	PROC near
+	mov [bp+2].vm_err,al
+	mov bx,int_data_sel
+	mov ds,bx
+	movzx bx,al
+	shl bx,2
+	push cs
+	push OFFSET reflect_to_pm_done
+	push dword ptr ds:[bx].pm32_int_handlers
+;
+	mov ds,[bp].pm_ds
+	mov eax,[bp].vm_eax
+	mov ebx,[bp].vm_ebx
+	retf
+default_int	ENDP
+
+code	ENDS
+
+	END

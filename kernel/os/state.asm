@@ -1,0 +1,536 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; STATE.ASM
+; Thread state interface module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME state
+
+GateSize = 16
+
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE system.inc
+INCLUDE user.def
+INCLUDE state.def
+INCLUDE os.def
+INCLUDE virt.def
+INCLUDE user.inc
+INCLUDE os.inc
+
+state_data_seg	SEGMENT AT 0
+
+state_hooks		DW ?
+state_arr		DW 2*32 DUP(?)
+
+state_data_size	DB ?
+
+state_data_seg	ENDS
+
+code	SEGMENT byte public 'CODE'
+
+.386p
+
+	assume cs:code
+
+	extrn trap_single_step:far
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			DEFAULT_STATE
+;
+;		DESCRIPTION:	Default (unknown) state
+;
+;		PARAMETERS:		BX:EAX   	address of list
+;						CX:EDX   	cs:eip
+;						BX:EAX   	returned data to write
+;						ES:EDI   	state string
+;						NC	    	processed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unknown_state	DB 'Unknown State',0
+
+default_state	Proc far
+	mov di,cs
+	mov es,di
+	mov edi,OFFSET unknown_state
+	clc
+	ret
+default_state	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			HOOK_STATE
+;
+;		DESCRIPTION:	Add a state hook
+;
+;		PARAMETERS:		ES:DI		Callback
+;
+;		CALLED WITH:	BX:EAX   	address of list
+;						CX:EDX   	cs:eip
+;						BX:EAX   	returned data to write
+;						ES:EDI   	state string
+;						NC	    	processed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_state_name DB 'Hook State',0
+
+hook_state	Proc far
+	push ds
+	push bx
+	mov bx,state_data_sel
+	mov ds,bx
+	mov bx,ds:state_hooks
+	shl bx,2
+	mov ds:[bx].state_arr,di
+	mov ds:[bx+2].state_arr,es
+	inc ds:state_hooks
+	pop ax
+	pop ds
+	ret
+hook_state	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GET_STATE
+;
+;		DESCRIPTION:	Get state of a thread
+;
+;		PARAMETERS:		ES:(E)DI		BUFFER TO PUT STATE IN
+;						AX				THREAD #
+;						NC				THREAD EXISTS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_state_name DB 'Get State',0
+
+get_state	Proc far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+	mov bx,ax
+	shl bx,1
+	mov ax,system_data_sel
+	mov ds,ax
+	cli
+	mov ax,ds:[bx].thread_arr
+	or ax,ax
+	stc
+	jz get_state_done
+	mov ds,ax
+	mov ax,ds:p_id
+	mov es:[edi].st_id,ax
+	mov si,OFFSET thread_name
+	mov ecx,32
+	push edi
+	add edi,OFFSET st_name
+	rep movs byte ptr es:[edi],[esi]
+	pop edi
+	mov eax,ds:p_msb_tics
+	mov es:[edi].st_time,eax
+	mov eax,ds:p_lsb_tics
+	mov es:[edi].st_time+4,eax
+;
+	mov bx,ds:p_sleep_sel
+	mov eax,ds:p_sleep_offset
+	mov ds,ds:p_tss_data_sel
+	mov cx,ds:tss_cs
+	mov edx,dword ptr ds:tss_eip
+	push es
+	push edi
+	mov di,state_data_sel
+	mov ds,di
+	sti
+	mov di,OFFSET state_arr
+get_state_loop:
+	call dword ptr [di]
+	jnc get_state_found
+	add di,4
+	jmp get_state_loop
+get_state_found:
+	mov si,es
+	mov ds,si
+	mov esi,edi
+	pop edi
+	pop es
+;
+	push edi
+	mov es:[edi].st_offs,eax
+	mov es:[edi].st_sel,bx
+	add edi,OFFSET st_list
+	mov ecx,32
+move_list_loop:
+	lods byte ptr [esi]
+	or al,al
+	jz move_list_pad
+	stos byte ptr es:[edi]
+	loop move_list_loop
+	jmp move_list_done
+move_list_pad:
+	mov al,' '
+	rep stos byte ptr es:[edi]
+move_list_done:
+	pop edi
+	clc
+get_state_done:
+	sti
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+get_state	Endp
+
+get_state16	Proc far
+	push edi
+	movzx edi,di
+	call get_state
+	pop edi
+	ret
+get_state16	Endp
+
+get_state32	Proc far
+	call get_state
+	Retf32
+get_state32	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Pause_thread
+;
+;		DESCRIPTION:	Pause thread (put it in debugger)
+;
+;		PARAMETER:		AX		Thread #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pause_name	DB 'Pause',0
+
+pause_thread	PROC far
+	push ds
+	push ax
+	push bx
+;
+	mov bx,ax
+	shl bx,1
+	mov ax,system_data_sel
+	mov ds,ax
+	cli
+	mov ax,ds:[bx].thread_arr
+	or ax,ax
+	stc
+	jz pause_done
+	mov ds,ax
+	mov ds:p_trap_ads,OFFSET trap_single_step
+	mov ds:p_trap_ads+2,cs
+	mov ds,ds:p_tss_data_sel
+	mov ds:tss_t,1
+	clc
+pause_done:
+	sti
+;
+	pop bx
+	pop ax
+	pop ds
+	retf32
+pause_thread	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GetThreadTss
+;
+;		DESCRIPTION:	Get thread TSS
+;
+;		PARAMETERS:		ES:(E)DI		Buffer for TSS
+;						BX				Thread handle
+;						NC				Thread exists
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_thread_tss_name DB 'Get Thread TSS',0
+
+get_thread_tss	Proc near
+	push ds
+	push ax
+	push dx
+	push si
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov si,OFFSET debug_list
+	mov ax,[si]
+	or ax,ax
+	stc
+	jz get_thread_tss_done
+;
+	mov dx,ax
+
+get_thread_tss_loop:
+	cmp ax,bx
+	je get_thread_tss_found
+;
+	mov ds,ax
+	mov ax,ds:p_next
+	cmp ax,dx
+	jne get_thread_tss_loop
+	stc
+	jmp get_thread_tss_done
+
+get_thread_tss_found:
+	push ecx
+	push esi
+	push edi
+	mov ds,ax
+	mov ds,ds:p_tss_data_sel
+	xor esi,esi
+	mov ecx,OFFSET tss_thread
+	rep movs byte ptr es:[edi],[esi]
+	pop edi
+	pop esi
+	pop ecx
+	clc
+
+get_thread_tss_done:
+	pop si
+	pop dx
+	pop ax
+	pop ds
+	ret
+get_thread_tss	Endp
+
+get_thread_tss16	Proc far
+	push edi
+	movzx edi,di
+	call get_thread_tss
+	pop edi
+	ret
+get_thread_tss16	Endp
+
+get_thread_tss32	Proc far
+	call get_thread_tss
+	retf32
+get_thread_tss32	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetThreadTss
+;
+;		DESCRIPTION:	Set thread TSS
+;
+;		PARAMETERS:		ES:(E)DI		Buffer for TSS
+;						BX				Thread handle
+;						NC				Thread exists
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_thread_tss_name DB 'Set Thread TSS',0
+
+set_thread_tss	Proc near
+	push ds
+	push ax
+	push dx
+	push si
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov si,OFFSET debug_list
+	mov ax,[si]
+	or ax,ax
+	stc
+	jz set_thread_tss_done
+;
+	mov dx,ax
+
+set_thread_tss_loop:
+	cmp ax,bx
+	je set_thread_tss_found
+;
+	mov ds,ax
+	mov ax,ds:p_next
+	cmp ax,dx
+	jne set_thread_tss_loop
+	stc
+	jmp set_thread_tss_done
+
+set_thread_tss_found:
+	push ds
+	push es
+	push ecx
+	push esi
+	push edi
+	mov ax,es
+	mov ds,ax
+	mov es,bx
+	mov es,es:p_tss_data_sel
+	mov esi,edi
+	xor edi,edi
+	mov ecx,OFFSET tss_thread
+	rep movs byte ptr es:[edi],[esi]
+	pop edi
+	pop esi
+	pop ecx
+	pop es
+	pop ds
+	clc
+
+set_thread_tss_done:
+	pop si
+	pop dx
+	pop ax
+	pop ds
+	ret
+set_thread_tss	Endp
+
+set_thread_tss16	Proc far
+	push edi
+	movzx edi,di
+	call set_thread_tss
+	pop edi
+	ret
+set_thread_tss16	Endp
+
+set_thread_tss32	Proc far
+	call set_thread_tss
+	retf32
+set_thread_tss32	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			Init
+;
+;		DESCRIPTION:	Init module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_state
+
+init_state	PROC near
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov si,OFFSET hook_state
+	mov di,OFFSET hook_state_name
+	xor cl,cl
+	mov ax,hook_state_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_state16
+	mov di,OFFSET get_state_name
+	xor cl,cl
+	mov ax,get_state_nr
+	RegisterUserGate16
+	mov si,OFFSET get_state32
+	mov di,OFFSET get_state_name
+	xor cl,cl
+	mov ax,get_state_nr
+	RegisterUserGate32
+	mov bx,ax
+	mov dx,virt_es_in
+	mov ax,get_virt_state_nr
+	RegisterVirtUserGate
+;
+	mov si,OFFSET get_thread_tss16
+	mov di,OFFSET get_thread_tss_name
+	xor cl,cl
+	mov ax,get_thread_tss_nr
+	RegisterUserGate16
+	mov si,OFFSET get_thread_tss32
+	mov di,OFFSET get_thread_tss_name
+	xor cl,cl
+	mov ax,get_thread_tss_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET set_thread_tss16
+	mov di,OFFSET set_thread_tss_name
+	xor cl,cl
+	mov ax,set_thread_tss_nr
+	RegisterUserGate16
+	mov si,OFFSET set_thread_tss32
+	mov di,OFFSET set_thread_tss_name
+	xor cl,cl
+	mov ax,set_thread_tss_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET pause_thread
+	mov di,OFFSET pause_name
+	xor cl,cl
+	mov ax,pause_nr
+	RegisterUserGate
+;
+	mov eax,OFFSET state_data_size
+	mov bx,state_data_sel
+	AllocateFixedSystemMem
+	mov es:state_hooks,0
+	mov cx,32
+	mov di,OFFSET state_arr
+init_state_hooks:
+	mov word ptr es:[di],OFFSET default_state
+	mov es:[di+2],cs
+	add di,4
+	loop init_state_hooks
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_state	ENDP
+
+code	ENDS
+
+	END

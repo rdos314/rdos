@@ -1,0 +1,96 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; EXEC.DEF
+; Common executable loader related types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dev_name		EQU 8
+dev_param		EQU 90h
+dev_next		EQU 0E0h
+dev_type		EQU 0E4h
+dev_ip			EQU 0FAh
+
+load_gs		EQU 32
+load_fs		EQU 28
+load_ds		EQU 24
+load_es		EQU 20
+load_ss		EQU 16
+load_esp	EQU 12
+load_eflags	EQU 8
+load_cs		EQU 4
+load_eip	EQU 0
+load_eax	EQU -4
+load_ebx	EQU -8
+load_ecx	EQU -12
+load_edx	EQU -16
+load_esi	EQU -20
+load_edi	EQU -24
+load_ebp	EQU -28
+
+exec_block	STRUC
+exec_enviro	DW ?
+exec_line	DD ?
+exec_fcb1	DD ?
+exec_fcb2	DD ?
+exec_block	ENDS
+
+exeh_seg	SEGMENT AT 0
+exeh_signature		DW ?
+exeh_size_lsb		DW ?
+exeh_size_msb		DW ?
+exeh_reloc_ant		DW ?
+exeh_size_header	DW ?
+exeh_minalloc		DW ?
+exeh_maxalloc		DW ?
+exeh_ss				DW ?
+exeh_sp				DW ?
+exeh_checksum		DW ?
+exeh_ip				DW ?
+exeh_cs				DW ?
+exeh_reloc_offs		DW ?
+exeh_ov_nr			DW ?
+exeh_seg	ENDS
+
+
+exec_sys_seg	STRUC
+
+focus_nr		DW ?
+load_exe_hooks	DB ?
+load_exe_arr	DW 2*16 DUP(?)
+
+				ENDS
+
+spawn_struc	STRUC
+
+s_name				DW ?
+s_cmd				DW ?
+s_loader_name		DD ?
+s_param				DD ?
+s_thread			DW ?
+s_app				DW ?
+s_ret_code			DW ?
+s_sect1				section_typ <>
+s_sect2				section_typ <>
+
+spawn_struc	ENDS

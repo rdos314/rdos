@@ -1,0 +1,4313 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; TCP.ASM
+; TCP protocol
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		NAME  tcp
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+GateSize = 16
+
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE driver.def
+INCLUDE int.def
+INCLUDE user.def
+INCLUDE virt.def
+INCLUDE os.def
+INCLUDE user.inc
+INCLUDE virt.inc
+INCLUDE os.inc
+INCLUDE exec.def
+INCLUDE ne.def
+INCLUDE system.inc
+INCLUDE ip.inc
+INCLUDE	tcp.inc
+
+Reverse	MACRO
+	xchg al,ah
+	rol eax,16
+	xchg al,ah
+		ENDM
+
+LogInit	MACRO
+	push ds
+	push es
+	push ax
+	push bx
+	push cx
+	push di
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET LogFileName
+	xor cx,cx
+	CreateFile
+	CloseFile
+;
+	pop di
+	pop cx
+	pop bx
+	pop ax
+	pop es
+	pop ds
+		ENDM
+
+;
+;	ES:DI		TCP header
+;	CX			Size
+
+LogMessage	MACRO
+	push ds
+	push eax
+	push bx
+	push cx
+	push edx
+	push di
+;
+	add cx,di
+	xor di,di
+	push es
+	push di
+	push cx
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET LogFileName
+	xor cl,cl
+	OpenFile
+	GetFileSize
+	SetFilePos
+;
+	GetThread
+	mov es,ax
+	mov di,OFFSET thread_name
+	mov cx,32
+	WriteFile
+	xor ax,ax
+	push ax
+	GetSystemTime
+	push eax
+	mov ax,ss
+	mov es,ax
+	mov di,sp
+	mov cx,5
+	WriteFile
+	add sp,6
+;
+	pop cx
+	pop di
+	pop es
+	WriteFile
+	CloseFile
+;
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	pop ds
+			ENDM
+;
+;	DS	connection
+;
+
+LogConnection	MACRO
+	push es
+	push eax
+	push bx
+	push cx
+	push edx
+	push di
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET LogFileName
+	xor cl,cl
+	OpenFile
+	GetFileSize
+	SetFilePos
+;
+	GetThread
+	mov es,ax
+	mov di,OFFSET thread_name
+	mov cx,32
+	WriteFile
+	mov ax,1
+	push ax
+	GetSystemTime
+	push eax
+	mov ax,ss
+	mov es,ax
+	mov di,sp
+	mov cx,5
+	WriteFile
+	add sp,6
+;
+	mov ax,ds
+	mov es,ax
+	xor di,di
+	mov cx,SIZE tcp_connection
+	WriteFile
+	CloseFile
+;
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	pop eax
+	pop es
+			ENDM
+
+handle_num EQU 128
+
+tcp_handle	STRUC
+
+handle_next		DW ?
+handle_sel		DW ?
+
+tcp_handle	ENDS
+
+tcp_process_seg	STRUC
+
+handle_free_list	DW ?
+handles				DB 4*handle_num DUP(?)
+
+tcp_process_seg	ENDS
+
+HandleToOffset	MACRO reg
+	dec reg
+	shl reg,2
+	add reg,OFFSET handles	
+					ENDM
+
+OffsetToHandle	MACRO reg
+	sub reg,OFFSET handles
+	shr reg,2
+	inc reg
+					ENDM
+
+AllocateHandle	MACRO
+	push ax
+	cli
+	mov bx,ds:handle_free_list
+	mov ax,[bx]
+	mov ds:handle_free_list,ax
+	sti
+	pop ax
+				ENDM
+
+FreeHandle	MACRO
+	push ax
+	cli
+	mov ax,ds:handle_free_list
+	mov [bx],ax
+	mov ds:handle_free_list,bx
+	sti
+	pop ax
+			ENDM
+
+code	SEGMENT byte public 'CODE'
+
+.386p
+	
+	assume cs:code
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			AllocatePort
+;
+;	Purpose:		Allocate a dynamic port
+;
+;	Returns:		SI		Local port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocatePort	Proc near
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+
+allocate_port_loop:
+	GetSystemTime
+	mov ebx,edx
+	movzx ecx,ds:LastPort
+	mul ecx
+	add eax,ebx
+	xor edx,edx
+	mov ecx,0F800h
+	div ecx
+	mov ax,dx
+	mov ds:LastPort,ax
+;	
+	mov bx,OFFSET PortMap
+	btr [bx],ax
+	jnc allocate_port_loop
+;
+	mov si,800h
+	add si,ax
+	clc
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+AllocatePort	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			FreePort
+;
+;	Purpose:		Free a dynamic port
+;
+;	Parameters:		SI		Local port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreePort	Proc near
+	push ds
+	push ax
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	mov bx,OFFSET PortMap
+	mov ax,si
+	sub ax,800h
+	jc free_port_done
+	bts [bx],ax
+
+free_port_done:
+	pop ax
+	pop ds
+	ret
+FreePort	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CalcChecksum
+;
+;		DESCRIPTION:    Calculate checksum for TCP
+;
+;		PARAMETERS:		AX		Checksum in
+;						CX		Size of data
+;						ES:DI	Data
+;
+;		RETURNS:		AX		Checksum ut
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CalcChecksum	Proc near
+	push ds
+	push cx
+	push dx
+	push si
+;
+	mov si,es
+	mov ds,si
+	mov si,di
+	mov dx,ax
+	shr cx,1
+	pushf
+	clc
+checksum_loop:
+	lodsw
+	adc dx,ax
+	loop checksum_loop
+	adc dx,0
+	adc dx,0
+	popf
+	jnc calc_checksum_done
+	xor ah,ah
+	lodsb
+	add dx,ax
+	adc dx,0
+	adc dx,0
+calc_checksum_done:
+	mov ax,dx
+;
+	pop si
+	pop dx
+	pop cx
+	pop ds
+	ret
+CalcChecksum	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetIss
+;
+;	Purpose:		Get initial ISS value
+;
+;	Parameters:		DS		connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetIss	Proc near
+	push edx
+	push eax
+;
+	GetSystemTime
+	mov ds:tcp_time_val,eax
+	rcr edx,1
+	rcr eax,1
+	rcr edx,1
+	rcr eax,1
+	rcr edx,1
+	rcr eax,1
+	mov ds:tcp_iss,eax
+	mov ds:tcp_time_seq,eax
+	mov ds:tcp_id,ax
+;
+	pop eax
+	pop edx
+	ret
+GetIss	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CreateSegment
+;
+;	Purpose:		Create a tcp segment
+;
+;	Parameters:		DS		connection selector
+;					ECX		size of data portion
+;
+;	Returns:		ES:DI	segment
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateSegment	Proc near
+	push ax
+	push bx
+	push ecx
+	push edx
+	push esi
+;
+	mov al,6
+	mov ah,60
+	mov bx,ds:tcp_id
+	inc bx
+	mov ds:tcp_id,bx
+	xchg bl,bh
+	add ecx,SIZE tcp_header
+	mov edx,ds:tcp_remote_ip
+	mov esi,OFFSET tcp_options
+	CreateIpHeader
+	mov ax,ds:tcp_port
+	xchg al,ah
+	mov es:[di].tcp_source,ax
+	mov ax,ds:tcp_remote_port
+	xchg al,ah
+	mov es:[di].tcp_dest,ax
+	mov es:[di].tcp_seq,0
+	mov es:[di].tcp_ack,0
+	mov es:[di].tcp_header_len,50h
+	mov es:[di].tcp_flags,0
+	mov ax,ds:tcp_rcv_wnd
+	xchg al,ah
+	mov es:[di].tcp_window,ax
+	mov es:[di].tcp_urgent,0
+;
+	pop esi
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	ret
+CreateSegment	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			SendSegment
+;
+;	Purpose:		Send a tcp segment
+;
+;	Parameters:		DS		connection selector
+;					ES:DI	TCP data
+;					ECX		size of data portion
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSegment	Proc near
+	push ax
+	push cx
+;
+	mov ax,ds:tcp_checksum_base
+	add cx,SIZE tcp_header
+	xchg cl,ch
+	add ax,cx
+	adc ax,0
+	adc ax,0
+	xchg cl,ch
+	mov es:[di].tcp_checksum,0
+	call CalcChecksum
+	not ax
+	mov es:[di].tcp_checksum,ax
+;	LogMessage
+	SendIp
+;
+	pop cx
+	pop ax
+	ret
+SendSegment	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CreateConnection
+;
+;	Purpose:		Create a connection and link it
+;
+;	Parameters:		EAX		Timeout in seconds for connection
+;					CX		buffer size
+;					EDX		ip address
+;					SI		local port
+;					DI		remote port
+;
+;	Returns:		DS		connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateConnection	Proc near
+	push es
+	push ax
+	push ecx
+	push edx
+;
+	dec ecx
+	shr ecx,3
+	inc ecx
+	shl ecx,3
+;
+	push eax
+	mov eax,SIZE tcp_connection
+	AllocateSmallGlobalMem
+	pop eax
+	mov es:tcp_options,0
+	mov es:tcp_port,si
+	mov es:tcp_remote_ip,edx
+	mov es:tcp_remote_port,di
+	mov es:tcp_timeout,eax
+	mov es:tcp_buffer_size,cx
+	mov es:tcp_rcv_wnd,cx
+	mov es:tcp_state,-1
+	mov es:tcp_mtu,1400
+	mov es:tcp_pending,0
+	mov es:tcp_push_timeout,0
+	mov es:tcp_rto,1193000 * 3
+	mov es:tcp_rts,1193000 * 3
+	mov es:tcp_rtm,0
+	mov es:tcp_reorder_count,0
+	mov es:tcp_delete_ok,0
+	mov eax,ecx
+	push es
+	AllocateSmallGlobalMem
+	mov dx,es
+	pop es
+	mov es:tcp_receive_buffer,dx
+	mov es:tcp_receive_count,0
+	mov es:tcp_receive_head,0
+	mov es:tcp_receive_tail,0
+	push es
+	AllocateSmallGlobalMem
+	mov dx,es
+	pop es
+	mov es:tcp_send_buffer,dx
+	mov es:tcp_send_count,0
+	mov es:tcp_send_head,0
+	mov es:tcp_send_tail,0
+	InitSection es:tcp_section
+	EnterSection es:tcp_section
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	EnterSection ds:ListSection
+	mov dx,ds:ConnectionList
+	mov es:tcp_next,dx
+	mov ds:ConnectionList,es
+	LeaveSection ds:ListSection
+	mov ax,es
+	mov ds,ax
+	call GetIss
+;
+	GetIpAddress
+	push edx
+	pop ax
+	pop dx
+;
+	add dx,ax
+	adc dx,word ptr ds:tcp_remote_ip
+	adc dx,word ptr ds:tcp_remote_ip+2
+	adc dx,600h
+	adc dx,0
+	adc dx,0
+	mov ds:tcp_checksum_base,dx
+;
+	mov ax,tcp_data_sel
+	mov es,ax
+	mov bx,es:TcpThread
+	Signal
+;
+	pop edx
+	pop ecx
+	pop ax
+	pop es
+	ret
+CreateConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DeleteConnection
+;
+;	Purpose:		Delete a connection. ListSection & connection section
+;					must be taken prior to call
+;
+;	Parameters:		DS		connection selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteConnection	Proc near
+	push es
+	push ax
+	push bx
+	push ecx
+	push edx
+;
+	mov si,ds:tcp_port
+	call FreePort
+;
+	mov es,ds:tcp_receive_buffer
+	FreeMem
+;
+	mov es,ds:tcp_send_buffer
+	FreeMem
+;
+	mov dx,ds:tcp_next
+	mov bx,ds
+	mov es,bx
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	mov ax,ds:ConnectionList
+	cmp ax,bx
+	jne delete_connect_loop
+;
+	mov ds:ConnectionList,dx
+	jmp delete_connect_unlinked
+
+delete_connect_loop:
+	or ax,ax
+	jz delete_connect_unlinked
+	mov ds,ax
+	mov cx,ax
+	mov ax,ds:tcp_next
+	cmp ax,bx
+	jne delete_connect_loop
+;
+	mov ds,cx
+	mov ds:tcp_next,bx	
+
+delete_connect_unlinked:
+	FreeMem
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	pop es
+	ret
+DeleteConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			FindConnection
+;
+;	Purpose:		Look for a connection
+;
+;	Parameters:		EDX		remote ip
+;					SI		local port
+;					DI		remote port
+;
+;	Returns:		NC		connection found
+;					DS		connection, locked
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindConnection	Proc near
+	push es
+	push ax
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	EnterSection ds:ListSection
+	mov ax,ds:ConnectionList
+
+find_connection_loop:
+	or ax,ax
+	jz find_connection_fail
+	mov es,ax
+	cmp edx,es:tcp_remote_ip
+	jne find_connection_next
+	cmp si,es:tcp_port
+	jne find_connection_next
+	cmp di,es:tcp_remote_port
+	je find_connection_ok
+find_connection_next:
+	mov ax,es:tcp_next
+	jmp find_connection_loop
+
+find_connection_fail:
+	LeaveSection ds:ListSection
+	stc
+	jmp find_connection_done
+
+find_connection_ok:
+	mov ax,es
+	push ax
+	mov ds,ax
+	EnterSection ds:tcp_section
+	test ds:tcp_pending,FLAG_DELETE
+	jz find_connection_not_deleted
+;
+	pop ax
+	LeaveSection ds:tcp_section
+	mov ax,tcp_data_sel
+	mov ds,ax
+	LeaveSection ds:ListSection
+	stc
+	jmp find_connection_done
+
+find_connection_not_deleted:
+	mov ax,tcp_data_sel
+	mov ds,ax
+	LeaveSection ds:ListSection
+	pop ds
+	clc
+
+find_connection_done:
+	pop ax
+	pop es
+	ret
+FindConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			FindListen
+;
+;	Purpose:		Look for a listen request
+;
+;	Parameters:		SI		local port
+;					
+;	Returns:		NC		connection found
+;					DS		listen request
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FindListen	Proc near
+	push es
+	push ax
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	EnterSection ds:ListSection
+	mov ax,ds:ListenList
+
+find_listen_loop:
+	or ax,ax
+	jz find_listen_fail
+	mov es,ax
+	cmp si,es:tcp_listen_port
+	je find_listen_ok
+find_listen_next:
+	mov ax,es:tcp_listen_next
+	jmp find_listen_loop
+
+find_listen_fail:
+	LeaveSection ds:ListSection
+	stc
+	jmp find_listen_done
+
+find_listen_ok:
+	LeaveSection ds:ListSection
+	mov ax,es
+	mov ds,ax
+	clc
+
+find_listen_done:
+	pop ax
+	pop es
+	ret
+FindListen	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			UpdateRto
+;
+;	Purpose:		Update Round trip time meassurement
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateRto	Proc near
+	GetSystemTime
+	sub eax,ds:tcp_time_val
+	sub eax,ds:tcp_rts
+	mov edx,eax
+	jae update_rto_err_ok
+	neg eax
+update_rto_err_ok:
+	mov ecx,ds:tcp_rtm
+	sub eax,ecx
+	sar eax,2
+	add ds:tcp_rtm,eax
+;
+	sar edx,3
+	add ds:tcp_rts,edx
+;
+	mov eax,ds:tcp_rtm
+	sal eax,2
+	add eax,ds:tcp_rts
+	cmp eax,240 * 1193000
+	jb update_rto_small
+	mov eax,240 * 1193000
+update_rto_small:
+	mov ds:tcp_rto,eax
+	ret
+UpdateRto	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			Ignore
+;
+;	Purpose:		Igonre (dummy proc)
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Ignore	Proc near
+	ret
+Ignore	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			SetResendTimeout
+;
+;	Purpose:		Setup resend timeout
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SetResendTimeout	Proc near
+	push ecx
+	mov eax,ds:tcp_rto
+	add eax,119300 / 2
+	xor edx,edx
+	mov ecx,119300
+	div ecx
+	add ax,1
+	mov ds:tcp_resend_timeout,ax
+	pop ecx
+	ret
+SetResendTimeout	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			SendAck
+;
+;	Purpose:		Send an ACK segment (possibly with data)
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendAck	Proc near
+	push es
+	push di
+;
+	and ds:tcp_pending,NOT FLAG_DELAY_ACK
+	movzx ecx,ds:tcp_send_count
+	or cx,cx
+	jnz send_ack_and_data
+;
+	and ds:tcp_pending, NOT FLAG_RESENT
+	call CreateSegment
+	mov es:[di].tcp_flags, ACK
+	mov eax,ds:tcp_send_next
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	test ds:tcp_pending,FLAG_CLOSING
+	jz send_ack_no_fin
+;
+	and ds:tcp_pending,NOT FLAG_CLOSING
+	inc ds:tcp_send_next
+	mov es:[di].tcp_flags, ACK OR FIN
+
+send_ack_no_fin:
+	test ds:tcp_pending,FLAG_SEND_PUSH
+	jz send_ack_no_push
+;
+	and ds:tcp_pending, NOT FLAG_SEND_PUSH
+	or es:[di].tcp_flags, PSH
+
+send_ack_no_push:
+	call SendSegment
+	jmp send_ack_done
+
+send_ack_and_data:
+	test ds:tcp_pending,FLAG_RESENT
+	jnz send_ack_no_rtt
+;
+	mov eax,ds:tcp_time_seq
+	sub eax,ds:tcp_send_una
+	jg send_ack_no_rtt
+;
+	call UpdateRto
+	GetSystemTime
+	mov ds:tcp_time_val,eax	
+	mov eax,ds:tcp_send_next
+	mov ds:tcp_time_seq,eax
+
+send_ack_no_rtt:
+	movzx ecx,ds:tcp_send_count
+	movzx eax,ds:tcp_send_wnd
+	cmp eax,ds:tcp_cwnd
+	jb send_ack_cong_ok
+	mov eax,ds:tcp_cwnd
+send_ack_cong_ok:
+	add eax,ds:tcp_send_una
+	sub eax,ds:tcp_send_next
+;
+	cmp ecx,eax
+	jb send_ack_check_mtu
+;
+	mov ecx,eax
+
+send_ack_check_mtu:
+	movzx eax,ds:tcp_mtu
+	cmp ecx,eax
+	jc send_ack_size_ok
+;
+	mov ecx,eax
+
+send_ack_size_ok:
+	call CreateSegment
+	mov es:[di].tcp_flags, ACK
+	mov eax,ds:tcp_send_next
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	add ds:tcp_send_next,ecx
+;
+	test ds:tcp_pending,FLAG_CLOSING
+	jz send_ack_data_no_fin
+;
+	cmp cx,ds:tcp_send_count
+	jne send_ack_data_no_fin
+;
+	and ds:tcp_pending,NOT FLAG_CLOSING
+	inc ds:tcp_send_next
+	mov es:[di].tcp_flags, ACK OR FIN
+
+send_ack_data_no_fin:
+	test ds:tcp_pending,FLAG_SEND_PUSH
+	jz send_ack_data_no_push
+;
+	and ds:tcp_pending, NOT FLAG_SEND_PUSH
+	or es:[di].tcp_flags, PSH
+
+send_ack_data_no_push:
+	push fs
+	push cx
+	push di
+;
+	add di,SIZE tcp_header
+	mov fs,ds:tcp_send_buffer
+	mov bx,ds:tcp_send_head
+	mov dx,ds:tcp_send_count
+;
+	or cx,cx
+	jz send_ack_do
+
+send_ack_data_loop:
+	mov al,fs:[bx]
+	dec dx
+	inc bx
+	cmp bx,ds:tcp_buffer_size
+	jnz send_ack_data_no_wrap
+	xor bx,bx
+send_ack_data_no_wrap:
+	mov es:[di],al
+	inc di
+	loop send_ack_data_loop
+
+send_ack_do:
+	mov ds:tcp_send_head,bx
+	mov ds:tcp_send_count,dx
+;
+	pop di
+	pop cx
+	pop fs
+	call SendSegment
+
+send_ack_done:
+	pop di
+	pop es
+	ret
+SendAck	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			SendData
+;
+;	Purpose:		Send a data segment if Nagle permits
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendData	Proc near
+	test ds:tcp_pending,FLAG_CLOSING
+	jnz send_data_do
+;
+	movzx ecx,ds:tcp_send_count
+	movzx eax,ds:tcp_send_wnd
+	add eax,ds:tcp_send_una
+	sub eax,ds:tcp_send_next
+	movzx edx,ds:tcp_mtu
+	cmp edx,eax
+	ja send_data_check2
+	cmp dx,cx
+	jbe send_data_do
+
+send_data_check2:
+	cmp eax,ecx
+	jb send_data_check3
+;
+	test ds:tcp_pending,FLAG_SEND_PUSH
+	jz send_data_check3
+;
+	mov eax,ds:tcp_send_una
+	cmp eax,ds:tcp_send_next
+	je send_data_do
+
+send_data_check3:
+	movzx edx,ds:tcp_send_max_wnd
+	shr edx,1
+	cmp edx,eax
+	ja send_data_check4
+	cmp dx,cx
+	jbe send_data_do
+
+send_data_check4:
+	test ds:tcp_pending,FLAG_SEND_PUSH
+	jz send_data_done
+;
+	cmp ds:tcp_push_timeout,0
+	jnz send_data_done
+
+send_data_do:
+	movzx eax,ds:tcp_send_wnd
+	cmp eax,ds:tcp_cwnd
+	jb send_data_cong_ok
+	mov eax,ds:tcp_cwnd
+send_data_cong_ok:
+	add eax,ds:tcp_send_una
+	sub eax,ds:tcp_send_next
+	jbe send_data_done
+;
+	call SendAck
+	
+send_data_done:
+	ret
+SendData	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			RetransmitSynSent
+;
+;	Purpose:		Retransmit in SYN-SENT state
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RetransmitSynSent	Proc near
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	call SendSegment
+	ret
+RetransmitSynSent	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			RetransmitSynRcvd
+;
+;	Purpose:		Retransmit in SYN-RCVD state
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RetransmitSynRcvd	Proc near
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN OR ACK
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	call SendSegment
+	ret
+RetransmitSynRcvd	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			RetransmitData
+;
+;	Purpose:		Retransmit data
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RetransmitData	Proc near
+	mov ecx,ds:tcp_send_next
+	sub ecx,ds:tcp_send_una
+	movzx eax,ds:tcp_mtu
+	cmp ecx,eax
+	jb retrans_mtu_ok
+;
+	mov ecx,eax
+
+retrans_mtu_ok:
+	call CreateSegment
+	mov es:[di].tcp_flags, ACK
+;
+	test ds:tcp_pending,FLAG_CLOSING
+	jz retrans_no_fin
+;
+	mov ax,ds:tcp_send_count
+	or ax,ax
+	jnz retrans_no_fin
+;
+	mov eax,ds:tcp_send_next
+	sub eax,ds:tcp_send_una
+	cmp eax,ecx
+	jne retrans_no_fin
+;
+	mov es:[di].tcp_flags, ACK OR FIN
+
+retrans_no_fin:
+	mov eax,ds:tcp_send_una
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+;
+	push fs
+	push cx
+	push di
+;
+	add di,SIZE tcp_header
+	mov fs,ds:tcp_send_buffer
+	mov bx,ds:tcp_send_head
+	mov eax,ds:tcp_send_next
+	sub eax,ds:tcp_send_una
+	sub bx,ax
+	jnc retrans_data_copy
+;
+	add bx,ds:tcp_buffer_size
+
+retrans_data_copy:
+	or cx,cx
+	jz retrans_do
+
+retrans_data_loop:
+	mov al,fs:[bx]
+	inc bx
+	cmp bx,ds:tcp_buffer_size
+	jnz retrans_data_no_wrap
+	xor bx,bx
+retrans_data_no_wrap:
+	mov es:[di],al
+	inc di
+	loop retrans_data_loop
+
+retrans_do:
+	pop di
+	pop cx
+	pop fs
+	call SendSegment
+
+retrans_done:
+	ret
+RetransmitData	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			Retransmit
+;
+;	Purpose:		Retransmit data
+;
+;	Parameters:		DS		Connection
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+retransmit_tab:
+rt0	DW OFFSET RetransmitSynSent
+rt1 DW OFFSET RetransmitSynRcvd
+rt2 DW OFFSET RetransmitData
+rt3	DW OFFSET RetransmitData
+rt4	DW OFFSET Ignore
+rt5 DW OFFSET RetransmitData
+rt6 DW OFFSET RetransmitData
+rt7 DW OFFSET Ignore
+rt8 DW OFFSET Ignore
+
+Retransmit	Proc near
+	push es
+	push cx
+	push di
+;
+	or ds:tcp_pending,FLAG_RESENT
+	and ds:tcp_pending,NOT FLAG_DELAY_ACK
+	call SetResendTimeout
+;
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].retransmit_tab
+;
+	pop di
+	pop cx
+	pop es
+	ret
+Retransmit	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CheckSeq
+;
+;	Purpose:		Check if an SEQ is acceptable
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSeq	Proc near
+	mov eax,es:[di].tcp_seq
+	Reverse
+	mov edx,eax
+;
+	or cx,cx
+	jz check_seq_no_data
+;
+	mov ax,ds:tcp_buffer_size
+	sub ax,ds:tcp_receive_count
+	jz check_seq_bad
+;
+	movzx eax,ax
+	add eax,ds:tcp_rcv_next
+	cmp edx,eax
+	jg check_seq_test2
+;
+	cmp edx,ds:tcp_rcv_next
+	jge check_seq_ok
+
+check_seq_test2:
+	movzx ecx,cx
+	add edx,ecx
+	dec edx
+;
+	mov ax,ds:tcp_buffer_size
+	sub ax,ds:tcp_receive_count
+	movzx eax,ax
+	add eax,ds:tcp_rcv_next
+	cmp edx,eax
+	jg check_seq_bad
+;
+	cmp edx,ds:tcp_rcv_next
+	jg check_seq_ok
+	jmp check_seq_bad
+
+check_seq_no_data:
+	mov ax,ds:tcp_buffer_size
+	sub ax,ds:tcp_receive_count
+	jz check_seq_both_zero
+;
+	movzx eax,ax
+	add eax,ds:tcp_rcv_next
+	cmp edx,eax
+	jg check_seq_bad
+;
+	cmp edx,ds:tcp_rcv_next
+	jge check_seq_ok
+	jmp check_seq_bad
+
+check_seq_both_zero:
+	mov eax,es:[di].tcp_seq
+	Reverse
+	cmp eax,ds:tcp_rcv_next
+	je check_seq_ok
+
+check_seq_bad:
+	mov al,es:[di].tcp_flags
+	test al,RST
+	jnz check_seq_fail
+;
+	or ds:tcp_pending,FLAG_ACK
+
+check_seq_fail:
+	stc
+	ret
+
+check_seq_ok:
+	clc
+	ret
+CheckSeq	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CheckRst
+;
+;	Purpose:		Check for RST
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckRst	Proc near
+	mov al,es:[di].tcp_flags
+	test al,RST
+	clc
+	jz check_rst_done
+;
+	or ds:tcp_pending,FLAG_DELETE
+	stc
+
+check_rst_done:
+	ret
+CheckRst	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CheckSyn
+;
+;	Purpose:		Check for SYN
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckSyn	Proc near
+	mov al,es:[di].tcp_flags
+	test al,SYN
+	clc
+	jz check_syn_done
+;
+	or ds:tcp_pending,FLAG_DELETE
+	stc
+
+check_syn_done:
+	ret
+CheckSyn	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			InitConnection
+;
+;	Purpose:		Init connection
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitConnection	Proc near
+	test ds:tcp_pending,FLAG_WAIT
+	jz init_con_nowait
+;
+	and ds:tcp_pending,NOT FLAG_WAIT
+	mov bx,ds:tcp_owner
+	Signal
+
+init_con_nowait:
+	movzx eax,ds:tcp_mtu
+	mov ds:tcp_cwnd,eax
+	mov ds:tcp_ssthresh,10000h
+	mov ds:tcp_dup_acks,0
+;
+	mov eax,es:[di].tcp_seq
+	Reverse
+	mov ds:tcp_send_wl1,eax
+	mov eax,es:[di].tcp_ack
+	Reverse
+	mov ds:tcp_send_wl2,eax
+;
+	mov ax,es:[di].tcp_window
+	xchg al,ah
+	mov ds:tcp_send_wnd,ax
+	mov ds:tcp_send_max_wnd,ax
+	ret
+InitConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			NewAck
+;
+;	Purpose:		Handle new ACK
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NewAck	Proc near
+	mov ax,es:[di].tcp_window
+	xchg al,ah
+	mov ds:tcp_send_wnd,ax
+	cmp ax,ds:tcp_send_max_wnd
+	jb new_ack_not_max_wnd
+	mov ds:tcp_send_max_wnd,ax
+new_ack_not_max_wnd:
+	mov eax,es:[di].tcp_seq
+	Reverse
+	mov ds:tcp_send_wl1,eax
+	mov eax,es:[di].tcp_ack
+	Reverse
+	mov ds:tcp_send_wl2,eax
+;
+	xor ax,ax
+	xchg ax,ds:tcp_dup_acks
+	cmp ax,3
+	jb new_ack_congestion
+;
+	mov eax,ds:tcp_cwnd
+	mov ds:tcp_ssthresh,eax
+	jmp new_ack_done
+
+new_ack_congestion:
+	mov eax,ds:tcp_cwnd
+	cmp eax,ds:tcp_ssthresh
+	jbe new_ack_slow_start
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	sub eax,ds:tcp_send_una
+	mul eax
+	div ds:tcp_cwnd
+	mov ds:tcp_cwnd,eax
+	jmp new_ack_done
+
+new_ack_slow_start:
+	movzx edx,ds:tcp_mtu
+	add eax,edx
+	mov ds:tcp_cwnd,eax
+
+new_ack_done:
+	ret
+NewAck	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DuplicateAck
+;
+;	Purpose:		Handle duplicate ACK
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DuplicateAck	Proc near
+	mov ax,ds:tcp_dup_acks
+	inc ax
+	mov ds:tcp_dup_acks,ax
+	cmp ax,3
+	jb dupl_ack_congestion
+	jne dupl_ack_not3
+
+dupl_ack3:
+	mov eax,ds:tcp_cwnd
+	shr eax,1
+	movzx edx,ds:tcp_mtu
+	add edx,edx
+	cmp eax,edx
+	ja dupl_ack3_set_thresh
+	mov eax,edx
+dupl_ack3_set_thresh:
+	mov ds:tcp_ssthresh,eax
+	add eax,edx
+	movzx edx,ds:tcp_mtu
+	add eax,edx
+	mov ds:tcp_cwnd,eax
+	call Retransmit
+	jmp dupl_ack_done
+
+dupl_ack_not3:
+	movzx eax,ds:tcp_mtu
+	add ds:tcp_cwnd,eax
+	jmp dupl_ack_done
+
+dupl_ack_congestion:
+	mov dx,es:[di].tcp_window
+	xchg dl,dh
+	movzx edx,dx
+;
+	mov eax,ds:tcp_cwnd
+	cmp eax,edx
+	jb dupl_ack_min_ok
+	mov eax,edx
+dupl_ack_min_ok:
+	movzx edx,ds:tcp_mtu
+	add edx,edx
+	shr eax,1
+	cmp eax,edx
+	ja upd_thres_size_ok
+	mov eax,edx
+upd_thres_size_ok:
+	mov ds:tcp_ssthresh,eax
+
+dupl_ack_done:
+	ret
+DuplicateAck	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			UpdateSendWnd
+;
+;	Purpose:		Update send window
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateSendWnd	Proc near
+	mov eax,es:[di].tcp_ack
+	Reverse
+	cmp eax,ds:tcp_send_next
+	jg update_send_wnd_fail
+
+update_send_wnd_ok:
+	cmp eax,ds:tcp_send_una
+	jle update_send_wnd_old
+;
+	mov eax,es:[di].tcp_seq
+	Reverse
+	cmp eax,ds:tcp_send_wl1
+	jg update_send_wnd_new
+	jne update_send_wnd_old
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	cmp eax,ds:tcp_send_wl2
+	jl update_send_wnd_old
+
+update_send_wnd_new:
+	call NewAck
+	call SetResendTimeout
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	mov ds:tcp_send_una,eax
+	clc
+	jmp update_send_wnd_done
+
+update_send_wnd_old:
+	mov eax,ds:tcp_send_una
+	cmp eax,ds:tcp_send_next
+	je update_send_wnd_empty
+;
+	call DuplicateAck
+	clc
+	jmp update_send_wnd_done
+
+update_send_wnd_empty:
+	mov ds:tcp_dup_acks,0
+	clc
+	jmp update_send_wnd_done
+
+update_send_wnd_fail:
+	or ds:tcp_pending,FLAG_ACK
+	stc
+
+update_send_wnd_done:
+	ret
+UpdateSendWnd	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			UpdateReceiveWnd
+;
+;	Purpose:		Update receive window
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateReceiveWnd	Proc near
+	mov ax,ds:tcp_buffer_size
+	mov dx,ax
+	sub ax,ds:tcp_receive_count
+	sub ax,ds:tcp_rcv_wnd
+	shr dx,1
+	cmp ax,dx
+	jb update_rec_wnd_done
+;
+	cmp ax,ds:tcp_mtu
+	jb update_rec_wnd_done
+;
+	mov ds:tcp_rcv_wnd,ax
+	or ds:tcp_pending,FLAG_ACK
+	
+update_rec_wnd_done:
+	ret
+UpdateReceiveWnd	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			InsertReordered
+;
+;	Purpose:		Insert reordered data
+;
+;	Parameters:		DS		Connection
+;					EAX		Sequence number
+;					CX		Size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertReordered	Proc near
+	push esi
+	push edi
+;
+	movzx esi,cx
+	mov edi,eax
+;
+	mov bx,OFFSET tcp_reorder_arr
+	mov cx,ds:tcp_reorder_count
+	or cx,cx
+	jz insert_reorder_do
+
+insert_reorder_loop:
+	mov edx,ds:[bx].reorder_seq
+	cmp eax,edx
+	jl insert_reorder_do
+;
+	add edx,ds:[bx].reorder_size
+	cmp eax,edx
+	jg insert_reorder_next
+;
+	add eax,esi
+	cmp eax,edx
+	jle insert_reorder_done
+;
+	mov eax,esi
+	add eax,edi
+	sub eax,ds:[bx].reorder_seq
+	mov ds:[bx].reorder_size,eax
+	jmp insert_reorder_check_merge
+
+insert_reorder_next:
+	add bx,8
+	loop insert_reorder_loop
+
+insert_reorder_do:
+	mov dx,ds:tcp_reorder_count
+	cmp dx,REORDER_ENTRIES
+	jne insert_reorder_not_full
+;
+	sub cx,1
+	jc insert_reorder_done
+;
+	dec ds:tcp_reorder_count
+
+insert_reorder_not_full:
+	inc ds:tcp_reorder_count
+	mov dx,cx
+	shl dx,3
+	add bx,dx
+	push cx
+;
+	or cx,cx
+	jz insert_reorder_add
+
+insert_reorder_move_fwd:
+	mov edx,ds:[bx-8]
+	mov ds:[bx],edx
+	mov edx,ds:[bx-4]
+	mov ds:[bx+4],edx
+	sub bx,8
+	loop insert_reorder_move_fwd
+
+insert_reorder_add:
+	pop cx
+	inc cx
+	mov ds:[bx].reorder_seq,edi
+	mov ds:[bx].reorder_size,esi
+
+insert_reorder_check_merge:
+	cmp cx,1
+	jbe insert_reorder_done
+;
+	mov eax,ds:[bx].reorder_seq
+	add eax,ds:[bx].reorder_size
+	cmp eax,ds:[bx+8].reorder_seq
+	jl insert_reorder_done
+;
+	mov eax,ds:[bx+8].reorder_seq
+	add eax,ds:[bx+8].reorder_size
+	sub eax,ds:[bx].reorder_seq
+	cmp eax,ds:[bx].reorder_size
+	jb insert_reorder_size_ok
+;
+	mov ds:[bx].reorder_size,eax
+
+insert_reorder_size_ok:
+	dec cx
+	dec ds:tcp_reorder_count
+;
+	or cx,cx
+	jz insert_reorder_done
+
+	push bx
+	push cx
+insert_reorder_move_back:
+	add bx,8
+	mov eax,ds:[bx+8]
+	mov ds:[bx],eax
+	mov eax,ds:[bx+12]
+	mov ds:[bx+4],eax
+	loop insert_reorder_move_back
+;
+	pop cx
+	pop bx
+	jmp insert_reorder_check_merge
+
+insert_reorder_done:
+	pop edi
+	pop esi
+	ret
+InsertReordered	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ProcessData
+;
+;	Purpose:		Process received data
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessData	Proc near;
+	mov al,es:[di].tcp_flags
+	test al,FIN
+	clc
+	jz process_data_no_fin
+;
+	or ds:tcp_pending, FLAG_REC_FIN
+	mov eax,es:[di].tcp_seq
+	Reverse
+	mov ds:tcp_fin_seq,eax
+
+process_data_no_fin:
+	or cx,cx
+	jnz process_data_available
+;
+	test ds:tcp_pending, FLAG_REC_FIN
+	jnz process_data_check_fin
+;
+	mov al,es:[di].tcp_flags
+	test al,PSH
+	jz process_data_done
+;
+	or ds:tcp_pending,FLAG_REC_PUSH
+	jmp process_data_check_fin
+
+process_data_available:
+	mov fs,ds:tcp_receive_buffer
+	mov bx,ds:tcp_receive_tail
+	mov eax,es:[di].tcp_seq
+	Reverse
+	sub eax,ds:tcp_rcv_next
+	jg process_data_in_future
+;
+	neg ax
+	add si,ax
+	sub cx,ax
+	jc process_data_done
+;
+	mov dx,ds:tcp_buffer_size
+	mov ax,dx
+	sub ax,ds:tcp_receive_count
+	cmp cx,ax
+	jbe process_data_do
+	mov cx,ax
+	jmp process_data_do
+
+process_data_in_future:
+	or ds:tcp_pending,FLAG_ACK
+	add bx,ax
+	cmp bx,ds:tcp_buffer_size
+	jc process_data_future_nowrap
+;
+	sub bx,ds:tcp_buffer_size
+
+process_data_future_nowrap:
+	mov dx,ax
+	mov ax,ds:tcp_buffer_size
+	sub ax,dx
+	sub ax,ds:tcp_receive_count
+	cmp cx,ax
+	jbe process_data_do
+	mov cx,ax
+	
+process_data_do:
+	push cx
+	push bx
+;
+	mov eax,es:[di].tcp_seq
+	Reverse
+	cmp eax,ds:tcp_rcv_next
+	jg process_data_reorder
+;
+	mov eax,ds:tcp_rcv_next
+
+process_data_reorder:
+	call InsertReordered
+	pop bx
+	pop cx
+;
+	mov dx,ds:tcp_buffer_size
+
+process_data_loop:
+	mov al,es:[si]
+	mov fs:[bx],al
+	inc bx
+	inc si
+	cmp bx,dx
+	jnz process_data_no_wrap
+	xor bx,bx
+process_data_no_wrap:
+	loop process_data_loop
+
+process_data_moved:
+	mov eax,ds:tcp_reorder_arr.reorder_seq
+	cmp eax,ds:tcp_rcv_next
+	jg process_data_empty
+;
+	add eax,ds:tcp_reorder_arr.reorder_size
+	sub eax,ds:tcp_rcv_next
+	add ds:tcp_rcv_next,eax
+	mov bx,ds:tcp_receive_tail
+	add bx,ax
+	cmp bx,ds:tcp_buffer_size
+	jc process_data_new_tail_ok
+;
+	sub bx,ds:tcp_buffer_size
+
+process_data_new_tail_ok:
+	mov ds:tcp_receive_tail,bx
+	add ds:tcp_receive_count,ax
+	sub ds:tcp_rcv_wnd,ax
+;
+	call UpdateReceiveWnd
+	or ds:tcp_pending,FLAG_DELAY_ACK
+	mov ds:tcp_ack_timeout,4
+;
+	mov cx,ds:tcp_reorder_count
+	sub cx,1
+	mov ds:tcp_reorder_count,cx
+	jz process_data_empty
+;
+	mov bx,OFFSET tcp_reorder_arr
+
+process_data_reorder_remove_loop:
+	mov eax,ds:[bx+8]
+	mov ds:[bx],eax
+	mov eax,ds:[bx+12]
+	mov ds:[bx+4],eax
+	loop process_data_reorder_remove_loop
+
+process_data_empty:
+	mov al,es:[di].tcp_flags
+	test al,PSH
+	jz process_data_check_fin
+;
+	or ds:tcp_pending,FLAG_REC_PUSH
+
+process_data_check_fin:
+	test ds:tcp_pending, FLAG_REC_FIN
+	jz process_data_wake
+;
+	mov eax,ds:tcp_rcv_next
+	cmp eax,ds:tcp_fin_seq
+	jl process_data_wake
+;
+	mov eax,ds:tcp_fin_seq
+	inc eax
+	mov ds:tcp_rcv_next,eax
+	or ds:tcp_pending, FLAG_DELAY_ACK OR FLAG_CLOSED
+
+process_data_wake:
+	mov bx,ds:tcp_owner
+	Signal
+
+process_data_done:
+	ret
+ProcessData	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveListen
+;
+;	Purpose:		Received data in LISTEN state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveListen	Proc near
+	mov eax,es:[di].tcp_seq
+	Reverse
+	inc eax
+	mov ds:tcp_rcv_next,eax
+;
+	mov eax,ds:tcp_iss
+	mov ds:tcp_send_una,eax
+	inc eax
+	mov ds:tcp_send_next,eax	
+	mov ds:tcp_state,STATE_SYN_RCVD
+;
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN OR ACK
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	call SendSegment
+	ret
+ReceiveListen	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveSynSent
+;
+;	Purpose:		Received data in SYN-SENT state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveSynSent	Proc near
+	mov dl,es:[di].tcp_flags
+	test dl,ACK
+	jz receive_syn_sent_noack
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	cmp eax,ds:tcp_iss
+	jle receive_syn_sent_reset
+;
+	cmp eax,ds:tcp_send_next
+	jg receive_syn_sent_reset
+;
+	mov dl,es:[di].tcp_flags
+	test dl,RST
+	jz receive_syn_sent_norst
+;
+	or ds:tcp_pending,FLAG_DELETE
+	jmp receive_syn_sent_done
+
+receive_syn_sent_noack:
+	test dl,RST
+	jnz receive_syn_sent_done
+
+receive_syn_sent_norst:
+	test dl,SYN
+	jz receive_syn_sent_done
+;
+	mov eax,es:[di].tcp_seq
+	Reverse
+	inc eax
+	mov ds:tcp_rcv_next,eax
+;
+	test dl,ACK
+	jz receive_syn_sent_answer
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	mov ds:tcp_send_una,eax
+
+receive_syn_sent_answer:
+	mov eax,ds:tcp_send_una
+	cmp eax,ds:tcp_iss
+	jg receive_syn_sent_ok
+;
+	mov ds:tcp_state, STATE_SYN_RCVD
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN OR ACK
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	call SendSegment
+	jmp receive_syn_sent_done
+
+receive_syn_sent_ok:
+	mov ds:tcp_state, STATE_ESTAB
+	or ds:tcp_pending, FLAG_DELAY_ACK
+	mov ds:tcp_ack_timeout,4
+	call InitConnection
+	jmp receive_syn_sent_done
+
+receive_syn_sent_reset:
+	mov al,es:[di].tcp_flags
+	test al,RST
+	jnz receive_syn_sent_done
+;
+	xor ecx,ecx
+	push es:[di].tcp_ack
+	call CreateSegment
+	mov es:[di].tcp_flags, RST
+	pop es:[di].tcp_seq
+	call SendSegment
+
+receive_syn_sent_done:
+	ret
+ReceiveSynSent	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveSynRcvd
+;
+;	Purpose:		Received data in SYN-RCVD state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveSynRcvd	Proc near
+	call CheckSeq
+	jc receive_syn_rcvd_done
+;
+	call CheckRst
+	jc receive_syn_rcvd_done
+;
+	call CheckSyn
+	jc receive_syn_rcvd_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_syn_rcvd_done
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	cmp eax,ds:tcp_send_una
+	jl receive_syn_rcvd_reset
+;
+	cmp eax,ds:tcp_send_next
+	jle receive_syn_rcvd_ack_ok
+
+receive_syn_rcvd_reset:
+	xor ecx,ecx
+	push es:[di].tcp_ack
+	call CreateSegment
+	mov es:[di].tcp_flags, RST
+	pop es:[di].tcp_seq
+	call SendSegment
+	jmp receive_syn_rcvd_done
+
+receive_syn_rcvd_ack_ok:
+	mov ds:tcp_state,STATE_ESTAB
+	call InitConnection
+	call UpdateSendWnd
+	jc receive_syn_rcvd_done
+;
+	mov al,es:[di].tcp_flags
+	test al,FIN
+	clc
+	jz receive_syn_rcvd_done
+;
+	or ds:tcp_pending, FLAG_REC_FIN OR FLAG_ACK OR FLAG_CLOSED
+	mov eax,es:[di].tcp_seq
+	Reverse
+	cmp eax,ds:tcp_rcv_next
+	jne receive_syn_rcvd_done
+;
+	inc ds:tcp_rcv_next
+	mov ds:tcp_state,STATE_CLOSE_WAIT
+
+receive_syn_rcvd_done:
+	ret
+ReceiveSynRcvd	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveEstab
+;
+;	Purpose:		Received data in ESTABLISHED state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveEstab	Proc near
+	call CheckSeq
+	jc receive_estab_done
+;
+	call CheckRst
+	jc receive_estab_done
+;
+	call CheckSyn
+	jc receive_estab_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_estab_done
+;
+	call UpdateSendWnd
+	jc receive_estab_done
+;
+	call ProcessData
+;
+	test ds:tcp_pending, FLAG_CLOSED
+	jz receive_estab_done
+;
+	mov ds:tcp_state,STATE_CLOSE_WAIT
+	
+receive_estab_done:
+	ret
+ReceiveEstab	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveFinWait1
+;
+;	Purpose:		Received data in FIN-WAIT1 state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveFinWait1	Proc near
+	call CheckSeq
+	jc receive_fin_wait1_done
+;
+	call CheckRst
+	jc receive_fin_wait1_done
+;
+	call CheckSyn
+	jc receive_fin_wait1_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_fin_wait1_done
+;
+	call UpdateSendWnd
+	jc receive_fin_wait1_done
+;
+	call ProcessData
+;
+	test ds:tcp_pending, FLAG_CLOSED
+	jz receive_fin_wait1_done
+;
+	mov al,ds:tcp_state
+	cmp al,STATE_FIN_WAIT1
+	je receive_fin_wait1_not_acked
+;
+	mov ds:tcp_state,STATE_TIME_WAIT
+	jmp receive_fin_wait1_done
+
+receive_fin_wait1_not_acked:
+	mov ds:tcp_state,STATE_CLOSING
+
+receive_fin_wait1_done:
+	ret
+ReceiveFinWait1	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveFinWait2
+;
+;	Purpose:		Received data in FIN-WAIT2 state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveFinWait2	Proc near
+	call CheckSeq
+	jc receive_fin_wait2_done
+;
+	call CheckRst
+	jc receive_fin_wait2_done
+;
+	call CheckSyn
+	jc receive_fin_wait2_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_fin_wait2_done
+;
+	call UpdateSendWnd
+	jc receive_fin_wait2_done
+;
+	call ProcessData
+;
+	test ds:tcp_pending, FLAG_CLOSED
+	jz receive_fin_wait1_done
+;
+	mov ds:tcp_state,STATE_TIME_WAIT
+
+receive_fin_wait2_done:
+	ret
+ReceiveFinWait2	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveCloseWait
+;
+;	Purpose:		Received data in CLOSE-WAIT state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveCloseWait	Proc near
+	call CheckSeq
+	jc receive_close_wait_done
+;
+	call CheckRst
+	jc receive_close_wait_done
+;
+	call CheckSyn
+	jc receive_close_wait_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_close_wait_done
+;
+	call UpdateSendWnd
+
+receive_close_wait_done:
+	ret
+ReceiveCloseWait	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveClosing
+;
+;	Purpose:		Received data in CLOSING state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveClosing	Proc near
+	call CheckSeq
+	jc receive_closing_done
+;
+	call CheckRst
+	jc receive_closing_done
+;
+	call CheckSyn
+	jc receive_closing_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_closing_done
+;
+	call UpdateSendWnd
+	jc receive_closing_done
+
+receive_closing_done:
+	ret
+ReceiveClosing	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveLastAck
+;
+;	Purpose:		Received data in LAST-ACK state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveLastAck	Proc near
+	call CheckSeq
+	jc receive_last_ack_done
+;
+	call CheckRst
+	jc receive_last_ack_done
+;
+	call CheckSyn
+	jc receive_last_ack_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_last_ack_done
+;
+	mov eax,es:[di].tcp_ack
+	Reverse
+	cmp eax,ds:tcp_send_next
+	je receive_last_ack_delete
+;
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, FIN OR ACK
+	mov eax,ds:tcp_send_next
+	Reverse
+	mov es:[di].tcp_seq,eax
+	mov eax,ds:tcp_rcv_next
+	Reverse
+	mov es:[di].tcp_ack,eax
+	call SendSegment
+	jmp receive_last_ack_done
+
+receive_last_ack_delete:
+	or ds:tcp_pending, FLAG_DELETE
+
+receive_last_ack_done:
+	ret
+ReceiveLastAck	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveTimeWait
+;
+;	Purpose:		Received data in TIME-WAIT state
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data
+;					EDX		Source IP address
+;					ES:SI	TCP data
+;					ES:DI	TCP header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveTimeWait	Proc near
+	call CheckSeq
+	jc receive_time_wait_done
+;
+	call CheckRst
+	jc receive_time_wait_done
+;
+	call CheckSyn
+	jc receive_time_wait_done
+;
+	test es:[di].tcp_flags, ACK
+	jz receive_time_wait_done
+
+receive_time_wait_done:
+	ret
+ReceiveTimeWait	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ProcessOptions
+;
+;	Purpose:		Process IP & TCP options
+;
+;	Parameters:		DS		Connection
+;					CX		Size of data & header
+;					EDX		Source IP address
+;					ES:SI	IP options
+;					ES:DI	TCP header
+;
+;	Returns:		ES:ESI	TCP data
+;					CX		Size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessOptions	Proc near
+	movzx dx,es:[di].tcp_header_len
+	shr dx,2
+	sub dx,SIZE tcp_header
+	or dx,dx
+	jz process_options_done
+;
+	mov si,di
+	add si,SIZE tcp_header
+
+process_options_next:
+	sub dx,1
+	jz process_options_done
+;
+	lods byte ptr es:[si]
+	or al,al
+	jz process_options_done
+;
+	cmp al,1
+	jz process_options_next
+;
+	cmp al,2
+	je process_mtu
+;
+	jmp process_options_adv
+
+process_mtu:
+	mov al,es:[si]
+	cmp al,4
+	jne process_options_adv
+;	
+	inc si
+	sub dx,3
+	jc process_options_done
+;
+	lods word ptr es:[si]
+	xchg al,ah
+	cmp ax,ds:tcp_mtu
+	ja process_options_ignore_mtu
+;
+	mov ds:tcp_mtu,ax
+
+process_options_ignore_mtu:
+	or dx,dx
+	jz process_options_done
+	jmp process_options_next
+
+process_options_adv:
+	sub dx,1
+	jz process_options_done
+	lods byte ptr es:[si]
+	movzx ax,al
+	sub al,2
+	add si,ax
+	sub dx,ax
+	ja process_options_next
+
+process_options_done:
+	movzx ax,es:[di].tcp_header_len
+	shr ax,2
+	sub cx,ax
+	mov si,di
+	add si,ax
+	ret
+ProcessOptions	Endp
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReceiveChecksum
+;
+;	Purpose:		Check receive checksum
+;
+;	Parameters:		AX		Size of options
+;					BX		Id
+;					CX		Size of data
+;					EDX		Source IP address
+;					DS:SI	Options
+;					ES:DI	Data
+;
+;	Returns:		NC		checksum ok
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveChecksum	Proc near
+	push dx
+	push si
+	push di
+;
+	mov dx,cx
+	xchg dl,dh
+	add dx,600h
+	adc dx,0
+	adc dx,0
+	sub si,8
+	lodsw
+	add dx,ax
+	lodsw
+	adc dx,ax
+	lodsw
+	adc dx,ax
+	lodsw
+	adc dx,ax
+	mov ax,dx
+	adc ax,0
+	adc ax,0
+	mov si,di
+	call CalcChecksum
+	not ax
+	or al,ah
+	clc
+	jz receive_checksum_done
+	stc
+
+receive_checksum_done:
+	pop di
+	pop si
+	pop dx
+	ret
+ReceiveChecksum	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			Receive
+;
+;	Purpose:		IP callback
+;
+;	Parameters:		AX		Size of options
+;					BX		Id
+;					CX		Size of data
+;					EDX		Source IP address
+;					DS:SI	Options
+;					ES:DI	Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ReceiveTab:
+rt00 DW OFFSET ReceiveSynSent
+rt01 DW OFFSET ReceiveSynRcvd
+rt02 DW OFFSET ReceiveEstab
+rt03 DW OFFSET ReceiveFinWait1
+rt04 DW OFFSET ReceiveFinWait2
+rt05 DW OFFSET ReceiveCloseWait
+rt06 DW OFFSET ReceiveLastAck
+rt07 DW OFFSET ReceiveClosing
+rt08 DW OFFSET ReceiveTimeWait
+
+Receive	Proc far
+;	LogMessage
+	call ReceiveChecksum
+	jc receive_free
+;
+	push di
+	mov ax,es:[di].tcp_dest
+	xchg al,ah
+	mov si,ax
+	mov ax,es:[di].tcp_source
+	xchg al,ah
+	mov di,ax
+	call FindConnection
+	pop di
+	jnc receive_connection
+;
+	call FindListen
+	jc receive_no_connection
+;
+	mov al,es:[di].tcp_flags
+	test al,RST
+	jnz receive_free
+;
+	test al,ACK
+	jnz receive_no_connection
+;
+	test al,SYN
+	jz receive_free
+;
+	push ds
+	push ecx
+	push di
+	mov ax,es:[di].tcp_source
+	xchg al,ah
+	mov di,ax
+	mov eax,120
+	mov ecx,ds:tcp_listen_buffer_size
+	call CreateConnection
+	pop di
+	pop ecx
+	call ProcessOptions
+	call ReceiveListen
+	LeaveSection ds:tcp_section
+;
+	mov bx,ds
+	pop ds
+;
+	push es
+	mov es,bx
+	EnterSection ds:tcp_listen_section
+	mov ax,ds:tcp_listen_list
+	mov es:tcp_listen_link,ax
+	mov ds:tcp_listen_list,es
+	mov bx,ds:tcp_listen_thread
+	Signal
+	LeaveSection ds:tcp_listen_section
+	pop es
+	jmp receive_free
+
+receive_connection:
+	call ProcessOptions
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].ReceiveTab
+	mov ax,ds:tcp_pending
+	test ax,FLAG_ACK
+	jz receive_no_ack
+;
+	and ax,NOT FLAG_ACK
+	mov ds:tcp_pending,ax
+	call SendAck
+	jmp receive_leave
+
+receive_no_ack:
+	call SendData
+
+receive_leave:
+	LeaveSection ds:tcp_section
+	jmp receive_free
+
+no_options	DB 0
+
+receive_no_connection:
+	mov ax,es
+	mov ds,ax
+	mov si,di
+;
+	mov al,ds:[si].tcp_flags
+	test al,RST
+	jnz receive_free
+;
+	push ds
+	push cx
+	push si
+	mov al,6
+	mov ah,60
+	mov bx,ds:ip_id
+	mov ecx,SIZE tcp_header
+	mov edx,ds:ip_source
+	mov si,cs
+	mov ds,si	
+	mov esi,OFFSET no_options
+	CreateIpHeader
+	pop si
+	pop cx
+	pop ds
+	mov ax,ds:[si].tcp_dest
+	mov es:[di].tcp_source,ax
+	mov ax,ds:[si].tcp_source
+	mov es:[di].tcp_dest,ax
+	mov es:[di].tcp_seq,0
+	mov es:[di].tcp_ack,0
+	mov es:[di].tcp_header_len,50h
+	mov es:[di].tcp_window,0
+	mov es:[di].tcp_urgent,0
+;
+	mov al,ds:[si].tcp_flags
+	test al,ACK
+	jz receive_rst_noack
+
+receive_rst_ack:
+	mov eax,ds:[si].tcp_ack
+	mov es:[di].tcp_seq,eax
+	mov es:[di].tcp_flags,RST
+	jmp receive_rst_do
+
+receive_rst_noack:
+	mov eax,ds:[si].tcp_seq
+	Reverse
+	movzx ecx,cx
+	add eax,ecx
+	Reverse
+	mov es:[di].tcp_ack,eax
+	mov es:[di].tcp_flags,RST OR ACK
+
+receive_rst_do:
+	mov ax,word ptr ds:ip_dest
+	adc ax,word ptr ds:ip_dest+2
+	adc ax,word ptr ds:ip_source
+	adc ax,word ptr ds:ip_source+2
+	adc ax,600h
+	adc ax,0
+	adc ax,0
+	mov cx,SIZE tcp_header
+	xchg cl,ch
+	add ax,cx
+	adc ax,0
+	adc ax,0
+	xchg cl,ch
+	mov es:[di].tcp_checksum,0
+	call CalcChecksum
+	not ax
+	mov es:[di].tcp_checksum,ax
+;	LogMessage
+	SendIp
+	mov ax,ds
+	mov es,ax
+
+receive_free:
+	xor ax,ax
+	mov ds,ax
+	FreeMem
+	ret
+Receive	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ListenTcpPort
+;
+;	Purpose:		Listen on a tcp port
+;
+;	Parameters:		ECX			buffer size
+;					SI			local port
+;					ES:(E)DI	connection callback
+;					EAX			callback param
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+listen_tcp_port_name	DB 'Listen TCP Port',0
+
+listen_tcp_port32	Proc far
+	push ds
+	push es
+	pushad
+;
+	push eax
+	mov eax,SIZE tcp_listen
+	AllocateSmallGlobalMem
+	ClearSignal
+	GetThread
+	mov es:tcp_listen_thread,ax
+	InitSection es:tcp_listen_section
+	mov es:tcp_listen_port,si
+	mov es:tcp_listen_buffer_size,ecx
+	mov es:tcp_listen_list,0
+	mov dx,tcp_data_sel
+	mov ds,dx
+	EnterSection ds:ListSection
+	mov dx,ds:ListenList
+	mov es:tcp_listen_next,dx
+	mov ds:ListenList,es
+	LeaveSection ds:ListSection
+	mov ax,es
+	mov ds,ax
+	pop eax
+
+listen_tcp_loop:
+	WaitForSignal
+listen_tcp_next:
+	EnterSection ds:tcp_listen_section
+	mov dx,ds:tcp_listen_list
+	or dx,dx
+	jz listen_tcp_leave
+;
+	mov es,dx
+	mov bx,es:tcp_listen_link
+	mov ds:tcp_listen_list,bx
+
+listen_tcp_leave:
+	LeaveSection ds:tcp_listen_section		
+	or dx,dx
+	jz listen_tcp_loop
+;
+	push ds
+	push edi
+;
+	push eax
+	mov ax,tcp_process_sel
+	mov ds,ax
+	AllocateHandle
+	mov [bx].handle_sel,es
+	OffsetToHandle bx
+	pop eax
+	push eax
+	push edi
+	CallPm32
+	pop eax
+;
+	pop edi
+	pop ds
+	jmp listen_tcp_next
+;
+	popad
+	pop es
+	pop ds	
+	retf32
+listen_tcp_port32	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			WaitForTcpConnection
+;
+;	Purpose:		Wait for a connection
+;
+;	Parameters:		SI		local port
+;					EAX		timeout
+;					BX		connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_tcp_connection_name	DB 'Wait For TCP Connection',0
+
+wait_for_tcp_connection	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz wait_tcp_inv
+	cmp bx,handle_num
+	jbe wait_tcp_valid
+
+wait_tcp_inv:
+	stc
+	jmp wait_tcp_done
+
+wait_tcp_valid:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz wait_tcp_inv
+;
+	push bx
+	mov ds,ax
+	EnterSection ds:tcp_section
+	cmp ds:tcp_state,STATE_ESTAB
+	jae wait_tcp_ok
+;
+	xor edx,edx
+	mov ecx,100
+	div ecx
+	mov ds:tcp_user_timeout,ax
+	ClearSignal
+	GetThread
+	mov ds:tcp_owner,ax
+	or ds:tcp_pending,FLAG_WAIT
+	LeaveSection ds:tcp_section
+;
+	WaitForSignal
+	EnterSection ds:tcp_section
+	cmp ds:tcp_state,STATE_ESTAB
+	jb wait_tcp_fail
+
+wait_tcp_ok:
+	LeaveSection ds:tcp_section
+	pop bx
+	clc
+	jmp wait_tcp_done
+
+wait_tcp_fail:
+	mov ds:tcp_delete_ok,1
+	or ds:tcp_pending,FLAG_DELETE
+	LeaveSection ds:tcp_section
+	pop bx
+	mov ax,tcp_process_sel
+	mov ds,ax
+	mov word ptr [bx].handle_sel,0
+	FreeHandle
+	stc
+
+wait_tcp_done:
+	popad
+	pop es
+	pop ds	
+	retf32
+wait_for_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			OpenTcpConnection
+;
+;	Purpose:		Open a tcp connection
+;
+;	Parameters:		EAX		Timeout in milliseconds for connection
+;					ECX		buffer size
+;					EDX		ip address
+;					SI		local port
+;					DI		remote port
+;
+;	Returns:		NC		ok
+;					BX		connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_tcp_connection_name	DB 'Open TCP Connection',0
+
+open_tcp_connection	Proc far
+	push ds
+	push es
+	push eax
+	push ecx
+	push edx
+	push esi
+	push edi
+	push ebp
+;
+	mov ebp,eax
+	or si,si
+	jz open_tcp_dyn
+	cmp si,2048
+	jnc open_tcp_dyn
+;
+	call FindConnection
+	jc open_tcp_create
+;
+	LeaveSection ds:tcp_section
+	stc
+	jmp open_tcp_done
+
+open_tcp_dyn:
+	call AllocatePort
+	jc open_tcp_done
+
+open_tcp_create:
+	call CreateConnection
+	mov eax,ds:tcp_iss
+	mov ds:tcp_send_una,eax
+	inc eax
+	mov ds:tcp_send_next,eax
+	mov ds:tcp_state,STATE_SYN_SENT
+;
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, SYN
+	mov eax,ds:tcp_iss
+	Reverse
+	mov es:[di].tcp_seq,eax
+	call SendSegment
+;
+	ClearSignal
+	GetThread
+	mov ds:tcp_owner,ax
+	mov eax,ebp
+	xor edx,edx
+	mov ecx,100
+	div ecx
+	mov ds:tcp_user_timeout,ax
+	or ds:tcp_pending,FLAG_WAIT
+	LeaveSection ds:tcp_section
+	WaitForSignal
+	EnterSection ds:tcp_section
+	cmp ds:tcp_state,STATE_ESTAB
+	jne open_tcp_fail
+	LeaveSection ds:tcp_section
+	mov dx,ds
+	mov bx,tcp_process_sel
+	mov ds,bx
+	AllocateHandle
+	mov [bx].handle_sel,dx
+	OffsetToHandle bx
+	clc
+	jmp open_tcp_done
+
+open_tcp_fail:
+	or ds:tcp_pending,FLAG_DELETE
+	mov ds:tcp_delete_ok,1
+	LeaveSection ds:tcp_section
+	stc
+
+open_tcp_done:
+	pop ebp
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop eax
+	pop es
+	pop ds
+	retf32
+open_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CloseDelete
+;
+;	Purpose:		Delete close
+;
+;	Parameters:		DS		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseDelete	Proc near
+	or ds:tcp_pending,FLAG_DELETE
+	mov ds:tcp_delete_ok,1
+	ret
+CloseDelete	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CloseNormal
+;
+;	Purpose:		Normal close
+;
+;	Parameters:		DS		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseNormal	Proc near
+	mov ds:tcp_state,STATE_FIN_WAIT1
+	or ds:tcp_pending,FLAG_CLOSING
+	call SendData
+	ret
+CloseNormal	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CloseCloseWait
+;
+;	Purpose:		Close in CLOSE-WAIT state
+;
+;	Parameters:		DS		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseCloseWait	Proc near
+	mov ds:tcp_state,STATE_LAST_ACK
+	or ds:tcp_pending,FLAG_CLOSING
+	call SendData
+	ret
+CloseCloseWait	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CloseTcpConnection
+;
+;	Purpose:		Close connection
+;
+;	Parameters:		BX		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_tcp_connection_name DB 'Close TCP Connection',0
+
+close_tab:
+cl0	DW OFFSET CloseDelete
+cl1 DW OFFSET CloseNormal
+cl2 DW OFFSET CloseNormal
+cl3	DW OFFSET Ignore
+cl4	DW OFFSET Ignore
+cl5 DW OFFSET CloseCloseWait
+cl6 DW OFFSET Ignore
+cl7 DW OFFSET Ignore
+cl8 DW OFFSET Ignore
+
+close_tcp_connection	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz close_tcp_fail
+	cmp bx,handle_num
+	jbe close_tcp_ok
+
+close_tcp_fail:
+	stc
+	jmp close_tcp_done
+
+close_tcp_ok:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz close_tcp_fail
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].close_tab
+	LeaveSection ds:tcp_section
+	clc
+
+close_tcp_done:
+	popad
+	pop es
+	pop ds
+	retf32
+close_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DeleteTcpConnection
+;
+;	Purpose:		Delete connection handle
+;
+;	Parameters:		BX		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_tcp_connection_name DB 'Delete TCP Connection',0
+
+delete_tcp_connection	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz delete_tcp_done
+;
+	cmp bx,handle_num
+	ja delete_tcp_done
+;
+	HandleToOffset bx
+	xor ax,ax
+	xchg ax,[bx].handle_sel
+	or ax,ax
+	jz delete_tcp_done
+;
+	mov ds,ax
+	mov ax,tcp_process_sel
+	cli
+	mov ds:tcp_delete_ok,1
+	mov ds,ax
+	sti
+;
+	mov ds,ax
+	FreeHandle
+
+delete_tcp_done:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+delete_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			IsTcpConnectionClosed
+;
+;	Purpose:		Check if connection is closed by remote site
+;
+;	Parameters:		BX		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_tcp_connection_closed_name DB 'Is TCP Connection Closed?',0
+
+is_tcp_connection_closed	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz is_tcp_closed_fail
+;
+	cmp bx,handle_num
+	ja is_tcp_closed_fail
+;
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz is_tcp_closed_fail
+;
+	mov ds,ax
+	mov al,ds:tcp_state
+	cmp al,STATE_ESTAB
+	ja is_tcp_closed_fail
+;
+	clc
+	jmp is_tcp_closed_done
+
+is_tcp_closed_fail:
+	stc
+
+is_tcp_closed_done:
+	pop bx
+	pop ax
+	pop ds
+	retf32
+is_tcp_connection_closed	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			AbortDelete
+;
+;	Purpose:		Delete abort
+;
+;	Parameters:		DS		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AbortDelete	Proc near
+	or ds:tcp_pending,FLAG_DELETE
+	ret
+AbortDelete	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			AbortReset
+;
+;	Purpose:		Abort connection (reset & delete)
+;
+;	Parameters:		DS		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AbortReset	Proc near
+	xor ecx,ecx
+	call CreateSegment
+	mov es:[di].tcp_flags, RST
+	mov eax,ds:tcp_send_next
+	Reverse
+	mov es:[di].tcp_seq,eax
+	call SendSegment
+	or ds:tcp_pending,FLAG_DELETE
+	ret
+AbortReset	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			AbortTcpConnection
+;
+;	Purpose:		Abort connection
+;
+;	Parameters:		BX		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+abort_tcp_connection_name DB 'Abort TCP Connection',0
+
+abort_tab:
+ab0	DW OFFSET AbortDelete
+ab1 DW OFFSET AbortReset
+ab2 DW OFFSET AbortReset
+ab3	DW OFFSET AbortReset
+ab4	DW OFFSET AbortReset
+ab5 DW OFFSET AbortReset
+ab6 DW OFFSET AbortDelete
+ab7 DW OFFSET AbortDelete
+ab8 DW OFFSET AbortDelete
+
+abort_tcp_connection	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz abort_tcp_fail
+	cmp bx,handle_num
+	jbe abort_tcp_ok
+
+abort_tcp_fail:
+	stc
+	jmp abort_tcp_done
+
+abort_tcp_ok:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz abort_tcp_fail
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].abort_tab
+	LeaveSection ds:tcp_section
+	pop bx
+
+abort_tcp_done:
+	popad
+	pop es
+	pop ds
+	retf32
+abort_tcp_connection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			Failed
+;
+;	Purpose:		Failed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Failed	Proc near
+	stc
+	ret
+Failed	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReadNormal
+;
+;	Purpose:		Read connection
+;
+;	Parameters:		EAX			timeout in ms for receive
+;					BX			connection handle
+;					(E)CX		wanted number of bytes
+;					ES:(E)DI	data buffer
+;
+;	Returns:		NC			ok
+;					(E)AX		size of received data
+;					CY			connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_receive	Proc near
+	call UpdateReceiveWnd
+	mov ax,ds:tcp_pending
+	test ax,FLAG_ACK
+	jz update_rec_done
+;
+	and ax,NOT FLAG_ACK
+	mov ds:tcp_pending,ax
+	call SendAck
+
+update_rec_done:
+	ret
+update_receive	Endp
+
+ReadNormal	Proc near
+	mov fs,ds:tcp_receive_buffer
+	xor eax,eax
+
+read_tcp_loop:
+	or ecx,ecx
+	jz read_tcp_ok
+
+read_tcp_retry:
+	test ds:tcp_pending,FLAG_DELETE
+	jnz read_tcp_fail
+;
+	mov dx,ds:tcp_receive_count
+	or dx,dx
+	jz read_tcp_no_char
+;
+	mov bx,ds:tcp_receive_head
+	dec dx
+	mov ds:tcp_receive_count,dx
+	mov dl,fs:[bx]
+	inc bx
+	cmp bx,ds:tcp_buffer_size
+	jnz read_tcp_no_wrap
+	xor bx,bx
+read_tcp_no_wrap:
+	mov ds:tcp_receive_head,bx
+	mov es:[edi],dl
+	inc edi
+	inc eax
+	dec ecx
+	jmp read_tcp_loop
+
+read_tcp_no_char:
+	test ds:tcp_pending, FLAG_REC_PUSH
+	jz read_tcp_wait
+;
+	and ds:tcp_pending, NOT FLAG_REC_PUSH
+	or eax,eax
+	jnz read_tcp_ok
+
+read_tcp_wait:
+	test ds:tcp_pending, FLAG_CLOSED
+	jnz read_tcp_ok
+;
+	push eax
+	push ecx
+	push edi
+	call update_receive
+	ClearSignal
+	GetThread
+	mov ds:tcp_owner,ax
+	LeaveSection ds:tcp_section
+	WaitForSignal
+	pop edi
+	pop ecx
+	pop eax
+	EnterSection ds:tcp_section
+	jmp read_tcp_retry
+
+read_tcp_fail:
+	stc
+	jmp read_tcp_done
+
+read_tcp_ok:
+	push eax
+	call update_receive
+	pop eax
+	and ds:tcp_pending, NOT FLAG_REC_PUSH
+	clc
+
+read_tcp_done:
+	ret
+ReadNormal	Endp
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			ReadTcpConnection
+;
+;	Purpose:		Read connection
+;
+;	Parameters:		EAX			timeout in ms for receive
+;					BX			connection handle
+;					(E)CX		wanted number of bytes
+;					ES:(E)DI	data buffer
+;
+;	Returns:		NC			ok
+;					(E)AX		size of received data
+;					CY			connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_tcp_connection_name DB 'Read TCP Connection',0
+
+read_tab:
+rd0	DW OFFSET Failed
+rd1 DW OFFSET Failed
+rd2 DW OFFSET ReadNormal
+rd3	DW OFFSET ReadNormal
+rd4	DW OFFSET ReadNormal
+rd5 DW OFFSET ReadNormal
+rd6 DW OFFSET Failed
+rd7 DW OFFSET Failed
+rd8 DW OFFSET Failed
+
+read_tcp_connection16	Proc far
+	push ds
+	push es
+	push fs
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz read_tcp_fail16
+	cmp bx,handle_num
+	jbe read_tcp_ok16
+
+read_tcp_fail16:
+	stc
+	jmp read_tcp_done16
+
+read_tcp_ok16:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz read_tcp_fail16
+;
+	mov ds,ax
+	movzx ecx,cx
+	movzx edi,di
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].read_tab
+	pushf
+	LeaveSection ds:tcp_section
+	popf
+
+read_tcp_done16:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop fs
+	pop es
+	pop ds
+	ret
+read_tcp_connection16	Endp
+
+read_tcp_connection32	Proc far
+	push ds
+	push es
+	push fs
+	push ebx
+	push ecx
+	push edx
+	push esi
+	push edi
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz read_tcp_fail32
+	cmp bx,handle_num
+	jbe read_tcp_ok32
+
+read_tcp_fail32:
+	stc
+	jmp read_tcp_done32
+
+read_tcp_ok32:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz read_tcp_fail32
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].read_tab
+	pushf
+	LeaveSection ds:tcp_section
+	popf
+
+read_tcp_done32:
+	pop edi
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop fs
+	pop es
+	pop ds
+	retf32
+read_tcp_connection32	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			WriteNormal
+;
+;	Purpose:		Write connection
+;
+;	Parameters:		BX			connection handle
+;					(E)CX		number of bytes to write
+;					ES:(E)DI	data buffer
+;
+;	Returns:		NC			ok
+;					CY			connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteNormal	Proc near
+	mov fs,ds:tcp_send_buffer
+
+write_tcp_retry:
+	test ds:tcp_pending,FLAG_DELETE OR FLAG_CLOSED
+	jnz write_tcp_fail
+;
+	mov bx,ds:tcp_send_tail
+	mov eax,ds:tcp_send_next
+	sub eax,ds:tcp_send_una
+	add ax,ds:tcp_send_count
+	mov dx,ds:tcp_buffer_size
+	sub dx,ax
+	movzx edx,dx
+	cmp edx,ecx
+	jc write_tcp_start
+	mov dx,cx
+
+write_tcp_start:
+	add ds:tcp_send_count,dx
+
+write_tcp_loop:
+	or ecx,ecx
+	jz write_tcp_ok
+;
+	mov al,es:[edi]
+	mov fs:[bx],al
+;
+	inc edi
+	dec ecx
+	dec dx
+;
+	inc bx
+	cmp bx,ds:tcp_buffer_size
+	jnz write_tcp_loop
+	xor bx,bx
+	jmp write_tcp_loop
+
+write_tcp_full:
+	mov ds:tcp_send_tail,bx
+	call SendData
+;
+	ClearSignal
+	GetThread
+	mov ds:tcp_owner,ax
+	LeaveSection ds:tcp_section
+	WaitForSignal
+	EnterSection ds:tcp_section
+	jmp write_tcp_retry
+
+write_tcp_fail:
+	stc
+	jmp write_tcp_done
+
+write_tcp_ok:
+	mov ds:tcp_send_tail,bx
+	mov ax,ds:tcp_send_count
+	cmp ax,600h
+	jc write_tcp_delay
+	call SendData
+write_tcp_delay:
+	clc
+
+write_tcp_done:
+	ret
+WriteNormal	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			WriteTcpConnection
+;
+;	Purpose:		Write connection
+;
+;	Parameters:		BX			connection handle
+;					(E)CX		number of bytes to write
+;					ES:(E)DI	data buffer
+;
+;	Returns:		NC			ok
+;					CY			connection closed
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_tcp_connection_name	DB 'Write TCP Connection',0
+
+write_tab:
+wr0	DW OFFSET Failed
+wr1 DW OFFSET Failed
+wr2 DW OFFSET WriteNormal
+wr3	DW OFFSET Failed
+wr4	DW OFFSET Failed
+wr5 DW OFFSET WriteNormal
+wr6 DW OFFSET Failed
+wr7 DW OFFSET Failed
+wr8 DW OFFSET Failed
+
+write_tcp_connection16	Proc far
+	push ds
+	push es
+	push fs
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz write_tcp_fail16
+	cmp bx,handle_num
+	jbe write_tcp_ok16
+
+write_tcp_fail16:
+	stc
+	jmp write_tcp_done16
+
+write_tcp_ok16:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz write_tcp_fail16
+;
+	mov ds,ax
+	movzx ecx,cx
+	movzx edi,di
+	mov ds,bx
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].write_tab
+	pushf
+	LeaveSection ds:tcp_section
+	popf
+
+write_tcp_done16:
+	popad
+	pop fs
+	pop es
+	pop ds
+	ret
+write_tcp_connection16	Endp
+
+write_tcp_connection32	Proc far
+	push ds
+	push es
+	push fs
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz write_tcp_fail32
+	cmp bx,handle_num
+	jbe write_tcp_ok32
+
+write_tcp_fail32:
+	stc
+	jmp write_tcp_done32
+
+write_tcp_ok32:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz write_tcp_fail32
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	movzx bx,ds:tcp_state
+	add bx,bx
+	call word ptr cs:[bx].write_tab
+	pushf
+	LeaveSection ds:tcp_section
+	popf
+
+write_tcp_done32:
+	popad
+	pop fs
+	pop es
+	pop ds
+	retf32
+write_tcp_connection32	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			PushTcpConnection
+;
+;	Purpose:		Push (commit) data connection
+;
+;	Parameters:		BX		Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+push_tcp_connection_name DB 'Push TCP Connection',0
+
+push_tcp_connection	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov ds,ax
+	or bx,bx
+	jz push_tcp_fail
+	cmp bx,handle_num
+	jbe push_tcp_ok
+
+push_tcp_fail:
+	stc
+	jmp push_tcp_done
+
+push_tcp_ok:
+	HandleToOffset bx
+	mov ax,[bx].handle_sel
+	or ax,ax
+	jz push_tcp_fail
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	mov ds:tcp_push_timeout,5
+	or ds:tcp_pending,FLAG_SEND_PUSH
+	call SendData
+	LeaveSection ds:tcp_section
+
+push_tcp_done:
+	popad
+	pop es
+	pop ds
+	retf32
+push_tcp_connection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdateConnection
+;
+;		DESCRIPTION:    Update a connection
+;
+;       PARAMETERS:     DS	connection
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdateConnection	Proc near
+	mov dx,ds:tcp_pending
+	test dx,FLAG_SEND_PUSH
+	jz update_con_push_done
+;
+	mov cx,ds:tcp_send_count
+	or cx,cx
+	jnz update_con_check_push
+;
+	and dx,NOT FLAG_SEND_PUSH
+	mov ds:tcp_pending,dx 
+	jmp update_con_push_done
+
+update_con_check_push:
+	mov al,ds:tcp_push_timeout
+	or al,al
+	jz update_con_push_do
+	dec al
+	mov ds:tcp_push_timeout,al
+	jmp update_con_push_done
+
+update_con_push_do:
+	and dx,NOT FLAG_SEND_PUSH
+	mov ds:tcp_pending,dx
+	call SendData
+	mov dx,ds:tcp_pending
+
+update_con_push_done:
+	test dx,FLAG_WAIT
+	jz update_user_done
+;
+	mov ax,ds:tcp_user_timeout
+	sub ax,1
+	mov ds:tcp_user_timeout,ax
+	jnz update_user_done
+;
+	and dx,NOT FLAG_WAIT
+	mov ds:tcp_pending,dx
+	mov bx,ds:tcp_owner
+	Signal
+
+update_user_done:
+	test dx,FLAG_DELAY_ACK
+	jz update_delay_ack_done
+;
+	mov al,ds:tcp_ack_timeout
+	sub al,1
+	mov ds:tcp_ack_timeout,al
+	jnz update_delay_ack_done
+;
+	call SendAck
+
+update_delay_ack_done:
+	mov eax,ds:tcp_send_next
+	cmp eax,ds:tcp_send_una
+	je update_resend_done
+	mov ax,ds:tcp_resend_timeout
+	sub ax,1
+	mov ds:tcp_resend_timeout,ax
+	jnz update_resend_done
+;
+	call Retransmit
+
+update_resend_done:
+	mov ax,ds:tcp_send_count
+	or ax,ax
+	jz update_con_done
+;
+	call SendData
+
+update_con_done:
+	ret
+UpdateConnection	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			tcp_thread
+;
+;		DESCRIPTION:    supervisor thread
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+tcp_thread_name	DB 'TCP',0
+
+LogFileName	DB 'z:\tcp.log',0
+
+tcp_thread_pr:
+	mov ax,250
+	WaitMilliSec
+	LogInit
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	GetThread
+	mov ds:TcpThread,ax
+tcp_sleep:
+	WaitForSignal
+
+tcp_active_loop:
+	mov ax,ds:ConnectionList
+	or ax,ax
+	jz tcp_sleep
+;
+	EnterSection ds:ListSection
+	mov ax,ds:ConnectionList
+	push ds
+
+tcp_active_next:
+	or ax,ax
+	jz tcp_active_wait
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	test ds:tcp_pending,FLAG_DELETE
+	jz tcp_update
+;
+	test ds:tcp_pending,FLAG_WAIT
+	jz tcp_user_done
+;
+	and ds:tcp_pending,NOT FLAG_WAIT
+	mov bx,ds:tcp_owner
+	Signal
+
+tcp_user_done:
+	mov al,ds:tcp_delete_ok
+	or al,al
+	jz tcp_leave
+;
+	mov bx,ds
+	mov si,ds:tcp_next
+	mov ax,tcp_data_sel
+	mov ds,ax
+	xor dx,dx
+	mov ax,ds:ConnectionList
+
+tcp_unlink_loop:
+	cmp ax,bx
+	je tcp_unlink_do
+;
+	mov dx,ax
+	mov ds,ax
+	mov ax,ds:tcp_next
+	jmp tcp_unlink_loop
+
+tcp_unlink_do:
+	or dx,dx
+	jz tcp_unlink_head
+;
+	mov ds:tcp_next,si
+	jmp tcp_delete_do
+
+tcp_unlink_head:
+	mov ds:ConnectionList,si
+
+tcp_delete_do:
+	push si
+	mov ds,bx
+	call DeleteConnection
+	pop ax
+	jmp tcp_active_next
+
+tcp_update:
+	call UpdateConnection
+
+tcp_leave:
+	mov ax,ds:tcp_next
+	LeaveSection ds:tcp_section
+	jmp tcp_active_next
+
+tcp_active_wait:
+	pop ds
+	LeaveSection ds:ListSection
+	mov ax,100
+	WaitMilliSec
+	jmp tcp_active_loop
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			init_tcp
+;
+;		DESCRIPTION:    Create supervisor thread
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_tcp	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET tcp_thread_pr
+	mov di,OFFSET tcp_thread_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_tcp	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INIT_PROCESS
+;
+;		DESCRIPTION:	INITERA PROCESSENS HANDLE-TABELL
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_process	PROC far
+	push ds
+	push es
+	pushad
+;
+	mov ax,tcp_process_sel
+	mov es,ax
+	mov cx,handle_num
+	mov di,4*handle_num + OFFSET handles
+init_handle_tab_loop:
+	mov ax,di
+	sub di,4
+	mov es:[di],ax
+	loop init_handle_tab_loop
+	mov es:handle_free_list,di
+;
+	popad
+	pop es
+	pop ds
+	ret
+init_process	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			init
+;
+;		DESCRIPTION:    Init tcp driver
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init	PROC far
+	push ds
+	push es
+	pusha
+;
+	mov bx,tcp_code_sel
+	InitDevice
+;	
+	mov eax,SIZE tcp_process_seg
+	mov bx,tcp_process_sel
+	AllocateFixedProcessMem
+;
+	mov eax,SIZE tcp_data
+	mov bx,tcp_data_sel
+	AllocateFixedSystemMem
+	mov es,bx
+	mov es:ConnectionList,0
+	mov es:ListenList,0
+	mov es:Handle,0
+	mov es:LastPort,545
+	InitSection es:ListSection
+	mov cx,1F00h
+	mov di,OFFSET PortMap
+	mov al,0FFh
+	rep stosb
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+;
+	mov di,OFFSET init_tcp
+	HookInitTasking
+;
+	mov di,OFFSET init_process
+	HookCreateProcess
+;
+	mov si,OFFSET open_tcp_connection
+	mov di,OFFSET open_tcp_connection_name
+	xor cl,cl
+	mov ax,open_tcp_connection_nr
+	RegisterUserGate
+;
+	mov si,OFFSET listen_tcp_port32
+	mov di,OFFSET listen_tcp_port_name
+	xor cl,cl
+	mov ax,listen_tcp_port_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET wait_for_tcp_connection
+	mov di,OFFSET wait_for_tcp_connection_name
+	xor cl,cl
+	mov ax,wait_for_tcp_connection_nr
+	RegisterUserGate
+;
+	mov si,OFFSET close_tcp_connection
+	mov di,OFFSET close_tcp_connection_name
+	xor cl,cl
+	mov ax,close_tcp_connection_nr
+	RegisterUserGate
+;
+	mov si,OFFSET delete_tcp_connection
+	mov di,OFFSET delete_tcp_connection_name
+	xor cl,cl
+	mov ax,delete_tcp_connection_nr
+	RegisterUserGate
+;
+	mov si,OFFSET is_tcp_connection_closed
+	mov di,OFFSET is_tcp_connection_closed_name
+	xor cl,cl
+	mov ax,is_tcp_connection_closed_nr
+	RegisterUserGate
+;
+	mov si,OFFSET abort_tcp_connection
+	mov di,OFFSET abort_tcp_connection_name
+	xor cl,cl
+	mov ax,abort_tcp_connection_nr
+	RegisterUserGate
+;
+	mov si,OFFSET read_tcp_connection16
+	mov di,OFFSET read_tcp_connection_name
+	xor cl,cl
+	mov ax,read_tcp_connection_nr
+	RegisterUserGate16
+	mov si,OFFSET read_tcp_connection32
+	mov di,OFFSET read_tcp_connection_name
+	xor cl,cl
+	mov ax,read_tcp_connection_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET write_tcp_connection16
+	mov di,OFFSET write_tcp_connection_name
+	xor cl,cl
+	mov ax,write_tcp_connection_nr
+	RegisterUserGate16
+	mov si,OFFSET write_tcp_connection32
+	mov di,OFFSET write_tcp_connection_name
+	xor cl,cl
+	mov ax,write_tcp_connection_nr
+	RegisterUserGate32
+;
+	mov si,OFFSET push_tcp_connection
+	mov di,OFFSET push_tcp_connection_name
+	xor cl,cl
+	mov ax,push_tcp_connection_nr
+	RegisterUserGate
+;
+	mov al,6
+	mov di,OFFSET Receive
+	HookIp
+;
+	popa
+	pop es
+	pop ds
+	ret
+init	ENDP
+
+code    ENDS
+
+        END init

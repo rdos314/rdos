@@ -1,0 +1,196 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; NE.DEF
+; Common NE loader types
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    
+NOAUTODATA		EQU 0
+SINGLEDATA		EQU 1
+MULTIPLEDATA	EQU 2
+LINKERRORS		EQU 2000h
+LIBRARY			EQU 8000h
+
+segmented_exe_header	STRUC
+
+seh_signature			DW ?
+seh_linker				DW ?
+seh_entry_table_offset	DW ?
+seh_entry_table_size	DW ?
+seh_crc32				DD ?
+seh_flag				DW ?
+seh_automatic_ds		DW ?
+seh_heap_size			DW ?
+seh_stack_size			DW ?
+seh_ip					DW ?
+seh_cs					DW ?
+seh_sp					DW ?
+seh_ss					DW ?
+seh_segment_entries		DW ?
+seh_module_entries		DW ?
+seh_nonresident_size	DW ?
+seh_segment_offset		DW ?
+seh_resource_offset		DW ?
+seh_resident_offset		DW ?
+seh_module_offset		DW ?
+seh_imported_offset		DW ?
+seh_nonresident_pos		DD ?
+seh_moveable_entries	DW ?
+seh_sector_shift		DW ?
+seh_resource_entries	DW ?
+seh_type				DB ?
+seh_automatic_size		DW ?
+
+segmented_exe_header	ENDS 
+
+segment_table_struc		STRUC
+
+seg_sector				DW ?
+seg_file_size			DW ?
+seg_flags				DW ?
+seg_selector			DW ?
+
+segment_table_struc		ENDS
+
+fixed_entry_struc		STRUC
+
+fe_flag					DB ?
+fe_offset				DW ?
+
+fixed_entry_struc		ENDS
+
+moveable_entry_struc	STRUC
+
+me_flag					DB ?
+me_int3f				DW ?
+me_segment				DB ?
+me_offset				DW ?
+
+moveable_entry_struc	ENDS
+
+entry_struc		STRUC
+
+e_count		DB ?
+e_segment	DB ?
+e_data		DB ?
+
+entry_struc		ENDS
+
+library_header	STRUC
+
+lib_prev				DW ?
+lib_next				DW ?
+lib_section				section_typ <>
+lib_file_handle			DW ?
+lib_context				DW ?
+lib_usage_count			DW ?
+lib_entry_table_offset	DW ?
+lib_entry_table_size	DW ?
+lib_segment_entries		DW ?
+lib_module_offset		DW ?
+lib_module_size			DW ?
+lib_imported_offset		DW ?
+lib_imported_size		DW ?
+lib_resident_offset		DW ?
+lib_resident_size		DW ?
+lib_filebase			DW ?
+lib_sector_shift		DW ?
+lib_handle_selector		DW ?
+lib_code_selector		DW ?
+lib_sym_dir_count		DW ?
+lib_sym_dir_sel			DW ?
+lib_sym_seg_count		DW ?
+lib_sym_seg_sel			DW ?
+lib_sym_line_count		DW ?
+lib_sym_line_sel		DW ?
+lib_sym_proc_count		DW ?
+lib_sym_proc_sel		DW ?
+lib_sym_type_count		DW ?
+lib_sym_type_sel		DW ?
+
+lib_tables				DB ?
+
+library_header	ENDS
+
+ne_data_seg	SEGMENT AT 0
+
+lib_modules			DW ?
+lib_module_section	section_typ <>
+
+ne_data_seg	ENDS
+
+;	ds:di	list
+;	es		block
+
+InsertLib	MACRO
+	LOCAL ins_empty
+	LOCAL ins_done
+	push di
+	mov di,[di]
+	or di,di
+	je ins_empty
+	push ds
+	push si
+	mov ds,di
+	mov si,ds:lib_prev
+	mov ds:lib_prev,es
+	mov ds,si
+	mov ds:lib_next,es
+	mov es:lib_next,di
+	mov es:lib_prev,si
+	pop si
+	pop ds
+	pop di
+	jmp ins_done
+ins_empty:
+	mov es:lib_next,es
+	mov es:lib_prev,es
+	pop di
+	mov [di],es
+ins_done:
+		ENDM
+
+;	ds:si		list
+;	es			block
+
+RemoveLib	MACRO
+	LOCAL rem_done
+	push si
+	mov es,[si]
+	push di
+	push ds
+	mov di,es:lib_prev
+	cmp di,[si]
+	mov [si],di
+	mov si,es:lib_next
+	mov ds,di
+	mov ds:lib_next,si
+	mov ds,si
+	mov ds:lib_prev,di
+	pop ds
+	pop di
+	pop si
+	jne rem_done
+	mov word ptr [si],0
+rem_done:
+		ENDM

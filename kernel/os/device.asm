@@ -1,0 +1,384 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; RDOS operating system
+; Copyright (C) 1988-2000, Leif Ekblad
+;
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 2 of the License, or
+; (at your option) any later version. The only exception to this rule
+; is for commercial usage in embedded systems. For information on
+; usage in commercial embedded systems, contact embedded@rdos.net
+;
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program; if not, write to the Free Software
+; Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+;
+; The author of this program may be contacted at leif@rdos.net
+;
+; DEVICE.ASM
+; Device driver handling module
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+						
+		NAME  device
+
+;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
+
+GateSize = 16
+
+INCLUDE system.def
+INCLUDE protseg.def
+INCLUDE os.def
+INCLUDE os.inc
+	
+code	SEGMENT byte public 'CODE'
+
+.386c
+
+	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			move_kernel_code
+;
+;		DESCRIPTION:	Move kernel code descriptor high
+;
+;		PARAMETERS:		EDX		NEW BASE ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_kernel_code	Proc near
+	push bx
+	push edx
+	mov bx,cs
+	mov es:[bx+2],edx
+	mov byte ptr es:[bx+5],9Ah
+	shr edx,16
+	xor dl,dl
+	mov es:[bx+6],dx
+	db 0EAh
+	dw OFFSET move_kernel_done
+	dw kernel_code
+move_kernel_done:
+	pop edx
+	pop bx
+	ret
+move_kernel_code	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			move_shutdown_code
+;
+;		DESCRIPTION:	Move shutdown code high
+;
+;		PARAMETERS:		EDX		NEW BASE ADDRESS
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+move_shutdown_code	Proc near
+	push bx
+	push edx
+	mov bx,shutdown_code_sel
+	mov es:[bx+2],edx
+	mov byte ptr es:[bx+5],9Ah
+	shr edx,16
+	xor dl,dl
+	mov es:[bx+6],dx
+	pop edx
+	pop bx
+	ret
+move_shutdown_code	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			move_adapters
+;
+;		DESCRIPTION:	Move adapters to private address space
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public move_adapters
+
+move_adapters	PROC near
+	push ds
+	push es
+	push fs
+	pushad
+;
+	mov ax,sys_page_sel
+	mov ds,ax
+	mov ax,gdt_sel
+	mov es,ax
+	mov ax,system_data_sel
+	mov fs,ax
+;
+	mov ebp,kernel_linear
+	sub ebp,fs:rom_base
+;
+	mov bx,cs
+	mov eax,es:[bx+2]
+	rol eax,8
+	mov al,es:[bx+7]
+	ror eax,8
+	mov esi,eax
+;
+	mov bx,shutdown_code_sel
+	mov eax,es:[bx+2]
+	rol eax,8
+	mov al,es:[bx+7]
+	ror eax,8
+	mov edi,eax
+;
+	mov cx,fs:rom_modules
+	mov bx,OFFSET rom_adapters
+move_adapter_loop:
+	push cx
+	push esi
+	push edi
+	mov ecx,fs:[bx].adapter_size
+	mov esi,fs:[bx].adapter_base
+	mov eax,esi
+	and si,0F000h
+	sub eax,esi
+	add ecx,eax
+	mov edi,esi
+	add edi,ebp
+	mov edx,edi
+	shr esi,12
+	shl esi,2
+	shr edi,12
+	shl edi,2
+	dec ecx
+	add ecx,1000h
+	shr ecx,12
+move_page_loop:
+	mov eax,[esi]
+	mov al,5
+	mov [edi],eax
+	add esi,4
+	add edi,4
+	loop move_page_loop
+;
+	pop edi
+	pop esi
+	mov eax,esi
+	sub eax,fs:[bx].adapter_base
+	jc move_not_current_adapter
+	cmp eax,fs:[bx].adapter_size
+	jnc move_not_current_adapter
+;
+	push edx
+	mov cx,word ptr fs:[bx].adapter_base
+	and cx,0FFFh
+	or dx,cx
+	add edx,eax
+	call move_kernel_code
+	pop edx
+move_not_current_adapter:
+	mov eax,edi
+	sub eax,fs:[bx].adapter_base
+	jc move_not_shutdown_adapter
+	cmp eax,fs:[bx].adapter_size
+	jnc move_not_shutdown_adapter
+	push edx
+	mov cx,word ptr fs:[bx].adapter_base
+	and cx,0FFFh
+	or dx,cx
+	add edx,eax
+	call move_shutdown_code
+	pop edx
+move_not_shutdown_adapter:
+	mov ax,word ptr fs:[bx].adapter_base
+	and ax,0FFFh
+	or dx,ax
+	mov fs:[bx].adapter_base,edx
+	add bx,SIZE adapter_typ
+	pop cx
+	sub cx,1
+	jnz move_adapter_loop	
+;
+	popad
+	pop fs
+	pop es
+	pop ds
+	ret
+move_adapters	ENDP
+
+page
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			INIT_DEVICE_PR
+;
+;		DESCRIPTION:	Init device code selector
+;
+;		PARAMETERS:		BX				CODE SELECTOR
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_device_name	DB 'Init Device',0
+
+init_device_pr	PROC far
+	push bp
+	mov bp,sp
+	push ds
+	push eax
+	push si
+	mov ax,gdt_sel
+	mov ds,ax
+	mov si,[bp+4]
+	mov eax,[si]
+	mov [bx],eax
+	mov eax,[si+4]
+	mov [bx+4],eax
+	mov [bp+4],bx
+	pop si
+	pop eax
+	pop ds
+	pop bp
+	ret
+init_device_pr	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			install_device
+;
+;		DESCRIPTION:	install device
+;
+;		PARAMETERS:		DS:EDX	device header
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_device	PROC near
+	push ds
+	push es
+	pushad
+	mov ecx,[edx].len
+	sub ecx,SIZE rdos_header
+	add edx,SIZE rdos_header
+	mov ax,[edx].init_ip
+	sub ecx,SIZE device_header
+	add edx,SIZE device_header
+	mov bx,device_code_sel
+	CreateCodeSelector16
+;
+	push cs
+	push OFFSET install_device_end
+	push bx
+	push ax
+	retf
+install_device_end:
+	popad
+	pop es
+	pop ds
+	ret
+install_device	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			install_adapter
+;
+;		DESCRIPTION:	install devices in adapter
+;
+;		PARAMETERS:		edx		base address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_adapter	Proc near
+	push ds
+	push ax
+	push bx
+	push edx
+	mov ax,flat_sel
+	mov ds,ax
+install_adapter_loop:
+	mov ax,[edx].typ
+	cmp ax,RdosDevice
+	jne not_install_device
+	call install_device
+	jmp install_adapter_next
+not_install_device:
+	cmp ax,RdosEnd
+	je install_adapter_done
+install_adapter_next:
+	add edx,[edx].len
+	jmp install_adapter_loop
+install_adapter_done:
+	pop edx
+	pop bx
+	pop ax
+	pop ds
+	ret
+install_adapter	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			init_device
+;
+;		DESCRIPTION:	Init module (devices)
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public init_device
+
+init_device	PROC near
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET init_device_pr
+	mov di,OFFSET init_device_name
+	xor cl,cl
+	mov ax,init_device_nr
+	RegisterOsGate
+;
+	mov ax,system_data_sel
+	mov ds,ax
+	mov cx,ds:rom_modules
+	mov bx,OFFSET rom_adapters
+init_device_loop:
+	mov edx,[bx].adapter_base
+	call install_adapter
+	add bx,SIZE adapter_typ
+	loop init_device_loop	
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_device	ENDP
+	
+code	ENDS
+
+	END
