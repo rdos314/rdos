@@ -11,6 +11,7 @@
 #include "set.h"
 #include "sysset.h"
 #include "help.h"
+#include "cmdline.h"
 
 THelpFactory *help;
 TPathFactory *path;
@@ -28,7 +29,7 @@ void Init()
 	path = new TPathFactory;
 	help = new THelpFactory;
 
-	Write("\r\nFreeCom for RDOS\r\n\r\n");
+	Write("FreeCom for RDOS\r\n\r\n");
 
 	cmd = help->Create("");
 	if (cmd)
@@ -40,7 +41,7 @@ void main()
 //	TLangString::SetLanguage("swedish.dll");
 	char param[256];
 	int ok;
-	TCommand *cmd;
+	TCommandLine *cmd;
 
 	Init();
 
@@ -50,9 +51,9 @@ void main()
 		ok = Read(param, 256);
 		if (ok)
 		{
-			cmd = TCommandFactory::Parse(param);
-			if (cmd)
-				cmd->Run();
+		    cmd = new TCommandLine(param);
+		    cmd->Run();
+		    delete cmd;
 		}
 	}
 }

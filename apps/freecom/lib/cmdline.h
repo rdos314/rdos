@@ -39,6 +39,8 @@ public:
     int Run();
 
 protected:
+    void InsertLast(TCommand *cmd);
+
 	TCommand *FList;
 };
 

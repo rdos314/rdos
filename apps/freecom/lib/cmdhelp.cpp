@@ -36,12 +36,13 @@
 
 TFile *FInputFile = new TFile("CON");
 TFile *FOutputFile = new TFile("CON");
+TFile *FErrorFile = new TFile("CON");
 
 /*##########################################################################
 #
-#   Name       : SetupInputFile
+#   Name       : SetInputFile
 #
-#   Purpose....: Setup input file
+#   Purpose....: Set input file
 #
 #   In params..: *
 #   Out params.: *
@@ -50,17 +51,14 @@ TFile *FOutputFile = new TFile("CON");
 ##########################################################################*/
 void SetInputFile(TFile *File)
 {
-	if (FInputFile)
-		delete FInputFile;
-
 	FInputFile = File;
 }
 
 /*##########################################################################
 #
-#   Name       : SetupOutputFile
+#   Name       : SetOutputFile
 #
-#   Purpose....: Setup output file
+#   Purpose....: Set output file
 #
 #   In params..: *
 #   Out params.: *
@@ -69,10 +67,71 @@ void SetInputFile(TFile *File)
 ##########################################################################*/
 void SetOutputFile(TFile *File)
 {
-	if (FOutputFile)
-		delete FOutputFile;
-
 	FOutputFile = File;
+}
+
+/*##########################################################################
+#
+#   Name       : SetErrorFile
+#
+#   Purpose....: Set error file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SetErrorFile(TFile *File)
+{
+	FErrorFile = File;
+}
+
+/*##########################################################################
+#
+#   Name       : GetInputFile
+#
+#   Purpose....: Get input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *GetInputFile()
+{
+	return FInputFile;
+}
+
+/*##########################################################################
+#
+#   Name       : GetOutputFile
+#
+#   Purpose....: Get output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *GetOutputFile()
+{
+	return FOutputFile;
+}
+
+/*##########################################################################
+#
+#   Name       : GetErrorFile
+#
+#   Purpose....: Get error file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *GetErrorFile()
+{
+	return FErrorFile;
 }
 
 /*##########################################################################

@@ -52,6 +52,11 @@ enum InternalErrorCodes
 
 void SetInputFile(TFile *File);
 void SetOutputFile(TFile *File);
+void SetErrorFile(TFile *File);
+
+TFile *GetInputFile();
+TFile *GetOutputFile();
+TFile *GetErrorFile();
 
 int IsEmpty(const char *s);
 int IsArgDelim(char ch);

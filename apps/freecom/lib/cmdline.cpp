@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include "cmdhelp.h"
 #include "cmdline.h"
 #include "cmdfact.h"
 
@@ -44,8 +45,66 @@
 ##########################################################################*/
 TCommandLine::TCommandLine(const char *line)
 {	
-    FList = TCommandFactory::Parse(line);
-    FList->FList = 0;
+    TCommand *cmd;
+    char *ptr;
+    TString str;
+    char ch;
+    char *p;
+  
+//    cmd = TCommandFactory::Parse(line);
+//    InsertLast(cmd);
+
+    ptr = line;
+
+    while (*ptr)
+    {
+        ch = *ptr;
+
+        switch (ch)
+        {
+            case '"':
+            case '\'':
+                p = strchr(ptr, ch);
+                if (p == 0)
+                {
+                    str.Append(ptr);
+                    ptr = ptr + strlen(ptr) - 1;
+                }
+                else
+                {
+                    while (p >= ptr)
+                    {
+                        str.Append(*ptr);
+                        ptr++;
+                    }
+                }
+                break;
+
+            case '<':
+                ptr = RedirInput(str, ptr);
+                str = "";
+                break;
+
+            case '>':
+                if (*(ptr+1) == '>')
+                    RedirAppend(str, ptr + 1);
+                else
+                    RedirOutput(str, ptr);
+                return;
+
+            case '|':
+                ptr = Pipe(str, ptr);
+                str = "";
+                break;                
+
+            default:
+                str.Append(ptr);
+                ptr++;
+                break;
+        }
+    }
+
+    Add(str);
 }
 
 /*##########################################################################
@@ -76,6 +135,35 @@ TCommandLine::~TCommandLine()
 
 /*##########################################################################
 #
+#   Name       : TCommandLine::InsertLast
+#
+#   Purpose....: Insert command last
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TCommandLine::InsertLast(TCommand *cmd)
+{
+    TCommand *curr;
+    
+    cmd->FList = 0;
+    curr = FList;
+   
+    if (curr)
+    {
+        while (curr->FList)
+            curr = curr->FList;
+
+        curr->FList = cmd;
+    }
+    else
+        FList = cmd;
+}
+
+/*##########################################################################
+#
 #   Name       : TCommandLine::Run
 #
 #   Purpose....: Run command line
@@ -89,6 +177,9 @@ int TCommandLine::Run()
 {	
     TCommand *cmd;
     int result = 0;
+    TFile *PrevInput = GetInputFile();
+    TFile *PrevOutput = GetOutputFile();
+    TFile *PrevError = GetErrorFile();
 
     cmd = FList;
 
@@ -96,6 +187,11 @@ int TCommandLine::Run()
     {
         result = cmd->Run();
         cmd = cmd->FList;
+
+        SetInputFile(PrevInput);
+        SetOutputFile(PrevOutput);
+        SetErrorFile(PrevError);
     }
+    Write("\r\n");
     return result;
 }

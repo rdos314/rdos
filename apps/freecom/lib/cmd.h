@@ -29,6 +29,8 @@
 #define _CMD_H
 
 #include "langstr.h"
+#include "file.h"
+#include "path.h"
 
 class TCommand
 {
@@ -37,6 +39,11 @@ public:
     TCommand(const char *param);
 	virtual ~TCommand();
 
+	int DefineInput(const char *name, int remove);
+	int DefineOutput(const char *name);
+	int DefineAppend(const char *name);
+	int DefineError(const char *name);
+	
 	int Run();
 	virtual void InitOptions();
 	virtual int Execute(char *param) = 0;
@@ -60,6 +67,11 @@ protected:
 	TLangString FHelpScreen;
 	TCommand *FList;
 
+	TFile *FInputFile;
+	TFile *FOutputFile;
+	TFile *FErrorFile;
+
+    TPathName *FRemovePath;
 };
 
 #endif

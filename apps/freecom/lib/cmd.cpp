@@ -52,6 +52,11 @@ int TCommand::ErrorLevel = 0;
 TCommand::TCommand(const char *param)
   : FCmdLine(param)
 {
+    FInputFile = 0;
+    FOutputFile = 0;
+    FErrorFile = 0;
+
+    FRemovePath = 0;
 }
 
 /*##########################################################################
@@ -67,6 +72,98 @@ TCommand::TCommand(const char *param)
 ##########################################################################*/
 TCommand::~TCommand()
 {
+    if (FInputFile)
+        delete FInputFile;
+
+	if (FOutputFile)
+		delete FOutputFile;
+
+	if (FErrorFile)
+		delete FErrorFile;
+
+	if (FRemovePath)
+	{
+		FRemovePath->DeleteFile();
+		delete FRemovePath;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::DefineInput
+#
+#   Purpose....: Define input file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::DefineInput(const char *name, int remove)
+{
+	FInputFile = new TFile(name);
+	if (FInputFile->IsOpen() && remove)
+		FRemovePath = new TPathName(name);
+        
+    return FInputFile->IsOpen();        
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::DefineOutput
+#
+#   Purpose....: Define output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::DefineOutput(const char *name)
+{
+    FOutputFile = new TFile(name, 2);
+    return FOutputFile->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::DefineError
+#
+#   Purpose....: Define error file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::DefineError(const char *name)
+{
+    FErrorFile = new TFile(name, 2);
+    return FErrorFile->IsOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : TCommand::DefineAppend
+#
+#   Purpose....: Define append to output file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TCommand::DefineAppend(const char *name)
+{
+    FOutputFile = new TFile(name);
+    if (FOutputFile->IsOpen())
+        FOutputFile->SetPos(FOutputFile->GetSize());
+    else
+    {
+        delete FOutputFile;
+        FOutputFile = new TFile(name, 2);        
+    }
+    return FOutputFile->IsOpen();
 }
 
 /*##########################################################################
@@ -89,6 +186,15 @@ int TCommand::Run()
 	size = FCmdLine.GetSize();
 	param = new char[size + 1];
 	memcpy(param, FCmdLine.GetData(), size + 1);
+
+	if (FInputFile)
+	    SetInputFile(FInputFile);
+
+	if (FOutputFile)
+	    SetOutputFile(FOutputFile);
+
+	if (FErrorFile)
+	    SetErrorFile(FErrorFile);
 
     InitOptions();
 	
