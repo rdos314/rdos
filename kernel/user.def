@@ -240,4 +240,13 @@ unload_exe_nr				EQU 208
 allocate_app_mem_nr			EQU 209
 free_app_mem_nr				EQU 210
 
-usergate_entries			EQU 211
+create_mapping_nr				EQU 211
+create_named_mapping_nr			EQU 212
+create_named_file_mapping_nr	EQU 213
+open_named_mapping_nr			EQU 214
+sync_mapping_nr					EQU 215
+close_mapping_nr				EQU 216
+map_view_nr						EQU 217
+unmap_view_nr					EQU 218
+
+usergate_entries			EQU 219

@@ -90,12 +90,13 @@ PAGE
 ;						ES			SMP list entry
 ;						FS:ESI		Message buffer
 ;
+;		RETURNS:		ECX			Size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyFromSender	Proc near
 	push eax
 	push bx
-	push ecx
 	push edx
 	push esi
 	push edi
@@ -148,13 +149,13 @@ do_rec_zero:
 	mov ds:m_send_glob_sel,ax
 	mov ax,es:il_reply_thread
 	mov ds:m_send_thread,ax
+	mov ecx,es:il_send_size
 	FreeMem
 	LeaveSection ds:m_section
 ;
 	pop edi
 	pop esi
 	pop edx
-	pop ecx
 	pop bx
 	pop eax
 	ret
@@ -465,8 +466,10 @@ send_local_busy:
 	jmp send_local_wait
 
 send_local_idle:
+	push ecx
 	mov ecx,ebp
 	call InsertSend
+	pop ecx
 	push ds:m_send_glob_size
 	push ds:m_send_glob_base
 	push ds:m_send_base

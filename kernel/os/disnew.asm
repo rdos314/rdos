@@ -9392,5 +9392,119 @@ adr_sibi_111:
 			DW OFFSET edi_adr
 			DW OFFSET no_adr
 
+;									##GIL##
+
+		public	cr_tab
+		
+;Control register format
+
+cr_tab:
+
+cr0:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_0 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr1:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr2:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_2 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr3:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_3 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr4:
+			DD OFFSET op_one
+			DD OFFSET cr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_4 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr5:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr6:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+cr7:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+
+		public	dr_tab
+		
+;Debug register format
+
+dr_tab:
+
+dr0:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_0 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr1:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_1 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr2:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_2 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr3:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_3 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr4:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr5:
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr6:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_6 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+dr7:
+			DD OFFSET op_one
+			DD OFFSET dr_txt - OFFSET mne_tab + no_sep
+			DD OFFSET txt_7 - OFFSET mne_tab 
+			DD 0FFFFFFFFh
+			DD 0FFFFFFFFh
+
+;					##GIL END##	
+
 code	ENDS
 	END

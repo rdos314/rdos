@@ -42,47 +42,12 @@ INCLUDE int.def
 INCLUDE system.inc
 INCLUDE fs.inc
 
-file_num	EQU 80h
-dir_num		EQU 8
-MAX_DRIVES	EQU 'Z' - 'A' + 1
-
-file_handle_seg		STRUC
-
-file_pos			DD ?
-file_handle			DW ?
-file_access			DB ?
-file_drive			DB ?
-
-file_handle_seg		ENDS
-
 dir_handle_seg		STRUC
 
 dir_handle			DW ?
 dir_drive			DB ?
 
 dir_handle_seg		ENDS
-
-fs_process_seg	STRUC
-
-cur_dir_ptr			DD MAX_DRIVES DUP(?)
-curr_drive			DB ?
-resv1				DB ?
-file_free_list		DW ?
-dir_free_list		DW ?
-file_list			DB 8*file_num DUP(?)
-dir_list			DB 4*dir_num DUP(?)
-
-fs_process_seg	ENDS
-
-fs_data_seg		STRUC
-
-file_defs			DB ?
-
-file_def_arr		DD 2*32 DUP(?)
-
-file_sys_arr		DD 2*256 DUP(?)
-
-fs_data_seg		ENDS
 
 CallFileSystem	MACRO	call_proc
 	push ds
@@ -101,32 +66,6 @@ CallFileSystem	MACRO	call_proc
 	pop gs
 	pop ds
 				ENDM
-
-file_to_offset	MACRO reg
-	shl reg,3
-	add reg,OFFSET file_list
-					ENDM
-
-offset_to_file	MACRO reg
-	sub reg,OFFSET file_list
-	shr reg,3
-					ENDM
-
-allocate_file	MACRO
-	push ax
-	mov bx,ds:file_free_list
-	mov ax,[bx]
-	mov ds:file_free_list,ax
-	pop ax
-				ENDM
-
-free_file	MACRO
-	push ax
-	mov ax,ds:file_free_list
-	mov [bx],ax
-	mov ds:file_free_list,bx
-	pop ax
-			ENDM
 
 dir_to_offset	MACRO reg
 	shl reg,2
@@ -159,6 +98,15 @@ code	SEGMENT byte public 'CODE'
 	.386p
 
 	assume cs:code
+
+	extrn init_file:near
+	extrn init_memmap:near
+	extrn init_file_process:near
+	extrn init_memmap_process:near
+	extrn close_file_app:near
+	extrn close_memmap_app:near
+
+	extrn CreateFileHandle:near
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1004,77 +952,6 @@ read_dir16	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GET_FILE_INFO
-;
-;		DESCRIPTION:	Get file info
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;
-;		RETURNS:		AX			FILE SYSTEM HANDLE
-;						CL			ACCESS
-;						CH			DRIVE
-;						NC			SUCCESS
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_info_name	DB 'Get File info',0
-
-get_file_info	PROC far
-	push ds
-	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov ax,ds:[bx].file_handle
-	mov cl,ds:[bx].file_access
-	mov ch,ds:[bx].file_drive
-	clc
-	pop bx
-	pop ds
-	ret
-get_file_info	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DUPL_FILE_INFO
-;
-;		DESCRIPTION:	Duplicate handle using file-info
-;
-;		PARAMETERS:		AX			FILE SYSTEM HANDLE
-;						CL			ACCESS
-;						CH			DRIVE
-;
-;		RETURNS:		BX			FILE HANDLE
-;						NC			SUCCESS
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file_info_name	DB 'Duplicate File info',0
-
-dupl_file_info	PROC far
-	push ds
-	push ax
-	mov bx,ax
-	mov al,ch
-	CallFileSystem dupl_file_proc
-	mov ax,fs_process_sel
-	mov ds,ax
-	pop ax
-	allocate_file
-	mov ds:[bx].file_pos,0
-	mov ds:[bx].file_handle,ax
-	mov ds:[bx].file_access,cl
-	mov ds:[bx].file_drive,ch
-	offset_to_file bx
-	clc
-	pop ds
-	ret
-dupl_file_info	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			OPEN_FILE
 ;
 ;		DESCRIPTION:	Open file
@@ -1096,18 +973,12 @@ open_file32:
 	mov ds,ax
 	call get_drive_from_path
 	jc open_file32_done
+;
 	CallFileSystem open_file_proc	
 	jc open_file32_done
-	push si
-	mov si,bx
-	allocate_file
-	mov ds:[bx].file_pos,0
-	mov ds:[bx].file_handle,si
-	mov ds:[bx].file_access,cl
-	mov ds:[bx].file_drive,al
-	offset_to_file bx
-	pop si
-	clc
+;
+	call CreateFileHandle
+
 open_file32_done:
 	pop edi
 	pop ds
@@ -1121,18 +992,12 @@ open_file16	PROC far
 	mov ds,ax
 	call get_drive_from_path
 	jc open_file16_done
+;
 	CallFileSystem open_file_proc	
 	jc open_file16_done
-	push si
-	mov si,bx
-	allocate_file
-	mov ds:[bx].file_pos,0
-	mov ds:[bx].file_handle,si
-	mov ds:[bx].file_access,cl
-	mov ds:[bx].file_drive,al
-	offset_to_file bx
-	pop si
-	clc
+;
+	call CreateFileHandle
+
 open_file16_done:
 	pop edi
 	pop ds
@@ -1163,18 +1028,12 @@ create_file32:
 	mov ds,ax
 	call get_drive_from_path
 	jc create_file32_done
+;
 	CallFileSystem create_file_proc	
 	jc create_file32_done
-	push si
-	mov si,bx
-	allocate_file
-	mov ds:[bx].file_pos,0
-	mov ds:[bx].file_handle,si
-	mov ds:[bx].file_access,cl
-	mov ds:[bx].file_drive,al
-	offset_to_file bx
-	pop si
-	clc
+;
+	call CreateFileHandle
+
 create_file32_done:
 	pop edi
 	pop ds
@@ -1188,496 +1047,17 @@ create_file16	PROC far
 	mov ds,ax
 	call get_drive_from_path
 	jc create_file16_done
+;
 	CallFileSystem create_file_proc	
 	jc create_file16_done
-	push si
-	mov si,bx
-	allocate_file
-	mov ds:[bx].file_pos,0
-	mov ds:[bx].file_handle,si
-	mov ds:[bx].file_access,cl
-	mov ds:[bx].file_drive,al
-	offset_to_file bx
-	pop si
-	clc
+;
+	call CreateFileHandle
+
 create_file16_done:
 	pop edi
 	pop ds
 	ret
 create_file16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			CLOSE_FILE
-;
-;		DESCRIPTION:	Close file
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;						NC			SUCCESS
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_file_name	DB 'Close File',0
-
-close_file:
-	push ds
-	push bx
-	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz close_file_done
-	CallFileSystem close_file_proc
-	mov bx,si
-	mov ds:[bx].file_handle,0
-	free_file
-	clc
-close_file_done:
-	pop si
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DUPL_FILE
-;
-;		DESCRIPTION:	Duplicate file handle
-;
-;		PARAMETERS:		AX			OLD FILE HANDLE
-;
-;		RETURNS:		BX			NEW FILE HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file_name	DB 'Duplicate File Handle',0
-
-dupl_file:
-	push ds
-	push es
-	push eax
-	push si
-	mov bx,ax
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	allocate_file
-	mov eax,[si].file_pos
-	mov [bx].file_pos,eax
-	mov ax,[si].file_handle
-	mov [bx].file_handle,ax
-	mov al,[si].file_access
-	mov [bx].file_access,al
-	mov al,[si].file_drive
-	mov [bx].file_drive,al
-	push bx
-	mov bx,ds:[bx].file_handle
-	CallFileSystem dupl_file_proc
-	pop bx
-	offset_to_file bx
-	clc
-	pop si
-	pop eax
-	pop es
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_IOCTL_DATA
-;
-;		DESCRIPTION:	Get IOCTL data
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;
-;		RETURNS:		DX			DEVICE ATTRIBUTE
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_ioctl_data_name	DB 'Get IOCTL Data',0
-
-get_ioctl_data:
-	push ds
-	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz get_ioctl_data_done
-	CallFileSystem get_ioctl_data_proc
-get_ioctl_data_done:
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_SIZE
-;
-;		DESCRIPTION:	Get file size
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;				
-;		RETURNS:		EAX			SIZE OF FILE
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_size_name	DB 'Get File Size',0
-
-get_file_size:
-	push ds
-	push bx
-	push edx
-	mov dx,fs_process_sel
-	mov ds,dx
-	file_to_offset bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz get_file_size_done
-	CallFileSystem get_file_size_proc
-	mov eax,edx
-get_file_size_done:
-	pop edx
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_SIZE
-;
-;		DESCRIPTION:	Set file size
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;						EAX			SIZE OF FILE
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_size_name	DB 'Set File Size',0
-
-set_file_size:
-	push ds
-	push bx
-	push edx
-	mov dx,fs_process_sel
-	mov ds,dx
-	mov edx,eax
-	file_to_offset bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz set_file_size_done
-	CallFileSystem set_file_size_proc
-set_file_size_done:
-	pop edx
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_POS
-;
-;		DESCRIPTION:	Get file position
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;			
-;		RETURNS:		EAX			FILE POSITION
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_pos_name	DB 'Get File Position',0
-
-get_file_pos:
-	push ds
-	push bx
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov ax,ds:[bx].file_handle
-	or ax,ax
-	stc
-	jz get_file_pos_done
-	mov eax,[bx].file_pos
-	clc
-get_file_pos_done:
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_POS
-;
-;		DESCRIPTION:	Set file position
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;						EAX			FILE POSITION
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_pos_name	DB 'Set File Position',0
-
-set_file_pos:
-	push ds
-	push bx
-	push dx
-	mov dx,fs_process_sel
-	mov ds,dx
-	file_to_offset bx
-	mov dx,[bx].file_handle
-	or dx,dx
-	stc
-	jz set_file_pos_done
-	mov [bx].file_pos,eax
-	clc
-set_file_pos_done:
-	pop dx
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GET_FILE_TIME
-;
-;		DESCRIPTION:	Get file time & date
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;			
-;		RETURNS:		EDX:EAX		CURRENT FILE TIME
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_file_time_name	DB 'Get File Time',0
-
-get_file_time:
-	push ds
-	push bx
-	push ecx
-	mov dx,fs_process_sel
-	mov ds,dx
-	file_to_offset bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz get_file_time_done
-	CallFileSystem get_file_time_proc
-	mov eax,ecx
-get_file_time_done:
-	pop ecx
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			SET_FILE_TIME
-;
-;		DESCRIPTION:	Set file time & date
-;
-;		PARAMETERS:		BX			FILE HANDLE
-;						EDX:EAX		NEW FILE TIME
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-set_file_time_name	DB 'Set File Time',0
-
-set_file_time:
-	push ds
-	push bx
-	push ecx
-	mov cx,fs_process_sel
-	mov ds,cx
-	mov ecx,eax
-	file_to_offset bx
-	mov al,ds:[bx].file_drive
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz set_file_time_done
-	CallFileSystem set_file_time_proc
-set_file_time_done:
-	pop ecx
-	pop bx
-	pop ds
-	retf32
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			READ_FILE
-;
-;		DESCRIPTION:	Read file
-;
-;		PARAMETERS:		ES:(E)DI	BUFFER
-;						BX			HANDLE
-;						(E)CX		NUMBER OF BYTES TO READ
-;
-;		RETURNS:		(E)AX		NUMBER OF BYTES READ
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_file_name	DB 'Read File',0
-
-read_file32:
-	push ds
-	push bx
-	push edx
-	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].file_drive
-	mov edx,ds:[bx].file_pos
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz read_file32_done
-	CallFileSystem read_file_proc
-	pushf
-	add [si].file_pos,eax
-	popf
-read_file32_done:
-	pop si
-	pop edx
-	pop bx
-	pop ds
-	retf32
-
-read_file16	PROC far
-	push ds
-	push bx
-	push ecx
-	push edx
-	push si
-	push edi
-	movzx ecx,cx
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].file_drive
-	mov edx,ds:[bx].file_pos
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz read_file16_done
-	CallFileSystem read_file_proc
-	pushf
-	add [si].file_pos,eax
-	popf
-read_file16_done:
-	pop edi
-	pop si
-	pop edx
-	pop ecx
-	pop bx
-	pop ds
-	ret
-read_file16	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			WRITE_FILE
-;
-;		DESCRIPTION:	Write file
-;
-;		PARAMETERS:		ES:(E)DI	BUFFER
-;						BX			HANDLE
-;						(E)CX		NUMBER OF BYTES TO WRITE
-;		
-;		RETURNS:		(E)AX		NUMBER OF BYTES WRITTEN
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_file_name	DB 'Write File',0
-
-write_file32:
-	push ds
-	push bx
-	push edx
-	push si
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].file_drive
-	mov edx,ds:[bx].file_pos
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz write_file32_done
-	CallFileSystem write_file_proc
-	pushf
-	add [si].file_pos,eax
-	popf
-write_file32_done:
-	pop si
-	pop edx
-	pop bx
-	pop ds
-	retf32
-
-write_file16	PROC far
-	push ds
-	push bx
-	push ecx
-	push edx
-	push si
-	push edi
-	movzx ecx,cx
-	movzx edi,di
-	mov ax,fs_process_sel
-	mov ds,ax
-	file_to_offset bx
-	mov si,bx
-	mov al,ds:[bx].file_drive
-	mov edx,ds:[bx].file_pos
-	mov bx,ds:[bx].file_handle
-	or bx,bx
-	stc
-	jz write_file16_done
-	CallFileSystem write_file_proc
-	pushf
-	add [si].file_pos,eax
-	popf
-write_file16_done:
-	pop edi
-	pop si
-	pop edx
-	pop ecx
-	pop bx
-	pop ds
-	ret
-write_file16	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1705,15 +1085,6 @@ init_process	PROC far
 ;
 	mov es:curr_drive,MAX_DRIVES - 1
 ;
-	mov cx,file_num
-	mov di,8*file_num + OFFSET file_list
-init_file_tab_loop:
-	mov ax,di
-	sub di,8
-	mov es:[di],ax
-	loop init_file_tab_loop
-	mov es:file_free_list,di
-;
 	mov cx,dir_num
 	mov di,4*dir_num + OFFSET dir_list
 init_dir_tab_loop:
@@ -1723,11 +1094,39 @@ init_dir_tab_loop:
 	loop init_dir_tab_loop
 	mov es:dir_free_list,di
 ;
+	call init_file_process
+	call init_memmap_process
+;
 	popad
 	pop es
 	pop ds
 	ret
 init_process	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CLOSE_APP
+;
+;		DESCRIPTION:	Close app
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_app	PROC far
+	push ds
+	push es
+	pushad
+;
+	call close_file_app
+	call close_memmap_app
+;
+	popad
+	pop es
+	pop ds
+	ret
+close_app	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2030,18 +1429,6 @@ init	PROC far
 	mov ax,set_virt_file_attribute_nr
 	RegisterVirtUserGate
 ;
-	mov si,OFFSET get_file_info
-	mov di,OFFSET get_file_info_name
-	xor cl,cl
-	mov ax,get_file_info_nr
-	RegisterOsGate
-;
-	mov si,OFFSET dupl_file_info
-	mov di,OFFSET dupl_file_info_name
-	xor cl,cl
-	mov ax,dupl_file_info_nr
-	RegisterOsGate
-;
 	mov si,OFFSET open_file32
 	mov di,OFFSET open_file_name
 	xor cl,cl
@@ -2076,131 +1463,11 @@ init	PROC far
 	mov ax,create_virt_file_nr
 	RegisterVirtUserGate
 ;
-	mov si,OFFSET close_file
-	mov di,OFFSET close_file_name
-	xor cl,cl
-	mov ax,close_file_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,close_virt_file_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET dupl_file
-	mov di,OFFSET dupl_file_name
-	xor cl,cl
-	mov ax,dupl_file_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,dupl_virt_file_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET get_ioctl_data
-	mov di,OFFSET get_ioctl_data_name
-	xor cl,cl
-	mov ax,get_ioctl_data_nr
-	RegisterUserGate
-;
-	mov si,OFFSET get_file_size
-	mov di,OFFSET get_file_size_name
-	xor cl,cl
-	mov ax,get_file_size_nr
-	RegisterUserGate
-;
-	mov si,OFFSET set_file_size
-	mov di,OFFSET set_file_size_name
-	xor cl,cl
-	mov ax,set_file_size_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,get_virt_file_size_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET get_file_pos
-	mov di,OFFSET get_file_pos_name
-	xor cl,cl
-	mov ax,get_file_pos_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,get_virt_file_pos_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET set_file_pos
-	mov di,OFFSET set_file_pos_name
-	xor cl,cl
-	mov ax,set_file_pos_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,set_virt_file_pos_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET get_file_time
-	mov di,OFFSET get_file_time_name
-	xor cl,cl
-	mov ax,get_file_time_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,get_virt_file_time_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET set_file_time
-	mov di,OFFSET set_file_time_name
-	xor cl,cl
-	mov ax,set_file_time_nr
-	RegisterUserGate
-;
-	mov bx,ax
-	xor dx,dx
-	mov ax,set_virt_file_time_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET read_file32
-	mov di,OFFSET read_file_name
-	xor cl,cl
-	mov ax,read_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET read_file16
-	mov di,OFFSET read_file_name
-	xor cl,cl
-	mov ax,read_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,read_virt_file_nr
-	RegisterVirtUserGate
-;
-	mov si,OFFSET write_file32
-	mov di,OFFSET write_file_name
-	xor cl,cl
-	mov ax,write_file_nr
-	RegisterUserGate32
-;
-	mov si,OFFSET write_file16
-	mov di,OFFSET write_file_name
-	xor cl,cl
-	mov ax,write_file_nr
-	RegisterUserGate16
-;
-	mov bx,ax
-	mov dx,virt_es_in
-	mov ax,write_virt_file_nr
-	RegisterVirtUserGate
-;
 	mov di,OFFSET init_process
 	HookCreateProcess
+;
+	mov di,OFFSET close_app
+	HookCloseApp
 ;
 	mov eax,SIZE fs_process_seg
 	mov bx,fs_process_sel
@@ -2223,6 +1490,9 @@ init_fs_loop:
 	stosw
 	stosw
 	loop init_fs_loop
+;
+	call init_file
+	call init_memmap
 ;	
 	popa
 	pop es

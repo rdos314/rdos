@@ -2533,24 +2533,12 @@ enter_section	PROC far
 	push fs
 	pushad
 ;
+	cli
 	mov ax,ds
 	mov fs,ax
 	mov ebx,esi
 	mov ax,task_sel
 	mov ds,ax
-	cli
-	cmp fs:[ebx].cs_list,-1
-	jne enter_section_check_value
-;
-	mov fs:[ebx].cs_list,0
-	jmp enter_section_done
-
-enter_section_check_value:
-	cmp fs:[ebx].cs_value,-1
-	je enter_section_done
-
-enter_section_block:
-	push di
 	mov es,thread_act
 	mov si,es:p_prio
 	RemoveBlock
@@ -2574,7 +2562,6 @@ enter_ins_empty:
 	mov es:p_prev,es
 	mov fs:[ebx].cs_list,es
 enter_inserted:
-	pop di
 	mov ax,task_sel
 	mov ds,ax
 	call GetNextThread

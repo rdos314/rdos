@@ -45,6 +45,77 @@ code	SEGMENT byte use16 public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetSelectorBaseSize
+;
+;		DESCRIPTION:	Get selector base + size
+;
+;		PARAMETERS:		BX			Selector
+;
+;		RETURNS:		EDX			Base
+;						ECX			Limit
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_selector_base_size_name DB 'Get selector base & size',0
+
+get_selector_base_size	PROC far
+	push ds
+	push ax
+;
+	test bx,4
+	jz get_selector_gdt
+
+get_selector_ldt:
+	mov ax,thread_sel
+	mov ds,ax
+	mov ds,ds:p_ldt_sel
+	jmp get_selector_check
+
+get_selector_gdt:
+	mov ax,gdt_sel
+	mov ds,ax
+
+get_selector_check:
+	and bx,0FFF8h
+	mov al,[bx+5]
+	test al,80h
+	jz get_selector_error
+;
+	test al,10h
+	jz get_selector_error
+;
+	xor ecx,ecx
+	mov cl,[bx+6]
+	and cl,0Fh
+	shl ecx,16
+	mov cx,[bx]
+	test byte ptr [bx+6],80h
+	jz get_selector_small
+;
+	shl ecx,12
+	or cx,0FFFh
+
+get_selector_small:
+	inc ecx
+	mov edx,[bx+2]
+	rol edx,8
+	mov dl,[bx+7]
+	ror edx,8
+	clc
+	jmp get_selector_done
+
+get_selector_error:
+	stc
+
+get_selector_done:
+	pop ax
+	pop ds
+	ret
+get_selector_base_size	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			CreateDataSelector16
 ;
 ;		DESCRIPTION:	Create 16-bit data selector
@@ -862,6 +933,12 @@ init_protseg	PROC near
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET get_selector_base_size
+	mov di,OFFSET get_selector_base_size_name
+	xor cl,cl
+	mov ax,get_selector_base_size_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET create_data_sel16
 	mov di,OFFSET create_data_sel16_name

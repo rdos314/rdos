@@ -62,6 +62,8 @@ code	SEGMENT byte public 'CODE'
 	extrn mne_tab:near
 	extrn sep_tab:near
 	extrn txt_noth:near
+	extrn cr_tab:near
+	extrn dr_tab:near
 
 PAGE
 
@@ -1287,10 +1289,6 @@ op_math	ENDP
 op_one	PROC near
 	ret
 op_one	ENDP
-
-;
-; ej implementerade f n
-;
 
 	public op_reg_cr
 

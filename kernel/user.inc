@@ -25,6 +25,13 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+FILE_ATTRIB_READONLY = 1
+FILE_ATTRIB_HIDDEN = 2
+FILE_ATTRIB_SYSTEM = 4
+FILE_ATTRIB_LABEL = 8
+FILE_ATTRIB_DIR = 10h
+FILE_ATTRIB_ARC = 20h
+
 UserGateVm      MACRO gate_nr
 	db 0Fh
 	db 0Bh
@@ -330,6 +337,8 @@ InitSection     MACRO section
 
 EnterSection    MACRO section
 	LOCAL enter_section_done
+	pushf
+	cli
 	sub section.cs_value,1
 	jc enter_section_done
 	push esi
@@ -337,10 +346,13 @@ EnterSection    MACRO section
 	UserGate enter_section_nr
 	pop esi
 enter_section_done:
+	popf
 						ENDM
 
 LeaveSection    MACRO section
 	LOCAL leave_section_done
+	pushf
+	cli
 	add section.cs_value,1
 	jc leave_section_done
 	push esi
@@ -348,6 +360,7 @@ LeaveSection    MACRO section
 	UserGate leave_section_nr
 	pop esi
 leave_section_done:
+	popf
 						ENDM
 
 InitReadWriteSection    MACRO section
@@ -359,7 +372,9 @@ InitReadWriteSection    MACRO section
 						ENDM
 
 EnterReadSection        MACRO section
-	LOCAL enter_sync_ok,enter_read_ok,enter_read_do
+	LOCAL enter_sync_ok,enter_read_ok,enter_read_done
+	pushf
+	cli
 	sub section.ssync_value,1
 	jc enter_sync_ok
 	push esi
@@ -383,10 +398,13 @@ enter_read_ok:
 	UserGate leave_section_nr
 	pop esi
 enter_read_done:
+	popf
 						ENDM
 
 LeaveReadSection        MACRO section
-	LOCAL leave_sync_ok,leave_read_ok,leave_read_do
+	LOCAL leave_sync_ok,leave_read_ok,leave_read_done
+	pushf
+	cli
 	sub section.ssync_value,1
 	jc leave_sync_ok
 	push esi
@@ -410,10 +428,13 @@ leave_read_ok:
 	UserGate leave_section_nr
 	pop esi
 leave_read_done:
+	popf
 						ENDM
 
 EnterWriteSection       MACRO section
 	LOCAL enter_section_done
+	pushf
+	cli
 	sub section.swrite_value,1
 	jc enter_section_done
 	push esi
@@ -421,10 +442,13 @@ EnterWriteSection       MACRO section
 	UserGate enter_section_nr
 	pop esi
 enter_section_done:
+	popf
 						ENDM
 
 LeaveWriteSection       MACRO section
 	LOCAL leave_section_done
+	pushf
+	cli
 	add section.swrite_value,1
 	jc leave_section_done
 	push esi
@@ -432,6 +456,7 @@ LeaveWriteSection       MACRO section
 	UserGate leave_section_nr
 	pop esi
 leave_section_done:
+	popf
 						ENDM
 
 ;       DS:ESI          SECTION DATA
@@ -447,6 +472,8 @@ InitFarSection     MACRO seg, section
 
 EnterFarSection    MACRO seg, section
 	LOCAL enter_section_done
+	pushf
+	cli
 	sub seg:section.cs_value,1
 	jc enter_section_done
 	push ds
@@ -458,10 +485,13 @@ EnterFarSection    MACRO seg, section
 	pop esi
 	pop ds
 enter_section_done:
+	popf
 						ENDM
 
 LeaveFarSection    MACRO seg, section
 	LOCAL leave_section_done
+	pushf
+	cli
 	add seg:section.cs_value,1
 	jc leave_section_done
 	push ds
@@ -473,6 +503,7 @@ LeaveFarSection    MACRO seg, section
 	pop esi
 	pop ds
 leave_section_done:
+	popf
 						ENDM
 
 Swap       MACRO
@@ -1218,6 +1249,57 @@ ReadFile        MACRO
 ; 	OUT (E)AX 		NUMBER OF BYTES WRITTEN
 WriteFile       MACRO
 	UserGate write_file_nr
+						ENDM
+
+;	IN EAX			SIZE OF MAPPING OBJECT
+;	OUT BX			MAPPING HANDLE
+CreateMapping        MACRO
+	UserGate create_mapping_nr
+						ENDM
+
+;	IN EAX			SIZE OF MAPPING OBJECT
+;	IN ES:(E)DI 	MAPPING NAME
+;	OUT BX			MAPPING HANDLE
+CreateNamedMapping        MACRO
+	UserGate create_named_mapping_nr
+						ENDM
+
+;	IN EAX			SIZE OF MAPPING OBJECT
+;	IN BX			FILE HANDLE
+;	IN ES:(E)DI 	MAPPING NAME
+;	OUT BX			MAPPING HANDLE
+CreateNamedFileMapping        MACRO
+	UserGate create_named_file_mapping_nr
+						ENDM
+
+;	IN	ES:(E)DI 	MAPPING NAME
+;	OUT BX			MAPPING HANDLE
+OpenNamedMapping        MACRO
+	UserGate open_named_mapping_nr
+						ENDM
+
+;	IN  BX			MAPPING HANDLE
+SyncMapping        MACRO
+	UserGate sync_mapping_nr
+						ENDM
+
+
+;	IN  BX			MAPPING HANDLE
+CloseMapping        MACRO
+	UserGate close_mapping_nr
+						ENDM
+
+;	IN  EAX			OFFSET
+;	IN  BX			MAPPING HANDLE
+;	IN	(E)CX		SIZE
+;	IN  ES:(E)DI	ADDRESS TO MAP AT
+MapView        MACRO
+	UserGate map_view_nr
+						ENDM
+
+;	IN  BX			MAPPING HANDLE
+UnmapView        MACRO
+	UserGate unmap_view_nr
 						ENDM
 
 ;	DX		PRINTER #

@@ -39,15 +39,9 @@ INCLUDE virt.inc
 INCLUDE os.inc
 INCLUDE system.def
 INCLUDE system.inc
+INCLUDE fs.inc
 
-attr_read_only		EQU 1
-attr_hidden			EQU 2
-attr_system			EQU 4
-attr_volume			EQU 8
-attr_dir			EQU 10h
-attr_arcive			EQU 20h
-
-MAX_DRIVES		EQU 4
+MAX_RAM_DRIVES		EQU 4
 
 dev_name		EQU 8
 dev_param		EQU 90h
@@ -89,7 +83,7 @@ fs_data_seg	STRUC
 
 drive_count		DW ?
 drive_arr		DW 26 DUP(?)
-drive_sel_arr	DW MAX_DRIVES DUP(?)
+drive_sel_arr	DW MAX_RAM_DRIVES DUP(?)
  
 fs_data_seg	ENDS
 
@@ -359,7 +353,7 @@ insert_dir_node_init:
 	GetTime
 	mov es:[ecx].entry_ptr,0
 	mov es:[ecx].entry_type,0
-	mov es:[ecx].entry_attrib,attr_dir
+	mov es:[ecx].entry_attrib,FILE_ATTRIB_DIR
 	mov es:[ecx].entry_time,eax
 	mov es:[ecx+4].entry_time,edx
 	mov es:[ecx].entry_data_size,0
@@ -775,22 +769,29 @@ parse_file	Endp
 open_file_handle	Proc near
 	push ds
 	push es
+	mov al,ds:drive_nr
 	mov bx,flat_sel
 	mov ds,bx
 	mov bx,[edx].entry_sel
 	or bx,bx
-	jne open_file_handle_inc_usage
-	push eax
-	mov eax,SIZE handle_seg
-	AllocateSmallGlobalMem
-	pop eax
-	mov es:handle_ptr,edx
-	mov es:handle_usage,0
-	mov bx,es
-	mov [edx].entry_sel,bx
-open_file_handle_inc_usage:
+	jne open_file_handle_done
+;
+	push ecx
+	mov ecx,[edx].entry_data_size
+	mov ah,[edx].entry_attrib
+	cmp [edx].entry_type,1
+;	jne open_file_crsel  ; fix later!!
+;
+	or ah,80h
+
+open_file_crsel:
+	CreateFileSelector
 	mov es,bx
-	inc es:handle_usage
+	mov es:file_ptr,edx
+	mov [edx].entry_sel,bx
+	pop ecx
+
+open_file_handle_done:
 	pop es
 	pop ds
 	ret
@@ -804,26 +805,24 @@ open_file_handle	Endp
 ;		DESCRIPTION:	Close file
 ;
 ;		PARAMETERS:		DS		DRIVE_DATA_SEG
-;						BX		HANDLE
+;						BX		File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_file_handle	Proc near
-	push es
-	mov es,bx
-	sub es:handle_usage,1
-	jnz close_file_handle_done
+	push ds
 	push eax
 	push dx
-	mov eax,es:handle_ptr
-	FreeMem
+;
+	mov ds,bx
+	mov eax,ds:file_ptr
 	mov dx,flat_sel
-	mov es,dx
-	mov es:[eax].entry_sel,0
+	mov ds,dx
+	mov [eax].entry_sel,0
+;
 	pop dx
 	pop eax
-close_file_handle_done:
-	pop es
+	pop ds
 	ret
 close_file_handle	Endp
 
@@ -1690,10 +1689,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dupl_file	PROC far
-	push ds
-	mov ds,bx
-	inc ds:handle_usage
-	pop ds
 	clc
 	ret
 dupl_file	ENDP
@@ -1738,7 +1733,7 @@ get_file_size	PROC far
 	push ds
 	push ax
 	mov ds,bx
-	mov edx,ds:handle_ptr
+	mov edx,ds:file_ptr
 	mov ax,flat_sel
 	mov ds,ax
 	mov edx,ds:[edx].entry_data_size
@@ -1767,7 +1762,7 @@ set_file_size	PROC far
 	push eax
 	push ecx
 	mov ds,bx
-	mov eax,ds:handle_ptr
+	mov eax,ds:file_ptr
 	mov ecx,edx
 	call set_size
 	pop ecx
@@ -1795,7 +1790,7 @@ get_file_time	PROC far
 	push ds
 	push ax
 	mov ds,bx
-	mov edx,ds:handle_ptr
+	mov edx,ds:file_ptr
 	mov ax,flat_sel
 	mov ds,ax
 	mov ecx,ds:[edx].entry_time
@@ -1825,7 +1820,7 @@ set_file_time	PROC far
 	push ax
 	push esi
 	mov ds,bx
-	mov esi,ds:handle_ptr
+	mov esi,ds:file_ptr
 	mov ax,flat_sel
 	mov ds,ax
 	mov ds:[esi].entry_time,ecx
@@ -1863,7 +1858,7 @@ read_file	PROC far
 	push edi
 ;
 	mov ds,bx
-	mov esi,ds:handle_ptr
+	mov esi,ds:file_ptr
 	mov ax,flat_sel
 	mov ds,ax
 	mov eax,[esi].entry_data_size
@@ -2001,7 +1996,7 @@ write_file	PROC far
 ;
 	push ds
 	mov ds,bx
-	mov esi,ds:handle_ptr
+	mov esi,ds:file_ptr
 	mov ax,flat_sel
 	mov ds,ax
 	mov al,ds:[esi].entry_type
@@ -2100,6 +2095,106 @@ write_file_done:
 	pop ds
  	ret
 write_file	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			allocate_file_list
+;
+;		DESCRIPTION:	Allocate file list
+;
+;		RETURNS:		EDI		Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+allocate_file_list	PROC far
+	push eax
+	push ecx
+	push edx
+;
+	mov eax,SIZE file_list_struc
+	AllocateSmallLinear
+	mov edi,edx
+;
+	pop edx
+	pop ecx
+	pop eax
+	clc
+	ret
+allocate_file_list	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			free_file_list
+;
+;		DESCRIPTION:	Free file list
+;
+;		PARAMETERS:		EDI		Linear address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+free_file_list	PROC far
+	push ecx
+	push edx
+;
+	mov edx,edi
+	mov ecx,SIZE file_list_struc
+	FreeLinear
+;
+	pop edx
+	pop ecx
+	clc
+	ret
+free_file_list	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			READ_FILE_BLOCK
+;
+;		DESCRIPTION:	Read file block
+;
+;		PARAMETERS:		BX			HANDLE TO DEVICE
+;						EDI			LINEAR ADDRESS
+;						ECX			NUMBER OF PAGES TO READ
+;						EDX			POSITION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_file_block	PROC far
+	int 3
+	clc
+	ret
+read_file_block	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WRITE_FILE_BLOCK
+;
+;		DESCRIPTION:	Write file block
+;
+;		PARAMETERS:		BX			HANDLE TO DEVICE
+;						EDI			LINEAR ADDRESS
+;						ECX			NUMBER OF PAGES TO READ
+;						EDX			POSITION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_file_block	PROC far
+	int 3
+	clc
+	ret
+write_file_block	ENDP
 
 PAGE
 
@@ -2295,14 +2390,17 @@ fs13	DW OFFSET read_dir,			ramdrive_code_sel
 fs14	DW OFFSET open_file,		ramdrive_code_sel
 fs15	DW OFFSET create_file,		ramdrive_code_sel
 fs16	DW OFFSET close_file,		ramdrive_code_sel
-fs17	DW OFFSET dupl_file,		ramdrive_code_sel
-fs18	DW OFFSET get_ioctl_data,	ramdrive_code_sel
-fs19	DW OFFSET get_file_size,	ramdrive_code_sel
-fs20	DW OFFSET set_file_size,	ramdrive_code_sel
-fs21	DW OFFSET get_file_time,	ramdrive_code_sel
-fs22	DW OFFSET set_file_time,	ramdrive_code_sel
-fs23	DW OFFSET read_file,		ramdrive_code_sel
-fs24	DW OFFSET write_file,		ramdrive_code_sel
+fs17	DW OFFSET get_ioctl_data,	ramdrive_code_sel
+fs18	DW OFFSET get_file_size,	ramdrive_code_sel
+fs19	DW OFFSET set_file_size,	ramdrive_code_sel
+fs20	DW OFFSET get_file_time,	ramdrive_code_sel
+fs21	DW OFFSET set_file_time,	ramdrive_code_sel
+fs22	DW OFFSET read_file,		ramdrive_code_sel
+fs23	DW OFFSET write_file,		ramdrive_code_sel
+fs24	DW OFFSET allocate_file_list,ramdrive_code_sel
+fs25	DW OFFSET free_file_list,	ramdrive_code_sel
+fs26	DW OFFSET read_file_block,	ramdrive_code_sel
+fs27	DW OFFSET write_file_block,	ramdrive_code_sel
 
 init	PROC far
 	push ds

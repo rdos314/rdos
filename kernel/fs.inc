@@ -25,7 +25,83 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-file_system_struc	STRUC
+dir_num		EQU 8
+MAX_DRIVES	EQU 'Z' - 'A' + 1
+file_num = 80h
+map_num = 40h
+
+FILE_ATTRIB_NOBUFFER = 80h
+
+FILE_LIST_STATE_EMPTY = 0ACh
+FILE_LIST_STATE_USED = 04Ah
+
+FILE_LIST_FLAG_READAHEAD = 1
+
+fs_data_seg		STRUC
+
+map_list			DW ?
+map_named_list		DW ?
+sys_section			section_typ <>
+
+file_defs			DB ?
+file_def_arr		DD 2*32 DUP(?)
+file_sys_arr		DD 2*256 DUP(?)
+
+fs_data_seg		ENDS
+
+fs_process_seg	STRUC
+
+cur_dir_ptr			DD MAX_DRIVES DUP(?)
+curr_drive			DB ?
+resv1				DB ?
+dir_free_list		DW ?
+file_free_list		DW ?
+handle_free_list	DW ?
+dir_list			DB 4*dir_num DUP(?)
+file_list			DB 8 * file_num DUP(?)
+handle_list			DB 16 * map_num DUP(?)
+file_handle_section	section_typ <>
+
+fs_process_seg	ENDS
+
+file_list_struc	STRUC
+
+fl_prev				DD ?
+fl_next				DD ?
+fl_usage			DW ?
+fl_ref_count		DW ?
+fl_base				DD ?
+fl_size				DD ?
+fl_sel				DW ?
+fl_state			DB ?
+fl_flags			DB ?
+fl_prev_small		DD ?
+fl_next_small		DD ?
+
+file_list_struc	ENDS
+
+file_data_struc	STRUC
+
+file_size_section	read_write_section_typ <>
+file_list_section	section_typ <>
+file_ptr			DD ?
+file_dir_entry		DD ?
+file_usage			DW ?
+file_drive			DB ?
+file_attrib			DB ?
+file_parent			DW ?
+file_cache_entry	DD ?
+file_cache_ads		DD ?
+file_size			DD ?
+file_dir_shift		DB ?
+file_entry_shift	DB ?
+file_block_size		DD ?
+file_dir_entries	DW ?
+file_entries		DD ?
+
+file_data_struc	ENDS
+
+file_system_struc 	STRUC
 
 ;	IN	DX			DRIVE DATA
 mount_proc				DD ?
@@ -94,9 +170,6 @@ create_file_proc		DD ?
 close_file_proc			DD ?
 
 ;	IN	BX			FILE HANDLE
-dupl_file_proc			DD ?
-
-;	IN	BX			FILE HANDLE
 ;	OUT	DX			IOCTL DATA
 get_ioctl_data_proc		DD ?
 
@@ -129,6 +202,25 @@ read_file_proc			DD ?
 ;	IN	ES:EDI		DATA BUFFER
 ;	OUT	EAX			NUMBER OF BYTES WRITTEN
 write_file_proc			DD ?
+
+;	IN	BX			FILE HANDLE
+;	OUT	EDI			FILE LIST ENTRY
+allocate_file_list_proc			DD ?
+
+;	IN	EDI			FILE LIST ENTRY
+free_file_list_proc			DD ?
+
+;	IN	BX			FILE HANDLE
+;	IN	ECX			BYTES TO READ
+;	IN	EDX			POSITION
+;	IN	EDI			FILE LIST ENTRY
+read_file_block_proc			DD ?
+
+;	IN	BX			FILE HANDLE
+;	IN	ECX			BYTES TO WRITE
+;	IN	EDX			POSITION
+;	IN	EDI			FILE LIST ENTRY
+write_file_block_proc			DD ?
 
 file_system_struc	ENDS
 

@@ -791,6 +791,7 @@ SendMouseCommand	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckAux	Proc near
+	mov cx,100
 check_aux_wait1:
 	in al,64h
 	test al,2
@@ -798,7 +799,8 @@ check_aux_wait1:
 ;
 	mov eax,10
 	WaitMilliSec
-	jmp check_aux_wait1
+	loop check_aux_wait1
+	jmp check_aux_fail
 
 check_aux_prefix:
 	mov al,0D3h
@@ -837,6 +839,8 @@ check_aux_delay:
 	mov eax,10
 	WaitMilliSec
 	loop check_aux_wait3
+
+check_aux_fail:
 	stc
 
 check_aux_done:
@@ -867,7 +871,8 @@ init_mouse	Proc far
 	GetThread
 	mov ds:mouse_thread,ax
 ;
-	call CheckAux
+	stc
+;	call CheckAux
 	jc init_mouse_done
 ;
 	mov al,12

@@ -1634,7 +1634,12 @@ free_pages_loop:
 	xchg eax,[bx]
 	test al,1
 	jz free_pages_nopage
+;
+	test ax,800h
+	jnz free_pages_nopage
+;
 	FreePhysical
+
 free_pages_nopage:
 	add bx,4
 	loop free_pages_loop
@@ -1678,7 +1683,12 @@ free_big_loop:
 	xchg eax,[edx]
 	test al,1
 	jz free_big_nopage
+;
+	test ax,800h
+	jnz free_big_nopage
+;
 	FreePhysical
+
 free_big_nopage:
 	add edx,4
 	loop free_big_loop
@@ -2051,7 +2061,12 @@ free_blocal_loop:
 	xchg eax,[edx]
 	test al,1
 	jz free_blocal_nopage
+;
+	test ax,800h
+	jnz free_blocal_nopage
+;
 	FreePhysical
+
 free_blocal_nopage:
 	add edx,4
 	loop free_blocal_loop

@@ -387,8 +387,8 @@ init	PROC far
 	InitDevice
 	mov ax,cs
 	mov ds,ax
-	mov ax,cs
-	mov ds,ax
+	mov es,ax
+;
 	mov si,OFFSET days_in_month
 	mov di,OFFSET days_in_month_name
 	xor cl,cl

@@ -789,18 +789,20 @@ PAGE
 ;						ES			SMP request list entry
 ;						FS:ESI		Message buffer
 ;
+;		RETURNS:		ECX			Size
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CopyFromSmp	Proc near
 	push eax
-	push ecx
 	push esi
 	push edi
 ;
 	mov ds:m_current,es
 	mov ds:m_send_thread,-1
-	push ds
 	mov ecx,es:l_size
+	push ds
+	push ecx
 	mov ax,es
 	mov ds,ax
 	mov ax,fs
@@ -808,6 +810,7 @@ CopyFromSmp	Proc near
 	mov edi,esi
 	mov esi,OFFSET l_msg
 	rep movs byte ptr es:[edi],[esi]
+	pop ecx
 	pop ds
 ;
 	xor ax,ax
@@ -816,7 +819,6 @@ CopyFromSmp	Proc near
 ;
 	pop edi
 	pop esi
-	pop ecx
 	pop eax
 	ret
 CopyFromSmp	Endp

@@ -107,8 +107,6 @@ fs_code_sel			EQU 5B0h
 fs_data_sel			EQU 5B8h
 fs_process_sel		EQU 5C0h
 
-disc_drive_sel		EQU 5C8h
-
 multiplx_code_sel	EQU 5D0h
 
 dosdev_process_sel	EQU 5D8h
@@ -120,6 +118,8 @@ debug_code_sel		EQU 5F0h
 test_sel			EQU 5F8h
 
 time_code_sel		EQU 600h
+
+disc_drive_sel		EQU 608h
 
 mail_local_sel		EQU 610h
 mail_global_sel		EQU 618h

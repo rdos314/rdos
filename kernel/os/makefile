@@ -152,7 +152,7 @@ dosdev_srcs = DOSDEV.ASM
 dosdev_objs = $(dosdev_srcs:.ASM=.OBJ)
 dosdev_rdvs = DOSDEV.RDV
 
-fs_srcs = FS.ASM
+fs_srcs = FS.ASM FILE.ASM MEMMAP.ASM
 fs_objs = $(fs_srcs:.ASM=.OBJ)
 fs_rdvs = FS.RDV
 
@@ -175,7 +175,7 @@ time_rdvs = TIME.RDV
 kernel_srcs =   KERNEL.ASM
 
 p1_srcs =   PAGING.ASM				TASK.ASM                STATE.ASM	\
-			DEVICE.ASM				IO.ASM             \
+			DEVICE.ASM				IO.ASM      \
 			PROC.ASM 				ENV.ASM					APP.ASM
 
 p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				\
@@ -211,7 +211,7 @@ srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
 			$(ipc_srcs) $(ntp_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
-			$(prot_srcs) $(timer_srcs) $(em_srcs) \
+			$(prot_srcs) $(timer_srcs) $(em_srcs) $(file_srcs) \
 			$(dosdev_srcs) $(v86bios_srcs) \
 			$(drive_srcs) $(ramdrive_srcs) $(rdfs_srcs)	\
 			$(focus_srcs) $(rtc_srcs)
@@ -236,7 +236,7 @@ exes =      $(prot_exes) $(pcshut_exes)
 rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
-		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	 \
+		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
 			$(em_rdvs) $(dosdev_rdvs) $(ipc_rdvs) $(ipcdebug_rdvs) \
 			$(net_rdvs) $(udp_rdvs) $(ip_rdvs) $(tcp_rdvs) \
 			$(ntp_rdvs) \
@@ -524,6 +524,14 @@ DOSDEV.RDV : $(dosdev_objs)
 	$(dosdev_objs)
 	DOSDEV.RDV
 	DOSDEV;
+!
+
+FILE.RDV : $(file_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(file_objs)
+	FILE.RDV
+	FILE;
 !
 
 FS.RDV : $(fs_objs)

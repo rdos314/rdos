@@ -102,6 +102,13 @@ RegisterVirtUserGate	MACRO
 ;	BX		DESCRIPTOR
 ;	EDX		BASE
 ;	ECX		LIMIT
+GetSelectorBaseSize	MACRO
+	OsGate get_selector_base_size_nr
+					ENDM
+
+;	BX		DESCRIPTOR
+;	EDX		BASE
+;	ECX		LIMIT
 CreateDataSelector16	MACRO
 	OsGate create_data_sel16_nr
 					ENDM
@@ -1087,6 +1094,7 @@ HookInitDisc	MACRO
 
 ;	IN	AX		Sub-unit #
 ;	IN	BX		Disc handle
+;	IN	ECX		Read-ahead
 ;	IN	DS:SI	Disc name
 ;	IN	ES:DI	Disc struc
 ;	OUT	AL		Disc #
@@ -1134,17 +1142,11 @@ NewDiscRequest	MACRO
 					ENDM
 
 ;	IN  BX		Disc sel
+;	IN  ECX		Max number of entries
 ;	OUT	ESI		Disc handle array
 ;	OUT ECX		Number of entries
 GetDiscRequestArray	MACRO
 	OsGate get_disc_request_array_nr
-					ENDM
-
-;	IN  BX		Disc sel
-;	IN	ESI		Disc handle array
-;	IN  ECX		Number of entries
-DiscRequestArrayDone	MACRO
-	OsGate disc_request_array_done_nr
 					ENDM
 
 ;	OUT	AL		Drive #
@@ -1174,15 +1176,16 @@ CloseDrive	MACRO
 	OsGate close_drive_nr
 					ENDM
 
-;	AL		Drive #
-;	EDX		Sector
-NewSector	MACRO
-	OsGate new_sector_nr
+;	IN	AL		Drive #
+;	OUT	EAX		Readahead
+;	OUT ECX		Size
+GetDriveParam	MACRO
+	OsGate get_drive_param_nr
 					ENDM
 
-;	AL		Drive #
+;	AL		DRIVE #
 ;	EBX		Handle
-;	EDX		Sector
+;	EDX		SECTOR
 ;	ESI		Logical address of data
 LockSector	MACRO
 	OsGate lock_sector_nr
@@ -1199,6 +1202,12 @@ ModifySector	MACRO
 					ENDM
 
 ;	AL		Drive #
+;	EDX		Sector
+NewSector	MACRO
+	OsGate new_sector_nr
+					ENDM
+
+;	AL		Drive #
 ;	EBX		Handle
 ;	EDX		Sector
 ;	ESI		Logical address of data
@@ -1209,6 +1218,27 @@ LockSeqSector	MACRO
 ;	EBX		Handle
 UnlockSeqSector	MACRO
 	OsGate unlock_seq_sector_nr
+					ENDM
+
+;	AL		DRIVE #
+;	EBX		Handle
+;	EDX		SECTOR
+;	ESI		Logical address of data
+ReqSector	MACRO
+	OsGate req_sector_nr
+					ENDM
+
+;	AL		DRIVE #
+;	EBX		Handle
+;	EDX		SECTOR
+;	ESI		Logical address of data
+DefineSector	MACRO
+	OsGate define_sector_nr
+					ENDM
+
+;	EBX		Handle
+WaitForSector	MACRO
+	OsGate wait_for_sector_nr
 					ENDM
 
 ;	AL		Drive #
@@ -1245,6 +1275,26 @@ InstallFileSystem	MACRO
 ;	AL			DRIVE #
 InitFileSystem	MACRO
 	OsGate init_file_system_nr
+					ENDM
+
+;	AL			DRIVE #
+;	AH			ATTRIB
+;	BX			FILE SELECTOR
+;	ECX			FILE SIZE
+CreateFileSelector	MACRO
+	OsGate create_file_selector_nr
+					ENDM
+
+;	BX			File selector
+;	EDX			Position
+GetFileListEntry	MACRO
+	OsGate get_file_list_entry_nr
+					ENDM
+
+;	BX			File selector
+;	EDI			File list entry
+FreeFileListEntry	MACRO
+	OsGate free_file_list_entry_nr
 					ENDM
 
 ;	AL			DRIVE #

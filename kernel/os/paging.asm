@@ -243,8 +243,8 @@ init_paging	PROC near
 	or ecx,ecx
 	jz init_paging_done
 ;
-	mov edx,es:ram1_size
-	mov ecx,es:ram2_base
+	mov edx,0A0000h
+	mov ecx,100000h
 	sub ecx,edx
 	call map_flat
 	
@@ -314,6 +314,26 @@ PAGE
 	public init_process_paging
 
 init_process_paging	Proc near
+	mov ax,sys_page_sel
+	mov ds,ax
+	mov ax,system_data_sel
+	mov es,ax
+	mov ecx,es:rom_size
+	mov edx,es:rom_base
+	add ecx,edx
+	and dx,0F000h
+	dec ecx
+	and cx,0F000h
+	add ecx,1000h
+	sub ecx,edx
+	shr edx,10
+	shr ecx,12
+
+unmap_loop:
+	mov dword ptr [edx],0
+	add edx,4
+	loop unmap_loop
+;
 	mov ax,sys_dir_sel
 	mov ds,ax
 	mov bx,sys_page_linear SHR 20
