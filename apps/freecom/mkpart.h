@@ -20,46 +20,34 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# showpart.h
-# Show partitions command class
+# mkpart.h
+# Make partition command class
 #
 ########################################################################*/
 
-#ifndef _SHOWPART_H
-#define _SHOWPART_H
+#ifndef _MKPART_H
+#define _MKPART_H
 
 #include "cmd.h"
 #include "cmdfact.h"
 #include "part.h"
 
-class TShowPartitionFactory : public TCommandFactory
+class TMakePartitionFactory : public TCommandFactory
 {
 public:
-	TShowPartitionFactory();
+	TMakePartitionFactory();
 	virtual TCommand *Create(const char *param);
-
-protected:
 };
 
-class TShowPartitionCommand : public TCommand
+class TMakePartitionCommand : public TCommand
 {
 public:
-	TShowPartitionCommand(const char *param);
+	TMakePartitionCommand(const char *param);
 
 	virtual int Execute(char *param);	
 
 protected:
-    void InitOptions();
-	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
-
-    void ShowEntry(int Nr, TPartition *Entry);
-    void ShowTreeTable(TPartitionTable *Part);
-    void ShowTree(TDiscPartition *Part);
-    void ShowTable(TDiscPartition *Part);
-    int Show(int Disc);
-	
-	int FOptD;
-
+    int Make(int Disc, const char *FsName, int Sectors);
 };
 
 #endif

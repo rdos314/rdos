@@ -1472,7 +1472,7 @@ or just hit enter to cancel to load the strings.
 :TEXT_CMDHELP_SHOWPART
 Show harddrive partition information
 
-SHOWPART /D [disc]
+PART [/D] [disc]
   [disc]          Show partitions on a specified disc
   /D              Shows detailed information about partition tables
 .
@@ -1490,24 +1490,55 @@ Disc %d
 
 .
 
-:TEXT_SHOWPART_PART_RANGE
-
-%08lX-%08lX %15.3f MB
-.
-
 :TEXT_SHOWPART_HEADER
-  DRV TYPE    SECTORS      FILESYS  TOTAL SIZE      FREE SIZE
-.
-
-:TEXT_SHOWPART_DRIVE_ENTRY
-%d: %s %02hX %08lX-%08lX %8s %15.3f MB %15.3f MB
-.
-
-:TEXT_SHOWPART_UNKNOWN_ENTRY
-%d: -- %02hX %08lX-%08lX %8s %15.3f MB
+  DRV TYPE    SECTORS       FILESYS         TOTAL SIZE          FREE SIZE
 .
 
 :TEXT_SHOWPART_FREE_ENTRY
 %d: -- No entry
 .
 
+:TEXT_CMDHELP_RMPART
+Remove harddrive partition
+
+RMPART [/Y] disc part
+  disc            Disc number
+  part            Partition number
+  /Y              Don't ask before removing partition
+.
+
+:TEXT_RMPART_PART_ERROR
+Partition %d not found or invalid
+.
+
+:TEXT_RMPART_DRIVE_HEAD
+Removing drive %s
+Size: %s
+.
+
+:TEXT_RMPART_PART_HEAD
+Removing partition %d on disc %d
+Size: %s
+.
+
+:PROMPT_RMPART
+YyNn{CR}{BREAK}{ESC}
+aabb   b      b    b
+Delete (Yes/No) ? \
+.
+
+:TEXT_CMDHELP_MKPART
+Make harddrive partition
+
+MKPART disc filesys size
+  disc            Disc number
+  filesys         Filesystem name
+  size            Partition size in MB
+
+Currently supported filesystem names are:
+FAT12, FAT16, FAT32, RDFS and FLASHFS
+.
+
+:TEXT_MKPART_ERROR
+Unable to create partition. Invalid size of filesystem name
+.

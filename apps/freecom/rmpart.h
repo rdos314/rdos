@@ -20,31 +20,29 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# showpart.h
-# Show partitions command class
+# rmpart.h
+# Remove partition command class
 #
 ########################################################################*/
 
-#ifndef _SHOWPART_H
-#define _SHOWPART_H
+#ifndef _RMPART_H
+#define _RMPART_H
 
 #include "cmd.h"
 #include "cmdfact.h"
 #include "part.h"
 
-class TShowPartitionFactory : public TCommandFactory
+class TRemovePartitionFactory : public TCommandFactory
 {
 public:
-	TShowPartitionFactory();
+	TRemovePartitionFactory();
 	virtual TCommand *Create(const char *param);
-
-protected:
 };
 
-class TShowPartitionCommand : public TCommand
+class TRemovePartitionCommand : public TCommand
 {
 public:
-	TShowPartitionCommand(const char *param);
+	TRemovePartitionCommand(const char *param);
 
 	virtual int Execute(char *param);	
 
@@ -52,13 +50,15 @@ protected:
     void InitOptions();
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
-    void ShowEntry(int Nr, TPartition *Entry);
-    void ShowTreeTable(TPartitionTable *Part);
-    void ShowTree(TDiscPartition *Part);
-    void ShowTable(TDiscPartition *Part);
-    int Show(int Disc);
+    int Confirm(TFsPartition *Part);
+    int Remove(TFsPartition *Part);
+    int RemovePart();
+    int RemoveDisc();
 	
-	int FOptD;
+	int FOptY;
+	int FDisc;
+	int FPartNr;
+	TDiscPartition *FDiscPart;
 
 };
 

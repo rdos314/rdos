@@ -4280,7 +4280,7 @@ format_find_drive_next:
 	mov ah,al
 	AllocateStaticDrive
 	OpenDrive
-	jmp format_do
+	jmp format_perf
 
 format_drive_found:
     push dx

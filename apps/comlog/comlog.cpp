@@ -25,12 +25,15 @@ void cdecl main()
 	TSerialDevice Port1(1, 9600, 'N', 8, 1);
 	TSerialDevice Port2(3, 9600, 'N', 8, 1);
 
+	Port1.Open();
+	Port2.Open();
+
 	Wait.Add(&Port1);
 	Wait.Add(&Port2);
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-	TFile *File = new TFile("z:\\raw.dat", 0);
+	TFile *File = new TFile("z:\\zap.dat", 0);
 
 	for (;;)
 	{

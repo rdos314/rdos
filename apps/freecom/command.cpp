@@ -21,6 +21,8 @@
 #include "type.h"
 #include "del.h"
 #include "showpart.h"
+#include "rmpart.h"
+#include "mkpart.h"
 
 #include "part.h"
 #include "rdfspart.h"
@@ -38,11 +40,13 @@ TEraseFactory *erase;
 THelpFactory *help;
 TMdFactory *md;
 TMkdirFactory *mkdir;
+TMakePartitionFactory *mkpart;
+TShowPartitionFactory *showpart;
 TPathFactory *path;
 TRdFactory *rd;
 TRmdirFactory *rmdir;
+TRemovePartitionFactory *rmpart;
 TSetFactory *set;
-TShowPartitionFactory *showpart;
 TTypeFactory *type;
 TTimeFactory *time;
 
@@ -59,7 +63,7 @@ void Init()
 	factory = new TFat12PartitionFactory;
 	factory = new TFat16PartitionFactory;
 	factory = new TFat32PartitionFactory;
-    factory = new TFlashFsPartitionFactory;
+	factory = new TFlashFsPartitionFactory;
 
 	RdosGetVersion(&Major, &Minor, &Release);
 	sprintf(VersionStr, "%d.%d.%d", Major, Minor, Release);
@@ -68,11 +72,13 @@ void Init()
 
 	time = new TTimeFactory;
 	type = new TTypeFactory;
-	showpart = new TShowPartitionFactory;
 	set = new TSetFactory;
+	rmpart = new TRemovePartitionFactory;
 	rmdir = new TRmdirFactory;
 	rd = new TRdFactory;
 	path = new TPathFactory;
+	showpart = new TShowPartitionFactory;
+	mkpart = new TMakePartitionFactory;
 	mkdir = new TMkdirFactory;
 	md = new TMdFactory;
 	erase = new TEraseFactory;

@@ -672,7 +672,7 @@ void TSerialDevice::DeviceName(char *Name, int MaxLen) const
 void TSerialDevice::Add(TWait *Wait)
 {
     if (FHandle)
-        RdosAddWaitForCom(FWait->GetHandle(), FHandle, this);
+        RdosAddWaitForCom(Wait->GetHandle(), FHandle, this);
 }
 
 /*##########################################################################
