@@ -89,6 +89,8 @@ disc_current			DD ?
 disc_list				DD ?
 disc_free				DD ?
 disc_section			section_typ <>
+disc_read_list			DD ?
+disc_read_section		section_typ <>
 disc_unit_arr			DD ?
 
 disc_def_struc		ENDS
@@ -237,40 +239,120 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CHECK
+;		NAME:			INSERT_READ
 ;
-;		DESCRIPTION:	Check if sector is in list
+;		DESCRIPTION:	Insert block into read request list
+;
+;		PARAMETERS:		DS		DiscBuf handle
+;						ES		Flat_sel
+;						EDI		DiscBlock handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+insert_read	PROC near
+	push eax
+	push ebx
+	push cx
+	push dx
+;
+	EnterSection ds:disc_read_section
+	mov eax,ds:disc_read_list
+	or eax,eax
+	jne insert_read_used
+
+insert_read_empty:
+	mov es:[edi].dh_prev,edi
+	mov es:[edi].dh_next,edi
+	mov ds:disc_read_list,edi
+	jmp insert_read_done
+
+insert_read_used:
+	mov cx,es:[edi].dh_unit
+	mov dx,es:[edi].dh_sector
+	cmp cx,es:[eax].dh_unit
+	jc insert_read_first
+;
+	jnz insert_read_search_loop
+	cmp dx,es:[eax].dh_sector
+	jnc insert_read_search_loop
+
+insert_read_first:
+	mov ds:disc_read_list,edi
+	jmp insert_read_link
+
+insert_read_search_loop:
+	mov eax,es:[eax].dh_next
+	cmp eax,ds:disc_read_list
+	je insert_read_link
+;
+	cmp cx,es:[eax].dh_unit
+	jc insert_read_link
+;
+	jnz insert_read_search_loop
+;
+	cmp dx,es:[eax].dh_sector
+	jnc insert_read_search_loop
+
+insert_read_link:	
+	mov ebx,es:[eax].dh_prev
+	mov es:[eax].dh_prev,edi
+	mov es:[ebx].dh_next,edi
+	mov es:[edi].dh_prev,ebx
+	mov es:[edi].dh_next,eax	
+
+insert_read_done:
+	LeaveSection ds:disc_read_section
+	pop dx
+	pop cx
+	pop ebx
+	pop eax
+	ret
+insert_read	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GET_READ
+;
+;		DESCRIPTION:	Get next read-request
 ;
 ;		PARAMETERS:		DS		Disc selector
 ;						ES		Flat_sel
-;						CX		Unit #
-;						DX		Sector #
-;						SI		List to look in
 ;
 ;		RETURNS:		EDI		DiscBlock handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-check	PROC near
-	mov edi,ds:[si]
+get_read	PROC near
+	EnterSection ds:disc_read_section
+	mov edi,ds:disc_read_list
 	or edi,edi
 	stc
-	jz check_done
-check_loop:
-	cmp cx,es:[edi].dh_unit
-;	jc check_done
-	jnz check_next
-	cmp dx,es:[edi].dh_sector
-;	jbe check_done
-	je check_done
-check_next:
-	mov edi,es:[edi].dh_next
-	cmp edi,[si]
-	jne check_loop
-	stc
-check_done:
+	jz get_read_done
+;
+	mov eax,es:[edi].dh_next
+	mov ebx,es:[edi].dh_prev
+	mov es:[ebx].dh_next,eax
+	mov es:[eax].dh_prev,ebx
+	cmp eax,edi
+	jne get_read_unlink
+;
+	mov dword ptr ds:disc_read_list,0
+	clc
+	jmp get_read_done
+
+get_read_unlink:
+	mov ds:disc_read_list,eax
+	clc
+
+get_read_done:
+	pushf
+	LeaveSection ds:disc_read_section
+	popf
 	ret
-check	ENDP
+get_read	ENDP
 
 PAGE
 
@@ -350,76 +432,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSERT
-;
-;		DESCRIPTION:	Insert block in list
-;
-;		PARAMETERS:		DS		DiscBuf handle
-;						ES		Flat_sel
-;						SI		List address
-;						EDI		DiscBlock handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-insert	PROC near
-	push eax
-	push ebx
-	push cx
-	push dx
-;
-	mov eax,ds:[si]
-	or eax,eax
-	jne insert_used
-
-insert_empty:
-	mov es:[edi].dh_prev,edi
-	mov es:[edi].dh_next,edi
-	mov ds:[si],edi
-	jmp insert_done
-
-insert_used:
-	mov cx,es:[edi].dh_unit
-	mov dx,es:[edi].dh_sector
-	cmp cx,es:[eax].dh_unit
-	jc insert_first
-	jnz insert_search_loop
-	cmp dx,es:[eax].dh_sector
-	jnc insert_search_loop
-
-insert_first:
-	mov ds:[si],edi
-	jmp insert_link
-
-insert_search_loop:
-	mov eax,es:[eax].dh_next
-	cmp eax,ds:[si]
-	je insert_link
-	cmp cx,es:[eax].dh_unit
-	jc insert_link
-	jnz insert_search_loop
-	cmp dx,es:[eax].dh_sector
-	jnc insert_search_loop
-
-insert_link:	
-	mov ebx,es:[eax].dh_prev
-	mov es:[eax].dh_prev,edi
-	mov es:[ebx].dh_next,edi
-	mov es:[edi].dh_prev,ebx
-	mov es:[edi].dh_next,eax	
-
-insert_done:
-	pop dx
-	pop cx
-	pop ebx
-	pop eax
-	ret
-insert	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			INSERT_BUF
 ;
 ;		DESCRIPTION:	Insert block in buffer list
@@ -467,44 +479,6 @@ insert_buf_used:
 	pop eax
 	ret
 insert_buf	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			REMOVE
-;
-;		DESCRIPTION:	Remove block from list
-;
-;		PARAMETERS:		DS		Disc selector
-;						ES		Flat_sel
-;						SI		List address
-;						EDI		DiscBlock handle
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-remove	PROC near
-	push eax
-	push ebx
-;
-	mov eax,es:[edi].dh_next
-	mov ebx,es:[edi].dh_prev
-	mov es:[ebx].dh_next,eax
-	mov es:[eax].dh_prev,ebx
-	cmp eax,edi
-	jne remove_more
-	mov dword ptr ds:[si],0
-	jmp remove_done
-remove_more:
-	cmp edi,ds:[si]
-	jne remove_done
-	mov ds:[si],eax
-remove_done:
-	pop ebx
-	pop eax
-	ret
-remove	ENDP
 
 PAGE
 
@@ -904,11 +878,13 @@ perform_wakeup	Endp
 ;		DESCRIPTION:	Perform one request
 ;
 ;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 perform_one	Proc near
+	call get_read
+	jc perform_one_done
+;
 	mov al,es:[edi].dh_state
 	cmp al,STATE_EMPTY
 	je perform_one_read
@@ -938,50 +914,6 @@ perform_one_completed:
 perform_one_done:
 	ret
 perform_one	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			perform_unit
-;
-;		DESCRIPTION:	Perform request on one unit
-;
-;		PARAMETERS:		DS		Disc selector
-;						EAX		Unit address
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_unit	Proc near
-	push es
-	push ecx
-	push edi
-;
-	lea edi,[eax].disc_sector_arr
-	mov ax,flat_sel
-	mov es,ax
-	mov cx,ds:disc_sectors_per_unit
-
-perform_unit_sector_loop:
-	xor eax,eax
-	repz scas dword ptr es:[edi]
-	sub edi,4
-	mov eax,es:[edi]
-	or eax,eax
-	jz perform_unit_done
-;
-	push edi
-	mov edi,eax
-	call perform_one
-	pop edi
-	add edi,4
-	jmp perform_unit_sector_loop
-
-perform_unit_done:
-	pop edi
-	pop ecx
-	pop es
-	ret
-perform_unit	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1010,25 +942,13 @@ discbuf_thread:
 	mov cx,100h
 	CreateThread
 	pop ds
-	mov ax,ds
+	mov ax,flat_sel
 	mov es,ax
 
 discbuf_thread_loop:
 	WaitForSignal
-	mov edi,OFFSET disc_unit_arr
-	movzx ecx,ds:disc_units
-
-perform_io_unit_loop:
-	xor eax,eax
-	repz scas dword ptr es:[edi]
-	sub edi,4
-	mov eax,es:[edi]
-	or eax,eax
-	jz discbuf_thread_loop
-;
-	call perform_unit
-	add edi,4
-	jmp perform_io_unit_loop
+	call perform_one
+	jmp discbuf_thread_loop
 
 PAGE
 
@@ -1117,11 +1037,13 @@ install_disc_loop:
 	mov word ptr ds:disc_proc+2,cx
 	mov ds:disc_current,0
 	mov ds:disc_list,0
+	mov ds:disc_read_list,0
 	mov ds:disc_free,0
 	mov ds:disc_thread,-1
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
 	InitSection ds:disc_section
+	InitSection ds:disc_read_section
 	pop di
 	pop es
 ;
@@ -1403,6 +1325,7 @@ lock_loop:
 	mov es:[edi].dh_time_lsb,0
 	mov es:[edi].dh_time_msb,0
 	call insert_buf
+	call insert_read
 
 lock_read_signal:
 	mov al,es:[edi].dh_state
