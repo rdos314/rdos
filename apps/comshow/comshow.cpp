@@ -39,6 +39,7 @@
 #include "netana.h"
 #include "zap.h"
 #include "cotana.h"
+#include "tatsuno.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -65,7 +66,7 @@ void cdecl main()
 //	TFile RawFile("z:\\compacpu.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
-	TFile RawFile("z:\\zap.dat");
+	TFile RawFile("raw.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
@@ -75,7 +76,8 @@ void cdecl main()
 //	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
-	TZapProtocolAnalyser analyzer(&RawFile);
+//	TZapProtocolAnalyser analyzer(&RawFile);
+	TTatsunoProtocolAnalyser analyzer(&RawFile);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
@@ -85,7 +87,7 @@ void cdecl main()
 //	analyzer.DefineLogFile("pump.txt");
 //	analyzer.DefineLogFile("flintab.txt");
 //	analyzer.DefineLogFile("cbus.txt");
-	analyzer.DefineLogFile("zap.txt");
+	analyzer.DefineLogFile("tatsuno.txt");
 
 	for (;;)
 	{
