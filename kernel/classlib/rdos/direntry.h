@@ -30,48 +30,135 @@
 
 #include "datetime.h"
 #include "path.h"
+#include "shareobj.h"
+#include "listbase.h"
 
-class TDirEntry
+class TDirEntryData : public TShareObjectData
 {
 public:
-    TDirEntry();
-    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
-    ~TDirEntry();
+    TDirEntryData();
+    ~TDirEntryData();
     
     TPathName PathName;
     TString EntryName;
     long FileSize;
     int Attribute;
     TDateTime Time;
-    int Valid;
 };
 
-class TDir
+class TDirEntry : public TShareObject
+{
+friend class TDirListNode;
+public:
+    TDirEntry();
+    TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute);
+    TDirEntry(const TDirEntry &src);
+    virtual ~TDirEntry();
+
+	const TDirEntry &operator=(const TDirEntry &src);
+
+	const TDirEntryData &Get() const;
+
+	const TPathName &GetPathName() const;
+	const TString &GetEntryName() const;
+	long GetFileSize() const;
+	int GetAttribute() const;
+	const TDateTime &GetTime() const;
+
+protected:
+    virtual int Compare(const TDirEntry &str) const;
+
+	virtual TShareObjectData *Create(int size);
+	virtual void Destroy(TShareObjectData *obj);
+
+    TDirEntryData *FEntry;
+};
+
+class TDirListNode : public TListBaseNode
 {
 public:
-    TDir();
-	TDir(const char *PathName);
-	TDir(const TString &PathName);
-	TDir(const TPathName &PathName);
-	~TDir();
+	TDirListNode();
+	TDirListNode(const TDirEntry &src);
+	TDirListNode(const TDirListNode &source);
+	virtual ~TDirListNode();
 
-    TDirEntry GotoFirst();
-	TDirEntry GotoNext();
+	const TDirListNode &operator=(const TDirListNode &src);
+	int operator==(const TDirListNode &dest) const;
+	int operator!=(const TDirListNode &dest) const;
+	int operator>(const TDirListNode &dest) const;
+	int operator>=(const TDirListNode &dest) const;
+	int operator<(const TDirListNode &dest) const;
+	int operator<=(const TDirListNode &dest) const;
+
+	TDirEntry &Get() const;
+	void Set(TDirEntry &entry);
+
+protected:
+	virtual int Compare(const TDirListNode &n2) const;
+	virtual int Compare(const TListBaseNode &n2) const;
+	virtual void Load(const TDirListNode &src);
+	virtual void Load(const TListBaseNode &src);
+	
+	TDirEntry *FEntry;
+};
+    
+class TDirList : public TListBase
+{
+public:
+    TDirList();
+	TDirList(const char *PathName);
+	TDirList(const TString &PathName);
+	TDirList(const TPathName &PathName);
+    TDirList(const TDirList &source);
+	~TDirList();
+
+    void SetDefaultAttributes();
+    void SetRequiredAttributes(int attrib);
+    void SetIgnoredAttributes(int attrib);
+    
+	int operator==(const TDirList &dest) const;
+	int operator!=(const TDirList &dest) const;
+	int operator>(const TDirList &dest) const;
+	int operator>=(const TDirList &dest) const;
+	int operator<(const TDirList &dest) const;
+	int operator<=(const TDirList &dest) const;
+	TDirList &operator=(const TDirList &l);
+	TDirList &operator+=(const TDirList &l);
+	TDirList &operator&=(const TDirList &l);
+	TDirList &operator|=(const TDirList &l);
+	TDirList &operator^=(const TDirList &l);
+	TDirEntry &operator[] (int pos);
+
+	TDirEntry &Get();
+
+	void Add(const char *PathName);
+    void Add(const TString &PathName);
+    void Add(const TPathName &PathName);
 
 	TPathName FPathName;
 	TString FBaseString;
 	TString FSearchString;
-    
+
 protected:
+	virtual TDirListNode *Clone(const TDirListNode *ln) const;
+	virtual TListBaseNode *Clone(const TListBaseNode *ln) const;
+
+    int CheckAttrib(int attrib);
 	int IsMatch(const char *FileName);
+    void Add(const char *Name, unsigned long msb, unsigned long lsb, long FileSize, int Attrib);
 
 private:
     void Init();
+    void DoSearch();
 
-	int FDirHandle;
-    int FIndex;
-	
+    int FAttribIgnored;
+    int FAttribRequired;
 };
+
+TDirList operator+(const TDirList& list1, const TDirList& list2);
+TDirList operator&(const TDirList& list1, const TDirList& list2);
+TDirList operator|(const TDirList& list1, const TDirList& list2);
+TDirList operator^(const TDirList& list1, const TDirList& list2);
 
 #endif
 

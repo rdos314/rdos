@@ -31,7 +31,7 @@
 #include "datetime.h"
 #include "str.h"
 
-class TDir;
+class TDirList;
 class TFile;
 
 class TPathName
@@ -39,12 +39,12 @@ class TPathName
 public:
 	TPathName();
 	TPathName(int Drive);
-    TPathName(const char *PathName);
-    TPathName(const TString &PathName);
-    TPathName(int Drive, const TString &PathName);
-    TPathName(int Drive, const TString &DirName, const TString &EntryName);
-    TPathName(const TPathName &PathName);
-    ~TPathName();
+	TPathName(const char *PathName);
+	TPathName(const TString &PathName);
+	TPathName(int Drive, const TString &PathName);
+	TPathName(int Drive, const TString &DirName, const TString &EntryName);
+	TPathName(const TPathName &PathName);
+	~TPathName();
 
 	const TPathName &operator=(const TPathName &src);
 	const TPathName &operator=(const TString &src);
@@ -62,21 +62,21 @@ public:
 	int GetAttribute() const;
 	int SetAttribute(int Attribute) const;
 
-    int IsFile() const;
+	int IsFile() const;
 	TFile OpenFile() const;
-    TFile CreateFile(int Attribute) const;
-    int DeleteFile() const;
-    int MoveFile(const TPathName &NewName) const;
-    int CopyFile(const TPathName &NewName) const;
-    int AppendFile(const TPathName &NewName) const;
-    
-    int IsDir() const;
-    int MakeDir() const;
-    int RemoveDir() const;
-    
-    TDir Find() const;
-    TDir Find(const char *SearchString) const;
-    TDir Find(const TString &SearchString) const;
+	TFile CreateFile(int Attribute) const;
+	int DeleteFile() const;
+	int MoveFile(const TPathName &NewName) const;
+	int CopyFile(const TPathName &NewName) const;
+	int AppendFile(const TPathName &NewName) const;
+
+	int IsDir() const;
+	int MakeDir() const;
+	int RemoveDir() const;
+
+	TDirList Find() const;
+	TDirList Find(const char *SearchString) const;
+	TDirList Find(const TString &SearchString) const;
 
 private:
 	void Init(const char *PathName);

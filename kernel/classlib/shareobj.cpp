@@ -128,6 +128,61 @@ void TShareObject::Init()
 
 /*##########################################################################
 #
+#   Name       : TShareObject::Create
+#
+#   Purpose....: Create data object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TShareObjectData *TShareObject::Create(int size)
+{
+	return (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
+}
+
+/*##########################################################################
+#
+#   Name       : TShareObject::Destroy
+#
+#   Purpose....: Destroy data object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShareObject::Destroy(TShareObjectData *obj)
+{
+	delete obj;
+}
+
+/*##########################################################################
+#
+#   Name       : TShareObject::Load
+#
+#   Purpose....: Load a new object (for assigment constructors)
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TShareObject::Load(const TShareObject &src)
+{
+	if (FBuf != src.FBuf)
+	{
+		Release();
+		FBuf = src.FBuf;
+		FData = src.FData;
+		if (FData)
+			FData->FRefs++;
+	}
+}
+
+/*##########################################################################
+#
 #   Name       : TShareObject::GetSize
 #
 #   Purpose....: Get size of data
@@ -204,7 +259,7 @@ void TShareObject::AllocBuffer(int size)
 		Init();
 	else
 	{
-		FData = (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
+	    FData = Create(size);
 		FData->FRefs = 1;
 		FData->FDataSize = size;
 		FData->FAllocSize = size;
@@ -229,7 +284,7 @@ void TShareObject::Release()
 	{
 		FData->FRefs--;
 		if (FData->FRefs <= 0)
-			delete FData;
+		    Destroy(FData);
 	}
 	Init();
 }
@@ -251,7 +306,7 @@ void TShareObject::Release(TShareObjectData *Data)
 	{
         Data->FRefs--;
         if (Data->FRefs <= 0)
-            delete Data;
+            Destroy(Data);
 	}
 }
 

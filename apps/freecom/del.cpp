@@ -170,7 +170,7 @@ void TDelCommand::InitOptions()
 #   Returns....: *
 #
 ##########################################################################*/
-int TDelCommand::Del(TDirEntry *entry)
+int TDelCommand::Del(TDirEntryData *entry)
 {
 	if (FOptP)
 	{

@@ -61,7 +61,7 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 	void InitOptions();
 
-    int Del(TDirEntry *entry);
+    int Del(TDirEntryData *entry);
 	int Add(TArg *arg);
 
 	TFileList FFileList;

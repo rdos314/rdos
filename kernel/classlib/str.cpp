@@ -198,14 +198,7 @@ void TString::ConcatInPlace(const char *str, int size)
 ##########################################################################*/
 const TString &TString::operator=(const TString &src)
 {
-	if (FBuf != src.FBuf)
-	{
-		Release();
-		FBuf = src.FBuf;
-		FData = src.FData;
-		if (FData)
-			FData->FRefs++;
-	}
+    Load(src);
 	return *this;
 }
 

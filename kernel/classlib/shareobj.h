@@ -60,11 +60,15 @@ public:
 	virtual int Compare(const TShareObject &n2) const;
 
 protected:
+    virtual TShareObjectData *Create(int size);
+    virtual void Destroy(TShareObjectData *obj);
+
 	void Init();
+    void Load(const TShareObject &src);
 	void AllocBuffer(int size);
 	void Release();
 	void Empty();
-	static void Release(TShareObjectData *Data);
+	void Release(TShareObjectData *Data);
 	void CopyBeforeWrite();
 	void AllocBeforeWrite(int size);
 	void AssignCopy(const void *x, int size);

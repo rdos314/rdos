@@ -1116,9 +1116,9 @@ int TPathName::RemoveDir() const
 #   Returns....: *
 #
 ##########################################################################*/
-TDir TPathName::Find() const
+TDirList TPathName::Find() const
 {
-    return TDir(FPathName);
+	return TDirList(FPathName);
 }
 
 /*##########################################################################
@@ -1132,13 +1132,13 @@ TDir TPathName::Find() const
 #   Returns....: *
 #
 ##########################################################################*/
-TDir TPathName::Find(const char *SearchString) const
+TDirList TPathName::Find(const char *SearchString) const
 {
 	TPathName path(*this);
 
 	path += SearchString;
 
-	return TDir(path);
+	return TDirList(path);
 }
 
 /*##########################################################################
@@ -1152,11 +1152,11 @@ TDir TPathName::Find(const char *SearchString) const
 #   Returns....: *
 #
 ##########################################################################*/
-TDir TPathName::Find(const TString &SearchString) const
+TDirList TPathName::Find(const TString &SearchString) const
 {
 	TPathName path(*this);
 
 	path += SearchString;
 
-	return TDir(path);
+	return TDirList(path);
 }
