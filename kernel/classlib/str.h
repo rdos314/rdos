@@ -33,6 +33,7 @@
 
 class TString : public TShareObject
 {
+friend class TStringListNode;
 public:
     TString();
 	TString(const TString &source);

@@ -28,10 +28,10 @@
 #ifndef _STRLIST_H
 #define _STRLIST_H
 
-#include "list.h"
+#include "listbase.h"
 #include "str.h"
 
-class TStringListNode : public TListNode
+class TStringListNode : public TListBaseNode
 {
 public:
 	TStringListNode();
@@ -39,20 +39,33 @@ public:
 	TStringListNode(const TStringListNode &source);
 	virtual ~TStringListNode();
 
+	const TStringListNode &operator=(const TStringListNode &src);
+	int operator==(const TStringListNode &dest) const;
+	int operator!=(const TStringListNode &dest) const;
+	int operator>(const TStringListNode &dest) const;
+	int operator>=(const TStringListNode &dest) const;
+	int operator<(const TStringListNode &dest) const;
+	int operator<=(const TStringListNode &dest) const;
+
 	TString &Get() const;
 	void Set(TString &str);
 
 protected:
+	virtual int Compare(const TStringListNode &n2) const;
+	virtual int Compare(const TListBaseNode &n2) const;
+	virtual void Load(const TStringListNode &src);
+	virtual void Load(const TListBaseNode &src);
+	
 	TString *FStr;
 };
 
-class TStringList : public TList
+class TStringList : public TListBase
 {
 public:
 	TStringList();
+	TStringList(const TStringList &source);
 	~TStringList();
 
-	TString &Get();
 	int operator==(const TStringList &dest) const;
 	int operator!=(const TStringList &dest) const;
 	int operator>(const TStringList &dest) const;
@@ -66,14 +79,17 @@ public:
 	TStringList &operator^=(const TStringList &l);
 	TString &operator[] (int pos);
 
-	void AddFirst(TString &str);
-	void AddLast(TString &str);
-	void AddAt(int n, TString &str);
-
-    int Replace(int n, TString &str);
+	TString &Get();
+	
+	int Find(const TString &str);
+	void AddFirst(const TString &str);
+	void AddLast(const TString &str);
+	void AddAt(int n, const TString &str);
+    int Replace(int n, const TString &str);
 
 protected:
-	virtual TListNode *Clone(const TListNode *ln) const;
+	virtual TStringListNode *Clone(const TStringListNode *ln) const;
+	virtual TListBaseNode *Clone(const TListBaseNode *ln) const;
 
 };
 

@@ -47,6 +47,7 @@ TString EmptyStr;
 ##########################################################################*/
 TStringListNode::TStringListNode()
 {
+    FStr = 0;
 }
 
 /*##########################################################################
@@ -102,6 +103,224 @@ TStringListNode::~TStringListNode()
 
 /*##########################################################################
 #
+#   Name       : TStringListNode::Compare
+#
+#   Purpose....: Compare nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::Compare(const TStringListNode &n2) const
+{
+	if (FStr && n2.FStr)
+		return FStr->Compare(*n2.FStr);
+	else
+	{
+		if (FStr || n2.FStr)
+		{
+			if (FStr)
+				return 1;
+			else
+				return -1;
+		}
+		else
+			return 0;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::Compare
+#
+#   Purpose....: Compare nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::Compare(const TListBaseNode &n2) const
+{
+    TStringListNode *p = (TStringListNode *)&n2;
+    return Compare(*p);    
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::Load
+#
+#   Purpose....: Load new node
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStringListNode::Load(const TStringListNode &src)
+{
+	if (FStr)
+		*FStr = *src.FStr;
+	else
+	{
+		if (src.FData)
+			FStr = new TString(*src.FStr);
+	}
+	FData = FStr;
+	FValid = src.FValid;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::Load
+#
+#   Purpose....: Load new node
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TStringListNode::Load(const TListBaseNode &src)
+{
+	TStringListNode *p = (TStringListNode *)&src;
+	Load(*p);
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TStringListNode &TStringListNode::operator=(const TStringListNode &src)
+{
+	Load(src);
+	return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator==
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator==(const TStringListNode &ln) const
+{
+	if (Compare(ln) == 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator!=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator!=(const TStringListNode &ln) const
+{
+	if (Compare(ln) == 0)
+		return FALSE;
+	else
+		return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator>
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator>(const TStringListNode &dest) const
+{
+	if (Compare(dest) > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator<
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator<(const TStringListNode &dest) const
+{
+	if (Compare(dest) < 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator>=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator>=(const TStringListNode &dest) const
+{
+	if (Compare(dest) >= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TStringListNode::operator<=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TStringListNode::operator<=(const TStringListNode &dest) const
+{
+	if (Compare(dest) <= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TStringListNode::Get
 #
 #   Purpose....: Get data
@@ -129,7 +348,7 @@ TString &TStringListNode::Get() const
 ##########################################################################*/
 void TStringListNode::Set(TString &str)
 {
-	if (FData)
+	if (FStr)
 		*FStr = str;
 	else
 	{
@@ -151,6 +370,22 @@ void TStringListNode::Set(TString &str)
 #
 ##########################################################################*/
 TStringList::TStringList()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TStringList::TStringList
+#
+#   Purpose....: Copy constructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TStringList::TStringList(const TStringList &source)
+  : TListBase(source)
 {
 }
 
@@ -389,7 +624,7 @@ TStringList &TStringList::operator^=(const TStringList &l)
 ##########################################################################*/
 TString &TStringList::operator[](int pos)
 {
-	TStringListNode *p = (TStringListNode *)TList::Get(pos);
+	TStringListNode *p = (TStringListNode *)TListBase::Get(pos);
 
 	if (p->IsValid())
 		return p->Get();
@@ -408,9 +643,25 @@ TString &TStringList::operator[](int pos)
 #   Returns....: *
 #
 ##########################################################################*/
-TListNode *TStringList::Clone(const TListNode *ln) const
+TStringListNode *TStringList::Clone(const TStringListNode *ln) const
 {
-	TStringListNode *p = (TStringListNode *)ln;
+	return new TStringListNode(*ln);
+}
+
+/*##########################################################################
+#
+#   Name       : TStringList::Clone
+#
+#   Purpose....: Clone entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListBaseNode *TStringList::Clone(const TListBaseNode *ln) const
+{
+    TStringListNode *p = (TStringListNode *)ln;
 	return new TStringListNode(*p);
 }
 
@@ -444,10 +695,10 @@ TString &TStringList::Get()
 #   Returns....: *
 #
 ##########################################################################*/
-void TStringList::AddFirst(TString &str)
+void TStringList::AddFirst(const TString &str)
 {
-	TListNode *p = new TStringListNode(str);
-	TList::AddFirst(p);
+	TStringListNode *p = new TStringListNode(str);
+	TListBase::AddFirst(p);
 }
 
 /*##########################################################################
@@ -461,10 +712,10 @@ void TStringList::AddFirst(TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TStringList::AddLast(TString &str)
+void TStringList::AddLast(const TString &str)
 {
-	TListNode *p = new TStringListNode(str);
-	TList::AddLast(p);
+	TStringListNode *p = new TStringListNode(str);
+	TListBase::AddLast(p);
 }
 
 /*##########################################################################
@@ -478,10 +729,10 @@ void TStringList::AddLast(TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-void TStringList::AddAt(int n, TString &str)
+void TStringList::AddAt(int n, const TString &str)
 {
-	TListNode *p = new TStringListNode(str);
-	TList::AddAt(n, p);
+	TStringListNode *p = new TStringListNode(str);
+	TListBase::AddAt(n, p);
 }
 
 /*##########################################################################
@@ -495,10 +746,10 @@ void TStringList::AddAt(int n, TString &str)
 #   Returns....: *
 #
 ##########################################################################*/
-int TStringList::Replace(int pos, TString &str)
+int TStringList::Replace(int pos, const TString &str)
 {
-	TStringListNode p = TStringListNode(str);
-	return TList::Replace(pos, p);
+	TStringListNode n = TStringListNode(str);
+	return TListBase::Replace(pos, &n);
 }
 
 /*##########################################################################
