@@ -41,7 +41,7 @@ INCLUDE ..\os\system.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
 INCLUDE ..\os\port.def
-
+INCLUDE ..\os\drive.inc
 
 boot_struc	STRUC
 
@@ -64,7 +64,12 @@ boot_signature				DB ?
 boot_serial					DD ?
 boot_volume					DB 11 DUP(?)
 boot_fs						DB 8 DUP(?)
-boot_fs_handle				DW ?
+
+disc_fs_handle				DW ?
+disc_sel					DW ?
+disc_thread					DW ?
+disc_sub_unit				DB ?
+disc_nr						DB ?
 
 boot_struc		ENDS
 
@@ -1176,11 +1181,12 @@ GetDriveParam	Proc near
 	call ReadDrive
 	mov edx,ebx
 	jc get_drive_param_done
+;
 	mov cx,flat_sel
 	mov ds,cx
 	mov esi,edx
 	xor edi,edi
-	mov ecx,SIZE boot_struc
+	mov ecx,OFFSET disc_fs_handle
 	rep movs byte ptr es:[edi],[esi]
 	mov cx,floppy_data_sel
 	mov ds,cx
@@ -1192,6 +1198,7 @@ GetDriveParam	Proc near
 	cmp ax,es:boot_bytes_per_sector
 	stc
 	jne get_drive_param_done
+;
 	mov ax,es:boot_sectors_per_cyl
 	mov ds:[bx].Tracks,al
 	clc
@@ -1222,7 +1229,7 @@ PAGE
 ;
 ;		PARAMETERS:		AL		Sub-unit #
 ;						AH		Disc #
-;						ES		Disc handle
+;						ES		Boot sector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1273,7 +1280,7 @@ PAGE
 ;
 ;		PARAMETERS:		AL		Sub-unit #
 ;						AH		Disc #
-;						BX		Disc handle
+;						ES		Disc handle
 ;					
 ;		RETURNS:		AX		Sectors / unit
 ;						CX		Bytes / sector
@@ -1281,39 +1288,20 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_drive	Proc far
-	push es
-;
-	mov es,bx
+open_drive	Proc near
 	call GetDriveParam
 	jc open_drive_done
+;
 	call InstallMain
 	mov ax,es:boot_sectors_per_cyl
 	mul es:boot_heads
 	mov cx,es:boot_bytes_per_sector
 	mov edx,80
 	clc
+
 open_drive_done:
-	pop es
 	ret
 open_drive	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			close_drive
-;
-;		DESCRIPTION:	Close a drive
-;
-;		PARAMETERS:		BX		Drive handle
-;					
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-close_drive	Proc far
-	ret
-close_drive	Endp
 
 PAGE
 
@@ -1324,19 +1312,18 @@ PAGE
 ;
 ;		DESCRIPTION:	Check for media change
 ;
-;		PARAMETERS:		BX		Drive handle
+;		PARAMETERS:		FS		Disc selector
 ;
 ;		RETURNS:		AX      Status
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-check_media	Proc far
+check_media	Proc near
 	push ax
 	push bx
 	push dx
 ;
-	mov ds,bx
-	mov al,ds:boot_drive_nr
+	mov al,fs:boot_drive_nr
 	mov bx,floppy_data_sel
 	mov ds,bx
 	EnterSection FloppySection
@@ -1360,98 +1347,6 @@ check_media_done:
 	pop ax
 	ret
 check_media	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			read_drive
-;
-;		DESCRIPTION:	Read sector(s) from drive
-;
-;		PARAMETERS:		AX		Sector
-;						BX		Drive handle
-;						EDX		Unit
-;						CX		Number of sectors
-;						EDI		Logical address of buffer, must be page aligned
-;
-;		RETURNS:		AX      Status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_drive	Proc far
-	push ax
-	push ebx
-	push cx
-	push dx
-	push edi
-;
-	mov ds,bx
-	shl cx,9
-	div byte ptr ds:boot_sectors_per_cyl
-	mov dh,al
-	xchg ah,dl
-	inc dl
-	mov al,ds:boot_drive_nr
-	mov bx,floppy_data_sel
-	mov ds,bx
-	mov ebx,edi
-	call ReadDrive
-;
-	pop edi
-	pop dx
-	pop cx
-	pop ebx
-	pop ax
-	ret
-read_drive	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			write_drive
-;
-;		DESCRIPTION:	Write sector(s) to drive
-;
-;		PARAMETERS:		AX		Sector
-;						BX		Drive handle
-;						EDX		Unit
-;						CX		Number of sectors
-;						EDI		Logical address of buffer, must be page aligned
-;
-;		RETURNS:		AX      Status
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_drive	Proc far
-	push ax
-	push ebx
-	push cx
-	push dx
-	push edi
-;
-	mov ds,bx
-	shl cx,9
-	div byte ptr ds:boot_sectors_per_cyl
-	mov dh,al
-	xchg ah,dl
-	inc dl
-	mov al,ds:boot_drive_nr
-	mov bx,floppy_data_sel
-	mov ds,bx
-	mov ebx,edi
-	call WriteDrive
-;
-	pop edi
-	pop dx
-	pop cx
-	pop ebx
-	pop ax
-	ret
-write_drive	Endp
 
 PAGE
 
@@ -1522,31 +1417,291 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DISCINIT_THREAD
+;
+;		DESCRIPTION:	Thread to open a disc drive
+;
+;		PARAMETERS:		FS		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+discinit_thread_name	DB 'Disc Init',0
+
+discinit_thread	Proc far
+	int 3
+	mov ax,fs
+	mov es,ax
+	mov ax,floppy_data_sel
+	mov ds,ax
+	mov al,es:disc_sub_unit
+	mov ah,es:disc_nr
+	call open_drive
+	jc discinit_thread_done
+;
+	mov bx,es:disc_sel
+	FlushDisc
+;
+	mov bx,es:disc_thread
+	Signal
+
+discinit_thread_done:
+	ret
+discinit_thread	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			read_drive
+;
+;		DESCRIPTION:	Read drive
+;
+;		PARAMETERS:		FS		Disc selector
+;						EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_drive	Proc near
+	push cx
+	mov cx,3
+
+read_drive_loop:
+	push eax
+	push cx
+	push edx
+	push edi
+;
+	movzx eax,es:[edi].dh_sector
+	movzx edx,es:[edi].dh_unit
+	mov edi,es:[edi].dh_data
+;
+	div byte ptr fs:boot_sectors_per_cyl
+	mov dh,al
+	xchg ah,dl
+	inc dl
+	mov al,fs:boot_drive_nr
+;
+	mov bx,floppy_data_sel
+	mov ds,bx
+	mov cx,200h
+	mov ebx,edi
+	call ReadDrive
+;
+	pop edi
+	pop edx
+	pop cx
+	pop eax
+	jnc read_drive_ok
+;
+	call check_media
+	jc read_drive_done
+;
+	loop read_drive_loop
+;
+	mov es:[edi].dh_state,STATE_BAD
+	stc
+	jmp read_drive_done
+
+read_drive_ok:
+	mov es:[edi].dh_state,STATE_USED
+
+read_drive_done:
+	pop cx
+	ret
+read_drive	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			write_drive
+;
+;		DESCRIPTION:	Perform a write request
+;
+;		PARAMETERS:		DS		Disc selector
+;						EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_drive	Proc near
+	mov es:[edi].dh_state,STATE_USED
+	push cx
+;
+	or dx,dx
+	jnz write_drive_do
+;
+	or ax,ax
+	jnz write_drive_do
+;
+	int 3
+	stc
+	jmp write_drive_done
+
+write_drive_do:
+	mov cx,3
+
+write_drive_loop:
+	push eax
+	push cx
+	push edx
+	push edi
+;
+	movzx eax,es:[edi].dh_sector
+	movzx edx,es:[edi].dh_unit
+	mov edi,es:[edi].dh_data
+;
+	div byte ptr fs:boot_sectors_per_cyl
+	mov dh,al
+	xchg ah,dl
+	inc dl
+	mov al,fs:boot_drive_nr
+;
+	mov bx,floppy_data_sel
+	mov ds,bx
+	mov cx,200h
+	mov ebx,edi
+	call WriteDrive
+;
+	pop edi
+	pop edx
+	pop cx
+	pop eax
+	jnc write_drive_done
+;
+	call check_media
+	jc write_drive_done
+;
+	loop write_drive_loop
+;
+	stc
+
+write_drive_done:
+	pop cx
+	ret
+write_drive	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			perform_one
+;
+;		DESCRIPTION:	Perform one request
+;
+;		PARAMETERS:		FS		Disc selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+perform_one	Proc near
+
+perform_one_loop:
+	GetDiscRequest
+	jc perform_one_done
+;
+	mov al,es:[edi].dh_state
+	cmp al,STATE_EMPTY
+	je perform_one_read
+;
+	cmp al,STATE_DIRTY
+	je perform_one_write
+;
+	cmp al,STATE_SEQ
+	jne perform_one_done
+
+perform_one_write:
+	call check_media
+	jc perform_one_fail
+;
+	call write_drive
+	jmp perform_one_completed
+
+perform_one_read:
+	call check_media
+	jc perform_one_done
+;
+	call read_drive
+
+perform_one_completed:
+	DiscRequestCompleted
+	jmp perform_one_loop
+
+perform_one_fail:
+	DiscRequestCompleted
+	FlushDisc
+
+perform_one_done:
+	ret
+perform_one	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DISCBUF_THREAD
+;
+;		DESCRIPTION:	Thread to handle disc buffer queue
+;
+;		PARAMETERS:		FS		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+discbuf_thread:
+	int 3
+	mov ax,floppy_data_sel
+	mov ds,ax
+	InstallDisc
+	mov fs:disc_sel,bx
+	mov fs:disc_nr,al
+	GetThread
+	mov fs:disc_thread,ax
+	push ds
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET discinit_thread
+	mov di,OFFSET discinit_thread_name
+	mov ax,4
+	mov cx,100h
+	CreateThread
+	pop ds
+;
+	mov ax,flat_sel
+	mov es,ax
+	WaitForSignal
+
+discbuf_thread_loop:
+	WaitForDiscRequest
+	call perform_one
+	jmp discbuf_thread_loop
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			INSTALL_UNIT
 ;
 ;		DESCRIPTION:	Install a disk unit
 ;
 ;		PARAMETERS:		AL		UNIT #
-;						SI		NAME
+;						DI		NAME
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 install_unit	Proc near
-	push es
-	push di
 	push ax
 	mov eax,SIZE boot_struc
 	AllocateSmallGlobalMem
-	mov cx,ax
-	xor di,di
-	xor al,al
-	rep stosb
 	mov bx,es
+	mov fs,bx
 	pop ax
-	pop di
-	pop es
-	InstallDisc
-install_unit_done:
+	mov fs:disc_sub_unit,al
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET discbuf_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
 	ret
 install_unit	Endp
 
@@ -1563,17 +1718,11 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-drive_ctrl:
-dc00	DW OFFSET open_drive,		floppy_code_sel
-dc01	DW OFFSET close_drive,		floppy_code_sel
-dc02	DW OFFSET check_media,		floppy_code_sel
-dc03	DW OFFSET read_drive,		floppy_code_sel
-dc04	DW OFFSET write_drive,		floppy_code_sel
-
 floppy0	DB 'Floppy Drive 0',0
 floppy1	DB 'Floppy Drive 1',0
 
 init_disc	Proc far
+	int 3
 	in al,INT0_MASK
 	and al,NOT 40h
 	out INT0_MASK,al
@@ -1582,15 +1731,11 @@ init_disc	Proc far
 	mov ds,ax
 	call ResetController
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov di,OFFSET drive_ctrl
 	mov al,0
-	mov si,OFFSET floppy0
+	mov di,OFFSET floppy0
 	call install_unit
 	mov al,1
-	mov si,OFFSET floppy1
+	mov di,OFFSET floppy1
 ;	call install_unit
 	ret
 init_disc	Endp

@@ -25,35 +25,31 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_proc_struc	STRUC
+STATE_DIRTY = 9Bh
+STATE_USED = 5Ah
+STATE_EMPTY = 0CFh
+STATE_BAD = 0AAh
+STATE_SEQ = 7Bh
 
-;	IN	AX		Unit #
-;	IN	BX		Disc handle
-;	OUT	DS:SI	Disc data
-;	OUT	AX		Sectors / unit
-;	OUT	CX		Bytes / sector
-;	OUT	DX		Units
-open_disc_proc			DD ?
+FLAGS_READ_AHEAD = 1
 
-;	IN	BX		Disc handle
-close_disc_proc		DD ?
+DISC_HANDLE_SIZE	EQU 32
 
-;	IN	BX		Disc handle
-check_media_proc		DD ?
+discbuf_handle		STRUC
 
-;	IN	AX		Sector
-;	IN	BX		Disc handle
-;	IN	DX		Unit
-;	IN	CX		Number of sectors
-;	IN	EDI		Logical address of buffer, must be page aligned
-read_disc_proc			DD ?
+dh_next				DD ?
+dh_prev				DD ?
+dh_unit				DW ?
+dh_sector			DW ?
+dh_wait				DW ?
+dh_thread			DW ?
+dh_lock_count		DB ?
+dh_state			DB ?
+dh_usage			DB ?
+dh_flags			DB ?
+dh_buf_sel			DW ?
+dh_time_lsb			DD ?
+dh_time_msb			DW ?
+dh_data				DD ?
 
-;	IN	AX		Sector
-;	IN	BX		Disc handle
-;	IN	DX		Unit
-;	IN	CX		Number of sectors
-;	IN	EDI		Logical address of buffer, must be page aligned
-write_disc_proc		DD ?
-
-disc_proc_struc	ENDS
-
+discbuf_handle		ENDS

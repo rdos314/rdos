@@ -44,28 +44,8 @@ INCLUDE drive.inc
 
 MAX_DRIVES = 'Z' - 'A' + 1
 
-STATE_DIRTY = 9Bh
-STATE_USED = 5Ah
-STATE_EMPTY = 0CFh
-STATE_BAD = 0AAh
-STATE_SEQ = 7Bh
-
-FLAGS_READ_AHEAD = 1
-
 POLL_TIMEOUT EQU 2 * 1192000
 MIN_TIMEOUT EQU 2 * 1192000
-
-CallDrive	Macro call_proc
-	push ds
-	push bx
-	push si
-	mov bx,ds:disc_handle
-	lds si,ds:disc_proc
-	call ds:[si].&call_proc
-	pop si
-	pop bx
-	pop ds
-				ENDM
 
 disc_data_seg		STRUC
 
@@ -81,10 +61,7 @@ disc_data_seg		ENDS
 
 disc_def_struc		STRUC
 
-disc_sub_unit			DB ?
 disc_nr					DB ?
-disc_proc				DD ?
-disc_handle				DW ?
 disc_units				DW ?
 disc_bytes_per_sector	DW ?
 disc_sectors_per_unit	DW ?
@@ -118,27 +95,6 @@ drive_disc				DW ?
 drive_start_sector		DD ?
 
 drive_def_struc	ENDS
-
-DISC_HANDLE_SIZE	EQU 32
-
-discbuf_handle		STRUC
-
-dh_next				DD ?
-dh_prev				DD ?
-dh_unit				DW ?
-dh_sector			DW ?
-dh_wait				DW ?
-dh_thread			DW ?
-dh_lock_count		DB ?
-dh_state			DB ?
-dh_usage			DB ?
-dh_flags			DB ?
-dh_buf_sel			DW ?
-dh_time_lsb			DD ?
-dh_time_msb			DW ?
-dh_data				DD ?
-
-discbuf_handle		ENDS
 
 	.386p
 
@@ -837,15 +793,15 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INIT_DRIVES
+;		NAME:			FLUSH_DRIVES
 ;
-;		DESCRIPTION:	Init all drives assocated with a disc #
+;		DESCRIPTION:	Flush all drives assocated with a disc #
 ;
 ;		PARAMETERS:		DS		Disc def struc
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-init_drives	Proc near
+flush_drives	Proc near
 	push ds
 	push es
 	push ax
@@ -858,22 +814,27 @@ init_drives	Proc near
 	mov ds,ax
 	mov cx,MAX_DRIVES
 	mov si,OFFSET drive_def_arr
-init_drives_loop:
+
+flush_drives_loop:
 	mov ax,[si]
 	or ax,ax
-	jz init_drives_next
+	jz flush_drives_next
+;
 	cmp ax,-1
-	je init_drives_next
+	je flush_drives_next
+;
 	mov es,ax
 	cmp bx,es:drive_disc
-	jne init_drives_next
+	jne flush_drives_next
+;
 	mov ax,si
 	sub ax,OFFSET drive_def_arr
 	shr ax,1
 	InitFileSystem
-init_drives_next:
+
+flush_drives_next:
 	add si,2
-	loop init_drives_loop	
+	loop flush_drives_loop	
 ;
 	pop si
 	pop cx
@@ -882,33 +843,29 @@ init_drives_next:
 	pop es
 	pop ds
 	ret
-init_drives	Endp
+flush_drives	Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			OPEN_DISC
+;		NAME:			FLUSH_DISC
 ;
-;		DESCRIPTION:	Open disc
+;		DESCRIPTION:	Flush disc
 ;
-;		PARAMETERS:		DS		Disc def struc
+;		PARAMETERS:		AX		Sectors per unit
+;						BX		Disc sel
+;						CX		Bytes per sector
+;						DX		Units
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_disc	Proc near
+flush_disc_name	DB 'Flush Disc',0
+
+flush_disc	Proc far
 	push ds
-	push si
-	mov al,ds:disc_sub_unit
-	mov ah,ds:disc_nr
-	mov bx,ds:disc_handle
-	lds si,ds:disc_proc
-	call ds:[si].open_disc_proc
-	pop si
-	pop ds
-	jc open_disc_done
-;
+	mov ds,bx
 	mov ds:disc_sectors_per_unit,ax
 	mov ds:disc_bytes_per_sector,cx
 	mov ds:disc_units,dx
@@ -953,301 +910,163 @@ open_disc	Proc near
 ;
 	push es
 	push di
-	call init_drives
+	call flush_drives
 	pop di
 	pop es
-	clc
-open_disc_done:
-	ret
-open_disc	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;
-;		NAME:			perform_media_check
-;
-;		DESCRIPTION:	Perform a media check
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_media_check	Proc near
-	CallDrive check_media_proc
-	jnc perform_media_check_done
-;
-	int 3
-
-perform_media_check_done:
-	ret
-perform_media_check	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			perform_write
-;
-;		DESCRIPTION:	Perform a write request
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_write	Proc near
-	mov es:[edi].dh_state,STATE_USED
-	push cx
-;
-	or dx,dx
-	jnz perform_write_do
-;
-	or ax,ax
-	jnz perform_write_do
-;
-	int 3
-	stc
-	jmp perform_write_done
-
-perform_write_do:
-	mov cx,3
-
-perform_write_loop:
-	push eax
-	push cx
-	push edx
-	push edi
-	movzx eax,es:[edi].dh_sector
-	movzx edx,es:[edi].dh_unit
-	mov cx,1
-	mov edi,es:[edi].dh_data
-	CallDrive write_disc_proc
-	pop edi
-	pop edx
-	pop cx
-	pop eax
-	jnc perform_write_done
-;
-	call perform_media_check
-	jc perform_write_done
-;
-	loop perform_write_loop
-;
-	stc
-
-perform_write_done:
-	pop cx
-	ret
-perform_write	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			perform_read
-;
-;		DESCRIPTION:	Perform a read request
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_read	Proc near
-	push cx
-	mov cx,3
-
-perform_read_loop:
-	push eax
-	push cx
-	push edx
-	push edi
-	movzx eax,es:[edi].dh_sector
-	movzx edx,es:[edi].dh_unit
-	mov cx,1
-	mov edi,es:[edi].dh_data
-	CallDrive read_disc_proc
-	pop edi
-	pop edx
-	pop cx
-	pop eax
-	jnc perform_read_ok
-;
-	call perform_media_check
-	jc perform_read_done
-;
-	loop perform_read_loop
-;
-	mov es:[edi].dh_state,STATE_BAD
-	stc
-	jmp perform_read_done
-
-perform_read_ok:
-	mov es:[edi].dh_state,STATE_USED
-
-perform_read_done:
-	pop cx
-	ret
-perform_read	Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			perform_wakeup
-;
-;		DESCRIPTION:	Perform wakeups
-;
-;		PARAMETERS:		DS		Disc selector
-;						EDI		Disc handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-perform_wakeup	Proc near
-	xor bx,bx
-	xchg bx,es:[edi].dh_thread
-	Signal
-;
-	push ds
-	push esi
-	mov ax,es
-	mov ds,ax
-	lea esi,[edi].dh_wait
-
-perform_wakeup_loop:
-	mov ax,[esi]
-	or ax,ax
-	jz perform_wakeup_done
-;
-	Wake32
-	jmp perform_wakeup_loop
-
-perform_wakeup_done:
-	pop esi
 	pop ds
 	ret
-perform_wakeup	Endp
+flush_disc	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			perform_one
+;		NAME:			wait_for_disc_request
 ;
-;		DESCRIPTION:	Perform one request
+;		DESCRIPTION:	wait for a new disc request
 ;
-;		PARAMETERS:		DS		Disc selector
+;		PARAMETERS:		BX		Disc selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-perform_one	Proc near
+wait_for_disc_request_name	DB 'Wait For Disc Request', 0
 
-perform_one_loop:
+wait_for_disc_request	Proc far
+	push ds
+	push eax
+	push bx
+;
+	ClearSignal
+	mov ds,bx
+	GetThread
+	mov ds:disc_thread,ax
+
+wait_for_disc_req_loop:
+	mov ebx,ds:disc_pend_list
+	or ebx,ebx
+	jnz wait_for_disc_req_done
+;
+	WaitForSignal
+;
+	push es
+	pushad
+	mov ax,flat_sel
+	mov es,ax
+	EnterSection ds:disc_section
+	call update_async_write
+	call update_async_timer
+	LeaveSection ds:disc_section
+	popad
+	pop es
+	jmp wait_for_disc_req_loop
+		
+wait_for_disc_req_done:
+	pop bx
+	pop eax
+	pop ds
+	ret
+wait_for_disc_request	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			get_disc_request
+;
+;		DESCRIPTION:	get a disc request
+;
+;		PARAMETERS:		BX		Disc selector
+;
+;		RETURNS:		EDI		Disc handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_disc_request_name	DB 'Get Disc Request', 0
+
+get_disc_request	Proc far
+	push ds
+	push es
+	pushad
+;
+	mov ax,flat_sel
+	mov es,ax
+	mov ds,bx
 	EnterSection ds:disc_section
 	call update_async_write
 	call update_async_timer
 	call get_pending
-	pushf
-	LeaveSection ds:disc_section
-	popf
-	jc perform_one_done
+	jc get_disc_req_fail
 ;
 	mov al,es:[edi].dh_state
-	cmp al,STATE_EMPTY
-	je perform_one_read
-;
-	cmp al,STATE_DIRTY
-	je perform_one_write
-;
 	cmp al,STATE_SEQ
-	jne perform_one_done
-
-perform_one_seq:
-	EnterSection ds:disc_section
+	jne get_disc_req_ok
+;
 	call update_seq_write
+	jmp get_disc_req_ok
+
+get_disc_req_fail:
 	LeaveSection ds:disc_section
+	stc
+	jmp get_disc_req_done
 
-perform_one_write:
-	call perform_media_check
-	jc perform_one_done
-;
+get_disc_req_ok:
 	mov ds:disc_current,edi
-	call perform_write
-	jmp perform_one_completed
-
-perform_one_read:
-	call perform_media_check
-	jc perform_one_done
-;
-	mov ds:disc_current,edi
-	call perform_read
-
-perform_one_completed:
-	mov ds:disc_current,0
-	call perform_wakeup
-	jmp perform_one_loop
-
-perform_one_done:
-	ret
-perform_one	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DISCBUF_THREAD
-;
-;		DESCRIPTION:	Thread to handle disc buffer queue
-;
-;		PARAMETERS:		FS		Disc selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-discbuf_thread:
-	mov ax,fs
-	mov ds,ax
-	GetThread
-	mov ds:disc_thread,ax
-;
-	push ds
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET discinit_thread
-	mov di,OFFSET discinit_thread_name
-	mov ax,4
-	mov cx,100h
-	CreateThread
+	LeaveSection ds:disc_section
+	clc
+	
+get_disc_req_done:
+	popad
+	pop es
 	pop ds
-	mov ax,flat_sel
-	mov es,ax
-
-discbuf_thread_loop:
-	WaitForSignal
-	call perform_one
-	jmp discbuf_thread_loop
+	ret
+get_disc_request	Endp
 
 PAGE
-
+	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DISCINIT_THREAD
+;		NAME:			disc_request_completed
 ;
-;		DESCRIPTION:	Thread to open a disc drive
+;		DESCRIPTION:	Disc request completed
 ;
-;		PARAMETERS:		FS		Disc selector
+;		PARAMETERS:		BX		Disc selector
+;						EDI		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-discinit_thread_name	DB 'Disc Init',0
+disc_request_completed_name	DB 'Disc Request Completed', 0
 
-discinit_thread	Proc far
-	mov ax,fs
-	mov ds,ax
-	call open_disc
-	jc discinit_thread_done
-	mov bx,ds:disc_thread
+disc_request_completed	Proc far
+	push ds
+	push ax
+	push bx
+	push esi
+;
+	mov ds,bx
+	mov ds:disc_current,0
+	xor bx,bx
+	xchg bx,es:[edi].dh_thread
 	Signal
-discinit_thread_done:
+;
+	mov ax,flat_sel
+	mov ds,ax
+	lea esi,[edi].dh_wait
+
+completed_wakeup_loop:
+	mov ax,[esi]
+	or ax,ax
+	jz completed_wakeup_done
+;
+	Wake32
+	jmp completed_wakeup_loop
+
+completed_wakeup_done:
+	pop esi
+	pop bx
+	pop ax
+	pop ds
 	ret
-discinit_thread	Endp
+disc_request_completed	Endp
 
 PAGE
 
@@ -1258,10 +1077,8 @@ PAGE
 ;
 ;		DESCRIPTION:	Install disc unit
 ;
-;		PARAMETERS:		AL		Sub-unit
-;						BX		Disc handle
-;						DS:SI	Disc name
-;						ES:DI	Disc struc
+;		RETURNS:		BX		Disc sel
+;						AL		Disc #
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1270,14 +1087,12 @@ install_disc_name	DB 'Install Disc',0
 install_disc	Proc far
 	push ds
 	push es
-	push ax
 	push cx
 	push si
 	push di
 ;
 	push ds
 	push si
-	push ax
 	mov ax,disc_data_sel
 	mov ds,ax
 	mov si,OFFSET disc_def_arr
@@ -1303,11 +1118,6 @@ install_disc_loop:
 	shr ax,1
 	mov ds:disc_nr,al
 	pop cx
-	pop ax
-	mov ds:disc_handle,bx
-	mov ds:disc_sub_unit,al
-	mov word ptr ds:disc_proc,di
-	mov word ptr ds:disc_proc+2,cx
 	mov ds:disc_current,0
 	mov ds:disc_list,0
 	mov ds:disc_pend_list,0
@@ -1318,36 +1128,29 @@ install_disc_loop:
 	mov ds:disc_swrite_list,0
 	mov ds:disc_swrite_first,0
 	mov ds:disc_free,0
-	mov ds:disc_thread,-1
 	mov ds:disc_timer_id,0
 	mov ds:disc_block_count,0
+	GetThread
+	mov ds:disc_thread,ax
 	InitSection ds:disc_section
 	pop di
 	pop es
-;
-	push fs
-	mov ax,ds
-	mov fs,ax
-	mov ax,cs
-	mov ds,ax
-	mov si,OFFSET discbuf_thread
-	mov ax,4
-	mov cx,100h
-	CreateThread
-	pop fs
+	mov bx,ds
+	mov al,es:disc_nr
 	clc
 	jmp install_disc_done
+
 install_disc_next:
 	add si,2
 	sub cx,1
 	jnz install_disc_loop
 	add sp,6
 	stc
+
 install_disc_done:
 	pop di
 	pop si
 	pop cx
-	pop ax
 	pop es
 	pop ds
 	ret
@@ -2168,6 +1971,26 @@ init	PROC far
 	mov si,OFFSET install_disc
 	mov di,OFFSET install_disc_name
 	mov ax,install_disc_nr
+	RegisterOsGate
+;
+	mov si,OFFSET flush_disc
+	mov di,OFFSET flush_disc_name
+	mov ax,flush_disc_nr
+	RegisterOsGate
+;
+	mov si,OFFSET wait_for_disc_request
+	mov di,OFFSET wait_for_disc_request_name
+	mov ax,wait_for_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET get_disc_request
+	mov di,OFFSET get_disc_request_name
+	mov ax,get_disc_request_nr
+	RegisterOsGate
+;
+	mov si,OFFSET disc_request_completed
+	mov di,OFFSET disc_request_completed_name
+	mov ax,disc_request_completed_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET allocate_fixed_drive

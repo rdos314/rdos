@@ -1094,6 +1094,31 @@ InstallDisc	MACRO
 	OsGate install_disc_nr
 					ENDM
 
+;	IN  AX		Sectors per unit
+;	IN  BX		Disc sel
+;	IN  CX		Bytes per sector
+;	IN  DX		Units
+FlushDisc	MACRO
+	OsGate flush_disc_nr
+					ENDM
+
+;	IN  BX		Disc sel
+WaitForDiscRequest	MACRO
+	OsGate wait_for_disc_request_nr
+					ENDM
+
+;	IN  BX		Disc sel
+;	OUT	EDI		Disc handle
+GetDiscRequest	MACRO
+	OsGate get_disc_request_nr
+					ENDM
+
+;	IN  BX		Disc sel
+;	IN	EDI		Disc handle
+DiscRequestCompleted	MACRO
+	OsGate disc_request_completed_nr
+					ENDM
+
 ;	OUT	AL		Drive #
 AllocateStaticDrive	MACRO
 	OsGate allocate_static_drive_nr

@@ -251,5 +251,9 @@ create_process_nr			EQU 220
 new_sector_nr				EQU 221
 lock_seq_sector_nr			EQU 222
 unlock_seq_sector_nr		EQU 223
+flush_disc_nr				EQU 224
+wait_for_disc_request_nr	EQU 225
+get_disc_request_nr			EQU 226
+disc_request_completed_nr	EQU 227
 
-osgate_entries				EQU 224
+osgate_entries				EQU 228
