@@ -157,9 +157,17 @@ csaSectorLoop:
 
 csaLoop:
 	mov al,es:[ebx+esi].le_status
+	cmp al,-1
+	je csaDone
+;	
+    and al,LOG_STATUS_BEFORE_ALLOC
+    cmp al,LOG_STATUS_BEFORE_ALLOC
+    je csaNext
+;	
+	mov al,es:[ebx+esi].le_status
 	or al,al
 	jnz csaNotDeleted
-;
+;	
 	mov ax,es:[ebx+esi].le_physical_sector
 	or ax,ax
 	jz csaNext
@@ -183,9 +191,6 @@ csaPop:
 	jmp csaNext
 
 csaNotDeleted:
-	cmp al,-1
-	je csaDone
-;
     and al,1Fh
 	cmp al,LOG_ENTRY_OBJECT
 	je csaCache
@@ -688,6 +693,8 @@ AliasBlockSector	Proc near
 	push ebp
 ;
     mov edx,ecx
+    push ax
+    push edx
 
 albsRetry:
 	mov cx,ds:data_sectors
@@ -734,15 +741,39 @@ albsBlankLoop:
 	pop ebx
 	inc ebp
 	or ebp,ebp
-	clc
-	jz albsDone
+	jz albsCache
 ;
 	mov es:[esi].le_status,0
 	push ebx
 	mov ebx,gs:bc_op_handle
 	call WriteSector
 	pop ebx
+;
+	pop edx
+    pop ax
+;
+    push ax
+	push edx
 	jmp albsRetry
+
+albsCache:
+	movzx edi,bx
+	shl edi,3
+	add edi,gs:bc_log_sector_ptr
+	mov eax,edx
+	sub eax,gs:bc_start_sector
+	mov es:[edi].bs_physical_sector,ax
+;
+	push ebx
+	mov ebx,gs:bc_op_handle
+	call WriteSector
+	pop ebx
+	mov al,es:[esi].le_status
+	and al,NOT LOG_STATUS_BEFORE_ALLOC
+	or al,LOG_STATUS_AFTER_ALLOC
+	mov es:[esi].le_status,al
+	clc
+	jmp albsDone
 
 albsPhysNext:
 	add edi,2
@@ -752,6 +783,8 @@ albsPhysNext:
 	stc
 
 albsDone:
+    add sp,6
+;    
 	pop ebp
 	pop edi
 	pop esi

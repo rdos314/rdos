@@ -352,10 +352,11 @@ RedoDirEntry	Proc near
 	call WriteSector
 	UnlockSector
 ;
+	mov ebx,gs:bc_op_handle
+	call WriteSector
+;
     pop edx
     push edx
-    mov al,ds:drive_nr
-    LockSector
 ;
     call FindDirInfo
     jc rdeUnlock
