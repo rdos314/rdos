@@ -75,7 +75,7 @@ struct TBitmapInfoHeader
 #   Returns....: *
 #
 ##########################################################################*/
-static Reverse(const char *src, char *dest, int size)
+static void Reverse(const char *src, char *dest, int size)
 {
 	int i, j;
 	char ch1, ch2;
@@ -208,7 +208,7 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 	int Count;
 	int Pixel;
 	char *buf;
-	char *pal;
+	long *pal;
 
 	if (file.IsOpen())
 	{
@@ -241,22 +241,18 @@ int SaveBmp(const char *FileName, TBitmapGraphicDevice *bitmap)
 				LineSize = bitmap->GetLineSize();
 
 			    ih.ClrUsed = 2;
-			    fh.BitOffset += 6;
+				fh.BitOffset += 8;
 				ih.ImageSize = FileLineSize * ih.Height;
-				fh.Size += ih.ImageSize + 6;
+				fh.Size += ih.ImageSize + 8;
 
 				file.Write(&fh, sizeof(fh));
 				file.Write(&ih, sizeof(ih));
 
-                pal = new char[6];
-                *pal = 0;
-                *(pal + 1) = 0;
-                *(pal + 2) = 0;
-                *(pal + 3) = 255;
-                *(pal + 4) = 255;
-                *(pal + 5) = 255;
-                file.Write(pal, 6);
-                delete pal;
+				pal = new long[2];
+				*pal = mkcolor(0, 0, 0);
+				*(pal + 1) = mkcolor(255, 255, 255);
+				file.Write(pal, 8);
+				delete pal;
 
 				buf = new char[LineSize];
 				for (Line = bitmap->GetHeight() - 1; Line >= 0; Line--)
