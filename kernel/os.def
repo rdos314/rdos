@@ -280,5 +280,7 @@ hook_init_file_system_nr	EQU 249
 is_file_system_available_nr	EQU 250
 demand_load_file_system_nr	EQU 251
 demand_load_drive_nr		EQU 252
+define_media_check_nr		EQU 253
+register_disc_change_nr		EQU 254
 
-osgate_entries				EQU 253
+osgate_entries				EQU 255

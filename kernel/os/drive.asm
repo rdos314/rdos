@@ -89,6 +89,7 @@ disc_swrite_list		DD ?
 disc_swrite_first		DD ?
 disc_param				DD ?
 disc_handle				DW ?
+disc_change_proc		DD ?
 disc_unit_arr			DD ?
 
 disc_def_struc		ENDS
@@ -1067,6 +1068,35 @@ set_disc_param	Proc far
 	pop ds
 	ret
 set_disc_param	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			REGISTER_DISC_CHANGE
+;
+;		DESCRIPTION:	Register disc-change procedure
+;
+;		PARAMETERS:		BX		Disc sel
+;						ES:DI	Disc change proc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+register_disc_change_name	DB 'Register Disc Change',0
+
+register_disc_change	Proc far
+	push ds
+	push bx
+;
+	mov ds,bx
+	mov word ptr ds:disc_change_proc,di
+	mov word ptr ds:disc_change_proc+2,es
+;
+	pop bx
+	pop ds
+	ret
+register_disc_change	Endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1605,6 +1635,7 @@ install_disc_loop:
 	mov ds:disc_free,0
 	mov ds:disc_timer_id,0
 	mov ds:disc_thread,0
+	mov ds:disc_change_proc,0
 	pop ds:disc_param
 	pop ds:disc_handle
 	pop cx
@@ -1774,6 +1805,8 @@ open_drive	Proc far
 	push ds
 	push es
 	push bx
+	push si
+	push di
 ;
 	push ax
 	mov ax,disc_data_sel
@@ -1787,11 +1820,26 @@ open_drive	Proc far
 	shl bx,1
 	mov bx,ds:[bx].disc_def_arr
 	mov es:drive_disc,bx
-	movzx bx,al
-	shl bx,1
-	mov [bx].drive_def_arr,es
+;
+	movzx si,al
+	shl si,1
+	mov [si].drive_def_arr,es
+;
+	mov ds,bx
+	mov di,word ptr ds:disc_change_proc+2
+	or di,di
+	jz open_drive_done
+;
+	mov es,di
+	mov di,word ptr ds:disc_change_proc
+	mov bx,ds:disc_handle
+	DefineMediaCheck
+
+open_drive_done:
 	clc
 ;
+	pop di
+	pop si
 	pop bx
 	pop es
 	pop ds
@@ -2966,7 +3014,7 @@ demand_load_drive_fail:
 
 demand_load_drive_done:
 	popad
-	pop es
+	pop ds
 	ret
 demand_load_drive	Endp
 
@@ -3025,6 +3073,11 @@ init	PROC far
 	mov si,OFFSET set_disc_param
 	mov di,OFFSET set_disc_param_name
 	mov ax,set_disc_param_nr
+	RegisterOsGate
+;
+	mov si,OFFSET register_disc_change
+	mov di,OFFSET register_disc_change_name
+	mov ax,register_disc_change_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET flush_disc
@@ -3154,10 +3207,12 @@ init	PROC far
 	mov bx,disc_data_sel
 	AllocateFixedSystemMem
 	mov es:disc_params,0
+;
 	mov cx,MAX_DRIVES
 	mov di,OFFSET disc_def_arr
 	xor ax,ax
 	rep stosw
+;
 	mov cx,MAX_DRIVES
 	mov di,OFFSET drive_def_arr
 	xor ax,ax

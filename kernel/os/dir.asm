@@ -176,11 +176,20 @@ validate_drive_retry:
 
 validate_drive_defined:
 	cmp bx,-1
-	clc
-	jnz validate_drive_done
+	jnz validate_drive_media
 ;
 	DemandLoadDrive
 	jmp validate_drive_retry
+
+validate_drive_media:
+	mov bx,ds:[si].media_check_handle
+	or bx,bx
+	clc
+	jz validate_drive_done
+;
+	add si,si
+	call ds:[si].media_check_proc
+	clc
 
 validate_drive_done:
 	pop si

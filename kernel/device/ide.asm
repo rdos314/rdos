@@ -1225,9 +1225,6 @@ drive_assign_loop1:
 	or cl,cl
 	jz drive_assign_free1
 ;
-	cmp cl,5
-	je drive_assign_next_part1
-;
 	cmp cl,10h
 	cmc
 	jc drive_assign_next_part1
@@ -1363,8 +1360,16 @@ drive_assign_loop2:
 	jz drive_assign_free2
 ;
 	cmp cl,5
+	je drive_assign_next_part2
+;
+	cmp cl,0Fh
 	jne drive_assign_next_part2
 ;
+	mov edx,es:[esi+edi].part_start_sector
+	call InstallExtended
+	jmp drive_assign_next_part2
+	
+drive_assign_ext_dos:
 	mov edx,es:[esi+edi].part_start_sector
 	call InstallExtended
 

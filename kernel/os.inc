@@ -1278,6 +1278,12 @@ InstallDisc	MACRO
 					ENDM
 
 ;	IN  BX		Disc sel
+;	IN	ES:DI	Disc change procedure
+RegisterDiscChange	MACRO
+	OsGate register_disc_change_nr
+					ENDM
+
+;	IN  BX		Disc sel
 FlushDisc	MACRO
 	OsGate flush_disc_nr
 					ENDM
@@ -1454,6 +1460,13 @@ HookInitFileSystem	MACRO
 ;	ES:DI		FILE SYSTEM STRUC
 RegisterFileSystem	MACRO
 	OsGate register_file_system_nr
+					ENDM
+
+;	AL			DRIVE #
+;	BX			HANDLE
+;	ES:DI		MEDIA CHECK PROCEDURE
+DefineMediaCheck	MACRO
+	OsGate define_media_check_nr
 					ENDM
 
 ;	AL			DRIVE #

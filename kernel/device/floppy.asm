@@ -71,6 +71,7 @@ disc_struc	STRUC
 
 boot_sect				DB 512 DUP(?)
 
+disc_section			section_typ <>
 disc_fs_handle			DW ?
 disc_sel				DW ?
 disc_thread				DW ?
@@ -781,9 +782,11 @@ SelectDrive	Proc near
 	mov al,DriveControl
 	test al,ah
 	jnz SelectDriveMotorOn
+;
 	sti
 	call ResetController
 	jc SelectDriveDone
+;
 	cli
 	mov [bx].MotorCount,255
 	mov al,DriveControl
@@ -798,6 +801,7 @@ SelectDrive	Proc near
 	WaitMilliSec
 	mov al,DriveControl
 	jmp SelectDriveInit
+
 SelectDriveMotorOn:
 	cli
 	mov al,DriveControl
@@ -806,6 +810,7 @@ SelectDriveMotorOn:
 	cmp ah,cl
 	clc
 	je SelectDriveDone
+
 SelectDriveInit:
 	and al,NOT 3
 	or al,cl
@@ -1078,9 +1083,7 @@ ReadDriveRetry:
 	pop ax
 	jmp ReadDriveLoop
 ReadDriveDone:
-	pushf
 	LeaveSection FloppySection
-	popf
 	pop si
 	ret
 ReadDrive	Endp
@@ -1142,9 +1145,7 @@ WriteDriveRetry:
 	pop ax
 	jmp WriteDriveLoop
 WriteDriveDone:
-	pushf
 	LeaveSection FloppySection
-	popf
 	pop si
 	ret
 WriteDrive	Endp
@@ -1180,24 +1181,50 @@ ReadBootSector	Proc near
 	pop ax
 ;
 	mov ebx,edx
-	mov dh,0
-	mov dl,1
-	mov ah,0
-	mov cx,200h
-	call ReadDrive
-	mov edx,ebx
-	jc read_boot_sector_done
+	call SelectDrive
+	jnc read_boot_sector_read
+
+read_boot_sector_retry:
+	push ax
+	mov al,0Ch
+	mov DriveControl,al
+	mov dx,3F2h
+	out dx,al
+	pop ax
 ;
+	push ax
+	mov ax,250
+	WaitMilliSec
+	pop ax
+;
+	call SelectDrive
+	jc read_boot_sector_done
+
+read_boot_sector_read:
 	mov ah,1
 	call SeekCmd
-	jc read_boot_sector_done
+	jc read_boot_sector_retry
 ;
-    mov dx,3F7h
-    in al,dx
+	mov cTrack,ah
+	mov ah,0
+	call SeekCmd
+	jc read_boot_sector_retry
+;
+	mov cTrack,ah
+	mov dh,0
+	mov dl,1
+	mov cx,200h
+	push ax
+	mov al,46h
+	call SetupDMA
+	pop ax
+;
+	call ReadCmd
+	jc read_boot_sector_retry
 ;
 	mov cx,flat_sel
 	mov ds,cx
-	mov esi,edx
+	mov esi,ebx
 	mov ecx,128
 	rep movs dword ptr es:[edi],[esi]
 	mov cx,floppy_data_sel
@@ -1341,7 +1368,9 @@ demand_mount	Proc far
 	mov ds,ax
 	mov al,es:disc_sub_unit
 	mov edi,OFFSET boot_sect
+	EnterSection ds:FloppySection
 	call ReadBootSector
+	LeaveSection ds:FloppySection
 	jc drive_assign_done1
 ;
 	call InstallMain
@@ -1376,14 +1405,17 @@ PAGE
 ;
 ;		PARAMETERS:		FS		Disc selector
 ;
-;		RETURNS:		AX      Status
-;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 check_media	Proc near
-	push ax
+	push ds
+	push eax
 	push bx
 	push dx
+;
+	mov bx,fs
+	mov ds,bx
+	EnterSection ds:disc_section
 ;
 	mov al,fs:boot_drive_nr
 	mov bx,floppy_data_sel
@@ -1393,30 +1425,87 @@ check_media	Proc near
 	mov bl,[bx].Gap
 	or bl,bl
 	stc
-	jz check_media_done
+	jz check_media_leave
 	call SelectDrive
-	jc check_media_done
-    mov dx,3F7h
-    in al,dx
-    shl al,1
-	jnc check_media_done
+	jc check_media_leave
 ;
-	mov ah,1
-	call SeekCmd
+	push ax
     mov dx,3F7h
     in al,dx
-	int 3
     shl al,1
-	
-check_media_done:
+	pop ax
+	jnc check_media_leave
+;
+	push es
+	push ecx
+	push esi
+	push edi
+;
+	push eax
+	mov eax,200h
+	AllocateSmallGlobalMem
+	pop eax
+
+check_media_retry:
+	xor edi,edi
+	call ReadBootSector
+;
+	mov esi,OFFSET boot_sect
+	mov ecx,80h
+	repe cmps dword ptr fs:[esi],es:[edi]
+	clc
+	jz check_media_free
+;
+	push ax
+	mov ax,250
+	WaitMilliSec
+	pop ax
+	jmp check_media_retry
+
+check_media_free:
 	pushf
-	LeaveSection FloppySection
+	FreeMem
 	popf
+	pop edi
+	pop esi
+	pop ecx
+	pop es
+	
+check_media_leave:
+	LeaveSection FloppySection
+
+check_media_done:
+	mov bx,fs
+	mov ds,bx
+	LeaveSection ds:disc_section
+;
 	pop dx
 	pop bx
-	pop ax
+	pop eax
+	pop ds
 	ret
 check_media	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			check_media_proc
+;
+;		DESCRIPTION:	Check for media change
+;
+;		PARAMETERS:		BX		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+check_media_proc	Proc far
+	push fs
+	mov fs,bx
+	call check_media
+	pop fs
+	ret
+check_media_proc	Endp
 
 PAGE
 
@@ -1652,7 +1741,7 @@ perform_one_write:
 
 perform_one_read:
 	call check_media
-	jc perform_one_done
+	jc perform_one_fail
 ;
 	call read_drive
 	jc perform_one_fail
@@ -1688,6 +1777,7 @@ PAGE
 discbuf_thread:
 	GetThread
 	mov fs:disc_thread,ax
+	mov bx,fs:disc_sel
 ;
 	mov ax,floppy_data_sel
 	mov ds,ax
@@ -1730,12 +1820,20 @@ install_unit	Proc near
 	mov fs,bx
 	pop ax
 	mov fs:disc_sub_unit,al
+	InitSection fs:disc_section
 ;
 	mov ecx,200h
 	mov bx,fs
 	InstallDisc
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
+;
+	push di
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET check_media_proc
+	RegisterDiscChange
+	pop di
 ;
 	mov ax,cs
 	mov ds,ax
