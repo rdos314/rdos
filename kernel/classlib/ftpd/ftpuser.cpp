@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::TUserFactory
+#   Name       : TFtpUserFactory::TFtpUserFactory
 #
-#   Purpose....: Constructor for TUserFactory
+#   Purpose....: Constructor for TFtpUserFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserFactory::TUserFactory()
-  : TCommandFactory("USER")
+TFtpUserFactory::TFtpUserFactory()
+  : TFtpCommandFactory("USER")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserFactory::Create
+#   Name       : TFtpUserFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TUserFactory::TUserFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TUserFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpUserFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TUserCommand(Server, param);
+	return new TFtpUserCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::TUserCommand
+#   Name       : TFtpUserCommand::TFtpUserCommand
 #
-#   Purpose....: Constructor for TUserCommand
+#   Purpose....: Constructor for TFtpUserCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpUserCommand::TFtpUserCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TUserCommand::Run
+#   Name       : TFtpUserCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,11 +93,11 @@ TUserCommand::TUserCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TUserCommand::Execute(char *param)
+void TFtpUserCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	ok = ScanCmdLine(param, 0);

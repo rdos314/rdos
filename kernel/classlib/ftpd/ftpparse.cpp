@@ -35,7 +35,7 @@
 
 /*##########################################################################
 #
-#   Name       : TParser::TParser
+#   Name       : TFtpParser::TFtpParser
 #
 #   Purpose....: Constructor for parser
 #
@@ -44,13 +44,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TParser::TParser()
+TFtpParser::TFtpParser()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TParser::~TParser
+#   Name       : TFtpParser::~TFtpParser
 #
 #   Purpose....: Destructor for parser
 #
@@ -59,13 +59,13 @@ TParser::TParser()
 #   Returns....: *
 #
 ##########################################################################*/
-TParser::~TParser()
+TFtpParser::~TFtpParser()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TParser::IsArgDelim
+#   Name       : TFtpParser::IsArgDelim
 #
 #   Purpose....: Check for argument delimiter
 #
@@ -74,14 +74,14 @@ TParser::~TParser()
 #   Returns....: *
 #
 ##########################################################################*/
-int TParser::IsArgDelim(char ch)
+int TFtpParser::IsArgDelim(char ch)
 {
 	return TFtpSocketServer::IsArgDelim(ch);
 }
 
 /*##########################################################################
 #
-#   Name       : TParser::SkipWord
+#   Name       : TFtpParser::SkipWord
 #
 #   Purpose....: Skip to next word
 #
@@ -90,7 +90,7 @@ int TParser::IsArgDelim(char ch)
 #   Returns....: *
 #
 ##########################################################################*/
-char *TParser::SkipWord(char *p)
+char *TFtpParser::SkipWord(char *p)
 {
 	int ch, quote;
 	int more;
@@ -120,7 +120,7 @@ char *TParser::SkipWord(char *p)
 
 /*##########################################################################
 #
-#   Name       : TParser::SkipDelim
+#   Name       : TFtpParser::SkipDelim
 #
 #   Purpose....: Skip to next delimiter
 #
@@ -129,7 +129,7 @@ char *TParser::SkipWord(char *p)
 #   Returns....: *
 #
 ##########################################################################*/
-char *TParser::SkipDelim(char *p)
+char *TFtpParser::SkipDelim(char *p)
 {
 	int ch, quote;
 	int more;

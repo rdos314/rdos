@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPasvFactory::TPasvFactory
+#   Name       : TFtpPasvFactory::TFtpPasvFactory
 #
-#   Purpose....: Constructor for TPasvFactory
+#   Purpose....: Constructor for TFtpPasvFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPasvFactory::TPasvFactory()
-  : TCommandFactory("PASV")
+TFtpPasvFactory::TFtpPasvFactory()
+  : TFtpCommandFactory("PASV")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPasvFactory::Create
+#   Name       : TFtpPasvFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TPasvFactory::TPasvFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPasvFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpPasvFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPasvCommand(Server, param);
+	return new TFtpPasvCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPasvCommand::TPasvCommand
+#   Name       : TFtpPasvCommand::TFtpPasvCommand
 #
-#   Purpose....: Constructor for TPasvCommand
+#   Purpose....: Constructor for TFtpPasvCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPasvCommand::TPasvCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpPasvCommand::TFtpPasvCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPasvCommand::Run
+#   Name       : TFtpPasvCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,9 +93,9 @@ TPasvCommand::TPasvCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPasvCommand::Execute(char *param)
+void TFtpPasvCommand::Execute(char *param)
 {
-	TLangString msg;
+	TFtpLangString msg;
 	long IP;
 	int port;
 	int i;

@@ -39,23 +39,23 @@
 
 /*##########################################################################
 #
-#   Name       : TStorFactory::TStorFactory
+#   Name       : TFtpStorFactory::TFtpStorFactory
 #
-#   Purpose....: Constructor for TStorFactory
+#   Purpose....: Constructor for TFtpStorFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorFactory::TStorFactory()
-  : TCommandFactory("STOR")
+TFtpStorFactory::TFtpStorFactory()
+  : TFtpCommandFactory("STOR")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorFactory::Create
+#   Name       : TFtpStorFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -64,45 +64,45 @@ TStorFactory::TStorFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TStorFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpStorFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TStorCommand(Server, param);
+	return new TFtpStorCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::TStorCommand
+#   Name       : TFtpStorCommand::TFtpStorCommand
 #
-#   Purpose....: Constructor for TStorCommand
+#   Purpose....: Constructor for TFtpStorCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorCommand::TStorCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpStorCommand::TFtpStorCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::~TStorCommand
+#   Name       : TFtpStorCommand::~TFtpStorCommand
 #
-#   Purpose....: Destructor for TStorCommand
+#   Purpose....: Destructor for TFtpStorCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TStorCommand::~TStorCommand()
+TFtpStorCommand::~TFtpStorCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TStorCommand::Execute
+#   Name       : TFtpStorCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -111,11 +111,11 @@ TStorCommand::~TStorCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TStorCommand::Execute(char *param)
+void TFtpStorCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

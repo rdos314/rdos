@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# stor.h
-# Stor command class
+# ftpstor.h
+# Ftpstor command class
 #
 ########################################################################*/
 
-#ifndef _STOR_H
-#define _STOR_H
+#ifndef _FTPSTOR_H
+#define _FTPSTOR_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TStorFactory : public TCommandFactory
+class TFtpStorFactory : public TFtpCommandFactory
 {
 public:
-	TStorFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpStorFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TStorCommand : public TCommand
+class TFtpStorCommand : public TFtpCommand
 {
 public:
-	TStorCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TStorCommand();
+	TFtpStorCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpStorCommand();
 
 	virtual void Execute(char *param);
 

@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# type.h
-# Type command class
+# ftptype.h
+# Ftp type command class
 #
 ########################################################################*/
 
-#ifndef _TYPE_H
-#define _TYPE_H
+#ifndef _FTPTYPE_H
+#define _FTPTYPE_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TTypeFactory : public TCommandFactory
+class TFtpTypeFactory : public TFtpCommandFactory
 {
 public:
-	TTypeFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpTypeFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TTypeCommand : public TCommand
+class TFtpTypeCommand : public TFtpCommand
 {
 public:
-	TTypeCommand(TFtpSocketServer *Server, const char *param);
+	TFtpTypeCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TSystFactory::TSystFactory
+#   Name       : TFtpSystFactory::TFtpSystFactory
 #
-#   Purpose....: Constructor for TSystFactory
+#   Purpose....: Constructor for TFtpSystFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSystFactory::TSystFactory()
-  : TCommandFactory("SYST")
+TFtpSystFactory::TFtpSystFactory()
+  : TFtpCommandFactory("SYST")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TSystFactory::Create
+#   Name       : TFtpSystFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TSystFactory::TSystFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TSystFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpSystFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TSystCommand(Server, param);
+	return new TFtpSystCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TSystCommand::TSystCommand
+#   Name       : TFtpSystCommand::TFtpSystCommand
 #
-#   Purpose....: Constructor for TSystCommand
+#   Purpose....: Constructor for TFtpSystCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TSystCommand::TSystCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpSystCommand::TFtpSystCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TSystCommand::Run
+#   Name       : TFtpSystCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,9 +93,9 @@ TSystCommand::TSystCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TSystCommand::Execute(char *param)
+void TFtpSystCommand::Execute(char *param)
 {
-	TLangString msg;
+	TFtpLangString msg;
 
 	if (FServer->VerifyUser())
     	msg.Load(215);

@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quit.h
-# Quit command class
+# ftpquit.h
+# FTP Quit command class
 #
 ########################################################################*/
 
-#ifndef _QUIT_H
-#define _QUIT_H
+#ifndef _FTPQUIT_H
+#define _FTPQUIT_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TQuitFactory : public TCommandFactory
+class TFtpQuitFactory : public TFtpCommandFactory
 {
 public:
-	TQuitFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpQuitFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TQuitCommand : public TCommand
+class TFtpQuitCommand : public TFtpCommand
 {
 public:
-	TQuitCommand(TFtpSocketServer *Server, const char *param);
+	TFtpQuitCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

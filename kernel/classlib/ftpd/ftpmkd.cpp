@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# mkd.cpp
-# Mkd command class
+# ftpmkd.cpp
+# Ftp Mkd command class
 #
 ########################################################################*/
 
@@ -38,23 +38,23 @@
 
 /*##########################################################################
 #
-#   Name       : TMkdFactory::TMkdFactory
+#   Name       : TFtpMkdFactory::TFtpMkdFactory
 #
-#   Purpose....: Constructor for TMkdFactory
+#   Purpose....: Constructor for TFtpMkdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMkdFactory::TMkdFactory()
-  : TCommandFactory("MKD")
+TFtpMkdFactory::TFtpMkdFactory()
+  : TFtpCommandFactory("MKD")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMkdFactory::Create
+#   Name       : TFtpMkdFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,45 +63,45 @@ TMkdFactory::TMkdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TMkdFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpMkdFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TMkdCommand(Server, param);
+	return new TFtpMkdCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TMkdCommand::TMkdCommand
+#   Name       : TFtpMkdCommand::TFtpMkdCommand
 #
-#   Purpose....: Constructor for TMkdCommand
+#   Purpose....: Constructor for TFtpMkdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMkdCommand::TMkdCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpMkdCommand::TFtpMkdCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMkdCommand::~TMkdCommand
+#   Name       : TFtpMkdCommand::~TFtpMkdCommand
 #
-#   Purpose....: Destructor for TMkdCommand
+#   Purpose....: Destructor for TFtpMkdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMkdCommand::~TMkdCommand()
+TFtpMkdCommand::~TFtpMkdCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMkdCommand::Execute
+#   Name       : TFtpMkdCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -110,11 +110,11 @@ TMkdCommand::~TMkdCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMkdCommand::Execute(char *param)
+void TFtpMkdCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

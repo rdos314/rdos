@@ -20,39 +20,39 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmdfact.h
-# Command factory base class
+# ftpfact.h
+# FTP Command factory base class
 #
 ########################################################################*/
 
-#ifndef _CMDFACT_H
-#define _CMDFACT_H
+#ifndef _FTPFACT_H
+#define _FTPFACT_H
 
 #include "ftpcmd.h"
 #include "ftpacc.h"
 
 class TFtpSocketServer;
 
-class TCommandFactory
+class TFtpCommandFactory
 {
 friend class THelpCommand;
-    
-public:
-    TCommandFactory(const char *name);
-	virtual ~TCommandFactory();
 
-	static TCommand *Parse(TFtpSocketServer *Server, const char *line);
+public:
+	 TFtpCommandFactory(const char *name);
+	virtual ~TFtpCommandFactory();
+
+	static TFtpCommand *Parse(TFtpSocketServer *Server, const char *line);
 
 protected:
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param) = 0;
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param) = 0;
 	virtual int PassAll();
-    virtual int PassDir();
-	
+	 virtual int PassDir();
+
 	void InsertCommand();
 	void RemoveCommand();
 
-	static TCommandFactory *FCmdList;
-	TCommandFactory *FList;
+	static TFtpCommandFactory *FCmdList;
+	TFtpCommandFactory *FList;
 	TString FName;
 };
 

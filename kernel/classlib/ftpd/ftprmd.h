@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# rmd.h
-# Rmd command class
+# ftprmd.h
+# Ftprmd command class
 #
 ########################################################################*/
 
-#ifndef _RMD_H
-#define _RMD_H
+#ifndef _FTPRMD_H
+#define _FTPRMD_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TRmdFactory : public TCommandFactory
+class TFtpRmdFactory : public TFtpCommandFactory
 {
 public:
-	TRmdFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpRmdFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TRmdCommand : public TCommand
+class TFtpRmdCommand : public TFtpCommand
 {
 public:
-	TRmdCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TRmdCommand();
+	TFtpRmdCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpRmdCommand();
 
 	virtual void Execute(char *param);
 

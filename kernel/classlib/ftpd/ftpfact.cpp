@@ -56,11 +56,11 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TCommandFactory *TCommandFactory::FCmdList = 0;
+TFtpCommandFactory *TFtpCommandFactory::FCmdList = 0;
 
 /*##########################################################################
 #
-#   Name       : TCommandFactory::TCommandFactory
+#   Name       : TFtpCommandFactory::TFtpCommandFactory
 #
 #   Purpose....: Constructor for command factory
 #
@@ -69,7 +69,7 @@ TCommandFactory *TCommandFactory::FCmdList = 0;
 #   Returns....: *
 #
 ##########################################################################*/
-TCommandFactory::TCommandFactory(const char *name)
+TFtpCommandFactory::TFtpCommandFactory(const char *name)
   : FName(name)
 {
 	InsertCommand();
@@ -77,7 +77,7 @@ TCommandFactory::TCommandFactory(const char *name)
 
 /*##########################################################################
 #
-#   Name       : TCommandFactor::~TCommandFactor
+#   Name       : TFtpCommandFactor::~TFtpCommandFactor
 #
 #   Purpose....: Destructor for command factory
 #
@@ -86,12 +86,12 @@ TCommandFactory::TCommandFactory(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-TCommandFactory::~TCommandFactory()
-{	
+TFtpCommandFactory::~TFtpCommandFactory()
+{
 	RemoveCommand();
 }
 
-/*##################  TCommandFactory::InsertCommand  ##########################
+/*##################  TFtpCommandFactory::InsertCommand  ##########################
 *   Purpose....: Insert device into command list                           #
 *				 Should only be done in constructor							#
 *   In params..: *                                                          #
@@ -99,13 +99,13 @@ TCommandFactory::~TCommandFactory()
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-void TCommandFactory::InsertCommand()
+void TFtpCommandFactory::InsertCommand()
 {
 	FList = FCmdList;
 	FCmdList = this;
 }
 
-/*##################  TCommandFactory::RemoveCommand  ##########################
+/*##################  TFtpCommandFactory::RemoveCommand  ##########################
 *   Purpose....: Remove device from command list                           #
 *				 Should only done in destructor								#
 *   In params..: *                                                          #
@@ -113,66 +113,66 @@ void TCommandFactory::InsertCommand()
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-void TCommandFactory::RemoveCommand()
+void TFtpCommandFactory::RemoveCommand()
 {
-	TCommandFactory *ptr;
-	TCommandFactory *prev;
+	TFtpCommandFactory *ptr;
+	TFtpCommandFactory *prev;
 	prev = 0;
 
 	ptr = FCmdList;
 	while ((ptr != 0) && (ptr != this))
-    {
+	 {
 		prev = ptr;
 		ptr = ptr->FList;
-    }
+	 }
 	if (prev == 0)
 		FCmdList = FCmdList->FList;
 	else
 		prev->FList = ptr->FList;
 }
 
-/*##################  TCommandFactory::PassAll  ##########################
+/*##################  TFtpCommandFactory::PassAll  ##########################
 *   Purpose....: Pass all characters to commandline                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-int TCommandFactory::PassAll()
+int TFtpCommandFactory::PassAll()
 {
-    return FALSE;
+	 return FALSE;
 }
 
-/*##################  TCommandFactory::PassDir  ##########################
+/*##################  TFtpCommandFactory::PassDir  ##########################
 *   Purpose....: Pass dir characters to commandline                         #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-int TCommandFactory::PassDir()
+int TFtpCommandFactory::PassDir()
 {
-    return FALSE;
+	 return FALSE;
 }
 
-/*##################  TCommandFactory::Parse  ##########################
+/*##################  TFtpCommandFactory::Parse  ##########################
 *   Purpose....: Parse a command line and return a command class	    	#
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-09-02 le                                                #
 *##########################################################################*/
-TCommand *TCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
+TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *line)
 {
 	const char *rest;
 	int size;
-    int i;
+	 int i;
 	char *com;
 	char *ptr;
-    int done;
-    TString Line;
-	TCommandFactory *factory = 0;
-	TCommand *cmd;
+	 int done;
+	 TString Line;
+	TFtpCommandFactory *factory = 0;
+	TFtpCommand *cmd;
 
 	Line = TString(TFtpSocketServer::LTrim(line));
 
@@ -269,7 +269,7 @@ TFtpSocketServerFactory::TFtpSocketServerFactory()
 ##########################################################################*/
 TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language)
 {
-	TLangString::SetLanguage(Language);
+	TFtpLangString::SetLanguage(Language);
 	Init();
 }
 
@@ -286,23 +286,23 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language)
 ##########################################################################*/
 void TFtpSocketServerFactory::Init()
 {
-	TUserFactory *user = new TUserFactory;
-	TPassFactory *pass = new TPassFactory;
-	TPwdFactory *pwd = new TPwdFactory;
-	TSystFactory *syst = new TSystFactory;
-	TPasvFactory *pasv = new TPasvFactory;
-	TPortFactory *port = new TPortFactory;
-	TListFactory *list = new TListFactory;
-	TCwdFactory *cwd = new TCwdFactory;
-	TCdupFactory *cdup = new TCdupFactory;
-	TTypeFactory *type = new TTypeFactory;
-	TRetrFactory *retr = new TRetrFactory;
-	TStorFactory *stor = new TStorFactory;
-	TMdtmFactory *mdtm = new TMdtmFactory;
-	TDeleFactory *dele = new TDeleFactory;
-	TMkdFactory *mkd = new TMkdFactory;
-	TRmdFactory *rmd = new TRmdFactory;
-	TQuitFactory *quit = new TQuitFactory;
+	TFtpUserFactory *user = new TFtpUserFactory;
+	TFtpPassFactory *pass = new TFtpPassFactory;
+	TFtpPwdFactory *pwd = new TFtpPwdFactory;
+	TFtpSystFactory *syst = new TFtpSystFactory;
+	TFtpPasvFactory *pasv = new TFtpPasvFactory;
+	TFtpPortFactory *port = new TFtpPortFactory;
+	TFtpListFactory *list = new TFtpListFactory;
+	TFtpCwdFactory *cwd = new TFtpCwdFactory;
+	TFtpCdupFactory *cdup = new TFtpCdupFactory;
+	TFtpTypeFactory *type = new TFtpTypeFactory;
+	TFtpRetrFactory *retr = new TFtpRetrFactory;
+	TFtpStorFactory *stor = new TFtpStorFactory;
+	TFtpMdtmFactory *mdtm = new TFtpMdtmFactory;
+	TFtpDeleFactory *dele = new TFtpDeleFactory;
+	TFtpMkdFactory *mkd = new TFtpMkdFactory;
+	TFtpRmdFactory *rmd = new TFtpRmdFactory;
+	TFtpQuitFactory *quit = new TFtpQuitFactory;
 
 	FList = 0;
 }

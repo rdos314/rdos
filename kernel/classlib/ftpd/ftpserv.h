@@ -75,7 +75,7 @@ public:
 	void ListenForDataConnection(long *IP, int *port);
 	void Quit();
 
-	void Reply(TLangString *Msg);
+	void Reply(TFtpLangString *Msg);
 
 	void (*OnCommand)(TFtpSocketServer *server, const char *str);
 

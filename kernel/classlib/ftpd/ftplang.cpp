@@ -38,12 +38,12 @@
 
 #define DEFAULT_ID  502
 
-int TLangString::FHandle = 0;
-int TLangString::FIsLocalHandle = TRUE;
+int TFtpLangString::FHandle = 0;
+int TFtpLangString::FIsLocalHandle = TRUE;
 
 /*##########################################################################
 #
-#   Name       : TLangString::TLangString
+#   Name       : TFtpLangString::TFtpLangString
 #
 #   Purpose....: Constructor for language string
 #
@@ -52,14 +52,14 @@ int TLangString::FIsLocalHandle = TRUE;
 #   Returns....: *
 #
 ##########################################################################*/
-TLangString::TLangString()
+TFtpLangString::TFtpLangString()
 {
-    FID = DEFAULT_ID;
+	 FID = DEFAULT_ID;
 }
 
 /*##########################################################################
 #
-#   Name       : TLangString::TLangString
+#   Name       : TFtpLangString::TFtpLangString
 #
 #   Purpose....: Constructor for language string
 #
@@ -68,14 +68,14 @@ TLangString::TLangString()
 #   Returns....: *
 #
 ##########################################################################*/
-TLangString::TLangString(int ID)
+TFtpLangString::TFtpLangString(int ID)
 {
 	Load(ID);
 }
 
 /*##########################################################################
 #
-#   Name       : TLangString::SetLanguage
+#   Name       : TFtpLangString::SetLanguage
 #
 #   Purpose....: Set new language
 #
@@ -84,25 +84,25 @@ TLangString::TLangString(int ID)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLangString::SetLanguage(const char *language)
+void TFtpLangString::SetLanguage(const char *language)
 {
 	int Handle = RdosLoadDll(language);
 
-    if (Handle)
-    {	
-    	if (FHandle && !FIsLocalHandle)
-	    {
-		    RdosFreeDll(FHandle);
-    		FHandle = 0;
-	    }
-	    FHandle = Handle;
-    	FIsLocalHandle = FALSE;
-    }
+	 if (Handle)
+	 {
+		if (FHandle && !FIsLocalHandle)
+		 {
+			 RdosFreeDll(FHandle);
+			FHandle = 0;
+		 }
+		 FHandle = Handle;
+		FIsLocalHandle = FALSE;
+	 }
 }
 
 /*##########################################################################
 #
-#   Name       : TLangString::Load
+#   Name       : TFtpLangString::Load
 #
 #   Purpose....: Load language string
 #
@@ -111,7 +111,7 @@ void TLangString::SetLanguage(const char *language)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLangString::Load(int ID)
+void TFtpLangString::Load(int ID)
 {
 	char str[257];
 	int start;
@@ -154,7 +154,7 @@ void TLangString::Load(int ID)
 
 /*##########################################################################
 #
-#   Name       : TLangString::printf
+#   Name       : TFtpLangString::printf
 #
 #   Purpose....: Load & printf on message
 #
@@ -163,10 +163,10 @@ void TLangString::Load(int ID)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLangString::printf(int ID, ...)
+void TFtpLangString::printf(int ID, ...)
 {
 	va_list ap;
-	TLangString temp(ID);
+	TFtpLangString temp(ID);
 
 	va_start(ap, ID);
 	TString::printf(temp.GetData(), ap);
@@ -176,7 +176,7 @@ void TLangString::printf(int ID, ...)
 
 /*##########################################################################
 #
-#   Name       : TLangString::Write
+#   Name       : TFtpLangString::Write
 #
 #   Purpose....: Write message to socket
 #
@@ -185,7 +185,7 @@ void TLangString::printf(int ID, ...)
 #   Returns....: *
 #
 ##########################################################################*/
-void TLangString::Write(TSocket *Socket)
+void TFtpLangString::Write(TSocket *Socket)
 {
 	char str[5];
 

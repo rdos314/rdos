@@ -25,17 +25,17 @@
 #
 ########################################################################*/
 
-#ifndef _LANGSTR_H
-#define _LANGSTR_H
+#ifndef _FTPLANGSTR_H
+#define _FTPLANGSTR_H
 
 #include "str.h"
 #include "socket.h"
 
-class TLangString : public TString
+class TFtpLangString : public TString
 {
 public:
-    TLangString();
-    TLangString(int ID);
+	 TFtpLangString();
+	 TFtpLangString(int ID);
 
 	void Load(int ID);
 	void printf(int ID, ...);
@@ -47,7 +47,7 @@ public:
 protected:
 	int FID;
 
-    static int FIsLocalHandle;
+	 static int FIsLocalHandle;
 	static int FHandle;
 };
 

@@ -20,32 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# list.h
-# List command class
+# ftplist.h
+# Ftp List command class
 #
 ########################################################################*/
 
-#ifndef _LIST_H
-#define _LIST_H
+#ifndef _FTPLIST_H
+#define _FTPLIST_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 #include "direntry.h"
 
-class TListFactory : public TCommandFactory
+class TFtpListFactory : public TFtpCommandFactory
 {
 public:
-	TListFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpListFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TListCommand : public TCommand
+class TFtpListCommand : public TFtpCommand
 {
 public:
-	TListCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TListCommand();
+	TFtpListCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpListCommand();
 
 	virtual void Execute(char *param);
 

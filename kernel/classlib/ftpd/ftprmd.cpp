@@ -38,23 +38,23 @@
 
 /*##########################################################################
 #
-#   Name       : TRmdFactory::TRmdFactory
+#   Name       : TFtpRmdFactory::TFtpRmdFactory
 #
-#   Purpose....: Constructor for TRmdFactory
+#   Purpose....: Constructor for TFtpRmdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRmdFactory::TRmdFactory()
-  : TCommandFactory("RMD")
+TFtpRmdFactory::TFtpRmdFactory()
+  : TFtpCommandFactory("RMD")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRmdFactory::Create
+#   Name       : TFtpRmdFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,45 +63,45 @@ TRmdFactory::TRmdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TRmdFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpRmdFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TRmdCommand(Server, param);
+	return new TFtpRmdCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TRmdCommand::TRmdCommand
+#   Name       : TFtpRmdCommand::TFtpRmdCommand
 #
-#   Purpose....: Constructor for TRmdCommand
+#   Purpose....: Constructor for TFtpRmdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRmdCommand::TRmdCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpRmdCommand::TFtpRmdCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRmdCommand::~TRmdCommand
+#   Name       : TFtpRmdCommand::~TFtpRmdCommand
 #
-#   Purpose....: Destructor for TRmdCommand
+#   Purpose....: Destructor for TFtpRmdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRmdCommand::~TRmdCommand()
+TFtpRmdCommand::~TFtpRmdCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRmdCommand::Execute
+#   Name       : TFtpRmdCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -110,11 +110,11 @@ TRmdCommand::~TRmdCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRmdCommand::Execute(char *param)
+void TFtpRmdCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

@@ -25,25 +25,25 @@
 #
 ########################################################################*/
 
-#ifndef _SYST_H
-#define _SYST_H
+#ifndef _FTPSYST_H
+#define _FTPSYST_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TSystFactory : public TCommandFactory
+class TFtpSystFactory : public TFtpCommandFactory
 {
 public:
-	TSystFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpSystFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TSystCommand : public TCommand
+class TFtpSystCommand : public TFtpCommand
 {
 public:
-	TSystCommand(TFtpSocketServer *Server, const char *param);
+	TFtpSystCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

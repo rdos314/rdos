@@ -299,7 +299,7 @@ void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
 #   Returns....: *
 #
 ##########################################################################*/
-void TFtpSocketServer::Reply(TLangString *msg)
+void TFtpSocketServer::Reply(TFtpLangString *msg)
 {
 	 msg->Write(FSocket);
 }
@@ -602,8 +602,8 @@ void TFtpSocketServer::HandleSocket()
 	int Major;
 	int Minor;
 	int Release;
-	TLangString msg;
-	TCommand *cmd;
+	TFtpLangString msg;
+	TFtpCommand *cmd;
 
 	int count;
 	char Buf[513];
@@ -626,7 +626,7 @@ void TFtpSocketServer::HandleSocket()
             if (OnCommand)
                 (*OnCommand)(this, Buf);
 
-			cmd = TCommandFactory::Parse(this, Buf);
+			cmd = TFtpCommandFactory::Parse(this, Buf);
 
 			if (cmd)
 				cmd->Run();

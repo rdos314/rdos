@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pass.h
-# Password command class
+# ftppass.h
+# Ftp Password command class
 #
 ########################################################################*/
 
-#ifndef _PASS_H
-#define _PASS_H
+#ifndef _FTPPASS_H
+#define _FTPPASS_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TPassFactory : public TCommandFactory
+class TFtpPassFactory : public TFtpCommandFactory
 {
 public:
-	TPassFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpPassFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TPassCommand : public TCommand
+class TFtpPassCommand : public TFtpCommand
 {
 public:
-	TPassCommand(TFtpSocketServer *Server, const char *param);
+	TFtpPassCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# ftpport.cpp
+# Ftp Port command class
 #
 ########################################################################*/
 
@@ -37,23 +37,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPortFactory::TPortFactory
+#   Name       : TFtpPortFactory::TFtpPortFactory
 #
-#   Purpose....: Constructor for TPortFactory
+#   Purpose....: Constructor for TFtpPortFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPortFactory::TPortFactory()
-  : TCommandFactory("PORT")
+TFtpPortFactory::TFtpPortFactory()
+  : TFtpCommandFactory("PORT")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPortFactory::Create
+#   Name       : TFtpPortFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -62,30 +62,30 @@ TPortFactory::TPortFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPortFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpPortFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPortCommand(Server, param);
+	return new TFtpPortCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPortCommand::TPortCommand
+#   Name       : TFtpPortCommand::TFtpPortCommand
 #
-#   Purpose....: Constructor for TPortCommand
+#   Purpose....: Constructor for TFtpPortCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPortCommand::TPortCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpPortCommand::TFtpPortCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPortCommand::Run
+#   Name       : TFtpPortCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -94,11 +94,11 @@ TPortCommand::TPortCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPortCommand::Execute(char *param)
+void TFtpPortCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 	long IP;
 	int port;

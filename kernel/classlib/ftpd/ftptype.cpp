@@ -35,23 +35,23 @@
 
 /*##########################################################################
 #
-#   Name       : TTypeFactory::TTypeFactory
+#   Name       : TFtpTypeFactory::TFtpTypeFactory
 #
-#   Purpose....: Constructor for TTypeFactory
+#   Purpose....: Constructor for TFtpTypeFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TTypeFactory::TTypeFactory()
-  : TCommandFactory("TYPE")
+TFtpTypeFactory::TFtpTypeFactory()
+  : TFtpCommandFactory("TYPE")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TTypeFactory::Create
+#   Name       : TFtpTypeFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -60,30 +60,30 @@ TTypeFactory::TTypeFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TTypeFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpTypeFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TTypeCommand(Server, param);
+	return new TFtpTypeCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TTypeCommand::TTypeCommand
+#   Name       : TFtpTypeCommand::TFtpTypeCommand
 #
-#   Purpose....: Constructor for TTypeCommand
+#   Purpose....: Constructor for TFtpTypeCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TTypeCommand::TTypeCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpTypeCommand::TFtpTypeCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TTypeCommand::Run
+#   Name       : TFtpTypeCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -92,11 +92,11 @@ TTypeCommand::TTypeCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TTypeCommand::Execute(char *param)
+void TFtpTypeCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	ok = ScanCmdLine(param, 0);

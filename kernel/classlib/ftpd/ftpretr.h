@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# retr.h
-# Retr command class
+# ftpretr.h
+# Ftp Retr command class
 #
 ########################################################################*/
 
-#ifndef _RETR_H
-#define _RETR_H
+#ifndef _FTPRETR_H
+#define _FTPRETR_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TRetrFactory : public TCommandFactory
+class TFtpRetrFactory : public TFtpCommandFactory
 {
 public:
-	TRetrFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpRetrFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TRetrCommand : public TCommand
+class TFtpRetrCommand : public TFtpCommand
 {
 public:
-	TRetrCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TRetrCommand();
+	TFtpRetrCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpRetrCommand();
 
 	virtual void Execute(char *param);
 

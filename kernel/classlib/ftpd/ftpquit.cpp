@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quit.cpp
-# Quit command class
+# ftpquit.cpp
+# FTP Quit command class
 #
 ########################################################################*/
 
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TQuitFactory::TQuitFactory
+#   Name       : TFtpQuitFactory::TFtpQuitFactory
 #
-#   Purpose....: Constructor for TQuitFactory
+#   Purpose....: Constructor for TFtpQuitFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuitFactory::TQuitFactory()
-  : TCommandFactory("QUIT")
+TFtpQuitFactory::TFtpQuitFactory()
+  : TFtpCommandFactory("QUIT")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuitFactory::Create
+#   Name       : TFtpQuitFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TQuitFactory::TQuitFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TQuitFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpQuitFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TQuitCommand(Server, param);
+	return new TFtpQuitCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuitCommand::TQuitCommand
+#   Name       : TFtpQuitCommand::TFtpQuitCommand
 #
-#   Purpose....: Constructor for TQuitCommand
+#   Purpose....: Constructor for TFtpQuitCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuitCommand::TQuitCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpQuitCommand::TFtpQuitCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuitCommand::Run
+#   Name       : TFtpQuitCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,9 +93,9 @@ TQuitCommand::TQuitCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuitCommand::Execute(char *param)
+void TFtpQuitCommand::Execute(char *param)
 {
-	TLangString msg;
+	TFtpLangString msg;
 
 	msg.Load(221);
     FServer->Reply(&msg);    

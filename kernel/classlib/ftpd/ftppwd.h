@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pwd.h
-# Pwd command class
+# ftppwd.h
+# Ftp Pwd command class
 #
 ########################################################################*/
 
-#ifndef _PWD_H
-#define _PWD_H
+#ifndef _FTPPWD_H
+#define _FTPPWD_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TPwdFactory : public TCommandFactory
+class TFtpPwdFactory : public TFtpCommandFactory
 {
 public:
-	TPwdFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpPwdFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TPwdCommand : public TCommand
+class TFtpPwdCommand : public TFtpCommand
 {
 public:
-	TPwdCommand(TFtpSocketServer *Server, const char *param);
+	TFtpPwdCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

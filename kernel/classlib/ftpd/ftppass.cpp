@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# path.cpp
-# Path command class
+# ftppath.cpp
+# Ftp Path command class
 #
 ########################################################################*/
 
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPassFactory::TPassFactory
+#   Name       : TFtpPassFactory::TFtpPassFactory
 #
-#   Purpose....: Constructor for TPassFactory
+#   Purpose....: Constructor for TFtpPassFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPassFactory::TPassFactory()
-  : TCommandFactory("PASS")
+TFtpPassFactory::TFtpPassFactory()
+  : TFtpCommandFactory("PASS")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPassFactory::Create
+#   Name       : TFtpPassFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TPassFactory::TPassFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPassFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpPassFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPassCommand(Server, param);
+	return new TFtpPassCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPassCommand::TPassCommand
+#   Name       : TFtpPassCommand::TFtpPassCommand
 #
-#   Purpose....: Constructor for TPassCommand
+#   Purpose....: Constructor for TFtpPassCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPassCommand::TPassCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpPassCommand::TFtpPassCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPassCommand::Run
+#   Name       : TFtpPassCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,11 +93,11 @@ TPassCommand::TPassCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPassCommand::Execute(char *param)
+void TFtpPassCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	ok = ScanCmdLine(param, 0);

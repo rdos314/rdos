@@ -25,14 +25,14 @@
 #
 ########################################################################*/
 
-#ifndef _PARSER_H
-#define _PARSER_H
+#ifndef _FTPPARSER_H
+#define _FTPPARSER_H
 
-class TParser
+class TFtpParser
 {
 public:
-    TParser();
-	virtual ~TParser();
+	 TFtpParser();
+	virtual ~TFtpParser();
 
 protected:
 	virtual int IsArgDelim(char ch);

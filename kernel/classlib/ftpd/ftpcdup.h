@@ -20,32 +20,32 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cdup.h
-# Cdup command class
+# ftpcdup.h
+# Ftpddup command class
 #
 ########################################################################*/
 
-#ifndef _CDUP_H
-#define _CDUP_H
+#ifndef _FTPCDUP_H
+#define _FTPCDUP_H
 
 #include "ftpcdup.h"
 #include "ftpfact.h"
 #include "direntry.h"
 
-class TCdupFactory : public TCommandFactory
+class TFtpCdupFactory : public TFtpCommandFactory
 {
 public:
-	TCdupFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpCdupFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TCdupCommand : public TCommand
+class TFtpCdupCommand : public TFtpCommand
 {
 public:
-	TCdupCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TCdupCommand();
+	TFtpCdupCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpCdupCommand();
 
 	virtual void Execute(char *param);
 

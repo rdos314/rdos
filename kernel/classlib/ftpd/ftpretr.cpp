@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# retr.cpp
-# Retr command class
+# ftpretr.cpp
+# Ftp Retr command class
 #
 ########################################################################*/
 
@@ -39,23 +39,23 @@
 
 /*##########################################################################
 #
-#   Name       : TRetrFactory::TRetrFactory
+#   Name       : TFtpRetrFactory::TFtpRetrFactory
 #
-#   Purpose....: Constructor for TRetrFactory
+#   Purpose....: Constructor for TFtpRetrFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRetrFactory::TRetrFactory()
-  : TCommandFactory("RETR")
+TFtpRetrFactory::TFtpRetrFactory()
+  : TFtpCommandFactory("RETR")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRetrFactory::Create
+#   Name       : TFtpRetrFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -64,45 +64,45 @@ TRetrFactory::TRetrFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TRetrFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpRetrFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TRetrCommand(Server, param);
+	return new TFtpRetrCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TRetrCommand::TRetrCommand
+#   Name       : TFtpRetrCommand::TFtpRetrCommand
 #
-#   Purpose....: Constructor for TRetrCommand
+#   Purpose....: Constructor for TFtpRetrCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRetrCommand::TRetrCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpRetrCommand::TFtpRetrCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRetrCommand::~TRetrCommand
+#   Name       : TFtpRetrCommand::~TFtpRetrCommand
 #
-#   Purpose....: Destructor for TRetrCommand
+#   Purpose....: Destructor for TFtpRetrCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TRetrCommand::~TRetrCommand()
+TFtpRetrCommand::~TFtpRetrCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TRetrCommand::Execute
+#   Name       : TFtpRetrCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -111,11 +111,11 @@ TRetrCommand::~TRetrCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRetrCommand::Execute(char *param)
+void TFtpRetrCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dele.h
-# Dele command class
+# ftpdele.h
+# Ftp Dele command class
 #
 ########################################################################*/
 
-#ifndef _DELE_H
-#define _DELE_H
+#ifndef _FTPDELE_H
+#define _FTPDELE_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TDeleFactory : public TCommandFactory
+class TFtpDeleFactory : public TFtpCommandFactory
 {
 public:
-	TDeleFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpDeleFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TDeleCommand : public TCommand
+class TFtpDeleCommand : public TFtpCommand
 {
 public:
-	TDeleCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TDeleCommand();
+	TFtpDeleCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpDeleCommand();
 
 	virtual void Execute(char *param);
 

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pwd.cpp
-# Pwd command class
+# ftppwd.cpp
+# FTP Pwd command class
 #
 ########################################################################*/
 
@@ -36,23 +36,23 @@
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::TPwdFactory
+#   Name       : TFtpPwdFactory::TFtpPwdFactory
 #
-#   Purpose....: Constructor for TPwdFactory
+#   Purpose....: Constructor for TFtpPwdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdFactory::TPwdFactory()
-  : TCommandFactory("PWD")
+TFtpPwdFactory::TFtpPwdFactory()
+  : TFtpCommandFactory("PWD")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdFactory::Create
+#   Name       : TFtpPwdFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -61,30 +61,30 @@ TPwdFactory::TPwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TPwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpPwdFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TPwdCommand(Server, param);
+	return new TFtpPwdCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::TPwdCommand
+#   Name       : TFtpPwdCommand::TFtpPwdCommand
 #
-#   Purpose....: Constructor for TPwdCommand
+#   Purpose....: Constructor for TFtpPwdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpPwdCommand::TFtpPwdCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TPwdCommand::Run
+#   Name       : TFtpPwdCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -93,9 +93,9 @@ TPwdCommand::TPwdCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPwdCommand::Execute(char *param)
+void TFtpPwdCommand::Execute(char *param)
 {
-	TLangString msg;
+	TFtpLangString msg;
     TString str;
 	const char *ptr;
 

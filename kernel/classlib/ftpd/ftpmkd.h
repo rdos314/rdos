@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# mkd.h
-# Mkd command class
+# ftpmkd.h
+# Ftp Mkd command class
 #
 ########################################################################*/
 
-#ifndef _MKD_H
-#define _MKD_H
+#ifndef _FTPMKD_H
+#define _FTPMKD_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TMkdFactory : public TCommandFactory
+class TFtpMkdFactory : public TFtpCommandFactory
 {
 public:
-	TMkdFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpMkdFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TMkdCommand : public TCommand
+class TFtpMkdCommand : public TFtpCommand
 {
 public:
-	TMkdCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TMkdCommand();
+	TFtpMkdCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpMkdCommand();
 
 	virtual void Execute(char *param);
 

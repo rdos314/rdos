@@ -40,23 +40,23 @@
 
 /*##########################################################################
 #
-#   Name       : TCwdFactory::TCwdFactory
+#   Name       : TFtpCwdFactory::TFtpCwdFactory
 #
-#   Purpose....: Constructor for TCwdFactory
+#   Purpose....: Constructor for TFtpCwdFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdFactory::TCwdFactory()
-  : TCommandFactory("CWD")
+TFtpCwdFactory::TFtpCwdFactory()
+  : TFtpCommandFactory("CWD")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdFactory::Create
+#   Name       : TFtpCwdFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -65,45 +65,45 @@ TCwdFactory::TCwdFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TCwdFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpCwdFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TCwdCommand(Server, param);
+	return new TFtpCwdCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::TCwdCommand
+#   Name       : TFtpCwdCommand::TFtpCwdCommand
 #
-#   Purpose....: Constructor for TCwdCommand
+#   Purpose....: Constructor for TFtpCwdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdCommand::TCwdCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpCwdCommand::TFtpCwdCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::~TCwdCommand
+#   Name       : TFtpCwdCommand::~TFtpCwdCommand
 #
-#   Purpose....: Destructor for TCwdCommand
+#   Purpose....: Destructor for TFtpCwdCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCwdCommand::~TCwdCommand()
+TFtpCwdCommand::~TFtpCwdCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCwdCommand::Execute
+#   Name       : TFtpCwdCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -112,11 +112,11 @@ TCwdCommand::~TCwdCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCwdCommand::Execute(char *param)
+void TFtpCwdCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

@@ -35,20 +35,20 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-int TCommand::ErrorLevel = 0;
+int TFtpCommand::ErrorLevel = 0;
 
 /*##########################################################################
 #
-#   Name       : TArg::TArg
+#   Name       : TFtpArg::TFtpArg
 #
-#   Purpose....: Constructor for TArg
+#   Purpose....: Constructor for TFtpArg
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TArg::TArg(const char *name)
+TFtpArg::TFtpArg(const char *name)
   : FName(name)
 {
     ptr = (char *)FName.GetData();
@@ -58,22 +58,22 @@ TArg::TArg(const char *name)
 
 /*##########################################################################
 #
-#   Name       : TArg::~TArg
+#   Name       : TFtpArg::~TFtpArg
 #
-#   Purpose....: Destructor for TArg
+#   Purpose....: Destructor for TFtpArg
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TArg::~TArg()
+TFtpArg::~TFtpArg()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCommand::TCommand
+#   Name       : TFtpCommand::TFtpCommand
 #
 #   Purpose....: Constructor for command
 #
@@ -82,7 +82,7 @@ TArg::~TArg()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(TFtpSocketServer *Server)
+TFtpCommand::TFtpCommand(TFtpSocketServer *Server)
 {
     FServer = Server;
     FArgList = 0;
@@ -90,7 +90,7 @@ TCommand::TCommand(TFtpSocketServer *Server)
 
 /*##########################################################################
 #
-#   Name       : TCommand::TCommand
+#   Name       : TFtpCommand::TFtpCommand
 #
 #   Purpose....: Constructor for command
 #
@@ -99,7 +99,7 @@ TCommand::TCommand(TFtpSocketServer *Server)
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::TCommand(TFtpSocketServer *Server, const char *param)
+TFtpCommand::TFtpCommand(TFtpSocketServer *Server, const char *param)
   : FCmdLine(param)
 {
     FServer = Server;
@@ -108,7 +108,7 @@ TCommand::TCommand(TFtpSocketServer *Server, const char *param)
 
 /*##########################################################################
 #
-#   Name       : TCommand::~TCommand
+#   Name       : TFtpCommand::~TFtpCommand
 #
 #   Purpose....: Destructor for command
 #
@@ -117,9 +117,9 @@ TCommand::TCommand(TFtpSocketServer *Server, const char *param)
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand::~TCommand()
+TFtpCommand::~TFtpCommand()
 {
-    TArg *arg;
+    TFtpArg *arg;
 
     arg = FArgList;
     while (arg)
@@ -132,7 +132,7 @@ TCommand::~TCommand()
 
 /*##########################################################################
 #
-#   Name       : TCommand::Run
+#   Name       : TFtpCommand::Run
 #
 #   Purpose....: Run command
 #
@@ -141,7 +141,7 @@ TCommand::~TCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::Run()
+void TFtpCommand::Run()
 {
 	char *param;
 	char *ptr;
@@ -160,7 +160,7 @@ void TCommand::Run()
 
 /*##########################################################################
 #
-#   Name       : TCommand::AddArg
+#   Name       : TFtpCommand::AddArg
 #
 #   Purpose....: Add an argument
 #
@@ -169,10 +169,10 @@ void TCommand::Run()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::AddArg(const char *name)
+void TFtpCommand::AddArg(const char *name)
 {
-    TArg *arg = new TArg(name);
-    TArg *curr;
+    TFtpArg *arg = new TFtpArg(name);
+    TFtpArg *curr;
 
     arg->FList = 0;
 	curr = FArgList;
@@ -190,7 +190,7 @@ void TCommand::AddArg(const char *name)
 
 /*##########################################################################
 #
-#   Name       : TCommand::AddArg
+#   Name       : TFtpCommand::AddArg
 #
 #   Purpose....: Add an argument
 #
@@ -199,7 +199,7 @@ void TCommand::AddArg(const char *name)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::AddArg(char *sBeg, char **sEnd)
+void TFtpCommand::AddArg(char *sBeg, char **sEnd)
 { 
     char *arg;
 
@@ -211,7 +211,7 @@ void TCommand::AddArg(char *sBeg, char **sEnd)
 
 /*##########################################################################
 #
-#   Name       : TCommand::Split
+#   Name       : TFtpCommand::Split
 #
 #   Purpose....: Split line into arguments
 #
@@ -220,7 +220,7 @@ void TCommand::AddArg(char *sBeg, char **sEnd)
 #   Returns....: *
 #
 ##########################################################################*/
-void TCommand::Split(char *s)
+void TFtpCommand::Split(char *s)
 {
 	char *start;
 
@@ -237,7 +237,7 @@ void TCommand::Split(char *s)
 
 /*##########################################################################
 #
-#   Name       : TCommand::Parse
+#   Name       : TFtpCommand::Parse
 #
 #   Purpose....: Parse arguments
 #
@@ -246,9 +246,9 @@ void TCommand::Split(char *s)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::Parse(void *arg)
+int TFtpCommand::Parse(void *arg)
 {
-    TArg *argv;
+    TFtpArg *argv;
 
 	FArgCount = 0;
 
@@ -264,7 +264,7 @@ int TCommand::Parse(void *arg)
 
 /*##########################################################################
 #
-#   Name       : TCommand::ScanCmdLine
+#   Name       : TFtpCommand::ScanCmdLine
 #
 #   Purpose....: Scan cmd line
 #
@@ -273,7 +273,7 @@ int TCommand::Parse(void *arg)
 #   Returns....: *
 #
 ##########################################################################*/
-int TCommand::ScanCmdLine(char *line, void *arg)
+int TFtpCommand::ScanCmdLine(char *line, void *arg)
 {
 	Split(line);
 

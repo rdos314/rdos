@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# port.h
-# Port command class
+# ftpport.h
+# Ftp Port command class
 #
 ########################################################################*/
 
-#ifndef _PORT_H
-#define _PORT_H
+#ifndef _FTPPORT_H
+#define _FTPPORT_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TPortFactory : public TCommandFactory
+class TFtpPortFactory : public TFtpCommandFactory
 {
 public:
-	TPortFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpPortFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TPortCommand : public TCommand
+class TFtpPortCommand : public TFtpCommand
 {
 public:
-	TPortCommand(TFtpSocketServer *Server, const char *param);
+	TFtpPortCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

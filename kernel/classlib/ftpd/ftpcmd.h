@@ -20,37 +20,37 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# cmd.h
-# Command base class
+# ftpcmd.h
+# Ftp command base class
 #
 ########################################################################*/
 
-#ifndef _CMD_H
-#define _CMD_H
+#ifndef _FTPCMD_H
+#define _FTPCMD_H
 
 #include "file.h"
 #include "path.h"
 #include "ftpparse.h"
 #include "ftpserv.h"
 
-class TArg
+class TFtpArg
 {
 public:
-    TArg(const char *name);
-    ~TArg();
+    TFtpArg(const char *name);
+    ~TFtpArg();
 
     char *ptr;
 
     TString FName;
-    TArg *FList;
+	 TFtpArg *FList;
 };
 
-class TCommand : public TParser
+class TFtpCommand : public TFtpParser
 {
 public:
-    TCommand(TFtpSocketServer *Server);
-    TCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TCommand();
+    TFtpCommand(TFtpSocketServer *Server);
+    TFtpCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpCommand();
 	
 	void Run();
 	virtual void Execute(char *param) = 0;
@@ -65,9 +65,9 @@ protected:
     int ScanCmdLine(char *line, void *arg);
 
 	TString FCmdLine;
-	TCommand *FList;
+	TFtpCommand *FList;
 	
-	TArg *FArgList;
+	TFtpArg *FArgList;
 	int FArgCount;
 
 	TFtpSocketServer *FServer;

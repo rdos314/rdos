@@ -40,23 +40,23 @@
 
 /*##########################################################################
 #
-#   Name       : TCdupFactory::TCdupFactory
+#   Name       : TFtpCdupFactory::TFtpCdupFactory
 #
-#   Purpose....: Constructor for TCdupFactory
+#   Purpose....: Constructor for TFtpCdupFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCdupFactory::TCdupFactory()
-  : TCommandFactory("CDUP")
+TFtpCdupFactory::TFtpCdupFactory()
+  : TFtpCommandFactory("CDUP")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCdupFactory::Create
+#   Name       : TFtpCdupFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -65,45 +65,45 @@ TCdupFactory::TCdupFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TCdupFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpCdupFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TCdupCommand(Server, param);
+	return new TFtpCdupCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TCdupCommand::TCdupCommand
+#   Name       : TFtpCdupCommand::TFtpCdupCommand
 #
-#   Purpose....: Constructor for TCdupCommand
+#   Purpose....: Constructor for TFtpCdupCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCdupCommand::TCdupCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpCdupCommand::TFtpCdupCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCdupCommand::~TCdupCommand
+#   Name       : TFtpCdupCommand::~TFtpCdupCommand
 #
-#   Purpose....: Destructor for TCdupCommand
+#   Purpose....: Destructor for TFtpCdupCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TCdupCommand::~TCdupCommand()
+TFtpCdupCommand::~TFtpCdupCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TCdupCommand::Execute
+#   Name       : TFtpCdupCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -112,11 +112,11 @@ TCdupCommand::~TCdupCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TCdupCommand::Execute(char *param)
+void TFtpCdupCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 
 	if (FServer->VerifyUser())
 	{

@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# user.h
-# User command class
+# ftpuser.h
+# Ftp User command class
 #
 ########################################################################*/
 
-#ifndef _USER_H
-#define _USER_H
+#ifndef _FTPUSER_H
+#define _FTPUSER_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TUserFactory : public TCommandFactory
+class TFtpUserFactory : public TFtpCommandFactory
 {
 public:
-	TUserFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpUserFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TUserCommand : public TCommand
+class TFtpUserCommand : public TFtpCommand
 {
 public:
-	TUserCommand(TFtpSocketServer *Server, const char *param);
+	TFtpUserCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };

@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# mdtm.cpp
-# Mdtm command class
+# ftpmdtm.cpp
+# Ftp Mdtm command class
 #
 ########################################################################*/
 
@@ -39,23 +39,23 @@
 
 /*##########################################################################
 #
-#   Name       : TMdtmFactory::TMdtmFactory
+#   Name       : TFtpMdtmFactory::TFtpMdtmFactory
 #
-#   Purpose....: Constructor for TMdtmFactory
+#   Purpose....: Constructor for TFtpMdtmFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMdtmFactory::TMdtmFactory()
-  : TCommandFactory("MDTM")
+TFtpMdtmFactory::TFtpMdtmFactory()
+  : TFtpCommandFactory("MDTM")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMdtmFactory::Create
+#   Name       : TFtpMdtmFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -64,45 +64,45 @@ TMdtmFactory::TMdtmFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TMdtmFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpMdtmFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TMdtmCommand(Server, param);
+	return new TFtpMdtmCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TMdtmCommand::TMdtmCommand
+#   Name       : TFtpMdtmCommand::TFtpMdtmCommand
 #
-#   Purpose....: Constructor for TMdtmCommand
+#   Purpose....: Constructor for TFtpMdtmCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMdtmCommand::TMdtmCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpMdtmCommand::TFtpMdtmCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMdtmCommand::~TMdtmCommand
+#   Name       : TFtpMdtmCommand::~TFtpMdtmCommand
 #
-#   Purpose....: Destructor for TMdtmCommand
+#   Purpose....: Destructor for TFtpMdtmCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMdtmCommand::~TMdtmCommand()
+TFtpMdtmCommand::~TFtpMdtmCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMdtmCommand::Execute
+#   Name       : TFtpMdtmCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -111,11 +111,11 @@ TMdtmCommand::~TMdtmCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMdtmCommand::Execute(char *param)
+void TFtpMdtmCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 	int year, month, day;
 	int hour, min, sec;

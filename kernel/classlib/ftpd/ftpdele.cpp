@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# dele.cpp
-# Dele command class
+# ftpdele.cpp
+# Ftp Dele command class
 #
 ########################################################################*/
 
@@ -38,23 +38,23 @@
 
 /*##########################################################################
 #
-#   Name       : TDeleFactory::TDeleFactory
+#   Name       : TFtpDeleFactory::TFtpDeleFactory
 #
-#   Purpose....: Constructor for TDeleFactory
+#   Purpose....: Constructor for TFtpDeleFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDeleFactory::TDeleFactory()
-  : TCommandFactory("DELE")
+TFtpDeleFactory::TFtpDeleFactory()
+  : TFtpCommandFactory("DELE")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDeleFactory::Create
+#   Name       : TFtpDeleFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -63,45 +63,45 @@ TDeleFactory::TDeleFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TDeleFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpDeleFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TDeleCommand(Server, param);
+	return new TFtpDeleCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TDeleCommand::TDeleCommand
+#   Name       : TFtpDeleCommand::TFtpDeleCommand
 #
-#   Purpose....: Constructor for TDeleCommand
+#   Purpose....: Constructor for TFtpDeleCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDeleCommand::TDeleCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpDeleCommand::TFtpDeleCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDeleCommand::~TDeleCommand
+#   Name       : TFtpDeleCommand::~TFtpDeleCommand
 #
-#   Purpose....: Destructor for TDeleCommand
+#   Purpose....: Destructor for TFtpDeleCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TDeleCommand::~TDeleCommand()
+TFtpDeleCommand::~TFtpDeleCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TDeleCommand::Execute
+#   Name       : TFtpDeleCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -110,11 +110,11 @@ TDeleCommand::~TDeleCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDeleCommand::Execute(char *param)
+void TFtpDeleCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 
 	if (FServer->VerifyUser())

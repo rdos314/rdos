@@ -367,8 +367,6 @@ void cdecl main()
 	Mouse->OnRightUp = RightUp;
 	Mouse->OnRightDown = RightDown;
 
-	_asm int 3
-
 	vbe = new TVideoGraphicDevice(32, 640, 480);
 
 	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);

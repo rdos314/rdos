@@ -20,31 +20,31 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# mdtm.h
-# Mdtm command class
+# ftpmdtm.h
+# Ftp Mdtm command class
 #
 ########################################################################*/
 
-#ifndef _MDTM_H
-#define _MDTM_H
+#ifndef _FTPMDTM_H
+#define _FTPMDTM_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TMdtmFactory : public TCommandFactory
+class TFtpMdtmFactory : public TFtpCommandFactory
 {
 public:
-	TMdtmFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpMdtmFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TMdtmCommand : public TCommand
+class TFtpMdtmCommand : public TFtpCommand
 {
 public:
-	TMdtmCommand(TFtpSocketServer *Server, const char *param);
-	virtual ~TMdtmCommand();
+	TFtpMdtmCommand(TFtpSocketServer *Server, const char *param);
+	virtual ~TFtpMdtmCommand();
 
 	virtual void Execute(char *param);
 

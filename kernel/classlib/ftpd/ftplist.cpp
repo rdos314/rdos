@@ -40,23 +40,23 @@
 
 /*##########################################################################
 #
-#   Name       : TListFactory::TListFactory
+#   Name       : TFtpListFactory::TFtpListFactory
 #
-#   Purpose....: Constructor for TListFactory
+#   Purpose....: Constructor for TFtpListFactory
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TListFactory::TListFactory()
-  : TCommandFactory("LIST")
+TFtpListFactory::TFtpListFactory()
+  : TFtpCommandFactory("LIST")
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TListFactory::Create
+#   Name       : TFtpListFactory::Create
 #
 #   Purpose....: Create a command
 #
@@ -65,45 +65,45 @@ TListFactory::TListFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TCommand *TListFactory::Create(TFtpSocketServer *Server, const char *param)
+TFtpCommand *TFtpListFactory::Create(TFtpSocketServer *Server, const char *param)
 {
-	return new TListCommand(Server, param);
+	return new TFtpListCommand(Server, param);
 }
 
 /*##########################################################################
 #
-#   Name       : TListCommand::TListCommand
+#   Name       : TFtpListCommand::TFtpListCommand
 #
-#   Purpose....: Constructor for TListCommand
+#   Purpose....: Constructor for TFtpListCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TListCommand::TListCommand(TFtpSocketServer *Server, const char *param)
-  : TCommand(Server, param)
+TFtpListCommand::TFtpListCommand(TFtpSocketServer *Server, const char *param)
+  : TFtpCommand(Server, param)
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TListCommand::~TListCommand
+#   Name       : TFtpListCommand::~TFtpListCommand
 #
-#   Purpose....: Destructor for TListCommand
+#   Purpose....: Destructor for TFtpListCommand
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TListCommand::~TListCommand()
+TFtpListCommand::~TFtpListCommand()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TListCommand::WriteEntry
+#   Name       : TFtpListCommand::WriteEntry
 #
 #   Purpose....: Write detailed listing entry
 #
@@ -112,7 +112,7 @@ TListCommand::~TListCommand()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListCommand::WriteEntry(const TDirEntryData &entry)
+void TFtpListCommand::WriteEntry(const TDirEntryData &entry)
 {
     TDateTime CurrTime;
 	char str[31];
@@ -215,7 +215,7 @@ void TListCommand::WriteEntry(const TDirEntryData &entry)
 
 /*##########################################################################
 #
-#   Name       : TListCommand::WriteEntry
+#   Name       : TFtpListCommand::WriteEntry
 #
 #   Purpose....: Write detailed listing
 #
@@ -224,7 +224,7 @@ void TListCommand::WriteEntry(const TDirEntryData &entry)
 #   Returns....: *
 #
 ##########################################################################*/
-void TListCommand::WriteEntry()
+void TFtpListCommand::WriteEntry()
 {
 	int ok;
 
@@ -245,7 +245,7 @@ void TListCommand::WriteEntry()
 
 /*##########################################################################
 #
-#   Name       : TListCommand::Execute
+#   Name       : TFtpListCommand::Execute
 #
 #   Purpose....: Run command
 #
@@ -254,11 +254,11 @@ void TListCommand::WriteEntry()
 #   Returns....: *
 #
 ##########################################################################*/
-void TListCommand::Execute(char *param)
+void TFtpListCommand::Execute(char *param)
 {
-	TArg *arg;
+	TFtpArg *arg;
 	int ArgCount;
-	TLangString msg;
+	TFtpLangString msg;
 	int ok;
 	TPathName path(FServer->RootDir);
 

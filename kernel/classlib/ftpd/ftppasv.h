@@ -20,30 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pasv.h
-# Pasv command class
+# ftppasv.h
+# Ftp Pasv command class
 #
 ########################################################################*/
 
-#ifndef _PASV_H
-#define _PASV_H
+#ifndef _FTPPASV_H
+#define _FTPPASV_H
 
 #include "ftpcmd.h"
 #include "ftpfact.h"
 
-class TPasvFactory : public TCommandFactory
+class TFtpPasvFactory : public TFtpCommandFactory
 {
 public:
-	TPasvFactory();
-	virtual TCommand *Create(TFtpSocketServer *Server, const char *param);
+	TFtpPasvFactory();
+	virtual TFtpCommand *Create(TFtpSocketServer *Server, const char *param);
 
 protected:
 };
 
-class TPasvCommand : public TCommand
+class TFtpPasvCommand : public TFtpCommand
 {
 public:
-	TPasvCommand(TFtpSocketServer *Server, const char *param);
+	TFtpPasvCommand(TFtpSocketServer *Server, const char *param);
 
 	virtual void Execute(char *param);
 };
