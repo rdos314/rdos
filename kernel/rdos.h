@@ -109,7 +109,19 @@ void __stdcall RdosCloseMapping(int Handle);
 void __stdcall RdosMapView(int Handle, int Offset, void *Base, int Size);
 void __stdcall RdosUnmapView(int Handle);
 
-void __stdcall RdosSetCurDir(const char *PathName);
+int __stdcall RdosSetCurDrive(int Drive);
+int __stdcall RdosGetCurDrive();
+int __stdcall RdosSetCurDir(const char *PathName);
+int __stdcall RdosGetCurDir(int Drive, char *PathName);
+int __stdcall RdosMakeDir(const char *PathName);
+int __stdcall RdosRemoveDir(const char *PathName);
+int __stdcall RdosRenameFile(const char *ToName, const char *FromName);
+int __stdcall RdosDeleteFile(const char *PathName);
+int __stdcall RdosGetFileAttribute(const char *PathName, int *Attribute);
+int __stdcall RdosSetFileAttribute(const char *PathName, int Attribute);
+int __stdcall RdosOpenDir(const char *PathName);
+void __stdcall RdosCloseDir(int Handle);
+int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, long *MsbTime, long *LsbTime);
 
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();

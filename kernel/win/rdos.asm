@@ -3127,6 +3127,61 @@ _RdosUnmapView	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosSetCurDrive
+;
+;		DESCRIPTION:	Set current drive
+;
+;		PARAMETER:		Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetCurDrive
+
+_RdosSetCurDrive	PROC far
+	push bp
+	mov bp,sp
+;
+	mov al,[bp+6]
+    SetCurDrive
+	jc rscdrFail
+
+    mov ax,1
+    jmp rscdrDone
+
+rscdrFail:
+    xor ax,ax
+
+rscdrDone:
+	pop bp
+	ret
+_RdosSetCurDrive	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetCurDrive
+;
+;		DESCRIPTION:	Get current drive
+;
+;		RETURNS:		Drive
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetCurDrive
+
+_RdosGetCurDrive	PROC far
+	push bp
+	mov bp,sp
+;
+    xor ax,ax
+    GetCurDrive
+	movzx ax,al
+;
+	pop bp
+	ret
+_RdosGetCurDrive	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosSetCurDir
 ;
 ;		DESCRIPTION:	Set current directory
@@ -3137,7 +3192,7 @@ _RdosUnmapView	ENDP
 
 	public _RdosSetCurDir
 
-_RdosSetCurDir	PROC far
+_RdosSetCurDir	PROC
 	push bp
 	mov bp,sp
 	push es
@@ -3145,12 +3200,405 @@ _RdosSetCurDir	PROC far
 ;
 	les di,[bp+6]
 	SetCurDir
-;
+	jc rscdFail
+
+    mov ax,1
+    jmp rscdDone
+
+rscdFail:
+    xor ax,ax
+
+rscdDone:
 	pop di
 	pop es
 	pop bp
 	ret
 _RdosSetCurDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetCurDir
+;
+;		DESCRIPTION:	Get current directory
+;
+;		PARAMETER:		Drive
+;                       Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetCurDir
+
+_RdosGetCurDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+    mov al,[bp+6]
+	les di,[bp+8]
+	GetCurDir
+	jc rgcdFail
+
+    mov ax,1
+    jmp rgcdDone
+
+rgcdFail:
+    xor ax,ax
+
+rgcdDone:
+	pop di
+	pop es
+	pop ebp
+	ret
+_RdosGetCurDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosMakeDir
+;
+;		DESCRIPTION:	Make a new directory
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosMakeDir
+
+_RdosMakeDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	MakeDir
+	jc mdFail
+
+    mov ax,1
+    jmp mdDone
+
+mdFail:
+    xor ax,ax
+
+mdDone:
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosMakeDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosRemoveDir
+;
+;		DESCRIPTION:	Remove a directory
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosRemoveDir
+
+_RdosRemoveDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	RemoveDir
+	jc rdFail
+
+    mov ax,1
+    jmp rdDone
+
+rdFail:
+    xor ax,ax
+
+rdDone:
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosRemoveDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosRenameFile
+;
+;		DESCRIPTION:	Rename a file
+;
+;		PARAMETER:		ToName
+;                       FromName
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosRenameFile
+
+_RdosRenameFile	PROC far
+	push bp
+	mov bp,sp
+	push ds
+	push es
+	push si
+	push di
+;
+	les di,[bp+6]
+	lds si,[bp+10]
+	RenameFile
+	jc rfFail
+
+    mov ax,1
+    jmp rfDone
+
+rfFail:
+    xor ax,ax
+
+rfDone:
+	pop di
+	pop si
+	pop es
+	pop ds
+	pop bp
+	ret
+_RdosRenameFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosDeleteFile
+;
+;		DESCRIPTION:	Delete a file
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosDeleteFile
+
+_RdosDeleteFile	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push di
+;
+	les di,[bp+6]
+	DeleteFile
+	jc dfFail
+
+    mov ax,1
+    jmp dfDone
+
+dfFail:
+    xor ax,ax
+
+dfDone:
+	pop di
+	pop es
+	pop bp
+	ret
+_RdosDeleteFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetFileAttribute
+;
+;		DESCRIPTION:	Get file attribute
+;
+;		PARAMETER:		Pathname
+;                       Attribute
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetFileAttribute
+
+_RdosGetFileAttribute	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push di
+;
+    les di,[bp+6]
+	GetFileAttribute
+	jc gfaFail
+;
+    les di,[bp+10]
+    mov es:[di],cx
+    mov ax,1
+    jmp gfaDone
+
+gfaFail:
+    xor ax,ax
+
+gfaDone:
+	pop di
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosGetFileAttribute	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSetFileAttribute
+;
+;		DESCRIPTION:	Set file attribute
+;
+;		PARAMETER:		Pathname
+;                       Attribute
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosSetFileAttribute
+
+_RdosSetFileAttribute	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push cx
+	push di
+;
+	les di,[bp+6]
+	mov cx,[bp+10]
+	SetFileAttribute
+	jc sfaFail
+;
+    mov ax,1
+    jmp sfaDone
+
+sfaFail:
+    xor ax,ax
+
+sfaDone:
+	pop di
+	pop cx
+	pop es
+	pop bp
+	ret
+_RdosSetFileAttribute	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenDir
+;
+;		DESCRIPTION:	Open directory
+;
+;		PARAMETER:		Pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosOpenDir
+
+_RdosOpenDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push di
+;
+	les di,[bp+6]
+	OpenDir
+	jc odFail
+;
+    mov ax,bx
+    jmp odDone
+
+odFail:
+    xor ax,ax
+
+odDone:
+	pop di
+	pop bx
+	pop es
+	pop bp
+	ret
+_RdosOpenDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseDir
+;
+;		DESCRIPTION:	Close directory
+;
+;		PARAMETER:		Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCloseDir
+
+_RdosCloseDir	PROC far
+	push bp
+	mov bp,sp
+	push bx
+;
+	mov bx,[bp+6]
+	CloseDir
+;
+	pop bx
+	pop bp
+	ret
+_RdosCloseDir	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadDir
+;
+;		DESCRIPTION:	Read a directory entry
+;
+;		PARAMETER:		Handle
+;                       Entry #
+;                       MaxNameSize
+;                       Name buffer
+;                       FileSize
+;                       Attribute
+;                       Msb time
+;                       Lsb time
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReadDir
+
+_RdosReadDir	PROC far
+	push bp
+	mov bp,sp
+	push es
+	push bx
+	push ecx
+	push di
+;
+	mov bx,[bp+6]
+	mov dx,[bp+8]
+	mov cx,[bp+10]
+	les di,[bp+12]
+	UserGate read_dir_nr
+	jc rdiFail
+;
+    les di,[bp+16]
+    mov es:[di],ecx
+;
+    les di,[bp+20]
+    mov es:[di],bx
+;
+    les di,[bp+24]
+    mov es:[di],edx
+;
+    les di,[bp+28]
+    mov es:[di],eax
+;
+    mov ax,1
+    jmp rdiDone
+
+rdiFail:
+    xor ax,ax
+    
+rdiDone:
+    pop di
+    pop ecx
+	pop ebx
+	pop es
+	pop bp
+	ret
+_RdosReadDir	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
