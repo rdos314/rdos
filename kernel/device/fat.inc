@@ -29,6 +29,14 @@ fat12				EQU 12
 fat16				EQU 16
 fat32				EQU 32
 
+fat_file_list_struc	STRUC
+
+ffl_basic			file_list_struc <>
+ffl_sector_ptr		DD ?
+ffl_clusters		DD ?
+
+fat_file_list_struc	ENDS
+
 dir_data_struc	STRUC
 
 dir_section			read_write_section_typ <>
@@ -58,18 +66,6 @@ dir_file_size	DD ?
 dir_drive		DB ?
 
 dir_entry_struc	ENDS
-
-file_data_struc	STRUC
-
-file_section		read_write_section_typ <>
-file_ptr			DD ?
-file_dir_entry		DD ?
-file_usage			DW ?
-file_parent			DW ?
-file_cache_entry	DD ?
-file_cache_ads		DD ?
-
-file_data_struc	ENDS
 
 FILE_ENTRY_SIZE	EQU 16
 

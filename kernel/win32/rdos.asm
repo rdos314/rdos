@@ -30,7 +30,7 @@
 	.386
 	.model flat
 
-include c:\rdos\os\user.def
+include \rdos\os\user.def
 
 tib_data	STRUC
 
@@ -134,6 +134,55 @@ RdosCreateThread	PROC
 	pop ebp
 	ret 16
 RdosCreateThread	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosAllocateMem
+;
+;		description:	Allocate memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAllocateMem
+
+RdosAllocateMem	Proc
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov eax,[ebp+8]
+	UserGate allocate_app_mem_nr
+	mov eax,edx
+;
+	pop edx
+	pop ebp
+	ret 4
+RdosAllocateMem	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosFreeMem
+;
+;		description:	Free memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosFreeMem
+
+RdosFreeMem	Proc
+	push ebp
+	mov ebp,esp
+	push edx
+;
+	mov edx,[ebp+8]
+	UserGate free_app_mem_nr
+;
+	pop edx
+	pop ebp
+	ret 4
+RdosFreeMem	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -577,6 +626,27 @@ RdosGetSysTime	Proc
 	pop ebp
 	ret 24
 RdosGetSysTime	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetTics
+;
+;		description:	gets system time
+;
+;		returns:		LSB of tics
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetTics
+
+RdosGetTics	Proc
+	push edx
+	UserGate get_system_time_nr
+	pop edx
+	ret
+RdosGetTics	Endp
 
 PAGE
 
@@ -1105,6 +1175,210 @@ RdosWriteFile	PROC
 	pop ebp
 	ret 12
 RdosWriteFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateMapping
+;
+;		DESCRIPTION:	Create file mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateMapping
+
+RdosCreateMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+8]
+	UserGate create_mapping_nr
+	movzx eax,bx
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCreateMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateNamedMapping
+;
+;		DESCRIPTION:	Create file named mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateNamedMapping
+
+RdosCreateNamedMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate create_named_mapping_nr
+	movzx eax,bx
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 8
+RdosCreateNamedMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCreateNamedFileMapping
+;
+;		DESCRIPTION:	Create file named file mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateNamedFileMapping
+
+RdosCreateNamedFileMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov eax,[ebp+12]
+	mov bx,[ebp+16]
+	UserGate create_named_file_mapping_nr
+	movzx eax,bx
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 12
+RdosCreateNamedFileMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenNamedMapping
+;
+;		DESCRIPTION:	Open named mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenNamedMapping
+
+RdosOpenNamedMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate open_named_mapping_nr
+	movzx eax,bx
+;
+	pop edi
+	pop ebx
+	pop ebp
+	ret 4
+RdosOpenNamedMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosSyncMapping
+;
+;		DESCRIPTION:	Sync mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSyncMapping
+
+RdosSyncMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate sync_mapping_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosSyncMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseMapping
+;
+;		DESCRIPTION:	Close mapping
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseMapping
+
+RdosCloseMapping	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_mapping_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseMapping	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosMapView
+;
+;		DESCRIPTION:	Map view into memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosMapView
+
+RdosMapView	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate map_view_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosMapView	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosUnmapView
+;
+;		DESCRIPTION:	Unmap view from memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosUnmapView
+
+RdosUnmapView	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate unmap_view_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosUnmapView	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

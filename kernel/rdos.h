@@ -19,7 +19,18 @@ int RdosDrawChar(int x, int y, char ch);
 int RdosGetStringWidth(const char *str);
 int RdosDrawString(int x, int y, const char *str);
 int RdosGetMemSize(void *ptr);
+void *RdosAllocateMem(int Size);
 void RdosFreeMem(void *ptr);
+
+int RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
+void RdosCloseCom(int Handle);
+void RdosFlushCom(int Handle);
+int RdosPollCom(int Handle);
+int RdosWaitForCom(int Handle, int Timeout);
+char RdosReadCom(int Handle);
+void RdosWriteCom(int Handle, char Val);
+void RdosSetDtr(int Handle);
+void RdosResetDtr(int Handle);
 
 int RdosOpenFile(const char *FileName, char Access);
 void RdosCloseFile(int Handle);
@@ -30,11 +41,21 @@ void RdosSetFilePos(int Handle, long Pos);
 int RdosReadFile(int Handle, void *Buf, int Size);
 int RdosWriteFile(int Handle, void *Buf, int Size);
 
+int RdosCreateMapping(int Size);
+int RdosCreateNamedMapping(const char *Name, int Size); 
+int RdosCreateNamedFileMapping(const char *Name, int Size, int FileHandle);
+int RdosOpenNamedMapping(const char *Name);
+void RdosSyncMapping(int Handle);
+void RdosCloseMapping(int Handle);
+void RdosMapView(int Handle, int Offset, void *Base, int Size);
+void RdosUnmapView(int Handle);
+
 void RdosSetCurDir(const char *PathName);
 
 void RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void RdosTerminateThread();
 void RdosWaitMilli(int ms);
+int RdosGetTics();
 
 int RdosNameToIp(const char *HostName);
 int RdosIpToName(int Ip, char *HostName, int MaxSize);

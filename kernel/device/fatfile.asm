@@ -40,6 +40,7 @@ INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\fs.inc
 INCLUDE fat.inc
 
 	.386p
@@ -144,130 +145,50 @@ free_index_block	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			READ_FILE
-;
-;		DESCRIPTION:	Read file cluster chain
-;
-;		PARAMETERS:		AL			Drive
-;						EDX			Start cluster
-;						FS			File selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-read_file	Proc near
-	push ebx
-	push edx
-	push edi
-;
-	call allocate_index_block
-	mov fs:file_ptr,edi
-	mov ebx,edi
-	jmp read_file_cluster2
-
-read_file_cluster_loop:
-	call next_cluster
-	jc read_file_done
-	call allocate_index_block
-	mov es:[ebx].file_next,edi
-read_file_cluster2:
-	mov es:[edi].file_cluster,edx
-	call next_cluster
-	jc read_file_done
-	mov es:[edi].file_cluster+4,edx
-	call next_cluster
-	jc read_file_done
-	mov es:[edi].file_cluster+8,edx
-	mov ebx,edi
-	jmp read_file_cluster_loop
-
-read_file_done:
-	mov es:[edi].file_next,0
-;
-	pop edi
-	pop edx
-	pop ebx
-	ret
-read_file	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OPEN_FILE
-;
-;		DESCRIPTION:	Open and buffer file
-;
-;		PARAMETERS:		AL			Drive
-;						EDX			Start cluster
-;						FS			Dir selector
-;						EDI			Linear address of dir
-;
-;		RETURNS:		FS			File selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_file	PROC near
-	push bx
-	push edx
-;
-	mov bx,fs
-	push es
-	push eax
-	mov eax,SIZE file_data_struc
-	AllocateSmallGlobalMem
-	mov ax,es
-	mov fs,ax
-	pop eax
-	pop es
-	InitReadWriteSection fs:file_section
-	mov fs:file_usage,0
-	mov fs:file_ptr,0
-	mov fs:file_dir_entry,edi
-	mov fs:file_parent,bx
-	mov fs:file_cache_entry,-1
-;
-	or edx,edx
-	jz open_file_done
-	call read_file
-open_file_done:
-;
-	pop edx
-	pop bx
-	ret
-open_file	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			OPEN_FILE_HANDLE
 ;
 ;		DESCRIPTION:	Open file handle
 ;
 ;		PARAMETERS:		EDI		Linear address of file
-;						FS		Dir selector
 ;
-;		RETURNS:		FS		File selector
+;		RETURNS:		BX		File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public open_file_handle
 
 open_file_handle	Proc near
+	push fs
 	push eax
 	push edx
 ;
-	mov dx,es:[edi].dir_handle
-	or dx,dx
+	mov bx,es:[edi].dir_handle
+	or bx,bx
 	jnz open_file_handle_done
+;
+	push ecx
 	mov al,ds:drive_nr
+	mov ecx,es:[edi].dir_file_size
+	mov ah,es:[edi].dir_attrib
+	CreateFileSelector
+	mov es:[edi].dir_handle,bx
+	mov fs,bx
+	mov fs:file_ptr,0
+	mov fs:file_dir_entry,edi
+	mov fs:file_cache_entry,-1
+	mov fs:file_cache_ads,0
+	pop ecx
+;
 	mov edx,es:[edi].dir_cluster
-	call open_file
-	mov es:[edi].dir_handle,fs	
-	mov dx,fs
+	or edx,edx
+	jz open_file_handle_done
+;
+	clc
+
 open_file_handle_done:
-	mov fs,dx
-	inc fs:file_usage
 	pop edx
 	pop eax
+	pop fs
 	ret
 open_file_handle	Endp
 
@@ -278,28 +199,22 @@ open_file_handle	Endp
 ;
 ;		DESCRIPTION:	Close file handle
 ;
-;		PARAMETERS:		FS		File selector
+;		PARAMETERS:		BX		File selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public close_file_handle
 
 close_file_handle	Proc near
+	push fs
 	push eax
 	push edi
 ;
-	sub fs:file_usage,1
-	jnz close_file_done
-;
+	mov fs,bx
 	mov eax,fs:file_ptr
 	mov edi,fs:file_dir_entry
 	mov es:[edi].dir_handle,0
-	push es
-	mov di,fs
-	mov es,di
-	mov fs,fs:file_parent
-	FreeMem
-	pop es
+
 close_file_loop:
 	or eax,eax
 	je close_file_done
@@ -307,101 +222,13 @@ close_file_loop:
 	mov eax,es:[edi].file_next
 	call free_index_block
 	jmp close_file_loop
+
 close_file_done:
 	pop edi
 	pop eax
+	pop fs
 	ret
 close_file_handle	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			LOCK_FILE
-;
-;		DESCRIPTION:	Get a buffer to file position
-;
-;		PARAMETERS:		FS		File selector
-;						EDX		File offset
-;
-;		RETURNS:		EBX		Sector handle
-;						ESI		Linear address of disk data
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public lock_file
-
-lock_file	Proc near
-	push eax
-	push ecx
-	push edx
-	push edi
-;
-	mov edi,fs:file_ptr
-	push edx
-	mov cl,9
-	shr edx,cl
-	push edx
-	mov cl,ds:fat_cluster_shift
-	shr edx,cl
-	mov eax,edx
-	xor edx,edx
-	mov ecx,3
-	div ecx
-	mov ecx,eax
-	or ecx,ecx
-	jz lock_file_setup
-;
-	cmp ecx,fs:file_cache_entry
-	jnz lock_file_cluster_search
-;
-	mov edi,fs:file_cache_ads
-	jmp lock_file_setup
-
-lock_file_cluster_search:
-	mov eax,fs:file_cache_entry
-	mov edi,fs:file_cache_ads
-	mov fs:file_cache_entry,ecx
-	sub ecx,eax
-	jnc lock_file_cluster_loop
-;
-	mov edi,fs:file_ptr
-	add ecx,eax
-
-lock_file_cluster_loop:
-	mov edi,es:[edi].file_next
-	sub ecx,1
-	jnz lock_file_cluster_loop
-;
-	mov fs:file_cache_ads,edi
-		
-lock_file_setup:
-	shl edx,2
-	mov edx,es:[edx+edi].file_cluster
-	sub edx,2
-	mov eax,1
-	mov cl,ds:fat_cluster_shift
-	shl edx,cl
-	shl eax,cl
-	add edx,ds:start_sector
-	mov ecx,eax
-	pop eax
-	dec ecx
-	and eax,ecx
-	add edx,eax	
-	mov al,ds:drive_nr
-	call lock_sector
-	pop edx
-	jc lock_file_done
-	and dx,1FFh
-	or si,dx
-	clc
-lock_file_done:
-	pop edi
-	pop edx
-	pop ecx
-	pop eax
-	ret
-lock_file	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

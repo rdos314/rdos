@@ -40,6 +40,7 @@ INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\fs.inc
 INCLUDE fat.inc
 
 	.386p

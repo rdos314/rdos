@@ -38,6 +38,7 @@ INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\int.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\fs.inc
 INCLUDE fat.inc
 
 	extrn lock_sector:near
@@ -1097,36 +1098,16 @@ allocate_cluster	Proc near
 
 alloc32:
 	call allocate_cluster32
-	jmp allocate_cluster_zero
+	jmp allocate_cluster_done
 
 alloc16:
 	call allocate_cluster16
-	jmp allocate_cluster_zero
+	jmp allocate_cluster_done
 
 alloc12:
 	call allocate_cluster12
 
-allocate_cluster_zero:
-	pushf
-	push bx
-	push cx
-	push edx
-;
-	mov cl,ds:fat_cluster_shift
-	shl edx,cl
-	mov bx,1
-	shl bx,cl
-	mov cx,bx
-
-allocate_cluster_init_loop:
-	NewSector
-	inc edx
-	loop allocate_cluster_init_loop
-;
-	pop edx
-	pop cx
-	pop bx
-	popf
+allocate_cluster_done:
 	ret
 allocate_cluster	Endp
 
@@ -1213,6 +1194,47 @@ link_cluster_done:
 	LeaveSection ds:cluster_section
 	ret
 link_cluster	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			EOF_CLUSTER
+;
+;		DESCRIPTION:	Mark cluster as last
+;
+;		PARAMETERS:		AL			Drive
+;						EDX			Cluster #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public eof_cluster
+
+eof_cluster	Proc near
+	EnterSection ds:cluster_section
+	cmp ds:fat_type,fat12
+	je eof12
+;
+	cmp ds:fat_type,fat16
+	je eof16
+
+eof32:
+	mov ecx,0FFFFFFFFh
+	call update_cluster_link32
+	jmp eof_cluster_done
+
+eof16:
+	mov ecx,0FFFFh
+	call update_cluster_link16
+	jmp eof_cluster_done
+
+eof12:
+	mov ecx,0FFFh
+	call update_cluster_link12
+
+eof_cluster_done:
+	LeaveSection ds:cluster_section
+	ret
+eof_cluster	Endp
 
 code	ENDS
 

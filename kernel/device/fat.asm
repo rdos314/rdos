@@ -39,6 +39,7 @@ INCLUDE ..\os\virt.inc
 INCLUDE ..\os\os.inc
 INCLUDE ..\os\system.def
 INCLUDE ..\os\system.inc
+INCLUDE ..\os\fs.inc
 INCLUDE fat.inc
 
 attr_read_only		EQU 1
@@ -60,13 +61,18 @@ MAX_DRIVES		EQU 'Z' -'A' + 1
 	extrn open_file_handle:near
 	extrn close_file_handle:near
 	extrn remove_file_node:near
-	extrn lock_file:near
-	extrn update_file:near
+	extrn modify_file_entry:near
 	extrn lock_dir_entry:near
 	extrn update_dir_name:near
 	extrn update_dir_time:near
 	extrn update_dir_entry:near
 	extrn set_dir_name:near
+
+	extrn next_cluster:near
+	extrn allocate_cluster:near
+	extrn free_cluster:near
+	extrn link_cluster:near
+	extrn eof_cluster:near
 
 	.386p
 
@@ -459,8 +465,9 @@ delete_file	PROC far
 	jc delete_file_done
 	push fs
 	call open_file_handle
+	mov fs,bx
 	xor ecx,ecx
-	call update_file
+	call update_file_clusters
 	pop fs
 	call remove_file_node
 	clc
@@ -861,7 +868,6 @@ open_file	PROC far
 	call parse_file
 	jc open_file_fail
 	call open_file_handle
-	mov bx,fs
 	clc
 open_file_fail:
 	pop edi
@@ -902,12 +908,17 @@ create_file	PROC far
 	call parse_dir
 	call parse_file
 	jc create_file_non_exist
+;
 	call open_file_handle
 	push ecx
+	push fs
+	mov fs,bx
 	xor ecx,ecx
-	call update_file
+	call update_file_clusters
+	mov edi,fs:file_dir_entry
+	pop fs
+	call modify_file_entry
 	pop ecx
-	mov bx,fs
 	clc
 	jmp create_file_done
 
@@ -915,7 +926,6 @@ create_file_non_exist:
 	call insert_file_node
 	jc create_file_done
 	call open_file_handle
-	mov bx,fs
 	clc
 create_file_done:
 	pop edi
@@ -940,42 +950,14 @@ PAGE
 
 close_file	PROC far
 	push es
-	push fs
 	push ax
-;
 	mov ax,flat_sel
 	mov es,ax
-	mov fs,bx
 	call close_file_handle
-	clc
-;
 	pop ax
-	pop fs
 	pop es
 	ret
 close_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DUPL_FILE
-;
-;		DESCRIPTION:	Duplicate file
-;
-;		PARAMETERS:		BX			HANDLE
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-dupl_file	PROC far
-	push fs
-	mov fs,bx
-	inc fs:file_usage
-	pop fs
-	clc
-	ret
-dupl_file	ENDP
 
 PAGE 
 
@@ -1028,7 +1010,506 @@ get_file_size	PROC far
 	pop es
 	ret
 get_file_size	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GROW_FILE
+;
+;		DESCRIPTION:	Increase file size
+;
+;		PARAMETERS:		FS		File selector
+;						ESI		Current size of file
+;						EDI		Wanted size of file
+;						EBP		Cluster size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+grow_file	Proc near
+	push eax
+	push ebx
+	push ecx
+	push edx
+;
+	push esi
+	or esi,esi
+	jne grow_file_do
+;
+	mov al,ds:drive_nr
+	call allocate_cluster
+	jc grow_file_fail
+;
+	push edx
+	mov bx,fs
+	xor edx,edx
+	GetFileListEntry
+	pop edx
+;
+	mov es:[eax].ffl_clusters,edx
+	mov ecx,fs:file_dir_entry
+	mov es:[ecx].dir_cluster,edx
+	add esi,ebp
+	cmp esi,edi
+	clc
+	je grow_file_cluster_done
+
+grow_file_do:
+	sub esi,ebp
+	sub edi,ebp
+	push edx
+	mov bx,fs
+	mov edx,esi
+	GetFileListEntry
+	pop edx
+;
+	lea ebx,[eax].ffl_clusters
+	mov ecx,esi
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ecx
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	shl eax,2
+	add ebx,eax
 	
+grow_file_loop:
+	mov al,ds:drive_nr
+	call allocate_cluster
+	jc grow_file_fail
+;
+	mov ecx,edx
+	mov edx,es:[ebx]
+	call link_cluster
+	add ebx,4
+	mov es:[ebx],ecx
+	add esi,ebp
+	cmp esi,edi
+	clc
+	je grow_file_cluster_done
+;
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,esi
+	jnz grow_file_loop
+;
+	mov edx,es:[ebx]
+	push edx
+	mov bx,fs
+	mov edx,esi
+	GetFileListEntry
+	pop edx
+	lea ebx,[eax].ffl_clusters
+	mov es:[ebx],edx
+	jmp grow_file_loop
+
+grow_file_cluster_done:
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,esi
+	jnz grow_file_lock
+;
+	mov edx,es:[ebx]
+	push edx
+	mov bx,fs
+	mov edx,esi
+	GetFileListEntry
+	pop edx
+	lea ebx,[eax].ffl_clusters
+	mov es:[ebx],edx
+
+grow_file_lock:
+	pop esi
+	mov ebx,esi
+
+grow_list_loop:
+	cmp ebx,fs:file_size
+	ja grow_file_done
+;
+	push bx
+	push edx
+	mov edx,ebx
+	mov bx,fs
+	GetFileListEntry
+	pop edx
+	pop bx
+	mov edi,eax
+;
+	lea ebp,[eax].ffl_clusters
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ebx
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	shl eax,2
+	add ebp,eax
+;
+	mov esi,es:[edi].fl_base
+	or esi,esi
+	jnz grow_lock_valid
+;
+	push edx
+	mov eax,fs:file_block_size
+	AllocateBigLinear
+	mov esi,edx
+	pop edx
+	mov es:[edi].fl_base,esi
+
+grow_lock_valid:
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ebx
+	add esi,eax
+;
+	mov edi,es:[edi].ffl_sector_ptr
+	shr eax,9
+	shl eax,2
+	add edi,eax
+
+grow_lock_loop:
+	cmp ebx,fs:file_size
+	ja grow_file_done
+;
+	mov edx,es:[ebp]
+	sub edx,2
+	mov eax,1
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	shl eax,cl
+	mov ecx,eax
+	add edx,ds:start_sector
+
+grow_cluster_loop:
+	push ebx
+	mov ebx,es:[edi]
+	cmp ebx,-1
+	je grow_define_sector
+;
+	or ebx,ebx
+	jnz grow_cluster_next
+
+grow_define_sector:
+	mov al,ds:drive_nr
+	DefineSector
+	mov es:[edi],ebx
+
+grow_cluster_next:
+	pop ebx
+	add edi,4
+	inc edx
+	add esi,200h
+	add ebx,200h
+	loop grow_cluster_loop
+;
+	add ebp,4
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ebx
+	jnz grow_lock_loop
+	jmp grow_list_loop
+
+grow_file_fail:
+	pop esi
+
+grow_file_done:
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	ret
+grow_file	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SHRINK_FILE
+;
+;		DESCRIPTION:	Decrease size of file
+;
+;		PARAMETERS:		FS		File selector
+;						ESI		Current file size
+;						EDI		Wanted file size
+;						EBP		Cluster size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+shrink_file	Proc near
+	push eax
+	push ebx
+	push ecx
+	push edx
+;
+	push esi
+	push edi
+	
+shrink_file_unlock:
+	mov ebx,edi
+
+shrink_list_loop:
+	cmp ebx,esi
+	ja shrink_file_free
+;
+	push bx
+	push edx
+	mov edx,ebx
+	mov bx,fs
+	GetFileListEntry
+	pop edx
+	pop bx
+	mov edi,eax
+;
+	mov edi,es:[edi].ffl_sector_ptr
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ebx
+	shr eax,9
+	add edi,eax
+
+shrink_unlock_loop:
+	cmp ebx,esi
+	je shrink_file_free
+;
+	mov eax,1
+	mov cl,ds:fat_cluster_shift
+	shl eax,cl
+	mov ecx,eax
+
+shrink_cluster_loop:
+	push ebx
+	mov ebx,es:[edi]
+	cmp ebx,-1
+	je shrink_cluster_next
+;
+	or ebx,ebx
+	jz shrink_cluster_next
+;
+	UnlockSector
+
+shrink_cluster_next:
+	mov dword ptr es:[edi],0
+	pop ebx
+	add edi,4
+	inc edx
+	add ebx,200h
+	loop shrink_cluster_loop
+;
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,ebx
+	jnz shrink_unlock_loop
+	jmp shrink_list_loop
+
+shrink_file_free:
+	pop edi
+	pop esi
+	sub esi,ebp
+
+shrink_file_list_loop:
+	mov bx,fs
+	mov edx,esi
+	GetFileListEntry
+;
+	lea ebx,[eax].ffl_clusters
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,esi
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	shl eax,2
+	add ebx,eax
+	
+shrink_file_loop:
+	mov edx,es:[ebx]
+	mov al,ds:drive_nr
+	call free_cluster
+	mov dword ptr es:[ebx],0
+;
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,esi
+	sub ebx,4
+	sub esi,ebp
+	jc shrink_file_zero
+;
+	cmp esi,edi
+	jc shrink_file_mark_end
+;
+	or eax,eax
+	jnz shrink_file_loop
+;
+	mov edx,esi
+	add edx,ebp
+	mov bx,fs
+	push edi
+	GetFileListEntry
+	mov edi,eax
+	FreeFileListEntry
+	pop edi
+	jmp shrink_file_list_loop
+
+shrink_file_mark_end:
+	or eax,eax
+	jnz shrink_mark_do
+;
+	mov edx,esi
+	add edx,ebp
+	mov bx,fs
+	push edi
+	GetFileListEntry
+	mov edi,eax
+	FreeFileListEntry
+	pop edi
+;
+	mov bx,fs
+	mov edx,esi
+	GetFileListEntry
+;
+	lea ebx,[eax].ffl_clusters
+	mov eax,fs:file_block_size
+	dec eax
+	and eax,esi
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	shl eax,2
+	add ebx,eax
+
+shrink_mark_do:
+	mov edx,es:[ebx]
+	mov al,ds:drive_nr
+	call eof_cluster
+	jmp shrink_file_done
+
+shrink_file_zero:
+	mov eax,fs:file_dir_entry
+	mov es:[eax].dir_cluster,0
+
+shrink_file_done:
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	ret
+shrink_file	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UPDATE_FILE_CLUSTERS
+;
+;		DESCRIPTION:	Update number of clusters in file
+;
+;		PARAMETERS:		FS		File selector
+;						ECX		New file size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+update_file_clusters	PROC near
+	push eax
+	push edx
+	push esi
+	push edi
+	push ebp
+;
+	push ecx
+	mov edi,fs:file_dir_entry
+	mov esi,es:[edi].dir_file_size
+	mov edi,ecx
+	mov eax,200h
+	mov cl,ds:fat_cluster_shift
+	shl eax,cl
+	mov ebp,eax
+	neg eax
+	dec esi
+	and esi,eax
+	dec edi
+	and edi,eax
+	add esi,ebp
+	add edi,ebp
+	mov edx,fs:file_size
+	or edx,edx
+	jz update_file_cluster_ok
+;
+	mov edx,esi
+	sub edx,ebp
+	call get_file_cluster
+;
+	push ebx
+	push esi
+	push edi
+;
+	mov bx,fs
+	GetFileListEntry
+	mov edi,eax
+;
+	lea esi,[edi].ffl_clusters
+	mov eax,fs:file_block_size
+	neg eax
+	mov ebx,edx
+	and ebx,eax
+	neg eax
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	mov ecx,eax
+
+update_req_loop:
+	cmp ebx,fs:file_size
+	ja update_req_done
+;
+	mov edx,es:[esi]
+	or edx,edx
+	jnz update_req_next
+;
+	mov edx,es:[esi-4]
+	mov al,fs:file_drive
+	call next_cluster
+	mov es:[esi],edx
+
+update_req_next:
+	add ebx,ebp
+	add esi,4
+	loop update_req_loop
+
+update_req_done:
+	pop edi
+	pop esi
+	pop ebx
+
+update_file_cluster_ok:
+	pop ecx
+	cmp edi,esi
+	je update_file_equal
+	jc update_file_shrink
+
+update_file_grow:
+	mov fs:file_size,ecx
+	call grow_file
+	jmp update_file_done
+
+update_file_shrink:
+	call shrink_file
+	mov fs:file_size,ecx
+	jmp update_file_done
+
+update_file_equal:
+	mov fs:file_size,ecx
+
+update_file_done:
+	mov edx,fs:file_dir_entry
+	mov es:[edx].dir_file_size,ecx
+	clc
+;
+	pop ebp
+	pop edi
+	pop esi
+	pop edx
+	pop eax
+	ret
+update_file_clusters	ENDP
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1047,13 +1528,21 @@ set_file_size	PROC far
 	push es
 	push fs
 	push ecx
+	push edi
 ;
 	mov cx,flat_sel
 	mov es,cx
 	mov fs,bx
 	mov ecx,edx
-	call update_file
+	call update_file_clusters
+	jc set_file_size_done
 ;
+	mov edi,fs:file_dir_entry
+	call modify_file_entry
+	clc
+
+set_file_size_done:
+	pop edi
 	pop ecx
 	pop fs
 	pop es
@@ -1139,273 +1628,506 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			READ_FILE
+;		NAME:			ALLOCATE_FILE_LIST
 ;
-;		DESCRIPTION:	Read from file
+;		DESCRIPTION:	Allocate file list block
 ;
-;		PARAMETERS:		BX			HANDLE TO DEVICE
-;						ES:EDI		BUFFER
-;						ECX			NUMBER OF BYTES TO READ
-;						EDX			POSITION
+;		PARAMETERS:		BX		File handle
 ;
-;		RETURNS:		EAX			NUMBER OF BYTES READ
+;		RETURNS:		EDI		Linear address of file list block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_file	PROC far
+allocate_file_list	PROC far
 	push es
 	push fs
-	push ebx
+	push eax
 	push ecx
 	push edx
-	push esi
-	push edi
 ;
+	mov ax,flat_sel
+	mov es,ax
 	mov fs,bx
-	mov ax,flat_sel
-	mov gs,ax
-	mov esi,fs:file_dir_entry
-	mov eax,gs:[esi].dir_file_size
 ;
-	sub eax,edx
-	jc read_file_fail
-	cmp eax,ecx
-	jnc read_file_do
-	mov ecx,eax
-read_file_do:
-	or ecx,ecx
-	jnz read_file_non_zero
+	mov cl,fs:file_entry_shift
+	sub cl,9
+	mov edx,4
+	shl edx,cl
+	mov eax,4
+	sub cl,ds:fat_cluster_shift
+	shl eax,cl
+	add eax,edx
+	add eax,SIZE fat_file_list_struc + 4
+	AllocateSmallLinear
+	mov edi,edx
 ;
-	xor eax,eax
-	clc
-	jmp read_file_done
-
-read_file_non_zero:
-	push ecx
-	push es
-	mov ax,flat_sel
-	mov es,ax
-	call lock_file
-	pop es
-	jc read_file_pop
-	xor eax,eax
-	sub eax,edx
-	and eax,1FFh
-	cmp eax,ecx
-	jc read_file_first_do
-	mov eax,ecx
-read_file_first_do:
-	push ecx
+	mov eax,1
+	shl eax,cl
+	inc eax
 	mov ecx,eax
-	shr ecx,2
-	rep movs dword ptr es:[edi],gs:[esi]
-	mov ecx,eax
-	and ecx,3
-	rep movs byte ptr es:[edi],gs:[esi]
-	pop ecx	
-	UnlockSector
-	sub ecx,eax
-	jz read_file_ok
-	add edx,eax
-	push ecx
-	shr ecx,9	
-	or ecx,ecx
-	jz read_file_partial_last
-read_file_loop:
-	push es
-	mov ax,flat_sel
-	mov es,ax
-	call lock_file
-	pop es
-	jc read_file_pop2
-	push ecx
-	mov ecx,80h
-	rep movs dword ptr es:[edi],gs:[esi]
-	pop ecx
-	UnlockSector
-	add edx,200h
-	sub ecx,1
-	jnz read_file_loop
-read_file_partial_last:
-	pop ecx 
-	and ecx,1FFh
-	jz read_file_ok
-;
-	push es
-	mov ax,flat_sel
-	mov es,ax
-	call lock_file
-	pop es
-	jc read_file_pop
-	push ecx
-	mov eax,ecx
-	shr ecx,2
-	rep movs dword ptr es:[edi],gs:[esi]
-	mov ecx,eax
-	and ecx,3
-	rep movs byte ptr es:[edi],gs:[esi]
-	pop ecx
-	UnlockSector
-
-read_file_ok:
-	pop ecx
-	mov eax,ecx
-	clc
-	jmp read_file_done
-read_file_pop2:
-	pop ecx
-read_file_pop:
-	pop ecx
-read_file_fail:
 	xor eax,eax
-	stc
-read_file_done:
+	push edi
+	add edi,OFFSET ffl_clusters
+	rep stos dword ptr es:[edi]
+	mov edx,edi
 	pop edi
-	pop esi
+;
+	mov es:[edi].ffl_sector_ptr,edx
+	mov cl,fs:file_entry_shift
+	sub cl,9
+	mov eax,1
+	shl eax,cl
+	mov ecx,eax
+	xor eax,eax
+	push edi
+	mov edi,edx
+	rep stos dword ptr es:[edi]
+	pop edi
+;
 	pop edx
 	pop ecx
-	pop ebx
+	pop eax
 	pop fs
 	pop es
 	ret
-read_file	ENDP
+allocate_file_list	ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			WRITE_FILE
+;		NAME:			free_file_list
 ;
-;		DESCRIPTION:	Write to file
+;		DESCRIPTION:	Free file list
 ;
-;		PARAMETERS:		BX			HANDLE TO DEVICE
-;						ES:EDI		BUFFER
-;						ECX			NUMBER OF BYTES TO READ
-;						EDX			POSITION
-;
-;		RETURNS:		EAX			NUMBER OF BYTES WRITTEN
+;		PARAMETERS:		EDI		Linear address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-write_file	PROC far
+free_file_list	PROC far
 	push es
 	push fs
+	push eax
 	push ebx
 	push ecx
 	push edx
-	push esi
-	push edi
 ;
-	mov ax,es
-	mov gs,ax
 	mov ax,flat_sel
 	mov es,ax
 	mov fs,bx
-	mov esi,edi
-	mov edi,fs:file_dir_entry
-	mov eax,es:[edi].dir_file_size
 ;
-	push ecx
-	push edx
-	add ecx,edx
-	cmp eax,ecx
-	jnc write_file_size_ok
-	call update_file
-	jc write_file_pop2
-write_file_size_ok:
-	pop edx
-	pop ecx
-	jc write_file_fail
+	mov edx,es:[edi].ffl_sector_ptr
+	mov cl,fs:file_entry_shift
+	sub cl,9
+	mov eax,1
+	shl eax,cl
+	mov ecx,eax
+
+file_list_unlock_loop:
+	mov ebx,es:[edx]
+	cmp ebx,-1
+	je file_list_unlock_next
 ;
-	push ecx
-	push esi
-	call lock_file
-	mov edi,esi
-	pop esi
-	jc write_file_pop
-	xor eax,eax
-	sub eax,edx
-	and eax,1FFh
-	cmp eax,ecx
-	jc write_file_first_do
-	mov eax,ecx
-write_file_first_do:
-	push ecx
-	mov ecx,eax
-	shr ecx,2
-	rep movs dword ptr es:[edi],gs:[esi]
-	mov ecx,eax
-	and ecx,3
-	rep movs byte ptr es:[edi],gs:[esi]
-	pop ecx	
-	ModifySector
-	UnlockSector
-	sub ecx,eax
-	jz write_file_ok
-	add edx,eax
-	push ecx
-	shr ecx,9	
-	or ecx,ecx
-	jz write_file_partial_last
-write_file_loop:
-	push esi
-	call lock_file
-	mov edi,esi
-	pop esi
-	jc write_file_pop2	
-	push ecx
-	mov ecx,80h
-	rep movs dword ptr es:[edi],gs:[esi]
-	pop ecx
-	ModifySector
-	UnlockSector
-	add edx,200h
-	sub ecx,1
-	jnz write_file_loop
-write_file_partial_last:
-	pop ecx 
-	and ecx,1FFh
-	jz write_file_ok
+	or ebx,ebx
+	jz file_list_unlock_next 
 ;
-	push esi
-	call lock_file
-	mov edi,esi
-	pop esi
-	jc write_file_pop
-	push ecx
-	mov eax,ecx
-	shr ecx,2
-	rep movs dword ptr es:[edi],gs:[esi]
-	mov ecx,eax
-	and ecx,3
-	rep movs byte ptr es:[edi],gs:[esi]
-	pop ecx
-	ModifySector
 	UnlockSector
 
-write_file_ok:
-	pop ecx
-	clc
-	mov eax,ecx
-	jmp write_file_done
-write_file_pop2:
-	pop ecx
-write_file_pop:
-	pop ecx
-write_file_fail:
-	xor eax,eax
-	stc
-write_file_done:
-	pop edi
-	pop esi
+file_list_unlock_next:
+	add edx,4
+	loop file_list_unlock_loop
+;
+	mov ecx,edx
+	mov edx,edi
+	FreeLinear
+;
 	pop edx
 	pop ecx
 	pop ebx
+	pop eax
+	pop fs
+	pop es
+	clc
+	ret
+free_file_list	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			get_file_cluster
+;
+;		DESCRIPTION:	Get cluster of file
+;
+;		PARAMETERS:		FS			FILE HANDLE
+;						EDX			POSITION
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_file_cluster	Proc near
+	pushad
+;
+	mov ebx,fs:file_block_size
+	neg ebx
+	and edx,ebx
+	mov ebx,edx
+	mov ebp,edx
+	mov edi,fs:file_dir_entry
+	mov edx,es:[edi].dir_cluster
+	or ebp,ebp
+	jz get_cluster_loop
+
+get_cluster_scan:
+	mov edx,es:[edi].dir_cluster
+	sub ebp,fs:file_block_size
+	jz get_cluster_loop
+;
+	push bx
+	push edx
+	mov bx,fs
+	mov edx,ebp	
+	GetFileListEntry
+	pop edx
+	pop bx
+	mov edx,es:[eax].ffl_clusters
+	or edx,edx
+	jz get_cluster_scan
+;
+	lea eax,[eax].ffl_clusters+4
+	mov esi,200h
+	mov cl,ds:fat_cluster_shift
+	shl esi,cl
+	mov ecx,edx
+	mov edi,fs:file_block_size
+
+advance_cluster_loop:
+	mov edx,es:[eax]
+	or edx,edx
+	jnz advance_cluster_next
+;
+	mov edx,ecx
+	push ax
+	mov al,fs:file_drive
+	call next_cluster
+	pop ax
+	mov es:[eax],edx
+
+advance_cluster_next:
+	mov ecx,edx
+	add eax,4
+	sub edi,esi
+	jnz advance_cluster_loop
+;
+	add ebp,fs:file_block_size
+
+get_cluster_loop:
+	push bx
+	push edx
+	mov bx,fs
+	mov edx,ebp	
+	GetFileListEntry
+	pop edx
+	pop bx
+	mov es:[eax].ffl_clusters,edx
+
+get_cluster_check:
+	cmp ebx,ebp
+	je get_cluster_done
+;
+	lea eax,[eax].ffl_clusters+4
+	mov esi,200h
+	mov cl,ds:fat_cluster_shift
+	shl esi,cl
+	mov edi,fs:file_block_size
+
+get_file_cluster_loop:
+	mov edx,es:[eax]
+	or edx,edx
+	jnz get_file_cluster_next
+;
+	mov edx,es:[eax-4]
+	push ax
+	mov al,fs:file_drive
+	call next_cluster
+	pop ax
+	mov es:[eax],edx
+
+get_file_cluster_next:
+	add ebp,esi
+	add eax,4
+	cmp ebp,fs:file_size
+	jnc get_cluster_done
+;
+	sub edi,esi
+	jnz get_file_cluster_loop
+;
+	jmp get_cluster_loop
+
+get_cluster_done:
+	popad
+	ret
+get_file_cluster	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			READ_FILE_BLOCK
+;
+;		DESCRIPTION:	Read file block
+;
+;		PARAMETERS:		BX			FILE HANDLE
+;						ECX			BYTES TO READ
+;						EDX			POSITION
+;						EDI			FILE LIST
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_file_block	PROC far
+	push es
+	push fs
+	pushad
+;
+	mov fs,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,fs:file_size
+	sub eax,edx
+	cmp eax,ecx
+	jnc read_file_inrange
+;
+	mov ecx,eax
+
+read_file_inrange:
+	mov eax,es:[edi].ffl_clusters
+	or eax,eax
+	jnz read_file_do
+;
+	call get_file_cluster
+
+read_file_do:
+	push edi
+;
+	mov esi,es:[edi].fl_base
+	lea ebp,[edi].ffl_clusters
+	mov edi,es:[edi].ffl_sector_ptr
+	mov eax,fs:file_block_size
+	mov cl,ds:fat_cluster_shift
+	add cl,9
+	shr eax,cl
+	mov ecx,eax
+	mov ebx,edx
+
+read_req_loop:
+	cmp ebx,fs:file_size
+	ja read_file_wait
+;
+	mov edx,es:[ebp]
+	or edx,edx
+	jnz read_file_req_cluster
+;
+	mov edx,es:[ebp-4]
+	mov al,fs:file_drive
+	call next_cluster
+	mov es:[ebp],edx
+
+read_file_req_cluster:
+	push ecx
+	sub edx,2
+	mov eax,1
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	shl eax,cl
+	mov ecx,eax
+	add edx,ds:start_sector
+
+read_cluster_loop:
+	push ebx
+	mov ebx,es:[edi]
+	or ebx,ebx
+	jnz read_cluster_next
+;
+	mov al,ds:drive_nr
+	ReqSector
+	mov es:[edi],ebx
+
+read_cluster_next:
+	pop ebx
+	add edi,4
+	inc edx
+	add esi,200h
+	add ebx,200h
+	loop read_cluster_loop
+;
+	add ebp,4
+	pop ecx
+	loop read_req_loop
+
+read_file_wait:
+	mov esi,edi
+	pop edi
+
+read_wait_loop:
+	sub esi,4
+	mov ebx,es:[esi]
+	cmp ebx,-1
+	je read_wait_next
+;
+	WaitForSector
+	UnlockSector
+	mov dword ptr es:[esi],-1
+
+read_wait_next:
+	cmp esi,es:[edi].ffl_sector_ptr
+	jne read_wait_loop
+
+read_file_done:
+	popad
+	clc
+	pop fs
+	pop es
+	ret
+read_file_block	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WRITE_FILE_BLOCK
+;
+;		DESCRIPTION:	Write file block
+;
+;		PARAMETERS:		BX			HANDLE TO DEVICE
+;						ECX			NUMBER OF BYTES TO WRITE
+;						EDX			POSITION
+;						EDI			FILE LIST
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_file_block	PROC far
+	push es
+	push fs
+	pushad
+;
+	mov fs,bx
+	mov ax,flat_sel
+	mov es,ax
+;
+	mov eax,fs:file_size
+	sub eax,edx
+	cmp eax,ecx
+	jnc write_file_inrange
+;
+	mov ecx,eax
+
+write_file_inrange:
+	mov eax,es:[edi].ffl_clusters
+	or eax,eax
+	jnz write_file_do
+;
+	call get_file_cluster
+
+write_file_do:
+	mov esi,es:[edi].fl_base
+	lea ebp,[edi].ffl_clusters
+	mov edi,es:[edi].ffl_sector_ptr
+	mov ebx,ecx
+	add ebx,edx
+	dec ebx
+	mov eax,1
+	mov cl,9
+	add cl,ds:fat_cluster_shift
+	shl eax,cl
+	neg eax
+	and edx,eax
+	and ebx,eax
+	neg eax
+	add ebx,eax
+	sub ebx,edx
+	shr ebx,cl
+	push ebx
+;
+	mov eax,fs:file_block_size
+	dec eax
+	mov ebx,edx
+	and edx,eax
+	and eax,ebx
+	add esi,eax
+;
+	shr edx,cl
+	shl edx,2
+	add ebp,edx
+;
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	add edi,edx
+	pop ecx
+
+write_req_loop:
+	cmp ebx,fs:file_size
+	ja write_file_done
+;
+	mov edx,es:[ebp]
+	or edx,edx
+	jnz write_cluster_ok
+;
+	mov edx,es:[ebp-4]
+	mov al,fs:file_drive
+	call next_cluster
+	mov es:[ebp],edx
+
+write_cluster_ok:
+	push ecx
+	sub edx,2
+	mov eax,1
+	mov cl,ds:fat_cluster_shift
+	shl edx,cl
+	shl eax,cl
+	mov ecx,eax
+	add edx,ds:start_sector
+
+write_cluster_loop:
+	push ebx
+	mov ebx,es:[edi]
+	cmp ebx,-1
+	je write_cluster_define
+;
+	or ebx,ebx
+	jnz write_cluster_next
+
+write_cluster_define:
+	mov al,ds:drive_nr
+	DefineSector
+
+write_cluster_next:
+	ModifySector
+	UnlockSector
+	mov dword ptr es:[edi],-1
+;
+	pop ebx
+	add edi,4
+	inc edx
+	add esi,200h
+	add ebx,200h
+	loop write_cluster_loop
+;
+	add ebp,4
+	pop ecx
+	sub cx,1
+	jnz write_req_loop
+
+write_file_done:
+	popad
+	clc
 	pop fs
 	pop es
  	ret
-write_file	ENDP
+write_file_block	ENDP
 
 PAGE
 
@@ -1443,14 +2165,17 @@ f12s13	DW OFFSET read_dir,			fat_code_sel
 f12s14	DW OFFSET open_file,		fat_code_sel
 f12s15	DW OFFSET create_file,		fat_code_sel
 f12s16	DW OFFSET close_file,		fat_code_sel
-f12s17	DW OFFSET dupl_file,		fat_code_sel
-f12s18	DW OFFSET get_ioctl_data,	fat_code_sel
-f12s19	DW OFFSET get_file_size,	fat_code_sel
-f12s20	DW OFFSET set_file_size,	fat_code_sel
-f12s21	DW OFFSET get_file_time,	fat_code_sel
-f12s22	DW OFFSET set_file_time,	fat_code_sel
-f12s23	DW OFFSET read_file,		fat_code_sel
-f12s24	DW OFFSET write_file,		fat_code_sel
+f12s17	DW OFFSET get_ioctl_data,	fat_code_sel
+f12s18	DW OFFSET get_file_size,	fat_code_sel
+f12s19	DW OFFSET set_file_size,	fat_code_sel
+f12s20	DW OFFSET get_file_time,	fat_code_sel
+f12s21	DW OFFSET set_file_time,	fat_code_sel
+f12s22	DW OFFSET dummy,			fat_code_sel
+f12s23	DW OFFSET dummy,			fat_code_sel
+f12s24	DW OFFSET allocate_file_list,fat_code_sel
+f12s25	DW OFFSET free_file_list,	fat_code_sel
+f12s26	DW OFFSET read_file_block,	fat_code_sel
+f12s27	DW OFFSET write_file_block,	fat_code_sel
 
 fs16_name	DB 'FAT16',0
 
@@ -1472,14 +2197,17 @@ f16s13	DW OFFSET read_dir,			fat_code_sel
 f16s14	DW OFFSET open_file,		fat_code_sel
 f16s15	DW OFFSET create_file,		fat_code_sel
 f16s16	DW OFFSET close_file,		fat_code_sel
-f16s17	DW OFFSET dupl_file,		fat_code_sel
-f16s18	DW OFFSET get_ioctl_data,	fat_code_sel
-f16s19	DW OFFSET get_file_size,	fat_code_sel
-f16s20	DW OFFSET set_file_size,	fat_code_sel
-f16s21	DW OFFSET get_file_time,	fat_code_sel
-f16s22	DW OFFSET set_file_time,	fat_code_sel
-f16s23	DW OFFSET read_file,		fat_code_sel
-f16s24	DW OFFSET write_file,		fat_code_sel
+f16s17	DW OFFSET get_ioctl_data,	fat_code_sel
+f16s18	DW OFFSET get_file_size,	fat_code_sel
+f16s19	DW OFFSET set_file_size,	fat_code_sel
+f16s20	DW OFFSET get_file_time,	fat_code_sel
+f16s21	DW OFFSET set_file_time,	fat_code_sel
+f16s22	DW OFFSET dummy,			fat_code_sel
+f16s23	DW OFFSET dummy,			fat_code_sel
+f16s24	DW OFFSET allocate_file_list,fat_code_sel
+f16s25	DW OFFSET free_file_list,	fat_code_sel
+f16s26	DW OFFSET read_file_block,	fat_code_sel
+f16s27	DW OFFSET write_file_block,	fat_code_sel
 
 fs32_name	DB 'FAT32',0
 
@@ -1501,14 +2229,17 @@ f32s13	DW OFFSET read_dir,			fat_code_sel
 f32s14	DW OFFSET open_file,		fat_code_sel
 f32s15	DW OFFSET create_file,		fat_code_sel
 f32s16	DW OFFSET close_file,		fat_code_sel
-f32s17	DW OFFSET dupl_file,		fat_code_sel
-f32s18	DW OFFSET get_ioctl_data,	fat_code_sel
-f32s19	DW OFFSET get_file_size,	fat_code_sel
-f32s20	DW OFFSET set_file_size,	fat_code_sel
-f32s21	DW OFFSET get_file_time,	fat_code_sel
-f32s22	DW OFFSET set_file_time,	fat_code_sel
-f32s23	DW OFFSET read_file,		fat_code_sel
-f32s24	DW OFFSET write_file,		fat_code_sel
+f32s17	DW OFFSET get_ioctl_data,	fat_code_sel
+f32s18	DW OFFSET get_file_size,	fat_code_sel
+f32s19	DW OFFSET set_file_size,	fat_code_sel
+f32s20	DW OFFSET get_file_time,	fat_code_sel
+f32s21	DW OFFSET set_file_time,	fat_code_sel
+f32s22	DW OFFSET dummy,			fat_code_sel
+f32s23	DW OFFSET dummy,			fat_code_sel
+f32s24	DW OFFSET allocate_file_list,fat_code_sel
+f32s25	DW OFFSET free_file_list,	fat_code_sel
+f32s26	DW OFFSET read_file_block,	fat_code_sel
+f32s27	DW OFFSET write_file_block,	fat_code_sel
 
 init	PROC far
 	push ds

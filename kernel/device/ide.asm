@@ -581,7 +581,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDriveParam
+;		NAME:			GetDriveParams
 ;
 ;		DESCRIPTION:	Get drive param
 ;
@@ -592,7 +592,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDriveParam	Proc near
+GetDriveParams	Proc near
 	xor dx,dx
 	xor bx,bx
 	mov cx,1
@@ -649,7 +649,7 @@ GetDriveParam	Proc near
 	call ReadTaskFile
 get_drive_param_done:
 	ret
-GetDriveParam	Endp
+GetDriveParams	Endp
 
 PAGE
 
@@ -900,7 +900,7 @@ open_drive	Proc near
 	AllocateSmallLinear
 	mov edi,edx
 ;
-	call GetDriveParam
+	call GetDriveParams
 	jc open_drive_done
 ;
 	call InstallMain
@@ -985,15 +985,6 @@ read_drive	Proc near
 	mov ax,ide_data_sel
 	mov ds,ax
 	EnterSection IdeSection
-;
-	cmp ecx,256
-	jb read_drive_retry_in_range
-;
-	mov ecx,255
-
-read_drive_retry_in_range:
-	push ecx
-	push esi
 
 read_drive_retry_loop:
 	ClearSignal
@@ -1060,6 +1051,7 @@ read_drive_fail:
 	jmp read_drive_done
 
 read_drive_ok:
+	mov eax,es:[edi].dh_data
 	mov es:[edi].dh_state,STATE_USED
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
@@ -1072,10 +1064,6 @@ read_drive_check_next:
 
 read_drive_done:
 	LeaveSection IdeSection
-	pop esi
-	pop ecx
-	mov bx,fs:disc_sel
-	DiscRequestArrayDone	
 	ret
 read_drive	Endp
 
@@ -1106,14 +1094,6 @@ write_drive	Proc near
 	int 3
 
 write_drive_not_zero:
-	cmp ecx,256
-	jb write_drive_retry_in_range
-;
-	mov ecx,255
-
-write_drive_retry_in_range:
-	push ecx
-	push esi
 
 write_drive_retry_loop:
 	ClearSignal
@@ -1177,6 +1157,7 @@ write_drive_retry:
 	jnz write_drive_retry_loop
 
 write_drive_fail:
+	int 3
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
@@ -1195,10 +1176,6 @@ write_drive_check_next:
 
 write_drive_done:
 	LeaveSection IdeSection
-	pop esi
-	pop ecx
-	mov bx,fs:disc_sel
-	DiscRequestArrayDone
 	ret
 write_drive	Endp
 
@@ -1218,6 +1195,7 @@ PAGE
 perform_one	Proc near
 
 perform_one_loop:
+	mov ecx,255
 	GetDiscRequestArray
 	jc perform_one_done
 ;
@@ -1260,6 +1238,7 @@ PAGE
 discbuf_thread:
 	mov ax,ide_data_sel
 	mov ds,ax
+	mov ecx,10000h
 	InstallDisc
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
@@ -1386,7 +1365,7 @@ init_disc	Proc far
 	call install_unit
 	mov al,1
 	mov di,OFFSET disc1
-;	call install_unit
+	call install_unit
 	mov IdeThread,0
 	LeaveSection IdeSection
 	ret

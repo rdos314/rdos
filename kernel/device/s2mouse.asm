@@ -29,6 +29,9 @@
 
 IRQ = 3
 IO_BASE = 2F8h
+;                       ##GIL ##
+GREET_BYTE_COUNT = 0Dh
+;                       ##GIL END##
 
 GateSize = 16
 
@@ -51,7 +54,12 @@ md_buttons		DB ?
 md_dx			DB ?
 md_dy			DB ?
 md_pos			DW ?
-
+;                                       ##GIL ##
+greeting_mouse          DB ?            ;indicator
+greet_count             DW ?            ;number of byte for greeting
+mouse_init2             DB ?            ;for hot initialisation of the mouse 
+                                        ;without restarting the machine
+;                                       ##GIL ##
 mouse_data_seg	ENDS
 
 code	SEGMENT byte public use16 'CODE'
@@ -72,14 +80,59 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 mus_int	proc far
+;			##GIL ##
+	mov 	dx,IO_BASE + 5
+	in	al,dx
+	test	al,1
+	jz	mus_not_moved
+;                       ##GIL END##
+
 	mov dx,IO_BASE
 	in al,dx
+;                       ##GIL ##
+;GREET_BYTE_COUNT = SIZE (4D 33 08 01 24 2C 27 29 18 10 10 11 09)  this is my mouse sequence of greeting
+;greeting  my mouse
+
+        cmp     ds:greeting_mouse,0
+        jnz     short mus_go_on
+
+        cmp     al,'M'                  ;is it a reinitialiation ?
+        jz      short mus_init
+
+        cmp     ds:mouse_init2,1
+        jz      short  mus_reinit
+
+        mov     ds:greeting_mouse,1
+        jmp     mus_go_on
+;
+mus_init:
+        mov     ds:mouse_init2,1           ;this is for hot reinitialisation
+
+mus_reinit:
+;        
+        mov     bx,ds:greet_count
+        inc     bx
+        cmp     bx,GREET_BYTE_COUNT
+        jb      short mus_greet
+        mov     ds:greeting_mouse,1
+        jmp     short mus_not_moved
+;
+mus_greet:
+        mov     ds:greet_count,bx
+        jmp     short mus_not_moved
+
+;come here only when greeting is ok
+
+mus_go_on:
+
+;                       ##GIL END##
+
 	mov bx,ds:md_pos
 	test al,40h
 	jz mus_int_coord
 	xor bx,bx
 mus_int_coord:
-	mov [bx],al
+	mov [bx],al		;620:11 is here  the protected fault
 	inc bx
 	mov ds:md_pos,bx
 	cmp bx,3
@@ -159,6 +212,12 @@ init_mouse	Proc far
 	mov al,0Bh
 	out dx,al				; modem control, DTR = high, RTS = high
 ;
+;			##GIL ##
+	mov dx,IO_BASE+2
+	mov al,3
+	out dx,al				; enable FIFO  trigger level set to 1,clear received FIFO
+
+;			##GIL END ##
 	pop es
 	pop ds
 	ret
@@ -179,26 +238,31 @@ PAGE
 
 init	PROC far
 	pusha
-	push ds
+	push 	ds
 ;
-	mov bx,mousedev_code_sel
+	mov 	bx,mousedev_code_sel
 	InitDevice
 ;
-	mov eax,SIZE mouse_data_seg
-	mov bx,mousedev_data_sel
+	mov 	eax,SIZE mouse_data_seg
+	mov 	bx,mousedev_data_sel
 	AllocateFixedSystemMem
-	mov es:md_pos,0
+	mov 	es:md_pos,0
+;                                       ##GIL ##
+        mov     es:greeting_mouse,0
+        mov     es:greet_count,0
+        mov     es:mouse_init2,0
+;                                       ##GIL END ##
 ;
-	mov ax,cs
-	mov ds,ax
-	mov es,ax
-	mov si,OFFSET init_mouse
-	mov di,OFFSET init_mouse_name
-	xor cl,cl
-	mov ax,init_mouse_nr
+	mov 	ax,cs
+	mov 	ds,ax
+	mov 	es,ax
+	mov 	si,OFFSET init_mouse
+	mov 	di,OFFSET init_mouse_name
+	xor 	cl,cl
+	mov 	ax,init_mouse_nr
 	RegisterOsGate
 ;
-	pop ds
+	pop 	ds
 	popa
 	ret
 init	ENDP

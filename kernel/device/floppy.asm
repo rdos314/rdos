@@ -1148,7 +1148,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDriveParam
+;		NAME:			GetDriveParams
 ;
 ;		DESCRIPTION:	Get boot-record and drive parameters
 ;
@@ -1158,7 +1158,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDriveParam	Proc near
+GetDriveParams	Proc near
 	push ds
 	push ax
 	push ebx
@@ -1216,7 +1216,7 @@ get_drive_param_done:
 	pop ax
 	pop ds
 	ret
-GetDriveParam	Endp
+GetDriveParams	Endp
 
 PAGE
 
@@ -1230,6 +1230,7 @@ PAGE
 ;		PARAMETERS:		AL		Sub-unit #
 ;						AH		Disc #
 ;						ES		Boot sector
+;						FS		Disc handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1243,7 +1244,6 @@ InstallMain	Proc near
 	push edx
 	push di
 ;
-	mov bx,es
 	xor edx,edx
 	OpenDrive
 ;
@@ -1289,7 +1289,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_drive	Proc near
-	call GetDriveParam
+	call GetDriveParams
 	jc open_drive_done
 ;
 	call InstallMain
@@ -1437,11 +1437,11 @@ discinit_thread	Proc far
 	call open_drive
 	jc discinit_thread_done
 ;
-	mov bx,es:disc_sel
-	FlushDisc
-;
 	mov bx,es:disc_thread
 	Signal
+;
+	mov bx,es:disc_sel
+	FlushDisc
 
 discinit_thread_done:
 	ret
@@ -1649,6 +1649,7 @@ PAGE
 discbuf_thread:
 	mov ax,floppy_data_sel
 	mov ds,ax
+	mov ecx,200h
 	InstallDisc
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
