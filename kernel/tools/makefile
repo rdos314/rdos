@@ -94,6 +94,10 @@ mkhdboot_srcs = MKHDBOOT.ASM
 mkhdboot_objs = $(mkhdboot_srcs:.ASM=.OBJ)
 mkhdboot_exes = MKHDBOOT.EXE
 
+mkfdboot_srcs = MKFDBOOT.ASM
+mkfdboot_objs = $(mkfdboot_srcs:.ASM=.OBJ)
+mkfdboot_exes = MKFDBOOT.EXE
+
 acrimg_srcs = BOOTSEC.ASM BOOTLOAD.ASM BOOT.ASM ACRIMG.ASM
 acrimg_objs = $(acrimg_srcs:.ASM=.OBJ)
 acrimg_exes = ACRIMG.EXE
@@ -127,7 +131,8 @@ srcs =      $(cfg2bin_srcs) $(boot2bin_srcs) $(load_srcs) $(acrloc_srcs)    \
 			$(rdfsboot_srcs) $(grubload_srcs) $(hdboot_srcs) $(fdboot_srcs) \
 			$(rdfsimg_srcs) $(progfl_srcs) $(grubimg_srcs) \
 		    $(state_srcs) $(state40_srcs) $(acrimg_srcs) \
-			$(run_srcs) $(remdebug_srcs) $(mkhdboot_srcs) $(bootsec_srcs)
+			$(run_srcs) $(remdebug_srcs) $(mkhdboot_srcs) \
+			$(bootsec_srcs) $(mkfdboot_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -136,7 +141,8 @@ exes =      $(cfg2bin_exes) $(boot2bin_exes) $(acrprom_exes)  \
 			$(rdfsboot_exes) $(grubload_exes) $(hdboot_exes) $(fdboot_exes) \
 			$(rdfsimg_exes) $(progfl_exes) $(grubimg_exes) \
 		    $(state_exes) $(state40_exes) $(acrloc_exes) $(bootsec_exes)	\
-			$(run_exes) $(remdebug_exes) $(acrimg_exes) $(mkhdboot_exes)
+			$(run_exes) $(remdebug_exes) $(acrimg_exes) \
+			$(mkhdboot_exes) $(mkfdboot_exes)
 			
 
 maps =      $(exes:.EXE=.MAP)
@@ -158,7 +164,8 @@ kit_modules =   $(maps) $(bats) $(bins)  LOAD.EXE GRUBLOAD.EXE
 # TARGET
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN HDBOOT.BIN
+MAIN:   BOOT2BIN.EXE CFG2BIN.EXE $(exes) $(bins) GRUBLOAD.BIN HDBOOT.BIN \
+        FDBOOT.BIN
 
 CFG2BIN.EXE : $(cfg2bin_objs)
     tlink @&&!
@@ -272,6 +279,14 @@ MKHDBOOT.EXE : $(mkhdboot_objs)
 	MKHDBOOT;
 !
 
+MKFDBOOT.EXE : $(mkfdboot_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(mkfdboot_objs)
+	MKFDBOOT
+	MKFDBOOT;
+!
+
 FDBOOT.EXE : $(fdboot_objs)
     tlink @&&!
 	$(link_opt) +
@@ -346,3 +361,6 @@ BOOTSEC.BIN:    BOOTSEC.EXE BOOTSEC.ASM
 
 HDBOOT.BIN:    HDBOOT.EXE HDBOOT.ASM
     mkhdboot
+
+FDBOOT.BIN:    FDBOOT.EXE FDBOOT.ASM
+    mkfdboot
