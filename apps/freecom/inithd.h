@@ -59,6 +59,7 @@ protected:
 
     int FLoaderSectors;
 	int FOptR;
+    int FOptI;
 	char *FBootLoader;
 	int FLoaderSize;
 };

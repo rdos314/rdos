@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	5
+#define MAX_PLANETS	20
 
 struct TPlanet
 {
@@ -450,9 +450,12 @@ void cdecl main()
 	int i;
 
 	RdosWaitMilli(250);
-	bpp = 1;
-	width = 240;
-	height = 128;
+//	bpp = 1;
+//	width = 240;
+//	height = 128;
+	bpp = 32;
+	width = 640;
+    height = 480;
 	VbeHandle = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &buf);
 	if (VbeHandle == 0)
 	{

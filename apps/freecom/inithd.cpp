@@ -102,7 +102,7 @@ TInitHdCommand::TInitHdCommand(TSession *session, const char *param)
 ##########################################################################*/
 TInitHdCommand::~TInitHdCommand()
 {
-    if (FBootLoader)
+	if (FBootLoader)
         delete FBootLoader;
 }
 
@@ -123,6 +123,9 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 	{
 		case 'R':
 			return OptScanBool(optstr, bool, strarg, &FOptR);
+
+		case 'I':
+			return OptScanBool(optstr, bool, strarg, &FOptI);
 	}
 	OptError(optstr);
 	return E_Useage;
@@ -141,7 +144,8 @@ int TInitHdCommand::OptScan(const char *optstr, int ch, int bool, const char *st
 ##########################################################################*/
 void TInitHdCommand::InitOptions()
 {
-    FOptR = 0;
+	FOptR = 0;
+	FOptI = 0;
 }
 
 /*##########################################################################
@@ -192,7 +196,12 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;
 	bootp.SmallSectors = 0;
-	bootp.Media = 0xF0;
+
+	if (FOptI)
+		bootp.Media = 0xF1;
+	else
+		bootp.Media = 0xF0;
+
 	bootp.Resv6 = 0;
 	bootp.SectorsPerCyl = Disc->GetSectorsPerCyl();
 	bootp.Heads = Disc->GetHeads();
@@ -208,7 +217,16 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 	BootSector = new char[512];
 
 	Disc->Read(0, BootSector, 512);
-	memset(BootSector, 0, 0x1BE);
+
+	if (FOptI)
+	{
+		memset(BootSector, 0, 0x1FE);
+		*(BootSector + 0x1FE) = 0x55;
+		*(BootSector + 0x1FF) = 0xAA;
+	}
+	else
+		memset(BootSector, 0, 0x1BE);
+
 	RdosReadBinaryResource(0, 100, BootSector, 0x1BE);
 
 	memcpy(BootSector + 11, &bootp, sizeof(bootp));
@@ -274,6 +292,9 @@ int TInitHdCommand::Execute(char *param)
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
 
+	if (FOptI)
+		FOptR = 0;
+
 	if (sscanf(param, "%d", &DiscNr) == 1)
 	{
 		Disc = new TIdeDisc(DiscNr);
@@ -287,7 +308,7 @@ int TInitHdCommand::Execute(char *param)
 			Part = DiscPart->PartArr[0];
 			if (Part)
 				if (Part->Start <= FLoaderSectors + 1)
-				    ok = Part->IsFree();
+					ok = Part->IsFree();
 			delete DiscPart;
 
 			if (!ok)
@@ -304,14 +325,14 @@ int TInitHdCommand::Execute(char *param)
 			Write(FMsg.GetData());
 			return 0;
 		}
-            
 
-        if (ok)
-        {            		
-    	    WriteBootLoader(Disc);
-    	    WriteBootSector(Disc);
-    	    return 0;
-    	}
+
+		if (ok)
+		{
+			WriteBootLoader(Disc);
+			WriteBootSector(Disc);
+			return 0;
+		}
 	}
 
 	ErrorSyntax(0);

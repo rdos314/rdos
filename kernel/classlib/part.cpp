@@ -199,7 +199,7 @@ int TPartition::IsFree()
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-void TPartition::WriteToTable(TPartitionTable *Owner)
+void TPartition::WriteToTable(TPartitionTable *Owner, char Active)
 {
 	char Buf[512];
 	char *PartPtr;
@@ -227,7 +227,7 @@ void TPartition::WriteToTable(TPartitionTable *Owner)
 			break;
 	}
 
-	*PartPtr = 0;
+	*PartPtr = Active;
 	FDisc->LbaToChs(Start, PartPtr + 1);
 	*(PartPtr + 4) = FType;
 	FDisc->LbaToChs(Start + Size - 1, PartPtr + 5);
@@ -668,7 +668,7 @@ TPartitionTable *TPartitionTable::Create(int Entry, TFreePartition *FreePart)
 	Buf[511] = 0xAA;
 	FDisc->Write(PartTable->Start, Buf, 512);
 	PartArr[Entry] = PartTable;
-	PartTable->WriteToTable(this);
+	PartTable->WriteToTable(this, 0);
 
 	return PartTable;
 }
@@ -680,7 +680,7 @@ TPartitionTable *TPartitionTable::Create(int Entry, TFreePartition *FreePart)
 *   Returns....: *                                                          #
 *   Created....: 96-10-02 le                                                #
 *##########################################################################*/
-TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *FreePart, long NewSize)
+TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *FreePart, long NewSize, char Active)
 {
 	int i;
 	TFsPartition *FsPart;
@@ -701,11 +701,11 @@ TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *Free
 				if (PartArr[i]->Start <= FreePart->Start && PartArr[i]->Start + PartArr[i]->Size >= FreePart->Start)
 				{
 				    PartTable = (TPartitionTable *)PartArr[i];
-					FsPart = PartTable->InsertFs(FsName, FreePart, NewSize);
+					FsPart = PartTable->InsertFs(FsName, FreePart, NewSize, 0);
 					while (PartTable->FParent && FsPart->Start + FsPart->Size > PartTable->Start + PartTable->Size)
                     {
 				        PartTable->Size = FsPart->Start + FsPart->Size - PartTable->Start;
-            			PartTable->WriteToTable(PartTable->FParent);
+            			PartTable->WriteToTable(PartTable->FParent, 0);
             			PartTable = PartTable->FParent;
 					}
 					return FsPart;
@@ -728,7 +728,7 @@ TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *Free
 					delete PartArr[i];
 					PartTable = Create(i, FreePart);
 					PartArr[i] = PartTable;
-					return PartTable->InsertFs(FsName, FreePart, NewSize);
+					return PartTable->InsertFs(FsName, FreePart, NewSize, 0);
 				}
 	}
 
@@ -740,7 +740,11 @@ TFsPartition *TPartitionTable::InsertFs(const char *FsName, TFreePartition *Free
 				delete PartArr[i];
 				FsPart = TFsPartitionFactory::Format(FDisc, FsName, this, i, FreePart->Start, NewSize);
 				PartArr[i] = FsPart;
-				FsPart->WriteToTable(this);
+				if (i == 0)
+    				FsPart->WriteToTable(this, Active);
+    			else
+					FsPart->WriteToTable(this, 0);
+    				
 				return FsPart;
 			}
 		}
@@ -770,7 +774,7 @@ void TPartitionTable::FreeEntry(int Entry)
 		while (PartTable->FParent && Part->Start + Part->Size == PartTable->Start + PartTable->Size)
 		{
 		    PartTable->Size -= Part->Size;
-            PartTable->WriteToTable(PartTable->FParent);
+            PartTable->WriteToTable(PartTable->FParent, 0);
             PartTable = PartTable->FParent;
         }
         
@@ -1197,13 +1201,31 @@ TFsPartition *TDiscPartition::Add(const char *FsName, long Sectors)
 {
 	int i;
 	TFsPartition *FsPart;
+	long Size;
+	long Start;
+	long SectorsPerCyl = FDisc->GetSectorsPerCyl();
 
 	for (i = 0; i < PartCount; i++)
 		if (PartArr[i]->IsFree())
 		{
-			if (PartArr[i]->Size >= Sectors)
+		    Start = PartArr[i]->Start;
+		    Size = PartArr[i]->Size;
+
+		    if (Start < SectorsPerCyl)
+		    {
+		        Start += SectorsPerCyl;
+		        Size -= SectorsPerCyl;
+		    }
+		    
+			if (Size >= Sectors)
 			{
-				FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors);
+			    PartArr[i]->Start = Start;
+			    PartArr[i]->Size = Size;
+			    if (i == 0)
+    				FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0x80);
+    			else
+    				FsPart = PartRoot->InsertFs(FsName, (TFreePartition *)PartArr[i], Sectors, 0);
+
 				if (FsPart)
 				{
 					PartArr[i]->Size -= Sectors;

@@ -133,6 +133,7 @@ DiscCyls            DW ?
 DiscHeads           DW ?
 SectorsPerCyl       DW ?
 
+BootMedia           DB 0
 CurrEntry           DW ?
 MenuEntries         DW 0
 MenuArr             DW MAX_IMAGES DUP(0)
@@ -1370,14 +1371,20 @@ WriteMenu  Proc near
     call WriteLine
     mov cx,22
 ;
-    mov cs:MenuEntries,1
     mov bx,OFFSET MenuArr
+    mov cs:MenuEntries,0
+    mov al,cs:BootMedia
+    cmp al,0F0h
+    jne wmOrgDone
+;    
+    mov cs:MenuEntries,1
     dec cx
     mov si,OFFSET org_line
     call WriteLine
     mov word ptr cs:[bx],0
     add bx,2
-;
+
+wmOrgDone:    
     mov si,OFFSET norm_file
     call FindLine
     jc wmNormOk
@@ -1975,6 +1982,9 @@ Start:
     jne read_part_error
 
 boot_check_part_type:
+    mov al,ds:boot_media
+    mov cs:BootMedia,al
+;    
     mov al,cs:PartType
     cmp al,10h
     jae read_part_error

@@ -86,7 +86,7 @@ public:
 	long FreeSectors;
 
 protected:
-	void WriteToTable(TPartitionTable *Owner);
+	void WriteToTable(TPartitionTable *Owner, char Active);
 	void DeleteFromTable(TPartitionTable *Owner);
 
 	TDisc *FDisc;
@@ -127,7 +127,7 @@ protected:
 	void LbaToChs(long Sector, char *Data);
 	void Process();
 	void ProcessOne(int Entry, const char *Data);
-	TFsPartition *InsertFs(const char *FsName, TFreePartition *FreePart, long Size);
+	TFsPartition *InsertFs(const char *FsName, TFreePartition *FreePart, long Size, char Active);
 	void FreeEntry(int Entry);
 
 	int FSectorsPerCyl;
