@@ -25,8 +25,19 @@
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+rdfs_info_struc	STRUC
+
+ri_free_arr			DD ?
+ri_free_arr_size	DD ?
+ri_root_dir			DD ?
+ri_total_sectors	DD ?
+ri_free_sectors		DD ?
+
+rdfs_info_struc	ENDS
+
 drive_data_seg	STRUC
 
+info_sector			rdfs_info_struc <>
 mapping_sector		DD ?
 data_sector			DD ?
 sectors				DD ?
@@ -35,6 +46,24 @@ drive_nr			DB ?
 
 drive_data_seg	ENDS
 
+rdfs_control_struc	STRUC
+
+rc_key_bias			DW ?
+rc_key_offset		DW ?
+rc_size				DD ?
+rc_sector_arr		DD 126 DUP(?)
+
+rdfs_control_struc	ENDS
+
+rdfs_dir_block_struc	STRUC
+
+rdbf_prev	DW ?
+rdbf_next	DW ?
+rdbs_prev	DW ?
+rdbs_next	DW ?
+
+rdfs_dir_block_struc	ENDS
+
 rdfs_dir_ptr_struc	STRUC
 
 rdp_rel_sector		DW ?
@@ -42,15 +71,8 @@ rdp_offset			DW ?
 
 rdfs_dir_ptr_struc	ENDS
 
-rdfs_dir_sector_struc	STRUC
-
-rds_free_list		DW ?
-
-rdfs_dir_sector_struc	ENDS
-
 rdfs_dir_start_sector_struc	STRUC
 
-rdss_base			rdfs_dir_sector_struc <>
 rdss_dir_list		rdfs_dir_ptr_struc <>
 rdss_file_list		rdfs_dir_ptr_struc <>
 

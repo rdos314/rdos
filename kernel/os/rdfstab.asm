@@ -46,451 +46,82 @@ INCLUDE rdfs.inc
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
-
 ;
-; Table is generated using 11.77480735% increments (4GB max file size)
-; 18.10910802% increment can be used for 2TB file size support
+; Table is generated using 1.1777758960 as factor
 ;
 
 ExtentSizeTab:
 es00	DD 00000001h, 00000001h, 00000001h, 00000001h
-es04	DD 00000001h, 00000001h, 00000001h, 00000002h
-es08	DD 00000002h, 00000002h, 00000003h, 00000003h
-es0C	DD 00000003h, 00000004h, 00000004h, 00000005h
-es10	DD 00000005h, 00000006h, 00000007h, 00000008h
-es14	DD 00000009h, 0000000Ah, 0000000Bh, 0000000Ch
-es18	DD 0000000Eh, 00000010h, 00000012h, 00000014h
-es1C	DD 00000016h, 00000019h, 0000001Ch, 0000001Fh
-es20	DD 00000023h, 00000027h, 0000002Ch, 00000031h
-es24	DD 00000037h, 0000003Dh, 00000044h, 0000004Ch
-es28	DD 00000055h, 0000005Fh, 0000006Bh, 00000077h
-es2C	DD 00000086h, 00000095h, 000000A7h, 000000BBh
-es30	DD 000000D1h, 000000E9h, 00000105h, 00000124h
-es34	DD 00000146h, 0000016Ch, 00000197h, 000001C7h
-es38	DD 000001FDh, 00000239h, 0000027Ch, 000002C7h
-es3C	DD 0000031Bh, 00000379h, 000003E1h, 00000456h
-es40	DD 000004D9h, 0000056Bh, 0000060Fh, 000006C5h
-es44	DD 00000792h, 00000876h, 00000975h, 00000A92h
-es48	DD 00000BD1h, 00000D35h, 00000EC3h, 00001080h
-es4C	DD 00001272h, 0000149Eh, 0000170Bh, 000019C2h
-es50	DD 00001CCAh, 0000202Eh, 000023F8h, 00002835h
-es54	DD 00002CF1h, 0000323Bh, 00003826h, 00003EC2h
-es58	DD 00004626h, 00004E68h, 000057A4h, 000061F6h
-es5C	DD 00006D7Fh, 00007A63h, 000088CDh, 000098E8h
-es60	DD 0000AAE9h, 0000BF09h, 0000D588h, 0000EEADh
-es64	DD 00010AC7h, 00012A31h, 00014D4Dh, 0001748Ch
-es68	DD 0001A06Ah, 0001D173h, 00020841h, 00024583h
-es6C	DD 000289FCh, 0002D685h, 00032C11h, 00038BAFh
-es70	DD 0003F690h, 00046E07h, 0004F38Fh, 000588CFh
-es74	DD 00062FA3h, 0006EA1Bh, 0007BA89h, 0008A380h
-es78	DD 0009A7E7h, 000ACAF7h, 000C104Ch, 000D7BF1h
+es04	DD 00000001h, 00000002h, 00000002h, 00000003h
+es08	DD 00000003h, 00000004h, 00000005h, 00000006h
+es0C	DD 00000007h, 00000008h, 00000009h, 0000000Bh
+es10	DD 0000000Dh, 00000010h, 00000013h, 00000016h
+es14	DD 0000001Ah, 0000001Fh, 00000024h, 0000002Bh
+es18	DD 00000032h, 0000003Bh, 00000046h, 00000052h
+es1C	DD 00000061h, 00000073h, 00000087h, 0000009Fh
+es20	DD 000000BBh, 000000DDh, 00000104h, 00000133h
+es24	DD 00000169h, 000001A9h, 000001F5h, 0000024Eh
+es28	DD 000002B7h, 00000333h, 000003C5h, 00000470h
+es2C	DD 0000053Ah, 00000628h, 00000741h, 0000088Bh
+es30	DD 00000A10h, 00000BDAh, 00000DF5h, 00001071h
+es34	DD 0000135Dh, 000016CEh, 00001ADCh, 00001FA3h
+es38	DD 00002543h, 00002BE2h, 000033B0h, 00003CE0h
+es3C	DD 000047B3h, 00005472h, 00006375h, 00007524h
+es40	DD 000089F7h, 0000A27Eh, 0000BF61h, 0000E166h
+es44	DD 00010979h, 000138ABh, 00017040h, 0001B1B8h
+es48	DD 0001FED3h, 000259A3h, 0002C497h, 00034290h
+es4C	DD 0003D6EDh, 000485ABh, 00055379h, 000645DEh
+es50	DD 0007635Ah, 0008B397h, 000A3F9Ah, 000C1204h
+es54	DD 000E3759h, 0010BE56h, 0013B858h, 001739D1h
+es58	DD 001B5AD7h, 002037C7h, 0025F208h, 002CB0F4h
+es5C	DD 0034A2E1h, 003DFE63h, 004903C3h, 0055FEB5h
+es60	DD 00654864h, 007749D5h, 008C7EB9h, 00A578BEh
+es64	DD 00C2E376h, 00E588F6h, 010E573Eh, 013E669Fh
+es68	DD 0177013Fh, 01B9ABF4h, 020830B6h, 0264AAE6h
+es6C	DD 02D195C9h, 0351DD94h, 03E8F37Eh, 049AE569h
+es70	DD 056C79B7h, 0663501Ch, 0786083Ah, 08DC6F2Ah
+es74	DD 0A6FB509h, 0C4AAC1Ch, 0E7A1325h, 110CECF1h
+es78	DD 1414E773h, 17A6D53Ch, 1BDB3C7Eh, 20CEFF8Bh
+es7C	DD 26A4233Dh, 2D82B8A6h
 
 ;
 ; This table is the sum of the ExtentSizeTab
+; The total sum is 2^23
 ;
 
 ExtentPosTab:
 ep00	DD 00000000h, 00000001h, 00000002h, 00000003h
-ep04	DD 00000004h, 00000005h, 00000006h, 00000007h
-ep08	DD 00000009h, 0000000Bh, 0000000Dh, 00000010h
-ep0C	DD 00000013h, 00000016h, 0000001Ah, 0000001Eh
-ep10	DD 00000023h, 00000028h, 0000002Eh, 00000035h
-ep14	DD 0000003Dh, 00000046h, 00000050h, 0000005Bh
-ep18	DD 00000067h, 00000075h, 00000085h, 00000097h
-ep1C	DD 000000ABh, 000000C1h, 000000DAh, 000000F6h
-ep20	DD 00000115h, 00000138h, 0000015Fh, 0000018Bh
-ep24	DD 000001BCh, 000001F3h, 00000230h, 00000274h
-ep28	DD 000002C0h, 00000315h, 00000374h, 000003DFh
-ep2C	DD 00000456h, 000004DCh, 00000571h, 00000618h
-ep30	DD 000006D3h, 000007A4h, 0000088Dh, 00000992h
-ep34	DD 00000AB6h, 00000BFCh, 00000D68h, 00000EFFh
-ep38	DD 000010C6h, 000012C3h, 000014FCh, 00001778h
-ep3C	DD 00001A3Fh, 00001D5Ah, 000020D3h, 000024B4h
-ep40	DD 0000290Ah, 00002DE3h, 0000334Eh, 0000395Dh
-ep44	DD 00004022h, 000047B4h, 0000502Ah, 0000599Fh
-ep48	DD 00006431h, 00007002h, 00007D37h, 00008BFAh
-ep4C	DD 00009C7Ah, 0000AEECh, 0000C38Ah, 0000DA95h
-ep50	DD 0000F457h, 00011121h, 0001314Fh, 00015547h
-ep54	DD 00017D7Ch, 0001AA6Dh, 0001DCA8h, 000214CEh
-ep58	DD 00025390h, 000299B6h, 0002E81Eh, 00033FC2h
-ep5C	DD 0003A1B8h, 00040F37h, 0004899Ah, 00051267h
-ep60	DD 0005AB4Fh, 00065638h, 00071541h, 0007EAC9h
-ep64	DD 0008D976h, 0009E43Dh, 000B0E6Eh, 000C5BBBh
-ep68	DD 000DD047h, 000F70B1h, 00114224h, 00134A65h
-ep6C	DD 00158FE8h, 001819E4h, 001AF069h, 001E1C7Ah
-ep70	DD 0021A829h, 00259EB9h, 002A0CC0h, 002F004Fh
-ep74	DD 0034891Eh, 003AB8C1h, 0041A2DCh, 00495D65h
-ep78	DD 005200E5h, 005BA8CCh, 006673C3h, 0072840Fh
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;		DESCRIPTION:	Helpers for allocate_sectors and free_sectors
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-BitTab:
-mbt0	DB 00000000b
-mbt1	DB 00000001b
-mbt2	DB 00000011b
-mbt3	DB 00000111b
-mbt4	DB 00001111b
-mbt5	DB 00011111b
-mbt6	DB 00111111b
-mbt7	DB 01111111b
-mbt8	DB 11111111b
-
-InvBitTab:
-ibt0	DB 00000000b
-ibt1	DB 10000000b
-ibt2	DB 11000000b
-ibt3	DB 11100000b
-ibt4	DB 11110000b
-ibt5	DB 11111000b
-ibt6	DB 11111100b
-ibt7	DB 11111110b
-ibt8	DB 11111111b
-
-StartBitTab:
-bbt0	DB 11111111b
-bbt1	DB 11111110b
-bbt2	DB 11111100b
-bbt3	DB 11111000b
-bbt4	DB 11110000b
-bbt5	DB 11100000b
-bbt6	DB 11000000b
-bbt7	DB 10000000b
-
-StopBitTab:
-ebt0	DB 00000001b
-ebt1	DB 00000011b
-ebt2	DB 00000111b
-ebt3	DB 00001111b
-ebt4	DB 00011111b
-ebt5	DB 00111111b
-ebt6	DB 01111111b
-ebt7	DB 11111111b
-
-HighBitTab:
-ht00 db 8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4
-ht10 db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
-ht20 db 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
-ht30 db 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
-ht40 db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-ht50 db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-ht60 db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-ht70 db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-ht80 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-ht90 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htA0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htB0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htC0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htD0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htE0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-htF0 db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-
-LowBitTab:
-lt00 db 8, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt10 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt20 db 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt30 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt40 db 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt50 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt60 db 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt70 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt80 db 7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-lt90 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltA0 db 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltB0 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltC0 db 6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltD0 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltE0 db 5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-ltF0 db 4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
-
-MidBitTab:
-mt00 db 8, 7, 6, 6, 5, 5, 5, 5, 4, 4, 4, 4, 4, 4, 4, 4
-mt10 db 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
-mt20 db 5, 4, 3, 3, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2
-mt30 db 4, 3, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2
-mt40 db 6, 5, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2
-mt50 db 4, 3, 2, 2, 2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 1
-mt60 db 5, 4, 3, 3, 2, 2, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1
-mt70 db 4, 3, 2, 2, 2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 1
-mt80 db 7, 6, 5, 5, 4, 4, 4, 4, 3, 3, 3, 3, 3, 3, 3, 3
-mt90 db 4, 3, 2, 2, 2, 2, 2, 2, 3, 2, 2, 2, 2, 2, 2, 2
-mtA0 db 5, 4, 3, 3, 2, 2, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1
-mtB0 db 4, 3, 2, 2, 2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 1
-mtC0 db 6, 5, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2
-mtD0 db 4, 3, 2, 2, 2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 1
-mtE0 db 5, 4, 3, 3, 2, 2, 2, 2, 3, 2, 1, 1, 2, 1, 1, 1
-mtF0 db 4, 3, 2, 2, 2, 1, 1, 1, 3, 2, 1, 1, 2, 1, 1, 0
-
-GotoNext	Macro
-	local goto_next_done
-	inc esi
-	test si,1FFh
-	clc
-	jnz goto_next_done
-	UnlockSector
-	inc edx
-	cmp edx,ds:data_sector
-	stc
-	je goto_next_done
-	push ax
-	mov al,ds:drive_nr
-	LockSector
-	pop ax
-goto_next_done:
-			Endm
-
-GotoPrev	Macro
-	local goto_prev_dec
-	local goto_prev_done
-	test si,1FFh
-	jnz goto_prev_dec
-	UnlockSector
-	cmp edx,ds:mapping_sector
-	stc
-	je goto_prev_done
-	dec edx
-	push ax
-	mov al,ds:drive_nr
-	LockSector
-	pop ax
-	jmp goto_prev_done
-goto_prev_dec:
-	dec esi
-goto_prev_done:
-			Endm
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			ALLOCATE_SECTORS
-;
-;		DESCRIPTION:	ALLOCATES A NUMBER OF SECTORS
-;
-;		PARAMETERS:		AL			DRIVE
-;						ECX			NUMBER OF SECTORS
-;
-;		RETURNS			EDX			LOGICAL SECTOR #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public allocate_sectors
-
-allocate_sectors	PROC near
-	push eax
-	push ebx
-	push ecx
-	push esi
-	push edi
-	push ebp
-;
-	mov edx,ds:mapping_sector
-	xor ebp,ebp
-	mov al,ds:drive_nr
-	LockSector
-	push bx
-
-allocate_sector_loop:
-	mov bx,OFFSET MidBitTab
-	movzx eax,byte ptr es:[esi]
-	xlat byte ptr cs:MidBitTab
-	cmp eax,ecx
-	jnc allocate_take_one
-	mov bx,OFFSET HighBitTab
-	mov al,es:[esi]
-	xlat byte ptr cs:HighBitTab
-	movzx edi,al
-
-allocate_try_next:
-	pop bx
-	GotoNext
-	jc allocate_sector_done
-	add ebp,8
-	push bx
-;
-	mov bx,OFFSET LowBitTab
-	movzx eax,byte ptr es:[esi]
-	xlat byte ptr cs:LowBitTab
-	add edi,eax
-	cmp edi,ecx
-	jnc allocate_take_many
-	cmp al,8
-	je allocate_try_next
-	jmp allocate_sector_loop
-	
-allocate_take_one:
-	mov al,cl
-	mov bx,OFFSET BitTab
-	xlat byte ptr cs:BitTab
-	mov bl,es:[esi]
-	not bl
-allocate_take_one_search:
-	mov ah,bl
-	and ah,al
-	cmp ah,al
-	je allocate_take_one_do
-	shl al,1
-	inc ebp
-	jmp allocate_take_one_search
-allocate_take_one_do:
-	or es:[esi],al
-	pop bx
-	ModifySector
-	UnlockSector
-	mov edx,ebp
-	clc
-	jmp allocate_sector_done
-
-allocate_take_many:
-	sub ebp,ecx
-	movzx eax,byte ptr es:[esi]
-	mov bx,OFFSET LowBitTab
-	xlat byte ptr cs:LowBitTab
-	add ebp,eax
-	sub ecx,eax
-	jnc allocate_take_many_more
-	add al,cl
-	mov bx,OFFSET BitTab
-	xlat byte ptr cs:BitTab
-	or es:[esi],al
-	pop bx
-	ModifySector
-	UnlockSector
-	mov edx,ebp
-	clc
-	jmp allocate_sector_done
-
-allocate_take_many_more:
-	mov bx,OFFSET BitTab
-	xlat byte ptr cs:BitTab
-	or es:[esi],al
-;
-allocate_take_many_more_loop:
-	pop bx
-	ModifySector
-	GotoPrev
-	push bx
-;
-	movzx eax,byte ptr es:[esi]
-	mov bx,OFFSET HighBitTab
-	xlat byte ptr cs:HighBitTab
-	cmp eax,ecx
-	jae allocate_take_many_last
-	cmp al,8
-	stc
-	jne allocate_sector_done
-	mov byte ptr es:[esi],0FFh
-	jmp allocate_take_many_more_loop
-
-allocate_take_many_last:
-	mov al,cl
-	mov bx,OFFSET InvBitTab
-	xlat byte ptr cs:InvBitTab
-	or es:[esi],al	
-	pop bx
-	ModifySector
-	UnlockSector
-	mov edx,ebp
-	clc
-		
-allocate_sector_done:
-	pop ebp
-	pop edi
-	pop esi
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-allocate_sectors	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			FREE_SECTORS
-;
-;		DESCRIPTION:	FREE A NUMBER OF SECTORS
-;
-;		PARAMETERS:		AL			DRIVE
-;						ECX			NUMBER OF SECTORS
-;						EDX			LOGICAL SECTOR #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public free_sectors
-
-free_sectors	PROC near
-	push eax
-	push ebx
-	push ecx
-	push edx
-	push esi
-;
-	push dx
-	shr edx,3
-	push dx
-	shr edx,9
-	add edx,ds:mapping_sector
-	mov al,ds:drive_nr
-	LockSector
-	pop ax
-	and ax,1FFh
-	or si,ax
-	pop ax
-	and al,7
-	mov ah,al
-	neg ah
-	add ah,8
-;
-	push bx
-	mov bx,OFFSET StartBitTab
-	xlat byte ptr cs:StartBitTab
-	mov bl,al
-;
-	movzx eax,ah
-
-free_sector_loop:
-	sub ecx,eax
-	ja free_sector_more
-
-free_sector_last:
-	mov ah,bl
-	dec al
-	mov bx,OFFSET StopBitTab
-	xlat byte ptr cs:StopBitTab
-	and al,ah
-	not al
-	and es:[esi],al
-	pop bx
-	ModifySector
-	UnlockSector
-	clc
-	jmp free_sector_done
-
-free_sector_more:
-	mov al,bl
-	not al
-	and es:[esi],al
-	pop bx
-	ModifySector
-	GotoNext
-	push bx
-	mov bl,0FFh
-	sub ecx,8
-	ja free_sector_more
-	mov al,8
-	jmp free_sector_last
-	
-free_sector_done:
-;
-	pop esi
-	pop edx
-	pop ecx
-	pop ebx
-	pop eax
-	ret
-free_sectors	Endp
+ep04	DD 00000004h, 00000005h, 00000007h, 00000009h
+ep08	DD 0000000Ch, 0000000Fh, 00000013h, 00000018h
+ep0C	DD 0000001Eh, 00000025h, 0000002Dh, 00000036h
+ep10	DD 00000041h, 0000004Eh, 0000005Eh, 00000071h
+ep14	DD 00000087h, 000000A1h, 000000C0h, 000000E4h
+ep18	DD 0000010Fh, 00000141h, 0000017Ch, 000001C2h
+ep1C	DD 00000214h, 00000275h, 000002E8h, 0000036Fh
+ep20	DD 0000040Eh, 000004C9h, 000005A6h, 000006AAh
+ep24	DD 000007DDh, 00000946h, 00000AEFh, 00000CE4h
+ep28	DD 00000F32h, 000011E9h, 0000151Ch, 000018E1h
+ep2C	DD 00001D51h, 0000228Bh, 000028B3h, 00002FF4h
+ep30	DD 0000387Fh, 0000428Fh, 00004E69h, 00005C5Eh
+ep34	DD 00006CCFh, 0000802Ch, 000096FAh, 0000B1D6h
+ep38	DD 0000D179h, 0000F6BCh, 0001229Eh, 0001564Eh
+ep3C	DD 0001932Eh, 0001DAE1h, 00022F53h, 000292C8h
+ep40	DD 000307ECh, 000391E3h, 00043461h, 0004F3C2h
+ep44	DD 0005D528h, 0006DEA1h, 0008174Ch, 0009878Ch
+ep48	DD 000B3944h, 000D3817h, 000F91BAh, 00125651h
+ep4C	DD 001598E1h, 00196FCEh, 001DF579h, 002348F2h
+ep50	DD 00298ED0h, 0030F22Ah, 0039A5C1h, 0043E55Bh
+ep54	DD 004FF75Fh, 005E2EB8h, 006EED0Eh, 0082A566h
+ep58	DD 0099DF37h, 00B53A0Eh, 00D571D5h, 00FB63DDh
+ep5C	DD 012814D1h, 015CB7B2h, 019AB615h, 01E3B9D8h
+ep60	DD 0239B88Dh, 029F00F1h, 03164AC6h, 03A2C97Fh
+ep64	DD 0448423Dh, 050B25B3h, 05F0AEA9h, 06FF05E7h
+ep68	DD 083D6C86h, 09B46DC5h, 0B6E19B9h, 0D764A6Fh
+ep6C	DD 0FDAF555h, 12AC8B1Eh, 15FE68B2h, 19E75C30h
+ep70	DD 1E824199h, 23EEBB50h, 2A520B6Ch, 31D813A6h
+ep74	DD 3AB482D0h, 452437D9h, 516EE3F5h, 5FE8F71Ah
+ep78	DD 70F5E40Bh, 850ACB7Eh, 9CB1A0BAh, 0B88CDD38h
+ep7C	DD 0D95BDCC3h, 0FFFFFFFFh
 
 code	ENDS
 

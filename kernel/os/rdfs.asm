@@ -142,8 +142,10 @@ dismount	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 get_drive_info	PROC far
-	int 3
-	stc
+	mov eax,ds:ri_free_sectors
+	mov edx,ds:ri_total_sectors
+	mov cx,200h
+	clc
 	ret
 get_drive_info	ENDP
 

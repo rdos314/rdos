@@ -564,6 +564,68 @@ ctFF8  DB 077h, 0B0h, 032h, 082h, 06Eh, 01Ah, 0E3h, 05Ch
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			decrypt
+;
+;		DESCRIPTION:	Decrypt a sector
+;
+;		PARAMETERS:		AL			Bias
+;						BP			Offset
+;						ES:ESI		Crypted sector data
+;						ES:EDI		Decrypted sector data
+;
+;		RETURNS:		AH			Checksum
+;						BP			Updated offset
+;		
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public decrypt
+
+decrypt	Proc near
+	push ebx
+	push cx
+	push edx
+	push esi
+	push edi
+;
+	mov cx,80h
+	mov dl,al
+	shl dx,8
+	mov dl,al
+	shl edx,8
+	mov dl,al
+	shl edx,8
+	mov dl,al
+	xor ebx,ebx
+	
+decrypt_loop:
+	and bp,0FFCh
+	lods dword ptr es:[esi]
+	xor eax,dword ptr cs:[bp].CryptTab
+	xor eax,edx
+	stos dword ptr es:[edi]
+	xor ebx,eax
+	add bp,4
+	loop decrypt_loop
+;
+	mov ah,bl
+	shr ebx,8
+	xor ah,bl
+	shr ebx,8
+	xor ah,bl
+	shr bx,8
+	xor ah,bl
+;
+	pop edi
+	pop esi
+	pop edx
+	pop cx
+	pop ebx
+	ret
+decrypt	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			GET_PARAM
 ;
 ;		DESCRIPTION:	READ DRIVE PARAMS FROM BOOT RECORD
@@ -581,21 +643,26 @@ get_param	Proc near
 	push ecx
 	push edx
 	push esi
+	push edi
 ;
 	mov ds:drive_root_handle,0
 	mov ds:drive_nr,al
-	xor edx,edx
+	mov edx,1
 	LockSector
-;	mov edx,es:[esi].boot_hidden_sectors
-	mov ds:mapping_sector,edx
-;	movzx ecx,es:[esi].boot_mapping_sectors
-	add edx,ecx
-	mov ds:data_sector,edx
-;	mov ecx,es:[esi].boot_sectors
-	sub ecx,edx
-	mov ds:sectors,ecx
+	push ds
+	push es
+	mov ax,ds
+	mov dx,es
+	mov ds,dx
+	mov es,ax
+	mov edi,OFFSET info_sector
+	mov ecx,SIZE rdfs_info_struc
+	rep movs byte ptr es:[edi],[esi]
+	pop es
+	pop ds
 	UnlockSector
 ;
+	pop edi
 	pop esi
 	pop edx
 	pop ecx

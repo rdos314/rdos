@@ -41,6 +41,8 @@ INCLUDE system.def
 INCLUDE system.inc
 INCLUDE rdfs.inc
 
+	extrn decrypt:near
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -64,8 +66,71 @@ PAGE
 	public cache_dir
 
 cache_dir	Proc far
+	pushad
+	or edx,edx
+	jnz cache_dir_subdir
+;
+	int 3
+	mov ax,flat_sel
+	mov es,ax
+	mov al,ds:drive_nr
+	mov edx,ds:ri_root_dir
+	LockSector
+	mov ecx,es:[esi].rc_size
+	mov edx,es:[esi].rc_sector_arr
+	mov bp,es:[esi].rc_key_offset
+	push es:[esi].rc_key_bias
+	UnlockSector
+	LockSector
+	mov eax,ecx
+	AllocateSmallLinear
+	mov edi,edx
+	pop ax
+	mov cx,es:[esi]
+	call decrypt
+	xor ah,es:[edi]
+	xor ah,es:[edi+1]
+	mov word ptr es:[edi],0
+	cmp cl,ah
+	jne cache_dir_free_fail
+;
+	not ah
+	cmp ch,ah
+	jne cache_dir_free_fail
+;
+	mov esi,8
+;	
+	mov eax,dword ptr es:[esi+edi].rdss_dir_list
+	cmp eax,-1
+	je cache_dir_dir_done
+;
+	int 3
+
+cache_dir_dir_done:
+	mov eax,dword ptr es:[esi+edi].rdss_dir_list
+	cmp eax,-1
+	je cache_dir_file_done
+;
+	int 3
+
+cache_dir_file_done:
+	clc
+	jmp cache_dir_done
+
+cache_dir_free_fail:
+	mov edx,edi
+	xor ecx,ecx
+	FreeLinear
+	jmp cache_dir_fail
+
+cache_dir_subdir:
+
+cache_dir_fail:
 	int 3
 	stc
+
+cache_dir_done:
+	popad
 	ret
 cache_dir	Endp
 

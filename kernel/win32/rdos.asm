@@ -2691,7 +2691,6 @@ RdosWriteDisc	Proc
 	mov edx,[ebp+12]
 	mov edi,[ebp+16]
 	mov ecx,[ebp+20]
-	int 3
 	UserGate write_disc_nr
 	jc write_disc_fail
 ;

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-const long double Coeff = 1.18109108019;
+const long double Coeff = 1.17777589604;
 
 void GenSizeTab()
 {
@@ -14,7 +14,7 @@ void GenSizeTab()
 	printf("\r\n");
 	printf("ExtentSizeTab:");
 
-	for (i = 0; i < 124; i++)
+	for (i = 0; i < 126; i++)
 	{
 		if (i % 4 == 0)
 			printf("\r\nes%02hX	DD ", i);
@@ -43,7 +43,7 @@ void GenSumTab()
 	printf("\r\n");
 	printf("ExtentPosTab:");
 
-	for (i = 0; i < 124; i++)
+	for (i = 0; i < 126; i++)
 	{
 		if (i % 4 == 0)
 			printf("\r\nep%02hX	DD ", i);
