@@ -209,6 +209,12 @@ void THttpCommand::Run()
         {
             *start = 0;
             start++;
+			start = (char *)THttpSocketServer::LTrim(start);
+			THttpSocketServer::RTrim(start);
+
+			ptr = (char *)THttpSocketServer::LTrim(ptr);
+			THttpSocketServer::RTrim(ptr);
+            
             AddOpt(ptr, start);
         }
             
