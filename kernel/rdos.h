@@ -33,6 +33,7 @@ void RdosSetDtr(int Handle);
 void RdosResetDtr(int Handle);
 
 int RdosOpenFile(const char *FileName, char Access);
+int RdosCreateFile(const char *FileName, int Attrib);
 void RdosCloseFile(int Handle);
 long RdosGetFileSize(int Handle);
 void RdosSetFileSize(int Handle, long Size);

@@ -1028,6 +1028,41 @@ RdosOpenFile	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosCreateFile
+;
+;		DESCRIPTION:	Creates a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCreateFile
+
+RdosCreateFile	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov edi,[ebp+8]
+	mov cx,[ebp+12]
+	UserGate create_file_nr
+	jc CreateFileFailed
+	mov ax,bx
+	jmp CreateFileDone
+
+CreateFileFailed:
+	xor ax,ax
+
+CreateFileDone:
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosCreateFile	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosCloseFile
 ;
 ;		DESCRIPTION:	Close a file
