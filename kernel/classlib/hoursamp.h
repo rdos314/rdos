@@ -25,17 +25,17 @@
 #
 ########################################################################*/
 
-#ifndef _MINSAMP_H
-#define _MINSAMP_H
+#ifndef _HOURSAMP_H
+#define _HOURSAMP_H
 
 #include "sample.h"
 #include "datetime.h"
 
-class TMinSample : public TSample
+class THourSample : public TSample
 {
 public:
-	TMinSample(int index, const char *unit);
-	virtual ~TMinSample();
+	THourSample(int index, const char *unit);
+	virtual ~THourSample();
 
 	virtual void Add(TDateTime *time, long double value);
 
@@ -44,7 +44,6 @@ protected:
     int FPrevMonth;
     int FPrevDay;
     int FPrevHour;
-    int FPrevMin;
 
 private:
 };

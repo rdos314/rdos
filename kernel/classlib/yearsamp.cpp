@@ -20,55 +20,51 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# minsamp.cpp
-# Minute basis sampling class
+# yearsamp.cpp
+# Year basis sampling class
 #
 ########################################################################*/
 
-#include "minsamp.h"
+#include "yearsamp.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
 
 /*##########################################################################
 #
-#   Name       : TMinSample::TMinSample
+#   Name       : TYearSample::TYearSample
 #
-#   Purpose....: Constructor for minute sampling
+#   Purpose....: Constructor for year sampling
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMinSample::TMinSample(int index, const char *unit)
- : TSample(index, unit)
+TYearSample::TYearSample(int index, const char *unit)
+  : TSample(index, unit)
 {
-    FPrevMin = -1;
-    FPrevHour = -1;
-    FPrevDay = -1;
-    FPrevMonth = -1;
     FPrevYear = -1;
 }
 
 /*##########################################################################
 #
-#   Name       : TMinSample::~TMinSample
+#   Name       : TYearSample::~TYearSample
 #
-#   Purpose....: Destructor for minute sampling
+#   Purpose....: Destructor for year sampling
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMinSample::~TMinSample()
+TYearSample::~TYearSample()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMinSample::Add
+#   Name       : TYearSample::Add
 #
 #   Purpose....: Add a new sample
 #
@@ -78,32 +74,16 @@ TMinSample::~TMinSample()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMinSample::Add(TDateTime *time, long double value)
+void TYearSample::Add(TDateTime *time, long double value)
 {
     int ok;
 
     ok = time->GetYear() == FPrevYear;
 
-    if (ok)
-        ok = time->GetMonth() == FPrevMonth;
-
-    if (ok)
-        ok = time->GetDay() == FPrevDay;
-
-    if (ok)
-        ok = time->GetHour() == FPrevHour;
-
-    if (ok)
-        ok = time->GetMin() == FPrevMin;
-
     if (!ok)
     {
 		Clear();
         FPrevYear = time->GetYear();
-        FPrevMonth = time->GetMonth();
-        FPrevDay = time->GetDay();
-        FPrevHour = time->GetHour();
-        FPrevMin = time->GetMin();
     }
     
     TSample::Add(time, value);

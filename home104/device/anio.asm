@@ -271,10 +271,10 @@ read_adc	Proc far
     DerefHandle
     jc read_adc_done
 ;
-; remove later
+; test code
 ;
-	mov eax,10000
-	jmp read_adc_done
+;	mov eax,10000
+;	jmp read_adc_done
 ;
 	mov dx,28Fh
 	in al,dx

@@ -20,31 +20,28 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# sample.h
-# Sampling base class
+# tempdev.h
+# Temperature measurement class
 #
 ########################################################################*/
 
-#ifndef _MINSAMP_H
-#define _MINSAMP_H
+#ifndef _TEMPDEV_H
+#define _TEMPDEV_H
 
-#include "sample.h"
-#include "datetime.h"
+#include "adcdev.h"
 
-class TMinSample : public TSample
+class TTempDevice : public TAdcDevice
 {
 public:
-	TMinSample(int index, const char *unit);
-	virtual ~TMinSample();
+	TTempDevice(TWait *Wait, int channel);
+	TTempDevice(const char *IniSection, TWait *Wait, int channel);
+	~TTempDevice();
 
-	virtual void Add(TDateTime *time, long double value);
+	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual const char *GetUnit();
 
 protected:
-    int FPrevYear;
-    int FPrevMonth;
-    int FPrevDay;
-    int FPrevHour;
-    int FPrevMin;
+	virtual long double MvToReal(long double mv);
 
 private:
 };

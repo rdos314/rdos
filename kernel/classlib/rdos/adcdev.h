@@ -46,6 +46,7 @@ public:
 	void DefineStart(TDateTime &StartTime);
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual const char *GetUnit();
 	long double Sample();
 
 	void (*OnSample)(TAdcDevice *Adc, TDateTime *time, long double value);
@@ -64,11 +65,11 @@ protected:
 	long FSec;
 	long FMilli;
 	long FTics;
+	int FChannel;
 
 private:
 	void Init(TWait *Wait, int channel);
 
-	int FChannel;
 	int FHandle;
 };
 

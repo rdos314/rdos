@@ -44,11 +44,17 @@ class TSample
 {
 public:
 	TSample();
+	TSample(int Index, const char *Unit);
 	virtual ~TSample();
 
-	void Define(TSample *Sample);
+	void DefineMin(TSample *Sample);
+	void DefineMax(TSample *Sample);
+	void DefineMean(TSample *Sample);
 
     int GetCount();
+
+	int GetIndex();
+	const char *GetUnit();
     
 	int GotoFirst(TDateTime *time, long double *value);
 	int GotoNext(TDateTime *time, long double *value);
@@ -69,7 +75,9 @@ public:
 	void (*BeforeClear)(TSample *Sample);
 
 protected:
-    TSample *FSample;
+    TSample *FMinSample;
+    TSample *FMaxSample;
+    TSample *FMeanSample;
     int FExSmallCount;
     int FExLargeCount;
     int FSampleCount;
@@ -77,8 +85,12 @@ protected:
     TSampleEntry *FSampleAmpList;
     TSampleEntry *FCurrent;
     TSection FSection;
+	int FIndex;
+	char *FUnit;
 
 private:
+	void Init();
+
 };
 
 #endif

@@ -25,6 +25,7 @@
 #
 ########################################################################*/
 
+#include <string.h>
 #include "sample.h"
 
 #define FALSE   0
@@ -43,7 +44,51 @@
 ##########################################################################*/
 TSample::TSample()
 {
-    FSample = 0;
+	FIndex = 0;
+	FUnit = 0;
+
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::TSample
+#
+#   Purpose....: Constructor for sampling
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSample::TSample(int Index, const char *Unit)
+{
+	int size;
+
+	FIndex = Index;
+	size = strlen(Unit);
+	FUnit = new char[size+1];
+	strcpy(FUnit, Unit);
+
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::Init
+#
+#   Purpose....: Init
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSample::Init()
+{
+    FMinSample = 0;
+    FMaxSample = 0;
+    FMeanSample = 0;
     FSampleCount = 0;
     FSampleTimeList = 0;
     FSampleAmpList = 0;
@@ -67,6 +112,42 @@ TSample::TSample()
 TSample::~TSample()
 {
     Clear();
+	if (FUnit)
+		delete FUnit;
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::GetIndex
+#
+#   Purpose....: Get index
+#
+#   In params..: time       sample time
+#                value      sample value
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSample::GetIndex()
+{
+	return FIndex;
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::GetUnit
+#
+#   Purpose....: Get unit
+#
+#   In params..: time       sample time
+#                value      sample value
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *TSample::GetUnit()
+{
+	return FUnit;
 }
 
 /*##########################################################################
@@ -139,18 +220,50 @@ void TSample::Add(TDateTime *time, long double value)
 
 /*##########################################################################
 #
-#   Name       : TSample::Define
+#   Name       : TSample::DefineMin
 #
-#   Purpose....: Define a clear sample
+#   Purpose....: Define a clear min sample
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TSample::Define(TSample *Sample)
+void TSample::DefineMin(TSample *Sample)
 {
-    FSample = Sample;
+    FMinSample = Sample;
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::DefineMax
+#
+#   Purpose....: Define a clear max sample
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSample::DefineMax(TSample *Sample)
+{
+    FMaxSample = Sample;
+}
+
+/*##########################################################################
+#
+#   Name       : TSample::DefineMean
+#
+#   Purpose....: Define a clear mean sample
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSample::DefineMean(TSample *Sample)
+{
+    FMeanSample = Sample;
 }
 
 /*##########################################################################
@@ -176,10 +289,22 @@ void TSample::Clear()
 		if (BeforeClear)
 			(*BeforeClear)(this);
 
-		if (FSample)
+		if (FMinSample)
+		{
+			val = GetMin(&time);
+			FMinSample->Add(&time, val);
+		}
+
+		if (FMaxSample)
+		{
+			val = GetMax(&time);
+			FMaxSample->Add(&time, val);
+		}
+
+		if (FMeanSample)
 		{
 			val = GetMean(&time);
-			FSample->Add(&time, val);
+			FMeanSample->Add(&time, val);
 		}
 
 		FSection.Enter();

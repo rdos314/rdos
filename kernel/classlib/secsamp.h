@@ -34,7 +34,7 @@
 class TSecSample : public TSample
 {
 public:
-	TSecSample();
+	TSecSample(int index, const char *unit);
 	virtual ~TSecSample();
 
 	virtual void Add(TDateTime *time, long double value);

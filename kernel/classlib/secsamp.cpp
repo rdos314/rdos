@@ -41,7 +41,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSecSample::TSecSample()
+TSecSample::TSecSample(int index, const char *unit)
+ : TSample(index, unit)
 {
     FPrevSec = -1;
     FPrevMin = -1;

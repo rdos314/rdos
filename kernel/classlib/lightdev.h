@@ -20,31 +20,28 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# sample.h
-# Sampling base class
+# lightdev.h
+# Light measurement class
 #
 ########################################################################*/
 
-#ifndef _MINSAMP_H
-#define _MINSAMP_H
+#ifndef _LIGHTDEV_H
+#define _LIGHTDEV_H
 
-#include "sample.h"
-#include "datetime.h"
+#include "adcdev.h"
 
-class TMinSample : public TSample
+class TLightDevice : public TAdcDevice
 {
 public:
-	TMinSample(int index, const char *unit);
-	virtual ~TMinSample();
+	TLightDevice(TWait *Wait, int channel);
+	TLightDevice(const char *IniSection, TWait *Wait, int channel);
+	~TLightDevice();
 
-	virtual void Add(TDateTime *time, long double value);
+	virtual void DeviceName(char *Name, int MaxLen) const;
+	virtual const char *GetUnit();
 
 protected:
-    int FPrevYear;
-    int FPrevMonth;
-    int FPrevDay;
-    int FPrevHour;
-    int FPrevMin;
+	virtual long double MvToReal(long double mv);
 
 private:
 };

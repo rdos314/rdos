@@ -20,32 +20,30 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# minsamp.cpp
-# Minute basis sampling class
+# daysamp.cpp
+# Day basis sampling class
 #
 ########################################################################*/
 
-#include "minsamp.h"
+#include "daysamp.h"
 
 #define FALSE   0
 #define TRUE    !FALSE
 
 /*##########################################################################
 #
-#   Name       : TMinSample::TMinSample
+#   Name       : TDaySample::TDaySample
 #
-#   Purpose....: Constructor for minute sampling
+#   Purpose....: Constructor for day sampling
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMinSample::TMinSample(int index, const char *unit)
+TDaySample::TDaySample(int index, const char *unit)
  : TSample(index, unit)
 {
-    FPrevMin = -1;
-    FPrevHour = -1;
     FPrevDay = -1;
     FPrevMonth = -1;
     FPrevYear = -1;
@@ -53,22 +51,22 @@ TMinSample::TMinSample(int index, const char *unit)
 
 /*##########################################################################
 #
-#   Name       : TMinSample::~TMinSample
+#   Name       : TDaySample::~TDaySample
 #
-#   Purpose....: Destructor for minute sampling
+#   Purpose....: Destructor for day sampling
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TMinSample::~TMinSample()
+TDaySample::~TDaySample()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TMinSample::Add
+#   Name       : TDaySample::Add
 #
 #   Purpose....: Add a new sample
 #
@@ -78,7 +76,7 @@ TMinSample::~TMinSample()
 #   Returns....: *
 #
 ##########################################################################*/
-void TMinSample::Add(TDateTime *time, long double value)
+void TDaySample::Add(TDateTime *time, long double value)
 {
     int ok;
 
@@ -90,20 +88,12 @@ void TMinSample::Add(TDateTime *time, long double value)
     if (ok)
         ok = time->GetDay() == FPrevDay;
 
-    if (ok)
-        ok = time->GetHour() == FPrevHour;
-
-    if (ok)
-        ok = time->GetMin() == FPrevMin;
-
     if (!ok)
     {
 		Clear();
         FPrevYear = time->GetYear();
         FPrevMonth = time->GetMonth();
         FPrevDay = time->GetDay();
-        FPrevHour = time->GetHour();
-        FPrevMin = time->GetMin();
     }
     
     TSample::Add(time, value);

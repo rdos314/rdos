@@ -134,6 +134,22 @@ void TAdcDevice::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : TAdcDevice::GetUnit
+#
+#   Purpose....: Get unit
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Measurement unit
+#
+##########################################################################*/
+const char *TAdcDevice::GetUnit()
+{
+	return "mV";
+}
+
+/*##########################################################################
+#
 #   Name       : TAdcDevice::GetChannel
 #
 #   Purpose....: Get ADC channel
@@ -235,7 +251,7 @@ void TAdcDevice::DefineStart(TDateTime &StartTime)
 ##########################################################################*/
 long double TAdcDevice::MvToReal(long double value)
 {
-	return random(100) * value;
+	return value;
 }
 
 /*##########################################################################
