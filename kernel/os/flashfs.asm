@@ -46,6 +46,7 @@ code	SEGMENT byte public use16 'CODE'
 
 	extrn cache_dir:far
 	extrn create_file:far
+	extrn delete_file:far
 
 	extrn CacheBlock:near
 	extrn GetFreeBlockSectors:near
@@ -292,27 +293,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DELETE_FILE
-;
-;		DESCRIPTION:	Delete file
-;
-;		PARAMETERS:		BX			DIR SELECTOR
-;						EDX			FILE ENTRY TO DELETE
-;						NC			SUCCESS
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_file	PROC far
-    int 3
-    stc
-	ret
-delete_file	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			RENAME_FILE
 ;
 ;		DESCRIPTION:	rename file within filesystem
@@ -365,8 +345,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_file_size	PROC far
-    int 3
-    stc
+;	int 3
+	stc
 	ret
 set_file_size	ENDP
 	

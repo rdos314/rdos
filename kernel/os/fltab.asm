@@ -140,10 +140,30 @@ CacheSectorArr	Proc near
 csaLoop:
 	mov al,es:[ebx+esi].le_type
 	or al,al
+	jnz csaNotDeleted
+;
+	mov al,es:[ebx+esi].le_physical_sector
+	or al,al
 	jz csaNext
 ;
+	test al,80h
+	jnz csaNext
+;
+	dec al
+	movzx di,al
+	mov al,fs:[di].bc_phys_sector_arr
+	cmp al,-1
+	jne csaNext
+;
+	mov fs:[di].bc_phys_sector_arr,0
+	jmp csaNext
+
+csaNotDeleted:
 	cmp al,-1
 	je csaDone
+;
+	cmp al,LOG_ENTRY_OBJECT
+	je csaCache
 ;
 	cmp al,LOG_ENTRY_DIR_DATA
 	je csaCache
@@ -636,6 +656,68 @@ asDone:
 	pop eax
 	ret
 AllocateSector	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			FreeSector
+;
+;		DESCRIPTION:	Free a sector
+;
+;       PARAMETERS:     EBX			Logical sector #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public FreeSector
+
+FreeSector	PROC near
+	push fs
+	pushad
+;
+	push ebx
+	shr ebx,8
+	call GetBlock
+	pop ebx
+	jc fsDone
+;
+	movzx di,bl
+	add di,di
+	mov fs:[di].bc_log_sector_arr.bs_type,0
+	movzx di,fs:[di].bc_log_sector_arr.bs_physical_sector
+	mov fs:[di].bc_phys_sector_arr,0
+;
+	mov edi,fs:bc_ptr
+	xor esi,esi
+
+fsLoop:
+	mov al,es:[esi+edi].le_type
+	or al,al
+	jz fsNext
+;
+	cmp al,-1
+	je fsUpdate
+;
+	cmp bl,es:[esi+edi].le_logical_entry
+	jne fsNext
+;
+	mov es:[esi+edi].le_type,0
+
+fsNext:
+	add esi,3
+	cmp esi,fc_logical_block
+	jb fsLoop
+
+fsUpdate:
+	mov ebx,fs:bc_handle
+	call WriteSector
+
+fsDone:	
+	popad
+	pop fs
+	ret
+FreeSector	Endp
 
 PAGE
 

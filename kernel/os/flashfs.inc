@@ -28,17 +28,15 @@
 fde_struc	STRUC
 
 fde_base			dir_dir_entry_data_struc <>
-
-fde_sector          DD ?
-fde_name	    	DB ?
+fde_entry_sector	DD ?
+fde_name			DB ?
 
 fde_struc	ENDS
 
 ffe_struc	STRUC
 
 ffe_base			dir_file_entry_data_struc <>
-
-ffe_sector          DD ?
+ffe_entry_sector    DD ?
 ffe_name			DB ?
 
 ffe_struc	ENDS

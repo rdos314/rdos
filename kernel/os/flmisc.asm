@@ -66,6 +66,32 @@ WriteSector	Proc near
 	ret
 WriteSector	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WriteSectorAlloc
+;
+;		DESCRIPTION:	Write a sector & allocation table
+;
+;		PARAMETERS:		EBX     Sector handle
+;						FS		Allocate selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+    public WriteSectorAlloc
+    
+WriteSectorAlloc	Proc near
+	push ebx
+;
+    ModifySector
+    mov ebx,fs:bc_handle
+    ModifySector
+;
+	pop ebx
+	ret
+WriteSectorAlloc	Endp
 
 code	ENDS
 
