@@ -3083,8 +3083,6 @@ validate_ldt_thread_done:
 	pop ds
 	jmp validate_thread_done
 validate_thread_gdt:
-	cmp dx,gdt_size
-	jnc validate_thread_fail
 	push ds
 	push bx
 	mov bx,gdt_sel

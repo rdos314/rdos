@@ -83,7 +83,6 @@ hook_out_sel		EQU 118h
 ;
 osgate_sel			EQU 120h
 usergate_sel		EQU 128h
-virtgate_sel		EQU 130h
 virt_thread_sel		EQU 138h
 ;
 term_code_sel		EQU 14Bh
@@ -134,12 +133,6 @@ __C000				EQU 28Bh
 handle_sel			EQU 290h
 handle_mem_sel		EQU 298h
 handle_data_sel		EQU 2A0h
-
-;
-user_begin_sel		EQU 1800h
-mem_begin_sel		EQU 3800h
-
-gdt_size			EQU 8000h
 
 idt_size			EQU 800h
 ldt_size			EQU 200h

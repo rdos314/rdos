@@ -67,7 +67,7 @@ create_gdt	PROC near
 ;
 	mov bx,gdt_sel
 	mov ds,bx
-	mov eax,gdt_size
+	mov eax,10000h
 	mov bx,temp_sel
 	push cs
 	call allocate_fixed_system_mem
@@ -76,37 +76,36 @@ create_gdt	PROC near
 	mov cx,1000h
 	rep movsb
 	xor al,al
-	mov cx,gdt_size-1000h
+	mov cx,2000h
 	rep stosb
 	mov ds,bx
-	mov word ptr [bx],gdt_size-1
+	mov word ptr [bx],2FFFh ; initial size = 3000, fixed = 2000
 	mov si,bx
 	mov di,gdt_sel
 	movsd
 	movsd
-	mov al,[bx+7]
-	xchg al,[bx+5]
+;
+	mov eax,[bx+2]
+	mov cl,[bx+7]
+	mov [bx+4],eax
+	mov [bx+7],cl
+	mov ax,[bx]
+	mov [bx+2],ax
 	db 66h
-	lgdt [bx]
-	mov [bx+5],al
+	lgdt [bx+2]
 ;
 	mov ax,gdt_sel
 	mov ds,ax
-	mov cx,gdt_size
-	xor si,si
+	mov cx,1000h SHR 3
+	mov si,2000h
 	xor bx,bx
+
 init_free_dt_loop:
-	add si,8
-	sub cx,8
-	jz init_free_dt_end
-	mov al,[si+5]
-	test al,80h
-	test byte ptr [si+5],80h
-	jnz init_free_dt_loop
 	mov [si],bx
 	mov bx,si
-	jmp init_free_dt_loop
-init_free_dt_end:
+	add si,8
+	loop init_free_dt_loop
+;
 	mov si,bx
 	xor bx,bx
 	mov [bx],si
@@ -218,6 +217,52 @@ allocate_gdt	PROC far
 	xor di,di
 	cli
 	mov si,[di]
+	or si,si
+	jnz alloc_gdt_room
+;
+	int 3
+	push cx
+	mov si,gdt_sel
+	mov cx,[si]
+	inc cx
+	or cx,cx
+	jnz alloc_gdt_not_full
+;
+	int 3
+
+alloc_gdt_not_full:
+	add word ptr [si],1000h
+;
+	xor bx,bx
+	mov eax,[si+2]
+	mov cl,[si+7]
+	mov [bx+4],eax
+	mov [bx+7],cl
+	mov ax,[si]
+	mov [bx+2],ax
+	db 66h
+	lgdt [bx+2]
+	mov bx,gdt_sel
+	mov ds,bx
+;
+	mov si,[bx]
+	inc si
+	add si,1000h
+	mov cx,1000h SHR 3
+	xor bx,bx
+
+extend_gdt_loop:
+	mov [si],bx
+	mov bx,si
+	add si,8
+	loop extend_gdt_loop
+;
+	mov si,bx
+	xor bx,bx
+	mov [bx],si
+	pop cx
+
+alloc_gdt_room:
 	mov bx,si
 	mov si,[si]
 	mov [di],si

@@ -1415,6 +1415,11 @@ page
 set_vbe_mode_name	DB 'Set VBE Mode',0
 
 set_vbe_mode	PROC far
+	int 3
+set_alloc_loop:
+	AllocateGdt
+	jmp set_alloc_loop
+;
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_init_proc
