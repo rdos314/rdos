@@ -527,6 +527,27 @@ fat_fs      DB 'FAT12', 0
 
 flash_thread:
     int 3
+    mov cx,7168h
+    mov dx,1409h
+    xor ax,ax
+    FindPciDevice
+;
+    xor ch,ch
+    mov cl,10h        
+    ReadPciDword
+;
+    mov ch,1
+    mov cl,10h
+    ReadPciDword
+;
+    xor ch,ch
+    mov cl,3Ch
+    ReadPciByte
+;
+    xor ch,ch
+    mov cl,3Dh
+    ReadPciByte
+;
     mov ax,cs
     mov ds,ax
     mov es,ax

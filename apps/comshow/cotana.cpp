@@ -1341,6 +1341,58 @@ void TCotexProtocolAnalyser::WriteVarName(TCotexVar *var)
 			Write("UseAlternativeIP");
 			break;
 
+		case COFLEX_VAR_Timeout:
+			Write("Timeout");
+			break;
+
+		case COFLEX_VAR_WarnMeterReadingLimit:
+			Write("WarnMeterReadingLimit");
+			break;
+
+		case COFLEX_VAR_CardInternalValidate:
+			Write("CardInternalValidate");
+			break;
+
+		case COFLEX_VAR_DeviceName:
+			Write("DeviceName");
+			break;
+
+		case COFLEX_VAR_PaperJam:
+			Write("PaperJam");
+			break;
+
+		case COFLEX_VAR_PaperOut:
+			Write("PaperOut");
+			break;
+
+		case COFLEX_VAR_PaperLow:
+			Write("PaperLow");
+			break;
+
+		case COFLEX_VAR_NoteJam:
+			Write("NoteJam");
+			break;
+
+		case COFLEX_VAR_CustomerBlackListCount:
+			Write("CustomerBlackListCount");
+			break;
+
+		case COFLEX_VAR_StripListCount:
+			Write("StripListCount");
+			break;
+
+		case COFLEX_VAR_MeterReadingDigits:
+			Write("MeterReadingDigits");
+			break;
+
+		case COFLEX_VAR_ModemVersion:
+			Write("ModemVersion");
+			break;
+
+		case COFLEX_VAR_TimeToUseAlternativeIP:
+			Write("TimeToUseAlternativeIP");
+			break;
+
 		default:
 			sprintf(str, "<Unknown Variable (%d)>", var->GetID());
 			Write(str);

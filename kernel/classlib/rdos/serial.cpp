@@ -847,7 +847,7 @@ int TSerialDevice::GetStopBits() const
 ##########################################################################*/
 int TSerialDevice::GetSendBufferSpace()
 {
-    return 0;
+    return 1000;
 }
 
 /*##########################################################################
@@ -863,7 +863,7 @@ int TSerialDevice::GetSendBufferSpace()
 ##########################################################################*/
 int TSerialDevice::GetReceiveBufferSpace()
 {
-    return 0;
+    return 1000;
 }
 
 /*##########################################################################
