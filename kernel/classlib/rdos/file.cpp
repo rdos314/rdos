@@ -351,3 +351,22 @@ int TFile::Write(const void *Buf, int Size)
 	else
 		return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TFile::Write
+#
+#   Purpose....: Write data to file
+#
+#   In params..: buf
+#   Out params.: *
+#   Returns....: Bytes written
+#
+##########################################################################*/
+int TFile::Write(const char *str)
+{
+	if (FHandle)
+		return RdosWriteFile(FHandle, str, strlen(str));
+	else
+		return 0;
+}

@@ -214,8 +214,7 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
 				factory = factory->FList;
 			}
 
-			if (!factory)
-				delete com;
+			delete com;
 		}
 	}
 

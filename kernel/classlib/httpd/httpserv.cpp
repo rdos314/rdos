@@ -501,6 +501,76 @@ char *THttpSocketServer::ReadLine()
 	return result;
 }
 
+/*##################  THttpSocketServer::Parse  ##########################
+*   Purpose....: Parse a command line and return a command class	    	#
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-09-02 le                                                #
+*##########################################################################*/
+THttpCommand *THttpSocketServer::Parse(const char *line)
+{
+	const char *rest;
+	int size;
+	int i;
+	char *com;
+	char *ptr;
+	int done;
+	TString Line;
+	THttpCommand *cmd;
+	TString Method;
+
+	Line = TString(LTrim(line));
+
+	rest = Line.GetData();
+
+	Method = TString("");
+
+	if (*rest)
+	{
+		size = 0;
+		while (*rest && IsFileNameChar(*rest) && !strchr("\"", *rest))
+		{
+			size++;
+			rest++;
+		}
+
+		if (*rest && strchr("\"", *rest))
+			size = 0;
+
+		if (size)
+		{
+			com = new char[size + 1];
+
+			rest = Line.GetData();
+			ptr = com;
+
+			for (i = 0; i < size; i++)
+			{
+				*ptr = toupper(*rest);
+				ptr++;
+				rest++;
+			}
+			*ptr = 0;
+
+			Method = TString(com);
+			delete com;
+		}
+	}
+
+	if (Method.GetSize())
+	{
+		done = *rest == 0 || *rest == '/' || *rest == '.' || *rest == ':';
+		if (!done)
+			if (IsArgDelim(*rest))
+				rest = LTrim(rest);
+
+    	return new THttpCommand(this, Method, TString(rest));
+	}
+	else
+		return 0;
+}
+
 /*##########################################################################
 #
 #   Name       : THttpSocketServer::HandleSocket
@@ -525,9 +595,12 @@ void THttpSocketServer::HandleSocket()
 		    ptr = ReadLine();
 		    if (ptr)
 		    {
-                cmd = THttpCommandFactory::Parse(this, ptr);
-    			if (cmd)
-	    			cmd->Run();
+				cmd = Parse(ptr);
+				if (cmd)
+				{
+					cmd->Run();
+					delete cmd;
+				}
 	    	}
 	    	else
 	    	{

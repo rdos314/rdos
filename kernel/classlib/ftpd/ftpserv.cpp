@@ -629,7 +629,10 @@ void TFtpSocketServer::HandleSocket()
 			cmd = TFtpCommandFactory::Parse(this, Buf);
 
 			if (cmd)
+			{
 				cmd->Run();
+				delete cmd;
+			}
 			else
 			{
 				msg.Load(502);

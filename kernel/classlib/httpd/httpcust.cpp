@@ -29,7 +29,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "path.h"
 #include "httpcust.h"
 #include "httpcmd.h"
 
@@ -73,6 +72,39 @@ THttpCustomPage::~THttpCustomPage()
 
 /*##########################################################################
 #
+#   Name       : THttpCustomPage::Write
+#
+#   Purpose....: Write header & file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::Write(TFile &File, int ErrorCode, const char *ContentType)
+{
+	char *Buf = new char[256];
+	int count;
+
+	FCmd->WriteStartHeader(ErrorCode);
+	FCmd->WriteOption("Accept-Ranges", "bytes");
+	FCmd->WriteOption("Content-Type", ContentType);
+	FCmd->WriteLongOption("Content-Length", File.GetSize());
+	FCmd->WriteEndHeader();
+
+	File.SetPos(0);
+
+	count = File.Read(Buf, 256);
+	while (count)
+	{
+		FCmd->FServer->Write(Buf, count);
+		count = File.Read(Buf, 256);
+	}
+	delete Buf;
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCustomPage::Execute
 #
 #   Purpose....: Execute page
@@ -84,30 +116,15 @@ THttpCustomPage::~THttpCustomPage()
 ##########################################################################*/
 void THttpCustomPage::Execute()
 {
-    int count;
-    char *Buf = new char[256];
-    TFile File(FFileName.GetData(), 0);
-    
-    File.Write("<html><body><h2>RDOS Webserver</h2>\r\n");
-    File.Write("Default page for (");
-    File.Write(FFileName.GetData());
-    File.Write(")<br>\r\n");
-    File.Write("</body></html>\r\n");
+	TFile File(FFileName.GetData(), 0);
 
-    FCmd->WriteStartHeader(200);
-    FCmd->WriteOption("Accept-Ranges", "bytes");
-    FCmd->WriteOption("Content-Type", "text/html");
-	FCmd->WriteLongOption("Content-Length", File.GetSize());
+	File.Write("<html><body><h2>RDOS Webserver</h2>\r\n");
+	File.Write("Default page for (");
+	File.Write(FFileName.GetData());
+	File.Write(")<br>\r\n");
+	File.Write("</body></html>\r\n");
 
-    File.SetPos(0);
-
-    count = File.Read(Buf, 256);
-    while (count)
-	{
-        FCmd->FServer->Write(Buf, count);
-        count = File.Read(Buf, 256);
-    }
-    delete Buf;
+	Write(File, 200, "text/html");
 }
 
 /*##########################################################################
@@ -143,6 +160,22 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 
 /*##########################################################################
 #
+#   Name       : THttpCustomPageFactory::CreateUniqueFile
+#
+#   Purpose....: Create an unique filename
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString THttpCustomPageFactory::CreateUniqueFile(THttpCommand *Cmd)
+{
+    return Cmd->FServer->CreateUniqueFile();
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCustomPageFactory::Create
 #
 #   Purpose....: Create custom page instance
@@ -154,8 +187,6 @@ THttpCustomPageFactory::~THttpCustomPageFactory()
 ##########################################################################*/
 THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd)
 {
-    TString tempname = Cmd->FServer->CreateUniqueFile();
-	THttpCustomPage *page = new THttpCustomPage(Cmd, tempname.GetData());
-
-    return page;
+	TString tempname = CreateUniqueFile(Cmd);
+	return new THttpCustomPage(Cmd, tempname.GetData());
 }

@@ -33,166 +33,12 @@
 #include "httpserv.h"
 #include "httpcmd.h"
 #include "httpfact.h"
-#include "httpget.h"
 #include "httpcust.h"
 
 #include "path.h"
 
 #define FALSE 0
 #define TRUE !FALSE
-
-THttpCommandFactory *THttpCommandFactory::FCmdList = 0;
-
-/*##########################################################################
-#
-#   Name       : THttpCommandFactory::THttpCommandFactory
-#
-#   Purpose....: Constructor for command factory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpCommandFactory::THttpCommandFactory(const char *name)
-  : FName(name)
-{
-	InsertCommand();
-}
-
-/*##########################################################################
-#
-#   Name       : THttpCommandFactor::~THttpCommandFactor
-#
-#   Purpose....: Destructor for command factory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpCommandFactory::~THttpCommandFactory()
-{
-	RemoveCommand();
-}
-
-/*##################  THttpCommandFactory::InsertCommand  ##########################
-*   Purpose....: Insert device into command list                           #
-*				 Should only be done in constructor							#
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-void THttpCommandFactory::InsertCommand()
-{
-	FList = FCmdList;
-	FCmdList = this;
-}
-
-/*##################  THttpCommandFactory::RemoveCommand  ##########################
-*   Purpose....: Remove device from command list                           #
-*				 Should only done in destructor								#
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-void THttpCommandFactory::RemoveCommand()
-{
-	THttpCommandFactory *ptr;
-	THttpCommandFactory *prev;
-	prev = 0;
-
-	ptr = FCmdList;
-	while ((ptr != 0) && (ptr != this))
-	 {
-		prev = ptr;
-		ptr = ptr->FList;
-	 }
-	if (prev == 0)
-		FCmdList = FCmdList->FList;
-	else
-		prev->FList = ptr->FList;
-}
-
-/*##################  THttpCommandFactory::Parse  ##########################
-*   Purpose....: Parse a command line and return a command class	    	#
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-09-02 le                                                #
-*##########################################################################*/
-THttpCommand *THttpCommandFactory::Parse(THttpSocketServer *Server, const char *line)
-{
-	const char *rest;
-	int size;
-	 int i;
-	char *com;
-	char *ptr;
-	 int done;
-	 TString Line;
-	THttpCommandFactory *factory = 0;
-	THttpCommand *cmd;
-
-	Line = TString(THttpSocketServer::LTrim(line));
-
-	rest = Line.GetData();
-
-	if (*rest)
-	{
-		size = 0;
-		while (*rest && THttpSocketServer::IsFileNameChar(*rest) && !strchr("\"", *rest))
-		{
-			size++;
-			rest++;
-		}
-
-		if (*rest && strchr("\"", *rest))
-			size = 0;
-
-		if (size)
-		{
-			com = new char[size + 1];
-
-			rest = Line.GetData();
-			ptr = com;
-
-			for (i = 0; i < size; i++)
-			{
-				*ptr = toupper(*rest);
-				ptr++;
-				rest++;
-			}
-			*ptr = 0;
-
-			factory = FCmdList;
-			while (factory)
-			{
-				if (!strcmp(factory->FName.GetData(), com))
-					break;
-
-				factory = factory->FList;
-			}
-
-			if (!factory)
-				delete com;
-		}
-	}
-
-	if (factory)
-	{
-		done = *rest == 0 || *rest == '/' || *rest == '.' || *rest == ':';
-		if (!done)
-			if (THttpSocketServer::IsArgDelim(*rest))
-				rest = THttpSocketServer::LTrim(rest);
-
-		return factory->Create(Server, rest);
-
-	}
-	else
-		 return 0;
-}
 
 /*##########################################################################
 #
@@ -226,8 +72,6 @@ void THttpSocketServerFactory::Init()
 {
     KeepAlive = 15;
     FPageList = 0;
-    
-	THttpGetFactory *get = new THttpGetFactory;
 }
 
 /*##########################################################################

@@ -30,28 +30,6 @@
 
 #include "httpcmd.h"
 
-class THttpSocketServer;
-class THttpCustomPageFactory;
-
-class THttpCommandFactory
-{
-public:
-	THttpCommandFactory(const char *name);
-	virtual ~THttpCommandFactory();
-
-	static THttpCommand *Parse(THttpSocketServer *Server, const char *line);
-
-protected:
-	virtual THttpCommand *Create(THttpSocketServer *Server, const char *param) = 0;
-
-	void InsertCommand();
-	void RemoveCommand();
-
-	static THttpCommandFactory *FCmdList;
-	THttpCommandFactory *FList;
-	TString FName;
-};
-
 class THttpSocketServerFactory : public TSocketServerFactory
 {
 public:

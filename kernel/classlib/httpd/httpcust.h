@@ -40,14 +40,16 @@ class THttpCustomPage
 friend class THttpCustomPageFactory;
 
 public:
-    THttpCustomPage(THttpCommand *Cmd, const char *FileName);
-    ~THttpCustomPage();
+	THttpCustomPage(THttpCommand *Cmd, const char *FileName);
+	virtual ~THttpCustomPage();
 
-    virtual void Execute();
+	virtual void Execute();
 
 protected:
-    THttpCommand *FCmd;
-    TString FFileName;
+	void Write(TFile &File, int ErrorCode, const char *ContentType);
+
+	THttpCommand *FCmd;
+	TString FFileName;
 };
 
 class THttpCustomPageFactory
@@ -64,8 +66,11 @@ public:
 	TString FReqName;
 
 protected:
+    TString CreateUniqueFile(THttpCommand *Cmd);
+
 	THttpCustomPageFactory *FList;
 	THttpCommand *FCmd;
 };
 
 #endif
+

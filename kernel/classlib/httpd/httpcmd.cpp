@@ -87,28 +87,12 @@ THttpArg::~THttpArg()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCommand::THttpCommand(THttpSocketServer *Server)
+THttpCommand::THttpCommand(THttpSocketServer *Server, TString Method, TString Param)
+  : FMethod(Method),
+	FCmdLine(Param)
 {
-	 FServer = Server;
-    FArgList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::THttpCommand
-#
-#   Purpose....: Constructor for command
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpCommand::THttpCommand(THttpSocketServer *Server, const char *param)
-  : FCmdLine(param)
-{
-    FServer = Server;
-    FArgList = 0;
+	FServer = Server;
+	FArgList = 0;
 	FOptCount = 0;
 	FOptList = 0;
 }
@@ -185,92 +169,6 @@ char *THttpCommand::SkipOptDelim(char *p)
 	return p;
 }
 
-
-/*##########################################################################
-#
-#   Name       : THttpCommand::Run
-#
-#   Purpose....: Run command
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpCommand::Run()
-{
-	char *param;
-	char *ptr;
-	int size;
-	THttpArg *arg;
-	int ArgCount;
-	char *start;
-	THttpOption *opt;
-
-    ptr = FServer->ReadLine();
-	while (ptr && *ptr != 0)
-	{
-        start = SkipOptDelim(ptr);
-        if (*start == ':')
-        {
-            *start = 0;
-            start++;
-			start = (char *)THttpSocketServer::LTrim(start);
-			THttpSocketServer::RTrim(start);
-
-			ptr = (char *)THttpSocketServer::LTrim(ptr);
-			THttpSocketServer::RTrim(ptr);
-            
-            AddOpt(ptr, start);
-        }
-            
-	    ptr = FServer->ReadLine();
-	}
-
-	size = FCmdLine.GetSize();
-	param = new char[size + 1];
-	memcpy(param, FCmdLine.GetData(), size + 1);
-
-	if (ScanCmdLine(param, 0))
-	{
-    	ArgCount = 0;
-    	arg = FArgList;
-    	while (arg)
-	    {
-    		ArgCount++;
-	    	arg = arg->FList;
-    	}
-
-    	if (ArgCount == 2)
-    	{
-            ptr = (char *)FArgList->FList->FName.GetData();
-
-            FMajor = 0;
-            FMinor = 0;
-            
-            if (!strcmp(ptr, "HTTP/1.0"))
-            {
-			    FMajor = 1;
-                FMinor = 0;
-            }                
-            
-            if (!strcmp(ptr, "HTTP/1.1"))
-            {
-                FMajor = 1;
-                FMinor = 1;
-            }                
-    	
-    	    ptr = (char *)FArgList->FName.GetData();
-    	    while (*ptr == '/')
-    	        ptr++;
-
-            Execute(ptr);
-        }
-    }
-
-	delete param;
-}
-
 /*##########################################################################
 #
 #   Name       : THttpCommand::DecodeTime
@@ -319,7 +217,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
             ptr += 3;
             ok = (sscanf(ptr, "%04d %02d:%02d:%02d", 
                                 &year, &hour, &min, &sec) == 4);
-        }        
+		}
     }    
     else
         ok = FALSE;
@@ -344,7 +242,7 @@ TDateTime THttpCommand::DecodeTime(THttpOption *opt)
 THttpOption *THttpCommand::FindOption(const char *name)
 {
     THttpOption *curr;
-    TString Name(name);
+	TString Name(name);
 
     curr = FOptList;
 
@@ -669,7 +567,7 @@ const char *THttpCommand::GetErrorText(int ErrorCode)
 
         default:
             return "UNKNOWN ERROR";
-    }
+	}
 }
 
 /*##########################################################################
@@ -741,3 +639,211 @@ void THttpCommand::WriteError(int ErrorCode)
     WriteEndHeader();
     FServer->Write(str);
 }
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteFile
+#
+#   Purpose....: Write a file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
+{
+	int count;
+
+    TFile file = path.OpenFile();	
+    TDateTime time(file.GetTime());
+
+    if (time == GetModifiedSince())
+    {
+	    WriteStartHeader(304);
+        WriteEndHeader();
+    }
+    else
+    {
+    	char *Buf = new char[512];
+    	
+		WriteStartHeader(200);
+        WriteTimeOption("Last-Modified", time);
+        WriteOption("Accept-Ranges", "bytes");
+        WriteOption("Content-Type", ContentType);
+        WriteLongOption("Content-Length", file.GetSize());
+        WriteEndHeader();
+
+	    count = file.Read(Buf, 512);
+    	while (count)
+	    {
+            FServer->Write(Buf, count);
+            count = file.Read(Buf, 512);
+        }
+        delete Buf;
+        
+    }
+}
+    
+/*##########################################################################
+#
+#   Name       : THttpCommand::Get
+#
+#   Purpose....: Get command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::Get(const char *Name)
+{
+	THttpCustomPageFactory *cust = FServer->Find(Name);
+
+	if (cust)
+	{
+		THttpCustomPage *page = cust->Create(this);
+		page->Execute();
+		delete page;
+	}
+	else
+	{
+		TPathName path;
+
+		path = TPathName(FServer->RootDir);
+
+		if (*Name)
+			path += TString(Name);
+
+		if (path.IsDir())
+			path += TString("index.htm");
+
+        if (path.IsFile())
+            WriteFile(path, "text/html");
+        else
+            WriteError(404);
+
+		FServer->Push();
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::Post
+#
+#   Purpose....: Post command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::Post(const char *Name)
+{
+    Get(Name);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::Execute
+#
+#   Purpose....: Execute command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::Execute(const char *Name)
+{
+    if (FMethod == "POST")
+        Post(Name);
+    else
+        Get(Name);
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::Run
+#
+#   Purpose....: Run command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::Run()
+{
+	char *param;
+	char *ptr;
+	int size;
+	THttpArg *arg;
+	int ArgCount;
+	char *start;
+	THttpOption *opt;
+
+	ptr = FServer->ReadLine();
+	while (ptr && *ptr != 0)
+	{
+		start = SkipOptDelim(ptr);
+		if (*start == ':')
+		{
+			*start = 0;
+			start++;
+			start = (char *)THttpSocketServer::LTrim(start);
+			THttpSocketServer::RTrim(start);
+
+			ptr = (char *)THttpSocketServer::LTrim(ptr);
+			THttpSocketServer::RTrim(ptr);
+
+			AddOpt(ptr, start);
+		}
+
+		ptr = FServer->ReadLine();
+	}
+
+	size = FCmdLine.GetSize();
+	param = new char[size + 1];
+	memcpy(param, FCmdLine.GetData(), size + 1);
+
+	if (ScanCmdLine(param, 0))
+	{
+		ArgCount = 0;
+		arg = FArgList;
+		while (arg)
+		{
+			ArgCount++;
+			arg = arg->FList;
+		}
+
+		if (ArgCount == 2)
+		{
+			ptr = (char *)FArgList->FList->FName.GetData();
+
+			FMajor = 0;
+			FMinor = 0;
+
+			if (!strcmp(ptr, "HTTP/1.0"))
+			{
+				FMajor = 1;
+				FMinor = 0;
+			}
+
+			if (!strcmp(ptr, "HTTP/1.1"))
+			{
+				FMajor = 1;
+				FMinor = 1;
+			}
+
+			ptr = (char *)FArgList->FName.GetData();
+			while (*ptr == '/')
+				ptr++;
+
+			Execute(ptr);
+		}
+	}
+
+	delete param;
+}
+

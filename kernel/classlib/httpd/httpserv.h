@@ -88,6 +88,9 @@ public:
 	THttpCustomPageFactory *FPageList;
 
 protected:
+    THttpCommand *Parse(const char *line);
+
+	TString FMethod;
     char *FSocketBuf;
     int FBufCount;
     int FBufPos;

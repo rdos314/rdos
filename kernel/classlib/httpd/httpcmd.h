@@ -52,18 +52,21 @@ friend class THttpCustomPage;
 friend class THttpCustomPageFactory;
 
 public:
-    THttpCommand(THttpSocketServer *Server);
-    THttpCommand(THttpSocketServer *Server, const char *param);
+	THttpCommand(THttpSocketServer *Server, TString Method, TString Param);
 	virtual ~THttpCommand();
 
 	void Run();
-	virtual void Execute(const char *Name) = 0;
+
+	virtual void Execute(const char *Name);
 
 	static int ErrorLevel;
 
 protected:
-    void AddArg(const char *name);
-    void AddArg(char *sBeg, char **sEnd);
+    virtual void Get(const char *Name);
+    virtual void Post(const char *Name);
+
+	void AddArg(const char *name);
+	void AddArg(char *sBeg, char **sEnd);
 	void Split(char *s);
 	int Parse(void *arg);
 	int ScanCmdLine(char *line, void *arg);
@@ -72,22 +75,22 @@ protected:
 	THttpOption *FindOption(const char *name);
 	TDateTime GetModifiedSince();
 
-    const char *GetErrorText(int ErrorCode);
+	const char *GetErrorText(int ErrorCode);
 
 	void WriteStartHeader(int ErrorCode);
 	void WriteEndHeader();
-    void WriteOption(const char *option, const char *val);
-    void WriteLongOption(const char *option, long value);
-    void WriteTimeOption(const char *option, TDateTime &time);
+	void WriteOption(const char *option, const char *val);
+	void WriteLongOption(const char *option, long value);
+	void WriteTimeOption(const char *option, TDateTime &time);
 
-    void WriteError(int ErrorCode);
+	void WriteFile(TPathName &path, const char *ContentType);
+	void WriteError(int ErrorCode);
 
-    char *SkipOptDelim(char *p);
+	char *SkipOptDelim(char *p);
 	void AddOpt(char *name, char *param);
 
-	TString FCmdLine;
 	THttpCommand *FList;
-	
+
 	THttpArg *FArgList;
 	int FArgCount;
 
@@ -97,6 +100,8 @@ protected:
 	int FMajor;
 	int FMinor;
 
+	TString FMethod;
+	TString FCmdLine;
 	THttpSocketServer *FServer;
 };
 
