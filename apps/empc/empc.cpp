@@ -25,13 +25,18 @@
 *
 *##########################################################################*/
 
-#include <windows.h>
-#include <conio.h>
+#include <rdos.h>
 #include <stdio.h>
 #include "cpu.h"
 #include "pic.h"
 #include "pit.h"
 #include "keyb.h"
+#include "pci.h"
+#include "zfsb.h"
+#include "zfsmi.h"
+#include "zfide.h"
+#include "zfxbus.h"
+#include "zfusb.h"
 #include "cmos.h"
 
 #define STACK_SIZE	0x4000
@@ -40,6 +45,7 @@ TPic Pic0;
 TPit Pit(&Pic0);
 TKeyb Keyb;
 TCmos Cmos;
+TPci Pci;
 TCpu Cpu;
 void *Eprom;
 void *Dram;
@@ -53,9 +59,9 @@ void *Dram;
 *##########################################################################*/
 void Idle(TCpu *Cpu)
 {
-	if (kbhit())
+	if (RdosPollKeyboard())
 	{
-		getch();
+		RdosReadKeyboard();
 		Cpu->Break();
 	}
 }
@@ -134,10 +140,10 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 {
 	char *Source;
 
-	if (Address >= 0xFFFE0000)
+	if (Address >= 0xFFFC0000 || (Address >= 0xC0000 && Address < 0x100000))
 	{
 		Source = (char *)Eprom;
-		Source += Address & 0x1FFFF;
+		Source += Address & 0x3FFFF;
 		return *Source;
 	}
 	else
@@ -163,7 +169,7 @@ char ReadFromMemory(TCpu *Cpu, unsigned long Address)
 void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
 {
 	char *Source;
-		
+
 	if (Address < 0x400000)
 	{
 		Source = (char *)Dram;
@@ -190,10 +196,14 @@ char ReadFromIo(TCpu *Cpu, unsigned short int Port)
 			return Pit.In(Port & 0xF);
 
 		case 0x60:
+		    return 0xFF;
 			return Keyb.In(Port & 0xF);
 
 		case 0x70:
 			return Cmos.In(Port & 0xF);
+
+		case 0xCF0:
+		    return Pci.In(Port & 0xF);
 
 		default:
 			return 0;
@@ -226,6 +236,10 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 		case 0x70:
 			Cmos.Out(Port & 0xF, Value);
 			break;
+
+		case 0xCF0:
+		    Pci.Out(Port & 0xF, Value);
+		    break;
 	}
 }
 
@@ -238,12 +252,12 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 *##########################################################################*/
 void Reset()
 {
-	HFILE file;
+	int file;
 	int i;
 	long l;
 	long *LongPtr;
-	Eprom = malloc(0x20000);
-	Dram = malloc(0x400000);
+	Eprom = new char[0x40000];
+	Dram = new char[0x400000];
 
 	LongPtr = (long *)Dram;
 	for (l = 0; l < 0x100000; l++)
@@ -252,11 +266,11 @@ void Reset()
 		LongPtr++;
 	}
 
-	file = _lopen("\\rdos\\app\\bootprom.bin", 0);
+	file = RdosOpenFile("prmbm.rom", 0);
 	if (file)
 	{
-		_lread(file, ((char *)Eprom) + 0, 0x20000);
-		_lclose(file);
+		RdosReadFile(file, ((char *)Eprom) + 0, 0x40000);
+		RdosCloseFile(file);
 	}
 
 	Pit.Counter[0]->OnSetOut = PitSetOut0;
@@ -270,8 +284,14 @@ void Reset()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-extern "C" void main(void)
+void main(void)
 {
+	Pci.RegisterFunction(new TZfxSouthBridge, 0, 0x12, 0);
+	Pci.RegisterFunction(new TZfxSmi, 0, 0x12, 1);
+	Pci.RegisterFunction(new TZfxIde, 0, 0x12, 2);
+	Pci.RegisterFunction(new TZfxXbus, 0, 0x12, 3);
+	Pci.RegisterFunction(new TZfxUsb, 0, 0x13, 0);
+
 	Cpu.OnIdle = Idle;
 	Cpu.OnReadFromMemory = ReadFromMemory;
 	Cpu.OnWriteToMemory = WriteToMemory;
@@ -284,18 +304,18 @@ extern "C" void main(void)
 	while (1)
 	{
 		Cpu.Show();
-		switch (getch())
+		switch (RdosReadKeyboard() & 0xFF)
 		{
 			case 'f':
 			case 'F':
 				Cpu.ShowFpu();
-				getch();
+				RdosReadKeyboard();
 				break;
 
 			case 'd':
 			case 'D':
 				Cpu.ShowData();
-				getch();
+				RdosReadKeyboard();
 				break;
 
 			case 'q':
@@ -320,13 +340,13 @@ extern "C" void main(void)
 			case 'u':
 			case 'U':
 				Cpu.ShowInstruction(20);
-				getch();
+				RdosReadKeyboard();
 				break;
 
 			case 'b':
 			case 'B':
 				Cpu.ShowPreviousInstruction();
-				getch();
+				RdosReadKeyboard();
 				break;
 		}
 	}
