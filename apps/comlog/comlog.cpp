@@ -24,8 +24,8 @@ void cdecl main()
 	TSerialDevice Port1(&Wait, 1, 9600);
 	TSerialDevice Port2(&Wait, 2, 1200);
 
-	TFile *CbusFile = new TFile("c:\\volvo\\cbus.dat", 0);
-	TFile *BarFile = new TFile("c:\\volvo\\bar.dat", 0);
+	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
+	TFile *BarFile = new TFile("z:\\bar.dat", 0);
 
 	for (;;)
 	{

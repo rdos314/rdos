@@ -35,6 +35,7 @@
 #include "cbus.h"
 #include "sernet.h"
 #include "cotana.h"
+#include "bar.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -54,13 +55,13 @@ void cdecl main()
 	int HasCbus;
 	int HasBar;
 
-	TFile RawCbusFile("c:\\volvo\\cbus.dat");
-	TFile RawBarFile("c:\\volvo\\bar.dat");
+	TFile RawCbusFile("z:\\cbus.dat");
+	TFile RawBarFile("z:\\bar.dat");
 
 	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
-	TProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
+	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 
 	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
@@ -86,16 +87,16 @@ void cdecl main()
 				if (BarTime < CbusTime)
 					BarAnalyzer.ShowMsg();
 				else
-		            CbusAnalyzer.ShowMsg();
-		    }
-		    else
-		    {
-		        if (HasCbus)
-		            CbusAnalyzer.ShowMsg();
+					CbusAnalyzer.ShowMsg();
+			}
+			else
+			{
+				if (HasCbus)
+					CbusAnalyzer.ShowMsg();
 
-		        if (HasBar)
-		            BarAnalyzer.ShowMsg();
-		    }
+				if (HasBar)
+					BarAnalyzer.ShowMsg();
+			}
 		}
 
 		if ((RdosReadKeyboard() & 0xFF) == 0x1B)
