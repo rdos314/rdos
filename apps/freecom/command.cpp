@@ -21,13 +21,16 @@
 #include "rmdir.h"
 #include "dir.h"
 #include "type.h"
+#include "del.h"
 
 TCdFactory *cd;
 TChdirFactory *chdir;
 TClsFactory *cls;
 TCopyFactory *cpy;
 TDateFactory *date;
+TDelFactory *del;
 TDirFactory *dir;
+TEraseFactory *erase;
 THelpFactory *help;
 TMdFactory *md;
 TMkdirFactory *mkdir;
@@ -62,7 +65,9 @@ void Init()
 	path = new TPathFactory;
 	mkdir = new TMkdirFactory;
 	md = new TMdFactory;
+	erase = new TEraseFactory;
 	dir = new TDirFactory;
+	del = new TDelFactory;
 	date = new TDateFactory;
 	cpy = new TCopyFactory;
 	cls = new TClsFactory;
