@@ -446,7 +446,7 @@ ihResetDone:
 ;
 	mov dx,ds:IoBase
 	add dx,IntrMask
-	mov ax, TxErr OR TxOK OR RxOK
+	mov ax, TxErr OR TxOK OR RxOK OR RxUnderrun
 	out dx,ax 
 	clc
 
@@ -468,6 +468,22 @@ InitHardware	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NetInt	Proc far
+	mov dx,ds;IoBase
+	add dx,IntrStatus
+	in ax,dx
+	mov bx,ax
+	test bx,RxUnderrun
+	jz niNotUnderrun
+;
+	mov dx,ds:IoBase
+	add dx,CSCR
+	in ax,dx
+
+niNotUnderrun:
+	mov dx,ds:IoBase
+	add dx,IntrStatus
+	mov ax,bx
+	out dx,ax
 	ret
 NetInt	Endp
 
