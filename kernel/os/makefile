@@ -98,6 +98,10 @@ key_srcs = KEY.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
 key_objs = $(key_srcs:.ASM=.OBJ)
 key_rdvs = KEYSW.RDV KEYUS.RDV KEYUK.RDV KEYFR.RDV
 
+keym_srcs = KEYMOUSE.ASM KEYSW.ASM KEYUS.ASM KEYUK.ASM KEYFR.ASM
+keym_objs = $(keym_srcs:.ASM=.OBJ)
+keym_rdvs = KEYMSW.RDV KEYMUS.RDV KEYMUK.RDV KEYMFR.RDV
+
 mouse_srcs = MOUSE.ASM 
 mouse_objs = $(mouse_srcs:.ASM=.OBJ)
 mouse_rdvs = MOUSE.RDV
@@ -220,7 +224,7 @@ prot_exes = KERNEL.EXE
 
 srcs =      $(multiplx_srcs) $(ems_srcs) $(xms_srcs) $(dpmi_srcs)   \
 			$(dos_srcs) $(key_srcs) $(kdebug_srcs) $(kdeb40_srcs) $(pci_srcs) \
-			$(net_srcs) $(udp_srcs) $(ip_srcs) $(tcp_srcs) \
+			$(net_srcs) $(udp_srcs) $(ip_srcs) $(tcp_srcs) $(keym_srcs) \
 			$(ipc_srcs) $(ntp_srcs) $(mouse_srcs) $(ipcdebug_srcs) \
 			$(fs_srcs) $(bios_srcs) $(ne_srcs) $(pe_srcs) $(elf_srcs) \
 			$(time_srcs) $(font_srcs) $(video_srcs) $(pcshut_srcs)   \
@@ -246,7 +250,7 @@ fonts =     SYS8.GFT                SYS12.GFT               SYS14.GFT       \
 
 exes =      $(prot_exes) $(pcshut_exes)
 
-rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs)   \
+rdvs =      $(multiplx_rdvs) $(ems_rdvs) $(xms_rdvs) $(dpmi_rdvs) $(keym_rdvs)  \
 			$(dos_rdvs) $(key_rdvs) $(kdebug_rdvs) $(kdeb40_rdvs) $(pci_rdvs)     \
 			$(fs_rdvs) $(bios_rdvs) $(ne_rdvs) $(pe_rdvs) $(elf_rdvs)   \
 		    $(timer_rdvs) $(mouse_rdvs) $(v86bios_rdvs)	$(file_rdvs) \
@@ -401,6 +405,38 @@ KEYFR.RDV : $(key_objs)
 	KEY+KEYFR
 	KEYFR.RDV
 	KEYFR;
+!
+
+KEYMSW.RDV : $(keym_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEYMOUSE+KEYSW
+	KEYMSW.RDV
+	KEYMSW;
+!
+
+KEYMUS.RDV : $(keym_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEYMOUSE+KEYUS
+	KEYMUS.RDV
+	KEYMUS;
+!
+
+KEYMUK.RDV : $(keym_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEYMOUSE+KEYUK
+	KEYMUK.RDV
+	KEYMUK;
+!
+
+KEYMFR.RDV : $(keym_objs)
+    tlink @&&!
+	$(link_opt) +
+	KEYMOUSE+KEYFR
+	KEYMFR.RDV
+	KEYMFR;
 !
 
 MOUSE.RDV : $(mouse_objs)

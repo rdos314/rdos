@@ -61,14 +61,23 @@ ctrl_F10	EQU 9
 ; status
 ;
 status_key_req		EQU 1
+status_mouse_req	EQU 2
 status_key_ack		EQU 4
+status_mouse_ack	EQU 8
 
 key_data_seg	STRUC
 
 mode_thread		DW ?
+mouse_thread	DW ?
 command			DB ?
 status			DB ?
 focus_req       DB ?
+
+mouse_timeout	DB ?
+mouse_counter	DB ?
+mouse_buttons	DB ?
+mouse_dx		DB ?
+mouse_dy		DB ?
 
 key_data_seg	ENDS
 
@@ -1082,6 +1091,328 @@ SendCommand	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SendMouseTimeout
+;
+;		DESCRIPTION:	Send a command timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendMouseTimeout	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,pc_key_data_sel
+	mov ds,ax
+	inc ds:mouse_timeout
+	mov bx,ds:mouse_thread
+	Signal
+;
+	pop bx
+	pop ax
+	pop ds
+	ret
+SendMouseTimeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SendMouseCommand
+;
+;		DESCRIPTION:	Send a command to mouse port
+;
+;		PARAMETERS:		AL		command
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendMouseCommand	proc near
+	ClearSignal
+	pushad
+	mov ds:mouse_timeout,0
+	mov bx,ds:mouse_thread
+	mov ax,cs
+	mov es,ax
+	GetSystemTime
+	add eax,1193*30
+	adc edx,0
+	mov di,OFFSET SendMouseTimeout
+	StartTimer
+	popad
+;
+	mov ds:command,al
+send_mouse_check_ready:
+	in al,64h
+	test al,2
+	jz send_mouse_prefix
+	mov eax,10
+	WaitMilliSec
+	jmp send_mouse_check_ready
+
+send_mouse_prefix:
+	mov al,0D4h
+	out 64h,al
+
+send_mouse_check_prefix:
+	in al,64h
+	test al,2
+	jz send_mouse_command_do
+	mov eax,10
+	WaitMilliSec
+	jmp send_mouse_check_prefix
+
+send_mouse_command_do:
+	cli
+	mov al,ds:status
+	or al,status_mouse_req
+	and al,NOT status_mouse_ack
+	mov ds:status,al
+	sti
+	mov al,ds:command
+	out 60h,al
+
+send_mouse_command_wait:
+	WaitForSignal
+	mov al,ds:mouse_timeout
+	or al,al
+	jnz send_mouse_cmd_fail
+;
+	test ds:status, status_mouse_ack
+	jz send_mouse_command_wait
+;
+	clc
+	jmp send_mouse_cmd_done
+
+send_mouse_cmd_fail:
+	stc
+
+send_mouse_cmd_done:
+	pushf
+	push bx
+	mov bx,ds:mouse_thread
+	StopTimer
+	pop bx
+	popf
+	ret
+SendMouseCommand	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CheckAux
+;
+;		DESCRIPTION:	Check for AUX (mouse) port
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckAux	Proc near
+	mov cx,100
+check_aux_wait1:
+	in al,64h
+	test al,2
+	jz check_aux_prefix
+;
+	mov eax,10
+	WaitMilliSec
+	loop check_aux_wait1
+	jmp check_aux_fail
+
+check_aux_prefix:
+	mov al,0D3h
+	out 64h,al
+
+check_aux_wait2:
+	in al,64h
+	test al,2
+	jz check_aux_command
+;
+	mov eax,10
+	WaitMilliSec
+	jmp check_aux_wait2
+
+check_aux_command:
+	mov al,0F4h
+	out 60h,al
+;
+	mov cx,10
+check_aux_wait3:
+	in al,64h
+	test al,1
+	jz check_aux_delay
+;
+	mov ah,al
+	in al,60h
+	test ah,20h
+	jz check_aux_fail
+;
+	cmp al,0F4h
+	jne check_aux_fail
+;
+	clc
+	jmp check_aux_done
+
+check_aux_delay:
+	mov eax,10
+	WaitMilliSec
+	loop check_aux_wait3
+
+check_aux_fail:
+	stc
+
+check_aux_done:
+	ret
+CheckAux	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			init_mouse
+;
+;		DESCRIPTION:	Init mouse hardware
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_mouse_name	DB 'Init Mouse', 0
+
+init_mouse	Proc far
+	push ds
+	push es
+	push ax
+	push bx
+	push di
+;
+	mov bx,pc_key_data_sel
+	mov ds,bx
+	mov ds:mouse_counter,0
+	GetThread
+	mov ds:mouse_thread,ax
+;
+	stc
+	call CheckAux
+	jc init_mouse_done
+;
+    
+init_check_aux_loop:
+	in al,64h
+	test al,2
+	jz init_check_aux_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_check_aux_loop
+
+init_check_aux_do:
+	mov al,0A9h
+	out 64h,al
+
+init_check_loop1:
+	in al,64h
+	test al,2
+	jz init_check_read
+;
+	mov eax,10
+	WaitMilliSec
+	jmp init_check_loop1
+
+init_check_read:
+    in al,60h
+;
+	mov al,12
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET keyb_int
+	RequestPrivateIrqHandler
+    
+init_enable_aux_loop:
+	in al,64h
+	test al,2
+	jz init_enable_aux_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_enable_aux_loop
+
+init_enable_aux_do:
+	mov al,0A8h
+	out 64h,al
+
+init_enable_loop1:
+	in al,64h
+	test al,2
+	jz init_enable_prefix
+	mov eax,10
+	WaitMilliSec
+	jmp init_enable_loop1
+
+init_enable_prefix:
+	mov al,60h
+	out 64h,al
+
+init_enable_loop2:
+	in al,64h
+	test al,2
+	jz init_enable_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_enable_loop2
+
+init_enable_do:
+	mov al,47h
+	out 60h,al
+;
+	mov al,0F3h
+	call SendMouseCommand
+	jc init_mouse_revoke
+;
+	mov al,100
+	call SendMouseCommand
+	jc init_mouse_revoke
+;
+	mov al,0E8h
+	call SendMouseCommand
+	jc init_mouse_revoke
+;
+	mov al,3
+	call SendMouseCommand
+	jc init_mouse_revoke
+;
+	mov al,0E6h
+	call SendMouseCommand
+	jc init_mouse_revoke
+;
+	mov al,0F4h
+	call SendMouseCommand
+	jc init_mouse_revoke
+	jmp init_mouse_done
+
+init_mouse_revoke:
+	mov al,60h
+	out 64h,al
+
+init_disable_loop2:
+	in al,64h
+	test al,2
+	jz init_disable_do
+	mov eax,10
+	WaitMilliSec
+	jmp init_disable_loop2
+
+init_disable_do:
+	mov al,65h
+	out 60h,al
+;
+	mov al,12
+	ReleasePrivateIrqHandler
+
+init_mouse_done:
+	pop di
+	pop bx
+	pop ax
+	pop es
+	pop ds
+	ret
+init_mouse	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			UpdateMode
 ;
 ;		DESCRIPTION:	Update mode indicators
@@ -1145,7 +1476,7 @@ mode_thread_mode:
 ;
 ;		NAME:			keyb_int
 ;
-;		DESCRIPTION:	Keyboard hardware int
+;		DESCRIPTION:	Keyboard and PS/2 mouse hardware int
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1157,6 +1488,66 @@ keyb_int_loop:
 	test al,1
 	jz keyb_int_done
 ;
+	test al,20h
+	jz keyb_int_keyboard
+
+keyb_int_mouse:
+	in al,60h
+	sti
+;
+	test ds:status,status_mouse_req
+	jz mouse_int_not_resend
+;
+	cmp al,0FAh
+	jnz mouse_int_not_ack
+;
+	cli
+	mov al,ds:status
+	or al,status_mouse_ack
+	and al,NOT status_mouse_req
+	mov ds:status,al
+	mov bx,ds:mouse_thread
+	Signal
+	jmp keyb_int_loop
+
+mouse_int_not_ack:
+	cmp al,0FEh
+	jnz mouse_int_not_resend
+;
+	mov al,ds:command
+	out 60h,al
+	jmp keyb_int_loop
+
+mouse_int_not_resend:
+	movzx bx,ds:mouse_counter
+	mov ds:[bx].mouse_buttons,al
+	inc bl
+	mov ds:mouse_counter,bl
+	cmp bl,3
+	jne keyb_int_loop
+;
+	movzx ax,ds:mouse_buttons
+	movzx cx,ds:mouse_dx
+	movzx dx,ds:mouse_dy
+;
+	test al,10h
+	clc
+	jz mouse_xpos
+	stc
+mouse_xpos:
+	sbb ch,ch
+	test al,20h
+	clc
+	jz mouse_ypos
+	stc
+mouse_ypos:
+	sbb dh,dh
+	and al,3
+	UpdateMouse
+	mov ds:mouse_counter,0
+	jmp keyb_int_loop
+
+keyb_int_keyboard:
 	in al,60h
 	sti
 	or al,al
@@ -1310,10 +1701,17 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
+	mov si,OFFSET init_mouse
+	mov di,OFFSET init_mouse_name
+	xor cl,cl
+	mov ax,init_mouse_nr
+	RegisterOsGate
+;
 	mov ax,pc_key_data_sel
 	mov ds,ax
 	xor ax,ax
 	mov ds:mode_thread,ax
+	mov ds:mouse_thread,ax
 	mov ds:status,0
 	mov ds:focus_req,0
 ;
