@@ -2206,6 +2206,66 @@ RdosRecordToTics	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosDayOfWeek
+;
+;		description:	Get day of week
+;
+;		PARAMETERS:		int year
+;						int month
+;						int day
+;
+;       RETURNS:        day of week (0 = sun)
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosDayOfWeek
+
+rdowYear	EQU 8
+rdowMonth	EQU 12
+rdowDay		EQU 16
+
+RdosDayOfWeek	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+	mov dx,[ebp].rdowYear
+	mov ch,[ebp].rdowMonth
+	mov cl,[ebp].rdowDay
+    xor bx,bx
+    xor ah,ah
+	UserGate adjust_time_nr
+	push dx
+	mov eax,365
+	imul dx
+	push dx
+	push ax
+	pop ebx
+	pop dx
+	UserGate passed_days_nr
+	dec dx
+	shr dx,2
+	inc dx
+	add ax,dx
+	add eax,ebx
+    xor edx,edx
+    add eax,5
+    mov ebx,7
+    div ebx
+    movzx eax,dl
+;
+	pop edx
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosDayOfWeek	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosGetTics
 ;
 ;		description:	gets system time

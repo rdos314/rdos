@@ -151,6 +151,7 @@ void __stdcall RdosWaitMilli(int ms);
 void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
 void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
+int __stdcall RdosDayOfWeek(int year, int month, int day);
 void __stdcall RdosGetSysTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosGetTime(int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosAddTics(unsigned long *msb, unsigned long *lsb, long tics);

@@ -200,6 +200,7 @@ void THttpCommand::Run()
 	THttpArg *arg;
 	int ArgCount;
 	char *start;
+	THttpOption *opt;
 
     ptr = FServer->ReadLine();
 	while (ptr && *ptr != 0)
@@ -237,6 +238,23 @@ void THttpCommand::Run()
 
     	if (ArgCount == 2)
     	{
+            ptr = (char *)FArgList->FList->FName.GetData();
+
+            FMajor = 0;
+            FMinor = 0;
+            
+            if (!strcmp(ptr, "HTTP/1.0"))
+            {
+                FMajor = 1;
+                FMinor = 0;
+            }                
+            
+            if (!strcmp(ptr, "HTTP/1.1"))
+            {
+                FMajor = 1;
+                FMinor = 1;
+            }                
+    	
     	    ptr = (char *)FArgList->FName.GetData();
     	    while (*ptr == '/')
     	        ptr++;
@@ -244,7 +262,38 @@ void THttpCommand::Run()
         }
     }
 
+    opt = FindOption("Accept");
+
 	delete param;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::FindOption
+#
+#   Purpose....: Find an option
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpOption *THttpCommand::FindOption(const char *name)
+{
+    THttpOption *curr;
+    TString Name(name);
+
+    curr = FOptList;
+
+    while (curr)
+    {
+        if (curr->FName == Name)
+            return curr;
+        else
+            curr = curr->FList;
+    }
+
+    return 0;
 }
 
 /*##########################################################################
@@ -402,3 +451,253 @@ int THttpCommand::ScanCmdLine(char *line, void *arg)
 	    return TRUE;
 }
 
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteOption
+#
+#   Purpose....: Write option
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteOption(const char *option, const char *val)
+{
+    FServer->Write(option);
+    FServer->Write(": ");
+    FServer->Write(val);
+    FServer->Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteLongOption
+#
+#   Purpose....: Write number to standard output
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteLongOption(const char *option, long value)
+{
+	char str[40];
+
+    FServer->Write(option);
+    FServer->Write(": ");
+
+    sprintf(str, "%ld", value);
+	FServer->Write(str);
+    FServer->Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteTimeOption
+#
+#   Purpose....: Write a time option
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteTimeOption(const char *option, TDateTime &time)
+{
+	char str[40];
+
+	FServer->Write(option);
+	FServer->Write(": ");
+
+	switch (time.GetDayOfWeek())
+	{
+		case 0:
+			FServer->Write("Sun");
+			break;
+
+		case 1:
+			FServer->Write("Mon");
+			break;
+
+		case 2:
+			FServer->Write("Tue");
+			break;
+
+		case 3:
+			FServer->Write("Wed");
+			break;
+
+		case 4:
+			FServer->Write("Thu");
+			break;
+
+		case 5:
+			FServer->Write("Fri");
+			break;
+
+		case 6:
+			FServer->Write("Sat");
+			break;
+	}
+
+	sprintf(str, ", %d ", time.GetDay());
+	FServer->Write(str);
+
+	switch (time.GetMonth())
+	{
+		case 1:
+			FServer->Write("Jan");
+			break;
+
+		case 2:
+			FServer->Write("Feb");
+			break;
+
+		case 3:
+			FServer->Write("Mar");
+			break;
+
+		case 4:
+			FServer->Write("Apr");
+			break;
+
+		case 5:
+			FServer->Write("May");
+			break;
+
+		case 6:
+			FServer->Write("Jun");
+			break;
+
+		case 7:
+			FServer->Write("Jul");
+			break;
+
+		case 8:
+			FServer->Write("Aug");
+			break;
+
+		case 9:
+			FServer->Write("Sep");
+			break;
+
+		case 10:
+			FServer->Write("Oct");
+			break;
+
+		case 11:
+			FServer->Write("Nov");
+			break;
+
+		case 12:
+			FServer->Write("Dec");
+			break;
+	}
+
+	sprintf(str, " %04d %02d:%02d:%02d GMT",
+				time.GetYear(),
+			    time.GetHour(),
+				time.GetMin(),
+				time.GetSec());
+
+	FServer->Write(str);
+	FServer->Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::GetErrorText
+#
+#   Purpose....: Get error text for error code
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const char *THttpCommand::GetErrorText(int ErrorCode)
+{
+    switch (ErrorCode)
+    {
+        case 200:
+            return "OK";
+
+        case 404:
+            return "NOT FOUND";
+
+        default:
+            return "UNKNOWN ERROR";
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteStartHeader
+#
+#   Purpose....: Write start of header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteStartHeader(int ErrorCode)
+{
+    char str[80];
+    TDateTime CurrTime;
+
+    if (FMajor)
+    {
+        sprintf(str, "HTTP/%d.%d %d ", FMajor, FMinor, ErrorCode);
+        FServer->Write(str);
+        FServer->Write(GetErrorText(ErrorCode));
+        FServer->Write("\r\n");
+
+        WriteTimeOption("Date", CurrTime);
+        WriteOption("Server", "RDOS");
+        
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteEndHeader
+#
+#   Purpose....: Write end of header
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteEndHeader()
+{
+    FServer->Write("\r\n");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCommand::WriteError
+#
+#   Purpose....: Write error msg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCommand::WriteError(int ErrorCode)
+{
+    char str[256];
+
+    sprintf(str, "<html><body><h2>RDOS Webserver</h2>%s (%d)</body></html>",
+            GetErrorText(ErrorCode), ErrorCode);
+    
+    WriteStartHeader(ErrorCode);
+    WriteOption("Content-Type", "text/html");
+    WriteLongOption("Content-Length", strlen(str));
+    WriteEndHeader();
+    FServer->Write(str);
+}

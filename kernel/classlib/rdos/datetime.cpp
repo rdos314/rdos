@@ -275,6 +275,22 @@ int TDateTime::HasExpired() const
 
 /*##########################################################################
 #
+#   Name       : TDateTime::GetDayOfWeek
+#
+#   Purpose....: Get day of week
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: day of week (0 = sunday)
+#
+##########################################################################*/
+int TDateTime::GetDayOfWeek() const
+{
+	return RdosDayOfWeek(FYear, FMonth, FDay);
+}
+
+/*##########################################################################
+#
 #   Name       : TDateTime::GetYear
 #
 #   Purpose....: Get year

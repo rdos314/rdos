@@ -273,6 +273,7 @@ TSocketServer *THttpSocketServerFactory::Create()
 	THttpSocketServer *server;
 	server = new THttpSocketServer();
 	server->OnCommand = OnCommand;
+	server->RootDir = "e:\\wwwroot";
 
 	return server;
 }

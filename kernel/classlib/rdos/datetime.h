@@ -52,6 +52,7 @@ public:
 	void AddHour(long hour);
 	void AddDay(long day);
 
+    int GetDayOfWeek() const;
 	int GetYear() const;
 	int GetMonth() const;
 	int GetDay() const;

@@ -65,6 +65,18 @@ protected:
 	int Parse(void *arg);
 	int ScanCmdLine(char *line, void *arg);
 
+	THttpOption *FindOption(const char *name);
+
+    const char *GetErrorText(int ErrorCode);
+
+	void WriteStartHeader(int ErrorCode);
+	void WriteEndHeader();
+    void WriteOption(const char *option, const char *val);
+    void WriteLongOption(const char *option, long value);
+    void WriteTimeOption(const char *option, TDateTime &time);
+
+    void WriteError(int ErrorCode);
+
     char *SkipOptDelim(char *p);
 	void AddOpt(char *name, char *param);
 
@@ -76,6 +88,9 @@ protected:
 
 	THttpOption *FOptList;
 	int FOptCount;
+
+	int FMajor;
+	int FMinor;
 
 	THttpSocketServer *FServer;
 };
