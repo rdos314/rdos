@@ -21,6 +21,11 @@ extern "C" {
 #define LGOP_SUBTRACT  10
 #define LGOP_MULTIPLY  11
 
+#define getred(pgc)       (((pgc)>>16)&0xFF)
+#define getgreen(pgc)     (((pgc)>>8)&0xFF)
+#define getblue(pgc)      ((pgc)&0xFF)
+#define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
+
 int RdosSetVBEMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void RdosSetDrawColor(int handle, int color);
 void RdosSetLGOP(int handle, int lgop);
@@ -31,7 +36,7 @@ void RdosCloseFont(int font);
 void RdosGetStringMetrics(int font, const char *str, int *width, int *height);
 void RdosSetFont(int handle, int font);
 int RdosGetPixel(int handle, int x, int y);
-void RdosSetPixel(int handle, int x, int y, int color);
+void RdosSetPixel(int handle, int x, int y);
 void RdosBlit(int SrcHandle, int DestHandle, int width, int height,
 				int SrcX, int SrcY, int DestX, int DestY);
 void RdosDrawMask(int handle, void *mask, int RowSize, int width, int height,
@@ -43,6 +48,8 @@ void RdosDrawEllipse(int handle, int x, int y, int width, int height);
 int RdosCreateBitmap(int BitsPerPixel, int width, int height);
 void RdosCloseBitmap(int handle);
 int RdosCreateStringBitmap(int font, const char *str);
+void RdosGetBitmapInfo(int handle, int *BitPerPixel, int *width, int *height,
+					   int *linesize, void **buffer);
 
 void RdosSetForeColor(int color);
 void RdosSetBackColor(int color);
@@ -116,6 +123,8 @@ int RdosSendMailslot(int Handle, const void *Msg, int Size, void *ReplyBuf, int 
 void RdosDefineMailslot(const char *Name, int MaxSize);
 int RdosReceiveMailslot(void *Msg);
 void RdosReplyMailslot(const void *Msg, int Size);
+
+void RdosSetFocus(char FocusKey);
 
 void RdosClearKeyboard();
 int RdosPollKeyboard();

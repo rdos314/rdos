@@ -491,6 +491,7 @@ lbt7	DB 7Fh
 
 open_font	Proc far
 	push ds
+	push es
 	push eax
 	push cx
 	push edx
@@ -691,6 +692,7 @@ open_font_end:
 	pop edx
 	pop cx
 	pop eax
+	pop es
 	pop ds
 	retf32
 open_font	Endp

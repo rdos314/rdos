@@ -713,9 +713,14 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 FilledLine	Proc near
+	or cx,cx
+	jz filled_line_done
+;
 	mov bx,ds:v_lgop
 	add bx,bx
 	call word ptr cs:[bx].SlabTab
+
+filled_line_done:
 	ret
 FilledLine	Endp
 
@@ -1149,6 +1154,13 @@ draw_line	Proc far
 	je line_horiz
 
 line_bresen:
+	cmp di,dx
+	jae line_bresen_magn_ok
+;
+	xchg cx,si
+	xchg dx,di
+
+line_bresen_magn_ok:
 	push si
 	push di
 	push dx
@@ -1253,6 +1265,14 @@ line_bresen_dx_fract_neg:
 	add ax,cx
 
 line_bresen_dx_plot:
+	cmp edi,ds:v_app_base
+	jb line_done
+;
+	sub esi,ebp
+	cmp esi,edi
+	jae line_done
+;
+	add esi,ebp
 	push ax
 	push bx
 	mov bx,ds:v_lgop
@@ -1289,6 +1309,14 @@ line_bresen_dy_fract_neg:
 	add ax,dx
 
 line_bresen_dy_plot:
+	cmp edi,ds:v_app_base
+	jb line_done
+;
+	sub esi,ebp
+	cmp esi,edi
+	jae line_done
+;
+	add esi,ebp
 	push ax
 	push bx
 	mov bx,ds:v_lgop
@@ -1539,6 +1567,12 @@ draw_ellipse	Proc far
 	mov bp,sp
 	sub sp,84
 ;
+	cmp si,2
+	jbe ellipse_end
+;
+	cmp di,2
+	jbe ellipse_end
+;
 	dec si
 	shr si,1
 	mov [bp].de_w,si
@@ -1776,7 +1810,8 @@ ellipse_done:
 	movzx bx,ds:v_style
 	add bx,bx
 	call word ptr cs:[bx].ellipse_last_style_tab
-;
+
+ellipse_end:
 	add sp,84
 	popad
 	pop es
