@@ -1014,7 +1014,7 @@ allocate_cluster32	PROC near
 	xor edi,edi
 ;
 	call lock_fat
-	jnc allocate_cluster32_failed
+	jc allocate_cluster32_failed
 	mov edi,2
 	add si,8
 	jmp allocate_cluster32_loop
