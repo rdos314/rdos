@@ -1536,9 +1536,10 @@ Unable to create partition. Invalid size of filesystem name
 :TEXT_CMDHELP_INITHD
 Init harddrive partition table and write RDOS bootloader
 
-INITHD /R disc
+INITHD [/R] [/I] disc [filesystem] [size]
   disc            Disc number
   /R              Make RDOS normal boot as default
+  /I              Init partition table and write active partition
 .
 
 :TEXT_INITHD_AVAIL_ERROR
@@ -1576,7 +1577,7 @@ Ping timeout
 :TEXT_CMDHELP_INITFD
 Init floppy and write RDOS bootloader
 
-INITFD 
+INITFD disc
 .
 
 :TEXT_CMDHELP_STATE

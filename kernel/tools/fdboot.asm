@@ -278,8 +278,13 @@ tiDone:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadSector	Proc near
+    push cx
+    mov cx,3    
+
+rsLoop:    
     push es
 	push ax
+	push bx
 	push cx
 	push edx
 ;	
@@ -309,8 +314,24 @@ ReadSector	Proc near
 ;	
 	pop edx
 	pop cx
+	pop bx
 	pop ax
 	pop es
+	jnc rsDone
+;
+	push ax
+	push dx
+	xor ax,ax
+	mov dl,cs:DriveNr
+	int 13h
+	pop dx
+	pop ax
+    loop rsLoop
+;
+    stc
+    
+rsDone:
+    pop cx
 	ret
 ReadSector	Endp
 
