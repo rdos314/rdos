@@ -620,6 +620,141 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			HideLineBuffer
+;
+;		DESCRIPTION:	Hide in line buffer
+;
+;		PARAMETERS:		Y       y in current sprite
+;                       DS:BX   Hiding sprite info
+;                       FS      Current sprite
+;                       GS      Dest sel
+;                       DX      Y relative
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+HideLineBuffer  MACRO y
+    local not_upper
+    local empty
+    local upper_loop
+    local lower_loop
+    local done
+
+    add dx,fs:&y
+    mov si,dx
+    shl si,2
+    add si,gs:v_sprite_lines
+    mov ax,fs:sp_index
+    cmp ax,gs:[si].spl_upper_ind
+    jne not_upper
+;
+    cmp ax,gs:[si].spl_lower_ind
+    je empty
+;
+    push bx
+
+upper_loop:
+    sub bx,16
+    test ds:[bx].spi_flags,SP_FLAG_VISIBLE
+	jz upper_loop
+;
+    cmp dx,ds:[bx].spi_y_min
+    jb upper_loop
+;
+    cmp dx,ds:[bx].spi_y_max
+    ja upper_loop
+;
+    shr bx,4
+    mov gs:[si].spl_upper_ind,bx
+    pop bx
+    jmp done
+
+empty:
+    mov gs:[si].spl_lower_ind,-1
+    mov gs:[si].spl_upper_ind,-1
+    jmp done
+
+not_upper:
+    cmp ax,ds:[si].spl_lower_ind
+    jne done
+;
+    push bx
+
+lower_loop:
+    add bx,16
+    test ds:[bx].spi_flags,SP_FLAG_VISIBLE
+	jz lower_loop
+;
+    cmp dx,ds:[bx].spi_y_min
+    jb lower_loop
+;
+    cmp dx,ds:[bx].spi_y_max
+    ja lower_loop
+;
+    shr bx,4
+    mov gs:[si].spl_lower_ind,bx
+    pop bx
+
+done:
+        ENDM
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ShowLineBuffer
+;
+;		DESCRIPTION:	Show in line buffer
+;
+;		PARAMETERS:		Y       y in current sprite
+;                       DS:BX   Hiding sprite info
+;                       FS      Current sprite
+;                       GS      Dest sel
+;                       DX      Y relative position
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+ShowLineBuffer  MACRO y
+    local empty
+    local not_upper
+    local done
+
+    add dx,fs:&y
+    mov si,dx
+    shl si,2
+    add si,gs:v_sprite_lines
+    mov ax,fs:sp_index
+    mov dx,gs:[si].spl_upper_ind
+    cmp dx,-1
+    je empty
+;
+    cmp ax,dx
+    jb not_upper
+;
+    mov gs:[si].spl_upper_ind,ax
+    jmp done
+
+not_upper:
+    cmp ax,gs:[si].spl_lower_ind
+    ja done
+;
+    mov gs:[si].spl_lower_ind,ax
+    jmp done
+
+empty:
+    mov gs:[si].spl_lower_ind,ax
+    mov gs:[si].spl_upper_ind,ax
+
+done:
+        ENDM
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			hide
 ;
 ;		DESCRIPTION:	Hide sprite
@@ -656,6 +791,10 @@ hide_sprite_ovl_next:
 	jmp hide_sprite_ovl_loop
 
 hide_sprite_curr:
+    mov gs,fs:sp_dest_sel
+    mov dx,bp
+;    HideLineBuffer sp_y
+;
     push ds
     push bx
     mov dx,bp
@@ -736,6 +875,10 @@ show_sprite_ovl_hide_next:
 	jnc show_sprite_ovl_hide_loop
 
 show_sprite_curr:
+    mov gs,fs:sp_dest_sel
+    mov dx,bp
+;    ShowLineBuffer sp_y
+;
     push ds
     push bx
     mov dx,bp
@@ -872,110 +1015,7 @@ PAGE
 
 move_sprite_name	DB 'Move Sprite', 0
 
-MoveSpriteOvlLine	Proc near
-    push cx
-    mov bx,cx
-    sub bx,16
-
-move_sprite_ovl_hide_loop:
-	mov dx,fs
-	cmp dx,ds:[bx].spi_sel
-	je move_sprite_ovl_hide_curr
-;
-	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
-	jz move_sprite_ovl_hide_new
-;
-    mov dx,bp
-    HideLine sp_x, sp_y
-
-move_sprite_ovl_hide_new:
-	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
-	jz move_sprite_ovl_hide_next
-;
-    mov dx,bp
-    HideLine sp_new_x, sp_new_y
-
-move_sprite_ovl_hide_next:
-    sub bx,16
-	jmp move_sprite_ovl_hide_loop
-
-move_sprite_ovl_hide_curr:
-    push ds
-    push bx
-    mov dx,bp
-    HideWholeLine
-    mov dx,bp
-    SaveAndShowWholeLine
-    pop bx
-    pop ds
-    add bx,16
-    pop cx
-
-move_sprite_ovl_show_loop:
-    cmp bx,cx
-	je move_sprite_ovl_line_done
-;
-	push cx
-	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
-	jz move_sprite_ovl_save_new
-;
-    mov dx,bp
-    SaveLine sp_x, sp_y
-
-move_sprite_ovl_save_new:
-	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
-	jz move_sprite_ovl_save_done
-;
-    mov dx,bp
-    SaveLine sp_new_x, sp_new_y
-
-move_sprite_ovl_save_done:
-	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
-	jz move_sprite_ovl_show_new
-;
-    mov dx,bp
-    ShowLine sp_x, sp_y
-
-move_sprite_ovl_show_new:
-	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
-	jz move_sprite_ovl_show_next
-;
-    mov dx,bp
-    ShowLine sp_new_x, sp_new_y
-
-move_sprite_ovl_show_next:
-	add bx,16
-	pop cx
-	jmp move_sprite_ovl_show_loop
-
-move_sprite_ovl_line_done:
-	ret
-MoveSpriteOvlLine	Endp
-
-move_sprite	Proc far
-	push ds
-	push es
-	push fs
-	pushad
-;
-	mov ax,SPRITE_HANDLE
-	DerefHandle
-	jc move_sprite_done
-;
-    mov fs,ds:[bx].sp_sel
-    mov fs:sp_new_x,cx
-    mov fs:sp_new_y,dx
-;
-    test fs:sp_flags,SP_FLAG_VISIBLE
-    jz move_sprite_hidden
-;
-    cmp cx,fs:sp_x
-    jne move_sprite_move
-;
-    cmp dx,fs:sp_y
-    je move_sprite_hidden
-
-move_sprite_move:
+SetupMove   Proc near
     and fs:sp_flags,NOT (SP_FLAG_OVL_OLD OR SP_FLAG_OVL_NEW)
 ;
     mov ds,fs:sp_dest_sel
@@ -1066,6 +1106,122 @@ move_sprite_check_next:
     cmp bx,cx
     jne move_sprite_check_loop
 ;
+    ret
+SetupMove   Endp
+
+MoveSpriteOvlLine	Proc near
+    push cx
+    mov bx,cx
+    sub bx,16
+
+move_sprite_ovl_hide_loop:
+	mov dx,fs
+	cmp dx,ds:[bx].spi_sel
+	je move_sprite_ovl_hide_curr
+;
+	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
+	jz move_sprite_ovl_hide_new
+;
+    mov dx,bp
+    HideLine sp_x, sp_y
+
+move_sprite_ovl_hide_new:
+	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
+	jz move_sprite_ovl_hide_next
+;
+    mov dx,bp
+    HideLine sp_new_x, sp_new_y
+
+move_sprite_ovl_hide_next:
+    sub bx,16
+	jmp move_sprite_ovl_hide_loop
+
+move_sprite_ovl_hide_curr:
+    mov gs,fs:sp_dest_sel
+    mov dx,bp
+;    HideLineBuffer sp_y
+;
+    mov dx,bp
+;    ShowLineBuffer sp_new_y
+;
+    push ds
+    push bx
+    mov dx,bp
+    HideWholeLine
+    mov dx,bp
+    SaveAndShowWholeLine
+    pop bx
+    pop ds
+    add bx,16
+    pop cx
+
+move_sprite_ovl_show_loop:
+    cmp bx,cx
+	je move_sprite_ovl_line_done
+;
+	push cx
+	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
+	jz move_sprite_ovl_save_new
+;
+    mov dx,bp
+    SaveLine sp_x, sp_y
+
+move_sprite_ovl_save_new:
+	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
+	jz move_sprite_ovl_save_done
+;
+    mov dx,bp
+    SaveLine sp_new_x, sp_new_y
+
+move_sprite_ovl_save_done:
+	test ds:[bx].spi_flags,SP_FLAG_OVL_OLD
+	jz move_sprite_ovl_show_new
+;
+    mov dx,bp
+    ShowLine sp_x, sp_y
+
+move_sprite_ovl_show_new:
+	test ds:[bx].spi_flags,SP_FLAG_OVL_NEW
+	jz move_sprite_ovl_show_next
+;
+    mov dx,bp
+    ShowLine sp_new_x, sp_new_y
+
+move_sprite_ovl_show_next:
+	add bx,16
+	pop cx
+	jmp move_sprite_ovl_show_loop
+
+move_sprite_ovl_line_done:
+	ret
+MoveSpriteOvlLine	Endp
+
+move_sprite	Proc far
+	push ds
+	push es
+	push fs
+	pushad
+;
+	mov ax,SPRITE_HANDLE
+	DerefHandle
+	jc move_sprite_done
+;
+    mov fs,ds:[bx].sp_sel
+    mov fs:sp_new_x,cx
+    mov fs:sp_new_y,dx
+;
+    test fs:sp_flags,SP_FLAG_VISIBLE
+    jz move_sprite_hidden
+;
+    cmp cx,fs:sp_x
+    jne move_sprite_move
+;
+    cmp dx,fs:sp_y
+    je move_sprite_hidden
+
+move_sprite_move:
+    call SetupMove
+;
     test fs:sp_flags,SP_FLAG_OVL_OLD OR SP_FLAG_OVL_NEW
 	jnz move_sprite_ovl
 ;
@@ -1077,6 +1233,17 @@ move_sprite_down:
     xor bp,bp
 
 move_sprite_down_loop:
+    mov gs,fs:sp_dest_sel
+    mov ds,gs:v_sprite_sel
+    mov bx,fs:sp_index
+    shl bx,4
+;
+    mov dx,bp
+;    HideLineBuffer sp_y
+;
+    mov dx,bp
+;    ShowLineBuffer sp_new_y
+;    
     mov dx,bp
     HideWholeLine
 ;
@@ -1093,6 +1260,19 @@ move_sprite_up:
 	dec bp
 
 move_sprite_up_loop:
+    mov gs,fs:sp_dest_sel
+    mov ds,gs:v_sprite_sel
+    mov bx,fs:sp_index
+    shl bx,4
+;
+    mov dx,bp
+;    HideLineBuffer sp_y
+;
+    mov dx,bp
+;    ShowLineBuffer sp_new_y
+;    
+    mov dx,bp
+    HideWholeLine
     mov dx,bp
     HideWholeLine
 ;

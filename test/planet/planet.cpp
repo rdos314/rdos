@@ -19,7 +19,7 @@ int sprite;
 void *buf;
 int counter = 0;
 
-#define MAX_PLANETS	100
+#define MAX_PLANETS	35
 
 struct TPlanet
 {
@@ -456,7 +456,7 @@ struct TPos
 
 TPos Pos[POS_COUNT] =
             {
-                {552,     201,     567,     185},
+				{552,     201,     567,     185},
                 {551,     201,     567,     186},
                 {551,     201,     567,     187},
                 {551,     200,     567,     188},
@@ -479,7 +479,7 @@ void SimPos()
 	TPlanet *planet2;
 
     planet1 = new TPlanet;
-    planet2 = new TPlanet;
+	planet2 = new TPlanet;
 
     planet1->r = 10;
     planet2->r = 8;
@@ -502,12 +502,12 @@ void SimPos()
         planet1->x = Pos[i].x1;
 		planet1->y = Pos[i].y1;
         planet2->x = Pos[i].x2;
-        planet2->y = Pos[i].y2;
+		planet2->y = Pos[i].y2;
         RdosMoveSprite(planet1->handle, planet1->x - planet1->r, planet1->y - planet1->r);
         RdosMoveSprite(planet2->handle, planet2->x - planet2->r, planet2->y - planet2->r);
     }        
 
-    for (;;)
+	for (;;)
 		RdosWaitMilli(10);
 }
 
