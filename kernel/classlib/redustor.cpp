@@ -43,13 +43,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRedundanceStorageList::TRedundanceStorageList(int StoreSize, int DataSize, unsigned short int ListID)
+TRedundanceStorageList::TRedundanceStorageList(int DataSize, unsigned short int ListID)
   : TStorageList(DataSize, ListID)
 {
-    Init(DataSize, ListID);
-
     FRedCount = 0;
-    FMaxEntries = StoreSize / FEntrySize;
 }
 
 /*##########################################################################
@@ -100,14 +97,42 @@ TRedundanceStorageList::~TRedundanceStorageList()
 #   Returns....: *
 #
 ##########################################################################*/
-void TRedundanceStorageList::Add(TStorage *store, int offset)
+void TRedundanceStorageList::Add(TStorage *store)
 {
     if (FRedCount < MAX_REDUNDANCE)
     {
-        FRedArr[FRedCount].Store = store;
-        FRedArr[FRedCount].Offset = offset;
+        FRedArr[FRedCount] = store;
         FRedCount++;
     }
+}
+
+/*##########################################################################
+#
+#   Name       : TRedundanceStorageList::Recover
+#
+#   Purpose....: Recover list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRedundanceStorageList::Recover()
+{
+    int i;
+
+	if (FRedArr[0])
+		FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
+	else
+		FMaxEntries = 0;
+
+	for (i = 0; i < FRedCount; i++)
+		if (FRedArr[i]->Size() / (long)FEntrySize < FMaxEntries)
+			FMaxEntries = FRedArr[0]->Size() / (long)FEntrySize;
+    
+    FRecover = TRUE;
+    TStorageList::Recover();
+    FRecover = FALSE;
 }
 
 /*##########################################################################
@@ -125,10 +150,71 @@ int TRedundanceStorageList::Read(int entry, char *buf)
 {
 	int i;
 	int ok = FALSE;
+	long pos;
+	int ValidArr[MAX_REDUNDANCE];
+	int ValidPos;
+    unsigned short int crc;
 
-	for (i = 0; i < FRedCount && !ok; i++)
-		ok = FRedArr[i].Store->Read(FRedArr[i].Offset + entry * FEntrySize, buf, FEntrySize);
+	pos = (long)entry * (long)FEntrySize;
 
+    if (FRecover)
+    {
+        ValidPos = -1;
+        
+    	for (i = 0; i < FRedCount; i++)
+    	{
+	    	ok = FRedArr[i]->Read(pos, buf, FEntrySize);
+	    	if (ok)
+            {
+    			crc = CalcCrc(buf, FDataSize);
+	    		ok = crc == *(unsigned short int *)(buf + FDataSize);
+	        }
+	        
+            if (ok)	    	
+	    	{
+	    	    ValidArr[i] = TRUE;
+	    	    ValidPos = i;
+	    	}
+	    	else
+	    	    ValidArr[i] = FALSE;
+	    }
+
+	    if (ValidPos == -1)
+	        ok = FALSE;
+	    else
+	    	ok = FRedArr[ValidPos]->Read(pos, buf, FEntrySize);
+
+        if (ok)
+        {
+            for (i = 0; i < FRedCount; i++)
+                if (!ValidArr[i])
+                    FRedArr[i]->Write(pos, buf, FEntrySize);
+        }
+        else
+        {
+            memset(buf, 0xFF, FEntrySize);
+            for (i = 0; i < FRedCount; i++)
+                FRedArr[i]->Write(pos, buf, FEntrySize);
+        }
+
+    }
+    else
+    {
+    	for (i = 0; i < FRedCount && !ok; i++)
+    	{
+	    	ok = FRedArr[i]->Read(pos, buf, FEntrySize);
+	    	if (ok)
+            {
+    			crc = CalcCrc(buf, FDataSize);
+	    		ok = crc == *(unsigned short int *)(buf + FDataSize);
+	        }
+	    }
+
+    }
+
+    if (!ok && FRedCount)
+    	ok = FRedArr[0]->Read(pos, buf, FEntrySize);        
+    
 	return ok;
 }
 
@@ -147,26 +233,13 @@ int TRedundanceStorageList::Write(int entry, const char *buf)
 {
 	int i;
 	int ok = FALSE;
+	long pos;
+
+	pos = (long)entry * (long)FEntrySize;
 
 	for (i = 0; i < FRedCount; i++)
-		if (FRedArr[i].Store->Write(FRedArr[i].Offset + entry * FEntrySize, buf, FEntrySize))
+		if (FRedArr[i]->Write(pos, buf, FEntrySize))
 			ok = TRUE;
 
 	return ok;
-}
-
-/*##########################################################################
-#
-#   Name       : TRedundanceStorageList::Recover
-#
-#   Purpose....: Recover list from backup store
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRedundanceStorageList::Recover()
-{
-    TStorageList::Recover();
 }

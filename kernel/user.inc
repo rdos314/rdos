@@ -277,6 +277,10 @@ FreeVMCallback  MACRO
 
 ;;;;;;;;;;;;;; MULTITASKING ;;;;;;;;;;;;
 
+CpuReset        MACRO
+	UserGate cpu_reset_nr
+						ENDM
+
 ; IN  AX         Number of milliseconds
 WaitMilliSec        MACRO
 	UserGate wait_milli_nr

@@ -586,7 +586,7 @@ init	Proc far
 	push es
 	pusha
 ;
-	mov bx,flash_disc_code_sel
+	mov bx,bsp_code_sel
 	InitDevice
 ;
 	mov ax,cs
@@ -636,7 +636,7 @@ init	Proc far
     EnableStatusLED    
 ;
     mov eax,80000h
-    AllocateBigMem
+    AllocateGlobalMem
 ;
     mov ax,flat_sel
     mov ds,ax
@@ -664,7 +664,7 @@ load_loop:
 ;
     call GetAllAdapters
 ;
-    FreeMem
+;   FreeMem
 ;
 	popa
 	pop es

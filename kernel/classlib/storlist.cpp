@@ -327,7 +327,7 @@ TStorageList::TStorageList(TStorage *store, int DataSize, unsigned short int Lis
     Init(DataSize, ListID);
     
     FStore = store;
-    FMaxEntries = FStore->Size() / FEntrySize;
+    FMaxEntries = (int)(FStore->Size() / (long)FEntrySize);
     Recover();
 }
 
@@ -737,7 +737,7 @@ unsigned short int TStorageList::CalcCrc(const char *Data, int Size)
 ##########################################################################*/
 int TStorageList::Read(int entry, char *buf)
 {
-    return FStore->Read(entry * FEntrySize, buf, FEntrySize);
+    return FStore->Read((long)entry * (long)FEntrySize, buf, FEntrySize);
 }
 
 /*##########################################################################
@@ -753,7 +753,7 @@ int TStorageList::Read(int entry, char *buf)
 ##########################################################################*/
 int TStorageList::Write(int entry, const char *buf)
 {
-    return FStore->Write(entry * FEntrySize, buf, FEntrySize);
+    return FStore->Write((long)entry * (long)FEntrySize, buf, FEntrySize);
 }
 
 /*##########################################################################
@@ -780,8 +780,8 @@ void TStorageList::Recover()
 
     buf = new char[FEntrySize];
 
-    FCacheSize = FMaxEntries / 16;
-    if (FCacheSize < 16)
+	FCacheSize = FMaxEntries / 16;
+	if (FCacheSize < 16)
         FCacheSize = 16;
 
     FCache = new int[FCacheSize];

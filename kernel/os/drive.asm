@@ -385,21 +385,32 @@ insert_pending	PROC near
 	push cx
 	push dx
 ;
+    test es:[edi].dh_flags,FLAG_ASYNC_WRITE
+    jz insert_noaw
+;
+    int 3
+
+insert_noaw:
+
 	test es:[edi].dh_flags,FLAG_IO_PENDING
 	jz insert_pend_do
 ;
 	int 3
+	call CheckAll
+;	
 	mov eax,ds:disc_pend_first
 	or eax,eax
 	jz insert_pend_do
 ;
 	mov ebx,eax
+	cmp eax,edi
+	je insert_pend_err
 
 insert_pend_check:
+	mov eax,es:[eax].dh_next
 	cmp eax,edi
 	je insert_pend_err
 ;
-	mov eax,es:[eax].dh_next
 	cmp eax,ebx
 	jnz insert_pend_check
 	jmp insert_pend_do
@@ -530,11 +541,12 @@ PAGE
 insert_async_write	PROC near
 	push eax
 	push ebx
+;	
+    test es:[edi].dh_flags, FLAG_IO_PENDING
+    jnz insert_awrite_end
 ;
 	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jz insert_awrite_do
-;
-	jmp insert_awrite_done
+	jnz insert_awrite_done
 
 insert_awrite_do:
 	or es:[edi].dh_flags, FLAG_ASYNC_WRITE
@@ -557,7 +569,8 @@ insert_awrite_used:
 
 insert_awrite_done:
 	mov ds:disc_awrite_list,edi
-;
+
+insert_awrite_end:
 	pop ebx
 	pop eax
 	ret
@@ -1526,17 +1539,18 @@ modify_disc_request	PROC far
 	mov es,ax
 	mov ds,es:[edi].dh_buf_sel
 ;	
-	test es:[edi].dh_flags, FLAG_IO_BUSY
-	jnz modify_disc_done
-;	
 	mov al,es:[edi].dh_state
 	cmp al,STATE_USED
 	jne modify_disc_done
 ;	
+	mov es:[edi].dh_state,STATE_DIRTY
+;	
+	test es:[edi].dh_flags, FLAG_IO_PENDING
+	jnz modify_disc_done
+;	
 	GetSystemTime
 	mov es:[edi].dh_time_lsb,eax
 	mov es:[edi].dh_time_msb,dx
-	mov es:[edi].dh_state,STATE_DIRTY
 	call insert_async_write
 	call update_async_timer
 
@@ -2597,10 +2611,14 @@ modify_not_busy:
 	jne modify_done
 
 modify_clean:
+	mov es:[edi].dh_state,STATE_DIRTY
+;	
+    test es:[edi].dh_flags, FLAG_IO_PENDING
+    jz modify_done
+;    
 	GetSystemTime
 	mov es:[edi].dh_time_lsb,eax
 	mov es:[edi].dh_time_msb,dx
-	mov es:[edi].dh_state,STATE_DIRTY
 	call insert_async_write
 	call update_async_timer
 

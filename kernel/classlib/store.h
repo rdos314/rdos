@@ -31,9 +31,9 @@
 class TStorage
 {
 public:
-    virtual int Size() = 0;
-    virtual int Read(int offset, char *buf, int size) = 0;
-    virtual int Write(int offset, const char *buf, int size) = 0;
+    virtual long Size() = 0;
+    virtual int Read(long offset, char *buf, int size) = 0;
+    virtual int Write(long offset, const char *buf, int size) = 0;
 };
 
 #endif

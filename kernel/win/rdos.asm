@@ -172,6 +172,22 @@ _RdosExec	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosCpuReset
+;
+;		description:	void RdosCpuReset()
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosCpuReset
+
+_RdosCpuReset	Proc far
+	CpuReset
+	ret
+_RdosCpuReset	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosGetVersion
 ;
 ;		description:	void RdosGetVersion(*major,*minor, *relase)
@@ -4786,6 +4802,156 @@ _RdosReplyMailslot	Proc far
 	pop bp
 	ret
 _RdosReplyMailslot	Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetDiscInfo
+;
+;		DESCRIPTION:	Get disc info
+;
+;		PARAMETER:		Disc #
+;						Bytes / sector
+;						Total sectors
+;						BIOS sectors / cyl
+;						BIOS heads
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosGetDiscInfo
+
+_RdosGetDiscInfo	Proc far
+	push bp
+	mov bp,sp
+	push ds
+	push bx
+	push edx
+	push si
+	push di
+;
+	mov al,[bp+6]
+    GetDiscInfo
+	jc get_disc_info_fail
+;
+    lds bx,[bp+8]
+    mov [bx],cx
+;
+    lds bx,[bp+12]
+    mov [bx],edx
+;
+    lds bx,[bp+16]
+    mov [bx],si
+;
+    lds bx,[bp+20]
+    mov [bx],di
+;
+	mov ax,1
+	jmp get_disc_info_done
+
+get_disc_info_fail:
+	xor ax,ax
+
+get_disc_info_done:
+	pop di
+	pop si
+	pop edx
+	pop bx
+	pop ds
+	pop bp
+	ret
+_RdosGetDiscInfo	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadDisc
+;
+;		DESCRIPTION:	Read from disc
+;
+;		PARAMETER:		Disc #
+;						Sector #
+;						Buffer
+;						Size
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosReadDisc
+
+_RdosReadDisc	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push edx
+	push di
+;
+	mov al,[bp+6]
+	mov edx,[bp+8]
+	les di,[bp+12]
+	mov cx,[bp+16]
+	ReadDisc
+	jc read_disc_fail
+;
+	mov ax,1
+	jmp read_disc_done
+
+read_disc_fail:
+	xor ax,ax
+
+read_disc_done:
+	pop di
+	pop edx
+	pop es
+	pop bp
+	ret
+_RdosReadDisc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			WriteReadDisc
+;
+;		DESCRIPTION:	Write to disc
+;
+;		PARAMETER:		Disc #
+;						Sector #
+;						Buffer
+;						Size
+;
+;		RETURNS:		OK
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _RdosWriteDisc
+
+_RdosWriteDisc	Proc far
+	push bp
+	mov bp,sp
+	push es
+	push edx
+	push di
+;
+	mov al,[bp+6]
+	mov edx,[bp+8]
+	les di,[bp+12]
+	mov cx,[bp+16]
+	WriteDisc
+	jc write_disc_fail
+;
+	mov ax,1
+	jmp write_disc_done
+
+write_disc_fail:
+	xor ax,ax
+
+write_disc_done:
+	pop di
+	pop edx
+	pop es
+	pop bp
+	ret
+_RdosWriteDisc	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

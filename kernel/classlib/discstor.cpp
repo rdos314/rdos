@@ -131,9 +131,9 @@ TDiscStorage::~TDiscStorage()
 #
 #
 ##########################################################################*/
-int TDiscStorage::Size()
+long TDiscStorage::Size()
 {
-    return 512 * FSectorCount; 
+    return 512L * (long)FSectorCount; 
 }
 
 /*##########################################################################
@@ -144,7 +144,7 @@ int TDiscStorage::Size()
 #
 #
 ##########################################################################*/
-int TDiscStorage::Read(int offset, char *buf, int size)
+int TDiscStorage::Read(long offset, char *buf, int size)
 {
     int RelSector;
     int OffSector;
@@ -152,8 +152,8 @@ int TDiscStorage::Read(int offset, char *buf, int size)
     char SectorBuf[512];
     int ok;
 
-    RelSector = offset / 512;
-    OffSector = offset % 512;
+    RelSector = (int)(offset / 512L);
+    OffSector = (int)(offset % 512L);
     CurrSize = 512 - OffSector;
 
     if (CurrSize > size)
@@ -202,7 +202,7 @@ int TDiscStorage::Read(int offset, char *buf, int size)
 #
 #
 ##########################################################################*/
-int TDiscStorage::Write(int offset, const char *buf, int size)
+int TDiscStorage::Write(long offset, const char *buf, int size)
 {
     int RelSector;
     int OffSector;
@@ -210,8 +210,8 @@ int TDiscStorage::Write(int offset, const char *buf, int size)
     char SectorBuf[512];
     int ok;
 
-    RelSector = offset / 512;
-    OffSector = offset % 512;
+    RelSector = (int)(offset / 512L);
+    OffSector = (int)(offset % 512L);
     CurrSize = 512 - OffSector;
 
     if (CurrSize > size)

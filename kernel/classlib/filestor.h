@@ -40,9 +40,9 @@ public:
     TFileStorage(const char *FileName, int Size);
     ~TFileStorage();
     
-    virtual int Size();
-    virtual int Read(int offset, char *buf, int size);
-    virtual int Write(int offset, const char *buf, int size);
+    virtual long Size();
+    virtual int Read(long offset, char *buf, int size);
+    virtual int Write(long offset, const char *buf, int size);
 
 private:
     TFile FFile;

@@ -37,9 +37,9 @@ public:
     TDiscStorage(int DiscNr, long StartSector, int SectorCount);
     ~TDiscStorage();
     
-    virtual int Size();
-    virtual int Read(int offset, char *buf, int size);
-    virtual int Write(int offset, const char *buf, int size);
+    virtual long Size();
+    virtual int Read(long offset, char *buf, int size);
+    virtual int Write(long offset, const char *buf, int size);
 
 private:
     int FDiscNr;

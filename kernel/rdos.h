@@ -132,6 +132,7 @@ int __stdcall RdosOpenDir(const char *PathName);
 void __stdcall RdosCloseDir(int Handle);
 int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathName, long *FileSize, int *Attribute, unsigned long *MsbTime, unsigned long *LsbTime);
 
+void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);
 void __stdcall RdosCreateThread(void (*Start)(void *Param), const char *Name, void *Param, int StackSize);
 void __stdcall RdosTerminateThread();

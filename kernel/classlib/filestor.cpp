@@ -119,7 +119,7 @@ TFileStorage::~TFileStorage()
 #
 #
 ##########################################################################*/
-int TFileStorage::Size()
+long TFileStorage::Size()
 {
 	return FFile.GetSize();
 }
@@ -132,7 +132,7 @@ int TFileStorage::Size()
 #
 #
 ##########################################################################*/
-int TFileStorage::Read(int offset, char *buf, int size)
+int TFileStorage::Read(long offset, char *buf, int size)
 {
     if (offset + size <= FFile.GetSize())
     {
@@ -151,7 +151,7 @@ int TFileStorage::Read(int offset, char *buf, int size)
 #
 #
 ##########################################################################*/
-int TFileStorage::Write(int offset, const char *buf, int size)
+int TFileStorage::Write(long offset, const char *buf, int size)
 {
     if (offset + size <= FFile.GetSize())
     {

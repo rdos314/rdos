@@ -109,7 +109,7 @@ protected:
     TStorage *FStore;
     int FEntrySize;
     int FDataSize;
-    int FMaxEntries;
+	int FMaxEntries;
     unsigned short int FListID;
 
     int FAvailable;

@@ -316,4 +316,6 @@ kick_watchdog_nr            = 277
 
 erase_disc_sectors_nr       = 278
 
+cpu_reset_nr                = 279
+
 usergate_entries			= 300

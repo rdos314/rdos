@@ -32,29 +32,23 @@
 
 #define MAX_REDUNDANCE  16
 
-class TRedundanceEntry
-{
-public:
-    TStorage *Store;
-    int Offset;
-};
-
 class TRedundanceStorageList : public TStorageList
 {
 public:
-	TRedundanceStorageList(int StoreSize, int DataSize, unsigned short int ListID);
+	TRedundanceStorageList(int DataSize, unsigned short int ListID);
 	TRedundanceStorageList(const TRedundanceStorageList &source);
 	~TRedundanceStorageList();
 
-	void Add(TStorage *store, int Offset);
+	void Add(TStorage *store);
 	void Recover();
 
 protected:
     virtual int Read(int entry, char *buf);
     virtual int Write(int entry, const char *buf);
 
+    int FRecover;
     int FRedCount;
-    TRedundanceEntry FRedArr[MAX_REDUNDANCE];
+    TStorage *FRedArr[MAX_REDUNDANCE];
 };
 
 #endif

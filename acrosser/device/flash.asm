@@ -673,6 +673,13 @@ install_unit	Proc near
 ;
     mov edx,0
     call read_flash
+;    
+    push ax
+    mov al,0F0h
+    mov edx,0    
+    call write_flash
+    pop ax
+;        
     cmp al,1
     pop ax
     jne install_unit_done
@@ -735,6 +742,11 @@ disc_assign	Proc far
 	push es
 	pusha
 ;
+    mov ax,flash_disc_data_sel
+    mov ds,ax
+    EnterSection ds:flash_section
+    push ds
+;    
 	mov al,0
 	mov di,OFFSET flash0
 	call install_unit
@@ -742,6 +754,9 @@ disc_assign	Proc far
 	mov al,1
 	mov di,OFFSET flash1
 	call install_unit
+;
+    pop ds
+   	LeaveSection ds:flash_section
 ;
 	popa
 	pop es
