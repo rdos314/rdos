@@ -20,34 +20,41 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# filestor.h
-# File storage class
+# redustor.h
+# Redundance store list base class
 #
 ########################################################################*/
 
-#ifndef _FILESTOR_H
-#define _FILESTOR_H
+#ifndef _REDUSTOR_H
+#define _REDUSTOR_H
 
-#include "store.h"
-#include "file.h"
+#include "storlist.h"
 
-class TFileStorage : public TStorage
+#define MAX_REDUNDANCE  16
+
+class TRedundanceEntry
 {
 public:
-    TFileStorage(TFile &File);
-    TFileStorage(TFile &File, int Size);
-    TFileStorage(const char *FileName);
-    TFileStorage(const char *FileName, int Size);
-    ~TFileStorage();
-    
-    virtual int Size();
-    virtual int Read(int offset, char *buf, int size);
-    virtual int Write(int offset, const char *buf, int size);
+    TStorage *Store;
+    int Offset;
+};
 
-private:
-    TFile FFile;
+class TRedundanceStorageList : public TStorageList
+{
+public:
+	TRedundanceStorageList(int StoreSize, int DataSize, unsigned short int ListID);
+	TRedundanceStorageList(const TRedundanceStorageList &source);
+	~TRedundanceStorageList();
 
+	void Add(TStorage *store, int Offset);
+	void Recover();
+
+protected:
+    virtual int Read(int entry, char *buf);
+    virtual int Write(int entry, const char *buf);
+
+    int FRedCount;
+    TRedundanceEntry FRedArr[MAX_REDUNDANCE];
 };
 
 #endif
-

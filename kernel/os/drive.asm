@@ -534,7 +534,6 @@ insert_async_write	PROC near
 	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
 	jz insert_awrite_do
 ;
-	int 3
 	jmp insert_awrite_done
 
 insert_awrite_do:

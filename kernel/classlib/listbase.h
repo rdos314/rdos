@@ -28,7 +28,9 @@
 #ifndef _LISTBASE_H
 #define _LISTBASE_H
 
+#include "store.h"
 #include "shareobj.h"
+#include "section.h"
 
 class TListBaseNode
 {
@@ -88,6 +90,7 @@ public:
 
 protected:
     void Init();
+    
 	void Invalidate(TListBaseNode *ln);
 	void Load(const TListBase &src);
 	int Find(const TListBaseNode *ln);
@@ -100,9 +103,20 @@ protected:
 
 	virtual TListBaseNode *Clone(const TListBaseNode *ln) const = 0;
 
+	virtual void RemoveOldest();
+	virtual void Add(TListBaseNode *ln);
+	virtual void Remove(TListBaseNode *ln);
+	virtual void Update(TListBaseNode *ln);
+
+	TListBaseNode *FInvNext;
+    
 	TListBaseNode *FList;
 	TListBaseNode *FCurrPos;
 	TListBaseNode *FPrevPos;
+
+
+    TSection FSection;
+
 };
 
 #endif

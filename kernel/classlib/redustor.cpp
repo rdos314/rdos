@@ -20,144 +20,153 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# filestor.cpp
-# File storage class
+# redustor.cpp
+# Redundant storage list class
 #
 ########################################################################*/
 
-#include "filestor.h"
+#include <mem.h>
 
-#define FALSE   0
-#define TRUE    !FALSE
+#include "redustor.h"
+
+#define FALSE 0
+#define TRUE !FALSE
 
 /*##########################################################################
 #
-#   Name       : TFileStorage::TFileStorage
+#   Name       : TRedundanceStorageList::TRedundanceStorageList
 #
-#   Purpose....: Constructor for file storage
+#   Purpose....: Constructor for list (no recover)
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFileStorage::TFileStorage(TFile &File)
- : FFile(File)
+TRedundanceStorageList::TRedundanceStorageList(int StoreSize, int DataSize, unsigned short int ListID)
+  : TStorageList(DataSize, ListID)
 {
+    Init(DataSize, ListID);
+
+    FRedCount = 0;
+    FMaxEntries = StoreSize / FEntrySize;
 }
 
 /*##########################################################################
 #
-#   Name       : TFileStorage::TFileStorage
+#   Name       : TRedundanceStorageList::TRedundanceStorageList
 #
-#   Purpose....: Constructor for file storage
+#   Purpose....: Copy constructor for list
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFileStorage::TFileStorage(TFile &File, int Size)
- : FFile(File)
+TRedundanceStorageList::TRedundanceStorageList(const TRedundanceStorageList &src)
+  : TStorageList(src)
 {
-    FFile.SetSize(Size);
+    int i;
+    
+	FRedCount = src.FRedCount;
+
+    for (i = 0; i < FRedCount; i++)
+        FRedArr[i] = src.FRedArr[i];
 }
 
 /*##########################################################################
 #
-#   Name       : TFileStorage::TFileStorage
+#   Name       : TRedundanceStorageList::~TRedundanceStorageList
 #
-#   Purpose....: Constructor for file storage
+#   Purpose....: Destructor for list
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFileStorage::TFileStorage(const char *FileName)
- : FFile(FileName)
+TRedundanceStorageList::~TRedundanceStorageList()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TFileStorage::TFileStorage
+#   Name       : TRedundanceStorageList::Add
 #
-#   Purpose....: Constructor for file storage
+#   Purpose....: Add redundance
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFileStorage::TFileStorage(const char *FileName, int Size)
- : FFile(FileName)
+void TRedundanceStorageList::Add(TStorage *store, int offset)
 {
-    FFile.SetSize(Size);
-}
-
-/*##########################################################################
-#
-#   Name       : TFileStorage::~TFileStorage
-#
-#   Purpose....: Destructor for file storage
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFileStorage::~TFileStorage()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TFileStorage::Size
-#
-#   Purpose....: Get size
-#
-#
-##########################################################################*/
-int TFileStorage::Size()
-{
-	return FFile.GetSize();
-}
-
-/*##########################################################################
-#
-#   Name       : TFileStorage::Read
-#
-#   Purpose....: Read data block
-#
-#
-##########################################################################*/
-int TFileStorage::Read(int offset, char *buf, int size)
-{
-    if (offset + size <= FFile.GetSize())
+    if (FRedCount < MAX_REDUNDANCE)
     {
-        FFile.SetPos(offset);
-        if (FFile.Read(buf, size) == size)
-            return TRUE;
+        FRedArr[FRedCount].Store = store;
+        FRedArr[FRedCount].Offset = offset;
+        FRedCount++;
     }
-    return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TFileStorage::Write
+#   Name       : TRedundanceStorageList::Read
 #
-#   Purpose....: Write data block
+#   Purpose....: Read an entry
 #
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
 #
 ##########################################################################*/
-int TFileStorage::Write(int offset, const char *buf, int size)
+int TRedundanceStorageList::Read(int entry, char *buf)
 {
-    if (offset + size <= FFile.GetSize())
-    {
-        FFile.SetPos(offset);
-        if (FFile.Write(buf, size) == size)
-            return TRUE;
-    }
-    return FALSE;
+	int i;
+	int ok = FALSE;
+
+	for (i = 0; i < FRedCount && !ok; i++)
+		ok = FRedArr[i].Store->Read(FRedArr[i].Offset + entry * FEntrySize, buf, FEntrySize);
+
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRedundanceStorageList::Write
+#
+#   Purpose....: Write an entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRedundanceStorageList::Write(int entry, const char *buf)
+{
+	int i;
+	int ok = FALSE;
+
+	for (i = 0; i < FRedCount; i++)
+		if (FRedArr[i].Store->Write(FRedArr[i].Offset + entry * FEntrySize, buf, FEntrySize))
+			ok = TRUE;
+
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRedundanceStorageList::Recover
+#
+#   Purpose....: Recover list from backup store
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRedundanceStorageList::Recover()
+{
+    TStorageList::Recover();
 }

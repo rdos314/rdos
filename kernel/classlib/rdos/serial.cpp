@@ -1023,7 +1023,7 @@ void TSerialDevice::Write(char ch)
     
 	RdosWriteCom(FHandle, ch);
 
-	if (FDebugFile)
+	if (FDebugFile && FOutChannel)
 	{
 	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
 	    Debug.Channel = FOutChannel;
@@ -1114,7 +1114,7 @@ char TSerialDevice::Read()
     
 	ch = RdosReadCom(FHandle);
 
-	if (FDebugFile)
+	if (FDebugFile && FInChannel)
 	{
 	    RdosGetTics(&Debug.TimeMSB, &Debug.TimeLSB);
 	    Debug.Channel = FInChannel;

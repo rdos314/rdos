@@ -33,8 +33,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-static TSection FSection;
-
 /*##########################################################################
 #
 #   Name       : TListBaseNode::TListBaseNode
@@ -253,9 +251,10 @@ TListBase::~TListBase()
 ##########################################################################*/
 void TListBase::Init()
 {
-    FList = 0;
+	FList = 0;
     FCurrPos = 0;
 	FPrevPos = 0;
+	FInvNext = 0;
 }
 
 /*##########################################################################
@@ -409,11 +408,94 @@ void TListBase::Clear()
     {
         p = FList;
         FList = FList->FNext;
+        Remove(p);
         delete p;
     }
     Init();
 
     FSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TListBase::Add
+#
+#   Purpose....: Add notify. Should be in critical section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListBase::Add(TListBaseNode *ln)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TListBase::Remove
+#
+#   Purpose....: Remove notify. Should be in critical section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListBase::Remove(TListBaseNode *ln)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TListBase::Update
+#
+#   Purpose....: Update notify. Should be in critical section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListBase::Update(TListBaseNode *ln)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TListBase::RemoveOldest
+#
+#   Purpose....: Remove oldest entry. Should be in critical section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TListBase::RemoveOldest()
+{
+	TListBaseNode *p;
+    TListBaseNode *prev;
+
+    if (FList)
+    {
+        prev = 0;
+        p = FList;
+        while (p->FNext)
+        {
+            prev = p;
+            p = p->FNext;
+        }
+
+        if (prev)
+            prev->FNext = 0;    
+        else
+            FList = 0;
+
+        Invalidate(p);
+        Remove(p);
+        delete p;
+	}
 }
 
 /*##########################################################################
@@ -449,7 +531,11 @@ int TListBase::IsEmpty()
 void TListBase::Invalidate(TListBaseNode *ln)
 {
     if (FCurrPos == ln)
+    {
+        if (FCurrPos)
+            FInvNext = FCurrPos->FNext;
         FCurrPos = 0;
+    }
 
     if (FPrevPos == ln)
         FPrevPos = 0;
@@ -471,6 +557,7 @@ void TListBase::AddFirst(TListBaseNode *p)
 	FSection.Enter();
 	p->FNext = FList;
 	FList = p;
+	Add(p);
 	FSection.Leave();
 }
 
@@ -502,6 +589,7 @@ void TListBase::AddLast(TListBaseNode *p)
         FList = p;
         
     p->FNext = 0;
+    Add(p);
     FSection.Leave();
 }
 
@@ -547,6 +635,7 @@ void TListBase::AddAt(int n, TListBaseNode *p)
         FList = p;
         p->FNext = 0;
     }
+    Add(p);
     FSection.Leave();
 }
 
@@ -601,6 +690,12 @@ int TListBase::GetPosition()
 
     p = FList;
 
+    if (!FCurrPos && FInvNext)
+    {
+        FCurrPos = FInvNext;
+        FInvNext = 0;
+    }    
+
 	if (FCurrPos)
     {
         while (p && p != FCurrPos)
@@ -631,6 +726,7 @@ int TListBase::GotoFirst()
     FSection.Enter();
     FCurrPos = FList;
     FPrevPos = 0;
+    FInvNext = 0;
     FSection.Leave();
     return FCurrPos != 0;
 }
@@ -652,6 +748,12 @@ int TListBase::GotoNext()
 
     if (FCurrPos)
         FCurrPos = FCurrPos->FNext;
+    else
+        if (FInvNext)
+        {
+            FCurrPos = FInvNext;
+            FInvNext = 0;
+        }
 
     FSection.Leave();
 
@@ -713,6 +815,7 @@ int TListBase::GotoLast()
 {
 	FSection.Enter();
 
+    FInvNext = 0;
     FPrevPos = 0;
     FCurrPos = FList;
 
@@ -744,6 +847,7 @@ int TListBase::Goto(int pos)
 
     FSection.Enter();
 
+    FInvNext = 0;
     FCurrPos = FList;
 
 	while (FCurrPos && n < pos)
@@ -772,6 +876,7 @@ int TListBase::Find(const TListBaseNode *ln)
 {
     FSection.Enter();
 
+    FInvNext = 0;
     FCurrPos = FList;
 
 	while (FCurrPos && FCurrPos->Compare(*ln))				    
@@ -805,6 +910,7 @@ int TListBase::RemoveFirst()
         p = FList;
         FList = FList->FNext;
         Invalidate(p);
+        Remove(p);
         delete p;
         success = TRUE;
 
@@ -852,6 +958,7 @@ int TListBase::RemoveLast()
             FList = 0;
 
         Invalidate(p);
+        Remove(p);
         delete p;
         
         success = TRUE;
@@ -901,6 +1008,7 @@ int TListBase::RemoveCurrent()
                 FList = p->FNext;
 
             Invalidate(p);
+            Remove(p);
             delete p;
             
 			success = TRUE;
@@ -955,6 +1063,7 @@ int TListBase::Remove(int pos)
                 FList = p->FNext;
 
             Invalidate(p);
+            Remove(p);
             delete p;
             
             success = TRUE;
@@ -1001,6 +1110,7 @@ int TListBase::Replace(int pos, const TListBaseNode *newln)
 		if (p)
 		{
             p->Load(*newln);
+            Update(p);
             success = TRUE;
         }
         else
@@ -1256,7 +1366,10 @@ void TListBase::RemoveDuplicates()
     		tp = tp->FNext;
 
         if (tp)
+        {
+            Remove(p);
             delete p;
+        }
         else
         {
             if (insp)

@@ -200,9 +200,9 @@ void TCompacProtocolAnalyser::ShowPump(int Pump)
 void TCompacProtocolAnalyser::ShowPrePay(int PrePay)
 {
     if (PrePay)
-        Write("PREPAY  ");
-    else
-        Write("POSTPAY ");
+		Write("PREPAY  ");
+	else
+		Write("POSTPAY ");
 }
 
 /*##################  TCompacProtocolAnalyser::ShowLockout ##########################
@@ -214,44 +214,47 @@ void TCompacProtocolAnalyser::ShowPrePay(int PrePay)
 *##########################################################################*/
 void TCompacProtocolAnalyser::ShowLockout(char Lockout)
 {
-    switch (Lockout)
-    {
+	char str[80];
+
+	switch (Lockout)
+	{
 		case '1':
-            Write("RELEASE ONE ");
-            break;
-
-        case '3':
-            Write("ABORT IM ");
-            break;
-
-        case '4':
-            Write("TEMP STOP ");
-            break;
-
-        case '5':
-            Write("CLEAR TEMP STOP ");
+			Write("RELEASE ONE ");
 			break;
 
-        case '6':
-            Write("CLEAR END DELIVERY ");
+		case '3':
+			Write("ABORT IM ");
 			break;
 
-        case '7':
-            Write("ALLOW PRICE CHANGE ");
-            break;
+		case '4':
+			Write("TEMP STOP ");
+			break;
+
+		case '5':
+			Write("CLEAR TEMP STOP ");
+			break;
+
+		case '6':
+			Write("CLEAR END DELIVERY ");
+			break;
+
+		case '7':
+			Write("ALLOW PRICE CHANGE ");
+			break;
 
 		case '8':
-            Write("ALLOW PRICE IM ");
-            break;
+			Write("ALLOW PRICE IM ");
+			break;
 
-        case '9':
-            Write("CLEAR STARTUP ");
-            break;
+		case '9':
+			Write("CLEAR STARTUP ");
+			break;
 
-        default:
-            Write("INVALID LOCKOUT ");
-            break;
-    }
+		default:
+			sprintf(str, "INVALID LOCKOUT (%c)", Lockout);
+			Write(str);
+			break;
+	}
 }
 
 /*##################  TCompacProtocolAnalyser::ShowPollType ##########################
@@ -263,6 +266,8 @@ void TCompacProtocolAnalyser::ShowLockout(char Lockout)
 *##########################################################################*/
 void TCompacProtocolAnalyser::ShowPollType(char PollType)
 {
+	char str[80];
+
 	switch (PollType)
 	{
 		case 'X':
@@ -270,16 +275,16 @@ void TCompacProtocolAnalyser::ShowPollType(char PollType)
 			break;
 
 		case 'Q':
-            Write("REPORT REQ ");
-            break;
-
-        case '$':
-            Write("PRESET AMOUNT ");
+			Write("REPORT REQ ");
 			break;
 
-        case 'D':
-            Write("REQ DELIVERY QUAL & AMOUNT ");
-            break;
+		case '$':
+			Write("PRESET AMOUNT ");
+			break;
+
+		case 'D':
+			Write("REQ DELIVERY QUAL & AMOUNT ");
+			break;
 
 		case 'G':
 			Write("REMOTE PRICES ");
@@ -318,7 +323,8 @@ void TCompacProtocolAnalyser::ShowPollType(char PollType)
 			break;
 
 		default:
-			Write("INVALID POLL-TYPE ");
+			sprintf(str, "INVALID POLL-TYPE (%c)", PollType);
+			Write(str);
 			break;
 	}
 }
@@ -379,6 +385,8 @@ void TCompacProtocolAnalyser::ShowNozzle(char Nozzle)
 *##########################################################################*/
 void TCompacProtocolAnalyser::ShowStatus(char Status)
 {
+	char str[80];
+
 	switch (Status)
 	{
 		case '0':
@@ -430,7 +438,8 @@ void TCompacProtocolAnalyser::ShowStatus(char Status)
 			break;
 
 		default:
-			Write("INVALID STATUS ");
+			sprintf(str, "INVALID STATUS (%c)", Status);
+			Write(str);
 			break;
 	}
 }
@@ -768,10 +777,10 @@ void TCompacProtocolAnalyser::ShowMsg()
 			{
 				nozzle = *(str+3);
 				status = *(str+4);
-				lockout = *(str+7);
+				lockout = *(str+5);
 
-				MsgLen -= 9;
-				memcpy(MsgData, str+8, MsgLen);
+				MsgLen -= 8;
+				memcpy(MsgData, str+7, MsgLen);
 				MsgData[MsgLen] = 0;
 				ShowSlaveMsg(pump, prepay, nozzle, status, lockout, MsgData);
 			}

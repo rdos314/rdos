@@ -1418,6 +1418,50 @@ void TCotexProtocolAnalyser::WriteVarName(TCotexVar *var)
 			Write("OfflineFillingDialLimit");
 			break;
 
+		case COFLEX_VAR_AvailableInList:
+			Write("AvailableInList");
+			break;
+
+		case COFLEX_VAR_Switch:
+			Write("Switch");
+			break;
+
+		case COFLEX_VAR_Reinstall:
+			Write("Reinstall");
+			break;
+
+		case COFLEX_VAR_ReplyMessage:
+			Write("ReplyMessage");
+			break;
+
+		case COFLEX_VAR_IsExternalCard:
+			Write("IsExternalCard");
+			break;
+
+		case COFLEX_VAR_HasPaymentAlternatives:
+			Write("HasPaymentAlternatives");
+			break;
+
+		case COFLEX_VAR_IsCreditCard:
+			Write("IsCreditCard");
+			break;
+
+		case COFLEX_VAR_PinBlock:
+			Write("PinBlock");
+			break;
+
+		case COFLEX_VAR_KSN:
+			Write("KSN");
+			break;
+
+		case COFLEX_VAR_MAC:
+			Write("MAC");
+			break;
+
+		case COFLEX_VAR_ControlNumber:
+			Write("ControlNumber");
+			break;
+
 		default:
 			sprintf(str, "<Unknown Variable (%d)>", var->GetID());
 			Write(str);
@@ -1781,6 +1825,18 @@ void TCotexProtocolAnalyser::WriteTagName(TCotexTag *tag)
 
 		case COFLEX_TAG_INSTALL_ACK:
 			Write("<Install Ack>");
+			break;
+
+		case COFLEX_TAG_LAYOUT_LIST:
+			Write("<LayoutList>");
+			break;
+
+		case COFLEX_TAG_PINVALIDATE_REQ:
+			Write("<PinValidate Req>");
+			break;
+
+		case COFLEX_TAG_PINVALIDATE_ACK:
+			Write("<PinValidate Ack>");
 			break;
 
 		default:

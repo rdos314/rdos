@@ -25,27 +25,26 @@
 #
 ########################################################################*/
 
-#ifndef _FILESTOR_H
-#define _FILESTOR_H
+#ifndef _DISCSTOR_H
+#define _DISCSTOR_H
 
 #include "store.h"
-#include "file.h"
 
-class TFileStorage : public TStorage
+class TDiscStorage : public TStorage
 {
 public:
-    TFileStorage(TFile &File);
-    TFileStorage(TFile &File, int Size);
-    TFileStorage(const char *FileName);
-    TFileStorage(const char *FileName, int Size);
-    ~TFileStorage();
+    TDiscStorage(int DiscNr);
+    TDiscStorage(int DiscNr, long StartSector, int SectorCount);
+    ~TDiscStorage();
     
     virtual int Size();
     virtual int Read(int offset, char *buf, int size);
     virtual int Write(int offset, const char *buf, int size);
 
 private:
-    TFile FFile;
+    int FDiscNr;
+    long FStartSector;
+    int FSectorCount;
 
 };
 

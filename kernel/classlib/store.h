@@ -20,33 +20,20 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# filestor.h
-# File storage class
+# store.h
+# Storage base class
 #
 ########################################################################*/
 
-#ifndef _FILESTOR_H
-#define _FILESTOR_H
+#ifndef _STORE_H
+#define _STORE_H
 
-#include "store.h"
-#include "file.h"
-
-class TFileStorage : public TStorage
+class TStorage
 {
 public:
-    TFileStorage(TFile &File);
-    TFileStorage(TFile &File, int Size);
-    TFileStorage(const char *FileName);
-    TFileStorage(const char *FileName, int Size);
-    ~TFileStorage();
-    
-    virtual int Size();
-    virtual int Read(int offset, char *buf, int size);
-    virtual int Write(int offset, const char *buf, int size);
-
-private:
-    TFile FFile;
-
+    virtual int Size() = 0;
+    virtual int Read(int offset, char *buf, int size) = 0;
+    virtual int Write(int offset, const char *buf, int size) = 0;
 };
 
 #endif
