@@ -40,6 +40,7 @@ public:
 
 	void SetRef(long double Temp);
 	void SetIntensity(long double rel);
+	void SetAmbient(long double rel);
 	long double GetRef();
 	long double GetTemp();
 	long double GetMotor();
@@ -51,8 +52,10 @@ protected:
 private:
 	int FUpdateRef;
 	int FUpdateInten;
+	int FUpdateAmbient;
 
 	int FChannel;
+	long double FAmbient;
 	long double FInten;
 	long double FRef;
 	long double FTemp;

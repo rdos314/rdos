@@ -58,15 +58,15 @@ RESET:		PAGE1
 			clrf PORTA
 ;
 			clrf REF
+;
 			clrf TEM0
 			clrf TEM1
-			clrf MOT
+;
+			movlw $C0
+			movwf MOT
 ;
 			movlw 12
 			movwf INTEN
-;
-			movlw 100
-			movwf MOT
 
 LP:			call Wait
 			call INITLED

@@ -274,6 +274,7 @@ void UpdateFuzzy()
 	RdosWriteString(str);
 
 	radiator[0]->SetIntensity(50.0 + lv * 25.0);
+	radiator[0]->SetAmbient(tv[0]);
 
 	RdosSetCursorPosition(11, 5);
 	if (radiator[0]->IsOnline())

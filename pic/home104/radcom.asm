@@ -95,7 +95,8 @@ RESET:		PAGE1
 			movwf VAL0
 			movwf VAL1
 ;
-			clrf VAL2
+			movlw $C0
+			movwf VAL2
 ;
 			movlw $C0
 			movwf VAL3

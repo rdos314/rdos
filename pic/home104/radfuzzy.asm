@@ -719,8 +719,8 @@ UpdateFuzzy:
 	addlw 127
 	movwf ErrorIndex
 ;
-	movf PrevErrorIndex, W
-	subwf ErrorIndex, W
+	movf ErrorIndex, W
+	subwf PrevErrorIndex, W
 	addlw 127
 	movwf DeltaIndex
 ;
@@ -936,7 +936,9 @@ Main:
 	movwf PrevErrorIndex
 	movwf DeltaIndex
 	movwf AmbientIndex
-	clrf MotorVal
+;
+	movlw $C0
+	movwf MotorVal
 
 LP:
 	call Wait

@@ -53,7 +53,9 @@ TRadiator::TRadiator(int channel)
 	FChannel = channel;
 	FUpdateRef = FALSE;
 	FUpdateInten = FALSE;
+	FUpdateAmbient = FALSE;
 	FInten = 50.0;
+	FAmbient = 20.0;
 	FRef = 20.0;
 	FTemp = 20.0;
 	FMotor = 0.0;
@@ -126,6 +128,22 @@ void TRadiator::SetIntensity(long double rel)
 {
 	FInten = rel;
 	FUpdateInten = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRadiator::SetAmbient
+#
+#   Purpose....: Set ambient (outdoor) temperature
+#
+#   Out params.: ambient temperature
+#   Returns....: *
+#
+##########################################################################*/
+void TRadiator::SetAmbient(long double temp)
+{
+	FAmbient = temp;
+	FUpdateAmbient = TRUE;
 }
 
 /*##########################################################################
@@ -245,6 +263,13 @@ void TRadiator::Execute()
 			val = (int)(FRef * 0.15 + 0.5);
 			val = val << 27;
 			FUpdateInten = !RdosWriteSerialVal(FChannel, 3, val);
+		}
+
+		if (FUpdateAmbient)
+		{
+			val = (int)(10.0 * FAmbient + 0.5);
+			val = val << 23;			
+			FUpdateAmbient = !RdosWriteSerialVal(FChannel, 4, val);
 		}
 
 		if (RunUntil->HasExpired())
