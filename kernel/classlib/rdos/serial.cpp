@@ -751,7 +751,10 @@ void TSerialDevice::Open()
 void TSerialDevice::Close()
 {
 	if (FHandle)
-        RdosCloseCom(FHandle);
+	{
+		RdosCloseCom(FHandle);
+        FHandle = 0;
+	}
 }
 
 /*##########################################################################

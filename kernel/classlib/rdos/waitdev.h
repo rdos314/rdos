@@ -48,10 +48,10 @@ public:
 
 protected:
 	void CreateWait();
+	void Remove(TWait *Wait);
 
 	virtual void SignalNewData() = 0;
 	virtual void Add(TWait *Wait) = 0;
-	virtual void Remove(TWait *Wait);
 
 	TWait *FWait;
 
@@ -68,6 +68,7 @@ public:
 
 class TWait
 {
+
 public:
 	TWait();
 	virtual ~TWait();

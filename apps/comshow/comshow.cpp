@@ -37,6 +37,7 @@
 #include "bar.h"
 #include "compac.h"
 #include "netana.h"
+#include "zap.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -60,9 +61,10 @@ void cdecl main()
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
 //	TFile RawFile("z:\compacpu.dat");
-	TFile RawFile("z:\raw.dat");
+//	TFile RawFile("z:\raw.dat");
+	TFile RawFile("z:\zap.dat");
 
-	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
+//	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
@@ -70,13 +72,15 @@ void cdecl main()
 //	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
+	TZapProtocolAnalyser analyzer(&RawFile);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
 //	analyzer.DefineLogFile("compac.txt");
-	analyzer.DefineLogFile("pump.txt");
+//	analyzer.DefineLogFile("pump.txt");
+	analyzer.DefineLogFile("zap.txt");
 
 	for (;;)
 	{

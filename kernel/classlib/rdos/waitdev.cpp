@@ -95,10 +95,7 @@ TWaitDevice::TWaitDevice(const char *IniSection)
 TWaitDevice::~TWaitDevice()
 {
 	if (FWait)
-	{
-    	RdosRemoveWait(FWait->GetHandle(), this);
 	    delete FWait;
-	}
 }
 
 /*##########################################################################
@@ -131,7 +128,7 @@ void TWaitDevice::CreateWait()
     if (!FWait)
     {
         FWait = new TWait;
-		Add(FWait);
+		FWait->Add(this);
 	}
 }
 
@@ -208,6 +205,7 @@ TWait::TWait()
     FHandle = RdosCreateWait();
 	FInstalled = TRUE;
 	FThreadRunning = FALSE;
+	FWaitList = 0;
 }
 
 /*##########################################################################
@@ -235,7 +233,7 @@ TWait::~TWait()
     while (FWaitList)
     {
         ptr = FWaitList->List;
-		  ptr->WaitDev->Remove(this);
+		FWaitList->WaitDev->Remove(this);
         delete FWaitList;
         FWaitList = ptr;
     }
