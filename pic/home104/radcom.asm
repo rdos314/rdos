@@ -4,6 +4,8 @@
 #DEFINE PAGE1   BSF $03,5
 
 INDF:	.EQU 0
+TMR0:	.EQU 1
+OPTION: .EQU 1
 PCL:    .EQU 2
 STATUS: .EQU 3
 FSR:	.EQU 4
@@ -23,12 +25,11 @@ EEDATA: .EQU $08        ;eeprom data value register
 EECON1: .EQU $08        ;eeprom write register 1
 EEADR:  .EQU $09        ;eeprom data address register
 EECON2: .EQU $09        ;eeprom write register 2
+INTCON: .EQU $0B
 
 WR:     .EQU 1          ;eeprom write initiate flag
 WREN:   .EQU 2          ;eeprom write enable flag
 RD:     .EQU 0          ;eeprom read enable flag
-
-INTCON: .EQU $0B
 
 AL:		.EQU $0F
 DL:		.EQU $10
@@ -43,15 +44,23 @@ CMD:	.EQU $18
 T0:		.EQU $19
 T1:		.EQU $1A
 T2:		.EQU $1B
+TMRCNT	.EQU $1C
+CLKCNT	.EQU $1D
+STATE0	.EQU $1E
+STATE1	.EQU $1F
+BIT0	.EQU $20
+BIT1	.EQU $21
+FLREG0	.EQU $22
+FLREG1	.EQU $23
 
-VAL0:	.EQU $20
-VAL1:	.EQU $21
-VAL2:	.EQU $22
-VAL3:	.EQU $23
-VAL4:	.EQU $24
-VAL5:	.EQU $25
-VAL6:	.EQU $26
-VAL7:	.EQU $27
+VAL0:	.EQU $28
+VAL1:	.EQU $29
+VAL2:	.EQU $2A
+VAL3:	.EQU $2B
+VAL4:	.EQU $2C
+VAL5:	.EQU $2D
+VAL6:	.EQU $2E
+VAL7:	.EQU $2F
 
 	        .ORG 4
     	    .ORG 5
@@ -60,15 +69,28 @@ RESET:		PAGE1
 			movlw $03
 			movwf TRISA
 
-			movlw $FF
+			movlw %11100100
 			movwf TRISB
+
+	        movlw %10000100 ;move ratio value into W
+    	    movwf OPTION    ;set timer ratio to 1:32 (TMR0 rate)
+
 			PAGE0
 			clrf PORTA
 			clrf PORTB
 ;
+			movlw 152
+			movwf TMRCNT
+			bcf INTCON,2
+;
 			movlw $FF
 			movwf TEMP
+;
+			movlw 16
+			movwf CLKCNT
 
+			clrf STATE0
+			clrf STATE1
 			clrf VAL0
 			clrf VAL1
 			clrf VAL2
@@ -78,7 +100,8 @@ RESET:		PAGE1
 			clrf VAL6
 			clrf VAL7
 
-ILOOP:		btfss PORTA,0
+ILOOP:		call POLLTIMER
+			btfss PORTA,0
 			goto ILOOP
 
 REMOTE:		clrf PORTA
@@ -221,9 +244,102 @@ DEVDONE:	movlw 2
 
 LOOPHI:		clrf PORTA
 
-LOOPH:		btfsc PORTA,0
+LOOPH:		call POLLTIMER
+			btfsc PORTA,0
 			goto LOOPH
 			goto ILOOP
+
+HANDLEST0:	movf STATE0,W
+			addwf PCL,F
+			goto SCLK0
+			goto RCLKOP0
+			goto SCLK0
+			goto RCLKREG0
+
+SCLK0:		incf STATE0,F
+			bsf PORTB,0
+			return
+
+RCLKOP0:	incf STATE0,F
+			btfss FLREG0,0
+			goto RCLKOPC
+
+			bsf PORTB,1
+			goto RCLKOPD
+
+RCLKOPC:	bcf PORTB,1
+RCLKOPD:	rrf FLREG0,F
+			movlw 3
+			movwf BIT0
+			return
+
+RCLKREG0:	decf STATE0,F
+			decfsz BIT0,F
+			goto RCLKREGM
+;
+			clrf STATE0
+			bcf PORTB,0
+			bcf PORTB,3
+			return
+
+RCLKREGM:	btfss FLREG0,0
+			goto RCLKREGC
+
+			bsf PORTB,1
+			goto RCLKREGD
+
+RCLKREGC:	bcf PORTB,1
+RCLKREGD:	rrf FLREG0,F
+			return
+
+HANDLEST1:	movf STATE1,W
+			addwf PCL,F
+			goto SETCLK1
+			goto RESCLK1
+
+SETCLK1:	incf STATE1,F
+			bsf PORTB,0
+			return
+
+RESCLK1:	clrf STATE1
+			bcf PORTB,0
+			bcf PORTB,4
+			return
+			
+POLLTIMER:	decfsz CLKCNT,F
+			goto POLLTIM
+;
+			movlw 16
+			movwf CLKCNT
+;
+			btfsc PORTB,3
+			call HANDLEST0
+;
+			btfsc PORTB,4
+			call HANDLEST1
+
+POLLTIM:	btfss INTCON,2
+			return
+
+			bcf INTCON,2
+;
+			decfsz TMRCNT,F
+			return
+;
+			movlw 16
+			movwf CLKCNT
+			
+			movlw 153
+			movwf TMRCNT
+;
+			movlw 0
+			movwf FLREG0
+			bsf FLREG0,7
+			bsf PORTB,1
+;
+			bsf PORTB,3
+			incf VAL0,F
+			return
 
 DELAY:		return
 
@@ -241,10 +357,12 @@ UPDATECRC:	andlw 1
 			xorwf CRC,F
 			return
 
-WAITCLK:	btfsc PORTA,0
+WAITCLK:	call POLLTIMER
+			btfsc PORTA,0
 			goto WAITCLK
 
-WCLKLOW:	btfss PORTA,0
+WCLKLOW:	call POLLTIMER
+			btfss PORTA,0
 			goto WCLKLOW
 			return
 

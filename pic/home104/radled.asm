@@ -48,7 +48,7 @@ RESET:		PAGE1
 			movlw $18
 			movwf TRISA
 
-			movlw $FF
+			movlw %11010010
 			movwf TRISB
 			PAGE0
 			clrf PORTA
@@ -65,11 +65,9 @@ LP:			call WRITEREF
 			call WRITETEM
 			call WRITEMOT
 			call WAIT
-			incf REF,F
 			incf TEM0,F
 			btfsc STATUS,Z
 			incf TEM1,F
-			incf MOT,F
 			goto LP
 
 STOP:		goto STOP
@@ -234,14 +232,25 @@ WRITEMOT:	call DECMOT
 			call LOADLED
 			return
 
-WAIT:		clrf TEMP
-WAITY:		clrf COUNT
-WAITI:		decfsz COUNT,F
-			goto WAITI
-			decfsz TEMP,F
-			goto WAITY
+WAIT:		btfss PORTB,7
+			goto WAIT
+
+WAITSC:		btfss PORTB,7
 			return
 
+			btfss PORTB,4
+			goto WAITSC
+;
+			incf REF,F
+			incf MOT,F
+
+WAITSS:		btfss PORTB,7
+			return
+
+			btfsc PORTB,4
+			goto WAITSS
+			goto WAITSC
+			
 DECODE:		clrf D1
 			clrf D2
 			movlw 100
