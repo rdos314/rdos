@@ -1071,6 +1071,7 @@ RdosGetBitmapInfo	Proc
 	UserGate get_bitmap_info_nr
 	jc gbiFail
 ;
+	push edi
 	mov edi,[ebp+12]
 	movzx eax,al
 	mov [edi],eax
