@@ -49,6 +49,7 @@
 #include "mdtm.h"
 #include "dele.h"
 #include "mkd.h"
+#include "rmd.h"
 #include "quit.h"
 
 #define FALSE 0
@@ -129,7 +130,7 @@ void cdecl main()
 	TPasvFactory *pasv = new TPasvFactory;
 	TPortFactory *port = new TPortFactory;
 	TListFactory *list = new TListFactory;
-    TCwdFactory *cwd = new TCwdFactory;
+	TCwdFactory *cwd = new TCwdFactory;
 	TCdupFactory *cdup = new TCdupFactory;
 	TTypeFactory *type = new TTypeFactory;
 	TRetrFactory *retr = new TRetrFactory;
@@ -137,6 +138,7 @@ void cdecl main()
 	TMdtmFactory *mdtm = new TMdtmFactory;
 	TDeleFactory *dele = new TDeleFactory;
 	TMkdFactory *mkd = new TMkdFactory;
+	TRmdFactory *rmd = new TRmdFactory;
 	TQuitFactory *quit = new TQuitFactory;
 
 	TSocket::Listen(&Factory, 21, 0x4000);
