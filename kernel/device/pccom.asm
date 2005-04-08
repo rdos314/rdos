@@ -36,6 +36,7 @@ include ..\user.inc
 include ..\driver.def
 include ..\handle.inc
 include ..\wait.inc
+include ..\os\pci.inc
 						
 		NAME pccom
 
@@ -1501,6 +1502,102 @@ add_wait_done:
 	retf32
 add_wait_for_com	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitPciAdapter
+;
+;		DESCRIPTION:    Init PCI adapter if found
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		NC		Adapter found
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DriverName	DB 'SerialPCI',0
+
+PciVendorTab:
+pci00	DW 1409h, 7168h
+pci01 	DW 0,	  0
+
+InitPciAdapter	Proc near
+	mov si,OFFSET PciVendorTab
+init_pci_loop:
+	xor ax,ax
+	mov dx,cs:[si]
+	mov cx,cs:[si+2]
+	or dx,dx
+	stc
+	jz init_pci_done
+;
+	FindPciDevice
+	jnc init_pci_found
+;
+	add si,4
+	jmp init_pci_loop
+
+init_pci_found:
+    int 3
+	mov cx,PCI_card_ExCa_base
+	ReadPciDword
+	mov dx,ax
+	and dx,0FFE0h
+;	mov ds:IoBase,dx
+;
+	xor ch,ch
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+;	mov bx,cs
+;	mov es,bx
+;	mov di,OFFSET NetInt	
+;	RequestPrivateIrqHandler
+	clc
+
+init_pci_done:
+	ret
+InitPciAdapter	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Init_pci
+;
+;		DESCRIPTION:    inits adpater
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+detect_name	DB 'Serial PCI',0
+
+detect_thread	proc far
+	call InitPciAdapter
+	ret
+detect_thread	endp
+	
+init_pci	Proc far
+	push ds
+	push es
+	pusha
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET detect_name
+	mov si,OFFSET detect_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	popa
+	pop es
+	pop ds
+	ret
+init_pci	Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1522,6 +1619,11 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET init_pci
+	HookInitTasking
 ;
 	mov di,OFFSET delete_handle
 	mov ax,SERIAL_HANDLE
