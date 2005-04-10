@@ -1064,6 +1064,14 @@ ReleasePrivateIrqHandler	MACRO
 	OsGate release_private_irq_handler_nr
 					ENDM
 
+SetupIrqDetect	MACRO
+	OsGate setup_irq_detect_nr
+					ENDM
+;   AX      Detected IRQs
+PollIrqDetect	MACRO
+	OsGate poll_irq_detect_nr
+					ENDM
+
 ;;;;;;;;; TIME & DATE ;;;;;;;;;;;;;
 
 UpdateRtc	MACRO

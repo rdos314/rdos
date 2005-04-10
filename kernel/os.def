@@ -430,5 +430,8 @@ register_swap_proc_nr       EQU 294
 
 is_irq_free_nr              EQU 295
 
+setup_irq_detect_nr         EQU 296
+poll_irq_detect_nr          EQU 297
+
 osgate_entries				EQU 300
 

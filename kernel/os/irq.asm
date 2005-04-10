@@ -75,6 +75,8 @@ irq_vm_seg		DW ?
 irq_pm16_sel	DW ?
 irq_pm32_sel	DW ?
 
+bad_irqs        DW ?
+
 irq_arr			DB 16 * SIZE irq_struc DUP(?)
 
 irq_sys_seg	ENDS
@@ -101,6 +103,7 @@ irq_thread&nr:
 	int 3
 	jmp irq_thread&nr
 
+
 irq&nr:
 	push bp
 	mov bp,sp
@@ -116,6 +119,7 @@ irq_mask_done&nr:
 	mov eax,ds:[bx].owner_cr3
 	or eax,eax
 	jz irq_default&nr
+;	
 	int 3
 	mov edx,cr3
 	cmp eax,edx
@@ -209,6 +213,7 @@ irq_real_stack_ok&nr:
 	jmp irq_handle_done&nr
 irq_handle_in_thread&nr:
 	int 3
+	
 irq_default&nr:
 	mov ax,irq_sys_sel
 	mov es,ax
@@ -219,13 +224,24 @@ irq_default&nr:
 ;
 	mov ds,es:[bx].user_data
 	push cs
-	push OFFSET irq_default_error&nr
+	push OFFSET irq_handle_done&nr
 	push es:[bx].user_handler
 	xor ax,ax
 	mov es,ax
 	retf
 
 irq_default_error&nr:
+IF nr GT 7
+	in al,INT1_MASK
+	or al,1 SHL (nr-8)
+	out INT1_MASK,al
+ELSE
+    in al,INT0_MASK
+	or al,1 SHL nr
+	out INT0_MASK,al
+ENDIF
+	or es:bad_irqs, 1 SHL nr
+
 irq_handle_done&nr:
 	cli
 IF nr GT 7
@@ -686,6 +702,70 @@ remove_pic_done:
 	ret
 release_private_irq_handler	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			setup_irq_detect
+;
+;		description:	Setup IRQ detect
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+setup_irq_detect_name	DB 'Setup IRQ detect',0
+
+setup_irq_detect	Proc far
+	push ds
+	push ax
+;	
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov ds:bad_irqs,0
+;	
+	xor al,al
+	out 21h,al
+	jmp short $+2
+;	
+    xor al,al
+	out 0A1h,al
+;
+    Swap
+    Swap
+;
+    mov ds:bad_irqs,0    	
+;
+	pop ax
+	pop ds
+	ret
+setup_irq_detect	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			poll_irq_detect
+;
+;		description:	Poll detected IRQs
+;
+;       RETURNS:        AX      Detected IRQs
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+poll_irq_detect_name	DB 'Poll IRQ detect',0
+
+poll_irq_detect	Proc far
+	push ds
+;	
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov ax,ds:bad_irqs
+;
+	pop ds
+	ret
+poll_irq_detect	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -748,6 +828,18 @@ init_irq	PROC near
 	mov di,OFFSET release_private_irq_handler_name
 	xor cl,cl
 	mov ax,release_private_irq_handler_nr
+	RegisterOsGate
+;
+	mov si,OFFSET setup_irq_detect
+	mov di,OFFSET setup_irq_detect_name
+	xor cl,cl
+	mov ax,setup_irq_detect_nr
+	RegisterOsGate
+;
+	mov si,OFFSET poll_irq_detect
+	mov di,OFFSET poll_irq_detect_name
+	xor cl,cl
+	mov ax,poll_irq_detect_nr
 	RegisterOsGate
 ;
 	xor eax,eax

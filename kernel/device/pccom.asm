@@ -1574,6 +1574,69 @@ InitPciAdapter	Endp
 detect_name	DB 'Serial PCI',0
 
 detect_thread	proc far
+    int 3
+    SetupIrqDetect
+    mov dx,3F8h
+;    
+    push dx
+    add dx,4
+    in al,dx
+    pop dx
+    mov ah,al
+; 
+    push dx
+    add dx,1
+    in al,dx
+    pop dx
+;
+    push ax
+;
+    push dx
+    add dx,4
+    mov al,0Ch
+    out dx,al
+    pop dx
+;
+    PollIrqDetect
+;
+    push dx
+    add dx,4
+    xor al,al
+    out dx,al
+    pop dx
+;
+    mov ax,10
+    WaitMilliSec
+;
+    push dx
+    add dx,4
+    mov al,0Bh
+    out dx,al
+    pop dx    
+;
+    push dx
+    inc dx
+    mov al,0Fh
+    out dx,al
+    pop dx
+;
+    push dx
+    in al,dx
+    add dx,2
+    in al,dx
+    add dx,2
+    in al,dx
+    add dx,2
+    in al,dx
+    pop dx
+;
+    mov al,-1
+    out dx,al
+;
+    mov ax,20
+    WaitMilliSec
+;    
+    PollIrqDetect
 	call InitPciAdapter
 	ret
 detect_thread	endp
