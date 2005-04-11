@@ -242,82 +242,6 @@ int TSerialCommand::WaitForChar(long MaxWait)
 
 /*##########################################################################
 #
-#   Name       : TSerialDevice::CalcBase
-#
-#   Purpose....: Calculate io address for port based on port nr            
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialDevice::CalcBase(int Port)
-{
-	switch (Port)
-	{
-		case 1:
-			return 0x3F8;
-
-		case 2:
-			return 0x2F8;
-
-		case 3:
-			return 0x3E8;
-
-		case 4:
-			return 0x2E8;
-
-		case 5:
-			return 0x3A8;
-
-		case 6:
-			return 0x2A8;
-
-		default:
-		    return 0;
-	}
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::CalcIrq
-#
-#   Purpose....: Calculate irq nr for port based on port nr      	       
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TSerialDevice::CalcIrq(int Port)
-{
-	switch (Port)
-	{
-		case 1:
-			return 4;
-
-		case 2:
-			return 3;
-
-		case 3:
-			return 9;
-
-		case 4:
-			return 10;
-
-		case 5:
-			return 11;
-
-		case 6:
-			return 12;
-
-		default:
-			return 0;
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TSerialDevice::Init
 #
 #   Purpose....: Init device
@@ -336,50 +260,12 @@ void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int
     OnChar = 0;    
 
     FPort = Port;
-	FBase = CalcBase(Port);
-	FIrq = CalcIrq(Port);
     FBaudrate = Baudrate;
     FParity = Parity;
     FDataBits = DataBits;
     FStopBits = StopBits;
 	FDebugFile = 0;
 	FUseCts = FALSE;
-	
-	OpenPort();
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::Init
-#
-#   Purpose....: Init device
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Irq        irq line
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSerialDevice::Init(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
-{
-    int Base;
-
-    OnChar = 0;    
-
-    FDebugFile = 0;
-    FPort = Port;
-	FBase = CalcBase(Port);
-	FIrq = Irq;
-    FBaudrate = Baudrate;
-    FParity = Parity;
-    FDataBits = DataBits;
-    FStopBits = StopBits;
-    FUseCts = FALSE;
-    FHandle = 0;
 	
 	OpenPort();
 }
@@ -398,8 +284,6 @@ TSerialDevice::TSerialDevice()
 {
     OnChar = 0;    
     FPort = 0;
-	FBase = 0;
-	FIrq = 0;
     FBaudrate = 0;
     FParity = 0;
     FDataBits = 0;
@@ -423,8 +307,6 @@ TSerialDevice::TSerialDevice(const char *IniSection)
 {
     OnChar = 0;    
     FPort = 0;
-	FBase = 0;
-	FIrq = 0;
     FBaudrate = 0;
     FParity = 0;
     FDataBits = 0;
@@ -480,49 +362,6 @@ TSerialDevice::TSerialDevice(const char *IniSection, int Port, long Baudrate, ch
 #
 #   Purpose....: Constructor
 #
-#   In params..: IniSection Parameter section
-#                Port       port number (ie COM1 = 1)
-#                Irq        IRQ line
-#                Baudrate   baudrate
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate)
-	: TWaitDevice(IniSection)
-{
-	Init(Port, Irq, Baudrate, 'N', 8, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: IniSection Parameter section
-#                Port       port number (ie COM1 = 1)
-#                Irq        IRQ line
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
-	: TWaitDevice(IniSection)
-{
-	Init(Port, Irq, Baudrate, Parity, DataBits, StopBits);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
 #   In params..: Port       port number (ie COM1 = 1)
 #                Baudrate   baudrate
 #   Out params.: *
@@ -552,45 +391,6 @@ TSerialDevice::TSerialDevice(int Port, long Baudrate)
 TSerialDevice::TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
 	Init(Port, Baudrate, Parity, DataBits, StopBits);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Irq        IRQ line
-#                Baudrate   baudrate
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(int Port, int Irq, long Baudrate)
-{
-	Init(Port, Irq, Baudrate, 'N', 8, 1);
-}
-
-/*##########################################################################
-#
-#   Name       : TSerialDevice::TSerialDevice
-#
-#   Purpose....: Constructor
-#
-#   In params..: Port       port number (ie COM1 = 1)
-#                Irq        IRQ line
-#                Baudrate   baudrate
-#                Parity     parity
-#                DataBits   databits
-#                StopBits   stopbits
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSerialDevice::TSerialDevice(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits)
-{
-	Init(Port, Irq, Baudrate, Parity, DataBits, StopBits);
 }
 
 /*##########################################################################
@@ -702,8 +502,11 @@ void TSerialDevice::StartDebug(TFile *File, int InChannel, int OutChannel)
 *##########################################################################*/
 void TSerialDevice::OpenPort()
 {
-	FHandle = RdosOpenCom(FBase, FIrq, (int)(115200L / FBaudrate), FParity, FDataBits, FStopBits, 0x4000, 0x4000);
-
+    if (FPort)
+    	FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
+    else
+        FHandle = 0;
+        
     if (FHandle)
     {
         if (FUseCts)

@@ -40,6 +40,9 @@ include ..\os\pci.inc
 						
 		NAME pccom
 
+MAX_PORTS       = 16
+MAX_IRQS        = 16
+MAX_IRQ_SHARE   = 4
 
 IER_BITS        = 8
 
@@ -85,11 +88,34 @@ char_time       DD ?
 
 send_wait       DW ?
 
-irq				DB ?
+port_handle     DW ?
 flgs            DB ?
 base			DW ?
 
 port_struc	ENDS
+
+serial_port_struc   STRUC
+
+s_base          DW ?
+s_handle        DW ?
+s_baud_base     DD ?
+
+serial_port_struc   ENDS
+
+serial_irq_struc    STRUC
+
+serial_ports    DW ?
+serial_port_arr DW MAX_IRQ_SHARE DUP(?)
+
+serial_irq_struc    ENDS
+
+serial_data STRUC
+
+sd_ports    DW ?
+sd_port_arr DW MAX_PORTS DUP(?)
+sd_irq_arr  DW MAX_IRQS DUP(?)
+
+serial_data ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -342,17 +368,64 @@ st_rx	DW OFFSET rec_pr
 st_li	DW OFFSET line_err
 
 com_int	Proc far
+    xor bx,bx
+    mov cx,ds:serial_ports
+
+com_int_port_loop:
+    push ds
+    push bx
+    push cx
+;
+    mov ds,ds:[bx].serial_port_arr
+    mov ax,ds:s_handle
+    or ax,ax
+    jz com_int_inactive
+;
+    mov ds,ax
+
+com_int_loop:
 	mov dx,ds:base
 	add dx,2
 	in al,dx
 	test al,1
-	jnz com_int_end
+	jnz com_int_next_port
+;	
 	mov bl,al
 	xor bh,bh
 	and bx,6
 	call word ptr cs:[bx].serial_tab
-	jmp com_int
-com_int_end:
+	jmp com_int_loop
+
+com_int_inactive:
+	mov dx,ds:s_base
+	add dx,2
+	in al,dx
+	test al,1
+	jnz com_int_next_port
+;	
+    mov dx,ds:s_base
+	add dx,6
+	in al,dx
+;	
+    mov dx,ds:s_base
+	add dx,5
+	in al,dx
+;
+    mov dx,ds:s_base
+	in al,dx
+;	
+	mov al,IER_BITS + 1
+	inc dx
+	out dx,al
+
+com_int_next_port:
+    pop cx
+    pop bx
+    pop ds
+;
+    add bx,2
+    loop com_int_port_loop 
+;       
 	ret
 com_int	Endp
 
@@ -391,13 +464,13 @@ delete_handle	Proc far
     StopComPort
 
 delete_handle_stopped:
-	mov al,ds:irq
-	ReleasePrivateIrqHandler
-;
 	mov dx,ds:base
 	inc bx
 	mov al,0
 	out dx,al				; disable rx, tx, line and modem ints
+;	
+    mov es,ds:port_handle
+    mov es:s_handle,0
 ;
 	mov es,ds:send_buf
 	FreeMem
@@ -430,12 +503,11 @@ PAGE
 ;
 ;		description:	Open a serial port
 ;
-;		PARAMETERS:		DX				IO base address
-;						AL				IRQ
+;		PARAMETERS:		AL				Port #
 ;						AH				# of data bits
 ;						BL				# of stop bits
 ;						BH				parity
-;						CX				baudrate divisor
+;						ECX				baudrate
 ;						SI				size of transmit buffer
 ;						DI				size of receive buffer
 ;
@@ -445,41 +517,46 @@ PAGE
 
 open_com_name DB 'Open Com',0
 
-port_base		EQU 2
-port_parity		EQU 4
-port_stop_bits	EQU 6
-port_data_bits	EQU 8
-port_irq		EQU 10
-baud_divisor	EQU 12
+port_parity		EQU 2
+port_stop_bits	EQU 4
+port_data_bits	EQU 6
+port_id         EQU 8
+baud_rate   	EQU 10
 send_buf_size	EQU 14
 rec_buf_size	EQU 16
+baud_divisor    EQU 18
 
 open_com	Proc far
+    sub sp,2
 	push di
 	push si
-	push cx
+	push ecx
 	mov cl,ah
-	and ax,0Fh
+    xor ah,ah
+    push ax	
+	movzx ax,cl
 	push ax
-	mov al,cl
+	movzx ax,bl
 	push ax
-	mov al,bl
+	movzx ax,bh
 	push ax
-	mov al,bh
-	push ax
-	push dx
 	push bp
 	mov bp,sp
 	push ds
 	push es
+	push fs
 	push cx
 	push dx
 	push di
 ;
-    xor bx,bx
-	mov al,[bp].port_irq
-	IsIrqFree
-	jc open_com_done
+    mov bx,com_data_sel
+    mov ds,bx
+    mov bx,[bp].port_id
+    cmp bx,ds:sd_ports
+    jae open_com_fail
+;    
+    add bx,bx
+    mov fs,ds:[bx].sd_port_arr
 ;
 	mov eax, SIZE port_struc
 	AllocateSmallGlobalMem
@@ -513,21 +590,16 @@ open_com	Proc far
 	mov ds:avail_obj,0
 	mov ds:send_wait,0
 ;
-	mov ax,[bp].port_base
+	mov ax,fs:s_base
 	mov ds:base,ax
-	mov al,[bp].port_irq
-	mov ds:irq,al
-	mov ds:flgs,0
-	mov cx,cs
-	mov es,cx
-	mov di,OFFSET com_int
-	RequestPrivateIrqHandler
+	mov fs:s_handle,ds
+	mov ds:port_handle,fs
 ;
     mov ax,start_com_port_nr
     IsValidOsGate
     jc open_com_started
 ;
-    mov dx,[bp].port_base
+    mov dx,fs:s_base
     StartComPort
 
 open_com_started:   
@@ -566,11 +638,14 @@ open_parity_done:
     push edx
 ;
     push dx
-    movzx ecx,word ptr [bp].baud_divisor    
-    mov eax,115200
-    xor edx,edx
-    div ecx             ; eax = bits / s
 ;    
+    mov ecx,[bp].baud_rate
+    mov eax,fs:s_baud_base
+    xor edx,edx
+    div ecx
+    mov [bp].baud_divisor,ax
+;        
+    mov eax,[bp].baud_rate    
     mov ecx,eax
     mov eax,1193000
     xor edx,edx
@@ -623,15 +698,22 @@ open_parity_done:
 	in al,dx
 ;
 	pop bx
+	clc
+	jmp open_com_done
+
+open_com_fail:
+    xor bx,bx
+    stc
 
 open_com_done:
 	pop di
 	pop dx
 	pop cx
+	pop fs
 	pop es
 	pop ds
 	pop bp
-	add sp,16
+	add sp,18
 	retf32 
 open_com	Endp
 
@@ -672,13 +754,13 @@ close_com	Proc far
     StopComPort
 
 close_com_stopped:
-	mov al,ds:irq
-	ReleasePrivateIrqHandler
-;
 	mov dx,ds:base
 	inc bx
 	mov al,0
 	out dx,al				; disable rx, tx, line and modem ints
+;	
+    mov es,ds:port_handle
+    mov es:s_handle,0
 ;
 	mov es,ds:send_buf
 	FreeMem
@@ -691,9 +773,8 @@ close_com_stopped:
 	mov es,ax
 	FreeMem
 ;
-	mov ax,500
+	mov ax,100
 	WaitMilliSec
-
 
 close_com_done:
 	pop dx
@@ -1505,6 +1586,194 @@ add_wait_for_com	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			DetectIrq
+;
+;		DESCRIPTION:    Detect IRQ for a serial base address
+;
+;       PARAMETERS:     DX      Base
+;
+;		RETURNS:		AL      IRQ
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DetectIrq   Proc near
+    push bx
+    push cx
+    push bp
+;    
+    SetupIrqDetect
+;    
+    push dx
+    add dx,4
+    in al,dx
+    pop dx
+    mov ah,al
+; 
+    push dx
+    add dx,1
+    in al,dx
+    pop dx
+;
+    push dx
+    add dx,4
+    mov al,0Ch
+    out dx,al
+    pop dx
+;
+    push dx
+    add dx,4
+    xor al,al
+    out dx,al
+    pop dx
+;
+    mov ax,10
+    WaitMilliSec
+;
+    PollIrqDetect
+    or ax,ax
+    stc
+    jz diDone
+;
+    mov bp,ax
+;
+    push dx
+    add dx,4
+    mov al,0Bh
+    out dx,al
+    pop dx    
+;
+    push dx
+    inc dx
+    mov al,0Fh
+    out dx,al
+    pop dx
+;
+    push dx
+    in al,dx
+    add dx,2
+    in al,dx
+    add dx,2
+    in al,dx
+    add dx,2
+    in al,dx
+    pop dx
+;
+    mov al,-1
+    out dx,al
+;
+    SetupIrqDetect
+;    
+    mov ax,20
+    WaitMilliSec
+;    
+    PollIrqDetect
+;
+    not ax
+    and ax,bp
+    stc
+    jz diDone
+;
+    xor cx,cx
+    mov bx,1
+
+diGetNrLoop:
+    test ax,bx
+    jnz diGetNrDone
+;
+    shl bx,1
+    inc cx
+    jmp diGetNrLoop
+
+diGetNrDone:
+    not bx
+    and ax,bx
+    stc
+    jnz diDone
+;
+    mov ax,cx
+    clc    
+
+diDone:
+    pop bp
+    pop cx
+    pop bx
+    ret
+DetectIrq   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AddPort
+;
+;		DESCRIPTION:    Add port to list of available ports
+;
+;       PARAMETERS:     DX      Base
+;                       AL      IRQ
+;                       ECX     Baud base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddPort Proc near
+    push ds
+    push es
+    pushad
+;    
+    push ax
+    mov ax,com_data_sel
+    mov ds,ax
+;
+    mov eax,SIZE serial_port_struc
+	AllocateSmallGlobalMem
+	mov es:s_base,dx
+	mov es:s_handle,0
+	mov es:s_baud_base,ecx
+	pop ax
+	movzx dx,al
+;
+    mov bx,ds:sd_ports
+    add bx,bx
+    mov ds:[bx].sd_port_arr,es
+    inc ds:sd_ports
+;
+    mov bx,dx
+    add bx,bx
+    mov ax,ds:[bx].sd_irq_arr
+    or ax,ax
+    jnz apAddIrqPort
+;
+    push es
+    push ds
+    mov eax,SIZE serial_irq_struc
+    AllocateSmallGlobalMem
+    mov es:serial_ports,0
+    mov ax,es
+    mov ds,ax
+    mov ax,cs
+    mov es,ax
+	mov di,OFFSET com_int
+    mov ax,dx
+    RequestPrivateIrqHandler
+    mov ax,ds
+    pop ds
+    mov ds:[bx].sd_irq_arr,ax
+    pop es
+
+apAddIrqPort:
+    mov ds,ax
+    mov bx,ds:serial_ports
+    add bx,bx
+    mov ds:[bx].serial_port_arr,es 
+    inc ds:serial_ports   
+;
+    popad
+    pop es
+    pop ds	
+    ret
+AddPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InitPciAdapter
 ;
 ;		DESCRIPTION:    Init PCI adapter if found
@@ -1538,20 +1807,26 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
-    int 3
-	mov cx,PCI_card_ExCa_base
+	xor ch,ch
+	mov cl,PCI_command_reg
+	ReadPciWord
+	or al,PCI_command_IO OR PCI_command_busmstr
+	WritePciWord
+;
+	mov cl,10h
 	ReadPciDword
 	mov dx,ax
-	and dx,0FFE0h
-;	mov ds:IoBase,dx
+	and dx,0FF00h
 ;
 	xor ch,ch
 	mov cl,PCI_interrupt_line
 	ReadPciByte
-;	mov bx,cs
-;	mov es,bx
-;	mov di,OFFSET NetInt	
-;	RequestPrivateIrqHandler
+;
+    mov ecx,921600
+    call AddPort
+;
+    add dx,8
+    call AddPort    
 	clc
 
 init_pci_done:
@@ -1574,69 +1849,41 @@ InitPciAdapter	Endp
 detect_name	DB 'Serial PCI',0
 
 detect_thread	proc far
-    int 3
-    SetupIrqDetect
+    mov ax,100
+    WaitMilliSec
+;    
     mov dx,3F8h
+    call DetectIrq
+    jc dt1
+;
+    mov ecx,115200
+    call AddPort    
+
+dt1:
+    mov dx,2F8h
+    call DetectIrq
+    jc dt2
+;
+    mov ecx,115200
+    call AddPort
+
+dt2:   
+    mov dx,3E8h
+    call DetectIrq
+    jc dt3
 ;    
-    push dx
-    add dx,4
-    in al,dx
-    pop dx
-    mov ah,al
-; 
-    push dx
-    add dx,1
-    in al,dx
-    pop dx
-;
-    push ax
-;
-    push dx
-    add dx,4
-    mov al,0Ch
-    out dx,al
-    pop dx
-;
-    PollIrqDetect
-;
-    push dx
-    add dx,4
-    xor al,al
-    out dx,al
-    pop dx
-;
-    mov ax,10
-    WaitMilliSec
-;
-    push dx
-    add dx,4
-    mov al,0Bh
-    out dx,al
-    pop dx    
-;
-    push dx
-    inc dx
-    mov al,0Fh
-    out dx,al
-    pop dx
-;
-    push dx
-    in al,dx
-    add dx,2
-    in al,dx
-    add dx,2
-    in al,dx
-    add dx,2
-    in al,dx
-    pop dx
-;
-    mov al,-1
-    out dx,al
-;
-    mov ax,20
-    WaitMilliSec
+    mov ecx,115200
+    call AddPort
+
+dt3:   
+    mov dx,2E8h
+    call DetectIrq
+    jc dtpci
 ;    
-    PollIrqDetect
+    mov ecx,115200
+    call AddPort
+
+dtpci:
 	call InitPciAdapter
 	ret
 detect_thread	endp
@@ -1793,6 +2040,14 @@ init	Proc far
 	xor dx,dx
 	mov ax,get_com_send_space_nr
 	RegisterBimodalUserGate
+;
+	mov eax,SIZE serial_data
+	mov bx,com_data_sel
+	AllocateFixedSystemMem
+	mov cx,SIZE serial_data
+	xor di,di
+	xor al,al
+	rep stosb
 ;
 	popa
 	pop es

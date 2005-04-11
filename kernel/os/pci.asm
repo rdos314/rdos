@@ -521,6 +521,69 @@ find_pci_class	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			FindPciCapability
+;
+;		DESCRIPTION:	Find a PCI capability
+;
+;		PARAMETERS:		BH		Bus
+;						BL 		Device
+;						CH		Function
+;                       AL      Capability
+;
+;		RETURNS:		AL      Index
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+find_pci_cap_name	DB 'Find PCI Capability',0
+
+find_pci_cap	Proc far
+    mov dl,al
+    mov cl,6
+    ReadPciWord
+    test al,10h
+    stc
+    jz fpcDone
+;
+    mov cl,34h
+    ReadPciByte
+;
+    mov cl,al
+    mov dh,48
+
+fpcLoop:
+    and cl,NOT 3
+    cmp cl,40h
+    jc fpcDone
+;
+    ReadPciByte
+    cmp al,-1
+    stc
+    jz fpcDone
+;
+    cmp al,dl
+    je fpcOk
+;
+    inc cl
+    ReadPciByte
+    mov cl,al
+;
+    sub dh,1    
+    jnz fpcLoop                    
+;
+    stc
+    jmp fpcDone    
+
+fpcOk:
+    mov al,cl
+    clc
+
+fpcDone:    
+	ret
+find_pci_cap	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			bios_pci_int
 ;
 ;		DESCRIPTION:	Handling BIOS PCI int (0B1h, int 1Ah)
@@ -771,6 +834,12 @@ init	Proc far
 	mov di,OFFSET find_pci_device_name
 	xor cl,cl
 	mov ax,find_pci_device_nr
+	RegisterOsGate
+;
+	mov si,OFFSET find_pci_cap
+	mov di,OFFSET find_pci_cap_name
+	xor cl,cl
+	mov ax,find_pci_cap_nr
 	RegisterOsGate
 ;
 	popa

@@ -294,6 +294,7 @@ printer_code_sel	EQU 730h
 xms_local_sel		EQU 740h
 xms_system_sel		EQU 748h
 
+com_data_sel        EQU 750h
 cbus_data_sel		EQU 758h
 com_code_sel		EQU 760h
 cbus_code_sel		EQU 768h

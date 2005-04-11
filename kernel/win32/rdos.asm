@@ -2923,9 +2923,8 @@ PAGE
 ;
 ;		description:	Open comport
 ;
-;		PARAMETERS:		port_base		base IO-address to com port
-;						port_irq		irq to com port
-;						baud_divisor	baudrate divisor
+;		PARAMETERS:		port_id 		Port #
+;						baud_rate   	baudrate
 ;						parity			parity 'N', 'E' or 'O'
 ;						data_bits		# of data bits
 ;						stop_bits		# of stop bits
@@ -2938,14 +2937,13 @@ PAGE
 
 	public RdosOpenCom
 
-port_base		EQU 8
-port_irq		EQU 12
-baud_divisor	EQU 16
-parity			EQU 20
-data_bits		EQU 24
-stop_bits		EQU 28
-send_buf_size	EQU 32
-rec_buf_size	EQU 36
+port_id 		EQU 8
+baud_rate   	EQU 12
+parity			EQU 16
+data_bits		EQU 20
+stop_bits		EQU 24
+send_buf_size	EQU 28
+rec_buf_size	EQU 32
 
 RdosOpenCom	Proc
 	push ebp
@@ -2956,12 +2954,11 @@ RdosOpenCom	Proc
 	push esi
 	push edi
 ;
-	mov dx,[ebp].port_base
-	mov al,[ebp].port_irq
+	mov al,[ebp].port_id
 	mov ah,[ebp].data_bits
 	mov bl,[ebp].stop_bits
 	mov bh,[ebp].parity
-	mov cx,[ebp].baud_divisor
+	mov ecx,[ebp].baud_rate
 	mov si,[ebp].send_buf_size
 	mov di,[ebp].rec_buf_size
 	UserGate open_com_nr
@@ -2973,7 +2970,7 @@ RdosOpenCom	Proc
 	pop ecx
 	pop ebx
 	pop ebp
-	ret 32
+	ret 28
 RdosOpenCom	Endp
 
 PAGE

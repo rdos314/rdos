@@ -1549,12 +1549,11 @@ InsertCd        MACRO
 
 ;;;;;;;;;;;;; SERIAL PORT ;;;;;;;;;;;;;
 
-;	IN  DX		basadress till com port
-;	IN  AL		irq till com port
+;	IN  AL		Port #
 ;	IN  AH		# of data bits
 ;	IN  BL		# of stop bits
 ;	IN  BH		parity ('N', 'E' or 'O')
-;	IN  CX		baudrate divisor
+;	IN  ECX		baudrate
 ;	IN  SI		size of transmit buffer
 ;	IN  DI		size of receive buffer
 ;	OUT BX		port handle

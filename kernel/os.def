@@ -433,5 +433,7 @@ is_irq_free_nr              EQU 295
 setup_irq_detect_nr         EQU 296
 poll_irq_detect_nr          EQU 297
 
+find_pci_cap_nr             EQU 298
+
 osgate_entries				EQU 300
 

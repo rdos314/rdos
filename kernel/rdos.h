@@ -97,7 +97,7 @@ void *__stdcall RdosAllocateMem(int Size);
 void __stdcall RdosFreeMem(void *ptr);
 int __stdcall RdosAppDebug();
 
-int __stdcall RdosOpenCom(int Base, int Irq, int Divisor, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
+int __stdcall RdosOpenCom(int ID, long BaudRate, char Parity, char DataBits, char StopBits, int SendBufSize, int RecBufSize); 
 void __stdcall RdosCloseCom(int Handle);
 void __stdcall RdosFlushCom(int Handle);
 char __stdcall RdosReadCom(int Handle);

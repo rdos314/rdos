@@ -2456,9 +2456,8 @@ PAGE
 ;
 ;		description:	Open comport
 ;
-;		PARAMETERS:		port_base		base IO-address to com port
-;						port_irq		irq to com port
-;						baud_divisor	baudrate divisor
+;		PARAMETERS:		port_id 		base id
+;						baud_rate   	baudrate
 ;						parity			parity 'N', 'E' or 'O'
 ;						data_bits		# of data bits
 ;						stop_bits		# of stop bits
@@ -2471,9 +2470,8 @@ PAGE
 
 	public _RdosOpenCom
 
-port_base		EQU 6
-port_irq		EQU 8
-baud_divisor	EQU 10
+port_id 		EQU 6
+baud_rate   	EQU 8
 parity			EQU 12
 data_bits		EQU 14
 stop_bits		EQU 16
@@ -2487,12 +2485,11 @@ _RdosOpenCom	Proc far
 	push si
 	push di
 ;
-	mov dx,[bp].port_base
-	mov al,[bp].port_irq
+	mov al,[bp].port_id
 	mov ah,[bp].data_bits
 	mov bl,[bp].stop_bits
 	mov bh,[bp].parity
-	mov cx,[bp].baud_divisor
+	mov ecx,[bp].baud_rate
 	mov si,[bp].send_buf_size
 	mov di,[bp].rec_buf_size
 	OpenCom
@@ -5379,7 +5376,7 @@ _RdosDemandLoadDrive	Proc far
 	mov bp,sp
 ;
 	mov al,[bp+6]
-    GetDemandLoadDrive
+    DemandLoadDrive
 ;    
 	pop bp
 	ret

@@ -45,12 +45,8 @@ class TSerialDevice : public TWaitDevice
 public:
 	TSerialDevice(const char *IniSection, int Port, long Baudrate);
 	TSerialDevice(const char *IniSection, int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate);
-	TSerialDevice(const char *IniSection, int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	TSerialDevice(int Port, long Baudrate);
 	TSerialDevice(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	TSerialDevice(int Port, int Irq, long Baudrate);
-	TSerialDevice(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
 	TSerialDevice(const char *IniSection);
 	TSerialDevice();
 	~TSerialDevice();
@@ -102,17 +98,12 @@ protected:
 
 private:
 	void Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits);
-	void Init(int Port, int Irq, long Baudrate, char Parity, int DataBits, int StopBits);
-	int CalcBase(int Port);
-	int CalcIrq(int Port);
 	void OpenPort();
 
 	TSection FSection;
 	int FHandle;
 
     int FPort;
-	int FIrq;
-	int FBase;
 	long FBaudrate;
 	char FParity;
 	int FDataBits;
