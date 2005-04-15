@@ -575,6 +575,7 @@ open_com	Proc far
 	movzx eax,word ptr [bp].send_buf_size
 	mov ds:send_size,ax
 	AllocateSmallGlobalMem
+	mov ds:flgs,0
 	mov ds:send_buf,es
 	mov ds:send_count,0
 	mov ds:send_head,0

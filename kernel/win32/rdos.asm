@@ -126,23 +126,88 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IFNDEF LOADER
-
 	public _LocalToNetworkLong
 
 _LocalToNetworkLong	Proc
-	push bp
-	mov bp,sp
-	mov dx,[bp+6]
-	xchg dl,dh
-	mov ax,[bp+8]
+	push ebp
+	mov ebp,esp
+	mov eax,[ebp+8]
 	xchg al,ah
-	pop bp
+	rol eax,16
+	xchg al,ah
+	pop ebp
 	ret
 _LocalToNetworkLong	Endp
 
-ENDIF
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NetworkToLocalLong
+;
+;		description:	Convert a network long to local format
+;
+;		returns:		Local format
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+	public _NetworkToLocalLong
+
+_NetworkToLocalLong	Proc
+	push ebp
+	mov ebp,esp
+	mov eax,[ebp+8]
+	xchg al,ah
+	rol eax,16
+	xchg al,ah
+	pop ebp
+	ret
+_NetworkToLocalLong	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			LocalToNetworkShort
+;
+;		description:	Convert a local short to network format
+;
+;		returns:		Network format
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _LocalToNetworkShort
+
+_LocalToNetworkShort	Proc
+	push ebp
+	mov ebp,esp
+	mov ax,[ebp+8]
+	xchg al,ah
+	pop ebp
+	ret
+_LocalToNetworkShort	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NetworkToLocalShort
+;
+;		description:	Convert a network short to local format
+;
+;		returns:		Local format
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public _NetworkToLocalShort
+
+_NetworkToLocalShort	Proc
+	push ebp
+	mov ebp,esp
+	mov ax,[ebp+8]
+	xchg al,ah
+	pop ebp
+	ret
+_NetworkToLocalShort	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
