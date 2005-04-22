@@ -69,11 +69,11 @@ void cdecl main()
 //	TFile RawFile("z:\\tatsuno.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-	TProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TZapProtocolAnalyser analyzer(&RawFile);
@@ -81,14 +81,14 @@ void cdecl main()
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-//	analyzer.DefineLogFile("cotex.txt");
+	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
 //	analyzer.DefineLogFile("compac.txt");
 //	analyzer.DefineLogFile("pump.txt");
 //	analyzer.DefineLogFile("flintab.txt");
 //	analyzer.DefineLogFile("cbus.txt");
 //	analyzer.DefineLogFile("tatsuno.txt");
-	analyzer.DefineLogFile("innova.txt");
+//	analyzer.DefineLogFile("innova.txt");
 	for (;;)
 	{
 		while (!RdosPollKeyboard())
