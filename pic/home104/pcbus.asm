@@ -378,15 +378,15 @@ OutCrcLoop24:
     btfss STATUS,Z
     goto OutCrcLoop24
 ;
-    bcf VAL,0
-    call OutputBit
-    call Delay
-;
     movlw 1
     btfss PORTA,4
     movlw 0   
     movwf VAL
     call WritePort
+;
+    bcf VAL,0
+    call OutputBit
+    call Delay
 ;
     bcf VAL,0
     call OutputBit
@@ -429,6 +429,7 @@ InDataLoop24:
     movwf COUNT
 
 InCrcLoop24:
+    clrf VAL
     call InputBit
     rlf VAL,F
     rlf VAL,F
