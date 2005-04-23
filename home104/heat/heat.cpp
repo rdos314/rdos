@@ -11,19 +11,49 @@
 
 void cdecl main()
 {
-    int val;
-    
+	int val;
+	int prevval = 0;
+	int prevw = -1;
+	int prevr = -1;
+	int w;
+	int r;
+	int change;
+
 	for (;;)
 	{
-		if (RdosWriteSerialRaw(0x26, 5, 2))
-			printf("ok, ");
-		else
-        	printf("fail, ");
+		w = RdosWriteSerialRaw(0x26, 5, 2);
+		r = RdosReadSerialRaw(0x26, 1, &val);
 
-		if (RdosReadSerialRaw(0x26, 1, &val))
-			printf("%ld.%ld\r\n", val / 10, val % 10);
+		if (r)
+		{
+			change = val != prevval;
+			prevval = val;
+		}
 		else
-			printf("fail\r\n");
+			change = FALSE;
+
+		if (!change)
+			change = w != prevw;
+
+		if (!change)
+			change = r != prevr;
+
+		prevr = r;
+		prevw = w;
+
+		if (change)
+		{
+			if (w)
+				printf("ok, ");
+			else
+				printf("fail, ");
+
+			if (r)
+				printf("%ld.%ld\r\n", val / 10, val % 10);
+			else
+				printf("fail\r\n");
+		}
+
 		RdosWaitMilli(1000);
 	}
 }
