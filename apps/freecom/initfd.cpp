@@ -217,6 +217,9 @@ void TInitFdCommand::WriteBootSector()
 
 	memcpy(BootSector + 11, &bootp, sizeof(bootp));
 
+	*(BootSector + 0x1FE) = 0x55;
+	*(BootSector + 0x1FF) = 0xAA;
+
 	if (FDisc)
 		FDisc->Write(0, BootSector, 512);
 
