@@ -449,13 +449,19 @@ allocate_multiple_physical_name	DB 'Allocate Multiple Physical Memory',0
 check_address	Proc near
 	push eax
 	push ebx
+	push esi
 ;
+	mov esi,ds:phys_free_pages
+	shl esi,2
 	mov ebx,ds:free_dma_phys_list
 
 check_addr_loop:
 	or ebx,ebx
 	jz check_addr_fail
 ;	
+    cmp ebx,esi
+    jae check_addr_fail
+;    
 	mov eax,fs:[ebx]
 	xor al,al
 	cmp eax,edx
@@ -472,6 +478,7 @@ check_addr_found:
 	clc
 
 check_addr_done:
+    pop esi
 	pop ebx
 	pop eax
 	ret

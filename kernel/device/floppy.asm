@@ -711,6 +711,7 @@ InitDrive	Proc near
 	push bx
 	movzx bx,al
 ;
+    mov ah,0
 	call TestDrive
 	mov al,7
 	mov ah,18
@@ -734,6 +735,7 @@ InitDrive	Proc near
 	mov ah,27
 	jnc InitDriveOk
 	xor al,al
+	int 3
 	stc
 InitDriveOk:
 	mov ds:[bx].Gap,al
