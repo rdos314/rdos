@@ -7051,11 +7051,14 @@ RdosReadSerialVal	Proc near
 	mov dh,[ebp+8]
 	mov dl,[ebp+12]
 	UserGate read_serial_val_nr
-	jc rdvFail
 ;
+    pushf
 	shl eax,8
 	mov esi,[ebp+16]
 	mov [esi],eax
+    popf	
+	jc rdvFail
+;
 	mov eax,1
 	jmp rdvDone
 
@@ -7134,10 +7137,13 @@ RdosReadSerialRaw	Proc near
 	mov dh,[ebp+8]
 	mov dl,[ebp+12]
 	UserGate read_serial_val_nr
-	jc rdrFail
 ;
+    pushf
 	mov esi,[ebp+16]
 	mov [esi],eax
+    popf	
+	jc rdrFail
+;
 	mov eax,1
 	jmp rdrDone
 

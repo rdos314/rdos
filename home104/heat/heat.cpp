@@ -12,47 +12,43 @@
 void cdecl main()
 {
 	int val;
-	int prevval = 0;
-	int prevw = -1;
-	int prevr = -1;
-	int w;
-	int r;
-	int change;
 
 	for (;;)
 	{
-		w = RdosWriteSerialRaw(0x26, 5, 2);
-		r = RdosReadSerialRaw(0x26, 1, &val);
+		RdosSetCursorPosition(6,0);
 
-		if (r)
+		if (RdosWriteSerialRaw(0x26, 5, 2))
+			printf("ok ");
+		else
+			printf("-- ");
+
+		if (RdosReadSerialRaw(0x26, 0, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(0x26, 1, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(0x26, 2, &val))
 		{
-			change = val != prevval;
-			prevval = val;
+			val = val * 10 / 25;
+			printf("%4ld.%ld ", val / 10, val % 10);
 		}
 		else
-			change = FALSE;
+			printf("------ ");
 
-		if (!change)
-			change = w != prevw;
+		if (RdosReadSerialRaw(0x26, 3, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
 
-		if (!change)
-			change = r != prevr;
-
-		prevr = r;
-		prevw = w;
-
-		if (change)
-		{
-			if (w)
-				printf("ok, ");
-			else
-				printf("fail, ");
-
-			if (r)
-				printf("%ld.%ld\r\n", val / 10, val % 10);
-			else
-				printf("fail\r\n");
-		}
+		if (RdosReadSerialRaw(0x26, 4, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
 
 		RdosWaitMilli(1000);
 	}

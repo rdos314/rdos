@@ -68,10 +68,17 @@ WAIT:
     call Preamp
     call ReadPort
     call Output6
+    call Delay
 ;
     movlw $1A
+    btfss PORTA,4
+    movlw 0   
     movwf VAL
-    call WritePort    
+    call WritePort
+;    
+    movf VAL,W
+    btfsc STATUS,Z
+    goto WAIT
 ;
     call ReadPort
     movf VAL,W
@@ -79,16 +86,11 @@ WAIT:
     call Output6	    
 ;
     movlw 1
-    btfss PORTA,4
-    movlw 0   
     movwf VAL
     call WritePort
-    movf VAL,W
-    btfsc STATUS,Z
-    goto WAIT
 ;
     call CmdProc
-    goto WAIT    
+    goto WAIT
 
 CmdProc:
 	movf CMD,W

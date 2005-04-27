@@ -1566,12 +1566,15 @@ read_serial_val	Proc far
     push edx
     push di
 ;
+    push ebp
+    mov ebp,5000
     mov cx,dx
     xor ax,ax
     mov edx,1193 * 100
     mov di,OFFSET rd0_proc
     mov bl,2
     call DioReq
+    pop ebp
 ;
 	pop di
 	pop edx
