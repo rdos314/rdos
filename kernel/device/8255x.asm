@@ -40,12 +40,6 @@ INCLUDE ..\os\net.inc
 RX_RING_SIZE EQU 10000h
 TX_RING_SIZE EQU 4000h
 
-Reverse	MACRO
-	xchg al,ah
-	rol eax,16
-	xchg al,ah
-		ENDM
-
 SCBStatus       = 0
 SCBCommand      = 2
 SCBPointer      = 4
@@ -120,6 +114,34 @@ ST_OK           = 2000h
 
 AC_EOF          = 8000h
 AC_F            = 4000h
+
+cnf  STRUC
+
+cnf_byte_count      DB ?
+cnf_fifo            DB ?
+cnf_adaptive_ifs    DB ?
+cnf_3               DB ?
+cnf_rx_dma          DB ?
+cnf_tx_dma          DB ?
+cnf_6               DB ?
+cnf_7               DB ?
+cnf_8               DB ?
+cnf_9               DB ?
+cnf_10              DB ?
+cnf_11              DB ?
+cnf_12              DB ?
+cnf_ip_addr_lo      DB ?
+cnf_ip_addr_hi      DB ?
+cnf_15              DB ?
+cnf_fc_delay_lo     DB ?
+cnf_fc_delay_hi     DB ?
+cnf_18              DB ?
+cnf_19              DB ?
+cnf_20              DB ?
+cnf_21              DB ?
+cnf_22              DB ?
+
+cnf  ENDS
 
 rfd     STRUC
 
@@ -489,6 +511,161 @@ InitTx	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			Config
+;
+;		DESCRIPTION:    Configure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Config	Proc near
+    mov es,ds:TxRingSel
+    mov es:cb_status,0
+    mov es:cb_command,CB_CONFIG OR CMD_S
+    mov es:cb_link,-1
+;
+    mov cx,SIZE cnf
+    mov di,SIZE CB
+    xor al,al
+    rep stosb
+;
+    mov di,SIZE CB
+    mov es:[di].cnf_byte_count,SIZE cnf
+    mov es:[di].cnf_fifo,8
+    mov es:[di].cnf_6,32h
+    mov es:[di].cnf_7,7
+    mov es:[di].cnf_8,1
+
+	if(nic->mac >= mac_82558_D101_A4) {
+    	mov es:[di].cnf_3,1
+    
+
+struct config {
+/*0*/	u8 X(byte_count:6, pad0:2);
+/*1*/	u8 X(X(rx_fifo_limit:4, tx_fifo_limit:3), pad1:1);
+/*2*/	u8 adaptive_ifs;
+/*3*/	u8 X(X(X(X(mwi_enable:1, type_enable:1), read_align_enable:1),
+	   term_write_cache_line:1), pad3:4);
+/*4*/	u8 X(rx_dma_max_count:7, pad4:1);
+/*5*/	u8 X(tx_dma_max_count:7, dma_max_count_enable:1);
+
+/*6*/	u8 X(X(X(X(X(X(X(late_scb_update:1, direct_rx_dma:1),
+	   tno_intr:1), cna_intr:1), standard_tcb:1), standard_stat_counter:1),
+	   rx_discard_overruns:1), rx_save_bad_frames:1);
+/*7*/	u8 X(X(X(X(X(rx_discard_short_frames:1, tx_underrun_retry:2),
+	   pad7:2), rx_extended_rfd:1), tx_two_frames_in_fifo:1),
+	   tx_dynamic_tbd:1);
+/*8*/	u8 X(X(mii_mode:1, pad8:6), csma_disabled:1);
+/*9*/	u8 X(X(X(X(X(rx_tcpudp_checksum:1, pad9:3), vlan_arp_tco:1),
+	   link_status_wake:1), arp_wake:1), mcmatch_wake:1);
+/*10*/	u8 X(X(X(pad10:3, no_source_addr_insertion:1), preamble_length:2),
+	   loopback:2);
+/*11*/	u8 X(linear_priority:3, pad11:5);
+/*12*/	u8 X(X(linear_priority_mode:1, pad12:3), ifs:4);
+/*13*/	u8 ip_addr_lo;
+/*14*/	u8 ip_addr_hi;
+/*15*/	u8 X(X(X(X(X(X(X(promiscuous_mode:1, broadcast_disabled:1),
+	   wait_after_win:1), pad15_1:1), ignore_ul_bit:1), crc_16_bit:1),
+	   pad15_2:1), crs_or_cdt:1);
+/*16*/	u8 fc_delay_lo;
+/*17*/	u8 fc_delay_hi;
+/*18*/	u8 X(X(X(X(X(rx_stripping:1, tx_padding:1), rx_crc_transfer:1),
+	   rx_long_ok:1), fc_priority_threshold:3), pad18:1);
+/*19*/	u8 X(X(X(X(X(X(X(addr_wake:1, magic_packet_disable:1),
+	   fc_disable:1), fc_restop:1), fc_restart:1), fc_reject:1),
+	   full_duplex_force:1), full_duplex_pin:1);
+/*20*/	u8 X(X(X(pad20_1:5, fc_priority_location:1), multi_ia:1), pad20_2:1);
+/*21*/	u8 X(X(pad21_1:3, multicast_all:1), pad21_2:4);
+/*22*/	u8 X(X(rx_d102_mode:1, rx_vlan_drop:1), pad22:6);
+	u8 pad_d102[9];
+};
+
+config  STRUC
+
+cnf_byte_count      DB ?
+cnf_fifo            DB ?
+cnf_adaptive_ifs    DB ?
+cnf_3               DB ?
+cnf_rx_dma          DB ?
+cnf_tx_dma          DB ?
+cnf_6               DB ?
+cnf_7               DB ?
+cnf_8               DB ?
+cnf_9               DB ?
+cnf_10              DB ?
+cnf_11              DB ?
+cnf_12              DB ?
+cnf_ip_addr_lo      DB ?
+cnf_ip_addr_hi      DB ?
+cnf_15              DB ?
+cnf_fc_delay_lo     DB ?
+cnf_fc_delay_hi     DB ?
+cnf_18              DB ?
+cnf_19              DB ?
+cnf_20              DB ?
+cnf_21              DB ?
+cnf_22              DB ?
+
+config  ENDS
+
+	config->rx_discard_short_frames = 0x1;	/* 1=discard, 0=pass */
+	config->tx_underrun_retry = 0x3;	/* # of underrun retries */
+	config->mii_mode = 0x1;			/* 1=MII mode, 0=503 mode */
+	config->pad10 = 0x6;
+	config->no_source_addr_insertion = 0x1;	/* 1=no, 0=yes */
+	config->preamble_length = 0x2;		/* 0=1, 1=3, 2=7, 3=15 bytes */
+	config->ifs = 0x6;			/* x16 = inter frame spacing */
+	config->ip_addr_hi = 0xF2;		/* ARP IP filter - not used */
+	config->pad15_1 = 0x1;
+	config->pad15_2 = 0x1;
+	config->crs_or_cdt = 0x0;		/* 0=CRS only, 1=CRS or CDT */
+	config->fc_delay_hi = 0x40;		/* time delay for fc frame */
+	config->tx_padding = 0x1;		/* 1=pad short frames */
+	config->fc_priority_threshold = 0x7;	/* 7=priority fc disabled */
+	config->pad18 = 0x1;
+	config->full_duplex_pin = 0x1;		/* 1=examine FDX# pin */
+	config->pad20_1 = 0x1F;
+	config->fc_priority_location = 0x1;	/* 1=byte#31, 0=byte#19 */
+	config->pad21_1 = 0x5;
+
+	config->adaptive_ifs = nic->adaptive_ifs;
+	config->loopback = nic->loopback;
+
+	if(nic->mii.force_media && nic->mii.full_duplex)
+		config->full_duplex_force = 0x1;	/* 1=force, 0=auto */
+
+	if(nic->flags & promiscuous || nic->loopback) {
+		config->rx_save_bad_frames = 0x1;	/* 1=save, 0=discard */
+		config->rx_discard_short_frames = 0x0;	/* 1=discard, 0=save */
+		config->promiscuous_mode = 0x1;		/* 1=on, 0=off */
+	}
+
+	if(nic->flags & multicast_all)
+		config->multicast_all = 0x1;		/* 1=accept, 0=no */
+
+	if(!(nic->flags & wol_magic))
+		config->magic_packet_disable = 0x1;	/* 1=off, 0=on */
+
+	if(nic->mac >= mac_82558_D101_A4) {
+		config->fc_disable = 0x1;	/* 1=Tx fc off, 0=Tx fc on */
+		config->mwi_enable = 0x1;	/* 1=enable, 0=disable */
+		config->standard_tcb = 0x0;	/* 1=standard, 0=extended */
+		config->rx_long_ok = 0x1;	/* 1=VLANs ok, 0=standard */
+		if(nic->mac >= mac_82559_D101M)
+			config->tno_intr = 0x1;		/* TCO stats enable */
+		else
+			config->standard_stat_counter = 0x0;
+	}
+
+	DPRINTK(HW, DEBUG, "[00-07]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
+		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+	DPRINTK(HW, DEBUG, "[08-15]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
+		c[8], c[9], c[10], c[11], c[12], c[13], c[14], c[15]);
+	DPRINTK(HW, DEBUG, "[16-23]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
+		c[16], c[17], c[18], c[19], c[20], c[21], c[22], c[23]);
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			SetupEthernetAddress
 ;
 ;		DESCRIPTION:    Setup ethernet address
@@ -674,9 +851,12 @@ NetInt  Endp
 DriverName	DB '8255x',0
 
 PciVendorTab:
-pci00	DW 8086h, 1209h
-pci01	DW 8086h, 1229h
-pci02 	DW 0,	  0
+pci00	DW 8086h, 1029h
+pci01	DW 8086h, 1030h
+pci02	DW 8086h, 1059h
+pci03	DW 8086h, 1209h
+pci04	DW 8086h, 1229h
+pci05 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
