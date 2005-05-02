@@ -40,6 +40,21 @@ INCLUDE ..\os\net.inc
 RX_RING_SIZE EQU 10000h
 TX_RING_SIZE EQU 4000h
 
+; Revision ID
+
+MAC_82557_D100_A  = 0
+MAC_82557_D100_B  = 1
+MAC_82557_D100_C  = 2
+MAC_82558_D101_A4 = 4
+MAC_82558_D101_B0 = 5
+MAC_82559_D101M   = 8
+MAC_82559_D101S   = 9
+MAC_82550_D102    = 12
+MAC_82550_D102_C  = 13
+MAC_82551_E       = 14
+MAC_82551_F       = 15
+MAC_82551_10      = 16
+
 SCBStatus       = 0
 SCBCommand      = 2
 SCBPointer      = 4
@@ -92,6 +107,14 @@ CU_DUMP_STAT    = 50h
 CU_BASE         = 60h
 CU_DUMP_RESET   = 70h
 
+; int bits
+
+ACK_SW_INT	    = 4
+ACK_RNR		    = 10h
+ACK_CU_IDLE	    = 20h
+ACK_FRAME_RX	= 40h
+ACK_CU_CMD	    = 80h
+
 ; SCBStatus bits
 
 CB_COMPLETE     = 8000h
@@ -130,8 +153,8 @@ cnf_9               DB ?
 cnf_10              DB ?
 cnf_11              DB ?
 cnf_12              DB ?
-cnf_ip_addr_lo      DB ?
-cnf_ip_addr_hi      DB ?
+cnf_13              DB ?
+cnf_14              DB ?
 cnf_15              DB ?
 cnf_fc_delay_lo     DB ?
 cnf_fc_delay_hi     DB ?
@@ -171,12 +194,14 @@ Handle				DW ?
 WaitThread          DW ?
 IntStat             DB ?
 EeAdrLen            DB ?
+RevID               DB ?
 EthernetAddress		DB 6 DUP(?)
 
 RxRingPhys          DD ?
 RxRingLinear        DD ?
 RxRingSize          DD ?
 RxRingSel           DW ?
+RxRingCurrPtr       DD ?
 
 TxRingPhys          DD ?
 TxRingLinear        DD ?
@@ -534,134 +559,39 @@ Config	Proc near
     mov es:[di].cnf_6,32h
     mov es:[di].cnf_7,7
     mov es:[di].cnf_8,1
+    mov es:[di].cnf_10,2Eh
+    mov es:[di].cnf_12,61h
+    mov es:[di].cnf_14,0F2h
+    mov es:[di].cnf_15,48h
+    mov es:[di].cnf_fc_delay_hi,40h
+    mov es:[di].cnf_18,0F2h
+    mov es:[di].cnf_19,80h
+    mov es:[di].cnf_20,3Fh
+    mov es:[di].cnf_21,5
+;
+    cmp ds:RevID,MAC_82558_D101_A4
+    jc config_do
+;
+    or es:[di].cnf_3,1
+    or es:[di].cnf_19,4
 
-	if(nic->mac >= mac_82558_D101_A4) {
-    	mov es:[di].cnf_3,1
-    
-
-struct config {
-/*0*/	u8 X(byte_count:6, pad0:2);
-/*1*/	u8 X(X(rx_fifo_limit:4, tx_fifo_limit:3), pad1:1);
-/*2*/	u8 adaptive_ifs;
-/*3*/	u8 X(X(X(X(mwi_enable:1, type_enable:1), read_align_enable:1),
-	   term_write_cache_line:1), pad3:4);
-/*4*/	u8 X(rx_dma_max_count:7, pad4:1);
-/*5*/	u8 X(tx_dma_max_count:7, dma_max_count_enable:1);
-
-/*6*/	u8 X(X(X(X(X(X(X(late_scb_update:1, direct_rx_dma:1),
-	   tno_intr:1), cna_intr:1), standard_tcb:1), standard_stat_counter:1),
-	   rx_discard_overruns:1), rx_save_bad_frames:1);
-/*7*/	u8 X(X(X(X(X(rx_discard_short_frames:1, tx_underrun_retry:2),
-	   pad7:2), rx_extended_rfd:1), tx_two_frames_in_fifo:1),
-	   tx_dynamic_tbd:1);
-/*8*/	u8 X(X(mii_mode:1, pad8:6), csma_disabled:1);
-/*9*/	u8 X(X(X(X(X(rx_tcpudp_checksum:1, pad9:3), vlan_arp_tco:1),
-	   link_status_wake:1), arp_wake:1), mcmatch_wake:1);
-/*10*/	u8 X(X(X(pad10:3, no_source_addr_insertion:1), preamble_length:2),
-	   loopback:2);
-/*11*/	u8 X(linear_priority:3, pad11:5);
-/*12*/	u8 X(X(linear_priority_mode:1, pad12:3), ifs:4);
-/*13*/	u8 ip_addr_lo;
-/*14*/	u8 ip_addr_hi;
-/*15*/	u8 X(X(X(X(X(X(X(promiscuous_mode:1, broadcast_disabled:1),
-	   wait_after_win:1), pad15_1:1), ignore_ul_bit:1), crc_16_bit:1),
-	   pad15_2:1), crs_or_cdt:1);
-/*16*/	u8 fc_delay_lo;
-/*17*/	u8 fc_delay_hi;
-/*18*/	u8 X(X(X(X(X(rx_stripping:1, tx_padding:1), rx_crc_transfer:1),
-	   rx_long_ok:1), fc_priority_threshold:3), pad18:1);
-/*19*/	u8 X(X(X(X(X(X(X(addr_wake:1, magic_packet_disable:1),
-	   fc_disable:1), fc_restop:1), fc_restart:1), fc_reject:1),
-	   full_duplex_force:1), full_duplex_pin:1);
-/*20*/	u8 X(X(X(pad20_1:5, fc_priority_location:1), multi_ia:1), pad20_2:1);
-/*21*/	u8 X(X(pad21_1:3, multicast_all:1), pad21_2:4);
-/*22*/	u8 X(X(rx_d102_mode:1, rx_vlan_drop:1), pad22:6);
-	u8 pad_d102[9];
-};
-
-config  STRUC
-
-cnf_byte_count      DB ?
-cnf_fifo            DB ?
-cnf_adaptive_ifs    DB ?
-cnf_3               DB ?
-cnf_rx_dma          DB ?
-cnf_tx_dma          DB ?
-cnf_6               DB ?
-cnf_7               DB ?
-cnf_8               DB ?
-cnf_9               DB ?
-cnf_10              DB ?
-cnf_11              DB ?
-cnf_12              DB ?
-cnf_ip_addr_lo      DB ?
-cnf_ip_addr_hi      DB ?
-cnf_15              DB ?
-cnf_fc_delay_lo     DB ?
-cnf_fc_delay_hi     DB ?
-cnf_18              DB ?
-cnf_19              DB ?
-cnf_20              DB ?
-cnf_21              DB ?
-cnf_22              DB ?
-
-config  ENDS
-
-	config->rx_discard_short_frames = 0x1;	/* 1=discard, 0=pass */
-	config->tx_underrun_retry = 0x3;	/* # of underrun retries */
-	config->mii_mode = 0x1;			/* 1=MII mode, 0=503 mode */
-	config->pad10 = 0x6;
-	config->no_source_addr_insertion = 0x1;	/* 1=no, 0=yes */
-	config->preamble_length = 0x2;		/* 0=1, 1=3, 2=7, 3=15 bytes */
-	config->ifs = 0x6;			/* x16 = inter frame spacing */
-	config->ip_addr_hi = 0xF2;		/* ARP IP filter - not used */
-	config->pad15_1 = 0x1;
-	config->pad15_2 = 0x1;
-	config->crs_or_cdt = 0x0;		/* 0=CRS only, 1=CRS or CDT */
-	config->fc_delay_hi = 0x40;		/* time delay for fc frame */
-	config->tx_padding = 0x1;		/* 1=pad short frames */
-	config->fc_priority_threshold = 0x7;	/* 7=priority fc disabled */
-	config->pad18 = 0x1;
-	config->full_duplex_pin = 0x1;		/* 1=examine FDX# pin */
-	config->pad20_1 = 0x1F;
-	config->fc_priority_location = 0x1;	/* 1=byte#31, 0=byte#19 */
-	config->pad21_1 = 0x5;
-
-	config->adaptive_ifs = nic->adaptive_ifs;
-	config->loopback = nic->loopback;
-
-	if(nic->mii.force_media && nic->mii.full_duplex)
-		config->full_duplex_force = 0x1;	/* 1=force, 0=auto */
-
-	if(nic->flags & promiscuous || nic->loopback) {
-		config->rx_save_bad_frames = 0x1;	/* 1=save, 0=discard */
-		config->rx_discard_short_frames = 0x0;	/* 1=discard, 0=save */
-		config->promiscuous_mode = 0x1;		/* 1=on, 0=off */
-	}
-
-	if(nic->flags & multicast_all)
-		config->multicast_all = 0x1;		/* 1=accept, 0=no */
-
-	if(!(nic->flags & wol_magic))
-		config->magic_packet_disable = 0x1;	/* 1=off, 0=on */
-
-	if(nic->mac >= mac_82558_D101_A4) {
-		config->fc_disable = 0x1;	/* 1=Tx fc off, 0=Tx fc on */
-		config->mwi_enable = 0x1;	/* 1=enable, 0=disable */
-		config->standard_tcb = 0x0;	/* 1=standard, 0=extended */
-		config->rx_long_ok = 0x1;	/* 1=VLANs ok, 0=standard */
-		if(nic->mac >= mac_82559_D101M)
-			config->tno_intr = 0x1;		/* TCO stats enable */
-		else
-			config->standard_stat_counter = 0x0;
-	}
-
-	DPRINTK(HW, DEBUG, "[00-07]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
-		c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
-	DPRINTK(HW, DEBUG, "[08-15]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
-		c[8], c[9], c[10], c[11], c[12], c[13], c[14], c[15]);
-	DPRINTK(HW, DEBUG, "[16-23]=%02X:%02X:%02X:%02X:%02X:%02X:%02X:%02X\n",
-		c[16], c[17], c[18], c[19], c[20], c[21], c[22], c[23]);
+config_do:    
+    ClearSignal
+    xor eax,eax
+    mov dx,ds:IoBase
+    add dx,SCBPointer     
+    out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,SCBCommand
+    mov al,CU_START
+    out dx,al
+    call WaitForAccept    
+    WaitForSignal
+	clc
+;
+    ret
+Config  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -760,6 +690,7 @@ ir_rxring_loop:
 	AllocateGdt
 	CreateDataSelector16
 	mov ds:RxRingSel,bx
+	mov ds:RxRingCurrPtr,0
 ;
     mov es,bx	
     xor edx,edx
@@ -774,6 +705,7 @@ irInitRfd:
 ;
     xor eax,eax
     call InitRfd   
+    mov es:[edx].rfd_command,CMD_S
 ;
     mov eax,ds:RxRingPhys
     mov dx,ds:IoBase
@@ -796,13 +728,6 @@ irInitRfd:
     mov al,RU_START
     out dx,al         
     call WaitForAccept    
-
-irloop:
-    mov dx,ds:IoBase
-    add dx,SCBStatus
-    in eax,dx
-    int 3
-    jmp irloop
 	clc
 
 irDone:
@@ -830,10 +755,272 @@ niLoop:
     or ds:IntStat,al
     out dx,al
 ;
+    test al,ACK_FRAME_RX
+    jz niNotRx
+;
+	mov bx,ds:Handle
+	or bx,bx
+	jz niNotRx
+;
+    push ax
+	NetReceived
+	pop ax
+	and al,NOT ACK_FRAME_RX
+
+niNotRx:
+    or al,al
+    jz niDone
+;    
     mov bx,ds:WaitThread
-    Signal    
+    or bx,bx
+    jz niLoop
+;    
+    Signal
+    jmp niLoop    
+
+niDone:    
     ret
 NetInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Preview
+;
+;		DESCRIPTION:    Return size of block or no more data
+;
+;		RETURNS:		NC		Data available
+;						ECX		Size of data (0)
+;						DX		Packet type
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Preview	Proc far
+    push ds
+    push fs
+    push ebx
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+    mov fs,ds:RxRingSel
+
+preview_loop:
+    mov ebx,ds:RxRingCurrPtr
+    mov ax,fs:[ebx].rfd_status
+    test ax,ST_C
+    stc
+    jz preview_done
+;
+    test ax,ST_OK
+    jnz preview_ok
+;
+    mov fs:[ebx].rfd_status,0
+    or fs:[ebx].rfd_command,CMD_S
+    mov fs:[ebx].rfd_actual_size,0
+    push ebx
+    sub ebx,800h
+    jnc preview_unsusp
+;
+    mov ebx,RX_RING_SIZE - 800h
+
+preview_unsusp:
+    mov fs:[ebx].rfd_command,0
+    pop ebx
+;
+    add ebx,800h
+    cmp ebx,RX_RING_SIZE
+    jnz preview_save_next
+;
+    xor ebx,ebx
+
+preview_save_next:    
+    mov ds:RxRingCurrPtr,ebx
+    jmp preview_loop
+        
+preview_ok:    
+    add ebx,SIZE RFD
+	mov dx,fs:[ebx+12]	
+	xchg dl,dh
+    xor ecx,ecx
+    clc
+
+preview_done:
+    pop ebx
+    pop fs
+    pop ds
+	ret
+Preview	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Receive
+;
+;		DESCRIPTION:    Receive data
+;
+;       RETURNS: 	    ES:EDI		data buffer
+;						ECX			size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Receive	Proc far
+    push ds
+    push fs
+    push bx
+    push edx
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+	mov fs,ds:RxRingSel
+    mov edx,ds:RxRingCurrPtr
+    mov cx,fs:[edx].rfd_actual_size
+    and ecx,3FFFh
+    AllocateGdt
+    add edx,SIZE RFD
+    add edx,ds:RxRingLinear
+    CreateAliasSelector16
+    mov es,bx
+	mov edi,14
+	sub ecx,14
+;
+    pop edx
+    pop bx
+	pop fs
+	pop ds
+	ret
+Receive	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Remove
+;
+;		DESCRIPTION:    Remove data from buffer ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Remove	Proc far
+    push ds
+    push ebx
+;
+	mov bx,ether_data_sel
+	mov ds,bx
+    mov ebx,ds:RxRingCurrPtr
+    mov ds,ds:RxRingSel
+    and ds:[ebx].rfd_status, NOT ST_OK
+;
+    pop ebx
+    pop ds
+	ret
+Remove	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetBuffer
+;
+;		DESCRIPTION:    Get buffer
+;
+;       PARAMETERS:     ECX		size
+;
+;		RETURNS:		ES:EDI	data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetBuffer	Proc far
+	push eax
+	mov eax,14
+	add eax,ecx
+	cmp eax,64
+	jae gbSizeOk
+
+    mov eax,64
+
+gbSizeOk:	
+    add eax,4
+	AllocateGlobalMem
+	mov edi,14
+	pop eax
+	ret
+GetBuffer	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Send
+;
+;		DESCRIPTION:    Send data
+;
+;       PARAMETERS:     ECX		size
+;						DX		packet type
+;						DS:ESI	dest address
+;						ES:EDI	data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Send	Proc far
+    int 3
+    FreeMem
+    ret
+Send    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetAddress
+;
+;		DESCRIPTION:    Get adapter address
+;
+;		RETURNS:		DS:ESI	address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetAddress	Proc far
+	mov si,ether_data_sel
+	mov ds,si
+	mov esi,OFFSET EthernetAddress	
+	ret
+GetAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetPktAddress
+;
+;		DESCRIPTION:    Get packet addresses
+;
+; 		PARAMETERS:		ES		Data buffer selector
+;
+;		RETURNS:	 	ES:ESI	Source address
+;						ES:EDI	Dest address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetPktAddress	Proc far
+	mov esi,6
+	xor edi,edi
+	ret
+GetPktAddress	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DispatchTable
+;
+;		DESCRIPTION:    Driver dispatch table
+;
+;       PARAMETERS:     
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DispTable:
+	DW OFFSET Preview,	 		ether_code_sel
+	DW OFFSET Receive,			ether_code_sel
+	DW OFFSET Remove,			ether_code_sel
+	DW OFFSET GetBuffer,		ether_code_sel
+	DW OFFSET Send,				ether_code_sel
+	DW OFFSET GetAddress,		ether_code_sel
+	DW OFFSET GetPktAddress,	ether_code_sel
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -875,6 +1062,10 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
+	mov cx,PCI_revisionID
+	ReadPciByte
+	mov ds:RevID,al
+;	
 	mov cx,10h
 	ReadPciDword
 	mov dx,ax
@@ -909,28 +1100,33 @@ init_pci_found:
 	RequestPrivateIrqHandler
 ;
     call ReadEthernetAddress
-    int 3	
     call InitTx
+    call Config
     call SetupEthernetAddress
-;    
-    mov dx,ds:IoBase
-    in eax,dx
-;    
     call InitRx
+    mov ds:WaitThread,0
 ;
 	push ds
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;	mov si,OFFSET DispTable
-;	mov di,OFFSET DriverName
+	mov si,OFFSET DispTable
+	mov di,OFFSET DriverName
 	mov al,1
 	mov dx,0
 	mov ecx,1600
-;	RegisterNetDriver
+	RegisterNetDriver
 	pop ds
-;	mov ds:Handle,bx
-	clc
+	mov ds:Handle,bx
+;	
+    mov al,ds:IntStat
+    test al,ACK_FRAME_RX
+    clc
+    jz init_pci_done
+;
+	mov bx,ds:Handle
+	NetReceived
+    clc
 
 init_pci_done:
 	ret

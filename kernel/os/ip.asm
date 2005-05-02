@@ -931,7 +931,7 @@ receive_check_ok:
 	cmp al,17
 	jne receive_fail
 ;
-	mov al,ds:[di].ip_hdr_ver
+	mov al,es:[di].ip_hdr_ver
 	and al,0Fh
 	shl al,2
 	xor ah,ah
