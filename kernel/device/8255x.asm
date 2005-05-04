@@ -37,8 +37,12 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
 INCLUDE ..\os\net.inc
 
-RX_RING_SIZE EQU 10000h
-TX_RING_SIZE EQU 4000h
+RX_ENTRIES   EQU 20h
+RX_BUF_SIZE  EQU 800h
+RX_RING_SIZE EQU 10000h         ; 20h * 800h
+TX_ENTRIES   EQU 80h
+TX_BUF_SIZE  EQU 20h
+TX_RING_SIZE EQU TX_ENTRIES * TX_BUF_SIZE
 
 ; Revision ID
 
@@ -125,6 +129,7 @@ CB_OK           = 2000h
 CMD_EL          = 8000h
 CMD_S           = 4000h
 CMD_I           = 2000h
+CMD_NC          = 20h
 CMD_H           = 10h
 CMD_SF          = 8
 
@@ -177,6 +182,27 @@ rfd_size        DW ?
 
 rfd     ENDS
 
+txd     STRUC
+
+txd_status      DW ?
+txd_command     DW ?
+txd_link        DD ?
+txd_tbd_arr     DD ?
+txd_tcb_size    DW ?
+txd_threshold   DB ?
+txd_tbd_count   DB ?
+
+txd     ENDS
+
+tbd     STRUC
+
+tbd_buf         DD ?
+tbd_actual_size DW ?
+tbd_el          DW ?
+tbd_sel         DW ?
+
+tbd     ENDS
+
 cb  STRUC
 
 cb_status       DW ?
@@ -195,6 +221,7 @@ WaitThread          DW ?
 IntStat             DB ?
 EeAdrLen            DB ?
 RevID               DB ?
+TxSection           section_typ <>
 EthernetAddress		DB 6 DUP(?)
 
 RxRingPhys          DD ?
@@ -207,11 +234,13 @@ TxRingPhys          DD ?
 TxRingLinear        DD ?
 TxRingSize          DD ?
 TxRingSel           DW ?
+TxRingCurrPtr       DD ?
+TxRingAckPtr        DD ?
+TxRingStarted       DB ?
 
 data	ENDS
 
 code	SEGMENT byte public 'CODE'
-
 
 	assume cs:code
 
@@ -484,16 +513,16 @@ WaitForAccept   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitTx
+;		NAME:			InitCmd
 ;
 ;		DESCRIPTION:    Init command ring
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InitTx	Proc near
+InitCmd	Proc near
 	mov ecx,TX_RING_SIZE SHR 12
 	AllocateMultiplePhysical
-	jc itDone
+	jc icDone
 ;
 	mov ds:TxRingPhys,eax
 	mov eax,TX_RING_SIZE
@@ -505,11 +534,11 @@ InitTx	Proc near
 	or al,7
 	mov ecx,TX_RING_SIZE SHR 12
 
-it_ring_loop:
+ic_ring_loop:
 	SetPhysicalPage
 	add eax,1000h
 	add edx,1000h
-	loop it_ring_loop
+	loop ic_ring_loop
 ;
 	mov ecx,ds:TxRingSize
 	mov edx,ds:TxRingLinear
@@ -529,9 +558,9 @@ it_ring_loop:
     call WaitForAccept    
 	clc
 
-itDone:
+icDone:
 	ret
-InitTx	Endp
+InitCmd	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -648,7 +677,7 @@ InitRfd	Proc near
     mov es:[edx].rfd_command,0
     mov es:[edx].rfd_status,0
     mov es:[edx].rfd_rbd,0
-    mov ax,800h - SIZE RFD
+    mov ax,RX_BUF_SIZE - SIZE RFD
     mov es:[edx].rfd_size,ax
     mov es:[edx].rfd_actual_size,0
     pop eax
@@ -694,12 +723,12 @@ ir_rxring_loop:
 ;
     mov es,bx	
     xor edx,edx
-    mov eax,800h
+    mov eax,RX_BUF_SIZE
 
 irInitRfd:
     call InitRfd
     mov edx,eax
-    add eax,800h
+    add eax,RX_BUF_SIZE
     cmp eax,RX_RING_SIZE
     jne irInitRfd
 ;
@@ -733,6 +762,116 @@ irInitRfd:
 irDone:
 	ret
 InitRx	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitTxd
+;
+;		DESCRIPTION:    Init TXD block
+;
+;       PARAMETERS:     ES:EDX      TXD address
+;                       EAX         Next TXD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTxd	Proc near
+    push eax
+    mov es:[edx].txd_link,eax
+    mov es:[edx].txd_command,CB_TX OR CMD_S OR CMD_SF
+    mov es:[edx].txd_status,0
+    mov eax,edx
+    add eax,SIZE txd
+    mov es:[edx].txd_tbd_arr,eax
+    mov es:[edx].txd_tcb_size,0
+    mov es:[edx].txd_threshold,0E0h
+    mov es:[edx].txd_tbd_count,1
+;
+    mov es:[eax].tbd_buf,0
+    mov es:[eax].tbd_actual_size,0
+    mov es:[eax].tbd_el,0    
+    pop eax
+    ret
+InitTxd Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitTx
+;
+;		DESCRIPTION:    Init transmit ring
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitTx	Proc near
+    mov cx,TX_ENTRIES - 1
+    mov es,ds:TxRingSel
+    xor edx,edx
+    mov eax,TX_BUF_SIZE
+
+itInitTxd:
+    call InitTxd
+    mov edx,eax
+    add eax,TX_BUF_SIZE
+    loop itInitTxd
+;
+    xor eax,eax
+    call InitTxd
+;    
+	mov ds:TxRingCurrPtr,0
+	mov ds:TxRingAckPtr,0
+	ret
+InitTx	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PurgeTx
+;
+;		DESCRIPTION:    Remove sent packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PurgeTx	Proc near
+    push es
+    push fs
+    push edx
+;    
+    EnterSection ds:TxSection
+;
+    mov fs,ds:TxRingSel
+
+ptLoop:
+    mov edx,ds:TxRingAckPtr
+    cmp edx,ds:TxRingCurrPtr
+    je ptLeave
+;
+    test fs:[edx].txd_status, ST_C
+    jz ptLeave
+;
+    mov fs:[edx].txd_status,0
+    or fs:[edx].txd_command, CMD_S
+;    
+    push edx
+    mov edx,fs:[edx].txd_tbd_arr
+    mov es,fs:[edx].tbd_sel
+    FreeMem
+    mov fs:[edx].tbd_sel,0
+    mov fs:[edx].tbd_buf,0
+    mov fs:[edx].tbd_actual_size,0
+    pop edx
+    mov edx,fs:[edx].txd_link
+    mov ds:TxRingAckPtr,edx
+    jmp ptLoop
+
+ptLeave:
+    LeaveSection ds:TxSection
+;
+    pop edx
+    pop fs
+    pop es    
+	ret
+PurgeTx	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -818,16 +957,16 @@ preview_loop:
     or fs:[ebx].rfd_command,CMD_S
     mov fs:[ebx].rfd_actual_size,0
     push ebx
-    sub ebx,800h
+    sub ebx,RX_BUF_SIZE
     jnc preview_unsusp
 ;
-    mov ebx,RX_RING_SIZE - 800h
+    mov ebx,RX_RING_SIZE - RX_BUF_SIZE
 
 preview_unsusp:
     mov fs:[ebx].rfd_command,0
     pop ebx
 ;
-    add ebx,800h
+    add ebx,RX_BUF_SIZE
     cmp ebx,RX_RING_SIZE
     jnz preview_save_next
 ;
@@ -959,8 +1098,126 @@ GetBuffer	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send	Proc far
-    int 3
-    FreeMem
+	push eax
+	push bx
+	push ecx
+	push dx
+	push esi
+	push edi
+;
+	xor di,di
+	mov ax,ds:[esi]
+	stosw
+	mov ax,[esi+2]
+	stosw
+	mov ax,[esi+4]
+	stosw
+;
+	mov ax,ether_data_sel
+	mov ds,ax
+    call PurgeTx
+;    
+	mov ax,word ptr ds:EthernetAddress
+	stosw
+	mov ax,word ptr ds:EthernetAddress+2
+	stosw
+	mov ax,word ptr ds:EthernetAddress+4
+	stosw
+;
+	mov ax,dx
+	xchg al,ah
+	stosw
+	add ecx,14
+;
+    mov bx,es
+	push ecx
+	GetSelectorBaseSize
+	pop ecx
+	GetPhysicalPage
+	and ax,0F000h
+	and ecx,0FFFh
+;
+	EnterSection ds:TxSection
+
+send_retry_buf:
+    mov edx,ds:TxRingCurrPtr
+    mov es,ds:TxRingSel
+    mov esi,es:[edx].txd_tbd_arr
+    mov edi,es:[esi].tbd_buf
+    or edi,edi
+    jz send_take_buf
+;
+    push ax
+    mov ax,100
+    WaitMilliSec
+    pop ax
+    jmp send_retry_buf
+
+send_take_buf:
+    or es:[edx].txd_command, CMD_S
+    mov es:[esi].tbd_buf,eax
+    mov es:[esi].tbd_actual_size,cx
+    mov es:[esi].tbd_sel,bx
+;
+    sub edx,TX_BUF_SIZE
+    jnc send_prev_buf
+;
+    mov edx,TX_RING_SIZE - TX_BUF_SIZE
+
+send_prev_buf:
+    and es:[edx].txd_command, NOT CMD_S
+;
+    mov edx,ds:TxRingCurrPtr
+    add edx,TX_BUF_SIZE
+    cmp edx,TX_RING_SIZE
+    jne send_next_buf
+;
+    xor edx,edx
+
+send_next_buf:
+    mov ds:TxRingCurrPtr,edx   
+;
+    mov dx,ds:IoBase
+    add dx,SCBStatus
+    in al,dx
+    test al,80h
+    jnz send_leave
+;
+    mov al,ds:TxRingStarted
+    or al,al
+    jnz send_resume
+;
+    inc ds:TxRingStarted
+    xor eax,eax
+    mov dx,ds:IoBase
+    add dx,SCBPointer     
+    out dx,eax
+;
+    mov dx,ds:IoBase
+    add dx,SCBCommand
+    mov al,CU_START
+    out dx,al
+    call WaitForAccept    
+
+send_resume:    
+    mov dx,ds:IoBase
+    add dx,SCBCommand
+    mov al,CU_RESUME
+    out dx,al
+    call WaitForAccept    
+
+send_leave:    
+    xor ax,ax
+    mov es,ax
+	LeaveSection ds:TxSection
+	mov ds,ax
+;
+	pop edi
+	pop esi
+	pop dx
+	pop ecx
+	pop bx
+	pop eax
     ret
 Send    Endp
 
@@ -1100,11 +1357,12 @@ init_pci_found:
 	RequestPrivateIrqHandler
 ;
     call ReadEthernetAddress
-    call InitTx
+    call InitCmd
     call Config
     call SetupEthernetAddress
     call InitRx
     mov ds:WaitThread,0
+    call InitTx
 ;
 	push ds
 	mov ax,cs
@@ -1208,6 +1466,7 @@ Init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+	InitSection ds:TxSection
 ;
 	mov ax,cs
 	mov es,ax
