@@ -38,6 +38,8 @@ INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
+NODE_CNT            = 20h
+
 DQE_STAT_DONE       = 1
 DQE_STAT_TIMEOUT    = 2
 DQE_STAT_SUCCESS    = 4
@@ -68,6 +70,8 @@ PicStatus   DB ?
 
 DioQueue    DW ?,?,?
 DioCurr     DW ?,?,?
+
+NodeArr     DB NODE_CNT DUP(?)
 
 data_seg    ENDS
 
@@ -1285,6 +1289,143 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;
+;		NAME:		    DioAllReq
+;
+;		description:	Broadcase dio req
+;
+;       PARAMETERS:     EDX     Timeout in tics
+;                       EBP     Data
+;                       BL      Cmd #
+;                       CL      Line #
+;                       CH      Node #
+;                       DI      Action proc
+;
+;       RETURNS:        EAX     Data returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioAllReq   Proc near
+    push ds
+    push es
+    push fs
+    push bx
+    push si
+    push di
+;    
+    ClearSignal
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    mov eax,6
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov fs,ax
+    xor si,si
+;
+    xor ax,ax    
+
+darAllocLoop:
+    push ax
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    GetThread
+    mov fs:[si],es
+    mov es:dqe_thread,ax
+    pop ax
+    mov es:dqe_device,0
+    mov es:dqe_stat,0
+    mov es:dqe_timeout,edx
+    mov es:dqe_proc,OFFSET node_proc
+    mov es:dqe_node,ch
+    mov es:dqe_line,cl
+    mov es:dqe_cmd,bl
+    mov es:dqe_data,ebp
+    mov es:dqe_action,di
+    push ax
+    call es:dqe_proc
+    pop ax
+;
+    push di
+    mov di,OFFSET DioQueue
+    add di,ax
+    add di,ax
+    call DioInsert
+    pop di
+;    
+    add si,2
+    inc ax
+    cmp ax,3
+    jne darAllocLoop    
+;
+    mov bx,ds:PicThread
+    Signal
+;
+    mov cx,3
+
+darWaitSignal:    
+    WaitForSignal
+    loop darWaitSignal
+;
+    mov cx,3
+    xor si,si
+
+darFreeLoop:
+    mov es,fs:[si]
+    mov eax,es:dqe_data
+    mov bl,es:dqe_stat
+    test bl,DQE_STAT_SUCCESS
+    jnz darOk
+;
+    FreeMem
+    add si,2
+    loop darFreeLoop    
+;
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+    stc
+    jmp darDone
+
+darOk:
+    movzx bx,es:dqe_node
+    mov ax,si
+    shr ax,1
+    mov ds:[bx].NodeArr,al
+    FreeMem
+    add si,2
+    sub cx,1
+    jz darOkDone
+
+darOkLoop:
+    mov es,fs:[si]
+    FreeMem
+    add si,2
+    loop darFreeLoop
+
+darOkDone:
+    mov bx,fs
+    mov es,bx
+    xor bx,bx
+    mov fs,bx
+    FreeMem
+    clc
+
+darDone:
+    pop di
+    pop si
+    pop bx
+    pop fs
+    pop es
+    pop ds
+    ret
+DioAllReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			node_proc
 ;
 ;       PARAMETERS:     ES      Req block
@@ -1457,11 +1598,10 @@ write_serial_val	Proc far
 ;
     mov ebp,eax
     mov cx,dx
-    xor ax,ax
     mov edx,1193 * 100
     mov di,OFFSET wr0_proc
     mov bl,3
-    call DioReq
+    call DioAllReq
 ;
 	pop ebp
 	pop di
@@ -1569,11 +1709,10 @@ read_serial_val	Proc far
     push ebp
     mov ebp,5000
     mov cx,dx
-    xor ax,ax
     mov edx,1193 * 100
     mov di,OFFSET rd0_proc
     mov bl,2
-    call DioReq
+    call DioAllReq
     pop ebp
 ;
 	pop di
@@ -1645,6 +1784,7 @@ init	PROC far
 	mov eax,SIZE data_seg
 	mov bx,piclcd_data_sel
 	AllocateFixedSystemMem
+;	
 	mov es:PicThread,0
 	mov es:DioQueue,0
 	mov es:DioQueue+2,0
@@ -1652,6 +1792,11 @@ init	PROC far
 	mov es:DioCurr,0
 	mov es:DioCurr+2,0
 	mov es:DioCurr+4,0
+;
+    mov di,NodeArr
+    mov cx,NODE_CNT
+    mov al,-1
+    rep stosb
 ;
 	mov ax,cs
 	mov ds,ax
