@@ -38,11 +38,12 @@ INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
-NODE_CNT            = 20h
+NODE_CNT            = 40h
 
 DQE_STAT_DONE       = 1
 DQE_STAT_TIMEOUT    = 2
 DQE_STAT_SUCCESS    = 4
+DQE_STAT_COMPLETE   = 8
 
 digio_queue_entry   STRUC
 
@@ -1155,6 +1156,7 @@ dcrRemove:
     jmp dcrDone
 
 dcrFree:
+    or es:dqe_stat,DQE_STAT_COMPLETE
     mov bx,es:dqe_thread
     Signal
 
@@ -1215,9 +1217,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioReq
+;		NAME:		    DioOneReq
 ;
-;		description:	Dio req
+;		description:	Dio req, specified queue
 ;
 ;       PARAMETERS:     AX      Queue #
 ;                       EDX     Timeout in tics
@@ -1231,7 +1233,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioReq   Proc near
+DioOneReq   Proc near
     push ds
     push es
     push bx
@@ -1246,7 +1248,7 @@ DioReq   Proc near
     GetThread
     mov es:dqe_thread,ax
     pop ax
-    mov es:dqe_device,0
+    mov es:dqe_device,al
     mov es:dqe_stat,0
     mov es:dqe_timeout,edx
     mov es:dqe_proc,OFFSET node_proc
@@ -1273,17 +1275,17 @@ DioReq   Proc near
     FreeMem
     test bl,DQE_STAT_SUCCESS
     stc
-    jz drDone
+    jz dorDone
 ;
     clc
 
-drDone:
+dorDone:
     pop di
     pop bx
     pop es
     pop ds
     ret
-DioReq    Endp
+DioOneReq    Endp
 
 PAGE
 
@@ -1332,7 +1334,7 @@ darAllocLoop:
     mov fs:[si],es
     mov es:dqe_thread,ax
     pop ax
-    mov es:dqe_device,0
+    mov es:dqe_device,al
     mov es:dqe_stat,0
     mov es:dqe_timeout,edx
     mov es:dqe_proc,OFFSET node_proc
@@ -1359,13 +1361,21 @@ darAllocLoop:
 ;
     mov bx,ds:PicThread
     Signal
-;
-    mov cx,3
 
-darWaitSignal:    
+darSignalLoop:
     WaitForSignal
-    loop darWaitSignal
+;   
+    mov cx,3
+    xor si,si
+
+darCheckLoop:
+    mov es,fs:[si]
+    test es:dqe_stat, DQE_STAT_COMPLETE
+    jz darSignalLoop
 ;
+    add si,2
+    loop darCheckLoop    
+; 
     mov cx,3
     xor si,si
 
@@ -1402,15 +1412,15 @@ darOkLoop:
     mov es,fs:[si]
     FreeMem
     add si,2
-    loop darFreeLoop
+    loop darOkLoop
 
 darOkDone:
-    mov bx,fs
-    mov es,bx
-    xor bx,bx
-    mov fs,bx
+    mov dx,fs
+    mov es,dx
+    xor dx,dx
+    mov fs,dx
     FreeMem
-    clc
+    clc    
 
 darDone:
     pop di
@@ -1421,6 +1431,57 @@ darDone:
     pop ds
     ret
 DioAllReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioReq
+;
+;		description:    Dio req
+;
+;       PARAMETERS:     EDX     Timeout in tics
+;                       EBP     Data
+;                       BL      Cmd #
+;                       CL      Line #
+;                       CH      Node #
+;                       DI      Action proc
+;
+;       RETURNS:        EAX     Data returned
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioReq  Proc near
+    push ds
+;    
+    mov ax,piclcd_data_sel
+    mov ds,ax
+    push bx
+    movzx bx,ch
+    mov al,ds:[bx].NodeArr
+    pop bx
+    cmp al,-1
+    je drAll
+;
+    movzx ax,al
+    call DioOneReq
+    jnc drDone
+;
+    push bx
+    movzx bx,ch
+    mov byte ptr ds:[bx].NodeArr,-1
+    pop bx
+    stc
+    jmp drDone
+    
+drAll:
+    call DioAllReq 
+
+drDone:   
+    pop ds
+    ret
+DioReq  Endp
 
 PAGE
 
@@ -1601,7 +1662,7 @@ write_serial_val	Proc far
     mov edx,1193 * 100
     mov di,OFFSET wr0_proc
     mov bl,3
-    call DioAllReq
+    call DioReq
 ;
 	pop ebp
 	pop di
@@ -1712,7 +1773,7 @@ read_serial_val	Proc far
     mov edx,1193 * 100
     mov di,OFFSET rd0_proc
     mov bl,2
-    call DioAllReq
+    call DioReq
     pop ebp
 ;
 	pop di
