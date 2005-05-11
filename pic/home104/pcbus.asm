@@ -110,7 +110,7 @@ CmdProc:
 ;;;;;;;;;;
 
 Delay:
-    movlw 1
+    movlw 10
     movwf DELCNT
 ;
 
