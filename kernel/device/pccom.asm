@@ -1587,6 +1587,60 @@ add_wait_for_com	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			InitDetect
+;
+;		DESCRIPTION:    Init detect
+;
+;       PARAMETERS:     DX      Base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitDetect  Proc near
+    push dx
+	mov al,83h
+	add dx,3
+	out dx,al				; set line control to divisor access
+;
+	sub dx,3
+	mov al,12
+	out dx,al				; output LSB divisor latch
+;
+	inc dx
+	mov al,0
+	out dx,al				; output MSB divisor latch
+;
+    inc dx
+    mov al,1
+    out dx,al               ; enable FIFOs if present
+;
+	mov al,3
+	inc dx
+	out dx,al				; set line control 
+;
+	sub dx,2
+	mov al,0
+	out dx,al				; enable rx ints and delta ints, disable tx, line ints
+;
+	add dx,3
+	mov al,0Bh
+	out dx,al				; modem control, DTR = high, RTS = high
+	pop dx
+;
+    push dx
+	in al,dx
+	add dx,2
+	in al,dx
+	add dx,3
+	in al,dx
+	inc dx
+	in al,dx
+	pop dx
+	ret
+InitDetect  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			DetectIrq
 ;
 ;		DESCRIPTION:    Detect IRQ for a serial base address
@@ -1603,50 +1657,44 @@ DetectIrq   Proc near
     push bp
 ;    
     SetupIrqDetect
-;    
-    push dx
-    add dx,4
-    in al,dx
-    pop dx
-    mov ah,al
-; 
-    push dx
-    add dx,1
-    in al,dx
-    pop dx
-;
-    push dx
-    add dx,4
-    mov al,0Ch
-    out dx,al
-    pop dx
-;
-    push dx
-    add dx,4
-    xor al,al
-    out dx,al
-    pop dx
-;
-    mov ax,10
-    WaitMilliSec
-;
-    PollIrqDetect
-    or ax,ax
-    jnz diGet
-;
-    SetupIrqDetect
-;
-    push dx
-    add dx,4
-    mov al,0Bh
-    out dx,al
-    pop dx    
 ;
     push dx
     inc dx
-    mov al,0Fh
-    out dx,al
+	mov al,IER_BITS + 2
+	out dx,al				; enable tx ints and delta ints, line ints
+;
+	add dx,3
+	mov al,0Bh
+	out dx,al				; modem control, DTR = high, RTS = high
     pop dx
+;   
+    push dx
+	in al,dx
+	add dx,2
+	in al,dx
+	add dx,3
+	in al,dx
+	inc dx
+	in al,dx
+	pop dx
+;
+    mov cx,1000h
+
+diLoop1:
+    loop diLoop1    
+;
+    PollIrqDetect
+    or ax,ax
+    stc
+    jz diDone
+;
+    mov bp,ax
+;    
+    push dx
+	inc dx
+	xor al,al
+	out dx,al
+	pop dx
 ;
     push dx
     in al,dx
@@ -1657,17 +1705,26 @@ DetectIrq   Proc near
     add dx,2
     in al,dx
     pop dx
-;    
-    mov ax,20
-    WaitMilliSec
-;    
+;
+    mov cx,1000h
+
+diLoop2:
+    loop diLoop2
+;
+    SetupIrqDetect
+;
+    mov cx,1000h
+
+diLoop3:
+    loop diLoop3
+;
     PollIrqDetect
 ;
-    or ax,ax
+    not ax
+    and ax,bp
     stc
     jz diDone
-
-diGet:
+;
     xor cx,cx
     mov bx,1
 
@@ -1886,13 +1943,25 @@ detect_thread	proc far
     mov ax,100
     WaitMilliSec
 ; 
-    int 3    
+    mov dx,3F8h
+    call InitDetect
+; 
+    mov dx,2F8h
+    call InitDetect
+; 
+    mov dx,3E8h
+    call InitDetect
+; 
+    mov dx,2E8h
+    call InitDetect
+; 
     mov dx,3F8h
     call DetectIrq
     jc dt1
 ;
     mov ecx,115200
     call AddPort    
+    call InitDetect
 
 dt1:
     mov dx,2F8h
@@ -1901,6 +1970,7 @@ dt1:
 ;
     mov ecx,115200
     call AddPort
+    call InitDetect
 
 dt2:   
     mov dx,3E8h
@@ -1909,6 +1979,7 @@ dt2:
 ;    
     mov ecx,115200
     call AddPort
+    call InitDetect
 
 dt3:   
     mov dx,2E8h
@@ -1917,10 +1988,15 @@ dt3:
 ;    
     mov ecx,115200
     call AddPort
+    call InitDetect
 
 dtpci:
 	call InitPciAdapter
 	call RequestIRQs
+    int 3    
+    mov ax,com_data_sel
+    mov ds,ax
+    mov cx,ds:serial_ports
 	ret
 detect_thread	endp
 	
