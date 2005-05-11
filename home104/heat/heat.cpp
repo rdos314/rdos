@@ -6,55 +6,98 @@
 #include <time.h>
 #include <math.h>
 
+#include "device.h"
+
 #define FALSE	0
 #define TRUE	!FALSE
 
-void cdecl main()
+class TRad : public TDevice
 {
-	int val;
-    int chan;
+public:
+    TRad(int Address, int Row);
 
-	for (;;)
+    void DeviceName(char *Name, int Size) const;
+    
+protected:
+    virtual void Execute();
+
+    int FAddress;
+    int FRow;
+    
+};
+
+TRad::TRad(int Address, int Row)
+{
+    char str[40];
+    
+    FAddress = Address;
+    FRow = Row;
+
+    sprintf(str, "RAD %d", Address);
+    Start(str, 0x2000);
+}
+
+void TRad::DeviceName(char *Name, int Size) const
+{
+    strcpy(Name, "RAD");
+}
+
+void TRad::Execute()
+{
+    int val;
+
+	while (FInstalled)
 	{
-		for (chan = 0; chan < 8; chan++)
+		RdosSetCursorPosition(FRow + 1,0);
+
+		if (RdosWriteSerialRaw(FAddress, 5, 2))
+			printf("ok ");
+		else
+			printf("-- ");
+
+		if (RdosReadSerialRaw(FAddress, 0, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(FAddress, 1, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(FAddress, 2, &val))
 		{
-			RdosSetCursorPosition(chan + 1,0);
-
-			if (RdosWriteSerialRaw(0x20 + chan, 5, 2))
-				printf("ok ");
-			else
-				printf("-- ");
-
-			if (RdosReadSerialRaw(0x20 + chan, 0, &val))
-				printf("%4ld.%ld ", val / 10, val % 10);
-			else
-				printf("------ ");
-
-			if (RdosReadSerialRaw(0x20 + chan, 1, &val))
-				printf("%4ld.%ld ", val / 10, val % 10);
-			else
-				printf("------ ");
-
-			if (RdosReadSerialRaw(0x20 + chan, 2, &val))
-			{
-				val = val * 10 / 25;
-				printf("%4ld.%ld ", val / 10, val % 10);
-			}
-			else
-				printf("------ ");
-
-			if (RdosReadSerialRaw(0x20 + chan, 3, &val))
-				printf("%4ld.%ld ", val / 10, val % 10);
-			else
-				printf("------ ");
-
-			if (RdosReadSerialRaw(0x20 + chan, 4, &val))
-				printf("%4ld.%ld ", val / 10, val % 10);
-			else
-				printf("------ ");
+			val = val * 10 / 25;
+			printf("%4ld.%ld ", val / 10, val % 10);
 		}
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(FAddress, 3, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
+
+		if (RdosReadSerialRaw(FAddress, 4, &val))
+			printf("%4ld.%ld ", val / 10, val % 10);
+		else
+			printf("------ ");
 
 		RdosWaitMilli(1000);
 	}
+}
+
+void cdecl main()
+{
+    TRad *RadArr[8];
+    int i;
+
+    for (i = 0; i < 8; i++)
+        RadArr[8] = new TRad(0x20 + i, i);
+
+
+    for (;;)
+		RdosWaitMilli(1000);
+
 }
 
