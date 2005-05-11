@@ -1632,10 +1632,9 @@ DetectIrq   Proc near
 ;
     PollIrqDetect
     or ax,ax
-    stc
-    jz diDone
+    jnz diGet
 ;
-    mov bp,ax
+    SetupIrqDetect
 ;
     push dx
     add dx,4
@@ -1658,22 +1657,17 @@ DetectIrq   Proc near
     add dx,2
     in al,dx
     pop dx
-;
-    mov al,-1
-    out dx,al
-;
-    SetupIrqDetect
 ;    
     mov ax,20
     WaitMilliSec
 ;    
     PollIrqDetect
 ;
-    not ax
-    and ax,bp
+    or ax,ax
     stc
     jz diDone
-;
+
+diGet:
     xor cx,cx
     mov bx,1
 
@@ -1748,13 +1742,6 @@ AddPort Proc near
     AllocateSmallGlobalMem
     mov es:serial_ports,0
     mov ax,es
-    mov ds,ax
-    mov ax,cs
-    mov es,ax
-	mov di,OFFSET com_int
-    mov ax,dx
-    RequestPrivateIrqHandler
-    mov ax,ds
     pop ds
     mov ds:[bx].sd_irq_arr,ax
     pop es
@@ -1771,6 +1758,52 @@ apAddIrqPort:
     pop ds	
     ret
 AddPort Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RequestIRQs
+;
+;		DESCRIPTION:    Request IRQs for all ports
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RequestIRQs Proc near
+    push ds
+    push es
+    pushad
+;    
+    mov ax,com_data_sel
+    mov ds,ax
+;
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET com_int
+;    
+    mov cx,MAX_IRQS
+    mov bx,OFFSET sd_irq_arr
+    xor al,al
+
+riLoop:
+    mov dx,[bx]
+    or dx,dx
+    jz riNext
+;    
+    push ds
+    mov ds,dx
+    RequestPrivateIrqHandler
+    pop ds
+
+riNext:
+    inc al
+    add bx,2
+    loop riLoop
+;
+    popad
+    pop es
+    pop ds	
+    ret
+RequestIRQs Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1852,7 +1885,8 @@ detect_name	DB 'Serial PCI',0
 detect_thread	proc far
     mov ax,100
     WaitMilliSec
-;    
+; 
+    int 3    
     mov dx,3F8h
     call DetectIrq
     jc dt1
@@ -1886,6 +1920,7 @@ dt3:
 
 dtpci:
 	call InitPciAdapter
+	call RequestIRQs
 	ret
 detect_thread	endp
 	

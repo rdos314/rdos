@@ -1136,6 +1136,8 @@ Send	Proc far
 	GetPhysicalPage
 	and ax,0F000h
 	and ecx,0FFFh
+	and dx,0FFFh
+	or ax,dx
 ;
 	EnterSection ds:TxSection
 
