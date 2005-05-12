@@ -36,6 +36,7 @@ TEMP:   .EQU $13
 BITS:   .EQU $14
 CMD:    .EQU $15
 CMDLEN: .EQU $16
+LINE:   .EQU $17
 
     .ORG 4
     .ORG 5
@@ -101,7 +102,7 @@ CmdProc:
 	goto Read24    ; 2
 	goto Write24   ; 3
 	goto WAIT      ; 4
-	goto WAIT      ; 5
+	goto ReadLine  ; 5
 	goto WAIT      ; 6
 	goto WAIT      ; 7
 
@@ -459,6 +460,79 @@ InCrcFail:
     decf COUNT,F
     btfss STATUS,Z
     goto InCrcFailLoop
+;
+    clrf VAL
+    call WritePort
+    return
+
+;;;;;;;;;;;;
+; ReadLine
+;;;;;;;;;;;;
+
+ReadLine:
+    call ReadPort
+    clrf LINE
+    movlw 8
+    movwf COUNT
+
+ReadLineLoop:
+    rlf LINE,F
+    clrf VAL
+    call InputBit
+    call UpdateInCrc
+    rlf VAL,W
+    andlw $80
+    iorwf LINE,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto ReadLineLoop
+;
+    movlw $5A
+    xorwf CRC,F
+    movlw 8
+    movwf COUNT
+
+ReadLineCrcLoop:
+    clrf VAL
+    call InputBit
+    rlf VAL,F
+    rlf VAL,F
+    rlf VAL,W
+    andlw 1
+    xorwf CRC,W
+    andlw 1
+    btfss STATUS,Z
+    goto ReadLineCrcFail
+;    
+    rrf CRC,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto ReadLineCrcLoop
+;
+    movf LINE,W
+    andlw $0F
+    iorlw $30
+    movwf VAL
+    call WritePort
+;    
+    call ReadPort
+    rrf LINE,F
+    rrf LINE,F
+    rrf LINE,F
+    rrf LINE,W
+    andlw $0F
+    iorlw $30
+    movwf VAL
+    call WritePort            
+    return
+
+ReadLineCrcFailLoop:
+    call InputBit
+
+ReadLineCrcFail:
+    decf COUNT,F
+    btfss STATUS,Z
+    goto ReadLineCrcFailLoop
 ;
     clrf VAL
     call WritePort
