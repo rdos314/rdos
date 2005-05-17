@@ -6,6 +6,7 @@
 #include <time.h>
 #include <math.h>
 
+#include "datetime.h"
 #include "device.h"
 
 #define FALSE	0
@@ -14,37 +15,37 @@
 class TRad : public TDevice
 {
 public:
-    TRad(int Address, int Row);
+	TRad(int Address, int Row);
 
-    void DeviceName(char *Name, int Size) const;
-    
+	void DeviceName(char *Name, int Size) const;
+
 protected:
-    virtual void Execute();
+	virtual void Execute();
 
-    int FAddress;
-    int FRow;
-    
+	int FAddress;
+	int FRow;
+
 };
 
 TRad::TRad(int Address, int Row)
 {
-    char str[40];
-    
-    FAddress = Address;
-    FRow = Row;
+	char str[40];
 
-    sprintf(str, "RAD %d", Address);
-    Start(str, 0x2000);
+	FAddress = Address;
+	FRow = Row;
+
+	sprintf(str, "RAD %d", Address);
+	Start(str, 0x2000);
 }
 
 void TRad::DeviceName(char *Name, int Size) const
 {
-    strcpy(Name, "RAD");
+	strcpy(Name, "RAD");
 }
 
 void TRad::Execute()
 {
-    int val;
+	int val;
 
 	while (FInstalled)
 	{
@@ -89,15 +90,51 @@ void TRad::Execute()
 
 void cdecl main()
 {
-    TRad *RadArr[8];
-    int i;
+	TRad *RadArr[8];
+	int i;
+	int diostat;
+	int mask;
+	TDateTime CurrTime;
 
-    for (i = 0; i < 8; i++)
-        RadArr[8] = new TRad(0x20 + i, i);
+	for (i = 0; i < 8; i++)
+		RadArr[8] = new TRad(0x20 + i, i);
 
+	for (;;)
+	{
+		RdosSetCursorPosition(0,0);
 
-    for (;;)
+		if (RdosReadSerialLines(1, &diostat))
+		{
+			mask = 0x80;
+			for (i = 0; i < 8; i++)
+			{
+				if (diostat & mask)
+					printf("1");
+				else
+					printf("0");
+				mask = mask >> 1;
+			}
+
+			if (CurrTime.GetHour() >= 21 || CurrTime.GetHour() <= 2)
+			{
+				if ((diostat & 1) == 0)
+					RdosToggleSerialLine(1, 0);
+
+				if ((diostat & 0x80) == 0)
+					RdosToggleSerialLine(1, 7);
+			}
+			else
+			{
+				if (diostat & 1)
+					RdosToggleSerialLine(1, 0);
+
+				if (diostat & 0x80)
+					RdosToggleSerialLine(1, 7);
+			}
+		}
+		else
+			printf("------");
 		RdosWaitMilli(1000);
-
+	}
 }
 

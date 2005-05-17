@@ -66,8 +66,13 @@ digio_queue_entry   ENDS
 
 data_seg    STRUC
 
+DcfThread   DW ?
+DcfVal      DB ?
+
 PicThread   DW ?
 PicStatus   DB ?
+
+ListSection section_typ <>
 
 DioQueue    DW ?,?,?
 DioCurr     DW ?,?,?
@@ -865,7 +870,7 @@ pic_int_not1:
 
 pic_int_not2:
     test al,8
-    jnz pic_int_done
+    jnz pic_int_not3
 ;    
     mov dx,3BEh
 	in al,dx
@@ -882,6 +887,18 @@ pic_int_not2:
 	Signal
 	jmp pic_int_loop
 
+
+pic_int_not3:
+    test al,10h
+    jnz pic_int_done    
+;
+    mov dx,3B4h
+    in al,dx
+    mov ds:DcfVal,al
+    mov bx,ds:DcfThread
+    Signal
+    jmp pic_int_loop
+    
 pic_int_done:
     ret
 pic_int Endp
@@ -1257,6 +1274,7 @@ DioOneReq   Proc near
     mov es:dqe_cmd,bl
     mov es:dqe_data,ebp
     mov es:dqe_action,di
+    EnterSection ds:ListSection
     push ax
     call es:dqe_proc
     pop ax
@@ -1265,6 +1283,7 @@ DioOneReq   Proc near
     add di,ax
     add di,ax
     call DioInsert
+    LeaveSection ds:ListSection
 ;
     mov bx,ds:PicThread
     Signal    
@@ -1343,6 +1362,7 @@ darAllocLoop:
     mov es:dqe_cmd,bl
     mov es:dqe_data,ebp
     mov es:dqe_action,di
+    EnterSection ds:ListSection
     push ax
     call es:dqe_proc
     pop ax
@@ -1353,6 +1373,7 @@ darAllocLoop:
     add di,ax
     call DioInsert
     pop di
+    LeaveSection ds:ListSection
 ;    
     add si,2
     inc ax
@@ -1400,9 +1421,11 @@ darFreeLoop:
 
 darOk:
     movzx bx,es:dqe_node
+    push ax
     mov ax,si
     shr ax,1
     mov ds:[bx].NodeArr,al
+    pop ax
     FreeMem
     add si,2
     sub cx,1
@@ -1549,9 +1572,143 @@ pic_thread:
     ClearSignal
 
 pic_thread_loop: 
+    EnterSection ds:ListSection
     call DioUpdate   
+    LeaveSection ds:ListSection
 	WaitForSignal
     jmp pic_thread_loop
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ToggleSerialLine
+;
+;		DESCRIPTION:	Toggle serial input line
+;
+;		PARAMETERS:		DL		Line #
+;						DH		Device #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+toggle_serial_line_name	DB 'Toggle Serial Line', 0
+
+toggle_proc    Proc near
+    or es:dqe_stat,DQE_STAT_SUCCESS
+    stc
+    ret
+toggle_proc    Endp
+
+toggle_serial_line	Proc far
+	push bx
+	push cx
+    push edx
+    push di
+;
+    push ebp
+    mov ebp,5000
+    mov cx,dx
+    mov edx,1193 * 100
+    mov di,OFFSET toggle_proc
+    mov bl,4
+    call DioReq
+    pop ebp
+;
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	retf32
+toggle_serial_line  Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadSerialLines
+;
+;		DESCRIPTION:	Read serial lines
+;
+;		PARAMETERS:		DH		Device #
+;
+;		RETURNS:		AL		State
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_serial_lines_name	DB 'Read Serial Lines', 0
+
+rl0_proc    Proc near
+    mov al,es:dqe_val
+    or al,al
+    stc
+    jz rl0_done
+;    
+    mov es:dqe_data,0
+    mov es:dqe_val,1
+    mov es:dqe_proc,OFFSET rl1_proc
+    clc
+
+rl0_done:
+    ret
+rl0_proc    Endp
+
+rl1_proc    Proc near
+    mov al,es:dqe_val
+    test al,30h
+    stc
+    jz rl1_done
+;    
+    and eax,0Fh
+    or es:dqe_data,eax
+    mov es:dqe_val,2
+    mov es:dqe_proc,OFFSET rl2_proc
+    clc
+
+rl1_done:
+    ret
+rl1_proc    Endp
+
+rl2_proc    Proc near
+    mov al,es:dqe_val
+    test al,30h
+    stc
+    jz rl2_done
+;    
+    and eax,0Fh
+    shl eax,4
+    or es:dqe_data,eax
+    mov es:dqe_val,3
+    or es:dqe_stat,DQE_STAT_SUCCESS
+
+rl2_done:
+    stc
+    ret
+rl2_proc    Endp
+
+read_serial_lines	Proc far
+	push bx
+	push cx
+    push edx
+    push di
+;
+    push ebp
+    mov ebp,5000
+    mov ch,dh
+    xor cl,cl
+    mov edx,1193 * 100
+    mov di,OFFSET rl0_proc
+    mov bl,5
+    call DioReq
+    pop ebp
+;
+	pop di
+	pop edx
+	pop cx
+	pop bx
+	retf32
+read_serial_lines	Endp
 
 PAGE
 	
@@ -1786,6 +1943,29 @@ read_serial_val	Endp
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			DCF thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+dcf_name	DB 'DCF',0
+
+dcf_thread:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    GetThread
+    mov ds:DcfThread,ax    
+    ClearSignal
+
+dcf_thread_loop: 
+	WaitForSignal
+	int 3
+	mov al,ds:DcfVal
+    jmp dcf_thread_loop
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			InitDriver
@@ -1812,6 +1992,15 @@ InitDriver  Proc far
 	mov es,ax
 	mov di,OFFSET pic_name
 	mov si,OFFSET pic_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET dcf_name
+	mov si,OFFSET dcf_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -1846,6 +2035,7 @@ init	PROC far
 	mov bx,piclcd_data_sel
 	AllocateFixedSystemMem
 ;	
+    mov es:DcfThread,0
 	mov es:PicThread,0
 	mov es:DioQueue,0
 	mov es:DioQueue+2,0
@@ -1853,6 +2043,7 @@ init	PROC far
 	mov es:DioCurr,0
 	mov es:DioCurr+2,0
 	mov es:DioCurr+4,0
+	InitSection es:ListSection
 ;
     mov di,NodeArr
     mov cx,NODE_CNT
@@ -1883,6 +2074,16 @@ init	PROC far
 	mov es,ax
 	mov di,OFFSET InitDriver
 	HookInitTasking
+;
+	mov si,OFFSET read_serial_lines
+	mov di,OFFSET read_serial_lines_name
+	mov ax,read_serial_lines_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET toggle_serial_line
+	mov di,OFFSET toggle_serial_line_name
+	mov ax,toggle_serial_line_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET write_serial_val
 	mov di,OFFSET write_serial_val_name
