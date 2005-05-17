@@ -1951,6 +1951,9 @@ PAGE
 dcf_name	DB 'DCF',0
 
 dcf_thread:
+	mov ax,43h
+	EnableFocus
+;
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
@@ -1959,8 +1962,8 @@ dcf_thread:
 
 dcf_thread_loop: 
 	WaitForSignal
-	int 3
 	mov al,ds:DcfVal
+	WriteChar
     jmp dcf_thread_loop
 
 PAGE
@@ -1986,6 +1989,12 @@ InitDriver  Proc far
 	mov es,bx
 	mov di,OFFSET pic_int
 	RequestPrivateIrqHandler
+;    
+    mov dx,3B4h
+    in al,dx
+;
+    mov dx,3B2h
+    in al,dx
 ;
 	mov ax,cs
 	mov ds,ax
@@ -2003,7 +2012,7 @@ InitDriver  Proc far
 	mov si,OFFSET dcf_thread
 	mov ax,4
 	mov cx,100h
-	CreateThread
+	CreateProcess
 ;
     popad
     pop es
