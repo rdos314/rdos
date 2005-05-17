@@ -49,7 +49,7 @@ RESET:
 	movlw $7F
 	movwf TRISB
 ;
-    movlw $D7
+    movlw $D4
     movwf OPT
 ;			
     PAGE0
@@ -97,23 +97,22 @@ CmdProc:
 	movf CMD,W
 	andlw 7
 	addwf PCL,F
-	goto WAIT      ; 0
-	goto WAIT      ; 1
-	goto Read24    ; 2
-	goto Write24   ; 3
-	goto WAIT      ; 4
-	goto ReadLine  ; 5
-	goto WAIT      ; 6
-	goto WAIT      ; 7
+	goto WAIT           ; 0
+	goto WAIT           ; 1
+	goto Read24         ; 2
+	goto Write24        ; 3
+	goto ToggleLine     ; 4
+	goto ReadLine       ; 5
+	goto WAIT           ; 6
+	goto WAIT           ; 7
 
 ;;;;;;;;;;
 ; Delay
 ;;;;;;;;;;
 
 Delay:
-    movlw 10
+    movlw 3
     movwf DELCNT
-;
 
 DelayYLoop:
     movlw $FF
@@ -466,17 +465,25 @@ InCrcFail:
     return
 
 ;;;;;;;;;;;;
+; ToggleLine
+;;;;;;;;;;;;
+
+ToggleLine:
+    return
+
+;;;;;;;;;;;;
 ; ReadLine
 ;;;;;;;;;;;;
 
 ReadLine:
+    clrf CRC
     call ReadPort
     clrf LINE
     movlw 8
     movwf COUNT
 
 ReadLineLoop:
-    rlf LINE,F
+    rrf LINE,F
     clrf VAL
     call InputBit
     call UpdateInCrc
