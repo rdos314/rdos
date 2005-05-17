@@ -56,9 +56,12 @@ radfuzzy_objs	= RADFUZZY.OBJ
 pcbus_srcs		= PCBUS.ASM
 pcbus_objs  	= PCBUS.OBJ
 
+dcf_srcs		= DCF.ASM
+dcf_objs  	    = DCF.OBJ
+
 srcs =      $(serda_srcs) $(siodrive_srcs) $(siokeyb_srcs)	\
 			$(radled_srcs) $(radcom_srcs) $(radfuzzy_srcs)  \
-			$(pcbus_srcs)
+			$(pcbus_srcs) $(dcf_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
