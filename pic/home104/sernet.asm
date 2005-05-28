@@ -38,8 +38,7 @@ CMD:    .EQU $15
 CMDLEN: .EQU $16
 LINE:   .EQU $17
 
-
-; RA0 = packet out/gen_int (1)
+; RA0 = ack packet in (0)
 ; RA1 = packet in (1)
 ; RA2 = ack packet (1)
 ; RA3 = clear shift (0)
@@ -59,12 +58,6 @@ LINE:   .EQU $17
     .ORG 5
 
 RESET:		
-    PAGE0
-    clrf PORTA
-;
-    movlw $8E
-    movwf PORTB			
-;    
     PAGE1
     movlw $12
 	movwf TRISA
@@ -76,14 +69,19 @@ RESET:
     movwf OPT
 ;			
     PAGE0
+    clrf PORTA
 ;
-    bsf PORTA,3
+    movlw $8E
+    movwf PORTB			    
+;
+    movlw $0D
+    movwf PORTA
 
 Wait:
     call Delay
-    bcf PORTB,1
-    call Delay
     bsf PORTB,1
+    call Delay
+    bcf PORTB,1
     goto Wait
 
 ;;;;;;;;;;
@@ -95,7 +93,7 @@ Delay:
     movwf DELCNT
 
 DelayYLoop:
-    movlw $FF
+    movlw $01
     movwf TMR0
 
 DelayLoop:
