@@ -28,15 +28,9 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-CRC:    .EQU $0F
-VAL:    .EQU $10
-COUNT:  .EQU $11
-DELCNT: .EQU $12
-TEMP:   .EQU $13
-BITS:   .EQU $14
-CMD:    .EQU $15
-CMDLEN: .EQU $16
-LINE:   .EQU $17
+VAL:    .EQU $0F
+COUNT:  .EQU $10
+DELCNT: .EQU $11
 
 ; RA0 = gen int (0)
 ; RA1 = packet in (1)
@@ -82,6 +76,10 @@ Wait:
     bsf PORTB,1
     call Delay
     bcf PORTB,1
+;
+    call StartReceive
+    movlw $5A
+    call OutputByte
 ;    
     bcf PORTA,0
     bsf PORTA,0    
@@ -119,6 +117,69 @@ DelayLoop:
     btfss STATUS,Z
     goto DelayYLoop
 
+    return
+
+;;;;;;;;;;
+; StartReceive
+;;;;;;;;;;
+
+StartReceive:
+    PAGE1
+	movlw $01
+	movwf TRISB
+;
+	PAGE0
+	movlw $8E
+	movwf PORTB
+;
+    bcf PORTA,3
+    bsf PORTA,3
+    return
+
+;;;;;;;;;;
+; OutputBit
+;;;;;;;;;;
+
+OutputBit:
+    btfss VAL,0
+    goto BitClear
+
+BitSet:
+    bsf PORTB,4
+    goto BitDone
+
+BitClear:
+    bcf PORTB,4
+    goto BitDone
+
+BitDone:
+    bsf PORTB,5
+    bcf PORTB,5
+    return
+
+;;;;;;;;;;
+; OutputByte
+; W = byte
+;;;;;;;;;;
+
+OutputByte:
+    movwf VAL
+;    
+    movlw 8
+    movwf COUNT
+
+OutByteLoop:
+    call OutputBit
+    rrf VAL,F
+    decf COUNT,F
+    btfss STATUS,Z
+    goto OutByteLoop
+;
+    bsf PORTB,6
+    bcf PORTB,6
+;
+    bcf PORTB,7
+    bsf PORTB,7    
     return
 
         .END
