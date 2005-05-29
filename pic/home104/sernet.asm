@@ -38,7 +38,7 @@ CMD:    .EQU $15
 CMDLEN: .EQU $16
 LINE:   .EQU $17
 
-; RA0 = ack packet in (0)
+; RA0 = gen int (0)
 ; RA1 = packet in (1)
 ; RA2 = ack packet (1)
 ; RA3 = clear shift (0)
@@ -82,6 +82,20 @@ Wait:
     bsf PORTB,1
     call Delay
     bcf PORTB,1
+;    
+    bcf PORTA,0
+    bsf PORTA,0    
+
+WaitReq:   
+    btfss PORTA,4
+    goto WaitReq
+
+AckLoop:
+    bcf PORTA,2
+    bsf PORTA,2
+    btfsc PORTA,4
+    goto AckLoop
+;    
     goto Wait
 
 ;;;;;;;;;;
@@ -93,7 +107,7 @@ Delay:
     movwf DELCNT
 
 DelayYLoop:
-    movlw $01
+    movlw $FF
     movwf TMR0
 
 DelayLoop:
@@ -106,5 +120,6 @@ DelayLoop:
     goto DelayYLoop
 
     return
+
         .END
 

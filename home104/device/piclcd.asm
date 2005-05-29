@@ -72,6 +72,8 @@ DcfVal      DB ?
 PicThread   DW ?
 PicStatus   DB ?
 
+SernetThread    DW ?
+
 ListSection section_typ <>
 
 DioQueue    DW ?,?,?
@@ -831,6 +833,17 @@ pic_int Proc far
 pic_int_loop:
     mov dx,3B2h
     in al,dx
+    test al,1
+    jnz pic_int_not0
+;
+    mov dx,3B6h
+    out dx,al
+;    
+    mov bx,ds:SernetThread
+    Signal
+    jmp pic_int_loop    
+
+pic_int_not0:    
     test al,2
     jnz pic_int_not1
 ;
@@ -1944,6 +1957,39 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			Sernet thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+sernet_name	DB 'SERNET',0
+
+sernet_thread:
+    mov ax,25
+    WaitMilliSec
+;
+    mov al,30h
+    mov dx,3B2h
+    out dx,al    
+;
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    GetThread
+    mov ds:SernetThread,ax    
+    ClearSignal
+
+sernet_thread_loop:
+    WaitForSignal
+    mov dx,3B2h
+    mov al,20h
+    out dx,al
+    mov al,30h
+    out dx,al
+    jmp sernet_thread_loop
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			DCF thread
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1995,12 +2041,24 @@ InitDriver  Proc far
 ;
     mov dx,3B2h
     in al,dx
+;	
+    mov dx,3B6h
+    out dx,al
 ;
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
 	mov di,OFFSET pic_name
 	mov si,OFFSET pic_thread
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET sernet_name
+	mov si,OFFSET sernet_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -2046,6 +2104,7 @@ init	PROC far
 ;	
     mov es:DcfThread,0
 	mov es:PicThread,0
+	mov es:SernetThread,0
 	mov es:DioQueue,0
 	mov es:DioQueue+2,0
 	mov es:DioQueue+4,0
@@ -2066,6 +2125,13 @@ init	PROC far
 	mov dx,3B3h
 	xor al,al
 	out dx,al
+;	
+    mov dx,3B6h
+    out dx,al
+;    
+    mov al,0
+    mov dx,3B2h
+    out dx,al
 ;
 	mov ax,cs
 	mov es,ax	

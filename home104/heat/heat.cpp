@@ -94,7 +94,7 @@ void cdecl main()
 	int i;
 	int diostat;
 	int mask;
-	TDateTime CurrTime;
+	TDateTime *CurrTime;
 
 	for (i = 0; i < 8; i++)
 		RadArr[8] = new TRad(0x20 + i, i);
@@ -115,7 +115,9 @@ void cdecl main()
 				mask = mask >> 1;
 			}
 
-			if (CurrTime.GetHour() >= 21 || CurrTime.GetHour() <= 2)
+			CurrTime = new TDateTime;
+
+			if (CurrTime->GetHour() >= 21 || CurrTime->GetHour() <= 2)
 			{
 				if ((diostat & 1) == 0)
 					RdosToggleSerialLine(1, 0);
@@ -131,6 +133,8 @@ void cdecl main()
 				if (diostat & 0x80)
 					RdosToggleSerialLine(1, 7);
 			}
+
+			delete CurrTime;
 		}
 		else
 			printf("------");
