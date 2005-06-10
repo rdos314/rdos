@@ -1,4 +1,19 @@
-;SERNET.ASM
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; operation model
+;
+; baudrate = 250kb
+; bittime = 4us (20 instructions)
+; time frame len = 288us (72 bits)
+; initialize interval = 1024 * 288us = 0.295s (1024 time frames)
+; maximum of 32 nodes on network (PIC limit)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+NODE_NR     .EQU 1
+
+BIT_TIME    .EQU 20
+FRAME_US_L  .EQU 32
+FRAME_US_M  .EQU 1
+FRAME_BITS  .EQU 72
 
 #DEFINE PAGE0   BCF $03,5
 #DEFINE PAGE1   BSF $03,5
@@ -28,9 +43,15 @@ RD:     .EQU 0          ;eeprom read enable flag
 
 INTCON: .EQU $0B
 
-VAL:    .EQU $0F
-COUNT:  .EQU $10
-DELCNT: .EQU $11
+VAL:        .EQU $0F
+COUNT:      .EQU $10
+DELCNT:     .EQU $11
+BUF:        .EQU $12
+BYTENO:     .EQU $13
+NODECNT:    .EQU $14
+MASTER:     .EQU $15
+
+NODEARR:    .EQU $30
 
 ; RA0 = gen int (0)
 ; RA1 = packet in (1)
@@ -72,17 +93,6 @@ RESET:
     movwf PORTA
 
 Wait:
-    call Delay
-    bsf PORTB,1
-    call Delay
-    bcf PORTB,1
-;
-    call StartReceive
-    movlw $5A
-    call OutputByte
-;    
-    bcf PORTA,0
-    bsf PORTA,0    
 
 WaitReq:   
     btfss PORTA,4
@@ -94,7 +104,57 @@ AckLoop:
     btfsc PORTA,4
     goto AckLoop
 ;    
+    call StartSend
+    call InputByte
+    movwf BUF
+;
+    call StartReceive
+    movf BUF,W
+    call OutputByte
+;    
+    bcf PORTA,0
+    bsf PORTA,0    
+;    
     goto Wait
+
+;;;;;;;;;;
+; GetInitByte
+;;;;;;;;;;
+
+GetInitByte:
+			movf BYTENO,W
+			incf BYTENO,F
+			addwf PCL,F
+			retlw $9B
+			retlw $7C
+			retlw NODE_NR
+			retlw $AB
+			retlw FRAME_US_M
+			retlw FRAME_US_L
+
+;;;;;;;;;;
+; GetReqByte
+;;;;;;;;;;
+
+GetReqByte:
+			movf BYTENO,W
+			incf BYTENO,F
+			addwf PCL,F
+			retlw $9B
+			retlw $7D
+			retlw NODE_NR
+
+;;;;;;;;;;
+; GetReplyByte
+;;;;;;;;;;
+
+GetReplyByte:
+			movf BYTENO,W
+			incf BYTENO,F
+			addwf PCL,F
+			retlw $9B
+			retlw $7E
+			retlw NODE_NR
 
 ;;;;;;;;;;
 ; Delay
@@ -137,6 +197,40 @@ StartReceive:
     return
 
 ;;;;;;;;;;
+; StartSend
+;;;;;;;;;;
+
+StartSend:
+    PAGE1
+	movlw $11
+	movwf TRISB
+;
+	PAGE0
+	movlw $8C
+	movwf PORTB
+;
+    bcf PORTA,3
+    bsf PORTA,3
+    return
+
+;;;;;;;;;;
+; StartLocal
+;;;;;;;;;;
+
+StartLocal:
+    PAGE1
+	movlw $01
+	movwf TRISB
+;
+	PAGE0
+	movlw $84
+	movwf PORTB
+;
+    bcf PORTA,3
+    bsf PORTA,3
+    return
+
+;;;;;;;;;;
 ; OutputBit
 ;;;;;;;;;;
 
@@ -155,6 +249,7 @@ BitClear:
 BitDone:
     bsf PORTB,5
     bcf PORTB,5
+    rrf VAL,F
     return
 
 ;;;;;;;;;;
@@ -170,7 +265,6 @@ OutputByte:
 
 OutByteLoop:
     call OutputBit
-    rrf VAL,F
     decf COUNT,F
     btfss STATUS,Z
     goto OutByteLoop
@@ -181,6 +275,71 @@ OutByteLoop:
     bcf PORTB,7
     bsf PORTB,7    
     return
+
+;;;;;;;;;;
+; InputBit
+;;;;;;;;;;
+
+InputBit:
+    rrf VAL,F            
+    bcf VAL,7
+    btfsc PORTB,0
+    bsf VAL,7
+    bsf PORTB,5
+    bcf PORTB,5
+    return
+
+;;;;;;;;;;
+; InputByte
+; W = byte
+;;;;;;;;;;
+
+InputByte:
+    bcf PORTB,7
+;    
+    movlw 8
+    movwf COUNT
+    clrf VAL    
+;
+    bsf PORTB,7    
+;    
+    bsf PORTB,6
+    bcf PORTB,6
+
+InByteLoop:
+    call InputBit
+    decf COUNT,F
+    btfss STATUS,Z
+    goto InByteLoop
+;
+    movf VAL,W    
+    return
+
+;;;;;;;;;;
+; LocalByte
+;;;;;;;;;;
+
+LocalBit:
+    bcf PORTB,4
+    btfsc VAL,0
+    bsf PORTB,4
+    bsf PORTB,5
+    bcf PORTB,5
+    rrf VAL,F
+;
+    andlw 1
+    movwf BITS
+    clrf TEMP
+	bcf STATUS,C
+	rlf CRC,F
+	rlf TEMP,W
+	xorwf BITS,W
+	btfsc STATUS,Z
+	return
+;
+	movlw $26
+	xorwf CRC,F
+	return
 
         .END
 

@@ -59,6 +59,7 @@ drive_cyls					DW ?
 drive_sectors_per_unit		DW ?
 drive_units					DW ?
 drive_lba_sectors			DD ?
+disc_io_base                DW ?
 disc_sel					DW ?
 disc_thread					DW ?
 disc_sub_unit				DB ?
@@ -107,6 +108,7 @@ ide_int	Endp
 ;		DESCRIPTION:	Wait for ready
 ;
 ;		PARAMETERS:		DS		IDE_DATA
+;                       DX      Io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -115,7 +117,7 @@ CheckReady	PROC near
 	push cx
 	push dx
 ;
-	mov dx,1F7h
+	add dx,7
 	mov cx,1000
 CheckReadyLoop:
 	in al,dx
@@ -141,6 +143,7 @@ CheckReady	ENDP
 ;		DESCRIPTION:	Wait for data request
 ;
 ;		PARAMETERS:		DS		IDE_DATA
+;                       DX      Disc io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -150,7 +153,7 @@ WaitDrq	Proc near
 	push dx
 ;
 	mov cx,100h
-	mov dx,1F7h
+	add dx,7
 WaitDrqLoop:
 	in al,dx
 	test al,8
@@ -173,6 +176,7 @@ WaitDrq	Endp
 ;		DESCRIPTION:	Check transfer status
 ;
 ;		PARAMETERS:		DS		IDE_DATA
+;                       DX      Disc io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -180,7 +184,7 @@ CheckStatus	Proc near
 	push ax
 	push dx
 ;
-	mov dx,1F7h
+	add dx,7
 	in al,dx
 	test al,80h
 	jnz CheckStatusFail
@@ -193,7 +197,7 @@ CheckStatus	Proc near
 	test al,1
 	clc
 	jz CheckStatusDone
-	mov dx,1F1h
+	sub dx,6
 	in al,dx
 CheckStatusFail:
 	stc
@@ -225,10 +229,15 @@ SetupIdeTaskFile	Proc near
 	push bx
 	push dx
 ;
+    push dx
+    mov dx,fs:disc_io_base
 	call CheckReady
+	pop dx
 	jc SetupIdeTaskDone
+;	
 	push dx
-	mov dx,1F1h
+	mov dx,fs:disc_io_base
+	inc dx
 ;
 	jmp short $+2
 	mov al,ah
@@ -261,6 +270,7 @@ SetupIdeTaskFile	Proc near
 	or al,0A0h
 	out dx,al
 	clc
+	
 SetupIdeTaskDone:
 	pop dx
 	pop bx
@@ -288,11 +298,15 @@ SetupLbaTaskFile	Proc near
 	push bx
 	push dx
 ;
+    push dx
+    mov dx,fs:disc_io_base
 	call CheckReady
+	pop dx
 	jc SetupLbaTaskDone
 ;
 	push edx
-	mov dx,1F1h
+	mov dx,fs:disc_io_base
+	inc dx
 ;
 	jmp short $+2
 	mov al,ah
@@ -326,8 +340,8 @@ SetupLbaTaskFile	Proc near
 	or al,0E0h
 	out dx,al
 	clc
+	
 SetupLbaTaskDone:
-;
 	pop dx
 	pop bx
 	pop ax
@@ -343,18 +357,22 @@ SetupLbaTaskFile	Endp
 ;
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						AL		COMMAND CODE
+;                       DX      Disc io base
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 RunTaskFile	Proc near
 	push dx
-	mov dx,1F7h
+	add dx,7
 	out dx,al
+	pop dx
+;	
 	WaitForSignal
 	jc RunTaskFileDone
+;	
 	call CheckStatus
+	
 RunTaskFileDone:
-	pop dx
 	ret
 RunTaskFile	ENDP
 
@@ -368,22 +386,24 @@ RunTaskFile	ENDP
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						AL		COMMAND CODE
 ;						CX		Number of sectors
+;                       DX      Disc io base
 ;						ES:EDI	Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadTaskFile	Proc near
 	push cx
-	push dx
 	push edi
 ;
 	ClearSignal
-	mov dx,1F7h
+	push dx
+	add dx,7
 	out dx,al
+	pop dx
+	
 ReadTaskFileInt:
 	WaitForSignal
 	push ecx
-	mov dx,1F0h
 	mov ecx,256
 	rep
 	db 67h
@@ -393,10 +413,9 @@ ReadTaskFileInt:
 	jc ReadTaskFileDone
 	loop ReadTaskFileInt
 	clc
+	
 ReadTaskFileDone:
-;
 	pop edi
-	pop dx
 	pop cx
 	ret
 ReadTaskFile	ENDP
@@ -411,6 +430,7 @@ ReadTaskFile	ENDP
 ;		PARAMETERS:		DS		IDE SEGMENT
 ;						AL		Command code
 ;						CX		Number of sectors
+;                       DX      Disc io base
 ;						ES:EDI	Logical address of buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -418,32 +438,37 @@ ReadTaskFile	ENDP
 WriteTaskFile	PROC near
 	push ax
 	push cx
-	push dx
 	push edi
 ;
 	ClearSignal
-	mov dx,1F7h
+	push dx
+	add dx,7
 	out dx,al
+	pop dx
+	
 WriteTaskFileInt:
 	call WaitDrq
 	jc WriteTaskFileDone
+;	
 	push cx
-	mov dx,1F0h
 	mov cx,256
+	
 WriteTaskFileLoop:
 	mov ax,es:[edi]
 	add edi,2
 	out dx,ax
 	loop WriteTaskFileLoop
 	pop cx
+;	
 	WaitForSignal
 	call CheckStatus
 	jc WriteTaskFileDone
+;	
 	loop WriteTaskFileInt
 	clc
+	
 WriteTaskFileDone:
 	pop edi
-	pop dx
 	pop cx
 	pop ax
 	ret
@@ -500,8 +525,12 @@ ReadDriveIde:
 
 ReadDriveStart:
 	jc ReadDriveDone
+;
+    push dx	
 	mov al,20h
+	mov dx,fs:disc_io_base
 	call ReadTaskFile
+	pop dx
 
 ReadDriveDone:
 	pushf
@@ -561,8 +590,13 @@ WriteDriveIde:
 
 WriteDriveStart:
 	jc WriteDriveDone
+;
+    push dx	
 	mov al,30h
+	mov dx,fs:disc_io_base
 	call WriteTaskFile
+	pop dx
+	
 WriteDriveDone:
 	pushf
 	mov ds:IdeThread,0
@@ -604,6 +638,7 @@ GetDriveParams	Proc near
 	jc get_drive_param_done
 ;
 	mov al,0ECh
+	mov dx,fs:disc_io_base
 	call ReadTaskFile
 	jc get_drive_param_done
 ;
@@ -624,6 +659,7 @@ GetDriveParams	Proc near
 	jc get_drive_param_done
 ;
 	mov al,20h
+	mov dx,fs:disc_io_base
 	call ReadTaskFile	
 	jnc get_drive_param_done
 ;
@@ -636,6 +672,7 @@ GetDriveParams	Proc near
 	jc get_drive_param_done
 ;
 	mov al,20h
+	mov dx,fs:disc_io_base
 	call ReadTaskFile
 
 get_drive_param_done:
@@ -1248,18 +1285,20 @@ read_drive_start:
 ;
 	mov bp,3
 	mov al,20h
-	mov dx,1F7h
+	mov dx,fs:disc_io_base
+    add dx,7
 	out dx,al
 
 read_sector_loop:
 	WaitForSignal
+;	
+	mov dx,fs:disc_io_base
 	call CheckStatus
 	jc read_drive_retry
 ;
 	push cx
 	push edi
 	mov edi,es:[edi].dh_data
-	mov dx,1F0h
 	mov ecx,256
 	rep
 	db 67h
@@ -1349,17 +1388,18 @@ write_drive_start:
 ;
 	mov bp,3
 	mov al,30h
-	mov dx,1F7h
+	mov dx,fs:disc_io_base
+	add dx,7
 	out dx,al
 
 write_sector_loop:
+    mov dx,fs:disc_io_base
 	call WaitDrq
 	jc write_drive_retry
 ;
 	push cx
 	push esi
 	mov esi,es:[edi].dh_data
-	mov dx,1F0h
 	mov ecx,256
 	rep
 	db 26h
@@ -1508,15 +1548,22 @@ PAGE
 ;		DESCRIPTION:	Install a unit
 ;
 ;		PARAMETERS:		AL		UNIT #
+;                       DX      IO BASE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disc0	DB 'Ide Drive 0',0
 disc1	DB 'Ide Drive 1',0
+disc2	DB 'Ide Drive 2',0
+disc3	DB 'Ide Drive 3',0
 
-disc_name_tab:
-dnt00	DW OFFSET disc0
-dnt01	DW OFFSET disc1
+disc_name_tab1:
+dnt100	DW OFFSET disc0
+dnt101	DW OFFSET disc1
+
+disc_name_tab2:
+dnt200	DW OFFSET disc2
+dnt201	DW OFFSET disc3
 
 install_unit	Proc near
 	ClearSignal
@@ -1524,6 +1571,7 @@ install_unit	Proc near
 	jc install_unit_done
 ;
 	push ax
+    push dx
 	GetSystemTime
 	add eax,119300
 	adc edx,0
@@ -1532,11 +1580,13 @@ install_unit	Proc near
 	mov di,OFFSET install_timeout
 	mov bx,cs
 	StartTimer
+	pop dx
 	pop ax
 ;
 	push ax
 ;
-	mov dx,1F6h
+    push dx
+    add dx,6
 	shl al,4
 	or al,0A0h
 	out dx,al
@@ -1545,17 +1595,19 @@ install_unit	Proc near
 	jmp short $+2
 	mov al,0ECh
 	out dx,al
+	pop dx
 ;
 	WaitForSignal
 	StopTimer
 	pop ax
 ;
 	push ax
-	mov dx,1F0h
 	mov cx,256
+	
 install_unit_read:
 	in ax,dx
 	loop install_unit_read
+;	
 	call CheckStatus
 	pop ax
 	jc install_unit_done
@@ -1568,6 +1620,7 @@ install_unit_read:
 	pop ax
 ;
 	mov fs:disc_sub_unit,al
+	mov fs:disc_io_base,dx
 	call GetDriveParams
 	jnc install_unit_ok
 ;
@@ -1603,7 +1656,17 @@ install_unit_ok:
 	mov es,ax
 	movzx di,fs:disc_sub_unit
 	add di,di
-	mov di,word ptr cs:[di].disc_name_tab
+	mov dx,fs:disc_io_base
+	cmp dx,1F0h
+	je install_primary
+;	
+	mov di,word ptr cs:[di].disc_name_tab2
+	jmp install_cr_thread
+
+install_primary:	
+	mov di,word ptr cs:[di].disc_name_tab1
+
+install_cr_thread:
 	mov si,OFFSET discbuf_thread
 	mov ax,4
 	mov cx,100h
@@ -1633,10 +1696,35 @@ disc_assign	Proc far
 	mov ds,ax
 	GetThread
 	mov ds:IdeThread,ax
+;	
+    mov dx,1F7h
+    in al,dx
+    cmp al,-1
+    je disc_assign_secondary
+;    
 	mov al,0
+	mov dx,1F0h
 	call install_unit
+;	
 	mov al,1
+	mov dx,1F0h
 	call install_unit
+
+disc_assign_secondary:
+    mov dx,177h
+    in al,dx
+    cmp al,-1
+    je disc_assign_done
+;	    
+	mov al,0
+	mov dx,170h
+	call install_unit
+;	
+	mov al,1
+	mov dx,170h
+	call install_unit
+
+disc_assign_done:
 	mov ds:IdeThread,0
 	ret
 disc_assign	Endp
@@ -1941,7 +2029,7 @@ get_ide_disc	Proc far
 ;
     mov ax,ide_data_sel
     mov ds,ax
-    cmp bl,2
+    cmp bl,4
     jae get_ide_fail
 ;    
     movzx bx,bl
@@ -2004,8 +2092,14 @@ init	PROC far
 	mov dx,1F7h
 	in al,dx
 	cmp al,-1
-	je init_ide_done
+	jne init_ide_do
 ;
+    mov dx,177h
+    in al,dx
+    cmp al,1	
+	je init_ide_done
+
+init_ide_do:
 	mov di,OFFSET disc_ctrl
 	HookInitDisc
 ;
@@ -2016,6 +2110,8 @@ init	PROC far
 	mov es:IdeThread,0
 	mov es:DriveSelArr,0
 	mov es:DriveSelArr+2,0
+	mov es:DriveSelArr+4,0
+	mov es:DriveSelArr+6,0
 ;
 	mov al,0Eh
 	mov bx,ide_data_sel

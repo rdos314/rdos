@@ -1993,10 +1993,10 @@ dt3:
 dtpci:
 	call InitPciAdapter
 	call RequestIRQs
-    int 3    
-    mov ax,com_data_sel
-    mov ds,ax
-    mov cx,ds:serial_ports
+;    int 3    
+;    mov ax,com_data_sel
+;    mov ds,ax
+;    mov cx,ds:serial_ports
 	ret
 detect_thread	endp
 	
