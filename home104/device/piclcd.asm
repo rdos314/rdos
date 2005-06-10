@@ -1976,14 +1976,33 @@ sernet_thread:
     GetThread
     mov ds:SernetThread,ax    
     ClearSignal
+    mov cx,1FFh
 
 sernet_thread_loop:
-    WaitForSignal
+    inc cl
+    mov ax,cx
+    mov dx,3B8h
+    out dx,ax
+;        
     mov dx,3B2h
     mov al,20h
     out dx,al
     mov al,30h
     out dx,al
+;    
+    WaitForSignal
+;
+    mov dx,3B8h
+    in ax,dx
+    inc al
+    cmp al,cl
+    je sernet_thread_loop
+;
+    in ax,dx
+    inc al
+    cmp al,cl
+    je sernet_thread_loop
+;    
     jmp sernet_thread_loop
 
 PAGE
