@@ -63,8 +63,8 @@ TZflIoArea::TZflIoArea()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TZFLogic::TZFLogic(TIsa *Isa, int Base)
-  : TIsaFunction(Isa)
+TZFLogic::TZFLogic(TBus *Bus, int Base)
+  : TBusFunction(Bus)
 {
 	int i;
 
@@ -102,7 +102,7 @@ int TZFLogic::GetSize()
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TZFLogic::DefineIoCs(TIsaFunction *func, int Num)
+void TZFLogic::DefineIoCs(TBusFunction *func, int Num)
 {
     ZflMemArr[Num].func = func;
     UpdateIoWindow(Num);
@@ -115,10 +115,10 @@ void TZFLogic::DefineIoCs(TIsaFunction *func, int Num)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TZFLogic::DefineMemCs(TIsaFunction *func, int Num)
+void TZFLogic::DefineMemCs(TBusFunction *func, int Num)
 {
-    ZflMemArr[Num].func = func;
-    UpdateMemWindow(Num);
+	ZflMemArr[Num].func = func;
+	UpdateMemWindow(Num);
 }
 
 /*##################  TZFLogic::Out  ###############

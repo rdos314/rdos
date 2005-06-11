@@ -28,7 +28,7 @@
 #ifndef	_ZFL_H
 #define _ZFL_H
 
-#include "isa.h"
+#include "bus.h"
 
 class TZflMemArea
 {
@@ -40,7 +40,7 @@ public:
 	unsigned long Page;
 	int Enabled;
 	int Write;
-	TIsaFunction *func;
+	TBusFunction *func;
 };
 
 class TZflIoArea
@@ -52,13 +52,13 @@ public:
     int Size;
     int Enabled;
     int Write;
-    TIsaFunction *func;
+	TBusFunction *func;
 };
 
-class TZFLogic : public TIsaFunction
+class TZFLogic : public TBusFunction
 {
 public:
-	TZFLogic(TIsa *Isa, int Base);
+	TZFLogic(TBus *Bus, int Base);
 
 	virtual int GetSize();
 
@@ -67,8 +67,8 @@ public:
 	virtual void WriteMem(int Num, unsigned long Offset, char Value);
 	virtual char ReadMem(int Num, unsigned long Offset);
 
-	void DefineIoCs(TIsaFunction *func, int Num);
-	void DefineMemCs(TIsaFunction *func, int Num);
+	void DefineIoCs(TBusFunction *func, int Num);
+	void DefineMemCs(TBusFunction *func, int Num);
 
 protected:
     void UpdateData(int Index);
