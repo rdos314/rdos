@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@
 #ifndef	_PCI_H
 #define _PCI_H
 
-#include "isa.h"
+#include "bus.h"
 
 class TPci;
 
@@ -99,7 +99,7 @@ public:
 class TPci
 {
 public:
-	TPci(TIsa *Isa);
+	TPci(TBus *Isa);
 	~TPci();
 
 	void Out(int Port, char Value);
@@ -130,7 +130,7 @@ private:
 	int FDataChanged;
     int FKeyboardEnabled;
 
-	TIsa *FIsa;
+	TBus *FIsa;
     TPciBus *FBusArr[256];
 	int FHookIoMax;
 	int FHookMemMax;

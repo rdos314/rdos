@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,12 +28,12 @@
 #ifndef	_KEYB_H
 #define _KEYB_H
 
-#include "isa.h"
+#include "bus.h"
 
-class TKeyb : public TIsaFunction
+class TKeyb : public TBusFunction
 {
 public:
-	TKeyb(TIsa *Isa, int Base);
+	TKeyb(TBus *Bus, int Base);
 
 	virtual int GetSize();
 

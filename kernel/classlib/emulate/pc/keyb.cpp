@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -37,8 +37,8 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TKeyb::TKeyb(TIsa *Isa, int Base)
-  : TIsaFunction(Isa)
+TKeyb::TKeyb(TBus *Bus, int Base)
+  : TBusFunction(Bus)
 {
 	FRefresh = FALSE;
 	FLast = 0;
