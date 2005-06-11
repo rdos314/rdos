@@ -38,7 +38,7 @@ void CloseScreen();
 
 #define STACK_SIZE	0x4000
 
-TIsa Isa;
+TBus Isa;
 TPic Pic0(&Isa, 0x20);
 TPit Pit(&Isa, 0x40);
 TFlash Flash(&Isa, 0x80000, 0x80000);
