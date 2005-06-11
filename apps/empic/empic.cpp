@@ -20,147 +20,21 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* SIM.CPP
-* Main simulator
+* EMPIC.CPP
+* Emulate PIC16F84
 *
 *##########################################################################*/
 
 #include <rdos.h>
 #include <stdio.h>
-#include "cpu.h"
-#include "pic.h"
-#include "pit.h"
-#include "keyb.h"
-#include "pci.h"
-#include "zfnb.h"
-#include "zfsb.h"
-#include "zfsmi.h"
-#include "zfl.h"
-#include "zfide.h"
-#include "zfxbus.h"
-#include "zfusb.h"
-#include "cmos.h"
-#include "flash.h"
+#include "pic16f84.h"
 
 void OpenScreen(const char *FileName);
 void CloseScreen();
 
 #define STACK_SIZE	0x4000
 
-TBus Isa;
-TPci Pci(&Isa);
-TPic Pic0(&Isa, 0x20);
-TPit Pit(&Isa, 0x40);
-TKeyb Keyb(&Isa, 0x60);
-TCmos Cmos(&Isa, 0x70);
-TFlash Flash(0x400000);
-TZFLogic ZFLogic(&Isa, 0x218);
-TCpu Cpu;
-void *Eprom;
-char *LowRam;
-
-/*##################  Idle  ###############
-*   Purpose....: Idle								            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void Idle(TCpu *Cpu)
-{
-	if (RdosPollKeyboard())
-	{
-		RdosReadKeyboard();
-		Cpu->Break();
-	}
-}
-
-/*##################  SetClk  ###############
-*   Purpose....: 1 / 8 clk high notification					            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void SetClk(TCpu *Cpu)
-{
-	Pit.Counter[0]->SetClk();
-	Pit.Counter[2]->SetClk();
-}
-
-/*##################  ResetClk  ###############
-*   Purpose....: 1 / 8 clk low notification					            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void ResetClk(TCpu *Cpu)
-{
-	Pit.Counter[0]->ResetClk();
-	Pit.Counter[2]->ResetClk();
-	Cpu->PendingInt = Pic0.IsIntActive();
-}
-
-/*##################  GetIntVector  ###############
-*   Purpose....: Get interrupt vector							            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char __stdcall GetIntVector(TCpu *Cpu)
-{
-	return Pic0.GetVector();
-}
-
-/*##################  ReadFromMemory  ###############
-*   Purpose....: Read from memory				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char ReadFromMemory(TCpu *Cpu, unsigned long Address)
-{
-	return Pci.ReadMem(Address);
-}
-
-/*##################  WriteToMemory  ###############
-*   Purpose....:  Write to memory				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteToMemory(TCpu *Cpu, unsigned long Address, char Value)
-{
-	Pci.WriteMem(Address, Value);
-}
-
-/*##################  ReadFromIo  ###############
-*   Purpose....: Read from IO				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-char ReadFromIo(TCpu *Cpu, unsigned short int Port)
-{
-    return Pci.In(Port);
-}
-
-/*##################  WriteToIo  ###############
-*   Purpose....: Read from IO				            #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-10-30 le                                                #
-*##########################################################################*/
-void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
-{
-	Pci.Out(Port, Value);
-}
+TPic16F84 Cpu;
 
 /*##################  main  ###############
 *   Purpose....: main				            #
@@ -171,48 +45,18 @@ void WriteToIo(TCpu *Cpu, unsigned short int Port, char Value)
 *##########################################################################*/
 void main(void)
 {
-	TFile FlashFile("demo.rom");
+	TFile ProgFile("c:\\rdos\\pic\\home104\\sernet.obj");
 
 	OpenScreen("f:\\sim.log");
 
-	Flash.LoadTop(&FlashFile);
-	ZFLogic.DefineMemCs(&Flash, 0);
-
-	Pit.Counter[0]->Define(&Pic0, 0);
-	Pci.RegisterFunction(new TZfxNorthBridge(&Pci), 0, 0, 0);
-	Pci.RegisterFunction(new TZfxSouthBridge(&Pci), 0, 0x12, 0);
-	Pci.RegisterFunction(new TZfxSmi(&Pci), 0, 0x12, 1);
-	Pci.RegisterFunction(new TZfxIde(&Pci), 0, 0x12, 2);
-	Pci.RegisterFunction(new TZfxXbus(&Pci), 0, 0x12, 3);
-	Pci.RegisterFunction(new TZfxUsb(&Pci), 0, 0x13, 0);
-
-	Cpu.Define(&Pic0);
-	Cpu.OnSetClk = SetClk;
-	Cpu.OnResetClk = ResetClk;
-	Cpu.OnIdle = Idle;
-	Cpu.OnReadFromMemory = ReadFromMemory;
-	Cpu.OnWriteToMemory = WriteToMemory;
-	Cpu.OnReadFromIo = ReadFromIo;
-	Cpu.OnWriteToIo = WriteToIo;
+    Cpu.Load(&ProgFile);
 	Cpu.Reset();
 
-	while (1)
+	for (;;)
 	{
 		Cpu.Show();
 		switch (RdosReadKeyboard() & 0xFF)
 		{
-			case 'f':
-			case 'F':
-				Cpu.ShowFpu();
-				RdosReadKeyboard();
-				break;
-
-			case 'd':
-			case 'D':
-				Cpu.ShowData();
-				RdosReadKeyboard();
-				break;
-
 			case 'q':
 			case 'Q':
 				return;
@@ -238,11 +82,6 @@ void main(void)
 				RdosReadKeyboard();
 				break;
 
-			case 'b':
-			case 'B':
-				Cpu.ShowPreviousInstruction();
-				RdosReadKeyboard();
-				break;
 		}
 	}
 	CloseScreen();

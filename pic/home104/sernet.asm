@@ -1,18 +1,18 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; operation model
 ;
-; baudrate = 250kb
-; bittime = 4us (20 instructions)
-; time frame len = 288us (72 bits)
-; initialize interval = 1024 * 288us = 0.295s (1024 time frames)
+; baudrate = 167kb
+; bittime = 6us (30 instructions)
+; time frame len = 432us (72 bits)
+; initialize interval = 256 * 432us = 0.11s (256 time frames)
 ; maximum of 32 nodes on network (PIC limit)
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 NODE_NR     .EQU 1
 
-BIT_TIME    .EQU 20
-FRAME_US_L  .EQU 32
+BIT_TICS    .EQU 30
 FRAME_US_M  .EQU 1
+FRAME_US_L  .EQU 176
 FRAME_BITS  .EQU 72
 
 #DEFINE PAGE0   BCF $03,5
@@ -50,6 +50,14 @@ BUF:        .EQU $12
 BYTENO:     .EQU $13
 NODECNT:    .EQU $14
 MASTER:     .EQU $15
+CRCL:       .EQU $16
+CRCH:       .EQU $17
+
+TMR:        .EQU $18
+TICS:       .EQU $19
+BIT:        .EQU $1A
+FRAME:      .EQU $1B
+TEMP:       .EQU $1C
 
 NODEARR:    .EQU $30
 
@@ -317,29 +325,124 @@ InByteLoop:
 
 ;;;;;;;;;;
 ; LocalByte
+; W = byte
 ;;;;;;;;;;
 
-LocalBit:
-    bcf PORTB,4
-    btfsc VAL,0
-    bsf PORTB,4
-    bsf PORTB,5
+LocalByte:
+    movwf VAL
+    movlw 8
+    movwf COUNT
+
+LocalByteLoop:
     bcf PORTB,5
+    movf PORTB,W
+    andlw $FC
+    btfss VAL,0
+    iorlw $04
+    movwf PORTB
+;
     rrf VAL,F
+    rlf CRCL,F
+    rlf CRCH,F
+    btfss STATUS,C
+    goto LocalByteCrcOk
 ;
-    andlw 1
-    movwf BITS
-    clrf TEMP
-	bcf STATUS,C
-	rlf CRC,F
-	rlf TEMP,W
-	xorwf BITS,W
-	btfsc STATUS,Z
+    movlw $10
+    xorwf CRCH,F
+    movlw $21
+    xorwf CRCL,F
+
+LocalByteCrcOk:    
+    bsf PORTB,5
+;
+    movf TMR0,W
+    movwf TEMP
+    movf TMR,W
+    subwf TEMP,W
+    addwf TICS,F
+    movf TEMP,W
+    movwf TMR
+;    
+    decf COUNT,F
+    btfss STATUS,Z
+    goto LocalByteLoop
+;
+    bcf PORTB,5    
+	return
+
+
+;;;;;;;;;;
+; UpdateTimer
+;;;;;;;;;;
+
+UpdateTimer:
+    movf TMR0,W
+    movwf TEMP
+    movf TMR,W
+    subwf TEMP,W
+    addwf TICS,F
+    movf TEMP,W
+    movwf TMR
+;
+    movlw BIT_TICS    
+    subwf TICS,W
+    btfsc STATUS,C
 	return
 ;
-	movlw $26
-	xorwf CRC,F
-	return
+    movwf TICS
+    incf BIT,F
+    movlw FRAME_BITS
+    subwf BIT,W
+    btfss STATUS,Z
+    goto UpdateTimer
+;   
+    incf FRAME,F
+    goto UpdateTimer    
+
+;;;;;;;;;;
+; SendInit
+;;;;;;;;;;
+
+SendInit:
+    clrf CRCL
+    clrf CRCH
+    clrf TICS
+    clrf BIT
+    clrf FRAME
+;    
+    movlw $9B
+    call LocalByte
+    call UpdateTimer
+;
+    movlw $7C
+    call LocalByte
+    call UpdateTimer
+;
+    movlw NODE_NR
+    call LocalByte
+    call UpdateTimer
+;            
+    movlw $AB
+    call LocalByte
+    call UpdateTimer
+;    
+    movlw FRAME_US_M
+    call LocalByte
+    call UpdateTimer
+;
+    movlw FRAME_US_L
+    call LocalByte
+    call UpdateTimer
+;
+    movf CRCH,W
+    call LocalByte
+    call UpdateTimer
+;
+    movf CRCL,W
+    call LocalByte
+    call UpdateTimer
+;
+    return    
 
         .END
 

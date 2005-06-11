@@ -28,6 +28,8 @@
 #ifndef	_PIC16F84_H
 #define _PIC16F84_H
 
+#include "file.h"
+
 #define STATUS_C        1
 #define STATUS_DC       2
 #define STATUS_Z        4
@@ -42,6 +44,14 @@ class TPic16F84
 public:
 	TPic16F84();
 	~TPic16F84();
+
+    void Load(TFile *File);
+    void Reset();
+	void Show();
+	void Trace();
+	void Pace();
+	void Go();
+	void ShowInstruction(int count);
 
 // don't change data members here, without also changing in pic16f84.inc file
 
