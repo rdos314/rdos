@@ -20,24 +20,24 @@
 *
 * The author of this program may be contacted at leif@rdos.net
 *
-* ISA.CPP
-* ISA bus emulation
+* BUS.CPP
+* Bus emulation
 *
 *##########################################################################*/
 
-#include "isa.h"
+#include "bus.h"
 
 #define FALSE 0
 #define TRUE !FALSE
 
-/*##################  TIsaFunction::IsaFunction  ###############
+/*##################  TBusFunction::TBusFunction  ###############
 *   Purpose....: Constructor							            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TIsaFunction::TIsaFunction(TIsa *Isa)
+TBusFunction::TBusFunction(TBus *Bus)
 {
     int i;
 
@@ -47,19 +47,19 @@ TIsaFunction::TIsaFunction(TIsa *Isa)
         FMemArr[i] = 0;
     }
 
-	FIsa = Isa;
+	FBus = Bus;
 }
 
-/*##################  TIsaFunction::WriteMem  ###############
+/*##################  TBusFunction::WriteMem  ###############
 *   Purpose....: Write to data block								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::WriteMem(int Num, unsigned long Offset, char Value)
+void TBusFunction::WriteMem(int Num, unsigned long Offset, char Value)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     area = FMemArr[Num];
     if (area)
@@ -68,16 +68,16 @@ void TIsaFunction::WriteMem(int Num, unsigned long Offset, char Value)
 
 }
 
-/*##################  TIsaFunction::ReadMem  ###############
+/*##################  TBusFunction::ReadMem  ###############
 *   Purpose....: Read from data block								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TIsaFunction::ReadMem(int Num, unsigned long Offset)
+char TBusFunction::ReadMem(int Num, unsigned long Offset)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     area = FMemArr[Num];
     if (area)
@@ -87,16 +87,16 @@ char TIsaFunction::ReadMem(int Num, unsigned long Offset)
 	return 0xFF;
 }
 
-/*##################  TIsaFunction::Out  ###############
+/*##################  TBusFunction::Out  ###############
 *   Purpose....: Out to data block								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::Out(int Num, int Offset, char Value)
+void TBusFunction::Out(int Num, int Offset, char Value)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     area = FIoArr[Num];
     if (area)
@@ -105,16 +105,16 @@ void TIsaFunction::Out(int Num, int Offset, char Value)
 
 }
 
-/*##################  TIsaFunction::In  ###############
+/*##################  TBusFunction::In  ###############
 *   Purpose....: In from data block								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TIsaFunction::In(int Num, int Offset)
+char TBusFunction::In(int Num, int Offset)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     area = FIoArr[Num];
     if (area)
@@ -124,109 +124,109 @@ char TIsaFunction::In(int Num, int Offset)
 	return 0xFF;
 }
 
-/*##################  TIsaFunction::DefineIo  ###############
+/*##################  TBusFunction::DefineIo  ###############
 *   Purpose....: Define an io area								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::DefineIo(int Num, int Base, int Size, char *Data)
+void TBusFunction::DefineIo(int Num, int Base, int Size, char *Data)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     if (FIoArr[Num])
     {
-        if (FIsa)
-    	    FIsa->UndefineIo(this, Num);
+        if (FBus)
+    	    FBus->UndefineIo(this, Num);
         delete FIoArr[Num];
     }
 
-    area = new TIsaAreaData;
+    area = new TBusAreaData;
     area->Base = Base;
     area->Size = Size;
     area->Data = Data;
     FIoArr[Num] = area;
 
-    if (FIsa)
-        FIsa->DefineIo(this, Num, Base, Size);
+    if (FBus)
+        FBus->DefineIo(this, Num, Base, Size);
 }
 
-/*##################  TIsaFunction::UndefineIo  ###############
+/*##################  TBusFunction::UndefineIo  ###############
 *   Purpose....: Undefine an io area								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::UndefineIo(int Num)
+void TBusFunction::UndefineIo(int Num)
 {
     if (FIoArr[Num])
     {
-        if (FIsa)
-            FIsa->UndefineIo(this, Num);
+        if (FBus)
+            FBus->UndefineIo(this, Num);
 
         delete FIoArr[Num];
         FIoArr[Num] = 0;
     }
 }
 
-/*##################  TIsaFunction::DefineMem  ###############
+/*##################  TBusFunction::DefineMem  ###############
 *   Purpose....: Define a memory area								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::DefineMem(int Num, int Base, int Size, char *Data)
+void TBusFunction::DefineMem(int Num, int Base, int Size, char *Data)
 {
-    TIsaAreaData *area;
+    TBusAreaData *area;
 
     if (FMemArr[Num])
     {
-        if (FIsa)
-            FIsa->UndefineMem(this, Num);
+        if (FBus)
+            FBus->UndefineMem(this, Num);
 
         delete FMemArr[Num];
     }
 
-    area = new TIsaAreaData;
+    area = new TBusAreaData;
     area->Base = Base & 0x00FFFFFF;
     area->Size = Size;
     area->Data = Data;
     FMemArr[Num] = area;
 
-    if (FIsa)
-        FIsa->DefineMem(this, Num, Base, Size);
+    if (FBus)
+        FBus->DefineMem(this, Num, Base, Size);
 }
 
-/*##################  TIsaFunction::UndefineMem  ###############
+/*##################  TBusFunction::UndefineMem  ###############
 *   Purpose....: Undefine a memory area								            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsaFunction::UndefineMem(int Num)
+void TBusFunction::UndefineMem(int Num)
 {
     if (FMemArr[Num])
     {
-        if (FIsa)
-            FIsa->UndefineMem(this, Num);
+        if (FBus)
+            FBus->UndefineMem(this, Num);
 
         delete FMemArr[Num];
         FMemArr[Num] = 0;
     }
 }
 
-/*##################  TIsa::TIsa  ###############
-*   Purpose....: Constructor for ISA							            #
+/*##################  TBus::TBus  ###############
+*   Purpose....: Constructor for Bus							            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TIsa::TIsa()
+TBus::TBus()
 {
     int i;
 
@@ -239,14 +239,14 @@ TIsa::TIsa()
 	FHookMemMax = 0;
 }
 
-/*##################  TIsa::~TIsa  ###############
-*   Purpose....: Destructor for ISA							            #
+/*##################  TBus::~TBus  ###############
+*   Purpose....: Destructor for bus					            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TIsa::~TIsa()
+TBus::~TBus()
 {
     int i;
 
@@ -260,19 +260,19 @@ TIsa::~TIsa()
 	}
 }
 
-/*##################  TIsa::DefineIo  ###############
+/*##################  TBus::DefineIo  ###############
 *   Purpose....: Define an IO area						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::DefineIo(TIsaFunction *func, int Num, int Base, int Size)
+void TBus::DefineIo(TBusFunction *func, int Num, int Base, int Size)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
-	area = new TIsaArea;
+	area = new TBusArea;
 	area->Base = Base;
 	area->Size = Size;
 	area->func = func;
@@ -288,16 +288,16 @@ void TIsa::DefineIo(TIsaFunction *func, int Num, int Base, int Size)
 		}
 }
 
-/*##################  TIsa::UndefineIo  ###############
+/*##################  TBus::UndefineIo  ###############
 *   Purpose....: Undefine an IO area						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::UndefineIo(TIsaFunction *func, int Num)
+void TBus::UndefineIo(TBusFunction *func, int Num)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	for (i = 0; i < 256; i++)
@@ -313,19 +313,19 @@ void TIsa::UndefineIo(TIsaFunction *func, int Num)
 	}
 }
 
-/*##################  TIsa::DefineMem  ###############
+/*##################  TBus::DefineMem  ###############
 *   Purpose....: Define a memory area						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::DefineMem(TIsaFunction *func, int Num, int Base, int Size)
+void TBus::DefineMem(TBusFunction *func, int Num, int Base, int Size)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
-	area = new TIsaArea;
+	area = new TBusArea;
 	area->Base = Base & 0x00FFFFFF;
 	area->Size = Size;
 	area->func = func;
@@ -341,16 +341,16 @@ void TIsa::DefineMem(TIsaFunction *func, int Num, int Base, int Size)
 		}
 }
 
-/*##################  TIsa::UndefineMem  ###############
+/*##################  TBus::UndefineMem  ###############
 *   Purpose....: Undefine a memory area						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::UndefineMem(TIsaFunction *func, int Num)
+void TBus::UndefineMem(TBusFunction *func, int Num)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	for (i = 0; i < 256; i++)
@@ -366,16 +366,16 @@ void TIsa::UndefineMem(TIsaFunction *func, int Num)
 	}
 }
 
-/*##################  TIsa::WriteMem  ###############
+/*##################  TBus::WriteMem  ###############
 *   Purpose....: Perform write memory instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::WriteMem(unsigned long Address, char Value)
+void TBus::WriteMem(unsigned long Address, char Value)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	Address = Address & 0x00FFFFFF;
@@ -392,16 +392,16 @@ void TIsa::WriteMem(unsigned long Address, char Value)
 	}
 }
 
-/*##################  TIsa::ReadMem  ###############
+/*##################  TBus::ReadMem  ###############
 *   Purpose....: Perform read memory instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TIsa::ReadMem(unsigned long Address)
+char TBus::ReadMem(unsigned long Address)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	Address = Address & 0x00FFFFFF;
@@ -416,16 +416,16 @@ char TIsa::ReadMem(unsigned long Address)
 	return 0xFF;
 }
 
-/*##################  TIsa::Out  ###############
+/*##################  TBus::Out  ###############
 *   Purpose....: Perform out instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-void TIsa::Out(int Port, char Value)
+void TBus::Out(int Port, char Value)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	for (i = 0; i <= FHookIoMax; i++)
@@ -440,16 +440,16 @@ void TIsa::Out(int Port, char Value)
 	}
 }
 
-/*##################  TIsa::In  ###############
+/*##################  TBus::In  ###############
 *   Purpose....: Perform in instruction						            #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-char TIsa::In(int Port)
+char TBus::In(int Port)
 {
-	TIsaArea *area;
+	TBusArea *area;
 	int i;
 
 	for (i = 0; i <= FHookIoMax; i++)
