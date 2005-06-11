@@ -30,8 +30,8 @@
 
 	NAME empage
 
-include ..\core\emulate.inc
-include ..\core\emseg.inc
+include x86\emulate.inc
+include x86\emseg.inc
 
 	extrn ReadFromMemory:near
 	extrn WriteToMemory:near

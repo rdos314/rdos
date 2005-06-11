@@ -32,11 +32,11 @@ PAGE
 
 	NAME em387
 
-include ..\core\emulate.inc
-include ..\core\emcom.inc
-include ..\core\emseg.inc
-include ..\core\emfloat.inc
-include ..\core\emmem.inc
+include x86\emulate.inc
+include x86\emcom.inc
+include x86\emseg.inc
+include x86\emfloat.inc
+include x86\emmem.inc
 
 RC_MASK	EQU 0C00h
 RC_RND	EQU 0000h

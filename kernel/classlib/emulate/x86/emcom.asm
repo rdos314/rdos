@@ -30,10 +30,10 @@
 
 	NAME emcom
 
-include ..\core\emulate.inc
-include ..\core\emseg.inc
-include ..\core\empage.inc
-include ..\core\emtss.inc
+include x86\emulate.inc
+include x86\emseg.inc
+include x86\empage.inc
+include x86\emtss.inc
 
 	extrn ReadFromIo:near
 	extrn WriteToIo:near

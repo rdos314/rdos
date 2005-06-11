@@ -32,9 +32,9 @@
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
-include ..\core\emulate.inc
-include ..\core\emcom.inc
-include ..\core\emmem.inc
+include x86\emulate.inc
+include x86\emcom.inc
+include x86\emmem.inc
 
 .code
 

@@ -30,11 +30,11 @@
 
 	NAME emprot
 
-include ..\core\emulate.inc
-include ..\core\emcom.inc
-include ..\core\empage.inc
-include ..\core\emmem.inc
-include ..\core\emseg.inc
+include x86\emulate.inc
+include x86\emcom.inc
+include x86\empage.inc
+include x86\emmem.inc
+include x86\emseg.inc
 
 .code
 

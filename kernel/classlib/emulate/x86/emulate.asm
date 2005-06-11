@@ -30,15 +30,15 @@
 
 	NAME emulate
 
-include ..\core\emulate.inc
-include ..\core\emcom.inc
-include ..\core\emseg.inc
-include ..\core\emarithm.inc
-include ..\core\emtrans.inc
-include ..\core\emcontr.inc
-include ..\core\emstring.inc
-include ..\core\emprot.inc
-include ..\core\em387.inc
+include x86\emulate.inc
+include x86\emcom.inc
+include x86\emseg.inc
+include x86\emarithm.inc
+include x86\emtrans.inc
+include x86\emcontr.inc
+include x86\emstring.inc
+include x86\emprot.inc
+include x86\em387.inc
 
 .code
 
