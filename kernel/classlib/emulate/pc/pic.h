@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -48,12 +48,12 @@
 #define ICW4_BUF			8
 #define ICW4_SNFM			0x10
 
-#include "isa.h"
+#include "bus.h"
 
-class TPic : TIsaFunction
+class TPic : TBusFunction
 {
 	public:
-		TPic(TIsa *Isa, int Base);
+		TPic(TBus *Bus, int Base);
 
 		virtual int GetSize();
 

@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -36,8 +36,8 @@
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPic::TPic(TIsa *Isa, int Base)
-  : TIsaFunction(Isa)
+TPic::TPic(TBus *Bus, int Base)
+  : TBusFunction(Bus)
 {
 	int i;
 

@@ -59,7 +59,7 @@ TFlash::TFlash(unsigned long Size)
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
 TFlash::TFlash(TBus *Bus, unsigned long Base, unsigned long Size)
-  : TBusFunction(Isa)
+  : TBusFunction(Bus)
 {
 	int i;
 

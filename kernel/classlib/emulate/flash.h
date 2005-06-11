@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,14 +28,14 @@
 #ifndef	_FLASH_H
 #define _FLASH_H
 
-#include "isa.h"
+#include "bus.h"
 #include "file.h"
 
-class TFlash : public TIsaFunction
+class TFlash : public TBusFunction
 {
 public:
 	TFlash(unsigned long Size);
-	TFlash(TIsa *Isa, unsigned long Base, unsigned long Size);
+	TFlash(TBus *Bus, unsigned long Base, unsigned long Size);
 	~TFlash();
 
 	virtual int GetSize();

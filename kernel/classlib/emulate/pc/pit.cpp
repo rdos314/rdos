@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -429,8 +429,8 @@ char TPitCounter::Read()
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *##########################################################################*/
-TPit::TPit(TIsa *Isa, int Base)
-  : TIsaFunction(Isa)
+TPit::TPit(TBus *Bus, int Base)
+  : TBusFunction(Bus)
 {
 	int i;
 

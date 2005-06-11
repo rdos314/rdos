@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,7 +28,7 @@
 #ifndef	_PIT_H
 #define _PIT_H
 
-#include "isa.h"
+#include "bus.h"
 #include "pic.h"
 
 class TPitCounter
@@ -67,10 +67,10 @@ private:
 	int FIrq;
 };
 
-class TPit : public TIsaFunction
+class TPit : public TBusFunction
 {
 public:
-	TPit(TIsa *Isa, int Base);
+	TPit(TBus *Bus, int Base);
 	~TPit();
 
 	virtual int GetSize();
