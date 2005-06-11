@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -37,8 +37,8 @@
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TCmos::TCmos(TIsa *Isa, int Base)
-  : TIsaFunction(Isa)
+TCmos::TCmos(TBus *Bus, int Base)
+  : TBusFunction(Bus)
 {
 	int i;
 
