@@ -30,7 +30,7 @@
 						
 		NAME dismain
 
-INCLUDE ..\core\emulate.inc
+INCLUDE x86\emulate.inc
 
 blank_sep			EQU 0
 komma_sep			EQU 1000h

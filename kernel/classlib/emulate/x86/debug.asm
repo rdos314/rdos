@@ -30,8 +30,8 @@
 						
 		NAME  DEBUG_
 
-INCLUDE ..\core\emulate.inc
-INCLUDE ..\core\emcom.inc
+INCLUDE x86\emulate.inc
+INCLUDE x86\emcom.inc
 
 
 .data

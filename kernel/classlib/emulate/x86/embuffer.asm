@@ -31,7 +31,7 @@ locals
 
 		NAME embuffer
 		
-INCLUDE ..\core\emulate.inc
+INCLUDE x86\emulate.inc
 		
 .data
 		

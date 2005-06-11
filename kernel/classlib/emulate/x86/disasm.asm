@@ -30,8 +30,8 @@
 
 	NAME emulate
 
-include ..\core\emulate.inc
-include ..\core\empage.inc
+include x86\emulate.inc
+include x86\empage.inc
 
    extrn dis_ass_one:near
    extrn op_code_size

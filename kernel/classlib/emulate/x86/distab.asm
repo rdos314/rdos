@@ -30,7 +30,7 @@
 						
 		NAME distab
 
-INCLUDE ..\core\emulate.inc
+INCLUDE x86\emulate.inc
 
 .code
 
