@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -28,13 +28,13 @@
 #ifndef	_RAM_H
 #define _RAM_H
 
-#include "isa.h"
+#include "bus.h"
 
-class TRam : public TIsaFunction
+class TRam : public TBusFunction
 {
 public:
 	TRam(unsigned long Size);
-	TRam(TIsa *Isa, unsigned long Base, unsigned long Size);
+	TRam(TBus *Bus, unsigned long Base, unsigned long Size);
 	~TRam();
 
 	virtual int GetSize();

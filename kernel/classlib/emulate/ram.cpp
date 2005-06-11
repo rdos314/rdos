@@ -1,5 +1,5 @@
 /*###########################################################################
-* Em486 CPU emulator
+* RDOS operating system 
 * Copyright (C) 1998-2000, Leif Ekblad
 *
 * This program is free software; you can redistribute it and/or modify
@@ -38,7 +38,7 @@
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
 TRam::TRam(unsigned long Size)
-  : TIsaFunction(0)
+  : TBusFunction(0)
 {
 	int i;
 
@@ -58,8 +58,8 @@ TRam::TRam(unsigned long Size)
 *   Returns....: *                                                          #
 *   Created....: 96-10-30 le                                                #
 *##########################################################################*/
-TRam::TRam(TIsa *Isa, unsigned long Base, unsigned long Size)
-  : TIsaFunction(Isa)
+TRam::TRam(TBus *Bus, unsigned long Base, unsigned long Size)
+  : TBusFunction(Bus)
 {
 	int i;
 
