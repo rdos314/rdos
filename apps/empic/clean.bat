@@ -1,0 +1,9 @@
+del *.bak
+del *.obj
+del *.exe
+del *.rdv
+del *.map
+del *.~??
+del *.csm
+del *.dsw
+del *.tr2
