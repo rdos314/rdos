@@ -84,6 +84,7 @@ public:
     virtual void Write(const char *buf, int count);
 	virtual void Write(const char *str);
 	virtual void WaitForSendCompleted();
+	virtual int Poll();
 	virtual char Read();
 	virtual int WaitForChar(long Timeout);
 

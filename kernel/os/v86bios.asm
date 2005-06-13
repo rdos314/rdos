@@ -349,7 +349,6 @@ handle_output_zero:
 	or eax,eax
 	jz handle_output_zero_next
 ;
-	int 3
 	FreePhysical
 
 handle_output_zero_next:

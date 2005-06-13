@@ -998,6 +998,22 @@ int TSerialDevice::WaitForChar(long Timeout)
 
 /*##########################################################################
 #
+#   Name       : TSerialDevice::Poll
+#
+#   Purpose....: Poll port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: true if successful
+#
+##########################################################################*/
+int TSerialDevice::Poll()
+{
+    return WaitForChar(25);
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDevice::Read
 #
 #   Purpose....: Read a single character

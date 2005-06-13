@@ -1379,6 +1379,16 @@ InitV86	Proc near
 	CreateDataSelector16
 	mov es,bx
 ;
+    push ecx
+    push edi
+;
+    xor al,al
+    xor edi,edi
+    rep stos byte ptr es:[edi]
+;
+    pop edi
+    pop ecx
+;
 	mov ax,4F0Ah
 	xor bl,bl
 	push 10h
