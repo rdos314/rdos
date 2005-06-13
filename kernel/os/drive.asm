@@ -4341,8 +4341,9 @@ format_find_drive_next:
 	sub bp,1
 	jnz format_find_drive_loop
 ;
-	mov ah,al
+	mov bl,al
 	AllocateStaticDrive
+	mov ah,bl
 	OpenDrive
 	jmp format_perf
 
