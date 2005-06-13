@@ -2335,6 +2335,7 @@ allocate_static_drive	Proc far
 	push cx
 	push si
 ;
+    push ax
 	mov ax,disc_data_sel
 	mov ds,ax
 	mov si,OFFSET drive_def_arr
@@ -2344,14 +2345,18 @@ allocate_static_drive_loop:
 	or ax,ax
 	jnz allocate_static_drive_next
 	mov word ptr [si],-1
-	mov ax,si
-	sub ax,OFFSET drive_def_arr
-	shr ax,1
+	mov cx,si
+	sub cx,OFFSET drive_def_arr
+	shr cx,1
+	pop ax
+	mov al,cl
 	clc
 	jmp allocate_static_drive_done
+	
 allocate_static_drive_next:
 	add si,2
 	loop allocate_static_drive_loop
+	pop ax
 	stc
 
 allocate_static_drive_done:
@@ -2381,6 +2386,7 @@ allocate_dynamic_drive	Proc far
 	push cx
 	push si
 ;
+    push ax
 	mov ax,disc_data_sel
 	mov ds,ax
 	mov si,OFFSET drive_def_arr + 2 * (MAX_DRIVES - 1)
@@ -2390,14 +2396,18 @@ allocate_dynamic_drive_loop:
 	or ax,ax
 	jnz allocate_dynamic_drive_next
 	mov word ptr [si],-1
-	mov ax,si
-	sub ax,OFFSET drive_def_arr
-	shr ax,1
+	mov cx,si
+	sub cx,OFFSET drive_def_arr
+	shr cx,1
+	pop ax
+	mov al,cl
 	clc
 	jmp allocate_dynamic_drive_done
+	
 allocate_dynamic_drive_next:
 	sub si,2
 	loop allocate_dynamic_drive_loop
+	pop ax
 	stc
 	
 allocate_dynamic_drive_done:
@@ -4341,9 +4351,8 @@ format_find_drive_next:
 	sub bp,1
 	jnz format_find_drive_loop
 ;
-	mov bl,al
+	mov ah,al
 	AllocateStaticDrive
-	mov ah,bl
 	OpenDrive
 	jmp format_perf
 
