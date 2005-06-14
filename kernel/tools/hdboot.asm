@@ -122,9 +122,11 @@ CurrFatSector       DD 0
 Tics                DD ?
 
 OrgTimerVect        DD ?
-OrgIdeVect          DD ?
+OrgIdeVect1         DD ?
+OrgIdeVect2         DD ?
 
 IntFlag             DB ?
+IoBase              DW 1F0h
 DiscSubUnit         DB ?
 LbaMode             DB ?
 Precomp             DB ?
@@ -324,8 +326,10 @@ CheckReady	PROC near
 	push cx
 	push dx
 ;
-	mov dx,1F7h
+    mov dx,cs:IoBase
+	add dx,7
 	xor cx,cx
+	
 CheckReadyLoop:
 	in al,dx
 	test al,80h
@@ -356,7 +360,9 @@ WaitDrq	Proc near
 	push dx
 ;
 	mov cx,100h
-	mov dx,1F7h
+	mov dx,cs:IoBase
+	add dx,7
+	
 WaitDrqLoop:
 	in al,dx
 	test al,8
@@ -385,7 +391,8 @@ CheckStatus	Proc near
 	push ax
 	push dx
 ;
-	mov dx,1F7h
+    mov dx,cs:IoBase
+    add dx,7
 	in al,dx
 	test al,80h
 	jnz CheckStatusFail
@@ -398,7 +405,9 @@ CheckStatus	Proc near
 	test al,1
 	clc
 	jz CheckStatusDone
-	mov dx,1F1h
+;
+    mov dx,cs:IoBase	
+	add dx,1
 	in al,dx
 CheckStatusFail:
 	stc
@@ -432,7 +441,8 @@ SetupIdeTaskFile	Proc near
 	jc SetupIdeTaskDone
 ;	
 	push dx
-	mov dx,1F1h
+	mov dx,cs:IoBase
+    inc dx
 ;
 	jmp short $+2
 	mov al,ah
@@ -494,7 +504,8 @@ SetupLbaTaskFile	Proc near
 	jc SetupLbaTaskDone
 ;
 	push edx
-	mov dx,1F1h
+	mov dx,cs:IoBase
+	inc dx
 ;
 	jmp short $+2
 	mov al,ah
@@ -549,7 +560,8 @@ SetupLbaTaskFile	Endp
 
 RunTaskFile	Proc near
 	push dx
-	mov dx,1F7h
+	mov dx,cs:IoBase
+	add dx,7
 	out dx,al
 
 rtfWait:
@@ -583,7 +595,8 @@ ReadTaskFile	Proc near
 	push di
 ;
     mov cs:IntFlag,0
-	mov dx,1F7h
+	mov dx,cs:IoBase
+	add dx,7
 	out dx,al
 	
 ReadTaskFileInt:
@@ -592,7 +605,7 @@ ReadTaskFileInt:
     jz ReadTaskFileInt
 ;    
 	push cx
-	mov dx,1F0h
+	mov dx,cs:IoBase
 	mov cx,256
 	rep insw
 	pop cx
@@ -716,7 +729,6 @@ InitIrq Proc near
     mov di,bx
 ;    
     mov cs:IntFlag,0
-    mov cs:DiscSubUnit,0
     xor ax,ax
     mov ds,ax
     mov bx,8 SHL 2
@@ -727,7 +739,13 @@ InitIrq Proc near
 ;
     mov bx,76h SHL 2
     mov eax,[bx]
-    mov cs:OrgIdeVect,eax
+    mov cs:OrgIdeVect1,eax
+    mov word ptr [bx],OFFSET IdeInt
+    mov [bx+2],cs
+;
+    mov bx,77h SHL 2
+    mov eax,[bx]
+    mov cs:OrgIdeVect2,eax
     mov word ptr [bx],OFFSET IdeInt
     mov [bx+2],cs
 ;
@@ -1952,6 +1970,19 @@ part_stop:
 Start:
 	sti
 	mov cs:DriveNr,dl
+	test dl,1
+	jz boot_prim
+;
+    mov cs:IoBase,170h
+    jmp boot_base_ok	
+
+boot_prim:
+    mov cs:IoBase,1F0h
+
+boot_base_ok:
+    and dl,1
+	mov cs:DiscSubUnit,dl
+;	
 	mov cs:DefaultBoot,al
 	mov ax,DATA_SEG
 	mov ds,ax
@@ -2054,8 +2085,6 @@ LoadDefaultOk:
     call ClearScreen
     xor ax,ax
     mov ds,ax
-;
-    inc cs:DiscSubUnit      ; fix for drive-swap!!
 ;    
     xor edx,edx
     mov bx,600h
@@ -2070,7 +2099,11 @@ LoadDefaultOk:
     mov [bx],eax
 ;
     mov bx,76h SHL 2
-    mov eax,cs:OrgIdeVect
+    mov eax,cs:OrgIdeVect1
+    mov [bx],eax
+;
+    mov bx,77h SHL 2
+    mov eax,cs:OrgIdeVect2
     mov [bx],eax
 ;
     mov si,600h + 1BEh    

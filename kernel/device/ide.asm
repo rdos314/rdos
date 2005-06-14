@@ -60,6 +60,7 @@ drive_sectors_per_unit		DW ?
 drive_units					DW ?
 drive_lba_sectors			DD ?
 disc_io_base                DW ?
+disc_ide_sel                DW ?
 disc_sel					DW ?
 disc_thread					DW ?
 disc_sub_unit				DB ?
@@ -278,6 +279,7 @@ SetupIdeTaskDone:
 	ret
 SetupIdeTaskFile	Endp
 
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -491,8 +493,7 @@ WriteTaskFile	ENDP
 
 ReadDrive	Proc near
 	push bx
-	mov bx,ide_data_sel
-	mov ds,bx
+	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
 	GetThread
 	mov ds:IdeThread,ax
@@ -557,8 +558,7 @@ ReadDrive	Endp
 
 WriteDrive	Proc near
 	push bx
-	mov bx,ide_data_sel
-	mov ds,bx
+	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
 	GetThread
 	mov ds:IdeThread,ax
@@ -1247,8 +1247,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 read_drive	Proc near
-	mov ax,ide_data_sel
-	mov ds,ax
+	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
 
 read_drive_retry_loop:
@@ -1343,15 +1342,14 @@ PAGE
 ;
 ;		DESCRIPTION:	Perform a write request
 ;
-;		PARAMETERS:		DS		Disc selector
+;		PARAMETERS:		FS		Disc selector
 ;						ESI		Disc handle array
 ;						ECX		Entries
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 write_drive	Proc near
-	mov ax,ide_data_sel
-	mov ds,ax
+	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
 
 write_drive_retry_loop:
@@ -1496,14 +1494,13 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 discbuf_thread:
-	mov ax,ide_data_sel
-	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
 ;
 	GetThread
 	mov fs:disc_thread,ax
 	mov bx,fs:disc_sel
+	mov ds,fs:disc_ide_sel
 
 discbuf_thread_loop:
 	WaitForDiscRequest
@@ -1515,19 +1512,19 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			INSTALL_TIMEOUT
+;		NAME:			INSTALL_TIMEOUT1
 ;
 ;		DESCRIPTION:	Install unit timeout
 ;
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-install_timeout	Proc far
+install_timeout1	Proc far
 	push ds
 	push ax
 	push bx
 ;
-	mov ax,ide_data_sel
+	mov ax,ide_data_sel1
 	mov ds,ax
 	mov bx,ds:IdeThread
 	Signal
@@ -1536,7 +1533,35 @@ install_timeout	Proc far
 	pop ax
 	pop ds
 	ret
-install_timeout	Endp
+install_timeout1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			INSTALL_TIMEOUT2
+;
+;		DESCRIPTION:	Install unit timeout
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+install_timeout2	Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,ide_data_sel2
+	mov ds,ax
+	mov bx,ds:IdeThread
+	Signal
+;
+	pop bx
+	pop ax
+	pop ds
+	ret
+install_timeout2	Endp
 
 PAGE
 
@@ -1570,6 +1595,16 @@ install_unit	Proc near
 	call CheckReady
 	jc install_unit_done
 ;
+	cmp dx,1F0h
+	je inst_timeout_primary
+;	
+	mov di,OFFSET install_timeout1
+	jmp inst_timeout_start
+
+inst_timeout_primary:	
+	mov di,OFFSET install_timeout2
+
+inst_timeout_start:
 	push ax
     push dx
 	GetSystemTime
@@ -1577,7 +1612,6 @@ install_unit	Proc near
 	adc edx,0
 	mov bx,cs
 	mov es,bx
-	mov di,OFFSET install_timeout
 	mov bx,cs
 	StartTimer
 	pop dx
@@ -1640,6 +1674,7 @@ install_unit_ok:
 	InstallDisc
 	mov fs:disc_sel,bx
 	mov fs:disc_nr,al
+	mov fs:disc_ide_sel,ds
 ;
 	call CalcParam
 	mov ax,fs:drive_sectors_per_unit
@@ -1683,25 +1718,25 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			DISC_ASSIGN
+;		NAME:			DISC_ASSIGN1
 ;
-;		DESCRIPTION:	Assign discs
+;		DESCRIPTION:	Assign discs on primary adapter
 ;
 ;		PARAMETERS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_assign	Proc far
-	mov ax,ide_data_sel
+disc_assign1	Proc far
+    mov dx,1F7h
+    in al,dx
+    cmp al,-1
+    je disc_assign1_done
+;    
+	mov ax,ide_data_sel1
 	mov ds,ax
 	GetThread
 	mov ds:IdeThread,ax
 ;	
-    mov dx,1F7h
-    in al,dx
-    cmp al,-1
-    je disc_assign_secondary
-;    
 	mov al,0
 	mov dx,1F0h
 	call install_unit
@@ -1709,12 +1744,36 @@ disc_assign	Proc far
 	mov al,1
 	mov dx,1F0h
 	call install_unit
+	mov ds:IdeThread,0
 
-disc_assign_secondary:
+disc_assign1_done:
+	mov ds:IdeThread,0
+	ret
+disc_assign1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			DISC_ASSIGN2
+;
+;		DESCRIPTION:	Assign discs
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+disc_assign2	Proc far
     mov dx,177h
     in al,dx
     cmp al,-1
-    je disc_assign_done
+    je disc_assign2_done
+;    
+	mov ax,ide_data_sel2
+	mov ds,ax
+	GetThread
+	mov ds:IdeThread,ax
 ;	    
 	mov al,0
 	mov dx,170h
@@ -1724,10 +1783,10 @@ disc_assign_secondary:
 	mov dx,170h
 	call install_unit
 
-disc_assign_done:
+disc_assign2_done:
 	mov ds:IdeThread,0
 	ret
-disc_assign	Endp
+disc_assign2	Endp
 
 PAGE
 
@@ -1743,9 +1802,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign1	Proc far
-	mov ax,ide_data_sel
-	mov ds,ax
 	mov fs,bx
+	mov ds,fs:disc_ide_sel
 ;
 	mov ax,flat_sel
 	mov es,ax
@@ -1909,11 +1967,10 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 drive_assign2	Proc far
-	mov ax,ide_data_sel
-	mov ds,ax
 	mov ax,flat_sel
 	mov es,ax
 	mov fs,bx
+	mov ds,fs:disc_ide_sel
 ;
 	mov eax,200h
 	AllocateSmallLinear
@@ -2027,11 +2084,35 @@ get_ide_disc	Proc far
     push ds
     push bx
 ;
-    mov ax,ide_data_sel
+    cmp bl,2
+    jae get_ide_second
+;    
+    mov ax,ide_data_sel1
+	verr ax
+	jnz get_ide_fail
+;
     mov ds,ax
-    cmp bl,4
+    movzx bx,bl
+    add bx,bx
+    mov bx,ds:[bx].DriveSelArr
+    or bx,bx
+    jz get_ide_fail
+;
+    mov ds,bx
+    mov al,ds:disc_nr
+    clc
+    jmp get_ide_done
+
+get_ide_second:
+    sub bl,2
+    cmp bl,2
     jae get_ide_fail
 ;    
+    mov ax,ide_data_sel2
+	verr ax
+	jnz get_ide_fail
+;
+    mov ds,ax
     movzx bx,bl
     add bx,bx
     mov bx,ds:[bx].DriveSelArr
@@ -2065,12 +2146,19 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disc_ctrl:
-dct00	DW OFFSET disc_assign,		ide_code_sel
-dct01	DW OFFSET drive_assign1,	ide_code_sel
-dct02	DW OFFSET drive_assign2,	ide_code_sel
-dct03	DW OFFSET demand_mount,		ide_code_sel
-dct04   DW OFFSET erase,            ide_code_sel
+disc_ctrl1:
+dct100	DW OFFSET disc_assign1,		ide_code_sel
+dct101	DW OFFSET drive_assign1,	ide_code_sel
+dct102	DW OFFSET drive_assign2,	ide_code_sel
+dct103	DW OFFSET demand_mount,		ide_code_sel
+dct104  DW OFFSET erase,            ide_code_sel
+
+disc_ctrl2:
+dct200	DW OFFSET disc_assign2,		ide_code_sel
+dct201	DW OFFSET drive_assign1,	ide_code_sel
+dct202	DW OFFSET drive_assign2,	ide_code_sel
+dct203	DW OFFSET demand_mount,		ide_code_sel
+dct204  DW OFFSET erase,            ide_code_sel
 
 init	PROC far
 	push ds
@@ -2092,29 +2180,46 @@ init	PROC far
 	mov dx,1F7h
 	in al,dx
 	cmp al,-1
-	jne init_ide_do
+	je init_ide_second
 ;
-    mov dx,177h
-    in al,dx
-    cmp al,1	
-	je init_ide_done
-
-init_ide_do:
-	mov di,OFFSET disc_ctrl
+	mov di,OFFSET disc_ctrl1
 	HookInitDisc
 ;
 	mov eax,SIZE ide_data
-	mov bx,ide_data_sel
+	mov bx,ide_data_sel1
 	AllocateFixedSystemMem
 	InitSection es:IdeSection
 	mov es:IdeThread,0
 	mov es:DriveSelArr,0
 	mov es:DriveSelArr+2,0
-	mov es:DriveSelArr+4,0
-	mov es:DriveSelArr+6,0
 ;
 	mov al,0Eh
-	mov bx,ide_data_sel
+	mov bx,ide_data_sel1
+	mov ds,bx
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET ide_int
+	RequestPrivateIrqHandler
+
+init_ide_second:
+    mov dx,177h
+    in al,dx
+    cmp al,-1	
+	je init_ide_done
+;
+	mov di,OFFSET disc_ctrl2
+	HookInitDisc
+;
+	mov eax,SIZE ide_data
+	mov bx,ide_data_sel2
+	AllocateFixedSystemMem
+	InitSection es:IdeSection
+	mov es:IdeThread,0
+	mov es:DriveSelArr,0
+	mov es:DriveSelArr+2,0
+;
+	mov al,0Fh
+	mov bx,ide_data_sel2
 	mov ds,bx
 	mov bx,cs
 	mov es,bx

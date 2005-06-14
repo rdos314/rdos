@@ -149,9 +149,6 @@ handle_data_sel		EQU 2A0h
 key_code_sel		EQU 400h
 key_data_sel		EQU 408h
 
-ide_code_sel		EQU 410h
-ide_data_sel		EQU 418h
-
 fat_code_sel		EQU 420h
 rdfs_code_sel		EQU 428h
 
@@ -321,6 +318,10 @@ ppp_data_sel		EQU 7D8h
 
 dhcp_data_sel		EQU 7E0h
 udp_data_sel		EQU 7E8h
+
+ide_code_sel		EQU 7F0h
+ide_data_sel1		EQU 7F8h
+ide_data_sel2		EQU 800h
 
 ntp_data_sel		EQU 808h
 
