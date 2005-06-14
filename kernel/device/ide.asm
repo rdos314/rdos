@@ -1729,7 +1729,8 @@ PAGE
 disc_assign1	Proc far
     mov dx,1F7h
     in al,dx
-    cmp al,-1
+    and al,7Fh
+    cmp al,7Fh
     je disc_assign1_done
 ;    
 	mov ax,ide_data_sel1
@@ -1747,7 +1748,6 @@ disc_assign1	Proc far
 	mov ds:IdeThread,0
 
 disc_assign1_done:
-	mov ds:IdeThread,0
 	ret
 disc_assign1	Endp
 
@@ -1767,7 +1767,8 @@ PAGE
 disc_assign2	Proc far
     mov dx,177h
     in al,dx
-    cmp al,-1
+    and al,7Fh
+    cmp al,7Fh
     je disc_assign2_done
 ;    
 	mov ax,ide_data_sel2
@@ -1782,9 +1783,9 @@ disc_assign2	Proc far
 	mov al,1
 	mov dx,170h
 	call install_unit
+	mov ds:IdeThread,0
 
 disc_assign2_done:
-	mov ds:IdeThread,0
 	ret
 disc_assign2	Endp
 
@@ -2176,10 +2177,12 @@ init	PROC far
 	xor dx,dx
 	mov ax,get_ide_disc_nr
 	RegisterBimodalUserGate
-;
+
+init_ide_primary:
 	mov dx,1F7h
 	in al,dx
-	cmp al,-1
+	and al,7Fh
+	cmp al,7Fh
 	je init_ide_second
 ;
 	mov di,OFFSET disc_ctrl1
@@ -2204,7 +2207,8 @@ init	PROC far
 init_ide_second:
     mov dx,177h
     in al,dx
-    cmp al,-1	
+    and al,7Fh
+    cmp al,7Fh
 	je init_ide_done
 ;
 	mov di,OFFSET disc_ctrl2

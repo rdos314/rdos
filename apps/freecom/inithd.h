@@ -54,7 +54,7 @@ protected:
 	virtual int OptScan(const char *optstr, int ch, int bool, const char *strarg, void * const arg);
 
     void LoadBootLoader(TDisc *Disc);
-	void WriteBootSector(TDisc *Disc);
+	void WriteBootSector(TDisc *Disc, int IdeDisc);
 	void WriteBootLoader(TDisc *Disc);
 
     int FLoaderSectors;

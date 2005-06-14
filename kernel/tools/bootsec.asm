@@ -177,6 +177,7 @@ ReadSector	Proc near
 	mov cx,dx
 	xchg ch,cl
 	mov dl,cs:BootMedia.boot_drive_nr
+    and dl,80h
 	mov dh,bh
 	pop bx
 	int 13h

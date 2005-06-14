@@ -179,6 +179,28 @@ singel_hex	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			WriteChar
+;
+;		DESCRIPTION:	Write character
+;
+;		PARAMETERS:		AL		Char
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WriteChar	PROC near
+	push ax
+	push bx
+	mov ah,0Eh
+	mov bx,7
+	int 10h
+	pop bx
+	pop ax
+	ret
+WriteChar	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			WriteHexByte
 ;
 ;		DESCRIPTION:	Write hex byte on screen
@@ -293,7 +315,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			IdeInt
+;		NAME:			IdeInt1
 ;
 ;		DESCRIPTION:	IDE INTERRUPT
 ;
@@ -301,13 +323,37 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-IdeInt:
+IdeInt1:
     push ax
 	mov al,62h
 	out 20h,al
     mov cs:IntFlag,1
 ;    
 	mov al,66h
+	out 0A0h,al
+	pop ax
+    iret
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			IdeInt2
+;
+;		DESCRIPTION:	IDE INTERRUPT
+;
+;		PARAMETERS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IdeInt2:
+    push ax
+	mov al,62h
+	out 20h,al
+    mov cs:IntFlag,1
+;    
+	mov al,67h
 	out 0A0h,al
 	pop ax
     iret
@@ -740,13 +786,13 @@ InitIrq Proc near
     mov bx,76h SHL 2
     mov eax,[bx]
     mov cs:OrgIdeVect1,eax
-    mov word ptr [bx],OFFSET IdeInt
+    mov word ptr [bx],OFFSET IdeInt1
     mov [bx+2],cs
 ;
     mov bx,77h SHL 2
     mov eax,[bx]
     mov cs:OrgIdeVect2,eax
-    mov word ptr [bx],OFFSET IdeInt
+    mov word ptr [bx],OFFSET IdeInt2
     mov [bx+2],cs
 ;
 	mov cs:Precomp,0FFh
@@ -1969,19 +2015,55 @@ part_stop:
 
 Start:
 	sti
+    push ax
+    push dx
+    mov al,dl
+    call WriteHexByte
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+;
 	mov cs:DriveNr,dl
-	test dl,1
+	test dl,2
 	jz boot_prim
 ;
+    push ax
+    push dx
+    mov ax,170h
+    call WriteHexWord
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+
     mov cs:IoBase,170h
     jmp boot_base_ok	
 
 boot_prim:
+    push ax
+    push dx
+    mov ax,1F0h
+    call WriteHexWord
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax
+
     mov cs:IoBase,1F0h
 
 boot_base_ok:
     and dl,1
 	mov cs:DiscSubUnit,dl
+
+    push ax
+    push dx
+    mov al,dl
+    call WriteHexByte
+    mov al,' '
+    call WriteChar
+    pop dx
+    pop ax	
 ;	
 	mov cs:DefaultBoot,al
 	mov ax,DATA_SEG

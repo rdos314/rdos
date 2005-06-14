@@ -180,7 +180,7 @@ void TInitHdCommand::LoadBootLoader(TDisc *Disc)
 #   Returns....: *
 #
 ##########################################################################*/
-void TInitHdCommand::WriteBootSector(TDisc *Disc)
+void TInitHdCommand::WriteBootSector(TDisc *Disc, int IdeDisc)
 {
 	char *BootSector;
 	TBootParam bootp;
@@ -191,7 +191,7 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 		bootp.Resv1 = 1;
 	else
 		bootp.Resv1 = 0;
-	    
+
 	bootp.MappingSectors = FLoaderSectors;
 	bootp.Resv3 = 0;
 	bootp.Resv4 = 0;
@@ -207,7 +207,7 @@ void TInitHdCommand::WriteBootSector(TDisc *Disc)
 	bootp.Heads = Disc->GetHeads();
 	bootp.HiddenSectors = FLoaderSectors;
 	bootp.Sectors = Disc->GetTotalSectors();
-	bootp.Drive = 0x80;
+	bootp.Drive = 0x80 + IdeDisc;
 	bootp.Resv7 = 0;
 	bootp.Signature = 0;
 	bootp.Serial = 0;
@@ -330,7 +330,7 @@ int TInitHdCommand::Execute(char *param)
 		if (ok)
 		{
 			WriteBootLoader(Disc);
-			WriteBootSector(Disc);
+			WriteBootSector(Disc, DiscNr);
 			return 0;
 		}
 	}
