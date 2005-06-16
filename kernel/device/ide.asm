@@ -73,6 +73,7 @@ ide_data    SEGMENT AT 0
 IdeThread		DW ?
 DriveSelArr		DW 2 DUP(?)
 IdeSection		section_typ <>
+IntFlag         DB ?
 
 ide_data    ENDS
 
@@ -96,6 +97,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ide_int	Proc far
+    mov ds:IntFlag,1
 	mov bx,ds:IdeThread
 	Signal
 	ret
@@ -1591,6 +1593,7 @@ dnt200	DW OFFSET disc2
 dnt201	DW OFFSET disc3
 
 install_unit	Proc near
+    mov ds:IntFlag,0
 	ClearSignal
 	call CheckReady
 	jc install_unit_done
@@ -1598,11 +1601,11 @@ install_unit	Proc near
 	cmp dx,1F0h
 	je inst_timeout_primary
 ;	
-	mov di,OFFSET install_timeout1
+	mov di,OFFSET install_timeout2
 	jmp inst_timeout_start
 
 inst_timeout_primary:	
-	mov di,OFFSET install_timeout2
+	mov di,OFFSET install_timeout1
 
 inst_timeout_start:
 	push ax
@@ -1641,8 +1644,15 @@ inst_timeout_start:
 install_unit_read:
 	in ax,dx
 	loop install_unit_read
-;	
+;
+    mov al,ds:IntFlag
+    or al,al
+    stc
+    jz install_unit_check_done
+;    	
 	call CheckStatus
+
+install_unit_check_done:
 	pop ax
 	jc install_unit_done
 ;

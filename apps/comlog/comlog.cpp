@@ -24,8 +24,8 @@ void cdecl main()
 	TWait Wait;
 	TKeyboardDevice Keyboard;
 
-	TSerialDevice Port1(3, 9600, 'E', 8, 1);
-	TSerialDevice Port2(4, 9600, 'E', 8, 1);
+	TSerialDevice Port1(1, 19200, 'N', 8, 1);
+	TSerialDevice Port2(3, 19200, 'N', 8, 1);
 
 	Port1.Open();
 	Port2.Open();
