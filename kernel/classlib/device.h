@@ -2,14 +2,14 @@
 # RDOS operating system
 # Copyright (C) 1988-2002, Leif Ekblad
 #
-# This program is free software; you can redistribute it and/or modify
+# This program is free software; you can reDeviceribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 2 of the License, or
 # (at your option) any later version. The only exception to this rule
 # is for commercial usage in embedded systems. For information on
 # usage in commercial embedded systems, contact embedded@rdos.net
 #
-# This program is distributed in the hope that it will be useful,
+# This program is Deviceributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -28,15 +28,305 @@
 #ifndef _DEVICE_H
 #define _DEVICE_H
 
+#include <stdlib.h>
+
 #include "section.h"
 #include "thread.h"
+#include "datetime.h"
+
+#define DEVICE_TAG_HEADER             0
+#define DEVICE_TAG_ACK                1
+#define DEVICE_TAG_REQ                2
+#define DEVICE_TAG_REPLY              3
+#define DEVICE_TAG_INFO               4
+#define DEVICE_TAG_RESET              5
+#define DEVICE_TAG_INSTALL            6
+
+#define DEVICE_VAR_UnitType           0
+#define DEVICE_VAR_UnitID             1
+#define DEVICE_VAR_MsgID              2
+#define DEVICE_VAR_Open               3
+#define DEVICE_VAR_Enabled            4
+#define DEVICE_VAR_Online             5
+#define DEVICE_VAR_Busy               6
+
+class TDeviceAlloc
+{
+public:
+	TDeviceAlloc(int MaxSize);
+	~TDeviceAlloc();
+
+	void *Allocate(int size);
+
+protected:
+	char *FArr;
+	int FPos;
+	int FSize;
+};
+
+class TDeviceData
+{
+public:
+    TDeviceData();
+    virtual ~TDeviceData();
+	virtual int GetSize() = 0;
+	virtual int GetData(char *data) = 0;
+	virtual int GetID() = 0;
+	virtual int IsTag();
+	virtual int IsVar();
+
+    TDeviceData *FNext;
+};
+
+class TDeviceTag;
+
+class TDeviceVar : public TDeviceData
+{
+friend class TDeviceTag;
+public:
+	TDeviceVar(TDeviceAlloc *alloc, unsigned short int ID);
+	TDeviceVar(TDeviceAlloc *alloc, const char *data, int size, int *count);
+	virtual ~TDeviceVar();
+
+	virtual int IsVar();
+	int IsEmptyVar();
+	char GetType();
+
+	void *operator new(size_t size, TDeviceAlloc *alloc);
+
+	virtual int GetID();
+	virtual int GetSize();
+	virtual int GetData(char *data);
+
+	void SetUnsigned8(unsigned char data);
+	void SetUnsigned16(unsigned short int data);
+	void SetUnsigned32(unsigned long data);
+	void SetSigned8(char data);
+	void SetSigned16(short int data);
+	void SetSigned32(long data);
+	void SetChar(char ch);
+	void SetFloat1(long data);
+	void SetFloat2(long data);
+	void SetFloat3(long data);
+	void SetFloat4(long data);
+	void SetJulian(long data);
+	void SetBinary(int size, const void *data);
+	void SetString(const char *str);
+	void SetBoolean(int data);
+	void SetBoolArray(int size, const char *data);
+	void SetByteArray(int size, const void *data);
+
+	unsigned char GetUnsigned8();
+	unsigned short int GetUnsigned16();
+	unsigned long GetUnsigned32();
+	char GetSigned8();
+	short int GetSigned16();
+	long GetSigned32();
+	char GetChar();
+	long GetFloat1();
+	long GetFloat2();
+	long GetFloat3();
+	long GetFloat4();
+	long GetJulian();
+	const void *GetBinary(int *size);
+	const char *GetString();
+	int GetBoolean();
+	const char *GetBoolArray(int *size);
+	const void *GetByteArray(int *size);
+
+protected:
+	void Reinit();
+	char *Allocate(int size);
+
+	unsigned short int FID;
+	char FType;
+	int FSize;
+	char *FData;
+	char *FStr;
+	TDeviceAlloc *FAlloc;
+};
+
+class TDeviceMsg;
+
+class TDeviceTag : public TDeviceData
+{
+friend class TDeviceMsg;
+
+public:
+    TDeviceTag(TDeviceAlloc *alloc, unsigned short int ID);
+    TDeviceTag(TDeviceAlloc *alloc, const char *data, int size, int *count);
+	virtual ~TDeviceTag();
+
+	virtual int IsTag();
+	int IsEmptyTag();
+
+	void *operator new(size_t size, TDeviceAlloc *alloc);
+
+	virtual int GetID();
+    virtual int GetSize();
+    virtual int GetData(char *data);
+
+    TDeviceTag *Copy(TDeviceAlloc *alloc);
+    TDeviceTag *CopyTag(TDeviceTag *tag);
+    
+    TDeviceTag *AddTag(unsigned short int ID);
+    TDeviceVar *AddNone(unsigned short int ID);
+    
+    TDeviceVar *AddUnsigned8(unsigned short int ID, unsigned char data);
+    TDeviceVar *AddUnsigned16(unsigned short int ID, unsigned short int data);
+    TDeviceVar *AddUnsigned32(unsigned short int ID, unsigned long data);
+    TDeviceVar *AddSigned8(unsigned short int ID, char data);
+    TDeviceVar *AddSigned16(unsigned short int ID, short int data);
+    TDeviceVar *AddSigned32(unsigned short int ID, long data);
+    TDeviceVar *AddChar(unsigned short int ID, char ch);
+    TDeviceVar *AddFloat1(unsigned short int ID, long data);
+	TDeviceVar *AddFloat2(unsigned short int ID, long data);
+    TDeviceVar *AddFloat3(unsigned short int ID, long data);
+    TDeviceVar *AddFloat4(unsigned short int ID, long data);
+    TDeviceVar *AddJulian(unsigned short int ID, long data);
+    TDeviceVar *AddBinary(unsigned short int ID, int size, const void *data);
+    TDeviceVar *AddString(unsigned short int ID, const char *str);
+    TDeviceVar *AddBoolean(unsigned short int ID, int data);
+    TDeviceVar *AddBoolArray(unsigned short int ID, int size, const char *data);
+    TDeviceVar *AddByteArray(unsigned short int ID, int size, const void *data);
+
+    TDeviceVar *ModifyUnsigned8(unsigned short int ID, unsigned char data);
+    TDeviceVar *ModifyUnsigned16(unsigned short int ID, unsigned short int data);
+    TDeviceVar *ModifyUnsigned32(unsigned short int ID, unsigned long data);
+    TDeviceVar *ModifySigned8(unsigned short int ID, char data);
+    TDeviceVar *ModifySigned16(unsigned short int ID, short int data);
+    TDeviceVar *ModifySigned32(unsigned short int ID, long data);
+    TDeviceVar *ModifyChar(unsigned short int ID, char ch);
+    TDeviceVar *ModifyFloat1(unsigned short int ID, long data);
+    TDeviceVar *ModifyFloat2(unsigned short int ID, long data);
+    TDeviceVar *ModifyFloat3(unsigned short int ID, long data);
+    TDeviceVar *ModifyFloat4(unsigned short int ID, long data);
+    TDeviceVar *ModifyJulian(unsigned short int ID, long data);
+    TDeviceVar *ModifyBinary(unsigned short int ID, int size, const void *data);
+    TDeviceVar *ModifyString(unsigned short int ID, const char *str);
+    TDeviceVar *ModifyBoolean(unsigned short int ID, int data);
+	TDeviceVar *ModifyBoolArray(unsigned short int ID, int size, const char *data);
+    TDeviceVar *ModifyByteArray(unsigned short int ID, int size, const void *data);
+
+    TDeviceTag *GotoFirstTag();
+    TDeviceTag *GotoNextTag();
+    TDeviceVar *GotoFirstVar();
+    TDeviceVar *GotoNextVar();
+
+    TDeviceTag *GetTag(unsigned short int ID);
+    TDeviceVar *GetVar(unsigned short int ID);
+    int HasEmptyVar(unsigned short int ID);
+	int HasEmptyTag(unsigned short int ID);
+
+    unsigned char GetUnsigned8(unsigned short int ID, unsigned char Default);
+    unsigned short int GetUnsigned16(unsigned short int ID, unsigned short int Default);
+    unsigned long GetUnsigned32(unsigned short int ID, unsigned long Default);
+    char GetSigned8(unsigned short int ID, char Default);
+    short int GetSigned16(unsigned short int ID, short int Default);
+    long GetSigned32(unsigned short int ID, long Default);
+    char GetChar(unsigned short int ID, char Default);
+    long GetFloat1(unsigned short int ID, long Default);
+    long GetFloat2(unsigned short int ID, long Default);
+    long GetFloat3(unsigned short int ID, long Default);
+    long GetFloat4(unsigned short int ID, long Default);
+    long GetJulian(unsigned short int ID, long Default);
+	const void *GetBinary(unsigned short int ID, int *size);
+    const char *GetString(unsigned short int ID, const char *Default);
+    int GetBoolean(unsigned short int ID, int Default);
+    const char *GetBoolArray(unsigned short int ID, int *size);
+    const void *GetByteArray(unsigned short int ID, int *size);     
+
+    void UpdateUnsigned8(TDeviceTag *DestTag, unsigned short int ID, unsigned char *Val);
+	void UpdateUnsigned16(TDeviceTag *DestTag, unsigned short int ID, unsigned int *Val);
+	void UpdateUnsigned32(TDeviceTag *DestTag, unsigned short int ID, unsigned long *Val);
+	void UpdateSigned8(TDeviceTag *DestTag, unsigned short int ID, char *Val);
+	void UpdateSigned16(TDeviceTag *DestTag, unsigned short int ID, short int *Val);
+	void UpdateSigned16(TDeviceTag *DestTag, unsigned short int ID, int *Val);
+	void UpdateSigned32(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateChar(TDeviceTag *DestTag, unsigned short int ID, char *Val);
+	void UpdateFloat1(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateFloat2(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateFloat3(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateFloat4(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateJulian(TDeviceTag *DestTag, unsigned short int ID, long *Val);
+	void UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int *Val);
+	void UpdateString(TDeviceTag *DestTag, unsigned short int ID, char **Val);
+
+    void UpdateUnsigned8(TDeviceTag *DestTag, unsigned short int ID, unsigned char Val);
+	void UpdateUnsigned16(TDeviceTag *DestTag, unsigned short int ID, unsigned int Val);
+	void UpdateUnsigned32(TDeviceTag *DestTag, unsigned short int ID, unsigned long Val);
+	void UpdateSigned8(TDeviceTag *DestTag, unsigned short int ID, char Val);
+	void UpdateSigned16(TDeviceTag *DestTag, unsigned short int ID, int Val);
+	void UpdateSigned32(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateChar(TDeviceTag *DestTag, unsigned short int ID, char Val);
+	void UpdateFloat1(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateFloat2(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateFloat3(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateFloat4(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateJulian(TDeviceTag *DestTag, unsigned short int ID, long Val);
+	void UpdateBoolean(TDeviceTag *DestTag, unsigned short int ID, int Val);
+	void UpdateString(TDeviceTag *DestTag, unsigned short int ID, char *Val);
+    
+protected:
+    void Add(TDeviceData *data);
+	char *Allocate(int size);
+
+    unsigned short int FID;
+    TDeviceData *FHead;
+    TDeviceTag *FCurrTag;
+    TDeviceVar *FCurrVar;
+	TDeviceAlloc *FAlloc;
+};
+
+class TDeviceMsg
+{
+public:
+    TDeviceMsg(int MaxSize);
+    ~TDeviceMsg();
+
+    int GetSize();
+    void GetData(char *data);
+    int Parse(const char *data, int size);
+
+    TDeviceAlloc *GetAlloc();
+
+    TDeviceTag *CopyTag(TDeviceTag *tag);
+    TDeviceTag *AddTag(unsigned short int ID);
+
+    TDeviceTag *GotoFirstTag();
+    TDeviceTag *GotoNextTag();
+
+    TDeviceTag *GetTag(unsigned short int ID);
+
+    void Add(TDeviceTag *tag);
+    void Free();
+
+    TDateTime FResend;
+    int FDeleteOnSend;
+
+protected:
+	unsigned short int Crc(const char *Data, int Size) const;
+
+	TDeviceTag *FHead;
+	TDeviceTag *FCurrTag;
+	TDeviceAlloc *FAlloc;
+
+private:
+};
+
+class TDistDevice;
 
 class TDevice : public TThread
 {
+	friend class TDistDevice;
+
 public:
 	TDevice();
 	TDevice(const char *IniSection);
+	TDevice(TDistDevice *DistDevice);
+	TDevice(const char *IniSection, TDistDevice *DistDevice);
 	virtual ~TDevice();
+
 	virtual void NotifyReset();
 	virtual void Open();
 	virtual void Close();
@@ -68,6 +358,50 @@ protected:
 	int IsReseted() const;
 	void ClearReset();
 
+	virtual short int GetUnitType();
+	virtual short int GetUnitNumber();
+	virtual int GetMaxMsgSize();
+    virtual int IsVirtualDevice();
+
+	virtual void NotifyResetTag();
+	virtual void NotifyReqTag(TDeviceTag *Tag);
+	virtual void NotifyReplyTag(TDeviceTag *Tag);
+	virtual void NotifyInfoTag(TDeviceTag *Tag);
+	virtual void NotifyInstallTag(TDeviceTag *Tag);
+
+    void ResetCurrMsg();
+	void CreateMsg();
+
+    void IncMsgID();
+    void CreateResetTag();
+    
+	TDeviceTag *LockReqTag();
+	TDeviceTag *LockReplyTag(short int ID);
+	TDeviceTag *LockInfoTag();
+	TDeviceTag *LockInstallTag();
+
+	void UnlockTag();
+	void SignalMsg();
+
+	void HandleAckTag(TDeviceTag *Tag);
+	void HandleReqTag(TDeviceTag *Tag);
+	void HandleReplyTag(TDeviceTag *Tag);
+	void HandleInfoTag(TDeviceTag *Tag);
+	void HandleResetTag(TDeviceTag *Tag);
+	void HandleInstallTag(TDeviceTag *Tag);
+
+	void HandleMsg(TDeviceMsg *Msg);
+    TDeviceMsg *GetMsg();
+    
+	TDevice *FComList;
+
+    TDeviceMsg *FMsg;
+	
+	short int FReqID;
+	short int FInfoID;
+	short int FInstallID;
+	short int FResetID;
+
 private:
 	void Init();
 	void InsertDevice();
@@ -82,7 +416,51 @@ private:
 	int FOnline;
 	int FBusy;
 	int FReset;
+	
+	TDistDevice *FDistDevice;
+	TSection FMsgSection;
+	TDeviceMsg *FCurrMsg;
+	TDeviceTag *FReqTag;
+	TDeviceTag *FReplyTag;
+	TDeviceTag *FInfoTag;
+	TDeviceTag *FInstallTag;
+	short int FCurrID;
+	short int FCurrReqID;
+	short int FCurrInfoID;
+	short int FCurrInstallID;
+	short int FCurrResetID;
 };
+
+class TSignalDevice;
+
+class TDistDevice : public TDevice
+{
+	friend class TDevice;
+
+public:
+	TDistDevice();
+	virtual ~TDistDevice();
+
+protected:
+	void InsertUnit(TDevice *Device);
+	void RemoveUnit(TDevice *Device);
+
+    virtual void SendMsg(const char *Data, int Size) = 0;    
+	virtual int GetTimeout() = 0;
+    
+	void NotifyMsg(const char *Data, int Size);
+	void SignalMsg();
+
+    void UpdateMsg();
+    void HandleMsg(TDeviceMsg *Msg);
+
+	TDeviceMsg *FMsgQueue;
+	TSection FUnitSection;
+	TDevice *FUnitList;
+
+	TSignalDevice *FSignal;
+};
+
 
 #endif
 

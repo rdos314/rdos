@@ -945,7 +945,9 @@ read_small_done:
 read_file_list_do:
 	mov es:[edi].fl_state, FILE_LIST_STATE_USED
 	push edx
+	push ecx
 	mov eax,ds:file_block_size
+	mov ecx,eax
 	neg eax
 	and edx,eax
 	push bx
@@ -953,6 +955,7 @@ read_file_list_do:
 	mov bx,ds
 	CallFileSystem read_file_block_proc
 	pop bx
+	pop ecx
 	pop edx
 	ret
 ReadFileListEntry	Endp
@@ -1440,9 +1443,12 @@ write_file_check_base:
 	neg eax
 	and edx,eax
 	push bx
+	push ecx
+	mov ecx,ds:file_block_size
 	mov al,ds:file_drive
 	mov bx,ds
 	CallFileSystem read_file_block_proc
+	pop ecx
 	pop bx
 	pop edi
 	pop edx

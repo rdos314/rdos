@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include "device.h"
 #include "sigdev.h"
 
 #include <rdos.h>
