@@ -523,7 +523,7 @@ void TSerialDevice::OpenPort()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TSerialDevice::IsOpen()
+int TSerialDevice::IsOpen() const
 {
 	if (FHandle)
 	    return TRUE;

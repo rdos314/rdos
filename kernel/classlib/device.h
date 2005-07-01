@@ -41,6 +41,9 @@
 #define DEVICE_TAG_INFO               4
 #define DEVICE_TAG_RESET              5
 #define DEVICE_TAG_INSTALL            6
+#define DEVICE_TAG_POLL               7
+
+#define DEVICE_TAG_USER               100
 
 #define DEVICE_VAR_UnitType           0
 #define DEVICE_VAR_UnitID             1
@@ -49,6 +52,9 @@
 #define DEVICE_VAR_Enabled            4
 #define DEVICE_VAR_Online             5
 #define DEVICE_VAR_Busy               6
+#define DEVICE_VAR_PhysicalDevice     7
+
+#define DEVICE_VAR_USER               250
 
 class TDeviceAlloc
 {
@@ -314,17 +320,15 @@ protected:
 private:
 };
 
-class TDistDevice;
+class TDistUnit;
 
 class TDevice : public TThread
 {
-	friend class TDistDevice;
+	friend class TDistUnit;
 
 public:
 	TDevice();
 	TDevice(const char *IniSection);
-	TDevice(TDistDevice *DistDevice);
-	TDevice(const char *IniSection, TDistDevice *DistDevice);
 	virtual ~TDevice();
 
 	virtual void NotifyReset();
@@ -339,6 +343,11 @@ public:
 	virtual int IsOnline() const;
 	virtual void DeviceName(char *Name, int MaxLen) const = 0;
 	static void GetDevices(void (*DeviceCallb)(TDevice *Device));
+
+	virtual short int GetUnitType();
+	virtual short int GetUnitNumber();
+
+	void AddVirtualUnit(TDistUnit *unit);
 
 	void *Owner;
 	void (*OnOnline)(TDevice *Device);
@@ -358,49 +367,43 @@ protected:
 	int IsReseted() const;
 	void ClearReset();
 
-	virtual short int GetUnitType();
-	virtual short int GetUnitNumber();
+    void DefinePhysicalUnit(TDistUnit *unit);
+
 	virtual int GetMaxMsgSize();
-    virtual int IsVirtualDevice();
+	virtual int IsModifyTag(unsigned short int TAG);
 
-	virtual void NotifyResetTag();
-	virtual void NotifyReqTag(TDeviceTag *Tag);
-	virtual void NotifyReplyTag(TDeviceTag *Tag);
-	virtual void NotifyInfoTag(TDeviceTag *Tag);
-	virtual void NotifyInstallTag(TDeviceTag *Tag);
+    void AddNone(TDistUnit *unit, unsigned short int TAG, unsigned short int ID);
+    void AddUnsigned8(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned char data);
+    void AddUnsigned16(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned short int data);
+    void AddUnsigned32(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, unsigned long data);
+    void AddSigned8(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, char data);
+    void AddSigned16(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, short int data);
+    void AddSigned32(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+    void AddChar(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, char ch);
+    void AddFloat1(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+	void AddFloat2(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+    void AddFloat3(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+    void AddFloat4(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+    void AddJulian(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, long data);
+    void AddBinary(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const void *data);
+    void AddString(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, const char *str);
+    void AddBoolean(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int data);
+    void AddBoolArray(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const char *data);
+    void AddByteArray(TDistUnit *unit, unsigned short int TAG, unsigned short int ID, int size, const void *data);
 
-    void ResetCurrMsg();
-	void CreateMsg();
+    void SignalMsg(TDistUnit *unit);
 
-    void IncMsgID();
-    void CreateResetTag();
-    
-	TDeviceTag *LockReqTag();
-	TDeviceTag *LockReplyTag(short int ID);
-	TDeviceTag *LockInfoTag();
-	TDeviceTag *LockInstallTag();
+    virtual void CreateResetTag(TDistUnit *unit);
+    virtual void CreateInstallTag(TDistUnit *unit);
 
-	void UnlockTag();
-	void SignalMsg();
+	virtual void NotifyResetTag(TDistUnit *unit);
+	virtual void NotifyReqTag(TDistUnit *unit, TDeviceTag *tag);
+	virtual void NotifyReplyTag(TDistUnit *unit, TDeviceTag *tag);
+	virtual void NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag);
+	virtual void NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag);
 
-	void HandleAckTag(TDeviceTag *Tag);
-	void HandleReqTag(TDeviceTag *Tag);
-	void HandleReplyTag(TDeviceTag *Tag);
-	void HandleInfoTag(TDeviceTag *Tag);
-	void HandleResetTag(TDeviceTag *Tag);
-	void HandleInstallTag(TDeviceTag *Tag);
-
-	void HandleMsg(TDeviceMsg *Msg);
-    TDeviceMsg *GetMsg();
-    
-	TDevice *FComList;
-
-    TDeviceMsg *FMsg;
-	
-	short int FReqID;
-	short int FInfoID;
-	short int FInstallID;
-	short int FResetID;
+	TDistUnit *FVirtUnitList;
+	TDistUnit *FPhysUnit;
 
 private:
 	void Init();
@@ -416,8 +419,70 @@ private:
 	int FOnline;
 	int FBusy;
 	int FReset;
+};
+
+class TDistDevice;
+
+class TDistUnit
+{    
+	friend class TDevice;
+	friend class TDistDevice;
+    
+public:
+	TDistUnit(TDistDevice *DistDevice);
+	~TDistUnit();
+
+	void DefineDevice(TDevice *Device);
+	int IsOnline();
+
+	short int GetUnitType();
+    short int GetUnitNumber();
+
+	TDeviceTag *LockTag(unsigned short int TAG); 
+	void UnlockTag();
+	void SignalMsg();
 	
+	TDistUnit *GetNextUnit();
+
+protected:
+    void CreateResetTag();
+    void CreateAckTag(TDeviceTag *Tag);
+    
+	TDeviceTag *LockReqTag();
+	TDeviceTag *LockReplyTag(unsigned short int ID);
+	TDeviceTag *LockInfoTag();
+	TDeviceTag *LockInstallTag();
+
+	void HandleMsg(TDeviceMsg *Msg);
+    TDeviceMsg *GetMsg();
+
+    void ClearQueues();
+    void ResetCurrMsg();
+	void CreateMsg();
+	void CreateAckMsg();
+    void IncMsgID();
+
+	void HandleAckTag(TDeviceTag *Tag);
+	void HandleReqTag(TDeviceTag *Tag);
+	void HandleReplyTag(TDeviceTag *Tag);
+	void HandleInfoTag(TDeviceTag *Tag);
+	void HandleResetTag(TDeviceTag *Tag);
+	void HandleInstallTag(TDeviceTag *Tag);
+
+    TDistUnit *FNext;
+    TDistUnit *FList;
+  	TDevice *FDevice;
 	TDistDevice *FDistDevice;
+
+    TDeviceMsg *FMsg;
+    TDeviceMsg *FAckMsg;
+	
+	short int FReqID;
+	short int FInfoID;
+	short int FInstallID;
+	short int FResetID;
+
+private:
 	TSection FMsgSection;
 	TDeviceMsg *FCurrMsg;
 	TDeviceTag *FReqTag;
@@ -435,18 +500,20 @@ class TSignalDevice;
 
 class TDistDevice : public TDevice
 {
-	friend class TDevice;
+	friend class TDistUnit;
 
 public:
 	TDistDevice();
 	virtual ~TDistDevice();
 
 protected:
-	void InsertUnit(TDevice *Device);
-	void RemoveUnit(TDevice *Device);
+	void InsertUnit(TDistUnit *unit);
+	void RemoveUnit(TDistUnit *unit);
 
     virtual void SendMsg(const char *Data, int Size) = 0;    
 	virtual int GetTimeout() = 0;
+	
+    void SendPoll();
     
 	void NotifyMsg(const char *Data, int Size);
 	void SignalMsg();
@@ -456,7 +523,7 @@ protected:
 
 	TDeviceMsg *FMsgQueue;
 	TSection FUnitSection;
-	TDevice *FUnitList;
+	TDistUnit *FUnitList;
 
 	TSignalDevice *FSignal;
 };

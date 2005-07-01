@@ -55,7 +55,7 @@ public:
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);
     
-    virtual int IsOpen();
+	virtual int IsOpen() const;
 	virtual void Open();
 	virtual void Close();
 	

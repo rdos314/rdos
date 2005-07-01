@@ -36,7 +36,8 @@ void cdecl main()
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-	TFile *File = new TFile("raw.dat", 0);
+//	TFile *File = new TFile("raw.dat", 0);
+	TFile *File = new TFile("z:\\device.dat", 0);
 
 	for (;;)
 	{

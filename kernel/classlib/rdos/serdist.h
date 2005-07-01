@@ -30,6 +30,7 @@
 
 #include "device.h"
 #include "serial.h"
+#include "datetime.h"
 
 class TSerialDistDevice : public TDistDevice
 {
@@ -42,15 +43,16 @@ public:
     virtual void SendMsg(const char *Data, int Size);    
 	virtual int GetTimeout();
 
-protected:
-    void CheckForMsg();
     void ReceiveThread();
     void SendThread();
 
+protected:
+    void CheckForMsg();
+
 	virtual void Execute();
 	
-	int FThreadStarted;
     TSerialDevice *FSerial;
+    TDateTime FPollTime;
 };
 
 #endif
