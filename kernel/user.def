@@ -359,4 +359,6 @@ allocate_static_drive_nr	= 306
 allocate_fixed_drive_nr		= 307
 allocate_dynamic_drive_nr	= 308
 
+get_focus_nr                = 309
+
 usergate_entries			= 340

@@ -668,38 +668,56 @@ void TDeviceVar::SetBinary(int size, const void *data)
 void TDeviceVar::SetString(const char *str)
 {
     int size = strlen(str);
-    
-    Reinit();
 
     if (size < 128)
     {
-        FType = DEVICE_DATA_SHORTSTRING + (char)size;
-        FSize = size;
-        if (FSize)
-        {
-            FData = Allocate(size);
+        if (FType == DEVICE_DATA_SHORTSTRING + (char)size)
             memcpy(FData, str, size);        
+        else
+        {
+            Reinit();
+            FType = DEVICE_DATA_SHORTSTRING + (char)size;
+            FSize = size;
+
+            if (FSize)
+            {
+                FData = Allocate(size);
+                memcpy(FData, str, size);        
+            }
+            else
+                FData = 0;
+
         }
-		else
-            FData = 0;
     }
     else
     {
         if (size < 256)
         {
-            FType = DEVICE_DATA_STRING8;
-            FSize = 1 + size;
-            FData = Allocate(FSize);
-            memcpy(FData, &size, 1);
-            memcpy(FData + 1, str, size);
+            if (FType == DEVICE_DATA_STRING8 && FSize == 1 + size)
+                memcpy(FData + 1, str, size);
+            else
+            {
+                Reinit();           
+                FType = DEVICE_DATA_STRING8;
+                FSize = 1 + size;
+                FData = Allocate(FSize);
+                memcpy(FData, &size, 1);
+                memcpy(FData + 1, str, size);
+            }
         }
         else
         {
-            FType = DEVICE_DATA_STRING16;
-            FSize = 2 + size;
-            FData = Allocate(FSize);
-            memcpy(FData, &size, 2);
-            memcpy(FData + 2, str, size);
+            if (FType == DEVICE_DATA_STRING16 && FSize == 2 + size)
+                memcpy(FData + 2, str, size);
+            else
+            {
+                Reinit();
+                FType = DEVICE_DATA_STRING16;
+                FSize = 2 + size;
+                FData = Allocate(FSize);
+                memcpy(FData, &size, 2);
+                memcpy(FData + 2, str, size);
+            }
         }
     }
 }
@@ -4509,6 +4527,9 @@ void TDevice::SaveProperty(const char *Name, long Value)
 ##########################################################################*/
 TDevice::~TDevice()
 {
+    if (FName)
+        delete FName;
+        
 	RemoveDevice();
 }
 
@@ -4529,6 +4550,7 @@ void TDevice::Init()
     FVirtUnitList = 0;
     FPhysUnit = 0;
 
+    FName = 0;
    	FReset = FALSE;
 	FEnabled = FALSE;
 	FOnline = FALSE;
@@ -4587,6 +4609,26 @@ int TDevice::IsReseted() const
 void TDevice::ClearReset()
 {
 	FReset = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::DeviceName
+#
+#   Purpose....: Default devicename
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::DeviceName(char *Name, int MaxLen) const
+{
+    if (FName)
+    	strncpy(Name, FName, MaxLen);
+    else
+		strncpy(Name, "NO NAME", MaxLen);
+	Name[MaxLen-1] = 0;
 }
 
 /*##########################################################################
@@ -4915,46 +4957,7 @@ short int TDevice::GetUnitNumber()
 ##########################################################################*/
 int TDevice::GetMaxMsgSize()
 {
-	return 1024;
-}
-
-/*##########################################################################
-#
-#   Name       : TDevice::AddVirtualUnit
-#
-#   Purpose....: Add a virtual unit
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::AddVirtualUnit(TDistUnit *unit)
-{
-	unit->FNext = FVirtUnitList;
-	FVirtUnitList = unit;
-	unit->DefineDevice(this);
-
-	CreateInstallTag(unit);
-}
-
-/*##########################################################################
-#
-#   Name       : TDevice::DefinePhysicalUnit
-#
-#   Purpose....: Define physical unit for this (virtual) unit
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TDevice::DefinePhysicalUnit(TDistUnit *unit)
-{
-    FPhysUnit = unit;
-    unit->DefineDevice(this);
-
-    CreateResetTag(unit);
+	return 0x40000;
 }
 
 /*##########################################################################
@@ -5461,8 +5464,6 @@ void TDevice::CreateResetTag(TDistUnit *unit)
 {
 	TDeviceTag *tag;
 
-	unit->CreateResetTag();
-
 	tag = unit->LockInfoTag();
 	tag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
 	tag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
@@ -5480,15 +5481,35 @@ void TDevice::CreateResetTag(TDistUnit *unit)
 #   Out params.: *
 #
 ##########################################################################*/
+void TDevice::CreateInstallTag(TDeviceTag *tag)
+{
+	char str[101];
+
+	DeviceName(str, 100);
+
+	tag->AddBoolean(DEVICE_VAR_Open, FOpen);
+	tag->AddBoolean(DEVICE_VAR_Enabled, FEnabled);
+	tag->AddBoolean(DEVICE_VAR_Online, FOnline);
+	tag->AddBoolean(DEVICE_VAR_Busy, FBusy);
+	tag->AddString(DEVICE_VAR_Name, str);
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::CreateInstallTag
+#
+#   Purpose....: Create an install tag
+#
+#   In params..: *
+#   Out params.: *
+#
+##########################################################################*/
 void TDevice::CreateInstallTag(TDistUnit *unit)
 {
 	TDeviceTag *tag;
-    
+
     tag = unit->LockInstallTag();
-    tag->AddBoolean(DEVICE_VAR_Open, FOpen);
-    tag->AddBoolean(DEVICE_VAR_Enabled, FEnabled);
-    tag->AddBoolean(DEVICE_VAR_Online, FOnline);
-    tag->AddBoolean(DEVICE_VAR_Busy, FBusy);
+    CreateInstallTag(tag);
     unit->UnlockTag();
     unit->SignalMsg();
 }
@@ -5505,7 +5526,8 @@ void TDevice::CreateInstallTag(TDistUnit *unit)
 ##########################################################################*/
 void TDevice::NotifyResetTag(TDistUnit *unit)
 {
-    CreateInstallTag(unit);
+    if (FPhysUnit != unit)
+        CreateInstallTag(unit);
 }
 
 /*##########################################################################
@@ -5605,6 +5627,8 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 {
     int Val;
     TDeviceTag *resptag = 0;
+    const char *ptr;
+    int len;
 
     Val = tag->GetBoolean(DEVICE_VAR_Open, FOpen);
 
@@ -5643,6 +5667,17 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
             Idle();
     }    
 
+    ptr = tag->GetString(DEVICE_VAR_Name, "");
+    len = strlen(ptr);
+    if (len)
+    {
+        if (FName)
+            delete FName;
+            
+        FName = new char[len + 1];
+        strcpy(FName, ptr);
+    }
+
     if (resptag)
     {
         unit->UnlockTag();
@@ -5663,28 +5698,33 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 ##########################################################################*/
 TDistUnit::TDistUnit(TDistDevice *DistDevice)
 {
-    FAckMsg = 0;
-    FCurrMsg = 0;
-    FReqTag = 0;
-    FReplyTag = 0;
-    FInfoTag = 0;
-    FInstallTag = 0;
-    FCurrID = 1;
-    FCurrReqID = 0;
-    FCurrInfoID = 0;
-    FCurrInstallID = 0;
-    FCurrResetID = 0;
-    FReqID = 0;
-    FInfoID = 0;
-    FInstallID = 0;
-    FResetID = 0;
-	FMsg = 0;
-	FDevice = 0;
-	FNext = 0;
-	FList = 0;
-
-    FDistDevice = DistDevice;
+    FDistDevice = DistDevice;    
 	FDistDevice->InsertUnit(this);
+	
+	Init();
+}
+
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::TDistUnit
+#
+#   Purpose....: Constructor for class		                               
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDistUnit::TDistUnit(TDistDevice *DistDevice, short int UnitType, short int UnitNumber)
+{
+    FUnitType = UnitType;
+    FUnitNumber = UnitNumber;
+
+    FDistDevice = DistDevice;    
+	FDistDevice->InsertNoBlockUnit(this);
+	
+	Init();
 }
 
 /*##########################################################################
@@ -5703,11 +5743,62 @@ TDistUnit::~TDistUnit()
     if (FCurrMsg)
         delete FCurrMsg;
 
+    if (FAcceptMsg)
+        delete FAcceptMsg;
+
+    if (FAckMsg)
+        delete FAckMsg;
+
 	if (FMsg)
         delete FMsg;
 
     if (FDistDevice)
         FDistDevice->RemoveUnit(this);        
+
+    if (FAlloc)
+        delete FAlloc;
+
+    if (FPendingInstallTag)
+        delete FPendingInstallTag;        
+}
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::Init
+#
+#   Purpose....: Init object		                         
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistUnit::Init()
+{
+    FAckMsg = 0;
+    FAcceptMsg = 0;
+    FCurrMsg = 0;
+    FReqTag = 0;
+    FReplyTag = 0;
+    FInfoTag = 0;
+    FInstallTag = 0;
+    FCurrID = 1;
+    FCurrReqID = 0;
+    FCurrInfoID = 0;
+    FCurrInstallID = 0;
+    FCurrAcceptID = 0;
+    FReqID = 0;
+    FInfoID = 0;
+    FInstallID = 0;
+    FAcceptID = 0;
+	FMsg = 0;
+	FDevice = 0;
+	FNext = 0;
+	FInstalled = FALSE;
+	FOnline = FALSE;
+
+    FAlloc = 0;
+    FPendingInstallTag = 0;
 }
 
 /*##########################################################################
@@ -5728,6 +5819,61 @@ void TDistUnit::DefineDevice(TDevice *Device)
 
 /*##########################################################################
 #
+#   Name       : TDistUnit::Online
+#
+#   Purpose....: Set state to online
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistUnit::Online()
+{
+    if (!FOnline)
+    {
+        FOnline = TRUE;
+        
+        if (FDevice)
+        {
+            ClearQueues();
+
+            if (FDevice->FPhysUnit != this)
+            {
+            	FInstalled = TRUE;
+				FDevice->CreateInstallTag(this);
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::Offline
+#
+#   Purpose....: Set state to offline
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistUnit::Offline()
+{
+    if (FOnline)
+    {
+        FOnline = FALSE;
+        FInstalled = FALSE;
+
+        ClearQueues();
+
+	    if (FDevice)
+		    FDevice->NotifyResetTag(this);
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TDistUnit::IsOnline
 #
 #   Purpose....: Check if online
@@ -5739,10 +5885,23 @@ void TDistUnit::DefineDevice(TDevice *Device)
 ##########################################################################*/
 int TDistUnit::IsOnline()
 {
-    if (FDistDevice)
-        return FDistDevice->IsOnline();
-    else
-        return FALSE;
+    return FOnline;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::IsInstalled
+#
+#   Purpose....: Check if installed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDistUnit::IsInstalled()
+{
+    return FInstalled;
 }
 
 /*##########################################################################
@@ -5761,7 +5920,7 @@ short int TDistUnit::GetUnitType()
 	if (FDevice)
 		return FDevice->GetUnitType();
 	else
-		return 0;
+		return FUnitType;
 }
 
 /*##########################################################################
@@ -5780,7 +5939,7 @@ short int TDistUnit::GetUnitNumber()
     if (FDevice)
         return FDevice->GetUnitNumber();
     else
-        return 0;
+        return FUnitNumber;
 }
 
 /*##########################################################################
@@ -5818,7 +5977,6 @@ void TDistUnit::ResetCurrMsg()
     FCurrReqID = 0;
     FCurrInfoID = 0;
     FCurrInstallID = 0;
-    FCurrResetID = 0;
 }
 
 /*##########################################################################
@@ -5833,23 +5991,30 @@ void TDistUnit::ResetCurrMsg()
 ##########################################################################*/
 void TDistUnit::ClearQueues()
 {
+	FMsgSection.Enter();
+
 	if (FMsg)
 		delete FMsg;
-
 	FMsg = 0;
-	FReqID = 0;
-	FInfoID = 0;
-	FInstallID = 0;
-	FResetID = 0;
-
-	FMsgSection.Enter();
 
 	if (FCurrMsg)
 		delete FCurrMsg;
-
 	FCurrMsg = 0;
 
+	if (FAckMsg)
+	    delete FAckMsg;
+	FAckMsg = 0;
+
+	if (FAcceptMsg)
+	    delete FAcceptMsg;
+	FAcceptMsg = 0;
+
 	ResetCurrMsg();
+
+	FReqID = 0;
+	FInfoID = 0;
+	FInstallID = 0;
+	FAcceptID = 0;
 
 	FMsgSection.Leave();
 }
@@ -5868,25 +6033,65 @@ void TDistUnit::CreateMsg()
 {
     TDeviceTag *tag;
 
-	if (FDistDevice && FDevice)
+	if (FDistDevice)
 	{
 		if (FCurrMsg)
 			delete FCurrMsg;
 
-		FCurrMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+        if (FDevice)
+    		FCurrMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+    	else
+    		FCurrMsg = new TDeviceMsg(1024);
 
 		tag = FCurrMsg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSigned16(DEVICE_VAR_UnitType, FDevice->GetUnitType());
-		tag->AddSigned16(DEVICE_VAR_UnitID, FDevice->GetUnitNumber());
+		tag->AddSigned16(DEVICE_VAR_UnitType, GetUnitType());
+		tag->AddSigned16(DEVICE_VAR_UnitID, GetUnitNumber());
 
-		if (FDevice->FPhysUnit)
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+        if (FDevice)
+        {
+    		if (FDevice->FPhysUnit)
+        		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+            else
+    		    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+        }
         else
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
 
 		FReqTag = 0;
 		FInfoTag = 0;
 		FInstallTag = 0;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::CreateAcceptMsg
+#
+#   Purpose....: Create a new accept message
+#
+#   In params..: *
+#   Out params.: *
+#
+##########################################################################*/
+void TDistUnit::CreateAcceptMsg()
+{
+    TDeviceTag *tag;
+
+	if (FDistDevice && FDevice)
+	{
+		if (FAcceptMsg)
+			delete FAcceptMsg;
+
+        FAcceptMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+
+		tag = FAcceptMsg->AddTag(DEVICE_TAG_HEADER);
+		tag->AddSigned16(DEVICE_VAR_UnitType, GetUnitType());
+		tag->AddSigned16(DEVICE_VAR_UnitID, GetUnitNumber());
+
+    	if (FDevice->FPhysUnit)
+        	tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+        else
+    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
 	}
 }
 
@@ -5904,22 +6109,30 @@ void TDistUnit::CreateAckMsg()
 {
     TDeviceTag *tag;
 
-	if (FDistDevice && FDevice)
+	if (FDistDevice)
 	{
 		if (FAckMsg)
 			delete FAckMsg;
 
-		FAckMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+		if (FDevice)
+			FAckMsg = new TDeviceMsg(FDevice->GetMaxMsgSize());
+		else
+			FAckMsg = new TDeviceMsg(1024);
 
 		tag = FAckMsg->AddTag(DEVICE_TAG_HEADER);
-		tag->AddSigned16(DEVICE_VAR_UnitType, FDevice->GetUnitType());
-		tag->AddSigned16(DEVICE_VAR_UnitID, FDevice->GetUnitNumber());
+		tag->AddSigned16(DEVICE_VAR_UnitType, GetUnitType());
+		tag->AddSigned16(DEVICE_VAR_UnitID, GetUnitNumber());
 
-		if (FDevice->FPhysUnit)
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+        if (FDevice)
+        {
+    		if (FDevice->FPhysUnit)
+        		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+            else
+    		    tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
+        }
         else
-    		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, TRUE);
-
+      		tag->AddBoolean(DEVICE_VAR_PhysicalDevice, FALSE);
+        
 		FReplyTag = 0;
 	}
 }
@@ -5940,39 +6153,6 @@ void TDistUnit::IncMsgID()
 
     if (FCurrID <= 0)
         FCurrID = 1;
-}
-
-/*##########################################################################
-#
-#   Name       : TDistUnit::CreateResetTag
-#
-#   Purpose....: Create reset tag
-#
-#   In params..: *
-#   Out params.: *
-#
-##########################################################################*/
-void TDistUnit::CreateResetTag()
-{
-	TDeviceTag *tag;
-
-	if (FDistDevice)
-	{
-		FMsgSection.Enter();
-
-		if (!FCurrMsg)
-			CreateMsg();
-
-		if (FCurrMsg)
-		{
-			tag = FCurrMsg->AddTag(DEVICE_TAG_RESET);
-			tag->AddSigned16(DEVICE_VAR_MsgID, FCurrID);
-			FCurrResetID = FCurrID;
-			IncMsgID();
-		}
-
-		FMsgSection.Leave();
-	}
 }
 
 /*##########################################################################
@@ -6011,6 +6191,39 @@ void TDistUnit::CreateAckTag(TDeviceTag *SrcTag)
 
 /*##########################################################################
 #
+#   Name       : TDistUnit::CreateAcceptTag
+#
+#   Purpose....: Create install ack tag
+#
+#   In params..: *
+#   Out params.: *
+#
+##########################################################################*/
+void TDistUnit::CreateAcceptTag()
+{
+	TDeviceTag *tag;
+
+	if (FDistDevice)
+	{
+		FMsgSection.Enter();
+
+        if (!FAcceptMsg)
+            CreateAcceptMsg();
+
+		if (FAcceptMsg)
+		{
+			tag = FAcceptMsg->AddTag(DEVICE_TAG_INSTALL_ACCEPT);
+			tag->AddSigned16(DEVICE_VAR_MsgID, FCurrID);
+            FCurrAcceptID = FCurrID;
+            IncMsgID();
+		}
+
+		FMsgSection.Leave();
+	}
+}
+
+/*##########################################################################
+#
 #   Name       : TDistUnit::LockReqTag
 #
 #   Purpose....: Lock req tag
@@ -6021,7 +6234,7 @@ void TDistUnit::CreateAckTag(TDeviceTag *SrcTag)
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockReqTag()
 {
-    if (FDistDevice)
+	if (FDistDevice)
     {
         FMsgSection.Enter();
 
@@ -6033,7 +6246,7 @@ TDeviceTag *TDistUnit::LockReqTag()
             if (!FReqTag)
             {
                 FReqTag = FCurrMsg->AddTag(DEVICE_TAG_REQ);
-                FReqTag->AddSigned16(DEVICE_VAR_MsgID, FCurrID);
+				FReqTag->AddSigned16(DEVICE_VAR_MsgID, FCurrID);
                 FCurrReqID = FCurrID;
                 IncMsgID();
             }
@@ -6096,7 +6309,7 @@ TDeviceTag *TDistUnit::LockReplyTag(unsigned short int ID)
 TDeviceTag *TDistUnit::LockInfoTag()
 {
     if (FDistDevice)
-    {
+	{
         FMsgSection.Enter();
 
         if (!FCurrMsg)
@@ -6144,9 +6357,9 @@ TDeviceTag *TDistUnit::LockInstallTag()
         {
             if (!FInstallTag)
             {
-                FInstallTag = FCurrMsg->AddTag(DEVICE_TAG_INSTALL);
+                FInstallTag = FCurrMsg->AddTag(DEVICE_TAG_INSTALL_REQ);
                 FInstallTag->AddSigned16(DEVICE_VAR_MsgID, FCurrID);
-                FCurrInstallID = FCurrID;
+				FCurrInstallID = FCurrID;
                 IncMsgID();
             }
 
@@ -6171,7 +6384,7 @@ TDeviceTag *TDistUnit::LockInstallTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockTag(unsigned short int TAG)
 {
-    switch (TAG)
+	switch (TAG)
     {
         case DEVICE_TAG_REQ:
             return LockReqTag();
@@ -6182,7 +6395,7 @@ TDeviceTag *TDistUnit::LockTag(unsigned short int TAG)
         case DEVICE_TAG_INFO:
             return LockInfoTag();
 
-        case DEVICE_TAG_INSTALL:
+        case DEVICE_TAG_INSTALL_REQ:
             return LockInstallTag();
     }
 
@@ -6241,8 +6454,14 @@ void TDistUnit::HandleAckTag(TDeviceTag *Tag)
     if (FInstallID == ID)
         FInstallID = 0;
 
-    if (FResetID == ID)
-        FResetID = 0;
+    if (FAcceptID == ID)
+    {
+		FInstalled = TRUE;
+        FAcceptID = 0;
+
+		if (FDevice)
+    		FDevice->CreateResetTag(this);
+    }
 }
 
 /*##########################################################################
@@ -6308,27 +6527,38 @@ void TDistUnit::HandleInfoTag(TDeviceTag *Tag)
 
 /*##########################################################################
 #
-#   Name       : TDistUnit::HandleResetTag
+#   Name       : TDistUnit::HandleInstallTag
 #
-#   Purpose....: Handle an RESET tag
+#   Purpose....: Handle an INSTALL req tag
 #
 #   In params..: *
 #   Out params.: *
 #
 ##########################################################################*/
-void TDistUnit::HandleResetTag(TDeviceTag *Tag)
+void TDistUnit::HandleInstallTag()
 {
     ClearQueues();
 
-	if (FDevice)
-		FDevice->NotifyResetTag(this);
+	if (FDevice && FPendingInstallTag)
+	{
+		FDevice->NotifyInstallTag(this, FPendingInstallTag);
+
+		FPendingInstallTag = 0;
+
+		if (FAlloc)
+    		delete FAlloc;
+        FAlloc = 0;
+
+        CreateAcceptTag();
+    	SignalMsg();
+	}
 }
 
 /*##########################################################################
 #
 #   Name       : TDistUnit::HandleInstallTag
 #
-#   Purpose....: Handle an INSTALL tag
+#   Purpose....: Handle an INSTALL req tag
 #
 #   In params..: *
 #   Out params.: *
@@ -6339,7 +6569,29 @@ void TDistUnit::HandleInstallTag(TDeviceTag *Tag)
     ClearQueues();
 
 	if (FDevice)
+	{
 		FDevice->NotifyInstallTag(this, Tag);
+        CreateAcceptTag();
+    }
+    else
+    {
+		FAlloc = new TDeviceAlloc(4096);
+		FPendingInstallTag = Tag->Copy(FAlloc);
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDistUnit::HandleAcceptTag
+#
+#   Purpose....: Handle an INSTALL accept tag
+#
+#   In params..: *
+#   Out params.: *
+#
+##########################################################################*/
+void TDistUnit::HandleAcceptTag(TDeviceTag *Tag)
+{
 }
 
 /*##########################################################################
@@ -6367,25 +6619,31 @@ void TDistUnit::HandleMsg(TDeviceMsg *Msg)
 				break;
 
 			case DEVICE_TAG_REQ:
-				HandleReqTag(tag);
+			    if (FInstalled)
+    				HandleReqTag(tag);
 				break;
 
 			case DEVICE_TAG_REPLY:
-				HandleReplyTag(tag);
+			    if (FInstalled)
+    				HandleReplyTag(tag);
 				break;
 
 			case DEVICE_TAG_INFO:
-				HandleInfoTag(tag);
-				CreateAckTag(tag);
+			    if (FInstalled)
+			    {
+    				HandleInfoTag(tag);
+	    			CreateAckTag(tag);
+	    		}
 				break;
 
-			case DEVICE_TAG_RESET:
-				HandleResetTag(tag);
-				CreateAckTag(tag);
-				break;
-
-			case DEVICE_TAG_INSTALL:
+			case DEVICE_TAG_INSTALL_REQ:
 				HandleInstallTag(tag);
+				CreateAckTag(tag);
+				break;
+
+			case DEVICE_TAG_INSTALL_ACCEPT:
+			    FInstalled = TRUE;
+				HandleAcceptTag(tag);
 				CreateAckTag(tag);
 				break;
 
@@ -6395,12 +6653,16 @@ void TDistUnit::HandleMsg(TDeviceMsg *Msg)
 		tag = Msg->GotoNextTag();
 	}
 
-	if (FReqID == 0 && FInfoID == 0 && FInstallID == 0 && FResetID == 0)
+	if (FReqID == 0 && FInfoID == 0 && FInstallID == 0 && FAcceptID == 0)
 	{
+	    FMsgSection.Enter();
+	    
 		if (FMsg)
 			delete FMsg;
 
 		FMsg = 0;
+
+		FMsgSection.Leave();
 	}
 
 	SignalMsg();
@@ -6418,11 +6680,11 @@ void TDistUnit::HandleMsg(TDeviceMsg *Msg)
 ##########################################################################*/
 TDeviceMsg *TDistUnit::GetMsg()
 {
-    TDeviceMsg *msg;
+    TDeviceMsg *msg = 0;
     
-    if (FDistDevice && FDevice)
+    if (FDistDevice)
     {
-        if (FAckMsg)
+		if (FAckMsg)
         {
           	FMsgSection.Enter();
 
@@ -6442,38 +6704,128 @@ TDeviceMsg *TDistUnit::GetMsg()
             if (FMsg->FResend.HasExpired())
             {
         		FMsg->FResend = TDateTime();
-        		FMsg->FResend.AddMilli(FDistDevice->GetTimeout());
+                FMsg->FResend.AddMilli(FDistDevice->GetTimeout());
 
-        		return FMsg;
-        	}
-        }
-        else
-        {
-    		if (FCurrMsg)
-    		{
-          		FMsgSection.Enter();
-
-            	FMsg = FCurrMsg;
-
-        		FReqID = FCurrReqID;
-		        FInfoID = FCurrInfoID;
-        		FInstallID = FCurrInstallID;
-        		FResetID = FCurrResetID;
-
-		        FCurrMsg = 0;
-
-                ResetCurrMsg();
-
-        		FMsgSection.Leave();
-
-               	FMsg->FResend = TDateTime();
-             	FMsg->FResend.AddMilli(FDistDevice->GetTimeout());
-                return FMsg;
+            	return FMsg;
             }
         }
+
+        if (FAcceptMsg)
+        {
+          	msg = 0;
+          	FMsgSection.Enter();
+
+          	if (FMsg == 0)
+          	{
+                FMsg = FAcceptMsg;
+                msg = FMsg;
+                FAcceptMsg = 0;
+
+                FAcceptID = FCurrAcceptID;
+                FCurrAcceptID = 0;
+            }
+         
+            FMsgSection.Leave();
+
+            if (msg)
+            {
+                msg->FResend = TDateTime();
+                msg->FResend.AddMilli(FDistDevice->GetTimeout());
+                return msg;
+            }
+        }
+
+        if (FDevice && FInstalled && FCurrMsg)
+        {
+            msg = 0;
+            FMsgSection.Enter();
+
+            if (FMsg == 0)
+            {
+                FMsg = FCurrMsg;
+                msg = FMsg;
+
+                FReqID = FCurrReqID;
+		        FInfoID = FCurrInfoID;
+                FInstallID = FCurrInstallID;
+
+    		    FCurrMsg = 0;
+
+                ResetCurrMsg();
+            }
+
+            FMsgSection.Leave();
+
+            if (msg)
+            {
+                msg->FResend = TDateTime();
+				msg->FResend.AddMilli(FDistDevice->GetTimeout());
+                return msg;
+            }
+	    }
 	}
 
 	return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceConfig::TDeviceConfig
+#
+#   Purpose....: Constructor for device configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceConfig::TDeviceConfig(unsigned short int UnitType, unsigned short int UnitNumber, int MaxSize)
+{
+	TDeviceTag *tag;
+
+	FConfigMsg = new TDeviceMsg(MaxSize);
+
+	tag = FConfigMsg->AddTag(DEVICE_TAG_HEADER);
+	tag->AddSigned16(DEVICE_VAR_UnitType, UnitType);
+	tag->AddSigned16(DEVICE_VAR_UnitID, UnitNumber);
+
+	FConfigTag = FConfigMsg->AddTag(DEVICE_TAG_CONFIG_REQ);
+
+	FUnitType = UnitType;
+	FUnitNumber = UnitNumber;
+	FActive = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceConfig::~TDeviceConfig
+#
+#   Purpose....: Destructor for device configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceConfig::~TDeviceConfig()
+{
+    delete FConfigMsg;
+}
+
+/*##########################################################################
+#
+#   Name       : TDeviceConfig::GetConfigTag
+#
+#   Purpose....: Get configuration tag
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceTag *TDeviceConfig::GetConfigTag()
+{
+    return FConfigTag;
 }
 
 /*##########################################################################
@@ -6493,6 +6845,23 @@ void TDistDevice::InsertUnit(TDistUnit *unit)
 	unit->FList = FUnitList;
 	FUnitList = unit;
 	FUnitSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::InsertNoBlockUnit
+#
+#   Purpose....: Insert unit into list of active units, don't take section
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::InsertNoBlockUnit(TDistUnit *unit)
+{
+	unit->FList = FUnitList;
+	FUnitList = unit;
 }
 
 /*##########################################################################
@@ -6544,8 +6913,13 @@ TDistDevice::TDistDevice()
 {
 	FSignal = new TSignalDevice;
 
+    OnConfig = 0;
 	FMsgQueue = 0;
 	FUnitList = 0;
+	FConfigList = 0;
+	FPendingPoll = FALSE;
+	FPendingResetReq = TRUE;
+	FPendingResetAck = FALSE;
 }
 
 /*##########################################################################
@@ -6566,6 +6940,339 @@ TDistDevice::~TDistDevice()
 
 /*##########################################################################
 #
+#   Name       : TDistDevice::InsertConfig
+#
+#   Purpose....: Insert configuration into list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::InsertConfig(TDeviceConfig *config)
+{
+	FConfigSection.Enter();
+	config->FNext = FConfigList;
+	FConfigList = config;
+	FConfigSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::RemoveConfig
+#
+#   Purpose....: Remove configuration from list                  
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::RemoveConfig(TDeviceConfig *config)
+{
+	TDeviceConfig *ptr;
+	TDeviceConfig *prev;
+	prev = 0;
+	
+	FConfigSection.Enter();
+
+	ptr = FConfigList;
+	while ((ptr != 0) && (ptr != config))
+	{
+		prev = ptr;
+		ptr = ptr->FNext;
+    }
+    
+	if (prev == 0)
+		FConfigList = FConfigList->FNext;
+	else
+		prev->FNext = ptr->FNext;
+		
+	FConfigSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::HasConfig
+#
+#   Purpose....: Check if config is available
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDistDevice::HasConfig(unsigned short int UnitType, unsigned short int UnitNumber)
+{
+	TDeviceConfig *ptr;
+	int ok;
+
+	FConfigSection.Enter();
+
+	ok = FALSE;
+	ptr = FConfigList;
+	while (!ok && ptr)
+	{
+		if (ptr->FUnitType == UnitType && ptr->FUnitNumber == UnitNumber)
+			ok = TRUE;
+		ptr = ptr->FNext;
+	}
+
+	FConfigSection.Leave();
+
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::Config
+#
+#   Purpose....: Configure device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::Config(TDeviceConfig *config)
+{
+	TDeviceConfig *ptr;
+
+	FConfigSection.Enter();
+
+	ptr = FConfigList;
+	while (ptr)
+	{
+		if (ptr->FUnitType == config->FUnitType && ptr->FUnitNumber == config->FUnitNumber)
+		{
+		    RemoveConfig(ptr);
+		    delete ptr;
+		    break;
+		}
+		ptr = ptr->FNext;
+	}
+
+	FConfigSection.Leave();
+
+    InsertConfig(config);
+    config->FActive = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::Online
+#
+#   Purpose....: Sets state to online
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::Online()
+{
+	TDistUnit *ptr;
+
+	if (!FOnline)
+	{
+	    TDevice::Online();
+
+        FUnitSection.Enter();
+
+        ptr = FUnitList;
+	    while (ptr)
+        {
+            ptr->Online();
+    	    ptr = ptr->FList;
+	    }
+
+        FUnitSection.Leave();
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::Offline
+#
+#   Purpose....: Sets state to offline
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::Offline()
+{
+	TDistUnit *ptr;
+	TDeviceConfig *config;
+
+	if (FOnline)
+	{
+        FPendingResetReq = TRUE;
+
+        TDevice::Offline();
+
+        FUnitSection.Enter();
+
+        ptr = FUnitList;
+	    while (ptr)
+        {
+            ptr->Offline();
+    	    ptr = ptr->FList;
+	    }
+
+        FUnitSection.Leave();
+
+    	FConfigSection.Enter();
+
+    	config = FConfigList;
+    	while (config)
+	    {
+	        config->FActive = TRUE;
+    		config = config->FNext;
+    	}
+
+	    FConfigSection.Leave();
+
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::HasUnit
+#
+#   Purpose....: Check if unit is available & uninstalled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDistDevice::HasUnit(unsigned short int UnitType)
+{
+	TDistUnit *ptr;
+	int ok;
+
+	FUnitSection.Enter();
+
+	ok = FALSE;
+	ptr = FUnitList;
+	while (!ok && ptr)
+	{
+		if (!ptr->FInstalled && ptr->GetUnitType() == UnitType)
+			ok = TRUE;
+		ptr = ptr->FList;
+	}
+
+	FUnitSection.Leave();
+
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::HasUnit
+#
+#   Purpose....: Check if unit is available & uninstalled
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDistDevice::HasUnit(unsigned short int UnitType, unsigned short int UnitNumber)
+{
+	TDistUnit *ptr;
+	int ok;
+
+	FUnitSection.Enter();
+
+	ok = FALSE;
+	ptr = FUnitList;
+	while (!ok && ptr)
+    {
+	    if (!ptr->FInstalled && ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitNumber)
+	        ok = TRUE;
+	    ptr = ptr->FList;
+	}
+
+    FUnitSection.Leave();
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::InstallVirtual
+#
+#   Purpose....: Install a virtual device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::InstallVirtual(TDevice *Device)
+{
+	TDistUnit *ptr;
+	int found;
+
+    FUnitSection.Enter();
+
+    found = FALSE;
+    ptr = FUnitList;
+	while (!found && ptr)
+    {
+	    if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
+	    {
+			Device->FPhysUnit = ptr;
+            ptr->DefineDevice(Device);
+            if (IsOnline())
+                ptr->Online();
+            ptr->HandleInstallTag();
+	        found = TRUE;
+	    }
+	    ptr = ptr->FList;
+	}
+
+	if (!found)
+	{
+		ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
+        Device->FPhysUnit = ptr;
+        ptr->DefineDevice(Device);
+        if (IsOnline())
+            ptr->Online();
+	}
+
+    FUnitSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::InstallPhysical
+#
+#   Purpose....: Install a physical device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::InstallPhysical(TDevice *Device)
+{
+    TDistUnit *ptr;
+
+    ptr = new TDistUnit(this);
+
+	ptr->FNext = Device->FVirtUnitList;
+	Device->FVirtUnitList = ptr;
+	ptr->DefineDevice(Device);
+	if (IsOnline())
+    	ptr->Online();
+}
+
+/*##########################################################################
+#
 #   Name       : TDistDevice::SignalMsg
 #
 #   Purpose....: Signal new message
@@ -6582,16 +7289,16 @@ void TDistDevice::SignalMsg()
 
 /*##########################################################################
 #
-#   Name       : TDistDevice::SendPoll
+#   Name       : TDistDevice::SendResetReq
 #
-#   Purpose....: Send a poll
+#   Purpose....: Send a reset req
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TDistDevice::SendPoll()
+void TDistDevice::SendResetReq()
 {
     TDeviceMsg *msg;
     TDeviceTag *tag;
@@ -6599,7 +7306,7 @@ void TDistDevice::SendPoll()
     int size;
 
 	msg = new TDeviceMsg(128);
-    tag = msg->AddTag(DEVICE_TAG_POLL);
+    tag = msg->AddTag(DEVICE_TAG_RESET_REQ);
 
     size = msg->GetSize();
     data = new char[size];
@@ -6607,6 +7314,136 @@ void TDistDevice::SendPoll()
 	delete msg;
 	SendMsg(data, size);
 	delete data;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::SendResetAck
+#
+#   Purpose....: Send a reset ack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::SendResetAck()
+{
+    TDeviceMsg *msg;
+    TDeviceTag *tag;
+    char *data;
+    int size;
+
+	msg = new TDeviceMsg(128);
+    tag = msg->AddTag(DEVICE_TAG_RESET_ACK);
+
+    size = msg->GetSize();
+    data = new char[size];
+    msg->GetData(data);
+	delete msg;
+	SendMsg(data, size);
+	delete data;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::SendPollReq
+#
+#   Purpose....: Send a poll req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::SendPollReq()
+{
+    TDeviceMsg *msg;
+    TDeviceTag *tag;
+    char *data;
+    int size;
+
+    if (!FPendingResetReq && !FPendingResetAck)
+    {
+    	msg = new TDeviceMsg(128);
+        tag = msg->AddTag(DEVICE_TAG_POLL_REQ);
+
+        size = msg->GetSize();
+        data = new char[size];
+        msg->GetData(data);
+	    delete msg;
+    	SendMsg(data, size);
+	    delete data;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::SendPollAck
+#
+#   Purpose....: Send a poll ack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::SendPollAck()
+{
+    TDeviceMsg *msg;
+    TDeviceTag *tag;
+    char *data;
+    int size;
+
+    if (!FPendingResetReq && !FPendingResetAck)
+    {
+    	msg = new TDeviceMsg(128);
+        tag = msg->AddTag(DEVICE_TAG_POLL_ACK);
+
+        size = msg->GetSize();
+        data = new char[size];
+        msg->GetData(data);
+    	delete msg;
+	    SendMsg(data, size);
+    	delete data;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TDistDevice::SendConfigAck
+#
+#   Purpose....: Send a config ack
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistDevice::SendConfigAck(unsigned short int UnitType, unsigned short int UnitNumber)
+{
+    TDeviceMsg *msg;
+    TDeviceTag *tag;
+    char *data;
+    int size;
+
+    if (!FPendingResetReq && !FPendingResetAck)
+    {
+    	msg = new TDeviceMsg(256);
+
+		tag = msg->AddTag(DEVICE_TAG_HEADER);
+		tag->AddSigned16(DEVICE_VAR_UnitType, UnitType);
+		tag->AddSigned16(DEVICE_VAR_UnitID, UnitNumber);
+
+        tag = msg->AddTag(DEVICE_TAG_CONFIG_ACK);
+
+        size = msg->GetSize();
+        data = new char[size];
+        msg->GetData(data);
+    	delete msg;
+	    SendMsg(data, size);
+    	delete data;
+    }
 }
 
 /*##########################################################################
@@ -6623,31 +7460,88 @@ void TDistDevice::SendPoll()
 void TDistDevice::UpdateMsg()
 {
 	TDistUnit *ptr;
+	TDeviceConfig *config;
     TDeviceMsg *msg;
     char *data;
     int size;
+    int more;
+    int sent;
 
-    FUnitSection.Enter();
+    more = TRUE;
+    sent = FALSE;
 
-	ptr = FUnitList;
-	while (ptr)
-	{
-	    msg = ptr->GetMsg();
-	    if (msg)
-	    {
-            size = msg->GetSize();
-            data = new char[size];
-            msg->GetData(data);
-	        if (msg->FDeleteOnSend)
-	            delete msg;
-	        SendMsg(data, size);
-	        delete data;
+    if (FPendingResetReq)
+    {
+        more = FALSE;
+        sent = TRUE;
+        SendResetReq();
+    }
 
+    if (FPendingResetAck)
+    {
+        more = FALSE;
+        sent = TRUE;
+        SendResetAck();
+        FPendingResetAck = FALSE;
+    }
+
+    if (more)
+    {
+        FConfigSection.Enter();
+
+    	config = FConfigList;
+	    while (config)
+    	{
+    	    if (config->FActive)
+    	    {
+        	    msg = config->FConfigMsg;
+                size = msg->GetSize();
+                data = new char[size];
+                msg->GetData(data);
+	            SendMsg(data, size);
+	            delete data;
+	            sent = TRUE;
+            }
+    	    config = config->FNext;
+    	}
+
+        FConfigSection.Leave();
+    }
+
+    while (more)
+    {
+        more = FALSE;
+
+        FUnitSection.Enter();
+
+    	ptr = FUnitList;
+	    while (ptr)
+    	{
+	        msg = ptr->GetMsg();
+	        if (msg)
+    	    {
+                size = msg->GetSize();
+                data = new char[size];
+                msg->GetData(data);
+    	        if (msg->FDeleteOnSend)
+	                delete msg;
+	            SendMsg(data, size);
+	            delete data;
+
+	            more = TRUE;
+	            sent = TRUE;
+    	    }
+	        ptr = ptr->FList;
 	    }
-	    ptr = ptr->FList;
+
+        FUnitSection.Leave();
 	}
 
-    FUnitSection.Leave();
+    if (!sent && FPendingPoll)
+    {
+        FPendingPoll = FALSE;
+        SendPollAck();
+    }
 }
 
 /*##########################################################################
@@ -6664,36 +7558,112 @@ void TDistDevice::UpdateMsg()
 void TDistDevice::HandleMsg(TDeviceMsg *Msg)
 {
     TDistUnit *ptr;
+    TDeviceConfig *cfg;
     TDeviceMsg *msg;
-    TDeviceTag *header;
+	TDeviceTag *header;
+    TDeviceTag *poll;
+    TDeviceTag *reset;
+    TDeviceTag *config;
     short int UnitType = 0;
     short int UnitID = 0;
+    int found;
 
-    header = Msg->GetTag(DEVICE_TAG_HEADER);
-
-    if (header)
+    reset = Msg->GetTag(DEVICE_TAG_RESET_REQ);
+    if (reset)
     {
-        UnitType = header->GetSigned16(DEVICE_VAR_UnitType, 0);
-        UnitID = header->GetSigned16(DEVICE_VAR_UnitID, 0);
+        Offline();
+        Online();
+        
+        FPendingResetAck = TRUE;
+        FPendingResetReq = FALSE;
+        SignalMsg();
     }
 
-    if (UnitType)
+    reset = Msg->GetTag(DEVICE_TAG_RESET_ACK);
+    if (reset)
+        FPendingResetReq = FALSE;
+
+    if (!FPendingResetReq && !FPendingResetAck)
     {
-    
-        FUnitSection.Enter();
+        poll = Msg->GetTag(DEVICE_TAG_POLL_REQ);
+        if (poll)
+        {
+            FPendingPoll = TRUE;
+            SignalMsg();
+        }
 
-	    ptr = FUnitList;
-    	while (ptr)
-	    {
-			if (ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitID)
-                ptr->HandleMsg(Msg);
+        header = Msg->GetTag(DEVICE_TAG_HEADER);
+        if (header)
+        {
+            UnitType = header->GetSigned16(DEVICE_VAR_UnitType, 0);
+            UnitID = header->GetSigned16(DEVICE_VAR_UnitID, 0);
+        }
+
+        if (UnitType)
+        {
+
+            found = FALSE;        
+            FPendingPoll = FALSE;
+
+            config = Msg->GetTag(DEVICE_TAG_CONFIG_REQ);
+            if (config)
+            {
+    			SendConfigAck(UnitType, UnitID);
+
+                if (!HasUnit(UnitType, UnitID))
+                {                    
+                    if (OnConfig)
+                        (*OnConfig)(this, UnitType, UnitID, config);
+                }
+            }
+
+            if (!config)
+            {
+                config = Msg->GetTag(DEVICE_TAG_CONFIG_ACK);
+                if (config)
+                {
+                    FConfigSection.Enter();
+
+        	        cfg = FConfigList;
+        	        
+            	    while (cfg)
+        	        {
+	        	    	if (cfg->FUnitType == UnitType && cfg->FUnitNumber == UnitID)
+	        	    	    cfg->FActive = FALSE;
                 
-			ptr = ptr->FList;
-    	}
-    	
-        FUnitSection.Leave();
-	}
+            			cfg = cfg->FNext;
+            		}
 
+            		FConfigSection.Leave();
+            	}
+            }
+                     
+            if (!config)
+            {
+                FUnitSection.Enter();
+
+    	        ptr = FUnitList;
+        	    while (!found && ptr)
+    	        {
+	    	    	if (ptr->GetUnitType() == UnitType && ptr->GetUnitNumber() == UnitID)
+                    {
+                        ptr->HandleMsg(Msg);
+                        found = TRUE;
+                    }
+                
+        			ptr = ptr->FList;
+            	}
+
+                if (!found)
+                {
+                    ptr = new TDistUnit(this, UnitType, UnitID);
+                    ptr->HandleMsg(Msg);                
+                }
+                	
+                FUnitSection.Leave();
+            }
+    	}
+    }
 }
 
 /*##########################################################################

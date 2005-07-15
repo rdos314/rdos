@@ -4535,6 +4535,21 @@ RdosSetFocus	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosGetFocus
+;
+;		DESCRIPTION:	Get focus
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetFocus
+
+RdosGetFocus	PROC
+	UserGate get_focus_nr
+	ret
+RdosGetFocus	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosClearKeyboard
 ;
 ;		DESCRIPTION:	Clear keyboard buffer

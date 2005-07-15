@@ -58,6 +58,12 @@ got_focus_arr			DD 16 DUP(?)
 
 focus_seg	ENDS
 
+focus_process_seg   STRUC
+
+fp_key              DB ?
+
+focus_process_seg   ENDS
+
 	.386p
 
 code	SEGMENT byte public use16 'CODE'
@@ -118,6 +124,10 @@ init	PROC far
 	mov es:focus_alloc_rel,0
 	mov es:focus_current_thread,0
 	InitSection es:focus_section
+;	
+	mov bx,focus_process_sel
+	mov eax,SIZE focus_process_seg
+	AllocateFixedProcessMem
 ;
 	mov ax,cs
 	mov ds,ax
@@ -136,6 +146,12 @@ init	PROC far
 	mov di,OFFSET set_focus_name
 	xor dx,dx
 	mov ax,set_focus_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_focus
+	mov di,OFFSET get_focus_name
+	xor dx,dx
+	mov ax,get_focus_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET enable_focus
@@ -399,6 +415,10 @@ init_focus_process	Proc far
 	push ebx
 	push cx
 ;
+	mov ax,focus_process_sel
+	mov ds,ax
+	mov ds:fp_key,0
+;	
 	mov ax,process_page_sel
 	mov ds,ax
 	mov ebx,io_local_linear SHR 10
@@ -779,12 +799,40 @@ enable_focus_done:
 ;
 	mov ax,bx
 	shr ax,1
+;	
+	mov bx,focus_process_sel
+	mov ds,bx
+	mov ds:fp_key,al
 ;
 	pop bx
 	pop es
 	pop ds
 	retf32
 enable_focus	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			GET_FOCUS
+;
+;		DESCRIPTION:	Get input focus key
+;
+;		RETURN: 		AL	KEY NUMBER
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_focus_name	DB 'Get Focus',0
+
+get_focus	PROC far
+    push ds
+	mov ax,focus_process_sel
+	mov ds,ax
+	mov al,ds:fp_key
+	pop ds
+    retf32
+get_focus   ENDP
 
 code	ENDS
 

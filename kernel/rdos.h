@@ -234,6 +234,7 @@ int __stdcall RdosReceiveMailslot(void *Msg);
 void __stdcall RdosReplyMailslot(const void *Msg, int Size);
 
 void __stdcall RdosSetFocus(char FocusKey);
+char __stdcall RdosGetFocus();
 
 void __stdcall RdosClearKeyboard();
 int __stdcall RdosPollKeyboard();

@@ -53,6 +53,7 @@ protected:
 	
     TSerialDevice *FSerial;
     TDateTime FPollTime;
+    int FPollCount;
 };
 
 #endif

@@ -4,3 +4,4 @@ tdstrp32 ..\freecom\command
 ..\..\kernel\tools\cfg2bin rdos2
 ..\..\kernel\tools\cfg2bin mpl
 ..\..\kernel\tools\cfg2bin mk
+..\..\kernel\tools\cfg2bin pejl

@@ -911,6 +911,11 @@ SetFocus        MACRO
 	UserGate set_focus_nr
 						ENDM
 
+; OUT AL    	Switch key for current process
+GetFocus        MACRO
+	UserGate get_focus_nr
+						ENDM
+
 ;;;;;;;;;;;;; NETWORK ;;;;;;;;;;;
 
 ; OUT EAX		Primary DNS IP address (or 0)

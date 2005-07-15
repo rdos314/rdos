@@ -66,6 +66,7 @@ TSerialDistDevice::TSerialDistDevice(TSerialDevice *Serial)
 {
     FSerial = Serial;
     FSerial->Open();
+	FPollCount = 0;
     
 	Start("Serial Dist Rec", STACK_SIZE);
 }
@@ -137,7 +138,7 @@ void TSerialDistDevice::SendMsg(const char *Data, int Size)
 ##########################################################################*/
 int TSerialDistDevice::GetTimeout()
 {
-    return 500;
+	return 1000;
 }
 
 /*##################  TSerialDistDevice::CheckForMsg ############
@@ -149,10 +150,10 @@ int TSerialDistDevice::GetTimeout()
 *##########################################################################*/
 void TSerialDistDevice::CheckForMsg()
 {
-    unsigned char uch;
-    char ch;
-    char Buf[6];
-    short int size;
+	unsigned char uch;
+	char ch;
+	char Buf[6];
+	short int size;
 	int i;
 	char *data;
 
@@ -210,7 +211,10 @@ void TSerialDistDevice::CheckForMsg()
     FPollTime = TDateTime();
     FPollTime.AddSec(POLL_INTERVAL);
     
+    FPollCount = 0;
+    Online();
 	NotifyMsg(data, size);
+	delete data;
 }
 
 /*##########################################################################
@@ -226,10 +230,11 @@ void TSerialDistDevice::CheckForMsg()
 ##########################################################################*/
 void TSerialDistDevice::ReceiveThread()
 {
-    Online();
-    
     while (FInstalled)
-        CheckForMsg();
+        if (IsActive())
+            CheckForMsg();
+        else
+            RdosWaitMilli(1000);
 }
 
 /*##########################################################################
@@ -247,11 +252,23 @@ void TSerialDistDevice::SendThread()
 {
     while (FInstalled)
     {
-        FSignal->WaitTimeout(500);
-        UpdateMsg();
+        if (IsActive())
+        {
+            FSignal->WaitTimeout(500);
+            UpdateMsg();
 
-        if (FPollTime < TDateTime())
-            SendPoll();        
+            if (FPollTime < TDateTime())
+            {
+                if (FPollCount > 10)
+                    Offline();
+                else
+                    FPollCount++;
+            
+                SendPollReq();       
+            }
+        }
+        else
+            RdosWaitMilli(1000);
     }
 }
 

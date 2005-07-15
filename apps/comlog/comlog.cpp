@@ -25,7 +25,7 @@ void cdecl main()
 	TKeyboardDevice Keyboard;
 
 	TSerialDevice Port1(1, 19200, 'N', 8, 1);
-	TSerialDevice Port2(3, 19200, 'N', 8, 1);
+	TSerialDevice Port2(2, 19200, 'N', 8, 1);
 
 	Port1.Open();
 	Port2.Open();

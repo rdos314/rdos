@@ -259,6 +259,7 @@ net_code_sel		EQU 670h
 net_data_sel		EQU 678h
 net_mem_sel			EQU 680h
 
+focus_process_sel   EQU 688h
 focus_code_sel		EQU 690h
 focus_sel			EQU 698h
 ;

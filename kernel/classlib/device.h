@@ -39,9 +39,14 @@
 #define DEVICE_TAG_REQ                2
 #define DEVICE_TAG_REPLY              3
 #define DEVICE_TAG_INFO               4
-#define DEVICE_TAG_RESET              5
-#define DEVICE_TAG_INSTALL            6
-#define DEVICE_TAG_POLL               7
+#define DEVICE_TAG_RESET_REQ          5
+#define DEVICE_TAG_RESET_ACK          6
+#define DEVICE_TAG_POLL_REQ           7
+#define DEVICE_TAG_POLL_ACK           8
+#define DEVICE_TAG_INSTALL_REQ        9
+#define DEVICE_TAG_INSTALL_ACCEPT     10
+#define DEVICE_TAG_CONFIG_REQ         11
+#define DEVICE_TAG_CONFIG_ACK         12
 
 #define DEVICE_TAG_USER               100
 
@@ -53,6 +58,7 @@
 #define DEVICE_VAR_Online             5
 #define DEVICE_VAR_Busy               6
 #define DEVICE_VAR_PhysicalDevice     7
+#define DEVICE_VAR_Name               8
 
 #define DEVICE_VAR_USER               250
 
@@ -325,6 +331,7 @@ class TDistUnit;
 class TDevice : public TThread
 {
 	friend class TDistUnit;
+	friend class TDistDevice;
 
 public:
 	TDevice();
@@ -341,13 +348,11 @@ public:
 	virtual int IsBusy() const;
 	virtual int IsEnabled() const;
 	virtual int IsOnline() const;
-	virtual void DeviceName(char *Name, int MaxLen) const = 0;
+	virtual void DeviceName(char *Name, int MaxLen) const;
 	static void GetDevices(void (*DeviceCallb)(TDevice *Device));
 
 	virtual short int GetUnitType();
 	virtual short int GetUnitNumber();
-
-	void AddVirtualUnit(TDistUnit *unit);
 
 	void *Owner;
 	void (*OnOnline)(TDevice *Device);
@@ -366,8 +371,6 @@ protected:
 	virtual void Busy();
 	int IsReseted() const;
 	void ClearReset();
-
-    void DefinePhysicalUnit(TDistUnit *unit);
 
 	virtual int GetMaxMsgSize();
 	virtual int IsModifyTag(unsigned short int TAG);
@@ -393,9 +396,10 @@ protected:
 
     void SignalMsg(TDistUnit *unit);
 
-    virtual void CreateResetTag(TDistUnit *unit);
-    virtual void CreateInstallTag(TDistUnit *unit);
+    void CreateResetTag(TDistUnit *unit);
+    void CreateInstallTag(TDistUnit *unit);
 
+    virtual void CreateInstallTag(TDeviceTag *tag);
 	virtual void NotifyResetTag(TDistUnit *unit);
 	virtual void NotifyReqTag(TDistUnit *unit, TDeviceTag *tag);
 	virtual void NotifyReplyTag(TDistUnit *unit, TDeviceTag *tag);
@@ -404,6 +408,13 @@ protected:
 
 	TDistUnit *FVirtUnitList;
 	TDistUnit *FPhysUnit;
+
+	int	FOpen;
+	int FEnabled;
+	int FOnline;
+	int FBusy;
+	int FReset;
+	char *FName;
 
 private:
 	void Init();
@@ -414,11 +425,6 @@ private:
 	static TDevice *FDeviceList;
 	TDevice *FList;
 	const char *FIniSection;
-	int	FOpen;
-	int FEnabled;
-	int FOnline;
-	int FBusy;
-	int FReset;
 };
 
 class TDistDevice;
@@ -434,7 +440,8 @@ public:
 
 	void DefineDevice(TDevice *Device);
 	int IsOnline();
-
+    int IsInstalled();
+    
 	short int GetUnitType();
     short int GetUnitNumber();
 
@@ -445,8 +452,14 @@ public:
 	TDistUnit *GetNextUnit();
 
 protected:
+    void Online();
+    void Offline();
+    
+	TDistUnit(TDistDevice *DistDevice, short int UnitType, short int UnitNumber);
+	
     void CreateResetTag();
     void CreateAckTag(TDeviceTag *Tag);
+    void CreateAcceptTag();
     
 	TDeviceTag *LockReqTag();
 	TDeviceTag *LockReplyTag(unsigned short int ID);
@@ -459,6 +472,7 @@ protected:
     void ClearQueues();
     void ResetCurrMsg();
 	void CreateMsg();
+	void CreateAcceptMsg();
 	void CreateAckMsg();
     void IncMsgID();
 
@@ -466,8 +480,9 @@ protected:
 	void HandleReqTag(TDeviceTag *Tag);
 	void HandleReplyTag(TDeviceTag *Tag);
 	void HandleInfoTag(TDeviceTag *Tag);
-	void HandleResetTag(TDeviceTag *Tag);
+	void HandleInstallTag();
 	void HandleInstallTag(TDeviceTag *Tag);
+	void HandleAcceptTag(TDeviceTag *Tag);
 
     TDistUnit *FNext;
     TDistUnit *FList;
@@ -475,14 +490,26 @@ protected:
 	TDistDevice *FDistDevice;
 
     TDeviceMsg *FMsg;
+    TDeviceMsg *FAcceptMsg;
     TDeviceMsg *FAckMsg;
 	
 	short int FReqID;
 	short int FInfoID;
 	short int FInstallID;
-	short int FResetID;
+	short int FAcceptID;
+
+    short int FUnitType;
+    short int FUnitNumber;
+    
+	int FInstalled;
+	int FOnline;
 
 private:
+    void Init();
+
+	TDeviceAlloc *FAlloc;
+	TDeviceTag *FPendingInstallTag;
+    
 	TSection FMsgSection;
 	TDeviceMsg *FCurrMsg;
 	TDeviceTag *FReqTag;
@@ -493,7 +520,28 @@ private:
 	short int FCurrReqID;
 	short int FCurrInfoID;
 	short int FCurrInstallID;
-	short int FCurrResetID;
+	short int FCurrAcceptID;
+};
+
+class TDeviceConfig
+{
+    friend class TDistDevice;
+    
+public:
+    TDeviceConfig(unsigned short int UnitType, unsigned short int UnitNumber, int MaxSize);
+    ~TDeviceConfig();
+
+    TDeviceTag *GetConfigTag();
+
+
+protected:
+    unsigned short int FUnitType;
+    unsigned short int FUnitNumber;
+    int FActive;
+    
+    TDeviceConfig *FNext;
+    TDeviceMsg *FConfigMsg;
+    TDeviceTag *FConfigTag;
 };
 
 class TSignalDevice;
@@ -506,14 +554,38 @@ public:
 	TDistDevice();
 	virtual ~TDistDevice();
 
+	int HasUnit(unsigned short int UnitType);
+	int HasUnit(unsigned short int UnitType, unsigned short int UnitNumber);
+    int HasConfig(unsigned short int UnitType, unsigned short int UnitNumber);
+
+	void InstallVirtual(TDevice *Device);
+	void InstallPhysical(TDevice *Device);
+
+	void Config(TDeviceConfig *config);
+
+	void (*OnConfig)(TDistDevice *Dist, unsigned short int UnitType, unsigned short int UnitNumber, TDeviceTag *config);
+
 protected:
 	void InsertUnit(TDistUnit *unit);
+	void InsertNoBlockUnit(TDistUnit *unit);
 	void RemoveUnit(TDistUnit *unit);
+
+	void InsertConfig(TDeviceConfig *config);
+	void RemoveConfig(TDeviceConfig *config);
+
+	virtual void Online();
+	virtual void Offline();
 
     virtual void SendMsg(const char *Data, int Size) = 0;    
 	virtual int GetTimeout() = 0;
 	
-    void SendPoll();
+    void SendResetReq();
+    void SendResetAck();
+	
+    void SendPollReq();
+    void SendPollAck();
+
+    void SendConfigAck(unsigned short int UnitType, unsigned short int UnitNumber);
     
 	void NotifyMsg(const char *Data, int Size);
 	void SignalMsg();
@@ -525,7 +597,15 @@ protected:
 	TSection FUnitSection;
 	TDistUnit *FUnitList;
 
+	TDeviceConfig *FConfigList;
+	TSection FConfigSection;
+
 	TSignalDevice *FSignal;
+
+private:
+    int FPendingResetReq;
+    int FPendingResetAck;
+    int FPendingPoll;
 };
 
 
