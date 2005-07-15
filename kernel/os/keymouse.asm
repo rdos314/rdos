@@ -1289,6 +1289,9 @@ init_mouse	Proc far
 	call CheckAux
 	jc init_mouse_done
 ;
+    mov al,12
+	IsIrqFree
+	jc init_mouse_done
     
 init_check_aux_loop:
 	in al,64h
