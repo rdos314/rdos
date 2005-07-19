@@ -64,7 +64,7 @@ static void SendStartup(void *ptr)
 ##########################################################################*/
 TSerialDistDevice::TSerialDistDevice(TSerialDevice *Serial)
 {
-    FSerial = Serial;
+	FSerial = Serial;
     FSerial->Open();
 	FPollCount = 0;
     
@@ -156,39 +156,40 @@ void TSerialDistDevice::CheckForMsg()
 	short int size;
 	int i;
 	char *data;
+	long sign;
 
 	FSerial->WaitForChar(10000);
 
-    for (i = 0; i < 6; i++)
+	for (i = 0; i < 4; i++)
+	{
+        if (!FSerial->WaitForChar(200))
+            return;
+
+		Buf[i] = FSerial->Read();
+    }
+
+	memcpy(&sign, Buf, 4);
+
+	while (!CheckSignature(sign))
+	{
+		if (!FSerial->WaitForChar(200))
+			return;
+
+		Buf[0] = Buf[1];
+		Buf[1] = Buf[2];
+		Buf[2] = Buf[3];
+		Buf[3] = FSerial->Read();
+
+		memcpy(&sign, Buf, 4);
+	}
+
+    for (i = 4; i < 6; i++)
     {
         if (!FSerial->WaitForChar(200))
             return;
 
-		ch = FSerial->Read();
-        uch = (unsigned char)ch;
-        switch (i)
-        {
-            case 0:
-                if (uch != 0xDE)
-                    return;
-                break;
-                
-            case 1:
-                if (uch != 0x01)
-                    return;
-                break;
-
-            case 2:
-                if (uch != 0xCE)
-                    return;
-                break;
-
-            case 3:
-                if (uch != 0x01)
-                    return;
-        }
-		Buf[i] = ch;
-    }
+		Buf[i] = FSerial->Read();
+	}
 
     memcpy(&size, &Buf[4], 2);
 
@@ -213,7 +214,7 @@ void TSerialDistDevice::CheckForMsg()
     
     FPollCount = 0;
     Online();
-	NotifyMsg(data, size);
+	NotifyMsg(sign, data, size);
 	delete data;
 }
 

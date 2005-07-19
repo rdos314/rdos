@@ -35,25 +35,25 @@
 class TSerialDistDevice : public TDistDevice
 {
 public:
-    TSerialDistDevice(TSerialDevice *Serial);
-    ~TSerialDistDevice();
+	TSerialDistDevice(TSerialDevice *Serial);
+	~TSerialDistDevice();
 
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
-    virtual void SendMsg(const char *Data, int Size);    
+	virtual void SendMsg(const char *Data, int Size);
 	virtual int GetTimeout();
 
-    void ReceiveThread();
-    void SendThread();
+	void ReceiveThread();
+	void SendThread();
 
 protected:
-    void CheckForMsg();
+	void CheckForMsg();
 
 	virtual void Execute();
-	
-    TSerialDevice *FSerial;
-    TDateTime FPollTime;
-    int FPollCount;
+
+	TSerialDevice *FSerial;
+	TDateTime FPollTime;
+	int FPollCount;
 };
 
 #endif
