@@ -80,7 +80,7 @@ void cdecl main()
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TZapProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
-	TDeviceProtocolAnalyser analyzer(&RawFile, 0x400);
+	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
