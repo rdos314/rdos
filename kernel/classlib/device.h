@@ -396,11 +396,14 @@ protected:
     virtual void NotifyClose();
     virtual void NotifyEnable();
     virtual void NotifyDisable();
+    virtual void NotifyIdle();
+    virtual void NotifyBusy();
 
 	virtual void Online();
 	virtual void Offline();
-	virtual void Idle();
-	virtual void Busy();
+
+	void Idle();
+	void Busy();
 
 	int IsReseted() const;
 	void ClearReset();

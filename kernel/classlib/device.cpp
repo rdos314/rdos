@@ -5471,6 +5471,24 @@ int TDevice::IsActive() const
 
 /*##########################################################################
 #
+#   Name       : TDevice::NotifyIdle
+#
+#   Purpose....: Notify idle
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::NotifyIdle()
+{
+	FBusy = FALSE;
+	if (OnIdle)
+		OnIdle(this);
+}
+
+/*##########################################################################
+#
 #   Name       : TDevice::Idle
 #
 #   Purpose....: Sets device to idle
@@ -5484,13 +5502,32 @@ void TDevice::Idle()
 {
 	if (FBusy)
     {
-		FBusy = FALSE;
-		if (OnIdle)
-			OnIdle(this);
+        NotifyIdle();
 
+        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+
+        SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDevice::NotifyBusy
+#
+#   Purpose....: Notify busy
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDevice::NotifyBusy()
+{
+	FBusy = TRUE;
+	if (OnBusy)
+		OnBusy(this);
 }
 
 /*##########################################################################
@@ -5508,11 +5545,12 @@ void TDevice::Busy()
 {
 	if (!FBusy)
 	{
-		FBusy = TRUE;
-		if (OnBusy)
-			OnBusy(this);
+	    NotifyBusy();
 
+        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+
+        SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
 	}
 }
@@ -6744,9 +6782,12 @@ void TDevice::NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag)
     if (Val != FBusy)
     {
         if (Val)
-            Busy();
+            NotifyBusy();
         else
-            Idle();
+            NotifyIdle();
+
+        AddBoolean(FPhysUnit, unit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        AddBoolean(FVirtUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
     }    
 }
 
