@@ -121,7 +121,7 @@ static TCommandFactory *rmpart;
 static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
-static TCommandFactory *time;
+static TCommandFactory *timev;
 static TCommandFactory *wait;
 
 static TStringList *History;
@@ -158,7 +158,7 @@ TSession::TSession()
     	flashfs = new TFlashFsPartitionFactory;
 
     	wait = new TWaitFactory;
-    	time = new TTimeFactory;
+    	timev = new TTimeFactory;
     	type = new TTypeFactory;
     	synctime = new TSyncTimeFactory;
     	state = new TStateFactory;
@@ -273,7 +273,7 @@ TSession::~TSession()
     	delete flashfs;
 
         delete wait;
-    	delete time;
+    	delete timev;
 	    delete type;
 	    delete synctime;
     	delete state;
