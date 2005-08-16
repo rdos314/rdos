@@ -1032,7 +1032,7 @@ TCorrelation::~TCorrelation()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void WriteCorrTable(const char *filename, const char *name1, const char *name2, TCorrelation *corr, TPopulation *pop1, TPopulation *pop2)
+void WriteCorrTable(const char *filename, const char *name1, const char *name2, TCorrelation *corr, TPopulation *pop1, TPopulation *pop2, long double mincorr)
 {
 	int i;
 	int ok;
@@ -1051,7 +1051,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 	{
 		ind = corr->IndArr[i];
 
-		ok = (corr->chi2[ind] >= 3.0);
+		ok = (corr->chi2[ind] >= mincorr);
 
 		if (ok && j % 10 == 0)
 		{
@@ -1255,7 +1255,7 @@ void WriteAsNtCorrelation(const char *filename)
 
     TCorrelation corr(pop1, pop2); 
 
-    WriteCorrTable(filename, "AS", "NT referrer", &corr, pop1, pop2);
+	WriteCorrTable(filename, "AS", "NT referrer", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
@@ -1290,7 +1290,7 @@ void WriteAsAspieCorrelation(const char *filename)
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, "AS", "Aspie referrer", &corr, pop1, pop2);
+	WriteCorrTable(filename, "AS", "Aspie referrer", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
@@ -1325,7 +1325,7 @@ void WriteAddNtCorrelation(const char *filename)
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, "ADHD", "NT referrer", &corr, pop1, pop2);
+	WriteCorrTable(filename, "ADHD", "NT referrer", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
@@ -1360,7 +1360,7 @@ void WriteAddAsCorrelation(const char *filename)
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, "ADHD", "AS", &corr, pop1, pop2);
+	WriteCorrTable(filename, "ADHD", "AS", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
@@ -1395,7 +1395,7 @@ void WriteHbtNtCorrelation(const char *filename)
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, "HBT", "NT referrer", &corr, pop1, pop2);
+	WriteCorrTable(filename, "HBT", "NT referrer", &corr, pop1, pop2, 5.0);
 
 	delete pop1;
 	delete pop2;
@@ -1430,7 +1430,7 @@ void WriteHbtAsCorrelation(const char *filename)
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, "HBT", "AS", &corr, pop1, pop2);
+	WriteCorrTable(filename, "HBT", "AS", &corr, pop1, pop2, 5.0);
 
 	delete pop1;
 	delete pop2;
@@ -1475,7 +1475,7 @@ void WriteRefererNtCorrelation(const char *filename, const char *header, const c
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, header, "NT referrer", &corr, pop1, pop2);
+	WriteCorrTable(filename, header, "NT referrer", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
@@ -1520,10 +1520,270 @@ void WriteRefererAsCorrelation(const char *filename, const char *header, const c
 
 	TCorrelation corr(pop1, pop2);
 
-	WriteCorrTable(filename, header, "AS", &corr, pop1, pop2);
+	WriteCorrTable(filename, header, "AS", &corr, pop1, pop2, 6.0);
 
 	delete pop1;
 	delete pop2;
+}
+
+/*##################  WriteCorrelation ##########################
+*   Purpose....: Write correlation      	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCorrelation(const char *filename)
+{
+	int i;
+	int ok;
+	int j;
+	int k;
+	char str[80];
+	TFile file(filename, 0);
+	int Used[100][100];
+	long double MaxVal;
+	int MaxInd1, MaxInd2;
+	int ival;
+	TQuizRow Row;
+	TPopulation *pop1;
+	TPopulation *pop2;
+	TFile file1("as.dat");
+	TFile file2("nt.dat");
+
+	pop1 = new TPopulation;
+
+	file1.SetPos(0);
+	while (file1.Read(&Row, sizeof(Row)))
+		 pop1->Add(&Row);
+
+	pop2 = new TPopulation;
+
+	file2.SetPos(0);
+	while (file2.Read(&Row, sizeof(Row)))
+		pop2->Add(&Row);
+
+	TCorrelation asntcorr(pop1, pop2);
+
+	delete pop1;
+	delete pop2;
+
+	for (i = 0; i < 100; i++)
+		for (j = 0; j < 100; j++)
+			if (i == j)
+				Used[i][j] = TRUE;
+			else
+				Used[i][j] = FALSE;
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	for (k = 0; k < 50; k++)
+	{
+		if (k % 10 == 0)
+		{
+			file.Write("<tr style='height:24.75pt'>");
+
+			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+			file.Write("<p>");
+			file.Write("<b>");
+			file.Write("#");
+			file.Write("</b>");
+			file.Write("</p>");
+
+			file.Write("</td>");
+
+			file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
+
+			file.Write("<p align=\"center\">");
+			file.Write("<b>");
+
+			file.Write(" ");
+
+			file.Write("</b>");
+			file.Write("</p>");
+			file.Write("</td>");
+
+			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+			file.Write("<p>");
+			file.Write("<b>");
+			file.Write("AS-NT corr");
+			file.Write("</b>");
+			file.Write("</p>");
+
+			file.Write("</td>");
+
+			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+			file.Write("<p>");
+			file.Write("<b>");
+			file.Write("#");
+			file.Write("</b>");
+			file.Write("</p>");
+
+			file.Write("</td>");
+
+			file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
+
+			file.Write("<p align=\"center\">");
+			file.Write("<b>");
+
+			file.Write(" ");
+
+			file.Write("</b>");
+			file.Write("</p>");
+			file.Write("</td>");
+
+			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+			file.Write("<p>");
+			file.Write("<b>");
+			file.Write("AS-NT corr");
+			file.Write("</b>");
+			file.Write("</p>");
+
+			file.Write("</td>");
+
+			file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+			file.Write("<p>");
+			file.Write("<b>");
+
+			file.Write("Corr");
+
+			file.Write("</b>");
+			file.Write("</p>");
+
+			file.Write("</td>");
+
+			file.Write("</tr>");
+		}
+
+    	MaxVal = -1.0;
+	    MaxInd1 = 0;
+    	MaxInd2 = 0;
+
+		for (i = 0; i < 100; i++)
+		{
+			for (j = 0; j < i; j++)
+			{
+				if (corr[i][j] > MaxVal && !Used[i][j])
+				{
+					MaxVal = corr[i][j];
+					MaxInd1 = i;
+					MaxInd2 = j;
+				}
+			}
+		}
+
+		Used[MaxInd1][MaxInd2] = TRUE;
+		Used[MaxInd2][MaxInd1] = TRUE;
+
+		file.Write("<tr style='height:24.75pt'>");
+
+		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		sprintf(str, "%d", MaxInd1 + 1);
+		file.Write(str);
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
+
+		file.Write("<p align=\"center\">");
+		file.Write("<b>");
+
+		file.Write(QuizTextArr[MaxInd1]);
+
+		file.Write("\n");
+
+		file.Write("</b>");
+		file.Write("</p>");
+		file.Write("</td>");
+
+		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+        ival = 100 * asntcorr.corr[MaxInd1];
+		sprintf(str, "%d", ival);
+		file.Write(str);
+		file.Write("%");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		sprintf(str, "%d", MaxInd2 + 1);
+		file.Write(str);
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
+
+		file.Write("<p align=\"center\">");
+		file.Write("<b>");
+
+		file.Write(QuizTextArr[MaxInd2]);
+
+		file.Write("\n");
+
+		file.Write("</b>");
+		file.Write("</p>");
+		file.Write("</td>");
+
+		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+        ival = 100 * asntcorr.corr[MaxInd2];
+		sprintf(str, "%d", ival);
+		file.Write(str);
+		file.Write("%");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		ival = 100 * corr[MaxInd1][MaxInd2];
+		sprintf(str, "%d", ival);
+		file.Write(str);
+		file.Write("%");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("</tr>");
+
+	}
+
+	file.Write("</table>");
 }
 
 /*##################  CalcCorrelation ##########################
@@ -1574,9 +1834,9 @@ void CalcCorrelation()
 
     for (q1 = 0; q1 < 100; q1++)
     {
-        for (q2 = 0; q2 < q1; q2++)
+		for (q2 = 0; q2 < q1; q2++)
         {
-            rsum = 0;
+			rsum = 0;
             for (e = 0; e < pop->Count; e++)
             {
 		        zx = ((long double)pop->ValArr[q1][e] - mean[q1]) / csd[q1];
@@ -1591,6 +1851,97 @@ void CalcCorrelation()
 	}
 
 	delete pop;
+}
+
+/*##################  WriteNewQuiz ##########################
+*   Purpose....: Write new quiz           	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteNewQuiz(const char *filename)
+{
+	TQuizRow Row;
+	TPopulation *pop1;
+	TPopulation *pop2;
+	TFile file1("as.dat");
+	TFile file2("nt.dat");
+	int i, j, k;
+	long double rsum;
+	long double val;
+	int Used[100];
+	long double MaxVal;
+	int MaxInd;
+
+	pop1 = new TPopulation;
+
+	file1.SetPos(0);
+	while (file1.Read(&Row, sizeof(Row)))
+		 pop1->Add(&Row);
+
+	pop2 = new TPopulation;
+
+	file2.SetPos(0);
+	while (file2.Read(&Row, sizeof(Row)))
+		pop2->Add(&Row);
+
+	TCorrelation asntcorr(pop1, pop2);
+
+	for (i = 0; i < 100; i++)
+		Used[i] = FALSE;
+
+	i = asntcorr.IndArr[0];
+
+	Used[i] = TRUE;
+
+	for (i = 1; i < 100; i++)
+	{
+		MaxVal = -1.0;
+		MaxInd = 0;
+
+		for (j = 0; j < 100; j++)
+		{
+			if (!Used[j])
+			{
+				rsum = 0;
+
+				for (k = 0; k < 100; k++)
+					if (Used[k] && asntcorr.corr[j] > 0.25)
+					{
+					    val = corr[j][k];
+						rsum += val * val;
+				    }
+
+				if (rsum)
+				{
+					rsum = sqrt(rsum);
+					if (rsum < 0)
+						rsum = -rsum;
+
+					val = asntcorr.corr[j];
+					rsum = val * val / rsum;
+
+					if (rsum > MaxVal)
+					{
+						MaxVal = rsum;
+						MaxInd = j;
+					}
+				}
+			}
+		}
+
+        if (MaxVal >= 0.0)
+        {
+    		asntcorr.IndArr[i] = MaxInd;
+	    	Used[MaxInd] = TRUE;
+	    }
+	}
+
+	WriteCorrTable(filename, "AS", "NT referrer", &asntcorr, pop1, pop2, 0.0);
+
+	delete pop1;
+	delete pop2;
 }
 
 /*##################  main ##########################
@@ -1624,5 +1975,7 @@ int main(int argc, char **argv)
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
     CalcCorrelation();
+	WriteCorrelation("corr.htm");
+	WriteNewQuiz("quiz.htm");
 }
 

@@ -437,7 +437,8 @@ PAGE
 
 init:
     mov eax,cr0
-    or al,22h
+;    or al,22h
+    or al,4
     mov cr0,eax
 ;
 	call ZeroRam
