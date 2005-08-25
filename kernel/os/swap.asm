@@ -179,7 +179,7 @@ init_swap_thread	PROC far
 	mov di,OFFSET swap_name
 	mov cx,256
 	mov ax,3
-	CreateThread
+;	CreateThread
 ;
 	popa
 	pop es
