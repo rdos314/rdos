@@ -260,6 +260,7 @@ void ProcessReferers()
 	AddReferer("phpportalen.net", "phpportalen.net");
 	AddReferer("aspforum.liebert.se", "aspforum.liebert.se");
 	AddReferer("dickflash.com", "dickflash.com");
+	AddReferer("99musik.com/forum", "99musik.com/forum");
 
 	quizfile.SetPos(0);
 	while (quizfile.Read(&Row, sizeof(Row)))
@@ -283,7 +284,7 @@ void ProcessReferers()
 		            else
 		                ref->Result100_139++;
 		        }
-		        else
+				  else
 		            ref->Result60_99++;
 		    }
 		    else
@@ -306,7 +307,7 @@ void ProcessReferers()
                 NTRef->Count += ref->Count;
                 NTRef->Result0_59 += ref->Result0_59;
                 NTRef->Result60_99 += ref->Result60_99;
-                NTRef->Result100_139 += ref->Result100_139;
+					 NTRef->Result100_139 += ref->Result100_139;
                 NTRef->Result140_200 += ref->Result140_200;
             }
 
@@ -352,7 +353,7 @@ void ProcessAs()
 		    {
 		        if (Row.ResultNow >= 140)
 		            AsRef->Result140_200++;
-		        else
+				  else
 		            AsRef->Result100_139++;
 		    }
 		    else
@@ -444,7 +445,7 @@ void WriteReferer(TFile &file, TReferer *ref)
     file.Write(str);
     
     file.Write("</b>");
-    file.Write("</p>");
+	 file.Write("</p>");
 
     file.Write("</td>");
 	      
@@ -467,7 +468,7 @@ void WriteReferer(TFile &file, TReferer *ref)
     file.Write("<b>");
 
     sprintf(str, "%d", ref->Result60_99 * 100 / ref->Count);
-    file.Write(str);
+	 file.Write(str);
     
     file.Write("%</b>");
     file.Write("</p>");
@@ -490,7 +491,7 @@ void WriteReferer(TFile &file, TReferer *ref)
     file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
     file.Write("<p align=\"right\">");
-    file.Write("<b>");
+	 file.Write("<b>");
 
     sprintf(str, "%d", ref->Result140_200 * 100 / ref->Count);
     file.Write(str);
@@ -513,7 +514,7 @@ void WriteReferer(TFile &file, TReferer *ref)
         file.Write(ref->RefererRef);
         file.Write("</a>");
     }
-    else
+	 else
         file.Write(ref->RefererRef);
 
     file.Write("</b>");
@@ -536,7 +537,7 @@ void WriteReferers(const char *filename)
 
     file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
-    file.Write("<tr style='height:24.75pt'>");
+	 file.Write("<tr style='height:24.75pt'>");
 
     file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
@@ -559,7 +560,7 @@ void WriteReferers(const char *filename)
     file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
     file.Write("<p align=\"center\">");
-    file.Write("<b>Before");
+	 file.Write("<b>Before");
     file.Write("</b>");
     file.Write("</p>");
 
@@ -582,7 +583,7 @@ void WriteReferers(const char *filename)
     file.Write("</p>");
 
     file.Write("</td>");
-	      
+
     file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
     file.Write("<p align=\"center\">");
@@ -605,7 +606,7 @@ void WriteReferers(const char *filename)
 
     file.Write("<p>");
     file.Write("<b>Web site");
-    file.Write("</b>");
+	 file.Write("</b>");
     file.Write("</p>");
     file.Write("</td>");
     file.Write("</tr>");
@@ -697,7 +698,7 @@ void CreateReferences()
 *##########################################################################*/
 void InitQuizText()
 {
-    int i;
+	 int i;
 
     for (i = 0; i < 100; i++)
         QuizHeadArr[i] = 0;
@@ -743,7 +744,7 @@ void InitQuizText()
 	QuizTextArr[26] = "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?";
 
 	QuizHeadArr[27] = "NEED FOR SAFETY, FAMILIARITY & SUPPORT";
- 
+
 	QuizTextArr[27] = "Do you feel stress, panic or have a brain malfunction in unfamiliar or demanding situations?";
 	QuizTextArr[28] = "Before doing something or going somewhere, do you need to have a picture in your mind of what's going to happen so as to be able to preparei yourself mentally first?";
 	QuizTextArr[29] = "Do you feel a lot safer if you have a trusted companion with you?";
@@ -1970,11 +1971,13 @@ int main(int argc, char **argv)
 	WriteHbtAsCorrelation("hbtas.htm");
 	WriteRefererNtCorrelation("flashnt.htm", "dickflash.com", "dickflash.com");
 	WriteRefererAsCorrelation("flashas.htm", "dickflash.com", "dickflash.com");
+	WriteRefererNtCorrelation("musicnt.htm", "99musik.com/forum", "99musik.com/forum");
+	WriteRefererAsCorrelation("musicas.htm", "99musik.com/forum", "99musik.com/forum");
 	WriteRefererNtCorrelation("opiumnt.htm", "opiumse", "66.98.216.44/~opiumse/viewtopic.php?id=20888");
 	WriteRefererNtCorrelation("compnt.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
-    CalcCorrelation();
+	 CalcCorrelation();
 	WriteCorrelation("corr.htm");
 	WriteNewQuiz("quiz.htm");
 }
