@@ -126,6 +126,16 @@ dwEventFlags		dd ?
 
 MOUSE_EVENT_RECORD	ENDS
 
+CONSOLE_SCREEN_BUFFER_INFO  STRUC
+
+dwScreenSize            COORD <>
+dwScreenCursorPosition  COORD <>
+wScreenAttrib           dw ?
+srScreenWindow          SMALL_RECT <>
+dwScreenMaxSize         COORD <>
+
+CONSOLE_SCREEN_BUFFER_INFO  ENDS
+
 ALT EQU 2
 CTRL EQU 8
 SHIFT EQU 16
@@ -647,10 +657,8 @@ InitConsole ENDP
 	public WriteConsole
 
 WriteConsole Proc near
-	push ebx
-	mov bx,1
-	UserGate write_file_nr
-	pop ebx
+	UserGate write_size_string_nr
+	mov eax,ecx
 	ret
 WriteConsole ENDP
 
@@ -1093,7 +1101,10 @@ GetOEMCP Endp
 
 GetConsoleCursorInfo Proc near
 	int 3
-	xor eax,eax
+	mov edx,[esp+8]
+	mov [edx].CONSOLE_CURSOR_INFO.bVisible,0
+	mov [edx].CONSOLE_CURSOR_INFO.dwCursorSize,0
+	mov eax,1
 	ret 8
 GetConsoleCursorInfo ENDP
 
@@ -1296,13 +1307,16 @@ ReadConsoleOutputA Endp
 ;
 ;       DESCRIPTION:    Scroll console screen buffer
 ;
+; WDOSX has fuller implementation!
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public ScrollConsoleScreenBufferA
 
+
 ScrollConsoleScreenBufferA Proc near
 	int 3
-	xor eax,eax
+	mov eax,1
 	ret 20
 ScrollConsoleScreenBufferA ENDP
 
@@ -1313,13 +1327,15 @@ ScrollConsoleScreenBufferA ENDP
 ;
 ;       DESCRIPTION:    Set console cursor info
 ;
+; WDOSX has fuller implementation!
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public SetConsoleCursorInfo
 
 SetConsoleCursorInfo Proc near
 	int 3
-	xor eax,eax
+	mov eax,1
 	ret 8
 SetConsoleCursorInfo ENDP
 
@@ -1335,9 +1351,8 @@ SetConsoleCursorInfo ENDP
 	public SetConsoleCursorPosition
 
 SetConsoleCursorPosition Proc near
-	int 3
-	mov cx,[esp+12]
-	mov dx,[esp+14]
+	mov cx,[esp+8]
+	mov dx,[esp+10]
 	UserGate set_cursor_position_nr
 	mov eax,1
 	ret 8
@@ -1430,7 +1445,7 @@ SetConsoleMode ENDP
 
 SetConsoleScreenBufferSize Proc near
 	int 3
-	xor eax,eax
+	mov eax,1
 	ret 8
 SetConsoleScreenBufferSize ENDP
 
@@ -1464,7 +1479,7 @@ SetConsoleTextAttribute Endp
 
 SetConsoleWindowInfo Proc near
 	int 3
-	xor eax,eax
+	mov eax,1
 	ret 12
 SetConsoleWindowInfo ENDP
 
@@ -1475,15 +1490,17 @@ SetConsoleWindowInfo ENDP
 ;
 ;       DESCRIPTION:    Write console output
 ;
+; WDOSX has fuller implementation!
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 	public WriteConsoleOutputA
 
-WriteConsoleOutputA Proc near
+WriteConsoleOutputA     Proc near
 	int 3
 	xor eax,eax
 	ret 20
-WriteConsoleOutputA ENDP
+WriteConsoleOutputA     ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1497,8 +1514,35 @@ WriteConsoleOutputA ENDP
 	public GetConsoleScreenBufferInfo
 
 GetConsoleScreenBufferInfo  Proc near
-	int 3
-	xor eax,eax
+    push ebp
+    mov ebp,esp
+    push ecx
+    push esi
+    push edi
+;    
+	mov esi,[ebp+12]
+	mov [esi].dwScreenSize.X, 80
+	mov [esi].dwScreenSize.Y, 25
+;
+    UserGate get_cursor_position_nr
+    mov [esi].dwScreenCursorPosition.X,cx
+    mov [esi].dwScreenCursorPosition.Y,dx
+;	
+    mov [esi].wScreenAttrib,7
+;
+    mov [esi].srScreenWindow.Left,0
+    mov [esi].srScreenWindow.Top,0
+    mov [esi].srScreenWindow.Right,79
+    mov [esi].srScreenWindow.Bottom,24
+;    
+	mov [esi].dwScreenMaxSize.X, 80
+	mov [esi].dwScreenMaxSize.Y, 25
+;
+    pop edi
+    pop esi
+    pop ecx
+    pop ebp	
+	mov eax,1
 	ret 8
 GetConsoleScreenBufferInfo  ENDP
 
@@ -1514,7 +1558,7 @@ GetConsoleScreenBufferInfo  ENDP
 	public GetLargestConsoleWindowSize
 
 GetLargestConsoleWindowSize Proc near
-	mov eax,320050h ; return 80 x 50
+	mov eax,190050h ; return 80 x 25
 	ret 4
 GetLargestConsoleWindowSize ENDP
 

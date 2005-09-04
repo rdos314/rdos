@@ -1,0 +1,890 @@
+
+; mbedit.syn
+; mbedit configuration file for syntax highlighting
+
+; M. Braun - 17.04.04
+
+; Note! the 1st character in each line defines the meaning of the entry:
+;   ;   comment
+;   e   file extension(s): all extensions for each file type in one line
+;   c   case sensitivity
+;   m   comment type 1 (multiple lines)
+;   s   comment type 2 (single line)
+;   f   comment type 3 (first column, e.g. "C" in Fortran)
+;   k   keywords
+
+
+;------------------------------------------------------------------------------
+; Ada
+;------------------------------------------------------------------------------
+
+e   adb ads     ; file extensions
+c   0           ; case sensitive: no
+s   --          ; comment type 2 (single line)   : start
+
+; keywords
+k   abort     abs       abstract  accept    access    aliased
+k   all       and       array     at        begin     body
+k   case      constant  declare   delay     delta     digits
+k   do        else      elsif     end       entry     exception
+k   exit      for       function  generic   goto      if
+k   in        is        limited   loop      mod       new
+k   not       null      of        or        others    out
+k   package   pragma    private   procedure protected raise
+k   range     record    rem       renames   requeue   return
+k   reverse   select    separate  subtype   tagged    task
+k   terminate then      type      until     use       when
+k   while     with      xor
+
+
+;------------------------------------------------------------------------------
+; ASCII Text
+;------------------------------------------------------------------------------
+
+e   asc txt log readme ; file extensions
+
+; no comments, no keywords, just string highlighting
+
+
+;------------------------------------------------------------------------------
+; Assembler 8051
+;------------------------------------------------------------------------------
+
+e   a51         ; file extensions
+c   0           ; case sensitive: no
+s   ;           ; comment type 2 (single line)   : start
+
+; keywords
+; Instruction Mnemonics
+k       ACALL       DA          JNB         MUL         RR
+k       ADD         DEC         JNC         NOP         RRC
+k       ADDC        DIV         JNZ         ORL         SETB
+k       AJMP        DJNZ        JZ          POP         SJMP
+k       ANL         INC         LCALL       PUSH        SUBB
+k       CALL        JB          LJMP        RET         SWAP
+k       CJNE        JBC         MOV         RETI        XCH
+k       CLR         JC          MOVC        RL          XCHD
+k       CPL         JMP         MOVX        RLC         XRL
+; Pseudo Instructions
+k       AT          DATA        DSEG        IDATA       SET
+k       BIT         DB          DW          ISEG        USING
+k       BSEG        DBIT        END         NAME        XDATA
+k       CODE        DS          EQU         ORG         XSEG
+k       CSEG
+; Operators
+k       AND         GT          LOW         NE          SHL
+k       EQ          HIGH        LT          NOT         SHR
+k       GE          LE          MOD         OR          XOR
+; Assembler Controls
+k       $DA         $LI         $NOMO       $NOXREF     $SB
+k       $DATE       $LIST       $NOMOD51    $PAGING     $SYMBOLS
+k       $DEBUG      $MO         $NOPAGING   $PAGELENGTH $TITLE
+k       $DB         $MOD51      $NOPI       $PAGEWIDTH  $TT
+k       $EJ         $NODB       $NOSB       $PHILIPS    $XR
+k       $EJECT      $NODEBUG    $NOSYMBOLS  $PI         $XREF
+k       $IC         $NOLI       $NOTABS     $PL
+k       $INCLUDE    $NOLIST     $NOXR       $PW
+; Meta Instructions
+k       ELSE        ENDIF       IF          IFDEF       IFNDEF
+; Miscellaneous
+k       SEGMENT     RSEG
+k       PUBLIC      EXTRN
+
+
+;------------------------------------------------------------------------------
+; Assembler 80x86
+;------------------------------------------------------------------------------
+
+e   asm a86     ; file extensions
+c   0           ; case sensitive: no
+s   ;           ; comment type 2 (single line)   : start
+
+; keywords
+k   AAA     AAD     AAM     AAS     ADC     ADD
+k   AND     ARPL    BOUND   BSF     BSR     BSWAP
+k   BT      BTC     BTR     BTS     CALL    CBW
+k   CDQ     CLC     CLD     CLI     CLTS    CMC
+k   CMP     CMPS    CMPXCHG CWD     CWDE    DAA
+k   DAS     DEC     DIV     ENTER   ESC     FWAIT
+k   DB      DW      DD
+k   HLT     IDIV    IMUL    IN      INC     INS
+k   INT     INTO    INVD    INVLPG  IRET    IRETD
+k   JCXZ    JECXZ   JMP     Jxx     LAHF    LAR
+k   JE      JNE     JZ      JNZ     JS      JNS     JC      JNC
+k   JB      JNB     JA      JNA     JG      JGE     JL      JLE
+k   LDS     LEA     LEAVE   LES     LFS     LGDT
+k   LGS     LIDT    LLDT    LMSW    LOCK    LODS
+k   LOOP    LOOPE   LOOPNE  LOOPNZ  LOOPZ   LSL
+k   LSS     LTR     MOV     MOVS    MOVSX   MOVZX
+k   MUL     NEG     NOP     NOT     OR      OUT
+k   OUTS    POP     POPA    POPAD   POPF    POPFD
+k   PUSH    PUSHA   PUSHAD  PUSHF   PUSHFD  RCL
+k   RCR     REP     REPE    REPNE   REPNZ   REPZ
+k   RET     RETF    ROL     ROR     SAHF    SAL
+k   SAR     SBB     SCAS    SETAE   SETB    SETBE
+k   SETC    SETE    SETG    SETGE   SETL    SETLE
+k   SETNA   SETNAE  SETNB   SETNC   SETNE   SETNG
+k   SETNGE  SETNL   SETNLE  SETNO   SETNP   SETNS
+k   SETNZ   SETO    SETP    SETPE   SETPO   SETS
+k   SETZ    SGDT    SHL     SHL     SHLD    SHR
+k   SHRD    SIDT    SLDT    SMSW    STC     STD
+k   STI     STOS    STR     SUB     TEST    VERR
+k   VERW    WAIT    WBINVD  XCHG    XLAT    XLATB
+; directives
+k   _BSS     _DATA
+k   XOR     END     ENDP    ENDS
+k   GROUP   DGROUP  CGROUP  CODE    DATA    CONST
+k   SEGMENT PROC    NEAR    FAR
+k   STRUC   ASSUME
+k   PUBLIC  EXTRN   NAME    LABEL
+K   DUP     BYTE    WORD    DWORD
+k   EQU     PTR     SHORT
+
+
+;------------------------------------------------------------------------------
+; batch files (ms-dos 6.0)
+;------------------------------------------------------------------------------
+
+e   bat ; file extensions
+c   0           ; case sensitive: no
+f   rem         ; comment type 3 (first column, e.g. "C" in Fortran)
+
+; keywords
+k   ANSI.SYS  APPEND    ARP       ASSIGN    ATTRIB
+k   BREAK
+k   CD        CHCP      CHDIR     CHKDSK    CHOICE
+k   CLS       COMMAND   COPY      CTTY
+k   DATE      DEBUG     DEFRAG    DEL       DELTREE
+k   DIR       DISKCOMP  DISKCOPY  DOSKEY    DOSSHELL  DRIVPARM
+k   ECHO      EDIT      EDLIN     EMM386    ERASE
+k   EXIT      EXPAND    EXTRACT
+k   FASTHELP  FC        FDISK     FIND      FOR       FORMAT    FTP
+k   GRAFTABL  HELP      IFSHLP.SYS          IPCONFIG  KEYB
+k   LABEL     LH        LOADFIX   LOADHIGH  LOCK
+k   MD        MEM       MKDIR     MODE      MORE
+k   MOVE      MSAV      MSD       MSCDEX
+k   NET       NETSTAT   NLSFUNC
+k   PATH      PAUSE     PING      POWER     PRINT     PROMPT
+k   QBASIC    RD        REN       RENAME    RMDIR     ROUTE
+k   SCANDISK  SCANREG   SET       SETVER    SHARE     SORT
+k   SUBST     SWITCHES  SYS
+k   TIME      TRACERT   TREE      TYPE
+k   UNDELETE  UNFORMAT  UNLOCK
+k   VER       VERIFY    VOL
+k   XCOPY
+
+
+;------------------------------------------------------------------------------
+; C (ANSI-C)
+;------------------------------------------------------------------------------
+
+e   c           ; file extensions
+c   1           ; case sensitive: yes
+m   /* */       ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   auto      break     case      cdecl     char      const
+k   continue  default   do        double    else      enum
+k   extern    far       float     for       fortran   goto
+k   huge      if        int       interrupt long      near
+k   pascal    register  return    short     signed    sizeof
+k   static    struct    switch    typedef   union     unsigned
+k   void      volatile  while
+; preprocessor directives
+k   #define   #elif     #else     #endif    #error
+k   #if       #ifdef    #ifndef   #include  #line
+k   #pragma   #undef
+
+
+;------------------------------------------------------------------------------
+; C++
+;------------------------------------------------------------------------------
+
+e   cpp cc hpp h hh x bak  ; file extensions
+c   1           ; case sensitive: yes
+m   /*  */      ; comment type 1 (multiple lines): start stop
+s   //          ; comment type 2 (single line)   : start
+
+; keywords
+k   asm       auto      break     case      catch     char
+k   class     const     continue  default   delete    do
+k   double    else      enum      extern    float     for
+k   friend    goto      if        inline    int       long
+k   new       operator  private   protected public    register
+k   return    short     signed    sizeof    static    struct
+k   switch    template  this      throw     try       typedef
+k   union     unsigned  virtual   void      volatile  while
+; preprocessor directives
+k   #define   #elif     #else     #endif    #error
+k   #if       #ifdef    #ifndef   #include  #line
+k   #pragma   #undef
+
+
+;------------------------------------------------------------------------------
+; C# (C Sharp)
+;------------------------------------------------------------------------------
+
+e   cs          ; file extensions
+c   1           ; case sensitive: yes
+m   /*  */      ; comment type 1 (multiple lines): start stop
+s   //          ; comment type 2 (single line)   : start
+
+; keywords
+k   abstract  event     new       struct
+k   as        explicit  null      switch
+k   base      extern    object    this
+k   bool      false     operator  throw
+k   break     finally   out       true
+k   byte      fixed     override  try
+k   case      float     params    typeof
+k   catch     for       private   uint
+k   char      foreach   protected ulong
+k   checked   goto      public    unchecked
+k   class     if        readonly  unsafe
+k   const     implicit  ref       ushort
+k   continue  in        return    using
+k   decimal   int       sbyte     virtual
+k   default   interface sealed    volatile
+k   delegate  internal  short     void
+k   do        is        sizeof    while
+k   double    lock      stackalloc
+k   else      long      static
+k   enum      namespace string
+; preprocessor directives
+k   #if       #else     #elif     #endif
+k   #define   #undef    #warning  #error
+k   #line     #region   #endregion
+; operators
+k   true      false
+k   new
+k   as        is        sizeof    typeof
+k   checked   unchecked
+
+
+;------------------------------------------------------------------------------
+; CSS (Cascading Style Sheets)
+;------------------------------------------------------------------------------
+
+e   css         ; file extensions
+c   1           ; case sensitive: yes
+m   <!-- -->    ; comment type 1 (multiple lines): start stop
+
+; keywords
+
+; properties
+k   azimuth                 background              background-attachment
+k   background-color        background-image        background-position
+k   background-repeat       border
+k   border-bottom           border-collapse
+k   border-color            border-spacing          border-style
+k   border-top              border-top-color        border-top-style
+k   border-top-width        border-width            bottom
+k   caption-side            clear                   clip
+k   color                   content                 counter-increment
+k   counter-reset           cue                     cue-after
+k   cue-before              cursor                  direction
+k   display                 elevation               empty-cells
+k   float                   font                    font-family
+k   font-size               font-size-adjust        font-stretch
+k   font-style              font-variant            font-weight
+k   height                  left                    letter-spacing
+k   line-height             list-style              list-style-image
+k   list-style-position     list-style-type         margin
+k   margin-bottom           margin-right
+k   margin-top              marker-offset           marks
+k   max-height              max-width               min-height
+k   min-width               orphans                 outline
+k   outline-color           outline-style           outline-width
+k   overflow                padding                 padding-top
+k   page                    page-break-after        page-break-before
+k   page-break-inside       pause                   pause-after
+k   pause-before            pitch                   pitch-range
+k   play-during             position                quotes
+k   richness                right                   size
+k   speak                   speak-header            speak-numeral
+k   speak-punctuation       speech-rate             stress
+k   table-layout            text-align              text-decoration
+k   text-indent             text-shadow             text-transform
+k   top                     unicode-bidi            vertical-align
+k   visibility              voice-family            volume
+k   white-space             widows                  width
+k   word-spacing            z-index
+
+; descriptors
+k   ascent                  baseline                bbox
+k   cap-height              centerline              definition-src
+k   descent                 font-family             font-size
+k   font-stretch            font-variant            mathline
+k   panose-1                slope                   src
+k   stemh                   stemv                   topline
+k   unicode-range           units-per-em            widths
+k   x-height
+
+; HTML keywords
+k   <a       <a>      </a>     abbr     acronym  address  applet   area     
+k   <b>      </b>     base     basefont bdo      big      blockquote
+k   body     br       button   caption  center   cite     
+k   code     col      colgroup dd       del      dfn      
+k   dir      div      dl       dt       em       fieldset 
+k   font     form     frame    frameset h1       h2       
+k   h3       h4       h5       h6
+k   head     hr       href     html
+k   <i>      </i>     iframe   img      input    ins      
+k   isindex  kbd      label    legend   li       link     
+k   map      menu     meta     noframes noscript object   
+k   ol       optgroup option   <p>      </p>     param    pre      
+k   <q>      </q>     <s>      </s>     samp     script   select   small    
+k   span     strike   strong   style    sub      sup      
+k   table    tbody    td       textarea tfoot    th       
+k   thead    title    tr       tt       <u>      </u>     ul       
+k   var
+k   name     bgcolor  target   type     height   width
+
+
+;------------------------------------------------------------------------------
+; Fortran
+;------------------------------------------------------------------------------
+
+e   f for f77 f90  ; file extensions
+c   1           ; case sensitive: yes
+f   C           ; comment type 3 (first column, e.g. "C" in Fortran)
+
+; keywords
+k   ACCEPT            ASSIGN            AUTOMATIC         BACKSPACE
+k   BLOCK DATA        BYTE              CALL              CHARACTER
+k   CLOSE             COMMON            COMPLEX           CONTINUE
+k   DATA              DECODE            DIMENSION         DO
+k   DO WHILE          DOUBLE COMPLEX    DOUBLE PRECISION  ELSE
+k   ELSE IF           ENCODE            END               END DO
+k   END FILE          END IF            END MAP           END STRUCTURE
+k   END UNION         ENTRY             EQUIVALENCE       EXTERNAL
+k   FORMAT            FUNCTION          GOTO              IF
+k   IMPLICIT          INCLUDE           INQUIRE           INTEGER
+k   INTRINSIC         LOGICAL           MAP               NAMELIST
+k   OPEN              OPTIONS           PARAMETER         PAUSE
+k   POINTER           PRINT             PRAGMA            PROGRAM
+k   REAL              RECORD            RETURN            REWIND
+k   SAVE              STATIC            STOP              STRUCTURE
+k   SUBROUTINE        TYPE              UNION             VIRTUAL
+k   VOLATILE          WRITE
+
+
+;------------------------------------------------------------------------------
+; HTML
+;------------------------------------------------------------------------------
+
+e   htm html xml  ; file extensions
+c   0           ; case sensitive: no
+m   <!-- -->    ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   <a       <a>      </a>     abbr     acronym  address  applet   area     
+k   <b>      </b>     base     basefont bdo      big      blockquote
+k   body     br       button   caption  center   cite     
+k   code     col      colgroup dd       del      dfn      
+k   dir      div      dl       dt       em       fieldset 
+k   font     form     frame    frameset h1       h2       
+k   h3       h4       h5       h6
+k   head     hr       href     html
+k   <i>      </i>     iframe   img      input    ins      
+k   isindex  kbd      label    legend   li       link     
+k   map      menu     meta     noframes noscript object   
+k   ol       optgroup option   <p>      </p>     param    pre      
+k   <q>      </q>     <s>      </s>     samp     script   select   small    
+k   span     strike   strong   style    sub      sup      
+k   table    tbody    td       textarea tfoot    th       
+k   thead    title    tr       tt       <u>      </u>     ul       
+k   var
+k   name     bgcolor  target   type     height   width
+
+
+;------------------------------------------------------------------------------
+; ini files (Windows)
+;------------------------------------------------------------------------------
+
+e   ini ; file extensions
+c   0           ; case sensitive: no
+s   #           ; comment type 2 (single line)   : start
+m   [  ]        ; instead of keywords, highlight the section brackets
+
+; keywords
+
+
+;------------------------------------------------------------------------------
+; Java
+;------------------------------------------------------------------------------
+
+e   jav java    ; file extensions
+c   1           ; case sensitive: yes
+m   /*  */      ; comment type 1 (multiple lines): start stop
+s   //          ; comment type 2 (single line)   : start
+
+; keywords
+k   abstract      assert        boolean       break         byte
+k   case          catch         char          class         const
+k   continue      default       delegate      do            double
+k   else          extends       false         final         finally
+k   float         for           goto          if            implements
+k   import        instanceof    int           interface     long
+k   multicast     native        new           null          object
+k   package       private       protected     public        return
+k   short         static        strictfp      super         switch
+k   synchronized  this          throw         throws        transient
+k   true          try           void          volatile      while
+
+
+;------------------------------------------------------------------------------
+; Javascript
+;------------------------------------------------------------------------------
+
+e   js          ; file extensions
+c   1           ; case sensitive: yes
+m   <!-- -->    ; comment type 1 (multiple lines): start stop
+s   //          ; comment type 2 (single line)   : start
+
+; keywords
+k   break       for         this        case        function
+k   true        continue    if          typeof      default
+k   import      var         delete      in          void
+k   do          new         while       else        null
+k   with        export      return      false       switch
+
+
+;------------------------------------------------------------------------------
+; Matlab
+;------------------------------------------------------------------------------
+
+e   m           ; file extensions
+c   1           ; case sensitive: yes
+s   %           ; comment type 2 (single line)   : start
+
+; keywords
+
+; Control flow.
+k   if        else      elseif    end       for
+k   while     break     switch    case      otherwise
+k   try       catch     return
+
+; Evaluation and execution.
+k   eval      evalc     feval     evalin    builtin
+k   assignin  run
+
+; Scripts, functions, and variables.
+k   script    function  global    persistent          mfilename
+k   lists     exist     isglobal  mlock     munlock
+k   mislocked precedence
+
+; Argument handling.
+k   nargchk   nargin    nargout   varargin  varargout
+k   inputname
+
+; Message display.
+k   error     warning   lasterr   lastwarn  errortrap
+k   disp      display   fprintf   sprintf
+
+; Interactive input.
+k   input     keyboard  pause     uimenu    uicontrol
+
+
+;------------------------------------------------------------------------------
+; mbedit macro file
+;------------------------------------------------------------------------------
+
+e   mac         ; file extensions
+c   0           ; case sensitive: no
+m   \*  *\      ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   AG      AM      AS      AE
+k   AFNV    AFRV    AF1V    AF2V    AFCV    AFKV    AFSV
+
+
+;------------------------------------------------------------------------------
+; mbedit syntax file
+;------------------------------------------------------------------------------
+
+e   syn         ; file extensions
+c   0           ; case sensitive: no
+s   ;           ; comment type 2 (single line)   : start
+
+; keywords
+k   e       c       m       s       k
+
+
+;------------------------------------------------------------------------------
+; Modula-2
+;------------------------------------------------------------------------------
+
+e   mod m2      ; file extensions
+c   1           ; case sensitive: yes
+m   (*  *)      ; comment type 1 (multiple lines): start stop
+
+; Reserved Words (Keywords)
+k   AND             ARRAY           BEGIN           BY
+k   CASE            CONST           DEFINITION      DIV
+k   DO              ELSE            ELSIF           END 
+k   EXIT            EXCEPT          EXPORT          FINALLY
+k   FOR             FORWARD         FROM            IF
+k   IMPLEMENTATION  IMPORT          IN              LOOP
+k   MOD             MODULE          NOT             OF
+k   OR              PACKEDSET       POINTER         PROCEDURE
+k   QUALIFIED       RECORD          REM             RETRY
+k   REPEAT          RETURN          SET             THEN
+k   TO              TYPE            UNTIL           VAR
+k   WHILE           WITH
+
+; Standard (Pervasive) Identifiers
+k   ABS             BITSET          BOOLEAN         CARDINAL
+k   CAP             CHR             CHAR            COMPLEX
+k   CMPLX           DEC             DISPOSE         EXCL
+k   FALSE           FLOAT           HALT            HIGH
+k   IM              INC             INCL            INT
+k   INTERRUPTIBLE   INTEGER         LENGTH          LFLOAT
+k   LONGCOMPLEX     LONGREAL        MAX             MIN
+k   NEW             NIL             ODD             ORD
+k   PROC            PROTECTION      RE              REAL
+k   SIZE            TRUE            TRUNC           UNINTERRUPTIBLE
+k   VAL
+
+
+;------------------------------------------------------------------------------
+; Oberon
+;------------------------------------------------------------------------------
+
+e   obn         ; file extensions
+c   1           ; case sensitive: yes
+m   (*  *)      ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   ARRAY     BEGIN     BY        CASE      CONST
+k   DIV       DO        ELSE      ELSIF     END
+k   EXIT      FOR       IF        IMPORT    IN
+k   IS        LOOP      MOD       MODULE    NIL
+k   OF        OR        POINTER   PROCEDURE RECORD
+k   REPEAT    RETURN    THEN      TO        TYPE
+k   UNTIL     VAR       WHILE     WITH
+
+; predeclared identifiers
+k   BOOLEAN   CHAR      FALSE     INTEGER   NEW
+k   REAL      TRUE
+
+
+;------------------------------------------------------------------------------
+; Pascal
+;------------------------------------------------------------------------------
+
+e   pas         ; file extensions
+c   0           ; case sensitive: no
+m   {  }        ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   Absolute        Abstract        All             And             And_then
+k   Array           Asm             Begin           Bindable        Case
+k   Class           Const           Constructor     Destructor      Div
+k   Do              Downto          Else            End             Export
+k   File            For             Function        Goto            If
+k   Import          Implementation  Inherited       In              Inline
+k   Interface       Is              Label           Mod             Module
+k   Nil             Not             Object          Of              Only
+k   Operator        Or              Or_else         Otherwise       Packed
+k   Pow             Procedure       Program         Property        Protected
+k   Qualified       Record          Repeat          Restricted      Set
+k   Shl             Shr             Then            To              Type
+k   Unit            Until           Uses            Value           Var
+k   View            Virtual         While           With            Xor
+
+
+;------------------------------------------------------------------------------
+; PEARL
+;------------------------------------------------------------------------------
+
+e   prl         ; file extensions
+c   1           ; case sensitive: yes
+m   /* */       ; comment type 1 (multiple lines): start stop
+f   !           ; comment type 3 (first column, e.g. "C" in Fortran)
+
+; List of Keywords with Shortforms
+k   ACTIVATE    AFTER       ALL         ALPHIC      ALT
+k   AT          BASIC       BEGIN       BIT         BOLT
+k   BY          CALL        CASE        CHARACTER   CHAR
+k   CLOCK       CLOSE       CONT        CONTINUE    CONTROL
+k   CONVERT     CREATED     CYCLIC      DATION      DECLARE
+k   DCL         DIM         DIRECT      DISABLE     DURATION
+k   DUR         DURING      ELSE        ENABLE      END
+k   ENTER       ENTRY       EXIT        FIN         FIXED
+k   FLOAT       FOR         FORBACK     FORMAT      FORWARD
+k   FREE        FROM        GET         GLOBAL      GOTO
+k   HRS         IDENTICAL   IDENT       IF          IN
+k   INDUCE      INITIAL     INIT        INOUT       INTERRUPT
+k   IRPT        INV         LEAVE       LENGTH      MAIN
+k   MAX         MIN         MODEND      MODULE      NIL
+k   NOCYCL      NOSTREAM    ON          OPEN        OPERATOR
+k   OUT         PRECEDENCE  PRESET      PREVENT     PRIORITY
+k   PRIO        PROBLEM     PROCEDURE   PROC        PUT
+k   READ        REF         RELEASE     REPEAT      REQUEST
+k   RESERVE     RESUME      RETURN      RETURNS     SEC
+k   SEMA        SEND        SIGNAL      SPECIFY     SPC
+k   STREAM      STRUCT      SUSPEND     SYSTEM      TAKE
+k   TASK        TERMINATE   TFU         THEN        TO
+k   TRIGGER     TYPE        UNTIL       WHEN        WHILE
+k   WRITE
+
+; Other Word Symbols in PEARL
+k   A           ABS         ADV         AND         ANY
+k   ATAN        B           B1          B2          B3
+k   B4          CAN         CAT         COL         CONT
+k   COS         CSHIFT      D           DATE        E
+k   ENTIER      EQ          EXOR        EXP         F
+k   FIT         GE          GT          IDF         IS
+k   ISNT        LE          LINE        LIST        LN
+k   LT          LWB         NE          NEW         NOT
+k   NOW         OLD         OR          PAGE        POS
+k   PRM         R           REM         ROUND       RST
+k   S           SHIFT       SIGN        SIN         SIZEOF
+k   SKIP        SOP         SQRT        T           TAN
+k   TANH        TOBIT       TOCHAR      TOFIXED     TOFLOAT
+k   TRY         UPB         X
+
+;------------------------------------------------------------------------------
+; Perl
+;------------------------------------------------------------------------------
+
+e   pl          ; file extensions
+c   1           ; case sensitive: yes
+s   #           ; comment type 2 (single line)   : start
+
+; keywords
+
+; Functions
+k   abs             accept          alarm           atan2
+k   bind            binmode         bless           caller
+k   chdir           chmod           chomp           chop
+k   chown           chr             chroot          closedir
+k   close           connect         cos             crypt
+k   dbmclose        dbmopen         defined         delete
+k   die             do              dump            each
+k   endgrent        endhostent      endnetent       endprotoent
+k   endpwent        endservent      eof             eval
+k   exec            exists          exit            exp
+k   fcntl           fileno          flock           fork
+k   format          formline        getc            getgrent
+k   getgrgid        getgrnam        gethostbyaddr   gethostbyname
+k   gethostent      getlogin        getnetbyaddr    getnetbyname
+k   getnetent       getpeername     getpgrp         getpriority
+k   getprotobyname  getprotobynumber                getprotoent     getpwent
+k   getpwnam        getpwuid        getservbyname   getservbyport
+k   getservent      getsockname     getsockopt      glob
+k   gmtime          goto            grep            hex
+k   index           int             ioctl           join
+k   keys            kill            last            lcfirst
+k   lc              length          link            listen
+k   local           localtime       log             lstat
+k   map             mkdir           msgctl          msgget
+k   msgrcv          msgsnd          my              m
+k   next            no              oct             open
+k   opendir         ord             pack            package
+k   pipe            pop             pos             printf
+k   print           prototype       push            qq
+k   quotemeta       qw              qx              q
+k   rand            readdir         readline        readlink
+k   readpipe        read            recv            redo
+k   ref             rename          require         reset
+k   return          reverse         rewinddir       rindex
+k   rmdir           scalar          seek            seekdir
+k   select          semctl          semget          semop
+k   send            setgrent        sethostent      setnetent
+k   setpgrp         setpriority     setprotoent     setpwent
+k   setservent      setsockopt      shift           shmctl
+k   shmget          shmread         shmwrite        shutdown
+k   sin             sleep           socket          socketpair
+k   sort            splice          split           sprintf
+k   sqrt            srand           stat            study
+k   substr          sub             symlink         syscall
+k   sysopen         sysread         sysseek         system
+k   syswrite        s               tell            telldir
+k   tie             tied            time            times
+k   truncate        tr              ucfirst         uc
+k   umask           undef           unlink          unpack
+k   unshift         untie           use             utime
+k   values          vec             waitpid         wait
+k   wantarray       warn            write           y
+
+; Keywords
+k   continue        else            elsif           for
+k   foreach         if              last            next
+k   redo            sub             unless          until
+k   while
+
+; Escapes
+k   \a              \b              \c              \d
+k   \e              \f              \l              \n
+k   \r              \s              \t              \u
+k   \v              \w              \x              \A
+k   \B              \D              \E              \G
+k   \L              \Q              \S              \U
+k   \W              \Z
+
+; Top Classes
+k   XML             Win32API        Win32           WWW
+k   User            URI             UDDI            Tk
+k   Time            Tie             Text            Test
+k   Term            Sys             Search          SOAP
+k   Pod             PPM             PDF             Net
+k   Math            MIME            LWP             IPC
+k   IO              I18N            Heap            HTTP
+k   HTML            Graph           Getopt          Font
+k   File            ExtUtils        Digest          Devel
+k   Date            Data            Compress        Class
+k   CPAN            CGI             Bundle          B
+k   Archive
+
+
+;------------------------------------------------------------------------------
+; PL/M 386 (Intel)
+;------------------------------------------------------------------------------
+
+e   plm         ; file extensions
+c   1           ; case sensitive: yes
+m   /*  */      ; comment type 1 (multiple lines): start stop
+
+; keywords
+k   ADDRESS   AND       AT        BASED     BY        BYTE
+k   CALL      CASE      CHARINT   DATA      DECLARE   DISABLE
+k   DO        DWORD     ELSE      ENABLE    END       EOF
+k   EXTERNAL  GO        GOTO      HALT      HWORD     IF
+k   INITIAL   INTEGER   INTERRUPT LABEL     LITERALLY LOGINT
+k   MINUS     MOD       NOT       OFFSET    OR        PLUS
+k   POINTER   PUBLIC    REAL      REENTRANT RETURN    SELECTOR
+k   SHORTINT  STRUCTURE THEN      TO        WHILE     WORD
+k   QWORD     XOR
+
+
+;------------------------------------------------------------------------------
+; PL/M 51 (Intel)
+;------------------------------------------------------------------------------
+
+e   p51         ; file extensions
+c   1           ; case sensitive: yes
+m   /*  */      ; comment type 1 (multiple lines): start stop
+
+; reserved words
+k   ADDRESS   AND       AT        AUXILIARY BASED
+k   BIT       BY        BYTE      CALL      CASE
+k   CONSTANT  DECLARE   DISABLE   DO        ELSE
+k   ENABLE    END       EXTERNAL  GO        GOTO
+k   IDATA     IF        INDIRECTLY_CALLABLE INTERRUPT LABEL
+k   LITERALLY MAIN      MINUS     MOD       NOT
+k   OR        PLUS      PROCEDURE PUBLIC    REGISTER
+k   RETURN    STRUCTURE THEN      TO        USING
+k   WHILE     WORD      XOR
+
+; predeclared identifiers
+k   BOOLEAN   DEC       DOUBLE    EXPAND    HIGH
+k   LAST      LENGTH    LOW       PROPAGATE ROL
+k   ROR       SCL       SCR       SHL       SHR
+k   SIZE      TESTCLEAR TIME
+
+
+;------------------------------------------------------------------------------
+; Python
+;------------------------------------------------------------------------------
+
+e   py          ; file extensions
+c   1           ; case sensitive: yes
+s   #           ; comment type 2 (single line)   : start
+
+; reserved words
+k   and       del       for       is        raise    
+k   assert    elif      from      lambda    return   
+k   break     else      global    not       try      
+k   class     except    if        or        while    
+k   continue  exec      import    pass      yield    
+k   def       finally   in        print
+
+
+;------------------------------------------------------------------------------
+; shell scripts (Unix)
+;------------------------------------------------------------------------------
+
+e   sh csh bash mak tcl cfg diag makefile ; file extensions
+c   1           ; case sensitive: yes
+s   #           ; comment type 2 (single line)   : start
+
+; keywords
+k   CDPATH    HOME      IFS       MAIL      MAILCHECK MAILPATH
+k   PATH      PS1       PS2       SHACCT    SHELL     alias
+k   bg        break     breaksw   case      cd        chdir
+k   continue  default   dirs      echo      else      end
+k   endif     esac      eval      exec      exit      export
+k   foreach   getopts   glob      goto      hash      hashstat
+k   history   if        jobs      kill      limit     login
+k   logout    newgrp    nice      nohup     notify    onintr
+k   popd      pushd     pwd       read      readonly  rehash
+k   repeat    return    set       setenv    shift     source
+k   stop      suspend   switch    test      then      time
+k   times     trap      type      ulimit    umask     unalias
+k   unhash    unlimit   unset     unsetenv  wait      while
+k   do        done      true      false     fi        fg
+
+; command line substitutions
+k   $0        $*        $?        $%        $$    
+k   $!        $_        $<        $#
+
+;------------------------------------------------------------------------------
+; Visual Basic
+;------------------------------------------------------------------------------
+
+e   vb bas      ; file extensions
+c   0           ; case sensitive: no
+s   '           ; comment type 2 (single line)   : start
+
+; keywords
+k   AddHandler      AddressOf       Alias           And
+k   AndAlso         Ansi            As              Assembly
+k   Auto            Boolean         ByRef           Byte
+k   ByVal           Call            Case            Catch
+k   CBool           CByte           CChar           CDate
+k   CDec            CDbl            Char            CInt
+k   Class           CLng            CObj            Const
+k   CShort          CSng            CStr            CType
+k   Date            Decimal         Declare         Default
+k   Delegate        Dim             DirectCast      Do
+k   Double          Each            Else            ElseIf
+k   End             Enum            Erase           Error
+k   Event           Exit            #ExternalSource False
+k   Finally         For             Friend          Function
+k   Get             GetType         GoTo            Handles
+k   If              Implements      Imports         In
+k   Inherits        Integer         Interface       Is
+k   Let             Lib             Like            Long
+k   Loop            Me              Mod             Module
+k   MustInherit     MustOverride    MyBase          MyClass
+k   Namespace       New             Next            Not
+k   Nothing         NotInheritable  NotOverridable  Object
+k   On              Option          Optional        Or
+k   OrElse          Overloads       Overridable     Overrides
+k   ParamArray      Preserve        Private         Property
+k   Protected       Public          RaiseEvent      ReadOnly
+k   ReDim           #Region         REM             RemoveHandler
+k   Resume          Return          Select          Set
+k   Shadows         Shared          Short           Single
+k   Static          Step            Stop            String
+k   Structure       Sub             SyncLock        Then
+k   Throw           To              True            Try
+k   TypeOf          Unicode         Until           Variant
+k   When            While           With            WithEvents
+k   WriteOnly       Xor             #Const          #ExternalSource
+k   #If             Then            #Else           #Region
+
+
+;------------------------------------------------------------------------------
+; Modification History
+;------------------------------------------------------------------------------
+
+; 31.03.03 - start of mbedit.syn
+; 14.02.04 - inside_keywords excludes comments and strings
+; 12.03.04 - new entry: CSS (Cascading Style Sheets)
+; 24.03.04 - CSS: more keywords
+; 03.04.04 - new entry: Python
+; 17.04.04 - Pascal: more keywords
+

@@ -6,7 +6,9 @@ EXPORTS
 	Borland32
     CloseHandle
     CompareStringA
+    CompareStringW
 	ContinueDebugEvent
+	CopyFileA
     CreateConsoleScreenBuffer
     CreateDirectoryA
     CreateDirectoryW
@@ -23,6 +25,7 @@ EXPORTS
     DeleteFileA
     DeleteFileW
     DosDateTimeToFileTime
+    DuplicateHandle
     EnterCriticalSection
     EnumCalendarInfoA
     ExitProcess
@@ -92,6 +95,7 @@ EXPORTS
     GetProcessHeap
 	GetProfileIntA
 	GetProfileStringA
+	GetShortPathNameA
     GetStartupInfoA
     GetStdHandle
     GetStringTypeA
@@ -99,6 +103,8 @@ EXPORTS
     GetSystemDefaultLCID
 	GetSystemInfo
     GetSystemTime
+    GetSystemTimeAsFileTime
+    GetTempFileNameA
 	GetThreadContext
     GetThreadLocale
 	GetThreadPriority
@@ -122,6 +128,7 @@ EXPORTS
     HeapCreate
     HeapDestroy
     HeapFree
+    HeapReAlloc
     InitializeCriticalSection
     InterlockedDecrement
     InterlockedExchange
@@ -136,6 +143,7 @@ EXPORTS
     LocalAlloc
     LocalFileTimeToFileTime
     LocalFree
+	LockFile
 	LockResource
 	MapViewOfFile
     MoveFileA
@@ -154,7 +162,10 @@ EXPORTS
     RemoveDirectoryA
     RemoveDirectoryW
 	ResumeThread
+	RtlFillMemory
+	RtlMoveMemory
     RtlUnwind
+    RtlZeroMemory
     ScrollConsoleScreenBufferA
 	SearchPathA
 	SetConsoleActiveScreenBuffer
@@ -163,6 +174,7 @@ EXPORTS
     SetConsoleCursorPosition
     SetConsoleMode
     SetConsoleScreenBufferSize
+	SetConsoleTextAttribute
 	SetConsoleTitleA
     SetConsoleWindowInfo
     SetCurrentDirectoryA
@@ -192,6 +204,7 @@ EXPORTS
     TlsGetValue
     TlsSetValue
     UnhandledExceptionFilter
+    UnlockFile
     VirtualAlloc
     VirtualFree
     VirtualQuery

@@ -381,21 +381,9 @@ LocalAlloc Proc near
 	push ebp
 	mov ebp,esp
 ;
-	int 3
 	mov eax,[ebp].laBytes
-	push es
-	push ecx
-	push edi
-	UserGate allocate_local_mem_nr
-	mov ecx,eax
-	xor al,al
-	xor edi,edi
-	rep stosb
-	mov ax,es
-	movzx eax,ax
-	pop edi
-	pop ecx
-	pop es
+	UserGate allocate_app_mem_nr
+	mov eax,edx
 ;
 	pop ebp
 	ret 8
@@ -418,11 +406,8 @@ LocalFree Proc near
 	push ebp
 	mov ebp,esp
 ;
-	int 3
-	push es
-	mov es,[ebp].lfMem
-	UserGate free_mem_nr
-	pop es
+	mov edx,[ebp].lfMem
+	UserGate free_app_mem_nr
 	xor eax,eax
 ;
 	pop ebp
@@ -441,7 +426,7 @@ LocalFree Endp
 	public GetProcessHeap
 
 GetProcessHeap PROC near
-	mov eax,1 
+	mov eax,2
 	ret
 GetProcessHeap ENDP
 
@@ -457,7 +442,6 @@ GetProcessHeap ENDP
 	public HeapCreate
 
 HeapCreate PROC near
-	int 3
 	mov eax,1 
 	ret 12
 HeapCreate ENDP
@@ -474,7 +458,6 @@ HeapCreate ENDP
 	public HeapDestroy
 
 HeapDestroy Proc near
-	int 3
 	mov eax,1
 	ret 4
 HeapDestroy ENDP
@@ -491,12 +474,32 @@ HeapDestroy ENDP
 	public HeapAlloc
 
 HeapAlloc PROC near
-	int 3
 	pop edx
 	pop eax
+	pop eax
+	and eax,8
+	shl eax,3
+	push eax
 	push edx
 	jmp LocalAlloc
 HeapAlloc ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           HeapReAlloc
+;
+;       DESCRIPTION:    Reallocate on heap
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public HeapReAlloc
+
+HeapReAlloc PROC near
+	int 3
+	xor eax,eax
+	ret 16
+HeapReAlloc ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -510,12 +513,113 @@ HeapAlloc ENDP
 	public HeapFree
 
 HeapFree PROC near
-	int 3
 	pop edx
 	pop eax
 	pop eax
 	push edx
 	jmp LocalFree
 HeapFree ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RtlMoveMemory
+;
+;       DESCRIPTION:    Move memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RtlMoveMemory
+	
+RtlMoveMemory PROC near
+	push esi
+	push edi
+	cld
+	mov	esi, [esp + 4 + 8]
+    mov	edi, [esp + 8 + 8]
+	mov	ecx, [esp +12 + 8]
+	cmp	esi, edi
+	jnc	mmCopy
+
+	std
+	sub	eax, eax
+	cmp	ecx, 4
+	adc	eax, eax
+	cmp	ecx, 4
+	adc	eax, eax
+	lea	esi, [esi + ecx - 4]
+	lea	edi, [edi + ecx - 4]
+	add	esi, eax
+	add	edi, eax
+
+mmCopy:
+	shr	ecx, 2
+	rep	movsd
+	mov	ecx, [esp +12 + 8]
+	and	ecx, 3
+	rep	movsb
+	cld
+	pop	edi
+	pop	esi
+	ret 12
+RtlMoveMemory ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RtlFillMemory
+;
+;       DESCRIPTION:    Fill memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RtlFillMemory
+
+RtlFillMemory PROC near
+	push edi
+	mov	edi, [esp + 4 + 4]
+	mov	ecx, [esp + 8 + 4]
+	cld
+	movzx eax, byte ptr [esp +12]
+	mov	edx, eax
+	shl	eax, 16
+	or eax, edx
+	mov	edx, eax
+	shl	edx, 8
+	or eax, edx
+	shr	ecx, 2
+	rep	stosd
+	mov	ecx, [esp + 8 + 4]
+	and	ecx, 3
+	rep	stosb
+	pop	edi
+	ret 12
+RtlFillMemory ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RtlZeroMemory
+;
+;       DESCRIPTION:    Zero memory
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RtlZeroMemory
+
+RtlZeroMemory PROC near
+	push edi
+	mov	edi, [esp + 4 + 4]
+	mov	ecx, [esp + 8 + 4]
+	sub	eax, eax
+	cld
+	shr	ecx, 2
+	rep	stosd
+	mov	ecx, [esp + 8 + 4]
+	and	ecx, 3
+	rep	stosb
+	pop	edi
+	ret 8
+RtlZeroMemory ENDP
 
 	END

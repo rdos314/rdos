@@ -145,6 +145,38 @@ Wide2Ansi	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           LockFile
+;
+;       DESCRIPTION:    Lock file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public LockFile
+
+LockFile	Proc near
+    mov eax,1
+    ret 20
+LockFile    Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           UnlockFile
+;
+;       DESCRIPTION:    Unlock file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public UnlockFile
+
+UnlockFile	Proc near
+    mov eax,1
+    ret 20
+UnlockFile    Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           AreFileApisANSI
 ;
 ;       DESCRIPTION:    Check if file APIs are ANSI
@@ -172,6 +204,46 @@ AreFileApisANSI	Endp
 SetFileApisToOEM	Proc near
 	ret
 SetFileApisToOEM ENDP
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetShortPathNameA
+;
+;       DESCRIPTION:    Get short pathname
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetShortPathNameA
+
+GetShortPathNameA PROC near
+    mov eax,[esp+4]
+
+gspnLoop1:
+    cmp byte ptr [eax],1
+    inc eax
+    jnc gspnLoop1
+;
+    sub eax,[esp+4]
+    cmp eax,[esp+12]
+    ja gspnExit
+;
+    mov eax,[esp+4]
+    mov ecx,[esp+8]
+    
+gspnLoop2:
+    mov al,[eax]
+    inc eax
+    mov [ecx],dl
+    inc ecx
+    test dl,dl
+    jnz gspnLoop2
+;
+    dec eax
+
+gspnExit:
+    ret 12
+GetShortPathNameA endp
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -1999,6 +2071,223 @@ GetFileType	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:          	CopyFileA
+;
+;       DESCRIPTION:    Copy a file
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public CopyFileA
+
+cpfaSrc	        EQU 8
+cpfaDest        EQU 12
+cpfaOverwrite   EQU 16
+cpfaSrcHandle   EQU -2
+cpfaDestHandle  EQU -4
+
+CopyFileA   Proc near
+    push ebp
+    mov ebp,esp
+    sub esp,4
+    push ebx
+    push ecx
+    push esi
+    push edi
+;
+    int 3
+    mov eax,[ebp].cpfaOverwrite
+    or eax,eax
+    jz cpfaDestChecked
+;
+    xor ecx,ecx
+    mov edi,[ebp].cpfaDest
+    UserGate open_file_nr
+    jc cpfaDestChecked
+
+cpfaCloseFail:
+    UserGate close_file_nr
+
+cpfaFail:    
+    xor eax,eax
+    jmp cpfaDone
+
+cpfaDestChecked:
+    xor ecx,ecx
+    mov edi,[ebp].cpfaSrc
+    UserGate open_file_nr
+    jc cpfaCloseFail
+;
+    mov [ebp].cpfaSrcHandle,bx
+;
+    xor ecx,ecx
+    mov edi,[ebp].cpfaDest
+    UserGate create_file_nr
+    jnc cpfaSetupCopy
+;
+    mov bx,[ebp].cpfaSrcHandle
+    jmp cpfaCloseFail
+
+cpfaSetupCopy:  
+    mov [ebp].cpfaDestHandle,bx      
+    mov ecx,1000h
+    sub esp,ecx
+    mov edi,esp
+
+cpfaCopyLoop:
+    mov bx,[ebp].cpfaSrcHandle
+    UserGate read_file_nr
+    jc cpfaCopyFail
+;    
+    mov ecx,eax
+;
+    mov bx,[ebp].cpfaDestHandle
+    UserGate write_file_nr
+    jc cpfaCopyFail
+;
+    cmp eax,ecx
+    jne cpfaCopyFail    
+;
+    or ecx,ecx
+    jnz cpfaCopyLoop    
+;
+    mov eax,1    
+    jmp cpfaLeaveCopy
+
+cpfaCopyFail:
+    xor eax,eax
+
+cpfaLeaveCopy:    
+    add esp,1000h
+;
+    mov bx,[ebp].cpfaSrcHandle
+    UserGate close_file_nr
+;
+    mov bx,[ebp].cpfaDestHandle
+    UserGate close_file_nr       
+
+cpfaDone:        
+    pop edi
+    pop esi
+    pop ecx
+    pop ebx
+    add esp,4
+    pop ebp
+    ret 12
+CopyFileA   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:          	GetTempFileNameA
+;
+;       DESCRIPTION:    Get temporary filename
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetTempFileNameA
+
+GetTempFileNameA PROC near
+	pushad
+	int 3
+;
+; Copy the path
+;
+    mov	edx,[esp + 32 + 4]
+	mov	ebx,[esp + 32 + 16]
+	sub	eax, eax
+
+gtf_loop1:
+	mov	al,[edx]
+	inc	edx
+	mov	[ebx],al
+	inc	ebx
+	test al,al
+	jnz	gtf_loop1
+;
+; If there is no trailing backslash, insert one
+;
+	dec ebx
+	dec	ebx
+	cmp	byte ptr [ebx], '\'
+	setne al
+	add	ebx,eax
+	mov	byte ptr [ebx], '\'
+	inc	ebx
+;
+; Copy the 3 bytes prefix
+;
+	mov	edx,[esp + 32 + 8]
+
+	mov	ecx, 3
+
+gtf_loop2:
+	mov	al,[edx]
+	test al,al
+	je gtf_alphaok
+
+	mov	[ebx],al
+	inc	ebx
+	loop gtf_loop2
+
+gtf_alphaok:
+;
+; EBX now points at the beginning of the numerical part
+;
+	mov	dword ptr [ebx + 4], 'pmt.'
+	mov	byte ptr [ebx + 8], 0
+	mov	esi,[esp + 12]
+	test esi,esi
+	jnz	gtf_gotnum
+
+gtf_getnum:
+	inc	esi
+
+gtf_gotnum:
+	movzx esi, si
+	mov	[esp + 28], esi
+
+	mov	edi,esi
+	sub	edx,edx
+	mov	ecx,4
+
+gtf_loop3:
+	ror	edi,4
+	shld edx, edi, 4
+	shl	edx,4
+	cmp	dl,10
+	jc gtf_noadj
+
+	add	dl,7
+
+gtf_noadj:				
+	loop gtf_loop3
+
+	add	edx,30303030h
+	mov	[ebx],edx
+	cmp	dword ptr [esp + 12], 0
+	jne	gtf_done
+;
+    push ebx
+    xor ecx,ecx
+	mov	edi,[esp + 16 + 4]
+	UserGate open_file_nr
+	jc gtf_done
+
+gtf_close:
+    UserGate close_file_nr
+    pop ebx
+	jmp	gtf_getnum
+
+gtf_done:
+    pop ebx
+	popad
+	mov eax,1
+	ret 16
+GetTempFileNameA endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:          	CreateFile
 ;
 ;       DESCRIPTION:    Create a file
@@ -2233,6 +2522,59 @@ chDone:
 	pop ebp
 	ret 4
 CloseHandle	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           DuplicateHandle
+;
+;       DESCRIPTION:    Duplicate handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public DuplicateHandle
+
+DuplicateHandle Proc near
+    push ebx
+    mov eax,[esp+12]
+	mov bx,ax
+	xor ax,ax
+	cmp eax,FILE_HANDLE
+	je dhFile
+;	
+	cmp eax,STD_HANDLE
+	jne dhFail
+;
+    mov edx,[esp+20]
+    mov eax,[esp+12]
+    mov [edx],eax
+    mov eax,1
+    jmp dhDone    
+
+dhFail:	
+	mov eax,6
+	jmp dhDone
+
+dhFile:
+    mov ebx,[esp+12]
+    UserGate dupl_file_nr
+    mov ecx,FILE_HANDLE
+    mov cx,ax
+;
+    test byte ptr [esp+32],1
+    jz dhCloseOk
+;
+    UserGate close_file_nr
+
+dhCloseOk:
+    mov edx,[esp+20]
+    mov [edx],ecx
+    mov eax,1
+
+dhDone:    
+    pop ebx
+    ret 28
+DuplicateHandle Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

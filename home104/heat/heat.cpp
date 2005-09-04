@@ -96,6 +96,8 @@ void cdecl main()
 	int mask;
 	TDateTime *CurrTime;
 
+	RdosWaitMilli(1000);
+
 	for (i = 0; i < 8; i++)
 		RadArr[8] = new TRad(0x20 + i, i);
 

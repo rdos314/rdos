@@ -33,16 +33,16 @@ extern "C" {
 #define getblue(pgc)      ((pgc)&0xFF)
 #define mkcolor(r,g,b)    (((r)<<16)|((g)<<8)|(b))
 
-struct ThreadState
+typedef struct ThreadState
 {
-    short int ID;
-    char Name[32];
-    unsigned long MsbTime;
-    unsigned long LsbTime;
-    char List[32];
-    long Offset;
-    short int Sel;
-};
+	 short int ID;
+	 char Name[32];
+	 unsigned long MsbTime;
+	 unsigned long LsbTime;
+	 char List[32];
+	 long Offset;
+	 short int Sel;
+} ThreadState;
 
 #ifdef __GNUC__
 #define __stdcall

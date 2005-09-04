@@ -1,0 +1,332 @@
+\*      mbedit.mac                                13.03.04       *\
+\*
+\  --------------------------------------------------------------
+\  Copyright (C) 2004: Peter Stoeckigt
+\                      Heinz-Dieter Sander
+\                      Michael Braun
+\  --------------------------------------------------------------
+\
+\    macro file for aedit / mbedit
+\
+*\
+
+\* GENERAL SETTINGS *\
+\* AV= 25; *\    \* NUMBER OF LINES                                    *\
+\* AC= 80; *\    \* NUMBER OF COLUMNS                                  *\
+AG=  3;          \* SEMI-GRAFIK: 0=OFF, 1=VGA/VT100, 2=ANSI, 3=ANSI/PC *\
+AM=  0;          \* 1 = MOUSE DRIVER ON (only 80 x 25 char)            *\
+AS=  1;          \* Automatic Shift of Screen with Cursor              *\
+AE=200;          \* wait time for <esc> sequences in msec              *\
+
+
+\********************\
+\* COLOR SETTINGS   *\
+\********************\
+
+\* SETTINGS FOR VGA GRAPHIC (MS-DOS)      *\
+AFNV=1B4D70;            \* NORMAL VIDEO   *\
+AFRV=1B4D07;            \* REVERS VIDEO   *\
+AF1V=1B4D30;            \* STATUS LINE 1  *\
+AF2V=1B4D47;            \* STATUS LINE 2  *\
+AFCV=1B4D72;            \* COMMENTS       *\
+AFKV=1B4D71;            \* KEYWORDS       *\
+AFSV=1B4D74;            \* STRINGS        *\
+\*       ||                               *\
+\*       |+--- Foreground Color 0-F       *\
+\*       +---- Background Color 0-F       *\
+\*             Background Bit 3 set = blinking *\
+
+\* SETTINGS FOR VGA GRAPHIC (Windows DOS-Box) *\
+AFNV=1B4DF0;            \* NORMAL VIDEO   *\
+AFRV=1B4D0F;            \* REVERS VIDEO   *\
+AF1V=1B4D30;            \* STATUS LINE 1  *\
+AF2V=1B4D4F;            \* STATUS LINE 2  *\
+AFCV=1B4DF2;            \* COMMENTS       *\
+AFKV=1B4DF1;            \* KEYWORDS       *\
+AFSV=1B4DF4;            \* STRINGS        *\
+\*       ||                               *\
+\*       |+--- Foreground Color 0-F       *\
+\*       +---- Background Color 0-F       *\
+\*             Background Bit 3 set = light color *\
+
+\*\* SETTINGS FOR VT100 / VT220             *\
+\*AFNV="[0m"             \* NORMAL VIDEO   *\
+\*AFRV="[7m"             \* REVERS VIDEO   *\
+\*AF1V="[0m"             \* STATUS LINE 1  *\
+\*AF2V="[7m"             \* STATUS LINE 2  *\
+\*AFCV="[1m"             \* COMMENTS       *\
+\*AFKV="[4m"             \* KEYWORDS       *\
+\*AFSV="[4m"             \* STRINGS        *\
+\*\*      |                                 *\
+\*\*      +--- Attribute : 0 = normal       *\
+\*\*                       1 = bold         *\
+\*\*                       4 = underlined   *\
+\*\*                       5 = blinking     *\
+\*\*                       7 = invers       *\
+\*\*                       8 = hidden       *\
+
+\* SETTINGS FOR ANSI                              *\
+AFNV="[0;30;48m"       \* NORMAL VIDEO           *\
+AFRV="[7;30;48m"       \* REVERS VIDEO           *\
+AF1V="[0;30;46m"       \* STATUS LINE 1          *\
+AF2V="[0;37;41m"       \* STATUS LINE 2 (Unix)   If required, swap these two lines. *\
+AF2V="[0;38;41m"       \* STATUS LINE 2 (WIN_32) If required, swap these two lines. *\
+AFCV="[0;32;48m"       \* COMMENTS               *\
+AFKV="[0;34;48m"       \* KEYWORDS               *\
+AFSV="[0;31;48m"       \* STRINGS                *\
+\*      |  |  |                                   *\
+\*      |  |  +--- Background Color 0-7 (0-8)     *\
+\*      |  +------ Foreground Color 0-7 (0-8)     *\
+\*      +--------- Attribute as above             *\
+
+\* Meaning of Attributes and Colors, see:
+   http://home.t-online.de/home/braun-m/doc_html/english/mb_ac_e.htm
+*\
+
+
+\********************\
+\* KEYBOARD MACROS  *\
+\********************\
+                                            
+M]\BR-\NL\BRr\BR\NL   \BR\NL\MM
+M[\BR-\NL\BR\CRcn9=(curwd==2020h)*3\NL\XN9\XF\NL\MM
+
+M\085\BRe\0185\BR\MM;           \*** shift screen ==>              ^-->  ***\
+M\0185\BRsl+10\BR\MM;
+M\084\BRe\0184\BR\MM;           \***              <==              ^<--  ***\
+M\0184\BRsl-10\BR\MM;
+M\088\BRjp0\NLsl0\NL\MM;                                \***    ^<Home>  ***\
+M\086\BR\081cn8=col/80\NL
+cn9=n8*80+(!(N8==0)&1)*((col\\80)-60)\NLsl\XN9\NL\MM;   \***     ^<End>  ***\
+
+M\080\BRe\0180\BR\CU\CH\MM;                             \***     <PgUp>  ***\
+M\0180\BR\CD\MM;
+M\082\BRe\0182\BR\CD\CH\MM;                             \***     <PgDn>  ***\
+M\0182\BR\CU\MM;
+M\07F\BRjp0\NL\MM;              \*** home                      ^<BckSp>  ***\
+M\081\BRe\0181\BR\CR\CH\MM;     \*** end                          <End>  ***\
+M\0181\BR\CL\MM;
+
+\* M\083\BR\BRi\EM; *\          \*** insert                    <Insert>  ***\
+M\00F\BR\BRx\EM;                \*** exchange                        ^O  ***\
+
+M\089\BRjs\BR\MM;               \*** jump start                 ^<PgUp>  ***\
+M\087\BRje\BR\MM;               \*** jump start                 ^<PgDn>  ***\
+
+M\00C\BRe\010C\MM;              \*** find next occurance             ^L  ***\
+M\010C\BR1f\BR\MM;
+M\010\BRe\0110\BR\MM;           \*** find prev occurance             ^P  ***\
+M\0110\BR1-\BR\MM;
+
+M>\BRF\XSB\BR\MM                \*** find block buffer foreward       >  ***\
+M<\BR-\XSB\BR\MM                \*** find block buffer backward       <  ***\
+
+                                \*** macro help                      F1  ***\
+M\090\BR!TYPE \XSM\RB\RB\RBHLP\NL\MM
+                                \*** directory                  shft F1  ***\
+M\0A0\BR!DIR/W\BR\MM;
+                                \*** system shell               ctrl F1  ***\
+M\0B0\BR!COMMAND\BR\MM;
+
+         \* search Online Help for the current word              alt F1  ***\
+M\0C0\BRe\091\BR!qh \XSb\NL\MM
+\*               ^^^ modify here !!    *\
+\*      MS-DOS: "qh "   (quickhelp)    *\
+\*      unix  : "man "  (manual pages) *\
+\*      os/9  : "help "                *\
+
+                    \* Copy current word into Buffer                 F2  ***\
+M\091\BRtc0f~\RB\BR/e\01171\NLtd/e\01111\NL/e\01112\NL/e\01172\NL
+bjdbjc\MM
+
+                                \*** get  err-file              shft F7  ***\
+M\0A6\BROQINUL\NLI\XSI\BR-.\BR\XAI.ERR\BRB\CL\CHBQUIL:\XSB\NL\MM
+                                \*** get list-file                   F7  ***\
+M\096\BROQINUL\NLI\XSI\BR-.\BR\XAI.LST\BRB\CL\CHBQUIL:\XSB\NL\MM
+                                \*** find error (MS-C)          shft F8  ***\
+M\0A7\BRe\010A7\NLcn9=cntfnd==0\BR\XN9e\011A7\NL\MM
+M\010A7\BRF: error\BR\MM
+M\011A7\BRF: warning\BR\MM
+                                \*** find error (INTEL)              F8 ***\
+M\097\BRe\01097\NLcn9=cntfnd==0\BR\XN9e\01197\NL
+cn9=cntfnd==0\BR\XN9e\01297\NL\MM
+M\01097\BRF*** ERROR\BR\MM
+M\01197\BRF*** WARNING\BR\MM
+M\01297\BRF*** REMARK\BR\MM
+                                \*** Jump Error Line (MS-C)           @ ***\
+M@\BRjp0\NLf(\BRbf)\BR\CLbojl\XSb\NL\MM 
+                                \*** Jump Error Line (INTEL ASM/PLM)  # ***\
+M#\BRjp0\NLf(LINE \BRbf)\BR\CLbojl\XSb\NL\MM 
+                                \*** Jump Error Line (INTEL/KEIL C)   $ ***\
+M$\BRjp0\NLf LINE \BRbf \BRbojl\XSb\NL\MM
+
+                                \*** Word right macros               ^W ***\
+M\017\BR0f~\RB\BR/e\01171\NL/e\01172\NL\MM;
+M\01171\BRcn9=isdel\NL\XN9f\BR\CR\MM;
+M\01172\BRcn9=!isdel\NL\XN9f\BR\CR\MM;
+                                \*** Word left macros                ^Q ***\
+M\011\BR0f~\RB\BR\CL/e\01111\NL/e\01112\NL\CR\MM;
+M\01112\BRcn9=isdel\NL\XN9f\BR\CL\MM;
+M\01111\BRcn9=!isdel\NL\XN9f\BR\CL\MM;
+                                \*** skip white spaces               +W ***\
+M+W\BR/e+W1\BR\MM;
+M+w1\BRcn9=!iswhte\NL\XN9f~\RB\BR\CR\MM;
+                                \*** back skip white spaces          -W ***\
+M-W\BR/e-W1\BR\MM;
+M-w1\BRcn9=!iswhte\NL\XN9f~\RB\BR\CL\MM;
+                                \*** skip blanks                     +B ***\
+M+B\BR/e+B1\BR\MM;
+M+b1\BRcn9=!(curch==20H)\NL\XN9f~\RB\BR\CR\MM;
+                                \*** back skip blanks                -B ***\
+M-B\BR/e-B1\BR\MM;
+M-b1\BRcn9=!(curch==20H)\NL\XN9f~\RB\BR\CL\MM;
+                                \*** convert all tabs to blanks   NOTAB ***\
+MNOTAB\BRsknsny/eDE1\NL\MM;
+Mde1\BRf\TB\BR\RBi\TB\BR\MM;
+                                \*** display current line number      L ***\
+ML\BRtaeflf\NLjacn9=cntfnd+1\NLjeeflf\NLjacn8=cntfnd+1\NL
+cs9="----- line: \XN9 (\XN8) -----"\NLcs9\NL\MM;
+Mflf\BRskn/-\XH0a\BR\MM;
+                    
+
+\* Date Macro - European format: dd.mm.yy or dd.mm.yyyy, respectively *\
+
+\* search for next occurance of a date and replace it with the actual one *\
+Md\BR
+eextract_date\BR
+esearch_ddmmyy\BR
+\xn9ereplace_ddmmyy\NL
+\xn8ereplace_ddmmyyyy\NL
+\MM;
+
+\* extract year(cn9), day(cn8), month(cn7) from "date" and build string s9 *\
+Mextract_date\BR
+srd
+cn9=date%100+100\NL
+cn8=(date/100)%100+100\NL
+cn7=date/10000+100\NL
+cs9="\XN8\CL\CL\CL\XF\CR\CR.\XN7\CL\CL\CL\XF\CR\CR.\XN9\CL\CL\CL\XF\CR\CR"\NL
+cs9\NL
+\MM
+
+\* search for dd.mm.yy in the file buffer *\
+Msearch_ddmmyy\BR
+s*y
+cn8=0\BR
+cn9=0\BR
+f??.??.??\BR
+cn8=(cntfnd > 0) & (curch >= '0') & (curch <= '9')\BR
+2\CL
+cn9=(cntfnd > 0) & (curch >= '0') & (curch <= '9')\BR
+6\CL
+s*n
+\MM;
+
+\* exchange current text with actual date string *\
+Mreplace_ddmmyy\BR
+x\xs9\BR
+\MM;
+
+\* translate year 2 --> 4 digits (if already this length) *\
+Mreplace_ddmmyyyy\BR
+\XF\XF
+\CL\CL
+i20\CR\CR\BR
+10\CL
+s*y
+f??.??.????\BR
+s*n
+\MM;
+
+
+
+M\098\BR\BRqu\BR\MM;            \*** Update File                 F9 , U ***\
+\* MU\BR\BRqu\BR\MM; *\
+MU\BR\BRsdyqu\BRsdn\MM;
+M\099\BR\BRqe\BR\MM;            \*** Quit + Exit                    F10 ***\
+M\0B9\BR\BRqe\BR\MM;            \*** Quit + Abort              ctrl F10 ***\
+M\002\BRI\XSB\BR\MM;            \*** get buffer contents             ^B ***\
+M\016\BRV\BR\MM;                \*** View                            ^V ***\
+M \BRI \BR\MM                   \*** Blank                              ***\
+
+
+\* new MBEDIT macros for pc-semigraphic *\
+M\0D1\BR\XHb3\EM;               \* ALT 1 : ³ *\
+M\0D2\BR\XHda\EM;               \* ALT 2 : Ú *\
+M\0D3\BR\XHbf\EM;               \* ALT 3 : ¿ *\
+M\0D4\BR\XHc0\EM;               \* ALT 4 : À *\
+M\0D5\BR\XHd9\EM;               \* ALT 5 : Ù *\
+M\0D6\BR\XHc3\EM;               \* ALT 6 : Ã *\
+M\0D7\BR\XHc2\EM;               \* ALT 7 : Â *\
+M\0D8\BR\XHb4\EM;               \* ALT 8 : ´ *\
+M\0D9\BR\XHc1\EM;               \* ALT 9 : Á *\
+M\0D0\BR\XHcd\EM;               \* ALT 0 : Í *\
+M\0DM\BR\XHc4\EM;               \* ALT - : Ä *\
+M\0DE\BR\XHc5\EM;               \* ALT = : Å *\
+
+\* ^Y --> ^Z (for german keyboard) *\
+M\019\BR\XZ\MM;
+
+\* '=' : <F1> : Help Option *\
+M=\BR\090\MM;
+
+\* '@' : <F2> : Current Word *\
+M@\BR\091\MM;
+
+\* '#' : get current word and find it *\
+M#\BR@f\016b\BR\MM;
+
+\* '^' : exchange 2 characters *\
+M^\BRd\CLd\CRg\NL\MM;
+
+\*** Initial modes   ***\
+SAN                 \* insert <nl> automatically: NO *\
+SBY                 \* generate bak files            *\
+SCN	                \* Consider CAse: NO             *\
+SDN	                \* display macro execution       *\
+SF2	                \* file number                   *\
+SHA	                \* display highbit chars (Auto)  *\
+SIY	                \* auto indent                   *\
+SM 0, 0, 78         \* margin (indent, left, right)  *\
+SNY                 \* fill tabs with blanks         *\
+SRD	                \* radix hex                     *\
+ST4                 \* tabs 4                        *\
+SV9                 \* Set View Row                  *\
+SW2                 \* Warning beep always ON        *\
+SY7                 \* Set default c-syntax ON       *\
+
+\* END *\
+
+\* Modification History *\
+\* 12.09.91 - Stoeckigt: Macro <alt><F1> searches qh for curr. word *\
+\* 09.03.92 - Sander   : Macro "dd" also changes "AEND./STAND" *\
+\* 10.01.93 - Braun    : Set File number *\
+\* 14.01.93 - Braun    : AC=80 number of columns *\
+\* 18.02.93 - Braun    : pc-semi-graphics        *\
+\* 17.06.93 - Braun    : AFRV + AFNV             *\
+\* 18.06.93 - Braun    : Set Warning             *\
+\* 23.06.93 - Sander   : Macro "^End" an MBEdit angepasst  *\
+\* 27.07.93 - Braun    : Set Warning level 0-2              *\
+\* 27.07.93 - Braun    : AF1V + AF2V                        *\
+\* 28.07.93 - Braun    : ^Y --> ^Z (wg. deutscher Tastatur) *\
+\* 14.09.93 - Braun    : Macro "L" again (for test purpose) *\
+\* 12.12.93 - Braun    : Hints for Online Help (qh/man/help) *\
+\* 13.12.93 - Braun    : SM: Parameter im Aedit Format (Komma) *\
+\* 16.12.93 - Braun    : AM=1, mouse control ON/OFF *\
+\* 07.01.94 - Braun    : Macro <insert> is now obsolete *\
+\* 07.01.94 - Braun    : AS=1, Automatic Shift of Screen with Cursor *\
+\* 09.05.94 - Braun    : AE=200, wait time for <esc> sequences in msec *\
+\* 05.07.94 - Braun    : SE..... (Delimiter Set) *\
+\* 06.07.94 - Braun    : Set Autonl *\
+\* 27.09.94 - Braun    : AFCV, AFKV *\
+\* 05.10.94 - Braun    : <esc> sequences for VT100 / ANSI *\
+\* 06.10.94 - Braun    : AG=0-2; SEMI-GRAFIK: 0=OFF, 1=VGA/VT100, 2=ANSI *\
+\* 12.12.94 - Braun    : Macro '^': exchange 2 characters *\
+\* 09.03.95 - Braun    : AC und AV auskommentiert *\
+\* 15.11.95 - Braun    : Macro <F2> *\
+\* 17.11.95 - Braun    : SY3 *\
+\* 31.01.99 - Braun    : macro 'd' modified + 'y2k' new *\
+\* 05.08.02 - Braun    : macro 'd' modified: dd.mm.yy or dd.mm.yyyy *\
+\* 01.05.03 - Braun    : SY7, AFSV: Syntax Highlighting for strings *\
+\* 11.02.04 - Braun    : 'S'et 'H'ighbit 'A'uto *\
+\* 13.03.04 - Braun    : 'S'et 'E'delimiter removed *\

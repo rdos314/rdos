@@ -79,6 +79,7 @@ IniBuf	DB 400h DUP(?)
 	extrn InitConsole:near
 	extrn lstrlen:near
 	extrn InitException:near
+	extrn GetModuleHandleA:near
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -159,8 +160,10 @@ GlobalMemoryStatus Proc near
 	mov [edx].dwAvailPhys,-1
 	mov [edx].dwTotalPageFile,0
 	mov [edx].dwAvailPageFile,0
+;	
 	UserGate available_local_linear_nr
 	mov [edx].dwAvailVirtual,eax
+;	
 	UserGate used_local_linear_nr
 	add eax,[edx].dwAvailVirtual
 	mov [edx].dwTotalVirtual,eax
@@ -1047,18 +1050,19 @@ WritePrivateProfileStringA	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		public LoadResource
-
-lrModule	EQU 8
-lrHandle	EQU 12
+	public LoadResource
 
 LoadResource	Proc near
-	int 3
-	push ebp
-	mov ebp,esp
-	mov eax,[ebp].lrHandle
-	mov eax,[eax]
-	pop ebp
+	mov	eax,[esp + 4]
+	test	eax, eax
+	jnz	lres1
+
+	push eax
+	call GetModuleHandleA
+
+lRes1:
+	mov	edx, [esp + 8]
+	add	eax, [edx]
 	ret 8
 LoadResource	Endp
 
@@ -1207,50 +1211,141 @@ CompareStringA Proc near
 	push esi
 	push edi
 
-	cmp dword ptr [esp+24], -1
-	jne short cstra1
+	cmp	dword ptr [esp+24], -1
+	jne	short cstra1
 
 	push dword ptr [esp+20]
 	call lstrlen
-	mov dword ptr [esp+24], eax
+	mov	dword ptr [esp+24], eax
 
 cstra1:
-	cmp dword ptr [esp+32], -1
-	jne short cstra2
+	cmp	dword ptr [esp+32], -1
+	jne	short cstra2
 
 	push dword ptr [esp+28]
 	call lstrlen
-	mov dword ptr [esp+32], eax
+	mov	dword ptr [esp+32], eax
 
 cstra2:
-	mov eax, 2
-	mov esi, [esp+20]
-	mov edi, [esp+28]
-	mov ecx, [esp+24]
-	cmp ecx, [esp+32]
-	jnc short csta01
+	mov	eax, 2
+	mov	esi, [esp+20]
+	mov	edi, [esp+28]
+	mov	ecx, [esp+24]
+	cmp	ecx, [esp+32]
+	jnc	short csta01
 
-	mov ecx, [esp+32]
+	mov	ecx, [esp+32]
 
 csta01:
+	test byte ptr [esp+16], 1	; NORM_IGNORECASE ?
+	jz	csta04
+
+csta06:
+	jecxz	csta05
+	mov	dl, [esi]
+	mov	dh, [edi]
+
+	cmp	dl, 'A'
+	jc	csta001
+
+	cmp	dl, 'Z'
+	ja	csta001
+
+	add	dl, 'a' - 'A'
+
+csta001:
+	cmp	dh, 'A'
+	jc	csta002
+
+	cmp	dh, 'Z'
+	ja	csta002
+
+	add	dh, 'a' - 'A'
+
+csta002:
+	inc	esi
+	inc	edi
+	dec	ecx
+	cmp	dl, dh
+	jne	csta02
+
+	jmp	csta06
+
+csta04:
 	cld
 	repe cmpsb
-	jne csta02
+	jne	csta02
 
-	mov ecx, [esp+24]
-	cmp ecx, [esp+32]
+csta05:
+	mov	ecx, [esp+24]
+	cmp	ecx, [esp+32]
 	je csta03
 
 csta02:
-	sbb eax, eax
-	and eax, 3
-	xor al, 2
-	 
+	setnc al
+	lea	eax, [eax + eax + 1]
+			
 csta03:
-	pop esi
-	pop edi
+	pop	edi
+	pop	esi
 	ret 24
 CompareStringA Endp
+
+    public CompareStringW
+    
+CompareStringW Proc near
+	push esi
+	push edi
+	cld
+
+	cmp	dword ptr [esp+24], -1
+	jne	short cstrw1
+
+	push dword ptr [esp+20]
+	sub	eax, eax
+	mov	edi, [esp+20]
+	repne scasw
+	sub	edi, [esp+20]
+	shr	edi, 1
+	mov	dword ptr [esp+24], edi
+
+cstrw1:
+	cmp	dword ptr [esp+32], -1
+	jne	short cstrw2
+
+	mov	edi, [esp+28]
+	repne	scasw
+	sub	edi, [esp+28]
+	shr	edi, 1
+	mov	dword ptr [esp+32], edi
+
+cstrw2:
+	mov	eax, 2
+	mov	esi, [esp+20]
+	mov	edi, [esp+28]
+	mov	ecx, [esp+24]
+	cmp	ecx, [esp+32]
+	jnc	short cstw01
+
+	mov	ecx, [esp+32]
+
+cstw01:
+	repe cmpsw
+	jne	cstw02
+
+	mov	ecx, [esp+24]
+	cmp	ecx, [esp+32]
+	je	cstw03
+
+cstw02:
+	setnc al
+	lea	eax, [eax + eax + 1]
+			
+cstw03:
+	pop	edi
+	pop	esi
+	ret 24
+CompareStringW Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       

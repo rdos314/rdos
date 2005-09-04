@@ -1,8 +1,16 @@
 NAME    USER32
 EXPORTS
 	Borland32
-	CharUpperA
+    CharLowerA
+	CharLowerBuffA
+	CharNextA
+    CharToOemA    
+    CharToOemBuffA
+    CharToOemBuffW
+    CharToOemW
+    CharUpperA
 	CharUpperBuffA
+	DestroyWindow
 	EnumThreadWindows
 	EnumWindows
 	GetClassNameA
@@ -11,8 +19,15 @@ EXPORTS
 	GetSystemMetrics
 	GetWindowTextA
 	GetWindowThreadProcessId
+	IsCharAlphaNumericA
 	IsIconic
 	IsWindow
 	LoadStringA
 	MessageBoxA
-	SetForegroundWindow
+	MessageBoxExA
+	OemToCharA
+    OemToCharBuffA	
+    OemToCharBuffW
+	OemToCharW
+    SetForegroundWindow
+    wsprintfA

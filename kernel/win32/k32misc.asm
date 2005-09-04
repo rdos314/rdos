@@ -162,7 +162,6 @@ WideCharToMultiByte Proc near
 	mov ecx,[esp + 16 + 4] ; number of input chrs
 	mov edx,[esp + 12 + 4] ; input string
 	mov ebx,[esp + 20 + 4] ; output string
-	push ecx
 	sub eax,eax
 	test ebx,ebx
 	jz wcmbDone
@@ -173,10 +172,14 @@ wcmbLoop:
 	inc edx
 	mov [ebx],al
 	inc ebx
+	test al,al
+	jz wcmbDone
+;
 	loop wcmbLoop
 
 wcmbDone:
-	pop eax
+	sub	ebx,[esp + 20 + 4]
+	mov	eax, ebx
 	pop ebx
 	ret 32
 WideCharToMultiByte	Endp
@@ -197,7 +200,6 @@ MultiByteToWideChar Proc near
 	mov ecx,[esp + 16 + 4] ; number of input chrs
 	mov edx,[esp + 12 + 4] ; input string
 	mov ebx,[esp + 20 + 4] ; output string
-	push ecx
 	test ebx,ebx
 	jz mbwcDone
 
@@ -209,12 +211,15 @@ mbwcLoop:
 	mov [ebx],ax
 	inc ebx
 	inc ebx
+	test	al, al
+	jz mbwcDone
+;	
 	loop mbwcLoop
 
 mbwcDone:
-	pop eax
-	add eax,eax
-	pop ebx
+	sub	ebx, [esp + 20 + 4]
+	mov	eax, ebx
+	pop	ebx
 	ret 24
 MultiByteToWideChar Endp
 
@@ -231,13 +236,11 @@ MultiByteToWideChar Endp
 	public FreeEnvironmentStringsA
 
 FreeEnvironmentStringsW Proc near
-	int 3
 	mov eax,1
 	ret 4
 FreeEnvironmentStringsW	Endp
 
 FreeEnvironmentStringsA Proc near
-	int 3
 	mov eax,1
 	ret 4
 FreeEnvironmentStringsA	Endp
@@ -285,6 +288,29 @@ FileTimeToLocalFileTime:
 	mov eax,1
 	ret 8
 LocalFileTimeToFileTime ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           GetSystemTimeAsFileTime
+;
+;       DESCRIPTION:   	
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public GetSystemTimeAsFileTime
+
+GetSystemTimeAsFileTime PROC near
+	sub	esp, 16
+	mov	eax, esp
+	push dword ptr [esp + 4 + 16]
+	push eax
+	push eax
+	call GetSystemTime
+	call SystemTimeToFileTime
+	add	esp, 16
+	ret 4
+GetSystemTimeAsFileTime ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -565,7 +591,7 @@ GetSystemInfo Proc near
 	mov [edx].siNumOfCpus,1
 	mov [edx].siCpuType,386
 	mov [edx].siAppGranularity,1000h
-	mov [edx].siCpuLevel,0
+	mov [edx].siCpuLevel,3
 	mov [edx].siCpuRevision,0
 	pop ebp
 	ret 4
