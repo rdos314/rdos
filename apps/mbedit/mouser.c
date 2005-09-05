@@ -109,6 +109,7 @@ static char center_col = (INIT_COLUMNS / 2);
 static char center_row = (INIT_ROWS / 2);
 static char old_win_row, old_win_col;
 static int  event_count, disp_window_active;
+static int mouse_on_off_status = 0;
 
 #define STACK_SIZE 3
 
@@ -193,6 +194,21 @@ void update_mouse(void)
  {
 	EvFlags = EV_MOU_MOVE;
 	RdosGetMousePosition(&x, &y);
+ }
+
+ mouevent &= ~1;                                  /* Bit 0 ausblenden */
+ mouevent |= ( EvFlags & 1 );           /* Bit 0 aus EvFlags kopieren */
+
+ if ( EvFlags & LBITS )      /* linker Mausknopf losg. oder niederg.? */
+ {                                                             /* Ja */
+   mouevent &= ~LBITS;                /* bisherigen Status ausblenden */
+   mouevent |= ( EvFlags & LBITS );        /* neuen Status einblenden */
+ }
+
+ if ( EvFlags & RBITS )     /* rechter Mausknopf losg. oder niederg.? */
+ {                             /* Ja, Bits ausblenden und einblenden */
+   mouevent &= ~RBITS;                /* bisherigen Status ausblenden */
+   mouevent |= ( EvFlags & RBITS );        /* neuen Status einblenden */
  }
 
  moucol = (char) XTOCOL(x);         /* Spalte in Textspalten umrechnen */
@@ -428,6 +444,45 @@ int mouse_event_handler_c (int repeat)
    return key;
 }  /* mouse_event_handler_c */
 
+/***********************************************************************
+*  Funktion         : M o u S h o w M o u s e                          *
+**--------------------------------------------------------------------**
+*  Aufgabe          : Maus-Cursor auf dem Bildschirm anzeigen.         *
+*  Eingabe-Parameter: keine                                            *
+*  Return-Wert      : keiner                                           *
+*  Info             : Die Aufrufe von MouHidemMouse() und MouShow-     *
+*                     Mouse() mÅssen ausbalanciert sein, damit sie     *
+*                     Wirkung zeigen.                                  *
+***********************************************************************/
+
+void MouShowMouse( void )
+{
+ if (mouse_on_off_status == 0)
+ {
+    mouse_on_off_status++;
+    RdosShowMouse();
+ }
+}
+
+/***********************************************************************
+*  Funktion         : M o u H i d e M o u s e                          *
+**--------------------------------------------------------------------**
+*  Aufgabe          : Maus-Cursor vom dem Bildschirm entfernen.        *
+*  Eingabe-Parameter: keine                                            *
+*  Return-Wert      : keiner                                           *
+*  Info             : Die Aufrufe von MouHidemMouse() und MouShow-     *
+*                     Mouse() mÅssen ausbalanciert sein, damit sie     *
+*                     Wirkung zeigen.                                  *
+***********************************************************************/
+
+void MouHideMouse( void )
+{
+ if (mouse_on_off_status == 1)
+ {
+    mouse_on_off_status--;
+    RdosHideMouse();
+ }
+}
 
 /***********************************************************************
 *  Funktion         : M o u S e t M o v e A r e a                      *
@@ -502,7 +557,7 @@ void MouSetMoveArea( char x1, char y1, char x2, char y2, int window_flag )
 
    disp_window_active = work_area[stack_ind].win_flag;
 
-   RdosSetMouseWindow(x1, y1, x2, y2);
+   RdosSetMouseWindow(8 * x1, 8 * y1, 8 * x2, 8 * y2);
    RdosSetMousePosition(moucol, mourow);
 
    return; 
@@ -531,11 +586,11 @@ void MouEnd( void )
 
 int MouStartup (int columns, int rows)
 {
-    RdosSetMouseWindow(0, 0, columns, rows); 
+    RdosSetMouseWindow(0, 0, 8 * columns, 8 * rows); 
     RdosSetMouseMickey(8, 8);
-	 RdosSetMousePosition(columns / 2, rows / 2);
-	 RdosShowMouse();
-    return mavail = TRUE;                        /* Maus ist installiert */
+	RdosSetMousePosition(columns / 2, rows / 2);
+    mavail = TRUE;                        /* Maus ist installiert */
+    return 0;
 }
 
 /* -FF-  */

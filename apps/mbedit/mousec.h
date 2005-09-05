@@ -43,6 +43,8 @@ struct MOUSE_STAT
 extern int  MouStartup   (int columns, int rows);
 extern void MouEnd       (void);
 extern void MouSetMoveArea (char x1, char y1, char x2, char y2, int window_flag);
+extern void MouShowMouse (void);
+extern void MouHideMouse (void);
 
 extern void update_mouse(void);
 extern int mouse_event (void);

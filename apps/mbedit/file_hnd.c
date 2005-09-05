@@ -46,7 +46,11 @@
 #endif
 
 
+#if (ACT_OP_SYSTEM == RDOS)
+#define FAST_BACKUP 0                 /* RDOS currently does not support rename */
+#else
 #define FAST_BACKUP 1                  /* <== select here ! */
+#endif
 
 #if ((BINARY_MODE) && (ACT_OP_SYSTEM != OS_9))
 #define FAST_FILE_LENGTH 1             /* <== select here ! */
@@ -481,7 +485,7 @@ static int set_write_permission (char *filename)
 
 static char *create_bak_name (char *filename)
 {
-#if (ACT_OP_SYSTEM == MS_DOS)
+#if (ACT_OP_SYSTEM == MS_DOS) || (ACT_OP_SYSTEM == RDOS)
 #define LONG_BAK_NAMES  0   /* always 0 here ! */
 #else
 #define LONG_BAK_NAMES  1   /* for unix + os-9.

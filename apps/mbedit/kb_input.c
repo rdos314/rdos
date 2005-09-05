@@ -783,7 +783,7 @@ static int loc_get_1_int (void)
             /* is key pressed ? */
             if (RdosPollKeyboard())
             {
-                RdosHideMouse();
+                MouHideMouse();
                 break;
             }
 
@@ -804,14 +804,14 @@ static int loc_get_1_int (void)
                 key = mouse_event_handler_c (call_handler);
                 if (key)           /* return value != 0 means: */
                 {
-                    RdosHideMouse();
+                    MouHideMouse();
                     return (key);   /* mouse simulated key stroke */
                                /* e.g.: left mouse key = <cr> */
                 }
 
              /* make mouse visible */
-                RdosHideMouse();
-                RdosShowMouse();
+                MouHideMouse();
+                MouShowMouse();
             }
         }
            
