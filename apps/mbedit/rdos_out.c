@@ -139,9 +139,9 @@
 #include "ansi_out.h"
 #include "rdos.h"
 
-#define FOREGROUND_BLUE      0x0001 // text color contains blue.
-#define FOREGROUND_GREEN     0x0002 // text color contains green.
-#define FOREGROUND_RED       0x0004 // text color contains red.
+#define FOREGROUND_BLUE      0x0009 // text color contains blue.
+#define FOREGROUND_GREEN     0x000A // text color contains green.
+#define FOREGROUND_RED       0x000C // text color contains red.
 #define FOREGROUND_INTENSITY 0x0008 // text color is intensified.
 #define BACKGROUND_BLUE      0x0001 // background color contains blue.
 #define BACKGROUND_GREEN     0x0002 // background color contains green.
@@ -187,8 +187,8 @@ static char ansi_buf[40];
 
 void get_screen_lin_col (int *lines, int *columns)
 {
-    *lines = INIT_ROWS;
-    *columns = INIT_COLUMNS;
+	*lines = 25;
+    *columns = 80;
 }
 
 //----------------------------------------------------------------------------
@@ -352,7 +352,7 @@ void process_ansi_buf()
 		}  /* switch hl */
 
 		RdosSetForeColor(fgc);
-		RdosSetBackColor(0);
+		RdosSetBackColor(bgc);
 		return;
 	}
 

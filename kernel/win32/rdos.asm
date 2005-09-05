@@ -6645,6 +6645,36 @@ RdosFormatDrive	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RdosGetExeName
+;
+;       DESCRIPTION:    Get full path of executable
+;
+;		RETURNS:		Exe name buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosGetExeName
+
+RdosGetExeName	Proc near
+	push edi
+;
+	UserGate get_exe_name_nr
+	jc rgenFail
+;
+    mov eax,edi
+    jmp rgenDone
+
+rgenFail:
+    xor eax,eax
+
+rgenDone:
+	pop edi
+	ret
+RdosGetExeName	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RdosLoadDll
 ;
 ;       DESCRIPTION:    Load a DLL

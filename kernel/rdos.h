@@ -289,6 +289,7 @@ int __stdcall RdosCreateFileDrive(int Drive, long Size, const char *FsName, cons
 int __stdcall RdosOpenFileDrive(int Drive, const char *FileName);
 
 int __stdcall RdosGetModuleHandle();
+const char * __stdcall RdosGetExeName();
 int __stdcall RdosLoadDll(const char *Name);
 void __stdcall RdosFreeDll(int handle);
 int __stdcall RdosReadResource(int handle, int ID, char *Buf, int Size);

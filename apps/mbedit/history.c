@@ -27,6 +27,9 @@
 #include "err_mess.h"
 #include "mousec.h"
 
+#if (ACT_OP_SYSTEM == RDOS)
+#include "rdos.h"
+#endif
 
 /****************************************************************
 *                                                               *
@@ -52,7 +55,7 @@
 
 struct HIST {char delete_protected;
              char text [BUFFER_SIZE];
-            };
+			};
 
 static struct HIST hist [HIST_NUM] [HIST_SIZE];
 
@@ -77,7 +80,7 @@ static const char semi_grafik [] [4]      /* 2. index = 0 : ASCII  */
    /* GR_TOP_RIGHT  */  '+',  (char)191,  'k', '?',   /* 0xbf */
    /* GR_BOT_LEFT   */  '+',  (char)192,  'm', '@',   /* 0xc0 */
    /* GR_BOT_RIGHT  */  '+',  (char)217,  'j', 'Y',   /* 0xd9 */
-                                                     
+
    /* GR_TICK_RIGHT */  '+',  (char)195,  't', '4',   /* 0xc3 */
    /* GR_TICK_LEFT  */  '+',  (char)180,  'u', 'C',   /* 0xb4 */
    /* GR_TICK_DOWN  */  '+',  (char)194,  'w', 'B',   /* 0xc2 */
@@ -102,7 +105,7 @@ enum SEMIGRAF_INDEX
          IND_GR_TICK_DOWN,
          IND_GR_TICK_UP,
 
-         IND_GR_VERTICAL,
+		 IND_GR_VERTICAL,
          IND_GR_HORIZONT,
          IND_GR_CROSS
        };
@@ -202,7 +205,7 @@ int row, col;
    out_1_char (GR_TOP_LEFT, 1);
    for (col = (left + 1) ; col < right ; col++)
    {
-      out_1_char (GR_HORIZONT, 1);
+	  out_1_char (GR_HORIZONT, 1);
    }
    out_1_char (GR_TOP_RIGHT, 1);
 
@@ -252,7 +255,7 @@ int row, col;
 #endif
 
    if (graf_index >= 2)
-      set_grafik_off (graf_index-2);
+	  set_grafik_off (graf_index-2);
 
    pop_cursor ();
 
@@ -377,7 +380,7 @@ int ii;
 
 /* cursor to end of line */
    if (select_flag)
-      set_cursor_to (row, right);
+	  set_cursor_to (row, right);
 
    pop_cursor ();
 
@@ -427,7 +430,7 @@ char *return_text = NULL;
             break;
 
 #if (ACT_OP_SYSTEM == SCO_UNIX)
-         case KEY_RUBOUT:    /* rubout */
+		 case KEY_RUBOUT:    /* rubout */
 #endif
          case KEY_DEL:
             if (hist [id][entry].delete_protected)
@@ -452,7 +455,7 @@ char *return_text = NULL;
                hist [id][entry].delete_protected++;   /* toggle protect mode */
                hist [id][entry].delete_protected &= 1;
                print_history_line (id, entry, 1, 0);
-               write_history_file (0);
+			   write_history_file (0);
             }
             break;
 
@@ -602,7 +605,7 @@ char *str_ptr;
                hist [id][entry].delete_protected = (char) delete_prot;
                memcpy (hist [id][entry].text, str_ptr, max_text);
    
-            /* forced end of string */
+			/* forced end of string */
                hist [id][entry].text [max_text - 1] = '\0';
    
             /* count up */
@@ -677,7 +680,7 @@ char *text_ptr;
          /* write history entries */
             for (id = 0 ; id < HIST_NUM ; id++)
             {
-               for (entry = 0 ; entry < HIST_SIZE ; entry++)
+			   for (entry = 0 ; entry < HIST_SIZE ; entry++)
                {
                   text_ptr = hist [id][entry].text;
                   if (*text_ptr)
@@ -702,7 +705,7 @@ char *text_ptr;
             show_status_line_2 ("*** history file written ***", 0, -2, 0);
          }
 
-         file_modified = 0;  /* reset flag */
+		 file_modified = 0;  /* reset flag */
       }
    }
    
@@ -752,7 +755,7 @@ STATIC char line_buf [BUF_256];
       {
          if (fgets (line_buf, sizeof(line_buf), fp) == NULL)
             break;   /* EOF */
-         
+
          mini_file_num = max (mini_file_num, (file+1));
 #if (ACT_OP_SYSTEM == MS_DOS) || (ACT_OP_SYSTEM == WIN_32) || (ACT_OP_SYSTEM == RDOS)
          values = sscanf (line_buf, "%d \"%[^\"]\" %ld",
@@ -777,7 +780,7 @@ STATIC char line_buf [BUF_256];
       }
       else
       {
-         show_status_line_2 ("*** got status file ***", 0, -2, 0);
+		 show_status_line_2 ("*** got status file ***", 0, -2, 0);
          return 1;   /* o.k. */
       }
    }
@@ -827,7 +830,7 @@ FILE *fp;
                           file_control[file].filename,
                           file_control[file].byte_index);
 #endif
-         }
+		 }
       }
 
       fclose (fp);
@@ -877,7 +880,7 @@ char del_prot;
    /* then search for last entry without protection */
       for (entry = (HIST_SIZE-1) ; entry >= 0 ; entry--)
       {
-         if (!hist [id][entry].delete_protected)
+		 if (!hist [id][entry].delete_protected)
          {
             start_ind = entry;
             modified = 1;
@@ -937,24 +940,46 @@ char *get_home_dir (void)
 static char *path;
 #define DEFAULT_PATH "."
 
+#if (ACT_OP_SYSTEM == RDOS)
+	const char *exename;
+	char str[256];
+	int pos;
+#endif
+
    path = getenv(":HOME:");
    if (path)
    {
-      limit_at_1st_blank (path);
-      if (*path)
-         return path;
+	  limit_at_1st_blank (path);
+	  if (*path)
+		 return path;
    }
-     
+
    path = getenv("HOME");
    if (path)
    {
-      limit_at_1st_blank (path);
-      if (*path)
-         return path;
+	  limit_at_1st_blank (path);
+	  if (*path)
+		 return path;
    }
 
+#if (ACT_OP_SYSTEM == RDOS)
+
+	exename = RdosGetExeName();
+
+	strcpy(str, exename);
+	pos = strlen(str) - 1;
+	while (pos && str[pos] != '\\')
+		pos--;
+
+	str[pos] = 0;
+
+	if (pos)
+		return str;
+
+#endif
+
    return DEFAULT_PATH;
-   
+
 }  /* get_home_dir */
 
 /* -FF-  */

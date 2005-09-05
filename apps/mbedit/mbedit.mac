@@ -14,7 +14,7 @@
 \* AV= 25; *\    \* NUMBER OF LINES                                    *\
 \* AC= 80; *\    \* NUMBER OF COLUMNS                                  *\
 AG=  3;          \* SEMI-GRAFIK: 0=OFF, 1=VGA/VT100, 2=ANSI, 3=ANSI/PC *\
-AM=  0;          \* 1 = MOUSE DRIVER ON (only 80 x 25 char)            *\
+AM=  1;          \* 1 = MOUSE DRIVER ON (only 80 x 25 char)            *\
 AS=  1;          \* Automatic Shift of Screen with Cursor              *\
 AE=200;          \* wait time for <esc> sequences in msec              *\
 
@@ -24,26 +24,26 @@ AE=200;          \* wait time for <esc> sequences in msec              *\
 \********************\
 
 \* SETTINGS FOR VGA GRAPHIC (MS-DOS)      *\
-AFNV=1B4D70;            \* NORMAL VIDEO   *\
-AFRV=1B4D07;            \* REVERS VIDEO   *\
+AFNV=1B4D07;            \* NORMAL VIDEO   *\
+AFRV=1B4D70;            \* REVERS VIDEO   *\
 AF1V=1B4D30;            \* STATUS LINE 1  *\
 AF2V=1B4D47;            \* STATUS LINE 2  *\
-AFCV=1B4D72;            \* COMMENTS       *\
-AFKV=1B4D71;            \* KEYWORDS       *\
-AFSV=1B4D74;            \* STRINGS        *\
+AFCV=1B4D02;            \* COMMENTS       *\
+AFKV=1B4D03;            \* KEYWORDS       *\
+AFSV=1B4D04;            \* STRINGS        *\
 \*       ||                               *\
 \*       |+--- Foreground Color 0-F       *\
 \*       +---- Background Color 0-F       *\
 \*             Background Bit 3 set = blinking *\
 
 \* SETTINGS FOR VGA GRAPHIC (Windows DOS-Box) *\
-AFNV=1B4DF0;            \* NORMAL VIDEO   *\
-AFRV=1B4D0F;            \* REVERS VIDEO   *\
+AFNV=1B4D07;            \* NORMAL VIDEO   *\
+AFRV=1B4D70;            \* REVERS VIDEO   *\
 AF1V=1B4D30;            \* STATUS LINE 1  *\
 AF2V=1B4D4F;            \* STATUS LINE 2  *\
-AFCV=1B4DF2;            \* COMMENTS       *\
-AFKV=1B4DF1;            \* KEYWORDS       *\
-AFSV=1B4DF4;            \* STRINGS        *\
+AFCV=1B4D02;            \* COMMENTS       *\
+AFKV=1B4D03;            \* KEYWORDS       *\
+AFSV=1B4D04;            \* STRINGS        *\
 \*       ||                               *\
 \*       |+--- Foreground Color 0-F       *\
 \*       +---- Background Color 0-F       *\
@@ -66,14 +66,14 @@ AFSV=1B4DF4;            \* STRINGS        *\
 \*\*                       8 = hidden       *\
 
 \* SETTINGS FOR ANSI                              *\
-AFNV="[0;30;48m"       \* NORMAL VIDEO           *\
-AFRV="[7;30;48m"       \* REVERS VIDEO           *\
+AFNV="[0;37;40m"       \* NORMAL VIDEO           *\
+AFRV="[7;30;47m"       \* REVERS VIDEO           *\
 AF1V="[0;30;46m"       \* STATUS LINE 1          *\
 AF2V="[0;37;41m"       \* STATUS LINE 2 (Unix)   If required, swap these two lines. *\
 AF2V="[0;38;41m"       \* STATUS LINE 2 (WIN_32) If required, swap these two lines. *\
-AFCV="[0;32;48m"       \* COMMENTS               *\
-AFKV="[0;34;48m"       \* KEYWORDS               *\
-AFSV="[0;31;48m"       \* STRINGS                *\
+AFCV="[0;32;40m"       \* COMMENTS               *\
+AFKV="[0;36;40m"       \* KEYWORDS               *\
+AFSV="[0;31;40m"       \* STRINGS                *\
 \*      |  |  |                                   *\
 \*      |  |  +--- Background Color 0-7 (0-8)     *\
 \*      |  +------ Foreground Color 0-7 (0-8)     *\
