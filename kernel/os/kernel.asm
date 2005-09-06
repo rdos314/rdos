@@ -438,7 +438,8 @@ PAGE
 init:
     mov eax,cr0
 ;    or al,22h
-    or al,4
+;    or al,4        ; enable this for FPU emulation
+    and al,NOT 4    ; enable this for real FPU
     mov cr0,eax
 ;
 	call ZeroRam
@@ -511,13 +512,6 @@ init:
 	dw 0,kernel_tss
 
 prot_init:
-;
-; enable FPU emulation!!
-;
-;    mov eax,cr0
-;    or al,4
-;    mov cr0,eax
-;
 	cli
 	call init_pre_tasking
 	call init_boot_system

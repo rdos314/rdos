@@ -3132,7 +3132,7 @@ EmFscale	Proc near
 	push ss
 	push ax
 	mov eax,RC_CHOP
-	push eax
+	push ax
 	call RealToInt
 	jnc EmFscaleIntOk
 ;
