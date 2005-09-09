@@ -261,6 +261,7 @@ void ProcessReferers()
 	AddReferer("aspforum.liebert.se", "aspforum.liebert.se");
 	AddReferer("dickflash.com", "dickflash.com");
 	AddReferer("99musik.com/forum", "99musik.com/forum");
+	AddReferer("whoa.nu", "whoa.nu");
 
 	quizfile.SetPos(0);
 	while (quizfile.Read(&Row, sizeof(Row)))
@@ -1974,6 +1975,7 @@ int main(int argc, char **argv)
 	WriteRefererNtCorrelation("musicnt.htm", "99musik.com/forum", "99musik.com/forum");
 	WriteRefererAsCorrelation("musicas.htm", "99musik.com/forum", "99musik.com/forum");
 	WriteRefererNtCorrelation("opiumnt.htm", "opiumse", "66.98.216.44/~opiumse/viewtopic.php?id=20888");
+	WriteRefererNtCorrelation("hiphopnt.htm", "whoa.nu", "whoa.nu");
 	WriteRefererNtCorrelation("compnt.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
