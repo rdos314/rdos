@@ -1893,6 +1893,19 @@ void WriteNewQuiz(const char *filename)
 	for (i = 0; i < 100; i++)
 		Used[i] = FALSE;
 
+// mark out high-corr questions
+
+	Used[83] = TRUE;
+	Used[80] = TRUE;
+	Used[68] = TRUE;
+	Used[98] = TRUE;
+	Used[44] = TRUE;
+	Used[37] = TRUE;
+	Used[70] = TRUE;
+	Used[38] = TRUE;
+	Used[75] = TRUE;
+	Used[27] = TRUE;
+
 	i = asntcorr.IndArr[0];
 
 	Used[i] = TRUE;
