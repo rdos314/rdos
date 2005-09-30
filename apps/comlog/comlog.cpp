@@ -18,14 +18,17 @@
 *##########################################################################*/
 void cdecl main()
 {
+	RdosWaitMilli(5000);
+
 	TSerialDebug Debug;
 	char Str[10];
 	TWaitDevice *WaitDevice;
 	TWait Wait;
 	TKeyboardDevice Keyboard;
+	int num;
 
-	TSerialDevice Port1(1, 19200, 'N', 8, 1);
-	TSerialDevice Port2(2, 19200, 'N', 8, 1);
+	TSerialDevice Port1(1, 9600, 'N', 8, 1);
+	TSerialDevice Port2(4, 9600, 'N', 8, 1);
 
 	Port1.Open();
 	Port2.Open();
@@ -34,10 +37,24 @@ void cdecl main()
 	Wait.Add(&Port2);
 	Wait.Add(&Keyboard);
 
+	int handle;
+	char FileName[40];
+
+	for (num = 0; num < 100; num++)
+	{
+		sprintf(FileName, "d:\\raw%03d.dat", num);
+		handle = RdosOpenFile(FileName, 0);
+		if (handle)
+			RdosCloseFile(handle);
+		else
+			break;
+	}
+	TFile *File = new TFile(FileName, 0);
+
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-//	TFile *File = new TFile("raw.dat", 0);
-	TFile *File = new TFile("z:\\device.dat", 0);
+//	TFile *File = new TFile("d:\\raw.dat", 0);
+//	TFile *File = new TFile("z:\\device.dat", 0);
 
 	for (;;)
 	{

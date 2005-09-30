@@ -32,6 +32,9 @@
 #include "file.h"
 #include "quizdb2.h"
 
+#define FALSE 0
+#define TRUE !FALSE
+
 #define MAX_IN_ROW      0x1000
 #define MAX_REFERERS    1024
 
@@ -268,12 +271,23 @@ void ProcessRow(char *str)
 	int hour, min, sec;
     TDateTime *time;
 	TQuizRow Row;
+	int quote;
 
 	for (fieldno = 0; fieldno < 107; fieldno++)
     {
         valstr = str;
-	    ptr = strstr(str, ",");
-		if (ptr)
+
+        quote = FALSE;
+        ptr = str;
+        while (*ptr && (quote || *ptr != ','))
+        {
+            if (*ptr == 0x27)
+                quote = !quote;
+
+            ptr++;
+        }
+                
+		if (*ptr == ',')
 		{
 			*ptr = 0;
 			str = ptr + 1;
@@ -281,7 +295,7 @@ void ProcessRow(char *str)
 			switch (fieldno)
 			{
 			    case 0:
-				    Row.ID = atol(valstr);
+					Row.ID = atol(valstr);
 					break;
 
 				case 1:

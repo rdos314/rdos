@@ -96,6 +96,16 @@ public:
     int IndArr[100];
 };
 
+struct TQuizQuestion
+{
+    const char *Text;
+    long double AsMean;
+    long double NtMean;
+    long double Chi2;
+    long double Corr;
+    int Used;
+};
+
 int RefCount = 0;
 TReferer *RefArr[MAX_REFERERS];
 TReferer *NoRef = new TReferer("", "No referrer");
@@ -106,6 +116,8 @@ TReferer *AddRef = new TReferer("", "Diagnosed ADD/ADHD");
 
 char *QuizTextArr[100];
 char *QuizHeadArr[100];
+
+TQuizQuestion Quiz_I[100];
 
 long double corr[100][100];
 
@@ -1237,6 +1249,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 *##########################################################################*/
 void WriteAsNtCorrelation(const char *filename)
 {
+    int i;
 	TQuizRow Row;
 	TPopulation *pop1;
 	TPopulation *pop2;
@@ -1258,6 +1271,15 @@ void WriteAsNtCorrelation(const char *filename)
     TCorrelation corr(pop1, pop2); 
 
 	WriteCorrTable(filename, "AS", "NT referrer", &corr, pop1, pop2, 6.0);
+
+    for (i = 0; i < 100; i++)
+    {
+        Quiz_I[i].Text = 0;
+        Quiz_I[i].AsMean = (long double)pop1->Sum[i] / pop1->Count;
+        Quiz_I[i].NtMean = (long double)pop2->Sum[i] / pop2->Count;
+        Quiz_I[i].Chi2 = corr.chi2[i];
+        Quiz_I[i].Corr = corr.corr[i];
+    }
 
 	delete pop1;
 	delete pop2;
@@ -1959,6 +1981,20 @@ void WriteNewQuiz(const char *filename)
 	delete pop2;
 }
 
+/*##################  WriteResult ##########################
+*   Purpose....: Write AS-NT result     	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteResult(const char *filename)
+{
+	TFile file(filename, 0);
+
+	file.Write(Quiz_I, sizeof(Quiz_I));
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -1995,5 +2031,6 @@ int main(int argc, char **argv)
 	 CalcCorrelation();
 	WriteCorrelation("corr.htm");
 	WriteNewQuiz("quiz.htm");
+	WriteResult("quiz1.dat");
 }
 

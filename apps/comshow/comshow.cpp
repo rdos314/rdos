@@ -65,13 +65,13 @@ void cdecl main()
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
 //	TFile RawFile("z:\\compacpu.dat");
-//	TFile RawFile("raw.dat");
+	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
 //	TFile RawFile("z:\\tatsuno.dat");
-	TFile RawFile("z:\\device.dat");
+//	TFile RawFile("z:\\device.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
@@ -80,11 +80,11 @@ void cdecl main()
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TZapProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
-	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
+//	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-//	analyzer.DefineLogFile("cotex.txt");
+	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
 //	analyzer.DefineLogFile("compac.txt");
 //	analyzer.DefineLogFile("pump.txt");
@@ -92,7 +92,7 @@ void cdecl main()
 //	analyzer.DefineLogFile("cbus.txt");
 //	analyzer.DefineLogFile("tatsuno.txt");
 //	analyzer.DefineLogFile("innova.txt");
-	analyzer.DefineLogFile("device.txt");
+//	analyzer.DefineLogFile("device.txt");
 	for (;;)
 	{
 		while (!RdosPollKeyboard())

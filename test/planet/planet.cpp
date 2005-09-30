@@ -454,8 +454,8 @@ void cdecl main()
 //	width = 240;
 //	height = 128;
 	bpp = 24;
-	width = 720;
-	height = 400;
+	width = 640;
+	height = 480;
 	VbeHandle = RdosSetVideoMode(&bpp, &width, &height, &rowsize, &buf);
 	if (VbeHandle == 0)
 	{
