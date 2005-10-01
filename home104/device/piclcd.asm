@@ -2159,9 +2159,9 @@ init	PROC far
 	mov cx,LCD_WIDTH
     mov dx,LCD_HEIGHT
 	mov di,OFFSET init_mode
-	RegisterVideoMode
+;	RegisterVideoMode
 ;
-    call InitLCD
+;    call InitLCD
 ;
 	mov ax,cs
 	mov ds,ax
