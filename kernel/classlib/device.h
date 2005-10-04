@@ -470,6 +470,7 @@ protected:
 	int FBusy;
 	int FReset;
 	char *FName;
+	TSection FPropertySection;
 
 private:
 	void Init();

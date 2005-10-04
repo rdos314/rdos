@@ -5219,6 +5219,7 @@ void TDevice::NotifyOpen()
 ##########################################################################*/
 void TDevice::Open()
 {
+    FPropertySection.Enter();
     if (!FOpen)
     {
         NotifyOpen();
@@ -5229,6 +5230,7 @@ void TDevice::Open()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
     }
+    FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5260,6 +5262,7 @@ void TDevice::NotifyClose()
 ##########################################################################*/
 void TDevice::Close()
 {
+    FPropertySection.Enter();
     if (FOpen)
     {
     	NotifyClose();
@@ -5270,6 +5273,7 @@ void TDevice::Close()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
 	}
+	FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5317,6 +5321,7 @@ void TDevice::NotifyEnable()
 ##########################################################################*/
 void TDevice::Enable()
 {
+    FPropertySection.Enter();
     if (!FEnabled)
     {
         NotifyEnable();
@@ -5327,6 +5332,7 @@ void TDevice::Enable()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
     }
+    FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5358,6 +5364,7 @@ void TDevice::NotifyDisable()
 ##########################################################################*/
 void TDevice::Disable()
 {
+    FPropertySection.Enter();
     if (FEnabled)
     {
     	NotifyDisable();
@@ -5368,6 +5375,7 @@ void TDevice::Disable()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
     }
+    FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5399,6 +5407,7 @@ int TDevice::IsEnabled() const
 ##########################################################################*/
 void TDevice::Online()
 {
+    FPropertySection.Enter();
 	if (!FOnline)
 	{
         FOnline = TRUE;
@@ -5408,6 +5417,7 @@ void TDevice::Online()
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
         SignalMsg(FVirtUnitList);
 	}
+	FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5423,6 +5433,7 @@ void TDevice::Online()
 ##########################################################################*/
 void TDevice::Offline()
 {
+    FPropertySection.Enter();
 	if (FOnline)
 	{
 		FOnline = FALSE;
@@ -5432,6 +5443,7 @@ void TDevice::Offline()
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
         SignalMsg(FVirtUnitList);
 	}
+	FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5500,6 +5512,7 @@ void TDevice::NotifyIdle()
 ##########################################################################*/
 void TDevice::Idle()
 {
+    FPropertySection.Enter();
 	if (FBusy)
     {
         NotifyIdle();
@@ -5510,6 +5523,7 @@ void TDevice::Idle()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
 	}
+	FPropertySection.Leave();
 }
 
 /*##########################################################################
@@ -5543,6 +5557,7 @@ void TDevice::NotifyBusy()
 ##########################################################################*/
 void TDevice::Busy()
 {
+    FPropertySection.Enter();
 	if (!FBusy)
 	{
 	    NotifyBusy();
@@ -5553,6 +5568,7 @@ void TDevice::Busy()
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
 	}
+	FPropertySection.Leave();
 }
 
 /*##########################################################################
