@@ -74,6 +74,8 @@ public:
     ~TPopulation();
 
     void Add(TQuizRow *Row);
+    long double GetMean(int QuestionNr);
+    long double GetSd(int QuestionNr);
 
     int Count;
     int Sum[100];
@@ -99,8 +101,12 @@ public:
 struct TQuizQuestion
 {
     const char *Text;
+    int AsCount;
     long double AsMean;
+    long double AsSd;
+    int NtCount;
     long double NtMean;
+    long double NtSd;
     long double Chi2;
     long double Corr;
     int Used;
@@ -913,6 +919,41 @@ void TPopulation::Add(TQuizRow *Row)
     Count++;
 }
 
+/*##################  TPopulation::GetMean ##########################
+*   Purpose....: Get mean value for a single question      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long double TPopulation::GetMean(int QuestionNr)
+{
+	return (long double)Sum[QuestionNr] / Count;
+}
+
+/*##################  TPopulation::GetSd ##########################
+*   Purpose....: Get standard deviation for a single question      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long double TPopulation::GetSd(int QuestionNr)
+{
+	int e;
+	long double val;
+	long double rsum = 0;
+	long double mean = GetMean(QuestionNr);
+
+	for (e = 0; e < Count; e++)
+	{
+		val = (long double)ValArr[QuestionNr][e] - mean;
+		rsum += val * val;
+	}
+
+    return sqrt(rsum / ((long double)Count - 1));
+}
+
 /*##################  TCorrelation::TCorrelation ##########################
 *   Purpose....: Calculate correlation	   					      	        #
 *   In params..: *                                                          #
@@ -1275,8 +1316,12 @@ void WriteAsNtCorrelation(const char *filename)
     for (i = 0; i < 100; i++)
     {
         Quiz_I[i].Text = 0;
-        Quiz_I[i].AsMean = (long double)pop1->Sum[i] / pop1->Count;
-        Quiz_I[i].NtMean = (long double)pop2->Sum[i] / pop2->Count;
+        Quiz_I[i].AsCount = pop1->Count;
+        Quiz_I[i].AsMean = pop1->GetMean(i);   
+        Quiz_I[i].AsSd = pop1->GetSd(i);      
+        Quiz_I[i].NtCount = pop2->Count;
+        Quiz_I[i].NtMean = pop2->GetMean(i);
+        Quiz_I[i].NtSd = pop2->GetSd(i);
         Quiz_I[i].Chi2 = corr.chi2[i];
         Quiz_I[i].Corr = corr.corr[i];
     }
