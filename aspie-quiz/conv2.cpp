@@ -267,9 +267,6 @@ void ProcessRow(char *str)
 	char *ptr;
 	int fieldno;
 	int i;
-	int year, month, day;
-	int hour, min, sec;
-    TDateTime *time;
 	TQuizRow Row;
 	int quote;
 
@@ -299,23 +296,6 @@ void ProcessRow(char *str)
 					break;
 
 				case 1:
-                    valstr = GetQuoted(valstr);
-                    if (valstr)
-                    {					    
-    					sscanf(valstr, "%04d-%02d-%02d %02d:%02d:%02d",
-									        &year, &month, &day,
-							                &hour, &min, &sec);
-
-    					time = new TDateTime(year, month, day, hour, min, sec);
-						Row.LsbTime = time->GetLsb();
-						Row.MsbTime = time->GetMsb();
-						delete time;
-				    }
-				    else
-				    {
-				        Row.LsbTime = 0;
-				        Row.MsbTime = 0;
-				    }
                     break;
 
                 case 2:

@@ -50,22 +50,22 @@ TFile addfile("add.dat", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-    switch (Row->Diagnos)
-    {
-        case DX_AS:
+	 switch (Row->Diagnos)
+	 {
+		  case DX_AS:
 			asfile.Write(Row, sizeof(TQuizRow));
 			break;
 
 		  case DX_ADD:
-            addfile.Write(Row, sizeof(TQuizRow));
-            break;
+				addfile.Write(Row, sizeof(TQuizRow));
+				break;
 
-        case DX_REFERER:
-            quizfile.Write(Row, sizeof(TQuizRow));
-            break;
-    }
-    
-    printf("%d Now: %d Before: %d, Ref: %s\n", Row->ID, Row->ResultNow, Row->ResultBefore, Row->Referer);    
+		  case DX_REFERER:
+				quizfile.Write(Row, sizeof(TQuizRow));
+				break;
+	 }
+
+	 printf("%d Now: %d Before: %d, Ref: %s\n", Row->ID, Row->ResultNow, Row->ResultBefore, Row->Referer);
 }
 
 /*##################  CalcScore ##########################
@@ -77,38 +77,38 @@ void HandleRow(TQuizRow *Row)
 *##########################################################################*/
 void CalcScore(TQuizRow *Row)
 {
-    int nsum = 0;
-    int fsum = 0;
-    int i;
+	 int nsum = 0;
+	 int fsum = 0;
+	 int i;
 
-    for (i = 0; i < 100; i++)
-    {
-        if (Row->Now[i] && Row->Before[i])    
-        {
-            nsum += Row->Now[i];
-            fsum += Row->Before[i];
-        }    
-        else
-        {
-            if (Row->Now[i])
-            {
-                nsum += Row->Now[i];
-                fsum += Row->Now[i];
-            }
+	 for (i = 0; i < 100; i++)
+	 {
+		  if (Row->Now[i] && Row->Before[i])
+		  {
+				nsum += Row->Now[i];
+				fsum += Row->Before[i];
+		  }
+		  else
+		  {
+				if (Row->Now[i])
+				{
+					 nsum += Row->Now[i];
+					 fsum += Row->Now[i];
+				}
 
-            if (Row->Before[i])
-            {
-                nsum += Row->Before[i];
-                fsum += Row->Before[i];
-            }
-        }
-    }
+				if (Row->Before[i])
+				{
+					 nsum += Row->Before[i];
+					 fsum += Row->Before[i];
+				}
+		  }
+	 }
 
 	if (Row->ResultNow)
 	{
-	    if (Row->ResultNow != nsum)
-	    {
-	        printf("Now: %d, expected: %d", nsum, Row->ResultNow);
+		 if (Row->ResultNow != nsum)
+		 {
+			  printf("Now: %d, expected: %d", nsum, Row->ResultNow);
 			  exit(0);
 		 }
 	}
@@ -120,11 +120,11 @@ void CalcScore(TQuizRow *Row)
 		 if (Row->ResultBefore != fsum)
 		 {
 			  printf("Before: %d, expected: %d", fsum, Row->ResultBefore);
-	        exit(0);
-	    }
+			  exit(0);
+		 }
 	}
 	else
-	    Row->ResultBefore = fsum;
+		 Row->ResultBefore = fsum;
 }
 
 /*##################  UpdateReferer ##########################
@@ -136,28 +136,28 @@ void CalcScore(TQuizRow *Row)
 *##########################################################################*/
 char *UpdateReferer(char *Referer)
 {
-    char *ptr;
+	 char *ptr;
 	 const char http[] = "http://";
 	 const char www[] = "www.";
-    char str[10];
+	 char str[10];
 
-    ptr = strchr(Referer, '&');
-    if (ptr)
-        *ptr = 0;
+	 ptr = strchr(Referer, '&');
+	 if (ptr)
+		  *ptr = 0;
 
-    memcpy(str, Referer, strlen(http));
-    str[strlen(http)] = 0;
+	 memcpy(str, Referer, strlen(http));
+	 str[strlen(http)] = 0;
 
-    if (!strcmp(str, http))
-        Referer += strlen(http);
+	 if (!strcmp(str, http))
+		  Referer += strlen(http);
 
-    memcpy(str, Referer, strlen(www));
-    str[strlen(www)] = 0;
+	 memcpy(str, Referer, strlen(www));
+	 str[strlen(www)] = 0;
 
-    if (!strcmp(str, www))
-        Referer += strlen(www);
+	 if (!strcmp(str, www))
+		  Referer += strlen(www);
 
-    return Referer;
+	 return Referer;
 }
 
 /*##################  GetQuoted ##########################
@@ -220,20 +220,20 @@ void ProcessRow(char *str)
 					break;
 
 				case 3:
-                    valstr = GetQuoted(valstr);
-                    if (valstr)
-                    {					    
-    					sscanf(valstr, "%04d-%02d-%02d %02d:%02d:%02d",
-									        &year, &month, &day,
-							                &hour, &min, &sec);
+						  valstr = GetQuoted(valstr);
+						  if (valstr)
+						  {
+						sscanf(valstr, "%04d-%02d-%02d %02d:%02d:%02d",
+											  &year, &month, &day,
+												 &hour, &min, &sec);
 
-    					time = new TDateTime(year, month, day, hour, min, sec);
+						time = new TDateTime(year, month, day, hour, min, sec);
 						Row.LsbTime = time->GetLsb();
 						Row.MsbTime = time->GetMsb();
 						delete time;
-				    }
-				    else
-				    {
+					 }
+					 else
+					 {
 				        Row.LsbTime = 0;
 				        Row.MsbTime = 0;
 				    }
@@ -245,7 +245,7 @@ void ProcessRow(char *str)
 
                 case 6:
                     Row.Age = atoi(valstr);
-                    break;
+						  break;
 
                 case 7:
                     Row.Gender = atoi(valstr);
@@ -256,7 +256,7 @@ void ProcessRow(char *str)
                     if (valstr)
                     {
                         valstr = UpdateReferer(valstr);
-                        if (strlen(valstr) >= 100)
+								if (strlen(valstr) >= 100)
                             valstr[99] = 0;
                         strcpy(Row.Referer, valstr);
                     }
@@ -268,7 +268,7 @@ void ProcessRow(char *str)
                     Row.ResultNow = atoi(valstr);
                     break;
 
-                case 10:
+					 case 10:
 						  Row.ResultBefore = atoi(valstr);
                     break;
 

@@ -10,8 +10,6 @@
 struct TQuizRow
 {
     long ID;
-    long LsbTime;
-    long MsbTime;
     char Diagnos;
     int  BirthYear;
     char Gender;

@@ -127,6 +127,18 @@ TQuizQuestion Quiz_I[100];
 
 long double corr[100][100];
 
+/*##################  round ##########################
+*   Purpose....: round long double to int       	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int round(long double val)
+{
+	return (int)(val + 0.5);
+}
+
 /*##################  TReferer::TReferer ##########################
 *   Purpose....: Referer constructor    					      	        #
 *   In params..: *                                                          #
@@ -137,17 +149,17 @@ long double corr[100][100];
 TReferer::TReferer(const char *Search, const char *Ref)
 {
 	strcpy(RefererSearch, Search);
-    strcpy(RefererRef, Ref);
-    Count = 0;
-    Now = 0;
-    Before = 0;
-    Result0_59 = 0;
-    Result60_99 = 0;
-    Result100_139 = 0;
-    Result140_200 = 0;
+	 strcpy(RefererRef, Ref);
+	 Count = 0;
+	 Now = 0;
+	 Before = 0;
+	 Result0_59 = 0;
+	 Result60_99 = 0;
+	 Result100_139 = 0;
+	 Result140_200 = 0;
 
-    NT = FALSE;
-    Aspie = FALSE;
+	 NT = FALSE;
+	 Aspie = FALSE;
 }
 
 /*##################  TReferer::~TReferer ##########################
@@ -170,10 +182,10 @@ TReferer::~TReferer()
 *##########################################################################*/
 TReferer::IsMatch(const char *Referer)
 {
-    if (strstr(Referer, RefererSearch))
-        return TRUE;
-    else
-        return FALSE;
+	 if (strstr(Referer, RefererSearch))
+		  return TRUE;
+	 else
+		  return FALSE;
 }
 
 /*##################  FindReferer ##########################
@@ -185,19 +197,19 @@ TReferer::IsMatch(const char *Referer)
 *##########################################################################*/
 TReferer *FindReferer(char *Referer)
 {
-    int i;
-    TReferer *ref;
+	 int i;
+	 TReferer *ref;
 
-    if (strlen(Referer) == 0)
-        return NoRef;
+	 if (strlen(Referer) == 0)
+		  return NoRef;
 
-    for (i = 0; i < RefCount; i++)
-    {
-        ref = RefArr[i];
-        if (ref->IsMatch(Referer))
-            return ref;
-    }
-    return 0;
+	 for (i = 0; i < RefCount; i++)
+	 {
+		  ref = RefArr[i];
+		  if (ref->IsMatch(Referer))
+				return ref;
+	 }
+	 return 0;
 }
 
 /*##################  AddReferer ##########################
@@ -209,11 +221,11 @@ TReferer *FindReferer(char *Referer)
 *##########################################################################*/
 TReferer *AddReferer(char *Search, char *Ref)
 {
-    TReferer *ref;
+	 TReferer *ref;
 
 	if (RefCount < MAX_REFERERS)
 	{
-        ref = new TReferer(Search, Ref);
+		  ref = new TReferer(Search, Ref);
 		RefArr[RefCount] = ref;
 		RefCount++;
 
@@ -232,25 +244,25 @@ TReferer *AddReferer(char *Search, char *Ref)
 *##########################################################################*/
 void SortReferers()
 {
-    int i, j;
-    int count;
-    TReferer *ref;
+	 int i, j;
+	 int count;
+	 TReferer *ref;
 
-    for (i = 0; i < RefCount; i++)
-    {
-        count = RefArr[i]->Count;        
+	 for (i = 0; i < RefCount; i++)
+	 {
+		  count = RefArr[i]->Count;
 
-        for (j = i + 1; j < RefCount; j++)
-        {
-            if (RefArr[j]->Count > count)
-            {
-                ref = RefArr[j];
-                RefArr[j] = RefArr[i];
-                RefArr[i] = ref;
-                count = ref->Count;
-            }
-        }
-    }
+		  for (j = i + 1; j < RefCount; j++)
+		  {
+				if (RefArr[j]->Count > count)
+				{
+					 ref = RefArr[j];
+					 RefArr[j] = RefArr[i];
+					 RefArr[i] = ref;
+					 count = ref->Count;
+				}
+		  }
+	 }
 }
 
 /*##################  ProcessReferers ##########################
@@ -264,8 +276,8 @@ void ProcessReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
-    int i;
-    int val;
+	 int i;
+	 int val;
 
 	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
 	AddReferer("aspiesforfreedom.", "aspiesforfreedom.com");
@@ -290,60 +302,60 @@ void ProcessReferers()
 
 		if (ref)
 		{
-		    ref->Count++;
-		    ref->Now += Row.ResultNow;
-		    ref->Before += Row.ResultBefore;
+			 ref->Count++;
+			 ref->Now += Row.ResultNow;
+			 ref->Before += Row.ResultBefore;
 
-		    if (Row.ResultNow >= 60)
-		    {
-		        if (Row.ResultNow >= 100)
-		        {
-		            if (Row.ResultNow >= 140)
-		                ref->Result140_200++;
-		            else
-		                ref->Result100_139++;
-		        }
+			 if (Row.ResultNow >= 60)
+			 {
+				  if (Row.ResultNow >= 100)
+				  {
+						if (Row.ResultNow >= 140)
+							 ref->Result140_200++;
+						else
+							 ref->Result100_139++;
+				  }
 				  else
-		            ref->Result60_99++;
-		    }
-		    else
-		        ref->Result0_59++;
+						ref->Result60_99++;
+			 }
+			 else
+				  ref->Result0_59++;
 		}
 	}
 
-    for (i = 0; i < RefCount; i++)
-    {
-        ref = RefArr[i];
-        
-        if (ref->Count >= 5)
-        {        
-            val = ref->Result0_59 * 100 / ref->Count;        
-            if (val >= 40)
-            {
-                ref->NT = TRUE;
-                NTRef->Now += ref->Now;
-                NTRef->Before += ref->Before;
-                NTRef->Count += ref->Count;
-                NTRef->Result0_59 += ref->Result0_59;
-                NTRef->Result60_99 += ref->Result60_99;
-					 NTRef->Result100_139 += ref->Result100_139;
-                NTRef->Result140_200 += ref->Result140_200;
-            }
+	 for (i = 0; i < RefCount; i++)
+	 {
+		  ref = RefArr[i];
 
-            val = ref->Result140_200 * 100 / ref->Count;
+		  if (ref->Count >= 5)
+		  {
+				val = ref->Result0_59 * 100 / ref->Count;
+				if (val >= 40)
+				{
+					 ref->NT = TRUE;
+					 NTRef->Now += ref->Now;
+					 NTRef->Before += ref->Before;
+					 NTRef->Count += ref->Count;
+					 NTRef->Result0_59 += ref->Result0_59;
+					 NTRef->Result60_99 += ref->Result60_99;
+					 NTRef->Result100_139 += ref->Result100_139;
+					 NTRef->Result140_200 += ref->Result140_200;
+				}
+
+				val = ref->Result140_200 * 100 / ref->Count;
 				if (val >= 35)
 				{
-                ref->Aspie = TRUE;
-                AspieRef->Now += ref->Now;
-                AspieRef->Before += ref->Before;
-                AspieRef->Count += ref->Count;
-                AspieRef->Result0_59 += ref->Result0_59;
-                AspieRef->Result60_99 += ref->Result60_99;
-                AspieRef->Result100_139 += ref->Result100_139;
-                AspieRef->Result140_200 += ref->Result140_200;
-            }
-        }
-    }            
+					 ref->Aspie = TRUE;
+					 AspieRef->Now += ref->Now;
+					 AspieRef->Before += ref->Before;
+					 AspieRef->Count += ref->Count;
+					 AspieRef->Result0_59 += ref->Result0_59;
+					 AspieRef->Result60_99 += ref->Result60_99;
+					 AspieRef->Result100_139 += ref->Result100_139;
+					 AspieRef->Result140_200 += ref->Result140_200;
+				}
+		  }
+	 }
 
 	SortReferers();
 }
@@ -362,25 +374,25 @@ void ProcessAs()
 	asfile.SetPos(0);
 	while (asfile.Read(&Row, sizeof(Row)))
 	{
-        AsRef->Count++;
+		  AsRef->Count++;
 		AsRef->Now += Row.ResultNow;
 		AsRef->Before += Row.ResultBefore;
 
 		if (Row.ResultNow >= 60)
 		{
-		    if (Row.ResultNow >= 100)
-		    {
-		        if (Row.ResultNow >= 140)
-		            AsRef->Result140_200++;
+			 if (Row.ResultNow >= 100)
+			 {
+				  if (Row.ResultNow >= 140)
+						AsRef->Result140_200++;
 				  else
-		            AsRef->Result100_139++;
-		    }
-		    else
-		        AsRef->Result60_99++;
+						AsRef->Result100_139++;
+			 }
+			 else
+				  AsRef->Result60_99++;
 		}
 		else
-		    AsRef->Result0_59++;
-    }
+			 AsRef->Result0_59++;
+	 }
 }
 
 /*##################  ProcessAdd ##########################
@@ -397,25 +409,25 @@ void ProcessAdd()
 	addfile.SetPos(0);
 	while (addfile.Read(&Row, sizeof(Row)))
 	{
-        AddRef->Count++;
+		  AddRef->Count++;
 		AddRef->Now += Row.ResultNow;
 		AddRef->Before += Row.ResultBefore;
 
 		if (Row.ResultNow >= 60)
 		{
-		    if (Row.ResultNow >= 100)
-		    {
-		        if (Row.ResultNow >= 140)
-		            AddRef->Result140_200++;
-		        else
-		            AddRef->Result100_139++;
-		    }
-		    else
-		        AddRef->Result60_99++;
+			 if (Row.ResultNow >= 100)
+			 {
+				  if (Row.ResultNow >= 140)
+						AddRef->Result140_200++;
+				  else
+						AddRef->Result100_139++;
+			 }
+			 else
+				  AddRef->Result60_99++;
 		}
 		else
-		    AddRef->Result0_59++;
-    }
+			 AddRef->Result0_59++;
+	 }
 }
 
 /*##################  WriteReferer ##########################
@@ -427,119 +439,119 @@ void ProcessAdd()
 *##########################################################################*/
 void WriteReferer(TFile &file, TReferer *ref)
 {
-    char str[80];
+	 char str[80];
 
-    file.Write("<tr style='height:24.75pt'>");
+	 file.Write("<tr style='height:24.75pt'>");
 
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
-    file.Write("<p align=\"center\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Count);
-    file.Write(str);
-    
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Now / ref->Count);
-    file.Write(str);
-    
-    file.Write("</b>");
-    file.Write("</p>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Before / ref->Count);
-    file.Write(str);
-    
-    file.Write("</b>");
-	 file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"right\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Result0_59 * 100 / ref->Count);
-    file.Write(str);
-    
-    file.Write("%</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"right\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Result60_99 * 100 / ref->Count);
-	 file.Write(str);
-    
-    file.Write("%</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"right\">");
-    file.Write("<b>");
-
-    sprintf(str, "%d", ref->Result100_139 * 100 / ref->Count);
-    file.Write(str);
-
-    file.Write("%</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"right\">");
+	 file.Write("<p align=\"center\">");
 	 file.Write("<b>");
 
-    sprintf(str, "%d", ref->Result140_200 * 100 / ref->Count);
-    file.Write(str);
-    
-    file.Write("%</b>");
-    file.Write("</p>");
+	 sprintf(str, "%d", ref->Count);
+	 file.Write(str);
 
-    file.Write("</td>");
+	 file.Write("</b>");
+	 file.Write("</p>");
 
-    file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
+	 file.Write("</td>");
 
-    file.Write("<p>");
-    file.Write("<b>");
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Now / ref->Count);
+	 file.Write(str);
+
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Before / ref->Count);
+	 file.Write(str);
+
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"right\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Result0_59 * 100 / ref->Count);
+	 file.Write(str);
+
+	 file.Write("%</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"right\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Result60_99 * 100 / ref->Count);
+	 file.Write(str);
+
+	 file.Write("%</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"right\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Result100_139 * 100 / ref->Count);
+	 file.Write(str);
+
+	 file.Write("%</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"right\">");
+	 file.Write("<b>");
+
+	 sprintf(str, "%d", ref->Result140_200 * 100 / ref->Count);
+	 file.Write(str);
+
+	 file.Write("%</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
+
+	 file.Write("<p>");
+	 file.Write("<b>");
 
 	if (strlen(ref->RefererSearch))
-    {
-        file.Write("<a href=\"http://");
-        file.Write(ref->RefererRef);
-        file.Write("\">http://");
-        file.Write(ref->RefererRef);
-        file.Write("</a>");
-    }
+	 {
+		  file.Write("<a href=\"http://");
+		  file.Write(ref->RefererRef);
+		  file.Write("\">http://");
+		  file.Write(ref->RefererRef);
+		  file.Write("</a>");
+	 }
 	 else
-        file.Write(ref->RefererRef);
+		  file.Write(ref->RefererRef);
 
-    file.Write("</b>");
-    file.Write("</p>");
-    file.Write("</td>");
-    file.Write("</tr>");
+	 file.Write("</b>");
+	 file.Write("</p>");
+	 file.Write("</td>");
+	 file.Write("</tr>");
 }
 
 /*##################  PrintReferers ##########################
@@ -551,95 +563,95 @@ void WriteReferer(TFile &file, TReferer *ref)
 *##########################################################################*/
 void WriteReferers(const char *filename)
 {
-    TFile file(filename, 0);
-    int i;
+	 TFile file(filename, 0);
+	 int i;
 
-    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+	 file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
 	 file.Write("<tr style='height:24.75pt'>");
 
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
-    file.Write("<p align=\"center\">");
-    file.Write("<b>Answers");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>Now");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-	 file.Write("<b>Before");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>0-59");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>60-99");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>100-139");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-	      
-    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
-
-    file.Write("<p align=\"center\">");
-    file.Write("<b>140-200");
-    file.Write("</b>");
-    file.Write("</p>");
-
-    file.Write("</td>");
-
-    file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
-
-    file.Write("<p>");
-    file.Write("<b>Web site");
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>Answers");
 	 file.Write("</b>");
-    file.Write("</p>");
-    file.Write("</td>");
-    file.Write("</tr>");
+	 file.Write("</p>");
 
-    WriteReferer(file, AsRef);
-    WriteReferer(file, AddRef);
-    WriteReferer(file, AspieRef);
-    WriteReferer(file, NTRef);
-    WriteReferer(file, NoRef);
+	 file.Write("</td>");
 
-    for (i = 0; i < RefCount; i++)
-        WriteReferer(file, RefArr[i]);
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
 
-    file.Write("</table>");
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>Now");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>Before");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>0-59");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>60-99");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>100-139");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	 file.Write("<p align=\"center\">");
+	 file.Write("<b>140-200");
+	 file.Write("</b>");
+	 file.Write("</p>");
+
+	 file.Write("</td>");
+
+	 file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
+
+	 file.Write("<p>");
+	 file.Write("<b>Web site");
+	 file.Write("</b>");
+	 file.Write("</p>");
+	 file.Write("</td>");
+	 file.Write("</tr>");
+
+	 WriteReferer(file, AsRef);
+	 WriteReferer(file, AddRef);
+	 WriteReferer(file, AspieRef);
+	 WriteReferer(file, NTRef);
+	 WriteReferer(file, NoRef);
+
+	 for (i = 0; i < RefCount; i++)
+		  WriteReferer(file, RefArr[i]);
+
+	 file.Write("</table>");
 }
 
 
@@ -652,28 +664,28 @@ void WriteReferers(const char *filename)
 *##########################################################################*/
 void ProcessHBT()
 {
-    int ok;
+	 int ok;
 	TQuizRow Row;
 	TReferer *ref;
-    TFile hbtfile("hbt.dat", 0);
+	 TFile hbtfile("hbt.dat", 0);
 
 	quizfile.SetPos(0);
 	while (quizfile.Read(&Row, sizeof(Row)))
 	{
 
-	    ok = FALSE;
-	    
-	    if (strlen(Row.Referer))
-	    {
+		 ok = FALSE;
+
+		 if (strlen(Row.Referer))
+		 {
 			if (strstr(Row.Referer, "atforumz.com/showthread.php?t=274235"))
 				ok = TRUE;
 
 			if (strstr(Row.Referer, "livejournal.com/community/gay_oddities"))
-                ok = TRUE;
-        }
+					 ok = TRUE;
+		  }
 
-        if (ok)
-		    hbtfile.Write(&Row, sizeof(Row));
+		  if (ok)
+			 hbtfile.Write(&Row, sizeof(Row));
 	}
 }
 
@@ -689,8 +701,8 @@ void CreateReferences()
 {
 	TQuizRow Row;
 	TReferer *ref;
-    TFile ntfile("nt.dat", 0);
-    TFile aspiefile("aspie.dat", 0);
+	 TFile ntfile("nt.dat", 0);
+	 TFile aspiefile("aspie.dat", 0);
 
 	quizfile.SetPos(0);
 	while (quizfile.Read(&Row, sizeof(Row)))
@@ -699,11 +711,11 @@ void CreateReferences()
 
 		if (ref)
 		{
-		    if (ref->NT)
-		        ntfile.Write(&Row, sizeof(Row));
+			 if (ref->NT)
+				  ntfile.Write(&Row, sizeof(Row));
 
-		    if (ref->Aspie)
-		        aspiefile.Write(&Row, sizeof(Row));
+			 if (ref->Aspie)
+				  aspiefile.Write(&Row, sizeof(Row));
 		}
 	}
 }
@@ -719,11 +731,11 @@ void InitQuizText()
 {
 	 int i;
 
-    for (i = 0; i < 100; i++)
-        QuizHeadArr[i] = 0;
+	 for (i = 0; i < 100; i++)
+		  QuizHeadArr[i] = 0;
 
 	QuizHeadArr[0] = "BRAIN FUNCTION & LEARNING";
- 
+
 	QuizTextArr[0] = "Are you very logical and get surprised or impatient when others aren't?";
 	QuizTextArr[1] = "Do you find visualizing easy?";
 	QuizTextArr[2] = "Do you get confused by verbal instructions - especially several at the same time?";
@@ -739,7 +751,7 @@ void InitQuizText()
 
 
 	QuizHeadArr[12] = "LANGUAGE & SPEECH";
- 
+
 	QuizTextArr[12] = "Do you have excellent vocabulary and/or a fascination with words?";
 	QuizTextArr[13] = "Is it difficult or tiresome for you to talk?";
 	QuizTextArr[14] = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)t?";
@@ -756,7 +768,7 @@ void InitQuizText()
 	QuizTextArr[22] = "Do you have unconventional, often unique ways of solving problems?";
 
 	QuizHeadArr[23] = "HYPERFOCUS & PERSEVERATION";
- 
+
 	QuizTextArr[23] = "Do you have an ability to stick to something that interests you and not give up?";
 	QuizTextArr[24] = "Does it feel vitally important to be left undisturbed to persue your special interests?";
 	QuizTextArr[25] = "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?";
@@ -825,7 +837,7 @@ void InitQuizText()
 	QuizTextArr[72] = "Do you dislike shaking hands?";
 
 	QuizHeadArr[73] = "EMOTIONS";
- 
+
 	QuizTextArr[73] = "Are you fairly cool & dispassionate and usually only have feelings when provoked or excited?";
 	QuizTextArr[74] = "Do you easily get frustrated and upset when you are stressed, tired, hungry, interrupted, questioned, over-stimulated, or when things don't go as you had anticipated?";
 	QuizTextArr[75] = "Do you tend to express your feelings in ways that may baffle others (e.g. banging your head in the wall, or being unable to show anything at all)?";
@@ -1221,7 +1233,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 			file.Write("<p>");
 			file.Write("<b>");
 
-			ival = 100 * pop1->Sum[ind] / pop1->Count;
+			ival = round(100.0 * pop1->Sum[ind] / pop1->Count);
 			sprintf(str, "%d.%02d", ival / 100, ival % 100);
 			file.Write(str);
 
@@ -1235,7 +1247,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 			file.Write("<p>");
 			file.Write("<b>");
 
-			ival = 100 * pop2->Sum[ind] / pop2->Count;
+			ival = round(100.0 * pop2->Sum[ind] / pop2->Count);
 			sprintf(str, "%d.%02d", ival / 100, ival % 100);
 			file.Write(str);
 
@@ -1249,7 +1261,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 			file.Write("<p>");
 			file.Write("<b>");
 
-			ival = (int)corr->chi2[ind];
+			ival = round(corr->chi2[ind]);
 
 			sprintf(str, "%d", ival);
 			file.Write(str);
@@ -1264,7 +1276,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 			file.Write("<p>");
 			file.Write("<b>");
 
-			ival = 100 * corr->corr[ind];
+			ival = round(100.0 * corr->corr[ind]);
 //	    	ival = 100 * sqrt(corr.chi2[ind] / (pop1->Count + pop2->Count));
 
 			sprintf(str, "%d", ival);
@@ -1290,7 +1302,7 @@ void WriteCorrTable(const char *filename, const char *name1, const char *name2, 
 *##########################################################################*/
 void WriteAsNtCorrelation(const char *filename)
 {
-    int i;
+	 int i;
 	TQuizRow Row;
 	TPopulation *pop1;
 	TPopulation *pop2;
@@ -1298,33 +1310,33 @@ void WriteAsNtCorrelation(const char *filename)
 	TFile file2("nt.dat");
 
 	pop1 = new TPopulation;
-    
+
 	file1.SetPos(0);
 	while (file1.Read(&Row, sizeof(Row)))
 		 pop1->Add(&Row);
 
-    pop2 = new TPopulation;
+	 pop2 = new TPopulation;
 
 	file2.SetPos(0);
 	while (file2.Read(&Row, sizeof(Row)))
-	    pop2->Add(&Row);
+		 pop2->Add(&Row);
 
-    TCorrelation corr(pop1, pop2); 
+	 TCorrelation corr(pop1, pop2);
 
 	WriteCorrTable(filename, "AS", "NT referrer", &corr, pop1, pop2, 6.0);
 
-    for (i = 0; i < 100; i++)
-    {
-        Quiz_I[i].Text = 0;
-        Quiz_I[i].AsCount = pop1->Count;
-        Quiz_I[i].AsMean = pop1->GetMean(i);   
-        Quiz_I[i].AsSd = pop1->GetSd(i);      
-        Quiz_I[i].NtCount = pop2->Count;
-        Quiz_I[i].NtMean = pop2->GetMean(i);
-        Quiz_I[i].NtSd = pop2->GetSd(i);
-        Quiz_I[i].Chi2 = corr.chi2[i];
-        Quiz_I[i].Corr = corr.corr[i];
-    }
+	 for (i = 0; i < 100; i++)
+	 {
+		  Quiz_I[i].Text = 0;
+		  Quiz_I[i].AsCount = pop1->Count;
+		  Quiz_I[i].AsMean = pop1->GetMean(i);
+		  Quiz_I[i].AsSd = pop1->GetSd(i);
+		  Quiz_I[i].NtCount = pop2->Count;
+		  Quiz_I[i].NtMean = pop2->GetMean(i);
+		  Quiz_I[i].NtSd = pop2->GetSd(i);
+		  Quiz_I[i].Chi2 = corr.chi2[i];
+		  Quiz_I[i].Corr = corr.corr[i];
+	 }
 
 	delete pop1;
 	delete pop2;
@@ -1346,16 +1358,16 @@ void WriteAsAspieCorrelation(const char *filename)
 	TFile file2("aspie.dat");
 
 	pop1 = new TPopulation;
-    
+
 	file1.SetPos(0);
 	while (file1.Read(&Row, sizeof(Row)))
 		 pop1->Add(&Row);
 
-    pop2 = new TPopulation;
+	 pop2 = new TPopulation;
 
 	file2.SetPos(0);
 	while (file2.Read(&Row, sizeof(Row)))
-	    pop2->Add(&Row);
+		 pop2->Add(&Row);
 
 	TCorrelation corr(pop1, pop2);
 
@@ -1729,9 +1741,9 @@ void WriteCorrelation(const char *filename)
 			file.Write("</tr>");
 		}
 
-    	MaxVal = -1.0;
-	    MaxInd1 = 0;
-    	MaxInd2 = 0;
+		MaxVal = -1.0;
+		 MaxInd1 = 0;
+		MaxInd2 = 0;
 
 		for (i = 0; i < 100; i++)
 		{
@@ -1782,7 +1794,7 @@ void WriteCorrelation(const char *filename)
 		file.Write("<p>");
 		file.Write("<b>");
 
-        ival = 100 * asntcorr.corr[MaxInd1];
+		  ival = round(100.0 * asntcorr.corr[MaxInd1]);
 		sprintf(str, "%d", ival);
 		file.Write(str);
 		file.Write("%");
@@ -1823,7 +1835,7 @@ void WriteCorrelation(const char *filename)
 		file.Write("<p>");
 		file.Write("<b>");
 
-        ival = 100 * asntcorr.corr[MaxInd2];
+		  ival = round(100.0 * asntcorr.corr[MaxInd2]);
 		sprintf(str, "%d", ival);
 		file.Write(str);
 		file.Write("%");
@@ -1838,7 +1850,7 @@ void WriteCorrelation(const char *filename)
 		file.Write("<p>");
 		file.Write("<b>");
 
-		ival = 100 * corr[MaxInd1][MaxInd2];
+		ival = round(100.0 * corr[MaxInd1][MaxInd2]);
 		sprintf(str, "%d", ival);
 		file.Write(str);
 		file.Write("%");
@@ -1864,8 +1876,8 @@ void WriteCorrelation(const char *filename)
 *##########################################################################*/
 void CalcCorrelation()
 {
-    int i;
-    int q1, q2;
+	 int i;
+	 int q1, q2;
 	int e;
 	int sum;
 	long double val;
@@ -1883,33 +1895,33 @@ void CalcCorrelation()
 		pop->Add(&Row);
 
 	for (i = 0; i < 100; i++)
-    {
-        sum = 0;
-        for (e = 0; e < pop->Count; e++)
-            sum += pop->ValArr[i][e];
+	 {
+		  sum = 0;
+		  for (e = 0; e < pop->Count; e++)
+				sum += pop->ValArr[i][e];
 
-        mean[i] = (long double)sum / (long double)pop->Count;
-    
-        rsum = 0;
-	    for (e = 0; e < pop->Count; e++)
+		  mean[i] = (long double)sum / (long double)pop->Count;
+
+		  rsum = 0;
+		 for (e = 0; e < pop->Count; e++)
 		{
 			val = (long double)pop->ValArr[i][e] - mean[i];
 			rsum += val * val;
 		}
 
-    	csd[i] = sqrt(rsum / ((long double)pop->Count - 1));
-    	corr[i][i] = 0.0;
-    }
+		csd[i] = sqrt(rsum / ((long double)pop->Count - 1));
+		corr[i][i] = 0.0;
+	 }
 
-    for (q1 = 0; q1 < 100; q1++)
-    {
+	 for (q1 = 0; q1 < 100; q1++)
+	 {
 		for (q2 = 0; q2 < q1; q2++)
-        {
+		  {
 			rsum = 0;
-            for (e = 0; e < pop->Count; e++)
-            {
-		        zx = ((long double)pop->ValArr[q1][e] - mean[q1]) / csd[q1];
-        		zy = ((long double)pop->ValArr[q2][e] - mean[q2]) / csd[q2];
+				for (e = 0; e < pop->Count; e++)
+				{
+				  zx = ((long double)pop->ValArr[q1][e] - mean[q1]) / csd[q1];
+				zy = ((long double)pop->ValArr[q2][e] - mean[q2]) / csd[q2];
 				rsum += zx * zy;
 			}
 
@@ -1991,9 +2003,9 @@ void WriteNewQuiz(const char *filename)
 				for (k = 0; k < 100; k++)
 					if (Used[k] && asntcorr.corr[j] > 0.25)
 					{
-					    val = corr[j][k];
+						 val = corr[j][k];
 						rsum += val * val;
-				    }
+					 }
 
 				if (rsum)
 				{
@@ -2013,11 +2025,11 @@ void WriteNewQuiz(const char *filename)
 			}
 		}
 
-        if (MaxVal >= 0.0)
-        {
-    		asntcorr.IndArr[i] = MaxInd;
-	    	Used[MaxInd] = TRUE;
-	    }
+		  if (MaxVal >= 0.0)
+		  {
+			asntcorr.IndArr[i] = MaxInd;
+			Used[MaxInd] = TRUE;
+		 }
 	}
 
 	WriteCorrTable(filename, "AS", "NT referrer", &asntcorr, pop1, pop2, 0.0);
