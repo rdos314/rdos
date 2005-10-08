@@ -315,3 +315,26 @@ int TFile::Write(const void *Buf, int Size)
 		    
 	return 0;
 }
+
+/*##########################################################################
+#
+#   Name       : TFile::Write
+#
+#   Purpose....: Write data to file
+#
+#   In params..: buf
+#   Out params.: *
+#   Returns....: Bytes written
+#
+##########################################################################*/
+int TFile::Write(const char *str)
+{
+    DWORD written;
+    int size = strlen(str);
+    
+	if (FHandle)
+		if (WriteFile(FHandle, str, size, &written, 0))
+		    return written;
+		    
+	return 0;
+}

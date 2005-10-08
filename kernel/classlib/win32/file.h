@@ -53,6 +53,7 @@ public:
 
 	int Read(void *Buf, int Size);
 	int Write(const void *Buf, int Size);
+	int Write(const char *Buf);
 
 protected:
 

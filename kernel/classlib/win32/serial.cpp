@@ -353,8 +353,8 @@ void TSerialDevice::Unblock()
 void TSerialDevice::Init(int Port, long Baudrate, char Parity, int DataBits, int StopBits)
 {
 	FPortHandle = 0;
-	FPort = LoadProperty("Port", Port);
-	FBaudrate = LoadProperty("Baudrate", Baudrate);
+	FPort = Port;
+	FBaudrate = Baudrate;
 	FParity = Parity;
 	FDataBits = DataBits;
 	FStopBits = StopBits;
@@ -396,7 +396,6 @@ void TSerialDevice::SetComPort(int Port)
     {
 		FPort = Port;
     }
-	SaveProperty("Port", FPort);
 }
 
 /*##################  TSerialDevice::GetPort  #######################
@@ -425,8 +424,7 @@ void TSerialDevice::SetBaudrate(long Baudrate)
     {
 	    FCommDCB.BaudRate = FBaudrate;
     	SetCommState(FPortHandle, &FCommDCB);
-    }
-	SaveProperty("Baudrate", FBaudrate);
+	 }
 }
 
 /*##################  TSerialDevice::GetBaudrate  #######################
