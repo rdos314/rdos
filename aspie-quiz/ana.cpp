@@ -37,6 +37,23 @@
 #define MAX_CATS        8
 #define MAX_VALUES      4096
 
+#define GROUP_COUNT     14
+
+#define GROUP_BRAIN         0
+#define GROUP_LANGUAGE      1
+#define GROUP_TALENTS       2
+#define GROUP_FOCUS         3
+#define GROUP_SAFETY        4
+#define GROUP_REPETITION    5
+#define GROUP_NEUROLOGY     6
+#define GROUP_SENSORY       7
+#define GROUP_INTROVERSION  8
+#define GROUP_EMOTIONS      9
+#define GROUP_SOCIAL        10
+#define GROUP_SINCERITY     11
+#define GROUP_CULTURE       12
+#define GROUP_MIXED			13
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -80,7 +97,7 @@ public:
     int Count;
     int Sum[100];
     int ValArr[100][MAX_VALUES];
-    int ChiArr[100][MAX_CATS];
+	int ChiArr[100][MAX_CATS];
     
 };
 
@@ -102,7 +119,7 @@ struct TQuizQuestion
 {
     const char *Text;
     int AsCount;
-    long double AsMean;
+	long double AsMean;
     long double AsSd;
     int NtCount;
     long double NtMean;
@@ -119,6 +136,9 @@ TReferer *NTRef = new TReferer("", "NT sites (at least 40% between 0-59 and at l
 TReferer *AspieRef = new TReferer("", "Aspie sites (at least 35% between 140-200 and at least 5 answers)");
 TReferer *AsRef = new TReferer("", "Diagnosed AS/HFA/PDD");
 TReferer *AddRef = new TReferer("", "Diagnosed ADD/ADHD");
+
+int QuizGroup[100];
+char *GroupName[GROUP_COUNT];
 
 char *QuizTextArr[100];
 char *QuizHeadArr[100];
@@ -847,7 +867,7 @@ void InitQuizText()
 	QuizTextArr[79] = "Are you sometimes afraid in safe situations, yet fearless in situations which may actually be dangerous?";
 
 	QuizHeadArr[80] = "SOCIAL DIFFICULTIES";
- 
+
 	QuizTextArr[80] = "Do you tend to feel get nervous, shy, confused and/or like you don't fit in, in various social situations?";
 	QuizTextArr[81] = "Are you usually unaware of social rules & boundaries unless they are specifically spelled out?";
 	QuizTextArr[82] = "In conversations, do you have trouble with things like timing and reciprocity?";
@@ -869,7 +889,7 @@ void InitQuizText()
 	QuizTextArr[95] = "Once you understand how someone feels, do you usually want to express you sympathy, help or cheer that person up if he or she is in distress?";
 
 	QuizHeadArr[96] = "CULTURAL INDEPENDENCE";
- 
+
 	QuizTextArr[96] = "Are you usually unaware of/disinterested in what is currently in vogue?";
 	QuizTextArr[97] = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
 	QuizTextArr[98] = "Do you have high morals and a tendency to stand up for your ideals and beliefs even if they are contrary to general consensus, or if it means social or economical disadvantages?";
@@ -891,7 +911,7 @@ TPopulation::TPopulation()
 
 	for (i = 0; i < 100; i++)
 	{
-        Sum[i] = 0;
+		Sum[i] = 0;
         for (j = 0; j < MAX_CATS; j++)
 			ChiArr[i][j] = 0;
 	}
@@ -2052,6 +2072,334 @@ void WriteResult(const char *filename)
 	file.Write(Quiz_I, sizeof(Quiz_I));
 }
 
+/*##################  WriteGroupCorrTable ##########################
+*   Purpose....: Write group correlation table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteGroupCorrTable(const char *filename)
+{
+    int i;
+	int j;
+	int k;
+	int g;
+	int comp;
+	char str[80];
+	long double rsum;
+	int ival;
+	long double val;
+	long double maxcorr;
+	long double selfcorr;
+	long double ref;
+	long double refsum;
+	int group;
+	TFile file(filename, 0);
+
+	GroupName[GROUP_BRAIN] = "BRAIN FUNCTION & LEARNING";
+	GroupName[GROUP_LANGUAGE] = "LANGUAGE & SPEECH";
+	GroupName[GROUP_TALENTS] = "TALENTS & SPECIAL INTERESTS";
+	GroupName[GROUP_FOCUS] = "HYPERFOCUS & PERSEVERATION";
+	GroupName[GROUP_SAFETY] = "NEED FOR SAFETY, FAMILIARITY & SUPPORT";
+	GroupName[GROUP_REPETITION] = "NEED FOR REPETITION & PREDICABILITY";
+	GroupName[GROUP_NEUROLOGY] = "BIOLOGICAL & NEUROLOGICAL DIFFERENCES";
+	GroupName[GROUP_SENSORY] = "HYPERSENSITIVE SENSES";
+	GroupName[GROUP_INTROVERSION] = "NATURAL INTROVERSION";
+	GroupName[GROUP_EMOTIONS] = "EMOTIONS";
+	GroupName[GROUP_SOCIAL] = "SOCIAL DIFFICULTIES";
+	GroupName[GROUP_SINCERITY] = "SINCERITY, FRIENDLINESS & NAIVETÉ";
+	GroupName[GROUP_CULTURE] = "CULTURAL INDEPENDENCE";
+	GroupName[GROUP_MIXED] = "MIXED";
+
+	QuizGroup[0] = GROUP_BRAIN;
+	QuizGroup[1] = GROUP_MIXED;
+	QuizGroup[2] = GROUP_BRAIN;
+	QuizGroup[3] = GROUP_BRAIN;
+	QuizGroup[4] = GROUP_BRAIN;
+	QuizGroup[5] = GROUP_BRAIN;
+	QuizGroup[6] = GROUP_BRAIN;
+	QuizGroup[7] = GROUP_BRAIN;
+	QuizGroup[8] = GROUP_BRAIN;
+	QuizGroup[9] = GROUP_BRAIN;
+	QuizGroup[10] = GROUP_BRAIN;
+	QuizGroup[11] = GROUP_MIXED;
+	QuizGroup[12] = GROUP_MIXED;
+	QuizGroup[13] = GROUP_LANGUAGE;
+	QuizGroup[14] = GROUP_LANGUAGE;
+	QuizGroup[15] = GROUP_LANGUAGE;
+	QuizGroup[16] = GROUP_LANGUAGE;
+	QuizGroup[17] = GROUP_LANGUAGE;
+	QuizGroup[18] = GROUP_TALENTS;
+	QuizGroup[19] = GROUP_TALENTS;
+	QuizGroup[20] = GROUP_TALENTS;
+	QuizGroup[21] = GROUP_TALENTS;
+	QuizGroup[22] = GROUP_TALENTS;
+	QuizGroup[23] = GROUP_FOCUS;
+	QuizGroup[24] = GROUP_FOCUS;
+	QuizGroup[25] = GROUP_FOCUS;
+	QuizGroup[26] = GROUP_FOCUS;
+	QuizGroup[27] = GROUP_SAFETY;
+	QuizGroup[28] = GROUP_SAFETY;
+	QuizGroup[29] = GROUP_SAFETY;
+	QuizGroup[30] = GROUP_SAFETY;
+	QuizGroup[31] = GROUP_SAFETY;
+	QuizGroup[32] = GROUP_SAFETY;
+	QuizGroup[33] = GROUP_SAFETY;
+	QuizGroup[34] = GROUP_SAFETY;
+	QuizGroup[35] = GROUP_REPETITION;
+	QuizGroup[36] = GROUP_REPETITION;
+	QuizGroup[37] = GROUP_REPETITION;
+	QuizGroup[38] = GROUP_REPETITION;
+	QuizGroup[39] = GROUP_REPETITION;
+	QuizGroup[40] = GROUP_REPETITION;
+	QuizGroup[41] = GROUP_NEUROLOGY;
+	QuizGroup[42] = GROUP_NEUROLOGY;
+	QuizGroup[43] = GROUP_NEUROLOGY;
+	QuizGroup[44] = GROUP_NEUROLOGY;
+	QuizGroup[45] = GROUP_NEUROLOGY;
+	QuizGroup[46] = GROUP_MIXED;
+	QuizGroup[47] = GROUP_MIXED;
+	QuizGroup[48] = GROUP_NEUROLOGY;
+	QuizGroup[49] = GROUP_NEUROLOGY;
+	QuizGroup[50] = GROUP_NEUROLOGY;
+	QuizGroup[51] = GROUP_SENSORY;
+	QuizGroup[52] = GROUP_SENSORY;
+	QuizGroup[53] = GROUP_SENSORY;
+	QuizGroup[54] = GROUP_SENSORY;
+	QuizGroup[55] = GROUP_SENSORY;
+	QuizGroup[56] = GROUP_SENSORY;
+	QuizGroup[57] = GROUP_SENSORY;
+	QuizGroup[58] = GROUP_MIXED;
+	QuizGroup[59] = GROUP_SENSORY;
+	QuizGroup[60] = GROUP_SENSORY;
+	QuizGroup[61] = GROUP_SENSORY;
+	QuizGroup[62] = GROUP_SENSORY;
+	QuizGroup[63] = GROUP_MIXED;
+	QuizGroup[64] = GROUP_SENSORY;
+	QuizGroup[65] = GROUP_SENSORY;
+	QuizGroup[66] = GROUP_INTROVERSION;
+	QuizGroup[67] = GROUP_INTROVERSION;
+	QuizGroup[68] = GROUP_INTROVERSION;
+	QuizGroup[69] = GROUP_INTROVERSION;
+	QuizGroup[70] = GROUP_INTROVERSION;
+	QuizGroup[71] = GROUP_INTROVERSION;
+	QuizGroup[72] = GROUP_INTROVERSION;
+	QuizGroup[73] = GROUP_EMOTIONS;
+	QuizGroup[74] = GROUP_EMOTIONS;
+	QuizGroup[75] = GROUP_EMOTIONS;
+	QuizGroup[76] = GROUP_EMOTIONS;
+	QuizGroup[77] = GROUP_EMOTIONS;
+	QuizGroup[78] = GROUP_SENSORY;
+	QuizGroup[79] = GROUP_EMOTIONS;
+	QuizGroup[80] = GROUP_SOCIAL;
+	QuizGroup[81] = GROUP_SOCIAL;
+	QuizGroup[82] = GROUP_SOCIAL;
+	QuizGroup[83] = GROUP_SOCIAL;
+	QuizGroup[84] = GROUP_SOCIAL;
+	QuizGroup[85] = GROUP_SOCIAL;
+	QuizGroup[86] = GROUP_SOCIAL;
+	QuizGroup[87] = GROUP_SOCIAL;
+	QuizGroup[88] = GROUP_SOCIAL;
+	QuizGroup[89] = GROUP_SOCIAL;
+	QuizGroup[90] = GROUP_SOCIAL;
+	QuizGroup[91] = GROUP_SINCERITY;
+	QuizGroup[92] = GROUP_SINCERITY;
+	QuizGroup[93] = GROUP_SINCERITY;
+	QuizGroup[94] = GROUP_SINCERITY;
+	QuizGroup[95] = GROUP_MIXED;
+	QuizGroup[96] = GROUP_CULTURE;
+	QuizGroup[97] = GROUP_CULTURE;
+	QuizGroup[98] = GROUP_CULTURE;
+	QuizGroup[99] = GROUP_CULTURE;
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+		file.Write("<tr style='height:24.75pt'>");
+
+		file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		sprintf(str, "#%d", g + 1);
+		file.Write(str);
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"50%\" colspan=2 valign=top halign=center>");
+
+		file.Write("<p align=\"center\">");
+		file.Write("<b>");
+
+		file.Write(GroupName[g]);
+
+		file.Write("</b>");
+		file.Write("</p>");
+		file.Write("</td>");
+
+		file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		file.Write("Corr Own");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		file.Write("Corr Max");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("<td width=\"38%\" colspan=2 valign=top>");
+
+		file.Write("<p>");
+		file.Write("<b>");
+
+		file.Write(" ");
+
+		file.Write("</b>");
+		file.Write("</p>");
+
+		file.Write("</td>");
+
+		file.Write("</tr>");
+
+		for (i = 0; i < 100; i++)
+		{
+			if (QuizGroup[i] == g)
+			{
+				file.Write("<tr style='height:24.75pt'>");
+
+				file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+				file.Write("<p>");
+				file.Write("<b>");
+
+				sprintf(str, "%d", i + 1);
+				file.Write(str);
+
+				file.Write("</b>");
+				file.Write("</p>");
+
+				file.Write("</td>");
+
+				file.Write("<td width=\"50%\" colspan=2 valign=top halign=center>");
+
+				file.Write("<p align=\"center\">");
+				file.Write("<b>");
+
+				file.Write(QuizTextArr[i]);
+
+				file.Write("\n");
+
+				file.Write("</b>");
+				file.Write("</p>");
+				file.Write("</td>");
+
+				maxcorr = 0;
+
+				for (j = 0; j < GROUP_COUNT; j++)
+				{
+					rsum = 0;
+					refsum = 0;
+
+					for (k = 0; k < 100; k++)
+					{
+						if (i != k && QuizGroup[k] == j)
+						{
+							ref = Quiz_I[k].Corr;
+						    if (ref < 0)
+						        ref = -ref;
+						    refsum += ref;
+						        
+						    val = corr[i][k] * ref;
+							if (val < 0)
+							    val = -val;
+							rsum += val;
+						}
+					}
+
+					val = rsum / refsum;
+
+					if (j == g)
+					{
+						selfcorr = val;
+						comp = TRUE;
+					}
+					else
+						comp = TRUE;
+
+					if (comp && val > maxcorr)
+					{
+						maxcorr = val;
+						group = j;
+					}
+				}
+
+				file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+				file.Write("<p>");
+				file.Write("<b>");
+
+				ival = round(100.0 * selfcorr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+
+				file.Write("</b>");
+				file.Write("</p>");
+
+				file.Write("</td>");
+
+				file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+				file.Write("<p>");
+				file.Write("<b>");
+
+				ival = round(100.0 * maxcorr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+
+				file.Write("</b>");
+				file.Write("</p>");
+
+				file.Write("</td>");
+
+				file.Write("<td width=\"38%\" colspan=2 valign=top>");
+
+				file.Write("<p>");
+				file.Write("<b>");
+				file.Write(GroupName[group]);
+
+				file.Write("</b>");
+				file.Write("</p>");
+
+				file.Write("</td>");
+
+				file.Write("</tr>");
+			}
+		}
+	}
+
+	file.Write("</table>");
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -2089,5 +2437,7 @@ int main(int argc, char **argv)
 	WriteCorrelation("corr.htm");
 	WriteNewQuiz("quiz.htm");
 	WriteResult("quiz1.dat");
+
+	WriteGroupCorrTable("grpcorr.htm");
 }
 
