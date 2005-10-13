@@ -57,15 +57,15 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TFile quizfile("referer.dat");
+TFile quizfile("quiz1.bin");
 TFile asfile("as.dat");
 TFile addfile("add.dat");
 
 class TReferer
 {
 public:
-    TReferer(const char *Search, const char *Ref);
-    ~TReferer();
+	TReferer(const char *Search, const char *Ref);
+	~TReferer();
 
 	int IsMatch(const char *Referer);
 
@@ -125,7 +125,7 @@ struct TQuizQuestion
     long double NtMean;
     long double NtSd;
     long double Chi2;
-    long double Corr;
+	long double Corr;
     int Used;
 };
 
@@ -1551,7 +1551,7 @@ void WriteRefererNtCorrelation(const char *filename, const char *header, const c
 	TQuizRow Row;
 	TPopulation *pop1;
 	TPopulation *pop2;
-	TFile file1("referer.dat");
+	TFile file1("quiz1.bin");
 	TFile file2("nt.dat");
 
 	pop1 = new TPopulation;
@@ -1596,7 +1596,7 @@ void WriteRefererAsCorrelation(const char *filename, const char *header, const c
 	TQuizRow Row;
 	TPopulation *pop1;
 	TPopulation *pop2;
-	TFile file1("referer.dat");
+	TFile file1("quiz1.bin");
 	TFile file2("as.dat");
 
 	pop1 = new TPopulation;
@@ -1907,7 +1907,7 @@ void CalcCorrelation()
 	long double zx;
 	long double zy;
 	TQuizRow Row;
-	TFile reffile("referer.dat");
+	TFile reffile("quiz1.bin");
 	TPopulation *pop = new TPopulation;
 
 	reffile.SetPos(0);
@@ -2436,7 +2436,7 @@ int main(int argc, char **argv)
 	 CalcCorrelation();
 	WriteCorrelation("corr.htm");
 	WriteNewQuiz("quiz.htm");
-	WriteResult("quiz1.dat");
+	WriteResult("quiz1.bin");
 
 	WriteGroupCorrTable("grpcorr.htm");
 }

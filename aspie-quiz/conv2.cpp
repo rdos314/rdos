@@ -40,7 +40,7 @@
 
 const char InsertString[] = "INSERT INTO aspie-quiz-II VALUES (";
 
-TFile quizfile("quiz.dat", 0);
+TFile quizfile("quiz2.bin", 0);
 
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row       	   					      	        #
@@ -51,8 +51,8 @@ TFile quizfile("quiz.dat", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-    quizfile.Write(Row, sizeof(TQuizRow));
-    printf("%d Result: %d, Ref: %s\n", Row->ID, Row->Result, Row->Referer);    
+	quizfile.Write(Row, sizeof(TQuizRow));
+	printf("%d Result: %d, Ref: %s\n", Row->ID, Row->Result, Row->Referer);
 }
 
 /*##################  UpdateReferer ##########################
@@ -80,7 +80,7 @@ char *UpdateReferer(char *Referer)
         Referer += strlen(http);
 
     memcpy(str, Referer, strlen(www));
-    str[strlen(www)] = 0;
+	str[strlen(www)] = 0;
 
     if (!strcmp(str, www))
         Referer += strlen(www);
@@ -105,7 +105,7 @@ char *GetQuoted(char *str)
     {
         res++;
         ptr = strchr(res, 0x27);
-        if (ptr)
+		if (ptr)
         {
             *ptr = 0;
             return res;
@@ -130,7 +130,7 @@ void UpdateScore(TQuizRow *row)
                         {0, 1, 2},
                         {0, 1, 2},
                         {0, 1, 2},
-                        {0, 1, 2},
+						{0, 1, 2},
                         {0, 1, 2},
                         {0, 1, 2},
                         {0, 1, 2},
@@ -155,7 +155,7 @@ void UpdateScore(TQuizRow *row)
                         {0, 0, 0},
                         {0, 1, 2},
                         {0, 1, 2},
-                        {0, 1, 2},
+						{0, 1, 2},
                         {0, 1, 2},
                         {0, 1, 2},
                         {0, 0, 0},
@@ -180,7 +180,7 @@ void UpdateScore(TQuizRow *row)
                         {0, 0, 0},
                         {0, 1, 2},
                         {2, 1, 0},
-                        {2, 1, 0},
+						{2, 1, 0},
                         {0, 0, 0},
                         {0, 1, 2},
                         {0, 0, 0},
@@ -205,7 +205,7 @@ void UpdateScore(TQuizRow *row)
                         {0, 0, 0},
                         {0, 0, 0},
                         {0, 0, 0},
-                        {0, 0, 0},
+						{0, 0, 0},
                         {0, 0, 0},
                         {0, 0, 0},
                         {0, 0, 0},
@@ -230,7 +230,7 @@ void UpdateScore(TQuizRow *row)
     int i;
     int j;
     int val;
-    int sum;
+	int sum;
     int totsum;
 
     sum = 0;
@@ -330,7 +330,7 @@ void ProcessRow(char *str)
                 default:
                     i = fieldno - 7;
                     Row.Quiz[i] = atoi(valstr);
-                    break;
+					break;
             }                    
         }
 	}
@@ -353,9 +353,9 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quiz.sql");
+	TFile infile("quiz2.sql");
 
-    while (size = infile.Read(buf, MAX_IN_ROW))
+	while (size = infile.Read(buf, MAX_IN_ROW))
 	{
         buf[size] = 0;
 	    rowstr = strstr(buf, InsertString);

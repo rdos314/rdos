@@ -37,7 +37,7 @@
 
 const char InsertString[] = "INSERT INTO aspie-quiz VALUES (";
 
-TFile quizfile("referer.dat", 0);
+TFile quizfile("quiz1.bin", 0);
 TFile asfile("as.dat", 0);
 TFile addfile("add.dat", 0);
 
@@ -216,7 +216,7 @@ void ProcessRow(char *str)
 			switch (fieldno)
 			{
 			    case 0:
-				    Row.ID = atol(valstr);
+					Row.ID = atol(valstr);
 					break;
 
 				case 3:
@@ -241,7 +241,7 @@ void ProcessRow(char *str)
 
                 case 5:
                     Row.Diagnos = atoi(valstr);
-                    break;
+					break;
 
                 case 6:
                     Row.Age = atoi(valstr);
@@ -266,7 +266,7 @@ void ProcessRow(char *str)
 
                 case 9:
                     Row.ResultNow = atoi(valstr);
-                    break;
+					break;
 
 					 case 10:
 						  Row.ResultBefore = atoi(valstr);
@@ -306,12 +306,12 @@ int main(int argc, char **argv)
 	char *rowstr;
 	char *ptr;
 	long pos = 0;
-	TFile infile("quiz.sql");
+	TFile infile("quiz1.sql");
 
-    while (size = infile.Read(buf, MAX_IN_ROW))
+	while (size = infile.Read(buf, MAX_IN_ROW))
 	{
-        buf[size] = 0;
-	    rowstr = strstr(buf, InsertString);
+		buf[size] = 0;
+		rowstr = strstr(buf, InsertString);
 		if (rowstr)
 		{
 			rowstr += strlen(InsertString);
@@ -320,13 +320,13 @@ int main(int argc, char **argv)
 				 *ptr = 0;
 			else
 				 rowstr = 0;
-	    }
+		}
 
 		pos += strlen(buf) + 1;
 		infile.SetPos(pos);
 
 		if (rowstr)
-            ProcessRow(rowstr);
-    }
+			ProcessRow(rowstr);
+	}
 }
 
