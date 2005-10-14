@@ -37,22 +37,21 @@
 #define MAX_CATS        8
 #define MAX_VALUES      4096
 
-#define GROUP_COUNT     14
+#define MAX_GROUP_COUNT 15
+#define GROUP_COUNT     12
 
-#define GROUP_BRAIN         0
-#define GROUP_LANGUAGE      1
-#define GROUP_TALENTS       2
-#define GROUP_FOCUS         3
-#define GROUP_SAFETY        4
-#define GROUP_REPETITION    5
-#define GROUP_NEUROLOGY     6
-#define GROUP_SENSORY       7
-#define GROUP_INTROVERSION  8
-#define GROUP_EMOTIONS      9
-#define GROUP_SOCIAL        10
-#define GROUP_SINCERITY     11
-#define GROUP_CULTURE       12
-#define GROUP_MIXED			13
+#define GROUP_SENSORY           0
+#define GROUP_BIOLOGY           1
+#define GROUP_NONVERBAL         2
+#define GROUP_LANGUAGE          3
+#define GROUP_SOCIAL            4
+#define GROUP_NT_RELATION       5
+#define GROUP_SEX               6
+#define GROUP_FOCUS             7
+#define GROUP_REPETITION        8
+#define GROUP_ORGANIZATION      9
+#define GROUP_PHYSICAL          10
+#define GROUP_MIXED             11
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -92,11 +91,11 @@ public:
 
     void Add(TQuizRow *Row);
     long double GetMean(int QuestionNr);
-    long double GetSd(int QuestionNr);
+	long double GetSd(int QuestionNr);
 
     int Count;
     int Sum[100];
-    int ValArr[100][MAX_VALUES];
+	int ValArr[100][MAX_VALUES];
 	int ChiArr[100][MAX_CATS];
     
 };
@@ -115,10 +114,16 @@ public:
     int IndArr[100];
 };
 
+struct TQuizGroup
+{
+    long double Corr;
+    int Count;
+};
+
 struct TQuizQuestion
 {
     const char *Text;
-    int AsCount;
+	int AsCount;
 	long double AsMean;
     long double AsSd;
     int NtCount;
@@ -127,6 +132,7 @@ struct TQuizQuestion
     long double Chi2;
 	long double Corr;
     int Used;
+    TQuizGroup Group[MAX_GROUP_COUNT];
 };
 
 int RefCount = 0;
@@ -140,12 +146,15 @@ TReferer *AddRef = new TReferer("", "Diagnosed ADD/ADHD");
 int QuizGroup[100];
 char *GroupName[GROUP_COUNT];
 
+int ValArr[100][MAX_VALUES];
+int GroupSum[GROUP_COUNT][MAX_VALUES];
+int GroupCount[GROUP_COUNT][MAX_VALUES];
+int GroupExist[GROUP_COUNT];
+
 char *QuizTextArr[100];
 char *QuizHeadArr[100];
 
 TQuizQuestion Quiz_I[100];
-
-long double corr[100][100];
 
 /*##################  round ##########################
 *   Purpose....: round long double to int       	   					      	        #
@@ -754,6 +763,120 @@ void InitQuizText()
 	 for (i = 0; i < 100; i++)
 		  QuizHeadArr[i] = 0;
 
+	GroupName[GROUP_SENSORY] = "SENSORY SYSTEM";
+	GroupName[GROUP_BIOLOGY] = "BIOLOGY";
+	GroupName[GROUP_NONVERBAL] = "NONVERBAL COMMUNICATION";
+	GroupName[GROUP_LANGUAGE] = "LANGUAGE AND SPEECH";
+	GroupName[GROUP_SOCIAL] = "SOCIAL & EMOTIONS";
+	GroupName[GROUP_NT_RELATION] = "NT RELATIONSHIPS";
+	GroupName[GROUP_SEX] = "SEXUALITY & GENDER ISSUES";
+	GroupName[GROUP_FOCUS] = "HYPERFOCUS, DETAIL & TALENTS";
+	GroupName[GROUP_REPETITION] = "NEED FOR REPETITION & PREDICTABILITY";
+	GroupName[GROUP_ORGANIZATION] = "ORGANIZATIONAL SKILLS";
+	GroupName[GROUP_PHYSICAL] = "PHYSICAL TRAITS";
+	GroupName[GROUP_MIXED] = "MIXED";
+
+	QuizGroup[0] = GROUP_FOCUS;
+	QuizGroup[1] = GROUP_FOCUS;
+	QuizGroup[2] = GROUP_LANGUAGE;      // cross
+	QuizGroup[3] = GROUP_MIXED;
+	QuizGroup[4] = GROUP_FOCUS;
+	QuizGroup[5] = GROUP_MIXED;
+	QuizGroup[6] = GROUP_MIXED;
+	QuizGroup[7] = GROUP_FOCUS;
+	QuizGroup[8] = GROUP_MIXED;
+	QuizGroup[9] = GROUP_FOCUS;       // cross
+	QuizGroup[10] = GROUP_MIXED;
+	QuizGroup[11] = GROUP_FOCUS;
+	QuizGroup[12] = GROUP_FOCUS;
+	QuizGroup[13] = GROUP_LANGUAGE;
+	QuizGroup[14] = GROUP_LANGUAGE;
+	QuizGroup[15] = GROUP_LANGUAGE;     // cross
+	QuizGroup[16] = GROUP_LANGUAGE;
+	QuizGroup[17] = GROUP_LANGUAGE;     // cross
+	QuizGroup[18] = GROUP_FOCUS;
+	QuizGroup[19] = GROUP_FOCUS;
+	QuizGroup[20] = GROUP_FOCUS;
+	QuizGroup[21] = GROUP_FOCUS;
+	QuizGroup[22] = GROUP_FOCUS;      // cross
+	QuizGroup[23] = GROUP_FOCUS;
+	QuizGroup[24] = GROUP_FOCUS;
+	QuizGroup[25] = GROUP_FOCUS;
+	QuizGroup[26] = GROUP_MIXED;
+	QuizGroup[27] = GROUP_MIXED;
+	QuizGroup[28] = GROUP_MIXED;
+	QuizGroup[29] = GROUP_MIXED;
+	QuizGroup[30] = GROUP_MIXED;
+	QuizGroup[31] = GROUP_MIXED;
+	QuizGroup[32] = GROUP_MIXED;
+	QuizGroup[33] = GROUP_SOCIAL;
+	QuizGroup[34] = GROUP_MIXED;
+	QuizGroup[35] = GROUP_REPETITION;
+	QuizGroup[36] = GROUP_REPETITION;   // cross
+	QuizGroup[37] = GROUP_REPETITION;
+	QuizGroup[38] = GROUP_REPETITION;
+	QuizGroup[39] = GROUP_REPETITION;   // cross
+	QuizGroup[40] = GROUP_NONVERBAL;
+	QuizGroup[41] = GROUP_MIXED;
+	QuizGroup[42] = GROUP_BIOLOGY;      // cross
+	QuizGroup[43] = GROUP_BIOLOGY;
+	QuizGroup[44] = GROUP_BIOLOGY;
+	QuizGroup[45] = GROUP_BIOLOGY;      // cross
+	QuizGroup[46] = GROUP_BIOLOGY;
+	QuizGroup[47] = GROUP_BIOLOGY;
+	QuizGroup[48] = GROUP_BIOLOGY;
+	QuizGroup[49] = GROUP_BIOLOGY;
+	QuizGroup[50] = GROUP_REPETITION;
+	QuizGroup[51] = GROUP_FOCUS;
+	QuizGroup[52] = GROUP_SENSORY;      // cross
+	QuizGroup[53] = GROUP_SENSORY;      // cross
+	QuizGroup[54] = GROUP_SENSORY;
+	QuizGroup[55] = GROUP_SENSORY;      // cross
+	QuizGroup[56] = GROUP_SENSORY;      // cross
+	QuizGroup[57] = GROUP_SENSORY;      // cross
+	QuizGroup[58] = GROUP_MIXED;
+	QuizGroup[59] = GROUP_SENSORY;
+	QuizGroup[60] = GROUP_SENSORY;
+	QuizGroup[61] = GROUP_SENSORY;      // cross
+	QuizGroup[62] = GROUP_SENSORY;
+	QuizGroup[63] = GROUP_MIXED;
+	QuizGroup[64] = GROUP_SENSORY;      // cross
+	QuizGroup[65] = GROUP_SOCIAL;       // cross
+	QuizGroup[66] = GROUP_SOCIAL;
+	QuizGroup[67] = GROUP_SOCIAL;
+	QuizGroup[68] = GROUP_SOCIAL;
+	QuizGroup[69] = GROUP_SOCIAL;       // cross
+	QuizGroup[70] = GROUP_SOCIAL;
+	QuizGroup[71] = GROUP_NONVERBAL;
+	QuizGroup[72] = GROUP_MIXED;        // cross
+	QuizGroup[73] = GROUP_SOCIAL;
+	QuizGroup[74] = GROUP_SOCIAL;
+	QuizGroup[75] = GROUP_SOCIAL;
+	QuizGroup[76] = GROUP_MIXED;        // cross
+	QuizGroup[77] = GROUP_SOCIAL;       // cross
+	QuizGroup[78] = GROUP_SENSORY;
+	QuizGroup[79] = GROUP_MIXED;
+	QuizGroup[80] = GROUP_SOCIAL;
+	QuizGroup[81] = GROUP_NONVERBAL;    // cross
+	QuizGroup[82] = GROUP_NONVERBAL;    // cross
+	QuizGroup[83] = GROUP_NONVERBAL;
+	QuizGroup[84] = GROUP_NONVERBAL;
+	QuizGroup[85] = GROUP_NONVERBAL;
+	QuizGroup[86] = GROUP_NONVERBAL;
+	QuizGroup[87] = GROUP_NONVERBAL;    // cross
+	QuizGroup[88] = GROUP_NONVERBAL;    // cross
+	QuizGroup[89] = GROUP_SOCIAL;       // cross
+	QuizGroup[90] = GROUP_SOCIAL;       // cross
+	QuizGroup[91] = GROUP_NONVERBAL;       // cross
+	QuizGroup[92] = GROUP_SOCIAL;
+	QuizGroup[93] = GROUP_MIXED;
+	QuizGroup[94] = GROUP_NONVERBAL;
+	QuizGroup[95] = GROUP_MIXED;
+	QuizGroup[96] = GROUP_SOCIAL;
+	QuizGroup[97] = GROUP_SOCIAL;       // cross
+	QuizGroup[98] = GROUP_SOCIAL;
+	QuizGroup[99] = GROUP_SOCIAL;       // cross
+
 	QuizHeadArr[0] = "BRAIN FUNCTION & LEARNING";
 
 	QuizTextArr[0] = "Are you very logical and get surprised or impatient when others aren't?";
@@ -946,7 +1069,7 @@ void TPopulation::Add(TQuizRow *Row)
         ChiArr[i][val]++;
         ValArr[i][Count] = val;
         Sum[i] += val;
-    }
+	}
     
     Count++;
 }
@@ -1627,437 +1750,6 @@ void WriteRefererAsCorrelation(const char *filename, const char *header, const c
 	delete pop2;
 }
 
-/*##################  WriteCorrelation ##########################
-*   Purpose....: Write correlation      	      			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void WriteCorrelation(const char *filename)
-{
-	int i;
-	int ok;
-	int j;
-	int k;
-	char str[80];
-	TFile file(filename, 0);
-	int Used[100][100];
-	long double MaxVal;
-	int MaxInd1, MaxInd2;
-	int ival;
-	TQuizRow Row;
-	TPopulation *pop1;
-	TPopulation *pop2;
-	TFile file1("as.dat");
-	TFile file2("nt.dat");
-
-	pop1 = new TPopulation;
-
-	file1.SetPos(0);
-	while (file1.Read(&Row, sizeof(Row)))
-		 pop1->Add(&Row);
-
-	pop2 = new TPopulation;
-
-	file2.SetPos(0);
-	while (file2.Read(&Row, sizeof(Row)))
-		pop2->Add(&Row);
-
-	TCorrelation asntcorr(pop1, pop2);
-
-	delete pop1;
-	delete pop2;
-
-	for (i = 0; i < 100; i++)
-		for (j = 0; j < 100; j++)
-			if (i == j)
-				Used[i][j] = TRUE;
-			else
-				Used[i][j] = FALSE;
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	for (k = 0; k < 50; k++)
-	{
-		if (k % 10 == 0)
-		{
-			file.Write("<tr style='height:24.75pt'>");
-
-			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-			file.Write("<p>");
-			file.Write("<b>");
-			file.Write("#");
-			file.Write("</b>");
-			file.Write("</p>");
-
-			file.Write("</td>");
-
-			file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
-
-			file.Write("<p align=\"center\">");
-			file.Write("<b>");
-
-			file.Write(" ");
-
-			file.Write("</b>");
-			file.Write("</p>");
-			file.Write("</td>");
-
-			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-			file.Write("<p>");
-			file.Write("<b>");
-			file.Write("AS-NT corr");
-			file.Write("</b>");
-			file.Write("</p>");
-
-			file.Write("</td>");
-
-			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-			file.Write("<p>");
-			file.Write("<b>");
-			file.Write("#");
-			file.Write("</b>");
-			file.Write("</p>");
-
-			file.Write("</td>");
-
-			file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
-
-			file.Write("<p align=\"center\">");
-			file.Write("<b>");
-
-			file.Write(" ");
-
-			file.Write("</b>");
-			file.Write("</p>");
-			file.Write("</td>");
-
-			file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-			file.Write("<p>");
-			file.Write("<b>");
-			file.Write("AS-NT corr");
-			file.Write("</b>");
-			file.Write("</p>");
-
-			file.Write("</td>");
-
-			file.Write("<td width=\"4%\" colspan=2 valign=top>");
-
-			file.Write("<p>");
-			file.Write("<b>");
-
-			file.Write("Corr");
-
-			file.Write("</b>");
-			file.Write("</p>");
-
-			file.Write("</td>");
-
-			file.Write("</tr>");
-		}
-
-		MaxVal = -1.0;
-		 MaxInd1 = 0;
-		MaxInd2 = 0;
-
-		for (i = 0; i < 100; i++)
-		{
-			for (j = 0; j < i; j++)
-			{
-				if (corr[i][j] > MaxVal && !Used[i][j])
-				{
-					MaxVal = corr[i][j];
-					MaxInd1 = i;
-					MaxInd2 = j;
-				}
-			}
-		}
-
-		Used[MaxInd1][MaxInd2] = TRUE;
-		Used[MaxInd2][MaxInd1] = TRUE;
-
-		file.Write("<tr style='height:24.75pt'>");
-
-		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		sprintf(str, "%d", MaxInd1 + 1);
-		file.Write(str);
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
-
-		file.Write("<p align=\"center\">");
-		file.Write("<b>");
-
-		file.Write(QuizTextArr[MaxInd1]);
-
-		file.Write("\n");
-
-		file.Write("</b>");
-		file.Write("</p>");
-		file.Write("</td>");
-
-		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		  ival = round(100.0 * asntcorr.corr[MaxInd1]);
-		sprintf(str, "%d", ival);
-		file.Write(str);
-		file.Write("%");
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		sprintf(str, "%d", MaxInd2 + 1);
-		file.Write(str);
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("<td width=\"42%\" colspan=2 valign=top halign=center>");
-
-		file.Write("<p align=\"center\">");
-		file.Write("<b>");
-
-		file.Write(QuizTextArr[MaxInd2]);
-
-		file.Write("\n");
-
-		file.Write("</b>");
-		file.Write("</p>");
-		file.Write("</td>");
-
-		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		  ival = round(100.0 * asntcorr.corr[MaxInd2]);
-		sprintf(str, "%d", ival);
-		file.Write(str);
-		file.Write("%");
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("<td width=\"4%\" colspan=2 valign=top>");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		ival = round(100.0 * corr[MaxInd1][MaxInd2]);
-		sprintf(str, "%d", ival);
-		file.Write(str);
-		file.Write("%");
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("</tr>");
-
-	}
-
-	file.Write("</table>");
-}
-
-/*##################  CalcCorrelation ##########################
-*   Purpose....: Calculate correlation	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void CalcCorrelation()
-{
-	 int i;
-	 int q1, q2;
-	int e;
-	int sum;
-	long double val;
-	long double rsum;
-	long double mean[100];
-	long double csd[100];
-	long double zx;
-	long double zy;
-	TQuizRow Row;
-	TFile reffile("quiz1.bin");
-	TPopulation *pop = new TPopulation;
-
-	reffile.SetPos(0);
-	while (reffile.Read(&Row, sizeof(Row)))
-		pop->Add(&Row);
-
-	for (i = 0; i < 100; i++)
-	 {
-		  sum = 0;
-		  for (e = 0; e < pop->Count; e++)
-				sum += pop->ValArr[i][e];
-
-		  mean[i] = (long double)sum / (long double)pop->Count;
-
-		  rsum = 0;
-		 for (e = 0; e < pop->Count; e++)
-		{
-			val = (long double)pop->ValArr[i][e] - mean[i];
-			rsum += val * val;
-		}
-
-		csd[i] = sqrt(rsum / ((long double)pop->Count - 1));
-		corr[i][i] = 0.0;
-	 }
-
-	 for (q1 = 0; q1 < 100; q1++)
-	 {
-		for (q2 = 0; q2 < q1; q2++)
-		  {
-			rsum = 0;
-				for (e = 0; e < pop->Count; e++)
-				{
-				  zx = ((long double)pop->ValArr[q1][e] - mean[q1]) / csd[q1];
-				zy = ((long double)pop->ValArr[q2][e] - mean[q2]) / csd[q2];
-				rsum += zx * zy;
-			}
-
-			val = rsum / ((long double)pop->Count - 1);
-			corr[q1][q2] = val;
-			corr[q2][q1] = val;
-		}
-	}
-
-	delete pop;
-}
-
-/*##################  WriteNewQuiz ##########################
-*   Purpose....: Write new quiz           	      			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void WriteNewQuiz(const char *filename)
-{
-	TQuizRow Row;
-	TPopulation *pop1;
-	TPopulation *pop2;
-	TFile file1("as.dat");
-	TFile file2("nt.dat");
-	int i, j, k;
-	long double rsum;
-	long double val;
-	int Used[100];
-	long double MaxVal;
-	int MaxInd;
-
-	pop1 = new TPopulation;
-
-	file1.SetPos(0);
-	while (file1.Read(&Row, sizeof(Row)))
-		 pop1->Add(&Row);
-
-	pop2 = new TPopulation;
-
-	file2.SetPos(0);
-	while (file2.Read(&Row, sizeof(Row)))
-		pop2->Add(&Row);
-
-	TCorrelation asntcorr(pop1, pop2);
-
-	for (i = 0; i < 100; i++)
-		Used[i] = FALSE;
-
-// mark out high-corr questions
-
-	Used[83] = TRUE;
-	Used[80] = TRUE;
-	Used[68] = TRUE;
-	Used[98] = TRUE;
-	Used[44] = TRUE;
-	Used[37] = TRUE;
-	Used[70] = TRUE;
-	Used[38] = TRUE;
-	Used[75] = TRUE;
-	Used[27] = TRUE;
-
-	i = asntcorr.IndArr[0];
-
-	Used[i] = TRUE;
-
-	for (i = 1; i < 100; i++)
-	{
-		MaxVal = -1.0;
-		MaxInd = 0;
-
-		for (j = 0; j < 100; j++)
-		{
-			if (!Used[j])
-			{
-				rsum = 0;
-
-				for (k = 0; k < 100; k++)
-					if (Used[k] && asntcorr.corr[j] > 0.25)
-					{
-						 val = corr[j][k];
-						rsum += val * val;
-					 }
-
-				if (rsum)
-				{
-					rsum = sqrt(rsum);
-					if (rsum < 0)
-						rsum = -rsum;
-
-					val = asntcorr.corr[j];
-					rsum = val * val / rsum;
-
-					if (rsum > MaxVal)
-					{
-						MaxVal = rsum;
-						MaxInd = j;
-					}
-				}
-			}
-		}
-
-		  if (MaxVal >= 0.0)
-		  {
-			asntcorr.IndArr[i] = MaxInd;
-			Used[MaxInd] = TRUE;
-		 }
-	}
-
-	WriteCorrTable(filename, "AS", "NT referrer", &asntcorr, pop1, pop2, 0.0);
-
-	delete pop1;
-	delete pop2;
-}
-
 /*##################  WriteResult ##########################
 *   Purpose....: Write AS-NT result     	      			      	        #
 *   In params..: *                                                          #
@@ -2072,6 +1764,166 @@ void WriteResult(const char *filename)
 	file.Write(Quiz_I, sizeof(Quiz_I));
 }
 
+/*##################  CalcCorrelation ##########################
+*   Purpose....: Calculate question-group correlations	   	     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CalcCorrelation()
+{
+	int i;
+	int q;
+	int g;
+	int e;
+	int ok;
+	int rows;
+	int ival;
+	int gcount;
+	int gsum;
+	long double val;
+	long double rsum;
+	int sum[100];
+	int grpcount[GROUP_COUNT];
+	int grpsum[GROUP_COUNT];
+	long double mean[100];
+	long double csd[100];
+	long double grpmean[GROUP_COUNT];
+	long double grpcsd[GROUP_COUNT];
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+
+	for (i = 0; i < 100; i++)
+	    sum[i] = 0;
+
+    for (i = 0; i < GROUP_COUNT; i++)
+	{
+        grpsum[i] = 0;
+        grpcount[i] = 0;
+    }
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+        GroupExist[g] = FALSE;        
+        for (i = 0; i < 100; i++)
+            if (QuizGroup[i] == g)
+                GroupExist[g] = TRUE;
+    }
+    
+    rows = 0;
+	quizfile.SetPos(0);
+	while (quizfile.Read(&Row, sizeof(Row)))
+	{
+        for (i = 0; i < 100; i++)
+        {
+            ival = Row.Now[i];
+			ValArr[i][rows] = ival;
+            sum[i] += ival;
+        }
+
+        for (g = 0; g < GROUP_COUNT; g++)
+        {
+            if (GroupExist[g])
+            {
+    			gsum = 0;
+                gcount = 0;
+    
+                for (i = 0; i < 100; i++)
+		    	{
+                    if (QuizGroup[i] == g)
+                    {
+                        ival = Row.Now[i];
+                        gsum += ival;                            
+                        gcount++;
+                    }
+                }
+
+	    		GroupSum[g][rows] = gsum;
+		    	GroupCount[g][rows] = gcount;
+			    grpsum[g] += gsum;
+    			grpcount[g] += gcount;
+    	    }
+		}
+
+		rows++;
+	}
+
+	for (i = 0; i < 100; i++)
+	{
+		mean[i] = (long double)sum[i] / rows;
+
+		rsum = 0;
+
+		for (e = 0; e < rows; e++)
+		{
+			ival = ValArr[i][e];
+			val = (long double)ival - mean[i];
+			rsum += val * val;
+		}
+		csd[i] = sqrt(rsum / ((long double)rows - 1));
+	}
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+	    if (GroupExist[g])
+	    {
+    		grpmean[g] = (long double)grpsum[g] / grpcount[g];
+
+	    	rsum = 0;
+    
+	    	for (e = 0; e < rows; e++)
+		    {
+			    if (GroupCount[g][e])
+    			{
+	    			val = (long double)GroupSum[g][e] / GroupCount[g][e];
+		    		val -= grpmean[g];
+			    	rsum += val * val;
+    			}
+	    	}
+		    grpcsd[g] = sqrt(rsum / ((long double)rows - 1));
+		}
+	}
+
+	for (q = 0; q < 100; q++)
+	{
+		for (g = 0; g < GROUP_COUNT; g++)
+		{
+		    Quiz_I[q].Group[g].Corr = 0;
+		    if (GroupExist[g])
+		    {
+    		    Quiz_I[q].Group[g].Count = 0;
+	    	    rsum = 0;
+		    	for (e = 0; e < rows; e++)
+			    {
+    			    ival = ValArr[q][e];
+	    		    gcount = GroupCount[g][e];
+		    	    gsum = GroupSum[g][e];
+    
+	    		    if (gcount)
+		    	    {    			        
+			            Quiz_I[q].Group[g].Count++;
+
+                        if (QuizGroup[q] == g)
+                        {
+                            gcount--;
+                            gsum -= ival;
+                        }
+
+        			    zx = ((long double)ival - mean[q]) / csd[q];
+        				zy = ((long double)gsum / gcount - grpmean[g]) / grpcsd[g];
+	        			rsum += zx * zy;
+		        	}
+                }
+    
+				if (Quiz_I[q].Group[g].Count)
+					Quiz_I[q].Group[g].Corr = rsum / ((long double)Quiz_I[q].Group[g].Count - 1);
+			}
+		}
+	}
+}
+
 /*##################  WriteGroupCorrTable ##########################
 *   Purpose....: Write group correlation table	      			      	        #
 *   In params..: *                                                          #
@@ -2081,150 +1933,42 @@ void WriteResult(const char *filename)
 *##########################################################################*/
 void WriteGroupCorrTable(const char *filename)
 {
+    int ind;
     int i;
 	int j;
-	int k;
 	int g;
+	int grp;
 	int comp;
 	char str[80];
-	long double rsum;
 	int ival;
+	int count;
 	long double val;
 	long double maxcorr;
 	long double selfcorr;
-	long double ref;
-	long double refsum;
+	long double zij;
+    long double za;
+    long double low;
+    long double high;
+    long double corrval;
 	int group;
+    int used[100];
 	TFile file(filename, 0);
 
-	GroupName[GROUP_BRAIN] = "BRAIN FUNCTION & LEARNING";
-	GroupName[GROUP_LANGUAGE] = "LANGUAGE & SPEECH";
-	GroupName[GROUP_TALENTS] = "TALENTS & SPECIAL INTERESTS";
-	GroupName[GROUP_FOCUS] = "HYPERFOCUS & PERSEVERATION";
-	GroupName[GROUP_SAFETY] = "NEED FOR SAFETY, FAMILIARITY & SUPPORT";
-	GroupName[GROUP_REPETITION] = "NEED FOR REPETITION & PREDICABILITY";
-	GroupName[GROUP_NEUROLOGY] = "BIOLOGICAL & NEUROLOGICAL DIFFERENCES";
-	GroupName[GROUP_SENSORY] = "HYPERSENSITIVE SENSES";
-	GroupName[GROUP_INTROVERSION] = "NATURAL INTROVERSION";
-	GroupName[GROUP_EMOTIONS] = "EMOTIONS";
-	GroupName[GROUP_SOCIAL] = "SOCIAL DIFFICULTIES";
-	GroupName[GROUP_SINCERITY] = "SINCERITY, FRIENDLINESS & NAIVETÉ";
-	GroupName[GROUP_CULTURE] = "CULTURAL INDEPENDENCE";
-	GroupName[GROUP_MIXED] = "MIXED";
+    for (i = 0; i < 100; i++)
+        used[i] = FALSE;
 
-	QuizGroup[0] = GROUP_BRAIN;
-	QuizGroup[1] = GROUP_MIXED;
-	QuizGroup[2] = GROUP_BRAIN;
-	QuizGroup[3] = GROUP_BRAIN;
-	QuizGroup[4] = GROUP_BRAIN;
-	QuizGroup[5] = GROUP_BRAIN;
-	QuizGroup[6] = GROUP_BRAIN;
-	QuizGroup[7] = GROUP_BRAIN;
-	QuizGroup[8] = GROUP_BRAIN;
-	QuizGroup[9] = GROUP_BRAIN;
-	QuizGroup[10] = GROUP_BRAIN;
-	QuizGroup[11] = GROUP_MIXED;
-	QuizGroup[12] = GROUP_MIXED;
-	QuizGroup[13] = GROUP_LANGUAGE;
-	QuizGroup[14] = GROUP_LANGUAGE;
-	QuizGroup[15] = GROUP_LANGUAGE;
-	QuizGroup[16] = GROUP_LANGUAGE;
-	QuizGroup[17] = GROUP_LANGUAGE;
-	QuizGroup[18] = GROUP_TALENTS;
-	QuizGroup[19] = GROUP_TALENTS;
-	QuizGroup[20] = GROUP_TALENTS;
-	QuizGroup[21] = GROUP_TALENTS;
-	QuizGroup[22] = GROUP_TALENTS;
-	QuizGroup[23] = GROUP_FOCUS;
-	QuizGroup[24] = GROUP_FOCUS;
-	QuizGroup[25] = GROUP_FOCUS;
-	QuizGroup[26] = GROUP_FOCUS;
-	QuizGroup[27] = GROUP_SAFETY;
-	QuizGroup[28] = GROUP_SAFETY;
-	QuizGroup[29] = GROUP_SAFETY;
-	QuizGroup[30] = GROUP_SAFETY;
-	QuizGroup[31] = GROUP_SAFETY;
-	QuizGroup[32] = GROUP_SAFETY;
-	QuizGroup[33] = GROUP_SAFETY;
-	QuizGroup[34] = GROUP_SAFETY;
-	QuizGroup[35] = GROUP_REPETITION;
-	QuizGroup[36] = GROUP_REPETITION;
-	QuizGroup[37] = GROUP_REPETITION;
-	QuizGroup[38] = GROUP_REPETITION;
-	QuizGroup[39] = GROUP_REPETITION;
-	QuizGroup[40] = GROUP_REPETITION;
-	QuizGroup[41] = GROUP_NEUROLOGY;
-	QuizGroup[42] = GROUP_NEUROLOGY;
-	QuizGroup[43] = GROUP_NEUROLOGY;
-	QuizGroup[44] = GROUP_NEUROLOGY;
-	QuizGroup[45] = GROUP_NEUROLOGY;
-	QuizGroup[46] = GROUP_MIXED;
-	QuizGroup[47] = GROUP_MIXED;
-	QuizGroup[48] = GROUP_NEUROLOGY;
-	QuizGroup[49] = GROUP_NEUROLOGY;
-	QuizGroup[50] = GROUP_NEUROLOGY;
-	QuizGroup[51] = GROUP_SENSORY;
-	QuizGroup[52] = GROUP_SENSORY;
-	QuizGroup[53] = GROUP_SENSORY;
-	QuizGroup[54] = GROUP_SENSORY;
-	QuizGroup[55] = GROUP_SENSORY;
-	QuizGroup[56] = GROUP_SENSORY;
-	QuizGroup[57] = GROUP_SENSORY;
-	QuizGroup[58] = GROUP_MIXED;
-	QuizGroup[59] = GROUP_SENSORY;
-	QuizGroup[60] = GROUP_SENSORY;
-	QuizGroup[61] = GROUP_SENSORY;
-	QuizGroup[62] = GROUP_SENSORY;
-	QuizGroup[63] = GROUP_MIXED;
-	QuizGroup[64] = GROUP_SENSORY;
-	QuizGroup[65] = GROUP_SENSORY;
-	QuizGroup[66] = GROUP_INTROVERSION;
-	QuizGroup[67] = GROUP_INTROVERSION;
-	QuizGroup[68] = GROUP_INTROVERSION;
-	QuizGroup[69] = GROUP_INTROVERSION;
-	QuizGroup[70] = GROUP_INTROVERSION;
-	QuizGroup[71] = GROUP_INTROVERSION;
-	QuizGroup[72] = GROUP_INTROVERSION;
-	QuizGroup[73] = GROUP_EMOTIONS;
-	QuizGroup[74] = GROUP_EMOTIONS;
-	QuizGroup[75] = GROUP_EMOTIONS;
-	QuizGroup[76] = GROUP_EMOTIONS;
-	QuizGroup[77] = GROUP_EMOTIONS;
-	QuizGroup[78] = GROUP_SENSORY;
-	QuizGroup[79] = GROUP_EMOTIONS;
-	QuizGroup[80] = GROUP_SOCIAL;
-	QuizGroup[81] = GROUP_SOCIAL;
-	QuizGroup[82] = GROUP_SOCIAL;
-	QuizGroup[83] = GROUP_SOCIAL;
-	QuizGroup[84] = GROUP_SOCIAL;
-	QuizGroup[85] = GROUP_SOCIAL;
-	QuizGroup[86] = GROUP_SOCIAL;
-	QuizGroup[87] = GROUP_SOCIAL;
-	QuizGroup[88] = GROUP_SOCIAL;
-	QuizGroup[89] = GROUP_SOCIAL;
-	QuizGroup[90] = GROUP_SOCIAL;
-	QuizGroup[91] = GROUP_SINCERITY;
-	QuizGroup[92] = GROUP_SINCERITY;
-	QuizGroup[93] = GROUP_SINCERITY;
-	QuizGroup[94] = GROUP_SINCERITY;
-	QuizGroup[95] = GROUP_MIXED;
-	QuizGroup[96] = GROUP_CULTURE;
-	QuizGroup[97] = GROUP_CULTURE;
-	QuizGroup[98] = GROUP_CULTURE;
-	QuizGroup[99] = GROUP_CULTURE;
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
+    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
     for (g = 0; g < GROUP_COUNT; g++)
     {
 		file.Write("<tr style='height:24.75pt'>");
 
-		file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+		file.Write("<td width=\"3%\" valign=middle align='center'>\n");
 
 		file.Write("<p>");
 		file.Write("<b>");
 
-		sprintf(str, "#%d", g + 1);
+		sprintf(str, "G:%d", g + 1);
 		file.Write(str);
 
 		file.Write("</b>");
@@ -2232,7 +1976,7 @@ void WriteGroupCorrTable(const char *filename)
 
 		file.Write("</td>");
 
-		file.Write("<td width=\"50%\" colspan=2 valign=top halign=center>");
+		file.Write("<td width=\"38%\" colspan=2 valign=top halign=center>");
 
 		file.Write("<p align=\"center\">");
 		file.Write("<b>");
@@ -2243,56 +1987,73 @@ void WriteGroupCorrTable(const char *filename)
 		file.Write("</p>");
 		file.Write("</td>");
 
-		file.Write("<td width=\"4%\" colspan=2 valign=top>");
+		file.Write("<td width=\"3%\" colspan=2 valign=top halign=center>");
 
-		file.Write("<p>");
+		file.Write("<p align=\"center\">");
 		file.Write("<b>");
 
-		file.Write("Corr Own");
+		file.Write("AS-NT Corr");
 
 		file.Write("</b>");
 		file.Write("</p>");
-
 		file.Write("</td>");
 
-		file.Write("<td width=\"4%\" colspan=2 valign=top>");
+		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+        {
+            if (GroupExist[grp])
+            {
+        		file.Write("<td width=\"4%\" colspan=2 valign=top>");
 
-		file.Write("<p>");
-		file.Write("<b>");
+	        	file.Write("<p>");
+		        file.Write("<b>");
 
-		file.Write("Corr Max");
+                sprintf(str, "#%d", grp + 1);
+        		file.Write(str);
 
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
-
-		file.Write("<td width=\"38%\" colspan=2 valign=top>");
-
-		file.Write("<p>");
-		file.Write("<b>");
-
-		file.Write(" ");
-
-		file.Write("</b>");
-		file.Write("</p>");
-
-		file.Write("</td>");
+        		file.Write("</b>");
+	        	file.Write("</p>");
+    
+	    	    file.Write("</td>");
+	    	}
+		}
 
 		file.Write("</tr>");
 
-		for (i = 0; i < 100; i++)
-		{
-			if (QuizGroup[i] == g)
+		ind = 0;
+
+        while (ind >= 0)
+        {
+            maxcorr = 0.0;
+            ind = -1;
+        
+            for (i = 0; i < 100; i++)
+            {
+                if (QuizGroup[i] == g && !used[i])
+                {
+                    val = Quiz_I[i].Corr;
+                    if (val < 0)
+                        val = -val;
+
+                    if (val > maxcorr)
+                    {
+                        maxcorr = val;
+						ind = i;
+                    }                
+                }
+            }
+
+            if (ind >= 0)
 			{
+			    used[ind] = TRUE;
+			    
 				file.Write("<tr style='height:24.75pt'>");
 
-				file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+				file.Write("<td width=\"3%\" valign=middle align='center'>\n");
 
 				file.Write("<p>");
 				file.Write("<b>");
 
-				sprintf(str, "%d", i + 1);
+				sprintf(str, "%d", ind + 1);
 				file.Write(str);
 
 				file.Write("</b>");
@@ -2300,14 +2061,25 @@ void WriteGroupCorrTable(const char *filename)
 
 				file.Write("</td>");
 
-				file.Write("<td width=\"50%\" colspan=2 valign=top halign=center>");
+				file.Write("<td width=\"38%\" colspan=2 valign=top halign=center>");
 
 				file.Write("<p align=\"center\">");
 				file.Write("<b>");
 
-				file.Write(QuizTextArr[i]);
+				file.Write(QuizTextArr[ind]);
 
-				file.Write("\n");
+				file.Write("</b>");
+				file.Write("</p>");
+				file.Write("</td>");
+
+				file.Write("<td width=\"3%\" colspan=2 valign=top halign=center>");
+
+				file.Write("<p align=\"center\">");
+				file.Write("<b>");
+
+    			ival = round(100.0 * Quiz_I[ind].Corr);
+	    		sprintf(str, "%d%", ival);
+		    	file.Write(str);
 
 				file.Write("</b>");
 				file.Write("</p>");
@@ -2315,89 +2087,85 @@ void WriteGroupCorrTable(const char *filename)
 
 				maxcorr = 0;
 
-				for (j = 0; j < GROUP_COUNT; j++)
+				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
-					rsum = 0;
-					refsum = 0;
+				    if (GroupExist[j])
+				    {
+                        val = Quiz_I[ind].Group[j].Corr;
 
-					for (k = 0; k < 100; k++)
-					{
-						if (i != k && QuizGroup[k] == j)
-						{
-							ref = Quiz_I[k].Corr;
-						    if (ref < 0)
-						        ref = -ref;
-						    refsum += ref;
-						        
-						    val = corr[i][k] * ref;
-							if (val < 0)
-							    val = -val;
-							rsum += val;
-						}
-					}
+	    				if (j == g)
+		    			{
+			    			selfcorr = val;
+				    		comp = TRUE;
+					    }
+    					else
+	    					comp = TRUE;
 
-					val = rsum / refsum;
-
-					if (j == g)
-					{
-						selfcorr = val;
-						comp = TRUE;
-					}
-					else
-						comp = TRUE;
-
-					if (comp && val > maxcorr)
-					{
-						maxcorr = val;
-						group = j;
+		    			if (comp && val > maxcorr)
+			    		{
+				    		maxcorr = val;
+					    	group = j;
+					    }
 					}
 				}
 
-				file.Write("<td width=\"4%\" colspan=2 valign=top>");
+				maxcorr = maxcorr * 0.9;
 
-				file.Write("<p>");
-				file.Write("<b>");
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+				    if (GroupExist[j])
+				    {
+                        val = Quiz_I[ind].Group[j].Corr;
+                        corrval = val;
+                        count = Quiz_I[ind].Group[j].Count;
+    
+                        if (val < 0.0)
+                            val = -val;
 
-				ival = round(100.0 * selfcorr);
-				sprintf(str, "%d%", ival);
-				file.Write(str);
+                        zij = 0.5 * logl((1 + val) / (1 - val));
+                        za = 1.96 / sqrtl(count - 3); 
+                        low = tanhl(zij - za);
+	                    high = tanhl(zij + za);
 
-				file.Write("</b>");
-				file.Write("</p>");
+    			    	file.Write("<td width=\"4%\" colspan=2 valign=top>");
+    
+    	    			file.Write("<p>");
+	    	    		file.Write("<b>");
+    
+                        if (low <= 0.0 && high >= 0.0)
+                            file.Write("-----");
+                        else
+				    	{
+    				    	if (val > maxcorr)
+	    				    	file.Write("<span style='color:#009999'>");
+    
+    	    				if (corrval < 0.0)
+	    		    			file.Write("<span style='color:#990099'>");
 
-				file.Write("</td>");
+    	    				ival = round(100.0 * low);
+	    	    			sprintf(str, "%d", ival);
+		    	    		file.Write(str);
 
-				file.Write("<td width=\"4%\" colspan=2 valign=top>");
+        					ival = round(100.0 * high);
+	        				sprintf(str, "-%d", ival);
+		        			file.Write(str);
+    
+	    		    		if (val > maxcorr || corrval < 0.0)
+		        	    	    file.Write("</span>");
+		        	    }
 
-				file.Write("<p>");
-				file.Write("<b>");
+		    	    	file.Write("</b>");
+			    	    file.Write("</p>");
 
-				ival = round(100.0 * maxcorr);
-				sprintf(str, "%d%", ival);
-				file.Write(str);
-
-				file.Write("</b>");
-				file.Write("</p>");
-
-				file.Write("</td>");
-
-				file.Write("<td width=\"38%\" colspan=2 valign=top>");
-
-				file.Write("<p>");
-				file.Write("<b>");
-				file.Write(GroupName[group]);
-
-				file.Write("</b>");
-				file.Write("</p>");
-
-				file.Write("</td>");
+    					file.Write("</td>");
+                    }
+				}
 
 				file.Write("</tr>");
 			}
 		}
 	}
-
-	file.Write("</table>");
+    file.Write("</table>");
 }
 
 /*##################  main ##########################
@@ -2433,11 +2201,9 @@ int main(int argc, char **argv)
 	WriteRefererNtCorrelation("compnt.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
-	 CalcCorrelation();
-	WriteCorrelation("corr.htm");
-	WriteNewQuiz("quiz.htm");
-	WriteResult("quiz1.bin");
+	WriteResult("quiz1.dat");
 
+	CalcCorrelation();
 	WriteGroupCorrTable("grpcorr.htm");
 }
 
