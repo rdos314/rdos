@@ -2201,9 +2201,9 @@ int main(int argc, char **argv)
 	WriteRefererNtCorrelation("compnt.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
-	WriteResult("quiz1.dat");
-
 	CalcCorrelation();
 	WriteGroupCorrTable("grpcorr.htm");
+
+	WriteResult("quiz1.dat");
 }
 
