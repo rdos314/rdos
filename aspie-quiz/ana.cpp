@@ -38,7 +38,7 @@
 #define MAX_VALUES      4096
 
 #define MAX_GROUP_COUNT 15
-#define GROUP_COUNT     12
+#define GROUP_COUNT     11
 
 #define GROUP_SENSORY           0
 #define GROUP_BIOLOGY           1
@@ -49,9 +49,8 @@
 #define GROUP_SEX               6
 #define GROUP_FOCUS             7
 #define GROUP_REPETITION        8
-#define GROUP_ORGANIZATION      9
-#define GROUP_PHYSICAL          10
-#define GROUP_MIXED             11
+#define GROUP_PHYSICAL          9
+#define GROUP_MIXED             10
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -116,7 +115,7 @@ public:
 
 struct TQuizGroup
 {
-    long double Corr;
+	long double Corr;
     int Count;
 };
 
@@ -135,6 +134,25 @@ struct TQuizQuestion
     TQuizGroup Group[MAX_GROUP_COUNT];
 };
 
+struct TGroupCorr
+{
+    long double Corr;
+	int Count;
+};
+
+struct TGroup
+{
+	long double Mean;
+	long double Sd;
+};
+
+struct TQuizResult
+{
+	TGroup Group[MAX_GROUP_COUNT];
+	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
+	TQuizQuestion Quiz[100];
+};
+
 int RefCount = 0;
 TReferer *RefArr[MAX_REFERERS];
 TReferer *NoRef = new TReferer("", "No referrer");
@@ -151,10 +169,12 @@ int GroupSum[GROUP_COUNT][MAX_VALUES];
 int GroupCount[GROUP_COUNT][MAX_VALUES];
 int GroupExist[GROUP_COUNT];
 
+int rows;
+
 char *QuizTextArr[100];
 char *QuizHeadArr[100];
 
-TQuizQuestion Quiz_I[100];
+TQuizResult Quiz_I;
 
 /*##################  round ##########################
 *   Purpose....: round long double to int       	   					      	        #
@@ -772,7 +792,6 @@ void InitQuizText()
 	GroupName[GROUP_SEX] = "SEXUALITY & GENDER ISSUES";
 	GroupName[GROUP_FOCUS] = "HYPERFOCUS, DETAIL & TALENTS";
 	GroupName[GROUP_REPETITION] = "NEED FOR REPETITION & PREDICTABILITY";
-	GroupName[GROUP_ORGANIZATION] = "ORGANIZATIONAL SKILLS";
 	GroupName[GROUP_PHYSICAL] = "PHYSICAL TRAITS";
 	GroupName[GROUP_MIXED] = "MIXED";
 
@@ -970,7 +989,7 @@ void InitQuizText()
 	QuizTextArr[65] = "Do you get exceedingly tired after socializing, and need to regenerate alone?";
 
 	QuizHeadArr[66] = "NATURAL INTROVERSION";
- 
+
 	QuizTextArr[66] = "Are you more of an observer than one who participates in life - being a detached observer ?";
 	QuizTextArr[67] = "Are you fairly self-absorbed, more interested in yourself than in others and/or an objective observer of yourself?";
 	QuizTextArr[68] = "Do you find yourself more attracted to things, ideas, music, computers, animals, buildings or vehicles than to people and social exchange?";
@@ -1070,7 +1089,7 @@ void TPopulation::Add(TQuizRow *Row)
         ValArr[i][Count] = val;
         Sum[i] += val;
 	}
-    
+
     Count++;
 }
 
@@ -1470,15 +1489,15 @@ void WriteAsNtCorrelation(const char *filename)
 
 	 for (i = 0; i < 100; i++)
 	 {
-		  Quiz_I[i].Text = 0;
-		  Quiz_I[i].AsCount = pop1->Count;
-		  Quiz_I[i].AsMean = pop1->GetMean(i);
-		  Quiz_I[i].AsSd = pop1->GetSd(i);
-		  Quiz_I[i].NtCount = pop2->Count;
-		  Quiz_I[i].NtMean = pop2->GetMean(i);
-		  Quiz_I[i].NtSd = pop2->GetSd(i);
-		  Quiz_I[i].Chi2 = corr.chi2[i];
-		  Quiz_I[i].Corr = corr.corr[i];
+		  Quiz_I.Quiz[i].Text = 0;
+		  Quiz_I.Quiz[i].AsCount = pop1->Count;
+		  Quiz_I.Quiz[i].AsMean = pop1->GetMean(i);
+		  Quiz_I.Quiz[i].AsSd = pop1->GetSd(i);
+		  Quiz_I.Quiz[i].NtCount = pop2->Count;
+		  Quiz_I.Quiz[i].NtMean = pop2->GetMean(i);
+		  Quiz_I.Quiz[i].NtSd = pop2->GetSd(i);
+		  Quiz_I.Quiz[i].Chi2 = corr.chi2[i];
+		  Quiz_I.Quiz[i].Corr = corr.corr[i];
 	 }
 
 	delete pop1;
@@ -1761,7 +1780,7 @@ void WriteResult(const char *filename)
 {
 	TFile file(filename, 0);
 
-	file.Write(Quiz_I, sizeof(Quiz_I));
+	file.Write(&Quiz_I, sizeof(Quiz_I));
 }
 
 /*##################  CalcCorrelation ##########################
@@ -1778,7 +1797,6 @@ void CalcCorrelation()
 	int g;
 	int e;
 	int ok;
-	int rows;
 	int ival;
 	int gcount;
 	int gsum;
@@ -1789,8 +1807,6 @@ void CalcCorrelation()
 	int grpsum[GROUP_COUNT];
 	long double mean[100];
 	long double csd[100];
-	long double grpmean[GROUP_COUNT];
-	long double grpcsd[GROUP_COUNT];
 	long double zx;
 	long double zy;
 	TQuizRow Row;
@@ -1869,7 +1885,7 @@ void CalcCorrelation()
 	{
 	    if (GroupExist[g])
 	    {
-    		grpmean[g] = (long double)grpsum[g] / grpcount[g];
+    		Quiz_I.Group[g].Mean = (long double)grpsum[g] / grpcount[g];
 
 	    	rsum = 0;
     
@@ -1878,11 +1894,11 @@ void CalcCorrelation()
 			    if (GroupCount[g][e])
     			{
 	    			val = (long double)GroupSum[g][e] / GroupCount[g][e];
-		    		val -= grpmean[g];
+		    		val -= Quiz_I.Group[g].Mean;
 			    	rsum += val * val;
     			}
 	    	}
-		    grpcsd[g] = sqrt(rsum / ((long double)rows - 1));
+		    Quiz_I.Group[g].Sd = sqrt(rsum / ((long double)rows - 1));
 		}
 	}
 
@@ -1890,10 +1906,10 @@ void CalcCorrelation()
 	{
 		for (g = 0; g < GROUP_COUNT; g++)
 		{
-		    Quiz_I[q].Group[g].Corr = 0;
+		    Quiz_I.Quiz[q].Group[g].Corr = 0;
 		    if (GroupExist[g])
 		    {
-    		    Quiz_I[q].Group[g].Count = 0;
+    		    Quiz_I.Quiz[q].Group[g].Count = 0;
 	    	    rsum = 0;
 		    	for (e = 0; e < rows; e++)
 			    {
@@ -1903,7 +1919,7 @@ void CalcCorrelation()
     
 	    		    if (gcount)
 		    	    {    			        
-			            Quiz_I[q].Group[g].Count++;
+			            Quiz_I.Quiz[q].Group[g].Count++;
 
                         if (QuizGroup[q] == g)
                         {
@@ -1912,13 +1928,13 @@ void CalcCorrelation()
                         }
 
         			    zx = ((long double)ival - mean[q]) / csd[q];
-        				zy = ((long double)gsum / gcount - grpmean[g]) / grpcsd[g];
+						zy = ((long double)gsum / gcount - Quiz_I.Group[g].Mean) / Quiz_I.Group[g].Sd;
 	        			rsum += zx * zy;
 		        	}
                 }
     
-				if (Quiz_I[q].Group[g].Count)
-					Quiz_I[q].Group[g].Corr = rsum / ((long double)Quiz_I[q].Group[g].Count - 1);
+				if (Quiz_I.Quiz[q].Group[g].Count)
+					Quiz_I.Quiz[q].Group[g].Corr = rsum / ((long double)Quiz_I.Quiz[q].Group[g].Count - 1);
 			}
 		}
 	}
@@ -2030,7 +2046,7 @@ void WriteGroupCorrTable(const char *filename)
             {
                 if (QuizGroup[i] == g && !used[i])
                 {
-                    val = Quiz_I[i].Corr;
+                    val = Quiz_I.Quiz[i].Corr;
                     if (val < 0)
                         val = -val;
 
@@ -2077,7 +2093,7 @@ void WriteGroupCorrTable(const char *filename)
 				file.Write("<p align=\"center\">");
 				file.Write("<b>");
 
-    			ival = round(100.0 * Quiz_I[ind].Corr);
+    			ival = round(100.0 * Quiz_I.Quiz[ind].Corr);
 	    		sprintf(str, "%d%", ival);
 		    	file.Write(str);
 
@@ -2091,7 +2107,7 @@ void WriteGroupCorrTable(const char *filename)
 				{
 				    if (GroupExist[j])
 				    {
-                        val = Quiz_I[ind].Group[j].Corr;
+                        val = Quiz_I.Quiz[ind].Group[j].Corr;
 
 	    				if (j == g)
 		    			{
@@ -2115,9 +2131,9 @@ void WriteGroupCorrTable(const char *filename)
 				{
 				    if (GroupExist[j])
 				    {
-                        val = Quiz_I[ind].Group[j].Corr;
+						val = Quiz_I.Quiz[ind].Group[j].Corr;
                         corrval = val;
-                        count = Quiz_I[ind].Group[j].Count;
+                        count = Quiz_I.Quiz[ind].Group[j].Count;
     
                         if (val < 0.0)
                             val = -val;
@@ -2168,6 +2184,209 @@ void WriteGroupCorrTable(const char *filename)
     file.Write("</table>");
 }
 
+/*##################  CalcGroupCorr ##########################
+*   Purpose....: Calculate group to group correlations	   	     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CalcGroupCorr()
+{
+	int e;
+	int g1, g2;
+	long double rsum;
+	long double zx;
+   long double zy;
+	int count1;
+	int sum1;
+	int count2;
+	int sum2;
+
+	for (g1 = 0; g1 < GROUP_COUNT; g1++)
+	    Quiz_I.GroupCorr[g1][g1].Corr = 1.0;
+
+	for (g1 = 0; g1 < GROUP_COUNT; g1++)
+	{
+		for (g2 = 0; g2 < g1; g2++)
+		{
+			Quiz_I.GroupCorr[g1][g2].Corr = 0;
+		    Quiz_I.GroupCorr[g1][g2].Count = 0;
+		    
+		    rsum = 0;
+			for (e = 0; e < rows; e++)
+			{
+			    count1 = GroupCount[g1][e];
+			    sum1 = GroupSum[g1][e];
+
+			    count2 = GroupCount[g2][e];
+			    sum2 = GroupSum[g2][e];
+
+			    if (count1 && count2)
+			    {
+			        Quiz_I.GroupCorr[g1][g2].Count++;
+
+                    zx = ((long double)sum1 / count1 - Quiz_I.Group[g1].Mean) / Quiz_I.Group[g1].Sd;
+					zy = ((long double)sum2 / count2 - Quiz_I.Group[g2].Mean) / Quiz_I.Group[g2].Sd;
+	    			rsum += zx * zy;
+		    	}
+            }
+            
+			if (Quiz_I.GroupCorr[g1][g2].Count)
+			{
+				Quiz_I.GroupCorr[g1][g2].Corr = rsum / ((long double)Quiz_I.GroupCorr[g1][g2].Count - 1);
+				Quiz_I.GroupCorr[g2][g1].Corr = rsum / ((long double)Quiz_I.GroupCorr[g1][g2].Count - 1);
+				Quiz_I.GroupCorr[g2][g1].Count = Quiz_I.GroupCorr[g1][g2].Count;
+			}
+			else
+			{
+				Quiz_I.GroupCorr[g1][g2].Corr = 0;
+				Quiz_I.GroupCorr[g2][g1].Corr = 0;
+				Quiz_I.GroupCorr[g2][g1].Count = 0;
+			}
+		}
+	}
+}
+
+/*##################  WriteGroupTable ##########################
+*   Purpose....: Write group - group correlation table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteGroupTable(const char *filename)
+{
+    int g1;
+	 int g2;
+    int ival;
+    long double val;
+    long double corrval;
+    long double zij;
+    long double za;
+    long double low;
+    long double high;
+    int count;
+	char str[80];
+	TFile file(filename, 0);
+
+    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+	file.Write("<tr style='height:24.75pt'>");
+
+	file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+	file.Write("<p>");
+	file.Write("<b>");
+
+	file.Write("#");
+
+	file.Write("</b>");
+	file.Write("</p>");
+
+	file.Write("</td>");
+
+	file.Write("<td width=\"38%\" colspan=2 valign=top halign=center>");
+
+	file.Write("<p align=\"center\">");
+	file.Write("<b>");
+
+	file.Write("Group");
+
+	file.Write("</b>");
+	file.Write("</p>");
+	file.Write("</td>");
+
+	for (g2 = 0; g2 < GROUP_COUNT - 1; g2++)
+    {
+    	file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+	    file.Write("<p>");
+		file.Write("<b>");
+
+        sprintf(str, "#%d", g2 + 1);
+    	file.Write(str);
+
+    	file.Write("</b>");
+	    file.Write("</p>");
+
+		file.Write("</td>");
+    }
+
+	file.Write("</tr>");
+
+    for (g1 = 0; g1 < GROUP_COUNT - 1; g1++)
+    {
+        file.Write("<tr style='height:24.75pt'>");
+
+        file.Write("<td width=\"3%\" valign=middle align='center'>\n");
+
+        file.Write("<p>");
+        file.Write("<b>");
+
+        sprintf(str, "G:%d", g1 + 1);
+        file.Write(str);
+
+        file.Write("</b>");
+        file.Write("</p>");
+
+        file.Write("</td>");
+
+		file.Write("<td width=\"38%\" colspan=2 valign=top halign=center>");
+
+    	file.Write("<p align=\"center\">");
+	    file.Write("<b>");
+
+		file.Write(GroupName[g1]);
+
+    	file.Write("</b>");
+	    file.Write("</p>");
+		file.Write("</td>");
+
+        for (g2 = 0; g2 < GROUP_COUNT - 1; g2++)
+        {
+		    file.Write("<td width=\"4%\" colspan=2 valign=top>");
+
+			file.Write("<p>");
+			file.Write("<b>");
+
+			val = Quiz_I.GroupCorr[g1][g2].Corr;
+			corrval = val;
+			count = Quiz_I.GroupCorr[g1][g2].Count;
+
+		    if (count)
+		    {
+		        if (val < 0.0)
+				    val = -val;
+
+				zij = 0.5 * logl((1 + val) / (1 - val));
+				za = 1.96 / sqrtl(count - 3);
+				low = tanhl(zij - za);
+				high = tanhl(zij + za);
+
+				if (low <= 0.0 && high >= 0.0)
+			        file.Write("-----");
+				else
+				{
+				    if (corrval < 0.0)
+					    file.Write("<span style='color:#990099'>");
+
+					ival = round(100.0 * low);
+					sprintf(str, "%d", ival);
+					file.Write(str);
+
+					ival = round(100.0 * high);
+					sprintf(str, "-%d", ival);
+					file.Write(str);
+
+					if (corrval < 0.0)
+					    file.Write("</span>");
+				}
+		    }
+	    }
+	}
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -2202,7 +2421,10 @@ int main(int argc, char **argv)
 	WriteRefererAsCorrelation("compas.htm", "pellesoft.se", "pellesoft.se/communicate/forum/view.aspx?msgid=186984");
 
 	CalcCorrelation();
-	WriteGroupCorrTable("grpcorr.htm");
+	WriteGroupCorrTable("grpcorr1.htm");
+
+	CalcGroupCorr();
+	WriteGroupTable("group1.htm");
 
 	WriteResult("quiz1.dat");
 }
