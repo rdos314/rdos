@@ -27,8 +27,8 @@ void cdecl main()
 	TKeyboardDevice Keyboard;
 	int num;
 
-	TSerialDevice Port1(1, 9600, 'N', 8, 1);
-	TSerialDevice Port2(4, 9600, 'N', 8, 1);
+	TSerialDevice Port1(1, 4800, 'O', 7, 1);
+	TSerialDevice Port2(4, 4800, 'O', 7, 1);
 
 	Port1.Open();
 	Port2.Open();
@@ -40,20 +40,20 @@ void cdecl main()
 	int handle;
 	char FileName[40];
 
-	for (num = 0; num < 100; num++)
-	{
-		sprintf(FileName, "d:\\raw%03d.dat", num);
-		handle = RdosOpenFile(FileName, 0);
-		if (handle)
-			RdosCloseFile(handle);
-		else
-			break;
-	}
-	TFile *File = new TFile(FileName, 0);
+//	for (num = 0; num < 100; num++)
+//	{
+//		sprintf(FileName, "d:\\raw%03d.dat", num);
+//		handle = RdosOpenFile(FileName, 0);
+//		if (handle)
+//			RdosCloseFile(handle);
+//		else
+//			break;
+//	}
+//	TFile *File = new TFile(FileName, 0);
 
 //	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
 //	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-//	TFile *File = new TFile("d:\\raw.dat", 0);
+	TFile *File = new TFile("z:\\rawatcl.dat", 0);
 //	TFile *File = new TFile("z:\\device.dat", 0);
 
 	for (;;)
