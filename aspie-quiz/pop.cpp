@@ -1,0 +1,218 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2002, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# pop.cpp
+# Population class
+#
+########################################################################*/
+
+#include <math.h>
+#include "pop.h"
+
+#define FALSE 0
+#define TRUE !FALSE
+
+/*##########################################################################
+#
+#   Name       : TPopulation::TPopulation
+#
+#   Purpose....: Constructor for TPopulation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPopulation::TPopulation(int MaxValues)
+{
+    ValArr = 0;
+
+    Clear(MaxValues);
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::~TPopulation
+#
+#   Purpose....: Destructor for TPopulation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TPopulation::~TPopulation()
+{
+    if (ValArr)
+        delete ValArr;
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::Clear
+#
+#   Purpose....: Clear population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPopulation::Clear(int MaxValues)
+{
+	int i,j;
+
+    ValueCount = 0;
+    MaxSize = MaxValues;
+    ValArr = new TValArr[MaxValues];
+
+	for (i = 0; i < 100; i++)
+	{
+		Count[i] = 0;
+		Sum[i] = 0;
+        for (j = 0; j < MAX_CATS; j++)
+			ChiArr[i][j] = 0;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::Add
+#
+#   Purpose....: Add an answer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPopulation::Add(char Arr[100])
+{
+    int val;
+    int i;
+
+    if (ValueCount < MaxSize)
+    {
+        for (i = 0; i < 100; i++)
+        {
+		    val = Arr[i];
+    		ValArr[ValueCount].Quiz[i] = val;
+            if (val)
+            {
+                val--;
+                ChiArr[i][val]++;
+                Sum[i] += val;
+		    	Count[i]++;
+            }
+        }
+
+        ValueCount++;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::Pack
+#
+#   Purpose....: Compact population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPopulation::Pack()
+{
+    TValArr *NewArr;
+    int i;
+
+    NewArr = new TValArr[ValueCount];
+
+    for (i = 0; i < ValueCount; i++)
+        NewArr[i] = ValArr[i];
+
+    delete ValArr;
+    ValArr = NewArr;
+    MaxSize = ValueCount;
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::GetMean
+#
+#   Purpose....: Get mean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TPopulation::GetMean(int QuestionNr)
+{
+    if (Count[QuestionNr])
+        return (long double)Sum[QuestionNr] / Count[QuestionNr];
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TPopulation::GetSd
+#
+#   Purpose....: Get standard deviation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TPopulation::GetSd(int QuestionNr)
+{
+    int e;
+    int ival;
+	long double val;
+	long double rsum = 0;
+	long double mean = GetMean(QuestionNr);
+
+	if (QuestionNr >= 0 && QuestionNr < 100)
+	{
+        if (Count[QuestionNr] > 1)
+        {
+    	    for (e = 0; e < Count[QuestionNr]; e++)
+    	    {
+    	        ival = ValArr[e].Quiz[QuestionNr];
+                if (ival)
+                {
+                    ival--;
+    	    	    val = (long double)ival - mean;
+        	        rsum += val * val;
+        	    }
+    	    }
+
+            return sqrt(rsum / ((long double)Count[QuestionNr] - 1));
+    	}
+        else
+            return 0;
+    }
+    else
+        return 0;
+}
