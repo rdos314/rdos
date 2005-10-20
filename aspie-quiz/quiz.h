@@ -28,9 +28,14 @@
 #ifndef _QUIZ_H
 #define _QUIZ_H
 
-#define MAX_GROUP_COUNT     15
+#include "pop.h"
+#include "refer.h"
+#include "file.h"
 
-#define GROUP_COUNT     11
+#define MAX_GROUP_COUNT         15
+#define MAX_REFERERS            1024
+
+#define GROUP_COUNT             11
 
 #define GROUP_SENSORY           0
 #define GROUP_BIOLOGY           1
@@ -62,6 +67,7 @@ struct TQuizQuestion
     long double Chi2;
 	long double Corr;
     int Used;
+    int NoAnswer;
     int MyGroup;
     int Reverse;
     TQuizGroup Group[MAX_GROUP_COUNT];
@@ -83,18 +89,57 @@ struct TGroup
 class TQuiz
 {
 public:
-    TQuiz(const char *FileName);
+    TQuiz();
     ~TQuiz();
 
-protected:
-    TQuiz();
+    void WriteReferers(const char *filename);
 
+protected:
     void Init();
 
+    TReferer *FindReferer(char *Referer);
+    TReferer *AddReferer(char *Search, char *Ref);
+    void SortReferers();
+    void WriteReferer(TFile &file, TReferer *ref);
+
+    void DefineNt(char *Referer);
+    void DefineAspie(char *Referer);
+    
 	TGroup Group[MAX_GROUP_COUNT];
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
-	TQuizQuestion Quiz[100];
+	TQuizQuestion Quiz[MAX_QUESTIONS];
+
+    TPopulation All;
+    TPopulation As;
+    TPopulation AsMale;
+    TPopulation AsFemale;
+    TPopulation Add;
+    TPopulation AddMale;
+    TPopulation AddFemale;
+    TPopulation Aspie;
+    TPopulation AspieMale;
+    TPopulation AspieFemale;    
+    TPopulation Mix;
+    TPopulation MixMale;
+    TPopulation MixFemale;
+    TPopulation Nt;
+    TPopulation NtMale;
+    TPopulation NtFemale;    
+
+    int RefCount;
+    TReferer *RefArr[MAX_REFERERS];
+    TReferer NoRef;
+    TReferer NTRef;
+    TReferer AspieRef;
+    TReferer DxAsRef;
+    TReferer DxTsRef;
+    TReferer DxAddRef;
+    TReferer SelfAsRef;
+    TReferer SelfTsRef;
+    TReferer SelfAddRef;
+    TReferer MaleAsRef;
+    TReferer FemaleAsRef;
+
 };
 
 #endif
-

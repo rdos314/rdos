@@ -37,38 +37,32 @@
 #
 #   Purpose....: Constructor for TQuiz
 #
-#   In params..: Filename to load quiz from
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TQuiz::TQuiz(const char *FileName)
-{
-	TFile file(FileName);
-	
-	file.Read(&Group, sizeof(Group));
-	file.Read(&GroupCorr, sizeof(GroupCorr));
-	file.Read(&Quiz, sizeof(Quiz));    
-
-	Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TQuiz::TQuiz
-#
-#   Purpose....: Constructor for TQuiz
-#
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TQuiz::TQuiz()
+  : NoRef("", "No referrer"),
+    NTRef("", "NT control group"),
+    AspieRef("", "Aspie control group"),
+    DxAsRef("", "Diagnosed AS/HFA/PDD"),
+    DxTsRef("", "Diagnosed Tourette"),
+    DxAddRef("", "Diagnosed ADD/ADHD"),
+    SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
+    SelfTsRef("", "Self-diagnosed Tourette"),
+    SelfAddRef("", "Self-diagnosed ADD/ADHD"),
+    MaleAsRef("", "Male AS/HFA/PDD"),
+    FemaleAsRef("", "Female AS/HFA/PDD")	
 {
     int i;
     int g;
     int g1, g2;
+
+    RefCount = 0;
+
+    for (i = 0; i < MAX_REFERERS; i++)
+        RefArr[i] = 0;
 
     for (i = 0; i < 100; i++)
     {
@@ -123,6 +117,11 @@ TQuiz::TQuiz()
 ##########################################################################*/
 TQuiz::~TQuiz()
 {
+    int i;
+        
+    for (i = 0; i < MAX_REFERERS; i++)
+        if (RefArr[i])
+            delete RefArr[i];
 }
 
 /*##########################################################################
@@ -140,6 +139,7 @@ void TQuiz::Init()
 {
 	int i;
 	int g;
+
 
     for (i = 0; i < 100; i++)
     {
@@ -181,4 +181,340 @@ void TQuiz::Init()
 	Group[GROUP_MIXED].Name = "OGRUPPERADE";
 
 #endif
+}
+
+/*##################  TQuiz::FindReferer ##########################
+*   Purpose....: Find referer in array    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TReferer *TQuiz::FindReferer(char *Referer)
+{
+    int i;
+	TReferer *ref;
+
+	if (strlen(Referer) == 0)
+	    return NoRef;
+
+	for (i = 0; i < RefCount; i++)
+	{
+		ref = RefArr[i];
+		if (ref->IsMatch(Referer))
+		    return ref;
+	}
+	return 0;
+}
+
+/*##################  TQuiz::AddReferer ##########################
+*   Purpose....: Add referer to array    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TReferer *TQuiz::AddReferer(char *Search, char *Ref)
+{
+    TReferer *ref;
+
+	if (RefCount < MAX_REFERERS)
+	{
+		ref = new TReferer(Search, Ref);
+		RefArr[RefCount] = ref;
+		RefCount++;
+
+		return ref;
+	}
+	else
+		return 0;
+}
+
+/*##################  TQuiz::SortReferers ##########################
+*   Purpose....: Sort referer array      					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::SortReferers()
+{
+    int i, j;
+    int count;
+    TReferer *ref;
+
+	for (i = 0; i < RefCount; i++)
+    {
+        count = RefArr[i]->Count;        
+
+		for (j = i + 1; j < RefCount; j++)
+		{
+		    if (RefArr[j]->Count > count)
+			{
+			    ref = RefArr[j];
+			    RefArr[j] = RefArr[i];
+				RefArr[i] = ref;
+			    count = ref->Count;
+			}
+	    }
+    }
+}
+
+/*##################  TQuiz::DefineNt ##########################
+*   Purpose....: Define NT control group    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::DefineNt(char *Referer)
+{
+	TReferer *ref;
+
+	ref = FindReferer(Referer);
+	if (ref)
+	{
+		ref->NT = TRUE;
+		NTRef.Result += ref->Result;
+		NTRef.Count += ref->Count;
+		NTRef.Result0_59 += ref->Result0_59;
+		NTRef.Result60_99 += ref->Result60_99;
+		NTRef.Result100_139 += ref->Result100_139;
+		NTRef.Result140_200 += ref->Result140_200;
+	}
+}
+
+/*##################  TQuiz::DefineAspie ##########################
+*   Purpose....: Define Aspie control group    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::DefineAspie(char *Referer)
+{
+	TReferer *ref;
+
+	ref = FindReferer(Referer);
+	if (ref)
+	{
+		 ref->Aspie = TRUE;
+		 AspieRef.Result += ref->Result;
+		 AspieRef.Count += ref->Count;
+		 AspieRef.Result0_59 += ref->Result0_59;
+		 AspieRef.Result60_99 += ref->Result60_99;
+		 AspieRef.Result100_139 += ref->Result100_139;
+		 AspieRef.Result140_200 += ref->Result140_200;
+	}
+}
+
+/*##################  TQuiz::WriteReferer ##########################
+*   Purpose....: Write referer    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteReferer(TFile &file, TReferer *ref)
+{
+    char str[80];
+
+    if (ref->Count)
+    {
+	    file.Write("<tr style='height:24.75pt'>");
+
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	    file.Write("<p align=\"center\">");
+	    file.Write("<b>");
+
+	    sprintf(str, "%d", ref->Count);
+	    file.Write(str);
+
+	    file.Write("</b>");
+	    file.Write("</p>");
+
+	    file.Write("</td>");
+
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	    file.Write("<p align=\"center\">");
+	    file.Write("<b>");
+
+	    sprintf(str, "%d", ref->Result / ref->Count);
+	    file.Write(str);
+
+	    file.Write("</b>");
+	    file.Write("</p>");
+
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	    file.Write("<p align=\"right\">");
+	    file.Write("<b>");
+
+	    sprintf(str, "%d", round(100.0 * ref->Result0_59 / ref->Count));
+	    file.Write(str);
+
+		file.Write("%</b>");
+	    file.Write("</p>");
+
+	    file.Write("</td>");
+
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    	file.Write("<p align=\"right\">");
+	    file.Write("<b>");
+
+    	sprintf(str, "%d", round(100.0 * ref->Result60_99 / ref->Count));
+	    file.Write(str);
+
+	    file.Write("%</b>");
+	    file.Write("</p>");
+
+	    file.Write("</td>");
+
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	    file.Write("<p align=\"right\">");
+	    file.Write("<b>");
+
+	    sprintf(str, "%d", round(100.0 * ref->Result100_139 / ref->Count));
+	    file.Write(str);
+
+	    file.Write("%</b>");
+        file.Write("</p>");
+
+        file.Write("</td>");
+	      
+	    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+        file.Write("<p align=\"right\">");
+	    file.Write("<b>");
+
+        sprintf(str, "%d", round(100.0 * ref->Result140_200 / ref->Count));
+        file.Write(str);
+    
+        file.Write("%</b>");
+        file.Write("</p>");
+
+        file.Write("</td>");
+
+	    file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
+
+        file.Write("<p>");
+        file.Write("<b>");
+
+	    if (strlen(ref->RefererSearch))
+		{
+		    file.Write("<a href=\"http://");
+            file.Write(ref->RefererRef);
+            file.Write("\">http://");
+		    file.Write(ref->RefererRef);
+            file.Write("</a>");
+	    }
+	    else
+            file.Write(ref->RefererRef);
+
+	    file.Write("</b>");
+        file.Write("</p>");
+        file.Write("</td>");
+        file.Write("</tr>");
+    }
+}
+
+/*##################  TQuiz::WriteReferers ##########################
+*   Purpose....: Print referers    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteReferers(const char *filename)
+{
+    TFile file(filename, 0);
+	int i;
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    file.Write("<p align=\"center\">");
+	file.Write("<b>Answers");
+    file.Write("</b>");
+    file.Write("</p>");
+
+	file.Write("</td>");
+
+	file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    file.Write("<p align=\"center\">");
+    file.Write("<b>Score");
+    file.Write("</b>");
+    file.Write("</p>");
+
+	file.Write("</td>");
+
+	file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    file.Write("<p align=\"center\">");
+    file.Write("<b>0-59");
+    file.Write("</b>");
+    file.Write("</p>");
+
+	file.Write("</td>");
+	      
+    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+	file.Write("<p align=\"center\">");
+    file.Write("<b>60-99");
+	file.Write("</b>");
+	file.Write("</p>");
+
+    file.Write("</td>");
+
+    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    file.Write("<p align=\"center\">");
+    file.Write("<b>100-139");
+	file.Write("</b>");
+	file.Write("</p>");
+
+    file.Write("</td>");
+
+    file.Write("<td width=\"4%\" valign=middle align='center'>\n");
+
+    file.Write("<p align=\"center\">");
+    file.Write("<b>140-200");
+    file.Write("</b>");
+	file.Write("</p>");
+
+    file.Write("</td>");
+
+	file.Write("<td width=\"72%\" colspan=2 valign=middle halign=center>");
+
+	file.Write("<p>");
+	file.Write("<b>Web site");
+	file.Write("</b>");
+	file.Write("</p>");
+	file.Write("</td>");
+	file.Write("</tr>");
+
+	WriteReferer(file, &DxAsRef);
+	WriteReferer(file, &DxTsRef);
+	WriteReferer(file, &DxAddRef);
+	WriteReferer(file, &SelfAsRef);
+	WriteReferer(file, &SelfTsRef);
+	WriteReferer(file, &SelfAddRef);
+	WriteReferer(file, &MaleAsRef);
+	WriteReferer(file, &FemaleAsRef);
+	WriteReferer(file, &AspieRef);
+	WriteReferer(file, &NTRef);
+	WriteReferer(file, &NoRef);
+
+	for (i = 0; i < RefCount; i++)
+		WriteReferer(file, RefArr[i]);
+
+	file.Write("</table>");
 }

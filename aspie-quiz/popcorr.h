@@ -20,44 +20,34 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pop.h
-# Basic population class
+# popcorr.h
+# Population correlation class
 #
 ########################################################################*/
 
-#ifndef _POP_H
-#define _POP_H
+#ifndef _POPCORR_H
+#define _POPCORR_H
 
-#define MAX_CATS        8
+#include "pop.h"
 
-#define MAX_QUESTIONS   100
 
-struct TValArr
+class TPopulationCorrelation
 {
-    char Quiz[MAX_QUESTIONS];
-};
-
-class TPopulation
-{
-friend class TPopulationCorrelation;
 public:
-	TPopulation();
-	~TPopulation();
+    TPopulationCorrelation();
+    ~TPopulationCorrelation();
 
-	void Add(char Arr[MAX_QUESTIONS]);
-
-    long double GetMean(int QuestionNr);
-    long double GetSd(int QuestionNr);
+    void Correlate(TPopulation *pop1, TPopulation *pop2);
+    void Sort();
     
-    int Count[MAX_QUESTIONS];
-	int Sum[MAX_QUESTIONS];
-    int ChiArr[MAX_QUESTIONS][MAX_CATS];
+	long double mean[MAX_QUESTIONS];
+	long double sd[MAX_QUESTIONS];
+	long double corr[MAX_QUESTIONS];
+	long double chi2[MAX_QUESTIONS];
 
-    int Increment;
-    int ValueCount;
-    int MaxSize;
-    TValArr *ValArr;    
+	int IndArr[MAX_QUESTIONS];
 };
+
 
 #endif
 

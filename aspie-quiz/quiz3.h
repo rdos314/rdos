@@ -29,16 +29,21 @@
 #define _QUIZ3_H
 
 #include "quiz.h"
+#include "file.h"
 
 class TQuizIII : public TQuiz
 {
 public:
-    TQuizIII(const char *FileName);
-    TQuizIII();
+    TQuizIII(TFile *File);
     ~TQuizIII();
 
 private:
-    void Init();
+    void SetupTexts();
+    void InitReferers();
+    void LoadReferers(TFile *File);
+    void LoadPopulations(TFile *File);
+    void SetupControlGroups();
+
 };
 
 #endif

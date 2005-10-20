@@ -20,44 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# pop.h
-# Basic population class
+# refer.h
+# Referrer class
 #
 ########################################################################*/
 
-#ifndef _POP_H
-#define _POP_H
+#ifndef _REFER_H
+#define _REFER_H
 
-#define MAX_CATS        8
+#include "pop.h"
 
-#define MAX_QUESTIONS   100
-
-struct TValArr
+class TReferer
 {
-    char Quiz[MAX_QUESTIONS];
-};
-
-class TPopulation
-{
-friend class TPopulationCorrelation;
 public:
-	TPopulation();
-	~TPopulation();
+	TReferer(const char *Search, const char *Ref);
+	~TReferer();
 
-	void Add(char Arr[MAX_QUESTIONS]);
+	int IsMatch(const char *Referer);
 
-    long double GetMean(int QuestionNr);
-    long double GetSd(int QuestionNr);
-    
-    int Count[MAX_QUESTIONS];
-	int Sum[MAX_QUESTIONS];
-    int ChiArr[MAX_QUESTIONS][MAX_CATS];
+	int Result;
+	int Count;
+	int Result0_59;
+	int Result60_99;
+	int Result100_139;
+	int Result140_200;
 
-    int Increment;
-    int ValueCount;
-    int MaxSize;
-    TValArr *ValArr;    
+	int NT;
+	int Aspie;
+
+	char RefererSearch[MAX_QUESTIONS];
+	char RefererRef[MAX_QUESTIONS];
 };
 
 #endif
-

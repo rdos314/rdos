@@ -42,11 +42,22 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TPopulation::TPopulation(int MaxValues)
+TPopulation::TPopulation()
 {
+	int i,j;
+
     ValArr = 0;
 
-    Clear(MaxValues);
+    ValueCount = 0;
+    MaxSize = 0;
+
+	for (i = 0; i < MAX_QUESTIONS; i++)
+	{
+		Count[i] = 0;
+		Sum[i] = 0;
+        for (j = 0; j < MAX_CATS; j++)
+			ChiArr[i][j] = 0;
+	}
 }
 
 /*##########################################################################
@@ -68,34 +79,6 @@ TPopulation::~TPopulation()
 
 /*##########################################################################
 #
-#   Name       : TPopulation::Clear
-#
-#   Purpose....: Clear population
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPopulation::Clear(int MaxValues)
-{
-	int i,j;
-
-    ValueCount = 0;
-    MaxSize = MaxValues;
-    ValArr = new TValArr[MaxValues];
-
-	for (i = 0; i < 100; i++)
-	{
-		Count[i] = 0;
-		Sum[i] = 0;
-        for (j = 0; j < MAX_CATS; j++)
-			ChiArr[i][j] = 0;
-	}
-}
-
-/*##########################################################################
-#
 #   Name       : TPopulation::Add
 #
 #   Purpose....: Add an answer
@@ -105,54 +88,44 @@ void TPopulation::Clear(int MaxValues)
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(char Arr[100])
+void TPopulation::Add(char Arr[MAX_QUESTIONS])
 {
     int val;
     int i;
-
-    if (ValueCount < MaxSize)
-    {
-        for (i = 0; i < 100; i++)
-        {
-		    val = Arr[i];
-    		ValArr[ValueCount].Quiz[i] = val;
-            if (val)
-            {
-                val--;
-                ChiArr[i][val]++;
-                Sum[i] += val;
-		    	Count[i]++;
-            }
-        }
-
-        ValueCount++;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TPopulation::Pack
-#
-#   Purpose....: Compact population
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TPopulation::Pack()
-{
     TValArr *NewArr;
-    int i;
 
-    NewArr = new TValArr[ValueCount];
+    if (ValArr == 0)
+    {
+        MaxSize = 8;
+        ValArr = new TValArr[MaxSize];
+    }
 
-    for (i = 0; i < ValueCount; i++)
-        NewArr[i] = ValArr[i];
+    if (ValueCount >= MaxSize)
+    {
+        MaxSize = 3 * MaxSize / 2;
+        NewArr = new TValArr[MaxSize];
+                
+        for (i = 0; i < ValueCount; i++)
+            NewArr[i] = ValArr[i];
 
-    delete ValArr;
-    ValArr = NewArr;
-    MaxSize = ValueCount;
+        delete ValArr;
+        ValArr = NewArr;
+    } 
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+    {
+		val = Arr[i];
+    	ValArr[ValueCount].Quiz[i] = val;
+        if (val)
+        {
+            val--;
+            ChiArr[i][val]++;
+            Sum[i] += val;
+		    Count[i]++;
+        }
+    }
+
+    ValueCount++;
 }
 
 /*##########################################################################
@@ -168,8 +141,13 @@ void TPopulation::Pack()
 ##########################################################################*/
 long double TPopulation::GetMean(int QuestionNr)
 {
-    if (Count[QuestionNr])
-        return (long double)Sum[QuestionNr] / Count[QuestionNr];
+    if (QuestionNr >= 0 && QuestionNr < MAX_QUESTIONS)
+    {
+        if (Count[QuestionNr])
+            return (long double)Sum[QuestionNr] / Count[QuestionNr];
+        else
+            return 0;
+    }
     else
         return 0;
 }
@@ -192,24 +170,26 @@ long double TPopulation::GetSd(int QuestionNr)
 	long double val;
 	long double rsum = 0;
 	long double mean = GetMean(QuestionNr);
+	int count;
 
-	if (QuestionNr >= 0 && QuestionNr < 100)
+	if (QuestionNr >= 0 && QuestionNr < MAX_QUESTIONS)
 	{
-        if (Count[QuestionNr] > 1)
-        {
-    	    for (e = 0; e < Count[QuestionNr]; e++)
-    	    {
-    	        ival = ValArr[e].Quiz[QuestionNr];
-                if (ival)
-                {
-                    ival--;
-    	    	    val = (long double)ival - mean;
-        	        rsum += val * val;
-        	    }
-    	    }
-
-            return sqrt(rsum / ((long double)Count[QuestionNr] - 1));
+        count = 0;
+            
+    	for (e = 0; e < ValueCount; e++)
+    	{
+    	    ival = ValArr[e].Quiz[QuestionNr];
+            if (ival)
+            {
+                count++;
+                ival--;
+    	    	val = (long double)ival - mean;
+        	    rsum += val * val;
+        	}
     	}
+    	
+        if (count > 1)
+            return sqrtl(rsum / ((long double)count - 1));
         else
             return 0;
     }
