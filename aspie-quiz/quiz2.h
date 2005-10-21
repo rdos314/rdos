@@ -33,12 +33,20 @@
 class TQuizII : public TQuiz
 {
 public:
-    TQuizII(const char *FileName);
-    TQuizII();
+    TQuizII(const char *FileName, TQuiz *QuizI);
     ~TQuizII();
 
 private:
-    void Init();
+    virtual void GetReferer(const char *referer, TPopulation *pop);
+
+    void SetupTexts();
+    void InitReferers();
+    void LoadReferers();
+    void LoadPopulations();
+    void SetupControlGroups();
+    void SetupCross(TQuiz *QuizI);
+
+    TFile FDataFile;
 };
 
 #endif

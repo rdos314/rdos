@@ -34,11 +34,18 @@ class TQuizI : public TQuiz
 {
 public:
     TQuizI(const char *FileName);
-    TQuizI();
     ~TQuizI();
 
 private:
-    void Init();
+    virtual void GetReferer(const char *referer, TPopulation *pop);
+
+    void SetupTexts();
+    void InitReferers();
+    void LoadReferers();
+    void LoadPopulations();
+    void SetupControlGroups();
+
+    TFile FDataFile;
 };
 
 #endif

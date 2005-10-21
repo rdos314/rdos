@@ -38,8 +38,6 @@
 const char InsertString[] = "INSERT INTO aspie-quiz VALUES (";
 
 TFile quizfile("quiz1.bin", 0);
-TFile asfile("as.dat", 0);
-TFile addfile("add.dat", 0);
 
 /*##################  HandleRow ##########################
 *   Purpose....: Handle a row       	   					      	        #
@@ -50,22 +48,8 @@ TFile addfile("add.dat", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
-	 switch (Row->Diagnos)
-	 {
-		  case DX_AS:
-			asfile.Write(Row, sizeof(TQuizRow));
-			break;
-
-		  case DX_ADD:
-				addfile.Write(Row, sizeof(TQuizRow));
-				break;
-
-		  case DX_REFERER:
-				quizfile.Write(Row, sizeof(TQuizRow));
-				break;
-	 }
-
-	 printf("%d Now: %d Before: %d, Ref: %s\n", Row->ID, Row->ResultNow, Row->ResultBefore, Row->Referer);
+	quizfile.Write(Row, sizeof(TQuizRow));
+	printf("%d Now: %d Before: %d, Ref: %s\n", Row->ID, Row->ResultNow, Row->ResultBefore, Row->Referer);
 }
 
 /*##################  CalcScore ##########################

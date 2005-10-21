@@ -45,14 +45,17 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizIII::TQuizIII(TFile *File)
+TQuizIII::TQuizIII(const char *FileName, TQuiz *QuizI, TQuiz *QuizII)
+  : FDataFile(FileName)
 {
     SetupTexts();
     InitReferers();
-    LoadReferers(File);
-    LoadPopulations(File);
+    LoadReferers();
     SetupControlGroups();
 	SortReferers();
+    LoadPopulations();
+    SetupCross(QuizI, QuizII);
+    Calculate();
 }
 
 /*##########################################################################
@@ -441,15 +444,13 @@ void TQuizIII::InitReferers()
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizIII::LoadReferers(TFile *File)
+void TQuizIII::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
-	int i;
-	int val;
 
-	File->SetPos(0);
-	while (File->Read(&Row, sizeof(Row)))
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		ref = FindReferer(Row.Referer);
 		if (!ref)
@@ -578,7 +579,7 @@ void TQuizIII::LoadReferers(TFile *File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizIII::LoadPopulations(TFile *File)
+void TQuizIII::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -587,8 +588,8 @@ void TQuizIII::LoadPopulations(TFile *File)
     for (i = 0; i < MAX_QUESTIONS; i++)
         Quiz[i].NoAnswer = 0;
     
-	File->SetPos(0);	
-	while (File->Read(&Row, sizeof(Row)))
+	FDataFile.SetPos(0);	
+	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
         for (i = 0; i < MAX_QUESTIONS; i++)
         {
@@ -683,3 +684,124 @@ void TQuizIII::SetupControlGroups()
 	DefineAspie("aspergianisland.com");
 	DefineAspie("xmission.com/~winter");
 }
+
+/*##########################################################################
+#
+#   Name       : TQuizIII::SetupCross
+#
+#   Purpose....: Setup cross-references
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizIII::SetupCross(TQuiz *QuizI, TQuiz *QuizII)
+{
+	DefineCross(QuizII, 0, 0);
+	DefineCross(QuizII, 1, 4);
+	DefineCross(QuizII, 2, 3);
+	DefineCross(QuizI, 3, 59);
+	DefineCross(QuizII, 4, 2);
+	DefineCross(QuizI, 5, 60);
+	DefineCross(QuizI, 6, 62);
+	DefineCross(QuizI, 7, 54);
+	DefineCross(QuizII, 8, 11);
+	DefineCross(QuizII, 9, 14);
+	DefineCross(QuizI, 11, 43);
+	DefineCross(QuizI, 12, 44);
+	DefineCross(QuizII, 13, 8);
+	DefineCross(QuizI, 14, 49);
+	DefineCross(QuizII, 15, 87);
+	DefineCross(QuizI, 16, 46);
+	DefineCross(QuizI, 17, 47);
+	DefineCross(QuizI, 17, 48);
+	DefineCross(QuizII, 25, 23);
+	DefineCross(QuizII, 26, 22);
+	DefineCross(QuizII, 27, 24);
+	DefineCross(QuizII, 28, 41);
+	DefineCross(QuizI, 29, 85);
+	DefineCross(QuizI, 30, 94);
+	DefineCross(QuizI, 31, 83);
+	DefineCross(QuizI, 32, 86);
+	DefineCross(QuizII, 33, 21);
+	DefineCross(QuizII, 34, 28);
+	DefineCross(QuizII, 35, 30);
+	DefineCross(QuizII, 36, 29);
+	DefineCross(QuizII, 37, 49);
+	DefineCross(QuizII, 38, 32);
+	DefineCross(QuizII, 39, 48);
+	DefineCross(QuizI, 40, 14);
+	DefineCross(QuizI, 41, 15);
+	DefineCross(QuizII, 42, 33);
+	DefineCross(QuizI, 43, 16);
+	DefineCross(QuizII, 44, 40);
+	DefineCross(QuizII, 45, 25);
+	DefineCross(QuizII, 46, 7);
+	DefineCross(QuizII, 47, 72);
+	DefineCross(QuizII, 48, 50);
+	DefineCross(QuizII, 49, 54);
+	DefineCross(QuizI, 50, 77);
+	DefineCross(QuizI, 51, 70);
+	DefineCross(QuizI, 52, 67);
+	DefineCross(QuizI, 53, 80);
+	DefineCross(QuizII, 54, 77);
+	DefineCross(QuizII, 55, 73);
+	DefineCross(QuizII, 56, 89);
+	DefineCross(QuizII, 57, 80);
+	DefineCross(QuizII, 58, 74);
+	DefineCross(QuizII, 63, 57);
+	DefineCross(QuizII, 66, 58);
+	DefineCross(QuizII, 69, 60);
+	DefineCross(QuizI, 70, 25);
+	DefineCross(QuizI, 71, 21);
+	DefineCross(QuizI, 72, 19);
+	DefineCross(QuizII, 73, 61);
+	DefineCross(QuizI, 74, 7);
+	DefineCross(QuizI, 75, 4);
+	DefineCross(QuizI, 76, 0);
+	DefineCross(QuizI, 77, 18);
+	DefineCross(QuizII, 78, 62);
+	DefineCross(QuizII, 79, 68);
+	DefineCross(QuizII, 80, 67);
+	DefineCross(QuizI, 81, 37);
+	DefineCross(QuizI, 82, 38);
+	DefineCross(QuizI, 83, 35);
+	DefineCross(QuizI, 84, 50);
+	DefineCross(QuizII, 85, 36);
+	DefineCross(QuizII, 86, 88);
+	DefineCross(QuizII, 87, 94);
+	DefineCross(QuizII, 88, 99);
+	DefineCross(QuizII, 89, 98);
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizIII::GetReferer
+#
+#   Purpose....: Get referer population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizIII::GetReferer(const char *referer, TPopulation *pop)
+{
+	int i;
+	TReferer *ref;
+	TQuizRow Row;
+
+	for (i = 0; i < RefCount; i++)
+	{
+		ref = RefArr[i];
+		if (ref->IsMatch(referer))
+			break;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		if (ref->IsMatch(Row.Referer))
+		    pop->Add(Row.Quiz);
+}
+

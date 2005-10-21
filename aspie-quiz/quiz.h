@@ -29,8 +29,13 @@
 #define _QUIZ_H
 
 #include "pop.h"
+#include "popcorr.h"
 #include "refer.h"
 #include "file.h"
+
+#if !defined(SWEDISH) && !defined(ENGLISH)
+#define ENGLISH
+#endif
 
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
@@ -48,6 +53,8 @@
 #define GROUP_REPETITION        8
 #define GROUP_PHYSICAL          9
 #define GROUP_MIXED             10
+
+class TQuiz;
 
 struct TQuizGroup
 {
@@ -70,6 +77,8 @@ struct TQuizQuestion
     int NoAnswer;
     int MyGroup;
     int Reverse;
+    TQuiz *CrossQuiz;
+    int CrossInd;
     TQuizGroup Group[MAX_GROUP_COUNT];
 };
 
@@ -93,21 +102,50 @@ public:
     ~TQuiz();
 
     void WriteReferers(const char *filename);
-
+    void WriteSumaryTable(const char *filename);
+    void WriteAsNtCorrelation(const char *filename);
+    void WriteAspieAsCorrelation(const char *filename);
+    void WriteAddAsCorrelation(const char *filename);
+    void WriteGenderAsCorrelation(const char *filename);
+    void WriteAddNtCorrelation(const char *filename);
+    void WriteRefererAsCorrelation(const char *filename, const char *header, const char *referer);
+    void WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer);
+    
 protected:
     void Init();
+    int round(long double val);
+
+    virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
     void SortReferers();
-    void WriteReferer(TFile &file, TReferer *ref);
+    void CalcAspieNtCorr();
+    void Calculate();
+    void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
+    void ClearUsed();
+    void ClearUsed(int Question);
+    TQuiz *GetHighestCorr(int MyQuestion, int *Question);
 
     void DefineNt(char *Referer);
     void DefineAspie(char *Referer);
+
+    void WriteFieldHeader(TFile &File, int RelWidth);
+    void WriteCenteredFieldHeader(TFile &File, int RelWidth);
+    void WriteRightFieldHeader(TFile &File, int RelWidth);
+    void WriteFieldFooter(TFile &File);
+
+    void WriteStaple(TFile &File, TPopulation *pop, int Question);
+    void WriteCI95(TFile &File, TPopulation *pop, int Question);
+    void WriteCorr95(TFile &File, long double corr, int count);
+    void WriteReferer(TFile &file, TReferer *ref);
+    void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
     
 	TGroup Group[MAX_GROUP_COUNT];
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
 	TQuizQuestion Quiz[MAX_QUESTIONS];
+
+	TPopulationCorrelation PopCorr;
 
     TPopulation All;
     TPopulation As;
@@ -139,7 +177,6 @@ protected:
     TReferer SelfAddRef;
     TReferer MaleAsRef;
     TReferer FemaleAsRef;
-
 };
 
 #endif

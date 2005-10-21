@@ -25,8 +25,11 @@
 #
 ########################################################################*/
 
+#include <string.h>
+
 #include "quiz1.h"
 #include "file.h"
+#include "quizdb.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -37,31 +40,21 @@
 #
 #   Purpose....: Constructor for TQuizI
 #
-#   In params..: Filename to load quiz I from
+#   In params..: File to load quiz I from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
 TQuizI::TQuizI(const char *FileName)
- : TQuiz(FileName)
+  : FDataFile(FileName)
 {
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizI::TQuizI
-#
-#   Purpose....: Constructor for TQuizI
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TQuizI::TQuizI()
-{
-    Init();
+    SetupTexts();
+    InitReferers();
+    LoadReferers();
+    SetupControlGroups();
+	SortReferers();
+    LoadPopulations();
+    Calculate();
 }
 
 /*##########################################################################
@@ -81,7 +74,7 @@ TQuizI::~TQuizI()
 
 /*##########################################################################
 #
-#   Name       : TQuizI::Init
+#   Name       : TQuizI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -90,7 +83,7 @@ TQuizI::~TQuizI()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizI::Init()
+void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_FOCUS;
 	Quiz[1].MyGroup = GROUP_FOCUS;
@@ -407,3 +400,311 @@ void TQuizI::Init()
 #endif
 
 }
+
+/*##########################################################################
+#
+#   Name       : TQuizII::InitReferers
+#
+#   Purpose....: Init referers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::InitReferers()
+{
+	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
+	AddReferer("aspiesforfreedom.", "aspiesforfreedom.com");
+	AddReferer("google.com", "google.com");
+	AddReferer("wrongplanet.net", "wrongplanet.net");
+	AddReferer("intpcentral.com", "intpcentral.com");
+	AddReferer("xmission.com/~winter", "xmission.com/~winter");
+	AddReferer("everyonesconnected.com", "everyonesconnected.com");
+	AddReferer("tribe.net", "tribe.net");
+	AddReferer("phpportalen.net", "phpportalen.net");
+	AddReferer("aspforum.liebert.se", "aspforum.liebert.se");
+	AddReferer("dickflash.com", "dickflash.com");
+	AddReferer("99musik.com/forum", "99musik.com/forum");
+	AddReferer("whoa.nu", "whoa.nu");
+}
+
+/*##################  TQuizI::LoadReferers ##########################
+*   Purpose....: Load referers    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizI::LoadReferers()
+{
+	TQuizRow Row;
+	TReferer *ref;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		ref = FindReferer(Row.Referer);
+		if (!ref)
+			ref = AddReferer(Row.Referer, Row.Referer);
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.ResultNow;
+
+			if (Row.ResultNow >= 60)
+			{
+				if (Row.ResultNow >= 100)
+				{
+					if (Row.ResultNow >= 140)
+						ref->Result140_200++;
+					else
+						ref->Result100_139++;
+				}
+				else
+					ref->Result60_99++;
+			}
+			else
+			    ref->Result0_59++;
+		}
+
+		switch (Row.Diagnos)
+		{
+			case DX_AS:
+				ref = &DxAsRef;
+				break;
+
+			case DX_ADD:
+				ref = &DxAddRef;
+				break;
+
+			default:
+				ref = 0;
+				break;
+		}
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.ResultNow;
+
+			if (Row.ResultNow >= 60)
+			{
+				if (Row.ResultNow >= 100)
+				{
+					if (Row.ResultNow >= 140)
+					    ref->Result140_200++;
+					else
+						ref->Result100_139++;
+				}
+				else
+					ref->Result60_99++;
+			}
+			else
+			    ref->Result0_59++;
+		}
+
+		switch (Row.Diagnos)
+		{
+			case DX_AS:
+				if (Row.Gender == 1)
+					ref = &MaleAsRef;
+				else
+					ref = &FemaleAsRef;
+				break;
+
+			default:
+				ref = 0;
+				break;
+		}
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.ResultNow;
+
+			if (Row.ResultNow >= 60)
+			{
+				if (Row.ResultNow >= 100)
+				{
+					if (Row.ResultNow >= 140)
+						ref->Result140_200++;
+					else
+						ref->Result100_139++;
+				}
+				else
+					ref->Result60_99++;
+			}
+			else
+				ref->Result0_59++;
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizI::LoadPopulations
+#
+#   Purpose....: Load populations
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::LoadPopulations()
+{
+	TQuizRow Row;
+	char ValArr[MAX_QUESTIONS];
+	int i;
+    TReferer *ref;
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+        Quiz[i].NoAnswer = 0;
+    
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < MAX_QUESTIONS; i++)
+		{
+			if (Row.Before[i] > Row.Now[i])
+				ValArr[i] = Row.Before[i] + 1;
+			else
+				ValArr[i] = Row.Now[i] + 1;
+
+			if (ValArr[i] > 3)
+			    ValArr[i] = 0;
+		}
+
+		All.Add(ValArr);
+
+		switch (Row.Diagnos)
+		{
+			case DX_AS:
+		        As.Add(ValArr);
+				if (Row.Gender == 1)
+					AsMale.Add(ValArr);
+				else
+					AsFemale.Add(ValArr);
+				break;
+
+			case DX_ADD:
+		        Add.Add(ValArr);
+				if (Row.Gender == 1)
+					AddMale.Add(ValArr);
+				else
+					AddFemale.Add(ValArr);
+				break;
+		}
+
+		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
+		    Mix.Add(ValArr);
+		else
+		{
+			ref = FindReferer(Row.Referer);
+
+			if (ref)
+			{
+				if (ref->NT)
+					Nt.Add(ValArr);
+
+				if (ref->Aspie)
+					Aspie.Add(ValArr);
+			}
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizI::SetupControlGroups
+#
+#   Purpose....: Setup control-groups
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::SetupControlGroups()
+{
+	int i;
+    TReferer *ref;
+	int val;
+
+	for (i = 0; i < RefCount; i++)
+	{
+		ref = RefArr[i];
+
+		if (ref->Count >= 5)
+		{
+		    val = ref->Result0_59 * 100 / ref->Count;
+			if (val >= 40)
+			{
+				ref->NT = TRUE;
+				NTRef.Result += ref->Result;
+				NTRef.Count += ref->Count;
+				NTRef.Result0_59 += ref->Result0_59;
+				NTRef.Result60_99 += ref->Result60_99;
+				NTRef.Result100_139 += ref->Result100_139;
+			    NTRef.Result140_200 += ref->Result140_200;
+		    }
+
+			val = ref->Result140_200 * 100 / ref->Count;
+			if (val >= 35)
+			{
+			    ref->Aspie = TRUE;
+				AspieRef.Result += ref->Result;
+				AspieRef.Count += ref->Count;
+				AspieRef.Result0_59 += ref->Result0_59;
+				AspieRef.Result60_99 += ref->Result60_99;
+				AspieRef.Result100_139 += ref->Result100_139;
+				AspieRef.Result140_200 += ref->Result140_200;
+			}
+	    }
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizI::GetReferer
+#
+#   Purpose....: Get referer population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::GetReferer(const char *referer, TPopulation *pop)
+{
+	int i;
+	TReferer *ref;
+	TQuizRow Row;
+	char ValArr[MAX_QUESTIONS];
+
+	for (i = 0; i < RefCount; i++)
+	{
+		ref = RefArr[i];
+		if (ref->IsMatch(referer))
+			break;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (ref->IsMatch(Row.Referer))
+		{
+			for (i = 0; i < MAX_QUESTIONS; i++)
+			{
+				if (Row.Before[i] > Row.Now[i])
+					ValArr[i] = Row.Before[i] + 1;
+				else
+					ValArr[i] = Row.Now[i] + 1;
+				pop->Add(ValArr);
+			}
+		}
+	}
+}
+

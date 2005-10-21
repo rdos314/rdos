@@ -25,8 +25,11 @@
 #
 ########################################################################*/
 
+#include <string.h>
+
 #include "quiz2.h"
 #include "file.h"
+#include "quizdb2.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -42,26 +45,17 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizII::TQuizII(const char *FileName)
- : TQuiz(FileName)
+TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
+  : FDataFile(FileName)
 {
-    Init();
-}
-
-/*##########################################################################
-#
-#   Name       : TQuizII::TQuizII
-#
-#   Purpose....: Constructor for TQuizII
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TQuizII::TQuizII()
-{
-    Init();
+    SetupTexts();
+    InitReferers();
+    LoadReferers();
+    SetupControlGroups();
+	SortReferers();
+    LoadPopulations();
+	SetupCross(QuizI);
+    Calculate();
 }
 
 /*##########################################################################
@@ -81,7 +75,7 @@ TQuizII::~TQuizII()
 
 /*##########################################################################
 #
-#   Name       : TQuizII::Init
+#   Name       : TQuizII::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -90,7 +84,7 @@ TQuizII::~TQuizII()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizII::Init()
+void TQuizII::SetupTexts()
 {
 	Quiz[16].Reverse = TRUE;
 	Quiz[37].Reverse = TRUE;
@@ -421,3 +415,356 @@ void TQuizII::Init()
 #endif
 
 }
+
+/*##########################################################################
+#
+#   Name       : TQuizII::InitReferers
+#
+#   Purpose....: Init referers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::InitReferers()
+{
+	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
+	AddReferer("lushforum.co.uk", "lushforum.co.uk");
+	AddReferer("whoa.nu", "whoa.nu");
+	AddReferer("flashback.info", "flashback.info");
+	AddReferer("gentlechristianmothers.com", "gentlechristianmothers.com");
+	AddReferer("georgewbush.org", "georgewbush.org");
+	AddReferer("aspie-forum.htm", "groups.yahoo.com/group/aspie-forum");
+	AddReferer("fam.htm", "groups.yahoo.com/group/FAMSecretSociety");
+	AddReferer("aspiesforfreedom.", "aspiesforfreedom.com");
+	AddReferer("aspergianisland.com", "aspergianisland.com");
+	AddReferer("ddrsverige.com", "ddrsverige.com");
+	AddReferer("nevro.info", "nevro.info");
+	AddReferer("google.com", "google.com");
+	AddReferer("wrongplanet.net", "wrongplanet.net");
+	AddReferer("xmission.com/~winter", "xmission.com/~winter");
+	AddReferer("rdos.net/sv", "rdos.net/sv");
+}
+
+/*##################  TQuizII::LoadReferers ##########################
+*   Purpose....: Load referers    					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizII::LoadReferers()
+{
+	TQuizRow Row;
+	TReferer *ref;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		ref = FindReferer(Row.Referer);
+		if (!ref)
+			ref = AddReferer(Row.Referer, Row.Referer);
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.Result;
+
+			if (Row.Result >= 60)
+			{
+		        if (Row.Result >= 100)
+				{
+				    if (Row.Result >= 140)
+				        ref->Result140_200++;
+					else
+					    ref->Result100_139++;
+				}
+				else
+				    ref->Result60_99++;
+			}
+		    else
+			    ref->Result0_59++;
+		}
+
+		switch (Row.Diagnos)
+		{
+		    case DX_AS:
+				ref = &DxAsRef;
+				break;
+
+			case DX_TS:
+				ref = &DxTsRef;
+				break;
+
+			case DX_ADD:
+				ref = &DxAddRef;
+				break;
+
+			case SELF_AS:
+				ref = &SelfAsRef;
+				break;
+
+			case SELF_TS:
+				ref = &SelfTsRef;
+				break;
+
+			case SELF_ADD:
+				ref = &SelfAddRef;
+				break;
+
+			default:
+				ref = 0;
+				break;
+		}
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.Result;
+
+			if (Row.Result >= 60)
+		    {
+		        if (Row.Result >= 100)
+				{
+					if (Row.Result >= 140)
+					    ref->Result140_200++;
+					else
+						ref->Result100_139++;
+				}
+				else
+					ref->Result60_99++;
+			}
+			else
+			    ref->Result0_59++;
+		}
+
+		switch (Row.Diagnos)
+		{
+			case DX_AS:
+			case SELF_AS:
+				if (Row.Gender == 1)
+					ref = &MaleAsRef;
+				else
+					ref = &FemaleAsRef;
+				break;
+
+			default:
+				ref = 0;
+				break;
+		}
+
+		if (ref)
+		{
+			ref->Count++;
+			ref->Result += Row.Result;
+
+			if (Row.Result >= 60)
+			{
+				if (Row.Result >= 100)
+				{
+					if (Row.Result >= 140)
+						ref->Result140_200++;
+					else
+						ref->Result100_139++;
+				}
+				else
+					ref->Result60_99++;
+			}
+			else
+				ref->Result0_59++;
+		}
+
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizII::LoadPopulations
+#
+#   Purpose....: Load populations
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::LoadPopulations()
+{
+	TQuizRow Row;
+	int i;
+    TReferer *ref;
+
+    for (i = 0; i < MAX_QUESTIONS; i++)
+        Quiz[i].NoAnswer = 0;
+    
+	FDataFile.SetPos(0);	
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+        for (i = 0; i < MAX_QUESTIONS; i++)
+        {
+            if (Row.Quiz[i] == 0)
+                Quiz[i].NoAnswer++;
+
+        }
+
+        All.Add(Row.Quiz);
+
+		switch (Row.Diagnos)
+		{
+		    case DX_AS:
+		        As.Add(Row.Quiz);
+				if (Row.Gender == 1)
+					AsMale.Add(Row.Quiz);
+				else
+					AsFemale.Add(Row.Quiz);
+				break;
+
+			case DX_ADD:
+			case SELF_ADD:
+			    Add.Add(Row.Quiz);
+				if (Row.Gender == 1)
+					AddMale.Add(Row.Quiz);
+				else
+					AddFemale.Add(Row.Quiz);
+				break;
+		}
+
+		if (strlen(Row.Referer) == 0)
+		{
+		    Mix.Add(Row.Quiz);
+			if (Row.Gender == 1)
+				MixMale.Add(Row.Quiz);
+			else
+				MixFemale.Add(Row.Quiz);
+		}
+		else
+		{
+			ref = FindReferer(Row.Referer);
+
+			if (ref)
+			{
+				if (ref->NT && Row.Diagnos == NO_DX)
+				{
+				    Nt.Add(Row.Quiz);
+					if (Row.Gender == 1)
+						NtMale.Add(Row.Quiz);
+					else
+						NtFemale.Add(Row.Quiz);
+				}
+
+				if (ref->Aspie)
+				{
+				    Aspie.Add(Row.Quiz);
+					if (Row.Gender == 1)
+						AspieMale.Add(Row.Quiz);
+					else
+						AspieFemale.Add(Row.Quiz);
+				}
+			}
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizII::SetupControlGroups
+#
+#   Purpose....: Setup control-groups
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::SetupControlGroups()
+{
+	DefineNt("rdos.net/sv");
+	DefineNt("lushforum.co.uk");
+	DefineNt("flashback.info");
+	DefineNt("whoa.nu");
+	DefineNt("gentlechristianmothers.com");
+	DefineNt("ddrsverige.com");
+
+	DefineAspie("wrongplanet.net");
+	DefineAspie("livejournal.com/community/asperger");
+	DefineAspie("aspie-forum.htm");
+	DefineAspie("aspiesforfreedom.");
+	DefineAspie("aspergianisland.com");
+	DefineAspie("xmission.com/~winter");
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizII::SetupCross
+#
+#   Purpose....: Setup cross-references
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::SetupCross(TQuiz *QuizI)
+{
+	DefineCross(QuizI, 0, 52);
+	DefineCross(QuizI, 1, 53);
+	DefineCross(QuizI, 2, 55);
+	DefineCross(QuizI, 3, 56);
+	DefineCross(QuizI, 4, 57);
+	DefineCross(QuizI, 5, 61);
+	DefineCross(QuizI, 6, 64);
+	DefineCross(QuizI, 7, 65);
+	DefineCross(QuizI, 8, 45);
+	DefineCross(QuizI, 22, 82);
+	DefineCross(QuizI, 23, 87);
+	DefineCross(QuizI, 24, 88);
+	DefineCross(QuizI, 25, 89);
+	DefineCross(QuizI, 26, 42);
+	DefineCross(QuizI, 29, 17);
+	DefineCross(QuizI, 30, 2);
+	DefineCross(QuizI, 31, 15);
+	DefineCross(QuizI, 35, 76);
+	DefineCross(QuizI, 40, 69);
+	DefineCross(QuizI, 41, 81);
+	DefineCross(QuizI, 42, 97);
+	DefineCross(QuizI, 50, 90);
+	DefineCross(QuizI, 60, 22);
+	DefineCross(QuizI, 67, 36);
+	DefineCross(QuizI, 68, 39);
+	DefineCross(QuizI, 69, 9);
+	DefineCross(QuizI, 70, 91);
+	DefineCross(QuizI, 71, 72);
+	DefineCross(QuizI, 72, 99);
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizII::GetReferer
+#
+#   Purpose....: Get referer population
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::GetReferer(const char *referer, TPopulation *pop)
+{
+	int i;
+	TReferer *ref;
+	TQuizRow Row;
+
+	for (i = 0; i < RefCount; i++)
+	{
+		ref = RefArr[i];
+		if (ref->IsMatch(referer))
+			break;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		if (ref->IsMatch(Row.Referer))
+		    pop->Add(Row.Quiz);
+}
+

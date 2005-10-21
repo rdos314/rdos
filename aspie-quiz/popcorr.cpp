@@ -132,7 +132,6 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
     		    ival = pop1->ValArr[e].Quiz[i];
 	    	    if (ival)
 		        {
-		            count++;
 		            ival--;
     			    val = (long double)ival - mean[i];
         			rsum += val * val;
@@ -144,7 +143,6 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
     		    ival = pop2->ValArr[e].Quiz[i];
 	    	    if (ival)
 		        {
-		            count++;
 		            ival--;
         			val = (long double)ival - mean[i];
         			rsum += val * val;
@@ -165,33 +163,36 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 
     		rsum = 0;
 
-	    	zx = (1.0 - cmean) / csd;
-		    for (e = 0; e < pop1->ValueCount; e++)
+    		if (csd == 0 || sd[i] == 0)
+        		corr[i] = 1.0;
+            else
     		{
-    		    ival = pop1->ValArr[e].Quiz[i];
-	    	    if (ival)
+    	    	zx = (1.0 - cmean) / csd;
+	    	    for (e = 0; e < pop1->ValueCount; e++)
+    	    	{
+    		        ival = pop1->ValArr[e].Quiz[i];
+    	    	    if (ival)
+	    	        {
+		                ival--;
+        	    		zy = ((long double)ival - mean[i]) / sd[i];
+        		    	rsum += zx * zy;
+    		        }
+	    	    }
+    
+        		zx = (0.0 - cmean) / csd;
+	        	for (e = 0; e < pop2->ValueCount; e++)
 		        {
-		            count++;
-		            ival--;
-        			zy = ((long double)ival - mean[i]) / sd[i];
-        			rsum += zx * zy;
+        		    ival = pop2->ValArr[e].Quiz[i];
+	        	    if (ival)
+		            {
+		                ival--;
+        		    	zy = ((long double)ival - mean[i]) / sd[i];
+            			rsum += zx * zy;
+	    	        }
 		        }
-		    }
+        		corr[i] = rsum / ((long double)count - 1);
 
-    		zx = (0.0 - cmean) / csd;
-	    	for (e = 0; e < pop2->ValueCount; e++)
-		    {
-    		    ival = pop2->ValArr[e].Quiz[i];
-	    	    if (ival)
-		        {
-		            count++;
-		            ival--;
-        			zy = ((long double)ival - mean[i]) / sd[i];
-        			rsum += zx * zy;
-		        }
 		    }
-
-    		corr[i] = rsum / ((long double)count - 1);
 
     		rsum = 0;
 

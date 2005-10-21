@@ -34,16 +34,20 @@
 class TQuizIII : public TQuiz
 {
 public:
-    TQuizIII(TFile *File);
+    TQuizIII(const char *FileName, TQuiz *QuizI, TQuiz *QuizII);
     ~TQuizIII();
 
 private:
+    virtual void GetReferer(const char *referer, TPopulation *pop);
+
     void SetupTexts();
     void InitReferers();
-    void LoadReferers(TFile *File);
-    void LoadPopulations(TFile *File);
+    void LoadReferers();
+    void LoadPopulations();
     void SetupControlGroups();
+    void SetupCross(TQuiz *QuizI, TQuiz *QuizII);
 
+    TFile FDataFile;
 };
 
 #endif
