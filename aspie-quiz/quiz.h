@@ -39,6 +39,7 @@
 
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
+#define MAX_CROSS               30
 
 #define GROUP_COUNT             11
 
@@ -73,6 +74,8 @@ struct TQuizQuestion
     long double NtSd;
     long double Chi2;
 	long double Corr;
+	int Count;
+	long double Sum;
     int Used;
     int NoAnswer;
     int MyGroup;
@@ -88,11 +91,25 @@ struct TGroupCorr
 	int Count;
 };
 
+struct TGroupVal
+{
+    int Count;
+    int Sum;
+};
+
+struct TGroupValArr
+{
+    TGroupVal Group[MAX_GROUP_COUNT];    
+};
+
 struct TGroup
 {
     const char *Name;
 	long double Mean;
 	long double Sd;
+	int Answers;
+	int Count;
+	int Sum;
 };
 
 class TQuiz
@@ -108,23 +125,35 @@ public:
     void WriteAddAsCorrelation(const char *filename);
     void WriteGenderAsCorrelation(const char *filename);
     void WriteAddNtCorrelation(const char *filename);
+    void WriteLowAsNtCorrelation(const char *filename);
+    void WriteLowAsAsCorrelation(const char *filename);
     void WriteRefererAsCorrelation(const char *filename, const char *header, const char *referer);
     void WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer);
+    void WriteAsNtAll(const char *filename);
+    void WriteGroupCorrTable(const char *filename);
+    void WriteGroupTable(const char *filename, int Cross);
+
+    void CheckCross();
     
 protected:
     void Init();
     int round(long double val);
 
     virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
+	virtual void WriteName(TFile &File) = 0;
 
+    void DefineCross(int id, TQuiz *quiz);
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
     void SortReferers();
     void CalcAspieNtCorr();
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
+    
     void ClearUsed();
     void ClearUsed(int Question);
+    TQuiz *GetTopQuizCorr(int *Question);
+    TQuiz *GetTopGroupCorr(int Group, int *Question);
     TQuiz *GetHighestCorr(int MyQuestion, int *Question);
 
     void DefineNt(char *Referer);
@@ -140,14 +169,16 @@ protected:
     void WriteCorr95(TFile &File, long double corr, int count);
     void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
-    
-	TGroup Group[MAX_GROUP_COUNT];
-	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
-	TQuizQuestion Quiz[MAX_QUESTIONS];
+
+    void WriteAsCI95(TFile &File, int Question);
+    void WriteNtCI95(TFile &File, int Question);
+    void WriteAsNtChi2(TFile &File, int Question);
+    void WriteAsNtCorr95(TFile &File, int Question);
 
 	TPopulationCorrelation PopCorr;
 
     TPopulation All;
+    TPopulation LowAs;
     TPopulation As;
     TPopulation AsMale;
     TPopulation AsFemale;
@@ -177,6 +208,15 @@ protected:
     TReferer SelfAddRef;
     TReferer MaleAsRef;
     TReferer FemaleAsRef;
+
+    TQuiz *CrossQuiz[MAX_CROSS];
+    
+    int GroupValCount;
+    TGroupValArr *GroupValArr;    
+	TGroup Group[MAX_GROUP_COUNT];
+	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
+	TQuizQuestion Quiz[MAX_QUESTIONS];
+
 };
 
 #endif

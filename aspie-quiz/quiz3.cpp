@@ -48,6 +48,9 @@
 TQuizIII::TQuizIII(const char *FileName, TQuiz *QuizI, TQuiz *QuizII)
   : FDataFile(FileName)
 {
+    DefineCross(0, QuizI);
+    DefineCross(1, QuizII);
+
     SetupTexts();
     InitReferers();
     LoadReferers();
@@ -71,6 +74,22 @@ TQuizIII::TQuizIII(const char *FileName, TQuiz *QuizI, TQuiz *QuizII)
 ##########################################################################*/
 TQuizIII::~TQuizIII()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizIII::WriteName
+#
+#   Purpose....: Write quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizIII::WriteName(TFile &File)
+{
+    File.Write("III");
 }
 
 /*##########################################################################
@@ -584,6 +603,7 @@ void TQuizIII::LoadPopulations()
 	TQuizRow Row;
 	int i;
     TReferer *ref;
+    int aspie;
 
     for (i = 0; i < MAX_QUESTIONS; i++)
         Quiz[i].NoAnswer = 0;
@@ -598,16 +618,26 @@ void TQuizIII::LoadPopulations()
 
         }
 
+        aspie = FALSE;
+
         All.Add(Row.Quiz);
 
 		switch (Row.Diagnos)
 		{
 		    case DX_AS:
-		        As.Add(Row.Quiz);
+		    case SELF_AS:
+		        aspie = TRUE;
+
+		        if (Row.Result < 100)
+		            LowAs.Add(Row.Quiz);
+		            
 				if (Row.Gender == 1)
 					AsMale.Add(Row.Quiz);
 				else
 					AsFemale.Add(Row.Quiz);
+
+		        if (Row.Diagnos == DX_AS)
+    		        As.Add(Row.Quiz);
 				break;
 
 			case DX_ADD:
@@ -643,15 +673,20 @@ void TQuizIII::LoadPopulations()
 						NtFemale.Add(Row.Quiz);
 				}
 
-				if (ref->Aspie)
-				{
-				    Aspie.Add(Row.Quiz);
-					if (Row.Gender == 1)
-						AspieMale.Add(Row.Quiz);
-					else
-						AspieFemale.Add(Row.Quiz);
-				}
+                if (!aspie)
+                    aspie = ref->Aspie;
 			}
+		}
+
+                    
+		if (aspie)
+		{
+				
+			Aspie.Add(Row.Quiz);
+			if (Row.Gender == 1)
+				AspieMale.Add(Row.Quiz);
+			else
+				AspieFemale.Add(Row.Quiz);
 		}
 	}
 }
@@ -707,7 +742,7 @@ void TQuizIII::SetupCross(TQuiz *QuizI, TQuiz *QuizII)
 	DefineCross(QuizI, 6, 62);
 	DefineCross(QuizI, 7, 54);
 	DefineCross(QuizII, 8, 11);
-	DefineCross(QuizII, 9, 14);
+	DefineCross(QuizII, 9, 10);
 	DefineCross(QuizI, 11, 43);
 	DefineCross(QuizI, 12, 44);
 	DefineCross(QuizII, 13, 8);
@@ -715,7 +750,7 @@ void TQuizIII::SetupCross(TQuiz *QuizI, TQuiz *QuizII)
 	DefineCross(QuizII, 15, 87);
 	DefineCross(QuizI, 16, 46);
 	DefineCross(QuizI, 17, 47);
-	DefineCross(QuizI, 17, 48);
+	DefineCross(QuizI, 18, 48);
 	DefineCross(QuizII, 25, 23);
 	DefineCross(QuizII, 26, 22);
 	DefineCross(QuizII, 27, 24);
@@ -746,7 +781,6 @@ void TQuizIII::SetupCross(TQuiz *QuizI, TQuiz *QuizII)
 	DefineCross(QuizI, 52, 67);
 	DefineCross(QuizI, 53, 80);
 	DefineCross(QuizII, 54, 77);
-	DefineCross(QuizII, 55, 73);
 	DefineCross(QuizII, 56, 89);
 	DefineCross(QuizII, 57, 80);
 	DefineCross(QuizII, 58, 74);
@@ -759,7 +793,6 @@ void TQuizIII::SetupCross(TQuiz *QuizI, TQuiz *QuizII)
 	DefineCross(QuizII, 73, 61);
 	DefineCross(QuizI, 74, 7);
 	DefineCross(QuizI, 75, 4);
-	DefineCross(QuizI, 76, 0);
 	DefineCross(QuizI, 77, 18);
 	DefineCross(QuizII, 78, 62);
 	DefineCross(QuizII, 79, 68);

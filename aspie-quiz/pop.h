@@ -29,7 +29,6 @@
 #define _POP_H
 
 #define MAX_CATS        8
-
 #define MAX_QUESTIONS   100
 
 struct TValArr
@@ -39,9 +38,8 @@ struct TValArr
 
 class TPopulation
 {
-friend class TPopulationCorrelation;
 public:
-	TPopulation();
+    TPopulation();
 	~TPopulation();
 
 	void Add(char Arr[MAX_QUESTIONS]);

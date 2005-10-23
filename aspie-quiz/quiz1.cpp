@@ -74,6 +74,22 @@ TQuizI::~TQuizI()
 
 /*##########################################################################
 #
+#   Name       : TQuizI::WriteName
+#
+#   Purpose....: Write quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::WriteName(TFile &File)
+{
+    File.Write("I");
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -203,7 +219,7 @@ void TQuizI::SetupTexts()
 	Quiz[11].Text = "Do you have excellent long-term memory in subjects that interest you?";
 	Quiz[12].Text = "Do you have excellent vocabulary and/or a fascination with words?";
 	Quiz[13].Text = "Is it difficult or tiresome for you to talk?";
-	Quiz[14].Text = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)t?";
+	Quiz[14].Text = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)?";
 	Quiz[15].Text = "Do you sometimes mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
 	Quiz[16].Text = "Do you use stock phrases or phrases borrowed from other situations or people?";
 	Quiz[17].Text = "Do you have a monotonous voice and/or difficulty adjusting volume and speed when you talk?";
@@ -582,6 +598,9 @@ void TQuizI::LoadPopulations()
 		switch (Row.Diagnos)
 		{
 			case DX_AS:
+			    if (Row.ResultNow < 100)
+			        LowAs.Add(ValArr);
+			        
 		        As.Add(ValArr);
 				if (Row.Gender == 1)
 					AsMale.Add(ValArr);

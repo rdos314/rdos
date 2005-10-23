@@ -68,6 +68,9 @@ TQuiz::TQuiz()
     for (i = 0; i < MAX_REFERERS; i++)
         RefArr[i] = 0;
 
+    for (i = 0; i < MAX_CROSS; i++)
+        CrossQuiz[i] = 0;
+
     for (i = 0; i < 100; i++)
     {
         Quiz[i].Text = "NO TEXT";
@@ -107,6 +110,9 @@ TQuiz::TQuiz()
         Group[g].Sd = 0;
     }
 
+    GroupValArr = 0;
+    GroupValCount = 0;
+
     Init();
 }
 
@@ -128,6 +134,9 @@ TQuiz::~TQuiz()
     for (i = 0; i < MAX_REFERERS; i++)
         if (RefArr[i])
             delete RefArr[i];
+
+    if (GroupValArr)
+        delete GroupValArr;
 }
 
 /*##########################################################################
@@ -199,6 +208,79 @@ void TQuiz::Init()
 int TQuiz::round(long double val)
 {
 	return (int)(val + 0.5);
+}
+
+/*##################  TQuiz::DefineCross ##########################
+*   Purpose....: Define cross reference quiz 					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::DefineCross(int id, TQuiz *quiz)
+{
+    if (id >= 0 && id < MAX_CROSS)
+		CrossQuiz[id] = quiz;
+}
+
+/*##################  TQuiz::CheckCross ##########################
+*   Purpose....: Check cross-references 					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::CheckCross()
+{
+    int q;
+    int qc;
+    int group;
+    int i;
+    int curr;
+    TQuiz *quiz;
+    const char *text;
+    int CrossArr[MAX_CROSS];
+    int cross;
+
+    for (q = 0; q < MAX_QUESTIONS; q++)
+    {
+        quiz = this;
+        group = quiz->Quiz[q].MyGroup;
+        text = quiz->Quiz[q].Text;
+        curr = q;
+
+        for (cross = 0; cross < MAX_CROSS; cross++)
+            CrossArr[cross] = -1;
+
+        while (quiz)
+        {
+            for (cross = 0; cross < MAX_CROSS; cross++)
+                if (quiz == CrossQuiz[cross])
+                    CrossArr[cross] = curr;
+        
+            if (quiz->Quiz[curr].MyGroup != group)
+                printf("Group conflict, question:%d %d should be %d\r\n",
+                         q, quiz->Quiz[curr].MyGroup, group);
+
+            if (strcmp(quiz->Quiz[curr].Text, text))
+                printf("Text conflict, question:%d <%s> should be <%s>\r\n",
+                         q, quiz->Quiz[curr].Text, text);
+                    
+
+            i = quiz->Quiz[curr].CrossInd;
+            quiz = quiz->Quiz[curr].CrossQuiz;
+            curr = i;
+        }
+
+        for (cross = 0; cross < MAX_CROSS; cross++)
+            if (CrossQuiz[cross])
+                for (qc = 0; qc < MAX_QUESTIONS; qc++)
+                    if (qc != CrossArr[cross])
+                        if (!strcmp(CrossQuiz[cross]->Quiz[qc].Text, text))
+                            printf("Text duplicate, question:%d in cross %d:%d",
+                                q, cross, qc);
+                    
+    }
 }
 
 /*##################  TQuiz::FindReferer ##########################
@@ -372,13 +454,194 @@ void TQuiz::ClearUsed(int Question)
 void TQuiz::ClearUsed()
 {
     int i;
+    int cross;
 
     for (i = 0; i < MAX_QUESTIONS; i++)
         ClearUsed(i);
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+        if (CrossQuiz[cross])
+            CrossQuiz[cross]->ClearUsed();
 }
 
-/*##################  TQuiz::iGetHighestCorr ##########################
-*   Purpose....: Get highest correlated in non-used quizes            	    #
+/*##################  TQuiz::GetTopQuizCorr ##########################
+*   Purpose....: Get top node of higest correlated quiz question     	    #
+*              : Does not update used field
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TQuiz *TQuiz::GetTopQuizCorr(int *Question)
+{
+    TQuiz *CurrQuiz;
+    TQuiz *TopQuiz;
+    int i;
+    long double corr;
+    long double maxcorr;
+    int q;
+    int CurrQuestion;
+    int cross;
+    
+    maxcorr = -1;
+    TopQuiz = 0;
+
+    for (q = 0; q < MAX_QUESTIONS; q++)
+    {
+        CurrQuiz = this;
+        CurrQuestion = q;
+
+        while (CurrQuiz)
+        {
+            if (!CurrQuiz->Quiz[CurrQuestion].Used)
+            {
+                corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                if (corr < 0)
+                    corr = -corr;
+
+                if (corr > maxcorr)
+                {
+                    TopQuiz = this;
+                    *Question = q;
+                    maxcorr = corr;
+                }
+            }
+
+            i = CurrQuiz->Quiz[CurrQuestion].CrossInd;
+            CurrQuiz = CurrQuiz->Quiz[CurrQuestion].CrossQuiz;
+            CurrQuestion = i;
+        }
+    }
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        if (CrossQuiz[cross])
+        {
+            for (q = 0; q < MAX_QUESTIONS; q++)
+            {
+                CurrQuiz = CrossQuiz[cross];
+                CurrQuestion = q;
+
+                while (CurrQuiz)
+                {
+                    if (!CurrQuiz->Quiz[CurrQuestion].Used)
+                    {
+                        corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                        if (corr < 0)
+                            corr = -corr;
+
+						if (corr > maxcorr)
+						{
+							TopQuiz = CrossQuiz[cross];
+							*Question = q;
+							maxcorr = corr;
+						}
+					}
+
+					i = CurrQuiz->Quiz[CurrQuestion].CrossInd;
+					CurrQuiz = CurrQuiz->Quiz[CurrQuestion].CrossQuiz;
+					CurrQuestion = i;
+				}
+			}
+		}
+    }
+
+    return TopQuiz;
+}
+
+/*##################  TQuiz::GetTopGroupCorr ##########################
+*   Purpose....: Get top node of higest correlated question in group            	    #
+*              : Does not update used field
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
+{
+    TQuiz *CurrQuiz;
+    TQuiz *TopQuiz;
+    int i;
+    long double corr;
+    long double maxcorr;
+    int q;
+    int CurrQuestion;
+    int cross;
+    
+    maxcorr = -1;
+    TopQuiz = 0;
+
+    for (q = 0; q < MAX_QUESTIONS; q++)
+    {
+        if (Quiz[q].MyGroup == Group)
+        {
+            CurrQuiz = this;
+            CurrQuestion = q;
+
+            while (CurrQuiz)
+            {
+                if (!CurrQuiz->Quiz[CurrQuestion].Used)
+                {
+                    corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                    if (corr < 0)
+                        corr = -corr;
+
+                    if (corr > maxcorr)
+                    {
+                        TopQuiz = this;
+                        *Question = q;
+                        maxcorr = corr;
+                    }
+                }
+
+                i = CurrQuiz->Quiz[CurrQuestion].CrossInd;
+                CurrQuiz = CurrQuiz->Quiz[CurrQuestion].CrossQuiz;
+                CurrQuestion = i;
+            }
+        }
+    }
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        if (CrossQuiz[cross])
+        {
+            for (q = 0; q < MAX_QUESTIONS; q++)
+            {
+                if (CrossQuiz[cross]->Quiz[q].MyGroup == Group)
+                {
+                    CurrQuiz = CrossQuiz[cross];
+                    CurrQuestion = q;
+
+                    while (CurrQuiz)
+                    {
+                        if (!CurrQuiz->Quiz[CurrQuestion].Used)
+                        {
+                            corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                            if (corr < 0)
+                                corr = -corr;
+
+                            if (corr > maxcorr)
+                            {
+                                TopQuiz = CrossQuiz[cross];
+                                *Question = q;
+                                maxcorr = corr;
+                            }
+                        }
+
+                        i = CurrQuiz->Quiz[CurrQuestion].CrossInd;
+                        CurrQuiz = CurrQuiz->Quiz[CurrQuestion].CrossQuiz;
+                        CurrQuestion = i;
+                    }
+				}
+			}
+		}
+	}
+
+	return TopQuiz;
+}
+
+/*##################  TQuiz::GetHighestCorr ##########################
+*   Purpose....: Get highest correlated in question cross link        	    #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -434,6 +697,24 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
 void TQuiz::Calculate()
 {
     int i;
+	int g;
+	int e;
+	int ok;
+	int ival;
+	int count;
+	int sum;
+	long double mean[100];
+	long double csd[100];
+	int q;
+	long double val;
+	long double rsum;
+	long double zx;
+	long double zy;
+	int g1, g2;
+	int count1;
+	int sum1;
+	int count2;
+	int sum2;
 
 	PopCorr.Correlate(&Aspie, &Nt);
 
@@ -447,6 +728,230 @@ void TQuiz::Calculate()
 		Quiz[i].NtSd = Nt.GetSd(i);
 	    Quiz[i].Chi2 = PopCorr.chi2[i];
 		Quiz[i].Corr = PopCorr.corr[i];
+	}
+
+	for (i = 0; i < MAX_QUESTIONS; i++)
+	{
+		Quiz[i].Count = 0;
+		Quiz[i].Sum = 0;
+	}
+
+	for (i = 0; i < GROUP_COUNT; i++)
+	{
+        Group[i].Answers = 0;
+        Group[i].Count = 0;
+        Group[i].Sum = 0;
+	}
+
+    GroupValCount = All.ValueCount;
+
+    if (GroupValArr)
+        delete GroupValArr;
+        
+	GroupValArr = new TGroupValArr[GroupValCount];
+
+    for (e = 0; e < GroupValCount; e++)
+    {
+		for (i = 0; i < MAX_QUESTIONS; i++)
+		{
+			ival = All.ValArr[e].Quiz[i];
+			if (ival)
+			{
+				if (Quiz[i].Reverse)
+					ival = 3 - ival;
+				else
+					ival--;
+
+				Quiz[i].Sum += ival;
+				Quiz[i].Count++;
+			}
+		}
+
+		for (g = 0; g < GROUP_COUNT; g++)
+		{
+			ok = TRUE;
+			sum = 0;
+			count = 0;
+
+			for (i = 0; i < MAX_QUESTIONS; i++)
+			{
+				if (Quiz[i].MyGroup == g)
+				{
+					ival = All.ValArr[e].Quiz[i];
+					if (ival)
+					{
+						if (Quiz[i].Reverse)
+							sum += 3 - ival;
+						else
+							sum += ival - 1;
+
+						count++;
+					}
+					else
+					    ok = FALSE;
+				}
+			}
+
+			if (ok)
+			{
+			    GroupValArr[e].Group[g].Sum = sum;
+			    GroupValArr[e].Group[g].Count = count;
+                Group[g].Answers++;
+                Group[g].Sum += sum;
+                Group[g].Count += count;
+			}
+			else
+			{
+			    GroupValArr[e].Group[g].Sum = 0;
+			    GroupValArr[e].Group[g].Count = 0;
+			}
+		}
+	}
+
+	for (i = 0; i < MAX_QUESTIONS; i++)
+	{
+	    if (Quiz[i].Count > 1)
+	    {
+    		mean[i] = (long double)Quiz[i].Sum / Quiz[i].Count;
+
+    		rsum = 0;
+
+	    	for (e = 0; e < GroupValCount; e++)
+		    {
+			    ival = All.ValArr[e].Quiz[i];
+    			if (ival)
+	    		{
+		    		if (Quiz[i].Reverse)
+			            ival = 3 - ival;
+			        else
+    				    ival--;
+
+    				val = (long double)ival - mean[i];
+	    			rsum += val * val;
+		    	}
+		    }
+		    csd[i] = sqrtl(rsum / ((long double)Quiz[i].Count - 1));
+		}
+		else
+		{
+		    mean[i] = 0;
+		    csd[i] = 0;
+		}
+	}
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+	    if (Group[g].Count && Group[g].Answers > 1)
+	    {
+    		Group[g].Mean = (long double)Group[g].Sum / Group[g].Count;
+
+	    	rsum = 0;
+
+    		for (e = 0; e < GroupValCount; e++)
+	    	{
+		        if (GroupValArr[e].Group[g].Count)
+			    {
+			        val = (long double)GroupValArr[e].Group[g].Sum / GroupValArr[e].Group[g].Count;
+    				val -= Group[g].Mean;
+	    			rsum += val * val;
+		    	}
+		    }
+		    Group[g].Sd = sqrtl(rsum / ((long double)Group[g].Answers - 1));
+		}
+		else
+		{
+		    Group[g].Mean = 0;
+		    Group[g].Sd = 0;
+		}
+	}
+
+	for (q = 0; q < MAX_QUESTIONS; q++)
+	{
+		for (g = 0; g < GROUP_COUNT; g++)
+		{
+			Quiz[q].Group[g].Corr = 0;
+
+			if (csd[q] && Group[g].Sd)
+			{
+    		    rsum = 0;
+	    		for (e = 0; e < GroupValCount; e++)
+		    	{
+			    	ival = All.ValArr[e].Quiz[q];
+	    			count = GroupValArr[e].Group[g].Count;
+		    		sum = GroupValArr[e].Group[g].Sum;
+
+    			    if (ival && count)
+	    		    {
+		    	        if (Quiz[q].Reverse)
+			                ival = 3 - ival;
+			            else
+    			            ival--;
+
+    			        Quiz[q].Group[g].Count++;
+
+                        if (Quiz[q].MyGroup == g)
+                        {
+                            count--;
+				    		sum -= ival;
+                        }
+
+                        if (count)
+                        {
+    	    				zx = ((long double)ival - mean[q]) / csd[q];
+	    	    			zy = ((long double)sum / count - Group[g].Mean) / Group[g].Sd;
+		    	    		rsum += zx * zy;
+		     	        }
+				    }
+			    }
+
+    			if (Quiz[q].Group[g].Count)
+	    			Quiz[q].Group[g].Corr = rsum / ((long double)Quiz[q].Group[g].Count - 1);
+	    	}
+		}
+	}
+
+	for (g1 = 0; g1 < GROUP_COUNT; g1++)
+		GroupCorr[g1][g1].Corr = 1.0;
+
+	for (g1 = 0; g1 < GROUP_COUNT; g1++)
+	{
+		for (g2 = 0; g2 < g1; g2++)
+		{
+		    GroupCorr[g1][g2].Corr = 0;
+			GroupCorr[g1][g2].Count = 0;
+
+			rsum = 0;
+			for (e = 0; e < GroupValCount; e++)
+			{
+			    count1 = GroupValArr[e].Group[g1].Count;
+				sum1 = GroupValArr[e].Group[g1].Sum;
+
+			    count2 = GroupValArr[e].Group[g2].Count;
+			    sum2 = GroupValArr[e].Group[g2].Sum;
+
+			    if (count1 && count2 && Group[g1].Sd && Group[g2].Sd)
+			    {
+					GroupCorr[g1][g2].Count++;
+
+					zx = ((long double)sum1 / count1 - Group[g1].Mean) / Group[g1].Sd;
+					zy = ((long double)sum2 / count2 - Group[g2].Mean) / Group[g2].Sd;
+					rsum += zx * zy;
+				}
+            }
+            
+			if (GroupCorr[g1][g2].Count)
+			{
+				GroupCorr[g1][g2].Corr = rsum / ((long double)GroupCorr[g1][g2].Count - 1);
+				GroupCorr[g2][g1].Corr = rsum / ((long double)GroupCorr[g1][g2].Count - 1);
+				GroupCorr[g2][g1].Count = GroupCorr[g1][g2].Count;
+			}
+			else
+			{
+				GroupCorr[g1][g2].Corr = 0;
+		        GroupCorr[g2][g1].Corr = 0;
+				GroupCorr[g2][g1].Count = 0;
+			}
+		}
 	}
 }
 
@@ -545,22 +1050,22 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	    WriteFieldFooter(file);
 
 	    WriteRightFieldHeader(file, 4);
-	    sprintf(str, "%d", round(100.0 * ref->Result0_59 / ref->Count));
+	    sprintf(str, "%d%", round(100.0 * ref->Result0_59 / ref->Count));
 	    file.Write(str);
 	    WriteFieldFooter(file);
 
 	    WriteRightFieldHeader(file, 4);
-    	sprintf(str, "%d", round(100.0 * ref->Result60_99 / ref->Count));
+    	sprintf(str, "%d%", round(100.0 * ref->Result60_99 / ref->Count));
 	    file.Write(str);
 	    WriteFieldFooter(file);
 
 	    WriteRightFieldHeader(file, 4);
-	    sprintf(str, "%d", round(100.0 * ref->Result100_139 / ref->Count));
+	    sprintf(str, "%d%", round(100.0 * ref->Result100_139 / ref->Count));
 	    file.Write(str);
 	    WriteFieldFooter(file);
 	      
 	    WriteRightFieldHeader(file, 4);
-        sprintf(str, "%d", round(100.0 * ref->Result140_200 / ref->Count));
+        sprintf(str, "%d%", round(100.0 * ref->Result140_200 / ref->Count));
         file.Write(str);
 	    WriteFieldFooter(file);
     
@@ -767,31 +1272,35 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
 
     File.Write("\n");
 
-    if (corr < 1.0)
-    {    
-		zij = 0.5 * logl((1 + corr) / (1 - corr));
-		za = 1.96 / sqrtl(count - 3);
-        rlow = tanhl(zij - za);
-        rhigh = tanhl(zij + za);   
+    if (count > 3)
+    {
+        if (corr < 1.0)
+        {    
+    		zij = 0.5 * logl((1 + corr) / (1 - corr));
+	    	za = 1.96 / sqrtl(count - 3);
+            rlow = tanhl(zij - za);
+            rhigh = tanhl(zij + za);   
 
-        if (rlow <= 0.0 && rhigh >= 0.0)
-            File.Write("-----");
-        else
-        {
-            ival = round(100.0 * rlow);
-		    sprintf(str, "%d", ival);
-		    File.Write(str);
+            if (rlow <= 0.0 && rhigh >= 0.0)
+                File.Write("-----");
+            else
+            {
+                ival = round(100.0 * rlow * rlow);
+		        sprintf(str, "%d", ival);
+		        File.Write(str);
 
-    		ival = round(100.0 * rhigh);
-	    	sprintf(str, "-%d", ival);
-		    File.Write(str);
+        		ival = round(100.0 * rhigh * rhigh);
+	        	sprintf(str, "-%d", ival);
+		        File.Write(str);
 			
-			File.Write("%");
-		}
-
+    			File.Write("%");
+	    	}
+	    }
+	    else
+            File.Write("100%");
     }
     else
-        File.Write("100%");
+	    File.Write(" ");
 
     File.Write("</span>\n");
         
@@ -1148,6 +1657,32 @@ void TQuiz::WriteGenderAsCorrelation(const char *filename)
 		WriteCorrTable(filename, "Male AS", "Female AS", &AsMale, &AsFemale, 6.0);
 }
 
+/*##################  TQuiz::WriteLowAsNtCorrelation ##########################
+*   Purpose....: Write low-score AS vs NT correlation	   			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLowAsNtCorrelation(const char *filename)
+{
+	if (LowAs.ValueCount >= 5 && Nt.ValueCount >= 5)
+		WriteCorrTable(filename, "Low AS", "NT control", &LowAs, &Nt, 6.0);
+}
+
+/*##################  TQuiz::WriteLowAsAsCorrelation ##########################
+*   Purpose....: Write low-score AS vs AS correlation	   			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLowAsAsCorrelation(const char *filename)
+{
+	if (LowAs.ValueCount >= 5 && As.ValueCount >= 5)
+		WriteCorrTable(filename, "Low AS", "AS/HFA/PDD", &LowAs, &As, 6.0);
+}
+
 /*##################  TQuiz::WriteRefererNtCorrelation ##########################
 *   Purpose....: Write referer vs NT correlation	   			      	        #
 *   In params..: *                                                          #
@@ -1180,4 +1715,535 @@ void TQuiz::WriteRefererAsCorrelation(const char *filename, const char *header, 
 
     if (pop.ValueCount >= 5 && Aspie.ValueCount >= 5)
     	WriteCorrTable(filename, header, "Aspie control", &pop, &Nt, 6.0);
+}
+
+/*##################  TQuiz::WriteAsCI95 ##########################
+*   Purpose....: Write AS mean with 95% confidence interval                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAsCI95(TFile &File, int Question)
+{
+    long double mean;
+    long double sd;
+    long double dev;
+    long double val;
+    int ival;
+	int count;
+    char str[80];
+            
+	mean = Quiz[Question].AsMean;
+	sd = Quiz[Question].AsSd;
+	count = Quiz[Question].AsCount;
+
+	if (count > 1)
+	{
+		dev = 1.96 * sd / sqrtl(count);
+
+		val = mean - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = 100 * val;
+
+		sprintf(str, "%d.%02d", ival / 100, ival % 100);
+		File.Write(str);
+
+		val = mean + dev;
+		if (val > 2.0)
+			val = 2.0;
+
+		ival = 100 * val;
+
+		sprintf(str, "-%d.%02d", ival / 100, ival % 100);
+		File.Write(str);
+	}
+	else
+		File.Write("-----");
+}
+
+/*##################  TQuiz::WriteNtCI95 ##########################
+*   Purpose....: Write NT mean with 95% confidence interval                 #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteNtCI95(TFile &File, int Question)
+{
+    long double mean;
+    long double sd;
+    long double dev;
+    long double val;
+    int ival;
+	int count;
+    char str[80];
+            
+	mean = Quiz[Question].NtMean;
+	sd = Quiz[Question].NtSd;
+	count = Quiz[Question].NtCount;
+
+	if (count > 1)
+	{
+		dev = 1.96 * sd / sqrtl(count);
+
+		val = mean - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = 100 * val;
+
+		sprintf(str, "%d.%02d", ival / 100, ival % 100);
+		File.Write(str);
+
+		val = mean + dev;
+		if (val > 2.0)
+			val = 2.0;
+
+		ival = 100 * val;
+
+		sprintf(str, "-%d.%02d", ival / 100, ival % 100);
+		File.Write(str);
+	}
+	else
+	    File.Write("-----");
+}
+
+/*##################  TQuiz::WriteAsNtChi2 ##########################
+*   Purpose....: Write AS vs NT chi-2                                        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAsNtChi2(TFile &File, int Question)
+{
+    int ival;
+    char str[80];
+    
+    ival = round(Quiz[Question].Chi2);
+
+    sprintf(str, "%d", ival);
+	File.Write(str);
+}
+
+/*##################  TQuiz::WriteAsNtCorr95 ##########################
+*   Purpose....: Write AS vs NT 95% correlation interval      	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAsNtCorr95(TFile &File, int Question)
+{
+    int count;
+    long double corr;
+    
+	count = Quiz[Question].AsCount + Quiz[Question].NtCount;
+
+	if (count > 3)
+	{
+    	corr = Quiz[Question].Corr;
+    	WriteCorr95(File, corr, count);
+    }
+    else
+        File.Write("-----");
+}
+
+/*##################  TQuiz::WriteAsNtAll ##########################
+*   Purpose....: Write AS vs NT correlation, all quizes                     #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAsNtAll(const char *filename)
+{
+	int j;
+	char str[80];
+	TFile file(filename, 0);
+	TQuiz *quiz;
+	TQuiz *TopQuiz;
+	int TopQuestion;
+	int q;
+
+	ClearUsed();
+
+	j = 0;
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	TopQuiz = GetTopQuizCorr(&TopQuestion);
+
+	while (TopQuiz)
+	{
+		if (j % 10 == 0)
+		{
+			file.Write("<tr style='height:24.75pt'>");
+
+            WriteFieldHeader(file, 6);
+			file.Write("#");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 60);
+			file.Write(" ");
+            WriteFieldFooter(file);
+
+            WriteFieldHeader(file, 6);
+			file.Write("Aspie");
+            WriteFieldFooter(file);
+
+            WriteFieldHeader(file, 6);
+			file.Write("NT");
+            WriteFieldFooter(file);
+
+            WriteFieldHeader(file, 6);
+			file.Write("Chi2");
+            WriteFieldFooter(file);
+
+            WriteFieldHeader(file, 6);
+			file.Write("Corr");
+            WriteFieldFooter(file);
+
+			file.Write("</tr>");
+		}
+
+		j++;
+
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 6);
+		quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		while (quiz)
+		{
+			quiz->WriteName(file);
+			sprintf(str, ":%d", q + 1);
+			file.Write(str);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            if (quiz)
+    			file.Write("<br>");
+		}
+		WriteFieldFooter(file);
+	    
+        WriteCenteredFieldHeader(file, 60);
+		file.Write(TopQuiz->Quiz[TopQuestion].Text);
+        WriteFieldFooter(file);
+
+        TopQuiz->ClearUsed(TopQuestion);
+        WriteCenteredFieldHeader(file, 6);
+        quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+        while (quiz)
+        {
+            quiz->WriteAsCI95(file, q);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            if (quiz)
+    			file.Write("<br>");
+        }
+        WriteFieldFooter(file);
+
+        TopQuiz->ClearUsed(TopQuestion);
+        WriteCenteredFieldHeader(file, 6);
+        quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+        while (quiz)
+        {
+            quiz->WriteNtCI95(file, q);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            if (quiz)
+    			file.Write("<br>");
+        }
+        WriteFieldFooter(file);
+
+        TopQuiz->ClearUsed(TopQuestion);
+        WriteRightFieldHeader(file, 6);
+        quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+        while (quiz)
+        {
+            quiz->WriteAsNtChi2(file, q);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            if (quiz)
+    			file.Write("<br>");
+        }
+        WriteFieldFooter(file);
+
+        TopQuiz->ClearUsed(TopQuestion);
+        WriteRightFieldHeader(file, 6);
+        quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+        while (quiz)
+        {
+            quiz->WriteAsNtCorr95(file, q);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            if (quiz)
+    			file.Write("<br>");
+        }
+		WriteFieldFooter(file);
+
+		TopQuiz = GetTopQuizCorr(&TopQuestion);
+	}
+
+	file.Write("</table>");
+}
+
+/*##################  TQuiz::WriteGroupCorrTable ##########################
+*   Purpose....: Write group correlation table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteGroupCorrTable(const char *filename)
+{
+	int j;
+	int g;
+	int grp;
+    TQuiz *quiz;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+    int q;
+	char str[80];
+	long double NormCorr[MAX_CROSS];
+	int cross;
+	int ival;
+	int count;
+	long double val;
+    long double zij;
+    long double za;
+    long double low;
+    long double high;
+    long double corrval;
+	TFile file(filename, 0);
+
+	ClearUsed();
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 32);
+		file.Write(Group[g].Name);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
+		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+        {
+            WriteFieldHeader(file, 5);
+			sprintf(str, "G:%d", grp + 1);
+			file.Write(str);
+            WriteFieldFooter(file);
+		}
+
+		file.Write("</tr>");
+
+    	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+	    while (TopQuiz)
+    	{
+			file.Write("<tr style='height:24.75pt'>");
+
+    		WriteCenteredFieldHeader(file, 3);
+	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    while (quiz)
+    		{
+		    	quiz->WriteName(file);
+    			sprintf(str, ":%d", q + 1);
+	    		file.Write(str);
+		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    	if (quiz)
+    	    		file.Write("<br>");
+		    }
+		    WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 32);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("<span style='color:#990099'>");
+			file.Write(TopQuiz->Quiz[TopQuestion].Text);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("</span>");
+		    WriteFieldFooter(file);
+					
+            cross = 0;
+            TopQuiz->ClearUsed(TopQuestion);
+            WriteCenteredFieldHeader(file, 6);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {
+                NormCorr[cross] = 0.0;
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					if (val >= NormCorr[cross])
+						NormCorr[cross] = val;
+				}       
+				NormCorr[cross] = 0.9 * NormCorr[cross]; 
+				    
+				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                if (quiz)
+                {   cross++;
+    			    file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+			for (j = 0; j < GROUP_COUNT - 1; j++)
+			{
+				cross = 0;
+				TopQuiz->ClearUsed(TopQuestion);
+				WriteFieldHeader(file, 5);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				while (quiz)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					corrval = val;
+					count = quiz->Quiz[q].Group[j].Count;
+
+					if (count > 3)
+					{
+						if (val < 0.0)
+							val = -val;
+
+						if (val == 1)
+							zij = 1000;
+						else
+							zij = 0.5 * logl((1 + val) / (1 - val));
+
+						za = 1.96 / sqrtl(count - 3);
+						low = tanhl(zij - za);
+						high = tanhl(zij + za);
+
+						if (low <= 0.0 && high >= 0.0)
+							file.Write("-----");
+						else
+						{
+							if (val > NormCorr[cross])
+								file.Write("<span style='color:#009999'>");
+
+							if (corrval < 0.0)
+								file.Write("<span style='color:#990099'>");
+
+							ival = round(100.0 * low * low);
+							sprintf(str, "%d", ival);
+							file.Write(str);
+
+							ival = round(100.0 * high * high);
+							sprintf(str, "-%d%", ival);
+							file.Write(str);
+
+							if (val > NormCorr[cross] || corrval < 0.0)
+								 file.Write("</span>");
+						 }
+					}
+					else
+						file.Write("     ");
+
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					if (quiz)
+					{
+						cross++;
+						file.Write("<br>");
+					}
+				}
+				WriteFieldFooter(file);
+			}
+			file.Write("</tr>");    
+        	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+		}
+	}
+	file.Write("</table>");
+}
+
+/*##################  TQuiz::WriteGroupTable ##########################
+*   Purpose....: Write group - group correlation table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteGroupTable(const char *filename, int Cross)
+{
+    int g1;
+	int g2;
+    long double corrval;
+    int count;
+	char str[80];
+	int insertcr;
+	int cross;
+	TFile file(filename, 0);
+
+    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+	file.Write("<tr style='height:24.75pt'>");
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("#");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 25);
+	file.Write("Group");
+    WriteFieldFooter(file);
+
+	for (g2 = 0; g2 < GROUP_COUNT - 1; g2++)
+    {
+        WriteCenteredFieldHeader(file, 5);
+        sprintf(str, "G:%d", g2 + 1);
+    	file.Write(str);
+        WriteFieldFooter(file);
+    }
+
+	file.Write("</tr>");
+
+    for (g1 = 0; g1 < GROUP_COUNT - 1; g1++)
+    {
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+        sprintf(str, "G:%d", g1 + 1);
+        file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 25);
+		file.Write(Group[g1].Name);
+        WriteFieldFooter(file);
+
+        for (g2 = 0; g2 < GROUP_COUNT - 1; g2++)
+        {
+            WriteCenteredFieldHeader(file, 5);
+
+            insertcr = FALSE;
+            
+            for (cross = 0; cross < MAX_CROSS && Cross; cross++)
+            {
+                if (CrossQuiz[cross])
+                {
+                    if (insertcr)
+                        file.Write("<br>");
+                    insertcr = TRUE;
+					corrval = CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
+					count = CrossQuiz[cross]->GroupCorr[g1][g2].Count;
+					WriteCorr95(file, corrval, count);
+				}
+			}
+
+			if (insertcr)
+				file.Write("<br>");
+
+			corrval = GroupCorr[g1][g2].Corr;
+			count = GroupCorr[g1][g2].Count;
+			WriteCorr95(file, corrval, count);
+
+            WriteFieldFooter(file);
+	    }
+	}
 }

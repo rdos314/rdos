@@ -48,6 +48,8 @@
 TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
   : FDataFile(FileName)
 {
+    DefineCross(0, QuizI);
+
     SetupTexts();
     InitReferers();
     LoadReferers();
@@ -71,6 +73,22 @@ TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
 ##########################################################################*/
 TQuizII::~TQuizII()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizII::WriteName
+#
+#   Purpose....: Write quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::WriteName(TFile &File)
+{
+    File.Write("II");
 }
 
 /*##########################################################################
@@ -192,7 +210,7 @@ void TQuizII::SetupTexts()
 	Quiz[86].MyGroup = GROUP_MIXED;
 	Quiz[87].MyGroup = GROUP_BIOLOGY;
 	Quiz[88].MyGroup = GROUP_REPETITION;
-	Quiz[89].MyGroup = GROUP_MIXED;
+	Quiz[89].MyGroup = GROUP_NT_RELATION;
 	Quiz[90].MyGroup = GROUP_MIXED;
 	Quiz[91].MyGroup = GROUP_FOCUS;
 	Quiz[92].MyGroup = GROUP_SOCIAL;
@@ -613,11 +631,17 @@ void TQuizII::LoadPopulations()
 		switch (Row.Diagnos)
 		{
 		    case DX_AS:
-		        As.Add(Row.Quiz);
-				if (Row.Gender == 1)
-					AsMale.Add(Row.Quiz);
-				else
-					AsFemale.Add(Row.Quiz);
+		    case SELF_AS:
+                if (Row.Result < 100)
+                    LowAs.Add(Row.Quiz);
+		    
+	    		if (Row.Gender == 1)
+		    		AsMale.Add(Row.Quiz);
+			   	else
+				    AsFemale.Add(Row.Quiz);
+
+		        if (Row.Diagnos == DX_AS)
+    		        As.Add(Row.Quiz);
 				break;
 
 			case DX_ADD:
@@ -723,7 +747,6 @@ void TQuizII::SetupCross(TQuiz *QuizI)
 	DefineCross(QuizI, 26, 42);
 	DefineCross(QuizI, 29, 17);
 	DefineCross(QuizI, 30, 2);
-	DefineCross(QuizI, 31, 15);
 	DefineCross(QuizI, 35, 76);
 	DefineCross(QuizI, 40, 69);
 	DefineCross(QuizI, 41, 81);
