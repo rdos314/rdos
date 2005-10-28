@@ -793,18 +793,16 @@ void TDeviceVar::SetBinary(int size, const void *data)
 	if (size < 256)
 	{
 		FType = DEVICE_DATA_BINARY8;
-		FSize = 1 + size;
+		FSize = size;
 		FData = Allocate(FSize);
-		memcpy(FData, &size, 1);
-		memcpy(FData + 1, data, size);
+		memcpy(FData, data, size);
 	}
 	else
 	{
         FType = DEVICE_DATA_BINARY16;
-        FSize = 2 + size;
+        FSize = size;
         FData = Allocate(FSize);
-        memcpy(FData, &size, 2);
-        memcpy(FData + 2, data, size);
+        memcpy(FData, data, size);
 	}
 }
 
@@ -822,7 +820,7 @@ void TDeviceVar::SetString(const char *str)
     if (size < 128)
     {
         if (FType == DEVICE_DATA_SHORTSTRING + (char)size)
-            memcpy(FData, str, size);        
+            memcpy(FData, str, size);
         else
         {
             Reinit();
@@ -843,30 +841,28 @@ void TDeviceVar::SetString(const char *str)
     {
         if (size < 256)
         {
-            if (FType == DEVICE_DATA_STRING8 && FSize == 1 + size)
-                memcpy(FData + 1, str, size);
+            if (FType == DEVICE_DATA_STRING8 && FSize == size)
+                memcpy(FData, str, size);
             else
             {
                 Reinit();           
                 FType = DEVICE_DATA_STRING8;
-                FSize = 1 + size;
+                FSize = size;
                 FData = Allocate(FSize);
-                memcpy(FData, &size, 1);
-                memcpy(FData + 1, str, size);
+                memcpy(FData, str, size);
             }
         }
         else
         {
-            if (FType == DEVICE_DATA_STRING16 && FSize == 2 + size)
-                memcpy(FData + 2, str, size);
+            if (FType == DEVICE_DATA_STRING16 && FSize == size)
+                memcpy(FData, str, size);
             else
             {
                 Reinit();
                 FType = DEVICE_DATA_STRING16;
-                FSize = 2 + size;
+                FSize = size;
                 FData = Allocate(FSize);
-                memcpy(FData, &size, 2);
-                memcpy(FData + 2, str, size);
+                memcpy(FData, str, size);
             }
         }
     }
@@ -922,12 +918,11 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
     else
         len = size / 8 + 1;
 
-    FSize = 1 + len;
+    FSize = len;
     FData = Allocate(FSize);
-    memcpy(FData, &len, 1);
 
     for (i = 0; i < len; i++)       
-		*(FData + i + 1) = 0;
+		*(FData + i) = 0;
 
     bitnr = 0;
     ptr = FData;
@@ -962,10 +957,9 @@ void TDeviceVar::SetByteArray(int size, const void *data)
         return;
         
     FType = DEVICE_DATA_BYTEARRAY;
-    FSize = 1 + size;
+    FSize = size;
     FData = Allocate(FSize);
-    memcpy(FData, &size, 1);
-    memcpy(FData + 1, data, size);
+    memcpy(FData, data, size);
 }    
 
 /*##################  TDeviceVar::GetUnsigned8  ###############

@@ -32,6 +32,7 @@
 #include "popcorr.h"
 #include "refer.h"
 #include "file.h"
+#include "pca.h"
 
 #if !defined(SWEDISH) && !defined(ENGLISH)
 #define ENGLISH
@@ -60,7 +61,7 @@ class TQuiz;
 struct TQuizGroup
 {
 	long double Corr;
-    int Count;
+	int Count;
 };
 
 struct TQuizQuestion
@@ -133,6 +134,8 @@ public:
     void WriteGroupCorrTable(const char *filename);
     void WriteGroupTable(const char *filename, int Cross);
 
+    void CalcGroupPca();
+
     void CheckCross();
     
 protected:
@@ -176,6 +179,8 @@ protected:
     void WriteAsNtCorr95(TFile &File, int Question);
 
 	TPopulationCorrelation PopCorr;
+	TPca Pca;
+	long double PcaCorr[MAX_QUESTIONS][MAX_QUESTIONS];
 
     TPopulation All;
     TPopulation LowAs;

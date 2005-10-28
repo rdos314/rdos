@@ -955,6 +955,24 @@ void TQuiz::Calculate()
 	}
 }
 
+/*##################  TQuiz::CalcGroupPca ##########################
+*   Purpose....: Calculate group PCAs                      	      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::CalcGroupPca()
+{
+    int i, j;
+
+    for (i = 0; i < GROUP_COUNT; i++)
+        for (j = 0; j < GROUP_COUNT; j++)
+            PcaCorr[i][j] = GroupCorr[i][j].Corr;
+            
+    Pca.Calculate(PcaCorr, GROUP_COUNT);
+}
+
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
