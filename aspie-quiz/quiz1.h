@@ -36,6 +36,9 @@ public:
     TQuizI(const char *FileName);
     ~TQuizI();
 
+    virtual void ExportExcelCase(const char *filename, int PcaType);
+    virtual void ImportMvsp(const char *filename, int PcaType);
+
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);

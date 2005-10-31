@@ -26,10 +26,13 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "quiz2.h"
 #include "file.h"
 #include "quizdb2.h"
+
+#define MAX_IN_ROW		1024
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -48,6 +51,7 @@
 TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
   : FDataFile(FileName)
 {
+    UseNtResult = FALSE;
     DefineCross(0, QuizI);
 
     SetupTexts();
@@ -791,3 +795,194 @@ void TQuizII::GetReferer(const char *referer, TPopulation *pop)
 		    pop->Add(Row.Quiz);
 }
 
+/*##################  IsPca ##########################
+*   Purpose....: Check quiz row against pca-type                 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+static int IsPca(TQuizRow *row, int PcaType)
+{
+    switch (PcaType)
+    {
+        case PCA_TYPE_ALL:
+            return TRUE;
+
+        case PCA_TYPE_MALE:
+            if (row->Gender == 1)
+                return TRUE;
+            else
+                return FALSE;
+
+        case PCA_TYPE_FEMALE:
+            if (row->Gender == 2)
+                return TRUE;
+            else
+                return FALSE;
+    }
+    return FALSE;
+}
+
+/*##################  TQuizII::ExportExcelCases ##########################
+*   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizII::ExportExcelCase(const char *filename, int PcaType)
+{
+	TQuizRow Row;
+    int i;
+    int ival;
+    char str[80];
+	TFile file(filename, 0);
+
+    file.Write("\"\", ");
+    file.Write("\"\", ");
+
+	for (i = 0; i < MAX_QUESTIONS; i++)
+    {
+        file.Write("\"");
+
+//        strncpy(str, Quiz[i].Text, 35);
+//        str[35] = 0;
+        sprintf(str, "#%d", i + 1);
+        file.Write(str);
+        
+        file.Write("\"");
+        if (i != MAX_QUESTIONS - 1)
+            file.Write(", ");
+    }
+    file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    if (IsPca(&Row, PcaType))
+	    {
+    	    sprintf(str, "\%d\", ", Row.Result);
+	        file.Write(str);
+
+    	    sprintf(str, "\"%d\", ", Row.Diagnos);
+	        file.Write(str);
+	    
+    		for (i = 0; i < MAX_QUESTIONS; i++)
+	    	{
+		        ival = Row.Quiz[i];
+		        if (ival)
+    		    {
+//				if (Quiz[i].Reverse)
+//					ival = 3 - ival;
+//				else
+					ival--;
+	    		}
+		        
+		    	if (ival > 2)
+			        ival = 0;
+
+    		    sprintf(str, "\"%d\"", ival);
+                file.Write(str);
+                if (i != MAX_QUESTIONS - 1)
+                    file.Write(", ");
+    		}
+	    	file.Write("\n");
+	    }
+	}
+}
+
+/*##################  TQuizII::ImportMvsp ##########################
+*   Purpose....: Import MVSP loadings   	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizII::ImportMvsp(const char *filename, int PcaType)
+{
+	char buf[MAX_IN_ROW];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d1, d2, d3;
+	int q;
+	int count;
+	TFile infile(filename);
+
+	while (size = infile.Read(buf, MAX_IN_ROW))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+		    rowstr++;
+		    ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+		    for (i = 0; i < strlen(rowstr); i++)
+		    {
+		        switch (rowstr[i])
+		        {
+		            case ',':
+		                rowstr[i] = '.';
+		                break;
+
+		            case 0x9:
+		            case 0xd:
+		                rowstr[i] = ' ';
+		                break;
+		        }
+		    }
+
+		    if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
+		    {
+		        if (d1 > 0 && d2 > 0)
+		        {
+		            if (d1 > d2)
+		            {
+		                d1 = d1 - d2;
+		                d2 = 0;
+		            }
+		            else
+		            {
+		                d2 = d2 - d1;
+		                d1 = 0;
+		            }
+		        }
+
+                switch (PcaType)
+                {
+                    case PCA_TYPE_ALL:		            
+        		        Quiz[q - 1].Pca[0] = d1;
+	        	        Quiz[q - 1].Pca[1] = d2;
+		                Quiz[q - 1].Pca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_MALE:		            
+        		        Quiz[q - 1].MalePca[0] = d1;
+	        	        Quiz[q - 1].MalePca[1] = d2;
+		                Quiz[q - 1].MalePca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_FEMALE:		            
+        		        Quiz[q - 1].FemalePca[0] = d1;
+	        	        Quiz[q - 1].FemalePca[1] = d2;
+		                Quiz[q - 1].FemalePca[2] = d3;
+		                break;
+		        }
+		    }
+		}
+	}
+}

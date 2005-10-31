@@ -30,7 +30,7 @@
 #include <ctype.h>
 
 #include "file.h"
-#include "quizdb2.h"
+#include "quizdb3.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -52,7 +52,7 @@ TFile quizfile("quiz3.bin", 0);
 void HandleRow(TQuizRow *Row)
 {
 	quizfile.Write(Row, sizeof(TQuizRow));
-	printf("%d Result: %d, Ref: %s\n", Row->ID, Row->Result, Row->Referer);
+	printf("%d AS: %d, NT: %d, Ref: %s\n", Row->ID, Row->AsResult, Row->NtResult, Row->Referer);
 }
 
 /*##################  UpdateReferer ##########################
@@ -114,6 +114,106 @@ char *GetQuoted(char *str)
 	return 0;
 }
 
+/*##################  UpdateScore ##########################
+*   Purpose....: Calculate & update a modified score based on current quiz-weights	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void UpdateScore(TQuizRow *row)
+{
+    int i;
+    int assum = 0;
+    int astotsum = 0;
+    int ntsum = 0;
+    int nttotsum = 0;
+    int val;
+    int w;
+    static int Asw[100] = {  12,  12,   8,  10,   9,  10,   8,   9,   7,   3,
+                              1,   6,   9,   8,   8,   8,   6,   8,   8,  11,
+                              5,   2,   7,   8,   6,  10,  11,   8,   9,  10,
+                              9,   7,   6,  10,   9,  12,   8,  13,  12,  10,
+                              6,   4,  10,   9,  12,  12,  14,   9,  14,   0,
+                             11,   5,  12,  10,   0,   0,   0,   0,   0,   0,
+                              0,   0,   0,   2,   1,   3,   3,   4,   4,  12,
+                             12,   9,   8,  13,   7,   5,  10,   3,   8,  11,
+                              9,   8,   7,   9,   9,  11,  10,  13,   6,   4,
+                              5,   2,   3,   3,   3,   4,   0,   5,   3,   0};
+
+    static int Ntw[100] = {  -5,  -5,  -5,  -2,  -3,  -4,  -4,   0,   0,  -3,
+                             -2, -11, -10,  -8,  -8,  -4,  -3,  -4,   0,   0, 
+                              0,   0,   0,  -5,   0, -14, -12,  -8, -11, -10, 
+                             -4, -12, -12,  -5,  -9, -10, -11,  -8,  -2,  -8, 
+                             -9,  -8,  -7,  -4,  -5, -11,  -2,  -2,  -4,  15, 
+                             -2,   0,  -1,   0,  15,  11,  10,  10,  12,  13,
+                              6,  13,  11,  -2,  -1,  -1,  -1,   0,  -1,   0, 
+                              0,  -2,  -1,   0,  -2,   0,   0,   0,   0,  -8, 
+                             -8, -11, -13,  -8, -10,  -6,  -5,  -2,   0,   0, 
+                              0,   0,   0,   0,  -3,  -1,   0,  -4,   0,   1};
+
+	static int Asg[100] =  {  0,   0,	0,   0,  -1,   0,   0,   0,   1,   0,
+							  0,   0,   2,  -1,   0,   1,   0,   0,   0,   1,
+							  0,   0,   0,   0,   0,   1,   1,   0,   1,   0,
+							  0,   0,   0,   0,   0,   0,   1,   0,   1,   0,
+							  0,   0,   1,   0,   0,   1,   0,   1,   1,   0,
+							  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
+							  0,   0,   0,   0,   0,   0,   0,   0,   0,   1,
+							  0,   0,   0,   0,   0,   0,   0,   0,  -3,   0,
+							  1,   0,   0,   0,   0,   0,   0,   0,   2,   0,
+							  0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
+
+	static int Ntg[100] = {  -2,   0,  -2,   0,   0,  -1,   0,   0,   0,   0,
+							  0,   0,   0,  -1,   0,   0,   0,   0,   1,   0,
+							  3,   0,   0,   0,   0,   1,   1,   0,   1,   0,
+							  0,   0,   0,   0,   2,   0,   0,   1,   1,   1,
+							  0,   1,   1,   0,  -2,   2,   0,   0,   1,   0,
+							  0,   0,   0,   0,   2,   0,  -2,   0,   0,   0,
+							  0,   0,   0,   1,   1,   1,   0,   0,   0,   2,
+							  0,   0,   0,   1,   0,   0,   0,   0,   0,   0,
+							  1,   0,   0,   0,   0,   1,   2,   0,   0,   0,
+							  0,   0,   0,   0,   0,   0,   0,   0,   0,   0};
+
+	for (i = 0; i < 100; i++)
+	{
+		if (row->Quiz[i])
+		{
+			val = row->Quiz[i];
+			w = Asw[i];
+			if (row->Gender == 1)
+				w += Asg[i];
+			else
+				w -= Asg[i];
+
+			assum += w * (val - 1);
+			astotsum += w;
+
+			w = Ntw[i];
+			if (row->Gender == 1)
+				w += Ntg[i];
+			else
+				w -= Ntg[i];
+
+			if (w > 0)
+			{
+				val--;
+				ntsum += w * val;
+				nttotsum += w;
+			}
+			else
+			{
+				val = 3 - val;
+				w = -w;
+				ntsum += w * val;
+				nttotsum += w;
+			}
+		}
+	}
+
+	row->AsResult = assum * 100 / astotsum;
+	row->NtResult = ntsum * 100 / nttotsum;
+}
+
 /*##################  ProcessRow ##########################
 *   Purpose....: Process row        	   					      	        #
 *   In params..: *                                                          #
@@ -134,7 +234,7 @@ void ProcessRow(char *str)
     {
 		valstr = str;
 
-        quote = FALSE;
+		quote = FALSE;
         ptr = str;
         while (*ptr && (quote || *ptr != ','))
         {
@@ -159,7 +259,7 @@ void ProcessRow(char *str)
                     break;
 
                 case 2:
-                    Row.Diagnos = atoi(valstr);
+					Row.Diagnos = atoi(valstr);
                     break;
 
                 case 3:
@@ -184,7 +284,7 @@ void ProcessRow(char *str)
                     break;
 
                 case 6:
-                    Row.Result = atoi(valstr);
+					Row.AsResult = atoi(valstr);
                     break;
 
                 default:
@@ -195,6 +295,7 @@ void ProcessRow(char *str)
 		}
 	}
 
+    UpdateScore(&Row);
 	HandleRow(&Row);
 }
 

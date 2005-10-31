@@ -32,7 +32,6 @@
 #include "popcorr.h"
 #include "refer.h"
 #include "file.h"
-#include "pca.h"
 
 #if !defined(SWEDISH) && !defined(ENGLISH)
 #define ENGLISH
@@ -41,6 +40,11 @@
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
+#define MAX_PCA_AXIS            3
+
+#define PCA_TYPE_ALL            0
+#define PCA_TYPE_MALE           1
+#define PCA_TYPE_FEMALE         2
 
 #define GROUP_COUNT             11
 
@@ -84,6 +88,9 @@ struct TQuizQuestion
     TQuiz *CrossQuiz;
     int CrossInd;
     TQuizGroup Group[MAX_GROUP_COUNT];
+    long double Pca[MAX_PCA_AXIS];
+    long double MalePca[MAX_PCA_AXIS];
+    long double FemalePca[MAX_PCA_AXIS];
 };
 
 struct TGroupCorr
@@ -133,8 +140,10 @@ public:
     void WriteAsNtAll(const char *filename);
     void WriteGroupCorrTable(const char *filename);
     void WriteGroupTable(const char *filename, int Cross);
+    void WritePca(const char *filename);
 
-    void CalcGroupPca();
+    virtual void ImportMvsp(const char *filename, int PcaType) = 0;
+    virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 
     void CheckCross();
     
@@ -179,8 +188,6 @@ protected:
     void WriteAsNtCorr95(TFile &File, int Question);
 
 	TPopulationCorrelation PopCorr;
-	TPca Pca;
-	long double PcaCorr[MAX_QUESTIONS][MAX_QUESTIONS];
 
     TPopulation All;
     TPopulation LowAs;
@@ -200,6 +207,7 @@ protected:
     TPopulation NtMale;
     TPopulation NtFemale;    
 
+    int UseNtResult;
     int RefCount;
     TReferer *RefArr[MAX_REFERERS];
     TReferer NoRef;

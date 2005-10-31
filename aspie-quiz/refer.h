@@ -39,11 +39,16 @@ public:
 	int IsMatch(const char *Referer);
 
 	int Result;
+	int AsResult;
+	int NtResult;
 	int Count;
 	int Result0_59;
 	int Result60_99;
 	int Result100_139;
 	int Result140_200;
+	int ResultNt;
+	int ResultLowAs;
+	int ResultHighAs;
 
 	int NT;
 	int Aspie;

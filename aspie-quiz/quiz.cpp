@@ -64,6 +64,7 @@ TQuiz::TQuiz()
     int g1, g2;
 
     RefCount = 0;
+    UseNtResult = TRUE;
 
     for (i = 0; i < MAX_REFERERS; i++)
         RefArr[i] = 0;
@@ -92,6 +93,13 @@ TQuiz::TQuiz()
         {
             Quiz[i].Group[g].Corr = 0;
             Quiz[i].Group[g].Count = 0;
+        }
+
+        for (g = 0; g < MAX_PCA_AXIS; g++)
+        {
+            Quiz[i].Pca[g] = 0;
+            Quiz[i].MalePca[g] = 0;
+            Quiz[i].FemalePca[g] = 0;
         }
     }
 
@@ -375,12 +383,24 @@ void TQuiz::DefineNt(char *Referer)
 	if (ref)
 	{
 		ref->NT = TRUE;
-		NTRef.Result += ref->Result;
-		NTRef.Count += ref->Count;
-		NTRef.Result0_59 += ref->Result0_59;
-		NTRef.Result60_99 += ref->Result60_99;
-		NTRef.Result100_139 += ref->Result100_139;
-		NTRef.Result140_200 += ref->Result140_200;
+		if (UseNtResult)
+		{
+    		NTRef.AsResult += ref->AsResult;
+    		NTRef.NtResult += ref->NtResult;
+	    	NTRef.Count += ref->Count;
+    		NTRef.ResultNt += ref->ResultNt;
+	    	NTRef.ResultLowAs += ref->ResultLowAs;
+		    NTRef.ResultHighAs += ref->ResultHighAs;
+        }
+        else
+        {
+    		NTRef.Result += ref->Result;
+	    	NTRef.Count += ref->Count;
+    		NTRef.Result0_59 += ref->Result0_59;
+	    	NTRef.Result60_99 += ref->Result60_99;
+		    NTRef.Result100_139 += ref->Result100_139;
+		    NTRef.Result140_200 += ref->Result140_200;
+		}
 	}
 }
 
@@ -399,12 +419,24 @@ void TQuiz::DefineAspie(char *Referer)
 	if (ref)
 	{
 		 ref->Aspie = TRUE;
-		 AspieRef.Result += ref->Result;
-		 AspieRef.Count += ref->Count;
-		 AspieRef.Result0_59 += ref->Result0_59;
-		 AspieRef.Result60_99 += ref->Result60_99;
-		 AspieRef.Result100_139 += ref->Result100_139;
-		 AspieRef.Result140_200 += ref->Result140_200;
+		 if (UseNtResult)
+		 {
+    		 AspieRef.AsResult += ref->AsResult;
+    		 AspieRef.NtResult += ref->NtResult;
+	    	 AspieRef.Count += ref->Count;
+		     AspieRef.ResultNt += ref->ResultNt;
+    		 AspieRef.ResultLowAs += ref->ResultLowAs;
+	    	 AspieRef.ResultHighAs += ref->ResultHighAs;
+		 }
+		 else
+		 {
+    		 AspieRef.Result += ref->Result;
+	    	 AspieRef.Count += ref->Count;
+		     AspieRef.Result0_59 += ref->Result0_59;
+    		 AspieRef.Result60_99 += ref->Result60_99;
+	    	 AspieRef.Result100_139 += ref->Result100_139;
+		     AspieRef.Result140_200 += ref->Result140_200;
+		 }
 	}
 }
 
@@ -955,24 +987,6 @@ void TQuiz::Calculate()
 	}
 }
 
-/*##################  TQuiz::CalcGroupPca ##########################
-*   Purpose....: Calculate group PCAs                      	      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::CalcGroupPca()
-{
-    int i, j;
-
-    for (i = 0; i < GROUP_COUNT; i++)
-        for (j = 0; j < GROUP_COUNT; j++)
-            PcaCorr[i][j] = GroupCorr[i][j].Corr;
-            
-    Pca.Calculate(PcaCorr, GROUP_COUNT);
-}
-
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
@@ -1062,30 +1076,60 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	    file.Write(str);
 	    WriteFieldFooter(file);
 
-	    WriteRightFieldHeader(file, 4);
-	    sprintf(str, "%d", ref->Result / ref->Count);
-	    file.Write(str);
-	    WriteFieldFooter(file);
+	    if (UseNtResult)
+	    {
+    	    WriteRightFieldHeader(file, 4);
+			sprintf(str, "%d", ref->AsResult / ref->Count);
+			file.Write(str);
+			WriteFieldFooter(file);
 
-	    WriteRightFieldHeader(file, 4);
-	    sprintf(str, "%d%", round(100.0 * ref->Result0_59 / ref->Count));
-	    file.Write(str);
-	    WriteFieldFooter(file);
+			WriteRightFieldHeader(file, 4);
+			sprintf(str, "%d", ref->NtResult / ref->Count);
+			file.Write(str);
+			WriteFieldFooter(file);
 
-	    WriteRightFieldHeader(file, 4);
-    	sprintf(str, "%d%", round(100.0 * ref->Result60_99 / ref->Count));
-	    file.Write(str);
-	    WriteFieldFooter(file);
+			WriteRightFieldHeader(file, 4);
+			sprintf(str, "%d%", round(100.0 * ref->ResultNt / ref->Count));
+    	    file.Write(str);
+	        WriteFieldFooter(file);
+    
+	        WriteRightFieldHeader(file, 4);
+    	    sprintf(str, "%d%", round(100.0 * ref->ResultLowAs / ref->Count));
+	        file.Write(str);
+	        WriteFieldFooter(file);
 
-	    WriteRightFieldHeader(file, 4);
-	    sprintf(str, "%d%", round(100.0 * ref->Result100_139 / ref->Count));
-	    file.Write(str);
-	    WriteFieldFooter(file);
+    	    WriteRightFieldHeader(file, 4);
+	        sprintf(str, "%d%", round(100.0 * ref->ResultHighAs / ref->Count));
+	        file.Write(str);
+	        WriteFieldFooter(file);
+	    }
+	    else
+	    {
+    	    WriteRightFieldHeader(file, 4);
+	        sprintf(str, "%d", ref->Result / ref->Count);
+	        file.Write(str);
+	        WriteFieldFooter(file);
+
+    	    WriteRightFieldHeader(file, 4);
+	        sprintf(str, "%d%", round(100.0 * ref->Result0_59 / ref->Count));
+    	    file.Write(str);
+	        WriteFieldFooter(file);
+    
+	        WriteRightFieldHeader(file, 4);
+    	    sprintf(str, "%d%", round(100.0 * ref->Result60_99 / ref->Count));
+	        file.Write(str);
+	        WriteFieldFooter(file);
+
+    	    WriteRightFieldHeader(file, 4);
+	        sprintf(str, "%d%", round(100.0 * ref->Result100_139 / ref->Count));
+	        file.Write(str);
+	        WriteFieldFooter(file);
 	      
-	    WriteRightFieldHeader(file, 4);
-        sprintf(str, "%d%", round(100.0 * ref->Result140_200 / ref->Count));
-        file.Write(str);
-	    WriteFieldFooter(file);
+    	    WriteRightFieldHeader(file, 4);
+            sprintf(str, "%d%", round(100.0 * ref->Result140_200 / ref->Count));
+            file.Write(str);
+	        WriteFieldFooter(file);
+	    }
     
 	    WriteFieldHeader(file, 72);
 
@@ -1126,25 +1170,50 @@ void TQuiz::WriteReferers(const char *filename)
 	file.Write("Answers");
 	WriteFieldFooter(file);
 
-	WriteCenteredFieldHeader(file, 4);
-    file.Write("Score");
-	WriteFieldFooter(file);
+	if (UseNtResult)
+	{
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("AS Score");
+    	WriteFieldFooter(file);
 
-	WriteCenteredFieldHeader(file, 4);
-    file.Write("0-59");
-	WriteFieldFooter(file);
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("NT Score");
+    	WriteFieldFooter(file);
+
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("NT");
+	    WriteFieldFooter(file);
 	      
-	WriteCenteredFieldHeader(file, 4);
-    file.Write("60-99");
-	WriteFieldFooter(file);
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("AS 0-50");
+    	WriteFieldFooter(file);
 
-	WriteCenteredFieldHeader(file, 4);
-    file.Write("100-139");
-	WriteFieldFooter(file);
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("AS 100-");
+	    WriteFieldFooter(file);
+	}
+	else
+	{
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("Score");
+    	WriteFieldFooter(file);
 
-	WriteCenteredFieldHeader(file, 4);
-    file.Write("140-200");
-	WriteFieldFooter(file);
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("0-59");
+	    WriteFieldFooter(file);
+	      
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("60-99");
+    	WriteFieldFooter(file);
+
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("100-139");
+	    WriteFieldFooter(file);
+
+    	WriteCenteredFieldHeader(file, 4);
+        file.Write("140-200");
+	    WriteFieldFooter(file);
+	}
 
 	WriteFieldHeader(file, 72);
 	file.Write("Web site / description");
@@ -1340,7 +1409,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
 	int UseGender;
 
 	if (AspieMale.ValueCount && NtMale.ValueCount && AspieFemale.ValueCount && NtFemale.ValueCount)
-	    UseGender = TRUE;
+		UseGender = TRUE;
 	else
 	    UseGender = FALSE;
 
@@ -1356,7 +1425,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
 			file.Write("#");
         	WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 42);
+        	WriteCenteredFieldHeader(file, 40);
 			file.Write(" ");
         	WriteFieldFooter(file);
 
@@ -1368,31 +1437,43 @@ void TQuiz::WriteSumaryTable(const char *filename)
 			file.Write("Trend");
         	WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 8);
+        	WriteCenteredFieldHeader(file, 6);
+			file.Write("PCA #1");
+			if (UseGender)
+			    file.Write("<br>M/F");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 6);
+			file.Write("PCA #2");
+			if (UseGender)
+			    file.Write("<br>M/F");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 6);
 			file.Write("Aspie");
 			if (UseGender)
 			    file.Write("<br>M/F");
         	WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 8);
+        	WriteCenteredFieldHeader(file, 6);
 			file.Write("AS");
 			if (UseGender)
 			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
+			WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 8);
+        	WriteCenteredFieldHeader(file, 6);
 			file.Write("ADHD");
 			if (UseGender)
 			    file.Write("<br>M/F");
 			WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 8);
+        	WriteCenteredFieldHeader(file, 6);
 			file.Write("Mixed");
 			if (UseGender)
 			    file.Write("<br>M/F");
         	WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 8);
+        	WriteCenteredFieldHeader(file, 6);
 			file.Write("NT");
 			if (UseGender)
 			    file.Write("<br>M/F");
@@ -1403,12 +1484,12 @@ void TQuiz::WriteSumaryTable(const char *filename)
 
 		file.Write("<tr style='height:24.75pt'>");
 
-        WriteCenteredFieldHeader(file, 5);
+		WriteCenteredFieldHeader(file, 5);
 		sprintf(str, "%d", i + 1);
 		file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 42);
+        WriteCenteredFieldHeader(file, 40);
 		file.Write(Quiz[i].Text);
         WriteFieldFooter(file);
 
@@ -1428,7 +1509,7 @@ void TQuiz::WriteSumaryTable(const char *filename)
 		{
 		    WriteStaple(file, &AspieMale, i);
 		    WriteStaple(file, &AsMale, i);
-		    WriteStaple(file, &AddMale, i);
+			WriteStaple(file, &AddMale, i);
 		    WriteStaple(file, &MixMale, i);
 		    WriteStaple(file, &NtMale, i);
 
@@ -1452,55 +1533,87 @@ void TQuiz::WriteSumaryTable(const char *filename)
 
 		if (UseGender)
 		{
-            WriteCenteredFieldHeader(file, 8);
-		    WriteCI95(file, &AspieMale, i);
-		    file.Write("<br>");
-		    WriteCI95(file, &AspieFemale, i);
-            WriteFieldFooter(file);
+            WriteCenteredFieldHeader(file, 6);
+			ival = round(100.0 * Quiz[i].MalePca[0]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			file.Write("<br>");
+			ival = round(100.0 * Quiz[i].FemalePca[0]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
+			WriteCenteredFieldHeader(file, 6);
+			ival = round(100.0 * Quiz[i].MalePca[1]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			file.Write("<br>");
+			ival = round(100.0 * Quiz[i].FemalePca[1]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 6);
+			WriteCI95(file, &AspieMale, i);
+			file.Write("<br>");
+			WriteCI95(file, &AspieFemale, i);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 6);
 			WriteCI95(file, &AsMale, i);
-		    file.Write("<br>");
-		    WriteCI95(file, &AsFemale, i);
-            WriteFieldFooter(file);
+			file.Write("<br>");
+			WriteCI95(file, &AsFemale, i);
+			WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
-		    WriteCI95(file, &AddMale, i);
-		    file.Write("<br>");
-		    WriteCI95(file, &AddFemale, i);
-            WriteFieldFooter(file);
+			WriteCenteredFieldHeader(file, 6);
+			WriteCI95(file, &AddMale, i);
+			file.Write("<br>");
+			WriteCI95(file, &AddFemale, i);
+			WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
-		    WriteCI95(file, &MixMale, i);
-		    file.Write("<br>");
-		    WriteCI95(file, &MixFemale, i);
-            WriteFieldFooter(file);
+			WriteCenteredFieldHeader(file, 6);
+			WriteCI95(file, &MixMale, i);
+			file.Write("<br>");
+			WriteCI95(file, &MixFemale, i);
+			WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
-		    WriteCI95(file, &NtMale, i);
-		    file.Write("<br>");
-		    WriteCI95(file, &NtFemale, i);
-            WriteFieldFooter(file);
-	    }
-	    else
-	    {
-            WriteCenteredFieldHeader(file, 8);
-		    WriteCI95(file, &Aspie, i);
-            WriteFieldFooter(file);
+			WriteCenteredFieldHeader(file, 6);
+			WriteCI95(file, &NtMale, i);
+			file.Write("<br>");
+			WriteCI95(file, &NtFemale, i);
+			WriteFieldFooter(file);
+		}
+		else
+		{
+			WriteCenteredFieldHeader(file, 6);
+			ival = round(100.0 * Quiz[i].Pca[0]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
+			WriteCenteredFieldHeader(file, 6);
+			ival = round(100.0 * Quiz[i].Pca[1]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 6);
+			WriteCI95(file, &Aspie, i);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 6);
 		    WriteCI95(file, &As, i);
             WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
+            WriteCenteredFieldHeader(file, 6);
 		    WriteCI95(file, &Add, i);
             WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
+			WriteCenteredFieldHeader(file, 6);
 		    WriteCI95(file, &Mix, i);
             WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 8);
+            WriteCenteredFieldHeader(file, 6);
 		    WriteCI95(file, &Nt, i);
             WriteFieldFooter(file);
 	    }
@@ -2044,12 +2157,20 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 32);
+        WriteCenteredFieldHeader(file, 26);
 		file.Write(Group[g].Name);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
 		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("PCA #1");
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("PCA #2");
         WriteFieldFooter(file);
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
@@ -2081,7 +2202,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		    }
 		    WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 32);
+            WriteCenteredFieldHeader(file, 26);
 			if (TopQuiz->Quiz[TopQuestion].Reverse)
 				file.Write("<span style='color:#990099'>");
 			file.Write(TopQuiz->Quiz[TopQuestion].Text);
@@ -2107,6 +2228,43 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
+				
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                if (quiz)
+                {   cross++;
+    			    file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+					
+            cross = 0;
+            TopQuiz->ClearUsed(TopQuestion);
+            WriteCenteredFieldHeader(file, 6);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {				    
+				ival = round(100.0 * quiz->Quiz[q].Pca[0]);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				if (quiz)
+				{   cross++;
+					file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+			cross = 0;
+			TopQuiz->ClearUsed(TopQuestion);
+			WriteCenteredFieldHeader(file, 6);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
+			{
+				ival = round(100.0 * quiz->Quiz[q].Pca[1]);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
                 {   cross++;
@@ -2264,4 +2422,84 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
             WriteFieldFooter(file);
 	    }
 	}
+}
+
+/*##################  TQuiz::WritePca ##########################
+*   Purpose....: Write PCA loadings      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePca(const char *filename)
+{
+	int i;
+	char str[80];
+	int ival;
+	int p;
+	TFile file(filename, 0);
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	for (i = 0; i < 100; i++)
+	{
+		if (i % 10 == 0)
+		{
+			file.Write("<tr style='height:24.75pt'>");
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("#");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 70);
+			file.Write(" ");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("AS-NT corr");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("PCA #1");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("PCA #2");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("PCA #3");
+        	WriteFieldFooter(file);
+
+			file.Write("</tr>");
+		}
+
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 5);
+		sprintf(str, "%d", i + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 70);
+		file.Write(Quiz[i].Text);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        WriteAsCI95(file, i);
+        WriteFieldFooter(file);
+
+        for (p = 0; p < 3; p++)
+        {
+            WriteCenteredFieldHeader(file, 5);
+            ival = round(100.0 * Quiz[i].Pca[p]);
+			sprintf(str, "%d%", ival);
+			file.Write(str);
+            WriteFieldFooter(file);
+        }
+        
+		file.Write("</tr>");
+	}
+
+	file.Write("</table>");
 }

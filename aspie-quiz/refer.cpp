@@ -49,10 +49,15 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	strcpy(RefererRef, Ref);
 	Count = 0;
 	Result = 0;
+	AsResult = 0;
+	NtResult = 0;
 	Result0_59 = 0;
 	Result60_99 = 0;
 	Result100_139 = 0;
 	Result140_200 = 0;
+	ResultNt = 0;
+	ResultLowAs = 0;
+	ResultHighAs = 0;
 
 	NT = FALSE;
 	Aspie = FALSE;
