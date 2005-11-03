@@ -91,7 +91,7 @@ protected:
 	void WriteError(int ErrorCode);
 
 	void StartPush();
-	int PushFile(TPathName &path, const char *ContentType);
+	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
 
 	char *SkipOptDelim(char *p);
 	void AddOpt(char *name, char *param);

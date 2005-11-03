@@ -789,7 +789,7 @@ void THttpCommand::StartPush()
 #   Returns....: *
 #
 ##########################################################################*/
-int THttpCommand::PushFile(TPathName &path, const char *ContentType)
+int THttpCommand::PushFile(TPathName &path, const char *ContentType, int ReloadTime)
 {
 	int count;
 	char *Buf = new char[512];
@@ -808,12 +808,16 @@ int THttpCommand::PushFile(TPathName &path, const char *ContentType)
 		  FServer->Write(Buf, count);
 		  count = file.Read(Buf, 512);
 	 }
-	 delete Buf;
 
 	 if (MSIE)
-		  FServer->Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=1>\r\n");
+	 {
+		  sprintf(Buf, "<META HTTP-EQUIV=\"Refresh\" CONTENT=%d>\r\n", ReloadTime);
+		  FServer->Write(Buf);
+	 }
 	 else
 		  FServer->Write("--ThisRandomString\r\n");
+
+	 delete Buf;
 
 	 FServer->Push();
 
@@ -889,7 +893,7 @@ void THttpCommand::Get(const char *Name)
 ##########################################################################*/
 void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 {
-    char *ptr;
+	char *ptr;
     char *nextptr;
     char *valptr;
     
@@ -914,7 +918,7 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
                 page->Post(ptr, valptr);
             }
 
-            ptr = nextptr;
+			ptr = nextptr;
         }
     }
 

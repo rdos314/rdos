@@ -1015,10 +1015,11 @@ GetBuffer	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Send	Proc far
-	push ds
 	push eax
 	push ecx
 	push edi
+	push bp
+	mov bp,ds
 ;
 	xor di,di
 	mov ax,ds:[esi]
@@ -1055,14 +1056,22 @@ IFDEF debug
 ENDIF
 
 	call CreateSendEntry
+	mov ax,es
+	cmp ax,bp
+	jne send_keep_ds
+;
+    xor bp,bp
+
+send_keep_ds:    	
 	xor ax,ax
 	mov es,ax
 	call InsertSendEntry
 ;
+    mov ds,bp
+    pop bp
 	pop edi
 	pop ecx
 	pop eax
-	pop ds
 	ret
 Send	Endp
 

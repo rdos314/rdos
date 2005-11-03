@@ -114,9 +114,9 @@ void THttpCustomPage::StartPush()
 #   Returns....: *
 #
 ##########################################################################*/
-int THttpCustomPage::PushFile(TPathName &path, const char *ContentType)
+int THttpCustomPage::PushFile(TPathName &path, const char *ContentType, int ReloadTimeout)
 {
-    return FCmd->PushFile(path, ContentType);
+	return FCmd->PushFile(path, ContentType, ReloadTimeout);
 }
 
 /*##########################################################################

@@ -51,7 +51,7 @@ protected:
 
 	void WriteFile(TPathName &path, const char *ContentType);
 	void StartPush();
-	int PushFile(TPathName &path, const char *ContentType);
+	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
 
 	THttpCommand *FCmd;
 	TString FFileName;

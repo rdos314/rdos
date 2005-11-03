@@ -1964,6 +1964,7 @@ PAGE
 sernet_name	DB 'SERNET',0
 
 sernet_thread:
+    int 3
     mov ax,25
     WaitMilliSec
 ;
@@ -2080,7 +2081,7 @@ InitDriver  Proc far
 	mov si,OFFSET sernet_thread
 	mov ax,4
 	mov cx,100h
-	CreateThread
+;	CreateThread
 ;
 	mov ax,cs
 	mov ds,ax
@@ -2089,7 +2090,7 @@ InitDriver  Proc far
 	mov si,OFFSET dcf_thread
 	mov ax,4
 	mov cx,100h
-	CreateProcess
+;	CreateProcess
 ;
     popad
     pop es

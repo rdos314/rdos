@@ -1,3 +1,30 @@
+/*#######################################################################
+# RDOS operating system
+# Copyright (C) 1988-2003, Leif Ekblad
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version. The only exception to this rule
+# is for commercial usage in embedded systems. For information on
+# usage in commercial embedded systems, contact embedded@rdos.net
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+# The author of this program may be contacted at leif@rdos.net
+#
+# heat.cpp
+# Heat control program
+#
+########################################################################*/
+
 #include "rdos.h"
 #include <ctype.h>
 #include <string.h>
@@ -6,87 +33,12 @@
 #include <time.h>
 #include <math.h>
 
+#include "httpheat.h"
+#include "rad.h"
 #include "datetime.h"
-#include "device.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
-
-class TRad : public TDevice
-{
-public:
-	TRad(int Address, int Row);
-
-	void DeviceName(char *Name, int Size) const;
-
-protected:
-	virtual void Execute();
-
-	int FAddress;
-	int FRow;
-
-};
-
-TRad::TRad(int Address, int Row)
-{
-	char str[40];
-
-	FAddress = Address;
-	FRow = Row;
-
-	sprintf(str, "RAD %d", Address);
-	Start(str, 0x2000);
-}
-
-void TRad::DeviceName(char *Name, int Size) const
-{
-	strcpy(Name, "RAD");
-}
-
-void TRad::Execute()
-{
-	int val;
-
-	while (FInstalled)
-	{
-		RdosSetCursorPosition(FRow + 1,0);
-
-		if (RdosWriteSerialRaw(FAddress, 5, 2))
-			printf("ok ");
-		else
-			printf("-- ");
-
-		if (RdosReadSerialRaw(FAddress, 0, &val))
-			printf("%4ld.%ld ", val / 10, val % 10);
-		else
-			printf("------ ");
-
-		if (RdosReadSerialRaw(FAddress, 1, &val))
-			printf("%4ld.%ld ", val / 10, val % 10);
-		else
-			printf("------ ");
-
-		if (RdosReadSerialRaw(FAddress, 2, &val))
-		{
-			val = val * 10 / 25;
-			printf("%4ld.%ld ", val / 10, val % 10);
-		}
-		else
-			printf("------ ");
-
-		if (RdosReadSerialRaw(FAddress, 3, &val))
-			printf("%4ld.%ld ", val / 10, val % 10);
-		else
-			printf("------ ");
-
-		if (RdosReadSerialRaw(FAddress, 4, &val))
-			printf("%4ld.%ld ", val / 10, val % 10);
-		else
-			printf("------ ");
-
-		RdosWaitMilli(1000);
-	}
-}
 
 void cdecl main()
 {
@@ -95,12 +47,20 @@ void cdecl main()
 	int diostat;
 	int mask;
 	TDateTime *CurrTime;
+	int motsum;
+	int motcount;
+	int mot;
 
 	RdosWaitMilli(1000);
 
-	for (i = 0; i < 8; i++)
-		RadArr[8] = new TRad(0x20 + i, i);
+    InitHeatHttp();
 
+	for (i = 0; i < 8; i++)
+	{
+		RadArr[i] = new TRad(0x20 + i, i);
+		AddHttpRad(RadArr[i]);
+    }
+    
 	for (;;)
 	{
 		RdosSetCursorPosition(0,0);
@@ -119,7 +79,7 @@ void cdecl main()
 
 			CurrTime = new TDateTime;
 
-			if (CurrTime->GetHour() >= 21 || CurrTime->GetHour() <= 2)
+			if (CurrTime->GetHour() >= 17 || CurrTime->GetHour() <= 7)
 			{
 				if ((diostat & 1) == 0)
 					RdosToggleSerialLine(1, 0);
@@ -140,6 +100,31 @@ void cdecl main()
 		}
 		else
 			printf("------");
+
+        motsum = 0;
+        motcount = 0;
+        
+		for (i = 0; i < 8; i++)
+		{
+			if (RadArr[i]->IsOnline())
+		    {
+		        motcount++;
+		        motsum += RadArr[i]->Motor;
+		    }
+		}
+
+		if (motcount > 5)
+		{
+		    mot = motsum / motcount;
+		    if (mot >= 70)
+		        if ((diostat & 0x20) == 0)
+		            RdosToggleSerialLine(1, 5);
+
+		    if (mot <= 25)
+		        if (diostat & 0x20)
+		            RdosToggleSerialLine(1, 5);
+        }		    
+		    		
 		RdosWaitMilli(1000);
 	}
 }
