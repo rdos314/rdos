@@ -133,12 +133,12 @@ void TQuizIII::SetupTexts()
 	Quiz[12].MyGroup = GROUP_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_BIOLOGY;
-	Quiz[15].MyGroup = GROUP_BIOLOGY;
+	Quiz[15].MyGroup = GROUP_SENSORY;
 	Quiz[16].MyGroup = GROUP_BIOLOGY;
 	Quiz[17].MyGroup = GROUP_BIOLOGY;
 	Quiz[18].MyGroup = GROUP_BIOLOGY;
 	Quiz[19].MyGroup = GROUP_BIOLOGY;
-	Quiz[20].MyGroup = GROUP_BIOLOGY;
+	Quiz[20].MyGroup = GROUP_SENSORY;
 	Quiz[21].MyGroup = GROUP_BIOLOGY;
 	Quiz[22].MyGroup = GROUP_BIOLOGY;
 	Quiz[23].MyGroup = GROUP_BIOLOGY;
@@ -457,6 +457,7 @@ void TQuizIII::InitReferers()
 	AddReferer("wrongplanet.net", "wrongplanet.net");
 	AddReferer("xmission.com/~winter", "xmission.com/~winter");
 	AddReferer("rdos.net/sv", "rdos.net/sv");
+	AddReferer("katter.nu", "home.katter.nu/kattforum");
 }
 
 /*##################  TQuizIII::LoadReferers ##########################
@@ -695,13 +696,11 @@ void TQuizIII::LoadPopulations()
 ##########################################################################*/
 void TQuizIII::SetupControlGroups()
 {
-	DefineNt("rdos.net/sv");
 	DefineNt("lushforum.co.uk");
 	DefineNt("flashback.info");
 	DefineNt("whoa.nu");
 	DefineNt("gentlechristianmothers.com");
-	DefineNt("georgewbush.org");
-	DefineNt("ddrsverige.com");
+	DefineNt("katter.nu");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -982,6 +981,8 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 
 		    if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 		    {
+		        d2 = -d2;
+		        
 		        if (d1 > 0 && d2 > 0)
 		        {
 		            if (d1 > d2)
