@@ -40,7 +40,7 @@
 #include "zap.h"
 #include "cotana.h"
 #include "tatsuno.h"
-#include "devana.h"
+//#include "devana.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -65,11 +65,11 @@ void cdecl main()
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
 //	TFile RawFile("z:\\compacpu.dat");
-//	TFile RawFile("z:\\raw.dat");
+	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
 //	TFile RawFile("z:\\tatsuno.dat");
 //	TFile RawFile("z:\\device.dat");
-	TFile RawFile("z:\\rawatcl.dat");
+//	TFile RawFile("z:\\rawatcl.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
@@ -94,7 +94,8 @@ void cdecl main()
 //	analyzer.DefineLogFile("tatsuno.txt");
 //	analyzer.DefineLogFile("innova.txt");
 //	analyzer.DefineLogFile("device.txt");
-	analyzer.DefineLogFile("atcl.txt");
+//	analyzer.DefineLogFile("atcl.txt");
+	analyzer.DefineLogFile("ws2000.txt");
 
 	for (;;)
 	{
