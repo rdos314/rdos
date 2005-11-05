@@ -46,6 +46,7 @@
 
 #define CHAR_TIMEOUT    175
 
+#define MAXWINDRETRIES      20
 #define WRITENIB            0x42
 #define WRITEACK            0x10
 
@@ -392,14 +393,14 @@ int TWs2300::Write(int address, int count, const char *buf)
 #   Returns....: TRUE if success
 #
 ##########################################################################*/
-int TWs2300::SafeRead(int address, int count, char *buf)
+int TWs2300::SafeRead(int address, int count, unsigned char *buf)
 {
 	int j;
 
 	for (j = 0; j < MAXRETRIES; j++)
 	{
 		if (Reset06())
-			if (Read(address, count, buf))
+			if (Read(address, count, (char *)buf))
 				return TRUE;
 
 		RdosWaitMilli(500);
@@ -420,14 +421,14 @@ int TWs2300::SafeRead(int address, int count, char *buf)
 #   Returns....: TRUE if success
 #
 ##########################################################################*/
-int TWs2300::SafeWrite(int address, int count, const char *buf)
+int TWs2300::SafeWrite(int address, int count, const unsigned char *buf)
 {
 	int j;
 
 	for (j = 0; j < MAXRETRIES; j++)
 	{
 		if (Reset06())
-			if (Write(address, count, buf))
+			if (Write(address, count, (const char *)buf))
 				return TRUE;
 
 		RdosWaitMilli(500);
@@ -446,7 +447,7 @@ int TWs2300::SafeWrite(int address, int count, const char *buf)
 ##########################################################################*/
 long double TWs2300::GetIndoorTemp()
 {
-	char data[20];
+	unsigned char data[20];
 
 	if (SafeRead(0x346, 2, data))
 		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
@@ -455,4 +456,193 @@ long double TWs2300::GetIndoorTemp()
 		return -999.9;
 }
 
+/*##########################################################################
+#
+#   Name       : TWs2300::GetOutdoorTemp
+#
+#   Purpose....: Get outdoor temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetOutdoorTemp()
+{
+	unsigned char data[20];
 
+	if (SafeRead(0x373, 2, data))
+		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+	else
+		return -999.9;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetDewpoint
+#
+#   Purpose....: Get dewpoint temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetDewpoint()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x3CE, 2, data))
+		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+	else
+		return -999.9;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetIndoorHumidity
+#
+#   Purpose....: Get indoor humidity
+#
+#   Returns....: Humidity
+#
+##########################################################################*/
+long double TWs2300::GetIndoorHumidity()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x3FB, 1, data))
+		return ((data[0] >> 4) * 10 + (data[0] & 0xF));
+	else
+		return -999;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetOutdoorHumidity
+#
+#   Purpose....: Get outdoor humidity
+#
+#   Returns....: Humidity
+#
+##########################################################################*/
+long double TWs2300::GetOutdoorHumidity()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x419, 1, data))
+		return ((data[0] >> 4) * 10 + (data[0] & 0xF));
+	else
+		return -999;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetWind
+#
+#   Purpose....: Get wind speed & direction
+#
+#   Returns....: Wind speed
+#
+##########################################################################*/
+long double TWs2300::GetWind(long double *winddir)
+{
+	unsigned char data[20];
+	int i;
+
+	for ( i = 0; i < MAXWINDRETRIES; i++)
+	{
+		if (SafeRead(0x527, 3, data))
+		{
+			 if ((data[0] != 0) || ((data[1] == -1) && (((data[2] & 0xF) == 0)  || ((data[2] & 0xF) == 1))))
+					 RdosWaitMilli(10000);
+				else
+					 break;
+		  }
+	}
+
+	*winddir = (data[2]>>4)*22.5;
+
+	return (((data[2]&0xF)<<8)+(data[1])) / 10.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetWindchill
+#
+#   Purpose....: Get wind-chill temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetWindchill()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x3A0, 2, data))
+		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+	else
+		return -999.9;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetRain1h
+#
+#   Purpose....: Get last 1h rain
+#
+#   Returns....: Rain amount
+#
+##########################################################################*/
+long double TWs2300::GetRain1h()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x4B4, 3, data))
+		return ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
+				 (data[0] & 0xF) / 100.0 ));
+	else
+		return -999.99;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetRain24h
+#
+#   Purpose....: Get last 24h rain
+#
+#   Returns....: Rain amount
+#
+##########################################################################*/
+long double TWs2300::GetRain24h()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x497, 3, data))
+		return ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
+				 (data[0] & 0xF) / 100.0 ));
+	else
+		return -999.99;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetAirPressure
+#
+#   Purpose....: Get air pressure
+#
+#   Returns....: Air pressure
+#
+##########################################################################*/
+long double TWs2300::GetAirPressure()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x5D8, 3, data))
+		return (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
+					 (data[1] & 0xF) * 10 + (data[0] >> 4) +
+					 (data[0] & 0xF) / 10.0));
+	else
+		return -999.99;
+}

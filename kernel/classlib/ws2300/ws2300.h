@@ -47,6 +47,15 @@ public:
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
 	long double GetIndoorTemp();
+    long double GetOutdoorTemp();
+    long double GetDewpoint();
+    long double GetIndoorHumidity();
+    long double GetOutdoorHumidity();
+    long double GetWindchill();
+    long double GetWind(long double *winddir);
+    long double GetRain1h();
+    long double GetRain24h();
+    long double GetAirPressure();
 
 protected:
     void AddressEncode(int address);
@@ -56,8 +65,8 @@ protected:
     int Reset06();
     int Read(int address, int count, char *buf);
     int Write(int address, int count, const char *buf);
-    int SafeRead(int address, int count, char *buf);
-    int SafeWrite(int address, int count, const char *buf);
+	 int SafeRead(int address, int count, unsigned char *buf);
+	 int SafeWrite(int address, int count, const unsigned char *buf);
 
     TSerialDevice *FSerial;
     int FFreeSerial;
