@@ -45,6 +45,9 @@
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1
 #define PCA_TYPE_FEMALE         2
+#define PCA_TYPE_YOUNG          3
+#define PCA_TYPE_OLD            4
+#define PCA_TYPE_AS             5
 
 #define GROUP_COUNT             11
 
@@ -91,6 +94,9 @@ struct TQuizQuestion
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
     long double FemalePca[MAX_PCA_AXIS];
+    long double YoungPca[MAX_PCA_AXIS];
+    long double OldPca[MAX_PCA_AXIS];
+    long double AsPca[MAX_PCA_AXIS];
 };
 
 struct TGroupCorr
@@ -141,6 +147,7 @@ public:
     void WriteGroupCorrTable(const char *filename);
     void WriteGroupTable(const char *filename, int Cross);
     void WritePca(const char *filename);
+    void WriteWeighting(const char *filename);
 
     virtual void ImportMvsp(const char *filename, int PcaType) = 0;
     virtual void ExportExcelCase(const char *filename, int PcaType) = 0;

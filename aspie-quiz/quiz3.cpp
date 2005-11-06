@@ -128,7 +128,7 @@ void TQuizIII::SetupTexts()
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_SENSORY;
-	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_BIOLOGY;
 	Quiz[11].MyGroup = GROUP_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_BIOLOGY;
@@ -142,7 +142,7 @@ void TQuizIII::SetupTexts()
 	Quiz[21].MyGroup = GROUP_BIOLOGY;
 	Quiz[22].MyGroup = GROUP_BIOLOGY;
 	Quiz[23].MyGroup = GROUP_BIOLOGY;
-	Quiz[24].MyGroup = GROUP_BIOLOGY;
+	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_NONVERBAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
 	Quiz[27].MyGroup = GROUP_NONVERBAL;
@@ -178,7 +178,7 @@ void TQuizIII::SetupTexts()
 	Quiz[57].MyGroup = GROUP_NT_RELATION;
 	Quiz[58].MyGroup = GROUP_NT_RELATION;
 	Quiz[59].MyGroup = GROUP_NT_RELATION;
-	Quiz[60].MyGroup = GROUP_NT_RELATION;
+	Quiz[60].MyGroup = GROUP_MIXED;
 	Quiz[61].MyGroup = GROUP_NT_RELATION;
 	Quiz[62].MyGroup = GROUP_NT_RELATION;
 	Quiz[63].MyGroup = GROUP_SEX;
@@ -209,14 +209,14 @@ void TQuizIII::SetupTexts()
 	Quiz[88].MyGroup = GROUP_PHYSICAL;
 	Quiz[89].MyGroup = GROUP_PHYSICAL;
 	Quiz[90].MyGroup = GROUP_PHYSICAL;
-	Quiz[91].MyGroup = GROUP_MIXED;
+	Quiz[91].MyGroup = GROUP_BIOLOGY;
 	Quiz[92].MyGroup = GROUP_MIXED;
 	Quiz[93].MyGroup = GROUP_MIXED;
 	Quiz[94].MyGroup = GROUP_MIXED;
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_MIXED;
 	Quiz[97].MyGroup = GROUP_MIXED;
-	Quiz[98].MyGroup = GROUP_PHYSICAL;
+	Quiz[98].MyGroup = GROUP_BIOLOGY;
 	Quiz[99].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -853,6 +853,25 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return TRUE;
             else
                 return FALSE;
+
+        case PCA_TYPE_YOUNG:
+            if (row->BirthYear >= 1980)
+                return TRUE;
+            else
+                return FALSE;
+
+        case PCA_TYPE_OLD:
+            if (row->BirthYear <= 1965)
+                return TRUE;
+            else
+                return FALSE;                
+
+        case PCA_TYPE_AS:
+            if (row->Diagnos == DX_AS)
+                return TRUE;
+            else
+                return FALSE;
+                
     }
     return FALSE;
 }
@@ -905,12 +924,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 	    	{
 		        ival = Row.Quiz[i];
 		        if (ival)
-    		    {
-//				if (Quiz[i].Reverse)
-//					ival = 3 - ival;
-//				else
 					ival--;
-	    		}
 		        
 		    	if (ival > 2)
 			        ival = 0;
@@ -973,41 +987,43 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 		                break;
 
 		            case 0x9:
-		            case 0xd:
-		                rowstr[i] = ' ';
-		                break;
-		        }
-		    }
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
 
-		    if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
-		    {
-		        d2 = -d2;
-		        
-		        if (d1 > 0 && d2 > 0)
-		        {
-		            if (d1 > d2)
-		            {
-		                d1 = d1 - d2;
-		                d2 = 0;
-		            }
-		            else
-		            {
-		                d2 = d2 - d1;
-		                d1 = 0;
-		            }
-		        }
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
+			{
+				if (PcaType != PCA_TYPE_FEMALE && PcaType != PCA_TYPE_YOUNG
+				   && PcaType != PCA_TYPE_AS)
+					d2 = -d2;
 
-                switch (PcaType)
-                {
-                    case PCA_TYPE_ALL:		            
-        		        Quiz[q - 1].Pca[0] = d1;
-	        	        Quiz[q - 1].Pca[1] = d2;
-		                Quiz[q - 1].Pca[2] = d3;
-		                break;
+				if (d1 > 0 && d2 > 0)
+				{
+					if (d1 > d2)
+					{
+						d1 = d1 - d2;
+						d2 = 0;
+					}
+					else
+					{
+						d2 = d2 - d1;
+						d1 = 0;
+					}
+				}
 
-                    case PCA_TYPE_MALE:		            
-        		        Quiz[q - 1].MalePca[0] = d1;
-	        	        Quiz[q - 1].MalePca[1] = d2;
+				switch (PcaType)
+				{
+					case PCA_TYPE_ALL:
+						Quiz[q - 1].Pca[0] = d1;
+						Quiz[q - 1].Pca[1] = d2;
+						Quiz[q - 1].Pca[2] = d3;
+						break;
+
+					case PCA_TYPE_MALE:
+						Quiz[q - 1].MalePca[0] = d1;
+						Quiz[q - 1].MalePca[1] = d2;
 		                Quiz[q - 1].MalePca[2] = d3;
 		                break;
 
@@ -1015,6 +1031,24 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
         		        Quiz[q - 1].FemalePca[0] = d1;
 	        	        Quiz[q - 1].FemalePca[1] = d2;
 		                Quiz[q - 1].FemalePca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_YOUNG:		            
+        		        Quiz[q - 1].YoungPca[0] = d1;
+	        	        Quiz[q - 1].YoungPca[1] = d2;
+		                Quiz[q - 1].YoungPca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_OLD:		            
+        		        Quiz[q - 1].OldPca[0] = d1;
+	        	        Quiz[q - 1].OldPca[1] = d2;
+		                Quiz[q - 1].OldPca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_AS:		            
+        		        Quiz[q - 1].AsPca[0] = d1;
+	        	        Quiz[q - 1].AsPca[1] = d2;
+		                Quiz[q - 1].AsPca[2] = d3;
 		                break;
 		        }
 		    }

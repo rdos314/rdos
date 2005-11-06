@@ -107,7 +107,7 @@ void TQuizI::WriteName(TFile &File)
 void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_FOCUS;
-	Quiz[1].MyGroup = GROUP_FOCUS;
+	Quiz[1].MyGroup = GROUP_MIXED;
 	Quiz[2].MyGroup = GROUP_LANGUAGE;
     Quiz[3].MyGroup = GROUP_MIXED;
 	Quiz[4].MyGroup = GROUP_FOCUS;
@@ -178,7 +178,7 @@ void TQuizI::SetupTexts()
 	Quiz[69].MyGroup = GROUP_SOCIAL;
 	Quiz[70].MyGroup = GROUP_SOCIAL;
 	Quiz[71].MyGroup = GROUP_SOCIAL;
-	Quiz[72].MyGroup = GROUP_MIXED;
+	Quiz[72].MyGroup = GROUP_SOCIAL;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_SOCIAL;
 	Quiz[75].MyGroup = GROUP_SOCIAL;

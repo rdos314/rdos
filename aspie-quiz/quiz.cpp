@@ -100,6 +100,9 @@ TQuiz::TQuiz()
             Quiz[i].Pca[g] = 0;
             Quiz[i].MalePca[g] = 0;
             Quiz[i].FemalePca[g] = 0;
+            Quiz[i].YoungPca[g] = 0;
+            Quiz[i].OldPca[g] = 0;
+            Quiz[i].AsPca[g] = 0;
         }
     }
 
@@ -162,7 +165,6 @@ void TQuiz::Init()
 {
 	int i;
 	int g;
-
 
     for (i = 0; i < 100; i++)
     {
@@ -2451,7 +2453,7 @@ void TQuiz::WritePca(const char *filename)
 			file.Write("#");
         	WriteFieldFooter(file);
 
-        	WriteCenteredFieldHeader(file, 70);
+        	WriteCenteredFieldHeader(file, 55);
 			file.Write(" ");
         	WriteFieldFooter(file);
 
@@ -2460,15 +2462,19 @@ void TQuiz::WritePca(const char *filename)
         	WriteFieldFooter(file);
 
         	WriteCenteredFieldHeader(file, 5);
-			file.Write("PCA #1");
+			file.Write("Total PCA #1/#2");
         	WriteFieldFooter(file);
 
         	WriteCenteredFieldHeader(file, 5);
-			file.Write("PCA #2");
+			file.Write("Young PCA #1/#2");
         	WriteFieldFooter(file);
 
         	WriteCenteredFieldHeader(file, 5);
-			file.Write("PCA #3");
+			file.Write("Old PCA #1/#2");
+        	WriteFieldFooter(file);
+
+        	WriteCenteredFieldHeader(file, 5);
+			file.Write("AS PCA #1/#2");
         	WriteFieldFooter(file);
 
 			file.Write("</tr>");
@@ -2481,7 +2487,7 @@ void TQuiz::WritePca(const char *filename)
 		file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 70);
+        WriteCenteredFieldHeader(file, 65);
 		file.Write(Quiz[i].Text);
         WriteFieldFooter(file);
 
@@ -2489,17 +2495,202 @@ void TQuiz::WritePca(const char *filename)
         WriteAsCI95(file, i);
         WriteFieldFooter(file);
 
-        for (p = 0; p < 3; p++)
-        {
-            WriteCenteredFieldHeader(file, 5);
-            ival = round(100.0 * Quiz[i].Pca[p]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-            WriteFieldFooter(file);
-        }
+        WriteCenteredFieldHeader(file, 5);
+        ival = round(100.0 * Quiz[i].Pca[0]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+		file.Write("<br>");
+		
+        ival = round(100.0 * Quiz[i].Pca[1]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        ival = round(100.0 * Quiz[i].YoungPca[0]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+		file.Write("<br>");
+
+        ival = round(100.0 * Quiz[i].YoungPca[1]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        ival = round(100.0 * Quiz[i].OldPca[0]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        file.Write("<br>");
+
+        ival = round(100.0 * Quiz[i].OldPca[1]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 5);
+        ival = round(100.0 * Quiz[i].AsPca[0]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        file.Write("<br>");
+
+        ival = round(100.0 * Quiz[i].AsPca[1]);
+		sprintf(str, "%d%", ival);
+		file.Write(str);
+        WriteFieldFooter(file);
         
 		file.Write("</tr>");
 	}
 
 	file.Write("</table>");
+}
+
+/*##################  TQuiz::WriteWeighting ##########################
+*   Purpose....: Write weighting        	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteWeighting(const char *filename)
+{
+	int i;
+	int j;
+	int k;
+	char str[80];
+	int ival;
+	long double val;
+	long double Asw[100];
+	long double Ntw[100];
+	long double Asg[100];
+	long double Ntg[100];
+    int count;
+    long double assum;
+    long double ntsum;
+    long double mas0, mas1, fas0, fas1;
+    TQuiz *CurrQuiz;
+	TFile file(filename, 0);
+
+    for (i = 0; i < 100; i++)
+    {
+        assum = Quiz[i].Pca[0];
+        ntsum = Quiz[i].Pca[1];
+        count = 1;
+
+        j = Quiz[i].CrossInd;
+        CurrQuiz = Quiz[i].CrossQuiz;
+        j = i;
+
+        while (CurrQuiz)
+        {
+            assum += CurrQuiz->Quiz[j].Pca[0];
+            ntsum += CurrQuiz->Quiz[j].Pca[1];
+            count++;
+
+            k = CurrQuiz->Quiz[j].CrossInd;
+            CurrQuiz = CurrQuiz->Quiz[j].CrossQuiz;
+            j = k;
+        }
+
+        Asw[i] = assum / (long double)count;
+        Ntw[i] = ntsum / (long double)count;        
+    }
+
+    file.Write("    static int Asw[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Asw[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
+    file.Write("    static int Ntw[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Ntw[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
+    for (i = 0; i < 100; i++)
+    {
+        assum = Quiz[i].MalePca[0] - Quiz[i].FemalePca[0];
+        ntsum = Quiz[i].MalePca[1] - Quiz[i].FemalePca[1];
+        count = 1;
+
+        j = Quiz[i].CrossInd;
+        CurrQuiz = Quiz[i].CrossQuiz;
+        j = i;
+
+        while (CurrQuiz)
+        {
+            mas0 = CurrQuiz->Quiz[j].MalePca[0];
+            fas0 = CurrQuiz->Quiz[j].FemalePca[0];
+            mas1 = CurrQuiz->Quiz[j].MalePca[1];
+            fas1 = CurrQuiz->Quiz[j].FemalePca[1];
+
+            if (mas0 != 0 || fas0 != 0 || mas1 != 0 || fas1 != 0)
+            {
+                assum += mas0 - fas0;
+                ntsum += mas1 - fas1;
+                count++;
+            }
+
+            k = CurrQuiz->Quiz[j].CrossInd;
+            CurrQuiz = CurrQuiz->Quiz[j].CrossQuiz;
+            j = k;
+        }
+
+        Asg[i] = assum / (long double)count / 2.0;
+        Ntg[i] = ntsum / (long double)count / 2.0;        
+    }
+
+    file.Write("    static int Asg[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Asg[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
+    file.Write("    static int Ntg[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Ntg[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
 }

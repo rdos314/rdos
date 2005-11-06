@@ -51,7 +51,6 @@
 TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
   : FDataFile(FileName)
 {
-    UseNtResult = FALSE;
     DefineCross(0, QuizI);
 
     SetupTexts();
@@ -196,7 +195,7 @@ void TQuizII::SetupTexts()
 	Quiz[68].MyGroup = GROUP_REPETITION;
 	Quiz[69].MyGroup = GROUP_MIXED;
 	Quiz[70].MyGroup = GROUP_NONVERBAL;
-	Quiz[71].MyGroup = GROUP_MIXED;
+	Quiz[71].MyGroup = GROUP_SOCIAL;
 	Quiz[72].MyGroup = GROUP_SOCIAL;
 	Quiz[73].MyGroup = GROUP_NT_RELATION;
 	Quiz[74].MyGroup = GROUP_NT_RELATION;
@@ -209,7 +208,7 @@ void TQuizII::SetupTexts()
 	Quiz[81].MyGroup = GROUP_FOCUS;
 	Quiz[82].MyGroup = GROUP_BIOLOGY;
 	Quiz[83].MyGroup = GROUP_REPETITION;
-	Quiz[84].MyGroup = GROUP_BIOLOGY;
+	Quiz[84].MyGroup = GROUP_SENSORY;
 	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_MIXED;
 	Quiz[87].MyGroup = GROUP_SENSORY;
@@ -491,22 +490,18 @@ void TQuizII::LoadReferers()
 		if (ref)
 		{
 			ref->Count++;
-			ref->Result += Row.Result;
+			ref->AsResult += Row.AsResult;
+			ref->NtResult += Row.NtResult;
 
-			if (Row.Result >= 60)
+			if (Row.AsResult >= Row.NtResult)
 			{
-		        if (Row.Result >= 100)
-				{
-				    if (Row.Result >= 140)
-				        ref->Result140_200++;
-					else
-					    ref->Result100_139++;
-				}
+				if (Row.AsResult - Row.NtResult >= 50)
+					ref->ResultHighAs++;
 				else
-				    ref->Result60_99++;
+					ref->ResultLowAs++;
 			}
-		    else
-			    ref->Result0_59++;
+			else
+				ref->ResultNt++;
 		}
 
 		switch (Row.Diagnos)
@@ -543,22 +538,18 @@ void TQuizII::LoadReferers()
 		if (ref)
 		{
 			ref->Count++;
-			ref->Result += Row.Result;
+			ref->AsResult += Row.AsResult;
+			ref->NtResult += Row.NtResult;
 
-			if (Row.Result >= 60)
-		    {
-		        if (Row.Result >= 100)
-				{
-					if (Row.Result >= 140)
-					    ref->Result140_200++;
-					else
-						ref->Result100_139++;
-				}
+			if (Row.AsResult >= Row.NtResult)
+			{
+				if (Row.AsResult - Row.NtResult >= 50)
+					ref->ResultHighAs++;
 				else
-					ref->Result60_99++;
+					ref->ResultLowAs++;
 			}
 			else
-			    ref->Result0_59++;
+				ref->ResultNt++;
 		}
 
 		switch (Row.Diagnos)
@@ -579,22 +570,18 @@ void TQuizII::LoadReferers()
 		if (ref)
 		{
 			ref->Count++;
-			ref->Result += Row.Result;
+			ref->AsResult += Row.AsResult;
+			ref->NtResult += Row.NtResult;
 
-			if (Row.Result >= 60)
+			if (Row.AsResult >= Row.NtResult)
 			{
-				if (Row.Result >= 100)
-				{
-					if (Row.Result >= 140)
-						ref->Result140_200++;
-					else
-						ref->Result100_139++;
-				}
+				if (Row.AsResult - Row.NtResult >= 50)
+					ref->ResultHighAs++;
 				else
-					ref->Result60_99++;
+					ref->ResultLowAs++;
 			}
 			else
-				ref->Result0_59++;
+				ref->ResultNt++;
 		}
 
 	}
@@ -636,7 +623,7 @@ void TQuizII::LoadPopulations()
 		{
 		    case DX_AS:
 		    case SELF_AS:
-                if (Row.Result < 100)
+                if (Row.AsResult < 100)
                     LowAs.Add(Row.Quiz);
 		    
 	    		if (Row.Gender == 1)
@@ -820,6 +807,25 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return TRUE;
             else
                 return FALSE;
+
+        case PCA_TYPE_YOUNG:
+            if (row->BirthYear >= 1980)
+                return TRUE;
+            else
+                return FALSE;
+
+        case PCA_TYPE_OLD:
+            if (row->BirthYear <= 1965)
+                return TRUE;
+            else
+                return FALSE;
+
+        case PCA_TYPE_AS:
+            if (row->Diagnos == DX_AS)
+                return TRUE;
+            else
+                return FALSE;
+                
     }
     return FALSE;
 }
@@ -862,7 +868,7 @@ void TQuizII::ExportExcelCase(const char *filename, int PcaType)
 	{
 	    if (IsPca(&Row, PcaType))
 	    {
-    	    sprintf(str, "\%d\", ", Row.Result);
+    	    sprintf(str, "\%d\", ", Row.AsResult);
 	        file.Write(str);
 
     	    sprintf(str, "\"%d\", ", Row.Diagnos);
@@ -872,12 +878,7 @@ void TQuizII::ExportExcelCase(const char *filename, int PcaType)
 	    	{
 		        ival = Row.Quiz[i];
 		        if (ival)
-    		    {
-//				if (Quiz[i].Reverse)
-//					ival = 3 - ival;
-//				else
 					ival--;
-	    		}
 		        
 		    	if (ival > 2)
 			        ival = 0;
@@ -948,6 +949,9 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
 
 		    if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 		    {
+		        if (PcaType == PCA_TYPE_YOUNG || PcaType == PCA_TYPE_AS)
+		            d2 = -d2;
+		            
 		        if (d1 > 0 && d2 > 0)
 		        {
 		            if (d1 > d2)
@@ -980,6 +984,24 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
         		        Quiz[q - 1].FemalePca[0] = d1;
 	        	        Quiz[q - 1].FemalePca[1] = d2;
 		                Quiz[q - 1].FemalePca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_YOUNG:		            
+        		        Quiz[q - 1].YoungPca[0] = d1;
+	        	        Quiz[q - 1].YoungPca[1] = d2;
+		                Quiz[q - 1].YoungPca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_OLD:		            
+        		        Quiz[q - 1].OldPca[0] = d1;
+	        	        Quiz[q - 1].OldPca[1] = d2;
+		                Quiz[q - 1].OldPca[2] = d3;
+		                break;
+
+                    case PCA_TYPE_AS:		            
+        		        Quiz[q - 1].AsPca[0] = d1;
+	        	        Quiz[q - 1].AsPca[1] = d2;
+		                Quiz[q - 1].AsPca[2] = d3;
 		                break;
 		        }
 		    }

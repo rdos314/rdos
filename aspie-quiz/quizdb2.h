@@ -14,6 +14,7 @@ struct TQuizRow
     int  BirthYear;
     char Gender;
     char Referer[100];
-    long Result;
+    long AsResult;
+    long NtResult;
     char Quiz[100];
 };
