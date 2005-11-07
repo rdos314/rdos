@@ -57,15 +57,17 @@ void cdecl main()
 
 	RdosWaitMilli(1000);
 
-	 InitHeatHttp();
+	InitHeatHttp();
 
 	for (i = 0; i < 8; i++)
 	{
 		RadArr[i] = new TRad(0x20 + i, i);
 		AddHttpRad(RadArr[i]);
-	 }
+	}
 
-	 Ws = new TWs2300(1);
+	Ws = new TWs2300(1);
+	
+	AddHttpWs2300(Ws);
 
 	for (;;)
 	{

@@ -37,6 +37,7 @@
 
 #define DEBUG	1
 
+#include "datetime.h"
 #include "rdos.h"
 #include "ws2300.h"
 #include "file.h"
@@ -138,7 +139,7 @@ void TWs2300::Init()
     FOutdoorHumidity = 50.0;
     FWindChill = 20.0;
     FWindSpeed = 0.0;
-    FWinDir = 0.0;
+	FWindDir = 0.0;
     FRain1h = 0.0;
     FRain24h = 0.0;
     FAirPressure = 1013.0;
@@ -299,7 +300,7 @@ long double TWs2300::GetRain1h()
 ##########################################################################*/
 long double TWs2300::GetRain24h()
 {
-    return FRain24;
+	return FRain24h;
 }
 
 /*##########################################################################
@@ -652,14 +653,14 @@ int TWs2300::UpdateOutdoorTemp()
 
 /*##########################################################################
 #
-#   Name       : TWs2300::UpdateDewpoint
+#   Name       : TWs2300::UpdateDewPoint
 #
 #   Purpose....: Update dewpoint temperature
 #
 #   Returns....: Success
 #
 ##########################################################################*/
-int TWs2300::UpdateDewpoint()
+int TWs2300::UpdateDewPoint()
 {
 	unsigned char data[20];
 
@@ -819,7 +820,7 @@ int TWs2300::UpdateRain24h()
 
 	if (SafeRead(0x497, 3, data))
 	{
-		FRain24 = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+		FRain24h = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
 		return TRUE;
@@ -865,63 +866,63 @@ void TWs2300::Execute()
     int HasOutdoorTemp = FALSE;
     int HasDewPoint = FALSE;
     int HasIndoorHumidity = FALSE;
-    int HasOutdoorHumidity = FALSE;
-    int HasWindChill = FALSE;
-    int HasRain1h = FALSE;
-    int HasRain24h = FALSE;
-    int HasWind = FALSE;
-    int HasPressure = FALSE;
-    int ok;
-    TDateTime datetime;
-    int lastsec = datetime.GetSec();
-    int sec;
+	int HasOutdoorHumidity = FALSE;
+	int HasWindChill = FALSE;
+	int HasRain1h = FALSE;
+	int HasRain24h = FALSE;
+	int HasWind = FALSE;
+	int HasPressure = FALSE;
+	int ok;
+	TDateTime datetime;
+	int lastsec = datetime.GetSec();
+	int sec;
 
-    while (FInstalled)
-    {
-        if (!HasIndoorTemp)
-            HasIndoorTemp = GetIndoorTemp();
+	while (FInstalled)
+	{
+		if (!HasIndoorTemp)
+			HasIndoorTemp = UpdateIndoorTemp();
 
-        if (!HasOutdoorTemp)
-            HasOutdoorTemp = GetOutdoorTemp();
+		if (!HasOutdoorTemp)
+			HasOutdoorTemp = UpdateOutdoorTemp();
 
-        if (!HasDewPoint)
-            HasDewPoint = GetDewPoint();
+		if (!HasDewPoint)
+			HasDewPoint = UpdateDewPoint();
 
-        if (!HasIndoorHumidity)
-            HasIndoorHumidity = GetIndoorHumidity();
+		if (!HasIndoorHumidity)
+			HasIndoorHumidity = UpdateIndoorHumidity();
 
-        if (!HasOutdoorHumidity)
-            HasOutdoorHumidity = GetOutdoorHumidity();
+		if (!HasOutdoorHumidity)
+			HasOutdoorHumidity = UpdateOutdoorHumidity();
 
-        if (!HasWind)
-            HasWind = GetWind();
+		if (!HasWind)
+			HasWind = UpdateWind();
 
-        if (!HasWindChill)
-            HasWindChill = GetWindChill();
+		if (!HasWindChill)
+			HasWindChill = UpdateWindChill();
 
-        if (!HasRain1h)
-            HasRain1h = GetRain1h();
+		if (!HasRain1h)
+			HasRain1h = UpdateRain1h();
 
-        if (!HasRain24h)
-            HasRain24h = GetRain24h();
+		if (!HasRain24h)
+			HasRain24h = UpdateRain24h();
 
-        if (!HasPressure)
-            HasPressure = GetPressure();
+		if (!HasPressure)
+			HasPressure = UpdateAirPressure();
 
-        datetime = TDateTime::TDateTime();
-        sec = datetime.GetSec();
+		datetime = TDateTime();
+		sec = datetime.GetSec();
 
-        if (sec < lastsec)
-            lastsec -= 60;
+		if (sec < lastsec)
+			lastsec -= 60;
 
-        if (sec - lastsec >= 60)
-        {
-            HasIndoorTemp = FALSE;
-            HasOutdoorTemp = FALSE;
-            HasDewPoint = FALSE;
-            HasIndoorHumidity = FALSE;
-            HasOutdoorHumidity = FALSE;
-            HasWindChill = FALSE;
+		if (sec - lastsec >= 60)
+		{
+			HasIndoorTemp = FALSE;
+			HasOutdoorTemp = FALSE;
+			HasDewPoint = FALSE;
+			HasIndoorHumidity = FALSE;
+			HasOutdoorHumidity = FALSE;
+			HasWindChill = FALSE;
             HasWind = FALSE;
             HasRain1h = FALSE;
             HasRain24h = FALSE;
@@ -943,7 +944,7 @@ void TWs2300::Execute()
 
         if (ok)
         {
-            WaitMilli(15000);
+            RdosWaitMilli(15000);
             HasWind = FALSE;
         }
     }

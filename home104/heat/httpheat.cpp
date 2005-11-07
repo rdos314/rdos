@@ -48,6 +48,7 @@ TSignalDevice *SignalList = 0;
 
 int RadCount = 0;
 TRad *RadArr[15];
+TWs2300 *Ws2300 = 0;
 
 /*##########################################################################
 #
@@ -323,27 +324,27 @@ void THttpHeatPage::Get(const char *Name)
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d.%d", RadArr[r]->Ref / 10, RadArr[r]->Ref % 10);
+				sprintf(str, "%d.%d °C", RadArr[r]->Ref / 10, RadArr[r]->Ref % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d.%d", RadArr[r]->Temp / 10, RadArr[r]->Temp % 10);
+				sprintf(str, "%d.%d °C", RadArr[r]->Temp / 10, RadArr[r]->Temp % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d.%d", RadArr[r]->Motor / 10, RadArr[r]->Motor % 10);
+				sprintf(str, "%d%", RadArr[r]->Motor / 100);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d.%d", RadArr[r]->Light / 10, RadArr[r]->Light % 10);
+				sprintf(str, "%d.%d W/m²", RadArr[r]->Light / 10, RadArr[r]->Light % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d.%d", RadArr[r]->AuxTemp / 10, RadArr[r]->AuxTemp % 10);
+				sprintf(str, "%d.%d °C", RadArr[r]->AuxTemp / 10, RadArr[r]->AuxTemp % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
@@ -433,6 +434,22 @@ void AddHttpRad(TRad *Rad)
 {
     RadArr[RadCount] = Rad;
     RadCount++;
+}
+
+/*##########################################################################
+#
+#   Name       : AddHttpWs2300
+#
+#   Purpose....: Add weather station
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddHttpWs2300(TWs2300 *Ws)
+{
+    Ws2300 = Ws;
 }
 
 /*##########################################################################

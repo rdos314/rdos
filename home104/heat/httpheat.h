@@ -30,6 +30,7 @@
 
 #include "httpfact.h"
 #include "httpcust.h"
+#include "ws2300.h"
 
 class TRad;
 
@@ -60,6 +61,7 @@ protected:
 };
 
 void AddHttpRad(TRad *Rad);
+void AddHttpWs2300(TWs2300 *ws);
 void InitHeatHttp();
 void HttpUpdate();
 
