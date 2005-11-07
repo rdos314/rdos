@@ -40,7 +40,8 @@
 #include "zap.h"
 #include "cotana.h"
 #include "tatsuno.h"
-//#include "devana.h"
+#include "devana.h"
+#include "waynecl.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -68,20 +69,22 @@ void cdecl main()
 	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\flintab.dat");
 //	TFile RawFile("z:\\tatsuno.dat");
-//	TFile RawFile("z:\\device.dat");
+	TFile RawFile("z:\\device.dat");
 //	TFile RawFile("z:\\rawatcl.dat");
+//	TFile RawFile("z:\\rawcl.dat");
+//	TFile RawFile("z:\\spp.log");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-	TProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TZapProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
-//	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
+	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
@@ -93,9 +96,11 @@ void cdecl main()
 //	analyzer.DefineLogFile("cbus.txt");
 //	analyzer.DefineLogFile("tatsuno.txt");
 //	analyzer.DefineLogFile("innova.txt");
-//	analyzer.DefineLogFile("device.txt");
+	analyzer.DefineLogFile("device.txt");
 //	analyzer.DefineLogFile("atcl.txt");
-	analyzer.DefineLogFile("ws2000.txt");
+//	analyzer.DefineLogFile("wayne.txt");
+//	analyzer.DefineLogFile("spp.txt");
+//	analyzer.DefineLogFile("ws2000.txt");
 
 	for (;;)
 	{
