@@ -132,68 +132,48 @@ void cdecl main()
 		  }
 
 		RdosSetCursorPosition(10,0);
-
 		val = Ws->GetIndoorTemp();
-		if (val > -100)
-			printf("%5.1Lf", val);
-		else
-			 printf("-----");
+		printf("%5.1Lf", val);
 
 		RdosSetCursorPosition(10,10);
-
 		val = Ws->GetIndoorHumidity();
-		if (val > -10)
-			printf("%4.0Lf%", val);
-		else
-			printf("----%");
+		printf("%4.0Lf%", val);
 
 		RdosSetCursorPosition(11,0);
-
 		val = Ws->GetOutdoorTemp();
-		if (val > -100)
-			printf("%5.1Lf", val);
-		else
-			 printf("-----");
+		printf("%5.1Lf", val);
 
 		RdosSetCursorPosition(11,10);
-
 		val = Ws->GetOutdoorHumidity();
-		if (val > -10)
-			printf("%4.0Lf%", val);
-		else
-			printf("----%");
+		printf("%4.0Lf%", val);
 
 		RdosSetCursorPosition(12,0);
+		val = Ws->GetDewPoint();
+		printf("%5.1Lf", val);
 
-		val = Ws->GetWind(&winddir);
-		if (val > -10)
-			printf("%5.1Lf m/s   %4Lf", val, winddir);
-		else
-			printf("----- m/s    ----");
+		RdosSetCursorPosition(12,10);
+		val = Ws->GetWindChill();
+		printf("%5.1Lf", val);
 
 		RdosSetCursorPosition(13,0);
-
-		val = Ws->GetRain1h();
-		if (val > -100)
-			printf("%5.1Lf mm", val);
-		else
-			 printf("----- mm");
+		val = Ws->GetWindSpeed();
+		printf("%5.1Lf m/s", val);
 
 		RdosSetCursorPosition(13,10);
-
-		val = Ws->GetRain24h();
-		if (val > -100)
-			printf("%5.1Lf mm", val);
-		else
-			 printf("----- mm");
+		val = Ws->GetWindDir();
+		printf("%4Lf", val);
 
 		RdosSetCursorPosition(14,0);
+		val = Ws->GetRain1h();
+		printf("%5.1Lf mm", val);
 
+		RdosSetCursorPosition(14,10);
+		val = Ws->GetRain24h();
+		printf("%5.1Lf mm", val);
+
+		RdosSetCursorPosition(15,0);
 		val = Ws->GetAirPressure();
-		if (val > -100)
-			printf("%6.1Lf hPa", val);
-		else
-			 printf("----- hPa");
+		printf("%6.1Lf hPa", val);
 
 		RdosWaitMilli(1000);
 	}

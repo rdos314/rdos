@@ -48,16 +48,30 @@ public:
 
 	long double GetIndoorTemp();
     long double GetOutdoorTemp();
-    long double GetDewpoint();
+    long double GetDewPoint();
     long double GetIndoorHumidity();
     long double GetOutdoorHumidity();
-    long double GetWindchill();
-    long double GetWind(long double *winddir);
+    long double GetWindChill();
+    long double GetWindSpeed();
+    long double GetWindDir();
     long double GetRain1h();
     long double GetRain24h();
     long double GetAirPressure();
 
 protected:
+	int UpdateIndoorTemp();
+    int UpdateOutdoorTemp();
+    int UpdateDewPoint();
+    int UpdateIndoorHumidity();
+    int UpdateOutdoorHumidity();
+    int UpdateWindChill();
+    int UpdateWind();
+    int UpdateRain1h();
+    int UpdateRain24h();
+    int UpdateAirPressure();
+
+	virtual void Execute();
+
     void AddressEncode(int address);
     void CountEncode(int count);
     unsigned char Checksum(const char *buf, int count);
@@ -65,12 +79,24 @@ protected:
     int Reset06();
     int Read(int address, int count, char *buf);
     int Write(int address, int count, const char *buf);
-	 int SafeRead(int address, int count, unsigned char *buf);
-	 int SafeWrite(int address, int count, const unsigned char *buf);
+	int SafeRead(int address, int count, unsigned char *buf);
+	int SafeWrite(int address, int count, const unsigned char *buf);
 
     TSerialDevice *FSerial;
     int FFreeSerial;
     unsigned char FCmdBuf[25];
+
+    long double FIndoorTemp;
+    long double FOutdoorTemp;
+    long double FDewPoint;
+    long double FIndoorHumidity;
+    long double FOutdoorHumidity;
+    long double FWindChill;
+    long double FWindSpeed;
+    long double FWindDir;
+    long double FRain1h;
+    long double FRain24h;
+    long double FAirPressure;
 
 private:
     void Init();    

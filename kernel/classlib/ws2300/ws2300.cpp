@@ -128,8 +128,22 @@ void TWs2300::Init()
 {
     FSerial->Open();
     FSerial->Enable();
-	 FSerial->ResetDtr();
+	FSerial->ResetDtr();
     FSerial->SetRts();
+
+    FIndoorTemp = 20.0;
+    FOutdoorTemp = 20.0;
+    FDewPoint = 20.0;
+    FIndoorHumidity = 50.0;
+    FOutdoorHumidity = 50.0;
+    FWindChill = 20.0;
+    FWindSpeed = 0.0;
+    FWinDir = 0.0;
+    FRain1h = 0.0;
+    FRain24h = 0.0;
+    FAirPressure = 1013.0;
+
+    Start("WS2300", 0x2000);    
 }
 
 /*##########################################################################
@@ -146,6 +160,160 @@ void TWs2300::Init()
 void TWs2300::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"WS2300",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetIndoorTemp
+#
+#   Purpose....: Get indoor temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetIndoorTemp()
+{
+    return FIndoorTemp;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetOutdoorTemp
+#
+#   Purpose....: Get outdoor temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetOutdoorTemp()
+{
+    return FOutdoorTemp;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetDewPoint
+#
+#   Purpose....: Get dewpoint temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetDewPoint()
+{
+    return FDewPoint;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetIndoorHumidity
+#
+#   Purpose....: Get indoor humidity
+#
+#   Returns....: Humidity
+#
+##########################################################################*/
+long double TWs2300::GetIndoorHumidity()
+{
+    return FIndoorHumidity;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetOutdoorHumidity
+#
+#   Purpose....: Get outdoor humidity
+#
+#   Returns....: Humidity
+#
+##########################################################################*/
+long double TWs2300::GetOutdoorHumidity()
+{
+    return FOutdoorHumidity;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetWindSpeed
+#
+#   Purpose....: Get wind speed
+#
+#   Returns....: Wind speed
+#
+##########################################################################*/
+long double TWs2300::GetWindSpeed()
+{
+    return FWindSpeed;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetWindDir
+#
+#   Purpose....: Get wind direction
+#
+#   Returns....: Wind direction
+#
+##########################################################################*/
+long double TWs2300::GetWindDir()
+{
+    return FWindDir;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetWindChill
+#
+#   Purpose....: Get wind-chill temperature
+#
+#   Returns....: Temperature
+#
+##########################################################################*/
+long double TWs2300::GetWindChill()
+{
+    return FWindChill;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetRain1h
+#
+#   Purpose....: Get last 1h rain
+#
+#   Returns....: Rain amount
+#
+##########################################################################*/
+long double TWs2300::GetRain1h()
+{
+    return FRain1h;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetRain24h
+#
+#   Purpose....: Get last 24h rain
+#
+#   Returns....: Rain amount
+#
+##########################################################################*/
+long double TWs2300::GetRain24h()
+{
+    return FRain24;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetAirPressure
+#
+#   Purpose....: Get air pressure
+#
+#   Returns....: Air pressure
+#
+##########################################################################*/
+long double TWs2300::GetAirPressure()
+{
+    return FAirPressure;
 }
 
 /*##########################################################################
@@ -438,211 +606,345 @@ int TWs2300::SafeWrite(int address, int count, const unsigned char *buf)
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetIndoorTemp
+#   Name       : TWs2300::UpdateIndoorTemp
 #
-#   Purpose....: Get indoor temperature
+#   Purpose....: Update indoor temperature
 #
-#   Returns....: Temperature
+#   Returns....: success
 #
 ##########################################################################*/
-long double TWs2300::GetIndoorTemp()
+int TWs2300::UpdateIndoorTemp()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x346, 2, data))
-		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+	{
+		FIndoorTemp = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
 					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+	    return TRUE;
+	}
 	else
-		return -999.9;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetOutdoorTemp
+#   Name       : TWs2300::UpdateOutdoorTemp
 #
-#   Purpose....: Get outdoor temperature
+#   Purpose....: Update outdoor temperature
 #
-#   Returns....: Temperature
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetOutdoorTemp()
+int TWs2300::UpdateOutdoorTemp()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x373, 2, data))
-		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+	{
+		FOutdoorTemp = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
 					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		return TRUE;
+    }
 	else
-		return -999.9;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetDewpoint
+#   Name       : TWs2300::UpdateDewpoint
 #
-#   Purpose....: Get dewpoint temperature
+#   Purpose....: Update dewpoint temperature
 #
-#   Returns....: Temperature
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetDewpoint()
+int TWs2300::UpdateDewpoint()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x3CE, 2, data))
-		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+	{
+		FDewPoint = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
 					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		return TRUE;
+	}
 	else
-		return -999.9;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetIndoorHumidity
+#   Name       : TWs2300::UpdateIndoorHumidity
 #
-#   Purpose....: Get indoor humidity
+#   Purpose....: Update indoor humidity
 #
-#   Returns....: Humidity
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetIndoorHumidity()
+int TWs2300::UpdateIndoorHumidity()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x3FB, 1, data))
-		return ((data[0] >> 4) * 10 + (data[0] & 0xF));
+	{
+		FIndoorHumidity = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+		return TRUE;
+	}
 	else
-		return -999;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetOutdoorHumidity
+#   Name       : TWs2300::UpdateOutdoorHumidity
 #
-#   Purpose....: Get outdoor humidity
+#   Purpose....: Update outdoor humidity
 #
-#   Returns....: Humidity
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetOutdoorHumidity()
+int TWs2300::UpdateOutdoorHumidity()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x419, 1, data))
-		return ((data[0] >> 4) * 10 + (data[0] & 0xF));
+	{
+		FOutdoorHumidity = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+		return TRUE;
+    }
 	else
-		return -999;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetWind
+#   Name       : TWs2300::UpdateWind
 #
-#   Purpose....: Get wind speed & direction
+#   Purpose....: Update wind speed & direction
 #
-#   Returns....: Wind speed
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetWind(long double *winddir)
+int TWs2300::UpdateWind()
 {
 	unsigned char data[20];
 	int i;
+	int ok;
 
 	for ( i = 0; i < MAXWINDRETRIES; i++)
 	{
-		if (SafeRead(0x527, 3, data))
+		ok = SafeRead(0x527, 3, data);
+
+		if (ok)
 		{
-			 if ((data[0] != 0) || ((data[1] == -1) && (((data[2] & 0xF) == 0)  || ((data[2] & 0xF) == 1))))
-					 RdosWaitMilli(10000);
-				else
-					 break;
-		  }
+			if ((data[0] != 0) || ((data[1] == -1) && (((data[2] & 0xF) == 0)  || ((data[2] & 0xF) == 1))))
+			{
+			    ok = FALSE;
+				RdosWaitMilli(10000);
+			}
+			else
+				break;
+		}
 	}
 
-	*winddir = (data[2]>>4)*22.5;
-
-	return (((data[2]&0xF)<<8)+(data[1])) / 10.0;
+    if (ok)
+    {
+        FWindDir = (data[2]>>4)*22.5;
+	    FWindSpeed = (((data[2]&0xF)<<8)+(data[1])) / 10.0;
+	}
+	
+	return ok;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetWindchill
+#   Name       : TWs2300::UpdateWindChill
 #
-#   Purpose....: Get wind-chill temperature
+#   Purpose....: Update wind-chill temperature
 #
-#   Returns....: Temperature
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetWindchill()
+int TWs2300::UpdateWindChill()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x3A0, 2, data))
-		return ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+	{
+		FWindChill = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
 					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		return TRUE;
+	}
 	else
-		return -999.9;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetRain1h
+#   Name       : TWs2300::UpdateRain1h
 #
-#   Purpose....: Get last 1h rain
+#   Purpose....: Update 1h rain
 #
-#   Returns....: Rain amount
+#   Returns....: Sucess
 #
 ##########################################################################*/
-long double TWs2300::GetRain1h()
+int TWs2300::UpdateRain1h()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x4B4, 3, data))
-		return ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+	{
+		FRain1h = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
+		return TRUE;
+	}
 	else
-		return -999.99;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetRain24h
+#   Name       : TWs2300::UpdateRain24h
 #
-#   Purpose....: Get last 24h rain
+#   Purpose....: Update 24h rain
 #
-#   Returns....: Rain amount
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetRain24h()
+int TWs2300::UpdateRain24h()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x497, 3, data))
-		return ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+	{
+		FRain24 = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
+		return TRUE;
+    }
 	else
-		return -999.99;
+		return FALSE;
 }
 
 /*##########################################################################
 #
-#   Name       : TWs2300::GetAirPressure
+#   Name       : TWs2300::UpdateAirPressure
 #
-#   Purpose....: Get air pressure
+#   Purpose....: Update air pressure
 #
-#   Returns....: Air pressure
+#   Returns....: Success
 #
 ##########################################################################*/
-long double TWs2300::GetAirPressure()
+int TWs2300::UpdateAirPressure()
 {
 	unsigned char data[20];
 
 	if (SafeRead(0x5D8, 3, data))
-		return (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
+	{
+		FAirPressure = (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
 					 (data[1] & 0xF) * 10 + (data[0] >> 4) +
 					 (data[0] & 0xF) / 10.0));
+		return TRUE;
+	}
 	else
-		return -999.99;
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::Execute
+#
+#   Purpose....: Execute messurements
+#
+##########################################################################*/
+void TWs2300::Execute()
+{
+    int HasIndoorTemp = FALSE;
+    int HasOutdoorTemp = FALSE;
+    int HasDewPoint = FALSE;
+    int HasIndoorHumidity = FALSE;
+    int HasOutdoorHumidity = FALSE;
+    int HasWindChill = FALSE;
+    int HasRain1h = FALSE;
+    int HasRain24h = FALSE;
+    int HasWind = FALSE;
+    int HasPressure = FALSE;
+    int ok;
+    TDateTime datetime;
+    int lastsec = datetime.GetSec();
+    int sec;
+
+    while (FInstalled)
+    {
+        if (!HasIndoorTemp)
+            HasIndoorTemp = GetIndoorTemp();
+
+        if (!HasOutdoorTemp)
+            HasOutdoorTemp = GetOutdoorTemp();
+
+        if (!HasDewPoint)
+            HasDewPoint = GetDewPoint();
+
+        if (!HasIndoorHumidity)
+            HasIndoorHumidity = GetIndoorHumidity();
+
+        if (!HasOutdoorHumidity)
+            HasOutdoorHumidity = GetOutdoorHumidity();
+
+        if (!HasWind)
+            HasWind = GetWind();
+
+        if (!HasWindChill)
+            HasWindChill = GetWindChill();
+
+        if (!HasRain1h)
+            HasRain1h = GetRain1h();
+
+        if (!HasRain24h)
+            HasRain24h = GetRain24h();
+
+        if (!HasPressure)
+            HasPressure = GetPressure();
+
+        datetime = TDateTime::TDateTime();
+        sec = datetime.GetSec();
+
+        if (sec < lastsec)
+            lastsec -= 60;
+
+        if (sec - lastsec >= 60)
+        {
+            HasIndoorTemp = FALSE;
+            HasOutdoorTemp = FALSE;
+            HasDewPoint = FALSE;
+            HasIndoorHumidity = FALSE;
+            HasOutdoorHumidity = FALSE;
+            HasWindChill = FALSE;
+            HasWind = FALSE;
+            HasRain1h = FALSE;
+            HasRain24h = FALSE;
+            HasPressure = FALSE;
+    
+            lastsec = sec;
+        }
+
+        ok =    HasIndoorTemp &&
+                HasOutdoorTemp &&
+                HasDewPoint &&
+                HasIndoorHumidity &&
+                HasOutdoorHumidity &&
+                HasWind &&
+                HasWindChill &&
+                HasRain1h &&
+                HasRain24h &&
+                HasPressure;
+
+        if (ok)
+        {
+            WaitMilli(15000);
+            HasWind = FALSE;
+        }
+    }
 }
