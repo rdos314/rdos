@@ -38,6 +38,7 @@ public:
     ~TQuizIII();
 
     virtual void ExportExcelCase(const char *filename, int PcaType);
+    virtual void ExportExcelGroups(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
 
 private:

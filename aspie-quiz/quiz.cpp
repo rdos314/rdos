@@ -529,7 +529,8 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
         {
             if (!CurrQuiz->Quiz[CurrQuestion].Used)
             {
-                corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+                        CurrQuiz->Quiz[CurrQuestion].Pca[1];
                 if (corr < 0)
                     corr = -corr;
 
@@ -560,7 +561,8 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
                 {
                     if (!CurrQuiz->Quiz[CurrQuestion].Used)
                     {
-                        corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                        corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+                                CurrQuiz->Quiz[CurrQuestion].Pca[1];
                         if (corr < 0)
                             corr = -corr;
 
@@ -616,7 +618,8 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
             {
                 if (!CurrQuiz->Quiz[CurrQuestion].Used)
                 {
-                    corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                    corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+                            CurrQuiz->Quiz[CurrQuestion].Pca[1];
                     if (corr < 0)
                         corr = -corr;
 
@@ -650,7 +653,8 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
                     {
                         if (!CurrQuiz->Quiz[CurrQuestion].Used)
                         {
-                            corr = CurrQuiz->Quiz[CurrQuestion].Corr;
+                            corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+                                    CurrQuiz->Quiz[CurrQuestion].Pca[1];
                             if (corr < 0)
                                 corr = -corr;
 
@@ -698,21 +702,22 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
     {
         if (!CurrQuiz->Quiz[MyQuestion].Used)
         {
-            corr = CurrQuiz->Quiz[MyQuestion].Corr;
-            if (corr < 0)
-                corr = -corr;
+			corr =  CurrQuiz->Quiz[MyQuestion].Pca[0] -
+					CurrQuiz->Quiz[MyQuestion].Pca[1];
+			if (corr < 0)
+				corr = -corr;
 
-            if (corr >= maxcorr)
-            {
-                *Question = MyQuestion;
-                MaxQuiz = CurrQuiz;
-                maxcorr = corr;
-            }
-        }
+			if (corr >= maxcorr)
+			{
+				*Question = MyQuestion;
+				MaxQuiz = CurrQuiz;
+				maxcorr = corr;
+			}
+		}
 
-        i = CurrQuiz->Quiz[MyQuestion].CrossInd;
-        CurrQuiz = CurrQuiz->Quiz[MyQuestion].CrossQuiz;
-        MyQuestion = i;
+		i = CurrQuiz->Quiz[MyQuestion].CrossInd;
+		CurrQuiz = CurrQuiz->Quiz[MyQuestion].CrossQuiz;
+		MyQuestion = i;
     }
 
     if (MaxQuiz)
@@ -2568,6 +2573,7 @@ void TQuiz::WriteWeighting(const char *filename)
     long double assum;
     long double ntsum;
     long double mas0, mas1, fas0, fas1;
+    long double oas0, oas1, yas0, yas1;
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
 
@@ -2678,6 +2684,71 @@ void TQuiz::WriteWeighting(const char *filename)
 	file.Write("};\r\n\r\n");
 
     file.Write("    static int Ntg[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Ntg[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
+    for (i = 0; i < 100; i++)
+    {
+        assum = Quiz[i].OldPca[0] - Quiz[i].YoungPca[0];
+        ntsum = Quiz[i].OldPca[1] - Quiz[i].YoungPca[1];
+        count = 1;
+
+        j = Quiz[i].CrossInd;
+        CurrQuiz = Quiz[i].CrossQuiz;
+        j = i;
+
+        while (CurrQuiz)
+        {
+            oas0 = CurrQuiz->Quiz[j].OldPca[0];
+            yas0 = CurrQuiz->Quiz[j].YoungPca[0];
+            oas1 = CurrQuiz->Quiz[j].OldPca[1];
+            yas1 = CurrQuiz->Quiz[j].YoungPca[1];
+
+            if (oas0 != 0 || oas0 != 0 || yas1 != 0 || yas1 != 0)
+            {
+                assum += oas0 - yas0;
+                ntsum += oas1 - yas1;
+                count++;
+            }
+
+            k = CurrQuiz->Quiz[j].CrossInd;
+            CurrQuiz = CurrQuiz->Quiz[j].CrossQuiz;
+            j = k;
+        }
+
+        Asg[i] = assum / (long double)count / 2.0;
+        Ntg[i] = ntsum / (long double)count / 2.0;        
+    }
+
+    file.Write("    static int Asa[100] = {");
+    
+	for (i = 0; i < 100; i++)
+	{
+        if ((i % 10) == 0)
+    	    file.Write("\r\n          ");
+    	        
+		ival = round(100.0 * Asg[i]);
+		sprintf(str, "%5d", ival);
+		file.Write(str);
+
+	    if (i != 99)
+    	    file.Write(",");		
+	}
+	file.Write("};\r\n\r\n");
+
+    file.Write("    static int Nta[100] = {");
     
 	for (i = 0; i < 100; i++)
 	{

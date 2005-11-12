@@ -701,6 +701,7 @@ void TQuizIII::SetupControlGroups()
 	DefineNt("whoa.nu");
 	DefineNt("gentlechristianmothers.com");
 	DefineNt("katter.nu");
+	DefineNt("rdos.net/sv");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -939,6 +940,96 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
+/*##################  TQuizIII::ExportExcelGroups ##########################
+*   Purpose....: Export group cases in excel format             	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizIII::ExportExcelGroups(const char *filename)
+{
+	TQuizRow Row;
+    int i;
+    int ival;
+    int group;
+    int ok;
+    char str[80];
+	TFile file(filename, 0);
+	int GroupSum[GROUP_COUNT];
+	int GroupCount[GROUP_COUNT];
+
+    file.Write("\"\", ");
+    file.Write("\"\", ");
+
+	for (i = 0; i < GROUP_COUNT; i++)
+    {
+        file.Write("\"");
+
+        strncpy(str, Group[i].Name, 35);
+        str[35] = 0;
+//        sprintf(str, "#%d", i + 1);
+        file.Write(str);
+        
+        file.Write("\"");
+        if (i != GROUP_COUNT - 1)
+            file.Write(", ");
+    }
+    file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    for (i = 0; i < GROUP_COUNT; i++)
+	    {
+	        GroupSum[i] = 0;
+	        GroupCount[i] = 0;
+	    }
+	    
+    	for (i = 0; i < MAX_QUESTIONS; i++)
+	    {
+		    ival = Row.Quiz[i];
+		    if (ival > 2)
+			    ival = 0;
+
+		    if (ival)
+		    {
+				if (Quiz[i].Reverse)
+					ival = 3 - ival;
+				else
+					ival--;
+				group = Quiz[i].MyGroup;
+				GroupSum[group] += ival;
+				GroupCount[group]++;
+		    }
+		}
+
+        ok = TRUE;
+		for (i = 0; i < GROUP_COUNT; i++)
+            if (GroupCount[i] == 0)
+                ok = FALSE;	
+
+        if (ok)
+        {	
+	   		sprintf(str, "\%d\", ", Row.AsResult);
+	        file.Write(str);
+
+            sprintf(str, "\"%d\", ", Row.Diagnos);
+	        file.Write(str);
+
+            for (i = 0; i < GROUP_COUNT; i++)
+            {
+                ival = round(100.0 * (long double)GroupSum[i] / (long double)GroupCount[i]);
+    		    sprintf(str, "\"%d\"", ival);
+                file.Write(str);
+                if (i != GROUP_COUNT - 1)
+                    file.Write(", ");
+            }
+	    	file.Write("\n");
+	    }
+	}
+}
+
 /*##################  TQuizIII::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
@@ -995,8 +1086,7 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 
 			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 			{
-				if (PcaType != PCA_TYPE_FEMALE && PcaType != PCA_TYPE_YOUNG
-				   && PcaType != PCA_TYPE_AS)
+				if (PcaType != PCA_TYPE_AS  && PcaType != PCA_TYPE_OLD)
 					d2 = -d2;
 
 				if (d1 > 0 && d2 > 0)

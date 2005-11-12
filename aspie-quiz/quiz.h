@@ -48,6 +48,7 @@
 #define PCA_TYPE_YOUNG          3
 #define PCA_TYPE_OLD            4
 #define PCA_TYPE_AS             5
+#define PCA_TYPE_GROUP          6
 
 #define GROUP_COUNT             11
 
