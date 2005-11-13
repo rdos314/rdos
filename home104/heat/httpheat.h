@@ -34,19 +34,28 @@
 
 class TRad;
 
-class THttpHeatPage : public THttpCustomPage
+class THttpTablePage : public THttpCustomPage
+{
+public:
+	THttpTablePage(THttpCommand *Cmd, const char *FileName);
+	virtual ~THttpTablePage();
+
+protected:
+    void WriteCenteredFieldHeader(TFile &File, int RelWidth);
+    void WriteRightFieldHeader(TFile &File, int RelWidth);
+    void WriteLeftFieldHeader(TFile &File, int RelWidth);
+    void WriteFieldFooter(TFile &File);
+
+};
+
+class THttpHeatPage : public THttpTablePage
 {
 public:
 	THttpHeatPage(THttpCommand *Cmd, const char *FileName);
 	virtual ~THttpHeatPage();
 
 protected:
-    void WriteCenteredFieldHeader(TFile &File, int RelWidth);
-    void WriteRightFieldHeader(TFile &File, int RelWidth);
-    void WriteFieldFooter(TFile &File);
-    
 	virtual void Get(const char *Name);
-
 };
 
 class THttpHeatPageFactory : public THttpCustomPageFactory
@@ -60,9 +69,35 @@ public:
 protected:
 };
 
+class THttpWs2300Page : public THttpTablePage
+{
+public:
+	THttpWs2300Page(THttpCommand *Cmd, const char *FileName);
+	virtual ~THttpWs2300Page();
+
+protected:
+	virtual void Get(const char *Name);
+
+};
+
+class THttpWs2300PageFactory : public THttpCustomPageFactory
+{
+public:
+	THttpWs2300PageFactory(const char *ReqName);
+	virtual ~THttpWs2300PageFactory();
+
+	virtual THttpCustomPage *Create(THttpCommand *cmd);
+
+protected:
+};
+
 void AddHttpRad(TRad *Rad);
 void AddHttpWs2300(TWs2300 *ws);
 void InitHeatHttp();
 void HttpUpdate();
+void HttpSetVpOn();
+void HttpSetVpOff();
+void HttpSetLightOn();
+void HttpSetLightOff();
 
 #endif

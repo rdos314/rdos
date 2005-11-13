@@ -216,7 +216,7 @@ long double TWs2300::GetDewPoint()
 ##########################################################################*/
 long double TWs2300::GetIndoorHumidity()
 {
-    return FIndoorHumidity;
+	 return FIndoorHumidity;
 }
 
 /*##########################################################################
@@ -824,7 +824,7 @@ int TWs2300::UpdateRain24h()
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
 		return TRUE;
-    }
+	 }
 	else
 		return FALSE;
 }
@@ -847,6 +847,29 @@ int TWs2300::UpdateAirPressure()
 		FAirPressure = (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
 					 (data[1] & 0xF) * 10 + (data[0] >> 4) +
 					 (data[0] & 0xF) / 10.0));
+		return TRUE;
+	}
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::UpdateForecast
+#
+#   Purpose....: Update forecast
+#
+#   Returns....: Success
+#
+##########################################################################*/
+int TWs2300::UpdateForecast()
+{
+	unsigned char data[20];
+
+	if (SafeRead(0x26B, 1, data))
+	{
+		FTendency = (data[0] >> 4) & 3;
+		FForecast = data[0] & 3;
 		return TRUE;
 	}
 	else

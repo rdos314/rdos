@@ -133,6 +133,16 @@ void cdecl main()
 						RdosToggleSerialLine(1, 5);
 		  }
 
+        if (diostat & 0x20)
+            HttpSetVpOn();
+        else
+            HttpSetVpOff();
+
+        if (diostat & 1)
+            HttpSetLightOn();
+        else
+            HttpSetLightOff();            
+
 		RdosSetCursorPosition(10,0);
 		val = Ws->GetIndoorTemp();
 		printf("%5.1Lf", val);
