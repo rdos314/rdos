@@ -99,7 +99,6 @@ enable_focus_nr				= 87
 get_dns_nr					= 88
 get_ppp_dns_nr				= 89
 open_tcp_connection_nr		= 90
-listen_tcp_port_nr			= 91
 wait_for_tcp_connection_nr	= 92
 close_tcp_connection_nr		= 93
 delete_tcp_connection_nr	= 94
@@ -360,5 +359,10 @@ allocate_fixed_drive_nr		= 307
 allocate_dynamic_drive_nr	= 308
 
 get_focus_nr                = 309
+
+add_wait_for_tcp_listen_nr  = 310
+create_tcp_listen_nr        = 311
+get_tcp_listen_nr           = 312
+close_tcp_listen_nr         = 313
 
 usergate_entries			= 340

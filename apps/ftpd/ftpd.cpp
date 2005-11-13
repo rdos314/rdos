@@ -37,10 +37,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-// this one must be globally defined!
-
-TFtpSocketServerFactory Factory;
-
 /*##################  WriteCommand ##########################
 *   Purpose....: Write command echo	   					      	        #
 *   In params..: *                                                          #
@@ -62,6 +58,7 @@ void WriteCommand(TFtpSocketServer *server, const char *str)
 *##########################################################################*/
 void cdecl main()
 {
+	TFtpSocketServerFactory Factory(21, 50, 0x4000);
 	Factory.AddUser("c-drive", "rdos", "c:\\");
 	Factory.AddUser("d-drive", "rdos", "d:\\");
 	Factory.AddUser("e-drive", "rdos", "e:\\");
@@ -76,6 +73,8 @@ void cdecl main()
 	Factory.AddUser("n-drive", "rdos", "n:\\");
 	Factory.AddUser("z-drive", "rdos", "z:\\");
 	Factory.OnCommand = WriteCommand;
-	TSocket::Listen(&Factory, 21, 0x4000);
+
+	for (;;)
+		Factory.WaitForever();
 }
 

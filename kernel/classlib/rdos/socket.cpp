@@ -32,242 +32,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-class TThreadListen
-{
-public:
-	TSocketServerFactory *Factory;
-    int Port;
-    int BufferSize;
-};
-
-TSection TSocketServer::FSection;
-TSocketServer *TSocketServer::FList = 0;
-
-static TSection ConnectionSection;
-
-/*##########################################################################
-#
-#   Name       : TSocketServer::TSocketServer
-#
-#   Purpose....: Constructor for socket server
-#
-#   In params..: ThreadName     Name of server thread
-#				 Socket         Socket to handle
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer::TSocketServer()
-{
-    FSocket = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketServer::~TSocketServer
-#
-#   Purpose....: Destructor for socket server
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TSocketServer::~TSocketServer()
-{
-    if (FSocket)
-        delete FSocket;
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketServer::ThreadStartup
-#
-#   Purpose....: Startup of socket server
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocketServer::ThreadStartup(int Handle)
-{
-	FSocket = new TSocket(Handle);
-
-    Cleanup();
-	Insert();
-
-	HandleSocket();
-
-	FSocket->Push();
-	FSocket->Close();
-    delete FSocket;
-    FSocket = 0;	
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketServer::Clearup
-#
-#   Purpose....: Cleanup terminated socket servers
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocketServer::Cleanup()
-{
-	TSocketServer *ptr;
-	TSocketServer *prev;
-	TSocketServer *temp;
-
-	prev = 0;
-	FSection.Enter();
-	ptr = FList;
-	while (ptr)
-	{
-		if (ptr->FSocket == 0)
-		{
-			temp = ptr->FNext;
-			delete ptr;
-			if (prev == 0)
-				FList = temp;
-			else
-				prev->FNext = temp;
-			ptr = temp;
-		}
-		else
-		{
-			prev = ptr;
-			ptr = ptr->FNext;
-		}
-	}
-	FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TSocketServer::Insert
-#
-#   Purpose....: Insert into socket server list
-#				 Should only done in constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocketServer::Insert()
-{
-	FSection.Enter();
-	FNext = FList;
-	FList = this;
-	FSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : ConnectionThread
-#
-#   Purpose....: Connection thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void ConnectionThread(void *Data)
-{
-	TSocketServerFactory *Factory = (TSocketServerFactory *)Data;
-	int Handle = Factory->Handle;
-	
-    ConnectionSection.Leave();
-	TSocketServer *Server = Factory->Create();
-    Server->ThreadStartup(Handle);
-}
-
-/*##########################################################################
-#
-#   Name       : NewConnection
-#
-#   Purpose....: New connection callback
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void __stdcall NewConnection(int Handle, void *Data)
-{
-	TSocketServerFactory *Factory = (TSocketServerFactory *)Data;
-	
-    ConnectionSection.Enter();
-    Factory->Handle = Handle;    	
-	RdosCreateThread(ConnectionThread, Factory->GetThreadName(), Data, Factory->GetStackSize());
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Listen
-#
-#   Purpose....: Listen for connections on a specified port
-#
-#   In params..: Port       local port to listen on
-#				 BufferSize	socket buffer size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Listen(TSocketServerFactory *Factory, int Port, int BufferSize)
-{
-	for (;;)
-		RdosListenTcpPort(Port, BufferSize, NewConnection, Factory);
-}
-
-/*##########################################################################
-#
-#   Name       : ListenThread
-#
-#   Purpose....: Listen thread
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-static void ThreadListen(void *Data)
-{
-	 TThreadListen *listen = (TThreadListen *)Data;
-
-	for (;;)
-		RdosListenTcpPort(listen->Port, listen->BufferSize, NewConnection, listen->Factory);
-}
-
-/*##########################################################################
-#
-#   Name       : TSocket::Listen
-#
-#   Purpose....: Listen for connections in a new thread
-#
-#   In params..: ThreadName Name of listen thread
-#                Port       local port to listen on
-#				 BufferSize	socket buffer size
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TSocket::Listen(const char *ThreadName, TSocketServerFactory *Factory, int Port, int BufferSize)
-{
-    TThreadListen *listen = new TThreadListen;
-
-    listen->Factory = Factory;
-    listen->Port = Port;
-    listen->BufferSize = BufferSize;
-
-	RdosCreateThread(ThreadListen, ThreadName, listen, 0x2000);
-}
-
 /*##########################################################################
 #
 #   Name       : TSocket::TSocket
@@ -582,8 +346,6 @@ char TSocket::Read()
 ##########################################################################*/
 int TSocket::Read(char *buf, int size)
 {
-    char ch = 0;
-
     if (FHandle)
         return RdosReadTcpConnection(FHandle, buf, size);
     else
@@ -604,3 +366,196 @@ int TSocket::Read(char *buf, int size)
 void TSocket::SignalNewData()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::TSocketServer
+#
+#   Purpose....: Constructor for socket server
+#
+#   In params..: ThreadName     Name of server thread
+#				 Socket         Socket to handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer::TSocketServer(const char *Name, int StackSize, TSocket *Socket)
+{
+    FSocket = Socket;
+    FNext = 0;
+
+    Start(Name, StackSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::~TSocketServer
+#
+#   Purpose....: Destructor for socket server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServer::~TSocketServer()
+{
+    if (FSocket)
+        delete FSocket;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServer::Execute
+#
+#   Purpose....: Execute socket server
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServer::Execute()
+{
+    RdosWaitMilli(50);
+    
+	if (FSocket->WaitForConnection(6000))
+	{
+    	HandleSocket();
+    	FSocket->Push();
+    }
+    
+	FSocket->Close();
+    delete FSocket;
+    FSocket = 0;	
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::TSocketServerFactory
+#
+#   Purpose....: Constructor for socket server factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServerFactory::TSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+{
+    FList = 0;
+	FListenHandle = RdosCreateTcpListen(Port, MaxConnections, BufferSize);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::~TSocketServerFactory
+#
+#   Purpose....: Destructor for socket server factory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TSocketServerFactory::~TSocketServerFactory()
+{
+	 RdosCloseTcpListen(FListenHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::Clearup
+#
+#   Purpose....: Cleanup terminated socket servers
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServerFactory::Cleanup()
+{
+	TSocketServer *ptr;
+	TSocketServer *prev;
+	TSocketServer *temp;
+
+	prev = 0;
+	ptr = FList;
+	while (ptr)
+	{
+		if (ptr->FSocket == 0)
+		{
+			temp = ptr->FNext;
+			delete ptr;
+			if (prev == 0)
+				FList = temp;
+			else
+				prev->FNext = temp;
+			ptr = temp;
+		}
+		else
+		{
+			prev = ptr;
+			ptr = ptr->FNext;
+		}
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::Insert
+#
+#   Purpose....: Insert into socket server list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServerFactory::Insert(TSocketServer *server)
+{
+	server->FNext = FList;
+	FList = server;
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::Add
+#
+#   Purpose....: Add this object to wait list
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServerFactory::Add(TWait *Wait)
+{
+	RdosAddWaitForTcpListen(Wait->GetHandle(), FListenHandle, this);
+}
+
+/*##########################################################################
+#
+#   Name       : TSocketServerFactory::SignalNewData
+#
+#   Purpose....: Signal new data if available
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSocketServerFactory::SignalNewData()
+{
+	int handle;
+	TSocket *socket;
+
+    Cleanup();
+	handle = RdosGetTcpListen(FListenHandle);
+	if (handle)
+	{
+	    socket = new TSocket(handle);
+		Insert(Create(socket));
+	}
+}
+

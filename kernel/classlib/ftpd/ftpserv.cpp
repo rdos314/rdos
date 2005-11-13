@@ -247,7 +247,8 @@ int TFtpSocketServer::MatchToken(char **Xp, const char *word, int len)
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList)
+TFtpSocketServer::TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TSocket *Socket)
+  : TSocketServer(Name, StackSize, Socket)
 {
 	FUserList = UserList;
 	CurrDir = "/";
@@ -270,22 +271,6 @@ TFtpSocketServer::~TFtpSocketServer()
 {
     if (FDataSocket)
         delete FDataSocket;
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServer::DeviceName
-#
-#   Purpose....: Device name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFtpSocketServer::DeviceName(char *Name, int MaxLen) const
-{
-	strncpy(Name,"FTP",MaxLen);
 }
 
 /*##########################################################################
@@ -608,36 +593,32 @@ void TFtpSocketServer::HandleSocket()
 	int count;
 	char Buf[513];
 
-	if (FSocket->WaitForConnection(6000))
+	RdosGetVersion(&Major, &Minor, &Release);
+	msg.printf(220, Major, Minor, Release);
+	msg.Write(FSocket);
+
+	while (FSocket->IsOpen())
 	{
+		count = FSocket->Read(Buf, 512);
+		Buf[count] = 0;
 
-		RdosGetVersion(&Major, &Minor, &Release);
-		msg.printf(220, Major, Minor, Release);
-		msg.Write(FSocket);
+		if (count == 0)
+			break;
 
-		while (FSocket->IsOpen())
+        if (OnCommand)
+            (*OnCommand)(this, Buf);
+
+	    cmd = TFtpCommandFactory::Parse(this, Buf);
+
+		if (cmd)
 		{
-			count = FSocket->Read(Buf, 512);
-			Buf[count] = 0;
-
-			if (count == 0)
-				break;
-
-            if (OnCommand)
-                (*OnCommand)(this, Buf);
-
-			cmd = TFtpCommandFactory::Parse(this, Buf);
-
-			if (cmd)
-			{
-				cmd->Run();
-				delete cmd;
-			}
-			else
-			{
-				msg.Load(502);
-				msg.Write(FSocket);
-			}
+			cmd->Run();
+			delete cmd;
+		}
+		else
+		{
+			msg.Load(502);
+			msg.Write(FSocket);
 		}
 	}
 }

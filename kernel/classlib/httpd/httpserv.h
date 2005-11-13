@@ -54,10 +54,9 @@ enum InternalErrorCodes
 class THttpSocketServer : public TSocketServer
 {
 public:
-	THttpSocketServer();
+	THttpSocketServer(const char *Name, int StackSize, TSocket *Socket);
 	~THttpSocketServer();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual void HandleSocket();
 
     void Write(char ch);

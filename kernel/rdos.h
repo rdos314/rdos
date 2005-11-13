@@ -208,8 +208,12 @@ long __stdcall RdosGetIp();
 int __stdcall RdosNameToIp(const char *HostName);
 int __stdcall RdosIpToName(int Ip, char *HostName, int MaxSize);
 
+int __stdcall RdosCreateTcpListen(int Port, int MaxConnections, int BufferSize);
+int __stdcall RdosGetTcpListen(int Handle);
+void __stdcall RdosCloseTcpListen(int Handle);
+void __stdcall RdosAddWaitForTcpListen(int Handle, int ConHandle, void *ID);
+
 int __stdcall RdosOpenTcpConnection(int RemoteIp, int LocalPort, int RemotePort, int Timeout, int BufferSize);
-void __stdcall RdosListenTcpPort(int Port, int BufferSize, void __stdcall (*Callb)(int Handle, void *Data), void *Data);
 int __stdcall RdosWaitForTcpConnection(int Handle, long Timeout);
 void __stdcall RdosAddWaitForTcpConnection(int Handle, int ConHandle, void *ID);
 void __stdcall RdosCloseTcpConnection(int Handle);

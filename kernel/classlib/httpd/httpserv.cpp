@@ -248,7 +248,8 @@ int THttpSocketServer::MatchToken(char **Xp, const char *word, int len)
 #   Returns....: *
 #
 ##########################################################################*/
-THttpSocketServer::THttpSocketServer()
+THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TSocket *Socket)
+  : TSocketServer(Name, StackSize, Socket)
 {
 	OnCommand = 0;
 	FSocketBuf = 0;
@@ -270,22 +271,6 @@ THttpSocketServer::~THttpSocketServer()
 {
 	if (FSocketBuf)
 		delete FSocketBuf;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServer::DeviceName
-#
-#   Purpose....: Device name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpSocketServer::DeviceName(char *Name, int MaxLen) const
-{
-	strncpy(Name,"HTTP",MaxLen);
 }
 
 /*##########################################################################
@@ -461,8 +446,6 @@ int THttpSocketServer::IsEmpty()
 ##########################################################################*/
 int THttpSocketServer::Read(char *buf, int size)
 {
-	char *ptr;
-	char *result;
 	int pos;
 	int count;
 
@@ -617,7 +600,6 @@ THttpCommand *THttpSocketServer::Parse(const char *line)
 	char *ptr;
 	int done;
 	TString Line;
-	THttpCommand *cmd;
 	TString Method;
 
 	Line = TString(LTrim(line));
@@ -684,7 +666,6 @@ THttpCommand *THttpSocketServer::Parse(const char *line)
 ##########################################################################*/
 void THttpSocketServer::HandleSocket()
 {
-	int count;
 	THttpCommand *cmd;
 	char *ptr;
 

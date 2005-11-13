@@ -413,6 +413,13 @@ AddWaitForTcpConnection       MACRO
 	UserGate add_wait_for_tcp_connection_nr
 						ENDM
 
+; IN  AX        Tcp listen handle
+; IN  BX		Wait handle
+; IN  ECX       Object ID
+AddWaitForTcpListen       MACRO
+	UserGate add_wait_for_tcp_listen_nr
+						ENDM
+
 ; IN  AX        ADC handle
 ; IN  BX		Wait handle
 ; IN  ECX       Object ID
@@ -930,6 +937,25 @@ GetPppDns	MACRO
 	UserGate get_ppp_dns_nr
 				ENDM
 
+; IN  AX            max connections
+; IN  ECX			buffer size
+; IN  SI			local port
+; OUT BX            listen handle
+CreateTcpListen	MACRO
+	UserGate create_tcp_listen_nr
+			ENDM
+
+; IN  BX            listen handle
+; OUT AX            connection handle
+GetTcpListen	MACRO
+	UserGate get_tcp_listen_nr
+			ENDM
+
+; IN  BX		listen handle
+CloseTcpListen	MACRO
+	UserGate close_tcp_listen_nr
+			ENDM
+
 ; IN  EAX		Timeout in milliseconds for connection
 ; IN  ECX		buffer size
 ; IN  EDX		ip address
@@ -938,13 +964,6 @@ GetPppDns	MACRO
 ; OUT BX		connection handle
 OpenTcpConnection	MACRO
 	UserGate open_tcp_connection_nr
-			ENDM
-
-; IN  ECX			buffer size
-; IN  SI			local port
-; IN  ES:(E)DI	callback upon new connection
-ListenTcpPort	MACRO
-	UserGate listen_tcp_port_nr
 			ENDM
 
 ; IN  BX		connection handle

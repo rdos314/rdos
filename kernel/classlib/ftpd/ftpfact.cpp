@@ -250,7 +250,8 @@ TFtpCommand *TFtpCommandFactory::Parse(TFtpSocketServer *Server, const char *lin
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServerFactory::TFtpSocketServerFactory()
+TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 	Init();
 }
@@ -266,11 +267,44 @@ TFtpSocketServerFactory::TFtpSocketServerFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language)
+TFtpSocketServerFactory::TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize)
 {
 	TFtpLangString::SetLanguage(Language);
 	Init();
 }
+
+/*##########################################################################
+#
+#   Name       : TFtpSocketServerFactory::~TFtpSocketServerFactory
+#
+#   Purpose....: Socket server factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFtpSocketServerFactory::~TFtpSocketServerFactory()
+{
+    delete user;
+    delete pass;
+    delete pwd;
+    delete syst;
+    delete pasv;
+    delete port;
+    delete list;
+    delete cwd;
+    delete cdup;
+    delete type;
+    delete retr;
+    delete stor;
+    delete mdtm;
+    delete dele;
+    delete mkd;
+    delete rmd;
+    delete quit;
+}        
 
 /*##########################################################################
 #
@@ -285,57 +319,25 @@ TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language)
 ##########################################################################*/
 void TFtpSocketServerFactory::Init()
 {
-	TFtpUserFactory *user = new TFtpUserFactory;
-	TFtpPassFactory *pass = new TFtpPassFactory;
-	TFtpPwdFactory *pwd = new TFtpPwdFactory;
-	TFtpSystFactory *syst = new TFtpSystFactory;
-	TFtpPasvFactory *pasv = new TFtpPasvFactory;
-	TFtpPortFactory *port = new TFtpPortFactory;
-	TFtpListFactory *list = new TFtpListFactory;
-	TFtpCwdFactory *cwd = new TFtpCwdFactory;
-	TFtpCdupFactory *cdup = new TFtpCdupFactory;
-	TFtpTypeFactory *type = new TFtpTypeFactory;
-	TFtpRetrFactory *retr = new TFtpRetrFactory;
-	TFtpStorFactory *stor = new TFtpStorFactory;
-	TFtpMdtmFactory *mdtm = new TFtpMdtmFactory;
-	TFtpDeleFactory *dele = new TFtpDeleFactory;
-	TFtpMkdFactory *mkd = new TFtpMkdFactory;
-	TFtpRmdFactory *rmd = new TFtpRmdFactory;
-	TFtpQuitFactory *quit = new TFtpQuitFactory;
+	user = new TFtpUserFactory;
+	pass = new TFtpPassFactory;
+	pwd = new TFtpPwdFactory;
+	syst = new TFtpSystFactory;
+	pasv = new TFtpPasvFactory;
+	port = new TFtpPortFactory;
+	list = new TFtpListFactory;
+	cwd = new TFtpCwdFactory;
+	cdup = new TFtpCdupFactory;
+	type = new TFtpTypeFactory;
+	retr = new TFtpRetrFactory;
+    stor = new TFtpStorFactory;
+	mdtm = new TFtpMdtmFactory;
+	dele = new TFtpDeleFactory;
+	mkd = new TFtpMkdFactory;
+	rmd = new TFtpRmdFactory;
+	quit = new TFtpQuitFactory;
 
 	FList = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServerFactory::GetThreadName
-#
-#   Purpose....: Return thread name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *TFtpSocketServerFactory::GetThreadName()
-{
-	return "FTP";
-}
-
-/*##########################################################################
-#
-#   Name       : TFtpSocketServerFactory::GetStackSize
-#
-#   Purpose....: Return thread stack size
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFtpSocketServerFactory::GetStackSize()
-{
-	return 0x2000;
 }
 
 /*##########################################################################
@@ -349,10 +351,10 @@ int TFtpSocketServerFactory::GetStackSize()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *TFtpSocketServerFactory::Create()
+TSocketServer *TFtpSocketServerFactory::Create(TSocket *Socket)
 {
 	TFtpSocketServer *server;
-	server = new TFtpSocketServer(FList);
+	server = new TFtpSocketServer(FList, "FTP", 0x2000, Socket);
 	server->OnCommand = OnCommand;
 
 	return server;

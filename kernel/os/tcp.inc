@@ -85,7 +85,9 @@ tcp_listen_next			DW ?
 tcp_listen_port			DW ?
 tcp_listen_buffer_size	DD ?
 tcp_listen_list			DW ?
-tcp_listen_thread		DW ?
+tcp_listen_wait 		DW ?
+tcp_listen_max_conn     DW ?
+tcp_listen_conn_count   DW ?
 
 tcp_listen	ENDS
 

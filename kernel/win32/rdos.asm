@@ -5415,63 +5415,132 @@ RdosOpenTcpConnection	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosListenTcpPort
+;		NAME:			RdosCreateTcpListen
 ;
-;		DESCRIPTION:	Initialize listen on passive port
+;		DESCRIPTION:	Create listen handle
 ;
 ;		PARAMETER:		Port
+;                       Max connections
 ;						BufferSize
-;						Callback
-;                       Callback param
+;
+;       RETURNS:        Listen handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-lcbStruc    STRUC
+	public RdosCreateTcpListen
 
-lcbAds      DD ?
-lcbData     DD ?
-
-lcbStruc    ENDS
-
-ListenCallback	Proc
-    push [eax].lcbData
-	push ebx
-	push OFFSET lcDone
-	push [eax].lcbAds
-	ret
-lcDone:
-	ret
-ListenCallback	Endp
-
-	public RdosListenTcpPort
-
-RdosListenTcpPort	Proc
+RdosCreateTcpListen	Proc
 	push ebp
 	mov ebp,esp
+	push ebx
 	push esi
-	push edi
-;
-	mov eax,8
-	UserGate allocate_app_mem_nr
-	mov eax,[ebp+16]
-	mov [edx].lcbAds,eax
-	mov eax,[ebp+20]
-	mov [edx].lcbData,eax
 ;	
-	mov edi,OFFSET ListenCallback
 	mov si,[ebp+8]
-	mov ecx,[ebp+12]
-	mov eax,edx
-	UserGate listen_tcp_port_nr
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate create_tcp_listen_nr
+	movzx eax,bx
+	jnc ctlDone
 ;
-	mov edx,[ebp+8]
-	UserGate free_app_mem_nr
-;
-	pop edi
+    xor eax,eax
+
+ctlDone:
 	pop esi
+	pop ebx
 	pop ebp
-	ret 16
-RdosListenTcpPort	Endp
+	ret 12
+RdosCreateTcpListen	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetTcpListen
+;
+;		DESCRIPTION:	Get connection from listen
+;
+;		PARAMETER:		Listen handle
+;
+;       RETURNS:        Connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetTcpListen
+
+RdosGetTcpListen	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;	
+    mov bx,[ebp+8]
+	UserGate get_tcp_listen_nr
+	movzx eax,ax
+	jnc gtlDone
+;
+    xor eax,eax
+
+gtlDone:
+    pop ebx
+	pop ebp
+	ret 4
+RdosGetTcpListen	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseTcpListen
+;
+;		DESCRIPTION:	Close listen handle
+;
+;		PARAMETER:		Listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseTcpListen
+
+RdosCloseTcpListen	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;	
+    mov bx,[ebp+8]
+	UserGate close_tcp_listen_nr
+;	
+    pop ebx
+	pop ebp
+	ret 4
+RdosCloseTcpListen	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAddWaitForTcpListen
+;
+;		DESCRIPTION:	Add wait object to tcp listen
+;
+;		PARAMETER:		WaitHandle
+;                       ConHandle
+;						ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForTcpListen
+
+RdosAddWaitForTcpListen	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate add_wait_for_tcp_listen_nr
+	mov eax,1
+	jnc awftlDone
+;
+	xor eax,eax
+
+awftlDone:
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddWaitForTcpListen	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

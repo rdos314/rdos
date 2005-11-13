@@ -55,10 +55,9 @@ enum InternalErrorCodes
 class TFtpSocketServer : public TSocketServer
 {
 public:
-	TFtpSocketServer(TFtpUser *UserList);
+    TFtpSocketServer(TFtpUser *UserList, const char *Name, int StackSize, TSocket *Socket);
 	~TFtpSocketServer();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual void HandleSocket();
 
     void Write(char ch);

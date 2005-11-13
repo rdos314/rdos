@@ -59,19 +59,36 @@ protected:
 class TFtpSocketServerFactory : public TSocketServerFactory
 {
 public:
-    TFtpSocketServerFactory::TFtpSocketServerFactory(const char *Language);
-	 TFtpSocketServerFactory::TFtpSocketServerFactory();
+    TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize, const char *Language);
+	TFtpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+	~TFtpSocketServerFactory();
 
-	 void AddUser(const char *User, const char *Passw, const char *RootDir);
+	void AddUser(const char *User, const char *Passw, const char *RootDir);
 
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
+	virtual TSocketServer *Create(TSocket *Socket);
 
 	void (*OnCommand)(TFtpSocketServer *server, const char *str);
 
 protected:
 	void Init();
+
+	TFtpCommandFactory *user;
+	TFtpCommandFactory *pass;
+	TFtpCommandFactory *pwd;
+	TFtpCommandFactory *syst;
+	TFtpCommandFactory *pasv;
+	TFtpCommandFactory *port;
+	TFtpCommandFactory *list;
+	TFtpCommandFactory *cwd;
+	TFtpCommandFactory *cdup;
+	TFtpCommandFactory *type;
+	TFtpCommandFactory *retr;
+	TFtpCommandFactory *stor;
+	TFtpCommandFactory *mdtm;
+	TFtpCommandFactory *dele;
+	TFtpCommandFactory *mkd;
+	TFtpCommandFactory *rmd;
+	TFtpCommandFactory *quit;
 
 	TFtpUser *FList;
 };

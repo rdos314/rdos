@@ -51,17 +51,33 @@
 #   Returns....: *
 #
 ##########################################################################*/
-THttpSocketServerFactory::THttpSocketServerFactory()
-  : RootDir("c:\\")
+THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize)
+  : TSocketServerFactory(Port, MaxConnections, BufferSize),
+    RootDir("c:\\")
 {
 	Init();
 }
 
 /*##########################################################################
 #
-#   Name       : THttpSocketServerFactory::THttpSocketServerFactory
+#   Name       : THttpSocketServerFactory::~THttpSocketServerFactory
 #
-#   Purpose....: Socket server factory constructor
+#   Purpose....: Socket server factory destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpSocketServerFactory::~THttpSocketServerFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServerFactory::Init
+#
+#   Purpose....: Init
 #
 #   In params..: *
 #   Out params.: *
@@ -87,7 +103,7 @@ void THttpSocketServerFactory::Init()
 ##########################################################################*/
 void THttpSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
 {
-	 THttpCustomPageFactory *curr;
+	THttpCustomPageFactory *curr;
 
     page->FList = 0;
 	curr = FPageList;
@@ -105,38 +121,6 @@ void THttpSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
 
 /*##########################################################################
 #
-#   Name       : THttpSocketServerFactory::GetThreadName
-#
-#   Purpose....: Return thread name
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-char *THttpSocketServerFactory::GetThreadName()
-{
-	return "HTTP";
-}
-
-/*##########################################################################
-#
-#   Name       : THttpSocketServerFactory::GetStackSize
-#
-#   Purpose....: Return thread stack size
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int THttpSocketServerFactory::GetStackSize()
-{
-	return 0x2000;
-}
-
-/*##########################################################################
-#
 #   Name       : THttpSocketServerFactory::Create
 #
 #   Purpose....: Create a socket server instance
@@ -146,10 +130,11 @@ int THttpSocketServerFactory::GetStackSize()
 #   Returns....: *
 #
 ##########################################################################*/
-TSocketServer *THttpSocketServerFactory::Create()
+TSocketServer *THttpSocketServerFactory::Create(TSocket *Socket)
 {
 	THttpSocketServer *server;
-	server = new THttpSocketServer();
+
+	server = new THttpSocketServer("HTTP", 0x2000, Socket);
 	server->OnCommand = OnCommand;
 	server->RootDir = RootDir;
 	server->KeepAlive = KeepAlive;

@@ -39,9 +39,6 @@ public:
     TSocket(long IP, int Port, int Timeout, int BufferSize);
     ~TSocket();
 
-    static void Listen(TSocketServerFactory *Factory, int Port, int BufferSize);
-    static void Listen(const char *ThreadName, TSocketServerFactory *Factory, int Port, int BufferSize);
-
 	virtual void DeviceName(char *Name, int MaxLen) const;
 	virtual int IsOpen() const;
 
@@ -70,36 +67,38 @@ protected:
 	int FHandle;
 };
 
-class TSocketServer
+class TSocketServer : public TThread
 {
+friend class TSocketServerFactory;
 public:
-	TSocketServer();
+    TSocketServer(const char *Name, int StackSize, TSocket *Socket);
 	virtual ~TSocketServer();
-
-    void ThreadStartup(int Handle);
     
 protected:
     virtual void HandleSocket() = 0;
-
-    void Insert();
-	void Cleanup();
-
-    static TSection FSection;    
-    static TSocketServer *FList;
+    virtual void Execute();
+    
     TSocketServer *FNext;
-
 	TSocket *FSocket;
 };
 
-class TSocketServerFactory
+class TSocketServerFactory : public TWaitDevice
 {
 public:
-    virtual char *GetThreadName() = 0;
-    virtual int GetStackSize() = 0;    
-	virtual TSocketServer *Create() = 0;
+    TSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+    ~TSocketServerFactory();
 
-    int Handle;
-	
+	virtual TSocketServer *Create(TSocket *Socket) = 0;
+
+protected:
+    void Cleanup();
+    void Insert(TSocketServer *server);
+    
+	virtual void SignalNewData();
+    virtual void Add(TWait *Wait);
+
+    TSocketServer *FList;
+    int FListenHandle;
 };
 
 #endif

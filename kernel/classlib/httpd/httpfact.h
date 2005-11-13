@@ -33,13 +33,12 @@
 class THttpSocketServerFactory : public TSocketServerFactory
 {
 public:
-	THttpSocketServerFactory::THttpSocketServerFactory();
+	THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+	~THttpSocketServerFactory();
 
 	void AddCustomPage(THttpCustomPageFactory *page);
 
-	virtual char *GetThreadName();
-	virtual int GetStackSize();
-	virtual TSocketServer *Create();
+	virtual TSocketServer *Create(TSocket *Socket);
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
 

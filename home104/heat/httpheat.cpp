@@ -38,11 +38,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-// this one must be globally defined!
-
-THttpSocketServerFactory Factory;
-THttpHeatPageFactory HeatPage("main.htm");
-
 TSection SignalSection;
 TSignalDevice *SignalList = 0;
 
@@ -334,7 +329,10 @@ void THttpHeatPage::Get(const char *Name)
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				sprintf(str, "%d%", RadArr[r]->Motor / 100);
+				ival = RadArr[r]->Motor;
+				if (ival > 100)
+				    ival = 100;
+				sprintf(str, "%d%", ival);
 				File.Write(str);
 				WriteFieldFooter(File);
 
@@ -465,7 +463,12 @@ void AddHttpWs2300(TWs2300 *Ws)
 ##########################################################################*/
 void InitHeatHttp()
 {
-	Factory.RootDir = "d:\\wwwroot";
-	Factory.AddCustomPage(&HeatPage);
-	TSocket::Listen("HEAT-HTTPD", &Factory, 80, 0x4000);
+    THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
+    THttpHeatPageFactory *HeatPage = new THttpHeatPageFactory("main.htm");
+    TWait *Wait = new TWait;
+    
+	Factory->RootDir = "d:\\wwwroot";
+	Factory->AddCustomPage(HeatPage);
+	Wait->Add(Factory);
+	Wait->StartThreadHandler("HTTPD", 0x1800);
 }

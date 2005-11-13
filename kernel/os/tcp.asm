@@ -37,7 +37,7 @@ INCLUDE ..\user.def
 INCLUDE ..\os.def
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
-INCLUDE ..\handle.inc
+include ..\handle.inc
 include ..\wait.inc
 INCLUDE exec.def
 INCLUDE system.inc
@@ -57,13 +57,19 @@ tw_handle		DW ?
 
 tcp_wait_header	ENDS
 
-
 tcp_handle_seg		STRUC
 
 tcp_handle_base	    handle_header <>
 tcp_handle_sel      DW ?
 
 tcp_handle_seg		ENDS
+
+listen_handle_seg		STRUC
+
+listen_handle_base	    handle_header <>
+listen_handle_sel       DW ?
+
+listen_handle_seg		ENDS
 
 code	SEGMENT byte public 'CODE'
 
@@ -896,6 +902,137 @@ find_wild_connection_done:
 	pop es
 	ret
 FindWildConnection	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CreateListen
+;
+;	Purpose:		Create a listen and link it
+;
+;	Parameters:		AX	    Max connections
+;					ECX		buffer size
+;					SI		local port
+;
+;	Returns:		DS		listen selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateListen	Proc near
+    push es
+    push dx
+;
+    push eax
+	mov eax,SIZE tcp_listen
+	AllocateSmallGlobalMem
+	pop eax
+	InitSection es:tcp_listen_section
+	mov es:tcp_listen_port,si
+	mov es:tcp_listen_max_conn,ax
+	mov es:tcp_listen_conn_count,0
+	mov es:tcp_listen_buffer_size,ecx
+	mov es:tcp_listen_list,0
+	mov es:tcp_listen_wait,0
+	mov dx,tcp_data_sel
+	mov ds,dx
+	EnterSection ds:ListSection
+	mov dx,ds:ListenList
+	mov es:tcp_listen_next,dx
+	mov ds:ListenList,es
+	LeaveSection ds:ListSection
+	mov dx,es
+	mov ds,dx
+;
+    pop dx
+    pop es
+    ret	
+CreateListen    Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			DeleteListen
+;
+;	Purpose:		Delete a listen. Listen section
+;                   must be taken prior to call
+;
+;	Parameters:		DS		listen selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DeleteListen	Proc near
+	push es
+	push ax
+	push bx
+	push ecx
+	push edx
+;
+	mov dx,ds:tcp_listen_next
+	mov bx,ds
+	mov es,bx
+;
+	mov ax,tcp_data_sel
+	mov ds,ax
+	EnterSection ds:ListSection
+;	
+	mov ax,ds:ListenList
+	cmp ax,bx
+	jne delete_listen_loop
+;
+	mov ds:ConnectionList,dx
+	jmp delete_listen_unlinked
+
+delete_listen_loop:
+	or ax,ax
+	jz delete_listen_unlinked
+;	
+	mov ds,ax
+	mov cx,ax
+	mov ax,ds:tcp_listen_next
+	cmp ax,bx
+	jne delete_listen_loop
+;
+	mov ds,cx
+	mov ds:tcp_listen_next,bx
+;
+    mov ax,ds:tcp_listen_list
+    or ax,ax
+    jz delete_listen_unlinked
+;
+    mov ds,ax
+
+delete_listen_connections:
+    mov dx,ds:tcp_next
+;
+	mov ax,ds:tcp_receive_buffer
+	call FreeBuffer
+;
+	mov ax,ds:tcp_send_buffer
+	call FreeBuffer
+;
+    push es
+    mov ax,ds
+    mov es,ax
+    mov ds,dx
+    FreeMem
+    pop es
+    jmp delete_listen_connections        
+
+delete_listen_unlinked:
+	mov ax,tcp_data_sel
+	mov ds,ax
+	LeaveSection ds:ListSection
+	FreeMem
+;
+	pop edx
+	pop ecx
+	pop bx
+	pop ax
+	pop es
+	ret
+DeleteListen	Endp
 
 PAGE
 	    
@@ -2943,9 +3080,17 @@ receive_listen:
 	mov ax,ds:tcp_listen_list
 	mov es:tcp_listen_link,ax
 	mov ds:tcp_listen_list,es
-	mov bx,ds:tcp_listen_thread
-	Signal
 	LeaveSection ds:tcp_listen_section
+	pop es
+;
+    mov bx,ds:tcp_listen_wait	
+    or bx,bx
+    jz receive_free
+;
+    push es
+    mov es,bx
+    SignalWait
+	mov ds:tcp_listen_wait,0
 	pop es
 	jmp receive_free
 
@@ -3070,88 +3215,145 @@ PAGE
 	    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; 	Name:			ListenTcpPort
+; 	Name:			CreateTcpListen
 ;
-;	Purpose:		Listen on a tcp port
+;	Purpose:		Create a TCP listen handle
 ;
-;	Parameters:		ECX			buffer size
+;	Parameters:		AX          max connections
+;                   ECX			buffer size
 ;					SI			local port
-;					ES:(E)DI	connection callback
-;					EAX			callback param
+;
+;   Returns:        BX          listen handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-listen_tcp_port_name	DB 'Listen TCP Port',0
+create_tcp_listen_name	DB 'Create TCP listen',0
 
-listen_tcp_port32	Proc far
+create_tcp_listen	Proc far
 	push ds
 	push es
-	pushad
-;
 	push eax
-	mov eax,SIZE tcp_listen
-	AllocateSmallGlobalMem
-	ClearSignal
-	GetThread
-	mov es:tcp_listen_thread,ax
-	InitSection es:tcp_listen_section
-	mov es:tcp_listen_port,si
-	mov es:tcp_listen_buffer_size,ecx
-	mov es:tcp_listen_list,0
-	mov dx,tcp_data_sel
-	mov ds,dx
-	EnterSection ds:ListSection
-	mov dx,ds:ListenList
-	mov es:tcp_listen_next,dx
-	mov ds:ListenList,es
-	LeaveSection ds:ListSection
-	mov ax,es
-	mov ds,ax
+	push cx
+	push dx
+;
+    call CreateListen
+    mov dx,ds
+;
+    mov ax,TCP_LISTEN_HANDLE
+	mov cx,SIZE listen_handle_seg
+	AllocateHandle
+	mov [bx].listen_handle_sel,dx
+	mov [bx].hh_sign,TCP_LISTEN_HANDLE
+	mov bx,[bx].hh_handle
+;	
+    pop dx
+    pop cx
 	pop eax
+	pop es
+	pop ds
+	retf32
+create_tcp_listen   Endp
 
-listen_tcp_loop:
-	WaitForSignal
-listen_tcp_next:
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			GetTcpListen
+;
+;	Purpose:		Get a connection from a listen
+;
+;	Parameters:		BX          listen handle
+;
+;   Returns:        AX          connection handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_tcp_listen_name	DB 'Get TCP listen',0
+
+get_tcp_listen	Proc far
+	push ds
+	push es
+	push bx
+	push cx
+	push dx
+;
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc get_listen_done
+;    
+	mov ax,[bx].listen_handle_sel
+    mov ds,ax
 	EnterSection ds:tcp_listen_section
 	mov dx,ds:tcp_listen_list
 	or dx,dx
-	jz listen_tcp_leave
+	jz get_listen_leave
 ;
 	mov es,dx
 	mov bx,es:tcp_listen_link
 	mov ds:tcp_listen_list,bx
 
-listen_tcp_leave:
+get_listen_leave:
 	LeaveSection ds:tcp_listen_section		
 	or dx,dx
-	jz listen_tcp_loop
+	stc
+	jz get_listen_done
 ;
-	push ds
-	push edi
-;
-	push eax
-;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
 	mov cx,SIZE tcp_handle_seg
 	AllocateHandle
 	mov [bx].tcp_handle_sel,es
-	mov [bx].hh_sign,TCP_HANDLE
-	mov bx,[bx].hh_handle
-	pop eax
-	push eax
-	push edi
-	CallPm32
-	pop eax
-;
-	pop edi
-	pop ds
-	jmp listen_tcp_next
-;
-	popad
+	mov [bx].hh_sign,TCP_SOCKET_HANDLE
+	mov ax,[bx].hh_handle
+	clc
+
+get_listen_done:
+	pop dx
+	pop cx
+	pop bx
 	pop es
 	pop ds	
 	retf32
-listen_tcp_port32	Endp
+get_tcp_listen	Endp
+
+PAGE
+	    
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; 	Name:			CloseTcpListen
+;
+;	Purpose:		Close listen
+;
+;	Parameters:		BX		Listen handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_tcp_listen_name DB 'Close TCP Listen',0
+
+close_tcp_listen	Proc far
+	push ds
+	push es
+	pushad
+;
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc close_tcp_listen_done
+;    
+	mov ax,[bx].listen_handle_sel
+	or ax,ax
+	stc
+	jz close_tcp_listen_done
+;
+	mov ds,ax
+	EnterSection ds:tcp_section
+	call DeleteListen
+	clc
+
+close_tcp_listen_done:
+	popad
+	pop es
+	pop ds
+	retf32
+close_tcp_listen	Endp
 
 PAGE
 	    
@@ -3174,7 +3376,7 @@ wait_for_tcp_connection	Proc far
 	push es
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc wait_tcp_done
 ;    
@@ -3313,11 +3515,11 @@ open_tcp_create:
 open_tcp_handle:
 	mov ds:tcp_owner,0
 	mov dx,ds
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
 	mov cx,SIZE tcp_handle_seg
 	AllocateHandle
 	mov [bx].tcp_handle_sel,dx
-	mov [bx].hh_sign,TCP_HANDLE
+	mov [bx].hh_sign,TCP_SOCKET_HANDLE
 	mov bx,[bx].hh_handle
 	clc
 	jmp open_tcp_done
@@ -3431,7 +3633,7 @@ close_tcp_connection	Proc far
 	push es
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc close_tcp_done
 ;    
@@ -3469,23 +3671,23 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Delete_handle
+;		NAME:			Delete_socket_handle
 ;
-;		DESCRIPTION:	Delete handle (called from handle module)
+;		DESCRIPTION:	Delete socket handle (called from handle module)
 ;
 ;		PARAMETERS:		BX			TCP CONNECTION HANDLE
 ;						
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-delete_handle	Proc far
+delete_socket_handle	Proc far
 	push ds
 	push es
 	push ax
 	push dx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
-    jc delete_handle_done
+    jc delete_socket_handle_done
 ;
     push [bx].tcp_handle_sel
     FreeHandle
@@ -3493,7 +3695,7 @@ delete_handle	Proc far
 ;    
     or ax,ax
     stc
-    jz delete_handle_done
+    jz delete_socket_handle_done
 ;    
 	mov ds,ax
 	EnterSection ds:tcp_section
@@ -3503,13 +3705,57 @@ delete_handle	Proc far
 	LeaveSection ds:tcp_section
 	clc
 
-delete_handle_done:
+delete_socket_handle_done:
 	pop dx
 	pop ax
 	pop es
 	pop ds
 	ret
-delete_handle	Endp
+delete_socket_handle	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Delete_listen_handle
+;
+;		DESCRIPTION:	Delete listen handle (called from handle module)
+;
+;		PARAMETERS:		BX			tcp listen handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_listen_handle	Proc far
+	push ds
+	push es
+	push ax
+	push dx
+;
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc delete_listen_handle_done
+;
+    push [bx].tcp_handle_sel
+    FreeHandle
+    pop ds
+;    
+    or ax,ax
+    stc
+    jz delete_listen_handle_done
+;    
+	mov ds,ax
+	EnterSection ds:tcp_listen_section
+    call DeleteListen
+	clc
+
+delete_listen_handle_done:
+	pop dx
+	pop ax
+	pop es
+	pop ds
+	ret
+delete_listen_handle	Endp
 
 PAGE
 	    
@@ -3530,7 +3776,7 @@ delete_tcp_connection	Proc far
 	push ax
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc delete_tcp_done
 ;    
@@ -3585,7 +3831,7 @@ is_tcp_connection_closed	Proc far
 	push ax
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc is_tcp_closed_done
 ;    
@@ -3631,7 +3877,7 @@ get_remote_tcp_connection_ip	Proc far
 	push ds
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc get_rem_ip_done
 ;    
@@ -3673,7 +3919,7 @@ get_remote_tcp_connection_port	Proc far
 	push ds
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc get_rem_port_done
 ;    
@@ -3715,7 +3961,7 @@ get_local_tcp_connection_port	Proc far
 	push ds
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc get_local_port_done
 ;    
@@ -3808,7 +4054,7 @@ abort_tcp_connection	Proc far
 	push es
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc abort_tcp_done
 ;    
@@ -3866,7 +4112,7 @@ start_wait_for_connection	PROC far
     push bx
 ;
     mov bx,es:tw_handle
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc start_wait_for_done
 ;    
@@ -3912,7 +4158,7 @@ stop_wait_for_connection	PROC far
     push bx
 ;
     mov bx,es:tw_handle
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc stop_wait_done
 ;    
@@ -3966,7 +4212,7 @@ is_connection_idle	PROC far
     push bx
 ;
     mov bx,es:tw_handle
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc is_idle_done
 ;    
@@ -4035,6 +4281,191 @@ add_wait_done:
     pop ds
 	retf32
 add_wait_for_tcp_connection	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForListen
+;
+;		DESCRIPTION:	Start a wait for listen
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_listen	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc start_wait_for_listen_done
+;    
+	mov ax,[bx].listen_handle_sel
+	or ax,ax
+	jz start_wait_for_listen_done
+;
+	mov ds,ax
+	mov ds:tcp_listen_wait,es
+;
+    mov ax,ds:tcp_listen_list
+    or ax,ax
+    jz start_wait_for_listen_done
+;    
+	mov ds:tcp_listen_wait,0
+    SignalWait
+
+start_wait_for_listen_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+start_wait_for_listen Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForListen
+;
+;		DESCRIPTION:	Stop a wait for listen
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_listen	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc stop_wait_listen_done
+;    
+	mov ax,[bx].listen_handle_sel
+	or ax,ax
+	jz stop_wait_listen_done
+;
+	mov ds,ax
+	mov ds:tcp_listen_wait,0
+
+stop_wait_listen_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+stop_wait_for_listen Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearListen
+;
+;		DESCRIPTION:	Clear tcp listen
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_listen	PROC far
+    ret
+clear_listen Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsListenIdle
+;
+;		DESCRIPTION:	Check if listen is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_listen_idle	PROC far
+    push ds
+    push ax
+    push bx
+;
+    mov bx,es:tw_handle
+    mov ax,TCP_LISTEN_HANDLE
+    DerefHandle
+    jc is_listen_idle_done
+;    
+	mov ax,[bx].listen_handle_sel
+	or ax,ax
+	stc
+	jz is_listen_idle_done
+;
+	mov ds,ax
+	mov ax,ds:tcp_listen_list
+	or ax,ax
+	clc
+	jne is_listen_idle_done
+;
+	stc
+
+is_listen_idle_done:
+    pop bx
+    pop ax
+    pop ds
+    ret
+is_listen_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForTcpListen
+;
+;		DESCRIPTION:	Add a wait for TCP listen
+;
+;		PARAMETERS:		AX      Listen handle
+;                       BX      Wait handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_tcp_listen_name	DB 'Add Wait For TCP Listen',0
+
+add_wait_listen_tab:
+al0	DW OFFSET start_wait_for_listen,        ip_code_sel
+al1 DW OFFSET stop_wait_for_listen,  		ip_code_sel
+al2	DW OFFSET clear_listen, 				ip_code_sel
+al3	DW OFFSET is_listen_idle,		        ip_code_sel
+
+add_wait_for_tcp_listen	PROC far
+	push ds
+	push es
+	push eax
+	push di
+;
+    push ax
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE tcp_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_listen_tab
+    AddWait
+    pop ax
+    jc add_wait_listen_done
+;
+	mov es:tw_handle,ax
+
+add_wait_listen_done:
+    pop di
+    pop eax
+    pop es
+    pop ds
+	retf32
+add_wait_for_tcp_listen	ENDP
 
 PAGE
 	    
@@ -4177,7 +4608,7 @@ read_tcp_connection16	Proc far
 	push esi
 	push edi
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc read_tcp_done16
 ;    
@@ -4219,7 +4650,7 @@ read_tcp_connection32	Proc far
 	push esi
 	push edi
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc read_tcp_done32
 ;    
@@ -4379,7 +4810,7 @@ write_tcp_connection16	Proc far
 	push fs
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc write_tcp_done16
 ;    
@@ -4414,7 +4845,7 @@ write_tcp_connection32	Proc far
 	push fs
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc write_tcp_done32
 ;    
@@ -4459,7 +4890,7 @@ push_tcp_connection	Proc far
 	push es
 	pushad
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc push_tcp_done
 ;
@@ -4507,7 +4938,7 @@ poll_tcp_connection	Proc far
 	push ds
 	push bx
 ;
-    mov ax,TCP_HANDLE
+    mov ax,TCP_SOCKET_HANDLE
     DerefHandle
     jc poll_tcp_done
 ;
@@ -4832,8 +5263,12 @@ init_tcp	PROC near
 	mov di,OFFSET init_tcp_thread
 	HookInitTasking
 ;
-	mov di,OFFSET delete_handle
-	mov ax,TCP_HANDLE
+	mov di,OFFSET delete_socket_handle
+	mov ax,TCP_SOCKET_HANDLE
+	RegisterHandle
+;
+	mov di,OFFSET delete_listen_handle
+	mov ax,TCP_SOCKET_HANDLE
 	RegisterHandle
 ;
 	mov si,OFFSET open_tcp_connection
@@ -4842,11 +5277,23 @@ init_tcp	PROC near
 	mov ax,open_tcp_connection_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET listen_tcp_port32
-	mov di,OFFSET listen_tcp_port_name
+	mov si,OFFSET create_tcp_listen
+	mov di,OFFSET create_tcp_listen_name
 	xor dx,dx
-	mov ax,listen_tcp_port_nr
-	RegisterUserGate32
+	mov ax,create_tcp_listen_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_tcp_listen
+	mov di,OFFSET get_tcp_listen_name
+	xor dx,dx
+	mov ax,get_tcp_listen_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_tcp_listen
+	mov di,OFFSET close_tcp_listen_name
+	xor dx,dx
+	mov ax,close_tcp_listen_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET wait_for_tcp_connection
 	mov di,OFFSET wait_for_tcp_connection_name
@@ -4926,6 +5373,12 @@ init_tcp	PROC near
 	mov di,OFFSET add_wait_for_tcp_connection_name
 	xor dx,dx
 	mov ax,add_wait_for_tcp_connection_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET add_wait_for_tcp_listen
+	mov di,OFFSET add_wait_for_tcp_listen_name
+	xor dx,dx
+	mov ax,add_wait_for_tcp_listen_nr
 	RegisterBimodalUserGate
 ;
 	mov al,6
