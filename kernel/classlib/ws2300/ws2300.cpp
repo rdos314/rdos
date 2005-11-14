@@ -144,6 +144,11 @@ void TWs2300::Init()
     FRain24h = 0.0;
     FAirPressure = 1013.0;
 
+    FTendency = TENDENCY_STEADY;
+    FForecast = FORECAST_CLOUDY;
+
+    OnChanged = 0;
+
     Start("WS2300", 0x2000);    
 }
 
@@ -161,6 +166,23 @@ void TWs2300::Init()
 void TWs2300::DeviceName(char *Name, int MaxLen) const
 {
 	strncpy(Name,"WS2300",MaxLen);
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::NotifyChanged
+#
+#   Purpose....: Notify changed
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TWs2300::NotifyChanged()
+{
+    if (OnChanged)
+        (*OnChanged)(this);
 }
 
 /*##########################################################################
@@ -315,6 +337,34 @@ long double TWs2300::GetRain24h()
 long double TWs2300::GetAirPressure()
 {
     return FAirPressure;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetTendency
+#
+#   Purpose....: Get tendency
+#
+#   Returns....: Tendency
+#
+##########################################################################*/
+int TWs2300::GetTendency()
+{
+    return FTendency;
+}
+
+/*##########################################################################
+#
+#   Name       : TWs2300::GetForecast
+#
+#   Purpose....: Get forecast
+#
+#   Returns....: Forecast
+#
+##########################################################################*/
+int TWs2300::GetForecast()
+{
+    return FForecast;
 }
 
 /*##########################################################################
@@ -617,11 +667,18 @@ int TWs2300::SafeWrite(int address, int count, const unsigned char *buf)
 int TWs2300::UpdateIndoorTemp()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x346, 2, data))
 	{
-		FIndoorTemp = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
-					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		val = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+				(data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+
+	    if (val != FIndoorTemp)
+	    {
+	        FIndoorTemp = val;
+	        NotifyChanged();
+	    }
 	    return TRUE;
 	}
 	else
@@ -640,11 +697,18 @@ int TWs2300::UpdateIndoorTemp()
 int TWs2300::UpdateOutdoorTemp()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x373, 2, data))
 	{
-		FOutdoorTemp = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
-					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		val = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+				(data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+
+		if (val != FOutdoorTemp)
+		{
+		    FOutdoorTemp = val;
+		    NotifyChanged();
+		}
 		return TRUE;
     }
 	else
@@ -663,11 +727,18 @@ int TWs2300::UpdateOutdoorTemp()
 int TWs2300::UpdateDewPoint()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x3CE, 2, data))
 	{
-		FDewPoint = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
-					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		val = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+				(data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+
+		if (val != FDewPoint)
+		{
+		    FDewPoint = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -686,10 +757,17 @@ int TWs2300::UpdateDewPoint()
 int TWs2300::UpdateIndoorHumidity()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x3FB, 1, data))
 	{
-		FIndoorHumidity = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+		val = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+
+		if (val != FIndoorHumidity)
+		{
+		    FIndoorHumidity = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -708,10 +786,17 @@ int TWs2300::UpdateIndoorHumidity()
 int TWs2300::UpdateOutdoorHumidity()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x419, 1, data))
 	{
-		FOutdoorHumidity = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+		val = ((data[0] >> 4) * 10 + (data[0] & 0xF));
+
+		if (val != FOutdoorHumidity)
+		{
+		    FOutdoorHumidity = val;
+		    NotifyChanged();
+		}
 		return TRUE;
     }
 	else
@@ -732,6 +817,7 @@ int TWs2300::UpdateWind()
 	unsigned char data[20];
 	int i;
 	int ok;
+	long double val;
 
 	for ( i = 0; i < MAXWINDRETRIES; i++)
 	{
@@ -751,8 +837,21 @@ int TWs2300::UpdateWind()
 
     if (ok)
     {
-        FWindDir = (data[2]>>4)*22.5;
-	    FWindSpeed = (((data[2]&0xF)<<8)+(data[1])) / 10.0;
+        val = (data[2]>>4)*22.5;
+
+        if (val != FWindDir)
+        {
+            FWindDir = val;
+            NotifyChanged();
+        }
+        
+	    val = (((data[2]&0xF)<<8)+(data[1])) / 10.0;
+	    
+	    if (val != FWindSpeed)
+	    {
+	        FWindSpeed = val;
+	        NotifyChanged();
+	    }
 	}
 	
 	return ok;
@@ -770,11 +869,18 @@ int TWs2300::UpdateWind()
 int TWs2300::UpdateWindChill()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x3A0, 2, data))
 	{
-		FWindChill = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
-					 (data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+		val = ((((data[1] >> 4) * 10 + (data[1] & 0xF) +
+				(data[0] >> 4) / 10.0 + (data[0] & 0xF) / 100.0) - 30.0));
+
+		if (val != FWindChill)
+		{
+		    FWindChill = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -793,12 +899,19 @@ int TWs2300::UpdateWindChill()
 int TWs2300::UpdateRain1h()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x4B4, 3, data))
 	{
-		FRain1h = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+		val = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
+
+		if (val != FRain1h)
+		{
+		    FRain1h = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -817,12 +930,19 @@ int TWs2300::UpdateRain1h()
 int TWs2300::UpdateRain24h()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x497, 3, data))
 	{
-		FRain24h = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
+		val = ( ((data[2] >> 4) * 1000 + (data[2] & 0xF) * 100 +
 				 (data[1] >> 4) * 10 + (data[1] & 0xF) + (data[0] >> 4) / 10.0 +
 				 (data[0] & 0xF) / 100.0 ));
+
+		if (val != FRain24h)
+		{
+		    FRain24h = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	 }
 	else
@@ -841,12 +961,19 @@ int TWs2300::UpdateRain24h()
 int TWs2300::UpdateAirPressure()
 {
 	unsigned char data[20];
+	long double val;
 
 	if (SafeRead(0x5D8, 3, data))
 	{
-		FAirPressure = (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
-					 (data[1] & 0xF) * 10 + (data[0] >> 4) +
-					 (data[0] & 0xF) / 10.0));
+		val = (((data[2] & 0xF) * 1000 + (data[1] >> 4) * 100 +
+				 (data[1] & 0xF) * 10 + (data[0] >> 4) +
+				 (data[0] & 0xF) / 10.0));
+
+		if (val != FAirPressure)
+		{
+		    FAirPressure = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -865,11 +992,23 @@ int TWs2300::UpdateAirPressure()
 int TWs2300::UpdateForecast()
 {
 	unsigned char data[20];
+	int val;
 
 	if (SafeRead(0x26B, 1, data))
 	{
-		FTendency = (data[0] >> 4) & 3;
-		FForecast = data[0] & 3;
+		val = (data[0] >> 4) & 3;
+		if (val != FTendency)
+		{
+		    FTendency = val;
+		    NotifyChanged();
+		}
+		
+		val = data[0] & 3;
+		if (val != FForecast)
+		{
+		    FForecast = val;
+		    NotifyChanged();
+		}
 		return TRUE;
 	}
 	else
@@ -895,6 +1034,7 @@ void TWs2300::Execute()
 	int HasRain24h = FALSE;
 	int HasWind = FALSE;
 	int HasPressure = FALSE;
+	int HasForecast = FALSE;
 	int ok;
 	TDateTime datetime;
 	int lastsec = datetime.GetSec();
@@ -932,6 +1072,9 @@ void TWs2300::Execute()
 		if (!HasPressure)
 			HasPressure = UpdateAirPressure();
 
+	    if (!HasForecast)
+	        HasForecast = UpdateForecast();
+
 		datetime = TDateTime();
 		sec = datetime.GetSec();
 
@@ -950,6 +1093,7 @@ void TWs2300::Execute()
             HasRain1h = FALSE;
             HasRain24h = FALSE;
             HasPressure = FALSE;
+            HasForecast = FALSE;
     
             lastsec = sec;
         }
@@ -963,7 +1107,8 @@ void TWs2300::Execute()
                 HasWindChill &&
                 HasRain1h &&
                 HasRain24h &&
-                HasPressure;
+                HasPressure &&
+                HasForecast;
 
         if (ok)
         {

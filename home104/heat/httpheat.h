@@ -46,6 +46,8 @@ protected:
     void WriteLeftFieldHeader(TFile &File, int RelWidth);
     void WriteFieldFooter(TFile &File);
 
+    void WriteFloat1(TFile &File, long double val);
+
 };
 
 class THttpHeatPage : public THttpTablePage

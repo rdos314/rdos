@@ -41,6 +41,11 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
+void WsChanged(TWs2300 *ws)
+{
+    HttpUpdate();
+}
+
 void cdecl main()
 {
 	TRad *RadArr[8];
@@ -66,6 +71,7 @@ void cdecl main()
 	}
 
 	Ws = new TWs2300(1);
+    Ws->OnChanged = WsChanged;
 	
 	AddHttpWs2300(Ws);
 

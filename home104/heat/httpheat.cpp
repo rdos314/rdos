@@ -243,6 +243,30 @@ void THttpTablePage::WriteFieldFooter(TFile &File)
 	 File.Write("</td>\n");
 }
 
+/*##################  THttpTablePage::WriteFloat1 ##########################
+*   Purpose....: Write long double with one decimal point	    	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void THttpTablePage::WriteFloat1(TFile &File, long double val)
+{
+    char str[40];
+    int ival;
+
+    ival = round(10 * val);
+    
+    if (ival < 0)
+    {
+        File.Write("-");
+        ival = -ival;
+    }
+
+	sprintf(str, "%d.%d", ival / 10, ival % 10);
+	File.Write(str);
+}
+
 /*##########################################################################
 #
 #   Name       : THttpHeatPage::THttpHeatPage
@@ -455,7 +479,7 @@ void THttpHeatPage::Get(const char *Name)
 		if (!PushFile(FFileName.GetData(), "text/html", 30))
 			break;
 
-		Signal.WaitTimeout(2000);
+		Signal.WaitTimeout(25000);
 
 		RdosWaitMilli(50);
 		Signal.Clear();
@@ -544,9 +568,9 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write("</h3>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetIndoorTemp());
-		sprintf(str, "Temperatur %d.%d °C", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Temperatur: ");
+		WriteFloat1(File, Ws2300->GetIndoorTemp());
+		File.Write(" °C");
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
@@ -560,9 +584,9 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write("</h3>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetOutdoorTemp());
-		sprintf(str, "Temperatur: %d.%d °C", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Temperatur: ");
+		WriteFloat1(File, Ws2300->GetOutdoorTemp());
+		File.Write(" °C");
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
@@ -572,21 +596,21 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetDewPoint());
-		sprintf(str, "Daggpunkt: %d.%d °C", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Daggpunkt: ");
+		WriteFloat1(File, Ws2300->GetDewPoint());
+		File.Write(" °C");
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetWindChill());
-		sprintf(str, "Vindkompenserad: %d.%d °C", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Vindkompenserad: ");
+		WriteFloat1(File, Ws2300->GetWindChill());
+		File.Write(" °C");
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetWindSpeed());
-		sprintf(str, "Vind: %d.%d m/s  ", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Vind: ");
+		WriteFloat1(File, Ws2300->GetWindSpeed());
+		File.Write(" m/s ");
 
 		ival = round(Ws2300->GetWindDir() / 22);
 		  switch (ival)
@@ -662,9 +686,9 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
-		ival = round(10 * Ws2300->GetAirPressure());
-		sprintf(str, "Lufttryck: %d.%d hPa", ival / 10, ival % 10);
-		File.Write(str);
+		File.Write("Lufttryck: ");
+		WriteFloat1(File, Ws2300->GetAirPressure());
+		File.Write(" hPa");
 		File.Write("</b></p>");
 
 		File.Write("<p><b>");
@@ -679,6 +703,34 @@ void THttpWs2300Page::Get(const char *Name)
 		File.Write(str);
 		File.Write("</b></p>");
 
+		switch (Ws2300->GetForecast())
+		{
+			case FORECAST_RAINY:
+				File.Write("<img border=\"0\" src=\"rain.gif\" width=\"36\" height=\"26\">");
+				break;
+
+			case FORECAST_CLOUDY:
+				File.Write("<img border=\"0\" src=\"cloudy.gif\" width=\"36\" height=\"20\">");
+				break;
+
+			case FORECAST_SUNNY:
+				File.Write("<img border=\"0\" src=\"sunny.gif\" width=\"28\" height=\"26\">");
+				break;
+		}
+
+		File.Write("   ");
+
+		switch (Ws2300->GetTendency())
+		{
+			case TENDENCY_RISING:
+				File.Write("<img border=\"0\" src=\"up.gif\" width=\"12\" height=\"25\">");
+				break;
+
+			case TENDENCY_FALLING:
+				File.Write("<img border=\"0\" src=\"down.gif\" width=\"12\" height=\"26\">");
+				break;
+		}
+
 		File.Write("</CENTERED>\n");
 
 		File.Write("</form>\r\n");
@@ -687,7 +739,7 @@ void THttpWs2300Page::Get(const char *Name)
 		if (!PushFile(FFileName.GetData(), "text/html", 30))
 			break;
 
-		Signal.WaitTimeout(2000);
+		Signal.WaitTimeout(25000);
 
 		RdosWaitMilli(50);
 		Signal.Clear();
