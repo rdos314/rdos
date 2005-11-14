@@ -458,6 +458,8 @@ void TQuizIII::InitReferers()
 	AddReferer("xmission.com/~winter", "xmission.com/~winter");
 	AddReferer("rdos.net/sv", "rdos.net/sv");
 	AddReferer("katter.nu", "home.katter.nu/kattforum");
+	AddReferer("takeforum.com", "takeforum.com/forum/viewtopic.php?t=3330");
+	AddReferer("ayme.org.uk", "members.ayme.org.uk/board/viewtopic.php?topic=36075");
 }
 
 /*##################  TQuizIII::LoadReferers ##########################
@@ -702,6 +704,8 @@ void TQuizIII::SetupControlGroups()
 	DefineNt("gentlechristianmothers.com");
 	DefineNt("katter.nu");
 	DefineNt("rdos.net/sv");
+    DefineNt("takeforum.com");
+	DefineNt("ayme.org.uk");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
