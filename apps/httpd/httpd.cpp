@@ -36,11 +36,6 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-// this one must be globally defined!
-
-THttpSocketServerFactory Factory;
-THttpCustomPageFactory def("");
-
 /*##################  WriteCommand ##########################
 *   Purpose....: Write command echo	   					      	        #
 *   In params..: *                                                          #
@@ -62,9 +57,13 @@ void WriteCommand(THttpSocketServer *server, const char *str)
 *##########################################################################*/
 void cdecl main()
 {
-	Factory.OnCommand = WriteCommand;
-	Factory.RootDir = "d:\\wwwroot";
-	Factory.AddCustomPage(&def);
-	TSocket::Listen(&Factory, 80, 0x4000);
+	THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
+	TWait *Wait = new TWait;
+
+	Factory->OnCommand = WriteCommand;
+	Factory->RootDir = "d:\\wwwroot";
+	Wait->Add(Factory);
+	for (;;)
+		Wait->WaitForever();
 }
 

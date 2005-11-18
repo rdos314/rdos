@@ -57,6 +57,7 @@ void cdecl main()
 	int motsum;
 	int motcount;
 	int mot;
+	int motmax;
 	long double val;
 	long double winddir;
 
@@ -117,20 +118,26 @@ void cdecl main()
 
         motsum = 0;
         motcount = 0;
+        motmax = 0;
         
 		for (i = 0; i < 8; i++)
 		{
 			if (RadArr[i]->IsOnline())
 		    {
 		        motcount++;
-		        motsum += RadArr[i]->Motor;
+		        mot = RadArr[i]->Motor;
+		        motsum += mot;
+
+		        if (mot > motmax)
+		            motmax = mot;
 			 }
 		}
 
 		if (motcount > 5)
 		{
 			 mot = motsum / motcount;
-			 if (mot >= 70)
+			 mot = (mot + motmax) / 2;
+			 if (mot >= 60)
 				  if ((diostat & 0x20) == 0)
 						RdosToggleSerialLine(1, 5);
 
