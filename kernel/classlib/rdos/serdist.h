@@ -42,6 +42,7 @@ public:
 
 	virtual void SendMsg(const char *Data, int Size);
 	virtual int GetTimeout();
+	virtual int GetPort();
 
 	void ReceiveThread();
 	void SendThread();
@@ -49,9 +50,12 @@ public:
 protected:
 	void CheckForMsg();
 
+    virtual void NotifyOpen();
+    virtual void NotifyClose();
 	virtual void Execute();
 
 	TSerialDevice *FSerial;
+
 	TDateTime FPollTime;
 	int FPollCount;
 };

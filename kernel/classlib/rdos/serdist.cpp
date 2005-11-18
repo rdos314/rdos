@@ -100,6 +100,40 @@ void TSerialDistDevice::DeviceName(char *Name, int MaxLen) const
 
 /*##########################################################################
 #
+#   Name       : TSerialDistDevice::NotifyOpen
+#
+#   Purpose....: Notify device open
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDistDevice::NotifyOpen()
+{
+    FSerial->Open();
+    TDevice::NotifyOpen();
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDistDevice::NotifyClose
+#
+#   Purpose....: Notify device close
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDistDevice::NotifyClose()
+{
+    TDevice::NotifyClose();
+    FSerial->Close();
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDistDevice::SendMsg
 #
 #   Purpose....: Send a message
@@ -139,6 +173,22 @@ void TSerialDistDevice::SendMsg(const char *Data, int Size)
 int TSerialDistDevice::GetTimeout()
 {
 	return 1000;
+}
+
+/*##########################################################################
+#
+#   Name       : TSerialDistDevice::GetPort
+#
+#   Purpose....: Get serial port
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TSerialDistDevice::GetPort()
+{
+	return FSerial->GetPort();
 }
 
 /*##################  TSerialDistDevice::CheckForMsg ############
