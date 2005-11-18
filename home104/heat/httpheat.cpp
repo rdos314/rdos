@@ -714,7 +714,7 @@ void THttpWs2300Page::Get(const char *Name)
 				break;
 
 			case FORECAST_SUNNY:
-				File.Write("<img border=\"0\" src=\"sunny.gif\" width=\"28\" height=\"26\">");
+				File.Write("<img border=\"0\" src=\"sun.gif\" width=\"28\" height=\"26\">");
 				break;
 		}
 

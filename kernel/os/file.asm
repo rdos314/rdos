@@ -1427,34 +1427,17 @@ write_file_check_mid:
 	mov es:[ebx+esi],eax
 
 write_file_check_base:
-	cmp es:[eax].fl_base,0
-	jnz write_file_do_first
+	cmp es:[eax].fl_state, FILE_LIST_STATE_EMPTY
+	jne write_file_do_first
 ;
-	push edx
 	push edi
 	mov edi,eax
-	mov eax,ds:file_block_size
-	push ecx
-	push edx
-	AllocateBigLinear
-	mov es:[edi].fl_base,edx
-	pop edx
-	pop ecx
-	neg eax
-	and edx,eax
-	push bx
-	push ecx
-	mov ecx,ds:file_block_size
-	mov al,ds:file_drive
-	mov bx,ds
-	CallFileSystem read_file_block_proc
-	pop ecx
-	pop bx
+	call ReadFileListEntry
 	pop edi
-	pop edx
 	jnc write_file_do_first
 ;
 	mov dword ptr es:[ebx+esi],0
+	LeaveSection ds:file_list_section
 	jmp write_file_done
 
 write_file_do_first:

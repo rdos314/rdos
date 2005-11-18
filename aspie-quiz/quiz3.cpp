@@ -462,6 +462,11 @@ void TQuizIII::InitReferers()
 	AddReferer("ayme.org.uk", "members.ayme.org.uk/board/viewtopic.php?topic=36075");
 	AddReferer("boylover.net", "boylover.net/ubb/ultimatebb.php/topic/1/16634.html");
 	AddReferer("intpcentral.com", "intpcentral.com/forums/showthread.php?p=196421");
+	AddReferer("theconversationcafe.com", "theconversationcafe.com/forums/showthread.php?t=20514");
+	AddReferer("democraticunderground.com", "democraticunderground.com/discuss/duboard.php?az=view_all");
+	AddReferer("delphiforums.com", "forums.delphiforums.com/n/mb/message.asp?webtag=aspies");
+	AddReferer("assupportgrouponline.co.uk", "assupportgrouponline.co.uk/");
+	AddReferer("teleboards.com", "teleboards.com/showthread.php?s=");
 }
 
 /*##################  TQuizIII::LoadReferers ##########################
@@ -608,37 +613,37 @@ void TQuizIII::LoadPopulations()
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
         for (i = 0; i < MAX_QUESTIONS; i++)
-        {
-            if (Row.Quiz[i] == 0)
-                Quiz[i].NoAnswer++;
+		{
+			if (Row.Quiz[i] == 0)
+				Quiz[i].NoAnswer++;
 
-        }
+		}
 
-        aspie = FALSE;
+		aspie = FALSE;
 
-        All.Add(Row.Quiz);
+		All.Add(Row.Quiz);
 
 		switch (Row.Diagnos)
 		{
-		    case DX_AS:
-		    case SELF_AS:
-		        aspie = TRUE;
+			case DX_AS:
+			case SELF_AS:
+				aspie = TRUE;
 
-		        if (Row.AsResult < Row.NtResult)
-		            LowAs.Add(Row.Quiz);
-		            
+				if (Row.AsResult < Row.NtResult)
+					LowAs.Add(Row.Quiz);
+
 				if (Row.Gender == 1)
 					AsMale.Add(Row.Quiz);
 				else
 					AsFemale.Add(Row.Quiz);
 
-		        if (Row.Diagnos == DX_AS)
-    		        As.Add(Row.Quiz);
+				if (Row.Diagnos == DX_AS)
+					As.Add(Row.Quiz);
 				break;
 
 			case DX_ADD:
 			case SELF_ADD:
-			    Add.Add(Row.Quiz);
+				Add.Add(Row.Quiz);
 				if (Row.Gender == 1)
 					AddMale.Add(Row.Quiz);
 				else
@@ -648,7 +653,7 @@ void TQuizIII::LoadPopulations()
 
 		if (strlen(Row.Referer) == 0)
 		{
-		    Mix.Add(Row.Quiz);
+			Mix.Add(Row.Quiz);
 			if (Row.Gender == 1)
 				MixMale.Add(Row.Quiz);
 			else
@@ -662,14 +667,14 @@ void TQuizIII::LoadPopulations()
 			{
 				if (ref->NT && Row.Diagnos == NO_DX)
 				{
-				    Nt.Add(Row.Quiz);
+					Nt.Add(Row.Quiz);
 					if (Row.Gender == 1)
 						NtMale.Add(Row.Quiz);
 					else
 						NtFemale.Add(Row.Quiz);
 				}
 
-                if (!aspie)
+//                if (!aspie)
                     aspie = ref->Aspie;
 			}
 		}
@@ -709,6 +714,9 @@ void TQuizIII::SetupControlGroups()
     DefineNt("takeforum.com");
 	DefineNt("ayme.org.uk");
 	DefineNt("boylover.net");
+	DefineNt("democraticunderground.com");
+    DefineNt("theconversationcafe.com");
+    DefineNt("teleboards.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -716,6 +724,8 @@ void TQuizIII::SetupControlGroups()
 	DefineAspie("aspiesforfreedom.");
 	DefineAspie("aspergianisland.com");
 	DefineAspie("xmission.com/~winter");
+	DefineAspie("delphiforums.com");
+    DefineAspie("assupportgrouponline.co.uk");
 }
 
 /*##########################################################################
@@ -1093,7 +1103,7 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 
 			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 			{
-				if (PcaType != PCA_TYPE_AS  && PcaType != PCA_TYPE_OLD)
+				if (PcaType != PCA_TYPE_AS  && PcaType != PCA_TYPE_YOUNG)
 					d2 = -d2;
 
 				if (d1 > 0 && d2 > 0)
