@@ -108,22 +108,22 @@ void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_FOCUS;
 	Quiz[1].MyGroup = GROUP_MIXED;
-	Quiz[2].MyGroup = GROUP_LANGUAGE;
-    Quiz[3].MyGroup = GROUP_MIXED;
+	Quiz[2].MyGroup = GROUP_NONVERBAL;
+	Quiz[3].MyGroup = GROUP_MIXED;
 	Quiz[4].MyGroup = GROUP_FOCUS;
-	Quiz[5].MyGroup = GROUP_MIXED;
-	Quiz[6].MyGroup = GROUP_MIXED;
+	Quiz[5].MyGroup = GROUP_NONVERBAL;
+	Quiz[6].MyGroup = GROUP_NONVERBAL;
 	Quiz[7].MyGroup = GROUP_FOCUS;
 	Quiz[8].MyGroup = GROUP_MIXED;
 	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_MIXED;
 	Quiz[11].MyGroup = GROUP_FOCUS;
 	Quiz[12].MyGroup = GROUP_FOCUS;
-	Quiz[13].MyGroup = GROUP_LANGUAGE;
-	Quiz[14].MyGroup = GROUP_LANGUAGE;
-	Quiz[15].MyGroup = GROUP_LANGUAGE;
-	Quiz[16].MyGroup = GROUP_LANGUAGE;
-	Quiz[17].MyGroup = GROUP_LANGUAGE;
+	Quiz[13].MyGroup = GROUP_SOCIAL;
+	Quiz[14].MyGroup = GROUP_NONVERBAL;
+	Quiz[15].MyGroup = GROUP_MIXED;
+	Quiz[16].MyGroup = GROUP_NONVERBAL;
+	Quiz[17].MyGroup = GROUP_NONVERBAL;
 	Quiz[18].MyGroup = GROUP_FOCUS;
 	Quiz[19].MyGroup = GROUP_FOCUS;
 	Quiz[20].MyGroup = GROUP_FOCUS;
@@ -132,15 +132,15 @@ void TQuizI::SetupTexts()
 	Quiz[23].MyGroup = GROUP_FOCUS;
 	Quiz[24].MyGroup = GROUP_FOCUS;
 	Quiz[25].MyGroup = GROUP_FOCUS;
-	Quiz[26].MyGroup = GROUP_MIXED;
-	Quiz[27].MyGroup = GROUP_MIXED;
+	Quiz[26].MyGroup = GROUP_NONVERBAL;
+	Quiz[27].MyGroup = GROUP_REPETITION;
 	Quiz[28].MyGroup = GROUP_REPETITION;
-	Quiz[29].MyGroup = GROUP_MIXED;
-	Quiz[30].MyGroup = GROUP_MIXED;
-	Quiz[31].MyGroup = GROUP_MIXED;
-	Quiz[32].MyGroup = GROUP_MIXED;
+	Quiz[29].MyGroup = GROUP_REPETITION;
+	Quiz[30].MyGroup = GROUP_SOCIAL;
+	Quiz[31].MyGroup = GROUP_SOCIAL;
+	Quiz[32].MyGroup = GROUP_SOCIAL;
 	Quiz[33].MyGroup = GROUP_SOCIAL;
-	Quiz[34].MyGroup = GROUP_MIXED;
+	Quiz[34].MyGroup = GROUP_REPETITION;
 	Quiz[35].MyGroup = GROUP_REPETITION;
 	Quiz[36].MyGroup = GROUP_REPETITION;
 	Quiz[37].MyGroup = GROUP_REPETITION;
@@ -148,29 +148,29 @@ void TQuizI::SetupTexts()
 	Quiz[39].MyGroup = GROUP_REPETITION;
 	Quiz[40].MyGroup = GROUP_NONVERBAL;
 	Quiz[41].MyGroup = GROUP_MIXED;
-	Quiz[42].MyGroup = GROUP_BIOLOGY;
-	Quiz[43].MyGroup = GROUP_BIOLOGY;
-	Quiz[44].MyGroup = GROUP_BIOLOGY;
-	Quiz[45].MyGroup = GROUP_BIOLOGY;
-	Quiz[46].MyGroup = GROUP_BIOLOGY;
-	Quiz[47].MyGroup = GROUP_BIOLOGY;
-	Quiz[48].MyGroup = GROUP_BIOLOGY;
-	Quiz[49].MyGroup = GROUP_BIOLOGY;
+	Quiz[42].MyGroup = GROUP_NONVERBAL;
+	Quiz[43].MyGroup = GROUP_MOTOR;
+	Quiz[44].MyGroup = GROUP_MOTOR;
+	Quiz[45].MyGroup = GROUP_MOTOR;
+	Quiz[46].MyGroup = GROUP_MIXED;
+	Quiz[47].MyGroup = GROUP_SENSORY;
+	Quiz[48].MyGroup = GROUP_SENSORY;
+	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_REPETITION;
-	Quiz[51].MyGroup = GROUP_FOCUS;
+	Quiz[51].MyGroup = GROUP_SENSORY;
 	Quiz[52].MyGroup = GROUP_SENSORY;
-	Quiz[53].MyGroup = GROUP_SENSORY;
+	Quiz[53].MyGroup = GROUP_NONVERBAL;
 	Quiz[54].MyGroup = GROUP_SENSORY;
 	Quiz[55].MyGroup = GROUP_SENSORY;
 	Quiz[56].MyGroup = GROUP_SENSORY;
 	Quiz[57].MyGroup = GROUP_SENSORY;
-	Quiz[58].MyGroup = GROUP_MIXED;
+	Quiz[58].MyGroup = GROUP_SENSORY;
 	Quiz[59].MyGroup = GROUP_SENSORY;
 	Quiz[60].MyGroup = GROUP_SENSORY;
-	Quiz[61].MyGroup = GROUP_SENSORY;
+	Quiz[61].MyGroup = GROUP_SOCIAL;
 	Quiz[62].MyGroup = GROUP_SENSORY;
-	Quiz[63].MyGroup = GROUP_MIXED;
-	Quiz[64].MyGroup = GROUP_SENSORY;
+	Quiz[63].MyGroup = GROUP_REPETITION;
+	Quiz[64].MyGroup = GROUP_SOCIAL;
 	Quiz[65].MyGroup = GROUP_SOCIAL;
 	Quiz[66].MyGroup = GROUP_SOCIAL;
 	Quiz[67].MyGroup = GROUP_SOCIAL;
@@ -181,11 +181,11 @@ void TQuizI::SetupTexts()
 	Quiz[72].MyGroup = GROUP_SOCIAL;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_SOCIAL;
-	Quiz[75].MyGroup = GROUP_SOCIAL;
-	Quiz[76].MyGroup = GROUP_MIXED;
+	Quiz[75].MyGroup = GROUP_NONVERBAL;
+	Quiz[76].MyGroup = GROUP_SOCIAL;
 	Quiz[77].MyGroup = GROUP_SOCIAL;
 	Quiz[78].MyGroup = GROUP_SENSORY;
-	Quiz[79].MyGroup = GROUP_MIXED;
+	Quiz[79].MyGroup = GROUP_SOCIAL;
 	Quiz[80].MyGroup = GROUP_SOCIAL;
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;
@@ -199,7 +199,7 @@ void TQuizI::SetupTexts()
 	Quiz[90].MyGroup = GROUP_SOCIAL;
 	Quiz[91].MyGroup = GROUP_NONVERBAL;
 	Quiz[92].MyGroup = GROUP_SOCIAL;
-	Quiz[93].MyGroup = GROUP_MIXED;
+	Quiz[93].MyGroup = GROUP_SOCIAL;
 	Quiz[94].MyGroup = GROUP_NONVERBAL;
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_SOCIAL;
@@ -751,43 +751,49 @@ void TQuizI::ExportExcelCase(const char *filename, int PcaType)
     file.Write("\"\", ");
     
 	for (i = 0; i < MAX_QUESTIONS; i++)
-    {
-        file.Write("\"");
+	{
+		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+		{
+			file.Write("\"");
 
 //        strncpy(str, Quiz[i].Text, 35);
 //        str[35] = 0;
-        sprintf(str, "#%d", i + 1);
-        file.Write(str);
-        
-        file.Write("\"");
-        if (i != MAX_QUESTIONS - 1)
-            file.Write(", ");
-    }
-    file.Write("\n");
+			sprintf(str, "#%d", i + 1);
+			file.Write(str);
+
+			file.Write("\"");
+			if (i != MAX_QUESTIONS - 1)
+				file.Write(", ");
+		}
+	}
+	file.Write("\n");
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    sprintf(str, "\"%d\", ", Row.ResultNow);
-	    file.Write(str);
+		sprintf(str, "\"%d\", ", Row.ResultNow);
+		file.Write(str);
 
-	    sprintf(str, "\"%d\", ", Row.Diagnos);
-	    file.Write(str);
-	    
+		sprintf(str, "\"%d\", ", Row.Diagnos);
+		file.Write(str);
+
 		for (i = 0; i < MAX_QUESTIONS; i++)
 		{
-			if (Row.Before[i] > Row.Now[i])
-				ival = Row.Before[i];
-			else
-				ival = Row.Now[i];
+			if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+			{
+				if (Row.Before[i] > Row.Now[i])
+					ival = Row.Before[i];
+				else
+					ival = Row.Now[i];
 
-			if (ival > 2)
-			    ival = 0;
+				if (ival > 2)
+					ival = 0;
 
-		    sprintf(str, "\"%d\"", ival);
-            file.Write(str);
-            if (i != MAX_QUESTIONS - 1)
-                file.Write(", ");
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
+				if (i != MAX_QUESTIONS - 1)
+					file.Write(", ");
+			}
 		}
 		file.Write("\n");
 	}
@@ -808,7 +814,7 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2, d3;
+	long double d1, d2;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -819,8 +825,8 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 		rowstr = strstr(buf, "#");
 		if (rowstr)
 		{
-		    rowstr++;
-		    ptr = strstr(rowstr, "\r");
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
 			if (ptr)
 				 *ptr = 0;
 			else
@@ -832,42 +838,50 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 
 		if (rowstr)
 		{
-		    for (i = 0; i < strlen(rowstr); i++)
-		    {
-		        switch (rowstr[i])
-		        {
-		            case ',':
-		                rowstr[i] = '.';
-		                break;
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
 
-		            case 0x9:
-		            case 0xd:
-		                rowstr[i] = ' ';
-		                break;
-		        }
-		    }
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
 
-		    if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
-		    {
-		        d2 = -d2;
-		        if (d1 > 0 && d2 > 0)
-		        {
-		            if (d1 > d2)
-		            {
-		                d1 = d1 - d2;
-		                d2 = 0;
-		            }
-		            else
-		            {
-		                d2 = d2 - d1;
-		                d1 = 0;
-		            }
-		        }
+			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			{
+				if (PcaType == PCA_TYPE_MIXED)
+				{
+					Quiz[q - 1].MixedPca[0] = d1;
+					Quiz[q - 1].MixedPca[1] = d2;
+				}
+				else
+				{
+					d2 = -d2;
+					if (d1 > 0 && d2 > 0)
+					{
+						if (d1 > d2)
+						{
+							d1 = d1 - d2;
+							d2 = 0;
+						}
+						else
+						{
+							d2 = d2 - d1;
+							d1 = 0;
+						}
+					}
 
-		        Quiz[q - 1].Pca[0] = d1;
-		        Quiz[q - 1].Pca[1] = d2;
-		        Quiz[q - 1].Pca[2] = d3;
-		    }
+					Quiz[q - 1].Pca[0] = d1;
+					Quiz[q - 1].Pca[1] = d2;
+				}
+			}
 		}
 	}
 }
+

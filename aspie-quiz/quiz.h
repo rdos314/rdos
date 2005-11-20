@@ -48,21 +48,19 @@
 #define PCA_TYPE_YOUNG          3
 #define PCA_TYPE_OLD            4
 #define PCA_TYPE_AS             5
-#define PCA_TYPE_GROUP          6
+#define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             11
+#define GROUP_COUNT             9
 
 #define GROUP_SENSORY           0
-#define GROUP_BIOLOGY           1
+#define GROUP_MOTOR             1
 #define GROUP_NONVERBAL         2
-#define GROUP_LANGUAGE          3
-#define GROUP_SOCIAL            4
-#define GROUP_NT_RELATION       5
-#define GROUP_SEX               6
-#define GROUP_FOCUS             7
-#define GROUP_REPETITION        8
-#define GROUP_PHYSICAL          9
-#define GROUP_MIXED             10
+#define GROUP_FOCUS             3
+#define GROUP_REPETITION        4
+#define GROUP_SOCIAL            5
+#define GROUP_NT_RELATION       6
+#define GROUP_SEX               7
+#define GROUP_MIXED             8
 
 class TQuiz;
 
@@ -94,10 +92,11 @@ struct TQuizQuestion
     TQuizGroup Group[MAX_GROUP_COUNT];
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
-    long double FemalePca[MAX_PCA_AXIS];
-    long double YoungPca[MAX_PCA_AXIS];
+	long double FemalePca[MAX_PCA_AXIS];
+	long double YoungPca[MAX_PCA_AXIS];
     long double OldPca[MAX_PCA_AXIS];
-    long double AsPca[MAX_PCA_AXIS];
+	long double AsPca[MAX_PCA_AXIS];
+    long double MixedPca[MAX_PCA_AXIS];
 };
 
 struct TGroupCorr
@@ -134,7 +133,7 @@ public:
     ~TQuiz();
 
     void WriteReferers(const char *filename);
-    void WriteSumaryTable(const char *filename);
+    void WriteSumaryTable(const char *filename, int OnlyMixed);
     void WriteAsNtCorrelation(const char *filename);
     void WriteAspieAsCorrelation(const char *filename);
     void WriteAddAsCorrelation(const char *filename);
@@ -145,21 +144,21 @@ public:
     void WriteRefererAsCorrelation(const char *filename, const char *header, const char *referer);
     void WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer);
     void WriteAsNtAll(const char *filename);
-    void WriteGroupCorrTable(const char *filename);
-    void WriteGroupTable(const char *filename, int Cross);
-    void WritePca(const char *filename);
-    void WriteWeighting(const char *filename);
+	void WriteGroupCorrTable(const char *filename);
+	void WriteGroupTable(const char *filename, int Cross);
+	void WritePca(const char *filename);
+	void WriteWeighting(const char *filename);
 
-    virtual void ImportMvsp(const char *filename, int PcaType) = 0;
-    virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
+	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
+	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 
-    void CheckCross();
-    
+	void CheckCross();
+
 protected:
-    void Init();
-    int round(long double val);
+	void Init();
+	int round(long double val);
 
-    virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
+	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
 
     void DefineCross(int id, TQuiz *quiz);
@@ -186,8 +185,8 @@ protected:
 
     void WriteStaple(TFile &File, TPopulation *pop, int Question);
     void WriteCI95(TFile &File, TPopulation *pop, int Question);
-    void WriteCorr95(TFile &File, long double corr, int count);
-    void WriteReferer(TFile &file, TReferer *ref);
+	void WriteCorr95(TFile &File, long double corr, int count);
+	void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
 
     void WriteAsCI95(TFile &File, int Question);
@@ -211,8 +210,8 @@ protected:
     TPopulation Mix;
     TPopulation MixMale;
     TPopulation MixFemale;
-    TPopulation Nt;
-    TPopulation NtMale;
+	TPopulation Nt;
+	TPopulation NtMale;
     TPopulation NtFemale;    
 
     int UseNtResult;

@@ -128,20 +128,20 @@ void TQuizIII::SetupTexts()
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_SENSORY;
-	Quiz[10].MyGroup = GROUP_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_BIOLOGY;
-	Quiz[12].MyGroup = GROUP_BIOLOGY;
-	Quiz[13].MyGroup = GROUP_BIOLOGY;
-	Quiz[14].MyGroup = GROUP_BIOLOGY;
-	Quiz[15].MyGroup = GROUP_SENSORY;
-	Quiz[16].MyGroup = GROUP_BIOLOGY;
-	Quiz[17].MyGroup = GROUP_BIOLOGY;
-	Quiz[18].MyGroup = GROUP_BIOLOGY;
-	Quiz[19].MyGroup = GROUP_BIOLOGY;
-	Quiz[20].MyGroup = GROUP_SENSORY;
-	Quiz[21].MyGroup = GROUP_BIOLOGY;
-	Quiz[22].MyGroup = GROUP_BIOLOGY;
-	Quiz[23].MyGroup = GROUP_BIOLOGY;
+	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[11].MyGroup = GROUP_MOTOR;
+	Quiz[12].MyGroup = GROUP_MOTOR;
+	Quiz[13].MyGroup = GROUP_MOTOR;
+	Quiz[14].MyGroup = GROUP_MIXED;
+	Quiz[15].MyGroup = GROUP_MIXED;
+	Quiz[16].MyGroup = GROUP_MIXED;
+	Quiz[17].MyGroup = GROUP_SENSORY;
+	Quiz[18].MyGroup = GROUP_SENSORY;
+	Quiz[19].MyGroup = GROUP_SENSORY;
+	Quiz[20].MyGroup = GROUP_MIXED;
+	Quiz[21].MyGroup = GROUP_MIXED;
+	Quiz[22].MyGroup = GROUP_MIXED;
+	Quiz[23].MyGroup = GROUP_SENSORY;
 	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_NONVERBAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
@@ -153,15 +153,15 @@ void TQuizIII::SetupTexts()
 	Quiz[32].MyGroup = GROUP_NONVERBAL;
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
-	Quiz[35].MyGroup = GROUP_LANGUAGE;
-	Quiz[36].MyGroup = GROUP_LANGUAGE;
-	Quiz[37].MyGroup = GROUP_LANGUAGE;
-	Quiz[38].MyGroup = GROUP_LANGUAGE;
-	Quiz[39].MyGroup = GROUP_LANGUAGE;
-	Quiz[40].MyGroup = GROUP_LANGUAGE;
-	Quiz[41].MyGroup = GROUP_LANGUAGE;
-	Quiz[42].MyGroup = GROUP_LANGUAGE;
-	Quiz[43].MyGroup = GROUP_LANGUAGE;
+	Quiz[35].MyGroup = GROUP_NONVERBAL;
+	Quiz[36].MyGroup = GROUP_NONVERBAL;
+	Quiz[37].MyGroup = GROUP_NONVERBAL;
+	Quiz[38].MyGroup = GROUP_SOCIAL;
+	Quiz[39].MyGroup = GROUP_NONVERBAL;
+	Quiz[40].MyGroup = GROUP_NONVERBAL;
+	Quiz[41].MyGroup = GROUP_MIXED;
+	Quiz[42].MyGroup = GROUP_MIXED;
+	Quiz[43].MyGroup = GROUP_NONVERBAL;
 	Quiz[44].MyGroup = GROUP_SOCIAL;
 	Quiz[45].MyGroup = GROUP_SOCIAL;
 	Quiz[46].MyGroup = GROUP_SOCIAL;
@@ -174,7 +174,7 @@ void TQuizIII::SetupTexts()
 	Quiz[53].MyGroup = GROUP_SOCIAL;
 	Quiz[54].MyGroup = GROUP_NT_RELATION;
 	Quiz[55].MyGroup = GROUP_NT_RELATION;
-	Quiz[56].MyGroup = GROUP_NT_RELATION;
+	Quiz[56].MyGroup = GROUP_MIXED;
 	Quiz[57].MyGroup = GROUP_NT_RELATION;
 	Quiz[58].MyGroup = GROUP_NT_RELATION;
 	Quiz[59].MyGroup = GROUP_NT_RELATION;
@@ -206,17 +206,17 @@ void TQuizIII::SetupTexts()
 	Quiz[85].MyGroup = GROUP_REPETITION;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_REPETITION;
-	Quiz[88].MyGroup = GROUP_PHYSICAL;
-	Quiz[89].MyGroup = GROUP_PHYSICAL;
-	Quiz[90].MyGroup = GROUP_PHYSICAL;
-	Quiz[91].MyGroup = GROUP_BIOLOGY;
+	Quiz[88].MyGroup = GROUP_MIXED;
+	Quiz[89].MyGroup = GROUP_MIXED;
+	Quiz[90].MyGroup = GROUP_MIXED;
+	Quiz[91].MyGroup = GROUP_MIXED;
 	Quiz[92].MyGroup = GROUP_MIXED;
 	Quiz[93].MyGroup = GROUP_MIXED;
 	Quiz[94].MyGroup = GROUP_MIXED;
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_MIXED;
 	Quiz[97].MyGroup = GROUP_MIXED;
-	Quiz[98].MyGroup = GROUP_BIOLOGY;
+	Quiz[98].MyGroup = GROUP_MIXED;
 	Quiz[99].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -715,7 +715,7 @@ void TQuizIII::SetupControlGroups()
 	DefineNt("ayme.org.uk");
 	DefineNt("boylover.net");
 	DefineNt("democraticunderground.com");
-    DefineNt("theconversationcafe.com");
+	DefineNt("theconversationcafe.com");
     DefineNt("teleboards.com");
 
 	DefineAspie("wrongplanet.net");
@@ -857,7 +857,8 @@ static int IsPca(TQuizRow *row, int PcaType)
 {
     switch (PcaType)
     {
-        case PCA_TYPE_ALL:
+		case PCA_TYPE_ALL:
+		case PCA_TYPE_MIXED:
             return TRUE;
 
         case PCA_TYPE_MALE:
@@ -882,7 +883,7 @@ static int IsPca(TQuizRow *row, int PcaType)
             if (row->BirthYear <= 1965)
                 return TRUE;
             else
-                return FALSE;                
+				return FALSE;
 
         case PCA_TYPE_AS:
             if (row->Diagnos == DX_AS)
@@ -909,51 +910,57 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
     char str[80];
 	TFile file(filename, 0);
 
-    file.Write("\"\", ");
-    file.Write("\"\", ");
+	file.Write("\"\", ");
+	file.Write("\"\", ");
 
 	for (i = 0; i < MAX_QUESTIONS; i++)
-    {
-        file.Write("\"");
+	{
+		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+		{
+			file.Write("\"");
 
-//        strncpy(str, Quiz[i].Text, 35);
-//        str[35] = 0;
-        sprintf(str, "#%d", i + 1);
-        file.Write(str);
-        
-        file.Write("\"");
-        if (i != MAX_QUESTIONS - 1)
-            file.Write(", ");
-    }
-    file.Write("\n");
+//  	      strncpy(str, Quiz[i].Text, 35);
+//      	  str[35] = 0;
+			sprintf(str, "#%d", i + 1);
+			file.Write(str);
+
+			file.Write("\"");
+			if (i != MAX_QUESTIONS - 1)
+				file.Write(", ");
+		}
+	}
+	file.Write("\n");
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    if (IsPca(&Row, PcaType))
-	    {
+		if (IsPca(&Row, PcaType))
+		{
 			sprintf(str, "\%d\", ", Row.AsResult);
-	        file.Write(str);
+			file.Write(str);
 
-    	    sprintf(str, "\"%d\", ", Row.Diagnos);
-	        file.Write(str);
-	    
-    		for (i = 0; i < MAX_QUESTIONS; i++)
-	    	{
-		        ival = Row.Quiz[i];
-		        if (ival)
-					ival--;
-		        
-		    	if (ival > 2)
-			        ival = 0;
+			sprintf(str, "\"%d\", ", Row.Diagnos);
+			file.Write(str);
 
-    		    sprintf(str, "\"%d\"", ival);
-                file.Write(str);
-                if (i != MAX_QUESTIONS - 1)
-                    file.Write(", ");
-    		}
-	    	file.Write("\n");
-	    }
+			for (i = 0; i < MAX_QUESTIONS; i++)
+			{
+				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+				{
+					ival = Row.Quiz[i];
+					if (ival)
+						ival--;
+
+					if (ival > 2)
+						ival = 0;
+
+					sprintf(str, "\"%d\"", ival);
+					file.Write(str);
+					if (i != MAX_QUESTIONS - 1)
+						file.Write(", ");
+				}
+			}
+			file.Write("\n");
+		}
 	}
 }
 
@@ -1062,7 +1069,7 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2, d3;
+	long double d1, d2;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -1073,8 +1080,8 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 		rowstr = strstr(buf, "#");
 		if (rowstr)
 		{
-		    rowstr++;
-		    ptr = strstr(rowstr, "\r");
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
 			if (ptr)
 				 *ptr = 0;
 			else
@@ -1087,36 +1094,39 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 		if (rowstr)
 		{
 		    for (i = 0; i < strlen(rowstr); i++)
-		    {
-		        switch (rowstr[i])
-		        {
-		            case ',':
-		                rowstr[i] = '.';
-		                break;
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
 
-		            case 0x9:
+					case 0x9:
 					case 0xd:
 						rowstr[i] = ' ';
 						break;
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
+			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
 			{
-				if (PcaType != PCA_TYPE_AS  && PcaType != PCA_TYPE_YOUNG)
-					d2 = -d2;
-
-				if (d1 > 0 && d2 > 0)
+				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (d1 > d2)
+					if (PcaType != PCA_TYPE_FEMALE)
+						d2 = -d2;
+
+					if (d1 > 0 && d2 > 0)
 					{
-						d1 = d1 - d2;
-						d2 = 0;
-					}
-					else
-					{
-						d2 = d2 - d1;
-						d1 = 0;
+						if (d1 > d2)
+						{
+							d1 = d1 - d2;
+							d2 = 0;
+						}
+						else
+						{
+							d2 = d2 - d1;
+							d1 = 0;
+						}
 					}
 				}
 
@@ -1125,40 +1135,39 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 					case PCA_TYPE_ALL:
 						Quiz[q - 1].Pca[0] = d1;
 						Quiz[q - 1].Pca[1] = d2;
-						Quiz[q - 1].Pca[2] = d3;
 						break;
 
 					case PCA_TYPE_MALE:
 						Quiz[q - 1].MalePca[0] = d1;
 						Quiz[q - 1].MalePca[1] = d2;
-		                Quiz[q - 1].MalePca[2] = d3;
-		                break;
+						break;
 
-                    case PCA_TYPE_FEMALE:		            
-        		        Quiz[q - 1].FemalePca[0] = d1;
-	        	        Quiz[q - 1].FemalePca[1] = d2;
-		                Quiz[q - 1].FemalePca[2] = d3;
-		                break;
+					case PCA_TYPE_FEMALE:
+						Quiz[q - 1].FemalePca[0] = d1;
+						Quiz[q - 1].FemalePca[1] = d2;
+						break;
 
-                    case PCA_TYPE_YOUNG:		            
-        		        Quiz[q - 1].YoungPca[0] = d1;
-	        	        Quiz[q - 1].YoungPca[1] = d2;
-		                Quiz[q - 1].YoungPca[2] = d3;
-		                break;
+					case PCA_TYPE_YOUNG:
+						Quiz[q - 1].YoungPca[0] = d1;
+						Quiz[q - 1].YoungPca[1] = d2;
+						break;
 
-                    case PCA_TYPE_OLD:		            
-        		        Quiz[q - 1].OldPca[0] = d1;
-	        	        Quiz[q - 1].OldPca[1] = d2;
-		                Quiz[q - 1].OldPca[2] = d3;
-		                break;
+					case PCA_TYPE_OLD:
+						Quiz[q - 1].OldPca[0] = d1;
+						Quiz[q - 1].OldPca[1] = d2;
+						break;
 
-                    case PCA_TYPE_AS:		            
-        		        Quiz[q - 1].AsPca[0] = d1;
-	        	        Quiz[q - 1].AsPca[1] = d2;
-		                Quiz[q - 1].AsPca[2] = d3;
-		                break;
-		        }
-		    }
+					case PCA_TYPE_AS:
+						Quiz[q - 1].AsPca[0] = d1;
+						Quiz[q - 1].AsPca[1] = d2;
+						break;
+
+					case PCA_TYPE_MIXED:
+						Quiz[q - 1].MixedPca[0] = d1;
+						Quiz[q - 1].MixedPca[1] = d2;
+						break;
+				}
+			}
 		}
 	}
 }

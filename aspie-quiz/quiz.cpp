@@ -102,27 +102,28 @@ TQuiz::TQuiz()
             Quiz[i].FemalePca[g] = 0;
             Quiz[i].YoungPca[g] = 0;
             Quiz[i].OldPca[g] = 0;
-            Quiz[i].AsPca[g] = 0;
-        }
-    }
+			Quiz[i].AsPca[g] = 0;
+			Quiz[i].MixedPca[g] = 0;
+		}
+	}
 
-    for (g1 = 0; g1 < MAX_GROUP_COUNT; g1++)
-    {
-        for (g2 = 0; g2 < MAX_GROUP_COUNT; g2++)
-        {
-            GroupCorr[g1][g2].Corr = 0;
-            GroupCorr[g1][g2].Count = 0;
-        }
-    }
+	for (g1 = 0; g1 < MAX_GROUP_COUNT; g1++)
+	{
+		for (g2 = 0; g2 < MAX_GROUP_COUNT; g2++)
+		{
+			GroupCorr[g1][g2].Corr = 0;
+			GroupCorr[g1][g2].Count = 0;
+		}
+	}
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-    {
-        Group[g].Mean = 0;
-        Group[g].Sd = 0;
-    }
+	for (g = 0; g < MAX_GROUP_COUNT; g++)
+	{
+		Group[g].Mean = 0;
+		Group[g].Sd = 0;
+	}
 
-    GroupValArr = 0;
-    GroupValCount = 0;
+	GroupValArr = 0;
+	GroupValCount = 0;
 
     Init();
 }
@@ -173,20 +174,18 @@ void TQuiz::Init()
     }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
-        Group[g].Name = "NO NAME";
+		Group[g].Name = "NO NAME";
 
 #ifdef ENGLISH
 
 	Group[GROUP_SENSORY].Name = "SENSORY SYSTEM";
-	Group[GROUP_BIOLOGY].Name = "BIOLOGY";
 	Group[GROUP_NONVERBAL].Name = "NONVERBAL COMMUNICATION";
-	Group[GROUP_LANGUAGE].Name = "LANGUAGE AND SPEECH";
 	Group[GROUP_SOCIAL].Name = "SOCIAL & EMOTIONS";
 	Group[GROUP_NT_RELATION].Name = "NT RELATIONSHIPS";
 	Group[GROUP_SEX].Name = "SEXUALITY & GENDER ISSUES";
 	Group[GROUP_FOCUS].Name = "HYPERFOCUS, DETAIL & TALENTS";
 	Group[GROUP_REPETITION].Name = "NEED FOR REPETITION & PREDICTABILITY";
-	Group[GROUP_PHYSICAL].Name = "PHYSICAL TRAITS";
+	Group[GROUP_MOTOR].Name = "MOTOR";
 	Group[GROUP_MIXED].Name = "MIXED";
 
 #endif
@@ -194,15 +193,13 @@ void TQuiz::Init()
 #ifdef SWEDISH
 
 	Group[GROUP_SENSORY].Name = "SINNEN";
-	Group[GROUP_BIOLOGY].Name = "BIOLOGI";
 	Group[GROUP_NONVERBAL].Name = "ICKE-VERBAL KOMMUNIKATION";
-	Group[GROUP_LANGUAGE].Name = "TAL & SPRÅK";
 	Group[GROUP_SOCIAL].Name = "SOCIALT & KÄNSLOR";
 	Group[GROUP_NT_RELATION].Name = "NT RELATIONER";
 	Group[GROUP_SEX].Name = "SEXUALITET & KÖNSROLLER";
 	Group[GROUP_FOCUS].Name = "HYPERFOKUS, DETALJER & TALANGER";
 	Group[GROUP_REPETITION].Name = "UPPREPNING, STRUKTUR OCH FÖRUTSÄGBARTHET";
-	Group[GROUP_PHYSICAL].Name = "FYSISKA DRAG";
+	Group[GROUP_MOTOR].Name = "MOTOR";
 	Group[GROUP_MIXED].Name = "OGRUPPERADE";
 
 #endif
@@ -1407,9 +1404,10 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteSumaryTable(const char *filename)
+void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 {
 	int i;
+	int j;
 	char str[80];
 	int ival;
 	TFile file(filename, 0);
@@ -1422,210 +1420,226 @@ void TQuiz::WriteSumaryTable(const char *filename)
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
+    j = 0;
+    
 	for (i = 0; i < 100; i++)
 	{
-		if (i % 10 == 0)
-		{
-			file.Write("<tr style='height:24.75pt'>");
-
-        	WriteCenteredFieldHeader(file, 5);
-			file.Write("#");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 40);
-			file.Write(" ");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 5);
-			file.Write("?");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 5);
-			file.Write("Trend");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("PCA #1");
-			if (UseGender)
-			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("PCA #2");
-			if (UseGender)
-			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("Aspie");
-			if (UseGender)
-			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("AS");
-			if (UseGender)
-			    file.Write("<br>M/F");
-			WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("ADHD");
-			if (UseGender)
-			    file.Write("<br>M/F");
-			WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("Mixed");
-			if (UseGender)
-			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
-
-        	WriteCenteredFieldHeader(file, 6);
-			file.Write("NT");
-			if (UseGender)
-			    file.Write("<br>M/F");
-        	WriteFieldFooter(file);
-
-			file.Write("</tr>");
-		}
-
-		file.Write("<tr style='height:24.75pt'>");
-
-		WriteCenteredFieldHeader(file, 5);
-		sprintf(str, "%d", i + 1);
-		file.Write(str);
-        WriteFieldFooter(file);
-
-        WriteCenteredFieldHeader(file, 40);
-		file.Write(Quiz[i].Text);
-        WriteFieldFooter(file);
-
-        WriteCenteredFieldHeader(file, 5);
-		if (All.Count[i])
+		if (!OnlyMixed || Quiz[i].MyGroup == GROUP_MIXED)
         {
-    		ival = round(100.0 * Quiz[i].NoAnswer / All.Count[i]);
-	    	sprintf(str, "%d%", ival);
-		    file.Write(str);
-		}
-		else
-		    file.Write("-----");
-        WriteFieldFooter(file);
+    		if (j % 10 == 0)
+	    	{
+		    	file.Write("<tr style='height:24.75pt'>");
 
-        WriteCenteredFieldHeader(file, 5);
-		if (UseGender)
-		{
-		    WriteStaple(file, &AspieMale, i);
-		    WriteStaple(file, &AsMale, i);
-			WriteStaple(file, &AddMale, i);
-		    WriteStaple(file, &MixMale, i);
-		    WriteStaple(file, &NtMale, i);
+            	WriteCenteredFieldHeader(file, 5);
+	    		file.Write("#");
+            	WriteFieldFooter(file);
 
-		    file.Write("<br>");
+            	WriteCenteredFieldHeader(file, 40);
+	    		file.Write(" ");
+            	WriteFieldFooter(file);
 
-			WriteStaple(file, &AspieFemale, i);
-		    WriteStaple(file, &AsFemale, i);
-		    WriteStaple(file, &AddFemale, i);
-		    WriteStaple(file, &MixFemale, i);
-		    WriteStaple(file, &NtFemale, i);
+            	WriteCenteredFieldHeader(file, 5);
+	    		file.Write("?");
+            	WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 5);
+	    		file.Write("Trend");
+            	WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("PCA #1");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+        	    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("PCA #2");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+        	    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("Aspie");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+        	    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("AS");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+			    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("ADHD");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+			    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+		    	file.Write("Mixed");
+	    		if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+        	    WriteFieldFooter(file);
+
+            	WriteCenteredFieldHeader(file, 6);
+	    		file.Write("NT");
+		    	if (UseGender && !OnlyMixed)
+			        file.Write("<br>M/F");
+        	    WriteFieldFooter(file);
+
+    			file.Write("</tr>");
+    		}
+
+            j++;
+            
+    		file.Write("<tr style='height:24.75pt'>");
+
+	    	WriteCenteredFieldHeader(file, 5);
+		    sprintf(str, "%d", i + 1);
+    		file.Write(str);
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 40);
+	    	file.Write(Quiz[i].Text);
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+	    	if (All.Count[i])
+            {
+    		    ival = round(100.0 * Quiz[i].NoAnswer / All.Count[i]);
+    	    	sprintf(str, "%d%", ival);
+	    	    file.Write(str);
+		    }
+    		else
+	    	    file.Write("-----");
+            WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 5);
+	    	if (UseGender && !OnlyMixed)
+		    {
+    		    WriteStaple(file, &AspieMale, i);
+	    	    WriteStaple(file, &AsMale, i);
+		    	WriteStaple(file, &AddMale, i);
+		        WriteStaple(file, &MixMale, i);
+		        WriteStaple(file, &NtMale, i);
+
+    		    file.Write("<br>");
+
+	    		WriteStaple(file, &AspieFemale, i);
+		        WriteStaple(file, &AsFemale, i);
+		        WriteStaple(file, &AddFemale, i);
+		        WriteStaple(file, &MixFemale, i);
+		        WriteStaple(file, &NtFemale, i);
+    	    }
+	        else
+	        {
+		        WriteStaple(file, &Aspie, i);
+			    WriteStaple(file, &As, i);
+			    WriteStaple(file, &Add, i);
+			    WriteStaple(file, &Mix, i);
+			    WriteStaple(file, &Nt, i);
+		    }
+    		WriteFieldFooter(file);
+
+    		if (UseGender && !OnlyMixed)
+	    	{
+		    	WriteCenteredFieldHeader(file, 6);
+			    ival = round(100.0 * Quiz[i].MalePca[0]);
+    			sprintf(str, "%d%", ival);
+	    		file.Write(str);
+		    	file.Write("<br>");
+			    ival = round(100.0 * Quiz[i].FemalePca[0]);
+    			sprintf(str, "%d%", ival);
+	    		file.Write(str);
+		    	WriteFieldFooter(file);
+
+       			WriteCenteredFieldHeader(file, 6);
+	    		ival = round(100.0 * Quiz[i].MalePca[1]);
+		    	sprintf(str, "%d%", ival);
+			    file.Write(str);
+    			file.Write("<br>");
+	    		ival = round(100.0 * Quiz[i].FemalePca[1]);
+		    	sprintf(str, "%d%", ival);
+			    file.Write(str);
+    			WriteFieldFooter(file);
+    
+    			WriteCenteredFieldHeader(file, 6);
+	    		WriteCI95(file, &AspieMale, i);
+		    	file.Write("<br>");
+			    WriteCI95(file, &AspieFemale, i);
+    			WriteFieldFooter(file);
+
+	    		WriteCenteredFieldHeader(file, 6);
+		    	WriteCI95(file, &AsMale, i);
+			    file.Write("<br>");
+    			WriteCI95(file, &AsFemale, i);
+	    		WriteFieldFooter(file);
+    
+	       		WriteCenteredFieldHeader(file, 6);
+       			WriteCI95(file, &AddMale, i);
+	    		file.Write("<br>");
+		    	WriteCI95(file, &AddFemale, i);
+    			WriteFieldFooter(file);
+
+	    		WriteCenteredFieldHeader(file, 6);
+		    	WriteCI95(file, &MixMale, i);
+			    file.Write("<br>");
+    			WriteCI95(file, &MixFemale, i);
+	    		WriteFieldFooter(file);
+
+		    	WriteCenteredFieldHeader(file, 6);
+			    WriteCI95(file, &NtMale, i);
+    			file.Write("<br>");
+	    		WriteCI95(file, &NtFemale, i);
+		    	WriteFieldFooter(file);
+
+        		file.Write("</tr>");
+	    	}
+		    else
+		    {
+    			WriteCenteredFieldHeader(file, 6);
+	    		if (OnlyMixed)
+				    ival = round(100.0 * Quiz[i].MixedPca[0]);
+	    		else
+		    		ival = round(100.0 * Quiz[i].Pca[0]);
+
+		    	sprintf(str, "%d%", ival);
+			    file.Write(str);
+		    	WriteFieldFooter(file);
+    
+	    		WriteCenteredFieldHeader(file, 6);
+		    	if (OnlyMixed)
+	    			ival = round(100.0 * Quiz[i].MixedPca[1]);
+			    else
+    				ival = round(100.0 * Quiz[i].Pca[1]);
+	    		sprintf(str, "%d%", ival);
+		    	file.Write(str);
+			    WriteFieldFooter(file);
+
+    			WriteCenteredFieldHeader(file, 6);
+	    		WriteCI95(file, &Aspie, i);
+		    	WriteFieldFooter(file);
+    
+	    		WriteCenteredFieldHeader(file, 6);
+		        WriteCI95(file, &As, i);
+                WriteFieldFooter(file);
+
+                WriteCenteredFieldHeader(file, 6);
+	    	    WriteCI95(file, &Add, i);
+                WriteFieldFooter(file);
+    
+    			WriteCenteredFieldHeader(file, 6);
+	    	    WriteCI95(file, &Mix, i);
+                WriteFieldFooter(file);
+    
+                WriteCenteredFieldHeader(file, 6);
+		        WriteCI95(file, &Nt, i);
+                WriteFieldFooter(file);
+
+           		file.Write("</tr>");
+    	    }
 	    }
-	    else
-	    {
-		    WriteStaple(file, &Aspie, i);
-		    WriteStaple(file, &As, i);
-		    WriteStaple(file, &Add, i);
-		    WriteStaple(file, &Mix, i);
-		    WriteStaple(file, &Nt, i);
-	    }
-        WriteFieldFooter(file);
-
-		if (UseGender)
-		{
-            WriteCenteredFieldHeader(file, 6);
-			ival = round(100.0 * Quiz[i].MalePca[0]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			file.Write("<br>");
-			ival = round(100.0 * Quiz[i].FemalePca[0]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			ival = round(100.0 * Quiz[i].MalePca[1]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			file.Write("<br>");
-			ival = round(100.0 * Quiz[i].FemalePca[1]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &AspieMale, i);
-			file.Write("<br>");
-			WriteCI95(file, &AspieFemale, i);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &AsMale, i);
-			file.Write("<br>");
-			WriteCI95(file, &AsFemale, i);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &AddMale, i);
-			file.Write("<br>");
-			WriteCI95(file, &AddFemale, i);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &MixMale, i);
-			file.Write("<br>");
-			WriteCI95(file, &MixFemale, i);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &NtMale, i);
-			file.Write("<br>");
-			WriteCI95(file, &NtFemale, i);
-			WriteFieldFooter(file);
-		}
-		else
-		{
-			WriteCenteredFieldHeader(file, 6);
-			ival = round(100.0 * Quiz[i].Pca[0]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			ival = round(100.0 * Quiz[i].Pca[1]);
-			sprintf(str, "%d%", ival);
-			file.Write(str);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-			WriteCI95(file, &Aspie, i);
-			WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-		    WriteCI95(file, &As, i);
-            WriteFieldFooter(file);
-
-            WriteCenteredFieldHeader(file, 6);
-		    WriteCI95(file, &Add, i);
-            WriteFieldFooter(file);
-
-			WriteCenteredFieldHeader(file, 6);
-		    WriteCI95(file, &Mix, i);
-            WriteFieldFooter(file);
-
-            WriteCenteredFieldHeader(file, 6);
-		    WriteCI95(file, &Nt, i);
-            WriteFieldFooter(file);
-	    }
-	    
-		file.Write("</tr>");
 	}
 
 	file.Write("</table>");
@@ -1852,7 +1866,7 @@ void TQuiz::WriteRefererAsCorrelation(const char *filename, const char *header, 
     GetReferer(referer, &pop);
 
     if (pop.ValueCount >= 5 && Aspie.ValueCount >= 5)
-    	WriteCorrTable(filename, header, "Aspie control", &pop, &Nt, 6.0);
+		WriteCorrTable(filename, header, "Aspie control", &pop, &As, 6.0);
 }
 
 /*##################  TQuiz::WriteAsCI95 ##########################
@@ -2249,7 +2263,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
             WriteCenteredFieldHeader(file, 6);
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             while (quiz)
-            {				    
+			{
 				ival = round(100.0 * quiz->Quiz[q].Pca[0]);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
@@ -2271,11 +2285,11 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				ival = round(100.0 * quiz->Quiz[q].Pca[1]);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
-				
-                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-                if (quiz)
-                {   cross++;
-    			    file.Write("<br>");
+
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				if (quiz)
+				{   cross++;
+					file.Write("<br>");
 				}
 			}
 			WriteFieldFooter(file);
@@ -2517,33 +2531,39 @@ void TQuiz::WritePca(const char *filename)
 		file.Write(str);
 		file.Write("<br>");
 
-        ival = round(100.0 * Quiz[i].YoungPca[1]);
+		ival = round(100.0 * Quiz[i].YoungPca[1]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 5);
-        ival = round(100.0 * Quiz[i].OldPca[0]);
+		WriteCenteredFieldHeader(file, 5);
+		ival = round(100.0 * Quiz[i].OldPca[0]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        file.Write("<br>");
+		file.Write("<br>");
 
-        ival = round(100.0 * Quiz[i].OldPca[1]);
+		ival = round(100.0 * Quiz[i].OldPca[1]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        WriteFieldFooter(file);
+		WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 5);
-        ival = round(100.0 * Quiz[i].AsPca[0]);
+		WriteCenteredFieldHeader(file, 5);
+		if (Quiz[i].MyGroup == GROUP_MIXED)
+			ival = round(100.0 * Quiz[i].MixedPca[0]);
+		else
+			ival = round(100.0 * Quiz[i].AsPca[0]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        file.Write("<br>");
+		file.Write("<br>");
 
-        ival = round(100.0 * Quiz[i].AsPca[1]);
+		if (Quiz[i].MyGroup == GROUP_MIXED)
+			ival = round(100.0 * Quiz[i].MixedPca[1]);
+		else
+			ival = round(100.0 * Quiz[i].AsPca[1]);
 		sprintf(str, "%d%", ival);
 		file.Write(str);
-        WriteFieldFooter(file);
-        
+		WriteFieldFooter(file);
+
 		file.Write("</tr>");
 	}
 
@@ -2578,10 +2598,10 @@ void TQuiz::WriteWeighting(const char *filename)
 	TFile file(filename, 0);
 
     for (i = 0; i < 100; i++)
-    {
-        assum = Quiz[i].Pca[0];
-        ntsum = Quiz[i].Pca[1];
-        count = 1;
+	{
+		assum = Quiz[i].Pca[0];
+		ntsum = Quiz[i].Pca[1];
+		count = 1;
 
         j = Quiz[i].CrossInd;
         CurrQuiz = Quiz[i].CrossQuiz;
@@ -2589,12 +2609,12 @@ void TQuiz::WriteWeighting(const char *filename)
 
         while (CurrQuiz)
         {
-            assum += CurrQuiz->Quiz[j].Pca[0];
-            ntsum += CurrQuiz->Quiz[j].Pca[1];
-            count++;
+			assum += CurrQuiz->Quiz[j].Pca[0];
+			ntsum += CurrQuiz->Quiz[j].Pca[1];
+			count++;
 
-            k = CurrQuiz->Quiz[j].CrossInd;
-            CurrQuiz = CurrQuiz->Quiz[j].CrossQuiz;
+			k = CurrQuiz->Quiz[j].CrossInd;
+			CurrQuiz = CurrQuiz->Quiz[j].CrossQuiz;
             j = k;
         }
 
@@ -2636,20 +2656,20 @@ void TQuiz::WriteWeighting(const char *filename)
 
     for (i = 0; i < 100; i++)
     {
-        assum = Quiz[i].MalePca[0] - Quiz[i].FemalePca[0];
-        ntsum = Quiz[i].MalePca[1] - Quiz[i].FemalePca[1];
+		assum = Quiz[i].MalePca[0] - Quiz[i].FemalePca[0];
+		ntsum = Quiz[i].MalePca[1] - Quiz[i].FemalePca[1];
         count = 1;
 
         j = Quiz[i].CrossInd;
-        CurrQuiz = Quiz[i].CrossQuiz;
+		CurrQuiz = Quiz[i].CrossQuiz;
         j = i;
 
         while (CurrQuiz)
         {
-            mas0 = CurrQuiz->Quiz[j].MalePca[0];
-            fas0 = CurrQuiz->Quiz[j].FemalePca[0];
-            mas1 = CurrQuiz->Quiz[j].MalePca[1];
-            fas1 = CurrQuiz->Quiz[j].FemalePca[1];
+			mas0 = CurrQuiz->Quiz[j].MalePca[0];
+			fas0 = CurrQuiz->Quiz[j].FemalePca[0];
+			mas1 = CurrQuiz->Quiz[j].MalePca[1];
+			fas1 = CurrQuiz->Quiz[j].FemalePca[1];
 
             if (mas0 != 0 || fas0 != 0 || mas1 != 0 || fas1 != 0)
             {
@@ -2701,9 +2721,9 @@ void TQuiz::WriteWeighting(const char *filename)
 
     for (i = 0; i < 100; i++)
     {
-        assum = Quiz[i].OldPca[0] - Quiz[i].YoungPca[0];
-        ntsum = Quiz[i].OldPca[1] - Quiz[i].YoungPca[1];
-        count = 1;
+		assum = Quiz[i].OldPca[0] - Quiz[i].YoungPca[0];
+		ntsum = Quiz[i].OldPca[1] - Quiz[i].YoungPca[1];
+		count = 1;
 
         j = Quiz[i].CrossInd;
         CurrQuiz = Quiz[i].CrossQuiz;
@@ -2711,12 +2731,12 @@ void TQuiz::WriteWeighting(const char *filename)
 
         while (CurrQuiz)
         {
-            oas0 = CurrQuiz->Quiz[j].OldPca[0];
-            yas0 = CurrQuiz->Quiz[j].YoungPca[0];
-            oas1 = CurrQuiz->Quiz[j].OldPca[1];
-            yas1 = CurrQuiz->Quiz[j].YoungPca[1];
+			oas0 = CurrQuiz->Quiz[j].OldPca[0];
+			yas0 = CurrQuiz->Quiz[j].YoungPca[0];
+			oas1 = CurrQuiz->Quiz[j].OldPca[1];
+			yas1 = CurrQuiz->Quiz[j].YoungPca[1];
 
-            if (oas0 != 0 || oas0 != 0 || yas1 != 0 || yas1 != 0)
+			if (oas0 != 0 || oas0 != 0 || yas1 != 0 || yas1 != 0)
             {
                 assum += oas0 - yas0;
                 ntsum += oas1 - yas1;
