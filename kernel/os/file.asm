@@ -668,21 +668,7 @@ FreeFileSel	PROC near
 	push ecx
 	push si
 	push edi
-;
-    mov ax,flat_sel
-    mov es,ax
-	mov ecx,ds:file_dir_entry
-	mov bx,es:[ecx].de_sel
-	or bx,bx
-	jz free_file_sel_enter_ok
 ;	
-	push ds
-    mov ds,bx
-	EnterSection ds:ds_list_section
-	pop ds
-
-free_file_sel_enter_ok:
-    push bx
     mov bx,ds
     call RemoveFileSel
 ;    
@@ -724,16 +710,6 @@ free_file_sel_done:
 	xor ax,ax
 	mov ds,ax
 ;
-    pop bx
-    or bx,bx
-    jz free_file_sel_leave_ok
-;    
-	push ds
-    mov ds,bx
-	LeaveSection ds:ds_list_section
-	pop ds
-
-free_file_sel_leave_ok:
 	pop edi
 	pop si
 	pop ecx

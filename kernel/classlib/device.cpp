@@ -6951,9 +6951,6 @@ TDistUnit::~TDistUnit()
 
     if (FReplyAlloc)
         delete FReplyAlloc;
-
-    if (FLastReplyTag)
-        delete FLastReplyTag;        
 }
 
 /*##########################################################################
@@ -7169,12 +7166,14 @@ TDistUnit *TDistUnit::GetNextUnit()
 void TDistUnit::ResetCurrMsg()
 {
     FReqTag = 0;
+    FReplyTag = 0;
     FInfoTag = 0;
     FInstallTag = 0;
                 
     FCurrReqID = 0;
     FCurrInfoID = 0;
     FCurrInstallID = 0;
+    FCurrAcceptID = 0;
 }
 
 /*##########################################################################
@@ -7207,12 +7206,19 @@ void TDistUnit::ClearQueues()
 	    delete FAcceptMsg;
 	FAcceptMsg = 0;
 
+    if (FReplyAlloc)
+        delete FReplyAlloc;
+    FReplyAlloc = 0;
+
+    FLastReplyTag = 0;
+
 	ResetCurrMsg();
 
 	FReqID = 0;
 	FInfoID = 0;
 	FInstallID = 0;
 	FAcceptID = 0;
+    FLastReplyID = 0;
 
 	FMsgSection.Leave();
 }
@@ -8679,6 +8685,8 @@ void TDistSystem::SendResetReq()
     char *data;
     int size;
 
+    FDistDevice->Reset();
+
 	msg = new TDeviceMsg(128);
     tag = msg->AddTag(DEVICE_TAG_RESET_REQ);
 
@@ -8707,6 +8715,8 @@ void TDistSystem::SendResetAck()
     TDeviceTag *tag;
     char *data;
     int size;
+
+    FDistDevice->Reset();
 
 	msg = new TDeviceMsg(128);
 	tag = msg->AddTag(DEVICE_TAG_RESET_ACK);

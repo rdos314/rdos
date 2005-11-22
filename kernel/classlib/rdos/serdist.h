@@ -44,6 +44,8 @@ public:
 	virtual int GetTimeout();
 	virtual int GetPort();
 
+	virtual void Reset();
+
 	void ReceiveThread();
 	void SendThread();
 

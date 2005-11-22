@@ -134,6 +134,22 @@ void TSerialDistDevice::NotifyClose()
 
 /*##########################################################################
 #
+#   Name       : TSerialDistDevice::Reset
+#
+#   Purpose....: Reset device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDistDevice::Reset()
+{
+    FSerial->Clear();
+}
+
+/*##########################################################################
+#
 #   Name       : TSerialDistDevice::SendMsg
 #
 #   Purpose....: Send a message

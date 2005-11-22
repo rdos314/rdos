@@ -698,6 +698,8 @@ public:
     virtual void SendMsg(const char *Data, int Size) = 0;    
 	virtual int GetTimeout() = 0;
 	virtual int GetPort() = 0;
+
+	virtual void Reset() = 0;
         
 protected:
     void AddSystem(TDistSystem *system);
