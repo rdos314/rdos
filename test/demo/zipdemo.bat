@@ -1,1 +1,2 @@
-pkzip demo.zip *.bin *.bat *.gft
+pkzip demo.zip rdos.bin start.bat \rdos\kernel\tools\load.exe
+

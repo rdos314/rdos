@@ -1,1 +1,1 @@
-pkzip httpd.zip *.cpp *.h *.def *.dsw *.exe *.ide
+pkzip httpd.zip *.cpp *.h *.def *.exe *.ide

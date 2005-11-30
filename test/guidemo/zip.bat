@@ -1,1 +1,1 @@
-pkzip guidemo.zip *.cpp *.h *.def *.dsw *.exe *.ide
+pkzip guidemo.zip *.cpp *.h *.def *.exe *.ide

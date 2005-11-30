@@ -1,2 +1,2 @@
 echo off
-load demo
+load rdos
