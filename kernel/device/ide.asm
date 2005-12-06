@@ -653,6 +653,10 @@ GetDriveParams	Proc near
 	mov ax,es:[edi+12]
 	mov fs:drive_sectors_per_cyl,ax
 ;
+    mov ax,es:[edi+98]
+    test ax,200h
+    jz get_drive_param_done
+;        
 	mov fs:drive_lba_mode,1
 	mov cx,1
 	mov ah,fs:drive_precomp

@@ -36,6 +36,7 @@
 #include "bar.h"
 #include "compac.h"
 #include "netana.h"
+#include "waynecl.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -58,29 +59,28 @@ void cdecl main()
 //	TFile RawBarFile("z:\\bar.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
-	TFile RawFile("c:\\comlog\\raw.dat");
+	TFile RawFile("c:\\comlog\\raw002.dat");
 
 //	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
-	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-	TProtocolAnalyser rawanalyzer(&RawFile, 0x400);
+//	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TProtocolAnalyser rawanalyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
+	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
-	rawanalyzer.DefineLogFile("compraw.txt");
-	analyzer.DefineLogFile("compac.txt");
+//	rawanalyzer.DefineLogFile("compraw.txt");
+//	analyzer.DefineLogFile("compac.txt");
+	analyzer.DefineLogFile("c:\\comlog\\wayne.txt");
 
 	for (;;)
 	{
-		if (rawanalyzer.GetMsg())
-			rawanalyzer.ShowMsg();
-
 		if (analyzer.GetMsg())
 			analyzer.ShowMsg();
 	}

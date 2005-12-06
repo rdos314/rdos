@@ -467,6 +467,7 @@ void TQuizIII::InitReferers()
 	AddReferer("delphiforums.com", "forums.delphiforums.com/n/mb/message.asp?webtag=aspies");
 	AddReferer("assupportgrouponline.co.uk", "assupportgrouponline.co.uk/");
 	AddReferer("teleboards.com", "teleboards.com/showthread.php?s=");
+	AddReferer("thorntree.lonelyplanet.com", "thorntree.lonelyplanet.com/categories.cfm?catid=41");
 }
 
 /*##################  TQuizIII::LoadReferers ##########################
@@ -717,6 +718,7 @@ void TQuizIII::SetupControlGroups()
 	DefineNt("democraticunderground.com");
 	DefineNt("theconversationcafe.com");
     DefineNt("teleboards.com");
+	DefineNt("thorntree.lonelyplanet.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -725,7 +727,7 @@ void TQuizIII::SetupControlGroups()
 	DefineAspie("aspergianisland.com");
 	DefineAspie("xmission.com/~winter");
 	DefineAspie("delphiforums.com");
-    DefineAspie("assupportgrouponline.co.uk");
+	DefineAspie("assupportgrouponline.co.uk");
 }
 
 /*##########################################################################
@@ -1112,7 +1114,7 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType != PCA_TYPE_FEMALE)
+					if (PcaType != PCA_TYPE_MALE && PcaType != PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (d1 > 0 && d2 > 0)

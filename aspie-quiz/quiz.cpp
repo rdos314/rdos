@@ -526,8 +526,9 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
         {
             if (!CurrQuiz->Quiz[CurrQuestion].Used)
             {
-                corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
-                        CurrQuiz->Quiz[CurrQuestion].Pca[1];
+//                corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+//                        CurrQuiz->Quiz[CurrQuestion].Pca[1];
+                corr = CurrQuiz->Quiz[CurrQuestion].Corr;
                 if (corr < 0)
                     corr = -corr;
 
@@ -558,8 +559,9 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
                 {
                     if (!CurrQuiz->Quiz[CurrQuestion].Used)
                     {
-                        corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
-                                CurrQuiz->Quiz[CurrQuestion].Pca[1];
+//                        corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+//                                CurrQuiz->Quiz[CurrQuestion].Pca[1];
+                        corr = CurrQuiz->Quiz[CurrQuestion].Corr;
                         if (corr < 0)
                             corr = -corr;
 
@@ -615,8 +617,9 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
             {
                 if (!CurrQuiz->Quiz[CurrQuestion].Used)
                 {
-                    corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
-                            CurrQuiz->Quiz[CurrQuestion].Pca[1];
+//                    corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+//                            CurrQuiz->Quiz[CurrQuestion].Pca[1];
+                    corr = CurrQuiz->Quiz[CurrQuestion].Corr;
                     if (corr < 0)
                         corr = -corr;
 
@@ -650,8 +653,9 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
                     {
                         if (!CurrQuiz->Quiz[CurrQuestion].Used)
                         {
-                            corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
-                                    CurrQuiz->Quiz[CurrQuestion].Pca[1];
+//                            corr =  CurrQuiz->Quiz[CurrQuestion].Pca[0] - 
+//                                    CurrQuiz->Quiz[CurrQuestion].Pca[1];
+                            corr = CurrQuiz->Quiz[CurrQuestion].Corr;
                             if (corr < 0)
                                 corr = -corr;
 
@@ -699,8 +703,9 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
     {
         if (!CurrQuiz->Quiz[MyQuestion].Used)
         {
-			corr =  CurrQuiz->Quiz[MyQuestion].Pca[0] -
-					CurrQuiz->Quiz[MyQuestion].Pca[1];
+//			corr =  CurrQuiz->Quiz[MyQuestion].Pca[0] -
+//					CurrQuiz->Quiz[MyQuestion].Pca[1];
+            corr = CurrQuiz->Quiz[MyQuestion].Corr;
 			if (corr < 0)
 				corr = -corr;
 
