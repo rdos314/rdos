@@ -1309,7 +1309,8 @@ PAGE
 CreateDirBase	Proc near
 	push ds
 	push fs
-	push ax
+	push eax
+	push ebx
 	push edx
 ;
 	mov bx,flat_sel
@@ -1350,7 +1351,8 @@ create_dir_pop_failed:
 
 create_dir_done:
 	pop edx
-	pop ax
+	pop ebx
+	pop eax
 	pop fs
 	pop ds
 	ret
@@ -1376,6 +1378,8 @@ DeleteDirBase	Proc near
 	push es
 	push fs
 	push eax
+	push ebx
+	push ecx
 	push edx
 	push edi
 ;
@@ -1452,6 +1456,8 @@ delete_dir_fail:
 delete_dir_done:
 	pop edi
 	pop edx
+	pop ecx
+	pop ebx
 	pop eax
 	pop fs
 	pop es

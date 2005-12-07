@@ -2802,8 +2802,8 @@ lock_sector_name	DB 'Lock Sector',0
 lock_sector	PROC far
 	push ds
 	push es
-	push ax
-	push cx
+	push eax
+	push ecx
 	push edx
 	push edi
 ;
@@ -2938,8 +2938,8 @@ lock_get_adds:
 lock_done:
 	pop edi
 	pop edx
-	pop cx
-	pop ax
+	pop ecx
+	pop eax
 	pop es
 	pop ds
 	ret
@@ -4383,7 +4383,8 @@ format_perf:
 	xor edx,edx
 	LockSector
 ;
-    movzx edx,es:[esi].boot_param.boot_mapping_sectors
+    mov edx,1
+    mov es:[esi].boot_param.boot_mapping_sectors,dx
     sub ecx,edx
     mov edx,ecx
 	mov es:[esi].boot_param.boot_sectors,edx

@@ -69,6 +69,7 @@
 #include "synctime.h"
 #include "fd2file.h"
 #include "mount.h"
+#include "reboot.h"
 
 #include "file.h"
 #include "path.h"
@@ -115,6 +116,7 @@ static TCommandFactory *synctime;
 static TCommandFactory *pause;
 static TCommandFactory *path;
 static TCommandFactory *rd;
+static TCommandFactory *reboot;
 static TCommandFactory *rem;
 static TCommandFactory *rmdir;
 static TCommandFactory *rmpart;
@@ -166,6 +168,7 @@ TSession::TSession()
     	rmpart = new TRemovePartitionFactory;
     	rmdir = new TRmdirFactory;
     	rem = new TRemFactory;
+    	reboot = new TRebootFactory;
     	rd = new TRdFactory;
     	prompt = new TPromptFactory;
     	ping = new TPingFactory;
@@ -281,6 +284,7 @@ TSession::~TSession()
     	delete rmpart;
     	delete rmdir;
     	delete rem;
+    	delete reboot;
     	delete rd;
     	delete prompt;
     	delete ping;

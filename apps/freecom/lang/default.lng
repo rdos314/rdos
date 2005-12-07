@@ -969,6 +969,12 @@ Clears the screen.
 CLS
 .
 
+:TEXT_CMDHELP_REBOOT
+Reboots computer.
+
+REBOOT
+.
+
 :TEXT_CMDHELP_COMMAND
 Starts a new copy of the command shell.
 
