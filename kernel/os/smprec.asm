@@ -1417,27 +1417,27 @@ ReceiveRequest	Proc near
 	push ds
 	push ax
 	push bx
-	push edx
 ;
 	mov bx,es:[di].sh_mailslot
 	xchg bl,bh
 	call FindReceiveMailslot
 	jc receive_fail
 ;
-	mov edx,es:ip_source
 	call FindReceiveMailslotHost
 	jc receive_fail
 ;
+    push edx
 	mov edx,ds:m_rec_max_size
 	mov ds,ax
 	call HandleRequest
+	pop edx
 	jmp receive_done
 
 receive_fail:
-	mov edx,es:ip_source
 	call FindHost
 	jc receive_done
 ;
+    push edx
 	mov ds,ax
 	mov eax,es:[di].sh_connection
 	Reverse
@@ -1445,6 +1445,7 @@ receive_fail:
 	mov bx,es:[di].sh_mailslot
 	xchg bl,bh
 	call QueueReset
+	pop edx
 ;
 	mov bx,ipc_data_sel
 	mov ds,bx
@@ -1452,7 +1453,6 @@ receive_fail:
 	Signal
 
 receive_done:
-	pop edx
 	pop bx
 	pop ax
 	pop ds

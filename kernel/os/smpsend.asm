@@ -1598,6 +1598,7 @@ HandleReply	Proc near
 	push gs
 	push eax
 	push ebx
+	push edx
 ;
 	mov al,ds:vm_valid
 	or al,al
@@ -1635,6 +1636,7 @@ handle_reply_leave:
 	LeaveSection ds:m_section
 
 handle_reply_done:
+    pop edx
 	pop ebx
 	pop eax
 	pop gs
@@ -1653,6 +1655,7 @@ PAGE
 ;		Parameters:		ES:DI	SMP header
 ;						ES:SI	SMP data
 ;						CX		Size of data
+;                       EDX     IP source
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1661,17 +1664,15 @@ PAGE
 ReceiveReply	Proc near
 	push ds
 	push bx
-	push edx
 ;
 	mov bx,es:[di].sh_mailslot
 	xchg bl,bh
-	mov edx,es:ip_source
 	call FindSendMailslot
 	jc receive_reply_done
+;	
 	call HandleReply
 
 receive_reply_done:
-	pop edx
 	pop bx
 	pop ds
 	ret
@@ -1686,6 +1687,7 @@ PAGE
 ;	Purpose:		Handle a reset message
 ;
 ;	Parameters:		ES:SI	Response data
+;                   EDX     IP source
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1697,11 +1699,9 @@ HandleReset	Proc near
 	push eax
 	push ebx
 	push ecx
-	push edx
-;
+;	
 	mov bx,es:[si].sr_mailslot
 	xchg bl,bh
-	mov edx,es:ip_source
 	call FindSendMailslot
 	jc handle_reset_done
 ;
@@ -1719,6 +1719,7 @@ HandleReset	Proc near
 	jae handle_reset_leave
 
 handle_reset_do:
+    push edx
 	mov ds:vm_valid,0
 	LeaveSection ds:m_section
 	mov fs,ds:vm_host
@@ -1735,8 +1736,8 @@ handle_reset_do:
 ;
 	GetSystemTime
 	mov ds:vm_name_time,eax
+	pop edx
 ;
-	mov edx,es:ip_source
 	call SendNameRequest
 	jmp handle_reset_done
 
@@ -1745,7 +1746,6 @@ handle_reset_leave:
 
 handle_reset_done:
 	clc
-	pop edx
 	pop ecx
 	pop ebx
 	pop eax

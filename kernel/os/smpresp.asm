@@ -259,6 +259,7 @@ PAGE
 ;	Purpose:		Handle ACK response
 ;
 ;	Parameters:		ES:SI	Response data
+;                   EDX     IP source
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -266,14 +267,12 @@ HandleAck	Proc near
 	push ds
 	push eax
 	push bx
-	push edx
 ;
 	cmp es:[si].sr_size,4
 	jnz handle_ack_done
 ;
 	mov bx,es:[si].sr_mailslot
 	xchg bl,bh
-	mov edx,es:ip_source
 	call FindSendMailslot
 	jc handle_ack_check_receive
 ;
@@ -284,7 +283,6 @@ handle_ack_check_receive:
 	call FindReceiveMailslot
 	jc handle_ack_done
 ;
-	mov edx,es:ip_source
 	call FindReceiveMailslotHost
 	jc handle_ack_done
 ;
@@ -294,7 +292,6 @@ handle_ack_check_receive:
 	pop gs
 
 handle_ack_done:
-	pop edx
 	pop bx
 	pop eax
 	pop ds
@@ -344,6 +341,7 @@ PAGE
 ;
 ;	Parameters:		ES:SI	Response data
 ;					CX		Size of data
+;                   EDX     IP source
 ;
 ;	Returns:		ES:SI	Next response
 ;					CX		Size of data
@@ -408,6 +406,7 @@ PAGE
 ;
 ;	Parameters:		ES:DI	SMP header
 ;					CX		Size of data + header
+;                   EDX     IP source
 ;
 ;	Returns:		ES:SI	SMP data
 ;					CX		Size of data
@@ -417,15 +416,13 @@ PAGE
 	public HandleResponses
 
 HandleResponses	Proc near 
-	push edx
-;
 	mov si,di
 	add si,SIZE smp_header
 	sub cx,SIZE smp_header
 	jc handle_responses_done
 ;
-	mov dl,es:[di].sh_responses
-	or dl,dl
+	mov al,es:[di].sh_responses
+	or al,al
 	clc
 	jz handle_responses_done
 
@@ -433,12 +430,11 @@ handle_responses_loop:
 	call ActOnResponse
 	jc handle_responses_done
 ;
-	sub dl,1
+	sub al,1
 	jnz handle_responses_loop
 	clc
 
 handle_responses_done:
-	pop edx
 	ret
 HandleResponses	Endp
 
