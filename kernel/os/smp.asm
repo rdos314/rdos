@@ -246,6 +246,7 @@ Receive	Proc far
 	push di
 ;
 	push di
+	push dx
 	mov dx,cx
 	xchg dl,dh
 	add dx,7900h
@@ -267,34 +268,35 @@ Receive	Proc far
 	call CalcChecksum
 	not ax
 	or al,ah
+	pop dx
 	pop di
 	jnz receive_free
 ;
-	mov dl,es:[di].sh_flags
+	mov al,es:[di].sh_flags
 ;
-	test dl,NAM
+	test al,NAM
 	jnz receive_name
 ;
-	test dl,REQ
+	test al,REQ
 	jnz receive_request
 ;
-	and dl,REQ OR RPY
-	cmp dl,REQ OR RPY
+	and al,REQ OR RPY
+	cmp al,REQ OR RPY
 	je receive_free
 ;
-	test dl,RPY
+	test al,RPY
 	jnz receive_reply
 	jmp receive_responses
 
 receive_name:
-	and dl,REQ OR RPY
-	cmp dl,REQ OR RPY
+	and al,REQ OR RPY
+	cmp al,REQ OR RPY
 	je receive_free
 ;
-	test dl,REQ
+	test al,REQ
 	jnz receive_name_request
 ;
-	test dl,RPY
+	test al,RPY
 	jnz receive_name_reply
 	jmp receive_responses
 

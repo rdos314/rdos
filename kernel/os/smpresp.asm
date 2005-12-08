@@ -417,7 +417,7 @@ PAGE
 	public HandleResponses
 
 HandleResponses	Proc near 
-	push dx
+	push edx
 ;
 	mov si,di
 	add si,SIZE smp_header
@@ -438,7 +438,7 @@ handle_responses_loop:
 	clc
 
 handle_responses_done:
-	pop dx
+	pop edx
 	ret
 HandleResponses	Endp
 

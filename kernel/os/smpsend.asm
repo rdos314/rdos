@@ -1881,6 +1881,7 @@ HandleName	Endp
 ;
 ;		Parameters:		AX		Size of options
 ;						ECX		Size of data
+;                       EDX     IP source
 ;						DS:ESI	SMP data
 ;						ES:EDI	SMP header
 ;
@@ -1894,7 +1895,6 @@ NameReply	Proc near
 	push bx
 	push edx
 ;
-	mov edx,es:ip_source
 	call FindHost
 	jc name_reply_done
 ;

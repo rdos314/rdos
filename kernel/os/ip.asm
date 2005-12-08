@@ -418,7 +418,7 @@ create_header_alloc:
 	je create_header_not_ppp
 ;
 	cmp dl,127
-	je create_header_not_ppp
+	je create_header_local
 ;
 	mov eax,fs:gateway
 	or eax,eax
@@ -442,6 +442,14 @@ create_header_gw_pop:
 	pop ds
 	jnc create_header_fill
 	jmp create_header_fail_pop
+
+create_header_local:
+    mov di,6
+    movzx eax,cx
+    add ax,di
+    AllocateSmallGlobalMem
+    mov es:[di].ip_source,edx
+    jmp create_header_fill
 
 create_header_ppp:
 	GetPppBuffer
@@ -918,6 +926,10 @@ receive_check_ok:
 	mov ax,ip_data_sel
 	mov ds,ax
 ;
+    mov eax,es:[di].ip_source
+    cmp al,127
+    je receive_dhcp_done
+;    
 	mov bx,ds:ip_handle
 	push edi
 	lea edi,[di].ip_source

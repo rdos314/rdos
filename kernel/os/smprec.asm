@@ -423,9 +423,6 @@ SendData	Proc near
 	push bx
 	call CreateSegment
 ;
-	mov edx,gs:l_receive_ip
-	mov es:ip_source,edx
-;
 	mov eax,gs:l_connection
 	Reverse
 	mov es:[di].sh_connection,eax
@@ -505,9 +502,6 @@ SendAck	Proc near
 	xor ecx,ecx
 	call CreateSegment
 ;
-	mov edx,gs:l_receive_ip
-	mov es:ip_source,edx
-;
 	mov es:[di].sh_connection,0
 	mov es:[di].sh_offset_size,0
 	mov es:[di].sh_mailslot,0
@@ -578,9 +572,7 @@ send_good_name_size_loop:
 	jnz send_good_name_size_loop
 ;
 	push edx
-	mov edx,es:ip_dest
 	call CreateSegment
-	mov es:ip_source,edx
 	pop edx
 ;
 	mov eax,edx
@@ -1596,7 +1588,6 @@ name_res_ok:
 	LeaveSection ds:ipc_section
 	pop ds
 ;
-	mov edx,es:ip_source
 	call GetReceiveMailslot
 	jc name_res_done
 ;

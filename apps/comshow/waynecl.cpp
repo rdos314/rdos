@@ -119,7 +119,7 @@ int TWayneClProtocolAnalyser::GetMsg()
 
 		if (Channel != Debug.Channel)
 		{
-		    FRawFile->SetPos(StartPos);
+//		    FRawFile->SetPos(StartPos);
 			return TRUE;
 		}
 
