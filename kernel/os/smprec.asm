@@ -914,9 +914,9 @@ send_smp_idle:
 	mov ecx,es:l_size
 	mov esi,OFFSET l_msg
 	mov ds:m_current,es
-	mov ds:m_send_thread,-1
 	xor ax,ax
 	mov es,ax
+	mov ds:m_send_thread,-1
 	mov ds:m_reply_callb,OFFSET ReplyToSmp
 	call CopyToReceiver
 	pop fs

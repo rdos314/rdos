@@ -66,7 +66,6 @@ code	SEGMENT byte public 'CODE'
 	extrn FindHost:near
 	extrn CalcChecksum:near
 	extrn ReceiverAck:near
-	extrn SenderAck:near
 	extrn FindReceiveMailslotHost:near
 	extrn FindReceiveMailslot:near
 	extrn FindSendMailslot:near
@@ -268,18 +267,12 @@ HandleAck	Proc near
 	push eax
 	push bx
 ;
+	mov bx,es:[si].sr_mailslot
+	xchg bl,bh
+;
 	cmp es:[si].sr_size,4
 	jnz handle_ack_done
 ;
-	mov bx,es:[si].sr_mailslot
-	xchg bl,bh
-	call FindSendMailslot
-	jc handle_ack_check_receive
-;
-	call SenderAck
-	jmp handle_ack_done
-
-handle_ack_check_receive:
 	call FindReceiveMailslot
 	jc handle_ack_done
 ;

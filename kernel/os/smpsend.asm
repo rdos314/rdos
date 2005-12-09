@@ -1754,56 +1754,6 @@ handle_reset_done:
 	ret
 HandleReset	Endp
 
-PAGE
-	    
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-; 	Name:			SenderAck
-;
-;	Purpose:		Sender ACK
-;
-;	Parameters:		ES:SI	Response data
-;					DS		Virtual mailslot
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-	public SenderAck
-
-SenderAck	Proc near
-	push gs
-	push eax
-	push ecx
-;
-	EnterSection ds:m_section
-	mov bx,si
-	add bx,SIZE smp_response
-	mov eax,es:[bx]
-	Reverse
-	mov ecx,eax
-;
-	mov eax,es:[si].sr_connection
-	Reverse
-	mov ebx,eax
-	call FindRequest
-	jc proc_ack_done
-;
-	cmp ecx,gs:l_ack
-	jc proc_ack_done
-;
-	mov gs:l_ack,ecx
-	cmp ecx,gs:l_size
-	jc proc_ack_done
-;
-
-proc_ack_done:
-	LeaveSection ds:m_section
-	clc
-;
-	pop ecx
-	pop eax
-	pop gs
-	ret
-SenderAck	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
