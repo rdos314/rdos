@@ -1670,7 +1670,7 @@ RdosDrawMask	Proc
 	mov dx,[ebp+40]
 	shl edx,16
 	mov dx,[ebp+36]
-	UserGate blit_nr
+	UserGate draw_mask_nr
 ;
 	pop edi
 	pop esi
@@ -3027,7 +3027,7 @@ RdosOpenCom	Proc
 	mov si,[ebp].send_buf_size
 	mov di,[ebp].rec_buf_size
 	UserGate open_com_nr
-	mov ax,bx
+	movzx eax,bx
 ;
 	pop edi
 	pop esi
@@ -3493,7 +3493,7 @@ RdosOpenFile	PROC
 	mov cl,[ebp+12]
 	UserGate open_file_nr
 	jc OpenFileFailed
-	mov ax,bx
+	movzx eax,bx
 	jmp OpenFileDone
 
 OpenFileFailed:
@@ -3528,7 +3528,7 @@ RdosCreateFile	PROC
 	mov cx,[ebp+12]
 	UserGate create_file_nr
 	jc CreateFileFailed
-	mov ax,bx
+	movzx eax,bx
 	jmp CreateFileDone
 
 CreateFileFailed:
@@ -3615,7 +3615,7 @@ RdosDuplFile	PROC
 	mov bx,[ebp+8]
 	UserGate dupl_file_nr
 	jc DuplFileFailed
-	mov ax,bx
+	movzx eax,bx
 	jmp DuplFileDone
 
 DuplFileFailed:
