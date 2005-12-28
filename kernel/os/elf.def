@@ -116,6 +116,8 @@ elf_data_seg	STRUC
 elf_dlls		DW ?
 elf_app			DW ?
 elf_cmd_line	DD ?
+elf_env			DD ?
+elf_exe_name	DD ?
 elf_section		section_typ <>
 elf_mem_blocks	DW ?
 

@@ -72,7 +72,7 @@ CreateLib	Proc near
 ;
 	push eax
 	push ecx
-	xor cx,cx
+	xor ecx,ecx
 	push esi
 create_lib_size_loop:
 	mov al,fs:[esi]
@@ -139,10 +139,10 @@ InsertApp	Proc near
 	mov ds,ax
 	mov word ptr ds:app_loader_name,OFFSET elf_loader_name
 	mov word ptr ds:app_loader_name+2,cs
-;	mov word ptr ds:app_get_env_proc,OFFSET get_env
-;	mov word ptr ds:app_get_env_proc+2,cs 
-;	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
-;	mov word ptr ds:app_get_exe_proc+2,cs 
+	mov word ptr ds:app_get_env_proc,OFFSET get_env
+	mov word ptr ds:app_get_env_proc+2,cs 
+	mov word ptr ds:app_get_exe_proc,OFFSET get_exe_name
+	mov word ptr ds:app_get_exe_proc+2,cs 
 	mov word ptr ds:app_get_cmd_line_proc,OFFSET get_cmd_line
 	mov word ptr ds:app_get_cmd_line_proc+2,cs 
 	mov word ptr ds:app_allocate_mem_proc,OFFSET allocate_mem
@@ -250,6 +250,9 @@ load_object	Proc far
 	mov eax,1
 	UnhookPage
 	sub edx,local_page_linear
+	mov ax,flat_data_sel
+	mov ds,ax
+	and dx,0F000h
 ;
 	call FindLib
 	jc load_object_done
@@ -482,6 +485,7 @@ InitStack	Proc near
 	mov eax,100000h
 	AllocateLocalLinear
 	sub edx,local_page_linear
+	add edx,eax
 	mov word ptr [bp].load_ss,flat_data_sel
 	mov [bp].load_esp,edx
 ;
@@ -903,11 +907,13 @@ allocate_mem	PROC far
 	and ax,0F000h
 	add eax,1000h
 	mov ecx,eax
+	push ecx
 	AllocateLocalLinear
 	sub edx,local_page_linear
 ;
 	mov eax,SIZE elf_mem_struc
 	AllocateLocalMem
+	pop ecx
 	mov es:mem_base,edx
 	mov es:mem_size,ecx
 	mov ax,elf_app_sel
@@ -955,8 +961,7 @@ PAGE
 ;
 ;		DESCRIPTION:	Free memory
 ;
-;		PARAMETERS:		EAX	Number of bytes
-;						EDX Offset within flat selector
+;		PARAMETERS:		EDX Offset within flat selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -969,7 +974,6 @@ free_mem	PROC far
 	push si
 	push edi
 ;
-	mov edi,eax
 	mov ax,elf_app_sel
 	mov ds,ax
 	EnterSection ds:elf_section
@@ -981,15 +985,9 @@ free_mem_more:
 	mov si,ax
 free_mem_loop:
 	mov es,ax
-	mov ecx,es:mem_base
-	add ecx,es:mem_size
-	cmp edx,ecx
-	jae free_mem_next
-;
-	mov ecx,edx
-	add ecx,edi
-	cmp ecx,es:mem_base
-	ja free_mem_ok
+
+    cmp edx,es:mem_base
+    je free_mem_ok
 
 free_mem_next:
 	mov ax,es:mem_next
@@ -1000,12 +998,10 @@ free_mem_failed:
 	jmp free_mem_done
 
 free_mem_ok:
-	push edx
 	mov edx,es:mem_base
 	add edx,local_page_linear
 	mov ecx,es:mem_size
 	FreeLinear
-	pop edx
 	mov ds:elf_mem_blocks,es
 	mov ax,es:mem_prev
 	cmp ax,ds:elf_mem_blocks
@@ -1037,6 +1033,122 @@ free_mem_done:
 	pop ds
 	ret
 free_mem	ENDP
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetExeName
+;
+;		DESCRIPTION:    Get exe-file name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_exe_name	Proc far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+;
+	mov ax,elf_app_sel
+	mov ds,ax
+	mov edi,ds:elf_exe_name
+	or edi,edi
+	jnz get_exe_done
+;	
+	mov ax,thread_app_sel
+	mov ds,ax
+	mov si,OFFSET app_exe_name
+
+get_exe_size_loop:
+	lodsb
+	or al,al
+	jnz get_exe_size_loop
+;
+	mov ax,si
+	sub ax,OFFSET app_exe_name
+	movzx eax,ax
+	mov ecx,eax
+	UserGateForce32 allocate_app_mem_nr
+	mov edi,edx
+	mov esi,OFFSET app_exe_name
+	rep movs byte ptr es:[edi],[esi]
+;
+	mov ax,elf_app_sel
+	mov ds,ax
+	mov ds:elf_exe_name,edx
+	mov edi,edx
+
+get_exe_done:
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+get_exe_name	Endp
+                                           
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetEnv
+;
+;		DESCRIPTION:    Get environment block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_env	Proc far
+	push ds
+	push eax
+	push ebx
+	push ecx
+	push edx
+	push esi
+;
+	mov ax,elf_app_sel
+	mov ds,ax
+	mov edi,ds:elf_env
+	or edi,edi
+	jnz get_env_done
+;	
+    LockProcEnv
+	mov ds,bx
+	xor si,si
+
+get_env_size_loop:
+	lodsb
+	or al,al
+	jnz get_env_size_loop
+;
+	lodsb
+	or al,al
+	jnz get_env_size_loop
+;
+	movzx ecx,si
+	mov eax,ecx
+	UserGateForce32 allocate_app_mem_nr
+	mov edi,edx
+	xor esi,esi
+	rep movs byte ptr es:[edi],[esi]
+;
+	mov ax,elf_app_sel
+	mov ds,ax
+	mov ds:elf_env,edx
+	mov edi,edx
+;
+    UnlockProcEnv
+
+get_env_done:
+	pop esi
+	pop edx
+	pop ecx
+	pop ebx
+	pop eax
+	pop ds
+	ret
+get_env	Endp
                                            
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
