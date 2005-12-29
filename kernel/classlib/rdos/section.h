@@ -33,8 +33,8 @@ class TSection
 public:
 	TSection();
     ~TSection();
-	void Enter();
-	void Leave();
+	void Enter() const;
+	void Leave() const;
 
 private:
 	int FHandle;

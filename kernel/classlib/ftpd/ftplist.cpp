@@ -30,7 +30,6 @@
 #include <stdio.h>
 
 #include "ftpserv.h"
-#include "dir.h"
 #include "ftplist.h"
 #include "rdos.h"
 #include "path.h"

@@ -194,7 +194,7 @@ int TKeyboardDevice::ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int 
 #   Returns....: TRUE if std key
 #
 ##########################################################################*/
-int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey)
+int TKeyboardDevice::IsStdKey(int ExtKey, int VirtualKey) const
 {
     if (ExtKey & 0x8000)
         return FALSE;

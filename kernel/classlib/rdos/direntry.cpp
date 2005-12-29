@@ -58,7 +58,7 @@ TSection FDirSortSection;
 #   Returns....: *
 #
 ##########################################################################*/
-static int cdecl SortCompare(const void *e1, const void *e2)
+static int __cdecl SortCompare(const void *e1, const void *e2)
 {
 	TDirListNode **tmp;
 	TDirEntryData dir1;

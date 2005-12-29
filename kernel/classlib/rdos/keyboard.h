@@ -180,7 +180,7 @@ public:
 	
 	int PeekEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
 	int ReadEvent(int *ExtKey, int *KeyState, int *VirtualKey, int *ScanCode);
-    int IsStdKey(int ExtKey, int VirtualKey);
+    int IsStdKey(int ExtKey, int VirtualKey) const;
 
 	void (*OnKeyPress)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 	void (*OnKeyRelease)(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode);

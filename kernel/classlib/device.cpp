@@ -25,7 +25,11 @@
 #
 #######################################################################*/
 
+#ifdef __GNUC__
+#include <string.h>
+#else
 #include <mem.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -553,10 +557,14 @@ void TDeviceVar::SetUnsignedLong(unsigned long data)
 *##########################################################################*/
 void TDeviceVar::SetUnsignedInt(unsigned int data)
 {
+#ifdef __GNUC__
+    SetUnsignedLong(data);
+#else
 #if sizeof(int) == 2
     SetUnsignedShort(data);
 #else
     SetUnsignedLong(data);
+#endif
 #endif
 }
 
@@ -656,10 +664,14 @@ void TDeviceVar::SetSignedLong(long data)
 *##########################################################################*/
 void TDeviceVar::SetSignedInt(int data)
 {
+#ifdef __GNUC__
+    SetSignedLong(data);
+#else
 #if sizeof(int) == 2
     SetSignedShort(data);
 #else
     SetSignedLong(data);
+#endif
 #endif
 }
 
@@ -904,7 +916,7 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
     int i;
     char *ptr;
     int bitnr;
-	const char *bool;
+	const char *cbool;
 
     Reinit();
 
@@ -926,10 +938,10 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
 
     bitnr = 0;
     ptr = FData;
-    bool = data;
+    cbool = data;
     for (i = 0; i < size; i++)
     {
-        if (*bool)
+        if (*cbool)
             *ptr |= 1 << bitnr;
         
         bitnr++;
@@ -938,7 +950,7 @@ void TDeviceVar::SetBoolArray(int size, const char *data)
             bitnr = 0;
             ptr++;
         }
-        bool++;
+        cbool++;
     }                 
 }
 
@@ -1137,10 +1149,14 @@ unsigned long TDeviceVar::GetUnsigned32()
 *##########################################################################*/
 unsigned int TDeviceVar::GetUnsignedInt()
 {
+#ifdef __GNUC__
+	return GetUnsigned32();
+#else
 #if sizeof(int) == 2
 	return GetUnsigned16();
 #else
 	return GetUnsigned32();
+#endif
 #endif
 }
 
@@ -1357,10 +1373,14 @@ long TDeviceVar::GetSigned32()
 *##########################################################################*/
 int TDeviceVar::GetSignedInt()
 {
+#ifdef __GNUC__
+	return GetSigned32();
+#else
 #if sizeof(int) == 2
 	return GetSigned16();
 #else
 	return GetSigned32();
+#endif
 #endif
 }
 
@@ -2876,10 +2896,14 @@ TDeviceVar *TDeviceTag::ModifyUnsignedInt(unsigned short int ID, unsigned int da
         Add(Var);
     }
 
+#ifdef __GNUC__
+    Var->SetUnsigned32(data);
+#else
 #if sizeof(int) == 2    
     Var->SetUnsigned16(data);
 #else
     Var->SetUnsigned32(data);
+#endif
 #endif
 
     return Var;
@@ -2959,10 +2983,14 @@ TDeviceVar *TDeviceTag::ModifySignedInt(unsigned short int ID, int data)
         Add(Var);
     }
 
+#ifdef __GNUC__
+    Var->SetSigned32(data);
+#else
 #if sizeof(int) == 2    
     Var->SetSigned16(data);
 #else
     Var->SetSigned32(data);
+#endif
 #endif
 
     return Var;

@@ -28,8 +28,13 @@
 #include "rdos.h"
 #include "gif.h"
 #include "file.h"
+#ifdef __GNUC__
+#include <malloc.h>
+#include <string.h>
+#else
 #include <alloc.h>
 #include <mem.h>
+#endif
 #include <string.h>
 
 #define FALSE	0
@@ -137,7 +142,7 @@ static int InterlacedJumps[] = { 8, 8, 4, 2 };    /* be read - offsets and jumps
 ******************************************************************************/
 static int BitSize(int n)
 {
-    register	i;
+    register	int i;
 
     for (i = 1; i <= 8; i++)
 		if ((1 << i) >= n)
@@ -1161,7 +1166,7 @@ static TGifBitmapDevice *DGifCreateBitmap(GifFileType *GifFile)
 						for (j = Row + InterlacedOffset[i]; j < Row + Height; j += InterlacedJumps[i])
 						{
 							ptr = bits + j * LineSize;
-						    if (DGifGetLine(GifFile, buf, Width))
+						    if (DGifGetLine(GifFile, (unsigned char *)buf, Width))
 								DGifHandleScanLine(GifFile, ptr, buf);
 							else
 								break;
@@ -1172,7 +1177,7 @@ static TGifBitmapDevice *DGifCreateBitmap(GifFileType *GifFile)
 					for (i = 0; i < Height; i++)
 					{
 						ptr = bits + Row * LineSize;
-						if (DGifGetLine(GifFile, buf, Width))
+						if (DGifGetLine(GifFile, (unsigned char *)buf, Width))
 						{
 							DGifHandleScanLine(GifFile, ptr, buf);
 							Row++;

@@ -218,7 +218,7 @@ int TAxis::LogToPixel(long double rel)
 		return FYMax - (int)(range * rel);
 	}
 
-	return 0.0;
+	return 0;
 }
 
 /*##########################################################################
@@ -284,7 +284,7 @@ int TAxis::PhysToPixel(long double val)
 		return FYMax - (int)(range * PhysToLog(val));
 	}
 
-	return 0.0;
+	return 0;
 }
 
 /*##########################################################################

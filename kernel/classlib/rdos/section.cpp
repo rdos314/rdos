@@ -74,7 +74,7 @@ TSection::~TSection()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSection::Enter()
+void TSection::Enter() const
 {
     RdosEnterSection(FHandle);
 }
@@ -90,7 +90,7 @@ void TSection::Enter()
 #   Returns....: *
 #
 ##########################################################################*/
-void TSection::Leave()
+void TSection::Leave() const
 {
     RdosLeaveSection(FHandle);
 }

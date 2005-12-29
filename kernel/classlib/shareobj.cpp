@@ -25,7 +25,11 @@
 #
 ########################################################################*/
 
+#ifdef __GNUC__
+#include <string.h>
+#else
 #include <mem.h>
+#endif
 
 #include "shareobj.h"
 #include "section.h"

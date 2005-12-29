@@ -88,7 +88,7 @@ TPngBitmapDevice *TPngBitmapDevice::Create(const char *FileName)
 		ok = FALSE;
 		if (RdosReadFile(FileHandle, buf, 8) == 8)
 		{				
-			if (png_sig_cmp(buf, 0, 8) == 0)
+			if (png_sig_cmp((png_byte*)buf, 0, 8) == 0)
 				ok = TRUE;
 		}
 

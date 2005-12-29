@@ -33,7 +33,7 @@
 class THttpSocketServerFactory : public TSocketServerFactory
 {
 public:
-	THttpSocketServerFactory::THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
+	THttpSocketServerFactory(int Port, int MaxConnections, int BufferSize);
 	~THttpSocketServerFactory();
 
 	void AddCustomPage(THttpCustomPageFactory *page);

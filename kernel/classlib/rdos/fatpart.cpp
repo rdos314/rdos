@@ -25,7 +25,11 @@
 #
 ########################################################################*/
 
+#ifdef __GNUC__
+#include <string.h>
+#else
 #include <mem.h>
+#endif
 #include <stdio.h>
 
 #include "rdos.h"

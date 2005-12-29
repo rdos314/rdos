@@ -32,15 +32,6 @@
 #define FALSE	0
 #define TRUE	!FALSE
 
-const RLE_COMMAND     = 0;
-const RLE_ENDOFLINE   = 0;
-const RLE_ENDOFBITMAP = 1;
-const RLE_DELTA       = 2;
-const BI_RGB          = 0;
-const BI_RLE8         = 1;
-const BI_RLE4         = 2;
-const BI_BITFIELDS    = 3;
-
 struct	TBitmapFileHeader
 {
 	char Type[2];

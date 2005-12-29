@@ -99,11 +99,13 @@ TDateTime::TDateTime(unsigned long Msb, unsigned long Lsb)
 ##########################################################################*/
 TDateTime::TDateTime(long double real)
 {
-#if sizeof(int) == 4
-	FMsb = (unsigned long)floorl(real);
+#ifdef __GNUC__
+	FMsb = (unsigned long)floor(real);
+#else
+    FMsb = (unsigned long)floorl(real);
+#endif
 	FLsb = (unsigned long)((real - (long double)FMsb) * 65536.0 * 65536.0);
 	RawToRecord();
-#endif
 }
 
 /*##########################################################################
