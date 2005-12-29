@@ -29,7 +29,7 @@ CC  	=	rdos-g++
 oDir	=	.
 Bin	=	.
 libDirs	=
-INCLUDES=	-I. -I../ -I../../ -I../rdos
+INCLUDES=	-I. -I../ -I../../ -I../zlib
 
 LD_FLAGS =	-s
 LIBS	=	
@@ -39,26 +39,38 @@ CFLAGS	=	-O
 	$(CC) $(CFLAGS) -O2 $(INCLUDES) -c $<
 
 SRCS	=\
-    httpcmd.cpp \
-    httpcust.cpp \
-    httpdata.cpp \
-    httpfact.cpp \
-    httpopt.cpp \
-    httppars.cpp \
-    httpserv.cpp
+    png.cpp \
+    pngerror.cpp \
+    pngget.cpp \
+    pngmem.cpp \
+    pngread.cpp \
+    pngrio.cpp \
+    pngrtran.cpp \
+    pngrutil.cpp \
+    pngset.cpp \
+    pngtrans.cpp \
+    pngwio.cpp \
+    pngwrite.cpp \
+    pngwutil.cpp
 
 EXOBJS	=\
-	$(oDir)/httpcmd.o \
-	$(oDir)/httpcust.o \
-	$(oDir)/httpdata.o \
-	$(oDir)/httpfact.o \
-	$(oDir)/httpopt.o \
-	$(oDir)/httppars.o \
-	$(oDir)/httpserv.o
+	$(oDir)/png.o \
+	$(oDir)/pngerror.o \
+	$(oDir)/pngget.o \
+	$(oDir)/pngmem.o \
+	$(oDir)/pngread.o \
+	$(oDir)/pngrio.o \
+	$(oDir)/pngrtran.o \
+	$(oDir)/pngrutil.o \
+	$(oDir)/pngset.o \
+	$(oDir)/pngtrans.o \
+	$(oDir)/pngwio.o \
+	$(oDir)/pngwrite.o \
+	$(oDir)/pngwutil.o
 
 ALLOBJS	=	$(EXOBJS)
-ALLBIN	=	$(Bin)/httpd.a
-ALLTGT	=	$(Bin)/httpd.a
+ALLBIN	=	$(Bin)/png.a
+ALLTGT	=	$(Bin)/png.a
 
 # User defines:
 
@@ -88,7 +100,7 @@ include Makefile.dep
 
 #@# Dependency rules follow -----------------------------
 
-$(Bin)/httpd.a: $(EXOBJS)
-	rm -f $(Bin)/httpd.a
-	rdos-ar cr $(Bin)/httpd.a $(EXOBJS)
-	rdos-ranlib $(Bin)/httpd.a
+$(Bin)/png.a: $(EXOBJS)
+	rm -f $(Bin)/png.a
+	rdos-ar cr $(Bin)/png.a $(EXOBJS)
+	rdos-ranlib $(Bin)/png.a
