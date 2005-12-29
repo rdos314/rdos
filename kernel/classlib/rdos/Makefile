@@ -7,106 +7,143 @@
 
 # Standard defines:
 CC  	=	rdos-g++
-LD  	=	g++
-WRES	=	windres
-CCOMP	=	gcc
-HOMEV	=	
-VPATH	=	$(HOMEV)/include
 oDir	=	.
 Bin	=	.
 libDirs	=
-INCLUDES=	-I../
+INCLUDES=	-I../ -I../../
 
 LD_FLAGS =	-s
 LIBS	=	
-CFLAGS	=	-O -I../
+CFLAGS	=	-O -I../ -I../../
 
 .cpp.o:
 	$(CC) $(CFLAGS) -O2 $(INCLUDES) -c $<
 
 SRCS	=\
-	device.cpp\
-	file.cpp\
-	adcdev.cpp\
-	bitdev.cpp\
-	linxaxis.cpp\
-	daysamp.cpp\
-	str.cpp\
-	serial.cpp\
-	axis.cpp\
-	font.cpp\
-	gif.cpp\
-	xaxis.cpp\
-	chart.cpp\
-	graphdev.cpp\
-	yaxis.cpp\
-	datetime.cpp\
-	linyaxis.cpp\
-	hoursamp.cpp\
-	ymodem.cpp\
-	filelist.cpp\
-	lightdev.cpp\
-	path.cpp\
-	montsamp.cpp\
-	mouse.cpp\
-	png.cpp\
-	secsamp.cpp\
-	section.cpp\
-	sprite.cpp\
-	tempdev.cpp\
-	videodev.cpp\
-	waitdev.cpp\
-	yearsamp.cpp\
-	JPEG.CPP\
-	minsamp.cpp\
-	sample.cpp\
-	bmp.cpp\
-	env.cpp\
-	KEYBOARD.CPP
+	../bmp.cpp \
+	../device.cpp \
+	../gif.cpp \
+	../jpeg.cpp \
+	../png.cpp \
+	../sample.cpp \
+	../secsamp.cpp \
+	../minsamp.cpp \
+	../hoursamp.cpp \
+	../daysamp.cpp \
+	../montsamp.cpp \
+	../yearsamp.cpp \
+	../tempdev.cpp \
+	../lightdev.cpp \
+	../str.cpp \
+	../ymodem.cpp \
+	../axis.cpp \
+	../xaxis.cpp \
+	../yaxis.cpp \
+	../linxaxis.cpp \
+	../linyaxis.cpp \
+	../chart.cpp \
+	../list.cpp \
+	../shareobj.cpp \
+	../listbase.cpp \
+	../strlist.cpp \
+	../filestor.cpp \
+	../discstor.cpp \
+	../storlist.cpp \
+	../redustor.cpp \
+	../splitstor.cpp \
+	../part.cpp \
+	bitdev.cpp \
+	datetime.cpp \
+    file.cpp \
+    font.cpp \
+    graphdev.cpp \
+    keyboard.cpp \
+    mouse.cpp \    
+    section.cpp \
+    serial.cpp \
+    sprite.cpp \
+    waitdev.cpp \
+    videodev.cpp \
+    adcdev.cpp \    	
+    env.cpp \
+    path.cpp \
+    direntry.cpp \
+    socket.cpp \
+    thread.cpp \
+    sigdev.cpp \
+    rdfspart.cpp \
+    fatpart.cpp \
+    ffspart.cpp \
+    disc.cpp \
+    drive.cpp \
+    fddisc.cpp \
+    idedisc.cpp \
+    serdist.cpp
 
 EXOBJS	=\
-	$(oDir)/device.o\
-	$(oDir)/file.o\
-	$(oDir)/adcdev.o\
-	$(oDir)/bitdev.o\
-	$(oDir)/linxaxis.o\
-	$(oDir)/daysamp.o\
-	$(oDir)/str.o\
-	$(oDir)/serial.o\
-	$(oDir)/axis.o\
-	$(oDir)/font.o\
-	$(oDir)/gif.o\
-	$(oDir)/xaxis.o\
-	$(oDir)/chart.o\
-	$(oDir)/graphdev.o\
-	$(oDir)/yaxis.o\
-	$(oDir)/datetime.o\
-	$(oDir)/linyaxis.o\
-	$(oDir)/hoursamp.o\
-	$(oDir)/ymodem.o\
-	$(oDir)/filelist.o\
-	$(oDir)/lightdev.o\
-	$(oDir)/path.o\
-	$(oDir)/montsamp.o\
-	$(oDir)/mouse.o\
-	$(oDir)/png.o\
-	$(oDir)/secsamp.o\
-	$(oDir)/section.o\
-	$(oDir)/sprite.o\
-	$(oDir)/tempdev.o\
-	$(oDir)/videodev.o\
-	$(oDir)/waitdev.o\
-	$(oDir)/yearsamp.o\
-	$(oDir)/JPEG.o\
-	$(oDir)/minsamp.o\
-	$(oDir)/sample.o\
-	$(oDir)/bmp.o\
-	$(oDir)/env.o\
-	$(oDir)/KEYBOARD.o
+	$(oDir)/bitdev.o \
+	$(oDir)/bmp.o \
+	$(oDir)/datetime.o \
+	$(oDir)/device.o \
+	$(oDir)/file.o \
+	$(oDir)/font.o \
+	$(oDir)/gif.o \
+	$(oDir)/graphdev.o \
+	$(oDir)/jpeg.o \
+	$(oDir)/keyboard.o \
+	$(oDir)/mouse.o \
+	$(oDir)/png.o \
+	$(oDir)/section.o \
+	$(oDir)/serial.o \
+	$(oDir)/sprite.o \
+	$(oDir)/waitdev.o \
+	$(oDir)/videodev.o \
+	$(oDir)/adcdev.o \
+	$(oDir)/sample.o \
+	$(oDir)/secsamp.o \
+	$(oDir)/minsamp.o \
+	$(oDir)/hoursamp.o \
+	$(oDir)/daysamp.o \
+	$(oDir)/montsamp.o \
+	$(oDir)/yearsamp.o \
+	$(oDir)/tempdev.o \
+	$(oDir)/lightdev.o \
+	$(oDir)/env.o \
+	$(oDir)/str.o \
+	$(oDir)/path.o \
+	$(oDir)/ymodem.o \
+	$(oDir)/axis.o \
+	$(oDir)/xaxis.o \
+	$(oDir)/yaxis.o \
+	$(oDir)/linxaxis.o \
+	$(oDir)/linyaxis.o \
+	$(oDir)/chart.o \
+	$(oDir)/list.o \
+	$(oDir)/shareobj.o \
+	$(oDir)/listbase.o \
+	$(oDir)/strlist.o \
+	$(oDir)/direntry.o \
+	$(oDir)/filestor.o \
+	$(oDir)/discstor.o \
+	$(oDir)/storlist.o \
+	$(oDir)/redustor.o \
+	$(oDir)/spltstor.o \
+    $(oDir)/socket.o \
+    $(oDir)/thread.o \
+    $(oDir)/sigdev.o \
+    $(oDir)/part.o \
+    $(oDir)/rdfspart.o \
+    $(oDir)/fatpart.o \
+    $(oDir)/ffspart.o \
+    $(oDir)/disc.o \
+    $(oDir)/drive.o \
+    $(oDir)/fddisc.o \
+    $(oDir)/idedisc.o \
+    $(oDir)/serdist.o	
 
 ALLOBJS	=	$(EXOBJS)
-ALLBIN	=	$(Bin)/rdosgcc.a
-ALLTGT	=	$(Bin)/rdosgcc.a
+ALLBIN	=	$(Bin)/rdos.a
+ALLTGT	=	$(Bin)/rdos.a
 
 # User defines:
 
@@ -131,7 +168,7 @@ cleanall:	cleanobjs cleanbin
 
 #@# Dependency rules follow -----------------------------
 
-$(Bin)/rdosgcc.a: $(EXOBJS)
-	rm -f $(Bin)/rdosgcc.a
-	ar cr $(Bin)/rdosgcc.a $(EXOBJS)
-	ranlib $(Bin)/rdosgcc.a
+$(Bin)/rdos.a: $(EXOBJS)
+	rm -f $(Bin)/rdos.a
+	rdos-ar cr $(Bin)/rdos.a $(EXOBJS)
+	rdos-ranlib $(Bin)/rdos.a
