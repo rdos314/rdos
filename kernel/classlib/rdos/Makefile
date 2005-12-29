@@ -183,7 +183,7 @@ clean:	cleanobjs cleanbin
 
 cleanall:	cleanobjs cleanbin
 
-Makefile.dep:   $(SRCS)
+Makefile.dep:   $(SRCS) Makefile
 	$(CC) -M $(INCLUDES) $(SRCS) >Makefile.dep
 
 #@# User Targets follow ---------------------------------

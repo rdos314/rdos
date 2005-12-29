@@ -29,7 +29,7 @@ CC  	=	rdos-g++
 oDir	=	.
 Bin	=	.
 libDirs	=
-INCLUDES=	-I. -I../ -I../../ -I../rdos
+INCLUDES=	-I. -I../ -I../../
 
 LD_FLAGS =	-s
 LIBS	=	
@@ -39,56 +39,40 @@ CFLAGS	=	-O
 	$(CC) $(CFLAGS) -O2 $(INCLUDES) -c $<
 
 SRCS	=\
-    ftpacc.cpp \
-    ftpcdup.cpp \
-    ftpcmd.cpp \
-    ftpcwd.cpp \
-    ftpdele.cpp \
-    ftpfact.cpp \
-    ftplist.cpp \
-    ftpmdtm.cpp \
-    ftpmkd.cpp \
-    ftpparse.cpp \
-    ftppass.cpp \
-    ftppasv.cpp \
-    ftpport.cpp \
-    ftppwd.cpp \
-    ftpquit.cpp \
-    ftpretr.cpp \
-    ftprmd.cpp \
-    ftpserv.cpp \
-    ftpstor.cpp \
-    ftpsyst.cpp \
-    ftptype.cpp \
-    ftpuser.cpp
+   adler32.cpp \
+   compress.cpp \
+   crc32.cpp \
+   deflate.cpp \
+   gzio.cpp \
+   infblock.cpp \
+   infcodes.cpp \
+   inffast.cpp \
+   inflate.cpp \
+   inftrees.cpp \
+   infutil.cpp \
+   trees.cpp \
+   uncompr.cpp \
+   zutil.cpp
 
 EXOBJS	=\
-	$(oDir)/ftpacc.o \
-    $(oDir)/ftpcdup.o \
-    $(oDir)/ftpcmd.o \
-    $(oDir)/ftpcwd.o \
-    $(oDir)/ftpdele.o \
-    $(oDir)/ftpfact.o \
-    $(oDir)/ftplist.o \
-    $(oDir)/ftpmdtm.o \
-    $(oDir)/ftpmkd.o \
-    $(oDir)/ftpparse.o \
-    $(oDir)/ftppass.o \
-    $(oDir)/ftppasv.o \
-    $(oDir)/ftpport.o \
-    $(oDir)/ftppwd.o \
-    $(oDir)/ftpquit.o \
-    $(oDir)/ftpretr.o \
-    $(oDir)/ftprmd.o \
-    $(oDir)/ftpserv.o \
-    $(oDir)/ftpstor.o \
-    $(oDir)/ftpsyst.o \
-    $(oDir)/ftptype.o \
-    $(oDir)/ftpuser.o
+	$(oDir)/adler32.o \
+	$(oDir)/compress.o \
+	$(oDir)/crc32.o \
+	$(oDir)/deflate.o \
+    $(oDir)/gzio.o \
+    $(oDir)/infblock.o \
+    $(oDir)/infcodes.o \
+    $(oDir)/inffast.o \
+    $(oDir)/inflate.o \
+    $(oDir)/inftrees.o \
+    $(oDir)/infutil.o \
+    $(oDir)/trees.o \
+    $(oDir)/uncompr.o \
+    $(oDir)/zutil.o
 
 ALLOBJS	=	$(EXOBJS)
-ALLBIN	=	$(Bin)/ftpd.a
-ALLTGT	=	$(Bin)/ftpd.a
+ALLBIN	=	$(Bin)/zlib.a
+ALLTGT	=	$(Bin)/zlib.a
 
 # User defines:
 
@@ -118,7 +102,7 @@ include Makefile.dep
 
 #@# Dependency rules follow -----------------------------
 
-$(Bin)/ftpd.a: $(EXOBJS)
-	rm -f $(Bin)/ftpd.a
-	rdos-ar cr $(Bin)/ftpd.a $(EXOBJS)
-	rdos-ranlib $(Bin)/ftpd.a
+$(Bin)/zlib.a: $(EXOBJS)
+	rm -f $(Bin)/zlib.a
+	rdos-ar cr $(Bin)/zlib.a $(EXOBJS)
+	rdos-ranlib $(Bin)/zlib.a

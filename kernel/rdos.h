@@ -44,9 +44,7 @@ typedef struct ThreadState
 	 short int Sel;
 } ThreadState;
 
-#ifdef __GNUC__
-#define __stdcall
-#else
+#ifndef __GNUC__
 #if (sizeof(int) == 2)
 #define __stdcall
 #endif
