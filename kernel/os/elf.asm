@@ -252,7 +252,6 @@ load_object	Proc far
 	sub edx,local_page_linear
 	mov ax,flat_data_sel
 	mov ds,ax
-	and dx,0F000h
 ;
 	call FindLib
 	jc load_object_done
