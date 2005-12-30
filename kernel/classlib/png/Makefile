@@ -51,6 +51,7 @@ SRCS	=\
     pngtrans.cpp \
     pngwio.cpp \
     pngwrite.cpp \
+    pngwtran.cpp \
     pngwutil.cpp
 
 EXOBJS	=\
@@ -66,6 +67,7 @@ EXOBJS	=\
 	$(oDir)/pngtrans.o \
 	$(oDir)/pngwio.o \
 	$(oDir)/pngwrite.o \
+	$(oDir)/pngwtran.o \
 	$(oDir)/pngwutil.o
 
 ALLOBJS	=	$(EXOBJS)
