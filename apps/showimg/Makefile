@@ -26,53 +26,31 @@
 
 # Standard defines:
 CC  	=	rdos-gcc
+LD      =   rdos-ld
 oDir	=	.
 Bin	=	.
 libDirs	=
-INCLUDES=	-I. -I../ -I../../ -I../zlib
+INCLUDES=	-I. -I../../kernel -I../../kernel/classlib -I../../kernel/classlib/rdos
 
 LD_FLAGS =	-s
-LIBS	=	
+LIBS	=	-L/usr/local/rdos/lib
 CFLAGS	=	-O
 
 .cpp.o:
 	$(CC) $(CFLAGS) -O2 $(INCLUDES) -c $<
 
 SRCS	=\
-    png.cpp \
-    pngerror.cpp \
-    pngget.cpp \
-    pngmem.cpp \
-    pngread.cpp \
-    pngrio.cpp \
-    pngrtran.cpp \
-    pngrutil.cpp \
-    pngset.cpp \
-    pngtrans.cpp \
-    pngwio.cpp \
-    pngwrite.cpp \
-    pngwtran.cpp \
-    pngwutil.cpp
+    showimg.cpp
 
 EXOBJS	=\
-	$(oDir)/png.o \
-	$(oDir)/pngerror.o \
-	$(oDir)/pngget.o \
-	$(oDir)/pngmem.o \
-	$(oDir)/pngread.o \
-	$(oDir)/pngrio.o \
-	$(oDir)/pngrtran.o \
-	$(oDir)/pngrutil.o \
-	$(oDir)/pngset.o \
-	$(oDir)/pngtrans.o \
-	$(oDir)/pngwio.o \
-	$(oDir)/pngwrite.o \
-	$(oDir)/pngwtran.o \
-	$(oDir)/pngwutil.o
+	$(oDir)/showimg.o
+
+EXLIBS =\
+   ../../kernel/classlib/rdos/rdos.a
 
 ALLOBJS	=	$(EXOBJS)
-ALLBIN	=	$(Bin)/png.a
-ALLTGT	=	$(Bin)/png.a
+ALLBIN	=	$(Bin)/showimg.exe
+ALLTGT	=	$(Bin)/showimg.exe
 
 # User defines:
 
@@ -102,7 +80,16 @@ include Makefile.dep
 
 #@# Dependency rules follow -----------------------------
 
-$(Bin)/png.a: $(EXOBJS)
-	rm -f $(Bin)/png.a
-	rdos-ar cr $(Bin)/png.a $(EXOBJS)
-	rdos-ranlib $(Bin)/png.a
+$(Bin)/showimg.exe: $(EXOBJS) $(EXLIBS)
+	rdos-ld $(LIBS) -o $(Bin)/showimg.exe $(EXOBJS) $(EXLIBS) \
+	      ../../kernel/classlib/rdos/rdos.a \
+	      ../../kernel/classlib/png/png.a \
+	      ../../kernel/classlib/jpeg/jpeg.a \
+	      ../../kernel/classlib/zlib/zlib.a \
+	      /usr/local/rdos/lib/crt0.o \
+	      /usr/local/rdos/lib/libstdc++.a \
+	      /usr/local/rdos/lib/libsupc++.a \
+	      /usr/local/rdos/lib/lib.a \
+	      /usr/local/rdos/lib/libc.a \
+	      /usr/local/rdos/lib/libm.a \
+	      /usr/local/rdos/lib/libgcc.a

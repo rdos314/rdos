@@ -25,7 +25,7 @@
 ########################################################################*/
 
 # Standard defines:
-CC  	=	rdos-g++
+CC  	=	rdos-gcc
 oDir	=	.
 Bin	=	.
 libDirs	=
