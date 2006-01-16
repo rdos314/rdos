@@ -81,15 +81,11 @@ include Makefile.dep
 #@# Dependency rules follow -----------------------------
 
 $(Bin)/showimg.exe: $(EXOBJS) $(EXLIBS)
-	rdos-ld $(LIBS) -o $(Bin)/showimg.exe $(EXOBJS) $(EXLIBS) \
+	$(CC) $(LIBS) -o $(Bin)/showimg.exe $(EXOBJS) $(EXLIBS) \
 	      ../../kernel/classlib/rdos/rdos.a \
 	      ../../kernel/classlib/png/png.a \
 	      ../../kernel/classlib/jpeg/jpeg.a \
 	      ../../kernel/classlib/zlib/zlib.a \
-	      /usr/local/rdos/lib/crt0.o \
 	      /usr/local/rdos/lib/libstdc++.a \
-	      /usr/local/rdos/lib/libsupc++.a \
-	      /usr/local/rdos/lib/lib.a \
 	      /usr/local/rdos/lib/libc.a \
-	      /usr/local/rdos/lib/libm.a \
-	      /usr/local/rdos/lib/libgcc.a
+	      /usr/local/rdos/lib/libm.a
