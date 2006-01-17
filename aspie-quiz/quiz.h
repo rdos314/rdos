@@ -228,6 +228,8 @@ protected:
     TReferer SelfAddRef;
     TReferer MaleAsRef;
     TReferer FemaleAsRef;
+    TReferer MaleNonAsRef;
+    TReferer FemaleNonAsRef;
 
     TQuiz *CrossQuiz[MAX_CROSS];
     

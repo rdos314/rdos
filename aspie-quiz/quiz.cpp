@@ -57,7 +57,9 @@ TQuiz::TQuiz()
     SelfTsRef("", "Self-diagnosed Tourette"),
     SelfAddRef("", "Self-diagnosed ADD/ADHD"),
     MaleAsRef("", "Male AS/HFA/PDD"),
-    FemaleAsRef("", "Female AS/HFA/PDD")	
+    FemaleAsRef("", "Female AS/HFA/PDD"),
+    MaleNonAsRef("", "Male non-AS/HFA/PDD"),
+	FemaleNonAsRef("", "Female non-AS/HFA/PDD")
 {
     int i;
     int g;
@@ -1238,6 +1240,8 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &SelfAddRef);
 	WriteReferer(file, &MaleAsRef);
 	WriteReferer(file, &FemaleAsRef);
+	WriteReferer(file, &MaleNonAsRef);
+	WriteReferer(file, &FemaleNonAsRef);
 	WriteReferer(file, &AspieRef);
 	WriteReferer(file, &NTRef);
 	WriteReferer(file, &NoRef);

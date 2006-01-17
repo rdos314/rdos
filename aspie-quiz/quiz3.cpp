@@ -565,7 +565,10 @@ void TQuizIII::LoadReferers()
 				break;
 
 			default:
-				ref = 0;
+				if (Row.Gender == 1)
+					ref = &MaleNonAsRef;
+				else
+					ref = &FemaleNonAsRef;
 				break;
 		}
 
