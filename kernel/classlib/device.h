@@ -368,6 +368,7 @@ public:
 	virtual ~TDevice();
 
 	virtual void NotifyReset();
+	int IsReseted() const;
 
 	void Open();
 	void Close();
@@ -405,7 +406,6 @@ protected:
 	void Idle();
 	void Busy();
 
-	int IsReseted() const;
 	void ClearReset();
 
 	virtual int GetMaxMsgSize();

@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 	TBitmapGraphicDevice *bitmap;
 	int width, height;
 	int ratio;
-	char *FileName;
+	char FileName[256];
 
 	if (argc == 1)
 	{
