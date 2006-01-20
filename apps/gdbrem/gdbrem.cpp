@@ -48,6 +48,7 @@
 void WriteCommand(TGdbRemoteSocketServer *server, const char *str)
 {
 	printf(str);
+	printf("\r\n");
 }
 
 /*##################  main ##########################

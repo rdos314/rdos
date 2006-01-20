@@ -40,6 +40,15 @@ public:
 	virtual void HandleSocket();
 
 	void (*OnCommand)(TGdbRemoteSocketServer *server, const char *str);
+
+protected:
+    void SendPacket(const char *cmd);
+    void SetThread(const char *cmd);
+    void SendPid();
+    void SendOffsets();
+    void SendReason();
+    void Query(const char *cmd);
+    void HandlePacket(const char *cmd);
 };
 
 #endif
