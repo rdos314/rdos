@@ -468,7 +468,8 @@ void TQuizIII::InitReferers()
 	AddReferer("assupportgrouponline.co.uk", "assupportgrouponline.co.uk/");
 	AddReferer("teleboards.com", "teleboards.com/showthread.php?s=");
 	AddReferer("thorntree.lonelyplanet.com", "thorntree.lonelyplanet.com/categories.cfm?catid=41");
-}
+	AddReferer("ninjatune.net", "ninjatune.net/forum/messages.php?id=3514339");
+ }
 
 /*##################  TQuizIII::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
@@ -613,7 +614,7 @@ void TQuizIII::LoadPopulations()
     for (i = 0; i < MAX_QUESTIONS; i++)
         Quiz[i].NoAnswer = 0;
     
-	FDataFile.SetPos(0);	
+	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
         for (i = 0; i < MAX_QUESTIONS; i++)
@@ -709,23 +710,16 @@ void TQuizIII::LoadPopulations()
 ##########################################################################*/
 void TQuizIII::SetupControlGroups()
 {
-	DefineNt("lushforum.co.uk");
 	DefineNt("flashback.info");
-	DefineNt("whoa.nu");
-	DefineNt("gentlechristianmothers.com");
-	DefineNt("katter.nu");
-	DefineNt("rdos.net/sv");
-    DefineNt("takeforum.com");
-	DefineNt("ayme.org.uk");
-	DefineNt("boylover.net");
 	DefineNt("democraticunderground.com");
+	DefineNt("katter.nu");
+	DefineNt("takeforum.com");
+	DefineNt("ninjatune.net");
 	DefineNt("theconversationcafe.com");
-    DefineNt("teleboards.com");
-	DefineNt("thorntree.lonelyplanet.com");
+	DefineNt("teleboards.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
-	DefineAspie("aspie-forum.htm");
 	DefineAspie("aspiesforfreedom.");
 	DefineAspie("aspergianisland.com");
 	DefineAspie("xmission.com/~winter");
@@ -1117,7 +1111,7 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType != PCA_TYPE_MALE && PcaType != PCA_TYPE_AS && PcaType != PCA_TYPE_OLD)
+					if (PcaType != PCA_TYPE_AS)
 						d2 = -d2;
 
 					if (d1 > 0 && d2 > 0)

@@ -4750,6 +4750,7 @@ write_tcp_full:
 	LeaveSection ds:tcp_section
 	WaitForSignal
 	EnterSection ds:tcp_section
+	mov ds:tcp_writer,0
 	jmp write_tcp_retry
 
 write_tcp_fail:
