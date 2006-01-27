@@ -60,8 +60,13 @@ void cdecl main()
 	int motmax;
 	long double val;
 	long double winddir;
+	long NtpIp;
+	int SyncCount = 0;
 
 	RdosWaitMilli(1000);
+
+    NtpIp = RdosNameToIp("ntp.lth.se");	
+    RdosSyncTime(NtpIp);
 
 	InitHeatHttp();
 
@@ -201,6 +206,15 @@ void cdecl main()
 		printf("%6.1Lf hPa", val);
 
 		RdosWaitMilli(1000);
+
+		if (SyncCount == 300)
+		{
+		    RdosSyncTime(NtpIp);
+		    SyncCount = 0;
+		}
+		else
+		    SyncCount++;
+		    
 	}
 }
 
