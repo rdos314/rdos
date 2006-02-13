@@ -2764,6 +2764,9 @@ start_thread	PROC far
 	push es
 	pushad
 ;
+    or bp,bp
+    je start_thread_done
+;    
 	mov ax,thread_app_sel
 	mov ds,ax
 	mov ax,word ptr ds:app_loader_name

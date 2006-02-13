@@ -369,7 +369,7 @@ trap_create_process	PROC near
 	sti
 	push cx
 	push si
-;
+;    
 	call init_process_mem
 	call init_process_app
 	call init_process_task
@@ -394,6 +394,8 @@ trap_create_process_loop:
 trap_create_process_done:
 	pop si
 	pop cx
+;
+    xor bp,bp
 	push cs
 	call trap_create_thread
 	ret

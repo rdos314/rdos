@@ -2729,7 +2729,6 @@ new_sector	PROC far
 	cmp edx,ds:drive_sectors
 	jc new_inrange
 ;
-	int 3
 	stc
 	jmp new_leave
 
@@ -2817,7 +2816,6 @@ lock_sector	PROC far
 	cmp edx,ds:drive_sectors
 	jc lock_inrange
 ;
-	int 3
 	stc
 	jmp lock_done
 
@@ -3319,7 +3317,6 @@ req_sector	PROC far
 	cmp edx,ds:drive_sectors
 	jc req_inrange
 ;
-	int 3
 	stc
 	jmp req_done
 
@@ -3455,7 +3452,6 @@ define_sector	PROC far
 	cmp edx,ds:drive_sectors
 	jc define_inrange
 ;
-	int 3
 	stc
 	jmp define_done
 

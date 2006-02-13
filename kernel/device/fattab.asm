@@ -70,6 +70,7 @@ lock_fat	PROC near
 	pop edx
 	jnc lock_fat_done
 	xor ebx,ebx
+	stc
 lock_fat_done:
 	ret
 lock_fat	Endp

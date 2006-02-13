@@ -28,6 +28,7 @@
 app_fs_data	STRUC
 
 afs_reent	DD ?
+afs_tls     DD ?
 
 app_fs_data	ENDS
 
