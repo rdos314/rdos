@@ -29,6 +29,7 @@
 #define LOG_H
 
 #include "device.h"
+#include "file.h"
 
 class TLog : public TDevice
 {
@@ -37,6 +38,8 @@ public:
 	~TLog();
 
 	void DeviceName(char *Name, int Size) const;
+
+	TFile *GetDayFile(int year, int month, int day, const char *name, void *init, int size);
     
 protected:
     void CreateRootDir();

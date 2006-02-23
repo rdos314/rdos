@@ -823,7 +823,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 
         case PCA_TYPE_AS:
             if (row->Diagnos == DX_AS)
-                return TRUE;
+				return TRUE;
             else
                 return FALSE;
                 
@@ -958,7 +958,7 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_YOUNG || PcaType == PCA_TYPE_AS)
+					if (PcaType == PCA_TYPE_AS || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (d1 > 0 && d2 > 0)

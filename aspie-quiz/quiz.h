@@ -34,7 +34,7 @@
 #include "file.h"
 
 #if !defined(SWEDISH) && !defined(ENGLISH)
-#define ENGLISH
+#define SWEDISH
 #endif
 
 #define MAX_GROUP_COUNT         15

@@ -26,12 +26,13 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "rdos.h"
 #include "log.h"
 #include "section.h"
 
-static TSection Section;
+static TSection FSection;
 
 /*##########################################################################
 #
@@ -85,6 +86,59 @@ void TLog::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
+#   Name       : TLog::GetDayFile
+#
+#   Purpose....: Create/open a day-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFile *TLog::GetDayFile(int year, int month, int day, const char *name, void *init, int size)
+{
+    char str[20];
+    char filename[256];
+    TFile *file;
+    int i;
+    int filesize; 
+
+    sprintf(str, "%04d%02d%02d", year, month, day);
+
+    FSection.Enter();
+
+    strcpy(filename, FRootDir);
+    strcat(filename, "\\");
+    strcat(filename, str);
+
+    if (!RdosSetCurDir(filename))
+        RdosMakeDir(filename);
+    
+    strcat(filename, "\\");
+    strcat(filename, name);
+
+    file = new TFile(filename);
+    if (!file->IsOpen())
+    {
+        delete file;
+        file = new TFile(filename, 0);
+    }
+
+    if (file->IsOpen())
+    {
+        filesize = 60 * 24 * size;
+        if (filesize > file->GetSize())
+            for (i = 0; i < 60 * 24; i++)
+                file->Write(init, size);
+    }    
+
+    FSection.Leave();
+
+    return file;
+}
+
+/*##########################################################################
+#
 #   Name       : TLog::CreateRootDir
 #
 #   Purpose....: Create root directory
@@ -96,7 +150,6 @@ void TLog::DeviceName(char *Name, int Size) const
 ##########################################################################*/
 void TLog::CreateRootDir()
 {
-    
     FSection.Enter();
 
     if (!RdosSetCurDir(FRootDir))

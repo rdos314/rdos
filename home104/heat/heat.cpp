@@ -37,6 +37,7 @@
 #include "rad.h"
 #include "datetime.h"
 #include "ws2300.h"
+#include "log.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -62,11 +63,18 @@ void cdecl main()
 	long double winddir;
 	long NtpIp;
 	int SyncCount = 0;
+	TLog *log;
+	TFile *file;
+	int init = 0x8000;
 
 	RdosWaitMilli(1000);
 
-    NtpIp = RdosNameToIp("ntp.lth.se");	
-    RdosSyncTime(NtpIp);
+	NtpIp = RdosNameToIp("ntp.lth.se");
+	RdosSyncTime(NtpIp);
+
+	log = new TLog("e:\\log");
+
+    file = log->GetDayFile(2006, 1, 27, "test.dat", &init, 4); 
 
 	InitHeatHttp();
 
