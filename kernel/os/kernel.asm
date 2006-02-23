@@ -84,6 +84,7 @@ RELEASE = 6
 	extrn init_device:near
 	extrn init_env:near
 	extrn init_swap:near
+	extrn init_random:near
 
 	extrn init_exec:near
 
@@ -555,6 +556,7 @@ prot_init:
 	call init_swap
 	call init_env
 	call init_exec
+	call init_random
 	call init_device
 	call init_first_process
 	call init_first_thread
