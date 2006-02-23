@@ -459,6 +459,16 @@ AddWaitForSignal       MACRO
 	UserGate add_wait_for_signal_nr
 						ENDM
 
+
+;;;;;;;;;;; RANDOM NUMBERS ;;;;
+
+
+;   OUT EAX         Random number
+GetRandom   MACRO
+    UserGate get_random_nr
+            ENDM
+
+
 ;;;;;;;;;;; IPC ;;;;;;;;;;;;;;;
 
 ;	IN  ES:(E)DI	Mailslot name

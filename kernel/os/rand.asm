@@ -39,10 +39,10 @@ INCLUDE ..\driver.def
 
 N = 624
 M = 397
-MATRIX_A EQU 9908B0DFh
 
 random_proc_seg	STRUC
 
+mtsect   section_typ <>
 mt      DD N DUP(?)
 mti     DW ?
     
@@ -53,6 +53,185 @@ code	SEGMENT byte public 'CODE'
 	.386p
 
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitRandom
+;
+;		DESCRIPTION:	Init random generator
+;
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_random_name    DB 'Init Random', 0
+
+init_random_pr	PROC far
+    push ds
+    pushad
+;
+    mov bx,random_proc_sel
+    mov ds,bx
+;    
+    GetTime
+    mov si,OFFSET mt
+    mov [si],eax
+;
+    add si,4
+    mul edx
+    inc eax
+    mov [si],eax
+;    
+    mov ecx,2
+
+init_genrand_loop:
+    mov edx,eax
+    shr edx,30
+    xor eax,edx
+    mov edx,1812433253
+    mul edx
+    add eax,ecx
+    add si,4
+    mov [si],eax
+    inc ecx
+    cmp ecx,N
+    jb init_genrand_loop    
+;
+    mov ds:mti,cx
+	InitSection ds:mtsect
+;
+    popad
+    pop ds
+    retf32
+init_random_pr    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GenArr
+;
+;		DESCRIPTION:	Generate array
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+gen_arr	PROC near
+    push eax
+    push bx
+    push cx
+    push edx
+    push si
+    push di
+;
+    mov cx,N
+    mov bx,OFFSET mt
+    xor si,si
+    mov di,4 * M
+
+gr_loop:
+    mov eax,[bx+si]
+    and eax,80000000h
+    mov edx,[bx+si+4]
+    and edx,7FFFFFFFh
+    or eax,edx
+    mov dl,al
+    shr  eax,1
+    jnc grno_xor
+;
+    xor eax,9908B0DFh
+
+grno_xor:
+    xor eax,[bx+di]
+    mov [bx+si],eax
+;
+    add si,4
+    add di,4
+    sub cx,1
+    or cx,cx
+    jz grok
+;    
+    cmp di,4 * N
+    jb gr_loop
+;
+    sub di,4 * N
+    jmp gr_loop
+
+grok:
+    mov ds:mti,0
+;    
+    pop di
+    pop si
+    pop edx
+    pop cx
+    pop bx
+    pop eax
+    ret
+gen_arr Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetRandom
+;
+;		DESCRIPTION:	Get random number
+;
+;       RETURNS:        EAX     Number
+;
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_random_name    DB 'Get Random Number', 0
+
+get_random	PROC far
+    push ds
+    push bx
+    push edx
+;    
+    mov bx,random_proc_sel
+    mov ds,bx
+	EnterSection ds:mtsect
+;
+    mov bx,ds:mti
+    cmp bx,4 * N
+    jb get_random_do
+;
+    call gen_arr
+    xor bx,bx
+
+get_random_do:
+    mov eax,ds:[bx].mt
+    add bx,4
+    mov ds:mti,bx
+;
+    mov edx,eax
+    shr edx,11
+    xor eax,edx
+;    
+    mov edx,eax
+    shl edx,7
+    and edx,9D2C5680h
+    xor eax,edx
+;
+    mov edx,eax
+    shl edx,15
+    and edx,0EFC60000h
+    xor eax,edx
+;
+    mov edx,eax
+    shr edx,18
+    xor eax,edx
+;
+	LeaveSection ds:mtsect
+    pop edx
+    pop bx
+    pop ds    
+    retf32
+get_random    Endp
 
 PAGE
 
@@ -101,6 +280,18 @@ init_random	PROC near
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess
+;
+	mov si,OFFSET init_random_pr
+	mov di,OFFSET init_random_name
+	xor dx,dx
+	mov ax,init_random_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_random
+	mov di,OFFSET get_random_name
+	xor dx,dx
+	mov ax,get_random_nr
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

@@ -53,6 +53,9 @@ typedef struct ThreadState
 short int __stdcall RdosSwapShort(short int val);
 long __stdcall RdosSwapLong(long val);
 
+long __stdcall RdosGetLongRandom();
+long __stdcall RdosGetRandom(long range);
+
 void __stdcall RdosSetTextMode();
 int __stdcall RdosSetVideoMode(int *BitsPerPixel, int *xres, int *yres, int *linesize, void **buffer);
 void __stdcall RdosSetClipRect(int handle, int xmin, int ymin, int xmax, int ymax);
