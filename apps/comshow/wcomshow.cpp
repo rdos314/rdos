@@ -59,17 +59,17 @@ void cdecl main()
 //	TFile RawBarFile("z:\\bar.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
-	TFile RawFile("c:\\comlog\\raw002.dat");
+	TFile RawFile("c:\\comlog\\spp.log");
 
 //	TCbusProtocolAnalyser CbusAnalyzer(&RawCbusFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TProtocolAnalyser rawanalyzer(&RawFile, 0x400);
+	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
-	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 
 //	CbusAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
@@ -77,7 +77,7 @@ void cdecl main()
 //	analyzer.DefineLogFile("net.txt");
 //	rawanalyzer.DefineLogFile("compraw.txt");
 //	analyzer.DefineLogFile("compac.txt");
-	analyzer.DefineLogFile("c:\\comlog\\wayne.txt");
+	analyzer.DefineLogFile("c:\\comlog\\spp.txt");
 
 	for (;;)
 	{

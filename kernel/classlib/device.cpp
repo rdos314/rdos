@@ -527,7 +527,7 @@ void TDeviceVar::SetUnsigned32(unsigned long data)
 *##########################################################################*/
 void TDeviceVar::SetUnsignedShort(unsigned short int data)
 {
-    if (data >= 0x100)
+    if (data >= 255)
         SetUnsigned16(data);
     else
         SetUnsigned8((unsigned char)data);
@@ -542,10 +542,15 @@ void TDeviceVar::SetUnsignedShort(unsigned short int data)
 *##########################################################################*/
 void TDeviceVar::SetUnsignedLong(unsigned long data)
 {
-    if (data >= 0x10000)
+    if (data > 65535)
         SetUnsigned32(data);
     else
-        SetUnsigned16((unsigned short int)data);
+    {
+        if (data > 255)
+            SetUnsigned16((unsigned short int)data);
+        else
+            SetUnsigned8((unsigned char)data);
+    }
 }
 
 /*##################  TDeviceVar::SetUnsignedint  ###############
@@ -634,10 +639,25 @@ void TDeviceVar::SetSigned32(long data)
 *##########################################################################*/
 void TDeviceVar::SetSignedShort(short int data)
 {
-    if (data > 127 || data < -128)
-        SetSigned16(data);
+    if (data >= 0)
+    {
+        if (data > 255)
+            SetSigned16((signed short int)data);
+        else
+        {
+            if (data > 127)
+                SetUnsigned8((unsigned char)data);
+            else
+                SetSigned8((signed char)data);
+        }
+    }
     else
-        SetSigned8((signed char)data);
+    {
+        if (data < -128)
+            SetSigned16(data);
+        else
+            SetSigned8((signed char)data);
+    }
 }
 
 /*##################  TDeviceVar::SetSignedLong  ###############
@@ -649,10 +669,40 @@ void TDeviceVar::SetSignedShort(short int data)
 *##########################################################################*/
 void TDeviceVar::SetSignedLong(long data)
 {
-    if (data > 32767 || data < -32768)
-        SetSigned32(data);
+    if (data >= 0)
+    {
+        if (data > 65535)
+            SetSigned32(data);
+        else
+        {
+            if (data > 32767)
+                SetUnsigned16((unsigned short int)data);
+            else
+            {
+                if (data > 255)
+                    SetSigned16((signed short int)data);
+                else
+                {
+                    if (data > 127)
+                        SetUnsigned8((unsigned char)data);
+                    else
+                        SetSigned8((signed char)data);
+                }
+            }
+        }
+    }
     else
-        SetSigned16((unsigned short int)data);
+    {
+        if (data < -32768)
+            SetSigned32(data);
+        else
+        {
+            if (data < -128)
+                SetSigned16((signed short int)data);
+            else
+                SetSigned8((signed char)data);
+        }
+    }
 }
 
 /*##################  TDeviceVar::SetSignedint  ###############

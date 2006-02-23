@@ -59,9 +59,159 @@ UserGate	MACRO gate_nr
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
+
+    .data
+    
+    scale dd -31
+    radd dd 55 dup(?)
+    raj dd ?
+    rak dd ?
+
+    rinit db 0
+    
 	.code
 
 PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RandomSetup
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RandomSetup Proc near
+    pushad
+;
+	UserGate get_system_time_nr
+    mov esi,1664525
+;    
+    mov edi,OFFSET radd
+    mov ecx,55
+
+rsFill:
+    mul esi
+    inc eax
+    stosd
+    loop rsFill
+;
+    mov raj,4 * 23
+    mov rak,4 * 54
+;
+    popad
+    ret
+RandomSetup Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetLongRandom
+;
+;                       Return random 32 bit number using linear congruential method.
+;
+;       returns:        EAX     out value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RdosGetLongRandom  Proc
+    push esi
+    push edi
+;    
+    mov al,rinit
+    or al,al
+    jnz rglDo
+;
+    call RandomSetup
+    mov rinit,1
+
+rglDo:
+    mov esi,raj
+    mov edi,rak
+    mov eax,[esi].radd
+    add eax,[edi].radd
+    mov [edi].radd,eax
+    sub esi,4
+    jb agjcyc
+;
+    sub edi,4
+    jb agkcyc
+;
+    mov raj,esi
+    mov rak,edi    
+    jmp agdone
+
+agjcyc:    
+    sub edi,4
+    mov raj,4 * 54
+    mov rak,edi
+    jmp agdone
+
+agkcyc:
+    mov raj,esi
+    mov rak,4 * 54    
+
+agdone:
+    pop edi
+    pop esi
+    ret
+RdosGetLongRandom Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetRandom
+;
+;                       Return random number [0..n] using linear congruential method.
+;
+;       returns:        EAX     out value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RdosGetRandom  Proc
+    push ebp
+    mov ebp,esp
+;    
+    mov ecx,[ebp+8]
+    call RdosGetLongRandom
+    inc ecx
+    jz rgrDone
+;
+    mul ecx
+    mov eax,edx
+
+rgrDone:
+    pop ebp
+    ret
+RdosGetRandom   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RdosGetDoubleRandom
+;
+;                       Return random number [0..1] using linear congruential method.
+;
+;       returns:        EAX     out value
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RdosGetDoubleRandom  Proc
+    fild scale
+    call RdosGetLongRandom
+    push eax
+    fild dword ptr [esp]
+    fabs
+    fscale
+    ftsp st(1)
+    add esp,4
+    ret
+RdosGetDoubleRandom Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
