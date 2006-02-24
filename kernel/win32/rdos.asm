@@ -75,9 +75,9 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public RdosGetLongRandom
+
 RdosGetLongRandom  Proc
-    UserGate init_random_nr
-    UserGate get_random_nr
     ret
 RdosGetLongRandom Endp
 
@@ -94,12 +94,15 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+    public RdosGetRandom
+    
 RdosGetRandom  Proc
     push ebp
     mov ebp,esp
+    push ecx
 ;    
     mov ecx,[ebp+8]
-    call RdosGetLongRandom
+    UserGate get_random_nr
     inc ecx
     jz rgrDone
 ;
@@ -107,8 +110,9 @@ RdosGetRandom  Proc
     mov eax,edx
 
 rgrDone:
+    pop ecx
     pop ebp
-    ret
+    ret 4
 RdosGetRandom   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

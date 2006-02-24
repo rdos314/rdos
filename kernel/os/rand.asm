@@ -59,59 +59,6 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			InitRandom
-;
-;		DESCRIPTION:	Init random generator
-;
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-init_random_name    DB 'Init Random', 0
-
-init_random_pr	PROC far
-    push ds
-    pushad
-;
-    mov bx,random_proc_sel
-    mov ds,bx
-;    
-    GetTime
-    mov si,OFFSET mt
-    mov [si],eax
-;
-    add si,4
-    mul edx
-    inc eax
-    mov [si],eax
-;    
-    mov ecx,2
-
-init_genrand_loop:
-    mov edx,eax
-    shr edx,30
-    xor eax,edx
-    mov edx,1812433253
-    mul edx
-    add eax,ecx
-    add si,4
-    mov [si],eax
-    inc ecx
-    cmp ecx,N
-    jb init_genrand_loop    
-;
-    mov ds:mti,cx
-	InitSection ds:mtsect
-;
-    popad
-    pop ds
-    retf32
-init_random_pr    Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			GenArr
 ;
 ;		DESCRIPTION:	Generate array
@@ -126,7 +73,7 @@ gen_arr	PROC near
     push si
     push di
 ;
-    mov cx,N
+    mov cx,N - 1
     mov bx,OFFSET mt
     xor si,si
     mov di,4 * M
@@ -248,6 +195,42 @@ PAGE
 	public init_process
 
 init_process	PROC far
+    push ds
+    pushad
+;
+    mov bx,random_proc_sel
+    mov ds,bx
+;    
+    GetTime
+    mov si,OFFSET mt
+    mov [si],eax
+;
+    add si,4
+    mul edx
+    inc eax
+    mov [si],eax
+;    
+    mov ecx,2
+
+init_genrand_loop:
+    mov edx,eax
+    shr edx,30
+    xor eax,edx
+    mov edx,1812433253
+    mul edx
+    add eax,ecx
+    add si,4
+    mov [si],eax
+    inc ecx
+    cmp ecx,N
+    jb init_genrand_loop    
+;
+    shl ecx,2
+    mov ds:mti,cx
+	InitSection ds:mtsect
+;
+    popad
+    pop ds
     ret
 init_process    Endp
 
@@ -280,12 +263,6 @@ init_random	PROC near
 ;
 	mov di,OFFSET init_process
 	HookCreateProcess
-;
-	mov si,OFFSET init_random_pr
-	mov di,OFFSET init_random_name
-	xor dx,dx
-	mov ax,init_random_nr
-	RegisterBimodalUserGate
 ;
 	mov si,OFFSET get_random
 	mov di,OFFSET get_random_name

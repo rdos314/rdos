@@ -366,6 +366,5 @@ get_tcp_listen_nr           = 312
 close_tcp_listen_nr         = 313
 
 get_random_nr               = 314
-init_random_nr              = 315
 
 usergate_entries			= 340
