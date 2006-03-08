@@ -1590,8 +1590,9 @@ INITFD [disc]
 :TEXT_CMDHELP_STATE
 List running threads
 
-STATE [/S] [thread-ID]
+STATE [/S] [/F] [thread-ID]
   /S              Suspend thread
+  /F              Force thread out of signal-wait and suspend
 .
 
 :TEXT_CMDHELP_MOVE

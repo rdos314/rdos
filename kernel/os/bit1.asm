@@ -1933,6 +1933,9 @@ SetMask	Proc near
 	push si
 	push edi
 ;
+    or cx,cx
+    jz set_mask_done
+;    
     mov ax,[bp].curr_y
     cmp ax,ds:v_y_min
     jl set_mask_done

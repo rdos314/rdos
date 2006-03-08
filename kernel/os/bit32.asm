@@ -560,6 +560,9 @@ slab	Proc far
     push ecx
 	push edi
 ;
+    or cx,cx
+    jz slab_done
+;    
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	jne slab_lgop
@@ -606,6 +609,9 @@ copy	Proc far
     push esi
     push edi
 ;
+    or cx,cx
+    jz copy_done
+;    
 	mov bx,ds:v_lgop
 	cmp bx,LGOP_NONE
 	je copy_none
@@ -657,6 +663,9 @@ mask_set	Proc far
     push esi
     push edi
 ;
+    or cx,cx
+    jz mask_set_line_done
+;    
     mov si,cx
     mov cl,dl        
 	    
@@ -720,6 +729,9 @@ mask_copy	Proc far
     push esi
     push edi
 ;
+    or cx,cx
+    jz mask_copy_done
+;    
     or dl,dl
     jz mask_copy_prep
 ;
@@ -800,6 +812,9 @@ SetMask	Proc near
 	push si
 	push edi
 ;
+    or cx,cx
+    jz set_mask_done
+;    
     mov ax,[bp].curr_y
     cmp ax,ds:v_y_min
     jl set_mask_done

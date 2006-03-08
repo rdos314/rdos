@@ -424,6 +424,39 @@ RdosSuspendThread	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosSuspendAndSignalThread
+;
+;		description:	Suspend and signal thread
+;
+;       parameters:     Thread #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosSuspendAndSignalThread
+
+RdosSuspendAndSignalThread	PROC
+	push ebp
+	mov ebp,esp
+;	
+    mov eax,[ebp+8]
+	UserGate suspend_and_signal_thread_nr
+	jc rssfFail
+;	
+    mov eax,1
+    jmp rssfDone
+    
+rssfFail:
+    xor eax,eax
+
+rssfDone:
+	pop ebp
+	ret 4
+	ret
+RdosSuspendAndSignalThread	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosExec
 ;
 ;		description:	Execute a program

@@ -355,34 +355,6 @@ SetupLbaTaskFile	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			RunTaskFile
-;
-;		DESCRIPTION:	Run command
-;
-;		PARAMETERS:		DS		IDE SEGMENT
-;						AL		COMMAND CODE
-;                       DX      Disc io base
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-RunTaskFile	Proc near
-	push dx
-	add dx,7
-	out dx,al
-	pop dx
-;	
-	WaitForSignal
-	jc RunTaskFileDone
-;	
-	call CheckStatus
-	
-RunTaskFileDone:
-	ret
-RunTaskFile	ENDP
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			ReadTaskFile
 ;
 ;		DESCRIPTION:	Read data from device
@@ -1412,7 +1384,15 @@ write_sector_loop:
 	pop esi
 	pop cx
 ;
-	WaitForSignal
+    push edx
+    push eax
+    GetSystemTime
+    add eax,1193 * 20
+    adc edx,0
+	WaitForSignalWithTimeout
+	pop eax
+	pop edx
+;	
 	call CheckStatus
 	jnc write_drive_ok
 

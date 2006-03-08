@@ -774,6 +774,11 @@ SuspendThread     MACRO
 	UserGate suspend_thread_nr
 						ENDM
 
+; IN  AX            Thread #
+SuspendAndSignalThread     MACRO
+	UserGate suspend_and_signal_thread_nr
+						ENDM
+
 ;  IN  EAX	Timeout in milliseconds
 ;  IN  EDI	Event record
 WaitForPeDebug MACRO

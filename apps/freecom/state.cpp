@@ -102,6 +102,9 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 	{
 		case 'S':
 			return OptScanBool(optstr, bool, strarg, &FOptS);
+
+	    case 'F':
+			return OptScanBool(optstr, bool, strarg, &FOptF);
 	}
 	OptError(optstr);
 	return E_Useage;
@@ -121,6 +124,7 @@ int TStateCommand::OptScan(const char *optstr, int ch, int bool, const char *str
 void TStateCommand::InitOptions()
 {
     FOptS = FALSE;
+    FOptF = FALSE;
 }
 
 /*##########################################################################
@@ -294,11 +298,19 @@ int TStateCommand::Execute(char *param)
 	                {
 	                    if (state.ID == ID)
 	                    {
-                		    if (FOptS)
-                		    {
-                		        RdosSuspendThread(i);
-                		        RdosWaitMilli(50);
-                		    }
+	                        if (FOptF)
+	                        {
+	                            RdosSuspendAndSignalThread(i);
+	                            RdosWaitMilli(50);
+	                        }
+	                        else
+	                        {
+                    		    if (FOptS)
+                    		    {
+                    		        RdosSuspendThread(i);
+                    		        RdosWaitMilli(50);
+                    		    }
+                    		}
 	                        WriteOne(&state);
 	                    }
 	                }

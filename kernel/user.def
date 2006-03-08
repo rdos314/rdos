@@ -367,4 +367,6 @@ close_tcp_listen_nr         = 313
 
 get_random_nr               = 314
 
+suspend_and_signal_thread_nr    = 315
+
 usergate_entries			= 340

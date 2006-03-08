@@ -278,6 +278,53 @@ suspend_done:
 suspend_thread	ENDP
 
 PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SuspendAndSignalThread
+;
+;		DESCRIPTION:	Suspend and signal thread (put it in debugger)
+;
+;		PARAMETER:		AX		Thread #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+suspend_and_signal_thread_name	DB 'Suspend and Signal Thread',0
+
+suspend_and_signal_thread	PROC far
+	push ds
+	push ax
+	push bx
+;
+	mov bx,ax
+	shl bx,1
+	mov ax,system_data_sel
+	mov ds,ax
+	cli
+	mov ax,ds:[bx].thread_arr
+	or ax,ax
+	stc
+	jz suspend_sig_done
+;	
+	mov ds,ax
+	mov ds:p_trap_ads,OFFSET trap_single_step
+	mov ds:p_trap_ads+2,cs
+	mov ds,ds:p_tss_data_sel
+	mov ds:tss_t,1
+    mov bx,ax
+    Signal
+	clc
+suspend_sig_done:
+	sti
+;
+	pop bx
+	pop ax
+	pop ds
+	retf32
+suspend_and_signal_thread	ENDP
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -574,6 +621,12 @@ init_state	PROC near
 	mov di,OFFSET suspend_thread_name
 	xor dx,dx
 	mov ax,suspend_thread_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET suspend_and_signal_thread
+	mov di,OFFSET suspend_and_signal_thread_name
+	xor dx,dx
+	mov ax,suspend_and_signal_thread_nr
 	RegisterBimodalUserGate
 ;
 	mov eax,OFFSET state_data_size

@@ -1608,6 +1608,15 @@ blit_diff_loop:
     cmp dx,ds:v_height
     jge blit_diff_next
 ;
+    mov di,cx
+    add di,ax
+    cmp di,ds:v_width
+    jle blit_diff_get
+;
+    mov ax,ds:v_width
+    sub ax,cx
+
+blit_diff_get:
 	xor edi,edi
 	call ds:get_rgb_row_proc
 ;

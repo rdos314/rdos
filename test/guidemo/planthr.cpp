@@ -81,7 +81,7 @@ TPlanet *TPlanetThread::RandomPlanet()
 	int m;
 	TPlanet *planet;
 
-	m = 2500 * random(100) / 100 + 10;
+	m = 2500 * RdosGetRandom(100) / 100 + 10;
 	for (r = 3; r < FDev.GetHeight() / 2; r++)
 		if (r * r * r * 25 > m)
 			break;
@@ -89,39 +89,39 @@ TPlanet *TPlanetThread::RandomPlanet()
 	planet = new TPlanet(&FDev, r);
 	planet->m = m;
 
-	switch (random(4))
+	switch (RdosGetRandom(4))
 	{
 		case 0:
 			planet->x = 0;
-			planet->y = random(100) * FDev.GetHeight();
-			planet->vx = random(1000);
-			planet->vy = random(1000);
+			planet->y = RdosGetRandom(100) * FDev.GetHeight();
+			planet->vx = RdosGetRandom(1000);
+			planet->vy = RdosGetRandom(1000);
 			break;
 
 		case 1:
 			planet->x = 100 * FDev.GetWidth();
-			planet->y = random(100) * FDev.GetHeight();
-			planet->vx = -random(1000);
-			planet->vy = random(1000);
+			planet->y = RdosGetRandom(100) * FDev.GetHeight();
+			planet->vx = -RdosGetRandom(1000);
+			planet->vy = RdosGetRandom(1000);
 			break;
 
 		case 2:
-			planet->x = random(100) * FDev.GetWidth();
+			planet->x = RdosGetRandom(100) * FDev.GetWidth();
 			planet->y = 0;
-			planet->vx = random(1000);
-			planet->vy = random(1000);
+			planet->vx = RdosGetRandom(1000);
+			planet->vy = RdosGetRandom(1000);
 			break;
 
 		case 3:
-			planet->x = random(100) * FDev.GetWidth();
+			planet->x = RdosGetRandom(100) * FDev.GetWidth();
 			planet->y = FDev.GetHeight() * 100;
-			planet->vx = random(1000);
-			planet->vy = -random(1000);
+			planet->vx = RdosGetRandom(1000);
+			planet->vy = -RdosGetRandom(1000);
 			break;
 	}
 
 
-	planet->ela = random(90);
+	planet->ela = RdosGetRandom(95);
 	planet->vmax = 1500;
 
 	return planet;

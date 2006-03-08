@@ -54,6 +54,7 @@ protected:
 
     int FOptR;
     int FOptS;
+    int FOptF;
 };
 
 #endif

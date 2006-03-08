@@ -566,6 +566,12 @@ timer_free_list_create:
 	mov ax,wait_for_signal_nr
 	RegisterOsGate
 ;
+	mov si,OFFSET wait_for_signal_timeout
+	mov di,OFFSET wait_for_signal_timeout_name
+	xor cl,cl
+	mov ax,wait_for_signal_timeout_nr
+	RegisterOsGate
+;
 	mov si,OFFSET cpu_reset
 	mov di,OFFSET cpu_reset_name
 	xor dx,dx
@@ -2547,6 +2553,84 @@ wait_for_signal_done:
 	pop ds
 	ret
 wait_for_signal	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			signal_timeout
+;
+;		DESCRIPTION:	Signal timeout handler
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+signal_timeout	PROC far
+    mov bx,cx
+    Signal
+    ret
+signal_timeout  Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitForSignalWithTimeout
+;
+;		DESCRIPTION:	Wait for a signal with timeout
+;
+;		PARAMETERS:		EDX:EAX     Timeout
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+wait_for_signal_timeout_name	DB 'Wait For Signal With Timeout',0
+
+wait_for_signal_timeout	PROC far
+	push ds
+	push es
+	pushad
+;
+	mov cx,task_sel
+	mov ds,cx
+;
+    mov cx,cs
+    mov es,cx
+    mov di,OFFSET signal_timeout    
+    mov bx,ds:thread_act
+    mov cx,bx
+    StartTimer
+;
+	mov es,bx
+	cli
+	xor cl,cl
+	xchg cl,es:p_signal
+	or cl,cl
+	jnz wait_for_signal_timeout_done
+;
+	mov si,es:p_prio
+	RemoveBlock
+	mov di,OFFSET signal_list
+	InsertBlock
+	call GetNextThread
+	call UpdateTimer
+;
+	mov ax,task_sel
+	mov ds,ax
+	mov es,ds:thread_act
+	mov es:p_signal,0
+	
+wait_for_signal_timeout_done:
+	sti
+	mov bx,ds:thread_act
+	StopTimer
+;
+	popad
+	pop es
+	pop ds
+	ret
+wait_for_signal_timeout	ENDP
 
 PAGE
 	

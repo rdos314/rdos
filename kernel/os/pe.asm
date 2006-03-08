@@ -1058,23 +1058,6 @@ find_path_name_loop:
 	FreeMem
 
 find_path_failed:
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET UnknownDllMsg
-	WriteAsciiz
-;
-	push edi
-	mov di,fs
-	mov es,di
-	mov edi,ebx
-	UserGateForce32 write_asciiz_nr
-	pop edi
-;
-	mov al,0Dh
-	WriteChar
-	mov al,0Ah
-	WriteChar
-;
 	stc
 	jmp open_dll_unlock
 
@@ -1151,7 +1134,8 @@ FindObject	Endp
 ;
 ;		PARAMETERS:     ES		Lib handle
 ;						EDI		Image base
-;						EDX		Virtual adress
+;						EDX		Linear address
+;                       EBP     Virtual address
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1232,7 +1216,7 @@ reloc_object_fixup_search:
 	je reloc_object_done
 ;
 	add eax,edi
-	cmp eax,edx
+	cmp eax,ebp
 	je reloc_object_fixup_found
 	mov eax,[esi].fixup_size
 	add esi,eax
@@ -1392,24 +1376,6 @@ import_by_name_next:
 	pop ebx
 	add edx,4
 	loop import_by_name_loop
-;
-	push es
-	push edi
-	mov ax,cs
-	mov es,ax
-	mov di,OFFSET UnresolvedMsg
-	WriteAsciiz
-	mov edi,ebx
-	mov ax,flat_data_sel
-	mov es,ax
-	UserGateForce32 write_asciiz_nr
-	pop edi
-	pop es	
-	mov al,0Dh
-	WriteChar
-	mov al,0Ah
-	WriteChar
-	xor eax,eax
 	jmp import_object_done
 
 import_by_name_ok:
@@ -1619,11 +1585,11 @@ NotifyDll	Proc near
 	jc notify_dll_done
 
 notify_check_debug:
+	mov edi,es:lib_base
 	xchg dx,es:lib_debug_lib
 	or dx,dx
 	jnz notify_dll_done
 ;
-	mov edi,es:lib_base
 	call Preload
 	push ds
 	push es
@@ -2023,8 +1989,6 @@ load_object	Proc far
 	push ds
 	push es
 	pushad
-	mov eax,1
-	UnhookPage
 	sub edx,local_page_linear
 	mov ax,flat_data_sel
 	mov ds,ax
@@ -2033,8 +1997,29 @@ load_object	Proc far
 	call FindLib
 	jc load_object_done
 ;
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:lib_section
+;
+	mov cx,process_page_sel
+	mov ds,cx
+	mov eax,edx
+    add eax,local_page_linear
+	shr eax,10
+;
+	mov eax,[eax]
+	test al,1
+	jnz load_object_leave
+;	
+	mov ax,flat_data_sel
+	mov ds,ax
 	call FindObject
-	jc load_object_done
+	jc load_object_leave
+;
+    mov ebp,edx
+    mov eax,1000h
+    AllocateLocalLinear
+    sub edx,local_page_linear
 ;
 	test [esi].o_flags,80h
 	jz load_object_from_file
@@ -2049,11 +2034,11 @@ load_object	Proc far
 	rep stos dword ptr es:[edi]
 	pop edi
 	pop es
-	jmp load_object_done
+	jmp load_object_leave
 
 load_object_from_file:
 	mov bx,es:lib_file_handle
-	mov eax,edx
+	mov eax,ebp
 	sub eax,edi
 	sub eax,[esi].o_va
 	mov ecx,[esi].o_phys_size
@@ -2082,13 +2067,35 @@ load_object_size_ok:
 ;
 	call RelocObject
 ;
-	mov eax,[esi].o_flags
-	test eax,80000000h
-	jnz load_object_done
+	mov ecx,[esi].o_flags
+	mov ax,process_page_sel
+	mov ds,ax
+    add edx,local_page_linear
+    add ebp,local_page_linear
+    push edx
+	shr edx,10
+	shr ebp,10
 ;
-	mov eax,1
-	SetFlatLinearRead
+    xor eax,eax
+	xchg eax,[edx]
+;
+	test ecx,80000000h
+	jnz load_object_save
 
+	and al,NOT 2
+
+load_object_save:
+	mov ds:[ebp],eax
+;
+    pop edx
+    mov ecx,1000h
+    FreeLinear
+
+load_object_leave:
+    mov ax,es
+    mov ds,ax
+    LeaveSection ds:lib_section
+    
 load_object_done:
 	popad
 	pop es

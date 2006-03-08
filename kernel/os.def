@@ -435,5 +435,7 @@ poll_irq_detect_nr          EQU 297
 
 find_pci_cap_nr             EQU 298
 
+wait_for_signal_timeout_nr  EQU 299
+
 osgate_entries				EQU 300
 

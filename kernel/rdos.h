@@ -154,6 +154,7 @@ int __stdcall RdosReadDir(int Handle, int EntryNr, int MaxNameSize, char *PathNa
 
 int __stdcall RdosGetThreadState(int ThreadNr, ThreadState *State);
 int __stdcall RdosSuspendThread(int ThreadNr);
+int __stdcall RdosSuspendAndSignalThread(int ThreadNr);
 
 void __stdcall RdosCpuReset();
 void __stdcall RdosGetVersion(int *Major, int *Minor, int *Release);

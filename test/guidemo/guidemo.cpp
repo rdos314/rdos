@@ -27,16 +27,16 @@ void RandomColor(TGraphicDevice *dev)
 
 	if (dev->GetBpp() == 1)
 	{
-		col = 255 * random(2);
+		col = 255 * RdosGetRandom(2);
 		dev->SetDrawColor(col, col, col);
 	}
 	else
-		dev->SetDrawColor(random(256), random(256), random(256));
+		dev->SetDrawColor(RdosGetRandom(256), RdosGetRandom(256), RdosGetRandom(256));
 }
 
 void RandomLgop(TGraphicDevice *dev)
 {
-	switch (random(12))
+	switch (RdosGetRandom(12))
 	{
 		case 0:
 			dev->SetLgopNone();
@@ -90,7 +90,7 @@ void RandomLgop(TGraphicDevice *dev)
 
 void RandomFillStyle(TGraphicDevice *dev)
 {
-	if (random(2) == 0)
+	if (RdosGetRandom(2) == 0)
 		dev->SetHollowStyle();
 	else
 		dev->SetFilledStyle();
@@ -101,10 +101,10 @@ void RandomLine(TGraphicDevice *dev)
 	int x1, y1;
 	int x2, y2;
 
-	x1 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y1 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
-	x2 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y2 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x1 = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y1 = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x2 = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y2 = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
 	RandomColor(dev);
 	RandomLgop(dev);
@@ -117,10 +117,10 @@ void RandomRect(TGraphicDevice *dev)
 	int x1, y1;
 	int x2, y2;
 
-	x1 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y1 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
-	x2 = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y2 = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x1 = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y1 = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x2 = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y2 = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
 	RandomColor(dev);
 	RandomLgop(dev);
@@ -134,10 +134,10 @@ void RandomEllipse(TGraphicDevice *dev)
 	int x, y;
 	int rx, ry;
 
-	x = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
-	rx = random(dev->GetWidth() / 2 + dev->GetWidth() / 8);
-	ry = random(dev->GetHeight() / 2 + dev->GetHeight() / 8);
+	x = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	rx = RdosGetRandom(dev->GetWidth() / 2 + dev->GetWidth() / 8);
+	ry = RdosGetRandom(dev->GetHeight() / 2 + dev->GetHeight() / 8);
 
 	RandomColor(dev);
 	RandomLgop(dev);
@@ -151,8 +151,8 @@ void RandomText(TGraphicDevice *dev)
 	int x, y;
 	char str[80];
 
-	x = random(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
-	y = random(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
+	x = RdosGetRandom(dev->GetWidth() + dev->GetWidth() / 4) - dev->GetWidth() / 8;
+	y = RdosGetRandom(dev->GetHeight() + dev->GetHeight() / 4) - dev->GetHeight() / 8;
 
 	sprintf(str, "%d", count);
 
@@ -364,7 +364,7 @@ void cdecl main()
 	Mouse->OnRightUp = RightUp;
 	Mouse->OnRightDown = RightDown;
 
-	vbe = new TVideoGraphicDevice(24, 800, 600);
+	vbe = new TVideoGraphicDevice(24, 640, 480);
 //	vbe = new TVideoGraphicDevice(1, 240, 128);
 
 	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
@@ -467,7 +467,7 @@ void cdecl main()
 	for (;;)
 	{
 		count++;
-		switch (random(4))
+		switch (RdosGetRandom(4))
 		{
 			case 0:
 				RandomLine(vbe);

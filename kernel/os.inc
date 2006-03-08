@@ -655,6 +655,10 @@ WaitForSignal	MACRO
 	OsGate wait_for_signal_nr
 					ENDM
 
+WaitForSignalWithTimeout	MACRO
+	OsGate wait_for_signal_timeout_nr
+					ENDM
+
 ; IN  AX      Extra bytes needed in wait object
 ; IN  BX      Wait handle
 ; IN  ES:DI   Method table (init, abort, peek)
