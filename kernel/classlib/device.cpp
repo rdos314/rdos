@@ -5178,8 +5178,11 @@ TDevice::~TDevice()
 ##########################################################################*/
 void TDevice::Init()
 {
+    FRemoteUnitList = 0;
     FVirtUnitList = 0;
     FPhysUnit = 0;
+
+    FRemote = FALSE;
 
     FName = 0;
    	FReset = FALSE;
@@ -5296,11 +5299,13 @@ void TDevice::Open()
     {
         NotifyOpen();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
+        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);    
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
     }
     FPropertySection.Leave();
 }
@@ -5339,11 +5344,13 @@ void TDevice::Close()
     {
     	NotifyClose();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
+        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);    
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
 	}
 	FPropertySection.Leave();
 }
@@ -5398,11 +5405,15 @@ void TDevice::Enable()
     {
         NotifyEnable();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+        if (!FRemote)
+            AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
     }
     FPropertySection.Leave();
 }
@@ -5441,11 +5452,15 @@ void TDevice::Disable()
     {
     	NotifyDisable();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+        if (!FRemote)
+            AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
     }
     FPropertySection.Leave();
 }
@@ -5487,7 +5502,10 @@ void TDevice::Online()
 		    OnOnline(this);
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
+
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
 	}
 	FPropertySection.Leave();
 }
@@ -5513,7 +5531,10 @@ void TDevice::Offline()
 			OnOffline(this);
 
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
+
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
 	}
 	FPropertySection.Leave();
 }
@@ -5589,11 +5610,15 @@ void TDevice::Idle()
     {
         NotifyIdle();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        if (!FRemote)
+            AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
 	}
 	FPropertySection.Leave();
 }
@@ -5634,11 +5659,15 @@ void TDevice::Busy()
 	{
 	    NotifyBusy();
 
-        AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        if (!FRemote)
+            AddBoolean(FPhysUnit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+
         AddBoolean(FVirtUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        AddBoolean(FRemoteUnitList, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
 
         SignalMsg(FPhysUnit);
         SignalMsg(FVirtUnitList);
+        SignalMsg(FRemoteUnitList);
 	}
 	FPropertySection.Leave();
 }
@@ -6721,11 +6750,16 @@ void TDevice::CreateResetTag(TDistUnit *unit)
 {
 	TDeviceTag *tag;
 
-	tag = unit->LockInfoTag();
-	tag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
-	tag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
-	unit->UnlockTag();
-	unit->SignalMsg();
+	if (!FRemote)
+	{
+    	tag = unit->LockInfoTag();
+
+    	tag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
+	    tag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
+
+    	unit->UnlockTag();
+	    unit->SignalMsg();
+	}
 }
 
 /*##########################################################################
@@ -6840,6 +6874,7 @@ void TDevice::NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag)
 
         AddBoolean(FPhysUnit, unit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
         AddBoolean(FVirtUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
+        AddBoolean(FRemoteUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Open, FOpen);
     }
 
     Val = tag->GetBoolean(DEVICE_VAR_Enabled, FEnabled);
@@ -6853,6 +6888,7 @@ void TDevice::NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag)
 
         AddBoolean(FPhysUnit, unit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
         AddBoolean(FVirtUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
+        AddBoolean(FRemoteUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Enabled, FEnabled);
     }
 
     Val = tag->GetBoolean(DEVICE_VAR_Online, FOnline);
@@ -6863,6 +6899,8 @@ void TDevice::NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag)
             Online();
         else
             Offline();
+
+        AddBoolean(FRemoteUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Online, FOnline);
     }
 
     Val = tag->GetBoolean(DEVICE_VAR_Busy, FBusy);
@@ -6876,6 +6914,7 @@ void TDevice::NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag)
 
         AddBoolean(FPhysUnit, unit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
         AddBoolean(FVirtUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
+        AddBoolean(FRemoteUnitList, unit, DEVICE_TAG_INFO, DEVICE_VAR_Busy, FBusy);
     }    
 }
 
@@ -6898,19 +6937,29 @@ void TDevice::NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag)
 
     Val = tag->GetBoolean(DEVICE_VAR_Open, FOpen);
 
-    if (Val != FOpen)
+    if (FRemote)
+        FOpen = Val;
+    else
     {
-    	resptag = unit->LockInfoTag();
-	    resptag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
+        if (Val != FOpen)
+        {
+        	resptag = unit->LockInfoTag();
+	        resptag->ModifyBoolean(DEVICE_VAR_Open, FOpen);
+        }
     }
 
     Val = tag->GetBoolean(DEVICE_VAR_Enabled, FEnabled);
 
-    if (Val != FEnabled)
+    if (FRemote)
+        FEnabled = Val;
+    else
     {
-        if (!resptag)
-        	resptag = unit->LockInfoTag();
-	    resptag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
+        if (Val != FEnabled)
+        {
+            if (!resptag)
+            	resptag = unit->LockInfoTag();
+	        resptag->ModifyBoolean(DEVICE_VAR_Enabled, FEnabled);
+        }
     }
 
     Val = tag->GetBoolean(DEVICE_VAR_Online, FOnline);
@@ -7092,6 +7141,22 @@ void TDistUnit::DefineDevice(TDevice *Device)
 
 /*##########################################################################
 #
+#   Name       : TDistUnit::IsRemote
+#
+#   Purpose....: Is this a remote unit?
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TDistUnit::IsRemote()
+{
+    return FDistSystem->FIsRemote;
+}
+
+/*##########################################################################
+#
 #   Name       : TDistUnit::Online
 #
 #   Purpose....: Set state to online
@@ -7113,8 +7178,8 @@ void TDistUnit::Online()
 
             if (FDevice->FPhysUnit != this)
             {
-            	FInstalled = TRUE;
-				FDevice->CreateInstallTag(this);
+                FInstalled = TRUE;
+	    		FDevice->CreateInstallTag(this);
             }
         }
     }
@@ -8285,6 +8350,7 @@ void TDistSystem::Init()
 	FPendingPoll = FALSE;
 	FPendingResetReq = TRUE;
 	FPendingResetAck = FALSE;
+	FIsRemote = FALSE;
 
 	FDistDevice->AddSystem(this);
 }
@@ -8302,6 +8368,38 @@ void TDistSystem::Init()
 ##########################################################################*/
 TDistSystem::~TDistSystem()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TDistSystem::DefineAsVirtual
+#
+#   Purpose....: Define this side as virtual device provider, e.g. terminal side
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistSystem::DefineAsVirtual()
+{
+    FIsRemote = FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TDistSystem::DefineAsRemote
+#
+#   Purpose....: Define this side as remote device listener
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistSystem::DefineAsRemote()
+{
+    FIsRemote = TRUE;
 }
 
 /*##########################################################################
@@ -8601,6 +8699,54 @@ int TDistSystem::HasUnit(unsigned short int UnitType, unsigned short int UnitNum
 
 /*##########################################################################
 #
+#   Name       : TDistSystem::InstallRemote
+#
+#   Purpose....: Install a remote device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistSystem::InstallRemote(TDevice *Device)
+{
+	TDistUnit *ptr;
+	int found;
+
+	FUnitSection.Enter();
+
+	Device->FRemote = TRUE;
+
+	found = FALSE;
+	ptr = FUnitList;
+	while (!found && ptr)
+	{
+		if (ptr->GetUnitType() == Device->GetUnitType() && ptr->GetUnitNumber() == Device->GetUnitNumber())
+		{
+			Device->FPhysUnit = ptr;
+			ptr->DefineDevice(Device);
+			if (IsOnline())
+				ptr->Online();
+			ptr->HandleInstallTag();
+			found = TRUE;
+		}
+		ptr = ptr->FList;
+	}
+
+	if (!found)
+	{
+		ptr = new TDistUnit(this, Device->GetUnitType(), Device->GetUnitNumber());
+		Device->FPhysUnit = ptr;
+		ptr->DefineDevice(Device);
+		if (IsOnline())
+			ptr->Online();
+	}
+
+	FUnitSection.Leave();
+}
+
+/*##########################################################################
+#
 #   Name       : TDistSystem::InstallVirtual
 #
 #   Purpose....: Install a virtual device
@@ -8662,11 +8808,35 @@ void TDistSystem::InstallPhysical(TDevice *Device)
 
     ptr = new TDistUnit(this);
 
-	ptr->FNext = Device->FVirtUnitList;
+    ptr->FNext = Device->FVirtUnitList;
 	Device->FVirtUnitList = ptr;
-	ptr->DefineDevice(Device);
+    ptr->DefineDevice(Device);
 	if (IsOnline())
 		ptr->Online();
+}
+
+/*##########################################################################
+#
+#   Name       : TDistSystem::AddRemote
+#
+#   Purpose....: Add remote support for device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDistSystem::AddRemote(TDevice *Device)
+{
+    TDistUnit *ptr;
+
+    ptr = new TDistUnit(this);
+
+    ptr->FNext = Device->FRemoteUnitList;
+    Device->FRemoteUnitList = ptr;
+    ptr->DefineDevice(Device);
+    if (IsOnline())
+	   	ptr->Online();
 }
 
 /*##########################################################################

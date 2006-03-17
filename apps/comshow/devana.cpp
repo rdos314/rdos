@@ -57,6 +57,24 @@
 #define DEVICE_DATA_BYTEARRAY       20
 #define DEVICE_DATA_SHORTSTRING     128
 
+// usual device
+
+//#define DEV0		0xDE
+//#define DEV1		0x01
+//#define DEV2		0xCE
+//#define DEV3		0x1
+
+//#define DEV       0x1CE01DE
+
+// remote device
+
+#define DEV0		0xAE
+#define DEV1		0x80
+#define DEV2		0x1E
+#define DEV3		0x1
+
+#define DEV         0x11E80AE
+
 const int DaysInMonth[12] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 /*##################  PassedDays  ###############
@@ -180,7 +198,7 @@ int TDeviceProtocolAnalyser::GetMsg()
 	int StartPos;
 	int Pos;
 
-    if (FRawFile->GetSize() <= FRawFile->GetPos())
+	if (FRawFile->GetSize() <= FRawFile->GetPos())
         return FALSE;
 
 	StartPos = FRawFile->GetPos();
@@ -199,7 +217,7 @@ int TDeviceProtocolAnalyser::GetMsg()
 			Pos = FRawFile->GetPos();
 			FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-            if (!FTime)
+			if (!FTime)
             {
             	FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
                 Channel = Debug.Channel;
@@ -237,22 +255,22 @@ int TDeviceProtocolAnalyser::GetMsg()
 		switch (i)
 		{
 			case 0:
-				if (uch != 0xDE)
+				if (uch != DEV0)
 					return TRUE;
 				break;
 
 			case 1:
-				if (uch != 0x01)
+				if (uch != DEV1)
 					return TRUE;
 				break;
 
 			case 2:
-				if (uch != 0xCE)
+				if (uch != DEV2)
 					return TRUE;
 				break;
 
 			case 3:
-				if (uch != 0x01)
+				if (uch != DEV3)
 					return TRUE;
 				break;
 		}
@@ -311,7 +329,7 @@ int TDeviceProtocolAnalyser::GetMsg()
 void TDeviceProtocolAnalyser::WriteVarType(TDeviceVar *var)
 {
     switch (var->GetType())
-    {
+	{
         case DEVICE_DATA_NONE:
             Write("None");
             break;
@@ -330,13 +348,13 @@ void TDeviceProtocolAnalyser::WriteVarType(TDeviceVar *var)
 
         case DEVICE_DATA_SIGNED8:
             Write("Signed 8");
-            break;
+			break;
 
         case DEVICE_DATA_SIGNED16:
             Write("Signed 16");
             break;
 
-        case DEVICE_DATA_SIGNED32:
+		case DEVICE_DATA_SIGNED32:
             Write("Signed 32");
             break;
 
@@ -361,7 +379,7 @@ void TDeviceProtocolAnalyser::WriteVarType(TDeviceVar *var)
             break;
 
         case DEVICE_DATA_JULIANDATE:
-            Write("Julian Date");
+			Write("Julian Date");
             break;
 
         case DEVICE_DATA_BINARY8:
@@ -380,13 +398,13 @@ void TDeviceProtocolAnalyser::WriteVarType(TDeviceVar *var)
             Write("String 16");
             break;
 
-        case DEVICE_DATA_BOOLEAN:
+		case DEVICE_DATA_BOOLEAN:
             Write("Boolean");
             break;
 
         case DEVICE_DATA_BOOLARRAY:
             Write("BoolArray");
-            break;
+			break;
 
         case DEVICE_DATA_BYTEARRAY:
             Write("ByteArray");
@@ -411,7 +429,7 @@ void TDeviceProtocolAnalyser::WriteVarType(TDeviceVar *var)
 void TDeviceProtocolAnalyser::WriteVarData(TDeviceVar *var)
 {
     char str[80];
-    long double temp;
+	long double temp;
     const char *ptr;
     int size;
     int year, month, day;
@@ -486,7 +504,7 @@ void TDeviceProtocolAnalyser::WriteVarData(TDeviceVar *var)
                 if (i != size)
                     Write(" ");
             }
-            break;
+			break;
 
         case DEVICE_DATA_STRING8:
         case DEVICE_DATA_STRING16:
@@ -1067,7 +1085,7 @@ void TDeviceProtocolAnalyser::ShowMsg()
 {
 	TDeviceMsg msg(0x10000);
 
-    if (msg.Parse(0x1CE01DE, FMsg, FSize + 8))
+    if (msg.Parse(DEV, FMsg, FSize + 8))
         ShowDevice(&msg);
 	else
 	{

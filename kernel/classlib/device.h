@@ -461,8 +461,11 @@ protected:
 	virtual void NotifyInfoTag(TDistUnit *unit, TDeviceTag *tag);
 	virtual void NotifyInstallTag(TDistUnit *unit, TDeviceTag *tag);
 
+    TDistUnit *FRemoteUnitList;
 	TDistUnit *FVirtUnitList;
 	TDistUnit *FPhysUnit;
+
+    int FRemote;
 
 	int	FOpen;
 	int FEnabled;
@@ -500,6 +503,8 @@ public:
     
 	short int GetUnitType();
     short int GetUnitNumber();
+
+    int IsRemote();
 
 	TDeviceTag *LockTag(unsigned short int TAG); 
 	void UnlockTag();
@@ -616,6 +621,9 @@ public:
 	TDistSystem(TDistDevice *DistDevice, long s1, long s2, long s3, long s4);
 	virtual ~TDistSystem();
 
+	void DefineAsVirtual();
+	void DefineAsRemote();
+
 	int HasUnit(unsigned short int UnitType);
 	int HasUnit(unsigned short int UnitType, unsigned short int UnitNumber);
     int HasConfig(unsigned short int UnitType, unsigned short int UnitNumber);
@@ -624,8 +632,11 @@ public:
 
     int IsOnline();
 
+	void InstallRemote(TDevice *Device);
 	void InstallVirtual(TDevice *Device);
 	void InstallPhysical(TDevice *Device);
+
+	void AddRemote(TDevice *Device);
 
 	void Config(TDeviceConfig *config);
 	void SendMsg(TDeviceMsg *Msg);
@@ -667,6 +678,7 @@ protected:
 	TSection FUnitSection;
 	TDistUnit *FUnitList;
 
+	int FIsRemote;
 	int FHasUnits;
 
 	TDeviceConfig *FConfigList;

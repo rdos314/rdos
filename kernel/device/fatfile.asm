@@ -1006,6 +1006,11 @@ read_cluster_loop:
 ;
 	mov al,ds:drive_nr
 	ReqSector
+	jnc read_cluster_save
+;
+    mov ebx,-1
+
+read_cluster_save:
 	mov es:[edi],ebx
 
 read_cluster_next:
@@ -1185,11 +1190,14 @@ write_cluster_loop:
 write_cluster_define:
 	mov al,ds:drive_nr
 	DefineSector
+	jc write_cluster_modify_done
+;	
 	mov es:[edi],ebx
 
 write_cluster_next:
 	ModifySector
-;
+
+write_cluster_modify_done:
 	pop ebx
 	add edi,4
 	inc edx
