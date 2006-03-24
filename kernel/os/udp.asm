@@ -658,14 +658,14 @@ receive_not_query:
 	FreeMem
 	mov ax,ds
 	mov es,ax
-	xor ax,ax
-	mov ds,ax
 	jmp receive_free
 
 receive_pop_free:
 	pop es
 
 receive_free:
+	xor ax,ax
+	mov ds,ax
 	FreeMem
 
 receive_done:

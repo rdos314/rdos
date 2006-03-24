@@ -564,6 +564,7 @@ protected:
     
 	int FInstalled;
 	int FOnline;
+	int FPhysical;
 
 private:
     void Init();
@@ -586,6 +587,8 @@ private:
 	short int FCurrInfoID;
 	short int FCurrInstallID;
 	short int FCurrAcceptID;
+
+	int FAllowMsg;
 };
 
 class TDeviceConfig

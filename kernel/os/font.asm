@@ -551,7 +551,7 @@ open_font_size_next:
 ;
 	movzx eax,ds:font_fheight
 	mul edx
-	add eax,SIZE font_buf_header
+	add eax,SIZE font_buf_header + 2
 	AllocateSmallGlobalMem
 	mov dx,ds:font_fheight
 	mov es:fh_height,dx

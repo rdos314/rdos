@@ -7015,7 +7015,8 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem)
 {
 	FDistSystem = DistSystem;
 	FDistSystem->InsertUnit(this);
-	
+	FPhysical = TRUE;
+
 	Init();
 }
 
@@ -7024,7 +7025,7 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem)
 #
 #   Name       : TDistUnit::TDistUnit
 #
-#   Purpose....: Constructor for class		                               
+#   Purpose....: Constructor for class
 #
 #   In params..: *
 #   Out params.: *
@@ -7038,7 +7039,8 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem, short int UnitType, short int Unit
 
 	FDistSystem = DistSystem;
 	FDistSystem->InsertNoBlockUnit(this);
-	
+	FPhysical = FALSE;
+
 	Init();
 }
 
@@ -7046,7 +7048,7 @@ TDistUnit::TDistUnit(TDistSystem *DistSystem, short int UnitType, short int Unit
 #
 #   Name       : TDistUnit::~TDistUnit
 #
-#   Purpose....: Destructor for TDistUnit		                         
+#   Purpose....: Destructor for TDistUnit
 #
 #   In params..: *
 #   Out params.: *
@@ -7121,6 +7123,8 @@ void TDistUnit::Init()
     FReplyAlloc = 0;
     FLastReplyTag = 0;
     FLastReplyID = 0;
+
+    FAllowMsg = !(FDistSystem->FIsRemote && FPhysical);
 }
 
 /*##########################################################################
@@ -7171,6 +7175,8 @@ void TDistUnit::Online()
     if (!FOnline)
     {
         FOnline = TRUE;
+
+        FAllowMsg = !(FDistSystem->FIsRemote && FPhysical);
         
         if (FDevice)
         {
@@ -7205,6 +7211,8 @@ void TDistUnit::Offline()
 
         ClearQueues();
 
+        FAllowMsg = !(FDistSystem->FIsRemote && FPhysical);
+            
 	    if (FDevice)
 		    FDevice->NotifyResetTag(this);
     }
@@ -7581,7 +7589,7 @@ void TDistUnit::CreateAcceptTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockReqTag()
 {
-	if (FDistSystem)
+	if (FDistSystem && FAllowMsg)
     {
         FMsgSection.Enter();
 
@@ -7619,7 +7627,7 @@ TDeviceTag *TDistUnit::LockReqTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockReplyTag(unsigned short int ID)
 {
-	if (FDistSystem)
+	if (FDistSystem && FAllowMsg)
 	{
 		FMsgSection.Enter();
 
@@ -7655,7 +7663,7 @@ TDeviceTag *TDistUnit::LockReplyTag(unsigned short int ID)
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockInfoTag()
 {
-	if (FDistSystem)
+	if (FDistSystem && FAllowMsg)
 	{
         FMsgSection.Enter();
 
@@ -7731,13 +7739,13 @@ TDeviceTag *TDistUnit::LockInstallTag()
 ##########################################################################*/
 TDeviceTag *TDistUnit::LockTag(unsigned short int TAG)
 {
-	switch (TAG)
+    switch (TAG)
     {
         case DEVICE_TAG_REQ:
             return LockReqTag();
 
-//		case DEVICE_TAG_REPLY:
-//			return LockReplyTag();
+//      case DEVICE_TAG_REPLY:
+//	    	return LockReplyTag();
 
         case DEVICE_TAG_INFO:
             return LockInfoTag();
@@ -7975,6 +7983,7 @@ void TDistUnit::HandleInstallTag(TDeviceTag *Tag)
 ##########################################################################*/
 void TDistUnit::HandleAcceptTag(TDeviceTag *Tag)
 {
+    FAllowMsg = TRUE;
 }
 
 /*##########################################################################
