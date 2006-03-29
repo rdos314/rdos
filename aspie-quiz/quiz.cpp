@@ -46,7 +46,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TQuiz::TQuiz()
+TQuiz::TQuiz(int Questions)
   : NoRef("", "No referrer"),
     NTRef("", "NT control group"),
     AspieRef("", "Aspie control group"),
@@ -64,6 +64,8 @@ TQuiz::TQuiz()
     int i;
     int g;
     int g1, g2;
+
+    N = Questions;
 
     RefCount = 0;
     UseNtResult = TRUE;
@@ -251,7 +253,7 @@ void TQuiz::CheckCross()
     int CrossArr[MAX_CROSS];
     int cross;
 
-    for (q = 0; q < MAX_QUESTIONS; q++)
+    for (q = 0; q < N; q++)
     {
         quiz = this;
         group = quiz->Quiz[q].MyGroup;
@@ -283,7 +285,7 @@ void TQuiz::CheckCross()
 
         for (cross = 0; cross < MAX_CROSS; cross++)
             if (CrossQuiz[cross])
-                for (qc = 0; qc < MAX_QUESTIONS; qc++)
+                for (qc = 0; qc < N; qc++)
                     if (qc != CrossArr[cross])
                         if (!strcmp(CrossQuiz[cross]->Quiz[qc].Text, text))
                             printf("Text duplicate, question:%d in cross %d:%d",
@@ -489,7 +491,7 @@ void TQuiz::ClearUsed()
     int i;
     int cross;
 
-    for (i = 0; i < MAX_QUESTIONS; i++)
+    for (i = 0; i < N; i++)
         ClearUsed(i);
 
     for (cross = 0; cross < MAX_CROSS; cross++)
@@ -519,7 +521,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
     maxcorr = -1;
     TopQuiz = 0;
 
-    for (q = 0; q < MAX_QUESTIONS; q++)
+    for (q = 0; q < N; q++)
     {
         CurrQuiz = this;
         CurrQuestion = q;
@@ -552,7 +554,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
     {
         if (CrossQuiz[cross])
         {
-            for (q = 0; q < MAX_QUESTIONS; q++)
+            for (q = 0; q < N; q++)
             {
                 CurrQuiz = CrossQuiz[cross];
                 CurrQuestion = q;
@@ -608,7 +610,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
     maxcorr = -1;
     TopQuiz = 0;
 
-    for (q = 0; q < MAX_QUESTIONS; q++)
+    for (q = 0; q < N; q++)
     {
         if (Quiz[q].MyGroup == Group)
         {
@@ -644,7 +646,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
     {
         if (CrossQuiz[cross])
         {
-            for (q = 0; q < MAX_QUESTIONS; q++)
+            for (q = 0; q < N; q++)
             {
                 if (CrossQuiz[cross]->Quiz[q].MyGroup == Group)
                 {
@@ -761,7 +763,7 @@ void TQuiz::Calculate()
 
 	PopCorr.Correlate(&Aspie, &Nt);
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		Quiz[i].AsCount = Aspie.Count[i];
 		Quiz[i].AsMean = Aspie.GetMean(i);
@@ -773,7 +775,7 @@ void TQuiz::Calculate()
 		Quiz[i].Corr = PopCorr.corr[i];
 	}
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		Quiz[i].Count = 0;
 		Quiz[i].Sum = 0;
@@ -795,7 +797,7 @@ void TQuiz::Calculate()
 
     for (e = 0; e < GroupValCount; e++)
     {
-		for (i = 0; i < MAX_QUESTIONS; i++)
+		for (i = 0; i < N; i++)
 		{
 			ival = All.ValArr[e].Quiz[i];
 			if (ival)
@@ -816,7 +818,7 @@ void TQuiz::Calculate()
 			sum = 0;
 			count = 0;
 
-			for (i = 0; i < MAX_QUESTIONS; i++)
+			for (i = 0; i < N; i++)
 			{
 				if (Quiz[i].MyGroup == g)
 				{
@@ -851,7 +853,7 @@ void TQuiz::Calculate()
 		}
 	}
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 	    if (Quiz[i].Count > 1)
 	    {
@@ -908,7 +910,7 @@ void TQuiz::Calculate()
 		}
 	}
 
-	for (q = 0; q < MAX_QUESTIONS; q++)
+	for (q = 0; q < N; q++)
 	{
 		for (g = 0; g < GROUP_COUNT; g++)
 		{

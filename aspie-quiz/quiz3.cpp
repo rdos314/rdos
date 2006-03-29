@@ -925,7 +925,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 			file.Write(str);
 
 			file.Write("\"");
-			if (i != MAX_QUESTIONS - 1)
+			if (i != N - 1)
 				file.Write(", ");
 		}
 	}

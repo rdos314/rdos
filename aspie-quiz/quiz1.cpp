@@ -49,7 +49,8 @@
 #
 ##########################################################################*/
 TQuizI::TQuizI(const char *FileName)
-  : FDataFile(FileName)
+  : TQuiz(100),
+    FDataFile(FileName)
 {
     UseNtResult = FALSE;
     
@@ -581,13 +582,13 @@ void TQuizI::LoadPopulations()
 	int i;
     TReferer *ref;
 
-    for (i = 0; i < MAX_QUESTIONS; i++)
+    for (i = 0; i < N; i++)
         Quiz[i].NoAnswer = 0;
     
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		for (i = 0; i < MAX_QUESTIONS; i++)
+		for (i = 0; i < N; i++)
 		{
 			if (Row.Before[i] > Row.Now[i])
 				ValArr[i] = Row.Before[i] + 1;
@@ -720,7 +721,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 	{
 		if (ref->IsMatch(Row.Referer))
 		{
-			for (i = 0; i < MAX_QUESTIONS; i++)
+			for (i = 0; i < N; i++)
 			{
 				if (Row.Before[i] > Row.Now[i])
 					ValArr[i] = Row.Before[i] + 1;
@@ -750,7 +751,7 @@ void TQuizI::ExportExcelCase(const char *filename, int PcaType)
     file.Write("\"\", ");
     file.Write("\"\", ");
     
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 		{
@@ -762,7 +763,7 @@ void TQuizI::ExportExcelCase(const char *filename, int PcaType)
 			file.Write(str);
 
 			file.Write("\"");
-			if (i != MAX_QUESTIONS - 1)
+			if (i != N - 1)
 				file.Write(", ");
 		}
 	}
@@ -777,7 +778,7 @@ void TQuizI::ExportExcelCase(const char *filename, int PcaType)
 		sprintf(str, "\"%d\", ", Row.Diagnos);
 		file.Write(str);
 
-		for (i = 0; i < MAX_QUESTIONS; i++)
+		for (i = 0; i < N; i++)
 		{
 			if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 			{
@@ -791,7 +792,7 @@ void TQuizI::ExportExcelCase(const char *filename, int PcaType)
 
 				sprintf(str, "\"%d\"", ival);
 				file.Write(str);
-				if (i != MAX_QUESTIONS - 1)
+				if (i != N - 1)
 					file.Write(", ");
 			}
 		}
