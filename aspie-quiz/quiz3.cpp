@@ -49,7 +49,8 @@
 #
 ##########################################################################*/
 TQuizIII::TQuizIII(const char *FileName, TQuiz *QuizI, TQuiz *QuizII)
-  : FDataFile(FileName)
+  : TQuiz(100),
+    FDataFile(FileName)
 {
     DefineCross(0, QuizI);
     DefineCross(1, QuizII);
@@ -611,13 +612,13 @@ void TQuizIII::LoadPopulations()
     TReferer *ref;
     int aspie;
 
-    for (i = 0; i < MAX_QUESTIONS; i++)
+    for (i = 0; i < N; i++)
         Quiz[i].NoAnswer = 0;
     
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-        for (i = 0; i < MAX_QUESTIONS; i++)
+        for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
@@ -912,7 +913,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 		{
@@ -941,7 +942,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 			sprintf(str, "\"%d\", ", Row.Diagnos);
 			file.Write(str);
 
-			for (i = 0; i < MAX_QUESTIONS; i++)
+			for (i = 0; i < N; i++)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
@@ -954,7 +955,7 @@ void TQuizIII::ExportExcelCase(const char *filename, int PcaType)
 
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
-					if (i != MAX_QUESTIONS - 1)
+					if (i != N - 1)
 						file.Write(", ");
 				}
 			}
@@ -1009,7 +1010,7 @@ void TQuizIII::ExportExcelGroups(const char *filename)
 	        GroupCount[i] = 0;
 	    }
 	    
-    	for (i = 0; i < MAX_QUESTIONS; i++)
+    	for (i = 0; i < N; i++)
 	    {
 		    ival = Row.Quiz[i];
 		    if (ival > 2)

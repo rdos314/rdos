@@ -129,7 +129,7 @@ struct TGroup
 class TQuiz
 {
 public:
-    TQuiz();
+    TQuiz(int questions);
     ~TQuiz();
 
     void WriteReferers(const char *filename);
@@ -232,7 +232,8 @@ protected:
     TReferer FemaleNonAsRef;
 
     TQuiz *CrossQuiz[MAX_CROSS];
-    
+
+    int N;    
     int GroupValCount;
     TGroupValArr *GroupValArr;    
 	TGroup Group[MAX_GROUP_COUNT];

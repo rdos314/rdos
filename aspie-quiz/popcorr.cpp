@@ -42,11 +42,13 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TPopulationCorrelation::TPopulationCorrelation()
+TPopulationCorrelation::TPopulationCorrelation(int questions)
 {
 	int i;
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	N = questions;
+
+	for (i = 0; i < N; i++)
 	{
 	    mean[i] = 0;
 	    sd[i] = 0;
@@ -96,7 +98,7 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 	long double cmean;
 	long double csd;
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 	    count = 0;
 		sum = 0;
@@ -235,14 +237,14 @@ void TPopulationCorrelation::Sort()
 	int e;
 	long double val;
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 		IndArr[i] = i;
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		val = corr[IndArr[i]];
 
-		for (j = i + 1; j < MAX_QUESTIONS; j++)
+		for (j = i + 1; j < N; j++)
 		{
 			if (corr[IndArr[j]] > val)
 			{

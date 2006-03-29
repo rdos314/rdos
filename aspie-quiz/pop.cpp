@@ -42,16 +42,18 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TPopulation::TPopulation()
+TPopulation::TPopulation(int questions)
 {
 	int i,j;
 
     ValArr = 0;
 
+    N = questions;
+
     ValueCount = 0;
     MaxSize = 0;
 
-	for (i = 0; i < MAX_QUESTIONS; i++)
+	for (i = 0; i < N; i++)
 	{
 		Count[i] = 0;
 		Sum[i] = 0;
@@ -112,7 +114,7 @@ void TPopulation::Add(char Arr[MAX_QUESTIONS])
         ValArr = NewArr;
     } 
 
-    for (i = 0; i < MAX_QUESTIONS; i++)
+    for (i = 0; i < N; i++)
     {
 		val = Arr[i];
     	ValArr[ValueCount].Quiz[i] = val;
@@ -141,7 +143,7 @@ void TPopulation::Add(char Arr[MAX_QUESTIONS])
 ##########################################################################*/
 long double TPopulation::GetMean(int QuestionNr)
 {
-    if (QuestionNr >= 0 && QuestionNr < MAX_QUESTIONS)
+    if (QuestionNr >= 0 && QuestionNr < N)
     {
         if (Count[QuestionNr])
             return (long double)Sum[QuestionNr] / Count[QuestionNr];
@@ -172,7 +174,7 @@ long double TPopulation::GetSd(int QuestionNr)
 	long double mean = GetMean(QuestionNr);
 	int count;
 
-	if (QuestionNr >= 0 && QuestionNr < MAX_QUESTIONS)
+	if (QuestionNr >= 0 && QuestionNr < N)
 	{
         count = 0;
             

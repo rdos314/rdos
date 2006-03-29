@@ -34,11 +34,13 @@
 class TPopulationCorrelation
 {
 public:
-    TPopulationCorrelation();
+    TPopulationCorrelation(int questions);
     ~TPopulationCorrelation();
 
     void Correlate(TPopulation *pop1, TPopulation *pop2);
     void Sort();
+
+    int N;
     
 	long double mean[MAX_QUESTIONS];
 	long double sd[MAX_QUESTIONS];

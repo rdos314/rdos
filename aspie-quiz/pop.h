@@ -29,7 +29,7 @@
 #define _POP_H
 
 #define MAX_CATS        8
-#define MAX_QUESTIONS   100
+#define MAX_QUESTIONS   200
 
 struct TValArr
 {
@@ -39,13 +39,15 @@ struct TValArr
 class TPopulation
 {
 public:
-    TPopulation();
+    TPopulation(int questions);
 	~TPopulation();
 
 	void Add(char Arr[MAX_QUESTIONS]);
 
     long double GetMean(int QuestionNr);
     long double GetSd(int QuestionNr);
+
+    int N;
     
     int Count[MAX_QUESTIONS];
 	int Sum[MAX_QUESTIONS];
