@@ -49,7 +49,8 @@
 #
 ##########################################################################*/
 TQuizII::TQuizII(const char *FileName, TQuiz *QuizI)
-  : FDataFile(FileName)
+  : TQuiz(100),
+    FDataFile(FileName)
 {
     DefineCross(0, QuizI);
 

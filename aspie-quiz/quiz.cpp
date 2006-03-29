@@ -47,7 +47,25 @@
 #
 ##########################################################################*/
 TQuiz::TQuiz(int Questions)
-  : NoRef("", "No referrer"),
+  : PopCorr(Questions),
+	 All(Questions),
+	 LowAs(Questions),
+	 As(Questions),
+	 AsMale(Questions),
+	 AsFemale(Questions),
+	 Add(Questions),
+	 AddMale(Questions),
+	 AddFemale(Questions),
+	 Aspie(Questions),
+	 AspieMale(Questions),
+	 AspieFemale(Questions),
+	 Mix(Questions),
+	 MixMale(Questions),
+	 MixFemale(Questions),
+	 Nt(Questions),
+	 NtMale(Questions),
+	 NtFemale(Questions),
+	 NoRef("", "No referrer"),
     NTRef("", "NT control group"),
     AspieRef("", "Aspie control group"),
     DxAsRef("", "Diagnosed AS/HFA/PDD"),
@@ -59,7 +77,7 @@ TQuiz::TQuiz(int Questions)
     MaleAsRef("", "Male AS/HFA/PDD"),
     FemaleAsRef("", "Female AS/HFA/PDD"),
     MaleNonAsRef("", "Male non-AS/HFA/PDD"),
-	FemaleNonAsRef("", "Female non-AS/HFA/PDD")
+	 FemaleNonAsRef("", "Female non-AS/HFA/PDD")
 {
     int i;
     int g;
@@ -76,7 +94,7 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < MAX_CROSS; i++)
         CrossQuiz[i] = 0;
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < N; i++)
     {
         Quiz[i].Text = "NO TEXT";
         Quiz[i].AsCount = 0;
@@ -171,7 +189,7 @@ void TQuiz::Init()
 	int i;
 	int g;
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < N; i++)
     {
         Quiz[i].Text = "NO TEXT";
         Quiz[i].Reverse = FALSE;
@@ -554,7 +572,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
     {
         if (CrossQuiz[cross])
         {
-            for (q = 0; q < N; q++)
+            for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
                 CurrQuiz = CrossQuiz[cross];
                 CurrQuestion = q;
@@ -646,7 +664,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
     {
         if (CrossQuiz[cross])
         {
-            for (q = 0; q < N; q++)
+            for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
                 if (CrossQuiz[cross]->Quiz[q].MyGroup == Group)
                 {
@@ -748,8 +766,8 @@ void TQuiz::Calculate()
 	int ival;
 	int count;
 	int sum;
-	long double mean[100];
-	long double csd[100];
+	long double mean[MAX_QUESTIONS];
+	long double csd[MAX_QUESTIONS];
 	int q;
 	long double val;
 	long double rsum;
@@ -1433,7 +1451,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 
     j = 0;
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
 		if (!OnlyMixed || Quiz[i].MyGroup == GROUP_MIXED)
         {
@@ -1680,7 +1698,7 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
 
 	j = 0;
 
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
 		ind = PopCorr.IndArr[i];
 
@@ -1855,7 +1873,7 @@ void TQuiz::WriteLowAsAsCorrelation(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer)
 {
-	TPopulation pop;
+	TPopulation pop(N);
 
 	GetReferer(referer, &pop);
 
@@ -1872,7 +1890,7 @@ void TQuiz::WriteRefererNtCorrelation(const char *filename, const char *header, 
 *##########################################################################*/
 void TQuiz::WriteRefererAsCorrelation(const char *filename, const char *header, const char *referer)
 {
-    TPopulation pop;
+    TPopulation pop(N);
 
     GetReferer(referer, &pop);
 
@@ -2473,7 +2491,7 @@ void TQuiz::WritePca(const char *filename)
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
 		if (i % 10 == 0)
 		{
@@ -2596,10 +2614,10 @@ void TQuiz::WriteWeighting(const char *filename)
 	char str[80];
 	int ival;
 	long double val;
-	long double Asw[100];
-	long double Ntw[100];
-	long double Asg[100];
-	long double Ntg[100];
+	long double Asw[MAX_QUESTIONS];
+	long double Ntw[MAX_QUESTIONS];
+	long double Asg[MAX_QUESTIONS];
+	long double Ntg[MAX_QUESTIONS];
     int count;
     long double assum;
     long double ntsum;
@@ -2608,7 +2626,7 @@ void TQuiz::WriteWeighting(const char *filename)
     TQuiz *CurrQuiz;
 	TFile file(filename, 0);
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < N; i++)
 	{
 		assum = Quiz[i].Pca[0];
 		ntsum = Quiz[i].Pca[1];
@@ -2633,9 +2651,10 @@ void TQuiz::WriteWeighting(const char *filename)
         Ntw[i] = ntsum / (long double)count;        
     }
 
-    file.Write("    static int Asw[100] = {");
+    sprintf(str, "    static int Asw[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2644,14 +2663,15 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
 
-    file.Write("    static int Ntw[100] = {");
+    sprintf(str, "    static int Ntw[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2660,12 +2680,12 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < N; i++)
     {
 		assum = Quiz[i].MalePca[0] - Quiz[i].FemalePca[0];
 		ntsum = Quiz[i].MalePca[1] - Quiz[i].FemalePca[1];
@@ -2698,9 +2718,10 @@ void TQuiz::WriteWeighting(const char *filename)
         Ntg[i] = ntsum / (long double)count / 2.0;        
     }
 
-    file.Write("    static int Asg[100] = {");
+    sprintf(str, "    static int Asg[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2709,14 +2730,15 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
 
-    file.Write("    static int Ntg[100] = {");
+    sprintf(str, "    static int Ntg[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2725,12 +2747,12 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
 
-    for (i = 0; i < 100; i++)
+    for (i = 0; i < N; i++)
     {
 		assum = Quiz[i].OldPca[0] - Quiz[i].YoungPca[0];
 		ntsum = Quiz[i].OldPca[1] - Quiz[i].YoungPca[1];
@@ -2763,9 +2785,10 @@ void TQuiz::WriteWeighting(const char *filename)
         Ntg[i] = ntsum / (long double)count / 2.0;        
     }
 
-    file.Write("    static int Asa[100] = {");
+    sprintf(str, "    static int Asa[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2774,14 +2797,15 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
 
-    file.Write("    static int Nta[100] = {");
+    sprintf(str, "    static int Nta[%d] = {", N);
+    file.Write(str);
     
-	for (i = 0; i < 100; i++)
+	for (i = 0; i < N; i++)
 	{
         if ((i % 10) == 0)
     	    file.Write("\r\n          ");
@@ -2790,7 +2814,7 @@ void TQuiz::WriteWeighting(const char *filename)
 		sprintf(str, "%5d", ival);
 		file.Write(str);
 
-	    if (i != 99)
+	    if (i != N - 1)
     	    file.Write(",");		
 	}
 	file.Write("};\r\n\r\n");
