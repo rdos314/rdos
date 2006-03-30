@@ -2198,6 +2198,22 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
 	ClearUsed();
 
+    file.Write("<h2>Grouped results</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+    file.Write("High correlation is light blue");
+    file.Write("</span><br>");
+
+	file.Write("<span style='color:#990099'>");
+    file.Write("Negative correlation is red color");
+    file.Write("</span><br>");
+
+    file.Write("Correlations are calculated against other questions in the group, not including the current question<br>");
+    file.Write("Each group is sorted so the highest AS-NT correlation comes first<br><br>");        
+
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
         
     for (g = 0; g < GROUP_COUNT; g++)
@@ -2636,7 +2652,6 @@ void TQuiz::WriteWeighting(const char *filename)
 
         j = Quiz[i].CrossInd;
         CurrQuiz = Quiz[i].CrossQuiz;
-        j = i;
 
         while (CurrQuiz)
         {
@@ -2695,7 +2710,6 @@ void TQuiz::WriteWeighting(const char *filename)
 
         j = Quiz[i].CrossInd;
 		CurrQuiz = Quiz[i].CrossQuiz;
-        j = i;
 
         while (CurrQuiz)
         {
@@ -2762,7 +2776,6 @@ void TQuiz::WriteWeighting(const char *filename)
 
         j = Quiz[i].CrossInd;
         CurrQuiz = Quiz[i].CrossQuiz;
-        j = i;
 
         while (CurrQuiz)
         {

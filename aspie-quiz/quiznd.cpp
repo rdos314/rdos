@@ -1400,7 +1400,7 @@ void TQuizNd::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType != PCA_TYPE_OLD)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (d1 > 0 && d2 > 0)
