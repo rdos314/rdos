@@ -156,7 +156,7 @@ void TQuizI::SetupTexts()
 	Quiz[46].MyGroup = GROUP_MIXED;
 	Quiz[47].MyGroup = GROUP_SENSORY;
 	Quiz[48].MyGroup = GROUP_SENSORY;
-	Quiz[49].MyGroup = GROUP_MIXED;
+	Quiz[49].MyGroup = GROUP_MATH;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_SENSORY;
 	Quiz[52].MyGroup = GROUP_SENSORY;

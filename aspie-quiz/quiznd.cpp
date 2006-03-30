@@ -115,8 +115,9 @@ void TQuizNd::SetupTexts()
 	Quiz[21].Reverse = TRUE;
 	Quiz[22].Reverse = TRUE;
 	Quiz[23].Reverse = TRUE;
-	Quiz[23].Reverse = TRUE;
+	Quiz[24].Reverse = TRUE;
 	Quiz[29].Reverse = TRUE;
+	Quiz[34].Reverse = TRUE;
 	Quiz[36].Reverse = TRUE;
 	Quiz[39].Reverse = TRUE;
 	Quiz[41].Reverse = TRUE;
@@ -127,24 +128,27 @@ void TQuizNd::SetupTexts()
 	Quiz[62].Reverse = TRUE;
 	Quiz[63].Reverse = TRUE;
 	Quiz[69].Reverse = TRUE;
-	Quiz[72].Reverse = TRUE;
 	Quiz[73].Reverse = TRUE;
 	Quiz[74].Reverse = TRUE;
+	Quiz[75].Reverse = TRUE;
 	Quiz[76].Reverse = TRUE;
+	Quiz[79].Reverse = TRUE;
+	Quiz[80].Reverse = TRUE;
 	Quiz[81].Reverse = TRUE;
 	Quiz[85].Reverse = TRUE;
 	Quiz[91].Reverse = TRUE;
 	Quiz[92].Reverse = TRUE;
 	Quiz[94].Reverse = TRUE;
 	Quiz[95].Reverse = TRUE;
+	Quiz[100].Reverse = TRUE;
 	Quiz[103].Reverse = TRUE;
 	Quiz[104].Reverse = TRUE;
 	Quiz[105].Reverse = TRUE;
 	Quiz[109].Reverse = TRUE;
+	Quiz[110].Reverse = TRUE;
 	Quiz[111].Reverse = TRUE;
 	Quiz[115].Reverse = TRUE;
 	Quiz[116].Reverse = TRUE;
-	Quiz[118].Reverse = TRUE;
 	Quiz[120].Reverse = TRUE;
 	Quiz[122].Reverse = TRUE;
 	Quiz[124].Reverse = TRUE;
@@ -153,9 +157,9 @@ void TQuizNd::SetupTexts()
 	Quiz[129].Reverse = TRUE;
 	Quiz[131].Reverse = TRUE;
 	Quiz[132].Reverse = TRUE;
+	Quiz[133].Reverse = TRUE;
 	Quiz[134].Reverse = TRUE;
 	Quiz[135].Reverse = TRUE;
-	Quiz[136].Reverse = TRUE;
 	Quiz[137].Reverse = TRUE;
 	Quiz[142].Reverse = TRUE;
 	Quiz[144].Reverse = TRUE;
@@ -164,7 +168,7 @@ void TQuizNd::SetupTexts()
 	Quiz[157].Reverse = TRUE;
 	Quiz[158].Reverse = TRUE;
 	Quiz[166].Reverse = TRUE;
-	Quiz[167].Reverse = TRUE;
+	Quiz[174].Reverse = TRUE;
 	Quiz[178].Reverse = TRUE;
 	Quiz[190].Reverse = TRUE;
 	Quiz[193].Reverse = TRUE;
@@ -174,7 +178,7 @@ void TQuizNd::SetupTexts()
 	Quiz[199].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
-	Quiz[1].MyGroup = GROUP_SENSORY;
+	Quiz[1].MyGroup = GROUP_NONVERBAL;
 	Quiz[2].MyGroup = GROUP_SENSORY;
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
@@ -183,12 +187,12 @@ void TQuizNd::SetupTexts()
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_SENSORY;
-	Quiz[10].MyGroup = GROUP_SENSORY;
-	Quiz[11].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_SOCIAL;
+	Quiz[11].MyGroup = GROUP_MIXED;
 	Quiz[12].MyGroup = GROUP_SENSORY;
 	Quiz[13].MyGroup = GROUP_SENSORY;
 	Quiz[14].MyGroup = GROUP_SENSORY;
-	Quiz[15].MyGroup = GROUP_SENSORY;
+	Quiz[15].MyGroup = GROUP_MIXED;
 	Quiz[16].MyGroup = GROUP_SENSORY;
 	Quiz[17].MyGroup = GROUP_MOTOR;
 	Quiz[18].MyGroup = GROUP_MOTOR;
@@ -197,8 +201,8 @@ void TQuizNd::SetupTexts()
 	Quiz[21].MyGroup = GROUP_MOTOR;
 	Quiz[22].MyGroup = GROUP_MOTOR;
 	Quiz[23].MyGroup = GROUP_MOTOR;
-	Quiz[24].MyGroup = GROUP_MOTOR;
-	Quiz[25].MyGroup = GROUP_MOTOR;
+	Quiz[24].MyGroup = GROUP_MIXED;
+	Quiz[25].MyGroup = GROUP_MIXED;
 	Quiz[26].MyGroup = GROUP_MOTOR;
 	Quiz[27].MyGroup = GROUP_MOTOR;
 	Quiz[28].MyGroup = GROUP_NONVERBAL;
@@ -209,8 +213,8 @@ void TQuizNd::SetupTexts()
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_NONVERBAL;
-	Quiz[36].MyGroup = GROUP_NONVERBAL;
-	Quiz[37].MyGroup = GROUP_NONVERBAL;
+	Quiz[36].MyGroup = GROUP_SOCIAL;
+	Quiz[37].MyGroup = GROUP_MIXED;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_NONVERBAL;
@@ -218,142 +222,142 @@ void TQuizNd::SetupTexts()
 	Quiz[42].MyGroup = GROUP_NONVERBAL;
 	Quiz[43].MyGroup = GROUP_NONVERBAL;
 	Quiz[44].MyGroup = GROUP_NONVERBAL;
-	Quiz[45].MyGroup = GROUP_NONVERBAL;
-	Quiz[46].MyGroup = GROUP_NONVERBAL;
+	Quiz[45].MyGroup = GROUP_MIXED;
+	Quiz[46].MyGroup = GROUP_MIXED;
 	Quiz[47].MyGroup = GROUP_NONVERBAL;
 	Quiz[48].MyGroup = GROUP_NONVERBAL;
 	Quiz[49].MyGroup = GROUP_NONVERBAL;
 	Quiz[50].MyGroup = GROUP_NONVERBAL;
-	Quiz[51].MyGroup = GROUP_NONVERBAL;
-	Quiz[52].MyGroup = GROUP_NONVERBAL;
-	Quiz[53].MyGroup = GROUP_NONVERBAL;
-	Quiz[54].MyGroup = GROUP_NONVERBAL;
-	Quiz[55].MyGroup = GROUP_NONVERBAL;
-	Quiz[56].MyGroup = GROUP_NONVERBAL;
-	Quiz[57].MyGroup = GROUP_NONVERBAL;
+	Quiz[51].MyGroup = GROUP_MIXED;
+	Quiz[52].MyGroup = GROUP_MIXED;
+	Quiz[53].MyGroup = GROUP_SENSORY;
+	Quiz[54].MyGroup = GROUP_MIXED;
+	Quiz[55].MyGroup = GROUP_SENSORY;
+	Quiz[56].MyGroup = GROUP_MIXED;
+	Quiz[57].MyGroup = GROUP_SENSORY;
 	Quiz[58].MyGroup = GROUP_FOCUS;
 	Quiz[59].MyGroup = GROUP_FOCUS;
 	Quiz[60].MyGroup = GROUP_FOCUS;
 	Quiz[61].MyGroup = GROUP_FOCUS;
-	Quiz[62].MyGroup = GROUP_FOCUS;
-	Quiz[63].MyGroup = GROUP_FOCUS;
+	Quiz[62].MyGroup = GROUP_SOCIAL;
+	Quiz[63].MyGroup = GROUP_MIXED;
 	Quiz[64].MyGroup = GROUP_FOCUS;
 	Quiz[65].MyGroup = GROUP_FOCUS;
 	Quiz[66].MyGroup = GROUP_FOCUS;
 	Quiz[67].MyGroup = GROUP_FOCUS;
 	Quiz[68].MyGroup = GROUP_FOCUS;
-	Quiz[69].MyGroup = GROUP_FOCUS;
-	Quiz[70].MyGroup = GROUP_FOCUS;
+	Quiz[69].MyGroup = GROUP_MIXED;
+	Quiz[70].MyGroup = GROUP_MIXED;
 	Quiz[71].MyGroup = GROUP_FOCUS;
-	Quiz[72].MyGroup = GROUP_FOCUS;
-	Quiz[73].MyGroup = GROUP_REPETITION;
-	Quiz[74].MyGroup = GROUP_REPETITION;
-	Quiz[75].MyGroup = GROUP_REPETITION;
-	Quiz[76].MyGroup = GROUP_REPETITION;
+	Quiz[72].MyGroup = GROUP_MIXED;
+	Quiz[73].MyGroup = GROUP_MIXED;
+	Quiz[74].MyGroup = GROUP_SOCIAL;
+	Quiz[75].MyGroup = GROUP_MIXED;
+	Quiz[76].MyGroup = GROUP_NT_RELATION;
 	Quiz[77].MyGroup = GROUP_REPETITION;
 	Quiz[78].MyGroup = GROUP_REPETITION;
-	Quiz[79].MyGroup = GROUP_REPETITION;
-	Quiz[80].MyGroup = GROUP_REPETITION;
-	Quiz[81].MyGroup = GROUP_REPETITION;
+	Quiz[79].MyGroup = GROUP_MIXED;
+	Quiz[80].MyGroup = GROUP_MIXED;
+	Quiz[81].MyGroup = GROUP_SOCIAL;
 	Quiz[82].MyGroup = GROUP_REPETITION;
 	Quiz[83].MyGroup = GROUP_REPETITION;
 	Quiz[84].MyGroup = GROUP_REPETITION;
-	Quiz[85].MyGroup = GROUP_REPETITION;
+	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_REPETITION;
 	Quiz[88].MyGroup = GROUP_REPETITION;
-	Quiz[89].MyGroup = GROUP_REPETITION;
-	Quiz[90].MyGroup = GROUP_REPETITION;
+	Quiz[89].MyGroup = GROUP_MIXED;
+	Quiz[90].MyGroup = GROUP_MIXED;
 	Quiz[91].MyGroup = GROUP_SOCIAL;
 	Quiz[92].MyGroup = GROUP_SOCIAL;
 	Quiz[93].MyGroup = GROUP_SOCIAL;
-	Quiz[94].MyGroup = GROUP_SOCIAL;
+	Quiz[94].MyGroup = GROUP_NT_RELATION;
 	Quiz[95].MyGroup = GROUP_SOCIAL;
 	Quiz[96].MyGroup = GROUP_SOCIAL;
 	Quiz[97].MyGroup = GROUP_SOCIAL;
 	Quiz[98].MyGroup = GROUP_SOCIAL;
 	Quiz[99].MyGroup = GROUP_SOCIAL;
-	Quiz[100].MyGroup = GROUP_SOCIAL;
+	Quiz[100].MyGroup = GROUP_MIXED;
 	Quiz[101].MyGroup = GROUP_SOCIAL;
 	Quiz[102].MyGroup = GROUP_SOCIAL;
-	Quiz[103].MyGroup = GROUP_SOCIAL;
-	Quiz[104].MyGroup = GROUP_SOCIAL;
+	Quiz[103].MyGroup = GROUP_NONVERBAL;
+	Quiz[104].MyGroup = GROUP_MIXED;
 	Quiz[105].MyGroup = GROUP_SOCIAL;
 	Quiz[106].MyGroup = GROUP_SOCIAL;
-	Quiz[107].MyGroup = GROUP_SOCIAL;
+	Quiz[107].MyGroup = GROUP_MIXED;
 	Quiz[108].MyGroup = GROUP_SOCIAL;
 	Quiz[109].MyGroup = GROUP_SOCIAL;
 	Quiz[110].MyGroup = GROUP_SOCIAL;
-	Quiz[111].MyGroup = GROUP_SOCIAL;
+	Quiz[111].MyGroup = GROUP_NONVERBAL;
 	Quiz[112].MyGroup = GROUP_SOCIAL;
 	Quiz[113].MyGroup = GROUP_SOCIAL;
-	Quiz[114].MyGroup = GROUP_SOCIAL;
-	Quiz[115].MyGroup = GROUP_SOCIAL;
-	Quiz[116].MyGroup = GROUP_SOCIAL;
-	Quiz[117].MyGroup = GROUP_SOCIAL;
-	Quiz[118].MyGroup = GROUP_SOCIAL;
+	Quiz[114].MyGroup = GROUP_MIXED;
+	Quiz[115].MyGroup = GROUP_NT_RELATION;
+	Quiz[116].MyGroup = GROUP_NT_RELATION;
+	Quiz[117].MyGroup = GROUP_MIXED;
+	Quiz[118].MyGroup = GROUP_MIXED;
 	Quiz[119].MyGroup = GROUP_SOCIAL;
 	Quiz[120].MyGroup = GROUP_SOCIAL;
 	Quiz[121].MyGroup = GROUP_SOCIAL;
-	Quiz[122].MyGroup = GROUP_SOCIAL;
-	Quiz[123].MyGroup = GROUP_SOCIAL;
+	Quiz[122].MyGroup = GROUP_NT_RELATION;
+	Quiz[123].MyGroup = GROUP_NONVERBAL;
 	Quiz[124].MyGroup = GROUP_SOCIAL;
 	Quiz[125].MyGroup = GROUP_SOCIAL;
 	Quiz[126].MyGroup = GROUP_SOCIAL;
 	Quiz[127].MyGroup = GROUP_SOCIAL;
 	Quiz[128].MyGroup = GROUP_SOCIAL;
 	Quiz[129].MyGroup = GROUP_SOCIAL;
-	Quiz[130].MyGroup = GROUP_SOCIAL;
-	Quiz[131].MyGroup = GROUP_SOCIAL;
-	Quiz[132].MyGroup = GROUP_SOCIAL;
-	Quiz[133].MyGroup = GROUP_SOCIAL;
+	Quiz[130].MyGroup = GROUP_MIXED;
+	Quiz[131].MyGroup = GROUP_NONVERBAL;
+	Quiz[132].MyGroup = GROUP_NONVERBAL;
+	Quiz[133].MyGroup = GROUP_NONVERBAL;
 	Quiz[134].MyGroup = GROUP_SOCIAL;
-	Quiz[135].MyGroup = GROUP_SOCIAL;
-	Quiz[136].MyGroup = GROUP_SOCIAL;
-	Quiz[137].MyGroup = GROUP_MIXED;
+	Quiz[135].MyGroup = GROUP_MIXED;
+	Quiz[136].MyGroup = GROUP_MIXED;
+	Quiz[137].MyGroup = GROUP_SOCIAL;
 	Quiz[138].MyGroup = GROUP_MIXED;
 	Quiz[139].MyGroup = GROUP_MIXED;
-	Quiz[140].MyGroup = GROUP_MIXED;
-	Quiz[141].MyGroup = GROUP_MIXED;
-	Quiz[142].MyGroup = GROUP_MIXED;
-	Quiz[143].MyGroup = GROUP_MIXED;
-	Quiz[144].MyGroup = GROUP_MIXED;
-	Quiz[145].MyGroup = GROUP_MIXED;
+	Quiz[140].MyGroup = GROUP_MATH;
+	Quiz[141].MyGroup = GROUP_MATH;
+	Quiz[142].MyGroup = GROUP_MATH;
+	Quiz[143].MyGroup = GROUP_MATH;
+	Quiz[144].MyGroup = GROUP_MATH;
+	Quiz[145].MyGroup = GROUP_MATH;
 	Quiz[146].MyGroup = GROUP_MIXED;
 	Quiz[147].MyGroup = GROUP_MIXED;
-	Quiz[148].MyGroup = GROUP_MIXED;
-	Quiz[149].MyGroup = GROUP_MIXED;
-	Quiz[150].MyGroup = GROUP_MIXED;
+	Quiz[148].MyGroup = GROUP_MATH;
+	Quiz[149].MyGroup = GROUP_MATH;
+	Quiz[150].MyGroup = GROUP_MATH;
 	Quiz[151].MyGroup = GROUP_MIXED;
 	Quiz[152].MyGroup = GROUP_MIXED;
 	Quiz[153].MyGroup = GROUP_MIXED;
 	Quiz[154].MyGroup = GROUP_MIXED;
 	Quiz[155].MyGroup = GROUP_MIXED;
-	Quiz[156].MyGroup = GROUP_MIXED;
-	Quiz[157].MyGroup = GROUP_MIXED;
-	Quiz[158].MyGroup = GROUP_MIXED;
-	Quiz[159].MyGroup = GROUP_MIXED;
-	Quiz[160].MyGroup = GROUP_MIXED;
-	Quiz[161].MyGroup = GROUP_MIXED;
-	Quiz[162].MyGroup = GROUP_MIXED;
+	Quiz[156].MyGroup = GROUP_MATH;
+	Quiz[157].MyGroup = GROUP_MATH;
+	Quiz[158].MyGroup = GROUP_MATH;
+	Quiz[159].MyGroup = GROUP_MATH;
+	Quiz[160].MyGroup = GROUP_MATH;
+	Quiz[161].MyGroup = GROUP_MATH;
+	Quiz[162].MyGroup = GROUP_MATH;
 	Quiz[163].MyGroup = GROUP_MIXED;
 	Quiz[164].MyGroup = GROUP_MIXED;
-	Quiz[165].MyGroup = GROUP_MIXED;
+	Quiz[165].MyGroup = GROUP_MATH;
 	Quiz[166].MyGroup = GROUP_MIXED;
 	Quiz[167].MyGroup = GROUP_MIXED;
 	Quiz[168].MyGroup = GROUP_MIXED;
 	Quiz[169].MyGroup = GROUP_MIXED;
 	Quiz[170].MyGroup = GROUP_MIXED;
-	Quiz[171].MyGroup = GROUP_MIXED;
-	Quiz[172].MyGroup = GROUP_MIXED;
+	Quiz[171].MyGroup = GROUP_MATH;
+	Quiz[172].MyGroup = GROUP_SOCIAL;
 	Quiz[173].MyGroup = GROUP_MIXED;
 	Quiz[174].MyGroup = GROUP_MIXED;
 	Quiz[175].MyGroup = GROUP_MIXED;
-	Quiz[176].MyGroup = GROUP_MIXED;
-	Quiz[177].MyGroup = GROUP_MIXED;
-	Quiz[178].MyGroup = GROUP_MIXED;
+	Quiz[176].MyGroup = GROUP_MATH;
+	Quiz[177].MyGroup = GROUP_MOTOR;
+	Quiz[178].MyGroup = GROUP_MATH;
 	Quiz[179].MyGroup = GROUP_MIXED;
-	Quiz[180].MyGroup = GROUP_MIXED;
+	Quiz[180].MyGroup = GROUP_NONVERBAL;
 	Quiz[181].MyGroup = GROUP_MIXED;
 	Quiz[182].MyGroup = GROUP_MIXED;
 	Quiz[183].MyGroup = GROUP_MIXED;
@@ -366,13 +370,13 @@ void TQuizNd::SetupTexts()
 	Quiz[190].MyGroup = GROUP_MIXED;
 	Quiz[191].MyGroup = GROUP_MIXED;
 	Quiz[192].MyGroup = GROUP_MIXED;
-	Quiz[193].MyGroup = GROUP_MIXED;
-	Quiz[194].MyGroup = GROUP_MIXED;
-	Quiz[195].MyGroup = GROUP_MIXED;
+	Quiz[193].MyGroup = GROUP_MATH;
+	Quiz[194].MyGroup = GROUP_MATH;
+	Quiz[195].MyGroup = GROUP_SOCIAL;
 	Quiz[196].MyGroup = GROUP_MIXED;
-	Quiz[197].MyGroup = GROUP_MIXED;
+	Quiz[197].MyGroup = GROUP_NT_RELATION;
 	Quiz[198].MyGroup = GROUP_MIXED;
-	Quiz[199].MyGroup = GROUP_MIXED;
+	Quiz[199].MyGroup = GROUP_NT_RELATION;
 
 #ifdef ENGLISH
  	Quiz[0].Text = "Can you easily hear small sounds?";
@@ -802,6 +806,8 @@ void TQuizNd::InitReferers()
 	AddReferer("aspergianisland.com", "aspergianisland.com");
 	AddReferer("wrongplanet.net", "wrongplanet.net");
 	AddReferer("rdos.net/sv", "rdos.net/sv");
+	AddReferer("kolozzeum.com", "kolozzeum.com/kolozzeum/showthread.php?t=65633");
+	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
  }
 
 /*##################  TQuizNd::LoadReferers ##########################
@@ -840,24 +846,24 @@ void TQuizNd::LoadReferers()
 				ref->ResultNt++;
 		}
 
-	    ref = 0;
+		ref = 0;
 
-	    if (Row.Autism == 1 || Row.Aspie == 1)
+		if (Row.Autism == 1 || Row.Aspie == 1)
 			ref = &SelfAsRef;
 
-        if (Row.TS == 1)
+		if (Row.TS == 1)
 			ref = &SelfTsRef;
 
-        if (Row.ADHD == 1)
+		if (Row.ADHD == 1)
 			ref = &SelfAddRef;
 
-        if (Row.Aspie == 2 || Row.Autism == 2)
+		if (Row.Aspie == 2 || Row.Autism == 2)
 			ref = &DxAsRef;
 
-        if (Row.TS == 2)
+		if (Row.TS == 2)
 			ref = &DxTsRef;
 
-        if (Row.ADHD == 2)
+		if (Row.ADHD == 2)
 			ref = &DxAddRef;
 
 		if (ref)
@@ -877,13 +883,13 @@ void TQuizNd::LoadReferers()
 				ref->ResultNt++;
 		}
 
-        if (Row.Autism || Row.Aspie)
-        {
+		if (Row.Autism || Row.Aspie)
+		{
 			if (Row.Gender == 1)
 				ref = &MaleAsRef;
 			else
 				ref = &FemaleAsRef;
-	    }
+		}
 
 		if (ref)
 		{
@@ -920,16 +926,16 @@ void TQuizNd::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
-    TReferer *ref;
-    int aspie;
+	TReferer *ref;
+	int aspie;
 
-    for (i = 0; i < N; i++)
-        Quiz[i].NoAnswer = 0;
-    
+	for (i = 0; i < N; i++)
+		Quiz[i].NoAnswer = 0;
+
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-        for (i = 0; i < N; i++)
+		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
@@ -940,8 +946,8 @@ void TQuizNd::LoadPopulations()
 
 		All.Add(Row.Quiz);
 
-        if (Row.Autism || Row.Aspie)
-        {
+		if (Row.Autism || Row.Aspie)
+		{
 			aspie = TRUE;
 
 			if (Row.AsResult < Row.NtResult)
@@ -1020,6 +1026,7 @@ void TQuizNd::LoadPopulations()
 void TQuizNd::SetupControlGroups()
 {
 	DefineNt("flashback.info");
+	DefineNt("kolozzeum.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1056,12 +1063,11 @@ void TQuizNd::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII)
 	DefineCross(QuizIII, 12, 6);
 	DefineCross(QuizIII, 13, 17);
 	DefineCross(QuizIII, 14, 19);
-	DefineCross(QuizIII, 15, 18);
 	DefineCross(QuizIII, 28, 26);
 	DefineCross(QuizIII, 30, 29);
 	DefineCross(QuizIII, 31, 28);
 	DefineCross(QuizIII, 32, 37);
-	DefineCross(QuizII, 33, 29);
+	DefineCross(QuizIII, 33, 36);
 	DefineCross(QuizIII, 38, 39);
 	DefineCross(QuizIII, 40, 31);
 	DefineCross(QuizII, 42, 70);
@@ -1071,6 +1077,7 @@ void TQuizNd::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII)
 	DefineCross(QuizIII, 59, 72);
 	DefineCross(QuizIII, 61, 70);
 	DefineCross(QuizIII, 64, 73);
+	DefineCross(QuizIII, 65, 75);
 	DefineCross(QuizIII, 66, 71);
 	DefineCross(QuizIII, 67, 77);
 	DefineCross(QuizIII, 71, 74);
@@ -1089,6 +1096,8 @@ void TQuizNd::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII)
 	DefineCross(QuizIII, 108, 50);
 	DefineCross(QuizII, 120, 76);
 	DefineCross(QuizIII, 127, 48);
+	DefineCross(QuizIII, 173, 42);
+	DefineCross(QuizI, 175, 3);
 	DefineCross(QuizIII, 176, 14);
 	DefineCross(QuizIII, 177, 13);
 	DefineCross(QuizIII, 179, 15);

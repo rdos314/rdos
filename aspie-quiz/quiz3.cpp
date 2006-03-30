@@ -133,7 +133,7 @@ void TQuizIII::SetupTexts()
 	Quiz[11].MyGroup = GROUP_MOTOR;
 	Quiz[12].MyGroup = GROUP_MOTOR;
 	Quiz[13].MyGroup = GROUP_MOTOR;
-	Quiz[14].MyGroup = GROUP_MIXED;
+	Quiz[14].MyGroup = GROUP_MATH;
 	Quiz[15].MyGroup = GROUP_MIXED;
 	Quiz[16].MyGroup = GROUP_MIXED;
 	Quiz[17].MyGroup = GROUP_SENSORY;

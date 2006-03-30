@@ -208,6 +208,7 @@ void TQuiz::Init()
 	Group[GROUP_FOCUS].Name = "HYPERFOCUS, DETAIL & TALENTS";
 	Group[GROUP_REPETITION].Name = "NEED FOR REPETITION & PREDICTABILITY";
 	Group[GROUP_MOTOR].Name = "MOTOR";
+	Group[GROUP_MATH].Name = "MATH";
 	Group[GROUP_MIXED].Name = "MIXED";
 
 #endif
@@ -222,6 +223,7 @@ void TQuiz::Init()
 	Group[GROUP_FOCUS].Name = "HYPERFOKUS, DETALJER & TALANGER";
 	Group[GROUP_REPETITION].Name = "UPPREPNING, STRUKTUR OCH FÖRUTSÄGBARTHET";
 	Group[GROUP_MOTOR].Name = "MOTOR";
+	Group[GROUP_MATH].Name = "MATEMATIK";
 	Group[GROUP_MIXED].Name = "OGRUPPERADE";
 
 #endif
@@ -303,7 +305,7 @@ void TQuiz::CheckCross()
 
         for (cross = 0; cross < MAX_CROSS; cross++)
             if (CrossQuiz[cross])
-                for (qc = 0; qc < N; qc++)
+                for (qc = 0; qc < CrossQuiz[cross]->N; qc++)
                     if (qc != CrossArr[cross])
                         if (!strcmp(CrossQuiz[cross]->Quiz[qc].Text, text))
                             printf("Text duplicate, question:%d in cross %d:%d",

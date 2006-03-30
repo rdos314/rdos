@@ -34,7 +34,7 @@
 #include "file.h"
 
 #if !defined(SWEDISH) && !defined(ENGLISH)
-#define SWEDISH
+#define ENGLISH
 #endif
 
 #define MAX_GROUP_COUNT         15
@@ -50,7 +50,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             9
+#define GROUP_COUNT             10
 
 #define GROUP_SENSORY           0
 #define GROUP_MOTOR             1
@@ -60,7 +60,8 @@
 #define GROUP_SOCIAL            5
 #define GROUP_NT_RELATION       6
 #define GROUP_SEX               7
-#define GROUP_MIXED             8
+#define GROUP_MATH              8
+#define GROUP_MIXED             9
 
 class TQuiz;
 
