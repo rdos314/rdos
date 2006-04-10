@@ -944,40 +944,41 @@ void TQuizNd::LoadPopulations()
 
 		aspie = FALSE;
 
-		All.Add(Row.Quiz);
+		if (Row.Autism || Row.Aspie)
+			aspie = TRUE;
+
+		All.Add(aspie, Row.Quiz);
 
 		if (Row.Autism || Row.Aspie)
 		{
-			aspie = TRUE;
-
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.Quiz);
+				LowAs.Add(aspie, Row.Quiz);
 
 			if (Row.Gender == 1)
-				AsMale.Add(Row.Quiz);
+				AsMale.Add(aspie, Row.Quiz);
 			else
-				AsFemale.Add(Row.Quiz);
+				AsFemale.Add(aspie, Row.Quiz);
 
 			if (Row.Autism == 2 || Row.Aspie == 2)
-				As.Add(Row.Quiz);
+				As.Add(aspie, Row.Quiz);
 		}
 
 		if (!aspie && Row.ADHD)
 		{
-			Add.Add(Row.Quiz);
+			Add.Add(aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				AddMale.Add(Row.Quiz);
+				AddMale.Add(aspie, Row.Quiz);
 			else
-				AddFemale.Add(Row.Quiz);
+				AddFemale.Add(aspie, Row.Quiz);
 		}
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(Row.Quiz);
+			Mix.Add(aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.Quiz);
+				MixMale.Add(aspie, Row.Quiz);
 			else
-				MixFemale.Add(Row.Quiz);
+				MixFemale.Add(aspie, Row.Quiz);
 		}
 		else
 		{
@@ -987,11 +988,11 @@ void TQuizNd::LoadPopulations()
 			{
 				if (ref->NT && Row.Autism == 0 && Row.Aspie == 0)
 				{
-					Nt.Add(Row.Quiz);
+					Nt.Add(aspie, Row.Quiz);
 					if (Row.Gender == 1)
-						NtMale.Add(Row.Quiz);
+						NtMale.Add(aspie, Row.Quiz);
 					else
-						NtFemale.Add(Row.Quiz);
+						NtFemale.Add(aspie, Row.Quiz);
 				}
 
 //                if (!aspie)
@@ -1003,11 +1004,11 @@ void TQuizNd::LoadPopulations()
 		if (aspie)
 		{
 				
-			Aspie.Add(Row.Quiz);
+			Aspie.Add(aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.Quiz);
+				AspieMale.Add(aspie, Row.Quiz);
 			else
-				AspieFemale.Add(Row.Quiz);
+				AspieFemale.Add(aspie, Row.Quiz);
 		}
 	}
 }
@@ -1131,7 +1132,7 @@ void TQuizNd::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-		    pop->Add(Row.Quiz);
+		    pop->Add(FALSE, Row.Quiz);
 }
 
 /*##################  IsPca ##########################
@@ -1400,7 +1401,7 @@ void TQuizNd::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (d1 > 0 && d2 > 0)

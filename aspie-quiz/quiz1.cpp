@@ -580,11 +580,12 @@ void TQuizI::LoadPopulations()
 	TQuizRow Row;
 	char ValArr[MAX_QUESTIONS];
 	int i;
-    TReferer *ref;
+	 TReferer *ref;
+	 int aspie = FALSE;
 
-    for (i = 0; i < N; i++)
-        Quiz[i].NoAnswer = 0;
-    
+	 for (i = 0; i < N; i++)
+		  Quiz[i].NoAnswer = 0;
+
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
@@ -596,35 +597,36 @@ void TQuizI::LoadPopulations()
 				ValArr[i] = Row.Now[i] + 1;
 
 			if (ValArr[i] > 3)
-			    ValArr[i] = 0;
+				 ValArr[i] = 0;
 		}
-
-		All.Add(ValArr);
 
 		switch (Row.Diagnos)
 		{
 			case DX_AS:
-			    if (Row.ResultNow < 100)
-			        LowAs.Add(ValArr);
-			        
-		        As.Add(ValArr);
+				aspie = TRUE;
+				 if (Row.ResultNow < 100)
+					  LowAs.Add(aspie, ValArr);
+
+				  As.Add(aspie, ValArr);
 				if (Row.Gender == 1)
-					AsMale.Add(ValArr);
+					AsMale.Add(aspie, ValArr);
 				else
-					AsFemale.Add(ValArr);
+					AsFemale.Add(aspie, ValArr);
 				break;
 
 			case DX_ADD:
-		        Add.Add(ValArr);
+				  Add.Add(aspie, ValArr);
 				if (Row.Gender == 1)
-					AddMale.Add(ValArr);
+					AddMale.Add(aspie, ValArr);
 				else
-					AddFemale.Add(ValArr);
+					AddFemale.Add(aspie, ValArr);
 				break;
 		}
 
+		All.Add(aspie, ValArr);
+
 		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
-		    Mix.Add(ValArr);
+			 Mix.Add(aspie, ValArr);
 		else
 		{
 			ref = FindReferer(Row.Referer);
@@ -632,10 +634,10 @@ void TQuizI::LoadPopulations()
 			if (ref)
 			{
 				if (ref->NT)
-					Nt.Add(ValArr);
+					Nt.Add(aspie, ValArr);
 
 				if (ref->Aspie)
-					Aspie.Add(ValArr);
+					Aspie.Add(aspie, ValArr);
 			}
 		}
 	}
@@ -727,7 +729,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 					ValArr[i] = Row.Before[i] + 1;
 				else
 					ValArr[i] = Row.Now[i] + 1;
-				pop->Add(ValArr);
+				pop->Add(FALSE, ValArr);
 			}
 		}
 	}

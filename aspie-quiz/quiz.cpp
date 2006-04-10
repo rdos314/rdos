@@ -290,11 +290,11 @@ void TQuiz::CheckCross()
                     CrossArr[cross] = curr;
         
             if (quiz->Quiz[curr].MyGroup != group)
-                printf("Group conflict, question:%d %d should be %d\r\n",
+                printf("Group conflict, question:%d %d should be %d\n",
                          q, quiz->Quiz[curr].MyGroup, group);
 
             if (strcmp(quiz->Quiz[curr].Text, text))
-                printf("Text conflict, question:%d <%s> should be <%s>\r\n",
+                printf("Text conflict, question:%d <%s> should be <%s>\n",
                          q, quiz->Quiz[curr].Text, text);
                     
 
@@ -312,6 +312,308 @@ void TQuiz::CheckCross()
                                 q, cross, qc);
                     
     }
+}
+
+/*##################  TQuiz::CalcAsNtDiff ##########################
+*   Purpose....: Calculate accumulated As & Nt diff for whole population         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff)
+{
+    int answers;
+    int e;
+    int i;
+    int ival;
+    int astot;
+    int nttot;
+    int assum;
+    int ntsum;
+    int w;
+    int asresult;
+    int ntresult;
+    int diff;
+    int ascnt = 0;
+    int errorcnt = 0;
+
+    answers = All.ValueCount;
+
+    *AsDiff = 0;
+    *NtDiff = 0;
+
+    for (e = 0; e < answers; e++)
+    {
+        astot = 0;
+        nttot = 0;
+        assum = 0;
+        ntsum = 0;
+    
+		for (i = 0; i < N; i++)
+		{
+			ival = All.ValArr[e].Quiz[i];
+			if (ival)
+			{
+			    w = Asw[i];
+				assum += w * (ival - 1);
+				astot += w;
+
+				 w = Ntw[i];
+				ntsum += w * (ival - 1);
+				nttot += w;
+			}
+		}
+
+		if (astot)
+    		asresult = assum * 100 / astot;
+        else
+            asresult = 0;
+
+        if (nttot)
+    		ntresult = ntsum * 100 / nttot;
+        else
+            ntresult = 0;
+            
+		diff = asresult - ntresult;
+
+        if (All.ValArr[e].As)
+        {
+            ascnt++;
+            *AsDiff += diff;
+
+            if (diff < 0)
+                errorcnt++;
+        }
+        else
+            *NtDiff -= diff;
+	}
+
+	*AsDiff = *AsDiff * 100 / ascnt;
+	*NtDiff = *NtDiff * 100 / (answers - ascnt);
+
+	return errorcnt * 10000 / ascnt;
+}
+
+/*##################  TQuiz::OptimizeAsOne ##########################
+*   Purpose....: Optimize As & Nt weights, one iteration          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
+{
+    int AswCnt;
+    int NtwCnt;
+    int AsDiff;
+    int NtDiff;
+    int BestQ;
+    int BestIsAs;
+    int BestIsInc;
+    int CurrDiff;
+    int q;
+    int diff;
+    int err;
+    static int ntc = 2;
+
+    err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+            
+    CurrDiff = AsDiff + ntc * NtDiff - 10 * err / ntc;
+    BestQ = -1;
+    BestIsAs = FALSE;
+    BestIsInc = FALSE;
+
+    AswCnt = 0;
+    NtwCnt = 0;
+    
+    for (q = 0; q < N; q++)
+    {
+        if (Asw[q])
+            AswCnt++;
+
+        if (Ntw[q])
+            NtwCnt++;
+    } 
+               
+	for (q = 0; q < N; q++)
+	{
+	    if (Asw[q] < 5 && Ntw[q] == 0)
+	    {
+            Asw[q]++;
+	    	err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+		    Asw[q]--;
+
+    		diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
+	    	if (diff > CurrDiff)
+		    {
+			    BestQ = q;
+    			BestIsAs = TRUE;
+	    		BestIsInc = TRUE;
+		    }
+		}
+
+		if (Asw[q] && AswCnt > 15)
+		{
+	        Asw[q]--;
+			err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+			Asw[q]++;
+
+			diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
+			if (diff > CurrDiff)
+		    {
+                BestQ = q;
+                BestIsAs = TRUE;
+                BestIsInc = FALSE;
+            }
+        }
+
+        if (Ntw[q] < 5 && Asw[q] == 0)
+        {
+            Ntw[q]++;
+            err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+            Ntw[q]--;
+        
+            diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
+            if (diff > CurrDiff)
+            {
+                BestQ = q;
+                BestIsAs = FALSE;
+                BestIsInc = TRUE;
+            }
+        }
+        
+        if (Ntw[q] && NtwCnt > 15)
+        {        
+            Ntw[q]--;
+            err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+            Ntw[q]++;
+        
+            diff = AsDiff + ntc * NtDiff - 10 * err / ntc;
+            if (diff > CurrDiff)
+            {
+                BestQ = q;
+                BestIsAs = FALSE;
+                BestIsInc = FALSE;
+            }
+        }
+    }
+
+    if (BestQ >= 0)
+    {
+        if (BestIsAs)
+        {
+            if (BestIsInc)
+                Asw[BestQ]++;
+            else
+                Asw[BestQ]--;
+        }
+        else
+        {
+            if (BestIsInc)
+                Ntw[BestQ]++;
+            else
+                Ntw[BestQ]--;
+        }
+    }
+
+    err = CalcAsNtDiff(Asw, Ntw, &AsDiff, &NtDiff);
+
+	printf("Error: %d.%02d As: %d.%02d, Nt: %d.%02d ", err / 100, err % 100, AsDiff / 100, AsDiff % 100, NtDiff / 100, NtDiff % 100);
+	printf("\n");
+
+	if (BestQ >= 0)
+	    return TRUE;
+	else
+	    return FALSE;	    
+}
+
+/*##################  TQuiz::WriteAsWeights ##########################
+*   Purpose....: Write As & Nt weights                        	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
+{
+	 int i;
+
+    printf("    static int Asw[200] = {\n");
+
+    for (i = 0; i < 200; i++)
+    {
+        printf("%4d", Asw[i]);
+
+        if (i == 199)
+            printf("};\n\n");
+        else
+        {
+            if (i % 10 == 9)
+                printf(",\n           ");
+            else
+                printf(",");
+        }
+    }
+
+    printf("    static int Ntw[200] = {\n");
+
+    for (i = 0; i < 200; i++)
+    {
+        printf("%4d", Ntw[i]);
+
+        if (i == 199)
+            printf("};\n\n");
+        else
+        {
+            if (i % 10 == 9)
+                printf(",\n           ");
+            else
+                printf(",");
+        }
+    }
+}
+
+/*##################  TQuiz::WriteWikiWeights ##########################
+*   Purpose....: Write As & Nt weights for wikipedia              	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
+{
+	int i;
+
+    for (i = 0; i < N; i++)
+    {
+        printf("* ");
+        printf(Quiz[i].Text);
+
+        if (Asw[i] || Ntw[i])
+            printf(" (%d %d)", Asw[i], Ntw[i]);        
+
+        printf("\n\n");
+    }
+}
+
+/*##################  TQuiz::OptimizeAsWeights ##########################
+*   Purpose....: Optimize As & Nt weights                        	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS])
+{
+    int i;
+
+    for (i = 0; i < 1000; i++)
+        if (!OptimizeAsOne(Asw, Ntw))
+            break;
+
+    WriteAsWeights(Asw, Ntw);
+    WriteWikiWeights(Asw, Ntw);
 }
 
 /*##################  TQuiz::FindReferer ##########################
@@ -2198,6 +2500,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
 	ClearUsed();
 
+#ifdef ENGLISH
     file.Write("<h2>Grouped results</h2>\n");
     file.Write("<span style='color:#990099'>");
     file.Write("Reversed score questions are showed in red color");
@@ -2211,8 +2514,28 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
     file.Write("Negative correlation is red color");
     file.Write("</span><br>");
 
-    file.Write("Correlations are calculated against other questions in the group, not including the current question<br>");
-    file.Write("Each group is sorted so the highest AS-NT correlation comes first<br><br>");        
+	 file.Write("Correlations are calculated against other questions in the group, not including the current question<br>");
+	 file.Write("Each group is sorted so the highest AS-NT correlation comes first<br><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Grupperade resultat</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+	 file.Write("Hög korrelation visas i ljusblått");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#990099'>");
+	 file.Write("Negativ korrelation visas i rött");
+	 file.Write("</span><br>");
+
+	 file.Write("Korrelationer är beräknade genemot andra frågor i gruppen ");
+	 file.Write("förutom den nuvarande frågan.<br> Varje grupp är sorterad med ");
+	 file.Write("högsta AS-NT korrelation först<br><br>");
+#endif
 
 	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
         

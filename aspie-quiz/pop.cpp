@@ -90,44 +90,45 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(char Arr[MAX_QUESTIONS])
+void TPopulation::Add(int As, char Arr[MAX_QUESTIONS])
 {
-    int val;
-    int i;
-    TValArr *NewArr;
+	 int val;
+	 int i;
+	 TValArr *NewArr;
 
-    if (ValArr == 0)
-    {
-        MaxSize = 8;
-        ValArr = new TValArr[MaxSize];
-    }
+	 if (ValArr == 0)
+	 {
+		  MaxSize = 8;
+		  ValArr = new TValArr[MaxSize];
+	 }
 
-    if (ValueCount >= MaxSize)
-    {
-        MaxSize = 3 * MaxSize / 2;
-        NewArr = new TValArr[MaxSize];
-                
-        for (i = 0; i < ValueCount; i++)
-            NewArr[i] = ValArr[i];
+	 if (ValueCount >= MaxSize)
+	 {
+		  MaxSize = 3 * MaxSize / 2;
+		  NewArr = new TValArr[MaxSize];
 
-        delete ValArr;
-        ValArr = NewArr;
-    } 
+		  for (i = 0; i < ValueCount; i++)
+				NewArr[i] = ValArr[i];
 
-    for (i = 0; i < N; i++)
-    {
+		  delete ValArr;
+		  ValArr = NewArr;
+	 }
+
+	 ValArr[ValueCount].As = As;
+	 for (i = 0; i < N; i++)
+	 {
 		val = Arr[i];
-    	ValArr[ValueCount].Quiz[i] = val;
-        if (val)
-        {
-            val--;
-            ChiArr[i][val]++;
-            Sum[i] += val;
-		    Count[i]++;
-        }
-    }
+		ValArr[ValueCount].Quiz[i] = val;
+		  if (val)
+		  {
+				val--;
+				ChiArr[i][val]++;
+				Sum[i] += val;
+			 Count[i]++;
+		  }
+	 }
 
-    ValueCount++;
+	 ValueCount++;
 }
 
 /*##########################################################################

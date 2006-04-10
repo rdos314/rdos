@@ -150,6 +150,8 @@ public:
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 
+	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 
@@ -158,6 +160,10 @@ public:
 protected:
 	void Init();
 	int round(long double val);
+    int CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff);
+    int OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+    void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+    void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
