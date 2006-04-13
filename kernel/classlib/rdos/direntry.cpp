@@ -123,10 +123,26 @@ static int __cdecl SortCompare(const void *e1, const void *e2)
 		}
 		
 		if (opt & ORDER_BY_INV)
-		    rv = -rv;
-		    
+			rv = -rv;
+
 	}
 	return rv;
+}
+
+/*##########################################################################
+#
+#   Name       : CreateDirEntry
+#
+#   Purpose....: Create direntry data object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TShareObjectData *CreateDirEntry(TShareObject *obj, int size)
+{
+	return new TDirEntryData();
 }
 
 /*##########################################################################
@@ -174,6 +190,7 @@ TDirEntryData::~TDirEntryData()
 ##########################################################################*/
 TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const TDateTime &Time, long FileSize, int Attribute)
 {
+	OnCreate = CreateDirEntry;
     AllocBuffer(sizeof(TDirEntryData));
     FEntry = (TDirEntryData *)FData;
 
@@ -197,6 +214,7 @@ TDirEntry::TDirEntry(const TPathName &PathName, const TString &EntryName, const 
 ##########################################################################*/
 TDirEntry::TDirEntry()
 {
+    OnCreate = CreateDirEntry;
 }
 
 /*##########################################################################
@@ -213,6 +231,7 @@ TDirEntry::TDirEntry()
 TDirEntry::TDirEntry(const TDirEntry &src)
  : TShareObject(src)
 {
+    OnCreate = CreateDirEntry;
     FEntry = src.FEntry;
 }
 
@@ -229,22 +248,6 @@ TDirEntry::TDirEntry(const TDirEntry &src)
 ##########################################################################*/
 TDirEntry::~TDirEntry()
 {
-}
-
-/*##########################################################################
-#
-#   Name       : TDirEntry::Create
-#
-#   Purpose....: Create data object
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TShareObjectData *TDirEntry::Create(int size)
-{
-	return new TDirEntryData();
 }
 
 /*##########################################################################

@@ -128,6 +128,7 @@ void TShareObject::Init()
 {
 	FBuf = 0;
 	FData = 0;
+	OnCreate = 0;
 }
 
 /*##########################################################################
@@ -143,7 +144,10 @@ void TShareObject::Init()
 ##########################################################################*/
 TShareObjectData *TShareObject::Create(int size)
 {
-	return (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
+	if (OnCreate)
+		return (*OnCreate)(this, size);
+    else
+    	return (TShareObjectData *)new char[sizeof(TShareObjectData) + size];
 }
 
 /*##########################################################################

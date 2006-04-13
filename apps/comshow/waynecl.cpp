@@ -78,21 +78,21 @@ TWayneClProtocolAnalyser::~TWayneClProtocolAnalyser()
 int TWayneClProtocolAnalyser::GetMsg()
 {
 	char *str;
-	int Channel;
 	int LastTime;
 	int Elapsed;
 	char ch;
 	TSerialDebug Debug;
 	int StartPos;
 	int Pos;
+	int TempPos;
 	int done;
 
 	if (FRawFile->GetSize() <= FRawFile->GetPos())
-        return FALSE;
+		return FALSE;
 
-    if (FTime)
-        delete FTime;
-    FTime = 0;
+	if (FTime)
+		delete FTime;
+	FTime = 0;
 
 	str = FMsg;
 	*str = 0;
@@ -102,65 +102,93 @@ int TWayneClProtocolAnalyser::GetMsg()
 
 	StartPos = FRawFile->GetPos();
 
-    done = FALSE;
-    
+	done = FALSE;
+
 	while (FRawFile->GetSize() > FRawFile->GetPos() && !done)
 	{
 
-        Pos = FRawFile->GetPos();
-	    FRawFile->Read(&Debug, sizeof(TSerialDebug));
+		Pos = FRawFile->GetPos();
+		FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-	    if (!FTime)
-	    {
-        	FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
-        	Channel = Debug.Channel;
-        	LastTime = Debug.TimeLSB;
+		while (Debug.Channel > 2 || Debug.Channel <= 0)
+		{
+		    Pos++;
+			FRawFile->SetPos(Pos);
+    		FRawFile->Read(&Debug, sizeof(TSerialDebug));
         }
 
-		if (Channel != Debug.Channel)
+		if (!FTime)
 		{
-//		    FRawFile->SetPos(StartPos);
+			FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+			FChannel = Debug.Channel;
+			LastTime = Debug.TimeLSB;
+		}
+
+		if (FChannel != Debug.Channel || Debug.ch == ETX)
+		{
+			Pos = FRawFile->GetPos();
+			FRawFile->SetPos(StartPos);
+
+			while (FRawFile->GetPos() < Pos && FSize < FMaxSize)
+			{
+    			TempPos = FRawFile->GetPos();
+				FRawFile->Read(&Debug, sizeof(TSerialDebug));
+            
+          		while (Debug.Channel > 2 || Debug.Channel <= 0)
+        		{
+		            TempPos++;
+        			FRawFile->SetPos(TempPos);
+            		FRawFile->Read(&Debug, sizeof(TSerialDebug));
+                }
+
+				ch = Debug.ch;
+
+				*str = ch;
+				str++;
+				*str = 0;
+				FSize++;
+			}
 			return TRUE;
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
 		if (Elapsed > 1193 * 25)
 		{
-		    FRawFile->SetPos(Pos);
+			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
 
 		ch = Debug.ch;
 
-        if (ch == STX)
-            done = TRUE;
+		if (ch == STX)
+			done = TRUE;
 
 		LastTime = Debug.TimeLSB;
 	}
 
 	if (!done)
 	{
-	    FRawFile->SetPos(StartPos);
-	    return FALSE;
+		FRawFile->SetPos(StartPos);
+		return FALSE;
 	}
 
-    done = FALSE;
-    
+	done = FALSE;
+
 	while (FRawFile->GetSize() > FRawFile->GetPos() && !done)
 	{
-        Pos = FRawFile->GetPos();
-	    FRawFile->Read(&Debug, sizeof(TSerialDebug));
+		Pos = FRawFile->GetPos();
+		FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-		if (Channel != Debug.Channel)
+		if (FChannel != Debug.Channel)
 		{
-		    FRawFile->SetPos(Pos);
+			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
-		
+
 		Elapsed = Debug.TimeLSB - LastTime;
 		if (Elapsed > 1193 * 25)
 		{
-		    FRawFile->SetPos(Pos);
+			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
 
@@ -168,21 +196,21 @@ int TWayneClProtocolAnalyser::GetMsg()
 		ch = Debug.ch;
 
 		if (ch == ETX)
-		    done = TRUE;
-        else
-        {
-    		*str = ch;
-	    	str++;
-		    *str = 0;
-    		FSize++;
-        }
-		    
+			done = TRUE;
+		else
+		{
+			*str = ch;
+			str++;
+			*str = 0;
+			FSize++;
+		}
+
 	}
 
 	if (!done)
 	{
-	    FRawFile->SetPos(StartPos);
-	    return FALSE;
+		FRawFile->SetPos(StartPos);
+		return FALSE;
 	}
 
 	return TRUE;

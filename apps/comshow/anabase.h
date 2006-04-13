@@ -48,18 +48,20 @@ protected:
 	void Write(const char *str);
 	void ShowShortTime(TDateTime *time);
 	void ShowLongTime(TDateTime *time);
+	void ShowChannel(int Channel);
 	void ShowHexMsg();
 	void ShowMneMsg();
 	void ShowAsciiMsg();
 
 	char *FMsg;
     long FSize;
+    int FChannel;
+    int FMaxSize;
 
 	TDateTime *FTime;
     TFile *FRawFile;
 
 private:
-    int FMaxSize;
 	TFile *FLogFile;
 };
 

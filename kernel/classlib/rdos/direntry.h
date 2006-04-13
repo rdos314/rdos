@@ -68,7 +68,6 @@ public:
 protected:
     virtual int Compare(const TDirEntry &str) const;
 
-	virtual TShareObjectData *Create(int size);
 	virtual void Destroy(TShareObjectData *obj);
 
     TDirEntryData *FEntry;

@@ -100,7 +100,6 @@ void TProtocolAnalyser::ShowLongTime(TDateTime *time)
 *##########################################################################*/
 int TProtocolAnalyser::GetMsg()
 {
-	int Channel;
 	int LastTime;
 	int Elapsed;
 	char ch;
@@ -128,20 +127,20 @@ int TProtocolAnalyser::GetMsg()
 		if (!FTime)
 		{
 			FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
-			Channel = Debug.Channel;
+			FChannel = Debug.Channel;
 			LastTime = Debug.TimeLSB;
 		}
 
 		ch = Debug.ch;
 
-		if (Channel != Debug.Channel)
+		if (FChannel != Debug.Channel)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
+		if (Elapsed > 1193 * 1000)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
@@ -169,10 +168,25 @@ int TProtocolAnalyser::GetMsg()
 *##########################################################################*/
 TDateTime TProtocolAnalyser::GetMsgTime()
 {
-    if (FTime)
-        return *FTime;
-    else
-        return TDateTime();
+	if (FTime)
+		return *FTime;
+	else
+		return TDateTime();
+}
+
+/*##################  TProtocolAnalyser::ShowChannel ##########################
+*   Purpose....: Show message channel  	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TProtocolAnalyser::ShowChannel(int Channel)
+{
+	char tempstr[15];
+
+	sprintf(tempstr, "%2d ", Channel);
+	Write(tempstr);
 }
 
 /*##################  TProtocolAnalyser::ShowHexMsg ##########################
@@ -269,6 +283,7 @@ void TProtocolAnalyser::ShowMsg()
 {
     if (FTime)
         ShowLongTime(FTime);
+    ShowChannel(FChannel);
     ShowHexMsg();
 }
 

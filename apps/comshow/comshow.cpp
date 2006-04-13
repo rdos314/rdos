@@ -81,11 +81,11 @@ void cdecl main()
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
+	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TZapProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
-	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
+//	TDeviceProtocolAnalyser analyzer(&RawFile, 0x10000);
 
 //	analyzer.DefineLogFile("d:\\r1\\cbus.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
@@ -97,9 +97,9 @@ void cdecl main()
 //	analyzer.DefineLogFile("cbus.txt");
 //	analyzer.DefineLogFile("tatsuno.txt");
 //	analyzer.DefineLogFile("innova.txt");
-	analyzer.DefineLogFile("device.txt");
+//	analyzer.DefineLogFile("device.txt");
 //	analyzer.DefineLogFile("atcl.txt");
-//	analyzer.DefineLogFile("wayne.txt");
+	analyzer.DefineLogFile("wayne.txt");
 //	analyzer.DefineLogFile("spp.txt");
 //	analyzer.DefineLogFile("ws2000.txt");
 

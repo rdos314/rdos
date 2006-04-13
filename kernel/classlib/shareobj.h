@@ -61,7 +61,7 @@ public:
 	virtual int Compare(const TShareObject &n2) const;
 
 protected:
-    virtual TShareObjectData *Create(int size);
+    TShareObjectData *Create(int size);
     virtual void Destroy(TShareObjectData *obj);
 
 	void Init();
@@ -73,6 +73,8 @@ protected:
 	void CopyBeforeWrite();
 	void AllocBeforeWrite(int size);
 	void AssignCopy(const void *x, int size);
+
+    TShareObjectData* (*OnCreate)(TShareObject *obj, int size);
 
 	char *FBuf;
 	TShareObjectData *FData;
