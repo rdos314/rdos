@@ -1028,6 +1028,7 @@ void TQuizNd::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("kolozzeum.com");
+	DefineNt("rdos.net/sv");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");

@@ -964,7 +964,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
         }
     }
 
-    for (cross = 0; cross < MAX_CROSS; cross++)
+    for (cross = MAX_CROSS - 1; cross >= 0; cross--)
     {
         if (CrossQuiz[cross])
         {
