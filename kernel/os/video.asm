@@ -978,8 +978,11 @@ write_size_string_name	DB 'Write Size String',0
 write_size_string16	PROC far
 	push ds
 	pusha
-;
+;    
     HideMouse
+    or cx,cx
+    jz write_size_string_done16
+;
 	mov si,cx
 	mov bx,video_thread_sel
 	mov ds,bx
@@ -1003,7 +1006,7 @@ write_size_string_done16:
 	mov ds:vt_col,cx
 	CallVideo set_cursor_position_proc
 	ShowMouse
-;
+;	
 	popa
 	pop ds
 	ret
@@ -1014,6 +1017,9 @@ write_size_string32	PROC far
 	pushad
 ;
     HideMouse
+    or ecx,ecx
+    jz write_size_string_done32
+;
 	mov esi,ecx
 	mov bx,video_thread_sel
 	mov ds,bx

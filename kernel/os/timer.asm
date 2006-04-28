@@ -160,7 +160,7 @@ out_timer1	PROC far
 out_timer1	ENDP
 
 in_timer2	PROC far
-	in al,42h
+    xor al,al
 	ret
 in_timer2	ENDP
 

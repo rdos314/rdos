@@ -531,6 +531,12 @@ ke18	DB 'Invalid selector        '
 
 WriteIntCode	Proc near
 	mov dx,fs:p_error_code
+	cmp dx,18
+	jbe write_int_do
+;
+    mov dx,0Fh
+
+write_int_do:	
 	mov bx,dx
 	add bx,bx
 	add bx,bx

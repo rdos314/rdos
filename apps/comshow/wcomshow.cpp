@@ -38,6 +38,7 @@
 #include "netana.h"
 #include "waynecl.h"
 #include "cotana.h"
+#include "tatsuno.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -60,7 +61,7 @@ void cdecl main()
 //	TFile RawBarFile("z:\\bar.dat");
 //	TFile RawFile("z:\\raw.dat");
 //	TFile RawFile("z:\\net.log");
-	TFile RawFile("c:\\comlog\\rawcl.dat");
+	TFile RawFile("c:\\comlog\\raw.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
 //	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
@@ -68,11 +69,11 @@ void cdecl main()
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TProtocolAnalyser analyzer(&RawFile, 0x400);
-	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TNetProtocolAnalyser analyzer(&RawFile);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TNetProtocolAnalyser analyzer(&RawFile);
+	TTatsunoProtocolAnalyser analyzer(&RawFile);
 
-	analyzer.DefineLogFile("c:\\comlog\\wayne.txt");
+	analyzer.DefineLogFile("c:\\comlog\\tatsuno.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");
