@@ -39,6 +39,7 @@
 #include "waynecl.h"
 #include "cotana.h"
 #include "tatsuno.h"
+#include "flintab.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -71,9 +72,11 @@ void cdecl main()
 //	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
-	TTatsunoProtocolAnalyser analyzer(&RawFile);
+//	TTatsunoProtocolAnalyser analyzer(&RawFile);
+	TFlintabProtocolAnalyser analyzer(&RawFile, 0x4000);
 
-	analyzer.DefineLogFile("c:\\comlog\\tatsuno.txt");
+//	analyzer.DefineLogFile("c:\\comlog\\tatsuno.txt");
+	analyzer.DefineLogFile("c:\\comlog\\flintab.txt");
 //	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
 //	analyzer.DefineLogFile("cotex.txt");
 //	analyzer.DefineLogFile("net.txt");

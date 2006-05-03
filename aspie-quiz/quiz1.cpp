@@ -109,7 +109,7 @@ void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_FOCUS;
 	Quiz[1].MyGroup = GROUP_MIXED;
-	Quiz[2].MyGroup = GROUP_NONVERBAL;
+	Quiz[2].MyGroup = GROUP_MIXED;
 	Quiz[3].MyGroup = GROUP_MIXED;
 	Quiz[4].MyGroup = GROUP_FOCUS;
 	Quiz[5].MyGroup = GROUP_NONVERBAL;
@@ -200,7 +200,7 @@ void TQuizI::SetupTexts()
 	Quiz[90].MyGroup = GROUP_SOCIAL;
 	Quiz[91].MyGroup = GROUP_NONVERBAL;
 	Quiz[92].MyGroup = GROUP_SOCIAL;
-	Quiz[93].MyGroup = GROUP_SOCIAL;
+	Quiz[93].MyGroup = GROUP_MIXED;
 	Quiz[94].MyGroup = GROUP_NONVERBAL;
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_SOCIAL;

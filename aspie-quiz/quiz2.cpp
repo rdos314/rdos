@@ -155,10 +155,10 @@ void TQuizII::SetupTexts()
 	Quiz[27].MyGroup = GROUP_MIXED;
 	Quiz[28].MyGroup = GROUP_NONVERBAL;
 	Quiz[29].MyGroup = GROUP_NONVERBAL;
-	Quiz[30].MyGroup = GROUP_NONVERBAL;
+	Quiz[30].MyGroup = GROUP_MIXED;
 	Quiz[31].MyGroup = GROUP_MIXED;
 	Quiz[32].MyGroup = GROUP_SOCIAL;
-	Quiz[33].MyGroup = GROUP_MIXED;
+	Quiz[33].MyGroup = GROUP_MATH;
 	Quiz[34].MyGroup = GROUP_MIXED;
 	Quiz[35].MyGroup = GROUP_SOCIAL;
 	Quiz[36].MyGroup = GROUP_REPETITION;
