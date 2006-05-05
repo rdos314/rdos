@@ -82,6 +82,7 @@ int TFlintabProtocolAnalyser::GetMsg()
 	TSerialDebug Debug;
 	int Pos;
 	int size;
+	TDateTime *time;
 
 	if (FRawFile->GetSize() <= FRawFile->GetPos())
 		return FALSE;
@@ -99,7 +100,12 @@ int TFlintabProtocolAnalyser::GetMsg()
 		Pos = FRawFile->GetPos();
 		FRawFile->Read(&Debug, sizeof(TSerialDebug));
 
-		if (!FTime)
+		if (FTime)
+		{
+			time = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
+			delete time;
+		}
+		else
 		{
 			FTime = new TDateTime(Debug.TimeMSB, Debug.TimeLSB);
 			FChannel = Debug.Channel;

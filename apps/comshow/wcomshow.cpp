@@ -73,7 +73,8 @@ void cdecl main()
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
-	TFlintabProtocolAnalyser analyzer(&RawFile, 0x4000);
+//	TFlintabProtocolAnalyser analyzer(&RawFile, 0x4000);
+	TProtocolAnalyser analyzer(&RawFile, 0x4000);
 
 //	analyzer.DefineLogFile("c:\\comlog\\tatsuno.txt");
 	analyzer.DefineLogFile("c:\\comlog\\flintab.txt");
