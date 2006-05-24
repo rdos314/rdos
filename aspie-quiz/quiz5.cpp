@@ -49,8 +49,8 @@
 #
 ##########################################################################*/
 TQuiz5::TQuiz5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd)
-  : TQuiz(112),
-    FDataFile(FileName)
+  : TQuiz(113),
+	FDataFile(FileName)
 {
     DefineCross(0, QuizI);
     DefineCross(1, QuizII);
@@ -254,9 +254,10 @@ void TQuiz5::SetupTexts()
 	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_MIXED;
 	Quiz[111].MyGroup = GROUP_MIXED;
+	Quiz[112].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
- 
+
 	Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
 	Quiz[1].Text = "Do you feel strongly attracted to, or appalled by, certain tastes, smells, sounds, colours, shapes, textures or materials?";
 	Quiz[2].Text = "Do you squint now or have done in the past?";
@@ -297,7 +298,7 @@ void TQuiz5::SetupTexts()
 	Quiz[37].Text = "Are you intuitive about what people need from you?";
 	Quiz[38].Text = "Do you have difficulties judging unseen limits and other people's personal space unless clearly instructed?";
 	Quiz[39].Text = "Do you understand figures of speech, parodies, allegories, irony etc with ease?";
-	Quiz[40].Text = "Do you sense the boundaries of others without being told?"; 
+	Quiz[40].Text = "Do you sense the boundaries of others without being told?";
 	Quiz[41].Text = "Do you have unconventional, often unique ways of solving problems?";
 	Quiz[42].Text = "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?";
 	Quiz[43].Text = "Do you love to collect and organize things, make lists & diagrams etc?";
@@ -369,6 +370,7 @@ void TQuiz5::SetupTexts()
 	Quiz[109].Text= "Do you prefer being told the bottom line rather than having to find your own way there?";
 	Quiz[110].Text= "Do you feel an urge to peel skin-flakes off yourself and /or others?";
 	Quiz[111].Text= "Are you gracious about criticism, correction and direction?";
+	Quiz[112].Text = "IQ";
 
 #endif
 
@@ -485,6 +487,7 @@ void TQuiz5::SetupTexts()
 	Quiz[109].Text= "Föredrar du att få veta av andra hur saker fungerar snarare än att ta reda på det på ditt eget sätt?";
 	Quiz[110].Text= "Känner du behov av att rycka loss hudflisor från dig själv (eller andra)?";
 	Quiz[111].Text= "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
+	Quiz[112].Text = "IQ";
 
 #endif
 }
@@ -631,12 +634,13 @@ void TQuiz5::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		for (i = 0; i < N; i++)
+		for (i = 0; i < N - 1; i++)
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
 
 		}
+		Row.Quiz[112] = Row.IqResult;
 
 		aspie = FALSE;
 
@@ -692,14 +696,14 @@ void TQuiz5::LoadPopulations()
 				}
 
 //                if (!aspie)
-                    aspie = ref->Aspie;
+					aspie = ref->Aspie;
 			}
 		}
 
-                    
+
 		if (aspie)
 		{
-				
+
 			Aspie.Add(aspie, Row.Quiz);
 			if (Row.Gender == 1)
 				AspieMale.Add(aspie, Row.Quiz);
@@ -908,9 +912,9 @@ static int IsPca(TQuizRow *row, int PcaType)
             return TRUE;
 
         case PCA_TYPE_MALE:
-            if (row->Gender == 1)
+			if (row->Gender == 1)
                 return TRUE;
-            else
+			else
                 return FALSE;
 
         case PCA_TYPE_FEMALE:
@@ -952,7 +956,7 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
     int i;
-    int ival;
+	int ival;
     char str[80];
 	TFile file(filename, 0);
 
@@ -1020,7 +1024,7 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 void TQuiz5::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
-    int i;
+	int i;
     int ival;
     int group;
     int ok;
@@ -1040,9 +1044,9 @@ void TQuiz5::ExportExcelGroups(const char *filename)
         str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
         file.Write(str);
-        
+
         file.Write("\"");
-        if (i != GROUP_COUNT - 1)
+		if (i != GROUP_COUNT - 1)
             file.Write(", ");
     }
     file.Write("\n");
@@ -1062,7 +1066,7 @@ void TQuiz5::ExportExcelGroups(const char *filename)
 		    if (ival > 2)
 			    ival = 0;
 
-		    if (ival)
+			if (ival)
 		    {
 				if (Quiz[i].Reverse)
 					ival = 3 - ival;

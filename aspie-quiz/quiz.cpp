@@ -1641,7 +1641,7 @@ void TQuiz::WriteCI95(TFile &File, TPopulation *pop, int Question)
 		File.Write(str);
 
 		val = mean + dev;
-		if (val > 2.0)
+		if (val > 2.0 && mean < 2.0)
 			val = 2.0;
 
 		ival = round(100.0 * val);
