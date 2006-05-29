@@ -1000,7 +1000,7 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 					if (ival)
 						ival--;
 
-					if (ival > 2)
+					if (ival > 2 && i < 112)
 						ival = 0;
 
 					sprintf(str, "\"%d\"", ival);
@@ -1025,49 +1025,49 @@ void TQuiz5::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
-    int ival;
-    int group;
-    int ok;
-    char str[80];
+	int ival;
+	int group;
+	int ok;
+	char str[80];
 	TFile file(filename, 0);
 	int GroupSum[GROUP_COUNT];
 	int GroupCount[GROUP_COUNT];
 
-    file.Write("\"\", ");
-    file.Write("\"\", ");
+	file.Write("\"\", ");
+	file.Write("\"\", ");
 
 	for (i = 0; i < GROUP_COUNT; i++)
-    {
-        file.Write("\"");
+	{
+		file.Write("\"");
 
-        strncpy(str, Group[i].Name, 35);
-        str[35] = 0;
+		strncpy(str, Group[i].Name, 35);
+		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
-        file.Write(str);
+		file.Write(str);
 
-        file.Write("\"");
+		file.Write("\"");
 		if (i != GROUP_COUNT - 1)
-            file.Write(", ");
-    }
-    file.Write("\n");
+			file.Write(", ");
+	}
+	file.Write("\n");
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    for (i = 0; i < GROUP_COUNT; i++)
-	    {
-	        GroupSum[i] = 0;
-	        GroupCount[i] = 0;
-	    }
-	    
-    	for (i = 0; i < N; i++)
-	    {
-		    ival = Row.Quiz[i];
-		    if (ival > 2)
-			    ival = 0;
+		for (i = 0; i < GROUP_COUNT; i++)
+		{
+			GroupSum[i] = 0;
+			GroupCount[i] = 0;
+		}
+
+		for (i = 0; i < N; i++)
+		{
+			ival = Row.Quiz[i];
+			if (ival > 2 && i < 112)
+				ival = 0;
 
 			if (ival)
-		    {
+			{
 				if (Quiz[i].Reverse)
 					ival = 3 - ival;
 				else
@@ -1075,32 +1075,32 @@ void TQuiz5::ExportExcelGroups(const char *filename)
 				group = Quiz[i].MyGroup;
 				GroupSum[group] += ival;
 				GroupCount[group]++;
-		    }
+			}
 		}
 
-        ok = TRUE;
+		ok = TRUE;
 		for (i = 0; i < GROUP_COUNT; i++)
-            if (GroupCount[i] == 0)
-                ok = FALSE;	
+			if (GroupCount[i] == 0)
+				ok = FALSE;
 
-        if (ok)
-        {	
-	   		sprintf(str, "\%d\", ", Row.AsResult);
-	        file.Write(str);
+		if (ok)
+		{
+			sprintf(str, "\%d\", ", Row.AsResult);
+			file.Write(str);
 
 				sprintf(str, "\"%d\", ", Row.NtResult);
-	        file.Write(str);
+			file.Write(str);
 
-            for (i = 0; i < GROUP_COUNT; i++)
-            {
-                ival = round(100.0 * (long double)GroupSum[i] / (long double)GroupCount[i]);
-    		    sprintf(str, "\"%d\"", ival);
-                file.Write(str);
-                if (i != GROUP_COUNT - 1)
-                    file.Write(", ");
-            }
-	    	file.Write("\n");
-	    }
+			for (i = 0; i < GROUP_COUNT; i++)
+			{
+				ival = round(100.0 * (long double)GroupSum[i] / (long double)GroupCount[i]);
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
+				if (i != GROUP_COUNT - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
+		}
 	}
 }
 
