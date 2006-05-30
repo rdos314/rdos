@@ -209,6 +209,32 @@ void ProcessRow(char *str)
 
 				case 12:
 					Row.IqResult = atoi(valstr);
+
+					switch (Row.IqResult)
+					{
+						case 5:
+						case 6:
+						case 7:
+						case 8:
+						case 9:
+							Row.Quiz[112] = 1;
+							break;
+
+						case 10:
+						case 11:
+						case 12:
+						case 13:
+						case 14:
+							Row.Quiz[112] = 2;
+							break;
+
+						case 15:
+						case 16:
+						case 17:
+						case 18:
+							Row.Quiz[112] = 3;
+							break;
+					}
 					break;
 
 				default:
