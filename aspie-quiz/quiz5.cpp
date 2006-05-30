@@ -27,6 +27,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 
 #include "quiz5.h"
 #include "file.h"
@@ -37,34 +38,49 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+struct TIqValArr
+{
+	int val;
+};
+
 class TIqEntry
 {
 public:
-    TIqEntry();
-    void Add(TQuizRow *Row);
-    void Write(TFile &file);
+	TIqEntry();
+	~TIqEntry();
+	void Add(TQuizRow *Row);
+	void Write(TFile &file);
 
-    int Sum;
-    int Count;
+	long double GetMean();
+	long double GetSd();
+
+protected:
+	int Sum;
+	int Count;
+	int Increment;
+	int MaxSize;
+	int *ValArr;
 };
 
 class TIqAge
 {
 public:
-    TIqAge();
-    void Add(TQuizRow *Row);
-    void WriteRow(TFile &file, const char *text);
+	TIqAge();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, const char *text);
 
-    static void WriteHeader(TFile &file);
-        
-    TIqEntry MaleHighAs;
-    TIqEntry MaleAs;
-    TIqEntry MaleNt;
-    TIqEntry MaleHighNt;
-    TIqEntry FemaleHighAs;
-    TIqEntry FemaleAs;
-    TIqEntry FemaleNt;
-    TIqEntry FemaleHighNt;
+	static void WriteHeader(TFile &file);
+
+	TIqEntry MaleSlowMat;
+	TIqEntry FemaleSlowMat;
+	TIqEntry MaleHighAs;
+	TIqEntry MaleAs;
+	TIqEntry MaleNt;
+	TIqEntry MaleHighNt;
+	TIqEntry FemaleHighAs;
+	TIqEntry FemaleAs;
+	TIqEntry FemaleNt;
+	TIqEntry FemaleHighNt;
 };
 
 /*##########################################################################
@@ -88,11 +104,11 @@ TQuiz5::TQuiz5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
     DefineCross(3, QuizNd);
 
     SetupTexts();
-    InitReferers();
-    LoadReferers();
+	InitReferers();
+	LoadReferers();
     SetupControlGroups();
 	SortReferers();
-    LoadPopulations();
+	LoadPopulations();
     SetupCross(QuizI, QuizII, QuizIII, QuizNd);
     Calculate();
 }
@@ -544,6 +560,7 @@ void TQuiz5::InitReferers()
 	AddReferer("kolozzeum.com", "kolozzeum.com/kolozzeum/showthread.php?t=65633");
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
 	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
+	AddReferer("whoa.nu", "whoa.nu");
  }
 
 /*##################  TQuiz5::LoadReferers ##########################
@@ -760,6 +777,7 @@ void TQuiz5::SetupControlGroups()
 	DefineNt("flashback.info");
 	DefineNt("kolozzeum.com");
 	DefineNt("rdos.net/sv");
+	DefineNt("whoa.nu");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -937,7 +955,7 @@ void TQuiz5::GetReferer(const char *referer, TPopulation *pop)
 static int IsPca(TQuizRow *row, int PcaType)
 {
     switch (PcaType)
-    {
+	{
 		case PCA_TYPE_ALL:
 		case PCA_TYPE_MIXED:
             return TRUE;
@@ -950,7 +968,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 
         case PCA_TYPE_FEMALE:
             if (row->Gender == 2)
-                return TRUE;
+				return TRUE;
             else
                 return FALSE;
 
@@ -958,10 +976,10 @@ static int IsPca(TQuizRow *row, int PcaType)
             if (row->BirthYear >= 1980)
                 return TRUE;
             else
-                return FALSE;
+				return FALSE;
 
-        case PCA_TYPE_OLD:
-            if (row->BirthYear <= 1965)
+		case PCA_TYPE_OLD:
+			if (row->BirthYear <= 1965)
                 return TRUE;
             else
 				return FALSE;
@@ -973,7 +991,7 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return FALSE;
                 
     }
-    return FALSE;
+	return FALSE;
 }
 
 /*##################  TQuiz5::ExportExcelCases ##########################
@@ -1262,8 +1280,24 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 *##########################################################################*/
 TIqEntry::TIqEntry()
 {
-    Sum = 0;
-    Count = 0;
+	ValArr = 0;
+	MaxSize = 0;
+
+	Count = 0;
+	Sum = 0;
+}
+
+/*##################  TIqEntry::~TIqEntry ##########################
+*   Purpose....: Destructor for TIqEntry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TIqEntry::~TIqEntry()
+{
+	if (ValArr)
+		delete ValArr;
 }
 
 /*##################  TIqEntry::Add ##########################
@@ -1275,8 +1309,84 @@ TIqEntry::TIqEntry()
 *##########################################################################*/
 void TIqEntry::Add(TQuizRow *Row)
 {
-    Sum += Row->IqResult;
-    Count++;
+	 int val;
+	 int i;
+	 int *NewArr;
+
+	 val = Row->IqResult;
+
+	 if (ValArr == 0)
+	 {
+		  MaxSize = 8;
+		  ValArr = new int[MaxSize];
+	 }
+
+	 if (Count >= MaxSize)
+	 {
+		  MaxSize = 3 * MaxSize / 2;
+		  NewArr = new int[MaxSize];
+
+		  for (i = 0; i < Count; i++)
+				NewArr[i] = ValArr[i];
+
+		  delete ValArr;
+		  ValArr = NewArr;
+	 }
+
+	 ValArr[Count] = val;
+	 Sum += val;
+	 Count++;
+}
+
+/*##########################################################################
+#
+#   Name       : TIqEntry::GetMean
+#
+#   Purpose....: Get mean
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TIqEntry::GetMean()
+{
+	if (Count)
+		return (long double)Sum / Count;
+	else
+		return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TIqEntry::GetSd
+#
+#   Purpose....: Get standard deviation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TIqEntry::GetSd()
+{
+	int e;
+	int ival;
+	long double val;
+	long double rsum = 0;
+	long double mean = GetMean();
+
+	for (e = 0; e < Count; e++)
+	{
+		ival = ValArr[e];
+		val = (long double)ival - mean;
+		rsum += val * val;
+	}
+
+	if (Count > 1)
+		return sqrtl(rsum / ((long double)Count - 1));
+	else
+		return 0;
 }
 
 /*##################  round ##########################
@@ -1300,10 +1410,10 @@ int round(long double val)
 *##########################################################################*/
 void WriteCenteredFieldHeader(TFile &File, int RelWidth)
 {
-    char str[80];
+	char str[80];
 
-    sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
-    File.Write(str);
+	sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+	File.Write(str);
 
 	File.Write("<p align=\"center\">\n");
 	File.Write("<b>\n");
@@ -1318,10 +1428,10 @@ void WriteCenteredFieldHeader(TFile &File, int RelWidth)
 *##########################################################################*/
 void WriteFieldFooter(TFile &File)
 {
-    File.Write("\n</b>\n");
+	File.Write("\n</b>\n");
 	File.Write("</p>\n");
 
-    File.Write("</td>\n");
+	File.Write("</td>\n");
 }
 
 /*##################  TIqEntry::Write ##########################
@@ -1333,19 +1443,39 @@ void WriteFieldFooter(TFile &File)
 *##########################################################################*/
 void TIqEntry::Write(TFile &file)
 {
-    long double mean;
-    int ival;
+	long double mean;
+	long double sd;
+	long double dev;
+	long double val;
+	int ival;
 	char str[80];
-    
-    if (Count > 1)
-	{
-	    mean = (long double)Sum / Count;
 
-	    ival = round(10.0 * mean);
+	if (Count > 1)
+	{
+		mean = GetMean();
+		sd = GetSd();
+
+		dev = 1.96 * sd / sqrtl(Count);
+
+		val = mean - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10.0 * val);
+
 		sprintf(str, "%d.%01d", ival / 10, ival % 10);
 		file.Write(str);
+
+		val = mean + dev;
+		if (val > 18.0)
+			val = 18.0;
+
+		ival = round(10.0 * val);
+
+		sprintf(str, "-%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
 	}
-    else
+	else
 		file.Write("-----");
 }
 
@@ -1369,35 +1499,42 @@ TIqAge::TIqAge()
 *##########################################################################*/
 void TIqAge::Add(TQuizRow *Row)
 {
-    int diff = Row->AsResult - Row->NtResult;
-    
-    if (Row->Gender == 1)
-    {
-        if (diff > 0)
-        {
-            MaleAs.Add(Row);
-            
-            if (diff > 50)
-                MaleHighAs.Add(Row);
-        }
-        else
-        {
-            MaleNt.Add(Row);
+	int diff = Row->AsResult - Row->NtResult;
 
-            if (diff < -50)
-                MaleHighNt.Add(Row);
-        }
-    }
-    else
-    {
-        if (diff > 0)
-        {
-            FemaleAs.Add(Row);
 
-            if (diff > 50)
-                FemaleHighAs.Add(Row);
-        }
-        else
+	if (Row->Gender == 1)
+	{
+		if (Row->Quiz[102] >= 2)
+			MaleSlowMat.Add(Row);
+
+		if (diff > 0)
+		{
+			MaleAs.Add(Row);
+
+			if (diff > 50)
+				MaleHighAs.Add(Row);
+		}
+		else
+		{
+			MaleNt.Add(Row);
+
+			if (diff < -50)
+				MaleHighNt.Add(Row);
+		}
+	}
+	else
+	{
+		if (Row->Quiz[102] >= 2)
+			FemaleSlowMat.Add(Row);
+
+		if (diff > 0)
+		{
+			FemaleAs.Add(Row);
+
+			if (diff > 50)
+				FemaleHighAs.Add(Row);
+		}
+		else
         {
             FemaleNt.Add(Row);
 
@@ -1418,25 +1555,29 @@ void TIqAge::WriteHeader(TFile &file)
 {
 	file.Write("<tr style='height:24.75pt'>");
 
-    WriteCenteredFieldHeader(file, 25);
+	WriteCenteredFieldHeader(file, 25);
 	file.Write("Age group");
-    WriteFieldFooter(file);
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 12);
-    file.Write("High AS<br>M/F");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Slow mat.<br>M/F");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 12);
-    file.Write("AS<br>M/F");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("High AS<br>M/F");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 12);
-    file.Write("NT<br>M/F");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS<br>M/F");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 12);
-    file.Write("High NT<br>M/F");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT<br>M/F");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("High NT<br>M/F");
+	WriteFieldFooter(file);
 
 	file.Write("</tr>");
 }
@@ -1451,12 +1592,18 @@ void TIqAge::WriteHeader(TFile &file)
 void TIqAge::WriteRow(TFile &file, const char *text)
 {
 	file.Write("<tr style='height:24.75pt'>");
-    WriteCenteredFieldHeader(file, 25);
-    file.Write(text);
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(text);
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 12);
-    MaleHighAs.Write(file);
+	WriteCenteredFieldHeader(file, 12);
+	MaleSlowMat.Write(file);
+	file.Write("<br>");
+	FemaleSlowMat.Write(file);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	MaleHighAs.Write(file);
 	file.Write("<br>");
 	FemaleHighAs.Write(file);
 	WriteFieldFooter(file);
@@ -1498,22 +1645,22 @@ void TQuiz5::WriteIQ(const char *filename)
     int age;
 	TFile file(filename, 0);
 
-    TIqAge iq_14;
-    TIqAge iq_15_19;
-    TIqAge iq_20_24;
-    TIqAge iq_25_29;
-    TIqAge iq_30_34;
-    TIqAge iq_35_39;
-    TIqAge iq_40;
+	TIqAge iq_14;
+	TIqAge iq_15_19;
+	TIqAge iq_20_24;
+	TIqAge iq_25_29;
+	TIqAge iq_30_34;
+	TIqAge iq_35_39;
+	TIqAge iq_40;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    age = 2006 - Row.BirthYear;
-	    
-	    if (age < 15)
-	        iq_14.Add(&Row);
-	    else
+		age = 2006 - Row.BirthYear;
+
+		if (age < 15)
+			iq_14.Add(&Row);
+		else
 	    {
 	        if (age < 20)
 	            iq_15_19.Add(&Row);
@@ -1530,10 +1677,10 @@ void TQuiz5::WriteIQ(const char *filename)
 	                    if (age < 35)
 	                        iq_30_34.Add(&Row);
 	                    else
-	                    {
+						{
 	                        if (age < 40)
 	                            iq_35_39.Add(&Row);
-	                        else
+							else
 	                            iq_40.Add(&Row);
 	                    }
 	                }
