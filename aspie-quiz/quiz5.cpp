@@ -37,6 +37,36 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+class TIqEntry
+{
+public:
+    TIqEntry();
+    void Add(TQuizRow *Row);
+    void Write(TFile &file);
+
+    int Sum;
+    int Count;
+};
+
+class TIqAge
+{
+public:
+    TIqAge();
+    void Add(TQuizRow *Row);
+    void WriteRow(TFile &file, const char *text);
+
+    static void WriteHeader(TFile &file);
+        
+    TIqEntry MaleHighAs;
+    TIqEntry MaleAs;
+    TIqEntry MaleNt;
+    TIqEntry MaleHighNt;
+    TIqEntry FemaleHighAs;
+    TIqEntry FemaleAs;
+    TIqEntry FemaleNt;
+    TIqEntry FemaleHighNt;
+};
+
 /*##########################################################################
 #
 #   Name       : TQuiz5::TQuiz5
@@ -513,6 +543,7 @@ void TQuiz5::InitReferers()
 	AddReferer("rdos.net/sv", "rdos.net/sv");
 	AddReferer("kolozzeum.com", "kolozzeum.com/kolozzeum/showthread.php?t=65633");
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
+	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
  }
 
 /*##################  TQuiz5::LoadReferers ##########################
@@ -1220,4 +1251,309 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TIqEntry::TIqEntry ##########################
+*   Purpose....: Initialize TIqEntry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TIqEntry::TIqEntry()
+{
+    Sum = 0;
+    Count = 0;
+}
+
+/*##################  TIqEntry::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TIqEntry::Add(TQuizRow *Row)
+{
+    Sum += Row->IqResult;
+    Count++;
+}
+
+/*##################  round ##########################
+*   Purpose....: round long double to int       	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int round(long double val)
+{
+	return (int)(val + 0.5);
+}
+
+/*##################  WriteCenteredFieldHeader ##########################
+*   Purpose....: Write centered field header for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCenteredFieldHeader(TFile &File, int RelWidth)
+{
+    char str[80];
+
+    sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+    File.Write(str);
+
+	File.Write("<p align=\"center\">\n");
+	File.Write("<b>\n");
+}
+
+/*##################  WriteFieldFooter ##########################
+*   Purpose....: Write field footer for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteFieldFooter(TFile &File)
+{
+    File.Write("\n</b>\n");
+	File.Write("</p>\n");
+
+    File.Write("</td>\n");
+}
+
+/*##################  TIqEntry::Write ##########################
+*   Purpose....: Write a value                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TIqEntry::Write(TFile &file)
+{
+    long double mean;
+    int ival;
+	char str[80];
+    
+    if (Count > 1)
+	{
+	    mean = (long double)Sum / Count;
+
+	    ival = round(10.0 * mean);
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+	}
+    else
+		file.Write("-----");
+}
+
+/*##################  TIqAge::TIqAge ##########################
+*   Purpose....: Initialize TIqAge                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TIqAge::TIqAge()
+{
+}
+
+/*##################  TIqAge::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TIqAge::Add(TQuizRow *Row)
+{
+    int diff = Row->AsResult - Row->NtResult;
+    
+    if (Row->Gender == 1)
+    {
+        if (diff > 0)
+        {
+            MaleAs.Add(Row);
+            
+            if (diff > 50)
+                MaleHighAs.Add(Row);
+        }
+        else
+        {
+            MaleNt.Add(Row);
+
+            if (diff < -50)
+                MaleHighNt.Add(Row);
+        }
+    }
+    else
+    {
+        if (diff > 0)
+        {
+            FemaleAs.Add(Row);
+
+            if (diff > 50)
+                FemaleHighAs.Add(Row);
+        }
+        else
+        {
+            FemaleNt.Add(Row);
+
+            if (diff < -50)
+                FemaleHighNt.Add(Row);
+        }
+    }
+}
+
+/*##################  TIqAge::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TIqAge::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+    WriteCenteredFieldHeader(file, 25);
+	file.Write("Age group");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 12);
+    file.Write("High AS<br>M/F");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 12);
+    file.Write("AS<br>M/F");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 12);
+    file.Write("NT<br>M/F");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 12);
+    file.Write("High NT<br>M/F");
+    WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TIqAge::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TIqAge::WriteRow(TFile &file, const char *text)
+{
+	file.Write("<tr style='height:24.75pt'>");
+    WriteCenteredFieldHeader(file, 25);
+    file.Write(text);
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 12);
+    MaleHighAs.Write(file);
+	file.Write("<br>");
+	FemaleHighAs.Write(file);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	MaleAs.Write(file);
+	file.Write("<br>");
+	FemaleAs.Write(file);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	MaleNt.Write(file);
+	file.Write("<br>");
+	FemaleNt.Write(file);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	MaleHighNt.Write(file);
+	file.Write("<br>");
+	FemaleHighNt.Write(file);
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TQuiz5::WriteIQ ##########################
+*   Purpose....: Write IQ report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz5::WriteIQ(const char *filename)
+{
+	TQuizRow Row;
+    int i;
+	int ival;
+    char str[80];
+    int age;
+	TFile file(filename, 0);
+
+    TIqAge iq_14;
+    TIqAge iq_15_19;
+    TIqAge iq_20_24;
+    TIqAge iq_25_29;
+    TIqAge iq_30_34;
+    TIqAge iq_35_39;
+    TIqAge iq_40;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    age = 2006 - Row.BirthYear;
+	    
+	    if (age < 15)
+	        iq_14.Add(&Row);
+	    else
+	    {
+	        if (age < 20)
+	            iq_15_19.Add(&Row);
+	        else
+	        {
+	            if (age < 25)
+	                iq_20_24.Add(&Row);
+	            else
+	            {
+	                if (age < 30)
+	                    iq_25_29.Add(&Row);
+	                else
+	                {
+	                    if (age < 35)
+	                        iq_30_34.Add(&Row);
+	                    else
+	                    {
+	                        if (age < 40)
+	                            iq_35_39.Add(&Row);
+	                        else
+	                            iq_40.Add(&Row);
+	                    }
+	                }
+	            }
+	        }
+	    }
+	}
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	TIqAge::WriteHeader(file);
+        
+	iq_14.WriteRow(file, "-14");
+	iq_15_19.WriteRow(file, "15-19");
+	iq_20_24.WriteRow(file, "20-24");
+	iq_25_29.WriteRow(file, "25-29");
+	iq_30_34.WriteRow(file, "30-34");
+	iq_35_39.WriteRow(file, "35-39");
+	iq_40.WriteRow(file, "40-");
+
+	file.Write("</table>");
+	
 }

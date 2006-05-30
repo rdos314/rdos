@@ -1322,6 +1322,17 @@ void TQuiz::Calculate()
 	}
 }
 
+/*##################  TQuiz::WriteIQ ##########################
+*   Purpose....: Write IQ report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteIQ(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
