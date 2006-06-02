@@ -1004,9 +1004,9 @@ static int IsPca(TQuizRow *row, int PcaType)
 void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
-    int i;
+	int i;
 	int ival;
-    char str[80];
+	char str[80];
 	TFile file(filename, 0);
 
 	file.Write("\"\", ");
@@ -1045,17 +1045,26 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-					ival = Row.Quiz[i];
-					if (ival)
-						ival--;
+					if (i == 112)
+					{
+						ival = 100 * (Row.Quiz[i] - 3) / 9;
+						sprintf(str, "\"%d.%02d\"", ival / 100, ival % 100);
+						file.Write(str);
+					}
+					else
+					{
+						ival = Row.Quiz[i];
+						if (ival)
+							ival--;
 
-					if (ival > 2 && i < 112)
-						ival = 0;
+						if (ival > 2)
+							ival = 0;
 
-					sprintf(str, "\"%d\"", ival);
-					file.Write(str);
-					if (i != N - 1)
-						file.Write(", ");
+						sprintf(str, "\"%d\"", ival);
+						file.Write(str);
+						if (i != N - 1)
+							file.Write(", ");
+					}
 				}
 			}
 			file.Write("\n");
