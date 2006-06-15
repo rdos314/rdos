@@ -1115,19 +1115,19 @@ void TQuizIII::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType != PCA_TYPE_OLD)
 						d2 = -d2;
 
-					if (d1 > 0 && d2 > 0)
-					{
-						if (d1 > d2)
-						{
-							d1 = d1 - d2;
-							d2 = 0;
-						}
-						else
-						{
-							d2 = d2 - d1;
-							d1 = 0;
-						}
-					}
+//					if (d1 > 0 && d2 > 0)
+//					{
+//						if (d1 > d2)
+//						{
+//							d1 = d1 - d2;
+//							d2 = 0;
+//						}
+//						else
+//						{
+//							d2 = d2 - d1;
+//							d1 = 0;
+//						}
+//					}
 				}
 
 				switch (PcaType)

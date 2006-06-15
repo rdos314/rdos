@@ -581,7 +581,7 @@ void TQuiz5::LoadReferers()
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
-
+        
 		if (ref)
 		{
 			ref->Count++;
@@ -682,13 +682,14 @@ void TQuiz5::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+		Row.Quiz[112] = Row.IqResult;
+
 		for (i = 0; i < N - 1; i++)
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
 
 		}
-		Row.Quiz[112] = Row.IqResult;
 
 		aspie = FALSE;
 
@@ -1220,22 +1221,22 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
-					if (d1 > 0 && d2 > 0)
-					{
-						if (d1 > d2)
-						{
-							d1 = d1 - d2;
-							d2 = 0;
-						}
-						else
-						{
-							d2 = d2 - d1;
-							d1 = 0;
-						}
-					}
+//					if (d1 > 0 && d2 > 0)
+//					{
+//						if (d1 > d2)
+//						{
+//							d1 = d1 - d2;
+//							d2 = 0;
+//						}
+//						else
+//						{
+//							d2 = d2 - d1;
+//							d1 = 0;
+//						}
+//					}
 				}
 
 				switch (PcaType)

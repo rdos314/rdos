@@ -54,6 +54,7 @@ public:
 	virtual void DeviceName(char *Name, int MaxLen) const;
 
     void StartDebug(TFile *File, int InChannel, int OutChannel);
+    void StopDebug();
     
 	virtual int IsOpen() const;
 	virtual void Open();

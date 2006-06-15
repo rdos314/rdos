@@ -866,19 +866,19 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 				else
 				{
 					d2 = -d2;
-					if (d1 > 0 && d2 > 0)
-					{
-						if (d1 > d2)
-						{
-							d1 = d1 - d2;
-							d2 = 0;
-						}
-						else
-						{
-							d2 = d2 - d1;
-							d1 = 0;
-						}
-					}
+//					if (d1 > 0 && d2 > 0)
+//					{
+//						if (d1 > d2)
+//						{
+//							d1 = d1 - d2;
+//							d2 = 0;
+//						}
+//						else
+//						{
+//							d2 = d2 - d1;
+//							d1 = 0;
+//						}
+//					}
 
 					Quiz[q - 1].Pca[0] = d1;
 					Quiz[q - 1].Pca[1] = d2;

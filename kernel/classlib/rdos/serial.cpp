@@ -493,6 +493,22 @@ void TSerialDevice::StartDebug(TFile *File, int InChannel, int OutChannel)
     FOutChannel = OutChannel;
 }
 
+/*##########################################################################
+#
+#   Name       : TSerialDevice::StopDebug
+#
+#   Purpose....: Stop debugging on device
+#
+#   In params..: Handle debug file handle
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TSerialDevice::StopDebug()
+{
+    FDebugFile = 0;
+}
+
 /*##################  TSerialDevice::OpenPort  #######################
 *   Purpose....: Opens V25 comport			                        #
 *   In params..: *                                                          #

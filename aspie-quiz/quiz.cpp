@@ -66,18 +66,28 @@ TQuiz::TQuiz(int Questions)
 	 NtMale(Questions),
 	 NtFemale(Questions),
 	 NoRef("", "No referrer"),
-    NTRef("", "NT control group"),
-    AspieRef("", "Aspie control group"),
-    DxAsRef("", "Diagnosed AS/HFA/PDD"),
-    DxTsRef("", "Diagnosed Tourette"),
-    DxAddRef("", "Diagnosed ADD/ADHD"),
-    SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
-    SelfTsRef("", "Self-diagnosed Tourette"),
-    SelfAddRef("", "Self-diagnosed ADD/ADHD"),
-    MaleAsRef("", "Male AS/HFA/PDD"),
-    FemaleAsRef("", "Female AS/HFA/PDD"),
-    MaleNonAsRef("", "Male non-AS/HFA/PDD"),
-	 FemaleNonAsRef("", "Female non-AS/HFA/PDD")
+     NTRef("", "NT control group"),
+     AspieRef("", "Aspie control group"),
+     DxAsRef("", "Diagnosed AS/HFA/PDD"),
+     DxTsRef("", "Diagnosed Tourette"),
+     DxAddRef("", "Diagnosed ADD/ADHD"),
+     SelfAsRef("", "Self-diagnosed AS/HFA/PDD"),
+     SelfTsRef("", "Self-diagnosed Tourette"),
+     SelfAddRef("", "Self-diagnosed ADD/ADHD"),
+     MaleAsRef("", "Male AS/HFA/PDD"),
+     FemaleAsRef("", "Female AS/HFA/PDD"),
+     MaleNonAsRef("", "Male non-AS/HFA/PDD"),
+	 FemaleNonAsRef("", "Female non-AS/HFA/PDD"),
+	 HyperlexiaRef("", "Hyperlexia"),
+	 DyspraxiaRef("", "Dyspraxia"),
+	 DyslexiaRef("", "Dyslexia"),
+	 DyscalculiaRef("", "Dyscalculia"),
+	 OCDRef("", "OCD"),
+	 ODDRef("", "ODD"),
+	 SynaesthesiaRef("", "Synaesthesia"),
+	 PARef("", "Prosapagnosia"),
+	 DysgraphiaRef("", "Dysgraphia"),
+	 BipolarRef("", "Bipolar")
 {
     int i;
     int g;
@@ -1578,6 +1588,16 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &MaleNonAsRef);
 	WriteReferer(file, &FemaleNonAsRef);
 	WriteReferer(file, &AspieRef);
+	WriteReferer(file, &HyperlexiaRef);
+	WriteReferer(file, &DyspraxiaRef);
+	WriteReferer(file, &DyslexiaRef);
+	WriteReferer(file, &DyscalculiaRef);
+	WriteReferer(file, &OCDRef);
+	WriteReferer(file, &ODDRef);
+	WriteReferer(file, &SynaesthesiaRef);
+	WriteReferer(file, &PARef);
+	WriteReferer(file, &DysgraphiaRef);
+	WriteReferer(file, &BipolarRef);
 	WriteReferer(file, &NTRef);
 	WriteReferer(file, &NoRef);
 

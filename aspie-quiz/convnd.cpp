@@ -266,42 +266,52 @@ void ProcessRow(char *str)
 
 				case 8:
 					Row.Hyperlexia = atoi(valstr);
+					Row.Quiz[200] = Row.Hyperlexia;
 					break;
 
 				case 9:
 					Row.Dyspraxia = atoi(valstr);
+					Row.Quiz[201] = Row.Dyspraxia;
 					break;
 
 				case 10:
 					Row.Dyslexia = atoi(valstr);
+					Row.Quiz[202] = Row.Dyslexia;
 					break;
 
 				case 11:
 					Row.Dyscalculia = atoi(valstr);
+					Row.Quiz[203] = Row.Dyscalculia;
 					break;
 
 				case 12:
 					Row.OCD = atoi(valstr);
+					Row.Quiz[204] = Row.OCD;
 					break;
 
 				case 13:
 					Row.ODD = atoi(valstr);
+					Row.Quiz[205] = Row.ODD;
 					break;
 
 				case 14:
 					Row.Synaesthesia = atoi(valstr);
+					Row.Quiz[206] = Row.Synaesthesia;
 					break;
 
 				case 15:
 					Row.PA = atoi(valstr);
+					Row.Quiz[207] = Row.PA;
 					break;
 
 				case 16:
 					Row.Dysgraphia = atoi(valstr);
+					Row.Quiz[208] = Row.Dysgraphia;
 					break;
 
 				case 17:
 					Row.Bipolar = atoi(valstr);
+					Row.Quiz[209] = Row.Bipolar;
 					break;
 
 				case 18:

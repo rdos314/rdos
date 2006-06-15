@@ -239,6 +239,16 @@ protected:
     TReferer FemaleAsRef;
     TReferer MaleNonAsRef;
     TReferer FemaleNonAsRef;
+    TReferer HyperlexiaRef;
+    TReferer DyspraxiaRef;
+    TReferer DyslexiaRef;
+    TReferer DyscalculiaRef;
+    TReferer OCDRef;
+    TReferer ODDRef;
+    TReferer SynaesthesiaRef;
+    TReferer PARef;
+    TReferer DysgraphiaRef;
+    TReferer BipolarRef;
 
     TQuiz *CrossQuiz[MAX_CROSS];
 

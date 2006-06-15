@@ -49,7 +49,7 @@
 #
 ##########################################################################*/
 TQuizNd::TQuizNd(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII)
-  : TQuiz(200),
+  : TQuiz(210),
     FDataFile(FileName)
 {
     DefineCross(0, QuizI);
@@ -380,6 +380,16 @@ void TQuizNd::SetupTexts()
 	Quiz[197].MyGroup = GROUP_NT_RELATION;
 	Quiz[198].MyGroup = GROUP_MIXED;
 	Quiz[199].MyGroup = GROUP_NT_RELATION;
+	Quiz[200].MyGroup = GROUP_MIXED;
+	Quiz[201].MyGroup = GROUP_MIXED;
+	Quiz[202].MyGroup = GROUP_MIXED;
+	Quiz[203].MyGroup = GROUP_MIXED;
+	Quiz[204].MyGroup = GROUP_MIXED;
+	Quiz[205].MyGroup = GROUP_MIXED;
+	Quiz[206].MyGroup = GROUP_MIXED;
+	Quiz[207].MyGroup = GROUP_MIXED;
+	Quiz[208].MyGroup = GROUP_MIXED;
+	Quiz[209].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
  	Quiz[0].Text = "Can you easily hear small sounds?";
@@ -582,6 +592,16 @@ void TQuizNd::SetupTexts()
  	Quiz[197].Text= "Do you talk to put others at ease even when you really have nothing to say?";
  	Quiz[198].Text= "Could you care less how others see you?";
  	Quiz[199].Text= "Do you consider yourself fashionable?";
+ 	Quiz[200].Text= "Hyperlexia";
+ 	Quiz[201].Text= "Dyspraxia";
+ 	Quiz[202].Text= "Dyslexia";
+ 	Quiz[203].Text= "Dyscalculia";
+ 	Quiz[204].Text= "OCD";
+ 	Quiz[205].Text= "ODD";
+ 	Quiz[206].Text= "Synaesthesia";
+ 	Quiz[207].Text= "Prosapagnosia";
+ 	Quiz[208].Text= "Dysgraphia";
+ 	Quiz[209].Text= "Bipolar";
 
 #endif
 
@@ -786,6 +806,16 @@ void TQuizNd::SetupTexts()
  	Quiz[197].Text= "Pratar du för att andra ska känna sig väl till mods även om du inte har något att säga?";
  	Quiz[198].Text= "Spelar det inte dig någon roll hur andra ser på dig?";
  	Quiz[199].Text= "Ser du dig själv som ett modelejon?";
+ 	Quiz[200].Text= "Hyperlexi";
+ 	Quiz[201].Text= "Dyspraxi";
+ 	Quiz[202].Text= "Dyslexi";
+ 	Quiz[203].Text= "Dyskaluli";
+ 	Quiz[204].Text= "OCD";
+ 	Quiz[205].Text= "ODD";
+ 	Quiz[206].Text= "Synaestesia";
+ 	Quiz[207].Text= "Prosapagnosi";
+ 	Quiz[208].Text= "Dysgrafi";
+ 	Quiz[209].Text= "Bipolär";
 
 #endif
 }
@@ -813,6 +843,34 @@ void TQuizNd::InitReferers()
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
  }
 
+/*##########################################################################
+#
+#   Name       : TQuizNd::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizNd::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
+{
+	ref->Count++;
+	ref->AsResult += AsResult;
+	ref->NtResult += NtResult;
+
+	if (AsResult >= NtResult)
+	{
+		if (AsResult - NtResult >= 50)
+			ref->ResultHighAs++;
+		else
+			ref->ResultLowAs++;
+	}
+		else
+			ref->ResultNt++;
+}
+
 /*##################  TQuizNd::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
@@ -832,83 +890,76 @@ void TQuizNd::LoadReferers()
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
 
+//
+// uncomment to exclude autism/AS from no refer group
+//
+//		if (ref == &NoRef)
+//            if (Row.Autism || Row.Aspie)
+//                ref = 0;
+
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
-
-		ref = 0;
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			ref = &SelfAsRef;
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.TS == 1)
-			ref = &SelfTsRef;
+			UpdateReferer(&SelfTsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 1)
-			ref = &SelfAddRef;
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			ref = &DxAsRef;
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.TS == 2)
-			ref = &DxTsRef;
+			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 2)
-			ref = &DxAddRef;
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
-		if (ref)
+//
+// uncomment to exclude autism/AS from ND-diagnosis
+//
+//		if (Row.Aspie == 0 && Row.Autism == 0)
 		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
+			if (Row.Hyperlexia)
+				UpdateReferer(&HyperlexiaRef, Row.AsResult, Row.NtResult);
 
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
+			if (Row.Dyspraxia)
+				UpdateReferer(&DyspraxiaRef, Row.AsResult, Row.NtResult);
+
+			if (Row.Dyslexia)
+				UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult);
+
+			if (Row.Dyscalculia)
+				UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult);
+
+			if (Row.OCD)
+				UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult);
+
+			if (Row.ODD)
+				UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult);
+
+			if (Row.Synaesthesia)
+				UpdateReferer(&SynaesthesiaRef, Row.AsResult, Row.NtResult);
+
+			if (Row.PA)
+				UpdateReferer(&PARef, Row.AsResult, Row.NtResult);
+
+			if (Row.Dysgraphia)
+				UpdateReferer(&DysgraphiaRef, Row.AsResult, Row.NtResult);
+
+			if (Row.Bipolar)
+				UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult);
 		}
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				ref = &MaleAsRef;
+    		    UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
 			else
-				ref = &FemaleAsRef;
-		}
-
-		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
+    		    UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
 		}
 
 	}
@@ -938,6 +989,17 @@ void TQuizNd::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+		Row.Quiz[200] = Row.Hyperlexia + 1;
+		Row.Quiz[201] = Row.Dyspraxia + 1;
+		Row.Quiz[202] = Row.Dyslexia + 1;
+		Row.Quiz[203] = Row.Dyscalculia + 1;
+		Row.Quiz[204] = Row.OCD + 1;
+		Row.Quiz[205] = Row.ODD + 1;
+		Row.Quiz[206] = Row.Synaesthesia + 1;
+		Row.Quiz[207] = Row.PA + 1;
+		Row.Quiz[208] = Row.Dysgraphia + 1;
+		Row.Quiz[209] = Row.Bipolar + 1;
+
 		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
@@ -999,14 +1061,14 @@ void TQuizNd::LoadPopulations()
 				}
 
 //                if (!aspie)
-                    aspie = ref->Aspie;
+					aspie = ref->Aspie;
 			}
 		}
 
-                    
+
 		if (aspie)
 		{
-				
+
 			Aspie.Add(aspie, Row.Quiz);
 			if (Row.Gender == 1)
 				AspieMale.Add(aspie, Row.Quiz);
@@ -1239,13 +1301,18 @@ void TQuizNd::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-					ival = Row.Quiz[i];
-					if (ival)
-						ival--;
+					if (i >= 200)
+						ival = Row.Quiz[i];
+					else
+                    {
+    					ival = Row.Quiz[i];
+	    				if (ival)
+		    				ival--;
 
-					if (ival > 2)
-						ival = 0;
-
+			    		if (ival > 2)
+				    		ival = 0;
+                    }
+                    
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
 					if (i != N - 1)
@@ -1405,22 +1472,22 @@ void TQuizNd::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
-					if (d1 > 0 && d2 > 0)
-					{
-						if (d1 > d2)
-						{
-							d1 = d1 - d2;
-							d2 = 0;
-						}
-						else
-						{
-							d2 = d2 - d1;
-							d1 = 0;
-						}
-					}
+//					if (d1 > 0 && d2 > 0)
+//					{
+//						if (d1 > d2)
+//						{
+//							d1 = d1 - d2;
+//							d2 = 0;
+//						}
+//						else
+//						{
+//							d2 = d2 - d1;
+//							d1 = 0;
+//						}
+//					}
 				}
 
 				switch (PcaType)
