@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quiz5.cpp
-# Quiz 5 class
+# quiz6.cpp
+# Quiz 6 class
 #
 ########################################################################*/
 
@@ -29,72 +29,27 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quiz5.h"
+#include "quiz6.h"
 #include "file.h"
-#include "quizdb5.h"
+#include "quizdb6.h"
 
 #define MAX_IN_ROW		1024
 
 #define FALSE 0
 #define TRUE !FALSE
 
-struct TIqValArr
-{
-	int val;
-};
-
-class TIqEntry
-{
-public:
-	TIqEntry();
-	~TIqEntry();
-	void Add(TQuizRow *Row);
-	void Write(TFile &file);
-
-	long double GetMean();
-	long double GetSd();
-
-protected:
-	int Sum;
-	int Count;
-	int Increment;
-	int MaxSize;
-	int *ValArr;
-};
-
-class TIqAge
-{
-public:
-	TIqAge();
-	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, const char *text);
-
-	static void WriteHeader(TFile &file);
-
-	TIqEntry MaleSlowMat;
-	TIqEntry FemaleSlowMat;
-	TIqEntry MaleHighAs;
-	TIqEntry MaleAs;
-	TIqEntry MaleNt;
-	TIqEntry MaleHighNt;
-	TIqEntry FemaleHighAs;
-	TIqEntry FemaleAs;
-	TIqEntry FemaleNt;
-	TIqEntry FemaleHighNt;
-};
-
 /*##########################################################################
 #
-#   Name       : TQuiz5::TQuiz5
+#   Name       : TQuiz6::TQuiz6
 #
-#   Purpose....: Constructor for TQuiz5
+#   Purpose....: Constructor for TQuiz6
 #
-#   In params..: Filename to load quiz 5 from
+#   In params..: Filename to load quiz 6 from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuiz5::TQuiz5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd)
+TQuiz6::TQuiz6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5)
   : TQuiz(113),
 	FDataFile(FileName)
 {
@@ -102,6 +57,7 @@ TQuiz5::TQuiz5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
     DefineCross(1, QuizII);
     DefineCross(2, QuizIII);
     DefineCross(3, QuizNd);
+    DefineCross(4, Quiz5);
 
     SetupTexts();
 	InitReferers();
@@ -109,28 +65,28 @@ TQuiz5::TQuiz5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
     SetupControlGroups();
 	SortReferers();
 	LoadPopulations();
-    SetupCross(QuizI, QuizII, QuizIII, QuizNd);
+    SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5);
     Calculate();
 }
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::~TQuiz5
+#   Name       : TQuiz6::~TQuiz6
 #
-#   Purpose....: Destructor for TQuiz5
+#   Purpose....: Destructor for TQuiz6
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuiz5::~TQuiz5()
+TQuiz6::~TQuiz6()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::WriteName
+#   Name       : TQuiz6::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -139,14 +95,14 @@ TQuiz5::~TQuiz5()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::WriteName(TFile &File)
+void TQuiz6::WriteName(TFile &File)
 {
-    File.Write("5");
+    File.Write("6");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::SetupTexts
+#   Name       : TQuiz6::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -155,7 +111,7 @@ void TQuiz5::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::SetupTexts()
+void TQuiz6::SetupTexts()
 {
 	Quiz[23].Reverse = TRUE;
 	Quiz[24].Reverse = TRUE;
@@ -540,7 +496,7 @@ void TQuiz5::SetupTexts()
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::InitReferers
+#   Name       : TQuiz6::InitReferers
 #
 #   Purpose....: Init referers
 #
@@ -549,7 +505,7 @@ void TQuiz5::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::InitReferers()
+void TQuiz6::InitReferers()
 {
 	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
 	AddReferer("flashback.info", "flashback.info");
@@ -566,14 +522,14 @@ void TQuiz5::InitReferers()
 	AddReferer("ufs.fi", "forum.ufs.fi/showthread.php?t=1873");
  }
 
-/*##################  TQuiz5::LoadReferers ##########################
+/*##################  TQuiz6::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz5::LoadReferers()
+void TQuiz6::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -663,7 +619,7 @@ void TQuiz5::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::LoadPopulations
+#   Name       : TQuiz6::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -672,7 +628,7 @@ void TQuiz5::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::LoadPopulations()
+void TQuiz6::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -685,8 +641,6 @@ void TQuiz5::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		Row.Quiz[112] = Row.IqResult;
-
 		for (i = 0; i < N - 1; i++)
 		{
 			if (Row.Quiz[i] == 0)
@@ -767,7 +721,7 @@ void TQuiz5::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::SetupControlGroups
+#   Name       : TQuiz6::SetupControlGroups
 #
 #   Purpose....: Setup control-groups
 #
@@ -776,7 +730,7 @@ void TQuiz5::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::SetupControlGroups()
+void TQuiz6::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("kolozzeum.com");
@@ -796,7 +750,7 @@ void TQuiz5::SetupControlGroups()
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::SetupCross
+#   Name       : TQuiz6::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -805,7 +759,7 @@ void TQuiz5::SetupControlGroups()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd)
+void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5)
 {
 	DefineCross(QuizIII, 0, 0);
 	DefineCross(QuizIII, 1, 1);
@@ -923,7 +877,7 @@ void TQuiz5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 
 /*##########################################################################
 #
-#   Name       : TQuiz5::GetReferer
+#   Name       : TQuiz6::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -932,7 +886,7 @@ void TQuiz5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz5::GetReferer(const char *referer, TPopulation *pop)
+void TQuiz6::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -1000,14 +954,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuiz5::ExportExcelCases ##########################
+/*##################  TQuiz6::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
+void TQuiz6::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -1078,14 +1032,14 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuiz5::ExportExcelGroups ##########################
+/*##################  TQuiz6::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz5::ExportExcelGroups(const char *filename)
+void TQuiz6::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1168,14 +1122,14 @@ void TQuiz5::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuiz5::ImportMvsp ##########################
+/*##################  TQuiz6::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz5::ImportMvsp(const char *filename, int PcaType)
+void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1284,446 +1238,4 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
-}
-
-/*##################  TIqEntry::TIqEntry ##########################
-*   Purpose....: Initialize TIqEntry                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TIqEntry::TIqEntry()
-{
-	ValArr = 0;
-	MaxSize = 0;
-
-	Count = 0;
-	Sum = 0;
-}
-
-/*##################  TIqEntry::~TIqEntry ##########################
-*   Purpose....: Destructor for TIqEntry                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TIqEntry::~TIqEntry()
-{
-	if (ValArr)
-		delete ValArr;
-}
-
-/*##################  TIqEntry::Add ##########################
-*   Purpose....: Add an answer                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TIqEntry::Add(TQuizRow *Row)
-{
-	 int val;
-	 int i;
-	 int *NewArr;
-
-	 val = Row->IqResult;
-
-	 if (ValArr == 0)
-	 {
-		  MaxSize = 8;
-		  ValArr = new int[MaxSize];
-	 }
-
-	 if (Count >= MaxSize)
-	 {
-		  MaxSize = 3 * MaxSize / 2;
-		  NewArr = new int[MaxSize];
-
-		  for (i = 0; i < Count; i++)
-				NewArr[i] = ValArr[i];
-
-		  delete ValArr;
-		  ValArr = NewArr;
-	 }
-
-	 ValArr[Count] = val;
-	 Sum += val;
-	 Count++;
-}
-
-/*##########################################################################
-#
-#   Name       : TIqEntry::GetMean
-#
-#   Purpose....: Get mean
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TIqEntry::GetMean()
-{
-	if (Count)
-		return (long double)Sum / Count;
-	else
-		return 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TIqEntry::GetSd
-#
-#   Purpose....: Get standard deviation
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TIqEntry::GetSd()
-{
-	int e;
-	int ival;
-	long double val;
-	long double rsum = 0;
-	long double mean = GetMean();
-
-	for (e = 0; e < Count; e++)
-	{
-		ival = ValArr[e];
-		val = (long double)ival - mean;
-		rsum += val * val;
-	}
-
-	if (Count > 1)
-		return sqrtl(rsum / ((long double)Count - 1));
-	else
-		return 0;
-}
-
-/*##################  round ##########################
-*   Purpose....: round long double to int       	   					      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int round(long double val)
-{
-	return (int)(val + 0.5);
-}
-
-/*##################  WriteCenteredFieldHeader ##########################
-*   Purpose....: Write centered field header for table    			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void WriteCenteredFieldHeader(TFile &File, int RelWidth)
-{
-	char str[80];
-
-	sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
-	File.Write(str);
-
-	File.Write("<p align=\"center\">\n");
-	File.Write("<b>\n");
-}
-
-/*##################  WriteFieldFooter ##########################
-*   Purpose....: Write field footer for table    			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void WriteFieldFooter(TFile &File)
-{
-	File.Write("\n</b>\n");
-	File.Write("</p>\n");
-
-	File.Write("</td>\n");
-}
-
-/*##################  TIqEntry::Write ##########################
-*   Purpose....: Write a value                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TIqEntry::Write(TFile &file)
-{
-	long double mean;
-	long double sd;
-	long double dev;
-	long double val;
-	int ival;
-	char str[80];
-
-	if (Count > 1)
-	{
-		mean = GetMean();
-
-#ifdef IQ_INTERVAL
-		sd = GetSd();
-
-		dev = 1.96 * sd / sqrtl(Count);
-
-		val = mean - dev;
-		if (val < 0.0)
-			val = 0.0;
-
-		ival = round(10.0 * val);
-
-		sprintf(str, "%d.%01d", ival / 10, ival % 10);
-		file.Write(str);
-
-		val = mean + dev;
-		if (val > 18.0)
-			val = 18.0;
-
-		ival = round(10.0 * val);
-
-		sprintf(str, "-%d.%01d", ival / 10, ival % 10);
-		file.Write(str);
-#else
-		ival = round(10.0 * mean);
-		sprintf(str, "%d.%01d", ival / 10, ival % 10);
-		file.Write(str);
-#endif
-
-	}
-	else
-		file.Write("-----");
-}
-
-/*##################  TIqAge::TIqAge ##########################
-*   Purpose....: Initialize TIqAge                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TIqAge::TIqAge()
-{
-}
-
-/*##################  TIqAge::Add ##########################
-*   Purpose....: Add an answer                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TIqAge::Add(TQuizRow *Row)
-{
-	int diff = Row->AsResult - Row->NtResult;
-
-
-	if (Row->Gender == 1)
-	{
-		if (Row->Quiz[102] >= 2)
-			MaleSlowMat.Add(Row);
-
-		if (diff > 0)
-		{
-			MaleAs.Add(Row);
-
-			if (diff > 50)
-				MaleHighAs.Add(Row);
-		}
-		else
-		{
-			MaleNt.Add(Row);
-
-			if (diff < -50)
-				MaleHighNt.Add(Row);
-		}
-	}
-	else
-	{
-		if (Row->Quiz[102] >= 2)
-			FemaleSlowMat.Add(Row);
-
-		if (diff > 0)
-		{
-			FemaleAs.Add(Row);
-
-			if (diff > 50)
-				FemaleHighAs.Add(Row);
-		}
-		else
-        {
-            FemaleNt.Add(Row);
-
-            if (diff < -50)
-                FemaleHighNt.Add(Row);
-        }
-    }
-}
-
-/*##################  TIqAge::WriteHeader ##########################
-*   Purpose....: Write header in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TIqAge::WriteHeader(TFile &file)
-{
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Age group");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("Slow mat.<br>M/F");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("High AS<br>M/F");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("AS<br>M/F");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("NT<br>M/F");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("High NT<br>M/F");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-}
-
-/*##################  TIqAge::Write ##########################
-*   Purpose....: Write row in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TIqAge::WriteRow(TFile &file, const char *text)
-{
-	file.Write("<tr style='height:24.75pt'>");
-	WriteCenteredFieldHeader(file, 25);
-	file.Write(text);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	MaleSlowMat.Write(file);
-	file.Write("<br>");
-	FemaleSlowMat.Write(file);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	MaleHighAs.Write(file);
-	file.Write("<br>");
-	FemaleHighAs.Write(file);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	MaleAs.Write(file);
-	file.Write("<br>");
-	FemaleAs.Write(file);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	MaleNt.Write(file);
-	file.Write("<br>");
-	FemaleNt.Write(file);
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	MaleHighNt.Write(file);
-	file.Write("<br>");
-	FemaleHighNt.Write(file);
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-}
-
-/*##################  TQuiz5::WriteIQ ##########################
-*   Purpose....: Write IQ report                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz5::WriteIQ(const char *filename)
-{
-	TQuizRow Row;
-    int i;
-	int ival;
-    char str[80];
-    int age;
-	TFile file(filename, 0);
-
-	TIqAge iq_14;
-	TIqAge iq_15_19;
-	TIqAge iq_20_24;
-	TIqAge iq_25_29;
-	TIqAge iq_30_34;
-	TIqAge iq_35_39;
-	TIqAge iq_40;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		age = 2006 - Row.BirthYear;
-
-		if (age < 15)
-			iq_14.Add(&Row);
-		else
-	    {
-	        if (age < 20)
-	            iq_15_19.Add(&Row);
-	        else
-	        {
-	            if (age < 25)
-	                iq_20_24.Add(&Row);
-	            else
-	            {
-	                if (age < 30)
-	                    iq_25_29.Add(&Row);
-	                else
-	                {
-	                    if (age < 35)
-	                        iq_30_34.Add(&Row);
-	                    else
-						{
-	                        if (age < 40)
-	                            iq_35_39.Add(&Row);
-							else
-	                            iq_40.Add(&Row);
-	                    }
-	                }
-	            }
-	        }
-	    }
-	}
-
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-	TIqAge::WriteHeader(file);
-        
-	iq_14.WriteRow(file, "-14");
-	iq_15_19.WriteRow(file, "15-19");
-	iq_20_24.WriteRow(file, "20-24");
-	iq_25_29.WriteRow(file, "25-29");
-	iq_30_34.WriteRow(file, "30-34");
-	iq_35_39.WriteRow(file, "35-39");
-	iq_40.WriteRow(file, "40-");
-
-	file.Write("</table>");
-	
 }

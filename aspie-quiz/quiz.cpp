@@ -1602,7 +1602,8 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &NoRef);
 
 	for (i = 0; i < RefCount; i++)
-		WriteReferer(file, RefArr[i]);
+	    if (RefArr[i]->Count >= 5)
+    		WriteReferer(file, RefArr[i]);
 
 	file.Write("</table>");
 }
