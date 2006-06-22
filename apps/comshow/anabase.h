@@ -46,6 +46,7 @@ public:
 
 protected:
 	void Write(const char *str);
+	void ShowDiffTime(TDateTime *timelow, TDateTime *timehigh);
 	void ShowShortTime(TDateTime *time);
 	void ShowLongTime(TDateTime *time);
 	void ShowChannel(int Channel);

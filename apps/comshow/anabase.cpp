@@ -50,6 +50,26 @@ void TProtocolAnalyser::Write(const char *str)
 		FLogFile->Write(str, strlen(str));
 }
 
+/*##################  TProtocolAnalyser::ShowDiffTime ##########################
+*   Purpose....: Show diff time string	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TProtocolAnalyser::ShowDiffTime(TDateTime *timelow, TDateTime *timehigh)
+{
+    char str[80];
+    int sec;
+    TDateTime time(0, timehigh->GetLsb() - timelow->GetLsb()); 
+
+    sec = time.GetSec();
+    sec += 60 * time.GetMin();
+
+	sprintf(str, "%04d,%03d  ", sec, time.GetMilliSec());
+	Write(str);
+}
+
 /*##################  TProtocolAnalyser::ShowShortTime ##########################
 *   Purpose....: Show short time string	   					      	        #
 *   In params..: *                                                          #

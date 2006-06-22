@@ -55,6 +55,7 @@
 TWayneClProtocolAnalyser::TWayneClProtocolAnalyser(TFile *RawFile, int MaxSize)
   : TProtocolAnalyser(RawFile, MaxSize)
 {
+    FPrevTime = 0;
 }
 
 /*##################  TWayneClProtocolAnalyser::~TWayneClProtocolAnalyser ##########################
@@ -112,10 +113,10 @@ int TWayneClProtocolAnalyser::GetMsg()
 
 		while (Debug.Channel > 2 || Debug.Channel <= 0)
 		{
-		    Pos++;
+			Pos++;
 			FRawFile->SetPos(Pos);
-    		FRawFile->Read(&Debug, sizeof(TSerialDebug));
-        }
+			FRawFile->Read(&Debug, sizeof(TSerialDebug));
+		}
 
 		if (!FTime)
 		{
@@ -131,15 +132,15 @@ int TWayneClProtocolAnalyser::GetMsg()
 
 			while (FRawFile->GetPos() < Pos && FSize < FMaxSize)
 			{
-    			TempPos = FRawFile->GetPos();
+				TempPos = FRawFile->GetPos();
 				FRawFile->Read(&Debug, sizeof(TSerialDebug));
-            
-          		while (Debug.Channel > 2 || Debug.Channel <= 0)
-        		{
-		            TempPos++;
-        			FRawFile->SetPos(TempPos);
-            		FRawFile->Read(&Debug, sizeof(TSerialDebug));
-                }
+
+				while (Debug.Channel > 2 || Debug.Channel <= 0)
+				{
+					TempPos++;
+					FRawFile->SetPos(TempPos);
+					FRawFile->Read(&Debug, sizeof(TSerialDebug));
+				}
 
 				ch = Debug.ch;
 
@@ -152,7 +153,7 @@ int TWayneClProtocolAnalyser::GetMsg()
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
+		if (Elapsed > 1193 * 250)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
@@ -186,7 +187,7 @@ int TWayneClProtocolAnalyser::GetMsg()
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 25)
+		if (Elapsed > 1193 * 250)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
@@ -252,7 +253,7 @@ void TWayneClProtocolAnalyser::ShowLimit(const char *MsgData)
     if (Str[2] & 0x80)
         Str[0] |= 0x2;
 
-    if (Str[2] & 0x40)
+	if (Str[2] & 0x40)
         Str[0] |= 0x1;
 
     if (Str[3] & 0x80)
@@ -384,7 +385,7 @@ void TWayneClProtocolAnalyser::ShowMode(char mode)
 {
 	char str[30];
 
-    switch (mode)
+	switch (mode)
     {
         case STATUS_RESET:
             Write("RESET");
@@ -406,7 +407,7 @@ void TWayneClProtocolAnalyser::ShowMode(char mode)
             Write("COMPLETED");
             break;
 
-        case STATUS_COMPLETED_CALL:
+		case STATUS_COMPLETED_CALL:
             Write("COMPLETED, CALL");
             break;
 
@@ -450,7 +451,7 @@ void TWayneClProtocolAnalyser::ShowCB3(const char *MsgData)
         if (Mask & (1 << bit))
             Write("1");
         else
-            Write("0");
+			Write("0");
     }
     
     Write("\r\n");
@@ -472,7 +473,7 @@ void TWayneClProtocolAnalyser::ShowDB0(const char *MsgData)
     int Amount;
     char mode;
     char alarm;
-    
+
     Write("DB0 ");
 
     mode = MsgData[17];
@@ -494,7 +495,7 @@ void TWayneClProtocolAnalyser::ShowDB0(const char *MsgData)
         Write("CPU RESET, ");
             
 	if (sscanf( MsgData, "%04d%1d%06d%06d", 
-	            &Price,
+				&Price,
 	            &Grade,
 	            &Volume,
 	            &Amount) == 4)
@@ -587,9 +588,18 @@ void TWayneClProtocolAnalyser::ShowReply(char Code, const char *MsgData)
 *##########################################################################*/
 void TWayneClProtocolAnalyser::ShowPumpMsg(char ToAdr, char FromAdr, char MessCode, const char *MsgData)
 {
-    if (FTime)
-        ShowLongTime(FTime);
-        
+	if (FTime)
+		ShowLongTime(FTime);
+
+	if (FTime && FPrevTime)
+		ShowDiffTime(FPrevTime, FTime);
+
+	if (FPrevTime)
+		delete FPrevTime;
+
+	FPrevTime = FTime;
+	FTime = 0;
+
 	if (FromAdr == 0x71)
     {
         ShowAddress(ToAdr);
@@ -622,9 +632,11 @@ void TWayneClProtocolAnalyser::ShowMsg()
 	    FromAdr = FMsg[1];
         MessCode = FMsg[3];
         if (ToAdr == 0x71 || FromAdr == 0x71)
-            ShowPumpMsg(ToAdr, FromAdr, MessCode, &FMsg[4]);
-        else
-            TProtocolAnalyser::ShowMsg();
+		{
+			ShowPumpMsg(ToAdr, FromAdr, MessCode, &FMsg[4]);
+		}
+		else
+			TProtocolAnalyser::ShowMsg();
 	}
 	else
 	    TProtocolAnalyser::ShowMsg();
