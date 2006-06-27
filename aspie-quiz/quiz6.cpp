@@ -50,9 +50,9 @@
 #
 ##########################################################################*/
 TQuiz6::TQuiz6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5)
-  : TQuiz(113),
+  : TQuiz(150),
 	FDataFile(FileName)
-{
+{             
     DefineCross(0, QuizI);
     DefineCross(1, QuizII);
     DefineCross(2, QuizIII);
@@ -324,56 +324,91 @@ void TQuiz6::SetupTexts()
 	Quiz[61].Text = "Do you have obsessions or compulsions (repeated irresistible impulses to do certain things)?";
 	Quiz[62].Text = "Do you have very strong attachments to certain objects?";
 	Quiz[63].Text = "Have you experienced stronger than normal attachments to certain people?";
-
-	Quiz[64].Text = "Does an unplanned hug make you jump out of your skin?";
-	Quiz[65].Text = "Are you energised by being in the company of others?";
-	Quiz[66].Text = "Have you felt different from others for most of your life?";
-	Quiz[67].Text = "Do you enjoy team sport and group endeavours?";
-	Quiz[68].Text = "Are you good at party games?";
-	Quiz[69].Text = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
-	Quiz[70].Text = "Have you been bullied, abused or taken advantage of in various situations?";
-	Quiz[71].Text = "Do you mostly prefer to play/work/do things on your own - unsupervised?";
-	Quiz[72].Text = "Do you easily get frustrated and upset when you are stressed, tired, hungry, interrupted, questioned, over-stimulated, or when things don't go as you had anticipated?";
-	Quiz[73].Text = "Do your friends mean more to you than hobbies and interests?";
-	Quiz[74].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
-	Quiz[75].Text = "Do you have an interest for fashions?";
-	Quiz[76].Text = "Is your style and image important to you?";
-	Quiz[77].Text = "Do you enjoy gossip?";
-	Quiz[78].Text = "Do you talk to put others at ease even when you really have nothing to say?";
-	Quiz[79].Text = "Do you spend more time getting to know others than yourself?";
-	Quiz[80].Text = "Is creating a social identity important for you?";
-	Quiz[81].Text = "Is other people's image of you important to you?";
-	Quiz[82].Text = "Do you find it difficult to read written material unless it is very interesting or very easy?";
-	Quiz[83].Text = "Do you have poor concept of time?";
-	Quiz[84].Text = "Do you find it difficult to taking notes in lectures?";
-	Quiz[85].Text = "Do you have trouble reading clocks?";
-	Quiz[86].Text = "Do you have things so well in hand that you've anticipate what will be asked for?";
-	Quiz[87].Text = "Do you fail to carry a number through to the next part of the calculation?";
-	Quiz[88].Text = "Do you often make spelling errors?";
-	Quiz[89].Text = "Do you often forget were you put things?";
-	Quiz[90].Text = "Can you easily remember sequences of past events?";
-	Quiz[91].Text = "Do you enjoy reading?";
-	Quiz[92].Text = "Do you have difficulty remembering scores during games?";
-	Quiz[93].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
-	Quiz[94].Text = "Do you find it difficult to calculate change received from a purchase?";
-	Quiz[95].Text = "Do find it easy to remember math formulas?";
-	Quiz[96].Text = "Are you a slow reader?";
-	Quiz[97].Text = "Do you find it easy to sequence ideas in writing?";
-	Quiz[98].Text = "Do you find instructions confusing - - especially several at the same time?";
-	Quiz[99].Text = "Do you dislike touch?";
-	Quiz[100].Text= "Are you easily distracted or overwhelmed?";
-	Quiz[101].Text= "Do you know when you are expected to offer an apology?";
-	Quiz[102].Text= "Do you look, feel or act younger than your biological age?";
-	Quiz[103].Text= "Do you get surprised and disappointed when people are unfriendly and don't seem to understand or accept you as you are?";
-	Quiz[104].Text= "Do you need to see, touch or do things yourself in order to remember them?";
-	Quiz[105].Text= "Do you find it very hard to learn things that you are not interested in?";
-	Quiz[106].Text= "Do you sometimes mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
-	Quiz[107].Text= "Do you get a firm feel for the big picture, before noticing details?";
-	Quiz[108].Text= "Do you often work through lunch or breaks to fix mistakes and get things done on time?";
-	Quiz[109].Text= "Do you prefer being told the bottom line rather than having to find your own way there?";
-	Quiz[110].Text= "Do you feel an urge to peel skin-flakes off yourself and /or others?";
-	Quiz[111].Text= "Are you gracious about criticism, correction and direction?";
-	Quiz[112].Text = "IQ";
+	Quiz[64].Text = "Do you find yourself at ease in romantic situations?";
+	Quiz[65].Text = "Do you prefer animals to people?";
+	Quiz[66].Text = "Do you find it easier to understand and communicate with odd & unusual people than with ordinary people?";
+	Quiz[67].Text = "Do you find it easier to communicate online than in real life?";
+	Quiz[68].Text = "Do you feel awkward in romantic situations?";
+	Quiz[69].Text = "Do you have difficulty compared to others your age in developing relationships and friendships?";
+	Quiz[70].Text = "Do you have values & views that are either very old-fashioned or way ahead of their time?";
+	Quiz[71].Text = "Are you good at party games?";
+	Quiz[72].Text = "Do you find the usual courting behavior natural?";
+	Quiz[73].Text = "Do you get exceedingly tired after socializing, and need to regenerate alone?";
+	Quiz[74].Text = "Have you felt different from others for most of your life?";
+	Quiz[75].Text = "Can you keep a healthy balance between what you need to do and treating your associates/guests with due attention?";
+	Quiz[76].Text = "Do you dislike being hugged when you haven't asked for it?";
+	Quiz[77].Text = "Are you energised by being in the company of others?";
+	Quiz[78].Text = "Do you tend to feel nervous, shy, confused and/or like you don't fit in, in various social situations?";
+	Quiz[79].Text = "Do you enjoy team sports and group endeavours?";
+	Quiz[80].Text = "Do you find social chitchat difficult, tiresome or a waste of time?";
+	Quiz[81].Text = "Have you been bullied, abused or taken advantage of in various situations?";
+	Quiz[82].Text = "Do you prefer to do things on your own?";
+	Quiz[83].Text = "Do your friends mean more to you than hobbies and interests?";
+	Quiz[84].Text = "Do you prefer to talk only when you have something relevant to say?";
+	Quiz[85].Text = "Do you have an alternative view of what is attractive in the opposite sex compared to most others?";
+	Quiz[86].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
+	Quiz[87].Text = "Do you feel uncomfortable with strangers?";
+	Quiz[88].Text = "Do you have an interest for fashions?";
+	Quiz[89].Text = "Is your style and image important to you?";
+	Quiz[90].Text = "Is creating a social identity important for you?";
+	Quiz[91].Text = "Do you enjoy listening to gossip?";
+	Quiz[92].Text = "Do you talk to put others at ease even when you really have nothing to say?";
+	Quiz[93].Text = "Do you enjoy the status of a new car/new stereo/new TV?";
+	Quiz[94].Text = "Is other people's image of you important to you?";
+	Quiz[95].Text = "Is making a career important to you?";
+	Quiz[96].Text = "Is a large social network important for you?";
+	Quiz[97].Text = "Do you find it easy to maintain your social network?";
+	Quiz[98].Text = "Do you have a poor concept of time?";
+	Quiz[99].Text = "Do you find it difficult to read written material unless it is very interesting or very easy?";
+	Quiz[100].Text= "Do you find it difficult to take notes in lectures?";
+	Quiz[101].Text= "Do you have trouble reading clocks?";
+	Quiz[102].Text= "Do you forget where you put things?";
+	Quiz[103].Text= "Do you fail to carry a number through to the next part of the calculation?";
+	Quiz[104].Text= "Do you often make spelling errors?";
+	Quiz[105].Text= "Do you find it hard to recognise phone numbers when said in a different way?";
+	Quiz[106].Text= "Do you have difficulty remembering scores during games?";
+	Quiz[107].Text= "Are you a slow reader?";
+	Quiz[108].Text= "Do you find it difficult to calculate change received from a purchase?";
+	Quiz[109].Text= "Are you a better listener than talker?";
+	Quiz[110].Text= "Are you the life of a party?";
+	Quiz[111].Text= "Are you difficult to get to know?";
+	Quiz[112].Text = "Are you a leader?";
+	Quiz[113].Text = "Do you think before you act?";
+	Quiz[114].Text = "Do you rather read a book than watch a movie?";
+	Quiz[115].Text = "Are you easily embarrased?";
+	Quiz[116].Text = "Do you cheer loudly at a sporting event or concert?";
+	Quiz[117].Text = "Do you get bored by quitness?";
+	Quiz[118].Text = "Do you get annoyed when people drop by to visit you?";
+	Quiz[119].Text = "Are you prepared to do a lot of things for attention?";
+	Quiz[120].Text = "Do you like to speak in public?";
+	Quiz[121].Text = "Do you feel like you were born with the wrong gender?";
+	Quiz[122].Text = "Do you have unusual sexual preferences?";
+	Quiz[123].Text = "Do you have odd teeth; e.g. teeth that are crooked or bigger than usual; gaps; overlaps; underbite etc.?";
+	Quiz[124].Text = "Are you flat-footed?";
+	Quiz[125].Text = "Do you have natural red or auburn hair-color?";
+	Quiz[126].Text = "Do you have blue eye-color?";
+	Quiz[127].Text = "Do you find instructions confusing - - especially several at the same time?";
+	Quiz[128].Text = "Are you easily distracted or overwhelmed?";
+	Quiz[129].Text = "Do you need to see, touch or do things yourself in order to remember them?";
+	Quiz[130].Text = "Do you look, feel or act younger than your biological age?";
+	Quiz[131].Text = "Do you know when you are expected to offer an apology?";
+	Quiz[132].Text = "Do you find it very hard to learn things that you are not interested in?";
+	Quiz[133].Text = "Do you get surprised and disappointed when people are unfriendly and don't seem to understand or accept you as you are?";
+	Quiz[134].Text = "Do you get a firm feel for the big picture, before noticing details?";
+	Quiz[135].Text = "Do you feel an urge to peel skin-flakes off yourself and /or others?";
+	Quiz[136].Text = "Do you easily remember names?";
+	Quiz[137].Text = "Are you gracious about criticism, correction and direction?";
+	Quiz[138].Text = "Do you mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
+	Quiz[139].Text = "Do you prefer romance/drama films to science fiction/documentary films?";
+	Quiz[140].Text = "Do you enjoy having a variety of choices to make each day?";
+	Quiz[141].Text = "Do you find the norms of hygiene too strict?";
+	Quiz[142].Text = "Do you find it natural that males take initiatives to start a romantic relationship?";
+	Quiz[143].Text = "Do you find it easy to describe your feelings and emotions to others?";
+	Quiz[144].Text = "Do you often get depressed during winter-time?";
+	Quiz[145].Text = "Do you find visualizing easy?";
+	Quiz[146].Text = "Do you tend to shut one or both of your eyes in strong sun-light?";
+	Quiz[147].Text = "Do you have a fascination for caves?";
+	Quiz[148].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
 
 #endif
 
@@ -442,56 +477,91 @@ void TQuiz6::SetupTexts()
 	Quiz[61].Text = "Har du tvångssyndrom (= tvångstankar eller oemotståndliga, upprepade, irrationella impulser att göra vissa saker)?";
 	Quiz[62].Text = "Är du exceptionellt fäst vid vissa saker?";
 	Quiz[63].Text = "Har du upplevt starkare bindningar än normalt med vissa människor?";
-
-	Quiz[64].Text = "Gör en oplanerad kram att du vill hoppa ur ditt skinn?";
-	Quiz[65].Text = "Får du energi av att vara i sällskap med andra?";
-	Quiz[66].Text = "Har du känt dig annorlunda största delen av ditt liv?";
-	Quiz[67].Text = "Tycker du om lagsporter och andra gruppaktiviteter?";
-	Quiz[68].Text = "Är du bra på sällskapsspel?";
-	Quiz[69].Text = "Tycker du att vanligt kallprat är svårt, plågsamt eller slöseri med tid?";
-	Quiz[70].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad i olika situationer?";
-	Quiz[71].Text = "Föredrar du att mestadels leka/arbeta/göra saker på egen hand - utan övervakning?";
-	Quiz[72].Text = "Blir du lätt frustrerad och upprörd när du blir stressad, trött, hungrig, ifrågasatt, avbruten, överstimulerad, eller när saker inte går som du har tänkt dig och ställt in dig på?";
-	Quiz[73].Text = "Betyder vänner mer för dig än hobbies och intressen?";
-	Quiz[74].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
-	Quiz[75].Text = "Är du intressad av mode?";
-	Quiz[76].Text = "Är din stil och image viktig för dig?";
-	Quiz[77].Text = "Tycker du om skvaller?";
-	Quiz[78].Text = "Pratar du för att andra ska känna sig väl till mods även om du inte har något att säga?";
-	Quiz[79].Text = "Använder du mer tid för att lära känna andra än dig själv?";
-	Quiz[80].Text = "Är det viktigt för dig att skapa en social identitet?";
-	Quiz[81].Text = "Är andra människors syn på dig viktigt för dig?";
-	Quiz[82].Text = "Tycker du det är svårt att läsa skrivet material om det inte antingen är väldigt intressant eller lättläst?";
-	Quiz[83].Text = "Har du dålig tidsuppfattning?";
-	Quiz[84].Text = "Har du svårt att göra anteckningar under föreläsningar?";
-	Quiz[85].Text = "Har du svårigheter att läsa av klockor?";
-	Quiz[86].Text = "Har du allting med som du kan tänkas bli ombedd att visa?";
-	Quiz[87].Text = "Glömmer du föra över ett tal till nästa del i en beräkning?";
-	Quiz[88].Text = "Gör du ofta stavfel?";
-	Quiz[89].Text = "Glömmer du ofta var du lagt saker?";
-	Quiz[90].Text = "Kan du enkelt komma ihåg sekvenser av gångna händelser?";
-	Quiz[91].Text = "Tycker du om att läsa?";
-	Quiz[92].Text = "Har du svårt för att komma ihåg poängställningar under spel?";
-	Quiz[93].Text = "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
-	Quiz[94].Text = "Tycker du det är svårt att beräkna växel på ett köp?";
-	Quiz[95].Text = "Tycker du det är enkelt att komma ihåg matematiska formler?";
-	Quiz[96].Text = "Läser du sakta?";
-	Quiz[97].Text = "Tycker du det är lätt att skriva ned sekvenser av idéer?";
-	Quiz[98].Text = "Blir du förvirrad av instruktioner - särskilt flera på en gång?";
-	Quiz[99].Text = "Ogillar du beröring?";
-	Quiz[100].Text= "Är du lätt att distrahera eller överväldiga?";
-	Quiz[101].Text= "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
-	Quiz[102].Text= "Ser du ut, uppträder eller agerar som om du vore yngre än din biologiska ålder?";
-	Quiz[103].Text= "Blir du förvånad och besviken när folk är ovänliga och inte tycks förstå eller acceptera dig som du är?";
-	Quiz[104].Text= "Har du behov av att SE, ta i, eller själv bearbeta saker för att riktigt minnas dem?";
-	Quiz[105].Text= "Är det svårt för dig att lära dig sånt som du inte är intresserad av?";
-	Quiz[106].Text= "Blandar du ibland ihop pronomen och t ex säger \"vi\" eller \"du\" när du menar \"jag\" eller tvärtom?";
-	Quiz[107].Text= "Tar du först in helheten innan du upptäcker detaljer?";
-	Quiz[108].Text= "Jobbar du ofta över lunch och/eller raster för att rätta till misstag och/eller bli klar i tid?";
-	Quiz[109].Text= "Föredrar du att få veta av andra hur saker fungerar snarare än att ta reda på det på ditt eget sätt?";
-	Quiz[110].Text= "Känner du behov av att rycka loss hudflisor från dig själv (eller andra)?";
-	Quiz[111].Text= "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
-	Quiz[112].Text = "IQ";
+	Quiz[64].Text = "Trivs du med romantiska situationer?";
+	Quiz[65].Text = "Umgås du hellre med djur än med människor?";
+	Quiz[66].Text = "Tycker du det är lättare att förstå och kommunicera med udda & ovanliga människor än med vanliga människor?";
+	Quiz[67].Text = "Tycker du att det är lättare att kommunicera via dator än i verkliga livet?";
+	Quiz[68].Text = "Känner du dig obekväm i romantiska situationer?";
+	Quiz[69].Text = "Har du svårare än dina jämnåriga att få vänner och partners?";
+	Quiz[70].Text = "Har du värderingar som antingen är väldigt gammaldags eller långt före sin tid?";
+	Quiz[71].Text = "Är du bra på sällskapsspel?";
+	Quiz[72].Text = "Tycker du det normala sättet att uppvakta varandra är naturligt?";
+	Quiz[73].Text = "Brukar du blir utmattad av att umgås med folk och efteråt behöva vila ut ifred?";
+	Quiz[74].Text = "Har du känt dig annorlunda största delen av ditt liv?";
+	Quiz[75].Text = "Kan du hålla balans mellan dina behov och samtidigt ge kolleger och gäster lämplig uppmärksamhet?";
+	Quiz[76].Text = "Tycker du illa om att bli kramad när du inte bett om det?";
+	Quiz[77].Text = "Får du energi av att vara i sällskap med andra?";
+	Quiz[78].Text = "Brukar du bli nervös, blyg, förvirrad och/eller känna dig annorlunda och utanför i olika sociala situationer?";
+	Quiz[79].Text = "Tycker du om lagsporter och andra gruppaktiviteter?";
+	Quiz[80].Text = "Tycker du att vanligt kallprat är svårt, plågsamt eller slöseri med tid?";
+	Quiz[81].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad i olika situationer?";
+	Quiz[82].Text = "Föredrar du att göra saker på egen hand?";
+	Quiz[83].Text = "Betyder vänner mer för dig än hobbies och intressen?";
+	Quiz[84].Text = "Brukar du föredra att tala enbart när du har nåt relevant att säga?";
+	Quiz[85].Text = "Har du avvikande uppfattning om vad som är attraktivt hos det motsatta könet än vad många andra anser?";
+	Quiz[86].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
+	Quiz[87].Text = "Känner du dig obekväm bland främmande människor?";
+	Quiz[88].Text = "Är du intressad av mode?";
+	Quiz[89].Text = "Är din stil och image viktig för dig?";
+	Quiz[90].Text = "Är det viktigt för dig att skapa en social identitet?";
+	Quiz[91].Text = "Tycker du om att lyssna på skvaller?";
+	Quiz[92].Text = "Pratar du för att andra ska känna sig väl till mods även om du inte har något att säga?";
+	Quiz[93].Text = "Njuter du av den status som en ny bil/stereo/TV ger?";
+	Quiz[94].Text = "Är andra människors syn på dig viktigt för dig?";
+	Quiz[95].Text = "Är det viktigt för dig att göra karriär?";
+	Quiz[96].Text = "Är ett stort socialt nätverk viktigt för dig?";
+	Quiz[97].Text = "Tycker du det är lätt att underhålla ditt sociala nätverk?";
+	Quiz[98].Text = "Har du dålig tidsuppfattning?";
+	Quiz[99].Text = "Tycker du det är svårt att läsa skrivet material om det inte antingen är väldigt intressant eller lättläst?";
+	Quiz[100].Text= "Har du svårt att göra anteckningar under lektioner?";
+	Quiz[101].Text= "Har du svårigheter att läsa av klockor?";
+	Quiz[102].Text= "Glömmer du var du lagt saker?";
+	Quiz[103].Text= "För du över tal fel till nästa del i en beräkning?";
+	Quiz[104].Text= "Gör du ofta stavfel?";
+	Quiz[105].Text= "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
+	Quiz[106].Text= "Har du svårt för att komma ihåg poängställningar under spel?";
+	Quiz[107].Text= "Läser du sakta?";
+	Quiz[108].Text= "Tycker du det är svårt att beräkna växel på ett köp?";
+	Quiz[109].Text= "Är du en bättre lyssnare än talare?";
+	Quiz[110].Text= "Är du aktiv på fester?";
+	Quiz[111].Text= "Är du svår att lära känna?";
+	Quiz[112].Text = "Är du en ledare?";
+	Quiz[113].Text = "Tänker du innan du agerar?";
+	Quiz[114].Text = "Läser du hellre en bok än tittar på en film?";
+	Quiz[115].Text = "Blir du lätt generad?";
+	Quiz[116].Text = "Hejar du glatt på sportevenemang eller koncerter?";
+	Quiz[117].Text = "Blir du uttråkad när det är lugnt och tyst?";
+	Quiz[118].Text = "Blir du irriterad när folk kommer på besök oanmälda?";
+	Quiz[119].Text = "Gör du lite allt möjligt för uppmärksamhet?";
+	Quiz[120].Text = "Tycker du om att tala offentligt?";
+	Quiz[121].Text = "Känns det som du föddes med fel kön?";
+	Quiz[122].Text = "Har du ovanliga sexuella preferenser?";
+	Quiz[123].Text = "Har du udda tänder; t ex tänder som sitter snett, är större än vanligt; mellanrum mellan tänderna; tänder som klättrar på varandra; underbett etc.?";
+	Quiz[124].Text = "Är du plattfot?";
+	Quiz[125].Text = "Har du naturlig röd eller kastanjebrun hårfärg?";
+	Quiz[126].Text = "Har du blå ögonfärg?";
+	Quiz[127].Text = "Blir du förvirrad av instruktioner - särskilt flera på en gång?";
+	Quiz[128].Text = "Blir du lätt distraherad eller överväldigad?";
+	Quiz[129].Text = "Har du behov av att SE, ta i, eller själv bearbeta saker för att riktigt minnas dem?";
+	Quiz[130].Text = "Ser du ut, uppträder eller agerar som om du vore yngre än din biologiska ålder?";
+	Quiz[131].Text = "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
+	Quiz[132].Text = "Är det svårt för dig att lära dig sånt som du inte är intresserad av?";
+	Quiz[133].Text = "Blir du förvånad och besviken när folk är ovänliga och inte tycks förstå eller acceptera dig som du är?";
+	Quiz[134].Text = "Tar du först in helheten innan du upptäcker detaljer?";
+	Quiz[135].Text = "Känner du behov av att rycka loss hudflisor från dig själv (eller andra)?";
+	Quiz[136].Text = "Kommer du lätt ihåg namn?";
+	Quiz[137].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
+	Quiz[138].Text = "Blandar du ihop pronomen och t ex säger \"vi\" eller \"du\" när du menar \"jag\" eller tvärtom?";
+	Quiz[139].Text = "Föredrar du filmer om romantik / drama före filmer om vetenskap/dokumentärer?";
+	Quiz[140].Text = "Gillar du att ha många olika saker du kan göra varje dag?";
+	Quiz[141].Text = "Tycker du att normerna för hygien är för strikta?";
+	Quiz[142].Text = "Tycker du det är naturligt att män tar initiativ till att starta ett förhållande?";
+	Quiz[143].Text = "Tycker du det är lätt att beskriva dina känslor för andra?";
+	Quiz[144].Text = "Brukar du drabbas av depressioner under vintern?";
+	Quiz[145].Text = "Har du lätt att visualisera och skapa bilder i huvudet?";
+	Quiz[146].Text = "Blundar du gärna med ena eller bägge ögana i starkt solljus?";
+	Quiz[147].Text = "Är du fascinerad av grottor?";
+	Quiz[148].Text = "Blir du instinktivt rädd för ljudet från en motorcykel?";
 
 #endif
 }
@@ -542,7 +612,7 @@ void TQuiz6::LoadReferers()
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
-        
+
 		if (ref)
 		{
 			ref->Count++;
@@ -929,29 +999,29 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return FALSE;
 
         case PCA_TYPE_FEMALE:
-            if (row->Gender == 2)
+			if (row->Gender == 2)
 				return TRUE;
-            else
+			else
                 return FALSE;
 
         case PCA_TYPE_YOUNG:
-            if (row->BirthYear >= 1980)
+			if (row->BirthYear >= 1980)
                 return TRUE;
-            else
+			else
 				return FALSE;
 
 		case PCA_TYPE_OLD:
 			if (row->BirthYear <= 1965)
                 return TRUE;
-            else
+			else
 				return FALSE;
 
         case PCA_TYPE_AS:
 				if (row->Autism == 2 || row->Aspie == 2)
                 return TRUE;
-            else
+			else
                 return FALSE;
-                
+
     }
 	return FALSE;
 }
@@ -1163,7 +1233,7 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 
 		if (rowstr)
 		{
-		    for (i = 0; i < strlen(rowstr); i++)
+			for (i = 0; i < strlen(rowstr); i++)
 			{
 				switch (rowstr[i])
 				{
