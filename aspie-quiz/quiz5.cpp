@@ -128,6 +128,18 @@ TQuiz5::~TQuiz5()
 {
 }
 
+/*##################  TQuiz5::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz5::GetPcaCount()
+{
+	return 3;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuiz5::WriteName
@@ -1183,7 +1195,7 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2;
+	long double d1, d2, d3;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -1222,11 +1234,11 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (d1 > 0 && d2 > 0)
@@ -1249,36 +1261,43 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 					case PCA_TYPE_ALL:
 						Quiz[q - 1].Pca[0] = d1;
 						Quiz[q - 1].Pca[1] = d2;
+						Quiz[q - 1].Pca[2] = d3;
 						break;
 
 					case PCA_TYPE_MALE:
 						Quiz[q - 1].MalePca[0] = d1;
 						Quiz[q - 1].MalePca[1] = d2;
+						Quiz[q - 1].MalePca[2] = d3;
 						break;
 
 					case PCA_TYPE_FEMALE:
 						Quiz[q - 1].FemalePca[0] = d1;
 						Quiz[q - 1].FemalePca[1] = d2;
+						Quiz[q - 1].FemalePca[2] = d3;
 						break;
 
 					case PCA_TYPE_YOUNG:
 						Quiz[q - 1].YoungPca[0] = d1;
 						Quiz[q - 1].YoungPca[1] = d2;
+						Quiz[q - 1].YoungPca[2] = d3;
 						break;
 
 					case PCA_TYPE_OLD:
 						Quiz[q - 1].OldPca[0] = d1;
 						Quiz[q - 1].OldPca[1] = d2;
+						Quiz[q - 1].OldPca[2] = d3;
 						break;
 
 					case PCA_TYPE_AS:
 						Quiz[q - 1].AsPca[0] = d1;
 						Quiz[q - 1].AsPca[1] = d2;
+						Quiz[q - 1].AsPca[2] = d3;
 						break;
 
 					case PCA_TYPE_MIXED:
 						Quiz[q - 1].MixedPca[0] = d1;
 						Quiz[q - 1].MixedPca[1] = d2;
+						Quiz[q - 1].MixedPca[2] = d3;
 						break;
 				}
 			}

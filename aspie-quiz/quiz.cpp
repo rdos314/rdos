@@ -251,6 +251,18 @@ int TQuiz::round(long double val)
 	return (int)(val + 0.5);
 }
 
+/*##################  TQuiz::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::GetPcaCount()
+{
+	return 2;
+}
+
 /*##################  TQuiz::DefineCross ##########################
 *   Purpose....: Define cross reference quiz 					      	        #
 *   In params..: *                                                          #
@@ -1823,6 +1835,15 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
 
+        	    if (GetPcaCount() > 2)
+        	    {
+                	WriteCenteredFieldHeader(file, 6);
+	        		file.Write("PCA #3");
+		        	if (UseGender && !OnlyMixed)
+			            file.Write("<br>M/F");
+        	        WriteFieldFooter(file);
+        	    }
+
             	WriteCenteredFieldHeader(file, 6);
 	    		file.Write("Aspie");
 		    	if (UseGender && !OnlyMixed)
@@ -1928,6 +1949,19 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 		    	sprintf(str, "%d%", ival);
 			    file.Write(str);
     			WriteFieldFooter(file);
+
+        	    if (GetPcaCount() > 2)
+        	    {
+           			WriteCenteredFieldHeader(file, 6);
+	        		ival = round(100.0 * Quiz[i].MalePca[2]);
+		        	sprintf(str, "%d%", ival);
+			        file.Write(str);
+        			file.Write("<br>");
+	        		ival = round(100.0 * Quiz[i].FemalePca[2]);
+		        	sprintf(str, "%d%", ival);
+			        file.Write(str);
+    			    WriteFieldFooter(file);
+    			}
     
     			WriteCenteredFieldHeader(file, 6);
 	    		WriteCI95(file, &AspieMale, i);
@@ -1981,6 +2015,18 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 	    		sprintf(str, "%d%", ival);
 		    	file.Write(str);
 			    WriteFieldFooter(file);
+
+        	    if (GetPcaCount() > 2)
+        	    {
+    	    		WriteCenteredFieldHeader(file, 6);
+	    	    	if (OnlyMixed)
+	        			ival = round(100.0 * Quiz[i].MixedPca[2]);
+			        else
+    			    	ival = round(100.0 * Quiz[i].Pca[2]);
+    	    		sprintf(str, "%d%", ival);
+	    	    	file.Write(str);
+		    	    WriteFieldFooter(file);
+		    	}
 
     			WriteCenteredFieldHeader(file, 6);
 	    		WriteCI95(file, &Aspie, i);
@@ -2588,6 +2634,205 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write("AS-NT Corr");
         WriteFieldFooter(file);
 
+		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+        {
+            WriteFieldHeader(file, 5);
+			sprintf(str, "G:%d", grp + 1);
+			file.Write(str);
+            WriteFieldFooter(file);
+		}
+
+		file.Write("</tr>");
+
+    	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+	    while (TopQuiz)
+    	{
+			file.Write("<tr style='height:24.75pt'>");
+
+    		WriteCenteredFieldHeader(file, 3);
+	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    while (quiz)
+    		{
+		    	quiz->WriteName(file);
+    			sprintf(str, ":%d", q + 1);
+	    		file.Write(str);
+		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    	if (quiz)
+    	    		file.Write("<br>");
+		    }
+		    WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 26);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("<span style='color:#990099'>");
+			file.Write(TopQuiz->Quiz[TopQuestion].Text);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("</span>");
+		    WriteFieldFooter(file);
+					
+            cross = 0;
+            TopQuiz->ClearUsed(TopQuestion);
+            WriteCenteredFieldHeader(file, 6);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {
+                NormCorr[cross] = 0.0;
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					if (val >= NormCorr[cross])
+						NormCorr[cross] = val;
+				}       
+				NormCorr[cross] = 0.9 * NormCorr[cross]; 
+				    
+				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+				
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                if (quiz)
+                {   cross++;
+    			    file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+			for (j = 0; j < GROUP_COUNT - 1; j++)
+			{
+				cross = 0;
+				TopQuiz->ClearUsed(TopQuestion);
+				WriteFieldHeader(file, 5);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				while (quiz)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					corrval = val;
+					count = quiz->Quiz[q].Group[j].Count;
+
+					if (count > 3)
+					{
+						if (val < 0.0)
+							val = -val;
+
+						if (val == 1)
+							zij = 1000;
+						else
+							zij = 0.5 * logl((1 + val) / (1 - val));
+
+						za = 1.96 / sqrtl(count - 3);
+						low = tanhl(zij - za);
+						high = tanhl(zij + za);
+
+						if (low <= 0.0 && high >= 0.0)
+							file.Write("-----");
+						else
+						{
+							if (val > NormCorr[cross])
+								file.Write("<span style='color:#009999'>");
+
+							if (corrval < 0.0)
+								file.Write("<span style='color:#990099'>");
+
+							ival = round(100.0 * low * low);
+							sprintf(str, "%d", ival);
+							file.Write(str);
+
+							ival = round(100.0 * high * high);
+							sprintf(str, "-%d%", ival);
+							file.Write(str);
+
+							if (val > NormCorr[cross] || corrval < 0.0)
+								 file.Write("</span>");
+						 }
+					}
+					else
+						file.Write("     ");
+
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					if (quiz)
+					{
+						cross++;
+						file.Write("<br>");
+					}
+				}
+				WriteFieldFooter(file);
+			}
+			file.Write("</tr>");    
+        	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+		}
+	}
+	file.Write("</table>");
+}
+
+/*##################  TQuiz::WritePcaLoadTable ##########################
+*   Purpose....: Write Pca loading table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePcaLoadTable(const char *filename)
+{
+	int j;
+	int g;
+	int grp;
+    TQuiz *quiz;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+    int q;
+	char str[80];
+	long double NormCorr[MAX_CROSS];
+	int cross;
+	int ival;
+	int count;
+	long double val;
+    long double zij;
+    long double za;
+    long double low;
+    long double high;
+    long double corrval;
+	TFile file(filename, 0);
+
+	ClearUsed();
+
+#ifdef ENGLISH
+    file.Write("<h2>Grouped results</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Grupperade resultat</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+	 file.Write("Hög korrelation visas i ljusblått");
+	 file.Write("</span><br>");
+#endif
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].Name);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
         WriteCenteredFieldHeader(file, 3);
 		file.Write("PCA #1");
         WriteFieldFooter(file);
@@ -2596,13 +2841,12 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write("PCA #2");
         WriteFieldFooter(file);
 
-		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
+        if (GetPcaCount() > 2)
         {
-            WriteFieldHeader(file, 5);
-			sprintf(str, "G:%d", grp + 1);
-			file.Write(str);
+            WriteCenteredFieldHeader(file, 3);
+	    	file.Write("PCA #3");
             WriteFieldFooter(file);
-		}
+        }
 
 		file.Write("</tr>");
 
@@ -2696,66 +2940,27 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 			}
 			WriteFieldFooter(file);
 
-			for (j = 0; j < GROUP_COUNT - 1; j++)
+			cross = 0;
+			TopQuiz->ClearUsed(TopQuestion);
+			WriteCenteredFieldHeader(file, 6);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
 			{
-				cross = 0;
-				TopQuiz->ClearUsed(TopQuestion);
-				WriteFieldHeader(file, 5);
+			    if (quiz->GetPcaCount() > 2)
+			    {
+    				ival = round(100.0 * quiz->Quiz[q].Pca[2]);
+	    			sprintf(str, "%d%", ival);
+		    		file.Write(str);
+		        }
+
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				while (quiz)
-				{
-					val = quiz->Quiz[q].Group[j].Corr;
-					corrval = val;
-					count = quiz->Quiz[q].Group[j].Count;
-
-					if (count > 3)
-					{
-						if (val < 0.0)
-							val = -val;
-
-						if (val == 1)
-							zij = 1000;
-						else
-							zij = 0.5 * logl((1 + val) / (1 - val));
-
-						za = 1.96 / sqrtl(count - 3);
-						low = tanhl(zij - za);
-						high = tanhl(zij + za);
-
-						if (low <= 0.0 && high >= 0.0)
-							file.Write("-----");
-						else
-						{
-							if (val > NormCorr[cross])
-								file.Write("<span style='color:#009999'>");
-
-							if (corrval < 0.0)
-								file.Write("<span style='color:#990099'>");
-
-							ival = round(100.0 * low * low);
-							sprintf(str, "%d", ival);
-							file.Write(str);
-
-							ival = round(100.0 * high * high);
-							sprintf(str, "-%d%", ival);
-							file.Write(str);
-
-							if (val > NormCorr[cross] || corrval < 0.0)
-								 file.Write("</span>");
-						 }
-					}
-					else
-						file.Write("     ");
-
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					if (quiz)
-					{
-						cross++;
-						file.Write("<br>");
-					}
+				if (quiz)
+				{   cross++;
+					file.Write("<br>");
 				}
-				WriteFieldFooter(file);
 			}
+			WriteFieldFooter(file);
+
 			file.Write("</tr>");    
         	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 		}

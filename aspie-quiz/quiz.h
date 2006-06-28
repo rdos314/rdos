@@ -40,7 +40,7 @@
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
-#define MAX_PCA_AXIS            3
+#define MAX_PCA_AXIS            5
 
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1
@@ -50,7 +50,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             10
+#define GROUP_COUNT             11
 
 #define GROUP_SENSORY           0
 #define GROUP_MOTOR             1
@@ -61,7 +61,8 @@
 #define GROUP_NT_RELATION       6
 #define GROUP_SEX               7
 #define GROUP_MATH              8
-#define GROUP_MIXED             9
+#define GROUP_INTROVERT         9
+#define GROUP_MIXED             10
 
 class TQuiz;
 
@@ -146,6 +147,7 @@ public:
     void WriteRefererNtCorrelation(const char *filename, const char *header, const char *referer);
     void WriteAsNtAll(const char *filename);
 	void WriteGroupCorrTable(const char *filename);
+	void WritePcaLoadTable(const char *filename);
 	void WriteGroupTable(const char *filename, int Cross);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
@@ -169,6 +171,7 @@ protected:
 
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
+	virtual int GetPcaCount();
 
     void DefineCross(int id, TQuiz *quiz);
     TReferer *FindReferer(char *Referer);
