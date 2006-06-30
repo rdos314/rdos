@@ -55,12 +55,12 @@
 #define GROUP_SENSORY           0
 #define GROUP_MOTOR             1
 #define GROUP_NONVERBAL         2
-#define GROUP_FOCUS             3
-#define GROUP_REPETITION        4
-#define GROUP_SOCIAL            5
-#define GROUP_NT_RELATION       6
-#define GROUP_SEX               7
-#define GROUP_MATH              8
+#define GROUP_ABILITY           3
+#define GROUP_DISABILITY        4
+#define GROUP_REPETITION        5
+#define GROUP_SOCIAL            6
+#define GROUP_NT_RELATION       7
+#define GROUP_SEX               8
 #define GROUP_INTROVERT         9
 #define GROUP_MIXED             10
 
@@ -151,6 +151,7 @@ public:
 	void WriteGroupTable(const char *filename, int Cross);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
+	void WritePhpWeighting(const char *filename);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 

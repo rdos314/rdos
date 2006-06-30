@@ -78,6 +78,18 @@ TQuizI::~TQuizI()
 {
 }
 
+/*##################  TQuizI::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizI::GetPcaCount()
+{
+	return 1;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuizI::WriteName
@@ -107,32 +119,32 @@ void TQuizI::WriteName(TFile &File)
 ##########################################################################*/
 void TQuizI::SetupTexts()
 {
-	Quiz[0].MyGroup = GROUP_FOCUS;
+	Quiz[0].MyGroup = GROUP_ABILITY;
 	Quiz[1].MyGroup = GROUP_MIXED;
 	Quiz[2].MyGroup = GROUP_MIXED;
 	Quiz[3].MyGroup = GROUP_MIXED;
-	Quiz[4].MyGroup = GROUP_FOCUS;
+	Quiz[4].MyGroup = GROUP_ABILITY;
 	Quiz[5].MyGroup = GROUP_NONVERBAL;
 	Quiz[6].MyGroup = GROUP_NONVERBAL;
-	Quiz[7].MyGroup = GROUP_FOCUS;
+	Quiz[7].MyGroup = GROUP_ABILITY;
 	Quiz[8].MyGroup = GROUP_MIXED;
 	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_MIXED;
-	Quiz[11].MyGroup = GROUP_FOCUS;
-	Quiz[12].MyGroup = GROUP_FOCUS;
+	Quiz[11].MyGroup = GROUP_ABILITY;
+	Quiz[12].MyGroup = GROUP_ABILITY;
 	Quiz[13].MyGroup = GROUP_SOCIAL;
 	Quiz[14].MyGroup = GROUP_NONVERBAL;
 	Quiz[15].MyGroup = GROUP_MIXED;
 	Quiz[16].MyGroup = GROUP_NONVERBAL;
 	Quiz[17].MyGroup = GROUP_NONVERBAL;
-	Quiz[18].MyGroup = GROUP_FOCUS;
-	Quiz[19].MyGroup = GROUP_FOCUS;
-	Quiz[20].MyGroup = GROUP_FOCUS;
-	Quiz[21].MyGroup = GROUP_FOCUS;
-	Quiz[22].MyGroup = GROUP_FOCUS;
-	Quiz[23].MyGroup = GROUP_FOCUS;
-	Quiz[24].MyGroup = GROUP_FOCUS;
-	Quiz[25].MyGroup = GROUP_FOCUS;
+	Quiz[18].MyGroup = GROUP_ABILITY;
+	Quiz[19].MyGroup = GROUP_ABILITY;
+	Quiz[20].MyGroup = GROUP_ABILITY;
+	Quiz[21].MyGroup = GROUP_ABILITY;
+	Quiz[22].MyGroup = GROUP_ABILITY;
+	Quiz[23].MyGroup = GROUP_ABILITY;
+	Quiz[24].MyGroup = GROUP_ABILITY;
+	Quiz[25].MyGroup = GROUP_ABILITY;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
 	Quiz[27].MyGroup = GROUP_REPETITION;
 	Quiz[28].MyGroup = GROUP_REPETITION;
@@ -156,7 +168,7 @@ void TQuizI::SetupTexts()
 	Quiz[46].MyGroup = GROUP_MIXED;
 	Quiz[47].MyGroup = GROUP_SENSORY;
 	Quiz[48].MyGroup = GROUP_SENSORY;
-	Quiz[49].MyGroup = GROUP_MATH;
+	Quiz[49].MyGroup = GROUP_DISABILITY;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_SENSORY;
 	Quiz[52].MyGroup = GROUP_SENSORY;
@@ -817,7 +829,7 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2;
+	long double d1, d2, d3, d4;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -856,7 +868,7 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 			{
 				if (PcaType == PCA_TYPE_MIXED)
 				{
@@ -866,19 +878,6 @@ void TQuizI::ImportMvsp(const char *filename, int PcaType)
 				else
 				{
 					d2 = -d2;
-//					if (d1 > 0 && d2 > 0)
-//					{
-//						if (d1 > d2)
-//						{
-//							d1 = d1 - d2;
-//							d2 = 0;
-//						}
-//						else
-//						{
-//							d2 = d2 - d1;
-//							d1 = 0;
-//						}
-//					}
 
 					Quiz[q - 1].Pca[0] = d1;
 					Quiz[q - 1].Pca[1] = d2;

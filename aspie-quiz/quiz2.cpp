@@ -79,6 +79,18 @@ TQuizII::~TQuizII()
 {
 }
 
+/*##################  TQuizII::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizII::GetPcaCount()
+{
+	return 3;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuizII::WriteName
@@ -158,7 +170,7 @@ void TQuizII::SetupTexts()
 	Quiz[30].MyGroup = GROUP_MIXED;
 	Quiz[31].MyGroup = GROUP_MIXED;
 	Quiz[32].MyGroup = GROUP_SOCIAL;
-	Quiz[33].MyGroup = GROUP_MATH;
+	Quiz[33].MyGroup = GROUP_DISABILITY;
 	Quiz[34].MyGroup = GROUP_MIXED;
 	Quiz[35].MyGroup = GROUP_SOCIAL;
 	Quiz[36].MyGroup = GROUP_REPETITION;
@@ -185,13 +197,13 @@ void TQuizII::SetupTexts()
 	Quiz[57].MyGroup = GROUP_SEX;
 	Quiz[58].MyGroup = GROUP_SEX;
 	Quiz[59].MyGroup = GROUP_MIXED;
-	Quiz[60].MyGroup = GROUP_FOCUS;
-	Quiz[61].MyGroup = GROUP_FOCUS;
-	Quiz[62].MyGroup = GROUP_FOCUS;
-	Quiz[63].MyGroup = GROUP_FOCUS;
-	Quiz[64].MyGroup = GROUP_FOCUS;
-	Quiz[65].MyGroup = GROUP_FOCUS;
-	Quiz[66].MyGroup = GROUP_FOCUS;
+	Quiz[60].MyGroup = GROUP_ABILITY;
+	Quiz[61].MyGroup = GROUP_ABILITY;
+	Quiz[62].MyGroup = GROUP_ABILITY;
+	Quiz[63].MyGroup = GROUP_ABILITY;
+	Quiz[64].MyGroup = GROUP_ABILITY;
+	Quiz[65].MyGroup = GROUP_ABILITY;
+	Quiz[66].MyGroup = GROUP_ABILITY;
 	Quiz[67].MyGroup = GROUP_REPETITION;
 	Quiz[68].MyGroup = GROUP_REPETITION;
 	Quiz[69].MyGroup = GROUP_MIXED;
@@ -216,7 +228,7 @@ void TQuizII::SetupTexts()
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_MIXED;
 	Quiz[90].MyGroup = GROUP_MIXED;
-	Quiz[91].MyGroup = GROUP_FOCUS;
+	Quiz[91].MyGroup = GROUP_ABILITY;
 	Quiz[92].MyGroup = GROUP_MIXED;
 	Quiz[93].MyGroup = GROUP_MIXED;
 	Quiz[94].MyGroup = GROUP_REPETITION;
@@ -918,7 +930,7 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2;
+	long double d1, d2, d3;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -957,26 +969,15 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
 					if (PcaType == PCA_TYPE_AS)
 						d2 = -d2;
 
-//					if (d1 > 0 && d2 > 0)
-//					{
-//						if (d1 > d2)
-//						{
-//							d1 = d1 - d2;
-//							d2 = 0;
-//						}
-//						else
-//						{
-//							d2 = d2 - d1;
-//							d1 = 0;
-//						}
-//					}
+					if (PcaType == PCA_TYPE_ALL)
+					    d3 = -d3;
 				}
 
 				switch (PcaType)
@@ -984,36 +985,45 @@ void TQuizII::ImportMvsp(const char *filename, int PcaType)
 					case PCA_TYPE_ALL:
 						Quiz[q - 1].Pca[0] = d1;
 						Quiz[q - 1].Pca[1] = d2;
+						Quiz[q - 1].Pca[2] = d3;
 						break;
 
 					case PCA_TYPE_MALE:
 						Quiz[q - 1].MalePca[0] = d1;
 						Quiz[q - 1].MalePca[1] = d2;
+						Quiz[q - 1].MalePca[2] = d3;
 						break;
 
 					case PCA_TYPE_FEMALE:
 						Quiz[q - 1].FemalePca[0] = d1;
 						Quiz[q - 1].FemalePca[1] = d2;
+						Quiz[q - 1].FemalePca[2] = d3;
 						break;
 
 					case PCA_TYPE_YOUNG:
 						Quiz[q - 1].YoungPca[0] = d1;
 						Quiz[q - 1].YoungPca[1] = d2;
+						Quiz[q - 1].YoungPca[2] = d3;
 						break;
 
 					case PCA_TYPE_OLD:
 						Quiz[q - 1].OldPca[0] = d1;
 						Quiz[q - 1].OldPca[1] = d2;
+						Quiz[q - 1].OldPca[2] = d3;
 						break;
 
 					case PCA_TYPE_AS:
 						Quiz[q - 1].AsPca[0] = d1;
 						Quiz[q - 1].AsPca[1] = d2;
+						Quiz[q - 1].AsPca[2] = d3;
 						break;
 
 					case PCA_TYPE_MIXED:
 						Quiz[q - 1].MixedPca[0] = d1;
 						Quiz[q - 1].MixedPca[1] = d2;
+						Quiz[q - 1].MixedPca[2] = d3;
+						break;
+
 				}
 			}
 		}

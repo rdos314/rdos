@@ -42,6 +42,7 @@ public:
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
+    virtual int GetPcaCount();
 
     void SetupTexts();
     void InitReferers();

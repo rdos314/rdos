@@ -33,6 +33,8 @@
 #include "file.h"
 #include "quizdb5.h"
 
+#define IQ_INTERVAL 1
+
 #define MAX_IN_ROW		1024
 
 #define FALSE 0
@@ -241,15 +243,15 @@ void TQuiz5::SetupTexts()
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_NONVERBAL;
-	Quiz[41].MyGroup = GROUP_FOCUS;
-	Quiz[42].MyGroup = GROUP_FOCUS;
-	Quiz[43].MyGroup = GROUP_FOCUS;
-	Quiz[44].MyGroup = GROUP_FOCUS;
-	Quiz[45].MyGroup = GROUP_FOCUS;
-	Quiz[46].MyGroup = GROUP_FOCUS;
-	Quiz[47].MyGroup = GROUP_FOCUS;
-	Quiz[48].MyGroup = GROUP_FOCUS;
-	Quiz[49].MyGroup = GROUP_FOCUS;
+	Quiz[41].MyGroup = GROUP_ABILITY;
+	Quiz[42].MyGroup = GROUP_ABILITY;
+	Quiz[43].MyGroup = GROUP_ABILITY;
+	Quiz[44].MyGroup = GROUP_ABILITY;
+	Quiz[45].MyGroup = GROUP_ABILITY;
+	Quiz[46].MyGroup = GROUP_ABILITY;
+	Quiz[47].MyGroup = GROUP_ABILITY;
+	Quiz[48].MyGroup = GROUP_ABILITY;
+	Quiz[49].MyGroup = GROUP_ABILITY;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_REPETITION;
 	Quiz[52].MyGroup = GROUP_REPETITION;
@@ -282,22 +284,22 @@ void TQuiz5::SetupTexts()
 	Quiz[79].MyGroup = GROUP_NT_RELATION;
 	Quiz[80].MyGroup = GROUP_NT_RELATION;
 	Quiz[81].MyGroup = GROUP_NT_RELATION;
-	Quiz[82].MyGroup = GROUP_MATH;
-	Quiz[83].MyGroup = GROUP_MATH;
-	Quiz[84].MyGroup = GROUP_MATH;
-	Quiz[85].MyGroup = GROUP_MATH;
-	Quiz[86].MyGroup = GROUP_MATH;
-	Quiz[87].MyGroup = GROUP_MATH;
-	Quiz[88].MyGroup = GROUP_MATH;
-	Quiz[89].MyGroup = GROUP_MATH;
-	Quiz[90].MyGroup = GROUP_MATH;
-	Quiz[91].MyGroup = GROUP_MATH;
-	Quiz[92].MyGroup = GROUP_MATH;
-	Quiz[93].MyGroup = GROUP_MATH;
-	Quiz[94].MyGroup = GROUP_MATH;
-	Quiz[95].MyGroup = GROUP_MATH;
-	Quiz[96].MyGroup = GROUP_MATH;
-	Quiz[97].MyGroup = GROUP_MATH;
+	Quiz[82].MyGroup = GROUP_DISABILITY;
+	Quiz[83].MyGroup = GROUP_DISABILITY;
+	Quiz[84].MyGroup = GROUP_DISABILITY;
+	Quiz[85].MyGroup = GROUP_DISABILITY;
+	Quiz[86].MyGroup = GROUP_DISABILITY;
+	Quiz[87].MyGroup = GROUP_DISABILITY;
+	Quiz[88].MyGroup = GROUP_DISABILITY;
+	Quiz[89].MyGroup = GROUP_DISABILITY;
+	Quiz[90].MyGroup = GROUP_DISABILITY;
+	Quiz[91].MyGroup = GROUP_DISABILITY;
+	Quiz[92].MyGroup = GROUP_DISABILITY;
+	Quiz[93].MyGroup = GROUP_DISABILITY;
+	Quiz[94].MyGroup = GROUP_DISABILITY;
+	Quiz[95].MyGroup = GROUP_DISABILITY;
+	Quiz[96].MyGroup = GROUP_DISABILITY;
+	Quiz[97].MyGroup = GROUP_DISABILITY;
 	Quiz[98].MyGroup = GROUP_MIXED;
 	Quiz[99].MyGroup = GROUP_MIXED;
 	Quiz[100].MyGroup = GROUP_MIXED;
@@ -1240,6 +1242,9 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 				{
 					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
+
+				    if (PcaType == PCA_TYPE_ALL)
+				        d3 = -d3;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
