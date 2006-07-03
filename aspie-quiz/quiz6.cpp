@@ -59,7 +59,7 @@ TQuiz6::TQuiz6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
     DefineCross(3, QuizNd);
     DefineCross(4, Quiz5);
 
-    SetupTexts();
+	SetupTexts();
 	InitReferers();
 	LoadReferers();
     SetupControlGroups();
@@ -1071,7 +1071,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 
         case PCA_TYPE_AS:
 				if (row->Autism == 2 || row->Aspie == 2)
-                return TRUE;
+				return TRUE;
 			else
                 return FALSE;
 
@@ -1130,26 +1130,17 @@ void TQuiz6::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-					if (i == 112)
-					{
-						ival = 100 * (Row.Quiz[i] - 3) / 9;
-						sprintf(str, "\"%d.%02d\"", ival / 100, ival % 100);
-						file.Write(str);
-					}
-					else
-					{
-						ival = Row.Quiz[i];
-						if (ival)
-							ival--;
+					ival = Row.Quiz[i];
+					if (ival)
+						ival--;
 
-						if (ival > 2)
-							ival = 0;
+					if (ival > 2)
+						ival = 0;
 
-						sprintf(str, "\"%d\"", ival);
-						file.Write(str);
-						if (i != N - 1)
-							file.Write(", ");
-					}
+					sprintf(str, "\"%d\"", ival);
+					file.Write(str);
+					if (i != N - 1)
+						file.Write(", ");
 				}
 			}
 			file.Write("\n");
@@ -1206,8 +1197,6 @@ void TQuiz6::ExportExcelGroups(const char *filename)
 		for (i = 0; i < N; i++)
 		{
 			ival = Row.Quiz[i];
-			if (ival > 2 && i < 112)
-				ival = 0;
 
 			if (ival)
 			{
