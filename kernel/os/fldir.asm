@@ -2209,7 +2209,6 @@ cache_dir	PROC far
 	or edx,edx
 	jnz cache_sub_dir
 ;
-    int 3
 	mov fs:fds_owner_sector,-1
 	call GetRootSector
     jc cache_dir_done

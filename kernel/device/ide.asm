@@ -155,13 +155,15 @@ WaitDrq	Proc near
 	push cx
 	push dx
 ;
-	mov cx,100h
+	mov cx,1000
 	add dx,7
 WaitDrqLoop:
 	in al,dx
 	test al,8
 	clc
-	jnz WaitDrqDone
+	jnz WaitDrqDone	
+	mov ax,50
+	WaitMicroSec
 	loop WaitDrqLoop
 	stc
 WaitDrqDone:
@@ -1267,7 +1269,14 @@ read_drive_start:
 	out dx,al
 
 read_sector_loop:
-	WaitForSignal
+    push edx
+    push eax
+    GetSystemTime
+    add eax,1193 * 500
+    adc edx,0
+	WaitForSignalWithTimeout
+	pop eax
+	pop edx
 ;	
 	mov dx,fs:disc_io_base
 	call CheckStatus
@@ -1371,7 +1380,19 @@ write_drive_start:
 write_sector_loop:
     mov dx,fs:disc_io_base
 	call WaitDrq
+
+    jnc write_drive_start_ok
+;
+    int 3
+	mov dx,fs:disc_io_base
+	call CheckStatus
+
+write_drive_start_ok:
+
+
 	jc write_drive_retry
+
+
 ;
 	push cx
 	push esi
@@ -1387,7 +1408,7 @@ write_sector_loop:
     push edx
     push eax
     GetSystemTime
-    add eax,1193 * 20
+    add eax,1193 * 500
     adc edx,0
 	WaitForSignalWithTimeout
 	pop eax

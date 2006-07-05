@@ -40,7 +40,7 @@
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
-#define MAX_PCA_AXIS            5
+#define MAX_PCA_AXIS            8
 
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1

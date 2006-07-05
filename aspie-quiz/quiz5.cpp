@@ -139,7 +139,7 @@ TQuiz5::~TQuiz5()
 *##########################################################################*/
 int TQuiz5::GetPcaCount()
 {
-	return 3;
+	return 4;
 }
 
 /*##########################################################################
@@ -199,7 +199,6 @@ void TQuiz5::SetupTexts()
 	Quiz[97].Reverse = TRUE;
 	Quiz[101].Reverse = TRUE;
 	Quiz[107].Reverse = TRUE;
-	Quiz[109].Reverse = TRUE;
 	Quiz[111].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
@@ -237,25 +236,25 @@ void TQuiz5::SetupTexts()
 	Quiz[32].MyGroup = GROUP_NONVERBAL;
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
-	Quiz[35].MyGroup = GROUP_NONVERBAL;
+	Quiz[35].MyGroup = GROUP_MIXED;
 	Quiz[36].MyGroup = GROUP_NONVERBAL;
 	Quiz[37].MyGroup = GROUP_NONVERBAL;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_NONVERBAL;
 	Quiz[41].MyGroup = GROUP_ABILITY;
-	Quiz[42].MyGroup = GROUP_ABILITY;
-	Quiz[43].MyGroup = GROUP_ABILITY;
+	Quiz[42].MyGroup = GROUP_MIXED;
+	Quiz[43].MyGroup = GROUP_REPETITION;
 	Quiz[44].MyGroup = GROUP_ABILITY;
 	Quiz[45].MyGroup = GROUP_ABILITY;
 	Quiz[46].MyGroup = GROUP_ABILITY;
 	Quiz[47].MyGroup = GROUP_ABILITY;
 	Quiz[48].MyGroup = GROUP_ABILITY;
-	Quiz[49].MyGroup = GROUP_ABILITY;
+	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_REPETITION;
 	Quiz[52].MyGroup = GROUP_REPETITION;
-	Quiz[53].MyGroup = GROUP_REPETITION;
+	Quiz[53].MyGroup = GROUP_MIXED;
 	Quiz[54].MyGroup = GROUP_REPETITION;
 	Quiz[55].MyGroup = GROUP_REPETITION;
 	Quiz[56].MyGroup = GROUP_REPETITION;
@@ -265,27 +264,27 @@ void TQuiz5::SetupTexts()
 	Quiz[60].MyGroup = GROUP_SOCIAL;
 	Quiz[61].MyGroup = GROUP_SOCIAL;
 	Quiz[62].MyGroup = GROUP_SOCIAL;
-	Quiz[63].MyGroup = GROUP_SOCIAL;
+	Quiz[63].MyGroup = GROUP_MIXED;
 	Quiz[64].MyGroup = GROUP_SOCIAL;
 	Quiz[65].MyGroup = GROUP_SOCIAL;
 	Quiz[66].MyGroup = GROUP_SOCIAL;
 	Quiz[67].MyGroup = GROUP_SOCIAL;
 	Quiz[68].MyGroup = GROUP_SOCIAL;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
-	Quiz[70].MyGroup = GROUP_SOCIAL;
-	Quiz[71].MyGroup = GROUP_SOCIAL;
-	Quiz[72].MyGroup = GROUP_SOCIAL;
+	Quiz[70].MyGroup = GROUP_MIXED;
+	Quiz[71].MyGroup = GROUP_INTROVERT;
+	Quiz[72].MyGroup = GROUP_MIXED;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_SOCIAL;
 	Quiz[75].MyGroup = GROUP_NT_RELATION;
 	Quiz[76].MyGroup = GROUP_NT_RELATION;
 	Quiz[77].MyGroup = GROUP_NT_RELATION;
-	Quiz[78].MyGroup = GROUP_NT_RELATION;
-	Quiz[79].MyGroup = GROUP_NT_RELATION;
+	Quiz[78].MyGroup = GROUP_MIXED;
+	Quiz[79].MyGroup = GROUP_MIXED;
 	Quiz[80].MyGroup = GROUP_NT_RELATION;
 	Quiz[81].MyGroup = GROUP_NT_RELATION;
 	Quiz[82].MyGroup = GROUP_DISABILITY;
-	Quiz[83].MyGroup = GROUP_DISABILITY;
+	Quiz[83].MyGroup = GROUP_MIXED;
 	Quiz[84].MyGroup = GROUP_DISABILITY;
 	Quiz[85].MyGroup = GROUP_DISABILITY;
 	Quiz[86].MyGroup = GROUP_DISABILITY;
@@ -1197,7 +1196,7 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2, d3;
+	long double d1, d2, d3, d4;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -1236,7 +1235,7 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf %Lf", &q, &d1, &d2, &d3) == 4)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
@@ -1245,6 +1244,9 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 
 				    if (PcaType == PCA_TYPE_ALL)
 				        d3 = -d3;
+
+				    if (PcaType == PCA_TYPE_ALL)
+				        d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
@@ -1267,42 +1269,49 @@ void TQuiz5::ImportMvsp(const char *filename, int PcaType)
 						Quiz[q - 1].Pca[0] = d1;
 						Quiz[q - 1].Pca[1] = d2;
 						Quiz[q - 1].Pca[2] = d3;
+						Quiz[q - 1].Pca[3] = d4;
 						break;
 
 					case PCA_TYPE_MALE:
 						Quiz[q - 1].MalePca[0] = d1;
 						Quiz[q - 1].MalePca[1] = d2;
 						Quiz[q - 1].MalePca[2] = d3;
+						Quiz[q - 1].MalePca[3] = d4;
 						break;
 
 					case PCA_TYPE_FEMALE:
 						Quiz[q - 1].FemalePca[0] = d1;
 						Quiz[q - 1].FemalePca[1] = d2;
 						Quiz[q - 1].FemalePca[2] = d3;
+						Quiz[q - 1].FemalePca[3] = d4;
 						break;
 
 					case PCA_TYPE_YOUNG:
 						Quiz[q - 1].YoungPca[0] = d1;
 						Quiz[q - 1].YoungPca[1] = d2;
 						Quiz[q - 1].YoungPca[2] = d3;
+						Quiz[q - 1].YoungPca[3] = d4;
 						break;
 
 					case PCA_TYPE_OLD:
 						Quiz[q - 1].OldPca[0] = d1;
 						Quiz[q - 1].OldPca[1] = d2;
 						Quiz[q - 1].OldPca[2] = d3;
+						Quiz[q - 1].OldPca[3] = d4;
 						break;
 
 					case PCA_TYPE_AS:
 						Quiz[q - 1].AsPca[0] = d1;
 						Quiz[q - 1].AsPca[1] = d2;
 						Quiz[q - 1].AsPca[2] = d3;
+						Quiz[q - 1].AsPca[3] = d4;
 						break;
 
 					case PCA_TYPE_MIXED:
 						Quiz[q - 1].MixedPca[0] = d1;
 						Quiz[q - 1].MixedPca[1] = d2;
 						Quiz[q - 1].MixedPca[2] = d3;
+						Quiz[q - 1].MixedPca[3] = d4;
 						break;
 				}
 			}

@@ -1616,7 +1616,7 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &NoRef);
 
 	for (i = 0; i < RefCount; i++)
-	    if (RefArr[i]->Count >= 5)
+		if (RefArr[i]->Count >= 0) // change later!
     		WriteReferer(file, RefArr[i]);
 
 	file.Write("</table>");
@@ -2835,6 +2835,13 @@ void TQuiz::WritePcaLoadTable(const char *filename)
             WriteFieldFooter(file);
         }
 
+        if (GetPcaCount() > 3)
+        {
+            WriteCenteredFieldHeader(file, 3);
+	    	file.Write("Introvert");
+            WriteFieldFooter(file);
+        }
+
 		file.Write("</tr>");
 
     	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
@@ -2939,6 +2946,27 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 			    if (quiz->GetPcaCount() > 2)
 			    {
     				ival = round(100.0 * quiz->Quiz[q].Pca[2]);
+	    			sprintf(str, "%d%", ival);
+		    		file.Write(str);
+		        }
+
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				if (quiz)
+				{   cross++;
+					file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+			cross = 0;
+			TopQuiz->ClearUsed(TopQuestion);
+			WriteCenteredFieldHeader(file, 6);
+			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+			while (quiz)
+			{
+			    if (quiz->GetPcaCount() > 3)
+			    {
+    				ival = round(100.0 * quiz->Quiz[q].Pca[3]);
 	    			sprintf(str, "%d%", ival);
 		    		file.Write(str);
 		        }

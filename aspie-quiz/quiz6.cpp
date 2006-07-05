@@ -84,6 +84,18 @@ TQuiz6::~TQuiz6()
 {
 }
 
+/*##################  TQuiz6::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz6::GetPcaCount()
+{
+	return 4;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuiz6::WriteName
@@ -119,6 +131,7 @@ void TQuiz6::SetupTexts()
 	Quiz[29].Reverse = TRUE;
 	Quiz[30].Reverse = TRUE;
 	Quiz[35].Reverse = TRUE;
+	Quiz[64].Reverse = TRUE;
 	Quiz[71].Reverse = TRUE;
 	Quiz[72].Reverse = TRUE;
 	Quiz[75].Reverse = TRUE;
@@ -137,7 +150,6 @@ void TQuiz6::SetupTexts()
 	Quiz[97].Reverse = TRUE;
 	Quiz[110].Reverse = TRUE;
 	Quiz[112].Reverse = TRUE;
-	Quiz[115].Reverse = TRUE;
 	Quiz[116].Reverse = TRUE;
 	Quiz[117].Reverse = TRUE;
 	Quiz[119].Reverse = TRUE;
@@ -146,6 +158,7 @@ void TQuiz6::SetupTexts()
 	Quiz[132].Reverse = TRUE;
 	Quiz[134].Reverse = TRUE;
 	Quiz[135].Reverse = TRUE;
+	Quiz[137].Reverse = TRUE;
 	Quiz[138].Reverse = TRUE;
 	Quiz[140].Reverse = TRUE;
 	Quiz[141].Reverse = TRUE;
@@ -182,24 +195,24 @@ void TQuiz6::SetupTexts()
 	Quiz[29].MyGroup = GROUP_NONVERBAL;
 	Quiz[30].MyGroup = GROUP_NONVERBAL;
 	Quiz[31].MyGroup = GROUP_NONVERBAL;
-	Quiz[32].MyGroup = GROUP_NONVERBAL;
+	Quiz[32].MyGroup = GROUP_MIXED;
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_NONVERBAL;
 	Quiz[36].MyGroup = GROUP_NONVERBAL;
 	Quiz[37].MyGroup = GROUP_NONVERBAL;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
-	Quiz[39].MyGroup = GROUP_NONVERBAL;
-	Quiz[40].MyGroup = GROUP_ABILITY;
+	Quiz[39].MyGroup = GROUP_MIXED;
+	Quiz[40].MyGroup = GROUP_MIXED;
 	Quiz[41].MyGroup = GROUP_ABILITY;
 	Quiz[42].MyGroup = GROUP_ABILITY;
-	Quiz[43].MyGroup = GROUP_ABILITY;
-	Quiz[44].MyGroup = GROUP_ABILITY;
+	Quiz[43].MyGroup = GROUP_MIXED;
+	Quiz[44].MyGroup = GROUP_REPETITION;
 	Quiz[45].MyGroup = GROUP_ABILITY;
 	Quiz[46].MyGroup = GROUP_ABILITY;
 	Quiz[47].MyGroup = GROUP_ABILITY;
 	Quiz[48].MyGroup = GROUP_ABILITY;
-	Quiz[49].MyGroup = GROUP_ABILITY;
+	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_ABILITY;
 	Quiz[51].MyGroup = GROUP_ABILITY;
 	Quiz[52].MyGroup = GROUP_ABILITY;
@@ -215,8 +228,8 @@ void TQuiz6::SetupTexts()
 	Quiz[62].MyGroup = GROUP_REPETITION;
 	Quiz[63].MyGroup = GROUP_REPETITION;
 	Quiz[64].MyGroup = GROUP_SOCIAL;
-	Quiz[65].MyGroup = GROUP_SOCIAL;
-	Quiz[66].MyGroup = GROUP_SOCIAL;
+	Quiz[65].MyGroup = GROUP_MIXED;
+	Quiz[66].MyGroup = GROUP_MIXED;
 	Quiz[67].MyGroup = GROUP_SOCIAL;
 	Quiz[68].MyGroup = GROUP_SOCIAL;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
@@ -225,16 +238,16 @@ void TQuiz6::SetupTexts()
 	Quiz[72].MyGroup = GROUP_SOCIAL;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_SOCIAL;
-	Quiz[75].MyGroup = GROUP_SOCIAL;
+	Quiz[75].MyGroup = GROUP_MIXED;
 	Quiz[76].MyGroup = GROUP_SOCIAL;
 	Quiz[77].MyGroup = GROUP_SOCIAL;
 	Quiz[78].MyGroup = GROUP_SOCIAL;
 	Quiz[79].MyGroup = GROUP_SOCIAL;
 	Quiz[80].MyGroup = GROUP_SOCIAL;
-	Quiz[81].MyGroup = GROUP_SOCIAL;
-	Quiz[82].MyGroup = GROUP_SOCIAL;
+	Quiz[81].MyGroup = GROUP_MIXED;
+	Quiz[82].MyGroup = GROUP_INTROVERT;
 	Quiz[83].MyGroup = GROUP_SOCIAL;
-	Quiz[84].MyGroup = GROUP_SOCIAL;
+	Quiz[84].MyGroup = GROUP_INTROVERT;
 	Quiz[85].MyGroup = GROUP_SOCIAL;
 	Quiz[86].MyGroup = GROUP_SOCIAL;
 	Quiz[87].MyGroup = GROUP_SOCIAL;
@@ -242,13 +255,13 @@ void TQuiz6::SetupTexts()
 	Quiz[89].MyGroup = GROUP_NT_RELATION;
 	Quiz[90].MyGroup = GROUP_NT_RELATION;
 	Quiz[91].MyGroup = GROUP_NT_RELATION;
-	Quiz[92].MyGroup = GROUP_NT_RELATION;
+	Quiz[92].MyGroup = GROUP_MIXED;
 	Quiz[93].MyGroup = GROUP_NT_RELATION;
 	Quiz[94].MyGroup = GROUP_NT_RELATION;
 	Quiz[95].MyGroup = GROUP_NT_RELATION;
 	Quiz[96].MyGroup = GROUP_NT_RELATION;
-	Quiz[97].MyGroup = GROUP_NT_RELATION;
-	Quiz[98].MyGroup = GROUP_DISABILITY;
+	Quiz[97].MyGroup = GROUP_INTROVERT;
+	Quiz[98].MyGroup = GROUP_MIXED;
 	Quiz[99].MyGroup = GROUP_DISABILITY;
 	Quiz[100].MyGroup = GROUP_DISABILITY;
 	Quiz[101].MyGroup = GROUP_DISABILITY;
@@ -261,14 +274,14 @@ void TQuiz6::SetupTexts()
 	Quiz[108].MyGroup = GROUP_DISABILITY;
 	Quiz[109].MyGroup = GROUP_INTROVERT;
 	Quiz[110].MyGroup = GROUP_INTROVERT;
-	Quiz[111].MyGroup = GROUP_INTROVERT;
+	Quiz[111].MyGroup = GROUP_SOCIAL;
 	Quiz[112].MyGroup = GROUP_INTROVERT;
 	Quiz[113].MyGroup = GROUP_INTROVERT;
-	Quiz[114].MyGroup = GROUP_INTROVERT;
-	Quiz[115].MyGroup = GROUP_INTROVERT;
+	Quiz[114].MyGroup = GROUP_MIXED;
+	Quiz[115].MyGroup = GROUP_MIXED;
 	Quiz[116].MyGroup = GROUP_INTROVERT;
 	Quiz[117].MyGroup = GROUP_INTROVERT;
-	Quiz[118].MyGroup = GROUP_INTROVERT;
+	Quiz[118].MyGroup = GROUP_SOCIAL;
 	Quiz[119].MyGroup = GROUP_INTROVERT;
 	Quiz[120].MyGroup = GROUP_INTROVERT;
 	Quiz[121].MyGroup = GROUP_SEX;
@@ -284,7 +297,7 @@ void TQuiz6::SetupTexts()
 	Quiz[131].MyGroup = GROUP_MIXED;
 	Quiz[132].MyGroup = GROUP_MIXED;
 	Quiz[133].MyGroup = GROUP_MIXED;
-	Quiz[134].MyGroup = GROUP_MIXED;
+	Quiz[134].MyGroup = GROUP_SOCIAL;
 	Quiz[135].MyGroup = GROUP_MIXED;
 	Quiz[136].MyGroup = GROUP_MIXED;
 	Quiz[137].MyGroup = GROUP_MIXED;
@@ -294,7 +307,7 @@ void TQuiz6::SetupTexts()
 	Quiz[141].MyGroup = GROUP_MIXED;
 	Quiz[142].MyGroup = GROUP_MIXED;
 	Quiz[143].MyGroup = GROUP_MIXED;
-	Quiz[144].MyGroup = GROUP_MIXED;
+	Quiz[144].MyGroup = GROUP_SENSORY;
 	Quiz[145].MyGroup = GROUP_MIXED;
 	Quiz[146].MyGroup = GROUP_MIXED;
 	Quiz[147].MyGroup = GROUP_MIXED;
@@ -1251,7 +1264,7 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 	char *ptr;
 	long pos = 0;
 	int i;
-	long double d1, d2;
+	long double d1, d2, d3, d4;
 	int q;
 	int count;
 	TFile infile(filename);
@@ -1290,12 +1303,18 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
+
+					if (PcaType == PCA_TYPE_ALL)
+					    d3 = -d3;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
@@ -1317,36 +1336,50 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 					case PCA_TYPE_ALL:
 						Quiz[q - 1].Pca[0] = d1;
 						Quiz[q - 1].Pca[1] = d2;
+						Quiz[q - 1].Pca[2] = d3;
+						Quiz[q - 1].Pca[3] = d4;
 						break;
 
 					case PCA_TYPE_MALE:
 						Quiz[q - 1].MalePca[0] = d1;
 						Quiz[q - 1].MalePca[1] = d2;
+						Quiz[q - 1].MalePca[2] = d3;
+						Quiz[q - 1].MalePca[3] = d4;
 						break;
 
 					case PCA_TYPE_FEMALE:
 						Quiz[q - 1].FemalePca[0] = d1;
 						Quiz[q - 1].FemalePca[1] = d2;
+						Quiz[q - 1].FemalePca[2] = d3;
+						Quiz[q - 1].FemalePca[3] = d4;
 						break;
 
 					case PCA_TYPE_YOUNG:
 						Quiz[q - 1].YoungPca[0] = d1;
 						Quiz[q - 1].YoungPca[1] = d2;
+						Quiz[q - 1].YoungPca[2] = d3;
+						Quiz[q - 1].YoungPca[3] = d4;
 						break;
 
 					case PCA_TYPE_OLD:
 						Quiz[q - 1].OldPca[0] = d1;
 						Quiz[q - 1].OldPca[1] = d2;
+						Quiz[q - 1].OldPca[2] = d3;
+						Quiz[q - 1].OldPca[3] = d4;
 						break;
 
 					case PCA_TYPE_AS:
 						Quiz[q - 1].AsPca[0] = d1;
 						Quiz[q - 1].AsPca[1] = d2;
+						Quiz[q - 1].AsPca[2] = d3;
+						Quiz[q - 1].AsPca[3] = d4;
 						break;
 
 					case PCA_TYPE_MIXED:
 						Quiz[q - 1].MixedPca[0] = d1;
 						Quiz[q - 1].MixedPca[1] = d2;
+						Quiz[q - 1].MixedPca[2] = d3;
+						Quiz[q - 1].MixedPca[3] = d4;
 						break;
 				}
 			}

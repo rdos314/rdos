@@ -27,8 +27,8 @@ void cdecl main()
 	TKeyboardDevice Keyboard;
 	int num;
 
-	TSerialDevice Port1(1, 9600, 'E', 7, 1);
-	TSerialDevice Port2(4, 9600, 'E', 7, 1);
+	TSerialDevice Port1(1, 9600, 'O', 8, 1);
+	TSerialDevice Port2(4, 9600, 'O', 8, 1);
 
 	Port1.Open();
 	Port2.Open();
@@ -81,8 +81,8 @@ void cdecl main()
 		{
 			if (Keyboard.Poll())
 			{
-				Keyboard.Get();
-				return;
+				if (Keyboard.Get() == 0x1b)
+					return;
 			}
 		}
 
