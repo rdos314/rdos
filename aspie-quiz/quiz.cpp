@@ -87,7 +87,13 @@ TQuiz::TQuiz(int Questions)
 	 SynaesthesiaRef("", "Synaesthesia"),
 	 PARef("", "Prosapagnosia"),
 	 DysgraphiaRef("", "Dysgraphia"),
-	 BipolarRef("", "Bipolar")
+	 BipolarRef("", "Bipolar"),
+	 AmerindianRef("", "Native American"),
+	 BlackRef("", "African"),
+	 HispanicRef("", "Hispanic"),
+	 WhiteRef("", "European"),
+	 ArabRef("", "Middle East & North African"),
+	 AsianRef("", "Asian")
 {
     int i;
     int g;
@@ -1357,6 +1363,39 @@ void TQuiz::WriteIQ(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteHair ##########################
+*   Purpose....: Write hair report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteHair(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteEye ##########################
+*   Purpose....: Write eye report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteEye(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteRace ##########################
+*   Purpose....: Write race report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteRace(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
@@ -1612,6 +1651,12 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &PARef);
 	WriteReferer(file, &DysgraphiaRef);
 	WriteReferer(file, &BipolarRef);
+	WriteReferer(file, &AmerindianRef);
+	WriteReferer(file, &BlackRef);
+	WriteReferer(file, &HispanicRef);
+	WriteReferer(file, &WhiteRef);
+	WriteReferer(file, &ArabRef);
+	WriteReferer(file, &AsianRef);
 	WriteReferer(file, &NTRef);
 	WriteReferer(file, &NoRef);
 

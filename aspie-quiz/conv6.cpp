@@ -51,6 +51,71 @@ TFile quizfile("quiz6.bin", 0);
 *##########################################################################*/
 void HandleRow(TQuizRow *Row)
 {
+    int i;
+    
+	if (Row->Ancestry >= 2100 && Row->Ancestry < 2200)
+	{
+		for (i = 150; i < 162; i++)
+			Row->Quiz[i] = 1;
+
+		switch (Row->Hair)
+		{
+			case 1:
+				Row->Quiz[150] = 3;
+				break;
+
+			case 2:
+				Row->Quiz[151] = 3;
+				break;
+
+			case 3:
+				Row->Quiz[152] = 3;
+				break;
+
+			case 4:
+				Row->Quiz[153] = 3;
+				break;
+
+			case 5:
+				Row->Quiz[154] = 3;
+				break;
+
+			case 6:
+				Row->Quiz[155] = 3;
+				break;
+
+			case 7:
+				Row->Quiz[156] = 3;
+				break;
+		}
+
+		switch (Row->Eye)
+		{
+			case 1:
+				Row->Quiz[157] = 3;
+				break;
+
+			case 2:
+				Row->Quiz[158] = 3;
+				break;
+
+			case 3:
+				Row->Quiz[159] = 3;
+				break;
+
+			case 4:
+				Row->Quiz[160] = 3;
+				break;
+
+			case 5:
+				Row->Quiz[161] = 3;
+				break;
+		}
+	}
+	else
+		for (i = 150; i < 162; i++)
+			Row->Quiz[i] = 0;
+
 	quizfile.Write(Row, sizeof(TQuizRow));
 	printf("%d AS: %d, NT: %d, Ref: %s\n", Row->ID, Row->AsResult, Row->NtResult, Row->Referer);
 }

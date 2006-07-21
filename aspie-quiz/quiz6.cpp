@@ -33,10 +33,53 @@
 #include "file.h"
 #include "quizdb6.h"
 
+#define CI	1
+
 #define MAX_IN_ROW		1024
 
 #define FALSE 0
 #define TRUE !FALSE
+
+class THair
+{
+public:
+	THair();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+	int AsCount[7];
+	int NtCount[7];
+};
+
+class TEye
+{
+public:
+	TEye();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+
+	int AsCount[5];
+	int NtCount[5];
+};
+
+class TRace
+{
+public:
+	TRace();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+
+	int Count[8];
+	int AsCount[8];
+};
 
 /*##########################################################################
 #
@@ -50,7 +93,7 @@
 #
 ##########################################################################*/
 TQuiz6::TQuiz6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5)
-  : TQuiz(150),
+  : TQuiz(162),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
@@ -314,6 +357,19 @@ void TQuiz6::SetupTexts()
 	Quiz[148].MyGroup = GROUP_MIXED;
 	Quiz[149].MyGroup = GROUP_MIXED;
 
+	Quiz[150].MyGroup = GROUP_MIXED;
+	Quiz[151].MyGroup = GROUP_MIXED;
+	Quiz[152].MyGroup = GROUP_MIXED;
+	Quiz[153].MyGroup = GROUP_MIXED;
+	Quiz[154].MyGroup = GROUP_MIXED;
+	Quiz[155].MyGroup = GROUP_MIXED;
+	Quiz[156].MyGroup = GROUP_MIXED;
+	Quiz[157].MyGroup = GROUP_MIXED;
+	Quiz[158].MyGroup = GROUP_MIXED;
+	Quiz[159].MyGroup = GROUP_MIXED;
+	Quiz[160].MyGroup = GROUP_MIXED;
+	Quiz[161].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
 
 	Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
@@ -466,6 +522,19 @@ void TQuiz6::SetupTexts()
 	Quiz[147].Text = "Are you afraid of thunderstorms?";
 	Quiz[148].Text = "Are you afraid of closed places?";
 	Quiz[149].Text = "Are you afraid of the dark?";
+
+	Quiz[150].Text = "Red hair color";
+	Quiz[151].Text = "Strawberry blond hair color";
+	Quiz[152].Text = "Blond hair color";
+	Quiz[153].Text = "Brown hair color";
+	Quiz[154].Text = "Auburn hair color";
+	Quiz[155].Text = "Dark brown hair color";
+	Quiz[156].Text = "Black hair color";
+	Quiz[157].Text = "Grey-blue eye color";
+	Quiz[158].Text = "Blue eye color";
+	Quiz[159].Text = "Green eye color";
+	Quiz[160].Text = "Hazel eye color";
+	Quiz[161].Text = "Brown eye color";
 
 #endif
 
@@ -621,6 +690,19 @@ void TQuiz6::SetupTexts()
 	Quiz[148].Text = "Är du rädd för att bli instängd?";
 	Quiz[149].Text = "Är du mörkrädd?";
 
+	Quiz[150].Text = "Röd hårfärg";
+	Quiz[151].Text = "Rödblond hårfärg";
+	Quiz[152].Text = "Blond hårfärg";
+	Quiz[153].Text = "Brun hårfärg";
+	Quiz[154].Text = "Rödbrun/kastanjebrun hårfärg";
+	Quiz[155].Text = "Mörkbrun hårfärg";
+	Quiz[156].Text = "Svart hårfärg";
+	Quiz[157].Text = "Gråblå ögonfärg";
+	Quiz[158].Text = "Blå ögonfärg";
+	Quiz[159].Text = "Grön ögonfärg";
+	Quiz[160].Text = "Ljusbrun ögonfärg";
+	Quiz[161].Text = "Brun ögonfärg";
+
 #endif
 }
 
@@ -643,14 +725,40 @@ void TQuiz6::InitReferers()
 	AddReferer("aspergianisland.com", "aspergianisland.com");
 	AddReferer("wrongplanet.net", "wrongplanet.net");
 	AddReferer("rdos.net/sv", "rdos.net/sv");
-	AddReferer("kolozzeum.com", "kolozzeum.com/kolozzeum/showthread.php?t=65633");
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
 	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
 	AddReferer("whoa.nu", "whoa.nu");
-	AddReferer("forum.rpg.net", "forum.rpg.net/showthread.php?t=268587");
-	AddReferer("99musik.se", "99musik.se/forum/showthread.php?t=12719");
-	AddReferer("ufs.fi", "forum.ufs.fi/showthread.php?t=1873");
+	AddReferer("airliners.net", "airliners.net/discussions/non_aviation/read.main/1295619");
+	AddReferer("supermama.lt", "supermama.lt/forumas/index.php?showtopic=99238");
  }
+
+/*##########################################################################
+#
+#   Name       : TQuiz6::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuiz6::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
+{
+	ref->Count++;
+	ref->AsResult += AsResult;
+	ref->NtResult += NtResult;
+
+	if (AsResult >= NtResult)
+	{
+		if (AsResult - NtResult >= 50)
+			ref->ResultHighAs++;
+		else
+			ref->ResultLowAs++;
+	}
+		else
+			ref->ResultNt++;
+}
 
 /*##################  TQuiz6::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
@@ -672,78 +780,48 @@ void TQuiz6::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
-
-		ref = 0;
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			ref = &SelfAsRef;
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 1)
-			ref = &SelfAddRef;
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			ref = &DxAsRef;
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 2)
-			ref = &DxAddRef;
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
-		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
+		if (Row.Ancestry == 3)
+			UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
 
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+		if (Row.Ancestry == 5 && Row.Hair >= 6 && Row.Eye >= 4)
+			UpdateReferer(&BlackRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Ancestry == 6)
+			UpdateReferer(&HispanicRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Ancestry >= 1000 && Row.Ancestry < 2000 && Row.Hair >= 6 && Row.Eye >= 4)
+			UpdateReferer(&BlackRef, Row.AsResult, Row.NtResult);
+
+		if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
+			UpdateReferer(&WhiteRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
+			UpdateReferer(&ArabRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Ancestry >= 4000)
+			UpdateReferer(&AsianRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				ref = &MaleAsRef;
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
 			else
-				ref = &FemaleAsRef;
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
 		}
-
-		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
-
 	}
 }
 
@@ -863,11 +941,10 @@ void TQuiz6::LoadPopulations()
 void TQuiz6::SetupControlGroups()
 {
 	DefineNt("flashback.info");
-	DefineNt("kolozzeum.com");
 	DefineNt("rdos.net/sv");
 	DefineNt("whoa.nu");
-	DefineNt("99musik.se");
-	DefineNt("ufs.fi");
+	DefineNt("airliners.net");
+	DefineNt("supermama.lt");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -876,6 +953,7 @@ void TQuiz6::SetupControlGroups()
 	DefineAspie("xmission.com/~winter");
 	DefineAspie("delphiforums.com");
 	DefineAspie("assupportgrouponline.co.uk");
+	DefineAspie("neurodiversity.com/diagnostic_instruments.html");
 }
 
 /*##########################################################################
@@ -1307,11 +1385,11 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-					    d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;
@@ -1385,4 +1463,737 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  round ##########################
+*   Purpose....: round long double to int       	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int round(long double val)
+{
+	return (int)(val + 0.5);
+}
+
+/*##################  WriteCenteredFieldHeader ##########################
+*   Purpose....: Write centered field header for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCenteredFieldHeader(TFile &File, int RelWidth)
+{
+	char str[80];
+
+	sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+	File.Write(str);
+
+	File.Write("<p align=\"center\">\n");
+	File.Write("<b>\n");
+}
+
+/*##################  WriteFieldFooter ##########################
+*   Purpose....: Write field footer for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteFieldFooter(TFile &File)
+{
+	File.Write("\n</b>\n");
+	File.Write("</p>\n");
+
+	File.Write("</td>\n");
+}
+
+/*##################  THair::THair ##########################
+*   Purpose....: Initialize THair                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+THair::THair()
+{
+    int i;
+
+    for (i = 0; i < 7; i++)
+    {
+        AsCount[i] = 0;
+        NtCount[i] = 0;
+    }
+}
+
+/*##################  THair::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void THair::Add(TQuizRow *Row)
+{
+    int index = Row->Hair - 1;
+	int diff = Row->AsResult - Row->NtResult;
+
+	if (diff > 0)
+	    AsCount[index]++;
+	else
+	    NtCount[index]++;
+}
+
+/*##################  THair::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void THair::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Color");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  THair::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void THair::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+    r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+    r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(100.0 * r);
+
+    	sprintf(str, "%d", ival);
+	    file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(100.0 * r);
+
+    	sprintf(str, "-%d%", ival);
+	    file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  THair::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void THair::WriteRow(TFile &file, int index, const char *text)
+{
+    char str[80];
+    int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+    file.Write(text);
+	WriteFieldFooter(file);
+
+
+    sum = 0;
+    for (i = 0; i < 7; i++)
+        sum += AsCount[i];            
+
+    if (sum)
+        WriteEntry(file, AsCount[index], sum);
+	else
+	    file.Write("---");
+
+    sum = 0;
+    for (i = 0; i < 7; i++)
+        sum += NtCount[i];            
+
+    if (sum)
+        WriteEntry(file, NtCount[index], sum);
+	else
+	    file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TEye::TEye ##########################
+*   Purpose....: Initialize TEye                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TEye::TEye()
+{
+    int i;
+
+    for (i = 0; i < 5; i++)
+    {
+        AsCount[i] = 0;
+        NtCount[i] = 0;
+    }
+}
+
+/*##################  TEye::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::Add(TQuizRow *Row)
+{
+    int index = Row->Eye - 1;
+	int diff = Row->AsResult - Row->NtResult;
+
+	if (diff > 0)
+	    AsCount[index]++;
+	else
+	    NtCount[index]++;
+}
+
+/*##################  TEye::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Color");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TEye::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+    r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+    r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(100.0 * r);
+
+    	sprintf(str, "%d", ival);
+	    file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(100.0 * r);
+
+    	sprintf(str, "-%d%", ival);
+	    file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+	
+/*##################  TEye::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteRow(TFile &file, int index, const char *text)
+{
+    char str[80];
+    int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+    file.Write(text);
+	WriteFieldFooter(file);
+
+    sum = 0;
+    for (i = 0; i < 5; i++)
+        sum += AsCount[i];            
+
+    if (sum)
+        WriteEntry(file, AsCount[index], sum);
+	else
+	    file.Write("---");
+
+
+    sum = 0;
+    for (i = 0; i < 5; i++)
+        sum += NtCount[i];            
+
+    if (sum)
+        WriteEntry(file, NtCount[index], sum);
+	else
+	    file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TRace::TRace ##########################
+*   Purpose....: Initialize TRace                 			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TRace::TRace()
+{
+    int i;
+
+    for (i = 0; i < 8; i++)
+    {
+		Count[i] = 0;
+		AsCount[i] = 0;
+    }
+}
+
+/*##################  TRace::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRace::Add(TQuizRow *Row)
+{
+	int index = -1;
+	int diff = Row->AsResult - Row->NtResult;
+
+	if (Row->Ancestry == 3)
+		index = 0;      // american indian
+
+	if (Row->Ancestry == 5 && Row->Hair >= 6 && Row->Eye >= 4)
+		index = 1;      // african american
+
+	if (Row->Ancestry == 6)
+		index = 0;      // hispanic
+
+	if (Row->Ancestry >= 1000 && Row->Ancestry < 2000 && Row->Hair >= 6 && Row->Eye >= 4)
+		index = 1;      // black african
+
+	if ((Row->Ancestry >= 2000 && Row->Ancestry < 3000) || Row->Ancestry == 3205)
+		index = 2;      // white
+
+	if (Row->Ancestry >= 3000 && Row->Ancestry < 4000 && Row->Ancestry != 3205)
+		index = 1;      // arab
+
+	if (Row->Ancestry >= 4000)
+		index = 3;      // asian
+
+	if (index >= 0)
+	{
+		Count[index]++;
+
+		if (diff > 0)
+		    AsCount[index]++;
+    }
+}
+
+/*##################  TRace::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRace::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Race");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Interest");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS proportion");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TRace::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRace::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+    r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+    r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(1000.0 * r);
+
+    	sprintf(str, "%d.%01d", ival / 10, ival % 10);
+	    file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(1000.0 * r);
+
+    	sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
+	    file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 1000 / count;
+    sprintf(str, "%d.%01d%", ival / 10, ival % 10);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  TRace::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRace::WriteRow(TFile &file, int index, const char *text)
+{
+    char str[80];
+    int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+    file.Write(text);
+	WriteFieldFooter(file);
+
+    sum = 0;
+    for (i = 0; i < 8; i++)
+        sum += Count[i];            
+
+    if (sum)
+    {
+        WriteEntry(file, Count[index], sum);
+
+        if (Count[index])
+            WriteEntry(file, AsCount[index], Count[index]);
+    }
+	else
+	    file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TQuiz5::WriteHair ##########################
+*   Purpose....: Write hair report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz6::WriteHair(const char *filename)
+{
+	TQuizRow Row;
+    int i;
+	int ival;
+    char str[80];
+	TFile file(filename, 0);
+
+    THair hair[7];
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ancestry >= 2100 && Row.Ancestry < 2400)
+	        hair[0].Add(&Row);
+
+		if (Row.Ancestry >= 2400 && Row.Ancestry < 2700)
+	        hair[1].Add(&Row);
+
+		if (Row.Ancestry >= 2700 && Row.Ancestry < 2800)
+	        hair[0].Add(&Row);
+	}
+
+    for (i = 0; i < 2; i++)
+    {
+        file.Write("<h3>");
+        
+        switch (i)
+        {
+            case 0:
+                file.Write("Northern Europe");
+                break;
+
+            case 1:
+                file.Write("Southern Europe");
+                break;
+
+        }
+
+        file.Write("</h3><br>");
+        
+    	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+    	THair::WriteHeader(file);
+
+        hair[i].WriteRow(file, 0, "Red");
+        hair[i].WriteRow(file, 1, "Strawberry blond");
+        hair[i].WriteRow(file, 2, "Blond");
+        hair[i].WriteRow(file, 3, "Brown");
+        hair[i].WriteRow(file, 4, "Auburn");
+        hair[i].WriteRow(file, 5, "Dark brown");
+        hair[i].WriteRow(file, 6, "Black");
+
+    	file.Write("</table>");
+
+    	file.Write("<br><br>");
+    	
+    }	
+	
+}
+
+/*##################  TQuiz5::WriteEye ##########################
+*   Purpose....: Write eye color report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz6::WriteEye(const char *filename)
+{
+	TQuizRow Row;
+    int i;
+	int ival;
+    char str[80];
+	TFile file(filename, 0);
+
+    TEye eye[7];
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.Ancestry >= 2100 && Row.Ancestry < 2400)
+	        eye[0].Add(&Row);
+
+		if (Row.Ancestry >= 2400 && Row.Ancestry < 2700)
+	        eye[1].Add(&Row);
+
+		if (Row.Ancestry >= 2700 && Row.Ancestry < 2800)
+	        eye[0].Add(&Row);
+	}
+
+    for (i = 0; i < 2; i++)
+    {
+        file.Write("<h3>");
+        
+        switch (i)
+        {
+            case 0:
+                file.Write("Northern Europe");
+                break;
+
+            case 1:
+                file.Write("Southern Europe");
+                break;
+
+        }
+
+        file.Write("</h3><br>");
+        
+    	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	    TEye::WriteHeader(file);
+
+        eye[i].WriteRow(file, 0, "Grey-blue");
+        eye[i].WriteRow(file, 1, "Blue");
+        eye[i].WriteRow(file, 2, "Green");
+        eye[i].WriteRow(file, 3, "Hazel");
+        eye[i].WriteRow(file, 4, "Brown");
+
+    	file.Write("</table>");
+
+    	file.Write("<br><br>");
+    	
+    }	
+}
+
+/*##################  TQuiz6::WriteRace ##########################
+*   Purpose....: Write race report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz6::WriteRace(const char *filename)
+{
+	TQuizRow Row;
+    int i;
+	int ival;
+    char str[80];
+	TFile file(filename, 0);
+
+    TRace race;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	    race.Add(&Row);
+        
+    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+    TRace::WriteHeader(file);
+
+    race.WriteRow(file, 0, "Native American");
+    race.WriteRow(file, 1, "Africa and Middle East");
+    race.WriteRow(file, 2, "Europe");
+    race.WriteRow(file, 3, "Asia");
+
+    file.Write("</table>");
+
+    file.Write("<br><br>");
 }

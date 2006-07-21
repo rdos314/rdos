@@ -4,7 +4,7 @@ struct TQuizRow
     long ID;
     int  BirthYear;
 	char Gender;
-	char Ancestry;
+	int Ancestry;
 	char Hair;
 	char Eye;
     char Lang;

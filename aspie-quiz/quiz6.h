@@ -41,6 +41,10 @@ public:
     virtual void ExportExcelGroups(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
 
+    virtual void WriteHair(const char *filename);
+    virtual void WriteEye(const char *filename);
+    virtual void WriteRace(const char *filename);
+
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
@@ -52,6 +56,7 @@ private:
     void LoadPopulations();
     void SetupControlGroups();
     void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5);
+    void UpdateReferer(TReferer *ref, int AsResult, int NtResult);
 
     TFile FDataFile;
 };

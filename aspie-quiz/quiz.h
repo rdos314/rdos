@@ -159,6 +159,9 @@ public:
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 
 	virtual void WriteIQ(const char *filename);
+	virtual void WriteHair(const char *filename);
+	virtual void WriteEye(const char *filename);
+    virtual void WriteRace(const char *filename);
 
 	void CheckCross();
 
@@ -253,6 +256,12 @@ protected:
     TReferer PARef;
     TReferer DysgraphiaRef;
     TReferer BipolarRef;
+    TReferer AmerindianRef;
+    TReferer BlackRef;
+    TReferer HispanicRef;
+    TReferer WhiteRef;
+    TReferer ArabRef;
+    TReferer AsianRef;
 
     TQuiz *CrossQuiz[MAX_CROSS];
 
