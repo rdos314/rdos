@@ -797,13 +797,13 @@ void TQuiz6::LoadReferers()
 		if (Row.Ancestry == 3)
 			UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Ancestry == 5 && Row.Hair >= 6 && Row.Eye >= 4)
+		if (Row.Ancestry == 5 && Row.Hair >= 7 && Row.Eye >= 5)
 			UpdateReferer(&BlackRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry == 6)
 			UpdateReferer(&HispanicRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Ancestry >= 1000 && Row.Ancestry < 2000 && Row.Hair >= 6 && Row.Eye >= 4)
+		if (Row.Ancestry >= 1000 && Row.Ancestry < 2000 && Row.Hair >= 7 && Row.Eye >= 5)
 			UpdateReferer(&BlackRef, Row.AsResult, Row.NtResult);
 
 		if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
@@ -1391,8 +1391,8 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

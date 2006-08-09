@@ -37,6 +37,8 @@
 #define ENGLISH
 #endif
 
+//#define USE_PERCENT     1     // write correlations in % variance explained
+
 #define MAX_GROUP_COUNT         15
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
@@ -202,6 +204,7 @@ protected:
     void WriteStaple(TFile &File, TPopulation *pop, int Question);
     void WriteCI95(TFile &File, TPopulation *pop, int Question);
 	void WriteCorr95(TFile &File, long double corr, int count);
+    void WritePca(TFile &File, long double pca);
 	void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
 

@@ -1800,6 +1800,7 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
                 File.Write("-----");
             else
             {
+#ifdef USE_PERCENT
                 ival = round(100.0 * rlow * rlow);
 		        sprintf(str, "%d", ival);
 		        File.Write(str);
@@ -1809,16 +1810,60 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
 		        File.Write(str);
 			
     			File.Write("%");
+#else
+                if (rlow <= 0.0)
+                {
+                    File.Write("-");
+                    rlow = -rlow;
+                    rhigh = -rhigh;
+                }
+                
+                ival = round(100 * rlow);
+		        sprintf(str, ".%02d", ival);
+		        File.Write(str);
+
+        		ival = round(100.0 * rhigh);
+	        	sprintf(str, "-.%02d", ival);
+		        File.Write(str);
+#endif
 	    	}
 	    }
 	    else
+#ifdef USE_PERCENT
             File.Write("100%");
+#else
+            File.Write("1.00");
+#endif
     }
     else
 	    File.Write(" ");
 
     File.Write("</span>\n");
         
+}
+
+/*##################  TQuiz::WritePca ##########################
+*   Purpose....: Write PCA loading                    	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePca(TFile &File, long double pca)
+{
+    int ival;
+    char str[40];
+
+    if (pca < 0.0)
+    {
+	    pca = -pca;
+	    File.Write("-");
+    }
+    
+	ival = round(100.0 * pca);
+			        
+    sprintf(str, ".%02d", ival);
+	File.Write(str);
 }
 
 /*##################  TQuiz::WriteSumaryTable ##########################
@@ -1969,23 +2014,15 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
     		if (UseGender && !OnlyMixed)
 	    	{
 		    	WriteCenteredFieldHeader(file, 6);
-			    ival = round(100.0 * Quiz[i].MalePca[0]);
-    			sprintf(str, "%d%", ival);
-	    		file.Write(str);
+			    WritePca(file, Quiz[i].MalePca[0]);
 		    	file.Write("<br>");
-			    ival = round(100.0 * Quiz[i].FemalePca[0]);
-				sprintf(str, "%d%", ival);
-	    		file.Write(str);
+			    WritePca(file, Quiz[i].FemalePca[0]);
 		    	WriteFieldFooter(file);
 
        			WriteCenteredFieldHeader(file, 6);
-	    		ival = round(100.0 * Quiz[i].MalePca[1]);
-		    	sprintf(str, "%d%", ival);
-			    file.Write(str);
+	    	    WritePca(file, Quiz[i].MalePca[1]);
     			file.Write("<br>");
-	    		ival = round(100.0 * Quiz[i].FemalePca[1]);
-		    	sprintf(str, "%d%", ival);
-			    file.Write(str);
+	    		WritePca(file, Quiz[i].FemalePca[1]);
     			WriteFieldFooter(file);
 
     			WriteCenteredFieldHeader(file, 6);
@@ -2024,24 +2061,18 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 		    {
     			WriteCenteredFieldHeader(file, 6);
 	    		if (OnlyMixed)
-				    ival = round(100.0 * Quiz[i].MixedPca[0]);
+				    WritePca(file, Quiz[i].MixedPca[0]);
 	    		else
-		    		ival = round(100.0 * Quiz[i].Pca[0]);
-
-		    	sprintf(str, "%d%", ival);
-			    file.Write(str);
+		    		WritePca(file, Quiz[i].Pca[0]);
 				WriteFieldFooter(file);
     
-
         	    if (GetPcaCount() > 1)
         	    {
     	    		WriteCenteredFieldHeader(file, 6);
 	    	    	if (OnlyMixed)
-	        			ival = round(100.0 * Quiz[i].MixedPca[1]);
+	        			WritePca(file, Quiz[i].MixedPca[1]);
 			        else
-    			    	ival = round(100.0 * Quiz[i].Pca[1]);
-    	    		sprintf(str, "%d%", ival);
-	    	    	file.Write(str);
+    			    	WritePca(file, Quiz[i].Pca[1]);
 		    	    WriteFieldFooter(file);
 		    	}
 
@@ -2049,11 +2080,9 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
         	    {
     	    		WriteCenteredFieldHeader(file, 6);
 	    	    	if (OnlyMixed)
-	        			ival = round(100.0 * Quiz[i].MixedPca[2]);
+	        			WritePca(file, Quiz[i].MixedPca[2]);
 			        else
-    			    	ival = round(100.0 * Quiz[i].Pca[2]);
-    	    		sprintf(str, "%d%", ival);
-	    	    	file.Write(str);
+    			    	WritePca(file, Quiz[i].Pca[2]);
 		    	    WriteFieldFooter(file);
 		    	}
 
@@ -2714,10 +2743,22 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 						NormCorr[cross] = val;
 				}       
 				NormCorr[cross] = 0.9 * NormCorr[cross]; 
-				    
+
+#ifdef USE_PERCENT  
 				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
+#else
+				ival = round(100.0 * quiz->Quiz[q].Corr);
+				if (ival < 0)
+				{
+				    file.Write("-");
+				    ival = -ival;
+				}
+				
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+#endif
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
@@ -2763,6 +2804,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 							if (corrval < 0.0)
 								file.Write("<span style='color:#990099'>");
 
+#ifdef USE_PERCENT
 							ival = round(100.0 * low * low);
 							sprintf(str, "%d", ival);
 							file.Write(str);
@@ -2770,6 +2812,22 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 							ival = round(100.0 * high * high);
 							sprintf(str, "-%d%", ival);
 							file.Write(str);
+#else
+                            if (low <= 0.0)
+                            {
+                                file.Write("-");
+                                low = -low;
+                                high = -high;
+                            }
+                
+                            ival = round(100 * low);
+            		        sprintf(str, ".%02d", ival);
+		                    file.Write(str);
+
+                    		ival = round(100.0 * high);
+	                    	sprintf(str, "-.%02d", ival);
+            		        file.Write(str);
+#endif
 
 							if (val > NormCorr[cross] || corrval < 0.0)
 								 file.Write("</span>");
@@ -2930,10 +2988,22 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 						NormCorr[cross] = val;
 				}       
 				NormCorr[cross] = 0.9 * NormCorr[cross]; 
-				    
+
+#ifdef USE_PERCENT  
 				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
 				sprintf(str, "%d%", ival);
 				file.Write(str);
+#else
+				ival = round(100.0 * quiz->Quiz[q].Corr);
+				if (ival < 0)
+				{
+				    file.Write("-");
+				    ival = -ival;
+				}
+				
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+#endif
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
@@ -2949,9 +3019,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             while (quiz)
 			{
-				ival = round(100.0 * quiz->Quiz[q].Pca[0]);
-				sprintf(str, "%d%", ival);
-				file.Write(str);
+				WritePca(file, quiz->Quiz[q].Pca[0]);
 
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				if (quiz)
@@ -2968,11 +3036,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 			while (quiz)
 			{
                 if (GetPcaCount() > 1)
-                {
-    				ival = round(100.0 * quiz->Quiz[q].Pca[1]);
-	    			sprintf(str, "%d%", ival);
-		    		file.Write(str);
-		        }
+    				WritePca(file, quiz->Quiz[q].Pca[1]);
 
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				if (quiz)
@@ -2989,11 +3053,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 			while (quiz)
 			{
 			    if (quiz->GetPcaCount() > 2)
-			    {
-    				ival = round(100.0 * quiz->Quiz[q].Pca[2]);
-	    			sprintf(str, "%d%", ival);
-		    		file.Write(str);
-		        }
+    				WritePca(file, quiz->Quiz[q].Pca[2]);
 
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				if (quiz)
@@ -3010,11 +3070,7 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 			while (quiz)
 			{
 			    if (quiz->GetPcaCount() > 3)
-			    {
-    				ival = round(100.0 * quiz->Quiz[q].Pca[3]);
-	    			sprintf(str, "%d%", ival);
-		    		file.Write(str);
-		        }
+    				WritePca(file, quiz->Quiz[q].Pca[3]);
 
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				if (quiz)
