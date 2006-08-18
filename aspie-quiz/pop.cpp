@@ -90,7 +90,7 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int As, char Arr[MAX_QUESTIONS])
+void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS])
 {
 	 int val;
 	 int i;
@@ -115,6 +115,8 @@ void TPopulation::Add(int As, char Arr[MAX_QUESTIONS])
 	 }
 
 	 ValArr[ValueCount].As = As;
+	 ValArr[ValueCount].AsScore = AsScore;
+	 ValArr[ValueCount].NtScore = NtScore;
 	 for (i = 0; i < N; i++)
 	 {
 		val = Arr[i];

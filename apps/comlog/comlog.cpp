@@ -9,6 +9,33 @@
 #include "str.h"
 #include "path.h"
 
+#define MAX_FILE_SIZE   0x400000 // 4 MB
+
+/*################## GetFile ##########################
+*   Purpose....: Get a new file     	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TFile *GetFile()
+{
+	int num;
+	int handle;
+	char FileName[40];
+
+	for (num = 0; num < 10000; num++)
+	{
+		sprintf(FileName, "d:\\log\\raw%04d.dat", num);
+		handle = RdosOpenFile(FileName, 0);
+		if (handle)
+			RdosCloseFile(handle);
+		else
+			break;
+	}
+	return new TFile(FileName, 0);
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -25,7 +52,6 @@ void cdecl main()
 	TWaitDevice *WaitDevice;
 	TWait Wait;
 	TKeyboardDevice Keyboard;
-	int num;
 
 	TSerialDevice Port1(1, 9600, 'O', 8, 1);
 	TSerialDevice Port2(4, 9600, 'O', 8, 1);
@@ -37,24 +63,7 @@ void cdecl main()
 	Wait.Add(&Port2);
 	Wait.Add(&Keyboard);
 
-	int handle;
-	char FileName[40];
-
-	for (num = 0; num < 100; num++)
-	{
-		sprintf(FileName, "d:\\log\\raw%03d.dat", num);
-		handle = RdosOpenFile(FileName, 0);
-		if (handle)
-			RdosCloseFile(handle);
-		else
-			break;
-	}
-	TFile *File = new TFile(FileName, 0);
-
-//	TFile *CbusFile = new TFile("z:\\cbus.dat", 0);
-//	TFile *BarFile = new TFile("z:\\bar.dat", 0);
-//	TFile *File = new TFile("z:\\raw.dat", 0);
-//	TFile *File = new TFile("z:\\device.dat", 0);
+	TFile *File = GetFile();
 
 	for (;;)
 	{
@@ -93,6 +102,11 @@ void cdecl main()
 		Str[3] = ' ';
 		Str[4] = 0;
 		RdosWriteString(Str);
+
+		if (File->GetSize() > MAX_FILE_SIZE)
+		{
+		    delete File;
+		    File = GetFile();
+		}
 	}
 }
-

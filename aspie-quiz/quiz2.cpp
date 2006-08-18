@@ -184,7 +184,7 @@ void TQuizII::SetupTexts()
 	Quiz[44].MyGroup = GROUP_SOCIAL;
 	Quiz[45].MyGroup = GROUP_SOCIAL;
 	Quiz[46].MyGroup = GROUP_MIXED;
-	Quiz[47].MyGroup = GROUP_MIXED;
+	Quiz[47].MyGroup = GROUP_NONVERBAL;
 	Quiz[48].MyGroup = GROUP_NONVERBAL;
 	Quiz[49].MyGroup = GROUP_NONVERBAL;
 	Quiz[50].MyGroup = GROUP_SOCIAL;
@@ -226,7 +226,7 @@ void TQuizII::SetupTexts()
 	Quiz[86].MyGroup = GROUP_MIXED;
 	Quiz[87].MyGroup = GROUP_MIXED;
 	Quiz[88].MyGroup = GROUP_REPETITION;
-	Quiz[89].MyGroup = GROUP_MIXED;
+	Quiz[89].MyGroup = GROUP_NT_RELATION;
 	Quiz[90].MyGroup = GROUP_MIXED;
 	Quiz[91].MyGroup = GROUP_ABILITY;
 	Quiz[92].MyGroup = GROUP_MIXED;
@@ -637,36 +637,41 @@ void TQuizII::LoadPopulations()
 			 case SELF_AS:
 					aspie = TRUE;
 					 if (Row.AsResult < 100)
-						  LowAs.Add(aspie, Row.Quiz);
+						  LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 				if (Row.Gender == 1)
-					AsMale.Add(aspie, Row.Quiz);
+					AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					else
-					 AsFemale.Add(aspie, Row.Quiz);
+					 AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 				  if (Row.Diagnos == DX_AS)
-					  As.Add(aspie, Row.Quiz);
+					  As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				break;
 
 			case DX_ADD:
 			case SELF_ADD:
-				 Add.Add(aspie, Row.Quiz);
+				 Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				if (Row.Gender == 1)
-					AddMale.Add(aspie, Row.Quiz);
+					AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				else
-					AddFemale.Add(aspie, Row.Quiz);
+					AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				break;
+
+			case DX_TS:
+			case SELF_TS:
+				Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				break;
 		}
 
-		All.Add(aspie, Row.Quiz);
+		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			 Mix.Add(aspie, Row.Quiz);
+			 Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				MixMale.Add(aspie, Row.Quiz);
+				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
-				MixFemale.Add(aspie, Row.Quiz);
+				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 		else
 		{
@@ -676,20 +681,20 @@ void TQuizII::LoadPopulations()
 			{
 				if (ref->NT && Row.Diagnos == NO_DX)
 				{
-					 Nt.Add(aspie, Row.Quiz);
+					 Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					if (Row.Gender == 1)
-						NtMale.Add(aspie, Row.Quiz);
+						NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					else
-						NtFemale.Add(aspie, Row.Quiz);
+						NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				}
 
 				if (ref->Aspie)
 				{
-					 Aspie.Add(aspie, Row.Quiz);
+					 Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					if (Row.Gender == 1)
-						AspieMale.Add(aspie, Row.Quiz);
+						AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					else
-						AspieFemale.Add(aspie, Row.Quiz);
+						AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				}
 			}
 		}
@@ -794,7 +799,7 @@ void TQuizII::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-		    pop->Add(FALSE, Row.Quiz);
+		    pop->Add(Row.AsResult, Row.NtResult, FALSE, Row.Quiz);
 }
 
 /*##################  IsPca ##########################

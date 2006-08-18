@@ -187,9 +187,9 @@ void TQuizI::SetupTexts()
 	Quiz[65].MyGroup = GROUP_SOCIAL;
 	Quiz[66].MyGroup = GROUP_INTROVERT;
 	Quiz[67].MyGroup = GROUP_INTROVERT;
-	Quiz[68].MyGroup = GROUP_INTROVERT;
+	Quiz[68].MyGroup = GROUP_SOCIAL;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
-	Quiz[70].MyGroup = GROUP_INTROVERT;
+	Quiz[70].MyGroup = GROUP_SOCIAL;
 	Quiz[71].MyGroup = GROUP_SOCIAL;
 	Quiz[72].MyGroup = GROUP_SOCIAL;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
@@ -617,28 +617,28 @@ void TQuizI::LoadPopulations()
 			case DX_AS:
 				aspie = TRUE;
 				 if (Row.ResultNow < 100)
-					  LowAs.Add(aspie, ValArr);
+					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 
-				  As.Add(aspie, ValArr);
+				  As.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				if (Row.Gender == 1)
-					AsMale.Add(aspie, ValArr);
+					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				else
-					AsFemale.Add(aspie, ValArr);
+					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				break;
 
 			case DX_ADD:
-				  Add.Add(aspie, ValArr);
+				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				if (Row.Gender == 1)
-					AddMale.Add(aspie, ValArr);
+					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				else
-					AddFemale.Add(aspie, ValArr);
+					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 				break;
 		}
 
-		All.Add(aspie, ValArr);
+		All.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 
 		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
-			 Mix.Add(aspie, ValArr);
+			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 		else
 		{
 			ref = FindReferer(Row.Referer);
@@ -646,10 +646,10 @@ void TQuizI::LoadPopulations()
 			if (ref)
 			{
 				if (ref->NT)
-					Nt.Add(aspie, ValArr);
+					Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 
 				if (ref->Aspie)
-					Aspie.Add(aspie, ValArr);
+					Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 			}
 		}
 	}
@@ -741,7 +741,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 					ValArr[i] = Row.Before[i] + 1;
 				else
 					ValArr[i] = Row.Now[i] + 1;
-				pop->Add(FALSE, ValArr);
+				pop->Add(Row.ResultNow, 200 - Row.ResultNow, FALSE, ValArr);
 			}
 		}
 	}

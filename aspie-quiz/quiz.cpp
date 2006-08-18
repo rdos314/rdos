@@ -65,6 +65,20 @@ TQuiz::TQuiz(int Questions)
 	 Nt(Questions),
 	 NtMale(Questions),
 	 NtFemale(Questions),
+	 Ts(Questions),
+	 Hyperlexia(Questions),
+	 Dyspraxia(Questions),
+	 Dyslexia(Questions),
+	 Dyscalculia(Questions),
+	 OCD(Questions),
+	 ODD(Questions),
+	 Synaesthesia(Questions),
+	 PA(Questions),
+	 Dysgraphia(Questions),
+	 Bipolar(Questions),
+	 Schizophrenia(Questions),
+	 LowIQ(Questions),
+	 HighIQ(Questions),
 	 NoRef("", "No referrer"),
      NTRef("", "NT control group"),
      AspieRef("", "Aspie control group"),
@@ -89,7 +103,10 @@ TQuiz::TQuiz(int Questions)
 	 DysgraphiaRef("", "Dysgraphia"),
 	 BipolarRef("", "Bipolar"),
 	 AmerindianRef("", "Native American"),
-	 BlackRef("", "African"),
+	 AfroAmericanRef("", "Afroamerican"),
+	 MixedAfroAmericanRef("", "Mixed American"),
+	 AfricanRef("", "African"),
+	 MixedAfricanRef("", "Mixed African"),
 	 HispanicRef("", "Hispanic"),
 	 WhiteRef("", "European"),
 	 ArabRef("", "Middle East & North African"),
@@ -806,6 +823,79 @@ void TQuiz::DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion)
 {
     Quiz[MyQuestion].CrossQuiz = quiz;
     Quiz[MyQuestion].CrossInd = CrossQuestion;
+}
+
+/*##################  TQuiz::GetPop ##########################
+*   Purpose....: Get population from type                 	      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TPopulation *TQuiz::GetPop(int PopType)
+{
+    switch (PopType)
+    {
+	    case POP_TYPE_ALL:
+			return &All;
+
+	    case POP_TYPE_AS:
+			return &As;
+
+		case POP_TYPE_ASPIE:
+			return &Aspie;
+
+		case POP_TYPE_ADD:
+			return &Add;
+
+		case POP_TYPE_NT:
+			return &Nt;
+
+		case POP_TYPE_HYPERLEXIA:
+			return &Hyperlexia;
+
+		case POP_TYPE_DYSPRAXIA:
+			return &Dyspraxia;
+
+		case POP_TYPE_DYSLEXIA:
+			return &Dyslexia;
+
+		case POP_TYPE_DYSCALCULIA:
+			return &Dyscalculia;
+
+		case POP_TYPE_OCD:
+			return &OCD;
+
+		case POP_TYPE_ODD:
+			return &ODD;
+
+		case POP_TYPE_SYNAESTHESIA:
+			return &Synaesthesia;
+
+		case POP_TYPE_PA:
+			return &PA;
+
+		case POP_TYPE_DYSGRAPHIA:
+			return &Dysgraphia;
+
+		case POP_TYPE_BIPOLAR:
+			return &Bipolar;
+
+		case POP_TYPE_TS:
+			return &Ts;
+
+		case POP_TYPE_SCHIZOPHRENIA:
+			return &Schizophrenia;
+
+		case POP_TYPE_LOW_IQ:
+			return &LowIQ;
+
+		case POP_TYPE_HIGH_IQ:
+			return &HighIQ;
+
+		default:
+			return 0;
+	}
 }
 
 /*##################  TQuiz::ClearUsed ##########################
@@ -1651,17 +1741,20 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &PARef);
 	WriteReferer(file, &DysgraphiaRef);
 	WriteReferer(file, &BipolarRef);
-	WriteReferer(file, &AmerindianRef);
-	WriteReferer(file, &BlackRef);
-	WriteReferer(file, &HispanicRef);
 	WriteReferer(file, &WhiteRef);
-	WriteReferer(file, &ArabRef);
 	WriteReferer(file, &AsianRef);
+	WriteReferer(file, &AmerindianRef);
+	WriteReferer(file, &MixedAfroAmericanRef);
+	WriteReferer(file, &AfroAmericanRef);
+	WriteReferer(file, &HispanicRef);
+	WriteReferer(file, &MixedAfricanRef);
+	WriteReferer(file, &AfricanRef);
+	WriteReferer(file, &ArabRef);
 	WriteReferer(file, &NTRef);
 	WriteReferer(file, &NoRef);
 
 	for (i = 0; i < RefCount; i++)
-		if (RefArr[i]->Count >= 0) // change later!
+		if (RefArr[i]->Count >= 10) // change later!
     		WriteReferer(file, RefArr[i]);
 
 	file.Write("</table>");
@@ -1864,6 +1957,142 @@ void TQuiz::WritePca(TFile &File, long double pca)
 			        
     sprintf(str, ".%02d", ival);
 	File.Write(str);
+}
+
+/*##################  TQuiz::WritePcaPopCorr ##########################
+*   Purpose....: Write PCA-population correlation      	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
+{
+    TPopulation *pop;
+    long double val;
+    long double aw;
+    long double nw;
+    int question;
+    long double mean[MAX_QUESTIONS];
+    long double pca[MAX_QUESTIONS];
+    long double PopMean;
+    long double PcaMean;
+    long double PopSd;
+    long double PcaSd;
+    long double sum;
+    long double zx;
+    long double zy;
+    long double count;
+    int ival;
+	char str[80];
+
+    pop = quiz->GetPop(PopType);
+
+	count = (long double)quiz->N;
+
+    for (question = 0; question < quiz->N; question++)
+    {
+        val = quiz->All.GetMean(question);
+        mean[question] = pop->GetMean(question) - val;
+
+        switch (PcaNr)
+        {
+            case -1:
+                aw = quiz->Quiz[question].Pca[0];
+                nw = quiz->Quiz[question].Pca[1];
+                val = aw - nw;
+                break;
+                
+            case 0:
+                aw = quiz->Quiz[question].Pca[0];
+                nw = quiz->Quiz[question].Pca[1];
+
+                if (aw > 0.0 && nw > 0.0)
+                {
+                    if (aw > nw)
+                        val = aw - nw;
+                    else
+                        val = 0.0;
+                }
+                else
+                    val = aw;
+                break;
+                
+            case 1:
+                aw = quiz->Quiz[question].Pca[0];
+                nw = quiz->Quiz[question].Pca[1];
+
+                if (aw > 0.0 && nw > 0.0)
+                {
+                    if (aw > nw)
+                        val = 0.0;
+                    else
+                        val = nw - aw;
+                }
+                else
+                    val = nw;
+                break;
+
+            default:                
+                val = quiz->Quiz[question].Pca[PcaNr];
+                break;
+        }
+        pca[question] = val;
+    }
+
+    sum = 0.0;
+    for (question = 0; question < quiz->N; question++)
+        sum += mean[question];
+
+    PopMean = sum / count;
+
+    sum = 0.0;
+    for (question = 0; question < quiz->N; question++)
+        sum += pca[question];
+
+    PcaMean = sum / count;
+
+    sum = 0.0;
+    for (question = 0; question < quiz->N; question++)
+    {
+        val = mean[question] - PopMean;
+        sum += val * val;
+    }
+    PopSd = sqrtl(sum / (count - 1.0));
+
+    sum = 0.0;
+    for (question = 0; question < quiz->N; question++)
+    {
+        val = pca[question] - PcaMean;
+        sum += val * val;
+    }
+    PcaSd = sqrtl(sum / (count - 1.0));
+
+    sum = 0.0;
+    for (question = 0; question < quiz->N; question++)
+    {
+        zx = (mean[question] - PopMean) / PopSd;
+        zy = (pca[question] - PcaMean) / PcaSd;
+        sum += zx * zy;
+    }
+
+    val = sum / (count - 1.0);       
+
+#ifdef USE_PERCENT
+    ival = quiz->round(100.0 * val * val);
+    sprintf(str, "%d%", ival);
+    File.Write(str);
+#else
+    if (val <= 0.0)
+    {
+        File.Write("-");
+        val = -val;
+    }
+                
+	ival = quiz->round(100 * val);
+    sprintf(str, ".%02d", ival);
+    File.Write(str);
+#endif
 }
 
 /*##################  TQuiz::WriteSumaryTable ##########################
@@ -3087,6 +3316,321 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 	file.Write("</table>");
 }
 
+/*##################  TQuiz::WritePcaCorrRow ##########################
+*   Purpose....: Write Pca correlation row	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
+{
+    int pca;
+	int q;
+    int count;
+    TQuiz *quiz;
+    TQuiz *QuizArr[MAX_CROSS + 1];
+    int rows;
+    int ok;
+
+	File.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(File, 25);
+	File.Write(comment);
+	WriteFieldFooter(File);
+
+    rows = 0;
+    for (q = 1; q < MAX_CROSS; q++)
+    {
+        quiz = CrossQuiz[q];
+
+        if (quiz)
+        {
+            switch (PopType)
+            {
+                case POP_TYPE_AS:
+                    ok = quiz->As.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_ASPIE:
+                    ok = quiz->Aspie.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_ADD:
+                    ok = quiz->Add.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_NT:
+                    ok = quiz->Nt.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_HYPERLEXIA:
+                    ok = quiz->Hyperlexia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_DYSPRAXIA:
+                    ok = quiz->Dyspraxia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_DYSLEXIA:
+                    ok = quiz->Dyslexia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_DYSCALCULIA:
+                    ok = quiz->Dyscalculia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_OCD:
+                    ok = quiz->OCD.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_ODD:
+                    ok = quiz->ODD.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_SYNAESTHESIA:
+                    ok = quiz->Synaesthesia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_PA:
+                    ok = quiz->PA.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_DYSGRAPHIA:
+                    ok = quiz->Dysgraphia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_BIPOLAR:
+                    ok = quiz->Bipolar.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_TS:
+                    ok = quiz->Ts.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_SCHIZOPHRENIA:
+                    ok = quiz->Schizophrenia.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_LOW_IQ:
+                    ok = quiz->LowIQ.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_HIGH_IQ:
+                    ok = quiz->HighIQ.ValueCount > 5;
+                    break;
+
+                default:
+                    ok = FALSE;
+                    break;
+            }
+
+            if (ok)
+            {
+                QuizArr[rows] = quiz;
+                rows++;
+            }
+        }
+    }
+
+    switch (PopType)
+    {
+        case POP_TYPE_AS:
+            ok = As.ValueCount > 5;
+            break;
+
+        case POP_TYPE_ASPIE:
+            ok = Aspie.ValueCount > 5;
+            break;
+
+        case POP_TYPE_ADD:
+            ok = Add.ValueCount > 5;
+            break;
+
+        case POP_TYPE_NT:
+            ok = Nt.ValueCount > 5;
+            break;
+
+        case POP_TYPE_HYPERLEXIA:
+            ok = Hyperlexia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_DYSPRAXIA:
+            ok = Dyspraxia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_DYSLEXIA:
+            ok = Dyslexia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_DYSCALCULIA:
+            ok = Dyscalculia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_OCD:
+            ok = OCD.ValueCount > 5;
+            break;
+
+        case POP_TYPE_ODD:
+            ok = ODD.ValueCount > 5;
+            break;
+
+        case POP_TYPE_SYNAESTHESIA:
+            ok = Synaesthesia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_PA:
+            ok = PA.ValueCount > 5;
+            break;
+
+        case POP_TYPE_DYSGRAPHIA:
+            ok = Dysgraphia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_BIPOLAR:
+            ok = Bipolar.ValueCount > 5;
+            break;
+
+        case POP_TYPE_TS:
+            ok = Ts.ValueCount > 5;
+            break;
+
+        case POP_TYPE_SCHIZOPHRENIA:
+            ok = Schizophrenia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_LOW_IQ:
+            ok = LowIQ.ValueCount > 5;
+            break;
+
+        case POP_TYPE_HIGH_IQ:
+            ok = HighIQ.ValueCount > 5;
+            break;
+
+        default:
+            ok = FALSE;
+    }
+
+    if (ok)
+    {
+        QuizArr[rows] = this;
+        rows++;
+    }
+
+	WriteCenteredFieldHeader(File, 10);
+
+	for (q = 0; q < rows; q++)
+	{
+        if (q)
+			File.Write("<br>");
+            		
+		QuizArr[q]->WriteName(File);
+    }
+	WriteFieldFooter(File);
+                        
+	for (pca = -1; pca < 4; pca++)
+	{
+		count = 0;
+
+		WriteCenteredFieldHeader(File, 3);
+
+		for (q = 0; q < rows; q++)
+		{
+            if (q)
+				File.Write("<br>");
+            		
+			quiz = QuizArr[q];
+
+			if (quiz->GetPcaCount() > pca)
+				WritePcaPopCorr(File, quiz, PopType, pca);
+		}
+
+		WriteFieldFooter(File);
+
+	}
+
+	File.Write("</tr>");
+}
+
+/*##################  TQuiz::WritePcaCorrTable ##########################
+*   Purpose....: Write Pca correlation table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePcaCorrTable(const char *filename)
+{
+    int i;
+	int q;
+    int count;
+    TQuiz *quiz;
+	TFile file(filename, 0);
+
+#ifdef ENGLISH
+    file.Write("<h2>Principal components analysis (PCA) correlates with psychiatric diagnosis</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Principal components analys (PCA) korrelationer med psykiatriska diagnoser</h2>\n");
+#endif
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+	file.Write("<tr style='height:24.75pt'>");
+
+    WriteCenteredFieldHeader(file, 25);
+	file.Write("Condition");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 10);
+	file.Write("Quiz");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("Quiz scoring (Hn - Hs)");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("Hn loading");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("Hs loading");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("G loading");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 3);
+	file.Write("Introvert");
+    WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+	WritePcaCorrRow(file, "Diagnosed AS", POP_TYPE_AS);
+	WritePcaCorrRow(file, "Aspie", POP_TYPE_ASPIE);
+	WritePcaCorrRow(file, "ADD/ADHD", POP_TYPE_ADD);
+	WritePcaCorrRow(file, "Tourette", POP_TYPE_TS);
+	WritePcaCorrRow(file, "Hyperlexia", POP_TYPE_HYPERLEXIA);
+	WritePcaCorrRow(file, "Dyspraxia", POP_TYPE_DYSPRAXIA);
+	WritePcaCorrRow(file, "Dyslexia", POP_TYPE_DYSLEXIA);
+	WritePcaCorrRow(file, "Dyscalculia", POP_TYPE_DYSCALCULIA);
+	WritePcaCorrRow(file, "OCD", POP_TYPE_OCD);
+	WritePcaCorrRow(file, "ODD", POP_TYPE_ODD);
+	WritePcaCorrRow(file, "Synaesthesia", POP_TYPE_SYNAESTHESIA);
+	WritePcaCorrRow(file, "Prosapagnosia", POP_TYPE_PA);
+	WritePcaCorrRow(file, "Dysgraphia", POP_TYPE_DYSGRAPHIA);
+	WritePcaCorrRow(file, "Bipolar", POP_TYPE_BIPOLAR);
+	WritePcaCorrRow(file, "Schizophrenia", POP_TYPE_SCHIZOPHRENIA);
+	WritePcaCorrRow(file, "NT control", POP_TYPE_NT);
+	WritePcaCorrRow(file, "Low IQ", POP_TYPE_LOW_IQ);
+	WritePcaCorrRow(file, "High IQ", POP_TYPE_HIGH_IQ);
+
+	file.Write("</table>");
+}
+
 /*##################  TQuiz::WriteGroupTable ##########################
 *   Purpose....: Write group - group correlation table	      			      	        #
 *   In params..: *                                                          #
@@ -3499,4 +4043,65 @@ void TQuiz::WritePhpWeighting(const char *filename)
 	file.Write("\r\n");
 	file.Write("  return $nw;\r\n");
 	file.Write("\r\n");
+}
+
+/*##################  TQuiz::ExportHistogram ##########################
+*   Purpose....: Export histogram for score distribution for population       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportHistogram(const char *filename, int PopType, int width)
+{
+    char str[80];
+    int val;
+    int i;
+    int j;
+    int e;
+	int HistAsCount[200];
+	int HistNtCount[200];
+    int HistScore[200];
+	TFile file(filename, 0);
+	TPopulation *pop;
+
+    pop = GetPop(PopType);
+    if (pop == 0)
+        return;
+    
+    for (i = 0; i < 200; i++)
+    {
+        HistAsCount[i] = 0;
+        HistNtCount[i] = 0;
+        HistScore[i] = i * width;
+    }
+
+    for (e = 0; e < pop->ValueCount; e++)
+    {
+        i = pop->ValArr[e].AsScore / width;
+        HistAsCount[i]++;
+
+        i = pop->ValArr[e].NtScore / width;
+        HistNtCount[i]++;        
+	}
+
+	for (i = 0; i < 200; i++)
+	{
+	    j = HistScore[i];
+	    if (j < 200)
+	    {
+	        sprintf(str, "%d\t", j);
+	        file.Write(str);
+
+            val = HistAsCount[i] * 10000;
+            val = val / width / pop->ValueCount;
+	        sprintf(str, "%d\t", val);
+	        file.Write(str);
+
+            val = HistNtCount[i] * 10000;
+            val = val / width / pop->ValueCount;
+	        sprintf(str, "%d\n", val);
+	        file.Write(str);	        
+	    }
+	}
 }

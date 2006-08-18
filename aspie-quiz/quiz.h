@@ -66,6 +66,26 @@
 #define GROUP_INTROVERT         9
 #define GROUP_MIXED             10
 
+#define POP_TYPE_ALL            0
+#define POP_TYPE_AS             1
+#define POP_TYPE_ASPIE          2
+#define POP_TYPE_ADD            3
+#define POP_TYPE_NT             4
+#define POP_TYPE_HYPERLEXIA     5
+#define POP_TYPE_DYSPRAXIA      6
+#define POP_TYPE_DYSLEXIA       7
+#define POP_TYPE_DYSCALCULIA    8
+#define POP_TYPE_OCD            9
+#define POP_TYPE_ODD            10
+#define POP_TYPE_SYNAESTHESIA   11
+#define POP_TYPE_PA             12
+#define POP_TYPE_DYSGRAPHIA     13
+#define POP_TYPE_BIPOLAR        14
+#define POP_TYPE_TS             15
+#define POP_TYPE_SCHIZOPHRENIA  16
+#define POP_TYPE_LOW_IQ         17
+#define POP_TYPE_HIGH_IQ        18
+
 class TQuiz;
 
 struct TQuizGroup
@@ -150,10 +170,13 @@ public:
     void WriteAsNtAll(const char *filename);
 	void WriteGroupCorrTable(const char *filename);
 	void WritePcaLoadTable(const char *filename);
+    void WritePcaCorrTable(const char *filename);
 	void WriteGroupTable(const char *filename, int Cross);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
+
+    void ExportHistogram(const char *filename, int PopType, int Width);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
@@ -179,6 +202,7 @@ protected:
 	virtual void WriteName(TFile &File) = 0;
 	virtual int GetPcaCount();
 
+    TPopulation *GetPop(int PopType);
     void DefineCross(int id, TQuiz *quiz);
     TReferer *FindReferer(char *Referer);
     TReferer *AddReferer(char *Search, char *Ref);
@@ -205,6 +229,8 @@ protected:
     void WriteCI95(TFile &File, TPopulation *pop, int Question);
 	void WriteCorr95(TFile &File, long double corr, int count);
     void WritePca(TFile &File, long double pca);
+    static void WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr);
+    void WritePcaCorrRow(TFile &File, const char *comment, int PopType);
 	void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
 
@@ -232,7 +258,21 @@ protected:
 	TPopulation Nt;
 	TPopulation NtMale;
     TPopulation NtFemale;    
-
+    TPopulation Ts;
+    TPopulation Hyperlexia;
+    TPopulation Dyspraxia;
+    TPopulation Dyslexia;
+    TPopulation Dyscalculia;
+    TPopulation OCD;
+    TPopulation ODD;
+    TPopulation Synaesthesia;
+    TPopulation PA;
+    TPopulation Dysgraphia;
+    TPopulation Bipolar;
+    TPopulation Schizophrenia;
+    TPopulation LowIQ;
+    TPopulation HighIQ;
+    
     int UseNtResult;
     int RefCount;
     TReferer *RefArr[MAX_REFERERS];
@@ -260,7 +300,10 @@ protected:
     TReferer DysgraphiaRef;
     TReferer BipolarRef;
     TReferer AmerindianRef;
-    TReferer BlackRef;
+    TReferer MixedAfroAmericanRef;
+    TReferer AfroAmericanRef;
+    TReferer AfricanRef;
+    TReferer MixedAfricanRef;
     TReferer HispanicRef;
     TReferer WhiteRef;
     TReferer ArabRef;

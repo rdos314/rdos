@@ -1229,6 +1229,7 @@ PAGE
 read_drive	Proc near
 	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
+	mov bp,3
 
 read_drive_retry_loop:
 	ClearSignal
@@ -1262,7 +1263,6 @@ read_drive_ide:
 read_drive_start:
 	jc read_drive_fail
 ;
-	mov bp,3
 	mov al,20h
 	mov dx,fs:disc_io_base
     add dx,7
@@ -1338,6 +1338,7 @@ PAGE
 write_drive	Proc near
 	mov ds,fs:disc_ide_sel
 	EnterSection ds:IdeSection
+	mov bp,3
 
 write_drive_retry_loop:
 	ClearSignal
@@ -1371,7 +1372,6 @@ write_drive_ide:
 write_drive_start:
 	jc write_drive_retry
 ;
-	mov bp,3
 	mov al,30h
 	mov dx,fs:disc_io_base
 	add dx,7
@@ -1380,19 +1380,7 @@ write_drive_start:
 write_sector_loop:
     mov dx,fs:disc_io_base
 	call WaitDrq
-
-    jnc write_drive_start_ok
-;
-    int 3
-	mov dx,fs:disc_io_base
-	call CheckStatus
-
-write_drive_start_ok:
-
-
 	jc write_drive_retry
-
-
 ;
 	push cx
 	push esi
@@ -1422,7 +1410,6 @@ write_drive_retry:
 	jnz write_drive_retry_loop
 
 write_drive_fail:
-	int 3
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted

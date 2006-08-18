@@ -272,7 +272,7 @@ void TQuiz5::SetupTexts()
 	Quiz[68].MyGroup = GROUP_SOCIAL;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
 	Quiz[70].MyGroup = GROUP_MIXED;
-	Quiz[71].MyGroup = GROUP_INTROVERT;
+	Quiz[71].MyGroup = GROUP_SOCIAL;
 	Quiz[72].MyGroup = GROUP_MIXED;
 	Quiz[73].MyGroup = GROUP_SOCIAL;
 	Quiz[74].MyGroup = GROUP_SOCIAL;
@@ -302,7 +302,7 @@ void TQuiz5::SetupTexts()
 	Quiz[98].MyGroup = GROUP_MIXED;
 	Quiz[99].MyGroup = GROUP_MIXED;
 	Quiz[100].MyGroup = GROUP_MIXED;
-	Quiz[101].MyGroup = GROUP_MIXED;
+	Quiz[101].MyGroup = GROUP_NONVERBAL;
 	Quiz[102].MyGroup = GROUP_MIXED;
 	Quiz[103].MyGroup = GROUP_MIXED;
 	Quiz[104].MyGroup = GROUP_MIXED;
@@ -712,38 +712,44 @@ void TQuiz5::LoadPopulations()
 		if (Row.Autism || Row.Aspie)
 			aspie = TRUE;
 
-		All.Add(aspie, Row.Quiz);
+		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(aspie, Row.Quiz);
+				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 			if (Row.Gender == 1)
-				AsMale.Add(aspie, Row.Quiz);
+				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
-				AsFemale.Add(aspie, Row.Quiz);
+				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 			if (Row.Autism == 2 || Row.Aspie == 2)
-				As.Add(aspie, Row.Quiz);
+				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-		if (!aspie && Row.ADHD)
+		if (Row.ADHD)
 		{
-			Add.Add(aspie, Row.Quiz);
+			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				AddMale.Add(aspie, Row.Quiz);
+				AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
-				AddFemale.Add(aspie, Row.Quiz);
+				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
+
+		if (Row.IqResult <= 10)
+			LowIQ.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.IQ >= 120)
+			HighIQ.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(aspie, Row.Quiz);
+			Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				MixMale.Add(aspie, Row.Quiz);
+				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
-				MixFemale.Add(aspie, Row.Quiz);
+				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 		else
 		{
@@ -753,11 +759,11 @@ void TQuiz5::LoadPopulations()
 			{
 				if (ref->NT && Row.Autism == 0 && Row.Aspie == 0)
 				{
-					Nt.Add(aspie, Row.Quiz);
+					Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					if (Row.Gender == 1)
-						NtMale.Add(aspie, Row.Quiz);
+						NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 					else
-						NtFemale.Add(aspie, Row.Quiz);
+						NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				}
 
 //                if (!aspie)
@@ -769,11 +775,11 @@ void TQuiz5::LoadPopulations()
 		if (aspie)
 		{
 
-			Aspie.Add(aspie, Row.Quiz);
+			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			if (Row.Gender == 1)
-				AspieMale.Add(aspie, Row.Quiz);
+				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
-				AspieFemale.Add(aspie, Row.Quiz);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 	}
 }
@@ -961,7 +967,7 @@ void TQuiz5::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-		    pop->Add(FALSE, Row.Quiz);
+		    pop->Add(Row.AsResult, Row.NtResult, FALSE, Row.Quiz);
 }
 
 /*##################  IsPca ##########################

@@ -33,6 +33,8 @@
 
 struct TValArr
 {
+    int AsScore;
+    int NtScore;
     int As;
     char Quiz[MAX_QUESTIONS];
 };
@@ -43,7 +45,7 @@ public:
     TPopulation(int questions);
 	~TPopulation();
 
-	void Add(int As, char Arr[MAX_QUESTIONS]);
+	void Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS]);
 
     long double GetMean(int QuestionNr);
     long double GetSd(int QuestionNr);
