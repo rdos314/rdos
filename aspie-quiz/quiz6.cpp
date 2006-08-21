@@ -795,24 +795,25 @@ void TQuiz6::LoadReferers()
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry == 3)
-			UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
+			if (Row.Hair >= 6 && Row.Eye >= 5)
+				UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry == 5)
 		{
-		    if (Row.Hair >= 7 && Row.Eye >= 5)
-    			UpdateReferer(&AfroAmericanRef, Row.AsResult, Row.NtResult);
-    	    else
-    			UpdateReferer(&MixedAfroAmericanRef, Row.AsResult, Row.NtResult);
-    	}
+			if (Row.Hair >= 6 && Row.Eye >= 5)
+				UpdateReferer(&AfroAmericanRef, Row.AsResult, Row.NtResult);
+			else
+				UpdateReferer(&MixedAfroAmericanRef, Row.AsResult, Row.NtResult);
+		}
 
 		if (Row.Ancestry == 6)
 			UpdateReferer(&HispanicRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry >= 1000 && Row.Ancestry < 2000)
-        {
-            if (Row.Hair >= 7 && Row.Eye >= 5)
-			    UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult);
-    	    else
+		{
+			if (Row.Hair >= 6 && Row.Eye >= 5)
+				UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult);
+			else
     			UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult);
     	}
 
@@ -1404,8 +1405,8 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
@@ -1913,12 +1914,12 @@ void TRace::Add(TQuizRow *Row)
 	int index = -1;
 	int diff = Row->AsResult - Row->NtResult;
 
-	if (Row->Ancestry == 3)
+	if (Row->Ancestry == 3 && Row->Hair >= 6 && Row->Eye >= 5)
 		index = 0;      // american indian
 
 	if (Row->Ancestry == 5)
 	{
-	    if (Row->Hair >= 7 && Row->Eye >= 5)
+		if (Row->Hair >= 6 && Row->Eye >= 5)
 	        index = 1;      // african american
 		else
 			index = 2;      // mixed american
@@ -1928,8 +1929,8 @@ void TRace::Add(TQuizRow *Row)
 		index = 3;      // hispanic
 
 	if (Row->Ancestry >= 1000 && Row->Ancestry < 2000)
-    {
-        if (Row->Hair >= 7 && Row->Eye >= 5)
+	{
+		if (Row->Hair >= 6 && Row->Eye >= 5)
     		index = 4;      // black african
         else
             index = 5;      // mixed african
