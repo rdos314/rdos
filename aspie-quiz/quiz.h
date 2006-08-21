@@ -54,14 +54,14 @@
 
 #define GROUP_COUNT             11
 
-#define GROUP_SENSORY           0
-#define GROUP_MOTOR             1
-#define GROUP_NONVERBAL         2
-#define GROUP_ABILITY           3
-#define GROUP_DISABILITY        4
-#define GROUP_REPETITION        5
-#define GROUP_SOCIAL            6
-#define GROUP_NT_RELATION       7
+#define GROUP_ASPIE_BIOLOGY     0
+#define GROUP_NT_BIOLOGY        1
+#define GROUP_ASPIE_TALENT      2
+#define GROUP_NT_TALENT         3
+#define GROUP_ASPIE_SOCIAL      4
+#define GROUP_NT_SOCIAL         5
+#define GROUP_NONVERBAL         6
+#define GROUP_REPETITION        7
 #define GROUP_SEX               8
 #define GROUP_INTROVERT         9
 #define GROUP_MIXED             10
