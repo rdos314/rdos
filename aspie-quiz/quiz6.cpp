@@ -211,13 +211,13 @@ void TQuiz6::SetupTexts()
 	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[5].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[11].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
@@ -330,7 +330,7 @@ void TQuiz6::SetupTexts()
 	Quiz[121].MyGroup = GROUP_SEX;
 	Quiz[122].MyGroup = GROUP_SEX;
 	Quiz[123].MyGroup = GROUP_MIXED;
-	Quiz[124].MyGroup = GROUP_MIXED;
+	Quiz[124].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[125].MyGroup = GROUP_MIXED;
 	Quiz[126].MyGroup = GROUP_MIXED;
 	Quiz[127].MyGroup = GROUP_MIXED;
@@ -745,19 +745,23 @@ void TQuiz6::InitReferers()
 ##########################################################################*/
 void TQuiz6::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
 {
+	int diff;
+
 	ref->Count++;
 	ref->AsResult += AsResult;
 	ref->NtResult += NtResult;
 
-	if (AsResult >= NtResult)
+	diff = AsResult - NtResult;
+
+	if (diff >= 35)
+		ref->ResultAs++;
+	else
 	{
-		if (AsResult - NtResult >= 50)
-			ref->ResultHighAs++;
-		else
-			ref->ResultLowAs++;
-	}
-		else
+		if (diff <= -35)
 			ref->ResultNt++;
+		else
+			ref->ResultMixed++;
+	}
 }
 
 /*##################  TQuiz6::LoadReferers ##########################
@@ -1402,8 +1406,8 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;

@@ -56,8 +56,8 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	Result100_139 = 0;
 	Result140_200 = 0;
 	ResultNt = 0;
-	ResultLowAs = 0;
-	ResultHighAs = 0;
+	ResultMixed = 0;
+	ResultAs = 0;
 
 	NT = FALSE;
 	Aspie = FALSE;

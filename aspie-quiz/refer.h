@@ -47,8 +47,8 @@ public:
 	int Result100_139;
 	int Result140_200;
 	int ResultNt;
-	int ResultLowAs;
-	int ResultHighAs;
+	int ResultMixed;
+	int ResultAs;
 
 	int NT;
 	int Aspie;

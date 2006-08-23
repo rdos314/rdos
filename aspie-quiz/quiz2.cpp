@@ -235,7 +235,7 @@ void TQuizII::SetupTexts()
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[97].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[98].MyGroup = GROUP_MIXED;
+	Quiz[98].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[99].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -481,6 +481,38 @@ void TQuizII::InitReferers()
 	AddReferer("rdos.net/sv", "rdos.net/sv");
 }
 
+/*##########################################################################
+#
+#   Name       : TQuizII::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizII::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
+{
+	int diff;
+
+	ref->Count++;
+	ref->AsResult += AsResult;
+	ref->NtResult += NtResult;
+
+	diff = AsResult - NtResult;
+
+	if (diff >= 35)
+		ref->ResultAs++;
+	else
+	{
+		if (diff <= -35)
+			ref->ResultNt++;
+		else
+			ref->ResultMixed++;
+	}
+}
+
 /*##################  TQuizII::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
@@ -501,25 +533,11 @@ void TQuizII::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 		switch (Row.Diagnos)
 		{
-		    case DX_AS:
+			case DX_AS:
 				ref = &DxAsRef;
 				break;
 
@@ -549,21 +567,7 @@ void TQuizII::LoadReferers()
 		}
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 		switch (Row.Diagnos)
 		{
@@ -581,21 +585,7 @@ void TQuizII::LoadReferers()
 		}
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 	}
 }

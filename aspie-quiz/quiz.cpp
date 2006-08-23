@@ -239,7 +239,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].Name = "NT TALENT";
 	Group[GROUP_ASPIE_SOCIAL].Name = "ASPIE SOCIAL";
 	Group[GROUP_NT_SOCIAL].Name = "NT SOCIAL";
-	Group[GROUP_NONVERBAL].Name = "COMMUNICATION";
+	Group[GROUP_ASPIE_COMM].Name = "ASPIE COMMUNICATION";
+	Group[GROUP_NONVERBAL].Name = "NT COMMUNICATION";
 	Group[GROUP_SEX].Name = "SEXUALITY & GENDER ISSUES";
 	Group[GROUP_REPETITION].Name = "NEED FOR REPETITION & PREDICTABILITY";
 	Group[GROUP_INTROVERT].Name = "INTROVERT-EXTROVERT";
@@ -255,7 +256,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].Name = "NT TALANGER";
 	Group[GROUP_ASPIE_SOCIAL].Name = "ASPIE SOCIAL";
 	Group[GROUP_NT_SOCIAL].Name = "NT SOCIAL";
-	Group[GROUP_NONVERBAL].Name = "KOMMUNIKATION";
+	Group[GROUP_ASPIE_COMM].Name = "ASPIE KOMMUNIKATION";
+	Group[GROUP_NONVERBAL].Name = "NT KOMMUNIKATION";
 	Group[GROUP_SEX].Name = "SEXUALITET & KÖNSROLLER";
 	Group[GROUP_REPETITION].Name = "UPPREPNING, STRUKTUR OCH FÖRUTSÄGBARTHET";
 	Group[GROUP_INTROVERT].Name = "INTROVERT-EXTROVERT";
@@ -761,8 +763,8 @@ void TQuiz::DefineNt(char *Referer)
     		NTRef.NtResult += ref->NtResult;
 	    	NTRef.Count += ref->Count;
     		NTRef.ResultNt += ref->ResultNt;
-	    	NTRef.ResultLowAs += ref->ResultLowAs;
-		    NTRef.ResultHighAs += ref->ResultHighAs;
+	    	NTRef.ResultMixed += ref->ResultMixed;
+		    NTRef.ResultAs += ref->ResultAs;
         }
         else
         {
@@ -797,8 +799,8 @@ void TQuiz::DefineAspie(char *Referer)
     		 AspieRef.NtResult += ref->NtResult;
 	    	 AspieRef.Count += ref->Count;
 		     AspieRef.ResultNt += ref->ResultNt;
-    		 AspieRef.ResultLowAs += ref->ResultLowAs;
-	    	 AspieRef.ResultHighAs += ref->ResultHighAs;
+    		 AspieRef.ResultMixed += ref->ResultMixed;
+	    	 AspieRef.ResultAs += ref->ResultAs;
 		 }
 		 else
 		 {
@@ -1593,12 +1595,12 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	        WriteFieldFooter(file);
     
 	        WriteRightFieldHeader(file, 4);
-    	    sprintf(str, "%d%", round(100.0 * ref->ResultLowAs / ref->Count));
+    	    sprintf(str, "%d%", round(100.0 * ref->ResultMixed / ref->Count));
 	        file.Write(str);
 	        WriteFieldFooter(file);
 
     	    WriteRightFieldHeader(file, 4);
-	        sprintf(str, "%d%", round(100.0 * ref->ResultHighAs / ref->Count));
+	        sprintf(str, "%d%", round(100.0 * ref->ResultAs / ref->Count));
 	        file.Write(str);
 	        WriteFieldFooter(file);
 	    }
@@ -1684,11 +1686,11 @@ void TQuiz::WriteReferers(const char *filename)
 	    WriteFieldFooter(file);
 	      
     	WriteCenteredFieldHeader(file, 4);
-        file.Write("AS 0-50");
+        file.Write("Mixed");
     	WriteFieldFooter(file);
 
     	WriteCenteredFieldHeader(file, 4);
-        file.Write("AS 100-");
+        file.Write("AS");
 	    WriteFieldFooter(file);
 	}
 	else

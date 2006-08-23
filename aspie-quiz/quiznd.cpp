@@ -245,10 +245,10 @@ void TQuizNd::SetupTexts()
 	Quiz[50].MyGroup = GROUP_MIXED;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_MIXED;
-	Quiz[53].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[54].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[55].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[56].MyGroup = GROUP_MIXED;
+	Quiz[53].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[54].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[55].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[56].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[57].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[58].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[59].MyGroup = GROUP_ASPIE_TALENT;
@@ -868,19 +868,23 @@ void TQuizNd::InitReferers()
 ##########################################################################*/
 void TQuizNd::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
 {
+	int diff;
+
 	ref->Count++;
 	ref->AsResult += AsResult;
 	ref->NtResult += NtResult;
 
-	if (AsResult >= NtResult)
+	diff = AsResult - NtResult;
+
+	if (diff >= 35)
+		ref->ResultAs++;
+	else
 	{
-		if (AsResult - NtResult >= 50)
-			ref->ResultHighAs++;
-		else
-			ref->ResultLowAs++;
-	}
-		else
+		if (diff <= -35)
 			ref->ResultNt++;
+		else
+			ref->ResultMixed++;
+	}
 }
 
 /*##################  TQuizNd::LoadReferers ##########################

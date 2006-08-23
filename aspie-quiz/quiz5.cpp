@@ -208,12 +208,12 @@ void TQuiz5::SetupTexts()
 	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[7].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[12].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[12].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[13].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[15].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -579,6 +579,38 @@ void TQuiz5::InitReferers()
 	AddReferer("ufs.fi", "forum.ufs.fi/showthread.php?t=1873");
  }
 
+/*##########################################################################
+#
+#   Name       : TQuiz5::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuiz5::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
+{
+	int diff;
+
+	ref->Count++;
+	ref->AsResult += AsResult;
+	ref->NtResult += NtResult;
+
+	diff = AsResult - NtResult;
+
+	if (diff >= 35)
+		ref->ResultAs++;
+	else
+	{
+		if (diff <= -35)
+			ref->ResultNt++;
+		else
+			ref->ResultMixed++;
+	}
+}
+
 /*##################  TQuiz5::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
@@ -597,23 +629,9 @@ void TQuiz5::LoadReferers()
 		ref = FindReferer(Row.Referer);
 		if (!ref)
 			ref = AddReferer(Row.Referer, Row.Referer);
-        
-		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
 
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+		if (ref)
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 		ref = 0;
 
@@ -630,21 +648,9 @@ void TQuiz5::LoadReferers()
 			ref = &DxAddRef;
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+		ref = 0;
 
 		if (Row.Autism || Row.Aspie)
 		{
@@ -655,21 +661,7 @@ void TQuiz5::LoadReferers()
 		}
 
 		if (ref)
-		{
-			ref->Count++;
-			ref->AsResult += Row.AsResult;
-			ref->NtResult += Row.NtResult;
-
-			if (Row.AsResult >= Row.NtResult)
-			{
-				if (Row.AsResult - Row.NtResult >= 50)
-					ref->ResultHighAs++;
-				else
-					ref->ResultLowAs++;
-			}
-			else
-				ref->ResultNt++;
-		}
+			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
 	}
 }
