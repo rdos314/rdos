@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# ana6.cpp
-# Analyze aspie-quiz 6
+# ana.cpp
+# Analyze aspie-quiz
 #
 ########################################################################*/
 #include <stdio.h>
@@ -31,7 +31,6 @@
 #include <math.h>
 
 #include "file.h"
-#include "quizdb6.h"
 
 #include "quiz1.h"
 #include "quiz2.h"
@@ -39,6 +38,7 @@
 #include "quiznd.h"
 #include "quiz5.h"
 #include "quiz6.h"
+#include "quiz7.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -64,12 +64,14 @@ int main(int argc, char **argv)
 	Quiz[3] = new TQuizNd("quiznd.bin", Quiz[0], Quiz[1], Quiz[2]);
 	Quiz[4] = new TQuiz5("quiz5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3]);
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
+	Quiz[6] = new TQuiz7("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
 
-	Quiz[1]->CheckCross();
-	Quiz[2]->CheckCross();
-	Quiz[3]->CheckCross();
-	Quiz[4]->CheckCross();
-	Quiz[5]->CheckCross();
+//	Quiz[1]->CheckCross();
+//	Quiz[2]->CheckCross();
+//	Quiz[3]->CheckCross();
+//	Quiz[4]->CheckCross();
+//	Quiz[5]->CheckCross();
+	Quiz[6]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -117,8 +119,8 @@ int main(int argc, char **argv)
 	 Quiz[5]->ImportMvsp("male6.txt", PCA_TYPE_MALE);
 	 Quiz[5]->ImportMvsp("female6.txt", PCA_TYPE_FEMALE);
 
-	 Quiz[5]->WritePhpWeighting("weights.php");
-	 Quiz[5]->WriteWeighting("weights.txt");
+	 Quiz[6]->WritePhpWeighting("weights.php");
+	 Quiz[6]->WriteWeighting("weights.txt");
 
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
