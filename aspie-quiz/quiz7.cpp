@@ -93,11 +93,11 @@ public:
 #
 ##########################################################################*/
 TQuiz7::TQuiz7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6)
-  : TQuiz(140),
+  : TQuiz(150),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
-    DefineCross(1, QuizII);
+	DefineCross(1, QuizII);
     DefineCross(2, QuizIII);
     DefineCross(3, QuizNd);
     DefineCross(4, Quiz5);
@@ -205,6 +205,7 @@ void TQuiz7::SetupTexts()
 	Quiz[125].Reverse = TRUE;
 	Quiz[133].Reverse = TRUE;
 	Quiz[135].Reverse = TRUE;
+	Quiz[148].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -346,11 +347,21 @@ void TQuiz7::SetupTexts()
 	Quiz[137].MyGroup = GROUP_MIXED;
 	Quiz[138].MyGroup = GROUP_MIXED;
 	Quiz[139].MyGroup = GROUP_MIXED;
+	Quiz[140].MyGroup = GROUP_MIXED;
+	Quiz[141].MyGroup = GROUP_MIXED;
+	Quiz[142].MyGroup = GROUP_MIXED;
+	Quiz[143].MyGroup = GROUP_MIXED;
+	Quiz[144].MyGroup = GROUP_MIXED;
+	Quiz[145].MyGroup = GROUP_MIXED;
+	Quiz[146].MyGroup = GROUP_MIXED;
+	Quiz[147].MyGroup = GROUP_MIXED;
+	Quiz[148].MyGroup = GROUP_MIXED;
+	Quiz[149].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
 	Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
-	Quiz[1].Text = "Do you squint, or have done so in the past?";
+	Quiz[1].Text = "Do you squint, or have you done so in the past?";
 	Quiz[2].Text = "Do certain phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
 	Quiz[3].Text = "Are you hyper- or hypo-sensitive to heat, cold, wind, humidity etc?";
 	Quiz[4].Text = "Do you have a very acute sense of smell?";
@@ -363,7 +374,7 @@ void TQuiz7::SetupTexts()
 	Quiz[11].Text = "Are you flat-footed?";
 	Quiz[12].Text = "Do you have difficulty catching a ball?";
 	Quiz[13].Text = "Do you have a tendency to drop things?";
-	Quiz[14].Text = "Are you the last one to finish manual tasks?";
+	Quiz[14].Text = "Are you slow to finish manual tasks?";
 	Quiz[15].Text = "Do you have difficulties judging distances, height, depth or speed?";
 	Quiz[16].Text = "Are you accident prone?";
 	Quiz[17].Text = "Do you have difficulty hopping, skipping or riding a bike?";
@@ -379,7 +390,7 @@ void TQuiz7::SetupTexts()
 	Quiz[27].Text = "Do you find it difficult to read written material unless it is very interesting or very easy?";
 	Quiz[28].Text = "Do you find it difficult to take notes in lectures?";
 	Quiz[29].Text = "Do you have trouble reading clocks?";
-	Quiz[30].Text = "Do you fail to carry a number through to the next part of the calculation?";
+	Quiz[30].Text = "Do you have trouble with math?";
 	Quiz[31].Text = "Do you forget where you put things?";
 	Quiz[32].Text = "Do you often make spelling errors?";
 	Quiz[33].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
@@ -410,17 +421,17 @@ void TQuiz7::SetupTexts()
 	Quiz[58].Text = "Is a large social network important for you?";
 	Quiz[59].Text = "Is creating a social identity important for you?";
 	Quiz[60].Text = "Do you prefer romance/drama films to science fiction/documentary films?";
-	Quiz[61].Text = "Do you have an interest for fashions?";
+	Quiz[61].Text = "Do you have an interest in fashion?";
 	Quiz[62].Text = "Is your style and image important to you?";
 	Quiz[63].Text = "Do you enjoy listening to gossip?";
 	Quiz[64].Text = "Do you enjoy the status of a new car/new stereo/new TV?";
 	Quiz[65].Text = "Is other people's image of you important to you?";
 	Quiz[66].Text = "Do you talk to put others at ease even when you really have nothing to say?";
 	Quiz[67].Text = "Do you enjoy make-up?";
-	Quiz[68].Text = "Do you enjoy to wear beads?";
-	Quiz[69].Text = "Do you blink or roll your eyes?";
+	Quiz[68].Text = "Do you enjoy wearing jewelry?";
+	Quiz[69].Text = "Do you roll your eyes?";
 	Quiz[70].Text = "Do you sniff involuntary?";
-	Quiz[71].Text = "Do you thrust your tounge at the wrong occassion?";
+	Quiz[71].Text = "Do you stick your tounge out in inappropriate situations?";
 	Quiz[72].Text = "Do you swear a lot?";
 	Quiz[73].Text = "Do you talk to yourself?";
 	Quiz[74].Text = "In conversations, do you use small sounds that others don't seem to use?";
@@ -430,11 +441,11 @@ void TQuiz7::SetupTexts()
 	Quiz[78].Text = "Can you read between the lines?";
 	Quiz[79].Text = "Do you have an intuitive sense for what is the right thing to do socially?";
 	Quiz[80].Text = "Do others often misunderstand you?";
-	Quiz[81].Text = "Are you often surprised what people's motives are?";
+	Quiz[81].Text = "Are you often surprised when you find out what people's true motives are?";
 	Quiz[82].Text = "Are you usually unaware of social rules & boundaries unless they are clearly spelled out?";
 	Quiz[83].Text = "Do you have problems distinguishing voices from background noise, or from other voices?";
 	Quiz[84].Text = "Do you read people well?";
-	Quiz[85].Text = "Do you forget you are in a social situation when something gets your attention?";
+	Quiz[85].Text = "Do you forget you are in a social situation when something else gets your attention?";
 	Quiz[86].Text = "Can you spot hidden agendas with ease?";
 	Quiz[87].Text = "Is it easy for you to interpret body language?";
 	Quiz[88].Text = "Do you have a monotonous voice and/or difficulty adjusting volume and speed when you talk?";
@@ -455,25 +466,25 @@ void TQuiz7::SetupTexts()
 	Quiz[103].Text= "Are you homosexual or bisexual?";
 	Quiz[104].Text= "Are you a leader?";
 	Quiz[105].Text= "Do you like to speak in public?";
-	Quiz[106].Text= "Are you prepared to do a lot of things for attention?";
+	Quiz[106].Text= "Are you willing to do almost anything to get attention?";
 	Quiz[107].Text= "Are you a better listener than talker?";
-	Quiz[108].Text= "Do you get bored by quietness?";
+	Quiz[108].Text= "Do you get bored by silence and stillness?";
 	Quiz[109].Text= "Do you think before you act?";
 	Quiz[110].Text= "Do you find verbal instructions confusing - - especially several at the same time?";
 	Quiz[111].Text= "Are you easily distracted or overwhelmed?";
 	Quiz[112].Text = "Do you tend to get so absorbed in your projects that you forget everything else?";
 	Quiz[113].Text = "Do you need to do things yourself in order to remember them?";
-	Quiz[114].Text = "Do you need to see or touch things yourself in order to remember them?";
+	Quiz[114].Text = "Do you dislike eye-contact?";
 	Quiz[115].Text = "Have you taken initiative only to find out it was not wanted?";
 	Quiz[116].Text = "Can you keep a healthy balance between what you need to do and treating your associates/guests with due attention?";
 	Quiz[117].Text = "Are you fascinated by dates and/or numbers?";
 	Quiz[118].Text = "Does it feel vitally important to be left undisturbed to persue your special interests?";
 	Quiz[119].Text = "Have you been bullied, abused or taken advantage of in various situations?";
-	Quiz[120].Text = "Do you find it very hard to learn things that you are not interested in?";
+	Quiz[120].Text = "Do you find it very hard to learn things you are not interested in?";
 	Quiz[121].Text = "Do you get surprised and disappointed when people are unfriendly and don't seem to understand or accept you as you are?";
 	Quiz[122].Text = "Do you have a poor concept of time?";
 	Quiz[123].Text = "Do you enjoy having a variety of choices to make each day?";
-	Quiz[124].Text = "Do you get a firm feel for the big picture, before noticing details?";
+	Quiz[124].Text = "Do you get the big picture before noticing details?";
 	Quiz[125].Text = "Are you gracious about criticism, correction and direction?";
 	Quiz[126].Text = "Do you mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
 	Quiz[127].Text = "Do you bounce your leg?";
@@ -481,14 +492,24 @@ void TQuiz7::SetupTexts()
 	Quiz[129].Text = "Do you rock your body?";
 	Quiz[130].Text = "Do you bite your nails?";
 	Quiz[131].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
-	Quiz[132].Text = "Is it easy to cheat on you?";
+	Quiz[132].Text = "Is it, or has it been, easy to cheat you?";
 	Quiz[133].Text = "Do you wear a wrist-watch?";
 	Quiz[134].Text = "Do you have tatoos?";
 	Quiz[135].Text = "Can you whistle?";
 	Quiz[136].Text = "Do you self-injure?";
-	Quiz[137].Text = "Do you sense the feelings of animals?";
+	Quiz[137].Text = "Can you sense the feelings of animals?";
 	Quiz[138].Text = "Do you chew on things?";
-	Quiz[139].Text = "Do you have a lot of body-hair?";
+	Quiz[139].Text = "Do you have more body-hair than others of your gender?";
+	Quiz[140].Text = "Do you have difficulty writing by hand?";
+	Quiz[141].Text = "Are you pained by the sound of a motor-bike?";
+	Quiz[142].Text = "Have you been hyperactive most of your life?";
+	Quiz[143].Text = "Do you need to touch in order to learn?";
+	Quiz[144].Text = "Do you learn best by verbal/auditory instruction?";
+	Quiz[145].Text = "Did you learn to read before you started school?";
+	Quiz[146].Text = "Do you feel shame when people expect you to be ashamed?";
+	Quiz[147].Text = "Are you sometimes afraid in safe situations, yet fearless in situations which may actually be dangerous?";
+	Quiz[148].Text = "Do you find it natural to keep track of whom owes whom favours?";
+	Quiz[149].Text = "Do you dislike it when people turn up at your home uninvited?";
 
 #endif
 
@@ -507,7 +528,7 @@ void TQuiz7::SetupTexts()
 	Quiz[11].Text = "Är du plattfot?";
 	Quiz[12].Text = "Har du svårt för att fånga en boll?";
 	Quiz[13].Text = "Har du en tendens att tappa saker?";
-	Quiz[14].Text = "Är du sist med att avsluta manuella uppgifter?";
+	Quiz[14].Text = "Är du långsam med att avsluta manuella uppgifter?";
 	Quiz[15].Text = "Har du svårigheter att bedöma avstånd, höjd, djup eller hastighet?";
 	Quiz[16].Text = "Skadar du dig lätt?";
 	Quiz[17].Text = "Har du svårt för att hoppa eller cykla?";
@@ -523,7 +544,7 @@ void TQuiz7::SetupTexts()
 	Quiz[27].Text = "Tycker du det är svårt att läsa skrivet material om det inte antingen är väldigt intressant eller lättläst?";
 	Quiz[28].Text = "Har du svårt att göra anteckningar under lektioner?";
 	Quiz[29].Text = "Har du svårigheter att läsa av klockor?";
-	Quiz[30].Text = "För du över tal fel till nästa del i en beräkning?";
+	Quiz[30].Text = "Har du problem med matematik?";
 	Quiz[31].Text = "Glömmer du var du lagt saker?";
 	Quiz[32].Text = "Gör du ofta stavfel?";
 	Quiz[33].Text = "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
@@ -562,7 +583,7 @@ void TQuiz7::SetupTexts()
 	Quiz[66].Text = "Pratar du för att andra ska känna sig väl till mods även om du inte har något att säga?";
 	Quiz[67].Text = "Gillar du att sminka dig?";
 	Quiz[68].Text = "Gillar du att bära smycken?";
-	Quiz[69].Text = "Blinkar eller rullar du med ögonen?";
+	Quiz[69].Text = "Himlar du med ögonen?";
 	Quiz[70].Text = "Sniffar du ofrivilligt?";
 	Quiz[71].Text = "Räcker du ut tungan vid fel tillfällen?";
 	Quiz[72].Text = "Svär du mycket?";
@@ -574,7 +595,7 @@ void TQuiz7::SetupTexts()
 	Quiz[78].Text = "Kan du läsa mellan raderna?";
 	Quiz[79].Text = "Känner du intuitivt av vad som är rätt socialt?";
 	Quiz[80].Text = "Missförstår andra ofta dig?";
-	Quiz[81].Text = "Blir du ofta överraskad av vad folks motiv är?";
+	Quiz[81].Text = "Blir du ofta överraskad när du får reda på vad folks verkliga motiv är?";
 	Quiz[82].Text = "Är du oftast omedveten om outtalade sociala regler?";
 	Quiz[83].Text = "Har du svårt att urskilja röster från bakgrundsljud, eller från andra röster?";
 	Quiz[84].Text = "Är du bra på att läsa av folk?";
@@ -607,7 +628,7 @@ void TQuiz7::SetupTexts()
 	Quiz[111].Text= "Blir du lätt distraherad eller överväldigad?";
 	Quiz[112].Text = "Brukar du bli så absorberad av dina projekt att du glömmer/struntar i allting annat?";
 	Quiz[113].Text = "Har du behov av att göra saker själv för att riktigt minnas dem?";
-	Quiz[114].Text = "Har du behov av att se eller ta i saker för att riktigt minnas dem?";
+	Quiz[114].Text = "Ogillar du ögonkontakt?";
 	Quiz[115].Text = "Tar du ibland initiativ som inte visar sig önskade?";
 	Quiz[116].Text = "Kan du hålla balans mellan dina behov och samtidigt ge kolleger och gäster lämplig uppmärksamhet?";
 	Quiz[117].Text = "Är du fascinerad av datum och/eller siffror?";
@@ -632,7 +653,17 @@ void TQuiz7::SetupTexts()
 	Quiz[136].Text = "Skadar du dig själv?";
 	Quiz[137].Text = "Känner du av djurs känslor?";
 	Quiz[138].Text = "Tuggar du på saker?";
-	Quiz[139].Text = "Har du mycket kroppshår?";
+	Quiz[139].Text = "Har du mer kroppshår än andra av ditt kön?";
+	Quiz[140].Text = "Har du svårt att skriva för hand?";
+	Quiz[141].Text = "Gör ljudet från en motorcykel ont?";
+	Quiz[142].Text = "Har du varit hyperaktiv största delen av ditt liv?";
+	Quiz[143].Text = "Behöver du känna på saker för att lära dig?";
+	Quiz[144].Text = "Lär du dig bäst genom verbal/auditiv instruktion?";
+	Quiz[145].Text = "Lärde du dig att läsa innan du började skolan?";
+	Quiz[146].Text = "Skäms du när folk förväntar sig att du ska skämmas?";
+	Quiz[147].Text = "Händer det att du är rädd i ofarliga situationer men orädd i situationer som faktiskt kan vara farliga?";
+	Quiz[148].Text = "Känns det naturligt för dig att hålla reda på tjänster och gentjänster?";
+	Quiz[149].Text = "Ogillar du att folk dyker upp vid ditt hem utan att du bjudit in dem?";
 
 #endif
 }
@@ -750,7 +781,7 @@ void TQuiz7::LoadReferers()
 				UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult);
 			else
     			UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult);
-    	}
+		}
 
 		if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
 			UpdateReferer(&WhiteRef, Row.AsResult, Row.NtResult);
@@ -941,7 +972,6 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz6, 27, 99);
 	DefineCross(Quiz6, 28, 100);
 	DefineCross(Quiz6, 29, 101);
-	DefineCross(Quiz6, 30, 103);
 	DefineCross(Quiz6, 31, 102);
 	DefineCross(Quiz6, 32, 104);
 	DefineCross(Quiz6, 33, 105);
@@ -1031,6 +1061,8 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz6, 125, 135);
 	DefineCross(Quiz6, 126, 136);
 	DefineCross(Quiz6, 131, 146);
+	DefineCross(QuizI, 147, 79);
+	DefineCross(QuizII, 148, 46);
 }
 
 /*##########################################################################

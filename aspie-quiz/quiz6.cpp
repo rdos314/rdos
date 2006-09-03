@@ -730,6 +730,8 @@ void TQuiz6::InitReferers()
 	AddReferer("whoa.nu", "whoa.nu");
 	AddReferer("airliners.net", "airliners.net/discussions/non_aviation/read.main/1295619");
 	AddReferer("supermama.lt", "supermama.lt/forumas/index.php?showtopic=99238");
+	AddReferer("intpcentral.com", "intpcentral.com/showthread.php?t=7415");
+	AddReferer("pnh.livejournal.com", "pnh.livejournal.com/24190.html");
  }
 
 /*##########################################################################
@@ -799,7 +801,7 @@ void TQuiz6::LoadReferers()
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry == 3)
-			if (Row.Hair >= 6 && Row.Eye >= 5)
+//			if (Row.Hair >= 6 && Row.Eye >= 5)
 				UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Ancestry == 5)
@@ -818,8 +820,8 @@ void TQuiz6::LoadReferers()
 			if (Row.Hair >= 6 && Row.Eye >= 5)
 				UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult);
 			else
-    			UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult);
-    	}
+				UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult);
+		}
 
 		if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
 			UpdateReferer(&WhiteRef, Row.AsResult, Row.NtResult);
@@ -1623,7 +1625,7 @@ void THair::WriteEntry(TFile &file, int val, int count)
 {
     char str[80];
     long double dev;
-    long double sd;
+	long double sd;
     long double mean;
     long double r;
     long double rsum;
@@ -1692,7 +1694,7 @@ void THair::WriteRow(TFile &file, int index, const char *text)
 {
     char str[80];
 	int sum;
-    int i;
+	int i;
 
     file.Write("<tr style='height:24.75pt'>");
 	WriteCenteredFieldHeader(file, 25);
@@ -1807,7 +1809,7 @@ void TEye::WriteEntry(TFile &file, int val, int count)
     mean = (long double)val / (long double)count;
 
     r = 1.0 - mean;
-    rsum = (long double)val * r * r;
+	rsum = (long double)val * r * r;
 
 	r = -mean;
 	rsum += (long double)(count - val) * r * r;
@@ -1876,7 +1878,7 @@ void TEye::WriteRow(TFile &file, int index, const char *text)
 	    file.Write("---");
 
 
-    sum = 0;
+	sum = 0;
     for (i = 0; i < 5; i++)
         sum += NtCount[i];            
 
@@ -1899,7 +1901,7 @@ TRace::TRace()
 {
 	int i;
 
-    for (i = 0; i < 10; i++)
+	for (i = 0; i < 10; i++)
     {
 		Count[i] = 0;
 		AsCount[i] = 0;
@@ -1918,13 +1920,13 @@ void TRace::Add(TQuizRow *Row)
 	int index = -1;
 	int diff = Row->AsResult - Row->NtResult;
 
-	if (Row->Ancestry == 3 && Row->Hair >= 6 && Row->Eye >= 5)
+	if (Row->Ancestry == 3) // && Row->Hair >= 6 && Row->Eye >= 5)
 		index = 0;      // american indian
 
 	if (Row->Ancestry == 5)
 	{
 		if (Row->Hair >= 6 && Row->Eye >= 5)
-	        index = 1;      // african american
+			index = 1;      // african american
 		else
 			index = 2;      // mixed american
 	}
@@ -1935,10 +1937,10 @@ void TRace::Add(TQuizRow *Row)
 	if (Row->Ancestry >= 1000 && Row->Ancestry < 2000)
 	{
 		if (Row->Hair >= 6 && Row->Eye >= 5)
-    		index = 4;      // black african
-        else
-            index = 5;      // mixed african
-    }
+			index = 4;      // black african
+		else
+			index = 5;      // mixed african
+	}
 
 	if ((Row->Ancestry >= 2000 && Row->Ancestry < 3000) || Row->Ancestry == 3205)
 		index = 6;      // white
@@ -1955,7 +1957,7 @@ void TRace::Add(TQuizRow *Row)
 
 		if (diff > 0)
 			AsCount[index]++;
-    }
+	}
 }
 
 /*##################  TRace::WriteHeader ##########################
