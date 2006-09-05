@@ -503,13 +503,13 @@ void TQuiz7::SetupTexts()
 	Quiz[140].Text = "Do you have difficulty writing by hand?";
 	Quiz[141].Text = "Are you pained by the sound of a motor-bike?";
 	Quiz[142].Text = "Have you been hyperactive most of your life?";
-	Quiz[143].Text = "Do you need to touch in order to learn?";
-	Quiz[144].Text = "Do you learn best by verbal/auditory instruction?";
-	Quiz[145].Text = "Did you learn to read before you started school?";
-	Quiz[146].Text = "Do you feel shame when people expect you to be ashamed?";
-	Quiz[147].Text = "Are you sometimes afraid in safe situations, yet fearless in situations which may actually be dangerous?";
-	Quiz[148].Text = "Do you find it natural to keep track of whom owes whom favours?";
-	Quiz[149].Text = "Do you dislike it when people turn up at your home uninvited?";
+	Quiz[143].Text = "Did you learn to read before you started school?";
+	Quiz[144].Text = "Do you feel shame when people expect you to be ashamed?";
+	Quiz[145].Text = "Are you sometimes afraid in safe situations, yet fearless in situations which may actually be dangerous?";
+	Quiz[146].Text = "Do you find it natural to keep track of whom owes whom favours?";
+	Quiz[147].Text = "Do you dislike it when people turn up at your home uninvited?";
+	Quiz[148].Text = "Do you click or rub a pen for the fun of it?";
+	Quiz[149].Text = "Do you sing for yourself or for your family?";
 
 #endif
 
@@ -657,13 +657,13 @@ void TQuiz7::SetupTexts()
 	Quiz[140].Text = "Har du svårt att skriva för hand?";
 	Quiz[141].Text = "Gör ljudet från en motorcykel ont?";
 	Quiz[142].Text = "Har du varit hyperaktiv största delen av ditt liv?";
-	Quiz[143].Text = "Behöver du känna på saker för att lära dig?";
-	Quiz[144].Text = "Lär du dig bäst genom verbal/auditiv instruktion?";
-	Quiz[145].Text = "Lärde du dig att läsa innan du började skolan?";
-	Quiz[146].Text = "Skäms du när folk förväntar sig att du ska skämmas?";
-	Quiz[147].Text = "Händer det att du är rädd i ofarliga situationer men orädd i situationer som faktiskt kan vara farliga?";
-	Quiz[148].Text = "Känns det naturligt för dig att hålla reda på tjänster och gentjänster?";
-	Quiz[149].Text = "Ogillar du att folk dyker upp vid ditt hem utan att du bjudit in dem?";
+	Quiz[143].Text = "Lärde du dig att läsa innan du började skolan?";
+	Quiz[144].Text = "Skäms du när folk förväntar sig att du ska skämmas?";
+	Quiz[145].Text = "Händer det att du är rädd i ofarliga situationer men orädd i situationer som faktiskt kan vara farliga?";
+	Quiz[146].Text = "Känns det naturligt för dig att hålla reda på tjänster och gentjänster?";
+	Quiz[147].Text = "Ogillar du att folk dyker upp vid ditt hem utan att du bjudit in dem?";
+	Quiz[148].Text = "Klickar eller gnider du på en penna för skojs skull?";
+	Quiz[149].Text = "Sjunger du för dig själv eller din familj?";
 
 #endif
 }
@@ -1061,8 +1061,8 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz6, 125, 135);
 	DefineCross(Quiz6, 126, 136);
 	DefineCross(Quiz6, 131, 146);
-	DefineCross(QuizI, 147, 79);
-	DefineCross(QuizII, 148, 46);
+	DefineCross(QuizI, 145, 79);
+	DefineCross(QuizII, 146, 46);
 }
 
 /*##########################################################################
