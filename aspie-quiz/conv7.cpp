@@ -130,7 +130,7 @@ void ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 
-	for (fieldno = 0; fieldno < 164; fieldno++)
+	for (fieldno = 0; fieldno < 174; fieldno++)
 	{
 		valstr = str;
 

@@ -137,7 +137,7 @@ TQuiz7::~TQuiz7()
 *##########################################################################*/
 int TQuiz7::GetPcaCount()
 {
-	return 2;
+	return 4;
 }
 
 /*##########################################################################
@@ -1355,7 +1355,7 @@ void TQuiz7::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf", &q, &d1, &d2) == 3)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
