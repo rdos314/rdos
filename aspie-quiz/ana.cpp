@@ -64,7 +64,7 @@ int main(int argc, char **argv)
 	Quiz[3] = new TQuizNd("quiznd.bin", Quiz[0], Quiz[1], Quiz[2]);
 	Quiz[4] = new TQuiz5("quiz5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3]);
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
-	Quiz[6] = new TQuiz7("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
+	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
 
 //	Quiz[1]->CheckCross();
 //	Quiz[2]->CheckCross();
@@ -97,6 +97,10 @@ int main(int argc, char **argv)
 	 Quiz[5]->ExportExcelCase("male6.dat", PCA_TYPE_MALE);
 	 Quiz[5]->ExportExcelCase("female6.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[6]->ExportExcelCase("all7.dat", PCA_TYPE_ALL);
+	 Quiz[6]->ExportExcelCase("male7.dat", PCA_TYPE_MALE);
+	 Quiz[6]->ExportExcelCase("female7.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
@@ -119,6 +123,10 @@ int main(int argc, char **argv)
 	 Quiz[5]->ImportMvsp("male6.txt", PCA_TYPE_MALE);
 	 Quiz[5]->ImportMvsp("female6.txt", PCA_TYPE_FEMALE);
 
+	 Quiz[6]->ImportMvsp("all7.txt", PCA_TYPE_ALL);
+	 Quiz[6]->ImportMvsp("male7.txt", PCA_TYPE_MALE);
+	 Quiz[6]->ImportMvsp("female7.txt", PCA_TYPE_FEMALE);
+
 	 Quiz[6]->WritePhpWeighting("weights.php");
 	 Quiz[6]->WriteWeighting("weights.txt");
 
@@ -127,6 +135,7 @@ int main(int argc, char **argv)
 	 Quiz[3]->WriteReferers("refnd.htm");
 	 Quiz[4]->WriteReferers("ref5.htm");
 	 Quiz[5]->WriteReferers("ref6.htm");
+	 Quiz[6]->WriteReferers("ref7.htm");
 
 	 Quiz[0]->WriteSumaryTable("quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("quiz2.htm", FALSE);
@@ -134,18 +143,16 @@ int main(int argc, char **argv)
 	 Quiz[3]->WriteSumaryTable("quiznd.htm", FALSE);
 	 Quiz[4]->WriteSumaryTable("quiz5.htm", FALSE);
 	 Quiz[5]->WriteSumaryTable("quiz6.htm", FALSE);
+	 Quiz[6]->WriteSumaryTable("quiz7.htm", FALSE);
 
-	 Quiz[5]->WriteGroupTable("group.htm", TRUE);
-	 Quiz[5]->WriteGroupCorrTable("groupcorr.htm");
-	 Quiz[5]->WritePcaLoadTable("pcaload.htm");
+	 Quiz[6]->WriteGroupTable("group.htm", TRUE);
+	 Quiz[6]->WriteGroupCorrTable("groupcorr.htm");
+	 Quiz[6]->WritePcaLoadTable("pcaload.htm");
 
 	 Quiz[5]->WritePcaCorrTable("pcacorr.htm");
 
 	 Quiz[5]->WriteHair("hair.htm");
 	 Quiz[5]->WriteEye("eye.htm");
 	 Quiz[5]->WriteRace("race.htm");
-
-	 Quiz[3]->ExportHistogram("hbip.txt", POP_TYPE_BIPOLAR, 2);
-	 Quiz[5]->ExportHistogram("hsch.txt", POP_TYPE_SCHIZOPHRENIA, 2);
 }
 

@@ -130,7 +130,7 @@ void ProcessRow(char *str)
 	TQuizRow Row;
 	int quote;
 
-	for (fieldno = 0; fieldno < 161; fieldno++)
+	for (fieldno = 0; fieldno < 164; fieldno++)
 	{
 		valstr = str;
 
@@ -199,15 +199,15 @@ void ProcessRow(char *str)
 					break;
 
 				case 12:
-					Row.Narcism = atoi(valstr);
-					break;
-
-				case 13:
 					Row.Social = atoi(valstr);
 					break;
 
-				case 14:
+				case 13:
 					Row.Premature = atoi(valstr);
+					break;
+
+				case 14:
+					Row.Job = atoi(valstr);
 					break;
 
 				case 15:
@@ -223,6 +223,18 @@ void ProcessRow(char *str)
 					break;
 
 				case 18:
+					Row.Temp = atoi(valstr);
+					break;
+
+				case 19:
+					Row.Vision = atoi(valstr);
+					break;
+
+				case 20:
+					Row.Learn = atoi(valstr);
+					break;
+
+				case 21:
 					valstr = GetQuoted(valstr);
 					if (valstr)
 					{
@@ -235,16 +247,16 @@ void ProcessRow(char *str)
 						Row.Referer[0] = 0;
 					break;
 
-				case 19:
+				case 22:
 					Row.AsResult = atoi(valstr);
 					break;
 
-				case 20:
+				case 23:
 					Row.NtResult = atoi(valstr);
 					break;
 
 				default:
-					i = fieldno - 21;
+					i = fieldno - 24;
 					Row.Quiz[i] = atoi(valstr);
 					break;
 			}

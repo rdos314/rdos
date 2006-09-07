@@ -12,12 +12,15 @@ struct TQuizRow
 	char Autism;
 	char Aspie;
 	char ADHD;
-	char Narcism;
 	char Social;
+	char Job;
 	char Premature;
 	char Music;
 	char Politics;
 	char Religion;
+	char Temp;
+	char Vision;
+	char Learn;
 	char Referer[100];
 	long AsResult;
 	long NtResult;
