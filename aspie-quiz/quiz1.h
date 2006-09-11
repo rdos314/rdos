@@ -49,6 +49,7 @@ private:
     void LoadReferers();
     void LoadPopulations();
     void SetupControlGroups();
+    void SetupCross();
 
     TFile FDataFile;
 };

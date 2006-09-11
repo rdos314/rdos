@@ -110,7 +110,7 @@ TQuiz7::TQuiz7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
 	SortReferers();
 	LoadPopulations();
     SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6);
-//    Calculate();
+    Calculate();
 }
 
 /*##########################################################################
@@ -169,7 +169,6 @@ void TQuiz7::WriteName(TFile &File)
 ##########################################################################*/
 void TQuiz7::SetupTexts()
 {
-	Quiz[35].Reverse = TRUE;
 	Quiz[36].Reverse = TRUE;
 	Quiz[38].Reverse = TRUE;
 	Quiz[41].Reverse = TRUE;
@@ -189,23 +188,24 @@ void TQuiz7::SetupTexts()
 	Quiz[66].Reverse = TRUE;
 	Quiz[67].Reverse = TRUE;
 	Quiz[68].Reverse = TRUE;
-	Quiz[78].Reverse = TRUE;
+	Quiz[71].Reverse = TRUE;
+	Quiz[72].Reverse = TRUE;
+	Quiz[77].Reverse = TRUE;
 	Quiz[79].Reverse = TRUE;
-	Quiz[84].Reverse = TRUE;
-	Quiz[86].Reverse = TRUE;
-	Quiz[87].Reverse = TRUE;
-	Quiz[89].Reverse = TRUE;
-	Quiz[104].Reverse = TRUE;
-	Quiz[105].Reverse = TRUE;
-	Quiz[106].Reverse = TRUE;
-	Quiz[108].Reverse = TRUE;
+	Quiz[80].Reverse = TRUE;
+	Quiz[82].Reverse = TRUE;
+	Quiz[97].Reverse = TRUE;
+	Quiz[98].Reverse = TRUE;
+	Quiz[99].Reverse = TRUE;
+	Quiz[101].Reverse = TRUE;
 	Quiz[116].Reverse = TRUE;
 	Quiz[123].Reverse = TRUE;
 	Quiz[124].Reverse = TRUE;
 	Quiz[125].Reverse = TRUE;
 	Quiz[133].Reverse = TRUE;
+	Quiz[134].Reverse = TRUE;
 	Quiz[135].Reverse = TRUE;
-	Quiz[148].Reverse = TRUE;
+	Quiz[146].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -242,7 +242,7 @@ void TQuiz7::SetupTexts()
 	Quiz[32].MyGroup = GROUP_NT_TALENT;
 	Quiz[33].MyGroup = GROUP_NT_TALENT;
 	Quiz[34].MyGroup = GROUP_NT_TALENT;
-	Quiz[35].MyGroup = GROUP_NT_TALENT;
+	Quiz[35].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[36].MyGroup = GROUP_NT_TALENT;
 	Quiz[37].MyGroup = GROUP_NT_TALENT;
 	Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -260,7 +260,7 @@ void TQuiz7::SetupTexts()
 	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[53].MyGroup = GROUP_MIXED;
 	Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -304,19 +304,19 @@ void TQuiz7::SetupTexts()
 	Quiz[94].MyGroup = GROUP_SEX;
 	Quiz[95].MyGroup = GROUP_SEX;
 	Quiz[96].MyGroup = GROUP_SEX;
-	Quiz[97].MyGroup = GROUP_INTROVERT;
-	Quiz[98].MyGroup = GROUP_INTROVERT;
-	Quiz[99].MyGroup = GROUP_INTROVERT;
-	Quiz[100].MyGroup = GROUP_INTROVERT;
-	Quiz[101].MyGroup = GROUP_INTROVERT;
-	Quiz[102].MyGroup = GROUP_INTROVERT;
+	Quiz[97].MyGroup = GROUP_MIXED;
+	Quiz[98].MyGroup = GROUP_MIXED;
+	Quiz[99].MyGroup = GROUP_MIXED;
+	Quiz[100].MyGroup = GROUP_MIXED;
+	Quiz[101].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[102].MyGroup = GROUP_MIXED;
 	Quiz[103].MyGroup = GROUP_MIXED;
 	Quiz[104].MyGroup = GROUP_MIXED;
 	Quiz[105].MyGroup = GROUP_MIXED;
-	Quiz[106].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[107].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[106].MyGroup = GROUP_MIXED;
+	Quiz[107].MyGroup = GROUP_MIXED;
 	Quiz[108].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[109].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[111].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[112].MyGroup = GROUP_ASPIE_COMM;
@@ -331,32 +331,32 @@ void TQuiz7::SetupTexts()
 	Quiz[121].MyGroup = GROUP_MIXED;
 	Quiz[122].MyGroup = GROUP_MIXED;
 	Quiz[123].MyGroup = GROUP_MIXED;
-	Quiz[124].MyGroup = GROUP_MIXED;
+	Quiz[124].MyGroup = GROUP_NONVERBAL;
 	Quiz[125].MyGroup = GROUP_MIXED;
 	Quiz[126].MyGroup = GROUP_MIXED;
-	Quiz[127].MyGroup = GROUP_MIXED;
-	Quiz[128].MyGroup = GROUP_MIXED;
-	Quiz[129].MyGroup = GROUP_MIXED;
-	Quiz[130].MyGroup = GROUP_MIXED;
+	Quiz[127].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[128].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[129].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[130].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[131].MyGroup = GROUP_MIXED;
-	Quiz[132].MyGroup = GROUP_MIXED;
-	Quiz[133].MyGroup = GROUP_MIXED;
+	Quiz[132].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[133].MyGroup = GROUP_NT_TALENT;
 	Quiz[134].MyGroup = GROUP_MIXED;
 	Quiz[135].MyGroup = GROUP_MIXED;
 	Quiz[136].MyGroup = GROUP_MIXED;
 	Quiz[137].MyGroup = GROUP_MIXED;
-	Quiz[138].MyGroup = GROUP_MIXED;
+	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[139].MyGroup = GROUP_MIXED;
 	Quiz[140].MyGroup = GROUP_MIXED;
 	Quiz[141].MyGroup = GROUP_MIXED;
 	Quiz[142].MyGroup = GROUP_MIXED;
-	Quiz[143].MyGroup = GROUP_MIXED;
+	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_MIXED;
 	Quiz[145].MyGroup = GROUP_MIXED;
-	Quiz[146].MyGroup = GROUP_MIXED;
-	Quiz[147].MyGroup = GROUP_MIXED;
-	Quiz[148].MyGroup = GROUP_MIXED;
-	Quiz[149].MyGroup = GROUP_MIXED;
+	Quiz[146].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[148].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[149].MyGroup = GROUP_ASPIE_COMM;
 
 #ifdef ENGLISH
 
@@ -1044,8 +1044,6 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz6, 103, 125);
 	DefineCross(Quiz6, 104, 126);
 	DefineCross(Quiz6, 105, 40);
-	DefineCross(Quiz6, 108, 5);
-	DefineCross(Quiz6, 109, 11);
 	DefineCross(QuizNd, 110, 54);
 	DefineCross(QuizNd, 111, 56);
 	DefineCross(Quiz6, 115, 32);

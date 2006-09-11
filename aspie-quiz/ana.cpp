@@ -66,12 +66,13 @@ int main(int argc, char **argv)
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
 	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
 
+//  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
 //	Quiz[2]->CheckCross();
 //	Quiz[3]->CheckCross();
 //	Quiz[4]->CheckCross();
-//	Quiz[5]->CheckCross();
-	Quiz[6]->CheckCross();
+	Quiz[5]->CheckCross();
+//	Quiz[6]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);

@@ -35,6 +35,12 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+
+
+#define MAX_GLOBAL_QUESTIONS       1024
+
+static int GlobalArr[MAX_GLOBAL_QUESTIONS];
+
 /*##########################################################################
 #
 #   Name       : TQuiz::TQuiz
@@ -143,6 +149,7 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].Reverse = FALSE;
         Quiz[i].CrossQuiz = 0;
         Quiz[i].CrossInd = 0;
+        Quiz[i].GlobalId = -1;
 
         for (g = 0; g < MAX_GROUP_COUNT; g++)
         {
@@ -243,7 +250,6 @@ void TQuiz::Init()
 	Group[GROUP_NONVERBAL].Name = "NT COMMUNICATION";
 	Group[GROUP_SEX].Name = "SEXUALITY & GENDER ISSUES";
 	Group[GROUP_REPETITION].Name = "NEED FOR REPETITION & PREDICTABILITY";
-	Group[GROUP_INTROVERT].Name = "INTROVERT-EXTROVERT";
 	Group[GROUP_MIXED].Name = "MIXED";
 
 #endif
@@ -260,7 +266,6 @@ void TQuiz::Init()
 	Group[GROUP_NONVERBAL].Name = "NT KOMMUNIKATION";
 	Group[GROUP_SEX].Name = "SEXUALITET & KÖNSROLLER";
 	Group[GROUP_REPETITION].Name = "UPPREPNING, STRUKTUR OCH FÖRUTSÄGBARTHET";
-	Group[GROUP_INTROVERT].Name = "INTROVERT-EXTROVERT";
 	Group[GROUP_MIXED].Name = "OGRUPPERADE";
 
 #endif
@@ -303,6 +308,24 @@ void TQuiz::DefineCross(int id, TQuiz *quiz)
 		CrossQuiz[id] = quiz;
 }
 
+/*##################  TQuiz::DefineGlobalId ##########################
+*   Purpose....: Define global ID for question 					            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::DefineGlobalId(int id, int GlobalId)
+{
+    if (id >= 0 && id < N)
+        if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+            if (!GlobalArr[GlobalId])
+            {
+        		GlobalArr[GlobalId] = TRUE;
+        		Quiz[id].GlobalId = GlobalId;
+            }
+}
+
 /*##################  TQuiz::CheckCross ##########################
 *   Purpose....: Check cross-references 					      	        #
 *   In params..: *                                                          #
@@ -328,6 +351,9 @@ void TQuiz::CheckCross()
         group = quiz->Quiz[q].MyGroup;
         text = quiz->Quiz[q].Text;
         curr = q;
+
+        if (quiz->Quiz[q].CrossQuiz == 0 && quiz->Quiz[q].GlobalId < 0)
+            printf("Missing global ID, question:%d\n", q);
 
         for (cross = 0; cross < MAX_CROSS; cross++)
             CrossArr[cross] = -1;

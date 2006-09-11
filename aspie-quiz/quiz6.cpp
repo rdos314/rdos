@@ -93,7 +93,7 @@ public:
 #
 ##########################################################################*/
 TQuiz6::TQuiz6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5)
-  : TQuiz(162),
+  : TQuiz(150),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
@@ -211,13 +211,13 @@ void TQuiz6::SetupTexts()
 	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[5].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[5].MyGroup = GROUP_MIXED;
 	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[11].MyGroup = GROUP_MIXED;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
@@ -291,7 +291,7 @@ void TQuiz6::SetupTexts()
 	Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[83].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[84].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[85].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[87].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[88].MyGroup = GROUP_NT_SOCIAL;
@@ -315,18 +315,18 @@ void TQuiz6::SetupTexts()
 	Quiz[106].MyGroup = GROUP_NT_TALENT;
 	Quiz[107].MyGroup = GROUP_NT_TALENT;
 	Quiz[108].MyGroup = GROUP_NT_TALENT;
-	Quiz[109].MyGroup = GROUP_INTROVERT;
+	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[112].MyGroup = GROUP_INTROVERT;
-	Quiz[113].MyGroup = GROUP_INTROVERT;
+	Quiz[112].MyGroup = GROUP_MIXED;
+	Quiz[113].MyGroup = GROUP_MIXED;
 	Quiz[114].MyGroup = GROUP_MIXED;
 	Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[116].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[117].MyGroup = GROUP_INTROVERT;
+	Quiz[117].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[118].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[119].MyGroup = GROUP_INTROVERT;
-	Quiz[120].MyGroup = GROUP_INTROVERT;
+	Quiz[119].MyGroup = GROUP_MIXED;
+	Quiz[120].MyGroup = GROUP_MIXED;
 	Quiz[121].MyGroup = GROUP_SEX;
 	Quiz[122].MyGroup = GROUP_SEX;
 	Quiz[123].MyGroup = GROUP_MIXED;
@@ -338,7 +338,7 @@ void TQuiz6::SetupTexts()
 	Quiz[129].MyGroup = GROUP_NONVERBAL;
 	Quiz[130].MyGroup = GROUP_MIXED;
 	Quiz[131].MyGroup = GROUP_MIXED;
-	Quiz[132].MyGroup = GROUP_MIXED;
+	Quiz[132].MyGroup = GROUP_NONVERBAL;
 	Quiz[133].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[134].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[135].MyGroup = GROUP_MIXED;
@@ -349,26 +349,13 @@ void TQuiz6::SetupTexts()
 	Quiz[140].MyGroup = GROUP_MIXED;
 	Quiz[141].MyGroup = GROUP_MIXED;
 	Quiz[142].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[143].MyGroup = GROUP_MIXED;
+	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[146].MyGroup = GROUP_MIXED;
 	Quiz[147].MyGroup = GROUP_MIXED;
 	Quiz[148].MyGroup = GROUP_MIXED;
 	Quiz[149].MyGroup = GROUP_MIXED;
-
-	Quiz[150].MyGroup = GROUP_MIXED;
-	Quiz[151].MyGroup = GROUP_MIXED;
-	Quiz[152].MyGroup = GROUP_MIXED;
-	Quiz[153].MyGroup = GROUP_MIXED;
-	Quiz[154].MyGroup = GROUP_MIXED;
-	Quiz[155].MyGroup = GROUP_MIXED;
-	Quiz[156].MyGroup = GROUP_MIXED;
-	Quiz[157].MyGroup = GROUP_MIXED;
-	Quiz[158].MyGroup = GROUP_MIXED;
-	Quiz[159].MyGroup = GROUP_MIXED;
-	Quiz[160].MyGroup = GROUP_MIXED;
-	Quiz[161].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -523,19 +510,6 @@ void TQuiz6::SetupTexts()
 	Quiz[148].Text = "Are you afraid of closed places?";
 	Quiz[149].Text = "Are you afraid of the dark?";
 
-	Quiz[150].Text = "Red hair color";
-	Quiz[151].Text = "Strawberry blond hair color";
-	Quiz[152].Text = "Blond hair color";
-	Quiz[153].Text = "Brown hair color";
-	Quiz[154].Text = "Auburn hair color";
-	Quiz[155].Text = "Dark brown hair color";
-	Quiz[156].Text = "Black hair color";
-	Quiz[157].Text = "Grey-blue eye color";
-	Quiz[158].Text = "Blue eye color";
-	Quiz[159].Text = "Green eye color";
-	Quiz[160].Text = "Hazel eye color";
-	Quiz[161].Text = "Brown eye color";
-
 #endif
 
 #ifdef SWEDISH
@@ -689,19 +663,6 @@ void TQuiz6::SetupTexts()
 	Quiz[147].Text = "Är du rädd för åska?";
 	Quiz[148].Text = "Är du rädd för att bli instängd?";
 	Quiz[149].Text = "Är du mörkrädd?";
-
-	Quiz[150].Text = "Röd hårfärg";
-	Quiz[151].Text = "Rödblond hårfärg";
-	Quiz[152].Text = "Blond hårfärg";
-	Quiz[153].Text = "Brun hårfärg";
-	Quiz[154].Text = "Rödbrun/kastanjebrun hårfärg";
-	Quiz[155].Text = "Mörkbrun hårfärg";
-	Quiz[156].Text = "Svart hårfärg";
-	Quiz[157].Text = "Gråblå ögonfärg";
-	Quiz[158].Text = "Blå ögonfärg";
-	Quiz[159].Text = "Grön ögonfärg";
-	Quiz[160].Text = "Ljusbrun ögonfärg";
-	Quiz[161].Text = "Brun ögonfärg";
 
 #endif
 }
@@ -2115,7 +2076,7 @@ void TQuiz6::WriteHair(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.Hair != 7)
+//		if (Row.Hair != 7)
 			hair[0].Add(&Row);
 	}
 
@@ -2140,6 +2101,7 @@ void TQuiz6::WriteHair(const char *filename)
 		hair[i].WriteRow(file, 0, "Red/Strawberry blond/auburn");
 		hair[i].WriteRow(file, 1, "Blond");
 		hair[i].WriteRow(file, 2, "Brown");
+		hair[i].WriteRow(file, 3, "Black");
 
 		file.Write("</table>");
 

@@ -60,6 +60,7 @@ TQuizI::TQuizI(const char *FileName)
     SetupControlGroups();
 	SortReferers();
     LoadPopulations();
+	SetupCross();
     Calculate();
 }
 
@@ -120,7 +121,7 @@ void TQuizI::WriteName(TFile &File)
 void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[1].MyGroup = GROUP_MIXED;
+	Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[2].MyGroup = GROUP_MIXED;
 	Quiz[3].MyGroup = GROUP_MIXED;
 	Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
@@ -150,7 +151,7 @@ void TQuizI::SetupTexts()
 	Quiz[28].MyGroup = GROUP_REPETITION;
 	Quiz[29].MyGroup = GROUP_REPETITION;
 	Quiz[30].MyGroup = GROUP_MIXED;
-	Quiz[31].MyGroup = GROUP_INTROVERT;
+	Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[34].MyGroup = GROUP_REPETITION;
@@ -185,8 +186,8 @@ void TQuizI::SetupTexts()
 	Quiz[63].MyGroup = GROUP_REPETITION;
 	Quiz[64].MyGroup = GROUP_MIXED;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[66].MyGroup = GROUP_INTROVERT;
-	Quiz[67].MyGroup = GROUP_INTROVERT;
+	Quiz[66].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[70].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -703,6 +704,121 @@ void TQuizI::SetupControlGroups()
 			}
 	    }
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TQuizI::SetupCross
+#
+#   Purpose....: Setup cross-references
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::SetupCross()
+{
+	DefineGlobalId(0, 0);
+	DefineGlobalId(1, 1);
+	DefineGlobalId(2, 2);
+	DefineGlobalId(3, 3);
+	DefineGlobalId(4, 4);
+	DefineGlobalId(5, 5);
+	DefineGlobalId(6, 6);
+	DefineGlobalId(7, 7);
+	DefineGlobalId(8, 8);
+	DefineGlobalId(9, 9);
+	DefineGlobalId(10, 10);
+	DefineGlobalId(11, 11);
+	DefineGlobalId(12, 12);
+	DefineGlobalId(13, 13);
+	DefineGlobalId(14, 14);
+	DefineGlobalId(15, 15);
+	DefineGlobalId(16, 16);
+	DefineGlobalId(17, 17);
+	DefineGlobalId(18, 18);
+	DefineGlobalId(19, 19);
+	DefineGlobalId(20, 20);
+	DefineGlobalId(21, 21);
+	DefineGlobalId(22, 22);
+	DefineGlobalId(23, 23);
+	DefineGlobalId(24, 24);
+	DefineGlobalId(25, 25);
+	DefineGlobalId(26, 26);
+	DefineGlobalId(27, 27);
+	DefineGlobalId(28, 28);
+	DefineGlobalId(29, 29);
+	DefineGlobalId(30, 30);
+	DefineGlobalId(31, 31);
+	DefineGlobalId(32, 32);
+	DefineGlobalId(33, 33);
+	DefineGlobalId(34, 34);
+	DefineGlobalId(35, 35);
+	DefineGlobalId(36, 36);
+	DefineGlobalId(37, 37);
+	DefineGlobalId(38, 38);
+	DefineGlobalId(39, 39);
+	DefineGlobalId(40, 40);
+	DefineGlobalId(41, 41);
+	DefineGlobalId(42, 42);
+	DefineGlobalId(43, 43);
+	DefineGlobalId(44, 44);
+	DefineGlobalId(45, 45);
+	DefineGlobalId(46, 46);
+	DefineGlobalId(47, 47);
+	DefineGlobalId(48, 48);
+	DefineGlobalId(49, 49);
+	DefineGlobalId(50, 50);
+	DefineGlobalId(51, 51);
+	DefineGlobalId(52, 52);
+	DefineGlobalId(53, 53);
+	DefineGlobalId(54, 54);
+	DefineGlobalId(55, 55);
+	DefineGlobalId(56, 56);
+	DefineGlobalId(57, 57);
+	DefineGlobalId(58, 58);
+	DefineGlobalId(59, 59);
+	DefineGlobalId(60, 60);
+	DefineGlobalId(61, 61);
+	DefineGlobalId(62, 62);
+	DefineGlobalId(63, 63);
+	DefineGlobalId(64, 64);
+	DefineGlobalId(65, 65);
+	DefineGlobalId(66, 66);
+	DefineGlobalId(67, 67);
+	DefineGlobalId(68, 68);
+	DefineGlobalId(69, 69);
+	DefineGlobalId(70, 70);
+	DefineGlobalId(71, 71);
+	DefineGlobalId(72, 72);
+	DefineGlobalId(73, 73);
+	DefineGlobalId(74, 74);
+	DefineGlobalId(75, 75);
+	DefineGlobalId(76, 76);
+	DefineGlobalId(77, 77);
+	DefineGlobalId(78, 78);
+	DefineGlobalId(79, 79);
+	DefineGlobalId(80, 80);
+	DefineGlobalId(81, 81);
+	DefineGlobalId(82, 82);
+	DefineGlobalId(83, 83);
+	DefineGlobalId(84, 84);
+	DefineGlobalId(85, 85);
+	DefineGlobalId(86, 86);
+	DefineGlobalId(87, 87);
+	DefineGlobalId(88, 88);
+	DefineGlobalId(89, 89);
+	DefineGlobalId(90, 90);
+	DefineGlobalId(91, 91);
+	DefineGlobalId(92, 92);
+	DefineGlobalId(93, 93);
+	DefineGlobalId(94, 94);
+	DefineGlobalId(95, 95);
+	DefineGlobalId(96, 96);
+	DefineGlobalId(97, 97);
+	DefineGlobalId(98, 98);
+	DefineGlobalId(99, 99);
 }
 
 /*##########################################################################

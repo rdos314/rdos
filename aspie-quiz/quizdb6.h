@@ -12,7 +12,7 @@ struct TQuizRow
 	char Aspie;
 	char ADHD;
 	char Schizophrenia;
-	char Referer[100];
+	char Referer[400];
 	long AsResult;
 	long NtResult;
 	char Quiz[200];
