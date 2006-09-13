@@ -981,6 +981,7 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz5, 28, 28);
 	DefineCross(Quiz5, 29, 30);
 	DefineCross(Quiz5, 30, 29);
+	DefineGlobalId(    31, 358);
 	DefineCross(Quiz5, 32, 35);
 	DefineCross(Quiz5, 33, 36);
 	DefineCross(Quiz5, 34, 38);
@@ -1002,6 +1003,8 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(QuizIII, 50, 76);
 	DefineCross(QuizIII, 51, 78);
 	DefineCross(QuizI, 52, 12);
+	DefineGlobalId(    53, 359);
+	DefineGlobalId(    54, 360);
 	DefineCross(Quiz5, 55, 52);
 	DefineCross(Quiz5, 56, 50);
 	DefineCross(Quiz5, 57, 54);
@@ -1010,7 +1013,11 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz5, 60, 56);
 	DefineCross(QuizIII, 61, 84);
 	DefineCross(QuizIII, 62, 82);
+	DefineGlobalId(    63, 361);
 	DefineCross(Quiz5, 64, 58);
+	DefineGlobalId(    65, 362);
+	DefineGlobalId(    66, 363);
+	DefineGlobalId(    67, 364);
 	DefineCross(Quiz5, 68, 59);
 	DefineCross(Quiz5, 69, 61);
 	DefineCross(QuizIII, 70, 47);
@@ -1030,6 +1037,7 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(QuizNd, 84, 102);
 	DefineCross(QuizII, 85, 53);
 	DefineCross(Quiz5, 86, 74);
+	DefineGlobalId(    87, 365);
 	DefineCross(Quiz5, 88, 75);
 	DefineCross(Quiz5, 89, 76);
 	DefineCross(Quiz5, 90, 80);
@@ -1038,6 +1046,8 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(QuizIII, 93, 58);
 	DefineCross(Quiz5, 94, 81);
 	DefineCross(QuizIII, 95, 61);
+	DefineGlobalId(    96, 366);
+	DefineGlobalId(    97, 367);
 	DefineCross(Quiz5, 98, 83);
 	DefineCross(Quiz5, 99, 82);
 	DefineCross(Quiz5, 100, 84);
@@ -1049,7 +1059,21 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz5, 106, 92);
 	DefineCross(Quiz5, 107, 96);
 	DefineCross(Quiz5, 108, 94);
+	DefineGlobalId(    109, 368);
+	DefineGlobalId(    110, 369);
+	DefineGlobalId(    111, 370);
+	DefineGlobalId(    112, 371);
+	DefineGlobalId(    113, 372);
+	DefineGlobalId(    114, 373);
+	DefineGlobalId(    115, 374);
+	DefineGlobalId(    116, 375);
+	DefineGlobalId(    117, 376);
+	DefineGlobalId(    118, 377);
+	DefineGlobalId(    119, 378);
+	DefineGlobalId(    120, 379);
 	DefineCross(QuizIII, 121, 63);
+	DefineGlobalId(    122, 380);
+	DefineGlobalId(    123, 381);
 	DefineCross(QuizIII, 124, 89);
 	DefineCross(Quiz5, 125, 98);
 	DefineCross(Quiz5, 126, 100);
@@ -1070,6 +1094,12 @@ void TQuiz6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(QuizII, 141, 37);
 	DefineCross(QuizII, 142, 13);
 	DefineCross(QuizI, 143, 1);
+	DefineGlobalId(    144, 382);
+	DefineGlobalId(    145, 383);
+	DefineGlobalId(    146, 384);
+	DefineGlobalId(    147, 385);
+	DefineGlobalId(    148, 386);
+	DefineGlobalId(    149, 387);
 }
 
 /*##########################################################################
@@ -1366,7 +1396,7 @@ void TQuiz6::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

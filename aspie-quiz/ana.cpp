@@ -71,8 +71,8 @@ int main(int argc, char **argv)
 //	Quiz[2]->CheckCross();
 //	Quiz[3]->CheckCross();
 //	Quiz[4]->CheckCross();
-	Quiz[5]->CheckCross();
-//	Quiz[6]->CheckCross();
+//	Quiz[5]->CheckCross();
+	Quiz[6]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
