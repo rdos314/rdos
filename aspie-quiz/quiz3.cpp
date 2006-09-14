@@ -168,7 +168,7 @@ void TQuizIII::SetupTexts()
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_MIXED;
 	Quiz[36].MyGroup = GROUP_NONVERBAL;
-	Quiz[37].MyGroup = GROUP_NONVERBAL;
+	Quiz[37].MyGroup = GROUP_MIXED;
 	Quiz[38].MyGroup = GROUP_MIXED;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_NONVERBAL;

@@ -228,8 +228,8 @@ void TQuiz5::SetupTexts()
 	Quiz[24].MyGroup = GROUP_NONVERBAL;
 	Quiz[25].MyGroup = GROUP_NONVERBAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
-	Quiz[27].MyGroup = GROUP_NONVERBAL;
-	Quiz[28].MyGroup = GROUP_NONVERBAL;
+	Quiz[27].MyGroup = GROUP_MIXED;
+	Quiz[28].MyGroup = GROUP_MIXED;
 	Quiz[29].MyGroup = GROUP_NONVERBAL;
 	Quiz[30].MyGroup = GROUP_NONVERBAL;
 	Quiz[31].MyGroup = GROUP_NONVERBAL;
@@ -253,7 +253,7 @@ void TQuiz5::SetupTexts()
 	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_REPETITION;
-	Quiz[52].MyGroup = GROUP_REPETITION;
+	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_MIXED;
 	Quiz[54].MyGroup = GROUP_REPETITION;
 	Quiz[55].MyGroup = GROUP_REPETITION;

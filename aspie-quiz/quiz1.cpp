@@ -146,13 +146,13 @@ void TQuizI::SetupTexts()
 	Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_MIXED;
-	Quiz[26].MyGroup = GROUP_NONVERBAL;
-	Quiz[27].MyGroup = GROUP_REPETITION;
+	Quiz[26].MyGroup = GROUP_MIXED;
+	Quiz[27].MyGroup = GROUP_MIXED;
 	Quiz[28].MyGroup = GROUP_REPETITION;
 	Quiz[29].MyGroup = GROUP_REPETITION;
 	Quiz[30].MyGroup = GROUP_MIXED;
 	Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[32].MyGroup = GROUP_MIXED;
 	Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[34].MyGroup = GROUP_REPETITION;
 	Quiz[35].MyGroup = GROUP_REPETITION;
@@ -195,7 +195,7 @@ void TQuizI::SetupTexts()
 	Quiz[72].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[74].MyGroup = GROUP_MIXED;
-	Quiz[75].MyGroup = GROUP_NONVERBAL;
+	Quiz[75].MyGroup = GROUP_MIXED;
 	Quiz[76].MyGroup = GROUP_MIXED;
 	Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[78].MyGroup = GROUP_ASPIE_BIOLOGY;
