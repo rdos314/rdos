@@ -149,6 +149,7 @@ struct TGroup
 	int Answers;
 	int Count;
 	int Sum;
+	int Questions;
 };
 
 class TQuiz
@@ -173,6 +174,7 @@ public:
 	void WritePcaLoadTable(const char *filename);
     void WritePcaCorrTable(const char *filename);
 	void WriteGroupTable(const char *filename, int Cross);
+    void WriteAverageGroupCorrTable(const char *filename);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);

@@ -150,6 +150,8 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteGroupCorrTable("groupcorr.htm");
 	 Quiz[6]->WritePcaLoadTable("pcaload.htm");
 
+	 Quiz[6]->WriteAverageGroupCorrTable("avgcorr.htm");
+
 	 Quiz[5]->WritePcaCorrTable("pcacorr.htm");
 
 	 Quiz[5]->WriteHair("hair.htm");
