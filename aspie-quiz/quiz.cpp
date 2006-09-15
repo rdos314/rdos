@@ -3652,6 +3652,330 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 	}
 }
 
+/*##################  TQuiz::WriteAveragePcaTable ##########################
+*   Purpose....: Write averaged PCA table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAveragePcaTable(const char *filename)
+{
+    long double CorrSum[MAX_GLOBAL_QUESTIONS];
+    int CorrCount[MAX_GLOBAL_QUESTIONS];
+    TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
+    int CorrQuestion[MAX_GLOBAL_QUESTIONS];
+    long double PcaSum;
+    int PcaCount;
+    int GlobalId;
+    int i;
+	int j;
+	int g;
+	int grp;
+    TQuiz *quiz;
+    TQuiz *CurrQuiz;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+    int q;
+	char str[80];
+	long double NormCorr;
+	int cross;
+	int ival;
+	int count;
+	int questions;
+	long double val;
+	long double corrval;
+    long double LowestCorr;
+	TFile file(filename, 0);
+
+	ClearUsed();
+
+
+#ifdef ENGLISH
+    file.Write("<h2>Principal components analysis (PCA) results</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Principal components analys (PCA) resultat</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+	 file.Write("Hög korrelation visas i ljusblått");
+	 file.Write("</span><br>");
+#endif
+
+
+#ifdef ENGLISH
+    file.Write("<h2>Grouped results</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+    file.Write("High correlation is light blue");
+    file.Write("</span><br>");
+
+	file.Write("<span style='color:#990099'>");
+    file.Write("Negative correlation is red color");
+    file.Write("</span><br>");
+
+	 file.Write("Correlations are calculated against other questions in the group, not including the current question<br>");
+	 file.Write("Each group is sorted so the highest AS-NT correlation comes first<br><br>");
+#endif
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+    	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+        for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+        {
+            CorrSum[i] = 0.0;
+            CorrCount[i] = 0;
+        }
+
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].Name);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("Hn loading");
+        WriteFieldFooter(file);
+
+        if (GetPcaCount() > 1)
+        {
+            WriteCenteredFieldHeader(file, 3);
+	    	file.Write("Hs loading");
+            WriteFieldFooter(file);
+        }
+
+        if (GetPcaCount() > 2)
+        {
+            WriteCenteredFieldHeader(file, 3);
+	    	file.Write("G loading");
+            WriteFieldFooter(file);
+        }
+
+        if (GetPcaCount() > 3)
+        {
+            WriteCenteredFieldHeader(file, 3);
+	    	file.Write("Introvert");
+            WriteFieldFooter(file);
+        }
+
+		file.Write("</tr>");
+
+    	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+        while (TopQuiz)
+        {
+            quiz = TopQuiz;
+            q = TopQuestion;
+
+            for (;;)
+            {
+                quiz->Quiz[q].Used = TRUE;
+        
+                if (quiz->Quiz[q].CrossQuiz)
+                {
+                    j = quiz->Quiz[q].CrossInd;
+                    quiz = quiz->Quiz[q].CrossQuiz;
+                    q = j;
+                }
+                else
+                {
+                    GlobalId = quiz->Quiz[q].GlobalId;
+                    break;
+                }
+            }
+
+            if (GlobalId > 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+            {
+                CorrQuiz[GlobalId] = TopQuiz;
+                CorrQuestion[GlobalId] = TopQuestion;
+
+                quiz = TopQuiz;
+                q = TopQuestion;
+            
+                while (quiz)
+                {
+                    CorrSum[GlobalId] += quiz->Quiz[q].Corr;
+                    CorrCount[GlobalId]++;
+
+                    j = quiz->Quiz[q].CrossInd;
+                    quiz = quiz->Quiz[q].CrossQuiz;
+                    q = j;
+                }
+            }
+
+        	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+        }
+
+        GlobalId = -1;
+
+        while (GlobalId)
+        {
+            LowestCorr = -0.1;
+            GlobalId = 0;
+
+            for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+            {
+                if (CorrCount[i])
+                {
+                    corrval = CorrSum[i] / CorrCount[i];
+                    corrval = corrval * corrval;
+                    if (corrval > LowestCorr)
+                    {
+                        GlobalId = i;
+                        LowestCorr = corrval;
+                    }
+                }
+            }
+
+            if (GlobalId)
+            {
+    			file.Write("<tr style='height:24.75pt'>");
+            
+                TopQuiz = CorrQuiz[GlobalId];
+                TopQuestion = CorrQuestion[GlobalId];
+		        
+                WriteCenteredFieldHeader(file, 3);
+        		sprintf(str, "%d", GlobalId + 1);
+		        file.Write(str);
+		        WriteFieldFooter(file);
+                
+                WriteCenteredFieldHeader(file, 26);
+	    		if (TopQuiz->Quiz[TopQuestion].Reverse)
+		    		file.Write("<span style='color:#990099'>");
+    			file.Write(TopQuiz->Quiz[TopQuestion].Text);
+	    		if (TopQuiz->Quiz[TopQuestion].Reverse)
+		    		file.Write("</span>");
+		        WriteFieldFooter(file);
+	    		
+                WriteCenteredFieldHeader(file, 6);
+                
+                val = CorrSum[GlobalId] / CorrCount[GlobalId];
+                CorrCount[GlobalId] = 0;
+
+#ifdef USE_PERCENT  
+			    ival = round(100.0 * val * val);
+				sprintf(str, "%d%", ival);
+    		    file.Write(str);
+#else
+	    		ival = round(100.0 * val);
+		    	if (ival < 0)
+			    {
+				    file.Write("-");
+				    ival = -ival;
+    			}
+	    			
+		    	sprintf(str, ".%02d", ival);
+			    file.Write(str);
+#endif
+		        WriteFieldFooter(file);
+
+                PcaCount = 0;
+                PcaSum = 0.0;
+
+                cross = 0;
+                TopQuiz->ClearUsed(TopQuestion);
+                WriteCenteredFieldHeader(file, 6);
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                while (quiz)
+	    		{
+	    		    PcaSum += quiz->Quiz[q].Pca[0];
+	    		    PcaCount++;
+	    		}
+
+	    		WritePca(file, PcaSum / PcaCount);
+    			WriteFieldFooter(file);
+
+                PcaCount = 0;
+                PcaSum = 0.0;
+			    WriteCenteredFieldHeader(file, 6);
+
+                if (GetPcaCount() > 1)
+                {
+          			TopQuiz->ClearUsed(TopQuestion);
+        			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		        	while (quiz)
+        			{
+                        if (quiz->GetPcaCount() > 1)
+                        {
+                            PcaSum += quiz->Quiz[q].Pca[1];
+                            PcaCount++;
+                        }
+
+        				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+      				}
+	    		}
+    			WriteFieldFooter(file);
+
+                PcaCount = 0;
+                PcaSum = 0.0;
+			    WriteCenteredFieldHeader(file, 6);
+
+                if (GetPcaCount() > 2)
+                {
+          			TopQuiz->ClearUsed(TopQuestion);
+        			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		        	while (quiz)
+        			{
+                        if (quiz->GetPcaCount() > 2)
+                        {
+                            PcaSum += quiz->Quiz[q].Pca[2];
+                            PcaCount++;
+                        }
+
+        				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+      				}
+	    		}
+    			WriteFieldFooter(file);
+
+                PcaCount = 0;
+                PcaSum = 0.0;
+			    WriteCenteredFieldHeader(file, 6);
+
+                if (GetPcaCount() > 3)
+                {
+          			TopQuiz->ClearUsed(TopQuestion);
+        			quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		        	while (quiz)
+        			{
+                        if (quiz->GetPcaCount() > 3)
+                        {
+                            PcaSum += quiz->Quiz[q].Pca[3];
+                            PcaCount++;
+                        }
+
+        				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+      				}
+	    		}
+    			WriteFieldFooter(file);
+
+  			    file.Write("</tr>");    
+			}
+	    }
+    	file.Write("</table>");
+    	file.Write("<br><br>");
+	}
+}
+
 /*##################  TQuiz::WritePcaCorrRow ##########################
 *   Purpose....: Write Pca correlation row	      			      	        #
 *   In params..: *                                                          #
