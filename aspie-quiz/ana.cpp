@@ -131,6 +131,7 @@ int main(int argc, char **argv)
 	 Quiz[6]->WritePhpWeighting("weights.php");
 	 Quiz[6]->WriteWeighting("weights.txt");
 
+	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
 	 Quiz[3]->WriteReferers("refnd.htm");
@@ -151,6 +152,8 @@ int main(int argc, char **argv)
 	 Quiz[6]->WritePcaLoadTable("pcaload.htm");
 
 	 Quiz[6]->WriteAverageGroupCorrTable("avgcorr.htm");
+	 Quiz[6]->WriteAveragePcaTable("avgpca.htm");
+	 Quiz[6]->WriteAveragePcaCorrTable("avg.htm");
 
 	 Quiz[5]->WritePcaCorrTable("pcacorr.htm");
 

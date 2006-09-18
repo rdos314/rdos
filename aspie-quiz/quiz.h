@@ -176,6 +176,7 @@ public:
 	void WriteGroupTable(const char *filename, int Cross);
     void WriteAverageGroupCorrTable(const char *filename);
     void WriteAveragePcaTable(const char *filename);
+	void WriteAveragePcaCorrTable(const char *filename);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
