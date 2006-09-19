@@ -65,11 +65,11 @@ void cdecl main()
 	TFile RawFile("c:\\comlog\\raw.dat");
 
 //	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
+	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-	TProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);

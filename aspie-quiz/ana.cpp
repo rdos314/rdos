@@ -155,10 +155,16 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteAveragePcaTable("avgpca.htm");
 	 Quiz[6]->WriteAveragePcaCorrTable("avg.htm");
 
-	 Quiz[5]->WritePcaCorrTable("pcacorr.htm");
+	 Quiz[6]->WritePcaCorrTable("pcacorr.htm");
 
-	 Quiz[5]->WriteHair("hair.htm");
-	 Quiz[5]->WriteEye("eye.htm");
-	 Quiz[5]->WriteRace("race.htm");
+	 Quiz[6]->WriteLinkReport("index.htm");
+
+	 Quiz[5]->WriteHair("hair6.htm");
+	 Quiz[5]->WriteEye("eye6.htm");
+	 Quiz[5]->WriteRace("race6.htm");
+
+	 Quiz[6]->WriteHair("hair7.htm");
+	 Quiz[6]->WriteEye("eye7.htm");
+	 Quiz[6]->WriteRace("race7.htm");
 }
 

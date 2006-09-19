@@ -177,6 +177,7 @@ public:
     void WriteAverageGroupCorrTable(const char *filename);
     void WriteAveragePcaTable(const char *filename);
 	void WriteAveragePcaCorrTable(const char *filename);
+	void WriteLinkReport(const char *filename);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
@@ -239,6 +240,9 @@ protected:
     void WritePcaCorrRow(TFile &File, const char *comment, int PopType);
 	void WriteReferer(TFile &file, TReferer *ref);
     void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
+
+    void WriteLinkQuestion(TFile *file, int Question, int GlobalId);
+    void WriteLinkGroup(TFile *file, int Group);
 
     void WriteAsCI95(TFile &File, int Question);
     void WriteNtCI95(TFile &File, int Question);

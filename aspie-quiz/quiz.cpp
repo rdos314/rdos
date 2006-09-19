@@ -239,7 +239,7 @@ void TQuiz::Init()
 #ifdef ENGLISH
 
 	Group[GROUP_ASPIE_BIOLOGY].Name = "Aspie biology";
-	Group[GROUP_NT_BIOLOGY].Name = "NT biologu";
+	Group[GROUP_NT_BIOLOGY].Name = "NT biology";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie ability";
 	Group[GROUP_NT_TALENT].Name = "Aspie disability";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
@@ -4323,6 +4323,703 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 		file.Write("</table>");
 		file.Write("<br><br>");
 	}
+}
+
+/*##################  TQuiz::WriteLinkQuestion ##########################
+*   Purpose....: Write link report question	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLinkQuestion(TFile *file, int Question, int GlobalId)
+{
+	char str[80];
+	
+    sprintf(str, "<a href=\"#%d\">", GlobalId + 1);
+	file->Write(str);
+	sprintf(str, "%d. ", GlobalId + 1);
+	file->Write(str);
+	file->Write(Quiz[Question].Text);
+    file->Write("</a><br>");
+}
+
+/*##################  TQuiz::WriteLinkGroup ##########################
+*   Purpose....: Write link report group	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLinkGroup(TFile *file, int Group)
+{
+	switch (Group)
+	{
+	    case GROUP_ASPIE_BIOLOGY:
+	        file->Write("ASPIE_BIOLOGY");
+	        break;
+	            
+	    case GROUP_NT_BIOLOGY:
+	        file->Write("NT_BIOLOGY");
+	        break;
+	            
+	    case GROUP_ASPIE_TALENT:
+	        file->Write("ASPIE_ABILITY");
+	        break;
+	            
+	    case GROUP_NT_TALENT:
+	        file->Write("ASPIE_DISABILITY");
+	        break;
+	            
+	    case GROUP_ASPIE_SOCIAL:
+	        file->Write("ASPIE_SOCIAL");
+	        break;
+	            
+	    case GROUP_NT_SOCIAL:
+	        file->Write("NT_SOCIAL");
+	        break;
+	            
+	    case GROUP_ASPIE_COMM:
+	        file->Write("STIMS");
+	        break;
+	            
+	    case GROUP_NONVERBAL:
+	        file->Write("NT_COMMUNICATION");
+	        break;
+	            
+	    case GROUP_REPETITION:
+	        file->Write("REPETITION");
+	        break;
+	            
+	    case GROUP_SEX:
+	        file->Write("SEX");
+	        break;
+	            
+	    case GROUP_MIXED:
+	        file->Write("MIXED");
+	        break;
+	}
+}
+
+/*##################  TQuiz::WriteLinkReport ##########################
+*   Purpose....: Write link report	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLinkReport(const char *filename)
+{
+	long double CorrSum[MAX_GLOBAL_QUESTIONS];
+	int CorrCount[MAX_GLOBAL_QUESTIONS];
+	TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
+	int CorrQuestion[MAX_GLOBAL_QUESTIONS];
+	long double PcaSum;
+	int PcaCount;
+	long double GroupSum[GROUP_COUNT];
+	int GroupCount[GROUP_COUNT];
+	int AsLoad;
+	int NtLoad;
+	int GlobalId;
+	int i;
+	int j;
+	int g;
+	int grp;
+	TQuiz *quiz;
+	TQuiz *CurrQuiz;
+	TQuiz *TopQuiz;
+	int TopQuestion;
+	int q;
+	char str[80];
+	long double NormCorr;
+	int cross;
+	int ival;
+	int count;
+	int questions;
+	long double val;
+	long double corrval;
+	long double LowestCorr;
+	int ok;
+	int first;
+	int found;
+	TQuiz *cquiz;
+	int cq;
+	TFile file(filename, 0);
+
+#ifdef ENGLISH
+	file.Write("<h2>Aspie-quiz evaluation</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Aspie-quiz utvärdering</h2>\n");
+#endif
+
+#ifdef ENGLISH
+	file.Write("<h3>Sumaries</h3>\n");
+	
+    file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
+    file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
+    file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
+    file.Write("<a href=\"histo\">Histogram of Aspie-quiz II-III + ND + 5-6</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
+    file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
+
+	file.Write("<h3>Quiz versions</h3>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h3>Summeringar</h3>\n");
+
+    file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
+    file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
+    file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
+    file.Write("<a href=\"histo\">Histogram för Aspie-quiz I-III + ND + 5-6</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
+    file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
+
+	file.Write("<h3>Quiz versioner</h3>\n");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[0]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    CrossQuiz[0]->WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz1.htm\">summary</a><br>\n");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz1.htm\">summering</a><br>\n");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[1]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    CrossQuiz[1]->WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz2.htm\">summary</a> <a href=\"ref2.htm\">referer sites</a><br>\n");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz2.htm\">summering</a> <a href=\"ref2.htm\">referenssajter</a><br>\n");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[2]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    CrossQuiz[2]->WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz3.htm\">summary</a> <a href=\"ref3.htm\">referer sites</a><br>\n");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz3.htm\">summering</a> <a href=\"ref3.htm\">referenssajter</a><br>\n");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[3]->WriteName(file);
+	file.Write("\">");
+	file.Write("Neurodiversity version ");
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiznd.htm\">summary</a> <a href=\"refnd.htm\">referer sites</a><br>\n");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiznd.htm\">summering</a> <a href=\"refnd.htm\">referenssajter</a><br>\n");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[4]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    CrossQuiz[4]->WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz5.htm\">summary</a> <a href=\"ref5.htm\">referer sites</a>");
+    file.Write(" <a href=\"iq.htm\">IQ test</a>");
+    file.Write("<br>\n");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz5.htm\">summering</a> <a href=\"ref5.htm\">referenssajter</a>");
+    file.Write(" <a href=\"iq.htm\">IQ test</a>");
+    file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	CrossQuiz[5]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    CrossQuiz[5]->WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz6.htm\">summary</a> <a href=\"ref6.htm\">referer sites</a>");
+    file.Write(" <a href=\"race6.htm\">ancestry</a>");
+    file.Write(" <a href=\"hair6.htm\">hair-color</a>");
+    file.Write(" <a href=\"eye6.htm\">eye-color</a>");
+    file.Write("<br>");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz6.htm\">summering</a> <a href=\"ref6.htm\">referenssajter</a>");
+    file.Write(" <a href=\"race6.htm\">ursprung</a>");
+    file.Write(" <a href=\"hair6.htm\">hårfärg</a>");
+    file.Write(" <a href=\"eye6.htm\">ögonfärg</a>");
+    file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz7.htm\">summary</a> <a href=\"ref7.htm\">referer sites</a>");
+    file.Write(" <a href=\"race7.htm\">ancestry</a>");
+    file.Write(" <a href=\"hair7.htm\">hair-color</a>");
+    file.Write(" <a href=\"eye7.htm\">eye-color</a>");
+    file.Write("<br>");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz7.htm\">summering</a> <a href=\"ref7.htm\">referenssajter</a>");
+    file.Write(" <a href=\"race7.htm\">ursprung</a>");
+    file.Write(" <a href=\"hair7.htm\">hårfärg</a>");
+    file.Write(" <a href=\"eye7.htm\">ögonfärg</a>");
+    file.Write("<br>");
+#endif
+
+#ifdef ENGLISH
+	file.Write("<h3>Groups</h3>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h3>Grupper</h3>\n");
+#endif
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+        file.Write("<a href=\"#");
+        WriteLinkGroup(&file, g);
+        file.Write("\">");
+		file.Write(Group[g].Name);
+        file.Write("</a><br>");
+    }
+
+#ifdef ENGLISH
+	file.Write("<h3>Questions</h3>\n");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h3>Frågor</h3>\n");
+#endif
+
+    for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+    {
+        found = FALSE;
+
+        for (q = 0; q < N && !found; q++)
+        {
+            if (Quiz[q].GlobalId == GlobalId)
+            {
+                found = TRUE;
+                WriteLinkQuestion(&file, q, GlobalId);
+            }
+            else
+            {
+				cquiz = Quiz[q].CrossQuiz;
+				cq = Quiz[q].CrossInd;
+				while (cquiz && !found)
+                {
+                    if (cquiz->Quiz[cq].GlobalId == GlobalId)
+                    {
+                        found = TRUE;
+                        cquiz->WriteLinkQuestion(&file, cq, GlobalId);
+                    }
+                    i = cquiz->Quiz[cq].CrossInd;
+                    cquiz = cquiz->Quiz[cq].CrossQuiz;
+                    cq = i;
+                }
+            }
+        }
+
+
+        for (cross = MAX_CROSS - 1; cross >= 0 && !found; cross--)
+        {
+            quiz = CrossQuiz[cross];
+            if (quiz)
+            {
+                for (q = 0; q < quiz->N && !found; q++)
+                {
+                    if (quiz->Quiz[q].GlobalId == GlobalId)
+                    {
+                        found = TRUE;
+                        quiz->WriteLinkQuestion(&file, q, GlobalId);
+                    }
+                    else
+                    {
+                        cquiz = quiz->Quiz[q].CrossQuiz;
+                        cq = quiz->Quiz[q].CrossInd;
+                        while (cquiz && !found)
+                        {
+							if (cquiz->Quiz[cq].GlobalId == GlobalId)
+							{
+								found = TRUE;
+								cquiz->WriteLinkQuestion(&file, cq, GlobalId);
+							}
+							i = cquiz->Quiz[cq].CrossInd;
+							cquiz = cquiz->Quiz[cq].CrossQuiz;
+							cq = i;
+						}
+					}
+                }
+            }
+        }
+    }
+
+	ClearUsed();
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+	    file.Write("<h3>");
+	    file.Write("<a name=\"");
+        WriteLinkGroup(&file, g);
+        file.Write("\">");
+		file.Write(Group[g].Name);
+        file.Write("</a>");
+        file.Write("</h3>");
+
+		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+		{
+			CorrSum[i] = 0.0;
+			CorrCount[i] = 0;
+		}
+        
+		TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+		while (TopQuiz)
+		{
+			quiz = TopQuiz;
+			q = TopQuestion;
+
+			for (;;)
+			{
+				quiz->Quiz[q].Used = TRUE;
+
+				if (quiz->Quiz[q].CrossQuiz)
+				{
+					j = quiz->Quiz[q].CrossInd;
+					quiz = quiz->Quiz[q].CrossQuiz;
+					q = j;
+				}
+				else
+				{
+					GlobalId = quiz->Quiz[q].GlobalId;
+					break;
+				}
+			}
+
+			if (GlobalId > 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+			{
+				CorrQuiz[GlobalId] = TopQuiz;
+				CorrQuestion[GlobalId] = TopQuestion;
+
+				quiz = TopQuiz;
+				q = TopQuestion;
+
+				while (quiz)
+				{
+					CorrSum[GlobalId] += quiz->Quiz[q].Corr;
+					CorrCount[GlobalId]++;
+
+					j = quiz->Quiz[q].CrossInd;
+					quiz = quiz->Quiz[q].CrossQuiz;
+					q = j;
+				}
+			}
+
+			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+		}
+
+		GlobalId = -1;
+
+		while (GlobalId)
+		{
+			LowestCorr = -0.1;
+			GlobalId = 0;
+
+			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+			{
+				if (CorrCount[i])
+				{
+					corrval = CorrSum[i] / CorrCount[i];
+					corrval = corrval * corrval;
+					if (corrval > LowestCorr)
+					{
+						GlobalId = i;
+						LowestCorr = corrval;
+					}
+				}
+			}
+
+			if (GlobalId)
+			{
+				TopQuiz = CorrQuiz[GlobalId];
+				TopQuestion = CorrQuestion[GlobalId];
+
+        	    file.Write("<h4>");
+	            file.Write("<a name=\"");
+	            sprintf(str, "%d", GlobalId + 1);
+	            file.Write(str);
+                file.Write("\">");
+                file.Write(str);
+                file.Write(". ");
+				file.Write(TopQuiz->Quiz[TopQuestion].Text);
+                file.Write("</a>");
+                file.Write("</h4>");
+
+				val = CorrSum[GlobalId] / CorrCount[GlobalId];
+				CorrCount[GlobalId] = 0;
+
+#ifdef ENGLISH
+            	file.Write("Aspie-neurotypical correlation: ");
+#endif
+
+#ifdef SWEDISH
+            	file.Write("Aspie-neurotypisk korrelation: ");
+#endif
+				
+
+#ifdef USE_PERCENT
+				ival = round(100.0 * val * val);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+#else
+				ival = round(100.0 * val);
+				if (ival < 0)
+				{
+					file.Write("-");
+					ival = -ival;
+				}
+
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+#endif
+                file.Write("<br>");
+
+				PcaCount = 0;
+				PcaSum = 0.0;
+
+				cross = 0;
+				TopQuiz->ClearUsed(TopQuestion);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				while (quiz)
+				{
+					PcaSum += quiz->Quiz[q].Pca[0];
+					PcaCount++;
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				}
+
+				AsLoad = round(100 * PcaSum / PcaCount);
+
+				PcaCount = 0;
+				PcaSum = 0.0;
+
+				if (GetPcaCount() > 1)
+				{
+					TopQuiz->ClearUsed(TopQuestion);
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					while (quiz)
+					{
+						if (quiz->GetPcaCount() > 1)
+						{
+							PcaSum += quiz->Quiz[q].Pca[1];
+							PcaCount++;
+						}
+						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					}
+					if (PcaCount)
+						NtLoad = round(100 * PcaSum / PcaCount);
+					else
+						NtLoad = 0;
+				}
+
+				if (PcaCount)
+				{
+					if (AsLoad > 0 && NtLoad > 0)
+					{
+						if (AsLoad > NtLoad)
+						{
+							AsLoad = AsLoad - NtLoad;
+							NtLoad = 0;
+						}
+						else
+						{
+							NtLoad = NtLoad - AsLoad;
+							AsLoad = 0;
+						}
+					}
+				}
+
+#ifdef ENGLISH
+				sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
+#endif
+
+#ifdef SWEDISH
+				sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
+#endif
+				file.Write(str);
+				file.Write("<br>");
+
+				if (PcaCount)
+				{
+					if (NtLoad >= 0)
+#ifdef ENGLISH
+						sprintf(str, "Neurotypical score: NO 0, YES %d", NtLoad);
+#endif
+
+#ifdef SWEDISH
+						sprintf(str, "Neurotypisk poäng: NEJ 0, JA %d", NtLoad);
+#endif
+					else
+#ifdef ENGLISH
+                    	sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
+#endif
+
+#ifdef SWEDISH
+                       	sprintf(str, "Neurotypisk po„ng: NEJ %d, JA 0", -NtLoad);
+#endif
+
+					file.Write(str);
+					file.Write("<br>");
+				}
+
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					GroupSum[j] = 0.0;
+					GroupCount[j] = 0;
+
+					TopQuiz->ClearUsed(TopQuestion);
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					while (quiz)
+					{
+						val = quiz->Quiz[q].Group[j].Corr;
+						corrval = val;
+						count = quiz->Quiz[q].Group[j].Count;
+						questions = quiz->Group[j].Questions;
+
+						if (count > 3)
+						{
+							GroupSum[j] += val * questions;
+							GroupCount[j] += questions;
+						}
+
+						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					}
+				}
+
+				NormCorr = 0.0;
+
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					if (GroupCount[j])
+					{
+						val = GroupSum[j] / GroupCount[j];
+						if (val >= NormCorr)
+							NormCorr = val;
+					}
+				}
+				NormCorr = 0.9 * NormCorr;
+
+				if (TopQuiz->Quiz[TopQuestion].Reverse)
+#ifdef ENGLISH
+                    file.Write("Negative correlation with: ");
+#endif
+
+#ifdef SWEDISH
+                    file.Write("Negativ korrelation med: ");
+#endif
+                else
+#ifdef ENGLISH
+                    file.Write("Positive correlation with: ");
+#endif
+
+#ifdef SWEDISH
+                    file.Write("Positiv korrelation med: ");
+#endif
+
+				first = TRUE;
+				ok = TRUE;
+				while (ok)
+				{
+					ok = FALSE;
+
+					for (j = 0; j < GROUP_COUNT - 1; j++)
+					{
+						if (GroupCount[j])
+						{
+							val = GroupSum[j] / GroupCount[j];
+							if (val >= NormCorr)
+							{
+								if (ok)
+								{
+									if (val > corrval)
+									{
+										grp = j;
+										corrval = val;
+									}
+								}
+								else
+								{
+									ok = TRUE;
+									grp = j;
+									corrval = val;
+								}
+							}
+						}
+					}
+
+					if (ok)
+					{
+						if (!first)
+							file.Write(", ");
+
+                        file.Write("<a href=\"#");
+                        WriteLinkGroup(&file, grp);
+                        file.Write("\">");
+                		file.Write(Group[grp].Name);
+                        file.Write("</a>");
+						first = FALSE;
+						GroupCount[grp] = 0;
+					}
+
+					CorrCount[GlobalId] = 0;
+				}
+				file.Write("<br>");
+			}
+		}
+		file.Write("<br>");
+	}
+
 }
 
 /*##################  TQuiz::WritePcaCorrRow ##########################
