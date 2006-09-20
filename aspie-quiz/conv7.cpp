@@ -298,6 +298,7 @@ void ProcessRow(char *str)
 
 				case 12:
 					Row.Social = atoi(valstr);
+					Row.Quiz[150] = Row.Social;
 					break;
 
 				case 13:
@@ -310,10 +311,28 @@ void ProcessRow(char *str)
 
 				case 15:
 					Row.Music = atoi(valstr);
+					switch (Row.Music)
+					{
+					    case 1:
+        					Row.Quiz[151] = 0;
+        					break;
+
+        			    case 2:
+        			        Row.Quiz[151] = 1;
+        			        break;
+
+        			    case 3:
+        			        Row.Quiz[151] = 2;
+        			        break;
+        			}
 					break;
 
 				case 16:
 					Row.Politics = atoi(valstr);
+					if (Row.Politics == 6)
+					    Row.Quiz[152] = 2;
+					else
+					    Row.Quiz[152] = 0;
 					break;
 
 				case 17:
@@ -322,6 +341,25 @@ void ProcessRow(char *str)
 
 				case 18:
 					Row.Temp = atoi(valstr);
+					switch (Row.Temp)
+					{
+					    case 1:
+					    case 2:
+					    case 3:
+					    case 4:
+					    case 5:
+					        Row.Quiz[153] = 2;
+					        break;
+
+					    case 6:
+					        Row.Quiz[153] = 1;
+					        break;
+
+					    case 7:
+					    case 8:
+					        Row.Quiz[153] = 0;
+					        break;
+					}
 					break;
 
 				case 19:

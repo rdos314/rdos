@@ -4797,6 +4797,47 @@ void TQuiz::WriteLinkReport(const char *filename)
                 file.Write("</a>");
                 file.Write("</h4>");
 
+
+#ifdef ENGLISH
+            	file.Write("Quiz versions: ");
+#endif
+
+#ifdef SWEDISH
+            	file.Write("Quiz versioner: ");
+#endif
+
+                count = 0;
+
+				TopQuiz->ClearUsed(TopQuestion);
+    	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+    		    while (quiz)
+        		{
+                    count += quiz->All.Count[q];
+        		
+                    file.Write("<a href=\"#QUIZ");
+		        	quiz->WriteName(file);
+                    file.Write("\">");
+		        	quiz->WriteName(file);
+                    file.Write("</a>");
+
+    		    	sprintf(str, ":%d", q + 1);
+	    		    file.Write(str);
+		    	    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    	    if (quiz)
+    	    		    file.Write(", ");
+    		    }
+
+
+#ifdef ENGLISH
+    		    sprintf(str, ", %d answers<br>\n", count);
+#endif
+
+#ifdef SWEDISH
+    		    sprintf(str, ", %d svar<br>\n", count);
+#endif
+
+    		    file.Write(str);
+
 				val = CorrSum[GlobalId] / CorrCount[GlobalId];
 				CorrCount[GlobalId] = 0;
 
@@ -4902,17 +4943,113 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 					else
 #ifdef ENGLISH
-                    	sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
+						sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
 #endif
 
 #ifdef SWEDISH
-                       	sprintf(str, "Neurotypisk po„ng: NEJ %d, JA 0", -NtLoad);
+						sprintf(str, "Neurotypisk poäng: NEJ %d, JA 0", -NtLoad);
 #endif
 
 					file.Write(str);
 					file.Write("<br>");
 				}
 
+				PcaCount = 0;
+				PcaSum = 0.0;
+
+				cross = 0;
+				TopQuiz->ClearUsed(TopQuestion);
+				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				while (quiz)
+				{
+					PcaSum += quiz->Quiz[q].Pca[0];
+					PcaCount++;
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				}
+
+                if (PcaCount)
+                {
+       				file.Write("PCA: Hn: ");
+	    			WritePca(file, PcaSum / PcaCount);
+	    		}
+
+				if (GetPcaCount() > 1)
+				{
+
+    				PcaCount = 0;
+	    			PcaSum = 0.0;
+	    			
+					TopQuiz->ClearUsed(TopQuestion);
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					while (quiz)
+					{
+						if (quiz->GetPcaCount() > 1)
+						{
+							PcaSum += quiz->Quiz[q].Pca[1];
+							PcaCount++;
+						}
+						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					}
+
+                    if (PcaCount)
+                    {
+        				file.Write(", Hs: ");
+    	    			WritePca(file, PcaSum / PcaCount);
+    	    		}
+				}
+
+				if (GetPcaCount() > 2)
+				{
+
+    				PcaCount = 0;
+	    			PcaSum = 0.0;
+	    			
+					TopQuiz->ClearUsed(TopQuestion);
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					while (quiz)
+					{
+						if (quiz->GetPcaCount() > 2)
+						{
+							PcaSum += quiz->Quiz[q].Pca[2];
+							PcaCount++;
+						}
+						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					}
+
+					if (PcaCount)
+					{
+        				file.Write(", g: ");
+	        			WritePca(file, PcaSum / PcaCount);
+	        		}
+				}
+
+				if (GetPcaCount() > 3)
+				{
+
+    				PcaCount = 0;
+	    			PcaSum = 0.0;
+	    			
+					TopQuiz->ClearUsed(TopQuestion);
+					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					while (quiz)
+					{
+						if (quiz->GetPcaCount() > 3)
+						{
+							PcaSum += quiz->Quiz[q].Pca[3];
+							PcaCount++;
+						}
+						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+					}
+
+                    if (PcaCount)
+                    {
+        				file.Write(", introvert: ");
+	        			WritePca(file, PcaSum / PcaCount);
+	        		}
+				}
+
+                file.Write("<br>");
+                
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
 					GroupSum[j] = 0.0;
@@ -4950,21 +5087,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 				}
 				NormCorr = 0.9 * NormCorr;
 
-				if (TopQuiz->Quiz[TopQuestion].Reverse)
 #ifdef ENGLISH
-                    file.Write("Negative correlation with: ");
+                file.Write("Correlates with: ");
 #endif
 
 #ifdef SWEDISH
-                    file.Write("Negativ korrelation med: ");
-#endif
-                else
-#ifdef ENGLISH
-                    file.Write("Positive correlation with: ");
-#endif
-
-#ifdef SWEDISH
-                    file.Write("Positiv korrelation med: ");
+                file.Write("Korrelaterar med: ");
 #endif
 
 				first = TRUE;
@@ -5008,6 +5136,20 @@ void TQuiz::WriteLinkReport(const char *filename)
                         file.Write("\">");
                 		file.Write(Group[grp].Name);
                         file.Write("</a>");
+
+        				ival = round(100.0 * corrval);
+
+        				if (TopQuiz->Quiz[TopQuestion].Reverse)
+        				{
+        				    sprintf(str, " (-.%02d)", ival);
+							file.Write(str);
+						}
+						else
+                        {
+    						sprintf(str, " (.%02d)", ival);
+	    					file.Write(str);
+	    				}
+                        
 						first = FALSE;
 						GroupCount[grp] = 0;
 					}
