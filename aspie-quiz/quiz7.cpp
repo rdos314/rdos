@@ -201,6 +201,7 @@ void TQuiz7::SetupTexts()
 	Quiz[98].Reverse = TRUE;
 	Quiz[99].Reverse = TRUE;
 	Quiz[101].Reverse = TRUE;
+	Quiz[102].Reverse = TRUE;
 	Quiz[116].Reverse = TRUE;
 	Quiz[123].Reverse = TRUE;
 	Quiz[124].Reverse = TRUE;
@@ -294,14 +295,14 @@ void TQuiz7::SetupTexts()
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;
 	Quiz[83].MyGroup = GROUP_MIXED;
-	Quiz[84].MyGroup = GROUP_REPETITION;
-	Quiz[85].MyGroup = GROUP_REPETITION;
+	Quiz[84].MyGroup = GROUP_MIXED;
+	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_REPETITION;
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_REPETITION;
-	Quiz[90].MyGroup = GROUP_REPETITION;
-	Quiz[91].MyGroup = GROUP_REPETITION;
+	Quiz[90].MyGroup = GROUP_MIXED;
+	Quiz[91].MyGroup = GROUP_MIXED;
 	Quiz[92].MyGroup = GROUP_REPETITION;
 	Quiz[93].MyGroup = GROUP_REPETITION;
 	Quiz[94].MyGroup = GROUP_SEX;
@@ -324,7 +325,7 @@ void TQuiz7::SetupTexts()
 	Quiz[111].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[112].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[113].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[114].MyGroup = GROUP_MIXED;
+	Quiz[114].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[115].MyGroup = GROUP_MIXED;
 	Quiz[116].MyGroup = GROUP_MIXED;
 	Quiz[117].MyGroup = GROUP_MIXED;
@@ -344,8 +345,8 @@ void TQuiz7::SetupTexts()
 	Quiz[131].MyGroup = GROUP_MIXED;
 	Quiz[132].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[133].MyGroup = GROUP_MIXED;
-	Quiz[134].MyGroup = GROUP_MIXED;
-	Quiz[135].MyGroup = GROUP_MIXED;
+	Quiz[134].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[135].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[136].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[137].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
@@ -361,9 +362,9 @@ void TQuiz7::SetupTexts()
 	Quiz[148].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[149].MyGroup = GROUP_ASPIE_COMM;
 
-	Quiz[150].MyGroup = GROUP_MIXED;
+	Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[151].MyGroup = GROUP_MIXED;
-	Quiz[152].MyGroup = GROUP_MIXED;
+	Quiz[152].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[153].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -520,7 +521,7 @@ void TQuiz7::SetupTexts()
 	Quiz[149].Text = "Do you sing for yourself or for your family?";
 
 	Quiz[150].Text = "Social phobia";
-	Quiz[151].Text = "Prefer flute over drums";
+	Quiz[151].Text = "Prefer flute";
 	Quiz[152].Text = "Environmentalist";
 	Quiz[153].Text = "Prefers cold";
 
@@ -679,7 +680,7 @@ void TQuiz7::SetupTexts()
 	Quiz[149].Text = "Sjunger du för dig själv eller din familj?";
 
 	Quiz[150].Text = "Social fobi";
-	Quiz[151].Text = "Föredrar flöjt framför trummor";
+	Quiz[151].Text = "Föredrar flöjt";
 	Quiz[152].Text = "Miljöpartist";
 	Quiz[153].Text = "Föredrar kyla över värme";
 
@@ -710,6 +711,7 @@ void TQuiz7::InitReferers()
 	AddReferer("whoa.nu", "whoa.nu");
 	AddReferer("airliners.net", "airliners.net/discussions/non_aviation/read.main/1295619");
 	AddReferer("supermama.lt", "supermama.lt/forumas/index.php?showtopic=99238");
+    AddReferer("dickflash.com", "dickflash.com");
  }
 
 /*##########################################################################
@@ -810,6 +812,9 @@ void TQuiz7::LoadReferers()
 		if (Row.Ancestry >= 4000)
 			UpdateReferer(&AsianRef, Row.AsResult, Row.NtResult);
 
+		if (Row.Social)
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult);
+
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
@@ -852,7 +857,7 @@ void TQuiz7::LoadPopulations()
         		break;
 
         	case 2:
-        	    Row.Quiz[151] = 2;
+        	    Row.Quiz[151] = 1;
         		break;
 
             case 3:
@@ -921,6 +926,9 @@ void TQuiz7::LoadPopulations()
 			else
 				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
+
+		if (Row.Social)
+			SocialPhobia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (strlen(Row.Referer) == 0)
 		{
@@ -1461,14 +1469,14 @@ void TQuiz7::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

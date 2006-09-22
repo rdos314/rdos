@@ -318,7 +318,7 @@ void ProcessRow(char *str)
         					break;
 
         			    case 2:
-        			        Row.Quiz[151] = 1;
+        			        Row.Quiz[151] = 0;
         			        break;
 
         			    case 3:

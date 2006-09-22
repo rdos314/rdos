@@ -193,6 +193,7 @@ void TQuiz6::SetupTexts()
 	Quiz[97].Reverse = TRUE;
 	Quiz[110].Reverse = TRUE;
 	Quiz[112].Reverse = TRUE;
+	Quiz[113].Reverse = TRUE;
 	Quiz[116].Reverse = TRUE;
 	Quiz[117].Reverse = TRUE;
 	Quiz[119].Reverse = TRUE;
@@ -211,13 +212,13 @@ void TQuiz6::SetupTexts()
 	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[5].MyGroup = GROUP_MIXED;
+	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_MIXED;
+	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
@@ -250,7 +251,7 @@ void TQuiz6::SetupTexts()
 	Quiz[41].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[42].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[43].MyGroup = GROUP_MIXED;
-	Quiz[44].MyGroup = GROUP_REPETITION;
+	Quiz[44].MyGroup = GROUP_MIXED;
 	Quiz[45].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[46].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
@@ -262,14 +263,14 @@ void TQuiz6::SetupTexts()
 	Quiz[53].MyGroup = GROUP_REPETITION;
 	Quiz[54].MyGroup = GROUP_REPETITION;
 	Quiz[55].MyGroup = GROUP_MIXED;
-	Quiz[56].MyGroup = GROUP_REPETITION;
+	Quiz[56].MyGroup = GROUP_MIXED;
 	Quiz[57].MyGroup = GROUP_REPETITION;
 	Quiz[58].MyGroup = GROUP_REPETITION;
-	Quiz[59].MyGroup = GROUP_REPETITION;
-	Quiz[60].MyGroup = GROUP_REPETITION;
+	Quiz[59].MyGroup = GROUP_MIXED;
+	Quiz[60].MyGroup = GROUP_MIXED;
 	Quiz[61].MyGroup = GROUP_REPETITION;
 	Quiz[62].MyGroup = GROUP_REPETITION;
-	Quiz[63].MyGroup = GROUP_REPETITION;
+	Quiz[63].MyGroup = GROUP_MIXED;
 	Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[66].MyGroup = GROUP_MIXED;
@@ -329,7 +330,7 @@ void TQuiz6::SetupTexts()
 	Quiz[120].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[121].MyGroup = GROUP_SEX;
 	Quiz[122].MyGroup = GROUP_SEX;
-	Quiz[123].MyGroup = GROUP_MIXED;
+	Quiz[123].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[124].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[125].MyGroup = GROUP_MIXED;
 	Quiz[126].MyGroup = GROUP_MIXED;
@@ -346,7 +347,7 @@ void TQuiz6::SetupTexts()
 	Quiz[137].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[138].MyGroup = GROUP_MIXED;
 	Quiz[139].MyGroup = GROUP_MIXED;
-	Quiz[140].MyGroup = GROUP_MIXED;
+	Quiz[140].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[141].MyGroup = GROUP_MIXED;
 	Quiz[142].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
@@ -792,6 +793,9 @@ void TQuiz6::LoadReferers()
 
 		if (Row.Ancestry >= 4000)
 			UpdateReferer(&AsianRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Schizophrenia)
+			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Autism || Row.Aspie)
 		{

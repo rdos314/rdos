@@ -81,6 +81,7 @@ TQuiz::TQuiz(int Questions)
 	 Dysgraphia(Questions),
 	 Bipolar(Questions),
 	 Schizophrenia(Questions),
+	 SocialPhobia(Questions),
 	 LowIQ(Questions),
 	 HighIQ(Questions),
 	 NoRef("", "No referrer"),
@@ -106,6 +107,8 @@ TQuiz::TQuiz(int Questions)
 	 PARef("", "Prosapagnosia"),
 	 DysgraphiaRef("", "Dysgraphia"),
 	 BipolarRef("", "Bipolar"),
+	 SchizophreniaRef("", "Schizophrenia"),
+	 SocialPhobiaRef("", "Social phobia"),
 	 AmerindianRef("", "Native American"),
 	 AfroAmericanRef("", "Afroamerican"),
 	 MixedAfroAmericanRef("", "Mixed American"),
@@ -248,6 +251,7 @@ void TQuiz::Init()
 	Group[GROUP_NONVERBAL].Name = "NT communication";
 	Group[GROUP_SEX].Name = "Sexuality";
 	Group[GROUP_REPETITION].Name = "Predictability";
+	Group[GROUP_RK].Name = "r/K selection";
 	Group[GROUP_MIXED].Name = "Mixed";
 
 #endif
@@ -264,6 +268,7 @@ void TQuiz::Init()
 	Group[GROUP_NONVERBAL].Name = "NT Kommunikation";
 	Group[GROUP_SEX].Name = "Sexualitet";
 	Group[GROUP_REPETITION].Name = "Förutsägbarhet";
+	Group[GROUP_RK].Name = "r/K selektion";
 	Group[GROUP_MIXED].Name = "Blandat";
 
 #endif
@@ -912,6 +917,9 @@ TPopulation *TQuiz::GetPop(int PopType)
 
 		case POP_TYPE_SCHIZOPHRENIA:
 			return &Schizophrenia;
+
+		case POP_TYPE_SOCIAL_PHOBIA:
+			return &SocialPhobia;
 
 		case POP_TYPE_LOW_IQ:
 			return &LowIQ;
@@ -1771,6 +1779,8 @@ void TQuiz::WriteReferers(const char *filename)
 	WriteReferer(file, &PARef);
 	WriteReferer(file, &DysgraphiaRef);
 	WriteReferer(file, &BipolarRef);
+	WriteReferer(file, &SchizophreniaRef);
+	WriteReferer(file, &SocialPhobiaRef);
 	WriteReferer(file, &WhiteRef);
 	WriteReferer(file, &AsianRef);
 	WriteReferer(file, &AmerindianRef);
@@ -5260,6 +5270,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
                     ok = quiz->Schizophrenia.ValueCount > 5;
                     break;
 
+                case POP_TYPE_SOCIAL_PHOBIA:
+                    ok = quiz->SocialPhobia.ValueCount > 5;
+                    break;
+
                 case POP_TYPE_LOW_IQ:
                     ok = quiz->LowIQ.ValueCount > 5;
                     break;
@@ -5345,6 +5359,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
         case POP_TYPE_SCHIZOPHRENIA:
             ok = Schizophrenia.ValueCount > 5;
+            break;
+
+        case POP_TYPE_SOCIAL_PHOBIA:
+            ok = SocialPhobia.ValueCount > 5;
             break;
 
         case POP_TYPE_LOW_IQ:
@@ -5472,6 +5490,7 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 	WritePcaCorrRow(file, "Dysgraphia", POP_TYPE_DYSGRAPHIA);
 	WritePcaCorrRow(file, "Bipolar", POP_TYPE_BIPOLAR);
 	WritePcaCorrRow(file, "Schizophrenia", POP_TYPE_SCHIZOPHRENIA);
+	WritePcaCorrRow(file, "Social phobia", POP_TYPE_SOCIAL_PHOBIA);
 	WritePcaCorrRow(file, "NT control", POP_TYPE_NT);
 	WritePcaCorrRow(file, "Low IQ", POP_TYPE_LOW_IQ);
 	WritePcaCorrRow(file, "High IQ", POP_TYPE_HIGH_IQ);

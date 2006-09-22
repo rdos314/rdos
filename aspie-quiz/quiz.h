@@ -52,7 +52,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             11
+#define GROUP_COUNT             12
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_NT_BIOLOGY        1
@@ -64,7 +64,8 @@
 #define GROUP_NONVERBAL         7
 #define GROUP_REPETITION        8
 #define GROUP_SEX               9
-#define GROUP_MIXED             10
+#define GROUP_RK                10
+#define GROUP_MIXED             11
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
@@ -85,6 +86,7 @@
 #define POP_TYPE_SCHIZOPHRENIA  16
 #define POP_TYPE_LOW_IQ         17
 #define POP_TYPE_HIGH_IQ        18
+#define POP_TYPE_SOCIAL_PHOBIA  19
 
 class TQuiz;
 
@@ -280,6 +282,7 @@ protected:
     TPopulation Dysgraphia;
     TPopulation Bipolar;
     TPopulation Schizophrenia;
+    TPopulation SocialPhobia;
     TPopulation LowIQ;
     TPopulation HighIQ;
     
@@ -302,6 +305,7 @@ protected:
     TReferer HyperlexiaRef;
     TReferer DyspraxiaRef;
     TReferer DyslexiaRef;
+    TReferer SocialPhobiaRef;
     TReferer DyscalculiaRef;
     TReferer OCDRef;
     TReferer ODDRef;
@@ -309,6 +313,7 @@ protected:
     TReferer PARef;
     TReferer DysgraphiaRef;
     TReferer BipolarRef;
+    TReferer SchizophreniaRef;
     TReferer AmerindianRef;
     TReferer MixedAfroAmericanRef;
     TReferer AfroAmericanRef;
