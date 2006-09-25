@@ -250,8 +250,7 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_COMM].Name = "Stims";
 	Group[GROUP_NONVERBAL].Name = "NT communication";
 	Group[GROUP_SEX].Name = "Sexuality";
-	Group[GROUP_REPETITION].Name = "Predictability";
-	Group[GROUP_RK].Name = "r/K selection";
+	Group[GROUP_REPETITION].Name = "Compulsions";
 	Group[GROUP_MIXED].Name = "Mixed";
 
 #endif
@@ -267,8 +266,7 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_COMM].Name = "Stimming";
 	Group[GROUP_NONVERBAL].Name = "NT Kommunikation";
 	Group[GROUP_SEX].Name = "Sexualitet";
-	Group[GROUP_REPETITION].Name = "Förutsägbarhet";
-	Group[GROUP_RK].Name = "r/K selektion";
+	Group[GROUP_REPETITION].Name = "Tvång";
 	Group[GROUP_MIXED].Name = "Blandat";
 
 #endif

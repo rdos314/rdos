@@ -251,7 +251,7 @@ void TQuiz7::SetupTexts()
 	Quiz[37].MyGroup = GROUP_NT_TALENT;
 	Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[40].MyGroup = GROUP_MIXED;
 	Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -295,14 +295,14 @@ void TQuiz7::SetupTexts()
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;
 	Quiz[83].MyGroup = GROUP_MIXED;
-	Quiz[84].MyGroup = GROUP_MIXED;
-	Quiz[85].MyGroup = GROUP_MIXED;
+	Quiz[84].MyGroup = GROUP_REPETITION;
+	Quiz[85].MyGroup = GROUP_REPETITION;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_REPETITION;
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_REPETITION;
 	Quiz[90].MyGroup = GROUP_MIXED;
-	Quiz[91].MyGroup = GROUP_MIXED;
+	Quiz[91].MyGroup = GROUP_REPETITION;
 	Quiz[92].MyGroup = GROUP_REPETITION;
 	Quiz[93].MyGroup = GROUP_REPETITION;
 	Quiz[94].MyGroup = GROUP_SEX;
@@ -329,7 +329,7 @@ void TQuiz7::SetupTexts()
 	Quiz[115].MyGroup = GROUP_MIXED;
 	Quiz[116].MyGroup = GROUP_MIXED;
 	Quiz[117].MyGroup = GROUP_MIXED;
-	Quiz[118].MyGroup = GROUP_MIXED;
+	Quiz[118].MyGroup = GROUP_REPETITION;
 	Quiz[119].MyGroup = GROUP_MIXED;
 	Quiz[120].MyGroup = GROUP_MIXED;
 	Quiz[121].MyGroup = GROUP_MIXED;
@@ -1472,11 +1472,11 @@ void TQuiz7::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

@@ -181,6 +181,9 @@ void UpdateScore(TQuizRow *row)
 
 	for (i = 0; i < 200; i++)
 	{
+		if (row->Quiz[i] < 0 || row->Quiz[i] > 3)
+        	exit;
+
 		if (row->Quiz[i])
 		{
 			val = row->Quiz[i];
@@ -223,6 +226,12 @@ void UpdateScore(TQuizRow *row)
 
 	row->AsResult = assum * 100 / astotsum;
 	row->NtResult = ntsum * 100 / nttotsum;
+
+	if (row->AsResult < 0 || row->AsResult >= 200)
+		exit;
+
+	if (row->NtResult < 0 || row->NtResult >= 200)
+		exit;
 }
 
 /*##################  ProcessRow ##########################

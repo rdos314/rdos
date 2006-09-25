@@ -18,7 +18,7 @@ struct TQuizRow
     char PA;
     char Dysgraphia;
     char Bipolar;
-    char Referer[100];
+    char Referer[200];
     long AsResult;
     long NtResult;
     long Hs;

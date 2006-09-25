@@ -166,5 +166,9 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteHair("hair7.htm");
 	 Quiz[6]->WriteEye("eye7.htm");
 	 Quiz[6]->WriteRace("race7.htm");
+
+	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
+	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
+	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 }
 
