@@ -2068,3 +2068,9 @@ StartFloppy	MACRO
 StopFloppy	MACRO
 	OsGate stop_floppy_nr
 					ENDM
+
+;   ES:EDI  Pointer to data
+;   ECX     Size of data
+NotifyEthernetPacket	MACRO
+	OsGate notify_ethernet_packet_nr
+					ENDM

@@ -1772,6 +1772,74 @@ arp_answ_done:
 	LeaveSection ds:arp_section
 	jmp arp_thread_loop
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetTimestamp
+;
+;		description:	Get pcap compatible timestamp
+;
+;       returns:        EDX:EAX Timestamp
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetTimestamp    Proc near
+    GetTime
+    push eax
+    BinaryToTime
+;    
+    push ax
+    PassedDays      ; ax = passed days
+    movzx eax,ax
+    mov edx,24
+    mul edx
+    movzx edx,bh
+    add eax,edx
+    mov edx,60
+    mul edx
+    movzx edx,bl
+    add eax,edx
+    pop bx
+    mov edx,60
+    mul edx
+    movzx edx,bh
+    add edx,eax 
+;
+    pop ebx
+    push edx
+;    
+    mov eax,3600
+    mul ebx
+    mov ebx,1000000
+    mul ebx
+    mov eax,edx
+;    
+    pop edx  
+    ret
+GetTimestamp    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NotifyEthernetPacket
+;
+;		description:	Notify reception of ethernet packet
+;
+;       parameters:     ECX     Size of packet
+;                       ES:EDI  Pointer to packet
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_ethernet_packet_name DB 'Notify Ethernet Packet', 0
+
+notify_ethernet_packet	Proc far
+	ret
+notify_ethernet_packet	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1930,6 +1998,12 @@ init	PROC far
 	mov di,OFFSET add_net_source_address_name
 	xor cl,cl
 	mov ax,add_net_source_address_nr
+	RegisterOsGate
+;
+	mov si,OFFSET notify_ethernet_packet
+	mov di,OFFSET notify_ethernet_packet_name
+	xor cl,cl
+	mov ax,notify_ethernet_packet_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET ether_broadcast

@@ -596,7 +596,9 @@ Receive	Proc far
     add edx,4    
     add edx,ds:RxRingLinear
     CreateAliasSelector16
+    xor edi,edi
     mov es,bx
+    NotifyEthernetPacket
 	mov edi,14
 	sub ecx,14
 ;
@@ -680,7 +682,6 @@ gbSizeOk:
 	ret
 GetBuffer	Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -731,6 +732,7 @@ Send	Proc far
     mov ecx,60
 
 sPadOk:	
+    NotifyEthernetPacket
     mov bx,es
 	push ecx
 	GetSelectorBaseSize
