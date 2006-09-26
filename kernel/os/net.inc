@@ -27,6 +27,11 @@
 
 net_data	STRUC
 
+capture_handle      DW ?
+capture_thread      DW ?
+capture_list        DD ?
+capture_section		section_typ <>
+
 arp_section			section_typ <>
 arp_rec_list		DW ?
 arp_send_list		DW ?

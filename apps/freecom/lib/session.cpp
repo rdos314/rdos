@@ -70,6 +70,7 @@
 #include "fd2file.h"
 #include "mount.h"
 #include "reboot.h"
+#include "capture.h"
 
 #include "file.h"
 #include "path.h"
@@ -93,6 +94,7 @@ static TCommandFactory *cd;
 static TCommandFactory *chdir;
 static TCommandFactory *cls;
 static TCommandFactory *newsess;
+static TCommandFactory *capture;
 static TCommandFactory *cpy;
 static TCommandFactory *date;
 static TCommandFactory *del;
@@ -194,6 +196,7 @@ TSession::TSession()
     	cls = new TClsFactory;
     	chdir = new TChdirFactory;
     	cd = new TCdFactory;
+    	capture = new TCaptureFactory;
     	call = new TCallFactory;
     	help = new THelpFactory;
 
@@ -310,6 +313,7 @@ TSession::~TSession()
     	delete cls;
 	    delete chdir;
     	delete cd;
+    	delete capture;
     	delete call;
     	delete help;
 

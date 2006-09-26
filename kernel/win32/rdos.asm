@@ -8073,10 +8073,12 @@ RdosKickWatchdog	Endp
 RdosStartNetCapture	Proc near
 	push ebp
 	mov ebp,esp
+	push ebx
 ;
 	mov bx,[ebp+8]
 	UserGate start_net_capture_nr
 ;
+    pop ebx
 	pop ebp
 	ret 4
 RdosStartNetCapture	Endp

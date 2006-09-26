@@ -732,6 +732,7 @@ Send	Proc far
     mov ecx,60
 
 sPadOk:	
+    xor edi,edi
     NotifyEthernetPacket
     mov bx,es
 	push ecx

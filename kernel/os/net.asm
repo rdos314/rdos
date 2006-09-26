@@ -74,6 +74,18 @@ ar_data		DB ?
 
 arp_rec_struc	ENDS
 
+
+capture_block   STRUC
+
+cb_prev     DD ?
+cb_next     DD ?
+cb_sec      DD ?
+cb_us       DD ?
+cb_len1     DD ?
+cb_len2     DD ?
+
+capture_block   ENDS
+
 code	SEGMENT byte public 'CODE'
 
 .386p
@@ -1786,6 +1798,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTimestamp    Proc near
+    push ebx
+    push cx
+;    
     GetTime
     push eax
     BinaryToTime
@@ -1817,8 +1832,146 @@ GetTimestamp    Proc near
     mov eax,edx
 ;    
     pop edx  
+;
+    pop cx
+    pop ebx
     ret
 GetTimestamp    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CaptureThread
+;
+;		description:    Capture thread
+;
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+capture_thread_name DB 'Net Capture', 0
+
+capture_thread_pr:
+    mov bx,net_data_sel
+    mov ds,bx
+    GetThread
+    mov ds:capture_thread,ax
+    LeaveSection ds:capture_section
+;    
+    mov ax,flat_sel
+    mov es,ax
+    mov eax,24
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    mov bx,ds:capture_handle
+    GetFileSize
+    cmp eax,24
+    jc ctpRewrite
+;
+    mov ecx,24
+    UserGateForce32 read_file_nr
+    cmp eax,24
+    jne ctpRewrite
+;
+    mov eax,es:[edi]
+    cmp eax,0A1B2C3D4h
+    jne ctpRewrite
+;
+    GetFileSize
+    SetFilePos
+;
+    mov ecx,24
+    mov edx,edi
+    FreeLinear    
+    jmp ctpLoop
+
+ctpRewrite:
+    xor eax,eax
+    SetFilePos
+    SetFileSize
+;
+    mov edx,edi
+;    
+    mov eax,0A1B2C3D4h
+    stos dword ptr es:[edi]
+;
+    mov ax,2
+    stos word ptr es:[edi]
+; 
+    mov ax,4
+    stos word ptr es:[edi]
+;
+    xor eax,eax
+    stos dword ptr es:[edi]
+;
+    xor eax,eax
+    stos dword ptr es:[edi]
+;
+    mov eax,0FFFFh
+    stos dword ptr es:[edi]
+;
+    mov eax,1
+    stos dword ptr es:[edi]
+;     
+    mov ecx,24
+    mov edi,edx
+    UserGateForce32 write_file_nr
+;
+    mov ecx,24
+    mov edx,edi
+    FreeLinear             
+
+ctpLoop:
+    WaitForSignal
+
+ctpMore:
+    EnterSection ds:capture_section    
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz ctpExit
+;
+    mov edx,ds:capture_list
+    or edx,edx
+    jz ctpNext
+;
+	push ebx
+	mov eax,es:[edx].cb_next
+	mov ebx,es:[edx].cb_prev
+	mov es:[ebx].cb_next,eax
+	mov es:[eax].cb_prev,ebx
+	pop ebx
+	cmp eax,edx
+	jne ctpUnlink
+;
+	mov ds:capture_list,0
+	jmp ctpWrite
+
+ctpUnlink:
+    mov ds:capture_list,eax
+
+ctpWrite:	
+    LeaveSection ds:capture_section
+;    
+    mov edi,edx
+    mov ecx,es:[edi].cb_len1
+    add ecx,16
+    add edi,8
+    UserGateForce32 write_file_nr
+;
+    add ecx,8
+    FreeLinear        
+    jmp ctpMore
+    
+ctpNext:
+    LeaveSection ds:capture_section
+    jmp ctpLoop
+
+ctpExit:  
+    mov ds:capture_thread,0
+    LeaveSection ds:capture_section
+    retf    
 
 PAGE
 
@@ -1837,6 +1990,70 @@ PAGE
 notify_ethernet_packet_name DB 'Notify Ethernet Packet', 0
 
 notify_ethernet_packet	Proc far
+    push ds
+    push ax
+;
+    mov ax,net_data_sel
+    mov ds,ax
+    EnterSection ds:capture_section
+    mov ax,ds:capture_thread
+    or ax,ax
+    jz nepLeave
+;    
+    push es
+    pushad
+;    
+    mov ax,es
+    mov ds,ax
+    mov esi,edi
+    mov bx,flat_sel
+    mov es,bx
+    mov eax,SIZE capture_block
+    add eax,ecx
+    AllocateSmallLinear
+    mov edi,edx
+;    
+    call GetTimestamp
+    mov es:[edi].cb_sec,edx
+    mov es:[edi].cb_us,eax
+    mov es:[edi].cb_len1,ecx
+    mov es:[edi].cb_len2,ecx
+    mov edx,edi
+    add edi,SIZE capture_block
+    rep movs byte ptr es:[edi],ds:[esi]
+;
+    mov bx,net_data_sel
+    mov ds,bx
+;
+	mov eax,ds:capture_list
+	or eax,eax
+	jne nepQueue
+
+nepEmpty:
+    mov es:[edx].cb_prev,edx
+    mov es:[edx].cb_next,edx
+    mov ds:capture_list,edx
+	jmp nepSignal
+
+nepQueue:
+	mov ebx,es:[eax].cb_prev
+	mov es:[eax].cb_prev,edx
+	mov es:[ebx].cb_next,edx
+	mov es:[edx].cb_prev,ebx
+	mov es:[edx].cb_next,eax	
+
+nepSignal:
+    mov bx,ds:capture_thread
+    Signal
+;
+    popad
+    pop es
+
+nepLeave:
+    LeaveSection ds:capture_section
+;    
+    pop ax
+    pop ds    
 	ret
 notify_ethernet_packet	Endp
 
@@ -1854,6 +2071,35 @@ notify_ethernet_packet	Endp
 start_net_capture_name DB 'Start Net Capture', 0
 
 start_net_capture	Proc
+    push ds
+    push es
+    push ax
+    push bx
+    push cx
+    push si
+    push di
+;    
+    mov ax,net_data_sel
+    mov ds,ax
+    EnterSection ds:capture_section
+;
+    mov ds:capture_handle,bx
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov si,OFFSET capture_thread_pr
+	mov di,OFFSET capture_thread_name
+	mov ax,3
+	mov cx,256
+	CreateThread
+;	
+	pop di
+    pop si
+    pop cx
+    pop bx
+    pop ax
+	pop es
+    pop ds
 	retf32
 start_net_capture	Endp
 
@@ -1869,6 +2115,29 @@ start_net_capture	Endp
 stop_net_capture_name DB 'Stop Net Capture', 0
 
 stop_net_capture	Proc
+    push ds
+    push bx
+;    
+    int 3
+    mov bx,net_data_sel
+    mov ds,bx
+
+    EnterSection ds:capture_section
+    xor bx,bx
+    xchg bx,ds:capture_thread
+    or bx,bx
+    jz sncThreadDone
+;    
+    Signal
+
+sncThreadDone:
+    mov bx,ds:capture_handle
+    CloseFile
+    mov ds:capture_handle,0
+    LeaveSection ds:capture_section        
+;
+    pop bx
+    pop ds    
 	retf32
 stop_net_capture	Endp
 
@@ -1939,7 +2208,11 @@ init	PROC far
 	mov es:arp_send_list,0
 	mov es:arp_answ_list,0
 	mov es:arp_thread,0
+	mov es:capture_handle,0
+	mov es:capture_thread,0
+	mov es:capture_list,0
 	InitSection es:arp_section
+	InitSection es:capture_section
 ;
 	mov ax,cs
 	mov ds,ax
