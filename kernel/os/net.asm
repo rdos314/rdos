@@ -1843,6 +1843,38 @@ notify_ethernet_packet	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			StartNetCapture
+;
+;		description:	Start capturing net-packets
+;
+;       parameters:     BX      File handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_net_capture_name DB 'Start Net Capture', 0
+
+start_net_capture	Proc
+	retf32
+start_net_capture	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StopNetCapture
+;
+;		description:	Stop capturing net-packets
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_net_capture_name DB 'Stop Net Capture', 0
+
+stop_net_capture	Proc
+	retf32
+stop_net_capture	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			Init_net
 ;
 ;		DESCRIPTION:    init net driver
@@ -2020,6 +2052,18 @@ init	PROC far
 	mov cx,4
 	mov al,0
 	RegisterNetClass
+;
+	mov si,OFFSET start_net_capture
+	mov di,OFFSET start_net_capture_name
+	xor dx,dx
+	mov ax,start_net_capture_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET stop_net_capture
+	mov di,OFFSET stop_net_capture_name
+	xor dx,dx
+	mov ax,stop_net_capture_nr
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

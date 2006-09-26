@@ -2034,3 +2034,12 @@ StartWatchdog      MACRO
 KickWatchdog      MACRO
 	UserGate kick_watchdog_nr
 						ENDM
+						
+;	IN  BX		File handle
+StartNetCapture      MACRO
+	UserGate start_net_capture_nr
+						ENDM
+						
+StopNetCapture      MACRO
+	UserGate stop_net_capture_nr
+						ENDM

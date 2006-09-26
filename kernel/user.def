@@ -369,4 +369,7 @@ get_random_nr               = 314
 
 suspend_and_signal_thread_nr    = 315
 
+start_net_capture_nr           = 316
+stop_net_capture_nr            = 317
+
 usergate_entries			= 340

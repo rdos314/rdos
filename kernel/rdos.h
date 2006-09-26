@@ -336,6 +336,9 @@ void __stdcall RdosDisableStatusLED();
 void __stdcall RdosStartWatchdog(int timeout);
 void __stdcall RdosKickWatchdog();
 
+void __stdcall RdosStartNetCapture(int FileHandle);
+void __stdcall RdosStopNetCapture();
+
 #ifdef __cplusplus
 }
 #endif

@@ -37,6 +37,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+TString CaptureFileName = "z:\\net.cap";
+int CaptureHandle = 0;
+
 /*##########################################################################
 #
 #   Name       : TCaptureFactory::TCaptureFactory
@@ -99,7 +102,9 @@ TCaptureCommand::TCaptureCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TCaptureCommand::Execute(char *param)
 {
+    TString Str;
 	const char *str;
+	const char *file;
 
 	if (!ScanCmdLine(param, 0))
 		return 1;
@@ -111,7 +116,49 @@ int TCaptureCommand::Execute(char *param)
 		 return E_Useage;
 	}
 
-	str = FArgList->FName.GetData();
-	return 0;
-}
+	Str = FArgList->FName;
+	Str.Lower();
+    str = Str.GetData();
+    
+    if (!strcmp(str, "off"))
+    {
+        RdosStopNetCapture();
 
+        if (CaptureHandle)
+        {
+            RdosCloseFile(CaptureHandle);
+            CaptureHandle = 0;
+        }
+            
+		FMsg.Load(TEXT_CAPTURE_OFF);
+        return 0;        
+    }
+
+    if (strcmp(str, "on"))
+        CaptureFileName = FArgList->FName;
+    
+    if (CaptureHandle)
+    {
+        RdosStopNetCapture();
+        RdosCloseFile(CaptureHandle);
+        CaptureHandle = 0;
+    }
+
+    file = CaptureFileName.GetData();
+    CaptureHandle = RdosOpenFile(file, 0);
+    if (!CaptureHandle)
+        CaptureHandle = RdosCreateFile(file, 0);
+        
+    if (CaptureHandle)
+    {
+		  RdosStartNetCapture(CaptureHandle);
+		FMsg.printf(TEXT_CAPTURE_ON, file);
+        return 0;        
+    }
+    else
+    {
+		 FMsg.Load(TEXT_ERROR_FILE_NOT_FOUND);
+		 Write(FMsg.GetData());
+		 return E_Useage;
+    }
+}

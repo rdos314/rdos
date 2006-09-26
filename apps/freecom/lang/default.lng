@@ -1652,3 +1652,11 @@ CAPTURE [ON | OFF | file]
   OFF             Turn off capture
   file            Logfile for capture (also turns on capture)
 .
+
+:TEXT_CAPTURE_ON
+Capture turned ON. Logfile is %s.
+.
+
+:TEXT_CAPTURE_OFF
+Capture turned OFF.
+.

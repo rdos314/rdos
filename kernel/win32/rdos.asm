@@ -8057,6 +8057,48 @@ RdosKickWatchdog	Proc near
 	ret
 RdosKickWatchdog	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosStartNetCapture
+;
+;       DESCRIPTION:    Start net-capture
+;
+;		PARAMETERS:		Filehandle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosStartNetCapture
+
+RdosStartNetCapture	Proc near
+	push ebp
+	mov ebp,esp
+;
+	mov bx,[ebp+8]
+	UserGate start_net_capture_nr
+;
+	pop ebp
+	ret 4
+RdosStartNetCapture	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosStopNetCapture
+;
+;       DESCRIPTION:    Stop net-capture
+;
+;		PARAMETERS:		
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosStopNetCapture
+
+RdosStopNetCapture	Proc near
+	UserGate stop_net_capture_nr
+	ret
+RdosStopNetCapture	Endp
+
 ;	extrn Startup:near
 
 ;	public _main
