@@ -1643,3 +1643,12 @@ MOUNT [/D drive[:]] pathname
   /D drive        Mount to specified drive
   pathname        File containing raw file system
 .
+
+:TEXT_CMDHELP_CAPTURE
+Capture network traffic
+
+CAPTURE [ON | OFF | file]
+  ON              Turn on capture
+  OFF             Turn off capture
+  file            Logfile for capture (also turns on capture)
+.
