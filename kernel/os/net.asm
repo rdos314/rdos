@@ -1636,6 +1636,64 @@ ResendTimeout	Proc far
 	ret
 ResendTimeout	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetEnvString
+;
+;		description:	Find an enviroment variable
+;
+;		PARAMETERS:		ES:DI		var name
+;
+;		RETURNS:		NC			found
+;							DS:SI	address of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetEnvString	proc near
+    push bx
+    LockSysEnv
+	mov ds,bx
+	xor si,si
+	mov ax,cs
+find_var_str_loop:
+	mov al,[si]
+	or al,al
+	stc
+	jz find_var_str_done
+	push di
+find_var_char_str_loop:
+	cmpsb
+	jnz find_var_str_next
+	mov al,es:[di]
+	or al,al
+	jnz find_var_char_str_loop
+	mov al,[si]
+	cmp al,'='
+	je find_var_str_found
+
+find_var_str_next:
+	lodsb
+	or al,al
+	jnz find_var_str_next
+	pop di
+	jmp find_var_str_loop
+
+find_var_str_found:
+	pop di
+	inc si
+	clc
+find_var_str_done:
+    pushf
+    UnlockSysEnv
+    popf
+;
+    pop bx
+	ret
+GetEnvString	Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -1650,8 +1708,30 @@ ResendTimeout	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 arp_thread_name	DB 'ARP',0
+capture_str		DB 'NET.CAPTURE',0
 
 arp_thread_pr:
+	mov ax,cs
+	mov es,ax
+	mov di,OFFSET capture_str
+	call GetEnvString
+	jc capture_done
+;
+    mov di,si
+    mov ax,ds
+    mov es,ax
+    xor cl,cl
+    OpenFile
+    jnc capture_setup
+;
+    xor cx,cx
+    CreateFile
+    jc capture_done
+
+capture_setup:        
+    StartNetCapture
+
+capture_done:
 	mov ax,net_data_sel
 	mov ds,ax
 	GetThread
@@ -2118,7 +2198,6 @@ stop_net_capture	Proc
     push ds
     push bx
 ;    
-    int 3
     mov bx,net_data_sel
     mov ds,bx
 
@@ -2129,10 +2208,10 @@ stop_net_capture	Proc
     jz sncThreadDone
 ;    
     Signal
-
-sncThreadDone:
     mov bx,ds:capture_handle
     CloseFile
+
+sncThreadDone:
     mov ds:capture_handle,0
     LeaveSection ds:capture_section        
 ;
@@ -2158,7 +2237,7 @@ init_net	Proc far
 	push ds
 	push es
 	pusha
-;
+;	
 	mov ax,cs
 	mov ds,ax
 	mov es,ax

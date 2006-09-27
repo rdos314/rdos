@@ -590,7 +590,7 @@ dhcp_disc_size_ok:
 	pop ds
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
-	mov es:[di].dhcp_flags,0
+	mov es:[di].dhcp_flags,80h
 	mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_req_ip,0
 	mov es:[di].dhcp_server_ip,0
@@ -696,7 +696,7 @@ dhcp_req_size_ok:
 	pop ds
 	mov es:[di].dhcp_id,eax
 	mov es:[di].dhcp_elapsed,0
-	mov es:[di].dhcp_flags,0
+	mov es:[di].dhcp_flags,80h
 	mov es:[di].dhcp_client_ip,0
 	mov es:[di].dhcp_req_ip,0
 	mov es:[di].dhcp_server_ip,0
@@ -1094,18 +1094,27 @@ dhcp_thread_pr:
 	mov ax,250
 	WaitMilliSec
 ;
+    mov cx,8
+
+dhcp_thread_retry:    
 	mov ax,cs
 	mov es,ax
 	mov di,OFFSET DhcpDiscover
 	NetBroadcast
 ;
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET DhcpTimeout
-	GetSystemTime
-	add eax,1193 * 2000
-	adc edx,0
-	StartTimer
+    mov ax,250
+    WaitMilliSec	
+;    
+	mov bx,dhcp_data_sel
+	mov ds,bx
+    mov al,ds:dhcp_stat
+    or al,al
+    jnz dhcp_thread_done
+;
+    loop dhcp_thread_retry    
+
+dhcp_thread_done:
+    mov ds:dhcp_stat,1    
 	retf
 
 PAGE

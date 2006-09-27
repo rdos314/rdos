@@ -3139,9 +3139,7 @@ receive_no_connection:
 	push si
 	mov al,6
 	mov ah,60
-	mov bx,ds:ip_id
 	mov ecx,SIZE tcp_header
-	mov edx,ds:ip_source
 	mov si,cs
 	mov ds,si	
 	mov esi,OFFSET no_options
@@ -3181,10 +3179,16 @@ receive_rst_noack:
 	mov es:[di].tcp_flags,RST OR ACK
 
 receive_rst_do:
-	mov ax,word ptr ds:ip_dest
-	adc ax,word ptr ds:ip_dest+2
-	adc ax,word ptr ds:ip_source
-	adc ax,word ptr ds:ip_source+2
+    push edx
+    pop bx
+    pop ax
+    add ax,bx
+   	GetIpAddress
+	push edx
+	pop bx
+    adc ax,bx
+    pop bx
+    adc ax,bx
 	adc ax,600h
 	adc ax,0
 	adc ax,0

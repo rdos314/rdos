@@ -949,7 +949,6 @@ receive_check_ok:
 	xor ah,ah
 	mov si,di
 	add si,ax	
-	add si,SIZE ip_header
 ;
 	mov ax,es:[si].udp_source
 	xchg al,ah
@@ -989,7 +988,7 @@ receive_prot_loop:
 	cmp al,es:[di].ip_proto
 	jne receive_prot_next
 ;
-	mov ax,es
+   	mov ax,es
 	mov ds,ax
 	mov bx,ds:[di].ip_id
 	xchg bl,bh
