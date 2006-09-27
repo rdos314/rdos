@@ -1878,6 +1878,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetTimestamp    Proc near
+    push esi
     push ebx
     push cx
 ;    
@@ -1886,8 +1887,22 @@ GetTimestamp    Proc near
     BinaryToTime
 ;    
     push ax
-    PassedDays      ; ax = passed days
-    movzx eax,ax
+;
+    push dx
+    sub dx,1970
+    movzx esi,dx
+    mov eax,365
+    mul esi
+	dec si
+	shr si,2
+	inc si
+    add esi,eax
+    pop dx        
+;    
+    PassedDays      ; ax = passed days   
+    movzx eax,ax    
+    add eax,esi
+;    
     mov edx,24
     mul edx
     movzx edx,bh
@@ -1915,6 +1930,7 @@ GetTimestamp    Proc near
 ;
     pop cx
     pop ebx
+    pop esi
     ret
 GetTimestamp    Endp
 

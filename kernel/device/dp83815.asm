@@ -923,12 +923,12 @@ Receive	Proc far
 	and ecx,0FFFh
 ;	
 	mov es,es:[edi].dh_data_sel
+	xor edi,edi
+	add ecx,14
+    NotifyEthernetPacket
+;	
 	mov edi,14
-
-IFDEF debug
-	mov al,LS_TYPE_RECEIVED
-	call LogEntry	
-ENDIF
+	sub ecx,14
 ;
 	pop eax
 	pop ds
@@ -1049,12 +1049,9 @@ Send	Proc far
 ;    mov ecx,64
 
 sSizeOk:
-
-IFDEF debug
-	mov al,LS_TYPE_SENT
-	call LogEntry
-ENDIF
-
+    xor edi,edi
+    NotifyEthernetPacket
+;
 	call CreateSendEntry
 	mov ax,es
 	cmp ax,bp

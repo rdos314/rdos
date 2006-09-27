@@ -585,7 +585,13 @@ dhcp_disc_size_ok:
 	push ds
 	mov ax,dhcp_data_sel
 	mov ds,ax
+	mov eax,ds:dhcp_ident
+	or eax,eax
+	jnz dhcp_ident_ok
+;	
 	GetSystemTime
+
+dhcp_ident_ok:
 	mov ds:dhcp_ident,eax
 	pop ds
 	mov es:[di].dhcp_id,eax
@@ -1175,6 +1181,7 @@ init_dhcp	PROC near
 	mov es:dhcp_server,0
 	GetIpAddress
 	mov es:dhcp_wanted_ip,edx
+	mov es:dhcp_ident,0
 ;
 	mov ax,cs
 	mov ds,ax
