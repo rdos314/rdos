@@ -200,6 +200,7 @@ diff_pos:
 sync_diff_found:
 	FreeMem
 	UpdateTime
+	UpdateRtc
 	clc
 sync_time_done:
 	pop di
