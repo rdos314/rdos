@@ -69,6 +69,8 @@ void cdecl main()
 
 	RdosWaitMilli(1000);
 
+	RdosWriteSerialVal(2, 2, 0x10000000);
+
 	NtpIp = RdosNameToIp("ntp.lth.se");
 	RdosSyncTime(NtpIp);
 
