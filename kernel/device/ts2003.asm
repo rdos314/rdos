@@ -74,9 +74,10 @@ touch_thread:
     CreateWait
     mov ds:td_wait,bx
 ;    
-    mov al,1
+    xor al,al
 
 ttPortLoop:    
+    push ax
     mov ah,8
     mov bl,1
     mov bh,'N'
@@ -84,10 +85,10 @@ ttPortLoop:
     mov si,256
     mov di,256
     OpenCom
-    jc ttDone
+    or bx,bx
+    jz ttDone
 ;
     mov ds:td_port,bx
-    push ax
     ResetDtr
     ResetRts
 ;
@@ -109,9 +110,9 @@ ttPortLoop:
     mov bx,ds:td_wait
     WaitWithTimeout
 ;
+    mov bx,ds:td_port
     ReadCom
-    or ah,ah
-    jnz ttNextPort      
+    jc ttNextPort      
 ;
     cmp al,'['
     jnz ttNextPort
@@ -122,9 +123,9 @@ ttPortLoop:
     mov bx,ds:td_wait
     WaitWithTimeout
 ;
+    mov bx,ds:td_port
     ReadCom
-    or ah,ah
-    jnz ttNextPort      
+    jc ttNextPort      
 ;
     cmp al,'T'
     jnz ttNextPort
@@ -135,9 +136,9 @@ ttPortLoop:
     mov bx,ds:td_wait
     WaitWithTimeout
 ;
+    mov bx,ds:td_port
     ReadCom
-    or ah,ah
-    jnz ttNextPort      
+    jc ttNextPort      
 ;
     cmp al,'S'
     jnz ttNextPort
@@ -148,16 +149,20 @@ ttPortLoop:
     mov bx,ds:td_wait
     WaitWithTimeout
 ;
+    mov bx,ds:td_port
     ReadCom
-    or ah,ah
-    jnz ttNextPort      
+    jc ttNextPort      
 ;
     cmp al,']'
     jz ttPortOk
 
-ttNextPort:    
+ttNextPort:   
+    mov bx,ds:td_wait 
+    RemoveWait
+;    
     pop ax
     inc al
+    mov bx,ds:td_port
     CloseCom
     jmp ttPortLoop
 
@@ -167,8 +172,11 @@ ttPortOk:
     WaitWithoutTimeout
     int 3
 
-ttDone:
-    ret
+ttDone: 
+    mov bx,ds:td_wait
+    CloseWait
+    pop ax
+    retf
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	

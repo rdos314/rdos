@@ -1024,9 +1024,11 @@ com_read_nix_wrap:
 	mov ds:rec_head,bx
 	sti
 	xor ah,ah
+	clc
 	jmp com_read_done
 com_read_no_char:
 	sti
+	stc
 	mov ax,-1
 com_read_done:
 	pop cx

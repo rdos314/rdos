@@ -1181,8 +1181,10 @@ debug_pace_not_gate:
 	je debug_pace_step
 	inc bx
 	cmp ax,9A66h
-	je debug_pace_step
-	jmp debug_pace_trace
+	jne debug_pace_trace
+;
+    add bx,2
+    
 debug_pace_step:
 	push ax
 	mov ax,es:tss_eflags+2
