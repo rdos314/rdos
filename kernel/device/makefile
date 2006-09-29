@@ -57,6 +57,10 @@ s2mouse_srcs = S2MOUSE.ASM
 s2mouse_objs = $(s2mouse_srcs:.ASM=.OBJ)
 s2mouse_rdvs = S2MOUSE.RDV
 
+ts2003_srcs = TS2003.ASM
+ts2003_objs = $(ts2003_srcs:.ASM=.OBJ)
+ts2003_rdvs = TS2003.RDV
+
 pccom_srcs = PCCOM.ASM
 pccom_objs = $(pccom_srcs:.ASM=.OBJ)
 pccom_rdvs = PCCOM.RDV
@@ -104,14 +108,16 @@ fat_rdvs = FAT.RDV
 srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
-			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs)
+			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
+			$(ts2003_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
 rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
-			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs)
+			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
+			$(ts2003_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -170,6 +176,14 @@ S2MOUSE.RDV : $(s2mouse_objs)
 	$(s2mouse_objs)
 	S2MOUSE.RDV
 	S2MOUSE;  
+!
+
+TS2003.RDV : $(ts2003_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(ts2003_objs)
+	TS2003.RDV
+	TS2003;       
 !
 
 PCCOM.RDV : $(pccom_objs)
