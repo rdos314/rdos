@@ -1088,9 +1088,9 @@ allocate_cluster32	ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			ALLOCATE_CLUSTER
+;		NAME:			ALLOCATE_CLUSTER_NO_VERIFY
 ;
-;		DESCRIPTION:	Allocate a cluster
+;		DESCRIPTION:	Allocate a cluster without verification
 ;
 ;		PARAMETERS:		AL			Drive
 ;
@@ -1098,9 +1098,9 @@ allocate_cluster32	ENDP
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public allocate_cluster
+	public allocate_cluster_no_verify
 
-allocate_cluster	Proc near
+allocate_cluster_no_verify	Proc near
 	cmp ds:fat_type,fat12
 	je alloc12
 ;
@@ -1120,7 +1120,7 @@ alloc12:
 
 allocate_cluster_done:
 	ret
-allocate_cluster	Endp
+allocate_cluster_no_verify	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1269,6 +1269,47 @@ eof_cluster_done:
 	LeaveSection ds:cluster_section
 	ret
 eof_cluster	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			BAD_CLUSTER
+;
+;		DESCRIPTION:	Mark cluster as bad
+;
+;		PARAMETERS:		AL			Drive
+;						EDX			Cluster #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public bad_cluster
+
+bad_cluster	Proc near
+	EnterSection ds:cluster_section
+	cmp ds:fat_type,fat12
+	je bad12
+;
+	cmp ds:fat_type,fat16
+	je bad16
+
+bad32:
+	mov ecx,0FFFFFFF8h
+	call update_cluster_link32
+	jmp bad_cluster_done
+
+bad16:
+	mov ecx,0FFF8h
+	call update_cluster_link16
+	jmp bad_cluster_done
+
+bad12:
+	mov ecx,0FF8h
+	call update_cluster_link12
+
+bad_cluster_done:
+	LeaveSection ds:cluster_section
+	ret
+bad_cluster	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;

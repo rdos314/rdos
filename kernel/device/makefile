@@ -101,7 +101,7 @@ sernet_srcs = SERNET.ASM
 sernet_objs = $(sernet_srcs:.ASM=.OBJ)
 sernet_rdvs = SERNET.RDV
 
-fat_srcs = FAT.ASM FATMISC.ASM FATTAB.ASM FATDIR.ASM FATFILE.ASM
+fat_srcs = FAT.ASM FATMISC.ASM FATTAB.ASM FATDIR.ASM FATFILE.ASM FATVERI.ASM
 fat_objs = $(fat_srcs:.ASM=.OBJ)
 fat_rdvs = FAT.RDV
 
