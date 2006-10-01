@@ -39,7 +39,7 @@ public:
 
 	void DeviceName(char *Name, int Size) const;
 
-	TFile *GetDayFile(int year, int month, int day, const char *name, void *init, int size);
+	TFile *GetDayFile(int year, int month, int day, int hour, int min, const char *name, void *init, int size);
     
 protected:
     void CreateRootDir();

@@ -76,13 +76,11 @@ void cdecl main()
 
 	log = new TLog("e:\\log");
 
-    file = log->GetDayFile(2006, 1, 27, "test.dat", &init, 4); 
-
 	InitHeatHttp();
 
 	for (i = 0; i < 8; i++)
 	{
-		RadArr[i] = new TRad(0x20 + i, i);
+		RadArr[i] = new TRad(0x20 + i, i, log);
 		AddHttpRad(RadArr[i]);
 	}
 

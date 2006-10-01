@@ -408,6 +408,10 @@ void THttpHeatPage::Get(const char *Name)
 					case 6:
 						File.Write("Trappa");
 						break;
+
+					case 7:
+						File.Write("Badrum");
+						break;
 				}
 				WriteFieldFooter(File);
 

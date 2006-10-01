@@ -29,11 +29,22 @@
 #define RAD_H
 
 #include "device.h"
+#include "log.h"
+
+struct TRadLog
+{
+    int Valid;
+    int Ref;
+    int Temp;
+    int Motor;
+    int Light;
+    int AuxTemp;
+};
 
 class TRad : public TDevice
 {
 public:
-	TRad(int Address, int Row);
+	TRad(int Address, int Row, TLog *Log);
 
 	void DeviceName(char *Name, int Size) const;
 
@@ -44,10 +55,30 @@ public:
     int AuxTemp;
     
 protected:
+    void ClearAcc();
 	virtual void Execute();
 
 	int FAddress;
 	int FRow;
+	TLog *FLog;
+	TFile *FLogFile;
+
+	int FYear;
+	int FMonth;
+	int FDay;
+	int FHour;
+	int FMin;
+
+	int FRefSum;
+	int FRefCount;
+	int FTempSum;
+	int FTempCount;
+	int FMotorSum;
+	int FMotorCount;
+	int FLightSum;
+	int FLightCount;
+	int FAuxTempSum;
+	int FAuxTempCount;
 
 };
 

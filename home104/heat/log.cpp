@@ -95,46 +95,64 @@ void TLog::DeviceName(char *Name, int Size) const
 #   Returns....: *
 #
 ##########################################################################*/
-TFile *TLog::GetDayFile(int year, int month, int day, const char *name, void *init, int size)
+TFile *TLog::GetDayFile(int year, int month, int day, int hour, int min, const char *name, void *init, int size)
 {
     char str[20];
     char filename[256];
     TFile *file;
-    int i;
-    int filesize; 
+    int i, j;
+	int filesize;
 
-    sprintf(str, "%04d%02d%02d", year, month, day);
+	FSection.Enter();
 
-    FSection.Enter();
+	sprintf(str, "%d", year);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
 
-    strcpy(filename, FRootDir);
-    strcat(filename, "\\");
-    strcat(filename, str);
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
 
-    if (!RdosSetCurDir(filename))
-        RdosMakeDir(filename);
-    
-    strcat(filename, "\\");
-    strcat(filename, name);
+	sprintf(str, "%d\\%d", year, month);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
 
-    file = new TFile(filename);
-    if (!file->IsOpen())
-    {
-        delete file;
-        file = new TFile(filename, 0);
-    }
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
 
-    if (file->IsOpen())
-    {
-        filesize = 60 * 24 * size;
-        if (filesize > file->GetSize())
-            for (i = 0; i < 60 * 24; i++)
-                file->Write(init, size);
-    }    
+	sprintf(str, "%d\\%d\\%d", year, month, day);
 
-    FSection.Leave();
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
 
-    return file;
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	strcat(filename, "\\");
+	strcat(filename, name);
+
+	file = new TFile(filename);
+	if (!file->IsOpen())
+	{
+		delete file;
+		file = new TFile(filename, 0);
+	}
+
+	if (file->IsOpen())
+	{
+		for (i = 0; i < hour; i++)
+			for (j = 0; j < 60; j++)
+				file->Write(init, size);
+
+		for (j = 0; j < min; j++)
+			file->Write(init, size);
+	}
+
+	FSection.Leave();
+
+	return file;
 }
 
 /*##########################################################################
