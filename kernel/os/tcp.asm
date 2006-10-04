@@ -1364,6 +1364,9 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 SendData	Proc near
+    test ds:tcp_pending,FLAG_DELETE_NET
+    jnz send_data_done
+;    
 	test ds:tcp_pending,FLAG_CLOSING
 	jnz send_data_do
 ;
@@ -1596,6 +1599,8 @@ Retransmit	Proc near
 
 retrans_close:
     or ds:tcp_pending,FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
     jmp retrans_done
 
 retrans_first:
@@ -1728,6 +1733,8 @@ CheckRst	Proc near
 	jz check_rst_done
 ;
 	or ds:tcp_pending,FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
 	stc
 
 check_rst_done:
@@ -1757,6 +1764,8 @@ CheckSyn	Proc near
 	jz check_syn_done
 ;
 	or ds:tcp_pending,FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
 	stc
 
 check_syn_done:
@@ -2433,6 +2442,8 @@ ReceiveSynSent	Proc near
 	jz receive_syn_sent_norst
 ;
 	or ds:tcp_pending,FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
 	jmp receive_syn_sent_done
 
 receive_syn_sent_noack:
@@ -2825,6 +2836,8 @@ ReceiveLastAck	Proc near
 
 receive_last_ack_delete:
 	or ds:tcp_pending, FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
 
 receive_last_ack_done:
 	ret
@@ -3120,7 +3133,7 @@ receive_listen:
 receive_connection:
     push es
 	call ProcessOptions
-	or ds:tcp_pending,FLAG_RETRY
+	and ds:tcp_pending,NOT FLAG_RETRY
 	movzx bx,ds:tcp_state
 	add bx,bx
 	call word ptr cs:[bx].ReceiveTab
@@ -5209,6 +5222,8 @@ tcp_leave:
 	
 tcp_delete_timeout_do:
     or ds:tcp_pending,FLAG_DELETE_NET
+	mov bx,ds:tcp_owner
+	Signal
 
 tcp_delete_timeout_done:
 	mov ax,ds:tcp_next
