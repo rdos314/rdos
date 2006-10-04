@@ -54,6 +54,7 @@ FLAG_CLOSED			EQU 100h
 FLAG_DELETE_NET		EQU 200h
 FLAG_DELETE_USER    EQU 400h
 FLAG_UNLINKED       EQU 800h
+FLAG_RETRY          EQU 1000h
 
 REORDER_ENTRIES	EQU 8
 
@@ -138,6 +139,7 @@ tcp_rtm				DD ?
 tcp_fin_seq			DD ?
 tcp_time_val		DD ?
 tcp_time_seq		DD ?
+tcp_retries         DW ?
 tcp_ack_timeout		DB ?
 tcp_push_timeout	DB ?
 tcp_user_timeout	DW ?

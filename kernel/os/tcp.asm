@@ -1491,29 +1491,29 @@ RetransmitData	Proc near
 	sub ecx,ds:tcp_send_una
 	movzx eax,ds:tcp_mtu
 	cmp ecx,eax
-	jb retrans_mtu_ok
+	jb retrans_data_mtu_ok
 ;
 	mov ecx,eax
 
-retrans_mtu_ok:
+retrans_data_mtu_ok:
 	call CreateSegment
 	mov es:[di].tcp_flags, ACK
 ;
 	test ds:tcp_pending,FLAG_CLOSING
-	jz retrans_no_fin
+	jz retrans_data_no_fin
 ;
 	mov ax,ds:tcp_send_count
 	or ax,ax
-	jnz retrans_no_fin
+	jnz retrans_data_no_fin
 ;
 	mov eax,ds:tcp_send_next
 	sub eax,ds:tcp_send_una
 	cmp eax,ecx
-	jne retrans_no_fin
+	jne retrans_data_no_fin
 ;
 	mov es:[di].tcp_flags, ACK OR FIN
 
-retrans_no_fin:
+retrans_data_no_fin:
 	mov eax,ds:tcp_send_una
 	Reverse
 	mov es:[di].tcp_seq,eax
@@ -1537,18 +1537,18 @@ retrans_no_fin:
 
 retrans_data_copy:
 	or cx,cx
-	jz retrans_do
+	jz retrans_data_do
 ;
     movzx edi,di
     call CopyFromBuffer
 
-retrans_do:
+retrans_data_do:
 	pop di
 	pop cx
 	pop fs
 	call SendSegment
 
-retrans_done:
+retrans_data_done:
 	ret
 RetransmitData	Endp
 
@@ -1580,14 +1580,37 @@ Retransmit	Proc near
 	push cx
 	push di
 ;
-	or ds:tcp_pending,FLAG_RESENT
+    test ds:tcp_pending,FLAG_DELETE_NET OR FLAG_DELETE_USER
+    jnz retrans_done
+;    
+    test ds:tcp_pending,FLAG_RETRY
+    jz retrans_first
+;
+    mov ax,ds:tcp_retries
+    cmp ax,10
+    jb retrans_close
+;
+    inc ax
+    mov ds:tcp_retries,ax
+    jmp retrans_do    
+
+retrans_close:
+    or ds:tcp_pending,FLAG_DELETE_NET
+    jmp retrans_done
+
+retrans_first:
+    mov ds:tcp_retries,0
+
+retrans_do:
+	or ds:tcp_pending,FLAG_RESENT OR FLAG_RETRY
 	and ds:tcp_pending,NOT FLAG_DELAY_ACK
 	call SetResendTimeout
 ;
 	movzx bx,ds:tcp_state
 	add bx,bx
 	call word ptr cs:[bx].retransmit_tab
-;
+
+retrans_done:
 	pop di
 	pop cx
 	pop es
@@ -3097,6 +3120,7 @@ receive_listen:
 receive_connection:
     push es
 	call ProcessOptions
+	or ds:tcp_pending,FLAG_RETRY
 	movzx bx,ds:tcp_state
 	add bx,bx
 	call word ptr cs:[bx].ReceiveTab
