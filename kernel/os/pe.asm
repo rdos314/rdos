@@ -1046,11 +1046,13 @@ find_path_name_loop:
 	jnz find_path_name_loop
 	pop ebx
 ;
+    push bx
 	xor di,di
 	xor cl,cl
 	OpenFile
 	jnc find_path_file_ok
 ;
+    pop bx
 	mov al,[si-1]
 	or al,al
 	jnz find_path_move_loop
@@ -1062,6 +1064,7 @@ find_path_failed:
 	jmp open_dll_unlock
 
 find_path_file_ok:
+    pop bx
 	FreeMem
 	clc
 	
@@ -1486,6 +1489,8 @@ load_import_dlls_loop:
 	mov gs,ax
 	pop edi
 	pop es
+	jc load_import_dlls_loop
+;	
 	call BindImport
 ;
 	add edx,SIZE import_descr
