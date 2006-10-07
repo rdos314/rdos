@@ -66,6 +66,8 @@ void cdecl main()
 	TLog *log;
 	TFile *file;
 	int init = 0x8000;
+	int ambient;
+	int night;
 
 	RdosWaitMilli(1000);
 
@@ -80,14 +82,17 @@ void cdecl main()
 
 	for (i = 0; i < 8; i++)
 	{
-		RadArr[i] = new TRad(0x20 + i, i, log);
+		RadArr[i] = new TRad(0x20 + i, i);
 		AddHttpRad(RadArr[i]);
+		log->Add(RadArr[i]);
 	}
 
 	Ws = new TWs2300(1);
-    Ws->OnChanged = WsChanged;
+	Ws->OnChanged = WsChanged;
 	
 	AddHttpWs2300(Ws);
+
+	log->Add(Ws);
 
 	for (;;)
 	{
@@ -129,20 +134,44 @@ void cdecl main()
 		else
 			printf("------");
 
-        motsum = 0;
+	    ambient = 10 * Ws->GetOutdoorTemp();
+
+    	night = FALSE;
+	    if (CurrTime->GetHour() >= 20)
+		    night = TRUE;
+    	else
+		    if (CurrTime->GetHour() < 6)
+			    night = TRUE;
+
+		motsum = 0;
         motcount = 0;
-        motmax = 0;
+		motmax = 0;
         
 		for (i = 0; i < 8; i++)
 		{
 			if (RadArr[i]->IsOnline())
 		    {
-		        motcount++;
-		        mot = RadArr[i]->Motor;
-		        motsum += mot;
+				if (RadArr[i]->GetMotor(&mot))
+					motcount++;
+				else
+					mot = 0;
 
-		        if (mot > motmax)
-		            motmax = mot;
+				motsum += mot;
+
+				if (mot > motmax)
+					motmax = mot;
+
+    			if (night)
+	    		{
+		    		if (ambient < 0)
+    					RadArr[i]->SetWinterRef();
+    				else
+	    				RadArr[i]->SetNightRef();
+    			}
+	    		else
+		    		RadArr[i]->SetDayRef();
+
+                RadArr[i]->SetAmbient(ambient);
 			 }
 		}
 
@@ -159,15 +188,15 @@ void cdecl main()
 						RdosToggleSerialLine(1, 5);
 		  }
 
-        if (diostat & 0x20)
-            HttpSetVpOn();
-        else
-            HttpSetVpOff();
+		if (diostat & 0x20)
+			HttpSetVpOn();
+		else
+			HttpSetVpOff();
 
-        if (diostat & 1)
-            HttpSetLightOn();
-        else
-            HttpSetLightOff();            
+		if (diostat & 1)
+			HttpSetLightOn();
+		else
+			HttpSetLightOff();
 
 		RdosSetCursorPosition(10,0);
 		val = Ws->GetIndoorTemp();

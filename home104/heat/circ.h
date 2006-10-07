@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2006, Leif Ekblad
+# Copyright (C) 1988-2003, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,71 +20,27 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# log.h
-# Log class
+# circ.h
+# Circulation pump class
 #
 ########################################################################*/
 
-#ifndef LOG_H
-#define LOG_H
+#ifndef CIRC_H
+#define CIRC_H
 
 #include "device.h"
-#include "file.h"
-#include "rad.h"
-#include "ws2300.h"
+#include "fuzzy.h"
 
-
-#define LOG_TAG_HEADER      50
-#define LOG_TAG_RAD         51
-#define LOG_TAG_INDOOR      52
-#define LOG_TAG_OUTDOOR     53
-#define LOG_TAG_RAIN        54
-
-#define LOG_VAR_Address     100
-#define LOG_VAR_MsbTime     101
-#define LOG_VAR_LsbTime     102
-#define LOG_VAR_Ref         103
-#define LOG_VAR_Temp        104
-#define LOG_VAR_Motor       105
-#define LOG_VAR_Light       106
-#define LOG_VAR_AuxTemp     107
-#define LOG_VAR_Humidity    108
-#define LOG_VAR_Dewpoint    109
-#define LOG_VAR_Windchill   110
-#define LOG_VAR_Windspeed   111
-#define LOG_VAR_Winddir     112
-#define LOG_VAR_Pressure    113
-#define LOG_VAR_Rain        114
-
-
-class TLog : public TDevice
+class TCirc : public TDevice
 {
 public:
-	TLog(const char *RootDir);
-	~TLog();
+	TCirc();
+	~TCirc();
 
 	void DeviceName(char *Name, int Size) const;
-
-    void Add(TRad *rad);
-    void Add(TWs2300 *ws);	
     
 protected:
-    virtual void Execute();
 
-    void CreateRootDir();
-    void CreateDayFile();
-
-    char FRootDir[256];
-
-    int FYear;
-    int FMonth;
-    int FDay;
-    int FHour;
-    int FMin;
-
-    TFile *FFile;
-    TRad *FRadArr[256];
-    TWs2300 *FWs;
 };
 
 #endif

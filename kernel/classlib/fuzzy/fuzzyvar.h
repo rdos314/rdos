@@ -1,6 +1,6 @@
 /*#######################################################################
 # RDOS operating system
-# Copyright (C) 1988-2003, Leif Ekblad
+# Copyright (C) 1988-2002, Leif Ekblad
 #
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,70 +20,36 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# rad.h
-# Radiator class
+# fuzzyvar.h
+# Fuzzy variable class
 #
 ########################################################################*/
 
-#ifndef RAD_H
-#define RAD_H
+#ifndef _FUZZYVAR_H
+#define _FUZZYVAR_H
 
-#include "device.h"
+#include "baseset.h"
 
-class TRad : public TDevice
+#define MAX_SETS    16
+
+class TFuzzyVar
 {
 public:
-	TRad(int Address, int Row);
+    TFuzzyVar();
+    ~TFuzzyVar();
 
-	void DeviceName(char *Name, int Size) const;
+    void Add(TFuzzyBaseSet *set);
+    void SetInputValue(long double val);    
 
-	void SetDayRef();
-	void SetNightRef();
-	void SetWinterRef();
-	void SetRef(int Temp);
-	void SetAmbient(int rel);
+    int GetSetCount();
+    long double GetValue(int index);
 
-    int GetAddress();
-
-    void ClearAcc();
-    
-    int GetRef(int *val);
-    int GetTemp(int *val);
-    int GetMotor(int *val);
-    int GetLight(int *val);
-    int GetAuxTemp(int *val);
-    
 protected:
-	virtual void Execute();
-
-	int FAddress;
-	int FRow;
-
-	int FUpdateRefType;
-	int FUpdateRef;
-	int FUpdateAmbient;
-
-    int Ref;
-    int Temp;
-    int Motor;
-    int Light;
-    int AuxTemp;
-	int Ambient;
-	int RefType;
-
-	int FRefSum;
-	int FRefCount;
-	int FTempSum;
-	int FTempCount;
-	int FMotorSum;
-	int FMotorCount;
-	int FLightSum;
-	int FLightCount;
-	int FAuxTempSum;
-	int FAuxTempCount;
-
-	TSection FSection;
-
+    TFuzzyBaseSet *FSetArr[MAX_SETS];
+    int FCount;
+    long double FVal;
+    
 };
 
 #endif
+

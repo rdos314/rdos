@@ -49,7 +49,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRad::TRad(int Address, int Row, TLog *Log)
+TRad::TRad(int Address, int Row)
 {
 	char str[40];
 
@@ -61,8 +61,13 @@ TRad::TRad(int Address, int Row, TLog *Log)
 	Motor = 51;
 	Light = 0;
 	AuxTemp = 200;
+	RefType = 0;
 
-	FLog = Log;
+    FUpdateRefType = FALSE;
+	FUpdateRef = FALSE;
+	FUpdateAmbient = FALSE;
+
+    ClearAcc();
 
 	sprintf(str, "RAD %d", Address);
 	Start(str, 0x2000);
@@ -82,6 +87,102 @@ TRad::TRad(int Address, int Row, TLog *Log)
 void TRad::DeviceName(char *Name, int Size) const
 {
 	strcpy(Name, "RAD");
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::SetDayRef
+#
+#   Purpose....: Set day time reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetDayRef()
+{
+	RefType = 0;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::SetNightRef
+#
+#   Purpose....: Set night time reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetNightRef()
+{
+	RefType = 1;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::SetWinterRef
+#
+#   Purpose....: Set winter time (night) reference
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetWinterRef()
+{
+	RefType = 2;
+	FUpdateRefType = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::SetRef
+#
+#   Purpose....: Set reference temperature
+#
+#   Out params.: Reference temperature
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetRef(int Temp)
+{
+	Ref = Temp;
+	FUpdateRef = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::SetAmbient
+#
+#   Purpose....: Set ambient (outdoor) temperature
+#
+#   Out params.: ambient temperature
+#   Returns....: *
+#
+##########################################################################*/
+void TRad::SetAmbient(int temp)
+{
+	Ambient = temp;
+	FUpdateAmbient = TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetAddress
+#
+#   Purpose....: Get address
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetAddress()
+{
+    return FAddress;
 }
 
 /*##########################################################################
@@ -111,6 +212,152 @@ void TRad::ClearAcc()
 
 /*##########################################################################
 #
+#   Name       : TRad::GetRef
+#
+#   Purpose....: Get reference temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetRef(int *val)
+{
+	int ok;
+
+	FSection.Enter();
+
+	if (FRefCount)
+	{
+		*val = FRefSum / FRefCount;
+		ok = TRUE;
+	}
+	else
+		ok = FALSE;
+
+	FSection.Leave();
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetTemp
+#
+#   Purpose....: Get temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetTemp(int *val)
+{
+	int ok;
+
+	FSection.Enter();
+
+	if (FTempCount)
+	{
+		*val = FTempSum / FTempCount;
+		ok = TRUE;
+	}
+	else
+		ok = FALSE;
+
+	FSection.Leave();
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetMotor
+#
+#   Purpose....: Get motor value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetMotor(int *val)
+{
+	int ok;
+
+	FSection.Enter();
+
+	if (FMotorCount)
+	{
+		*val = FMotorSum / FMotorCount;
+		ok = TRUE;
+	}
+	else
+		ok = FALSE;
+
+	FSection.Leave();
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetLight
+#
+#   Purpose....: Get light value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetLight(int *val)
+{
+	int ok;
+
+	FSection.Enter();
+
+	if (FLightCount)
+	{
+		*val = FLightSum / FLightCount;
+		ok = TRUE;
+	}
+	else
+		ok = FALSE;
+
+	FSection.Leave();
+	return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::GetAuxTemp
+#
+#   Purpose....: Get aux-temp value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TRad::GetAuxTemp(int *val)
+{
+	int ok;
+
+    FSection.Enter();
+
+    if (FAuxTempCount)
+    {
+        *val = FAuxTempSum / FAuxTempCount;
+		ok = TRUE;
+    }
+    else
+        ok = FALSE;
+
+    FSection.Leave();
+    return ok;
+}
+
+
+/*##########################################################################
+#
 #   Name       : TRad::Execute
 #
 #   Purpose....: Execute
@@ -122,22 +369,27 @@ void TRad::ClearAcc()
 ##########################################################################*/
 void TRad::Execute()
 {
-    int year, month, day;
-    int hour, min, sec;
-    int milli;
-    TRadLog RadLog;
-    char name[100];
-
-    FLogFile = 0;
-
-    ClearAcc();
-
-    RdosGetTime(&FYear, &FMonth, &FDay, &FHour, &FMin, &sec, &milli);
-
-	sprintf(name, "rad%02x.dat", FAddress);
+	int val;
 
 	while (FInstalled)
 	{
+	    FSection.Enter();
+
+		if (FUpdateRef)
+		{
+			val = Ref;
+			FUpdateRef = !RdosWriteSerialRaw(FAddress, 0, val);
+		}
+
+		if (FUpdateAmbient)
+		{
+			val = 127 + (Ambient - Ref) / 10;
+			FUpdateAmbient = !RdosWriteSerialRaw(FAddress, 4, val);
+		}
+
+		if (FUpdateRefType)
+			FUpdateRefType = !RdosWriteSerialRaw(FAddress, 5, RefType);
+
 		RdosSetCursorPosition(FRow + 1,0);
 
 		if (RdosWriteSerialRaw(FAddress, 5, 2))
@@ -206,64 +458,9 @@ void TRad::Execute()
 		else
 			printf("------ ");
 
-        RdosGetTime(&year, &month, &day, &hour, &min, &sec, &milli);
 
-        if (min != FMin)
-        {
-            if (FLogFile)
-            {
-                RadLog.Valid = TRUE;
+        FSection.Leave();
 
-                if (FRefCount)
-                    RadLog.Ref = FRefSum / FRefCount;
-                else
-                    RadLog.Valid = FALSE;
-
-                if (FTempCount)
-                    RadLog.Temp = FTempSum / FTempCount;
-                else
-                    RadLog.Valid = FALSE;
-
-                if (FMotorCount)
-                    RadLog.Motor = FMotorSum / FMotorCount;
-                else
-                    RadLog.Valid = FALSE;
-
-                if (FLightCount)
-                    RadLog.Light = FLightSum / FLightCount;
-                else
-                    RadLog.Valid = FALSE;
-
-                if (FAuxTempCount)
-                    RadLog.AuxTemp = FAuxTempSum / FAuxTempCount;
-                else
-                    RadLog.Valid = FALSE;
-
-				FLogFile->Write(&RadLog, sizeof(RadLog));
-
-				if (FDay != day)
-				{
-					delete FLogFile;
-
-					RadLog.Valid = FALSE;
-					FLogFile = FLog->GetDayFile(year, month, day, hour, min, name, &RadLog, sizeof(RadLog));
-				}
-			}
-			else
-			{
-				RadLog.Valid = FALSE;
-				FLogFile = FLog->GetDayFile(year, month, day, hour, min, name, &RadLog, sizeof(RadLog));
-			}
-
-			ClearAcc();
-
-            FYear = year;
-            FMonth = month;
-            FDay = day;
-            FHour = hour;
-            FMin = min;
-
-        }
 
 		RdosWaitMilli(1000);
 

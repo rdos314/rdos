@@ -32,7 +32,9 @@
 #include "log.h"
 #include "section.h"
 
-static TSection FSection;
+#define STACK_SIZE  0x2000
+
+#define LOG_SIGN    0xABEF1456
 
 /*##########################################################################
 #
@@ -47,10 +49,19 @@ static TSection FSection;
 ##########################################################################*/
 TLog::TLog(const char *RootDir)
 {
+    int i;
+    
     strcpy(FRootDir, RootDir);
     strlwr(FRootDir);
 
     CreateRootDir();
+
+    for (i = 0; i < 256; i++)
+        FRadArr[i] = 0; 
+
+    FWs = 0;
+
+    Start("LOGGER", STACK_SIZE);
 }
 
 /*##########################################################################
@@ -81,78 +92,7 @@ TLog::~TLog()
 ##########################################################################*/
 void TLog::DeviceName(char *Name, int Size) const
 {
-	strcpy(Name, "LOG");
-}
-
-/*##########################################################################
-#
-#   Name       : TLog::GetDayFile
-#
-#   Purpose....: Create/open a day-file
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFile *TLog::GetDayFile(int year, int month, int day, int hour, int min, const char *name, void *init, int size)
-{
-    char str[20];
-    char filename[256];
-    TFile *file;
-    int i, j;
-	int filesize;
-
-	FSection.Enter();
-
-	sprintf(str, "%d", year);
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
-
-	if (!RdosSetCurDir(filename))
-		RdosMakeDir(filename);
-
-	sprintf(str, "%d\\%d", year, month);
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
-
-	if (!RdosSetCurDir(filename))
-		RdosMakeDir(filename);
-
-	sprintf(str, "%d\\%d\\%d", year, month, day);
-
-	strcpy(filename, FRootDir);
-	strcat(filename, "\\");
-	strcat(filename, str);
-
-	if (!RdosSetCurDir(filename))
-		RdosMakeDir(filename);
-
-	strcat(filename, "\\");
-	strcat(filename, name);
-
-	file = new TFile(filename);
-	if (!file->IsOpen())
-	{
-		delete file;
-		file = new TFile(filename, 0);
-	}
-
-	if (file->IsOpen())
-	{
-		for (i = 0; i < hour; i++)
-			for (j = 0; j < 60; j++)
-				file->Write(init, size);
-
-		for (j = 0; j < min; j++)
-			file->Write(init, size);
-	}
-
-	FSection.Leave();
-
-	return file;
+	strcpy(Name, "LOGGER");
 }
 
 /*##########################################################################
@@ -168,10 +108,229 @@ TFile *TLog::GetDayFile(int year, int month, int day, int hour, int min, const c
 ##########################################################################*/
 void TLog::CreateRootDir()
 {
-    FSection.Enter();
-
     if (!RdosSetCurDir(FRootDir))
         RdosMakeDir(FRootDir);
-        
-    FSection.Leave();
 }
+
+/*##########################################################################
+#
+#   Name       : TLog::CreateDayFile
+#
+#   Purpose....: Create/open a day-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::CreateDayFile()
+{
+    char str[20];
+    char filename[256];
+    TFile *file;
+    int i, j;
+	int filesize;
+
+	if (FFile)
+	    delete FFile;
+
+	sprintf(str, "%d", FYear);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "%d\\%d", FYear, FMonth);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "%d\\%d\\%d.cot", FYear, FMonth, FDay);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	FFile = new TFile(filename);
+	if (!FFile->IsOpen())
+	{
+		delete FFile;
+		FFile = new TFile(filename, 0);
+	}
+
+	if (FFile->IsOpen())
+	    FFile->SetPos(FFile->GetSize());
+}
+
+/*##########################################################################
+#
+#   Name       : TLog::Add
+#
+#   Purpose....: Add radiator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Add(TRad *Rad)
+{
+    int i;
+
+    i = Rad->GetAddress();
+    FRadArr[i] = Rad;
+}
+
+/*##########################################################################
+#
+#   Name       : TLog::Add
+#
+#   Purpose....: Add weather station
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Add(TWs2300 *ws)
+{
+    FWs = ws;
+}
+
+/*##########################################################################
+#
+#   Name       : TLog::Execute
+#
+#   Purpose....: Execute thread loop
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Execute()
+{
+    int year, month, day;
+    int hour, min, sec;
+    int ms;
+    TDeviceMsg *doc;
+    TDeviceTag *tag;
+    int i;
+    TRad *rad;
+    int ival;
+    unsigned long msb;
+    unsigned long lsb;
+    int size;
+	char *msg;
+
+    RdosGetTime(&FYear, &FMonth, &FDay, &FHour, &FMin, &sec, &ms);
+    CreateDayFile();
+    
+    while (FInstalled)
+    {
+        RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
+
+        if (year != FYear || month != FMonth || day != FDay)
+        {
+            FYear = year;
+            FMonth = month;
+            FDay = day;
+            CreateDayFile();
+        }
+
+        if (hour != FHour || min != FMin)
+        {
+            FHour = hour;
+            FMin = min;
+
+            RdosRecordToTics(&msb, &lsb, FYear, FMonth, FDay, FHour, FMin, 0, 0);
+
+            doc = new TDeviceMsg(0x10000);
+
+			tag = doc->AddTag(LOG_TAG_HEADER);
+			tag->AddUnsignedLong(LOG_VAR_MsbTime, msb);
+			tag->AddUnsignedLong(LOG_VAR_LsbTime, lsb);
+
+            if (FWs)
+            {
+                tag = doc->AddTag(LOG_TAG_INDOOR);
+                ival = 10.0 * FWs->GetIndoorTemp();
+                tag->AddFloat1(LOG_VAR_Temp, ival);
+
+                ival = FWs->GetIndoorHumidity();
+                tag->AddSignedInt(LOG_VAR_Humidity, ival);
+
+                tag = doc->AddTag(LOG_TAG_OUTDOOR);
+                ival = 10.0 * FWs->GetOutdoorTemp();
+                tag->AddFloat1(LOG_VAR_Temp, ival);
+
+                ival = FWs->GetOutdoorHumidity();
+                tag->AddSignedInt(LOG_VAR_Humidity, ival);
+
+                ival = 10.0 * FWs->GetDewPoint();
+                tag->AddFloat1(LOG_VAR_Dewpoint, ival);
+
+                ival = 10.0 * FWs->GetWindChill();
+                tag->AddFloat1(LOG_VAR_Windchill, ival);
+
+                ival = 10.0 * FWs->GetWindSpeed();
+                tag->AddFloat1(LOG_VAR_Windspeed, ival);
+
+                ival = FWs->GetWindDir();
+                tag->AddSignedInt(LOG_VAR_Winddir, ival);
+
+                ival = 10.0 * FWs->GetAirPressure();
+                tag->AddFloat1(LOG_VAR_Pressure, ival);
+
+                if (FHour == 0)
+                {
+                    tag = doc->AddTag(LOG_TAG_RAIN);
+
+                    ival = 10.0 * FWs->GetRain1h();
+                    tag->AddFloat1(LOG_VAR_Rain, ival);
+                }
+            }
+
+            for (i = 0; i < 256; i++)
+            {
+                if (FRadArr[i])
+                {
+                    rad = FRadArr[i];
+                    
+                    tag = doc->AddTag(LOG_TAG_RAD);
+                    tag->AddSignedInt(LOG_VAR_Address, rad->GetAddress());
+
+					if (rad->GetRef(&ival))
+						tag->AddFloat1(LOG_VAR_Ref, ival);
+
+					if (rad->GetTemp(&ival))
+						tag->AddFloat1(LOG_VAR_Temp, ival);
+
+					if (rad->GetMotor(&ival))
+						tag->AddFloat1(LOG_VAR_Motor, ival);
+
+					if (rad->GetLight(&ival))
+						tag->AddFloat1(LOG_VAR_Light, ival);
+
+					if (rad->GetAuxTemp(&ival))
+						tag->AddFloat1(LOG_VAR_AuxTemp, ival);
+
+				    rad->ClearAcc();
+				}
+			}
+
+            size = doc->GetSize();
+            msg = new char[size];
+            doc->GetData(LOG_SIGN, msg);
+            FFile->Write(msg, size);
+            delete msg;
+        }
+
+        RdosWaitMilli(1000);
+    }
+}
+
