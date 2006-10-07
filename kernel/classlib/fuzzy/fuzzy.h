@@ -20,35 +20,29 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fuzzyvar.h
-# Fuzzy variable class
+# fuzzy.h
+# Fuzzy class
 #
 ########################################################################*/
 
-#ifndef _FUZZYVAR_H
-#define _FUZZYVAR_H
+#ifndef _FUZZY_H
+#define _FUZZY_H
 
-#include "baseset.h"
+#include "fuzzyvar.h"
 
-#define MAX_FUZZY_SETS    16
+#define MAX_FUZZY_VARS      16 
 
-class TFuzzyVar
+class TFuzzy
 {
 public:
-    TFuzzyVar();
-    ~TFuzzyVar();
+    TFuzzy();
+    ~TFuzzy();
 
-    void Add(TFuzzyBaseSet *set);
-    void SetInputValue(long double val);    
-
-    int GetSetCount();
-    long double GetValue(int index);
+    void AddInput(int index, TFuzzyVar *var);
 
 protected:
-    TFuzzyBaseSet *FSetArr[MAX_FUZZY_SETS];
-    int FCount;
-    long double FVal;
-    
+    TFuzzyVar *FVarArr[MAX_FUZZY_VARS];
+        
 };
 
 #endif

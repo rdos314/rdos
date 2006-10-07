@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# fuzzyvar.cpp
-# Fuzzy variable class
+# fuzzy.cpp
+# Fuzzy class
 #
 ########################################################################*/
 
@@ -29,108 +29,63 @@
 
 /*##########################################################################
 #
-#   Name       : TFuzzyVar::TFuzzyVar
+#   Name       : TFuzzy::TFuzzy
 #
-#   Purpose....: Constructor for fuzzy variable
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TFuzzyVar::TFuzzyVar()
-{
-    FCount = 0;
-}
-
-/*##########################################################################
-#
-#   Name       : TFuzzyVar::~TFuzzyVar
-#
-#   Purpose....: Destructor for fuzzy variable
+#   Purpose....: Constructor for fuzzy
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TFuzzyVar::~TFuzzyVar()
+TFuzzy::TFuzzy()
 {
     int i;
 
-    for (i = 0; i < FCount; i++)
-        delete FSetArr[i];
+    for (i = 0; i < MAX_FUZZY_VARS; i++)
+        FVarArr[i] = 0;
 }
 
 /*##########################################################################
 #
-#   Name       : TFuzzyVar::Add
+#   Name       : TFuzzy::~TFuzzy
 #
-#   Purpose....: Add new set
+#   Purpose....: Destructor for fuzzy
 #
-#   In params..: Set
+#   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TFuzzyVar::Add(TFuzzyBaseSet *set)
+TFuzzy::~TFuzzy()
 {
-    if (FCount != MAX_FUZZY_SETS)
+    int i;
+
+    for (i = 0; i < MAX_FUZZY_VARS; i++)
+        if (FVarArr[i])
+            delete FVarArr[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TFuzzy::AddInput
+#
+#   Purpose....: Add input var
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TFuzzy::AddInput(int index, TFuzzyVar *var)
+{
+    if (index < 0 || index >= MAX_FUZZY_VARS)
+        delete var;
+    else
     {
-        FSetArr[FCount] = set;
-        FCount++;
+        if (FVarArr[index])
+            delete FVarArr[index];
+
+        FVarArr[index] = var;
     }
-    else
-        delete set;
-}
-
-/*##########################################################################
-#
-#   Name       : TFuzzyVar::SetInputValue
-#
-#   Purpose....: Set input value of sets
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TFuzzyVar::SetInputValue(long double val)
-{
-    FVal = val;
-}
-
-/*##########################################################################
-#
-#   Name       : TFuzzyVar::GetSetCount
-#
-#   Purpose....: Get number of active sets
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFuzzyVar::GetSetCount()
-{
-    return FCount;
-}
-
-/*##########################################################################
-#
-#   Name       : TFuzzyVar::GetValue
-#
-#   Purpose....: Get value for a set
-#
-#   In params..: Set #
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-long double TFuzzyVar::GetValue(int index)
-{
-    if (index < 0 || index >= FCount)
-        return 0.0;
-    else
-        return FSetArr[index]->GetValue(FVal);
 }
