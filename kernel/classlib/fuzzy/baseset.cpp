@@ -20,29 +20,40 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# highset.h
-# High, linear fuzzy set class
+# baseset.cpp
+# Fuzzy set base class
 #
 ########################################################################*/
 
-#ifndef _HIGHSET_H
-#define _HIGHSET_H
-
 #include "baseset.h"
 
-class THighFuzzySet : public TFuzzyBaseSet
+/*##########################################################################
+#
+#   Name       : TFuzzyBaseSet::TFuzzyBaseSet
+#
+#   Purpose....: Constructor for fuzzy set
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFuzzyBaseSet::TFuzzyBaseSet()
 {
-public:
-    THighFuzzySet(long double Low, long double Mid);
-    ~THighFuzzySet();
+}
 
-    virtual long double GetValue(long double val);
-
-protected:
-    long double FLow;
-    long double FMid;
-    long double FSlope;
-};
-
-#endif
+/*##########################################################################
+#
+#   Name       : TFuzzyBaseSet::~TFuzzyBaseSet
+#
+#   Purpose....: Destructor for fuzzy set
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TFuzzyBaseSet::~TFuzzyBaseSet()
+{
+}
 

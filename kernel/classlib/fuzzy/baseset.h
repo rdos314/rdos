@@ -20,28 +20,21 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# highset.h
-# High, linear fuzzy set class
+# baseset.h
+# Fuzzy set base class
 #
 ########################################################################*/
 
-#ifndef _HIGHSET_H
-#define _HIGHSET_H
+#ifndef _BASESET_H
+#define _BASESET_H
 
-#include "baseset.h"
-
-class THighFuzzySet : public TFuzzyBaseSet
+class TFuzzyBaseSet
 {
 public:
-    THighFuzzySet(long double Low, long double Mid);
-    ~THighFuzzySet();
+    TFuzzyBaseSet();
+    ~TFuzzyBaseSet();
 
-    virtual long double GetValue(long double val);
-
-protected:
-    long double FLow;
-    long double FMid;
-    long double FSlope;
+    virtual long double GetValue(long double val) = 0;
 };
 
 #endif

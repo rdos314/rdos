@@ -20,20 +20,20 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# lowset.h
-# Low, linear fuzzy set class
+# midset.h
+# Mid, linear fuzzy set class
 #
 ########################################################################*/
 
-#ifndef _LOWSET_H
-#define _LOWSET_H
+#ifndef _MIDSET_H
+#define _MIDSET_H
 
-#include "fuzzyset.h"
+#include "baseset.h"
 
-class TLowFuzzySet : public TFuzzySet
+class TMidFuzzySet : public TFuzzyBaseSet
 {
 public:
-    TMidFuzzySet(long double Low, long double Mid, long double High);
+	TMidFuzzySet(long double Low, long double Mid, long double High);
     ~TMidFuzzySet();
 
     virtual long double GetValue(long double val);

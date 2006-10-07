@@ -42,7 +42,7 @@ TLowFuzzySet::TLowFuzzySet(long double Mid, long double High)
 {
     FMid = Mid;
     FHigh = High;
-	FSlope := 1.0 / (High - Mid);
+	FSlope = 1.0 / (High - Mid);
 }
 
 /*##########################################################################

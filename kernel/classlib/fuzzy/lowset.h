@@ -28,9 +28,9 @@
 #ifndef _LOWSET_H
 #define _LOWSET_H
 
-#include "fuzzyset.h"
+#include "baseset.h"
 
-class TLowFuzzySet : public TFuzzySet
+class TLowFuzzySet : public TFuzzyBaseSet
 {
 public:
     TLowFuzzySet(long double Mid, long double High);
@@ -41,6 +41,7 @@ public:
 protected:
     long double FMid;
     long double FHigh;
+    long double FSlope;
 };
 
 #endif

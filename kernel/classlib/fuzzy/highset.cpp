@@ -42,7 +42,7 @@ THighFuzzySet::THighFuzzySet(long double Low, long double Mid)
 {
     FLow = Low;
     FMid = Mid;
-	FSlope := 1.0 / (Mid - Low);
+	FSlope = 1.0 / (Mid - Low);
 }
 
 /*##########################################################################
