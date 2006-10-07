@@ -38,15 +38,13 @@ public:
     TFuzzyVar();
     ~TFuzzyVar();
 
-    void Add(TFuzzyBaseSet *set);
-    void SetInputValue(long double val);    
+    void Add(indexindex, TFuzzyBaseSet *set);
 
-    int GetSetCount();
+    void SetInputValue(long double val);    
     long double GetValue(int index);
 
 protected:
     TFuzzyBaseSet *FSetArr[MAX_FUZZY_SETS];
-    int FCount;
     long double FVal;
     
 };

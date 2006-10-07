@@ -29,10 +29,11 @@
 #define _FUZZY_H
 
 #include "fuzzyvar.h"
+#include "device.h"
 
 #define MAX_FUZZY_VARS      16 
 
-class TFuzzy
+class TFuzzy : public TDevice
 {
 public:
     TFuzzy();

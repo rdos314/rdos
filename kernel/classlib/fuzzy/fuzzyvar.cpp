@@ -40,7 +40,10 @@
 ##########################################################################*/
 TFuzzyVar::TFuzzyVar()
 {
-    FCount = 0;
+	int i;
+
+	for (i = 0; i < MAX_FUZZY_SETS; i++)
+		FSetArr[i] = 0;
 }
 
 /*##########################################################################
@@ -56,10 +59,11 @@ TFuzzyVar::TFuzzyVar()
 ##########################################################################*/
 TFuzzyVar::~TFuzzyVar()
 {
-    int i;
+	int i;
 
-    for (i = 0; i < FCount; i++)
-        delete FSetArr[i];
+	for (i = 0; i < MAX_FUZZY_SETS; i++)
+		if (FSetArr[i])
+			delete FSetArr[i];
 }
 
 /*##########################################################################
@@ -73,15 +77,17 @@ TFuzzyVar::~TFuzzyVar()
 #   Returns....: *
 #
 ##########################################################################*/
-void TFuzzyVar::Add(TFuzzyBaseSet *set)
+void TFuzzyVar::Add(int index, TFuzzyBaseSet *set)
 {
-    if (FCount != MAX_FUZZY_SETS)
-    {
-        FSetArr[FCount] = set;
-        FCount++;
-    }
-    else
+    if (index < 0 || index >= MAX_FUZZY_SETS)
         delete set;
+    else
+    {
+        if (FSetArr[index])
+            delete FSetArr[index];
+
+        FSetArr[index] = set;
+    }
 }
 
 /*##########################################################################
@@ -102,22 +108,6 @@ void TFuzzyVar::SetInputValue(long double val)
 
 /*##########################################################################
 #
-#   Name       : TFuzzyVar::GetSetCount
-#
-#   Purpose....: Get number of active sets
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TFuzzyVar::GetSetCount()
-{
-    return FCount;
-}
-
-/*##########################################################################
-#
 #   Name       : TFuzzyVar::GetValue
 #
 #   Purpose....: Get value for a set
@@ -129,8 +119,14 @@ int TFuzzyVar::GetSetCount()
 ##########################################################################*/
 long double TFuzzyVar::GetValue(int index)
 {
-    if (index < 0 || index >= FCount)
-        return 0.0;
-    else
-        return FSetArr[index]->GetValue(FVal);
+	if (index < 0 || index >= MAX_FUZZY_SETS)
+		return 0.0;
+	else
+	{
+		if (FSetArr[index])
+			return FSetArr[index]->GetValue(FVal);
+		else
+			return 0.0;
+	}
 }
+
