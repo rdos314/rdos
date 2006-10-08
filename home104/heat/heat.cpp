@@ -38,6 +38,8 @@
 #include "datetime.h"
 #include "ws2300.h"
 #include "log.h"
+#include "circ.h"
+#include "vp.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -51,14 +53,20 @@ void cdecl main()
 {
 	TRad *RadArr[8];
 	TWs2300 *Ws;
+	TCirc *Circ;
+	TVp *Vp;
 	int i;
 	int diostat;
 	int mask;
 	TDateTime *CurrTime;
-	int motsum;
 	int motcount;
 	int mot;
 	int motmax;
+	int temp;
+	int ref;
+	int tempcount;
+	int temperr;
+	int temperrmax;
 	long double val;
 	long double winddir;
 	long NtpIp;
@@ -70,8 +78,6 @@ void cdecl main()
 	int night;
 
 	RdosWaitMilli(1000);
-
-	RdosWriteSerialVal(2, 2, 0x10000000);
 
 	NtpIp = RdosNameToIp("ntp.lth.se");
 	RdosSyncTime(NtpIp);
@@ -89,14 +95,21 @@ void cdecl main()
 
 	Ws = new TWs2300(1);
 	Ws->OnChanged = WsChanged;
-	
 	AddHttpWs2300(Ws);
 
+    Circ = new TCirc;	
+
+    Vp = new TVp(Circ);
+	
 	log->Add(Ws);
+	log->Add(Circ);
+	log->Add(Vp);
 
 	for (;;)
 	{
 		RdosSetCursorPosition(0,0);
+
+		CurrTime = new TDateTime;
 
 		if (RdosReadSerialLines(1, &diostat))
 		{
@@ -109,8 +122,6 @@ void cdecl main()
 					printf("0");
 				mask = mask >> 1;
 			}
-
-			CurrTime = new TDateTime;
 
 			if (CurrTime->GetHour() >= 17 || CurrTime->GetHour() <= 7)
 			{
@@ -129,7 +140,6 @@ void cdecl main()
 					RdosToggleSerialLine(1, 7);
 			}
 
-			delete CurrTime;
 		}
 		else
 			printf("------");
@@ -143,9 +153,13 @@ void cdecl main()
 		    if (CurrTime->GetHour() < 6)
 			    night = TRUE;
 
-		motsum = 0;
+		delete CurrTime;
+
         motcount = 0;
 		motmax = 0;
+
+		tempcount = 0;
+		temperrmax = 255;
         
 		for (i = 0; i < 8; i++)
 		{
@@ -156,10 +170,18 @@ void cdecl main()
 				else
 					mot = 0;
 
-				motsum += mot;
-
 				if (mot > motmax)
 					motmax = mot;
+
+				if (RadArr[i]->GetTemp(&temp))
+					if (RadArr[i]->GetRef(&ref))
+		            {
+		                temperr = temp - ref;
+		                tempcount++;
+
+		                if (temperr < temperrmax)
+		                    temperrmax = temperr;
+		            }
 
     			if (night)
 	    		{
@@ -175,24 +197,12 @@ void cdecl main()
 			 }
 		}
 
-		if (motcount > 5)
-		{
-			 mot = motsum / motcount;
-			 mot = (mot + motmax) / 2;
-			 if (mot >= 60)
-				  if ((diostat & 0x20) == 0)
-						RdosToggleSerialLine(1, 5);
+		if (motcount)
+    	    Circ->SetMaxMotor(motmax);
 
-			 if (mot <= 25)
-				  if (diostat & 0x20)
-						RdosToggleSerialLine(1, 5);
-		  }
-
-		if (diostat & 0x20)
-			HttpSetVpOn();
-		else
-			HttpSetVpOff();
-
+    	if (tempcount)
+    	    Circ->SetMaxTempError(temperrmax);
+    	    
 		if (diostat & 1)
 			HttpSetLightOn();
 		else

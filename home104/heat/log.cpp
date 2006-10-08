@@ -60,6 +60,7 @@ TLog::TLog(const char *RootDir)
         FRadArr[i] = 0; 
 
     FWs = 0;
+    FCirc = 0;
 
     Start("LOGGER", STACK_SIZE);
 }
@@ -203,6 +204,38 @@ void TLog::Add(TWs2300 *ws)
 
 /*##########################################################################
 #
+#   Name       : TLog::Add
+#
+#   Purpose....: Add circulation
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Add(TCirc *circ)
+{
+    FCirc = circ;
+}
+
+/*##########################################################################
+#
+#   Name       : TLog::Add
+#
+#   Purpose....: Add VP
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Add(TVp *vp)
+{
+    FVp = vp;
+}
+
+/*##########################################################################
+#
 #   Name       : TLog::Execute
 #
 #   Purpose....: Execute thread loop
@@ -293,6 +326,20 @@ void TLog::Execute()
                     ival = 10.0 * FWs->GetRain1h();
                     tag->AddFloat1(LOG_VAR_Rain, ival);
                 }
+            }
+
+            if (FCirc)
+            {
+                tag = doc->AddTag(LOG_TAG_CIRC);
+                ival = 10.0 * FCirc->GetSpeed();
+                tag->AddFloat1(LOG_VAR_Motor, ival);
+            }
+
+            if (FVp)
+            {
+                tag = doc->AddTag(LOG_TAG_VP);
+                ival = FVp->IsOn();
+                tag->AddBoolean(LOG_VAR_On, ival);
             }
 
             for (i = 0; i < 256; i++)

@@ -20,46 +20,37 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# circ.h
-# Circulation pump class
+# vp.h
+# Heat pump class
 #
 ########################################################################*/
 
-#ifndef CIRC_H
-#define CIRC_H
+#ifndef VP_H
+#define VP_H
 
-#include "device.h"
 #include "fuzzy.h"
+#include "circ.h"
 
-class TCirc : public TFuzzy
+class TVp : public TFuzzy
 {
 public:
-	TCirc();
-	~TCirc();
+	TVp(TCirc *Circ);
+	~TVp();
 
 	void DeviceName(char *Name, int Size) const;
 
-	void SetMaxMotor(int val);
-	void SetMaxTempError(int temp);
-
-	long double GetSpeed();
+	int IsOn();
     
 protected:
-    long double ReadCircValve();
-    void WriteCircValve(long double value);
 	virtual void Execute();
 
     TFuzzyVar FMotorVar;
-    TFuzzyVar FTempDiffVar;
+    TFuzzyVar FMotorDiffVar;
     TFuzzyVar FOutputVar;
 
-    long double FSpeed;
-    int MotorSum;
-    int MotorCount;
-    int TempSum;
-    int TempCount;
+    int FOn;
 
-    TSection FSection;
+    TCirc *FCirc;
 };
 
 #endif

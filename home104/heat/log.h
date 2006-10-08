@@ -32,6 +32,8 @@
 #include "file.h"
 #include "rad.h"
 #include "ws2300.h"
+#include "circ.h"
+#include "vp.h"
 
 
 #define LOG_TAG_HEADER      50
@@ -39,6 +41,8 @@
 #define LOG_TAG_INDOOR      52
 #define LOG_TAG_OUTDOOR     53
 #define LOG_TAG_RAIN        54
+#define LOG_TAG_CIRC        55
+#define LOG_TAG_VP          56
 
 #define LOG_VAR_Address     100
 #define LOG_VAR_MsbTime     101
@@ -55,6 +59,7 @@
 #define LOG_VAR_Winddir     112
 #define LOG_VAR_Pressure    113
 #define LOG_VAR_Rain        114
+#define LOG_VAR_On          115
 
 
 class TLog : public TDevice
@@ -65,8 +70,10 @@ public:
 
 	void DeviceName(char *Name, int Size) const;
 
-    void Add(TRad *rad);
+	void Add(TRad *rad);
     void Add(TWs2300 *ws);	
+    void Add(TCirc *circ);
+    void Add(TVp *vp);
     
 protected:
     virtual void Execute();
@@ -85,6 +92,8 @@ protected:
     TFile *FFile;
     TRad *FRadArr[256];
     TWs2300 *FWs;
+    TCirc *FCirc;
+	TVp *FVp;
 };
 
 #endif
