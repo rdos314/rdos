@@ -83,3 +83,19 @@ long double TLowFuzzySet::GetValue(long double val)
             return 1.0 - (val - FMid) * FSlope;        
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TLowFuzzySet::GetCenter
+#
+#   Purpose....: Get center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TLowFuzzySet::GetCenter()
+{
+    return FMid;
+}

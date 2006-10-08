@@ -90,3 +90,19 @@ long double TMidFuzzySet::GetValue(long double val)
         }
     }
 }
+
+/*##########################################################################
+#
+#   Name       : TMidFuzzySet::GetCenter
+#
+#   Purpose....: Get center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TMidFuzzySet::GetCenter()
+{
+    return FMid;
+}

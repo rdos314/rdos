@@ -33,16 +33,31 @@
 
 #define MAX_FUZZY_VARS      16 
 
+struct TFuzzyRule
+{
+    int InputSetArr[MAX_FUZZY_SETS];
+    int OutputSet;
+};
+
 class TFuzzy : public TDevice
 {
 public:
     TFuzzy();
     ~TFuzzy();
 
-    void AddInput(int index, TFuzzyVar *var);
-
 protected:
+    void AddInput(int index, TFuzzyVar *var);
+    void AddOutput(TFuzzyVar *var);
+    void InitRule();
+    void DefineRule(int SetArr[MAX_FUZZY_VARS], int OutputSet);
+    long double Calc(long double ValArr[MAX_FUZZY_VARS]);
+
     TFuzzyVar *FVarArr[MAX_FUZZY_VARS];
+    TFuzzyVar *FOutputVar;
+    long double *FArr;
+    int FSize;
+    int FDimCount;
+    TFuzzyRule *FRuleArr;
         
 };
 

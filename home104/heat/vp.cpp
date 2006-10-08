@@ -79,9 +79,9 @@ TVp::TVp(TCirc *Circ)
     FMotorDiffVar.Add(4, new THighFuzzySet(0.2, 0.4)); 
     AddInput(1, &FMotorDiffVar);
 
-    FOutputVar.Add(0, new TLowFuzzySet(0.25, 0.5));
-    FOutputVar.Add(1, new TMidFuzzySet(0.25, 0.5, 0.75));
-    FOutputVar.Add(2, new THighFuzzySet(0.5, 0.75));
+    FOutputVar.Add(0, new TLowFuzzySet(0.0, 0.5));
+    FOutputVar.Add(1, new TMidFuzzySet(0.0, 0.5, 1.0));
+    FOutputVar.Add(2, new THighFuzzySet(0.5, 1.0));
     AddOutput(&FOutputVar);
 
     for (i = 0; i < 5; i++)
@@ -219,6 +219,10 @@ void TVp::Execute()
 
     			if (val > 0.75 && !FOn)
     			    FOn = TRUE;
+    
+    	    	RdosSetCursorPosition(17,0);
+        		printf("%6.2Lf V", val);
+
             }
 
             if (RdosReadSerialLines(1, &diostat))

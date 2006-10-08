@@ -686,6 +686,33 @@ RdosWaitMilli	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosWaitUntil
+;
+;		description:	Wait until tics expires
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitUntil
+
+RdosWaitUntil	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+	push edx
+;
+	mov edx,[ebp+8]
+	mov eax,[ebp+4]
+	UserGate wait_until_nr
+;
+    pop edx
+	pop eax
+	pop ebp
+	ret 8
+RdosWaitUntil	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosCreateSection
 ;
 ;		description:	Create section

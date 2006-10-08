@@ -39,8 +39,11 @@ public:
     ~TFuzzyVar();
 
     void Add(indexindex, TFuzzyBaseSet *set);
+    int HasSet(int index);
+    int GetSets();
 
     void SetInputValue(long double val);    
+    long double GetCenter(int index);
     long double GetValue(int index);
 
 protected:

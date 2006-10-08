@@ -27,6 +27,9 @@
 
 #include "fuzzyvar.h"
 
+#define FALSE   0
+#define TRUE    !FALSE
+
 /*##########################################################################
 #
 #   Name       : TFuzzyVar::TFuzzyVar
@@ -92,6 +95,53 @@ void TFuzzyVar::Add(int index, TFuzzyBaseSet *set)
 
 /*##########################################################################
 #
+#   Name       : TFuzzyVar::HasSet
+#
+#   Purpose....: Check if set is defined
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFuzzyVar::HasSet(int index)
+{
+    if (index < 0 || index >= MAX_FUZZY_SETS)
+        return FALSE;
+    else
+    {
+        if (FSetArr[index])
+            return TRUE;
+        else
+            return FALSE;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TFuzzyVar::GetSets
+#
+#   Purpose....: Get number of active sets
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TFuzzyVar::GetSets()
+{
+    int i;
+    int count = 0;
+
+    for (i = 0; i < MAX_FUZZY_SETS; i++)
+        if (FSetArr[i])
+            count++;
+
+    return count;
+}
+
+/*##########################################################################
+#
 #   Name       : TFuzzyVar::SetInputValue
 #
 #   Purpose....: Set input value of sets
@@ -104,6 +154,30 @@ void TFuzzyVar::Add(int index, TFuzzyBaseSet *set)
 void TFuzzyVar::SetInputValue(long double val)
 {
     FVal = val;
+}
+
+/*##########################################################################
+#
+#   Name       : TFuzzyVar::GetCenter
+#
+#   Purpose....: Get center for a set
+#
+#   In params..: Set #
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TFuzzyVar::GetCenter(int index)
+{
+	if (index < 0 || index >= MAX_FUZZY_SETS)
+		return 0.0;
+	else
+	{
+		if (FSetArr[index])
+			return FSetArr[index]->GetCenter();
+		else
+			return 0.0;
+	}
 }
 
 /*##########################################################################

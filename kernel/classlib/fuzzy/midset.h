@@ -37,6 +37,7 @@ public:
     ~TMidFuzzySet();
 
     virtual long double GetValue(long double val);
+    virtual long double GetCenter();
 
 protected:
     long double FLow;

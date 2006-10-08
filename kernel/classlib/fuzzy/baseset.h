@@ -35,6 +35,7 @@ public:
     ~TFuzzyBaseSet();
 
     virtual long double GetValue(long double val) = 0;
+    virtual long double GetCenter() = 0;
 };
 
 #endif

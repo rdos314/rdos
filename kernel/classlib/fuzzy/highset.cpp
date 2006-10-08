@@ -83,3 +83,19 @@ long double THighFuzzySet::GetValue(long double val)
             return 1.0 - (FMid - val) * FSlope;        
     }
 }
+
+/*##########################################################################
+#
+#   Name       : THighFuzzySet::GetCenter
+#
+#   Purpose....: Get center
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double THighFuzzySet::GetCenter()
+{
+    return FMid;
+}

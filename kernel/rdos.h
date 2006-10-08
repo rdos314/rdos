@@ -164,6 +164,7 @@ int __stdcall RdosGetThreadHandle();
 int __stdcall RdosExec(const char *prog, const char *param);
 int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir);
 void __stdcall RdosWaitMilli(int ms);
+void __stdcall RdosWaitUntil(unsigned long msb, unsigned long lsb);
 void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
 void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
 void __stdcall RdosRecordToTics(unsigned long *msb, unsigned long *lsb, int year, int month, int day, int hour, int min, int sec, int milli);
