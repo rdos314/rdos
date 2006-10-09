@@ -60,7 +60,7 @@ TVp::TVp(TCirc *Circ)
                 {
                     {0, 0, 1},
                     {0, 1, 1},
-                    {1, 1, 1},
+                    {0, 1, 2},
                     {1, 1, 2},
                     {1, 2, 2},
 				};
@@ -221,7 +221,7 @@ void TVp::Execute()
     			    FOn = TRUE;
     
     	    	RdosSetCursorPosition(17,0);
-        		printf("%6.2Lf V", val);
+        		printf("%6.2Lf", val);
 
             }
 
