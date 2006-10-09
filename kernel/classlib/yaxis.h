@@ -37,6 +37,7 @@ public:
     ~TYAxis();
 
 	virtual int IsYAxis();
+    virtual int RequiredWidth() = 0;
 
 protected:
 };

@@ -25,6 +25,9 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "linyaxis.h"
 
 #define     FALSE	0
@@ -44,6 +47,7 @@
 TLinYAxis::TLinYAxis(TFont *Font)
 {
 	FFont = Font;
+	FScale = 0.0;
 }
 
 /*##########################################################################
@@ -104,6 +108,183 @@ long double TLinYAxis::LogToPhys(long double rel)
 
 /*##########################################################################
 #
+#   Name       : TLinYAxis::CalcScale
+#
+#   Purpose....: Calculate scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinYAxis::CalcScale()
+{
+    int exp;
+    int scales;
+    int i;
+    long double Start;
+    int val;
+
+    FFont->GetStringMetrics("-", &FScaleWidth, &FHeight);
+
+    if (FScaleWidth > 4)
+        FScaleWidth = FScaleWidth / 2;
+
+    FScale = FValMax - FValMin;
+
+    if (FScale < 0.0)
+    {
+        FNegativeScale = TRUE;
+        FScale = -FScale;
+    }
+    else
+        FNegativeScale = FALSE;
+
+    if (FScale != 0.0)
+    {
+        scales = (FYMax - FYMin) / FHeight;
+        if (scales == 0)
+            FScale = 0.0;
+    }
+
+    if (FScale != 0.0)
+    {
+        FScale = FScale / scales;
+
+        exp = 0;
+
+        while (FScale > 10.0)
+        {
+            exp++;
+            FScale = FScale / 10.0;
+        }
+
+		while (FScale <= 1.0)
+		{
+            exp--;
+            FScale = FScale * 10.0;
+        }
+
+        if (FScale <= 2.0)
+        {
+            FScale = 2.0;
+            FSubScale = 2;
+        }
+        else
+        {
+            if (FScale <= 5.0)
+            {
+                FScale = 5.0;
+                FSubScale = 5;
+            }
+            else
+            {   
+                exp++;
+                FScale = 1.0;
+                FSubScale = 2;
+            }
+        }
+
+        if (exp > 0)
+            for (i = 0; i < exp; i++)
+                FScale = FScale * 10.0;
+
+        if (exp < 0)
+            for (i = 0; i < -exp; i++) 
+                FScale = FScale / 10.0;
+
+        if (FNegativeScale)
+            Start = FValMax / FScale;
+        else
+            Start = FValMin / FScale;        
+
+        if (Start > (long double)0x7FFFFFFF)
+            FScale = 0.0;
+        
+    }     
+
+    if (FScale != 0.0)
+    {
+        val = (int)Start;
+        FFirstVal = val * FScale;
+
+        if (exp < 0)
+            FDecimals = -exp;
+        else
+            FDecimals = 0;
+
+        exp = 1;
+        val = FValMin;
+
+        if (val < 0.0)
+            val = -val;
+
+        while (val >= 10.0)         
+        {
+            exp++;
+            val = val / 10.0;
+        }
+
+        FDigits = exp;
+
+        exp = 1;
+        val = FValMax;
+
+        if (val < 0.0)
+            val = -val;
+
+        while (val >= 10.0)         
+        {
+            exp++;
+            val = val / 10.0;
+        }
+
+        if (exp > FDigits)
+            FDigits = exp;
+
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLinYAxis::RequiredWidth
+#
+#   Purpose....: Get required width
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Min pixels required for scale
+#
+##########################################################################*/
+int TLinYAxis::RequiredWidth()
+{
+    char formstr[32];
+    char str[256];
+    int width1;
+    int width2;
+    int height;
+
+    CalcScale();
+
+    if (FScale != 0.0)
+    {
+        Format(str, FValMin);
+        FFont->GetStringMetrics(str, &width1, &height);
+    
+        Format(str, FValMax);
+        FFont->GetStringMetrics(str, &width2, &height);
+
+        if (width1 > width2)
+            return width1 + FScaleWidth + 2;
+        else
+            return width2 + FScaleWidth + 2;
+    }
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TLinYAxis::Draw
 #
 #   Purpose....: Draw axis
@@ -115,4 +296,110 @@ long double TLinYAxis::LogToPhys(long double rel)
 ##########################################################################*/
 void TLinYAxis::Draw()
 {
+    char str[256];
+    int width;
+    int height;
+    long double val;
+    long double subval;
+	int x, y;
+    int i;
+
+    CalcScale();
+
+    if (FScale != 0.0)
+    {
+    	FDev->SetClipRect(FXMin, FYMin, FXMax + 2 * FScaleWidth, FYMax);
+     	FDev->SetLgopNone();
+	    FDev->SetDrawColor(FRBack, FGBack, FBBack);
+        FDev->SetFilledStyle();
+        FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
+        FDev->SetDrawColor(FRFore, FGFore, FBFore);
+        FDev->DrawLine(FXMax, FYMin, FXMax, FYMax);
+        FDev->SetFont(FFont);
+
+        if (FNegativeScale)
+        {
+            val = FFirstVal;
+
+			while (val > FValMin)
+			{
+                Format(str, val);
+			    FFont->GetStringMetrics(str, &width, &height);
+
+				y = PhysToPixel(val) - FHeight / 2;
+				x = FXMax - FXMin - width - FScaleWidth - 2;
+				if (x > 0)
+				    x = FXMin + x;
+			    else
+					x = FXMin;
+
+			    FDev->DrawString(x, y, str);
+
+				val -= FScale;
+	        }
+        }
+		else
+		{
+			val = FFirstVal;
+
+			while (val < FValMax)
+			{
+                Format(str, val);
+                FFont->GetStringMetrics(str, &width, &height);
+
+                y = PhysToPixel(val) - FHeight / 2;
+                x = FXMax - FXMin - width - FScaleWidth - 2;
+                if (x > 0)
+                    x = FXMin + x;
+                else
+                    x = FXMin;
+
+				FDev->DrawString(x, y, str);
+
+                val += FScale;
+            }
+        }
+
+        if (FNegativeScale)
+        {
+            val = FFirstVal + FScale;
+
+			while (val > FValMin)
+			{
+				y = PhysToPixel(val);
+				FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
+
+                subval = val - FScale / FSubScale;
+                
+				for (i = 1; i < FSubScale; i++)
+                {
+    				y = PhysToPixel(subval);
+	    			FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
+	    			subval -= FScale / FSubScale;
+	    	    }
+				
+				val -= FScale;
+	        }
+        }
+		else
+		{
+			val = FFirstVal - FScale;
+
+			while (val < FValMax)
+			{
+				y = PhysToPixel(val);
+				FDev->DrawLine(FXMax - FScaleWidth, y, FXMax + FScaleWidth, y);
+
+                subval = val + FScale / FSubScale;
+                
+				for (i = 1; i < FSubScale; i++)
+                {
+    				y = PhysToPixel(subval);
+	    			FDev->DrawLine(FXMax - FScaleWidth / 2, y, FXMax + FScaleWidth / 2, y);
+	    			subval += FScale / FSubScale;
+	    	    }
+                val += FScale;
+            }
+        }
+    }        
 }

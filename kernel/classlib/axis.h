@@ -44,6 +44,9 @@ public:
 	void Define(long double min, long double max);
 	void SetMin(long double min);
 	void SetMax(long double max);
+
+	void SetBackColor(int r, int g, int b);
+	void SetForeColor(int r, int g, int b);
 	
 	virtual long double PhysToLog(long double val) = 0;
 	virtual long double LogToPhys(long double rel) = 0;
@@ -57,6 +60,8 @@ public:
 	virtual void Draw();
 
 protected:
+    void Format(char *str, long double val);
+    
 	virtual void Update();
 
 	TGraphicDevice *FDev;
@@ -66,6 +71,17 @@ protected:
 	int FYMax;
 	long double FValMin;
 	long double FValMax;
+
+	int FRBack;
+	int FGBack;
+	int FBBack;
+
+	int FRFore;
+	int FGFore;
+	int FBFore;
+
+    int FDigits;
+    int FDecimals;
 
 private:
 };

@@ -40,9 +40,20 @@ public:
 	virtual long double PhysToLog(long double val);
 	virtual long double LogToPhys(long double rel);
 
+    virtual int RequiredWidth();
+
 	virtual void Draw();
 
 protected:
+    void CalcScale();
+
+    int FScaleWidth;
+    int FHeight;
+    int FNegativeScale;
+    long double FFirstVal;
+    long double FScale;
+    int FSubScale;
+    
 	TFont *FFont;
 };
 

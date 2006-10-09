@@ -25,6 +25,9 @@
 #
 ########################################################################*/
 
+#include <stdio.h>
+#include <string.h>
+
 #include "axis.h"
 
 #define     FALSE	0
@@ -50,6 +53,14 @@ TAxis::TAxis()
 	FYMax = 1;
 	FValMin = 0.0;
 	FValMax = 1.0;
+	
+	FRBack = 255;
+	FGBack = 255;
+    FBBack = 255;
+
+    FRFore = 0;
+    FGFore = 0;
+    FBFore = 0;	
 }
 
 /*##########################################################################
@@ -101,9 +112,45 @@ int TAxis::IsYAxis()
 
 /*##########################################################################
 #
-#   Name       : TAxis::Define
+#   Name       : TAxis::SetForeColor
 #
-#   Purpose....: Define graphics device
+#   Purpose....: Set foreground color
+#
+#   In params..: r, g, b
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAxis::SetForeColor(int r, int g, int b)
+{
+    FRFore = r;
+    FGFore = g;
+    FBFore = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TAxis::SetBackColor
+#
+#   Purpose....: Set background color
+#
+#   In params..: r, g, b
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAxis::SetBackColor(int r, int g, int b)
+{
+    FRBack = r;
+    FGBack = g;
+    FBBack = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TAxis::SetWindow
+#
+#   Purpose....: Set draw window
 #
 #   In params..: dev
 #   Out params.: *
@@ -321,6 +368,48 @@ long double TAxis::PixelToPhys(int pixel)
 	}
 
 	return 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TAxis::Format
+#
+#   Purpose....: Format value
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TAxis::Format(char *str, long double val)
+{
+    char tempstr[32];
+    char formstr[32];
+    int len;
+    int digits;
+
+    if (val >= 0.0)
+        digits = FDigits + FDecimals + 1;
+    else
+        digits = FDigits + FDecimals + 2;
+        
+    if (FDecimals)
+    {
+        sprintf(tempstr, "%d.%dLf", digits, FDecimals);
+        strcpy(formstr, "%");
+        strcat(formstr, tempstr);            
+        sprintf(str, formstr, val);
+    }
+    else
+    {
+        sprintf(tempstr, "%d.1Lf", digits + 1);
+        strcpy(formstr, "%");
+        strcat(formstr, tempstr);            
+        sprintf(str, formstr, val);
+        len = strlen(str);
+        if (len >= 2)
+            str[len - 2] = 0;
+    }
 }
 
 /*##########################################################################
