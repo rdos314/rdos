@@ -470,11 +470,25 @@ InsertSendEntry	Proc near
 ;
 	mov ax,flat_sel
 	mov es,ax
-;
+
+iteSendLoop:
 	EnterSection ds:ListSection
 	mov eax,ds:TxList
 	or eax,eax
 	jz iteEmpty
+;
+	mov edx,es:[eax].dh_stat
+	test edx,80000000h
+	jnz iteGetTail
+;
+    push edi
+	mov edi,ds:TxList
+	mov eax,es:[edi].dh_link_linear
+	mov ds:TxList,eax
+	LeaveSection ds:ListSection
+	call FreeSendEntry
+	pop edi
+    jmp iteSendLoop
 
 iteGetTail:
 	mov edx,eax
@@ -509,9 +523,9 @@ iteEmpty:
 	mov dx,ds:IoBase
 	add dx,TXDP
 	out dx,eax
-
-iteDone:
-	mov dx,ds:IoBase
+		
+iteDone:	
+    mov dx,ds:IoBase
 	add dx,CR
 	mov eax,1
 	out dx,eax
