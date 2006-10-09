@@ -44,8 +44,9 @@ TSignalDevice *SignalList = 0;
 int RadCount = 0;
 TRad *RadArr[15];
 TWs2300 *Ws2300 = 0;
-int VpOn = FALSE;
 int LightOn = FALSE;
+TCirc *Circ;
+TVp *Vp;
 
 /*##########################################################################
 #
@@ -311,6 +312,7 @@ THttpHeatPage::~THttpHeatPage()
 ##########################################################################*/
 void THttpHeatPage::Get(const char *Name)
 {
+    long double val;
 	int ival;
 	int r;
 	int count;
@@ -468,11 +470,10 @@ void THttpHeatPage::Get(const char *Name)
 		WriteFieldFooter(File);
 
 		WriteCenteredFieldHeader(File, 6);
-		if (VpOn)
+		if (Vp->IsOn())
 			File.Write("<img border=\"0\" src=\"sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
 			File.Write("<img border=\"0\" src=\"sol_bl.gif\" width=\"26\" height=\"26\">");
-
 		File.Write("</tr>");
 
 		File.Write("<tr style='height:24.75pt'>");
@@ -486,6 +487,20 @@ void THttpHeatPage::Get(const char *Name)
 			File.Write("<img border=\"0\" src=\"sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
 			File.Write("<img border=\"0\" src=\"sol_bl.gif\" width=\"26\" height=\"26\">");
+
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Cirkulation");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		ival = round(10.0 * Circ->GetSpeed());
+		sprintf(str, "%d%", ival);
+		File.Write(str);
+		WriteFieldFooter(File);
 
 		File.Write("</tr>");
 
@@ -903,34 +918,34 @@ void AddHttpWs2300(TWs2300 *Ws)
 
 /*##########################################################################
 #
-#   Name       : HttpSetVpOn
+#   Name       : AddHttpCirc
 #
-#   Purpose....: Set VP to ON
+#   Purpose....: Add circulation pump
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void HttpSetVpOn()
+void AddHttpCirc(TCirc *circ)
 {
-    VpOn = TRUE;
+    Circ = circ;
 }
 
 /*##########################################################################
 #
-#   Name       : HttpSetVpOff
+#   Name       : AddHttpVp
 #
-#   Purpose....: Set VP to OFF
+#   Purpose....: Add heater pump
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void HttpSetVpOff()
+void AddHttpVp(TVp *vp)
 {
-    VpOn = FALSE;
+    Vp = vp;
 }
 
 /*##########################################################################
@@ -980,10 +995,10 @@ void InitHeatHttp()
 {
     THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
     THttpHeatPageFactory *HeatPage = new THttpHeatPageFactory("heat.htm");
-	 THttpWs2300PageFactory *Ws2300Page = new THttpWs2300PageFactory("ws2300.htm");
+	THttpWs2300PageFactory *Ws2300Page = new THttpWs2300PageFactory("ws2300.htm");
     TWait *Wait = new TWait;
     
-	Factory->RootDir = "d:\\wwwroot";
+	Factory->RootDir = "e:\\wwwroot";
     Factory->KeepAlive = 45;
 	Factory->AddCustomPage(HeatPage);
 	Factory->AddCustomPage(Ws2300Page);

@@ -170,5 +170,7 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
 	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
+
+	 Quiz[3]->ExportHistogram("hbip.txt", POP_TYPE_BIPOLAR, 2);
 }
 

@@ -31,6 +31,8 @@
 #include "httpfact.h"
 #include "httpcust.h"
 #include "ws2300.h"
+#include "circ.h"
+#include "vp.h"
 
 class TRad;
 
@@ -95,6 +97,8 @@ protected:
 
 void AddHttpRad(TRad *Rad);
 void AddHttpWs2300(TWs2300 *ws);
+void AddHttpCirc(TCirc *circ);
+void AddHttpVp(TVp *vp);
 void InitHeatHttp();
 void HttpUpdate();
 void HttpSetVpOn();

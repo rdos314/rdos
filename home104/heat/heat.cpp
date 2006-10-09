@@ -95,7 +95,6 @@ void cdecl main()
 
 	Ws = new TWs2300(1);
 	Ws->OnChanged = WsChanged;
-	AddHttpWs2300(Ws);
 
     Circ = new TCirc;	
 
@@ -104,6 +103,10 @@ void cdecl main()
 	log->Add(Ws);
 	log->Add(Circ);
 	log->Add(Vp);
+
+	AddHttpWs2300(Ws);
+	AddHttpCirc(Circ);
+	AddHttpVp(Vp);
 
 	for (;;)
 	{
