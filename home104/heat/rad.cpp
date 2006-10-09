@@ -423,10 +423,11 @@ void TRad::Execute()
 		{
 		    Online();
 
+			Motor = Motor * 10 / 25;
+
 		    FMotorSum += Motor;
 		    FMotorCount++;
 		    
-			Motor = Motor * 10 / 25;
 			printf("%4ld.%ld ", Motor / 10, Motor % 10);
 		}
 		else
