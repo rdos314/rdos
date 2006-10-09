@@ -423,7 +423,7 @@ void TRad::Execute()
 		{
 		    Online();
 
-		    FMotorSum = Motor;
+		    FMotorSum += Motor;
 		    FMotorCount++;
 		    
 			Motor = Motor * 10 / 25;
