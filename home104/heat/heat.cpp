@@ -59,12 +59,11 @@ void cdecl main()
 	int diostat;
 	int mask;
 	TDateTime *CurrTime;
-	int motcount;
 	int mot;
 	int motmax;
 	int temp;
 	int ref;
-	int tempcount;
+	int count;
 	int temperr;
 	int temperrmax;
 	long double val;
@@ -96,10 +95,10 @@ void cdecl main()
 	Ws = new TWs2300(1);
 	Ws->OnChanged = WsChanged;
 
-    Circ = new TCirc;	
+	Circ = new TCirc;
 
-    Vp = new TVp(Circ);
-	
+	Vp = new TVp(Circ);
+
 	log->Add(Ws);
 	log->Add(Circ);
 	log->Add(Vp);
@@ -147,65 +146,59 @@ void cdecl main()
 		else
 			printf("------");
 
-	    ambient = 10 * Ws->GetOutdoorTemp();
+		ambient = 10 * Ws->GetOutdoorTemp();
 
-    	night = FALSE;
-	    if (CurrTime->GetHour() >= 20)
-		    night = TRUE;
-    	else
-		    if (CurrTime->GetHour() < 6)
-			    night = TRUE;
+		night = FALSE;
+		if (CurrTime->GetHour() >= 20)
+			night = TRUE;
+		else
+			if (CurrTime->GetHour() < 6)
+				night = TRUE;
 
 		delete CurrTime;
 
-        motcount = 0;
+		count = 0;
 		motmax = 0;
-
-		tempcount = 0;
 		temperrmax = 255;
-        
+
 		for (i = 0; i < 8; i++)
 		{
 			if (RadArr[i]->IsOnline())
-		    {
-				if (RadArr[i]->GetMotor(&mot))
-					motcount++;
-				else
-					mot = 0;
+			{
+				count++;
 
+				mot = RadArr[i]->GetMotor();
 				if (mot > motmax)
 					motmax = mot;
 
-				if (RadArr[i]->GetTemp(&temp))
-					if (RadArr[i]->GetRef(&ref))
-		            {
-		                temperr = temp - ref;
-		                tempcount++;
+				temp = RadArr[i]->GetTemp();
+				ref = RadArr[i]->GetRef();
 
-		                if (temperr < temperrmax)
-		                    temperrmax = temperr;
-		            }
+				temperr = temp - ref;
 
-    			if (night)
-	    		{
-		    		if (ambient < 0)
-    					RadArr[i]->SetWinterRef();
-    				else
-	    				RadArr[i]->SetNightRef();
-    			}
-	    		else
-		    		RadArr[i]->SetDayRef();
+				if (temperr < temperrmax)
+					temperrmax = temperr;
 
-                RadArr[i]->SetAmbient(ambient);
+				if (night)
+				{
+					if (ambient < 0)
+						RadArr[i]->SetWinterRef();
+					else
+						RadArr[i]->SetNightRef();
+				}
+				else
+					RadArr[i]->SetDayRef();
+
+				RadArr[i]->SetAmbient(ambient);
 			 }
 		}
 
-		if (motcount)
-    	    Circ->SetMaxMotor(motmax);
+		if (count)
+			Circ->SetMaxMotor(motmax);
 
-    	if (tempcount)
-    	    Circ->SetMaxTempError(temperrmax);
-    	    
+		if (count)
+			Circ->SetMaxTempError(temperrmax);
+
 		if (diostat & 1)
 			HttpSetLightOn();
 		else

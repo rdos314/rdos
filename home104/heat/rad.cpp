@@ -67,7 +67,16 @@ TRad::TRad(int Address, int Row)
 	FUpdateRef = FALSE;
 	FUpdateAmbient = FALSE;
 
-    ClearAcc();
+    FRefSum = 0;
+    FRefCount = 0;
+    FTempSum = 0;
+    FTempCount = 0;
+    FMotorSum = 0;
+    FMotorCount = 0;
+    FLightSum = 0;
+    FLightCount = 0;
+    FAuxTempSum = 0;
+    FAuxTempCount = 0;
 
 	sprintf(str, "RAD %d", Address);
 	Start(str, 0x2000);
@@ -187,31 +196,6 @@ int TRad::GetAddress()
 
 /*##########################################################################
 #
-#   Name       : TRad::ClearAcc
-#
-#   Purpose....: Clear accumulated values
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TRad::ClearAcc()
-{
-    FRefSum = 0;
-    FRefCount = 0;
-    FTempSum = 0;
-    FTempCount = 0;
-    FMotorSum = 0;
-    FMotorCount = 0;
-    FLightSum = 0;
-    FLightCount = 0;
-    FAuxTempSum = 0;
-    FAuxTempCount = 0;
-}
-
-/*##########################################################################
-#
 #   Name       : TRad::GetRef
 #
 #   Purpose....: Get reference temperature
@@ -221,22 +205,9 @@ void TRad::ClearAcc()
 #   Returns....: *
 #
 ##########################################################################*/
-int TRad::GetRef(int *val)
+int TRad::GetRef()
 {
-	int ok;
-
-	FSection.Enter();
-
-	if (FRefCount)
-	{
-		*val = FRefSum / FRefCount;
-		ok = TRUE;
-	}
-	else
-		ok = FALSE;
-
-	FSection.Leave();
-	return ok;
+    return Ref;
 }
 
 /*##########################################################################
@@ -250,22 +221,9 @@ int TRad::GetRef(int *val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TRad::GetTemp(int *val)
+int TRad::GetTemp()
 {
-	int ok;
-
-	FSection.Enter();
-
-	if (FTempCount)
-	{
-		*val = FTempSum / FTempCount;
-		ok = TRUE;
-	}
-	else
-		ok = FALSE;
-
-	FSection.Leave();
-	return ok;
+    return Temp;
 }
 
 /*##########################################################################
@@ -279,22 +237,9 @@ int TRad::GetTemp(int *val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TRad::GetMotor(int *val)
+int TRad::GetMotor()
 {
-	int ok;
-
-	FSection.Enter();
-
-	if (FMotorCount)
-	{
-		*val = FMotorSum / FMotorCount;
-		ok = TRUE;
-	}
-	else
-		ok = FALSE;
-
-	FSection.Leave();
-	return ok;
+    return Motor;
 }
 
 /*##########################################################################
@@ -308,22 +253,9 @@ int TRad::GetMotor(int *val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TRad::GetLight(int *val)
+int TRad::GetLight()
 {
-	int ok;
-
-	FSection.Enter();
-
-	if (FLightCount)
-	{
-		*val = FLightSum / FLightCount;
-		ok = TRUE;
-	}
-	else
-		ok = FALSE;
-
-	FSection.Leave();
-	return ok;
+    return Light;
 }
 
 /*##########################################################################
@@ -337,22 +269,9 @@ int TRad::GetLight(int *val)
 #   Returns....: *
 #
 ##########################################################################*/
-int TRad::GetAuxTemp(int *val)
+int TRad::GetAuxTemp()
 {
-	int ok;
-
-    FSection.Enter();
-
-    if (FAuxTempCount)
-    {
-        *val = FAuxTempSum / FAuxTempCount;
-		ok = TRUE;
-    }
-    else
-        ok = FALSE;
-
-    FSection.Leave();
-    return ok;
+    return AuxTemp;
 }
 
 
@@ -397,38 +316,57 @@ void TRad::Execute()
 		else
 			printf("-- ");
 
-		if (RdosReadSerialRaw(FAddress, 0, &Ref))
+		if (RdosReadSerialRaw(FAddress, 0, &val))
 		{
-			FRefSum += Ref;
+			FRefSum += val;
 			FRefCount++;
-			printf("%4ld.%ld ", Ref / 10, Ref % 10);
+
+			if (FRefCount == 20)
+			{
+			    Ref = FRefSum / FRefCount;
+			    FRefSum = 0;
+			    FRefCount = 0;
+			}			
+			printf("%4ld.%ld ", val / 10, val % 10);
 		}
 		else
 			printf("------ ");
 
-		if (RdosReadSerialRaw(FAddress, 1, &Temp))
+		if (RdosReadSerialRaw(FAddress, 1, &val))
 		{
-			if (Temp < 50)
-				Temp += 256;
+			if (val < 50)
+				val += 256;
 
-		    FTempSum += Temp;
+		    FTempSum += val;
 		    FTempCount++;
-		        
-			printf("%4ld.%ld ", Temp / 10, Temp % 10);
+
+		    if (FTempCount == 20)
+		    {
+		        Temp = FTempSum / FTempCount;
+		        FTempSum = 0;
+		        FTempCount = 0;
+		    }   
+			printf("%4ld.%ld ", val / 10, val % 10);
 	    }
 		else
 			printf("------ ");
 
-		if (RdosReadSerialRaw(FAddress, 2, &Motor))
+		if (RdosReadSerialRaw(FAddress, 2, &val))
 		{
 		    Online();
 
-			Motor = Motor * 10 / 25;
+			val = val * 10 / 25;
 
-		    FMotorSum += Motor;
+		    FMotorSum += val;
 		    FMotorCount++;
-		    
-			printf("%4ld.%ld ", Motor / 10, Motor % 10);
+
+		    if (FMotorCount == 20)
+		    {
+		        Motor = FMotorSum / FMotorCount;
+		        FMotorSum = 0;
+		        FMotorCount = 0;
+		    }		    
+			printf("%4ld.%ld ", val / 10, val % 10);
 		}
 		else
 		{
@@ -436,25 +374,37 @@ void TRad::Execute()
 			printf("------ ");
 	    }
 
-		if (RdosReadSerialRaw(FAddress, 3, &Light))
+		if (RdosReadSerialRaw(FAddress, 3, &val))
 		{
-		    FLightSum += Light;
+		    FLightSum += val;
 		    FLightCount++;
-		    
-			printf("%4ld.%ld ", Light / 10, Light % 10);
+
+		    if (FLightCount == 20)
+		    {
+		        Light = FLightSum / FLightCount;
+		        FLightSum = 0;
+		        FLightCount = 0;
+		    }
+			printf("%4ld.%ld ", val / 10, val % 10);
 	    }
 		else
 			printf("------ ");
 
-		if (RdosReadSerialRaw(FAddress, 4, &AuxTemp))
+		if (RdosReadSerialRaw(FAddress, 4, &val))
 		{
-		    if (AuxTemp < 50)
-		        AuxTemp += 256;
+		    if (val < 50)
+		        val += 256;
 
-            FAuxTempSum += AuxTemp;
+            FAuxTempSum += val;
             FAuxTempCount++;
-		       
-			printf("%4ld.%ld ", AuxTemp / 10, AuxTemp % 10);
+
+            if (FAuxTempCount == 20)
+            {
+                AuxTemp = FAuxTempSum / FAuxTempCount;
+                FAuxTempSum = 0;
+                FAuxTempCount = 0;
+            }		       
+			printf("%4ld.%ld ", val / 10, val % 10);
 		}
 		else
 			printf("------ ");

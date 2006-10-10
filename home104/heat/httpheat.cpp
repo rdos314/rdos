@@ -418,44 +418,34 @@ void THttpHeatPage::Get(const char *Name)
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				if (RadArr[r]->GetRef(&ival))
-					sprintf(str, "%d.%d °C", ival / 10, ival % 10);
-				else
-					strcpy(str, "---");
+				ival = RadArr[r]->GetRef();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				if (RadArr[r]->GetTemp(&ival))
-					sprintf(str, "%d.%d °C", ival / 10, ival % 10);
-				else
-					strcpy(str, "---");
+				ival = RadArr[r]->GetTemp();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				if (RadArr[r]->GetMotor(&ival))
-				{
-					if (ival > 100)
-						 ival = 100;
-					sprintf(str, "%d%", ival);
-				}
-				else
-					strcpy(str, "---");
+				ival = RadArr[r]->GetMotor();
+				if (ival > 100)
+					ival = 100;
+				sprintf(str, "%d%", ival);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				if (RadArr[r]->GetLight(&ival))
-					sprintf(str, "%d.%d W/m²", ival / 10, ival % 10);
-				else
-					strcpy(str, "---");
+				ival = RadArr[r]->GetLight();
+				sprintf(str, "%d.%d W/m²", ival / 10, ival % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 
 				WriteCenteredFieldHeader(File, 6);
-				if (RadArr[r]->GetAuxTemp(&ival))
-					sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+				ival = RadArr[r]->GetAuxTemp();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 				File.Write(str);
 				WriteFieldFooter(File);
 

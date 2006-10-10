@@ -45,14 +45,12 @@ public:
 
     int GetAddress();
 
-    void ClearAcc();
-    
-    int GetRef(int *val);
-    int GetTemp(int *val);
-    int GetMotor(int *val);
-    int GetLight(int *val);
-    int GetAuxTemp(int *val);
-    
+    int GetRef();
+    int GetTemp();
+    int GetMotor();
+    int GetLight();
+    int GetAuxTemp();
+            
 protected:
 	virtual void Execute();
 

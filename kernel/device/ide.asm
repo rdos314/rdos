@@ -121,7 +121,7 @@ CheckReady	PROC near
 	push dx
 ;
 	add dx,7
-	mov cx,1000
+	mov cx,10000
 CheckReadyLoop:
 	in al,dx
 	test al,80h
@@ -155,7 +155,7 @@ WaitDrq	Proc near
 	push cx
 	push dx
 ;
-	mov cx,1000
+	mov cx,10000
 	add dx,7
 WaitDrqLoop:
 	in al,dx

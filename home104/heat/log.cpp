@@ -347,26 +347,18 @@ void TLog::Execute()
                 if (FRadArr[i])
                 {
                     rad = FRadArr[i];
-                    
-                    tag = doc->AddTag(LOG_TAG_RAD);
-                    tag->AddSignedInt(LOG_VAR_Address, rad->GetAddress());
 
-					if (rad->GetRef(&ival))
-						tag->AddFloat1(LOG_VAR_Ref, ival);
+					if (rad->IsOnline())
+					{
+						tag = doc->AddTag(LOG_TAG_RAD);
+						tag->AddSignedInt(LOG_VAR_Address, rad->GetAddress());
 
-					if (rad->GetTemp(&ival))
-						tag->AddFloat1(LOG_VAR_Temp, ival);
-
-					if (rad->GetMotor(&ival))
-						tag->AddFloat1(LOG_VAR_Motor, ival);
-
-					if (rad->GetLight(&ival))
-						tag->AddFloat1(LOG_VAR_Light, ival);
-
-					if (rad->GetAuxTemp(&ival))
-						tag->AddFloat1(LOG_VAR_AuxTemp, ival);
-
-				    rad->ClearAcc();
+						tag->AddFloat1(LOG_VAR_Ref, rad->GetRef());
+						tag->AddFloat1(LOG_VAR_Temp, rad->GetTemp());
+						tag->AddFloat1(LOG_VAR_Motor, rad->GetMotor());
+						tag->AddFloat1(LOG_VAR_Light, rad->GetLight());
+						tag->AddFloat1(LOG_VAR_AuxTemp, rad->GetAuxTemp());
+					}
 				}
 			}
 
