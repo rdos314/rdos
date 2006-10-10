@@ -66,6 +66,7 @@ allocate_cluster	PROC near
 acRetry:
 	call allocate_cluster_no_verify
 	jc acDone
+	jmp acDone      ; remove to activiate test
 ;
     push eax
     push ebx
