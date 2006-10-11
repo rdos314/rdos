@@ -433,6 +433,8 @@ void TDateTime::Set()
 void TDateTime::RawToRecord()
 {
 	RdosTicsToRecord(FMsb, FLsb, &FYear, &FMonth, &FDay, &FHour, &FMin, &FSec, &FMilli);
+	if (FMilli >= 1000 || FMilli < 0)
+	    FMilli = 0;
 }
 
 /*##########################################################################
@@ -551,4 +553,56 @@ void TDateTime::AddDay(long day)
 {
 	RdosAddDay(&FMsb, &FLsb, day);
 	RawToRecord();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddMonth
+#
+#   Purpose....: Add month
+#
+#   In params..: month  month
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddMonth(long month)
+{
+    FMonth += month;
+
+    if (month > 0)
+    {
+        while (FMonth > 12)
+        {
+            FYear++;
+            FMonth -= 12;
+        }
+    }
+
+    if (month < 0)
+    {
+        while (FMonth <= 0)
+        {
+            FYear--;
+            FMonth += 12;
+        }
+    }
+	RecordToRaw();
+}
+
+/*##########################################################################
+#
+#   Name       : TDateTime::AddYear
+#
+#   Purpose....: Add year
+#
+#   In params..: year
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TDateTime::AddYear(long year)
+{
+    FYear += year;
+	RecordToRaw();
 }

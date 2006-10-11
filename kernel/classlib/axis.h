@@ -60,7 +60,7 @@ public:
 	virtual void Draw();
 
 protected:
-    void Format(char *str, long double val);
+    virtual void Format(char *str, long double val);
     
 	virtual void Update();
 

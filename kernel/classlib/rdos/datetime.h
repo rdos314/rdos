@@ -51,6 +51,8 @@ public:
 	void AddMin(long min);
 	void AddHour(long hour);
 	void AddDay(long day);
+	void AddMonth(long month);
+	void AddYear(long year);
 
     int GetDayOfWeek() const;
 	int GetYear() const;

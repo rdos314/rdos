@@ -311,7 +311,7 @@ void TLinXAxis::Draw()
     {
         newwidth = 0;
         
-        CalcScale(maxwidth);
+        CalcScale(maxwidth + maxwidth / 2);
 
         if (FScale == 0.0)
             break;

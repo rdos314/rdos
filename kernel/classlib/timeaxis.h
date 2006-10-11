@@ -30,6 +30,15 @@
 
 #include "xaxis.h"
 #include "font.h"
+#include "datetime.h"
+
+#define TIME_XAXIS_SCALE_YEAR   1
+#define TIME_XAXIS_SCALE_MONTH  2
+#define TIME_XAXIS_SCALE_DATE   3
+#define TIME_XAXIS_SCALE_HOUR   4
+#define TIME_XAXIS_SCALE_MIN    5
+#define TIME_XAXIS_SCALE_SEC    6
+#define TIME_XAXIS_SCALE_MILLI  7
 
 class TTimeXAxis : public TXAxis
 {
@@ -44,18 +53,43 @@ public:
 
 	virtual void Draw();
 
+	void SetMonthName(int Month, const char *Name);
+	void UseAmericanDate();
+	void UseEuropeanDate();
+
 protected:
+    virtual void Format(char *str, long double val);
+    void NextTime(TDateTime &time, int change);
+    void NextSubScale(TDateTime &time);
+    void DrawLabels();
+    void DrawScale();
+
+    void SetupYearScale(int width);
+    void SetupMonthScale(int width);
+    void SetupDateScale(int width);
+    void SetupHourScale(int width);
+    void SetupMinScale(int width);
+    void SetupSecScale(int width);
+    void SetupMilliScale(int width);
+
     void CalcYearScale(int width);
     void CalcMonthScale(int width);
+    void CalcDateScale(int width);
+    void CalcHourScale(int width);
+    void CalcMinScale(int width);
+    void CalcSecScale(int width);
+
+    void CalcScale();
 
     int FScaleHeight;
     int FNegativeScale;
-    int FFirstVal;
-    int FScale;
+    long double FFirstVal;
     int FSubScale;
-    int FUseYear;
-    int FTimeValMin;
-    int FTimeValMax;
+    int FScaleType;
+    int FIncr;
+
+    char FMonth[13][5];
+    int FAmerican;
 
 	TFont *FFont;
 };

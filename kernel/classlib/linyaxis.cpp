@@ -124,12 +124,15 @@ void TLinYAxis::CalcScale()
     int i;
     long double Start;
     int val;
+    int height;
 
     FFont->GetStringMetrics("-", &FScaleWidth, &FHeight);
 
     if (FScaleWidth > 4)
         FScaleWidth = FScaleWidth / 2;
 
+    height = FHeight + FHeight / 2;
+  
     FScale = FValMax - FValMin;
 
     if (FScale < 0.0)
@@ -142,7 +145,7 @@ void TLinYAxis::CalcScale()
 
     if (FScale != 0.0)
     {
-        scales = (FYMax - FYMin) / FHeight;
+        scales = (FYMax - FYMin) / height;
         if (scales == 0)
             FScale = 0.0;
     }

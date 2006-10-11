@@ -2908,7 +2908,7 @@ RdosAddMilli	Proc
 ;
 	mov eax,[ebp+16]
 	mov edx,1193
-	mul edx
+	imul edx
 	mov ebx,[ebp+12]
 	add [ebx],eax
 	mov ebx,[ebp+8]
@@ -2943,7 +2943,7 @@ RdosAddSec	Proc
 ;
 	mov eax,[ebp+16]
 	mov edx,1193000
-	mul edx
+	imul edx
 	mov ebx,[ebp+12]
 	add [ebx],eax
 	mov ebx,[ebp+8]
@@ -2978,7 +2978,7 @@ RdosAddMin	Proc
 ;
 	mov eax,[ebp+16]
 	mov edx,1193046*60
-	mul edx
+	imul edx
 	mov ebx,[ebp+12]
 	add [ebx],eax
 	mov ebx,[ebp+8]
