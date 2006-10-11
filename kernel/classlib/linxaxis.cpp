@@ -378,7 +378,7 @@ void TLinXAxis::Draw()
         {
             val = FFirstVal;
 
-			while (val > FValMin)
+			while (val >= FValMin)
 			{
                 Format(str, val);
 			    FFont->GetStringMetrics(str, &width, &height);
@@ -386,7 +386,8 @@ void TLinXAxis::Draw()
 				x = PhysToPixel(val) - width / 2;
 				y = FYMin + FScaleHeight + 2;
 
-				FDev->DrawString(x, y, str);
+			    if (x >= FXMin && x + width <= FXMax)
+    				FDev->DrawString(x, y, str);
 
 				val -= FScale;
 		    }
@@ -395,7 +396,7 @@ void TLinXAxis::Draw()
 		{
 			val = FFirstVal;
 
-			while (val < FValMax)
+			while (val <= FValMax)
 			{
 			    Format(str, val);
 			    FFont->GetStringMetrics(str, &width, &height);
@@ -403,7 +404,8 @@ void TLinXAxis::Draw()
 				x = PhysToPixel(val) - width / 2;
 				y = FYMin + FScaleHeight + 2;
 
-				FDev->DrawString(x, y, str);
+			    if (x >= FXMin && x + width <= FXMax)
+    				FDev->DrawString(x, y, str);
 
 				val += FScale;
 	        }
@@ -413,7 +415,7 @@ void TLinXAxis::Draw()
 	    {
 		    val = FFirstVal + FScale;
 
-			while (val > FValMin)
+			while (val >= FValMin)
 			{
 				x = PhysToPixel(val);
 				FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);
@@ -434,7 +436,7 @@ void TLinXAxis::Draw()
 		{
 			val = FFirstVal - FScale;
 
-			while (val < FValMax)
+			while (val <= FValMax)
 			{
 				x = PhysToPixel(val);
 				FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);

@@ -45,6 +45,17 @@ public:
 	virtual void Draw();
 
 protected:
+    void CalcYearScale(int width);
+    void CalcMonthScale(int width);
+
+    int FScaleHeight;
+    int FNegativeScale;
+    int FFirstVal;
+    int FScale;
+    int FSubScale;
+    int FUseYear;
+    int FTimeValMin;
+    int FTimeValMax;
 
 	TFont *FFont;
 };
