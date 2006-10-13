@@ -30,6 +30,38 @@
 
 #include "xaxis.h"
 #include "yaxis.h"
+#include "listbase.h"
+
+struct TChartCoord
+{
+    long double x;
+    long double y;
+};
+
+class TChartListNode : public TListBaseNode
+{
+friend class TChart;
+public:
+	TChartListNode(TChartCoord *coord);
+	TChartListNode(const TChartListNode &source);
+	virtual ~TChartListNode();
+
+    TChartCoord *Get();
+
+	const TChartListNode &operator=(const TChartListNode &src);
+	int operator==(const TChartListNode &dest) const;
+	int operator!=(const TChartListNode &dest) const;
+	int operator>(const TChartListNode &dest) const;
+	int operator>=(const TChartListNode &dest) const;
+	int operator<(const TChartListNode &dest) const;
+	int operator<=(const TChartListNode &dest) const;
+
+protected:
+	virtual int Compare(const TChartListNode &n2) const;
+	virtual int Compare(const TListBaseNode &n2) const;
+	virtual void Load(const TChartListNode &src);
+	virtual void Load(const TListBaseNode &src);
+};
 
 class TChart
 {

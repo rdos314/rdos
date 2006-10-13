@@ -32,6 +32,280 @@
 
 /*##########################################################################
 #
+#   Name       : TChartListNode::TChartListNode
+#
+#   Purpose....: Constructor for list-node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartListNode::TChartListNode()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::TChartListNode
+#
+#   Purpose....: Constructor for list-node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartListNode::TChartListNode(TChartCoord *coord)
+  : TListBaseNode(coord, sizeof(TChartCoord)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::TChartListNode
+#
+#   Purpose....: Copy constructor for list-node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartListNode::TChartListNode(const TChartListNode &src)
+  : TListBaseNode(src)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::~TChartListNode
+#
+#   Purpose....: Destructor for list-node
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartListNode::~TChartListNode()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::Compare
+#
+#   Purpose....: Compare nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::Compare(const TChartListNode &n2) const
+{
+    long double d1, d2;
+    TChartCoord *coord;
+
+    coord = Get();
+    d1 = coord->x;
+    coord = n2.Get();
+    d2 = coord->y;
+
+    if (d1 < d2)
+        return -1;
+    else
+    {
+        if (d1 > d2)
+            return 1;
+        else
+            return 0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::Compare
+#
+#   Purpose....: Compare nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::Compare(const TListBaseNode &n2) const
+{
+    TChartListNode *p = (TChartListNode *)&n2;
+    return Compare(*p);    
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::Load
+#
+#   Purpose....: Load new node
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChartListNode::Load(const TChartListNode &src)
+{
+    FData->Load(*src.FData);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::Load
+#
+#   Purpose....: Load new node
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChartListNode::Load(const TListBaseNode &src)
+{
+	TChartListNode *p = (TChartListNode *)&src;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: src
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+const TChartListNode &TChartListNode::operator=(const TChartListNode &src)
+{
+	Load(src);
+	return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator==
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator==(const TChartListNode &ln) const
+{
+	if (Compare(ln) == 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator!=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator!=(const TChartListNode &ln) const
+{
+	if (Compare(ln) == 0)
+		return FALSE;
+	else
+		return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator>
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator>(const TChartListNode &dest) const
+{
+	if (Compare(dest) > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator<
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator<(const TChartListNode &dest) const
+{
+	if (Compare(dest) < 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator>=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator>=(const TChartListNode &dest) const
+{
+	if (Compare(dest) >= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::operator<=
+#
+#   Purpose....: Compare list nodes
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartListNode::operator<=(const TChartListNode &dest) const
+{
+	if (Compare(dest) <= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
 #   Name       : TChart::TChart
 #
 #   Purpose....: Constructor for TChart
