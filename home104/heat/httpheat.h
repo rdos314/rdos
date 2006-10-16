@@ -33,6 +33,7 @@
 #include "ws2300.h"
 #include "circ.h"
 #include "vp.h"
+#include "log.h"
 
 class TRad;
 
@@ -104,6 +105,8 @@ public:
 protected:
 	virtual void Get(const char *Name);
 
+    void CreateTempJpeg(int address, int year, int month, int day);
+
 };
 
 class THttpRadPageFactory : public THttpCustomDirFactory
@@ -121,6 +124,7 @@ void AddHttpRad(TRad *Rad);
 void AddHttpWs2300(TWs2300 *ws);
 void AddHttpCirc(TCirc *circ);
 void AddHttpVp(TVp *vp);
+void AddHttpLog(TLog *log);
 void InitHeatHttp();
 void HttpUpdate();
 void HttpSetVpOn();

@@ -169,6 +169,7 @@ TSocketServer *THttpSocketServerFactory::Create(TSocket *Socket)
 	server->RootDir = RootDir;
 	server->KeepAlive = KeepAlive;
 	server->FPageList = FPageList;
+	server->FDirList = FDirList;
 
 	return server;
 }

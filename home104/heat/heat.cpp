@@ -106,6 +106,7 @@ void cdecl main()
 	AddHttpWs2300(Ws);
 	AddHttpCirc(Circ);
 	AddHttpVp(Vp);
+	AddHttpLog(log);
 
 	for (;;)
 	{

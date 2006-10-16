@@ -44,6 +44,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define WWWROOT "e:\\wwwroot"
+
 TSection SignalSection;
 TSignalDevice *SignalList = 0;
 
@@ -53,6 +55,7 @@ TWs2300 *Ws2300 = 0;
 int LightOn = FALSE;
 TCirc *Circ;
 TVp *Vp;
+TLog *Log;
 
 /*##########################################################################
 #
@@ -912,16 +915,16 @@ THttpRadPage::~THttpRadPage()
 
 /*##########################################################################
 #
-#   Name       : THttpRadPage::Get
+#   Name       : THttpRadPage::CreateTempJpeg
 #
-#   Purpose....: Get dynamic page
+#   Purpose....: Create temperature jpeg
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpRadPage::Get(const char *Name)
+void THttpRadPage::CreateTempJpeg(int address, int year, int month, int day)
 {
 	TJpegBitmapDevice *jpeg;
 	TFont *font;
@@ -942,6 +945,11 @@ void THttpRadPage::Get(const char *Name)
 	TDateTime time;
 	TDateTime firsttime;
 	TDateTime lasttime;
+	char str[30];
+	char filename[128];
+
+	if (log == 0)
+	    return;
 
 	jpeg = new TJpegBitmapDevice(24, 500, 300);
 
@@ -964,10 +972,10 @@ void THttpRadPage::Get(const char *Name)
 	chart->SetLineColor(102, 255, 128, 0);
 	chart->SetLineColor(103, 0, 0, 255);
 
-	log = new TLogReader("9.cot");
+	log = Log->GetLog(year, month, day);
 
-    firsttime = TDateTime(2006, 10, 9, 0, 0, 0, 0);
-    lasttime = TDateTime(2006, 10, 9, 23, 59, 59, 999);
+    firsttime = TDateTime(year, month, day, 0, 0, 0, 0);
+    lasttime = TDateTime(year, month, day, 23, 59, 59, 999);
     
 	for (i = 0; i <= 25; i++) 
 	{
@@ -999,7 +1007,7 @@ void THttpRadPage::Get(const char *Name)
                 {
     			    var = tag->GetVar(LOG_VAR_Temp);
 	    			if (var)
-		    		{
+					{
 			    	    ival = var->GetFloat1();
 				        val = (long double)ival;
 				        val = val / 10.0;
@@ -1011,7 +1019,7 @@ void THttpRadPage::Get(const char *Name)
 		        if (tag->GetID() == LOG_TAG_RAD)
 		        {
 		            index = tag->GetSignedInt(LOG_VAR_Address, -1);
-						if (index == 0x21)
+					if (index == address)
 		            {
 		                var = tag->GetVar(LOG_VAR_Temp);
 		                if (var)
@@ -1045,7 +1053,7 @@ void THttpRadPage::Get(const char *Name)
         			}
 		        }
 
-		        tag = msg->GotoNextTag();
+				tag = msg->GotoNextTag();
 		    }
 		}
 
@@ -1056,9 +1064,97 @@ void THttpRadPage::Get(const char *Name)
 	}
 
 	chart->Draw();
+    
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, "image");
 
-    jpeg->Save("9.jpg");
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "image\\%d", address);
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "image\\%d\\%d", address, year);
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "image\\%d\\%d\\%d", address, year, month);
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "image\\%d\\%d\\%d\\%d.jpg", address, year, month, day);
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+    jpeg->Save(filename);
     delete jpeg;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::Get
+#
+#   Purpose....: Get dynamic page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpRadPage::Get(const char *Name)
+{
+    const char *param;
+    char str[256];
+    char filename[256];
+    TDateTime time;
+    int address;
+	int year;
+	int month;
+	int day;
+	int handle;
+	TFile File(FFileName.GetData(), 0);
+
+	param = FParam.GetData();
+
+	if (sscanf(param, "rad/%d/%d/%d/%d", &address, &year, &month, &day) != 4)
+	{
+	    WriteError(404);
+	    return;
+	}
+
+	sprintf(str, "image\\%d\\%d\\%d\\%d.jpg", address, year, month, day);
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	handle = RdosOpenFile(filename, 0);
+	if (handle)
+	    RdosCloseFile(handle);
+	else
+        CreateTempJpeg(address, year, month, day);
+
+	File.Write("<IMG SRC=\"");
+	sprintf(str, "/image/%d/%d/%d/%d.jpg", address, year, month, day);
+	File.Write(str);
+	File.Write("\" align=bottom width=500 height=300 border=0>");
+
+	WriteFile(FFileName.GetData(), "text/html");
+
 }
 
 /*##########################################################################
@@ -1179,6 +1275,22 @@ void AddHttpVp(TVp *vp)
 
 /*##########################################################################
 #
+#   Name       : AddHttpLog
+#
+#   Purpose....: Add log
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddHttpLog(TLog *log)
+{
+    Log = log;
+}
+
+/*##########################################################################
+#
 #   Name       : HttpSetLightOn
 #
 #   Purpose....: Set light to ON
@@ -1228,10 +1340,11 @@ void InitHeatHttp()
 	THttpRadPageFactory *RadPage = new THttpRadPageFactory("rad/");
     TWait *Wait = new TWait;
     
-	Factory->RootDir = "e:\\wwwroot";
+	Factory->RootDir = WWWROOT;
     Factory->KeepAlive = 45;
 	Factory->AddCustomPage(HeatPage);
 	Factory->AddCustomPage(Ws2300Page);
+	Factory->AddCustomDir(RadPage);
 	Wait->Add(Factory);
 	Wait->StartThreadHandler("HTTPD", 0x1800);
 }

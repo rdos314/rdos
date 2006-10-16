@@ -74,6 +74,22 @@ THttpCustomPage::~THttpCustomPage()
 
 /*##########################################################################
 #
+#   Name       : THttpCustomPage::WriteError
+#
+#   Purpose....: Write error
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpCustomPage::WriteError(int ErrorCode)
+{
+    FCmd->WriteError(ErrorCode);
+}
+
+/*##########################################################################
+#
 #   Name       : THttpCustomPage::WriteFile
 #
 #   Purpose....: Write header & file
@@ -225,10 +241,10 @@ TString THttpCustomPageFactory::CreateUniqueFile(THttpCommand *Cmd)
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd)
+THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd, const char *Param)
 {
 	TString tempname = CreateUniqueFile(Cmd);
-	return new THttpCustomPage(Cmd, tempname.GetData(), "");
+	return new THttpCustomPage(Cmd, tempname.GetData(), Param);
 }
 
 /*##########################################################################

@@ -875,23 +875,23 @@ void THttpCommand::Get(const char *Name)
 
 	if (pagefact)
 	{
-		THttpCustomPage *page = pagefact->Create(this);
+		THttpCustomPage *page = pagefact->Create(this, Name);
 		page->Get(Name);
 		delete page;
 	}
 	else
 	{
-	    dirfact = FServer->FindDir(Name);
+		dirfact = FServer->FindDir(Name);
 
-	    if (dirfact)
-	    {
-	        THttpCustomPage *page = dirfact->Create(this, Name);
-	        page->Get(Name);
-	        delete page;
-	    }
-	    else
-    	   	GetFile(Name);
-    }
+		if (dirfact)
+		{
+			THttpCustomPage *page = dirfact->Create(this, Name);
+			page->Get(Name);
+			delete page;
+		}
+		else
+			GetFile(Name);
+	}
 }
 
 /*##########################################################################
@@ -959,7 +959,7 @@ void THttpCommand::Post(const char *Name)
 
 	if (pagefact)
 	{
-		THttpCustomPage *page = pagefact->Create(this);
+		THttpCustomPage *page = pagefact->Create(this, Name);
     	HandlePost(page, Name);
 		delete page;
 	}

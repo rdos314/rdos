@@ -50,6 +50,7 @@ protected:
 	virtual void Post(const char *Name);
 	virtual void Post(const char *Var, const char *Val);
 
+	void WriteError(int ErrorCode);
 	void WriteFile(TPathName &path, const char *ContentType);
 	void StartPush();
 	int PushFile(TPathName &path, const char *ContentType, int ReloadTimeout);
@@ -68,7 +69,7 @@ public:
 	THttpCustomPageFactory(const char *ReqName);
 	virtual ~THttpCustomPageFactory();
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd);
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
 
 	TString FReqName;
 

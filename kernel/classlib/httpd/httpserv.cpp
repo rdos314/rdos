@@ -322,7 +322,7 @@ THttpCustomDirFactory *THttpSocketServer::FindDir(const char *FileName)
     {
         str = dir->FReqName.GetData();
         ptr = strstr(FileName, str);
-        if (ptr == str)
+        if (ptr == FileName)
             return dir;
         else
             dir = dir->FList;
