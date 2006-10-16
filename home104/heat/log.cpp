@@ -36,6 +36,9 @@
 
 #define LOG_SIGN    0xABEF1456
 
+#define FALSE		0
+#define TRUE		!FALSE
+
 /*##########################################################################
 #
 #   Name       : TLog::TLog
@@ -94,6 +97,30 @@ TLog::~TLog()
 void TLog::DeviceName(char *Name, int Size) const
 {
 	strcpy(Name, "LOGGER");
+}
+
+/*##########################################################################
+#
+#   Name       : TLog::GetLog
+#
+#   Purpose....: Get log reader device
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLogReader *TLog::GetLog(int year, int month, int day)
+{
+    char str[20];
+    char filename[256];
+
+	sprintf(str, "%d\\%d\\%d.cot", year, month, day);
+	strcpy(filename, FRootDir);
+	strcat(filename, "\\");
+	strcat(filename, str);
+
+	return new TLogReader(filename);
 }
 
 /*##########################################################################
@@ -373,3 +400,164 @@ void TLog::Execute()
     }
 }
 
+/*##########################################################################
+#
+#   Name       : TLogReader::TLogReader
+#
+#   Purpose....: LogReader constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLogReader::TLogReader(const char *filename)
+{
+    FFile = new TFile(filename);
+    FCurrMsg = new TDeviceMsg;
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::~TLogReader
+#
+#   Purpose....: LogReader destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLogReader::~TLogReader()
+{
+    if (FFile)
+        delete FFile;
+
+    if (FCurrMsg)
+        delete FCurrMsg;
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::DeviceName
+#
+#   Purpose....: Device name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLogReader::DeviceName(char *Name, int Size) const
+{
+	strcpy(Name, "LOG READER");
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::GetNext
+#
+#   Purpose....: Get next
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TLogReader::GetNext()
+{
+    long pos;
+    long sign;
+    int size = 0;
+    char *buf;
+
+    pos = FFile->GetPos();
+
+    for (;;)
+    {
+        FFile->Read(&sign, 4);
+
+        while (sign != LOG_SIGN)
+        {
+            pos++;
+            FFile->SetPos(pos);
+            if (FFile->Read(&sign, 4) != 4)
+                return FALSE;
+        }
+
+        FFile->Read(&size, 2);
+        if (size > 0 && size < 0x4000)
+        {
+				buf = new char[size + 8];
+				FFile->Read(buf + 6, size + 2);
+				memcpy(buf, &sign, 4);
+				memcpy(buf + 4, &size, 2);
+
+				if (FCurrMsg->Parse(LOG_SIGN, buf, size + 8))
+				{
+					 delete buf;
+					 return TRUE;
+				}
+            delete buf;
+        }
+
+        pos++;
+        FFile->SetPos(pos);
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::GotoFirst
+#
+#   Purpose....: Goto first entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TLogReader::GotoFirst()
+{
+    FFile->SetPos(0);
+
+    if (FFile->IsOpen())
+        return GetNext();
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::GotoNext
+#
+#   Purpose....: Goto next entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TLogReader::GotoNext()
+{
+    if (FFile->IsOpen())
+        return GetNext();
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TLogReader::Get
+#
+#   Purpose....: Get current data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDeviceMsg *TLogReader::Get()
+{
+    return FCurrMsg;
+}

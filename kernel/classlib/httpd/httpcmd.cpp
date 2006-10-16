@@ -868,16 +868,30 @@ void THttpCommand::GetFile(const char *Name)
 ##########################################################################*/
 void THttpCommand::Get(const char *Name)
 {
-	THttpCustomPageFactory *cust = FServer->Find(Name);
+	THttpCustomPageFactory *pagefact; 
+	THttpCustomDirFactory *dirfact; 
 
-	if (cust)
+	pagefact = FServer->FindPage(Name);
+
+	if (pagefact)
 	{
-		THttpCustomPage *page = cust->Create(this);
+		THttpCustomPage *page = pagefact->Create(this);
 		page->Get(Name);
 		delete page;
 	}
 	else
-		GetFile(Name);
+	{
+	    dirfact = FServer->FindDir(Name);
+
+	    if (dirfact)
+	    {
+	        THttpCustomPage *page = dirfact->Create(this, Name);
+	        page->Get(Name);
+	        delete page;
+	    }
+	    else
+    	   	GetFile(Name);
+    }
 }
 
 /*##########################################################################
@@ -938,16 +952,30 @@ void THttpCommand::HandlePost(THttpCustomPage *page, const char *name)
 ##########################################################################*/
 void THttpCommand::Post(const char *Name)
 {
-	THttpCustomPageFactory *cust = FServer->Find(Name);
+	THttpCustomPageFactory *pagefact; 
+	THttpCustomDirFactory *dirfact; 
 
-	if (cust)
+	pagefact = FServer->FindPage(Name);
+
+	if (pagefact)
 	{
-		THttpCustomPage *page = cust->Create(this);
-		HandlePost(page, Name);
+		THttpCustomPage *page = pagefact->Create(this);
+    	HandlePost(page, Name);
 		delete page;
 	}
 	else
-		GetFile(Name);
+	{
+	    dirfact = FServer->FindDir(Name);
+
+	    if (dirfact)
+	    {
+	        THttpCustomPage *page = dirfact->Create(this, Name);
+    		HandlePost(page, Name);
+	        delete page;
+	    }
+	    else
+    	   	GetFile(Name);
+    }
 }
 
 /*##########################################################################

@@ -37,6 +37,7 @@ public:
 	~THttpSocketServerFactory();
 
 	void AddCustomPage(THttpCustomPageFactory *page);
+	void AddCustomDir(THttpCustomDirFactory *dir);
 
 	virtual TSocketServer *Create(TSocket *Socket);
 
@@ -49,6 +50,7 @@ protected:
 	void Init();
 
 	THttpCustomPageFactory *FPageList;
+	THttpCustomDirFactory *FDirList;
 };
 
 #endif

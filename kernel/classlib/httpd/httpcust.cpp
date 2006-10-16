@@ -47,8 +47,9 @@
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName)
-  : FFileName(FileName)
+THttpCustomPage::THttpCustomPage(THttpCommand *Cmd, const char *FileName, const char *Param)
+  : FFileName(FileName),
+    FParam(Param)
 {
     FCmd = Cmd;
 }
@@ -227,5 +228,69 @@ TString THttpCustomPageFactory::CreateUniqueFile(THttpCommand *Cmd)
 THttpCustomPage *THttpCustomPageFactory::Create(THttpCommand *Cmd)
 {
 	TString tempname = CreateUniqueFile(Cmd);
-	return new THttpCustomPage(Cmd, tempname.GetData());
+	return new THttpCustomPage(Cmd, tempname.GetData(), "");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomDirFactory::THttpCuustomDirFactory
+#
+#   Purpose....: Constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomDirFactory::THttpCustomDirFactory(const char *ReqName)
+  : FReqName(ReqName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomDirFactory::~THttpCustomDirFactory
+#
+#   Purpose....: Destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomDirFactory::~THttpCustomDirFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomDirFactory::CreateUniqueFile
+#
+#   Purpose....: Create an unique filename
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TString THttpCustomDirFactory::CreateUniqueFile(THttpCommand *Cmd)
+{
+    return Cmd->FServer->CreateUniqueFile();
+}
+
+/*##########################################################################
+#
+#   Name       : THttpCustomDirFactory::Create
+#
+#   Purpose....: Create custom page instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomPage *THttpCustomDirFactory::Create(THttpCommand *Cmd, const char *Param)
+{
+	TString tempname = CreateUniqueFile(Cmd);
+	return new THttpCustomPage(Cmd, tempname.GetData(), Param);
 }

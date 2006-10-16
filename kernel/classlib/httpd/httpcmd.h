@@ -50,6 +50,7 @@ class THttpCommand : public THttpParser
 {
 friend class THttpCustomPage;
 friend class THttpCustomPageFactory;
+friend class THttpCustomDirFactory;
 
 public:
 	THttpCommand(THttpSocketServer *Server, TString Method, TString Param);

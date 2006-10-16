@@ -34,6 +34,12 @@
 #include "httpheat.h"
 #include "sigdev.h"
 #include "rad.h"
+#include "linxaxis.h"
+#include "linyaxis.h"
+#include "timeaxis.h"
+#include "chart.h"
+#include "jpeg.h"
+#include "log.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -156,7 +162,7 @@ void RemoveSignal(TSignalDevice *Signal)
 #
 ##########################################################################*/
 THttpTablePage::THttpTablePage(THttpCommand *Cmd, const char *FileName)
-  : THttpCustomPage(Cmd, FileName)
+  : THttpCustomPage(Cmd, FileName, "")
 {
 }
 
@@ -813,7 +819,7 @@ THttpHeatPageFactory::~THttpHeatPageFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpHeatPageFactory::Create(THttpCommand *Cmd)
+THttpCustomPage *THttpHeatPageFactory::Create(THttpCommand *Cmd, const char *Param)
 {
 	THttpHeatPage *page;
 
@@ -864,12 +870,245 @@ THttpWs2300PageFactory::~THttpWs2300PageFactory()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPage *THttpWs2300PageFactory::Create(THttpCommand *Cmd)
+THttpCustomPage *THttpWs2300PageFactory::Create(THttpCommand *Cmd, const char *Param)
 {
 	THttpWs2300Page *page;
 
 	TString tempname = CreateUniqueFile(Cmd);
 	page = new THttpWs2300Page(Cmd, tempname.GetData());
+	return page;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::THttpRadPage
+#
+#   Purpose....: Constructor for THttpRadPage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpRadPage::THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *Param)
+  : THttpCustomPage(Cmd, FileName, Param)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::~THttpRadPage
+#
+#   Purpose....: Destructor for THttpRadPage
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpRadPage::~THttpRadPage()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::Get
+#
+#   Purpose....: Get dynamic page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpRadPage::Get(const char *Name)
+{
+	TJpegBitmapDevice *jpeg;
+	TFont *font;
+	TLinYAxis *yaxis;
+	TTimeXAxis *xaxis;
+	TChart *chart;
+	TLogReader *log;
+	TDeviceMsg *msg;
+    TDeviceTag *header;
+	TDeviceTag *tag;
+	TDeviceVar *var;
+	int index;
+	int ival;
+	int i;
+	long double val;
+	unsigned long msb;
+	unsigned long lsb;
+	TDateTime time;
+	TDateTime firsttime;
+	TDateTime lasttime;
+
+	jpeg = new TJpegBitmapDevice(24, 500, 300);
+
+	font = new TFont(10);
+
+	xaxis = new TTimeXAxis(font);
+	yaxis = new TLinYAxis(font);
+	chart = new TChart(jpeg, xaxis, yaxis);
+
+	xaxis->SetForeColor(0, 0, 0);
+	xaxis->SetBackColor(255, 255, 255);
+
+	yaxis->SetForeColor(0, 0, 0);
+	yaxis->SetBackColor(255, 255, 255);
+
+	chart->SetBackColor(255, 255, 255);
+
+	chart->SetLineColor(100, 128, 128, 128);
+	chart->SetLineColor(101, 128, 255, 0);
+	chart->SetLineColor(102, 255, 128, 0);
+	chart->SetLineColor(103, 0, 0, 255);
+
+	log = new TLogReader("9.cot");
+
+    firsttime = TDateTime(2006, 10, 9, 0, 0, 0, 0);
+    lasttime = TDateTime(2006, 10, 9, 23, 59, 59, 999);
+    
+	for (i = 0; i <= 25; i++) 
+	{
+    	chart->SetLineColor(i, 210, 210, 210);
+    	
+	    val = (long double)i;
+	    chart->Add(i, firsttime, val);
+	    chart->Add(i, lasttime, val);
+	}
+
+	if (log->GotoFirst())
+        msg = log->Get();
+	else
+	    msg = 0;
+
+	while (msg)
+	{
+	    header = msg->GetTag(LOG_TAG_HEADER);
+		if (header)
+		{
+		    msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+			lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+			time = TDateTime(msb, lsb);
+
+		    tag = msg->GotoFirstTag();
+		    while (tag)
+		    {
+                if (tag->GetID() == LOG_TAG_OUTDOOR)
+                {
+    			    var = tag->GetVar(LOG_VAR_Temp);
+	    			if (var)
+		    		{
+			    	    ival = var->GetFloat1();
+				        val = (long double)ival;
+				        val = val / 10.0;
+
+    					chart->Add(100, time, val);
+	    		    }
+	    		}
+                		    
+		        if (tag->GetID() == LOG_TAG_RAD)
+		        {
+		            index = tag->GetSignedInt(LOG_VAR_Address, -1);
+						if (index == 0x21)
+		            {
+		                var = tag->GetVar(LOG_VAR_Temp);
+		                if (var)
+		                {
+		                    ival = var->GetFloat1();
+		                    val = (long double)ival;
+		                    val = val / 10.0; 
+
+        					chart->Add(101, time, val);
+        			    }
+
+		                var = tag->GetVar(LOG_VAR_AuxTemp);
+		                if (var)
+		                {
+		                    ival = var->GetFloat1();
+		                    val = (long double)ival;
+		                    val = val / 10.0; 
+
+        					chart->Add(102, time, val);
+        			    }
+
+		                var = tag->GetVar(LOG_VAR_Ref);
+		                if (var)
+		                {
+		                    ival = var->GetFloat1();
+		                    val = (long double)ival;
+		                    val = val / 10.0; 
+
+        					chart->Add(103, time, val);
+        			    }
+        			}
+		        }
+
+		        tag = msg->GotoNextTag();
+		    }
+		}
+
+		if (log->GotoNext())
+		    msg = log->Get();
+		else
+			msg = 0;
+	}
+
+	chart->Draw();
+
+    jpeg->Save("9.jpg");
+    delete jpeg;
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadFactory::THttRadPageFactory
+#
+#   Purpose....: Constructor for THttpRadPageFactory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpRadPageFactory::THttpRadPageFactory(const char *ReqName)
+  : THttpCustomDirFactory(ReqName)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPageFactory::~THttpRadPageFactory
+#
+#   Purpose....: Destructor for THttpRadPageFactory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpRadPageFactory::~THttpRadPageFactory()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPageFactory::Create
+#
+#   Purpose....: Create an instance
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomPage *THttpRadPageFactory::Create(THttpCommand *Cmd, const char *Param)
+{
+	THttpRadPage *page;
+
+	TString tempname = CreateUniqueFile(Cmd);
+	page = new THttpRadPage(Cmd, tempname.GetData(), Param);
 	return page;
 }
 
@@ -986,6 +1225,7 @@ void InitHeatHttp()
     THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
     THttpHeatPageFactory *HeatPage = new THttpHeatPageFactory("heat.htm");
 	THttpWs2300PageFactory *Ws2300Page = new THttpWs2300PageFactory("ws2300.htm");
+	THttpRadPageFactory *RadPage = new THttpRadPageFactory("rad/");
     TWait *Wait = new TWait;
     
 	Factory->RootDir = "e:\\wwwroot";

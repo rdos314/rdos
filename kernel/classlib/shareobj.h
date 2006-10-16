@@ -60,12 +60,13 @@ public:
 
 	virtual int Compare(const TShareObject &n2) const;
 
+    void Load(const TShareObject &src);
+
 protected:
     TShareObjectData *Create(int size);
     virtual void Destroy(TShareObjectData *obj);
 
 	void Init();
-    void Load(const TShareObject &src);
 	void AllocBuffer(int size);
 	void Release();
 	void Empty();

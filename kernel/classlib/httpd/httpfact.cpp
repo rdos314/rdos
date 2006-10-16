@@ -88,6 +88,7 @@ void THttpSocketServerFactory::Init()
 {
     KeepAlive = 15;
     FPageList = 0;
+    FDirList = 0;
 }
 
 /*##########################################################################
@@ -117,6 +118,35 @@ void THttpSocketServerFactory::AddCustomPage(THttpCustomPageFactory *page)
 	}
 	else
 		FPageList = page;    
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServerFactory::AddCustomDir
+#
+#   Purpose....: Add a custom directory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpSocketServerFactory::AddCustomDir(THttpCustomDirFactory *dir)
+{
+	THttpCustomDirFactory *curr;
+
+    dir->FList = 0;
+	curr = FDirList;
+   
+	if (curr)
+	{
+		while (curr->FList)
+			curr = curr->FList;
+
+		curr->FList = dir;
+	}
+	else
+		FDirList = dir;    
 }
 
 /*##########################################################################

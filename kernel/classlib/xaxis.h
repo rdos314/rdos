@@ -37,6 +37,7 @@ public:
     ~TXAxis();
 
 	virtual int IsXAxis();
+    virtual int RequiredHeight() = 0;
 
 protected:
 };

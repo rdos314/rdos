@@ -61,6 +61,7 @@
 #define LOG_VAR_Rain        114
 #define LOG_VAR_On          115
 
+class TLogReader;
 
 class TLog : public TDevice
 {
@@ -74,6 +75,8 @@ public:
     void Add(TWs2300 *ws);	
     void Add(TCirc *circ);
     void Add(TVp *vp);
+
+    TLogReader *GetLog(int year, int month, int day);    
     
 protected:
     virtual void Execute();
@@ -94,6 +97,27 @@ protected:
     TWs2300 *FWs;
     TCirc *FCirc;
 	TVp *FVp;
+};
+
+
+class TLogReader : public TDevice
+{
+public:
+    TLogReader(const char *filename);
+    ~TLogReader();
+
+	void DeviceName(char *Name, int Size) const;
+
+    int GotoFirst();
+    int GotoNext();
+
+    TDeviceMsg *Get();
+
+protected:
+    int GetNext();
+    
+    TFile *FFile;
+    TDeviceMsg *FCurrMsg;
 };
 
 #endif

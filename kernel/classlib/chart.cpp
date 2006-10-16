@@ -41,23 +41,8 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TChartListNode::TChartListNode()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TChartListNode::TChartListNode
-#
-#   Purpose....: Constructor for list-node
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
 TChartListNode::TChartListNode(TChartCoord *coord)
-  : TListBaseNode(coord, sizeof(TChartCoord)
+  : TListBaseNode(coord, sizeof(TChartCoord))
 {
 }
 
@@ -90,6 +75,22 @@ TChartListNode::TChartListNode(const TChartListNode &src)
 ##########################################################################*/
 TChartListNode::~TChartListNode()
 {
+}
+
+/*##########################################################################
+#
+#   Name       : TChartListNode::Get
+#
+#   Purpose....: Get data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartCoord *TChartListNode::Get() const
+{
+    return (TChartCoord *)GetData();
 }
 
 /*##########################################################################
@@ -306,6 +307,320 @@ int TChartListNode::operator<=(const TChartListNode &dest) const
 
 /*##########################################################################
 #
+#   Name       : TChartList::TChartList
+#
+#   Purpose....: Constructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartList::TChartList()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::TChartList
+#
+#   Purpose....: Copy constructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartList::TChartList(const TChartList &src)
+  : TListBase(src)
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::~TChartList
+#
+#   Purpose....: Destructor for list
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartList::~TChartList()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator==
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator==(const TChartList &l) const
+{
+    if (Compare(l) == 0)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator!=
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator!= (const TChartList &l) const
+{
+    if (Compare(l) != 0)
+        return TRUE;
+    else
+        return FALSE;
+}    
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator>
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator>(const TChartList &dest) const
+{
+	if (Compare(dest) > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator<
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator<(const TChartList &dest) const
+{
+	if (Compare(dest) < 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator>=
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator>=(const TChartList &dest) const
+{
+	if (Compare(dest) >= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator<=
+#
+#   Purpose....: Compare lists
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::operator<=(const TChartList &dest) const
+{
+	if (Compare(dest) <= 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::operator=
+#
+#   Purpose....: Assignment operator
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartList &TChartList::operator=(const TChartList &src)
+{
+	Load(src);
+	return *this;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::Clone
+#
+#   Purpose....: Clone entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartListNode *TChartList::Clone(const TChartListNode *ln) const
+{
+	return new TChartListNode(*ln);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::Clone
+#
+#   Purpose....: Clone entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TListBaseNode *TChartList::Clone(const TListBaseNode *ln) const
+{
+    TChartListNode *p = (TChartListNode *)ln;
+	return new TChartListNode(*p);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::Get
+#
+#   Purpose....: Get current entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TChartCoord *TChartList::Get()
+{
+    if (FCurrPos)
+		return (TChartCoord *)FCurrPos->GetData();
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::Find
+#
+#   Purpose....: Find specified entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::Find(TChartCoord *coord)
+{
+	TChartListNode n = TChartListNode(coord);
+	return TListBase::Find(&n);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::AddFirst
+#
+#   Purpose....: Add entry as first entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChartList::AddFirst(TChartCoord *coord)
+{
+	TChartListNode *p = new TChartListNode(coord);
+	TListBase::AddFirst(p);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::AddLast
+#
+#   Purpose....: Add entry as last entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChartList::AddLast(TChartCoord *coord)
+{
+	TChartListNode *p = new TChartListNode(coord);
+	TListBase::AddLast(p);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::AddAt
+#
+#   Purpose....: Add entry at specified position, if possible.
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChartList::AddAt(int n, TChartCoord *coord)
+{
+	TChartListNode *p = new TChartListNode(coord);
+	TListBase::AddAt(n, p);
+}
+
+/*##########################################################################
+#
+#   Name       : TChartList::Replace
+#
+#   Purpose....: Replace specified entry
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TChartList::Replace(int pos, TChartCoord *coord)
+{
+	TChartListNode n = TChartListNode(coord);
+	return TListBase::Replace(pos, &n);
+}
+
+/*##########################################################################
+#
 #   Name       : TChart::TChart
 #
 #   Purpose....: Constructor for TChart
@@ -317,15 +632,26 @@ int TChartListNode::operator<=(const TChartListNode &dest) const
 ##########################################################################*/
 TChart::TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y)
 {
+    int i;
+
+    for (i = 0; i < MAX_CURVES; i++)
+    {
+        FList[i] = 0;
+    	FR[i] = 255;
+	    FG[i] = 255;
+    	FB[i] = 255;
+    }
+    
 	FDev = dev;
 	FXAxis = x;
 	FYAxis = y;
 	x->Define(dev);
 	y->Define(dev);
-	SetWindow(0, 0, 1, 1);
-	FCurrValid = FALSE;
-	FCurrX = 0.0;
-	FCurrY = 0.0;
+	SetWindow(0, 0, dev->GetWidth(), dev->GetHeight());
+
+	FRBack = 0;
+	FGBack = 0;
+	FBBack = 0;
 }
 
 /*##########################################################################
@@ -341,6 +667,11 @@ TChart::TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y)
 ##########################################################################*/
 TChart::~TChart()
 {
+    int i;
+
+    for (i = 0; i < MAX_CURVES; i++)
+        if (FList[i])
+            delete FList[i];
 }
 
 /*##########################################################################
@@ -366,96 +697,274 @@ void TChart::SetWindow(int xmin, int ymin, int xmax, int ymax)
 
 /*##########################################################################
 #
-#   Name       : TChart::SetColor
+#   Name       : TChart::SetLineColor
 #
-#   Purpose....: Set color
+#   Purpose....: Set line-color
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TChart::SetColor(int r, int g, int b)
+void TChart::SetLineColor(int line, int r, int g, int b)
 {
-	FR = r;
-	FG = g;
-	FB = b;
+    if (line >= 0 && line < MAX_CURVES)
+    {
+		FR[line] = r;
+		 FG[line] = g;
+		FB[line] = b;
+
+		if (!FList[line])
+			FList[line] = new TChartList;
+
+	 }
 }
 
 /*##########################################################################
 #
-#   Name       : TChart::SetupForDraw
+#   Name       : TChart::SetBackColor
 #
-#   Purpose....: Prepare for drawing
+#   Purpose....: Set back-color
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TChart::SetupForDraw()
+void TChart::SetBackColor(int r, int g, int b)
 {
+	FRBack = r;
+	FGBack = g;
+	FBBack = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::Add
+#
+#   Purpose....: Add point
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::Add(int line, long double x, long double y)
+{
+	TChartCoord coord;
+
+	if (line >= 0 && line < MAX_CURVES)
+	{
+		coord.x = x;
+		coord.y = y;
+
+		if (!FList[line])
+			FList[line] = new TChartList;
+
+		FList[line]->AddLast(&coord);
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::Remove
+#
+#   Purpose....: Remove point
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::Remove(int line)
+{
+	 if (line >= 0 && line < MAX_CURVES)
+		  if (FList[line])
+				FList[line]->RemoveFirst();
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::Clear
+#
+#   Purpose....: Clear
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::Clear(int line)
+{
+	 if (line >= 0 && line < MAX_CURVES)
+		  if (FList[line])
+				FList[line]->Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::Clear
+#
+#   Purpose....: Clear
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::Clear()
+{
+	 int i;
+
+	 for (i = 0; i < MAX_CURVES; i++)
+		  if (FList[i])
+				FList[i]->Clear();
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::Draw
+#
+#   Purpose....: Draw chart
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::Draw()
+{
+	TChartCoord *coord;
+	long double xmin;
+	long double xmax;
+	long double ymin;
+	long double ymax;
+	int height;
+    int width;
+    int x;
+    int y;
+    int xprev;
+    int yprev;
+    int i;
+    int ok;
+
+    ok = FALSE;
+        
+    for (i = 0; i < MAX_CURVES; i++)
+    {
+        if (FList[i])
+        {        
+            if (FList[i]->GotoFirst())
+            {
+                coord = FList[i]->Get();
+                if (!ok)
+                {
+                    xmin = coord->x;
+                    xmax = coord->x;
+                    ymin = coord->y;
+                    ymax = coord->y;
+                    ok = TRUE;
+                }
+                else
+                {
+                    if (xmin > coord->x)
+                        xmin = coord->x;
+    
+                    if (xmax < coord->x)
+                        xmax = coord->x;
+
+                    if (ymin > coord->y)
+                        ymin = coord->y;
+
+                    if (ymax < coord->y)
+                        ymax = coord->y;
+                }
+                
+
+                while (FList[i]->GotoNext())
+                {
+                    coord = FList[i]->Get();
+                    if (coord)
+                    {
+                        if (xmin > coord->x)
+                            xmin = coord->x;
+
+                        if (xmax < coord->x)
+                            xmax = coord->x;
+
+                        if (ymin > coord->y)
+                            ymin = coord->y;
+
+                        if (ymax < coord->y)
+                            ymax = coord->y;
+                    }
+                }
+            }
+        }
+    }
+
+    FXAxis->SetMin(xmin);
+    FXAxis->SetMax(xmax);
+    FYAxis->SetMin(ymin);
+    FYAxis->SetMax(ymax);
+
+	height = FXAxis->RequiredHeight();  
+
+    y = FYMax - height;
+    if (y <= FYMin)
+        return; 
+
+    FYAxis->SetWindow(FXMin, FYMin, FXMin, y);
+
+    width = FYAxis->RequiredWidth();
+
+    x = FXMin + width;
+    if (x >= FXMax)
+        return;
+
 	FDev->SetClipRect(FXMin, FYMin, FXMax, FYMax);
 	FDev->SetLgopNone();
-	FDev->SetDrawColor(FR, FG, FB);
-}
+	FDev->SetDrawColor(FRBack, FGBack, FBBack);
+	FDev->SetFilledStyle();
+	FDev->DrawRect(FXMin, FYMin, FXMax, FYMax);
 
-/*##########################################################################
-#
-#   Name       : TChart::Plot
-#
-#   Purpose....: Plot a single pixel
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TChart::Plot(long double x, long double y)
-{
-	int xpix, ypix;
+    FYAxis->SetWindow(FXMin, FYMin, x, y);
+    FXAxis->SetWindow(x, y, FXMax, FYMax);
 
-	xpix = FXAxis->PhysToPixel(x);
-	ypix = FYAxis->PhysToPixel(y);
-
-	SetupForDraw();
-	FDev->SetPixel(xpix, ypix);
-	
-	FCurrX = x;
-	FCurrY = y;
-	FCurrValid = TRUE;
-}
-
-/*##########################################################################
-#
-#   Name       : TChart::LineTo
-#
-#   Purpose....: Draw a line
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TChart::LineTo(long double x, long double y)
-{
-	int xpix1, ypix1;
-	int xpix2, ypix2;
-
-	if (!FCurrValid)
-		Plot(x, y);
-	else
+	for (i = 0; i < MAX_CURVES; i++)
 	{
-		xpix1 = FXAxis->PhysToPixel(FCurrX);
-		ypix1 = FYAxis->PhysToPixel(FCurrY);
+	    if (FList[i])
+	    {
+            if (FList[i]->GotoFirst())
+            {
+            	FDev->SetDrawColor(FR[i], FG[i], FB[i]);
+        
+                coord = FList[i]->Get();
 
-		xpix2 = FXAxis->PhysToPixel(x);
-		ypix2 = FYAxis->PhysToPixel(y);
+            	x = FXAxis->PhysToPixel(coord->x);
+            	y = FYAxis->PhysToPixel(coord->y);
 
-		SetupForDraw();
-		FDev->DrawLine(xpix1, ypix1, xpix2, ypix2);
+            	FDev->SetPixel(x, y);
+
+            	xprev = x;
+            	yprev = y;
 	
-		FCurrX = x;
-		FCurrY = y;
-	}
+                while (FList[i]->GotoNext())
+                {
+                    coord = FList[i]->Get();
+                    if (coord)
+                    {
+                    	x = FXAxis->PhysToPixel(coord->x);
+                    	y = FYAxis->PhysToPixel(coord->y);
+                		FDev->DrawLine(xprev, yprev, x, y);
+                    	xprev = x;
+                    	yprev = y;
+                    }
+                }
+            }
+        }
+    }
+
+	FXAxis->Draw();
+	FYAxis->Draw();
 }

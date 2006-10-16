@@ -38,10 +38,11 @@ class THttpSocketServerFactory;
 class THttpCustomPage
 {
 friend class THttpCustomPageFactory;
+friend class THttpCustomDirFactory;
 friend class THttpCommand;
 
 public:
-	THttpCustomPage(THttpCommand *Cmd, const char *FileName);
+	THttpCustomPage(THttpCommand *Cmd, const char *FileName, const char *Param);
 	virtual ~THttpCustomPage();
 
 protected:
@@ -55,6 +56,7 @@ protected:
 
 	THttpCommand *FCmd;
 	TString FFileName;
+	TString FParam;
 };
 
 class THttpCustomPageFactory
@@ -74,6 +76,26 @@ protected:
     TString CreateUniqueFile(THttpCommand *Cmd);
 
 	THttpCustomPageFactory *FList;
+	THttpCommand *FCmd;
+};
+
+class THttpCustomDirFactory
+{
+friend class THttpSocketServer;
+friend class THttpSocketServerFactory;
+
+public:
+	THttpCustomDirFactory(const char *ReqName);
+	virtual ~THttpCustomDirFactory();
+
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
+
+	TString FReqName;
+
+protected:
+    TString CreateUniqueFile(THttpCommand *Cmd);
+
+	THttpCustomDirFactory *FList;
 	THttpCommand *FCmd;
 };
 

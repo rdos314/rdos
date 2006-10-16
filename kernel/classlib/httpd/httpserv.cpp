@@ -254,6 +254,7 @@ THttpSocketServer::THttpSocketServer(const char *Name, int StackSize, TSocket *S
 	OnCommand = 0;
 	FSocketBuf = 0;
 	FPageList = 0;
+	FDirList = 0;
 }
 
 /*##########################################################################
@@ -275,7 +276,7 @@ THttpSocketServer::~THttpSocketServer()
 
 /*##########################################################################
 #
-#   Name       : THttpSocketServer::Find
+#   Name       : THttpSocketServer::FindPage
 #
 #   Purpose....: Find custom page
 #
@@ -284,18 +285,49 @@ THttpSocketServer::~THttpSocketServer()
 #   Returns....: *
 #
 ##########################################################################*/
-THttpCustomPageFactory *THttpSocketServer::Find(const char *FileName)
+THttpCustomPageFactory *THttpSocketServer::FindPage(const char *FileName)
 {
     TString Name(FileName);
-	THttpCustomPageFactory *curr = FPageList;
+	THttpCustomPageFactory *page = FPageList;
 
-    while (curr)
+    while (page)
     {
-		if (curr->FReqName == Name)
-            return curr;
+		if (page->FReqName == Name)
+            return page;
         else
-            curr = curr->FList;
+            page = page->FList;
     }
+
+    return 0;    
+}
+
+/*##########################################################################
+#
+#   Name       : THttpSocketServer::FindDir
+#
+#   Purpose....: Find custom dir
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+THttpCustomDirFactory *THttpSocketServer::FindDir(const char *FileName)
+{
+    const char *str;
+    const char *ptr;
+	THttpCustomDirFactory *dir = FDirList;
+
+    while (dir)
+    {
+        str = dir->FReqName.GetData();
+        ptr = strstr(FileName, str);
+        if (ptr == str)
+            return dir;
+        else
+            dir = dir->FList;
+    }
+    
     return 0;    
 }
 

@@ -70,7 +70,8 @@ public:
 	int Read(char *buf, int size);
 	char *ReadLine();
 
-	THttpCustomPageFactory *Find(const char *FileName);
+	THttpCustomPageFactory *FindPage(const char *FileName);
+	THttpCustomDirFactory *FindDir(const char *FileName);
 	TString CreateUniqueFile();
 
 	void (*OnCommand)(THttpSocketServer *server, const char *str);
@@ -87,6 +88,7 @@ public:
 	TString RootDir;
 	int KeepAlive;
 	THttpCustomPageFactory *FPageList;
+	THttpCustomDirFactory *FDirList;
 
 protected:
     THttpCommand *Parse(const char *line);

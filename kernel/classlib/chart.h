@@ -32,6 +32,8 @@
 #include "yaxis.h"
 #include "listbase.h"
 
+#define MAX_CURVES 256
+
 struct TChartCoord
 {
     long double x;
@@ -46,7 +48,7 @@ public:
 	TChartListNode(const TChartListNode &source);
 	virtual ~TChartListNode();
 
-    TChartCoord *Get();
+    TChartCoord *Get() const;
 
 	const TChartListNode &operator=(const TChartListNode &src);
 	int operator==(const TChartListNode &dest) const;
@@ -63,34 +65,68 @@ protected:
 	virtual void Load(const TListBaseNode &src);
 };
 
+class TChartList : public TListBase
+{
+public:
+	TChartList();
+	TChartList(const TChartList &source);
+	~TChartList();
+
+	int operator==(const TChartList &dest) const;
+	int operator!=(const TChartList &dest) const;
+	int operator>(const TChartList &dest) const;
+	int operator>=(const TChartList &dest) const;
+	int operator<(const TChartList &dest) const;
+	int operator<=(const TChartList &dest) const;
+	TChartList &operator=(const TChartList &l);
+	
+	int Find(TChartCoord *coord);
+	void AddFirst(TChartCoord *coord);
+	void AddLast(TChartCoord *coord);
+	void AddAt(int n, TChartCoord *coord);
+    int Replace(int n, TChartCoord *coord);
+
+    TChartCoord *Get();
+
+protected:
+	virtual TChartListNode *Clone(const TChartListNode *ln) const;
+	virtual TListBaseNode *Clone(const TListBaseNode *ln) const;
+
+};
+
 class TChart
 {
 public:
 	TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y);
     virtual ~TChart();
 
-    void SetWindow(int xmin, int ymin, int xmax, int ymax);
-    void SetColor(int r, int g, int b);
+    void SetLineColor(int line, int r, int g, int b);
 
-    void Plot(long double x, long double y);
-	void LineTo(long double x, long double y);
+    void SetWindow(int xmin, int ymin, int xmax, int ymax);
+    void SetBackColor(int r, int g, int b);
+
+    void Add(int line, long double x, long double y);
+    void Remove(int line);
+    void Clear(int line); 
+    void Clear();
+
+    void Draw();
 
 protected:
-	void SetupForDraw();
-
 	TGraphicDevice *FDev;
 	TXAxis *FXAxis;
     TYAxis *FYAxis;
-	int FR;
-	int FG;
-	int FB;
+    TChartList *FList[MAX_CURVES];
+	int FR[MAX_CURVES];
+	int FG[MAX_CURVES];
+	int FB[MAX_CURVES];
+	int FRBack;
+	int FGBack;
+	int FBBack;
 	int FXMin;
 	int FYMin;
 	int FXMax;
 	int FYMax;
-	int FCurrValid;
-	long double FCurrX;
-	long double FCurrY;
 
 private:
 };

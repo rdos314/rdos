@@ -68,7 +68,7 @@ public:
 	THttpHeatPageFactory(const char *ReqName);
 	virtual ~THttpHeatPageFactory();
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd);
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
 
 protected:
 };
@@ -90,7 +90,29 @@ public:
 	THttpWs2300PageFactory(const char *ReqName);
 	virtual ~THttpWs2300PageFactory();
 
-	virtual THttpCustomPage *Create(THttpCommand *cmd);
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
+
+protected:
+};
+
+class THttpRadPage : public THttpCustomPage
+{
+public:
+	THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *Param);
+	virtual ~THttpRadPage();
+
+protected:
+	virtual void Get(const char *Name);
+
+};
+
+class THttpRadPageFactory : public THttpCustomDirFactory
+{
+public:
+	THttpRadPageFactory(const char *ReqName);
+	virtual ~THttpRadPageFactory();
+
+	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
 
 protected:
 };
