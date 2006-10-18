@@ -43,6 +43,7 @@
 class TTimeXAxis : public TXAxis
 {
 public:
+	TTimeXAxis();
 	TTimeXAxis(TFont *font);
     ~TTimeXAxis();
 
@@ -58,6 +59,7 @@ public:
 	void UseEuropeanDate();
 
 protected:
+    void Init();
     virtual void Format(char *str, long double val);
     void NextTime(TDateTime &time, int change);
     void NextSubScale(TDateTime &time);

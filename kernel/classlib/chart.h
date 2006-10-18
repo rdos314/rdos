@@ -102,6 +102,9 @@ public:
 
     void SetLineColor(int line, int r, int g, int b);
 
+    void SetXAxis(long double xmin, long double xmax);
+    void SetYAxis(long double ymin, long double ymax);
+
     void SetWindow(int xmin, int ymin, int xmax, int ymax);
     void SetBackColor(int r, int g, int b);
 
@@ -113,6 +116,8 @@ public:
     void Draw();
 
 protected:
+    void CalcLimits();
+
 	TGraphicDevice *FDev;
 	TXAxis *FXAxis;
     TYAxis *FYAxis;
@@ -127,6 +132,14 @@ protected:
 	int FYMin;
 	int FXMax;
 	int FYMax;
+
+	int FXAxisFixed;
+	long double FXAxisMin;
+	long double FXAxisMax;
+
+	int FYAxisFixed;
+	long double FYAxisMin;
+	long double FYAxisMax;
 
 private:
 };

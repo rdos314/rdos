@@ -34,6 +34,7 @@
 class TLinYAxis : public TYAxis
 {
 public:
+	TLinYAxis();
 	TLinYAxis(TFont *font);
     ~TLinYAxis();
 
@@ -45,6 +46,8 @@ public:
 	virtual void Draw();
 
 protected:
+    void DrawLabels();
+    void DrawScale();
     void CalcScale();
 
     int FScaleWidth;

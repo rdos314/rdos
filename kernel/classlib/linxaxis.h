@@ -34,6 +34,7 @@
 class TLinXAxis : public TXAxis
 {
 public:
+	TLinXAxis();
 	TLinXAxis(TFont *font);
     ~TLinXAxis();
 
@@ -45,7 +46,10 @@ public:
 	virtual void Draw();
 
 protected:
-    void CalcScale(int width);
+    void DrawLabels();
+    void DrawScale();
+    void SetupScale(int width);
+    void CalcScale();
 
     int FScaleHeight;
     int FNegativeScale;

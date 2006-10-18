@@ -38,7 +38,24 @@
 #
 #   Name       : TTimeXAxis::TTimeXAxis
 #
-#   Purpose....: Constructor for TTimeXAxis
+#   Purpose....: Constructor for TTimeXAxis, no scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTimeXAxis::TTimeXAxis()
+{
+	FFont = 0;
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TTimeXAxis::TTimeXAxis
+#
+#   Purpose....: Constructor for TTimeXAxis, scale
 #
 #   In params..: *
 #   Out params.: *
@@ -48,6 +65,37 @@
 TTimeXAxis::TTimeXAxis(TFont *Font)
 {
 	FFont = Font;
+	Init();
+}
+
+/*##########################################################################
+#
+#   Name       : TTimeXAxis::~TTimeXAxis
+#
+#   Purpose....: Destructor for TTimeXAxis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TTimeXAxis::~TTimeXAxis()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : TTimeXAxis::Init
+#
+#   Purpose....: Init
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TTimeXAxis::Init()
+{
 	FIncr = 0;
     FDecimals = 0;
 
@@ -65,21 +113,6 @@ TTimeXAxis::TTimeXAxis(TFont *Font)
     strcpy(FMonth[12], "DEC");
 
     FAmerican = FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TTimeXAxis::~TTimeXAxis
-#
-#   Purpose....: Destructor for TTimeXAxis
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TTimeXAxis::~TTimeXAxis()
-{
 }
 
 /*##########################################################################
@@ -187,12 +220,17 @@ int TTimeXAxis::RequiredHeight()
 {
     int height;
 
-    FFont->GetStringMetrics("-", &FScaleHeight, &height);
+    if (FFont)
+    {
+        FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
-    if (FScaleHeight > 4)
-        FScaleHeight = FScaleHeight / 2;
+        if (FScaleHeight > 4)
+            FScaleHeight = FScaleHeight / 2;
 
-    return height + FScaleHeight + 2;
+        return height + FScaleHeight + 2;
+    }
+    else
+        return 1;
 }
 
 /*##########################################################################
@@ -2045,9 +2083,12 @@ void TTimeXAxis::Draw()
     FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
     FDev->SetDrawColor(FRFore, FGFore, FBFore);
     FDev->DrawLine(FXMin, FYMin, FXMax, FYMin);
-    FDev->SetFont(FFont);
 
-	CalcScale();
-    DrawLabels();
-    DrawScale();
+    if (FFont)
+    {
+        FDev->SetFont(FFont);
+    	CalcScale();
+        DrawLabels();
+        DrawScale();
+    }
 }

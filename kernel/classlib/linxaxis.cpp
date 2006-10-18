@@ -36,7 +36,24 @@
 #
 #   Name       : TLinXAxis::TLinXAxis
 #
-#   Purpose....: Constructor for TLinXAxis
+#   Purpose....: Constructor for TLinXAxis, no scales
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLinXAxis::TLinXAxis()
+{
+	FFont = 0;
+	FScale = 0;
+}
+
+/*##########################################################################
+#
+#   Name       : TLinXAxis::TLinXAxis
+#
+#   Purpose....: Constructor for TLinXAxis, scales
 #
 #   In params..: *
 #   Out params.: *
@@ -120,26 +137,31 @@ int TLinXAxis::RequiredHeight()
 {
     int height;
 
-    FFont->GetStringMetrics("-", &FScaleHeight, &height);
+    if (FFont)
+    {
+        FFont->GetStringMetrics("-", &FScaleHeight, &height);
 
-    if (FScaleHeight > 4)
-        FScaleHeight = FScaleHeight / 2;
+        if (FScaleHeight > 4)
+            FScaleHeight = FScaleHeight / 2;
 
-    return height + FScaleHeight + 2;
+        return height + FScaleHeight + 2;
+    }
+    else
+        return 1;
 }
 
 /*##########################################################################
 #
-#   Name       : TLinXAxis::CalcScale
+#   Name       : TLinXAxis::SetupScale
 #
-#   Purpose....: Calculate scale
+#   Purpose....: Setup a scale
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TLinXAxis::CalcScale(int width)
+void TLinXAxis::SetupScale(int width)
 {
     int exp;
     int scales;
@@ -270,37 +292,25 @@ void TLinXAxis::CalcScale(int width)
 
 /*##########################################################################
 #
-#   Name       : TLinXAxis::Draw
+#   Name       : TLinXAxis::CalcScale
 #
-#   Purpose....: Draw axis
+#   Purpose....: Calculate scale
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TLinXAxis::Draw()
+void TLinXAxis::CalcScale()
 {
+	 int width;
+	 int height;
+	 int ok;
+    int final;
     int newwidth;
     int maxwidth;
-    int height;
-    int width;
-    int ok;
-    int final;
-    char str[256];
     long double val;
-    long double subval;
-	int x, y;
-    int i;
-
-	FDev->SetClipRect(FXMin, FYMin - 2 * FScaleHeight, FXMax, FYMax);
-    FDev->SetLgopNone();
-	FDev->SetDrawColor(FRBack, FGBack, FBBack);
-    FDev->SetFilledStyle();
-    FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
-    FDev->SetDrawColor(FRFore, FGFore, FBFore);
-    FDev->DrawLine(FXMin, FYMin, FXMax, FYMin);
-    FDev->SetFont(FFont);
+    char str[256];
 
     FFont->GetStringMetrics("-", &maxwidth, &height);
 
@@ -310,8 +320,8 @@ void TLinXAxis::Draw()
     while (!ok)
     {
         newwidth = 0;
-        
-        CalcScale(maxwidth + maxwidth / 2);
+            
+        SetupScale(maxwidth + maxwidth / 2);
 
         if (FScale == 0.0)
             break;
@@ -320,42 +330,42 @@ void TLinXAxis::Draw()
         if (FNegativeScale)
         {
             val = FFirstVal;
-
-			while (val > FValMin)
-			{
+    
+	        while (val > FValMin)
+		    {
                 Format(str, val);
-			    FFont->GetStringMetrics(str, &width, &height);
+	    		FFont->GetStringMetrics(str, &width, &height);
 
-			    if (width > maxwidth)
+		    	if (width > maxwidth)
 			    {
 			        ok = FALSE;
 			        maxwidth = width;
-			    }
+    			}
 
-			    if (width > newwidth)
-			        newwidth = width;
-
-				val -= FScale;
+	    		if (width > newwidth)
+		    	    newwidth = width;
+    
+	    	    val -= FScale;
 	        }
         }
-		else
+	    else
 		{
 			val = FFirstVal;
 
-			while (val < FValMax)
-			{
+    		while (val < FValMax)
+	    	{
                 Format(str, val);
                 FFont->GetStringMetrics(str, &width, &height);
 
-			    if (width > maxwidth)
-			    {
-			        ok = FALSE;
+    			if (width > maxwidth)
+	    		{
+		    	    ok = FALSE;
 			        maxwidth = width;
 			    }
 
-			    if (width > newwidth)
-			        newwidth = width;
-			        
+    			if (width > newwidth)
+	    		    newwidth = width;
+		    	        
                 val += FScale;
             }
         }
@@ -371,86 +381,158 @@ void TLinXAxis::Draw()
             }
         }
     }
+}
 
+/*##########################################################################
+#
+#   Name       : TLinXAxis::DrawLabels
+#
+#   Purpose....: Draw labels
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinXAxis::DrawLabels()
+{
+    long double val;
+    char str[256];
+    int height;
+    int width;
+	int x, y;
+    
     if (FScale != 0.0)
     {
         if (FNegativeScale)
         {
             val = FFirstVal;
-
-			while (val >= FValMin)
-			{
+    
+	    	while (val >= FValMin)
+		    {
                 Format(str, val);
 			    FFont->GetStringMetrics(str, &width, &height);
 
-				x = PhysToPixel(val) - width / 2;
-				y = FYMin + FScaleHeight + 2;
+    			x = PhysToPixel(val) - width / 2;
+	    		y = FYMin + FScaleHeight + 2;
 
-			    if (x >= FXMin && x + width <= FXMax)
-    				FDev->DrawString(x, y, str);
+		    	if (x >= FXMin && x + width <= FXMax)
+    		    	FDev->DrawString(x, y, str);
 
-				val -= FScale;
-		    }
-	    }
-		else
+    		    val -= FScale;
+	    	}
+    	}
+	    else
 		{
 			val = FFirstVal;
 
-			while (val <= FValMax)
-			{
-			    Format(str, val);
+    	    while (val <= FValMax)
+	    	{
+		    	Format(str, val);
 			    FFont->GetStringMetrics(str, &width, &height);
 
-				x = PhysToPixel(val) - width / 2;
-				y = FYMin + FScaleHeight + 2;
+    			x = PhysToPixel(val) - width / 2;
+	    		y = FYMin + FScaleHeight + 2;
 
-			    if (x >= FXMin && x + width <= FXMax)
-    				FDev->DrawString(x, y, str);
+    			if (x >= FXMin && x + width <= FXMax)
+        			FDev->DrawString(x, y, str);
 
-				val += FScale;
+    		    val += FScale;
 	        }
         }
+    }
+}
 
+/*##########################################################################
+#
+#   Name       : TLinXAxis::DrawScale
+#
+#   Purpose....: Draw scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinXAxis::DrawScale()
+{
+    long double val;
+    long double subval;
+	int x;
+    int i;
+    
+    if (FScale != 0.0)
+    {
         if (FNegativeScale)
 	    {
 		    val = FFirstVal + FScale;
 
-			while (val >= FValMin)
-			{
-				x = PhysToPixel(val);
-				FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);
+    	    while (val >= FValMin)
+	    	{
+		    	x = PhysToPixel(val);
+			    FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);
 
 			    subval = val - FScale / FSubScale;
 
-				for (i = 1; i < FSubScale; i++)
-			    {
-					x = PhysToPixel(subval);
-					FDev->DrawLine(x, FYMin - FScaleHeight / 2, x, FYMin + FScaleHeight / 2);
-					subval -= FScale / FSubScale;
-			    }
+    			for (i = 1; i < FSubScale; i++)
+	    		{
+		    		x = PhysToPixel(subval);
+			    	FDev->DrawLine(x, FYMin - FScaleHeight / 2, x, FYMin + FScaleHeight / 2);
+				    subval -= FScale / FSubScale;
+    			}
 
-				val -= FScale;
+	    		val -= FScale;
 	        }
-	    }
-		else
+    	}
+	    else
 		{
 			val = FFirstVal - FScale;
 
-			while (val <= FValMax)
-			{
-				x = PhysToPixel(val);
-				FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);
+    		while (val <= FValMax)
+	    	{
+		    	x = PhysToPixel(val);
+			    FDev->DrawLine(x, FYMin - FScaleHeight, x, FYMin + FScaleHeight);
 
 			    subval = val + FScale / FSubScale;
 
-				for (i = 1; i < FSubScale; i++)
-		        {
-					x = PhysToPixel(subval);
-					FDev->DrawLine(x, FYMin - FScaleHeight / 2, x, FYMin + FScaleHeight / 2);
-					subval += FScale / FSubScale;
-		        }
-			    val += FScale;
+    			for (i = 1; i < FSubScale; i++)
+	    	    {
+		    		x = PhysToPixel(subval);
+			    	FDev->DrawLine(x, FYMin - FScaleHeight / 2, x, FYMin + FScaleHeight / 2);
+				    subval += FScale / FSubScale;
+    		    }
+	    		val += FScale;
 		    }
-	    }
+    	}
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLinXAxis::Draw
+#
+#   Purpose....: Draw axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinXAxis::Draw()
+{
+	FDev->SetClipRect(FXMin, FYMin - 2 * FScaleHeight, FXMax, FYMax);
+    FDev->SetLgopNone();
+	FDev->SetDrawColor(FRBack, FGBack, FBBack);
+    FDev->SetFilledStyle();
+    FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
+    FDev->SetDrawColor(FRFore, FGFore, FBFore);
+    FDev->DrawLine(FXMin, FYMin, FXMax, FYMin);
+
+    if (FFont)
+    {
+        FDev->SetFont(FFont);
+        CalcScale();
+        DrawLabels();
+        DrawScale();
     }
 }

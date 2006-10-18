@@ -652,6 +652,9 @@ TChart::TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y)
 	FRBack = 0;
 	FGBack = 0;
 	FBBack = 0;
+
+	FXAxisFixed = FALSE;
+	FYAxisFixed = FALSE;
 }
 
 /*##########################################################################
@@ -672,6 +675,42 @@ TChart::~TChart()
     for (i = 0; i < MAX_CURVES; i++)
         if (FList[i])
             delete FList[i];
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::SetXAxis
+#
+#   Purpose....: Set fixed x-axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::SetXAxis(long double xmin, long double xmax)
+{
+    FXAxisFixed = TRUE;
+    FXAxisMin = xmin;
+    FXAxisMax = xmax;
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::SetYAxis
+#
+#   Purpose....: Set fixed y-axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::SetYAxis(long double ymin, long double ymax)
+{
+    FYAxisFixed = TRUE;
+    FYAxisMin = ymin;
+    FYAxisMax = ymax;
 }
 
 /*##########################################################################
@@ -711,7 +750,7 @@ void TChart::SetLineColor(int line, int r, int g, int b)
     if (line >= 0 && line < MAX_CURVES)
     {
 		FR[line] = r;
-		 FG[line] = g;
+		FG[line] = g;
 		FB[line] = b;
 
 		if (!FList[line])
@@ -823,6 +862,101 @@ void TChart::Clear()
 
 /*##########################################################################
 #
+#   Name       : TChart::CalcLimits
+#
+#   Purpose....: Calculate limits
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::CalcLimits()
+{
+    int i;
+	TChartCoord *coord;
+    int ok;
+    
+    if (FXAxisFixed && FYAxisFixed)
+        return;
+
+    ok = FALSE;
+
+    for (i = 0; i < MAX_CURVES; i++)
+    {
+        if (FList[i])
+        {        
+            if (FList[i]->GotoFirst())
+            {
+                coord = FList[i]->Get();
+                if (!ok)
+                {
+                    if (!FXAxisFixed)
+                    {
+                        FXAxisMin = coord->x;
+                        FXAxisMax = coord->x;
+                    }
+
+                    if (!FYAxisFixed)
+                    {
+                        FYAxisMin = coord->y;
+                        FYAxisMax = coord->y;
+                    }
+                    
+                    ok = TRUE;
+                }
+                else
+                {
+                    if (!FXAxisFixed)
+                    {
+                        if (FXAxisMin > coord->x)
+                            FXAxisMin = coord->x;
+        
+                        if (FXAxisMax < coord->x)
+                            FXAxisMax = coord->x;
+                    }
+
+                    if (!FYAxisFixed)
+                    {
+                        if (FYAxisMin > coord->y)
+                            FYAxisMin = coord->y;
+
+                        if (FYAxisMax < coord->y)
+                            FYAxisMax = coord->y;
+                    }
+                }
+                    
+                while (FList[i]->GotoNext())
+                {
+                    coord = FList[i]->Get();
+                    if (coord)
+                    {
+                        if (!FXAxisFixed)
+                        {
+                            if (FXAxisMin > coord->x)
+                                FXAxisMin = coord->x;
+
+                            if (FXAxisMax < coord->x)
+                                FXAxisMax = coord->x;
+                        }
+
+                        if (!FYAxisFixed)
+                        {
+                            if (FYAxisMin > coord->y)
+                                FYAxisMin = coord->y;
+    
+                            if (FYAxisMax < coord->y)
+                                FYAxisMax = coord->y;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TChart::Draw
 #
 #   Purpose....: Draw chart
@@ -835,10 +969,6 @@ void TChart::Clear()
 void TChart::Draw()
 {
 	TChartCoord *coord;
-	long double xmin;
-	long double xmax;
-	long double ymin;
-	long double ymax;
 	int height;
     int width;
     int x;
@@ -846,67 +976,13 @@ void TChart::Draw()
     int xprev;
     int yprev;
     int i;
-    int ok;
 
-    ok = FALSE;
-        
-    for (i = 0; i < MAX_CURVES; i++)
-    {
-        if (FList[i])
-        {        
-            if (FList[i]->GotoFirst())
-            {
-                coord = FList[i]->Get();
-                if (!ok)
-                {
-                    xmin = coord->x;
-                    xmax = coord->x;
-                    ymin = coord->y;
-                    ymax = coord->y;
-                    ok = TRUE;
-                }
-                else
-                {
-                    if (xmin > coord->x)
-                        xmin = coord->x;
-    
-                    if (xmax < coord->x)
-                        xmax = coord->x;
+    CalcLimits();
 
-                    if (ymin > coord->y)
-                        ymin = coord->y;
-
-                    if (ymax < coord->y)
-                        ymax = coord->y;
-                }
-                
-
-                while (FList[i]->GotoNext())
-                {
-                    coord = FList[i]->Get();
-                    if (coord)
-                    {
-                        if (xmin > coord->x)
-                            xmin = coord->x;
-
-                        if (xmax < coord->x)
-                            xmax = coord->x;
-
-                        if (ymin > coord->y)
-                            ymin = coord->y;
-
-                        if (ymax < coord->y)
-                            ymax = coord->y;
-                    }
-                }
-            }
-        }
-    }
-
-    FXAxis->SetMin(xmin);
-    FXAxis->SetMax(xmax);
-    FYAxis->SetMin(ymin);
-    FYAxis->SetMax(ymax);
+    FXAxis->SetMin(FXAxisMin);
+    FXAxis->SetMax(FXAxisMax);
+    FYAxis->SetMin(FYAxisMin);
+    FYAxis->SetMax(FYAxisMax);
 
 	height = FXAxis->RequiredHeight();  
 

@@ -37,7 +37,24 @@
 #
 #   Name       : TLinYAxis::TLinYAxis
 #
-#   Purpose....: Constructor for TLinYAxis
+#   Purpose....: Constructor for TLinYAxis, no scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TLinYAxis::TLinYAxis()
+{
+	FFont = 0;
+	FScale = 0.0;
+}
+
+/*##########################################################################
+#
+#   Name       : TLinYAxis::TLinYAxis
+#
+#   Purpose....: Constructor for TLinYAxis, scale
 #
 #   In params..: *
 #   Out params.: *
@@ -267,59 +284,51 @@ int TLinYAxis::RequiredWidth()
     int width2;
     int height;
 
-    CalcScale();
-
-    if (FScale != 0.0)
+    if (FFont)
     {
-        Format(str, FValMin);
-        FFont->GetStringMetrics(str, &width1, &height);
-    
-        Format(str, FValMax);
-        FFont->GetStringMetrics(str, &width2, &height);
+        CalcScale();
 
-        if (width1 > width2)
-            return width1 + FScaleWidth + 2;
+        if (FScale != 0.0)
+        {
+            Format(str, FValMin);
+            FFont->GetStringMetrics(str, &width1, &height);
+    
+            Format(str, FValMax);
+            FFont->GetStringMetrics(str, &width2, &height);
+
+            if (width1 > width2)
+                return width1 + FScaleWidth + 2;
+            else
+                return width2 + FScaleWidth + 2;
+        }
         else
-            return width2 + FScaleWidth + 2;
+            return 0;
     }
     else
-        return 0;
+        return 1;
 }
 
 /*##########################################################################
 #
-#   Name       : TLinYAxis::Draw
+#   Name       : TLinYAxis::DrawLabels
 #
-#   Purpose....: Draw axis
+#   Purpose....: Draw labels
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TLinYAxis::Draw()
+void TLinYAxis::DrawLabels()
 {
     char str[256];
+    long double val;
+	int x, y;
     int width;
     int height;
-    long double val;
-    long double subval;
-	int x, y;
-    int i;
-
-    CalcScale();
-
+    
     if (FScale != 0.0)
     {
-    	FDev->SetClipRect(FXMin, FYMin, FXMax + 2 * FScaleWidth, FYMax);
-     	FDev->SetLgopNone();
-	    FDev->SetDrawColor(FRBack, FGBack, FBBack);
-        FDev->SetFilledStyle();
-        FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
-        FDev->SetDrawColor(FRFore, FGFore, FBFore);
-        FDev->DrawLine(FXMax, FYMin, FXMax, FYMax);
-        FDev->SetFont(FFont);
-
         if (FNegativeScale)
         {
             val = FFirstVal;
@@ -364,7 +373,29 @@ void TLinYAxis::Draw()
                 val += FScale;
             }
         }
+    }
+}
 
+/*##########################################################################
+#
+#   Name       : TLinYAxis::DrawScale
+#
+#   Purpose....: Draw scale
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinYAxis::DrawScale()
+{
+    long double val;
+    long double subval;
+    int i;
+	int y;
+    
+    if (FScale != 0.0)
+    {
         if (FNegativeScale)
         {
             val = FFirstVal + FScale;
@@ -406,5 +437,35 @@ void TLinYAxis::Draw()
                 val += FScale;
             }
         }
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TLinYAxis::Draw
+#
+#   Purpose....: Draw axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLinYAxis::Draw()
+{
+    FDev->SetClipRect(FXMin, FYMin, FXMax + 2 * FScaleWidth, FYMax);
+    FDev->SetLgopNone();
+	FDev->SetDrawColor(FRBack, FGBack, FBBack);
+    FDev->SetFilledStyle();
+    FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
+    FDev->SetDrawColor(FRFore, FGFore, FBFore);
+    FDev->DrawLine(FXMax, FYMin, FXMax, FYMax);
+
+    if (FFont)
+    {
+        FDev->SetFont(FFont);    
+        CalcScale();
+        DrawLabels();
+        DrawScale();
     }        
 }

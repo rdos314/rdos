@@ -34,6 +34,11 @@
 #include "circ.h"
 #include "vp.h"
 #include "log.h"
+#include "linxaxis.h"
+#include "linyaxis.h"
+#include "timeaxis.h"
+#include "chart.h"
+#include "jpeg.h"
 
 class TRad;
 
@@ -105,7 +110,18 @@ public:
 protected:
 	virtual void Get(const char *Name);
 
-    void CreateTempJpeg(int address, int year, int month, int day);
+    void CreateTempJpeg(int address, TDateTime &from, TDateTime &to);
+    void DeleteTempJpeg();
+    void WriteHistoryTemp(int address, int year, int month, int day);
+    int CreateHistoryTempJpeg(int address, int year, int month, int day);
+
+	TJpegBitmapDevice *FJpeg;
+	TFont *FFont;
+	TLinYAxis *FTempAxis;
+	TTimeXAxis *FTimeScaleAxis;
+	TTimeXAxis *FTimeAxis;
+	TChart *FTempChart;
+
 
 };
 
