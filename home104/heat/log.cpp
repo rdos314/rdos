@@ -62,8 +62,10 @@ TLog::TLog(const char *RootDir)
     for (i = 0; i < 256; i++)
         FRadArr[i] = 0; 
 
+    FFile = 0;
     FWs = 0;
     FCirc = 0;
+    FVp = 0;
 
     Start("LOGGER", STACK_SIZE);
 }

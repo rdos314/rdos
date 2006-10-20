@@ -114,6 +114,7 @@ protected:
     void DeleteTempJpeg();
     void WriteHistoryTemp(int address, int year, int month, int day);
     int CreateHistoryTempJpeg(int address, int year, int month, int day);
+    void WriteTemp(int address);
 
 	TJpegBitmapDevice *FJpeg;
 	TFont *FFont;
