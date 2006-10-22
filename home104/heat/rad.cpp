@@ -311,11 +311,6 @@ void TRad::Execute()
 
 		RdosSetCursorPosition(FRow + 1,0);
 
-		if (RdosWriteSerialRaw(FAddress, 5, 2))
-			printf("ok ");
-		else
-			printf("-- ");
-
 		if (RdosReadSerialRaw(FAddress, 0, &val))
 		{
 			FRefSum += val;

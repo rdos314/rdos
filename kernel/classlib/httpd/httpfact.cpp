@@ -86,6 +86,7 @@ THttpSocketServerFactory::~THttpSocketServerFactory()
 ##########################################################################*/
 void THttpSocketServerFactory::Init()
 {
+    OnCommand = 0;
     KeepAlive = 15;
     FPageList = 0;
     FDirList = 0;

@@ -289,6 +289,8 @@ void TLog::Execute()
     int size;
 	char *msg;
 
+	RdosWaitMilli(1000);
+
     RdosGetTime(&FYear, &FMonth, &FDay, &FHour, &FMin, &sec, &ms);
     CreateDayFile();
     

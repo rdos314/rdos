@@ -150,10 +150,10 @@ void cdecl main()
 		ambient = 10 * Ws->GetOutdoorTemp();
 
 		night = FALSE;
-		if (CurrTime->GetHour() >= 20)
+		if (CurrTime->GetHour() >= 19)
 			night = TRUE;
 		else
-			if (CurrTime->GetHour() < 6)
+			if (CurrTime->GetHour() < 5)
 				night = TRUE;
 
 		delete CurrTime;

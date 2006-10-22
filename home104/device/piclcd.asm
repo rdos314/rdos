@@ -38,6 +38,8 @@ INCLUDE ..\..\kernel\video.inc
 
 	.386p
 
+IO_BASE = 3A0h
+
 NODE_CNT            = 40h
 
 DQE_STAT_DONE       = 1
@@ -102,7 +104,7 @@ WriteControl    Macro
     local wait
     
     push ax
-    mov dx,3B1h
+    mov dx,IO_BASE + 1
 
 wait:
     in al,dx
@@ -119,7 +121,7 @@ WriteData    Macro
     local wait
 
     push ax
-    mov dx,3B1h
+    mov dx,IO_BASE + 1
 
 wait:
     in al,dx
@@ -831,12 +833,12 @@ PAGE
 pic_int Proc far
 
 pic_int_loop:
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     in al,dx
     test al,1
     jnz pic_int_not0
 ;
-    mov dx,3B6h
+    mov dx,IO_BASE + 6
     out dx,al
 ;    
     mov bx,ds:SernetThread
@@ -847,7 +849,7 @@ pic_int_not0:
     test al,2
     jnz pic_int_not1
 ;
-    mov dx,3BAh
+    mov dx,IO_BASE + 0Ah
 	in al,dx
     mov dx,ds:DioCurr
     or dx,dx
@@ -866,7 +868,7 @@ pic_int_not1:
     test al,4
     jnz pic_int_not2
 ;    
-    mov dx,3BCh
+    mov dx,IO_BASE + 0Ch
 	in al,dx
 	mov dx,ds:DioCurr+2
 	or dx,dx
@@ -885,7 +887,7 @@ pic_int_not2:
     test al,8
     jnz pic_int_not3
 ;    
-    mov dx,3BEh
+    mov dx,IO_BASE + 0Eh
 	in al,dx
 	mov dx,ds:DioCurr+4
 	or dx,dx
@@ -905,7 +907,7 @@ pic_int_not3:
     test al,10h
     jnz pic_int_done    
 ;
-    mov dx,3B4h
+    mov dx,IO_BASE + 4
     in al,dx
     mov ds:DcfVal,al
     mov bx,ds:DcfThread
@@ -1042,7 +1044,7 @@ DioRun  Proc near
     push es
     pushad
 ;
-    movzx ax,es:dqe_device    
+    movzx ax,es:dqe_device
    
 drClearLoop:
     push ax
@@ -1050,13 +1052,13 @@ drClearLoop:
     mov ah,2
     shl ah,cl
 ;    
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     in al,dx
     test al,ah
     pop ax
     jnz drDo
 ;
-    mov dx,3BAh
+    mov dx,IO_BASE + 0Ah
     add dx,ax
     add dx,ax
     push ax
@@ -1071,7 +1073,7 @@ drDo:
     add di,OFFSET DioCurr
     mov [di],es
 ;   
-    mov dx,3BAh
+    mov dx,IO_BASE + 0Ah
     add dx,ax
     add dx,ax
     mov al,es:dqe_val
@@ -1160,13 +1162,13 @@ DioCheckReq Proc near
     mov ah,2
     shl ah,cl
 ;    
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     in al,dx
     test al,ah
     pop ax
     jnz dcrRemove
 ;
-    mov dx,3BAh
+    mov dx,IO_BASE + 0Ah
     add dx,ax
     add dx,ax
     in al,dx
@@ -1216,7 +1218,7 @@ DioUpdate   Proc near
     mov cx,3
     xor ax,ax
     mov si,OFFSET DioCurr
-
+    
 duLoop:
     mov dx,[si]
     or dx,dx
@@ -1969,7 +1971,7 @@ sernet_thread:
     WaitMilliSec
 ;
     mov al,30h
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     out dx,al    
 ;
     mov ax,piclcd_data_sel
@@ -1982,10 +1984,10 @@ sernet_thread:
 sernet_thread_loop:
     inc cl
     mov ax,cx
-    mov dx,3B8h
+    mov dx,IO_BASE + 8
     out dx,ax
 ;        
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     mov al,20h
     out dx,al
     mov al,30h
@@ -1993,7 +1995,7 @@ sernet_thread_loop:
 ;    
     WaitForSignal
 ;
-    mov dx,3B8h
+    mov dx,IO_BASE + 8
     in ax,dx
     inc al
     cmp al,cl
@@ -2056,13 +2058,13 @@ InitDriver  Proc far
 	mov di,OFFSET pic_int
 	RequestPrivateIrqHandler
 ;    
-    mov dx,3B4h
+    mov dx,IO_BASE + 4
     in al,dx
 ;
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     in al,dx
 ;	
-    mov dx,3B6h
+    mov dx,IO_BASE + 6
     out dx,al
 ;
 	mov ax,cs
@@ -2142,15 +2144,15 @@ init	PROC far
 	mov ds,ax
 	mov es,ax
 ;
-	mov dx,3B3h
+	mov dx,IO_BASE + 3
 	xor al,al
 	out dx,al
 ;	
-    mov dx,3B6h
+    mov dx,IO_BASE + 6
     out dx,al
 ;    
     mov al,0
-    mov dx,3B2h
+    mov dx,IO_BASE + 2
     out dx,al
 ;
 	mov ax,cs
