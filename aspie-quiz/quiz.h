@@ -197,6 +197,10 @@ public:
 
 	void CheckCross();
 
+	void WritePhpQuestions(const char *filename); 
+	void WriteSetupTexts(const char *filename); 
+	void WriteSetupCross(const char *filename); 
+
 protected:
 	void Init();
 	int round(long double val);
@@ -219,6 +223,7 @@ protected:
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
     void DefineID(int Question, int GlobalID);
+    void DefineText(int Question, const char *Text, int Group);
     
     void ClearUsed();
     void ClearUsed(int Question);

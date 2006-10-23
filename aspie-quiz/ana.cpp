@@ -68,13 +68,18 @@ int main(int argc, char **argv)
 	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
 	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
 
+//	Quiz[7]->WritePhpQuestions("q.php");
+//    Quiz[7]->WriteSetupTexts("q.cpp");
+//    Quiz[7]->WriteSetupCross("c.cpp");
+
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
 //	Quiz[2]->CheckCross();
 //	Quiz[3]->CheckCross();
 //	Quiz[4]->CheckCross();
 //	Quiz[5]->CheckCross();
-	Quiz[6]->CheckCross();
+//	Quiz[6]->CheckCross();
+    Quiz[7]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -173,6 +178,7 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
 	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 
-	 Quiz[3]->ExportHistogram("hbip.txt", POP_TYPE_BIPOLAR, 2);
+    Quiz[7]->WritePhpWeighting("weights.php");
+	 
 }
 
