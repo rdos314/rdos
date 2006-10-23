@@ -45,7 +45,7 @@ class TRad;
 class THttpTablePage : public THttpCustomPage
 {
 public:
-	THttpTablePage(THttpCommand *Cmd, const char *FileName);
+	THttpTablePage(THttpCommand *Cmd, const char *FileName, const char *Param);
 	virtual ~THttpTablePage();
 
 protected:
@@ -56,27 +56,6 @@ protected:
 
     void WriteFloat1(TFile &File, long double val);
 
-};
-
-class THttpHeatPage : public THttpTablePage
-{
-public:
-	THttpHeatPage(THttpCommand *Cmd, const char *FileName);
-	virtual ~THttpHeatPage();
-
-protected:
-	virtual void Get(const char *Name);
-};
-
-class THttpHeatPageFactory : public THttpCustomPageFactory
-{
-public:
-	THttpHeatPageFactory(const char *ReqName);
-	virtual ~THttpHeatPageFactory();
-
-	virtual THttpCustomPage *Create(THttpCommand *cmd, const char *Param);
-
-protected:
 };
 
 class THttpWs2300Page : public THttpTablePage
@@ -101,7 +80,7 @@ public:
 protected:
 };
 
-class THttpRadPage : public THttpCustomPage
+class THttpRadPage : public THttpTablePage
 {
 public:
 	THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *Param);
@@ -114,7 +93,9 @@ protected:
     void DeleteTempJpeg();
     void WriteHistoryTemp(int address, int year, int month, int day);
     int CreateHistoryTempJpeg(int address, int year, int month, int day);
+    void WriteCurrTempJpeg(int address);
     void WriteTemp(int address);
+    void WriteMain();
 
 	TJpegBitmapDevice *FJpeg;
 	TFont *FFont;

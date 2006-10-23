@@ -159,8 +159,8 @@ void RemoveSignal(TSignalDevice *Signal)
 #   Returns....: *
 #
 ##########################################################################*/
-THttpTablePage::THttpTablePage(THttpCommand *Cmd, const char *FileName)
-  : THttpCustomPage(Cmd, FileName, "")
+THttpTablePage::THttpTablePage(THttpCommand *Cmd, const char *FileName, const char *Param)
+  : THttpCustomPage(Cmd, FileName, Param)
 {
 }
 
@@ -274,254 +274,6 @@ void THttpTablePage::WriteFloat1(TFile &File, long double val)
 
 /*##########################################################################
 #
-#   Name       : THttpHeatPage::THttpHeatPage
-#
-#   Purpose....: Constructor for THttpHeatPage
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpHeatPage::THttpHeatPage(THttpCommand *Cmd, const char *FileName)
-  : THttpTablePage(Cmd, FileName)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : THttpHeatPage::~THttpHeatPage
-#
-#   Purpose....: Destructor for THttpHeatPage
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpHeatPage::~THttpHeatPage()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : THttpHeatPage::Get
-#
-#   Purpose....: Get dynamic page
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpHeatPage::Get(const char *Name)
-{
-    long double val;
-	int ival;
-	int r;
-	int count;
-	char str[40];
-	TFile File(FFileName.GetData(), 0);
-	TString RowStr;
-	int row;
-
-	TSignalDevice Signal;
-
-	InsertSignal(&Signal);
-
-	StartPush();
-
-	while (FCmd->IsOpen() && FCmd->IsEmpty())
-	{
-		File.SetSize(0);
-		File.SetPos(0);
-
-		File.Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=30>\r\n");
-		File.Write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\r\n");
-		File.Write("<html><body>\r\n");
-		File.Write("<form action=\"/\" method=\"post\">\r\n");
-
-		File.Write("<body background=\"http://www.rdos.net/home104/lgren005.jpg\">");
-
-		File.Write("<h1 align=\"center\">");
-		File.Write("Styrsystem");
-		File.Write("</h1>");
-		File.Write("<br>");
-
-		File.Write("<table border=0 cellspacing=0 cellpadding=0>");
-
-		File.Write("<tr style='height:24.75pt'>");
-
-		WriteLeftFieldHeader(File, 15);
-		File.Write("Plats");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		File.Write("Inställning");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		File.Write("Temperatur");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		File.Write("Pådrag");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		File.Write("Ljus");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		File.Write("Temperatur 2");
-		WriteFieldFooter(File);
-
-		File.Write("</tr>");
-
-		for (r = 0; r < RadCount; r++)
-		{
-			if (RadArr[r]->IsOnline())
-			{
-				File.Write("<tr style='height:24.75pt'>");
-
-				WriteLeftFieldHeader(File, 15);
-				
-                sprintf(str, "<a href=\"/rad/%d\">", r + 0x20);
-                File.Write(str);
-				switch (r)
-				{
-					case 0:
-						File.Write("Leif & Lenas sovrum");
-						break;
-
-					case 1:
-						File.Write("Vardagsrum");
-						break;
-
-					case 2:
-						File.Write("Rosa sovrum, nedre plan");
-						break;
-
-					case 3:
-						File.Write("Blått sovrum, nedre plan");
-						break;
-
-					case 4:
-						File.Write("Kök");
-						break;
-
-					case 5:
-						File.Write("Emil & Linneas sovrum");
-						break;
-
-					case 6:
-						File.Write("Trappa");
-						break;
-
-					case 7:
-						File.Write("Badrum");
-						break;
-				}
-                File.Write("</a>");
-
-				WriteFieldFooter(File);
-
-				WriteCenteredFieldHeader(File, 6);
-				ival = RadArr[r]->GetRef();
-				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
-				File.Write(str);
-				WriteFieldFooter(File);
-
-				WriteCenteredFieldHeader(File, 6);
-				ival = RadArr[r]->GetTemp();
-				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
-				File.Write(str);
-				WriteFieldFooter(File);
-
-				WriteCenteredFieldHeader(File, 6);
-				ival = RadArr[r]->GetMotor();
-				if (ival > 100)
-					ival = 100;
-				sprintf(str, "%d%", ival);
-				File.Write(str);
-				WriteFieldFooter(File);
-
-				WriteCenteredFieldHeader(File, 6);
-				ival = RadArr[r]->GetLight();
-				sprintf(str, "%d.%d W/m²", ival / 10, ival % 10);
-				File.Write(str);
-				WriteFieldFooter(File);
-
-				WriteCenteredFieldHeader(File, 6);
-				ival = RadArr[r]->GetAuxTemp();
-				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
-				File.Write(str);
-				WriteFieldFooter(File);
-
-				File.Write("</tr>");
-			}
-		}
-
-		File.Write("<tr style='height:24.75pt'>");
-
-		WriteLeftFieldHeader(File, 15);
-		File.Write("Värmepump");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		if (Vp->IsOn())
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
-		else
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
-		File.Write("</tr>");
-
-		File.Write("<tr style='height:24.75pt'>");
-
-		WriteLeftFieldHeader(File, 15);
-		File.Write("Ljus");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		if (LightOn)
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
-		else
-			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
-
-		File.Write("</tr>");
-
-		File.Write("<tr style='height:24.75pt'>");
-
-		WriteLeftFieldHeader(File, 15);
-		File.Write("Cirkulation");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		ival = round(10.0 * Circ->GetSpeed());
-		sprintf(str, "%d%", ival);
-		File.Write(str);
-		WriteFieldFooter(File);
-
-		File.Write("</tr>");
-
-		File.Write("</table>\r\n");
-
-		File.Write("</form>\r\n");
-		File.Write("</body></html>\r\n");
-
-		if (!PushFile(FFileName.GetData(), "text/html", 30))
-			break;
-
-		Signal.WaitTimeout(25000);
-
-		RdosWaitMilli(50);
-		Signal.Clear();
-	}
-
-	RemoveSignal(&Signal);
-}
-
-/*##########################################################################
-#
 #   Name       : THttpWs2300Page::THttpWs2300Page
 #
 #   Purpose....: Constructor for THttpWs2300Page
@@ -532,7 +284,7 @@ void THttpHeatPage::Get(const char *Name)
 #
 ##########################################################################*/
 THttpWs2300Page::THttpWs2300Page(THttpCommand *Cmd, const char *FileName)
-  : THttpTablePage(Cmd, FileName)
+  : THttpTablePage(Cmd, FileName, "")
 {
 }
 
@@ -780,56 +532,6 @@ void THttpWs2300Page::Get(const char *Name)
 	RemoveSignal(&Signal);
 }
 
-/*##########################################################################
-#
-#   Name       : THttpHeatFactory::THttpHeatPageFactory
-#
-#   Purpose....: Constructor for THttpHeatPageFactory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpHeatPageFactory::THttpHeatPageFactory(const char *ReqName)
-  : THttpCustomPageFactory(ReqName)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : THttpHeatPageFactory::~THttpHeatPageFactory
-#
-#   Purpose....: Destructor for THttpHeatPageFactory
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpHeatPageFactory::~THttpHeatPageFactory()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : THttpHeatPageFactory::Create
-#
-#   Purpose....: Create an instance
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-THttpCustomPage *THttpHeatPageFactory::Create(THttpCommand *Cmd, const char *Param)
-{
-	THttpHeatPage *page;
-
-	TString tempname = CreateUniqueFile(Cmd);
-	page = new THttpHeatPage(Cmd, tempname.GetData());
-	return page;
-}
 
 /*##########################################################################
 #
@@ -894,7 +596,7 @@ THttpCustomPage *THttpWs2300PageFactory::Create(THttpCommand *Cmd, const char *P
 #
 ##########################################################################*/
 THttpRadPage::THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *Param)
-  : THttpCustomPage(Cmd, FileName, Param)
+  : THttpTablePage(Cmd, FileName, Param)
 {
 	FJpeg = 0;
 	FFont = 0;
@@ -1016,7 +718,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 	        sameday = FALSE;
 
     	if (month != to.GetMonth())
-	        sameday = FALSE;
+			  sameday = FALSE;
 
     	if (day != to.GetDay())
 	        sameday = FALSE;
@@ -1051,7 +753,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 
     	while (msg)
 	    {
-	        header = msg->GetTag(LOG_TAG_HEADER);
+			  header = msg->GetTag(LOG_TAG_HEADER);
     		if (header)
 	    	{
 		        msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
@@ -1086,7 +788,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 		                        {
 		                            ival = var->GetFloat1();
 		                            val = (long double)ival;
-		                            val = val / 10.0; 
+											 val = val / 10.0;
 
             					    FTempChart->Add(101, time, val);
                 			    }
@@ -1121,7 +823,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 		    if (log->GotoNext())
 		        msg = log->Get();
     		else
-	    		msg = 0;
+				msg = 0;
     	}
     }
     
@@ -1156,7 +858,7 @@ void THttpRadPage::DeleteTempJpeg()
     FTempAxis = 0;
 
     if (FTimeScaleAxis)
-        delete FTimeScaleAxis;
+		  delete FTimeScaleAxis;
     FTimeScaleAxis = 0;
 
     if (FTimeAxis)
@@ -1295,6 +997,33 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
 
 /*##########################################################################
 #
+#   Name       : THttpRadPage::WriteCurrTempJpeg
+#
+#   Purpose....: Write current temperature jpeg
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpRadPage::WriteCurrTempJpeg(int address)
+{
+	TDateTime from;
+	TDateTime to;
+
+    from.AddDay(-1);
+
+	CreateTempJpeg(address, from, to);
+	
+    if (FJpeg)
+    {
+        FJpeg->Save(FFileName.GetData());
+    	WriteFile(FFileName.GetData(), "jpeg/jpeg");
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : THttpRadPage::WriteTemp
 #
 #   Purpose....: Write temp html-document
@@ -1306,7 +1035,236 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
 ##########################################################################*/
 void THttpRadPage::WriteTemp(int address)
 {
-    WriteError(404);
+    char str[256];
+    char filename[256];
+	int handle;
+	int ok;
+    TDateTime time;
+	TFile File(FFileName.GetData(), 0);
+
+    File.Write("<IMG SRC=\"");
+    sprintf(str, "/rad/%d.jpg", address);
+    File.Write(str);
+    File.Write("\" align=bottom width=500 height=300 border=0>");
+
+    WriteFile(FFileName.GetData(), "text/html");
+}
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::WriteMain
+#
+#   Purpose....: Write main page
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpRadPage::WriteMain()
+{
+    long double val;
+	int ival;
+	int r;
+	int count;
+	char str[40];
+	TString RowStr;
+	int row;
+	TFile File(FFileName.GetData(), 0);
+
+	TSignalDevice Signal;
+
+	InsertSignal(&Signal);
+
+	StartPush();
+
+	while (FCmd->IsOpen() && FCmd->IsEmpty())
+	{
+		File.SetSize(0);
+		File.SetPos(0);
+
+		File.Write("<META HTTP-EQUIV=\"Refresh\" CONTENT=30>\r\n");
+		File.Write("<meta http-equiv=\"Content-Type\" content=\"text/html; charset=windows-1252\">\r\n");
+		File.Write("<html><body>\r\n");
+		File.Write("<form action=\"/\" method=\"post\">\r\n");
+
+		File.Write("<body background=\"http://www.rdos.net/home104/lgren005.jpg\">");
+
+		File.Write("<h1 align=\"center\">");
+		File.Write("Styrsystem");
+		File.Write("</h1>");
+		File.Write("<br>");
+
+		File.Write("<table border=0 cellspacing=0 cellpadding=0>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Plats");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		File.Write("Inställning");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		File.Write("Temperatur");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		File.Write("Pådrag");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		File.Write("Ljus");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		File.Write("Temperatur 2");
+		WriteFieldFooter(File);
+
+		File.Write("</tr>");
+
+		for (r = 0; r < RadCount; r++)
+		{
+			if (RadArr[r]->IsOnline())
+			{
+				File.Write("<tr style='height:24.75pt'>");
+
+				WriteLeftFieldHeader(File, 15);
+				
+                sprintf(str, "<a href=\"/rad/%d.htm\">", r + 0x20);
+                File.Write(str);
+				switch (r)
+				{
+					case 0:
+						File.Write("Leif & Lenas sovrum");
+						break;
+
+					case 1:
+						File.Write("Vardagsrum");
+						break;
+
+					case 2:
+						File.Write("Rosa sovrum, nedre plan");
+						break;
+
+					case 3:
+						File.Write("Blått sovrum, nedre plan");
+						break;
+
+					case 4:
+						File.Write("Kök");
+						break;
+
+					case 5:
+						File.Write("Emil & Linneas sovrum");
+						break;
+
+					case 6:
+						File.Write("Trappa");
+						break;
+
+					case 7:
+						File.Write("Badrum");
+						break;
+				}
+                File.Write("</a>");
+
+				WriteFieldFooter(File);
+
+				WriteCenteredFieldHeader(File, 6);
+				ival = RadArr[r]->GetRef();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+				File.Write(str);
+				WriteFieldFooter(File);
+
+				WriteCenteredFieldHeader(File, 6);
+				ival = RadArr[r]->GetTemp();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+				File.Write(str);
+				WriteFieldFooter(File);
+
+				WriteCenteredFieldHeader(File, 6);
+				ival = RadArr[r]->GetMotor();
+				if (ival > 100)
+					ival = 100;
+				sprintf(str, "%d%", ival);
+				File.Write(str);
+				WriteFieldFooter(File);
+
+				WriteCenteredFieldHeader(File, 6);
+				ival = RadArr[r]->GetLight();
+				sprintf(str, "%d.%d W/m²", ival / 10, ival % 10);
+				File.Write(str);
+				WriteFieldFooter(File);
+
+				WriteCenteredFieldHeader(File, 6);
+				ival = RadArr[r]->GetAuxTemp();
+				sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+				File.Write(str);
+				WriteFieldFooter(File);
+
+				File.Write("</tr>");
+			}
+		}
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Värmepump");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		if (Vp->IsOn())
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+		else
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Ljus");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		if (LightOn)
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+		else
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Cirkulation");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		ival = round(10.0 * Circ->GetSpeed());
+		sprintf(str, "%d%", ival);
+		File.Write(str);
+		WriteFieldFooter(File);
+
+		File.Write("</tr>");
+
+		File.Write("</table>\r\n");
+
+		File.Write("</form>\r\n");
+		File.Write("</body></html>\r\n");
+
+		if (!PushFile(FFileName.GetData(), "text/html", 30))
+			break;
+
+		Signal.WaitTimeout(25000);
+
+		RdosWaitMilli(50);
+		Signal.Clear();
+	}
+
+	RemoveSignal(&Signal);
 }
 
 /*##########################################################################
@@ -1333,25 +1291,22 @@ void THttpRadPage::Get(const char *Name)
 
 	count = sscanf(param, "rad/%d/%d/%d/%d", &address, &year, &month, &day);
 
-    if (count != 4)
-    	count = sscanf(param, "rad/%d/%s", &address, &year, &month, &day);
-
-	switch (count)
-	{
-	    case 0:
-	    case 2:
-	    case 3:
-    	    WriteError(404);
-    	    break;
-
-	    case 1:
+    if (count == 4)
+        WriteHistoryTemp(address, year, month, day);
+    else
+    {
+        count = sscanf(param, "rad/%d.htm", &address);
+        if (count == 1)
 	        WriteTemp(address);
-	        break;
-
-	    case 4:
-	        WriteHistoryTemp(address, year, month, day);
-	        break;
-	}
+    	else
+	    {
+            count = sscanf(param, "rad/%d.jpg", &address);
+            if (count == 1)
+					 WriteCurrTempJpeg(address);
+            else
+                WriteMain();
+        }
+    }
 }
 
 /*##########################################################################
@@ -1532,14 +1487,12 @@ void HttpSetLightOff()
 void InitHeatHttp()
 {
     THttpSocketServerFactory *Factory = new THttpSocketServerFactory(80, 50, 0x4000);
-    THttpHeatPageFactory *HeatPage = new THttpHeatPageFactory("heat.htm");
 	THttpWs2300PageFactory *Ws2300Page = new THttpWs2300PageFactory("ws2300.htm");
 	THttpRadPageFactory *RadPage = new THttpRadPageFactory("rad/");
-    TWait *Wait = new TWait;
-    
+	 TWait *Wait = new TWait;
+
 	Factory->RootDir = WWWROOT;
-    Factory->KeepAlive = 45;
-	Factory->AddCustomPage(HeatPage);
+	 Factory->KeepAlive = 45;
 	Factory->AddCustomPage(Ws2300Page);
 	Factory->AddCustomDir(RadPage);
 	Wait->Add(Factory);
