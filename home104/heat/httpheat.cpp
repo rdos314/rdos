@@ -712,17 +712,6 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
     sameday = FALSE;
     while (!sameday)
     {    
-    	sameday = TRUE;
-
-    	if (year != to.GetYear())
-	        sameday = FALSE;
-
-    	if (month != to.GetMonth())
-			  sameday = FALSE;
-
-    	if (day != to.GetDay())
-	        sameday = FALSE;
-
         if (firstpass)
         {
             firsttime = TDateTime(year, month, day, from.GetHour(), from.GetMin(), 0, 0);
@@ -734,15 +723,26 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
             currtime.AddDay(1);
             firsttime = currtime;
         }
+
+    	sameday = TRUE;
+
+        year = firsttime.GetYear();
+        month = firsttime.GetMonth();
+        day = firsttime.GetDay();
+
+    	if (year != to.GetYear())
+	        sameday = FALSE;
+
+    	if (month != to.GetMonth())
+			  sameday = FALSE;
+
+    	if (day != to.GetDay())
+	        sameday = FALSE;
         
 	    if (sameday)
             lasttime = TDateTime(year, month, day, to.GetHour(), to.GetMin(), 59, 999);
         else
             lasttime = TDateTime(year, month, day, 23, 59, 59, 999);
-
-        year = firsttime.GetYear();
-        month = firsttime.GetMonth();
-        day = firsttime.GetDay();
                 
 	    log = Log->GetLog(year, month, day);
 
@@ -1286,6 +1286,7 @@ void THttpRadPage::Get(const char *Name)
 	int month;
 	int day;
 	int count;
+	const char *ext;
 
 	param = FParam.GetData();
 
@@ -1295,17 +1296,27 @@ void THttpRadPage::Get(const char *Name)
         WriteHistoryTemp(address, year, month, day);
     else
     {
-        count = sscanf(param, "rad/%d.htm", &address);
+		count = sscanf(param, "rad/%d", &address);
         if (count == 1)
-	        WriteTemp(address);
-    	else
-	    {
-            count = sscanf(param, "rad/%d.jpg", &address);
-            if (count == 1)
-					 WriteCurrTempJpeg(address);
+        {
+            ext = strchr(param, '.');
+            if (ext)
+            {
+                if (!strcmp(ext, ".htm"))
+        	        WriteTemp(address);
+        	    else
+        	    {
+        	        if (!strcmp(ext, ".jpg"))
+				        WriteCurrTempJpeg(address);
+				    else
+				        WriteError(404);
+				}
+            }
             else
-                WriteMain();
+                WriteError(404);
         }
+    	else
+            WriteMain();
     }
 }
 
