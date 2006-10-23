@@ -39,6 +39,7 @@
 #include "quiz5.h"
 #include "quiz6.h"
 #include "quiz7.h"
+#include "quiz8.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -65,6 +66,7 @@ int main(int argc, char **argv)
 	Quiz[4] = new TQuiz5("quiz5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3]);
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
 	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
+	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();

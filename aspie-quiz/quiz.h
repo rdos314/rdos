@@ -218,6 +218,7 @@ protected:
     void CalcAspieNtCorr();
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
+    void DefineID(int Question, int GlobalID);
     
     void ClearUsed();
     void ClearUsed(int Question);

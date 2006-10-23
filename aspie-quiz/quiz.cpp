@@ -234,6 +234,7 @@ void TQuiz::Init()
     {
         Quiz[i].Text = "NO TEXT";
         Quiz[i].Reverse = FALSE;
+        Quiz[i].GlobalId = -1;
     }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
@@ -307,6 +308,19 @@ void TQuiz::DefineCross(int id, TQuiz *quiz)
 {
     if (id >= 0 && id < MAX_CROSS)
 		CrossQuiz[id] = quiz;
+}
+
+/*##################  TQuiz::DefineID ##########################
+*   Purpose....: Define global ID for question 				       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::DefineID(int Question, int GlobalId)
+{
+    if (Question >= 0 && Question < MAX_QUESTIONS)
+        Quiz[Question].GlobalId = GlobalId;
 }
 
 /*##################  TQuiz::DefineGlobalId ##########################
