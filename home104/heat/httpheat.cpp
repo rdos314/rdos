@@ -598,12 +598,6 @@ THttpCustomPage *THttpWs2300PageFactory::Create(THttpCommand *Cmd, const char *P
 THttpRadPage::THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *Param)
   : THttpTablePage(Cmd, FileName, Param)
 {
-	FJpeg = 0;
-	FFont = 0;
-	FTempAxis = 0;
-	FTimeScaleAxis = 0;
-	FTimeAxis = 0;
-	FTempChart = 0;
 }
 
 /*##########################################################################
@@ -619,7 +613,6 @@ THttpRadPage::THttpRadPage(THttpCommand *Cmd, const char *FileName, const char *
 ##########################################################################*/
 THttpRadPage::~THttpRadPage()
 {
-    DeleteTempJpeg();
 }
 
 /*##########################################################################
@@ -633,7 +626,7 @@ THttpRadPage::~THttpRadPage()
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
+TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 {
 	TLogReader *log;
 	TDeviceMsg *msg;
@@ -655,57 +648,64 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 	int day;
 	int sameday;
 	int firstpass;
+	TJpegBitmapDevice *Jpeg = new TJpegBitmapDevice(24, 500, 400);
+	TFont Font(10);
+	TLinYAxis TempAxis(&Font);
+	TTimeXAxis TimeScaleAxis(&Font);
+	TTimeXAxis TimeAxis;
+	TChart TempChart(Jpeg, &TimeAxis, &TempAxis);
+	TChart PowerChart(Jpeg, &TimeAxis, &TempAxis);
+	TChart VpChart(Jpeg, &TimeScaleAxis, &TempAxis);
 
-    if (FJpeg)
-        delete FJpeg;	   
-	FJpeg = new TJpegBitmapDevice(24, 500, 300);
+    TempChart.SetWindow(0, 0, 499, 299);
+    PowerChart.SetWindow(0, 299, 499, 369);
+    VpChart.SetWindow(0, 370, 499, 399);
 
-    if (FFont)
-        delete FFont;        
-	FFont = new TFont(10);
+	TimeScaleAxis.SetForeColor(0, 0, 0);
+	TimeScaleAxis.SetBackColor(255, 255, 255);
 
-    if (FTimeScaleAxis)
-        delete FTimeScaleAxis;
-    FTimeScaleAxis = new TTimeXAxis(FFont);
+	TempAxis.SetForeColor(0, 0, 0);
+	TempAxis.SetBackColor(255, 255, 255);
 
-    if (FTimeAxis)
-        delete FTimeAxis;
-    FTimeAxis = new TTimeXAxis;
+	TempChart.SetBackColor(255, 255, 255);
 
-    if (FTempAxis)
-        delete FTempAxis;
-    FTempAxis = new TLinYAxis(FFont);
+	TempChart.SetLineColor(100, 128, 128, 128);
+	TempChart.SetLineColor(101, 128, 255, 0);
+	TempChart.SetLineColor(102, 255, 128, 0);
 
-    if (FTempChart)
-        delete FTempChart;
-    FTempChart = new TChart(FJpeg, FTimeScaleAxis, FTempAxis);
+	PowerChart.SetBackColor(255, 255, 255);
 
-	FTimeScaleAxis->SetForeColor(0, 0, 0);
-	FTimeScaleAxis->SetBackColor(255, 255, 255);
+	PowerChart.SetLineColor(101, 128, 255, 0);
+	PowerChart.SetLineColor(102, 255, 128, 0);
 
-	FTempAxis->SetForeColor(0, 0, 0);
-	FTempAxis->SetBackColor(255, 255, 255);
+	VpChart.SetBackColor(255, 255, 255);
 
-	FTempChart->SetBackColor(255, 255, 255);
-
-	FTempChart->SetLineColor(100, 128, 128, 128);
-	FTempChart->SetLineColor(101, 128, 255, 0);
-	FTempChart->SetLineColor(102, 255, 128, 0);
-	FTempChart->SetLineColor(103, 0, 0, 255);
+	VpChart.SetLineColor(101, 128, 255, 0);
 
 	year = from.GetYear();
 	month = from.GetMonth();
 	day = from.GetDay();
 
-	FTempChart->SetXAxis(from, to);
+	TempChart.SetXAxis(from, to);
+	PowerChart.SetXAxis(from, to);
+	VpChart.SetXAxis(from, to);
 
     for (i = 0; i <= 25; i++) 
     {
-        FTempChart->SetLineColor(i, 210, 210, 210);
+        TempChart.SetLineColor(i, 210, 210, 210);
     	
     	val = (long double)i;
-	    FTempChart->Add(i, from, val);
-	    FTempChart->Add(i, to, val);
+	    TempChart.Add(i, from, val);
+	    TempChart.Add(i, to, val);
+    }
+
+    for (i = 0; i <= 10; i++) 
+    {
+        PowerChart.SetLineColor(i, 210, 210, 210);
+    	
+    	val = (long double)i;
+	    PowerChart.Add(i, from, val);
+	    PowerChart.Add(i, to, val);
     }
 
     firstpass = TRUE;
@@ -753,7 +753,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 
     	while (msg)
 	    {
-			  header = msg->GetTag(LOG_TAG_HEADER);
+			header = msg->GetTag(LOG_TAG_HEADER);
     		if (header)
 	    	{
 		        msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
@@ -774,7 +774,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 			    	            val = (long double)ival;
 				                val = val / 10.0;
     
-            					FTempChart->Add(100, time, val);
+            					TempChart.Add(100, time, val);
     	        		    }
 	            		}
                 		    
@@ -788,9 +788,9 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 		                        {
 		                            ival = var->GetFloat1();
 		                            val = (long double)ival;
-											 val = val / 10.0;
+								    val = val / 10.0;
 
-            					    FTempChart->Add(101, time, val);
+            					    TempChart.Add(101, time, val);
                 			    }
     
 	        	                var = tag->GetVar(LOG_VAR_AuxTemp);
@@ -800,7 +800,7 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 		                            val = (long double)ival;
 		                            val = val / 10.0; 
     
-            				    	FTempChart->Add(102, time, val);
+            				    	TempChart.Add(102, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Ref);
@@ -810,10 +810,47 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
 		                            val = (long double)ival;
 		                            val = val / 10.0; 
 
-            					    FTempChart->Add(103, time, val);
+            					    TempChart.Add(103, time, val);
+                			    }
+
+	        	                var = tag->GetVar(LOG_VAR_Motor);
+		                        if (var)
+		                        {
+		                            ival = var->GetFloat1();
+		                            val = (long double)ival;
+		                            val = val / 10.0; 
+
+            					    PowerChart.Add(101, time, val);
                 			    }
                 			}
 		                }
+
+                        if (tag->GetID() == LOG_TAG_CIRC)
+                        {
+	        	            var = tag->GetVar(LOG_VAR_Motor);
+		                    if (var)
+		                    {
+		                        ival = var->GetFloat1();
+		                        val = (long double)ival;
+		                        val = val / 10.0; 
+
+            					PowerChart.Add(102, time, val);
+            			    }
+            			}
+
+                        if (tag->GetID() == LOG_TAG_VP)
+                        {
+	        	            var = tag->GetVar(LOG_VAR_On);
+		                    if (var)
+		                    {
+		                        if (var->GetBoolean())
+		                            val = 1.0;
+		                        else
+		                            val = 0.0;
+
+            					VpChart.Add(101, time, val);
+            			    }
+            			}
 
 			        	tag = msg->GotoNextTag();
     		        }
@@ -825,49 +862,38 @@ void THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TDateTime &to)
     		else
 				msg = 0;
     	}
+    	delete log;
+    }
+
+	currtime = TDateTime(from.GetYear(), from.GetMonth(), from.GetDay(), from.GetHour(), 0, 0, 0);
+
+    i = 30;    
+    while (currtime < to) 
+    {
+        TempChart.SetLineColor(i, 210, 210, 210);
+    	
+	    TempChart.Add(i, currtime, 0.0);
+	    TempChart.Add(i, currtime, 25.0);
+
+        PowerChart.SetLineColor(i, 210, 210, 210);
+    	
+	    PowerChart.Add(i, currtime, 0.0);
+	    PowerChart.Add(i, currtime, 10.0);
+
+        VpChart.SetLineColor(i, 210, 210, 210);
+    	
+	    VpChart.Add(i, currtime, 0.0);
+	    VpChart.Add(i, currtime, 1.0);
+
+	    i++;
+	    currtime.AddHour(1);
     }
     
-	FTempChart->Draw();
+	TempChart.Draw();
+	PowerChart.Draw();
+	VpChart.Draw();
 
-    delete log;
-}
-
-/*##########################################################################
-#
-#   Name       : THttpRadPage::DeleteTempJpeg
-#
-#   Purpose....: Delete temperature jpeg
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void THttpRadPage::DeleteTempJpeg()
-{
-    if (FJpeg)
-        delete FJpeg;
-    FJpeg = 0;
-
-    if (FFont)
-        delete FFont;
-    FFont = 0;
-
-    if (FTempAxis)
-        delete FTempAxis;
-    FTempAxis = 0;
-
-    if (FTimeScaleAxis)
-		  delete FTimeScaleAxis;
-    FTimeScaleAxis = 0;
-
-    if (FTimeAxis)
-        delete FTimeAxis;
-    FTimeAxis = 0;
-
-    if (FTempChart)
-        delete FTempChart;                
-    FTempChart = 0;
+    return Jpeg;
 }
 
 /*##########################################################################
@@ -885,6 +911,7 @@ int THttpRadPage::CreateHistoryTempJpeg(int address, int year, int month, int da
 {
     char str[256];
     char filename[256];
+	TJpegBitmapDevice *Jpeg;
 	TLogReader *log;
 	TDateTime from = TDateTime(year, month, day, 0, 0, 0, 0);
 	TDateTime to = TDateTime(year, month, day, 23, 59, 59, 999);
@@ -902,7 +929,7 @@ int THttpRadPage::CreateHistoryTempJpeg(int address, int year, int month, int da
 
     delete log;
 
-	CreateTempJpeg(address, from, to);
+	Jpeg = CreateTempJpeg(address, from, to);
 
 	strcpy(filename, WWWROOT);
 	strcat(filename, "\\");
@@ -940,10 +967,11 @@ int THttpRadPage::CreateHistoryTempJpeg(int address, int year, int month, int da
 	strcat(filename, "\\");
 	strcat(filename, str);
 
-    if (FJpeg)
-        FJpeg->Save(filename);
-
-    DeleteTempJpeg();        
+    if (Jpeg)
+    {
+        Jpeg->Save(filename);
+        delete Jpeg;
+    }
 
     return TRUE;
 }
@@ -987,7 +1015,7 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
     	File.Write("<IMG SRC=\"");
         sprintf(str, "/image/%d/%d/%d/%d.jpg", address, year, month, day);
     	File.Write(str);
-        File.Write("\" align=bottom width=500 height=300 border=0>");
+        File.Write("\" align=bottom width=500 height=400 border=0>");
 
     	WriteFile(FFileName.GetData(), "text/html");
     }
@@ -1010,15 +1038,17 @@ void THttpRadPage::WriteCurrTempJpeg(int address)
 {
 	TDateTime from;
 	TDateTime to;
+	TJpegBitmapDevice *Jpeg;
 
     from.AddDay(-1);
 
-	CreateTempJpeg(address, from, to);
+	Jpeg = CreateTempJpeg(address, from, to);
 	
-    if (FJpeg)
+    if (Jpeg)
     {
-        FJpeg->Save(FFileName.GetData());
+        Jpeg->Save(FFileName.GetData());
     	WriteFile(FFileName.GetData(), "jpeg/jpeg");
+    	delete Jpeg;
     }
 }
 
@@ -1045,7 +1075,7 @@ void THttpRadPage::WriteTemp(int address)
     File.Write("<IMG SRC=\"");
     sprintf(str, "/rad/%d.jpg", address);
     File.Write(str);
-    File.Write("\" align=bottom width=500 height=300 border=0>");
+    File.Write("\" align=bottom width=500 height=400 border=0>");
 
     WriteFile(FFileName.GetData(), "text/html");
 }

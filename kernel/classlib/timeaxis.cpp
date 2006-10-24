@@ -776,7 +776,7 @@ void TTimeXAxis::SetupSecScale(int width)
     hour = MinTime.GetHour();
     min = MinTime.GetMin();
     sec = MinTime.GetSec();
-    MinTime = TDateTime(year, month, day, hour, min, sec, 500);
+    MinTime = TDateTime(year, month, day, hour, min, sec, 50);
 
     year = MaxTime.GetYear();
     month = MaxTime.GetMonth();
@@ -784,7 +784,7 @@ void TTimeXAxis::SetupSecScale(int width)
     hour = MaxTime.GetHour();
     min = MaxTime.GetMin();
     sec = MaxTime.GetSec();
-    MaxTime = TDateTime(year, month, day, hour, min, sec, 500);
+    MaxTime = TDateTime(year, month, day, hour, min, sec, 50);
 
     FIncr = 0;
     
@@ -877,7 +877,7 @@ void TTimeXAxis::SetupSecScale(int width)
                     sec = MaxTime.GetSec();
                     sec = sec / FIncr;
                     sec = FIncr * sec;
-                    MaxTime = TDateTime(year, month, day, hour, min, sec, 500);
+                    MaxTime = TDateTime(year, month, day, hour, min, sec, 50);
                     FFirstVal = MaxTime;
                     break;
 
@@ -902,7 +902,7 @@ void TTimeXAxis::SetupSecScale(int width)
                     sec = MinTime.GetSec();
                     sec = sec / FIncr;
                     sec = FIncr * sec;
-                    MinTime = TDateTime(year, month, day, hour, min, sec, 500);
+                    MinTime = TDateTime(year, month, day, hour, min, sec, 50);
                     FFirstVal = MinTime;
                     break;
             }
@@ -950,14 +950,14 @@ void TTimeXAxis::SetupMinScale(int width)
     day = MinTime.GetDay();
     hour = MinTime.GetHour();
     min = MinTime.GetMin();
-    MinTime = TDateTime(year, month, day, hour, min, 30, 0);
+    MinTime = TDateTime(year, month, day, hour, min, 0, 50);
 
     year = MaxTime.GetYear();
     month = MaxTime.GetMonth();
     day = MaxTime.GetDay();
     hour = MaxTime.GetHour();
     min = MaxTime.GetMin();
-    MaxTime = TDateTime(year, month, day, hour, min, 30, 0);
+    MaxTime = TDateTime(year, month, day, hour, min, 0, 50);
 
     FIncr = 0;
     
@@ -1049,7 +1049,7 @@ void TTimeXAxis::SetupMinScale(int width)
                     min = MaxTime.GetMin();
                     min = min / FIncr;
                     min = FIncr * min;
-                    MaxTime = TDateTime(year, month, day, hour, min, 30, 0);
+                    MaxTime = TDateTime(year, month, day, hour, min, 0, 50);
                     FFirstVal = MaxTime;
                     break;
 
@@ -1073,7 +1073,7 @@ void TTimeXAxis::SetupMinScale(int width)
                     min = MinTime.GetMin();
                     min = min / FIncr;
                     min = FIncr * min;
-                    MinTime = TDateTime(year, month, day, hour, min, 30, 0);
+                    MinTime = TDateTime(year, month, day, hour, min, 0, 50);
                     FFirstVal = MinTime;
                     break;
             }
@@ -1119,13 +1119,13 @@ void TTimeXAxis::SetupHourScale(int width)
     month = MinTime.GetMonth();
     day = MinTime.GetDay();
     hour = MinTime.GetHour();
-    MinTime = TDateTime(year, month, day, hour, 30, 0, 0);
+    MinTime = TDateTime(year, month, day, hour, 0, 0, 50);
 
     year = MaxTime.GetYear();
     month = MaxTime.GetMonth();
     day = MaxTime.GetDay();
     hour = MaxTime.GetHour();
-    MaxTime = TDateTime(year, month, day, hour, 30, 0, 0);
+    MaxTime = TDateTime(year, month, day, hour, 0, 0, 50);
 
     FIncr = 0;
     
@@ -1216,7 +1216,7 @@ void TTimeXAxis::SetupHourScale(int width)
                     hour = MaxTime.GetHour();
                     hour = hour / FIncr;
                     hour = FIncr * hour;
-                    MaxTime = TDateTime(year, month, day, hour, 30, 0, 0);
+                    MaxTime = TDateTime(year, month, day, hour, 0, 0, 50);
                     FFirstVal = MaxTime;
                     break;
 
@@ -1239,7 +1239,7 @@ void TTimeXAxis::SetupHourScale(int width)
                     hour = MinTime.GetHour();
                     hour = hour / FIncr;
                     hour = FIncr * hour;
-                    MinTime = TDateTime(year, month, day, hour, 30, 0, 0);
+                    MinTime = TDateTime(year, month, day, hour, 0, 0, 50);
                     FFirstVal = MinTime;
                     break;
             }
@@ -1284,12 +1284,12 @@ void TTimeXAxis::SetupDateScale(int width)
     year = MinTime.GetYear();
     month = MinTime.GetMonth();
     day = MinTime.GetDay();
-    MinTime = TDateTime(year, month, day, 12, 0, 0, 0);
+    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
 
     year = MaxTime.GetYear();
     month = MaxTime.GetMonth();
     day = MaxTime.GetDay();
-    MaxTime = TDateTime(year, month, day, 12, 0, 0, 0);
+    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
 
     FIncr = 0;
     
@@ -1369,7 +1369,7 @@ void TTimeXAxis::SetupDateScale(int width)
                     day = MaxTime.GetDay();
                     day = (day - 1) / 2;
                     day = 2 * day + 1;
-                    MaxTime = TDateTime(year, month, day, 12, 0, 0, 0);
+                    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
                     FFirstVal = MaxTime;
                     break;
 
@@ -1377,7 +1377,7 @@ void TTimeXAxis::SetupDateScale(int width)
                     year = MaxTime.GetYear();
                     month = MaxTime.GetMonth();
                     day = MaxTime.GetDay();
-                    MaxTime = TDateTime(year, month, day, 12, 0, 0, 0);
+                    MaxTime = TDateTime(year, month, day, 0, 0, 0, 50);
                     dow = MaxTime.GetDayOfWeek();
                     MaxTime.AddDay(-dow);
                     FFirstVal = MaxTime;
@@ -1398,7 +1398,7 @@ void TTimeXAxis::SetupDateScale(int width)
                     day = MinTime.GetDay();
                     day = (day - 1) / 2;
                     day = 2 * day + 1;
-                    MinTime = TDateTime(year, month, day, 12, 0, 0, 0);
+                    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
                     FFirstVal = MinTime;
                     break;
 
@@ -1406,7 +1406,7 @@ void TTimeXAxis::SetupDateScale(int width)
                     year = MinTime.GetYear();
                     month = MinTime.GetMonth();
                     day = MinTime.GetDay();
-                    MinTime = TDateTime(year, month, day, 12, 0, 0, 0);
+                    MinTime = TDateTime(year, month, day, 0, 0, 0, 50);
                     dow = MinTime.GetDayOfWeek();
                     MinTime.AddDay(-dow);
                     FFirstVal = MinTime;
@@ -1450,11 +1450,11 @@ void TTimeXAxis::SetupMonthScale(int width)
 
     year = MinTime.GetYear();
     month = MinTime.GetMonth();
-    MinTime = TDateTime(year, month, 1, 12, 0, 0, 0);
+    MinTime = TDateTime(year, month, 1, 0, 0, 0, 50);
 
     year = MaxTime.GetYear();
     month = MaxTime.GetMonth();
-    MaxTime = TDateTime(year, month, 1, 12, 0, 0, 0);
+    MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50);
 
     FIncr = 0;
     
@@ -1524,7 +1524,7 @@ void TTimeXAxis::SetupMonthScale(int width)
                     month = MaxTime.GetMonth();
                     month = (month - 1) / 3;
                     month = 3 * month + 1;
-                    MaxTime = TDateTime(year, month, 1, 12, 0, 0, 0);
+                    MaxTime = TDateTime(year, month, 1, 0, 0, 0, 50);
                     FFirstVal = MaxTime;
                     break;
             }
@@ -1542,7 +1542,7 @@ void TTimeXAxis::SetupMonthScale(int width)
                     month = MinTime.GetMonth();
                     month = (month - 1) / 3;
                     month = 3 * month + 1;
-                    MinTime = TDateTime(year, month, 1, 12, 0, 0, 0);
+                    MinTime = TDateTime(year, month, 1, 0, 0, 0, 50);
                     FFirstVal = MinTime;
                     break;
             }

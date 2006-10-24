@@ -89,21 +89,12 @@ public:
 protected:
 	virtual void Get(const char *Name);
 
-    void CreateTempJpeg(int address, TDateTime &from, TDateTime &to);
-    void DeleteTempJpeg();
+    TJpegBitmapDevice *CreateTempJpeg(int address, TDateTime &from, TDateTime &to);
     void WriteHistoryTemp(int address, int year, int month, int day);
     int CreateHistoryTempJpeg(int address, int year, int month, int day);
     void WriteCurrTempJpeg(int address);
     void WriteTemp(int address);
     void WriteMain();
-
-	TJpegBitmapDevice *FJpeg;
-	TFont *FFont;
-	TLinYAxis *FTempAxis;
-	TTimeXAxis *FTimeScaleAxis;
-	TTimeXAxis *FTimeAxis;
-	TChart *FTempChart;
-
 
 };
 
