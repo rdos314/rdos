@@ -36,10 +36,13 @@ public:
 	TXAxis();
     ~TXAxis();
 
+    void SetMinHeight(int height);
+
 	virtual int IsXAxis();
     virtual int RequiredHeight() = 0;
 
 protected:
+    int FMinHeight;
 };
 
 #endif

@@ -36,10 +36,13 @@ public:
 	TYAxis();
     ~TYAxis();
 
+    void SetMinWidth(int width);
+
 	virtual int IsYAxis();
     virtual int RequiredWidth() = 0;
 
 protected:
+    int FMinWidth;
 };
 
 #endif

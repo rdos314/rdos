@@ -434,6 +434,8 @@ void TWayneClProtocolAnalyser::ShowCB3(const char *MsgData)
     char mode;
     char Mask;
     int bit;
+    int adr;
+    const char *ptr;
 
     Write("CB3 ");
 
@@ -442,6 +444,21 @@ void TWayneClProtocolAnalyser::ShowCB3(const char *MsgData)
         mode = *(MsgData + FAdr - 0x50);
         ShowMode(mode);
 		Write(", ");
+    }
+
+    if (FAdr == 0x4F)
+    {
+        ptr = MsgData;
+
+        for (adr = 0x50; adr < 0x60; adr++)
+        {
+            ShowAddress(adr);
+            Write("<");
+            mode = *ptr;
+            ShowMode(mode);
+	    	Write(">, ");
+	    	ptr++;
+	    }
     }
 
     Write("GRADES: ");

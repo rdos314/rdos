@@ -144,10 +144,19 @@ int TLinXAxis::RequiredHeight()
         if (FScaleHeight > 4)
             FScaleHeight = FScaleHeight / 2;
 
-        return height + FScaleHeight + 2;
+        height += FScaleHeight + 2;
+		  if (height < FMinHeight)
+				return FMinHeight;
+		  else
+				return height;
+	 }
+	 else
+	 {
+		  if (FMinHeight)
+				return FMinHeight;
+        else
+            return 1;
     }
-    else
-        return 1;
 }
 
 /*##########################################################################

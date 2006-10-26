@@ -43,6 +43,7 @@
 ##########################################################################*/
 TXAxis::TXAxis()
 {
+    FMinHeight = 0;
 }
 
 /*##########################################################################
@@ -74,4 +75,20 @@ TXAxis::~TXAxis()
 int TXAxis::IsXAxis()
 {
 	return TRUE;
+}
+
+/*##########################################################################
+#
+#   Name       : TXAxis::SetMinHeight
+#
+#   Purpose....: Set min height for axis
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TXAxis::SetMinHeight(int height)
+{
+    FMinHeight = height;
 }

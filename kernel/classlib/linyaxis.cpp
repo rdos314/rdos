@@ -283,6 +283,7 @@ int TLinYAxis::RequiredWidth()
     int width1;
     int width2;
     int height;
+    int width;
 
     if (FFont)
     {
@@ -297,15 +298,20 @@ int TLinYAxis::RequiredWidth()
             FFont->GetStringMetrics(str, &width2, &height);
 
             if (width1 > width2)
-                return width1 + FScaleWidth + 2;
+                width =  width1 + FScaleWidth + 2;
             else
-                return width2 + FScaleWidth + 2;
+                width = width2 + FScaleWidth + 2;
         }
         else
-            return 0;
+            width = 0;
     }
     else
-        return 1;
+        width = 1;
+
+    if (width < FMinWidth)
+        return FMinWidth;
+    else
+        return width;
 }
 
 /*##########################################################################
