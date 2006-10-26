@@ -45,6 +45,7 @@ TVideoGraphicDevice::TVideoGraphicDevice(int bpp, int width, int height)
   : TGraphicDevice(bpp, width, height)
 {
     FBitmapHandle = RdosSetVideoMode(&FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
+    InitDevice();
 }
 
 /*##########################################################################

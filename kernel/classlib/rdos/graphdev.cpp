@@ -56,6 +56,9 @@ TGraphicDevice::TGraphicDevice(int bpp, int width, int height)
 		FColor = 0;
 	FLgop = LGOP_NONE;
 	FFilledStyle = FALSE;
+    FFontHandle = 0;
+
+	InitDevice();
 }
 
 /*##########################################################################
@@ -86,6 +89,9 @@ TGraphicDevice::TGraphicDevice(const TGraphicDevice &dev)
 		FBitmapHandle = RdosDuplicateBitmapHandle(dev.FBitmapHandle);
 	else
 		FBitmapHandle = 0;
+    FFontHandle = 0;
+
+    InitDevice();
 }
 
 /*##########################################################################
@@ -103,6 +109,34 @@ TGraphicDevice::~TGraphicDevice()
 {
 	if (FBitmapHandle)
 		RdosCloseBitmap(FBitmapHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TGraphicDevice::InitDevice
+#
+#   Purpose....: Init device-settings
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: Bits per pixel
+#
+##########################################################################*/
+void TGraphicDevice::InitDevice()
+{
+    if (FBitmapHandle)
+    {
+        RdosSetDrawColor(FBitmapHandle, FColor);
+		RdosSetLGOP(FBitmapHandle, FLgop);
+
+        if (FFontHandle)
+            RdosSetFont(FBitmapHandle, FFontHandle);
+
+        if (FFilledStyle)
+    		RdosSetFilledStyle(FBitmapHandle);
+        else
+    		RdosSetHollowStyle(FBitmapHandle);
+    }
 }
 
 /*##########################################################################

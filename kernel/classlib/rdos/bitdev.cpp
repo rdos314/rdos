@@ -45,6 +45,7 @@ TBitmapGraphicDevice::TBitmapGraphicDevice(int bpp, int width, int height)
   : TGraphicDevice(bpp, width, height)
 {
     FBitmapHandle = RdosCreateBitmap(bpp, width, height);
+    InitDevice();
 	RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
 }
 

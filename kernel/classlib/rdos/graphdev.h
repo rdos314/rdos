@@ -76,6 +76,8 @@ public:
     void DrawEllipse(int x, int y, int rx, int ry);
 
 protected:
+    void InitDevice();
+
     int FBitmapHandle;
     int FFontHandle;
     int FBpp;
