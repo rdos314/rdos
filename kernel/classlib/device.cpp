@@ -25,7 +25,7 @@
 #
 #######################################################################*/
 
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC 
 #include <string.h>
 #else
 #include <mem.h>
@@ -562,7 +562,7 @@ void TDeviceVar::SetUnsignedLong(unsigned long data)
 *##########################################################################*/
 void TDeviceVar::SetUnsignedInt(unsigned int data)
 {
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
     SetUnsignedLong(data);
 #else
 #if sizeof(int) == 2
@@ -714,7 +714,7 @@ void TDeviceVar::SetSignedLong(long data)
 *##########################################################################*/
 void TDeviceVar::SetSignedInt(int data)
 {
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
     SetSignedLong(data);
 #else
 #if sizeof(int) == 2
@@ -1199,7 +1199,7 @@ unsigned long TDeviceVar::GetUnsigned32()
 *##########################################################################*/
 unsigned int TDeviceVar::GetUnsignedInt()
 {
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
 	return GetUnsigned32();
 #else
 #if sizeof(int) == 2
@@ -1423,7 +1423,7 @@ long TDeviceVar::GetSigned32()
 *##########################################################################*/
 int TDeviceVar::GetSignedInt()
 {
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
 	return GetSigned32();
 #else
 #if sizeof(int) == 2
@@ -2946,7 +2946,7 @@ TDeviceVar *TDeviceTag::ModifyUnsignedInt(unsigned short int ID, unsigned int da
         Add(Var);
     }
 
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
     Var->SetUnsigned32(data);
 #else
 #if sizeof(int) == 2    
@@ -3033,7 +3033,7 @@ TDeviceVar *TDeviceTag::ModifySignedInt(unsigned short int ID, int data)
         Add(Var);
     }
 
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
     Var->SetSigned32(data);
 #else
 #if sizeof(int) == 2    

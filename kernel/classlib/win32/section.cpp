@@ -41,12 +41,12 @@ TSection::~TSection()
 *   Returns....: *
 *   Created....: 96-09-05 le
 *##########################################################################*/
-void TSection::Enter()
+void TSection::Enter() const
 {
 	LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
 
 	if (Section)
-    	EnterCriticalSection(Section);
+		EnterCriticalSection(Section);
 }
 
 /*##################  TSection::Leave  ####################################
@@ -56,7 +56,7 @@ void TSection::Enter()
 *   Returns....: *
 *   Created....: 96-09-05 le
 *##########################################################################*/
-void TSection::Leave()
+void TSection::Leave() const
 {
 	LPCRITICAL_SECTION Section = (LPCRITICAL_SECTION)&FData;
 

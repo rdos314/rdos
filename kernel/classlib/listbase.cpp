@@ -25,7 +25,7 @@
 #
 ########################################################################*/
 
-#ifdef __GNUC__
+#if defined __GNUC__ || defined MSVC
 #include <string.h>
 #else
 #include <mem.h>

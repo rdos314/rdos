@@ -7,8 +7,8 @@ class TSection
 public:
 	TSection();
     ~TSection();
-	void Enter();
-	void Leave();
+	void Enter() const;
+	void Leave() const;
 protected:
 private:
 	int FData[8];
