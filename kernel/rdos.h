@@ -295,6 +295,10 @@ int __stdcall RdosGetDriveDiscParam(int DriveNr, int *DiscNr, long *StartSector,
 int __stdcall RdosCreateFileDrive(int Drive, long Size, const char *FsName, const char *FileName);
 int __stdcall RdosOpenFileDrive(int Drive, const char *FileName);
 
+int __stdcall RdosCreateCrc(unsigned short int CrcPoly);
+void __stdcall RdosCloseCrc(int Handle);
+unsigned short int __stdcall RdosCalcCrc(int Handle, unsigned short int CrcVal, const char *Buf, int Size);
+
 int __stdcall RdosGetModuleHandle();
 const char * __stdcall RdosGetExeName();
 int __stdcall RdosLoadDll(const char *Name);

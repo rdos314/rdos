@@ -8128,6 +8128,91 @@ RdosStopNetCapture	Proc near
 	ret
 RdosStopNetCapture	Endp
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCreateCrc
+;
+;       DESCRIPTION:    Create CRC handle
+;
+;		PARAMETERS:		CrcPoly
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCreateCrc
+
+RdosCreateCrc	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov ax,[ebp+8]
+	UserGate create_crc_nr
+	movzx eax,bx
+;
+    pop ebx
+	pop ebp
+	ret 4
+RdosCreateCrc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           RdosCloseCrc
+;
+;       DESCRIPTION:    Close CRC handle
+;
+;		PARAMETERS:		Handle
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosCloseCrc
+
+RdosCloseCrc	Proc near
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_crc_nr
+;
+    pop ebx
+	pop ebp
+	ret 4
+RdosCloseCrc	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCalcCrc
+;
+;		DESCRIPTION:	Calculate CRC
+;
+;       PARAMETERS:     Handle, Crc, Buf, Size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCalcCrc
+
+RdosCalcCrc	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate calc_crc_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosCalcCrc	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

@@ -32,12 +32,13 @@
 #include "log.h"
 #include "section.h"
 
-#define STACK_SIZE  0x2000
+#define STACK_SIZE      0x2000
 
-#define LOG_SIGN    0xABEF1456
+#define LOG_SIGN        0xABEF1456
+#define MAX_MSG_SIZE    0x10000
 
-#define FALSE		0
-#define TRUE		!FALSE
+#define FALSE		    0
+#define TRUE		    !FALSE
 
 /*##########################################################################
 #
@@ -313,7 +314,7 @@ void TLog::Execute()
 
             RdosRecordToTics(&msb, &lsb, FYear, FMonth, FDay, FHour, FMin, 0, 0);
 
-            doc = new TDeviceMsg(0x10000);
+            doc = new TDeviceMsg(MAX_MSG_SIZE);
 
 			tag = doc->AddTag(LOG_TAG_HEADER);
 			tag->AddUnsignedLong(LOG_VAR_MsbTime, msb);
@@ -418,7 +419,7 @@ void TLog::Execute()
 TLogReader::TLogReader(const char *filename)
 {
     FFile = new TFile(filename);
-    FCurrMsg = new TDeviceMsg;
+    FCurrMsg = new TDeviceMsg(MAX_MSG_SIZE);
 }
 
 /*##########################################################################

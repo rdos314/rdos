@@ -202,7 +202,7 @@ p2_srcs =   PHYSICAL.ASM    		IRQ.ASM				    SWAP.ASM    \
 
 pgen_srcs = PROTSEG.ASM             SYSTEM.ASM              RAND.ASM \
 			TRAPINT.ASM             TSSINT.ASM              LDT.ASM         \
-			OS.ASM                  USER.ASM 
+			OS.ASM                  USER.ASM                CRC.ASM
 
 
 pexec_srcs = EXEC.ASM

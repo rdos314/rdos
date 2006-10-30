@@ -372,4 +372,8 @@ suspend_and_signal_thread_nr    = 315
 start_net_capture_nr           = 316
 stop_net_capture_nr            = 317
 
+create_crc_nr               = 318
+close_crc_nr                = 319
+calc_crc_nr                 = 320
+
 usergate_entries			= 340

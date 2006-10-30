@@ -2043,3 +2043,23 @@ StartNetCapture      MACRO
 StopNetCapture      MACRO
 	UserGate stop_net_capture_nr
 						ENDM
+
+;   IN  AX          CRC polynom
+;   OUT BX          CRC handle
+CreateCrc      MACRO
+	UserGate create_crc_nr
+						ENDM
+
+;   IN  BX          CRC handle
+CloseCrc      MACRO
+	UserGate close_crc_nr
+						ENDM
+
+;   IN  BX          CRC handle
+;   IN  AX          CRC value
+;   IN  ES:(E)DI    Data
+;   IN  (E)CX       Size
+;   OUT AX          CRC value
+CalcCrc      MACRO
+	UserGate calc_crc_nr
+						ENDM
