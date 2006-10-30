@@ -529,19 +529,22 @@ void TLinXAxis::DrawScale()
 ##########################################################################*/
 void TLinXAxis::Draw()
 {
-	FDev->SetClipRect(FXMin, FYMin - 2 * FScaleHeight, FXMax, FYMax);
-    FDev->SetLgopNone();
-	FDev->SetDrawColor(FRBack, FGBack, FBBack);
-    FDev->SetFilledStyle();
-    FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
-    FDev->SetDrawColor(FRFore, FGFore, FBFore);
-    FDev->DrawLine(FXMin, FYMin, FXMax, FYMin);
-
-    if (FFont)
+	 if (IsVisible())
     {
-        FDev->SetFont(FFont);
-        CalcScale();
-        DrawLabels();
-        DrawScale();
+    	FDev->SetClipRect(FXMin, FYMin - 2 * FScaleHeight, FXMax, FYMax);
+        FDev->SetLgopNone();
+    	FDev->SetDrawColor(FRBack, FGBack, FBBack);
+        FDev->SetFilledStyle();
+        FDev->DrawRect(FXMin, FYMin, FXMax, FYMax - 1);
+        FDev->SetDrawColor(FRFore, FGFore, FBFore);
+        FDev->DrawLine(FXMin, FYMin, FXMax, FYMin);
+
+        if (FFont)
+        {
+            FDev->SetFont(FFont);
+            CalcScale();
+            DrawLabels();
+            DrawScale();
+        }
     }
 }

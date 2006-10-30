@@ -39,6 +39,10 @@ public:
 	virtual int IsXAxis();
 	virtual int IsYAxis();
 
+    int IsVisible() const;
+	void Hide();
+	void Show();
+
 	void Define(TGraphicDevice *dev);
 	void SetWindow(int xmin, int ymin, int xmax, int ymax);
 	void Define(long double min, long double max);
@@ -71,6 +75,7 @@ protected:
 	int FYMax;
 	long double FValMin;
 	long double FValMax;
+	int FVisible;
 
 	int FRBack;
 	int FGBack;
