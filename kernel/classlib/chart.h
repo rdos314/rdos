@@ -113,10 +113,13 @@ public:
     void Clear(int line); 
     void Clear();
 
+    void GetXAxis(long double *xmin, long double *xmax);
+    void GetYAxis(long double *ymin, long double *ymax);
+
     void Draw();
 
 protected:
-    void CalcLimits();
+    int CalcLimits();
 
 	TGraphicDevice *FDev;
 	TXAxis *FXAxis;
@@ -140,6 +143,8 @@ protected:
 	int FYAxisFixed;
 	long double FYAxisMin;
 	long double FYAxisMax;
+
+	int FNewLimits;
 
 private:
 };

@@ -655,6 +655,8 @@ TChart::TChart(TGraphicDevice *dev, TXAxis *x, TYAxis *y)
 
 	FXAxisFixed = FALSE;
 	FYAxisFixed = FALSE;
+
+	FNewLimits = TRUE;
 }
 
 /*##########################################################################
@@ -690,6 +692,7 @@ TChart::~TChart()
 ##########################################################################*/
 void TChart::SetXAxis(long double xmin, long double xmax)
 {
+	FNewLimits = TRUE;
     FXAxisFixed = TRUE;
     FXAxisMin = xmin;
     FXAxisMax = xmax;
@@ -708,6 +711,7 @@ void TChart::SetXAxis(long double xmin, long double xmax)
 ##########################################################################*/
 void TChart::SetYAxis(long double ymin, long double ymax)
 {
+	FNewLimits = TRUE;
     FYAxisFixed = TRUE;
     FYAxisMin = ymin;
     FYAxisMax = ymax;
@@ -794,6 +798,8 @@ void TChart::Add(int line, long double x, long double y)
 
 	if (line >= 0 && line < MAX_CURVES)
 	{
+    	FNewLimits = TRUE;
+    	
 		coord.x = x;
 		coord.y = y;
 
@@ -817,9 +823,14 @@ void TChart::Add(int line, long double x, long double y)
 ##########################################################################*/
 void TChart::Remove(int line)
 {
-	 if (line >= 0 && line < MAX_CURVES)
-		  if (FList[line])
-				FList[line]->RemoveFirst();
+	if (line >= 0 && line < MAX_CURVES)
+	{
+        if (FList[line])
+		{
+            FNewLimits = TRUE;
+			FList[line]->RemoveFirst();
+		}
+    }
 }
 
 /*##########################################################################
@@ -835,9 +846,14 @@ void TChart::Remove(int line)
 ##########################################################################*/
 void TChart::Clear(int line)
 {
-	 if (line >= 0 && line < MAX_CURVES)
-		  if (FList[line])
-				FList[line]->Clear();
+	if (line >= 0 && line < MAX_CURVES)
+	{
+        if (FList[line])
+		{
+        	FNewLimits = TRUE;
+			FList[line]->Clear();
+	    }
+	}
 }
 
 /*##########################################################################
@@ -853,11 +869,13 @@ void TChart::Clear(int line)
 ##########################################################################*/
 void TChart::Clear()
 {
-	 int i;
+    int i;
 
-	 for (i = 0; i < MAX_CURVES; i++)
-		  if (FList[i])
-				FList[i]->Clear();
+	FNewLimits = TRUE;
+
+	for (i = 0; i < MAX_CURVES; i++)
+        if (FList[i])
+		    FList[i]->Clear();
 }
 
 /*##########################################################################
@@ -871,14 +889,17 @@ void TChart::Clear()
 #   Returns....: *
 #
 ##########################################################################*/
-void TChart::CalcLimits()
+int TChart::CalcLimits()
 {
     int i;
 	TChartCoord *coord;
     int ok;
     
     if (FXAxisFixed && FYAxisFixed)
-        return;
+        return TRUE;
+
+    if (!FNewLimits)
+        return TRUE;
 
     ok = FALSE;
 
@@ -952,6 +973,61 @@ void TChart::CalcLimits()
                 }
             }
         }
+    }
+
+    if (ok)
+        FNewLimits = FALSE;
+
+    return ok;
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::GetXAxis
+#
+#   Purpose....: Get X-axis limits
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::GetXAxis(long double *xmin, long double *xmax)
+{
+    if (CalcLimits())
+    {
+        *xmin = FXAxisMin;
+        *xmax = FXAxisMax;
+    }
+    else
+    {
+        *xmin = 0.0;
+        *xmax = 0.0;
+    }
+}
+
+/*##########################################################################
+#
+#   Name       : TChart::GetYAxis
+#
+#   Purpose....: Get Y-axis limits
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TChart::GetYAxis(long double *ymin, long double *ymax)
+{
+    if (CalcLimits())
+    {
+        *ymin = FYAxisMin;
+        *ymax = FYAxisMax;
+    }
+    else
+    {
+        *ymin = 0.0;
+        *ymax = 0.0;
     }
 }
 

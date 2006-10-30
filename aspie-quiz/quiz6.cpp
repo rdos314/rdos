@@ -1745,8 +1745,25 @@ TEye::TEye()
 *##########################################################################*/
 void TEye::Add(TQuizRow *Row)
 {
-    int index = Row->Eye - 1;
+    int index;
 	int diff = Row->AsResult - Row->NtResult;
+
+	switch (Row->Eye)
+	{
+		case 1:
+		case 2:
+			index = 0;
+			break;
+
+		case 3:
+			index = 1;
+			break;
+
+		case 4:
+		case 5:
+			index = 2;
+			break;
+	}
 
 	if (diff > 0)
 		AsCount[index]++;
@@ -1800,17 +1817,16 @@ void TEye::WriteEntry(TFile &file, int val, int count)
     WriteCenteredFieldHeader(file, 12);
 
 #ifdef CI
-
     mean = (long double)val / (long double)count;
 
-    r = 1.0 - mean;
-	rsum = (long double)val * r * r;
+	r = 1.0 - mean;
+    rsum = (long double)val * r * r;
 
 	r = -mean;
-	rsum += (long double)(count - val) * r * r;
+    rsum += (long double)(count - val) * r * r;
 
-	if (count > 1 && val)
-	{
+    if (count > 1 && val)
+    {
 		sd = sqrtl(rsum / ((long double)count - 1));
 
 		dev = 1.96 * sd / sqrtl(count);
@@ -1832,9 +1848,13 @@ void TEye::WriteEntry(TFile &file, int val, int count)
 
 		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
 		file.Write(str);
+
+		ival = round(1000.0 * mean);
+		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
+		file.Write(str);
 	}
 	else
-		file.Write("---");
+	    file.Write("---");
 
 #else
 	ival = val * 100 / count;
@@ -2166,26 +2186,17 @@ void TQuiz6::WriteEye(const char *filename)
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		if ((Row.Ancestry >= 2100 && Row.Ancestry < 2400) || (Row.Ancestry >= 2700 && Row.Ancestry < 2800))
-		{
-			if (Row.Gender == 1)
-				eye[0].Add(&Row);
-			else
-				eye[1].Add(&Row);
-		}
+			eye[0].Add(&Row);
 	}
 
-	for (i = 0; i < 2; i++)
+	for (i = 0; i < 1; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Males");
-				break;
-
-			case 1:
-				file.Write("Females");
+				file.Write("Eye color");
 				break;
 
 		}
@@ -2196,11 +2207,9 @@ void TQuiz6::WriteEye(const char *filename)
 
 		TEye::WriteHeader(file);
 
-		eye[i].WriteRow(file, 0, "Grey-blue");
-		eye[i].WriteRow(file, 1, "Blue");
-		eye[i].WriteRow(file, 2, "Green");
-		eye[i].WriteRow(file, 3, "Hazel");
-		eye[i].WriteRow(file, 4, "Brown");
+		eye[i].WriteRow(file, 0, "Grey-blue/Blue");
+		eye[i].WriteRow(file, 1, "Green");
+		eye[i].WriteRow(file, 2, "Hazel/Brown");
 
 		file.Write("</table>");
 

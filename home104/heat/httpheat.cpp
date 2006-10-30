@@ -653,17 +653,27 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	TLinYAxis TempAxis(&Font);
 	TTimeXAxis TimeScaleAxis(&Font);
 	TTimeXAxis TimeAxis;
-	TChart TempChart(Jpeg, &TimeAxis, &TempAxis);
-	TChart PowerChart(Jpeg, &TimeAxis, &TempAxis);
-	TChart LightChart(Jpeg, &TimeAxis, &TempAxis);
-	TChart VpChart(Jpeg, &TimeScaleAxis, &TempAxis);
+	TChart *TempChart;
+	TChart *PowerChart;
+	TChart *LightChart;
+	TChart *WindChart;
+	TChart *VpChart;
 	int width;
 	int retry;
+	long double ymin;
+	long double ymax;
 
-	TempChart.SetWindow(0, 0, 499, 299);
-	PowerChart.SetWindow(0, 299, 499, 339);
-	LightChart.SetWindow(0, 340, 499, 379);
-	VpChart.SetWindow(0, 380, 499, 399);
+	TempChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
+    PowerChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
+	LightChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
+	WindChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
+	VpChart = new TChart(Jpeg, &TimeScaleAxis, &TempAxis);
+
+	TempChart->SetWindow(0, 0, 499, 269);
+	PowerChart->SetWindow(0, 270, 499, 309);
+	LightChart->SetWindow(0, 310, 499, 349);
+	WindChart->SetWindow(0, 350, 499, 379);
+	VpChart->SetWindow(0, 380, 499, 399);
 
 	TimeScaleAxis.SetForeColor(0, 0, 0);
 	TimeScaleAxis.SetBackColor(255, 255, 255);
@@ -671,51 +681,56 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	TempAxis.SetForeColor(0, 0, 0);
 	TempAxis.SetBackColor(255, 255, 255);
 
-	TempChart.SetBackColor(255, 255, 255);
+	TempChart->SetBackColor(255, 255, 255);
 
-	TempChart.SetLineColor(100, 128, 128, 128);
-	TempChart.SetLineColor(101, 128, 255, 0);
-	TempChart.SetLineColor(102, 255, 128, 0);
-	TempChart.SetLineColor(103, 0, 128, 255);
+	TempChart->SetLineColor(100, 128, 128, 128);
+	TempChart->SetLineColor(101, 128, 255, 0);
+	TempChart->SetLineColor(102, 255, 128, 0);
+	TempChart->SetLineColor(103, 0, 128, 255);
 
-	PowerChart.SetBackColor(255, 255, 255);
+	PowerChart->SetBackColor(255, 255, 255);
 
-	PowerChart.SetLineColor(101, 128, 255, 0);
-	PowerChart.SetLineColor(102, 255, 128, 0);
+	PowerChart->SetLineColor(101, 128, 255, 0);
+	PowerChart->SetLineColor(102, 255, 128, 0);
 
-	LightChart.SetBackColor(255, 255, 255);
+	WindChart->SetBackColor(255, 255, 255);
 
-	LightChart.SetLineColor(101, 128, 255, 0);
+	WindChart->SetLineColor(101, 128, 255, 0);
 
-	VpChart.SetBackColor(255, 255, 255);
+	LightChart->SetBackColor(255, 255, 255);
 
-	VpChart.SetLineColor(101, 128, 255, 0);
+	LightChart->SetLineColor(101, 128, 255, 0);
+
+	VpChart->SetBackColor(255, 255, 255);
+
+	VpChart->SetLineColor(101, 128, 255, 0);
 
 	year = from.GetYear();
 	month = from.GetMonth();
 	day = from.GetDay();
 
-	TempChart.SetXAxis(from, to);
-	PowerChart.SetXAxis(from, to);
-	LightChart.SetXAxis(from, to);
-	VpChart.SetXAxis(from, to);
+	TempChart->SetXAxis(from, to);
+	PowerChart->SetXAxis(from, to);
+	LightChart->SetXAxis(from, to);
+	WindChart->SetXAxis(from, to);
+	VpChart->SetXAxis(from, to);
 
     for (i = 0; i <= 25; i++) 
     {
-        TempChart.SetLineColor(i, 210, 210, 210);
+        TempChart->SetLineColor(i, 210, 210, 210);
     	
     	val = (long double)i;
-	    TempChart.Add(i, from, val);
-	    TempChart.Add(i, to, val);
+	    TempChart->Add(i, from, val);
+	    TempChart->Add(i, to, val);
     }
 
     for (i = 0; i <= 10; i += 2) 
     {
-        PowerChart.SetLineColor(i, 210, 210, 210);
+        PowerChart->SetLineColor(i, 210, 210, 210);
 
     	val = (long double)i;
-	    PowerChart.Add(i, from, val);
-		PowerChart.Add(i, to, val);
+	    PowerChart->Add(i, from, val);
+		PowerChart->Add(i, to, val);
     }
 
     firstpass = TRUE;
@@ -784,7 +799,17 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 								val = (long double)ival;
 				                val = val / 10.0;
     
-								TempChart.Add(100, time, val);
+								TempChart->Add(100, time, val);
+    	        		    }
+
+        			        var = tag->GetVar(LOG_VAR_Windspeed);
+    	        			if (var)
+	    		    		{
+		    	        	    ival = var->GetFloat1();
+								val = (long double)ival;
+				                val = val / 10.0;
+    
+								WindChart->Add(101, time, val);
     	        		    }
 	            		}
                 		    
@@ -800,7 +825,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                            val = (long double)ival;
 								    val = val / 10.0;
 
-            					    TempChart.Add(101, time, val);
+            					    TempChart->Add(101, time, val);
                 			    }
     
 	        	                var = tag->GetVar(LOG_VAR_AuxTemp);
@@ -810,7 +835,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
     
-            				    	TempChart.Add(102, time, val);
+            				    	TempChart->Add(102, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Ref);
@@ -820,7 +845,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                            val = (long double)ival;
 		                            val = val / 10.0; 
 
-            					    TempChart.Add(103, time, val);
+            					    TempChart->Add(103, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Motor);
@@ -830,7 +855,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
 
-									PowerChart.Add(101, time, val);
+									PowerChart->Add(101, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Light);
@@ -840,7 +865,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
 
-									LightChart.Add(101, time, val);
+									LightChart->Add(101, time, val);
                 			    }
                 			}
 		                }
@@ -854,7 +879,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                        val = (long double)ival;
 		                        val = val / 10.0; 
 
-            					PowerChart.Add(102, time, val);
+            					PowerChart->Add(102, time, val);
             			    }
             			}
 
@@ -868,7 +893,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                        else
 		                            val = 0.0;
 
-            					VpChart.Add(101, time, val);
+            					VpChart->Add(101, time, val);
             			    }
             			}
 
@@ -890,39 +915,51 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     i = 30;    
     while (currtime < to) 
     {
-        TempChart.SetLineColor(i, 210, 210, 210);
+        TempChart->SetLineColor(i, 210, 210, 210);
     	
-	    TempChart.Add(i, currtime, 0.0);
-	    TempChart.Add(i, currtime, 25.0);
+	    TempChart->Add(i, currtime, 0.0);
+	    TempChart->Add(i, currtime, 25.0);
 
-        PowerChart.SetLineColor(i, 210, 210, 210);
+        PowerChart->SetLineColor(i, 210, 210, 210);
     	
-	    PowerChart.Add(i, currtime, 0.0);
-	    PowerChart.Add(i, currtime, 10.0);
+	    PowerChart->Add(i, currtime, 0.0);
+	    PowerChart->Add(i, currtime, 10.0);
 
-        LightChart.SetLineColor(i, 210, 210, 210);
-    	
-	    LightChart.Add(i, currtime, 0.0);
-	    LightChart.Add(i, currtime, 1.0);
+	    LightChart->GetYAxis(&ymin, &ymax);
+	    if (ymax < 10.0)
+	        ymax = 10.0;
 
-        VpChart.SetLineColor(i, 210, 210, 210);
+        LightChart->SetLineColor(i, 210, 210, 210);
     	
-	    VpChart.Add(i, currtime, 0.0);
-	    VpChart.Add(i, currtime, 1.0);
+	    LightChart->Add(i, currtime, 0.0);
+	    LightChart->Add(i, currtime, ymax);
+
+	    WindChart->GetYAxis(&ymin, &ymax);
+	    if (ymax < 5.0)
+	        ymax = 5.0;
+
+        WindChart->SetLineColor(i, 210, 210, 210);
+    	
+	    WindChart->Add(i, currtime, 0.0);
+	    WindChart->Add(i, currtime, ymax);
+
+        VpChart->SetLineColor(i, 210, 210, 210);
+    	
+	    VpChart->Add(i, currtime, 0.0);
+	    VpChart->Add(i, currtime, 1.0);
 
 		i++;
 		currtime.AddHour(1);
 	}
 
-
     retry = FALSE;
 
-	TempChart.Draw();
+	TempChart->Draw();
 
 	width = TempAxis.RequiredWidth();
 	TempAxis.SetMinWidth(width);
 
-	PowerChart.Draw();
+	PowerChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
@@ -930,7 +967,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     	TempAxis.SetMinWidth(width);
     }
 	
-	LightChart.Draw();
+	LightChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
@@ -938,7 +975,15 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     	TempAxis.SetMinWidth(width);
     }
 	
-	VpChart.Draw();
+	WindChart->Draw();
+    if (width < TempAxis.RequiredWidth())
+    {
+        retry = TRUE;
+    	width = TempAxis.RequiredWidth();
+    	TempAxis.SetMinWidth(width);
+    }
+	
+	VpChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
@@ -948,11 +993,18 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 
     if (retry)	
     {
-        TempChart.Draw();
-        PowerChart.Draw();
-        LightChart.Draw();
-        VpChart.Draw();
+        TempChart->Draw();
+        PowerChart->Draw();
+        LightChart->Draw();
+        WindChart->Draw();
+        VpChart->Draw();
     }
+
+    delete VpChart;
+    delete WindChart;
+    delete LightChart;
+    delete PowerChart;
+    delete TempChart;
     
     return Jpeg;
 }
@@ -1598,5 +1650,5 @@ void InitHeatHttp()
 	Factory->AddCustomPage(Ws2300Page);
 	Factory->AddCustomDir(RadPage);
 	Wait->Add(Factory);
-	Wait->StartThreadHandler("HTTPD", 0x10000);
+	Wait->StartThreadHandler("HTTPD", 0x8000);
 }

@@ -69,8 +69,8 @@ int main(int argc, char **argv)
 	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
 
 //	Quiz[7]->WritePhpQuestions("q.php");
-//    Quiz[7]->WriteSetupTexts("q.cpp");
-//    Quiz[7]->WriteSetupCross("c.cpp");
+//	Quiz[7]->WriteSetupTexts("q.cpp");
+//  Quiz[7]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
