@@ -648,7 +648,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	int day;
 	int sameday;
 	int firstpass;
-	TJpegBitmapDevice *Jpeg = new TJpegBitmapDevice(24, 500, 400);
+	TJpegBitmapDevice *Jpeg = new TJpegBitmapDevice(24, 580, 400);
 	TFont Font(10);
 	TLinYAxis TempAxis(&Font);
 	TTimeXAxis TimeScaleAxis(&Font);
@@ -671,11 +671,44 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	WindChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
 	VpChart = new TChart(Jpeg, &TimeScaleAxis, &TempAxis);
 
-	TempChart->SetWindow(0, 0, 499, 269);
-	PowerChart->SetWindow(0, 270, 499, 309);
-	LightChart->SetWindow(0, 310, 499, 349);
-	WindChart->SetWindow(0, 350, 499, 379);
-	VpChart->SetWindow(0, 380, 499, 399);
+	TempChart->SetWindow(0, 0, 489, 269);
+	PowerChart->SetWindow(0, 270, 489, 309);
+	LightChart->SetWindow(0, 310, 489, 349);
+	WindChart->SetWindow(0, 350, 489, 379);
+	VpChart->SetWindow(0, 380, 489, 399);
+
+	Jpeg->SetClipRect(490, 0, 579, 399);
+	Jpeg->SetDrawColor(255, 255, 255);
+	Jpeg->SetFilledStyle();
+	Jpeg->DrawRect(490, 0, 579, 399); 
+	Jpeg->SetFont(&Font);
+	
+	Jpeg->SetDrawColor(128, 255, 0);
+	Jpeg->DrawString(492, 40, "Temperatur");
+
+	Jpeg->SetDrawColor(255, 128, 0);
+	Jpeg->DrawString(492, 60, "Temperatur 2");
+
+	Jpeg->SetDrawColor(0, 128, 255);
+	Jpeg->DrawString(492, 80, "Referens");
+	
+	Jpeg->SetDrawColor(128, 128, 128);
+	Jpeg->DrawString(492, 140, "Utetemperatur");
+
+	Jpeg->SetDrawColor(128, 255, 0);
+	Jpeg->DrawString(492, 270, "P†drag");
+	
+	Jpeg->SetDrawColor(255, 128, 0);
+	Jpeg->DrawString(492, 290, "Cirkulation");
+
+	Jpeg->SetDrawColor(128, 128, 240);
+	Jpeg->DrawString(492, 360, "Vind");
+
+	Jpeg->SetDrawColor(255, 128, 0);
+	Jpeg->DrawString(492, 330, "Ljus");
+
+	Jpeg->SetDrawColor(255, 0, 0);
+	Jpeg->DrawString(492, 380, "V„rmepump");
 
 	TimeScaleAxis.SetForeColor(0, 0, 0);
 	TimeScaleAxis.SetBackColor(255, 255, 255);
@@ -697,15 +730,15 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 
 	WindChart->SetBackColor(255, 255, 255);
 
-	WindChart->SetLineColor(101, 128, 255, 0);
+	WindChart->SetLineColor(101, 128, 128, 240);
 
 	LightChart->SetBackColor(255, 255, 255);
 
-	LightChart->SetLineColor(101, 128, 255, 0);
+	LightChart->SetLineColor(101, 255, 128, 0);
 
 	VpChart->SetBackColor(255, 255, 255);
 
-	VpChart->SetLineColor(101, 128, 255, 0);
+	VpChart->SetLineColor(101, 255, 0, 0);
 
 	year = from.GetYear();
 	month = from.GetMonth();
@@ -1134,7 +1167,7 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
     	File.Write("<IMG SRC=\"");
         sprintf(str, "/image/%d/%d/%d/%d.jpg", address, year, month, day);
     	File.Write(str);
-        File.Write("\" align=bottom width=500 height=400 border=0>");
+        File.Write("\" align=bottom width=580 height=400 border=0>");
 
     	WriteFile(FFileName.GetData(), "text/html");
     }
@@ -1194,7 +1227,7 @@ void THttpRadPage::WriteTemp(int address)
     File.Write("<IMG SRC=\"");
     sprintf(str, "/rad/%d.jpg", address);
     File.Write(str);
-    File.Write("\" align=bottom width=500 height=400 border=0>");
+    File.Write("\" align=bottom width=580 height=400 border=0>");
 
     WriteFile(FFileName.GetData(), "text/html");
 }
