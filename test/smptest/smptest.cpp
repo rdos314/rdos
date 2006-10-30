@@ -313,9 +313,48 @@ void InputMailslot(int Index)
 	}
 }
 
+unsigned short int GetOldCrc(const char *Data, int Size)
+{
+	unsigned short int Crc = 0;
+	int i;
+	unsigned short int Temp1, Temp2;
+	char ch;
+
+	while (Size)
+	{
+		ch = *Data;
+		for (i = 0; i != 8; i++)
+		{
+			Temp1 = (ch & 0x80) << 8;
+			Temp2 = Crc & 0x8000;
+			Crc = Crc << 1;
+			if ((Temp1 ^ Temp2) != 0)
+				Crc = Crc ^ 0x8005;
+			ch = ch << 1;
+		}
+		Size--;
+		Data++;
+	}
+	return Crc;
+}
+
+unsigned short int GetNewCrc(const char *Data, int Size)
+{
+    int CrcHandle = RdosCreateCrc(0x8005);
+    unsigned short int Crc = RdosCalcCrc(CrcHandle, 0, Data, Size);
+    RdosCloseCrc(CrcHandle);
+    return Crc;
+}
+
 void cdecl main()
 {
 	int i;
+	unsigned short int crc;
+	char data[] = "123";
+
+	crc = GetOldCrc(data, 3);
+    crc = GetNewCrc(data, 3);
+
 
 	for (i = 0; i < 4; i++)
 		InputMailslot(i);

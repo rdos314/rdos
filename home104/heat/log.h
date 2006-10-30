@@ -114,6 +114,7 @@ public:
     TDeviceMsg *Get();
 
 protected:
+    void Reset();
     int GetNext();
     
     TFile *FFile;

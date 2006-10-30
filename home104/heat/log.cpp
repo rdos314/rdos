@@ -460,6 +460,24 @@ void TLogReader::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
+#   Name       : TLogReader::Reset
+#
+#   Purpose....: Reset memory
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLogReader::Reset()
+{
+    if (FCurrMsg)
+        delete FCurrMsg;
+    FCurrMsg = new TDeviceMsg(MAX_MSG_SIZE);
+}
+
+/*##########################################################################
+#
 #   Name       : TLogReader::GetNext
 #
 #   Purpose....: Get next
@@ -493,6 +511,8 @@ int TLogReader::GetNext()
         FFile->Read(&size, 2);
         if (size > 0 && size < 0x4000)
         {
+                Reset();
+        
 				buf = new char[size + 8];
 				FFile->Read(buf + 6, size + 2);
 				memcpy(buf, &sign, 4);

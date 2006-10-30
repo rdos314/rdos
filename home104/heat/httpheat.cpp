@@ -663,6 +663,8 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	long double ymin;
 	long double ymax;
 
+	TimeAxis.Hide();
+
 	TempChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
     PowerChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
 	LightChart = new TChart(Jpeg, &TimeAxis, &TempAxis);
@@ -796,10 +798,14 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     	        			if (var)
 	    		    		{
 		    	        	    ival = var->GetFloat1();
-								val = (long double)ival;
-				                val = val / 10.0;
-    
-								TempChart->Add(100, time, val);
+
+		    	        	    if (ival < 500)
+		    	        	    {
+    								val = (long double)ival;
+	    			                val = val / 10.0;
+        
+		    						TempChart->Add(100, time, val);
+		    				    }
     	        		    }
 
         			        var = tag->GetVar(LOG_VAR_Windspeed);

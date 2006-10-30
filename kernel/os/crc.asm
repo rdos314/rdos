@@ -235,11 +235,13 @@ calc_crc Proc near
 	mov ds,[bx].crc_handle_sel
     or ecx,ecx
     jz calc_crc_done
+;
+    xor ebx,ebx
 
 calc_crc_loop:
-    xchg al,ah
-    xor al,es:[edi]
-    movzx ebx,al	
+    mov bl,es:[edi]
+    xor bl,ah
+    shl ax,8
     xor ax,ds:[2*ebx]
 ;
     inc edi
