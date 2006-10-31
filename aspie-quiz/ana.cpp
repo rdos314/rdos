@@ -70,7 +70,7 @@ int main(int argc, char **argv)
 
 //	Quiz[7]->WritePhpQuestions("q.php");
 //	Quiz[7]->WriteSetupTexts("q.cpp");
-//  Quiz[7]->WriteSetupCross("c.cpp");
+//    Quiz[7]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
