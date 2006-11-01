@@ -65,10 +65,10 @@ public:
 #
 ##########################################################################*/
 TQuiz8::TQuiz8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7)
-  : TQuiz(144),
+  : TQuiz(150),
 	FDataFile(FileName)
 {
-    DefineCross(0, QuizI);
+	 DefineCross(0, QuizI);
 	DefineCross(1, QuizII);
     DefineCross(2, QuizIII);
     DefineCross(3, QuizNd);
@@ -139,309 +139,6 @@ void TQuiz8::WriteName(TFile &File)
 *##########################################################################*/
 void TQuiz8::DefineQuiz()
 {
-	 DefineID(1, 53);
-	 DefineID(2, 390);
-	 DefineID(3, 178);
-	 DefineID(4, 55);
-	 DefineID(5, 230);
-	 DefineID(6, 330);
-	 DefineID(7, 61);
-	 DefineID(8, 60);
-	 DefineID(9, 234);
-	 DefineID(10, 203);
-	 DefineID(11, 389);
-	 DefineID(12, 232);
-	 DefineID(13, 160);
-	 DefineID(14, 56);
-
-#ifdef ENGLISH
-	 DefineText(15, "Are you good at climbing?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(15, "Är du bra på att klättra?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(16, "Are you good at jumping high?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(16, "Är du bra på att hoppa högt?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(17, "Do you have strong hands?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(17, "Har du starka nypor?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(18, "Do you have a good sense for how much pressure to apply when you do someting with your hands?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(18, "Har du en bra känsla för hur mycket du ska ta i när du gör något med händerna?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(19, "Do you have above average physical endurance?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(19, "Är du mer fysiskt uthållig än normalt?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(20, "Do you drop things when your attention is on other things?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(20, "Tappar du saker när din uppmärksamhet är på annat håll?", GROUP_ASPIE_BIOLOGY);
-#endif
-
-	 DefineID(21, 207);
-	 DefineID(22, 214);
-	 DefineID(23, 46);
-	 DefineID(24, 213);
-	 DefineID(25, 204);
-	 DefineID(26, 416);
-	 DefineID(27, 23);
-	 DefineID(28, 20);
-	 DefineID(29, 238);
-	 DefineID(30, 140);
-	 DefineID(31, 5);
-	 DefineID(32, 19);
-	 DefineID(33, 141);
-	 DefineID(34, 13);
-	 DefineID(35, 319);
-	 DefineID(36, 118);
-	 DefineID(37, 310);
-	 DefineID(38, 294);
-	 DefineID(39, 393);
-	 DefineID(40, 318);
-	 DefineID(41, 315);
-	 DefineID(42, 316);
-	 DefineID(43, 281);
-	 DefineID(44, 255);
-	 DefineID(45, 269);
-	 DefineID(46, 91);
-	 DefineID(47, 370);
-	 DefineID(48, 291);
-	 DefineID(49, 66);
-	 DefineID(50, 81);
-	 DefineID(51, 134);
-	 DefineID(52, 201);
-	 DefineID(53, 68);
-	 DefineID(54, 421);
-	 DefineID(55, 268);
-	 DefineID(56, 97);
-	 DefineID(57, 365);
-	 DefineID(58, 363);
-	 DefineID(59, 78);
-	 DefineID(60, 151);
-	 DefineID(61, 283);
-	 DefineID(62, 98);
-	 DefineID(63, 256);
-	 DefineID(64, 258);
-	 DefineID(65, 126);
-	 DefineID(66, 263);
-	 DefineID(67, 366);
-	 DefineID(68, 368);
-	 DefineID(69, 398);
-	 DefineID(70, 71);
-	 DefineID(71, 149);
-	 DefineID(72, 367);
-	 DefineID(73, 184);
-	 DefineID(74, 166);
-	 DefineID(75, 180);
-	 DefineID(76, 153);
-	 DefineID(77, 135);
-	 DefineID(78, 150);
-	 DefineID(79, 181);
-	 DefineID(80, 147);
-	 DefineID(81, 396);
-	 DefineID(82, 395);
-
-#ifdef ENGLISH
-	 DefineText(83, "Is climing the social hierarchy important to you?", GROUP_NT_SOCIAL);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(83, "Är det viktigt för dig att klättra i den sociala hierarkin?", GROUP_NT_SOCIAL);
-#endif
-
-	 DefineID(84, 401);
-	 DefineID(85, 403);
-	 DefineID(86, 404);
-	 DefineID(87, 422);
-	 DefineID(88, 402);
-	 DefineID(89, 406);
-	 DefineID(90, 231);
-
-#ifdef ENGLISH
-	 DefineText(91, "Do you sing for yourself?", GROUP_ASPIE_COMM);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(91, "Sjunger du för dig själv?", GROUP_ASPIE_COMM);
-#endif
-
-	DefineID(92, 83);
-   	DefineID(93, 226);
-      DefineID(94, 262);
-      DefineID(95, 86);
-      DefineID(96, 224);
-      DefineID(97, 285);
-      DefineID(98, 54);
-      DefineID(99, 215);
-      DefineID(100, 286);
-      DefineID(101, 18);
-      DefineID(102, 43);
-      DefineID(103, 128);
-      DefineID(104, 360);
-      DefineID(105, 361);
-      DefineID(106, 37);
-      DefineID(107, 25);
-      DefineID(108, 38);
-      DefineID(109, 39);
-      DefineID(110, 36);
-      DefineID(111, 22);
-
-#ifdef ENGLISH
-	 DefineText(112, "Do you have a need for symmetry, order and/or precision?", GROUP_REPETITION);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(112, "Har du ett behov av symmerti, ordning och/eller precision?", GROUP_REPETITION);
-#endif
-
-    DefineID(113, 137);
-    DefineID(114, 136);
-    DefineID(115, 381);
-
-#ifdef ENGLISH
-	 DefineText(116, "Do you have compulsive sexual behavior, e.g. spend too much time on sex or switch sexual partner frequently?", GROUP_SEX);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(116, "Har du tvångsmässigt sexuellt beteende, t.ex. använder för mycket tid för sex eller byter sex-partner ofta?", GROUP_SEX);
-#endif
-
-    DefineID(117, 90);
-    DefineID(118, 303);
-    DefineID(119, 130);
-    DefineID(120, 100);
-    DefineID(121, 26);
-    DefineID(122, 227);
-    DefineID(123, 3);
-    DefineID(124, 4);
-    DefineID(125, 278);
-    DefineID(126, 251);
-    DefineID(127, 77);
-    DefineID(128, 101);
-    DefineID(129, 279);
-    DefineID(130, 133);
-    DefineID(131, 139);
-    DefineID(132, 240);
-
-#ifdef ENGLISH
-	 DefineText(133, "Do you have an urge to climb?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(133, "Har du ett behov av att klättra?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(134, "Do you have an urge to jump over objects?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(134, "Har du ett behov av att hoppa över saker?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(135, "Are you superstitious?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(135, "Är du vidskeplig?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(136, "Do you care if you are right in a discussion?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(136, "Bryr du dig om ifall du får rätt i en diskussion?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(137, "Have you had paranormal experiences?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(137, "Har du haft övernaturliga upplevelser?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(138, "Do you tend to shut down or have a meltdown when stressed or overwhelmed?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(138, "Stänger du av eller bryter ihop när du blir stressad eller överväldigad?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(139, "Do your hands shake?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(139, "Skakar dina händer?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(140, "Do you apologize constantly?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(140, "Ber du om ursäkt i ett kör?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(141, "Do you have a small mouth?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(141, "Har du en liten mun?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(142, "Do you find it easy to talk about feelings?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(142, "Tycker du det är lätt att prata om känslor?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(143, "Do you have a fascination for slowly flowing water?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(143, "Är du fascinerad av långsamt flytande vatten?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	 DefineText(144, "Are you instinctively afraid of floods and/or fast running streams?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	 DefineText(144, "Är du instinktivt rädd för översvämningar och/eller snabbt rinnande forsar?", GROUP_MIXED);
-#endif
 }
 
 /*##########################################################################
@@ -630,6 +327,12 @@ void TQuiz8::SetupTexts()
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
@@ -776,6 +479,12 @@ void TQuiz8::SetupTexts()
   Quiz[141].Text = "Do you find it easy to talk about feelings?";
   Quiz[142].Text = "Do you have a fascination for slowly flowing water?";
   Quiz[143].Text = "Are you instinctively afraid of floods and/or fast running streams?";
+  Quiz[144].Text = "Do you feel sickened by seeing and/or hearing of torture or other cruelty against strangers?";
+  Quiz[145].Text = "Is your second toe longer than your big toe?";
+  Quiz[146].Text = "Do you examine the hair of people you like a lot?";
+  Quiz[147].Text = "Do you lick people you like a lot?";
+  Quiz[148].Text = "Do you prefer to do things on your own even if you could use others work or expertice?";
+  Quiz[149].Text = "Do you have a bad temper?";
 #endif
 
 #ifdef SWEDISH
@@ -785,7 +494,7 @@ void TQuiz8::SetupTexts()
   Quiz[3].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas up om och om igen?";
   Quiz[4].Text = "Blinkar eller rullar du med ögona?";
   Quiz[5].Text = "Ser du ut, uppträder eller agerar som om du vore yngre än din biologiska ålder?";
-  Quiz[6].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt på vissa ställen eller som är gjorda i "fel" material?";
+  Quiz[6].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt på vissa ställen eller som är gjorda i \"fel\" material?";
   Quiz[7].Text = "Är du känslig för värme, kyla, blåst och/eller förändringar i lufttyck, luftfuktighet o. dyl.?";
   Quiz[8].Text = "Stammar du när du blir stressad?";
   Quiz[9].Text = "Anser du att du är känslig?";
@@ -895,7 +604,7 @@ void TQuiz8::SetupTexts()
   Quiz[113].Text = "Är du homosexuell eller bisexuell?";
   Quiz[114].Text = "Har du ovanliga sexuella preferenser?";
   Quiz[115].Text = "Har du tvångsmässigt sexuellt beteende, t.ex. använder för mycket tid för sex eller byter sex-partner ofta?";
-  Quiz[116].Text = "Har du lättare att förstå dig på datorer, djur och/eller Aspergare än att umgås och kommunicera framgångsrikt med "vanliga" människor?";
+  Quiz[116].Text = "Har du lättare att förstå dig på datorer, djur och/eller Aspergare än att umgås och kommunicera framgångsrikt med \"vanliga\" människor?";
   Quiz[117].Text = "Är du lätt att distrahera eller överväldiga?";
   Quiz[118].Text = "Blir du ofta missförstådd av andra?";
   Quiz[119].Text = "Har du värderingar som antingen är väldigt gammaldags eller långt före sin tid?";
@@ -923,6 +632,12 @@ void TQuiz8::SetupTexts()
   Quiz[141].Text = "Tycker du det är lätt att prata om känslor?";
   Quiz[142].Text = "Är du fascinerad av långsamt flytande vatten?";
   Quiz[143].Text = "Är du instinktivt rädd för översvämningar och/eller snabbt rinnande forsar?";
+  Quiz[144].Text = "Mår du illa av att höra eller se tortyr eller andra grymheter mot främlingar?";
+  Quiz[145].Text = "Är din andratå längre än din stortå?";
+  Quiz[146].Text = "Undersöker du håret på de som du gillar mycket?";
+  Quiz[147].Text = "Slickar du på de som du gillar mycket?";
+  Quiz[148].Text = "Föredrar du att göra saker på egen hand även om du skulle kunna använda andras arbete och expertis?";
+  Quiz[149].Text = "Har du häftigt humör?";
 #endif
 
 }
@@ -1183,7 +898,7 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
     DefineCross(Quiz7, 5, 6);
     DefineCross(Quiz7, 6, 7);
     DefineCross(Quiz7, 7, 3);
-    DefineCross(Quiz6, 8, 7);
+	 DefineCross(Quiz6, 8, 7);
     DefineCross(Quiz5, 9, 10);
     DefineCross(Quiz7, 10, 4);
     DefineCross(Quiz6, 11, 11);
@@ -1218,7 +933,7 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
     DefineCross(Quiz7, 40, 34);
     DefineCross(Quiz7, 41, 33);
     DefineCross(Quiz5, 42, 60);
-    DefineCross(Quiz7, 43, 38);
+	 DefineCross(Quiz7, 43, 38);
     DefineCross(Quiz7, 44, 42);
     DefineCross(Quiz7, 45, 39);
     DefineCross(Quiz6, 46, 110);
@@ -1253,7 +968,7 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
     DefineCross(Quiz7, 75, 63);
     DefineCross(Quiz6, 76, 140);
     DefineCross(Quiz7, 77, 62);
-    DefineCross(Quiz7, 78, 65);
+	 DefineCross(Quiz7, 78, 65);
     DefineCross(Quiz7, 79, 64);
     DefineCross(Quiz7, 80, 68);
     DefineCross(Quiz7, 81, 67);
@@ -1288,7 +1003,7 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
     DefineCross(Quiz7, 110, 84);
 	DefineGlobalId( 111, 435);
     DefineCross(Quiz7, 112, 94);
-    DefineCross(Quiz7, 113, 96);
+	 DefineCross(Quiz7, 113, 96);
     DefineCross(Quiz7, 114, 95);
 	DefineGlobalId( 115, 436);
     DefineCross(QuizIII, 116, 45);
@@ -1319,6 +1034,12 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId( 141, 446);
 	DefineGlobalId( 142, 447);
 	DefineGlobalId( 143, 448);
+	DefineGlobalId( 144, 449);
+	DefineGlobalId( 145, 450);
+	DefineGlobalId( 146, 451);
+	DefineGlobalId( 147, 452);
+	DefineGlobalId( 148, 453);
+	DefineGlobalId( 149, 454);
 }
 
 /*##########################################################################

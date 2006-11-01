@@ -135,9 +135,6 @@ int main(int argc, char **argv)
 	 Quiz[6]->ImportMvsp("male7.txt", PCA_TYPE_MALE);
 	 Quiz[6]->ImportMvsp("female7.txt", PCA_TYPE_FEMALE);
 
-	 Quiz[6]->WritePhpWeighting("weights.php");
-	 Quiz[6]->WriteWeighting("weights.txt");
-
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
@@ -178,7 +175,12 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
 	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 
-    Quiz[7]->WritePhpWeighting("weights.php");
-	 
+  	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2);
+  	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2);
+  	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2);
+  	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2);
+  	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2);
+  	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2);
+
 }
 
