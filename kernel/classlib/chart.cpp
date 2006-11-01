@@ -1083,6 +1083,8 @@ void TChart::Draw()
     FYAxis->SetWindow(FXMin, FYMin, x, y);
     FXAxis->SetWindow(x, y, FXMax, FYMax);
 
+    FXAxis->SetAxisOffset(width);
+
 	for (i = 0; i < MAX_CURVES; i++)
 	{
 	    if (FList[i])

@@ -175,12 +175,17 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
 	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 
-  	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2);
-  	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2);
-  	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2);
-  	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2);
-  	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2);
-  	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2);
+  	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, FALSE);
+  	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2, FALSE);
+  	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2, FALSE);
+  	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2, FALSE);
+  	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2, FALSE);
+  	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
+
+  	 Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("add.csv", POP_TYPE_ADD, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
 
 }
 

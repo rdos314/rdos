@@ -37,12 +37,14 @@ public:
     ~TXAxis();
 
     void SetMinHeight(int height);
+    void SetAxisOffset(int offset);
 
 	virtual int IsXAxis();
     virtual int RequiredHeight() = 0;
 
 protected:
     int FMinHeight;
+    int FAxisOffset;
 };
 
 #endif

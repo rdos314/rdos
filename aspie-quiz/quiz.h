@@ -183,7 +183,7 @@ public:
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
 
-    void ExportHistogram(const char *filename, int PopType, int Width);
+    void ExportHistogram(const char *filename, int PopType, int Width, int All);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 

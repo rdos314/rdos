@@ -44,6 +44,7 @@
 TXAxis::TXAxis()
 {
     FMinHeight = 0;
+    FAxisOffset = 0;
 }
 
 /*##########################################################################
@@ -91,4 +92,20 @@ int TXAxis::IsXAxis()
 void TXAxis::SetMinHeight(int height)
 {
     FMinHeight = height;
+}
+
+/*##########################################################################
+#
+#   Name       : TXAxis::SetAxisOffset
+#
+#   Purpose....: Set axis offset
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TXAxis::SetAxisOffset(int offset)
+{
+    FAxisOffset = offset;
 }

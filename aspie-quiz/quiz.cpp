@@ -6249,13 +6249,16 @@ void TQuiz::WritePhpWeighting(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportHistogram(const char *filename, int PopType, int width)
+void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int All)
 {
     char str[80];
     int val;
     int i;
     int j;
     int e;
+    int cross;
+    TQuiz *quiz;
+    int count;
 	int HistAsCount[200];
 	int HistNtCount[200];
     int HistScore[200];
@@ -6265,7 +6268,9 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width)
     pop = GetPop(PopType);
     if (pop == 0)
         return;
-    
+
+    count = pop->ValueCount;
+        
     for (i = 0; i < 200; i++)
     {
         HistAsCount[i] = 0;
@@ -6282,6 +6287,31 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width)
         HistNtCount[i]++;        
 	}
 
+	if (All)
+	{
+	    for (cross = 0; cross < MAX_CROSS; cross++)
+	    {
+	        quiz = CrossQuiz[cross];
+	        if (quiz)
+	        {
+                pop = quiz->GetPop(PopType);
+                if (pop)
+                {
+    	            count += pop->ValueCount;
+	            
+                    for (e = 0; e < pop->ValueCount; e++)
+                    {
+                        i = pop->ValArr[e].AsScore / width;
+                        HistAsCount[i]++;
+
+                        i = pop->ValArr[e].NtScore / width;
+                        HistNtCount[i]++;        
+                	}
+                }
+	        }
+	    }
+	}
+
 	for (i = 0; i < 200; i++)
 	{
 	    j = HistScore[i];
@@ -6291,12 +6321,12 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width)
 	        file.Write(str);
 
             val = HistAsCount[i] * 10000;
-            val = val / width / pop->ValueCount;
+            val = val / width / count;
 	        sprintf(str, "%d\t", val);
 	        file.Write(str);
 
             val = HistNtCount[i] * 10000;
-            val = val / width / pop->ValueCount;
+            val = val / width / count;
 	        sprintf(str, "%d\n", val);
 	        file.Write(str);	        
 	    }

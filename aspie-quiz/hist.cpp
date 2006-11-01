@@ -94,160 +94,40 @@ int ImportData(const char *filename, THistData HistArr[100])
     return TRUE;
 }
 
-/*################## CreateAsHist ##########################
-*   Purpose....: Create Aspie histogram	   					      	        #
+/*################## WriteHeading ##########################
+*   Purpose....: Write heading     	   					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void CreateAsHist(TBitmapGraphicDevice *dev, int x, int y)
+void WriteHeading(TBitmapGraphicDevice *dev, int x, int y, const char *text)
 {
-	 int ok;
-	 int i;
-    char *name;
-    THistData HistArr[100];
     TFont Font(10);
-    TFont TextFont(25);
-	TLinXAxis LinXAxis(&Font);
-	TLinYAxis LinYAxis;
-    TChart *chart;
+    TFont TextFont(15);
 
-    chart = new TChart(dev, &LinXAxis, &LinYAxis);
+	dev->ClearClipRect();
+	dev->SetLgopNone();
+	dev->SetFont(&TextFont);
 
-    chart->SetWindow(x, y, x + 249, y + 149);
-    chart->SetBackColor(128, 128, 128);
-
-    ok = ImportData("as2.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(100, 192, 0, 192);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(100, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("as3.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(101, 0, 0, 255);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(101, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("as4.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(102, 0, 192, 192);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(102, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("as5.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(103, 0, 255, 0);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(103, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("as6.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(104, 192, 192, 0);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(104, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("as7.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(105, 255, 0, 0);
-    
-		  for (i = 0; i < 100; i++)
-            chart->Add(105, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    for (i = 0; i < 20; i++)
-    {
-        chart->SetLineColor(i, 120, 120, 120);
-
-        chart->Add(i, (long double)(10 * i), 0.0);
-        chart->Add(i, (long double)(10 * i), MaxVal + 25.0);
-    }
-
-    chart->Draw();    
-
-    dev->ClearClipRect();
-    dev->SetLgopNone();
-    dev->SetFont(&TextFont);
-
-    for (i = 2; i <= 7; i++)
-    {
-        switch (i)
-        {
-            case 2:
-                name = "II";
-                dev->SetDrawColor(192, 0, 192);
-                break;
-
-            case 3:
-                name = "III";
-                dev->SetDrawColor(0, 0, 255);
-                break;
-
-            case 4:
-                name = "ND";
-                dev->SetDrawColor(0, 192, 192);
-					 break;
-
-            case 5:
-                name = "5";
-                dev->SetDrawColor(0, 255, 0);
-                break;
-
-            case 6:
-                name = "6";
-                dev->SetDrawColor(192, 192, 0);
-                break;
-
-            case 7:
-                name = "7";
-                dev->SetDrawColor(255, 0, 0);
-                break;
-        } 
-        dev->DrawString(x + 40 * (i - 2) + 20, y + 3, name);
-                
-    }
-
-    delete chart;
+    dev->SetDrawColor(0, 0, 0);
+    dev->DrawString(x + 10, y + 3, text);
 }
 
-/*################## CreateNtHist ##########################
-*   Purpose....: Create NT histogram	   					      	        #
+/*################## WriteAsNtHist ##########################
+*   Purpose....: Write Aspie/NT histogram	   					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void CreateNtHist(TBitmapGraphicDevice *dev, int x, int y)
+void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], THistData Nt[100])
 {
-	 int ok;
-	 int i;
+	int ok;
+	int i;
     char *name;
-    THistData HistArr[100];
     TFont Font(10);
-    TFont TextFont(25);
+    TFont TextFont(15);
 	TLinXAxis LinXAxis(&Font);
 	TLinYAxis LinYAxis;
     TChart *chart;
@@ -257,119 +137,205 @@ void CreateNtHist(TBitmapGraphicDevice *dev, int x, int y)
     chart->SetWindow(x, y, x + 249, y + 149);
     chart->SetBackColor(128, 128, 128);
 
-    ok = ImportData("nt2.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(100, 192, 0, 192);
+    chart->SetLineColor(100, 128, 255, 0);
     
-        for (i = 0; i < 100; i++)
-            chart->Add(100, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
+    for (i = 0; i < 100; i++)
+		chart->Add(100, (long double)As[i].Index, As[i].Val);
 
-    ok = ImportData("nt3.dat", HistArr);    
+	chart->SetLineColor(101, 128, 0, 255);
 
-    if (ok)
-    {
-        chart->SetLineColor(101, 0, 0, 255);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(101, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
+	for (i = 0; i < 100; i++)
+		chart->Add(101, (long double)Nt[i].Index, Nt[i].Val);
 
-    ok = ImportData("nt4.dat", HistArr);    
+	for (i = 0; i < 20; i++)
+	{
+		chart->SetLineColor(i, 120, 120, 120);
 
-    if (ok)
-    {
-        chart->SetLineColor(102, 0, 192, 192);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(102, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
+		chart->Add(i, (long double)(10 * i), 0.0);
+		chart->Add(i, (long double)(10 * i), 1.2 * MaxVal);
+	}
 
-    ok = ImportData("nt5.dat", HistArr);    
+	chart->Draw();
 
-    if (ok)
-    {
-        chart->SetLineColor(103, 0, 255, 0);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(103, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
+	dev->ClearClipRect();
+	dev->SetLgopNone();
+	dev->SetFont(&TextFont);
 
-    ok = ImportData("nt6.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(104, 192, 192, 0);
-    
-        for (i = 0; i < 100; i++)
-            chart->Add(104, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    ok = ImportData("nt7.dat", HistArr);    
-
-    if (ok)
-    {
-        chart->SetLineColor(105, 255, 0, 0);
-    
-		  for (i = 0; i < 100; i++)
-            chart->Add(105, (long double)HistArr[i].Index, HistArr[i].Val);
-    }
-
-    for (i = 0; i < 20; i++)
-    {
-        chart->SetLineColor(i, 120, 120, 120);
-
-        chart->Add(i, (long double)(10 * i), 0.0);
-        chart->Add(i, (long double)(10 * i), MaxVal + 25.0);
-    }
-
-    chart->Draw();    
-
-    dev->ClearClipRect();
-    dev->SetLgopNone();
-    dev->SetFont(&TextFont);
-
-    for (i = 2; i <= 7; i++)
+    for (i = 0; i < 2; i++)
     {
         switch (i)
         {
-            case 2:
-                name = "II";
-                dev->SetDrawColor(192, 0, 192);
+            case 0:
+                name = "Aspie";
+                dev->SetDrawColor(128, 255, 0);
                 break;
 
-            case 3:
-                name = "III";
-                dev->SetDrawColor(0, 0, 255);
-                break;
-
-            case 4:
-                name = "ND";
-                dev->SetDrawColor(0, 192, 192);
-					 break;
-
-            case 5:
-                name = "5";
-                dev->SetDrawColor(0, 255, 0);
-                break;
-
-            case 6:
-                name = "6";
-                dev->SetDrawColor(192, 192, 0);
-                break;
-
-            case 7:
-                name = "7";
-                dev->SetDrawColor(255, 0, 0);
+            case 1:
+                name = "Neurotypical";
+                dev->SetDrawColor(128, 0, 255);
                 break;
         } 
-        dev->DrawString(x + 40 * (i - 2) + 20, y + 3, name);
+        dev->DrawString(x + 100 * i + 20, y + 3, name);
                 
     }
 
-    delete chart;
+	delete chart;
+}
+
+/*################## CreateAll ##########################
+*   Purpose....: Create all.jpg 	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CreateAll()
+{
+
+	THistData AsArr[100];
+	THistData NtArr[100];
+	int ok;
+	TJpegBitmapDevice jpeg(24, 520, 550);
+
+	jpeg.SetDrawColor(255, 255, 255);
+	jpeg.SetLgopNone();
+	jpeg.SetFilledStyle();
+	jpeg.DrawRect(0, 0, 519, 549);
+
+	WriteHeading(&jpeg, 0, 0, "Quiz II");
+
+	MaxVal = 0.0;
+	ok = ImportData("as2.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt2.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 260, 0, "Quiz III");
+
+	MaxVal = 0.0;
+	ok = ImportData("as3.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt3.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 0, 180, "Neurodiversity");
+
+	MaxVal = 0.0;
+	ok = ImportData("as4.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt4.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 260, 180, "Quiz 5");
+
+	MaxVal = 0.0;
+	ok = ImportData("as5.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt5.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 0, 360, "Quiz 6");
+
+	MaxVal = 0.0;
+	ok = ImportData("as6.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt6.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 260, 360, "Quiz 7");
+
+	MaxVal = 0.0;
+	ok = ImportData("as7.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt7.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr);
+
+	jpeg.Save("all.jpg");
+}
+
+/*################## CreateDx ##########################
+*   Purpose....: Create dx.jpg 	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CreateDx()
+{
+	THistData AsArr[100];
+	THistData NtArr[100];
+	int ok;
+	TJpegBitmapDevice jpeg(24, 520, 550);
+
+	jpeg.SetDrawColor(255, 255, 255);
+	jpeg.SetLgopNone();
+	jpeg.SetFilledStyle();
+	jpeg.DrawRect(0, 0, 519, 549);
+
+	WriteHeading(&jpeg, 0, 0, "AS/HFA/PDD");
+
+	MaxVal = 0.0;
+	ok = ImportData("asas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("asnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 260, 0, "Control group");
+
+	MaxVal = 0.0;
+	ok = ImportData("ntas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("ntnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 0, 180, "Social phobia");
+
+	MaxVal = 0.0;
+	ok = ImportData("socas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("socnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr);
+
+	WriteHeading(&jpeg, 260, 180, "ADD/ADHD");
+
+	MaxVal = 0.0;
+	ok = ImportData("addas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("addnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr);
+
+
+	jpeg.Save("dx.jpg");
 }
 
 /*##################  main ##########################
@@ -381,10 +347,6 @@ void CreateNtHist(TBitmapGraphicDevice *dev, int x, int y)
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-    TJpegBitmapDevice jpeg(24, 520, 150);
-    
-	 CreateAsHist(&jpeg, 0, 0);
-	 CreateNtHist(&jpeg, 260, 0);
-
-	 jpeg.Save("all.jpg");
+    CreateAll();
+    CreateDx();
 }
