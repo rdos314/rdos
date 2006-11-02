@@ -121,8 +121,9 @@ void WriteHeading(TBitmapGraphicDevice *dev, int x, int y, const char *text)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], THistData Nt[100])
+void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], THistData Nt[100], int Reverse)
 {
+    int index;
 	int ok;
 	int i;
     char *name;
@@ -134,10 +135,10 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 
     chart = new TChart(dev, &LinXAxis, &LinYAxis);
 
-    chart->SetWindow(x, y, x + 249, y + 149);
-    chart->SetBackColor(128, 128, 128);
+    chart->SetWindow(x, y + 20, x + 249, y + 149);
+    chart->SetBackColor(255, 255, 255);
 
-    chart->SetLineColor(100, 128, 255, 0);
+    chart->SetLineColor(100, 0, 255, 75);
     
     for (i = 0; i < 100; i++)
 		chart->Add(100, (long double)As[i].Index, As[i].Val);
@@ -147,14 +148,6 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 	for (i = 0; i < 100; i++)
 		chart->Add(101, (long double)Nt[i].Index, Nt[i].Val);
 
-	for (i = 0; i < 20; i++)
-	{
-		chart->SetLineColor(i, 120, 120, 120);
-
-		chart->Add(i, (long double)(10 * i), 0.0);
-		chart->Add(i, (long double)(10 * i), 1.2 * MaxVal);
-	}
-
 	chart->Draw();
 
 	dev->ClearClipRect();
@@ -163,19 +156,24 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 
     for (i = 0; i < 2; i++)
     {
-        switch (i)
+        if (Reverse)
+            index = 1 - i;
+        else
+            index = i;
+            
+        switch (index)
         {
             case 0:
-                name = "Aspie";
-                dev->SetDrawColor(128, 255, 0);
-                break;
-
-            case 1:
                 name = "Neurotypical";
                 dev->SetDrawColor(128, 0, 255);
                 break;
+
+            case 1:
+                name = "Aspie";
+                dev->SetDrawColor(0, 255, 75);
+                break;
         } 
-        dev->DrawString(x + 100 * i + 20, y + 3, name);
+        dev->DrawString(x + 125 * i + 20, y + 3, name);
                 
     }
 
@@ -211,7 +209,7 @@ void CreateAll()
 		ok = ImportData("nt2.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr, FALSE);
 
 	WriteHeading(&jpeg, 260, 0, "Quiz III");
 
@@ -222,7 +220,7 @@ void CreateAll()
 		ok = ImportData("nt3.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr, FALSE);
 
 	WriteHeading(&jpeg, 0, 180, "Neurodiversity");
 
@@ -233,7 +231,7 @@ void CreateAll()
 		ok = ImportData("nt4.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr, FALSE);
 
 	WriteHeading(&jpeg, 260, 180, "Quiz 5");
 
@@ -244,7 +242,7 @@ void CreateAll()
 		ok = ImportData("nt5.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr, FALSE);
 
 	WriteHeading(&jpeg, 0, 360, "Quiz 6");
 
@@ -255,7 +253,7 @@ void CreateAll()
 		ok = ImportData("nt6.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr, TRUE);
 
 	WriteHeading(&jpeg, 260, 360, "Quiz 7");
 
@@ -266,7 +264,7 @@ void CreateAll()
 		ok = ImportData("nt7.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr, FALSE);
 
 	jpeg.Save("all.jpg");
 }
@@ -283,12 +281,12 @@ void CreateDx()
 	THistData AsArr[100];
 	THistData NtArr[100];
 	int ok;
-	TJpegBitmapDevice jpeg(24, 520, 550);
+	TJpegBitmapDevice jpeg(24, 800, 900);
 
 	jpeg.SetDrawColor(255, 255, 255);
 	jpeg.SetLgopNone();
 	jpeg.SetFilledStyle();
-	jpeg.DrawRect(0, 0, 519, 549);
+	jpeg.DrawRect(0, 0, 799, 899);
 
 	WriteHeading(&jpeg, 0, 0, "AS/HFA/PDD");
 
@@ -299,20 +297,9 @@ void CreateDx()
 		ok = ImportData("asnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 0, "Control group");
-
-	MaxVal = 0.0;
-	ok = ImportData("ntas.dat", AsArr);
-
-	if (ok)
-		ok = ImportData("ntnt.dat", NtArr);
-
-	if (ok)
-		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr);
-
-	WriteHeading(&jpeg, 0, 180, "Social phobia");
+	WriteHeading(&jpeg, 260, 0, "Social phobia");
 
 	MaxVal = 0.0;
 	ok = ImportData("socas.dat", AsArr);
@@ -321,9 +308,20 @@ void CreateDx()
 		ok = ImportData("socnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 180, "ADD/ADHD");
+	WriteHeading(&jpeg, 520, 0, "Control group");
+
+	MaxVal = 0.0;
+	ok = ImportData("ntas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("ntnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 520, 20, AsArr, NtArr, TRUE);
+
+	WriteHeading(&jpeg, 0, 180, "ADD/ADHD");
 
 	MaxVal = 0.0;
 	ok = ImportData("addas.dat", AsArr);
@@ -332,8 +330,128 @@ void CreateDx()
 		ok = ImportData("addnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr);
+		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr, FALSE);
 
+	WriteHeading(&jpeg, 260, 180, "Tourette");
+
+	MaxVal = 0.0;
+	ok = ImportData("tsas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("tsnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 520, 180, "Prosapagnosia");
+
+	MaxVal = 0.0;
+	ok = ImportData("paas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("pant.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 520, 200, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 0, 360, "Bipolar");
+
+	MaxVal = 0.0;
+	ok = ImportData("bipas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("bipnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 260, 360, "Schizophrenia");
+
+	MaxVal = 0.0;
+	ok = ImportData("schas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("schnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 520, 360, "Synaesthesia");
+
+	MaxVal = 0.0;
+	ok = ImportData("synas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("synnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 520, 380, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 0, 540, "Dyslexia");
+
+	MaxVal = 0.0;
+	ok = ImportData("dyslas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("dyslnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 560, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 260, 540, "Dyscalculia");
+
+	MaxVal = 0.0;
+	ok = ImportData("dyscas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("dyscnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 560, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 520, 540, "Dysgraphia");
+
+	MaxVal = 0.0;
+	ok = ImportData("dysgas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("dysgnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 520, 560, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 0, 720, "OCD");
+
+	MaxVal = 0.0;
+	ok = ImportData("ocdas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("ocdnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 740, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 260, 720, "ODD");
+
+	MaxVal = 0.0;
+	ok = ImportData("oddas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("oddnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 260, 740, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 520, 720, "Dyspraxia");
+
+	MaxVal = 0.0;
+	ok = ImportData("dyspas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("dyspnt.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 520, 740, AsArr, NtArr, FALSE);
 
 	jpeg.Save("dx.jpg");
 }

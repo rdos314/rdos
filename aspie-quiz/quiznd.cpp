@@ -1441,7 +1441,7 @@ static int IsPca(TQuizRow *row, int PcaType)
                 return FALSE;
 
         case PCA_TYPE_OLD:
-            if (row->BirthYear <= 1965)
+				if (row->BirthYear <= 1965)
                 return TRUE;
             else
 				return FALSE;
@@ -1510,15 +1510,15 @@ void TQuizNd::ExportExcelCase(const char *filename, int PcaType)
 					if (i >= 200)
 						ival = Row.Quiz[i];
 					else
-                    {
-    					ival = Row.Quiz[i];
-	    				if (ival)
-		    				ival--;
+						  {
+						ival = Row.Quiz[i];
+						if (ival)
+							ival--;
 
-			    		if (ival > 2)
-				    		ival = 0;
-                    }
-                    
+						if (ival > 2)
+							ival = 0;
+						  }
+
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
 					if (i != N - 1)
@@ -1616,7 +1616,7 @@ void TQuizNd::ExportExcelGroups(const char *filename)
                     file.Write(", ");
             }
 	    	file.Write("\n");
-	    }
+		 }
 	}
 }
 
@@ -1678,8 +1678,14 @@ void TQuizNd::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

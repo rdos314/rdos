@@ -183,9 +183,20 @@ int main(int argc, char **argv)
   	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
 
   	 Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
   	 Quiz[6]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
   	 Quiz[6]->ExportHistogram("add.csv", POP_TYPE_ADD, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("ts.csv", POP_TYPE_TS, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("pa.csv", POP_TYPE_PA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("bip.csv", POP_TYPE_BIPOLAR, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("schizo.csv", POP_TYPE_SCHIZOPHRENIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("syn.csv", POP_TYPE_SYNAESTHESIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("dysl.csv", POP_TYPE_DYSLEXIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("dysc.csv", POP_TYPE_DYSCALCULIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("dysg.csv", POP_TYPE_DYSGRAPHIA, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("ocd.csv", POP_TYPE_OCD, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
+  	 Quiz[6]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
 }
 

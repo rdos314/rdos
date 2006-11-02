@@ -1306,12 +1306,14 @@ void TQuiz7::ExportExcelCase(const char *filename, int PcaType)
 				    {
     					ival = Row.Quiz[i];
 	    				if (ival)
-		    				ival--;
-    
-	    				if (ival > 2)
-		    				ival = 0;
-                    }
-                    
+							ival--;
+						else
+							ival = 1;
+
+						if (ival > 2)
+							ival = 1;
+				    }
+
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
 					if (i != N - 1)
@@ -1465,18 +1467,18 @@ void TQuiz7::ImportMvsp(const char *filename, int PcaType)
 				}
 			}
 
-			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d2, &d1, &d3, &d4) == 5)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
-
 //					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+//						d3 = -d3;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

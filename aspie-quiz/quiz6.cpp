@@ -72,13 +72,15 @@ class TRace
 public:
 	TRace();
 	void Add(TQuizRow *Row);
+	void WriteNonUsRow(TFile &file, int index, const char *text);
+	void WriteUsRow(TFile &file, int index, const char *text);
 	void WriteRow(TFile &file, int index, const char *text);
     void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
 
-	int Count[10];
-	int AsCount[10];
+	int UsCount[10];
+	int NonUsCount[10];
 };
 
 /*##########################################################################
@@ -1916,10 +1918,10 @@ TRace::TRace()
 {
 	int i;
 
-	for (i = 0; i < 10; i++)
+    for (i = 0; i < 10; i++)
     {
-		Count[i] = 0;
-		AsCount[i] = 0;
+		UsCount[i] = 0;
+		NonUsCount[i] = 0;
     }
 }
 
@@ -1935,44 +1937,29 @@ void TRace::Add(TQuizRow *Row)
 	int index = -1;
 	int diff = Row->AsResult - Row->NtResult;
 
-	if (Row->Ancestry == 3) // && Row->Hair >= 6 && Row->Eye >= 5)
+	if (Row->Ancestry == 3 && Row->Hair >= 6 && Row->Eye >= 5)
 		index = 0;      // american indian
 
 	if (Row->Ancestry == 5)
-	{
-		if (Row->Hair >= 6 && Row->Eye >= 5)
-			index = 1;      // african american
-		else
-			index = 2;      // mixed american
-	}
+	    index = 1;      // afroamerican
 
 	if (Row->Ancestry == 6)
-		index = 3;      // hispanic
+		index = 2;      // hispanic
 
 	if (Row->Ancestry >= 1000 && Row->Ancestry < 2000)
-	{
-		if (Row->Hair >= 6 && Row->Eye >= 5)
-			index = 4;      // black african
-		else
-			index = 5;      // mixed african
-	}
+		index = 5;      // black african
 
 	if ((Row->Ancestry >= 2000 && Row->Ancestry < 3000) || Row->Ancestry == 3205)
-		index = 6;      // white
+		index = 3;      // white
 
 	if (Row->Ancestry >= 3000 && Row->Ancestry < 4000 && Row->Ancestry != 3205)
-		index = 7;      // arab
+		index = 6;      // arab
 
 	if (Row->Ancestry >= 4000)
-		index = 8;      // asian
+		index = 4;      // asian
 
 	if (index >= 0)
-	{
-		Count[index]++;
-
-		if (diff > 0)
-			AsCount[index]++;
-	}
+		NonUsCount[index]++;
 }
 
 /*##################  TRace::WriteHeader ##########################
@@ -1996,10 +1983,6 @@ void TRace::WriteHeader(TFile &file)
 
 	WriteCenteredFieldHeader(file, 12);
 	file.Write("Interest");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("AS proportion");
 	WriteFieldFooter(file);
 
 	file.Write("</tr>");
@@ -2070,14 +2053,14 @@ void TRace::WriteEntry(TFile &file, int val, int count)
 	WriteFieldFooter(file);
 }
 
-/*##################  TRace::Write ##########################
+/*##################  TRace::WriteUsRow ##########################
 *   Purpose....: Write row in table                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TRace::WriteRow(TFile &file, int index, const char *text)
+void TRace::WriteUsRow(TFile &file, int index, const char *text)
 {
     char str[80];
     int sum;
@@ -2089,21 +2072,51 @@ void TRace::WriteRow(TFile &file, int index, const char *text)
 	WriteFieldFooter(file);
 
 	WriteCenteredFieldHeader(file, 12);
-	sprintf(str, "%d", Count[index]);
+	sprintf(str, "%d", UsCount[index]);
     file.Write(str);
 	WriteFieldFooter(file);
 
     sum = 0;
     for (i = 0; i < 10; i++)
-        sum += Count[i];            
+        sum += UsCount[i];            
 
     if (sum)
-    {
-        WriteEntry(file, Count[index], sum);
+        WriteEntry(file, UsCount[index], sum);
+	else
+	    file.Write("---");
 
-        if (Count[index])
-            WriteEntry(file, AsCount[index], Count[index]);
-    }
+    file.Write("</tr>");
+}
+
+/*##################  TRace::WriteNonUsRow ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TRace::WriteNonUsRow(TFile &file, int index, const char *text)
+{
+    char str[80];
+    int sum;
+    int i;
+
+	file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+    file.Write(text);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	sprintf(str, "%d", NonUsCount[index]);
+    file.Write(str);
+	WriteFieldFooter(file);
+
+    sum = 0;
+    for (i = 0; i < 10; i++)
+        sum += NonUsCount[i];            
+
+    if (sum)
+        WriteEntry(file, NonUsCount[index], sum);
 	else
 	    file.Write("---");
 
@@ -2238,22 +2251,55 @@ void TQuiz6::WriteRace(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	    race.Add(&Row);
+
+    race.UsCount[1] = race.NonUsCount[1];
+    race.NonUsCount[1] = 0;
+    
+    ival = race.NonUsCount[3];
+    race.UsCount[3] = 45 * ival / 100;
+    race.NonUsCount[3] = 55 * ival / 100;
+
+    ival = race.NonUsCount[4];
+    race.UsCount[4] = 35 * ival / 100;
+    race.NonUsCount[4] = 65 * ival / 100;
+
+    ival = race.NonUsCount[0];
+    race.UsCount[0] = 70 * ival / 100;
+    race.NonUsCount[0] = 30 * ival / 100;
+
+    ival = race.NonUsCount[2];
+    race.UsCount[2] = 65 * ival / 100;
+    race.NonUsCount[2] = 35 * ival / 100;
+	
+	file.Write("<h2>US population</h2>");
         
     file.Write("<table border=3 cellspacing=0 cellpadding=0>");
 
     TRace::WriteHeader(file);
 
-    race.WriteRow(file, 0, "Native American");
-    race.WriteRow(file, 1, "African American");
-	race.WriteRow(file, 2, "Mixed American");
-    race.WriteRow(file, 3, "Hispanic");
-    race.WriteRow(file, 4, "Black African");
-    race.WriteRow(file, 5, "Mixed African");
-    race.WriteRow(file, 6, "Caucasian");
-    race.WriteRow(file, 7, "Arab");
-    race.WriteRow(file, 8, "Asian");
+    race.WriteUsRow(file, 0, "Native American");
+    race.WriteUsRow(file, 1, "Black African");
+    race.WriteUsRow(file, 2, "Hispanic");
+    race.WriteUsRow(file, 3, "Caucasian");
+    race.WriteUsRow(file, 4, "Asian");
 
     file.Write("</table>");
 
     file.Write("<br><br>");
+
+	file.Write("<h2>Non-US population</h2>");
+        
+    file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+    TRace::WriteHeader(file);
+
+    race.WriteNonUsRow(file, 0, "Native American");
+    race.WriteNonUsRow(file, 2, "Hispanic");
+    race.WriteNonUsRow(file, 3, "Caucasian");
+    race.WriteNonUsRow(file, 4, "Asian");
+    race.WriteNonUsRow(file, 5, "Black African");
+    race.WriteNonUsRow(file, 6, "Arab");
+
+    file.Write("</table>");
+
 }
