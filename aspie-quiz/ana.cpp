@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 //	Quiz[4]->CheckCross();
 //	Quiz[5]->CheckCross();
 //	Quiz[6]->CheckCross();
-    Quiz[7]->CheckCross();
+	 Quiz[7]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -171,32 +171,13 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteEye("eye7.htm");
 	 Quiz[6]->WriteRace("race7.htm");
 
-	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
-	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
-	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
+//	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
+//	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
+//	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 
-  	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, FALSE);
-  	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2, FALSE);
-  	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2, FALSE);
-  	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2, FALSE);
-  	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2, FALSE);
-  	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
+//	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
+//  Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
 
-  	 Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("add.csv", POP_TYPE_ADD, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("ts.csv", POP_TYPE_TS, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("pa.csv", POP_TYPE_PA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("bip.csv", POP_TYPE_BIPOLAR, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("schizo.csv", POP_TYPE_SCHIZOPHRENIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("syn.csv", POP_TYPE_SYNAESTHESIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("dysl.csv", POP_TYPE_DYSLEXIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("dysc.csv", POP_TYPE_DYSCALCULIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("dysg.csv", POP_TYPE_DYSGRAPHIA, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("ocd.csv", POP_TYPE_OCD, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
-  	 Quiz[6]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
-
+    Quiz[7]->WritePhpWeighting("weights.php");
 }
 
