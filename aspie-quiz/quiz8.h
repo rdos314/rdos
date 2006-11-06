@@ -42,6 +42,8 @@ public:
     virtual void ImportMvsp(const char *filename, int PcaType);
 
     virtual void WriteHair(const char *filename);
+    virtual void WriteEye(const char *filename);
+    virtual void WriteStim(const char *filename);
 
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);

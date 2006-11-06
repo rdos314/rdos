@@ -194,6 +194,7 @@ public:
 	virtual void WriteHair(const char *filename);
 	virtual void WriteEye(const char *filename);
     virtual void WriteRace(const char *filename);
+    virtual void WriteStim(const char *filename);
 
 	void CheckCross();
 

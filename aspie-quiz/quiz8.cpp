@@ -53,6 +53,36 @@ public:
 	int NtCount[7];
 };
 
+class TEye
+{
+public:
+	TEye();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+
+	int AsCount[5];
+	int NtCount[5];
+};
+
+class TStim
+{
+public:
+	TStim();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int index);
+
+	static void WriteHeader(TFile &file);
+
+    int StimChoice[45][33];
+    int StimCount[45];
+    const char *StimText[45];
+    const char *ReasonText[33];
+    
+};
+
 /*##########################################################################
 #
 #   Name       : TQuiz8::TQuiz8
@@ -1683,6 +1713,407 @@ void THair::WriteRow(TFile &file, int index, const char *text)
     file.Write("</tr>");
 }
 
+/*##################  TEye::TEye ##########################
+*   Purpose....: Initialize TEye                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TEye::TEye()
+{
+	int i;
+
+    for (i = 0; i < 5; i++)
+    {
+        AsCount[i] = 0;
+        NtCount[i] = 0;
+    }
+}
+
+/*##################  TEye::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::Add(TQuizRow *Row)
+{
+    int index;
+	int diff = Row->AsResult - Row->NtResult;
+
+	switch (Row->Eye)
+	{
+		case 1:
+		case 2:
+			index = 0;
+			break;
+
+		case 3:
+			index = 1;
+			break;
+
+		case 4:
+		case 5:
+			index = 2;
+			break;
+	}
+
+    if (diff > 0)
+	    AsCount[index]++;
+    else
+	    NtCount[index]++;
+}
+
+/*##################  TEye::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Color");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TEye::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+    mean = (long double)val / (long double)count;
+
+	r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+	r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
+		file.Write(str);
+
+		ival = round(1000.0 * mean);
+		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
+		file.Write(str);
+	}
+	else
+	    file.Write("---");
+#else
+	ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+	file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  TEye::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TEye::WriteRow(TFile &file, int index, const char *text)
+{
+	char str[80];
+	int sum;
+	int i;
+
+	file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(text);
+	WriteFieldFooter(file);
+
+	sum = 0;
+	for (i = 0; i < 3; i++)
+		sum += AsCount[i];
+
+	if (sum)
+        WriteEntry(file, AsCount[index], sum);
+	else
+	    file.Write("---");
+
+
+    sum = 0;
+    for (i = 0; i < 3; i++)
+        sum += NtCount[i];            
+
+    if (sum)
+        WriteEntry(file, NtCount[index], sum);
+	else
+	    file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TStim::TStim ##########################
+*   Purpose....: Initialize TStim                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TStim::TStim()
+{
+	int i;
+	int j;
+
+    for (i = 0; i < 45; i++)
+    {
+        for (j = 0; j < 33; j++)
+            StimChoice[i][j] = 0;
+
+        StimCount[i] = 0;
+    }
+
+ 	StimText[0] = "Talking to yourself"; 
+ 	StimText[1] = "Singing to yourself"; 
+ 	StimText[2] = "Humming"; 
+ 	StimText[3] = "Whistling"; 
+ 	StimText[4] = "Tapping ears"; 
+ 	StimText[5] = "Pressing eyes"; 
+ 	StimText[6] = "Rolling eyes";
+ 	StimText[7] = "Watching a spinning, blinking or glittering object"; 
+ 	StimText[8] = "Picking nose"; 
+ 	StimText[9] = "Grinding teeth"; 
+ 	StimText[10] = "Clicking teeth"; 
+ 	StimText[11] = "Sticking tounge out"; 
+ 	StimText[12] = "Sucking thumb"; 
+ 	StimText[13] = "Sucking lip"; 
+ 	StimText[14] = "Biting lip, cheek or tongue"; 
+ 	StimText[15] = "Biting nails"; 
+ 	StimText[16] = "Biting, peeling or picking cuticle or fingertip"; 
+ 	StimText[17] = "Chewing or sucking on strands of hair or beard"; 
+ 	StimText[18] = "Chewing or sucking on pencil, toothpick or other object"; 
+ 	StimText[19] = "Clicking a pen"; 
+ 	StimText[20] = "Twirling hair"; 
+ 	StimText[21] = "Tapping fingers"; 
+ 	StimText[22] = "Tapping pen or other object"; 
+ 	StimText[23] = "Digging fingernails under each other, into skin or other things"; 
+ 	StimText[24] = "Flapping hands"; 
+ 	StimText[25] = "Clapping hands"; 
+ 	StimText[26] = "Rubbing hands together"; 
+ 	StimText[27] = "Rubbing arms or thighs"; 
+ 	StimText[28] = "Picking skin and scabs"; 
+ 	StimText[29] = "Peeling skin flakes, including from lips"; 
+ 	StimText[30] = "Pulling hairs from head, face or body"; 
+ 	StimText[31] = "Doodling"; 
+ 	StimText[32] = "Cracking joints"; 
+ 	StimText[33] = "Clenching and unclenching fists"; 
+ 	StimText[34] = "Twisting hands/fingers"; 
+ 	StimText[35] = "Fiddling with things"; 
+ 	StimText[36] = "Spinning an object"; 
+ 	StimText[37] = "Wiggling toes or feet"; 
+ 	StimText[38] = "Bouncing leg/foot"; 
+ 	StimText[39] = "Rocking back-&-forth";
+ 	StimText[40] = "Rocking side-to-side"; 
+ 	StimText[41] = "Rocking up and down"; 
+ 	StimText[42] = "Spinning in circles"; 
+ 	StimText[43] = "Pacing"; 
+ 	StimText[44] = "Walking on toes"; 
+
+ 	ReasonText[1] = "When happy"; 
+ 	ReasonText[2] = "When excited"; 
+ 	ReasonText[3] = "When relaxed"; 
+ 	ReasonText[4] = "When thinking"; 
+ 	ReasonText[5] = "When bored"; 
+ 	ReasonText[6] = "When sad"; 
+ 	ReasonText[7] = "When disappointed"; 
+ 	ReasonText[8] = "When depressed"; 
+ 	ReasonText[9] = "When distressed"; 
+ 	ReasonText[10] = "When worried"; 
+ 	ReasonText[11] = "When anxious"; 
+ 	ReasonText[12] = "When nervous"; 
+ 	ReasonText[13] = "When restless"; 
+ 	ReasonText[14] = "When stressed"; 
+ 	ReasonText[15] = "When overstimulated"; 
+ 	ReasonText[16] = "When overwhelmed"; 
+ 	ReasonText[17] = "When in physical or emotional pain"; 
+ 	ReasonText[18] = "When confused"; 
+ 	ReasonText[19] = "When indecisive"; 
+ 	ReasonText[20] = "When upset"; 
+ 	ReasonText[21] = "When frustrated"; 
+ 	ReasonText[22] = "When angry"; 
+ 	ReasonText[23] = "When concentrated";
+ 	ReasonText[24] = "When you like somebody";
+ 	ReasonText[25] = "When you dislike somebody"; 
+ 	ReasonText[26] = "For comfort"; 
+ 	ReasonText[27] = "To calm myself"; 
+ 	ReasonText[28] = "To concentrate"; 
+ 	ReasonText[29] = "To release excess energy"; 
+ 	ReasonText[30] = "For fun"; 
+ 	ReasonText[31] = "It's pleasurable"; 
+ 	ReasonText[32] = "Other"; 
+}
+
+/*##################  TStim::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TStim::Add(TQuizRow *Row)
+{
+    int i;
+    int j;
+    int index;
+
+    for (i = 0; i < 45; i++)
+    {
+        for (j = 0; j < 3; j++)
+        {
+            if (Row->Stim[i][j])
+            {
+                index = Row->Stim[i][j];
+                if (index < 33)
+                {
+                    StimChoice[i][index]++;
+                    StimCount[i]++;
+                }
+            }
+        }
+    }
+}
+
+/*##################  TStim::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TStim::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Stim");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("#1");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("#2");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 20);
+	file.Write("#3");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TStim::WriteRow ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TStim::WriteRow(TFile &file, int index)
+{
+    char str[20];
+	int i;
+    int j;
+	int max;
+	int val;
+	int currind;
+	int ind[3] = {0, 0, 0};
+
+	file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(StimText[index]);
+	WriteFieldFooter(file);
+
+    for (j = 0; j < 3; j++)
+    {
+    	max = 0;
+    	for (i = 1; i <= 32; i++)
+	    {
+            val = StimChoice[index][i];
+    	    if (i != ind[0] && i != ind[1])
+            {
+                if (val	> max)
+                {
+                    max = val;
+                    currind = i;
+                }
+            }
+        }
+
+        ind[j] = currind;
+
+        if (max)
+        {
+        	WriteCenteredFieldHeader(file, 20);
+        	file.Write(ReasonText[currind]);
+            sprintf(str, " (%d)", max);
+            file.Write(str);        	
+        	WriteFieldFooter(file);
+        }    
+        else
+            break;
+    }
+
+    file.Write("</tr>");
+}
+
 /*##################  TQuiz5::WriteHair ##########################
 *   Purpose....: Write hair report                   			     	        #
 *   In params..: *                                                          #
@@ -1735,4 +2166,91 @@ void TQuiz8::WriteHair(const char *filename)
 
 	}
 
+}
+
+/*##################  TQuiz8::WriteEye ##########################
+*   Purpose....: Write eye color report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz8::WriteEye(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TEye eye[7];
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		eye[0].Add(&Row);
+
+	for (i = 0; i < 1; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Eye color");
+				break;
+
+		}
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TEye::WriteHeader(file);
+
+		eye[i].WriteRow(file, 0, "Grey-blue/Blue");
+		eye[i].WriteRow(file, 1, "Green");
+		eye[i].WriteRow(file, 2, "Hazel/Brown");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+}
+
+/*##################  TQuiz8::WriteStim ##########################
+*   Purpose....: Write stim report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz8::WriteStim(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TStim stim;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		stim.Add(&Row);
+
+	file.Write("<h3>");
+	file.Write("Stim results");
+	file.Write("</h3><br>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+    TStim::WriteHeader(file);
+
+    for (i = 0; i < 45; i++)
+        stim.WriteRow(file, i);
+            
+	file.Write("</table>");
+
+	file.Write("<br><br>");
 }

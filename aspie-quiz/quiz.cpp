@@ -1854,6 +1854,17 @@ void TQuiz::WriteRace(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteStim ##########################
+*   Purpose....: Write stim report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteStim(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
@@ -4801,8 +4812,8 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
     file.Write("<a href=\"histo\">Histogram of Aspie-quiz II-III + ND + 5-6</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-7</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-8</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-8</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
     file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
 
@@ -4816,8 +4827,8 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
     file.Write("<a href=\"histo\">Histogram för Aspie-quiz I-III + ND + 5-6</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-7</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-7</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-8</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-8</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
     file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
 
@@ -4957,17 +4968,17 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef ENGLISH
     file.Write(" <a href=\"quiz8.htm\">summary</a> <a href=\"ref8.htm\">referer sites</a>");
-    file.Write(" <a href=\"race8.htm\">ancestry</a>");
     file.Write(" <a href=\"hair8.htm\">hair-color</a>");
     file.Write(" <a href=\"eye8.htm\">eye-color</a>");
+    file.Write(" <a href=\"stim8.htm\">stims</a>");
     file.Write("<br>");
 #endif
     
 #ifdef SWEDISH
     file.Write(" <a href=\"quiz8.htm\">summering</a> <a href=\"ref8.htm\">referenssajter</a>");
-    file.Write(" <a href=\"race8.htm\">ursprung</a>");
     file.Write(" <a href=\"hair8.htm\">hårfärg</a>");
     file.Write(" <a href=\"eye8.htm\">ögonfärg</a>");
+    file.Write(" <a href=\"stim8.htm\">stimming</a>");
     file.Write("<br>");
 #endif
 
