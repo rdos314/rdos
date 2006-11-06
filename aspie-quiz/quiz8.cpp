@@ -65,7 +65,7 @@ public:
 #
 ##########################################################################*/
 TQuiz8::TQuiz8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7)
-  : TQuiz(150),
+  : TQuiz(151),
 	FDataFile(FileName)
 {
 	 DefineCross(0, QuizI);
@@ -334,6 +334,8 @@ void TQuiz8::SetupTexts()
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
 
+  Quiz[150].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
   Quiz[1].Text = "Do you have a very acute sense of taste?";
@@ -485,6 +487,8 @@ void TQuiz8::SetupTexts()
   Quiz[147].Text = "Do you lick people you like a lot?";
   Quiz[148].Text = "Do you prefer to do things on your own even if you could use others work or expertice?";
   Quiz[149].Text = "Do you have a bad temper?";
+
+  Quiz[150].Text = "Likes Neanderthal faces";
 #endif
 
 #ifdef SWEDISH
@@ -638,6 +642,8 @@ void TQuiz8::SetupTexts()
   Quiz[147].Text = "Slickar du på de som du gillar mycket?";
   Quiz[148].Text = "Föredrar du att göra saker på egen hand även om du skulle kunna använda andras arbete och expertis?";
   Quiz[149].Text = "Har du häftigt humör?";
+
+  Quiz[150].Text = "Gillar neandertalsansikten";
 #endif
 
 }
@@ -769,6 +775,23 @@ void TQuiz8::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+		switch (Row.HnSimilar)
+		{
+		    case 1:
+			case 4:
+        	    Row.Quiz[150] = 1;
+        		break;
+        					
+			case 2:
+			case 3:
+        		Row.Quiz[150] = 2;
+        		break;
+
+			default:
+        		Row.Quiz[150] = 3;
+        		break;
+        					
+        }
 	
 		for (i = 0; i < N; i++)
 		{
@@ -1040,6 +1063,7 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId( 147, 452);
 	DefineGlobalId( 148, 453);
 	DefineGlobalId( 149, 454);
+	DefineGlobalId( 150, 455);
 }
 
 /*##########################################################################
@@ -1341,7 +1365,7 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
