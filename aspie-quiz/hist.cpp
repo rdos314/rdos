@@ -50,6 +50,9 @@ struct THistData
 
 long double MaxVal = 0.0;
 
+#define WIDTH  180
+#define HEIGHT 120
+
 /*################## ImportData ##########################
 *   Purpose....: Import data	   					      	        #
 *   In params..: *                                                          #
@@ -59,13 +62,13 @@ long double MaxVal = 0.0;
 *##########################################################################*/
 int ImportData(const char *filename, THistData HistArr[100])
 {
-    char buf[MAX_IN_ROW];
-    char *ptr;
+	 char buf[MAX_IN_ROW];
+	 char *ptr;
 	long pos = 0;
-    int size;
-    THistData *HistPtr = HistArr;
-    TFile infile(filename);
-    long double val;
+	 int size;
+	 THistData *HistPtr = HistArr;
+	 TFile infile(filename);
+	 long double val;
 
 	while (size = infile.Read(buf, MAX_IN_ROW))
 	{
@@ -80,15 +83,15 @@ int ImportData(const char *filename, THistData HistArr[100])
 		infile.SetPos(pos);
 
 		if (sscanf(buf, "%d %Lf", &HistPtr->Index, &val) != 2)
-		    return FALSE;
+			 return FALSE;
 
 		if (val < 0.0)
 		    val = 0.0;
 
-        if (val > MaxVal)
-            MaxVal = val;
+		  if (val > MaxVal)
+				MaxVal = val;
 
-        HistPtr->Val = val;
+		  HistPtr->Val = val;
 		HistPtr++;
 	}
     return TRUE;
@@ -103,7 +106,7 @@ int ImportData(const char *filename, THistData HistArr[100])
 *##########################################################################*/
 void WriteHeading(TBitmapGraphicDevice *dev, int x, int y, const char *text)
 {
-    TFont Font(10);
+	 TFont Font(10);
     TFont TextFont(15);
 
 	dev->ClearClipRect();
@@ -123,7 +126,7 @@ void WriteHeading(TBitmapGraphicDevice *dev, int x, int y, const char *text)
 *##########################################################################*/
 void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], THistData Nt[100], int Reverse)
 {
-    int index;
+	 int index;
 	int ok;
 	int i;
     char *name;
@@ -135,12 +138,12 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 
     chart = new TChart(dev, &LinXAxis, &LinYAxis);
 
-    chart->SetWindow(x, y + 20, x + 249, y + 149);
-    chart->SetBackColor(255, 255, 255);
+	 chart->SetWindow(x, y + 20, x + WIDTH / 2 + 17, y + HEIGHT - 31);
+	 chart->SetBackColor(255, 255, 255);
 
-    chart->SetLineColor(100, 0, 255, 75);
-    
-    for (i = 0; i < 100; i++)
+	 chart->SetLineColor(100, 0, 255, 75);
+
+	 for (i = 0; i < 100; i++)
 		chart->Add(100, (long double)As[i].Index, As[i].Val);
 
 	chart->SetLineColor(101, 128, 0, 255);
@@ -154,28 +157,28 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 	dev->SetLgopNone();
 	dev->SetFont(&TextFont);
 
-    for (i = 0; i < 2; i++)
-    {
-        if (Reverse)
-            index = 1 - i;
-        else
-            index = i;
-            
-        switch (index)
-        {
-            case 0:
-                name = "Neurotypical";
-                dev->SetDrawColor(128, 0, 255);
-                break;
+	 for (i = 0; i < 2; i++)
+	 {
+		  if (Reverse)
+				index = 1 - i;
+		  else
+				index = i;
 
-            case 1:
-                name = "Aspie";
-                dev->SetDrawColor(0, 255, 75);
-                break;
-        } 
-        dev->DrawString(x + 125 * i + 20, y + 3, name);
-                
-    }
+		  switch (index)
+		  {
+				case 0:
+					 name = "Neurotypical";
+					 dev->SetDrawColor(128, 0, 255);
+					 break;
+
+				case 1:
+					 name = "Aspie";
+					 dev->SetDrawColor(0, 255, 75);
+					 break;
+		  }
+		  dev->DrawString(x + (WIDTH / 2 - 5) * i + 20, y + 3, name);
+
+	 }
 
 	delete chart;
 }
@@ -193,12 +196,12 @@ void CreateAll()
 	THistData AsArr[100];
 	THistData NtArr[100];
 	int ok;
-	TJpegBitmapDevice jpeg(24, 520, 550);
+	TJpegBitmapDevice jpeg(24, 20 + 3 * WIDTH, 2 * HEIGHT);
 
 	jpeg.SetDrawColor(255, 255, 255);
 	jpeg.SetLgopNone();
 	jpeg.SetFilledStyle();
-	jpeg.DrawRect(0, 0, 519, 549);
+	jpeg.DrawRect(0, 0, 799, 359);
 
 	WriteHeading(&jpeg, 0, 0, "Quiz II");
 
@@ -211,7 +214,7 @@ void CreateAll()
 	if (ok)
 		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 0, "Quiz III");
+	WriteHeading(&jpeg, WIDTH, 0, "Quiz III");
 
 	MaxVal = 0.0;
 	ok = ImportData("as3.dat", AsArr);
@@ -220,9 +223,9 @@ void CreateAll()
 		ok = ImportData("nt3.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 0, 180, "Neurodiversity");
+	WriteHeading(&jpeg, 2 * WIDTH, 0, "Neurodiversity");
 
 	MaxVal = 0.0;
 	ok = ImportData("as4.dat", AsArr);
@@ -231,9 +234,9 @@ void CreateAll()
 		ok = ImportData("nt4.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 180, "Quiz 5");
+	WriteHeading(&jpeg, 0, HEIGHT, "Quiz 5");
 
 	MaxVal = 0.0;
 	ok = ImportData("as5.dat", AsArr);
@@ -242,9 +245,9 @@ void CreateAll()
 		ok = ImportData("nt5.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 0, 20 + HEIGHT, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 0, 360, "Quiz 6");
+	WriteHeading(&jpeg, WIDTH, HEIGHT, "Quiz 6");
 
 	MaxVal = 0.0;
 	ok = ImportData("as6.dat", AsArr);
@@ -253,9 +256,9 @@ void CreateAll()
 		ok = ImportData("nt6.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr, TRUE);
+		WriteAsNtHist(&jpeg, WIDTH, 20 + HEIGHT, AsArr, NtArr, TRUE);
 
-	WriteHeading(&jpeg, 260, 360, "Quiz 7");
+	WriteHeading(&jpeg, 2 * WIDTH, HEIGHT, "Quiz 7");
 
 	MaxVal = 0.0;
 	ok = ImportData("as7.dat", AsArr);
@@ -264,7 +267,7 @@ void CreateAll()
 		ok = ImportData("nt7.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 20 + HEIGHT, AsArr, NtArr, FALSE);
 
 	jpeg.Save("all.jpg");
 }
@@ -281,7 +284,7 @@ void CreateDx()
 	THistData AsArr[100];
 	THistData NtArr[100];
 	int ok;
-	TJpegBitmapDevice jpeg(24, 800, 900);
+	TJpegBitmapDevice jpeg(24, 20 + 3 * WIDTH, 5 * HEIGHT);
 
 	jpeg.SetDrawColor(255, 255, 255);
 	jpeg.SetLgopNone();
@@ -299,7 +302,7 @@ void CreateDx()
 	if (ok)
 		WriteAsNtHist(&jpeg, 0, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 0, "Social phobia");
+	WriteHeading(&jpeg, WIDTH, 0, "Social phobia");
 
 	MaxVal = 0.0;
 	ok = ImportData("socas.dat", AsArr);
@@ -308,9 +311,9 @@ void CreateDx()
 		ok = ImportData("socnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 20, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 520, 0, "Control group");
+	WriteHeading(&jpeg, 2 * WIDTH, 0, "Control group");
 
 	MaxVal = 0.0;
 	ok = ImportData("ntas.dat", AsArr);
@@ -319,9 +322,9 @@ void CreateDx()
 		ok = ImportData("ntnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 520, 20, AsArr, NtArr, TRUE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 20, AsArr, NtArr, TRUE);
 
-	WriteHeading(&jpeg, 0, 180, "ADD/ADHD");
+	WriteHeading(&jpeg, 0, HEIGHT, "ADD/ADHD");
 
 	MaxVal = 0.0;
 	ok = ImportData("addas.dat", AsArr);
@@ -330,9 +333,9 @@ void CreateDx()
 		ok = ImportData("addnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 200, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 0, 20 + HEIGHT, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 180, "Tourette");
+	WriteHeading(&jpeg, WIDTH, HEIGHT, "Tourette");
 
 	MaxVal = 0.0;
 	ok = ImportData("tsas.dat", AsArr);
@@ -341,9 +344,9 @@ void CreateDx()
 		ok = ImportData("tsnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 200, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 20 + HEIGHT, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 520, 180, "Prosapagnosia");
+	WriteHeading(&jpeg, 2 * WIDTH, HEIGHT, "Prosapagnosia");
 
 	MaxVal = 0.0;
 	ok = ImportData("paas.dat", AsArr);
@@ -352,9 +355,9 @@ void CreateDx()
 		ok = ImportData("pant.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 520, 200, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 20 + HEIGHT, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 0, 360, "Bipolar");
+	WriteHeading(&jpeg, 0, 2 * HEIGHT, "Bipolar");
 
 	MaxVal = 0.0;
 	ok = ImportData("bipas.dat", AsArr);
@@ -363,9 +366,9 @@ void CreateDx()
 		ok = ImportData("bipnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 380, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 0, 2 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 360, "Schizophrenia");
+	WriteHeading(&jpeg, WIDTH, 2 * HEIGHT, "Schizophrenia");
 
 	MaxVal = 0.0;
 	ok = ImportData("schas.dat", AsArr);
@@ -374,9 +377,9 @@ void CreateDx()
 		ok = ImportData("schnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 380, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 2 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 520, 360, "Synaesthesia");
+	WriteHeading(&jpeg, 2 * WIDTH, 2 * HEIGHT, "Synaesthesia");
 
 	MaxVal = 0.0;
 	ok = ImportData("synas.dat", AsArr);
@@ -385,9 +388,9 @@ void CreateDx()
 		ok = ImportData("synnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 520, 380, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 2 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 0, 540, "Dyslexia");
+	WriteHeading(&jpeg, 0, 3 * HEIGHT, "Dyslexia");
 
 	MaxVal = 0.0;
 	ok = ImportData("dyslas.dat", AsArr);
@@ -396,9 +399,9 @@ void CreateDx()
 		ok = ImportData("dyslnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 560, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 0, 3 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 540, "Dyscalculia");
+	WriteHeading(&jpeg, WIDTH, 3 * HEIGHT, "Dyscalculia");
 
 	MaxVal = 0.0;
 	ok = ImportData("dyscas.dat", AsArr);
@@ -407,9 +410,9 @@ void CreateDx()
 		ok = ImportData("dyscnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 560, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 3 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 520, 540, "Dysgraphia");
+	WriteHeading(&jpeg, 2 * WIDTH, 3 * HEIGHT, "Dysgraphia");
 
 	MaxVal = 0.0;
 	ok = ImportData("dysgas.dat", AsArr);
@@ -418,9 +421,9 @@ void CreateDx()
 		ok = ImportData("dysgnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 520, 560, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 3 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 0, 720, "OCD");
+	WriteHeading(&jpeg, 0, 4 * HEIGHT, "OCD");
 
 	MaxVal = 0.0;
 	ok = ImportData("ocdas.dat", AsArr);
@@ -429,9 +432,9 @@ void CreateDx()
 		ok = ImportData("ocdnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 0, 740, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 0, 4 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 260, 720, "ODD");
+	WriteHeading(&jpeg, WIDTH, 4 * HEIGHT, "ODD");
 
 	MaxVal = 0.0;
 	ok = ImportData("oddas.dat", AsArr);
@@ -440,9 +443,9 @@ void CreateDx()
 		ok = ImportData("oddnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 260, 740, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, WIDTH, 4 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
-	WriteHeading(&jpeg, 520, 720, "Dyspraxia");
+	WriteHeading(&jpeg, 2 * WIDTH, 4 * HEIGHT, "Dyspraxia");
 
 	MaxVal = 0.0;
 	ok = ImportData("dyspas.dat", AsArr);
@@ -451,7 +454,7 @@ void CreateDx()
 		ok = ImportData("dyspnt.dat", NtArr);
 
 	if (ok)
-		WriteAsNtHist(&jpeg, 520, 740, AsArr, NtArr, FALSE);
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 4 * HEIGHT + 20, AsArr, NtArr, FALSE);
 
 	jpeg.Save("dx.jpg");
 }

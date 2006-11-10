@@ -193,5 +193,7 @@ int main(int argc, char **argv)
 //  Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
 
 	 Quiz[7]->WritePhpWeighting("weights.php");
+
+	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
 

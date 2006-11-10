@@ -184,6 +184,8 @@ void TQuiz8::DefineQuiz()
 ##########################################################################*/
 void TQuiz8::SetupTexts()
 {
+  Quiz[15].Reverse = TRUE;
+  Quiz[17].Reverse = TRUE;
   Quiz[43].Reverse = TRUE;
   Quiz[46].Reverse = TRUE;
   Quiz[47].Reverse = TRUE;
@@ -205,6 +207,7 @@ void TQuiz8::SetupTexts()
   Quiz[79].Reverse = TRUE;
   Quiz[80].Reverse = TRUE;
   Quiz[81].Reverse = TRUE;
+  Quiz[82].Reverse = TRUE;
   Quiz[93].Reverse = TRUE;
   Quiz[95].Reverse = TRUE;
   Quiz[96].Reverse = TRUE;
@@ -212,6 +215,8 @@ void TQuiz8::SetupTexts()
   Quiz[99].Reverse = TRUE;
   Quiz[102].Reverse = TRUE;
   Quiz[128].Reverse = TRUE;
+  Quiz[141].Reverse = TRUE;
+  Quiz[144].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -227,12 +232,12 @@ void TQuiz8::SetupTexts()
   Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[12].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[13].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[14].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[15].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[16].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[17].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[14].MyGroup = GROUP_MIXED;
+  Quiz[15].MyGroup = GROUP_MIXED;
+  Quiz[16].MyGroup = GROUP_MIXED;
+  Quiz[17].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[18].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[19].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[19].MyGroup = GROUP_MIXED;
   Quiz[20].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[21].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[22].MyGroup = GROUP_NT_BIOLOGY;
@@ -343,7 +348,7 @@ void TQuiz8::SetupTexts()
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
-  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_MIXED;
@@ -351,9 +356,9 @@ void TQuiz8::SetupTexts()
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
-  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[139].MyGroup = GROUP_MIXED;
-  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
@@ -361,10 +366,10 @@ void TQuiz8::SetupTexts()
   Quiz[145].MyGroup = GROUP_MIXED;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
-  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_NONVERBAL;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
@@ -1395,11 +1400,11 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;

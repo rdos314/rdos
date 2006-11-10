@@ -36,7 +36,10 @@
 
 #include "device.h"
 #include "sigdev.h"
+
+#ifndef MSVC
 #include "rdos.h"
+#endif
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -73,7 +76,9 @@
 TSection TDevice::FListSection;
 TDevice *TDevice::FDeviceList = 0;
 
+#ifndef MSVC
 int CrcHandle = RdosCreateCrc(0x8005);
+#endif
 
 /*##################  TDeviceAlloc:TDeviceAlloc  ###############
 *   Purpose....: Constructor for msg allocation                        #
@@ -4881,8 +4886,9 @@ int TDeviceMsg::GetSize()
 *##########################################################################*/
 unsigned short int TDeviceMsg::Crc(const char *Data, int Size) const
 {
-    return RdosCalcCrc(CrcHandle, 0, Data, Size);
-
+#ifndef MSVC
+	return RdosCalcCrc(CrcHandle, 0, Data, Size);
+#else
 
 	unsigned short int Crc = 0;
 	int i;
@@ -4905,6 +4911,7 @@ unsigned short int TDeviceMsg::Crc(const char *Data, int Size) const
 		Data++;
 	}
 	return Crc;
+#endif
 }
 
 /*##################  TDeviceMsg::GetData  ###############

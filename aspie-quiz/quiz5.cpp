@@ -314,7 +314,7 @@ void TQuiz5::SetupTexts()
 	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[111].MyGroup = GROUP_MIXED;
-	Quiz[112].MyGroup = GROUP_NT_TALENT;
+	Quiz[112].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 

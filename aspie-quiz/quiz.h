@@ -196,6 +196,8 @@ public:
     virtual void WriteRace(const char *filename);
     virtual void WriteStim(const char *filename);
 
+    void WritePhpGlobalQuestions(const char *filename);
+
 	void CheckCross();
 
 	void WritePhpQuestions(const char *filename); 

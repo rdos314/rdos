@@ -25,7 +25,10 @@
 #
 ########################################################################*/
 
+#ifndef MSVC
 #include "rdos.h"
+#endif
+
 #include "gif.h"
 #include "file.h"
 #ifdef __GNUC__

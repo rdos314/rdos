@@ -6366,3 +6366,64 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 	    }
 	}
 }
+
+/*##################  TQuiz::WritePhpGlobalQuestions ##########################
+*   Purpose....: Write global question vector 					            #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePhpGlobalQuestions(const char *filename)
+{
+	TFile file(filename, 0);
+	int i;
+	int cross;
+	int q;
+	TQuiz *quiz;
+	int found;
+	char str[128];
+    int id;
+
+    for (id = 0; id < MAX_GLOBAL_QUESTIONS; id++)
+    {	
+		  if (GlobalArr[id])
+        {
+            found = FALSE;
+
+            for (cross = 0; cross < MAX_CROSS && !found; cross++)
+            {
+                quiz = CrossQuiz[cross];
+                if (quiz)
+                {
+                    for (q = 0; q < quiz->N && !found; q++)
+                    {
+                        if (quiz->Quiz[q].GlobalId == id)
+                        {
+                            sprintf(str, " $m[%d] = \"", id);
+                            file.Write(str);
+                            file.Write(quiz->Quiz[q].Text);
+                            file.Write("\";\n");                            
+                            found = TRUE;
+                        }
+                    }
+                }
+            }
+
+            if (!found)
+            {            
+                for (i = 0; i < N && !found; i++)
+                {
+                    if (Quiz[i].GlobalId == id)
+                    {
+                        sprintf(str, " $m[%d] = \"", id);
+                        file.Write(str);
+                        file.Write(Quiz[i].Text);
+                        file.Write("\";\n");                            
+                        found = TRUE;
+                    }
+                }
+            }
+        } 
+    }
+}

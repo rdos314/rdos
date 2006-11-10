@@ -119,7 +119,8 @@ dt12	DB 31
 days_in_month	PROC
 	push ebx
 	movzx ebx,ch
-	mov al,byte ptr cs:[ebx].day_tab
+	add ebx,OFFSET day_tab
+	mov al,byte ptr cs:[ebx]
 	cmp al,28
 	jnz days_in_month_ok
 	test dx,3
@@ -255,7 +256,8 @@ passed_days	PROC
 	push ebx
 	movzx ebx,ch
 	add bx,bx
-	mov ax,word ptr cs:[ebx].passed_days_tab
+	add ebx,OFFSET passed_days_tab
+	mov ax,word ptr cs:[ebx]
 	cmp ch,2
 	jc passed_days_add_day
 	test dx,3
@@ -446,46 +448,46 @@ Win32TicsToRecord	Proc
 	mov ebp,esp
 	pushad
 ;
-	mov edx,[ebp].ctMSB
-	mov eax,[ebp].ctLSB
+	mov edx,[ebp+ctMSB]
+	mov eax,[ebp+ctLSB]
 	add eax,1193 / 2
 	adc edx,0
 	call binary_to_time
 	push edx
 ;
-	mov esi,[ebp].ctYear
+	mov esi,[ebp+ctYear]
 	movzx edx,dx
 	mov [esi],edx
 ;
-	mov esi,[ebp].ctMonth
+	mov esi,[ebp+ctMonth]
 	movzx edx,ch
 	mov [esi],edx
 ;
-	mov esi,[ebp].ctDay
+	mov esi,[ebp+ctDay]
 	movzx edx,cl
 	mov [esi],edx
 ;
-	mov esi,[ebp].ctHour
+	mov esi,[ebp+ctHour]
 	movzx edx,bh
 	mov [esi],edx
 ;
-	mov esi,[ebp].ctMin
+	mov esi,[ebp+ctMin]
 	movzx edx,bl
 	mov [esi],edx
 ;
-	mov esi,[ebp].ctSec
+	mov esi,[ebp+ctSec]
 	movzx edx,ah
 	mov [esi],edx
 ;
 	pop edx
 	call time_to_binary
 	mov ebx,eax
-	mov eax,[ebp].ctLSB
+	mov eax,[ebp+ctLSB]
 	sub eax,ebx
 	xor edx,edx
 	mov ebx,1192
 	div ebx
-	mov esi,[ebp].ctMilli
+	mov esi,[ebp+ctMilli]
 	cmp ax,1000
 	jne rttrSaveMs
 ;
@@ -536,25 +538,25 @@ Win32RecordToTics	Proc
 	mov ebp,esp
 	pushad
 ;
-	mov eax,[ebp].rtMilli
+	mov eax,[ebp+rtMilli]
 	mov edx,1192
 	mul edx
 	push eax
-	mov dx,[ebp].rtYear
-	mov ch,[ebp].rtMonth
-	mov cl,[ebp].rtDay
-	mov bh,[ebp].rtHour
-	mov bl,[ebp].rtMin
-	mov ah,[ebp].rtSec
+	mov dx,[ebp+rtYear]
+	mov ch,[ebp+rtMonth]
+	mov cl,[ebp+rtDay]
+	mov bh,[ebp+rtHour]
+	mov bl,[ebp+rtMin]
+	mov ah,[ebp+rtSec]
 	call time_to_binary
 	pop ebx
 	add eax,ebx
 	adc edx,0
 ;
-	mov esi,[ebp].rtMSB
+	mov esi,[ebp+rtMSB]
 	mov [esi],edx
 ;
-	mov esi,[ebp].rtLSB
+	mov esi,[ebp+rtLSB]
 	mov [esi],eax
 ;
 	popad
@@ -587,12 +589,12 @@ Win32GetTics	Proc
 	push edx
 	push esi
 ;
-    mov eax,[ebp].rgtTick
+    mov eax,[ebp+rgtTick]
     mov edx,1079
     mul edx
-	mov esi,[ebp].rgtMSB
+	mov esi,[ebp+rgtMSB]
 	mov [esi],edx
-	mov esi,[ebp].rgtLSB
+	mov esi,[ebp+rgtLSB]
 	mov [esi],eax
 ;
 	pop esi
