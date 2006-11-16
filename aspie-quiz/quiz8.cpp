@@ -35,7 +35,7 @@
 
 #define CI	1
 
-#define MAX_IN_ROW		1024
+#define MAX_IN_ROW		4096
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -73,8 +73,6 @@ public:
 	TStim();
 	void Add(TQuizRow *Row);
 	void WriteRow(TFile &file, int index);
-
-	static void WriteHeader(TFile &file);
 
     int StimChoice[45][33];
     int StimCount[45];
@@ -1400,14 +1398,14 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
@@ -2013,55 +2011,25 @@ TStim::TStim()
 *##########################################################################*/
 void TStim::Add(TQuizRow *Row)
 {
-    int i;
-    int j;
-    int index;
+	 int i;
+	 int j;
+	 int index;
 
-    for (i = 0; i < 45; i++)
-    {
-        for (j = 0; j < 3; j++)
-        {
-            if (Row->Stim[i][j])
-            {
-                index = Row->Stim[i][j];
-                if (index < 33)
-                {
-                    StimChoice[i][index]++;
-                    StimCount[i]++;
-                }
-            }
-        }
-    }
-}
-
-/*##################  TStim::WriteHeader ##########################
-*   Purpose....: Write header in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TStim::WriteHeader(TFile &file)
-{
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Stim");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("#1");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("#2");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 20);
-	file.Write("#3");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
+	 for (i = 0; i < 45; i++)
+	 {
+		  for (j = 0; j < 3; j++)
+		  {
+				if (Row->Stim[i][j])
+				{
+					 index = Row->Stim[i][j];
+					 if (index < 33)
+					 {
+						  StimChoice[i][index] += 3 - j;
+						  StimCount[i] += 3 - j;
+					 }
+				}
+		  }
+	 }
 }
 
 /*##################  TStim::WriteRow ##########################
@@ -2077,46 +2045,61 @@ void TStim::WriteRow(TFile &file, int index)
 	int i;
     int j;
 	int max;
+	int min;
 	int val;
 	int currind;
-	int ind[3] = {0, 0, 0};
+	int used[33];
+	
 
-	file.Write("<tr style='height:24.75pt'>");
-	WriteCenteredFieldHeader(file, 25);
-	file.Write(StimText[index]);
-	WriteFieldFooter(file);
-
-    for (j = 0; j < 3; j++)
+    max = 0;
+    for (i = 1; i <= 32; i++)
     {
-    	max = 0;
-    	for (i = 1; i <= 32; i++)
-	    {
-            val = StimChoice[index][i];
-    	    if (i != ind[0] && i != ind[1])
+        used[i] = FALSE;
+        
+        val = StimChoice[index][i];
+        if (val > max)
+        {
+            max = val;
+            currind = i;
+        }
+    }
+
+    min = max * 8 / 10;
+
+    if (max)
+    {
+    	file.Write(StimText[index]);
+    	file.Write(":  ");
+    	file.Write(ReasonText[currind]);
+    	used[currind] = TRUE;
+
+        while (max)
+        {
+            max = 0;
+        
+            for (i = 1; i <= 32; i++)
             {
-                if (val	> max)
+                if (!used[i])
                 {
-                    max = val;
-                    currind = i;
+                    val = StimChoice[index][i];
+                    if (val >= min && val > max)
+                    {
+                        max = val;                    
+                        currind = i;
+                    }
                 }
+            }
+
+            if (max)
+            {
+                file.Write(", ");
+                file.Write(ReasonText[currind]);
+                used[currind] = TRUE;
             }
         }
 
-        ind[j] = currind;
-
-        if (max)
-        {
-        	WriteCenteredFieldHeader(file, 20);
-        	file.Write(ReasonText[currind]);
-            sprintf(str, " (%d)", max);
-            file.Write(str);        	
-        	WriteFieldFooter(file);
-        }    
-        else
-            break;
+        file.Write("<br>\n");
     }
-
-    file.Write("</tr>");
 }
 
 /*##################  TQuiz5::WriteHair ##########################
@@ -2248,14 +2231,8 @@ void TQuiz8::WriteStim(const char *filename)
 	file.Write("Stim results");
 	file.Write("</h3><br>");
 
-	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-    TStim::WriteHeader(file);
-
     for (i = 0; i < 45; i++)
         stim.WriteRow(file, i);
-            
-	file.Write("</table>");
 
 	file.Write("<br><br>");
 }
