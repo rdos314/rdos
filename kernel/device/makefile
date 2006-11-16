@@ -93,6 +93,10 @@ rtl8139_rdvs = RTL8139.RDV
 8255x_objs = $(8255x_srcs:.ASM=.OBJ)
 8255x_rdvs = 8255x.RDV
 
+viausb11_srcs = VIAUSB11.ASM
+viausb11_objs = $(viausb11_srcs:.ASM=.OBJ)
+viausb11_rdvs = VIAUSB11.RDV
+
 ppp_srcs = PPP.ASM
 ppp_objs = $(ppp_srcs:.ASM=.OBJ)
 ppp_rdvs = PPP.RDV
@@ -109,7 +113,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
-			$(ts2003_srcs)
+			$(ts2003_srcs) $(viausb11_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -117,7 +121,7 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
-			$(ts2003_rdvs)
+			$(ts2003_rdvs) $(viausb11_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -265,6 +269,14 @@ RTL8139.RDV : $(rtl8139_objs)
 	$(8255x_objs)
 	8255x.RDV
 	8255x;
+!
+
+VIAUSB11.RDV : $(viausb11_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(viausb11_objs)
+	VIAUSB11.RDV
+	VIAUSB11;
 !
 
 FAT.RDV : $(fat_objs)
