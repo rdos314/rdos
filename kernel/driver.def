@@ -382,14 +382,17 @@ flash_disc_data_sel	EQU 948h
 inifile_code_sel	EQU 950h
 inifile_sys_sel		EQU 958h
 
-bsp_code_sel            EQU 960h
-bsp_data_sel            EQU 968h
+bsp_code_sel        EQU 960h
+bsp_data_sel        EQU 968h
 
 touch_code_sel      EQU 970h
 touch_data_sel      EQU 978h
 
-usb_code_sel        EQU 980h
-usb_data_sel        EQU 988h
+usb_dev_code_sel    EQU 980h
+usb_dev_data_sel    EQU 988h
+
+usb_code_sel        EQU 990h
+usb_data_sel        EQU 998h
 
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h

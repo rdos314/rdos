@@ -39,6 +39,14 @@ INCLUDE ..\os.inc
 
 	.386p
 
+MAX_PCI_DEVICES = 256
+
+data    STRUC
+
+pci_device_arr      DD MAX_PCI_DEVICES DUP(?,?)
+
+data    ENDS
+
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
@@ -390,6 +398,7 @@ write_pci_dword	Endp
 ;
 ;		RETURNS:		NC		Success
 ;						BH		Bus
+;                       CH      Function
 ;						BL 		Device
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -397,52 +406,57 @@ write_pci_dword	Endp
 find_pci_device_name	DB 'Find PCI Device',0
 
 find_pci_device	Proc far
+    push ds
 	push eax
-	push ecx
 	push dx
 	push si
+	push di
+	push ecx
 ;
-	mov si,ax
+    mov di,pci_data_sel
+    mov ds,di
+    xor si,si
+;
+	mov di,ax
 	mov bx,cx
 	shl ebx,16
 	mov bx,dx
-	mov ecx,80000000h
 
+    mov cx,MAX_PCI_DEVICES
+    
 find_pci_device_loop:
-	mov eax,ecx
-	mov dx,0CF8h
-	and al,0FCh
-	cli
-	out dx,eax
-	mov dx,0CFCh
-	in eax,dx
-	sti
-	cmp eax,ebx
+    lodsd
+    cmp eax,ebx
 	jne find_pci_device_next	
 ;
-	or si,si
+	or di,di
 	jz find_pci_device_ok
 ;
-	sub si,1
+	sub di,1
 
 find_pci_device_next:
-	add ecx,800h
-	cmp ecx,81000000h
-	jne find_pci_device_loop
+    add esi,4
+    loop find_pci_device_loop
+;
 	stc
+	pop ecx
 	jmp find_pci_device_done
 
 find_pci_device_ok:
-	mov ebx,ecx
-	shr ebx,8
+    mov ebx,ds:[si+1]
 	shr bl,3
+;
+	mov cx,ds:[si]
+	and cx,700h
+	add sp,4
 	clc
 
 find_pci_device_done:
+    pop di
 	pop si
 	pop dx
-	pop ecx
 	pop eax
+	pop ds
 	ret
 find_pci_device	Endp
 
@@ -761,6 +775,54 @@ bios_pci_failed:
 bios_pci_int	Endp	
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			init_pci_devices
+;
+;		DESCRIPTION:	Init PCI devices
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_pci_devices	Proc near
+    mov ax,pci_data_sel
+    mov es,ax
+    xor di,di
+
+	mov ecx,80000000h
+
+init_pci_device_loop:
+	mov eax,ecx
+	mov dx,0CF8h
+	and al,0FCh
+	cli
+	out dx,eax
+	mov dx,0CFCh
+	in eax,dx
+	sti
+;	
+    or eax,eax
+    jz init_pci_next
+;   
+    cmp eax,-1
+    je init_pci_next
+;   
+    stosd
+    mov eax,ecx
+    stosd
+
+init_pci_next:
+    cmp di,8 * MAX_PCI_DEVICES
+    je init_pci_device_done
+;
+	add ecx,100h
+	cmp ecx,8100000h
+	jne init_pci_device_loop
+
+init_pci_device_done:	
+	ret
+init_pci_devices	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			init
@@ -777,6 +839,18 @@ init	Proc far
 	pusha
 	mov bx,pci_code_sel
 	InitDevice
+;
+	mov eax,SIZE data
+	mov bx,pci_data_sel
+	AllocateFixedSystemMem
+	mov ds,bx
+	mov es,bx
+	mov cx,2 * MAX_PCI_DEVICES
+	mov eax,-1
+	xor di,di
+	rep stosd
+;
+    call init_pci_devices
 ;
 	mov ax,cs
 	mov ds,ax

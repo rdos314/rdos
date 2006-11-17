@@ -271,7 +271,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			CalcCrc
+;		NAME:			LCalcCrc
 ;
 ;		DESCRIPTION:	CALCULATE CRC-SUM X^16 + X^12 + X^5 + 1
 ;
@@ -282,7 +282,7 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CalcCrc	PROC near
+LCalcCrc	PROC near
 	push bx
 	push cx
 	xor ax,ax
@@ -325,7 +325,7 @@ no_xor7:
 	pop cx
 	pop bx
 	ret
-CalcCrc	ENDP
+LCalcCrc	ENDP
 
 PAGE
 
@@ -354,7 +354,7 @@ StartSend	Proc near
 	push dx
 ;
 	add cx,SIZE packet_header
-	call CalcCrc
+	call LCalcCrc
 	xchg al,ah
 	push bx
 	add bx,cx
@@ -1111,7 +1111,7 @@ rec_not_data_size:
 ;
 	sub cx,2
 	mov bx,ds:RecPtr
-	call CalcCrc
+	call LCalcCrc
 	xchg al,ah
 	add bx,cx
 	cmp ax,[bx]

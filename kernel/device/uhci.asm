@@ -35,10 +35,43 @@ INCLUDE ..\os.inc
 INCLUDE ..\user.def
 INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
+INCLUDE ..\os\usb.inc
+
+UsbCommandReg = 0
+UsbStatusReg = 2
+UsbIntReg = 4
+FrameNumberReg = 6
+FrameBaseReg = 8
+SofReg = 12
+PortscReg1 = 16
+PortscReg2 = 18
+
+usb_func_sel    STRUC
+
+uf_hw_phys      DD ?
+uf_hw_linear    DD ?
+uf_hw_sel       DW ?
+uf_ring_sel     DW ?
+
+uf_io_base      DW ?
+
+uf_sel1         DW ?
+uf_sel2         DW ?
+
+usb_func_sel    ENDS
 
 data    STRUC
 
-IoBase  DW ?
+IoBase1     DW ?
+IoBase2     DW ?
+
+UsbSel1     DW ?
+UsbSel2     DW ?
+UsbSel3     DW ?
+UsbSel4     DW ?
+
+UsbFunc1    DW ?
+UsbFunc2    DW ?
 
 data    ENDS
 
@@ -69,6 +102,95 @@ UsbInt  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    CreateUsbFunction
+;
+;		DESCRIPTION:    Create USB function
+;
+;       PARAMETERS:     DX      IO base
+;
+;       RETURNS:        ES      USB function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateUsbFunction  Proc near
+    push ds
+    pushad
+;    
+    mov eax,SIZE usb_func_sel
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov ds,ax
+    mov ds:uf_io_base,dx
+;        
+    mov eax,1000h
+	AllocateBigLinear
+	mov ds:uf_hw_linear,edx
+	mov ecx,eax
+	AllocateGdt
+	CreateDataSelector16
+    mov ds:uf_hw_sel,bx
+    mov es,bx
+    xor di,di
+    mov eax,1
+    mov cx,1024
+    rep stosd
+;
+    GetPhysicalPage
+    and ax,0F000h
+    mov ds:uf_hw_phys,eax    
+;
+    mov eax,800h
+    AllocateSmallGlobalMem
+    mov ds:uf_ring_sel,es
+    xor di,di
+    xor ax,ax
+    mov cx,1024
+    rep stosw
+;    
+    mov ax,ds
+    mov es,ax
+;
+    popad
+    pop ds
+    ret
+CreateUsbFunction   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitUsbChannel
+;
+;		DESCRIPTION:    Init an USB channel
+;
+;       PARAMETERS:     DX      IO base
+;                       BP      Function #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitUsbChannel  Proc near
+    push es
+    pushad
+;
+    add bp,bp
+    call CreateUsbFunction
+    mov ds:[bp].UsbFunc1,es
+;        
+    mov si,es:uf_ring_sel
+    mov di,es:uf_hw_sel
+    OpenUsbChannel
+    mov ds:[bp].UsbSel1,bx
+;    
+    OpenUsbChannel
+    mov ds:[bp+2].UsbSel2,bx
+;
+    popad
+    pop es
+    ret
+InitUsbChannel  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InitPciAdapter
 ;
 ;		DESCRIPTION:    Init PCI adapter if found
@@ -81,7 +203,8 @@ UsbInt  Endp
 
 PciVendorTab:
 pci00	DW 1106h, 3038h
-pci01 	DW 0,	  0
+pci01	DW 1106h, 0571h
+pci02 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
@@ -100,20 +223,63 @@ init_pci_loop:
 	jmp init_pci_loop
 
 init_pci_found:
-    int 3
-	mov cx,PCI_card_ExCa_base
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+;
+    IsIrqFree
+    jnc init_pci_set_irq
+;
+    and al,0F0h
+    or al,13
+
+init_pci_irq_loop:
+    IsIrqFree
+    jnc init_pci_update_irq
+;
+    dec al
+    or al,al
+    jnz init_pci_irq_loop
+;
+    stc
+    jmp init_pci_done
+
+init_pci_update_irq:
+   	mov cl,PCI_interrupt_line
+	WritePciByte
+        
+init_pci_set_irq:	
+	mov di,cs
+	mov es,di
+	mov di,OFFSET UsbInt	
+	RequestPrivateIrqHandler
+;
+	mov cl,20h
 	ReadPciDword
 	mov dx,ax
 	and dx,0FFE0h
-	mov ds:IoBase,dx
-;
-	xor ch,ch
-	mov cl,PCI_interrupt_line
-	ReadPciByte
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET UsbInt	
-	RequestPrivateIrqHandler
+	mov ds:IoBase1,dx
+	xor bp,bp
+	call InitUsbChannel
+;	
+	mov ax,1
+	mov dx,cs:[si]
+	mov cx,cs:[si+2]
+	FindPciDevice
+	jc init_pci_no2
+;	
+	mov cl,20h
+	ReadPciDword
+	mov dx,ax
+	and dx,0FFE0h
+	mov ds:IoBase2,dx
+	mov bp,1
+	call InitUsbChannel
+    clc
+    jmp init_pci_done
+
+init_pci_no2:
+    mov ds:IoBase2,0
+    clc
 
 init_pci_done:
 	ret
@@ -136,7 +302,7 @@ detect_name	DB 'VIA-USB-1.1',0
 
 detect_thread	proc far
     int 3
-	mov ax,ether_data_sel
+	mov ax,usb_dev_data_sel
 	mov ds,ax
 	call InitPciAdapter
 	ret
@@ -180,7 +346,7 @@ Init	Proc far
 	push ds
 	push es
 	pusha
-	mov bx,usb_code_sel
+	mov bx,usb_dev_code_sel
 	InitDevice
 ;
 	mov ax,cs
@@ -188,7 +354,7 @@ Init	Proc far
 	mov es,ax
 ;
 	mov eax,SIZE data
-	mov bx,usb_data_sel
+	mov bx,usb_dev_data_sel
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es,bx

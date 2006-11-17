@@ -2074,3 +2074,10 @@ StopFloppy	MACRO
 NotifyEthernetPacket	MACRO
 	OsGate notify_ethernet_packet_nr
 					ENDM
+
+;   SI      Ring selector
+;   DI      Hardware ring selector
+;   BX      Usb selector
+OpenUsbChannel	MACRO
+	OsGate open_usb_channel_nr
+					ENDM
