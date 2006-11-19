@@ -203,8 +203,11 @@ InitUsbChannel  Endp
 
 PciVendorTab:
 pci00	DW 1106h, 3038h
-pci01	DW 1106h, 0571h
-pci02 	DW 0,	  0
+pci01	DW 8086h, 24D2h
+pci02	DW 8086h, 24D4h
+pci03	DW 8086h, 24D7h
+pci04	DW 8086h, 24DEh
+pci05 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
