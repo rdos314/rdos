@@ -51,37 +51,6 @@ code	SEGMENT byte public use16 'CODE'
 	assume cs:code
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			OpenUsbChannel
-;
-;		DESCRIPTION:	Open USB channel
-;
-;       PARAMETERS:     SI      Ring selector
-;                       DI      Hw selector
-;
-;		RETURNS:		BX      Usb selector
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-open_usb_channel_name	DB 'Open USB Channel',0
-
-open_usb_channel	Proc far
-    push es
-    push eax
-;
-    mov eax,SIZE usb_chan_sel
-    AllocateSmallGlobalMem
-    mov es:usb_ring_sel,si
-    mov es:usb_hw_sel,di 
-    mov bx,es   
-;
-    pop eax    
-    pop es
-	ret
-open_usb_channel	Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
 ;		NAME:			init
@@ -112,12 +81,6 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-;
-	mov si,OFFSET open_usb_channel
-	mov di,OFFSET open_usb_channel_name
-	xor cl,cl
-	mov ax,open_usb_channel_nr
-	RegisterOsGate
 ;
 	popa
 	pop es

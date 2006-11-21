@@ -24,10 +24,3 @@
 ; usb common types & constants
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-usb_chan_sel STRUC
-
-usb_ring_sel    DW ?
-usb_hw_sel      DW ?
-
-usb_chan_sel ENDS

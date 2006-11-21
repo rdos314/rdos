@@ -439,7 +439,5 @@ wait_for_signal_timeout_nr  EQU 299
 
 notify_ethernet_packet_nr   EQU 300
 
-open_usb_channel_nr         EQU 301
-
-osgate_entries				EQU 302
+osgate_entries				EQU 310
 

@@ -388,8 +388,8 @@ bsp_data_sel        EQU 968h
 touch_code_sel      EQU 970h
 touch_data_sel      EQU 978h
 
-usb_dev_code_sel    EQU 980h
-usb_dev_data_sel    EQU 988h
+uhci_code_sel       EQU 980h
+uhci_data_sel       EQU 988h
 
 usb_code_sel        EQU 990h
 usb_data_sel        EQU 998h
