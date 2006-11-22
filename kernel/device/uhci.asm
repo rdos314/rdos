@@ -50,18 +50,55 @@ PortscReg2 = 18
 
 uhci_func_sel    STRUC
 
+usb_dev_base     usb_dev_struc <>
+
 uhc_hw_phys      DD ?
 uhc_hw_linear    DD ?
 uhc_hw_sel       DW ?
 uhc_ring_sel     DW ?
+
+uhc_control_qh   DD ?
+
 uhc_io_base      DW ?
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 
 uhci_func_sel    ENDS
 
+uhci_control_pipe   STRUC
+
+upc_pipe_base    usb_pipe_struc <>
+
+uhci_control_pipe   ENDS
+
+uhci_td STRUC
+
+utd_link    DD ?
+utd_control DD ?
+utd_host    DD ?
+utd_buf     DD ?
+
+utd_va_link DD ?
+utd_va_buf  DD ?
+utd_phys    DD ?
+
+uhci_td ENDS
+
+uhci_qh STRUC
+
+uqh_link    DD ?
+uqh_elem    DD ?
+
+uqh_va_link DD ?
+uqh_va_elem DD ?
+uqh_phys    DD ?
+
+uhci_qh ENDS
+
 data    STRUC
 
+UhciList32   DD ?
+UhciSection  section_typ <>
 UhciIrq      DB ?
 UhciCount    DW ?
 UhciFunc     DW 16 DUP (?)
@@ -74,6 +111,293 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 .386p
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			AllocateBlock32
+;
+;		DESCRIPTION:	Allocate 32-byte block with page-alignment
+;
+;       PARAMETERS:     ES      Flat sel
+;
+;		RETURNS:		EDX		Data address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBlock32	PROC near
+    push ds
+    push eax
+;    
+    mov ax,uhci_data_sel
+    mov ds,ax
+    EnterSection ds:UhciSection
+    mov edx,ds:UhciList32
+	or edx,edx
+	jnz allocate_block32_done
+;
+    push ecx    
+	mov eax,1000h
+	AllocateBigLinear
+	mov ecx,32
+	mov ds:UhciList32,edx
+	
+allocate_block32_loop:
+	mov eax,edx
+	add eax,ecx
+	mov es:[edx],eax
+	mov edx,eax
+	test dx,0FFFh
+	jnz allocate_block32_loop
+;
+	sub edx,ecx
+	mov dword ptr es:[edx],0
+	mov edx,ds:UhciList32
+	pop ecx
+
+allocate_block32_done:
+	mov eax,es:[edx]
+	mov ds:UhciList32,eax
+    LeaveSection ds:UhciSection
+;
+	pop eax
+	pop ds
+	ret
+AllocateBlock32	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			FreeBlock32
+;
+;		DESCRIPTION:	Free 32-byte block
+;
+;       PARAMETERS:     ES      Flat sel
+;
+;		PARAMETERS:		EDX		Data address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeBlock32	PROC near
+    push ds
+	push eax
+;
+    mov ax,uhci_data_sel
+    mov ds,ax
+;    
+    EnterSection ds:UhciSection
+	mov eax,ds:UhciList32
+	mov es:[edx],eax
+	mov ds:UhciList32,edx
+    LeaveSection ds:UhciSection
+;	
+	pop eax
+	pop ds
+	ret
+FreeBlock32	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AllocateQh
+;
+;		DESCRIPTION:	Allocate & initialize a queue header
+;
+;       PARAMETERS:     ES      Flat sel
+;
+;		PARAMETERS:		EDX		QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateQh	PROC near
+    push eax
+    push cx
+;    
+    call AllocateBlock32
+    mov es:[edx].uqh_link,1
+    mov es:[edx].uqh_va_link,0
+    mov es:[edx].uqh_elem,1
+    mov es:[edx].uqh_va_elem,0
+    GetPhysicalPage
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    mov es:[edx].uqh_phys,eax
+;
+    pop cx   
+    pop eax
+    ret
+AllocateQh  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AllocateTd
+;
+;		DESCRIPTION:	Allocate & initialize a TD block
+;
+;       PARAMETERS:     ES      Flat sel
+;                       FS      Pipe
+;                       EDI     Data buffer
+;                       CX      Size of data
+;
+;		PARAMETERS:		EDX		TD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateTd	PROC near
+    push eax
+    push ecx
+;    
+    call AllocateBlock32
+    mov es:[edx].utd_link,1
+    mov es:[edx].utd_va_link,0
+    mov es:[edx].utd_control, 38000000h
+;
+    movzx ecx,cx
+    shl ecx,21
+    movzx eax,fs:usbp_endpoint
+    shl eax,15
+    or ecx,eax
+    or ch,fs:usbp_address
+    xor cl,cl
+;    
+    mov al,fs:usbp_seq
+    or al,al
+    jz atIncSeq
+;
+    or ecx,80000h 
+    xor al,al
+    jmp atSaveSeq
+
+atIncSeq:
+    inc al
+
+atSaveSeq:    
+    mov fs:usbp_seq,al   
+    mov es:[edx].utd_host,ecx
+;        
+    GetPhysicalPage
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    mov es:[edx].utd_phys,eax
+;
+    mov es:[edx].utd_va_buf,edi
+    xor eax,eax
+    or edi,edi
+    jz atSaveBuf
+;    
+    push edx
+    mov edx,edi
+    GetPhysicalPage
+    and ax,0F000h
+    mov cx,dx
+    and cx,0FFFh
+    or ax,cx
+    pop edx
+
+atSaveBuf:
+    mov es:[edx].utd_buf,eax
+;    
+    pop ecx   
+    pop eax
+    ret
+AllocateTd  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InsertElem
+;
+;		DESCRIPTION:	Insert TD into vertical QH
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX     QH
+;                       EAX     TD
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertElem	PROC near
+    push ecx
+    push edx
+;
+    mov ecx,es:[edx].uqh_va_elem
+    or ecx,ecx
+    jz ieEmpty
+
+ieTraverse:
+    mov edx,ecx
+    mov ecx,es:[edx].utd_va_link
+    or ecx,ecx
+    jnz ieTraverse
+;
+    mov cl,byte ptr es:[eax].utd_link
+    and cl,0E4h
+    or cl,1
+    mov byte ptr es:[eax].utd_link,cl
+;
+    mov ecx,es:[eax].utd_phys
+    mov cl,byte ptr es:[edx].utd_link
+    and cl,0E4h
+    mov es:[edx].utd_link,ecx
+    mov es:[edx].utd_va_link,eax
+    jmp ieDone
+    
+ieEmpty:
+    mov cl,byte ptr es:[eax].utd_link
+    and cl,0E4h
+    or cl,1
+    mov byte ptr es:[eax].utd_link,cl
+    mov es:[eax].utd_va_link,0
+;    
+    mov es:[edx].uqh_va_elem,eax
+    mov ecx,es:[eax].utd_phys
+    mov es:[edx].uqh_elem,ecx
+
+ieDone:
+    pop edx
+    pop ecx
+    ret
+InsertElem  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetControlQueue
+;
+;		DESCRIPTION:	Create control-queue if not already done, and return QH
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;
+;       RETURNS:        EDX     Control QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetControlQueue	PROC near
+    mov edx,ds:uhc_control_qh
+    or edx,edx
+    jnz gcqOk
+;
+    call AllocateQh
+    mov ds:uhc_control_qh,edx
+
+gcqOk:
+    ret
+GetControlQueue  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -93,6 +417,217 @@ UhciInt	Proc far
     mov ds,ax    
     ret
 UhciInt  Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateControl
+;
+;		DESCRIPTION:    Create control pipe
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControl   Proc far
+    push es
+    push eax
+;    
+    mov eax,SIZE uhci_control_pipe
+    AllocateSmallGlobalMem
+    mov ax,es
+    mov fs,ax
+;
+    pop eax    
+    pop es
+    ret
+CreateControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AllocateBuf
+;
+;		DESCRIPTION:    Allocate transfer buffer
+;
+;       PARAMETERS:     CX     Size
+;                       ES:EDI Data
+;                     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AllocateBuf    Proc far
+    push eax
+    push ecx
+    push edx
+;    
+    mov eax,1000h
+    AllocateBigLinear
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+;
+    pop edx
+    pop ecx
+    pop eax
+    ret
+AllocateBuf    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    StartQueue
+;
+;		DESCRIPTION:    Queue a write transfer req
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        EDX     Queue handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartQueue    Proc far
+    push es
+    mov dx,flat_sel
+    mov es,dx
+    call AllocateQh
+    pop es
+    ret
+StartQueue    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddSetup
+;
+;		DESCRIPTION:    Add setup transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;                       CX      Buffer size
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddSetup    Proc far
+    push eax
+;
+    int 3
+    push edx
+    mov fs:usbp_seq,0
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_SETUP
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem    
+;
+    pop eax    
+    ret
+AddSetup    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddOut
+;
+;		DESCRIPTION:    Add out transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;                       CX      Buffer size
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddOut    Proc far
+    int 3
+    ret
+AddOut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddIn
+;
+;		DESCRIPTION:    Add in transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;                       CX      Buffer size
+;                       ES:EDI  Buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddIn    Proc far
+    int 3
+    ret
+AddIn    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddStatus
+;
+;		DESCRIPTION:    Add status transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatus    Proc far
+    push es
+    push eax
+    push cx
+    push edi
+;
+    int 3
+    mov cx,flat_sel
+    mov es,cx
+    xor cx,cx
+    xor edi,edi
+    push edx
+    mov fs:usbp_seq,1
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_IN
+    or es:[edx].utd_control,1800000h
+    mov eax,edx
+    pop edx
+    call InsertElem    
+;
+    pop edi
+    pop cx
+    pop eax    
+    pop es
+    ret
+AddStatus    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    IssueTransfer
+;
+;		DESCRIPTION:    Issue transfer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     Queue handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IssueTransfer    Proc far
+    int 3
+    ret
+IssueTransfer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -130,19 +665,27 @@ EnablePort   Proc near
     and ax,NOT 200h
     out dx,ax
 ;
+    push cx
     mov cx,10
 
  epLoop:
     in ax,dx
     test ax,4
     clc
-    jnz epDone
+    jnz epNotify
 ;
     or ax,4
     out dx,ax
     loop epLoop
 ;
+    pop cx
     stc
+    jmp epDone
+
+epNotify:
+    pop cx
+    mov al,cl
+    NotifyUsbAttach
                     
 epDone:        
     pop dx
@@ -162,11 +705,35 @@ EnablePort   Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+uhci_tab:
+ut00 DW OFFSET CreateControl,	uhci_code_sel
+ut01 DW OFFSET AllocateBuf,    	uhci_code_sel
+ut02 DW OFFSET StartQueue,    	uhci_code_sel
+ut03 DW OFFSET AddSetup,    	uhci_code_sel
+ut04 DW OFFSET AddOut,      	uhci_code_sel
+ut05 DW OFFSET AddIn,        	uhci_code_sel
+ut06 DW OFFSET AddStatus,       uhci_code_sel
+ut07 DW OFFSET IssueTransfer,   uhci_code_sel
+
 InitFunction    Proc near
     push eax
     push cx
     push dx
+    push si
+    push di
 ;
+    mov si,OFFSET uhci_tab
+    xor di,di
+    mov cx,8
+
+ifTabLoop:
+    lods dword ptr cs:[si]
+    mov ds:[di],eax
+    add di,4
+    loop ifTabLoop    
+;
+    InitUsbDevice
+;    
     mov dx,ds:uhc_io_base
     add dx,SofReg
     in al,dx
@@ -213,6 +780,8 @@ InitFunction    Proc near
     or ax,0C1h
     out dx,ax
 ;
+    pop di
+    pop si
     pop dx
     pop cx
     pop eax       
@@ -262,14 +831,16 @@ AddFunction  Proc near
     and ax,0F000h
     mov ds:uhc_hw_phys,eax    
 ;
-    mov eax,800h
-    AllocateSmallGlobalMem
+    mov eax,1000h
+    AllocateGlobalMem
     mov ds:uhc_ring_sel,es
     xor di,di
     xor ax,ax
     mov cx,1024
-    rep stosw
+    rep stosd
 ;    
+    mov ds:uhc_control_qh,0
+;
     mov ax,uhci_data_sel
     mov es,ax
     mov bx,es:UhciCount
@@ -416,7 +987,6 @@ InitPciAdapter	Endp
 uhci_name	DB 'UHCI',0
 
 uhci_thread	proc far
-    int 3
     mov ax,uhci_data_sel
     mov ds,ax
 	call InitPciAdapter
@@ -433,10 +1003,12 @@ uhci_func_loop:
     call InitFunction
     push cx
 ;
+    push bx
     mov bx,ds:uhc_pci_bus_dev
     mov ch, ds:uhc_pci_func
     mov cl,PCI_status_reg
     ReadPciWord
+    pop bx
 ;    
     mov cl,0
     call EnablePort

@@ -38,6 +38,19 @@ INCLUDE ..\user.inc
 INCLUDE ..\os.inc
 INCLUDE usb.inc
 
+
+GET_STATUS = 0
+CLEAR_FEATURE = 1
+SET_FEATURE = 3
+SET_ADDRESS = 5
+GET_DESCR = 6
+SET_DESCR = 7
+GET_CONFIG = 8
+SET_CONFIG = 9
+GET_INTERFACE = 10
+SET_INTERFACE = 11
+SYNC_FRAME = 12
+
 	.386p
 
 data    STRUC
@@ -49,6 +62,142 @@ data    ENDS
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InitUsbDevice
+;
+;		description:	Init USB device selector
+;
+;       parameters:     DS      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+init_usb_device_name DB 'Init USB Device', 0
+
+init_usb_device	Proc far
+    push es
+    push ax
+    push cx
+    push di
+;
+    mov ax,ds
+    mov es,ax
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usb_port_sel_arr
+    xor ax,ax
+    rep stosw
+;
+    mov cx,128
+    mov di,OFFSET usb_addr_arr
+    xor ax,ax
+    rep stosw
+;
+    pop di
+    pop cx
+    pop ax
+    pop es
+    ret
+init_usb_device   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NotifyUsbAttach
+;
+;		description:	Notify USB attach event
+;
+;       parameters:     AL      Usb port
+;                       DS      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_usb_attach_name DB 'Notify USB Attach', 0
+
+notify_usb_attach	Proc far
+    push fs
+    push es
+    push ax
+    push bx
+    push cx
+    push di
+;    
+    movzx bx,al
+    add bx,bx
+    mov ax,ds
+    mov es,ax
+;
+    mov di,OFFSET usb_addr_arr
+    mov cx,128
+    add di,2
+    xor ax,ax
+    repnz scasw
+    sub di,2
+;
+    mov eax,SIZE usb_function_struc
+    AllocateSmallGlobalMem
+    mov ds:[di],es
+    mov ds:[bx].usb_port_sel_arr,es
+    sub di,OFFSET usb_addr_arr
+    shr di,1
+    mov ax,di
+    mov es:usbf_address,al
+;
+    push ax
+    mov cx,MAX_USB_HUB_PORTS
+    mov di,OFFSET usbf_port_sel_arr    
+    xor ax,ax
+    rep stosw
+    pop ax
+;    
+    push ax
+    call ds:create_control_proc
+;    
+    mov fs:usbp_function_sel,ds
+    mov fs:usbp_address,0
+    mov fs:usbp_endpoint,0
+    mov fs:usbp_seq,0
+    mov fs:usbp_mode,MODE_CONTROL
+    mov fs:usbp_maxlen,64
+;    
+    call ds:start_queue_proc
+    mov cx,8
+    call ds:allocate_buf_proc
+    mov es:[edi].usd_type,0
+    mov es:[edi].usd_req,SET_ADDRESS
+    movzx ax,fs:usbp_address
+    mov es:[edi].usd_value,ax
+    mov es:[edi].usd_index,0
+    mov es:[edi].usd_len,0
+    call ds:add_setup_proc
+    call ds:add_status_proc
+    call ds:issue_transfer_proc
+    pop ax
+    mov fs:usbp_address,al
+;
+    pop di
+    pop cx
+    pop bx
+    pop ax
+    pop es
+    pop fs
+    ret
+notify_usb_attach   Endp
+
+usb_setup_data  STRUC
+
+usd_type        DB ?
+usd_req         DB ?
+usd_value       DW ?
+usd_index       DW ?
+usd_len         DW ?
+
+usb_setup_data  ENDS
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -81,6 +230,18 @@ init	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
+;
+	mov si,OFFSET init_usb_device
+	mov di,OFFSET init_usb_device_name
+	xor cl,cl
+	mov ax,init_usb_device_nr
+	RegisterOsGate
+;
+	mov si,OFFSET notify_usb_attach
+	mov di,OFFSET notify_usb_attach_name
+	xor cl,cl
+	mov ax,notify_usb_attach_nr
+	RegisterOsGate
 ;
 	popa
 	pop es

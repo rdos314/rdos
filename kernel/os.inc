@@ -2074,3 +2074,14 @@ StopFloppy	MACRO
 NotifyEthernetPacket	MACRO
 	OsGate notify_ethernet_packet_nr
 					ENDM
+
+;   DS      Usb device selector
+InitUsbDevice	MACRO
+	OsGate init_usb_device_nr
+					ENDM
+
+;   AL      Port #
+;   DS      Usb device selector
+NotifyUsbAttach	MACRO
+	OsGate notify_usb_attach_nr
+					ENDM

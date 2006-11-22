@@ -24,3 +24,86 @@
 ; usb common types & constants
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+MAX_USB_HUB_PORTS = 16
+
+PID_IN = 69h
+PID_OUT = 0E1h
+PID_SETUP = 2Dh
+
+MODE_CONTROL = 1
+MODE_ISO = 2
+MODE_INTR = 3
+MODE_BULK = 4
+
+usb_dev_struc   STRUC
+
+; OUT FS        Pipe selector
+create_control_proc	DD ?
+
+; IN  CX        Size
+; OUT ES:EDI    Buffer
+allocate_buf_proc   DD ?
+
+; IN  FS        Pipe selector
+; OUT EDX       Queue handle
+start_queue_proc    DD ?
+
+; IN  FS        Pipe selector
+; IN  CX        Size
+; IN  ES:EDI    Data
+; IN  EDX       Queue
+add_setup_proc      DD ?
+
+; IN  FS        Pipe selector
+; IN  CX        Size
+; IN  ES:EDI    Data
+; IN  EDX       Queue
+add_out_proc      DD ?
+
+; IN  FS        Pipe selector
+; IN  CX        Size
+; IN  ES:EDI    Data
+; IN  EDX       Queue
+add_in_proc      DD ?
+
+; IN  FS        Pipe selector
+; IN  EDX       Queue
+add_status_proc      DD ?
+
+; IN  FS        Pipe selector
+; IN  EDX       Queue
+issue_transfer_proc      DD ?
+
+usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
+usb_addr_arr        DW 128 DUP(?)
+
+usb_dev_struc   ENDS
+
+usb_function_struc  STRUC
+
+usbf_address        DB ?
+usbf_port_sel_arr   DW MAX_USB_HUB_PORTS DUP(?)
+
+usb_function_struc  ENDS
+
+usb_pipe_struc      STRUC
+
+usbp_function_sel   DW ?
+usbp_address        DB ?
+usbp_endpoint       DB ?
+usbp_seq            DB ?
+usbp_mode           DB ?
+usbp_maxlen         DW ?
+
+usb_pipe_struc      ENDS
+
+usb_setup_data  STRUC
+
+usd_type        DB ?
+usd_req         DB ?
+usd_value       DW ?
+usd_index       DW ?
+usd_len         DW ?
+
+usb_setup_data  ENDS
