@@ -166,6 +166,7 @@ notify_usb_attach	Proc far
     mov fs:usbp_maxlen,64
 ;    
     call ds:start_queue_proc
+    int 3
     mov cx,8
     call ds:allocate_buf_proc
     mov es:[edi].usd_type,0

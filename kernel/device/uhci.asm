@@ -329,6 +329,7 @@ AllocateTd  ENDP
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 InsertElem	PROC near
+    push bx
     push ecx
     push edx
 ;
@@ -348,8 +349,10 @@ ieTraverse:
     mov byte ptr es:[eax].utd_link,cl
 ;
     mov ecx,es:[eax].utd_phys
-    mov cl,byte ptr es:[edx].utd_link
-    and cl,0E4h
+    mov bl,byte ptr es:[edx].utd_link
+    and bl,4
+    and cl,0E0h
+    or cl,bl
     mov es:[edx].utd_link,ecx
     mov es:[edx].utd_va_link,eax
     jmp ieDone
@@ -368,6 +371,7 @@ ieEmpty:
 ieDone:
     pop edx
     pop ecx
+    pop bx
     ret
 InsertElem  ENDP
 
@@ -515,7 +519,6 @@ StartQueue    Endp
 AddSetup    Proc far
     push eax
 ;
-    int 3
     push edx
     mov fs:usbp_seq,0
     call AllocateTd
@@ -589,7 +592,6 @@ AddStatus    Proc far
     push cx
     push edi
 ;
-    int 3
     mov cx,flat_sel
     mov es,cx
     xor cx,cx
