@@ -55,9 +55,15 @@ usb_dev_base     usb_dev_struc <>
 uhc_hw_phys      DD ?
 uhc_hw_linear    DD ?
 uhc_hw_sel       DW ?
+
 uhc_ring_sel     DW ?
 
+uhc_status       DW ?
+
 uhc_control_qh   DD ?
+uhc_period_qh    DD ?
+uhc_intr_qh      DD 8 DUP(?)
+uhc_intr_arr     DD 8 DUP(?)
 
 uhc_io_base      DW ?
 uhc_pci_bus_dev  DW ?
@@ -100,6 +106,7 @@ data    STRUC
 UhciList32   DD ?
 UhciSection  section_typ <>
 UhciIrq      DB ?
+UhciThread   DW ?
 UhciCount    DW ?
 UhciFunc     DW 16 DUP (?)
 
@@ -380,28 +387,144 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    GetControlQueue
+;		NAME:		    CreateFrameVa
 ;
-;		DESCRIPTION:	Create control-queue if not already done, and return QH
+;		DESCRIPTION:	Create frame pointer VA
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateFrameVa	PROC near
+    push es
+    push eax
+    push cx
+    push di
+;    
+    mov eax,1000h
+    AllocateGlobalMem
+    mov ds:uhc_ring_sel,es
+    xor di,di
+    xor ax,ax
+    mov cx,1024
+    rep stosd
+;
+    pop di
+    pop cx
+    pop eax
+    pop es    
+    ret
+CreateFrameVa ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateIntrQueue
+;
+;		DESCRIPTION:	Create interrupt queue
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Flat sel
 ;
-;       RETURNS:        EDX     Control QH
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateIntrQueue	PROC near
+    push es
+    push eax
+    push cx
+    push edx
+    push di
+;
+    mov ax,flat_sel
+    mov es,ax
+    mov cx,8
+    mov eax,ds:uhc_period_qh
+    mov di,OFFSET uhc_intr_qh
+    rep stosd    
+;
+    mov edx,es:[eax].uqh_phys
+    mov es,ds:uhc_ring_sel
+    xor di,di
+    mov cx,1024
+    rep stosd
+;
+    mov eax,edx
+    or al,2
+    mov es,ds:uhc_hw_sel
+    xor di,di
+    mov cx,1024
+    rep stosd
+;        
+    pop di
+    pop edx
+    pop cx
+    pop eax    
+    pop es
+    ret
+CreateIntrQueue  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreatePeriodQueue
+;
+;		DESCRIPTION:	Create periodic interrupt queue
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetControlQueue	PROC near
-    mov edx,ds:uhc_control_qh
-    or edx,edx
-    jnz gcqOk
+CreatePeriodQueue	PROC near
+    push edx
+;    
+    call AllocateQh
+    mov ds:uhc_period_qh,edx
+;    
+    call CreateFrameVa
+    call CreateIntrQueue
 ;
+    pop edx
+    ret
+CreatePeriodQueue  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateControlQueue
+;
+;		DESCRIPTION:	Create control-queue
+;
+;       PARAMETERS:     DS      Function sel
+;                       ES      Flat sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateControlQueue	PROC near
+    push edx
+;    
     call AllocateQh
     mov ds:uhc_control_qh,edx
+;
+    mov edx,ds:uhc_period_qh
+    or edx,edx
+    jnz ccqLinkPeriod    
+;
+    call CreatePeriodQueue
+    mov edx,ds:uhc_period_qh
 
-gcqOk:
+ccqLinkPeriod:
+    pop edx
     ret
-GetControlQueue  Endp
+CreateControlQueue  Endp
+
+PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -417,8 +540,38 @@ GetControlQueue  Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt	Proc far
-    mov ax,1234h
-    mov ds,ax    
+    mov cx,ds:UhciCount
+    mov si,OFFSET UhciFunc
+
+wiFuncLoop:
+    mov ax,[si]
+    or ax,ax
+    jz wiFuncNext
+;
+    mov es,ax
+;
+    mov dx,es:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
+    or es:uhc_status,ax
+    out dx,ax
+;    
+    mov dx,es:uhc_io_base
+    add dx,PortscReg1
+    in ax,dx
+    out dx,ax
+;
+    add dx,2
+    in ax,dx
+    out dx,ax
+
+wiFuncNext:
+    add si,2
+    loop wiFuncLoop   
+;
+    mov bx,ds:UhciThread
+    Signal    
+;    
     ret
 UhciInt  Endp
 
@@ -627,7 +780,32 @@ AddStatus    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
+    push ax
+    push edx
+;    
     int 3
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je itControl
+;
+    int 3
+    jmp itDone
+
+itControl:    
+    mov edx,ds:uhc_control_qh
+    or edx,edx
+    jnz itDoControl
+;
+    call CreateControlQueue
+    mov edx,ds:uhc_control_qh        
+
+itDoControl:
+    int 3
+    jmp itDone
+
+itDone:
+    pop edx    
+    pop ax
     ret
 IssueTransfer    Endp
 
@@ -829,18 +1007,23 @@ AddFunction  Proc near
     mov cx,1024
     rep stosd
 ;
+    mov di,OFFSET uhc_intr_qh
+    mov cx,8
+    xor eax,eax
+    rep stosd
+;
+    mov di,OFFSET uhc_intr_arr
+    mov cx,8
+    xor eax,eax
+    rep stosd        
+;
     GetPhysicalPage
     and ax,0F000h
     mov ds:uhc_hw_phys,eax    
-;
-    mov eax,1000h
-    AllocateGlobalMem
-    mov ds:uhc_ring_sel,es
-    xor di,di
-    xor ax,ax
-    mov cx,1024
-    rep stosd
 ;    
+    mov ds:uhc_status,0
+    mov ds:uhc_ring_sel,0
+    mov ds:uhc_period_qh,0
     mov ds:uhc_control_qh,0
 ;
     mov ax,uhci_data_sel
@@ -989,14 +1172,18 @@ InitPciAdapter	Endp
 uhci_name	DB 'UHCI',0
 
 uhci_thread	proc far
+    int 3
     mov ax,uhci_data_sel
     mov ds,ax
+    GetThread
+    mov ds:UhciThread,ax
+;    
 	call InitPciAdapter
 ;
     mov cx,ds:UhciCount	
     or cx,cx
     jz uhci_thread_exit
-;
+;    
     mov bx,OFFSET UhciFunc
 
 uhci_func_loop:
@@ -1004,13 +1191,6 @@ uhci_func_loop:
     mov ds,[bx]
     call InitFunction
     push cx
-;
-    push bx
-    mov bx,ds:uhc_pci_bus_dev
-    mov ch, ds:uhc_pci_func
-    mov cl,PCI_status_reg
-    ReadPciWord
-    pop bx
 ;    
     mov cl,0
     call EnablePort
@@ -1022,6 +1202,18 @@ uhci_func_loop:
     loop uhci_func_loop
 ;
     int 3    
+    WaitForSignal
+;    
+    mov bx,OFFSET UhciFunc
+
+uhci_poll_loop:
+    push ds
+    mov ds,[bx]
+    mov ax,ds:uhc_status
+    pop ds
+    add bx,2
+    loop uhci_func_loop
+    WaitForSignal
 
 uhci_thread_exit:
 	ret
