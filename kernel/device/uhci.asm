@@ -20,12 +20,12 @@
 ;
 ; The author of this program may be contacted at leif@rdos.net
 ;
-; VIAUSB11.ASM
-; VIA USB 1.1 driver
+; UHCI.ASM
+; UHCI-based USB host controller driver
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-		NAME viausb11
+		NAME uhci
 
 GateSize = 16
 
@@ -37,6 +37,8 @@ INCLUDE ..\user.inc
 INCLUDE ..\os\pci.inc
 INCLUDE ..\os\usb.inc
 
+MAX_USB_DEVICES = 16
+
 UsbCommandReg = 0
 UsbStatusReg = 2
 UsbIntReg = 4
@@ -46,32 +48,23 @@ SofReg = 12
 PortscReg1 = 16
 PortscReg2 = 18
 
-usb_func_sel    STRUC
+uhci_func_sel    STRUC
 
-uf_hw_phys      DD ?
-uf_hw_linear    DD ?
-uf_hw_sel       DW ?
-uf_ring_sel     DW ?
+uhc_hw_phys      DD ?
+uhc_hw_linear    DD ?
+uhc_hw_sel       DW ?
+uhc_ring_sel     DW ?
+uhc_io_base      DW ?
+uhc_pci_bus_dev  DW ?
+uhc_pci_func     DB ?
 
-uf_io_base      DW ?
-
-uf_sel1         DW ?
-uf_sel2         DW ?
-
-usb_func_sel    ENDS
+uhci_func_sel    ENDS
 
 data    STRUC
 
-IoBase1     DW ?
-IoBase2     DW ?
-
-UsbSel1     DW ?
-UsbSel2     DW ?
-UsbSel3     DW ?
-UsbSel4     DW ?
-
-UsbFunc1    DW ?
-UsbFunc2    DW ?
+UhciIrq      DB ?
+UhciCount    DW ?
+UhciFunc     DW 16 DUP (?)
 
 data    ENDS
 
@@ -85,9 +78,9 @@ code	SEGMENT byte public 'CODE'
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			UsbInt
+;		NAME:			UhciInt
 ;
-;		DESCRIPTION:    Usb interrupt
+;		DESCRIPTION:    UHCI interrupt
 ;
 ;       PARAMETERS:     
 ;
@@ -95,40 +88,170 @@ code	SEGMENT byte public 'CODE'
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UsbInt	Proc far
+UhciInt	Proc far
+    mov ax,1234h
+    mov ds,ax    
     ret
-UsbInt  Endp
+UhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreateUsbFunction
+;		NAME:		    EnablePort
 ;
-;		DESCRIPTION:    Create USB function
+;		DESCRIPTION:    Enable root-hub port
 ;
-;       PARAMETERS:     DX      IO base
-;
-;       RETURNS:        ES      USB function sel
+;       PARAMETERS:     DS      Function selector
+;                       CL      Port # (0,1)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreateUsbFunction  Proc near
+EnablePort   Proc near
+    push ax
+    push cx
+    push dx
+;    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    add dl,cl
+    add dl,cl
+    in ax,dx
+    test al,1
+    stc
+    jz epDone
+;
+    or ax,200h
+    out dx,ax
+;
+    mov ax,50
+    WaitMilliSec
+;
+    in ax,dx
+    and ax,NOT 200h
+    out dx,ax
+;
+    mov cx,10
+
+ epLoop:
+    in ax,dx
+    test ax,4
+    clc
+    jnz epDone
+;
+    or ax,4
+    out dx,ax
+    loop epLoop
+;
+    stc
+                    
+epDone:        
+    pop dx
+    pop cx
+    pop ax
+    ret
+EnablePort   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InitFunction
+;
+;		DESCRIPTION:    Init UHCI function
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InitFunction    Proc near
+    push eax
+    push cx
+    push dx
+;
+    mov dx,ds:uhc_io_base
+    add dx,SofReg
+    in al,dx
+    mov cl,al
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbCommandReg
+    in ax,dx
+    or ax,4
+    out dx,ax
+; 
+    mov ax,20
+    WaitMilliSec
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbCommandReg
+    in ax,dx
+    and ax,NOT 4
+    out dx,ax
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbIntReg
+    mov ax,0Fh
+    out dx,ax
+;
+    mov dx,ds:uhc_io_base
+    add dx,FrameNumberReg
+    xor ax,ax
+    out dx,ax
+;    
+    mov dx,ds:uhc_io_base
+    add dx,FrameBaseReg
+    mov eax,ds:uhc_hw_phys
+    out dx,eax
+;    
+    mov dx,ds:uhc_io_base
+    add dx,SofReg
+    mov al,cl
+    out dx,al
+;
+    mov dx,ds:uhc_io_base
+    add dx,UsbCommandReg
+    in ax,dx
+    or ax,0C1h
+    out dx,ax
+;
+    pop dx
+    pop cx
+    pop eax       
+    ret
+InitFunction    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddFunction
+;
+;		DESCRIPTION:    Add UHCI function
+;
+;       PARAMETERS:     BX      Bus/device
+;                       CH      Function
+;                       DX      IO base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddFunction  Proc near
     push ds
+    push es
     pushad
 ;    
-    mov eax,SIZE usb_func_sel
+    mov eax,SIZE uhci_func_sel
     AllocateSmallGlobalMem
     mov ax,es
     mov ds,ax
-    mov ds:uf_io_base,dx
+    mov ds:uhc_io_base,dx
+    mov ds:uhc_pci_bus_dev,bx
+    mov ds:uhc_pci_func,ch
 ;        
     mov eax,1000h
 	AllocateBigLinear
-	mov ds:uf_hw_linear,edx
+	mov ds:uhc_hw_linear,edx
 	mov ecx,eax
 	AllocateGdt
 	CreateDataSelector16
-    mov ds:uf_hw_sel,bx
+    mov ds:uhc_hw_sel,bx
     mov es,bx
     xor di,di
     mov eax,1
@@ -137,56 +260,28 @@ CreateUsbFunction  Proc near
 ;
     GetPhysicalPage
     and ax,0F000h
-    mov ds:uf_hw_phys,eax    
+    mov ds:uhc_hw_phys,eax    
 ;
     mov eax,800h
     AllocateSmallGlobalMem
-    mov ds:uf_ring_sel,es
+    mov ds:uhc_ring_sel,es
     xor di,di
     xor ax,ax
     mov cx,1024
     rep stosw
 ;    
-    mov ax,ds
+    mov ax,uhci_data_sel
     mov es,ax
-;
-    popad
-    pop ds
-    ret
-CreateUsbFunction   Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			InitUsbChannel
-;
-;		DESCRIPTION:    Init an USB channel
-;
-;       PARAMETERS:     DX      IO base
-;                       BP      Function #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-InitUsbChannel  Proc near
-    push es
-    pushad
-;
-    add bp,bp
-    call CreateUsbFunction
-    mov ds:[bp].UsbFunc1,es
-;        
-    mov si,es:uf_ring_sel
-    mov di,es:uf_hw_sel
-    OpenUsbChannel
-    mov ds:[bp].UsbSel1,bx
-;    
-    OpenUsbChannel
-    mov ds:[bp+2].UsbSel2,bx
+    mov bx,es:UhciCount
+    inc es:UhciCount
+    add bx,bx
+    mov es:[bx].UhciFunc,ds
 ;
     popad
     pop es
+    pop ds
     ret
-InitUsbChannel  Endp
+AddFunction   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -211,6 +306,8 @@ pci05 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
+	mov ds:UhciIrq,-1
+
 init_pci_loop:
 	xor ax,ax
 	mov dx,cs:[si]
@@ -221,14 +318,19 @@ init_pci_loop:
 ;
 	FindPciDevice
 	jnc init_pci_found
-;
+
+init_pci_next:
 	add si,4
 	jmp init_pci_loop
 
 init_pci_found:
 	mov cl,PCI_interrupt_line
 	ReadPciByte
-;
+;	
+    mov cl,ds:UhciIrq
+    cmp cl,-1
+    jne init_pci_irq_write
+;    
     IsIrqFree
     jnc init_pci_set_irq
 ;
@@ -237,52 +339,62 @@ init_pci_found:
 
 init_pci_irq_loop:
     IsIrqFree
-    jnc init_pci_update_irq
+    jnc init_pci_set_irq
 ;
     dec al
     or al,al
     jnz init_pci_irq_loop
 ;
-    stc
-    jmp init_pci_done
+    jmp init_pci_next
 
-init_pci_update_irq:
-   	mov cl,PCI_interrupt_line
-	WritePciByte
-        
-init_pci_set_irq:	
+init_pci_set_irq:        
+    mov cl,ds:UhciIrq
+    cmp cl,-1
+    jne init_pci_irq_write
+;
+    mov ds:UhciIrq,al
 	mov di,cs
 	mov es,di
-	mov di,OFFSET UsbInt	
+	mov di,OFFSET UhciInt	
 	RequestPrivateIrqHandler
-;
+
+init_pci_irq_write:
+    mov al,ds:UhciIrq
+   	mov cl,PCI_interrupt_line
+	WritePciByte
+
+init_pci_irq_set_ok:
 	mov cl,20h
 	ReadPciDword
 	mov dx,ax
 	and dx,0FFE0h
-	mov ds:IoBase1,dx
-	xor bp,bp
-	call InitUsbChannel
+	mov bp,dx
+	call AddFunction
 ;	
 	mov ax,1
+
+init_pci_next_device:
 	mov dx,cs:[si]
 	mov cx,cs:[si+2]
 	FindPciDevice
-	jc init_pci_no2
+	jc init_pci_next
 ;	
+    push ax
 	mov cl,20h
 	ReadPciDword
 	mov dx,ax
 	and dx,0FFE0h
-	mov ds:IoBase2,dx
-	mov bp,1
-	call InitUsbChannel
-    clc
-    jmp init_pci_done
-
-init_pci_no2:
-    mov ds:IoBase2,0
-    clc
+	pop ax
+	cmp dx,bp
+	je init_pci_next
+;	
+    mov al,ds:UhciIrq
+   	mov cl,PCI_interrupt_line
+	WritePciByte
+;	
+	call AddFunction
+	inc ax
+    jmp init_pci_next_device
 
 init_pci_done:
 	ret
@@ -301,15 +413,45 @@ InitPciAdapter	Endp
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-detect_name	DB 'VIA-USB-1.1',0
+uhci_name	DB 'UHCI',0
 
-detect_thread	proc far
+uhci_thread	proc far
     int 3
-	mov ax,usb_dev_data_sel
-	mov ds,ax
+    mov ax,uhci_data_sel
+    mov ds,ax
 	call InitPciAdapter
+;
+    mov cx,ds:UhciCount	
+    or cx,cx
+    jz uhci_thread_exit
+;
+    mov bx,OFFSET UhciFunc
+
+uhci_func_loop:
+    push ds
+    mov ds,[bx]
+    call InitFunction
+    push cx
+;
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch, ds:uhc_pci_func
+    mov cl,PCI_status_reg
+    ReadPciWord
+;    
+    mov cl,0
+    call EnablePort
+    mov cl,1
+    call EnablePort
+    pop cx
+    pop ds
+    add bx,2
+    loop uhci_func_loop
+;
+    int 3    
+
+uhci_thread_exit:
 	ret
-detect_thread	endp
+uhci_thread	endp
 	
 init_usb	Proc far
 	push ds
@@ -319,8 +461,8 @@ init_usb	Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov di,OFFSET detect_name
-	mov si,OFFSET detect_thread
+	mov di,OFFSET uhci_name
+	mov si,OFFSET uhci_thread
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -349,7 +491,7 @@ Init	Proc far
 	push ds
 	push es
 	pusha
-	mov bx,usb_dev_code_sel
+	mov bx,uhci_code_sel
 	InitDevice
 ;
 	mov ax,cs
@@ -357,7 +499,7 @@ Init	Proc far
 	mov es,ax
 ;
 	mov eax,SIZE data
-	mov bx,usb_dev_data_sel
+	mov bx,uhci_data_sel
 	AllocateFixedSystemMem
 	mov ds,bx
 	mov es,bx
