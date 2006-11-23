@@ -73,7 +73,8 @@ uhci_func_sel    ENDS
 
 uhci_control_pipe   STRUC
 
-upc_pipe_base    usb_pipe_struc <>
+upc_pipe_base   usb_pipe_struc <>
+upc_qh          DD ?
 
 uhci_control_pipe   ENDS
 
@@ -270,7 +271,8 @@ AllocateTd	PROC near
     mov es:[edx].utd_va_link,0
     mov es:[edx].utd_control, 38000000h
 ;
-    movzx ecx,cx
+    dec cx
+    and ecx,7FFh    
     shl ecx,21
     movzx eax,fs:usbp_endpoint
     shl eax,15
@@ -372,8 +374,6 @@ ieEmpty:
     mov es:[eax].utd_va_link,0
 ;    
     mov es:[edx].uqh_va_elem,eax
-    mov ecx,es:[eax].utd_phys
-    mov es:[edx].uqh_elem,ecx
 
 ieDone:
     pop edx
@@ -381,6 +381,161 @@ ieDone:
     pop bx
     ret
 InsertElem  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InsertQhFirst
+;
+;		DESCRIPTION:	Insert QH first into horizontal QH
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX     QH to insert into
+;                       EAX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertQhFirst	PROC near
+    push ecx
+;
+    mov ecx,es:[edx].uqh_va_link
+    or ecx,ecx
+    jz ifEmpty
+;
+    mov es:[eax].uqh_va_link,ecx
+    mov ecx,es:[ecx].uqh_phys
+    mov es:[eax].uqh_link,ecx
+;
+    mov es:[edx].uqh_va_link,eax
+    mov ecx,es:[eax].uqh_phys
+    or cl,2
+    mov es:[edx].uqh_link,ecx    
+    jmp ifDone
+    
+ifEmpty:
+    mov es:[eax].uqh_va_link,0
+    mov es:[eax].uqh_link,1
+    mov es:[edx].uqh_va_link,eax
+    mov ecx,es:[eax].uqh_phys
+    or cl,2
+    mov es:[edx].uqh_link,ecx
+
+ifDone:
+    pop ecx
+    ret
+InsertQhFirst  ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    FreeVaElem
+;
+;		DESCRIPTION:	Free all Tds in vertical va-linked list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX     QH
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+FreeVaElem	PROC near
+    push ebx
+    push edx
+    push esi
+;
+    mov es:[edx].uqh_elem,1
+    xor ebx,ebx
+    xchg ebx,es:[edx].uqh_va_elem
+    mov edx,ebx
+
+fveLoop:
+    or edx,edx
+    jz fveDone
+;
+    mov ebx,edx
+    mov esi,es:[ebx].utd_va_link
+    mov edx,es:[edx].utd_va_buf
+    or edx,edx
+    jz fveBufDone
+;
+    mov ecx,1000h
+    FreeLinear
+
+fveBufDone:
+    mov edx,ebx
+    call FreeBlock32
+    mov edx,esi
+    jmp fveLoop
+            
+fveDone:    
+    pop esi
+    pop edx
+    pop ebx
+    ret
+FreeVaElem  Endp
+
+PAGE
+ 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetQhData
+;
+;		DESCRIPTION:    Get data from transfer
+;
+;       PARAMETERS:     EDX     Qh
+;                       ES:EDI  Data buffer
+;
+;       RETURNS:        CX      Size of data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetQhData	PROC near
+    push ds
+    push eax
+    push edx
+    push esi
+    push edi
+;    
+    xor cx,cx
+    mov ax,flat_sel
+    mov ds,ax
+    mov edx,[edx].uqh_va_elem
+
+gqdLoop:
+    or edx,edx
+    jz gqdDone
+;
+    mov al,byte ptr [edx].utd_host
+    cmp al,PID_IN
+    jne gqdNext
+;    
+    mov esi,[edx].utd_va_buf
+    or esi,esi
+    jz gqdNext
+;
+    mov ax,word ptr [edx].utd_control
+    and ax,3FFh
+    inc ax
+    add cx,ax
+    push cx
+    movzx ecx,ax
+    rep movs byte ptr es:[edi],[esi]
+    pop cx
+
+gqdNext:
+    mov edx,[edx].utd_va_link
+    jmp gqdLoop
+            
+gqdDone:    
+    pop edi
+    pop esi
+    pop edx
+    pop eax
+    pop ds
+    ret
+GetQhData  Endp
 
 PAGE
 
@@ -405,7 +560,7 @@ CreateFrameVa	PROC near
     AllocateGlobalMem
     mov ds:uhc_ring_sel,es
     xor di,di
-    xor ax,ax
+    xor eax,eax
     mov cx,1024
     rep stosd
 ;
@@ -437,13 +592,15 @@ CreateIntrQueue	PROC near
     push edx
     push di
 ;
-    mov ax,flat_sel
+    mov ax,ds
     mov es,ax
     mov cx,8
     mov eax,ds:uhc_period_qh
     mov di,OFFSET uhc_intr_qh
     rep stosd    
 ;
+    mov dx,flat_sel
+    mov es,dx
     mov edx,es:[eax].uqh_phys
     mov es,ds:uhc_ring_sel
     xor di,di
@@ -503,13 +660,14 @@ PAGE
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Flat sel
+;                       EDX     Control queue head
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateControlQueue	PROC near
+    push eax
     push edx
 ;    
-    call AllocateQh
     mov ds:uhc_control_qh,edx
 ;
     mov edx,ds:uhc_period_qh
@@ -520,7 +678,11 @@ CreateControlQueue	PROC near
     mov edx,ds:uhc_period_qh
 
 ccqLinkPeriod:
+    mov eax,ds:uhc_control_qh
+    call InsertQhFirst
+;
     pop edx
+    pop eax
     ret
 CreateControlQueue  Endp
 
@@ -591,12 +753,29 @@ UhciInt  Endp
 CreateControl   Proc far
     push es
     push eax
+    push edx
 ;    
     mov eax,SIZE uhci_control_pipe
     AllocateSmallGlobalMem
     mov ax,es
     mov fs,ax
+    mov dx,flat_sel
+    mov es,dx
+    call AllocateQh
+    mov fs:upc_qh,edx
 ;
+    mov eax,ds:uhc_control_qh
+    or eax,eax
+    jnz ccInsert
+;
+    call CreateControlQueue
+    jmp ccDone
+
+ccInsert:
+    int 3
+
+ccDone:
+    pop edx
     pop eax    
     pop es
     ret
@@ -624,6 +803,7 @@ AllocateBuf    Proc far
     mov edi,edx
     mov ax,flat_sel
     mov es,ax
+    mov dword ptr es:[edi],0
 ;
     pop edx
     pop ecx
@@ -634,36 +814,12 @@ AllocateBuf    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    StartQueue
-;
-;		DESCRIPTION:    Queue a write transfer req
-;
-;       PARAMETERS:     DS      Function selector
-;                       FS      Pipe selector
-;
-;       RETURNS:        EDX     Queue handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-StartQueue    Proc far
-    push es
-    mov dx,flat_sel
-    mov es,dx
-    call AllocateQh
-    pop es
-    ret
-StartQueue    Endp
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:		    AddSetup
 ;
 ;		DESCRIPTION:    Add setup transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       EDX     Queue handle
 ;                       CX      Buffer size
 ;                       ES:EDI  Buffer
 ;
@@ -671,17 +827,23 @@ StartQueue    Endp
 
 AddSetup    Proc far
     push eax
-;
     push edx
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asDone
+;    
     mov fs:usbp_seq,0
     call AllocateTd
     or byte ptr es:[edx].utd_link,4
     or byte ptr es:[edx].utd_host,PID_SETUP
     or es:[edx].utd_control,800000h
     mov eax,edx
-    pop edx
+    mov edx,fs:upc_qh
     call InsertElem    
-;
+
+asDone:
+    pop edx
     pop eax    
     ret
 AddSetup    Endp
@@ -695,7 +857,6 @@ AddSetup    Endp
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       EDX     Queue handle
 ;                       CX      Buffer size
 ;                       ES:EDI  Buffer
 ;
@@ -715,56 +876,122 @@ AddOut    Endp
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       EDX     Queue handle
 ;                       CX      Buffer size
 ;                       ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
-    int 3
+    push eax
+    push edx
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne aiDone
+;    
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_IN
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    mov edx,fs:upc_qh
+    call InsertElem    
+
+aiDone:
+    pop edx
+    pop eax    
     ret
 AddIn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    AddStatus
+;		NAME:		    AddStatusOut
 ;
-;		DESCRIPTION:    Add status transaction to queue
+;		DESCRIPTION:    Add status OUT transaction to queue
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
-;                       EDX     Queue handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AddStatus    Proc far
+AddStatusOut    Proc far
     push es
     push eax
     push cx
+    push edx
     push edi
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asoDone
 ;
     mov cx,flat_sel
     mov es,cx
     xor cx,cx
     xor edi,edi
+    mov fs:usbp_seq,1
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_OUT
+    or es:[edx].utd_control,1800000h
+    mov eax,edx
+    mov edx,fs:upc_qh
+    call InsertElem    
+
+asoDone:
+    pop edi
+    pop edx
+    pop cx
+    pop eax    
+    pop es
+    ret
+AddStatusOut    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddStatusIn
+;
+;		DESCRIPTION:    Add status IN transaction to queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddStatusIn    Proc far
+    push es
+    push eax
+    push cx
     push edx
+    push edi
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne asiDone
+;
+    mov cx,flat_sel
+    mov es,cx
+    xor cx,cx
+    xor edi,edi
     mov fs:usbp_seq,1
     call AllocateTd
     or byte ptr es:[edx].utd_link,4
     or byte ptr es:[edx].utd_host,PID_IN
     or es:[edx].utd_control,1800000h
     mov eax,edx
-    pop edx
+    mov edx,fs:upc_qh
     call InsertElem    
-;
+
+asiDone:
     pop edi
+    pop edx
     pop cx
     pop eax    
     pop es
     ret
-AddStatus    Endp
+AddStatusIn    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -780,10 +1007,10 @@ AddStatus    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IssueTransfer    Proc far
-    push ax
+    push es
+    push eax
     push edx
 ;    
-    int 3
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     je itControl
@@ -791,23 +1018,151 @@ IssueTransfer    Proc far
     int 3
     jmp itDone
 
-itControl:    
-    mov edx,ds:uhc_control_qh
-    or edx,edx
-    jnz itDoControl
-;
-    call CreateControlQueue
-    mov edx,ds:uhc_control_qh        
+itControl:
+    mov ax,flat_sel
+    mov es,ax    
+    mov edx,fs:upc_qh
+    mov eax,es:[edx].uqh_va_elem    
+    mov eax,es:[eax].utd_phys
+    mov es:[edx].uqh_elem,eax
+    jmp itDone
 
-itDoControl:
+itControlAdd:
     int 3
     jmp itDone
 
 itDone:
     pop edx    
-    pop ax
+    pop eax
+    pop es
     ret
 IssueTransfer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    WaitForCompletion
+;
+;		DESCRIPTION:    Wait for transfer to complete
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitForCompletion   Proc far
+    push es
+    push eax
+    push edx
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je wfcControl
+;
+    int 3
+    stc
+    jmp wfcDone    
+
+wfcControl:
+    mov edx,fs:upc_qh
+    test es:[edx].uqh_elem,1
+    clc
+    jnz wfcDone
+;
+    mov eax,es:[edx].uqh_va_elem
+    test es:[eax].utd_control,400000h    
+    jnz wfccRecoverError
+;
+    mov ax,1
+    WaitMilliSec
+    jmp wfcControl    
+
+wfccRecoverError:
+    mov es:[edx].uqh_elem,1
+    stc
+
+wfcDone:
+    pop edx
+    pop eax
+    pop es
+    ret
+WaitForCompletion   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    EmptyQueue
+;
+;		DESCRIPTION:    Empty queue
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+EmptyQueue   Proc far
+    push es
+    push ax
+    push edx
+;        
+    mov ax,flat_sel
+    mov es,ax
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je eqControl
+;
+    int 3
+    jmp eqDone    
+
+eqControl:
+    mov edx,fs:upc_qh
+    call FreeVaElem
+
+eqDone:
+    pop edx
+    pop ax
+    pop es
+    ret
+EmptyQueue   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetData
+;
+;		DESCRIPTION:    Get data
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       ES:EDI  Buffer
+;
+;       RETURNS:        CX      Buffer size
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetData   Proc far
+    push ax
+    push edx
+;        
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je gdControl
+;
+    int 3
+    jmp gdDone    
+
+gdControl:
+    mov edx,fs:upc_qh
+    call GetQhData
+
+gdDone:
+    pop edx
+    pop ax
+    ret
+GetData   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -886,14 +1241,17 @@ EnablePort   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 uhci_tab:
-ut00 DW OFFSET CreateControl,	uhci_code_sel
-ut01 DW OFFSET AllocateBuf,    	uhci_code_sel
-ut02 DW OFFSET StartQueue,    	uhci_code_sel
-ut03 DW OFFSET AddSetup,    	uhci_code_sel
-ut04 DW OFFSET AddOut,      	uhci_code_sel
-ut05 DW OFFSET AddIn,        	uhci_code_sel
-ut06 DW OFFSET AddStatus,       uhci_code_sel
-ut07 DW OFFSET IssueTransfer,   uhci_code_sel
+ut00 DW OFFSET CreateControl,   	uhci_code_sel
+ut01 DW OFFSET AllocateBuf,    	    uhci_code_sel
+ut02 DW OFFSET AddSetup,    	    uhci_code_sel
+ut03 DW OFFSET AddOut,      	    uhci_code_sel
+ut04 DW OFFSET AddIn,        	    uhci_code_sel
+ut05 DW OFFSET AddStatusOut,        uhci_code_sel
+ut06 DW OFFSET AddStatusIn,        	uhci_code_sel
+ut07 DW OFFSET IssueTransfer,       uhci_code_sel
+ut08 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut09 DW OFFSET EmptyQueue,          uhci_code_sel
+ut10 DW OFFSET GetData,             uhci_code_sel
 
 InitFunction    Proc near
     push eax
@@ -904,7 +1262,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,8
+    mov cx,11
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -1007,6 +1365,8 @@ AddFunction  Proc near
     mov cx,1024
     rep stosd
 ;
+    mov ax,ds
+    mov es,ax
     mov di,OFFSET uhc_intr_qh
     mov cx,8
     xor eax,eax
@@ -1172,7 +1532,6 @@ InitPciAdapter	Endp
 uhci_name	DB 'UHCI',0
 
 uhci_thread	proc far
-    int 3
     mov ax,uhci_data_sel
     mov ds,ax
     GetThread
@@ -1192,6 +1551,9 @@ uhci_func_loop:
     call InitFunction
     push cx
 ;    
+    mov ax,100
+    WaitMilliSec
+;    
     mov cl,0
     call EnablePort
     mov cl,1
@@ -1202,17 +1564,21 @@ uhci_func_loop:
     loop uhci_func_loop
 ;
     int 3    
-    WaitForSignal
+;    WaitForSignal
 ;    
+    mov cx,ds:UhciCount	
     mov bx,OFFSET UhciFunc
 
 uhci_poll_loop:
     push ds
     mov ds,[bx]
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx    
     mov ax,ds:uhc_status
     pop ds
     add bx,2
-    loop uhci_func_loop
+    loop uhci_poll_loop
     WaitForSignal
 
 uhci_thread_exit:

@@ -46,34 +46,39 @@ create_control_proc	DD ?
 allocate_buf_proc   DD ?
 
 ; IN  FS        Pipe selector
-; OUT EDX       Queue handle
-start_queue_proc    DD ?
-
-; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-; IN  EDX       Queue
 add_setup_proc      DD ?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-; IN  EDX       Queue
 add_out_proc      DD ?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
-; IN  EDX       Queue
 add_in_proc      DD ?
 
 ; IN  FS        Pipe selector
-; IN  EDX       Queue
-add_status_proc      DD ?
+add_status_out_proc      DD ?
 
 ; IN  FS        Pipe selector
-; IN  EDX       Queue
+add_status_in_proc      DD ?
+
+; IN  FS        Pipe selector
 issue_transfer_proc      DD ?
+
+; IN  FS        Pipe selector
+wait_for_completion_proc      DD ?
+
+; IN  FS        Pipe selector
+delete_queue_proc      DD ?
+
+; IN  FS        Pipe selector
+; IN  ES:EDI    Buffer
+; OUT CX        Returned size
+get_data_proc      DD ?
 
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr        DW 128 DUP(?)
@@ -107,3 +112,22 @@ usd_index       DW ?
 usd_len         DW ?
 
 usb_setup_data  ENDS
+
+usb_device_descr	STRUC
+
+udd_len		DB ?
+udd_type	DB ?
+udd_usb_ver	DW ?
+udd_class	DB ?
+udd_sub_class	DB ?
+udd_proto	DB ?
+udd_maxlen	DB ?
+udd_vendor	DW ?
+udd_prod	DW ?
+udd_device	DW ?
+udd_man		DB ?
+udd_prodid	DB ?
+udd_num		DB ?
+udd_configs	DB ?
+
+usb_device_descr	ENDS
