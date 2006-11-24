@@ -133,16 +133,18 @@ CreateDefaultControl    Proc near
     mov fs:usbp_mode,MODE_CONTROL
     mov fs:usbp_maxlen,8
 ;    
-    mov cx,8
-    call ds:allocate_buf_proc
-    mov es:[edi].usd_type,0
-    mov es:[edi].usd_req,SET_ADDRESS
+    mov eax,8
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov es:usd_type,0
+    mov es:usd_req,SET_ADDRESS
     pop ax
 ;
     push ax
-    mov es:[edi].usd_value,ax
-    mov es:[edi].usd_index,0
-    mov es:[edi].usd_len,0
+    mov es:usd_value,ax
+    mov es:usd_index,0
+    mov es:usd_len,0
+    mov cx,8
     call ds:add_setup_proc
     call ds:add_status_in_proc
     call ds:issue_transfer_proc
@@ -152,6 +154,7 @@ CreateDefaultControl    Proc near
     call ds:wait_for_completion_proc
     pushf
     call ds:delete_queue_proc
+    FreeMem
     popf
 ;
     pop edi
@@ -179,43 +182,20 @@ GetDeviceDescr    Proc near
     push cx
     push edi
 ;    
+    mov eax,8
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov es:usd_type,80h
+    mov es:usd_req,GET_DESCR
+    mov es:usd_value,100h
+    mov es:usd_index,0
+    mov es:usd_len,cx
+;    
     push cx
     mov cx,8
-    call ds:allocate_buf_proc
-    mov es:[edi].usd_type,80h
-    mov es:[edi].usd_req,GET_DESCR
-    mov es:[edi].usd_value,100h
-    mov es:[edi].usd_index,0
-    mov es:[edi].usd_len,1024
     call ds:add_setup_proc
     pop cx
-;    
-    mov ax,cx
-    xor dx,dx
-    mov cx,fs:usbp_maxlen
-    div ax
-    mov cx,ax
-    push dx
-    or cx,cx
-    jz gddLastPart
-    
-gddLoop:
-    push cx
-    mov cx,fs:usbp_maxlen
-    call ds:allocate_buf_proc
     call ds:add_in_proc
-    pop cx
-    loop gddLoop
-
-gddLastPart:
-    pop cx
-    or cx,cx
-    jz gddInDone
-;    
-    call ds:allocate_buf_proc
-    call ds:add_in_proc
-
-gddInDone:    
     call ds:add_status_out_proc
     call ds:issue_transfer_proc
     call ds:wait_for_completion_proc
@@ -230,6 +210,55 @@ gddInDone:
     popf
     ret
 GetDeviceDescr    Endp    
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetConfigDescr
+;
+;		description:	Get configuration descriptor
+;
+;       parameters:     FS      Pipe control selector
+;                       CX      Size of requested data
+;                       ES:EDI  Data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetConfigDescr    Proc near    
+    push es
+    push cx
+    push edi
+;    
+    mov eax,8
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov es:usd_type,80h
+    mov es:usd_req,GET_DESCR
+    mov es:usd_value,200h
+    mov es:usd_index,0
+    mov es:usd_len,cx
+;    
+    push cx
+    mov cx,8
+    call ds:add_setup_proc
+    pop cx
+    call ds:add_in_proc
+    call ds:add_status_out_proc
+    call ds:issue_transfer_proc
+    call ds:wait_for_completion_proc
+;
+    pop edi
+    pop cx
+    pop es
+;    
+    pushf
+    call ds:get_data_proc
+    call ds:delete_queue_proc
+    popf
+    ret
+GetConfigDescr    Endp    
 
 PAGE
 
@@ -300,6 +329,20 @@ notify_usb_attach	Proc far
     xor edi,edi
     mov cx,ax
     call GetDeviceDescr
+    FreeMem
+
+    mov eax,8
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov cx,8
+    call GetConfigDescr
+    mov ax,es:ucd_size
+    FreeMem
+;
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov cx,ax
+    call GetConfigDescr
     
 nuaDone:
     pop di

@@ -41,10 +41,6 @@ usb_dev_struc   STRUC
 ; OUT FS        Pipe selector
 create_control_proc	DD ?
 
-; IN  CX        Size
-; OUT ES:EDI    Buffer
-allocate_buf_proc   DD ?
-
 ; IN  FS        Pipe selector
 ; IN  CX        Size
 ; IN  ES:EDI    Data
@@ -76,6 +72,7 @@ wait_for_completion_proc      DD ?
 delete_queue_proc      DD ?
 
 ; IN  FS        Pipe selector
+; IN  CX        Buffer size
 ; IN  ES:EDI    Buffer
 ; OUT CX        Returned size
 get_data_proc      DD ?
@@ -131,3 +128,16 @@ udd_num		DB ?
 udd_configs	DB ?
 
 usb_device_descr	ENDS
+
+usb_config_descr	STRUC
+
+ucd_len	    		DB ?
+ucd_type	    	DB ?
+ucd_size		    DW ?
+ucd_interface_count	DB ?
+ucd_config_id		DB ?
+ucd_config_str		DB ?
+ucd_attrib  		DB ?
+ucd_power	    	DB ?
+
+usb_config_descr	ENDS

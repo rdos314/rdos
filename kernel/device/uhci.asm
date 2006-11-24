@@ -88,6 +88,7 @@ utd_buf     DD ?
 utd_va_link DD ?
 utd_va_buf  DD ?
 utd_phys    DD ?
+utd_size    DD ?
 
 uhci_td ENDS
 
@@ -318,6 +319,7 @@ atSaveSeq:
 
 atSaveBuf:
     mov es:[edx].utd_buf,eax
+    mov es:[edx].utd_size,0
 ;    
     pop ecx   
     pop eax
@@ -441,6 +443,7 @@ InsertQhFirst  ENDP
 
 FreeVaElem	PROC near
     push ebx
+    push ecx
     push edx
     push esi
 ;
@@ -455,11 +458,17 @@ fveLoop:
 ;
     mov ebx,edx
     mov esi,es:[ebx].utd_va_link
+    mov ecx,es:[edx].utd_size
     mov edx,es:[edx].utd_va_buf
     or edx,edx
     jz fveBufDone
 ;
-    mov ecx,1000h
+    or ecx,ecx
+    jz fveBufDone
+;
+    dec ecx
+    and cx,0F000h
+    add ecx,1000h    
     FreeLinear
 
 fveBufDone:
@@ -471,6 +480,7 @@ fveBufDone:
 fveDone:    
     pop esi
     pop edx
+    pop ecx
     pop ebx
     ret
 FreeVaElem  Endp
@@ -516,11 +526,15 @@ gqdLoop:
     jz gqdNext
 ;
     mov ax,word ptr [edx].utd_control
-    and ax,3FFh
     inc ax
+    and ax,7FFh
     add cx,ax
     push cx
     movzx ecx,ax
+    shr ecx,2
+    rep movs dword ptr es:[edi],[esi]
+    mov cx,ax
+    and ecx,3
     rep movs byte ptr es:[edi],[esi]
     pop cx
 
@@ -784,32 +798,249 @@ CreateControl   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    AllocateBuf
+;		NAME:		    AddOutBuffer
 ;
-;		DESCRIPTION:    Allocate transfer buffer
+;		DESCRIPTION:    Allocate output buffer
 ;
-;       PARAMETERS:     CX     Size
-;                       ES:EDI Data
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     QH
+;                       CX      Size
+;                       ES:EDI  Data
 ;                     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AllocateBuf    Proc far
-    push eax
-    push ecx
-    push edx
+AddOutBuffer    Proc near
+    push gs
+    push es
+    pushad
 ;    
-    mov eax,1000h
+    or cx,cx
+    jnz aobHasData
+;
+    mov ax,flat_sel
+    mov es,ax
+    push edx
+    xor edi,edi
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_OUT
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem
+    jmp aobDone
+
+aobHasData:
+    movzx ebp,cx
+    push es
+    push edi
+;    
+    dec cx
+    and cx,0F000h
+    add cx,1000h
+    movzx eax,cx
+    push edx
     AllocateBigLinear
+    mov ecx,eax
+    mov edi,edx
+    pop edx
+    mov ax,flat_sel
+    mov es,ax
+;
+    pop esi
+    pop gs
+;    
+    mov ecx,ebp
+    push edi
+;    
+    push ecx
+    shr ecx,2
+    rep movs dword ptr es:[edi],gs:[esi]
+    pop ecx
+    and ecx,3
+    rep movs byte ptr es:[edi],gs:[esi]
+;    
+    pop edi
+;
+    push dx
+    mov ax,bp
+    xor dx,dx
+    mov cx,fs:usbp_maxlen
+    div cx
+    mov cx,ax
+    mov bx,dx
+    pop dx
+    or cx,cx
+    jz aobLastPart
+
+aobLoop:
+    push cx
+    mov cx,fs:usbp_maxlen     
+    push edx
+    call AllocateTd
+    or ebp,ebp
+    jz aobVaDone
+;
+    mov es:[edx].utd_size,ebp
+    xor ebp,ebp
+
+aobVaDone:    
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_OUT
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem       
+    movzx ecx,fs:usbp_maxlen 
+    add edi,ecx
+    pop cx
+    loop aobLoop
+
+aobLastPart:
+    mov cx,bx
+    or cx,cx
+    jz aobDone
+;
+    push edx
+    call AllocateTd
+    or ebp,ebp
+    jz aobVaLast
+;
+    mov es:[edx].utd_size,ebp
+
+aobVaLast:    
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_OUT
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem
+
+aobDone:
+    popad
+    pop es
+    pop gs    
+    ret
+AddOutBuffer    Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AddInBuffer
+;
+;		DESCRIPTION:    Allocate input buffer
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;                       EDX     QH
+;                       CX      Size
+;                     
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AddInBuffer    Proc near
+    push gs
+    push es
+    pushad
+;    
+    or cx,cx
+    jnz aibHasData
+;
+    mov ax,flat_sel
+    mov es,ax
+    push edx
+    xor edi,edi
+    call AllocateTd
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_IN
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem
+    jmp aibDone
+
+aibHasData:
+    movzx ebp,cx
+    push edx
+    dec cx
+    and cx,0F000h
+    add cx,1000h
+    movzx eax,cx
+    AllocateBigLinear
+    mov ecx,eax
     mov edi,edx
     mov ax,flat_sel
     mov es,ax
-    mov dword ptr es:[edi],0
-;
+    mov ecx,ebp    
+    shr ecx,2
+    xor eax,eax    
+    rep stos dword ptr es:[edi]
+    mov ecx,ebp
+    and ecx,3
+    rep stos byte ptr es:[edi]
+    mov edi,edx
     pop edx
-    pop ecx
-    pop eax
+;    
+    push dx
+    mov ax,bp
+    xor dx,dx
+    mov cx,fs:usbp_maxlen
+    div cx
+    mov cx,ax
+    mov bx,dx
+    pop dx
+    or cx,cx
+    jz aibLastPart
+
+aibLoop:
+    push cx
+    mov cx,fs:usbp_maxlen     
+    push edx
+    call AllocateTd
+    or ebp,ebp
+    jz aibVaDone
+;
+    mov es:[edx].utd_size,ebp
+    xor ebp,ebp
+
+aibVaDone:
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_IN
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem       
+    movzx ecx,fs:usbp_maxlen 
+    add edi,ecx
+    pop cx
+    loop aibLoop
+
+aibLastPart:
+    mov cx,bx
+    or cx,cx
+    jz aibDone
+;
+    push edx
+    call AllocateTd
+    or ebp,ebp
+    jz aibVaLast
+;
+    mov es:[edx].utd_size,ebp
+
+aibVaLast:
+    or byte ptr es:[edx].utd_link,4
+    or byte ptr es:[edx].utd_host,PID_IN
+    or es:[edx].utd_control,800000h
+    mov eax,edx
+    pop edx
+    call InsertElem
+
+aibDone:
+    popad
+    pop es
+    pop gs    
     ret
-AllocateBuf    Endp
+AddInBuffer    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -826,15 +1057,40 @@ AllocateBuf    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddSetup    Proc far
-    push eax
-    push edx
+    push gs
+    push es
+    pushad
 ;
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     jne asDone
 ;    
+    mov ax,es
+    mov gs,ax
+    mov esi,edi
+;    
+    mov eax,1000h
+    push ecx
+    AllocateBigLinear
+    pop ecx
+    mov edi,edx
+    mov ax,flat_sel
+    mov es,ax
+;
+    movzx ecx,cx
+    push ecx
+    push ecx
+    shr ecx,2
+    rep movs dword ptr es:[edi],gs:[esi]
+    pop ecx
+    and ecx,3
+    rep movs byte ptr es:[edi],gs:[esi]
+    mov edi,edx
+    pop ecx
+;
     mov fs:usbp_seq,0
     call AllocateTd
+    mov es:[edx].utd_size,ecx
     or byte ptr es:[edx].utd_link,4
     or byte ptr es:[edx].utd_host,PID_SETUP
     or es:[edx].utd_control,800000h
@@ -843,8 +1099,9 @@ AddSetup    Proc far
     call InsertElem    
 
 asDone:
-    pop edx
-    pop eax    
+    popad
+    pop es
+    pop gs
     ret
 AddSetup    Endp
 
@@ -863,7 +1120,19 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
-    int 3
+    push eax
+    push edx
+;
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    jne aoDone
+;   
+    mov edx,fs:upc_qh 
+    call AddOutBuffer
+
+aoDone:
+    pop edx
+    pop eax    
     ret
 AddOut    Endp
 
@@ -877,7 +1146,6 @@ AddOut    Endp
 ;       PARAMETERS:     DS      Function selector
 ;                       FS      Pipe selector
 ;                       CX      Buffer size
-;                       ES:EDI  Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -888,14 +1156,9 @@ AddIn    Proc far
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     jne aiDone
-;    
-    call AllocateTd
-    or byte ptr es:[edx].utd_link,4
-    or byte ptr es:[edx].utd_host,PID_IN
-    or es:[edx].utd_control,800000h
-    mov eax,edx
-    mov edx,fs:upc_qh
-    call InsertElem    
+;   
+    mov edx,fs:upc_qh 
+    call AddInBuffer
 
 aiDone:
     pop edx
@@ -916,35 +1179,23 @@ AddIn    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusOut    Proc far
-    push es
     push eax
-    push cx
+    push ecx
     push edx
-    push edi
 ;
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     jne asoDone
 ;
-    mov cx,flat_sel
-    mov es,cx
-    xor cx,cx
-    xor edi,edi
-    mov fs:usbp_seq,1
-    call AllocateTd
-    or byte ptr es:[edx].utd_link,4
-    or byte ptr es:[edx].utd_host,PID_OUT
-    or es:[edx].utd_control,1800000h
-    mov eax,edx
-    mov edx,fs:upc_qh
-    call InsertElem    
+    mov fs:usbp_seq,1   
+    mov edx,fs:upc_qh 
+    xor ecx,ecx
+    call AddOutBuffer
 
 asoDone:
-    pop edi
     pop edx
-    pop cx
+    pop ecx
     pop eax    
-    pop es
     ret
 AddStatusOut    Endp
 
@@ -961,35 +1212,23 @@ AddStatusOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddStatusIn    Proc far
-    push es
     push eax
-    push cx
+    push ecx
     push edx
-    push edi
 ;
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     jne asiDone
 ;
-    mov cx,flat_sel
-    mov es,cx
-    xor cx,cx
-    xor edi,edi
     mov fs:usbp_seq,1
-    call AllocateTd
-    or byte ptr es:[edx].utd_link,4
-    or byte ptr es:[edx].utd_host,PID_IN
-    or es:[edx].utd_control,1800000h
-    mov eax,edx
     mov edx,fs:upc_qh
-    call InsertElem    
+    xor ecx,ecx
+    call AddInBuffer
 
 asiDone:
-    pop edi
     pop edx
-    pop cx
+    pop ecx
     pop eax    
-    pop es
     ret
 AddStatusIn    Endp
 
@@ -1139,7 +1378,7 @@ EmptyQueue   Endp
 ;                       FS      Pipe selector
 ;                       ES:EDI  Buffer
 ;
-;       RETURNS:        CX      Buffer size
+;       RETURNS:        CX      Bytes read
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1242,16 +1481,15 @@ EnablePort   Endp
 
 uhci_tab:
 ut00 DW OFFSET CreateControl,   	uhci_code_sel
-ut01 DW OFFSET AllocateBuf,    	    uhci_code_sel
-ut02 DW OFFSET AddSetup,    	    uhci_code_sel
-ut03 DW OFFSET AddOut,      	    uhci_code_sel
-ut04 DW OFFSET AddIn,        	    uhci_code_sel
-ut05 DW OFFSET AddStatusOut,        uhci_code_sel
-ut06 DW OFFSET AddStatusIn,        	uhci_code_sel
-ut07 DW OFFSET IssueTransfer,       uhci_code_sel
-ut08 DW OFFSET WaitForCompletion,   uhci_code_sel
-ut09 DW OFFSET EmptyQueue,          uhci_code_sel
-ut10 DW OFFSET GetData,             uhci_code_sel
+ut01 DW OFFSET AddSetup,    	    uhci_code_sel
+ut02 DW OFFSET AddOut,      	    uhci_code_sel
+ut03 DW OFFSET AddIn,        	    uhci_code_sel
+ut04 DW OFFSET AddStatusOut,        uhci_code_sel
+ut05 DW OFFSET AddStatusIn,        	uhci_code_sel
+ut06 DW OFFSET IssueTransfer,       uhci_code_sel
+ut07 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut08 DW OFFSET EmptyQueue,          uhci_code_sel
+ut09 DW OFFSET GetData,             uhci_code_sel
 
 InitFunction    Proc near
     push eax
@@ -1262,7 +1500,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,11
+    mov cx,10
 
 ifTabLoop:
     lods dword ptr cs:[si]
