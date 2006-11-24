@@ -2063,3 +2063,22 @@ CloseCrc      MACRO
 CalcCrc      MACRO
 	UserGate calc_crc_nr
 						ENDM
+
+;   IN  BX          Controller #
+;   IN  AL          Device address (1..128)
+;   IN  (E)CX       Buffer size
+;   IN  ES:(E)DI    Buffer
+;   OUT (E)AX       Size of descriptor
+GetUsbDevice      MACRO
+	UserGate get_usb_device_nr
+						ENDM
+
+;   IN  BX          Controller #
+;   IN  AL          Device address (1..128)
+;   IN  DL          Config #
+;   IN  (E)CX       Buffer size
+;   IN  ES:(E)DI    Buffer
+;   OUT (E)AX       Size of descriptor
+GetUsbConfig      MACRO
+	UserGate get_usb_config_nr
+						ENDM

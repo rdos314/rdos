@@ -1660,3 +1660,9 @@ Capture turned ON. Logfile is %s.
 :TEXT_CAPTURE_OFF
 Capture turned OFF.
 .
+
+:TEXT_CMDHELP_USB
+Display list of attached USB devices
+
+USB
+.

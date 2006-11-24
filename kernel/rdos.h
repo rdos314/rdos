@@ -344,6 +344,10 @@ void __stdcall RdosKickWatchdog();
 void __stdcall RdosStartNetCapture(int FileHandle);
 void __stdcall RdosStopNetCapture();
 
+int __stdcall RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
+int __stdcall RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
+
+
 #ifdef __cplusplus
 }
 #endif

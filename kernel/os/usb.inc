@@ -84,8 +84,10 @@ usb_dev_struc   ENDS
 
 usb_function_struc  STRUC
 
-usbf_address        DB ?
-usbf_port_sel_arr   DW MAX_USB_HUB_PORTS DUP(?)
+usbf_address            DB ?
+usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
+usbf_in_endpoint_arr    DW 16 DUP(?)
+usbf_out_endpoint_arr   DW 16 DUP(?)
 
 usb_function_struc  ENDS
 
@@ -97,6 +99,8 @@ usbp_endpoint       DB ?
 usbp_seq            DB ?
 usbp_mode           DB ?
 usbp_maxlen         DW ?
+usbp_device_sel     DW ?
+usbp_config_sel     DW 16 DUP(?)
 
 usb_pipe_struc      ENDS
 

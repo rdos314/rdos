@@ -376,4 +376,7 @@ create_crc_nr               = 318
 close_crc_nr                = 319
 calc_crc_nr                 = 320
 
+get_usb_device_nr           = 321
+get_usb_config_nr           = 322
+
 usergate_entries			= 340

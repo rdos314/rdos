@@ -55,7 +55,8 @@ SYNC_FRAME = 12
 
 data    STRUC
 
-ddumy   DW ?
+usb_dev_count   DW ?
+usb_dev_arr     DW 256 DUP(?)
 
 data    ENDS
 
@@ -79,6 +80,7 @@ PAGE
 init_usb_device_name DB 'Init USB Device', 0
 
 init_usb_device	Proc far
+    push ds
     push es
     push ax
     push cx
@@ -96,10 +98,19 @@ init_usb_device	Proc far
     xor ax,ax
     rep stosw
 ;
+    int 3
+    mov ax,usb_data_sel
+    mov ds,ax
+    mov bx,ds:usb_dev_count
+    add bx,bx
+    mov ds:[bx].usb_dev_arr,es
+    inc ds:usb_dev_count
+;
     pop di
     pop cx
     pop ax
     pop es
+    pop ds
     ret
 init_usb_device   Endp
 
@@ -114,17 +125,22 @@ PAGE
 ;
 ;       parameters:     AL      Future device address
 ;                       DS      USB device selector
+;                       ES      Function selector
 ;
 ;       RETURNS:        FS      Pipe control selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CreateDefaultControl    Proc near    
+    push es
     push cx
     push edi
 ;    
     push ax
     call ds:create_control_proc
+;    
+    mov es:usbf_in_endpoint_arr,fs
+    mov es:usbf_out_endpoint_arr,fs
 ;    
     mov fs:usbp_function_sel,ds
     mov fs:usbp_address,0
@@ -132,6 +148,7 @@ CreateDefaultControl    Proc near
     mov fs:usbp_seq,0
     mov fs:usbp_mode,MODE_CONTROL
     mov fs:usbp_maxlen,8
+    mov fs:usbp_device_sel,0
 ;    
     mov eax,8
     AllocateSmallGlobalMem
@@ -159,6 +176,7 @@ CreateDefaultControl    Proc near
 ;
     pop edi
     pop cx
+    pop es
     ret
 CreateDefaultControl    Endp    
 
@@ -167,27 +185,30 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			GetDeviceDescr
+;		NAME:			GetDescr
 ;
-;		description:	Get device-descriptor
+;		description:	Get descriptor
 ;
 ;       parameters:     FS      Pipe control selector
+;                       AX      Config code
 ;                       CX      Size of requested data
 ;                       ES:EDI  Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-GetDeviceDescr    Proc near    
+GetDescr    Proc near    
     push es
     push cx
     push edi
 ;    
+    push ax
     mov eax,8
     AllocateSmallGlobalMem
+    pop ax
     xor edi,edi
     mov es:usd_type,80h
     mov es:usd_req,GET_DESCR
-    mov es:usd_value,100h
+    mov es:usd_value,ax
     mov es:usd_index,0
     mov es:usd_len,cx
 ;    
@@ -209,56 +230,7 @@ GetDeviceDescr    Proc near
     call ds:delete_queue_proc
     popf
     ret
-GetDeviceDescr    Endp    
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			GetConfigDescr
-;
-;		description:	Get configuration descriptor
-;
-;       parameters:     FS      Pipe control selector
-;                       CX      Size of requested data
-;                       ES:EDI  Data buffer
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-GetConfigDescr    Proc near    
-    push es
-    push cx
-    push edi
-;    
-    mov eax,8
-    AllocateSmallGlobalMem
-    xor edi,edi
-    mov es:usd_type,80h
-    mov es:usd_req,GET_DESCR
-    mov es:usd_value,200h
-    mov es:usd_index,0
-    mov es:usd_len,cx
-;    
-    push cx
-    mov cx,8
-    call ds:add_setup_proc
-    pop cx
-    call ds:add_in_proc
-    call ds:add_status_out_proc
-    call ds:issue_transfer_proc
-    call ds:wait_for_completion_proc
-;
-    pop edi
-    pop cx
-    pop es
-;    
-    pushf
-    call ds:get_data_proc
-    call ds:delete_queue_proc
-    popf
-    ret
-GetConfigDescr    Endp    
+GetDescr    Endp    
 
 PAGE
 
@@ -277,6 +249,7 @@ PAGE
 notify_usb_attach_name DB 'Notify USB Attach', 0
 
 notify_usb_attach	Proc far
+    push gs
     push fs
     push es
     push ax
@@ -310,6 +283,17 @@ notify_usb_attach	Proc far
     mov di,OFFSET usbf_port_sel_arr    
     xor ax,ax
     rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_in_endpoint_arr
+    xor ax,ax
+    rep stosw
+;    
+    mov cx,16
+    mov di,OFFSET usbf_out_endpoint_arr
+    xor ax,ax
+    rep stosw
+;    
     pop ax
     int 3
     call CreateDefaultControl
@@ -319,7 +303,8 @@ notify_usb_attach	Proc far
     AllocateSmallGlobalMem
     xor edi,edi
     mov cx,8
-    call GetDeviceDescr
+    mov ax,100h
+    call GetDescr
     movzx ax,es:udd_maxlen
     mov fs:usbp_maxlen,ax
     movzx eax,es:udd_len
@@ -328,21 +313,49 @@ notify_usb_attach	Proc far
     AllocateSmallGlobalMem
     xor edi,edi
     mov cx,ax
-    call GetDeviceDescr
-    FreeMem
+    mov ax,100h
+    call GetDescr
+    mov fs:usbp_device_sel,es
+    mov ax,es
+    mov gs,ax
+;
+    xor bx,bx
 
+nuaLoop:
     mov eax,8
     AllocateSmallGlobalMem
     xor edi,edi
     mov cx,8
-    call GetConfigDescr
+    mov al,bl
+    mov ah,2
+    call GetDescr
     mov ax,es:ucd_size
     FreeMem
 ;
     AllocateSmallGlobalMem
     xor edi,edi
     mov cx,ax
-    call GetConfigDescr
+    mov al,bl
+    mov ah,2
+    call GetDescr
+    mov di,bx
+    add di,di
+    mov fs:[di].usbp_config_sel,es
+;
+    inc bl
+    cmp bl,16
+    je nuaDone
+;    
+    cmp bl,gs:udd_configs
+    jb nuaLoop
+;
+    mov eax,1000h
+    AllocateSmallGlobalMem
+    xor edi,edi
+    xor bx,bx
+    mov al,1
+    mov ecx,1000h
+    GetUsbDevice
     
 nuaDone:
     pop di
@@ -351,8 +364,223 @@ nuaDone:
     pop ax
     pop es
     pop fs
+    pop gs
     ret
 notify_usb_attach   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetUsbDevice
+;
+;		description:	Get USB device descriptor
+;
+;       parameters:     BX          Controller #
+;                       AL          Device address (1..128)
+;                       (E)CX       Buffer size
+;                       ES:(E)DI    Buffer
+;
+;       Returns:        (E)AX       Size of descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_device_name DB 'Get USB Device', 0
+
+get_usb_device	Proc near
+    push ds
+    push esi
+;
+    mov si,usb_data_sel
+    mov ds,si
+    mov si,ds:usb_dev_count
+    cmp bx,si
+    jae gudFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz gudFail
+;
+    mov ds,si
+    cmp al,128
+    jae gudFail
+;    
+    movzx si,al
+    add si,si
+    mov si,ds:[si].usb_addr_arr
+    or si,si
+    jz gudFail
+;
+    mov ds,si
+    mov si,ds:usbf_in_endpoint_arr
+    or si,si
+    jz gudFail
+;
+    mov ds,si
+    mov si,ds:usbp_device_sel
+    or si,si
+    jz gudFail
+;
+    push ecx
+    push edi
+;
+    mov ds,si
+    xor esi,esi
+    movzx ax,ds:udd_len
+    cmp cx,ax
+    jbe gudCopy
+;
+    mov cx,ax
+
+gudCopy:
+    movzx ecx,cx
+    mov eax,ecx
+    rep movs byte ptr es:[edi],[esi]        
+;
+    pop edi
+    pop ecx
+    clc
+    jmp gudDone
+
+gudFail:
+    xor eax,eax    
+    stc
+
+gudDone:                
+    pop esi
+    pop ds
+    ret
+get_usb_device  Endp
+
+get_usb_device32:
+    call get_usb_device
+    retf32
+
+get_usb_device16    Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_usb_device
+;
+    pop edi
+    pop ecx
+    ret
+get_usb_device16    Endp        
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetUsbConfig
+;
+;		description:	Get USB config descriptor
+;
+;       parameters:     BX          Controller #
+;                       AL          Device address (1..128)
+;                       DL          Config #
+;                       (E)CX       Buffer size
+;                       ES:(E)DI    Buffer
+;
+;       Returns:        (E)AX       Size of descriptor
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_usb_config_name DB 'Get USB Config', 0
+
+get_usb_config	Proc near
+    push ds
+    push esi
+;
+    mov si,usb_data_sel
+    mov ds,si
+    mov si,ds:usb_dev_count
+    cmp bx,si
+    jae gucFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz gucFail
+;
+    mov ds,si
+    cmp al,128
+    jae gucFail
+;    
+    movzx si,al
+    add si,si
+    mov si,ds:[si].usb_addr_arr
+    or si,si
+    jz gucFail
+;
+    mov ds,si
+    mov si,ds:usbf_in_endpoint_arr
+    or si,si
+    jz gucFail
+;
+    cmp dl,16
+    jae gucFail
+;    
+    mov ds,si
+    movzx si,dl
+    add si,si
+    mov si,ds:[si].usbp_config_sel
+    or si,si
+    jz gucFail
+;
+    push ecx
+    push edi
+;
+    mov ds,si
+    xor esi,esi
+    mov ax,ds:ucd_size
+    cmp cx,ax
+    jbe gucCopy
+;
+    mov cx,ax
+
+gucCopy:
+    movzx ecx,cx
+    mov eax,ecx
+    rep movs byte ptr es:[edi],[esi]        
+;
+    pop edi
+    pop ecx
+    clc
+    jmp gucDone
+
+gucFail:
+    xor eax,eax    
+    stc
+
+gucDone:                
+    pop esi
+    pop ds
+    ret
+get_usb_config  Endp
+
+get_usb_config32:
+    call get_usb_config
+    retf32
+
+get_usb_config16    Proc far
+    push ecx
+    push edi
+;
+    movzx ecx,cx
+    movzx edi,di
+    call get_usb_config
+;
+    pop edi
+    pop ecx
+    ret
+get_usb_config16    Endp        
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -378,7 +606,7 @@ init	Proc far
 	mov ds,bx
 	mov es,bx
 	mov cx,ax
-	mov al,al
+	xor al,al
 	xor di,di
 	rep stosb
 ;
@@ -397,6 +625,20 @@ init	Proc far
 	xor cl,cl
 	mov ax,notify_usb_attach_nr
 	RegisterOsGate
+;
+	mov bx,OFFSET get_usb_device16
+	mov si,OFFSET get_usb_device32
+	mov di,OFFSET get_usb_device_name
+	mov dx,virt_es_in
+	mov ax,get_usb_device_nr
+	RegisterUserGate
+;
+	mov bx,OFFSET get_usb_config16
+	mov si,OFFSET get_usb_config32
+	mov di,OFFSET get_usb_config_name
+	mov dx,virt_es_in
+	mov ax,get_usb_config_nr
+	RegisterUserGate
 ;
 	popa
 	pop es

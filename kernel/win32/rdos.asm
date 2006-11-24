@@ -8213,6 +8213,71 @@ RdosCalcCrc	PROC
 	ret 16
 RdosCalcCrc	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetUsbDevice
+;
+;		DESCRIPTION:	Get device descriptor
+;
+;       PARAMETERS:     Controller, Device, Buffer, Maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetUsbDevice
+
+RdosGetUsbDevice	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov al,[ebp+12]
+	mov edi,[ebp+16]
+	mov ecx,[ebp+20]
+	UserGate get_usb_device_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 16
+RdosGetUsbDevice	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetUsbConfig
+;
+;		DESCRIPTION:	Get config descriptor
+;
+;       PARAMETERS:     Controller, Device, Config, Buffer, Maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetUsbConfig
+
+RdosGetUsbConfig	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov al,[ebp+12]
+	mov dl,[ebp+16]
+	mov edi,[ebp+20]
+	mov ecx,[ebp+24]
+	UserGate get_usb_config_nr
+;
+	pop edi
+	pop ecx
+	pop ebx
+	pop ebp
+	ret 20
+RdosGetUsbConfig	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main
