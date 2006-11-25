@@ -1556,6 +1556,18 @@ ifTabLoop:
     or ax,0C1h
     out dx,ax
 ;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    in ax,dx
+    or al,4
+    out dx,ax
+;
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg2
+    in ax,dx
+    or al,4
+    out dx,ax
+;
     pop di
     pop si
     pop dx
@@ -1685,6 +1697,7 @@ init_pci_found:
     cmp cl,-1
     jne init_pci_irq_write
 ;    
+    int 3
     IsIrqFree
     jnc init_pci_set_irq
 ;

@@ -1068,6 +1068,13 @@ ReleasePrivateIrqHandler	MACRO
 	OsGate release_private_irq_handler_nr
 					ENDM
 
+;	AL			IRQ NR
+;	DS			DATA PASSED TO HANDLER
+;	ES:DI		HANDLER ADDRESS
+RequestSharedIrqHandler	MACRO
+	OsGate request_shared_irq_handler_nr
+					ENDM
+
 SetupIrqDetect	MACRO
 	OsGate setup_irq_detect_nr
 					ENDM

@@ -83,6 +83,7 @@ init_usb_device	Proc far
     push ds
     push es
     push ax
+    push bx
     push cx
     push di
 ;
@@ -98,7 +99,6 @@ init_usb_device	Proc far
     xor ax,ax
     rep stosw
 ;
-    int 3
     mov ax,usb_data_sel
     mov ds,ax
     mov bx,ds:usb_dev_count
@@ -108,6 +108,7 @@ init_usb_device	Proc far
 ;
     pop di
     pop cx
+    pop bx
     pop ax
     pop es
     pop ds
@@ -252,10 +253,7 @@ notify_usb_attach	Proc far
     push gs
     push fs
     push es
-    push ax
-    push bx
-    push cx
-    push di
+    pushad
 ;    
     movzx bx,al
     add bx,bx
@@ -295,7 +293,6 @@ notify_usb_attach	Proc far
     rep stosw
 ;    
     pop ax
-    int 3
     call CreateDefaultControl
     jc nuaDone
 ;
@@ -348,20 +345,9 @@ nuaLoop:
 ;    
     cmp bl,gs:udd_configs
     jb nuaLoop
-;
-    mov eax,1000h
-    AllocateSmallGlobalMem
-    xor edi,edi
-    xor bx,bx
-    mov al,1
-    mov ecx,1000h
-    GetUsbDevice
     
 nuaDone:
-    pop di
-    pop cx
-    pop bx
-    pop ax
+    popad
     pop es
     pop fs
     pop gs

@@ -442,5 +442,7 @@ notify_ethernet_packet_nr   EQU 300
 init_usb_device_nr          EQU 301
 notify_usb_attach_nr        EQU 302
 
+request_shared_irq_handler_nr   EQU 303
+
 osgate_entries				EQU 310
 
