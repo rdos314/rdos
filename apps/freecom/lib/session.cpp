@@ -71,6 +71,7 @@
 #include "mount.h"
 #include "reboot.h"
 #include "capture.h"
+#include "usb.h"
 
 #include "file.h"
 #include "path.h"
@@ -126,6 +127,7 @@ static TCommandFactory *set;
 static TCommandFactory *state;
 static TCommandFactory *type;
 static TCommandFactory *timev;
+static TCommandFactory *usb;
 static TCommandFactory *wait;
 
 static TStringList *History;
@@ -162,6 +164,7 @@ TSession::TSession()
     	flashfs = new TFlashFsPartitionFactory;
 
     	wait = new TWaitFactory;
+    	usb = new TUsbFactory;
     	timev = new TTimeFactory;
     	type = new TTypeFactory;
     	synctime = new TSyncTimeFactory;
@@ -279,6 +282,7 @@ TSession::~TSession()
     	delete flashfs;
 
         delete wait;
+        delete usb;
     	delete timev;
 	    delete type;
 	    delete synctime;

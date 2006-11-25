@@ -26,6 +26,7 @@
 ########################################################################*/
 
 #include <string.h>
+#include <stdio.h>
 
 #include "cmdhelp.h"
 #include "lang.h"
@@ -86,6 +87,59 @@ TUsbCommand::TUsbCommand(TSession *session, const char *param)
 
 /*##########################################################################
 #
+#   Name       : TUsbCommand::ShowDevice
+#
+#   Purpose....: Show device descriptor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbCommand::ShowDevice(int control, int device, TUsbDevice *dev)
+{
+	char str[100];
+	int minor = dev->usb_ver & 0xFF;
+	int major = (dev->usb_ver >> 8) & 0xFF;
+
+	sprintf(str, "\n\nController: %d, Device: %d\n", control, device);
+	Write(str);
+
+	sprintf(str, "\nVersion: %02hX.%02hX", major, minor);
+	Write(str);
+
+	switch (dev->class_id)
+	{
+		case 0:
+			break;
+
+		case -1:
+			Write("\nVendor specific class");
+			break;
+
+		default:
+			sprintf(str, "\nClass: %02hX", dev->class_id);
+			break;
+	}
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbCommand::ShowConfig
+#
+#   Purpose....: Show config descriptor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbCommand::ShowConfig(int config, TUsbConfig *dev)
+{
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbCommand::Run
 #
 #   Purpose....: Run command
@@ -97,10 +151,42 @@ TUsbCommand::TUsbCommand(TSession *session, const char *param)
 ##########################################################################*/
 int TUsbCommand::Execute(char *param)
 {
-    int i;
+    int contr;
+    int device;
+    int config;
+    char *buf;
+    int size;
+    TUsbDevice UsbDevice;
+	TUsbConfig *UsbConfig;
 
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
+
+    buf = new char[4096];
     
+    for (contr = 0; contr < 256; contr++)
+    {
+        for (device = 1; device < 128; device++)
+        {
+            size = RdosGetUsbDevice(contr, device, &UsbDevice, sizeof(TUsbDevice));
+            if (size >= sizeof(TUsbDevice))
+            {
+                ShowDevice(contr, device, &UsbDevice);
+
+                for (config = 0; config < UsbDevice.configs; config++)
+                {
+                    size = RdosGetUsbConfig(contr, device, config, buf, 4096);
+                    if (size >= sizeof(TUsbConfig))
+                    {
+                        UsbConfig = (TUsbConfig *)buf;
+                        ShowConfig(config, UsbConfig);
+                    }
+                }
+            }        
+        }
+    } 
+
+    delete buf;
+
 	return 0;
 }

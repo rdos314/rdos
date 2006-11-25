@@ -31,6 +31,36 @@
 #include "cmd.h"
 #include "cmdfact.h"
 
+struct TUsbDevice
+{
+    char len;
+    char type;
+    short int usb_ver;
+    char class_id;
+    char sub_class;
+    char proto;
+    char maxlen;
+    short int vendor;
+    short int prod;
+    short int device;
+    char man;
+    char prodid;
+    char num;
+    char configs;
+};
+    
+struct TUsbConfig
+{
+    char len;
+    char type;
+    short int size;
+    char interface_count;
+    char config_id;
+    char config_str_id;
+    char attrib;
+    char power;
+};
+
 class TUsbFactory : public TCommandFactory
 {
 public:
@@ -46,6 +76,11 @@ public:
 	TUsbCommand(TSession *session, const char *param);
 
 	virtual int Execute(char *param);	
+
+protected:
+    void ShowDevice(int control, int device, TUsbDevice *dev);
+    void ShowConfig(int config, TUsbConfig *dev);
+
 };
 
 #endif
