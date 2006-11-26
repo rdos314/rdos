@@ -271,10 +271,10 @@ void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
 	int type;
 	int size;
 
-	Write("\r\n    ");
-
-	sprintf(str, "    Endpoint: %d\r\n", descr->address & 0xF);
+	sprintf(str, "\r\n    Endpoint: %d\r\n", descr->address & 0xF);
 	Write(str);
+
+	Write("    ");
 
 	type = descr->attrib & 3;
 
