@@ -271,12 +271,12 @@ void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
 	int type;
 	int size;
 
+	Write("\r\n    ");
+
 	sprintf(str, "    Endpoint: %d\r\n", descr->address & 0xF);
 	Write(str);
 
 	type = descr->attrib & 3;
-
-	Write("\r\n    ");
 
 	switch (type)
 	{
@@ -309,7 +309,6 @@ void TUsbCommand::ShowEndpoint(TUsbEndpoint *descr)
 	Write("\r\n");
 
 	size = (unsigned char)descr->maxsize;
-	size++;
 	
 	sprintf(str, "    Packet size %d\r\n", size);
 	Write(str);

@@ -238,6 +238,180 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    ClosePipe
+;
+;		description:    Close pipe
+;
+;       parameters:     FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePipe   Proc near
+    push es
+    push ax
+    push bx
+    push cx
+;
+    mov ax,fs:usbp_device_sel
+    or ax,ax
+    jz cpDevOk
+;
+    mov es,ax
+    FreeMem
+
+cpDevOk:
+    mov cx,16
+    mov bx,OFFSET usbp_config_sel
+
+cpConfLoop:
+    mov ax,fs:[bx]
+    or ax,ax
+    jz cpConfNext
+;
+    mov es,ax
+    FreeMem
+
+cpConfNext:
+    add bx,2
+    loop cpConfLoop        
+;
+    call ds:close_pipe_proc
+;
+    pop cx
+    pop bx
+    pop ax
+    pop es    
+    ret
+ClosePipe   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CloseEndpoint
+;
+;		description:    Close endpoint
+;
+;       parameters:     ES      Device
+;                       AL      Endpoint #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseEndpoint   Proc near
+    push ax
+    push bx
+;
+    movzx bx,al
+    add bx,bx
+    mov ax,es:[bx].usbf_in_endpoint_arr
+    or ax,ax
+    jnz ceClose
+;
+    mov ax,es:[bx].usbf_out_endpoint_arr
+    or ax,ax
+    jz ceDone
+
+ceClose:
+    push fs
+    mov es:[bx].usbf_in_endpoint_arr,0
+    mov es:[bx].usbf_out_endpoint_arr,0
+    mov fs,ax
+    call ClosePipe    
+    pop fs
+    
+ceDone:
+    pop bx
+    pop ax
+    ret
+CloseEndpoint   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CloseDevice
+;
+;		description:    Close device and cleanup resources
+;
+;       parameters:     ES      Device
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CloseDevice Proc near    
+    push ax
+    push bx
+    push cx
+    push dx
+;    
+    mov cx,MAX_USB_HUB_PORTS
+    mov bx,OFFSET usbf_port_sel_arr
+
+cdCloseHubLoop:
+    mov ax,es:[bx]
+    or ax,ax
+    jz cdCloseHubNext
+;
+    push es
+    mov es,ax
+    call CloseDevice
+    pop es            
+
+cdCloseHubNext:
+    add bx,2
+    loop cdCloseHubLoop
+;
+    movzx bx,es:usbf_address
+    add bx,bx
+    mov ds:[bx].usb_addr_arr,0
+;
+    mov cx,16
+    mov bx,OFFSET usbf_in_endpoint_arr
+    xor al,al
+
+cdCloseInLoop:
+    mov dx,es:[bx]
+    or dx,dx
+    jz cdCloseInNext
+;
+    call CloseEndpoint
+
+cdCloseInNext:
+    inc al
+    add bx,2
+    loop cdCloseInLoop           
+;
+    mov cx,16
+    mov bx,OFFSET usbf_out_endpoint_arr
+    xor al,al
+
+cdCloseOutLoop:
+    mov dx,es:[bx]
+    or dx,dx
+    jz cdCloseOutNext
+;
+    call CloseEndpoint
+
+cdCloseOutNext:
+    inc al
+    add bx,2
+    loop cdCloseOutLoop           
+;
+    FreeMem
+;
+    pop dx
+    pop cx
+    pop bx
+    pop ax    
+    ret
+CloseDevice Endp
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			NotifyUsbAttach
 ;
 ;		description:	Notify USB attach event
@@ -353,6 +527,42 @@ nuaDone:
     pop gs
     ret
 notify_usb_attach   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			NotifyUsbDetach
+;
+;		description:	Notify USB detach event
+;
+;       parameters:     AL      Usb port
+;                       DS      USB device selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+notify_usb_detach_name DB 'Notify USB Detach', 0
+
+notify_usb_detach	Proc far
+    push es
+    pushad
+;
+    movzx bx,al
+    add bx,bx
+    xor ax,ax
+    xchg ax,ds:[bx].usb_port_sel_arr
+    or ax,ax
+    jz nudDone
+;    
+    mov es,ax
+    call CloseDevice
+
+nudDone:    
+    popad
+    pop es
+    ret
+notify_usb_detach   Endp
 
 PAGE
 
@@ -610,6 +820,12 @@ init	Proc far
 	mov di,OFFSET notify_usb_attach_name
 	xor cl,cl
 	mov ax,notify_usb_attach_nr
+	RegisterOsGate
+;
+	mov si,OFFSET notify_usb_detach
+	mov di,OFFSET notify_usb_detach_name
+	xor cl,cl
+	mov ax,notify_usb_detach_nr
 	RegisterOsGate
 ;
 	mov bx,OFFSET get_usb_device16

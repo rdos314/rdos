@@ -77,6 +77,9 @@ delete_queue_proc      DD ?
 ; OUT CX        Returned size
 get_data_proc      DD ?
 
+; IN  FS        Pipe selector
+close_pipe_proc     DD ?
+
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr        DW 128 DUP(?)
 

@@ -81,6 +81,22 @@ irq_arr			DB 16 * SIZE irq_struc DUP(?)
 
 irq_sys_seg	ENDS
 
+share_handle_struc  STRUC
+
+sh_user_handler DD ?
+sh_user_data    DW ?
+
+share_handle_struc  ENDS
+
+MAX_SHARE   = 16
+
+share_struc	STRUC
+
+share_count     DW ?
+share_handler   DB MAX_SHARE * SIZE share_handle_struc DUP(?)
+
+share_struc ENDS
+
 irq_ss		EQU 18
 irq_esp		EQU 14
 irq_eflags	EQU 10
@@ -611,6 +627,117 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			request_shared_irq_handler
+;
+;		description:	Request for a shared irq handler
+;
+;		PARAMETERS:		ds			data for handler
+;						al			irq nr
+;						es:di		handler address
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+request_shared_irq_handler_name DB 'Request Shared Irq Handler',0
+
+shared_irq  Proc far
+    mov cx,ds:share_count
+    mov bx,OFFSET share_handler
+    or cx,cx
+    jz shared_irq_done
+
+shared_irq_loop:
+    push ds
+    push bx
+    push cx
+;
+	mov ax,ds:[bx].sh_user_data
+	push cs
+	push OFFSET shared_irq_next
+	push ds:[bx].sh_user_handler
+	mov ds,ax
+	retf
+
+shared_irq_next:
+    pop cx
+    pop bx
+    pop ds
+;    
+    add bx,SIZE share_handle_struc
+    loop shared_irq_loop
+
+shared_irq_done:
+    ret
+shared_irq  Endp
+
+request_shared_irq_handler	Proc far
+	push ds
+	pusha
+;
+	mov dx,ds
+	movzx bx,al
+	mov ax,irq_sys_sel
+	mov ds,ax
+	mov si,bx
+	add si,si
+	mov si,word ptr cs:[si].irq_offs_table
+	mov ax,cs
+    cmp ax,word ptr ds:[si].user_handler+2
+    jne rsih_req
+;    	
+    mov ax,word ptr ds:[si].user_handler
+    cmp ax,OFFSET shared_irq
+    je rsih_add
+
+rsih_req:
+    push ds
+    push es
+    push di
+;    
+    mov eax,SIZE share_struc
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor ax,ax
+    rep stosb
+;    
+    mov ax,es
+    mov ds,ax
+    mov ax,cs
+    mov es,ax
+    mov al,bl
+    mov di,OFFSET shared_irq
+    RequestPrivateIrqHandler   
+;
+    pop di
+    pop es
+    pop ds
+
+rsih_add:
+    mov ds,ds:[si].user_data
+    mov cx,ds:share_count
+    mov ax,cx
+    push dx
+    mov dx,SIZE share_handle_struc
+    mul dx
+    pop dx
+    mov bx,ax
+    add bx,OFFSET share_handler
+    mov word ptr ds:[bx].sh_user_handler,di
+    mov word ptr ds:[bx].sh_user_handler+2,es
+    mov ds:[bx].sh_user_data,dx
+    inc cx
+    mov ds:share_count,cx
+;
+	popa
+	pop ds
+	ret
+request_shared_irq_handler	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			is_irq_free
 ;
 ;		description:	Check if IRQ can be reserved
@@ -822,6 +949,12 @@ init_irq	PROC near
 	mov di,OFFSET request_private_irq_handler_name
 	xor cl,cl
 	mov ax,request_private_irq_handler_nr
+	RegisterOsGate
+;
+	mov si,OFFSET request_shared_irq_handler
+	mov di,OFFSET request_shared_irq_handler_name
+	xor cl,cl
+	mov ax,request_shared_irq_handler_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET release_private_irq_handler

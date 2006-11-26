@@ -444,5 +444,7 @@ notify_usb_attach_nr        EQU 302
 
 request_shared_irq_handler_nr   EQU 303
 
+notify_usb_detach_nr        EQU 304
+
 osgate_entries				EQU 310
 

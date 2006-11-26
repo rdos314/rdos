@@ -924,7 +924,7 @@ init_pci_found:
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET NetInt	
-	RequestPrivateIrqHandler
+	RequestSharedIrqHandler
 ;
 	call ReadEthernetAddress
 	call AllocateRing

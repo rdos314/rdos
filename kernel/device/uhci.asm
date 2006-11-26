@@ -60,7 +60,6 @@ uhc_ring_sel     DW ?
 
 uhc_status       DW ?
 
-uhc_control_qh   DD ?
 uhc_period_qh    DD ?
 uhc_intr_qh      DD 8 DUP(?)
 uhc_intr_arr     DD 8 DUP(?)
@@ -107,7 +106,6 @@ data    STRUC
 
 UhciList32   DD ?
 UhciSection  section_typ <>
-UhciIrq      DB ?
 UhciThread   DW ?
 UhciCount    DW ?
 UhciFunc     DW 16 DUP (?)
@@ -120,6 +118,40 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 .386p
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UhciInt
+;
+;		DESCRIPTION:    UHCI interrupt
+;
+;       PARAMETERS:     DS      Function selector
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UhciInt	Proc far
+    mov dx,ds:uhc_io_base
+    add dx,UsbStatusReg
+    in ax,dx
+    or ax,ax
+    jz uiDone
+;    
+    or ds:uhc_status,ax
+    out dx,ax
+;
+    mov ax,uhci_data_sel
+    mov ds,ax
+    mov bx,ds:UhciThread
+    Signal    
+
+uiDone:    
+    ret
+UhciInt  Endp
 
 PAGE
 
@@ -429,6 +461,56 @@ ifDone:
     ret
 InsertQhFirst  ENDP
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    RemoveQh
+;
+;		DESCRIPTION:	Remove QH from horizontal QH
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX     QH to search in
+;                       EAX     QH to delink
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemoveQh	PROC near
+    push ecx
+    push edx
+
+rqSearch:
+    mov ecx,es:[edx].uqh_va_link
+    or ecx,ecx
+    jz rqDone
+;
+    cmp eax,ecx
+    je rqRemove
+;
+    mov edx,ecx
+    jmp rqSearch         
+
+rqRemove:
+    mov ecx,es:[eax].uqh_va_link
+    or ecx,ecx
+    jz rqEmpty
+;    
+    mov es:[edx].uqh_va_link,ecx
+    mov ecx,es:[ecx].uqh_phys
+    mov es:[edx].uqh_link,ecx
+    jmp rqDone
+
+rqEmpty:
+    mov es:[edx].uqh_va_link,0
+    mov es:[edx].uqh_link,1
+
+rqDone:
+    pop edx
+    pop ecx
+    ret
+RemoveQh  ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -663,93 +745,6 @@ CreatePeriodQueue	PROC near
     ret
 CreatePeriodQueue  Endp
 
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    CreateControlQueue
-;
-;		DESCRIPTION:	Create control-queue
-;
-;       PARAMETERS:     DS      Function sel
-;                       ES      Flat sel
-;                       EDX     Control queue head
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-CreateControlQueue	PROC near
-    push eax
-    push edx
-;    
-    mov ds:uhc_control_qh,edx
-;
-    mov edx,ds:uhc_period_qh
-    or edx,edx
-    jnz ccqLinkPeriod    
-;
-    call CreatePeriodQueue
-    mov edx,ds:uhc_period_qh
-
-ccqLinkPeriod:
-    mov eax,ds:uhc_control_qh
-    call InsertQhFirst
-;
-    pop edx
-    pop eax
-    ret
-CreateControlQueue  Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			UhciInt
-;
-;		DESCRIPTION:    UHCI interrupt
-;
-;       PARAMETERS:     
-;
-;		RETURNS:		
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-UhciInt	Proc far
-    mov cx,ds:UhciCount
-    mov si,OFFSET UhciFunc
-
-wiFuncLoop:
-    mov ax,[si]
-    or ax,ax
-    jz wiFuncNext
-;
-    mov es,ax
-;
-    mov dx,es:uhc_io_base
-    add dx,UsbStatusReg
-    in ax,dx
-    or es:uhc_status,ax
-    out dx,ax
-;    
-    mov dx,es:uhc_io_base
-    add dx,PortscReg1
-    in ax,dx
-    out dx,ax
-;
-    add dx,2
-    in ax,dx
-    out dx,ax
-
-wiFuncNext:
-    add si,2
-    loop wiFuncLoop   
-;
-    mov bx,ds:UhciThread
-    Signal    
-;    
-    ret
-UhciInt  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -778,11 +773,16 @@ CreateControl   Proc far
     call AllocateQh
     mov fs:upc_qh,edx
 ;
-    mov eax,ds:uhc_control_qh
-    or eax,eax
-    jnz ccInsert
+    mov edx,ds:uhc_period_qh
+    or edx,edx
+    jnz ccLinkPeriod    
 ;
-    call CreateControlQueue
+    call CreatePeriodQueue
+    mov edx,ds:uhc_period_qh
+
+ccLinkPeriod:
+    mov eax,fs:upc_qh
+    call InsertQhFirst
     jmp ccDone
 
 ccInsert:
@@ -1406,28 +1406,84 @@ GetData   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    EnablePort
+;		NAME:		    ClosePipe
 ;
-;		DESCRIPTION:    Enable root-hub port
+;		DESCRIPTION:    Close pipe
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ClosePipe   Proc far
+    push es
+    push eax
+    push edx
+;        
+    mov al,fs:usbp_mode
+    cmp al,MODE_CONTROL
+    je dpControl
+;
+    int 3
+    jmp dpDone    
+
+dpControl:
+    int 3
+    mov ax,flat_sel
+    mov es,ax
+    mov edx,ds:uhc_period_qh
+    mov eax,fs:upc_qh
+    call RemoveQh
+    mov edx,eax
+    call FreeBlock32
+    
+dpDone:
+    mov ax,fs
+    mov es,ax
+    xor ax,ax
+    mov fs,ax
+    FreeMem
+;
+    pop edx
+    pop eax
+    pop es
+    ret
+ClosePipe   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    UpdatePort
+;
+;		DESCRIPTION:    Update root-hub port status
 ;
 ;       PARAMETERS:     DS      Function selector
 ;                       CL      Port # (0,1)
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-EnablePort   Proc near
+UpdatePort   Proc near
     push ax
+    push bx
     push cx
     push dx
+    push si
+;    
+    movzx si,cl
+    add si,si
 ;    
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
-    add dl,cl
-    add dl,cl
+    add dx,si
     in ax,dx
     test al,1
     stc
-    jz epDone
+    jz upDetach
+    
+upAttach:
+    mov bx,ds:[si].usb_port_sel_arr
+    or bx,bx
+    jnz upDone
 ;
     or ax,200h
     out dx,ax
@@ -1454,19 +1510,30 @@ EnablePort   Proc near
 ;
     pop cx
     stc
-    jmp epDone
+    jmp upDone
 
 epNotify:
     pop cx
     mov al,cl
     NotifyUsbAttach
+    jmp upDone
+
+upDetach:
+    mov bx,ds:[si].usb_port_sel_arr
+    or bx,bx
+    jz upDone
+;    
+    mov al,cl
+    NotifyUsbDetach
                     
-epDone:        
+upDone:    
+    pop si    
     pop dx
     pop cx
+    pop bx
     pop ax
     ret
-EnablePort   Endp
+UpdatePort   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1490,17 +1557,24 @@ ut06 DW OFFSET IssueTransfer,       uhci_code_sel
 ut07 DW OFFSET WaitForCompletion,   uhci_code_sel
 ut08 DW OFFSET EmptyQueue,          uhci_code_sel
 ut09 DW OFFSET GetData,             uhci_code_sel
+ut10 DW OFFSET ClosePipe,           uhci_code_sel
 
 InitFunction    Proc near
-    push eax
-    push cx
-    push dx
-    push si
-    push di
+    pushad
+;
+    mov bx,ds:uhc_pci_bus_dev
+    mov ch,ds:uhc_pci_func
+	mov cl,PCI_interrupt_line
+	ReadPciByte
+;	
+	mov di,cs
+	mov es,di
+	mov di,OFFSET UhciInt	
+	RequestSharedIrqHandler
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,10
+    mov cx,11
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -1568,11 +1642,7 @@ ifTabLoop:
     or al,4
     out dx,ax
 ;
-    pop di
-    pop si
-    pop dx
-    pop cx
-    pop eax       
+    popad
     ret
 InitFunction    Endp
 
@@ -1634,7 +1704,6 @@ AddFunction  Proc near
     mov ds:uhc_status,0
     mov ds:uhc_ring_sel,0
     mov ds:uhc_period_qh,0
-    mov ds:uhc_control_qh,0
 ;
     mov ax,uhci_data_sel
     mov es,ax
@@ -1648,6 +1717,57 @@ AddFunction  Proc near
     pop ds
     ret
 AddFunction   Endp
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    PollFunction
+;
+;		DESCRIPTION:    Poll UHCI function
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollFunction  Proc near
+    pusha
+;
+    mov ax,ds:uhc_status
+    or ax,ax
+    jz pfStatusOk
+;
+    int 3
+    mov ds:uhc_status,0
+
+pfStatusOk:
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    in ax,dx
+    mov bx,ax
+    and bx,0Ah
+    jz pfNotReg1
+;    
+    out dx,ax
+    mov cl,0
+    call UpdatePort
+
+pfNotReg1:
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg2
+    in ax,dx
+    mov bx,ax
+    and bx,0Ah
+    jz pfNotReg2
+;    
+    out dx,ax
+    mov cl,1
+    call UpdatePort
+
+pfNotReg2:
+    popa
+    ret
+PollFunction    Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1672,7 +1792,6 @@ pci05 	DW 0,	  0
 
 InitPciAdapter	Proc near
 	mov si,OFFSET PciVendorTab
-	mov ds:UhciIrq,-1
 
 init_pci_loop:
 	xor ax,ax
@@ -1690,47 +1809,6 @@ init_pci_next:
 	jmp init_pci_loop
 
 init_pci_found:
-	mov cl,PCI_interrupt_line
-	ReadPciByte
-;	
-    mov cl,ds:UhciIrq
-    cmp cl,-1
-    jne init_pci_irq_write
-;    
-    int 3
-    IsIrqFree
-    jnc init_pci_set_irq
-;
-    and al,0F0h
-    or al,13
-
-init_pci_irq_loop:
-    IsIrqFree
-    jnc init_pci_set_irq
-;
-    dec al
-    or al,al
-    jnz init_pci_irq_loop
-;
-    jmp init_pci_next
-
-init_pci_set_irq:        
-    mov cl,ds:UhciIrq
-    cmp cl,-1
-    jne init_pci_irq_write
-;
-    mov ds:UhciIrq,al
-	mov di,cs
-	mov es,di
-	mov di,OFFSET UhciInt	
-	RequestPrivateIrqHandler
-
-init_pci_irq_write:
-    mov al,ds:UhciIrq
-   	mov cl,PCI_interrupt_line
-	WritePciByte
-
-init_pci_irq_set_ok:
 	mov cl,20h
 	ReadPciDword
 	mov dx,ax
@@ -1755,10 +1833,6 @@ init_pci_next_device:
 	cmp dx,bp
 	je init_pci_next
 ;	
-    mov al,ds:UhciIrq
-   	mov cl,PCI_interrupt_line
-	WritePciByte
-;	
 	call AddFunction
 	inc ax
     jmp init_pci_next_device
@@ -1766,6 +1840,76 @@ init_pci_next_device:
 init_pci_done:
 	ret
 InitPciAdapter	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			port_timer
+;
+;		DESCRIPTION:    Port timer
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+port_timer  Proc far
+    push edx
+    push eax
+;    
+    xor si,si
+    mov ax,uhci_data_sel
+    mov ds,ax
+;
+    mov cx,ds:UhciCount	
+    mov bx,OFFSET UhciFunc
+
+timer_func_loop:
+    push ds
+    mov ds,[bx]
+;    
+    mov dx,ds:uhc_io_base
+    add dx,PortscReg1
+    in ax,dx
+    and ax,0Ah
+    jz timer_not_reg1
+;    
+    inc si
+
+timer_not_reg1:
+    add dx,2
+    in ax,dx
+    and ax,0Ah
+    jz timer_not_reg2
+;    
+    inc si
+
+timer_not_reg2:
+    pop ds
+    add bx,2
+    loop timer_func_loop
+;
+    or si,si
+    jz timer_no_action
+;
+    mov bx,ds:UhciThread
+    Signal
+
+timer_no_action:    
+    pop eax   
+    pop edx
+;    
+	add eax,119300
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov bx,cs
+	mov di,OFFSET port_timer
+	StartTimer
+    ret
+port_timer  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1800,37 +1944,33 @@ uhci_func_loop:
     push ds
     mov ds,[bx]
     call InitFunction
-    push cx
-;    
-    mov ax,100
-    WaitMilliSec
-;    
-    mov cl,0
-    call EnablePort
-    mov cl,1
-    call EnablePort
-    pop cx
     pop ds
     add bx,2
     loop uhci_func_loop
 ;
-    int 3    
-;    WaitForSignal
-;    
+	GetSystemTime
+	add eax,119300
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov bx,cs
+	mov di,OFFSET port_timer
+	StartTimer
+
+uhci_handle_loop:
+    WaitForSignal    
     mov cx,ds:UhciCount	
     mov bx,OFFSET UhciFunc
 
 uhci_poll_loop:
     push ds
     mov ds,[bx]
-    mov dx,ds:uhc_io_base
-    add dx,UsbStatusReg
-    in ax,dx    
-    mov ax,ds:uhc_status
+    call PollFunction
     pop ds
     add bx,2
     loop uhci_poll_loop
-    WaitForSignal
+;
+    jmp uhci_handle_loop    
 
 uhci_thread_exit:
 	ret

@@ -2092,3 +2092,9 @@ InitUsbDevice	MACRO
 NotifyUsbAttach	MACRO
 	OsGate notify_usb_attach_nr
 					ENDM
+
+;   AL      Port #
+;   DS      Usb device selector
+NotifyUsbDetach	MACRO
+	OsGate notify_usb_detach_nr
+					ENDM
