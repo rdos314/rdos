@@ -36,8 +36,9 @@ INCLUDE ..\os.def
 INCLUDE system.inc
 INCLUDE ..\user.inc
 INCLUDE ..\os.inc
+INCLUDE ..\handle.inc
+INCLUDE ..\wait.inc
 INCLUDE usb.inc
-
 
 GET_STATUS = 0
 CLEAR_FEATURE = 1
@@ -52,6 +53,22 @@ SET_INTERFACE = 11
 SYNC_FRAME = 12
 
 	.386p
+
+pipe_handle_struc	STRUC
+
+up_base			handle_header <>
+up_func_sel     DW ?
+up_pipe_sel		DW ?
+
+pipe_handle_struc	ENDS
+
+pipe_wait_header	STRUC
+
+pw_obj			wait_obj_header <>
+pw_func_sel		DW ?
+pw_pipe_sel     DW ?
+
+pipe_wait_header	ENDS
 
 data    STRUC
 
@@ -778,6 +795,326 @@ get_usb_config16    Proc far
     ret
 get_usb_config16    Endp        
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			OpenUsbPipe
+;
+;		description:	Open USB pipe
+;
+;       parameters:     BX      Controller #
+;                       AL      Device address (1..128)
+;                       DL      Pipe #
+;
+;       RETURNS:        BX      Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_usb_pipe_name DB 'Open USB Pipe', 0
+
+open_usb_pipe    Proc far
+    push ds
+    push es
+    push fs
+    push ax
+    push cx
+    push dx
+    push si
+;
+    mov si,usb_data_sel
+    mov ds,si
+    mov si,ds:usb_dev_count
+    cmp bx,si
+    jae oupFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz oupFail
+;
+    mov es,si
+    cmp al,128
+    jae oupFail
+;    
+    movzx si,al
+    add si,si
+    mov si,es:[si].usb_addr_arr
+    or si,si
+    jz oupFail
+;
+    cmp dl,16
+    jae oupFail
+;    
+    mov ds,si
+    movzx si,dl
+    add si,si
+    mov dx,ds:[si].usbf_in_endpoint_arr
+    or dx,dx
+    jnz oupCreateHandle
+;
+    mov dx,ds:[si].usbf_out_endpoint_arr
+    or dx,dx
+    jnz oupCreateHandle    
+;
+    int 3
+    jmp oupFail
+
+oupCreateHandle:    
+	mov cx,SIZE pipe_handle_struc
+	AllocateHandle
+	mov [bx].up_func_sel,es
+	mov [bx].up_pipe_sel,dx
+	mov [bx].hh_sign,USB_PIPE_HANDLE
+	mov bx,[bx].hh_handle
+	clc
+	jmp oupDone
+
+oupFail:
+    stc
+
+oupDone:
+    pop si
+    pop dx
+    pop cx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+open_usb_pipe    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseUsbPipe
+;
+;		DESCRIPTION:	Close a USB pipe handle
+;
+;		PARAMETERS:		BX		Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_usb_pipe_name	DB 'Close USB Pipe',0
+
+close_usb_pipe	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc cupDone
+;
+    push ds
+    push bx
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ClosePipe
+	pop bx
+	pop ds
+	FreeHandle
+	clc
+
+cupDone:
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+	retf32
+close_usb_pipe	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			delete_handle
+;
+;		DESCRIPTION:	BX			USB pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+delete_handle	Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc delete_handle_done
+;
+    push ds
+    push bx
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ClosePipe
+	pop bx
+	pop ds
+	FreeHandle
+	clc
+
+delete_handle_done:
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+	ret
+delete_handle	Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StartWaitForPipe
+;
+;		DESCRIPTION:	Start a wait for pipe
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_wait_for_pipe	PROC far
+    push ds
+    mov ds,es:pw_pipe_sel
+    mov ds:usbp_wait_obj,es
+    pop ds        
+    ret
+start_wait_for_pipe Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			StopWaitForPipe
+;
+;		DESCRIPTION:	Stop a wait for pipe
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+stop_wait_for_pipe	PROC far
+    push ds
+    mov ds,es:pw_pipe_sel
+    mov ds:usbp_wait_obj,0
+    pop ds        
+    ret
+stop_wait_for_pipe Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ClearWaitForPipe
+;
+;		DESCRIPTION:	Clear wait for pipe
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+clear_wait_for_pipe	PROC far
+    ret
+clear_wait_for_pipe Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			IsPipeIdle
+;
+;		DESCRIPTION:	Check if pipe is idle
+;
+;		PARAMETERS:		ES      Wait object
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+is_pipe_idle	PROC far
+    push ds
+    push fs
+;
+    mov ds,es:pw_func_sel
+    mov fs,es:pw_pipe_sel
+    call ds:is_pipe_signalled_proc
+;
+    pop fs
+    pop ds        
+    ret
+is_pipe_idle Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddWaitForPipe
+;
+;		DESCRIPTION:	Add a wait for pipe
+;
+;		PARAMETERS:		BX      Wait handle
+;                       AX      Pipe handle
+;                       ECX     Signalled ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_wait_for_pipe_name	DB 'Add Wait For Pipe',0
+
+add_wait_tab:
+aw0	DW OFFSET start_wait_for_pipe, 	    usb_code_sel
+aw1 DW OFFSET stop_wait_for_pipe,		usb_code_sel
+aw2	DW OFFSET clear_wait_for_pipe,	    usb_code_sel
+aw3	DW OFFSET is_pipe_idle, 			usb_code_sel
+
+add_wait_for_pipe	PROC far
+	push ds
+	push es
+	push fs
+	push eax
+	push bx
+	push di
+;
+    push bx
+    mov bx,ax
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc add_wait_pop_done
+;
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+    pop bx
+;
+    mov ax,cs
+    mov es,ax
+   	mov ax,SIZE pipe_wait_header - SIZE wait_obj_header
+    mov di,OFFSET add_wait_tab
+    AddWait
+    jc add_wait_done
+;
+    mov es:pw_func_sel,ds
+	mov es:pw_pipe_sel,fs
+	clc
+	jmp add_wait_done
+
+add_wait_pop_done:
+    pop bx
+    
+add_wait_done:
+    pop di
+    pop bx
+    pop eax
+    pop fs
+    pop es
+    pop ds
+	retf32
+add_wait_for_pipe	ENDP
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -810,6 +1147,10 @@ init	Proc far
 	mov ds,ax
 	mov es,ax
 ;
+	mov ax,USB_PIPE_HANDLE
+	mov di,OFFSET delete_handle
+	RegisterHandle
+;
 	mov si,OFFSET init_usb_device
 	mov di,OFFSET init_usb_device_name
 	xor cl,cl
@@ -841,6 +1182,24 @@ init	Proc far
 	mov dx,virt_es_in
 	mov ax,get_usb_config_nr
 	RegisterUserGate
+;
+	mov si,OFFSET open_usb_pipe
+	mov di,OFFSET open_usb_pipe_name
+	xor dx,dx
+	mov ax,open_usb_pipe_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_usb_pipe
+	mov di,OFFSET close_usb_pipe_name
+	xor dx,dx
+	mov ax,close_usb_pipe_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET add_wait_for_pipe
+	mov di,OFFSET add_wait_for_pipe_name
+	xor dx,dx
+	mov ax,add_wait_for_usb_pipe_nr
+	RegisterBimodalUserGate
 ;
 	popa
 	pop es

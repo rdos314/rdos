@@ -379,4 +379,8 @@ calc_crc_nr                 = 320
 get_usb_device_nr           = 321
 get_usb_config_nr           = 322
 
+open_usb_pipe_nr            = 323
+close_usb_pipe_nr           = 324
+add_wait_for_usb_pipe_nr    = 325
+
 usergate_entries			= 340

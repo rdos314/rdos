@@ -65,17 +65,22 @@ uhc_intr_qh      DD 8 DUP(?)
 uhc_intr_arr     DD 8 DUP(?)
 
 uhc_io_base      DW ?
+
+uhc_pipe_list    DW ?
+
 uhc_pci_bus_dev  DW ?
 uhc_pci_func     DB ?
 
 uhci_func_sel    ENDS
 
-uhci_control_pipe   STRUC
+uhci_pipe   STRUC
 
 upc_pipe_base   usb_pipe_struc <>
 upc_qh          DD ?
+upc_prev        DW ?
+upc_next        DW ?
 
-uhci_control_pipe   ENDS
+uhci_pipe   ENDS
 
 uhci_td STRUC
 
@@ -240,6 +245,96 @@ FreeBlock32	PROC near
 	pop ds
 	ret
 FreeBlock32	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			InsertPipe
+;
+;		DESCRIPTION:	Insert pipe into function pipe-list
+;
+;       PARAMETERS:     DS      Function
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertPipe  Proc near
+	push di
+	mov di,ds:uhc_pipe_list
+	or di,di
+	je ipEmpty
+;	
+	push ds
+	push si
+	mov ds,di
+	mov si,fs:upc_prev
+	mov ds:upc_prev,fs
+	mov ds,si
+	mov ds:upc_next,fs
+	mov fs:upc_next,di
+	mov fs:upc_prev,si
+	pop si
+	pop ds
+	pop di
+	jmp ipDone
+	
+ipEmpty:
+	mov fs:upc_next,fs
+	mov fs:upc_prev,fs
+	pop di
+	mov ds:uhc_pipe_list,fs
+
+ipDone:
+	ret
+InsertPipe  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			RemovePipe
+;
+;		DESCRIPTION:	Remove pipe from function pipe-list
+;
+;       PARAMETERS:     DS      Function
+;                       FS      Pipe
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RemovePipe  Proc near
+	push si
+	push di
+;	
+    push ds
+	mov si,fs:upc_prev
+	mov di,fs:upc_next
+	mov ds,di
+	mov ds:upc_prev,si
+	mov ds,si
+	mov ds:upc_next,di
+	pop ds
+;
+    mov si,fs
+    cmp si,ds:uhc_pipe_list
+    jne rpDone
+;
+    cmp si,di
+    je rpEmpty
+;
+    mov ds:uhc_pipe_list,di
+    jmp rpDone    
+
+rpEmpty:
+    mov ds:uhc_pipe_list,0    
+
+rpDone:
+	pop di
+	pop si
+    ret
+RemovePipe  Endp
 
 PAGE
 
@@ -745,7 +840,6 @@ CreatePeriodQueue	PROC near
     ret
 CreatePeriodQueue  Endp
 
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
@@ -764,7 +858,7 @@ CreateControl   Proc far
     push eax
     push edx
 ;    
-    mov eax,SIZE uhci_control_pipe
+    mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
     mov ax,es
     mov fs,ax
@@ -789,6 +883,8 @@ ccInsert:
     int 3
 
 ccDone:
+    call InsertPipe
+;
     pop edx
     pop eax    
     pop es
@@ -1333,6 +1429,25 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    IsPipeSignalled
+;
+;		DESCRIPTION:    IsPipeSignalled
+;
+;       PARAMETERS:     DS      Function selector
+;                       FS      Pipe selector
+;
+;       RETURNS:        CY      Pipe has data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsPipeSignalled   Proc far
+    clc
+    ret
+IsPipeSignalled   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    EmptyQueue
 ;
 ;		DESCRIPTION:    Empty queue
@@ -1420,6 +1535,8 @@ ClosePipe   Proc far
     push eax
     push edx
 ;        
+    call RemovePipe
+;
     mov al,fs:usbp_mode
     cmp al,MODE_CONTROL
     je dpControl
@@ -1554,10 +1671,11 @@ ut03 DW OFFSET AddIn,        	    uhci_code_sel
 ut04 DW OFFSET AddStatusOut,        uhci_code_sel
 ut05 DW OFFSET AddStatusIn,        	uhci_code_sel
 ut06 DW OFFSET IssueTransfer,       uhci_code_sel
-ut07 DW OFFSET WaitForCompletion,   uhci_code_sel
-ut08 DW OFFSET EmptyQueue,          uhci_code_sel
+ut07 DW OFFSET EmptyQueue,          uhci_code_sel
+ut08 DW OFFSET IsPipeSignalled,     uhci_code_sel
 ut09 DW OFFSET GetData,             uhci_code_sel
 ut10 DW OFFSET ClosePipe,           uhci_code_sel
+ut11 DW OFFSET WaitForCompletion,   uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -1574,7 +1692,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,11
+    mov cx,12
 
 ifTabLoop:
     lods dword ptr cs:[si]
@@ -1671,6 +1789,7 @@ AddFunction  Proc near
     mov ds:uhc_io_base,dx
     mov ds:uhc_pci_bus_dev,bx
     mov ds:uhc_pci_func,ch
+    mov ds:uhc_pipe_list,0
 ;        
     mov eax,1000h
 	AllocateBigLinear

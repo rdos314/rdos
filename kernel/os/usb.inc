@@ -66,10 +66,11 @@ add_status_in_proc      DD ?
 issue_transfer_proc      DD ?
 
 ; IN  FS        Pipe selector
-wait_for_completion_proc      DD ?
+delete_queue_proc      DD ?
 
 ; IN  FS        Pipe selector
-delete_queue_proc      DD ?
+; OUT CY        Pipe has data
+is_pipe_signalled_proc      DD ?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Buffer size
@@ -79,6 +80,9 @@ get_data_proc      DD ?
 
 ; IN  FS        Pipe selector
 close_pipe_proc     DD ?
+
+; IN  FS        Pipe selector
+wait_for_completion_proc      DD ?
 
 usb_port_sel_arr    DW MAX_USB_HUB_PORTS DUP(?)
 usb_addr_arr        DW 128 DUP(?)
@@ -102,6 +106,7 @@ usbp_endpoint       DB ?
 usbp_seq            DB ?
 usbp_mode           DB ?
 usbp_maxlen         DW ?
+usbp_wait_obj       DW ?
 usbp_device_sel     DW ?
 usbp_config_sel     DW 16 DUP(?)
 
