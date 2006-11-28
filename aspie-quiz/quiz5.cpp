@@ -209,7 +209,7 @@ void TQuiz5::SetupTexts()
 	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[7].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;

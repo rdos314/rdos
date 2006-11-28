@@ -220,7 +220,7 @@ void TQuiz8::SetupTexts()
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[4].MyGroup = GROUP_ASPIE_COMM;
   Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -234,7 +234,7 @@ void TQuiz8::SetupTexts()
   Quiz[15].MyGroup = GROUP_MIXED;
   Quiz[16].MyGroup = GROUP_MIXED;
   Quiz[17].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[18].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[18].MyGroup = GROUP_MIXED;
   Quiz[19].MyGroup = GROUP_MIXED;
   Quiz[20].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[21].MyGroup = GROUP_NT_BIOLOGY;
@@ -349,25 +349,25 @@ void TQuiz8::SetupTexts()
   Quiz[130].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_ASPIE_COMM;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
-  Quiz[138].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
-  Quiz[150].MyGroup = GROUP_NONVERBAL;
+  Quiz[150].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
@@ -1401,8 +1401,8 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;
@@ -2070,11 +2070,16 @@ void TStim::WriteRow(TFile &file, int index)
     {
     	file.Write(StimText[index]);
     	file.Write(":  ");
+        file.Write("<b>");
     	file.Write(ReasonText[currind]);
+    	file.Write("</b>");
     	used[currind] = TRUE;
 
         while (max)
         {
+            sprintf(str, " (%d)", max);
+            file.Write(str);
+            
             max = 0;
         
             for (i = 1; i <= 32; i++)
@@ -2093,7 +2098,9 @@ void TStim::WriteRow(TFile &file, int index)
             if (max)
             {
                 file.Write(", ");
+                file.Write("<b>");
                 file.Write(ReasonText[currind]);
+            	file.Write("</b>");
                 used[currind] = TRUE;
             }
         }
