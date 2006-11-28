@@ -8278,6 +8278,287 @@ RdosGetUsbConfig	PROC
 	ret 20
 RdosGetUsbConfig	ENDP
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenUsbPipe
+;
+;		DESCRIPTION:	Open USB pipe
+;
+;       PARAMETERS:     Controller, Device, Pipe
+;
+;       RETURNS:        Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenUsbPipe
+
+RdosOpenUsbPipe	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov al,[ebp+12]
+	mov dl,[ebp+16]
+	UserGate open_usb_pipe_nr
+	movzx eax,bx
+;
+	pop ebx
+	pop ebp
+	ret 12
+RdosOpenUsbPipe	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseUsbPipe
+;
+;		DESCRIPTION:	Close USB pipe
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseUsbPipe
+
+RdosCloseUsbPipe	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_usb_pipe_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseUsbPipe	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosAddWaitForUsbPipe
+;
+;		DESCRIPTION:	Add wait for USB pipe
+;
+;       PARAMETERS:     Handle, pipe handle, ID
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosAddWaitForUsbPipe
+
+RdosAddWaitForUsbPipe	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov ax,[ebp+12]
+	mov ecx,[ebp+16]
+	UserGate add_wait_for_usb_pipe_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosAddWaitForUsbPipe	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteUsbControl
+;
+;		DESCRIPTION:    Queue USB control data
+;
+;       PARAMETERS:     Handle, buffer, maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteUsbControl
+
+RdosWriteUsbControl	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate write_usb_control_nr
+;
+    pop edi
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteUsbControl	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReqUsbData
+;
+;		DESCRIPTION:	Queue request for USB-data input
+;
+;       PARAMETERS:     Handle, maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReqUsbData
+
+RdosReqUsbData	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	UserGate req_usb_data_nr
+;
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 8
+RdosReqUsbData	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosGetUsbData
+;
+;		DESCRIPTION:	Get data for previous USB input requests
+;
+;       PARAMETERS:     Handle, buffer, maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetUsbData
+
+RdosGetUsbData	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate get_usb_data_nr
+	movzx eax,ax
+;
+    pop edi
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosGetUsbData	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteUsbData
+;
+;		DESCRIPTION:    Queue USB output data
+;
+;       PARAMETERS:     Handle, buffer, maxsize
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteUsbData
+
+RdosWriteUsbData	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov cx,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate write_usb_data_nr
+;
+    pop edi
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteUsbData	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReqUsbStatus
+;
+;		DESCRIPTION:    Queue USB status input req
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReqUsbStatus
+
+RdosReqUsbStatus	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate req_usb_status_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosReqUsbStatus	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteUsbStatus
+;
+;		DESCRIPTION:    Queue USB status output req
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteUsbStatus
+
+RdosWriteUsbStatus	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate write_usb_status_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosWriteUsbStatus	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosStartUsbTransaction
+;
+;		DESCRIPTION:    Start queue requests
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosStartUsbTransaction
+
+RdosStartUsbTransaction	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate start_usb_transaction_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosStartUsbTransaction	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

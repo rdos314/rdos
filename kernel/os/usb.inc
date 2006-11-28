@@ -53,7 +53,6 @@ add_out_proc      DD ?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
-; IN  ES:EDI    Data
 add_in_proc      DD ?
 
 ; IN  FS        Pipe selector
@@ -107,6 +106,7 @@ usbp_seq            DB ?
 usbp_mode           DB ?
 usbp_maxlen         DW ?
 usbp_wait_obj       DW ?
+usbp_usage          DW ?
 usbp_device_sel     DW ?
 usbp_config_sel     DW 16 DUP(?)
 

@@ -131,3 +131,115 @@ void TUsbPipe::Add(TWait *Wait)
 void TUsbPipe::SignalNewData()
 {
 }
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::WriteControl
+#
+#   Purpose....: Queue control message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::WriteControl(const char *buf, int size)
+{
+    RdosWriteUsbControl(FHandle, buf, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::ReqData
+#
+#   Purpose....: Queue request for input data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::ReqData(int maxsize)
+{
+    RdosReqUsbData(FHandle, maxsize);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::WriteData
+#
+#   Purpose....: Queue data message
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::WriteData(const char *buf, int size)
+{
+    RdosWriteUsbData(FHandle, buf, size);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::GetData
+#
+#   Purpose....: Get received data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TUsbPipe::GetData(char *buf, int maxsize)
+{
+    return RdosGetUsbData(FHandle, buf, maxsize);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::ReqStatus
+#
+#   Purpose....: Queue status input req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::ReqStatus()
+{
+    RdosReqUsbStatus(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::WriteStatus
+#
+#   Purpose....: Queue status output req
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::WriteStatus()
+{
+    RdosWriteUsbStatus(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::StartTransaction
+#
+#   Purpose....: Run queued requests
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::StartTransaction()
+{
+    RdosStartUsbTransaction(FHandle);
+}

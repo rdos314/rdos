@@ -346,7 +346,16 @@ void __stdcall RdosStopNetCapture();
 
 int __stdcall RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsize);
 int __stdcall RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
-
+int __stdcall RdosOpenUsbPipe(int Controller, int Device, int Pipe);
+void __stdcall RdosCloseUsbPipe(int handle);
+void __stdcall RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
+void __stdcall RdosWriteUsbControl(int Handle, const char *buf, int size);
+void __stdcall RdosReqUsbData(int Handle, int Maxsize);
+int __stdcall RdosGetUsbData(int Handle, char *buf, int maxsize);
+void __stdcall RdosWriteUsbData(int Handle, const char *buf, int size);
+void __stdcall RdosReqUsbStatus(int Handle);
+void __stdcall RdosWriteUsbStatus(int Handle);
+void __stdcall RdosStartUsbTransaction(int Handle);
 
 #ifdef __cplusplus
 }

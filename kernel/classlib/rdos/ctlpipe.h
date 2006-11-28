@@ -20,38 +20,35 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# usbpipe.h
-# Usbpipe class
+# ctlpipe.h
+# USB control pipe class
 #
 ########################################################################*/
 
-#ifndef _USBPIPE_H
-#define _USBPIPE_H
+#ifndef _CTLPIPE_H
+#define _CTLPIPE_H
 
-#include "waitdev.h"
+#include "usbpipe.h"
 
-class TUsbPipe : public TWaitDevice
+struct TUsbControlMsg
+{
+    char type;
+    char req;
+    short int val;
+    short int index;
+    short int len;
+};
+
+class TUsbControlPipe : public TUsbPipe
 {
 public:
-    TUsbPipe(int Handle);
-    TUsbPipe(int Controller, int Device, int Pipe);
-    ~TUsbPipe();
+    TUsbControlPipe(int Handle);
+    TUsbControlPipe(int Controller, int Device, int Pipe);
+    ~TUsbControlPipe();
 
-	virtual void DeviceName(char *Name, int MaxLen) const;
-
-protected:
-	virtual void SignalNewData();
-	virtual void Add(TWait *Wait);
-
-    void WriteControl(const char *buf, int size);
-	void ReqData(int size);
-	void WriteData(const char *buf, int size);
-	int GetData(char *buf, int maxsize);
-	void ReqStatus();
-	void WriteStatus();
-	void StartTransaction();
-
-	int FHandle;
+    int Send(TUsbControlMsg *msg, int ms);
+    int Write(TUsbControlMsg *msg, const char *buf, int size, int ms);
+    int Read(TUsbControlMsg *msg, char *buf, int size, int ms);
 };
 
 #endif

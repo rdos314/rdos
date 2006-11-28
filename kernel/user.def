@@ -382,5 +382,12 @@ get_usb_config_nr           = 322
 open_usb_pipe_nr            = 323
 close_usb_pipe_nr           = 324
 add_wait_for_usb_pipe_nr    = 325
+req_usb_data_nr             = 326
+get_usb_data_nr             = 327
+write_usb_data_nr           = 328
+req_usb_status_nr           = 329
+write_usb_status_nr         = 330
+write_usb_control_nr        = 331
+start_usb_transaction_nr    = 332
 
 usergate_entries			= 340

@@ -33,6 +33,8 @@
 #include "usb.h"
 #include "rdos.h"
 
+#include "usbpipe.h"
+
 #define FALSE 0
 #define TRUE !FALSE
 
@@ -410,6 +412,10 @@ int TUsbCommand::Execute(char *param)
 						}
 					}
 				}
+
+				TUsbPipe *pipe = new TUsbPipe(contr, device, 0);
+				pipe->WaitTimeout(1000);
+				delete pipe;
 			}
         }
     } 

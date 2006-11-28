@@ -856,10 +856,17 @@ CreatePeriodQueue  Endp
 CreateControl   Proc far
     push es
     push eax
+    push cx
     push edx
+    push di
 ;    
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+;    
     mov ax,es
     mov fs,ax
     mov dx,flat_sel
@@ -885,7 +892,9 @@ ccInsert:
 ccDone:
     call InsertPipe
 ;
+    pop di
     pop edx
+    pop cx
     pop eax    
     pop es
     ret
@@ -1441,7 +1450,29 @@ WaitForCompletion   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 IsPipeSignalled   Proc far
+    push es
+    push edx
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov edx,fs:upc_qh
+    or edx,edx
+    jz ipsSig
+;
+    test byte ptr es:[edx].uqh_link,1
+    jz ipsNoSig
+
+ipsSig:
+    stc
+    jmp ipsDone
+
+ipsNoSig:
     clc
+
+ipsDone:
+    pop edx
+    pop es
     ret
 IsPipeSignalled   Endp
 
@@ -1545,7 +1576,6 @@ ClosePipe   Proc far
     jmp dpDone    
 
 dpControl:
-    int 3
     mov ax,flat_sel
     mov es,ax
     mov edx,ds:uhc_period_qh
@@ -1891,6 +1921,63 @@ PollFunction    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    PollPipes
+;
+;		DESCRIPTION:    Poll active pipes
+;
+;       PARAMETERS:     DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollPipes  Proc near
+    push es
+    push fs
+    pusha
+;
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov ax,ds:uhc_pipe_list
+    or ax,ax
+    jz ppDone
+;
+    mov di,ax
+    mov fs,ax
+
+ppLoop:
+    mov ax,fs:usbp_wait_obj
+    or ax,ax
+    jz ppNext
+;
+    mov edx,fs:upc_qh
+    or edx,edx
+    jz ppNext
+;
+    test byte ptr es:[edx].uqh_link,1
+    jz ppNext
+;    
+    push es
+    mov es,ax
+    SignalWait
+    pop es
+    mov fs:usbp_wait_obj,0
+
+ppNext:
+    mov ax,fs:upc_next
+    cmp ax,di
+    jne ppLoop
+
+ppDone:
+    popa 
+    pop fs
+    pop es
+    ret
+PollPipes   Endp   
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			InitPciAdapter
 ;
 ;		DESCRIPTION:    Init PCI adapter if found
@@ -2085,6 +2172,7 @@ uhci_poll_loop:
     push ds
     mov ds,[bx]
     call PollFunction
+    call PollPipes
     pop ds
     add bx,2
     loop uhci_poll_loop
