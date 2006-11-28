@@ -134,6 +134,38 @@ void TUsbPipe::SignalNewData()
 
 /*##########################################################################
 #
+#   Name       : TUsbPipe::Lock
+#
+#   Purpose....: Lock pipe for commands
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::Lock()
+{
+	RdosLockUsbPipe(FHandle);
+}
+
+/*##########################################################################
+#
+#   Name       : TUsbPipe::Unlock
+#
+#   Purpose....: Unlock pipe for commands
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TUsbPipe::Unlock()
+{
+	RdosUnlockUsbPipe(FHandle);
+}
+
+/*##########################################################################
+#
 #   Name       : TUsbPipe::WriteControl
 #
 #   Purpose....: Queue control message

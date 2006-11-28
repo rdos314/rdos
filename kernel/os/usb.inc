@@ -107,6 +107,7 @@ usbp_mode           DB ?
 usbp_maxlen         DW ?
 usbp_wait_obj       DW ?
 usbp_usage          DW ?
+usbp_section        section_typ <>
 usbp_device_sel     DW ?
 usbp_config_sel     DW 16 DUP(?)
 

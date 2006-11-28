@@ -33,7 +33,7 @@
 #include "usb.h"
 #include "rdos.h"
 
-#include "usbpipe.h"
+#include "ctlpipe.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -102,7 +102,7 @@ void TUsbCommand::ShowClass(char class_id, char sub_class, char protocol, int in
 {
 	char str[80];
 
-    if (indent)
+	if (indent)
         Write("    ");
 
 	switch (class_id)
@@ -378,7 +378,7 @@ int TUsbCommand::Execute(char *param)
 	if (LeadOptions(&param, 0) != E_None)
 		return 1;
 
-    buf = new char[4096];
+	buf = new char[4096];
     
     for (contr = 0; contr < 256; contr++)
     {
@@ -413,14 +413,29 @@ int TUsbCommand::Execute(char *param)
 					}
 				}
 
-				TUsbPipe *pipe = new TUsbPipe(contr, device, 0);
-				pipe->WaitTimeout(1000);
+				char buf[256];
+				int ok;
+				int size;
+				TUsbControlPipe *pipe = new TUsbControlPipe(contr, device, 0);
+				TUsbControlMsg msg;
+				msg.type = 0x80;
+				msg.req = 6;
+				msg.val = 0x200;
+				msg.index = 0;
+				ok = pipe->Read(&msg, buf, 8, 3600000);
+				if (ok)
+				{
+					size = 0;
+					memcpy(&size, &buf[2], 2);
+					ok = pipe->Read(&msg, buf, size, 3600000);
+				}
+
 				delete pipe;
 			}
-        }
-    } 
+		}
+	}
 
-    delete buf;
+	delete buf;
 
 	return 0;
 }

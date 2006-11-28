@@ -8335,6 +8335,56 @@ RdosCloseUsbPipe	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+;		NAME:			RdosLockUsbPipe
+;
+;		DESCRIPTION:	Lock USB pipe
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosLockUsbPipe
+
+RdosLockUsbPipe	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate lock_usb_pipe_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosLockUsbPipe	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosUnlockUsbPipe
+;
+;		DESCRIPTION:	Unlock USB pipe
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosUnlockUsbPipe
+
+RdosUnlockUsbPipe	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate unlock_usb_pipe_nr
+;
+	pop ebx
+	pop ebp
+	ret 4
+RdosUnlockUsbPipe	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ;		NAME:			RdosAddWaitForUsbPipe
 ;
 ;		DESCRIPTION:	Add wait for USB pipe
@@ -8382,8 +8432,8 @@ RdosWriteUsbControl	PROC
 	push edi
 ;
 	mov bx,[ebp+8]
-	mov cx,[ebp+12]
-	mov edi,[ebp+16]
+	mov edi,[ebp+12]
+	mov cx,[ebp+16]
 	UserGate write_usb_control_nr
 ;
     pop edi
@@ -8441,8 +8491,8 @@ RdosGetUsbData	PROC
 	push edi
 ;
 	mov bx,[ebp+8]
-	mov cx,[ebp+12]
-	mov edi,[ebp+16]
+	mov edi,[ebp+12]
+	mov cx,[ebp+16]
 	UserGate get_usb_data_nr
 	movzx eax,ax
 ;
@@ -8473,8 +8523,8 @@ RdosWriteUsbData	PROC
 	push edi
 ;
 	mov bx,[ebp+8]
-	mov cx,[ebp+12]
-	mov edi,[ebp+16]
+	mov edi,[ebp+12]
+	mov cx,[ebp+16]
 	UserGate write_usb_data_nr
 ;
     pop edi

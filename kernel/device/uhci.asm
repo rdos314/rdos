@@ -140,6 +140,8 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 UhciInt	Proc far
+    push fs
+;    
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
     in ax,dx
@@ -149,12 +151,41 @@ UhciInt	Proc far
     or ds:uhc_status,ax
     out dx,ax
 ;
-    mov ax,uhci_data_sel
-    mov ds,ax
-    mov bx,ds:UhciThread
-    Signal    
+    mov ax,flat_sel
+    mov es,ax
+;    
+    mov ax,ds:uhc_pipe_list
+    or ax,ax
+    jz uiDone
+;
+    mov di,ax
+    mov fs,ax
+
+uiLoop:
+    mov ax,fs:usbp_wait_obj
+    or ax,ax
+    jz uiNext
+;    
+    mov edx,fs:upc_qh
+    or edx,edx
+    jz uiNext
+;
+    test byte ptr es:[edx].uqh_link,1
+    jz uiNext
+;    
+    push es
+    mov es,ax
+    SignalWait
+    pop es
+    mov fs:usbp_wait_obj,0
+
+uiNext:
+    mov ax,fs:upc_next
+    cmp ax,di
+    jne uiLoop
 
 uiDone:    
+    pop fs
     ret
 UhciInt  Endp
 
@@ -1366,7 +1397,9 @@ itControl:
     mov ax,flat_sel
     mov es,ax    
     mov edx,fs:upc_qh
+;
     mov eax,es:[edx].uqh_va_elem    
+    or es:[eax].utd_control,1000000h
     mov eax,es:[eax].utd_phys
     mov es:[edx].uqh_elem,eax
     jmp itDone
@@ -1376,7 +1409,7 @@ itControlAdd:
     jmp itDone
 
 itDone:
-    pop edx    
+    pop edx 
     pop eax
     pop es
     ret
@@ -1918,62 +1951,6 @@ pfNotReg2:
     ret
 PollFunction    Endp
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    PollPipes
-;
-;		DESCRIPTION:    Poll active pipes
-;
-;       PARAMETERS:     DS      Function sel
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-PollPipes  Proc near
-    push es
-    push fs
-    pusha
-;
-    mov ax,flat_sel
-    mov es,ax
-;    
-    mov ax,ds:uhc_pipe_list
-    or ax,ax
-    jz ppDone
-;
-    mov di,ax
-    mov fs,ax
-
-ppLoop:
-    mov ax,fs:usbp_wait_obj
-    or ax,ax
-    jz ppNext
-;
-    mov edx,fs:upc_qh
-    or edx,edx
-    jz ppNext
-;
-    test byte ptr es:[edx].uqh_link,1
-    jz ppNext
-;    
-    push es
-    mov es,ax
-    SignalWait
-    pop es
-    mov fs:usbp_wait_obj,0
-
-ppNext:
-    mov ax,fs:upc_next
-    cmp ax,di
-    jne ppLoop
-
-ppDone:
-    popa 
-    pop fs
-    pop es
-    ret
-PollPipes   Endp   
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -2165,6 +2142,7 @@ uhci_func_loop:
 
 uhci_handle_loop:
     WaitForSignal    
+;    
     mov cx,ds:UhciCount	
     mov bx,OFFSET UhciFunc
 
@@ -2172,7 +2150,6 @@ uhci_poll_loop:
     push ds
     mov ds,[bx]
     call PollFunction
-    call PollPipes
     pop ds
     add bx,2
     loop uhci_poll_loop

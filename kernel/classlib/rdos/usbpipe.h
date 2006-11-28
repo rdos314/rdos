@@ -43,6 +43,9 @@ protected:
 	virtual void SignalNewData();
 	virtual void Add(TWait *Wait);
 
+    void Lock();
+    void Unlock();
+    
     void WriteControl(const char *buf, int size);
 	void ReqData(int size);
 	void WriteData(const char *buf, int size);

@@ -168,6 +168,7 @@ CreateDefaultControl    Proc near
     mov fs:usbp_maxlen,8
     mov fs:usbp_device_sel,0
     mov fs:usbp_usage,1
+    InitSection fs:usbp_section
 ;    
     mov eax,8
     AllocateSmallGlobalMem
@@ -996,6 +997,7 @@ start_wait_for_pipe	PROC far
 ;    
     mov fs,es:pw_pipe_sel
     mov fs:usbp_wait_obj,es
+    int 3
     mov ds,es:pw_func_sel
     call ds:is_pipe_signalled_proc
     jnc swfpDone
@@ -1021,6 +1023,7 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe	PROC far
+    int 3
     push ds
     mov ds,es:pw_pipe_sel
     mov ds:usbp_wait_obj,0
@@ -1135,6 +1138,80 @@ add_wait_done:
     pop ds
 	retf32
 add_wait_for_pipe	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			LockUsbPipe
+;
+;		DESCRIPTION:	Lock USB pipe
+;
+;		PARAMETERS:		BX		    Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+lock_usb_pipe_name	DB 'Lock USB Pipe',0
+
+lock_usb_pipe   Proc far
+	push ds
+	push ax
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc lupDone
+;
+    mov ds,ds:[bx].up_pipe_sel
+    EnterSection ds:usbp_section
+
+lupDone:
+	pop bx
+	pop ax
+	pop ds
+    retf32
+lock_usb_pipe   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			UnlockUsbPipe
+;
+;		DESCRIPTION:	Unlock USB pipe
+;
+;		PARAMETERS:		BX		    Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+unlock_usb_pipe_name	DB 'Unlock USB Pipe',0
+
+unlock_usb_pipe   Proc far
+	push ds
+	push fs
+	push ax
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc uupDone
+;
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ds:delete_queue_proc
+	mov ax,fs
+	mov ds,ax
+    LeaveSection ds:usbp_section
+
+uupDone:
+	pop bx
+	pop ax
+	pop fs
+	pop ds
+    retf32
+unlock_usb_pipe   Endp
 
 PAGE
 
@@ -1567,6 +1644,18 @@ init	Proc far
 	mov di,OFFSET add_wait_for_pipe_name
 	xor dx,dx
 	mov ax,add_wait_for_usb_pipe_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET lock_usb_pipe
+	mov di,OFFSET lock_usb_pipe_name
+	xor dx,dx
+	mov ax,lock_usb_pipe_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET unlock_usb_pipe
+	mov di,OFFSET unlock_usb_pipe_name
+	xor dx,dx
+	mov ax,unlock_usb_pipe_nr
 	RegisterBimodalUserGate
 ;
 	mov bx,OFFSET write_usb_control16

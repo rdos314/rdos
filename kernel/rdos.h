@@ -348,6 +348,8 @@ int __stdcall RdosGetUsbDevice(int Controller, int Device, void *ptr, int maxsiz
 int __stdcall RdosGetUsbConfig(int Controller, int Device, int Config, void *ptr, int maxsize);
 int __stdcall RdosOpenUsbPipe(int Controller, int Device, int Pipe);
 void __stdcall RdosCloseUsbPipe(int handle);
+void __stdcall RdosLockUsbPipe(int handle);
+void __stdcall RdosUnlockUsbPipe(int handle);
 void __stdcall RdosAddWaitForUsbPipe(int Handle, int PipeHandle, void *ID);
 void __stdcall RdosWriteUsbControl(int Handle, const char *buf, int size);
 void __stdcall RdosReqUsbData(int Handle, int Maxsize);

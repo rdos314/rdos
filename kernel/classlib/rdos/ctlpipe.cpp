@@ -94,14 +94,22 @@ TUsbControlPipe::~TUsbControlPipe()
 ##########################################################################*/
 int TUsbControlPipe::Send(TUsbControlMsg *msg, int MilliSec)
 {
+    int ok;
+
+    msg->len = 0;
+
+    Lock();
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     ReqStatus();
     StartTransaction();
 
-	 if (WaitTimeout(MilliSec))
-        return TRUE;
+	if (WaitTimeout(MilliSec))
+        ok = TRUE;
     else
-        return FALSE;
+        ok = FALSE;
+
+    Unlock();
+    return ok;
 }
 
 /*##########################################################################
@@ -117,15 +125,24 @@ int TUsbControlPipe::Send(TUsbControlMsg *msg, int MilliSec)
 ##########################################################################*/
 int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int MilliSec)
 {
+    int ok;
+
+    msg->type &= 0x7F;
+    msg->len = (short int)size;
+
+    Lock();
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     WriteData(buf, size);
     ReqStatus();
     StartTransaction();
 
-	 if (WaitTimeout(MilliSec))
-        return TRUE;
+	if (WaitTimeout(MilliSec))
+        ok = TRUE;
     else
-        return FALSE;
+        ok = FALSE;
+
+    Unlock();
+    return ok;
 }
 
 /*##########################################################################
@@ -142,7 +159,11 @@ int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int M
 int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec)
 {
     int ok;
+
+    msg->type |= 0x80;
+    msg->len = (short int)size;
     
+    Lock();    
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     ReqData(size);
     ReqStatus();
@@ -156,5 +177,6 @@ int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec
     if (ok)
         GetData(buf, size);
 
+    Unlock();
     return ok;
 }
