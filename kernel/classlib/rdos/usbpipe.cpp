@@ -262,16 +262,16 @@ void TUsbPipe::WriteStatus()
 
 /*##########################################################################
 #
-#   Name       : TUsbPipe::StartTransaction
+#   Name       : TUsbPipe::IsIdle
 #
-#   Purpose....: Run queued requests
+#   Purpose....: Check if pipe is idle (command executed)
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TUsbPipe::StartTransaction()
+int TUsbPipe::IsIdle()
 {
-    RdosStartUsbTransaction(FHandle);
+    return RdosIsUsbPipeIdle(FHandle);
 }

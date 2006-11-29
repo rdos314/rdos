@@ -8586,28 +8586,36 @@ RdosWriteUsbStatus	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosStartUsbTransaction
+;		NAME:			RdosIsUsbPipeIdle
 ;
-;		DESCRIPTION:    Start queue requests
+;		DESCRIPTION:    Check if pipe is idle/done
 ;
 ;       PARAMETERS:     Handle
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosStartUsbTransaction
+	public RdosIsUsbPipeIdle
 
-RdosStartUsbTransaction	PROC
+RdosIsUsbPipeIdle	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
 ;
 	mov bx,[ebp+8]
-	UserGate start_usb_transaction_nr
+	UserGate is_usb_pipe_idle_nr
+	jc iupiIdle
 ;
+    xor eax,eax
+    jmp iupiDone
+
+iupiIdle:
+    mov eax,1
+
+iupiDone:
 	pop ebx
 	pop ebp
 	ret 4
-RdosStartUsbTransaction	ENDP
+RdosIsUsbPipeIdle	ENDP
 
 ;	extrn Startup:near
 

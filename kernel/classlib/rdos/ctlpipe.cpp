@@ -101,12 +101,9 @@ int TUsbControlPipe::Send(TUsbControlMsg *msg, int MilliSec)
     Lock();
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     ReqStatus();
-    StartTransaction();
 
-	if (WaitTimeout(MilliSec))
-        ok = TRUE;
-    else
-        ok = FALSE;
+    WaitTimeout(MilliSec);
+    ok = IsIdle();
 
     Unlock();
     return ok;
@@ -126,7 +123,7 @@ int TUsbControlPipe::Send(TUsbControlMsg *msg, int MilliSec)
 int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int MilliSec)
 {
     int ok;
-
+    
     msg->type &= 0x7F;
     msg->len = (short int)size;
 
@@ -134,15 +131,15 @@ int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int M
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     WriteData(buf, size);
     ReqStatus();
-    StartTransaction();
 
-	if (WaitTimeout(MilliSec))
-        ok = TRUE;
-    else
-        ok = FALSE;
-
+    WaitTimeout(MilliSec);
+    ok = IsIdle();
     Unlock();
-    return ok;
+
+    if (ok)
+        return size;
+    else
+        return 0;
 }
 
 /*##########################################################################
@@ -159,7 +156,8 @@ int TUsbControlPipe::Write(TUsbControlMsg *msg, const char *buf, int size, int M
 int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec)
 {
     int ok;
-
+    int len;
+    
     msg->type |= 0x80;
     msg->len = (short int)size;
     
@@ -167,16 +165,17 @@ int TUsbControlPipe::Read(TUsbControlMsg *msg, char *buf, int size, int MilliSec
     WriteControl((char *)msg, sizeof(TUsbControlMsg));
     ReqData(size);
     ReqStatus();
-    StartTransaction();
 
-    if (WaitTimeout(MilliSec))
-        ok = TRUE;
-    else
-        ok = FALSE;
+    WaitTimeout(MilliSec);
+    ok = IsIdle();
 
     if (ok)
-        GetData(buf, size);
-
+        len = GetData(buf, size);
+    
     Unlock();
-    return ok;
+
+    if (ok)
+        return len;
+    else
+        return 0;
 }

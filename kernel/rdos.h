@@ -357,7 +357,7 @@ int __stdcall RdosGetUsbData(int Handle, char *buf, int maxsize);
 void __stdcall RdosWriteUsbData(int Handle, const char *buf, int size);
 void __stdcall RdosReqUsbStatus(int Handle);
 void __stdcall RdosWriteUsbStatus(int Handle);
-void __stdcall RdosStartUsbTransaction(int Handle);
+int __stdcall RdosIsUsbPipeIdle(int Handle);
 
 #ifdef __cplusplus
 }

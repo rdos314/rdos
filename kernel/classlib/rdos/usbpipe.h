@@ -52,7 +52,7 @@ protected:
 	int GetData(char *buf, int maxsize);
 	void ReqStatus();
 	void WriteStatus();
-	void StartTransaction();
+	int IsIdle();
 
 	int FHandle;
 };

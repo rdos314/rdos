@@ -413,6 +413,8 @@ int TUsbCommand::Execute(char *param)
 					}
 				}
 
+				Write("Start read\r\n");
+
 				char buf[256];
 				int ok;
 				int size;
@@ -422,12 +424,15 @@ int TUsbCommand::Execute(char *param)
 				msg.req = 6;
 				msg.val = 0x200;
 				msg.index = 0;
-				ok = pipe->Read(&msg, buf, 8, 3600000);
+				ok = pipe->Read(&msg, buf, 8, 2000);
 				if (ok)
 				{
+					Write("First ok\r\n");
 					size = 0;
 					memcpy(&size, &buf[2], 2);
-					ok = pipe->Read(&msg, buf, size, 3600000);
+					ok = pipe->Read(&msg, buf, size, 2000);
+					if (ok)
+						Write("Second ok\r\n");
 				}
 
 				delete pipe;

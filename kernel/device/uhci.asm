@@ -60,7 +60,7 @@ uhc_ring_sel     DW ?
 
 uhc_status       DW ?
 
-uhc_period_qh    DD ?
+uhc_period_td    DD ?
 uhc_intr_qh      DD 8 DUP(?)
 uhc_intr_arr     DD 8 DUP(?)
 
@@ -124,6 +124,68 @@ code	SEGMENT byte public 'CODE'
 
 .386p
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UpdatePipeList
+;
+;		DESCRIPTION:    Update pipe list
+;
+;       PARAMETERS:     DS      Function selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+UpdatePipeList  Proc near
+    push ax
+;    
+    mov ax,ds:uhc_pipe_list
+    or ax,ax
+    jz uplDone
+;
+    push es
+    push fs
+    push dx
+    push di
+;
+    mov di,ax
+    mov fs,ax
+;
+    mov ax,flat_sel
+    mov es,ax
+
+uplLoop:
+    mov ax,fs:usbp_wait_obj
+    or ax,ax
+    jz uplNext
+;    
+    mov edx,fs:upc_qh
+    or edx,edx
+    jz uplNext
+;
+    test byte ptr es:[edx].uqh_link,1
+    jz uplNext
+;    
+    push es
+    mov es,ax
+    SignalWait
+    pop es
+    mov fs:usbp_wait_obj,0
+
+uplNext:
+    mov ax,fs:upc_next
+    cmp ax,di
+    jne uplLoop
+;
+    pop di
+    pop dx
+    pop fs
+    pop es    
+
+uplDone:    
+    pop ax
+    ret
+UpdatePipeList  Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -139,53 +201,20 @@ PAGE
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-UhciInt	Proc far
-    push fs
-;    
+UhciInt	Proc far    
     mov dx,ds:uhc_io_base
     add dx,UsbStatusReg
+;
     in ax,dx
     or ax,ax
     jz uiDone
 ;    
     or ds:uhc_status,ax
     out dx,ax
-;
-    mov ax,flat_sel
-    mov es,ax
 ;    
-    mov ax,ds:uhc_pipe_list
-    or ax,ax
-    jz uiDone
-;
-    mov di,ax
-    mov fs,ax
+    call UpdatePipeList
 
-uiLoop:
-    mov ax,fs:usbp_wait_obj
-    or ax,ax
-    jz uiNext
-;    
-    mov edx,fs:upc_qh
-    or edx,edx
-    jz uiNext
-;
-    test byte ptr es:[edx].uqh_link,1
-    jz uiNext
-;    
-    push es
-    mov es,ax
-    SignalWait
-    pop es
-    mov fs:usbp_wait_obj,0
-
-uiNext:
-    mov ax,fs:upc_next
-    cmp ax,di
-    jne uiLoop
-
-uiDone:    
-    pop fs
+uiDone:
     ret
 UhciInt  Endp
 
@@ -428,7 +457,7 @@ AllocateTd	PROC near
     call AllocateBlock32
     mov es:[edx].utd_link,1
     mov es:[edx].utd_va_link,0
-    mov es:[edx].utd_control, 38000000h
+    mov es:[edx].utd_control, 18000000h
 ;
     dec cx
     and ecx,7FFh    
@@ -547,95 +576,115 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    InsertQhFirst
+;		NAME:		    InsertTdFirst
 ;
-;		DESCRIPTION:	Insert QH first into horizontal QH
+;		DESCRIPTION:	Insert QH first into TD list
 ;
 ;       PARAMETERS:     ES      Flat sel
-;                       EDX     QH to insert into
+;                       EDX     TD to insert into
 ;                       EAX     QH to link
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-InsertQhFirst	PROC near
+InsertTdFirst	PROC near
     push ecx
 ;
-    mov ecx,es:[edx].uqh_va_link
+    mov ecx,es:[edx].utd_va_link
     or ecx,ecx
-    jz ifEmpty
+    jz itdEmpty
 ;
     mov es:[eax].uqh_va_link,ecx
     mov ecx,es:[ecx].uqh_phys
     mov es:[eax].uqh_link,ecx
 ;
-    mov es:[edx].uqh_va_link,eax
+    mov es:[edx].utd_va_link,eax
     mov ecx,es:[eax].uqh_phys
     or cl,2
-    mov es:[edx].uqh_link,ecx    
-    jmp ifDone
+    mov es:[edx].utd_link,ecx    
+    jmp itdDone
     
-ifEmpty:
+itdEmpty:
     mov es:[eax].uqh_va_link,0
     mov es:[eax].uqh_link,1
-    mov es:[edx].uqh_va_link,eax
+    mov es:[edx].utd_va_link,eax
     mov ecx,es:[eax].uqh_phys
     or cl,2
-    mov es:[edx].uqh_link,ecx
+    mov es:[edx].utd_link,ecx
 
-ifDone:
+itdDone:
     pop ecx
     ret
-InsertQhFirst  ENDP
+InsertTdFirst  ENDP
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    RemoveQh
+;		NAME:		    RemoveTd
 ;
-;		DESCRIPTION:	Remove QH from horizontal QH
+;		DESCRIPTION:	Remove QH from TD list
 ;
 ;       PARAMETERS:     ES      Flat sel
-;                       EDX     QH to search in
+;                       EDX     TD list
 ;                       EAX     QH to delink
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-RemoveQh	PROC near
+RemoveTd	PROC near
     push ecx
     push edx
-
-rqSearch:
-    mov ecx,es:[edx].uqh_va_link
-    or ecx,ecx
-    jz rqDone
 ;
-    cmp eax,ecx
-    je rqRemove
+    mov ecx,es:[edx].utd_va_link
+    cmp ecx,eax
+    jne rtdSearch
 ;
-    mov edx,ecx
-    jmp rqSearch         
-
-rqRemove:
     mov ecx,es:[eax].uqh_va_link
     or ecx,ecx
-    jz rqEmpty
+    jz rtdEmptyList
+;
+    mov es:[edx].utd_va_link,ecx
+    mov ecx,es:[ecx].uqh_phys
+    or cl,2
+    mov es:[edx].utd_link,ecx
+    jmp rtdDone
+
+rtdEmptyList:
+    mov es:[edx].utd_va_link,0
+    mov es:[edx].utd_link,1    
+    jmp rtdDone
+
+rtdSearch:
+    or ecx,ecx
+    jz rtdDone
+;
+    cmp eax,ecx
+    je rtdRemove
+;
+    mov edx,ecx
+    mov ecx,es:[edx].uqh_va_link
+    jmp rtdSearch
+
+rtdRemove:
+    mov ecx,es:[eax].uqh_va_link
+    or ecx,ecx
+    jz rtdEmpty
 ;    
     mov es:[edx].uqh_va_link,ecx
     mov ecx,es:[ecx].uqh_phys
+    or cl,2
     mov es:[edx].uqh_link,ecx
-    jmp rqDone
+    jmp rtdDone
 
-rqEmpty:
+rtdEmpty:
     mov es:[edx].uqh_va_link,0
     mov es:[edx].uqh_link,1
 
-rqDone:
+rtdDone:
     pop edx
     pop ecx
     ret
-RemoveQh  ENDP
+RemoveTd  ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -817,20 +866,19 @@ CreateIntrQueue	PROC near
     mov ax,ds
     mov es,ax
     mov cx,8
-    mov eax,ds:uhc_period_qh
+    mov eax,ds:uhc_period_td
     mov di,OFFSET uhc_intr_qh
     rep stosd    
 ;
     mov dx,flat_sel
     mov es,dx
-    mov edx,es:[eax].uqh_phys
+    mov edx,es:[eax].utd_phys
     mov es,ds:uhc_ring_sel
     xor di,di
     mov cx,1024
     rep stosd
 ;
     mov eax,edx
-    or al,2
     mov es,ds:uhc_hw_sel
     xor di,di
     mov cx,1024
@@ -849,27 +897,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    CreatePeriodQueue
+;		NAME:		    CreatePeriodTd
 ;
-;		DESCRIPTION:	Create periodic interrupt queue
+;		DESCRIPTION:	Create periodic interrupt td
 ;
 ;       PARAMETERS:     DS      Function sel
 ;                       ES      Flat sel
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-CreatePeriodQueue	PROC near
+CreatePeriodTd	PROC near
     push edx
 ;    
-    call AllocateQh
-    mov ds:uhc_period_qh,edx
+    call AllocateTd
+    mov ds:uhc_period_td,edx
 ;    
     call CreateFrameVa
     call CreateIntrQueue
 ;
     pop edx
     ret
-CreatePeriodQueue  Endp
+CreatePeriodTd  Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -905,16 +953,16 @@ CreateControl   Proc far
     call AllocateQh
     mov fs:upc_qh,edx
 ;
-    mov edx,ds:uhc_period_qh
+    mov edx,ds:uhc_period_td
     or edx,edx
     jnz ccLinkPeriod    
 ;
-    call CreatePeriodQueue
-    mov edx,ds:uhc_period_qh
+    call CreatePeriodTd
+    mov edx,ds:uhc_period_td
 
 ccLinkPeriod:
     mov eax,fs:upc_qh
-    call InsertQhFirst
+    call InsertTdFirst
     jmp ccDone
 
 ccInsert:
@@ -1384,6 +1432,7 @@ AddStatusIn    Endp
 IssueTransfer    Proc far
     push es
     push eax
+    push ecx
     push edx
 ;    
     mov al,fs:usbp_mode
@@ -1398,10 +1447,20 @@ itControl:
     mov es,ax    
     mov edx,fs:upc_qh
 ;
+;    mov eax,ds:uhc_period_td
+;    mov es:[eax].utd_control,1000000h
+;    
     mov eax,es:[edx].uqh_va_elem    
-    or es:[eax].utd_control,1000000h
     mov eax,es:[eax].utd_phys
     mov es:[edx].uqh_elem,eax
+
+;    mov ax,ds:uhc_status    
+;    mov dx,ds:uhc_io_base
+;    add dx,UsbStatusReg
+;    in al,dx
+;
+;    mov eax,ds:uhc_period_td
+;    mov es:[eax].utd_control,0
     jmp itDone
 
 itControlAdd:
@@ -1410,6 +1469,7 @@ itControlAdd:
 
 itDone:
     pop edx 
+    pop ecx
     pop eax
     pop es
     ret
@@ -1611,9 +1671,9 @@ ClosePipe   Proc far
 dpControl:
     mov ax,flat_sel
     mov es,ax
-    mov edx,ds:uhc_period_qh
+    mov edx,ds:uhc_period_td
     mov eax,fs:upc_qh
-    call RemoveQh
+    call RemoveTd
     mov edx,eax
     call FreeBlock32
     
@@ -1885,7 +1945,7 @@ AddFunction  Proc near
 ;    
     mov ds:uhc_status,0
     mov ds:uhc_ring_sel,0
-    mov ds:uhc_period_qh,0
+    mov ds:uhc_period_td,0
 ;
     mov ax,uhci_data_sel
     mov es,ax
@@ -2052,6 +2112,8 @@ port_timer  Proc far
 timer_func_loop:
     push ds
     mov ds,[bx]
+;
+    call UpdatePipeList
 ;    
     mov dx,ds:uhc_io_base
     add dx,PortscReg1
@@ -2084,7 +2146,7 @@ timer_no_action:
     pop eax   
     pop edx
 ;    
-	add eax,119300
+	add eax,11930
 	adc edx,0
 	mov bx,cs
 	mov es,bx
@@ -2132,7 +2194,7 @@ uhci_func_loop:
     loop uhci_func_loop
 ;
 	GetSystemTime
-	add eax,119300
+	add eax,11930
 	adc edx,0
 	mov bx,cs
 	mov es,bx

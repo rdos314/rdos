@@ -995,17 +995,12 @@ start_wait_for_pipe	PROC far
     push ds
     push fs
 ;    
+    int 3
     mov fs,es:pw_pipe_sel
     mov fs:usbp_wait_obj,es
-    int 3
     mov ds,es:pw_func_sel
-    call ds:is_pipe_signalled_proc
-    jnc swfpDone
-;
-    mov fs:usbp_wait_obj,0
-    SignalWait
-    
-swfpDone:    
+	call ds:issue_transfer_proc
+;	
     pop fs
     pop ds        
     ret
@@ -1023,7 +1018,6 @@ start_wait_for_pipe Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 stop_wait_for_pipe	PROC far
-    int 3
     push ds
     mov ds,es:pw_pipe_sel
     mov ds:usbp_wait_obj,0
@@ -1528,37 +1522,38 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
-;		NAME:			StartUsbTransaction
+;		NAME:			IsUsbPipeIdle
 ;
-;		DESCRIPTION:	Start transaction
+;		DESCRIPTION:	Check if pipe is idle
 ;
 ;		PARAMETERS:		BX		    Pipe handle
 ;
+;       RETURNS:        NC          Busy
+;                       CY          Idle
+;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_usb_transaction_name	DB 'Start USB Transaction',0
+is_usb_pipe_idle_name	DB 'Is USB Pipe Idle',0
 
-start_usb_transaction	Proc far
+is_usb_pipe_idle	Proc far
 	push ds
 	push fs
 	push bx
-	push cx
 ;
 	mov ax,USB_PIPE_HANDLE
 	DerefHandle
-	jc sutDone
+	jc iupiDone
 ;
 	mov fs,ds:[bx].up_pipe_sel
 	mov ds,ds:[bx].up_func_sel
-	call ds:issue_transfer_proc
+	call ds:is_pipe_signalled_proc
 
-sutDone:
-    pop cx
+iupiDone:
 	pop bx
 	pop fs
 	pop ds
 	retf32
-start_usb_transaction	Endp
+is_usb_pipe_idle	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
@@ -1697,10 +1692,10 @@ init	Proc far
 	mov ax,write_usb_status_nr
 	RegisterBimodalUserGate
 ;
-	mov si,OFFSET start_usb_transaction
-	mov di,OFFSET start_usb_transaction_name
+	mov si,OFFSET is_usb_pipe_idle
+	mov di,OFFSET is_usb_pipe_idle_name
 	xor dx,dx
-	mov ax,start_usb_transaction_nr
+	mov ax,is_usb_pipe_idle_nr
 	RegisterBimodalUserGate
 ;
 	popa
