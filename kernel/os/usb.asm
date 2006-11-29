@@ -995,7 +995,6 @@ start_wait_for_pipe	PROC far
     push ds
     push fs
 ;    
-    int 3
     mov fs,es:pw_pipe_sel
     mov fs:usbp_wait_obj,es
     mov ds,es:pw_func_sel
