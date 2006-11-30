@@ -164,6 +164,7 @@ open_com	Proc far
     mov bx,dx
     add bx,bx
     mov ds,ds:[bx].s_port_arr
+    push ds
     call ds:cd_create_proc
 ;
     mov ax,SERIAL_HANDLE
@@ -195,6 +196,7 @@ open_com	Proc far
 	mov ds:avail_obj,0
 	mov ds:send_wait,0	
 ;
+    pop es
     pop ecx
     pop bx
     pop ax
@@ -592,7 +594,11 @@ com_send_no_wrap:
 	or cx,cx
 	jnz com_send_ok
 ;
+	inc cx
+	mov ds:send_count,cx
+	sti
     call ds:start_send_com_proc
+    jmp com_send_ok_done
 	
 com_send_ok:
 	inc cx

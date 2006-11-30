@@ -55,6 +55,7 @@ pps_base_struc  com_port_struc <>
 char_time       DD ?
 flgs            DB ?
 base			DW ?
+dev_handle      DW ?
 baud_base       DD ?
 
 pccom_port_struc	ENDS
@@ -423,6 +424,7 @@ open_com	Proc far
 ;
     push ax
 	mov es:pds_handle,ds
+	mov ds:dev_handle,es
 	mov ds:flgs,0
 ;
     mov ax,start_com_port_nr
@@ -544,6 +546,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_com	Proc far
+    push es
 	push ax
 	push dx
 ;
@@ -559,9 +562,13 @@ close_com_stopped:
 	inc bx
 	xor al,al
 	out dx,al				; disable rx, tx, line and modem ints
+;	
+	mov es,ds:dev_handle
+	mov es:pds_handle,0
 ;
 	pop dx
 	pop ax
+	pop es
 	ret
 close_com	Endp
 

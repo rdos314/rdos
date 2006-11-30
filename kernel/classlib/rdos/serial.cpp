@@ -518,9 +518,9 @@ void TSerialDevice::StopDebug()
 *##########################################################################*/
 void TSerialDevice::OpenPort()
 {
-    if (FPort)
-    	FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
-    else
+	 if (FPort)
+		FHandle = RdosOpenCom(FPort - 1, FBaudrate, FParity, FDataBits, FStopBits, 0x4000, 0x4000);
+	 else
         FHandle = 0;
         
     if (FHandle)
