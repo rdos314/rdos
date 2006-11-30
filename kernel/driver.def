@@ -394,6 +394,9 @@ uhci_data_sel       EQU 988h
 usb_code_sel        EQU 990h
 usb_data_sel        EQU 998h
 
+pccom_code_sel      EQU 9A0h
+pccom_data_sel      EQU 9A8h
+
 video_page0_sel		EQU 0F00h
 video_page1_sel		EQU 0F08h
 video_page2_sel		EQU 0F10h

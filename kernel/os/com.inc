@@ -27,7 +27,7 @@
 
 com_device_struc   STRUC
 
-;   OUT DS      Com port selector
+;   OUT ES      Com port selector
 cd_create_proc   DD ?
 
 cd_controller    DW ?

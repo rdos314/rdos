@@ -34,9 +34,8 @@ include ..\os.inc
 include ..\user.def
 include ..\user.inc
 include ..\driver.def
-include ..\handle.inc
-include ..\wait.inc
 include ..\os\pci.inc
+include ..\os\com.inc
 						
 		NAME pccom
 
@@ -49,58 +48,26 @@ IER_BITS        = 8
 FLG_ENABLE_CTS  = 1
 FLG_ENABLE_AUTO_RTS  = 2
 
-serial_wait_header	STRUC
+pccom_port_struc	STRUC
 
-sw_obj			wait_obj_header <>
-sw_handle		DW ?
-
-serial_wait_header	ENDS
-
-
-serial_handle_seg		STRUC
-
-serial_handle_base	handle_header <>
-
-port_sel            DW ?
-
-serial_handle_seg		ENDS
-
-port_struc	STRUC
-
-send_count		DW ?
-rec_count	  	DW ?
-
-send_head		DW ?
-rec_head		DW ?
-
-send_tail		DW ?
-rec_tail		DW ?
-
-send_size		DW ?
-rec_size		DW ?
-
-rec_buf			DW ?
-send_buf		DW ?
-
-avail_obj   	DW ?
+pps_base_struc  com_port_struc <>
 
 char_time       DD ?
-
-send_wait       DW ?
-
-port_handle     DW ?
 flgs            DB ?
 base			DW ?
+baud_base       DD ?
 
-port_struc	ENDS
+pccom_port_struc	ENDS
 
-serial_port_struc   STRUC
+pccom_device_struc   STRUC
 
-s_base          DW ?
-s_handle        DW ?
-s_baud_base     DD ?
+pds_base_struc    com_device_struc <>
 
-serial_port_struc   ENDS
+pds_base          DW ?
+pds_handle        DW ?
+pds_baud_base     DD ?
+
+pccom_device_struc   ENDS
 
 serial_irq_struc    STRUC
 
@@ -109,6 +76,7 @@ serial_port_arr DW MAX_IRQ_SHARE DUP(?)
 
 serial_irq_struc    ENDS
 
+
 serial_data STRUC
 
 sd_ports    DW ?
@@ -116,6 +84,7 @@ sd_port_arr DW MAX_PORTS DUP(?)
 sd_irq_arr  DW MAX_IRQS DUP(?)
 
 serial_data ENDS
+
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -377,7 +346,7 @@ com_int_port_loop:
     push cx
 ;
     mov ds,ds:[bx].serial_port_arr
-    mov ax,ds:s_handle
+    mov ax,ds:pds_handle
     or ax,ax
     jz com_int_inactive
 ;
@@ -397,21 +366,21 @@ com_int_loop:
 	jmp com_int_loop
 
 com_int_inactive:
-	mov dx,ds:s_base
+	mov dx,ds:pds_base
 	add dx,2
 	in al,dx
 	test al,1
 	jnz com_int_next_port
 ;	
-    mov dx,ds:s_base
+    mov dx,ds:pds_base
 	add dx,6
 	in al,dx
 ;	
-    mov dx,ds:s_base
+    mov dx,ds:pds_base
 	add dx,5
 	in al,dx
 ;
-    mov dx,ds:s_base
+    mov dx,ds:pds_base
 	in al,dx
 ;	
 	mov al,IER_BITS + 1
@@ -434,194 +403,57 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			Delete_handle
-;
-;		DESCRIPTION:	Delete handle (called from handle module)
-;
-;		PARAMETERS:		BX			COM HANDLE
-;						
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-delete_handle	Proc far
-	push ds
-	push es
-	push ax
-	push dx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc delete_handle_done
-;
-    push [bx].port_sel
-    FreeHandle
-    pop ds
-;
-    mov ax,stop_com_port_nr
-    IsValidOsGate
-    jc delete_handle_stopped
-;
-    mov dx,ds:base
-    StopComPort
-
-delete_handle_stopped:
-	mov dx,ds:base
-	inc bx
-	mov al,0
-	out dx,al				; disable rx, tx, line and modem ints
-;	
-    mov es,ds:port_handle
-    mov es:s_handle,0
-;
-	mov es,ds:send_buf
-	FreeMem
-	mov es,ds:rec_buf
-	FreeMem
-;
-	mov ax,ds
-	xor bx,bx
-	mov ds,bx
-	mov es,ax
-	FreeMem
-;
-	mov ax,500
-	WaitMilliSec
-
-delete_handle_done:
-	pop dx
-	pop ax
-	pop es
-	pop ds
-	ret
-delete_handle	Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
 ;		NAME:			open_com
 ;
 ;		description:	Open a serial port
 ;
-;		PARAMETERS:		AL				Port #
-;						AH				# of data bits
-;						BL				# of stop bits
-;						BH				parity
-;						ECX				baudrate
-;						SI				size of transmit buffer
-;						DI				size of receive buffer
-;
-;		RETURNS:		BX		port handle
+;		PARAMETERS:		DS      Port selector
+;		        		ES		Device selector
+;						AH		# of data bits
+;						BL		# of stop bits
+;						BH		parity
+;						ECX		baudrate
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-open_com_name DB 'Open Com',0
-
-port_parity		EQU 2
-port_stop_bits	EQU 4
-port_data_bits	EQU 6
-port_id         EQU 8
-baud_rate   	EQU 10
-send_buf_size	EQU 14
-rec_buf_size	EQU 16
-baud_divisor    EQU 18
-
 open_com	Proc far
-    sub sp,2
-	push di
-	push si
-	push ecx
-	mov cl,ah
-    xor ah,ah
-    push ax	
-	movzx ax,cl
-	push ax
-	movzx ax,bl
-	push ax
-	movzx ax,bh
-	push ax
-	push bp
-	mov bp,sp
-	push ds
-	push es
-	push fs
-	push cx
-	push dx
-	push di
+    push ax
+    push dx
+    push si
 ;
-    mov bx,com_data_sel
-    mov ds,bx
-    mov bx,[bp].port_id
-    cmp bx,ds:sd_ports
-    jae open_com_fail
-;    
-    add bx,bx
-    mov fs,ds:[bx].sd_port_arr
-;
-	mov eax, SIZE port_struc
-	AllocateSmallGlobalMem
-;
-    mov ax,SERIAL_HANDLE
-	mov cx,SIZE serial_handle_seg
-	AllocateHandle
-	mov [bx].port_sel,es
-	mov [bx].hh_sign,SERIAL_HANDLE
-	mov bx,[bx].hh_handle
-	push bx
-;
-	mov ax,es
-	mov ds,ax
-;
-	movzx eax,word ptr [bp].send_buf_size
-	mov ds:send_size,ax
-	AllocateSmallGlobalMem
+    push ax
+	mov es:pds_handle,ds
 	mov ds:flgs,0
-	mov ds:send_buf,es
-	mov ds:send_count,0
-	mov ds:send_head,0
-	mov ds:send_tail,0
-;
-	movzx eax,word ptr [bp].rec_buf_size
-	mov ds:rec_size,ax
-	AllocateSmallGlobalMem
-	mov ds:rec_buf,es
-	mov ds:rec_count,0
-	mov ds:rec_head,0
-	mov ds:rec_tail,0
-	mov ds:avail_obj,0
-	mov ds:send_wait,0
-;
-	mov ax,fs:s_base
-	mov ds:base,ax
-	mov fs:s_handle,ds
-	mov ds:port_handle,fs
 ;
     mov ax,start_com_port_nr
     IsValidOsGate
     jc open_com_started
 ;
-    mov dx,fs:s_base
+    mov dx,es:pds_base
     StartComPort
 
 open_com_started:   
-	mov al,[bp].port_data_bits
-	mov dl,al
+    pop ax
+;
+	mov dl,ah
 	inc dl
+    mov al,ah    
 	sub al,5
 	and al,3
 ;
-	mov ah,[bp].port_stop_bits
-	add dl,ah
+	add dl,bl
+	mov ah,bl
 	dec ah
 	and ah,1
 	shl ah,2
 	or al,ah
 ;
-	mov ah,[bp].port_parity
-	cmp ah,'E'
+	cmp bh,'E'
 	je open_even
-	cmp ah,'O'
+;	
+	cmp bh,'O'
 	je open_odd
+;	
 	jmp open_parity_done
 
 open_even:
@@ -635,30 +467,24 @@ open_odd:
 
 open_parity_done:
     push eax
-    push ecx
     push edx
 ;
-    push dx
-;    
-    mov ecx,[bp].baud_rate
-    mov eax,fs:s_baud_base
+    push dx    
+    mov eax,ds:baud_base
     xor edx,edx
     div ecx
-    mov [bp].baud_divisor,ax
+    mov si,ax
 ;        
-    mov eax,[bp].baud_rate    
-    mov ecx,eax
     mov eax,1193000
     xor edx,edx
     div ecx             ; eax = 1193000 / baudrate
-;
     pop dx
+;
     movzx edx,dl
     mul edx             ; eax = char tics
     mov ds:char_time,eax
 ;
     pop edx
-    pop ecx
     pop eax
 ;
 	push ax
@@ -668,11 +494,11 @@ open_parity_done:
 	out dx,al				; set line control to divisor access
 ;
 	sub dx,3
-	mov al,[bp].baud_divisor
+	mov ax,si
 	out dx,al				; output LSB divisor latch
 ;
 	inc dx
-	mov al,[bp].baud_divisor+1
+	mov al,ah
 	out dx,al				; output MSB divisor latch
 ;
     inc dx
@@ -698,24 +524,10 @@ open_parity_done:
 	inc dx
 	in al,dx
 ;
-	pop bx
-	clc
-	jmp open_com_done
-
-open_com_fail:
-    xor bx,bx
-    stc
-
-open_com_done:
-	pop di
-	pop dx
-	pop cx
-	pop fs
-	pop es
-	pop ds
-	pop bp
-	add sp,18
-	retf32 
+    pop si
+    pop dx
+    pop ax	
+	ret
 open_com	Endp
 
 PAGE
@@ -727,25 +539,13 @@ PAGE
 ;
 ;		description:	Close serial port
 ;
-;		PARAMETERS:		BX		port handle
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-close_com_name DB 'Close Com',0
-
 close_com	Proc far
-	push ds
-	push es
 	push ax
 	push dx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc close_com_done
-;
-    push [bx].port_sel
-    FreeHandle
-    pop ds
 ;
     mov ax,stop_com_port_nr
     IsValidOsGate
@@ -757,32 +557,12 @@ close_com	Proc far
 close_com_stopped:
 	mov dx,ds:base
 	inc bx
-	mov al,0
+	xor al,al
 	out dx,al				; disable rx, tx, line and modem ints
-;	
-    mov es,ds:port_handle
-    mov es:s_handle,0
 ;
-	mov es,ds:send_buf
-	FreeMem
-	mov es,ds:rec_buf
-	FreeMem
-;
-	mov ax,ds
-	xor bx,bx
-	mov ds,bx
-	mov es,ax
-	FreeMem
-;
-	mov ax,100
-	WaitMilliSec
-
-close_com_done:
 	pop dx
 	pop ax
-	pop es
-	pop ds
-	retf32
+	ret
 close_com	Endp
 
 PAGE
@@ -794,29 +574,13 @@ PAGE
 ;
 ;		DESCRIPTION:	Enable CTS signal
 ;
-;		PARAMETERS:		BX      Wait object
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_cts_name DB 'Enable CTS',0
-
 enable_cts	PROC far
-    push ds
-    push ax
-    push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc enable_cts_done
-;
-	mov ds,[bx].port_sel
     or ds:flgs,FLG_ENABLE_CTS
-
-enable_cts_done:
-    pop bx
-    pop ax
-    pop ds
-    retf32
+    ret
 enable_cts Endp
 
 PAGE
@@ -828,29 +592,13 @@ PAGE
 ;
 ;		DESCRIPTION:	Disable CTS signal
 ;
-;		PARAMETERS:		BX      Wait object
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_cts_name DB 'Disable CTS',0
-
 disable_cts	PROC far
-    push ds
-    push ax
-    push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc disable_cts_done
-;
-	mov ds,[bx].port_sel
     and ds:flgs,NOT FLG_ENABLE_CTS
-
-disable_cts_done:
-    pop bx
-    pop ax
-    pop ds
-    retf32
+    ret
 disable_cts Endp
 
 PAGE
@@ -862,35 +610,24 @@ PAGE
 ;
 ;		DESCRIPTION:	Enable automatic RTS on send
 ;
-;		PARAMETERS:		BX      Wait object
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-enable_auto_rts_name DB 'Enable Auto RTS',0
-
 enable_auto_rts	PROC far
-    push ds
     push ax
-    push bx
+    push dx
 ;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc enable_auto_rts_done
-;
-	mov ds,[bx].port_sel
     or ds:flgs,FLG_ENABLE_AUTO_RTS
-;
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	and al,NOT 2
 	out dx,al
-
-enable_auto_rts_done:
-    pop bx
+;	
+    pop dx
     pop ax
-    pop ds
-    retf32
+    ret
 enable_auto_rts Endp
 
 PAGE
@@ -902,35 +639,24 @@ PAGE
 ;
 ;		DESCRIPTION:	Disable automatic RTS on send
 ;
-;		PARAMETERS:		BX      Wait object
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-disable_auto_rts_name DB 'Disable Auto RTS',0
-
 disable_auto_rts	PROC far
-    push ds
     push ax
-    push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc disable_auto_rts_done
-;
-	mov ds,[bx].port_sel
-    and ds:flgs,NOT FLG_ENABLE_AUTO_RTS
+    push dx
 ;    
+    and ds:flgs,NOT FLG_ENABLE_AUTO_RTS
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	or al,2
 	out dx,al
-
-disable_auto_rts_done:
-    pop bx
+;	
+    pop dx
     pop ax
-    pop ds
-    retf32
+    ret
 disable_auto_rts Endp
 
 PAGE
@@ -942,40 +668,22 @@ PAGE
 ;
 ;		DESCRIPTION:	Flush com
 ;
-;		PARAMETERS:		BX      Wait object
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-flush_com_name DB 'Flush Com',0
-
 flush_com	PROC far
-    push ds
     push ax
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc flush_com_done
-;
-	mov ds,[bx].port_sel
-	cli
+    push dx
 ;
 	mov dx,ds:base
 	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
-;
-	mov ds:send_count,0
-	mov ds:send_head,0
-	mov ds:send_tail,0
-	mov ds:rec_count,0
-	mov ds:rec_head,0
-	mov ds:rec_tail,0
-	sti
-
-flush_com_done:
+;	
+    pop dx
     pop ax
-    pop ds
-    retf32
+    ret
 flush_com Endp
 
 PAGE
@@ -983,146 +691,17 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:			read_com
+;		NAME:			start_send
 ;
-;		description:	Read a byte from port
+;		description:	Start send
 ;
-;		PARAMETERS:		BX			Port handle
-;
-;		RETURNS:		AL			Received byte
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-read_com_name DB 'Read Com',0
-
-read_com	PROC far
-	push ds
-	push es
-	push bx
-	push cx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc com_read_done
-;
-	mov ds,[bx].port_sel
-	mov es,ds:rec_buf
-;
-	cli
-	mov cx,ds:rec_count
-	or cx,cx
-	jz com_read_no_char
-	mov bx,ds:rec_head
-	mov al,es:[bx]			; get char from buffer
-	dec cx
-	mov ds:rec_count,cx
-	inc bx
-	cmp bx,ds:rec_size
-	jnz com_read_nix_wrap
-	xor bx,bx
-com_read_nix_wrap:
-	mov ds:rec_head,bx
-	sti
-	xor ah,ah
-	clc
-	jmp com_read_done
-com_read_no_char:
-	sti
-	stc
-	mov ax,-1
-com_read_done:
-	pop cx
-	pop bx
-	pop es
-	pop ds
-	retf32
-read_com	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			get_com_receive_space
-;
-;		description:	Get space in receive buffer
-;
-;		PARAMETERS:		BX			Port handle
-;
-;		RETURNS:		EAX         Free space
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_com_receive_space_name DB 'Get Com Receive Space',0
-
-get_com_receive_space	PROC far
-	push ds
-	push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc get_com_rec_space_done
-;
-	mov ds,[bx].port_sel
-    mov ax,ds:rec_size
-    sub ax,ds:rec_count
-    movzx eax,ax
-
-get_com_rec_space_done:
-    pop bx
-	pop ds
-	retf32
-get_com_receive_space	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			write_com
-;
-;		description:	Write byte to port
-;
-;		PARAMETERS:		BX			Port handle
-;						AL			Data
-;
-;		RETURNS:		0			OK
-;						-1			Buffer overflow
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-write_com_name DB 'Write Com',0
-
-write_com	PROC far
-	push ds
-	push es
-	push bx
-	push cx
-	push dx
-;
+start_send	PROC far
     push ax
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    pop ax
-    jc com_send_full
-;
-	mov ds,[bx].port_sel
-	mov es,ds:send_buf
-	cli
-	mov cx,ds:send_count
-	cmp cx,ds:send_size
-	je com_send_full
-;	
-	mov bx,ds:send_tail
-	mov es:[bx],al
-	inc bx
-	cmp bx,ds:send_size
-	jnz com_send_no_wrap
-	xor bx,bx
-com_send_no_wrap:
-	mov ds:send_tail,bx
-	or cx,cx
-	jnz com_send_ok
+	push dx
 ;
     test ds:flgs, FLG_ENABLE_CTS
     jz com_send_enable
@@ -1153,107 +732,10 @@ com_send_start:
 	out dx,al
 	
 com_send_ok:
-	inc cx
-	mov ds:send_count,cx
-	
-com_send_ok_done:
-	sti
-	xor ax,ax
-	jmp com_send_end
-	
-com_send_full:
-	sti
-	mov ax,-1
-
-com_send_end:
 	pop dx
-	pop cx
-	pop bx
-	pop es
-	pop ds
-	retf32
-write_com	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			wait_for_send_completed_com
-;
-;		description:	Wait until send buffer is empty
-;
-;		PARAMETERS:		BX			Port handle
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-wait_for_send_completed_com_name DB 'Wait For Send Completed Com',0
-
-wait_for_send_completed_com	PROC far
-	push ds
-	push bx
-	push cx
-;
-    push ax
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    pop ax
-    jc wait_for_send_completed_done
-;
-	mov ds,[bx].port_sel
-    GetThread
-    mov ds:send_wait,ax
-;    
-	ClearSignal
-
-	mov cx,ds:send_count
-	or cx,cx
-	jz wait_for_send_completed_done
-;
-    WaitForSignal
-
-wait_for_send_completed_done:
-	pop cx
-	pop bx
-	pop ds
-	retf32
-wait_for_send_completed_com	ENDP
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			get_com_send_space
-;
-;		description:	Get space in send buffer
-;
-;		PARAMETERS:		BX			Port handle
-;
-;		RETURNS:		EAX         Free space
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-get_com_send_space_name DB 'Get Com Send Space',0
-
-get_com_send_space	PROC far
-	push ds
-	push bx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc get_com_send_space_done
-;
-	mov ds,[bx].port_sel
-    mov ax,ds:send_size
-    sub ax,ds:send_count
-    movzx eax,ax
-
-get_com_send_space_done:
-    pop bx
-	pop ds
-	retf32
-get_com_send_space	ENDP
+	pop ax
+	ret
+start_send	ENDP
 
 PAGE
 
@@ -1264,35 +746,23 @@ PAGE
 ;
 ;		description:	Set DTR signal
 ;
-;		PARAMETERS:		BX		Port handle
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_dtr_name DB 'Set Dtr',0
-
 set_dtr	Proc far
-	push ds
 	push ax
-	push bx
 	push dx
 ;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc set_dtr_done
-;
-	mov ds,[bx].port_sel
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	or al,1
 	out dx,al
-
-set_dtr_done:
+;
 	pop dx
-	pop bx
 	pop ax
-	pop ds
-	retf32
+	ret
 set_dtr	Endp
 
 PAGE
@@ -1304,35 +774,23 @@ PAGE
 ;
 ;		description:	Reset DTR signal
 ;
-;		PARAMETERS:		BX		Port handle
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_dtr_name DB 'Reset Dtr',0
-
 reset_dtr	Proc far
-	push ds
 	push ax
-	push bx
 	push dx
 ;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc reset_dtr_done
-;
-	mov ds,[bx].port_sel
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	and al,NOT 1
 	out dx,al	
-
-reset_dtr_done:
+;	
 	pop dx
-	pop bx
 	pop ax
-	pop ds
-	retf32
+	ret
 reset_dtr	Endp
 
 PAGE
@@ -1344,35 +802,23 @@ PAGE
 ;
 ;		description:	Set RTS signal
 ;
-;		PARAMETERS:		BX		Port handle
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-set_rts_name DB 'Set Rts',0
-
 set_rts	Proc far
-	push ds
 	push ax
-	push bx
 	push dx
-;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc set_rts_done
-;
-	mov ds,[bx].port_sel
+;	
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	or al,2
 	out dx,al
-
-set_rts_done:
+;
 	pop dx
-	pop bx
 	pop ax
-	pop ds
-	retf32
+	ret
 set_rts	Endp
 
 PAGE
@@ -1384,207 +830,81 @@ PAGE
 ;
 ;		description:	Reset RTS signal
 ;
-;		PARAMETERS:		BX		Port handle
+;		PARAMETERS:		DS      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-reset_rts_name DB 'Reset Rts',0
-
 reset_rts	Proc far
-	push ds
 	push ax
-	push bx
 	push dx
 ;
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc reset_rts_done
-;
-	mov ds,[bx].port_sel
 	mov dx,ds:base
 	add dx,4
 	in al,dx
 	and al,NOT 2
 	out dx,al	
-
-reset_rts_done:
+;	
 	pop dx
-	pop bx
 	pop ax
-	pop ds
-	retf32
+	ret
 reset_rts	Endp
 
 PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			StartWaitForCom
-;
-;		DESCRIPTION:	Start a wait for com
-;
-;		PARAMETERS:		ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-start_wait_for_com	PROC far
-    push ds
-    push ax
-    push bx
-;
-    mov bx,es:sw_handle
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc start_wait_for_done
-;
-	mov ds,[bx].port_sel
-	mov ds:avail_obj,es
-	mov ax,ds:rec_count
-	or ax,ax
-	je start_wait_for_done
-;
-	mov ds:avail_obj,0
-    SignalWait
-
-start_wait_for_done:
-    pop bx
-    pop ax
-    pop ds
-    ret
-start_wait_for_com Endp
-	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
 ;
-;		NAME:			StopWaitForCom
 ;
-;		DESCRIPTION:	Stop a wait for com
+;		NAME:	        create_port
 ;
-;		PARAMETERS:		ES      Wait object
+;		description:	Create port selector
+;
+;		RETURNS:		ES      Port selector
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-stop_wait_for_com	PROC far
-    push ds
-    push ax
-    push bx
-;
-    mov bx,es:sw_handle
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc stop_wait_done
-;
-	mov ds,[bx].port_sel
-	mov ds:avail_obj,0
+port_tab:
+pt00 DW OFFSET open_com,   	        pccom_code_sel
+pt01 DW OFFSET close_com,           pccom_code_sel
+pt02 DW OFFSET enable_cts,          pccom_code_sel
+pt03 DW OFFSET disable_cts,         pccom_code_sel
+pt04 DW OFFSET set_dtr,             pccom_code_sel
+pt05 DW OFFSET reset_dtr,           pccom_code_sel
+pt06 DW OFFSET set_rts,             pccom_code_sel
+pt07 DW OFFSET reset_rts,           pccom_code_sel
+pt08 DW OFFSET enable_auto_rts,     pccom_code_sel
+pt09 DW OFFSET disable_auto_rts,    pccom_code_sel
+pt10 DW OFFSET flush_com,           pccom_code_sel
+pt11 DW OFFSET start_send,          pccom_code_sel
 
-stop_wait_done:
-    pop bx
-    pop ax
-    pop ds
-    ret
-stop_wait_for_com Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
+create_port	Proc far
+    push eax
+    push cx
+    push si
+    push di
 ;
-;		NAME:			ClearCom
+    mov eax,SIZE pccom_port_struc
+    AllocateSmallGlobalMem
+    mov cx,ax
+    xor di,di
+    xor al,al
+    rep stosb
 ;
-;		DESCRIPTION:	Clear com
+    mov si,OFFSET port_tab
+    xor di,di
+    mov cx,12
+    rep movs dword ptr es:[di],cs:[si]
 ;
-;		PARAMETERS:		ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-clear_com	PROC far
-    ret
-clear_com Endp
-
-PAGE
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			IsComIdle
-;
-;		DESCRIPTION:	Check if com is idle
-;
-;		PARAMETERS:		ES      Wait object
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-is_com_idle	PROC far
-    push ds
-    push ax
-    push bx
-;
-    mov bx,es:sw_handle
-    mov ax,SERIAL_HANDLE
-    DerefHandle
-    jc is_idle_done
-;
-	mov ds,[bx].port_sel
-	mov ax,ds:rec_count
-	or ax,ax
-	clc
-	je is_idle_done
-;
-	stc
-
-is_idle_done:
-    pop bx
-    pop ax
-    pop ds
-    ret
-is_com_idle Endp
-	
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;	
-;
-;		NAME:			AddWaitForCom
-;
-;		DESCRIPTION:	Add a wait for serial port
-;
-;		PARAMETERS:		AX      Serial handle
-;                       BX      Wait handle
-;                       ECX     Signalled ID
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-add_wait_for_com_name	DB 'Add Wait For Com',0
-
-add_wait_tab:
-aw0	DW OFFSET start_wait_for_com,    	com_code_sel
-aw1 DW OFFSET stop_wait_for_com,		com_code_sel
-aw2	DW OFFSET clear_com,				com_code_sel
-aw3	DW OFFSET is_com_idle,		    	com_code_sel
-
-add_wait_for_com	PROC far
-	push ds
-	push es
-	push eax
-	push di
-;
-    push ax
-    mov ax,cs
-    mov es,ax
-   	mov ax,SIZE serial_wait_header - SIZE wait_obj_header
-    mov di,OFFSET add_wait_tab
-    AddWait
-    pop ax
-    jc add_wait_done
-;
-	mov es:sw_handle,ax
-
-add_wait_done:
+    mov ax,ds:pds_base
+    mov es:base,ax
+    mov eax,ds:pds_baud_base
+    mov es:baud_base,eax
+;        
     pop di
+    pop si
+    pop cx
     pop eax
-    pop es
-    pop ds
-	retf32
-add_wait_for_com	ENDP
+	ret
+create_port	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1773,14 +1093,14 @@ AddPort Proc near
     pushad
 ;    
     push ax
-    mov ax,com_data_sel
+    mov ax,pccom_data_sel
     mov ds,ax
 ;
-    mov eax,SIZE serial_port_struc
+    mov eax,SIZE pccom_device_struc
 	AllocateSmallGlobalMem
-	mov es:s_base,dx
-	mov es:s_handle,0
-	mov es:s_baud_base,ecx
+	mov es:pds_base,dx
+	mov es:pds_handle,0
+	mov es:pds_baud_base,ecx
 	pop ax
 	movzx dx,al
 ;
@@ -1812,6 +1132,15 @@ apAddIrqPort:
     mov ds:[bx].serial_port_arr,es 
     inc ds:serial_ports   
 ;
+    mov ax,es
+    mov ds,ax
+    mov ax,cs
+    mov es,ax
+    mov di,OFFSET create_port
+    xor ax,ax
+    xor dx,dx
+    AddComPort
+;
     popad
     pop es
     pop ds	
@@ -1832,7 +1161,7 @@ RequestIRQs Proc near
     push es
     pushad
 ;    
-    mov ax,com_data_sel
+    mov ax,pccom_data_sel
     mov ds,ax
 ;
     mov ax,cs
@@ -2037,7 +1366,7 @@ init	Proc far
 	push ds
 	push es
 	pusha
-	mov bx,com_code_sel
+	mov bx,pccom_code_sel
 	InitDevice
 ;	
 	mov ax,cs
@@ -2049,114 +1378,8 @@ init	Proc far
 	mov di,OFFSET init_pci
 	HookInitTasking
 ;
-	mov di,OFFSET delete_handle
-	mov ax,SERIAL_HANDLE
-	RegisterHandle
-;
-	mov si,OFFSET add_wait_for_com
-	mov di,OFFSET add_wait_for_com_name
-	xor dx,dx
-	mov ax,add_wait_for_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET open_com
-	mov di,OFFSET open_com_name
-	xor dx,dx
-	mov ax,open_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET close_com
-	mov di,OFFSET close_com_name
-	xor dx,dx
-	mov ax,close_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET flush_com
-	mov di,OFFSET flush_com_name
-	xor dx,dx
-	mov ax,flush_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET read_com
-	mov di,OFFSET read_com_name
-	xor dx,dx
-	mov ax,read_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET write_com
-	mov di,OFFSET write_com_name
-	xor dx,dx
-	mov ax,write_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET wait_for_send_completed_com
-	mov di,OFFSET wait_for_send_completed_com_name
-	xor dx,dx
-	mov ax,wait_for_send_completed_com_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET enable_cts
-	mov di,OFFSET enable_cts_name
-	xor dx,dx
-	mov ax,enable_cts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET disable_cts
-	mov di,OFFSET disable_cts_name
-	xor dx,dx
-	mov ax,disable_cts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET enable_auto_rts
-	mov di,OFFSET enable_auto_rts_name
-	xor dx,dx
-	mov ax,enable_auto_rts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET disable_auto_rts
-	mov di,OFFSET disable_auto_rts_name
-	xor dx,dx
-	mov ax,disable_auto_rts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET set_dtr
-	mov di,OFFSET set_dtr_name
-	xor dx,dx
-	mov ax,set_dtr_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET reset_dtr
-	mov di,OFFSET reset_dtr_name
-	xor dx,dx
-	mov ax,reset_dtr_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET set_rts
-	mov di,OFFSET set_rts_name
-	xor dx,dx
-	mov ax,set_rts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET reset_rts
-	mov di,OFFSET reset_rts_name
-	xor dx,dx
-	mov ax,reset_rts_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET get_com_receive_space
-	mov di,OFFSET get_com_receive_space_name
-	xor dx,dx
-	mov ax,get_com_receive_space_nr
-	RegisterBimodalUserGate
-;
-	mov si,OFFSET get_com_send_space
-	mov di,OFFSET get_com_send_space_name
-	xor dx,dx
-	mov ax,get_com_send_space_nr
-	RegisterBimodalUserGate
-;
 	mov eax,SIZE serial_data
-	mov bx,com_data_sel
+	mov bx,pccom_data_sel
 	AllocateFixedSystemMem
 	mov cx,SIZE serial_data
 	xor di,di

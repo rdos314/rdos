@@ -2098,3 +2098,11 @@ NotifyUsbAttach	MACRO
 NotifyUsbDetach	MACRO
 	OsGate notify_usb_detach_nr
 					ENDM
+
+;   AX      Controller #
+;   DX      Device #
+;   DS      Com device selector
+;   ES:DI   Create procedure
+AddComPort	MACRO
+	OsGate add_com_port_nr
+					ENDM

@@ -38,6 +38,8 @@ include ..\handle.inc
 include ..\wait.inc
 include com.inc
 
+MAX_PORTS = 32
+
 serial_wait_header	STRUC
 
 sw_obj			wait_obj_header <>
@@ -53,6 +55,13 @@ serial_handle_base	handle_header <>
 port_sel            DW ?
 
 serial_handle_seg		ENDS
+
+serial_data STRUC
+
+s_port_count    DW ?
+s_port_arr      DW MAX_PORTS DUP(?)
+
+serial_data ENDS
 
 ;;;;;;;;; INTERNAL PROCEDURES ;;;;;;;;;;;
 
@@ -136,92 +145,62 @@ PAGE
 
 open_com_name DB 'Open Com',0
 
-port_parity		EQU 2
-port_stop_bits	EQU 4
-port_data_bits	EQU 6
-port_id         EQU 8
-baud_rate   	EQU 10
-send_buf_size	EQU 14
-rec_buf_size	EQU 16
-baud_divisor    EQU 18
-
 open_com	Proc far
-    sub sp,2
-	push di
-	push si
-	push ecx
-	mov cl,ah
-    xor ah,ah
-    push ax	
-	movzx ax,cl
-	push ax
-	movzx ax,bl
-	push ax
-	movzx ax,bh
-	push ax
-	push bp
-	mov bp,sp
-	push ds
-	push es
-	push fs
-	push cx
-	push dx
-	push di
+    push ds
+    push es
+    push dx
+    push bp
 ;
-    mov bx,com_data_sel
-    mov ds,bx
-    mov bx,[bp].port_id
-    cmp bx,ds:sd_ports
+    mov dx,com_data_sel
+    mov ds,dx
+    movzx dx,al
+    cmp dx,ds:s_port_count
     jae open_com_fail
 ;    
+    push ax
+    push bx
+    push ecx
+;    
+    mov bx,dx
     add bx,bx
-    mov fs,ds:[bx].sd_port_arr
-;
-	mov eax, SIZE port_struc
-	AllocateSmallGlobalMem
+    mov ds,ds:[bx].s_port_arr
+    call ds:cd_create_proc
 ;
     mov ax,SERIAL_HANDLE
 	mov cx,SIZE serial_handle_seg
 	AllocateHandle
 	mov [bx].port_sel,es
 	mov [bx].hh_sign,SERIAL_HANDLE
-	mov bx,[bx].hh_handle
-	push bx
+	mov bp,[bx].hh_handle
 ;
 	mov ax,es
 	mov ds,ax
 ;
-	movzx eax,word ptr [bp].send_buf_size
+	movzx eax,si
 	mov ds:send_size,ax
 	AllocateSmallGlobalMem
-	mov ds:flgs,0
 	mov ds:send_buf,es
 	mov ds:send_count,0
 	mov ds:send_head,0
 	mov ds:send_tail,0
 ;
-	movzx eax,word ptr [bp].rec_buf_size
+	movzx eax,di
 	mov ds:rec_size,ax
 	AllocateSmallGlobalMem
 	mov ds:rec_buf,es
 	mov ds:rec_count,0
 	mov ds:rec_head,0
 	mov ds:rec_tail,0
+;	
 	mov ds:avail_obj,0
-	mov ds:send_wait,0
+	mov ds:send_wait,0	
 ;
-	mov ax,fs:s_base
-	mov ds:base,ax
-	mov fs:s_handle,ds
-	mov ds:port_handle,fs
-;
-
-    mov ah,[bp].port_data_bits
-    mov bl,[bp].port_stop_bits
-    mov bh,[bp].port_parity
-    mov ecx,[bp].port_baud_rate
-    call ds:open_com_proc
+    pop ecx
     pop bx
+    pop ax
+    call ds:open_com_proc
+;
+    mov bx,bp
 	clc
 	jmp open_com_done
 
@@ -230,14 +209,10 @@ open_com_fail:
     stc
 
 open_com_done:
-	pop di
-	pop dx
-	pop cx
-	pop fs
-	pop es
-	pop ds
-	pop bp
-	add sp,18
+    pop bp
+    pop dx
+    pop es
+    pop ds
 	retf32 
 open_com	Endp
 
@@ -820,7 +795,7 @@ set_rts	Proc far
     jc set_rts_done
 ;
 	mov ds,[bx].port_sel
-	call set_rts_proc
+	call ds:set_rts_proc
 
 set_rts_done:
 	pop dx
@@ -856,7 +831,7 @@ reset_rts	Proc far
     jc reset_rts_done
 ;
 	mov ds,[bx].port_sel
-	call reset_rts_proc
+	call ds:reset_rts_proc
 
 reset_rts_done:
 	pop dx
@@ -1037,6 +1012,48 @@ add_wait_done:
 	retf32
 add_wait_for_com	ENDP
 
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			AddComPort
+;
+;		DESCRIPTION:	Add a wait for serial port
+;
+;		PARAMETERS:		AX      Controller #
+;                       DX      Device #
+;                       DS      Com device selector
+;                       ES:DI   Create procedure
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+add_com_port_name	DB 'Add Com Port',0
+
+add_com_port    Proc far
+    push ds
+    push bx
+    push dx
+;
+    mov word ptr ds:cd_create_proc,di
+    mov word ptr ds:cd_create_proc+2,es
+    mov ds:cd_controller,ax
+    mov ds:cd_device,dx
+;
+    mov dx,ds
+    mov bx,com_data_sel
+    mov ds,bx
+;
+    mov bx,ds:s_port_count
+    add bx,bx
+    mov ds:[bx].s_port_arr,dx
+    inc ds:s_port_count
+;
+    pop dx
+    pop bx
+    pop ds    
+    ret
+add_com_port    Endp
+
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1062,6 +1079,12 @@ init	Proc far
 	mov di,OFFSET delete_handle
 	mov ax,SERIAL_HANDLE
 	RegisterHandle
+;
+	mov si,OFFSET add_com_port
+	mov di,OFFSET add_com_port_name
+	xor cl,cl
+	mov ax,add_com_port_nr
+	RegisterOsGate
 ;
 	mov si,OFFSET add_wait_for_com
 	mov di,OFFSET add_wait_for_com_name
