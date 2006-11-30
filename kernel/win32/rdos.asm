@@ -3096,6 +3096,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosGetMaxComPort
+;
+;		description:	Get max com port id
+;
+;		RETURNS:		Max com port id
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosGetMaxComPort
+
+RdosGetMaxComPort	Proc
+	UserGate get_max_com_port_nr
+	movzx eax,al
+	ret
+RdosGetMaxComPort	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosOpenCom
 ;
 ;		description:	Open comport

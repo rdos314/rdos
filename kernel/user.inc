@@ -1595,6 +1595,11 @@ InsertCd        MACRO
 
 ;;;;;;;;;;;;; SERIAL PORT ;;;;;;;;;;;;;
 
+;   OUT AL      Port #
+GetMaxComPort       MACRO
+	UserGate get_max_com_port_nr
+						ENDM
+
 ;	IN  AL		Port #
 ;	IN  AH		# of data bits
 ;	IN  BL		# of stop bits

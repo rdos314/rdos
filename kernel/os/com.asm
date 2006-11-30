@@ -127,6 +127,30 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			get_max_com_port
+;
+;		description:	Get max usable com port #
+;
+;		RETURNS:        AL      Max port #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+get_max_com_port_name DB 'Get Max Com Port',0
+
+get_max_com_port	Proc far
+    push ds
+    mov ax,com_data_sel
+    mov ds,ax
+    mov ax,ds:s_port_count
+    pop ds
+    retf32
+get_max_com_port    Endp    
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			open_com
 ;
 ;		description:	Open a serial port
@@ -1096,6 +1120,12 @@ init	Proc far
 	mov di,OFFSET add_wait_for_com_name
 	xor dx,dx
 	mov ax,add_wait_for_com_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET get_max_com_port
+	mov di,OFFSET get_max_com_port_name
+	xor dx,dx
+	mov ax,get_max_com_port_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET open_com
