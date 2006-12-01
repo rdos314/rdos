@@ -65,6 +65,10 @@ pccom_srcs = PCCOM.ASM
 pccom_objs = $(pccom_srcs:.ASM=.OBJ)
 pccom_rdvs = PCCOM.RDV
 
+usbcom_srcs = USBCOM.ASM
+usbcom_objs = $(usbcom_srcs:.ASM=.OBJ)
+usbcom_rdvs = USBCOM.RDV
+
 printer_srcs = PRINTER.ASM
 printer_objs = $(printer_srcs:.ASM=.OBJ)
 printer_rdvs = PRINTER.RDV
@@ -113,7 +117,7 @@ srcs =      $(ide_srcs) $(pcvideo_srcs) $(floppy_srcs) $(novideo_srcs)	\
 			$(fat_srcs)	$(pmouse_srcs) $(s1mouse_srcs) $(s2mouse_srcs) \
 			$(ne2000_srcs)	$(ppp_srcs) $(printer_srcs) $(sernet_srcs) \
 			$(pccom_srcs) $(dp83815_srcs) $(rtl8139_srcs) $(8255x_srcs) \
-			$(ts2003_srcs) $(uhci_srcs)
+			$(ts2003_srcs) $(uhci_srcs) $(usbcom_srcs)
 
 objs =      $(srcs:.ASM=.OBJ)
 
@@ -121,7 +125,7 @@ rdvs =      $(ide_rdvs) $(floppy_rdvs) $(pcvideo_rdvs) $(novideo_rdvs) \
 			$(fat_rdvs) $(pmouse_rdvs) $(s1mouse_rdvs) $(s2mouse_rdvs) \
 			$(ne2000_rdvs) $(ppp_rdvs) $(sernet_rdvs) $(dp83815_rdvs) \
 			$(printer_rdvs) $(pccom_rdvs) $(rtl8139_rdvs) $(8255x_rdvs) \
-			$(ts2003_rdvs) $(uhci_rdvs)
+			$(ts2003_rdvs) $(uhci_rdvs) $(usbcom_rdvs)
 
 maps =      $(exes:.EXE=.MAP) $(rdvs:.RDV=.MAP)
 
@@ -196,6 +200,14 @@ PCCOM.RDV : $(pccom_objs)
 	$(pccom_objs)
 	PCCOM.RDV
 	PCCOM;       
+!
+
+USBCOM.RDV : $(usbcom_objs)
+    tlink @&&!
+	$(link_opt) +
+	$(usbcom_objs)
+	USBCOM.RDV
+	USBCOM;       
 !
 
 

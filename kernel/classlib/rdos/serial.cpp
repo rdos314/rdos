@@ -1005,7 +1005,7 @@ int TSerialDevice::WaitForChar(long Timeout)
     if (!FWait)
         CreateWait();
 
-	if (FWait)
+	if (FWait && FHandle)
 		if (FWait->WaitTimeout(Timeout) == this)
 			return TRUE;
 

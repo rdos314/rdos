@@ -75,6 +75,8 @@ data    STRUC
 usb_dev_count   DW ?
 usb_dev_arr     DW 256 DUP(?)
 
+_hooks		DB ?
+
 data    ENDS
 
 code	SEGMENT byte public use16 'CODE'
@@ -1554,6 +1556,44 @@ iupiDone:
 	retf32
 is_usb_pipe_idle	Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HookUsbAttach
+;
+;		description:	Hook USB attach event
+;
+;       parameters:     ES:DI       Callback 
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_usb_attach_name DB 'Hook USB Attach', 0
+
+hook_usb_attach	Proc far
+    ret
+hook_usb_attach   Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HookUsbDetach
+;
+;		description:	Hook USB detach event
+;
+;       parameters:     ES:DI       Callback
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+hook_usb_detach_name DB 'Hook USB Detach', 0
+
+hook_usb_detach	Proc far
+    ret
+hook_usb_detach   Endp
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
@@ -1606,6 +1646,18 @@ init	Proc far
 	mov di,OFFSET notify_usb_detach_name
 	xor cl,cl
 	mov ax,notify_usb_detach_nr
+	RegisterOsGate
+;
+	mov si,OFFSET hook_usb_attach
+	mov di,OFFSET hook_usb_attach_name
+	xor cl,cl
+	mov ax,hook_usb_attach_nr
+	RegisterOsGate
+;
+	mov si,OFFSET hook_usb_detach
+	mov di,OFFSET hook_usb_detach_name
+	xor cl,cl
+	mov ax,hook_usb_detach_nr
 	RegisterOsGate
 ;
 	mov bx,OFFSET get_usb_device16
