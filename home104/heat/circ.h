@@ -30,11 +30,12 @@
 
 #include "device.h"
 #include "fuzzy.h"
+#include "graphdev.h"
 
 class TCirc : public TFuzzy
 {
 public:
-	TCirc();
+	TCirc(TGraphicDevice *dev);
 	~TCirc();
 
 	void DeviceName(char *Name, int Size) const;
@@ -59,6 +60,7 @@ protected:
     int TempSum;
     int TempCount;
 
+    TGraphicDevice *vbe;
     TSection FSection;
 };
 

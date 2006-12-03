@@ -29,28 +29,38 @@
 #define VP_H
 
 #include "fuzzy.h"
-#include "circ.h"
+#include "graphdev.h"
 
 class TVp : public TFuzzy
 {
 public:
-	TVp(TCirc *Circ);
+	TVp(TGraphicDevice *dev);
 	~TVp();
 
 	void DeviceName(char *Name, int Size) const;
 
 	int IsOn();
+
+	void SetMotor(int val);
+	void SetTempError(int temp);
     
 protected:
 	virtual void Execute();
 
     TFuzzyVar FMotorVar;
-    TFuzzyVar FMotorDiffVar;
+    TFuzzyVar FTempDiffVar;
     TFuzzyVar FOutputVar;
 
-    int FOn;
+    int MotorSum;
+    int MotorCount;
+    int TempSum;
+    int TempCount;
 
-    TCirc *FCirc;
+    int FOn;
+    long double FLevel;
+    TGraphicDevice *vbe;
+
+    TSection FSection;
 };
 
 #endif

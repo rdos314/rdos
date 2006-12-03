@@ -52,47 +52,52 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TCirc *Circ)
+TVp::TVp(TGraphicDevice *dev)
 {
-    int i, j;
-    int SetArr[MAX_FUZZY_VARS];
+	int i, j;
+	int SetArr[MAX_FUZZY_VARS];
 	int RuleArr[5][3] =
-                {
-                    {0, 0, 1},
-                    {0, 1, 1},
-                    {0, 1, 2},
-                    {1, 1, 2},
-                    {1, 2, 2},
+				{
+					{3, 4, 4},
+					{2, 3, 4},
+					{2, 2, 2},
+					{1, 1, 1},
+					{0, 0, 0},
 				};
 
-    FCirc = Circ;
-    
-    FMotorVar.Add(0, new TLowFuzzySet(2.5, 5.0));
-    FMotorVar.Add(1, new TMidFuzzySet(2.5, 5.0, 7.5));
-    FMotorVar.Add(2, new THighFuzzySet(5.0, 7.5));
-    AddInput(0, &FMotorVar);
+	FMotorVar.Add(0, new TLowFuzzySet(25.0, 50.0));
+	FMotorVar.Add(1, new TMidFuzzySet(25.0, 50.0, 75.0));
+	FMotorVar.Add(2, new THighFuzzySet(50.0, 75.0));
+	AddInput(0, &FMotorVar);
 
-    FMotorDiffVar.Add(0, new TLowFuzzySet(-0.4, -0.2));
-    FMotorDiffVar.Add(1, new TMidFuzzySet(-0.4, -0.2, 0.0));
-    FMotorDiffVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
-    FMotorDiffVar.Add(3, new TMidFuzzySet(0.0, 0.2, 0.4));
-    FMotorDiffVar.Add(4, new THighFuzzySet(0.2, 0.4)); 
-    AddInput(1, &FMotorDiffVar);
+	FTempDiffVar.Add(0, new TLowFuzzySet(-0.5, -0.2));
+	FTempDiffVar.Add(1, new TMidFuzzySet(-0.5, -0.2, 0.0));
+	FTempDiffVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
+	FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.2, 0.5));
+    FTempDiffVar.Add(4, new THighFuzzySet(0.2, 0.5)); 
+    AddInput(1, &FTempDiffVar);
 
-    FOutputVar.Add(0, new TLowFuzzySet(0.0, 0.5));
-    FOutputVar.Add(1, new TMidFuzzySet(0.0, 0.5, 1.0));
-    FOutputVar.Add(2, new THighFuzzySet(0.5, 1.0));
+    FOutputVar.Add(0, new TLowFuzzySet(-0.4, -0.2));
+    FOutputVar.Add(1, new TMidFuzzySet(-0.4, -0.2, 0.0));
+    FOutputVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
+    FOutputVar.Add(3, new TMidFuzzySet(0.0, 0.2, 0.4));
+    FOutputVar.Add(4, new THighFuzzySet(0.2, 0.4));
     AddOutput(&FOutputVar);
 
     for (i = 0; i < 5; i++)
     {
 		for (j = 0; j < 3; j++)
-        {
-            SetArr[0] = j;
-            SetArr[1] = i;
-            DefineRule(SetArr, RuleArr[i][j]);
-        }
-    }
+		{
+			SetArr[0] = j;
+			SetArr[1] = i;
+			DefineRule(SetArr, RuleArr[i][j]);
+		}
+	}
+
+	FMotorVar.SetInputValue(0.0);
+	FTempDiffVar.SetInputValue(0.0);
+
+	vbe = new TGraphicDevice(*dev);
 
 	Start("Vp", 0x2000);
 }
@@ -110,6 +115,7 @@ TVp::TVp(TCirc *Circ)
 ##########################################################################*/
 TVp::~TVp()
 {
+	delete vbe;
 }
 
 /*##########################################################################
@@ -145,6 +151,46 @@ int TVp::IsOn()
 
 /*##########################################################################
 #
+#   Name       : TVp::SetMotor
+#
+#   Purpose....: Set current motor
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::SetMotor(int motor)
+{
+	FSection.Enter();
+    
+    MotorCount++;
+    MotorSum += motor;
+
+    FSection.Leave();    
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::SetTempError
+#
+#   Purpose....: Set current temp error
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::SetTempError(int diff)
+{
+    FSection.Enter();
+    
+    TempCount++;
+	TempSum += diff;
+
+    FSection.Leave();    
+}
+
+/*##########################################################################
+#
 #   Name       : TVp::Execute
 #
 #   Purpose....: Handler thread
@@ -158,32 +204,36 @@ void TVp::Execute()
 	int year, month, day;
 	int hour, min, sec;
 	int ms;
-    int i;
 	int LastMin;
+	int i;
 	long double ValArr[MAX_FUZZY_VARS];
-	long double LastSpeed;
-	long double Speed;
-	long double SpeedSum;
-	long double DiffSum;
-	int Count;
 	long double val;
 	int diostat;
+	char str[50];
+	TFont font(10);
+
+	vbe->SetFont(&font);
+
+	MotorSum = 0;
+	MotorCount = 0;
+	TempSum = 0;
+	TempCount = 0;
 
 	for (i = 0; i < MAX_FUZZY_VARS; i++)
 		ValArr[i] = 0.0;
 
-    while (!RdosReadSerialLines(1, &diostat))
-        RdosWaitMilli(250);
+	while (!RdosReadSerialLines(1, &diostat))
+		RdosWaitMilli(250);
 
 	if (diostat & 0x20)
-	    FOn = TRUE;
+		FOn = TRUE;
 	else
-	    FOn = FALSE;
+		FOn = FALSE;
 
-	LastSpeed = FCirc->GetSpeed();
-	SpeedSum = 0;
-	DiffSum = 0;
-	Count = 0;
+	if (FOn)
+		FLevel = 9.9;
+	else
+		FLevel = 0.0;
 
 	RdosGetTime(&year, &month, &day, &hour, &LastMin, &sec, &ms);
 
@@ -191,39 +241,40 @@ void TVp::Execute()
 	{
 		RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
 
-		if (min != LastMin)
+		if (LastMin != min && MotorCount && TempCount)
 		{
 			LastMin = min;
 
-			Speed = FCirc->GetSpeed();
+			FSection.Enter();
 
-            SpeedSum += Speed;
-            DiffSum += Speed - LastSpeed;
-            Count++;
+			if (MotorCount)
+				ValArr[0] = (long double)MotorSum / (long double)MotorCount / 10.0;
 
-            LastSpeed = Speed;
+			if (TempCount)
+				ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
 
-            if (min % 15 == 0 && Count)
-            {
-                ValArr[0] = SpeedSum / (long double)Count;
-                ValArr[1] = DiffSum / (long double)Count;
-    
-	    		SpeedSum = 0;
-			    DiffSum = 0;
-			    Count = 0;
+			MotorSum = 0;
+			MotorCount = 0;
+			TempSum = 0;
+			TempCount = 0;
 
-    			val = Calc(ValArr);
+			FSection.Leave();
 
-    			if (val < 0.25 && FOn)
-    			    FOn = FALSE;
+			val = Calc(ValArr);
+			FLevel += val;
+			
+			if (FLevel < 0.0)
+			    FLevel = 0.0;
 
-    			if (val > 0.75 && !FOn)
-    			    FOn = TRUE;
-    
-    	    	RdosSetCursorPosition(17,0);
-        		printf("%6.2Lf", val);
+			if (FLevel > 9.9)
+			    FLevel = 9.9;
 
-            }
+
+    		if (FLevel < 0.25 && FOn)
+    			FOn = FALSE;
+
+    	    if (FLevel > 0.75 && !FOn)
+    			FOn = TRUE;
 
             if (RdosReadSerialLines(1, &diostat))
             {
@@ -238,6 +289,16 @@ void TVp::Execute()
             	        RdosToggleSerialLine(1, 5);
             	}
             }
+
+    		sprintf(str, "VP: %4.1Lf", FLevel);
+
+            vbe->SetFilledStyle();
+           	vbe->SetDrawColor(0, 0, 0);
+	    	vbe->DrawRect(550, 300, 550 + 100, 300 + 16);
+		
+    	    vbe->SetDrawColor(255, 255, 255);
+    	    vbe->DrawString(550, 300, str);
+
 		}
 
 		RdosWaitMilli(1000);

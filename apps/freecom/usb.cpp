@@ -413,6 +413,8 @@ int TUsbCommand::Execute(char *param)
 					}
 				}
 
+				RdosWaitMilli(250);
+
 				Write("Start read\r\n");
 
 				char buf[256];

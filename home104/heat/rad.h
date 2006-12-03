@@ -29,11 +29,13 @@
 #define RAD_H
 
 #include "device.h"
+#include "graphdev.h"
 
 class TRad : public TDevice
 {
 public:
-	TRad(int Address, int Row);
+	TRad(TGraphicDevice *dev, int Address, int x, int y);
+	~TRad();
 
 	void DeviceName(char *Name, int Size) const;
 
@@ -56,6 +58,10 @@ protected:
 
 	int FAddress;
 	int FRow;
+	TGraphicDevice *FDev;
+	TFont Font;
+	int FX;
+	int FY;
 
 	int FUpdateRefType;
 	int FUpdateRef;

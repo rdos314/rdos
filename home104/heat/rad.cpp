@@ -38,6 +38,9 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+#define WIDTH 50
+#define HEIGHT 15
+
 /*##########################################################################
 #
 #   Name       : TRad::TRad
@@ -49,12 +52,17 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TRad::TRad(int Address, int Row)
+TRad::TRad(TGraphicDevice *dev, int Address, int x, int y)
+ : Font(10)
 {
 	char str[40];
 
+    FDev = new TGraphicDevice(*dev);
+    FDev->SetFont(&Font);
+    
 	FAddress = Address;
-	FRow = Row;
+	FX = x;
+	FY = y;
 	Offline();
 	Ref = 200;
 	Temp = 200;
@@ -80,6 +88,22 @@ TRad::TRad(int Address, int Row)
 
 	sprintf(str, "RAD %d", Address);
 	Start(str, 0x2000);
+}
+
+/*##########################################################################
+#
+#   Name       : TRad::~TRad
+#
+#   Purpose....: Radiator destructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TRad::~TRad()
+{
+    delete FDev;
 }
 
 /*##########################################################################
@@ -289,6 +313,7 @@ int TRad::GetAuxTemp()
 void TRad::Execute()
 {
 	int val;
+	char str[80];
 
 	while (FInstalled)
 	{
@@ -309,8 +334,6 @@ void TRad::Execute()
 		if (FUpdateRefType)
 			FUpdateRefType = !RdosWriteSerialRaw(FAddress, 5, RefType);
 
-		RdosSetCursorPosition(FRow + 1,0);
-
 		if (RdosReadSerialRaw(FAddress, 0, &val))
 		{
 			FRefSum += val;
@@ -322,10 +345,18 @@ void TRad::Execute()
 			    FRefSum = 0;
 			    FRefCount = 0;
 			}			
-			printf("%4ld.%ld ", val / 10, val % 10);
+			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
 		}
 		else
-			printf("------ ");
+			strcpy(str, "------ ");
+
+    	FDev->SetFilledStyle();
+
+        FDev->SetDrawColor(0, 0, 0);
+		FDev->DrawRect(FX, FY, FX + WIDTH, FY + HEIGHT - 1);
+
+    	FDev->SetDrawColor(255, 255, 255);
+		FDev->DrawString(FX, FY, str);
 
 		if (RdosReadSerialRaw(FAddress, 1, &val))
 		{
@@ -341,10 +372,16 @@ void TRad::Execute()
 		        FTempSum = 0;
 		        FTempCount = 0;
 		    }   
-			printf("%4ld.%ld ", val / 10, val % 10);
+			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
 	    }
 		else
-			printf("------ ");
+			strcpy(str, "------ ");
+
+        FDev->SetDrawColor(0, 0, 0);
+		FDev->DrawRect(FX + WIDTH, FY, FX + 2 * WIDTH, FY + HEIGHT - 1);
+
+		FDev->SetDrawColor(255, 255, 255);
+		FDev->DrawString(FX + WIDTH, FY, str);
 
 		if (RdosReadSerialRaw(FAddress, 2, &val))
 		{
@@ -361,13 +398,19 @@ void TRad::Execute()
 		        FMotorSum = 0;
 		        FMotorCount = 0;
 		    }		    
-			printf("%4ld.%ld ", val / 10, val % 10);
+			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
 		}
 		else
 		{
 		    Offline();
-			printf("------ ");
-	    }
+			strcpy(str, "------ ");
+		}
+
+        FDev->SetDrawColor(0, 0, 0);
+		FDev->DrawRect(FX + 2 * WIDTH, FY, FX + 3 * WIDTH, FY + HEIGHT - 1);
+
+		FDev->SetDrawColor(255, 255, 255);
+		FDev->DrawString(FX + 2 * WIDTH, FY, str);
 
 		if (RdosReadSerialRaw(FAddress, 3, &val))
 		{
@@ -380,32 +423,43 @@ void TRad::Execute()
 		        FLightSum = 0;
 		        FLightCount = 0;
 		    }
-			printf("%4ld.%ld ", val / 10, val % 10);
+			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
 	    }
 		else
-			printf("------ ");
+			strcpy(str, "------ ");
+
+        FDev->SetDrawColor(0, 0, 0);
+		FDev->DrawRect(FX + 3 * WIDTH, FY, FX + 4 * WIDTH, FY + HEIGHT - 1);
+
+    	FDev->SetDrawColor(255, 255, 255);
+		FDev->DrawString(FX + 3 * WIDTH, FY, str);
 
 		if (RdosReadSerialRaw(FAddress, 4, &val))
 		{
-		    if (val < 50)
-		        val += 256;
+			if (val < 50)
+				val += 256;
 
-            FAuxTempSum += val;
-            FAuxTempCount++;
+			FAuxTempSum += val;
+			FAuxTempCount++;
 
-            if (FAuxTempCount == 20)
-            {
-                AuxTemp = FAuxTempSum / FAuxTempCount;
-                FAuxTempSum = 0;
-                FAuxTempCount = 0;
-            }		       
-			printf("%4ld.%ld ", val / 10, val % 10);
+			if (FAuxTempCount == 20)
+			{
+				AuxTemp = FAuxTempSum / FAuxTempCount;
+				FAuxTempSum = 0;
+				FAuxTempCount = 0;
+			}
+			sprintf(str, "%4ld.%ld ", val / 10, val % 10);
 		}
 		else
-			printf("------ ");
+			strcpy(str, "------ ");
 
+        FDev->SetDrawColor(0, 0, 0);
+		FDev->DrawRect(FX + 4 * WIDTH, FY, FX + 5 * WIDTH, FY + HEIGHT - 1);
 
-        FSection.Leave();
+		FDev->SetDrawColor(255, 255, 255);
+		FDev->DrawString(FX + 4 * WIDTH, FY, str);
+
+		FSection.Leave();
 
 
 		RdosWaitMilli(1000);

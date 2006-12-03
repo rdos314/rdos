@@ -40,9 +40,14 @@
 #include "log.h"
 #include "circ.h"
 #include "vp.h"
+#include "graph.h"
+#include "videodev.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
+
+#define WIDTH 240
+#define HEIGHT 15
 
 void WsChanged(TWs2300 *ws)
 {
@@ -67,6 +72,7 @@ void cdecl main()
 	int temperr;
 	int temperrmax;
 	long double val;
+    int ival;
 	long double winddir;
 	long NtpIp;
 	int SyncCount = 0;
@@ -75,6 +81,10 @@ void cdecl main()
 	int init = 0x8000;
 	int ambient;
 	int night;
+	TGraphic *graphic;
+	TGraphicDevice *vbe;
+	TFont Font(10);
+	char str[80];
 
 	RdosWaitMilli(1000);
 
@@ -83,11 +93,59 @@ void cdecl main()
 
 	log = new TLog("e:\\log");
 
-	InitHeatHttp();
+	vbe = new TVideoGraphicDevice(24, 800, 600);
+	vbe->SetFont(&Font);
+
+	graphic = new TGraphic(vbe, log);
+
+	vbe->SetDrawColor(255, 255, 255);
+
+	vbe->DrawString(170, 420, "   Ref");
+	vbe->DrawString(220, 420, "  Temp");
+	vbe->DrawString(270, 420, "P†drag");
+	vbe->DrawString(320, 420, "  Ljus");
+	vbe->DrawString(370, 420, "Temp 2");
 
 	for (i = 0; i < 8; i++)
 	{
-		RadArr[i] = new TRad(0x20 + i, i);
+		switch (i)
+		{
+			case 0:
+				strcpy(str, "Leif & Lenas sovrum");
+				break;
+
+			case 1:
+				strcpy(str, "Vardagsrum");
+				break;
+
+			case 2:
+				strcpy(str, "Rosa sovrum, nedre plan");
+				break;
+
+			case 3:
+				strcpy(str, "Bl†tt sovrum, nedre plan");
+				break;
+
+			case 4:
+				strcpy(str, "K”k");
+				break;
+
+			case 5:
+				strcpy(str, "Emil & Linneas sovrum");
+				break;
+
+			case 6:
+				strcpy(str, "Trappa");
+				break;
+
+			case 7:
+				strcpy(str, "Badrum");
+				break;
+		}
+
+		vbe->DrawString(5, 420 + 16 * (i + 1), str);
+
+		RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
 		AddHttpRad(RadArr[i]);
 		log->Add(RadArr[i]);
 	}
@@ -95,13 +153,15 @@ void cdecl main()
 	Ws = new TWs2300(1);
 	Ws->OnChanged = WsChanged;
 
-	Circ = new TCirc;
+	Circ = new TCirc(vbe);
 
-	Vp = new TVp(Circ);
+	Vp = new TVp(vbe);
 
 	log->Add(Ws);
 	log->Add(Circ);
 	log->Add(Vp);
+
+	InitHeatHttp();
 
 	AddHttpWs2300(Ws);
 	AddHttpCirc(Circ);
@@ -169,7 +229,7 @@ void cdecl main()
 				count++;
 
 				mot = RadArr[i]->GetMotor();
-				if (mot > motmax)
+				if (mot > motmax && i != 7)
 					motmax = mot;
 
 				temp = RadArr[i]->GetTemp();
@@ -177,7 +237,7 @@ void cdecl main()
 
 				temperr = temp - ref;
 
-				if (temperr < temperrmax)
+				if (temperr < temperrmax && i != 7)
 					temperrmax = temperr;
 
 				if (night)
@@ -200,54 +260,196 @@ void cdecl main()
 		if (count)
 			Circ->SetMaxTempError(temperrmax);
 
+		if (count)
+			Vp->SetMotor(motmax);
+
+		if (count)
+			Vp->SetTempError(temperrmax);
+
 		if (diostat & 1)
 			HttpSetLightOn();
 		else
 			HttpSetLightOff();
 
-		RdosSetCursorPosition(10,0);
+    	vbe->SetFilledStyle();
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 0, "V„derstation");
+
+	    vbe->DrawString(550, 16, "Inomhus");
+
 		val = Ws->GetIndoorTemp();
-		printf("%5.1Lf", val);
+		sprintf(str, "Temperatur: %5.1Lf", val);
 
-		RdosSetCursorPosition(10,10);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 2 * 16, 550 + WIDTH, 3 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 2 * 16, str);
+
 		val = Ws->GetIndoorHumidity();
-		printf("%4.0Lf%", val);
+		sprintf(str, "Fuktighet: %4.0Lf%", val);
 
-		RdosSetCursorPosition(11,0);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 3 * 16, 550 + WIDTH, 4 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 3 * 16, str);
+
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 4 * 16, "Utomhus");
+
 		val = Ws->GetOutdoorTemp();
-		printf("%5.1Lf", val);
+		sprintf(str, "Temperatur: %5.1Lf", val);
 
-		RdosSetCursorPosition(11,10);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 5 * 16, 550 + WIDTH, 6 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 5 * 16, str);
+
 		val = Ws->GetOutdoorHumidity();
-		printf("%4.0Lf%", val);
+		sprintf(str, "Fuktighet: %4.0Lf%", val);
 
-		RdosSetCursorPosition(12,0);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 6 * 16, 550 + WIDTH, 7 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 6 * 16, str);
+
 		val = Ws->GetDewPoint();
-		printf("%5.1Lf", val);
+		sprintf(str, "Daggpunkt: %5.1Lf", val);
 
-		RdosSetCursorPosition(12,10);
+		vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 7 * 16, 550 + WIDTH, 8 * 16 - 1);
+
+		vbe->SetDrawColor(255, 255, 255);
+		vbe->DrawString(550, 7 * 16, str);
+
 		val = Ws->GetWindChill();
-		printf("%5.1Lf", val);
+		sprintf(str, "Vindkompenserad: %5.1Lf", val);
 
-		RdosSetCursorPosition(13,0);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 8 * 16, 550 + WIDTH, 9 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 8 * 16, str);
+
 		val = Ws->GetWindSpeed();
-		printf("%5.1Lf m/s", val);
+		sprintf(str, "Vind: %5.1Lf m/s", val);
 
-		RdosSetCursorPosition(13,10);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 9 * 16, 550 + WIDTH, 10 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 9 * 16, str);
+
 		val = Ws->GetWindDir();
-		printf("%4Lf", val);
+		ival = (int)(val / 22 + 0.5);
 
-		RdosSetCursorPosition(14,0);
+		strcpy(str, "Vindriktning: ");
+		switch (ival)
+		{
+				case 0:
+					 strcat(str, "N");
+					 break;
+
+				case 1:
+					 strcat(str, "NNO");
+					 break;
+
+				case 2:
+					 strcat(str, "NO");
+					 break;
+
+				case 3:
+					 strcat(str, "ONO");
+					 break;
+
+				case 4:
+					 strcat(str, "O");
+					 break;
+
+				case 5:
+					 strcat(str, "OSO");
+					 break;
+
+				case 6:
+					 strcat(str, "SO");
+					 break;
+
+				case 7:
+					 strcat(str, "SSO");
+					 break;
+
+				case 8:
+					 strcat(str, "S");
+					 break;
+
+				case 9:
+					 strcat(str, "SSV");
+					 break;
+
+				case 10:
+					 strcat(str, "SV");
+					 break;
+
+				case 11:
+					 strcat(str, "VSV");
+					 break;
+
+				case 12:
+					 strcat(str, "V");
+					 break;
+
+				case 13:
+					 strcat(str, "VNV");
+					 break;
+
+				case 14:
+					 strcat(str, "NV");
+					 break;
+
+				case 15:
+					 strcat(str, "NNV");
+					 break;
+
+				case 16:
+					 strcat(str, "N");
+					 break;
+		}
+
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 10 * 16, 550 + WIDTH, 11 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 10 * 16, str);
+
 		val = Ws->GetRain1h();
-		printf("%5.1Lf mm", val);
+		sprintf(str, "Regn: 1 timme: %5.1Lf mm", val);
 
-		RdosSetCursorPosition(14,10);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 11 * 16, 550 + WIDTH, 12 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 11 * 16, str);
+
 		val = Ws->GetRain24h();
-		printf("%5.1Lf mm", val);
+		sprintf(str, "Regn: 24 timmar: %5.1Lf mm", val);
 
-		RdosSetCursorPosition(15,0);
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 12 * 16, 550 + WIDTH, 13 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 12 * 16, str);
+
 		val = Ws->GetAirPressure();
-		printf("%6.1Lf hPa", val);
+		sprintf(str, "Lufttryck: %6.1Lf hPa", val);
+
+    	vbe->SetDrawColor(0, 0, 0);
+		vbe->DrawRect(550, 13 * 16, 550 + WIDTH, 14 * 16 - 1);
+		
+    	vbe->SetDrawColor(255, 255, 255);
+	    vbe->DrawString(550, 13 * 16, str);
 
 		RdosWaitMilli(1000);
 

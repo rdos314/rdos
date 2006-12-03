@@ -52,7 +52,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TCirc::TCirc()
+TCirc::TCirc(TGraphicDevice *dev)
 {
     int i, j;
     int SetArr[MAX_FUZZY_VARS];
@@ -97,6 +97,8 @@ TCirc::TCirc()
     FMotorVar.SetInputValue(0.0);
     FTempDiffVar.SetInputValue(0.0);
 
+	vbe = new TGraphicDevice(*dev);
+
 	Start("Circ", 0x2000);
 }
 
@@ -113,6 +115,7 @@ TCirc::TCirc()
 ##########################################################################*/
 TCirc::~TCirc()
 {
+    delete vbe;
 }
 
 /*##########################################################################
@@ -244,6 +247,15 @@ void TCirc::Execute()
 	int i;
 	long double ValArr[MAX_FUZZY_VARS];
 	long double val;
+    char str[50];
+	TFont font(10);
+
+	vbe->SetFont(&font);
+
+	MotorSum = 0;
+	MotorCount = 0;
+	TempSum = 0;
+	TempCount = 0;
 
 	for (i = 0; i < MAX_FUZZY_VARS; i++)
 		ValArr[i] = 0.0;
@@ -267,13 +279,6 @@ void TCirc::Execute()
 			if (TempCount)
 				ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
 
-			MotorSum = 0;
-			MotorCount = 0;
-			TempSum = 0;
-			TempCount = 0;
-
-			FSection.Leave();
-
 			val = Calc(ValArr);
 			FSpeed += val;
 			
@@ -282,12 +287,29 @@ void TCirc::Execute()
 
 			if (FSpeed > 9.9)
 			    FSpeed = 9.9;
-			    
-			WriteCircValve(FSpeed);
-    
-	    	RdosSetCursorPosition(16,0);
-    		printf("%6.1Lf V", FSpeed);
 
+            if (MotorCount)
+            {
+	    		FSpeed = (long double)MotorSum / (long double)MotorCount / 10.0;
+    			    
+    			WriteCircValve(FSpeed);
+    	    }
+
+			MotorSum = 0;
+			MotorCount = 0;
+			TempSum = 0;
+			TempCount = 0;
+
+			FSection.Leave();
+    			
+    		sprintf(str, "Circ: %4.1Lf V", FSpeed);
+
+	    	vbe->SetFilledStyle();
+           	vbe->SetDrawColor(0, 0, 0);
+	        vbe->DrawRect(550, 316, 550 + 100, 316 + 16);
+		
+        	vbe->SetDrawColor(255, 255, 255);
+        	vbe->DrawString(550, 316, str);
 		}
 
 		RdosWaitMilli(1000);

@@ -448,5 +448,8 @@ notify_usb_detach_nr        EQU 304
 
 add_com_port_nr             EQU 305
 
+hook_usb_attach_nr          EQU 306
+hook_usb_detach_nr          EQU 307
+
 osgate_entries				EQU 310
 

@@ -75,8 +75,6 @@ data    STRUC
 usb_dev_count   DW ?
 usb_dev_arr     DW 256 DUP(?)
 
-_hooks		DB ?
-
 data    ENDS
 
 code	SEGMENT byte public use16 'CODE'
