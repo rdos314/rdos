@@ -1301,6 +1301,12 @@ read_drive_fail:
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
+;
+    mov bp,3
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz read_drive_retry_loop
 	jmp read_drive_done
 
 read_drive_ok:
@@ -1308,8 +1314,7 @@ read_drive_ok:
 	mov es:[edi].dh_state,STATE_USED
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
-
-read_drive_check_next:
+;
 	add esi,4
 	mov edi,es:[esi]
 	sub cx,1
@@ -1410,17 +1415,23 @@ write_drive_retry:
 	jnz write_drive_retry_loop
 
 write_drive_fail:
+    int 3
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
+;	
+	mov bp,3
+	add esi,4
+	mov edi,es:[esi]
+	sub cx,1
+	jnz write_drive_retry_loop
 	jmp write_drive_done
 
 write_drive_ok:
 	mov es:[edi].dh_state,STATE_USED
 	mov bx,fs:disc_sel
 	DiscRequestCompleted
-
-write_drive_check_next:
+;
 	add esi,4
 	mov edi,es:[esi]
 	sub cx,1
