@@ -1298,6 +1298,7 @@ read_drive_retry:
 	jnz read_drive_retry_loop
 
 read_drive_fail:
+    int 3
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted

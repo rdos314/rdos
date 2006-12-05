@@ -2099,6 +2099,20 @@ NotifyUsbDetach	MACRO
 	OsGate notify_usb_detach_nr
 					ENDM
 
+;   ES:DI   Callback
+;     BX    Controller #
+;     AL    Device address
+HookUsbAttach	MACRO
+	OsGate hook_usb_attach_nr
+					ENDM
+
+;   ES:DI   Callback
+;     BX    Controller #
+;     AL    Device address
+HookUsbDetach	MACRO
+	OsGate hook_usb_detach_nr
+					ENDM
+
 ;   AX      Controller #
 ;   DX      Device #
 ;   DS      Com device selector

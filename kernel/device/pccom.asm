@@ -67,22 +67,14 @@ pds_base_struc    com_device_struc <>
 pds_base          DW ?
 pds_handle        DW ?
 pds_baud_base     DD ?
+pds_irq           DB ?
 
 pccom_device_struc   ENDS
-
-serial_irq_struc    STRUC
-
-serial_ports    DW ?
-serial_port_arr DW MAX_IRQ_SHARE DUP(?)
-
-serial_irq_struc    ENDS
-
 
 serial_data STRUC
 
 sd_ports    DW ?
 sd_port_arr DW MAX_PORTS DUP(?)
-sd_irq_arr  DW MAX_IRQS DUP(?)
 
 serial_data ENDS
 
@@ -338,15 +330,6 @@ st_rx	DW OFFSET rec_pr
 st_li	DW OFFSET line_err
 
 com_int	Proc far
-    xor bx,bx
-    mov cx,ds:serial_ports
-
-com_int_port_loop:
-    push ds
-    push bx
-    push cx
-;
-    mov ds,ds:[bx].serial_port_arr
     mov ax,ds:pds_handle
     or ax,ax
     jz com_int_inactive
@@ -358,7 +341,7 @@ com_int_loop:
 	add dx,2
 	in al,dx
 	test al,1
-	jnz com_int_next_port
+	jnz com_int_done
 ;	
 	mov bl,al
 	xor bh,bh
@@ -371,7 +354,7 @@ com_int_inactive:
 	add dx,2
 	in al,dx
 	test al,1
-	jnz com_int_next_port
+	jnz com_int_done
 ;	
     mov dx,ds:pds_base
 	add dx,6
@@ -388,14 +371,7 @@ com_int_inactive:
 	inc dx
 	out dx,al
 
-com_int_next_port:
-    pop cx
-    pop bx
-    pop ds
-;
-    add bx,2
-    loop com_int_port_loop 
-;       
+com_int_done:	
 	ret
 com_int	Endp
 
@@ -1109,35 +1085,12 @@ AddPort Proc near
 	mov es:pds_handle,0
 	mov es:pds_baud_base,ecx
 	pop ax
-	movzx dx,al
+	mov es:pds_irq,al
 ;
     mov bx,ds:sd_ports
     add bx,bx
     mov ds:[bx].sd_port_arr,es
     inc ds:sd_ports
-;
-    mov bx,dx
-    add bx,bx
-    mov ax,ds:[bx].sd_irq_arr
-    or ax,ax
-    jnz apAddIrqPort
-;
-    push es
-    push ds
-    mov eax,SIZE serial_irq_struc
-    AllocateSmallGlobalMem
-    mov es:serial_ports,0
-    mov ax,es
-    pop ds
-    mov ds:[bx].sd_irq_arr,ax
-    pop es
-
-apAddIrqPort:
-    mov ds,ax
-    mov bx,ds:serial_ports
-    add bx,bx
-    mov ds:[bx].serial_port_arr,es 
-    inc ds:serial_ports   
 ;
     mov ax,es
     mov ds,ax
@@ -1175,9 +1128,8 @@ RequestIRQs Proc near
     mov es,ax
     mov di,OFFSET com_int
 ;    
-    mov cx,MAX_IRQS
-    mov bx,OFFSET sd_irq_arr
-    xor al,al
+    mov cx,ds:sd_ports
+    mov bx,OFFSET sd_port_arr
 
 riLoop:
     mov dx,[bx]
@@ -1186,11 +1138,11 @@ riLoop:
 ;    
     push ds
     mov ds,dx
-    RequestPrivateIrqHandler
+    mov al,ds:pds_irq
+    RequestSharedIrqHandler
     pop ds
 
 riNext:
-    inc al
     add bx,2
     loop riLoop
 ;
@@ -1331,10 +1283,9 @@ dt3:
 dtpci:
 	call InitPciAdapter
 	call RequestIRQs
-;    int 3    
-;    mov ax,com_data_sel
+;    mov ax,pccom_data_sel
 ;    mov ds,ax
-;    mov cx,ds:serial_ports
+;    mov cx,ds:sd_ports
 	ret
 detect_thread	endp
 	

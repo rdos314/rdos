@@ -40,6 +40,9 @@ INCLUDE ..\handle.inc
 INCLUDE ..\wait.inc
 INCLUDE usb.inc
 
+MAX_ATTACH_HOOKS = 32
+MAX_DETACH_HOOKS = 32
+
 GET_STATUS = 0
 CLEAR_FEATURE = 1
 SET_FEATURE = 3
@@ -72,8 +75,14 @@ pipe_wait_header	ENDS
 
 data    STRUC
 
-usb_dev_count   DW ?
-usb_dev_arr     DW 256 DUP(?)
+usb_dev_count       DW ?
+usb_dev_arr         DW 256 DUP(?)
+
+usb_attach_hooks	DW ?
+usb_attach_arr		DW 2 * MAX_ATTACH_HOOKS DUP(?)
+
+usb_detach_hooks	DW ?
+usb_detach_arr		DW 2 * MAX_DETACH_HOOKS DUP(?)
 
 data    ENDS
 
@@ -119,6 +128,7 @@ init_usb_device	Proc far
     mov ax,usb_data_sel
     mov ds,ax
     mov bx,ds:usb_dev_count
+    mov es:usb_controller_id,bx
     add bx,bx
     mov ds:[bx].usb_dev_arr,es
     inc ds:usb_dev_count
@@ -431,6 +441,98 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			TrapUsbAttach
+;
+;		DESCRIPTION:	Run notification handlers for attach
+;
+;		PARAMETERS:		BX          Controller #
+;                       AL          Device address (1..128)
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_usb_attach	PROC near
+    push ds
+	push cx
+	push si
+;	
+	mov cx,usb_data_sel
+	mov ds,cx
+	mov cx,ds:usb_attach_hooks
+	or cx,cx
+	je trap_attach_done
+	
+	mov si,OFFSET usb_attach_arr
+
+trap_attach_loop:
+	push ds
+	push si
+	push cx
+	call dword ptr [si]
+	pop cx
+	pop si
+	pop ds
+;	
+	add si,4
+	loop trap_attach_loop
+
+trap_attach_done:
+    pop si
+    pop cx
+    pop ds
+	ret
+trap_usb_attach	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			TrapUsbDetach
+;
+;		DESCRIPTION:	Run notification handlers for detach
+;
+;		PARAMETERS:		BX          Controller #
+;                       AL          Device address (1..128)
+;						
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+trap_usb_detach	PROC near
+    push ds
+	push cx
+	push si
+;	
+	mov cx,usb_data_sel
+	mov ds,cx
+	mov cx,ds:usb_detach_hooks
+	or cx,cx
+	je trap_detach_done
+	
+	mov si,OFFSET usb_detach_arr
+
+trap_detach_loop:
+	push ds
+	push si
+	push cx
+	call dword ptr [si]
+	pop cx
+	pop si
+	pop ds
+;	
+	add si,4
+	loop trap_detach_loop
+
+trap_detach_done:
+    pop si
+    pop cx
+    pop ds
+	ret
+trap_usb_detach	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			NotifyUsbAttach
 ;
 ;		description:	Notify USB attach event
@@ -534,10 +636,15 @@ nuaLoop:
 ;
     inc bl
     cmp bl,16
-    je nuaDone
+    je nuaNotify
 ;    
     cmp bl,gs:udd_configs
     jb nuaLoop
+
+nuaNotify:
+    mov bx,ds:usb_controller_id
+    mov al,fs:usbp_address
+    call trap_usb_attach
     
 nuaDone:
     popad
@@ -575,6 +682,9 @@ notify_usb_detach	Proc far
     jz nudDone
 ;    
     mov es,ax
+    mov bx,ds:usb_controller_id
+    mov al,es:usbf_address
+    call trap_usb_detach      
     call CloseDevice
 
 nudDone:    
@@ -1570,6 +1680,20 @@ PAGE
 hook_usb_attach_name DB 'Hook USB Attach', 0
 
 hook_usb_attach	Proc far
+	push ds
+	push bx
+;	
+	mov bx,usb_data_sel
+	mov ds,bx
+	mov bx,ds:usb_attach_hooks
+	shl bx,2
+	add bx,OFFSET usb_attach_arr
+	mov [bx],di
+	mov [bx+2],es
+	inc ds:usb_attach_hooks
+;
+	pop bx
+	pop ds
     ret
 hook_usb_attach   Endp
 
@@ -1589,6 +1713,20 @@ PAGE
 hook_usb_detach_name DB 'Hook USB Detach', 0
 
 hook_usb_detach	Proc far
+	push ds
+	push bx
+;	
+	mov bx,usb_data_sel
+	mov ds,bx
+	mov bx,ds:usb_detach_hooks
+	shl bx,2
+	add bx,OFFSET usb_detach_arr
+	mov [bx],di
+	mov [bx+2],es
+	inc ds:usb_detach_hooks
+;
+	pop bx
+	pop ds
     ret
 hook_usb_detach   Endp
 
