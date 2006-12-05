@@ -639,6 +639,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	long double val;
 	unsigned long msb;
 	unsigned long lsb;
+	TDateTime prevtime;
 	TDateTime time;
 	TDateTime firsttime;
 	TDateTime lasttime;
@@ -662,6 +663,11 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	int retry;
 	long double ymin;
 	long double ymax;
+    int skip;
+	int Line1;
+	int Line2;
+	int Line3;
+	int Line4;
 
 	TimeAxis.Hide();
 
@@ -718,27 +724,18 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 
 	TempChart->SetBackColor(255, 255, 255);
 
-	TempChart->SetLineColor(100, 128, 128, 128);
-	TempChart->SetLineColor(101, 128, 255, 0);
-	TempChart->SetLineColor(102, 255, 128, 0);
-	TempChart->SetLineColor(103, 0, 128, 255);
+	Line1 = 99;
+	Line2 = 124;
+	Line3 = 149;
+	Line4 = 174;
 
 	PowerChart->SetBackColor(255, 255, 255);
 
-	PowerChart->SetLineColor(101, 128, 255, 0);
-	PowerChart->SetLineColor(102, 255, 128, 0);
-
 	WindChart->SetBackColor(255, 255, 255);
-
-	WindChart->SetLineColor(101, 128, 128, 240);
 
 	LightChart->SetBackColor(255, 255, 255);
 
-	LightChart->SetLineColor(101, 255, 128, 0);
-
 	VpChart->SetBackColor(255, 255, 255);
-
-	VpChart->SetLineColor(101, 255, 0, 0);
 
 	year = from.GetYear();
 	month = from.GetMonth();
@@ -767,6 +764,9 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	    PowerChart->Add(i, from, val);
 		PowerChart->Add(i, to, val);
     }
+
+    prevtime = from;
+    prevtime.AddDay(-1);
 
     firstpass = TRUE;
     sameday = FALSE;
@@ -820,7 +820,33 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 			    lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
     			time = TDateTime(msb, lsb);
 
-    			if (time >= firsttime && time <= lasttime)
+    			prevtime.AddMin(5);
+
+    			if (prevtime < time)
+    			{
+    			    Line1++;
+    			    Line2++;
+    			    Line3++;
+    			    Line4++;
+    			    
+                	TempChart->SetLineColor(Line1, 128, 128, 128);
+                	TempChart->SetLineColor(Line2, 128, 255, 0);
+                	TempChart->SetLineColor(Line3, 255, 128, 0);
+                	TempChart->SetLineColor(Line4, 0, 128, 255);
+                	PowerChart->SetLineColor(Line1, 128, 255, 0);
+            	    PowerChart->SetLineColor(Line2, 255, 128, 0);
+                	WindChart->SetLineColor(Line1, 128, 128, 240);
+                	LightChart->SetLineColor(Line1, 255, 128, 0);
+                	VpChart->SetLineColor(Line1, 255, 0, 0);
+
+                	skip = TRUE;
+                }
+                else
+                    skip = FALSE;
+
+                prevtime = time;
+
+    			if (time >= firsttime && time <= lasttime && !skip)
     			{
     	    	    tag = msg->GotoFirstTag();
 	    	        while (tag)
@@ -837,7 +863,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     								val = (long double)ival;
 	    			                val = val / 10.0;
         
-		    						TempChart->Add(100, time, val);
+		    						TempChart->Add(Line1, time, val);
 		    				    }
     	        		    }
 
@@ -848,7 +874,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 								val = (long double)ival;
 				                val = val / 10.0;
     
-								WindChart->Add(101, time, val);
+								WindChart->Add(Line1, time, val);
     	        		    }
 	            		}
                 		    
@@ -864,7 +890,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                            val = (long double)ival;
 								    val = val / 10.0;
 
-            					    TempChart->Add(101, time, val);
+            					    TempChart->Add(Line2, time, val);
                 			    }
     
 	        	                var = tag->GetVar(LOG_VAR_AuxTemp);
@@ -874,7 +900,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
     
-            				    	TempChart->Add(102, time, val);
+            				    	TempChart->Add(Line3, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Ref);
@@ -884,7 +910,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                            val = (long double)ival;
 		                            val = val / 10.0; 
 
-            					    TempChart->Add(103, time, val);
+            					    TempChart->Add(Line4, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Motor);
@@ -894,7 +920,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
 
-									PowerChart->Add(101, time, val);
+									PowerChart->Add(Line1, time, val);
                 			    }
 
 	        	                var = tag->GetVar(LOG_VAR_Light);
@@ -904,7 +930,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 									val = (long double)ival;
 		                            val = val / 10.0; 
 
-									LightChart->Add(101, time, val);
+									LightChart->Add(Line1, time, val);
                 			    }
                 			}
 		                }
@@ -918,7 +944,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                        val = (long double)ival;
 		                        val = val / 10.0; 
 
-            					PowerChart->Add(102, time, val);
+            					PowerChart->Add(Line2, time, val);
             			    }
             			}
 
@@ -932,7 +958,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 		                        else
 		                            val = 0.0;
 
-            					VpChart->Add(101, time, val);
+            					VpChart->Add(Line1, time, val);
             			    }
             			}
 
@@ -1119,13 +1145,14 @@ int THttpRadPage::CreateHistoryTempJpeg(int address, int year, int month, int da
 	strcat(filename, "\\");
 	strcat(filename, str);
 
-    if (Jpeg)
-    {
-        Jpeg->Save(filename);
-        delete Jpeg;
-    }
+	if (Jpeg)
+	{
+		Jpeg->Save(filename);
+		delete Jpeg;
+		return TRUE;
+	}
 
-    return TRUE;
+	return FALSE;
 }
 
 /*##########################################################################
@@ -1148,7 +1175,7 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
     TDateTime time;
 	TFile File(FFileName.GetData(), 0);
 
-    sprintf(str, "image\\%d\\%d\\%d\\%d.jpg", address, year, month, day);
+	sprintf(str, "image\\%d\\%d\\%d\\%d.jpg", address, year, month, day);
     strcpy(filename, WWWROOT);
     strcat(filename, "\\");
     strcat(filename, str);
@@ -1163,7 +1190,7 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
         ok = CreateHistoryTempJpeg(address, year, month, day);
 
     if (ok)
-    {
+	{
     	File.Write("<IMG SRC=\"");
         sprintf(str, "/image/%d/%d/%d/%d.jpg", address, year, month, day);
     	File.Write(str);
@@ -1171,13 +1198,13 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
 
     	WriteFile(FFileName.GetData(), "text/html");
     }
-    else
+	else
         WriteError(404);
 }
 
 /*##########################################################################
 #
-#   Name       : THttpRadPage::WriteCurrTempJpeg
+#   Name       : THttpRadPage::CreateCurrTempJpeg
 #
 #   Purpose....: Write current temperature jpeg
 #
@@ -1186,22 +1213,36 @@ void THttpRadPage::WriteHistoryTemp(int address, int year, int month, int day)
 #   Returns....: *
 #
 ##########################################################################*/
-void THttpRadPage::WriteCurrTempJpeg(int address)
+int THttpRadPage::CreateCurrTempJpeg(int address)
 {
+	char str[256];
+	char filename[256];
 	TDateTime from;
 	TDateTime to;
 	TJpegBitmapDevice *Jpeg;
 
-    from.AddDay(-1);
+	from.AddDay(-1);
 
 	Jpeg = CreateTempJpeg(address, from, to);
-	
-    if (Jpeg)
-    {
-        Jpeg->Save(FFileName.GetData());
-    	WriteFile(FFileName.GetData(), "jpeg/jpeg");
-    	delete Jpeg;
-    }
+
+	strcpy(filename, WWWROOT);
+	strcat(filename, "\\");
+	strcat(filename, "image");
+
+	if (!RdosSetCurDir(filename))
+		RdosMakeDir(filename);
+
+	sprintf(str, "\\%d.jpg", address);
+	strcat(filename, str);
+
+	if (Jpeg)
+	{
+		Jpeg->Save(filename);
+		delete Jpeg;
+		return TRUE;
+	}
+	else
+    	return FALSE;
 }
 
 /*##########################################################################
@@ -1222,14 +1263,71 @@ void THttpRadPage::WriteTemp(int address)
 	int handle;
 	int ok;
     TDateTime time;
+    TDateTime filetime;
 	TFile File(FFileName.GetData(), 0);
+	unsigned long Msb, Lsb;
 
-    File.Write("<IMG SRC=\"");
-    sprintf(str, "/rad/%d.jpg", address);
-    File.Write(str);
-    File.Write("\" align=bottom width=580 height=400 border=0>");
+    sprintf(str, "image\\%d.jpg", address);
+    strcpy(filename, WWWROOT);
+    strcat(filename, "\\");
+    strcat(filename, str);
 
-    WriteFile(FFileName.GetData(), "text/html");
+    handle = RdosOpenFile(filename, 0);
+    if (handle)
+    {
+        RdosGetFileTime(handle, &Msb, &Lsb);
+        filetime = TDateTime(Msb, Lsb);
+        filetime.AddMin(5);
+
+        if (filetime > time)
+            ok = TRUE;
+        else
+            ok = FALSE;
+
+        RdosCloseFile(handle);
+    }
+    else
+        ok = FALSE;
+
+    if (!ok)
+		ok = CreateCurrTempJpeg(address);
+
+	if (ok)
+	{
+		File.Write("<IMG SRC=\"");
+        sprintf(str, "/rad/%d.jpg", address);
+        File.Write(str);
+        File.Write("\" align=bottom width=580 height=400 border=0>");
+
+        WriteFile(FFileName.GetData(), "text/html");
+    }
+    else
+        WriteError(404);
+}
+
+
+/*##########################################################################
+#
+#   Name       : THttpRadPage::WriteTempJpeg
+#
+#   Purpose....: Write temp jpeg-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void THttpRadPage::WriteTempJpeg(int address)
+{
+    char str[256];
+    char filename[256];
+
+    sprintf(str, "image\\%d.jpg", address);
+    strcpy(filename, WWWROOT);
+    strcat(filename, "\\");
+    strcat(filename, str);
+
+    WriteFile(filename, "jpeg/jpeg");
 }
 
 /*##########################################################################
@@ -1489,10 +1587,10 @@ void THttpRadPage::Get(const char *Name)
         	    else
         	    {
         	        if (!strcmp(ext, ".jpg"))
-				        WriteCurrTempJpeg(address);
-				    else
-				        WriteError(404);
-				}
+        	            WriteTempJpeg(address);
+        	        else
+    				    WriteError(404);
+    		    }
             }
             else
                 WriteError(404);

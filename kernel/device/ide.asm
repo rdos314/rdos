@@ -1294,11 +1294,11 @@ read_sector_loop:
 	jmp read_drive_ok
 
 read_drive_retry:
+    int 3
 	sub bp,1
 	jnz read_drive_retry_loop
 
 read_drive_fail:
-    int 3
 	mov es:[edi].dh_state,STATE_BAD
 	mov bx,fs:disc_sel
 	DiscRequestCompleted

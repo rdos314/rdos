@@ -750,6 +750,8 @@ void THttpCommand::WriteFile(TPathName &path, const char *ContentType)
 		}
 		delete Buf;
 
+		FServer->Push();
+
 	}
 }
 

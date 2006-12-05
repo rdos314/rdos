@@ -92,8 +92,9 @@ protected:
     TJpegBitmapDevice *CreateTempJpeg(int address, TDateTime &from, TDateTime &to);
     void WriteHistoryTemp(int address, int year, int month, int day);
     int CreateHistoryTempJpeg(int address, int year, int month, int day);
-    void WriteCurrTempJpeg(int address);
+    int CreateCurrTempJpeg(int address);
     void WriteTemp(int address);
+    void WriteTempJpeg(int address);
     void WriteMain();
 
 };

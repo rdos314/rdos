@@ -70,7 +70,7 @@ class TChartList : public TListBase
 public:
 	TChartList();
 	TChartList(const TChartList &source);
-	~TChartList();
+	virtual ~TChartList();
 
 	int operator==(const TChartList &dest) const;
 	int operator!=(const TChartList &dest) const;
