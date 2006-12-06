@@ -184,10 +184,10 @@ init_thread	PROC near
 	mov bx,thread_tss_sel
 	CreateDataSelector16
 ;
-	mov edx,thread_ss0_linear
-	mov ecx,200h
-	mov bx,thread_ss0_sel
-	CreateDataSelector16
+;	mov edx,thread_ss0_linear
+;	mov ecx,200h
+;	mov bx,thread_ss0_sel
+;	CreateDataSelector16
 ;
 	mov edx,fixed_process_linear
 	mov ecx,SIZE process_seg
@@ -953,10 +953,17 @@ init_default_tss	PROC near
 	xor edx,edx
 	mov [bx],edx
 ;
-	mov dx,200h
+	mov dx,stack0_size
 	add bx,4
 	mov [bx],edx
-	mov dx,thread_ss0_sel
+;	
+	push es
+	push eax
+	mov eax,stack0_size
+	AllocateSmallGlobalMem
+	mov dx,es
+	pop eax
+	pop es
 	add bx,4
 	mov [bx],edx
 ;
@@ -1124,14 +1131,18 @@ init_prot_tss_default:
 	jmp init_prot_tss_com
 
 init_kernel_tss:
-	mov dword ptr ds:tss_ss,thread_ss0_sel
-	mov eax,thread_ss0_linear - thread_block_linear + stack0_size - 6
-	mov es:[eax+4],dx
-	mov es:[eax+2],cs
-	mov word ptr es:[eax],OFFSET terminate_thread
+    push es
+    movzx eax,ds:tss_ess0
+    mov dword ptr ds:tss_ss,eax
+    mov bx,stack0_size - 6
+    mov es,ax
+    mov es:[bx+4],dx
+    mov es:[bx+2],cs
+    mov word ptr es:[bx],OFFSET terminate_thread
+    pop es
 	mov dword ptr ds:tss_esp,stack0_size - 6
 	mov es:p_stack_sel,0
-;
+
 init_prot_tss_com:
 	mov bx,OFFSET tss_es
 	mov ax,[bp].cr_es
@@ -1469,7 +1480,7 @@ init_task_tss	PROC near
 	add bx,4
 	mov [bx],edx
 	add bx,4
-	mov dx,200h
+	mov dx,stack0_size
 	mov [bx],edx
 	add bx,4
 	xor dx,dx
@@ -1485,7 +1496,7 @@ init_task_tss	PROC near
 	mov [bx],edx
 	add bx,4
 	push es
-	mov eax,200h
+	mov eax,stack0_size
 	AllocateSmallGlobalMem
 	mov [bx],es
 	pop es
@@ -1609,10 +1620,10 @@ init_process_tss	PROC near
 	mov ds:tss_eip+2,0
 	mov ds:tss_cs,cs
 	mov ds:tss_cs+2,0
-	mov ax,thread_ss0_sel
+	mov ax,ds:tss_ess0
 	mov ds:tss_ss,ax
 	mov ds:tss_ss+2,0
-	mov ax,200h
+	mov ax,stack0_size
 	mov ds:tss_esp,ax
 	mov ds:tss_esp+2,0
 ;
@@ -2124,9 +2135,13 @@ fill_bm_mod_more:
 	mov ds:tss_eip,ax
 	mov ds:tss_cs,cs
 ;
-	mov ax,thread_ss0_sel
+    push es
+    mov eax,stack0_size
+    AllocateSmallGlobalMem
+    mov ax,es
+    pop es    
 	mov ds:tss_ss,ax
-	mov ax,200h
+	mov ax,stack0_size
 	mov ds:tss_esp,ax
 ;
 	pushf

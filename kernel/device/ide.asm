@@ -1269,15 +1269,19 @@ read_drive_start:
 	out dx,al
 
 read_sector_loop:
-    push edx
     push eax
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
 	WaitForSignalWithTimeout
 	pop eax
-	pop edx
 ;	
+    mov dx,fs:disc_io_base
+    add dx,7
+    in al,dx
+    test al,80h
+    jnz read_sector_loop
+;    
 	mov dx,fs:disc_io_base
 	call CheckStatus
 	jc read_drive_retry
@@ -1398,16 +1402,22 @@ write_sector_loop:
 	outsw
 	pop esi
 	pop cx
-;
-    push edx
+
+write_sector_wait:
     push eax
     GetSystemTime
     add eax,1193 * 500
     adc edx,0
 	WaitForSignalWithTimeout
 	pop eax
-	pop edx
 ;	
+    mov dx,fs:disc_io_base
+    add dx,7
+    in al,dx
+    test al,80h
+    jnz write_sector_wait
+;	
+    mov dx,fs:disc_io_base
 	call CheckStatus
 	jnc write_drive_ok
 

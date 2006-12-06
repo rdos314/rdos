@@ -127,17 +127,20 @@ init_flat_pm:
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 ;
 	mov ax,4F01h
 	call ds:v_pm16_entry
 	mov si,ax
 ;
-	pop bp
-	mov ax,thread_ss0_sel
+	pop ebp
+	mov ax,bp
+	shr ebp,16
 	mov ss,ax
 	mov sp,bp
 
@@ -379,18 +382,21 @@ switch_to_v86:
 
 switch_to_pm:
 	mov ax,es:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 ;
 	or bx,4000h
 	or bx,8000h
 	mov ax,4F02h
 	call es:v_pm16_entry
 ;
-	pop bp
-	mov ax,thread_ss0_sel
+	pop ebp
+	mov ax,bp
+	shr ebp,16
 	mov ss,ax
 	mov sp,bp
 
@@ -763,15 +769,20 @@ get_video_modes_pm_loop:
 	je get_video_modes_pm_done
 ;
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 	mov ax,4F01h
 	call ds:v_pm16_entry
-	pop bp
+	pop ebp
 	cmp ax,4Fh
-	mov ax,thread_ss0_sel
+	mov ax,bp
+	pushf
+	shr ebp,16
+	popf
 	mov ss,ax
 	mov sp,bp
 	jne get_video_modes_pm_loop
@@ -996,14 +1007,17 @@ SetWindowPm16	Proc near
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 	mov ax,4F05h
 	call ds:v_pm16_entry
-	pop bp
-	mov si,thread_ss0_sel
+	pop ebp
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1037,14 +1051,17 @@ SetStartPm16	Proc near
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 	mov ax,4F07h
 	call ds:v_pm16_entry
-	pop bp
-	mov si,thread_ss0_sel
+	pop ebp
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1078,14 +1095,17 @@ SetPalettePm16	Proc near
 	mov ax,pc_video_data_sel
 	mov ds,ax
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 	mov ax,4F09h
 	call ds:v_pm16_entry
-	pop bp
-	mov si,thread_ss0_sel
+	pop ebp
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1123,10 +1143,12 @@ SetWindowPm32	Proc near
 	mov ax,gs:v_pm32_data_sel
 	mov ds,ax
 	mov es,gs:v_pm32_io
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1000h
-	push bp
+	push ebp
 	sub sp,8
 	mov bp,sp
 	mov dword ptr [bp],100h
@@ -1135,9 +1157,10 @@ SetWindowPm32	Proc near
 	mov ax,4F05h
 	call fword ptr [bp]
 	add sp,8
-	pop bp
+	pop ebp
 ;
-	mov si,thread_ss0_sel
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1176,10 +1199,12 @@ SetStartPm32	Proc near
 	mov ax,gs:v_pm32_data_sel
 	mov ds,ax
 	mov es,gs:v_pm32_io
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1000h
-	push bp
+	push ebp
 	sub sp,8
 	mov bp,sp
 	mov dword ptr [bp],108h
@@ -1188,9 +1213,10 @@ SetStartPm32	Proc near
 	mov ax,4F05h
 	call fword ptr [bp]
 	add sp,8
-	pop bp
+	pop ebp
 ;
-	mov si,thread_ss0_sel
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1229,10 +1255,12 @@ SetPalettePm32	Proc near
 	mov gs,ax
 	mov ds,gs:v_pm32_io
 	mov ax,gs:v_pm32_data_sel
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1000h
-	push bp
+	push ebp
 	sub sp,8
 	mov bp,sp
 	mov dword ptr [bp],110h
@@ -1241,9 +1269,10 @@ SetPalettePm32	Proc near
 	mov ax,4F05h
 	call fword ptr [bp]
 	add sp,8
-	pop bp
+	pop ebp
 ;
-	mov si,thread_ss0_sel
+	mov si,bp
+	shr ebp,16
 	mov ss,si
 	mov sp,bp
 ;
@@ -1279,10 +1308,12 @@ InitPm	Proc near
 	xor di,di
 ;
 	mov ax,ds:v_pm16_stack
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 ;
 	mov ax,4F00h
 	call ds:v_pm16_entry
@@ -1302,16 +1333,18 @@ InitPm	Proc near
 	mov ax,es:vesa_video_mem
 	shl eax,16
 	mov ds:v_video_mem,eax
-	pop bp
-	mov ax,thread_ss0_sel
+	pop ebp
+	mov ax,bp
+	shr ebp,16
 	mov ss,ax
 	mov sp,bp
 	call GetVideoModesPm
 	jmp init_pm_free
 
 init_pm_leave:
-	pop bp
-	mov ax,thread_ss0_sel
+	pop ebp
+	mov ax,bp
+	shr ebp,16
 	mov ss,ax
 	mov sp,bp
 
@@ -1630,10 +1663,12 @@ ChksumPmLoop:
 ;
 	mov ax,es
 	mov es,bx
+	mov bp,ss
+	shl ebp,16
 	mov bp,sp
 	mov ss,ax
 	mov sp,1024
-	push bp
+	push ebp
 ;
 	push cs
 	push OFFSET SetupPmInitRet
@@ -1642,8 +1677,9 @@ ChksumPmLoop:
 	retf
 
 SetupPmInitRet:
-	pop bp
-	mov ax,thread_ss0_sel
+	pop ebp
+	mov ax,bp
+	shr ebp,16
 	mov ss,ax
 	mov sp,bp
 	jmp SetupPmDone
