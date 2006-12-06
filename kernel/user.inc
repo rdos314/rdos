@@ -2097,6 +2097,13 @@ GetUsbConfig      MACRO
 
 ;   IN  BX          Controller #
 ;   IN  AL          Device address (1..128)
+;   IN  DL          Configuration id
+ConfigUsbDevice      MACRO
+	UserGate config_usb_device_nr
+						ENDM
+
+;   IN  BX          Controller #
+;   IN  AL          Device address (1..128)
 ;   IN  DL          Pipe #
 ;   OUT BX          Handle
 OpenUsbPipe      MACRO

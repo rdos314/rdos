@@ -48,6 +48,10 @@ usbcom_port_struc	STRUC
 
 ups_base_struc  com_port_struc <>
 
+ups_wait_handle     DW ?
+ups_control_pipe    DW ?
+ups_index           DW ?
+
 usbcom_port_struc	ENDS
 
 usbcom_device_struc   STRUC
@@ -312,10 +316,7 @@ pt11 DW OFFSET start_send,          usbcom_code_sel
 
 create_port	Proc far
     int 3
-    push eax
-    push cx
-    push si
-    push di
+    pushad
 ;
     mov eax,SIZE usbcom_port_struc
     AllocateSmallGlobalMem
@@ -328,11 +329,53 @@ create_port	Proc far
     xor di,di
     mov cx,12
     rep movs dword ptr es:[di],cs:[si]
+;
+    movzx ax,ds:uds_interface
+    mov es:ups_index,ax    
+;
+    CreateWait
+    mov es:ups_wait_handle,bx
+    mov bp,bx
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov es:ups_control_pipe,bx
+;
+    mov ax,bx
+    mov bx,es:ups_wait_handle
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    mov bx,es:ups_control_pipe
+    mov dx,es:ups_index
+    push es
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,1
+    mov es:usd_value,100h
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    xchg bx,bp
+    WaitWithTimeout
+    xchg bx,bp
+    UnlockUsbPipe
+;
+    FreeMem
+    pop es        
 ;        
-    pop di
-    pop si
-    pop cx
-    pop eax
+    popad
 	ret
 create_port	Endp
 
@@ -604,8 +647,22 @@ uaNext:
     jmp uaDone    
 
 uaFound:
-    int 3
     mov si,es:udd_device
+;    
+    xor dl,dl
+    mov cx,SIZE usb_config_descr
+    xor di,di
+    push ax
+    GetUsbConfig
+    mov cx,ax
+    pop ax
+    or cx,cx
+    jz uaDone
+;
+    mov dl,es:ucd_config_id
+    ConfigUsbDevice
+    jc uaDone
+;
     cmp si,200h
     jae uaNotSio
 ; 
@@ -624,16 +681,6 @@ uaNotSio:
     jmp uaDone
 
 uaNotAm:
-    xor dl,dl
-    mov cx,SIZE usb_config_descr
-    xor di,di
-    push ax
-    GetUsbConfig
-    mov cx,ax
-    pop ax
-    or cx,cx
-    jz uaDone
-;
     mov cl,es:ucd_interface_count
     cmp cl,1
     ja uaMany

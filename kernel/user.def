@@ -394,4 +394,6 @@ unlock_usb_pipe_nr          = 334
 
 get_max_com_port_nr         = 335
 
+config_usb_device_nr        = 336
+
 usergate_entries			= 340

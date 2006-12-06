@@ -912,6 +912,95 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			ConfigUsbDevice
+;
+;		description:	Configure USB device
+;
+;       parameters:     BX          Controller #
+;                       AL          Device address (1..128)
+;                       DL          Config #
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+config_usb_device_name DB 'Config USB Device', 0
+
+config_usb_device	Proc near
+    push ds
+    push es
+    push fs
+    push ax
+    push cx
+    push esi
+    push edi
+;    
+    mov si,usb_data_sel
+    mov ds,si
+    mov si,ds:usb_dev_count
+    cmp bx,si
+    jae cudFail
+;
+    mov si,bx
+    add si,si
+    mov si,ds:[si].usb_dev_arr
+    or si,si
+    jz cudFail
+;
+    mov ds,si
+    cmp al,128
+    jae cudFail
+;    
+    movzx si,al
+    add si,si
+    mov si,ds:[si].usb_addr_arr
+    or si,si
+    jz cudFail
+;
+    mov fs,si
+    mov si,fs:usbf_in_endpoint_arr
+    or si,si
+    jz cudFail
+;
+    mov fs,si    
+    mov eax,8
+    AllocateSmallGlobalMem
+    xor edi,edi
+    mov es:usd_type,0
+    mov es:usd_req,SET_CONFIG
+    movzx ax,dl
+    mov es:usd_value,ax
+    mov es:usd_index,0
+    mov es:usd_len,0
+;    
+    mov cx,8
+    call ds:add_setup_proc
+    call ds:add_status_in_proc
+    call ds:issue_transfer_proc
+    call ds:wait_for_completion_proc
+;
+    pushf
+    FreeMem
+    popf
+    jmp cudDone
+
+cudFail:
+    stc
+    
+cudDone: 
+    pop edi
+    pop esi
+    pop cx
+    pop ax
+    pop fs
+    pop es
+    pop ds
+    retf32
+config_usb_device    Endp        
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			OpenUsbPipe
 ;
 ;		description:	Open USB pipe
@@ -1105,6 +1194,7 @@ start_wait_for_pipe	PROC far
     push ds
     push fs
 ;    
+    int 3
     mov fs,es:pw_pipe_sel
     mov fs:usbp_wait_obj,es
     mov ds,es:pw_func_sel
@@ -1809,6 +1899,12 @@ init	Proc far
 	mov dx,virt_es_in
 	mov ax,get_usb_config_nr
 	RegisterUserGate
+;
+	mov si,OFFSET config_usb_device
+	mov di,OFFSET config_usb_device_name
+	xor dx,dx
+	mov ax,config_usb_device_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET open_usb_pipe
 	mov di,OFFSET open_usb_pipe_name
