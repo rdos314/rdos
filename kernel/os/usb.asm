@@ -1194,7 +1194,6 @@ start_wait_for_pipe	PROC far
     push ds
     push fs
 ;    
-    int 3
     mov fs,es:pw_pipe_sel
     mov fs:usbp_wait_obj,es
     mov ds,es:pw_func_sel
@@ -1349,6 +1348,7 @@ lock_usb_pipe_name	DB 'Lock USB Pipe',0
 
 lock_usb_pipe   Proc far
 	push ds
+	push fs
 	push ax
 	push bx
 ;
@@ -1356,12 +1356,19 @@ lock_usb_pipe   Proc far
 	DerefHandle
 	jc lupDone
 ;
+    push ds
     mov ds,ds:[bx].up_pipe_sel
     EnterSection ds:usbp_section
+    pop ds
+;    
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ds:delete_queue_proc
 
 lupDone:
 	pop bx
 	pop ax
+	pop fs
 	pop ds
     retf32
 lock_usb_pipe   Endp

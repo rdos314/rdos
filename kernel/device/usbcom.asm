@@ -48,6 +48,8 @@ usbcom_port_struc	STRUC
 
 ups_base_struc  com_port_struc <>
 
+ups_controller      DW ?
+ups_device          DW ?
 ups_wait_handle     DW ?
 ups_control_pipe    DW ?
 ups_index           DW ?
@@ -97,6 +99,27 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_com	Proc far
+    pushad
+;
+    CreateWait
+    mov ds:ups_wait_handle,bx
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:ups_control_pipe,bx
+;
+    mov ax,ds:ups_control_pipe
+    mov bx,ds:ups_wait_handle
+    movzx ecx,bx
+    AddWaitForUsbPipe
+;
+    call set_dtr    
+    call set_rts
+    call disable_cts
+;
+    popad
 	ret
 open_com	Endp
 
@@ -114,6 +137,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_com	Proc far
+    push bx
+;
+    call reset_rts
+    call reset_dtr
+;    
+    mov bx,ds:ups_wait_handle
+    CloseWait
+;
+    mov bx,ds:ups_control_pipe
+    CloseUsbPipe    
+;
+    pop bx    
 	ret
 close_com	Endp
 
@@ -131,6 +166,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 enable_cts	PROC far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,40h
+    mov es:usd_value,1
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
     ret
 enable_cts Endp
 
@@ -148,6 +220,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 disable_cts	PROC far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,40h
+    mov es:usd_value,0
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
     ret
 disable_cts Endp
 
@@ -233,6 +342,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_dtr	Proc far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,1
+    mov es:usd_value,101h
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
 	ret
 set_dtr	Endp
 
@@ -250,6 +396,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_dtr	Proc far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,1
+    mov es:usd_value,100h
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
 	ret
 reset_dtr	Endp
 
@@ -267,6 +450,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 set_rts	Proc far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,1
+    mov es:usd_value,202h
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
 	ret
 set_rts	Endp
 
@@ -284,6 +504,43 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 reset_rts	Proc far
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,1
+    mov es:usd_value,200h
+    mov es:usd_index,dx    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
 	ret
 reset_rts	Endp
 
@@ -315,7 +572,6 @@ pt10 DW OFFSET flush_com,           usbcom_code_sel
 pt11 DW OFFSET start_send,          usbcom_code_sel
 
 create_port	Proc far
-    int 3
     pushad
 ;
     mov eax,SIZE usbcom_port_struc
@@ -332,48 +588,10 @@ create_port	Proc far
 ;
     movzx ax,ds:uds_interface
     mov es:ups_index,ax    
-;
-    CreateWait
-    mov es:ups_wait_handle,bx
-    mov bp,bx
-;
-    mov bx,ds:cd_controller
+    mov ax,ds:cd_controller
+    mov es:ups_controller,ax
     mov ax,ds:cd_device
-    xor dl,dl
-    OpenUsbPipe
-    mov es:ups_control_pipe,bx
-;
-    mov ax,bx
-    mov bx,es:ups_wait_handle
-    movzx ecx,bx
-    AddWaitForUsbPipe
-;
-    mov bx,es:ups_control_pipe
-    mov dx,es:ups_index
-    push es
-    mov eax,SIZE usb_setup_data
-    AllocateSmallGlobalMem
-    mov cx,ax
-    mov es:usd_type,40h
-    mov es:usd_req,1
-    mov es:usd_value,100h
-    mov es:usd_index,dx    
-    mov es:usd_len,0
-    xor di,di
-;
-    LockUsbPipe
-    WriteUsbControl
-    ReqUsbStatus
-    GetSystemTime
-    add eax,1193 * 1000
-    adc edx,0
-    xchg bx,bp
-    WaitWithTimeout
-    xchg bx,bp
-    UnlockUsbPipe
-;
-    FreeMem
-    pop es        
+    mov es:ups_device,ax
 ;        
     popad
 	ret
