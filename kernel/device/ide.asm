@@ -122,21 +122,66 @@ CheckReady	PROC near
 ;
 	add dx,7
 	mov cx,10000
-CheckReadyLoop:
+
+CheckBusyLoop:
 	in al,dx
 	test al,80h
 	clc
 	jz CheckReadyDone
+;	
 	mov ax,50
 	WaitMicroSec
-	loop CheckReadyLoop
+;	
+	loop CheckBusyLoop
+	
 	stc
+	
 CheckReadyDone:
 	pop dx
 	pop cx
 	pop ax
 	ret
 CheckReady	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			WaitReady
+;
+;		DESCRIPTION:	Wait for DRDY signal
+;
+;		PARAMETERS:		DS		IDE_DATA
+;                       DX      Io base
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+WaitReady	PROC near
+	push ax
+	push cx
+	push dx
+;
+	add dx,7
+	mov cx,10000
+
+WaitReadyLoop:
+	in al,dx
+	test al,40h
+	clc
+	jnz WaitReadyDone
+;	
+	mov ax,50
+	WaitMicroSec
+;	
+	loop WaitReadyLoop
+	
+	stc
+	
+WaitReadyDone:
+	pop dx
+	pop cx
+	pop ax
+	ret
+WaitReady	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -236,7 +281,16 @@ SetupIdeTaskFile	Proc near
 ;
     push dx
     mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	clc
+	test al,80h
+	jz SetupIdeNotBusy
+;
+    sub dx,7
 	call CheckReady
+
+SetupIdeNotBusy:	
 	pop dx
 	jc SetupIdeTaskDone
 ;	
@@ -274,7 +328,16 @@ SetupIdeTaskFile	Proc near
 	or al,bh
 	or al,0A0h
 	out dx,al
+;
+	mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	test al,40h
 	clc
+	jnz SetupIdeTaskDone
+;
+    sub dx,7
+    call WaitReady
 	
 SetupIdeTaskDone:
 	pop dx
@@ -306,7 +369,16 @@ SetupLbaTaskFile	Proc near
 ;
     push dx
     mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	clc
+	test al,80h
+	jz SetupLbaNotBusy
+;
+    sub dx,7
 	call CheckReady
+
+SetupLbaNotBusy:	
 	pop dx
 	jc SetupLbaTaskDone
 ;
@@ -345,7 +417,16 @@ SetupLbaTaskFile	Proc near
 	or al,bl
 	or al,0E0h
 	out dx,al
+;
+	mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	test al,40h
 	clc
+	jnz SetupLbaTaskDone
+;
+    sub dx,7
+    call WaitReady
 	
 SetupLbaTaskDone:
 	pop dx
@@ -1285,7 +1366,19 @@ read_sector_loop:
 	mov dx,fs:disc_io_base
 	call CheckStatus
 	jc read_drive_retry
+;	
+    mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	test al,8
+	clc
+	jnz read_drive_drq_ok
 ;
+	call WaitDrq
+	jc read_drive_retry
+
+read_drive_drq_ok:
+	mov dx,fs:disc_io_base
 	push cx
 	push edi
 	mov edi,es:[edi].dh_data
@@ -1389,9 +1482,17 @@ write_drive_start:
 
 write_sector_loop:
     mov dx,fs:disc_io_base
+	add dx,7
+	in al,dx
+	test al,8
+	clc
+	jnz write_drive_drq_ok
+;
 	call WaitDrq
 	jc write_drive_retry
-;
+
+write_drive_drq_ok:
+    mov dx,fs:disc_io_base
 	push cx
 	push esi
 	mov esi,es:[edi].dh_data
