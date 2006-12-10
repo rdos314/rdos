@@ -270,34 +270,34 @@ void TVp::Execute()
 			    FLevel = 9.9;
 
 
-    		if (FLevel < 0.25 && FOn)
-    			FOn = FALSE;
+			if (FLevel < 2.5 && FOn)
+				FOn = FALSE;
 
-    	    if (FLevel > 0.75 && !FOn)
-    			FOn = TRUE;
+			if (FLevel > 7.5 && !FOn)
+				FOn = TRUE;
 
-            if (RdosReadSerialLines(1, &diostat))
-            {
-            	if (diostat & 0x20)
-            	{
-            	    if (!FOn)
-            	        RdosToggleSerialLine(1, 5);
-            	}
-            	else
-            	{
-            	    if (FOn)
-            	        RdosToggleSerialLine(1, 5);
-            	}
-            }
+			if (RdosReadSerialLines(1, &diostat))
+			{
+				if (diostat & 0x20)
+				{
+					if (!FOn)
+						RdosToggleSerialLine(1, 5);
+				}
+				else
+				{
+					if (FOn)
+						RdosToggleSerialLine(1, 5);
+				}
+			}
 
-    		sprintf(str, "VP: %4.1Lf", FLevel);
+			sprintf(str, "VP: %4.1Lf", FLevel);
 
-            vbe->SetFilledStyle();
-           	vbe->SetDrawColor(0, 0, 0);
-	    	vbe->DrawRect(550, 300, 550 + 100, 300 + 16);
-		
-    	    vbe->SetDrawColor(255, 255, 255);
-    	    vbe->DrawString(550, 300, str);
+			vbe->SetFilledStyle();
+			vbe->SetDrawColor(0, 0, 0);
+			vbe->DrawRect(550, 300, 550 + 100, 300 + 12);
+
+			vbe->SetDrawColor(255, 255, 255);
+			vbe->DrawString(550, 300, str);
 
 		}
 

@@ -90,6 +90,10 @@ disc_awrite_timeout		DD ?,?
 disc_seq_list			DW ?
 disc_param				DD ?
 disc_handle				DW ?
+
+disc_pend_count         DW ?
+disc_io_count           DW ?
+
 disc_change_proc		DD ?
 disc_unit_arr			DD ?
 
@@ -305,11 +309,17 @@ DiskError:
 CheckPending	Proc near
 	xor cx,cx
 	mov edi,ds:disc_pend_first
-	mov eax,edi
+	mov ebp,edi
 	or edi,edi
 	jz cpdone
+;
+    mov ax,es:[edi].dh_unit
+    mov dx,es:[edi].dh_sector	
 
 cploop:
+    test es:[edi].dh_flags, FLAG_IO_PENDING
+    jz cpfail
+;
 	cmp es:[edi].dh_state,STATE_DIRTY
 	je cpvalid
 ;
@@ -318,17 +328,30 @@ cploop:
 
 cpvalid:
 	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jz cpnext
+	jnz cpfail
+;
+    cmp dx,es:[edi].dh_sector
+    je cpunit
+    jb cpnext
+;
+    int 3    
+    jmp cpfail
 
+cpunit:
+    cmp ax,es:[edi].dh_unit
+    jbe cpnext
+;
+    int 3
+        
 cpfail:
 	int 3	
-	mov al,es:[edi].dh_state
-	mov ah,es:[edi].dh_flags
+	mov al,es:[edi].dh_state        ; STATE_DIRTY
+	mov ah,es:[edi].dh_flags        ; FLAG_ASYNC_WRITE | FLAG_EXT_DATA
 	jmp cpdone
 
 cpnext:
 	mov edi,es:[edi].dh_next
-	cmp edi,eax
+	cmp edi,ebp
 	jz cpdone
 ;
 	loop cploop
@@ -374,21 +397,60 @@ CheckAsyncWrite	Endp
 
 CheckAll	Proc near
 	push es
-	push eax
-	push ecx
-	push edi
+	pushad
 ;
 	mov ax,flat_sel
 	mov es,ax
 	call CheckPending
 	call CheckAsyncWrite
 ;
-	pop edi
-	pop ecx
-	pop eax
+	popad
 	pop es
 	ret
 CheckAll	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    IsPending
+;
+;		DESCRIPTION:	Is block in pending list?
+;
+;		PARAMETERS:	    EDI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsPending	Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+	xor cx,cx
+	mov esi,ds:disc_pend_first
+	mov ebp,esi
+	or esi,esi
+	jz ipdone
+
+iploop:
+    cmp esi,edi
+    je ipfound
+;
+	mov esi,es:[esi].dh_next
+	cmp esi,ebp
+	jz ipdone
+;
+	loop iploop
+
+ipfound:
+	int 3
+
+ipdone:
+    popad
+    pop es
+	ret
+IsPending	Endp
 
 PAGE
 
@@ -476,6 +538,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_handle	PROC near
+    call IsPending
 	push eax
 	test es:[edi].dh_flags, FLAG_EXT_DATA
 	jnz free_handle_do
@@ -486,11 +549,13 @@ free_handle	PROC near
 	pop edx
 
 free_handle_do:
+    mov es:[edi].dh_flags,0
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
     dec ds:disc_cached_sectors
 	pop eax
+	call CheckAll
 	ret
 free_handle	ENDP
 
@@ -659,7 +724,7 @@ PAGE
 allocate_handle	PROC near
 	push eax
 	push edx
-; 
+;    
     mov eax,ds:disc_cached_sectors
     cmp eax,ds:disc_cache_limit
     jc alloc_handle_no_swap
@@ -703,11 +768,12 @@ allocate_handle_done:
 	mov eax,es:[edi].dh_next
 	mov ds:disc_handle_list,eax
 ;
+    call IsPending
+; 
 	pop edx
 	pop eax
 	ret
 allocate_handle	ENDP
-
 
 PAGE
 
@@ -730,6 +796,8 @@ insert_pending	PROC near
 	push cx
 	push dx
 ;
+    call CheckAll
+;    
     test es:[edi].dh_flags,FLAG_ASYNC_WRITE
     jz insert_noaw
 ;
@@ -813,6 +881,8 @@ insert_pend_link:
 	mov es:[edi].dh_next,eax	
 
 insert_pend_done:
+    inc ds:disc_pend_count    
+    call CheckAll
 	pop dx
 	pop cx
 	pop ebx
@@ -1971,6 +2041,8 @@ disc_request_completed	Proc far
 	mov es,ax
 	mov ds,bx
 	EnterSection ds:disc_section
+	dec ds:disc_io_count
+;	
 	and es:[edi].dh_flags, NOT (FLAG_IO_PENDING OR FLAG_IO_BUSY)
 	xor bx,bx
 	xchg bx,es:[edi].dh_thread
@@ -2062,6 +2134,14 @@ get_disc_request_array	Proc far
 	mov es,ax
 	mov ds,bx
 	EnterSection ds:disc_section
+    mov ax,ds:disc_io_count
+    or ax,ax
+    jz get_disc_req_arr_io_ok
+;
+    int 3
+
+get_disc_req_arr_io_ok:	
+	call CheckAll
 	call update_async_write
 	call update_async_timer
 	call update_disc_seq
@@ -2112,8 +2192,10 @@ get_disc_req_arr_write:
 
 get_disc_req_arr_check_seq:
 	cmp al,STATE_SEQ
-	je get_disc_req_arr_write
-	jmp get_disc_req_arr_unlink
+	jne get_disc_req_arr_unlink
+;	
+	or es:[edi].dh_flags,FLAG_IO_BUSY
+	jmp get_disc_req_arr_write
 
 get_disc_req_arr_read:
 	inc edx
@@ -2143,6 +2225,9 @@ get_disc_req_arr_read:
 	jmp get_disc_req_arr_read
 
 get_disc_req_arr_unlink:
+    add ds:disc_io_count,cx
+    sub ds:disc_pend_count,cx
+;    
 	mov esi,ebx
 	mov edx,es:[esi]
 	mov edi,es:[esi+4*ecx-4]
@@ -2153,6 +2238,13 @@ get_disc_req_arr_unlink:
 	cmp eax,edx
 	jne get_disc_req_arr_unlinked
 ;
+    mov ax,ds:disc_pend_count
+    or ax,ax
+    jz get_disc_req_arr_pend_ok
+;
+    int 3
+
+get_disc_req_arr_pend_ok:
 	mov ds:disc_pend_list,0
 	mov ds:disc_pend_first,0
 	clc
@@ -2166,6 +2258,7 @@ get_disc_req_arr_unlinked:
 	mov ds:disc_pend_first,eax
 
 get_disc_req_arr_done:
+    call CheckAll
 	LeaveSection ds:disc_section
 	or ecx,ecx
 	stc
@@ -2255,6 +2348,8 @@ install_disc_loop:
 	pop cx
 	mov ds:disc_readahead,ecx
 	InitSection ds:disc_section
+	mov ds:disc_pend_count,0
+	mov ds:disc_io_count,0
 	mov bx,ds
 	mov al,ds:disc_nr
 	clc

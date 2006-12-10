@@ -65,7 +65,8 @@ void cdecl main()
 	int mask;
 	TDateTime *CurrTime;
 	int mot;
-	int motmax;
+	int vpmax;
+	int circmax;
 	int temp;
 	int ref;
 	int count;
@@ -219,7 +220,8 @@ void cdecl main()
 		delete CurrTime;
 
 		count = 0;
-		motmax = 0;
+		vpmax = 0;
+		circmax = 0;
 		temperrmax = 255;
 
 		for (i = 0; i < 8; i++)
@@ -229,8 +231,11 @@ void cdecl main()
 				count++;
 
 				mot = RadArr[i]->GetMotor();
-				if (mot > motmax && i != 7)
-					motmax = mot;
+				if (mot > vpmax && i != 7)
+					vpmax = mot;
+
+				if (mot > circmax)
+					circmax = mot;
 
 				temp = RadArr[i]->GetTemp();
 				ref = RadArr[i]->GetRef();
@@ -255,13 +260,13 @@ void cdecl main()
 		}
 
 		if (count)
-			Circ->SetMaxMotor(motmax);
+			Circ->SetMaxMotor(circmax);
 
 		if (count)
 			Circ->SetMaxTempError(temperrmax);
 
 		if (count)
-			Vp->SetMotor(motmax);
+			Vp->SetMotor(vpmax);
 
 		if (count)
 			Vp->SetTempError(temperrmax);
