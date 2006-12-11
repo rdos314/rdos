@@ -2082,12 +2082,14 @@ completed_wakeup_done:
 	jnz completed_done
 ;
 	EnterSection ds:disc_section
+	call IsPending
 	call remove_buf
 	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
 	dec ds:disc_cached_sectors
+	call CheckAll
 	LeaveSection ds:disc_section
 
 completed_done:
@@ -3353,15 +3355,20 @@ unlock_sector	PROC far
 	test es:[edi].dh_flags, FLAG_EXT_DATA
 	jz unlock_done
 ;
+	test es:[edi].dh_flags, BUSY_FLAGS
+	jnz unlock_done
+;
 	cmp es:[edi].dh_state, STATE_USED
 	jne unlock_done
 ;
+    call IsPending
 	call remove_buf
 	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
 	dec ds:disc_cached_sectors
+	call CheckAll
 
 unlock_done:
 	LeaveSection ds:disc_section
