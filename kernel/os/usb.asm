@@ -167,9 +167,7 @@ CreateDefaultControl    Proc near
     push ax
     call ds:create_control_proc
 ;    
-    mov es:usbf_in_endpoint_arr,fs
-    mov es:usbf_out_endpoint_arr,fs
-;    
+    mov es:usbf_endpoint_arr,fs    
     mov fs:usbp_function_sel,ds
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
@@ -209,6 +207,52 @@ CreateDefaultControl    Proc near
     pop es
     ret
 CreateDefaultControl    Endp    
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CreateBulk
+;
+;		description:	Create bulk-pipe
+;
+;       parameters:     DS      USB device selector
+;                       ES      Function selector
+;                       CX      Max data size
+;                       DL      Pipe #
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBulk    Proc near    
+    push es
+    push ax
+    push bx
+;    
+    call ds:create_bulk_proc
+;    
+    movzx bx,dl
+    add bx,bx    
+    mov es:[bx].usbf_endpoint_arr,fs
+;    
+    mov fs:usbp_function_sel,ds
+    mov al,fs:usbf_address
+    mov fs:usbp_address,al
+    mov fs:usbp_endpoint,dl
+    mov fs:usbp_seq,0
+    mov fs:usbp_mode,MODE_BULK
+    mov fs:usbp_maxlen,cx
+    mov fs:usbp_device_sel,0
+    mov fs:usbp_usage,1
+    InitSection fs:usbp_section
+;
+    pop bx
+    pop ax
+    pop es
+    ret
+CreateBulk    Endp    
 
 PAGE
 
@@ -333,18 +377,14 @@ CloseEndpoint   Proc near
 ;
     movzx bx,al
     add bx,bx
-    mov ax,es:[bx].usbf_in_endpoint_arr
-    or ax,ax
-    jnz ceClose
 ;
-    mov ax,es:[bx].usbf_out_endpoint_arr
+    mov ax,es:[bx].usbf_endpoint_arr
     or ax,ax
     jz ceDone
 
 ceClose:
     push fs
-    mov es:[bx].usbf_in_endpoint_arr,0
-    mov es:[bx].usbf_out_endpoint_arr,0
+    mov es:[bx].usbf_endpoint_arr,0
     mov fs,ax
     call ClosePipe    
     pop fs
@@ -396,36 +436,20 @@ cdCloseHubNext:
     mov ds:[bx].usb_addr_arr,0
 ;
     mov cx,16
-    mov bx,OFFSET usbf_in_endpoint_arr
+    mov bx,OFFSET usbf_endpoint_arr
     xor al,al
 
-cdCloseInLoop:
+cdCloseEndpointLoop:
     mov dx,es:[bx]
     or dx,dx
-    jz cdCloseInNext
+    jz cdCloseEndpointNext
 ;
     call CloseEndpoint
 
-cdCloseInNext:
+cdCloseEndpointNext:
     inc al
     add bx,2
-    loop cdCloseInLoop           
-;
-    mov cx,16
-    mov bx,OFFSET usbf_out_endpoint_arr
-    xor al,al
-
-cdCloseOutLoop:
-    mov dx,es:[bx]
-    or dx,dx
-    jz cdCloseOutNext
-;
-    call CloseEndpoint
-
-cdCloseOutNext:
-    inc al
-    add bx,2
-    loop cdCloseOutLoop           
+    loop cdCloseEndpointLoop           
 ;
     FreeMem
 ;
@@ -578,12 +602,7 @@ notify_usb_attach	Proc far
     rep stosw
 ;    
     mov cx,16
-    mov di,OFFSET usbf_in_endpoint_arr
-    xor ax,ax
-    rep stosw
-;    
-    mov cx,16
-    mov di,OFFSET usbf_out_endpoint_arr
+    mov di,OFFSET usbf_endpoint_arr
     xor ax,ax
     rep stosw
 ;    
@@ -740,7 +759,7 @@ get_usb_device	Proc near
     jz gudFail
 ;
     mov ds,si
-    mov si,ds:usbf_in_endpoint_arr
+    mov si,ds:usbf_endpoint_arr
     or si,si
     jz gudFail
 ;
@@ -845,7 +864,7 @@ get_usb_config	Proc near
     jz gucFail
 ;
     mov ds,si
-    mov si,ds:usbf_in_endpoint_arr
+    mov si,ds:usbf_endpoint_arr
     or si,si
     jz gucFail
 ;
@@ -956,7 +975,7 @@ config_usb_device	Proc near
     jz cudFail
 ;
     mov fs,si
-    mov si,fs:usbf_in_endpoint_arr
+    mov si,fs:usbf_endpoint_arr
     or si,si
     jz cudFail
 ;
@@ -980,6 +999,45 @@ config_usb_device	Proc near
     pushf
     FreeMem
     popf
+    jc cudFail
+;
+    int 3
+    movzx si,dl
+    dec si
+    add si,si
+    mov es,fs:[si].usbp_config_sel
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+cudDescrLoop:
+    mov al,es:[di].udd_type
+    cmp al,5
+    jne cudNextDescr
+;
+    mov al,es:[di].ued_attrib
+    and al,3
+    cmp al,2
+    je cudCreateBulk
+;
+    jmp cudNextDescr
+
+cudCreateBulk:
+    mov cx,es:[di].ued_maxsize
+    mov dl,es:[di].ued_address
+    and dl,0Fh
+    call CreateBulk
+    mov dl,es:[di].ued_address
+    and dl,80h
+    mov fs:usbp_dir,dl
+
+cudNextDescr:
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb cudDescrLoop    
+;
+    clc        
     jmp cudDone
 
 cudFail:
@@ -1052,11 +1110,7 @@ open_usb_pipe    Proc far
     mov ds,si
     movzx si,dl
     add si,si
-    mov dx,ds:[si].usbf_in_endpoint_arr
-    or dx,dx
-    jnz oupCreateHandle
-;
-    mov dx,ds:[si].usbf_out_endpoint_arr
+    mov dx,ds:[si].usbf_endpoint_arr
     or dx,dx
     jnz oupCreateHandle    
 ;

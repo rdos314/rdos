@@ -75,10 +75,10 @@ uhci_func_sel    ENDS
 
 uhci_pipe   STRUC
 
-upc_pipe_base   usb_pipe_struc <>
-upc_qh          DD ?
-upc_prev        DW ?
-upc_next        DW ?
+usp_pipe_base   usb_pipe_struc <>
+usp_qh          DD ?
+usp_prev        DW ?
+usp_next        DW ?
 
 uhci_pipe   ENDS
 
@@ -158,7 +158,7 @@ uplLoop:
     or ax,ax
     jz uplNext
 ;    
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     or edx,edx
     jz uplNext
 ;
@@ -172,7 +172,8 @@ uplLoop:
     mov fs:usbp_wait_obj,0
 
 uplNext:
-    mov ax,fs:upc_next
+    mov ax,fs:usp_next
+    mov fs,ax
     cmp ax,di
     jne uplLoop
 ;
@@ -329,20 +330,22 @@ InsertPipe  Proc near
 	push ds
 	push si
 	mov ds,di
-	mov si,fs:upc_prev
-	mov ds:upc_prev,fs
+	cli
+	mov si,ds:usp_prev
+	mov ds:usp_prev,fs
 	mov ds,si
-	mov ds:upc_next,fs
-	mov fs:upc_next,di
-	mov fs:upc_prev,si
+	mov ds:usp_next,fs
+	mov fs:usp_next,di
+	mov fs:usp_prev,si
+	sti
 	pop si
 	pop ds
 	pop di
 	jmp ipDone
 	
 ipEmpty:
-	mov fs:upc_next,fs
-	mov fs:upc_prev,fs
+	mov fs:usp_next,fs
+	mov fs:usp_prev,fs
 	pop di
 	mov ds:uhc_pipe_list,fs
 
@@ -369,12 +372,12 @@ RemovePipe  Proc near
 	push di
 ;	
     push ds
-	mov si,fs:upc_prev
-	mov di,fs:upc_next
+	mov si,fs:usp_prev
+	mov di,fs:usp_next
 	mov ds,di
-	mov ds:upc_prev,si
+	mov ds:usp_prev,si
 	mov ds,si
-	mov ds:upc_next,di
+	mov ds:usp_next,di
 	pop ds
 ;
     mov si,fs
@@ -615,6 +618,49 @@ itdDone:
     pop ecx
     ret
 InsertTdFirst  ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    InsertTdLast
+;
+;		DESCRIPTION:	Insert QH last into TD list
+;
+;       PARAMETERS:     ES      Flat sel
+;                       EDX     TD to insert into
+;                       EAX     QH to link
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+InsertTdLast	PROC near
+    push edx
+    push ecx
+;
+    mov es:[eax].uqh_va_link,0
+    mov es:[eax].uqh_link,1
+;
+    mov edx,es:[edx].utd_va_link    
+
+itlLoop:
+    mov ecx,es:[edx].uqh_va_link
+    or ecx,ecx
+    jz itlDo
+;
+    mov edx,ecx
+    jmp itlLoop
+
+itlDo:
+    mov es:[edx].uqh_va_link,eax
+    mov ecx,es:[eax].uqh_phys
+    or cl,2
+    mov es:[edx].uqh_link,ecx
+;    
+    pop edx
+    pop ecx
+    ret
+InsertTdLast  ENDP
 
 PAGE
 
@@ -951,7 +997,7 @@ CreateControl   Proc far
     mov dx,flat_sel
     mov es,dx
     call AllocateQh
-    mov fs:upc_qh,edx
+    mov fs:usp_qh,edx
 ;
     mov edx,ds:uhc_period_td
     or edx,edx
@@ -961,7 +1007,7 @@ CreateControl   Proc far
     mov edx,ds:uhc_period_td
 
 ccLinkPeriod:
-    mov eax,fs:upc_qh
+    mov eax,fs:usp_qh
     call InsertTdFirst
     jmp ccDone
 
@@ -978,6 +1024,53 @@ ccDone:
     pop es
     ret
 CreateControl   Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateBulk
+;
+;		DESCRIPTION:    Create bulk pipe
+;
+;       PARAMETERS:     DS      Function selector
+;
+;       RETURNS:        FS      Pipe selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBulk   Proc far
+    push es
+    push eax
+    push cx
+    push edx
+    push di
+;    
+    int 3
+    mov eax,SIZE uhci_pipe
+    AllocateSmallGlobalMem
+    xor di,di
+    mov cx,ax
+    xor al,al
+    rep stosb
+;    
+    mov ax,es
+    mov fs,ax
+    mov dx,flat_sel
+    mov es,dx
+    call AllocateQh
+    mov fs:usp_qh,edx    
+    mov eax,edx
+    mov edx,ds:uhc_period_td
+    call InsertTdLast
+    call InsertPipe
+;
+    pop di
+    pop edx
+    pop cx
+    pop eax    
+    pop es
+    ret
+CreateBulk   Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -1279,7 +1372,7 @@ AddSetup    Proc far
     or byte ptr es:[edx].utd_host,PID_SETUP
     or es:[edx].utd_control,800000h
     mov eax,edx
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     call InsertElem    
 
 asDone:
@@ -1311,7 +1404,7 @@ AddOut    Proc far
     cmp al,MODE_CONTROL
     jne aoDone
 ;   
-    mov edx,fs:upc_qh 
+    mov edx,fs:usp_qh 
     call AddOutBuffer
 
 aoDone:
@@ -1341,7 +1434,7 @@ AddIn    Proc far
     cmp al,MODE_CONTROL
     jne aiDone
 ;   
-    mov edx,fs:upc_qh 
+    mov edx,fs:usp_qh 
     call AddInBuffer
 
 aiDone:
@@ -1372,7 +1465,7 @@ AddStatusOut    Proc far
     jne asoDone
 ;
     mov fs:usbp_seq,1   
-    mov edx,fs:upc_qh 
+    mov edx,fs:usp_qh 
     xor ecx,ecx
     call AddOutBuffer
 
@@ -1405,7 +1498,7 @@ AddStatusIn    Proc far
     jne asiDone
 ;
     mov fs:usbp_seq,1
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     xor ecx,ecx
     call AddInBuffer
 
@@ -1445,7 +1538,7 @@ IssueTransfer    Proc far
 itControl:
     mov ax,flat_sel
     mov es,ax    
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
 ;
 ;    mov eax,ds:uhc_period_td
 ;    mov es:[eax].utd_control,1000000h
@@ -1504,7 +1597,7 @@ WaitForCompletion   Proc far
     jmp wfcDone    
 
 wfcControl:
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     test es:[edx].uqh_elem,1
     clc
     jnz wfcDone
@@ -1549,7 +1642,7 @@ IsPipeSignalled   Proc far
     mov ax,flat_sel
     mov es,ax
 ;    
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     or edx,edx
     jz ipsSig
 ;
@@ -1596,7 +1689,7 @@ EmptyQueue   Proc far
     jmp eqDone    
 
 eqControl:
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     call FreeVaElem
 
 eqDone:
@@ -1633,7 +1726,7 @@ GetData   Proc far
     jmp gdDone    
 
 gdControl:
-    mov edx,fs:upc_qh
+    mov edx,fs:usp_qh
     call GetQhData
 
 gdDone:
@@ -1672,7 +1765,7 @@ dpControl:
     mov ax,flat_sel
     mov es,ax
     mov edx,ds:uhc_period_td
-    mov eax,fs:upc_qh
+    mov eax,fs:usp_qh
     call RemoveTd
     mov edx,eax
     call FreeBlock32
@@ -1788,17 +1881,18 @@ UpdatePort   Endp
 
 uhci_tab:
 ut00 DW OFFSET CreateControl,   	uhci_code_sel
-ut01 DW OFFSET AddSetup,    	    uhci_code_sel
-ut02 DW OFFSET AddOut,      	    uhci_code_sel
-ut03 DW OFFSET AddIn,        	    uhci_code_sel
-ut04 DW OFFSET AddStatusOut,        uhci_code_sel
-ut05 DW OFFSET AddStatusIn,        	uhci_code_sel
-ut06 DW OFFSET IssueTransfer,       uhci_code_sel
-ut07 DW OFFSET EmptyQueue,          uhci_code_sel
-ut08 DW OFFSET IsPipeSignalled,     uhci_code_sel
-ut09 DW OFFSET GetData,             uhci_code_sel
-ut10 DW OFFSET ClosePipe,           uhci_code_sel
-ut11 DW OFFSET WaitForCompletion,   uhci_code_sel
+ut01 DW OFFSET CreateBulk,      	uhci_code_sel
+ut02 DW OFFSET AddSetup,    	    uhci_code_sel
+ut03 DW OFFSET AddOut,      	    uhci_code_sel
+ut04 DW OFFSET AddIn,        	    uhci_code_sel
+ut05 DW OFFSET AddStatusOut,        uhci_code_sel
+ut06 DW OFFSET AddStatusIn,        	uhci_code_sel
+ut07 DW OFFSET IssueTransfer,       uhci_code_sel
+ut08 DW OFFSET EmptyQueue,          uhci_code_sel
+ut09 DW OFFSET IsPipeSignalled,     uhci_code_sel
+ut10 DW OFFSET GetData,             uhci_code_sel
+ut11 DW OFFSET ClosePipe,           uhci_code_sel
+ut12 DW OFFSET WaitForCompletion,   uhci_code_sel
 
 InitFunction    Proc near
     pushad
@@ -1815,7 +1909,7 @@ InitFunction    Proc near
 ;
     mov si,OFFSET uhci_tab
     xor di,di
-    mov cx,12
+    mov cx,13
 
 ifTabLoop:
     lods dword ptr cs:[si]

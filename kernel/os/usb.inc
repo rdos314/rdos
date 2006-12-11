@@ -36,10 +36,16 @@ MODE_ISO = 2
 MODE_INTR = 3
 MODE_BULK = 4
 
+DIR_IN = 80h
+DIR_OUT = 0
+
 usb_dev_struc   STRUC
 
 ; OUT FS        Pipe selector
 create_control_proc	DD ?
+
+; OUT FS        Pipe selector
+create_bulk_proc	DD ?
 
 ; IN  FS        Pipe selector
 ; IN  CX        Size
@@ -93,8 +99,7 @@ usb_function_struc  STRUC
 
 usbf_address            DB ?
 usbf_port_sel_arr       DW MAX_USB_HUB_PORTS DUP(?)
-usbf_in_endpoint_arr    DW 16 DUP(?)
-usbf_out_endpoint_arr   DW 16 DUP(?)
+usbf_endpoint_arr       DW 16 DUP(?)
 
 usb_function_struc  ENDS
 
@@ -105,6 +110,7 @@ usbp_address        DB ?
 usbp_endpoint       DB ?
 usbp_seq            DB ?
 usbp_mode           DB ?
+usbp_dir            DB ?
 usbp_maxlen         DW ?
 usbp_wait_obj       DW ?
 usbp_usage          DW ?
@@ -155,3 +161,14 @@ ucd_attrib  		DB ?
 ucd_power	    	DB ?
 
 usb_config_descr	ENDS
+
+usb_endpoint_descr  STRUC
+
+ued_len             DB ?
+ued_type            DB ?
+ued_address         DB ?
+ued_attrib          DB ?
+ued_maxsize         DW ?
+ued_interval        DB ?
+
+usb_endpoint_descr  ENDS

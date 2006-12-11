@@ -313,8 +313,8 @@ CheckPending	Proc near
 	or edi,edi
 	jz cpdone
 ;
-    mov ax,es:[edi].dh_unit
-    mov dx,es:[edi].dh_sector	
+    mov dx,es:[edi].dh_unit
+    mov ax,es:[edi].dh_sector	
 
 cploop:
     test es:[edi].dh_flags, FLAG_IO_PENDING
@@ -330,7 +330,7 @@ cpvalid:
 	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
 	jnz cpfail
 ;
-    cmp dx,es:[edi].dh_sector
+    cmp dx,es:[edi].dh_unit
     je cpunit
     jb cpnext
 ;
@@ -338,7 +338,7 @@ cpvalid:
     jmp cpfail
 
 cpunit:
-    cmp ax,es:[edi].dh_unit
+    cmp ax,es:[edi].dh_sector
     jbe cpnext
 ;
     int 3
@@ -350,6 +350,9 @@ cpfail:
 	jmp cpdone
 
 cpnext:
+    mov dx,es:[edi].dh_unit
+    mov ax,es:[edi].dh_sector	
+;    
 	mov edi,es:[edi].dh_next
 	cmp edi,ebp
 	jz cpdone

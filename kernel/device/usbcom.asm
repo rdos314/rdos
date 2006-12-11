@@ -53,6 +53,11 @@ ups_device          DW ?
 ups_wait_handle     DW ?
 ups_control_pipe    DW ?
 ups_index           DW ?
+ups_device_type     DW ?
+ups_divisor         DD ?
+ups_data_bits       DB ?
+ups_stop_bits       DB ?
+ups_parity          DB ?
 
 usbcom_port_struc	ENDS
 
@@ -85,6 +90,415 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			GetDivisorError
+;
+;		description:	Get baud-rate divisor, error type
+;
+;		PARAMETERS:		DS      Port selector
+;						ECX		baudrate
+;
+;       RETURNS:        ECX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetDivisorError Proc near
+    xor cx,cx
+    stc
+    ret
+GetDivisorError Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetSioDivisor
+;
+;		description:	Get baud-rate divisor, SIO type
+;
+;		PARAMETERS:		DS      Port selector
+;						ECX		baudrate
+;
+;       RETURNS:        ECX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetSioDivisor Proc near
+    push ax
+;    
+    xor al,al
+    cmp ecx,300
+    je gdsDone
+;
+    inc al
+    cmp ecx,600
+    je gdsDone
+;
+    inc al
+    cmp ecx,1200
+    je gdsDone
+;
+    inc al
+    cmp ecx,2400
+    je gdsDone
+;
+    inc al
+    cmp ecx,4800
+    je gdsDone
+;
+    inc al
+    cmp ecx,9600
+    je gdsDone
+;
+    inc al
+    cmp ecx,19200
+    je gdsDone
+;
+    inc al
+    cmp ecx,38400
+    je gdsDone
+;
+    inc al
+    cmp ecx,57600
+    je gdsDone
+;
+    inc al
+    cmp ecx,115200
+    je gdsDone
+;
+    mov al,5                        
+
+gdsDone:                           
+    movzx ecx,al
+    clc
+;
+    pop ax
+    ret
+GetSioDivisor Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Get232AmDivisor
+;
+;		description:	Get baud-rate divisor, 232AM type
+;
+;		PARAMETERS:		DS      Port selector
+;						ECX		baudrate
+;
+;       RETURNS:        ECX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Get232AmDivisor Proc near
+    push eax
+    push edx
+;    
+    xor edx,edx
+    mov eax,48000000 / 2
+    div ecx
+    mov ecx,eax
+    and al,7
+    cmp al,7
+    jne get_am_not7
+;
+    inc ecx
+
+get_am_not7:
+    shr ecx,3
+    cmp al,1
+    jne get_am_not1
+;
+    or cx,0C000h
+    jmp get_am_part_ok
+
+get_am_not1:
+    cmp al,4
+    jb get_am_not4
+;
+    or cx,4000h
+    jmp get_am_part_ok
+        
+get_am_not4:
+    or al,al
+    je get_am_part_ok
+;
+    or cx,8000h
+
+get_am_part_ok: 
+    cmp cx,1
+    jnz get_am_done
+;
+    xor cx,cx
+
+get_am_done:
+    clc
+;    
+    pop edx
+    pop eax    
+    ret
+Get232AmDivisor Endp
+        
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			Get232BmDivisor
+;
+;		description:	Get baud-rate divisor, 232BM type
+;
+;		PARAMETERS:		DS      Port selector
+;						ECX		baudrate
+;
+;       RETURNS:        ECX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+fractab:
+ft00    DB 0
+ft01    DB 3
+ft02    DB 2
+ft03    DB 4
+ft04    DB 1
+ft05    DB 5
+ft06    DB 6
+ft07    DB 7
+
+Get232BmDivisor Proc near
+    push eax
+    push bx
+    push edx
+;    
+    xor edx,edx
+    mov eax,48000000 / 2
+    div ecx
+    mov ecx,eax
+    shr ecx,3
+;
+    movzx bx,cl
+    and bl,7
+    movzx eax,byte ptr cs:[bx].fractab
+    shl eax,14
+    or ecx,eax
+;
+    cmp ecx,1
+    jne get_bm_not1
+;
+    xor ecx,ecx
+
+get_bm_not1:
+    cmp ecx,4001h
+    jne get_bm_not4001
+;
+    mov ecx,1
+
+get_bm_not4001:            
+    clc
+;    
+    pop edx
+    pop bx
+    pop eax    
+    ret
+Get232BmDivisor Endp
+        
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			GetBaudDivisor
+;
+;		description:	Get baud-rate divisor
+;
+;		PARAMETERS:		DS      Port selector
+;						ECX		baudrate
+;
+;       RETURNS:        CX     Divisor to use
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+BaudDivisorTab:
+gbd00   DW OFFSET GetDivisorError
+gbd01   DW OFFSET GetSioDivisor
+gbd02   DW OFFSET Get232AmDivisor
+gbd03   DW OFFSET Get232BmDivisor
+gbd04   DW OFFSET Get232BmDivisor
+gbdend  DW OFFSET GetDivisorError
+
+GetBaudDivisor  Proc near
+    push bx
+;    
+    mov bx,ds:ups_device_type
+    add bx,bx
+    add bx,OFFSET BaudDivisorTab
+    cmp bx,OFFSET gbdend
+    jbe gbdCall
+;
+    mov bx,OFFSET gbdend    
+
+gbdCall:
+    call word ptr cs:[bx]
+;    
+    pop bx
+    ret
+GetBaudDivisor  Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetBaud
+;
+;		DESCRIPTION:	Set baudrate
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_baud	PROC near
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,3
+;    
+    mov ax,word ptr ds:ups_divisor
+    mov es:usd_value,ax
+;
+    mov ax,word ptr ds:ups_divisor+2   
+    cmp ds:ups_device_type,DEVICE_TYPE_FT2232C
+    jne set_baud_index_ok
+;
+    shl ax,8
+    or ax,dx
+
+set_baud_index_ok:
+    mov es:usd_index,ax    
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
+    ret
+set_baud Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetData
+;
+;		DESCRIPTION:	Set data format
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_data	PROC near
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,4
+;    
+    mov al,ds:ups_data_bits
+    mov ah,ds:ups_parity
+;
+    cmp ah,'E'
+    je set_data_even
+;
+    cmp ah,'O'
+    je set_data_odd
+
+set_data_none:    
+    xor ah,ah
+    jmp set_data_parity_ok
+
+set_data_even:
+    mov ah,2
+    jmp set_data_parity_ok
+
+set_data_odd:
+    mov ah,1
+
+set_data_parity_ok:
+    mov cl,ds:ups_stop_bits
+    cmp cl,2
+    jb set_data_stop_ok
+;
+    or ah,10h
+
+set_data_stop_ok:
+    mov es:usd_value,ax
+    mov es:usd_index,dx
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_wait_handle
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
+    ret
+set_data Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			open_com
 ;
 ;		description:	Open a serial port
@@ -101,6 +515,17 @@ PAGE
 open_com	Proc far
     pushad
 ;
+    mov ds:ups_data_bits,ah
+    mov ds:ups_stop_bits,bl
+    mov ds:ups_parity,bh
+;    
+    mov ax,es:uds_device_type
+    mov ds:ups_device_type,ax
+    call GetBaudDivisor
+    jc open_com_done
+;
+    mov ds:ups_divisor,ecx
+;
     CreateWait
     mov ds:ups_wait_handle,bx
 ;
@@ -114,11 +539,19 @@ open_com	Proc far
     mov bx,ds:ups_wait_handle
     movzx ecx,bx
     AddWaitForUsbPipe
+;    
+    call set_data
+    jc open_com_done
 ;
+    call set_baud
+    jc open_com_done
+;    
     call set_dtr    
     call set_rts
     call disable_cts
-;
+    clc
+
+open_com_done:
     popad
 	ret
 open_com	Endp
