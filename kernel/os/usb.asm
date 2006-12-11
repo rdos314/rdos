@@ -218,7 +218,6 @@ PAGE
 ;		description:	Create bulk-pipe
 ;
 ;       parameters:     DS      USB device selector
-;                       ES      Function selector
 ;                       CX      Max data size
 ;                       DL      Pipe #
 ;
@@ -231,8 +230,7 @@ CreateBulk    Proc near
     push ax
     push bx
 ;    
-    call ds:create_bulk_proc
-;    
+    call ds:create_bulk_proc    
     movzx bx,dl
     add bx,bx    
     mov es:[bx].usbf_endpoint_arr,fs
@@ -947,6 +945,7 @@ config_usb_device	Proc near
     push ds
     push es
     push fs
+    push gs
     push ax
     push cx
     push esi
@@ -1002,20 +1001,21 @@ config_usb_device	Proc near
     jc cudFail
 ;
     int 3
+    mov es,fs:usbp_function_sel
     movzx si,dl
     dec si
     add si,si
-    mov es,fs:[si].usbp_config_sel
+    mov gs,fs:[si].usbp_config_sel
     xor di,di
-    movzx cx,es:ucd_len
+    movzx cx,gs:ucd_len
     add di,cx
 
 cudDescrLoop:
-    mov al,es:[di].udd_type
+    mov al,gs:[di].udd_type
     cmp al,5
     jne cudNextDescr
 ;
-    mov al,es:[di].ued_attrib
+    mov al,gs:[di].ued_attrib
     and al,3
     cmp al,2
     je cudCreateBulk
@@ -1023,18 +1023,18 @@ cudDescrLoop:
     jmp cudNextDescr
 
 cudCreateBulk:
-    mov cx,es:[di].ued_maxsize
-    mov dl,es:[di].ued_address
+    mov cx,gs:[di].ued_maxsize
+    mov dl,gs:[di].ued_address
     and dl,0Fh
     call CreateBulk
-    mov dl,es:[di].ued_address
+    mov dl,gs:[di].ued_address
     and dl,80h
     mov fs:usbp_dir,dl
 
 cudNextDescr:
-    movzx cx,es:[di].ucd_len
+    movzx cx,gs:[di].ucd_len
     add di,cx
-    cmp di,es:ucd_size
+    cmp di,gs:ucd_size
     jb cudDescrLoop    
 ;
     clc        
@@ -1048,7 +1048,7 @@ cudDone:
     pop esi
     pop cx
     pop ax
-    pop fs
+    pop gs
     pop es
     pop ds
     retf32
