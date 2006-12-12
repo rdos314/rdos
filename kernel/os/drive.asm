@@ -454,6 +454,49 @@ ipdone:
     pop es
 	ret
 IsPending	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CheckDeleted
+;
+;		DESCRIPTION:	Check if block is deleted
+;
+;		PARAMETERS:	    EDI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDeleted	Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+	xor cx,cx
+	mov esi,ds:disc_handle_list
+	mov ebp,esi
+	or esi,esi
+	jz cddone
+
+cdloop:
+    cmp esi,edi
+    je cdfound
+;
+	mov esi,es:[esi].dh_next
+	or esi,esi
+	jz cddone
+;
+	loop cdloop
+
+cdfound:
+	int 3
+
+cddone:
+    popad
+    pop es
+	ret
+CheckDeleted	Endp
 
 PAGE
 
@@ -799,6 +842,7 @@ insert_pending	PROC near
 	push cx
 	push dx
 ;
+    call CheckDeleted
     call CheckAll
 ;    
     test es:[edi].dh_flags,FLAG_ASYNC_WRITE
@@ -960,6 +1004,7 @@ insert_async_write	PROC near
 	push eax
 	push ebx
 ;	
+    call CheckDeleted
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jnz insert_awrite_end
 ;
@@ -1311,6 +1356,7 @@ insert_buf	PROC near
 	push edx
 	push esi
 ;
+    call CheckDeleted
 	movzx esi,es:[edi].dh_unit
 	mov edx,ds:[4*esi].disc_unit_arr
 	or edx,edx
