@@ -172,3 +172,17 @@ ued_maxsize         DW ?
 ued_interval        DB ?
 
 usb_endpoint_descr  ENDS
+
+usb_interface_descr  STRUC
+
+uid_len             DB ?
+uid_type            DB ?
+uid_id              DB ?
+uid_alt_id          DB ?
+uid_endpoints       DB ?
+uid_class           DB ?
+uid_sub_class       DB ?
+uid_proto           DB ?
+uid_interface_id    DB ?
+
+usb_interface_descr  ENDS

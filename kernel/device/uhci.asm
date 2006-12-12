@@ -162,7 +162,7 @@ uplLoop:
     or edx,edx
     jz uplNext
 ;
-    test byte ptr es:[edx].uqh_link,1
+    test byte ptr es:[edx].uqh_elem,1
     jz uplNext
 ;    
     push es
@@ -980,10 +980,7 @@ CreatePeriodTd  Endp
 
 CreateControl   Proc far
     push es
-    push eax
-    push cx
-    push edx
-    push di
+    pushad
 ;    
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
@@ -1017,10 +1014,7 @@ ccInsert:
 ccDone:
     call InsertPipe
 ;
-    pop di
-    pop edx
-    pop cx
-    pop eax    
+    popad
     pop es
     ret
 CreateControl   Endp
@@ -1040,12 +1034,8 @@ CreateControl   Endp
 
 CreateBulk   Proc far
     push es
-    push eax
-    push cx
-    push edx
-    push di
+    pushad
 ;    
-    int 3
     mov eax,SIZE uhci_pipe
     AllocateSmallGlobalMem
     xor di,di
@@ -1064,10 +1054,7 @@ CreateBulk   Proc far
     call InsertTdLast
     call InsertPipe
 ;
-    pop di
-    pop edx
-    pop cx
-    pop eax    
+    popad
     pop es
     ret
 CreateBulk   Endp
@@ -1528,37 +1515,16 @@ IssueTransfer    Proc far
     push ecx
     push edx
 ;    
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je itControl
-;
-    int 3
-    jmp itDone
-
-itControl:
     mov ax,flat_sel
     mov es,ax    
     mov edx,fs:usp_qh
-;
-;    mov eax,ds:uhc_period_td
-;    mov es:[eax].utd_control,1000000h
 ;    
     mov eax,es:[edx].uqh_va_elem    
+    or eax,eax
+    jz itDone
+;    
     mov eax,es:[eax].utd_phys
     mov es:[edx].uqh_elem,eax
-
-;    mov ax,ds:uhc_status    
-;    mov dx,ds:uhc_io_base
-;    add dx,UsbStatusReg
-;    in al,dx
-;
-;    mov eax,ds:uhc_period_td
-;    mov es:[eax].utd_control,0
-    jmp itDone
-
-itControlAdd:
-    int 3
-    jmp itDone
 
 itDone:
     pop edx 
@@ -1646,7 +1612,7 @@ IsPipeSignalled   Proc far
     or edx,edx
     jz ipsSig
 ;
-    test byte ptr es:[edx].uqh_link,1
+    test byte ptr es:[edx].uqh_elem,1
     jz ipsNoSig
 
 ipsSig:

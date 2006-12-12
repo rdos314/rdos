@@ -52,6 +52,8 @@ ups_controller      DW ?
 ups_device          DW ?
 ups_wait_handle     DW ?
 ups_control_pipe    DW ?
+ups_bulk_in         DW ?
+ups_bulk_out        DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
@@ -67,6 +69,8 @@ uds_base_struc    com_device_struc <>
 
 uds_device_type     DW ?
 uds_interface       DB ?
+uds_bulk_in         DB ?
+uds_bulk_out        DB ?
 
 usbcom_device_struc   ENDS
 
@@ -389,6 +393,7 @@ set_baud_index_ok:
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -464,6 +469,10 @@ set_data_parity_ok:
     jb set_data_stop_ok
 ;
     or ah,10h
+;
+; test only
+;
+    or ah,40h    
 
 set_data_stop_ok:
     mov es:usd_value,ax
@@ -472,6 +481,7 @@ set_data_stop_ok:
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -539,6 +549,29 @@ open_com	Proc far
     mov bx,ds:ups_wait_handle
     movzx ecx,bx
     AddWaitForUsbPipe
+    int 3
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    mov dl,es:uds_bulk_in
+    OpenUsbPipe
+    mov ds:ups_bulk_in,bx
+;
+    mov ax,ds:ups_bulk_in
+    mov bx,ds:ups_wait_handle
+    movzx ecx,bx
+    AddWaitForUsbPipe                
+;
+    mov bx,ds:ups_controller
+    mov ax,ds:ups_device
+    mov dl,es:uds_bulk_out
+    OpenUsbPipe
+    mov ds:ups_bulk_out,bx
+;
+    mov ax,ds:ups_bulk_out
+    mov bx,ds:ups_wait_handle
+    movzx ecx,bx
+    AddWaitForUsbPipe                
 ;    
     call set_data
     jc open_com_done
@@ -581,6 +614,12 @@ close_com	Proc far
     mov bx,ds:ups_control_pipe
     CloseUsbPipe    
 ;
+    mov bx,ds:ups_bulk_in
+    CloseUsbPipe    
+;
+    mov bx,ds:ups_bulk_out
+    CloseUsbPipe    
+;
     pop bx    
 	ret
 close_com	Endp
@@ -617,6 +656,7 @@ enable_cts	PROC far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -671,6 +711,7 @@ disable_cts	PROC far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -793,6 +834,7 @@ set_dtr	Proc far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -847,6 +889,7 @@ reset_dtr	Proc far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -901,6 +944,7 @@ set_rts	Proc far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -955,6 +999,7 @@ reset_rts	Proc far
     xor di,di
 ;
     LockUsbPipe
+    mov cx,8
     WriteUsbControl
     ReqUsbStatus
     FreeMem
@@ -1041,8 +1086,8 @@ PAGE
 ;
 ;       PARAMETERS:     AL      Device address
 ;                       BX      Controller id
-;                       CL      Interface #
 ;                       DX      Device type
+;                       ES:DI   Interface descriptor + endpoints
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1051,15 +1096,65 @@ AddPort Proc near
     push es
     pushad
 ;    
-    push ax
-    mov ax,usbcom_data_sel
-    mov ds,ax
+    push dx
+    push di
+    mov dx,usbcom_data_sel
+    mov ds,dx
 ;
+    xor dx,dx
+    movzx cx,es:[di].uid_len
+    add di,cx
+
+apDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,5
+    jne apDescrDone
+;
+    mov cl,es:[di].ued_attrib
+    and cl,3
+    cmp cl,2
+    jne apDescrNext
+;
+    mov cl,es:[di].ued_address
+    test cl,80h    
+    jnz apBulkIn
+;
+    and cl,0Fh
+    mov dl,cl
+    jmp apDescrNext
+
+apBulkIn:
+    and cl,0Fh
+    mov dh,cl
+    
+apDescrNext:    
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb apDescrLoop    
+    	
+apDescrDone:
+    mov cx,dx
+    pop di
+    pop dx
+;    
+    or cl,cl
+    jz apDone
+;
+    or ch,ch
+    jz apDone
+;        
+    push cx
+    mov cl,es:[di].uid_id
+    push ax
     mov eax,SIZE usbcom_device_struc
 	AllocateSmallGlobalMem
 	pop ax
     mov es:uds_interface,cl
 	mov es:uds_device_type,dx
+	pop dx
+	mov es:uds_bulk_in,dh
+	mov es:uds_bulk_out,dl
 ;
     mov si,ds:sd_ports
     add si,si
@@ -1074,7 +1169,8 @@ AddPort Proc near
     movzx dx,al
     mov ax,bx
     AddComPort
-;
+
+apDone:
     popad
     pop es
     pop ds	
@@ -1301,7 +1397,7 @@ uaFound:
     mov si,es:udd_device
 ;    
     xor dl,dl
-    mov cx,SIZE usb_config_descr
+    mov cx,1000h
     xor di,di
     push ax
     GetUsbConfig
@@ -1314,11 +1410,19 @@ uaFound:
     ConfigUsbDevice
     jc uaDone
 ;
+    xor di,di
+    movzx cx,es:ucd_len
+    add di,cx
+
+uaDescrLoop:
+    mov cl,es:[di].udd_type
+    cmp cl,4
+    jne uaDescrNext
+;
     cmp si,200h
     jae uaNotSio
 ; 
     mov dx,DEVICE_TYPE_SIO
-    xor cx,cx
     call AddPort
     jmp uaDone
 
@@ -1327,27 +1431,27 @@ uaNotSio:
     jae uaNotAm
 ;
     mov dx,DEVICE_TYPE_FT232AM
-    xor cx,cx
     call AddPort
     jmp uaDone
 
 uaNotAm:
     mov cl,es:ucd_interface_count
     cmp cl,1
-    ja uaMany
+    ja uaMore
 ;
     mov dx,DEVICE_TYPE_FT232BM
-    xor cx,cx
     call AddPort
     jmp uaDone
 
-uaMany:
+uaMore:
     mov dx,DEVICE_TYPE_FT2232C 
-    xor cx,cx
     call AddPort
-;
-    mov cx,1
-    call AddPort
+
+uaDescrNext:
+    movzx cx,es:[di].ucd_len
+    add di,cx
+    cmp di,es:ucd_size
+    jb uaDescrLoop    
     
 uaDone:
     FreeMem

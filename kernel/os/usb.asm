@@ -168,7 +168,7 @@ CreateDefaultControl    Proc near
     call ds:create_control_proc
 ;    
     mov es:usbf_endpoint_arr,fs    
-    mov fs:usbp_function_sel,ds
+    mov fs:usbp_function_sel,es
     mov fs:usbp_address,0
     mov fs:usbp_endpoint,0
     mov fs:usbp_seq,0
@@ -235,7 +235,7 @@ CreateBulk    Proc near
     add bx,bx    
     mov es:[bx].usbf_endpoint_arr,fs
 ;    
-    mov fs:usbp_function_sel,ds
+    mov fs:usbp_function_sel,es
     mov al,fs:usbf_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
@@ -1000,7 +1000,6 @@ config_usb_device	Proc near
     popf
     jc cudFail
 ;
-    int 3
     mov es,fs:usbp_function_sel
     movzx si,dl
     dec si
@@ -1049,6 +1048,7 @@ cudDone:
     pop cx
     pop ax
     pop gs
+    pop fs
     pop es
     pop ds
     retf32
