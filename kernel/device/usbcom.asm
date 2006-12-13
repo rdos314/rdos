@@ -39,6 +39,19 @@ include ..\os\com.inc
 
 MAX_PORTS       = 16
 
+FLAG_CTS	= 10h
+FLAG_DSR	= 20h
+FLAG_RI		= 40h
+FLAG_RLSD	= 80h
+FLAG_DR		= 100h
+FLAG_OE		= 200h
+FLAG_PE		= 400h
+FLAG_FE		= 800h
+FLAG_BI		= 1000h
+FLAG_THRE	= 2000h
+FLAG_TEMT	= 4000h
+FLAG_FIFO_ERR	= 8000h
+
 DEVICE_TYPE_SIO = 1
 DEVICE_TYPE_FT232AM = 2
 DEVICE_TYPE_FT232BM = 3
@@ -48,12 +61,11 @@ usbcom_port_struc	STRUC
 
 ups_base_struc  com_port_struc <>
 
+ups_device_sel      DW ?
 ups_controller      DW ?
 ups_device          DW ?
-ups_wait_handle     DW ?
+ups_control_wait    DW ?
 ups_control_pipe    DW ?
-ups_bulk_in         DW ?
-ups_bulk_out        DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
@@ -67,17 +79,31 @@ usbcom_device_struc   STRUC
 
 uds_base_struc    com_device_struc <>
 
+uds_section         section_typ <>
+uds_port_sel        DW ?
 uds_device_type     DW ?
+uds_maxsize         DW ?
 uds_interface       DB ?
 uds_bulk_in         DB ?
 uds_bulk_out        DB ?
+uds_in_handle       DW ?
+uds_out_handle      DW ?
+uds_in_buffer       DW ?
+uds_out_buffer      DW ?
+uds_control         DW ?
+uds_wait            DW ?
 
 usbcom_device_struc   ENDS
 
 serial_data STRUC
 
-sd_ports    DW ?
-sd_port_arr DW MAX_PORTS DUP(?)
+sd_section          section_typ <>
+sd_thread           DW ?
+
+sd_wait             DW ?
+
+sd_ports            DW ?
+sd_port_arr         DW MAX_PORTS DUP(?)
 
 serial_data ENDS
 
@@ -401,7 +427,7 @@ set_baud_index_ok:
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -469,10 +495,6 @@ set_data_parity_ok:
     jb set_data_stop_ok
 ;
     or ah,10h
-;
-; test only
-;
-    or ah,40h    
 
 set_data_stop_ok:
     mov es:usd_value,ax
@@ -489,7 +511,7 @@ set_data_stop_ok:
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -523,6 +545,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 open_com	Proc far
+    push ds
     pushad
 ;
     mov ds:ups_data_bits,ah
@@ -537,7 +560,7 @@ open_com	Proc far
     mov ds:ups_divisor,ecx
 ;
     CreateWait
-    mov ds:ups_wait_handle,bx
+    mov ds:ups_control_wait,bx
 ;
     mov bx,ds:ups_controller
     mov ax,ds:ups_device
@@ -546,32 +569,9 @@ open_com	Proc far
     mov ds:ups_control_pipe,bx
 ;
     mov ax,ds:ups_control_pipe
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     movzx ecx,bx
     AddWaitForUsbPipe
-    int 3
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    mov dl,es:uds_bulk_in
-    OpenUsbPipe
-    mov ds:ups_bulk_in,bx
-;
-    mov ax,ds:ups_bulk_in
-    mov bx,ds:ups_wait_handle
-    movzx ecx,bx
-    AddWaitForUsbPipe                
-;
-    mov bx,ds:ups_controller
-    mov ax,ds:ups_device
-    mov dl,es:uds_bulk_out
-    OpenUsbPipe
-    mov ds:ups_bulk_out,bx
-;
-    mov ax,ds:ups_bulk_out
-    mov bx,ds:ups_wait_handle
-    movzx ecx,bx
-    AddWaitForUsbPipe                
 ;    
     call set_data
     jc open_com_done
@@ -582,10 +582,24 @@ open_com	Proc far
     call set_dtr    
     call set_rts
     call disable_cts
+;    
+    mov ds:ups_device_sel,es
+    mov dx,ds
+    mov ax,es
+    mov ds,ax
+    EnterSection ds:uds_section
+    mov ds:uds_port_sel,dx
+    LeaveSection ds:uds_section       
+;
+    mov ax,usbcom_data_sel
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
     clc
 
 open_com_done:
     popad
+    pop ds
 	ret
 open_com	Endp
 
@@ -603,24 +617,33 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 close_com	Proc far
+    push ds
     push bx
 ;
     call reset_rts
     call reset_dtr
 ;    
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     CloseWait
 ;
     mov bx,ds:ups_control_pipe
     CloseUsbPipe    
+;    
+    mov ax,ds
+    mov ds,ds:ups_device_sel
+    EnterSection ds:uds_section
+    mov ds:uds_port_sel,0
+    LeaveSection ds:uds_section       
+    mov ds,ax
+    mov ds:ups_device_sel,0
 ;
-    mov bx,ds:ups_bulk_in
-    CloseUsbPipe    
+    mov bx,usbcom_data_sel
+    mov ds,bx
+    mov bx,ds:sd_thread
+    Signal    
 ;
-    mov bx,ds:ups_bulk_out
-    CloseUsbPipe    
-;
-    pop bx    
+    pop bx
+    pop ds    
 	ret
 close_com	Endp
 
@@ -664,7 +687,7 @@ enable_cts	PROC far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -719,7 +742,7 @@ disable_cts	PROC far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -799,6 +822,18 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_send	PROC far
+    push ds
+    push ax
+    push bx
+;    
+    mov ax,usbcom_data_sel
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
+;
+    pop bx
+    pop ax
+    pop ds
 	ret
 start_send	ENDP
 
@@ -842,7 +877,7 @@ set_dtr	Proc far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -897,7 +932,7 @@ reset_dtr	Proc far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;    
     mov bx,ds:ups_control_pipe
@@ -952,7 +987,7 @@ set_rts	Proc far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;
     mov bx,ds:ups_control_pipe
@@ -1007,7 +1042,7 @@ reset_rts	Proc far
     GetSystemTime
     add eax,1193 * 1000
     adc edx,0
-    mov bx,ds:ups_wait_handle
+    mov bx,ds:ups_control_wait
     WaitWithTimeout
 ;
     mov bx,ds:ups_control_pipe
@@ -1080,6 +1115,484 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    RecreateWait
+;
+;		DESCRIPTION:    Recreate wait selector and queue open pipes onto it
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+RecreateWait    Proc near
+    push ds
+;
+    mov bx,fs:sd_wait
+    CloseWait
+;
+    CreateWait
+    mov fs:sd_wait,bx
+;    
+    mov cx,fs:sd_ports
+    or cx,cx
+    jz cwEnd
+;
+    xor si,si
+
+cwDevLoop:
+    mov ax,fs:[si].sd_port_arr
+    or ax,ax
+    jz cwDevNext
+;
+    mov ds,ax
+    mov ax,ds:uds_in_buffer
+    or ax,ax
+    jz cwDevNext
+;    
+    mov ax,ds:uds_in_handle
+    movzx ecx,ax
+    AddWaitForUsbPipe
+;
+    mov ax,ds:uds_out_handle
+    movzx ecx,ax
+    AddWaitForUsbPipe
+
+cwDevNext:
+    add si,2
+    loop cwDevLoop
+
+cwEnd:
+    pop ds
+    ret
+RecreateWait  Endp    
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    QueueInput
+;
+;		DESCRIPTION:    Queue input on bulk-in pipe
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+QueueInput  Proc near
+    mov bx,ds:uds_in_handle
+    movzx dx,ds:uds_interface
+    inc dx
+;    
+    LockUsbPipe
+    mov cx,ds:uds_maxsize
+    ReqUsbData
+    StartUsbTransaction
+    ret
+QueueInput  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    GetInput
+;
+;		DESCRIPTION:    Get input from bulk-in pipe
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+GetInput  Proc near
+    mov bx,ds:uds_in_handle
+    mov es,ds:uds_in_buffer
+    mov cx,ax
+    xor di,di
+    GetUsbData
+    UnlockUsbPipe    
+    ret
+GetInput  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    SendOutput
+;
+;		DESCRIPTION:    Send output to bulk-out pipe
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;                       CX      Number of bytes to send
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendOutput  Proc near
+    mov bx,ds:uds_out_handle
+    movzx dx,ds:uds_interface
+    inc dx
+;    
+    LockUsbPipe
+    mov es,ds:uds_out_buffer
+    WriteUsbData
+    StartUsbTransaction
+    UnlockUsbPipe
+    ret
+SendOutput  Endp
+
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    ProcessOpen
+;
+;		DESCRIPTION:    Process open request
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessOpen    Proc near
+    CreateWait
+    mov ds:uds_wait,bx
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    xor dl,dl
+    OpenUsbPipe
+    mov ds:uds_control,bx
+;
+    mov ax,ds:uds_control
+    mov bx,ds:uds_wait
+    movzx ecx,ax
+    AddWaitForUsbPipe
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_in
+    OpenUsbPipe
+    mov ds:uds_in_handle,bx
+;
+    mov bx,ds:cd_controller
+    mov ax,ds:cd_device
+    mov dl,ds:uds_bulk_out
+    OpenUsbPipe    
+    mov ds:uds_out_handle,bx
+;
+    movzx eax,ds:uds_maxsize
+    AllocateSmallGlobalMem
+    mov ds:uds_in_buffer,es
+;
+    movzx eax,ds:uds_maxsize
+    AllocateSmallGlobalMem
+    mov ds:uds_out_buffer,es
+;
+    call QueueInput    
+;        
+    ret
+ProcessOpen Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    ProcessClose
+;
+;		DESCRIPTION:    Process close request
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ProcessClose    Proc near
+    call GetInput
+;
+    mov bx,ds:uds_wait
+    CloseWait
+    mov ds:uds_wait,0
+;
+    mov bx,ds:uds_control
+    CloseUsbPipe    
+    mov ds:uds_control,0
+;
+    mov bx,ds:uds_in_handle
+    CloseUsbPipe    
+    mov ds:uds_in_handle,0
+;
+    mov bx,ds:uds_out_handle
+    CloseUsbPipe    
+    mov ds:uds_out_handle,0
+;
+    mov es,ds:uds_in_buffer
+    FreeMem    
+    mov ds:uds_in_buffer,0
+;
+    mov es,ds:uds_out_buffer
+    FreeMem    
+    mov ds:uds_out_buffer,0
+    ret
+ProcessClose    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    PollRead
+;
+;		DESCRIPTION:    Poll input-buffer
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollRead    Proc near
+    push ds
+    push fs
+    mov fs,ds:uds_in_buffer
+    mov ds,ds:uds_port_sel
+	mov es,ds:rec_buf
+	mov si,2
+
+prGetLoop:
+	lods byte ptr fs:[si]
+	cli
+	mov dx,ds:rec_count
+	cmp dx,ds:rec_size
+	je prSignal
+;	
+	inc dx
+	mov ds:rec_count,dx
+	mov bx,ds:rec_tail
+	mov es:[bx],al
+	inc bx
+	cmp bx,ds:rec_size
+	jnz prWrapOk
+;
+	xor bx,bx
+	
+prWrapOk:
+	mov ds:rec_tail,bx
+	sti
+    loop prGetLoop
+
+prSignal:
+    sti
+    mov bx,ds:avail_obj
+    or bx,bx
+    jz prDone
+;
+    mov es,bx
+    SignalWait
+	mov ds:avail_obj,0
+	
+prDone:
+    pop fs
+    pop ds
+    ret
+PollRead    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    PollWrite
+;
+;		DESCRIPTION:    Poll output-buffer
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;       RETURNS:        CX      Pending characters
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PollWrite    Proc near
+    push ds
+    push fs
+    mov bp,ds:uds_maxsize
+    mov es,ds:uds_out_buffer
+    mov ds,ds:uds_port_sel
+	mov fs,ds:send_buf
+	xor di,di
+;
+    xor cx,cx
+	mov dx,ds:send_count
+	or dx,dx
+	jz pwDone
+
+pwLoop:
+    cli
+	mov dx,ds:send_count
+	or dx,dx
+	jz pwSend
+;	
+   	dec dx
+	mov ds:send_count,dx
+	mov bx,ds:send_head
+	mov al,fs:[bx]
+	stosb
+	inc bx
+	cmp bx,ds:send_size
+	jnz pwWrapOk
+;	
+	xor bx,bx
+
+pwWrapOk:
+	mov ds:send_head,bx
+	sti
+;
+    inc cx
+    cmp cx,bp
+    jb pwLoop
+
+pwSend:
+    sti
+
+pwDone:
+    pop fs
+    pop ds    
+    ret
+PollWrite   Endp    
+    
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    HandleDevice
+;
+;		DESCRIPTION:    Handle device
+;
+;       PARAMETERS:     FS      Usbcom_data_sel
+;                       DS      Function sel
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleDevice    Proc near
+    mov ax,ds:uds_port_sel
+    or ax,ax
+    jz hdClosed
+
+hdOpen:
+    mov bx,ds:uds_in_buffer
+    or bx,bx
+    jnz hdOpenOk    
+;
+    call ProcessOpen
+    call RecreateWait    
+
+hdOpenOk:    
+    mov bx,ds:uds_in_handle
+    IsUsbPipeIdle
+    cmc
+    jc hdReadDone
+;
+    call GetInput
+    mov cx,ax
+    sub cx,2
+    jbe hdDataDone
+;
+    call PollRead
+
+hdDataDone:
+    call QueueInput
+
+hdReadDone:
+    mov bx,ds:uds_out_handle
+    IsUsbPipeIdle
+    cmc
+    jc hdDone
+;
+    call PollWrite
+    or cx,cx
+    jz hdDone
+;
+    call SendOutput
+    jmp hdDone
+
+hdClosed:
+    mov bx,ds:uds_in_buffer
+    or bx,bx
+    jz hdDone
+;
+    call ProcessClose
+    call RecreateWait
+    
+hdDone:
+    ret
+HandleDevice    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			UsbComThread
+;
+;		DESCRIPTION:    Com-port handler thread
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+usbcom_thread_name  DB 'USB Com', 0
+
+usbcom_thread:
+    mov ax,usbcom_data_sel
+    mov fs,ax
+    GetThread
+    mov fs:sd_thread,ax
+    CreateWait
+    mov fs:sd_wait,bx
+
+utLoop:
+    mov ax,25
+    WaitMilliSec
+;    
+    WaitWithoutTimeout
+    mov cx,fs:sd_ports
+    or cx,cx
+    jz utEnd
+;
+    xor si,si
+
+utDevLoop:
+    mov ax,fs:[si].sd_port_arr
+    or ax,ax
+    jz utDevNext
+;
+    mov ds,ax
+    push cx
+    push si
+;
+    EnterSection ds:uds_section
+    call HandleDevice
+    LeaveSection ds:uds_section
+;
+    pop si
+    pop cx
+    
+utDevNext:
+    add si,2
+    loop utDevLoop
+;        
+    jmp utLoop
+
+utEnd:
+    retf
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			AddPort
 ;
 ;		DESCRIPTION:    Add port to list of available ports
@@ -1100,7 +1613,33 @@ AddPort Proc near
     push di
     mov dx,usbcom_data_sel
     mov ds,dx
+    mov dx,ds:sd_thread
+    or dx,dx
+    jnz apThreadStarted
 ;
+	mov ds:sd_thread,-1
+    push ds
+    push es
+    push ax
+    push si
+    push di    
+;    
+	mov dx,cs
+	mov ds,dx
+	mov es,dx
+	mov di,OFFSET usbcom_thread_name
+	mov si,OFFSET usbcom_thread
+	mov ax,2
+	mov cx,100h
+	CreateThread
+;
+    pop di
+    pop si
+    pop ax
+    pop es
+    pop ds
+    	    
+apThreadStarted:
     xor dx,dx
     movzx cx,es:[di].uid_len
     add di,cx
@@ -1126,6 +1665,7 @@ apDescrLoop:
 apBulkIn:
     and cl,0Fh
     mov dh,cl
+    mov bp,es:[di].ued_maxsize
     
 apDescrNext:    
     movzx cx,es:[di].ucd_len
@@ -1155,6 +1695,12 @@ apDescrDone:
 	pop dx
 	mov es:uds_bulk_in,dh
 	mov es:uds_bulk_out,dl
+	mov es:uds_maxsize,bp
+	mov es:uds_in_buffer,0
+	mov es:uds_out_buffer,0
+	mov es:uds_in_handle,0
+	mov es:uds_out_handle,0
+	InitSection es:uds_section
 ;
     mov si,ds:sd_ports
     add si,si
@@ -1504,6 +2050,7 @@ init	Proc far
 	xor di,di
 	xor al,al
 	rep stosb
+	InitSection es:sd_section
 ;	
 	mov ax,cs
 	mov ds,ax

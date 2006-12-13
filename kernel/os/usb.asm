@@ -236,7 +236,7 @@ CreateBulk    Proc near
     mov es:[bx].usbf_endpoint_arr,fs
 ;    
     mov fs:usbp_function_sel,es
-    mov al,fs:usbf_address
+    mov al,es:usbf_address
     mov fs:usbp_address,al
     mov fs:usbp_endpoint,dl
     mov fs:usbp_seq,0
@@ -1782,6 +1782,41 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			StartUsbTransaction
+;
+;		DESCRIPTION:	Start USB transaction
+;
+;		PARAMETERS:		BX		    Pipe handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+start_usb_trans_name	DB 'Start USB Transaction',0
+
+start_usb_trans	Proc far
+	push ds
+	push fs
+	push bx
+;
+	mov ax,USB_PIPE_HANDLE
+	DerefHandle
+	jc sutDone
+;
+	mov fs,ds:[bx].up_pipe_sel
+	mov ds,ds:[bx].up_func_sel
+	call ds:issue_transfer_proc
+
+sutDone:
+	pop bx
+	pop fs
+	pop ds
+	retf32
+start_usb_trans	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			IsUsbPipeIdle
 ;
 ;		DESCRIPTION:	Check if pipe is idle
@@ -2034,6 +2069,12 @@ init	Proc far
 	mov di,OFFSET write_usb_status_name
 	xor dx,dx
 	mov ax,write_usb_status_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET start_usb_trans
+	mov di,OFFSET start_usb_trans_name
+	xor dx,dx
+	mov ax,start_usb_transaction_nr
 	RegisterBimodalUserGate
 ;
 	mov si,OFFSET is_usb_pipe_idle

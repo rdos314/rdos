@@ -2164,6 +2164,11 @@ WriteUsbStatus      MACRO
 						ENDM
 
 ;   IN  BX          Handle
+StartUsbTransaction      MACRO
+	UserGate start_usb_transaction_nr
+						ENDM
+
+;   IN  BX          Handle
 ;   IN  CY          Pipe is idle
 ;   IN  NC          Pipe is busy
 IsUsbPipeIdle      MACRO

@@ -144,6 +144,7 @@ UpdatePipeList  Proc near
 ;
     push es
     push fs
+    push ebx
     push dx
     push di
 ;
@@ -162,6 +163,10 @@ uplLoop:
     or edx,edx
     jz uplNext
 ;
+    mov ebx,es:[edx].uqh_va_elem
+    or ebx,ebx
+    jz uplNext
+;    
     test byte ptr es:[edx].uqh_elem,1
     jz uplNext
 ;    
@@ -179,6 +184,7 @@ uplNext:
 ;
     pop di
     pop dx
+    pop ebx
     pop fs
     pop es    
 
@@ -1414,19 +1420,12 @@ AddOut    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddIn    Proc far
-    push eax
     push edx
-;
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    jne aiDone
-;   
+;    
     mov edx,fs:usp_qh 
     call AddInBuffer
-
-aiDone:
+;    
     pop edx
-    pop eax    
     ret
 AddIn    Endp
 
@@ -1647,14 +1646,7 @@ EmptyQueue   Proc far
 ;        
     mov ax,flat_sel
     mov es,ax
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je eqControl
-;
-    int 3
-    jmp eqDone    
-
-eqControl:
+;    
     mov edx,fs:usp_qh
     call FreeVaElem
 
@@ -1681,23 +1673,12 @@ EmptyQueue   Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 GetData   Proc far
-    push ax
     push edx
-;        
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    je gdControl
-;
-    int 3
-    jmp gdDone    
-
-gdControl:
+;    
     mov edx,fs:usp_qh
     call GetQhData
-
-gdDone:
+;
     pop edx
-    pop ax
     ret
 GetData   Endp
 
