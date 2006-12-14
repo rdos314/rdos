@@ -62,6 +62,7 @@ disc_def_arr		DW MAX_DRIVES DUP(?)
 drive_def_arr		DW MAX_DRIVES DUP(?)
 drive_wait_arr		DB 4*DRIVE_WAIT_NUM DUP(?)
 drive_wait_free		DW ?
+drive_wait_count    DW ?
 
 disc_data_seg		ENDS
 
@@ -546,6 +547,54 @@ cbDone:
 	pop es
 	ret
 CheckBuffered	ENDP
+
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CheckDriveWait
+;
+;		DESCRIPTION:	Check consistency of drive-wait list
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDriveWait	Proc near
+    push ds
+    pushad
+;
+	mov ax,disc_data_sel
+	mov ds,ax
+    xor cx,cx
+	mov bx,ds:drive_wait_free
+
+cdwLoop:
+    or bx,bx
+    jz cdwCheck
+;
+    mov bx,[bx]
+    inc cx
+    jmp cdwLoop 
+
+cdwCheck:
+    cmp cx,ds:drive_wait_count
+    je cdwSizeOk
+;
+    int 3
+
+cdwSizeOk:  
+    or cx,cx
+    jnz cdwNotEmpty
+;
+    int 3
+
+
+cdwNotEmpty:    
+    popad
+    pop ds
+	ret
+CheckDriveWait	Endp
 
 PAGE
 
@@ -1551,10 +1600,15 @@ block	Proc near
 	mov es:[edi].dh_thread,ax
 	mov bx,ds:disc_thread
 	Signal
-	jmp block_cont
+	jmp block_do
 
 block_no_signal:
 	push ds
+
+ifdef DEBUG	
+	call CheckDriveWait
+endif
+	
 	mov ax,disc_data_sel
 	mov ds,ax
 	mov bx,ds:drive_wait_free
@@ -1565,16 +1619,51 @@ block_no_signal:
 	mov ax,es:[edi].dh_wait
 	mov ds:[bx].dws_link,ax
 	mov es:[edi].dh_wait,bx
+
+ifdef DEBUG	
+	dec ds:drive_wait_count
+	call CheckDriveWait
+endif
+	
 	pop ds
 
-block_cont:
+block_do:
 	LeaveSection ds:disc_section
  	WaitForSignal
+	EnterSection ds:disc_section
+;	
+    mov bx,es:[edi].dh_thread
+    cmp ax,bx
+    je block_do
+;    
+	push ds
+    mov bx,disc_data_sel
+    mov ds,bx
+;    
+    GetThread
+    mov bx,es:[edi].dh_wait
+
+block_check_loop:
+    or bx,bx
+    jz block_exit_pop
 ;
+    cmp ax,ds:[bx].dws_thread
+    je block_cont_pop
+;    
+    mov bx,ds:[bx].dws_link
+    jmp block_check_loop
+
+block_cont_pop:
+    pop ds
+    jmp block_do
+
+block_exit_pop:
+    pop ds
+    
+block_exit:
 	pop dx
 	pop bx
 	pop ax
-	EnterSection ds:disc_section
 	ret
 block	Endp
 
@@ -2209,11 +2298,21 @@ completed_wakeup_loop:
 	mov bx,ds:[bx].dws_thread
 	Signal
 	pop bx
-;
+
+ifdef DEBUG
+	call CheckDriveWait
+endif
+	
 	mov dx,ds:[bx].dws_link
 	mov ax,ds:drive_wait_free
 	mov [bx],ax
 	mov ds:drive_wait_free,bx
+
+ifdef DEBUG
+    inc ds:drive_wait_count
+	call CheckDriveWait
+endif	
+	
 	mov bx,dx
 	or bx,bx
 	jnz completed_wakeup_loop
@@ -5294,12 +5393,15 @@ init	PROC far
 ;
 	mov cx,DRIVE_WAIT_NUM
 	mov di,4*DRIVE_WAIT_NUM + OFFSET drive_wait_arr
+	xor ax,ax
+
 init_drive_wait_loop:
-	mov ax,di
 	sub di,4
 	mov es:[di],ax
+	mov ax,di
 	loop init_drive_wait_loop
 	mov es:drive_wait_free,di
+	mov es:drive_wait_count,DRIVE_WAIT_NUM
 ;
 	popa
 	pop es
