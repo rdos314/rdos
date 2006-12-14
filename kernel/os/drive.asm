@@ -90,6 +90,10 @@ disc_awrite_timeout		DD ?,?
 disc_seq_list			DW ?
 disc_param				DD ?
 disc_handle				DW ?
+
+disc_pend_count         DW ?
+disc_io_count           DW ?
+
 disc_change_proc		DD ?
 disc_unit_arr			DD ?
 
@@ -289,6 +293,13 @@ ReadSector	Endp
 
 DiskError:
 		db 'Disk error',0Dh,0Ah,0
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;   Boot sector ends here
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -305,11 +316,17 @@ DiskError:
 CheckPending	Proc near
 	xor cx,cx
 	mov edi,ds:disc_pend_first
-	mov eax,edi
+	mov ebp,edi
 	or edi,edi
 	jz cpdone
+;
+    mov dx,es:[edi].dh_unit
+    mov ax,es:[edi].dh_sector	
 
 cploop:
+    test es:[edi].dh_flags, FLAG_IO_PENDING
+    jz cpfail
+;
 	cmp es:[edi].dh_state,STATE_DIRTY
 	je cpvalid
 ;
@@ -318,17 +335,33 @@ cploop:
 
 cpvalid:
 	test es:[edi].dh_flags, FLAG_ASYNC_WRITE
-	jz cpnext
+	jnz cpfail
+;
+    cmp dx,es:[edi].dh_unit
+    je cpunit
+    jb cpnext
+;
+    int 3    
+    jmp cpfail
 
+cpunit:
+    cmp ax,es:[edi].dh_sector
+    jbe cpnext
+;
+    int 3
+        
 cpfail:
 	int 3	
-	mov al,es:[edi].dh_state
-	mov ah,es:[edi].dh_flags
+	mov al,es:[edi].dh_state        ; STATE_DIRTY
+	mov ah,es:[edi].dh_flags        ; FLAG_ASYNC_WRITE | FLAG_EXT_DATA
 	jmp cpdone
 
 cpnext:
+    mov dx,es:[edi].dh_unit
+    mov ax,es:[edi].dh_sector	
+;    
 	mov edi,es:[edi].dh_next
-	cmp edi,eax
+	cmp edi,ebp
 	jz cpdone
 ;
 	loop cploop
@@ -374,21 +407,145 @@ CheckAsyncWrite	Endp
 
 CheckAll	Proc near
 	push es
-	push eax
-	push ecx
-	push edi
+	pushad
 ;
 	mov ax,flat_sel
 	mov es,ax
 	call CheckPending
 	call CheckAsyncWrite
 ;
-	pop edi
-	pop ecx
-	pop eax
+	popad
 	pop es
 	ret
 CheckAll	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    IsPending
+;
+;		DESCRIPTION:	Is block in pending list?
+;
+;		PARAMETERS:	    EDI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+IsPending	Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+	xor cx,cx
+	mov esi,ds:disc_pend_first
+	mov ebp,esi
+	or esi,esi
+	jz ipdone
+
+iploop:
+    cmp esi,edi
+    je ipfound
+;
+	mov esi,es:[esi].dh_next
+	cmp esi,ebp
+	jz ipdone
+;
+	loop iploop
+
+ipfound:
+	int 3
+
+ipdone:
+    popad
+    pop es
+	ret
+IsPending	Endp
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CheckDeleted
+;
+;		DESCRIPTION:	Check if block is deleted
+;
+;		PARAMETERS:	    EDI
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckDeleted	Proc near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;
+	xor cx,cx
+	mov esi,ds:disc_handle_list
+	mov ebp,esi
+	or esi,esi
+	jz cddone
+
+cdloop:
+    cmp esi,edi
+    je cdfound
+;
+	mov esi,es:[esi].dh_next
+	or esi,esi
+	jz cddone
+;
+	loop cdloop
+
+cdfound:
+	int 3
+
+cddone:
+    popad
+    pop es
+	ret
+CheckDeleted	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			CheckBuffered
+;
+;		DESCRIPTION:	Make sure sector is buffered
+;
+;		PARAMETERS:		DS		Disc selector
+;						ES		Flat_sel
+;		        		EDI		DiscBlock handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CheckBuffered	PROC near
+    push es
+    pushad
+;    
+    mov ax,flat_sel
+    mov es,ax
+;    
+	movzx esi,es:[edi].dh_unit
+	mov eax,ds:[4*esi].disc_unit_arr
+	or eax,eax
+	jz cbFail
+;
+	movzx esi,es:[edi].dh_sector
+	mov eax,es:[4*esi+eax].disc_sector_arr
+;
+    or eax,eax
+    jnz cbDone
+	
+cbFail:
+    int 3
+
+cbDone:
+	popad
+	pop es
+	ret
+CheckBuffered	ENDP
 
 PAGE
 
@@ -476,6 +633,12 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 free_handle	PROC near
+
+ifdef DEBUG
+    call CheckDeleted
+    call IsPending
+endif
+    
 	push eax
 	test es:[edi].dh_flags, FLAG_EXT_DATA
 	jnz free_handle_do
@@ -486,11 +649,16 @@ free_handle	PROC near
 	pop edx
 
 free_handle_do:
+    mov es:[edi].dh_flags,0
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
     dec ds:disc_cached_sectors
 	pop eax
+
+ifdef DEBUG
+	call CheckAll
+endif
 	ret
 free_handle	ENDP
 
@@ -659,7 +827,7 @@ PAGE
 allocate_handle	PROC near
 	push eax
 	push edx
-; 
+;    
     mov eax,ds:disc_cached_sectors
     cmp eax,ds:disc_cache_limit
     jc alloc_handle_no_swap
@@ -702,12 +870,16 @@ allocate_init_handle_loop:
 allocate_handle_done:
 	mov eax,es:[edi].dh_next
 	mov ds:disc_handle_list,eax
-;
+
+ifdef DEBUG
+    call IsPending
+    call CheckDeleted
+endif    
+
 	pop edx
 	pop eax
 	ret
 allocate_handle	ENDP
-
 
 PAGE
 
@@ -729,7 +901,13 @@ insert_pending	PROC near
 	push ebx
 	push cx
 	push dx
-;
+
+ifdef DEBUG
+    call CheckDeleted
+    call CheckAll
+    call CheckBuffered
+endif
+    
     test es:[edi].dh_flags,FLAG_ASYNC_WRITE
     jz insert_noaw
 ;
@@ -813,6 +991,12 @@ insert_pend_link:
 	mov es:[edi].dh_next,eax	
 
 insert_pend_done:
+    inc ds:disc_pend_count    
+
+ifdef DEBUG
+    call CheckAll
+endif
+    
 	pop dx
 	pop cx
 	pop ebx
@@ -841,7 +1025,11 @@ get_pending	PROC near
 	or edi,edi
 	stc
 	jz get_pend_done
-;
+
+ifdef DEBUG
+    call CheckDeleted
+endif
+    
 	mov eax,es:[edi].dh_next
 	mov ebx,es:[edi].dh_prev
 	mov es:[ebx].dh_next,eax
@@ -886,7 +1074,11 @@ PAGE
 insert_async_write	PROC near
 	push eax
 	push ebx
-;	
+
+ifdef DEBUG	
+    call CheckDeleted
+endif
+    
     test es:[edi].dh_flags, FLAG_IO_PENDING
     jnz insert_awrite_end
 ;
@@ -1205,6 +1397,16 @@ check_buf	PROC near
 ;
 	movzx esi,dx
 	mov edi,es:[4*esi+edi].disc_sector_arr
+
+ifdef DEBUG
+
+    or edi,edi
+    jz check_no_del
+    call CheckDeleted
+check_no_del:
+
+endif
+    	
 	or edi,edi
 	clc
 	jnz check_buf_done
@@ -1237,7 +1439,11 @@ insert_buf	PROC near
 	push ecx
 	push edx
 	push esi
-;
+
+ifdef DEBUG
+    call CheckDeleted
+endif
+    
 	movzx esi,es:[edi].dh_unit
 	mov edx,ds:[4*esi].disc_unit_arr
 	or edx,edx
@@ -1289,7 +1495,12 @@ remove_buf	PROC near
 	push ecx
 	push edx
 	push esi
-;
+
+ifdef DEBUG
+    call CheckDeleted
+    call CheckBuffered
+endif
+    
 	movzx esi,es:[edi].dh_unit
 	mov edx,ds:[4*esi].disc_unit_arr
 	or edx,edx
@@ -1786,6 +1997,7 @@ new_disc_request	Proc far
 	mov es:[edi].dh_time_lsb,0
 	mov es:[edi].dh_time_msb,0
 	call insert_buf
+	inc es:[edi].dh_lock_count
 	LeaveSection ds:disc_section
 	clc
 	jmp new_disc_req_done
@@ -1858,6 +2070,7 @@ lock_disc_loop:
 	mov es:[edi].dh_time_msb,0
 	mov es:[edi].dh_flags,0
 	call insert_buf
+	inc es:[edi].dh_lock_count
 
 lock_disc_ok:
     clc
@@ -1971,6 +2184,14 @@ disc_request_completed	Proc far
 	mov es,ax
 	mov ds,bx
 	EnterSection ds:disc_section
+
+ifdef DEBUG	
+    call CheckDeleted
+    call CheckBuffered
+endif
+    
+	dec ds:disc_io_count
+;	
 	and es:[edi].dh_flags, NOT (FLAG_IO_PENDING OR FLAG_IO_BUSY)
 	xor bx,bx
 	xchg bx,es:[edi].dh_thread
@@ -2001,24 +2222,30 @@ completed_wakeup_loop:
 
 completed_wakeup_done:
 	mov es:[edi].dh_wait,0
-	LeaveSection ds:disc_section
 ;
 	test es:[edi].dh_flags, FLAG_EXT_DATA
 	jz completed_done
 ;
 	cmp es:[edi].dh_lock_count,0
 	jnz completed_done
-;
-	EnterSection ds:disc_section
+
+ifdef DEBUG
+	call IsPending
+endif
+	
 	call remove_buf
 	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
 	dec ds:disc_cached_sectors
-	LeaveSection ds:disc_section
+
+ifdef DEBUG
+	call CheckAll
+endif
 
 completed_done:
+	LeaveSection ds:disc_section
 	xor edi,edi
 ;
 	pop dx
@@ -2062,6 +2289,18 @@ get_disc_request_array	Proc far
 	mov es,ax
 	mov ds,bx
 	EnterSection ds:disc_section
+    mov ax,ds:disc_io_count
+    or ax,ax
+    jz get_disc_req_arr_io_ok
+;
+    int 3
+
+get_disc_req_arr_io_ok:	
+
+ifdef DEBUG
+	call CheckAll
+endif
+	
 	call update_async_write
 	call update_async_timer
 	call update_disc_seq
@@ -2112,8 +2351,10 @@ get_disc_req_arr_write:
 
 get_disc_req_arr_check_seq:
 	cmp al,STATE_SEQ
-	je get_disc_req_arr_write
-	jmp get_disc_req_arr_unlink
+	jne get_disc_req_arr_unlink
+;	
+	or es:[edi].dh_flags,FLAG_IO_BUSY
+	jmp get_disc_req_arr_write
 
 get_disc_req_arr_read:
 	inc edx
@@ -2143,6 +2384,9 @@ get_disc_req_arr_read:
 	jmp get_disc_req_arr_read
 
 get_disc_req_arr_unlink:
+    add ds:disc_io_count,cx
+    sub ds:disc_pend_count,cx
+;    
 	mov esi,ebx
 	mov edx,es:[esi]
 	mov edi,es:[esi+4*ecx-4]
@@ -2153,6 +2397,13 @@ get_disc_req_arr_unlink:
 	cmp eax,edx
 	jne get_disc_req_arr_unlinked
 ;
+    mov ax,ds:disc_pend_count
+    or ax,ax
+    jz get_disc_req_arr_pend_ok
+;
+    int 3
+
+get_disc_req_arr_pend_ok:
 	mov ds:disc_pend_list,0
 	mov ds:disc_pend_first,0
 	clc
@@ -2166,6 +2417,11 @@ get_disc_req_arr_unlinked:
 	mov ds:disc_pend_first,eax
 
 get_disc_req_arr_done:
+
+ifdef DEBUG
+    call CheckAll
+endif
+    
 	LeaveSection ds:disc_section
 	or ecx,ecx
 	stc
@@ -2255,6 +2511,8 @@ install_disc_loop:
 	pop cx
 	mov ds:disc_readahead,ecx
 	InitSection ds:disc_section
+	mov ds:disc_pend_count,0
+	mov ds:disc_io_count,0
 	mov bx,ds
 	mov al,ds:disc_nr
 	clc
@@ -2765,6 +3023,7 @@ new_loop:
 	call insert_buf
 
 new_done:
+	inc es:[edi].dh_lock_count
 	LeaveSection ds:disc_section
 	mov esi,es:[edi].dh_data
 	mov ebx,edi
@@ -2968,6 +3227,10 @@ modify_sector	PROC far
 	ClearSignal
 	EnterSection ds:disc_section
 
+ifdef DEBUG	
+    call CheckBuffered
+endif
+
 modify_try_again:
 	test es:[edi].dh_flags, FLAG_IO_BUSY
 	jz modify_not_busy
@@ -3026,6 +3289,10 @@ flush_sector	PROC far
 	mov ds,es:[edi].dh_buf_sel
 	ClearSignal
 	EnterSection ds:disc_section
+
+ifdef DEBUG
+    call CheckBuffered
+endif
 
 flush_try_again:
 	test es:[edi].dh_flags, FLAG_IO_BUSY
@@ -3120,6 +3387,10 @@ modify_seq_sector	PROC far
 	mov ds,es:[edi].dh_buf_sel
 	ClearSignal
 	EnterSection ds:disc_section
+
+ifdef DEBUG	
+    call CheckBuffered
+endif
 
 modify_seq_try_again:
 	test es:[edi].dh_flags, FLAG_IO_BUSY
@@ -3251,22 +3522,37 @@ unlock_sector	PROC far
 	mov edi,ebx
 	mov ds,es:[edi].dh_buf_sel
 	EnterSection ds:disc_section
-;
+
+ifdef DEBUG	
+    call CheckBuffered
+endif
+
 	sub es:[edi].dh_lock_count,1
 	jnz unlock_done
 ;
 	test es:[edi].dh_flags, FLAG_EXT_DATA
 	jz unlock_done
 ;
+	test es:[edi].dh_flags, BUSY_FLAGS
+	jnz unlock_done
+;
 	cmp es:[edi].dh_state, STATE_USED
 	jne unlock_done
-;
+
+ifdef DEBUG
+    call IsPending
+endif
+    
 	call remove_buf
 	mov es:[edi].dh_state, STATE_EMPTY
 	mov eax,ds:disc_handle_list
 	mov es:[edi],eax
 	mov ds:disc_handle_list,edi
 	dec ds:disc_cached_sectors
+
+ifdef DEBUG	
+	call CheckAll
+endif
 
 unlock_done:
 	LeaveSection ds:disc_section
@@ -3615,6 +3901,7 @@ erase_loop:
     pop eax
     pop ecx 
     ModifySector
+    UnlockSector
 ;
     inc edx
     loop erase_loop
@@ -3688,6 +3975,7 @@ erase_disc_loop:
     pop eax
     pop ecx 
     ModifySector
+    UnlockSector
 ;
     inc edx
     loop erase_disc_loop
@@ -3747,6 +4035,10 @@ wait_for_sector	PROC far
 	mov edi,ebx
 	mov ds,es:[edi].dh_buf_sel
 	EnterSection ds:disc_section
+
+ifdef DEBUG	
+    call CheckBuffered
+endif
 
 wait_sector_loop:
 	cmp es:[edi].dh_state,STATE_EMPTY
