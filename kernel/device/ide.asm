@@ -1482,16 +1482,9 @@ write_drive_start:
 
 write_sector_loop:
     mov dx,fs:disc_io_base
-	add dx,7
-	in al,dx
-	test al,8
-	clc
-	jnz write_drive_drq_ok
-;
 	call WaitDrq
 	jc write_drive_retry
-
-write_drive_drq_ok:
+;	
     mov dx,fs:disc_io_base
 	push cx
 	push esi
