@@ -1390,19 +1390,12 @@ AddSetup    Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 AddOut    Proc far
-    push eax
     push edx
-;
-    mov al,fs:usbp_mode
-    cmp al,MODE_CONTROL
-    jne aoDone
 ;   
     mov edx,fs:usp_qh 
     call AddOutBuffer
-
-aoDone:
+;    
     pop edx
-    pop eax    
     ret
 AddOut    Endp
 
@@ -1852,7 +1845,7 @@ InitFunction    Proc near
 	mov di,cs
 	mov es,di
 	mov di,OFFSET UhciInt	
-	RequestSharedIrqHandler
+;	RequestSharedIrqHandler
 ;
     mov si,OFFSET uhci_tab
     xor di,di
@@ -1888,7 +1881,8 @@ ifTabLoop:
 ;
     mov dx,ds:uhc_io_base
     add dx,UsbIntReg
-    mov ax,0Fh
+;    mov ax,0Fh
+    xor ax,ax
     out dx,ax
 ;
     mov dx,ds:uhc_io_base
@@ -2137,7 +2131,6 @@ InitPciAdapter	Endp
 ;		RETURNS:		
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 
 port_timer  Proc far
     push edx

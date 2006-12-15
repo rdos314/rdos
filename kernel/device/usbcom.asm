@@ -69,6 +69,7 @@ ups_control_pipe    DW ?
 ups_index           DW ?
 ups_device_type     DW ?
 ups_divisor         DD ?
+ups_timer_active    DB ?
 ups_data_bits       DB ?
 ups_stop_bits       DB ?
 ups_parity          DB ?
@@ -92,6 +93,7 @@ uds_in_buffer       DW ?
 uds_out_buffer      DW ?
 uds_control         DW ?
 uds_wait            DW ?
+uds_send_pending    DB ?
 
 usbcom_device_struc   ENDS
 
@@ -114,6 +116,77 @@ code	SEGMENT byte public 'CODE'
 	assume cs:code
 
 	.386c
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			SendSignal
+;
+;		description:	Sends signal to USB-handler thread
+;
+;       Parameters:     CX      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+SendSignal  Proc far
+    push ds
+    push ax
+    push bx
+;    
+    mov ds,cx
+    mov ds:ups_timer_active,0
+;    
+    mov ax,usbcom_data_sel
+    mov ds,ax    
+    mov bx,ds:sd_thread
+    Signal    
+;
+    pop bx
+    pop ax
+    pop ds
+    ret
+SendSignal  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			StartSendTimer
+;
+;		description:	Starts send timeout
+;
+;       Parameters:     DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+StartSendTimer Proc near
+    push es
+    pushad
+;	
+    mov al,1    
+    xchg al,ds:ups_timer_active
+    or al,al
+    jnz sstDone
+;
+	GetSystemTime
+	add eax,1193
+	adc edx,0
+;	
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET SendSignal
+	mov bx,ds
+	mov cx,bx
+	StartTimer
+
+sstDone:
+    popad
+    pop es
+    ret
+StartSendTimer Endp
 
 PAGE
 
@@ -381,6 +454,116 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			ResetSio
+;
+;		DESCRIPTION:	Reset SIO
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+reset_sio	PROC near
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,0
+    mov es:usd_value,0
+    mov es:usd_index,dx
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
+    ret
+reset_sio Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			SetLatencyTimer
+;
+;		DESCRIPTION:	Set latency timer
+;
+;		PARAMETERS:		DS      Port selector
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_latency_timer	PROC near
+    push es
+    pushad
+;
+    mov bx,ds:ups_control_pipe
+    mov dx,ds:ups_index
+    inc dx
+;    
+    mov eax,SIZE usb_setup_data
+    AllocateSmallGlobalMem
+    mov cx,ax
+    mov es:usd_type,40h
+    mov es:usd_req,9
+    mov es:usd_value,10
+    mov es:usd_index,dx
+    mov es:usd_len,0
+    xor di,di
+;
+    LockUsbPipe
+    mov cx,8
+    WriteUsbControl
+    ReqUsbStatus
+    FreeMem
+;    
+    GetSystemTime
+    add eax,1193 * 1000
+    adc edx,0
+    mov bx,ds:ups_control_wait
+    WaitWithTimeout
+;    
+    mov bx,ds:ups_control_pipe
+    IsUsbPipeIdle
+    cmc
+    pushf
+    UnlockUsbPipe
+    popf
+;
+    popad
+    pop es    
+    ret
+set_latency_timer Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			SetBaud
 ;
 ;		DESCRIPTION:	Set baudrate
@@ -548,6 +731,7 @@ open_com	Proc far
     push ds
     pushad
 ;
+    mov ds:ups_timer_active,0
     mov ds:ups_data_bits,ah
     mov ds:ups_stop_bits,bl
     mov ds:ups_parity,bh
@@ -572,6 +756,12 @@ open_com	Proc far
     mov bx,ds:ups_control_wait
     movzx ecx,bx
     AddWaitForUsbPipe
+;    
+    call reset_sio
+    jc open_com_done
+;
+    call set_latency_timer
+    jc open_com_done   
 ;    
     call set_data
     jc open_com_done
@@ -620,6 +810,15 @@ close_com	Proc far
     push ds
     push bx
 ;
+    mov al,ds:ups_timer_active
+    or al,al
+    jz ccTimerClosed
+;
+    mov bx,ds
+    StopTimer
+    mov ds:ups_timer_active,0
+    
+ccTimerClosed:   
     call reset_rts
     call reset_dtr
 ;    
@@ -667,13 +866,14 @@ enable_cts	PROC far
     mov bx,ds:ups_control_pipe
     mov dx,ds:ups_index
     inc dx
+    mov dx,200h
 ;    
     mov eax,SIZE usb_setup_data
     AllocateSmallGlobalMem
     mov cx,ax
     mov es:usd_type,40h
-    mov es:usd_req,40h
-    mov es:usd_value,1
+    mov es:usd_req,2
+    mov es:usd_value,0
     mov es:usd_index,dx    
     mov es:usd_len,0
     xor di,di
@@ -727,7 +927,7 @@ disable_cts	PROC far
     AllocateSmallGlobalMem
     mov cx,ax
     mov es:usd_type,40h
-    mov es:usd_req,40h
+    mov es:usd_req,2
     mov es:usd_value,0
     mov es:usd_index,dx    
     mov es:usd_len,0
@@ -822,18 +1022,7 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 start_send	PROC far
-    push ds
-    push ax
-    push bx
-;    
-    mov ax,usbcom_data_sel
-    mov ds,ax    
-    mov bx,ds:sd_thread
-    Signal    
-;
-    pop bx
-    pop ax
-    pop ds
+    call StartSendTimer
 	ret
 start_send	ENDP
 
@@ -1151,7 +1340,7 @@ cwDevLoop:
     mov ax,ds:uds_in_handle
     movzx ecx,ax
     AddWaitForUsbPipe
-;
+;    
     mov ax,ds:uds_out_handle
     movzx ecx,ax
     AddWaitForUsbPipe
@@ -1227,6 +1416,7 @@ PAGE
 ;       PARAMETERS:     FS      Usbcom_data_sel
 ;                       DS      Function sel
 ;                       CX      Number of bytes to send
+;                       DI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -1235,14 +1425,13 @@ SendOutput  Proc near
     movzx dx,ds:uds_interface
     inc dx
 ;    
+    mov ds:uds_send_pending,1
     LockUsbPipe
     mov es,ds:uds_out_buffer
     WriteUsbData
     StartUsbTransaction
-    UnlockUsbPipe
     ret
 SendOutput  Endp
-
 
 PAGE
 
@@ -1290,6 +1479,7 @@ ProcessOpen    Proc near
     mov ds:uds_in_buffer,es
 ;
     movzx eax,ds:uds_maxsize
+    inc eax
     AllocateSmallGlobalMem
     mov ds:uds_out_buffer,es
 ;
@@ -1414,17 +1604,23 @@ PAGE
 ;                       DS      Function sel
 ;
 ;       RETURNS:        CX      Pending characters
+;                       DI      Buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 PollWrite    Proc near
     push ds
     push fs
+;   
     mov bp,ds:uds_maxsize
     mov es,ds:uds_out_buffer
     mov ds,ds:uds_port_sel
+    mov al,ds:ups_timer_active
+    or al,al
+    jnz pwDone
+;    
 	mov fs,ds:send_buf
-	xor di,di
+	mov di,1
 ;
     xor cx,cx
 	mov dx,ds:send_count
@@ -1458,6 +1654,26 @@ pwWrapOk:
 
 pwSend:
     sti
+    mov ax,ds:send_size    
+    or ax,ax
+    jz pwTimerOk
+;
+    call StartSendTimer        
+
+pwTimerOk:
+    cmp ds:uds_device_type,DEVICE_TYPE_SIO
+    je pwSio
+;
+    mov di,1
+    jmp pwDone
+
+pwSio:
+    xor di,di    
+    mov al,cl
+    shl al,2
+    or al,1
+    mov es:[0],al    
+    inc cx
 
 pwDone:
     pop fs
@@ -1509,11 +1725,19 @@ hdDataDone:
     call QueueInput
 
 hdReadDone:
+    mov al,ds:uds_send_pending
+    or al,al
+    jz hdWrite
+;    
     mov bx,ds:uds_out_handle
     IsUsbPipeIdle
     cmc
     jc hdDone
-;
+;    
+    UnlockUsbPipe
+    mov ds:uds_send_pending,0
+
+hdWrite:
     call PollWrite
     or cx,cx
     jz hdDone
@@ -1555,10 +1779,9 @@ usbcom_thread:
     mov fs:sd_wait,bx
 
 utLoop:
-    mov ax,25
-    WaitMilliSec
-;    
+    mov bx,fs:sd_wait
     WaitWithoutTimeout
+;
     mov cx,fs:sd_ports
     or cx,cx
     jz utEnd
@@ -1700,6 +1923,7 @@ apDescrDone:
 	mov es:uds_out_buffer,0
 	mov es:uds_in_handle,0
 	mov es:uds_out_handle,0
+    mov es:uds_send_pending,0
 	InitSection es:uds_section
 ;
     mov si,ds:sd_ports

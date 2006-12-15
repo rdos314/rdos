@@ -69,8 +69,8 @@ void cdecl main()
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
 //	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
 //	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TProtocolAnalyser analyzer(&RawFile, 0x400);
-	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
+	TProtocolAnalyser analyzer(&RawFile, 0x400);
+//	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
 //	TNetProtocolAnalyser analyzer(&RawFile);
 //	TTatsunoProtocolAnalyser analyzer(&RawFile);
 //	TFlintabProtocolAnalyser analyzer(&RawFile, 0x4000);

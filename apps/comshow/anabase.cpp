@@ -160,7 +160,7 @@ int TProtocolAnalyser::GetMsg()
 		}
 
 		Elapsed = Debug.TimeLSB - LastTime;
-		if (Elapsed > 1193 * 1000)
+		if (Elapsed > 1193 * 100)
 		{
 			FRawFile->SetPos(Pos);
 			return TRUE;
