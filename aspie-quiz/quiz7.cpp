@@ -35,7 +35,7 @@
 
 #define CI	1
 
-#define MAX_IN_ROW		1024
+#define MAX_IN_ROW		4096
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -96,7 +96,7 @@ public:
 #
 ##########################################################################*/
 TQuiz7::TQuiz7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6)
-  : TQuiz(154),
+  : TQuiz(156),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
@@ -211,16 +211,16 @@ void TQuiz7::SetupTexts()
 	Quiz[135].Reverse = TRUE;
 	Quiz[146].Reverse = TRUE;
 
-	Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[0].MyGroup = GROUP_SENSORY;
+	Quiz[1].MyGroup = GROUP_SENSORY;
+	Quiz[2].MyGroup = GROUP_MIXED;
+	Quiz[3].MyGroup = GROUP_SENSORY;
+	Quiz[4].MyGroup = GROUP_SENSORY;
+	Quiz[5].MyGroup = GROUP_SENSORY;
+	Quiz[6].MyGroup = GROUP_MIXED;
+	Quiz[7].MyGroup = GROUP_SENSORY;
+	Quiz[8].MyGroup = GROUP_SENSORY;
+	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_MIXED;
 	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
@@ -310,17 +310,17 @@ void TQuiz7::SetupTexts()
 	Quiz[96].MyGroup = GROUP_SEX;
 	Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[99].MyGroup = GROUP_MIXED;
+	Quiz[99].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[100].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[101].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[102].MyGroup = GROUP_MIXED;
 	Quiz[103].MyGroup = GROUP_MIXED;
 	Quiz[104].MyGroup = GROUP_MIXED;
 	Quiz[105].MyGroup = GROUP_MIXED;
-	Quiz[106].MyGroup = GROUP_MIXED;
+	Quiz[106].MyGroup = GROUP_REPETITION;
 	Quiz[107].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[108].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[109].MyGroup = GROUP_MIXED;
+	Quiz[109].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[110].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[111].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[112].MyGroup = GROUP_ASPIE_COMM;
@@ -348,7 +348,7 @@ void TQuiz7::SetupTexts()
 	Quiz[134].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[135].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[136].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[137].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[137].MyGroup = GROUP_MIXED;
 	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[139].MyGroup = GROUP_MIXED;
 	Quiz[140].MyGroup = GROUP_NT_BIOLOGY;
@@ -364,8 +364,10 @@ void TQuiz7::SetupTexts()
 
 	Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[151].MyGroup = GROUP_MIXED;
-	Quiz[152].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[152].MyGroup = GROUP_MIXED;
 	Quiz[153].MyGroup = GROUP_MIXED;
+	Quiz[154].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[155].MyGroup = GROUP_ASPIE_BIOLOGY;
 
 #ifdef ENGLISH
 
@@ -524,6 +526,8 @@ void TQuiz7::SetupTexts()
 	Quiz[151].Text = "Prefer flute";
 	Quiz[152].Text = "Environmentalist";
 	Quiz[153].Text = "Prefers cold";
+    Quiz[154].Text = "Red hair-color";
+	Quiz[155].Text = "Do you have brown eyes?";
 
 #endif
 
@@ -683,6 +687,8 @@ void TQuiz7::SetupTexts()
 	Quiz[151].Text = "Föredrar flöjt";
 	Quiz[152].Text = "Miljöpartist";
 	Quiz[153].Text = "Föredrar kyla över värme";
+    Quiz[154].Text = "Röd hårfärg";
+	Quiz[155].Text = "Har du bruna ögon?";
 
 #endif
 }
@@ -889,7 +895,46 @@ void TQuiz7::LoadPopulations()
 		        Row.Quiz[153] = 1;
 		        break;
 		}
-	
+
+		switch (Row.Hair)
+		{
+		    case 1:
+    		case 2:
+	    	case 5:
+		    	Row.Quiz[154] = 3;
+    			break;
+
+    		case 3:
+	    		Row.Quiz[154] = 1;
+		    	break;
+
+		    case 4:
+    		case 6:
+	    		Row.Quiz[154] = 2;
+    			break;
+
+	    	case 7:
+		    	Row.Quiz[154] = 0;
+    			break;
+	    }
+
+		switch (Row.Eye)
+		{
+			case 1:
+			case 2:
+				Row.Quiz[155] = 1;
+				break;
+
+			case 3:
+				Row.Quiz[155] = 2;
+				break;
+
+			case 4:
+			case 5:
+				Row.Quiz[155] = 3;
+				break;
+		}
+		
 		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
@@ -1168,6 +1213,8 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId(    151, 424);
 	DefineGlobalId(    152, 425);
 	DefineGlobalId(    153, 426);
+	DefineCross(Quiz6, 154, 150);
+	DefineCross(Quiz6, 155, 151);
 }
 
 /*##########################################################################

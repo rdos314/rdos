@@ -32,7 +32,7 @@
 #include "file.h"
 #include "quizdb2.h"
 
-#define MAX_IN_ROW		1024
+#define MAX_IN_ROW		4096
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -137,20 +137,20 @@ void TQuizII::SetupTexts()
     Quiz[92].Reverse = TRUE;
 	Quiz[93].Reverse = TRUE;
 
-	Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[0].MyGroup = GROUP_SENSORY;
 	Quiz[1].MyGroup = GROUP_NONVERBAL;
-	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[2].MyGroup = GROUP_SENSORY;
+	Quiz[3].MyGroup = GROUP_SENSORY;
+	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[6].MyGroup = GROUP_MIXED;
 	Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[8].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[9].MyGroup = GROUP_MIXED;
-	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[12].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[13].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[11].MyGroup = GROUP_SENSORY;
+	Quiz[12].MyGroup = GROUP_MIXED;
+	Quiz[13].MyGroup = GROUP_MIXED;
 	Quiz[14].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[15].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[16].MyGroup = GROUP_MIXED;
@@ -221,10 +221,10 @@ void TQuizII::SetupTexts()
 	Quiz[81].MyGroup = GROUP_MIXED;
 	Quiz[82].MyGroup = GROUP_MIXED;
 	Quiz[83].MyGroup = GROUP_MIXED;
-	Quiz[84].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[84].MyGroup = GROUP_SENSORY;
 	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_MIXED;
-	Quiz[87].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[87].MyGroup = GROUP_MIXED;
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[90].MyGroup = GROUP_MIXED;

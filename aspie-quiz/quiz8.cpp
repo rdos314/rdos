@@ -72,10 +72,12 @@ class TStim
 public:
 	TStim();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index);
+	void WriteStimRow(TFile &file, int index);
+	void WriteChoiceRow(TFile &file, int index);
 
     int StimChoice[45][33];
     int StimCount[45];
+    int ChoiceCount[33];
     const char *StimText[45];
     const char *ReasonText[33];
     
@@ -93,7 +95,7 @@ public:
 #
 ##########################################################################*/
 TQuiz8::TQuiz8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7)
-  : TQuiz(151),
+  : TQuiz(154),
 	FDataFile(FileName)
 {
 	 DefineCross(0, QuizI);
@@ -182,8 +184,11 @@ void TQuiz8::DefineQuiz()
 ##########################################################################*/
 void TQuiz8::SetupTexts()
 {
+  Quiz[14].Reverse = TRUE;
   Quiz[15].Reverse = TRUE;
+  Quiz[16].Reverse = TRUE;
   Quiz[17].Reverse = TRUE;
+  Quiz[18].Reverse = TRUE;
   Quiz[43].Reverse = TRUE;
   Quiz[46].Reverse = TRUE;
   Quiz[47].Reverse = TRUE;
@@ -214,27 +219,26 @@ void TQuiz8::SetupTexts()
   Quiz[102].Reverse = TRUE;
   Quiz[128].Reverse = TRUE;
   Quiz[141].Reverse = TRUE;
-  Quiz[144].Reverse = TRUE;
 
-  Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[0].MyGroup = GROUP_SENSORY;
+  Quiz[1].MyGroup = GROUP_SENSORY;
+  Quiz[2].MyGroup = GROUP_SENSORY;
+  Quiz[3].MyGroup = GROUP_MIXED;
   Quiz[4].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[12].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[13].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[14].MyGroup = GROUP_MIXED;
-  Quiz[15].MyGroup = GROUP_MIXED;
-  Quiz[16].MyGroup = GROUP_MIXED;
+  Quiz[5].MyGroup = GROUP_MIXED;
+  Quiz[6].MyGroup = GROUP_SENSORY;
+  Quiz[7].MyGroup = GROUP_SENSORY;
+  Quiz[8].MyGroup = GROUP_MIXED;
+  Quiz[9].MyGroup = GROUP_SENSORY;
+  Quiz[10].MyGroup = GROUP_SENSORY;
+  Quiz[11].MyGroup = GROUP_MIXED;
+  Quiz[12].MyGroup = GROUP_MIXED;
+  Quiz[13].MyGroup = GROUP_SENSORY;
+  Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[15].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[16].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[17].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[18].MyGroup = GROUP_MIXED;
+  Quiz[18].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[19].MyGroup = GROUP_MIXED;
   Quiz[20].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[21].MyGroup = GROUP_NT_BIOLOGY;
@@ -348,13 +352,13 @@ void TQuiz8::SetupTexts()
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[131].MyGroup = GROUP_MIXED;
-  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_ASPIE_COMM;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
-  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_ASPIE_COMM;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -362,12 +366,15 @@ void TQuiz8::SetupTexts()
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[147].MyGroup = GROUP_SEX;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
   Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[152].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[153].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
@@ -522,6 +529,9 @@ void TQuiz8::SetupTexts()
   Quiz[149].Text = "Do you have a bad temper?";
 
   Quiz[150].Text = "Likes Neanderthal faces";
+  Quiz[151].Text = "Red hair-color";
+  Quiz[152].Text = "Do you have brown eyes?";
+  Quiz[153].Text = "Correct Neanderthal gender";
 #endif
 
 #ifdef SWEDISH
@@ -677,6 +687,9 @@ void TQuiz8::SetupTexts()
   Quiz[149].Text = "Har du häftigt humör?";
 
   Quiz[150].Text = "Gillar neandertalsansikten";
+  Quiz[151].Text = "Röd hårfärg";
+  Quiz[152].Text = "Har du bruna ögon?";
+  Quiz[153].Text = "Rätt kön på neandertalaren";
 #endif
 
 }
@@ -701,11 +714,9 @@ void TQuiz8::InitReferers()
 	AddReferer("wrongplanet.net", "wrongplanet.net");
 	AddReferer("rdos.net/sv", "rdos.net/sv");
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
-	AddReferer("wikipedia.org/wiki/As", "en.wikipedia.org/wiki/Aspergers");
-	AddReferer("whoa.nu", "whoa.nu");
-	AddReferer("airliners.net", "airliners.net/discussions/non_aviation/read.main/1295619");
-	AddReferer("supermama.lt", "supermama.lt/forumas/index.php?showtopic=99238");
-    AddReferer("dickflash.com", "dickflash.com");
+	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
+	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
+	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
  }
 
 /*##########################################################################
@@ -810,7 +821,7 @@ void TQuiz8::LoadPopulations()
 	{
 		switch (Row.HnSimilar)
 		{
-		    case 1:
+			case 1:
 			case 4:
         	    Row.Quiz[150] = 1;
         		break;
@@ -821,11 +832,62 @@ void TQuiz8::LoadPopulations()
         		break;
 
 			default:
-        		Row.Quiz[150] = 3;
+				Row.Quiz[150] = 3;
         		break;
         					
         }
-	
+
+		switch (Row.Hair)
+		{
+		    case 1:
+    		case 2:
+	    	case 5:
+		    	Row.Quiz[151] = 3;
+    			break;
+
+    		case 3:
+	    		Row.Quiz[151] = 1;
+		    	break;
+
+		    case 4:
+    		case 6:
+	    		Row.Quiz[151] = 2;
+    			break;
+
+	    	case 7:
+		    	Row.Quiz[151] = 0;
+    			break;
+	    }
+
+		switch (Row.Eye)
+		{
+			case 1:
+			case 2:
+				Row.Quiz[152] = 1;
+				break;
+
+			case 3:
+				Row.Quiz[152] = 2;
+				break;
+
+			case 4:
+			case 5:
+				Row.Quiz[152] = 3;
+				break;
+		}
+
+		switch (Row.HnGender)
+		{
+			case 1:
+        	    Row.Quiz[153] = 1;
+        		break;
+        					
+			case 2:
+        		Row.Quiz[153] = 3;
+        		break;
+
+        }
+
 		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
@@ -919,16 +981,14 @@ void TQuiz8::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("rdos.net/sv");
-	DefineNt("whoa.nu");
-	DefineNt("airliners.net");
-	DefineNt("supermama.lt");
+	DefineNt("circvsmaximvs.com");
+	DefineNt("panterachat.com");
+	DefineNt("kaytastrophe.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
 	DefineAspie("aspiesforfreedom.");
 	DefineAspie("aspergianisland.com");
-	DefineAspie("xmission.com/~winter");
-	DefineAspie("delphiforums.com");
 	DefineAspie("assupportgrouponline.co.uk");
 	DefineAspie("neurodiversity.com/diagnostic_instruments.html");
 }
@@ -1097,6 +1157,9 @@ void TQuiz8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId( 148, 453);
 	DefineGlobalId( 149, 454);
 	DefineGlobalId( 150, 455);
+    DefineCross(Quiz7, 151, 154);
+    DefineCross(Quiz7, 152, 155);
+	DefineGlobalId( 153, 458);
 }
 
 /*##########################################################################
@@ -1401,8 +1464,8 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;
@@ -1920,86 +1983,185 @@ TStim::TStim()
             StimChoice[i][j] = 0;
 
         StimCount[i] = 0;
-    }
+	}
 
- 	StimText[0] = "Talking to yourself"; 
- 	StimText[1] = "Singing to yourself"; 
- 	StimText[2] = "Humming"; 
- 	StimText[3] = "Whistling"; 
- 	StimText[4] = "Tapping ears"; 
- 	StimText[5] = "Pressing eyes"; 
- 	StimText[6] = "Rolling eyes";
- 	StimText[7] = "Watching a spinning, blinking or glittering object"; 
- 	StimText[8] = "Picking nose"; 
- 	StimText[9] = "Grinding teeth"; 
- 	StimText[10] = "Clicking teeth"; 
- 	StimText[11] = "Sticking tounge out"; 
- 	StimText[12] = "Sucking thumb"; 
- 	StimText[13] = "Sucking lip"; 
- 	StimText[14] = "Biting lip, cheek or tongue"; 
- 	StimText[15] = "Biting nails"; 
- 	StimText[16] = "Biting, peeling or picking cuticle or fingertip"; 
- 	StimText[17] = "Chewing or sucking on strands of hair or beard"; 
- 	StimText[18] = "Chewing or sucking on pencil, toothpick or other object"; 
- 	StimText[19] = "Clicking a pen"; 
- 	StimText[20] = "Twirling hair"; 
- 	StimText[21] = "Tapping fingers"; 
- 	StimText[22] = "Tapping pen or other object"; 
- 	StimText[23] = "Digging fingernails under each other, into skin or other things"; 
- 	StimText[24] = "Flapping hands"; 
- 	StimText[25] = "Clapping hands"; 
- 	StimText[26] = "Rubbing hands together"; 
- 	StimText[27] = "Rubbing arms or thighs"; 
- 	StimText[28] = "Picking skin and scabs"; 
- 	StimText[29] = "Peeling skin flakes, including from lips"; 
- 	StimText[30] = "Pulling hairs from head, face or body"; 
- 	StimText[31] = "Doodling"; 
- 	StimText[32] = "Cracking joints"; 
- 	StimText[33] = "Clenching and unclenching fists"; 
- 	StimText[34] = "Twisting hands/fingers"; 
- 	StimText[35] = "Fiddling with things"; 
- 	StimText[36] = "Spinning an object"; 
- 	StimText[37] = "Wiggling toes or feet"; 
- 	StimText[38] = "Bouncing leg/foot"; 
- 	StimText[39] = "Rocking back-&-forth";
- 	StimText[40] = "Rocking side-to-side"; 
- 	StimText[41] = "Rocking up and down"; 
- 	StimText[42] = "Spinning in circles"; 
- 	StimText[43] = "Pacing"; 
- 	StimText[44] = "Walking on toes"; 
+    for (i = 0; i < 33; i++)
+        ChoiceCount[i] = 0;
 
- 	ReasonText[1] = "When happy"; 
- 	ReasonText[2] = "When excited"; 
- 	ReasonText[3] = "When relaxed"; 
- 	ReasonText[4] = "When thinking"; 
- 	ReasonText[5] = "When bored"; 
- 	ReasonText[6] = "When sad"; 
- 	ReasonText[7] = "When disappointed"; 
- 	ReasonText[8] = "When depressed"; 
- 	ReasonText[9] = "When distressed"; 
- 	ReasonText[10] = "When worried"; 
- 	ReasonText[11] = "When anxious"; 
- 	ReasonText[12] = "When nervous"; 
- 	ReasonText[13] = "When restless"; 
- 	ReasonText[14] = "When stressed"; 
- 	ReasonText[15] = "When overstimulated"; 
- 	ReasonText[16] = "When overwhelmed"; 
- 	ReasonText[17] = "When in physical or emotional pain"; 
- 	ReasonText[18] = "When confused"; 
- 	ReasonText[19] = "When indecisive"; 
- 	ReasonText[20] = "When upset"; 
- 	ReasonText[21] = "When frustrated"; 
- 	ReasonText[22] = "When angry"; 
- 	ReasonText[23] = "When concentrated";
- 	ReasonText[24] = "When you like somebody";
- 	ReasonText[25] = "When you dislike somebody"; 
- 	ReasonText[26] = "For comfort"; 
- 	ReasonText[27] = "To calm myself"; 
- 	ReasonText[28] = "To concentrate"; 
- 	ReasonText[29] = "To release excess energy"; 
- 	ReasonText[30] = "For fun"; 
- 	ReasonText[31] = "It's pleasurable"; 
- 	ReasonText[32] = "Other"; 
+
+#ifdef ENGLISH
+
+	StimText[0] = "Talking to yourself";
+	StimText[1] = "Singing to yourself";
+	StimText[2] = "Humming";
+	StimText[3] = "Whistling";
+	StimText[4] = "Tapping ears";
+	StimText[5] = "Pressing eyes";
+	StimText[6] = "Rolling eyes";
+	StimText[7] = "Watching a spinning, blinking or glittering object";
+	StimText[8] = "Picking nose";
+	StimText[9] = "Grinding teeth";
+	StimText[10] = "Clicking teeth";
+	StimText[11] = "Sticking tounge out";
+	StimText[12] = "Sucking thumb";
+	StimText[13] = "Sucking lip";
+	StimText[14] = "Biting lip, cheek or tongue";
+	StimText[15] = "Biting nails";
+	StimText[16] = "Biting, peeling or picking cuticle or fingertip";
+	StimText[17] = "Chewing or sucking on strands of hair or beard";
+	StimText[18] = "Chewing or sucking on pencil, toothpick or other object";
+	StimText[19] = "Clicking a pen";
+	StimText[20] = "Twirling hair";
+	StimText[21] = "Tapping fingers";
+	StimText[22] = "Tapping pen or other object";
+	StimText[23] = "Digging fingernails under each other, into skin or other things";
+	StimText[24] = "Flapping hands";
+	StimText[25] = "Clapping hands";
+	StimText[26] = "Rubbing hands together";
+	StimText[27] = "Rubbing arms or thighs";
+	StimText[28] = "Picking skin and scabs";
+	StimText[29] = "Peeling skin flakes, including from lips";
+	StimText[30] = "Pulling hairs from head, face or body";
+	StimText[31] = "Doodling";
+	StimText[32] = "Cracking joints";
+	StimText[33] = "Clenching and unclenching fists";
+	StimText[34] = "Twisting hands/fingers";
+	StimText[35] = "Fiddling with things";
+	StimText[36] = "Spinning an object";
+	StimText[37] = "Wiggling toes or feet";
+	StimText[38] = "Bouncing leg/foot";
+	StimText[39] = "Rocking back-&-forth";
+	StimText[40] = "Rocking side-to-side";
+	StimText[41] = "Rocking up and down";
+	StimText[42] = "Spinning in circles";
+	StimText[43] = "Pacing";
+	StimText[44] = "Walking on toes";
+
+#endif
+
+#ifdef SWEDISH
+
+	StimText[0] = "Prata med sig själv";
+	StimText[1] = "Sjunga för sig själv";
+	StimText[2] = "Nynna";
+	StimText[3] = "Vissla";
+	StimText[4] = "Trumma på öronen";
+	StimText[5] = "Trycka på ögonen";
+	StimText[6] = "Rulla med ögonen";
+	StimText[7] = "Studera ett roterande, blinkande eller glittrande föremål";
+	StimText[8] = "Peta näsan";
+	StimText[9] = "Gnissla med tänderna";
+	StimText[10] = "Klappra med tänderna";
+	StimText[11] = "Räcka ut tungan";
+	StimText[12] = "Suga på tummen";
+	StimText[13] = "Suga på läppen";
+	StimText[14] = "Bita sig i läppen, kinden eller tungan";
+	StimText[15] = "Bita på naglarna";
+	StimText[16] = "Bita eller pilla på nagelband eller fingertoppar";
+	StimText[17] = "Tugga eller suga på hårslingor";
+	StimText[18] = "Tugga eller suga på penna, tandpetare eller annat föremål";
+	StimText[19] = "Klicka med en penna";
+	StimText[20] = "Snurra en hårslinga";
+	StimText[21] = "Trumma med fingrarna";
+	StimText[22] = "Trumma med penna eller annat föremål";
+	StimText[23] = "Trycka in naglarna under varandra, in i huden eller in i andra saker";
+	StimText[24] = "Flaxa med händerna";
+	StimText[25] = "Klappa händerna";
+	StimText[26] = "Gnugga händerna";
+	StimText[27] = "Gnugga sina armar eller lår";
+	StimText[28] = "Pilla på hud och sårskorpor";
+	StimText[29] = "Dra bort hudflagor, inkl från läpparna";
+	StimText[30] = "Dra ut hårstrån";
+	StimText[31] = "Kludda/rita figurer";
+	StimText[32] = "Knäcka leder";
+	StimText[33] = "Upprepat knyta nävarna";
+	StimText[34] = "Vrida händerna/fingrarna";
+	StimText[35] = "Pilla på något föremål";
+	StimText[36] = "Snurra på föremål";
+	StimText[37] = "Vicka på tårna eller fötterna";
+	StimText[38] = "Vippa med benet eller foten";
+	StimText[39] = "Sittandes vagga kroppen framåtillbaka";
+	StimText[40] = "Vagga i sidled";
+	StimText[41] = "Vagga upp och ned";
+	StimText[42] = "Snurra hela kroppen runt, runt";
+	StimText[43] = "Vanka av och an";
+	StimText[44] = "Gå på tå";
+
+#endif
+
+#ifdef ENGLISH
+
+	ReasonText[1] = "When happy";
+	ReasonText[2] = "When excited";
+	ReasonText[3] = "When relaxed";
+	ReasonText[4] = "When thinking";
+	ReasonText[5] = "When bored";
+	ReasonText[6] = "When sad";
+	ReasonText[7] = "When disappointed";
+	ReasonText[8] = "When depressed";
+	ReasonText[9] = "When distressed";
+	ReasonText[10] = "When worried";
+	ReasonText[11] = "When anxious";
+	ReasonText[12] = "When nervous";
+	ReasonText[13] = "When restless";
+	ReasonText[14] = "When stressed";
+	ReasonText[15] = "When overstimulated";
+	ReasonText[16] = "When overwhelmed";
+	ReasonText[17] = "When in physical or emotional pain";
+	ReasonText[18] = "When confused";
+	ReasonText[19] = "When indecisive";
+	ReasonText[20] = "When upset";
+	ReasonText[21] = "When frustrated";
+	ReasonText[22] = "When angry";
+	ReasonText[23] = "When concentrated";
+	ReasonText[24] = "When you like somebody";
+	ReasonText[25] = "When you dislike somebody";
+	ReasonText[26] = "For comfort";
+	ReasonText[27] = "To calm myself";
+	ReasonText[28] = "To concentrate";
+	ReasonText[29] = "To release excess energy";
+	ReasonText[30] = "For fun";
+	ReasonText[31] = "It's pleasurable";
+	ReasonText[32] = "Other";
+
+#endif
+
+#ifdef SWEDISH
+
+	ReasonText[1] = "När jag är lycklig";
+	ReasonText[2] = "När jag är upprymd";
+	ReasonText[3] = "När jag är avslappnad";
+	ReasonText[4] = "När jag tänker";
+	ReasonText[5] = "När jag är uttråkad";
+	ReasonText[6] = "När jag är ledsen";
+	ReasonText[7] = "När jag är besviken";
+	ReasonText[8] = "När jag är deprimerad";
+	ReasonText[9] = "När jag är olycklig";
+	ReasonText[10] = "När jag är orolig";
+	ReasonText[11] = "När jag är rädd eller har ångest";
+	ReasonText[12] = "När jag är nervös";
+	ReasonText[13] = "När jag är rastlös";
+	ReasonText[14] = "När jag är stressad";
+	ReasonText[15] = "När jag är överstimulerad";
+	ReasonText[16] = "När jag är överväldigad";
+	ReasonText[17] = "Av fysisk eller emotionell smärta";
+	ReasonText[18] = "När jag är förvirrad";
+	ReasonText[19] = "När jag inte kan bestämma mig";
+	ReasonText[20] = "När jag är upprörd";
+	ReasonText[21] = "När jag är frustrerad";
+	ReasonText[22] = "När jag är arg";
+	ReasonText[23] = "När jag är koncentrerad";
+	ReasonText[24] = "När jag gillar någon";
+	ReasonText[25] = "När jag ogillar någon";
+	ReasonText[26] = "Som tröst";
+	ReasonText[27] = "För att lugna ner mig";
+	ReasonText[28] = "För att koncentrera mig";
+	ReasonText[29] = "För att göra av med överskottsenergi";
+	ReasonText[30] = "För att det är roligt";
+	ReasonText[31] = "För att det är njutbart";
+	ReasonText[32] = "Annan orsak";
+
+#endif
 }
 
 /*##################  TStim::Add ##########################
@@ -2025,21 +2187,99 @@ void TStim::Add(TQuizRow *Row)
 					 if (index < 33)
 					 {
 						  StimChoice[i][index] += 3 - j;
-						  StimCount[i] += 3 - j;
+						  StimCount[i]++;
+						  ChoiceCount[index]++;
 					 }
 				}
 		  }
 	 }
 }
 
-/*##################  TStim::WriteRow ##########################
+/*##################  TStim::WriteStimRow ##########################
 *   Purpose....: Write row in table                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TStim::WriteRow(TFile &file, int index)
+void TStim::WriteStimRow(TFile &file, int index)
+{
+	char str[20];
+	int i;
+	int j;
+	int max;
+	int min;
+	int val;
+	int currind;
+	int used[33];
+
+
+	max = 0;
+	for (i = 1; i <= 32; i++)
+	{
+		used[i] = FALSE;
+
+		val = StimChoice[index][i];
+		if (val > max)
+		{
+			max = val;
+			currind = i;
+		}
+	}
+
+	min = max * 6 / 10;
+
+	if (max)
+	{
+		file.Write("<b>");
+		file.Write(StimText[index]);
+		file.Write("</b>");
+		sprintf(str, " (%d)", StimCount[index]);
+		file.Write(str);
+		file.Write(":  ");
+		file.Write(ReasonText[currind]);
+		used[currind] = TRUE;
+
+		while (max)
+		{
+			sprintf(str, " (%d)", max);
+			file.Write(str);
+
+			max = 0;
+
+			for (i = 1; i <= 32; i++)
+			{
+				if (!used[i])
+				{
+					val = StimChoice[index][i];
+					if (val >= min && val > max)
+					{
+						max = val;
+						currind = i;
+					}
+				}
+			}
+
+			if (max)
+			{
+				file.Write(", ");
+				file.Write(ReasonText[currind]);
+				used[currind] = TRUE;
+			}
+		}
+
+		file.Write("<br>\n");
+	}
+}
+
+/*##################  TStim::WriteChoiceRow ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TStim::WriteChoiceRow(TFile &file, int index)
 {
     char str[20];
 	int i;
@@ -2048,31 +2288,33 @@ void TStim::WriteRow(TFile &file, int index)
 	int min;
 	int val;
 	int currind;
-	int used[33];
+	int used[45];
 	
 
     max = 0;
-    for (i = 1; i <= 32; i++)
+    for (i = 1; i < 45; i++)
     {
         used[i] = FALSE;
         
-        val = StimChoice[index][i];
+        val = StimChoice[i][index];
         if (val > max)
         {
             max = val;
-            currind = i;
+			currind = i;
         }
     }
 
-    min = max * 8 / 10;
+    min = max * 6 / 10;
 
     if (max)
     {
-    	file.Write(StimText[index]);
-    	file.Write(":  ");
         file.Write("<b>");
-    	file.Write(ReasonText[currind]);
+    	file.Write(ReasonText[index]);
     	file.Write("</b>");
+		sprintf(str, " (%d)", ChoiceCount[index]);
+		file.Write(str);
+    	file.Write(":  ");
+    	file.Write(StimText[currind]);
     	used[currind] = TRUE;
 
         while (max)
@@ -2082,11 +2324,11 @@ void TStim::WriteRow(TFile &file, int index)
             
             max = 0;
         
-            for (i = 1; i <= 32; i++)
-            {
+            for (i = 0; i < 45; i++)
+			{
                 if (!used[i])
                 {
-                    val = StimChoice[index][i];
+                    val = StimChoice[i][index];
                     if (val >= min && val > max)
                     {
                         max = val;                    
@@ -2098,15 +2340,13 @@ void TStim::WriteRow(TFile &file, int index)
             if (max)
             {
                 file.Write(", ");
-                file.Write("<b>");
-                file.Write(ReasonText[currind]);
-            	file.Write("</b>");
+                file.Write(StimText[currind]);
                 used[currind] = TRUE;
             }
         }
 
         file.Write("<br>\n");
-    }
+	}
 }
 
 /*##################  TQuiz5::WriteHair ##########################
@@ -2224,9 +2464,13 @@ void TQuiz8::WriteStim(const char *filename)
 {
 	TQuizRow Row;
 	int i;
+	int j;
+	int index;
 	int ival;
 	char str[80];
 	TFile file(filename, 0);
+	int Used[45];
+	int max;
 
 	TStim stim;
 
@@ -2235,11 +2479,55 @@ void TQuiz8::WriteStim(const char *filename)
 		stim.Add(&Row);
 
 	file.Write("<h3>");
+
+#ifdef ENGLISH	
 	file.Write("Stim results");
+#endif
+
+#ifdef SWEDISH	
+	file.Write("Stim resultat");
+#endif
+	
 	file.Write("</h3><br>");
 
+
+    for (j = 0; j < 45; j++)
+        Used[j] = FALSE;
+        
     for (i = 0; i < 45; i++)
-        stim.WriteRow(file, i);
+    {
+        max = 0;
+
+        for (j = 0; j < 45; j++)
+            if (!Used[j] && stim.StimCount[j] > max)
+            {
+                index = j;
+                max = stim.StimCount[j];
+            }
+    
+        stim.WriteStimRow(file, index);
+        Used[index] = TRUE;
+    }
+
+	file.Write("<br><br>");
+
+    for (j = 1; j < 33; j++)
+        Used[j] = FALSE;
+        
+    for (i = 1; i < 33; i++)
+    {
+        max = 0;
+
+        for (j = 1; j < 33; j++)
+            if (!Used[j] && stim.ChoiceCount[j] > max)
+            {
+                index = j;
+                max = stim.ChoiceCount[j];
+            }
+    
+        stim.WriteChoiceRow(file, index);
+        Used[index] = TRUE;
+    }
 
 	file.Write("<br><br>");
 }

@@ -32,7 +32,7 @@
 #include "file.h"
 #include "quizdb3.h"
 
-#define MAX_IN_ROW		1024
+#define MAX_IN_ROW		4096
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -131,30 +131,30 @@ void TQuizIII::SetupTexts()
 	Quiz[61].Reverse = TRUE;
 	Quiz[62].Reverse = TRUE;
 
-	Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[9].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[0].MyGroup = GROUP_SENSORY;
+	Quiz[1].MyGroup = GROUP_SENSORY;
+	Quiz[2].MyGroup = GROUP_SENSORY;
+	Quiz[3].MyGroup = GROUP_SENSORY;
+	Quiz[4].MyGroup = GROUP_SENSORY;
+	Quiz[5].MyGroup = GROUP_SENSORY;
+	Quiz[6].MyGroup = GROUP_SENSORY;
+	Quiz[7].MyGroup = GROUP_MIXED;
+	Quiz[8].MyGroup = GROUP_SENSORY;
+	Quiz[9].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_MIXED;
 	Quiz[11].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_MIXED;
-	Quiz[15].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[16].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[17].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[18].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[19].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[15].MyGroup = GROUP_MIXED;
+	Quiz[16].MyGroup = GROUP_MIXED;
+	Quiz[17].MyGroup = GROUP_SENSORY;
+	Quiz[18].MyGroup = GROUP_MIXED;
+	Quiz[19].MyGroup = GROUP_MIXED;
 	Quiz[20].MyGroup = GROUP_MIXED;
 	Quiz[21].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[22].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[23].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[23].MyGroup = GROUP_SENSORY;
 	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_NONVERBAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
@@ -223,7 +223,7 @@ void TQuizIII::SetupTexts()
 	Quiz[89].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[90].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[91].MyGroup = GROUP_MIXED;
-	Quiz[92].MyGroup = GROUP_MIXED;
+	Quiz[92].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[93].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[94].MyGroup = GROUP_MIXED;
 	Quiz[95].MyGroup = GROUP_ASPIE_BIOLOGY;

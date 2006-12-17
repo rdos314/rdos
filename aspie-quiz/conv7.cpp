@@ -266,10 +266,47 @@ void ProcessRow(char *str)
 
 				case 4:
 					Row.Hair = atoi(valstr);
+            		switch (Row.Hair)
+            		{
+            		    case 1:
+                		case 2:
+            	    	case 5:
+            		    	Row.Quiz[154] = 3;
+                			break;
+
+                		case 3:
+	    	            	Row.Quiz[154] = 1;
+            		    	break;
+
+		                case 4:
+                		case 6:
+            	    		Row.Quiz[154] = 2;
+    		            	break;
+
+            	    	case 7:
+		                	Row.Quiz[154] = 0;
+                			break;
+            	    }   
 					break;
 
 				case 5:
 					Row.Eye = atoi(valstr);
+                	switch (Row.Eye)
+            	    {
+            		    case 1:
+                		case 2:
+							Row.Quiz[155] = 1;
+							break;
+
+						case 3:
+							Row.Quiz[155] = 2;
+							break;
+
+						case 4:
+						case 5:
+							Row.Quiz[155] = 3;
+							break;
+					}
 					break;
 
 				case 6:

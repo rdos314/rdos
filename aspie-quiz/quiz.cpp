@@ -244,6 +244,7 @@ void TQuiz::Init()
 
 	Group[GROUP_ASPIE_BIOLOGY].Name = "Aspie biology";
 	Group[GROUP_NT_BIOLOGY].Name = "NT biology";
+	Group[GROUP_SENSORY].Name = "Sensory";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie ability";
 	Group[GROUP_NT_TALENT].Name = "Aspie disability";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
@@ -260,6 +261,7 @@ void TQuiz::Init()
 
 	Group[GROUP_ASPIE_BIOLOGY].Name = "Aspie biologi";
 	Group[GROUP_NT_BIOLOGY].Name = "NT biologi";
+	Group[GROUP_SENSORY].Name = "Sinnen";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie talang";
 	Group[GROUP_NT_TALENT].Name = "Aspie handikapp";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";

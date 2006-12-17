@@ -493,7 +493,7 @@ create_header_fill:
 	pop ax
 	xchg al,ah
 	mov es:[di].ip_size,ax
-	mov es:[di].ip_frags,0
+	mov es:[di].ip_frags,40h
 	pop ax
 	mov es:[di].ip_ttl,ah
 	mov es:[di].ip_proto,al
@@ -771,7 +771,7 @@ create_broad_fill:
 	mov es:[di].ip_tos,0
 	xchg cl,ch
 	mov es:[di].ip_size,cx
-	mov es:[di].ip_frags,0
+	mov es:[di].ip_frags,40h
 	mov es:[di].ip_ttl,dh
 	mov es:[di].ip_proto,dl
 	mov es:[di].ip_checksum,0

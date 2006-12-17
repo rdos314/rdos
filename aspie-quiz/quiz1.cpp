@@ -32,7 +32,7 @@
 #include "file.h"
 #include "quizdb.h"
 
-#define MAX_IN_ROW		1024
+#define MAX_IN_ROW		4096
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -161,28 +161,28 @@ void TQuizI::SetupTexts()
 	Quiz[38].MyGroup = GROUP_REPETITION;
 	Quiz[39].MyGroup = GROUP_MIXED;
 	Quiz[40].MyGroup = GROUP_MIXED;
-	Quiz[41].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[41].MyGroup = GROUP_MIXED;
 	Quiz[42].MyGroup = GROUP_NONVERBAL;
 	Quiz[43].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[44].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[45].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[46].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[47].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[48].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[46].MyGroup = GROUP_MIXED;
+	Quiz[47].MyGroup = GROUP_SENSORY;
+	Quiz[48].MyGroup = GROUP_MIXED;
 	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_REPETITION;
-	Quiz[51].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[52].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[51].MyGroup = GROUP_MIXED;
+	Quiz[52].MyGroup = GROUP_SENSORY;
 	Quiz[53].MyGroup = GROUP_NONVERBAL;
-	Quiz[54].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[55].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[56].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[57].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[54].MyGroup = GROUP_MIXED;
+	Quiz[55].MyGroup = GROUP_SENSORY;
+	Quiz[56].MyGroup = GROUP_SENSORY;
+	Quiz[57].MyGroup = GROUP_SENSORY;
 	Quiz[58].MyGroup = GROUP_REPETITION;
-	Quiz[59].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[60].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[59].MyGroup = GROUP_SENSORY;
+	Quiz[60].MyGroup = GROUP_SENSORY;
 	Quiz[61].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[62].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[62].MyGroup = GROUP_SENSORY;
 	Quiz[63].MyGroup = GROUP_REPETITION;
 	Quiz[64].MyGroup = GROUP_MIXED;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -198,7 +198,7 @@ void TQuizI::SetupTexts()
 	Quiz[75].MyGroup = GROUP_MIXED;
 	Quiz[76].MyGroup = GROUP_MIXED;
 	Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[78].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[78].MyGroup = GROUP_MIXED;
 	Quiz[79].MyGroup = GROUP_MIXED;
 	Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
