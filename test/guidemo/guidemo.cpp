@@ -10,6 +10,7 @@
 #include "waitdev.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "jpeg.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -20,6 +21,38 @@ TSprite *LeftSprite;
 TSprite *RightSprite;
 TSprite *MouseSprite;
 TGraphicDevice *KeyVideo;
+
+void DrawKey(TGraphicDevice *dev, int x, int y, const char *text)
+{
+	TBitmapGraphicDevice *bitmap;
+	TFont Font(30);
+	int xsize;
+	int ysize;
+	int xstart;
+	int ystart;
+	int key_xsize;
+	int key_ysize;
+
+	bitmap = TJpegBitmapDevice::Create("kupp.jpg");
+	 bitmap->SetFont(&Font);
+
+	 Font.GetStringMetrics(text, &xsize, &ysize);
+
+	 key_xsize = bitmap->GetWidth();
+	 key_ysize = bitmap->GetHeight();
+
+	 xstart = (key_xsize - xsize) / 2;
+	 ystart = (key_ysize - ysize) / 2;
+
+	 bitmap->SetDrawColor(0, 0, 0);
+	 bitmap->SetLgopNone();
+	 bitmap->DrawString(xstart, ystart, text);
+
+	dev->SetLgopNone();
+	dev->Blit(bitmap, 0, 0, x, y, key_xsize, key_ysize);
+	delete bitmap;
+}
+
 
 void RandomColor(TGraphicDevice *dev)
 {
@@ -364,7 +397,7 @@ void cdecl main()
 	Mouse->OnRightUp = RightUp;
 	Mouse->OnRightDown = RightDown;
 
-	vbe = new TVideoGraphicDevice(24, 800, 600);
+	vbe = new TVideoGraphicDevice(24, 800, 480);
 //	vbe = new TVideoGraphicDevice(1, 240, 128);
 
 	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
@@ -398,13 +431,31 @@ void cdecl main()
 	Wait.Add(Mouse);
 	Wait.StartThreadHandler("IO Thread", 0x1000);
 
+	 DrawKey(vbe, 0, 0, "1");
+	 DrawKey(vbe, 80, 0, "2");
+	 DrawKey(vbe, 160, 0, "3");
+	 DrawKey(vbe, 0, 120, "4");
+	 DrawKey(vbe, 80, 120, "5");
+	 DrawKey(vbe, 160, 120, "6");
+	 DrawKey(vbe, 0, 240, "7");
+	 DrawKey(vbe, 80, 240, "8");
+	 DrawKey(vbe, 160, 240, "9");
+	 DrawKey(vbe, 0, 360, "FEL");
+	 DrawKey(vbe, 80, 360, "0");
+	 DrawKey(vbe, 160, 360, "KLAR");
+
+
+    for (;;)
+		  RdosWaitMilli(1000);
+
+
 	vbe->SetDrawColor(255,255,255);
 	vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
 	vbe->DrawLine(240, 0, 0, 128);
 
 	vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
 
-	Planets = new TPlanetThread(vbe, 8);
+//	Planets = new TPlanetThread(vbe, 8);
 
 	RdosWaitMilli(5000);
 
@@ -470,21 +521,22 @@ void cdecl main()
 		switch (RdosGetRandom(4))
 		{
 			case 0:
-				RandomLine(vbe);
+//				RandomLine(vbe);
 				break;
 
 			case 1:
-				RandomRect(vbe);
+//				RandomRect(vbe);
 				break;
 
 			case 2:
-				RandomEllipse(vbe);
+//				RandomEllipse(vbe);
 				break;
 
 			case 3:
-				RandomText(vbe);
+//				RandomText(vbe);
 				break;
 		}
+		RdosWaitMilli(1000);
 	}
 }
 

@@ -2046,6 +2046,20 @@ InvertMouse	MACRO
 	OsGate invert_mouse_nr
 					ENDM
 
+
+;	AX		Button status
+;	CX		Abs X (0..32767)
+;	DX		Abs Y (0..32767)
+SetMouse	MACRO
+	OsGate set_mouse_nr
+					ENDM
+
+;	CX		Max x-position
+;	DX		Max y-position
+SetMouseLimit	MACRO
+	OsGate set_mouse_limit_nr
+					ENDM
+
 ;;;;;;;;;; POWER MANAGEMENT ;;;;;;;;;
 
 ;   AX      Port number

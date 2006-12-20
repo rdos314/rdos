@@ -37,16 +37,211 @@ INCLUDE ..\os.inc
 
 	.386p
 
+X_START = 80
+Y_START = 110
+X_SIZE = 900
+Y_SIZE = 880
+
 touch_data_seg	SEGMENT AT 0
 
 td_wait         DW ?
 td_port         DW ?
+td_x            DW ?
+td_y            DW ?
+td_control      DB ?
 
 touch_data_seg	ENDS
 
 code	SEGMENT byte public use16 'CODE'
 
 	assume cs:code
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			HandleTouch
+;
+;		DESCRIPTION:    Handle touch-screen
+;
+;       PARAMETERS:     
+;
+;		RETURNS:		
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+HandleTouch:    
+    CreateWait
+    mov ds:td_wait,bx
+;    
+    mov ah,8
+    mov bl,1
+    mov bh,'N'
+    mov ecx,9600
+    mov si,256
+    mov di,256
+    OpenCom
+    mov ds:td_port,bx
+;
+    mov ax,ds:td_port
+    mov bx,ds:td_wait
+    xor ecx,ecx
+    AddWaitForCom
+
+htClearLoop:  
+    GetSystemTime
+    add eax,10 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,80h
+    jz htClearLoop
+    jmp htControl
+
+htLoop:
+    mov bx,ds:td_wait
+    WaitWithoutTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,80h
+    jz htLoop    
+
+htControl:
+    mov ds:td_control,al
+;    
+    GetSystemTime
+    add eax,10 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,0F0h
+    jnz htLoop
+;
+    and ax,0Fh
+    shl ax,6
+    mov ds:td_x,ax        
+;    
+    GetSystemTime
+    add eax,10 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,0C0h
+    jnz htLoop
+;
+    and ax,3Fh
+    or ds:td_x,ax
+;    
+    GetSystemTime
+    add eax,10 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,0F0h
+    jnz htLoop
+;
+    and ax,0Fh
+    shl ax,6
+    mov ds:td_y,ax        
+;    
+    GetSystemTime
+    add eax,10 * 1192
+    adc edx,0
+    mov bx,ds:td_wait
+    WaitWithTimeout
+;
+    mov bx,ds:td_port
+    ReadCom
+    jc htLoop
+;
+    test al,0C0h
+    jnz htLoop
+;
+    and ax,3Fh
+    or ds:td_y,ax
+;    
+; custom scaling
+;
+    mov cx,ds:td_x
+    sub cx,X_START
+    jnc htXMinOk
+;
+    xor cx,cx
+
+htXMinOk:
+    cmp cx,X_SIZE
+    jb htXMaxOk
+;
+    mov cx,X_SIZE
+
+htXMaxOk:
+    xor dx,dx
+    mov ax,7FFFh
+    mul cx
+    mov cx,X_SIZE
+    div cx
+    mov ds:td_x,ax
+;
+    mov cx,ds:td_y
+    sub cx,Y_START
+    jnc htYMinOk
+;
+    xor cx,cx
+
+htYMinOk:
+    cmp cx,Y_SIZE
+    jb htYMaxOk
+;
+    mov cx,Y_SIZE
+
+htYMaxOk:
+    xor dx,dx
+    mov ax,7FFFh
+    mul cx
+    mov cx,Y_SIZE
+    div cx
+    mov ds:td_y,ax
+;    
+    mov cx,ds:td_x
+    mov dx,ds:td_y
+    mov al,ds:td_control
+    and al,20h
+    shr al,5
+;    shl cx,5
+;    shl dx,5
+;
+; upside-down touch
+;
+    not cx
+    not dx
+    and ch,7Fh
+    and dh,7Fh
+;    
+    SetMouse
+;
+    jmp htLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -70,7 +265,6 @@ touch_thread:
     mov ax,touch_data_sel
     mov ds,ax
 ;    
-    int 3
     CreateWait
     mov ds:td_wait,bx
 ;    
@@ -168,9 +362,12 @@ ttNextPort:
 
 ttPortOk:
     pop ax
-    mov bx,ds:td_wait
-    WaitWithoutTimeout
-    int 3
+    mov bx,ds:td_port
+    CloseCom
+;    
+    mov bx,ds:td_wait 
+    RemoveWait
+    jmp HandleTouch
 
 ttDone: 
     mov bx,ds:td_wait

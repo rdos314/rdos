@@ -47,6 +47,9 @@ m_horiz_max		DW ?
 m_vert_min		DW ?
 m_vert_max		DW ?
 
+m_horiz_limit   DW ?
+m_vert_limit    DW ?
+
 m_botton_status	DW ?
 
 m_horiz_press0	DW ?
@@ -82,6 +85,8 @@ mouse_data_seg	STRUC
 md_buttons		DW ?
 md_dx			DW ?
 md_dy			DW ?
+md_x            DW ?
+md_y            DW ?
 md_mouse_thread	DW ?
 
 md_end			DB ?

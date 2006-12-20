@@ -147,6 +147,36 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	
 ;
+;		NAME:			SetMouseLimit
+;
+;		DESCRIPTION:	Set mouse limits for touch-screens
+;
+;		PARAMETERS:		CX		MaxX
+;  					    DX		MaxY
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_mouse_limit_name	DB 'Set Mouse Limit',0
+
+set_mouse_limit	PROC far
+	push ds
+	push ax
+;	
+	mov ax,mouse_local_sel
+	mov ds,ax
+	mov ds:m_horiz_limit,cx
+	mov ds:m_vert_limit,dx
+;	
+	pop ax
+	pop ds
+	ret
+set_mouse_limit	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
 ;		NAME:			update_mouse
 ;
 ;		DESCRIPTION:	update mouse from IRQ
@@ -195,6 +225,60 @@ update_mouse_done:
 	pop ds
 	ret
 update_mouse	ENDP
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			set_mouse
+;
+;		DESCRIPTION:	Set mouse from IRQ
+;
+;		PARAMETERS:		AX		Buttons
+;						CX		AbsX
+;  					    DX		AbsY
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+set_mouse_name	DB 'Set Mouse',0
+
+set_mouse	PROC far
+	push ds
+	push bx
+;
+	mov bx,mouse_data_sel
+	mov ds,bx
+	mov ds:md_buttons,ax
+	mov ds:md_x,cx
+	mov ds:md_y,dx
+;	
+	mov bx,ds:md_mouse_thread
+	mov ax,mouse_focus_sel
+	mov ds,ax
+	inc ds:m_counter
+	mov ax,ds:m_notify_thread
+	or ax,ax
+	jz set_mouse_int_signal
+;
+	mov bx,ax
+
+set_mouse_int_signal:
+	Signal
+;
+    mov bx,ds:m_avail_obj
+    or bx,bx
+    jz set_mouse_done
+;
+    mov es,bx
+    SignalWait
+	mov ds:m_avail_obj,0
+
+set_mouse_done:
+	pop bx
+	pop ds
+	ret
+set_mouse	ENDP
 
 PAGE
 
@@ -317,21 +401,43 @@ mouse_buttons_done:
 	xor cx,cx
 	xchg cx,es:md_dx
 	or cx,cx
-	jz update_not_horiz
+	jz update_not_delta_horiz
 ;
 	add ds:m_horiz_motion,cx
 	add ds:m_horiz_pos,cx
 	call check_horiz_position
 
+update_not_delta_horiz:
+    mov cx,0FFFFh
+    xchg cx,es:md_x
+    cmp cx,0FFFFh
+    je update_not_horiz
+;
+    shl cx,1
+    mov ax,ds:m_horiz_limit
+    mul cx
+    mov ds:m_horiz_pos,dx
+    
 update_not_horiz:
 	xor dx,dx
 	xchg dx,es:md_dy
 	or dx,dx
-	jz update_not_vert
+	jz update_not_delta_vert
 ;
 	add ds:m_vert_motion,dx
 	add ds:m_vert_pos,dx
 	call check_vert_position
+
+update_not_delta_vert:
+    mov cx,0FFFFh
+    xchg cx,es:md_y
+    cmp cx,0FFFFh
+    je update_not_vert
+;
+    shl cx,1
+    mov ax,ds:m_vert_limit
+    mul cx
+    mov ds:m_vert_pos,dx
 
 update_not_vert:
 	ret
@@ -372,8 +478,10 @@ reset	PROC near
 ;
 	mov ds:m_horiz_min,ax
 	mov ds:m_horiz_max,639
+	mov ds:m_horiz_limit,640
 	mov ds:m_vert_min,ax
 	mov ds:m_vert_max,199
+	mov ds:m_vert_limit,480
 ;
 	mov ds:m_horiz_press0,ax
 	mov ds:m_vert_press0,ax
@@ -1393,6 +1501,8 @@ init_mouse	PROC far
 	mov ds:md_buttons,0
 	mov ds:md_dx,0
 	mov ds:md_dy,0
+	mov ds:md_x,0FFFFh
+	mov ds:md_y,0FFFFh
 	mov ds:md_mouse_thread,0
 ;
 	mov ax,init_mouse_nr
@@ -1467,10 +1577,22 @@ init	PROC far
 	mov ax,add_wait_for_mouse_nr
 	RegisterBimodalUserGate
 ;
+	mov si,OFFSET set_mouse_limit
+	mov di,OFFSET set_mouse_limit_name
+	xor cl,cl
+	mov ax,set_mouse_limit_nr
+	RegisterOsGate
+;
 	mov si,OFFSET update_mouse
 	mov di,OFFSET update_mouse_name
 	xor cl,cl
 	mov ax,update_mouse_nr
+	RegisterOsGate
+;
+	mov si,OFFSET set_mouse
+	mov di,OFFSET set_mouse_name
+	xor cl,cl
+	mov ax,set_mouse_nr
 	RegisterOsGate
 ;
 	mov si,OFFSET show_mouse

@@ -451,5 +451,8 @@ add_com_port_nr             EQU 305
 hook_usb_attach_nr          EQU 306
 hook_usb_detach_nr          EQU 307
 
+set_mouse_nr                EQU 308
+set_mouse_limit_nr          EQU 309
+
 osgate_entries				EQU 310
 
