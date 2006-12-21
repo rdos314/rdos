@@ -47,7 +47,7 @@ void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKe
 {
     TControlThread *dev = (TControlThread *)Keyboard->Owner;
 
-    dev->OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
+    dev->NotifyKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -65,7 +65,7 @@ void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int Virtual
 {
     TControlThread *dev = (TControlThread *)Keyboard->Owner;
 
-    dev->OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
+    dev->NotifyKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
 }
 
 /*##########################################################################
@@ -83,7 +83,7 @@ void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     TControlThread *dev = (TControlThread *)Mouse->Owner;
 
-    dev->OnMouseMove(x, y, MouseButton, KeyState);
+    dev->NotifyMouseMove(x, y, MouseButton, KeyState);
 }
 
 /*##########################################################################
@@ -101,7 +101,7 @@ void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     TControlThread *dev = (TControlThread *)Mouse->Owner;
 
-    dev->OnLeftUp(x, y, MouseButton, KeyState);
+    dev->NotifyLeftUp(x, y, MouseButton, KeyState);
 }
 
 /*##########################################################################
@@ -119,7 +119,7 @@ void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     TControlThread *dev = (TControlThread *)Mouse->Owner;
 
-    dev->OnLeftDown(x, y, MouseButton, KeyState);
+    dev->NotifyLeftDown(x, y, MouseButton, KeyState);
 }
 
 /*##########################################################################
@@ -137,7 +137,7 @@ void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     TControlThread *dev = (TControlThread *)Mouse->Owner;
 
-    dev->OnRightUp(x, y, MouseButton, KeyState);
+    dev->NotifyRightUp(x, y, MouseButton, KeyState);
 }
 
 /*##########################################################################
@@ -155,7 +155,34 @@ void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
     TControlThread *dev = (TControlThread *)Mouse->Owner;
 
-    dev->OnRightDown(x, y, MouseButton, KeyState);
+    dev->NotifyRightDown(x, y, MouseButton, KeyState);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::TControl
+#
+#   Purpose....: Control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl::TControl(TControlThread *dev)
+{
+    FXMin = 0;
+    FYMin = 0;
+    FWidth = 0;
+    FHeight = 0;
+
+    FVisible = FALSE;
+    FEnabled = FALSE;
+    FControlList = 0;
+
+    FParent = 0;
+    FDev = dev;
+    FDev->Add(this);
 }
 
 /*##########################################################################
@@ -178,9 +205,63 @@ TControl::TControl(TControlThread *dev, int xmin, int ymin, int width, int heigh
 
     FVisible = TRUE;
     FEnabled = TRUE;
+    FControlList = 0;
 
+    FParent = 0;
     FDev = dev;
     FDev->Add(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::TControl
+#
+#   Purpose....: Control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl::TControl(TControl *control)
+{
+    FXMin = 0;
+    FYMin = 0;
+    FWidth = 0;
+    FHeight = 0;
+
+    FVisible = FALSE;
+    FEnabled = FALSE;
+    FControlList = 0;
+
+    FParent = control;
+    FParent->Add(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::TControl
+#
+#   Purpose....: Control constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TControl::TControl(TControl *control, int xmin, int ymin, int width, int height)
+{
+    FXMin = xmin;
+    FYMin = ymin;
+    FWidth = width;
+    FHeight = height;
+
+    FVisible = TRUE;
+    FEnabled = TRUE;
+    FControlList = 0;
+
+    FParent = control;
+    FParent->Add(this);
 }
 
 /*##########################################################################
@@ -196,8 +277,111 @@ TControl::TControl(TControlThread *dev, int xmin, int ymin, int width, int heigh
 ##########################################################################*/
 TControl::~TControl()
 {
-    FDev->Delete(this);
+    TControl *control;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        FControlList = control->FNext;
+        delete control;
+
+        control = FControlList;
+    }
+
+    FListSection.Leave();
+
+    if (FParent)
+        FParent->Delete(this);
+    else
+        FDev->Delete(this);
 }
+
+/*##########################################################################
+#
+#   Name       : TControl::Add
+#
+#   Purpose....: Add child control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Add(TControl *control)
+{
+	TControl *curr;
+    TControl *prev;
+
+    control->FDev = FDev;
+    
+    control->FNext = 0;
+
+    FListSection.Enter();
+    
+    prev = FControlList;
+
+    if (prev)
+    {
+        curr = prev;
+        while (curr)
+        {
+            prev = curr;
+            curr = curr->FNext;
+        }
+
+        prev->FNext = control;
+    }
+    else
+        FControlList = control;   
+
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Delete
+#
+#   Purpose....: Delete child control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Delete(TControl *control)
+{
+    TControl *curr;
+    TControl *prev;
+
+    control->FNext = 0;
+
+    FListSection.Enter();
+
+    if (FControlList)
+    {
+        if (FControlList == control)
+            FControlList = FControlList->FNext;
+        else
+        {
+            prev = FControlList;
+            curr = prev;
+            
+            while (curr && curr != control)
+            {
+                prev = curr;
+                curr = curr->FNext;
+            }
+
+            if (curr == control)
+                prev->FNext = curr->FNext;            
+        }
+    }
+
+    FListSection.Leave();
+}    
 
 /*##########################################################################
 #
@@ -297,6 +481,78 @@ int TControl::IsEnabled() const
 
 /*##########################################################################
 #
+#   Name       : TControl::Resize
+#
+#   Purpose....: Resize control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Resize(int xsize, int ysize)
+{
+    FWidth = xsize;
+    FHeight = ysize;
+
+    if (FVisible)
+        Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Move
+#
+#   Purpose....: Move control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Move(int xstart, int ystart)
+{
+    FXMin = xstart;
+    FYMin = ystart;
+
+    if (FVisible)
+        Redraw();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::PutKey
+#
+#   Purpose....: Put key into buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::PutKey(char ch)
+{
+    FDev->PutKey(ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::IsInside
+#
+#   Purpose....: Check if position is inside control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TControl::IsInside(int x, int y) const
+{
+	 return FXMin <= x && FXMin + FWidth > x && FYMin <= y && FYMin + FHeight > y;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::Redraw
 #
 #   Purpose....: Force redraw of control
@@ -324,6 +580,33 @@ void TControl::Redraw()
 ##########################################################################*/
 void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
+    TControl *control;
+    int xstart;
+    int ystart;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+        {
+            xstart = xmin + control->FXMin;
+            ystart = ymin + control->FYMin;
+            
+        	dev->SetClipRect(  xstart, ystart,
+        					   xstart + control->FWidth - 1,
+        					   ystart + control->FHeight - 1);
+
+            control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
+        }            
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
 }
 
 /*##########################################################################
@@ -337,8 +620,27 @@ void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int hei
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+int TControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control && !handled)
+    {
+        if (control->IsEnabled())
+            if (control->OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode))
+                handled = TRUE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -352,8 +654,27 @@ void TControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCo
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+int TControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control && !handled)
+    {
+        if (control->IsEnabled())
+            if (control->OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode))
+                handled = TRUE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -367,8 +688,27 @@ void TControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanC
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
+int TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnMouseMove(x - FXMin, y - FYMin, ButtonState, KeyState))
+                handled = FALSE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -382,8 +722,27 @@ void TControl::OnMouseMove(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
+int TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnLeftUp(x - FXMin, y - FYMin, ButtonState, KeyState))
+                handled = FALSE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -397,8 +756,27 @@ void TControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
+int TControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnLeftDown(x - FXMin, y - FYMin, ButtonState, KeyState))
+                handled = FALSE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -412,8 +790,27 @@ void TControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnRightUp(int x, int y, int ButtonState, int KeyState)
+int TControl::OnRightUp(int x, int y, int ButtonState, int KeyState)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnRightUp(x - FXMin, y - FYMin, ButtonState, KeyState))
+                handled = FALSE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -427,8 +824,27 @@ void TControl::OnRightUp(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
+int TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
 {
+    TControl *control;
+    int handled = FALSE;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnRightDown(x - FXMin, y - FYMin, ButtonState, KeyState))
+                handled = FALSE;
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return handled;
 }
 
 /*##########################################################################
@@ -442,14 +858,23 @@ void TControl::OnRightDown(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-TControlThread::TControlThread(const char *name, TGraphicDevice *dev, TKeyboardDevice *keyboard, TMouseDevice *mouse)
-  : TThread(name, STACK_SIZE)
+TControlThread::TControlThread(const char *name, TGraphicDevice *dev)
 {
-    FGraphic = dev;
-    FKeyboard = keyboard;
-    FMouse = mouse;
+    FGraphic = new TGraphicDevice(*dev);
+    FKeyboard = 0;
+    FMouse = 0;
 
     FControlList = 0;
+
+    OnKeyPressed = 0;
+    OnKeyReleased = 0;
+    OnMouseMove = 0;
+    OnLeftUp = 0;
+    OnLeftDown = 0;
+    OnRightUp = 0;
+    OnRightDown = 0;
+
+	Start(name, STACK_SIZE);    
 }
 
 /*##########################################################################
@@ -480,6 +905,53 @@ TControlThread::~TControlThread()
     }
 
     FListSection.Leave();
+
+    delete FGraphic;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Add
+#
+#   Purpose....: Add keyboard
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Add(TKeyboardDevice *Keyboard)
+{
+    FKeyboard = Keyboard;
+    
+    Keyboard->Owner = this;
+    Keyboard->OnKeyPress = KeyPress;
+	Keyboard->OnKeyRelease = KeyRelease;
+    FWait.Add(Keyboard);
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Add
+#
+#   Purpose....: Add mouse
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Add(TMouseDevice *Mouse)
+{
+    FMouse = Mouse;
+
+    Mouse->Owner = this;
+    Mouse->OnMove = MouseMove;
+	Mouse->OnLeftUp = LeftUp;
+    Mouse->OnLeftDown = LeftDown;
+	Mouse->OnRightUp = RightUp;
+    Mouse->OnRightDown = RightDown;
+    FWait.Add(FMouse);
 }
 
 /*##########################################################################
@@ -577,14 +1049,35 @@ void TControlThread::Delete(TControl *control)
 ##########################################################################*/
 void TControlThread::Redraw(TControl *control)
 {
+    int xmin;
+    int ymin;
+    TControl *parent;
+
+    xmin = control->FXMin;
+    ymin = control->FYMin;
+
+	 parent = control->FParent;
+
+	 while (parent)
+	 {
+		  xmin += parent->FXMin;
+		  ymin += parent->FYMin;
+
+		  parent = parent->FParent;
+    }
+    
     FPaintSection.Enter();
-    control->Paint(FGraphic, control->FXMin, control->FYMin, control->FWidth, control->FHeight);
+	 FGraphic->SetClipRect(   xmin, ymin,
+        			    xmin + control->FWidth - 1,
+        			    ymin + control->FHeight - 1);
+
+    control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
     FPaintSection.Leave();
 }
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnKeyPressed
+#   Name       : TControlThread::NotifyKeyPressed
 #
 #   Purpose....: Key pressed callback
 #
@@ -593,9 +1086,12 @@ void TControlThread::Redraw(TControl *control)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void TControlThread::NotifyKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
     TControl *control;
+
+    if (OnKeyPressed)
+        (*OnKeyPressed)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 
     FListSection.Enter();
 
@@ -604,7 +1100,8 @@ void TControlThread::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int 
     while (control)
     {
         if (control->IsEnabled())
-            control->OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode);
+            if (control->OnKeyPressed(ExtKey, KeyState, VirtualKey, ScanCode))
+                break;
 
         control = control->FNext;
     }
@@ -614,7 +1111,7 @@ void TControlThread::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int 
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnKeyReleased
+#   Name       : TControlThread::NotifyKeyReleased
 #
 #   Purpose....: Key released callback
 #
@@ -623,9 +1120,12 @@ void TControlThread::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int 
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void TControlThread::NotifyKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
     TControl *control;
+
+    if (OnKeyReleased)
+        (*OnKeyReleased)(this, ExtKey, KeyState, VirtualKey, ScanCode);
 
     FListSection.Enter();
 
@@ -634,7 +1134,8 @@ void TControlThread::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int
     while (control)
     {
         if (control->IsEnabled())
-            control->OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode);
+            if (control->OnKeyReleased(ExtKey, KeyState, VirtualKey, ScanCode))
+                break;
 
         control = control->FNext;
     }
@@ -644,7 +1145,7 @@ void TControlThread::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnMouseMove
+#   Name       : TControlThread::NotifyMouseMove
 #
 #   Purpose....: Mouse move callback
 #
@@ -653,9 +1154,12 @@ void TControlThread::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnMouseMove(int x, int y, int ButtonState, int KeyState)
+void TControlThread::NotifyMouseMove(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
+
+    if (OnMouseMove)
+        (*OnMouseMove)(this, x, y, ButtonState, KeyState);
 
     FListSection.Enter();
 
@@ -664,7 +1168,8 @@ void TControlThread::OnMouseMove(int x, int y, int ButtonState, int KeyState)
     while (control)
     {
         if (control->IsEnabled())
-            control->OnMouseMove(x, y, ButtonState, KeyState);
+            if (control->OnMouseMove(x, y, ButtonState, KeyState))
+                break;
 
         control = control->FNext;
     }
@@ -674,7 +1179,7 @@ void TControlThread::OnMouseMove(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnLeftDown
+#   Name       : TControlThread::NotifyLeftDown
 #
 #   Purpose....: Left button down callback
 #
@@ -683,9 +1188,12 @@ void TControlThread::OnMouseMove(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnLeftDown(int x, int y, int ButtonState, int KeyState)
+void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
+
+    if (OnLeftDown)
+        (*OnLeftDown)(this, x, y, ButtonState, KeyState);
 
     FListSection.Enter();
 
@@ -694,43 +1202,8 @@ void TControlThread::OnLeftDown(int x, int y, int ButtonState, int KeyState)
     while (control)
     {
         if (control->IsEnabled())
-        {
-            if (control->FXMin <= x && control->FXMin + control->FWidth > x &&
-                control->FYMin <= y && control->FYMin + control->FHeight > y)
-            {
-                control->OnLeftDown(x, y, ButtonState, KeyState);
+            if (control->OnLeftDown(x, y, ButtonState, KeyState))
                 break;
-            }
-        }
-        control = control->FNext;
-    }
-
-    FListSection.Leave();
-}
-
-/*##########################################################################
-#
-#   Name       : TControlThread::OnLeftUp
-#
-#   Purpose....: Left button up callback
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TControlThread::OnLeftUp(int x, int y, int ButtonState, int KeyState)
-{
-    TControl *control;
-
-    FListSection.Enter();
-
-    control = FControlList;
-
-    while (control)
-    {
-        if (control->IsEnabled())
-            control->OnLeftUp(x, y, ButtonState, KeyState);
             
         control = control->FNext;
     }
@@ -740,7 +1213,41 @@ void TControlThread::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnRightDown
+#   Name       : TControlThread::NotifyLeftUp
+#
+#   Purpose....: Left button up callback
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
+{
+    TControl *control;
+
+    if (OnLeftUp)
+        (*OnLeftUp)(this, x, y, ButtonState, KeyState);
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsEnabled())
+            if (control->OnLeftUp(x, y, ButtonState, KeyState))
+                break;
+            
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::NotifyRightDown
 #
 #   Purpose....: Right button down callback
 #
@@ -749,9 +1256,12 @@ void TControlThread::OnLeftUp(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnRightDown(int x, int y, int ButtonState, int KeyState)
+void TControlThread::NotifyRightDown(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
+
+    if (OnRightDown)
+        (*OnRightDown)(this, x, y, ButtonState, KeyState);
 
     FListSection.Enter();
 
@@ -760,14 +1270,9 @@ void TControlThread::OnRightDown(int x, int y, int ButtonState, int KeyState)
     while (control)
     {
         if (control->IsEnabled())
-        {
-            if (control->FXMin <= x && control->FXMin + control->FWidth > x &&
-                control->FYMin <= y && control->FYMin + control->FHeight > y)
-            {
-                control->OnRightDown(x, y, ButtonState, KeyState);
+            if (control->OnRightDown(x, y, ButtonState, KeyState))
                 break;
-            }
-        }
+
         control = control->FNext;
     }
 
@@ -776,7 +1281,7 @@ void TControlThread::OnRightDown(int x, int y, int ButtonState, int KeyState)
 
 /*##########################################################################
 #
-#   Name       : TControlThread::OnRightUp
+#   Name       : TControlThread::NotifyRightUp
 #
 #   Purpose....: Left button up callback
 #
@@ -785,9 +1290,12 @@ void TControlThread::OnRightDown(int x, int y, int ButtonState, int KeyState)
 #   Returns....: *
 #
 ##########################################################################*/
-void TControlThread::OnRightUp(int x, int y, int ButtonState, int KeyState)
+void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
+
+    if (OnRightUp)
+        (*OnRightUp)(this, x, y, ButtonState, KeyState);
 
     FListSection.Enter();
 
@@ -796,12 +1304,30 @@ void TControlThread::OnRightUp(int x, int y, int ButtonState, int KeyState)
     while (control)
     {
         if (control->IsEnabled())
-            control->OnRightUp(x, y, ButtonState, KeyState);
+            if (control->OnRightUp(x, y, ButtonState, KeyState))
+                break;
             
         control = control->FNext;
     }
 
     FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::PutKey
+#
+#   Purpose....: Put key into buffer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::PutKey(char ch)
+{
+    if (FKeyboard)
+        FKeyboard->Put(ch);
 }
 
 /*##########################################################################
@@ -817,27 +1343,6 @@ void TControlThread::OnRightUp(int x, int y, int ButtonState, int KeyState)
 ##########################################################################*/
 void TControlThread::Execute()
 {
-    TWait Wait;
-
-    if (FKeyboard)
-    {
-    	Wait.Add(FKeyboard);
-    	FKeyboard->Owner = this;
-    	FKeyboard->OnKeyPress = KeyPress;
-	    FKeyboard->OnKeyRelease = KeyRelease;
-	}
-
-    if (FMouse)
-    {
-        Wait.Add(FMouse);
-        FMouse->Owner = this;
-    	FMouse->OnMove = MouseMove;
-	    FMouse->OnLeftUp = LeftUp;
-    	FMouse->OnLeftDown = LeftDown;
-	    FMouse->OnRightUp = RightUp;
-    	FMouse->OnRightDown = RightDown;
-    }
-
     while (FInstalled)
-        Wait.WaitForever();
+        FWait.WaitForever();
 }

@@ -122,6 +122,7 @@ create_wait Proc far
 	mov [bx].hh_sign,WAIT_HANDLE
 	mov [bx].wh_obj_list,0
 	mov [bx].wh_running,0
+	mov [bx].wh_thread,0
 	InitSection ds:[bx].wh_section 
 	mov bx,[bx].hh_handle
 	clc
@@ -617,6 +618,20 @@ add_wait    Proc far
     mov es:wo_next,ax
     mov ds:[bx].wh_obj_list,es
 ;
+    mov al,ds:[bx].wh_running
+    or al,al
+    jz awLeave
+;
+    mov ax,ds:[bx].wh_thread
+    or ax,ax
+    jz awLeave
+;
+    push bx
+    mov bx,ax
+    Signal
+    pop bx
+
+awLeave:
     LeaveSection ds:[ebx].wh_section
 	clc
 

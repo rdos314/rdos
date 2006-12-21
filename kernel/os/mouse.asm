@@ -352,6 +352,28 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 refresh_mouse	Proc near
+    mov cx,0FFFFh
+    xchg cx,es:md_x
+    cmp cx,0FFFFh
+    je update_abs_horiz_done
+;
+    shl cx,1
+    mov ax,ds:m_horiz_limit
+    mul cx
+    mov ds:m_horiz_pos,dx
+    
+update_abs_horiz_done:
+    mov cx,0FFFFh
+    xchg cx,es:md_y
+    cmp cx,0FFFFh
+    je update_abs_vert_done
+;
+    shl cx,1
+    mov ax,ds:m_vert_limit
+    mul cx
+    mov ds:m_vert_pos,dx
+
+update_abs_vert_done:
 	mov ax,es:md_buttons
 	mov dx,ds:m_botton_status
 	mov dh,al
@@ -401,45 +423,23 @@ mouse_buttons_done:
 	xor cx,cx
 	xchg cx,es:md_dx
 	or cx,cx
-	jz update_not_delta_horiz
+	jz update_rel_horiz_done
 ;
 	add ds:m_horiz_motion,cx
 	add ds:m_horiz_pos,cx
 	call check_horiz_position
-
-update_not_delta_horiz:
-    mov cx,0FFFFh
-    xchg cx,es:md_x
-    cmp cx,0FFFFh
-    je update_not_horiz
-;
-    shl cx,1
-    mov ax,ds:m_horiz_limit
-    mul cx
-    mov ds:m_horiz_pos,dx
     
-update_not_horiz:
+update_rel_horiz_done:
 	xor dx,dx
 	xchg dx,es:md_dy
 	or dx,dx
-	jz update_not_delta_vert
+	jz update_rel_vert_done
 ;
 	add ds:m_vert_motion,dx
 	add ds:m_vert_pos,dx
 	call check_vert_position
 
-update_not_delta_vert:
-    mov cx,0FFFFh
-    xchg cx,es:md_y
-    cmp cx,0FFFFh
-    je update_not_vert
-;
-    shl cx,1
-    mov ax,ds:m_vert_limit
-    mul cx
-    mov ds:m_vert_pos,dx
-
-update_not_vert:
+update_rel_vert_done:
 	ret
 refresh_mouse	Endp
 
