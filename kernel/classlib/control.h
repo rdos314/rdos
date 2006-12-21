@@ -92,7 +92,7 @@ private:
     TControl *FParent;
 };
 
-class TControlThread : TThread
+class TControlThread : public TThread
 {
 friend class TControl;
 public:

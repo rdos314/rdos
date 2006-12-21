@@ -1224,7 +1224,7 @@ void TControlThread::NotifyLeftDown(int x, int y, int ButtonState, int KeyState)
 ##########################################################################*/
 void TControlThread::NotifyLeftUp(int x, int y, int ButtonState, int KeyState)
 {
-    TControl *control;
+	 TControl *control;
 
     if (OnLeftUp)
         (*OnLeftUp)(this, x, y, ButtonState, KeyState);
@@ -1294,7 +1294,7 @@ void TControlThread::NotifyRightUp(int x, int y, int ButtonState, int KeyState)
 {
     TControl *control;
 
-    if (OnRightUp)
+	 if (OnRightUp)
         (*OnRightUp)(this, x, y, ButtonState, KeyState);
 
     FListSection.Enter();
@@ -1328,6 +1328,8 @@ void TControlThread::PutKey(char ch)
 {
     if (FKeyboard)
         FKeyboard->Put(ch);
+    else
+		  NotifyKeyPressed(ch, ch, ch, ch);
 }
 
 /*##########################################################################

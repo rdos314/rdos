@@ -188,6 +188,11 @@ open_com	Proc far
     mov bx,dx
     add bx,bx
     mov ds,ds:[bx].s_port_arr
+    mov al,ds:cd_open
+    or al,al
+    jnz open_com_pop_fail
+;
+    inc ds:cd_open
     push ds
     call ds:cd_create_proc
 ;
@@ -224,12 +229,19 @@ open_com	Proc far
     pop ecx
     pop bx
     pop ax
+;    
+    mov ds:com_device,es
     call ds:open_com_proc
 ;
     mov bx,bp
 	clc
 	jmp open_com_done
 
+open_com_pop_fail:
+    pop ecx
+    pop bx
+    pop ax
+    
 open_com_fail:
     xor bx,bx
     stc
@@ -277,6 +289,9 @@ close_com	Proc far
 	FreeMem
 	mov es,ds:rec_buf
 	FreeMem
+;
+    mov es,ds:com_device
+    dec es:cd_open	
 ;
 	mov ax,ds
 	xor bx,bx
@@ -1068,6 +1083,7 @@ add_com_port    Proc far
     mov word ptr ds:cd_create_proc+2,es
     mov ds:cd_controller,ax
     mov ds:cd_device,dx
+    mov ds:cd_open,0
 ;
     mov dx,ds
     mov bx,com_data_sel

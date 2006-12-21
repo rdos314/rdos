@@ -32,6 +32,7 @@ cd_create_proc   DD ?
 
 cd_controller    DW ?
 cd_device        DW ?
+cd_open          DB ?
 
 com_device_struc   ENDS
 
@@ -95,6 +96,8 @@ send_buf		DW ?
 avail_obj   	DW ?
 
 send_wait       DW ?
+
+com_device      DW ?
 
 com_port_struc	ENDS
 

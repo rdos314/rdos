@@ -40,6 +40,8 @@ public:
 	virtual void Run();
 	void Stop();
 
+	void *Owner;
+
 protected:
 
 	void Start(const char *ThreadName, int StackSize);

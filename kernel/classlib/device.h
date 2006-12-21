@@ -386,7 +386,6 @@ public:
 	virtual short int GetUnitType();
 	virtual short int GetUnitNumber();
 
-	void *Owner;
 	void (*OnOnline)(TDevice *Device);
 	void (*OnOffline)(TDevice *Device);
 	void (*OnIdle)(TDevice *Device);
