@@ -4813,7 +4813,6 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-    file.Write("<a href=\"histo\">Histogram of Aspie-quiz II-III + ND + 5-6</a><br>\n");
     file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-8</a><br>\n");
     file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-8</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
@@ -4983,6 +4982,11 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write(" <a href=\"stim8.htm\">stimming</a>");
     file.Write("<br>");
 #endif
+
+	file.Write("<h3>Histograms</h3>\n");
+
+    file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=360 BORDER=0></p>");
+    file.Write("<p><img src=\"dx.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=600 BORDER=0></p>");
 
 #ifdef ENGLISH
 	file.Write("<h3>Groups</h3>\n");

@@ -189,8 +189,9 @@ int main(int argc, char **argv)
 //	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
 //	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
 
-//	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
-//  Quiz[6]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, FALSE);
+     Quiz[7]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+     Quiz[7]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
 
 	 Quiz[7]->WritePhpWeighting("weights.php");
 
