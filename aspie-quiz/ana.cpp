@@ -40,6 +40,7 @@
 #include "quiz6.h"
 #include "quiz7.h"
 #include "quiz8.h"
+#include "quiz9.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -67,10 +68,11 @@ int main(int argc, char **argv)
 	Quiz[5] = new TQuiz6("quiz6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4]);
 	Quiz[6] = new TQuiz7("quiz7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5]);
 	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
+	Quiz[8] = new TQuiz9("quiz9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7]);
 
-//	Quiz[7]->WritePhpQuestions("q.php");
-//	Quiz[7]->WriteSetupTexts("q.cpp");
-//    Quiz[7]->WriteSetupCross("c.cpp");
+//	Quiz[8]->WritePhpQuestions("q.php");
+//	Quiz[8]->WriteSetupTexts("q.cpp");
+//    Quiz[8]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -79,7 +81,8 @@ int main(int argc, char **argv)
 //	Quiz[4]->CheckCross();
 //	Quiz[5]->CheckCross();
 //	Quiz[6]->CheckCross();
-	 Quiz[7]->CheckCross();
+//  Quiz[7]->CheckCross();
+	Quiz[8]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -113,6 +116,10 @@ int main(int argc, char **argv)
 	 Quiz[7]->ExportExcelCase("male8.dat", PCA_TYPE_MALE);
 	 Quiz[7]->ExportExcelCase("female8.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[8]->ExportExcelCase("all9.dat", PCA_TYPE_ALL);
+	 Quiz[8]->ExportExcelCase("male9.dat", PCA_TYPE_MALE);
+	 Quiz[8]->ExportExcelCase("female9.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
@@ -143,6 +150,10 @@ int main(int argc, char **argv)
 	 Quiz[7]->ImportMvsp("male8.txt", PCA_TYPE_MALE);
 	 Quiz[7]->ImportMvsp("female8.txt", PCA_TYPE_FEMALE);
 
+	 Quiz[8]->ImportMvsp("all9.txt", PCA_TYPE_ALL);
+	 Quiz[8]->ImportMvsp("male9.txt", PCA_TYPE_MALE);
+	 Quiz[8]->ImportMvsp("female9.txt", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
@@ -151,6 +162,7 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteReferers("ref6.htm");
 	 Quiz[6]->WriteReferers("ref7.htm");
 	 Quiz[7]->WriteReferers("ref8.htm");
+	 Quiz[8]->WriteReferers("ref9.htm");
 
 	 Quiz[0]->WriteSumaryTable("quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("quiz2.htm", FALSE);
@@ -160,18 +172,19 @@ int main(int argc, char **argv)
 	 Quiz[5]->WriteSumaryTable("quiz6.htm", FALSE);
 	 Quiz[6]->WriteSumaryTable("quiz7.htm", FALSE);
 	 Quiz[7]->WriteSumaryTable("quiz8.htm", FALSE);
+	 Quiz[8]->WriteSumaryTable("quiz9.htm", FALSE);
 
-	 Quiz[7]->WriteGroupTable("group.htm", TRUE);
-	 Quiz[7]->WriteGroupCorrTable("groupcorr.htm");
-	 Quiz[7]->WritePcaLoadTable("pcaload.htm");
+	 Quiz[8]->WriteGroupTable("group.htm", TRUE);
+	 Quiz[8]->WriteGroupCorrTable("groupcorr.htm");
+	 Quiz[8]->WritePcaLoadTable("pcaload.htm");
 
-	 Quiz[7]->WriteAverageGroupCorrTable("avgcorr.htm");
-	 Quiz[7]->WriteAveragePcaTable("avgpca.htm");
-	 Quiz[7]->WriteAveragePcaCorrTable("avg.htm");
+	 Quiz[8]->WriteAverageGroupCorrTable("avgcorr.htm");
+	 Quiz[8]->WriteAveragePcaTable("avgpca.htm");
+	 Quiz[8]->WriteAveragePcaCorrTable("avg.htm");
 
-	 Quiz[7]->WritePcaCorrTable("pcacorr.htm");
+	 Quiz[8]->WritePcaCorrTable("pcacorr.htm");
 
-	 Quiz[7]->WriteLinkReport("index.htm");
+	 Quiz[8]->WriteLinkReport("index.htm");
 
 	 Quiz[5]->WriteHair("hair6.htm");
 	 Quiz[5]->WriteEye("eye6.htm");
@@ -185,16 +198,17 @@ int main(int argc, char **argv)
 	 Quiz[7]->WriteEye("eye8.htm");
 	 Quiz[7]->WriteStim("stim8.htm");
 
-//	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
-//	 Quiz[5]->WriteRefererNtCorrelation("intpnt.htm", "INTP", "intpcentral.com");
-//	 Quiz[5]->WriteRefererAsCorrelation("intpas.htm", "INTP", "intpcentral.com");
+	 Quiz[8]->WriteHair("hair9.htm");
+	 Quiz[8]->WriteEye("eye9.htm");
 
-	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, FALSE);
-     Quiz[7]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
-     Quiz[7]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
+	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
-	 Quiz[7]->WritePhpWeighting("weights.php");
+	 Quiz[8]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[8]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+	 Quiz[8]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
 
-	 Quiz[7]->WritePhpGlobalQuestions("global.php");
+	 Quiz[8]->WritePhpWeighting("weights.php");
+
+//	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
 

@@ -560,6 +560,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_BIOLOGY");
                 break;
 
+            case GROUP_SENSORY:
+                file.Write("GROUP_SENSORY");
+                break;
+
             case GROUP_ASPIE_TALENT:
                 file.Write("GROUP_ASPIE_TALENT");
                 break;
@@ -4980,6 +4984,27 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write(" <a href=\"hair8.htm\">hårfärg</a>");
     file.Write(" <a href=\"eye8.htm\">ögonfärg</a>");
     file.Write(" <a href=\"stim8.htm\">stimming</a>");
+    file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+    WriteName(file);
+    file.Write("</a>");
+
+#ifdef ENGLISH
+    file.Write(" <a href=\"quiz9.htm\">summary</a> <a href=\"ref9.htm\">referer sites</a>");
+    file.Write(" <a href=\"hair9.htm\">hair-color</a>");
+    file.Write(" <a href=\"eye9.htm\">eye-color</a>");
+    file.Write("<br>");
+#endif
+    
+#ifdef SWEDISH
+    file.Write(" <a href=\"quiz9.htm\">summering</a> <a href=\"ref9.htm\">referenssajter</a>");
+    file.Write(" <a href=\"hair9.htm\">hårfärg</a>");
+    file.Write(" <a href=\"eye9.htm\">ögonfärg</a>");
     file.Write("<br>");
 #endif
 

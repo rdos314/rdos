@@ -78,6 +78,7 @@ public:
     int StimChoice[45][33];
     int StimCount[45];
     int ChoiceCount[33];
+    int Ignore[33];
     const char *StimText[45];
     const char *ReasonText[33];
     
@@ -1464,8 +1465,8 @@ void TQuiz8::ImportMvsp(const char *filename, int PcaType)
 //					if (PcaType == PCA_TYPE_FEMALE)
 //						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;
@@ -1986,7 +1987,20 @@ TStim::TStim()
 	}
 
     for (i = 0; i < 33; i++)
+    {
         ChoiceCount[i] = 0;
+        Ignore[i] = FALSE;
+    }
+
+    Ignore[3] = TRUE;
+    Ignore[4] = TRUE;
+    Ignore[13] = TRUE;
+    Ignore[15] = TRUE;
+    Ignore[27] = TRUE;
+    Ignore[28] = TRUE;
+    Ignore[30] = TRUE;
+    Ignore[32] = TRUE;
+
 
 
 #ifdef ENGLISH
@@ -2220,7 +2234,7 @@ void TStim::WriteStimRow(TFile &file, int index)
 		used[i] = FALSE;
 
 		val = StimChoice[index][i];
-		if (val > max)
+		if (val > max && !Ignore[i])
 		{
 			max = val;
 			currind = i;
@@ -2249,7 +2263,7 @@ void TStim::WriteStimRow(TFile &file, int index)
 
 			for (i = 1; i <= 32; i++)
 			{
-				if (!used[i])
+				if (!used[i] && !Ignore[i])
 				{
 					val = StimChoice[index][i];
 					if (val >= min && val > max)
