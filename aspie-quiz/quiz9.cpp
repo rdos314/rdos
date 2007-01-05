@@ -154,294 +154,6 @@ void TQuiz9::WriteName(TFile &File)
 *##########################################################################*/
 void TQuiz9::DefineQuiz()
 {
-    return;
-
-	DefineID(1, 446);
-	DefineID(2, 382);
-	DefineID(3, 171);
-	DefineID(4, 193);
-	DefineID(5, 195);
-	DefineID(6, 334);
-
- #ifdef ENGLISH
-		  DefineText(7, "Do you have a strong grip?", GROUP_ASPIE_BIOLOGY);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(7, "Har du starka nypor?", GROUP_ASPIE_BIOLOGY);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(8, "Are your ears lower set than normal?", GROUP_ASPIE_BIOLOGY);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(8, "Sitter dina öron lägre än normalt?", GROUP_ASPIE_BIOLOGY);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(9, "Do your ears stick out?", GROUP_ASPIE_BIOLOGY);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(9, "Sticker dina öron ut?", GROUP_ASPIE_BIOLOGY);
- #endif
-
-	DefineID(10, 207);
-	DefineID(11, 205);
-	DefineID(12, 46);
-	DefineID(13, 44);
-	DefineID(14, 209);
-	DefineID(15, 204);
-	DefineID(16, 213);
-	DefineID(17, 431);
-	DefineID(18, 411);
-	DefineID(19, 428);
-	DefineID(20, 53);
-	DefineID(21, 178);
-	DefineID(22, 390);
-	DefineID(23, 60);
-	DefineID(24, 203);
-	DefineID(25, 389);
-	DefineID(26, 102);
-	DefineID(27, 56);
-	DefineID(28, 63);
-	DefineID(29, 103);
-
- #ifdef ENGLISH
-		  DefineText(30, "Are you insensitive to physical pain, or even enjoy some types of pain?", GROUP_SENSORY);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(30, "Är du okänslig för smärta eller till och med tycker viss sorts smärta?", GROUP_SENSORY);
- #endif
-
-	DefineID(31, 23);
-	DefineID(32, 20);
-	DefineID(33, 140);
-	DefineID(34, 238);
-	DefineID(35, 5);
-	DefineID(36, 19);
-	DefineID(37, 13);
-	DefineID(38, 141);
-	DefineID(39, 12);
-	DefineID(40, 319);
-	DefineID(41, 118);
-	DefineID(42, 310);
-	DefineID(43, 294);
-	DefineID(44, 328);
-	DefineID(45, 318);
-	DefineID(46, 315);
-	DefineID(47, 296);
-	DefineID(48, 341);
-	DefineID(49, 281);
-	DefineID(50, 255);
-	DefineID(51, 91);
-	DefineID(52, 269);
-	DefineID(53, 370);
-	DefineID(54, 291);
-	DefineID(55, 81);
-	DefineID(56, 66);
-	DefineID(57, 134);
-	DefineID(58, 68);
-	DefineID(59, 268);
-	DefineID(60, 365);
-	DefineID(61, 454);
-	DefineID(62, 151);
-	DefineID(63, 78);
-	DefineID(64, 398);
-	DefineID(65, 98);
-	DefineID(66, 283);
-	DefineID(67, 256);
-	DefineID(68, 97);
-	DefineID(69, 368);
-	DefineID(70, 258);
-	DefineID(71, 72);
-	DefineID(72, 366);
-	DefineID(73, 288);
-	DefineID(74, 235);
-	DefineID(75, 367);
-	DefineID(76, 434);
-	DefineID(77, 184);
-	DefineID(78, 166);
-	DefineID(79, 153);
-	DefineID(80, 180);
-	DefineID(81, 150);
-	DefineID(82, 135);
-	DefineID(83, 181);
-	DefineID(84, 147);
-	DefineID(85, 127);
-	DefineID(86, 396);
-	DefineID(87, 230);
-	DefineID(88, 403);
-	DefineID(89, 401);
-	DefineID(90, 400);
-	DefineID(91, 402);
-	DefineID(92, 444);
-	DefineID(93, 406);
-	DefineID(94, 438);
-	DefineID(95, 422);
-	DefineID(96, 452);
-	DefineID(97, 404);
-	DefineID(98, 439);
-	DefineID(99, 83);
-	DefineID(100, 226);
-	DefineID(101, 262);
-	DefineID(102, 86);
-	DefineID(103, 285);
-	DefineID(104, 224);
-	DefineID(105, 215);
-	DefineID(106, 18);
-	DefineID(107, 54);
-	DefineID(108, 43);
-	DefineID(109, 286);
-	DefineID(110, 128);
-	DefineID(111, 360);
-	DefineID(112, 361);
-	DefineID(113, 37);
-	DefineID(114, 25);
-	DefineID(115, 38);
-	DefineID(116, 22);
-	DefineID(117, 39);
-	DefineID(118, 36);
-	DefineID(119, 436);
-	DefineID(120, 137);
-	DefineID(121, 381);
-	DefineID(122, 136);
-	DefineID(123, 138);
-	DefineID(124, 443);
-	DefineID(125, 303);
-	DefineID(126, 130);
-	DefineID(127, 100);
-	DefineID(128, 3);
-	DefineID(129, 330);
-	DefineID(130, 133);
-	DefineID(131, 240);
-	DefineID(132, 160);
-	DefineID(133, 16);
-	DefineID(134, 362);
-	DefineID(135, 448);
-
- #ifdef ENGLISH
-		  DefineText(136, "Do you rehearse inside your head?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(136, "Tränar du scenarier inuti ditt huvud?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(137, "Are you afraid of heights?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(137, "Är du höjdrädd?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(138, "Do you like to dig holes in the ground?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(138, "Gräver du hål i marken?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(139, "Do you like to eat liver?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(139, "Tycker du om lever?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(140, "Do you like to eat seafood?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(140, "Tycker du om fisk?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(141, "Do you enjoy travel?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(141, "Tycker du om att resa?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(142, "Do you feel empathy for people once you understand their feelings?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(142, "Kan du känna empati för människor när du förstår hur de känner sig?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(143, "Is it harder for you than for others to get over a failed relationship?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(143, "Är det svårare för dih än för andra att komma över en misslyckad relation", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(144, "Do you refuse to give up on a relationship or potential relationship that others would not bother with?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(144, "Vägrar du ge upp en relation eller potentiell relation som andra inte skulle bry sig om", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(145, "Do you get tears in your eyes when excited?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(145, "Blir du tårögd när du blir upprymd", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(146, "Do you have good intuition about how things work?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(146, "Har du bra intuition för hur saker fungerar?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(147, "Do you have psychic abilities?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(147, "Har du övernaturliga förmågor?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(148, "Do you like tongue-kissing?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(148, "Tycker du om tungkyssar?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(149, "Do you prefer to sleep without cloth?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(149, "Föredrar du att sova utan kläder?", GROUP_MIXED);
- #endif
-
- #ifdef ENGLISH
-		  DefineText(150, "Do you have diarrhea?", GROUP_MIXED);
- #endif
-
- #ifdef SWEDISH
-		  DefineText(150, "Har du diarre?", GROUP_MIXED);
- #endif
-
 }
 
 /*##########################################################################
@@ -492,7 +204,8 @@ void TQuiz9::SetupTexts()
   Quiz[104].Reverse = TRUE;
   Quiz[108].Reverse = TRUE;
   Quiz[109].Reverse = TRUE;
-
+  Quiz[141].Reverse = TRUE;
+  Quiz[147].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -655,13 +368,13 @@ void TQuiz9::SetupTexts()
   Quiz[6].Text = "Do you have a strong grip?";
   Quiz[7].Text = "Are your ears lower set than normal?";
   Quiz[8].Text = "Do your ears stick out?";
-  Quiz[9].Text = "Do you have difficulty with throwing and catching a ball?";
+  Quiz[9].Text = "Do you have difficulty throwing or catching a ball?";
   Quiz[10].Text = "Do you have a tendency to drop things?";
   Quiz[11].Text = "Do you have difficulties judging distances, height, depth or speed?";
   Quiz[12].Text = "Do you have difficulties with fine motor skills and/or hand-eye co-ordination?";
   Quiz[13].Text = "Did you enjoy classes like handi-work or gymnasics in school?";
-  Quiz[14].Text = "Do you have difficulty hopping, skipping or riding a bike?";
-  Quiz[15].Text = "Are you often injured in the kitchen?";
+  Quiz[14].Text = "Do you have difficulty riding a bike?";
+  Quiz[15].Text = "Are you accident prone?";
   Quiz[16].Text = "Do you have a good sense for how much pressure to apply when you do someting with your hands?";
   Quiz[17].Text = "Can you whistle?";
   Quiz[18].Text = "Are you good at climbing?";
@@ -683,16 +396,16 @@ void TQuiz9::SetupTexts()
   Quiz[34].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
   Quiz[35].Text = "Are you very gifted in one or more areas?";
   Quiz[36].Text = "Do you have excellent vocabulary and/or a fascination with words?";
-  Quiz[37].Text = "Do you like to work out how things work?";
+  Quiz[37].Text = "Do you like to figure out how things work?";
   Quiz[38].Text = "Do you have excellent long-term memory in subjects that interest you?";
-  Quiz[39].Text = "Do you find it difficult to taking notes in lectures?";
+  Quiz[39].Text = "Do you find it difficult to take notes in lectures?";
   Quiz[40].Text = "Do you find it difficult to read written material unless it is very interesting or very easy?";
   Quiz[41].Text = "Do you have trouble reading clocks?";
-  Quiz[42].Text = "Do you often forget were you put things?";
+  Quiz[42].Text = "Do you forget where you put things?";
   Quiz[43].Text = "Do you instinctively know what time it is when someone asks you?";
   Quiz[44].Text = "Do you often make spelling errors?";
   Quiz[45].Text = "Do you have difficulty remembering scores during games?";
-  Quiz[46].Text = "Are you the one everyone relies on to remember birthdays?";
+  Quiz[46].Text = "Are you good at remembering birthdays?";
   Quiz[47].Text = "Can you easily remember sequences of past events?";
   Quiz[48].Text = "Do you find preferable/easier to understand & communicate with computers, animals or unusual people?";
   Quiz[49].Text = "Do you find yourself at ease in romantic situations?";
@@ -700,17 +413,17 @@ void TQuiz9::SetupTexts()
   Quiz[51].Text = "Have you felt different from others for most of your life?";
   Quiz[52].Text = "Are you the life of a party?";
   Quiz[53].Text = "Are you good at party games?";
-  Quiz[54].Text = "Do you tend to feel get nervous, shy, confused and/or like you don't fit in, in various social situations?";
+  Quiz[54].Text = "Do you tend to feel nervous, shy, confused and/or like you don't fit in, in various social situations?";
   Quiz[55].Text = "Do you get exceedingly tired after socializing, and need to regenerate alone?";
   Quiz[56].Text = "Do you find the usual courting behavior natural?";
   Quiz[57].Text = "Are you fairly self-absorbed, more interested in yourself than in others and/or an objective observer of yourself?";
-  Quiz[58].Text = "Does an unplanned hug make you jump out of your skin?";
+  Quiz[58].Text = "Do you dislike being hugged when you haven't asked for it?";
   Quiz[59].Text = "Do you find it easier to communicate online than in real life?";
   Quiz[60].Text = "Do you prefer to do things on your own even if you could use others work or expertice?";
   Quiz[61].Text = "Is your sense of humor different from mainstream and / or considered odd?";
   Quiz[62].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
   Quiz[63].Text = "Do you dislike eye-contact?";
-  Quiz[64].Text = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
+  Quiz[64].Text = "Do you find social chitchat difficult, tiresome or a waste of time?";
   Quiz[65].Text = "Do you enjoy team sport and group endeavours?";
   Quiz[66].Text = "Are you energised by being in the company of others?";
   Quiz[67].Text = "Are you usually unaware of/disinterested in what is currently in vogue?";
@@ -718,21 +431,21 @@ void TQuiz9::SetupTexts()
   Quiz[69].Text = "Are you comfortable in social situations and with new people?";
   Quiz[70].Text = "Do you have problems with eye-contact?";
   Quiz[71].Text = "Do you feel uncomfortable with strangers?";
-  Quiz[72].Text = "Are your dreams and fantasies much like those of your friends?";
-  Quiz[73].Text = "Do you prefer to take a more general interest in many areas?";
+  Quiz[72].Text = "Are your dreams and fantasies much like those of others?";
+  Quiz[73].Text = "Do you prefer to know a little about many things rather than becoming a specialist in one or a few areas?";
   Quiz[74].Text = "Is a large social network important for you?";
   Quiz[75].Text = "Is climing the social hierarchy important to you?";
   Quiz[76].Text = "Is creating a social identity important for you?";
-  Quiz[77].Text = "Do you appreciate to be in charge of other people?";
-  Quiz[78].Text = "Do you enjoy gossip?";
+  Quiz[77].Text = "Do you like to be in charge of other people?";
+  Quiz[78].Text = "Do you enjoy listening to gossip?";
   Quiz[79].Text = "Do you have an interest for the current fashions?";
-  Quiz[80].Text = "Is your style and image very important to you?";
+  Quiz[80].Text = "Is your style and image important to you?";
   Quiz[81].Text = "Do you find it natural that males take initiatives to start a romantic relationship?";
   Quiz[82].Text = "Is other people's image of you important to you?";
   Quiz[83].Text = "Do you enjoy the status of a new car/new stereo/new TV?";
   Quiz[84].Text = "Do you find it natural to keep track of whom owes whom favours?";
   Quiz[85].Text = "Do you enjoy wearing jewelry?";
-  Quiz[86].Text = "Do you blink or roll your eyes?";
+  Quiz[86].Text = "Do you roll your eyes when frustrated?";
   Quiz[87].Text = "Have you been accused of staring?";
   Quiz[88].Text = "Do you talk to yourself?";
   Quiz[89].Text = "Do you sniff?";
@@ -745,8 +458,8 @@ void TQuiz9::SetupTexts()
   Quiz[96].Text = "Do you bounce your leg?";
   Quiz[97].Text = "Do you have an urge to jump over objects?";
   Quiz[98].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
-  Quiz[99].Text = "Are you often surprised what people's motives are ?";
-  Quiz[100].Text = "Do you have an intuitive sense of when to do the right thing socially?";
+  Quiz[99].Text = "Are you often surprised when you find out what people's true motives are?";
+  Quiz[100].Text = "Do you have an intuitive sense for what is the right thing to do socially?";
   Quiz[101].Text = "Do you tend to interpret things literally and/or reply to rhetorical questions?";
   Quiz[102].Text = "Can you read between the lines?";
   Quiz[103].Text = "Do you read people well?";
@@ -762,7 +475,7 @@ void TQuiz9::SetupTexts()
   Quiz[113].Text = "Does it feel vitally important to be left undisturbed to persue your special interests?";
   Quiz[114].Text = "Do you need to sit on your favourite seat, go the same route or shop in the same shop every time?";
   Quiz[115].Text = "Do you love to collect and organize things, make lists & diagrams etc?";
-  Quiz[116].Text = "Do you have very strong attachments to certain objects, e.g. a favourite cup or a favourite towel and really need to have that precise one?";
+  Quiz[116].Text = "Do you have strong attachments to certain objects?";
   Quiz[117].Text = "Do you have certain simple & logical routines which you need to follow?";
   Quiz[118].Text = "Do you have a need for symmetry, order and/or precision?";
   Quiz[119].Text = "Do you feel like you were born with the wrong gender?";
@@ -776,9 +489,9 @@ void TQuiz9::SetupTexts()
   Quiz[127].Text = "Do you get confused by verbal instructions - especially several at the same time?";
   Quiz[128].Text = "Do you look, feel or act younger than your biological age?";
   Quiz[129].Text = "Do you have an alternative view of what is attractive in the opposite sex compared to most others?";
-  Quiz[130].Text = "Do you find it very hard to learn things that you are not interested in?";
+  Quiz[130].Text = "Do you find it hard to learn things you are not interested in?";
   Quiz[131].Text = "Do you feel an urge to peel flakes off yourself and / or others?";
-  Quiz[132].Text = "Do you sometimes mix up pronouns and, for example, say "you" or "we" when you mean "me" or vice versa?";
+  Quiz[132].Text = "Do you sometimes mix up pronouns and, for example, say \"you\" or \"we\" when you mean \"me\" or vice versa?";
   Quiz[133].Text = "Have you experienced stronger than normal attachments to certain people?";
   Quiz[134].Text = "Do you have a fascination for slowly flowing water?";
   Quiz[135].Text = "Do you rehearse inside your head?";
@@ -794,8 +507,8 @@ void TQuiz9::SetupTexts()
   Quiz[145].Text = "Do you have good intuition about how things work?";
   Quiz[146].Text = "Do you have psychic abilities?";
   Quiz[147].Text = "Do you like tongue-kissing?";
-  Quiz[148].Text = "Do you prefer to sleep without cloth?";
-  Quiz[149].Text = "Do you have diarrhea?";
+  Quiz[148].Text = "Do you enjoy to snuggle a long time with certain familiar people?";
+  Quiz[149].Text = "Do you use to have diarrhea?";
 #endif
 
 #ifdef SWEDISH
@@ -813,8 +526,8 @@ void TQuiz9::SetupTexts()
   Quiz[11].Text = "Har du svårigheter att bedöma avstånd, höjd, djup och fart?";
   Quiz[12].Text = "Har du problem med finmotorik och/eller öga-hand koordination?";
   Quiz[13].Text = "Tyckte du om praktiska ämnen som slöjd och gymnastik i skolan?";
-  Quiz[14].Text = "Har du svårt för att hoppa eller cykla?";
-  Quiz[15].Text = "Skadar du dig ofta i köket?";
+  Quiz[14].Text = "Har du svårt för att cykla?";
+  Quiz[15].Text = "Skadar du dig lätt?";
   Quiz[16].Text = "Har du en bra känsla för hur mycket du ska ta i när du gör något med händerna?";
   Quiz[17].Text = "Kan du vissla?";
   Quiz[18].Text = "Är du bra på att klättra?";
@@ -827,28 +540,28 @@ void TQuiz9::SetupTexts()
   Quiz[25].Text = "Är du känslig för elektromagnetiska fält?";
   Quiz[26].Text = "Är du känslig för lyrsrörsljus?";
   Quiz[27].Text = "Om någon tar i dig, föredrar du då hårdare tag framför lätt beröring?";
-  Quiz[28].Text = "Tittar du ofta i ögonvrån? ";
-  Quiz[29].Text = "Är du okänslig för smärta eller till och med tycker viss sorts smärta?";
+  Quiz[28].Text = "Använder du ofta periferseende?";
+  Quiz[29].Text = "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?";
   Quiz[30].Text = "Har du okonventionella, ofta unika sätt att lösa problem på?";
   Quiz[31].Text = "Brukar du fördjupa dig i ett ämne i taget och bli expert det?";
   Quiz[32].Text = "Är din fantasi ovanlig med unika idéer som andra inte har?";
-  Quiz[33].Text = "Har du en speciell talang som du har jobbat med?";
+  Quiz[33].Text = "Har du en speciell talang som du har jobbat på?";
   Quiz[34].Text = "Brukar du lägga märke till och intressera dig för detaljer som andra inte verkar se eller bry sig om?";
   Quiz[35].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
   Quiz[36].Text = "Har du utmärkt vokabulär och intresse för språk?";
-  Quiz[37].Text = "Tycker du om att reda ut hur saker fungerar? ";
+  Quiz[37].Text = "Tycker du om att lista ut hur saker fungerar?";
   Quiz[38].Text = "Har du utmärkt långtidsminne när det gäller de ämnen du är intresserad av?";
-  Quiz[39].Text = "Har du svårt att göra anteckningar under föreläsningar?";
+  Quiz[39].Text = "Har du svårt att göra anteckningar under lektioner?";
   Quiz[40].Text = "Tycker du det är svårt att läsa skrivet material om det inte antingen är väldigt intressant eller lättläst?";
   Quiz[41].Text = "Har du svårigheter att läsa av klockor?";
-  Quiz[42].Text = "Glömmer du ofta var du lagt saker?";
+  Quiz[42].Text = "Glömmer du var du lagt saker?";
   Quiz[43].Text = "Vet du instinktivt hur mycket klockan är när någon frågar dig?";
   Quiz[44].Text = "Gör du ofta stavfel?";
   Quiz[45].Text = "Har du svårt för att komma ihåg poängställningar under spel?";
-  Quiz[46].Text = "Litar andra på dig när det gäller att komma ihåg födelsedagar?";
+  Quiz[46].Text = "Är du bra på att komma ihåg födelsedagar?";
   Quiz[47].Text = "Kan du enkelt komma ihåg sekvenser av gångna händelser?";
   Quiz[48].Text = "Tycker du det är att föredra/lättare att förstå och kommunicera med datorer, djur eller udda människor?";
-  Quiz[49].Text = "Trivs du med romantiska situationer?";
+  Quiz[49].Text = "Trivs du i romantiska situationer?";
   Quiz[50].Text = "Har du svårare än dina jämnåriga att få vänner och/eller partners?";
   Quiz[51].Text = "Har du känt dig annorlunda största delen av ditt liv?";
   Quiz[52].Text = "Är du aktiv på fester?";
@@ -857,7 +570,7 @@ void TQuiz9::SetupTexts()
   Quiz[55].Text = "Brukar du blir utmattad av att umgås med folk och efteråt behöva vila ut ifred?";
   Quiz[56].Text = "Tycker du att det normala sättet att uppvakta varandra är naturligt?";
   Quiz[57].Text = "Är du rätt självupptagen, mer intresserad av dig själv än av andra och/eller en objektiv självobservatör?";
-  Quiz[58].Text = "Gör en oplanerad kram att du vill hoppa ur ditt skinn?";
+  Quiz[58].Text = "Tycker du illa om att bli kramad när du inte bett om det?";
   Quiz[59].Text = "Tycker du att det är lättare att kommunicera via dator än i verkliga livet?";
   Quiz[60].Text = "Föredrar du att göra saker på egen hand även om du skulle kunna använda andras arbete och expertis?";
   Quiz[61].Text = "Är ditt sinne för humor annorlunda än andras och / eller ansett som udda?";
@@ -871,21 +584,21 @@ void TQuiz9::SetupTexts()
   Quiz[69].Text = "Känner du dig hemma i sociala situationer med nya människor?";
   Quiz[70].Text = "Har du problem med ögonkontakt?";
   Quiz[71].Text = "Känner du dig obekväm bland främmande människor?";
-  Quiz[72].Text = "Är dina drömmar och fantasier likadana som dina vänners?";
-  Quiz[73].Text = "Föredrar du mer generellt intresse inom många olika områden?";
+  Quiz[72].Text = "Är dina drömmar och fantasier likadana som andras?";
+  Quiz[73].Text = "Föredrar du att veta lite om mycket framför att bli specialist inom något eller några få områden?";
   Quiz[74].Text = "Är ett stort socialt nätverk viktigt för dig?";
   Quiz[75].Text = "Är det viktigt för dig att klättra i den sociala hierarkin?";
   Quiz[76].Text = "Är det viktigt för dig att skapa en social identitet?";
-  Quiz[77].Text = "Uppskattar du att leda andra människor?";
-  Quiz[78].Text = "Tycker du om skvaller?";
+  Quiz[77].Text = "Gillar du att leda andra människor?";
+  Quiz[78].Text = "Tycker du om att lyssna på skvaller?";
   Quiz[79].Text = "Är du intressad av nuvarande mode?";
-  Quiz[80].Text = "Är din stil och image mycket viktig för dig?";
+  Quiz[80].Text = "Är din stil och image viktig för dig?";
   Quiz[81].Text = "Tycker du det är naturligt att män tar initiativ till att starta ett förhållande?";
-  Quiz[82].Text = "Är andra människors syn på dig viktigt för dig?";
+  Quiz[82].Text = "Är andra människors syn på dig viktig för dig?";
   Quiz[83].Text = "Njuter du av den status som en ny bil/stereo/TV ger?";
   Quiz[84].Text = "Känns det naturligt för dig att hålla reda på tjänster och gentjänster?";
   Quiz[85].Text = "Gillar du att bära smycken?";
-  Quiz[86].Text = "Blinkar eller rullar du med ögona?";
+  Quiz[86].Text = "Rullar du med ögonen när du blir frustrerad?";
   Quiz[87].Text = "Har du blivit anklagad för att glo?";
   Quiz[88].Text = "Pratar du med dig själv?";
   Quiz[89].Text = "Sniffar du?";
@@ -898,11 +611,11 @@ void TQuiz9::SetupTexts()
   Quiz[96].Text = "Brukar du vippa med benet?";
   Quiz[97].Text = "Har du ett behov av att hoppa över saker?";
   Quiz[98].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
-  Quiz[99].Text = "Blir du ofta överraskad av vad folks motiv är?";
+  Quiz[99].Text = "Blir du ofta överraskad när du får reda på vad folks verkliga motiv är?";
   Quiz[100].Text = "Känner du intuitivt av vad som är rätt socialt?";
   Quiz[101].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
   Quiz[102].Text = "Kan du läsa mellan raderna?";
-  Quiz[103].Text = "Läser du av folk bra?";
+  Quiz[103].Text = "Är du bra på att läsa av folk?";
   Quiz[104].Text = "Har du lätt för att tolka kroppsspråk?";
   Quiz[105].Text = "Har du en monoton röst och/eller svårigheter att finjustera ljudnivå och hastighet när du talar?";
   Quiz[106].Text = "Har du svårt att urskilja röster från bakgrundsljud, eller från andra röster?";
@@ -915,22 +628,22 @@ void TQuiz9::SetupTexts()
   Quiz[113].Text = "Känns det livsviktigt att få vara ifred och ägna dig åt dina specialintressen i lugn och ro?";
   Quiz[114].Text = "Har du starkt behov av att t ex sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?";
   Quiz[115].Text = "Älskar du att samla på, sortera & organisera saker och/eller göra listor och diagram?";
-  Quiz[116].Text = "Är du exceptionellt fäst vid vissa saker, t ex en favoritkopp, en favorittröja, en favorithandduk, och verkligen MÅSTE ha just den?";
+  Quiz[116].Text = "Är du exceptionellt fäst vid vissa saker?";
   Quiz[117].Text = "Har du vissa enkla, logiska rutiner som gör att du slipper tänka och som det känns bra att följa?";
   Quiz[118].Text = "Har du ett behov av symmerti, ordning och/eller precision?";
-  Quiz[119].Text = "Känns det som du föddes med fel kön?";
+  Quiz[119].Text = "Känns det som om du fötts med fel kön?";
   Quiz[120].Text = "Har du ovanliga sexuella preferenser?";
   Quiz[121].Text = "Är du homosexuell eller bisexuell?";
   Quiz[122].Text = "Har du intresse för eller har du medverkat i BD/SM?";
   Quiz[123].Text = "Stänger du av eller bryter ihop när du blir stressad eller överväldigad?";
-  Quiz[124].Text = "Är du lätt att distrahera eller överväldiga?";
+  Quiz[124].Text = "Blir du lätt distraherad eller överväldigad?";
   Quiz[125].Text = "Blir du ofta missförstådd av andra?";
   Quiz[126].Text = "Har du värderingar som antingen är väldigt gammaldags eller långt före sin tid?";
   Quiz[127].Text = "Blir du förvirrad av verbala instruktioner - särskilt flera på en gång?";
   Quiz[128].Text = "Ser du ut, uppträder eller agerar som om du vore yngre än din biologiska ålder?";
   Quiz[129].Text = "Har du avvikande uppfattning om vad som är attraktivt hos det motsatta könet än vad många andra anser?";
   Quiz[130].Text = "Är det svårt för dig att lära dig sånt som du inte är intresserad av?";
-  Quiz[131].Text = "Känner du behov av att rycka loss hudflisor från dig själv (eller andra)?";
+  Quiz[131].Text = "Känner du behov av att rycka loss hudflagor från dig själv (eller andra)?";
   Quiz[132].Text = "Blandar du ibland ihop pronomen och t ex säger \"vi\" eller \"du\" när du menar \"jag\" eller tvärtom?";
   Quiz[133].Text = "Har du upplevt starkare bindningar än normalt med vissa människor?";
   Quiz[134].Text = "Är du fascinerad av långsamt flytande vatten?";
@@ -941,14 +654,14 @@ void TQuiz9::SetupTexts()
   Quiz[139].Text = "Tycker du om fisk?";
   Quiz[140].Text = "Tycker du om att resa?";
   Quiz[141].Text = "Kan du känna empati för människor när du förstår hur de känner sig?";
-  Quiz[142].Text = "Är det svårare för dih än för andra att komma över en misslyckad relation";
+  Quiz[142].Text = "Är det svårare för dig än för andra att komma över en misslyckad relation";
   Quiz[143].Text = "Vägrar du ge upp en relation eller potentiell relation som andra inte skulle bry sig om";
   Quiz[144].Text = "Blir du tårögd när du blir upprymd";
   Quiz[145].Text = "Har du bra intuition för hur saker fungerar?";
   Quiz[146].Text = "Har du övernaturliga förmågor?";
   Quiz[147].Text = "Tycker du om tungkyssar?";
-  Quiz[148].Text = "Föredrar du att sova utan kläder?";
-  Quiz[149].Text = "Har du diarre?";
+  Quiz[148].Text = "Gillar du att gosa länge med vissa du känner väl?";
+  Quiz[149].Text = "Brukar du ha diarre?";
 #endif
 
 }
@@ -1244,15 +957,15 @@ void TQuiz9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
     DefineCross(QuizIII, 3, 93);
     DefineCross(QuizIII, 4, 95);
 	DefineCross(QuizNd, 5, 186);
-	DefineGlobalId( 6, 458);
-	DefineGlobalId( 7, 459);
-	DefineGlobalId( 8, 460);
+	DefineGlobalId( 6, 459);
+	DefineGlobalId( 7, 460);
+	DefineGlobalId( 8, 461);
 	DefineCross(Quiz8, 9, 20);
 	DefineCross(Quiz7, 10, 13);
 	DefineCross(Quiz8, 11, 22);
 	DefineCross(QuizIII, 12, 11);
 	DefineCross(QuizNd, 13, 22);
-	DefineCross(Quiz8, 14, 24);
+	DefineGlobalId( 14, 462);
 	DefineCross(Quiz8, 15, 23);
 	DefineCross(Quiz8, 16, 17);
 	DefineCross(Quiz7, 17, 135);
@@ -1267,7 +980,7 @@ void TQuiz9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz8, 26, 13);
 	DefineCross(Quiz5, 27, 13);
 	DefineCross(Quiz5, 28, 15);
-	DefineGlobalId( 29, 461);
+	DefineGlobalId( 29, 463);
 	DefineCross(Quiz8, 30, 26);
 	DefineCross(Quiz8, 31, 27);
 	DefineCross(Quiz8, 32, 29);
@@ -1324,7 +1037,7 @@ void TQuiz9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz8, 83, 79);
 	DefineCross(Quiz7, 84, 146);
 	DefineCross(Quiz8, 85, 80);
-	DefineCross(Quiz8, 86, 4);
+	DefineGlobalId( 86, 464);
 	DefineCross(Quiz8, 87, 84);
 	DefineCross(Quiz8, 88, 83);
 	DefineCross(Quiz7, 89, 109);
@@ -1373,21 +1086,21 @@ void TQuiz9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz7, 132, 126);
 	DefineCross(Quiz6, 133, 63);
 	DefineCross(Quiz8, 134, 142);
-	DefineGlobalId( 135, 462);
-	DefineGlobalId( 136, 463);
-	DefineGlobalId( 137, 464);
-	DefineGlobalId( 138, 465);
-	DefineGlobalId( 139, 466);
-	DefineGlobalId( 140, 467);
-	DefineGlobalId( 141, 468);
-	DefineGlobalId( 142, 469);
-	DefineGlobalId( 143, 470);
-	DefineGlobalId( 144, 471);
-	DefineGlobalId( 145, 472);
-	DefineGlobalId( 146, 473);
-	DefineGlobalId( 147, 474);
-	DefineGlobalId( 148, 475);
-	DefineGlobalId( 149, 476);
+	DefineGlobalId( 135, 465);
+	DefineGlobalId( 136, 466);
+	DefineGlobalId( 137, 467);
+	DefineGlobalId( 138, 468);
+	DefineGlobalId( 139, 469);
+	DefineGlobalId( 140, 470);
+	DefineGlobalId( 141, 471);
+	DefineGlobalId( 142, 472);
+	DefineGlobalId( 143, 473);
+	DefineGlobalId( 144, 474);
+	DefineGlobalId( 145, 475);
+	DefineGlobalId( 146, 476);
+	DefineGlobalId( 147, 477);
+	DefineGlobalId( 148, 478);
+	DefineGlobalId( 149, 479);
 }
 
 /*##########################################################################
@@ -1722,7 +1435,7 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

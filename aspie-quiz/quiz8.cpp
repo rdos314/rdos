@@ -75,12 +75,12 @@ public:
 	void WriteStimRow(TFile &file, int index);
 	void WriteChoiceRow(TFile &file, int index);
 
-    int StimChoice[45][33];
-    int StimCount[45];
-    int ChoiceCount[33];
-    int Ignore[33];
-    const char *StimText[45];
-    const char *ReasonText[33];
+    const char *StimText[50];
+    const char *ReasonText[40];
+    int StimChoice[50][40];
+    int StimCount[50];
+    int ChoiceCount[40];
+    int Ignore[40];
     
 };
 
@@ -552,7 +552,7 @@ void TQuiz8::SetupTexts()
   Quiz[13].Text = "Är du känslig för lyrsrörsljus?";
   Quiz[14].Text = "Är du bra på att klättra?";
   Quiz[15].Text = "Är du bra på att hoppa högt?";
-  Quiz[16].Text = "Har du starka nypor?";
+  Quiz[16].Text = "Har du starka händer?";
   Quiz[17].Text = "Har du en bra känsla för hur mycket du ska ta i när du gör något med händerna?";
   Quiz[18].Text = "Är du mer fysiskt uthållig än normalt?";
   Quiz[19].Text = "Tappar du saker när din uppmärksamhet är på annat håll?";
@@ -1978,28 +1978,28 @@ TStim::TStim()
 	int i;
 	int j;
 
-    for (i = 0; i < 45; i++)
+    for (i = 0; i < 46; i++)
     {
-        for (j = 0; j < 33; j++)
+        for (j = 0; j < 34; j++)
             StimChoice[i][j] = 0;
 
         StimCount[i] = 0;
 	}
 
-    for (i = 0; i < 33; i++)
+    for (i = 0; i < 34; i++)
     {
         ChoiceCount[i] = 0;
         Ignore[i] = FALSE;
     }
 
-    Ignore[3] = TRUE;
-    Ignore[4] = TRUE;
-    Ignore[13] = TRUE;
-    Ignore[15] = TRUE;
-    Ignore[27] = TRUE;
-    Ignore[28] = TRUE;
-    Ignore[30] = TRUE;
-    Ignore[32] = TRUE;
+//    Ignore[3] = TRUE;
+//    Ignore[4] = TRUE;
+//    Ignore[13] = TRUE;
+//    Ignore[15] = TRUE;
+//    Ignore[27] = TRUE;
+//    Ignore[28] = TRUE;
+//    Ignore[30] = TRUE;
+//    Ignore[32] = TRUE;
 
 
 
@@ -2187,26 +2187,27 @@ TStim::TStim()
 *##########################################################################*/
 void TStim::Add(TQuizRow *Row)
 {
-	 int i;
-	 int j;
-	 int index;
+	int i;
+	int j;
+	int index;
 
-	 for (i = 0; i < 45; i++)
-	 {
+	for (i = 0; i < 45; i++)
+	{
 		  for (j = 0; j < 3; j++)
 		  {
 				if (Row->Stim[i][j])
 				{
 					 index = Row->Stim[i][j];
-					 if (index < 33)
+					 if (index < 33 && index >= 0)
 					 {
+//					      StimChoice[i][index]++;
 						  StimChoice[i][index] += 3 - j;
 						  StimCount[i]++;
 						  ChoiceCount[index]++;
 					 }
 				}
 		  }
-	 }
+	}
 }
 
 /*##################  TStim::WriteStimRow ##########################
@@ -2486,7 +2487,7 @@ void TQuiz8::WriteStim(const char *filename)
 	int Used[45];
 	int max;
 
-	TStim stim;
+    TStim stim;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
@@ -2513,10 +2514,10 @@ void TQuiz8::WriteStim(const char *filename)
         max = 0;
 
         for (j = 0; j < 45; j++)
-            if (!Used[j] && stim.StimCount[j] > max)
-            {
-                index = j;
-                max = stim.StimCount[j];
+				if (!Used[j] && stim.StimCount[j] > max)
+				{
+					 index = j;
+					 max = stim.StimCount[j];
             }
     
         stim.WriteStimRow(file, index);
@@ -2533,11 +2534,11 @@ void TQuiz8::WriteStim(const char *filename)
         max = 0;
 
         for (j = 1; j < 33; j++)
-            if (!Used[j] && stim.ChoiceCount[j] > max)
-            {
-                index = j;
-                max = stim.ChoiceCount[j];
-            }
+				if (!Used[j] && stim.ChoiceCount[j] > max)
+				{
+					 index = j;
+					 max = stim.ChoiceCount[j];
+				}
     
         stim.WriteChoiceRow(file, index);
         Used[index] = TRUE;
