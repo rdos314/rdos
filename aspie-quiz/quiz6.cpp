@@ -272,7 +272,7 @@ void TQuiz6::SetupTexts()
 	Quiz[60].MyGroup = GROUP_REPETITION;
 	Quiz[61].MyGroup = GROUP_REPETITION;
 	Quiz[62].MyGroup = GROUP_REPETITION;
-	Quiz[63].MyGroup = GROUP_MIXED;
+	Quiz[63].MyGroup = GROUP_REPETITION;
 	Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[66].MyGroup = GROUP_MIXED;

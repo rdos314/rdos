@@ -45,12 +45,12 @@ class THair
 public:
 	THair();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index, const char *text);
-    void WriteEntry(TFile &file, int val, int count);
+	void WriteRow(TFile &file, int report, int index, const char *text);
+	void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
-	int AsCount[7];
-	int NtCount[7];
+	int AsCount[4][7];
+	int NtCount[4][7];
 };
 
 class TEye
@@ -1653,11 +1653,15 @@ void WriteFieldFooter(TFile &File)
 THair::THair()
 {
     int i;
+    int j;
 
     for (i = 0; i < 7; i++)
     {
-        AsCount[i] = 0;
-        NtCount[i] = 0;
+        for (j = 0; j < 3; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
     }
 }
 
@@ -1673,32 +1677,48 @@ void THair::Add(TQuizRow *Row)
 	int index;
 	int diff = Row->AsResult - Row->NtResult;
 
-	switch (Row->Hair)
+    switch (Row->Hair)
 	{
-		case 1:
-		case 2:
+    	case 1:
+	    case 2:
 		case 5:
-			index = 0;
+    		index = 0;
+	    	break;
+
+    	case 3:
+	    	index = 1;
+		    break;
+
+    	case 4:
+	    case 6:
+		    index = 2;
 			break;
 
-		case 3:
-			index = 1;
-			break;
+        case 7:
+	    	index = 3;
+		    break;
+    }
 
-		case 4:
-		case 6:
-			index = 2;
-			break;
+    if (Row->Country == 7302 && Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	 }
 
-		case 7:
-			index = 3;
-			break;
-	}
+    if (Row->Lang == 0 && Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	 }
 
 	if (diff > 0)
-		AsCount[index]++;
-	else
-		NtCount[index]++;
+		AsCount[0][index]++;
+    else
+	    NtCount[0][index]++;
 }
 
 /*##################  THair::WriteHeader ##########################
@@ -1803,37 +1823,37 @@ void THair::WriteEntry(TFile &file, int val, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void THair::WriteRow(TFile &file, int index, const char *text)
+void THair::WriteRow(TFile &file, int report, int index, const char *text)
 {
-    char str[80];
+	char str[80];
 	int sum;
-    int i;
+	int i;
 
-    file.Write("<tr style='height:24.75pt'>");
+	file.Write("<tr style='height:24.75pt'>");
 	WriteCenteredFieldHeader(file, 25);
 	file.Write(text);
 	WriteFieldFooter(file);
 
 
-    sum = 0;
+	sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += AsCount[i];
+		sum += AsCount[report][i];
 
 	if (sum)
-		WriteEntry(file, AsCount[index], sum);
+		WriteEntry(file, AsCount[report][index], sum);
 	else
 		file.Write("---");
 
 	sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += NtCount[i];
+		sum += NtCount[report][i];
 
 	if (sum)
-		WriteEntry(file, NtCount[index], sum);
+		WriteEntry(file, NtCount[report][index], sum);
 	else
 		file.Write("---");
 
-    file.Write("</tr>");
+	file.Write("</tr>");
 }
 
 /*##################  TEye::TEye ##########################
@@ -1866,27 +1886,30 @@ void TEye::Add(TQuizRow *Row)
     int index;
 	int diff = Row->AsResult - Row->NtResult;
 
-	switch (Row->Eye)
-	{
-		case 1:
-		case 2:
-			index = 0;
-			break;
+    if (Row->Country == 7302 && Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+    	switch (Row->Eye)
+	    {
+    		case 1:
+	    	case 2:
+		    	index = 0;
+			    break;
 
-		case 3:
-			index = 1;
-			break;
+    		case 3:
+	    		index = 1;
+		    	break;
 
-		case 4:
-		case 5:
-			index = 2;
-			break;
+    		case 4:
+	    	case 5:
+		    	index = 2;
+    			break;
+	    }
+
+        if (diff > 0)
+	        AsCount[index]++;
+        else
+	        NtCount[index]++;
 	}
-
-    if (diff > 0)
-	    AsCount[index]++;
-    else
-	    NtCount[index]++;
 }
 
 /*##################  TEye::WriteHeader ##########################
@@ -2318,23 +2341,31 @@ void TQuiz7::WriteHair(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-	THair hair[7];
+	THair hair;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		if (Row.Hair != 7)
-			hair[0].Add(&Row);
+			hair.Add(&Row);
 	}
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 3; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Hair-color excluding black");
+				file.Write("Hair-color, whole population");
+				break;
+
+			case 1:
+				file.Write("Hair-color, US Caucasians");
+				break;
+
+			case 2:
+				file.Write("Hair-color, English-speaking Caucasians");
 				break;
 
 		}
@@ -2345,9 +2376,9 @@ void TQuiz7::WriteHair(const char *filename)
 
 		THair::WriteHeader(file);
 
-		hair[i].WriteRow(file, 0, "Red/Strawberry blond/auburn");
-		hair[i].WriteRow(file, 1, "Blond");
-		hair[i].WriteRow(file, 2, "Brown");
+		hair.WriteRow(file, i, 0, "Red/Strawberry blond/auburn");
+		hair.WriteRow(file, i, 1, "Blond");
+		hair.WriteRow(file, i, 2, "Brown");
 
 		file.Write("</table>");
 
@@ -2359,7 +2390,7 @@ void TQuiz7::WriteHair(const char *filename)
 
 /*##################  TQuiz5::WriteEye ##########################
 *   Purpose....: Write eye color report                   			     	        #
-*   In params..: *                                                          #
+ *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #

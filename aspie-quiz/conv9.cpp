@@ -132,7 +132,7 @@ void UpdateScore(TQuizRow *row)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void ProcessRow(char *str)
+char *ProcessRow(char *str)
 {
 	char *valstr;
 	char *ptr;
@@ -148,15 +148,38 @@ void ProcessRow(char *str)
 
 		quote = FALSE;
 		ptr = str;
-		while (*ptr && (quote || *ptr != ','))
+		while (*ptr && (quote || (*ptr != ',' && *ptr != ')')))
 		{
-			if (*ptr == 0x27)
-				quote = !quote;
+		    switch (*ptr)
+		    {
+				case '\\':
+                    ptr++;
+                    if (*ptr == '\\')
+                    {
+                        ptr++;
+                        if (*ptr == 0x27)
+                        {
+                            ptr++;
+                            if (*ptr == 0x27)
+                                ptr++;
+                            else
+                                quote = FALSE;
+                        }
+                    }
+                    break;
 
-			ptr++;
+                case 0x27:
+                    quote = !quote;
+                    ptr++;
+                    break;
+
+                default:
+                    ptr++;
+                    break;
+            }
 		}
 
-		if (*ptr == ',')
+		if (*ptr == ',' || *ptr == ')')
 		{
 			*ptr = 0;
 			str = ptr + 1;
@@ -202,7 +225,7 @@ void ProcessRow(char *str)
                 			break;
 
 	    	            case 7:
-            		    	Row.Quiz[151] = 0;
+							Row.Quiz[151] = 0;
     		            	break;
             	    }
 					break;
@@ -322,8 +345,11 @@ void ProcessRow(char *str)
 		}
 	}
 
-    UpdateScore(&Row);
+	UpdateScore(&Row);
 	HandleRow(&Row);
+
+	return str;
+
 }
 
 /*##################  main ##########################
@@ -349,17 +375,13 @@ int main(int argc, char **argv)
 		if (rowstr)
 		{
 			rowstr += strlen(InsertString);
-			ptr = strstr(rowstr, ")");
-			if (ptr)
-				 *ptr = 0;
-			else
-				 rowstr = 0;
-		}
+			ptr = ProcessRow(rowstr);
 
-		pos += strlen(buf) + 1;
+			pos += ptr - buf;
+	    }
+	    else
+    		pos += strlen(buf) + 1;
+    		
 		infile.SetPos(pos);
-
-		if (rowstr)
-			ProcessRow(rowstr);
 	}
 }

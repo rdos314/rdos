@@ -204,8 +204,13 @@ void TQuiz9::SetupTexts()
   Quiz[104].Reverse = TRUE;
   Quiz[108].Reverse = TRUE;
   Quiz[109].Reverse = TRUE;
+  Quiz[138].Reverse = TRUE;
+  Quiz[139].Reverse = TRUE;
+  Quiz[140].Reverse = TRUE;
   Quiz[141].Reverse = TRUE;
+  Quiz[145].Reverse = TRUE;
   Quiz[147].Reverse = TRUE;
+  Quiz[148].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -213,7 +218,7 @@ void TQuiz9::SetupTexts()
   Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[9].MyGroup = GROUP_NT_BIOLOGY;
@@ -340,22 +345,22 @@ void TQuiz9::SetupTexts()
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_REPETITION;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
-  Quiz[137].MyGroup = GROUP_MIXED;
-  Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
-  Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[138].MyGroup = GROUP_SENSORY;
+  Quiz[139].MyGroup = GROUP_NT_TALENT;
+  Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[142].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_NT_TALENT;
   Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -1435,8 +1440,8 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_FEMALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
