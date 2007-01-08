@@ -338,11 +338,11 @@ void TQuiz9::SetupTexts()
   Quiz[123].MyGroup = GROUP_MIXED;
   Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_MIXED;
-  Quiz[126].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
-  Quiz[130].MyGroup = GROUP_MIXED;
+  Quiz[130].MyGroup = GROUP_NT_TALENT;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_REPETITION;
@@ -1440,7 +1440,7 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

@@ -166,12 +166,12 @@ void TQuizI::SetupTexts()
 	Quiz[43].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[44].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[45].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[46].MyGroup = GROUP_MIXED;
+	Quiz[46].MyGroup = GROUP_NT_TALENT;
 	Quiz[47].MyGroup = GROUP_SENSORY;
 	Quiz[48].MyGroup = GROUP_MIXED;
-	Quiz[49].MyGroup = GROUP_MIXED;
+	Quiz[49].MyGroup = GROUP_NT_TALENT;
 	Quiz[50].MyGroup = GROUP_REPETITION;
-	Quiz[51].MyGroup = GROUP_MIXED;
+	Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[52].MyGroup = GROUP_SENSORY;
 	Quiz[53].MyGroup = GROUP_NONVERBAL;
 	Quiz[54].MyGroup = GROUP_MIXED;
@@ -218,8 +218,8 @@ void TQuizI::SetupTexts()
 	Quiz[95].MyGroup = GROUP_MIXED;
 	Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[98].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[99].MyGroup = GROUP_MIXED;
+	Quiz[98].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[99].MyGroup = GROUP_ASPIE_TALENT;
 
 
 #ifdef ENGLISH
