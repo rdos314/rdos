@@ -242,15 +242,15 @@ void TQuiz::Init()
 
 #ifdef ENGLISH
 
-	Group[GROUP_ASPIE_BIOLOGY].Name = "Aspie biology";
-	Group[GROUP_NT_BIOLOGY].Name = "NT biology";
+	Group[GROUP_ASPIE_BIOLOGY].Name = "Biology";
+	Group[GROUP_NT_BIOLOGY].Name = "Motor";
 	Group[GROUP_SENSORY].Name = "Sensory";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie ability";
 	Group[GROUP_NT_TALENT].Name = "Aspie disability";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stims";
-	Group[GROUP_NONVERBAL].Name = "NT communication";
+	Group[GROUP_NONVERBAL].Name = "Nonverbal communication";
 	Group[GROUP_SEX].Name = "Sexuality";
 	Group[GROUP_REPETITION].Name = "Compulsions";
 	Group[GROUP_MIXED].Name = "Mixed";
@@ -259,15 +259,15 @@ void TQuiz::Init()
 
 #ifdef SWEDISH
 
-	Group[GROUP_ASPIE_BIOLOGY].Name = "Aspie biologi";
-	Group[GROUP_NT_BIOLOGY].Name = "NT biologi";
+	Group[GROUP_ASPIE_BIOLOGY].Name = "Biologi";
+	Group[GROUP_NT_BIOLOGY].Name = "Motorik";
 	Group[GROUP_SENSORY].Name = "Sinnen";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie talang";
 	Group[GROUP_NT_TALENT].Name = "Aspie handikapp";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stimming";
-	Group[GROUP_NONVERBAL].Name = "NT Kommunikation";
+	Group[GROUP_NONVERBAL].Name = "Nonverbal kommunikation";
 	Group[GROUP_SEX].Name = "Sexualitet";
 	Group[GROUP_REPETITION].Name = "Tvång";
 	Group[GROUP_MIXED].Name = "Blandat";

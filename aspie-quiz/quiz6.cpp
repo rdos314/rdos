@@ -45,12 +45,12 @@ class THair
 public:
 	THair();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index, const char *text);
+	void WriteRow(TFile &file, int report, int index, const char *text);
     void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
-	int AsCount[7];
-	int NtCount[7];
+	int AsCount[4][7];
+	int NtCount[4][7];
 };
 
 class TEye
@@ -58,13 +58,13 @@ class TEye
 public:
 	TEye();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index, const char *text);
+	void WriteRow(TFile &file, int report, int index, const char *text);
     void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
 
-	int AsCount[5];
-	int NtCount[5];
+	int AsCount[4][5];
+	int NtCount[4][5];
 };
 
 class TRace
@@ -211,7 +211,7 @@ void TQuiz6::SetupTexts()
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
 	Quiz[1].MyGroup = GROUP_SENSORY;
-	Quiz[2].MyGroup = GROUP_MIXED;
+	Quiz[2].MyGroup = GROUP_SENSORY;
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_ASPIE_COMM;
@@ -249,7 +249,7 @@ void TQuiz6::SetupTexts()
 	Quiz[37].MyGroup = GROUP_NONVERBAL;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_MIXED;
-	Quiz[40].MyGroup = GROUP_MIXED;
+	Quiz[40].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[41].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[42].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[43].MyGroup = GROUP_MIXED;
@@ -264,11 +264,11 @@ void TQuiz6::SetupTexts()
 	Quiz[52].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[53].MyGroup = GROUP_REPETITION;
 	Quiz[54].MyGroup = GROUP_REPETITION;
-	Quiz[55].MyGroup = GROUP_MIXED;
+	Quiz[55].MyGroup = GROUP_REPETITION;
 	Quiz[56].MyGroup = GROUP_REPETITION;
 	Quiz[57].MyGroup = GROUP_REPETITION;
 	Quiz[58].MyGroup = GROUP_REPETITION;
-	Quiz[59].MyGroup = GROUP_MIXED;
+	Quiz[59].MyGroup = GROUP_REPETITION;
 	Quiz[60].MyGroup = GROUP_REPETITION;
 	Quiz[61].MyGroup = GROUP_REPETITION;
 	Quiz[62].MyGroup = GROUP_REPETITION;
@@ -335,7 +335,7 @@ void TQuiz6::SetupTexts()
 	Quiz[123].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[124].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[125].MyGroup = GROUP_MIXED;
-	Quiz[126].MyGroup = GROUP_MIXED;
+	Quiz[126].MyGroup = GROUP_SENSORY;
 	Quiz[127].MyGroup = GROUP_MIXED;
 	Quiz[128].MyGroup = GROUP_MIXED;
 	Quiz[129].MyGroup = GROUP_NONVERBAL;
@@ -355,7 +355,7 @@ void TQuiz6::SetupTexts()
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_SENSORY;
 	Quiz[145].MyGroup = GROUP_MIXED;
-	Quiz[146].MyGroup = GROUP_MIXED;
+	Quiz[146].MyGroup = GROUP_SENSORY;
 	Quiz[147].MyGroup = GROUP_MIXED;
 	Quiz[148].MyGroup = GROUP_MIXED;
 	Quiz[149].MyGroup = GROUP_MIXED;
@@ -1587,11 +1587,15 @@ void WriteFieldFooter(TFile &File)
 THair::THair()
 {
     int i;
+    int j;
 
     for (i = 0; i < 7; i++)
     {
-        AsCount[i] = 0;
-        NtCount[i] = 0;
+        for (j = 0; j < 3; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
     }
 }
 
@@ -1629,10 +1633,26 @@ void THair::Add(TQuizRow *Row)
 			break;
 	}
 
+    if (Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	 }
+
+    if (Row->Lang == 0 && Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
 	if (diff > 0)
-		AsCount[index]++;
-	else
-		NtCount[index]++;
+		AsCount[0][index]++;
+    else
+	    NtCount[0][index]++;
 }
 
 /*##################  THair::WriteHeader ##########################
@@ -1737,7 +1757,7 @@ void THair::WriteEntry(TFile &file, int val, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void THair::WriteRow(TFile &file, int index, const char *text)
+void THair::WriteRow(TFile &file, int report, int index, const char *text)
 {
     char str[80];
 	int sum;
@@ -1751,19 +1771,19 @@ void THair::WriteRow(TFile &file, int index, const char *text)
 
     sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += AsCount[i];
+		sum += AsCount[report][i];
 
 	if (sum)
-		WriteEntry(file, AsCount[index], sum);
+		WriteEntry(file, AsCount[report][index], sum);
 	else
 		file.Write("---");
 
 	sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += NtCount[i];
+		sum += NtCount[report][i];
 
 	if (sum)
-		WriteEntry(file, NtCount[index], sum);
+		WriteEntry(file, NtCount[report][index], sum);
 	else
 		file.Write("---");
 
@@ -1780,11 +1800,15 @@ void THair::WriteRow(TFile &file, int index, const char *text)
 TEye::TEye()
 {
 	int i;
+	int j;
 
     for (i = 0; i < 5; i++)
     {
-        AsCount[i] = 0;
-        NtCount[i] = 0;
+        for (j = 0; j < 3; j++)
+        {
+            AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
     }
 }
 
@@ -1817,10 +1841,27 @@ void TEye::Add(TQuizRow *Row)
 			break;
 	}
 
+    if (Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	 }
+
+    if (Row->Lang == 0 && Row->Ancestry >= 2000 && Row->Ancestry < 3000)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	 }
+
 	if (diff > 0)
-		AsCount[index]++;
-	else
-	    NtCount[index]++;
+		AsCount[0][index]++;
+    else
+	    NtCount[0][index]++;
+
 }
 
 /*##################  TEye::WriteHeader ##########################
@@ -1924,7 +1965,7 @@ void TEye::WriteEntry(TFile &file, int val, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TEye::WriteRow(TFile &file, int index, const char *text)
+void TEye::WriteRow(TFile &file, int report, int index, const char *text)
 {
 	char str[80];
 	int sum;
@@ -1937,20 +1978,20 @@ void TEye::WriteRow(TFile &file, int index, const char *text)
 
 	sum = 0;
 	for (i = 0; i < 5; i++)
-		sum += AsCount[i];
+		sum += AsCount[report][i];
 
 	if (sum)
-        WriteEntry(file, AsCount[index], sum);
+        WriteEntry(file, AsCount[report][index], sum);
 	else
 	    file.Write("---");
 
 
 	sum = 0;
     for (i = 0; i < 5; i++)
-        sum += NtCount[i];            
+        sum += NtCount[report][i];            
 
     if (sum)
-        WriteEntry(file, NtCount[index], sum);
+        WriteEntry(file, NtCount[report][index], sum);
 	else
 	    file.Write("---");
 
@@ -2188,23 +2229,28 @@ void TQuiz6::WriteHair(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-	THair hair[7];
+	THair hair;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-//		if (Row.Hair != 7)
-			hair[0].Add(&Row);
-	}
+		hair.Add(&Row);
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 3; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Hair-color excluding black");
+				file.Write("Hair-color, whole population");
+				break;
+
+			case 1:
+				file.Write("Hair-color, Caucasians");
+				break;
+
+			case 2:
+				file.Write("Hair-color, English-speaking Caucasians");
 				break;
 
 		}
@@ -2215,10 +2261,10 @@ void TQuiz6::WriteHair(const char *filename)
 
 		THair::WriteHeader(file);
 
-		hair[i].WriteRow(file, 0, "Red/Strawberry blond/auburn");
-		hair[i].WriteRow(file, 1, "Blond");
-		hair[i].WriteRow(file, 2, "Brown");
-		hair[i].WriteRow(file, 3, "Black");
+		hair.WriteRow(file, i, 0, "Red/Strawberry blond/auburn");
+		hair.WriteRow(file, i, 1, "Blond");
+		hair.WriteRow(file, i, 2, "Brown");
+		hair.WriteRow(file, i, 3, "Black");
 
 		file.Write("</table>");
 
@@ -2243,23 +2289,28 @@ void TQuiz6::WriteEye(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-	TEye eye[7];
+	TEye eye;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if ((Row.Ancestry >= 2100 && Row.Ancestry < 2400) || (Row.Ancestry >= 2700 && Row.Ancestry < 2800))
-			eye[0].Add(&Row);
-	}
+		eye.Add(&Row);
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 3; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Eye color");
+				file.Write("Eye color, whole population");
+				break;
+
+			case 1:
+				file.Write("Eye color, Caucasians");
+				break;
+
+			case 2:
+				file.Write("Eye color, English-speaking Caucasians");
 				break;
 
 		}
@@ -2270,9 +2321,9 @@ void TQuiz6::WriteEye(const char *filename)
 
 		TEye::WriteHeader(file);
 
-		eye[i].WriteRow(file, 0, "Grey-blue/Blue");
-		eye[i].WriteRow(file, 1, "Green");
-		eye[i].WriteRow(file, 2, "Hazel/Brown");
+		eye.WriteRow(file, i, 0, "Grey-blue/Blue");
+		eye.WriteRow(file, i, 1, "Green");
+		eye.WriteRow(file, i, 2, "Hazel/Brown");
 
 		file.Write("</table>");
 

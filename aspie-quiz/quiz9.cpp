@@ -335,8 +335,8 @@ void TQuiz9::SetupTexts()
   Quiz[120].MyGroup = GROUP_SEX;
   Quiz[121].MyGroup = GROUP_SEX;
   Quiz[122].MyGroup = GROUP_SEX;
-  Quiz[123].MyGroup = GROUP_MIXED;
-  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[123].MyGroup = GROUP_SENSORY;
+  Quiz[124].MyGroup = GROUP_SENSORY;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[127].MyGroup = GROUP_MIXED;
@@ -354,7 +354,7 @@ void TQuiz9::SetupTexts()
   Quiz[139].MyGroup = GROUP_NT_TALENT;
   Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[142].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_NT_TALENT;
