@@ -181,7 +181,7 @@ void TQuizIII::SetupTexts()
 	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[50].MyGroup = GROUP_EMOTION;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -216,7 +216,7 @@ void TQuizIII::SetupTexts()
 	Quiz[82].MyGroup = GROUP_REPETITION;
 	Quiz[83].MyGroup = GROUP_REPETITION;
 	Quiz[84].MyGroup = GROUP_REPETITION;
-	Quiz[85].MyGroup = GROUP_REPETITION;
+	Quiz[85].MyGroup = GROUP_EMOTION;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_MIXED;
 	Quiz[88].MyGroup = GROUP_ASPIE_BIOLOGY;

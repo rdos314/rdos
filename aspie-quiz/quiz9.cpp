@@ -263,7 +263,7 @@ void TQuiz9::SetupTexts()
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[51].MyGroup = GROUP_EMOTION;
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -274,7 +274,7 @@ void TQuiz9::SetupTexts()
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[61].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[62].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[62].MyGroup = GROUP_EMOTION;
   Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -335,7 +335,7 @@ void TQuiz9::SetupTexts()
   Quiz[120].MyGroup = GROUP_SEX;
   Quiz[121].MyGroup = GROUP_SEX;
   Quiz[122].MyGroup = GROUP_SEX;
-  Quiz[123].MyGroup = GROUP_SENSORY;
+  Quiz[123].MyGroup = GROUP_EMOTION;
   Quiz[124].MyGroup = GROUP_SENSORY;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
@@ -353,7 +353,7 @@ void TQuiz9::SetupTexts()
   Quiz[138].MyGroup = GROUP_SENSORY;
   Quiz[139].MyGroup = GROUP_NT_TALENT;
   Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[141].MyGroup = GROUP_EMOTION;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
@@ -1446,8 +1446,8 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

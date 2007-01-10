@@ -251,6 +251,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stims";
 	Group[GROUP_NONVERBAL].Name = "Nonverbal communication";
+	Group[GROUP_EMOTION].Name = "Emotion";
 	Group[GROUP_SEX].Name = "Sexuality";
 	Group[GROUP_REPETITION].Name = "Compulsions";
 	Group[GROUP_MIXED].Name = "Mixed";
@@ -268,6 +269,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stimming";
 	Group[GROUP_NONVERBAL].Name = "Nonverbal kommunikation";
+	Group[GROUP_EMOTION].Name = "Känslor";
 	Group[GROUP_SEX].Name = "Sexualitet";
 	Group[GROUP_REPETITION].Name = "Tvång";
 	Group[GROUP_MIXED].Name = "Blandat";
