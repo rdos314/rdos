@@ -186,10 +186,10 @@ void TQuizI::SetupTexts()
 	Quiz[63].MyGroup = GROUP_REPETITION;
 	Quiz[64].MyGroup = GROUP_SENSORY;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[66].MyGroup = GROUP_EMOTION;
-	Quiz[67].MyGroup = GROUP_EMOTION;
-	Quiz[68].MyGroup = GROUP_EMOTION;
-	Quiz[69].MyGroup = GROUP_EMOTION;
+	Quiz[66].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[70].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_EMOTION;

@@ -269,7 +269,7 @@ void TQuiz9::SetupTexts()
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[57].MyGroup = GROUP_EMOTION;
+  Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -358,7 +358,7 @@ void TQuiz9::SetupTexts()
   Quiz[143].MyGroup = GROUP_EMOTION;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_SENSORY;
   Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
