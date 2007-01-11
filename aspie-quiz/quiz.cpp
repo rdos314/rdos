@@ -251,7 +251,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stims";
 	Group[GROUP_NONVERBAL].Name = "Nonverbal communication";
-	Group[GROUP_EMOTION].Name = "Emotion";
+	Group[GROUP_EMOTION].Name = "Environment";
 	Group[GROUP_SEX].Name = "Sexuality";
 	Group[GROUP_REPETITION].Name = "Compulsions";
 	Group[GROUP_MIXED].Name = "Mixed";
@@ -269,7 +269,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stimming";
 	Group[GROUP_NONVERBAL].Name = "Nonverbal kommunikation";
-	Group[GROUP_EMOTION].Name = "Känslor";
+	Group[GROUP_EMOTION].Name = "Miljö";
 	Group[GROUP_SEX].Name = "Sexualitet";
 	Group[GROUP_REPETITION].Name = "Tvång";
 	Group[GROUP_MIXED].Name = "Blandat";
@@ -3302,7 +3302,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 26);
+        WriteCenteredFieldHeader(file, 24);
 		file.Write(Group[g].Name);
         WriteFieldFooter(file);
 
@@ -3312,7 +3312,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
         {
-            WriteFieldHeader(file, 5);
+            WriteFieldHeader(file, 4);
 			sprintf(str, "G:%d", grp + 1);
 			file.Write(str);
             WriteFieldFooter(file);
@@ -3339,7 +3339,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		    }
 		    WriteFieldFooter(file);
 
-            WriteCenteredFieldHeader(file, 26);
+            WriteCenteredFieldHeader(file, 24);
 			if (TopQuiz->Quiz[TopQuestion].Reverse)
 				file.Write("<span style='color:#990099'>");
 			file.Write(TopQuiz->Quiz[TopQuestion].Text);
@@ -3349,7 +3349,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 					
             cross = 0;
             TopQuiz->ClearUsed(TopQuestion);
-            WriteCenteredFieldHeader(file, 6);
+            WriteCenteredFieldHeader(file, 4);
             quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
             while (quiz)
             {
@@ -3390,7 +3390,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 			{
 				cross = 0;
 				TopQuiz->ClearUsed(TopQuestion);
-				WriteFieldHeader(file, 5);
+				WriteFieldHeader(file, 4);
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				while (quiz)
 				{
@@ -3799,7 +3799,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 		file.Write(str);
 		WriteFieldFooter(file);
 
-		WriteCenteredFieldHeader(file, 26);
+		WriteCenteredFieldHeader(file, 24);
 		file.Write(Group[g].Name);
 		WriteFieldFooter(file);
 
@@ -3809,7 +3809,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
-			WriteFieldHeader(file, 5);
+			WriteFieldHeader(file, 4);
 			sprintf(str, "G:%d", grp + 1);
 			file.Write(str);
             WriteFieldFooter(file);
@@ -3896,7 +3896,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				file.Write(str);
 				WriteFieldFooter(file);
 
-				WriteCenteredFieldHeader(file, 26);
+				WriteCenteredFieldHeader(file, 24);
 				if (TopQuiz->Quiz[TopQuestion].Reverse)
 					file.Write("<span style='color:#990099'>");
 				file.Write(TopQuiz->Quiz[TopQuestion].Text);
@@ -3904,7 +3904,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 					file.Write("</span>");
 				WriteFieldFooter(file);
 
-				WriteCenteredFieldHeader(file, 6);
+				WriteCenteredFieldHeader(file, 4);
 
 				val = CorrSum[GlobalId] / CorrCount[GlobalId];
 				CorrCount[GlobalId] = 0;
@@ -3965,7 +3965,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
-					WriteCenteredFieldHeader(file, 5);
+					WriteCenteredFieldHeader(file, 4);
 
 					if (GroupCount[j])
 					{

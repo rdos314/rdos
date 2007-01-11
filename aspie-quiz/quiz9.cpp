@@ -218,7 +218,7 @@ void TQuiz9::SetupTexts()
   Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[6].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[6].MyGroup = GROUP_MIXED;
   Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[9].MyGroup = GROUP_NT_BIOLOGY;
@@ -263,18 +263,18 @@ void TQuiz9::SetupTexts()
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[51].MyGroup = GROUP_EMOTION;
+  Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[57].MyGroup = GROUP_EMOTION;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[61].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[62].MyGroup = GROUP_EMOTION;
+  Quiz[62].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -336,28 +336,28 @@ void TQuiz9::SetupTexts()
   Quiz[121].MyGroup = GROUP_SEX;
   Quiz[122].MyGroup = GROUP_SEX;
   Quiz[123].MyGroup = GROUP_EMOTION;
-  Quiz[124].MyGroup = GROUP_SENSORY;
+  Quiz[124].MyGroup = GROUP_EMOTION;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
-  Quiz[130].MyGroup = GROUP_NT_TALENT;
+  Quiz[130].MyGroup = GROUP_EMOTION;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_REPETITION;
+  Quiz[133].MyGroup = GROUP_EMOTION;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_SENSORY;
-  Quiz[139].MyGroup = GROUP_NT_TALENT;
+  Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[141].MyGroup = GROUP_EMOTION;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[142].MyGroup = GROUP_EMOTION;
+  Quiz[143].MyGroup = GROUP_EMOTION;
   Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_NT_TALENT;
+  Quiz[145].MyGroup = GROUP_MIXED;
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -883,28 +883,17 @@ void TQuiz9::LoadPopulations()
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
-		else
+
+		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			ref = FindReferer(Row.Referer);
-
-			if (ref)
-			{
-				if (ref->NT && Row.Autism == 0 && Row.Aspie == 0)
-				{
-					Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					if (Row.Gender == 1)
-						NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					else
-						NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-				}
-
-//                if (!aspie)
-					aspie = ref->Aspie;
-			}
+			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			if (Row.Gender == 1)
+				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			else
+				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-
-		if (aspie)
+		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
 			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
@@ -1443,11 +1432,11 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
