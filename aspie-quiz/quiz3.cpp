@@ -672,28 +672,17 @@ void TQuizIII::LoadPopulations()
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
-		else
+
+		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			ref = FindReferer(Row.Referer);
-
-			if (ref)
-			{
-				if (ref->NT && Row.Diagnos == NO_DX)
-				{
-					Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					if (Row.Gender == 1)
-						NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					else
-						NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-				}
-
-//                if (!aspie)
-						  aspie = ref->Aspie;
-			}
+			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			if (Row.Gender == 1)
+				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			else
+				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-
-		if (aspie)
+		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
 			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);

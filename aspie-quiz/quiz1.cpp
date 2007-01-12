@@ -640,19 +640,12 @@ void TQuizI::LoadPopulations()
 
 		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
 			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
-		else
-		{
-			ref = FindReferer(Row.Referer);
 
-			if (ref)
-			{
-				if (ref->NT)
-					Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
+		if (Row.ResultNow  <= 65)
+			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 
-				if (ref->Aspie)
-					Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
-			}
-		}
+		if (Row.ResultNow  >= 135)
+			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr);
 	}
 }
 

@@ -247,6 +247,7 @@ protected:
     void WriteStaple(TFile &File, TPopulation *pop, int Question);
     void WriteCI95(TFile &File, TPopulation *pop, int Question);
 	void WriteCorr95(TFile &File, long double corr, int count);
+	void WriteCorrVal(TFile &File, long double corr, int count);
     void WritePca(TFile &File, long double pca);
     static void WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr);
     void WritePcaCorrRow(TFile &File, const char *comment, int PopType);

@@ -340,6 +340,36 @@ void ProcessRow(char *str)
 
 				case 13:
 					Row.Premature = atoi(valstr);
+					switch (Row.Premature)
+					{
+					    case 1:
+					        Row.Quiz[156] = 0;
+					        Row.Quiz[157] = 0;
+                            break;
+					        
+					    case 2:
+        					Row.Quiz[156] = 3;
+					        Row.Quiz[157] = 1;
+        					break;
+
+                        case 3:
+        			        Row.Quiz[156] = 1;
+					        Row.Quiz[157] = 1;
+					        break;
+
+					    case 4:
+					    case 5:
+        			        Row.Quiz[156] = 1;
+					        Row.Quiz[157] = 2;
+					        break;
+                                    					
+					    case 6:
+					    case 7:
+        			        Row.Quiz[156] = 1;
+					        Row.Quiz[157] = 3;
+					        break;
+                            
+        			}
 					break;
 
 				case 14:

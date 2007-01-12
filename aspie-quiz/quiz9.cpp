@@ -169,6 +169,7 @@ void TQuiz9::DefineQuiz()
 ##########################################################################*/
 void TQuiz9::SetupTexts()
 {
+  Quiz[6].Reverse = TRUE;
   Quiz[13].Reverse = TRUE;
   Quiz[16].Reverse = TRUE;
   Quiz[17].Reverse = TRUE;
@@ -218,7 +219,7 @@ void TQuiz9::SetupTexts()
   Quiz[3].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[4].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[5].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[6].MyGroup = GROUP_MIXED;
+  Quiz[6].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[7].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[9].MyGroup = GROUP_NT_BIOLOGY;
@@ -1429,7 +1430,7 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)

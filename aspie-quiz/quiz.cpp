@@ -2324,6 +2324,70 @@ void TQuiz::WriteCorr95(TFile &File, long double corr, int count)
         
 }
 
+/*##################  TQuiz::WriteCorrVal ##########################
+*   Purpose....: Write correlation value      	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteCorrVal(TFile &File, long double corr, int count)
+{
+    int ival;
+	char str[80];
+
+    if (corr < 0.0)
+        corr = -corr;
+
+    File.Write("\n");
+
+    if (corr > 0.7)
+		File.Write("<span style='color:#BB0000'>");
+    else
+	{
+        if (corr > 0.5)
+	    	File.Write("<span style='color:#995500'>");
+		else
+		{
+			if (corr > 0.3)
+        		File.Write("<span style='color:#228844'>");
+            else
+            {
+			    if (corr > 0.1)
+            		File.Write("<span style='color:#002277'>");
+            	else
+                    File.Write("<span>");
+    	    }
+        }
+    }
+
+    File.Write("\n");
+
+    if (count > 3)
+    {
+#ifdef USE_PERCENT
+        ival = round(100.0 * corr * corr);
+		sprintf(str, "%d%", ival);
+		File.Write(str);
+#else
+        if (corr <= 0.0)
+        {
+            File.Write("-");
+            corr = -corr;
+        }
+                
+        ival = round(100 * corr);
+		sprintf(str, ".%02d", ival);
+		File.Write(str);
+#endif
+    }
+    else
+	    File.Write(" ");
+
+    File.Write("</span>\n");
+        
+}
+
 /*##################  TQuiz::WritePca ##########################
 *   Purpose....: Write PCA loading                    	          	        #
 *   In params..: *                                                          #
@@ -3390,7 +3454,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 			{
 				cross = 0;
 				TopQuiz->ClearUsed(TopQuestion);
-				WriteFieldHeader(file, 4);
+				WriteCenteredFieldHeader(file, 4);
 				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 				while (quiz)
 				{
@@ -3398,61 +3462,37 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 					corrval = val;
 					count = quiz->Quiz[q].Group[j].Count;
 
-					if (count > 3)
-					{
-						if (val < 0.0)
-							val = -val;
+                    if (count > 3)
+                    {
 
-						if (val == 1)
-							zij = 1000;
-						else
-							zij = 0.5 * logl((1 + val) / (1 - val));
-
-						za = 1.96 / sqrtl(count - 3);
-						low = tanhl(zij - za);
-						high = tanhl(zij + za);
-
-						if (low <= 0.0 && high >= 0.0)
-							file.Write("-----");
-						else
-						{
-							if (val > NormCorr[cross])
-								file.Write("<span style='color:#009999'>");
-
-							if (corrval < 0.0)
-								file.Write("<span style='color:#990099'>");
+    					if (val > NormCorr[cross])
+	    					file.Write("<span style='color:#009999'>");
+    
+	    				if (val < 0.0)
+		    				file.Write("<span style='color:#990099'>");
 
 #ifdef USE_PERCENT
-							ival = round(100.0 * low * low);
-							sprintf(str, "%d", ival);
-							file.Write(str);
-
-							ival = round(100.0 * high * high);
-							sprintf(str, "-%d%", ival);
-							file.Write(str);
+			    		ival = round(100.0 * val * val);
+				    	sprintf(str, "%d%", ival);
+					    file.Write(str);
 #else
-                            if (low <= 0.0)
-                            {
-								file.Write("-");
-                                low = -low;
-                                high = -high;
-                            }
-                
-                            ival = round(100 * low);
-            		        sprintf(str, ".%02d", ival);
-		                    file.Write(str);
+    					ival = round(100.0 * val);
+	    				if (ival < 0)
+		    			{
+			    			file.Write("-");
+				    		ival = -ival;
+					    }
 
-                    		ival = round(100.0 * high);
-	                    	sprintf(str, "-.%02d", ival);
-            		        file.Write(str);
+    					sprintf(str, ".%02d", ival);
+	    				file.Write(str);
 #endif
 
-							if (val > NormCorr[cross] || corrval < 0.0)
-								 file.Write("</span>");
-						 }
-					}
-					else
-						file.Write("     ");
+		    			if (val > NormCorr[cross] || val < 0.0)
+			    			file.Write("</span>");
+			    	}
+			    	else
+			    		file.Write("---");
+			    	    
 
 					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 					if (quiz)
@@ -5963,7 +6003,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
                     insertcr = TRUE;
 					corrval = CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
 					count = CrossQuiz[cross]->GroupCorr[g1][g2].Count;
-					WriteCorr95(file, corrval, count);
+					WriteCorrVal(file, corrval, count);
 				}
 			}
 
@@ -5972,7 +6012,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
 
 			corrval = GroupCorr[g1][g2].Corr;
 			count = GroupCorr[g1][g2].Count;
-			WriteCorr95(file, corrval, count);
+			WriteCorrVal(file, corrval, count);
 
             WriteFieldFooter(file);
 	    }

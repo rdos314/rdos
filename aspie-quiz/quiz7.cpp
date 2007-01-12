@@ -96,7 +96,7 @@ public:
 #
 ##########################################################################*/
 TQuiz7::TQuiz7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6)
-  : TQuiz(156),
+  : TQuiz(158),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
@@ -368,6 +368,8 @@ void TQuiz7::SetupTexts()
 	Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[154].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[155].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[156].MyGroup = GROUP_MIXED;
+	Quiz[157].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -528,6 +530,8 @@ void TQuiz7::SetupTexts()
 	Quiz[153].Text = "Prefers cold";
     Quiz[154].Text = "Red hair-color";
 	Quiz[155].Text = "Do you have brown eyes?";
+	Quiz[156].Text = "Induced birth";
+	Quiz[157].Text = "Premature birth";
 
 #endif
 
@@ -689,6 +693,8 @@ void TQuiz7::SetupTexts()
 	Quiz[153].Text = "Föredrar kyla över värme";
     Quiz[154].Text = "Röd hårfärg";
 	Quiz[155].Text = "Har du bruna ögon?";
+	Quiz[156].Text = "Igöngsatt födelse?";
+	Quiz[157].Text = "För tidigt född?";
 
 #endif
 }
@@ -934,6 +940,37 @@ void TQuiz7::LoadPopulations()
 				Row.Quiz[155] = 3;
 				break;
 		}
+
+		switch (Row.Premature)
+		{
+			case 1:
+				Row.Quiz[156] = 0;
+				Row.Quiz[157] = 0;
+                break;
+					        
+			case 2:
+        		Row.Quiz[156] = 3;
+				Row.Quiz[157] = 1;
+        		break;
+
+            case 3:
+        	    Row.Quiz[156] = 1;
+				Row.Quiz[157] = 1;
+			    break;
+
+			case 4:
+		    case 5:
+        		Row.Quiz[156] = 1;
+			    Row.Quiz[157] = 2;
+			    break;
+                                    					
+			case 6:
+			case 7:
+        		Row.Quiz[156] = 1;
+			    Row.Quiz[157] = 3;
+			    break;
+                            
+        }
 		
 		for (i = 0; i < N; i++)
 		{
@@ -983,28 +1020,17 @@ void TQuiz7::LoadPopulations()
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
-		else
+
+		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			ref = FindReferer(Row.Referer);
-
-			if (ref)
-			{
-				if (ref->NT && Row.Autism == 0 && Row.Aspie == 0)
-				{
-					Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					if (Row.Gender == 1)
-						NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					else
-						NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-				}
-
-//                if (!aspie)
-					aspie = ref->Aspie;
-			}
+			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			if (Row.Gender == 1)
+				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			else
+				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-
-		if (aspie)
+		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
 			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
@@ -1215,6 +1241,8 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId(    153, 426);
 	DefineCross(Quiz6, 154, 150);
 	DefineCross(Quiz6, 155, 151);
+	DefineGlobalId(    156, 480);
+	DefineGlobalId(    157, 481);
 }
 
 /*##########################################################################
