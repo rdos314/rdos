@@ -404,6 +404,23 @@ void ProcessRow(char *str)
 
 				case 17:
 					Row.Religion = atoi(valstr);
+					switch (Row.Religion)
+					{
+					    case 1:
+					    case 6:
+					    case 11:
+					        Row.Quiz[158] = 1;
+					        break;
+
+					    case 26:
+					        Row.Quiz[158] = 3;
+					        break;
+
+
+					    default:
+					        Row.Quiz[158] = 2;
+					        break;
+                    }					        
 					break;
 
 				case 18:
@@ -431,10 +448,40 @@ void ProcessRow(char *str)
 
 				case 19:
 					Row.Vision = atoi(valstr);
+					switch (Row.Vision)
+					{
+					    case 3:
+					    case 4:
+					        Row.Quiz[159] = 2;
+					        break;
+					        
+					    case 5:
+					    case 6:
+					        Row.Quiz[159] = 3;
+					        break;
+
+                        default:
+                            Row.Quiz[159] = 1;
+                            break;
+                    }
 					break;
 
 				case 20:
 					Row.Learn = atoi(valstr);
+					switch (Row.Learn)
+					{
+					    case 1:
+					        Row.Quiz[160] = 1;
+					        break;
+
+					    case 2:
+					        Row.Quiz[160] = 2;
+					        break;
+
+					    case 3:
+					        Row.Quiz[160] = 3;
+					        break;
+				    }
 					break;
 
 				case 21:

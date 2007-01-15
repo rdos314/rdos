@@ -96,7 +96,7 @@ public:
 #
 ##########################################################################*/
 TQuiz7::TQuiz7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6)
-  : TQuiz(158),
+  : TQuiz(161),
 	FDataFile(FileName)
 {             
     DefineCross(0, QuizI);
@@ -370,6 +370,9 @@ void TQuiz7::SetupTexts()
 	Quiz[155].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[156].MyGroup = GROUP_MIXED;
 	Quiz[157].MyGroup = GROUP_MIXED;
+	Quiz[158].MyGroup = GROUP_MIXED;
+	Quiz[159].MyGroup = GROUP_MIXED;
+	Quiz[160].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -532,6 +535,9 @@ void TQuiz7::SetupTexts()
 	Quiz[155].Text = "Do you have brown eyes?";
 	Quiz[156].Text = "Induced birth";
 	Quiz[157].Text = "Premature birth";
+	Quiz[158].Text = "Private religion";
+	Quiz[159].Text = "Short-sighted";
+	Quiz[160].Text = "Visual learner";
 
 #endif
 
@@ -695,6 +701,9 @@ void TQuiz7::SetupTexts()
 	Quiz[155].Text = "Har du bruna ögon?";
 	Quiz[156].Text = "Igöngsatt födelse?";
 	Quiz[157].Text = "För tidigt född?";
+	Quiz[158].Text = "Privat religion";
+	Quiz[159].Text = "Närsynt";
+	Quiz[160].Text = "Visuell inlärning";
 
 #endif
 }
@@ -971,7 +980,57 @@ void TQuiz7::LoadPopulations()
 			    break;
                             
         }
+
+		switch (Row.Religion)
+		{
+            case 1:
+			case 6:
+		    case 11:
+		        Row.Quiz[158] = 1;
+			    break;
+
+			case 26:
+				Row.Quiz[158] = 3;
+				break;
+
+
+            default:
+				Row.Quiz[158] = 2;
+				break;
+        }					        
 		
+		switch (Row.Vision)
+		{
+			case 3:
+			case 4:
+			    Row.Quiz[159] = 2;
+				break;
+					        
+			case 5:
+			case 6:
+				Row.Quiz[159] = 3;
+				break;
+
+            default:
+                Row.Quiz[159] = 1;
+                break;
+        }
+
+        switch (Row.Learn)
+		{
+            case 1:
+		        Row.Quiz[160] = 1;
+			    break;
+
+	        case 2:
+			    Row.Quiz[160] = 2;
+			    break;
+
+			case 3:
+			    Row.Quiz[160] = 3;
+			    break;
+		}
+
 		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
@@ -1243,6 +1302,9 @@ void TQuiz7::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineCross(Quiz6, 155, 151);
 	DefineGlobalId(    156, 480);
 	DefineGlobalId(    157, 481);
+	DefineGlobalId(    158, 482);
+	DefineGlobalId(    159, 483);
+	DefineGlobalId(    160, 484);
 }
 
 /*##########################################################################
