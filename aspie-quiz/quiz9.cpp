@@ -338,15 +338,15 @@ void TQuiz9::SetupTexts()
   Quiz[123].MyGroup = GROUP_EMOTION;
   Quiz[124].MyGroup = GROUP_EMOTION;
   Quiz[125].MyGroup = GROUP_MIXED;
-  Quiz[126].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
   Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_EMOTION;
-  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[131].MyGroup = GROUP_SENSORY;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_EMOTION;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_SENSORY;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
@@ -1429,14 +1429,14 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

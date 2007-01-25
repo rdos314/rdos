@@ -233,7 +233,7 @@ void TQuiz8::SetupTexts()
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_MIXED;
-  Quiz[12].MyGroup = GROUP_MIXED;
+  Quiz[12].MyGroup = GROUP_SENSORY;
   Quiz[13].MyGroup = GROUP_SENSORY;
   Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[15].MyGroup = GROUP_NT_BIOLOGY;
@@ -246,7 +246,7 @@ void TQuiz8::SetupTexts()
   Quiz[22].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[23].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[24].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[25].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[25].MyGroup = GROUP_MIXED;
   Quiz[26].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[27].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[28].MyGroup = GROUP_ASPIE_TALENT;
@@ -340,7 +340,7 @@ void TQuiz8::SetupTexts()
   Quiz[116].MyGroup = GROUP_MIXED;
   Quiz[117].MyGroup = GROUP_EMOTION;
   Quiz[118].MyGroup = GROUP_MIXED;
-  Quiz[119].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[119].MyGroup = GROUP_MIXED;
   Quiz[120].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[121].MyGroup = GROUP_EMOTION;
   Quiz[122].MyGroup = GROUP_MIXED;
@@ -355,7 +355,7 @@ void TQuiz8::SetupTexts()
   Quiz[131].MyGroup = GROUP_EMOTION;
   Quiz[132].MyGroup = GROUP_ASPIE_COMM;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_SENSORY;
   Quiz[135].MyGroup = GROUP_EMOTION;
   Quiz[136].MyGroup = GROUP_SENSORY;
   Quiz[137].MyGroup = GROUP_EMOTION;
@@ -363,8 +363,8 @@ void TQuiz8::SetupTexts()
   Quiz[139].MyGroup = GROUP_EMOTION;
   Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_SENSORY;
+  Quiz[143].MyGroup = GROUP_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[146].MyGroup = GROUP_ASPIE_COMM;

@@ -146,16 +146,16 @@ void TQuizIII::SetupTexts()
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_MIXED;
-	Quiz[15].MyGroup = GROUP_MIXED;
+	Quiz[15].MyGroup = GROUP_SENSORY;
 	Quiz[16].MyGroup = GROUP_NT_TALENT;
 	Quiz[17].MyGroup = GROUP_SENSORY;
-	Quiz[18].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[18].MyGroup = GROUP_SENSORY;
 	Quiz[19].MyGroup = GROUP_SENSORY;
 	Quiz[20].MyGroup = GROUP_SENSORY;
 	Quiz[21].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[22].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[23].MyGroup = GROUP_SENSORY;
-	Quiz[24].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_NONVERBAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
 	Quiz[27].MyGroup = GROUP_NONVERBAL;
@@ -178,7 +178,7 @@ void TQuizIII::SetupTexts()
 	Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[45].MyGroup = GROUP_MIXED;
 	Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[47].MyGroup = GROUP_MIXED;
 	Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -225,12 +225,12 @@ void TQuizIII::SetupTexts()
 	Quiz[91].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[92].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[93].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[94].MyGroup = GROUP_MIXED;
+	Quiz[94].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[95].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[96].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[97].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[98].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[99].MyGroup = GROUP_MIXED;
+	Quiz[99].MyGroup = GROUP_SENSORY;
 
 #ifdef ENGLISH
 	Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";

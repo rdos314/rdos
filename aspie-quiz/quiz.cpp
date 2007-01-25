@@ -2598,13 +2598,13 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
             	WriteFieldFooter(file);
 
             	WriteCenteredFieldHeader(file, 6);
-	    		file.Write("Hn loading");
+	    		file.Write("Loading #1");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
 
             	WriteCenteredFieldHeader(file, 6);
-	    		file.Write("Hs loading");
+	    		file.Write("Loading #2");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
@@ -3580,27 +3580,27 @@ void TQuiz::WritePcaLoadTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Hn loading");
+		file.Write("Loading #1");
         WriteFieldFooter(file);
 
         if (GetPcaCount() > 1)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Hs loading");
+	    	file.Write("Loading #2");
             WriteFieldFooter(file);
 		}
 
         if (GetPcaCount() > 2)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("G loading");
+	    	file.Write("Loading #3");
             WriteFieldFooter(file);
         }
 
         if (GetPcaCount() > 3)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Introvert");
+	    	file.Write("Loading #4");
             WriteFieldFooter(file);
         }
 
@@ -4129,27 +4129,27 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Hn loading");
+		file.Write("Loading #1");
         WriteFieldFooter(file);
 
         if (GetPcaCount() > 1)
         {
             WriteCenteredFieldHeader(file, 3);
-			file.Write("Hs loading");
+			file.Write("Loading #2");
 			WriteFieldFooter(file);
         }
 
         if (GetPcaCount() > 2)
 		{
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("G loading");
+	    	file.Write("Loading #3");
             WriteFieldFooter(file);
 		}
 
         if (GetPcaCount() > 3)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Introvert");
+	    	file.Write("Loading #4");
             WriteFieldFooter(file);
         }
 
@@ -4391,6 +4391,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 	int count;
 	int questions;
 	long double val;
+	long double val2;
 	long double corrval;
 	long double LowestCorr;
 	int ok;
@@ -4644,7 +4645,6 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 					while (quiz)
 					{
 						val = quiz->Quiz[q].Group[j].Corr;
-						corrval = val;
 						count = quiz->Quiz[q].Group[j].Count;
 						questions = quiz->Group[j].Questions;
 
@@ -4664,12 +4664,13 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				{
 					if (GroupCount[j])
 					{
-						val = GroupSum[j] / GroupCount[j];
+						corrval = GroupSum[j] / GroupCount[j];
+						val = corrval * corrval;
 						if (val >= NormCorr)
 							NormCorr = val;
 					}
 				}
-				NormCorr = 0.9 * NormCorr;
+				NormCorr = 0.81 * NormCorr;
 
 				WriteFieldHeader(file, 40);
 
@@ -4684,21 +4685,19 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 						if (GroupCount[j])
 						{
 							val = GroupSum[j] / GroupCount[j];
-							if (val >= NormCorr)
+							val2 = val * val;
+
+							if (val2 >= NormCorr)
 							{
 								if (ok)
 								{
-									if (val > corrval)
-									{
+									if (val2 > corrval)
 										grp = j;
-										corrval = val;
-									}
 								}
 								else
 								{
 									ok = TRUE;
 									grp = j;
-									corrval = val;
 								}
 							}
 						}
@@ -4708,7 +4707,17 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 					{
 						if (!first)
 							file.Write(", ");
+
+						val = GroupSum[grp] / GroupCount[grp];
+
+                        if (val < 0.0)
+        					file.Write("<span style='color:#990099'>");
+							
 						file.Write(Group[grp].Name);
+
+                        if (val < 0.0)
+        					file.Write("</span>");
+        					
 						first = FALSE;
 						GroupCount[grp] = 0;
 					}
@@ -4835,7 +4844,9 @@ void TQuiz::WriteLinkReport(const char *filename)
 	int ival;
 	int count;
 	int questions;
+	int reverse;
 	long double val;
+	long double val2;
 	long double corrval;
 	long double LowestCorr;
 	int ok;
@@ -5416,7 +5427,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                 if (PcaCount)
                 {
-       				file.Write("PCA: Hn: ");
+       				file.Write("PCA: #1: ");
 	    			WritePca(file, PcaSum / PcaCount);
 	    		}
 
@@ -5440,7 +5451,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                     if (PcaCount)
                     {
-        				file.Write(", Hs: ");
+        				file.Write(", #2: ");
     	    			WritePca(file, PcaSum / PcaCount);
     	    		}
 				}
@@ -5465,7 +5476,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 					if (PcaCount)
 					{
-        				file.Write(", g: ");
+        				file.Write(", #3: ");
 	        			WritePca(file, PcaSum / PcaCount);
 	        		}
 				}
@@ -5490,7 +5501,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                     if (PcaCount)
                     {
-        				file.Write(", introvert: ");
+        				file.Write(", #4: ");
 	        			WritePca(file, PcaSum / PcaCount);
 	        		}
 				}
@@ -5507,7 +5518,6 @@ void TQuiz::WriteLinkReport(const char *filename)
 					while (quiz)
 					{
 						val = quiz->Quiz[q].Group[j].Corr;
-						corrval = val;
 						count = quiz->Quiz[q].Group[j].Count;
 						questions = quiz->Group[j].Questions;
 
@@ -5528,11 +5538,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 					if (GroupCount[j])
 					{
 						val = GroupSum[j] / GroupCount[j];
-						if (val >= NormCorr)
-							NormCorr = val;
+						val2 = val * val;
+						if (val2 >= NormCorr)
+							NormCorr = val2;
 					}
 				}
-				NormCorr = 0.9 * NormCorr;
+				NormCorr = 0.81 * NormCorr;
 
 #ifdef ENGLISH
                 file.Write("Correlates with: ");
@@ -5553,21 +5564,18 @@ void TQuiz::WriteLinkReport(const char *filename)
 						if (GroupCount[j])
 						{
 							val = GroupSum[j] / GroupCount[j];
-							if (val >= NormCorr)
+							val2 = val * val;
+							if (val2 >= NormCorr)
 							{
 								if (ok)
 								{
-									if (val > corrval)
-									{
+									if (val2 > corrval)
 										grp = j;
-										corrval = val;
-									}
 								}
 								else
 								{
 									ok = TRUE;
 									grp = j;
-									corrval = val;
 								}
 							}
 						}
@@ -5584,9 +5592,25 @@ void TQuiz::WriteLinkReport(const char *filename)
                 		file.Write(Group[grp].Name);
                         file.Write("</a>");
 
-        				ival = round(100.0 * corrval);
+						corrval = GroupSum[grp] / GroupCount[grp];
+
+						if (corrval < 0.0)
+						{
+						    reverse = TRUE;
+						    val = -corrval;
+						}
+						else
+						{
+						    reverse = FALSE;
+						    val = corrval;
+						}
+
+        				ival = round(100.0 * val);
 
         				if (TopQuiz->Quiz[TopQuestion].Reverse)
+        				    reverse = !reverse;
+
+        				if (reverse)
         				{
         				    sprintf(str, " (-.%02d)", ival);
 							file.Write(str);
@@ -5891,23 +5915,23 @@ void TQuiz::WritePcaCorrTable(const char *filename)
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Quiz scoring (Hn - Hs)");
+	file.Write("Quiz scoring (PCA #1 - PCA #2)");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Hn loading");
+	file.Write("Loading #1");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Hs loading");
+	file.Write("Loading #2");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("G loading");
+	file.Write("Loading #3");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Introvert");
+	file.Write("Loading #4");
     WriteFieldFooter(file);
 
 	file.Write("</tr>");
