@@ -214,7 +214,7 @@ void TQuiz5::SetupTexts()
 	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_SENSORY;
 	Quiz[11].MyGroup = GROUP_SENSORY;
-	Quiz[12].MyGroup = GROUP_MIXED;
+	Quiz[12].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[13].MyGroup = GROUP_SENSORY;
 	Quiz[14].MyGroup = GROUP_SENSORY;
 	Quiz[15].MyGroup = GROUP_SENSORY;
@@ -280,7 +280,7 @@ void TQuiz5::SetupTexts()
 	Quiz[75].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[76].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[77].MyGroup = GROUP_NT_SOCIAL;
-	Quiz[78].MyGroup = GROUP_MIXED;
+	Quiz[78].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[80].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[81].MyGroup = GROUP_NT_SOCIAL;
@@ -310,7 +310,7 @@ void TQuiz5::SetupTexts()
 	Quiz[105].MyGroup = GROUP_EMOTION;
 	Quiz[106].MyGroup = GROUP_MIXED;
 	Quiz[107].MyGroup = GROUP_NONVERBAL;
-	Quiz[108].MyGroup = GROUP_MIXED;
+	Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_SENSORY;
 	Quiz[111].MyGroup = GROUP_MIXED;

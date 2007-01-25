@@ -162,7 +162,7 @@ void TQuizII::SetupTexts()
 	Quiz[22].MyGroup = GROUP_NONVERBAL;
 	Quiz[23].MyGroup = GROUP_NONVERBAL;
 	Quiz[24].MyGroup = GROUP_NONVERBAL;
-	Quiz[25].MyGroup = GROUP_MIXED;
+	Quiz[25].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[26].MyGroup = GROUP_NONVERBAL;
 	Quiz[27].MyGroup = GROUP_MIXED;
 	Quiz[28].MyGroup = GROUP_NONVERBAL;
@@ -196,7 +196,7 @@ void TQuizII::SetupTexts()
 	Quiz[56].MyGroup = GROUP_SEX;
 	Quiz[57].MyGroup = GROUP_SEX;
 	Quiz[58].MyGroup = GROUP_SEX;
-	Quiz[59].MyGroup = GROUP_EMOTION;
+	Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[61].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[62].MyGroup = GROUP_ASPIE_TALENT;
@@ -223,7 +223,7 @@ void TQuizII::SetupTexts()
 	Quiz[83].MyGroup = GROUP_EMOTION;
 	Quiz[84].MyGroup = GROUP_SENSORY;
 	Quiz[85].MyGroup = GROUP_MIXED;
-	Quiz[86].MyGroup = GROUP_MIXED;
+	Quiz[86].MyGroup = GROUP_SENSORY;
 	Quiz[87].MyGroup = GROUP_SENSORY;
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_NT_SOCIAL;
