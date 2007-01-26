@@ -197,6 +197,13 @@ public:
 	virtual void WriteEye(const char *filename);
     virtual void WriteRace(const char *filename);
     virtual void WriteStim(const char *filename);
+    virtual void WriteABO(const char *filename);
+    virtual void WriteBirthMonth(const char *filename);
+    virtual void WriteParkinson(const char *filename);
+    virtual void WriteAlzheimer(const char *filename);
+    virtual void WriteCFTR(const char *filename);
+    virtual void WriteHFE(const char *filename);
+    virtual void WriteLeiden(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);
 

@@ -250,7 +250,7 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stims";
-	Group[GROUP_NONVERBAL].Name = "Nonverbal communication";
+	Group[GROUP_NONVERBAL].Name = "NT communication";
 	Group[GROUP_EMOTION].Name = "Environment";
 	Group[GROUP_SEX].Name = "Sexuality";
 	Group[GROUP_REPETITION].Name = "Compulsions";
@@ -268,7 +268,7 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
 	Group[GROUP_ASPIE_COMM].Name = "Stimming";
-	Group[GROUP_NONVERBAL].Name = "Nonverbal kommunikation";
+	Group[GROUP_NONVERBAL].Name = "NT kommunikation";
 	Group[GROUP_EMOTION].Name = "Miljö";
 	Group[GROUP_SEX].Name = "Sexualitet";
 	Group[GROUP_REPETITION].Name = "Tvång";
@@ -1873,6 +1873,83 @@ void TQuiz::WriteStim(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteABO ##########################
+*   Purpose....: Write ABO report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteABO(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteBirthMonth ##########################
+*   Purpose....: Write birth month report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteBirthMonth(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteParkinson ##########################
+*   Purpose....: Write Parkinson report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteParkinson(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteAlzheimer ##########################
+*   Purpose....: Write Alzheimer report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAlzheimer(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteCFTR ##########################
+*   Purpose....: Write CFTR report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteCFTR(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteHFE ##########################
+*   Purpose....: Write HFE report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteHFE(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteLeiden ##########################
+*   Purpose....: Write Factor V Leiden report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLeiden(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteFieldHeader ##########################
 *   Purpose....: Write field header for table    			     	        #
 *   In params..: *                                                          #
@@ -2598,13 +2675,13 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
             	WriteFieldFooter(file);
 
             	WriteCenteredFieldHeader(file, 6);
-	    		file.Write("Loading #1");
+	    		file.Write("Aspie loading");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
 
             	WriteCenteredFieldHeader(file, 6);
-	    		file.Write("Loading #2");
+	    		file.Write("NT loading");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
         	    WriteFieldFooter(file);
@@ -3580,27 +3657,27 @@ void TQuiz::WritePcaLoadTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Loading #1");
+		file.Write("Aspie loading");
         WriteFieldFooter(file);
 
         if (GetPcaCount() > 1)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Loading #2");
+	    	file.Write("NT loading");
             WriteFieldFooter(file);
 		}
 
         if (GetPcaCount() > 2)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Loading #3");
+	    	file.Write("g loading");
             WriteFieldFooter(file);
         }
 
         if (GetPcaCount() > 3)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Loading #4");
+	    	file.Write("introvert loading");
             WriteFieldFooter(file);
         }
 
@@ -4129,27 +4206,27 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Loading #1");
+		file.Write("Aspie loading");
         WriteFieldFooter(file);
 
         if (GetPcaCount() > 1)
         {
             WriteCenteredFieldHeader(file, 3);
-			file.Write("Loading #2");
+			file.Write("NT loading");
 			WriteFieldFooter(file);
         }
 
         if (GetPcaCount() > 2)
 		{
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Loading #3");
+	    	file.Write("g loading");
             WriteFieldFooter(file);
 		}
 
         if (GetPcaCount() > 3)
         {
             WriteCenteredFieldHeader(file, 3);
-	    	file.Write("Loading #4");
+	    	file.Write("introvert loading");
             WriteFieldFooter(file);
         }
 
@@ -5051,6 +5128,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write(" <a href=\"quiz9.htm\">summary</a> <a href=\"ref9.htm\">referer sites</a>");
     file.Write(" <a href=\"hair9.htm\">hair-color</a>");
     file.Write(" <a href=\"eye9.htm\">eye-color</a>");
+    file.Write(" <a href=\"abo9.htm\">ABO</a>");
+    file.Write(" <a href=\"park9.htm\">Parkinson</a>");
+    file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
+    file.Write(" <a href=\"cftr9.htm\">Cystic fibrosis</a>");
+    file.Write(" <a href=\"hfe9.htm\">Hemochromatosis</a>");
+    file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
     file.Write("<br>");
 #endif
     
@@ -5058,6 +5141,12 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write(" <a href=\"quiz9.htm\">summering</a> <a href=\"ref9.htm\">referenssajter</a>");
     file.Write(" <a href=\"hair9.htm\">hårfärg</a>");
     file.Write(" <a href=\"eye9.htm\">ögonfärg</a>");
+    file.Write(" <a href=\"abo9.htm\">ABO</a>");
+    file.Write(" <a href=\"park9.htm\">Parkinson</a>");
+    file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
+    file.Write(" <a href=\"cftr9.htm\">Cystisk fibros</a>");
+    file.Write(" <a href=\"hfe9.htm\">Hemokromatos</a>");
+    file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
     file.Write("<br>");
 #endif
 
@@ -5427,7 +5516,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                 if (PcaCount)
                 {
-       				file.Write("PCA: #1: ");
+       				file.Write("PCA: Aspie: ");
 	    			WritePca(file, PcaSum / PcaCount);
 	    		}
 
@@ -5451,7 +5540,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                     if (PcaCount)
                     {
-        				file.Write(", #2: ");
+        				file.Write(", NT: ");
     	    			WritePca(file, PcaSum / PcaCount);
     	    		}
 				}
@@ -5476,7 +5565,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 					if (PcaCount)
 					{
-        				file.Write(", #3: ");
+        				file.Write(", g: ");
 	        			WritePca(file, PcaSum / PcaCount);
 	        		}
 				}
@@ -5501,7 +5590,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 
                     if (PcaCount)
                     {
-        				file.Write(", #4: ");
+        				file.Write(", introvert: ");
 	        			WritePca(file, PcaSum / PcaCount);
 	        		}
 				}
@@ -5915,23 +6004,23 @@ void TQuiz::WritePcaCorrTable(const char *filename)
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Quiz scoring (PCA #1 - PCA #2)");
+	file.Write("Quiz scoring (PCA Aspie - PCA NT)");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Loading #1");
+	file.Write("Aspie loading");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Loading #2");
+	file.Write("NT loading");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Loading #3");
+	file.Write("g loading");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
-	file.Write("Loading #4");
+	file.Write("Introvert loading");
     WriteFieldFooter(file);
 
 	file.Write("</tr>");

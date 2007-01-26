@@ -200,6 +200,13 @@ int main(int argc, char **argv)
 
 	 Quiz[8]->WriteHair("hair9.htm");
 	 Quiz[8]->WriteEye("eye9.htm");
+	 Quiz[8]->WriteABO("abo9.htm");
+	 Quiz[8]->WriteBirthMonth("birth9.htm");
+	 Quiz[8]->WriteParkinson("park9.htm");
+	 Quiz[8]->WriteAlzheimer("alz9.htm");
+	 Quiz[8]->WriteCFTR("cftr9.htm");
+	 Quiz[8]->WriteHFE("hfe9.htm");
+	 Quiz[8]->WriteLeiden("leiden9.htm");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 

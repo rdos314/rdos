@@ -43,6 +43,13 @@ public:
 
     virtual void WriteHair(const char *filename);
     virtual void WriteEye(const char *filename);
+    virtual void WriteABO(const char *filename);
+    virtual void WriteBirthMonth(const char *filename);
+    virtual void WriteParkinson(const char *filename);
+    virtual void WriteAlzheimer(const char *filename);
+    virtual void WriteCFTR(const char *filename);
+    virtual void WriteHFE(const char *filename);
+    virtual void WriteLeiden(const char *filename);
 
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);

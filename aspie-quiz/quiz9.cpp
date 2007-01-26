@@ -45,12 +45,12 @@ class THair
 public:
 	THair();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index, const char *text);
+	void WriteRow(TFile &file, int report, int index, const char *text);
     void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
-	int AsCount[7];
-	int NtCount[7];
+	int AsCount[4][7];
+	int NtCount[4][7];
 };
 
 class TEye
@@ -58,13 +58,98 @@ class TEye
 public:
 	TEye();
 	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int index, const char *text);
+	void WriteRow(TFile &file, int report, int index, const char *text);
 	void WriteEntry(TFile &file, int val, int count);
 
 	static void WriteHeader(TFile &file);
 
-	int AsCount[5];
-	int NtCount[5];
+	int AsCount[4][5];
+	int NtCount[4][5];
+};
+
+class TABO
+{
+public:
+	TABO();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int report, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+	int AsCount[4][7];
+	int NtCount[4][7];
+};
+
+class TBirthMonth
+{
+public:
+	TBirthMonth();
+	void Add(TQuizRow *Row);
+	void WriteRow(TFile &file, int report, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file);
+	int AsCount[4][15];
+	int NtCount[4][15];
+};
+
+class TDisease
+{
+public:
+	TDisease();
+
+    virtual int GetDisease(TQuizRow *Row) = 0;
+	virtual void Add(TQuizRow *Row) = 0;
+
+	void WriteRow(TFile &file, int report, int index, const char *text);
+    void WriteEntry(TFile &file, int val, int count);
+
+	static void WriteHeader(TFile &file, const char *Name);
+	int AsCount[4][7];
+	int NtCount[4][7];
+};
+
+class TDiseaseParent : public TDisease
+{
+public:
+	virtual void Add(TQuizRow *Row);
+};
+
+class TDiseaseAll : public TDisease
+{
+public:
+	virtual void Add(TQuizRow *Row);
+};
+	
+
+class TParkinson : public TDiseaseParent
+{
+public:
+    virtual int GetDisease(TQuizRow *Row);
+};
+
+class TAlzheimer : public TDiseaseParent
+{
+public:
+    virtual int GetDisease(TQuizRow *Row);
+};
+
+class TCFTR : public TDiseaseAll
+{
+public:
+    virtual int GetDisease(TQuizRow *Row);
+};
+
+class THFE : public TDiseaseAll
+{
+public:
+    virtual int GetDisease(TQuizRow *Row);
+};
+
+class TLeiden : public TDiseaseAll
+{
+public:
+    virtual int GetDisease(TQuizRow *Row);
 };
 
 /*##########################################################################
@@ -1429,7 +1514,7 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1564,11 +1649,15 @@ void WriteFieldFooter(TFile &File)
 THair::THair()
 {
     int i;
+    int j;
 
     for (i = 0; i < 7; i++)
     {
-		AsCount[i] = 0;
-        NtCount[i] = 0;
+        for (j = 0; j < 3; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
     }
 }
 
@@ -1606,10 +1695,26 @@ void THair::Add(TQuizRow *Row)
 			break;
 	}
 
+    if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	}
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
 	if (diff > 0)
-		AsCount[index]++;
+		AsCount[0][index]++;
 	else
-		NtCount[index]++;
+		NtCount[0][index]++;
 }
 
 /*##################  THair::WriteHeader ##########################
@@ -1659,7 +1764,7 @@ void THair::WriteEntry(TFile &file, int val, int count)
 
 #ifdef CI
 
-	mean = (long double)val / (long double)count;
+    mean = (long double)val / (long double)count;
 
 	r = 1.0 - mean;
     rsum = (long double)val * r * r;
@@ -1714,7 +1819,7 @@ void THair::WriteEntry(TFile &file, int val, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void THair::WriteRow(TFile &file, int index, const char *text)
+void THair::WriteRow(TFile &file, int report, int index, const char *text)
 {
     char str[80];
 	int sum;
@@ -1728,19 +1833,19 @@ void THair::WriteRow(TFile &file, int index, const char *text)
 
     sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += AsCount[i];
+		sum += AsCount[report][i];
 
 	if (sum)
-		WriteEntry(file, AsCount[index], sum);
+		WriteEntry(file, AsCount[report][index], sum);
 	else
 		file.Write("---");
 
 	sum = 0;
 	for (i = 0; i < 7; i++)
-		sum += NtCount[i];
+		sum += NtCount[report][i];
 
 	if (sum)
-		WriteEntry(file, NtCount[index], sum);
+		WriteEntry(file, NtCount[report][index], sum);
 	else
 		file.Write("---");
 
@@ -1757,11 +1862,15 @@ void THair::WriteRow(TFile &file, int index, const char *text)
 TEye::TEye()
 {
 	int i;
+	int j;
 
     for (i = 0; i < 5; i++)
     {
-        AsCount[i] = 0;
-        NtCount[i] = 0;
+        for (j = 0; j < 3; j++)
+        {
+            AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
     }
 }
 
@@ -1774,7 +1883,7 @@ TEye::TEye()
 *##########################################################################*/
 void TEye::Add(TQuizRow *Row)
 {
-	int index;
+    int index;
 	int diff = Row->AsResult - Row->NtResult;
 
 	switch (Row->Eye)
@@ -1794,10 +1903,27 @@ void TEye::Add(TQuizRow *Row)
 			break;
 	}
 
-    if (diff > 0)
-	    AsCount[index]++;
+    if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	 }
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	 }
+
+	if (diff > 0)
+		AsCount[0][index]++;
     else
-		NtCount[index]++;
+	    NtCount[0][index]++;
+
 }
 
 /*##################  TEye::WriteHeader ##########################
@@ -1843,7 +1969,7 @@ void TEye::WriteEntry(TFile &file, int val, int count)
     long double rsum;
 	int ival;
 
-	WriteCenteredFieldHeader(file, 12);
+    WriteCenteredFieldHeader(file, 12);
 
 #ifdef CI
     mean = (long double)val / (long double)count;
@@ -1900,7 +2026,7 @@ void TEye::WriteEntry(TFile &file, int val, int count)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TEye::WriteRow(TFile &file, int index, const char *text)
+void TEye::WriteRow(TFile &file, int report, int index, const char *text)
 {
 	char str[80];
 	int sum;
@@ -1913,27 +2039,750 @@ void TEye::WriteRow(TFile &file, int index, const char *text)
 
 	sum = 0;
 	for (i = 0; i < 3; i++)
-		sum += AsCount[i];
+		sum += AsCount[report][i];
 
 	if (sum)
-        WriteEntry(file, AsCount[index], sum);
+        WriteEntry(file, AsCount[report][index], sum);
 	else
 	    file.Write("---");
 
 
-	sum = 0;
-	for (i = 0; i < 3; i++)
-		sum += NtCount[i];
+    sum = 0;
+    for (i = 0; i < 3; i++)
+        sum += NtCount[report][i];            
 
-	if (sum)
-		WriteEntry(file, NtCount[index], sum);
+    if (sum)
+        WriteEntry(file, NtCount[report][index], sum);
 	else
-		file.Write("---");
+	    file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TABO::TABO ##########################
+*   Purpose....: Initialize TABO                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TABO::TABO()
+{
+    int i;
+    int j;
+
+    for (i = 0; i < 7; i++)
+    {
+        for (j = 0; j < 3; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
+    }
+}
+
+/*##################  TABO::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TABO::Add(TQuizRow *Row)
+{
+	int index;
+	int diff = Row->AsResult - Row->NtResult;
+
+	switch (Row->ABO)
+	{
+		case 1:
+		case 5:
+			index = 0;
+			break;
+
+		case 2:
+		case 6:
+			index = 1;
+			break;
+
+		case 3:
+		case 7:
+			index = 2;
+			break;
+
+		case 4:
+		case 8:
+			index = 3;
+			break;
+
+		default:
+			return;
+	}
+
+	 if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	}
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
+	if (diff > 0)
+		AsCount[0][index]++;
+	else
+		NtCount[0][index]++;
+}
+
+/*##################  TABO::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TABO::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("ABO");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
 
 	file.Write("</tr>");
 }
 
-/*##################  TQuiz5::WriteHair ##########################
+/*##################  TABO::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TABO::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+	r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+	r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
+		file.Write(str);
+
+		ival = round(1000.0 * mean);
+		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
+		file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  TABO::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TABO::WriteRow(TFile &file, int report, int index, const char *text)
+{
+    char str[80];
+	int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(text);
+	WriteFieldFooter(file);
+
+
+    sum = 0;
+	for (i = 0; i < 7; i++)
+		sum += AsCount[report][i];
+
+	if (sum)
+		WriteEntry(file, AsCount[report][index], sum);
+	else
+		file.Write("---");
+
+	sum = 0;
+	for (i = 0; i < 7; i++)
+		sum += NtCount[report][i];
+
+	if (sum)
+		WriteEntry(file, NtCount[report][index], sum);
+	else
+		file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TBirthMonth::TBirthMonth ##########################
+*   Purpose....: Initialize TBirthMonth                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TBirthMonth::TBirthMonth()
+{
+    int i;
+    int j;
+
+    for (i = 0; i < 15; i++)
+    {
+        for (j = 0; j < 3; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
+    }
+}
+
+/*##################  TBirthMonth::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::Add(TQuizRow *Row)
+{
+	int index;
+	int diff = Row->AsResult - Row->NtResult;
+
+    index = Row->BirthMonth - 1;
+
+	if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	}
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
+	if (diff > 0)
+		AsCount[0][index]++;
+	else
+		NtCount[0][index]++;
+}
+
+/*##################  TBirthMonth::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::WriteHeader(TFile &file)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Birth month");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TBirthMonth::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+	r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+	r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
+		file.Write(str);
+
+		ival = round(1000.0 * mean);
+		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
+		file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  TBirthMonth::Write ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::WriteRow(TFile &file, int report, int index, const char *text)
+{
+    char str[80];
+	int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(text);
+	WriteFieldFooter(file);
+
+
+    sum = 0;
+	for (i = 0; i < 15; i++)
+		sum += AsCount[report][i];
+
+	if (sum)
+		WriteEntry(file, AsCount[report][index], sum);
+	else
+		file.Write("---");
+
+	sum = 0;
+	for (i = 0; i < 15; i++)
+		sum += NtCount[report][i];
+
+	if (sum)
+		WriteEntry(file, NtCount[report][index], sum);
+	else
+		file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TDisease::TDisease ##########################
+*   Purpose....: Initialize TDisease                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TDisease::TDisease()
+{
+    int i;
+    int j;
+
+    for (i = 0; i < 7; i++)
+    {
+        for (j = 0; j < 4; j++)
+        {
+			AsCount[j][i] = 0;
+            NtCount[j][i] = 0;
+        }
+    }
+}
+
+/*##################  TDisease::WriteHeader ##########################
+*   Purpose....: Write header in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TDisease::WriteHeader(TFile &file, const char *Name)
+{
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(Name);
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("AS");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("NT");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+}
+
+/*##################  TDisease::WriteEntry ##########################
+*   Purpose....: Write entry in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TDisease::WriteEntry(TFile &file, int val, int count)
+{
+    char str[80];
+    long double dev;
+    long double sd;
+    long double mean;
+    long double r;
+    long double rsum;
+	int ival;
+
+    WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+    mean = (long double)val / (long double)count;
+
+	r = 1.0 - mean;
+    rsum = (long double)val * r * r;
+
+	r = -mean;
+    rsum += (long double)(count - val) * r * r;
+
+    if (count > 1 && val)
+    {
+		sd = sqrtl(rsum / ((long double)count - 1));
+
+		dev = 1.96 * sd / sqrtl(count);
+
+		r = mean - dev;
+		if (r < 0.0)
+			r = 0.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		r = mean + dev;
+		if (r > 1.0)
+			r = 1.0;
+
+		ival = round(1000.0 * r);
+
+		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
+		file.Write(str);
+
+		ival = round(1000.0 * mean);
+		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
+		file.Write(str);
+	}
+	else
+	    file.Write("---");
+	
+#else
+    ival = val * 100 / count;
+	sprintf(str, "%d%", ival);
+    file.Write(str);
+#endif
+
+	WriteFieldFooter(file);
+}
+
+/*##################  TDisease::WriteRow ##########################
+*   Purpose....: Write row in table                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TDisease::WriteRow(TFile &file, int report, int index, const char *text)
+{
+    char str[80];
+	int sum;
+    int i;
+
+    file.Write("<tr style='height:24.75pt'>");
+	WriteCenteredFieldHeader(file, 25);
+	file.Write(text);
+	WriteFieldFooter(file);
+
+    sum = 0;
+	for (i = 0; i < 7; i++)
+		sum += AsCount[report][i];
+
+	if (sum)
+		WriteEntry(file, AsCount[report][index], sum);
+	else
+		file.Write("---");
+
+	sum = 0;
+	for (i = 0; i < 7; i++)
+		sum += NtCount[report][i];
+
+	if (sum)
+		WriteEntry(file, NtCount[report][index], sum);
+	else
+		file.Write("---");
+
+    file.Write("</tr>");
+}
+
+/*##################  TDiseaseParent::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TDiseaseParent::Add(TQuizRow *Row)
+{
+	int index;
+	int diff = Row->AsResult - Row->NtResult;
+
+	switch (GetDisease(Row))
+	{
+		case 0:
+			index = 0;
+			break;
+
+		case 1:
+			index = 1;
+			break;
+
+		case 2:
+		case 3:
+			index = 2;
+			break;
+
+		case 5:
+		    index = 3;
+		    break;
+
+		default:
+			index = 4;
+			break;
+	}
+
+	if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	}
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
+	if (diff > 0)
+		AsCount[0][index]++;
+	else
+		NtCount[0][index]++;
+}
+
+/*##################  TDiseaseAll::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TDiseaseAll::Add(TQuizRow *Row)
+{
+	int index;
+	int diff = Row->AsResult - Row->NtResult;
+
+	if (GetDisease(Row))
+	    index = 1;
+	else
+	    index = 0;
+
+	if (Row->Lang == 0)
+    {
+	    if (diff > 0)
+		    AsCount[1][index]++;
+    	else
+	    	NtCount[1][index]++;
+	}
+
+    if (Row->Lang == 1)
+    {
+	    if (diff > 0)
+		    AsCount[2][index]++;
+    	else
+	    	NtCount[2][index]++;
+	}
+
+	if (diff > 0)
+		AsCount[0][index]++;
+	else
+		NtCount[0][index]++;
+}
+
+/*##################  TParkinson::GetDisease ##########################
+*   Purpose....: Get disease entry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TParkinson::GetDisease(TQuizRow *Row)
+{
+    return Row->Parkinson;
+}
+
+/*##################  TAlzheimer::GetDisease ##########################
+*   Purpose....: Get disease entry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TAlzheimer::GetDisease(TQuizRow *Row)
+{
+    return Row->Alzheimer;
+}
+
+/*##################  TCFTR::GetDisease ##########################
+*   Purpose....: Get disease entry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TCFTR::GetDisease(TQuizRow *Row)
+{
+    return Row->CFTR;
+}
+
+/*##################  THFE::GetDisease ##########################
+*   Purpose....: Get disease entry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int THFE::GetDisease(TQuizRow *Row)
+{
+    return Row->HFE;
+}
+
+/*##################  TLeiden::GetDisease ##########################
+*   Purpose....: Get disease entry                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TLeiden::GetDisease(TQuizRow *Row)
+{
+    return Row->Leiden;
+}
+
+/*##################  TQuiz9::WriteHair ##########################
 *   Purpose....: Write hair report                   			     	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
@@ -1948,26 +2797,30 @@ void TQuiz9::WriteHair(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-	THair hair[7];
+	THair hair;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.Hair != 7)
-			hair[0].Add(&Row);
-	}
+		hair.Add(&Row);
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 3; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Hair-color excluding black");
+				file.Write("Hair-color, whole population");
 				break;
 
-		}
+			case 1:
+				file.Write("Hair-color, English speaking");
+				break;
+
+			case 2:
+				file.Write("Hair-color, Swedish speaking");
+				break;
+        }
 
 		file.Write("</h3><br>");
 
@@ -1975,9 +2828,10 @@ void TQuiz9::WriteHair(const char *filename)
 
 		THair::WriteHeader(file);
 
-		hair[i].WriteRow(file, 0, "Red/Strawberry blond/auburn");
-		hair[i].WriteRow(file, 1, "Blond");
-		hair[i].WriteRow(file, 2, "Brown");
+		hair.WriteRow(file, i, 0, "Red/Strawberry blond/auburn");
+		hair.WriteRow(file, i, 1, "Blond");
+		hair.WriteRow(file, i, 2, "Brown");
+		hair.WriteRow(file, i, 3, "Black");
 
 		file.Write("</table>");
 
@@ -2002,20 +2856,28 @@ void TQuiz9::WriteEye(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-	TEye eye[7];
+	TEye eye;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
-		eye[0].Add(&Row);
+		eye.Add(&Row);
 
-	for (i = 0; i < 1; i++)
+	for (i = 0; i < 3; i++)
 	{
 		file.Write("<h3>");
 
 		switch (i)
 		{
 			case 0:
-				file.Write("Eye color");
+				file.Write("Eye color, whole population");
+				break;
+
+			case 1:
+				file.Write("Eye color, English speaking");
+				break;
+
+			case 2:
+				file.Write("Eye color, Swedish speaking");
 				break;
 
 		}
@@ -2026,9 +2888,9 @@ void TQuiz9::WriteEye(const char *filename)
 
 		TEye::WriteHeader(file);
 
-		eye[i].WriteRow(file, 0, "Grey-blue/Blue");
-		eye[i].WriteRow(file, 1, "Green");
-		eye[i].WriteRow(file, 2, "Hazel/Brown");
+		eye.WriteRow(file, i, 0, "Grey-blue/Blue");
+		eye.WriteRow(file, i, 1, "Green");
+		eye.WriteRow(file, i, 2, "Hazel/Brown");
 
 		file.Write("</table>");
 
@@ -2037,3 +2899,406 @@ void TQuiz9::WriteEye(const char *filename)
 	}
 }
 
+/*##################  TQuiz9::WriteABO ##########################
+*   Purpose....: Write ABO report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteABO(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TABO ABO;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		ABO.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("ABO blood group, whole population");
+				break;
+
+			case 1:
+				file.Write("ABO blood group, English speaking");
+				break;
+
+			case 2:
+				file.Write("ABO blood group, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TABO::WriteHeader(file);
+
+		ABO.WriteRow(file, i, 0, "O");
+		ABO.WriteRow(file, i, 1, "A");
+		ABO.WriteRow(file, i, 2, "B");
+		ABO.WriteRow(file, i, 3, "AB");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+
+}
+
+/*##################  TQuiz9::WriteBirthMonth ##########################
+*   Purpose....: Write birth month report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteBirthMonth(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TBirthMonth BirthMonth;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		BirthMonth.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Birth month, whole population");
+				break;
+
+			case 1:
+				file.Write("Birth month, English speaking");
+				break;
+
+			case 2:
+				file.Write("Birth month, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TBirthMonth::WriteHeader(file);
+
+		BirthMonth.WriteRow(file, i, 0, "Jan");
+		BirthMonth.WriteRow(file, i, 1, "Feb");
+		BirthMonth.WriteRow(file, i, 2, "Mar");
+		BirthMonth.WriteRow(file, i, 3, "Apr");
+		BirthMonth.WriteRow(file, i, 4, "May");
+		BirthMonth.WriteRow(file, i, 5, "Jun");
+		BirthMonth.WriteRow(file, i, 6, "Jul");
+		BirthMonth.WriteRow(file, i, 7, "Aug");
+		BirthMonth.WriteRow(file, i, 8, "Sep");
+		BirthMonth.WriteRow(file, i, 9, "Oct");
+		BirthMonth.WriteRow(file, i, 10, "Nov");
+		BirthMonth.WriteRow(file, i, 11, "Dec");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+
+}
+
+/*##################  TQuiz9::WriteParkinson ##########################
+*   Purpose....: Write Parkinson report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteParkinson(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TParkinson Parkinson;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		Parkinson.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Parkinson, whole population");
+				break;
+
+			case 1:
+				file.Write("Parkinson, English speaking");
+				break;
+
+			case 2:
+				file.Write("Parkinson, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TDisease::WriteHeader(file, "Parkinson");
+
+		Parkinson.WriteRow(file, i, 2, "Parent/grandparent");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+
+}
+
+/*##################  TQuiz9::WriteAlzheimer ##########################
+*   Purpose....: Write Alzheimer report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteAlzheimer(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TAlzheimer Alzheimer;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		Alzheimer.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Alzheimer, whole population");
+				break;
+
+			case 1:
+				file.Write("Alzheimer, English speaking");
+				break;
+
+			case 2:
+				file.Write("Alzheimer, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TDisease::WriteHeader(file, "Alzheimer");
+
+		Alzheimer.WriteRow(file, i, 2, "Parent/grandparent");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+
+}
+
+/*##################  TQuiz9::WriteCFTR ##########################
+*   Purpose....: Write Cystic fibrosis report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteCFTR(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TCFTR CFTR;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		CFTR.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Cystic fibrosis, whole population");
+				break;
+
+			case 1:
+				file.Write("Cystic fibrosis, English speaking");
+				break;
+
+			case 2:
+				file.Write("Cystic fibrosis, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TDisease::WriteHeader(file, "Cystic fibrosis");
+
+		CFTR.WriteRow(file, i, 1, "All");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+
+}
+
+/*##################  TQuiz9::WriteHFE ##########################
+*   Purpose....: Write Hemochromatosis report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteHFE(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	THFE HFE;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		HFE.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Hemochromatosis, whole population");
+				break;
+
+			case 1:
+				file.Write("Hemochromatosis, English speaking");
+				break;
+
+			case 2:
+				file.Write("Hemochromatosis, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TDisease::WriteHeader(file, "Hemochromatosis");
+
+		HFE.WriteRow(file, i, 1, "All");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+}
+
+/*##################  TQuiz9::WriteLeiden ##########################
+*   Purpose....: Write Factor V Leiden report                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::WriteLeiden(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	TLeiden Leiden;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		Leiden.Add(&Row);
+
+	for (i = 0; i < 3; i++)
+	{
+		file.Write("<h3>");
+
+		switch (i)
+		{
+			case 0:
+				file.Write("Factor V Leiden, whole population");
+				break;
+
+			case 1:
+				file.Write("Factor V Leiden, English speaking");
+				break;
+
+			case 2:
+				file.Write("Factor V Leiden, Swedish speaking");
+				break;
+        }
+
+		file.Write("</h3><br>");
+
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		TDisease::WriteHeader(file, "Factor V Leiden");
+
+		Leiden.WriteRow(file, i, 1, "All");
+
+		file.Write("</table>");
+
+		file.Write("<br><br>");
+
+	}
+}
