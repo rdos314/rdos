@@ -151,6 +151,7 @@ TQuiz::TQuiz(int Questions)
         Quiz[i].CrossQuiz = 0;
         Quiz[i].CrossInd = 0;
         Quiz[i].GlobalId = -1;
+        Quiz[i].Changed = FALSE;
 
         for (g = 0; g < MAX_GROUP_COUNT; g++)
         {
@@ -343,6 +344,23 @@ void TQuiz::DefineText(int Question, const char *Text, int Group)
     }
 }
 
+/*##################  TQuiz::RedefineText ##########################
+*   Purpose....: Redefine a previous text    				       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::RedefineText(int Question, int GlobalId, const char *Text)
+{
+    if (Question > 0 && Question <= MAX_QUESTIONS)
+    {
+        Quiz[Question - 1].GlobalId = GlobalId - 1;
+        Quiz[Question - 1].Text = Text;
+        Quiz[Question - 1].Changed = TRUE;
+    }
+}
+
 /*##################  TQuiz::DefineGlobalId ##########################
 *   Purpose....: Define global ID for question 					            #
 *   In params..: *                                                          #
@@ -445,8 +463,8 @@ void TQuiz::WritePhpQuestions(const char *filename)
     {
         found = FALSE;
         
-        if (Quiz[i].GlobalId >= 0)
-        {            
+		if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
+		{
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
                 quiz = CrossQuiz[cross];
@@ -594,6 +612,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_REPETITION");
                 break;
 
+            case GROUP_EMOTION:
+                file.Write("GROUP_EMOTION");
+                break;
+
             case GROUP_SEX:
                 file.Write("GROUP_SEX");
                 break;
@@ -609,7 +631,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
     {
         found = FALSE;
         
-        if (Quiz[i].GlobalId >= 0)
+        if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
         {            
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {

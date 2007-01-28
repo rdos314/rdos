@@ -117,6 +117,7 @@ struct TQuizQuestion
     TQuiz *CrossQuiz;
     int CrossInd;
     int GlobalId;
+    int Changed;
     TQuizGroup Group[MAX_GROUP_COUNT];
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
@@ -235,8 +236,10 @@ protected:
     void CalcAspieNtCorr();
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
+
     void DefineID(int Question, int GlobalID);
     void DefineText(int Question, const char *Text, int Group);
+    void RedefineText(int Question, int GlobalId, const char *Text);
     
     void ClearUsed();
     void ClearUsed(int Question);

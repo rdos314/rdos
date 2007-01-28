@@ -201,7 +201,7 @@ void TQuizIII::SetupTexts()
 	Quiz[67].MyGroup = GROUP_SEX;
 	Quiz[68].MyGroup = GROUP_SEX;
 	Quiz[69].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[70].MyGroup = GROUP_MIXED;
+	Quiz[70].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[71].MyGroup = GROUP_REPETITION;
 	Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[73].MyGroup = GROUP_ASPIE_TALENT;
