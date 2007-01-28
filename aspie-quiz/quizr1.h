@@ -20,37 +20,26 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quiz9.h
-# Quiz 9 class
+# quizr1.h
+# Quiz release 1 class
 #
 ########################################################################*/
 
-#ifndef _QUIZ9_H
-#define _QUIZ9_H
+#ifndef _QUIZR1_H
+#define _QUIZR1_H
 
 #include "quiz.h"
 #include "file.h"
 
-class TQuiz9 : public TQuiz
+class TQuizR1 : public TQuiz
 {
 public:
-    TQuiz9(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8);
-    ~TQuiz9();
+    TQuizR1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9);
+    ~TQuizR1();
 
     virtual void ExportExcelCase(const char *filename, int PcaType);
     virtual void ExportExcelGroups(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
-
-    virtual void WriteHair(const char *filename);
-    virtual void WriteEye(const char *filename);
-    virtual void WriteABO(const char *filename);
-    virtual void WriteBirthMonth(const char *filename);
-    virtual void ExportBirthMonthHistogram(const char *filename);
-    virtual void WriteParkinson(const char *filename);
-    virtual void WriteAlzheimer(const char *filename);
-    virtual void WriteCFTR(const char *filename);
-    virtual void WriteHFE(const char *filename);
-    virtual void WriteLeiden(const char *filename);
 
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
@@ -63,7 +52,7 @@ private:
     void LoadReferers();
     void LoadPopulations();
     void SetupControlGroups();
-    void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8);
+    void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9);
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult);
 
     TFile FDataFile;

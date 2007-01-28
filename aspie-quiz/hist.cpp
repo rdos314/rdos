@@ -183,6 +183,67 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 	delete chart;
 }
 
+/*################## WriteBirthHist ##########################
+*   Purpose....: Write Aspie/NT birth histogram	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteBirthHist(TBitmapGraphicDevice *dev, THistData As[100], THistData Nt[100])
+{
+	int index;
+	int ok;
+	int i;
+    char *name;
+    TFont Font(10);
+    TFont TextFont(15);
+	TLinXAxis LinXAxis(&Font);
+	TLinYAxis LinYAxis;
+    TChart *chart;
+
+    chart = new TChart(dev, &LinXAxis, &LinYAxis);
+
+	chart->SetWindow(0, 20, 340, 480 - 31);
+	chart->SetBackColor(255, 255, 255);
+
+	chart->SetLineColor(100, 0, 255, 75);
+
+	for (i = 6; i < 18; i++)
+	    chart->Add(100, (long double)(As[i].Index + 1), As[i].Val);
+
+	chart->SetLineColor(101, 128, 0, 255);
+
+	for (i = 6; i < 18; i++)
+		chart->Add(101, (long double)(Nt[i].Index + 1), Nt[i].Val);
+
+	chart->Draw();
+
+	dev->ClearClipRect();
+	dev->SetLgopNone();
+	dev->SetFont(&TextFont);
+
+	for (i = 0; i < 2; i++)
+	{
+        switch (i)
+		{
+			case 0:
+			    name = "Neurotypical";
+			    dev->SetDrawColor(128, 0, 255);
+				break;
+
+		    case 1:
+				name = "Aspie";
+				dev->SetDrawColor(0, 255, 75);
+				break;
+		}
+		dev->DrawString(140 * i + 20, 3, name);
+
+	 }
+
+	delete chart;
+}
+
 /*################## CreateAll ##########################
 *   Purpose....: Create all.jpg 	   					      	        #
 *   In params..: *                                                          #
@@ -279,6 +340,17 @@ void CreateAll()
 
 	if (ok)
 		WriteAsNtHist(&jpeg, 0, 20 + 2 * HEIGHT, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, WIDTH, 2 * HEIGHT, "Quiz 9");
+
+	MaxVal = 0.0;
+	ok = ImportData("as9.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("nt9.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, WIDTH, 20 + 2 * HEIGHT, AsArr, NtArr, FALSE);
 
 	jpeg.Save("all.jpg");
 }
@@ -470,6 +542,37 @@ void CreateDx()
 	jpeg.Save("dx.jpg");
 }
 
+/*################## CreateBirth ##########################
+*   Purpose....: Create birth.jpg 	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void CreateBirth()
+{
+	THistData AsArr[100];
+	THistData NtArr[100];
+	int ok;
+	TJpegBitmapDevice jpeg(24, 360, 480);
+
+	jpeg.SetDrawColor(255, 255, 255);
+	jpeg.SetLgopNone();
+	jpeg.SetFilledStyle();
+	jpeg.DrawRect(0, 0, 359, 479);
+
+	MaxVal = 0.0;
+	ok = ImportData("bmas.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("bmnt.dat", NtArr);
+
+	if (ok)
+		WriteBirthHist(&jpeg, AsArr, NtArr);
+
+	jpeg.Save("birth.jpg");
+}
+
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
 *   In params..: *                                                          #
@@ -481,4 +584,5 @@ int main(int argc, char **argv)
 {
     CreateAll();
     CreateDx();
+    CreateBirth();
 }

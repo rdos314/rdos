@@ -1895,6 +1895,17 @@ void TQuiz::WriteBirthMonth(const char *FileName)
 {
 }
 
+/*##################  TQuiz::ExportBirthMonthHistogram ##########################
+*   Purpose....: Write birth month histogram (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportBirthMonthHistogram(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteParkinson ##########################
 *   Purpose....: Write Parkinson report (dummy)           			     	        #
 *   In params..: *                                                          #

@@ -86,7 +86,9 @@ public:
 	TBirthMonth();
 	void Add(TQuizRow *Row);
 	void WriteRow(TFile &file, int report, int index, const char *text);
-    void WriteEntry(TFile &file, int val, int count);
+	void WriteEntry(TFile &file, int val, int count);
+	int GetFactor(int index);
+	void ExportHistogram(const char *filename);
 
 	static void WriteHeader(TFile &file);
 	int AsCount[4][15];
@@ -1315,7 +1317,7 @@ void TQuiz9::ExportExcelCase(const char *filename, int PcaType)
 					if (i >= 150)
 					{
 					    if (i >= 154)
-					    {
+						{
 					        switch (Row.Quiz[i])
 					        {
 					            case 0:
@@ -1342,7 +1344,7 @@ void TQuiz9::ExportExcelCase(const char *filename, int PcaType)
 					                ival = 2;
 					                break;
 					        }
-					    }
+						}
 					    else
     						ival = Row.Quiz[i];    				    
 						
@@ -1801,7 +1803,7 @@ void THair::WriteEntry(TFile &file, int val, int count)
 		file.Write(str);
 	}
 	else
-	    file.Write("---");
+		file.Write("---");
 	
 #else
     ival = val * 100 / count;
@@ -1963,7 +1965,7 @@ void TEye::WriteEntry(TFile &file, int val, int count)
 {
     char str[80];
     long double dev;
-    long double sd;
+	long double sd;
     long double mean;
     long double r;
     long double rsum;
@@ -2044,7 +2046,7 @@ void TEye::WriteRow(TFile &file, int report, int index, const char *text)
 	if (sum)
         WriteEntry(file, AsCount[report][index], sum);
 	else
-	    file.Write("---");
+		file.Write("---");
 
 
     sum = 0;
@@ -2071,7 +2073,7 @@ TABO::TABO()
     int i;
     int j;
 
-    for (i = 0; i < 7; i++)
+	for (i = 0; i < 7; i++)
     {
         for (j = 0; j < 3; j++)
         {
@@ -2179,7 +2181,7 @@ void TABO::WriteEntry(TFile &file, int val, int count)
     char str[80];
     long double dev;
     long double sd;
-    long double mean;
+	long double mean;
     long double r;
     long double rsum;
 	int ival;
@@ -2314,7 +2316,7 @@ void TBirthMonth::Add(TQuizRow *Row)
 
 	if (Row->Lang == 0)
     {
-	    if (diff > 0)
+		if (diff > 0)
 		    AsCount[1][index]++;
     	else
 	    	NtCount[1][index]++;
@@ -2466,7 +2468,96 @@ void TBirthMonth::WriteRow(TFile &file, int report, int index, const char *text)
 	else
 		file.Write("---");
 
-    file.Write("</tr>");
+	file.Write("</tr>");
+}
+
+/*##################  TBirthMonth::GetFactor ##########################
+*   Purpose....: Get month factor                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TBirthMonth::GetFactor(int index)
+{
+	switch (index)
+	{
+		case 0:
+		case 2:
+		case 4:
+		case 6:
+		case 7:
+		case 9:
+		case 11:
+			return 3100;
+
+		case 1:
+			return  2825;
+
+		case 3:
+		case 5:
+		case 8:
+		case 10:
+			return 3000;
+	}
+}
+
+/*##################  TBirthMonth::ExportHistogram ##########################
+*   Purpose....: Export histogram                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::ExportHistogram(const char *filename)
+{
+	char str[80];
+	int val;
+	int i;
+	int assum;
+	int ntsum;
+	TFile file(filename, 0);
+
+	assum = 0;
+	ntsum = 0;
+
+	for (i = 0; i < 12; i++)
+	{
+		assum += AsCount[0][i];
+		ntsum += NtCount[0][i];
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 1));
+		file.Write(str);
+
+		val = AsCount[0][i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[0][i] * GetFactor(i);
+		val = val / ntsum;
+		sprintf(str, "%d\n", val);
+		file.Write(str);
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 13));
+		file.Write(str);
+
+		val = AsCount[0][i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[0][i] * GetFactor(i);
+		val = val / ntsum;
+	    sprintf(str, "%d\n", val);
+	    file.Write(str);	        
+	}
 }
 
 /*##################  TDisease::TDisease ##########################
@@ -2527,7 +2618,7 @@ void TDisease::WriteHeader(TFile &file, const char *Name)
 void TDisease::WriteEntry(TFile &file, int val, int count)
 {
     char str[80];
-    long double dev;
+	long double dev;
     long double sd;
     long double mean;
     long double r;
@@ -2662,7 +2753,7 @@ void TDiseaseParent::Add(TQuizRow *Row)
 	}
 
 	if (Row->Lang == 0)
-    {
+	{
 	    if (diff > 0)
 		    AsCount[1][index]++;
     	else
@@ -2743,7 +2834,7 @@ int TParkinson::GetDisease(TQuizRow *Row)
 *##########################################################################*/
 int TAlzheimer::GetDisease(TQuizRow *Row)
 {
-    return Row->Alzheimer;
+	return Row->Alzheimer;
 }
 
 /*##################  TCFTR::GetDisease ##########################
@@ -3023,6 +3114,30 @@ void TQuiz9::WriteBirthMonth(const char *filename)
 
 	}
 
+}
+
+
+/*##################  TQuiz9::ExportBirthMonthHistogram ##########################
+*   Purpose....: Export birth month histogram       			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz9::ExportBirthMonthHistogram(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	TBirthMonth BirthMonth;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+		BirthMonth.Add(&Row);
+
+    BirthMonth.ExportHistogram(filename);
 }
 
 /*##################  TQuiz9::WriteParkinson ##########################

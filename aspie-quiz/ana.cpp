@@ -202,6 +202,7 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteEye("eye9.htm");
 	 Quiz[8]->WriteABO("abo9.htm");
 	 Quiz[8]->WriteBirthMonth("birth9.htm");
+	 Quiz[8]->ExportBirthMonthHistogram("birth9.csv");
 	 Quiz[8]->WriteParkinson("park9.htm");
 	 Quiz[8]->WriteAlzheimer("alz9.htm");
 	 Quiz[8]->WriteCFTR("cftr9.htm");
@@ -210,9 +211,8 @@ int main(int argc, char **argv)
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
-	 Quiz[8]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, FALSE);
-	 Quiz[8]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
-	 Quiz[8]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
+	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
 
 	 Quiz[8]->WritePhpWeighting("weights.php");
 
