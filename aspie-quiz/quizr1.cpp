@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizR1::TQuizR1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9)
-  : TQuiz(129),
+  : TQuiz(137),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -1083,6 +1083,15 @@ void TQuizR1::SetupTexts()
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
 
+  Quiz[129].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[130].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[131].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
   Quiz[1].Text = "Do you feel much younger inside than your biological age?";
@@ -1213,6 +1222,16 @@ void TQuizR1::SetupTexts()
   Quiz[126].Text = "Do you dislike shaking hands due to germophobia?";
   Quiz[127].Text = "Do you dislike shaking hands because handshakes feel unnatural?";
   Quiz[128].Text = "Do you dislike shaking hands for other reason?";
+
+  Quiz[129].Text = "Do you talk to yourself?";
+  Quiz[130].Text = "Do you have an urge to climb?";
+  Quiz[131].Text = "Do you clap your hands when excited?";
+  Quiz[132].Text = "Do you grind your teeth when stressed or anxious?";
+  Quiz[133].Text = "Do you clench your fists when angry?";
+  Quiz[134].Text = "Do you suck your thumb for comfort?";
+  Quiz[135].Text = "Do you enjoy lying on the ground looking at the sky?";
+  Quiz[136].Text = "Do you twist your hand to indicate so-so?";
+
 #endif
 
 #ifdef SWEDISH
@@ -1345,6 +1364,16 @@ void TQuizR1::SetupTexts()
   Quiz[126].Text = "Ogillar du att ta i hand pga bacillskräck?";
   Quiz[127].Text = "Ogillar du att ta i hand för att handslag känns onaturligt?";
   Quiz[128].Text = "Ogillar du att ta i hand av annan orsak?";
+
+  Quiz[129].Text = "Pratar du med dig själv?";
+  Quiz[130].Text = "Har du ett behov av att klättra?";
+  Quiz[131].Text = "Klappar du med händerna när du är upprymd?";
+  Quiz[132].Text = "Gnisslar du med tänderna när du är stressad eller har ångest?";
+  Quiz[133].Text = "Knyter du nävarna när du är arg?";
+  Quiz[134].Text = "Suger du på tummen när du behöver tröst?";
+  Quiz[135].Text = "Gillar du att ligga på marken och studera himlen?";
+  Quiz[136].Text = "Vrider du handen för att indikera \"sådär\"?";
+
 #endif
 }
 
@@ -1606,59 +1635,59 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(Quiz9, 22, 65);
   DefineGlobalId( 23, 489);
     DefineCross(Quiz6, 24, 35);
-    DefineCross(Quiz9, 25, 100);
+	 DefineCross(Quiz9, 25, 100);
   DefineGlobalId( 26, 490);
-    DefineCross(QuizI, 27, 13);
-    DefineCross(Quiz9, 28, 105);
-    DefineCross(Quiz8, 29, 8);
-    DefineCross(Quiz9, 30, 98);
-    DefineCross(Quiz9, 31, 59);
+	 DefineCross(QuizI, 27, 13);
+	 DefineCross(Quiz9, 28, 105);
+	 DefineCross(Quiz8, 29, 8);
+	 DefineCross(Quiz9, 30, 98);
+	 DefineCross(Quiz9, 31, 59);
   DefineGlobalId( 32, 491);
-    DefineCross(QuizIII, 33, 32);
+	 DefineCross(QuizIII, 33, 32);
   DefineGlobalId( 34, 492);
   DefineGlobalId( 35, 493);
   DefineGlobalId( 36, 494);
-    DefineCross(Quiz9, 37, 64);
-    DefineCross(QuizIII, 38, 25);
-    DefineCross(Quiz7, 39, 75);
+	 DefineCross(Quiz9, 37, 64);
+	 DefineCross(QuizIII, 38, 25);
+	 DefineCross(Quiz7, 39, 75);
   DefineGlobalId( 40, 495);
   DefineGlobalId( 41, 496);
-    DefineCross(Quiz9, 42, 102);
+	 DefineCross(Quiz9, 42, 102);
   DefineGlobalId( 43, 497);
-    DefineCross(Quiz9, 44, 109);
-    DefineCross(Quiz7, 45, 66);
+	 DefineCross(Quiz9, 44, 109);
+	 DefineCross(Quiz7, 45, 66);
 	DefineCross(QuizNd, 46, 36);
-    DefineCross(QuizI, 47, 41);
+	 DefineCross(QuizI, 47, 41);
   DefineGlobalId( 48, 498);
   DefineGlobalId( 49, 499);
   DefineGlobalId( 50, 500);
-    DefineCross(Quiz6, 51, 139);
-    DefineCross(Quiz9, 52, 61);
-    DefineCross(Quiz8, 53, 69);
-    DefineCross(QuizI, 54, 68);
-    DefineCross(Quiz9, 55, 35);
-    DefineCross(Quiz9, 56, 30);
-    DefineCross(Quiz9, 57, 31);
-    DefineCross(Quiz9, 58, 34);
+	 DefineCross(Quiz6, 51, 139);
+	 DefineCross(Quiz9, 52, 61);
+	 DefineCross(Quiz8, 53, 69);
+	 DefineCross(QuizI, 54, 68);
+	 DefineCross(Quiz9, 55, 35);
+	 DefineCross(Quiz9, 56, 30);
+	 DefineCross(Quiz9, 57, 31);
+	 DefineCross(Quiz9, 58, 34);
 	DefineCross(Quiz9, 59, 36);
-    DefineCross(Quiz7, 60, 143);
-    DefineCross(Quiz7, 61, 117);
-    DefineCross(Quiz9, 62, 37);
-    DefineCross(QuizII, 63, 69);
-    DefineCross(Quiz9, 64, 115);
+	 DefineCross(Quiz7, 60, 143);
+	 DefineCross(Quiz7, 61, 117);
+	 DefineCross(Quiz9, 62, 37);
+	 DefineCross(QuizII, 63, 69);
+	 DefineCross(Quiz9, 64, 115);
   DefineGlobalId( 65, 501);
-    DefineCross(QuizI, 66, 98);
-    DefineCross(Quiz8, 67, 120);
-    DefineCross(QuizI, 68, 26);
-    DefineCross(Quiz9, 69, 117);
-    DefineCross(Quiz9, 70, 110);
-    DefineCross(Quiz7, 71, 83);
-    DefineCross(Quiz9, 72, 118);
-    DefineCross(Quiz9, 73, 116);
-    DefineCross(Quiz9, 74, 114);
-    DefineCross(Quiz9, 75, 112);
+	 DefineCross(QuizI, 66, 98);
+	 DefineCross(Quiz8, 67, 120);
+	 DefineCross(QuizI, 68, 26);
+	 DefineCross(Quiz9, 69, 117);
+	 DefineCross(Quiz9, 70, 110);
+	 DefineCross(Quiz7, 71, 83);
+	 DefineCross(Quiz9, 72, 118);
+	 DefineCross(Quiz9, 73, 116);
+	 DefineCross(Quiz9, 74, 114);
+	 DefineCross(Quiz9, 75, 112);
   DefineGlobalId( 76, 502);
-    DefineCross(Quiz7, 77, 90);
+	 DefineCross(Quiz7, 77, 90);
   DefineGlobalId( 78, 503);
   DefineGlobalId( 79, 504);
   DefineGlobalId( 80, 505);
@@ -1666,43 +1695,43 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
   DefineGlobalId( 82, 507);
   DefineGlobalId( 83, 508);
   DefineGlobalId( 84, 509);
-    DefineCross(Quiz9, 85, 11);
-    DefineCross(Quiz7, 86, 122);
-    DefineCross(QuizI, 87, 31);
-    DefineCross(QuizI, 88, 30);
-    DefineCross(QuizII, 89, 64);
+	 DefineCross(Quiz9, 85, 11);
+	 DefineCross(Quiz7, 86, 122);
+	 DefineCross(QuizI, 87, 31);
+	 DefineCross(QuizI, 88, 30);
+	 DefineCross(QuizII, 89, 64);
   DefineGlobalId( 90, 510);
   DefineGlobalId( 91, 511);
   DefineGlobalId( 92, 512);
   DefineGlobalId( 93, 513);
   DefineGlobalId( 94, 514);
-    DefineCross(Quiz6, 95, 36);
-    DefineCross(Quiz6, 96, 31);
+	 DefineCross(Quiz6, 95, 36);
+	 DefineCross(Quiz6, 96, 31);
   DefineGlobalId( 97, 515);
   DefineGlobalId( 98, 516);
   DefineGlobalId( 99, 517);
   DefineGlobalId( 100, 518);
   DefineGlobalId( 101, 519);
   DefineGlobalId( 102, 520);
-    DefineCross(Quiz8, 103, 25);
+	 DefineCross(Quiz8, 103, 25);
   DefineGlobalId( 104, 521);
-    DefineCross(QuizNd, 105, 10);
+	 DefineCross(QuizNd, 105, 10);
   DefineGlobalId( 106, 522);
-    DefineCross(Quiz9, 107, 106);
-    DefineCross(Quiz8, 108, 3);
-    DefineCross(Quiz9, 109, 21);
-    DefineCross(QuizI, 110, 58);
-    DefineCross(Quiz9, 111, 24);
+	 DefineCross(Quiz9, 107, 106);
+	 DefineCross(Quiz8, 108, 3);
+	 DefineCross(Quiz9, 109, 21);
+	 DefineCross(QuizI, 110, 58);
+	 DefineCross(Quiz9, 111, 24);
   DefineGlobalId( 112, 523);
   DefineGlobalId( 113, 524);
   DefineGlobalId( 114, 525);
-    DefineCross(Quiz9, 115, 20);
-    DefineCross(Quiz9, 116, 26);
+	 DefineCross(Quiz9, 115, 20);
+	 DefineCross(Quiz9, 116, 26);
   DefineGlobalId( 117, 526);
-    DefineCross(Quiz8, 118, 6);
+	 DefineCross(Quiz8, 118, 6);
   DefineGlobalId( 119, 527);
-    DefineCross(Quiz9, 120, 27);
-    DefineCross(Quiz9, 121, 29);
+	 DefineCross(Quiz9, 120, 27);
+	 DefineCross(Quiz9, 121, 29);
   DefineGlobalId( 122, 528);
   DefineGlobalId( 123, 529);
   DefineGlobalId( 124, 530);
@@ -1710,6 +1739,14 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
   DefineGlobalId( 126, 532);
   DefineGlobalId( 127, 533);
   DefineGlobalId( 128, 534);
+	 DefineCross(Quiz9, 129, 88);
+	 DefineCross(Quiz9, 130, 93);
+  DefineGlobalId( 131, 535);
+  DefineGlobalId( 132, 536);
+  DefineGlobalId( 133, 537);
+  DefineGlobalId( 134, 538);
+  DefineGlobalId( 135, 539);
+  DefineGlobalId( 136, 540);
 }
 
 /*##########################################################################
