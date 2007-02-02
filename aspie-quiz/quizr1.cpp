@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizR1::TQuizR1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9)
-  : TQuiz(133),
+  : TQuiz(129),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -128,852 +128,819 @@ void TQuizR1::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizR1::DefineQuiz()
 {
-	DefineID(1, 269);
-	DefineID(2, 112);
+ return;
 
-#ifdef ENGLISH
-	DefineText(3, "Do you consider yourself emotionally sensitive?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(3, "Är du emotionellt sensitiv?", GROUP_MIXED);
-#endif
+ DefineID(1, 269);
+ DefineID(2, 112);
 
 #ifdef ENGLISH
-	RedefineText(4, 76, "Do you tend to express your feelings in unusual ways (e.g banging your head in the wall or not showing anything at all)?");
+ RedefineText(3, 67, "Are you more of an observer than one who participates in life?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(4, 76, "Brukar du uttrycka dina känslor på ovanliga sätt (t ex banka huvudet i väggen eller inte visa något alls)?");
+ RedefineText(3, 67, "Känner du dig mer som en observatör än som en deltagare i livet?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(5, 139, "Are you asexual (= uninterested in sex)?");
+ RedefineText(4, 91, "Have you had more difficulties than others of the same age when it comes to making friends or getting into relationships?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(5, 139, "Är du asexuell? (= ointresserad av sex)?");
+ RedefineText(4, 91, "Har du haft svårare än dina jämnåriga att få vänner eller partners?");
 #endif
-
-	DefineID(6, 343);
 
 #ifdef ENGLISH
-	DefineText(7, "Are you sometimes fearless in situations that can be dangerous?", GROUP_MIXED);
+ RedefineText(5, 34, "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(7, "Händer det att du är orädd i situationer som faktiskt kan vara farliga?", GROUP_MIXED);
+ RedefineText(5, 34, "Föredrar du bara att umgås med folk du känner väl, och helst på tu man hand eller i en mindre grupp?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(8, 67, "Are you more of an observer than one who participates in life?");
+ RedefineText(6, 33, "Do you prefer the company of those older or youger than yourself to that of your peers?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(8, 67, "Känner du dig mer som en observatör än som en deltagare i livet?");
+ RedefineText(6, 33, "Brukar du föredra att umgås med människor som är äldre eller yngre än du själv framför jämnåriga?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(9, 91, "Have you had more difficulties than others of the same age when it comes to making friendships or getting into relationships?");
+ RedefineText(7, 71, "Do you mostly prefer playing/working/doing things on your own - in your own way and at your own pace?");
 #endif
-
+ 
 #ifdef SWEDISH
-	RedefineText(9, 91, "Har du haft svårare än dina jämnåriga att få vänner eller partners?");
-#endif
-
-#ifdef ENGLISH
-	RedefineText(10, 34, "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?");
+ RedefineText(7, 71, "Brukar du föredra att leka/arbeta/göra saker själv - på ditt eget sätt och i din egen takt?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(10, 34, "Föredrar du bara att umgås med folk du känner väl, och helst på tu man hand eller i en mindre grupp?");
+ RedefineText(8, 66, "Brukar du blir väldigt trött av att umgås med folk och efteråt behöva vila ut ifred?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(11, 33, "Have you had a tendency to prefer the company of those older than yourself to that of your peers?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(11, 33, "Har du brukat föredra att umgås människor som är äldre eller mer erfarna än du själv framför jämnåriga?");
+ RedefineText(8, 66, "Do you get very tired after socializing, and need to regenerate alone?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(12, 66, "Do you get very tired after socializing, and need to regenerate alone?");
+ RedefineText(9, 378, "Do you dislike it when people drop by to visit you uninvited?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(12, 66, "Brukar du blir väldigt trött av att umgås med folk och efteråt behöva vila ut ifred?");
+ RedefineText(9, 378, "Ogillar du när folk kommer och hälsar på utan att ha blivit inbjudna?");
 #endif
 
+ DefineID(10, 93);
+
 #ifdef ENGLISH
-	RedefineText(13, 378, "Do you dislike it when people drop by to visit you uninvited?");
+ RedefineText(11, 81, "Do you tend to feel nervous, shy, confused or left out in various social situations?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(13, 378, "Ogillar du när folk kommer och hälsar på utan att ha blivit inbjudna?");
+ RedefineText(11, 81, "Brukar du bli nervös, blyg, förvirrad eller utanför i olika sociala situationer?");
 #endif
-
-	DefineID(14, 93);
 
 #ifdef ENGLISH
-	RedefineText(15, 81, "Do you tend to feel nervous, shy, confused and/or like you don't fit in, in various social situations?");
+ DefineText(12, "Do you find it difficult to figure out how to behave in various situations?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(15, 81, "Brukar du bli nervös, blyg, förvirrad och/eller ha svårt att passa in i olika sociala situationer?");
+ DefineText(12, "Är det svårt att veta hur du ska bete dig i olika situationer?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(16, "Do you find it difficult to figure out how to behave in various situations?", GROUP_MIXED);
+ DefineText(13, "Do you tend to say or do things that are considered socially inappropriate?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(16, "Är det svårt att veta hur du ska bete dig i olika situationer?", GROUP_MIXED);
+ DefineText(13, "Brukar du säga eller göra saker som anses socialt opassande?", GROUP_MIXED);
 #endif
 
-	DefineID(17, 126);
-
 #ifdef ENGLISH
-	DefineText(18, "Have you had difficulties fitting into expected gender stereotypes, perhaps having interests and behaviors that are atypical for your gender?", GROUP_MIXED);
+ DefineText(14, "Have you had difficulties fitting into expected gender stereotypes, perhaps having interests and behaviors that are atypical for your gender?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(18, "Har du haft svårigheter att passa in i traditionella könsroller, kanske haft intressen och uppförande som är otypiska för ditt kön?", GROUP_MIXED);
+ DefineText(14, "Har du haft svårigheter att passa in i traditionella könsroller, kanske haft intressen och uppförande som är otypiska för ditt kön?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(19, 367, "Is a large social network important to you?");
+ RedefineText(15, 367, "Is a large social network important to you?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(19, 367, "Är ett stort socialt nätverk viktigt för dig?");
+ RedefineText(15, 367, "Är ett stort socialt nätverk viktigt för dig?");
 #endif
 
-	DefineID(20, 149);
-	DefineID(21, 258);
-	DefineID(22, 256);
-	DefineID(23, 283);
+ DefineID(16, 149);
+ DefineID(17, 258);
+ DefineID(18, 283);
 
 #ifdef ENGLISH
-	DefineText(24, "Is your image and social identity a priority to you", GROUP_NT_SOCIAL);
+ DefineText(19, "Is your image and social identity a priority to you?", GROUP_NT_SOCIAL);
 #endif
 
 #ifdef SWEDISH
-	DefineText(24, "Är din image och sociala identitet väldigt viktig för dig?", GROUP_NT_SOCIAL);
+ DefineText(19, "Är din image och sociala identitet väldigt viktig för dig?", GROUP_NT_SOCIAL);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(25, 225, "Are you intuitive about what people need from you?");
+ RedefineText(20, 225, "Are you intuitive about what people need from you?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(25, 225, "Känner du intuitivt vad folk behöver från dig?");
+ RedefineText(20, 225, "Känner du intuitivt vad folk behöver från dig?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(26, 262, "Do you have a good sense for what is the right thing to do socially?");
+ RedefineText(21, 262, "Do you have a good sense for what is the right thing to do socially?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(26, 262, "Har du en bra känla för vad som är rätt socialt?");
+ RedefineText(21, 262, "Har du en bra känla för vad som är rätt socialt?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(27, "Can you easily remember people's names when you meet new people?", GROUP_MIXED);
+ DefineText(22, "Can you easily remember people's names when you meet new people?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(27, "Har du lätt att komma ihåg vad folk heter när du möter nya människor?", GROUP_MIXED);
+ DefineText(22, "Har du lätt att komma ihåg vad folk heter när du möter nya människor?", GROUP_MIXED);
 #endif
 
-	DefineID(28, 14);
-	DefineID(29, 18);
+ DefineID(23, 14);
+ DefineID(24, 18);
 
 #ifdef ENGLISH
-	RedefineText(30, 234, "Do you stutter when stressed?");
+ RedefineText(25, 234, "Do you stutter when stressed?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(30, 234, "Stammar du när du blir stressad?");
+ RedefineText(25, 234, "Stammar du när du blir stressad?");
 #endif
 
-	DefineID(31, 83);
-	DefineID(32, 365);
+ DefineID(26, 83);
+ DefineID(27, 365);
 
 #ifdef ENGLISH
-	DefineText(33, "Do you have a habit of repeating your own or others' last words (echolalia)?", GROUP_MIXED);
+ DefineText(28, "If asked to describe yourself, would you do so in a detached way, as if you were describing someone else?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(33, "Har du för vana att upprepa de sista orden som du själv eller någon annan just sagt (ekolali)?", GROUP_MIXED);
+ DefineText(28, "Om du blev ombedd att beskriva dig själv, skulle du då göra det på objektivt sätt, som om du beskrev någon annan?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(34, 87, "Do you have difficulties understanding idioms, figures of speech, parodies, allegories or irony?");
+ DefineText(29, "Do you tend to be more blunt and straightforward than others?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(34, 87, "Har du svårt att förstå talesätt, allegorier, parodier, ironi och liknande?");
+ DefineText(29, "Brukar du vara mer rak och rättfram i din kommunikation än andra?", GROUP_MIXED);
 #endif
 
+ DefineID(30, 98);
+ DefineID(31, 88);
+ 
 #ifdef ENGLISH
-	DefineText(35, "If asked to describe yourself, would you do so in a detached way, as if you were describing someone else?", GROUP_MIXED);
+ DefineText(32, "Do you have problems with eye-contact (e.g. preferring to avoid it or staring 'too much')?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(35, "Om du blev ombedd att beskriva dig själv, skulle du då göra det på objektivt sätt, som om du beskrev någon annan?", GROUP_MIXED);
+ DefineText(32, "Har du problem med ögonkontakt (t ex att du föredrar att undvika det eller stirrar 'för mycket')?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(36, "Do you tend to be more blunt and straightforward than others?", GROUP_MIXED);
+ RedefineText(33, 285, "Can you 'read between the lines'?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(36, "Brukar du vara mer rak och rättfram i din kommunikation än andra?", GROUP_MIXED);
+ RedefineText(33, 285, "Kan du 'läsa mellan raderna'?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(37, "Do you tend to say or do things that are considered socially inappropriate?", GROUP_MIXED);
+ DefineText(34, "Do you find it easy to describe your feelings?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(37, "Brukar du säga eller göra saker som anses socialt opassande?", GROUP_MIXED);
+ DefineText(34, "Är det lätt för dig att beskriva dina känslor?", GROUP_MIXED);
 #endif
 
-	DefineID(38, 98);
-	DefineID(39, 88);
-	DefineID(40, 82);
+ DefineID(35, 128);
 
 #ifdef ENGLISH
-	DefineText(41, "Do people think you are smiling at the wrong occasion or not smiling when you are expected to?", GROUP_MIXED);
+ RedefineText(36, 345, "Do you talk to put others at ease even if you don't have anything special to convey?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(41, "Brukar folk tycka att du ler vid fel tillfälle eller att du inte ler när du ‘borde’?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(42, "Do you have problems with eye-contact (e.g. preferring to avoid it, or staring ‘too much’)?", GROUP_MIXED);
+ RedefineText(36, 345, "Brukar du prata för att få andra att känna sig väl till mods även om du inte har nåt speciellt att berätta?");
 #endif
 
-#ifdef SWEDISH
-	DefineText(42, "Har du problem med ögonkontakt (t ex föredrar att undvika det, eller stirrar ‘för mycket’)?", GROUP_MIXED);
-#endif
+ DefineID(37, 218);
+ DefineID(38, 42);
 
 #ifdef ENGLISH
-	RedefineText(43, 285, "Can you 'read between the lines'?");
+ DefineText(39, "Were you precocious as a child?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(43, 285, "Kan du 'läsa mellan raderna'?");
+ DefineText(39, "Var du \"lillgammal\" som barn?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(44, "Do you find it easy to describe your feelings?", GROUP_MIXED);
+ DefineText(40, "Was your play more directed towards sorting, building or taking things apart than towards social games with other kids?", 
+GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(44, "Är det lätt för dig att beskriva dina känslor?", GROUP_MIXED);
+ DefineText(40, "Brukade dina lekar mer bestå i att sortera, bygga eller ta isär saker än i sociala lekar med andra barn?", GROUP_MIXED);
 #endif
 
-	DefineID(45, 128);
-
 #ifdef ENGLISH
-	RedefineText(46, 345, "Do you talk to put others at ease even if you don't have anything special to convey?");
+ DefineText(41, "Are you naturally nocturnal, i.e. do you tend to be most alert at night?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(46, 345, "Brukar du prata för att få andra att känna sig väl till mods även om du inte har nåt speciellt att berätta?");
+ DefineText(41, "Är du en nattmänniska, d.v.s. brukar du vara som piggast på kvällen/natten?", GROUP_MIXED);
 #endif
 
-	DefineID(47, 218);
-	DefineID(48, 42);
+ DefineID(42, 155);
 
 #ifdef ENGLISH
-	DefineText(49, "Were you precocious as a child?", GROUP_MIXED);
+ RedefineText(43, 151, "Is your sense of humor different from mainstream or considered odd?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(49, "Var du \"lillgammal\" som barn?", GROUP_MIXED);
+ RedefineText(43, 151, "Är ditt sinne för humor annorlunda än andras eller ansett som udda?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(50, "Was your play more directed towards sorting, building or taking things apart than towards social games with other kids?", GROUP_MIXED);
+ RedefineText(44, 69, "Do you find yourself more attracted to things, ideas, music, computers, animals, buildings or vehicles than to people and social exchange?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(50, "Brukade dina lekar mer bestå i att sortera, bygga eller ta isär saker än i sociala lekar med andra barn?", GROUP_MIXED);
+ RedefineText(44, 69, "Är du i grunden mer intresserad av saker, idéer, filmer, datorer, musik, djur, hus, fordon el dyl, än av människor och social samvaro?");
 #endif
+
+ DefineID(45, 19);
+ DefineID(46, 23);
 
 #ifdef ENGLISH
-	DefineText(51, "Are you naturally nocturnal, i.e. do you tend to be most alert at night?", GROUP_MIXED);
+ RedefineText(47, 20, "Do you hyperfocus on one interest at a time and become an expert on that subject?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(51, "Är du en nattmänniska, d.v.s. brukar du vara som piggast på kvällen/natten?", GROUP_MIXED);
+ RedefineText(47, 20, "Brukar du fördjupa dig i ett ämne i taget och bli expert det?");
 #endif
 
-	DefineID(52, 155);
+ DefineID(48, 5);
+ DefineID(49, 13);
 
 #ifdef ENGLISH
-	RedefineText(53, 151, "Is your sense of humor different from mainstream or considered odd?");
+ RedefineText(50, 419, "Did you learn to read on your own before you were taught in school?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(53, 151, "Är ditt sinne för humor annorlunda än andras eller ansett som udda?");
+ RedefineText(50, 419, "Lärde du dig att läsa själv innan du började skolan?");
 #endif
 
+ DefineID(51, 8);
+
 #ifdef ENGLISH
-	RedefineText(54, 71, "Do you mostly prefer playing/working/doing things on your own - in your own way and at your own pace?");
+ RedefineText(52, 141, "Do you enjoy figuring out how things work?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(54, 71, "Brukar du föredra att leka/arbeta/göra saker själv - på ditt eget sätt och i din egen takt?");
+ RedefineText(52, 141, "Tycker du om att lista ut hur saker fungerar?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(55, 69, "Do you find yourself more attracted to things, ideas, music, computers, animals, buildings or vehicles than to people and social exchange?");
+ RedefineText(53, 10, "Are you punctual, conscientious and a perfectionist?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(55, 69, "Är du i grunden mer intresserad av saker, idéer, filmer, datorer, musik, djur, hus, fordon el dyl, än av människor och social samvaro?");
+ RedefineText(53, 10, "Är du punktlig, noggrann och perfektionistisk?");
 #endif
 
-	DefineID(56, 19);
-	DefineID(57, 23);
+ DefineID(54, 22);
 
 #ifdef ENGLISH
-	RedefineText(58, 20, "Do you hyperfocus on one interest at a time and become an expert on that subject?");
+ DefineText(55, "Have you been called a 'know-it-all' because you feel compelled to correct people with accurate facts?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(58, 20, "Brukar du fördjupa dig i ett ämne i taget och bli expert det?");
+ DefineText(55, "Har du blivit kallad 'besserwisser' för att du känner dig manad att korrigera andra med korrekta fakta?", GROUP_MIXED);
 #endif
-
-	DefineID(59, 5);
-	DefineID(60, 13);
 
 #ifdef ENGLISH
-	RedefineText(61, 419, "Did you learn to read on your own before you were taught in school?");
+ RedefineText(56, 99, "Do you have strong sense of ethics and a tendency to stand up for your ideals & beliefs even if it means social or economical disadvantages?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(61, 419, "Lärde du dig att läsa själv innan du började skolan?");
+ RedefineText(56, 99, "Har du stark känsla för etik och en tendens att hålla fast vid dina ideal, övertygelser och principer även om det är till din nackdel, t ex socialt eller ekonomiskt?");
 #endif
 
-	DefineID(62, 8);
-
 #ifdef ENGLISH
-	RedefineText(63, 141, "Do you enjoy figuring out how things work?");
+ RedefineText(57, 26, "Do you tend to get so absorbed by your special interests that you forget everything else?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(63, 141, "Tycker du om att lista ut hur saker fungerar?");
+ RedefineText(57, 26, "Brukar du bli så absorberad av dina specialintressen att du glömmer allting annat?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(64, 10, "Are you punctual, conscientious and a perfectionist?");
+ RedefineText(58, 27, "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(64, 10, "Är du punktlig, noggrann och perfektionistisk?");
+ RedefineText(58, 27, "Har du svårt att göra flera saker samtidigt, snabbt skifta fokus från en sak till en annan och därför behöver göra klart det du håller på med innan du kan ta itu med något annat?");
 #endif
 
-	DefineID(65, 22);
-
 #ifdef ENGLISH
-	DefineText(66, "Have you been called a ‘know-it-all’ because you feel compelled to correct people with accurate facts?", GROUP_MIXED);
+ RedefineText(59, 36, "Do you have certain routines which you need to follow?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(66, "Har du blivit kallad ‘besserwisser’ för att du känner dig manad att korrigera andra med korrekta fakta?", GROUP_MIXED);
+ RedefineText(59, 36, "Har du vissa rutiner som du har behov av att följa?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(67, 99, "Do you have keen sense of ethics and a tendency to stand up for your ideals and beliefs even if they are contrary to general consensus, or if it means social or economical disadvantages?");
+ RedefineText(60, 360, "Does it cause chaos in you if your plans, environment or daily routines suddenly get changed?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(67, 99, "Har du hög moral och en tendens att hålla fast vid dina ideal, övertygelser och principer även om de går emot det rådande synsättet och kan vara till din nackdel, t ex socialt eller ekonomiskt?");
+ RedefineText(60, 360, "Blir det kaos inom dig om det händer något oväntat som förändrar din miljö, dina planer eller rutiner?");
 #endif
+
+ DefineID(61, 436);
 
 #ifdef ENGLISH
-	RedefineText(68, 26, "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?");
+ RedefineText(62, 39, "Do you have strong attachments to certain objects?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(68, 26, "Brukar du bli så absorberad av dina projekt att du glömmer allting annat (äta, duscha, sova, andra människor etc.)?");
+ RedefineText(62, 39, "Är du exceptionellt fäst vid vissa saker?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(69, 27, "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?");
+ RedefineText(63, 38, "Do you need to sit on your favourite seat, go the same route or shop in the same shop every time?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(69, 27, "Har du svårt att göra flera saker samtidigt, snabbt skifta fokus från en sak till en annan och därför har behov av att få göra klart det du håller på med innan du kan ta itu med något annat?");
+ RedefineText(63, 38, "Har du behov av att sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?");
 #endif
 
+ DefineID(64, 37);
+
 #ifdef ENGLISH
-	RedefineText(70, 36, "Do you have certain simple & logical routines which you need to follow?");
+ DefineText(65, "Before doing something or going somewhere, do you need to visualize the place you're going to or rehearse possible scenarios in your mind so as to prepare yourself?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(70, 36, "Har du vissa enkla, logiska rutiner som det känns bra att följa? (tog bort lite i mitten så de blev mer lika)?");
+ DefineText(65, "Innan du gör något eller åker någonstans, behöver du ha en inre bild av platsen eller mentalt öva på tänkbara scenarier för att förbereda dig?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(71, 360, "Does it cause chaos in you if your plans, environment or daily routines suddenly get changed?");
+ RedefineText(66, 28, "Do you feel stress, panic or have a brain malfunction in unfamiliar or demanding situations?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(71, 360, "Blir det kaos inom dig om det händer något oväntat som förändrar din miljö, dina planer eller rutiner?");
+ RedefineText(66, 28, "Brukar du bli stressad och få panik eller kortslutning i hjärnan i nya och kravfyllda situationer?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(72, 28, "Do you feel stress, panic or have a brain malfunction in unfamiliar or demanding situations?");
+ RedefineText(67, 35, "Do you sometimes have a need for comfort items like a blanket, stuffed animals etc?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(72, 28, "Brukar du bli stressad och få panik eller kortslutning i hjärnan i nya och kravfyllda situationer?");
+ RedefineText(67, 35, "Har du ibland behov av gosefilt, kramdjur eller liknande?");
 #endif
 
-	DefineID(73, 436);
-
 #ifdef ENGLISH
-	RedefineText(74, 39, "Do you have strong attachments to certain objects?");
+ DefineText(68, "Do you self-harm, or have you done so in the past?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(74, 39, "Är du exceptionellt fäst vid vissa saker?");
+ DefineText(68, "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?", GROUP_MIXED);
 #endif
-
+ 
 #ifdef ENGLISH
-	RedefineText(75, 38, "Do you need to sit on your favourite seat, go the same route or shop in the same shop every time?");
+ RedefineText(69, 65, "Are you easily overexcited, stressed and overwhelmed by things like noise, crowds, clutter, patterns, flicker and movement?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(75, 38, "Har du behov av att sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?");
+ RedefineText(69, 65, "Blir du lätt överstimulerad och stressad av för mycket ljud, mönster, flimmer, oreda, trängsel och rörelse?");
 #endif
 
-	DefineID(76, 37);
-
 #ifdef ENGLISH
-	DefineText(77, "Before doing something or going somewhere, do you need to visualize the place you’re going to or rehearse possible scenarios in your mind so as to prepare yourself?", GROUP_MIXED);
+ DefineText(70, "Do you have extra sensitive hearing?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(77, "Innan du gör något eller åker någonstans, behöver du ha en inre bild av platsen eller mentalt öva på tänkbara scenarier för att förbereda dig?", GROUP_MIXED);
+ DefineText(70, "Här du extra känslig hörsel?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(78, 35, "Do you sometimes have a need for comfort items like a blanket, stuffed animals etc?");
+ RedefineText(71, 54, "Do you have difficulties filtering out background noises when talking to someone?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(78, 35, "Har du ibland behov av gosefilt, kramdjur eller liknande?");
+ RedefineText(71, 54, "Har du svårt att filtrera bort bakgrundsljud när du talar med någon?");
 #endif
 
+ DefineID(72, 55);
+ DefineID(73, 390);
+
 #ifdef ENGLISH
-	DefineText(79, "Do you do any of the following when you’re thinking, restless or bored: pacing; bouncing leg or foot; tapping fingers, pen or other object; doodling; fiddling with object e.g clicking pen; chewing on something?", GROUP_MIXED);
+ RedefineText(74, 59, "Do you have to be particular about what you eat and/or how it is combined on the plate in order to be able to eat?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(79, "Brukar du göra något av följande när du tänker, är rastlös eller uttråkad: vanka; vippa foten eller benet; trumma med fingrarna, en penna eller annat objekt; kludda; klicka penna, pilla eller tugga på något?", GROUP_MIXED);
+ RedefineText(74, 59, "Måste du vara petig med vad du äter och/eller hur maten kombineras på tallriken för att kunna äta?");
 #endif
+
+ DefineID(75, 389);
 
 #ifdef ENGLISH
-	DefineText(80, "Do you do any of the following when you're happy: singing, humming or whistling to yourself?", GROUP_MIXED);
+ DefineText(76, "Are your eyes extra sensitive to stong light and glare?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(80, "Brukar du göra något av följande när du är glad: sjunga, nynna eller vissla för dig själv?", GROUP_MIXED);
+ DefineText(76, "Är dina ögon extra känsliga för starkt ljus och bländning?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(81, "Do you do any of the following when anxious: twisting hands or fingers; rubbing hands, arms or thighs; biting lip, cheek or tongue?", GROUP_MIXED);
+ DefineText(77, "Do you have poor night vision?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(81, "Brukar du göra något av följande när du är orolig: vrida dina händer eller fingar; gnugga händer, överarmar eller lår; bita dig i läppen, kinden eller tungan?", GROUP_MIXED);
+ DefineText(77, "Har du dåligt mörkerseende?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(82, "Do you do any of the following when bored: cracking joints; picking skin or scabs; peeling skin flakes; picking nose; pulling hairs;  biting nails or fingertips; pulling cuticle?", GROUP_MIXED);
+ DefineText(78, "Do you have a well-developed sense of colour?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(82, "Brukar du göra något av följande när du är uttråkad: knäcka leder; pila på huden; dra hudflagor; plocka sårskorpor; peta näsan; dra ut hårstrån; bita på naglarna eller fingertopparna; dra i nagelbanden?", GROUP_MIXED);
+ DefineText(78, "Har du välutvecklat färgseende?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(83, "Do you do any of the following in order to calm yourself when excited, overwhelmed or overstimulated: rocking; flapping hands; tapping ears; pressing eyes?", GROUP_MIXED);
+ RedefineText(79, 178, "Do you have (or have you had) a problem with squinting?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(83, "Brukar du göra något av följande för att lugna ner dig när du blivit upphetsad, stressad eller överstimulerad: gunga med överkroppen, flaxa med händerna, slå på öronen, pressa händerna mot ögonen?", GROUP_MIXED);
+ RedefineText(79, 178, "Har du (eller har du haft) problem med skelning?");
 #endif
 
+ DefineID(80, 56);
+
 #ifdef ENGLISH
-	DefineText(84, "Do you do any of the following for fun: spin in circles; walk on toes; watch a spinning, blinking or glittering object?", GROUP_MIXED);
+ DefineText(81, "Are you sensitive to weather changes?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(84, "Brukar du göra något av följande för att det är roligt: snurra runt, runt; gå på tå; titta på ett snurrande, blinkande eller glittrande föremål?", GROUP_MIXED);
+ DefineText(81, "Är du känslig för väderomslag?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(85, "Do you self-harm, or have you done so in the past?", GROUP_MIXED);
+ RedefineText(82, 61, "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(85, "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?", GROUP_MIXED);
+ RedefineText(82, 61, "Pinas du av skavande sömmar och etiketter, kläder som sitter åt eller som är gjorda i 'fel' material?");
 #endif
 
-	DefineID(86, 46);
-	DefineID(87, 50);
-	DefineID(88, 32);
-
 #ifdef ENGLISH
-	RedefineText(89, 31, "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?");
+ DefineText(83, "Do you dislike being touched or hugged unless you're prepared or have asked for it?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(89, 31, "Har du haft svårare att klara dig själv än andra i samma ålder?");
+ DefineText(83, "Ogillar du att bli tagen i eller kramad om du inte är beredd eller bett om det?", GROUP_MIXED);
 #endif
+
+ DefineID(84, 63);
 
 #ifdef ENGLISH
-	RedefineText(90, 143, "Are you easily distracted and/or bored?");
+ RedefineText(85, 464, "Are you fairly insensitive to physical pain, or even enjoy some types of pain?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(90, 143, "Blir du lätt distraherad och/eller uttråkad?");
+ RedefineText(85, 464, "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?");
 #endif
 
-#ifdef ENGLISH
-	DefineText(91, "Do you find it hard to focus on or learn things you are not interested in?", GROUP_MIXED);
-#endif
 
-#ifdef SWEDISH
-	DefineText(91, "Har du svårt att koncenterera dig på eller lära dig saker du inte är intresserad av?", GROUP_MIXED);
-#endif
+DefineID(86, 359);
 
 #ifdef ENGLISH
-	DefineText(92, "Are you somewhat of a daydreamer, often lost in your own thoughts?", GROUP_MIXED);
+ DefineText(87, "Do you have poor balance, e.g. difficulty riding a bicycle, skating, standing on one leg?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(92, "Är du lite av en dagdrömmare, ofta borta i dina egna tankar?", GROUP_MIXED);
+ DefineText(87, "Har du dåligt balanssinne, t ex svårt att cykla, åka skridskor, stå på ett ben?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(93, "Do you tend to be hyperactive and restless?", GROUP_MIXED);
+ DefineText(88, "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(93, "Brukar du vara hyperaktiv och rastlös?", GROUP_MIXED);
+ DefineText(88, "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(94, "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?", GROUP_MIXED);
+ DefineText(89, "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(94, "Brukar du vara otålig och impulsiv och t ex ha svårt att vänta på din tur?", GROUP_MIXED);
+ DefineText(89, "Har du svårt att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(95, "Do you have a hyperactive mind?", GROUP_MIXED);
+ DefineText(90, "Do you have problems with ball sports?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(95, "Är du mentalt hyperaktiv?", GROUP_MIXED);
+ DefineText(90, "Har du problem med med bollsporter?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(96, 89,  "Do you have problems recognizing faces (dysphagia)?");
+ DefineText(91, "Do you have difficulties with two-handed tasks, e.g. eating with knife & fork, knitting, typing or playing an instrument?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(96, 89, "Har du svårt att känna igen ansikten?");
+ DefineText(91, "Har du svårt med aktiviteter där man använder båda händerna samtidigt, t ex äta med kniv & gaffel, sticka, skriva maskin eller spela ett instrument?", GROUP_MIXED);
 #endif
 
-	DefineID(97, 359);
-
 #ifdef ENGLISH
-	DefineText(98, "Do you have poor balance, e.g. difficulty riding a bicycle, skating, standing on one leg?", GROUP_MIXED);
+ DefineText(92, "Do you have difficulties with activities requiring manual dexterity and precision, e.g drawing, sewing, tying shoe-laces, fastening buttons and handling small objects?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(98, "Har du dåligt balanssinne, t ex svårt att cykla, åka skridskor, stå på ett ben?", GROUP_MIXED);
+ DefineText(92, "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att rita, sy, knyta skosnören, knäppa knappar och hantera små föremål?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(99, "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?", GROUP_MIXED);
+ RedefineText(93, 416, "Do you have difficulty writing by hand (dysgraphia)?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(99, "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?", GROUP_MIXED);
+ RedefineText(93, 416, "Har du svårt att skriva för hand (dysgrafi)?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(100, "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?", GROUP_MIXED);
+ DefineText(94, "Do you have a poor sense of how much pressure to apply when doing things with your hands and a tendency to drop, spill or break things by mistake?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(100, "Har du svårt att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?", GROUP_MIXED);
+ DefineText(94, "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna och en tendens att tappa, spilla eller ha sönder saker av misstag?", GROUP_MIXED);
 #endif
+
+ DefineID(95, 46);
+ DefineID(96, 50);
+ DefineID(97, 32);
 
 #ifdef ENGLISH
-	DefineText(101, "Do you have problems with ball sports?", GROUP_MIXED);
+ RedefineText(98, 31, "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(101, "Har du problem med med bollsporter?", GROUP_MIXED);
+ RedefineText(98, 31, "Har du haft svårare att klara dig själv än andra i samma ålder?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(102, "Do you have difficulties with two-handed tasks, e.g. eating with knife & fork, knitting, typing or playing an instrument?", GROUP_MIXED);
+ RedefineText(99, 6, "Do you tend to get so stuck on details that you miss the overall picture?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(102, "Har du svårt med aktiviteter där man använder båda händerna samtidigt, t ex äta med kniv & gaffel, sticka, skriva maskin eller spela ett instrument?", GROUP_MIXED);
+ RedefineText(99, 6, "Händer det att du fastnar så för vissa detaljer att du missar eller struntar i helhetsbilden??");
 #endif
 
 #ifdef ENGLISH
-	DefineText(103, "Do you have difficulties with activities requiring manual dexterity and precision, e.g drawing, sewing, tying shoe-laces, fastening buttons and handling small objects?", GROUP_MIXED);
+ RedefineText(100, 87, "Do you have a tendency to interpret things literally and difficulties understanding figures of speech, idioms, allegories etc?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(103, "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att rita, sy, knyta skosnören, knäppa knappar och hantera små föremål?", GROUP_MIXED);
+ RedefineText(100, 87, "Har du en tendens att tolka saker bokstavligt och svårigheter att förstå talesätt, idiom, allegorier o dyl?");
 #endif
 
 #ifdef ENGLISH
-	RedefineText(104, 416, "Do you have difficulty writing by hand (dysgraphia)?");
+ RedefineText(101, 143, "Are you easily distracted and/or bored?");
 #endif
 
 #ifdef SWEDISH
-	RedefineText(104, 416, "Har du svårt att skriva för hand (dysgrafi)?");
+ RedefineText(101, 143, "Blir du lätt distraherad och/eller uttråkad?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(105, "Do you have a poor sense of how much pressure to apply when doing things with your hands and a tendency to drop, spill or break things by mistake?", GROUP_MIXED);
+ DefineText(102, "Do you find it hard to focus on or learn things you are not interested in?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(105, "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna och en tendens att tappa, spilla eller ha sönder saker av misstag?", GROUP_MIXED);
+ DefineText(102, "Har du svårt att koncenterera dig på eller lära dig saker du inte är intresserad av?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(106, 65, "Are you easily overexcited, stressed and overwhelmed by things like noise, crowds, clutter, patterns, flicker and movement?");
+ DefineText(103, "Are you somewhat of a daydreamer, often lost in your own thoughts?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(106, 65, "Blir du lätt överstimulerad och stressad av för mycket ljud, mönster, flimmer, oreda, trängsel och rörelse?");
+ DefineText(103, "Är du lite av en dagdrömmare, ofta borta i dina egna tankar?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(107, "Do you have extra sensitive hearing?", GROUP_MIXED);
+ DefineText(104, "Do you tend to be hyperactive and restless?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(107, "Här du extra känslig hörsel?", GROUP_MIXED);
+ DefineText(104, "Brukar du vara hyperaktiv och rastlös?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(108, 54, "Do you have difficulties filtering out background noises when talking to someone?");
+ DefineText(105, "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(108, 54, "Har du svårt att filtrera bort bakgrundsljud när du talar med någon?");
+ DefineText(105, "Brukar du vara otålig och impulsiv och t ex ha svårt att vänta på din tur?", GROUP_MIXED);
 #endif
 
-	DefineID(109, 55);
-	DefineID(110, 390);
-
 #ifdef ENGLISH
-	RedefineText(111, 59, "Do you have to be particular about what you eat and/or how it is combined on the plate in order to be able to eat?");
+ DefineText(106, "Do you have a hyperactive mind?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(111, 59, "Måste du vara petig med vad du äter och/eller hur maten kombineras på tallriken för att kunna äta?");
+ DefineText(106, "Är du mentalt hyperaktiv?", GROUP_MIXED);
 #endif
 
-	DefineID(112, 389);
-
 #ifdef ENGLISH
-	DefineText(113, "Are your eyes extra sensitive to stong light and glare?", GROUP_MIXED);
+ DefineText(107, "Do have difficulties keeping things tidy ?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(113, "Är dina ögon extra känsliga för starkt ljus och bländning?", GROUP_MIXED);
+ DefineText(107, "Har du svårt att hålla ordning omkring dig?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(114, "Do you have poor night vision?", GROUP_MIXED);
+ RedefineText(108, 89,  "Do you have problems recognizing faces when you meet people out of their usual environment (dysphagia)?");
 #endif
 
 #ifdef SWEDISH
-	DefineText(114, "Har du dåligt mörkerseende?", GROUP_MIXED);
+ RedefineText(108, 89, "Har du svårt att känna igen ansikten när du möter folk på andra ställen än där du är van att se dem?");
 #endif
 
 #ifdef ENGLISH
-	DefineText(115, "Do you have a well-developed sense of colour?", GROUP_MIXED);
+ DefineText(109, "Do you enjoy snuggling with people you like?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(115, "Har du välutvecklat färgseende?", GROUP_MIXED);
+ DefineText(109, "Gillar du att mysa ihop med personer du tycker om?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(116, 178, "Do you have (or have you had) a problem with squinting?");
+ DefineText(110, "Do you find it easy to understand and sympathise with those who function very differently from yourself?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(116, 178, "Har du (eller har du haft) problem med skelning?");
+ DefineText(110, "Har du lätt att förstå och känna sympati även för dem som fungerar väldigt annorlunda än du själv?", GROUP_MIXED);
 #endif
-
-	DefineID(117, 56);
 
 #ifdef ENGLISH
-	DefineText(118, "Are you sensitive to weather changes?", GROUP_MIXED);
+ DefineText(111, "Are you sometimes fearless in situations that can be dangerous?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(118, "Är du känslig för väderomslag?", GROUP_MIXED);
+ DefineText(111, "Händer det att du är orädd i situationer som faktiskt kan vara farliga?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	RedefineText(119, 61, "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?");
+ DefineText(112, "Do you dislike shaking hands due to disliking the feel of skin-contact with others?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(119, 61, "Pinas du av skavande sömmar och etiketter, kläder som sitter åt eller som är gjorda i 'fel' material?");
+ DefineText(112, "Ogillar du att ta i hand pga att du inte gillar känslan av hudkontakt med andra?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(120, "Do you dislike being touched or hugged unless you're prepared or have asked for it?", GROUP_MIXED);
+ DefineText(113, "Do you dislike shaking hands due to germophobia?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(120, "Ogillar du att bli tagen i eller kramad om du inte är beredd eller bett om det?", GROUP_MIXED);
+ DefineText(113, "Ogillar du att ta i hand pga bacillskräck?", GROUP_MIXED);
 #endif
 
-	DefineID(121, 63);
-
 #ifdef ENGLISH
-	RedefineText(122, 464, "Are you fairly insensitive to physical pain, or even enjoy some types of pain?");
+ DefineText(114, "Do you dislike shaking hands because handshakes feel unnatural?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	RedefineText(122, 464, "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?");
+ DefineText(114, "Ogillar du att ta i hand för att handslag känns onaturligt?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(123, "Do you enjoy snuggling with people you like?", GROUP_MIXED);
+ DefineText(115, "Do you dislike shaking hands for other reason?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(123, "Gillar du att mysa ihop med personer du tycker om?", GROUP_MIXED);
+ DefineText(115, "Ogillar du att ta i hand av annan orsak?", GROUP_MIXED);
 #endif
+
+ DefineID(116, 401);
+ DefineID(117, 438);
 
 #ifdef ENGLISH
-	DefineText(124, "Do you find it easy to understand and sympathise with those who function very differently from yourself?", GROUP_MIXED);
+ DefineText(118, "Do you do any of the following when you're thinking, restless or bored: pacing; bouncing leg or foot; tapping fingers, pen or other object; doodling; fiddling with object e.g clicking pen; chewing on something?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(124, "Har du lätt att förstå och känna sympati även för dem som fungerar väldigt annorlunda än du själv?", GROUP_MIXED);
+ DefineText(118, "Brukar du göra något av följande när du tänker, är rastlös eller uttråkad: vanka; vippa foten eller benet; trumma med fingrarna, en penna eller annat objekt; kludda; klicka penna, pilla eller tugga på något?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(125, "Have you had or would you like to have a sex-change?", GROUP_MIXED);
+ DefineText(119, "Do you do any of the following when you're happy: singing, humming or whistling to yourself?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(125, "Har du genomgått eller skulle du vilja genomgå ett könsbyte?", GROUP_MIXED);
+ DefineText(119, "Brukar du göra något av följande när du är glad: sjunga, nynna eller vissla för dig själv?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(126, "Do you dislike shaking hands due to disliking the feel of skin-contact with others?", GROUP_MIXED);
+ DefineText(120, "Do you do any of the following when anxious: twisting hands or fingers; rubbing hands, arms or thighs; biting lip, cheek or tongue?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(126, "Ogillar du att ta i hand pga att du inte gillar känslan av hudkontakt med andra?", GROUP_MIXED);
+ DefineText(120, "Brukar du göra något av följande när du är orolig: vrida dina händer eller fingar; gnugga händer, överarmar eller lår; bita dig i läppen, kinden eller tungan?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(127, "Do you dislike shaking hands due to germophobia?", GROUP_MIXED);
+ DefineText(121, "Do you do any of the following when bored: cracking joints; picking skin or scabs; peeling skin flakes; picking nose; pulling hairs; biting nails or fingertips; pulling cuticle?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(127, "Ogillar du att ta i hand pga bacillskräck?", GROUP_MIXED);
+ DefineText(121, "Brukar du göra något av följande när du är uttråkad: knäcka leder; pila på huden; dra hudflagor; plocka sårskorpor; peta näsan; dra ut hårstrån; bita på naglarna eller fingertopparna; dra i nagelbanden?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(128, "Do you dislike shaking hands because handshakes feel unnatural?", GROUP_MIXED);
+ DefineText(122, "Do you do any of the following in order to calm yourself when excited, overwhelmed or overstimulated: rocking; flapping hands; tapping ears; pressing eyes?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(128, "Ogillar du att ta i hand för att handslag känns onaturligt?", GROUP_MIXED);
+ DefineText(122, "Brukar du göra något av följande för att lugna ner dig när du blivit upphetsad, stressad eller överstimulerad: gunga med överkroppen, flaxa med händerna, slå på öronen, pressa händerna mot ögonen?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(129, "Do you dislike shaking hands for other reason?", GROUP_MIXED);
+ DefineText(123, "Do you do any of the following for fun: spin in circles; walk on toes; watch a spinning, blinking or glittering object?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(129, "Ogillar du att ta i hand av annan orsak?", GROUP_MIXED);
+ DefineText(123, "Brukar du göra något av följande för att det är roligt: snurra runt, runt; gå på tå; titta på ett snurrande, blinkande eller glittrande föremål?", GROUP_MIXED);
 #endif
 
-	DefineID(130, 401);
-	DefineID(131, 438);
-
 #ifdef ENGLISH
-	DefineText(132, "Do you clap your hands when excited?", GROUP_MIXED);
+ DefineText(124, "Do you clap your hands when excited?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(132, "Klappar du med händerna när du är upprymd?", GROUP_MIXED);
+ DefineText(124, "Klappar du med händerna när du är upprymd?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(133, "Do you grind your teeth when stressed or anxious?", GROUP_MIXED);
+ DefineText(125, "Do you grind your teeth when stressed or anxious?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(133, "Gnisslar du med tänderna när du är stressad eller har ångest?", GROUP_MIXED);
+ DefineText(125, "Gnisslar du med tänderna när du är stressad eller har ångest?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(134, "Do you clench your fists when angry?", GROUP_MIXED);
+ DefineText(126, "Do you clench your fists when angry?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(134, "Knyter du nävarna när du är arg?", GROUP_MIXED);
+ DefineText(126, "Knyter du nävarna när du är arg?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(135, "Do you suck your thumb for comfort?", GROUP_MIXED);
+ DefineText(127, "Do you suck your thumb for comfort?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(135, "Suger du på tummen när du behöver tröst?", GROUP_MIXED);
+ DefineText(127, "Suger du på tummen när du behöver tröst?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(136, "Do you enjoy lying on the ground looking at the sky?", GROUP_MIXED);
+ DefineText(128, "Do you wobble your hand slightly to indicate so-so?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(136, "Gillar du att ligga på marken och studera himlen?", GROUP_MIXED);
+ DefineText(128, "Brukar du vippa handen lite för att indikera \"sådär\"?", GROUP_MIXED);
 #endif
 
 #ifdef ENGLISH
-	DefineText(137, "Do you wobble your hand slightly to indicate so-so?", GROUP_MIXED);
+ DefineText(129, "Do you enjoy lying on the ground looking at the sky?", GROUP_MIXED);
 #endif
 
 #ifdef SWEDISH
-	DefineText(137, "Brukar du vippa handen lite för att indikera \"sådär\"?", GROUP_MIXED);
+ DefineText(129, "Gillar du att ligga på marken och studera himlen?", GROUP_MIXED);
 #endif
+
 
 }
 
@@ -994,132 +961,131 @@ void TQuizR1::SetupTexts()
   Quiz[15].Reverse = TRUE;
   Quiz[16].Reverse = TRUE;
   Quiz[17].Reverse = TRUE;
-  Quiz[18].Reverse = TRUE;
+  Quiz[19].Reverse = TRUE;
   Quiz[20].Reverse = TRUE;
-  Quiz[21].Reverse = TRUE;
-  Quiz[38].Reverse = TRUE;
-  Quiz[40].Reverse = TRUE;
-  Quiz[41].Reverse = TRUE;
-  Quiz[42].Reverse = TRUE;
+  Quiz[32].Reverse = TRUE;
+  Quiz[34].Reverse = TRUE;
+  Quiz[35].Reverse = TRUE;
+  Quiz[36].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[1].MyGroup = GROUP_MIXED;
-  Quiz[2].MyGroup = GROUP_MIXED;
+  Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[4].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[5].MyGroup = GROUP_EMOTION;
+  Quiz[4].MyGroup = GROUP_EMOTION;
+  Quiz[5].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[6].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[8].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[9].MyGroup = GROUP_EMOTION;
   Quiz[10].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[11].MyGroup = GROUP_MIXED;
-  Quiz[12].MyGroup = GROUP_EMOTION;
+  Quiz[12].MyGroup = GROUP_MIXED;
   Quiz[13].MyGroup = GROUP_MIXED;
   Quiz[14].MyGroup = GROUP_NT_SOCIAL;
   Quiz[15].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[16].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[17].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[18].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[19].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[18].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[19].MyGroup = GROUP_NONVERBAL;
   Quiz[20].MyGroup = GROUP_NONVERBAL;
-  Quiz[21].MyGroup = GROUP_NONVERBAL;
+  Quiz[21].MyGroup = GROUP_MIXED;
   Quiz[22].MyGroup = GROUP_MIXED;
-  Quiz[23].MyGroup = GROUP_MIXED;
-  Quiz[24].MyGroup = GROUP_NONVERBAL;
-  Quiz[25].MyGroup = GROUP_MIXED;
-  Quiz[26].MyGroup = GROUP_NONVERBAL;
-  Quiz[27].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[23].MyGroup = GROUP_NONVERBAL;
+  Quiz[24].MyGroup = GROUP_MIXED;
+  Quiz[25].MyGroup = GROUP_NONVERBAL;
+  Quiz[26].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[27].MyGroup = GROUP_MIXED;
   Quiz[28].MyGroup = GROUP_MIXED;
-  Quiz[29].MyGroup = GROUP_NONVERBAL;
-  Quiz[30].MyGroup = GROUP_MIXED;
+  Quiz[29].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[30].MyGroup = GROUP_NONVERBAL;
   Quiz[31].MyGroup = GROUP_MIXED;
-  Quiz[32].MyGroup = GROUP_MIXED;
-  Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[32].MyGroup = GROUP_NONVERBAL;
+  Quiz[33].MyGroup = GROUP_MIXED;
   Quiz[34].MyGroup = GROUP_NONVERBAL;
-  Quiz[35].MyGroup = GROUP_NONVERBAL;
-  Quiz[36].MyGroup = GROUP_MIXED;
+  Quiz[35].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
-  Quiz[38].MyGroup = GROUP_NONVERBAL;
+  Quiz[38].MyGroup = GROUP_MIXED;
   Quiz[39].MyGroup = GROUP_MIXED;
-  Quiz[40].MyGroup = GROUP_NONVERBAL;
-  Quiz[41].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[42].MyGroup = GROUP_MIXED;
-  Quiz[43].MyGroup = GROUP_MIXED;
-  Quiz[44].MyGroup = GROUP_MIXED;
-  Quiz[46].MyGroup = GROUP_MIXED;
-  Quiz[47].MyGroup = GROUP_MIXED;
-  Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[40].MyGroup = GROUP_MIXED;
+  Quiz[41].MyGroup = GROUP_MIXED;
+  Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[44].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[45].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[46].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[48].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[49].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[50].MyGroup = GROUP_MIXED;
   Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[52].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[54].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[52].MyGroup = GROUP_REPETITION;
+  Quiz[53].MyGroup = GROUP_REPETITION;
+  Quiz[54].MyGroup = GROUP_MIXED;
   Quiz[55].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[56].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[57].MyGroup = GROUP_MIXED;
-  Quiz[58].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[58].MyGroup = GROUP_REPETITION;
   Quiz[59].MyGroup = GROUP_REPETITION;
   Quiz[60].MyGroup = GROUP_REPETITION;
-  Quiz[61].MyGroup = GROUP_MIXED;
-  Quiz[62].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[63].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[61].MyGroup = GROUP_REPETITION;
+  Quiz[62].MyGroup = GROUP_REPETITION;
+  Quiz[63].MyGroup = GROUP_REPETITION;
   Quiz[64].MyGroup = GROUP_MIXED;
-  Quiz[65].MyGroup = GROUP_REPETITION;
+  Quiz[65].MyGroup = GROUP_EMOTION;
   Quiz[66].MyGroup = GROUP_REPETITION;
-  Quiz[67].MyGroup = GROUP_EMOTION;
-  Quiz[68].MyGroup = GROUP_REPETITION;
-  Quiz[69].MyGroup = GROUP_REPETITION;
-  Quiz[70].MyGroup = GROUP_REPETITION;
-  Quiz[71].MyGroup = GROUP_REPETITION;
-  Quiz[72].MyGroup = GROUP_MIXED;
-  Quiz[73].MyGroup = GROUP_REPETITION;
-  Quiz[74].MyGroup = GROUP_MIXED;
+  Quiz[67].MyGroup = GROUP_MIXED;
+  Quiz[68].MyGroup = GROUP_MIXED;
+  Quiz[69].MyGroup = GROUP_MIXED;
+  Quiz[70].MyGroup = GROUP_NONVERBAL;
+  Quiz[71].MyGroup = GROUP_SENSORY;
+  Quiz[72].MyGroup = GROUP_SENSORY;
+  Quiz[73].MyGroup = GROUP_SENSORY;
+  Quiz[74].MyGroup = GROUP_SENSORY;
   Quiz[75].MyGroup = GROUP_MIXED;
   Quiz[76].MyGroup = GROUP_MIXED;
   Quiz[77].MyGroup = GROUP_MIXED;
-  Quiz[78].MyGroup = GROUP_MIXED;
-  Quiz[79].MyGroup = GROUP_MIXED;
+  Quiz[78].MyGroup = GROUP_SENSORY;
+  Quiz[79].MyGroup = GROUP_SENSORY;
   Quiz[80].MyGroup = GROUP_MIXED;
-  Quiz[81].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[81].MyGroup = GROUP_SENSORY;
   Quiz[82].MyGroup = GROUP_MIXED;
-  Quiz[83].MyGroup = GROUP_EMOTION;
-  Quiz[84].MyGroup = GROUP_EMOTION;
-  Quiz[85].MyGroup = GROUP_NT_TALENT;
+  Quiz[83].MyGroup = GROUP_SENSORY;
+  Quiz[84].MyGroup = GROUP_SENSORY;
+  Quiz[85].MyGroup = GROUP_NONVERBAL;
   Quiz[86].MyGroup = GROUP_MIXED;
   Quiz[87].MyGroup = GROUP_MIXED;
   Quiz[88].MyGroup = GROUP_MIXED;
   Quiz[89].MyGroup = GROUP_MIXED;
   Quiz[90].MyGroup = GROUP_MIXED;
-  Quiz[91].MyGroup = GROUP_NONVERBAL;
-  Quiz[92].MyGroup = GROUP_NONVERBAL;
+  Quiz[91].MyGroup = GROUP_MIXED;
+  Quiz[92].MyGroup = GROUP_MIXED;
   Quiz[93].MyGroup = GROUP_MIXED;
-  Quiz[94].MyGroup = GROUP_MIXED;
+  Quiz[94].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[95].MyGroup = GROUP_MIXED;
-  Quiz[96].MyGroup = GROUP_MIXED;
-  Quiz[97].MyGroup = GROUP_MIXED;
-  Quiz[98].MyGroup = GROUP_MIXED;
-  Quiz[99].MyGroup = GROUP_MIXED;
-  Quiz[100].MyGroup = GROUP_MIXED;
+  Quiz[96].MyGroup = GROUP_EMOTION;
+  Quiz[97].MyGroup = GROUP_EMOTION;
+  Quiz[98].MyGroup = GROUP_NONVERBAL;
+  Quiz[99].MyGroup = GROUP_NONVERBAL;
+  Quiz[100].MyGroup = GROUP_NT_TALENT;
   Quiz[101].MyGroup = GROUP_MIXED;
   Quiz[102].MyGroup = GROUP_MIXED;
-  Quiz[103].MyGroup = GROUP_NONVERBAL;
-  Quiz[104].MyGroup = GROUP_SENSORY;
-  Quiz[105].MyGroup = GROUP_SENSORY;
-  Quiz[106].MyGroup = GROUP_SENSORY;
-  Quiz[107].MyGroup = GROUP_SENSORY;
+  Quiz[103].MyGroup = GROUP_MIXED;
+  Quiz[104].MyGroup = GROUP_MIXED;
+  Quiz[105].MyGroup = GROUP_MIXED;
+  Quiz[106].MyGroup = GROUP_MIXED;
+  Quiz[107].MyGroup = GROUP_NONVERBAL;
   Quiz[108].MyGroup = GROUP_MIXED;
   Quiz[109].MyGroup = GROUP_MIXED;
   Quiz[110].MyGroup = GROUP_MIXED;
-  Quiz[111].MyGroup = GROUP_SENSORY;
-  Quiz[112].MyGroup = GROUP_SENSORY;
+  Quiz[111].MyGroup = GROUP_MIXED;
+  Quiz[112].MyGroup = GROUP_MIXED;
   Quiz[113].MyGroup = GROUP_MIXED;
-  Quiz[114].MyGroup = GROUP_SENSORY;
-  Quiz[115].MyGroup = GROUP_MIXED;
-  Quiz[116].MyGroup = GROUP_SENSORY;
-  Quiz[117].MyGroup = GROUP_SENSORY;
+  Quiz[114].MyGroup = GROUP_MIXED;
+  Quiz[115].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[116].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[117].MyGroup = GROUP_MIXED;
   Quiz[118].MyGroup = GROUP_MIXED;
   Quiz[119].MyGroup = GROUP_MIXED;
   Quiz[120].MyGroup = GROUP_MIXED;
@@ -1127,291 +1093,275 @@ void TQuizR1::SetupTexts()
   Quiz[122].MyGroup = GROUP_MIXED;
   Quiz[123].MyGroup = GROUP_MIXED;
   Quiz[124].MyGroup = GROUP_MIXED;
-
-  Quiz[125].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[126].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
-  Quiz[130].MyGroup = GROUP_MIXED;
-  Quiz[131].MyGroup = GROUP_MIXED;
-  Quiz[132].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
   Quiz[1].Text = "Do you feel much younger inside than your biological age?";
-  Quiz[2].Text = "Are you sometimes fearless in situations that can be dangerous?";
-  Quiz[3].Text = "Are you more of an observer than one who participates in life?";
-  Quiz[4].Text = "Have you had more difficulties than others of the same age when it comes to making friendships or getting into relationships?";
-  Quiz[5].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
-  Quiz[6].Text = "Have you had a tendency to prefer the company of those older than yourself to that of your peers?";
+  Quiz[2].Text = "Are you more of an observer than one who participates in life?";
+  Quiz[3].Text = "Have you had more difficulties than others of the same age when it comes to making friends or getting into relationships?";
+  Quiz[4].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
+  Quiz[5].Text = "Do you prefer the company of those older or youger than yourself to that of your peers?";
+  Quiz[6].Text = "Do you mostly prefer playing/working/doing things on your own - in your own way and at your own pace?";
   Quiz[7].Text = "Do you get very tired after socializing, and need to regenerate alone?";
   Quiz[8].Text = "Do you dislike it when people drop by to visit you uninvited?";
   Quiz[9].Text = "Have you been bullied, abused or taken advantage of in various situations?";
-  Quiz[10].Text = "Do you tend to feel nervous, shy, confused and/or like you don't fit in, in various social situations?";
+  Quiz[10].Text = "Do you tend to feel nervous, shy, confused or left out in various social situations?";
   Quiz[11].Text = "Do you find it difficult to figure out how to behave in various situations?";
-  Quiz[12].Text = "Have you had the feeling of playing a game to pretend to be like people around you?";
+  Quiz[12].Text = "Do you tend to say or do things that are considered socially inappropriate?";
   Quiz[13].Text = "Have you had difficulties fitting into expected gender stereotypes, perhaps having interests and behaviors that are atypical for your gender?";
   Quiz[14].Text = "Is a large social network important to you?";
   Quiz[15].Text = "Do your friends mean more to you than hobbies and interests?";
   Quiz[16].Text = "Are you comfortable in social situations and with new people?";
-  Quiz[17].Text = "Are you energised by being in the company of others?";
-  Quiz[18].Text = "Do you enjoy team sport and group endeavours?";
-  Quiz[19].Text = "Is your image and social identity a priority to you?";
-  Quiz[20].Text = "Are you intuitive about what people need from you?";
-  Quiz[21].Text = "Do you have a good sense for what is the right thing to do socially?";
-  Quiz[22].Text = "Can you easily remember people's names when you meet new people?";
-  Quiz[23].Text = "Is it difficult or tiresome for you to talk?";
-  Quiz[24].Text = "Do you have a monotonous voice and/or difficulty adjusting volume and speed when you talk?";
-  Quiz[25].Text = "Do you stutter when stressed?";
-  Quiz[26].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
-  Quiz[27].Text = "Do you find it easier to communicate online than in real life?";
-  Quiz[28].Text = "Do you have a habit of repeating your own or others' last words (echolalia)?";
-  Quiz[29].Text = "Do you have difficulties understanding idioms, figures of speech, parodies, allegories or irony?";
-  Quiz[30].Text = "If asked to describe yourself, would you do so in a detached way, as if you were describing someone else?";
-  Quiz[31].Text = "Do you tend to be more blunt and straightforward than others?";
-  Quiz[32].Text = "Do you tend to say or do things that are considered socially inappropriate?";
-  Quiz[33].Text = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
-  Quiz[34].Text = "Do you have difficulties interpreting body language and/or facial expressions and figuring out what people feel and want, unless they tell you?";
-  Quiz[35].Text = "Are you usually unaware of social rules & boundaries unless they are specifically spelled out?";
-  Quiz[36].Text = "Do people think you are smiling at the wrong occasion or not smiling when you are expected to?";
-  Quiz[37].Text = "Do you have problems with eye-contact (e.g. preferring to avoid it, or staring ‘too much’)?";
-  Quiz[38].Text = "Can you 'read between the lines'?";
-  Quiz[39].Text = "Do you find it easy to describe your feelings?";
-  Quiz[40].Text = "Do you know when you are expected to offer an apology?";
-  Quiz[41].Text = "Do you talk to put others at ease even if you don't have anything special to convey?";
-  Quiz[42].Text = "Are you good at small talk?";
-  Quiz[43].Text = "Do you look younger than your biological age??";
-  Quiz[44].Text = "Were you precocious as a child?";
-  Quiz[45].Text = "Was your play more directed towards sorting, building or taking things apart than towards social games with other kids?";
-  Quiz[46].Text = "Are you naturally nocturnal, i.e. do you tend to be most alert at night?";
-  Quiz[47].Text = "Do you find the norms of hygiene too strict?";
-  Quiz[48].Text = "Is your sense of humor different from mainstream or considered odd?";
-  Quiz[49].Text = "Do you mostly prefer playing/working/doing things on your own - in your own way and at your own pace?";
-  Quiz[50].Text = "Do you find yourself more attracted to things, ideas, music, computers, animals, buildings or vehicles than to people and social exchange?";
-  Quiz[51].Text = "Are you very gifted in one or more areas?";
-  Quiz[52].Text = "Do you have unconventional, often unique ways of solving problems?";
-  Quiz[53].Text = "Do you hyperfocus on one interest at a time and become an expert on that subject?";
-  Quiz[54].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
-  Quiz[55].Text = "Do you have excellent vocabulary and/or a fascination with words?";
-  Quiz[56].Text = "Did you learn to read on your own before you were taught in school?";
-  Quiz[57].Text = "Are you fascinated by dates and/or numbers?";
-  Quiz[58].Text = "Do you enjoy figuring out how things work?";
-  Quiz[59].Text = "Are you punctual, conscientious and a perfectionist?";
-  Quiz[60].Text = "Do you love to collect and organize things, make lists & diagrams etc?";
-  Quiz[61].Text = "Have you been called a ‘know-it-all’ because you feel compelled to correct people with accurate facts?";
-  Quiz[62].Text = "Do you have keen sense of ethics and a tendency to stand up for your ideals and beliefs even if they are contrary to general consensus, or if it means social or economical disadvantages?";
-  Quiz[63].Text = "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?";
-  Quiz[64].Text = "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?";
-  Quiz[65].Text = "Do you have specific routines which you need to follow?";
-  Quiz[66].Text = "Does it cause chaos in you if your plans, environment or daily routines suddenly get changed?";
-  Quiz[67].Text = "Do you feel stress, panic or have a brain malfunction in unfamiliar or demanding situations?";
-  Quiz[68].Text = "Do you have a need for symmetry, order and/or precision?";
-  Quiz[69].Text = "Do you have strong attachments to certain objects?";
-  Quiz[70].Text = "Do you need to sit on your favourite seat, go the same route or shop in the same shop every time?";
-  Quiz[71].Text = "Do you prefer to wear the same clothes and/or eat the same food every day?";
-  Quiz[72].Text = "Before doing something or going somewhere, do you need to visualize the place you’re going to or rehearse possible scenarios in your mind so as to prepare yourself?";
-  Quiz[73].Text = "Do you sometimes have a need for comfort items like a blanket, stuffed animals etc?";
-  Quiz[74].Text = "Do you do any of the following when you’re thinking, restless or bored: pacing; bouncing leg or foot; tapping fingers, pen or other object; doodling; fiddling with object e.g clicking pen; chewing on something?";
-  Quiz[75].Text = "Do you do any of the following when you're happy: singing, humming or whistling to yourself?";
-  Quiz[76].Text = "Do you do any of the following when anxious: twisting hands or fingers; rubbing hands, arms or thighs; biting lip, cheek or tongue?";
-  Quiz[77].Text = "Do you do any of the following when bored: cracking joints; picking skin or scabs; peeling skin flakes; picking nose; pulling hairs;  biting nails or fingertips; pulling cuticle?";
-  Quiz[78].Text = "Do you do any of the following in order to calm yourself when excited, overwhelmed or overstimulated: rocking; flapping hands; tapping ears; pressing eyes?";
-  Quiz[79].Text = "Do you do any of the following for fun: spin in circles; walk on toes; watch a spinning, blinking or glittering object?";
-  Quiz[80].Text = "Do you self-harm, or have you done so in the past?";
-  Quiz[81].Text = "Do you have difficulties judging distances, height, depth or speed?";
-  Quiz[82].Text = "Do you have poor concept of time?";
-  Quiz[83].Text = "Do you have a tendency to be passive and not initiate things yourself?";
-  Quiz[84].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
-  Quiz[85].Text = "Are you easily distracted and/or bored?";
-  Quiz[86].Text = "Do you find it hard to focus on or learn things you are not interested in?";
-  Quiz[87].Text = "Are you somewhat of a daydreamer, often lost in your own thoughts?";
-  Quiz[88].Text = "Do you tend to be hyperactive and restless?";
-  Quiz[89].Text = "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?";
-  Quiz[90].Text = "Do you have a hyperactive mind?";
-  Quiz[91].Text = "Do you have problems recognizing faces (dysphagia)?";
-  Quiz[92].Text = "Do you have an odd posture or gait?";
-  Quiz[93].Text = "Do you have poor balance, e.g. difficulty riding a bicycle, skating, standing on one leg?";
-  Quiz[94].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
-  Quiz[95].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
-  Quiz[96].Text = "Do you have problems with ball sports?";
-  Quiz[97].Text = "Do you have difficulties with two-handed tasks, e.g. eating with knife & fork, knitting, typing or playing an instrument?";
-  Quiz[98].Text = "Do you have difficulties with activities requiring manual dexterity and precision, e.g drawing, sewing, tying shoe-laces, fastening buttons and handling small objects?";
-  Quiz[99].Text = "Do you have difficulty writing by hand (dysgraphia)?";
-  Quiz[100].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands and a tendency to drop, spill or break things by mistake?";
-  Quiz[101].Text = "Are you easily overexcited, stressed and overwhelmed by things like noise, crowds, clutter, patterns, flicker and movement?";
-  Quiz[102].Text = "Do you have extra sensitive hearing?";
-  Quiz[103].Text = "Do you have difficulties filtering out background noises when talking to someone?";
-  Quiz[104].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
-  Quiz[105].Text = "Do you have a very acute sense of taste?";
-  Quiz[106].Text = "Do you have to be particular about what you eat and/or how it is combined on the plate in order to be able to eat?";
-  Quiz[107].Text = "Do you have a very acute sense of smell?";
-  Quiz[108].Text = "Are your eyes extra sensitive to stong light and glare?";
-  Quiz[109].Text = "Do you have poor night vision?";
-  Quiz[110].Text = "Do you have a well-developed sense of colour?";
-  Quiz[111].Text = "Do you have (or have you had) a problem with squinting?";
-  Quiz[112].Text = "Do you feel uncomfortable in fluorescent light?";
-  Quiz[113].Text = "Are you sensitive to weather changes?";
-  Quiz[114].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
-  Quiz[115].Text = "Do you dislike being touched or hugged unless you're prepared or have asked for it?";
-  Quiz[116].Text = "If you have to be touched, do you prefer it to be firmly rather than lightly?";
-  Quiz[117].Text = "Are you fairly insensitive to physical pain, or even enjoy some types of pain?";
-  Quiz[118].Text = "Do you enjoy snuggling with people you like?";
-  Quiz[119].Text = "Do you find it easy to understand and sympathise with those who function very differently from yourself?";
-  Quiz[120].Text = "Have you had or would you like to have a sex-change?";
-  Quiz[121].Text = "Do you dislike shaking hands due to disliking the feel of skin-contact with others?";
-  Quiz[122].Text = "Do you dislike shaking hands due to germophobia?";
-  Quiz[123].Text = "Do you dislike shaking hands because handshakes feel unnatural?";
-  Quiz[124].Text = "Do you dislike shaking hands for other reason?";
-
-  Quiz[125].Text = "Do you talk to yourself?";
-  Quiz[126].Text = "Do you have an urge to climb?";
-  Quiz[127].Text = "Do you clap your hands when excited?";
-  Quiz[128].Text = "Do you grind your teeth when stressed or anxious?";
-  Quiz[129].Text = "Do you clench your fists when angry?";
-  Quiz[130].Text = "Do you suck your thumb for comfort?";
-  Quiz[131].Text = "Do you enjoy lying on the ground looking at the sky?";
-  Quiz[132].Text = "Do you wobble your hand slightly to indicate so-so?";
-
+  Quiz[17].Text = "Do you enjoy team sport and group endeavours?";
+  Quiz[18].Text = "Is your image and social identity a priority to you?";
+  Quiz[19].Text = "Are you intuitive about what people need from you?";
+  Quiz[20].Text = "Do you have a good sense for what is the right thing to do socially?";
+  Quiz[21].Text = "Can you easily remember people's names when you meet new people?";
+  Quiz[22].Text = "Is it difficult or tiresome for you to talk?";
+  Quiz[23].Text = "Do you have a monotonous voice and/or difficulty adjusting volume and speed when you talk?";
+  Quiz[24].Text = "Do you stutter when stressed?";
+  Quiz[25].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
+  Quiz[26].Text = "Do you find it easier to communicate online than in real life?";
+  Quiz[27].Text = "If asked to describe yourself, would you do so in a detached way, as if you were describing someone else?";
+  Quiz[28].Text = "Do you tend to be more blunt and straightforward than others?";
+  Quiz[29].Text = "Do you find social chitchat difficult, tiresome and/or a waste of time?";
+  Quiz[30].Text = "Do you have difficulties interpreting body language and/or facial expressions and figuring out what people feel and want, unless they tell you?";
+  Quiz[31].Text = "Do you have problems with eye-contact (e.g. preferring to avoid it or staring 'too much')?";
+  Quiz[32].Text = "Can you 'read between the lines'?";
+  Quiz[33].Text = "Do you find it easy to describe your feelings?";
+  Quiz[34].Text = "Do you know when you are expected to offer an apology?";
+  Quiz[35].Text = "Do you talk to put others at ease even if you don't have anything special to convey?";
+  Quiz[36].Text = "Are you good at small talk?";
+  Quiz[37].Text = "Do you look younger than your biological age??";
+  Quiz[38].Text = "Were you precocious as a child?";
+  Quiz[39].Text = "Was your play more directed towards sorting, building or taking things apart than towards social games with other kids?";
+  Quiz[40].Text = "Are you naturally nocturnal, i.e. do you tend to be most alert at night?";
+  Quiz[41].Text = "Do you find the norms of hygiene too strict?";
+  Quiz[42].Text = "Is your sense of humor different from mainstream or considered odd?";
+  Quiz[43].Text = "Do you find yourself more attracted to things, ideas, music, computers, animals, buildings or vehicles than to people and social exchange?";
+  Quiz[44].Text = "Are you very gifted in one or more areas?";
+  Quiz[45].Text = "Do you have unconventional, often unique ways of solving problems?";
+  Quiz[46].Text = "Do you hyperfocus on one interest at a time and become an expert on that subject?";
+  Quiz[47].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
+  Quiz[48].Text = "Do you have excellent vocabulary and/or a fascination with words?";
+  Quiz[49].Text = "Did you learn to read on your own before you were taught in school?";
+  Quiz[50].Text = "Are you fascinated by dates and/or numbers?";
+  Quiz[51].Text = "Do you enjoy figuring out how things work?";
+  Quiz[52].Text = "Are you punctual, conscientious and a perfectionist?";
+  Quiz[53].Text = "Do you love to collect and organize things, make lists & diagrams etc?";
+  Quiz[54].Text = "Have you been called a 'know-it-all' because you feel compelled to correct people with accurate facts?";
+  Quiz[55].Text = "Do you have strong sense of ethics and a tendency to stand up for your ideals & beliefs even if it means social or economical disadvantages?";
+  Quiz[56].Text = "Do you tend to get so absorbed by your special interests that you forget everything else?";
+  Quiz[57].Text = "Do you find it hard to multi-task or shift your attention rapidly from one thing to another and therefore need to finish one task before turning to the next?";
+  Quiz[58].Text = "Do you have certain routines which you need to follow?";
+  Quiz[59].Text = "Does it cause chaos in you if your plans, environment or daily routines suddenly get changed?";
+  Quiz[60].Text = "Do you have a need for symmetry, order and/or precision?";
+  Quiz[61].Text = "Do you have strong attachments to certain objects?";
+  Quiz[62].Text = "Do you need to sit on your favourite seat, go the same route or shop in the same shop every time?";
+  Quiz[63].Text = "Do you prefer to wear the same clothes and/or eat the same food every day?";
+  Quiz[64].Text = "Before doing something or going somewhere, do you need to visualize the place you're going to or rehearse possible scenarios in your mind so as to prepare yourself?";
+  Quiz[65].Text = "Do you feel stress, panic or have a brain malfunction in unfamiliar or demanding situations?";
+  Quiz[66].Text = "Do you sometimes have a need for comfort items like a blanket, stuffed animals etc?";
+  Quiz[67].Text = "Do you self-harm, or have you done so in the past?";
+  Quiz[68].Text = "Are you easily overexcited, stressed and overwhelmed by things like noise, crowds, clutter, patterns, flicker and movement?";
+  Quiz[69].Text = "Do you have extra sensitive hearing?";
+  Quiz[70].Text = "Do you have difficulties filtering out background noises when talking to someone?";
+  Quiz[71].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
+  Quiz[72].Text = "Do you have a very acute sense of taste?";
+  Quiz[73].Text = "Do you have to be particular about what you eat and/or how it is combined on the plate in order to be able to eat?";
+  Quiz[74].Text = "Do you have a very acute sense of smell?";
+  Quiz[75].Text = "Are your eyes extra sensitive to stong light and glare?";
+  Quiz[76].Text = "Do you have poor night vision?";
+  Quiz[77].Text = "Do you have a well-developed sense of colour?";
+  Quiz[78].Text = "Do you have (or have you had) a problem with squinting?";
+  Quiz[79].Text = "Do you feel uncomfortable in fluorescent light?";
+  Quiz[80].Text = "Are you sensitive to weather changes?";
+  Quiz[81].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
+  Quiz[82].Text = "Do you dislike being touched or hugged unless you're prepared or have asked for it?";
+  Quiz[83].Text = "If you have to be touched, do you prefer it to be firmly rather than lightly?";
+  Quiz[84].Text = "Are you fairly insensitive to physical pain, or even enjoy some types of pain?";
+  Quiz[85].Text = "Do you have an odd posture or gait?";
+  Quiz[86].Text = "Do you have poor balance, e.g. difficulty riding a bicycle, skating, standing on one leg?";
+  Quiz[87].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
+  Quiz[88].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
+  Quiz[89].Text = "Do you have problems with ball sports?";
+  Quiz[90].Text = "Do you have difficulties with two-handed tasks, e.g. eating with knife & fork, knitting, typing or playing an instrument?";
+  Quiz[91].Text = "Do you have difficulties with activities requiring manual dexterity and precision, e.g drawing, sewing, tying shoe-laces, fastening buttons and handling small objects?";
+  Quiz[92].Text = "Do you have difficulty writing by hand (dysgraphia)?";
+  Quiz[93].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands and a tendency to drop, spill or break things by mistake?";
+  Quiz[94].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[95].Text = "Do you have poor concept of time?";
+  Quiz[96].Text = "Do you have a tendency to be passive and not initiate things yourself?";
+  Quiz[97].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
+  Quiz[98].Text = "Do you tend to get so stuck on details that you miss the overall picture?";
+  Quiz[99].Text = "Do you have a tendency to interpret things literally and difficulties understanding figures of speech, idioms, allegories etc?";
+  Quiz[100].Text = "Are you easily distracted and/or bored?";
+  Quiz[101].Text = "Do you find it hard to focus on or learn things you are not interested in?";
+  Quiz[102].Text = "Are you somewhat of a daydreamer, often lost in your own thoughts?";
+  Quiz[103].Text = "Do you tend to be hyperactive and restless?";
+  Quiz[104].Text = "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?";
+  Quiz[105].Text = "Do you have a hyperactive mind?";
+  Quiz[106].Text = "Do have difficulties keeping things tidy ?";
+  Quiz[107].Text = "Do you have problems recognizing faces when you meet people out of their usual environment (dysphagia)?";
+  Quiz[108].Text = "Do you enjoy snuggling with people you like?";
+  Quiz[109].Text = "Do you find it easy to understand and sympathise with those who function very differently from yourself?";
+  Quiz[110].Text = "Are you sometimes fearless in situations that can be dangerous?";
+  Quiz[111].Text = "Do you dislike shaking hands due to disliking the feel of skin-contact with others?";
+  Quiz[112].Text = "Do you dislike shaking hands due to germophobia?";
+  Quiz[113].Text = "Do you dislike shaking hands because handshakes feel unnatural?";
+  Quiz[114].Text = "Do you dislike shaking hands for other reason?";
+  Quiz[115].Text = "Do you talk to yourself?";
+  Quiz[116].Text = "Do you have an urge to climb?";
+  Quiz[117].Text = "Do you do any of the following when you're thinking, restless or bored: pacing; bouncing leg or foot; tapping fingers, pen or other object; doodling; fiddling with object e.g clicking pen; chewing on something?";
+  Quiz[118].Text = "Do you do any of the following when you're happy: singing, humming or whistling to yourself?";
+  Quiz[119].Text = "Do you do any of the following when anxious: twisting hands or fingers; rubbing hands, arms or thighs; biting lip, cheek or tongue?";
+  Quiz[120].Text = "Do you do any of the following when bored: cracking joints; picking skin or scabs; peeling skin flakes; picking nose; pulling hairs; biting nails or fingertips; pulling cuticle?";
+  Quiz[121].Text = "Do you do any of the following in order to calm yourself when excited, overwhelmed or overstimulated: rocking; flapping hands; tapping ears; pressing eyes?";
+  Quiz[122].Text = "Do you do any of the following for fun: spin in circles; walk on toes; watch a spinning, blinking or glittering object?";
+  Quiz[123].Text = "Do you clap your hands when excited?";
+  Quiz[124].Text = "Do you grind your teeth when stressed or anxious?";
+  Quiz[125].Text = "Do you clench your fists when angry?";
+  Quiz[126].Text = "Do you suck your thumb for comfort?";
+  Quiz[127].Text = "Do you wobble your hand slightly to indicate so-so?";
+  Quiz[128].Text = "Do you enjoy lying on the ground looking at the sky?";
 #endif
 
 #ifdef SWEDISH
   Quiz[0].Text = "Har du känt dig annorlunda största delen av ditt liv?";
   Quiz[1].Text = "Känner du dig mycket yngre än din biologiska ålder?";
-  Quiz[2].Text = "Händer det att du är orädd i situationer som faktiskt kan vara farliga?";
-  Quiz[3].Text = "Känner du dig mer som en observatör än som en deltagare i livet?";
-  Quiz[4].Text = "Har du haft svårare än dina jämnåriga att få vänner eller partners?";
-  Quiz[5].Text = "Föredrar du bara att umgås med folk du känner väl, och helst på tu man hand eller i en mindre grupp?";
-  Quiz[6].Text = "Har du brukat föredra att umgås människor som är äldre eller mer erfarna än du själv framför jämnåriga?";
+  Quiz[2].Text = "Känner du dig mer som en observatör än som en deltagare i livet?";
+  Quiz[3].Text = "Har du haft svårare än dina jämnåriga att få vänner eller partners?";
+  Quiz[4].Text = "Föredrar du bara att umgås med folk du känner väl, och helst på tu man hand eller i en mindre grupp?";
+  Quiz[5].Text = "Brukar du föredra att umgås med människor som är äldre eller yngre än du själv framför jämnåriga?";
+  Quiz[6].Text = "Brukar du föredra att leka/arbeta/göra saker själv - på ditt eget sätt och i din egen takt?";
   Quiz[7].Text = "Brukar du blir väldigt trött av att umgås med folk och efteråt behöva vila ut ifred?";
   Quiz[8].Text = "Ogillar du när folk kommer och hälsar på utan att ha blivit inbjudna?";
   Quiz[9].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad i olika situationer?";
-  Quiz[10].Text = "Brukar du bli nervös, blyg, förvirrad och/eller ha svårt att passa in i olika sociala situationer?";
+  Quiz[10].Text = "Brukar du bli nervös, blyg, förvirrad eller utanför i olika sociala situationer?";
   Quiz[11].Text = "Är det svårt att veta hur du ska bete dig i olika situationer?";
-  Quiz[12].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
+  Quiz[12].Text = "Brukar du säga eller göra saker som anses socialt opassande?";
   Quiz[13].Text = "Har du haft svårigheter att passa in i traditionella könsroller, kanske haft intressen och uppförande som är otypiska för ditt kön?";
   Quiz[14].Text = "Är ett stort socialt nätverk viktigt för dig?";
   Quiz[15].Text = "Betyder dina vänner mer för dig än dina hobbies och intressen?";
   Quiz[16].Text = "Känner du dig hemma i sociala situationer med nya människor?";
-  Quiz[17].Text = "Får du energi av att vara i sällskap med andra?";
-  Quiz[18].Text = "Tycker du om lagsporter och andra gruppaktiviteter?";
-  Quiz[19].Text = "Är din image och sociala identitet väldigt viktig för dig?";
-  Quiz[20].Text = "Känner du intuitivt vad folk behöver från dig?";
-  Quiz[21].Text = "Har du en bra känla för vad som är rätt socialt?";
-  Quiz[22].Text = "Har du lätt att komma ihåg vad folk heter när du möter nya människor?";
-  Quiz[23].Text = "Finner du det svårt eller tröttsamt att tala?";
-  Quiz[24].Text = "Har du en monoton röst och/eller svårigheter att finjustera ljudnivå och hastighet när du talar?";
-  Quiz[25].Text = "Stammar du när du blir stressad?";
-  Quiz[26].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
-  Quiz[27].Text = "Tycker du att det är lättare att kommunicera via dator än i verkliga livet?";
-  Quiz[28].Text = "Har du för vana att upprepa de sista orden som du själv eller någon annan just sagt (ekolali)?";
-  Quiz[29].Text = "Har du svårt att förstå talesätt, allegorier, parodier, ironi och liknande?";
-  Quiz[30].Text = "Om du blev ombedd att beskriva dig själv, skulle du då göra det på objektivt sätt, som om du beskrev någon annan?";
-  Quiz[31].Text = "Brukar du vara mer rak och rättfram i din kommunikation än andra?";
-  Quiz[32].Text = "Brukar du säga eller göra saker som anses socialt opassande?";
-  Quiz[33].Text = "Tycker du att vanligt kallprat är svårt, plågsamt eller slöseri med tid?";
-  Quiz[34].Text = "Brukar du ha svårt att tolka kroppsspråk och ansiktsuttryck och att förstå vad andra känner och vill om de inte säger det rakt ut?";
-  Quiz[35].Text = "Är du oftast omedveten om outtalade sociala regler?";
-  Quiz[36].Text = "Brukar folk tycka att du ler vid fel tillfälle eller att du inte ler när du ‘borde’?";
-  Quiz[37].Text = "Har du problem med ögonkontakt (t ex föredrar att undvika det, eller stirrar ‘för mycket’)?";
-  Quiz[38].Text = "Kan du 'läsa mellan raderna'?";
-  Quiz[39].Text = "Är det lätt för dig att beskriva dina känslor?";
-  Quiz[40].Text = "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
-  Quiz[41].Text = "Brukar du prata för att få andra att känna sig väl till mods även om du inte har nåt speciellt att berätta?";
-  Quiz[42].Text = "Är du bra på kallprat?";
-  Quiz[43].Text = "Ser du yngre ut än din biologiska ålder?";
-  Quiz[44].Text = "Var du \"lillgammal\" som barn?";
-  Quiz[45].Text = "Brukade dina lekar mer bestå i att sortera, bygga eller ta isär saker än i sociala lekar med andra barn?";
-  Quiz[46].Text = "Är du en nattmänniska, d.v.s. brukar du vara som piggast på kvällen/natten?";
-  Quiz[47].Text = "Tycker du att normerna för hygien är för strikta?";
-  Quiz[48].Text = "Är ditt sinne för humor annorlunda än andras eller ansett som udda?";
-  Quiz[49].Text = "Brukar du föredra att leka/arbeta/göra saker själv - på ditt eget sätt och i din egen takt?";
-  Quiz[50].Text = "Är du i grunden mer intresserad av saker, idéer, filmer, datorer, musik, djur, hus, fordon el dyl, än av människor och social samvaro?";
-  Quiz[51].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
-  Quiz[52].Text = "Har du okonventionella, ofta unika sätt att lösa problem på?";
-  Quiz[53].Text = "Brukar du fördjupa dig i ett ämne i taget och bli expert det?";
-  Quiz[54].Text = "Brukar du lägga märke till och intressera dig för detaljer som andra inte verkar se eller bry sig om?";
-  Quiz[55].Text = "Har du utmärkt vokabulär och intresse för språk?";
-  Quiz[56].Text = "Lärde du dig att läsa själv innan du började skolan?";
-  Quiz[57].Text = "Är du fascinerad av datum och/eller siffror?";
-  Quiz[58].Text = "Tycker du om att lista ut hur saker fungerar?";
-  Quiz[59].Text = "Är du punktlig, noggrann och perfektionistisk?";
-  Quiz[60].Text = "Älskar du att samla på, sortera & organisera saker och/eller göra listor och diagram?";
-  Quiz[61].Text = "Har du blivit kallad ‘besserwisser’ för att du känner dig manad att korrigera andra med korrekta fakta?";
-  Quiz[62].Text = "Har du hög moral och en tendens att hålla fast vid dina ideal, övertygelser och principer även om de går emot det rådande synsättet och kan vara till din nackdel, t ex socialt eller ekonomiskt?";
-  Quiz[63].Text = "Brukar du bli så absorberad av dina projekt att du glömmer allting annat (äta, duscha, sova, andra människor etc.)?";
-  Quiz[64].Text = "Har du svårt att göra flera saker samtidigt, snabbt skifta fokus från en sak till en annan och därför har behov av att få göra klart det du håller på med innan du kan ta itu med något annat?";
-  Quiz[65].Text = "Har du vissa enkla, logiska rutiner som det känns bra att följa?";
-  Quiz[66].Text = "Blir det kaos inom dig om det händer något oväntat som förändrar din miljö, dina planer eller rutiner?";
-  Quiz[67].Text = "Brukar du bli stressad och få panik eller kortslutning i hjärnan i nya och kravfyllda situationer?";
-  Quiz[68].Text = "Har du ett behov av symmerti, ordning och/eller precision?";
-  Quiz[69].Text = "Är du exceptionellt fäst vid vissa saker?";
-  Quiz[70].Text = "Har du behov av att sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?";
-  Quiz[71].Text = "Föredrar du att använda samma kläder och/eller äta samma mat varje dag?";
-  Quiz[72].Text = "Innan du gör något eller åker någonstans, behöver du ha en inre bild av platsen eller mentalt öva på tänkbara scenarier för att förbereda dig?";
-  Quiz[73].Text = "Har du ibland behov av gosefilt, kramdjur eller liknande?";
-  Quiz[74].Text = "Brukar du göra något av följande när du tänker, är rastlös eller uttråkad: vanka; vippa foten eller benet; trumma med fingrarna, en penna eller annat objekt; kludda; klicka penna, pilla eller tugga på något?";
-  Quiz[75].Text = "Brukar du göra något av följande när du är glad: sjunga, nynna eller vissla för dig själv?";
-  Quiz[76].Text = "Brukar du göra något av följande när du är orolig: vrida dina händer eller fingar; gnugga händer, överarmar eller lår; bita dig i läppen, kinden eller tungan?";
-  Quiz[77].Text = "Brukar du göra något av följande när du är uttråkad: knäcka leder; pila på huden; dra hudflagor; plocka sårskorpor; peta näsan; dra ut hårstrån; bita på naglarna eller fingertopparna; dra i nagelbanden?";
-  Quiz[78].Text = "Brukar du göra något av följande för att lugna ner dig när du blivit upphetsad, stressad eller överstimulerad: gunga med överkroppen, flaxa med händerna, slå på öronen, pressa händerna mot ögonen?";
-  Quiz[79].Text = "Brukar du göra något av följande för att det är roligt: snurra runt, runt; gå på tå; titta på ett snurrande, blinkande eller glittrande föremål?";
-  Quiz[80].Text = "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?";
-  Quiz[81].Text = "Har du svårigheter att bedöma avstånd, höjd, djup och fart?";
-  Quiz[82].Text = "Har du dålig tidsuppfattning?";
-  Quiz[83].Text = "Har du en tendens att vara passiv och ha svårt att ta initiativ och komma igång med saker på egen hand?";
-  Quiz[84].Text = "Har du haft svårare att klara dig själv än andra i samma ålder?";
-  Quiz[85].Text = "Blir du lätt distraherad och/eller uttråkad?";
-  Quiz[86].Text = "Har du svårt att koncenterera dig på eller lära dig saker du inte är intresserad av?";
-  Quiz[87].Text = "Är du lite av en dagdrömmare, ofta borta i dina egna tankar?";
-  Quiz[88].Text = "Brukar du vara hyperaktiv och rastlös?";
-  Quiz[89].Text = "Brukar du vara otålig och impulsiv och t ex ha svårt att vänta på din tur?";
-  Quiz[90].Text = "Är du mentalt hyperaktiv?";
-  Quiz[91].Text = "Har du svårt att känna igen ansikten?";
-  Quiz[92].Text = "Har du ovanlig kroppshållning eller gångstil?";
-  Quiz[93].Text = "Har du dåligt balanssinne, t ex svårt att cykla, åka skridskor, stå på ett ben?";
-  Quiz[94].Text = "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?";
-  Quiz[95].Text = "Har du svårt att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?";
-  Quiz[96].Text = "Har du problem med med bollsporter?";
-  Quiz[97].Text = "Har du svårt med aktiviteter där man använder båda händerna samtidigt, t ex äta med kniv & gaffel, sticka, skriva maskin eller spela ett instrument?";
-  Quiz[98].Text = "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att rita, sy, knyta skosnören, knäppa knappar och hantera små föremål?";
-  Quiz[99].Text = "Har du svårt att skriva för hand (dysgrafi)?";
-  Quiz[100].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna och en tendens att tappa, spilla eller ha sönder saker av misstag?";
-  Quiz[101].Text = "Blir du lätt överstimulerad och stressad av för mycket ljud, mönster, flimmer, oreda, trängsel och rörelse?";
-  Quiz[102].Text = "Här du extra känslig hörsel?";
-  Quiz[103].Text = "Har du svårt att filtrera bort bakgrundsljud när du talar med någon?";
-  Quiz[104].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas up om och om igen?";
-  Quiz[105].Text = "Har du extra känsligt smaksinne?";
-  Quiz[106].Text = "Måste du vara petig med vad du äter och/eller hur maten kombineras på tallriken för att kunna äta?";
-  Quiz[107].Text = "Har du extra känsligt luktsinne?";
-  Quiz[108].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
-  Quiz[109].Text = "Har du dåligt mörkerseende?";
-  Quiz[110].Text = "Har du välutvecklat färgseende?";
-  Quiz[111].Text = "Har du (eller har du haft) problem med skelning?";
-  Quiz[112].Text = "Är du känslig för lyrsrörsljus?";
-  Quiz[113].Text = "Är du känslig för väderomslag?";
-  Quiz[114].Text = "Pinas du av skavande sömmar och etiketter, kläder som sitter åt eller som är gjorda i 'fel' material?";
-  Quiz[115].Text = "Ogillar du att bli tagen i eller kramad om du inte är beredd eller bett om det?";
-  Quiz[116].Text = "Om någon tar i dig, föredrar du då hårdare tag framför lätt beröring?";
-  Quiz[117].Text = "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?";
-  Quiz[118].Text = "Gillar du att mysa ihop med personer du tycker om?";
-  Quiz[119].Text = "Har du lätt att förstå och känna sympati även för dem som fungerar väldigt annorlunda än du själv?";
-  Quiz[120].Text = "Har du genomgått eller skulle du vilja genomgå ett könsbyte?";
-  Quiz[121].Text = "Ogillar du att ta i hand pga att du inte gillar känslan av hudkontakt med andra?";
-  Quiz[122].Text = "Ogillar du att ta i hand pga bacillskräck?";
-  Quiz[123].Text = "Ogillar du att ta i hand för att handslag känns onaturligt?";
-  Quiz[124].Text = "Ogillar du att ta i hand av annan orsak?";
-
-  Quiz[125].Text = "Pratar du med dig själv?";
-  Quiz[126].Text = "Har du ett behov av att klättra?";
-  Quiz[127].Text = "Klappar du med händerna när du är upprymd?";
-  Quiz[128].Text = "Gnisslar du med tänderna när du är stressad eller har ångest?";
-  Quiz[129].Text = "Knyter du nävarna när du är arg?";
-  Quiz[130].Text = "Suger du på tummen när du behöver tröst?";
-  Quiz[131].Text = "Gillar du att ligga på marken och studera himlen?";
-  Quiz[132].Text = "Brukar du vippa handen lite för att indikera \"sådär\"?";
-
+  Quiz[17].Text = "Tycker du om lagsporter och andra gruppaktiviteter?";
+  Quiz[18].Text = "Är din image och sociala identitet väldigt viktig för dig?";
+  Quiz[19].Text = "Känner du intuitivt vad folk behöver från dig?";
+  Quiz[20].Text = "Har du en bra känla för vad som är rätt socialt?";
+  Quiz[21].Text = "Har du lätt att komma ihåg vad folk heter när du möter nya människor?";
+  Quiz[22].Text = "Finner du det svårt eller tröttsamt att tala?";
+  Quiz[23].Text = "Har du en monoton röst och/eller svårigheter att finjustera ljudnivå och hastighet när du talar?";
+  Quiz[24].Text = "Stammar du när du blir stressad?";
+  Quiz[25].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
+  Quiz[26].Text = "Tycker du att det är lättare att kommunicera via dator än i verkliga livet?";
+  Quiz[27].Text = "Om du blev ombedd att beskriva dig själv, skulle du då göra det på objektivt sätt, som om du beskrev någon annan?";
+  Quiz[28].Text = "Brukar du vara mer rak och rättfram i din kommunikation än andra?";
+  Quiz[29].Text = "Tycker du att vanligt kallprat är svårt, plågsamt eller slöseri med tid?";
+  Quiz[30].Text = "Brukar du ha svårt att tolka kroppsspråk och ansiktsuttryck och att förstå vad andra känner och vill om de inte säger det rakt ut?";
+  Quiz[31].Text = "Har du problem med ögonkontakt (t ex att du föredrar att undvika det eller stirrar 'för mycket')?";
+  Quiz[32].Text = "Kan du 'läsa mellan raderna'?";
+  Quiz[33].Text = "Är det lätt för dig att beskriva dina känslor?";
+  Quiz[34].Text = "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
+  Quiz[35].Text = "Brukar du prata för att få andra att känna sig väl till mods även om du inte har nåt speciellt att berätta?";
+  Quiz[36].Text = "Är du bra på kallprat?";
+  Quiz[37].Text = "Ser du yngre ut än din biologiska ålder?";
+  Quiz[38].Text = "Var du \"lillgammal\" som barn?";
+  Quiz[39].Text = "Brukade dina lekar mer bestå i att sortera, bygga eller ta isär saker än i sociala lekar med andra barn?";
+  Quiz[40].Text = "Är du en nattmänniska, d.v.s. brukar du vara som piggast på kvällen/natten?";
+  Quiz[41].Text = "Tycker du att normerna för hygien är för strikta?";
+  Quiz[42].Text = "Är ditt sinne för humor annorlunda än andras eller ansett som udda?";
+  Quiz[43].Text = "Är du i grunden mer intresserad av saker, idéer, filmer, datorer, musik, djur, hus, fordon el dyl, än av människor och social samvaro?";
+  Quiz[44].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
+  Quiz[45].Text = "Har du okonventionella, ofta unika sätt att lösa problem på?";
+  Quiz[46].Text = "Brukar du fördjupa dig i ett ämne i taget och bli expert det?";
+  Quiz[47].Text = "Brukar du lägga märke till och intressera dig för detaljer som andra inte verkar se eller bry sig om?";
+  Quiz[48].Text = "Har du utmärkt vokabulär och intresse för språk?";
+  Quiz[49].Text = "Lärde du dig att läsa själv innan du började skolan?";
+  Quiz[50].Text = "Är du fascinerad av datum och/eller siffror?";
+  Quiz[51].Text = "Tycker du om att lista ut hur saker fungerar?";
+  Quiz[52].Text = "Är du punktlig, noggrann och perfektionistisk?";
+  Quiz[53].Text = "Älskar du att samla på, sortera & organisera saker och/eller göra listor och diagram?";
+  Quiz[54].Text = "Har du blivit kallad 'besserwisser' för att du känner dig manad att korrigera andra med korrekta fakta?";
+  Quiz[55].Text = "Har du stark känsla för etik och en tendens att hålla fast vid dina ideal, övertygelser och principer även om det är till din nackdel, t ex socialt eller ekonomiskt?";
+  Quiz[56].Text = "Brukar du bli så absorberad av dina specialintressen att du glömmer allting annat?";
+  Quiz[57].Text = "Har du svårt att göra flera saker samtidigt, snabbt skifta fokus från en sak till en annan och därför behöver göra klart det du håller på med innan du kan ta itu med något annat?";
+  Quiz[58].Text = "Har du vissa rutiner som du har behov av att följa?";
+  Quiz[59].Text = "Blir det kaos inom dig om det händer något oväntat som förändrar din miljö, dina planer eller rutiner?";
+  Quiz[60].Text = "Har du ett behov av symmerti, ordning och/eller precision?";
+  Quiz[61].Text = "Är du exceptionellt fäst vid vissa saker?";
+  Quiz[62].Text = "Har du behov av att sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?";
+  Quiz[63].Text = "Föredrar du att använda samma kläder och/eller äta samma mat varje dag?";
+  Quiz[64].Text = "Innan du gör något eller åker någonstans, behöver du ha en inre bild av platsen eller mentalt öva på tänkbara scenarier för att förbereda dig?";
+  Quiz[65].Text = "Brukar du bli stressad och få panik eller kortslutning i hjärnan i nya och kravfyllda situationer?";
+  Quiz[66].Text = "Har du ibland behov av gosefilt, kramdjur eller liknande?";
+  Quiz[67].Text = "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?";
+  Quiz[68].Text = "Blir du lätt överstimulerad och stressad av för mycket ljud, mönster, flimmer, oreda, trängsel och rörelse?";
+  Quiz[69].Text = "Här du extra känslig hörsel?";
+  Quiz[70].Text = "Har du svårt att filtrera bort bakgrundsljud när du talar med någon?";
+  Quiz[71].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas up om och om igen?";
+  Quiz[72].Text = "Har du extra känsligt smaksinne?";
+  Quiz[73].Text = "Måste du vara petig med vad du äter och/eller hur maten kombineras på tallriken för att kunna äta?";
+  Quiz[74].Text = "Har du extra känsligt luktsinne?";
+  Quiz[75].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
+  Quiz[76].Text = "Har du dåligt mörkerseende?";
+  Quiz[77].Text = "Har du välutvecklat färgseende?";
+  Quiz[78].Text = "Har du (eller har du haft) problem med skelning?";
+  Quiz[79].Text = "Är du känslig för lyrsrörsljus?";
+  Quiz[80].Text = "Är du känslig för väderomslag?";
+  Quiz[81].Text = "Pinas du av skavande sömmar och etiketter, kläder som sitter åt eller som är gjorda i 'fel' material?";
+  Quiz[82].Text = "Ogillar du att bli tagen i eller kramad om du inte är beredd eller bett om det?";
+  Quiz[83].Text = "Om någon tar i dig, föredrar du då hårdare tag framför lätt beröring?";
+  Quiz[84].Text = "Är du okänslig för smärta eller till och med tycker om viss sorts smärta?";
+  Quiz[85].Text = "Har du ovanlig kroppshållning eller gångstil?";
+  Quiz[86].Text = "Har du dåligt balanssinne, t ex svårt att cykla, åka skridskor, stå på ett ben?";
+  Quiz[87].Text = "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?";
+  Quiz[88].Text = "Har du svårt att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?";
+  Quiz[89].Text = "Har du problem med med bollsporter?";
+  Quiz[90].Text = "Har du svårt med aktiviteter där man använder båda händerna samtidigt, t ex äta med kniv & gaffel, sticka, skriva maskin eller spela ett instrument?";
+  Quiz[91].Text = "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att rita, sy, knyta skosnören, knäppa knappar och hantera små föremål?";
+  Quiz[92].Text = "Har du svårt att skriva för hand (dysgrafi)?";
+  Quiz[93].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna och en tendens att tappa, spilla eller ha sönder saker av misstag?";
+  Quiz[94].Text = "Har du svårigheter att bedöma avstånd, höjd, djup och fart?";
+  Quiz[95].Text = "Har du dålig tidsuppfattning?";
+  Quiz[96].Text = "Har du en tendens att vara passiv och ha svårt att ta initiativ och komma igång med saker på egen hand?";
+  Quiz[97].Text = "Har du haft svårare att klara dig själv än andra i samma ålder?";
+  Quiz[98].Text = "Händer det att du fastnar så för vissa detaljer att du missar eller struntar i helhetsbilden??";
+  Quiz[99].Text = "Har du en tendens att tolka saker bokstavligt och svårigheter att förstå talesätt, idiom, allegorier o dyl?";
+  Quiz[100].Text = "Blir du lätt distraherad och/eller uttråkad?";
+  Quiz[101].Text = "Har du svårt att koncenterera dig på eller lära dig saker du inte är intresserad av?";
+  Quiz[102].Text = "Är du lite av en dagdrömmare, ofta borta i dina egna tankar?";
+  Quiz[103].Text = "Brukar du vara hyperaktiv och rastlös?";
+  Quiz[104].Text = "Brukar du vara otålig och impulsiv och t ex ha svårt att vänta på din tur?";
+  Quiz[105].Text = "Är du mentalt hyperaktiv?";
+  Quiz[106].Text = "Har du svårt att hålla ordning omkring dig?";
+  Quiz[107].Text = "Har du svårt att känna igen ansikten när du möter folk på andra ställen än där du är van att se dem?";
+  Quiz[108].Text = "Gillar du att mysa ihop med personer du tycker om?";
+  Quiz[109].Text = "Har du lätt att förstå och känna sympati även för dem som fungerar väldigt annorlunda än du själv?";
+  Quiz[110].Text = "Händer det att du är orädd i situationer som faktiskt kan vara farliga?";
+  Quiz[111].Text = "Ogillar du att ta i hand pga att du inte gillar känslan av hudkontakt med andra?";
+  Quiz[112].Text = "Ogillar du att ta i hand pga bacillskräck?";
+  Quiz[113].Text = "Ogillar du att ta i hand för att handslag känns onaturligt?";
+  Quiz[114].Text = "Ogillar du att ta i hand av annan orsak?";
+  Quiz[115].Text = "Pratar du med dig själv?";
+  Quiz[116].Text = "Har du ett behov av att klättra?";
+  Quiz[117].Text = "Brukar du göra något av följande när du tänker, är rastlös eller uttråkad: vanka; vippa foten eller benet; trumma med fingrarna, en penna eller annat objekt; kludda; klicka penna, pilla eller tugga på något?";
+  Quiz[118].Text = "Brukar du göra något av följande när du är glad: sjunga, nynna eller vissla för dig själv?";
+  Quiz[119].Text = "Brukar du göra något av följande när du är orolig: vrida dina händer eller fingar; gnugga händer, överarmar eller lår; bita dig i läppen, kinden eller tungan?";
+  Quiz[120].Text = "Brukar du göra något av följande när du är uttråkad: knäcka leder; pila på huden; dra hudflagor; plocka sårskorpor; peta näsan; dra ut hårstrån; bita på naglarna eller fingertopparna; dra i nagelbanden?";
+  Quiz[121].Text = "Brukar du göra något av följande för att lugna ner dig när du blivit upphetsad, stressad eller överstimulerad: gunga med överkroppen, flaxa med händerna, slå på öronen, pressa händerna mot ögonen?";
+  Quiz[122].Text = "Brukar du göra något av följande för att det är roligt: snurra runt, runt; gå på tå; titta på ett snurrande, blinkande eller glittrande föremål?";
+  Quiz[123].Text = "Klappar du med händerna när du är upprymd?";
+  Quiz[124].Text = "Gnisslar du med tänderna när du är stressad eller har ångest?";
+  Quiz[125].Text = "Knyter du nävarna när du är arg?";
+  Quiz[126].Text = "Suger du på tummen när du behöver tröst?";
+  Quiz[127].Text = "Brukar du vippa handen lite för att indikera \"sådär\"?";
+  Quiz[128].Text = "Gillar du att ligga på marken och studera himlen?";
 #endif
+
 }
 
 /*##########################################################################
@@ -1647,139 +1597,136 @@ void TQuizR1::SetupControlGroups()
 ##########################################################################*/
 void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9)
 {
-	DefineCross(Quiz9, 0, 51);
-	DefineCross(QuizII, 1, 20);
-	DefineGlobalId( 2, 486);
-	DefineCross(QuizI, 3, 66);
-	DefineCross(Quiz9, 4, 50);
-	DefineCross(QuizI, 5, 33);
-	DefineCross(QuizI, 6, 32);
-	DefineCross(Quiz9, 7, 55);
-	DefineCross(Quiz6, 8, 118);
-	DefineCross(Quiz7, 9, 119);
-	DefineCross(Quiz9, 10, 54);
-	DefineGlobalId( 11, 487);
-	DefineCross(Quiz8, 12, 64);
-	DefineGlobalId( 13, 488);
-	DefineCross(Quiz9, 14, 74);
-	DefineCross(Quiz8, 15, 70);
-	DefineCross(Quiz9, 16, 69);
-	DefineCross(Quiz9, 17, 66);
-	DefineCross(Quiz9, 18, 65);
-	DefineGlobalId( 19, 489);
-	DefineCross(Quiz6, 20, 35);
-	DefineCross(Quiz9, 21, 100);
-	DefineGlobalId( 22, 490);
-	DefineCross(QuizI, 23, 13);
-	DefineCross(Quiz9, 24, 105);
-	DefineCross(Quiz8, 25, 8);
-	DefineCross(Quiz9, 26, 98);
-	DefineCross(Quiz9, 27, 59);
-	DefineGlobalId( 28, 491);
-	DefineCross(QuizIII, 29, 32);
-	DefineGlobalId( 30, 492);
-	DefineGlobalId( 31, 493);
-	DefineGlobalId( 32, 494);
-	DefineCross(Quiz9, 33, 64);
-	DefineCross(QuizIII, 34, 25);
-	DefineCross(Quiz7, 35, 75);
-	DefineGlobalId( 36, 495);
-	DefineGlobalId( 37, 496);
-	DefineCross(Quiz9, 38, 102);
-	DefineGlobalId( 39, 497);
-	DefineCross(Quiz9, 40, 109);
-	DefineCross(Quiz7, 41, 66);
-	DefineCross(QuizNd, 42, 36);
-	DefineCross(QuizI, 43, 41);
-	DefineGlobalId( 44, 498);
-	DefineGlobalId( 45, 499);
-	DefineGlobalId( 46, 500);
-	DefineCross(Quiz6, 47, 139);
-	DefineCross(Quiz9, 48, 61);
-	DefineCross(Quiz8, 49, 69);
-	DefineCross(QuizI, 50, 68);
-	DefineCross(Quiz9, 51, 35);
-	DefineCross(Quiz9, 52, 30);
-	DefineCross(Quiz9, 53, 31);
-	DefineCross(Quiz9, 54, 34);
-	DefineCross(Quiz9, 55, 36);
-	DefineCross(Quiz7, 56, 143);
-	DefineCross(Quiz7, 57, 117);
-	DefineCross(Quiz9, 58, 37);
-	DefineCross(QuizII, 59, 69);
-	DefineCross(Quiz9, 60, 115);
-	DefineGlobalId( 61, 501);
-	DefineCross(QuizI, 62, 98);
-	DefineCross(Quiz8, 63, 120);
-	DefineCross(QuizI, 64, 26);
-	DefineCross(Quiz9, 65, 117);
-	DefineCross(Quiz9, 66, 110);
-	DefineCross(Quiz7, 67, 83);
-	DefineCross(Quiz9, 68, 118);
-	DefineCross(Quiz9, 69, 116);
-	DefineCross(Quiz9, 70, 114);
-	DefineCross(Quiz9, 71, 112);
-	DefineGlobalId( 72, 502);
-	DefineCross(Quiz7, 73, 90);
-	DefineGlobalId( 74, 503);
-	DefineGlobalId( 75, 504);
-	DefineGlobalId( 76, 505);
-	DefineGlobalId( 77, 506);
-	DefineGlobalId( 78, 507);
-	DefineGlobalId( 79, 508);
-	DefineGlobalId( 80, 509);
-	DefineCross(Quiz9, 81, 11);
-	DefineCross(Quiz7, 82, 122);
-	DefineCross(QuizI, 83, 31);
-	DefineCross(QuizI, 84, 30);
-	DefineCross(QuizII, 85, 64);
-	DefineGlobalId( 86, 510);
-	DefineGlobalId( 87, 511);
-	DefineGlobalId( 88, 512);
-	DefineGlobalId( 89, 513);
-	DefineGlobalId( 90, 514);
-	DefineCross(Quiz6, 91, 36);
-	DefineCross(Quiz6, 92, 31);
-	DefineGlobalId( 93, 515);
-	DefineGlobalId( 94, 516);
-	DefineGlobalId( 95, 517);
-	DefineGlobalId( 96, 518);
-	DefineGlobalId( 97, 519);
-	DefineGlobalId( 98, 520);
-	DefineCross(Quiz8, 99, 25);
-	DefineGlobalId( 100, 521);
-	DefineCross(QuizNd, 101, 10);
-	DefineGlobalId( 102, 522);
-	DefineCross(Quiz9, 103, 106);
-	DefineCross(Quiz8, 104, 3);
-	DefineCross(Quiz9, 105, 21);
-	DefineCross(QuizI, 106, 58);
-	DefineCross(Quiz9, 107, 24);
-	DefineGlobalId( 108, 523);
-	DefineGlobalId( 109, 524);
-	DefineGlobalId( 110, 525);
-	DefineCross(Quiz9, 111, 20);
-	DefineCross(Quiz9, 112, 26);
-	DefineGlobalId( 113, 526);
-	DefineCross(Quiz8, 114, 6);
-	DefineGlobalId( 115, 527);
-	DefineCross(Quiz9, 116, 27);
-	DefineCross(Quiz9, 117, 29);
-	DefineGlobalId( 118, 528);
-	DefineGlobalId( 119, 529);
-	DefineGlobalId( 120, 530);
-	DefineGlobalId( 121, 531);
-	DefineGlobalId( 122, 532);
-	DefineGlobalId( 123, 533);
-	DefineGlobalId( 124, 534);
-	DefineCross(Quiz9, 125, 88);
-	DefineCross(Quiz9, 126, 93);
-	DefineGlobalId( 127, 535);
-	DefineGlobalId( 128, 536);
-	DefineGlobalId( 129, 537);
-	DefineGlobalId( 130, 538);
-	DefineGlobalId( 131, 539);
-	DefineGlobalId( 132, 540);
+    DefineCross(Quiz9, 0, 51);
+    DefineCross(QuizII, 1, 20);
+    DefineCross(QuizI, 2, 66);
+    DefineCross(Quiz9, 3, 50);
+    DefineCross(QuizI, 4, 33);
+    DefineCross(QuizI, 5, 32);
+    DefineCross(Quiz8, 6, 69);
+    DefineCross(Quiz9, 7, 55);
+    DefineCross(Quiz6, 8, 118);
+    DefineCross(Quiz7, 9, 119);
+    DefineCross(Quiz9, 10, 54);
+  DefineGlobalId( 11, 486);
+  DefineGlobalId( 12, 487);
+  DefineGlobalId( 13, 488);
+    DefineCross(Quiz9, 14, 74);
+    DefineCross(Quiz8, 15, 70);
+    DefineCross(Quiz9, 16, 69);
+    DefineCross(Quiz9, 17, 65);
+  DefineGlobalId( 18, 489);
+    DefineCross(Quiz6, 19, 35);
+    DefineCross(Quiz9, 20, 100);
+  DefineGlobalId( 21, 490);
+    DefineCross(QuizI, 22, 13);
+    DefineCross(Quiz9, 23, 105);
+    DefineCross(Quiz8, 24, 8);
+    DefineCross(Quiz9, 25, 98);
+    DefineCross(Quiz9, 26, 59);
+  DefineGlobalId( 27, 491);
+  DefineGlobalId( 28, 492);
+    DefineCross(Quiz9, 29, 64);
+    DefineCross(QuizIII, 30, 25);
+  DefineGlobalId( 31, 493);
+    DefineCross(Quiz9, 32, 102);
+  DefineGlobalId( 33, 494);
+    DefineCross(Quiz9, 34, 109);
+    DefineCross(Quiz7, 35, 66);
+	DefineCross(QuizNd, 36, 36);
+    DefineCross(QuizI, 37, 41);
+  DefineGlobalId( 38, 495);
+  DefineGlobalId( 39, 496);
+  DefineGlobalId( 40, 497);
+    DefineCross(Quiz6, 41, 139);
+    DefineCross(Quiz9, 42, 61);
+    DefineCross(QuizI, 43, 68);
+    DefineCross(Quiz9, 44, 35);
+    DefineCross(Quiz9, 45, 30);
+    DefineCross(Quiz9, 46, 31);
+    DefineCross(Quiz9, 47, 34);
+    DefineCross(Quiz9, 48, 36);
+    DefineCross(Quiz7, 49, 143);
+    DefineCross(Quiz7, 50, 117);
+    DefineCross(Quiz9, 51, 37);
+    DefineCross(QuizII, 52, 69);
+    DefineCross(Quiz9, 53, 115);
+  DefineGlobalId( 54, 498);
+    DefineCross(QuizI, 55, 98);
+    DefineCross(Quiz8, 56, 120);
+    DefineCross(QuizI, 57, 26);
+    DefineCross(Quiz9, 58, 117);
+    DefineCross(Quiz9, 59, 110);
+    DefineCross(Quiz9, 60, 118);
+    DefineCross(Quiz9, 61, 116);
+    DefineCross(Quiz9, 62, 114);
+    DefineCross(Quiz9, 63, 112);
+  DefineGlobalId( 64, 499);
+    DefineCross(Quiz7, 65, 83);
+    DefineCross(Quiz7, 66, 90);
+  DefineGlobalId( 67, 500);
+    DefineCross(QuizNd, 68, 10);
+  DefineGlobalId( 69, 501);
+    DefineCross(Quiz9, 70, 106);
+    DefineCross(Quiz8, 71, 3);
+    DefineCross(Quiz9, 72, 21);
+    DefineCross(QuizI, 73, 58);
+    DefineCross(Quiz9, 74, 24);
+  DefineGlobalId( 75, 502);
+  DefineGlobalId( 76, 503);
+  DefineGlobalId( 77, 504);
+    DefineCross(Quiz9, 78, 20);
+    DefineCross(Quiz9, 79, 26);
+  DefineGlobalId( 80, 505);
+    DefineCross(Quiz8, 81, 6);
+  DefineGlobalId( 82, 506);
+    DefineCross(Quiz9, 83, 27);
+    DefineCross(Quiz9, 84, 29);
+    DefineCross(Quiz6, 85, 31);
+  DefineGlobalId( 86, 507);
+  DefineGlobalId( 87, 508);
+  DefineGlobalId( 88, 509);
+  DefineGlobalId( 89, 510);
+  DefineGlobalId( 90, 511);
+  DefineGlobalId( 91, 512);
+    DefineCross(Quiz8, 92, 25);
+  DefineGlobalId( 93, 513);
+    DefineCross(Quiz9, 94, 11);
+    DefineCross(Quiz7, 95, 122);
+    DefineCross(QuizI, 96, 31);
+    DefineCross(QuizI, 97, 30);
+    DefineCross(QuizI, 98, 5);
+    DefineCross(QuizIII, 99, 32);
+    DefineCross(QuizII, 100, 64);
+  DefineGlobalId( 101, 514);
+  DefineGlobalId( 102, 515);
+  DefineGlobalId( 103, 516);
+  DefineGlobalId( 104, 517);
+  DefineGlobalId( 105, 518);
+  DefineGlobalId( 106, 519);
+    DefineCross(Quiz6, 107, 36);
+  DefineGlobalId( 108, 520);
+  DefineGlobalId( 109, 521);
+  DefineGlobalId( 110, 522);
+  DefineGlobalId( 111, 523);
+  DefineGlobalId( 112, 524);
+  DefineGlobalId( 113, 525);
+  DefineGlobalId( 114, 526);
+    DefineCross(Quiz9, 115, 88);
+    DefineCross(Quiz9, 116, 93);
+  DefineGlobalId( 117, 527);
+  DefineGlobalId( 118, 528);
+  DefineGlobalId( 119, 529);
+  DefineGlobalId( 120, 530);
+  DefineGlobalId( 121, 531);
+  DefineGlobalId( 122, 532);
+  DefineGlobalId( 123, 533);
+  DefineGlobalId( 124, 534);
+  DefineGlobalId( 125, 535);
+  DefineGlobalId( 126, 536);
+  DefineGlobalId( 127, 537);
+  DefineGlobalId( 128, 538);
+
 }
 
 /*##########################################################################
