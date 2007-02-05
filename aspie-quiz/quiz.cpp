@@ -5202,8 +5202,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 	file.Write("<h3>Histograms</h3>\n");
 
-    file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=360 BORDER=0></p>");
-    file.Write("<p><img src=\"dx.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=600 BORDER=0></p>");
+	file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=360 BORDER=0></p>");
+	file.Write("<p><img src=\"dx.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=600 BORDER=0></p>");
 
 #ifdef ENGLISH
 	file.Write("<h3>Groups</h3>\n");

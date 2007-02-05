@@ -1516,7 +1516,7 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
@@ -2557,6 +2557,22 @@ void TBirthMonth::ExportHistogram(const char *filename)
 		val = val / ntsum;
 	    sprintf(str, "%d\n", val);
 	    file.Write(str);	        
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 25));
+		file.Write(str);
+
+		val = AsCount[0][i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[0][i] * GetFactor(i);
+		val = val / ntsum;
+		sprintf(str, "%d\n", val);
+		file.Write(str);
 	}
 }
 

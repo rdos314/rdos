@@ -35,12 +35,13 @@
 #include "videodev.h"
 #include "linxaxis.h"
 #include "linyaxis.h"
+#include "timeaxis.h"
 #include "jpeg.h"
 
 struct THistData
 {
-    int Index;
-    long double Val;
+	int Index;
+	long double Val;
 };
 
 #define MAX_IN_ROW  1024
@@ -68,6 +69,7 @@ int ImportData(const char *filename, THistData HistArr[100])
 	 int size;
 	 THistData *HistPtr = HistArr;
 	 TFile infile(filename);
+	 long double temp;
 	 long double val;
 
 	while (size = infile.Read(buf, MAX_IN_ROW))
@@ -77,24 +79,25 @@ int ImportData(const char *filename, THistData HistArr[100])
 		if (ptr)
 			*ptr = 0;
 		else
-		    break;
+			break;
 
 		pos += strlen(buf) + 1;
 		infile.SetPos(pos);
 
-		if (sscanf(buf, "%d %Lf", &HistPtr->Index, &val) != 2)
+		if (sscanf(buf, "%Lf %Lf", &temp, &val) != 2)
 			 return FALSE;
 
 		if (val < 0.0)
-		    val = 0.0;
+			val = 0.0;
 
 		  if (val > MaxVal)
 				MaxVal = val;
 
-		  HistPtr->Val = val;
+		HistPtr->Index = (int)(temp + 0.5);
+		HistPtr->Val = val;
 		HistPtr++;
 	}
-    return TRUE;
+	return TRUE;
 }
 
 /*################## WriteHeading ##########################
@@ -131,12 +134,12 @@ void WriteAsNtHist(TBitmapGraphicDevice *dev, int x, int y, THistData As[100], T
 	int i;
     char *name;
     TFont Font(10);
-    TFont TextFont(15);
+	TFont TextFont(15);
 	TLinXAxis LinXAxis(&Font);
 	TLinYAxis LinYAxis;
     TChart *chart;
 
-    chart = new TChart(dev, &LinXAxis, &LinYAxis);
+	chart = new TChart(dev, &LinXAxis, &LinYAxis);
 
 	 chart->SetWindow(x, y + 20, x + WIDTH / 2 + 17, y + HEIGHT - 31);
 	 chart->SetBackColor(255, 255, 255);
@@ -195,27 +198,50 @@ void WriteBirthHist(TBitmapGraphicDevice *dev, THistData As[100], THistData Nt[1
 	int index;
 	int ok;
 	int i;
-    char *name;
-    TFont Font(10);
-    TFont TextFont(15);
-	TLinXAxis LinXAxis(&Font);
+	char *name;
+	TFont Font(10);
+	TFont TextFont(15);
+	TTimeXAxis TimeAxis(&Font);
 	TLinYAxis LinYAxis;
-    TChart *chart;
+	TDateTime datetime;
+	TDateTime fromtime(2001, 1, 1, 0, 0, 0, 0);
+	TDateTime totime(2004, 1, 1, 0, 0, 0, 0);
+	long double from = fromtime;
+    long double to = totime;
+    long double scale = (to - from) / 100.0; 
+    long double val;
+	TChart *chart;
 
-    chart = new TChart(dev, &LinXAxis, &LinYAxis);
+	chart = new TChart(dev, &TimeAxis, &LinYAxis);
 
 	chart->SetWindow(0, 20, 340, 480 - 31);
 	chart->SetBackColor(255, 255, 255);
 
+	for (i = 1; i < 14; i++)
+	{
+		chart->SetLineColor(i, 200, 200, 200);
+		val = TDateTime(2002, i, 1, 0, 0, 0, 0);
+		chart->Add(i, val, 0.0);
+		chart->Add(i, val, MaxVal);
+	}
+
 	chart->SetLineColor(100, 0, 255, 75);
 
-	for (i = 6; i < 18; i++)
-	    chart->Add(100, (long double)(As[i].Index + 1), As[i].Val);
+	for (i = 33; i < 67; i++)
+	{
+		val = from + (long double)i * scale;
+		chart->Add(100, val, As[i].Val);
+	}
 
 	chart->SetLineColor(101, 128, 0, 255);
 
-	for (i = 6; i < 18; i++)
-		chart->Add(101, (long double)(Nt[i].Index + 1), Nt[i].Val);
+	for (i = 33; i < 67; i++)
+	{
+	    val = from + (long double)i * scale;
+		chart->Add(101, val, Nt[i].Val);
+	}
+
+	chart->SetYAxis(0.0, MaxVal);
 
 	chart->Draw();
 
@@ -225,14 +251,14 @@ void WriteBirthHist(TBitmapGraphicDevice *dev, THistData As[100], THistData Nt[1
 
 	for (i = 0; i < 2; i++)
 	{
-        switch (i)
+		switch (i)
 		{
 			case 0:
-			    name = "Neurotypical";
-			    dev->SetDrawColor(128, 0, 255);
+				name = "Neurotypical";
+				dev->SetDrawColor(128, 0, 255);
 				break;
 
-		    case 1:
+			case 1:
 				name = "Aspie";
 				dev->SetDrawColor(0, 255, 75);
 				break;
