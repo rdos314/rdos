@@ -50,7 +50,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuiz *Quiz[6];
+TQuiz *Quiz[15];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -123,6 +123,10 @@ int main(int argc, char **argv)
 	 Quiz[8]->ExportExcelCase("male9.dat", PCA_TYPE_MALE);
 	 Quiz[8]->ExportExcelCase("female9.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[9]->ExportExcelCase("allr1.dat", PCA_TYPE_ALL);
+	 Quiz[9]->ExportExcelCase("maler1.dat", PCA_TYPE_MALE);
+	 Quiz[9]->ExportExcelCase("femaler1.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
@@ -157,6 +161,10 @@ int main(int argc, char **argv)
 	 Quiz[8]->ImportMvsp("male9.txt", PCA_TYPE_MALE);
 	 Quiz[8]->ImportMvsp("female9.txt", PCA_TYPE_FEMALE);
 
+	 Quiz[9]->ImportMvsp("allr1.txt", PCA_TYPE_ALL);
+	 Quiz[9]->ImportMvsp("maler1.txt", PCA_TYPE_MALE);
+	 Quiz[9]->ImportMvsp("femaler1.txt", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
@@ -166,6 +174,7 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteReferers("ref7.htm");
 	 Quiz[7]->WriteReferers("ref8.htm");
 	 Quiz[8]->WriteReferers("ref9.htm");
+	 Quiz[9]->WriteReferers("refr1.htm");
 
 	 Quiz[0]->WriteSumaryTable("quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("quiz2.htm", FALSE);
@@ -176,18 +185,19 @@ int main(int argc, char **argv)
 	 Quiz[6]->WriteSumaryTable("quiz7.htm", FALSE);
 	 Quiz[7]->WriteSumaryTable("quiz8.htm", FALSE);
 	 Quiz[8]->WriteSumaryTable("quiz9.htm", FALSE);
+	 Quiz[9]->WriteSumaryTable("quizr1.htm", FALSE);
 
-	 Quiz[8]->WriteGroupTable("group.htm", TRUE);
-	 Quiz[8]->WriteGroupCorrTable("groupcorr.htm");
-	 Quiz[8]->WritePcaLoadTable("pcaload.htm");
+	 Quiz[9]->WriteGroupTable("group.htm", TRUE);
+	 Quiz[9]->WriteGroupCorrTable("groupcorr.htm");
+	 Quiz[9]->WritePcaLoadTable("pcaload.htm");
 
-	 Quiz[8]->WriteAverageGroupCorrTable("avgcorr.htm");
-	 Quiz[8]->WriteAveragePcaTable("avgpca.htm");
-	 Quiz[8]->WriteAveragePcaCorrTable("avg.htm");
+	 Quiz[9]->WriteAverageGroupCorrTable("avgcorr.htm");
+	 Quiz[9]->WriteAveragePcaTable("avgpca.htm");
+	 Quiz[9]->WriteAveragePcaCorrTable("avg.htm");
 
-	 Quiz[8]->WritePcaCorrTable("pcacorr.htm");
+	 Quiz[9]->WritePcaCorrTable("pcacorr.htm");
 
-	 Quiz[8]->WriteLinkReport("index.htm");
+	 Quiz[9]->WriteLinkReport("index.htm");
 
 	 Quiz[5]->WriteHair("hair6.htm");
 	 Quiz[5]->WriteEye("eye6.htm");

@@ -5154,33 +5154,50 @@ void TQuiz::WriteLinkReport(const char *filename)
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[8]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
 	file.Write(" <a href=\"quiz9.htm\">summary</a> <a href=\"ref9.htm\">referer sites</a>");
-    file.Write(" <a href=\"hair9.htm\">hair-color</a>");
-    file.Write(" <a href=\"eye9.htm\">eye-color</a>");
-    file.Write(" <a href=\"abo9.htm\">ABO</a>");
-    file.Write(" <a href=\"park9.htm\">Parkinson</a>");
-    file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
-    file.Write(" <a href=\"cftr9.htm\">Cystic fibrosis</a>");
-    file.Write(" <a href=\"hfe9.htm\">Hemochromatosis</a>");
-    file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
-    file.Write("<br>");
+	 file.Write(" <a href=\"hair9.htm\">hair-color</a>");
+	 file.Write(" <a href=\"eye9.htm\">eye-color</a>");
+	 file.Write(" <a href=\"abo9.htm\">ABO</a>");
+	 file.Write(" <a href=\"park9.htm\">Parkinson</a>");
+	 file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
+	 file.Write(" <a href=\"cftr9.htm\">Cystic fibrosis</a>");
+	 file.Write(" <a href=\"hfe9.htm\">Hemochromatosis</a>");
+	 file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
+	 file.Write("<br>");
 #endif
-    
+
 #ifdef SWEDISH
-    file.Write(" <a href=\"quiz9.htm\">summering</a> <a href=\"ref9.htm\">referenssajter</a>");
-    file.Write(" <a href=\"hair9.htm\">hårfärg</a>");
-    file.Write(" <a href=\"eye9.htm\">ögonfärg</a>");
-    file.Write(" <a href=\"abo9.htm\">ABO</a>");
-    file.Write(" <a href=\"park9.htm\">Parkinson</a>");
-    file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
-    file.Write(" <a href=\"cftr9.htm\">Cystisk fibros</a>");
-    file.Write(" <a href=\"hfe9.htm\">Hemokromatos</a>");
-    file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
-    file.Write("<br>");
+	 file.Write(" <a href=\"quiz9.htm\">summering</a> <a href=\"ref9.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"hair9.htm\">hårfärg</a>");
+	 file.Write(" <a href=\"eye9.htm\">ögonfärg</a>");
+	 file.Write(" <a href=\"abo9.htm\">ABO</a>");
+	 file.Write(" <a href=\"park9.htm\">Parkinson</a>");
+	 file.Write(" <a href=\"alz9.htm\">Alzheimer</a>");
+	 file.Write(" <a href=\"cftr9.htm\">Cystisk fibros</a>");
+	 file.Write(" <a href=\"hfe9.htm\">Hemokromatos</a>");
+	 file.Write(" <a href=\"leiden9.htm\">Factor V Leiden</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizr1.htm\">summary</a> <a href=\"refr1.htm\">referer sites</a>");
+	 file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizr1.htm\">summering</a> <a href=\"refr1.htm\">referenssajter</a>");
+	 file.Write("<br>");
 #endif
 
 	file.Write("<h3>Histograms</h3>\n");
