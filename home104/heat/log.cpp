@@ -399,6 +399,7 @@ void TLog::Execute()
             doc->GetData(LOG_SIGN, msg);
             FFile->Write(msg, size);
             delete msg;
+            delete doc;
         }
 
         RdosWaitMilli(1000);
@@ -511,18 +512,18 @@ int TLogReader::GetNext()
         FFile->Read(&size, 2);
         if (size > 0 && size < 0x4000)
         {
-                Reset();
+            Reset();
         
-				buf = new char[size + 8];
-				FFile->Read(buf + 6, size + 2);
-				memcpy(buf, &sign, 4);
-				memcpy(buf + 4, &size, 2);
+			buf = new char[size + 8];
+			FFile->Read(buf + 6, size + 2);
+			memcpy(buf, &sign, 4);
+			memcpy(buf + 4, &size, 2);
 
-				if (FCurrMsg->Parse(LOG_SIGN, buf, size + 8))
-				{
-					 delete buf;
-					 return TRUE;
-				}
+			if (FCurrMsg->Parse(LOG_SIGN, buf, size + 8))
+			{
+				delete buf;
+				return TRUE;
+		    }
             delete buf;
         }
 
