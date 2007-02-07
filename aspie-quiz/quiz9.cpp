@@ -166,7 +166,7 @@ public:
 #
 ##########################################################################*/
 TQuiz9::TQuiz9(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8)
-  : TQuiz(150),
+  : TQuiz(153),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -450,6 +450,10 @@ void TQuiz9::SetupTexts()
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
+  Quiz[150].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[151].MyGroup = GROUP_ASPIE_BIOLOGY;
+  Quiz[152].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have a small mouth?";
   Quiz[1].Text = "Do you have odd teeth; e.g. teeth that are crooked or bigger than usual; gaps; overlaps; underbite etc.?";
@@ -601,6 +605,11 @@ void TQuiz9::SetupTexts()
   Quiz[147].Text = "Do you like tongue-kissing?";
   Quiz[148].Text = "Do you enjoy to snuggle a long time with certain familiar people?";
   Quiz[149].Text = "Do you use to have diarrhea?";
+
+  Quiz[150].Text = "Red hair-color";
+  Quiz[151].Text = "Do you have brown eyes?";
+  Quiz[152].Text = "Born between september and january";
+  
 #endif
 
 #ifdef SWEDISH
@@ -754,6 +763,11 @@ void TQuiz9::SetupTexts()
   Quiz[147].Text = "Tycker du om tungkyssar?";
   Quiz[148].Text = "Gillar du att gosa länge med vissa du känner väl?";
   Quiz[149].Text = "Brukar du ha diarre?";
+
+  Quiz[150].Text = "Röd hårfärg";
+  Quiz[151].Text = "Har du bruna ögon?";
+  Quiz[152].Text = "Född mellan september och januari";
+
 #endif
 
 }
@@ -888,20 +902,20 @@ void TQuiz9::LoadPopulations()
 			case 1:
 			case 2:
 			case 5:
-				Row.Quiz[151] = 3;
+				Row.Quiz[150] = 3;
 				break;
 
 			case 3:
-				Row.Quiz[151] = 1;
+				Row.Quiz[150] = 1;
 				break;
 
 			case 4:
 			case 6:
-				Row.Quiz[151] = 2;
+				Row.Quiz[150] = 2;
 				break;
 
 			case 7:
-				Row.Quiz[151] = 0;
+				Row.Quiz[150] = 0;
 				break;
 		}
 
@@ -909,21 +923,39 @@ void TQuiz9::LoadPopulations()
 		{
 			case 1:
 			case 2:
-				Row.Quiz[152] = 1;
+				Row.Quiz[151] = 1;
 				break;
 
 			case 3:
-				Row.Quiz[152] = 2;
+				Row.Quiz[151] = 2;
 				break;
 
 			case 4:
 			case 5:
-				Row.Quiz[152] = 3;
+				Row.Quiz[151] = 3;
 				break;
 		}
 
-		for (i = 0; i < 12; i++)
-			Row.Quiz[154 + i] = 0;
+        switch (Row.BirthMonth)
+        {
+				case 2:
+				case 3:
+				case 4:
+					 Row.Quiz[152] = 1;
+					 break;
+
+				case 8:
+				case 9:
+				case 10:
+				case 11:
+				case 12:
+					 Row.Quiz[152] = 3;
+					 break;
+
+				default:
+					Row.Quiz[152] = 2;
+                    break;
+        }
 
 		for (i = 0; i < N; i++)
 		{
@@ -1182,6 +1214,9 @@ void TQuiz9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Quiz
 	DefineGlobalId( 147, 477);
 	DefineGlobalId( 148, 478);
 	DefineGlobalId( 149, 479);
+	DefineCross(Quiz8, 150, 151);
+	DefineCross(Quiz8, 151, 152);
+	DefineGlobalId( 152, 539);
 }
 
 /*##########################################################################
@@ -1516,11 +1551,11 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

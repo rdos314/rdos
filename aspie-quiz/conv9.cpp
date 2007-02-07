@@ -199,6 +199,26 @@ char *ProcessRow(char *str)
 
 				case 3:
 					Row.BirthMonth = atoi(valstr);
+                	switch (Row.BirthMonth)
+            	    {
+                        case 2:
+                        case 3:
+                        case 4:
+            		    	Row.Quiz[152] = 1;
+            		    	break;
+            		    	
+                        case 8:
+                        case 9:                            
+                        case 10:
+                        case 11:
+                        case 12:
+                            Row.Quiz[152] = 3;
+                            break;
+
+                        default:
+                            Row.Quiz[152] = 2;
+                            break;
+            	    }
 					break;
 
 				case 4:
@@ -212,20 +232,20 @@ char *ProcessRow(char *str)
             		    case 1:
     		            case 2:
             	    	case 5:
-            		    	Row.Quiz[151] = 3;
+            		    	Row.Quiz[150] = 3;
     		            	break;
 
                    		case 3:
-	    	            	Row.Quiz[151] = 1;
+	    	            	Row.Quiz[150] = 1;
             		    	break;
 
 		                case 4:
                 		case 6:
-	    	            	Row.Quiz[151] = 2;
+	    	            	Row.Quiz[150] = 2;
                 			break;
 
 	    	            case 7:
-							Row.Quiz[151] = 0;
+							Row.Quiz[150] = 0;
     		            	break;
             	    }
 					break;
@@ -236,16 +256,16 @@ char *ProcessRow(char *str)
             	    {
             		    case 1:
                 		case 2:
-							Row.Quiz[152] = 1;
+							Row.Quiz[151] = 1;
 							break;
 
 						case 3:
-							Row.Quiz[152] = 2;
+							Row.Quiz[151] = 2;
 							break;
 
 						case 4:
 						case 5:
-							Row.Quiz[152] = 3;
+							Row.Quiz[151] = 3;
 							break;
 					}
 					break;
