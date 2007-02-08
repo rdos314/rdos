@@ -941,7 +941,7 @@ void TQuiz9::LoadPopulations()
 				case 2:
 				case 3:
 				case 4:
-					 Row.Quiz[152] = 1;
+					 Row.Quiz[152] = 3;
 					 break;
 
 				case 8:
@@ -949,7 +949,7 @@ void TQuiz9::LoadPopulations()
 				case 10:
 				case 11:
 				case 12:
-					 Row.Quiz[152] = 3;
+					 Row.Quiz[152] = 1;
 					 break;
 
 				default:
@@ -1554,8 +1554,8 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

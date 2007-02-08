@@ -204,7 +204,7 @@ char *ProcessRow(char *str)
                         case 2:
                         case 3:
                         case 4:
-            		    	Row.Quiz[152] = 1;
+            		    	Row.Quiz[152] = 3;
             		    	break;
             		    	
                         case 8:
@@ -212,7 +212,7 @@ char *ProcessRow(char *str)
                         case 10:
                         case 11:
                         case 12:
-                            Row.Quiz[152] = 3;
+                            Row.Quiz[152] = 1;
                             break;
 
                         default:

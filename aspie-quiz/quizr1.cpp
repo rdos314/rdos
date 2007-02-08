@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizR1::TQuizR1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9)
-  : TQuiz(129),
+  : TQuiz(130),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -150,6 +150,7 @@ void TQuizR1::SetupTexts()
   Quiz[19].Reverse = TRUE;
   Quiz[20].Reverse = TRUE;
   Quiz[32].Reverse = TRUE;
+  Quiz[33].Reverse = TRUE;
   Quiz[34].Reverse = TRUE;
   Quiz[35].Reverse = TRUE;
   Quiz[36].Reverse = TRUE;
@@ -158,7 +159,7 @@ void TQuizR1::SetupTexts()
   Quiz[1].MyGroup = GROUP_MIXED;
   Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[4].MyGroup = GROUP_EMOTION;
+  Quiz[4].MyGroup = GROUP_MIXED;
   Quiz[5].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[6].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -221,7 +222,7 @@ void TQuizR1::SetupTexts()
   Quiz[64].MyGroup = GROUP_MIXED;
   Quiz[65].MyGroup = GROUP_EMOTION;
   Quiz[66].MyGroup = GROUP_REPETITION;
-  Quiz[67].MyGroup = GROUP_MIXED;
+  Quiz[67].MyGroup = GROUP_EMOTION;
   Quiz[68].MyGroup = GROUP_MIXED;
   Quiz[69].MyGroup = GROUP_SENSORY;
   Quiz[70].MyGroup = GROUP_NONVERBAL;
@@ -229,30 +230,30 @@ void TQuizR1::SetupTexts()
   Quiz[72].MyGroup = GROUP_SENSORY;
   Quiz[73].MyGroup = GROUP_SENSORY;
   Quiz[74].MyGroup = GROUP_SENSORY;
-  Quiz[75].MyGroup = GROUP_MIXED;
+  Quiz[75].MyGroup = GROUP_SENSORY;
   Quiz[76].MyGroup = GROUP_MIXED;
   Quiz[77].MyGroup = GROUP_MIXED;
   Quiz[78].MyGroup = GROUP_SENSORY;
   Quiz[79].MyGroup = GROUP_SENSORY;
-  Quiz[80].MyGroup = GROUP_MIXED;
+  Quiz[80].MyGroup = GROUP_SENSORY;
   Quiz[81].MyGroup = GROUP_SENSORY;
   Quiz[82].MyGroup = GROUP_MIXED;
   Quiz[83].MyGroup = GROUP_SENSORY;
   Quiz[84].MyGroup = GROUP_SENSORY;
   Quiz[85].MyGroup = GROUP_NONVERBAL;
-  Quiz[86].MyGroup = GROUP_MIXED;
+  Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[87].MyGroup = GROUP_MIXED;
   Quiz[88].MyGroup = GROUP_MIXED;
   Quiz[89].MyGroup = GROUP_MIXED;
-  Quiz[90].MyGroup = GROUP_MIXED;
-  Quiz[91].MyGroup = GROUP_MIXED;
+  Quiz[90].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[91].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[92].MyGroup = GROUP_MIXED;
-  Quiz[93].MyGroup = GROUP_MIXED;
+  Quiz[93].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[94].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[95].MyGroup = GROUP_MIXED;
-  Quiz[96].MyGroup = GROUP_EMOTION;
-  Quiz[97].MyGroup = GROUP_EMOTION;
-  Quiz[98].MyGroup = GROUP_NONVERBAL;
+  Quiz[96].MyGroup = GROUP_MIXED;
+  Quiz[97].MyGroup = GROUP_MIXED;
+  Quiz[98].MyGroup = GROUP_MIXED;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
   Quiz[101].MyGroup = GROUP_MIXED;
@@ -267,22 +268,23 @@ void TQuizR1::SetupTexts()
   Quiz[110].MyGroup = GROUP_MIXED;
   Quiz[111].MyGroup = GROUP_MIXED;
   Quiz[112].MyGroup = GROUP_MIXED;
-  Quiz[113].MyGroup = GROUP_MIXED;
+  Quiz[113].MyGroup = GROUP_NONVERBAL;
   Quiz[114].MyGroup = GROUP_MIXED;
   Quiz[115].MyGroup = GROUP_ASPIE_COMM;
   Quiz[116].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[117].MyGroup = GROUP_MIXED;
-  Quiz[118].MyGroup = GROUP_MIXED;
-  Quiz[119].MyGroup = GROUP_MIXED;
-  Quiz[120].MyGroup = GROUP_MIXED;
-  Quiz[121].MyGroup = GROUP_MIXED;
-  Quiz[122].MyGroup = GROUP_MIXED;
-  Quiz[123].MyGroup = GROUP_MIXED;
+  Quiz[117].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[118].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[119].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[120].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[121].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[122].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[123].MyGroup = GROUP_ASPIE_COMM;
   Quiz[124].MyGroup = GROUP_MIXED;
-  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_ASPIE_COMM;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
@@ -414,6 +416,7 @@ void TQuizR1::SetupTexts()
   Quiz[126].Text = "Do you suck your thumb for comfort?";
   Quiz[127].Text = "Do you wobble your hand slightly to indicate so-so?";
   Quiz[128].Text = "Do you enjoy lying on the ground looking at the sky?";
+  Quiz[129].Text = "Are you good at sneaking up on people or animals?";
 #endif
 
 #ifdef SWEDISH
@@ -546,6 +549,7 @@ void TQuizR1::SetupTexts()
   Quiz[126].Text = "Suger du på tummen när du behöver tröst?";
   Quiz[127].Text = "Brukar du vippa handen lite för att indikera \"sådär\"?";
   Quiz[128].Text = "Gillar du att ligga på marken och studera himlen?";
+  Quiz[129].Text = "Är du bra att smyga på människor eller djur?";
 #endif
 
 }
@@ -829,7 +833,7 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizI, 43, 68);
     DefineCross(Quiz9, 44, 35);
     DefineCross(Quiz9, 45, 30);
-    DefineCross(Quiz9, 46, 31);
+	 DefineCross(Quiz9, 46, 31);
     DefineCross(Quiz9, 47, 34);
     DefineCross(Quiz9, 48, 36);
     DefineCross(Quiz7, 49, 143);
@@ -864,7 +868,7 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(Quiz9, 78, 20);
     DefineCross(Quiz9, 79, 26);
   DefineGlobalId( 80, 505);
-    DefineCross(Quiz8, 81, 6);
+	 DefineCross(Quiz8, 81, 6);
   DefineGlobalId( 82, 506);
     DefineCross(Quiz9, 83, 27);
     DefineCross(Quiz9, 84, 29);
@@ -899,7 +903,7 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
   DefineGlobalId( 113, 525);
   DefineGlobalId( 114, 526);
     DefineCross(Quiz9, 115, 88);
-    DefineCross(Quiz9, 116, 93);
+	 DefineCross(Quiz9, 116, 93);
   DefineGlobalId( 117, 527);
   DefineGlobalId( 118, 528);
   DefineGlobalId( 119, 529);
@@ -912,6 +916,7 @@ void TQuizR1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
   DefineGlobalId( 126, 536);
   DefineGlobalId( 127, 537);
   DefineGlobalId( 128, 538);
+  DefineGlobalId( 129, 540);
 
 }
 
@@ -1250,11 +1255,11 @@ void TQuizR1::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
-
 //					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+//						d3 = -d3;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

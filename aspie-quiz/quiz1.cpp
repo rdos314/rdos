@@ -125,7 +125,7 @@ void TQuizI::SetupTexts()
 	Quiz[2].MyGroup = GROUP_MIXED;
 	Quiz[3].MyGroup = GROUP_MIXED;
 	Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[5].MyGroup = GROUP_NONVERBAL;
+	Quiz[5].MyGroup = GROUP_MIXED;
 	Quiz[6].MyGroup = GROUP_NONVERBAL;
 	Quiz[7].MyGroup = GROUP_MIXED;
 	Quiz[8].MyGroup = GROUP_MIXED;
@@ -150,10 +150,10 @@ void TQuizI::SetupTexts()
 	Quiz[27].MyGroup = GROUP_EMOTION;
 	Quiz[28].MyGroup = GROUP_EMOTION;
 	Quiz[29].MyGroup = GROUP_EMOTION;
-	Quiz[30].MyGroup = GROUP_EMOTION;
-	Quiz[31].MyGroup = GROUP_EMOTION;
+	Quiz[30].MyGroup = GROUP_MIXED;
+	Quiz[31].MyGroup = GROUP_MIXED;
 	Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[33].MyGroup = GROUP_EMOTION;
+	Quiz[33].MyGroup = GROUP_MIXED;
 	Quiz[34].MyGroup = GROUP_REPETITION;
 	Quiz[35].MyGroup = GROUP_REPETITION;
 	Quiz[36].MyGroup = GROUP_REPETITION;
