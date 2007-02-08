@@ -147,13 +147,18 @@ void TQuizR1::SetupTexts()
   Quiz[15].Reverse = TRUE;
   Quiz[16].Reverse = TRUE;
   Quiz[17].Reverse = TRUE;
+  Quiz[18].Reverse = TRUE;
   Quiz[19].Reverse = TRUE;
   Quiz[20].Reverse = TRUE;
+  Quiz[21].Reverse = TRUE;
   Quiz[32].Reverse = TRUE;
   Quiz[33].Reverse = TRUE;
   Quiz[34].Reverse = TRUE;
   Quiz[35].Reverse = TRUE;
   Quiz[36].Reverse = TRUE;
+  Quiz[77].Reverse = TRUE;
+  Quiz[108].Reverse = TRUE;
+  Quiz[109].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[1].MyGroup = GROUP_MIXED;
@@ -166,9 +171,9 @@ void TQuizR1::SetupTexts()
   Quiz[8].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[9].MyGroup = GROUP_EMOTION;
   Quiz[10].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[11].MyGroup = GROUP_MIXED;
-  Quiz[12].MyGroup = GROUP_MIXED;
-  Quiz[13].MyGroup = GROUP_MIXED;
+  Quiz[11].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[12].MyGroup = GROUP_NONVERBAL;
+  Quiz[13].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[14].MyGroup = GROUP_NT_SOCIAL;
   Quiz[15].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[16].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -176,7 +181,7 @@ void TQuizR1::SetupTexts()
   Quiz[18].MyGroup = GROUP_NT_SOCIAL;
   Quiz[19].MyGroup = GROUP_NONVERBAL;
   Quiz[20].MyGroup = GROUP_NONVERBAL;
-  Quiz[21].MyGroup = GROUP_MIXED;
+  Quiz[21].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[22].MyGroup = GROUP_MIXED;
   Quiz[23].MyGroup = GROUP_NONVERBAL;
   Quiz[24].MyGroup = GROUP_MIXED;
@@ -186,16 +191,16 @@ void TQuizR1::SetupTexts()
   Quiz[28].MyGroup = GROUP_MIXED;
   Quiz[29].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[30].MyGroup = GROUP_NONVERBAL;
-  Quiz[31].MyGroup = GROUP_MIXED;
+  Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[32].MyGroup = GROUP_NONVERBAL;
-  Quiz[33].MyGroup = GROUP_MIXED;
+  Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[34].MyGroup = GROUP_NONVERBAL;
   Quiz[35].MyGroup = GROUP_NT_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
-  Quiz[38].MyGroup = GROUP_MIXED;
-  Quiz[39].MyGroup = GROUP_MIXED;
-  Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[40].MyGroup = GROUP_SENSORY;
   Quiz[41].MyGroup = GROUP_MIXED;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -209,7 +214,7 @@ void TQuizR1::SetupTexts()
   Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[52].MyGroup = GROUP_REPETITION;
   Quiz[53].MyGroup = GROUP_REPETITION;
-  Quiz[54].MyGroup = GROUP_MIXED;
+  Quiz[54].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[55].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[56].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[57].MyGroup = GROUP_MIXED;
@@ -237,14 +242,14 @@ void TQuizR1::SetupTexts()
   Quiz[79].MyGroup = GROUP_SENSORY;
   Quiz[80].MyGroup = GROUP_SENSORY;
   Quiz[81].MyGroup = GROUP_SENSORY;
-  Quiz[82].MyGroup = GROUP_MIXED;
+  Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[83].MyGroup = GROUP_SENSORY;
   Quiz[84].MyGroup = GROUP_SENSORY;
   Quiz[85].MyGroup = GROUP_NONVERBAL;
   Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[87].MyGroup = GROUP_MIXED;
-  Quiz[88].MyGroup = GROUP_MIXED;
-  Quiz[89].MyGroup = GROUP_MIXED;
+  Quiz[87].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[88].MyGroup = GROUP_NONVERBAL;
+  Quiz[89].MyGroup = GROUP_NONVERBAL;
   Quiz[90].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[91].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[92].MyGroup = GROUP_MIXED;
@@ -256,17 +261,17 @@ void TQuizR1::SetupTexts()
   Quiz[98].MyGroup = GROUP_MIXED;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
-  Quiz[101].MyGroup = GROUP_MIXED;
+  Quiz[101].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[102].MyGroup = GROUP_MIXED;
   Quiz[103].MyGroup = GROUP_MIXED;
-  Quiz[104].MyGroup = GROUP_MIXED;
-  Quiz[105].MyGroup = GROUP_MIXED;
+  Quiz[104].MyGroup = GROUP_EMOTION;
+  Quiz[105].MyGroup = GROUP_SENSORY;
   Quiz[106].MyGroup = GROUP_MIXED;
   Quiz[107].MyGroup = GROUP_NONVERBAL;
-  Quiz[108].MyGroup = GROUP_MIXED;
-  Quiz[109].MyGroup = GROUP_MIXED;
+  Quiz[108].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[109].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[110].MyGroup = GROUP_MIXED;
-  Quiz[111].MyGroup = GROUP_MIXED;
+  Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[112].MyGroup = GROUP_MIXED;
   Quiz[113].MyGroup = GROUP_NONVERBAL;
   Quiz[114].MyGroup = GROUP_MIXED;
@@ -282,9 +287,9 @@ void TQuizR1::SetupTexts()
   Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_ASPIE_COMM;
   Quiz[126].MyGroup = GROUP_MIXED;
-  Quiz[127].MyGroup = GROUP_MIXED;
+  Quiz[127].MyGroup = GROUP_ASPIE_COMM;
   Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_SENSORY;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
@@ -1252,7 +1257,7 @@ void TQuizR1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
