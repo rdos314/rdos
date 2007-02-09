@@ -941,21 +941,21 @@ void TQuiz9::LoadPopulations()
 				case 2:
 				case 3:
 				case 4:
-					 Row.Quiz[152] = 3;
+					 Row.Quiz[152] = 1;
 					 break;
 
-				case 8:
+				case 1:
 				case 9:
 				case 10:
 				case 11:
 				case 12:
-					 Row.Quiz[152] = 1;
+					 Row.Quiz[152] = 3;
 					 break;
 
 				default:
 					Row.Quiz[152] = 2;
-                    break;
-        }
+						  break;
+		  }
 
 		for (i = 0; i < N; i++)
 		{

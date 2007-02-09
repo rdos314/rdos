@@ -399,7 +399,7 @@ void TQuizR1::SetupTexts()
   Quiz[104].Text = "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?";
   Quiz[105].Text = "Do you have a hyperactive mind?";
   Quiz[106].Text = "Do have difficulties keeping things tidy ?";
-  Quiz[107].Text = "Do you have problems recognizing faces when you meet people out of their usual environment (dysphagia)?";
+  Quiz[107].Text = "Do you have problems recognizing faces when you meet people out of their usual environment (prosopagnosia)?";
   Quiz[108].Text = "Do you enjoy snuggling with people you like?";
   Quiz[109].Text = "Do you find it easy to understand and sympathise with those who function very differently from yourself?";
   Quiz[110].Text = "Are you sometimes fearless in situations that can be dangerous?";
@@ -485,7 +485,7 @@ void TQuizR1::SetupTexts()
   Quiz[57].Text = "Har du svårt att göra flera saker samtidigt, snabbt skifta fokus från en sak till en annan och därför behöver göra klart det du håller på med innan du kan ta itu med något annat?";
   Quiz[58].Text = "Har du vissa rutiner som du har behov av att följa?";
   Quiz[59].Text = "Blir det kaos inom dig om det händer något oväntat som förändrar din miljö, dina planer eller rutiner?";
-  Quiz[60].Text = "Har du ett behov av symmerti, ordning och/eller precision?";
+  Quiz[60].Text = "Har du ett behov av symmetri, ordning och/eller precision?";
   Quiz[61].Text = "Är du exceptionellt fäst vid vissa saker?";
   Quiz[62].Text = "Har du behov av att sitta på din favoritplats, åka samma väg eller handla i samma affär varje gång?";
   Quiz[63].Text = "Föredrar du att använda samma kläder och/eller äta samma mat varje dag?";
@@ -494,7 +494,7 @@ void TQuizR1::SetupTexts()
   Quiz[66].Text = "Har du ibland behov av gosefilt, kramdjur eller liknande?";
   Quiz[67].Text = "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?";
   Quiz[68].Text = "Blir du lätt överstimulerad och stressad av för mycket ljud, mönster, flimmer, oreda, trängsel och rörelse?";
-  Quiz[69].Text = "Här du extra känslig hörsel?";
+  Quiz[69].Text = "Har du extra känslig hörsel?";
   Quiz[70].Text = "Har du svårt att filtrera bort bakgrundsljud när du talar med någon?";
   Quiz[71].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas up om och om igen?";
   Quiz[72].Text = "Har du extra känsligt smaksinne?";
@@ -1257,11 +1257,11 @@ void TQuizR1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

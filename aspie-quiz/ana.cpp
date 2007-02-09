@@ -227,6 +227,7 @@ int main(int argc, char **argv)
 	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
 
+	 Quiz[9]->WriteWeighting("weights.cpp");
 	 Quiz[9]->WritePhpWeighting("weights.php");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");

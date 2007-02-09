@@ -4980,8 +4980,8 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-8</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-8</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
     file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
 
@@ -4994,9 +4994,9 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-    file.Write("<a href=\"histo\">Histogram för Aspie-quiz I-III + ND + 5-6</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-8</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-8</a><br>\n");
+    file.Write("<a href=\"histo\">Histogram för Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
     file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
 
