@@ -186,7 +186,7 @@ void TQuizR1::SetupTexts()
   Quiz[24].MyGroup = GROUP_MIXED;
   Quiz[25].MyGroup = GROUP_NONVERBAL;
   Quiz[26].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[27].MyGroup = GROUP_MIXED;
+  Quiz[27].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[28].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[29].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[30].MyGroup = GROUP_NONVERBAL;
@@ -247,8 +247,8 @@ void TQuizR1::SetupTexts()
   Quiz[85].MyGroup = GROUP_NONVERBAL;
   Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[87].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[88].MyGroup = GROUP_NONVERBAL;
-  Quiz[89].MyGroup = GROUP_NONVERBAL;
+  Quiz[88].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[89].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[90].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[91].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[92].MyGroup = GROUP_MIXED;
@@ -260,8 +260,8 @@ void TQuizR1::SetupTexts()
   Quiz[98].MyGroup = GROUP_MIXED;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
-  Quiz[101].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[102].MyGroup = GROUP_MIXED;
+  Quiz[101].MyGroup = GROUP_NT_TALENT;
+  Quiz[102].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[103].MyGroup = GROUP_EMOTION;
   Quiz[104].MyGroup = GROUP_EMOTION;
   Quiz[105].MyGroup = GROUP_SENSORY;
@@ -1259,11 +1259,11 @@ void TQuizR1::ImportMvsp(const char *filename, int PcaType)
 //					if (PcaType == PCA_TYPE_FEMALE)
 //						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
