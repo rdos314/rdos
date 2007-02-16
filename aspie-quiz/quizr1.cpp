@@ -192,7 +192,7 @@ void TQuizR1::SetupTexts()
   Quiz[30].MyGroup = GROUP_NONVERBAL;
   Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[32].MyGroup = GROUP_NONVERBAL;
-  Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[33].MyGroup = GROUP_NONVERBAL;
   Quiz[34].MyGroup = GROUP_NONVERBAL;
   Quiz[35].MyGroup = GROUP_NT_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -261,7 +261,7 @@ void TQuizR1::SetupTexts()
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
   Quiz[101].MyGroup = GROUP_NT_TALENT;
-  Quiz[102].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[102].MyGroup = GROUP_MIXED;
   Quiz[103].MyGroup = GROUP_EMOTION;
   Quiz[104].MyGroup = GROUP_EMOTION;
   Quiz[105].MyGroup = GROUP_SENSORY;
@@ -1259,8 +1259,8 @@ void TQuizR1::ImportMvsp(const char *filename, int PcaType)
 //					if (PcaType == PCA_TYPE_FEMALE)
 //						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;

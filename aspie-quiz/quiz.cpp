@@ -245,12 +245,12 @@ void TQuiz::Init()
 
 	Group[GROUP_ASPIE_BIOLOGY].Name = "Biology";
 	Group[GROUP_NT_BIOLOGY].Name = "Motor";
-	Group[GROUP_SENSORY].Name = "Sensory";
+	Group[GROUP_SENSORY].Name = "Perception";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie ability";
 	Group[GROUP_NT_TALENT].Name = "Aspie disability";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
-	Group[GROUP_ASPIE_COMM].Name = "Stims";
+	Group[GROUP_ASPIE_COMM].Name = "Aspie communication";
 	Group[GROUP_NONVERBAL].Name = "NT communication";
 	Group[GROUP_EMOTION].Name = "Environment";
 	Group[GROUP_SEX].Name = "Sexuality";
@@ -263,12 +263,12 @@ void TQuiz::Init()
 
 	Group[GROUP_ASPIE_BIOLOGY].Name = "Biologi";
 	Group[GROUP_NT_BIOLOGY].Name = "Motorik";
-	Group[GROUP_SENSORY].Name = "Sinnen";
+	Group[GROUP_SENSORY].Name = "Perception";
 	Group[GROUP_ASPIE_TALENT].Name = "Aspie talang";
 	Group[GROUP_NT_TALENT].Name = "Aspie handikapp";
 	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
 	Group[GROUP_NT_SOCIAL].Name = "NT social";
-	Group[GROUP_ASPIE_COMM].Name = "Stimming";
+	Group[GROUP_ASPIE_COMM].Name = "Aspie kommunikation";
 	Group[GROUP_NONVERBAL].Name = "NT kommunikation";
 	Group[GROUP_EMOTION].Name = "Miljö";
 	Group[GROUP_SEX].Name = "Sexualitet";
@@ -6662,4 +6662,86 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
             }
         } 
     }
+}
+
+/*##################  TQuiz::WritePhpGroupWeighting ##########################
+*   Purpose....: Write average group correlation in PHP-format for current quiz	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePhpGroupWeighting(const char *filename)
+{
+    long double gsum;
+    int gcount;
+    long double val;
+    int count;
+    int questions;
+    int curr;
+	int grp;
+    TQuiz *quiz;
+	 int q;
+    int j;
+	 int ival;
+	 char str[80];
+	TFile file(filename, 0);
+
+    file.Write("function GetGroupWeights()\r\n");
+    file.Write("{\r\n");
+
+	for (q = 0; q < N; q++)
+	{
+    	sprintf(str, "  $gw[%d] = array(0 => ", q);
+		file.Write(str);
+
+		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
+		{
+			gsum = 0.0;
+			gcount = 0;
+
+			quiz = this;
+			curr = q;
+			while (quiz)
+			{
+				val = quiz->Quiz[curr].Group[grp].Corr;
+				count = quiz->Quiz[curr].Group[grp].Count;
+				questions = quiz->Group[grp].Questions;
+
+				if (count > 3)
+				{
+					gsum += val * questions;
+					gcount += questions;
+				}
+
+                if (quiz->Quiz[curr].CrossQuiz)
+                {
+                    j = quiz->Quiz[curr].CrossInd;
+                    quiz = quiz->Quiz[curr].CrossQuiz;
+                    curr = j;
+    			}
+    			else
+    			    quiz = 0;
+			}
+
+            if (gcount)
+           		ival = round(100.0 * gsum / gcount);
+            else
+                ival = 0;
+
+            if (Quiz[q].Reverse)
+                ival = -ival;
+
+            if (grp == GROUP_NT_SOCIAL)
+                ival = -ival;
+                
+    		sprintf(str, "%d", ival);
+	    	file.Write(str);
+
+            if (grp != GROUP_COUNT - 3)
+                file.Write(", ");            
+			
+		}
+		file.Write(");\r\n");
+	}
 }

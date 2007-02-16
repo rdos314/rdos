@@ -185,6 +185,7 @@ public:
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
+	void WritePhpGroupWeighting(const char *filename);
 
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
 
