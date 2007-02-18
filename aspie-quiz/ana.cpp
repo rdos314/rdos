@@ -231,6 +231,9 @@ int main(int argc, char **argv)
 	 Quiz[8]->WritePhpWeighting("weights.php");
 	 Quiz[8]->WritePhpGroupWeighting("group.php");
 
+	 Quiz[9]->WriteWiki("wiki.txt", 0.2);
+	 Quiz[9]->WriteQuizWiki("r1wiki.txt");
+
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
 
