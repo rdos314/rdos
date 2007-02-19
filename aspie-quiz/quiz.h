@@ -189,6 +189,8 @@ public:
 	void WritePhpWeighting(const char *filename);
 	void WritePhpGroupWeighting(const char *filename);
 
+	void WriteGlobalCorrelation(const char *filename, int count);
+
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
@@ -221,6 +223,9 @@ public:
 protected:
 	void Init();
 	int round(long double val);
+
+    const char *GetGlobalQuestionText(int GlobalId);
+	
     int CalcAsNtDiff(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS], int *AsDiff, int *NtDiff);
     int OptimizeAsOne(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);

@@ -39,6 +39,10 @@
 
 static int GlobalArr[MAX_GLOBAL_QUESTIONS];
 
+static int GlobalCorrInited = FALSE;
+static int GlobalCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GLOBAL_QUESTIONS];
+static long double GlobalCorrArr[MAX_GLOBAL_QUESTIONS][MAX_GLOBAL_QUESTIONS];
+
 /*##########################################################################
 #
 #   Name       : TQuiz::TQuiz
@@ -440,6 +444,40 @@ void TQuiz::CheckCross()
                                 q, cross, qc);
                     
     }
+}
+
+/*##################  TQuiz::GetGlobalQuestionText ##########################
+*   Purpose....: Get global question text from ID   		     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+const char *TQuiz::GetGlobalQuestionText(int GlobalId)
+{
+	int cross;
+	int q;
+	TQuiz *quiz;
+	char str[128];
+
+    for (q = 0; q < N; q++)
+        if (Quiz[q].GlobalId == GlobalId)
+            return Quiz[q].Text;
+
+    for (cross = 0; cross < MAX_CROSS; cross++)
+    {
+        quiz = CrossQuiz[cross];
+        if (quiz)
+        {
+				for (q = 0; q < quiz->N; q++)
+            {
+                if (quiz->Quiz[q].GlobalId == GlobalId)
+                    return quiz->Quiz[q].Text;
+            }
+        }
+    }
+
+    return "";
 }
 
 /*##################  TQuiz::WritePhpQuestions ##########################
@@ -1596,6 +1634,11 @@ void TQuiz::Calculate()
 	int sum1;
 	int count2;
 	int sum2;
+    TQuiz *quiz;
+    int cq;
+	int q1, q2;
+    int ival1, ival2;
+    int gid1, gid2;
 
 	PopCorr.Correlate(&Aspie, &Nt);
 
@@ -1836,6 +1879,77 @@ void TQuiz::Calculate()
 		        GroupCorr[g2][g1].Corr = 0;
 				GroupCorr[g2][g1].Count = 0;
 			}
+		}
+	}
+
+    if (!GlobalCorrInited)
+    {
+        GlobalCorrInited = TRUE;
+
+		  for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
+        {
+            for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
+            {
+                GlobalCorrCount[gid1][gid2] = 0;
+                GlobalCorrArr[gid1][gid2] = 0.0;
+            }
+        }
+    }
+                
+    for (q = 0; q < N; q++)
+    {
+        quiz = Quiz[q].CrossQuiz;
+        if (quiz)
+        {
+			cq = Quiz[q].CrossInd;
+			Quiz[q].GlobalId = quiz->Quiz[cq].GlobalId;
+		}
+	}
+
+	for (q1 = 0; q1 < N; q1++)
+	{
+	    for (q2 = 0; q2 < q1; q2++)
+		{
+		    count = 0;
+			rsum = 0;
+			for (e = 0; e < All.ValueCount; e++)
+			{
+    			ival1 = All.ValArr[e].Quiz[q1];
+    			if (ival1)
+    			{
+    				if (Quiz[q1].Reverse)
+	    				ival1 = 3 - ival1;
+	    			else
+    					ival1--;
+
+        			ival2 = All.ValArr[e].Quiz[q2];
+        			if (ival2)
+        			{
+        				if (Quiz[q2].Reverse)
+	        				ival2 = 3 - ival2;
+	        			else
+    		    			ival2--;
+
+		    			count++;
+
+        			    zx = ((long double)ival1 - mean[q1]) / csd[q1];
+				        zy = ((long double)ival2 - mean[q2]) / csd[q2];
+				        rsum += zx * zy;
+		    	    }
+		    	}
+		    }
+
+		    if (count > 1)
+			 {
+				  gid1 = Quiz[q1].GlobalId;
+				  gid2 = Quiz[q2].GlobalId;
+
+				  GlobalCorrCount[gid1][gid2] += count;
+				  GlobalCorrArr[gid1][gid2] += rsum;
+
+				  GlobalCorrCount[gid2][gid1] += count;
+				  GlobalCorrArr[gid2][gid1] += rsum;
+	    	}
 		}
 	}
 }
@@ -6993,4 +7107,79 @@ void TQuiz::WriteQuizWiki(const char *filename)
     
     	file.Write("\r\n\r\n");
 	}
+}
+
+/*##################  TQuiz::WriteGlobalCorrelation ##########################
+*   Purpose....: Write N largest inter-question correlations     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
+{
+    int i;
+    int gid1, gid2;
+    int maxgid1, maxgid2;
+    int cnt;
+    int ival;
+    long double corr;
+    long double MaxCorr;
+    long double CorrLev;
+    char str[120];
+	TFile file(filename, 0);
+
+	CorrLev = 1.0;
+
+	for (i = 0; i < count; i++)
+	{
+    	MaxCorr = 0.0;
+
+    	for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
+    	{
+        	for (gid2 = 0; gid2 < gid1; gid2++)
+        	{
+        	    cnt = GlobalCorrCount[gid1][gid2];
+
+        	    if (cnt > 1)
+        	    {
+            	    corr = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
+            	    corr = corr * corr;
+            	    
+            	    if (corr > MaxCorr && corr < CorrLev)
+            	    {
+            	        MaxCorr = corr;
+            	        maxgid1 = gid1;
+            	        maxgid2 = gid2;
+            	    }
+            	}
+        	}
+        }
+
+        CorrLev = MaxCorr;
+
+        sprintf(str, "Question 1: %d \"", maxgid1 + 1);
+        file.Write(str);
+        file.Write(GetGlobalQuestionText(maxgid1));
+        file.Write("\", ");
+
+        sprintf(str, "Question 2: %d \"", maxgid2 + 1);
+        file.Write(str);
+        file.Write(GetGlobalQuestionText(maxgid2));
+
+        file.Write(" (");
+        cnt = GlobalCorrCount[maxgid1][maxgid2];
+        corr = GlobalCorrArr[maxgid1][maxgid2] / ((long double)cnt - 1);
+
+		ival = round(100.0 * corr);
+	    if (ival < 0)
+	    {
+    		file.Write("-");
+	    	ival = -ival;
+		}
+
+    	sprintf(str, ".%02d)", ival);
+	    file.Write(str);
+        file.Write("<br>");
+    }
 }
