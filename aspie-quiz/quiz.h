@@ -190,6 +190,8 @@ public:
 	void WritePhpGroupWeighting(const char *filename);
 
 	void WriteGlobalCorrelation(const char *filename, int count);
+    void WriteWikiCorrelation(const char *wiki, const char *filename, int count);
+    void WriteWikiNoncorrelated(const char *wiki, const char *filename, int count);
 
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
 

@@ -7158,18 +7158,326 @@ void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
 
         CorrLev = MaxCorr;
 
-        sprintf(str, "Question 1: %d \"", maxgid1 + 1);
+        sprintf(str, "Question %d \"", maxgid1 + 1);
         file.Write(str);
         file.Write(GetGlobalQuestionText(maxgid1));
         file.Write("\", ");
 
-        sprintf(str, "Question 2: %d \"", maxgid2 + 1);
+        sprintf(str, "Question %d \"", maxgid2 + 1);
         file.Write(str);
         file.Write(GetGlobalQuestionText(maxgid2));
 
         file.Write(" (");
         cnt = GlobalCorrCount[maxgid1][maxgid2];
         corr = GlobalCorrArr[maxgid1][maxgid2] / ((long double)cnt - 1);
+
+		ival = round(100.0 * corr);
+	    if (ival < 0)
+	    {
+    		file.Write("-");
+	    	ival = -ival;
+		}
+
+    	sprintf(str, ".%02d)", ival);
+	    file.Write(str);
+        file.Write("<br>");
+    }
+}
+
+/*##################  TQuiz::WriteWikiCorrelation ##########################
+*   Purpose....: Write N largest inter-question correlations from wiki-set  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int count)
+{
+    int i;
+    int gid1, gid2;
+    int maxgid1, maxgid2;
+    int cnt;
+    int ival;
+    long double corr;
+    long double MaxCorr;
+    long double CorrLev;
+    char str[120];
+	TFile file(filename, 0);
+	int Arr[MAX_GLOBAL_QUESTIONS];
+	char buf[4096];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	TFile infile(wiki);
+
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	    Arr[i] = FALSE;
+
+	while (size = infile.Read(buf, 4096))
+	{
+		buf[size] = 0;
+		rowstr = strchr(buf, '*');
+		if (rowstr)
+		{
+            ptr = strchr(rowstr, 0xd);
+            if (ptr)
+                *ptr = 0;
+
+            ptr = strstr(rowstr, "'''");
+            if (ptr)
+            {
+                ptr += 3;
+                i = atoi(ptr);
+                if (i)
+                    Arr[i - 1] = TRUE;
+                   
+            }           
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+	}
+
+	CorrLev = 1.0;
+
+	for (i = 0; i < count; i++)
+	{
+    	MaxCorr = 0.0;
+
+    	for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
+    	{
+    	    if (Arr[gid1])
+    	    {
+            	for (gid2 = 0; gid2 < gid1; gid2++)
+            	{
+            	    if (Arr[gid2])
+            	    {
+                	    cnt = GlobalCorrCount[gid1][gid2];
+
+                	    if (cnt > 1)
+        	            {
+            	            corr = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
+                    	    corr = corr * corr;
+            	    
+                    	    if (corr > MaxCorr && corr < CorrLev)
+            	            {
+                    	        MaxCorr = corr;
+                    	        maxgid1 = gid1;
+            	                maxgid2 = gid2;
+                    	    }
+                    	}
+                	}
+                }
+            }
+        }
+
+        CorrLev = MaxCorr;
+
+        sprintf(str, "Question %d \"", maxgid1 + 1);
+        file.Write(str);
+        file.Write(GetGlobalQuestionText(maxgid1));
+        file.Write("\", ");
+
+        sprintf(str, "Question %d \"", maxgid2 + 1);
+        file.Write(str);
+        file.Write(GetGlobalQuestionText(maxgid2));
+
+        file.Write(" (");
+        cnt = GlobalCorrCount[maxgid1][maxgid2];
+        corr = GlobalCorrArr[maxgid1][maxgid2] / ((long double)cnt - 1);
+
+		ival = round(100.0 * corr);
+	    if (ival < 0)
+	    {
+    		file.Write("-");
+	    	ival = -ival;
+		}
+
+    	sprintf(str, ".%02d)", ival);
+	    file.Write(str);
+        file.Write("<br>");
+    }
+}
+
+/*##################  TQuiz::WriteWikiNoncorrelated ##########################
+*   Purpose....: Write N lowest inter-question correlations from wiki-set  #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int count)
+{
+	int i;
+	int j;
+    int k;
+	int cnt;
+	long double corr;
+	long double MaxCorr;
+	long double CorrLev;
+	int MaxInd;
+    int ival;
+    long double sum;
+    char str[120];
+	TFile file(filename, 0);
+	int Use[MAX_GLOBAL_QUESTIONS];
+	long double CorrArr[MAX_GLOBAL_QUESTIONS];
+	char buf[4096];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	TFile infile(wiki);
+	int cross;
+	int q;
+	TQuiz *quiz;
+	int found;
+
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	    Use[i] = FALSE;
+
+	while (size = infile.Read(buf, 4096))
+	{
+		buf[size] = 0;
+		rowstr = strchr(buf, '*');
+		if (rowstr)
+		{
+            ptr = strchr(rowstr, 0xd);
+            if (ptr)
+				*ptr = 0;
+
+            ptr = strstr(rowstr, "'''");
+            if (ptr)
+            {
+                ptr += 3;
+                i = atoi(ptr);
+                if (i)
+                    Use[i - 1] = TRUE;
+                   
+            }           
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+	}
+
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	{
+		if (Use[i])
+			CorrArr[i] = 1.0;
+		else
+		{
+			MaxCorr = 0.0;
+
+			for (j = 0; j < MAX_GLOBAL_QUESTIONS; j++)
+			{
+				if (Use[j])
+				{
+					cnt = GlobalCorrCount[i][j];
+
+					if (cnt > 1)
+					{
+						corr = GlobalCorrArr[i][j] / ((long double)cnt - 1);
+						corr = corr * corr;
+
+						if (corr > MaxCorr)
+							MaxCorr = corr;
+					}
+				}
+			}
+
+			CorrArr[i] = MaxCorr;
+		}
+	}
+
+    for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+    {
+        found = FALSE;        
+        quiz = 0;
+        
+        for (q = 0; q < N && !found; q++)
+        {
+            if (Quiz[q].GlobalId == i)
+            {
+                quiz = this;
+                found = TRUE;
+            }
+        }
+
+        for (cross = MAX_CROSS - 1; cross >= 0 && !found; cross--)
+        {
+            quiz = CrossQuiz[cross];
+            if (quiz)
+            {
+			    for (q = 0; q < quiz->N && !found; q++)
+                {
+                    if (quiz->Quiz[q].GlobalId == i)
+                    {
+                        found = TRUE;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (quiz)
+        {
+    	    sum = 0;
+	        cnt = 0;
+	    
+            j = q;
+            while (quiz)
+            {
+	            sum += quiz->Quiz[j].Corr;
+    		    cnt++;
+
+                k = quiz->Quiz[j].CrossInd;
+			    quiz = quiz->Quiz[j].CrossQuiz;
+                j = k;
+    		}
+
+            corr = sum / cnt;
+            corr = corr * corr;
+
+            if (corr > 0.04)
+           		CorrArr[i] = corr / CorrArr[i];
+           	else
+           	    CorrArr[i] = 0;
+        }
+        else
+            CorrArr[i] = 0.0;
+    }
+
+	CorrLev = 1000000.0;
+
+	for (i = 0; i < count; i++)
+	{
+		MaxCorr = 0.0;
+
+		for (j = 0; j < MAX_GLOBAL_QUESTIONS; j++)
+		{
+			if (!Use[j])
+			{
+				corr = CorrArr[j];
+
+				if (corr > MaxCorr && corr < CorrLev)
+				{
+					MaxCorr = CorrArr[j];
+					MaxInd = j;
+				}
+			}
+		}
+
+		CorrLev = MaxCorr;
+
+		sprintf(str, "Question %d \"", MaxInd + 1);
+		file.Write(str);
+        file.Write(GetGlobalQuestionText(MaxInd));
+        file.Write("\", ");
+
+        file.Write(" (");
+        corr = CorrArr[MaxInd];
 
 		ival = round(100.0 * corr);
 	    if (ival < 0)

@@ -234,7 +234,9 @@ int main(int argc, char **argv)
 //	 Quiz[9]->WriteWiki("wiki.txt", 0.2);
 //	 Quiz[9]->WriteQuizWiki("r1wiki.txt");
 
-     Quiz[9]->WriteGlobalCorrelation("maxcorr.htm", 25);
+//     Quiz[9]->WriteGlobalCorrelation("maxcorr.htm", 25);
+     Quiz[9]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
+     Quiz[9]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
