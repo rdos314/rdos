@@ -184,6 +184,7 @@ public:
 	void WriteLinkReport(const char *filename);
     void WriteWiki(const char *filename, long double threshold);
     void WriteQuizWiki(const char *filename);
+    void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
