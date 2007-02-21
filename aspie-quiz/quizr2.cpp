@@ -74,7 +74,7 @@ TQuizR2::TQuizR2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################

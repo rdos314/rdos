@@ -1930,11 +1930,14 @@ void TQuiz::Calculate()
 	        			else
     		    			ival2--;
 
-		    			count++;
-
-        			    zx = ((long double)ival1 - mean[q1]) / csd[q1];
-				        zy = ((long double)ival2 - mean[q2]) / csd[q2];
-				        rsum += zx * zy;
+    		    		if (csd[q1] != 0.0 && csd[q2] != 0.0)
+    		    		{
+    		    			count++;
+    
+            			    zx = ((long double)ival1 - mean[q1]) / csd[q1];
+		    		        zy = ((long double)ival2 - mean[q2]) / csd[q2];
+			    	        rsum += zx * zy;
+			    	    }
 		    	    }
 		    	}
 		    }

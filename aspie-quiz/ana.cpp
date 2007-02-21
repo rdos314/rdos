@@ -130,6 +130,10 @@ int main(int argc, char **argv)
 	 Quiz[9]->ExportExcelCase("maler1.dat", PCA_TYPE_MALE);
 	 Quiz[9]->ExportExcelCase("femaler1.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[10]->ExportExcelCase("allr2.dat", PCA_TYPE_ALL);
+	 Quiz[10]->ExportExcelCase("maler2.dat", PCA_TYPE_MALE);
+	 Quiz[10]->ExportExcelCase("femaler2.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
@@ -168,6 +172,10 @@ int main(int argc, char **argv)
 	 Quiz[9]->ImportMvsp("maler1.txt", PCA_TYPE_MALE);
 	 Quiz[9]->ImportMvsp("femaler1.txt", PCA_TYPE_FEMALE);
 
+	 Quiz[10]->ImportMvsp("allr2.txt", PCA_TYPE_ALL);
+	 Quiz[10]->ImportMvsp("maler2.txt", PCA_TYPE_MALE);
+	 Quiz[10]->ImportMvsp("femaler2.txt", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
@@ -178,6 +186,7 @@ int main(int argc, char **argv)
 	 Quiz[7]->WriteReferers("ref8.htm");
 	 Quiz[8]->WriteReferers("ref9.htm");
 	 Quiz[9]->WriteReferers("refr1.htm");
+	 Quiz[10]->WriteReferers("refr2.htm");
 
 	 Quiz[0]->WriteSumaryTable("quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("quiz2.htm", FALSE);
@@ -189,6 +198,7 @@ int main(int argc, char **argv)
 	 Quiz[7]->WriteSumaryTable("quiz8.htm", FALSE);
 	 Quiz[8]->WriteSumaryTable("quiz9.htm", FALSE);
 	 Quiz[9]->WriteSumaryTable("quizr1.htm", FALSE);
+	 Quiz[10]->WriteSumaryTable("quizr2.htm", FALSE);
 
 	 Quiz[9]->WriteGroupTable("group.htm", TRUE);
 	 Quiz[9]->WriteGroupCorrTable("groupcorr.htm");
@@ -230,8 +240,8 @@ int main(int argc, char **argv)
 	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
 
-	 Quiz[10]->WriteWeighting("weights.cpp");
-	 Quiz[10]->WritePhpWeighting("weights.php");
+//	 Quiz[10]->WriteWeighting("weights.cpp");
+//	 Quiz[10]->WritePhpWeighting("weights.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -239,7 +249,7 @@ int main(int argc, char **argv)
 //     Quiz[9]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
 //     Quiz[9]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
 
-     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
+//     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
