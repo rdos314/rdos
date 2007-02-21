@@ -234,8 +234,10 @@ int main(int argc, char **argv)
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //     Quiz[9]->WriteGlobalCorrelation("maxcorr.htm", 25);
-     Quiz[9]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
-     Quiz[9]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+//     Quiz[9]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
+//     Quiz[9]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+
+     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }

@@ -7757,3 +7757,55 @@ void TQuiz::MoveWiki(const char *fromwiki, const char *towiki, long double thres
 	}
 
 }
+
+/*##################  TQuiz::WikiToQuiz ##########################
+*   Purpose....: Convert Wiki to quiz                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WikiToQuiz(const char *wikifile, const char *quizfile)
+{
+    int i;
+    char str[120];
+	int Use[MAX_GLOBAL_QUESTIONS];
+	char buf[4096];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int id;
+	TFile fromfile(wikifile);
+	TFile tofile(quizfile, 0);
+
+    id = 1;
+    
+	while (size = fromfile.Read(buf, 4096))
+	{
+		buf[size] = 0;
+		rowstr = strchr(buf, '*');
+		if (rowstr)
+		{
+            ptr = strchr(rowstr, 0xd);
+            if (ptr)
+                *ptr = 0;
+
+            ptr = strstr(rowstr, "'''");
+            if (ptr)
+            {
+                ptr += 3;
+                i = atoi(ptr);
+                if (i)
+                {
+                    sprintf(str, "  DefineID(%d, %d);\r\n", id, i);
+                    tofile.Write(str);
+                    id++;
+                }
+            }           
+		}
+
+		pos += strlen(buf) + 1;
+		fromfile.SetPos(pos);
+	}
+}

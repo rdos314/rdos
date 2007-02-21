@@ -193,6 +193,8 @@ public:
 	void WriteGlobalCorrelation(const char *filename, int count);
     void WriteWikiCorrelation(const char *wiki, const char *filename, int count);
     void WriteWikiNoncorrelated(const char *wiki, const char *filename, int count);
+    
+    static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
 
