@@ -20,22 +20,22 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizr1.h
-# Quiz release 1 class
+# quizr2.h
+# Quiz release 2 class
 #
 ########################################################################*/
 
-#ifndef _QUIZR1_H
-#define _QUIZR1_H
+#ifndef _QUIZR2_H
+#define _QUIZR2_H
 
 #include "quiz.h"
 #include "file.h"
 
-class TQuizR1 : public TQuiz
+class TQuizR2 : public TQuiz
 {
 public:
-    TQuizR1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9);
-    ~TQuizR1();
+    TQuizR2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1);
+    ~TQuizR2();
 
     virtual void ExportExcelCase(const char *filename, int PcaType);
     virtual void ExportExcelGroups(const char *filename);
@@ -52,7 +52,7 @@ private:
     void LoadReferers();
     void LoadPopulations();
     void SetupControlGroups();
-    void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9);
+    void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1);
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult);
 
     TFile FDataFile;

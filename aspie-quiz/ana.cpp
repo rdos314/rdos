@@ -42,6 +42,7 @@
 #include "quiz8.h"
 #include "quiz9.h"
 #include "quizr1.h"
+#include "quizr2.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -71,10 +72,11 @@ int main(int argc, char **argv)
 	Quiz[7] = new TQuiz8("quiz8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6]);
 	Quiz[8] = new TQuiz9("quiz9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7]);
 	Quiz[9] = new TQuizR1("quizr1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8]);
+	Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
 
-//	Quiz[9]->WritePhpQuestions("q.php");
-//	Quiz[9]->WriteSetupTexts("q.cpp");
-//	Quiz[9]->WriteSetupCross("c.cpp");
+//	Quiz[10]->WritePhpQuestions("q.php");
+//	Quiz[10]->WriteSetupTexts("q.cpp");
+//	Quiz[10]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -85,7 +87,8 @@ int main(int argc, char **argv)
 //	Quiz[6]->CheckCross();
 //  Quiz[7]->CheckCross();
 //	Quiz[8]->CheckCross();
-	Quiz[9]->CheckCross();
+//	Quiz[9]->CheckCross();
+    Quiz[10]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -227,9 +230,8 @@ int main(int argc, char **argv)
 	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
 
-	 Quiz[8]->WriteWeighting("weights.cpp");
-	 Quiz[8]->WritePhpWeighting("weights.php");
-	 Quiz[8]->WritePhpGroupWeighting("group.php");
+	 Quiz[10]->WriteWeighting("weights.cpp");
+	 Quiz[10]->WritePhpWeighting("weights.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
