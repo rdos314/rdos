@@ -200,17 +200,17 @@ int main(int argc, char **argv)
 	 Quiz[9]->WriteSumaryTable("quizr1.htm", FALSE);
 	 Quiz[10]->WriteSumaryTable("quizr2.htm", FALSE);
 
-	 Quiz[9]->WriteGroupTable("group.htm", TRUE);
-	 Quiz[9]->WriteGroupCorrTable("groupcorr.htm");
-	 Quiz[9]->WritePcaLoadTable("pcaload.htm");
+	 Quiz[10]->WriteGroupTable("group.htm", TRUE);
+	 Quiz[10]->WriteGroupCorrTable("groupcorr.htm");
+	 Quiz[10]->WritePcaLoadTable("pcaload.htm");
 
-	 Quiz[9]->WriteAverageGroupCorrTable("avgcorr.htm");
-	 Quiz[9]->WriteAveragePcaTable("avgpca.htm");
-	 Quiz[9]->WriteAveragePcaCorrTable("avg.htm");
+	 Quiz[10]->WriteAverageGroupCorrTable("avgcorr.htm");
+	 Quiz[10]->WriteAveragePcaTable("avgpca.htm");
+	 Quiz[10]->WriteAveragePcaCorrTable("avg.htm");
 
-	 Quiz[9]->WritePcaCorrTable("pcacorr.htm");
+	 Quiz[10]->WritePcaCorrTable("pcacorr.htm");
 
-	 Quiz[9]->WriteLinkReport("index.htm");
+	 Quiz[10]->WriteLinkReport("index.htm");
 
 	 Quiz[5]->WriteHair("hair6.htm");
 	 Quiz[5]->WriteEye("eye6.htm");
