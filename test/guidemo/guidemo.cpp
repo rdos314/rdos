@@ -10,12 +10,6 @@
 #include "waitdev.h"
 #include "keyboard.h"
 #include "mouse.h"
-#include "jpeg.h"
-#include "control.h"
-#include "str.h"
-
-#define MAX_ROW 10
-#define MAX_COL 10
 
 #define FALSE	0
 #define TRUE	!FALSE
@@ -26,356 +20,6 @@ TSprite *LeftSprite;
 TSprite *RightSprite;
 TSprite *MouseSprite;
 TGraphicDevice *KeyVideo;
-
-class TKeyControl : public TControl
-{
-public:
-    TKeyControl(const char *UpName, const char *DownName, const char *Text, char ch, TControlThread *dev, int row, int col);
-    TKeyControl(const char *UpName, const char *DownName, const char *Text, char ch, TControl *control, int row, int col);
-    ~TKeyControl();
-
-protected:
-	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
-	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);
-	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
-	virtual int OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
-
-private:
-    void Init(const char *UpName, const char *DownName, const char *Text, char ch, int row, int col);
-
-	char FKey;
-    TBitmapGraphicDevice *FUp;
-    TBitmapGraphicDevice *FDown;	
-    int FPressed;
-};        
-
-class TKeyboardControl : public TControl
-{
-public:
-    TKeyboardControl(const char *UpName, const char *DownName, TControlThread *dev);
-    ~TKeyboardControl();
-
-    void AddKey(int row, int col, const char *text, char ch);
-
-protected:
-    TKeyControl *FKeyMatr[MAX_ROW][MAX_COL];
-    TString FUpName;
-    TString FDownName;
-};        
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::TKeyControl
-#
-#   Purpose....: Key control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyControl::TKeyControl(const char *UpName, const char *DownName, const char *Text, char ch, TControlThread *dev, int row, int col)
- : TControl(dev)
-{
-    Init(UpName, DownName, Text, ch, row, col);
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::TKeyControl
-#
-#   Purpose....: Key control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyControl::TKeyControl(const char *UpName, const char *DownName, const char *Text, char ch, TControl *control, int row, int col)
- : TControl(control)
-{
-    Init(UpName, DownName, Text, ch, row, col);
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::Init
-#
-#   Purpose....: Init key control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TKeyControl::Init(const char *UpName, const char *DownName, const char *Text, char ch, int row, int col)
-{
-	TFont Font(30);
-	int xsize;
-	int ysize;
-	int xstart;
-	int ystart;
-	int key_xsize;
-	int key_ysize;
-
-    FPressed = FALSE;
-    FKey = ch;
-	Font.GetStringMetrics(Text, &xsize, &ysize);
-
-	FUp = TJpegBitmapDevice::Create(UpName);
-	FUp->SetFont(&Font);
-
-	key_xsize = FUp->GetWidth();
-	key_ysize = FUp->GetHeight();
-
-	xstart = (key_xsize - xsize) / 2;
-	ystart = (key_ysize - ysize) / 2;
-
-	FUp->SetDrawColor(150, 150, 150);
-	FUp->SetLgopNone();
-	FUp->DrawString(xstart, ystart, Text);
-	FUp->DrawString(xstart + 1, ystart, Text);
-	FUp->DrawString(xstart - 1, ystart, Text);
-	FUp->DrawString(xstart, ystart + 1, Text);
-	FUp->DrawString(xstart, ystart - 1, Text);
-	FUp->DrawString(xstart + 1, ystart + 1, Text);
-	FUp->DrawString(xstart - 1, ystart - 1, Text);
-	FUp->DrawString(xstart - 1, ystart + 1, Text);
-	FUp->DrawString(xstart + 1, ystart - 1, Text);
-
-	FUp->SetDrawColor(0, 0, 0);
-	FUp->DrawString(xstart, ystart, Text);
-
-	FDown = TJpegBitmapDevice::Create(DownName);
-	FDown->SetFont(&Font);
-
-	key_xsize = FDown->GetWidth();
-	key_ysize = FDown->GetHeight();
-
-	xstart = (key_xsize - xsize) / 2;
-	ystart = (key_ysize - ysize) / 2;
-
-	xstart += 4;
-	ystart += 4;
-
-	FDown->SetDrawColor(150, 150, 150);
-	FDown->SetLgopNone();
-	FDown->DrawString(xstart, ystart, Text);
-	FDown->DrawString(xstart + 1, ystart, Text);
-	FDown->DrawString(xstart - 1, ystart, Text);
-	FDown->DrawString(xstart, ystart + 1, Text);
-	FDown->DrawString(xstart, ystart - 1, Text);
-	FDown->DrawString(xstart + 1, ystart + 1, Text);
-	FDown->DrawString(xstart - 1, ystart - 1, Text);
-	FDown->DrawString(xstart - 1, ystart + 1, Text);
-	FDown->DrawString(xstart + 1, ystart - 1, Text);
-
-	FDown->SetDrawColor(0, 0, 0);
-	FDown->DrawString(xstart, ystart, Text);
-
-    xsize = FUp->GetWidth();
-    ysize = FUp->GetHeight();
-    
-	xstart = col * xsize;
-	ystart = row * ysize;
-
-	Resize(xsize, ysize);
-	Move(xstart, ystart);
-	Enable();
-	Show();
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::~TKeyControl
-#
-#   Purpose....: Key control destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyControl::~TKeyControl()
-{
-    delete FUp;
-    delete FDown;
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::OnLeftUp
-#
-#   Purpose....: Handle left button up
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TKeyControl::OnLeftUp(int x, int y, int ButtonState, int KeyState)
-{
-    if (FPressed)
-    {
-        FPressed = FALSE;
-        Redraw();
-    }
-    
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::OnLeftDown
-#
-#   Purpose....: Handle left button down
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TKeyControl::OnLeftDown(int x, int y, int ButtonState, int KeyState)
-{
-    if (IsInside(x, y))
-    {
-        PutKey(FKey);
-        FPressed = TRUE;
-        Redraw();
-        return TRUE;
-    }
-    else
-    {
-        if (FPressed)
-        {
-            FPressed = FALSE;
-            Redraw();
-        }
-        return FALSE;
-    }
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::OnKeyPressed
-#
-#   Purpose....: Handle key pressed
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TKeyControl::OnKeyPressed(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
-{
-    if (VirtualKey == FKey)
-    {
-        if (!FPressed)
-        {
-            FPressed = TRUE;
-            Redraw();
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::OnKeyReleased
-#
-#   Purpose....: Handle key released
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-int TKeyControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode)
-{
-    if (VirtualKey == FKey)
-    {
-        if (FPressed)
-        {
-            FPressed = FALSE;
-            Redraw();
-        }
-    }
-    return FALSE;
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyControl::Paint
-#
-#   Purpose....: Paint control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TKeyControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
-{
-	dev->SetLgopNone();
-
-    if (FPressed)
-    	dev->Blit(FDown, 0, 0, xmin, ymin, width, height);
-    else
-    	dev->Blit(FUp, 0, 0, xmin, ymin, width, height);
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyboardControl::TKeyboardControl
-#
-#   Purpose....: Keyboard control constructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyboardControl::TKeyboardControl(const char *UpName, const char *DownName, TControlThread *dev)
- : FUpName(UpName),
-	FDownName(DownName),
-   TControl(dev)
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyboardControl::~TKeyboardControl
-#
-#   Purpose....: Keyboard control destructor
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TKeyboardControl::~TKeyboardControl()
-{
-}
-
-/*##########################################################################
-#
-#   Name       : TKeyboardControl::AddKey
-#
-#   Purpose....: Add a keyboard control
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TKeyboardControl::AddKey(int row, int col, const char *text, char ch)
-{
-    TKeyControl *control;
-    control = new TKeyControl(FUpName.GetData(), FDownName.GetData(), text, ch, this, row, col);
-}
-
-
 
 void RandomColor(TGraphicDevice *dev)
 {
@@ -628,7 +272,7 @@ TBitmapGraphicDevice *CreateMouseBitmap(TGraphicDevice *dev, int r, int g, int b
 	return bitmap;
 }
 
-void KeyPress(TControlThread *Dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void KeyPress(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
 	char str[120];
 
@@ -640,7 +284,7 @@ void KeyPress(TControlThread *Dev, int ExtKey, int KeyState, int VirtualKey, int
 	KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
 }
 
-void KeyRelease(TControlThread *Dev, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
+void KeyRelease(TKeyboardDevice *Keyboard, int ExtKey, int KeyState, int VirtualKey, int ScanCode)
 {
 	char str[120];
 
@@ -652,12 +296,12 @@ void KeyRelease(TControlThread *Dev, int ExtKey, int KeyState, int VirtualKey, i
 	KeyVideo->DrawString(0, KeyVideo->GetHeight() - 35, str);
 }
 
-void MouseMove(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
+void MouseMove(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
 	MouseSprite->Move(x, y);
 }
 
-void LeftUp(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
+void LeftUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
 	MouseSprite->Hide();
 	if (MouseButton & MOUSE_RIGHT_BUTTON)
@@ -668,7 +312,7 @@ void LeftUp(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
 	MouseSprite->Show();
 }
 
-void LeftDown(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
+void LeftDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
 	MouseSprite->Hide();
 	MouseSprite = LeftSprite;
@@ -676,7 +320,7 @@ void LeftDown(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
 	MouseSprite->Show();
 }
 
-void RightUp(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
+void RightUp(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
 	MouseSprite->Hide();
 	if (MouseButton & MOUSE_LEFT_BUTTON)
@@ -687,7 +331,7 @@ void RightUp(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
 	MouseSprite->Show();
 }
 
-void RightDown(TControlThread *Dev, int x, int y, int MouseButton, int KeyState)
+void RightDown(TMouseDevice *Mouse, int x, int y, int MouseButton, int KeyState)
 {
 	MouseSprite->Hide();
 	MouseSprite = RightSprite;
@@ -706,26 +350,22 @@ void cdecl main()
 	TPlanetThread *Planets;
 	TKeyboardDevice *Keyboard;
 	TMouseDevice *Mouse;
-	TControlThread *ControlDev;
-	TKeyboardControl *KeyboardControl;
 
 	RdosWaitMilli(250);
 
 	Keyboard = new TKeyboardDevice;
+	Keyboard->OnKeyPress = KeyPress;
+	Keyboard->OnKeyRelease = KeyRelease;
+
 	Mouse = new TMouseDevice;
+	Mouse->OnMove = MouseMove;
+	Mouse->OnLeftUp = LeftUp;
+	Mouse->OnLeftDown = LeftDown;
+	Mouse->OnRightUp = RightUp;
+	Mouse->OnRightDown = RightDown;
 
-	vbe = new TVideoGraphicDevice(24, 800, 480);
+	vbe = new TVideoGraphicDevice(24, 800, 600);
 //	vbe = new TVideoGraphicDevice(1, 240, 128);
-
-    ControlDev = new TControlThread("Control", vbe, Keyboard, Mouse);    
-	
-	ControlDev->OnKeyPressed = KeyPress;
-	ControlDev->OnKeyReleased = KeyRelease;
-//	ControlDev->OnMouseMove = MouseMove;
-//	ControlDev->OnLeftUp = LeftUp;
-//	ControlDev->OnLeftDown = LeftDown;
-//	ControlDev->OnRightUp = RightUp;
-//	ControlDev->OnRightDown = RightDown;
 
 	Mouse->SetWindow(20, 20, vbe->GetWidth() - 20, vbe->GetHeight() - 20);
 	Mouse->SetMickey(1, 1);
@@ -746,39 +386,17 @@ void cdecl main()
 	RightSprite->Move(vbe->GetWidth() / 2, vbe->GetHeight() / 2);
 
 	MouseSprite = NormalSprite;
-//	MouseSprite->Show();
+	MouseSprite->Show();
 
 	KeyVideo = new TGraphicDevice(*vbe);
 	font = new TFont(35);
 	KeyVideo->SetFont(font);
 
-    KeyboardControl = new TKeyboardControl("kupp.jpg", "kner.jpg", ControlDev);
+	TWait Wait;
 
-    KeyboardControl->AddKey(0, 0, "1", '1');
-    KeyboardControl->AddKey(0, 1, "2", '2');
-    KeyboardControl->AddKey(0, 2, "3", '3');
-    
-    KeyboardControl->AddKey(1, 0, "4", '4');
-    KeyboardControl->AddKey(1, 1, "5", '5');
-    KeyboardControl->AddKey(1, 2, "6", '6');
-    
-    KeyboardControl->AddKey(2, 0, "7", '7');
-    KeyboardControl->AddKey(2, 1, "8", '8');
-    KeyboardControl->AddKey(2, 2, "9", '9');
-    
-    KeyboardControl->AddKey(3, 0, "FEL", 0x8);
-    KeyboardControl->AddKey(3, 1, "0", '0');
-    KeyboardControl->AddKey(3, 2, "KLAR", 0xd);
-
-    KeyboardControl->Move(50, 50);
-
-    KeyboardControl->Enable();
-    KeyboardControl->Show();
-    KeyboardControl->Redraw();
-
-    for (;;)
-		  RdosWaitMilli(1000);
-
+	Wait.Add(Keyboard);
+	Wait.Add(Mouse);
+	Wait.StartThreadHandler("IO Thread", 0x1000);
 
 	vbe->SetDrawColor(255,255,255);
 	vbe->DrawLine(0, 0, vbe->GetWidth(), vbe->GetHeight());
@@ -786,7 +404,7 @@ void cdecl main()
 
 	vbe->SetClipRect(0, 0, vbe->GetWidth(), vbe->GetHeight() - 35);
 
-//	Planets = new TPlanetThread(vbe, 8);
+	Planets = new TPlanetThread(vbe, 8);
 
 	RdosWaitMilli(5000);
 
@@ -852,22 +470,21 @@ void cdecl main()
 		switch (RdosGetRandom(4))
 		{
 			case 0:
-//				RandomLine(vbe);
+				RandomLine(vbe);
 				break;
 
 			case 1:
-//				RandomRect(vbe);
+				RandomRect(vbe);
 				break;
 
 			case 2:
-//				RandomEllipse(vbe);
+				RandomEllipse(vbe);
 				break;
 
 			case 3:
-//				RandomText(vbe);
+				RandomText(vbe);
 				break;
 		}
-		RdosWaitMilli(1000);
 	}
 }
 

@@ -16,3 +16,4 @@ pkzip -P bin.zip classlib\emulate\x86\zfx86\*.h
 pkzip -P bin.zip classlib\ftpd\*.lib classlib\ftpd\*.h classlib\ftpd\*.dll
 pkzip -P bin.zip classlib\httpd\*.lib classlib\httpd\*.h
 pkzip -P bin.zip classlib\ws2300\*.lib classlib\ws2300\*.h
+pkzip -P bin.zip classlib\fuzzy\*.lib classlib\fuzzy\*.h
