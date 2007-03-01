@@ -659,10 +659,12 @@ flush_com	PROC far
     push ax
     push dx
 ;
+    cli
 	mov dx,ds:base
 	mov al,IER_BITS + 1
 	inc dx
 	out dx,al
+	sti
 ;	
     pop dx
     pop ax
@@ -686,6 +688,7 @@ start_send	PROC far
     push ax
 	push dx
 ;
+    cli    
     test ds:flgs, FLG_ENABLE_CTS
     jz com_send_enable
 ;
@@ -715,6 +718,7 @@ com_send_start:
 	out dx,al
 	
 com_send_ok:
+    sti
 	pop dx
 	pop ax
 	ret
