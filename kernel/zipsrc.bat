@@ -17,3 +17,4 @@ pkzip -P src.zip classlib\emulate\x86\zfx86\*.cpp classlib\emulate\x86\zfx86\*.h
 pkzip -P src.zip classlib\ftpd\*.cpp classlib\ftpd\*.h classlib\ftpd\*.ide
 pkzip -P src.zip classlib\httpd\*.cpp classlib\httpd\*.h classlib\httpd\*.ide
 pkzip -P src.zip classlib\ws2300\*.cpp classlib\ws2300\*.h classlib\ws2300\*.ide
+pkzip -P src.zip classlib\fuzzy\*.cpp classlib\fuzzy\*.h classlib\fuzzy\*.ide

@@ -1,9 +1,9 @@
 
 /* pngrio.c - functions for data input
  *
- * Last changed in libpng 1.2.9 April 14, 2006
+ * libpng 1.2.1 - December 12, 2001
  * For conditions of distribution and use, see copyright notice in png.h
- * Copyright (c) 1998-2006 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2001 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -15,9 +15,9 @@
  * libpng use it at run time with png_set_read_fn(...).
  */
 
-#include "rdos.h"
 #define PNG_INTERNAL
 #include "png.h"
+#include "rdos.h"
 
 /* Read the data from whatever input you are using.  The default routine
    reads from a file pointer.  Note that this routine sometimes gets called
@@ -37,7 +37,27 @@ png_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
    not reading from a standard C stream, you should create a replacement
    read_data function and use it at run time with png_set_read_fn(), rather
    than changing the library. */
-void PNGAPI
+#ifndef USE_FAR_KEYWORD
+static void /* PRIVATE */
+png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
+{
+   png_size_t check;
+
+   check = RdosReadFile(png_ptr->file_handle, data, length);
+
+   if (check != length)
+	  png_error(png_ptr, "Read Error");
+}
+#else
+/* this is the model-independent version. Since the standard I/O library
+   can't handle far buffers in the medium and small models, we have to copy
+   the data.
+*/
+
+#define NEAR_BUF_SIZE 1024
+#define MIN(a,b) (a <= b ? a : b)
+
+static void /* PRIVATE */
 png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
    png_size_t check;
@@ -47,47 +67,6 @@ png_default_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
    if (check != length)
       png_error(png_ptr, "Read Error");
 }
-
-/* This function allows the application to supply a new input function
-   for libpng if standard C streams aren't being used.
-
-   This function takes as its arguments:
-   png_ptr      - pointer to a png input data structure
-   io_ptr       - pointer to user supplied structure containing info about
-                  the input functions.  May be NULL.
-   read_data_fn - pointer to a new input function that takes as its
-                  arguments a pointer to a png_struct, a pointer to
-                  a location where input data can be stored, and a 32-bit
-                  unsigned int that is the number of bytes to be read.
-                  To exit and output any fatal error messages the new write
-                  function should call png_error(png_ptr, "Error msg"). */
-void PNGAPI
-png_set_read_fn(png_structp png_ptr, png_voidp io_ptr,
-   png_rw_ptr read_data_fn)
-{
-   png_ptr->io_ptr = io_ptr;
-
-#if !defined(PNG_NO_STDIO)
-   if (read_data_fn != NULL)
-      png_ptr->read_data_fn = read_data_fn;
-   else
-      png_ptr->read_data_fn = png_default_read_data;
-#else
-   png_ptr->read_data_fn = read_data_fn;
+#endif
 #endif
 
-   /* It is an error to write to a read device */
-   if (png_ptr->write_data_fn != NULL)
-   {
-      png_ptr->write_data_fn = NULL;
-      png_warning(png_ptr,
-         "It's an error to set both read_data_fn and write_data_fn in the ");
-      png_warning(png_ptr,
-         "same structure.  Resetting write_data_fn to NULL.");
-   }
-
-#if defined(PNG_WRITE_FLUSH_SUPPORTED)
-   png_ptr->output_flush_fn = NULL;
-#endif
-}
-#endif /* PNG_READ_SUPPORTED */
