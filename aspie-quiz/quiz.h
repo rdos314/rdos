@@ -225,6 +225,8 @@ public:
 	void WriteSetupTexts(const char *filename); 
 	void WriteSetupCross(const char *filename); 
 
+    void CalcGlobal();
+
 protected:
 	void Init();
 	int round(long double val);
@@ -249,7 +251,7 @@ protected:
     void CalcAspieNtCorr();
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
-
+    
     void DefineID(int Question, int GlobalID);
     void DefineText(int Question, const char *Text, int Group);
     void RedefineText(int Question, int GlobalId, const char *Text);

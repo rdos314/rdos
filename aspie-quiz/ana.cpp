@@ -178,6 +178,8 @@ int main(int argc, char **argv)
 	 Quiz[10]->ImportMvsp("maler2.txt", PCA_TYPE_MALE);
 	 Quiz[10]->ImportMvsp("femaler2.txt", PCA_TYPE_FEMALE);
 
+     Quiz[10]->CalcGlobal();
+
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
 	 Quiz[2]->WriteReferers("ref3.htm");
@@ -248,8 +250,8 @@ int main(int argc, char **argv)
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //	  Quiz[10]->WriteWiki("wiki.txt", 0.2);
-	  Quiz[10]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
-	  Quiz[10]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+//	  Quiz[10]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
+//	  Quiz[10]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 

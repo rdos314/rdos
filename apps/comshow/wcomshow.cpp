@@ -29,17 +29,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#include "cbus.h"
 #include "file.h"
-#include "cbus.h"
 #include "sernet.h"
-#include "bar.h"
-#include "compac.h"
-#include "netana.h"
-#include "waynecl.h"
-#include "cotana.h"
-#include "tatsuno.h"
-#include "flintab.h"
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -53,39 +44,12 @@
 *##########################################################################*/
 void cdecl main()
 {
-//	TDateTime CbusTime;
-//	TDateTime BarTime;
-//	int HasCbus;
-//	int HasBar;
-
-//	TFile RawCbusFile("z:\\cbus.dat");
-//	TFile RawBarFile("z:\\bar.dat");
-//	TFile RawFile("z:\\raw.dat");
-//	TFile RawFile("z:\\net.log");
 	TFile RawFile("c:\\comlog\\raw.dat");
 
-//	TCbusProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TCotexProtocolAnalyser analyzer(&RawFile, 0x400);
 //  TSernetProtocolAnalyser analyzer("comlog", 0x4000);
-//	TBarProtocolAnalyser BarAnalyzer(&RawBarFile, 0x400);
-//	TCompacProtocolAnalyser analyzer(&RawFile, 0x400);
 	TProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TWayneClProtocolAnalyser analyzer(&RawFile, 0x400);
-//	TNetProtocolAnalyser analyzer(&RawFile);
-//	TTatsunoProtocolAnalyser analyzer(&RawFile);
-//	TFlintabProtocolAnalyser analyzer(&RawFile, 0x4000);
-//	TProtocolAnalyser analyzer(&RawFile, 0x400000);
 
-//	analyzer.DefineLogFile("c:\\comlog\\tatsuno.txt");
-//	analyzer.DefineLogFile("c:\\comlog\\flintab.txt");
-//	BarAnalyzer.DefineLogFile("c:\\volvo\\log.txt");
-//	analyzer.DefineLogFile("cotex.txt");
-//	analyzer.DefineLogFile("net.txt");
-//	rawanalyzer.DefineLogFile("compraw.txt");
-//	analyzer.DefineLogFile("compac.txt");
-//	analyzer.DefineLogFile("c:\\comlog\\spp.txt");
-	analyzer.DefineLogFile("c:\\comlog\\wayne.txt");
-//	analyzer.DefineLogFile("c:\\comlog\\log.txt");
+	analyzer.DefineLogFile("c:\\comlog\\log.txt");
 
 	for (;;)
 	{
