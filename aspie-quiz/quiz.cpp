@@ -35,6 +35,8 @@
 #define FALSE 0
 #define TRUE !FALSE
 
+// #define CALC_QUESTION_CORR       // turn on to calculate question correlations
+
 #define MAX_GLOBAL_QUESTIONS       1024
 
 static int GlobalArr[MAX_GLOBAL_QUESTIONS];
@@ -1781,7 +1783,7 @@ void TQuiz::Calculate()
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
-	    if (Group[g].Count && Group[g].Answers > 1)
+	    if (Group[g].Count > 1 && Group[g].Answers > 1)
 	    {
     		Group[g].Mean = (long double)Group[g].Sum / Group[g].Count;
 
@@ -1827,8 +1829,6 @@ void TQuiz::Calculate()
 			            else
     			            ival--;
 
-    			        Quiz[q].Group[g].Count++;
-
                         if (Quiz[q].MyGroup == g)
                         {
                             count--;
@@ -1837,6 +1837,8 @@ void TQuiz::Calculate()
 
                         if (count)
                         {
+            			    Quiz[q].Group[g].Count++;
+
     	    				zx = ((long double)ival - mean[q]) / csd[q];
 	    	    			zy = ((long double)sum / count - Group[g].Mean) / Group[g].Sd;
 		    	    		rsum += zx * zy;
@@ -1898,7 +1900,7 @@ void TQuiz::Calculate()
     {
         GlobalCorrInited = TRUE;
 
-		  for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
+		for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
         {
             for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
             {
@@ -1907,6 +1909,9 @@ void TQuiz::Calculate()
             }
         }
     }
+
+
+#ifdef CALC_QUESTION_CORR
                 
     for (q = 0; q < N; q++)
     {
@@ -1955,18 +1960,21 @@ void TQuiz::Calculate()
 		    }
 
 		    if (count > 1)
-			 {
-				  gid1 = Quiz[q1].GlobalId;
-				  gid2 = Quiz[q2].GlobalId;
+			{
+		        gid1 = Quiz[q1].GlobalId;
+				gid2 = Quiz[q2].GlobalId;
 
-				  GlobalCorrCount[gid1][gid2] += count;
-				  GlobalCorrArr[gid1][gid2] += rsum;
+				GlobalCorrCount[gid1][gid2] += count;
+				GlobalCorrArr[gid1][gid2] += rsum;
 
-				  GlobalCorrCount[gid2][gid1] += count;
-				  GlobalCorrArr[gid2][gid1] += rsum;
+				GlobalCorrCount[gid2][gid1] += count;
+				GlobalCorrArr[gid2][gid1] += rsum;
 	    	}
 		}
 	}
+
+#endif
+	
 }
 
 /*##################  TQuiz::CalcGlobal ##########################
@@ -1982,9 +1990,9 @@ void TQuiz::CalcGlobal()
     int i;
 	int j;
     TQuiz *quiz;
-  	 TQuiz *TopQuiz;
-	 int TopQuestion;
-	 int q;
+  	TQuiz *TopQuiz;
+	int TopQuestion;
+	int q;
 	int count;
 	int w;
 	long double val;
@@ -2038,7 +2046,7 @@ void TQuiz::CalcGlobal()
 			}
 		}
 
-        if (GlobalId > 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
+        if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
         {
 			GlobalTopQuiz[GlobalId] = TopQuiz;
             GlobalTopQuestion[GlobalId] = TopQuestion;
@@ -3890,11 +3898,6 @@ void TQuiz::WritePcaLoadTable(const char *filename)
 	int ival;
 	int count;
 	long double val;
-    long double zij;
-    long double za;
-    long double low;
-    long double high;
-    long double corrval;
 	TFile file(filename, 0);
 
 	ClearUsed();
@@ -4203,7 +4206,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 		for (;;)
 		{
 			LowestCorr = -0.1;
-			GlobalId = 0;
+			GlobalId = -1;
 
 			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 			{
@@ -4221,7 +4224,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
                 }
 			}
 
-			if (GlobalId)
+			if (GlobalId >= 0)
 			{
 				quiz = GlobalTopQuiz[GlobalId];
 				q = GlobalTopQuestion[GlobalId];
@@ -4335,26 +4338,21 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteAveragePcaTable(const char *filename)
 {
-    int Used[MAX_GLOBAL_QUESTIONS];
+	 int Used[MAX_GLOBAL_QUESTIONS];
 	int GlobalId;
 	int i;
 	int j;
 	int g;
-	int grp;
 	TQuiz *quiz;
 	int q;
 	char str[80];
-	long double NormCorr;
-	int cross;
 	int ival;
-	int count;
-	int questions;
 	long double val;
 	long double corrval;
 	long double LowestCorr;
 	TFile file(filename, 0);
 
-    CalcGlobal();
+	 CalcGlobal();
 
 	ClearUsed();
 
@@ -4371,6 +4369,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 	 file.Write("Reverserade frågor visas med röd färg");
 	 file.Write("</span><br>");
 #endif
+
     for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
         Used[q] = FALSE;
 
@@ -4414,7 +4413,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         for (;;)
 		{
 			LowestCorr = -0.1;
-            GlobalId = 0;
+            GlobalId = -1;
 
             for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 			{
@@ -4432,7 +4431,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
                 }
             }
 
-            if (GlobalId)
+            if (GlobalId >= 0)
             {
 				quiz = GlobalTopQuiz[GlobalId];
 				q = GlobalTopQuestion[GlobalId];
@@ -4503,14 +4502,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 {
-	long double CorrSum[MAX_GLOBAL_QUESTIONS];
-	int CorrCount[MAX_GLOBAL_QUESTIONS];
-	TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
-	int CorrQuestion[MAX_GLOBAL_QUESTIONS];
-	long double PcaSum;
-	int PcaCount;
-	long double GroupSum[GROUP_COUNT];
-	int GroupCount[GROUP_COUNT];
+    int Used[MAX_GLOBAL_QUESTIONS];
 	int AsLoad;
 	int NtLoad;
 	int GlobalId;
@@ -4519,18 +4511,12 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 	int g;
 	int grp;
 	TQuiz *quiz;
-	TQuiz *CurrQuiz;
-	TQuiz *TopQuiz;
-	int TopQuestion;
 	int q;
 	char str[80];
 	long double NormCorr;
-	int cross;
+	long double CorrArr[MAX_GROUP_COUNT];
 	int ival;
-	int count;
-	int questions;
 	long double val;
-	long double val2;
 	long double corrval;
 	long double LowestCorr;
 	int ok;
@@ -4555,15 +4541,12 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 	 file.Write("Korrelerade grupper visas med mest signifikant grupp först t.o.m. 90% av maximal korrelation");
 #endif
 
+    for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+        Used[q] = FALSE;
+
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
 		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-		{
-			CorrSum[i] = 0.0;
-			CorrCount[i] = 0;
-		}
 
 		file.Write("<tr style='height:24.75pt'>");
 
@@ -4592,82 +4575,35 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 		file.Write("Correlated groups");
 		WriteFieldFooter(file);
 
-
 		file.Write("</tr>");
 
-		TopQuiz = GetTopGroupCorr(g, &TopQuestion);
-
-		while (TopQuiz)
-		{
-			quiz = TopQuiz;
-			q = TopQuestion;
-
-			for (;;)
-			{
-				quiz->Quiz[q].Used = TRUE;
-
-				if (quiz->Quiz[q].CrossQuiz)
-				{
-					j = quiz->Quiz[q].CrossInd;
-					quiz = quiz->Quiz[q].CrossQuiz;
-					q = j;
-				}
-				else
-				{
-					GlobalId = quiz->Quiz[q].GlobalId;
-					break;
-				}
-			}
-
-			if (GlobalId > 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
-			{
-				CorrQuiz[GlobalId] = TopQuiz;
-				CorrQuestion[GlobalId] = TopQuestion;
-
-				quiz = TopQuiz;
-				q = TopQuestion;
-
-				while (quiz)
-				{
-					CorrSum[GlobalId] += quiz->Quiz[q].Corr;
-					CorrCount[GlobalId]++;
-
-					j = quiz->Quiz[q].CrossInd;
-					quiz = quiz->Quiz[q].CrossQuiz;
-					q = j;
-				}
-			}
-
-			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
-		}
-
-		GlobalId = -1;
-
-		while (GlobalId)
+        for (;;)
 		{
 			LowestCorr = -0.1;
-			GlobalId = 0;
+            GlobalId = -1;
 
-			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+            for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 			{
-				if (CorrCount[i])
+		        quiz = GlobalTopQuiz[i];
+				q = GlobalTopQuestion[i];
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
 				{
-					corrval = CorrSum[i] / CorrCount[i];
-					corrval = corrval * corrval;
-					if (corrval > LowestCorr)
-					{
-						GlobalId = i;
+                    corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+                    corrval = corrval * corrval;
+                    if (corrval > LowestCorr)
+                    {
+                        GlobalId = i;
 						LowestCorr = corrval;
-					}
-				}
-			}
+                    }
+                }
+            }
 
-			if (GlobalId)
-			{
+            if (GlobalId >= 0)
+            {
+				quiz = GlobalTopQuiz[GlobalId];
+				q = GlobalTopQuestion[GlobalId];
+
 				file.Write("<tr style='height:24.75pt'>");
-
-				TopQuiz = CorrQuiz[GlobalId];
-				TopQuestion = CorrQuestion[GlobalId];
 
 				WriteCenteredFieldHeader(file, 3);
 				sprintf(str, "%d", GlobalId + 1);
@@ -4675,17 +4611,18 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 45);
-				if (TopQuiz->Quiz[TopQuestion].Reverse)
+				if (quiz->Quiz[q].Reverse)
 					file.Write("<span style='color:#990099'>");
-				file.Write(TopQuiz->Quiz[TopQuestion].Text);
-				if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write(quiz->Quiz[q].Text);
+				if (quiz->Quiz[q].Reverse)
 					file.Write("</span>");
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 3);
 
-				val = CorrSum[GlobalId] / CorrCount[GlobalId];
-				CorrCount[GlobalId] = 0;
+				val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				Used[GlobalId] = TRUE;
 
 #ifdef USE_PERCENT
 				ival = round(100.0 * val * val);
@@ -4704,57 +4641,27 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 #endif
 				WriteFieldFooter(file);
 
-				PcaCount = 0;
-				PcaSum = 0.0;
+                if (GlobalPcaCount[GlobalId][0])
+					AsLoad = round(100 * GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
+			    else
+					AsLoad = 0;
 
-				cross = 0;
-				TopQuiz->ClearUsed(TopQuestion);
-				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				while (quiz)
+			    if (GlobalPcaCount[GlobalId][1])
+				    NtLoad = round(100 * GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
+			    else
+                    NtLoad = 0;                    
+
+				if (AsLoad > 0 && NtLoad > 0)
 				{
-					PcaSum += quiz->Quiz[q].Pca[0];
-					PcaCount++;
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				}
-
-				AsLoad = round(100 * PcaSum / PcaCount);
-
-				PcaCount = 0;
-				PcaSum = 0.0;
-
-				if (GetPcaCount() > 1)
-				{
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
+					if (AsLoad > NtLoad)
 					{
-						if (quiz->GetPcaCount() > 1)
-						{
-							PcaSum += quiz->Quiz[q].Pca[1];
-							PcaCount++;
-						}
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-					if (PcaCount)
-						NtLoad = round(100 * PcaSum / PcaCount);
-					else
+						AsLoad = AsLoad - NtLoad;
 						NtLoad = 0;
-				}
-
-				if (PcaCount)
-				{
-					if (AsLoad > 0 && NtLoad > 0)
+					}
+					else
 					{
-						if (AsLoad > NtLoad)
-						{
-							AsLoad = AsLoad - NtLoad;
-							NtLoad = 0;
-						}
-						else
-						{
-							NtLoad = NtLoad - AsLoad;
-							AsLoad = 0;
-						}
+						NtLoad = NtLoad - AsLoad;
+						AsLoad = 0;
 					}
 				}
 
@@ -4764,7 +4671,8 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 3);
-				if (PcaCount)
+
+			    if (GlobalPcaCount[GlobalId][1])
 				{
 					if (NtLoad >= 0)
 						sprintf(str, "0/%d", NtLoad);
@@ -4772,44 +4680,33 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 						sprintf(str, "%d/0", -NtLoad);
 					file.Write(str);
 				}
+
 				WriteFieldFooter(file);
-
-				for (j = 0; j < GROUP_COUNT - 1; j++)
-				{
-					GroupSum[j] = 0.0;
-					GroupCount[j] = 0;
-
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
-					{
-						val = quiz->Quiz[q].Group[j].Corr;
-						count = quiz->Quiz[q].Group[j].Count;
-						questions = quiz->Group[j].Questions;
-
-						if (count > 3)
-						{
-							GroupSum[j] += val * questions;
-							GroupCount[j] += questions;
-						}
-
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-				}
 
 				NormCorr = 0.0;
 
 				for (j = 0; j < GROUP_COUNT - 1; j++)
 				{
-					if (GroupCount[j])
+					if (GlobalGroupCorrCount[GlobalId][j])
 					{
-						corrval = GroupSum[j] / GroupCount[j];
-						val = corrval * corrval;
+						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
+						val = val * val;
 						if (val >= NormCorr)
 							NormCorr = val;
 					}
 				}
 				NormCorr = 0.81 * NormCorr;
+
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					if (GlobalGroupCorrCount[GlobalId][j])
+					{
+						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
+						CorrArr[j] = val * val;
+				    }
+				    else
+				        CorrArr[j] = 0.0;
+				}
 
 				WriteFieldHeader(file, 40);
 
@@ -4818,36 +4715,29 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				while (ok)
 				{
 					ok = FALSE;
+					corrval = 0.0;
 
 					for (j = 0; j < GROUP_COUNT - 1; j++)
 					{
-						if (GroupCount[j])
-						{
-							val = GroupSum[j] / GroupCount[j];
-							val2 = val * val;
-
-							if (val2 >= NormCorr)
-							{
-								if (ok)
-								{
-									if (val2 > corrval)
-										grp = j;
-								}
-								else
-								{
-									ok = TRUE;
-									grp = j;
-								}
-							}
-						}
+					    if (CorrArr[j] >= NormCorr)
+					    {
+					        if (CorrArr[j] > corrval)
+					        {
+					            grp = j;
+					            corrval = CorrArr[j];
+					            ok = TRUE;
+					        }
+					    }
 					}
-
+					
 					if (ok)
 					{
+                        CorrArr[grp] = 0.0;
+					
 						if (!first)
 							file.Write(", ");
 
-						val = GroupSum[grp] / GroupCount[grp];
+						val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
 
                         if (val < 0.0)
         					file.Write("<span style='color:#990099'>");
@@ -4856,16 +4746,15 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
                         if (val < 0.0)
         					file.Write("</span>");
-        					
+                        
 						first = FALSE;
-						GroupCount[grp] = 0;
 					}
-
-					CorrCount[GlobalId] = 0;
 				}
 				WriteFieldFooter(file);
 				file.Write("</tr>");
 			}
+			else
+			    break;
 		}
 		file.Write("</table>");
 		file.Write("<br><br>");
@@ -4957,14 +4846,7 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 *##########################################################################*/
 void TQuiz::WriteLinkReport(const char *filename)
 {
-	long double CorrSum[MAX_GLOBAL_QUESTIONS];
-	int CorrCount[MAX_GLOBAL_QUESTIONS];
-	TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
-	int CorrQuestion[MAX_GLOBAL_QUESTIONS];
-	long double PcaSum;
-	int PcaCount;
-	long double GroupSum[GROUP_COUNT];
-	int GroupCount[GROUP_COUNT];
+    int Used[MAX_GLOBAL_QUESTIONS];
 	int AsLoad;
 	int NtLoad;
 	int GlobalId;
@@ -4973,26 +4855,20 @@ void TQuiz::WriteLinkReport(const char *filename)
 	int g;
 	int grp;
 	TQuiz *quiz;
-	TQuiz *CurrQuiz;
+	int q;
 	TQuiz *TopQuiz;
 	int TopQuestion;
-	int q;
 	char str[80];
 	long double NormCorr;
-	int cross;
+	long double CorrArr[MAX_GROUP_COUNT];
 	int ival;
 	int count;
-	int questions;
 	int reverse;
 	long double val;
-	long double val2;
 	long double corrval;
 	long double LowestCorr;
 	int ok;
 	int first;
-	int found;
-	TQuiz *cquiz;
-	int cq;
 	TFile file(filename, 0);
 
 #ifdef ENGLISH
@@ -5278,68 +5154,17 @@ void TQuiz::WriteLinkReport(const char *filename)
 
     for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
     {
-        found = FALSE;
+        quiz = GlobalTopQuiz[GlobalId];
+        q = GlobalTopQuestion[GlobalId];
 
-        for (q = 0; q < N && !found; q++)
-        {
-            if (Quiz[q].GlobalId == GlobalId)
-            {
-                found = TRUE;
-                WriteLinkQuestion(&file, q, GlobalId);
-            }
-            else
-            {
-				cquiz = Quiz[q].CrossQuiz;
-				cq = Quiz[q].CrossInd;
-				while (cquiz && !found)
-                {
-                    if (cquiz->Quiz[cq].GlobalId == GlobalId)
-                    {
-                        found = TRUE;
-                        cquiz->WriteLinkQuestion(&file, cq, GlobalId);
-                    }
-                    i = cquiz->Quiz[cq].CrossInd;
-                    cquiz = cquiz->Quiz[cq].CrossQuiz;
-                    cq = i;
-                }
-            }
-        }
-
-
-        for (cross = MAX_CROSS - 1; cross >= 0 && !found; cross--)
-        {
-            quiz = CrossQuiz[cross];
-            if (quiz)
-            {
-                for (q = 0; q < quiz->N && !found; q++)
-                {
-                    if (quiz->Quiz[q].GlobalId == GlobalId)
-                    {
-                        found = TRUE;
-                        quiz->WriteLinkQuestion(&file, q, GlobalId);
-                    }
-                    else
-                    {
-                        cquiz = quiz->Quiz[q].CrossQuiz;
-                        cq = quiz->Quiz[q].CrossInd;
-                        while (cquiz && !found)
-                        {
-							if (cquiz->Quiz[cq].GlobalId == GlobalId)
-							{
-								found = TRUE;
-								cquiz->WriteLinkQuestion(&file, cq, GlobalId);
-							}
-							i = cquiz->Quiz[cq].CrossInd;
-							cquiz = cquiz->Quiz[cq].CrossQuiz;
-							cq = i;
-						}
-					}
-                }
-            }
-        }
+        if (quiz)
+            quiz->WriteLinkQuestion(&file, q, GlobalId);
     }
 
 	ClearUsed();
+
+    for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+        Used[q] = FALSE;
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
@@ -5350,84 +5175,32 @@ void TQuiz::WriteLinkReport(const char *filename)
 		file.Write(Group[g].Name);
         file.Write("</a>");
         file.Write("</h3>");
-
-		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-		{
-			CorrSum[i] = 0.0;
-			CorrCount[i] = 0;
-		}
         
-		TopQuiz = GetTopGroupCorr(g, &TopQuestion);
-
-		while (TopQuiz)
-		{
-			quiz = TopQuiz;
-			q = TopQuestion;
-
-			for (;;)
-			{
-				quiz->Quiz[q].Used = TRUE;
-
-				if (quiz->Quiz[q].CrossQuiz)
-				{
-					j = quiz->Quiz[q].CrossInd;
-					quiz = quiz->Quiz[q].CrossQuiz;
-					q = j;
-				}
-				else
-				{
-					GlobalId = quiz->Quiz[q].GlobalId;
-					break;
-				}
-			}
-
-			if (GlobalId > 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
-			{
-				CorrQuiz[GlobalId] = TopQuiz;
-				CorrQuestion[GlobalId] = TopQuestion;
-
-				quiz = TopQuiz;
-				q = TopQuestion;
-
-				while (quiz)
-				{
-					CorrSum[GlobalId] += quiz->Quiz[q].Corr;
-					CorrCount[GlobalId]++;
-
-					j = quiz->Quiz[q].CrossInd;
-					quiz = quiz->Quiz[q].CrossQuiz;
-					q = j;
-				}
-			}
-
-			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
-		}
-
-		GlobalId = -1;
-
-		while (GlobalId)
+        for (;;)
 		{
 			LowestCorr = -0.1;
-			GlobalId = 0;
+            GlobalId = -1;
 
-			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+            for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 			{
-				if (CorrCount[i])
+		        quiz = GlobalTopQuiz[i];
+				q = GlobalTopQuestion[i];
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
 				{
-					corrval = CorrSum[i] / CorrCount[i];
-					corrval = corrval * corrval;
-					if (corrval > LowestCorr)
-					{
-						GlobalId = i;
+                    corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+                    corrval = corrval * corrval;
+                    if (corrval > LowestCorr)
+                    {
+                        GlobalId = i;
 						LowestCorr = corrval;
-					}
-				}
-			}
+                    }
+                }
+            }
 
-			if (GlobalId)
-			{
-				TopQuiz = CorrQuiz[GlobalId];
-				TopQuestion = CorrQuestion[GlobalId];
+            if (GlobalId >= 0)
+            {
+				TopQuiz = GlobalTopQuiz[GlobalId];
+				TopQuestion = GlobalTopQuestion[GlobalId];
 
         	    file.Write("<h4>");
 	            file.Write("<a name=\"");
@@ -5481,8 +5254,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 
     		    file.Write(str);
 
-				val = CorrSum[GlobalId] / CorrCount[GlobalId];
-				CorrCount[GlobalId] = 0;
+
+				val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				Used[GlobalId] = TRUE;
 
 #ifdef ENGLISH
             	file.Write("Aspie-neurotypical correlation: ");
@@ -5510,225 +5285,91 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
                 file.Write("<br>");
 
-				PcaCount = 0;
-				PcaSum = 0.0;
+                if (GlobalPcaCount[GlobalId][0])
+					AsLoad = round(100 * GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
+			    else
+					AsLoad = 0;
 
-				cross = 0;
-				TopQuiz->ClearUsed(TopQuestion);
-				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				while (quiz)
+			    if (GlobalPcaCount[GlobalId][1])
+				    NtLoad = round(100 * GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
+			    else
+                    NtLoad = 0;                    
+
+				if (AsLoad > 0 && NtLoad > 0)
 				{
-					PcaSum += quiz->Quiz[q].Pca[0];
-					PcaCount++;
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				}
-
-				AsLoad = round(100 * PcaSum / PcaCount);
-
-				PcaCount = 0;
-				PcaSum = 0.0;
-
-				if (GetPcaCount() > 1)
-				{
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
+					if (AsLoad > NtLoad)
 					{
-						if (quiz->GetPcaCount() > 1)
-						{
-							PcaSum += quiz->Quiz[q].Pca[1];
-							PcaCount++;
-						}
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-					if (PcaCount)
-						NtLoad = round(100 * PcaSum / PcaCount);
-					else
+						AsLoad = AsLoad - NtLoad;
 						NtLoad = 0;
-				}
-
-				if (PcaCount)
-				{
-					if (AsLoad > 0 && NtLoad > 0)
+					}
+					else
 					{
-						if (AsLoad > NtLoad)
-						{
-							AsLoad = AsLoad - NtLoad;
-							NtLoad = 0;
-						}
-						else
-						{
-							NtLoad = NtLoad - AsLoad;
-							AsLoad = 0;
-						}
+						NtLoad = NtLoad - AsLoad;
+						AsLoad = 0;
 					}
 				}
 
 #ifdef ENGLISH
-				sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
+    			sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
 #endif
 
 #ifdef SWEDISH
-				sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
+	    		sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
 #endif
-				file.Write(str);
-				file.Write("<br>");
+		    	file.Write(str);
+			    file.Write("<br>");
 
-				if (PcaCount)
-				{
-					if (NtLoad >= 0)
+
+                if (GlobalPcaCount[GlobalId][1])
+                {
+
+			        if (NtLoad >= 0)
 #ifdef ENGLISH
-						sprintf(str, "Neurotypical score: NO 0, YES %d", NtLoad);
+				    	sprintf(str, "Neurotypical score: NO 0, YES %d", NtLoad);
 #endif
 
 #ifdef SWEDISH
-						sprintf(str, "Neurotypisk poäng: NEJ 0, JA %d", NtLoad);
+					    sprintf(str, "Neurotypisk poäng: NEJ 0, JA %d", NtLoad);
 #endif
-					else
+    				else
 #ifdef ENGLISH
-						sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
+	    				sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
 #endif
 
 #ifdef SWEDISH
-						sprintf(str, "Neurotypisk poäng: NEJ %d, JA 0", -NtLoad);
+		    			sprintf(str, "Neurotypisk poäng: NEJ %d, JA 0", -NtLoad);
 #endif
 
-					file.Write(str);
-					file.Write("<br>");
+			    	file.Write(str);
+				    file.Write("<br>");
 				}
 
-				PcaCount = 0;
-				PcaSum = 0.0;
-
-				cross = 0;
-				TopQuiz->ClearUsed(TopQuestion);
-				quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				while (quiz)
-				{
-					PcaSum += quiz->Quiz[q].Pca[0];
-					PcaCount++;
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-				}
-
-                if (PcaCount)
+                if (GlobalPcaCount[GlobalId][0])
                 {
        				file.Write("PCA: Aspie: ");
-	    			WritePca(file, PcaSum / PcaCount);
-	    		}
+	    			WritePca(file, GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
+                }	    			
 
-				if (GetPcaCount() > 1)
-				{
+                if (GlobalPcaCount[GlobalId][1])
+                {
+        			file.Write(", NT: ");
+	    			WritePca(file, GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
+                }	    			
 
-    				PcaCount = 0;
-	    			PcaSum = 0.0;
-	    			
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
-					{
-						if (quiz->GetPcaCount() > 1)
-						{
-							PcaSum += quiz->Quiz[q].Pca[1];
-							PcaCount++;
-						}
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
+                if (GlobalPcaCount[GlobalId][2])
+                {
+       				file.Write(", g: ");
+	    			WritePca(file, GlobalPcaSum[GlobalId][2] / GlobalPcaCount[GlobalId][2]);
+                }	    			
 
-                    if (PcaCount)
-                    {
-        				file.Write(", NT: ");
-    	    			WritePca(file, PcaSum / PcaCount);
-    	    		}
-				}
-
-				if (GetPcaCount() > 2)
-				{
-
-    				PcaCount = 0;
-	    			PcaSum = 0.0;
-	    			
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
-					{
-						if (quiz->GetPcaCount() > 2)
-						{
-							PcaSum += quiz->Quiz[q].Pca[2];
-							PcaCount++;
-						}
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-
-					if (PcaCount)
-					{
-        				file.Write(", g: ");
-	        			WritePca(file, PcaSum / PcaCount);
-	        		}
-				}
-
-				if (GetPcaCount() > 3)
-				{
-
-    				PcaCount = 0;
-	    			PcaSum = 0.0;
-	    			
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
-					{
-						if (quiz->GetPcaCount() > 3)
-						{
-							PcaSum += quiz->Quiz[q].Pca[3];
-							PcaCount++;
-						}
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-
-                    if (PcaCount)
-                    {
-        				file.Write(", introvert: ");
-	        			WritePca(file, PcaSum / PcaCount);
-	        		}
-				}
+                if (GlobalPcaCount[GlobalId][3])
+                {
+        			file.Write(", introvert: ");
+	    			WritePca(file, GlobalPcaSum[GlobalId][3] / GlobalPcaCount[GlobalId][3]);
+                }	    			
 
                 file.Write("<br>");
-                
-				for (j = 0; j < GROUP_COUNT - 1; j++)
-				{
-					GroupSum[j] = 0.0;
-					GroupCount[j] = 0;
 
-					TopQuiz->ClearUsed(TopQuestion);
-					quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					while (quiz)
-					{
-						val = quiz->Quiz[q].Group[j].Corr;
-						count = quiz->Quiz[q].Group[j].Count;
-						questions = quiz->Group[j].Questions;
-
-						if (count > 3)
-						{
-							GroupSum[j] += val * questions;
-							GroupCount[j] += questions;
-						}
-
-						quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
-					}
-				}
-
-				NormCorr = 0.0;
-
-				for (j = 0; j < GROUP_COUNT - 1; j++)
-				{
-					if (GroupCount[j])
-					{
-						val = GroupSum[j] / GroupCount[j];
-						val2 = val * val;
-						if (val2 >= NormCorr)
-							NormCorr = val2;
-					}
-				}
-				NormCorr = 0.81 * NormCorr;
 
 #ifdef ENGLISH
                 file.Write("Correlates with: ");
@@ -5738,36 +5379,55 @@ void TQuiz::WriteLinkReport(const char *filename)
                 file.Write("Korrelaterar med: ");
 #endif
 
+				NormCorr = 0.0;
+
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					if (GlobalGroupCorrCount[GlobalId][j])
+					{
+						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
+						val = val * val;
+						if (val >= NormCorr)
+							NormCorr = val;
+					}
+				}
+				NormCorr = 0.81 * NormCorr;
+
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					if (GlobalGroupCorrCount[GlobalId][j])
+					{
+						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
+						CorrArr[j] = val * val;
+				    }
+				    else
+				        CorrArr[j] = 0.0;
+				}
+
 				first = TRUE;
 				ok = TRUE;
 				while (ok)
 				{
 					ok = FALSE;
+					corrval = 0.0;
 
 					for (j = 0; j < GROUP_COUNT - 1; j++)
 					{
-						if (GroupCount[j])
-						{
-							val = GroupSum[j] / GroupCount[j];
-							val2 = val * val;
-							if (val2 >= NormCorr)
-							{
-								if (ok)
-								{
-									if (val2 > corrval)
-										grp = j;
-								}
-								else
-								{
-									ok = TRUE;
-									grp = j;
-								}
-							}
-						}
+					    if (CorrArr[j] >= NormCorr)
+					    {
+					        if (CorrArr[j] > corrval)
+					        {
+					            grp = j;
+					            corrval = CorrArr[j];
+					            ok = TRUE;
+					        }
+					    }
 					}
-
+					
 					if (ok)
 					{
+                        CorrArr[grp] = 0.0;
+					
 						if (!first)
 							file.Write(", ");
 
@@ -5777,18 +5437,15 @@ void TQuiz::WriteLinkReport(const char *filename)
                 		file.Write(Group[grp].Name);
                         file.Write("</a>");
 
-						corrval = GroupSum[grp] / GroupCount[grp];
+						val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
 
-						if (corrval < 0.0)
+						if (val < 0.0)
 						{
 						    reverse = TRUE;
-						    val = -corrval;
+						    val = -val;
 						}
 						else
-						{
 						    reverse = FALSE;
-						    val = corrval;
-						}
 
         				ival = round(100.0 * val);
 
@@ -5807,13 +5464,13 @@ void TQuiz::WriteLinkReport(const char *filename)
 	    				}
                         
 						first = FALSE;
-						GroupCount[grp] = 0;
 					}
 
-					CorrCount[GlobalId] = 0;
 				}
 				file.Write("<br>");
 			}
+			else
+			    break;
 		}
 		file.Write("<br>");
 	}

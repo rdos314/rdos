@@ -424,7 +424,7 @@ void TQuiz9::SetupTexts()
   Quiz[122].MyGroup = GROUP_SEX;
   Quiz[123].MyGroup = GROUP_EMOTION;
   Quiz[124].MyGroup = GROUP_EMOTION;
-  Quiz[125].MyGroup = GROUP_MIXED;
+  Quiz[125].MyGroup = GROUP_NONVERBAL;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
@@ -440,7 +440,7 @@ void TQuiz9::SetupTexts()
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[141].MyGroup = GROUP_NONVERBAL;
   Quiz[142].MyGroup = GROUP_EMOTION;
   Quiz[143].MyGroup = GROUP_EMOTION;
   Quiz[144].MyGroup = GROUP_MIXED;
