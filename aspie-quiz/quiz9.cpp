@@ -328,7 +328,7 @@ void TQuiz9::SetupTexts()
   Quiz[26].MyGroup = GROUP_SENSORY;
   Quiz[27].MyGroup = GROUP_SENSORY;
   Quiz[28].MyGroup = GROUP_SENSORY;
-  Quiz[29].MyGroup = GROUP_SENSORY;
+  Quiz[29].MyGroup = GROUP_ASPIE_COMM;
   Quiz[30].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[31].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[32].MyGroup = GROUP_ASPIE_TALENT;
@@ -432,9 +432,9 @@ void TQuiz9::SetupTexts()
   Quiz[130].MyGroup = GROUP_EMOTION;
   Quiz[131].MyGroup = GROUP_SENSORY;
   Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_EMOTION;
-  Quiz[134].MyGroup = GROUP_SENSORY;
-  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[134].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[135].MyGroup = GROUP_ASPIE_COMM;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_MIXED;
@@ -452,7 +452,7 @@ void TQuiz9::SetupTexts()
 
   Quiz[150].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[151].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have a small mouth?";
@@ -608,7 +608,7 @@ void TQuiz9::SetupTexts()
 
   Quiz[150].Text = "Red hair-color";
   Quiz[151].Text = "Do you have brown eyes?";
-  Quiz[152].Text = "Born between september and january";
+  Quiz[152].Text = "Born in autumn";
   
 #endif
 
@@ -766,7 +766,7 @@ void TQuiz9::SetupTexts()
 
   Quiz[150].Text = "Röd hårfärg";
   Quiz[151].Text = "Har du bruna ögon?";
-  Quiz[152].Text = "Född mellan september och januari";
+  Quiz[152].Text = "Född på hösten";
 
 #endif
 
@@ -941,14 +941,14 @@ void TQuiz9::LoadPopulations()
 				case 2:
 				case 3:
 				case 4:
+				case 5:
 					 Row.Quiz[152] = 1;
 					 break;
 
-				case 1:
+				case 8:
 				case 9:
 				case 10:
 				case 11:
-				case 12:
 					 Row.Quiz[152] = 3;
 					 break;
 
@@ -1557,8 +1557,8 @@ void TQuiz9::ImportMvsp(const char *filename, int PcaType)
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

@@ -178,7 +178,7 @@ void TQuizR2::SetupTexts()
   Quiz[12].MyGroup = GROUP_SENSORY;
   Quiz[13].MyGroup = GROUP_SENSORY;
   Quiz[14].MyGroup = GROUP_SENSORY;
-  Quiz[15].MyGroup = GROUP_SENSORY;
+  Quiz[15].MyGroup = GROUP_ASPIE_COMM;
   Quiz[16].MyGroup = GROUP_SENSORY;
   Quiz[17].MyGroup = GROUP_SENSORY;
   Quiz[18].MyGroup = GROUP_SENSORY;
@@ -275,14 +275,14 @@ void TQuizR2::SetupTexts()
   Quiz[109].MyGroup = GROUP_EMOTION;
   Quiz[110].MyGroup = GROUP_EMOTION;
   Quiz[111].MyGroup = GROUP_EMOTION;
-  Quiz[112].MyGroup = GROUP_EMOTION;
+  Quiz[112].MyGroup = GROUP_MIXED;
   Quiz[113].MyGroup = GROUP_EMOTION;
   Quiz[114].MyGroup = GROUP_NONVERBAL;
   Quiz[115].MyGroup = GROUP_EMOTION;
   Quiz[116].MyGroup = GROUP_EMOTION;
-  Quiz[117].MyGroup = GROUP_EMOTION;
+  Quiz[117].MyGroup = GROUP_ASPIE_COMM;
   Quiz[118].MyGroup = GROUP_EMOTION;
-  Quiz[119].MyGroup = GROUP_EMOTION;
+  Quiz[119].MyGroup = GROUP_ASPIE_COMM;
   Quiz[120].MyGroup = GROUP_REPETITION;
   Quiz[121].MyGroup = GROUP_REPETITION;
   Quiz[122].MyGroup = GROUP_REPETITION;
@@ -295,7 +295,7 @@ void TQuizR2::SetupTexts()
   Quiz[129].MyGroup = GROUP_REPETITION;
   Quiz[130].MyGroup = GROUP_REPETITION;
   Quiz[131].MyGroup = GROUP_REPETITION;
-  Quiz[132].MyGroup = GROUP_REPETITION;
+  Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_REPETITION;
   Quiz[134].MyGroup = GROUP_SEX;
   Quiz[135].MyGroup = GROUP_NONVERBAL;
@@ -309,11 +309,11 @@ void TQuizR2::SetupTexts()
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_NONVERBAL;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_COMM;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[152].MyGroup = GROUP_MIXED;
   Quiz[153].MyGroup = GROUP_MIXED;
@@ -1399,7 +1399,7 @@ void TQuizR2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

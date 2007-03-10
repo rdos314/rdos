@@ -271,7 +271,7 @@ void TQuizNd::SetupTexts()
 	Quiz[77].MyGroup = GROUP_REPETITION;
 	Quiz[78].MyGroup = GROUP_REPETITION;
 	Quiz[79].MyGroup = GROUP_NT_SOCIAL;
-	Quiz[80].MyGroup = GROUP_REPETITION;
+	Quiz[80].MyGroup = GROUP_MIXED;
 	Quiz[81].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[82].MyGroup = GROUP_REPETITION;
 	Quiz[83].MyGroup = GROUP_REPETITION;
@@ -343,7 +343,7 @@ void TQuizNd::SetupTexts()
 	Quiz[149].MyGroup = GROUP_EMOTION;
 	Quiz[150].MyGroup = GROUP_EMOTION;
 	Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[152].MyGroup = GROUP_SENSORY;
+	Quiz[152].MyGroup = GROUP_MIXED;
 	Quiz[153].MyGroup = GROUP_SENSORY;
 	Quiz[154].MyGroup = GROUP_SENSORY;
 	Quiz[155].MyGroup = GROUP_EMOTION;
@@ -400,7 +400,7 @@ void TQuizNd::SetupTexts()
 	Quiz[206].MyGroup = GROUP_SENSORY;
 	Quiz[207].MyGroup = GROUP_NONVERBAL;
 	Quiz[208].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[209].MyGroup = GROUP_EMOTION;
+	Quiz[209].MyGroup = GROUP_SENSORY;
 
 #ifdef ENGLISH
 	Quiz[0].Text = "Can you easily hear small sounds?";

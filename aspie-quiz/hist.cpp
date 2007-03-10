@@ -283,7 +283,7 @@ void CreateAll()
 	THistData AsArr[100];
 	THistData NtArr[100];
 	int ok;
-	TJpegBitmapDevice jpeg(24, 20 + 3 * WIDTH, 3 * HEIGHT);
+	TJpegBitmapDevice jpeg(24, 20 + 3 * WIDTH, 4 * HEIGHT);
 
 	jpeg.SetDrawColor(255, 255, 255);
 	jpeg.SetLgopNone();
@@ -377,6 +377,29 @@ void CreateAll()
 
 	if (ok)
 		WriteAsNtHist(&jpeg, WIDTH, 20 + 2 * HEIGHT, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 2 * WIDTH, 2 * HEIGHT, "Quiz R1");
+
+	MaxVal = 0.0;
+	ok = ImportData("asr1.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("ntr1.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 2 * WIDTH, 20 + 2 * HEIGHT, AsArr, NtArr, FALSE);
+
+	WriteHeading(&jpeg, 0, 3 * HEIGHT, "Quiz R2");
+
+	MaxVal = 0.0;
+	ok = ImportData("asr2.dat", AsArr);
+
+	if (ok)
+		ok = ImportData("ntr2.dat", NtArr);
+
+	if (ok)
+		WriteAsNtHist(&jpeg, 0, 20 + 3 * HEIGHT, AsArr, NtArr, FALSE);
+
 
 	jpeg.Save("all.jpg");
 }

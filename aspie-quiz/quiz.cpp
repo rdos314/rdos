@@ -50,12 +50,37 @@ static TQuiz *GlobalTopQuiz[MAX_GLOBAL_QUESTIONS];
 static int GlobalTopQuestion[MAX_GLOBAL_QUESTIONS];
 static int GlobalAsNtCorrCount[MAX_GLOBAL_QUESTIONS];
 static long double GlobalAsNtCorrSum[MAX_GLOBAL_QUESTIONS];
+static long double GlobalChi2[MAX_GLOBAL_QUESTIONS];
 
 static long double GlobalGroupCorrSum[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static int GlobalGroupCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 
 static long double GlobalPcaSum[MAX_GLOBAL_QUESTIONS][4];
 static int GlobalPcaCount[MAX_GLOBAL_QUESTIONS][4];
+
+static int Chi2Dist[190] =
+    {
+        10000,  9512,  9048,  8607,  8187,  7788,  7408,  7047,  6703,  6376,
+         6065,  5769,  5488,  5220,  4966,  4724,  4493,  4274,  4066,  3867,
+         3679,  3499,  3329,  3166,  3012,  2865,  2725,  2592,  2466,  2346,
+         2231,  2122,  2019,  1920,  1827,  1738,  1653,  1572,  1496,  1423,
+         1353,  1287,  1225,  1165,  1108,  1054,  1003,   954,   907,   863,
+          821,   781,   743,   707,   672,   639,   608,   578,   550,   523,
+          498,   474,   450,   429,   408,   388,   369,   351,   334,   317,
+          302,   287,   273,   260,   247,   235,   224,   213,   202,   193,
+          183,   174,   166,   158,   150,   143,   136,   129,   123,   117,
+          111,   106,   101,    96,    91,    87,    82,    78,    74,    71,
+           67,    64,    61,    58,    55,    52,    50,    47,    45,    43,
+           41,    39,    37,    35,    33,    32,    30,    29,    27,    26,
+           25,    24,    22,    21,    20,    19,    18,    17,    17,    16,
+           15,    14,    14,    13,    12,    12,    11,    11,    10,    10,
+            9,     9,     8,     8,     7,     7,     7,     6,     6,     6,
+            6,     5,     5,     5,     5,     4,     4,     4,     4,     4,
+            3,     3,     3,     3,     3,     3,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     1,     1,     1,
+            1,     1,     1,     1,     1,     1,     0,     0,     0,     0
+    };            
+
 
 /*##########################################################################
 #
@@ -1629,7 +1654,8 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
 *##########################################################################*/
 void TQuiz::Calculate()
 {
-    int i;
+	int i;
+    int j;
 	int g;
 	int e;
 	int ok;
@@ -1643,6 +1669,7 @@ void TQuiz::Calculate()
 	long double rsum;
 	long double zx;
 	long double zy;
+	long double exp;
 	int g1, g2;
 	int count1;
 	int sum1;
@@ -1653,6 +1680,10 @@ void TQuiz::Calculate()
 	int q1, q2;
     int ival1, ival2;
     int gid1, gid2;
+	long double dcount1;
+	long double dcount2;
+	long double val1;
+	long double val2;
 
 	PopCorr.Correlate(&Aspie, &Nt);
 
@@ -1664,8 +1695,44 @@ void TQuiz::Calculate()
 		Quiz[i].NtCount = Nt.Count[i];
 		Quiz[i].NtMean = Nt.GetMean(i);
 		Quiz[i].NtSd = Nt.GetSd(i);
-	    Quiz[i].Chi2 = PopCorr.chi2[i];
 		Quiz[i].Corr = PopCorr.corr[i];
+
+    	Quiz[i].ChiCount[0] = Aspie.Count[i];
+    	Quiz[i].ChiCount[1] = Nt.Count[i];
+        
+	    for (j = 0; j < 3; j++)
+		{
+
+		    Quiz[i].ChiArr[0][j] = Aspie.ChiArr[i][j];
+		    Quiz[i].ChiArr[1][j] = Nt.ChiArr[i][j];
+        }
+
+		rsum = 0;
+		dcount1 = (long double)Quiz[i].ChiCount[0];
+		dcount2 = (long double)Quiz[i].ChiCount[1];
+
+		for (j = 0; j < 3; j++)
+		{
+			val1 = (long double)Quiz[i].ChiArr[0][j];
+			val2 = (long double)Quiz[i].ChiArr[1][j];
+
+			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+			if (exp >= 5.0)
+			{
+				val = val1 - exp;
+				rsum += val * val / exp;
+			}
+
+			exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+			if (exp >= 5.0)
+			{
+				val = val2 - exp;
+				rsum += val * val / exp;
+			}
+		}
+
+		Quiz[i].Chi2 = rsum;
+
 	}
 
 	for (i = 0; i < N; i++)
@@ -1989,6 +2056,7 @@ void TQuiz::CalcGlobal()
     int GlobalId;
     int i;
 	int j;
+	int k;
     TQuiz *quiz;
   	TQuiz *TopQuiz;
 	int TopQuestion;
@@ -1996,6 +2064,14 @@ void TQuiz::CalcGlobal()
 	int count;
 	int w;
 	long double val;
+	long double rsum;
+	long double exp;
+	int ChiArr[2][3];
+	int ChiCount[2];
+	long double dcount1;
+	long double dcount2;
+	long double val1;
+	long double val2;
 
 	if (GlobalInited)
 	    return;
@@ -2006,6 +2082,7 @@ void TQuiz::CalcGlobal()
 	{
 		GlobalAsNtCorrSum[i] = 0.0;
 		GlobalAsNtCorrCount[i] = 0;
+		GlobalChi2[i] = 0.0;
 
 		for (j = 0; j < MAX_GROUP_COUNT; j++)
 		{
@@ -2018,6 +2095,7 @@ void TQuiz::CalcGlobal()
             GlobalPcaSum[i][j] = 0.0;
             GlobalPcaCount[i][j] = 0;
         }
+
 	}
 
 	ClearUsed();
@@ -2048,6 +2126,14 @@ void TQuiz::CalcGlobal()
 
         if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
         {
+            for (j = 0; j < 2; j++)
+            {
+                ChiCount[j] = 0;
+
+                for (k = 0; k < 3; k++)
+                    ChiArr[j][k] = 0;
+            }
+        
 			GlobalTopQuiz[GlobalId] = TopQuiz;
             GlobalTopQuestion[GlobalId] = TopQuestion;
 
@@ -2056,6 +2142,14 @@ void TQuiz::CalcGlobal()
 
     		for (;;)
             {    
+                for (j = 0; j < 2; j++)
+                {
+                    ChiCount[j] += quiz->Quiz[q].ChiCount[j];
+    
+                    for (k = 0; k < 3; k++)
+                        ChiArr[j][k] += quiz->Quiz[q].ChiArr[j][k];
+                }
+
 			    GlobalAsNtCorrSum[GlobalId] += quiz->Quiz[q].Corr * quiz->Quiz[q].Count;
                 GlobalAsNtCorrCount[GlobalId] += quiz->Quiz[q].Count;
 
@@ -2093,6 +2187,34 @@ void TQuiz::CalcGlobal()
                 else
     				break;
 		    }
+
+    		rsum = 0;
+	    	dcount1 = (long double)ChiCount[0];
+		    dcount2 = (long double)ChiCount[1];
+
+    		for (j = 0; j < 3; j++)
+	    	{
+		    	val1 = (long double)ChiArr[0][j];
+			    val2 = (long double)ChiArr[1][j];
+			    
+    			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+	    		if (exp >= 5.0)
+		    	{
+			    	val = val1 - exp;
+    				rsum += val * val / exp;
+	    		}
+
+		    	exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+			    if (exp >= 5.0)
+    			{
+	    			val = val2 - exp;
+		    		rsum += val * val / exp;
+			    }
+    		}
+
+		
+	        GlobalChi2[GlobalId] = rsum;
+		    
 	    }
 
         TopQuiz = GetTopQuizCorr(&TopQuestion);
@@ -2755,6 +2877,25 @@ void TQuiz::WriteCorrVal(TFile &File, long double corr, int count)
 
     File.Write("</span>\n");
         
+}
+
+/*##################  TQuiz::WriteChi2 ##########################
+*   Purpose....: Write chi-2 based p                   	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteChi2(TFile &File, long double chi2)
+{
+    char str[40];
+    int ival;
+
+    ival = round(chi2);
+
+    sprintf(str, "%d", ival);
+            
+	File.Write(str);
 }
 
 /*##################  TQuiz::WritePca ##########################
@@ -3739,6 +3880,10 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write("AS-NT Corr");
         WriteFieldFooter(file);
 
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("Chi-2");
+        WriteFieldFooter(file);
+
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
         {
             WriteFieldHeader(file, 4);
@@ -3759,10 +3904,22 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    while (quiz)
     		{
-		    	quiz->WriteName(file);
+                if (quiz->Quiz[q].Chi2 <= 6.0)
+    				file.Write("<span style='color:#EE0000'>");
+    			else
+    			{
+                    if (quiz->Quiz[q].Chi2 <= 9.3)
+        				file.Write("<span style='color:#990099'>");
+        		}
+                
+   		    	quiz->WriteName(file);
     			sprintf(str, ":%d", q + 1);
 	    		file.Write(str);
-		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+
+                if (quiz->Quiz[q].Chi2 <= 9.3)
+    				file.Write("</span>");
+
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    	if (quiz)
     	    		file.Write("<br>");
 		    }
@@ -3806,6 +3963,31 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
+				
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                if (quiz)
+                {   cross++;
+    			    file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+					
+            cross = 0;
+            TopQuiz->ClearUsed(TopQuestion);
+            WriteCenteredFieldHeader(file, 4);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {
+                NormCorr[cross] = 0.0;
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					if (val >= NormCorr[cross])
+						NormCorr[cross] = val;
+				}       
+				NormCorr[cross] = 0.9 * NormCorr[cross]; 
+
+				WriteChi2(file, quiz->Quiz[q].Chi2);
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
@@ -4193,6 +4375,10 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 		file.Write("AS-NT Corr");
 		WriteFieldFooter(file);
 
+		WriteCenteredFieldHeader(file, 3);
+		file.Write("Chi-2");
+		WriteFieldFooter(file);
+
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
 			WriteFieldHeader(file, 4);
@@ -4232,8 +4418,21 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				file.Write("<tr style='height:24.75pt'>");
 
 				WriteCenteredFieldHeader(file, 3);
+
+                if (GlobalChi2[GlobalId] <= 6.0)
+    				file.Write("<span style='color:#EE0000'>");
+    			else
+    			{
+                    if (GlobalChi2[GlobalId] <= 9.3)
+        				file.Write("<span style='color:#990099'>");
+        		}
+
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
+                
+                if (GlobalChi2[GlobalId] <= 9.3)
+    				file.Write("</span>");
+
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 24);
@@ -4265,6 +4464,10 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
+				WriteFieldFooter(file);
+
+				WriteCenteredFieldHeader(file, 4);
+				WriteChi2(file, GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
 				NormCorr = 0.0;
@@ -4393,6 +4596,10 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
+		file.Write("Chi-2");
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
 		file.Write("Aspie loading");
         WriteFieldFooter(file);
 
@@ -4439,8 +4646,21 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 				file.Write("<tr style='height:24.75pt'>");
 
 				WriteCenteredFieldHeader(file, 3);
+
+                if (GlobalChi2[GlobalId] <= 6.0)
+    				file.Write("<span style='color:#EE0000'>");
+    			else
+    			{
+                    if (GlobalChi2[GlobalId] <= 9.3)
+        				file.Write("<span style='color:#990099'>");
+        		}
+
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
+                
+                if (GlobalChi2[GlobalId] <= 9.3)
+    				file.Write("</span>");
+
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 26);
@@ -4472,6 +4692,9 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
+				WriteCenteredFieldHeader(file, 3);
+				WriteChi2(file, GlobalChi2[GlobalId]);
+				WriteFieldFooter(file);
 
 				for (j = 0; j < 4; j++)
 				{
@@ -4564,6 +4787,10 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
+		file.Write("Chi-2");
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 3);
 		file.Write("Aspie score NO/YES");
 		WriteFieldFooter(file);
 
@@ -4586,7 +4813,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 			{
 		        quiz = GlobalTopQuiz[i];
 				q = GlobalTopQuestion[i];
-				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= 6.0)
 				{
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;
@@ -4606,8 +4833,21 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				file.Write("<tr style='height:24.75pt'>");
 
 				WriteCenteredFieldHeader(file, 3);
+
+                if (GlobalChi2[GlobalId] <= 6.0)
+    				file.Write("<span style='color:#EE0000'>");
+    			else
+    			{
+                    if (GlobalChi2[GlobalId] <= 9.3)
+        				file.Write("<span style='color:#990099'>");
+        		}
+
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
+                
+                if (GlobalChi2[GlobalId] <= 9.3)
+    				file.Write("</span>");
+
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 45);
@@ -4639,6 +4879,10 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
+				WriteFieldFooter(file);
+
+				WriteCenteredFieldHeader(file, 3);
+				WriteChi2(file, GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
                 if (GlobalPcaCount[GlobalId][0])
@@ -4899,7 +5143,6 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-    file.Write("<a href=\"histo\">Histogram för Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
     file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
     file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
@@ -5124,8 +5367,9 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 	file.Write("<h3>Histograms</h3>\n");
 
-	file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=360 BORDER=0></p>");
+	file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=480 BORDER=0></p>");
 	file.Write("<p><img src=\"dx.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=600 BORDER=0></p>");
+	file.Write("<p><img src=\"birth9.jpg\" ALIGN=BOTTOM WIDTH=360 HEIGHT=480 BORDER=0></p>");
 
 #ifdef ENGLISH
 	file.Write("<h3>Groups</h3>\n");
@@ -5157,7 +5401,7 @@ void TQuiz::WriteLinkReport(const char *filename)
         quiz = GlobalTopQuiz[GlobalId];
         q = GlobalTopQuestion[GlobalId];
 
-        if (quiz)
+        if (quiz && GlobalChi2[GlobalId] >= 6.0)
             quiz->WriteLinkQuestion(&file, q, GlobalId);
     }
 
@@ -5185,7 +5429,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 			{
 		        quiz = GlobalTopQuiz[i];
 				q = GlobalTopQuestion[i];
-				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= 6.0)
 				{
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;
@@ -5260,11 +5504,11 @@ void TQuiz::WriteLinkReport(const char *filename)
 				Used[GlobalId] = TRUE;
 
 #ifdef ENGLISH
-            	file.Write("Aspie-neurotypical correlation: ");
+            	file.Write("Pearson's r: ");
 #endif
 
 #ifdef SWEDISH
-            	file.Write("Aspie-neurotypisk korrelation: ");
+            	file.Write("Pearson r: ");
 #endif
 				
 
@@ -5283,6 +5527,37 @@ void TQuiz::WriteLinkReport(const char *filename)
 				sprintf(str, ".%02d", ival);
 				file.Write(str);
 #endif
+                file.Write("<br>");
+
+
+#ifdef ENGLISH
+            	file.Write("Chi-square: ");
+#endif
+
+#ifdef SWEDISH
+            	file.Write("Chi-2: ");
+#endif
+
+				WriteChi2(file, GlobalChi2[GlobalId]);
+
+                file.Write("<br>");
+
+#ifdef ENGLISH
+            	file.Write("Cramer's phi: ");
+#endif
+
+#ifdef SWEDISH
+            	file.Write("Cramers phi: ");
+#endif
+
+				val = GlobalChi2[GlobalId] / (long double)count;
+				val = sqrtl(val);
+
+				ival = round(100.0 * val);
+
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+
                 file.Write("<br>");
 
                 if (GlobalPcaCount[GlobalId][0])

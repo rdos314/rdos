@@ -97,6 +97,10 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 	long double exp;
 	long double cmean;
 	long double csd;
+	long double count1;
+	long double count2;
+	long double val1;
+	long double val2;
 
 	for (i = 0; i < N; i++)
 	{
@@ -124,7 +128,7 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
     	    }
     	}
 
-    	if (count > 1)
+		if (count > 1)
         {
     		mean[i] = (long double)sum / ((long double)count);
 
@@ -151,7 +155,7 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
         	    }
     		}
 
-    		sd[i] = sqrtl(rsum / ((long double)count - 1));
+			sd[i] = sqrtl(rsum / ((long double)count - 1));
 
         	cmean = (long double)pop1->Count[i] / ((long double)count);
 
@@ -177,8 +181,8 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 	    	        {
 		                ival--;
         	    		zy = ((long double)ival - mean[i]) / sd[i];
-        		    	rsum += zx * zy;
-    		        }
+						rsum += zx * zy;
+					}
 	    	    }
     
         		zx = (0.0 - cmean) / csd;
@@ -197,15 +201,27 @@ void TPopulationCorrelation::Correlate(TPopulation *pop1, TPopulation *pop2)
 		    }
 
     		rsum = 0;
+		    count1 = (long double)pop1->Count[i];
+		    count2 = (long double)pop2->Count[i];
 
-	    	for (j = 0; j < 3; j++)
-		    {
-    			exp = (long double)pop2->ChiArr[i][j] * (long double)pop1->Count[i] / (long double)pop2->Count[i];
-	    		if (exp >= 5.0)
-		    	{
-			    	val = (long double)pop1->ChiArr[i][j] - exp;
-				    rsum += val * val / exp;
-			    }
+			for (j = 0; j < 3; j++)
+			{
+				val1 = (long double)pop1->ChiArr[i][j];
+				val2 = (long double)pop2->ChiArr[i][j];
+
+				exp = (val1 + val2) * count1 / (count1 + count2);
+				if (exp >= 5.0)
+				{
+					val = val1 - exp;
+					rsum += val * val / exp;
+				}
+
+				exp = (val1 + val2) * count2 / (count1 + count2);
+				if (exp >= 5.0)
+				{
+					val = val2 - exp;
+					rsum += val * val / exp;
+				}
 		    }
 
     		chi2[i] = rsum;

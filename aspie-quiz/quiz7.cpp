@@ -347,7 +347,7 @@ void TQuiz7::SetupTexts()
 	Quiz[133].MyGroup = GROUP_MIXED;
 	Quiz[134].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[135].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[136].MyGroup = GROUP_EMOTION;
+	Quiz[136].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[137].MyGroup = GROUP_SENSORY;
 	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[139].MyGroup = GROUP_ASPIE_BIOLOGY;

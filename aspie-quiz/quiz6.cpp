@@ -240,8 +240,8 @@ void TQuiz6::SetupTexts()
 	Quiz[28].MyGroup = GROUP_NONVERBAL;
 	Quiz[29].MyGroup = GROUP_NONVERBAL;
 	Quiz[30].MyGroup = GROUP_NONVERBAL;
-	Quiz[31].MyGroup = GROUP_MIXED;
-	Quiz[32].MyGroup = GROUP_EMOTION;
+	Quiz[31].MyGroup = GROUP_NONVERBAL;
+	Quiz[32].MyGroup = GROUP_MIXED;
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_NONVERBAL;
@@ -272,7 +272,7 @@ void TQuiz6::SetupTexts()
 	Quiz[60].MyGroup = GROUP_REPETITION;
 	Quiz[61].MyGroup = GROUP_REPETITION;
 	Quiz[62].MyGroup = GROUP_REPETITION;
-	Quiz[63].MyGroup = GROUP_EMOTION;
+	Quiz[63].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[66].MyGroup = GROUP_ASPIE_SOCIAL;

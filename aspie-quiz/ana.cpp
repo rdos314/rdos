@@ -81,15 +81,15 @@ int main(int argc, char **argv)
 //	Quiz[10]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
-//	Quiz[1]->CheckCross();
-//	Quiz[2]->CheckCross();
-//	Quiz[3]->CheckCross();
-//	Quiz[4]->CheckCross();
-//	Quiz[5]->CheckCross();
-//	Quiz[6]->CheckCross();
-//  Quiz[7]->CheckCross();
-//	Quiz[8]->CheckCross();
-//	Quiz[9]->CheckCross();
+	Quiz[1]->CheckCross();
+	Quiz[2]->CheckCross();
+	Quiz[3]->CheckCross();
+	Quiz[4]->CheckCross();
+	Quiz[5]->CheckCross();
+	Quiz[6]->CheckCross();
+	Quiz[7]->CheckCross();
+	Quiz[8]->CheckCross();
+	Quiz[9]->CheckCross();
     Quiz[10]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	 Quiz[10]->ImportMvsp("maler2.txt", PCA_TYPE_MALE);
 	 Quiz[10]->ImportMvsp("femaler2.txt", PCA_TYPE_FEMALE);
 
-     Quiz[10]->CalcGlobal();
+	 Quiz[10]->CalcGlobal();
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -241,8 +241,32 @@ int main(int argc, char **argv)
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
+	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[9]->ExportHistogram("allr1.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[10]->ExportHistogram("allr2.csv", POP_TYPE_ALL, 2, TRUE);
+
+	 Quiz[10]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
+	 Quiz[10]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
+	 Quiz[10]->ExportHistogram("add.csv", POP_TYPE_ADD, 2, TRUE);
+	 Quiz[10]->ExportHistogram("ts.csv", POP_TYPE_TS, 2, TRUE);
+	 Quiz[10]->ExportHistogram("pa.csv", POP_TYPE_PA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("bip.csv", POP_TYPE_BIPOLAR, 2, TRUE);
+	 Quiz[10]->ExportHistogram("schizo.csv", POP_TYPE_SCHIZOPHRENIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("syn.csv", POP_TYPE_SYNAESTHESIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("dysl.csv", POP_TYPE_DYSLEXIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("dysc.csv", POP_TYPE_DYSCALCULIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("dysg.csv", POP_TYPE_DYSGRAPHIA, 2, TRUE);
+	 Quiz[10]->ExportHistogram("ocd.csv", POP_TYPE_OCD, 2, TRUE);
+	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
+	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
 //	 Quiz[10]->WriteWeighting("weights.cpp");
 //	 Quiz[10]->WritePhpWeighting("weights.php");
