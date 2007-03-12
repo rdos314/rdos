@@ -2524,16 +2524,16 @@ int TBirthMonth::GetFactor(int index)
 		case 7:
 		case 9:
 		case 11:
-			return 3100;
+			return 3225;
 
 		case 1:
-			return  2825;
+			return  3539;
 
 		case 3:
 		case 5:
 		case 8:
 		case 10:
-			return 3000;
+			return 3333;
 	}
 }
 
