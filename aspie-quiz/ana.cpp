@@ -76,21 +76,22 @@ int main(int argc, char **argv)
 	Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
 	Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
 
-//	Quiz[10]->WritePhpQuestions("q.php");
-//	Quiz[10]->WriteSetupTexts("q.cpp");
-//	Quiz[10]->WriteSetupCross("c.cpp");
+	Quiz[11]->WritePhpQuestions("q.php");
+	Quiz[11]->WriteSetupTexts("q.cpp");
+	Quiz[11]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
-	Quiz[1]->CheckCross();
-	Quiz[2]->CheckCross();
-	Quiz[3]->CheckCross();
-	Quiz[4]->CheckCross();
-	Quiz[5]->CheckCross();
-	Quiz[6]->CheckCross();
-	Quiz[7]->CheckCross();
-	Quiz[8]->CheckCross();
-	Quiz[9]->CheckCross();
-    Quiz[10]->CheckCross();
+//	Quiz[1]->CheckCross();
+//	Quiz[2]->CheckCross();
+//	Quiz[3]->CheckCross();
+//	Quiz[4]->CheckCross();
+//	Quiz[5]->CheckCross();
+//	Quiz[6]->CheckCross();
+//	Quiz[7]->CheckCross();
+//	Quiz[8]->CheckCross();
+//	Quiz[9]->CheckCross();
+//	 Quiz[10]->CheckCross();
+	 Quiz[11]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
