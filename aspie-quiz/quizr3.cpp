@@ -1517,7 +1517,7 @@ void TQuizR3::SetupTexts()
   Quiz[8].Text = "Do you get very tired after socializing, and need to regenerate alone?";
   Quiz[9].Text = "Do you dislike it when people drop by to visit you uninvited?";
   Quiz[10].Text = "Have you been bullied, abused or taken advantage of?";
-  Quiz[11].Text = "Do you often have thoughts of committing suicide?";
+  Quiz[11].Text = "Have you had thoughts of committing suicide?";
   Quiz[12].Text = "Do you find it difficult to figure out how to behave in various situations?";
   Quiz[13].Text = "Have you had the feeling of playing a game, pretending to be like people around you?";
   Quiz[14].Text = "Do you tend to feel nervous, shy, confused or left out in social situations?";
@@ -1643,7 +1643,7 @@ void TQuizR3::SetupTexts()
   Quiz[134].Text = "Do you always give back books, things or money you have borrowed and expect others to do the same?";
   Quiz[135].Text = "Is your sense of humor different from mainstream or considered odd?";
   Quiz[136].Text = "Do you look, feel or act younger than your biological age?";
-  Quiz[137].Text = "Do you have odd teeth; e.g. that are crooked; bigger than usual; that have gaps; overlaps; underbite, show extra much gum?";
+  Quiz[137].Text = "Do you have odd teeth; e.g. that are crooked, bigger than usual; that have gaps, overlaps, underbite or that show extra much gum?";
   Quiz[138].Text = "Are you naturally nocturnal, most alert after midnight?";
   Quiz[139].Text = "Do you have atypical or irregular sleeping patterns that deviate from the 24-h cycle?";
   Quiz[140].Text = "Do you have unusual eating habits?";
@@ -1658,11 +1658,11 @@ void TQuizR3::SetupTexts()
   Quiz[149].Text = "Do you often forget were you put things?";
   Quiz[150].Text = "Do you tend to get so stuck on details that you miss the overall picture?";
   Quiz[151].Text = "Do you have difficulty accepting criticism, correction, and direction?";
-  Quiz[152].Text = "Do you have difficulty describing and summarising, e.g. conversations, events or something you've read?";
+  Quiz[152].Text = "Do you have difficulty describing & summarising for example events, conversations or something you've read?";
   Quiz[153].Text = "Is it difficult for you to multitask?";
   Quiz[154].Text = "Do you get confused by verbal instructions - especially several at the same time?";
   Quiz[155].Text = "Do you have problems recognizing faces (prosopagnosia)?";
-  Quiz[156].Text = "Do you tend to be impatient and impulsive, e.g. having trouble waiting for your turn?";
+  Quiz[156].Text = "Do you tend to be impatient and impulsive?";
   Quiz[157].Text = "Do you find it hard to focus on or learn things you are not interested in?";
   Quiz[158].Text = "Do you tend to procrastinate?";
   Quiz[159].Text = "Do you need lists and schedules in order to get things done?";
@@ -1685,7 +1685,7 @@ void TQuizR3::SetupTexts()
   Quiz[176].Text = "Do you have chronic bronchitis?";
   Quiz[177].Text = "Do you cough even when you don't have a cold?";
   Quiz[178].Text = "Do you constantly clear your throat?";
-  Quiz[179].Text = "Are you often depressed?";
+  Quiz[179].Text = "Are you prone to getting depressions?";
 #endif
 
 #ifdef SWEDISH
@@ -1700,7 +1700,7 @@ void TQuizR3::SetupTexts()
   Quiz[8].Text = "Brukar du bli utmattad av att umgås med folk och behöva vila ut ifred efteråt?";
   Quiz[9].Text = "Blir du irriterad när folk kommer på besök oanmälda?";
   Quiz[10].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad?";
-  Quiz[11].Text = "Har du ofta självmordstankar?";
+  Quiz[11].Text = "Har du haft självmordstankar?";
   Quiz[12].Text = "Är det svårt att veta hur du ska bete dig i olika situationer?";
   Quiz[13].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
   Quiz[14].Text = "Brukar du bli nervös, blyg, förvirrad eller känna dig utanför i olika sociala situationer?";
@@ -1868,7 +1868,7 @@ void TQuizR3::SetupTexts()
   Quiz[176].Text = "Har du problem med luftrören?";
   Quiz[177].Text = "Brukar du hosta fast du inte är förkyld?";
   Quiz[178].Text = "Brukar du ständigt harkla dig?";
-  Quiz[179].Text = "Är du ofta deprimerad?";
+  Quiz[179].Text = "Brukar du få depressioner?";
 #endif
 
 }
