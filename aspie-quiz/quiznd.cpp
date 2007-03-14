@@ -370,7 +370,7 @@ void TQuizNd::SetupTexts()
 	Quiz[176].MyGroup = GROUP_MIXED;
 	Quiz[177].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[178].MyGroup = GROUP_NT_TALENT;
-	Quiz[179].MyGroup = GROUP_SENSORY;
+	Quiz[179].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[180].MyGroup = GROUP_MIXED;
 	Quiz[181].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[182].MyGroup = GROUP_MIXED;

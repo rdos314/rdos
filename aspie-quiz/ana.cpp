@@ -137,6 +137,10 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportExcelCase("maler2.dat", PCA_TYPE_MALE);
 	 Quiz[10]->ExportExcelCase("femaler2.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[11]->ExportExcelCase("allr3.dat", PCA_TYPE_ALL);
+	 Quiz[11]->ExportExcelCase("maler3.dat", PCA_TYPE_MALE);
+	 Quiz[11]->ExportExcelCase("femaler3.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
@@ -179,7 +183,11 @@ int main(int argc, char **argv)
 	 Quiz[10]->ImportMvsp("maler2.txt", PCA_TYPE_MALE);
 	 Quiz[10]->ImportMvsp("femaler2.txt", PCA_TYPE_FEMALE);
 
-	 Quiz[10]->CalcGlobal();
+	 Quiz[11]->ImportMvsp("allr3.txt", PCA_TYPE_ALL);
+	 Quiz[11]->ImportMvsp("maler3.txt", PCA_TYPE_MALE);
+	 Quiz[11]->ImportMvsp("femaler3.txt", PCA_TYPE_FEMALE);
+
+	 Quiz[11]->CalcGlobal();
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -192,6 +200,7 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteReferers("ref9.htm");
 	 Quiz[9]->WriteReferers("refr1.htm");
 	 Quiz[10]->WriteReferers("refr2.htm");
+	 Quiz[11]->WriteReferers("refr3.htm");
 
 	 Quiz[0]->WriteSumaryTable("quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("quiz2.htm", FALSE);
@@ -204,18 +213,19 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteSumaryTable("quiz9.htm", FALSE);
 	 Quiz[9]->WriteSumaryTable("quizr1.htm", FALSE);
 	 Quiz[10]->WriteSumaryTable("quizr2.htm", FALSE);
+	 Quiz[11]->WriteSumaryTable("quizr3.htm", FALSE);
 
-	 Quiz[10]->WriteGroupTable("group.htm", TRUE);
-	 Quiz[10]->WriteGroupCorrTable("groupcorr.htm");
-	 Quiz[10]->WritePcaLoadTable("pcaload.htm");
+	 Quiz[11]->WriteGroupTable("group.htm", TRUE);
+	 Quiz[11]->WriteGroupCorrTable("groupcorr.htm");
+	 Quiz[11]->WritePcaLoadTable("pcaload.htm");
 
-	 Quiz[10]->WriteAverageGroupCorrTable("avgcorr.htm");
-	 Quiz[10]->WriteAveragePcaTable("avgpca.htm");
-	 Quiz[10]->WriteAveragePcaCorrTable("avg.htm");
+	 Quiz[11]->WriteAverageGroupCorrTable("avgcorr.htm");
+	 Quiz[11]->WriteAveragePcaTable("avgpca.htm");
+	 Quiz[11]->WriteAveragePcaCorrTable("avg.htm");
 
-	 Quiz[10]->WritePcaCorrTable("pcacorr.htm");
+	 Quiz[11]->WritePcaCorrTable("pcacorr.htm");
 
-	 Quiz[10]->WriteLinkReport("index.htm");
+	 Quiz[11]->WriteLinkReport("index.htm");
 
 	 Quiz[5]->WriteHair("hair6.htm");
 	 Quiz[5]->WriteEye("eye6.htm");
@@ -252,6 +262,7 @@ int main(int argc, char **argv)
 	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[9]->ExportHistogram("allr1.csv", POP_TYPE_ALL, 2, TRUE);
 	 Quiz[10]->ExportHistogram("allr2.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[11]->ExportHistogram("allr3.csv", POP_TYPE_ALL, 2, TRUE);
 
 	 Quiz[10]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
 	 Quiz[10]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
@@ -274,9 +285,9 @@ int main(int argc, char **argv)
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-//	  Quiz[10]->WriteWiki("wiki.txt", 0.2);
-//	  Quiz[10]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
-//	  Quiz[10]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+//	  Quiz[11]->WriteWiki("wiki.txt", 0.2);
+//	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
+//	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 

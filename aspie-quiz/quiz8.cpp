@@ -233,7 +233,7 @@ void TQuiz8::SetupTexts()
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[12].MyGroup = GROUP_SENSORY;
+  Quiz[12].MyGroup = GROUP_ASPIE_COMM;
   Quiz[13].MyGroup = GROUP_SENSORY;
   Quiz[14].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[15].MyGroup = GROUP_NT_BIOLOGY;

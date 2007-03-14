@@ -342,7 +342,7 @@ void TQuiz6::SetupTexts()
 	Quiz[130].MyGroup = GROUP_EMOTION;
 	Quiz[131].MyGroup = GROUP_EMOTION;
 	Quiz[132].MyGroup = GROUP_NONVERBAL;
-	Quiz[133].MyGroup = GROUP_SENSORY;
+	Quiz[133].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[134].MyGroup = GROUP_NONVERBAL;
 	Quiz[135].MyGroup = GROUP_MIXED;
 	Quiz[136].MyGroup = GROUP_MIXED;

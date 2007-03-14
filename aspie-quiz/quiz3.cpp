@@ -146,7 +146,7 @@ void TQuizIII::SetupTexts()
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[14].MyGroup = GROUP_MIXED;
-	Quiz[15].MyGroup = GROUP_SENSORY;
+	Quiz[15].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[16].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[17].MyGroup = GROUP_SENSORY;
 	Quiz[18].MyGroup = GROUP_SENSORY;
