@@ -341,7 +341,7 @@ void TQuiz9::SetupTexts()
   Quiz[39].MyGroup = GROUP_NT_TALENT;
   Quiz[40].MyGroup = GROUP_NT_TALENT;
   Quiz[41].MyGroup = GROUP_NT_TALENT;
-  Quiz[42].MyGroup = GROUP_NT_TALENT;
+  Quiz[42].MyGroup = GROUP_ASPIE_COMM;
   Quiz[43].MyGroup = GROUP_NT_TALENT;
   Quiz[44].MyGroup = GROUP_NT_TALENT;
   Quiz[45].MyGroup = GROUP_NT_TALENT;
@@ -428,10 +428,10 @@ void TQuiz9::SetupTexts()
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_ASPIE_COMM;
   Quiz[130].MyGroup = GROUP_EMOTION;
   Quiz[131].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_ASPIE_COMM;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
   Quiz[134].MyGroup = GROUP_ASPIE_COMM;
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
@@ -1431,7 +1431,7 @@ void TQuiz9::ExportExcelGroups(const char *filename)
 	{
 		file.Write("\"");
 
-		strncpy(str, Group[i].Name, 35);
+		strncpy(str, Group[i].PosName, 35);
 		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
 		file.Write(str);

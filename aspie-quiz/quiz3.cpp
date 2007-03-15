@@ -172,9 +172,9 @@ void TQuizIII::SetupTexts()
 	Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[41].MyGroup = GROUP_MIXED;
+	Quiz[41].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[42].MyGroup = GROUP_NT_TALENT;
-	Quiz[43].MyGroup = GROUP_NONVERBAL;
+	Quiz[43].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -1013,7 +1013,7 @@ void TQuizIII::ExportExcelGroups(const char *filename)
     {
         file.Write("\"");
 
-        strncpy(str, Group[i].Name, 35);
+		  strncpy(str, Group[i].PosName, 35);
         str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
         file.Write(str);

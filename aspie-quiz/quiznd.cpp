@@ -237,7 +237,7 @@ void TQuizNd::SetupTexts()
 	Quiz[43].MyGroup = GROUP_NONVERBAL;
 	Quiz[44].MyGroup = GROUP_NONVERBAL;
 	Quiz[45].MyGroup = GROUP_NONVERBAL;
-	Quiz[46].MyGroup = GROUP_MIXED;
+	Quiz[46].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[47].MyGroup = GROUP_NONVERBAL;
 	Quiz[48].MyGroup = GROUP_NONVERBAL;
 	Quiz[49].MyGroup = GROUP_NONVERBAL;
@@ -276,12 +276,12 @@ void TQuizNd::SetupTexts()
 	Quiz[82].MyGroup = GROUP_REPETITION;
 	Quiz[83].MyGroup = GROUP_REPETITION;
 	Quiz[84].MyGroup = GROUP_MIXED;
-	Quiz[85].MyGroup = GROUP_MIXED;
+	Quiz[85].MyGroup = GROUP_NONVERBAL;
 	Quiz[86].MyGroup = GROUP_REPETITION;
 	Quiz[87].MyGroup = GROUP_MIXED;
 	Quiz[88].MyGroup = GROUP_REPETITION;
 	Quiz[89].MyGroup = GROUP_REPETITION;
-	Quiz[90].MyGroup = GROUP_REPETITION;
+	Quiz[90].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[91].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[92].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -331,7 +331,7 @@ void TQuizNd::SetupTexts()
 	Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[138].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[139].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[140].MyGroup = GROUP_NT_TALENT;
+	Quiz[140].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[141].MyGroup = GROUP_NT_TALENT;
 	Quiz[142].MyGroup = GROUP_NT_TALENT;
 	Quiz[143].MyGroup = GROUP_NT_TALENT;
@@ -341,12 +341,12 @@ void TQuizNd::SetupTexts()
 	Quiz[147].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[148].MyGroup = GROUP_NT_TALENT;
 	Quiz[149].MyGroup = GROUP_EMOTION;
-	Quiz[150].MyGroup = GROUP_EMOTION;
+	Quiz[150].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[152].MyGroup = GROUP_MIXED;
-	Quiz[153].MyGroup = GROUP_SENSORY;
-	Quiz[154].MyGroup = GROUP_SENSORY;
-	Quiz[155].MyGroup = GROUP_EMOTION;
+	Quiz[152].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[153].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[154].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[155].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[156].MyGroup = GROUP_NT_TALENT;
 	Quiz[157].MyGroup = GROUP_NT_TALENT;
 	Quiz[158].MyGroup = GROUP_NT_TALENT;
@@ -383,7 +383,7 @@ void TQuizNd::SetupTexts()
 	Quiz[189].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[190].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[191].MyGroup = GROUP_EMOTION;
-	Quiz[192].MyGroup = GROUP_NT_TALENT;
+	Quiz[192].MyGroup = GROUP_MIXED;
 	Quiz[193].MyGroup = GROUP_NT_TALENT;
 	Quiz[194].MyGroup = GROUP_NT_TALENT;
 	Quiz[195].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -400,7 +400,7 @@ void TQuizNd::SetupTexts()
 	Quiz[206].MyGroup = GROUP_SENSORY;
 	Quiz[207].MyGroup = GROUP_NONVERBAL;
 	Quiz[208].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[209].MyGroup = GROUP_SENSORY;
+	Quiz[209].MyGroup = GROUP_ASPIE_COMM;
 
 #ifdef ENGLISH
 	Quiz[0].Text = "Can you easily hear small sounds?";
@@ -1545,7 +1545,7 @@ void TQuizNd::ExportExcelGroups(const char *filename)
     {
         file.Write("\"");
 
-        strncpy(str, Group[i].Name, 35);
+		  strncpy(str, Group[i].PosName, 35);
         str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
         file.Write(str);

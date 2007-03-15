@@ -149,7 +149,8 @@ struct TGroupValArr
 
 struct TGroup
 {
-    const char *Name;
+    const char *PosName;
+    const char *NegName;
 	long double Mean;
 	long double Sd;
 	int Answers;

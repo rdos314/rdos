@@ -282,41 +282,94 @@ void TQuiz::Init()
     }
 
     for (g = 0; g < MAX_GROUP_COUNT; g++)
-		Group[g].Name = "NO NAME";
+    {
+		Group[g].PosName = "NO NAME";
+		Group[g].NegName = "NO NAME";
+	}
 
 #ifdef ENGLISH
 
-	Group[GROUP_ASPIE_BIOLOGY].Name = "Biology";
-	Group[GROUP_NT_BIOLOGY].Name = "Motor";
-	Group[GROUP_SENSORY].Name = "Perception";
-	Group[GROUP_ASPIE_TALENT].Name = "Aspie ability";
-	Group[GROUP_NT_TALENT].Name = "Aspie disability";
-	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
-	Group[GROUP_NT_SOCIAL].Name = "NT social";
-	Group[GROUP_ASPIE_COMM].Name = "Aspie communication";
-	Group[GROUP_NONVERBAL].Name = "NT communication";
-	Group[GROUP_EMOTION].Name = "Environment";
-	Group[GROUP_SEX].Name = "Sexuality";
-	Group[GROUP_REPETITION].Name = "Compulsions";
-	Group[GROUP_MIXED].Name = "Mixed";
+	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biology";
+	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biology";
+
+	Group[GROUP_NT_BIOLOGY].PosName = "Motor problem";
+	Group[GROUP_NT_BIOLOGY].NegName = "Motor";
+
+	Group[GROUP_SENSORY].PosName = "Perception";
+	Group[GROUP_SENSORY].NegName = "Perception problem";
+
+	Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
+	Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
+
+	Group[GROUP_NT_TALENT].PosName = "NT ability problem";
+	Group[GROUP_NT_TALENT].NegName = "NT ability";
+
+	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+	
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+
+	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinct";
+	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinct problem";
+
+	Group[GROUP_NONVERBAL].PosName = "NT instinct problem";
+	Group[GROUP_NONVERBAL].NegName = "NT instinct";
+
+	Group[GROUP_EMOTION].PosName = "Environmental problem";
+	Group[GROUP_EMOTION].NegName = "Environmental";
+	
+	Group[GROUP_SEX].PosName = "Sexual deviation";
+	Group[GROUP_SEX].NegName = "Sexual normality";
+	
+	Group[GROUP_REPETITION].PosName = "Compulsion";
+	Group[GROUP_REPETITION].NegName = "Compulsion problem";
+
+	Group[GROUP_MIXED].PosName = "Aspie mixed";
+	Group[GROUP_MIXED].NegName = "NT mixed";
 
 #endif
 
 #ifdef SWEDISH
 
-	Group[GROUP_ASPIE_BIOLOGY].Name = "Biologi";
-	Group[GROUP_NT_BIOLOGY].Name = "Motorik";
-	Group[GROUP_SENSORY].Name = "Perception";
-	Group[GROUP_ASPIE_TALENT].Name = "Aspie talang";
-	Group[GROUP_NT_TALENT].Name = "Aspie handikapp";
-	Group[GROUP_ASPIE_SOCIAL].Name = "Aspie social";
-	Group[GROUP_NT_SOCIAL].Name = "NT social";
-	Group[GROUP_ASPIE_COMM].Name = "Aspie kommunikation";
-	Group[GROUP_NONVERBAL].Name = "NT kommunikation";
-	Group[GROUP_EMOTION].Name = "Miljö";
-	Group[GROUP_SEX].Name = "Sexualitet";
-	Group[GROUP_REPETITION].Name = "Tvång";
-	Group[GROUP_MIXED].Name = "Blandat";
+	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biologi";
+	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biologi";
+
+	Group[GROUP_NT_BIOLOGY].PosName = "Motorik problem";
+	Group[GROUP_NT_BIOLOGY].NegName = "Motorik";
+
+	Group[GROUP_SENSORY].PosName = "Perception";
+	Group[GROUP_SENSORY].NegName = "Perception problem";
+
+	Group[GROUP_ASPIE_TALENT].PosName = "Aspie talang";
+	Group[GROUP_ASPIE_TALENT].NegName = "Aspie talang problem";
+
+	Group[GROUP_NT_TALENT].PosName = "NT talang problem";
+	Group[GROUP_NT_TALENT].NegName = "NT talang";
+	
+	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+
+	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinkt";
+	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinkt problem";
+	
+	Group[GROUP_NONVERBAL].PosName = "NT instinkt problem";
+	Group[GROUP_NONVERBAL].NegName = "NT instinkt";
+
+	Group[GROUP_EMOTION].PosName = "Miljö problem";
+	Group[GROUP_EMOTION].NegName = "Miljö";
+
+	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
+	Group[GROUP_SEX].NegName = "Normal sexualitet";
+
+	Group[GROUP_REPETITION].PosName = "Tvång";
+	Group[GROUP_REPETITION].NegName = "Tvång problem";
+
+	Group[GROUP_MIXED].PosName = "Aspie blandat";
+	Group[GROUP_MIXED].NegName = "NT blandat";
 
 #endif
 }
@@ -3872,9 +3925,11 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 		file.Write(str);
         WriteFieldFooter(file);
 
-        WriteCenteredFieldHeader(file, 24);
-		file.Write(Group[g].Name);
-        WriteFieldFooter(file);
+		  WriteCenteredFieldHeader(file, 24);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		  WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
 		file.Write("AS-NT Corr");
@@ -4114,8 +4169,10 @@ void TQuiz::WritePcaLoadTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 26);
-		file.Write(Group[g].Name);
-        WriteFieldFooter(file);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		  WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
 		file.Write("AS-NT Corr");
@@ -4368,7 +4425,9 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 24);
-		file.Write(Group[g].Name);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
@@ -4588,7 +4647,9 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 26);
-		file.Write(Group[g].Name);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
@@ -4744,6 +4805,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 	long double LowestCorr;
 	int ok;
 	int first;
+	int neg;
 	TFile file(filename, 0);
 
 	ClearUsed();
@@ -4779,7 +4841,9 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 45);
-		file.Write(Group[g].Name);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
@@ -4983,14 +5047,16 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 						val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
 
-                        if (val < 0.0)
-        					file.Write("<span style='color:#990099'>");
-							
-						file.Write(Group[grp].Name);
+        				neg = quiz->Quiz[q].Reverse;
 
-                        if (val < 0.0)
-        					file.Write("</span>");
-                        
+        				if (val < 0.0)
+        				    neg = !neg;
+
+                        if (neg)
+    						file.Write(Group[grp].NegName);
+    					else
+    						file.Write(Group[grp].PosName);
+
 						first = FALSE;
 					}
 				}
@@ -5401,8 +5467,10 @@ void TQuiz::WriteLinkReport(const char *filename)
         file.Write("<a href=\"#");
         WriteLinkGroup(&file, g);
         file.Write("\">");
-		file.Write(Group[g].Name);
-        file.Write("</a><br>");
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		  file.Write("</a><br>");
     }
 
 #ifdef ENGLISH
@@ -5433,7 +5501,9 @@ void TQuiz::WriteLinkReport(const char *filename)
 	    file.Write("<a name=\"");
         WriteLinkGroup(&file, g);
         file.Write("\">");
-		file.Write(Group[g].Name);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
         file.Write("</a>");
         file.Write("</h3>");
         
@@ -5723,12 +5793,6 @@ void TQuiz::WriteLinkReport(const char *filename)
 						if (!first)
 							file.Write(", ");
 
-                        file.Write("<a href=\"#");
-                        WriteLinkGroup(&file, grp);
-                        file.Write("\">");
-                		file.Write(Group[grp].Name);
-                        file.Write("</a>");
-
 						val = GlobalGroupCorrSum[GlobalId][grp] / GlobalGroupCorrCount[GlobalId][grp];
 
 						if (val < 0.0)
@@ -5744,16 +5808,19 @@ void TQuiz::WriteLinkReport(const char *filename)
         				if (TopQuiz->Quiz[TopQuestion].Reverse)
         				    reverse = !reverse;
 
-        				if (reverse)
-        				{
-        				    sprintf(str, " (-.%02d)", ival);
-							file.Write(str);
-						}
-						else
-                        {
-    						sprintf(str, " (.%02d)", ival);
-	    					file.Write(str);
-	    				}
+                        file.Write("<a href=\"#");
+                        WriteLinkGroup(&file, grp);
+                        file.Write("\">");
+
+                        if (reverse)
+                    		file.Write(Group[grp].NegName);
+                    	else
+                    		file.Write(Group[grp].PosName);
+
+                		file.Write("</a>");
+
+    					sprintf(str, " (.%02d)", ival);
+	    				file.Write(str);
                         
 						first = FALSE;
 					}
@@ -6143,7 +6210,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 25);
-		file.Write(Group[g1].Name);
+		file.Write(Group[g1].PosName);
         WriteFieldFooter(file);
 
         for (g2 = 0; g2 < GROUP_COUNT - 1; g2++)
@@ -6775,8 +6842,10 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
 	    file.Write("== ");
-		file.Write(Group[g].Name);
-        file.Write(" ==\r\n\r\n");
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		  file.Write(" ==\r\n\r\n");
 
 		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 		{
@@ -7519,7 +7588,9 @@ void TQuiz::MoveWiki(const char *fromwiki, const char *towiki, long double thres
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
 		 tofile.Write("== ");
-		tofile.Write(Group[g].Name);
+		tofile.Write(Group[g].PosName);
+		tofile.Write(" / ");
+		tofile.Write(Group[g].NegName);
 		  tofile.Write(" ==\r\n\r\n");
 
 		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)

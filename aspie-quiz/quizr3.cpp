@@ -154,6 +154,7 @@ void TQuizR3::SetupTexts()
   Quiz[23].Reverse = TRUE;
   Quiz[49].Reverse = TRUE;
   Quiz[50].Reverse = TRUE;
+  Quiz[51].Reverse = TRUE;
   Quiz[52].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -161,7 +162,7 @@ void TQuizR3::SetupTexts()
   Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[4].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[5].MyGroup = GROUP_MIXED;
+  Quiz[5].MyGroup = GROUP_ASPIE_COMM;
   Quiz[6].MyGroup = GROUP_MIXED;
   Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[8].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -186,11 +187,11 @@ void TQuizR3::SetupTexts()
   Quiz[27].MyGroup = GROUP_MIXED;
   Quiz[28].MyGroup = GROUP_MIXED;
   Quiz[29].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[30].MyGroup = GROUP_MIXED;
+  Quiz[30].MyGroup = GROUP_ASPIE_COMM;
   Quiz[31].MyGroup = GROUP_ASPIE_COMM;
   Quiz[32].MyGroup = GROUP_NONVERBAL;
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[34].MyGroup = GROUP_NONVERBAL;
+  Quiz[34].MyGroup = GROUP_ASPIE_COMM;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_NONVERBAL;
@@ -200,18 +201,18 @@ void TQuizR3::SetupTexts()
   Quiz[41].MyGroup = GROUP_NONVERBAL;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[44].MyGroup = GROUP_MIXED;
+  Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[45].MyGroup = GROUP_ASPIE_COMM;
   Quiz[46].MyGroup = GROUP_ASPIE_COMM;
   Quiz[47].MyGroup = GROUP_NONVERBAL;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_NONVERBAL;
-  Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[50].MyGroup = GROUP_NONVERBAL;
   Quiz[51].MyGroup = GROUP_MIXED;
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[53].MyGroup = GROUP_SENSORY;
   Quiz[54].MyGroup = GROUP_SENSORY;
-  Quiz[55].MyGroup = GROUP_SENSORY;
+  Quiz[55].MyGroup = GROUP_MIXED;
   Quiz[56].MyGroup = GROUP_NONVERBAL;
   Quiz[57].MyGroup = GROUP_SENSORY;
   Quiz[58].MyGroup = GROUP_SENSORY;
@@ -231,18 +232,18 @@ void TQuizR3::SetupTexts()
   Quiz[72].MyGroup = GROUP_ASPIE_COMM;
   Quiz[73].MyGroup = GROUP_ASPIE_COMM;
   Quiz[74].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[75].MyGroup = GROUP_MIXED;
+  Quiz[75].MyGroup = GROUP_ASPIE_COMM;
   Quiz[76].MyGroup = GROUP_MIXED;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
   Quiz[79].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[80].MyGroup = GROUP_MIXED;
+  Quiz[80].MyGroup = GROUP_ASPIE_COMM;
   Quiz[81].MyGroup = GROUP_ASPIE_COMM;
   Quiz[82].MyGroup = GROUP_ASPIE_COMM;
   Quiz[83].MyGroup = GROUP_ASPIE_COMM;
   Quiz[84].MyGroup = GROUP_MIXED;
-  Quiz[85].MyGroup = GROUP_MIXED;
-  Quiz[86].MyGroup = GROUP_MIXED;
+  Quiz[85].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[86].MyGroup = GROUP_ASPIE_COMM;
   Quiz[87].MyGroup = GROUP_MIXED;
   Quiz[88].MyGroup = GROUP_ASPIE_COMM;
   Quiz[89].MyGroup = GROUP_ASPIE_COMM;
@@ -260,15 +261,15 @@ void TQuizR3::SetupTexts()
   Quiz[101].MyGroup = GROUP_MIXED;
   Quiz[102].MyGroup = GROUP_REPETITION;
   Quiz[103].MyGroup = GROUP_REPETITION;
-  Quiz[104].MyGroup = GROUP_REPETITION;
+  Quiz[104].MyGroup = GROUP_ASPIE_COMM;
   Quiz[105].MyGroup = GROUP_MIXED;
   Quiz[106].MyGroup = GROUP_REPETITION;
   Quiz[107].MyGroup = GROUP_REPETITION;
   Quiz[108].MyGroup = GROUP_MIXED;
   Quiz[109].MyGroup = GROUP_REPETITION;
-  Quiz[110].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[110].MyGroup = GROUP_ASPIE_COMM;
   Quiz[111].MyGroup = GROUP_MIXED;
-  Quiz[112].MyGroup = GROUP_MIXED;
+  Quiz[112].MyGroup = GROUP_ASPIE_COMM;
   Quiz[113].MyGroup = GROUP_ASPIE_COMM;
   Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -282,9 +283,9 @@ void TQuizR3::SetupTexts()
   Quiz[123].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[124].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[125].MyGroup = GROUP_MIXED;
-  Quiz[126].MyGroup = GROUP_SENSORY;
+  Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
-  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[129].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[130].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[131].MyGroup = GROUP_ASPIE_TALENT;
@@ -294,29 +295,29 @@ void TQuizR3::SetupTexts()
   Quiz[135].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[138].MyGroup = GROUP_SENSORY;
-  Quiz[139].MyGroup = GROUP_SENSORY;
+  Quiz[138].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[139].MyGroup = GROUP_ASPIE_COMM;
   Quiz[140].MyGroup = GROUP_SENSORY;
-  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_ASPIE_COMM;
   Quiz[142].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[143].MyGroup = GROUP_MIXED;
-  Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[144].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[145].MyGroup = GROUP_ASPIE_COMM;
   Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
-  Quiz[149].MyGroup = GROUP_NT_TALENT;
+  Quiz[149].MyGroup = GROUP_ASPIE_COMM;
   Quiz[150].MyGroup = GROUP_NONVERBAL;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_NONVERBAL;
   Quiz[153].MyGroup = GROUP_NONVERBAL;
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_NONVERBAL;
-  Quiz[156].MyGroup = GROUP_EMOTION;
+  Quiz[156].MyGroup = GROUP_ASPIE_COMM;
   Quiz[157].MyGroup = GROUP_NT_TALENT;
   Quiz[158].MyGroup = GROUP_EMOTION;
   Quiz[159].MyGroup = GROUP_EMOTION;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_ASPIE_COMM;
   Quiz[161].MyGroup = GROUP_EMOTION;
   Quiz[162].MyGroup = GROUP_EMOTION;
   Quiz[163].MyGroup = GROUP_EMOTION;
@@ -1250,50 +1251,12 @@ void TQuizR3::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-					if (i >= 150)
-					{
-					    if (i >= 154)
-						{
-					        switch (Row.Quiz[i])
-					        {
-									case 0:
-					                ival = 1;
-					                break;
-
-					            case 1:
-					            case 2:
-					            case 3:
-					            case 4:
-					                ival = 0;
-					                break;
-
-					            case 5:
-								case 6:
-					            case 7:
-					                ival = 1;
-					                break;
-
-					            case 8:
-					            case 9:
-					            case 10:
-					            case 11:
-					                ival = 2;
-					                break;
-					        }
-						}
-					    else
-    						ival = Row.Quiz[i];    				    
-						
-				    }
-				    else
-				    {
-    					ival = Row.Quiz[i];
-	    				if (ival)
-		    				ival--;
+    				ival = Row.Quiz[i];
+	    			if (ival)
+		    			ival--;
     
-						if (ival > 2)
-		    				ival = 0;
-                    }
+					if (ival > 2)
+						ival = 0;
                     
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
@@ -1332,7 +1295,7 @@ void TQuizR3::ExportExcelGroups(const char *filename)
 	{
 		file.Write("\"");
 
-		strncpy(str, Group[i].Name, 35);
+		strncpy(str, Group[i].PosName, 35);
 		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
 		file.Write(str);
@@ -1452,8 +1415,8 @@ void TQuizR3::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;

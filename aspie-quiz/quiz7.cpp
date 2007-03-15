@@ -221,7 +221,7 @@ void TQuiz7::SetupTexts()
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
@@ -242,7 +242,7 @@ void TQuiz7::SetupTexts()
 	Quiz[28].MyGroup = GROUP_NT_TALENT;
 	Quiz[29].MyGroup = GROUP_NT_TALENT;
 	Quiz[30].MyGroup = GROUP_NT_TALENT;
-	Quiz[31].MyGroup = GROUP_NT_TALENT;
+	Quiz[31].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[32].MyGroup = GROUP_NT_TALENT;
 	Quiz[33].MyGroup = GROUP_NT_TALENT;
 	Quiz[34].MyGroup = GROUP_NT_TALENT;
@@ -264,7 +264,7 @@ void TQuiz7::SetupTexts()
 	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[53].MyGroup = GROUP_MIXED;
+	Quiz[53].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -294,7 +294,7 @@ void TQuiz7::SetupTexts()
 	Quiz[80].MyGroup = GROUP_NONVERBAL;
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;
-	Quiz[83].MyGroup = GROUP_EMOTION;
+	Quiz[83].MyGroup = GROUP_MIXED;
 	Quiz[84].MyGroup = GROUP_REPETITION;
 	Quiz[85].MyGroup = GROUP_REPETITION;
 	Quiz[86].MyGroup = GROUP_REPETITION;
@@ -336,13 +336,13 @@ void TQuiz7::SetupTexts()
 	Quiz[122].MyGroup = GROUP_MIXED;
 	Quiz[123].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[124].MyGroup = GROUP_NONVERBAL;
-	Quiz[125].MyGroup = GROUP_MIXED;
-	Quiz[126].MyGroup = GROUP_MIXED;
+	Quiz[125].MyGroup = GROUP_NONVERBAL;
+	Quiz[126].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[127].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[128].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[129].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[130].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[131].MyGroup = GROUP_SENSORY;
+	Quiz[131].MyGroup = GROUP_MIXED;
 	Quiz[132].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[133].MyGroup = GROUP_MIXED;
 	Quiz[134].MyGroup = GROUP_NT_SOCIAL;
@@ -352,7 +352,7 @@ void TQuiz7::SetupTexts()
 	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[139].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[140].MyGroup = GROUP_MIXED;
-	Quiz[141].MyGroup = GROUP_SENSORY;
+	Quiz[141].MyGroup = GROUP_MIXED;
 	Quiz[142].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_EMOTION;
@@ -1488,7 +1488,7 @@ void TQuiz7::ExportExcelGroups(const char *filename)
 	{
 		file.Write("\"");
 
-		strncpy(str, Group[i].Name, 35);
+		strncpy(str, Group[i].PosName, 35);
 		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
 		file.Write(str);

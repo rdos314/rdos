@@ -172,7 +172,7 @@ void TQuizR1::SetupTexts()
   Quiz[10].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[11].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[12].MyGroup = GROUP_NONVERBAL;
-  Quiz[13].MyGroup = GROUP_MIXED;
+  Quiz[13].MyGroup = GROUP_ASPIE_COMM;
   Quiz[14].MyGroup = GROUP_NT_SOCIAL;
   Quiz[15].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[16].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -199,8 +199,8 @@ void TQuizR1::SetupTexts()
   Quiz[37].MyGroup = GROUP_MIXED;
   Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[39].MyGroup = GROUP_MIXED;
-  Quiz[40].MyGroup = GROUP_SENSORY;
-  Quiz[41].MyGroup = GROUP_MIXED;
+  Quiz[40].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[41].MyGroup = GROUP_ASPIE_COMM;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[44].MyGroup = GROUP_ASPIE_TALENT;
@@ -224,7 +224,7 @@ void TQuizR1::SetupTexts()
   Quiz[62].MyGroup = GROUP_REPETITION;
   Quiz[63].MyGroup = GROUP_REPETITION;
   Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[65].MyGroup = GROUP_EMOTION;
+  Quiz[65].MyGroup = GROUP_MIXED;
   Quiz[66].MyGroup = GROUP_REPETITION;
   Quiz[67].MyGroup = GROUP_ASPIE_COMM;
   Quiz[68].MyGroup = GROUP_MIXED;
@@ -261,15 +261,15 @@ void TQuizR1::SetupTexts()
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
   Quiz[101].MyGroup = GROUP_NT_TALENT;
-  Quiz[102].MyGroup = GROUP_MIXED;
-  Quiz[103].MyGroup = GROUP_EMOTION;
-  Quiz[104].MyGroup = GROUP_EMOTION;
-  Quiz[105].MyGroup = GROUP_SENSORY;
+  Quiz[102].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[103].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[104].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[105].MyGroup = GROUP_MIXED;
   Quiz[106].MyGroup = GROUP_NT_TALENT;
   Quiz[107].MyGroup = GROUP_NONVERBAL;
   Quiz[108].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[109].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[110].MyGroup = GROUP_MIXED;
+  Quiz[109].MyGroup = GROUP_NONVERBAL;
+  Quiz[110].MyGroup = GROUP_ASPIE_COMM;
   Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[112].MyGroup = GROUP_MIXED;
   Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -287,7 +287,7 @@ void TQuizR1::SetupTexts()
   Quiz[125].MyGroup = GROUP_ASPIE_COMM;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[128].MyGroup = GROUP_SENSORY;
+  Quiz[128].MyGroup = GROUP_ASPIE_COMM;
   Quiz[129].MyGroup = GROUP_SENSORY;
 
 #ifdef ENGLISH
@@ -1054,50 +1054,12 @@ void TQuizR1::ExportExcelCase(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
-					if (i >= 150)
-					{
-					    if (i >= 154)
-						{
-					        switch (Row.Quiz[i])
-					        {
-					            case 0:
-					                ival = 1;
-					                break;
-
-					            case 1:
-					            case 2:
-					            case 3:
-					            case 4:
-					                ival = 0;
-					                break;
-
-					            case 5:
-								case 6:
-					            case 7:
-					                ival = 1;
-					                break;
-
-					            case 8:
-					            case 9:
-					            case 10:
-					            case 11:
-					                ival = 2;
-					                break;
-					        }
-						}
-					    else
-    						ival = Row.Quiz[i];    				    
-						
-				    }
-				    else
-				    {
-    					ival = Row.Quiz[i];
-	    				if (ival)
-		    				ival--;
+    				ival = Row.Quiz[i];
+	    			if (ival)
+		    			ival--;
     
-						if (ival > 2)
-		    				ival = 0;
-                    }
+					if (ival > 2)
+		    			ival = 0;
                     
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
@@ -1136,7 +1098,7 @@ void TQuizR1::ExportExcelGroups(const char *filename)
 	{
 		file.Write("\"");
 
-		strncpy(str, Group[i].Name, 35);
+		strncpy(str, Group[i].PosName, 35);
 		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
 		file.Write(str);

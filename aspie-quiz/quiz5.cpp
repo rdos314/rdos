@@ -254,7 +254,7 @@ void TQuiz5::SetupTexts()
 	Quiz[49].MyGroup = GROUP_MIXED;
 	Quiz[50].MyGroup = GROUP_REPETITION;
 	Quiz[51].MyGroup = GROUP_REPETITION;
-	Quiz[52].MyGroup = GROUP_EMOTION;
+	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_MIXED;
 	Quiz[54].MyGroup = GROUP_REPETITION;
 	Quiz[55].MyGroup = GROUP_REPETITION;
@@ -291,7 +291,7 @@ void TQuiz5::SetupTexts()
 	Quiz[86].MyGroup = GROUP_NT_TALENT;
 	Quiz[87].MyGroup = GROUP_NT_TALENT;
 	Quiz[88].MyGroup = GROUP_NT_TALENT;
-	Quiz[89].MyGroup = GROUP_NT_TALENT;
+	Quiz[89].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[90].MyGroup = GROUP_NT_TALENT;
 	Quiz[91].MyGroup = GROUP_NT_TALENT;
 	Quiz[92].MyGroup = GROUP_NT_TALENT;
@@ -308,12 +308,12 @@ void TQuiz5::SetupTexts()
 	Quiz[103].MyGroup = GROUP_EMOTION;
 	Quiz[104].MyGroup = GROUP_MIXED;
 	Quiz[105].MyGroup = GROUP_EMOTION;
-	Quiz[106].MyGroup = GROUP_MIXED;
+	Quiz[106].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[107].MyGroup = GROUP_NONVERBAL;
 	Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[109].MyGroup = GROUP_MIXED;
 	Quiz[110].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[111].MyGroup = GROUP_MIXED;
+	Quiz[111].MyGroup = GROUP_NONVERBAL;
 	Quiz[112].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
@@ -1107,7 +1107,7 @@ void TQuiz5::ExportExcelGroups(const char *filename)
 	{
 		file.Write("\"");
 
-		strncpy(str, Group[i].Name, 35);
+		strncpy(str, Group[i].PosName, 35);
 		str[35] = 0;
 //        sprintf(str, "#%d", i + 1);
 		file.Write(str);
