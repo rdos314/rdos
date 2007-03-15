@@ -305,10 +305,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].NegName = "NT ability";
 
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-	
-	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinct";
 	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinct problem";
@@ -348,10 +345,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].NegName = "NT talang";
 	
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-
-	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinkt";
 	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinkt problem";
@@ -724,10 +718,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ASPIE_SOCIAL:
                 file.Write("GROUP_ASPIE_SOCIAL");
-                break;
-
-            case GROUP_NT_SOCIAL:
-                file.Write("GROUP_NT_SOCIAL");
                 break;
 
             case GROUP_ASPIE_COMM:
@@ -5121,10 +5111,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_SOCIAL");
 	        break;
 	            
-	    case GROUP_NT_SOCIAL:
-	        file->Write("NT_SOCIAL");
-	        break;
-	            
 	    case GROUP_ASPIE_COMM:
 	        file->Write("STIMS");
 	        break;
@@ -6740,7 +6726,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
     long double val;
     int count;
     int questions;
-    int curr;
+	int curr;
 	int grp;
     TQuiz *quiz;
 	 int q;
@@ -6794,10 +6780,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
             if (Quiz[q].Reverse)
                 ival = -ival;
 
-            if (grp == GROUP_NT_SOCIAL)
-                ival = -ival;
-                
-    		sprintf(str, "%d", ival);
+			sprintf(str, "%d", ival);
 	    	file.Write(str);
 
             if (grp != GROUP_COUNT - 3)
