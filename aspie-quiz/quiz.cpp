@@ -318,9 +318,6 @@ void TQuiz::Init()
 	
 	Group[GROUP_SEX].PosName = "Sexual deviation";
 	Group[GROUP_SEX].NegName = "Sexual normality";
-	
-	Group[GROUP_REPETITION].PosName = "Compulsion";
-	Group[GROUP_REPETITION].NegName = "Compulsion problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -358,9 +355,6 @@ void TQuiz::Init()
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
-
-	Group[GROUP_REPETITION].PosName = "Tvång";
-	Group[GROUP_REPETITION].NegName = "Tvång problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -726,10 +720,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NONVERBAL:
                 file.Write("GROUP_NONVERBAL");
-                break;
-
-            case GROUP_REPETITION:
-                file.Write("GROUP_REPETITION");
                 break;
 
             case GROUP_EMOTION:
@@ -5117,10 +5107,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_NONVERBAL:
 	        file->Write("NT_COMMUNICATION");
-	        break;
-	            
-	    case GROUP_REPETITION:
-	        file->Write("REPETITION");
 	        break;
 	            
 	    case GROUP_SEX:
