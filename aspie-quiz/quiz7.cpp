@@ -209,7 +209,6 @@ void TQuiz7::SetupTexts()
 	Quiz[133].Reverse = TRUE;
 	Quiz[134].Reverse = TRUE;
 	Quiz[135].Reverse = TRUE;
-	Quiz[146].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
 	Quiz[1].MyGroup = GROUP_SENSORY;
@@ -217,7 +216,7 @@ void TQuiz7::SetupTexts()
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_SENSORY;
-	Quiz[6].MyGroup = GROUP_MIXED;
+	Quiz[6].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
@@ -251,7 +250,7 @@ void TQuiz7::SetupTexts()
 	Quiz[37].MyGroup = GROUP_NT_TALENT;
 	Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[40].MyGroup = GROUP_MIXED;
+	Quiz[40].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[43].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -329,7 +328,7 @@ void TQuiz7::SetupTexts()
 	Quiz[115].MyGroup = GROUP_NONVERBAL;
 	Quiz[116].MyGroup = GROUP_NONVERBAL;
 	Quiz[117].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[118].MyGroup = GROUP_MIXED;
+	Quiz[118].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[119].MyGroup = GROUP_NONVERBAL;
 	Quiz[120].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[121].MyGroup = GROUP_ASPIE_COMM;
@@ -352,11 +351,11 @@ void TQuiz7::SetupTexts()
 	Quiz[138].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[139].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[140].MyGroup = GROUP_NONVERBAL;
-	Quiz[141].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[141].MyGroup = GROUP_SENSORY;
 	Quiz[142].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[144].MyGroup = GROUP_EMOTION;
-	Quiz[145].MyGroup = GROUP_MIXED;
+	Quiz[144].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[145].MyGroup = GROUP_NONVERBAL;
 	Quiz[146].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[148].MyGroup = GROUP_ASPIE_COMM;
@@ -368,11 +367,11 @@ void TQuiz7::SetupTexts()
 	Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[154].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[155].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[156].MyGroup = GROUP_MIXED;
+	Quiz[156].MyGroup = GROUP_SENSORY;
 	Quiz[157].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[158].MyGroup = GROUP_SEX;
-	Quiz[159].MyGroup = GROUP_MIXED;
-	Quiz[160].MyGroup = GROUP_MIXED;
+	Quiz[159].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[160].MyGroup = GROUP_ASPIE_COMM;
 
 #ifdef ENGLISH
 

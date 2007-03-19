@@ -219,7 +219,7 @@ void TQuiz6::SetupTexts()
 	Quiz[7].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_SENSORY;
-	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[11].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;
@@ -258,7 +258,7 @@ void TQuiz6::SetupTexts()
 	Quiz[46].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[48].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[49].MyGroup = GROUP_MIXED;
+	Quiz[49].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[50].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[52].MyGroup = GROUP_ASPIE_TALENT;
@@ -279,7 +279,7 @@ void TQuiz6::SetupTexts()
 	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[70].MyGroup = GROUP_MIXED;
+	Quiz[70].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -324,7 +324,7 @@ void TQuiz6::SetupTexts()
 	Quiz[112].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[113].MyGroup = GROUP_NT_TALENT;
 	Quiz[114].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[115].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[116].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[117].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[118].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -337,7 +337,7 @@ void TQuiz6::SetupTexts()
 	Quiz[125].MyGroup = GROUP_NONVERBAL;
 	Quiz[126].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[127].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[128].MyGroup = GROUP_MIXED;
+	Quiz[128].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[129].MyGroup = GROUP_NONVERBAL;
 	Quiz[130].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[131].MyGroup = GROUP_ASPIE_COMM;
@@ -348,10 +348,10 @@ void TQuiz6::SetupTexts()
 	Quiz[136].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[138].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[139].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[139].MyGroup = GROUP_NONVERBAL;
 	Quiz[140].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[142].MyGroup = GROUP_EMOTION;
+	Quiz[142].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[145].MyGroup = GROUP_ASPIE_COMM;

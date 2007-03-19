@@ -35,7 +35,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-// #define CALC_QUESTION_CORR       // turn on to calculate question correlations
+#define CALC_QUESTION_CORR       // turn on to calculate question correlations
 
 #define MAX_GLOBAL_QUESTIONS       1024
 
@@ -313,9 +313,6 @@ void TQuiz::Init()
 	Group[GROUP_NONVERBAL].PosName = "NT instinct problem";
 	Group[GROUP_NONVERBAL].NegName = "NT instinct";
 
-	Group[GROUP_EMOTION].PosName = "Environmental problem";
-	Group[GROUP_EMOTION].NegName = "Environmental";
-	
 	Group[GROUP_SEX].PosName = "Sexual deviation";
 	Group[GROUP_SEX].NegName = "Sexual normality";
 
@@ -340,18 +337,15 @@ void TQuiz::Init()
 
 	Group[GROUP_NT_TALENT].PosName = "NT talang problem";
 	Group[GROUP_NT_TALENT].NegName = "NT talang";
-	
+
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinkt";
 	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinkt problem";
-	
+
 	Group[GROUP_NONVERBAL].PosName = "NT instinkt problem";
 	Group[GROUP_NONVERBAL].NegName = "NT instinkt";
-
-	Group[GROUP_EMOTION].PosName = "Miljö problem";
-	Group[GROUP_EMOTION].NegName = "Miljö";
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
@@ -720,10 +714,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NONVERBAL:
                 file.Write("GROUP_NONVERBAL");
-                break;
-
-            case GROUP_EMOTION:
-                file.Write("GROUP_EMOTION");
                 break;
 
             case GROUP_SEX:
