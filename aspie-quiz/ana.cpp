@@ -286,8 +286,10 @@ int main(int argc, char **argv)
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 	  Quiz[11]->WriteWiki("wiki.txt", 0.2);
-	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 25);
+	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+
+	  Quiz[11]->WriteQuizWiki("r3.txt");
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 
