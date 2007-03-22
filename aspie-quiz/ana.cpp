@@ -291,6 +291,11 @@ int main(int argc, char **argv)
 
 	  Quiz[11]->WriteQuizWiki("r3.txt");
 
+	  TQuiz::PrintGlobalCorrelation(580, 582);
+	  TQuiz::PrintGlobalCorrelation(580, 584);
+	  TQuiz::PrintGlobalCorrelation(582, 584);
+
+
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
