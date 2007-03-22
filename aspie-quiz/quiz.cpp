@@ -7093,6 +7093,28 @@ void TQuiz::WriteGlobalCorrelation(const char *filename, int count)
     }
 }
 
+/*##################  TQuiz::PrintGlobalCorrelation ##########################
+*   Purpose....: Print global correlation between two questions   	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::PrintGlobalCorrelation(int q1, int q2)
+{
+    int cnt;
+    long double corr;
+    int ival;
+    
+    cnt = GlobalCorrCount[q1-1][q2-1];
+    corr = GlobalCorrArr[q1-1][q2-1] / ((long double)cnt - 1);
+
+	ival = round(100.0 * corr);
+	if (ival < 0)
+		 ival = -ival;
+	 printf("Question %d and Question %d, correlation: .%02d\r\n", q1, q2, ival);
+}
+
 /*##################  TQuiz::WriteWikiCorrelation ##########################
 *   Purpose....: Write N largest inter-question correlations from wiki-set  #
 *   In params..: *                                                          #
@@ -7257,23 +7279,52 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
         sprintf(str, "Question %d \"", maxgid1 + 1);
         file.Write(str);
         file.Write(GetGlobalQuestionText(maxgid1));
-        file.Write("\", ");
+        file.Write("\" (");
+
+		val = GlobalAsNtCorrSum[maxgid1] / GlobalAsNtCorrCount[maxgid1];
+		ival = round(100.0 * val);
+		if (ival < 0)
+		{
+			file.Write("-");
+			ival = -ival;
+		}
+
+		sprintf(str, ".%02d), ", ival);
+		file.Write(str);
 
         sprintf(str, "Question %d \"", maxgid2 + 1);
         file.Write(str);
         file.Write(GetGlobalQuestionText(maxgid2));
+        file.Write("\" (");
 
-        file.Write(" (");
+		val = GlobalAsNtCorrSum[maxgid2] / GlobalAsNtCorrCount[maxgid2];
+		ival = round(100.0 * val);
+		if (ival < 0)
+		{
+			file.Write("-");
+			ival = -ival;
+		}
+
+		sprintf(str, ".%02d), Corr: ", ival);
+		file.Write(str);
+
         cnt = GlobalCorrCount[maxgid1][maxgid2];
         corr = GlobalCorrArr[maxgid1][maxgid2] / ((long double)cnt - 1);
 
-        val = CorrArr[maxgid1] + CorrArr[maxgid2];
+//        val = CorrArr[maxgid1] + CorrArr[maxgid2];
         	            
-        corr = corr * corr;
-        corr = corr / val;
+//        corr = corr * corr;
+//        corr = corr / val;
 
 		ival = round(100.0 * corr);
-    	sprintf(str, "%d)", ival);
+
+    	if (ival < 0)
+    	{
+    	    ival = -ival;
+    	    file.Write("-");
+    	}
+    	
+    	sprintf(str, "%d", ival);
 	    file.Write(str);
         file.Write("<br>");
     }
