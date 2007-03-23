@@ -287,13 +287,11 @@ int main(int argc, char **argv)
 
 //	  Quiz[11]->WriteWiki("wiki.txt", 0.2);
 	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-//	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 25);
+	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 50);
 
 	  Quiz[11]->WriteQuizWiki("r3.txt");
 
-	  TQuiz::PrintGlobalCorrelation(580, 582);
-	  TQuiz::PrintGlobalCorrelation(580, 584);
-	  TQuiz::PrintGlobalCorrelation(582, 584);
+	  TQuiz::PrintGlobalCorrelation(587, 588);
 
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");

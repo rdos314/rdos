@@ -7133,6 +7133,8 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
     long double MaxCorr;
     long double CorrLev;
     long double val;
+    long double val1;
+    long double val2;
     char str[120];
 	TFile file(filename, 0);
 	int found;
@@ -7234,7 +7236,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 		infile.SetPos(pos);
 	}
 
-	CorrLev = 1.0;
+	CorrLev = 1000.0;
 
 	for (i = 0; i < count; i++)
 	{
@@ -7252,22 +7254,38 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
 
                 	    if (cnt > 1)
         	            {
-                            val = CorrArr[gid1] + CorrArr[gid2];
+                            val1 = CorrArr[gid1] * CorrArr[gid1];
+                            val2 = CorrArr[gid2] * CorrArr[gid2];
+
+//                            val = sqrtl(val1 + val2);
         	            
             	            corr = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
                     	    corr = corr * corr;
+
+                    	    val = 1.0;
+                    	    
+                    	    if (corr > val1 || corr > val2)
+                    	    {
+                    	        
+                    	        if (val1 > val2)
+                    	            corr = corr - val2;
+                    	        else
+                    	            corr = corr - val1;
+                    	    }
+                    	    else
+                    	        corr = 0.0;
 
                     	    if (val)
                         	    corr = corr / val;
                         	else
                         	    corr = 0.0;
             	    
-                    	    if (corr > MaxCorr && corr < CorrLev)
-            	            {
-                    	        MaxCorr = corr;
-                    	        maxgid1 = gid1;
+                        	if (corr > MaxCorr && corr < CorrLev)
+                	        {
+                        	    MaxCorr = corr;
+                        	    maxgid1 = gid1;
             	                maxgid2 = gid2;
-                    	    }
+                        	}
                     	}
                 	}
                 }
