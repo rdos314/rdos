@@ -44,6 +44,7 @@
 #include "quizr1.h"
 #include "quizr2.h"
 #include "quizr3.h"
+#include "quizr4.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -75,10 +76,11 @@ int main(int argc, char **argv)
 	Quiz[9] = new TQuizR1("quizr1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8]);
 	Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
 	Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
+	Quiz[12] = new TQuizR4("quizr4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11]);
 
-//	Quiz[11]->WritePhpQuestions("q.php");
-//	Quiz[11]->WriteSetupTexts("q.cpp");
-//	Quiz[11]->WriteSetupCross("c.cpp");
+	Quiz[12]->WritePhpQuestions("q.php");
+	Quiz[12]->WriteSetupTexts("q.cpp");
+	Quiz[12]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
