@@ -291,7 +291,8 @@ int main(int argc, char **argv)
 
 	  Quiz[11]->WriteQuizWiki("r3.txt");
 
-	  TQuiz::PrintGlobalCorrelation(587, 588);
+	  TQuiz::PrintGlobalCorrelation(258, 81);
+	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
