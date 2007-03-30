@@ -78,9 +78,9 @@ int main(int argc, char **argv)
 	Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
 	Quiz[12] = new TQuizR4("quizr4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11]);
 
-	Quiz[12]->WritePhpQuestions("q.php");
-	Quiz[12]->WriteSetupTexts("q.cpp");
-	Quiz[12]->WriteSetupCross("c.cpp");
+//	Quiz[12]->WritePhpQuestions("q.php");
+//	Quiz[12]->WriteSetupTexts("q.cpp");
+//	Quiz[12]->WriteSetupCross("c.cpp");
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -93,7 +93,8 @@ int main(int argc, char **argv)
 //	Quiz[8]->CheckCross();
 //	Quiz[9]->CheckCross();
 //	 Quiz[10]->CheckCross();
-	 Quiz[11]->CheckCross();
+//	 Quiz[11]->CheckCross();
+	 Quiz[12]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -282,19 +283,19 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
 	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
-	 Quiz[11]->WriteWeighting("weights.cpp");
-	 Quiz[11]->WritePhpWeighting("weights.php");
+	 Quiz[12]->WriteWeighting("weights.cpp");
+	 Quiz[12]->WritePhpWeighting("weights.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //	  Quiz[11]->WriteWiki("wiki.txt", 0.2);
-	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 50);
+//	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
+//	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 50);
 
-	  Quiz[11]->WriteQuizWiki("r3.txt");
+//	  Quiz[11]->WriteQuizWiki("r3.txt");
 
-	  TQuiz::PrintGlobalCorrelation(258, 81);
-	  TQuiz::PrintGlobalCorrelation(556, 493);
+//	  TQuiz::PrintGlobalCorrelation(258, 81);
+//	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
 //     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
