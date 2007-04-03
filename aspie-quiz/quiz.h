@@ -277,6 +277,7 @@ protected:
 	void WriteCorr95(TFile &File, long double corr, int count);
 	void WriteCorrVal(TFile &File, long double corr, int count);
     void WriteChi2(TFile &File, long double chi2);
+    void WriteP(TFile &File, long double chi2);
     void WritePca(TFile &File, long double pca);
     static void WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr);
     void WritePcaCorrRow(TFile &File, const char *comment, int PopType);

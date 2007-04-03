@@ -58,30 +58,6 @@ static int GlobalGroupCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static long double GlobalPcaSum[MAX_GLOBAL_QUESTIONS][4];
 static int GlobalPcaCount[MAX_GLOBAL_QUESTIONS][4];
 
-static int Chi2Dist[190] =
-    {
-        10000,  9512,  9048,  8607,  8187,  7788,  7408,  7047,  6703,  6376,
-         6065,  5769,  5488,  5220,  4966,  4724,  4493,  4274,  4066,  3867,
-         3679,  3499,  3329,  3166,  3012,  2865,  2725,  2592,  2466,  2346,
-         2231,  2122,  2019,  1920,  1827,  1738,  1653,  1572,  1496,  1423,
-         1353,  1287,  1225,  1165,  1108,  1054,  1003,   954,   907,   863,
-          821,   781,   743,   707,   672,   639,   608,   578,   550,   523,
-          498,   474,   450,   429,   408,   388,   369,   351,   334,   317,
-          302,   287,   273,   260,   247,   235,   224,   213,   202,   193,
-          183,   174,   166,   158,   150,   143,   136,   129,   123,   117,
-          111,   106,   101,    96,    91,    87,    82,    78,    74,    71,
-           67,    64,    61,    58,    55,    52,    50,    47,    45,    43,
-           41,    39,    37,    35,    33,    32,    30,    29,    27,    26,
-           25,    24,    22,    21,    20,    19,    18,    17,    17,    16,
-           15,    14,    14,    13,    12,    12,    11,    11,    10,    10,
-            9,     9,     8,     8,     7,     7,     7,     6,     6,     6,
-            6,     5,     5,     5,     5,     4,     4,     4,     4,     4,
-            3,     3,     3,     3,     3,     3,     2,     2,     2,     2,
-            2,     2,     2,     2,     2,     2,     2,     1,     1,     1,
-            1,     1,     1,     1,     1,     1,     0,     0,     0,     0
-    };            
-
-
 /*##########################################################################
 #
 #   Name       : TQuiz::TQuiz
@@ -2903,7 +2879,7 @@ void TQuiz::WriteCorrVal(TFile &File, long double corr, int count)
 }
 
 /*##################  TQuiz::WriteChi2 ##########################
-*   Purpose....: Write chi-2 based p                   	          	        #
+*   Purpose....: Write chi-2                           	          	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -2920,6 +2896,76 @@ void TQuiz::WriteChi2(TFile &File, long double chi2)
             
 	File.Write(str);
 }
+
+/*##################  TQuiz::WriteP ##########################
+*   Purpose....: Write chi-2 based p                   	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteP(TFile &File, long double chi2)
+{
+    char str[40];
+
+    if (chi2 >= 18.5)
+        strcpy(str, "0.0001");
+    else
+    {
+        if (chi2 >= 17.8)
+            strcpy(str, "0.0002");
+        else
+        {
+            if (chi2 >= 15.5)
+                strcpy(str, "0.0005");
+            else
+            {
+                if (chi2 >= 14.0)
+                    strcpy(str, "0.001");
+                else
+                {
+                    if (chi2 >= 12.5)
+                        strcpy(str, "0.002");
+                    else
+                    {
+                        if (chi2 >= 10.62)
+                            strcpy(str, "0.005");
+                        else
+                        {
+                            if (chi2 >= 9.23)
+                                strcpy(str, "0.01");
+                            else
+                            {
+                                if (chi2 >= 7.83)
+                                    strcpy(str, "0.02");
+                                else
+                                {
+                                    if (chi2 >= 6.00)
+                                        strcpy(str, "0.05");
+                                    else
+                                    {
+                                        if (chi2 >= 4.61)
+														  strcpy(str, "0.1");
+													 else
+													 {
+														  if (chi2 >= 3.22)
+																strcpy(str, "0.2");
+														  else
+																strcpy(str, "---");
+													 }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+            
+	File.Write(str);
+}
+
 
 /*##################  TQuiz::WritePca ##########################
 *   Purpose....: Write PCA loading                    	          	        #
@@ -3906,8 +3952,8 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Chi-2");
-        WriteFieldFooter(file);
+		file.Write("p <");
+		  WriteFieldFooter(file);
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
         {
@@ -4012,7 +4058,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				}       
 				NormCorr[cross] = 0.9 * NormCorr[cross]; 
 
-				WriteChi2(file, quiz->Quiz[q].Chi2);
+				WriteP(file, quiz->Quiz[q].Chi2);
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
@@ -4405,7 +4451,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
-		file.Write("Chi-2");
+		file.Write("p <");
 		WriteFieldFooter(file);
 
 		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
@@ -4496,7 +4542,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 4);
-				WriteChi2(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
 				NormCorr = 0.0;
@@ -4627,7 +4673,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
-		file.Write("Chi-2");
+		file.Write("p < ");
         WriteFieldFooter(file);
 
         WriteCenteredFieldHeader(file, 3);
@@ -4724,7 +4770,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 				file.Write(str);
 #endif
 				WriteCenteredFieldHeader(file, 3);
-				WriteChi2(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
 				for (j = 0; j < 4; j++)
@@ -4821,7 +4867,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
-		file.Write("Chi-2");
+		file.Write("p <");
 		WriteFieldFooter(file);
 
 		WriteCenteredFieldHeader(file, 3);
@@ -4916,7 +4962,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 3);
-				WriteChi2(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
                 if (GlobalPcaCount[GlobalId][0])
@@ -5588,6 +5634,19 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 				WriteChi2(file, GlobalChi2[GlobalId]);
+
+                file.Write("<br>");
+
+
+#ifdef ENGLISH
+            	file.Write("p < ");
+#endif
+
+#ifdef SWEDISH
+            	file.Write("p <  ");
+#endif
+
+				WriteP(file, GlobalChi2[GlobalId]);
 
                 file.Write("<br>");
 
