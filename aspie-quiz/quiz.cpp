@@ -553,23 +553,15 @@ void TQuiz::WritePhpQuestions(const char *filename)
         
 		if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
 		{
-            for (cross = 0; cross < MAX_CROSS && !found; cross++)
+            quiz = GlobalTopQuiz[Quiz[i].GlobalId];
+            q = GlobalTopQuestion[Quiz[i].GlobalId];
+            if (quiz)
             {
-                quiz = CrossQuiz[cross];
-                if (quiz)
-                {
-                    for (q = 0; q < quiz->N && !found; q++)
-                    {
-                        if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
-                        {
-                            sprintf(str, " $m[%d] = \"", i);
-                            file.Write(str);
-                            file.Write(quiz->Quiz[q].Text);
-                            file.Write("\";\n");                            
-                            found = TRUE;
-                        }
-                    }
-                }
+                sprintf(str, " $m[%d] = \"", i);
+                file.Write(str);
+                file.Write(quiz->Quiz[q].Text);
+                file.Write("\";\n");                            
+                found = TRUE;
             }
         } 
 
@@ -709,23 +701,15 @@ void TQuiz::WriteSetupTexts(const char *filename)
         
         if (Quiz[i].GlobalId >= 0 && !Quiz[i].Changed)
         {            
-            for (cross = 0; cross < MAX_CROSS && !found; cross++)
+            quiz = GlobalTopQuiz[Quiz[i].GlobalId];
+            q = GlobalTopQuestion[Quiz[i].GlobalId];
+            if (quiz)
             {
-                quiz = CrossQuiz[cross];
-                if (quiz)
-                {
-                    for (q = 0; q < quiz->N && !found; q++)
-                    {
-                        if (Quiz[i].GlobalId == quiz->Quiz[q].GlobalId)
-                        {
-                            sprintf(str, "  Quiz[%d].Text = \"", i);
-                            file.Write(str);
-                            file.Write(quiz->Quiz[q].Text);
-                            file.Write("\";\n");                            
-                            found = TRUE;
-                        }
-                    }
-                }
+                sprintf(str, "  Quiz[%d].Text = \"", i);
+                file.Write(str);
+                file.Write(quiz->Quiz[q].Text);
+                file.Write("\";\n");                            
+                found = TRUE;
             }
         } 
 
@@ -5443,7 +5427,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[11]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -5453,6 +5437,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizr3.htm\">summering</a> <a href=\"refr3.htm\">referenssajter</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizr4.htm\">summary</a> <a href=\"refr4.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizr4.htm\">summering</a> <a href=\"refr4.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 

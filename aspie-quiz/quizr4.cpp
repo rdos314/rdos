@@ -76,7 +76,7 @@ TQuizR4::TQuizR4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -539,7 +539,7 @@ void TQuizR4::DefineQuiz()
 #endif
 
 	DefineID(151, 384);
- 
+
 #ifdef ENGLISH
 	DefineText(152, "Do you like to relax and do absolutely nothing while pondering on things of interest?", GROUP_MIXED);
 #endif
@@ -638,7 +638,7 @@ void TQuizR4::SetupTexts()
   Quiz[57].MyGroup = GROUP_SENSORY;
   Quiz[58].MyGroup = GROUP_SENSORY;
   Quiz[59].MyGroup = GROUP_SENSORY;
-  Quiz[60].MyGroup = GROUP_MIXED;
+  Quiz[60].MyGroup = GROUP_ASPIE_COMM;
   Quiz[61].MyGroup = GROUP_ASPIE_COMM;
   Quiz[62].MyGroup = GROUP_ASPIE_COMM;
   Quiz[63].MyGroup = GROUP_ASPIE_COMM;
@@ -721,7 +721,7 @@ void TQuizR4::SetupTexts()
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_MIXED;
   Quiz[146].MyGroup = GROUP_ASPIE_COMM;
@@ -736,20 +736,20 @@ void TQuizR4::SetupTexts()
   Quiz[0].Text = "Have you felt different from others for most of your life?";
   Quiz[1].Text = "Have you had more difficulties than others making friends?";
   Quiz[2].Text = "Is it or has it been harder for you than for others to find a partner?";
-  Quiz[3].Text = "Do you tend to feel get nervous, shy, confused and/or like you don't fit in, in various social situations?";
-  Quiz[4].Text = "Are you more of an observer than one who participates in life - being a detached observer ?";
+  Quiz[3].Text = "Do you tend to feel nervous, shy, confused or left out in social situations?";
+  Quiz[4].Text = "Are you more of an observer than one who participates in life?";
   Quiz[5].Text = "Do you find it difficult to figure out how to behave in various situations?";
   Quiz[6].Text = "Have you taken initiative only to find out it was not wanted?";
-  Quiz[7].Text = "Have you had the feeling of playing a game to pretend to be like people around you?";
+  Quiz[7].Text = "Have you had the feeling of playing a game, pretending to be like people around you?";
   Quiz[8].Text = "Have you had difficulties fitting into expected gender stereotypes, perhaps having interests and behaviors that are atypical for your gender?";
   Quiz[9].Text = "Do you forget you are in a social situation when something gets your attention?";
   Quiz[10].Text = "Do you prefer to only meet people you know, one-on-one, or in small, familiar groups?";
   Quiz[11].Text = "Have you had a tendency to prefer the company of those who are older or younger than yourself?";
-  Quiz[12].Text = "Do you get annoyed when people drop by to visit you?";
-  Quiz[13].Text = "Do you get exceedingly tired after socializing, and need to regenerate alone?";
-  Quiz[14].Text = "Have you been bullied, abused or taken advantage of in various situations?";
-  Quiz[15].Text = "Do you often have thoughts of committing suicide?";
-  Quiz[16].Text = "Is a large social network important for you?";
+  Quiz[12].Text = "Do you dislike it when people drop by to visit you uninvited?";
+  Quiz[13].Text = "Do you get very tired after socializing, and need to regenerate alone?";
+  Quiz[14].Text = "Have you been bullied, abused or taken advantage of?";
+  Quiz[15].Text = "Have you had thoughts of committing suicide?";
+  Quiz[16].Text = "Is a large social network important to you?";
   Quiz[17].Text = "Are you intuitive about what people need from you?";
   Quiz[18].Text = "Do you find the usual courting behavior natural?";
   Quiz[19].Text = "Are you good at teamwork?";
@@ -776,7 +776,7 @@ void TQuizR4::SetupTexts()
   Quiz[40].Text = "Do you have extra sensitive hearing?";
   Quiz[41].Text = "Are you easily disturbed by sounds/noises that others make?";
   Quiz[42].Text = "Do you find the sound from a motor-bike, helicopter or tractor painful?";
-  Quiz[43].Text = "Do you have problems distinguishing voices from background noise, or from other voices?";
+  Quiz[43].Text = "Do you have difficulties filtering out background noise when talking to someone?";
   Quiz[44].Text = "Do you get confused by verbal instructions - especially several at the same time?";
   Quiz[45].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
   Quiz[46].Text = "Are your eyes extra sensitive to stong light and glare?";
@@ -785,7 +785,7 @@ void TQuizR4::SetupTexts()
   Quiz[49].Text = "Do you have a very acute sense of smell?";
   Quiz[50].Text = "Do you have a very acute sense of taste?";
   Quiz[51].Text = "Are you a picky eater?";
-  Quiz[52].Text = "Do you feel tortured by clothes tags, clothes that are too tight in certain places or are made in the 'wrong' material?";
+  Quiz[52].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
   Quiz[53].Text = "Do you dislike being touched or hugged unless you're prepared or have asked for it?";
   Quiz[54].Text = "If you have to be touched, do you prefer it to be firmly rather than lightly?";
   Quiz[55].Text = "Are you fairly non-sensitive to physical pain?";
@@ -807,28 +807,28 @@ void TQuizR4::SetupTexts()
   Quiz[71].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
   Quiz[72].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
   Quiz[73].Text = "Do you flap your hands (e.g. when excited or upset)?";
-  Quiz[74].Text = "Do you bite yourself (e.g. when upset)?";
+  Quiz[74].Text = "Do you bite yourself (e.g. when frustrated or upset)?";
   Quiz[75].Text = "Do you repeatedly bang your head (e.g. when frustrated or upset)?";
   Quiz[76].Text = "Do you self-harm, or have you done so in the past?";
   Quiz[77].Text = "In conversations, do you use small sounds that others don't seem to use?";
   Quiz[78].Text = "Do you have a habit of sniffing, snorting, coughing or clearing your throat, without it being due to allergy, cold or bronchitis?";
   Quiz[79].Text = "Do you repeatedly blink or have twitches in eyes or face?";
-  Quiz[80].Text = "Does it feel vitally important to be left undisturbed to persue your special interests?";
-  Quiz[81].Text = "Do you tend to get so absorbed in your projects that you forget everything else (e.g. eating, sleeping, taking a shower, other people)?";
+  Quiz[80].Text = "Does it feel vitally important to be left undisturbed when focusing on your special interests?";
+  Quiz[81].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
   Quiz[82].Text = "Do you need to finish what you're doing before turning to another task or person?";
   Quiz[83].Text = "Do you tend to get so stuck on details that you miss the overall picture?";
   Quiz[84].Text = "Do you need to do things yourself in order to remember them?";
-  Quiz[85].Text = "Do you prefer to do things on your own even if you could use others work or expertice?";
+  Quiz[85].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
   Quiz[86].Text = "Do you have a need for symmetry, order and/or precision?";
   Quiz[87].Text = "Do you love to make lists, diagrams etc for the fun of it?";
   Quiz[88].Text = "Do you love to collect things?";
-  Quiz[89].Text = "Do you have certain simple & logical routines which you need to follow?";
+  Quiz[89].Text = "Do you have certain routines which you need to follow?";
   Quiz[90].Text = "Do you need lists and schedules in order to get things done?";
   Quiz[91].Text = "Do you find it disturbing or upsetting when others show up either later or sooner than agreed?";
   Quiz[92].Text = "Do you get frustrated if you can't sit on your favorite seat?";
   Quiz[93].Text = "Do you prefer to wear the same clothes every day for many days in a row?";
   Quiz[94].Text = "Do you prefer to eat the same food every day for long periods at a time?";
-  Quiz[95].Text = "Do you have very strong attachments to certain objects, e.g. a favourite cup or a favourite towel and really need to have that precise one?";
+  Quiz[95].Text = "Do you have strong attachments to certain favorite objects?";
   Quiz[96].Text = "Do you have a fascination for water?";
   Quiz[97].Text = "Do you find it hard to resist picking scabs or peeling skin flakes?";
   Quiz[98].Text = "Do you feel an urge to correct people with accurate facts, numbers, spelling, grammar etc., when they get something wrong?";
@@ -836,43 +836,43 @@ void TQuizR4::SetupTexts()
   Quiz[100].Text = "Are you very gifted in one or more areas?";
   Quiz[101].Text = "Do you focus on one interest at a time and become an expert on that subject?";
   Quiz[102].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
-  Quiz[103].Text = "Do you have unconventional, often unique ways of solving problems?";
+  Quiz[103].Text = "Do you have unconventional ways of solving problems?";
   Quiz[104].Text = "Do tend to do everything worth doing, more perfect than really needed?";
-  Quiz[105].Text = "Was your play more directed towards sorting, building or taking things apart than towards social games with other kids?";
+  Quiz[105].Text = "As a child, was your play more directed towards, for example, sorting, building, investigating or taking things apart than towards social games with other kids?";
   Quiz[106].Text = "Are you a computer geek?";
-  Quiz[107].Text = "Do you have high morals and a tendency to stand up for your ideals and beliefs even if they are contrary to general consensus, or if it means social or economical disadvantages?";
+  Quiz[107].Text = "Do you have strong sense of ethics and a tendency to stand up for your ideals & beliefs?";
   Quiz[108].Text = "Do you have a hyperactive mind?";
   Quiz[109].Text = "Are you somewhat of a daydreamer, often lost in your own thoughts?";
-  Quiz[110].Text = "Is your sense of humor different from mainstream and / or considered odd?";
+  Quiz[110].Text = "Is your sense of humor different from mainstream or considered odd?";
   Quiz[111].Text = "Do you look, feel or act younger than your biological age?";
   Quiz[112].Text = "Do you have odd teeth; e.g. that are crooked, bigger than usual; that have gaps, overlaps, underbite or that show extra much gum?";
   Quiz[113].Text = "Do you have atypical or irregular sleeping patterns that deviate from the 24-h cycle?";
   Quiz[114].Text = "Do you find the norms of hygiene too strict?";
   Quiz[115].Text = "Are you usually unaware of/disinterested in what is currently in vogue?";
-  Quiz[116].Text = "Do you have an alternative view of what is attractive in the opposite sex compared to most others?";
+  Quiz[116].Text = "Do you have an alternative view of what is attractive in the opposite sex?";
   Quiz[117].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
   Quiz[118].Text = "Do you have difficulty accepting criticism, correction, and direction?";
   Quiz[119].Text = "Are you sometimes fearless in situations that can be dangerous?";
-  Quiz[120].Text = "Is it harder for you to make it on your own, than it seems to be for most others of your age?";
+  Quiz[120].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
   Quiz[121].Text = "Do you have a tendency to be passive and not initiate things yourself?";
-  Quiz[122].Text = "Do you have problems recognizing faces out of their usual context (e.g. your doctor at the supermarket without his white robe)?";
+  Quiz[122].Text = "Do you have problems recognizing faces (prosopagnosia)?";
   Quiz[123].Text = "Is it difficult for you to multitask?";
   Quiz[124].Text = "Do you have poor concept of time?";
-  Quiz[125].Text = "Do you often forget were you put things?";
+  Quiz[125].Text = "Do you often forget where you put things?";
   Quiz[126].Text = "Are you easily distracted?";
   Quiz[127].Text = "Do you find it hard to focus on or learn things you are not interested in?";
-  Quiz[128].Text = "Do you have difficulty summarizing and reporting conversations or describing events?";
+  Quiz[128].Text = "Do you have difficulty describing & summarising for example events, conversations or something you've read?";
   Quiz[129].Text = "Have you or have you had a tendency to be hyperactive and/or restless?";
   Quiz[130].Text = "Do you tend to be impatient and/or impulsive?";
   Quiz[131].Text = "Do you have difficulties judging distances, height, depth or speed?";
   Quiz[132].Text = "Do you have poor balance, e.g. difficulty riding a bicycle, skating, standing on one leg?";
   Quiz[133].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
-  Quiz[134].Text = "Do you have difficulty with throwing and catching a ball?";
-  Quiz[135].Text = "Do you have difficulties with activities requiring manual dexterity and precision, e.g drawing, sewing, tying shoe-laces, fastening buttons and handling small objects?";
-  Quiz[136].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands and a tendency to drop, spill or break things by mistake?";
+  Quiz[134].Text = "Do you have difficulties throwing and/or catching a ball?";
+  Quiz[135].Text = "Do you have difficulties with activities requiring manual precision, e.g sewing, tying shoe-laces, fastening buttons or handling small objects?";
+  Quiz[136].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
   Quiz[137].Text = "Do you have difficulty writing by hand?";
   Quiz[138].Text = "Do you have difficulties with pronunciation?";
-  Quiz[139].Text = "Do you stammer when stressed?";
+  Quiz[139].Text = "Do you stutter when stressed?";
   Quiz[140].Text = "Does it come more natural to you to think in pictures than in words?";
   Quiz[141].Text = "Are you affected negatively by high air humidity combined with hot weather?";
   Quiz[142].Text = "Are you affected negatively by high air humidity combined with cold weather?";
@@ -889,7 +889,7 @@ void TQuizR4::SetupTexts()
 #endif
 
 #ifdef SWEDISH
-  Quiz[0].Text = "Har du känt dig annorlunda största delen av ditt liv?";
+  Quiz[0].Text = "Har du känt dig annorlunda större delen av ditt liv?";
   Quiz[1].Text = "Har du haft svårare än andra att få vänner?";
   Quiz[2].Text = "Är det eller har det varit svårare för dig än för andra att hitta en partner?";
   Quiz[3].Text = "Brukar du känna dig nervös, blyg, förvirrad eller utanför i olika sociala situationer?";
@@ -899,26 +899,26 @@ void TQuizR4::SetupTexts()
   Quiz[7].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
   Quiz[8].Text = "Har du haft svårigheter att passa in i traditionella könsroller, kanske haft intressen och uppförande som är otypiska för ditt kön?";
   Quiz[9].Text = "Glömmer du bort att du är i en social situation när något annat fångar ditt intresse?";
-  Quiz[10].Text = "Föredrar du att umgås med folk du känner väl, och helst på tu man hand eller i en mindre grupp?";
+  Quiz[10].Text = "Föredrar du att bara umgås med folk du känner väl, på tu man hand eller i en mindre grupp?";
   Quiz[11].Text = "Har du haft en tendens att helst umgås med människor som är antingen äldre eller yngre än du själv?";
   Quiz[12].Text = "Ogillar du när folk kommer på besök oanmälda?";
-  Quiz[13].Text = "Brukar du blir utmattad av att umgås med folk och efteråt behöva vila ut ifred?";
-  Quiz[14].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad i olika situationer?";
-  Quiz[15].Text = "Har du ofta självmordstankar?";
+  Quiz[13].Text = "Brukar du bli utmattad av att umgås med folk och behöva vila ut ifred efteråt?";
+  Quiz[14].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad?";
+  Quiz[15].Text = "Har du haft självmordstankar?";
   Quiz[16].Text = "Är ett stort socialt nätverk viktigt för dig?";
-  Quiz[17].Text = "Känner du intuitivt av vad folk behöver från dig?";
+  Quiz[17].Text = "Känner du intuitivt vad folk behöver från dig?";
   Quiz[18].Text = "Tycker du att det normala sättet att uppvakta varandra är naturligt?";
   Quiz[19].Text = "Är du bra på att arbeta i grupp?";
   Quiz[20].Text = "Finner du det svårt eller tröttsamt att tala?";
   Quiz[21].Text = "Har du en monoton röst?";
   Quiz[22].Text = "Har du en tendens att tala antingen för tyst eller för högt?";
-  Quiz[23].Text = "I samtal, brukar du ibland ha problem med saker som timing, turtagning och ömsesidighet?";
+  Quiz[23].Text = "I samtal, brukar du ha problem med saker som timing, turtagning och ömsesidighet?";
   Quiz[24].Text = "I samtal, brukar du behöva extra tid att noggant tänka ut vad du ska säga, så att det kan uppstå en paus innan du svarar?";
   Quiz[25].Text = "Brukar du memorera och använda uttryck som du kopierat från andra människor och situationer?";
   Quiz[26].Text = "Tycker du att vanligt kallprat är svårt, tröttsamt eller slöseri med tid?";
   Quiz[27].Text = "Tycker du att det är lättare att kommunicera via dator än i verkliga livet?";
   Quiz[28].Text = "Har du eller har du haft svårt att förstå talesätt, idiom, allegorier och en tendens att tolka saker bokstavligt?";
-  Quiz[29].Text = "Brukar du ha svårt att tolka kroppsspråk och ansiktsuttryck och att förstå vad andra känner och vill om de inte säger det rakt ut?";
+  Quiz[29].Text = "Brukar du ha svårt att tolka kroppsspråk och/eller ansiktsuttryck och att förstå vad andra känner och vill om de inte säger det rakt ut?";
   Quiz[30].Text = "Tycker andra ibland att du ler när du inte borde?";
   Quiz[31].Text = "Förväntar du dig att andra ska känna till dina tankar, upplevelser och åsikter utan att du behöver berätta?";
   Quiz[32].Text = "Blir du ofta missförstådd av andra?";
@@ -926,23 +926,23 @@ void TQuizR4::SetupTexts()
   Quiz[34].Text = "Brukar du säga saker som anses socialt opassande?";
   Quiz[35].Text = "Ogillar du att behöva ta i hand?";
   Quiz[36].Text = "Föredrar du att undvika ögonkontakt?";
-  Quiz[37].Text = "Har du blivit anklagad för att glo?";
+  Quiz[37].Text = "Har du blivit anklagad för att stirra?";
   Quiz[38].Text = "Har du lätt att beskriva dina känslor?";
   Quiz[39].Text = "Är det lätt för dig att använda ett artigt eller 'passande' ansiktsuttryck, även om det inte motsvarar vad du egentligen känner?";
   Quiz[40].Text = "Har du extra känslig hörsel?";
   Quiz[41].Text = "Blir du lätt störd av ljud från andra?";
   Quiz[42].Text = "Upplever du att ljudet från en motorcykel, helikopter eller traktor gör ont?";
-  Quiz[43].Text = "Har du svårt att urskilja röster från bakgrundsljud, eller från andra röster?";
+  Quiz[43].Text = "Har du svårt att filtrera bort störande bakgrundsljud när du talar med någon?";
   Quiz[44].Text = "Blir du förvirrad av verbala instruktioner - särskilt flera på en gång?";
-  Quiz[45].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas up om och om igen?";
+  Quiz[45].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas upp om och om igen?";
   Quiz[46].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
   Quiz[47].Text = "Blundar du gärna med ena ögat i starkt solljus?";
-  Quiz[48].Text = "Är du känslig för lyrsrörsljus?";
+  Quiz[48].Text = "Tycker du att lysrörsljus känns obehagligt?";
   Quiz[49].Text = "Har du extra känsligt luktsinne?";
   Quiz[50].Text = "Har du extra känsligt smaksinne?";
   Quiz[51].Text = "Är du petig med vad du äter?";
-  Quiz[52].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt på vissa ställen eller som är gjorda i \"fel\" material?";
-  Quiz[53].Text = "Ogillar du att bli tagen i eller kramad om du inte är beredd eller bett om det?";
+  Quiz[52].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt eller som är gjorda i 'fel' material?";
+  Quiz[53].Text = "Ogillar du att bli tagen i eller kramad om du inte är beredd eller har bett om det?";
   Quiz[54].Text = "Om någon tar i dig, föredrar du då hårdare tag framför lätt beröring?";
   Quiz[55].Text = "Är du ganska okänslig för fysisk smärta?";
   Quiz[56].Text = "Är du känslig för värme?";
@@ -953,7 +953,7 @@ void TQuizR4::SetupTexts()
   Quiz[61].Text = "Brukar du bita dig i läppen, kinden eller tungan (t ex när du tänker, när du är orolig eller nervös)?";
   Quiz[62].Text = "Brukar du gnugga händer, eller vrida händerna eller fingrarna om varandra?";
   Quiz[63].Text = "Brukar du gnissla tänder (t ex när du är stressad)?";
-  Quiz[64].Text = "Pratar du med dig själv?";
+  Quiz[64].Text = "Brukar du prata med dig själv?";
   Quiz[65].Text = "Brukar du peta näsan?";
   Quiz[66].Text = "Brukar du dra i/knäcka leder?";
   Quiz[67].Text = "Brukar du vanka av och an (t ex när du tänker eller är orolig)?";
@@ -965,26 +965,26 @@ void TQuizR4::SetupTexts()
   Quiz[73].Text = "Brukar du vifta med händerna (t ex när du är upprymd eller upprörd)?";
   Quiz[74].Text = "Brukar du bita dig själv? (t ex när du är upprörd)?";
   Quiz[75].Text = "Brukar du upprepade gånger banka huvudet i nånting (t ex när du blir frustrerad eller upprörd)?";
-  Quiz[76].Text = "Brukar du ägna dig åt självskadande beteende, eller har du gjort det tidigare?";
-  Quiz[77].Text = "Använder du små ljud som andra inte verkar använda i samtal?";
+  Quiz[76].Text = "Brukar du eller har du brukat ägna dig åt självskadande beteende?";
+  Quiz[77].Text = "I samtal, använder du små ljud som andra inte verkar använda?";
   Quiz[78].Text = "Brukar du göra snusningar, harklingar eller hostningar utan att det beror på allergi, förkylning eller bronkit?";
   Quiz[79].Text = "Brukar du ha upprepade blinkningar eller ryckningar i ögon eller ansikte?";
-  Quiz[80].Text = "Känns det livsviktigt att få vara ifred och ägna dig åt dina specialintressen i lugn och ro?";
-  Quiz[81].Text = "Brukar du bli så absorberad av dina projekt att du glömmer/struntar i allting annat (äta, duscha, sova, andra människor etc.)?";
+  Quiz[80].Text = "Känns det livsviktigt att få vara ifred när du ägnar dig åt dina specialintressen?";
+  Quiz[81].Text = "Brukar du bli så absorberad av dina specialintressen att du glömmer/struntar i allting annat?";
   Quiz[82].Text = "Behöver du göra klart det du håller på med innan du kan ägna din uppmärksamhet åt något annat/någon annan?";
   Quiz[83].Text = "Händer det att du fastnar så för vissa detaljer att du missar eller struntar i helhetsbilden?";
   Quiz[84].Text = "Har du behov av att göra saker själv för att riktigt minnas dem?";
-  Quiz[85].Text = "Föredrar du att göra saker på egen hand även om du skulle kunna använda andras arbete och expertis?";
-  Quiz[86].Text = "Har du ett behov av symmerti, ordning och/eller precision?";
+  Quiz[85].Text = "Föredrar du att göra saker på egen hand även om du skulle ha användning för andras hjälp och expertis?";
+  Quiz[86].Text = "Har du behov av symmetri, ordning och/eller precision?";
   Quiz[87].Text = "Gillar du att göra listor, diagram o dyl för att det är kul?";
   Quiz[88].Text = "Gillar du att samla?";
-  Quiz[89].Text = "Har du vissa enkla, logiska rutiner som gör att du slipper tänka och som det känns bra att följa?";
+  Quiz[89].Text = "Har du vissa rutiner som du behöver följa?";
   Quiz[90].Text = "Behöver du listor och scheman för att få saker gjorda?";
   Quiz[91].Text = "Blir du störd eller upprörd när andra kommer antingen för för sent eller för tidigt?";
   Quiz[92].Text = "Blir du frustrerad om du inte får sitta på din favoritplats?";
   Quiz[93].Text = "Föredrar du att ha samma kläder varje dag, många dar i rad?";
   Quiz[94].Text = "Föredrar du att äta samma mat varje dag, långa perioder i taget?";
-  Quiz[95].Text = "Är du exceptionellt fäst vid vissa saker, t ex en favoritkopp, en favorittröja, en favorithandduk, och verkligen MÅSTE ha just den?";
+  Quiz[95].Text = "Är du exceptionellt fäst vid vissa favoritsaker?";
   Quiz[96].Text = "Är du fascinerad av vatten?";
   Quiz[97].Text = "Har du svårt att låta bli att pilla bort sårskorpor eller dra i flagande hud?";
   Quiz[98].Text = "Har du svårt att låta bli att korrigera andra med korrekta fakta, siffror, stavning, grammatik etc, när de missar något?";
@@ -992,40 +992,40 @@ void TQuizR4::SetupTexts()
   Quiz[100].Text = "Är du ovanligt begåvad inom ett eller flera områden?";
   Quiz[101].Text = "Brukar du fördjupa dig i ett ämne i taget och bli expert det?";
   Quiz[102].Text = "Brukar du lägga märke till och intressera dig för detaljer som andra inte verkar se eller bry sig om?";
-  Quiz[103].Text = "Brukar du lösa problem på du okonventionella sätt?";
+  Quiz[103].Text = "Brukar du lösa problem på okonventionella sätt?";
   Quiz[104].Text = "Brukar du göra allt som är värt att göras, mer perfekt än vad som egentligen behövs?";
-  Quiz[105].Text = "Brukade dina lekar mer bestå i att sortera, bygga eller ta isär saker än i sociala lekar med andra barn?";
+  Quiz[105].Text = "Brukade dina lekar mer bestå i att t ex sortera, bygga, undersöka eller ta isär saker än i sociala lekar med andra barn?";
   Quiz[106].Text = "Är du en datornörd?";
-  Quiz[107].Text = "Har du hög moral och en tendens att hålla fast vid dina ideal, övertygelser och principer även om de går emot det rådande synsättet och kan vara till din nackdel, t ex socialt eller ekonomiskt?";
+  Quiz[107].Text = "Har du hög moral och en tendens att hålla fast vid/stå upp för dina ideal?";
   Quiz[108].Text = "Är du mentalt hyperaktiv?";
   Quiz[109].Text = "Är du lite av en dagdrömmare, ofta borta i dina egna tankar?";
-  Quiz[110].Text = "Är ditt sinne för humor annorlunda än andras och / eller ansett som udda?";
+  Quiz[110].Text = "Är ditt sinne för humor annorlunda än andras eller ansett som udda?";
   Quiz[111].Text = "Ser du yngre ut, känner du dig eller uppträder du som om du vore yngre än din biologiska ålder?";
   Quiz[112].Text = "Har du udda tänder; t ex tänder som sitter snett, klättrar på varandra; är större än vanligt; mellanrum mellan tänderna; underbett, som visar extra mycket tandkött?";
   Quiz[113].Text = "Har du otypisk eller oregelbunden sömnrytm (d v s som avviker från 24-timmarscykeln)?";
   Quiz[114].Text = "Tycker du att normerna för hygien är för strikta?";
-  Quiz[115].Text = "Är du ofta omedveten om eller ointresserad av vad som för tillfället råkar vara aktuellt/modernt/inne?";
-  Quiz[116].Text = "Har du avvikande uppfattning om vad som är attraktivt hos det motsatta könet än vad många andra anser?";
+  Quiz[115].Text = "Är du ofta omedveten om eller ointresserad av vad som för tillfället råkar vara modernt/inne?";
+  Quiz[116].Text = "Har du avvikande uppfattning om vad som är attraktivt hos det motsatta könet?";
   Quiz[117].Text = "Brukar du stänga av eller bryta ihop när du blir stressad eller överväldigad?";
   Quiz[118].Text = "Har du svårt för att acceptera kritik, korrektion och direktiv?";
   Quiz[119].Text = "Händer det att du är orädd i situationer som faktiskt kan vara farliga?";
   Quiz[120].Text = "Har du haft svårare att klara dig själv än andra i samma ålder?";
   Quiz[121].Text = "Har du en tendens att vara passiv och ha svårt att ta initiativ och komma igång med saker på egen hand?";
-  Quiz[122].Text = "Har du svårt att känna igen ansikten i oväntade sammanhang (t ex din läkare i snabbköpet utan sin vita rock?";
+  Quiz[122].Text = "Har du svårt att känna igen ansikten?";
   Quiz[123].Text = "Har du svårt att göra flera saker samtidigt?";
   Quiz[124].Text = "Har du dålig tidsuppfattning?";
   Quiz[125].Text = "Glömmer du ofta var du lagt saker?";
   Quiz[126].Text = "Blir du lätt distraherad?";
   Quiz[127].Text = "Har du svårt att koncenterera dig på eller lära dig saker du inte är intresserad av?";
-  Quiz[128].Text = "Har du problem med att redogöra för konversationer eller händelser och att sammanfatta?";
+  Quiz[128].Text = "Har du svårt att sammanfatta och redogöra för t ex konversationer, händelser eller något du läst?";
   Quiz[129].Text = "Har du eller har du haft en tendens att vara hyperaktiv och/eller rastlös?";
   Quiz[130].Text = "Brukar du vara otålig och/eller impulsiv?";
-  Quiz[131].Text = "Har du svårigheter att bedöma avstånd, höjd, djup och fart?";
+  Quiz[131].Text = "Har du svårigheter att bedöma avstånd, höjd, djup eller fart?";
   Quiz[132].Text = "Har du dåligt balanssinne, t ex svårt att cykla, åka skridskor, stå på ett ben?";
   Quiz[133].Text = "Har du svårt att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?";
-  Quiz[134].Text = "Har du svårt för att kasta eller fånga en boll?";
-  Quiz[135].Text = "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att rita, sy, knyta skosnören, knäppa knappar och hantera små föremål?";
-  Quiz[136].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna och en tendens att tappa, spilla eller ha sönder saker av misstag?";
+  Quiz[134].Text = "Har du svårigheter med att kasta och/eller fånga en boll?";
+  Quiz[135].Text = "Har du svårigheter med aktiviteter som kräver finmotorisk precision, t ex att sy, knyta skosnören, knäppa knappar och hantera små föremål?";
+  Quiz[136].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna?";
   Quiz[137].Text = "Har du svårt att skriva för hand?";
   Quiz[138].Text = "Har du svårigheter med uttal?";
   Quiz[139].Text = "Stammar du när du blir stressad?";
@@ -1125,19 +1125,19 @@ void TQuizR4::LoadReferers()
 		if (ref)
 			UpdateReferer(ref, Row.AsResult, Row.NtResult);
 
-		if (Row.Autism == 1 || Row.Aspie == 1)
+		if (Row.Autism == 1 || Row.Aspie == 1 || Row.PDD == 1)
 			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 1)
 			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Aspie == 2 || Row.Autism == 2)
+		if (Row.Aspie == 2 || Row.Autism == 2 || Row.PDD == 2)
 			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
 
 		if (Row.ADHD == 2)
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Autism || Row.Aspie)
+		if (Row.Autism || Row.Aspie || Row.PDD)
 		{
 			if (Row.Gender == 1)
 				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
@@ -1196,7 +1196,7 @@ void TQuizR4::LoadPopulations()
 			else
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-			if (Row.Autism == 2 || Row.Aspie == 2)
+			if (Row.Autism == 2 || Row.Aspie == 2 || Row.PDD == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 

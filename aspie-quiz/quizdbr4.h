@@ -7,7 +7,13 @@ struct TQuizRow
     char Lang;
 	char Autism;
 	char Aspie;
+	char PDD;
 	char ADHD;
+	char Dyslexia;
+	char Dyscalculia;
+	char NLD;
+	char OCD;
+	char TS;
 	char Referer[100];
 	long AsResult;
 	long NtResult;
