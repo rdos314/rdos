@@ -209,12 +209,12 @@ void TQuiz5::SetupTexts()
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_SENSORY;
 	Quiz[6].MyGroup = GROUP_SENSORY;
-	Quiz[7].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[7].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[10].MyGroup = GROUP_SENSORY;
 	Quiz[11].MyGroup = GROUP_SENSORY;
-	Quiz[12].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[12].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[13].MyGroup = GROUP_SENSORY;
 	Quiz[14].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[15].MyGroup = GROUP_SENSORY;

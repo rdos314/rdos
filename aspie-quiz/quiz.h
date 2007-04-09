@@ -52,7 +52,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             10
+#define GROUP_COUNT             11
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_NT_BIOLOGY        1
@@ -61,9 +61,10 @@
 #define GROUP_NT_TALENT         4
 #define GROUP_ASPIE_SOCIAL      5
 #define GROUP_ASPIE_COMM        6
-#define GROUP_NONVERBAL         7
-#define GROUP_SEX               8
-#define GROUP_MIXED             9
+#define GROUP_ASPIE_NVC         7
+#define GROUP_NONVERBAL         8
+#define GROUP_SEX               9
+#define GROUP_MIXED             10
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
