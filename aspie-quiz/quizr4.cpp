@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizR4::TQuizR4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3)
-  : TQuiz(153),
+  : TQuiz(203),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -306,6 +306,57 @@ void TQuizR4::SetupTexts()
   Quiz[150].MyGroup = GROUP_ASPIE_COMM;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_MIXED;
+
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[189].MyGroup = GROUP_MIXED;
+  Quiz[190].MyGroup = GROUP_MIXED;
+  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[192].MyGroup = GROUP_MIXED;
+  Quiz[193].MyGroup = GROUP_MIXED;
+  Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[195].MyGroup = GROUP_MIXED;
+  Quiz[196].MyGroup = GROUP_MIXED;
+  Quiz[197].MyGroup = GROUP_MIXED;
+  Quiz[198].MyGroup = GROUP_MIXED;
+  Quiz[199].MyGroup = GROUP_MIXED;
+  Quiz[200].MyGroup = GROUP_MIXED;
+  Quiz[201].MyGroup = GROUP_MIXED;
+  Quiz[202].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
@@ -618,6 +669,57 @@ void TQuizR4::SetupTexts()
   Quiz[151].Text = "Brukar du gilla att bara slappa och göra ingenting medan du tänker på intressanta saker?";
   Quiz[152].Text = "Gillar du Science Fiction?";
 #endif
+
+ Quiz[153].Text = "AQ - I prefer to do things with others rather than on my own.";          
+ Quiz[154].Text = "AQ - I prefer to do things the same way over and over again.";          
+ Quiz[155].Text = "AQ - If I try to imagine something, I find it very easy to create a picture in my mind.";          
+ Quiz[156].Text = "AQ - I frequently get so strongly absorbed in one thing that I lose sight of other things.";          
+ Quiz[157].Text = "AQ - I often notice small sounds when others do not.";          
+ Quiz[158].Text = "AQ - I usually notice car number plates or similar strings of information.";          
+ Quiz[159].Text = "AQ - Other people frequently tell me that what I've said is impolite, even though I think it is polite.";          
+ Quiz[160].Text = "AQ - When I'm reading a story, I can easily imagine what the characters might look like.";          
+ Quiz[161].Text = "AQ - I am fascinated by dates.";          
+ Quiz[162].Text = "AQ - In a social group, I can easily keep track of several different people's conversations.";          
+ Quiz[163].Text = "AQ - I find social situations easy.";          
+ Quiz[164].Text = "AQ - I tend to notice details that others do not.";          
+ Quiz[165].Text = "AQ - I would rather go to a library than to a party.";          
+ Quiz[166].Text = "AQ - I find making up stories easy.";          
+ Quiz[167].Text = "AQ - I find myself drawn more strongly to people than to things.";          
+ Quiz[168].Text = "AQ - I tend to have very strong interests, which I get upset about if I can't pursue.";          
+ Quiz[169].Text = "AQ - I enjoy social chitchat.";          
+ Quiz[170].Text = "AQ - When I talk, it isn't always easy for others to get a word in edgewise.";          
+ Quiz[171].Text = "AQ - I am fascinated by numbers.";          
+ Quiz[172].Text = "AQ - When I'm reading a story, I find it difficult to work out the characters' intentions.";          
+ Quiz[173].Text = "AQ - I don't particularly enjoy reading fiction.";          
+ Quiz[174].Text = "AQ - I find it hard to make new friends.";          
+ Quiz[175].Text = "AQ - I notice patterns in things all the time.";          
+ Quiz[176].Text = "AQ - I would rather go to the theater than to a museum.";          
+ Quiz[177].Text = "AQ - It does not upset me if my daily routine is disturbed.";          
+ Quiz[178].Text = "AQ - I frequently find that I don't know how to keep a conversation going.";          
+ Quiz[179].Text = "AQ - I find it easy to 'read between the lines' when someone is talking to me.";          
+ Quiz[180].Text = "AQ - I usually concentrate more on the whole picture, rather than on the small details.";          
+ Quiz[181].Text = "AQ - I am not very good at remembering phone numbers.";          
+ Quiz[182].Text = "AQ - I don't usually notice small changes in a situation or a person's appearance.";          
+ Quiz[183].Text = "AQ - I know how to tell if someone listening to me is getting bored.";          
+ Quiz[184].Text = "AQ - I find it easy to do more than one thing at once.";          
+ Quiz[185].Text = "AQ - When I talk on the phone, I'm not sure when it's my turn to speak.";          
+ Quiz[186].Text = "AQ - I enjoy doing things spontaneously.";          
+ Quiz[187].Text = "AQ - I am often the last to understand the point of a joke.";          
+ Quiz[188].Text = "AQ - I find it easy to work out what someone is thinking or feeling just by looking at their face.";          
+ Quiz[189].Text = "AQ - If there is an interruption, I can switch back to what I was doing very quickly.";          
+ Quiz[190].Text = "AQ - I am good at social chitchat.";          
+ Quiz[191].Text = "AQ - People often tell me that I keep going on and on about the same thing.";          
+ Quiz[192].Text = "AQ - When I was young, I used to enjoy playing games involving pretending with other children.";          
+ Quiz[193].Text = "AQ - I like to collect information about categories of things (e.g., types of cars, birds, trains, plants).";          
+ Quiz[194].Text = "AQ - I find it difficult to imagine what it would be like to be someone else.";          
+ Quiz[195].Text = "AQ - I like to carefully plan any activities I participate in.";          
+ Quiz[196].Text = "AQ - I enjoy social occasions.";          
+ Quiz[197].Text = "AQ - I find it difficult to work out people's intentions.";          
+ Quiz[198].Text = "AQ - New situations make me anxious.";          
+ Quiz[199].Text = "AQ - I enjoy meeting new people.";          
+ Quiz[200].Text = "AQ - I am a good diplomat.";
+ Quiz[201].Text = "AQ - I am not very good at remembering people's date of birth.";
+ Quiz[202].Text = "AQ - I find it very easy to play games with children that involve pretending.";
 
 }
 
@@ -1007,6 +1109,57 @@ void TQuizR4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(Quiz6, 150, 145);
     DefineGlobalId( 151, 637);
     DefineGlobalId( 152, 638);
+
+    DefineGlobalId( 153, 639);
+    DefineGlobalId( 154, 640);
+    DefineGlobalId( 155, 641);
+    DefineGlobalId( 156, 642);
+    DefineGlobalId( 157, 643);
+    DefineGlobalId( 158, 644);
+    DefineGlobalId( 159, 645);
+    DefineGlobalId( 160, 646);
+    DefineGlobalId( 161, 647);
+    DefineGlobalId( 162, 648);
+    DefineGlobalId( 163, 649);
+    DefineGlobalId( 164, 650);
+    DefineGlobalId( 165, 651);
+    DefineGlobalId( 166, 652);
+    DefineGlobalId( 167, 653);
+    DefineGlobalId( 168, 654);
+    DefineGlobalId( 169, 655);
+    DefineGlobalId( 170, 656);
+    DefineGlobalId( 171, 657);
+    DefineGlobalId( 172, 658);
+    DefineGlobalId( 173, 659);
+    DefineGlobalId( 174, 660);
+    DefineGlobalId( 175, 661);
+    DefineGlobalId( 176, 662);
+    DefineGlobalId( 177, 663);
+    DefineGlobalId( 178, 664);
+    DefineGlobalId( 179, 665);
+    DefineGlobalId( 180, 666);
+    DefineGlobalId( 181, 667);
+    DefineGlobalId( 182, 668);
+    DefineGlobalId( 183, 669);
+    DefineGlobalId( 184, 670);
+    DefineGlobalId( 185, 671);
+    DefineGlobalId( 186, 672);
+    DefineGlobalId( 187, 673);
+    DefineGlobalId( 188, 674);
+    DefineGlobalId( 189, 675);
+    DefineGlobalId( 190, 676);
+    DefineGlobalId( 191, 677);
+    DefineGlobalId( 192, 678);
+    DefineGlobalId( 193, 679);
+    DefineGlobalId( 194, 680);
+    DefineGlobalId( 195, 681);
+    DefineGlobalId( 196, 682);
+    DefineGlobalId( 197, 683);
+    DefineGlobalId( 198, 684);
+    DefineGlobalId( 199, 685);
+    DefineGlobalId( 200, 686);
+    DefineGlobalId( 201, 687);
+    DefineGlobalId( 202, 688);
 }
 
 /*##########################################################################
@@ -1143,7 +1296,7 @@ void TQuizR4::ExportExcelCase(const char *filename, int PcaType)
 	    			if (ival)
 		    			ival--;
     
-					if (ival > 2)
+					if (i < 153 && ival > 2)
 						ival = 0;
                     
 					sprintf(str, "\"%d\"", ival);
@@ -1303,7 +1456,7 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)

@@ -269,21 +269,20 @@ char *ProcessRow(char *str)
 
 				default:
 					i = fieldno - 19;
+					Row.Quiz[i] = atoi(valstr);
 
-					if (i < 153)
-						Row.Quiz[i] = atoi(valstr);
-					else
-					{
-						i -= 153;
-						Row.AQ[i] = atoi(valstr);
-					}
+					if (i >= 203)
+					    Row.Quiz[i]++;
 					break;
 			}
 		}
 	}
 
-	 UpdateScore(&Row);
-	HandleRow(&Row);
+    if (Row.AqResult)
+    {
+    	UpdateScore(&Row);
+	    HandleRow(&Row);
+	}
 
 	return str;
 }
