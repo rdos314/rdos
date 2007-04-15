@@ -278,11 +278,8 @@ char *ProcessRow(char *str)
 		}
 	}
 
-    if (Row.AqResult)
-    {
-    	UpdateScore(&Row);
-	    HandleRow(&Row);
-	}
+  	UpdateScore(&Row);
+    HandleRow(&Row);
 
 	return str;
 }

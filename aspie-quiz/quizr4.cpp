@@ -1280,7 +1280,7 @@ void TQuizR4::ExportExcelCase(const char *filename, int PcaType)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (IsPca(&Row, PcaType))
+		if (Row.AqResult && IsPca(&Row, PcaType))
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -1456,7 +1456,7 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
