@@ -105,7 +105,7 @@ struct TQuizQuestion
     long double NtMean;
     long double NtSd;
     long double Chi2;
-    int ChiArr[2][3];
+    int ChiArr[2][8];
     int ChiCount[2];
 	long double Corr;
 	int Count;
@@ -118,6 +118,7 @@ struct TQuizQuestion
     int CrossInd;
     int GlobalId;
     int Changed;
+    int Cats;
     TQuizGroup Group[MAX_GROUP_COUNT];
     long double Pca[MAX_PCA_AXIS];
     long double MalePca[MAX_PCA_AXIS];
@@ -244,6 +245,7 @@ protected:
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
 	virtual int GetPcaCount();
+	virtual int GetCatCount(int Question);
 
     TPopulation *GetPop(int PopType);
     void DefineCross(int id, TQuiz *quiz);

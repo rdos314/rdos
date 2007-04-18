@@ -51,6 +51,7 @@ static int GlobalTopQuestion[MAX_GLOBAL_QUESTIONS];
 static int GlobalAsNtCorrCount[MAX_GLOBAL_QUESTIONS];
 static long double GlobalAsNtCorrSum[MAX_GLOBAL_QUESTIONS];
 static long double GlobalChi2[MAX_GLOBAL_QUESTIONS];
+static int GlobalCatCount[MAX_GLOBAL_QUESTIONS];
 
 static long double GlobalGroupCorrSum[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static int GlobalGroupCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
@@ -360,6 +361,18 @@ int TQuiz::round(long double val)
 int TQuiz::GetPcaCount()
 {
 	return 2;
+}
+
+/*##################  TQuiz::GetCatCount ##########################
+*   Purpose....: Return number of categories for question  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::GetCatCount(int Question)
+{
+	return 3;
 }
 
 /*##################  TQuiz::DefineCross ##########################
@@ -1689,11 +1702,12 @@ void TQuiz::Calculate()
 		Quiz[i].NtMean = Nt.GetMean(i);
 		Quiz[i].NtSd = Nt.GetSd(i);
 		Quiz[i].Corr = PopCorr.corr[i];
+		Quiz[i].Cats = GetCatCount(i);
 
     	Quiz[i].ChiCount[0] = Aspie.Count[i];
     	Quiz[i].ChiCount[1] = Nt.Count[i];
         
-	    for (j = 0; j < 3; j++)
+	    for (j = 0; j < Quiz[i].Cats; j++)
 		{
 
 		    Quiz[i].ChiArr[0][j] = Aspie.ChiArr[i][j];
@@ -1704,7 +1718,7 @@ void TQuiz::Calculate()
 		dcount1 = (long double)Quiz[i].ChiCount[0];
 		dcount2 = (long double)Quiz[i].ChiCount[1];
 
-		for (j = 0; j < 3; j++)
+		for (j = 0; j < Quiz[i].Cats; j++)
 		{
 			val1 = (long double)Quiz[i].ChiArr[0][j];
 			val2 = (long double)Quiz[i].ChiArr[1][j];
@@ -1757,7 +1771,7 @@ void TQuiz::Calculate()
 			if (ival)
 			{
 				if (Quiz[i].Reverse)
-					ival = 3 - ival;
+					ival = Quiz[i].Cats - ival;
 				else
 					ival--;
 
@@ -1780,7 +1794,7 @@ void TQuiz::Calculate()
 					if (ival)
 					{
 						if (Quiz[i].Reverse)
-							sum += 3 - ival;
+							sum += Quiz[i].Cats - ival;
 						else
 							sum += ival - 1;
 
@@ -1824,7 +1838,7 @@ void TQuiz::Calculate()
     			if (ival)
 	    		{
 		    		if (Quiz[i].Reverse)
-			            ival = 3 - ival;
+			            ival = Quiz[i].Cats - ival;
 			        else
     				    ival--;
 
@@ -1885,7 +1899,7 @@ void TQuiz::Calculate()
     			    if (ival && count)
 	    		    {
 		    	        if (Quiz[q].Reverse)
-			                ival = 3 - ival;
+			                ival = Quiz[q].Cats - ival;
 			            else
     			            ival--;
 
@@ -1995,7 +2009,7 @@ void TQuiz::Calculate()
     			if (ival1)
     			{
     				if (Quiz[q1].Reverse)
-	    				ival1 = 3 - ival1;
+	    				ival1 = Quiz[q1].Cats - ival1;
 	    			else
     					ival1--;
 
@@ -2003,7 +2017,7 @@ void TQuiz::Calculate()
         			if (ival2)
         			{
         				if (Quiz[q2].Reverse)
-	        				ival2 = 3 - ival2;
+	        				ival2 = Quiz[q2].Cats - ival2;
 	        			else
     		    			ival2--;
 
@@ -2059,8 +2073,9 @@ void TQuiz::CalcGlobal()
 	long double val;
 	long double rsum;
 	long double exp;
-	int ChiArr[2][3];
+	int ChiArr[2][8];
 	int ChiCount[2];
+	int Cats;
 	long double dcount1;
 	long double dcount2;
 	long double val1;
@@ -2119,11 +2134,15 @@ void TQuiz::CalcGlobal()
 
         if (GlobalId >= 0 && GlobalId < MAX_GLOBAL_QUESTIONS)
         {
+            Cats = TopQuiz->GetCatCount(TopQuestion);
+
+            GlobalCatCount[GlobalId] = Cats;
+
             for (j = 0; j < 2; j++)
             {
                 ChiCount[j] = 0;
 
-                for (k = 0; k < 3; k++)
+                for (k = 0; k < Cats; k++)
                     ChiArr[j][k] = 0;
             }
         
@@ -2139,7 +2158,7 @@ void TQuiz::CalcGlobal()
                 {
                     ChiCount[j] += quiz->Quiz[q].ChiCount[j];
     
-                    for (k = 0; k < 3; k++)
+                    for (k = 0; k < Cats; k++)
                         ChiArr[j][k] += quiz->Quiz[q].ChiArr[j][k];
                 }
 
@@ -2185,7 +2204,7 @@ void TQuiz::CalcGlobal()
 	    	dcount1 = (long double)ChiCount[0];
 		    dcount2 = (long double)ChiCount[1];
 
-    		for (j = 0; j < 3; j++)
+    		for (j = 0; j < Cats; j++)
 	    	{
 		    	val1 = (long double)ChiArr[0][j];
 			    val2 = (long double)ChiArr[1][j];
@@ -2676,10 +2695,12 @@ void TQuiz::WriteCI95(TFile &File, TPopulation *pop, int Question)
     long double sd;
     long double dev;
     long double val;
+    long double maxval;
     int ival;
 	char str[80];
     
     count = pop->Count[Question];
+    maxval = (long double)(Quiz[Question].Cats - 1);
 
     if (count > 1)
 	{
@@ -2698,8 +2719,8 @@ void TQuiz::WriteCI95(TFile &File, TPopulation *pop, int Question)
 		File.Write(str);
 
 		val = mean + dev;
-		if (val > 2.0 && mean < 2.0)
-			val = 2.0;
+		if (val > maxval && mean < maxval)
+			val = maxval;
 
 		ival = round(100.0 * val);
 
@@ -3231,7 +3252,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 			WriteCenteredFieldHeader(file, 5);
 	    	if (All.Count[i])
             {
-    		    ival = round(100.0 * Quiz[i].NoAnswer / All.Count[i]);
+    		    ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
     	    	sprintf(str, "%d%", ival);
 	    	    file.Write(str);
 		    }
@@ -3606,6 +3627,7 @@ void TQuiz::WriteAsCI95(TFile &File, int Question)
     long double sd;
     long double dev;
     long double val;
+    long double maxval;
     int ival;
 	int count;
     char str[80];
@@ -3613,6 +3635,7 @@ void TQuiz::WriteAsCI95(TFile &File, int Question)
 	mean = Quiz[Question].AsMean;
 	sd = Quiz[Question].AsSd;
 	count = Quiz[Question].AsCount;
+	maxval = (long double)(Quiz[Question].Cats - 1);
 
 	if (count > 1)
 	{
@@ -3628,8 +3651,8 @@ void TQuiz::WriteAsCI95(TFile &File, int Question)
 		File.Write(str);
 
 		val = mean + dev;
-		if (val > 2.0)
-			val = 2.0;
+		if (val > maxval)
+			val = maxval;
 
 		ival = 100 * val;
 
@@ -3653,6 +3676,7 @@ void TQuiz::WriteNtCI95(TFile &File, int Question)
     long double sd;
     long double dev;
     long double val;
+    long double maxval;
     int ival;
 	int count;
     char str[80];
@@ -3660,6 +3684,7 @@ void TQuiz::WriteNtCI95(TFile &File, int Question)
 	mean = Quiz[Question].NtMean;
 	sd = Quiz[Question].NtSd;
 	count = Quiz[Question].NtCount;
+	maxval = (long double)(Quiz[Question].Cats - 1);
 
 	if (count > 1)
 	{
@@ -3675,8 +3700,8 @@ void TQuiz::WriteNtCI95(TFile &File, int Question)
 		File.Write(str);
 
 		val = mean + dev;
-		if (val > 2.0)
-			val = 2.0;
+		if (val > maxval)
+			val = maxval;
 
 		ival = 100 * val;
 
