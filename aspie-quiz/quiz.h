@@ -185,7 +185,7 @@ public:
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
     void WriteWiki(const char *filename, long double threshold);
-    void WriteQuizWiki(const char *filename);
+    void WriteQuizWiki(const char *filename, long double corrlev);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
@@ -220,6 +220,7 @@ public:
     virtual void WriteCFTR(const char *filename);
     virtual void WriteHFE(const char *filename);
     virtual void WriteLeiden(const char *filename);
+    virtual void WriteAQ(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);
 

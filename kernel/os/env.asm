@@ -91,11 +91,18 @@ load_set_var	Proc near
 	push esi
 	add edx,SIZE rdos_header
 	mov esi,edx
+
+; test
+    mov al,es:[di]
+    int 3
+	
+	
 init_set_var_loop:
 	lods byte ptr [esi]
 	stosb
 	or al,al
 	jne init_set_var_loop
+;
 	pop esi
 	pop edx
 	pop ax
@@ -1133,6 +1140,7 @@ init_env	PROC near
 	mov ds,ax
 	mov cx,ds:rom_modules
 	mov bx,OFFSET rom_adapters
+    
 init_device_loop:
 	mov edx,[bx].adapter_base
 	call load_adapter_env

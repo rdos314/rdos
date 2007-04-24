@@ -932,6 +932,7 @@ page_fault_system	PROC near
 	push ax
 	mov eax,cr2
 	popf
+
 	mov bx,process_page_sel
 	mov ds,bx
 	mov ebx,eax
@@ -941,10 +942,13 @@ page_fault_system	PROC near
 	test al,1
 	jnz page_fault_system_retry
 ;
+    push eax
 	push cs
 	call allocate_physical
 	mov al,7
 	mov [ebx],eax
+    pop eax
+
 page_fault_system_retry:
 	ret
 page_fault_system	ENDP

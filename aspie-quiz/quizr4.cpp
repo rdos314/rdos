@@ -167,6 +167,7 @@ void TQuizR4::SetupTexts()
   Quiz[38].Reverse = TRUE;
   Quiz[39].Reverse = TRUE;
   Quiz[153].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
   Quiz[162].Reverse = TRUE;
   Quiz[163].Reverse = TRUE;
   Quiz[167].Reverse = TRUE;
@@ -212,7 +213,7 @@ void TQuizR4::SetupTexts()
   Quiz[21].MyGroup = GROUP_NONVERBAL;
   Quiz[22].MyGroup = GROUP_NONVERBAL;
   Quiz[23].MyGroup = GROUP_NONVERBAL;
-  Quiz[24].MyGroup = GROUP_NONVERBAL;
+  Quiz[24].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[25].MyGroup = GROUP_ASPIE_COMM;
   Quiz[26].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[27].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -349,7 +350,7 @@ void TQuizR4::SetupTexts()
   Quiz[157].MyGroup = GROUP_SENSORY;
   Quiz[158].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[159].MyGroup = GROUP_NONVERBAL;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_NONVERBAL;
   Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[162].MyGroup = GROUP_NONVERBAL;
   Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -371,7 +372,7 @@ void TQuizR4::SetupTexts()
   Quiz[179].MyGroup = GROUP_NONVERBAL;
   Quiz[180].MyGroup = GROUP_ASPIE_COMM;
   Quiz[181].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_NONVERBAL;
   Quiz[183].MyGroup = GROUP_NONVERBAL;
   Quiz[184].MyGroup = GROUP_NONVERBAL;
   Quiz[185].MyGroup = GROUP_ASPIE_COMM;
@@ -1491,14 +1492,14 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d4 = -d4;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{
@@ -1570,3 +1571,127 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  TQuizR4::WriteAQ ##########################
+*   Purpose....: Write AQ test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizR4::WriteAQ(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double AqSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double AqMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double AqSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	AqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AqResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			AqSum += Row.AqResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	AqMean = AqSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	AqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AqResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.AqResult - AqMean;
+			AqSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	AqSd = sqrtl(AqSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AqResult)
+        {
+            zx = ((long double)Row.AqResult - AqMean) / AqSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean AQ score: %5.1Lf, SD: %5.1Lf\r\n", AqMean, AqSd);
+
+	printf("AQ - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("AQ - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("AQ - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}
+

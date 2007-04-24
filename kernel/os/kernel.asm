@@ -1,4 +1,4 @@
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; RDOS operating system
 ; Copyright (C) 1988-2000, Leif Ekblad
 ;
@@ -544,7 +544,7 @@ prot_init:
 	xor dx,dx
 	mov ax,get_version_nr
 	RegisterBimodalUserGate
-;
+;	
 	call init_mem
 	call init_gdt
 	call init_idt
@@ -570,7 +570,7 @@ prot_init:
 	call init_exec
 	call init_random
 	call init_crc
-	call init_device
+	call init_device    
 	call init_first_process
 	call init_first_thread
 	int 3
