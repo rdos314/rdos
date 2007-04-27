@@ -1078,6 +1078,8 @@ trap_error_do:
 
 trap_not_present:
 	call page_fault
+	mov eax,cr3
+	mov cr3,eax
 
 trap_14_done:
 	pop edi

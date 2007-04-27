@@ -90,12 +90,7 @@ load_set_var	Proc near
 	push edx
 	push esi
 	add edx,SIZE rdos_header
-	mov esi,edx
-
-; test
-    mov al,es:[di]
-    int 3
-	
+	mov esi,edx	
 	
 init_set_var_loop:
 	lods byte ptr [esi]

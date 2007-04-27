@@ -166,7 +166,7 @@ void TQuizR4::SetupTexts()
   Quiz[19].Reverse = TRUE;
   Quiz[38].Reverse = TRUE;
   Quiz[39].Reverse = TRUE;
-  Quiz[153].Reverse = TRUE;
+  Quiz[153].Reverse = TRUE;
   Quiz[160].Reverse = TRUE;
   Quiz[162].Reverse = TRUE;
   Quiz[163].Reverse = TRUE;

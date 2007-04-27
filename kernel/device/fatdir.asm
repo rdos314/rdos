@@ -1135,7 +1135,6 @@ make_lfn_unique_retry:
     jc make_lfn_unique_ok
 
 make_lfn_unique_try_new:
-    int 3
     mov al,fs:lfn_fat_name+7
     cmp al,'9'
     jne make_lfn_unique_save7

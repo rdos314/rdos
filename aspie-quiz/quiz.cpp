@@ -5498,7 +5498,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizr4.htm\">summary</a> <a href=\"refr4.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizr4.htm\">summary</a> <a href=\"refr4.htm\">referer sites</a> <a href=\"aq.htm\">AQ test</a>");
 	file.Write("<br>");
 #endif
 

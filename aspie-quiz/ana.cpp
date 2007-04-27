@@ -24,7 +24,7 @@
 # Analyze aspie-quiz
 #
 ########################################################################*/
-#include <stdio.h>
+#include <stdio.h>                          
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -304,7 +304,6 @@ int main(int argc, char **argv)
 //	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 50);
 
 	  Quiz[12]->WriteQuizWiki("r4.txt", 0.5);
-	  Quiz[12]->WriteAQ("aq.htm");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
