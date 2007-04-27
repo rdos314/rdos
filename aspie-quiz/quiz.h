@@ -309,6 +309,8 @@ protected:
     TPopulation Aspie;
     TPopulation AspieMale;
     TPopulation AspieFemale;    
+    TPopulation YoungMale;
+    TPopulation YoungFemale;
     TPopulation Mix;
     TPopulation MixMale;
     TPopulation MixFemale;

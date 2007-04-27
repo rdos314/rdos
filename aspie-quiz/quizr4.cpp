@@ -905,9 +905,19 @@ void TQuizR4::LoadPopulations()
 				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 			if (Row.Gender == 1)
+			{
+			    if (Row.BirthYear > 1986)
+			        YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			        
 				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			}
 			else
+			{
+			    if (Row.BirthYear > 1986)
+			        YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			        
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			}
 
 			if (Row.Autism == 2 || Row.Aspie == 2 || Row.PDD == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);

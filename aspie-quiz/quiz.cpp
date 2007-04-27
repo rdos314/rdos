@@ -83,6 +83,8 @@ TQuiz::TQuiz(int Questions)
 	 Aspie(Questions),
 	 AspieMale(Questions),
 	 AspieFemale(Questions),
+	 YoungMale(Questions),
+	 YoungFemale(Questions),
 	 Mix(Questions),
 	 MixMale(Questions),
 	 MixFemale(Questions),
@@ -3227,7 +3229,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 			    WriteFieldFooter(file);
 
             	WriteCenteredFieldHeader(file, 6);
-	    		file.Write("ADHD");
+	    		file.Write("Young Aspie");
 		    	if (UseGender && !OnlyMixed)
 			        file.Write("<br>M/F");
 			    WriteFieldFooter(file);
@@ -3276,7 +3278,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 		    {
     		    WriteStaple(file, &AspieMale, i);
 	    	    WriteStaple(file, &AsMale, i);
-		    	WriteStaple(file, &AddMale, i);
+		    	WriteStaple(file, &YoungMale, i);
 		        WriteStaple(file, &MixMale, i);
 		        WriteStaple(file, &NtMale, i);
 
@@ -3284,7 +3286,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 
 	    		WriteStaple(file, &AspieFemale, i);
 				WriteStaple(file, &AsFemale, i);
-		        WriteStaple(file, &AddFemale, i);
+		        WriteStaple(file, &YoungFemale, i);
 		        WriteStaple(file, &MixFemale, i);
 		        WriteStaple(file, &NtFemale, i);
     	    }
