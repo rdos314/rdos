@@ -184,7 +184,7 @@ public:
     void WriteAveragePcaTable(const char *filename);
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
-    void WriteWiki(const char *filename, long double threshold);
+    void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename, long double corrlev);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
 	void WritePca(const char *filename);

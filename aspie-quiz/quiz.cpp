@@ -6886,7 +6886,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteWiki(const char *filename, long double threshold)
+void TQuiz::WriteWiki(const char *filename, long double threshold, long double intercorr)
 {
 	long double CorrSum[MAX_GLOBAL_QUESTIONS];
 	int CorrCount[MAX_GLOBAL_QUESTIONS];
@@ -6896,13 +6896,19 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 	int i;
 	int j;
 	int g;
+   int k;
 	TQuiz *quiz;
 	TQuiz *TopQuiz;
 	int TopQuestion;
 	int q;
 	char str[80];
+	int cnt;
+   int count;
 	int ival;
 	int mark;
+	long double sum;
+	long double MaxCorr;
+   long double CurrCorr;
     long double val;
 	long double corrval;
 	long double LowestCorr;
@@ -6912,12 +6918,6 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
-	    file.Write("== ");
-		file.Write(Group[g].PosName);
-		file.Write(" / ");
-		file.Write(Group[g].NegName);
-		  file.Write(" ==\r\n\r\n");
-
 		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 		{
 			CorrSum[i] = 0.0;
@@ -6969,7 +6969,17 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 
 			TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 		}
+	}
 
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+	    file.Write("== ");
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		file.Write(" ==\r\n\r\n");
+        
 		GlobalId = -1;
 
 		while (GlobalId)
@@ -6999,7 +7009,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 				
     			    mark = FALSE;
 
-                    for (i = 0; i < N && !mark; i++)
+                    for (i = 0; i < 153 && !mark; i++)
                     {
                         quiz = this;
                         q = i;
@@ -7049,10 +7059,74 @@ void TQuiz::WriteWiki(const char *filename, long double threshold)
 	    			if (mark)
 		    		    file.Write("'''");
 
+                	MaxCorr = 1.0;
+
+                	for (j = 0; j < 10; j++)
+                	{
+                    	CurrCorr = intercorr * intercorr;
+
+                    	q = -1;
+    	
+                	    for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+                	    {
+                        	cnt = GlobalCorrCount[GlobalId][k];
+
+                        	if (cnt > 1)
+            	                corrval = GlobalCorrArr[GlobalId][k] / ((long double)cnt - 1);
+                            else
+                                corrval = 0.0;
+
+                    	    corrval = corrval * corrval;
+            	    
+                        	if (corrval > CurrCorr && corrval < MaxCorr)
+                        	{
+                        	    CurrCorr = corrval;
+                        	    q = k;
+                        	}
+                    	}
+
+                        MaxCorr = CurrCorr;
+            
+        	            if (q >= 0)
+                    	{
+						    TopQuiz = CorrQuiz[q];
+					        TopQuestion = CorrQuestion[q];
+                
+						    file.Write(":");
+
+        					sprintf(str, "%d. ", q + 1);
+		        			file.Write(str);
+				        	file.Write(TopQuiz->Quiz[TopQuestion].Text);
+                    	    file.Write(" (");
+
+        					val = CorrSum[q] / CorrCount[q];
+            		        ival = round(100.0 * val);
+        	                if (ival < 0)
+            	            {
+                        		file.Write("-");
+            	            	ival = -ival;
+        		            }
+
+                        	sprintf(str, ".%02d), intercorr: ", ival);
+	                        file.Write(str);
+
+                        	cnt = GlobalCorrCount[GlobalId][q];
+
+                        	if (cnt > 1)
+            	                val = GlobalCorrArr[GlobalId][q] / ((long double)cnt - 1);
+                            else
+                                val = 0.0;
+
+                    		ival = round(100.0 * val);
+
+    	                    sprintf(str, ".%02d", ival);
+                    	    file.Write(str);
+        	                file.Write("\r\n");
+                    	}
+                	}
+
     				file.Write("\r\n\r\n");
     			}
-    			else
-	    			CorrCount[GlobalId] = 0;
             }				
 		}
 	}
