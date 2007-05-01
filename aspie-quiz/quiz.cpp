@@ -6890,8 +6890,11 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 {
 	long double CorrSum[MAX_GLOBAL_QUESTIONS];
 	int CorrCount[MAX_GLOBAL_QUESTIONS];
+	int CorrGroup[MAX_GLOBAL_QUESTIONS];
 	TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
 	int CorrQuestion[MAX_GLOBAL_QUESTIONS];
+	int Mark[MAX_GLOBAL_QUESTIONS];
+	int Used[MAX_GLOBAL_QUESTIONS];
 	int GlobalId;
 	int i;
 	int j;
@@ -6916,14 +6919,14 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 
 	ClearUsed();
 
+	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+	{
+		CorrSum[i] = 0.0;
+		CorrCount[i] = 0;
+	}    
+
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
-		for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
-		{
-			CorrSum[i] = 0.0;
-			CorrCount[i] = 0;
-		}
-        
 		TopQuiz = GetTopGroupCorr(g, &TopQuestion);
 
 		while (TopQuiz)
@@ -6952,6 +6955,33 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 			{
 				CorrQuiz[GlobalId] = TopQuiz;
 				CorrQuestion[GlobalId] = TopQuestion;
+				CorrGroup[GlobalId] = g;
+
+            	mark = FALSE;
+
+                for (i = 0; i < 153 && !mark; i++)
+                {
+                    quiz = this;
+                    q = i;
+                    while (quiz && !mark)
+                    {
+                        if (quiz->Quiz[q].CrossQuiz)
+                        {
+                            j = quiz->Quiz[q].CrossInd;
+		        	        quiz = quiz->Quiz[q].CrossQuiz;
+            	        	q = j;
+                    	}
+                        else
+                        {
+                            if (quiz->Quiz[q].GlobalId == GlobalId)
+                                mark = TRUE;
+
+                            quiz = 0;
+                        }
+                    }
+                }
+
+                Mark[GlobalId] = mark;                                
 
 				quiz = TopQuiz;
 				q = TopQuestion;
@@ -6974,22 +7004,25 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
+    	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+            Used[i] = FALSE;
+	    
 	    file.Write("== ");
 		file.Write(Group[g].PosName);
 		file.Write(" / ");
 		file.Write(Group[g].NegName);
 		file.Write(" ==\r\n\r\n");
         
-		GlobalId = -1;
+		GlobalId = 0;
 
-		while (GlobalId)
+		while (GlobalId >= 0)
 		{
 			LowestCorr = -0.1;
-			GlobalId = 0;
+			GlobalId = -1;
 
 			for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 			{
-				if (CorrCount[i])
+				if (CorrCount[i] && CorrGroup[i] == g && !Used[i])
 				{
 					corrval = CorrSum[i] / CorrCount[i];
 					corrval = corrval * corrval;
@@ -7001,42 +7034,18 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 				}
 			}
 
-			if (GlobalId)
+			if (GlobalId >= 0)
 			{
 				val = CorrSum[GlobalId] / CorrCount[GlobalId];
                 if (val * val > threshold * threshold)
                 {
-				
-    			    mark = FALSE;
 
-                    for (i = 0; i < 153 && !mark; i++)
-                    {
-                        quiz = this;
-                        q = i;
-                        while (quiz && !mark)
-                        {
-                            if (quiz->Quiz[q].CrossQuiz)
-                            {
-            					j = quiz->Quiz[q].CrossInd;
-			            		quiz = quiz->Quiz[q].CrossQuiz;
-            					q = j;
-            			    }
-            			    else
-            			    {
-                                if (quiz->Quiz[q].GlobalId == GlobalId)
-                                    mark = TRUE;
-
-                                quiz = 0;
-                            }
-                        }
-                    }                                
-                        			
     				TopQuiz = CorrQuiz[GlobalId];
 	    			TopQuestion = CorrQuestion[GlobalId];
 
     				file.Write("* ");
 
-	    			if (mark)
+	    			if (Mark[GlobalId])
 		    		    file.Write("'''");
 
     				sprintf(str, "%d. ", GlobalId + 1);
@@ -7045,7 +7054,8 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 			    	file.Write(" (");
 
     				val = CorrSum[GlobalId] / CorrCount[GlobalId];
-	    			CorrCount[GlobalId] = 0;
+                    Used[GlobalId] = TRUE;
+    			
 		    		ival = round(100.0 * val);
 			    	if (ival < 0)
 				    {
@@ -7056,8 +7066,10 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
     				sprintf(str, ".%02d)", ival);
 	    			file.Write(str);
     
-	    			if (mark)
+	    			if (Mark[GlobalId])
 		    		    file.Write("'''");
+
+            		file.Write("\r\n");
 
                 	MaxCorr = 1.0;
 
@@ -7094,6 +7106,9 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
                 
 						    file.Write(":");
 
+        	    			if (Mark[q])
+		            		    file.Write("'''");
+
         					sprintf(str, "%d. ", q + 1);
 		        			file.Write(str);
 				        	file.Write(TopQuiz->Quiz[TopQuestion].Text);
@@ -7121,12 +7136,18 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 
     	                    sprintf(str, ".%02d", ival);
                     	    file.Write(str);
+
+        	    			if (Mark[q])
+		            		    file.Write("'''");
+
         	                file.Write("\r\n");
                     	}
                 	}
 
     				file.Write("\r\n\r\n");
     			}
+    			else
+    			    GlobalId = -1;
             }				
 		}
 	}
