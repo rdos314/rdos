@@ -45,6 +45,7 @@
 #include "quizr2.h"
 #include "quizr3.h"
 #include "quizr4.h"
+#include "quizr5.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -77,6 +78,7 @@ int main(int argc, char **argv)
 	Quiz[10] = new TQuizR2("quizr2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9]);
 	Quiz[11] = new TQuizR3("quizr3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10]);
 	Quiz[12] = new TQuizR4("quizr4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11]);
+	Quiz[13] = new TQuizR5("quizr5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -90,7 +92,8 @@ int main(int argc, char **argv)
 //	Quiz[9]->CheckCross();
 //	 Quiz[10]->CheckCross();
 //	 Quiz[11]->CheckCross();
-	 Quiz[12]->CheckCross();
+//	 Quiz[12]->CheckCross();
+	 Quiz[13]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -196,9 +199,9 @@ int main(int argc, char **argv)
 
 	 Quiz[12]->CalcGlobal();
 
-//	Quiz[12]->WritePhpQuestions("q.php");
-//	Quiz[12]->WriteSetupTexts("q.cpp");
-//	Quiz[12]->WriteSetupCross("c.cpp");
+//	Quiz[13]->WritePhpQuestions("q.php");
+//	Quiz[13]->WriteSetupTexts("q.cpp");
+//	Quiz[13]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -295,7 +298,7 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
 //	 Quiz[12]->WriteWeighting("weights.cpp");
-//	 Quiz[12]->WritePhpWeighting("weights.php");
+	 Quiz[13]->WritePhpWeighting("weights.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
