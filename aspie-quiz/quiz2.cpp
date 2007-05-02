@@ -628,13 +628,23 @@ void TQuizII::LoadPopulations()
 					 if (Row.AsResult < 100)
 						  LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-				if (Row.Gender == 1)
-					AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-					else
-					 AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+        			if (Row.Gender == 1)
+		        	{
+			            if (Row.BirthYear > 1986)
+        			        YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			        
+		        		AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+        			}
+		        	else
+        			{
+		        	    if (Row.BirthYear > 1986)
+			                YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			        
+        				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		        	}
 
-				  if (Row.Diagnos == DX_AS)
-					  As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				    if (Row.Diagnos == DX_AS)
+					    As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				break;
 
 			case DX_ADD:

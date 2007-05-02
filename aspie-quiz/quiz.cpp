@@ -3327,9 +3327,9 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 	    		WriteFieldFooter(file);
     
 	       		WriteCenteredFieldHeader(file, 6);
-       			WriteCI95(file, &AddMale, i);
+       			WriteCI95(file, &YoungMale, i);
 	    		file.Write("<br>");
-		    	WriteCI95(file, &AddFemale, i);
+		    	WriteCI95(file, &YoungFemale, i);
     			WriteFieldFooter(file);
 
 	    		WriteCenteredFieldHeader(file, 6);
