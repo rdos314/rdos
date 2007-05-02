@@ -77,7 +77,7 @@ TQuizR5::TQuizR5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -615,13 +615,41 @@ void TQuizR5::DefineQuiz()
 ##########################################################################*/
 void TQuizR5::SetupTexts()
 {
+  Quiz[1].Reverse = TRUE;
+  Quiz[2].Reverse = TRUE;
+  Quiz[4].Reverse = TRUE;
+  Quiz[17].Reverse = TRUE;
+  Quiz[36].Reverse = TRUE;
+  Quiz[41].Reverse = TRUE;
+  Quiz[42].Reverse = TRUE;
+  Quiz[43].Reverse = TRUE;
+  Quiz[44].Reverse = TRUE;
+  Quiz[47].Reverse = TRUE;
   Quiz[48].Reverse = TRUE;
   Quiz[49].Reverse = TRUE;
+  Quiz[54].Reverse = TRUE;
+  Quiz[55].Reverse = TRUE;
   Quiz[56].Reverse = TRUE;
   Quiz[57].Reverse = TRUE;
   Quiz[58].Reverse = TRUE;
+  Quiz[61].Reverse = TRUE;
+  Quiz[74].Reverse = TRUE;
+  Quiz[89].Reverse = TRUE;
+  Quiz[110].Reverse = TRUE;
+  Quiz[111].Reverse = TRUE;
+  Quiz[114].Reverse = TRUE;
+  Quiz[116].Reverse = TRUE;
   Quiz[119].Reverse = TRUE;
+  Quiz[121].Reverse = TRUE;
+  Quiz[123].Reverse = TRUE;
+  Quiz[124].Reverse = TRUE;
+  Quiz[127].Reverse = TRUE;
+  Quiz[129].Reverse = TRUE;
+  Quiz[130].Reverse = TRUE;
+  Quiz[131].Reverse = TRUE;
+  Quiz[134].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
+  Quiz[139].Reverse = TRUE;
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_MIXED;
   Quiz[2].MyGroup = GROUP_MIXED;
