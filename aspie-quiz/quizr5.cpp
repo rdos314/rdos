@@ -132,474 +132,6 @@ void TQuizR5::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizR5::DefineQuiz()
 {
-    return;
-    
-	DefineID(1, 330);
-
-#ifdef ENGLISH
-	DefineText(2, "Do you have a good sense of how much pressure to apply when doing things with your hands?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(2, "Har du ett bra sinne för hur hårt man bör ta i när man gör saker med händerna?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(3, "Do you find it easy to imitate & time the movements of others, e.g. when learning new dance steps or in gym class?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(3, "Har du lätt för att imitera och tamja andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(4, "Do you seldom fall, stumble or bump into things?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(4, "Är det sällan du ramlar, snubblar eller springer in i saker?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(5, "Can you easily judge distance, height, depth and speed?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(5, "Har du lätt för att bedöma avstånd, höjd, djup eller fart?", GROUP_MIXED);
-#endif
-
-	DefineID(6, 207);
-	DefineID(7, 53);
-	DefineID(8, 61);
-	DefineID(9, 503);
-	DefineID(10, 502);
-	DefineID(11, 55);
-	DefineID(12, 632);
-	DefineID(13, 506);
-	DefineID(14, 385);
-	DefineID(15, 57);
-	DefineID(16, 634);
-	DefineID(17, 26);
-
-#ifdef ENGLISH
-	DefineText(18, "As a child, was your play more directed towards social games with other kids, than for example, sorting, building, investigating or taking things apart?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(18, "Brukade dina lekar mer bestå i sociala lekar med andra barn än att t ex sortera, bygga, undersöka eller ta isär saker?", GROUP_MIXED);
-#endif
-
-	DefineID(19, 100);
-	DefineID(20, 591);
-
-#ifdef ENGLISH
-	DefineText(21, "Do you notice patterns in things all the time?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(21, "Ser du mönster i saker hela tiden?", GROUP_MIXED);
-#endif
-
-	DefineID(22, 20);
-	DefineID(23, 519);
-	DefineID(24, 23);
-	DefineID(25, 606);
-	DefineID(26, 5);
-	DefineID(27, 599);
-	DefineID(28, 164);
-	DefineID(29, 143);
-
-#ifdef ENGLISH
-	RedefineText(30, 319, "Do you find it difficult to take notes in lectures?");
-#endif
-
-#ifdef SWEDISH
-	DefineID(30, 319);
-#endif
-
-	DefineID(31, 316);
-	DefineID(32, 487);
-	DefineID(33, 70);
-	DefineID(34, 549);
-	DefineID(35, 66);
-	DefineID(36, 552);
-
-#ifdef ENGLISH
-	DefineText(37, "Is it easy for you to make friends?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(37, "Har du lätt för att få vänner?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(38, "Don't you usually mind unexpected touch or an unexpected hug?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(38, "Har du oftast inget emot oväntad beröring eller en oväntad kram?", GROUP_MIXED);
-#endif
-
-	DefineID(39, 269);
-	DefineID(40, 78);
-
-#ifdef ENGLISH
-	DefineText(41, "Do you feel excited in unfamiliar situations?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(41, "Blir du upprymd av okända situationer?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(42, "Do you prefer to eat different food every day?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(42, "Föredrar du att äta olika maträtter varje dag?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(43, "Do you prefer to change cloth every day?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(43, "Föredrar du att byta kläder varje dag?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(44, "Do you prefer the company of those that are the same age as yourself?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(44, "Föredrar du att umgås med jämnåriga?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(45, "Are you good at social chitchat?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(45, "Är du bra på kallprat?", GROUP_MIXED);
-#endif
-
-	DefineID(46, 31);
-
-#ifdef ENGLISH
-	DefineText(47, "Do you prefer to use others' help or expertise instead of doing things on your own?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(47, "Föredrar du att använda andras hjälp och expertis istället för att göra saker på egen hand?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(48, "Do you find it easier to communicate in real life than online?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(48, "Tycker du att det är lättare att kommunicera i verkliga livet än via dator?", GROUP_MIXED);
-#endif
-
-	DefineID(49, 255);
-	DefineID(50, 545);
-	DefineID(51, 363);
-	DefineID(52, 595);
-	DefineID(53, 366);
-	DefineID(54, 34);
-
-#ifdef ENGLISH
-	DefineText(55, "Are you usually aware of/interested in what is currently in vogue?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(55, "Är du ofta medveten om/intresserad av vad som för tillfället råkar vara modernt/inne?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(56, "Do you enjoy when people drop by to visit you univited?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(56, "Gillar du när folk kommer på besök oanmälda?", GROUP_MIXED);
-#endif
-
-	DefineID(57, 256);
-	DefineID(58, 282);
-	DefineID(59, 277);
-	DefineID(60, 25);
-	DefineID(61, 443);
-
-#ifdef ENGLISH
-	DefineText(62, "Do you instinctively know when it is your turn to speak when talking on the phone?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(62, "Känner du instinktivt på dig när det är din tur att tala när du pratar i telefon?", GROUP_MIXED);
-#endif
-
-	DefineID(63, 500);
-	DefineID(64, 397);
-	DefineID(65, 596);
-	DefineID(66, 39);
-	DefineID(67, 36);
-	DefineID(68, 551);
-	DefineID(69, 126);
-	DefineID(70, 133);
-	DefineID(71, 433);
-	DefineID(72, 403);
-	DefineID(73, 516);
-	DefineID(74, 616);
-
-#ifdef ENGLISH
-	DefineText(75, "Do you naturally fit into the expected gender stereotypes?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(75, "Passar du naturligt in i de förväntade könsrollerna?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(76, "Do you have unusual eating and/or sleeping patterns?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(76, "Har du ovanliga ät- och/eller sovvanor?", GROUP_MIXED);
-#endif
-
-	DefineID(77, 240);
-	DefineID(78, 623);
-	DefineID(79, 592);
-	DefineID(80, 17);
-	DefineID(81, 518);
-	DefineID(82, 101);
-	DefineID(83, 448);
-	DefineID(84, 473);
-	DefineID(85, 234);
-	DefineID(86, 123);
-	DefineID(87, 362);
-	DefineID(88, 600);
-
-#ifdef ENGLISH
-	DefineText(89, "Does it come more natural to you to think in words than in pictures?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(89, "Är det mer naturligt för dig att tänka i ord än i bilder?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(90, "Do you eat almost anything?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(90, "Äter du nästan allt?", GROUP_MIXED);
-#endif
-
-	DefineID(91, 16);
-	DefineID(92, 523);
-	DefineID(93, 638);
-	DefineID(94, 637);
-	DefineID(95, 574);
-	DefineID(96, 575);
-	DefineID(97, 589);
-	DefineID(98, 590);
-	DefineID(99, 402);
-	DefineID(100, 582);
-	DefineID(101, 624);
-	DefineID(102, 572);
-	DefineID(103, 573);
-	DefineID(104, 401);
-
-#ifdef ENGLISH
-	DefineText(105, "Do you make unusual facial expressions?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(105, "Har du ovanliga ansiktsuttryck?", GROUP_MIXED);
-#endif
-
-	DefineID(106, 628);
-	DefineID(107, 399);
-	DefineID(108, 587);
-	DefineID(109, 536);
-	DefineID(110, 588);
-
-#ifdef ENGLISH
-	DefineText(111, "Do people understand you?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(111, "Förstår sig folk på dig?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(112, "Are you good at interpreting facial expressions?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(112, "Är du bra på att tolka ansiktsuttryck?", GROUP_MIXED);
-#endif
-
-	DefineID(113, 83);
-	DefineID(114, 278);
-
-#ifdef ENGLISH
-	DefineText(115, "Can you easily remember verbal instructions?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(115, "Kommer du lätt ihåg verbala instruktioner?", GROUP_MIXED);
-#endif
-
-	DefineID(116, 6);
-
-#ifdef ENGLISH
-	DefineText(117, "Is your sense of humor fairly conventional?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(117, "Är ditt sinne för humor ganska konventionellt?", GROUP_MIXED);
-#endif
-
-	DefineID(118, 115);
-	DefineID(119, 95);
-	DefineID(120, 262);
-	DefineID(121, 547);
-
-#ifdef ENGLISH
-	DefineText(122, "Do you intuitively sense boundraries and personal space of others?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(122, "Känner du intuitivt av andras gränser och privata sfär?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(123, "Are you sometimes afraid in safe situations?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(123, "Är du ibland rädd i ofarliga situationer?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(124, "Do you find it easy to do more than one thing at the time?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(124, "Tycker du det är lätt att göra mer än en sak i taget?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(125, "Do you find it easy to 'read between the lines' in a conversation?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(125, "Tycker du det är lätt att 'läsa mellan raderna' i en konversation?", GROUP_MIXED);
-#endif
-
-	DefineID(126, 227);
-	DefineID(127, 359);
-
-#ifdef ENGLISH
-	DefineText(128, "Do you find it easy to describe & summarize for example events, conversations or something you've read?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(128, "Har du lätt för att sammanfatta och redogöra för t ex konversationer, händelser eller något du läst?", GROUP_MIXED);
-#endif
-
-	DefineID(129, 54);
-
-#ifdef ENGLISH
-	DefineText(130, "Do you easily accept criticism, correction, and direction?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(130, "Har du lätt för att acceptera kritik, korrektion och direktiv?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(131, "Do you have a good sense of what time it is?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(131, "Har du ett bra sinne för hur mycket klockan är?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(132, "Do you find it easy estimate the age of people?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(132, "Har du lätt för att bedömma människors ålder?", GROUP_MIXED);
-#endif
-
-	DefineID(133, 93);
-	DefineID(134, 613);
-
-#ifdef ENGLISH
-	DefineText(135, "Do you easily recognize faces?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(135, "Har du lätt för att känna igen ansikten?", GROUP_MIXED);
-#endif
-
-	DefineID(136, 229);
-
-#ifdef ENGLISH
-	DefineText(137, "Can you easily keep track of several different people's conversations?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(137, "Kan du lätt hålla koll på flera olika människors konversationer?", GROUP_MIXED);
-#endif
-
-	DefineID(138, 119);
-	DefineID(139, 287);
-
-#ifdef ENGLISH
-	DefineText(140, "Do you find it natural to wave when you meet people?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(140, "Är det naturligt för dig att vinka när du möter folk?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(141, "Do you instinctively point to things of interest?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(141, "Pekar du insktinktivt på saker du finner intressanta?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(142, "Do you instinctively cross your arms when you are in a closed state of mind?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(142, "Korsar du instinktivt dina armar när du är reserverad?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(143, "Do you interpret a pat on somebody's head as patronizing?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(143, "Uppfattar du en klapp på huvudet som nedlåtande?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(144, "Do you often don't know where to put your arms?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(144, "Vet du ofta inte var du ska göra av dina armar?", GROUP_MIXED);
-#endif
-
 }
 
 /*##########################################################################
@@ -617,6 +149,7 @@ void TQuizR5::SetupTexts()
 {
   Quiz[1].Reverse = TRUE;
   Quiz[2].Reverse = TRUE;
+  Quiz[3].Reverse = TRUE;
   Quiz[4].Reverse = TRUE;
   Quiz[17].Reverse = TRUE;
   Quiz[36].Reverse = TRUE;
@@ -624,6 +157,7 @@ void TQuizR5::SetupTexts()
   Quiz[42].Reverse = TRUE;
   Quiz[43].Reverse = TRUE;
   Quiz[44].Reverse = TRUE;
+  Quiz[46].Reverse = TRUE;
   Quiz[47].Reverse = TRUE;
   Quiz[48].Reverse = TRUE;
   Quiz[49].Reverse = TRUE;
@@ -651,10 +185,10 @@ void TQuizR5::SetupTexts()
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[1].MyGroup = GROUP_MIXED;
-  Quiz[2].MyGroup = GROUP_MIXED;
-  Quiz[3].MyGroup = GROUP_MIXED;
-  Quiz[4].MyGroup = GROUP_MIXED;
+  Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[2].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[3].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[4].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[5].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[6].MyGroup = GROUP_SENSORY;
   Quiz[7].MyGroup = GROUP_SENSORY;
@@ -670,7 +204,7 @@ void TQuizR5::SetupTexts()
   Quiz[17].MyGroup = GROUP_MIXED;
   Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[19].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[20].MyGroup = GROUP_MIXED;
+  Quiz[20].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[21].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[22].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
@@ -686,7 +220,7 @@ void TQuizR5::SetupTexts()
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[34].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[36].MyGroup = GROUP_MIXED;
+  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -694,7 +228,7 @@ void TQuizR5::SetupTexts()
   Quiz[41].MyGroup = GROUP_MIXED;
   Quiz[42].MyGroup = GROUP_MIXED;
   Quiz[43].MyGroup = GROUP_MIXED;
-  Quiz[44].MyGroup = GROUP_MIXED;
+  Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[46].MyGroup = GROUP_MIXED;
   Quiz[47].MyGroup = GROUP_MIXED;
@@ -705,13 +239,13 @@ void TQuizR5::SetupTexts()
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_MIXED;
-  Quiz[55].MyGroup = GROUP_MIXED;
+  Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_COMM;
   Quiz[60].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[61].MyGroup = GROUP_MIXED;
+  Quiz[61].MyGroup = GROUP_NONVERBAL;
   Quiz[62].MyGroup = GROUP_ASPIE_COMM;
   Quiz[63].MyGroup = GROUP_ASPIE_COMM;
   Quiz[64].MyGroup = GROUP_ASPIE_COMM;
@@ -725,7 +259,7 @@ void TQuizR5::SetupTexts()
   Quiz[72].MyGroup = GROUP_ASPIE_COMM;
   Quiz[73].MyGroup = GROUP_ASPIE_COMM;
   Quiz[74].MyGroup = GROUP_MIXED;
-  Quiz[75].MyGroup = GROUP_MIXED;
+  Quiz[75].MyGroup = GROUP_ASPIE_COMM;
   Quiz[76].MyGroup = GROUP_ASPIE_COMM;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
@@ -754,19 +288,19 @@ void TQuizR5::SetupTexts()
   Quiz[101].MyGroup = GROUP_ASPIE_NVC;
   Quiz[102].MyGroup = GROUP_ASPIE_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[104].MyGroup = GROUP_MIXED;
+  Quiz[104].MyGroup = GROUP_ASPIE_NVC;
   Quiz[105].MyGroup = GROUP_ASPIE_NVC;
   Quiz[106].MyGroup = GROUP_ASPIE_NVC;
   Quiz[107].MyGroup = GROUP_ASPIE_NVC;
   Quiz[108].MyGroup = GROUP_ASPIE_NVC;
   Quiz[109].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[110].MyGroup = GROUP_MIXED;
-  Quiz[111].MyGroup = GROUP_MIXED;
+  Quiz[110].MyGroup = GROUP_NONVERBAL;
+  Quiz[111].MyGroup = GROUP_NONVERBAL;
   Quiz[112].MyGroup = GROUP_NONVERBAL;
   Quiz[113].MyGroup = GROUP_NONVERBAL;
-  Quiz[114].MyGroup = GROUP_MIXED;
+  Quiz[114].MyGroup = GROUP_NONVERBAL;
   Quiz[115].MyGroup = GROUP_NONVERBAL;
-  Quiz[116].MyGroup = GROUP_MIXED;
+  Quiz[116].MyGroup = GROUP_ASPIE_COMM;
   Quiz[117].MyGroup = GROUP_NONVERBAL;
   Quiz[118].MyGroup = GROUP_NONVERBAL;
   Quiz[119].MyGroup = GROUP_NONVERBAL;
@@ -774,7 +308,7 @@ void TQuizR5::SetupTexts()
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
   Quiz[123].MyGroup = GROUP_MIXED;
-  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_NONVERBAL;
   Quiz[125].MyGroup = GROUP_NONVERBAL;
   Quiz[126].MyGroup = GROUP_NONVERBAL;
   Quiz[127].MyGroup = GROUP_MIXED;
@@ -784,12 +318,12 @@ void TQuizR5::SetupTexts()
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_NONVERBAL;
   Quiz[133].MyGroup = GROUP_NONVERBAL;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_NONVERBAL;
   Quiz[135].MyGroup = GROUP_NONVERBAL;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_NONVERBAL;
   Quiz[138].MyGroup = GROUP_NONVERBAL;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_NONVERBAL;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
