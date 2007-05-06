@@ -198,7 +198,7 @@ void TQuizR1::SetupTexts()
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[39].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[40].MyGroup = GROUP_ASPIE_COMM;
   Quiz[41].MyGroup = GROUP_NONVERBAL;
   Quiz[42].MyGroup = GROUP_ASPIE_COMM;
@@ -247,7 +247,7 @@ void TQuizR1::SetupTexts()
   Quiz[85].MyGroup = GROUP_NONVERBAL;
   Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[87].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[88].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[88].MyGroup = GROUP_NONVERBAL;
   Quiz[89].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[90].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[91].MyGroup = GROUP_NT_BIOLOGY;

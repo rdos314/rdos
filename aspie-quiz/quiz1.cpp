@@ -199,7 +199,7 @@ void TQuizI::SetupTexts()
 	Quiz[76].MyGroup = GROUP_NONVERBAL;
 	Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[78].MyGroup = GROUP_SENSORY;
-	Quiz[79].MyGroup = GROUP_NONVERBAL;
+	Quiz[79].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;

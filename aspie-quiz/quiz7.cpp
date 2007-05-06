@@ -355,7 +355,7 @@ void TQuiz7::SetupTexts()
 	Quiz[142].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[143].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[144].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[145].MyGroup = GROUP_NONVERBAL;
+	Quiz[145].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[146].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[148].MyGroup = GROUP_ASPIE_NVC;

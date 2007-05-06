@@ -307,8 +307,8 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
 	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
-//	 Quiz[12]->WriteWeighting("weights.cpp");
-//	 Quiz[13]->WritePhpWeighting("weights.php");
+	 Quiz[13]->WriteWeighting("weights.cpp");
+	 Quiz[13]->WritePhpWeighting("weights.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 

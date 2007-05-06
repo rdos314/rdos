@@ -166,7 +166,7 @@ void TQuizR2::SetupTexts()
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[2].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[3].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[3].MyGroup = GROUP_NONVERBAL;
   Quiz[4].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[5].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[6].MyGroup = GROUP_NT_BIOLOGY;
