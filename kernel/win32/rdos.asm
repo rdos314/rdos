@@ -7726,6 +7726,42 @@ RdosOpenSysIni	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
 ;
+;       NAME:           RdosOpenIni
+;
+;       DESCRIPTION:    Open ini file
+;
+;       PARAMETERS:     Filename
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+		public RdosOpenIni
+
+RdosOpenIni	Proc near
+    push ebp
+    mov ebp,esp
+	push ebx
+	push edi
+;
+	mov edi,[ebp+8]
+	UserGate open_ini_nr
+	jc opiFail
+;
+	movzx eax,bx
+	jmp opiDone
+
+opiFail:
+	xor eax,eax
+
+opiDone:
+    pop edi
+	pop ebx
+	pop ebp
+	ret 4
+RdosOpenIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
 ;       NAME:           RdosCloseIni
 ;
 ;       DESCRIPTION:    Close ini file

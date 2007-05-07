@@ -75,7 +75,6 @@ ini_sys_seg  STRUC
 is_section      section_typ <>
 
 is_sys_sel      DW ?
-is_ini_list     DW ?
 
 ini_sys_seg  ENDS
 
@@ -169,6 +168,34 @@ open_sys_ini_done:
 	pop ds
 	ret
 OpenSystemIni	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenoPrivIni
+;
+;       DESCRIPTION:    Opens private ini file
+;
+;       PARAMETERS:     ES:EDI      file name
+;
+;		RETURNS:		BX			ini file handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+OpenPrivIni	Proc near
+    push cx
+;
+	mov cl,0
+	UserGateForce32 open_file_nr
+	jnc open_priv_ini_done
+;
+	xor cx,cx
+	UserGateForce32 create_file_nr
+
+open_priv_ini_done:
+    pop cx
+	ret
+OpenPrivIni	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;       
@@ -761,29 +788,8 @@ FreeIniSel	proc near
 	jmp fisDone
 
 fisPriv:
-	EnterSection ds:is_section
 	mov es,cx
-	push si
-	push di
-	push ds
-	mov di,es:if_next
-	cmp di,ds:is_ini_list
-	mov ds:is_ini_list,di
-	mov si,es:if_prev
-	mov ds,di
-	mov ds:if_prev,si
-	mov ds,si
-	mov ds:if_next,di
-	pop ds
-	pop di
-	pop si
-	jne fisUncache
-;
-	mov ds:is_ini_list,0
-
-fisUncache:
 	FreeMem
-	LeaveSection ds:is_section
 
 fisDone:
 	pop cx
@@ -888,6 +894,49 @@ osiDone:
 	retf32
 open_sys_ini	Endp
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;       
+;
+;       NAME:           OpenIni
+;
+;       DESCRIPTION:    Open ini file
+;
+;       PARAMETERS:     ES:(E)DI        File name
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_ini_name	DB 'Open Ini', 0
+
+open_ini	Proc near
+	push ds
+	push ax
+;
+	call OpenPrivIni
+	jc opiDone
+;
+	call CreateIniSel
+	call CreateIniHandle
+	clc
+
+opiDone:
+	pop ax
+	pop ds
+	retf32
+open_ini	Endp
+
+open_ini16 Proc far
+    push edi
+    movzx edi,di
+    call open_ini
+    pop edi
+    ret
+open_ini16  Endp
+
+open_ini32:
+    call open_ini
+    retf32
+    
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1826,7 +1875,6 @@ init	Proc far
 	AllocateFixedSystemMem
 	InitSection es:is_section
 	mov es:is_sys_sel,0
-	mov es:is_ini_list,0
 ;
 	mov ax,cs
 	mov ds,ax
@@ -1837,6 +1885,13 @@ init	Proc far
 	xor dx,dx
 	mov ax,open_sys_ini_nr
 	RegisterBimodalUserGate
+;    
+	mov bx,OFFSET open_ini16
+	mov si,OFFSET open_ini32
+	mov di,OFFSET open_ini_name
+	mov dx,virt_es_in
+	mov ax,open_ini_nr
+	RegisterUserGate
 ;
 	mov si,OFFSET close_ini
 	mov di,OFFSET close_ini_name

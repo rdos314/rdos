@@ -1308,14 +1308,14 @@ void TQuizR5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-//					if (PcaType == PCA_TYPE_ALL)
-//						d2 = -d2;
+					if (PcaType == PCA_TYPE_ALL)
+						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d4 = -d4;
+					if (PcaType == PCA_TYPE_ALL)
+						d4 = -d4;
 
 //					if (d1 > 0 && d2 > 0)
 //					{

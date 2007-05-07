@@ -398,4 +398,6 @@ config_usb_device_nr        = 336
 
 start_usb_transaction_nr    = 337
 
+open_ini_nr                 = 338
+
 usergate_entries			= 340

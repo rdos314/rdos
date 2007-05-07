@@ -703,6 +703,12 @@ OpenSysIni	MACRO
 	UserGate open_sys_ini_nr
 	        ENDM
 
+; IN  ES:(E)DI      Ini file name
+; OUT BX            Ini handle
+OpenIni	MACRO
+	UserGate open_ini_nr
+	        ENDM
+
 ; IN  BX            Ini handle
 CloseIni	MACRO
 	UserGate close_ini_nr
