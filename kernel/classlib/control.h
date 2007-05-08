@@ -32,6 +32,8 @@
 #include "graphdev.h"
 #include "keyboard.h"
 #include "mouse.h"
+#include "datetime.h"
+#include "sigdev.h"
 
 class TControlThread;
 
@@ -61,6 +63,8 @@ public:
     void PutKey(char ch);
 
     void Redraw();
+    void Redraw(int millisec);
+    void ClearRedraw();
 
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
@@ -75,6 +79,9 @@ protected:
 private:
 	void Add(TControl *Control);
 	void Delete(TControl *Control);
+    TDateTime GetRedrawTime();
+
+	TDateTime *FDelay;
 
     int FXMin;
     int FYMin;
@@ -119,9 +126,12 @@ public:
 	void (*OnRightDown)(TControlThread *dev, int x, int y, int ButtonState, int KeyState);
 
 protected:
+    void Signal();
     void Add(TControl *control);
     void Delete(TControl *control);
     void Redraw(TControl *control);
+    TDateTime GetRedrawTime();
+    void HandleRedraw();
 	virtual void Execute();
 
     void PutKey(char ch);
@@ -131,6 +141,7 @@ protected:
     TMouseDevice *FMouse; 
 
     TWait FWait;
+    TSignalDevice FSignal;
     TSection FListSection;       
     TSection FPaintSection;
     TControl *FControlList;

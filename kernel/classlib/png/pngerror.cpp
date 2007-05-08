@@ -79,6 +79,8 @@ png_error(png_structp png_ptr, png_const_charp message)
 void PNGAPI
 png_warning(png_structp png_ptr, png_const_charp message)
 {
+  return; // disable printout
+
      int offset = 0;
 #ifdef PNG_ERROR_NUMBERS_SUPPORTED
    if (png_ptr->flags&(PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT))

@@ -965,6 +965,46 @@ RdosWaitTimeout	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosWaitUntilTimeout
+;
+;		description:	int RdosWaitUntilTimeout(int Handle, long Msb, long Lsb) 
+;
+;       returns:        Signalled ID or 0
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitUntilTimeout
+
+RdosWaitUntilTimeout	Proc
+	push ebp
+	mov ebp,esp
+	push ebx
+	push ecx
+	push edx
+;
+   	mov eax,[ebp+16]
+   	mov edx,[ebp+12]
+	mov bx,[ebp+8]    	
+	UserGate wait_timeout_nr
+	jc rwutFail
+;
+    mov eax,ecx
+    jmp rwutDone
+
+rwutFail:
+    xor eax,eax
+
+rwutDone:
+    pop edx
+    pop ecx
+	pop ebx
+	pop ebp
+	ret 12
+RdosWaitUntilTimeout	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosStopWait
 ;
 ;		description:	void RdosStopWait(int Handle)

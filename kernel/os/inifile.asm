@@ -922,7 +922,7 @@ open_ini	Proc near
 opiDone:
 	pop ax
 	pop ds
-	retf32
+	ret
 open_ini	Endp
 
 open_ini16 Proc far

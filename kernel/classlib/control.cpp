@@ -179,6 +179,7 @@ TControl::TControl(TControlThread *dev)
     FVisible = FALSE;
     FEnabled = FALSE;
     FControlList = 0;
+    FDelay = 0;
 
     FParent = 0;
     FDev = dev;
@@ -206,6 +207,7 @@ TControl::TControl(TControlThread *dev, int xmin, int ymin, int width, int heigh
     FVisible = TRUE;
     FEnabled = TRUE;
     FControlList = 0;
+    FDelay = 0;
 
     FParent = 0;
     FDev = dev;
@@ -233,6 +235,7 @@ TControl::TControl(TControl *control)
     FVisible = FALSE;
     FEnabled = FALSE;
     FControlList = 0;
+    FDelay = 0;
 
     FParent = control;
     FParent->Add(this);
@@ -259,6 +262,7 @@ TControl::TControl(TControl *control, int xmin, int ymin, int width, int height)
     FVisible = TRUE;
     FEnabled = TRUE;
     FControlList = 0;
+    FDelay = 0;
 
     FParent = control;
     FParent->Add(this);
@@ -289,6 +293,12 @@ TControl::~TControl()
         delete control;
 
         control = FControlList;
+    }
+
+    if (FDelay)
+    {
+        delete FDelay;
+        FDelay = 0;
     }
 
     FListSection.Leave();
@@ -565,6 +575,115 @@ int TControl::IsInside(int x, int y) const
 void TControl::Redraw()
 {
     FDev->Redraw(this);
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Redraw
+#
+#   Purpose....: Redraw control after specified time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Redraw(int millisec)
+{
+    TDateTime time;
+
+	FListSection.Enter();
+
+	if (millisec)
+	{
+	    time.AddMilli(millisec);
+
+		if (FDelay)
+		    *FDelay = time;
+		else
+			FDelay = new TDateTime(time);
+	}
+	else
+	{
+        if (FDelay)
+		{
+			delete FDelay;
+			FDelay = 0;
+		}
+		Redraw();
+    }
+
+	FListSection.Leave();
+
+	FDev->Signal();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::ClearRedraw
+#
+#   Purpose....: Clear redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::ClearRedraw()
+{
+    FListSection.Enter();
+
+    if (FDelay)
+    {
+        delete FDelay;
+        FDelay = 0;
+    }
+
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::GetRedrawTime
+#
+#   Purpose....: Get time for next redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TControl::GetRedrawTime()
+{
+    TDateTime LowTime;
+    TDateTime RedrawTime;
+    TControl *control;
+
+    RedrawTime.AddYear(1);
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+        {
+            LowTime = control->GetRedrawTime();
+            if (LowTime < RedrawTime)
+                RedrawTime = LowTime;
+        }            
+
+        control = control->FNext;
+    }
+
+    if (FDelay)
+        if (*FDelay < RedrawTime)
+            RedrawTime = *FDelay;
+
+    FListSection.Leave();
+
+    return RedrawTime;
 }
 
 /*##########################################################################
@@ -1056,18 +1175,20 @@ void TControlThread::Redraw(TControl *control)
     xmin = control->FXMin;
     ymin = control->FYMin;
 
-	 parent = control->FParent;
+	parent = control->FParent;
 
-	 while (parent)
-	 {
-		  xmin += parent->FXMin;
-		  ymin += parent->FYMin;
+	while (parent)
+	{
+	    xmin += parent->FXMin;
+		ymin += parent->FYMin;
 
-		  parent = parent->FParent;
+		parent = parent->FParent;
     }
+
+    control->ClearRedraw();
     
     FPaintSection.Enter();
-	 FGraphic->SetClipRect(   xmin, ymin,
+	FGraphic->SetClipRect(   xmin, ymin,
         			    xmin + control->FWidth - 1,
         			    ymin + control->FHeight - 1);
 
@@ -1329,7 +1450,95 @@ void TControlThread::PutKey(char ch)
     if (FKeyboard)
         FKeyboard->Put(ch);
     else
-		  NotifyKeyPressed(ch, ch, ch, ch);
+		NotifyKeyPressed(ch, ch, ch, ch);
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::GetRedrawTime
+#
+#   Purpose....: Get next redraw time
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TDateTime TControlThread::GetRedrawTime()
+{
+    TDateTime LowTime;
+    TDateTime RedrawTime;
+    TControl *control;
+
+    FListSection.Enter();
+
+    RedrawTime.AddYear(1);
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+        {
+            LowTime = control->GetRedrawTime();
+            if (LowTime < RedrawTime)
+                RedrawTime = LowTime;
+        }
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+
+    return RedrawTime;
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::HandleRedraw
+#
+#   Purpose....: Handle control redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::HandleRedraw()
+{
+    TControl *control;
+    TDateTime currtime;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        if (control->IsVisible())
+            if (currtime > control->GetRedrawTime())
+                Redraw(control);
+
+        control = control->FNext;
+    }
+
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControlThread::Signal
+#
+#   Purpose....: Signal wakeup to thread
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControlThread::Signal()
+{
+    FSignal.Signal();
 }
 
 /*##########################################################################
@@ -1345,6 +1554,15 @@ void TControlThread::PutKey(char ch)
 ##########################################################################*/
 void TControlThread::Execute()
 {
+    TDateTime time;
+
+    FWait.Add(&FSignal);
+    
     while (FInstalled)
-        FWait.WaitForever();
+    {
+        time = GetRedrawTime();
+        
+        FWait.WaitUntil(time);
+        HandleRedraw();
+    }
 }

@@ -191,6 +191,27 @@ TWaitDevice *TWaitDevice::WaitTimeout(int MilliSec)
 
 /*##########################################################################
 #
+#   Name       : TWaitDevice::WaitUntil
+#
+#   Purpose....: Wait until
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWaitDevice *TWaitDevice::WaitUntil(TDateTime &time)
+{	
+    if (!FWait)
+        CreateWait();
+
+    if (FWait)
+        return FWait->WaitUntil(time);
+    else
+        return 0;
+}
+
+/*##########################################################################
+#
 #   Name       : TWait::TWait
 #
 #   Purpose....: Constructor for TWait		                          
@@ -392,6 +413,28 @@ TWaitDevice *TWait::WaitTimeout(int MilliSec)
 	TWaitDevice *Wait;
 
     Wait = (TWaitDevice *)RdosWaitTimeout(FHandle, MilliSec);
+	if (Wait)
+		Wait->SignalNewData();
+
+	return Wait;
+}
+
+/*##########################################################################
+#
+#   Name       : TWait::WaitUntil
+#
+#   Purpose....: Wait until for object(s), and return signalled object
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TWaitDevice *TWait::WaitUntil(TDateTime &time)
+{
+	TWaitDevice *Wait;
+
+    Wait = (TWaitDevice *)RdosWaitUntilTimeout(FHandle, time.GetMsb(), time.GetLsb());
 	if (Wait)
 		Wait->SignalNewData();
 

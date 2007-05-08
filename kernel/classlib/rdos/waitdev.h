@@ -29,6 +29,7 @@
 #define _WAIT_DEV_H
 
 #include "device.h"
+#include "datetime.h"
 
 class TWait;
 
@@ -43,6 +44,7 @@ public:
 
 	TWaitDevice *WaitForever();
 	TWaitDevice *WaitTimeout(int MilliSec);
+	TWaitDevice *WaitUntil(TDateTime &time);
 
 	int ID;
 
@@ -79,6 +81,7 @@ public:
 	TWaitDevice *Check();
 	TWaitDevice *WaitForever();
 	TWaitDevice *WaitTimeout(int MilliSec);
+	TWaitDevice *WaitUntil(TDateTime &time);
 	void Abort();
 
 	void Add(TWaitDevice *dev);
