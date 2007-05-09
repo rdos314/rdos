@@ -62,7 +62,7 @@ TJpegBitmapDevice::TJpegBitmapDevice(int bpp, int width, int height)
 #   Returns....: *
 #
 ##########################################################################*/
-TJpegBitmapDevice::TJpegBitmapDevice(TGraphicDevice *dev)
+TJpegBitmapDevice::TJpegBitmapDevice(const TJpegBitmapDevice &dev)
   : TBitmapGraphicDevice(dev)
 {
 }

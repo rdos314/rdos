@@ -34,7 +34,7 @@ class TBmpBitmapDevice : public TBitmapGraphicDevice
 {
 public:
 	TBmpBitmapDevice(int bpp, int width, int height);
-	TBmpBitmapDevice(TGraphicDevice *dev);
+	TBmpBitmapDevice(const TBmpBitmapDevice &dev);
 
 	static TBmpBitmapDevice *Create(const char *FileName);
 	int Save(const char *FileName);

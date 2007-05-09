@@ -43,7 +43,7 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TDisplayKeyControl::TDisplayKeyControl(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, TControlThread *dev, int xstart, int ystart)
+TDisplayKeyControl::TDisplayKeyControl(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, TControlThread *dev, int xstart, int ystart)
  : TControl(dev)
 {
 	 Init(Up, Down, Disable, Text, ch, xstart, ystart);
@@ -60,7 +60,7 @@ TDisplayKeyControl::TDisplayKeyControl(TBitmapGraphicDevice *Up, TBitmapGraphicD
 #   Returns....: *
 #
 ##########################################################################*/
-TDisplayKeyControl::TDisplayKeyControl(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, TControl *control, int xstart, int ystart)
+TDisplayKeyControl::TDisplayKeyControl(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, TControl *control, int xstart, int ystart)
  : TControl(control)
 {
 	 Init(Up, Down, Disable, Text, ch, xstart, ystart);
@@ -93,7 +93,7 @@ TDisplayKeyControl::~TDisplayKeyControl()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisplayKeyControl::Init(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, int xstart, int ystart)
+void TDisplayKeyControl::Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, int xstart, int ystart)
 {
     FPressed = FALSE;
     FKey = ch;
@@ -152,7 +152,7 @@ void TDisplayKeyControl::DeleteKeys()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisplayKeyControl::UpdateKeys(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable)
+void TDisplayKeyControl::UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable)
 {
 	TFont Font(30);
 	int xstart;
@@ -166,17 +166,17 @@ void TDisplayKeyControl::UpdateKeys(TBitmapGraphicDevice *Up, TBitmapGraphicDevi
     DeleteKeys();
 
     if (Up)    
-		FUp = new TBitmapGraphicDevice(Up);
+		FUp = new TBitmapGraphicDevice(*Up);
     else
         FUp = 0;
 
     if (Down)          
-		FDown = new TBitmapGraphicDevice(Down);
-	 else
-		  FDown = 0;
+		FDown = new TBitmapGraphicDevice(*Down);
+	else
+		FDown = 0;
 
-	 if (Disable)
-    	FDisabled = new TBitmapGraphicDevice(Disable);
+	if (Disable)
+    	FDisabled = new TBitmapGraphicDevice(*Disable);
     else
         FDisabled = 0;
 
@@ -275,7 +275,7 @@ void TDisplayKeyControl::UpdateKeys(TBitmapGraphicDevice *Up, TBitmapGraphicDevi
 	    FDown->DrawString(xstart, ystart, text);
 	}
 
-    if (FUp && FDown && FDisabled)
+    if (FUp || FDown || FDisabled)
     {
     	Resize(FSizeX, FSizeY);
 	    Move(FStartX, FStartY);
@@ -309,7 +309,7 @@ void TDisplayKeyControl::EnableKeepDown()
 #   Returns....: *
 #
 ##########################################################################*/
-void TDisplayKeyControl::ChangeImage(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable)
+void TDisplayKeyControl::ChangeImage(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable)
 {
     UpdateKeys(Up, Down, Disable);
 }
@@ -442,6 +442,8 @@ int TDisplayKeyControl::OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, 
 ##########################################################################*/
 void TDisplayKeyControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height)
 {
+    TBitmapGraphicDevice *bitmap;
+
 	if (IsVisible())
 	{
     	dev->SetLgopNone();
@@ -449,11 +451,20 @@ void TDisplayKeyControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int widt
         if (IsEnabled())
         {
             if (FPressed || FActive)
-        	    dev->Blit(FDown, 0, 0, xmin, ymin, width, height);
+                bitmap = FDown;
             else
-            	dev->Blit(FUp, 0, 0, xmin, ymin, width, height);
+                bitmap = FUp;
         }
         else
-            dev->Blit(FDisabled, 0, 0, xmin, ymin, width, height);
+            bitmap = FDisabled;
+
+        if (bitmap)
+            dev->Blit(bitmap, 0, 0, xmin, ymin, width, height);
+        else
+        {
+            dev->SetFilledStyle();
+            dev->SetDrawColor(150, 150, 150);
+            dev->DrawRect(xmin, ymin, xmin + width, ymin + height);
+        }
     }
 }

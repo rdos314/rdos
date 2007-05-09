@@ -35,12 +35,12 @@
 class TDisplayKeyControl : public TControl
 {
 public:
-    TDisplayKeyControl(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, TControlThread *dev, int xstart, int ystart);
-    TDisplayKeyControl(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, TControl *control, int xstart, int ystart);
+    TDisplayKeyControl(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, TControlThread *dev, int xstart, int ystart);
+    TDisplayKeyControl(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, TControl *control, int xstart, int ystart);
     ~TDisplayKeyControl();
 
     void EnableKeepDown();
-    void ChangeImage(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable);
+    void ChangeImage(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
 
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
@@ -50,9 +50,9 @@ protected:
 	virtual int OnKeyReleased(int ExtKey, int KeyState, int VirtualKey, int ScanCode);
 
 private:
-    void Init(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable, const char *Text, char ch, int xstart, int ystart);
+    void Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, int xstart, int ystart);
     void DeleteKeys();
-    void UpdateKeys(TBitmapGraphicDevice *Up, TBitmapGraphicDevice *Down, TBitmapGraphicDevice *Disable);
+    void UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
 
 	char FKey;
     TBitmapGraphicDevice *FUp;

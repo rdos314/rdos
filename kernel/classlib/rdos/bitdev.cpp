@@ -60,11 +60,9 @@ TBitmapGraphicDevice::TBitmapGraphicDevice(int bpp, int width, int height)
 #   Returns....: *
 #
 ##########################################################################*/
-TBitmapGraphicDevice::TBitmapGraphicDevice(TGraphicDevice *dev)
-  : TGraphicDevice(dev->GetBpp(), dev->GetWidth(), dev->GetHeight())
+TBitmapGraphicDevice::TBitmapGraphicDevice(const TBitmapGraphicDevice &dev)
+  : TGraphicDevice(dev)
 {
-	FBitmapHandle = RdosCreateBitmap(FBpp, FWidth, FHeight);
-	RdosGetBitmapInfo(FBitmapHandle, &FBpp, &FWidth, &FHeight, &FRowSize, &FLinear);
 }
 
 /*##########################################################################

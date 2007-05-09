@@ -119,7 +119,7 @@ TBmpBitmapDevice::TBmpBitmapDevice(int bpp, int width, int height)
 #   Returns....: *
 #
 ##########################################################################*/
-TBmpBitmapDevice::TBmpBitmapDevice(TGraphicDevice *dev)
+TBmpBitmapDevice::TBmpBitmapDevice(const TBmpBitmapDevice &dev)
   : TBitmapGraphicDevice(dev)
 {
 }
