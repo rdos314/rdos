@@ -729,6 +729,7 @@ close_font_name	DB 'Close Font',0
 
 close_font	Proc far
 	push ds
+	push es
 	push ax
 	push bx
 ;
@@ -736,12 +737,15 @@ close_font	Proc far
 	DerefHandle
 	jc cl_font_done
 ;
+	mov es,[bx].fh_buf_sel
+	FreeMem
 	FreeHandle
 	clc
 
 cl_font_done:
 	pop bx
 	pop ax
+	pop es
 	pop ds
 	retf32
 close_font	Endp
@@ -885,6 +889,7 @@ PAGE
 
 delete_handle	Proc far
 	push ds
+	push es
 	push ax
 	push bx
 ;
@@ -892,12 +897,15 @@ delete_handle	Proc far
 	DerefHandle
 	jc delete_handle_done
 ;
+	mov es,[bx].fh_buf_sel
+	FreeMem
 	FreeHandle
 	clc
 
 delete_handle_done:
 	pop bx
 	pop ax
+	pop es
 	pop ds
 	ret
 delete_handle	Endp
