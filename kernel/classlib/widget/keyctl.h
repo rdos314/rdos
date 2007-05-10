@@ -42,6 +42,8 @@ public:
     void EnableKeepDown();
     void ChangeImage(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable);
 
+	static TBitmapGraphicDevice *CreateButton(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right, const char *text, int shift);
+
 protected:
 	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height);
 	virtual int OnLeftUp(int x, int y, int ButtonState, int KeyState);

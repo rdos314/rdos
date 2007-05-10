@@ -95,6 +95,10 @@ TDisplayKeyControl::~TDisplayKeyControl()
 ##########################################################################*/
 void TDisplayKeyControl::Init(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable, const char *Text, char ch, int xstart, int ystart)
 {
+	 FUp = 0;
+	 FDown = 0;
+	 FDisabled = 0;
+
     FPressed = FALSE;
     FKey = ch;
     FKeepDown = FALSE;
@@ -280,6 +284,64 @@ void TDisplayKeyControl::UpdateKeys(const TBitmapGraphicDevice *Up, const TBitma
     	Resize(FSizeX, FSizeY);
 	    Move(FStartX, FStartY);
 	}
+}
+
+/*##########################################################################
+#
+#   Name       : TDisplayKeyControl::CreateButton
+#
+#   Purpose....: Create button from bitmaps and text
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TBitmapGraphicDevice *TDisplayKeyControl::CreateButton(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right, const char *text, int shift)
+{
+	int height = Left->GetHeight();
+	int width = Left->GetWidth() + Right->GetWidth();
+	TFont font(height * 2 / 3);
+	TBitmapGraphicDevice *bitmap;
+	int xsize;
+	int ysize;
+	int xstart;
+	int ystart;
+	int i;
+
+	font.GetStringMetrics(text, &xsize, &ysize);
+	width += xsize;
+
+	bitmap = new TBitmapGraphicDevice(24, width, height);
+	bitmap->SetLgopNone();
+
+	bitmap->Blit(Left, 0, 0, 0, 0, Left->GetWidth(), height);
+	bitmap->Blit(Right, 0, 0, width - Right->GetWidth(), 0, Right->GetWidth(), height);
+
+	for (i = 0; i < xsize; i++)
+        bitmap->Blit(Mid, 0, 0, i + Left->GetWidth(), 0, 1, height);
+
+	bitmap->SetFont(&font);
+	bitmap->SetDrawColor(0, 0, 0);
+
+    xstart = Left->GetWidth() + shift;
+    ystart = (height - ysize) / 2 + shift;
+    
+    bitmap->SetDrawColor(150, 150, 150);
+    bitmap->DrawString(xstart, ystart, text);
+    bitmap->DrawString(xstart + 1, ystart, text);
+	bitmap->DrawString(xstart - 1, ystart, text);
+	bitmap->DrawString(xstart, ystart + 1, text);
+	bitmap->DrawString(xstart, ystart - 1, text);
+	bitmap->DrawString(xstart + 1, ystart + 1, text);
+	bitmap->DrawString(xstart - 1, ystart - 1, text);
+	bitmap->DrawString(xstart - 1, ystart + 1, text);
+	bitmap->DrawString(xstart + 1, ystart - 1, text);
+
+	bitmap->SetDrawColor(0, 0, 0);
+	bitmap->DrawString(xstart, ystart, text);
+
+    return bitmap;
 }
 
 /*##########################################################################
