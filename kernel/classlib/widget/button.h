@@ -34,6 +34,27 @@
 
 class TButtonControl;
 
+class TButtonFactoryParam
+{
+public:
+    TButtonFactoryParam();
+
+    TBitmapGraphicDevice *Left;
+    TBitmapGraphicDevice *Mid;
+    TBitmapGraphicDevice *Right;
+
+    int ShiftX;
+    int ShiftY;
+
+    int TextR;
+    int TextG;
+    int TextB;
+
+    int ShadowR;
+    int ShadowG;
+    int ShadowB;
+};
+
 class TButtonFactory
 {
 public:
@@ -49,48 +70,32 @@ public:
     void SetDownShift(int x, int y);
     void SetDisabledShift(int x, int y);
     void SetFont(TFont *Font);
-    void SetTextColor(int r, int g, int b);
-    void SetShadowColor(int r, int g, int b);
+    void SetUpTextColor(int r, int g, int b);
+    void SetDownTextColor(int r, int g, int b);
+    void SetDisabledTextColor(int r, int g, int b);
+    void SetUpShadowColor(int r, int g, int b);
+    void SetDownShadowColor(int r, int g, int b);
+    void SetDisabledShadowColor(int r, int g, int b);
 
 	TButtonControl *Create(TControlThread *dev, const char *text, char ch, int xstart, int ystart);
 	TButtonControl *Create(TControl *control, const char *text, char ch, int xstart, int ystart);
 	
 protected:
-    void DeleteUp();
-    void DeleteDown();
-    void DeleteDisabled();
-    int GetWidth(const char *text);
-    void GetTextStart(const char *text, int *x, int *y);
-	 TBitmapGraphicDevice *CreateBitmap(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right, int width);
-	 void DrawText(TBitmapGraphicDevice *bitmap, const char *text, int x, int y);
-    TBitmapGraphicDevice *CreateUpButton(const char *text);
-    TBitmapGraphicDevice *CreateDownButton(const char *text);
-    TBitmapGraphicDevice *CreateDisabledButton(const char *text);
+    void CreateFont();
+    void Delete(TButtonFactoryParam &Param);
+    int GetHeight(TButtonFactoryParam &Param);
+    int GetWidth(TButtonFactoryParam &Param, const char *text);
+    void GetTextStart(TButtonFactoryParam &Param, const char *text, int *x, int *y);
+	TBitmapGraphicDevice *CreateBitmap(TButtonFactoryParam &Param, int width);
+	void DrawText(TButtonFactoryParam &Param, TBitmapGraphicDevice *bitmap, const char *text, int x, int y);
+    TBitmapGraphicDevice *CreateButton(TButtonFactoryParam &Param, const char *text);
 
-    TBitmapGraphicDevice *FUpLeft;
-    TBitmapGraphicDevice *FUpMid;
-    TBitmapGraphicDevice *FUpRight;
-    TBitmapGraphicDevice *FDownLeft;
-    TBitmapGraphicDevice *FDownMid;
-    TBitmapGraphicDevice *FDownRight;
-    TBitmapGraphicDevice *FDisabledLeft;
-    TBitmapGraphicDevice *FDisabledMid;
-    TBitmapGraphicDevice *FDisabledRight;
-    TFont *Font;
+    TButtonFactoryParam FUp;
+    TButtonFactoryParam FDown;
+    TButtonFactoryParam FDisabled;
+    
+    TFont *FFont;
     int FWidth;
-    int FHeight;
-    int FUpShiftX;
-    int FUpShiftY;
-    int FDownShiftX;
-    int FDownShiftY;
-    int FDisabledShiftX;
-    int FDisabledShiftY;
-    int FTextR;
-    int FTextG;
-    int FTextB;
-    int FShadowR;
-    int FShadowG;
-    int FShadowB;
 };
 
 class TButtonControl : public TControl

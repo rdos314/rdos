@@ -27,10 +27,39 @@
 
 #include <string.h>
 
-#include "keyctl.h"
+#include "button.h"
 
 #define FALSE	0
 #define TRUE	!FALSE
+
+/*##########################################################################
+#
+#   Name       : TButtonFactoryParam::TButtonFactoryParam
+#
+#   Purpose....: Button factory parameters constructor
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+TButtonFactoryParam::TButtonFactoryParam()
+{
+    ShiftX = 0;
+    ShiftY = 0;
+
+    TextR = 0;
+    TextG = 0;
+    TextB = 0;
+
+    ShadowR = 210;
+    ShadowG = 210;
+    ShadowB = 210;
+
+    Left = 0;
+    Mid = 0;
+    Right = 0;
+}
 
 /*##########################################################################
 #
@@ -46,32 +75,10 @@
 TButtonFactory::TButtonFactory()
 {
     FWidth = 0;
-    FUpShiftX = 0;
-    FUpShiftY = 0;
-    FDownShiftX = 4;
-    FDownShiftY = 4;
-    FDisabledShiftX = 0;
-    FDisabledShiftY = 0;        
+    FFont = 0;
 
-    FTextR = 0;
-    FTextG = 0;
-    FTextB = 0;
-
-    FShadowR = 210;
-    FShadowG = 210;
-    FShadowB = 210;
-
-    FHeight = FLeft->GetHeight();
-
-    if (FHeight < FMid->GetHeight())
-        FHeight = FMid->GetHeight();
-
-    if (FHeight < FRight->GetWidth())
-        FHeight = FRight->GetWidth();
-
-	FFont = new TFont(FMid->GetHeight() * 2 / 3);
-
-	CreateDefaultBitmaps();
+    FDown.ShiftX = 4;
+    FDown.ShiftY = 4;
 }
 
 /*##########################################################################
@@ -87,42 +94,69 @@ TButtonFactory::TButtonFactory()
 ##########################################################################*/
 TButtonFactory::~TButtonFactory()
 {
-    DeleteUp();
-    DeleteDown();
-    DeleteDisabled();
-    
-    delete FFont;
+    Delete(FUp);
+    Delete(FDown);
+    Delete(FDisabled);
+
+    if (FFont)    
+        delete FFont;
 }
 
 /*##########################################################################
 #
-#   Name       : TButtonFactory::DeleteUp
+#   Name       : TButtonFactory::GetHeight
 #
-#   Purpose....: Delete up button bitmaps
+#   Purpose....: Get height of button
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::DeleteUp()
+int TButtonFactory::GetHeight(TButtonFactoryParam &Param)
 {
-    if (FUpLeft)
+    int height;
+    
+    height = Param.Left->GetHeight();
+
+    if (height < Param.Mid->GetHeight())
+        height = Param.Mid->GetHeight();
+
+    if (height < Param.Right->GetHeight())
+        height = Param.Right->GetHeight();
+
+    return height;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::Delete
+#
+#   Purpose....: Delete button bitmaps
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::Delete(TButtonFactoryParam &Param)
+{
+    if (Param.Left)
     {
-        delete FUpLeft;
-        FUpLeft = 0;
+        delete Param.Left;
+        Param.Left = 0;
     }
 
-    if (FUpMid)
+    if (Param.Mid)
     {
-        delete FUpMid;    
-        FUpMid = 0;
+        delete Param.Mid;    
+        Param.Mid = 0;
     }
 
-    if (FUpRight)
+    if (Param.Right)
     {
-        delete FUpRight;
-        FUpRight = 0;
+        delete Param.Right;
+        Param.Right = 0;
     }
 }
 
@@ -139,43 +173,11 @@ void TButtonFactory::DeleteUp()
 ##########################################################################*/
 void TButtonFactory::DefineUp(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
 {
-    DeleteUp();
+    Delete(FUp);
 
-    FUpLeft = new TBitmapGraphicDevice(*Left);
-    FUpMid = new TBitmapGraphicDevice(*Mid);
-    FUpRight = new TBitmapGraphicDevice(*Right);
-}
-
-/*##########################################################################
-#
-#   Name       : TButtonFactory::DeleteDown
-#
-#   Purpose....: Delete down button bitmaps
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TButtonFactory::DeleteDown()
-{
-    if (FDownLeft)
-    {
-        delete FDownLeft;
-        FDownLeft = 0;
-    }
-
-    if (FDownMid)
-    {
-        delete FDownMid;    
-        FDownMid = 0;
-    }
-
-    if (FDownRight)
-    {
-        delete FDownRight;
-        FDownRight = 0;
-    }
+    FUp.Left = new TBitmapGraphicDevice(*Left);
+    FUp.Mid = new TBitmapGraphicDevice(*Mid);
+    FUp.Right = new TBitmapGraphicDevice(*Right);
 }
 
 /*##########################################################################
@@ -191,43 +193,11 @@ void TButtonFactory::DeleteDown()
 ##########################################################################*/
 void TButtonFactory::DefineDown(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
 {
-    DeleteDown();
+    Delete(FDown);
 
-    FDownLeft = new TBitmapGraphicDevice(*Left);
-    FDownMid = new TBitmapGraphicDevice(*Mid);
-    FDwnRight = new TBitmapGraphicDevice(*Right);
-}
-
-/*##########################################################################
-#
-#   Name       : TButtonFactory::DeleteDisabled
-#
-#   Purpose....: Delete disabled button bitmaps
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TButtonFactory::DeleteDisabled()
-{
-    if (FDisabledLeft)
-    {
-        delete FDisabledLeft;
-        FDisabledLeft = 0;
-    }
-
-    if (FDisabledMid)
-    {
-        delete FDisabledMid;    
-        FDisabledMid = 0;
-    }
-
-    if (FDisabledRight)
-    {
-        delete FDisabledRight;
-        FDisabledRight = 0;
-    }
+    FDown.Left = new TBitmapGraphicDevice(*Left);
+    FDown.Mid = new TBitmapGraphicDevice(*Mid);
+    FDown.Right = new TBitmapGraphicDevice(*Right);
 }
 
 /*##########################################################################
@@ -243,11 +213,11 @@ void TButtonFactory::DeleteDisabled()
 ##########################################################################*/
 void TButtonFactory::DefineDisabled(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right)
 {
-    DeleteDisabled();
+    Delete(FDisabled);
 
-    FDisabledLeft = new TBitmapGraphicDevice(*Left);
-    FDisabledMid = new TBitmapGraphicDevice(*Mid);
-    FDisabledRight = new TBitmapGraphicDevice(*Right);
+    FDisabled.Left = new TBitmapGraphicDevice(*Left);
+    FDisabled.Mid = new TBitmapGraphicDevice(*Mid);
+    FDisabled.Right = new TBitmapGraphicDevice(*Right);
 }
 
 /*##########################################################################
@@ -279,8 +249,8 @@ void TButtonFactory::SetWidth(int width)
 ##########################################################################*/
 void TButtonFactory::SetUpShift(int x, int y)
 {
-    FUpShiftX = x;
-    FUpShifyY = y;
+    FUp.ShiftX = x;
+    FUp.ShiftY = y;
 }
 
 /*##########################################################################
@@ -296,8 +266,8 @@ void TButtonFactory::SetUpShift(int x, int y)
 ##########################################################################*/
 void TButtonFactory::SetDownShift(int x, int y)
 {
-    FDownShiftX = x;
-    FDownShifyY = y;
+    FDown.ShiftX = x;
+	FDown.ShiftY = y;
 }
 
 /*##########################################################################
@@ -313,8 +283,8 @@ void TButtonFactory::SetDownShift(int x, int y)
 ##########################################################################*/
 void TButtonFactory::SetDisabledShift(int x, int y)
 {
-    FDisabledShiftX = x;
-    FDisabledShifyY = y;
+    FDisabled.ShiftX = x;
+	FDisabled.ShiftY = y;
 }
 
 /*##########################################################################
@@ -330,44 +300,118 @@ void TButtonFactory::SetDisabledShift(int x, int y)
 ##########################################################################*/
 void TButtonFactory::SetFont(TFont *Font)
 {
-    delete FFont;
-    FFont = Font;
+    if (FFont)
+        delete FFont;
+
+    FFont = new TFont(*Font);
 }
 
 /*##########################################################################
 #
-#   Name       : TButtonFactory::SetTextColor
+#   Name       : TButtonFactory::SetUpTextColor
 #
-#   Purpose....: Set text color
+#   Purpose....: Set text color for up button
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::SetTextColor(int r, int g, int b)
+void TButtonFactory::SetUpTextColor(int r, int g, int b)
 {
-    FTextR = r;
-    FTextG = g;
-    FTextB = b;
+    FUp.TextR = r;
+    FUp.TextG = g;
+    FUp.TextB = b;
 }
 
 /*##########################################################################
 #
-#   Name       : TButtonFactory::SetShadowColor
+#   Name       : TButtonFactory::SetDownTextColor
 #
-#   Purpose....: Set shadow color
+#   Purpose....: Set text color for down button
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::SetShadowColor(int r, int g, int b)
+void TButtonFactory::SetDownTextColor(int r, int g, int b)
 {
-    FShadowR = r;
-    FShadowG = g;
-    FShadowB = b;
+    FDown.TextR = r;
+    FDown.TextG = g;
+    FDown.TextB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::SetDisabledTextColor
+#
+#   Purpose....: Set text color for disabled button
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::SetDisabledTextColor(int r, int g, int b)
+{
+    FDisabled.TextR = r;
+    FDisabled.TextG = g;
+    FDisabled.TextB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::SetUpShadowColor
+#
+#   Purpose....: Set shadow color for up button
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::SetUpShadowColor(int r, int g, int b)
+{
+    FUp.ShadowR = r;
+    FUp.ShadowG = g;
+    FUp.ShadowB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::SetDownShadowColor
+#
+#   Purpose....: Set shadow color for down button
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::SetDownShadowColor(int r, int g, int b)
+{
+    FDown.ShadowR = r;
+    FDown.ShadowG = g;
+    FDown.ShadowB = b;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::SetDisabledShadowColor
+#
+#   Purpose....: Set shadow color for disabled button
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::SetDisabledShadowColor(int r, int g, int b)
+{
+    FDisabled.ShadowR = r;
+    FDisabled.ShadowG = g;
+    FDisabled.ShadowB = b;
 }
 
 /*##########################################################################
@@ -381,7 +425,7 @@ void TButtonFactory::SetShadowColor(int r, int g, int b)
 #   Returns....: *
 #
 ##########################################################################*/
-int TButtonFactory::GetWidth(const char *text)
+int TButtonFactory::GetWidth(TButtonFactoryParam &Param, const char *text)
 {
     int width;
     int xsize;
@@ -391,12 +435,46 @@ int TButtonFactory::GetWidth(const char *text)
         width = FWidth;
     else
     {
-        width = Left->GetWidth() + Right->GetWidth();
+        width = Param.Left->GetWidth() + Param.Right->GetWidth();
     	FFont->GetStringMetrics(text, &xsize, &ysize);
     	width += xsize;
     }
 
     return width;
+}
+
+/*##########################################################################
+#
+#   Name       : TButtonFactory::CreateFont
+#
+#   Purpose....: Create a font if it is missing
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TButtonFactory::CreateFont()
+{
+    int h1, h2, h3;
+    int height;
+
+    if (!FFont)
+    {
+        h1 = GetHeight(FUp);
+        h2 = GetHeight(FDown);
+        h3 = GetHeight(FDisabled);
+
+        height = h1;
+
+        if (height < h2)
+            height = h2;
+
+        if (height < h3)
+            height = h3;
+
+        FFont = new TFont(2 * height / 3);
+    }
 }
 
 /*##########################################################################
@@ -410,21 +488,24 @@ int TButtonFactory::GetWidth(const char *text)
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::GetTextStart(const char *text, int *x, int *y)
+void TButtonFactory::GetTextStart(TButtonFactoryParam &Param, const char *text, int *x, int *y)
 {
     int xsize;
     int ysize;
     int midsize;
     int left;
+    int height;
 
     FFont->GetStringMetrics(text, &xsize, &ysize);
 
-    *x = FLeft->GetWidth();
-    *y = (FHeight - ysize) / 2;
+    height = GetHeight(Param);
+
+    *x = Param.Left->GetWidth();
+    *y = (height - ysize) / 2;
 
     if (FWidth)
     {
-        midsize = FWidth - FLeft->GetWidth() - FRight->GetWidth();
+        midsize = FWidth - Param.Left->GetWidth() - Param.Right->GetWidth();
         left = (midsize - xsize) / 2;
         *x += left;
     }
@@ -441,28 +522,30 @@ void TButtonFactory::GetTextStart(const char *text, int *x, int *y)
 #   Returns....: *
 #
 ##########################################################################*/
-TBitmapGraphicDecive *TButtonFactory::CreateBitmap(TBitmapGraphicDevice *Left, TBitmapGraphicDevice *Mid, TBitmapGraphicDevice *Right, int width)
+TBitmapGraphicDevice *TButtonFactory::CreateBitmap(TButtonFactoryParam &Param, int width)
 {
 	TBitmapGraphicDevice *bitmap;
 	int midsize;
 	int i;
 	int left;
 	int right;
+	int height;
 
-    if (Left && Mid && Right)
-    {
-        left = Left->GetWidth();
-        right = Right->GetWidth();
-    	midsize = width - left - right;
+	if (Param.Left && Param.Mid && Param.Right)
+	{
+	    height = GetHeight(Param);
+		left = Param.Left->GetWidth();
+		right = Param.Right->GetWidth();
+		midsize = width - left - right;
 
-    	bitmap = new TBitmapGraphicDevice(24, width, FHeight);
+		bitmap = new TBitmapGraphicDevice(24, width, height);
 	    bitmap->SetLgopNone();
 
-    	bitmap->Blit(Left, 0, 0, 0, 0, left, FHeight);
-	    bitmap->Blit(Right, 0, 0, width - right, 0, right, FHeight);
+		bitmap->Blit(Param.Left, 0, 0, 0, 0, left, height);
+		bitmap->Blit(Param.Right, 0, 0, width - right, 0, right, height);
 
-    	for (i = 0; i < midsize; i++)
-            bitmap->Blit(Mid, 0, 0, i + left, 0, 1, FHeight);
+		for (i = 0; i < midsize; i++)
+		    bitmap->Blit(Param.Mid, 0, 0, i + left, 0, 1, height);
 
         return bitmap;
     }
@@ -481,10 +564,10 @@ TBitmapGraphicDecive *TButtonFactory::CreateBitmap(TBitmapGraphicDevice *Left, T
 #   Returns....: *
 #
 ##########################################################################*/
-void TButtonFactory::DrawText(TBitmapGraphicDecive *bitmap, const char *text, int x, int y)
+void TButtonFactory::DrawText(TButtonFactoryParam &Param, TBitmapGraphicDevice *bitmap, const char *text, int x, int y)
 {
 	bitmap->SetFont(FFont);
-    bitmap->SetDrawColor(FShadowR, FShadowG, FShadowB);
+    bitmap->SetDrawColor(Param.ShadowR, Param.ShadowG, Param.ShadowB);
     bitmap->DrawString(x, y, text);
     bitmap->DrawString(x + 1, y, text);
 	bitmap->DrawString(x - 1, y, text);
@@ -495,7 +578,7 @@ void TButtonFactory::DrawText(TBitmapGraphicDecive *bitmap, const char *text, in
 	bitmap->DrawString(x - 1, y + 1, text);
 	bitmap->DrawString(x + 1, y - 1, text);
 
-	bitmap->SetDrawColor(FTextR, FTextG, FTextB);
+	bitmap->SetDrawColor(Param.TextR, Param.TextG, Param.TextB);
 	bitmap->DrawString(x, y, text);
 }
 
@@ -510,81 +593,21 @@ void TButtonFactory::DrawText(TBitmapGraphicDecive *bitmap, const char *text, in
 #   Returns....: *
 #
 ##########################################################################*/
-TBitmapGraphicDevice *TButtonFactory::CreateUpButton(const char *text)
+TBitmapGraphicDevice *TButtonFactory::CreateButton(TButtonFactoryParam &Param, const char *text)
 {
 	TBitmapGraphicDevice *bitmap;
 	int xstart;
 	int ystart;
-	int width
+	int width;
 
-	width = GetWidth(text);
-	bitmap = CreateBitmap(FUpLeft, FUpMid, FUpRight, width);
-	GetTextStart(text, &xstart, &ystart);
+	width = GetWidth(Param, text);
+	bitmap = CreateBitmap(Param, width);
+	GetTextStart(Param, text, &xstart, &ystart);
 
-    xstart += FUpShiftX;
-    ystart += FUpShiftY;
+    xstart += Param.ShiftX;
+    ystart += Param.ShiftY;
 
-	DrawText(bitmap, text, xstart, ystart);
-
-    return bitmap;
-}
-
-/*##########################################################################
-#
-#   Name       : TButtonFactory::CreateDownButton
-#
-#   Purpose....: Create down button bitmap
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TBitmapGraphicDevice *TButtonFactory::CreateDownButton(const char *text)
-{
-	TBitmapGraphicDevice *bitmap;
-	int xstart;
-	int ystart;
-	int width
-
-	width = GetWidth(text);
-	bitmap = CreateBitmap(FDownLeft, FDownMid, FDownRight, width);
-	GetTextStart(text, &xstart, &ystart);
-
-    xstart += FDownShiftX;
-    ystart += FDownShiftY;
-
-	DrawText(bitmap, text, xstart, ystart);
-
-    return bitmap;
-}
-
-/*##########################################################################
-#
-#   Name       : TButtonFactory::CreateDisabledButton
-#
-#   Purpose....: Create disabled button bitmap
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-TBitmapGraphicDevice *TButtonFactory::CreateDisabledButton(const char *text)
-{
-	TBitmapGraphicDevice *bitmap;
-	int xstart;
-	int ystart;
-	int width
-
-	width = GetWidth(text);
-	bitmap = CreateBitmap(FDisabledLeft, FDisabledMid, FDisabledRight, width);
-	GetTextStart(text, &xstart, &ystart);
-
-    xstart += FDownShiftX;
-    ystart += FDownShiftY;
-
-	DrawText(bitmap, text, xstart, ystart);
+	DrawText(Param, bitmap, text, xstart, ystart);
 
     return bitmap;
 }
@@ -607,9 +630,11 @@ TButtonControl *TButtonFactory::Create(TControlThread *dev, const char *text, ch
     TBitmapGraphicDevice *Disabled;
     TButtonControl *button;
 
-    Up = CreateUpButton(text);
-    Down = CreateDownButton(text);
-    Disabled = CreateDisabledButton(text);
+    CreateFont();
+
+    Up = CreateButton(FUp, text);
+    Down = CreateButton(FDown, text);
+    Disabled = CreateButton(FDisabled, text);
 
     button = new TButtonControl(dev, Up, Down, Disabled, ch, xstart, ystart);
 
@@ -638,9 +663,11 @@ TButtonControl *TButtonFactory::Create(TControl *control, const char *text, char
     TBitmapGraphicDevice *Disabled;
     TButtonControl *button;
 
-    Up = CreateUpButton(text);
-    Down = CreateDownButton(text);
-    Disabled = CreateDisabledButton(text);
+    CreateFont();
+
+    Up = CreateButton(FUp, text);
+    Down = CreateButton(FDown, text);
+    Disabled = CreateButton(FDisabled, text);
 
     button = new TButtonControl(control, Up, Down, Disabled, ch, xstart, ystart);
 
@@ -774,14 +801,8 @@ void TButtonControl::DeleteKeys()
 ##########################################################################*/
 void TButtonControl::UpdateKeys(const TBitmapGraphicDevice *Up, const TBitmapGraphicDevice *Down, const TBitmapGraphicDevice *Disable)
 {
-	TFont Font(30);
-	int xstart;
-	int ystart;
 	int xsize;
-    int ysize;
-	int key_xsize;
-	int key_ysize;
-	const char *text;
+   int ysize;
 
     DeleteKeys();
 
@@ -1020,7 +1041,11 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
                 bitmap = FUp;
         }
         else
+        {
             bitmap = FDisabled;
+            FPressed = FALSE;
+            FActive = FALSE;
+        }
 
         if (bitmap)
             dev->Blit(bitmap, 0, 0, xmin, ymin, width, height);
@@ -1030,5 +1055,10 @@ void TButtonControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, i
             dev->SetDrawColor(150, 150, 150);
             dev->DrawRect(xmin, ymin, xmin + width, ymin + height);
         }
+    }
+    else
+    {
+        FPressed = FALSE;
+        FActive = FALSE;
     }
 }
