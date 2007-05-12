@@ -5513,7 +5513,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[13]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -5523,6 +5523,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizr5.htm\">summering</a> <a href=\"refr5.htm\">referenssajter</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizr6.htm\">summary</a> <a href=\"refr6.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizr6.htm\">summering</a> <a href=\"refr6.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
