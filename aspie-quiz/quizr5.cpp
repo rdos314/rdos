@@ -221,7 +221,7 @@ void TQuizR5::SetupTexts()
   Quiz[34].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[37].MyGroup = GROUP_MIXED;
+  Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[40].MyGroup = GROUP_ASPIE_COMM;
@@ -1311,8 +1311,8 @@ void TQuizR5::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

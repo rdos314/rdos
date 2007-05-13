@@ -133,226 +133,6 @@ void TQuizR6::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizR6::DefineQuiz()
 {
-    return;
-
-	DefineID(1, 330);
-	DefineID(2, 609);
-	DefineID(3, 514);
-	DefineID(4, 509);
-	DefineID(5, 46);
-    DefineID(6, 207);
-    DefineID(7, 53);
-    DefineID(8, 61);
-    DefineID(9, 55);
-    DefineID(10, 503);
-    DefineID(11, 632);
-    DefineID(12, 57);
-	DefineID(13, 102);
-    DefineID(14, 178);
-    DefineID(15, 26);
-    DefineID(16, 100);
-    DefineID(17, 20);
-    DefineID(18, 519);
-    DefineID(19, 23);
-    DefineID(20, 591);
-    DefineID(21, 695);
-    DefineID(22, 5);
-    DefineID(23, 606);
-    DefineID(24, 599);
-    DefineID(25, 164);
-    DefineID(26, 319);
-    DefineID(27, 143);
-    DefineID(28, 316);
-    DefineID(29, 487);
-    DefineID(30, 70);
-    DefineID(31, 66);
-	DefineID(32, 497);
-    DefineID(33, 269);
-    DefineID(34, 549);
-    DefineID(35, 78);
-    DefineID(36, 601);
-    DefineID(37, 598);
-    DefineID(38, 544);
-    DefineID(39, 597);
-	DefineID(40, 552);
-    DefineID(41, 454);
-    DefineID(42, 545);
-    DefineID(43, 255);
-    DefineID(44, 31);   
-    DefineID(45, 702);
-    DefineID(46, 288);
-    DefineID(47, 366);
-    DefineID(48, 363);
-    DefineID(49, 368);
-    DefineID(50, 595);
-    DefineID(51, 258);
-    DefineID(52, 256);
-    DefineID(53, 277);
-    DefineID(54, 495);
-    DefineID(55, 265);
-    DefineID(56, 282);
-    DefineID(57, 242);
-    DefineID(58, 704);
-
-#ifdef ENGLISH
-	RedefineText(59, 706, "Do you enjoy when people drop by to visit you uninvited?");
-#endif
-
-#ifdef SWEDISH
-    DefineID(59, 706);
-#endif
-
-    DefineID(60, 701);
-
-
-#ifdef ENGLISH
-	DefineText(61, "Do you dislike unexpected touch or hugs from strangers?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(61,"Ogillar du oväntad beröring eller kramar från främlingar?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(62, "Do you enjoy unexpected touch or hugs from friends?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(62,"Gillar du oväntad beröring eller kramar fr†n vänner?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(63, "Do you enjoy when unexpected things happen in nature", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(63,"Gillar du när oväntade saker händer i naturen?", GROUP_MIXED);
-#endif
-
-	DefineID(64, 25);
-	DefineID(65, 443);
-	DefineID(66, 397);
-	DefineID(67, 361);
-	DefineID(68, 500);
-	DefineID(69, 39);
-	DefineID(70, 36);
-	DefineID(71, 133);
-	DefineID(72, 551);
-	DefineID(73, 126);
-	DefineID(74, 433);
-	DefineID(75, 516);
-	DefineID(76, 403);
-	DefineID(77, 596);
-	DefineID(78, 716);
-	DefineID(79, 731);
-	DefineID(80, 240);
-	DefineID(81, 718);
-	DefineID(82, 17);
-	DefineID(83, 623);
-	DefineID(84, 592);
-	DefineID(85, 709);
-	DefineID(86, 518);
-	DefineID(87, 448);
-	DefineID(88, 234);
-	DefineID(89, 473);
-	DefineID(90, 600);
-	DefineID(91, 385);
-	DefineID(92, 101);
-	DefineID(93, 123);
-	DefineID(94, 362);
-	DefineID(95, 16);
-	DefineID(96, 523);
-	DefineID(97, 637);
-	DefineID(98, 638);
-	DefineID(99, 712);
-	DefineID(100, 574);
-	DefineID(101, 575);
-	DefineID(102, 402);
-	DefineID(103, 582);
-	DefineID(104, 589);
-	DefineID(105, 590);
-	DefineID(106, 572);
-	DefineID(107, 624);
-	DefineID(108, 401);
-	DefineID(109, 573);
-	DefineID(110, 587);
-	DefineID(111, 588);
-	DefineID(112, 536);
-	DefineID(113, 408);
-	DefineID(114, 83);
-	DefineID(115, 278);
-	DefineID(116, 86);
-	DefineID(117, 6);
-	DefineID(118, 115);
-	DefineID(119, 82);
-	DefineID(120, 226);
-	DefineID(121, 262);
-	DefineID(122, 713);
-	DefineID(123, 95);
-
-#ifdef ENGLISH
-	RedefineText(124, 547, "Do you tend to talk either too softly or too loudly?");
-#endif
-
-#ifdef SWEDISH
-	DefineID(124, 547);
-#endif
-
-	DefineID(125, 129);
-	DefineID(126, 215);
-	DefineID(127, 707);
-	DefineID(128, 128);
-	DefineID(129, 54);
-	DefineID(130, 359);
-	DefineID(131, 227);
-	DefineID(132, 715);
-	DefineID(133, 714);
-	DefineID(134, 510);
-	DefineID(135, 167);
-
-#ifdef ENGLISH
-	DefineText(136, "Do you have a good concept of time?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(136, "Har du en bra tidsuppfattning?", GROUP_MIXED);
-#endif
-
-	DefineID(137, 113);
-	DefineID(138, 93);
-	DefineID(139, 222);
-
-#ifdef ENGLISH
-	DefineText(140, "Do you usually recognize faces?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(140, "Brukar du känna igen ansikten?", GROUP_MIXED);
-#endif
-
-	DefineID(141, 716);
-	DefineID(142, 708);
-	DefineID(143, 613);
-	DefineID(144, 155);
-
-#ifdef ENGLISH
-	RedefineText(145, 724, "Do you find it easy to estimate the age of people?");
-#endif
-
-#ifdef SWEDISH
-	DefineID(145, 724);
-#endif
-
-	DefineID(146, 229);
-
-#ifdef ENGLISH
-	DefineText(147, "Do you find it natural to wave or say 'hi' when you meet people?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(147, "Tycker du det är naturligt att vinka eller säga 'hej' när du möter folk?", GROUP_MIXED);
-#endif
-
 }
 
 /*##########################################################################
@@ -383,6 +163,8 @@ void TQuizR6::SetupTexts()
   Quiz[57].Reverse = TRUE;
   Quiz[58].Reverse = TRUE;
   Quiz[59].Reverse = TRUE;
+  Quiz[61].Reverse = TRUE;
+  Quiz[62].Reverse = TRUE;
   Quiz[77].Reverse = TRUE;
   Quiz[120].Reverse = TRUE;
   Quiz[121].Reverse = TRUE;
@@ -391,9 +173,12 @@ void TQuizR6::SetupTexts()
   Quiz[127].Reverse = TRUE;
   Quiz[131].Reverse = TRUE;
   Quiz[132].Reverse = TRUE;
+  Quiz[135].Reverse = TRUE;
+  Quiz[139].Reverse = TRUE;
   Quiz[140].Reverse = TRUE;
   Quiz[141].Reverse = TRUE;
   Quiz[144].Reverse = TRUE;
+  Quiz[146].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -455,8 +240,8 @@ void TQuizR6::SetupTexts()
   Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[60].MyGroup = GROUP_MIXED;
-  Quiz[61].MyGroup = GROUP_MIXED;
+  Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[61].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[62].MyGroup = GROUP_MIXED;
   Quiz[63].MyGroup = GROUP_ASPIE_COMM;
   Quiz[64].MyGroup = GROUP_ASPIE_COMM;
@@ -530,18 +315,18 @@ void TQuizR6::SetupTexts()
   Quiz[132].MyGroup = GROUP_NONVERBAL;
   Quiz[133].MyGroup = GROUP_NONVERBAL;
   Quiz[134].MyGroup = GROUP_NONVERBAL;
-  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_NONVERBAL;
   Quiz[136].MyGroup = GROUP_NONVERBAL;
   Quiz[137].MyGroup = GROUP_NONVERBAL;
   Quiz[138].MyGroup = GROUP_NONVERBAL;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_NONVERBAL;
   Quiz[140].MyGroup = GROUP_ASPIE_COMM;
   Quiz[141].MyGroup = GROUP_NONVERBAL;
   Quiz[142].MyGroup = GROUP_NONVERBAL;
   Quiz[143].MyGroup = GROUP_NONVERBAL;
   Quiz[144].MyGroup = GROUP_NONVERBAL;
   Quiz[145].MyGroup = GROUP_NONVERBAL;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you look, feel or act younger than your biological age?";
@@ -1531,11 +1316,11 @@ void TQuizR6::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;
