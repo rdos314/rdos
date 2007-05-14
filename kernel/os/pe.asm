@@ -1207,6 +1207,10 @@ RelocObject	Proc near
 	mov ebx,es:lib_header
 	mov ecx,[ebx].peh_fixup_size
 	mov esi,[ebx].peh_fixup_va	
+;
+    or ecx,ecx
+    jz reloc_object_done
+;    	
 	or esi,esi
 	jz reloc_object_done
 ;
