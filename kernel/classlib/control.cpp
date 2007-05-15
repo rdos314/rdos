@@ -531,6 +531,40 @@ void TControl::Move(int xstart, int ystart)
 
 /*##########################################################################
 #
+#   Name       : TControl::GetPos
+#
+#   Purpose....: Get position of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::GetPos(int *x, int *y) const
+{
+    *x = FXMin;
+    *y = FYMin;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::GetSize
+#
+#   Purpose....: Get size of control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::GetSize(int *x, int *y) const
+{
+    *x = FWidth;
+    *y = FHeight;
+}
+
+/*##########################################################################
+#
 #   Name       : TControl::PutKey
 #
 #   Purpose....: Put key into buffer
@@ -684,6 +718,72 @@ TDateTime TControl::GetRedrawTime()
     FListSection.Leave();
 
     return RedrawTime;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::HandleRedraw
+#
+#   Purpose....: Handle redraw
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::HandleRedraw()
+{
+    TDateTime currtime;
+    TControl *control;
+    int redrawn;
+
+    FListSection.Enter();
+
+    redrawn = FALSE;
+    
+    if (FDelay)
+    {
+        if (currtime > *FDelay)
+        {
+            Redraw();
+            redrawn = TRUE;
+        }
+    }
+
+    if (!redrawn)
+    {
+
+        control = FControlList;
+
+        while (control)
+        {
+            if (control->IsVisible())
+                if (currtime > control->GetRedrawTime())
+						  control->HandleRedraw();
+
+            control = control->FNext;
+        }
+    }
+
+    FListSection.Leave();
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::SetClipRect
+#
+#   Purpose....: Set cliprec for control
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::SetClipRect(TGraphicDevice *dev, int xstart, int ystart)
+{
+    dev->SetClipRect(   xstart, ystart,
+        			    xstart + FWidth - 1,
+        				ystart + FHeight - 1);
 }
 
 /*##########################################################################
@@ -1517,7 +1617,7 @@ void TControlThread::HandleRedraw()
     {
         if (control->IsVisible())
             if (currtime > control->GetRedrawTime())
-                Redraw(control);
+                control->HandleRedraw();
 
         control = control->FNext;
     }

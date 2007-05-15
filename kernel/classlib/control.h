@@ -60,6 +60,9 @@ public:
 
     int IsInside(int x, int y) const;
 
+    void GetPos(int *x, int *y) const;
+    void GetSize(int *x, int *y) const;
+
     void PutKey(char ch);
 
     void Redraw();
@@ -75,6 +78,9 @@ protected:
 	virtual int OnLeftDown(int x, int y, int ButtonState, int KeyState);
 	virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
 	virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
+
+    void HandleRedraw();
+	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
 
 private:
 	void Add(TControl *Control);
