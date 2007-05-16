@@ -43,6 +43,7 @@ public:
     void SetBackColor(int r, int g, int b);
     void SetBorderColor(int r, int g, int b);
     void SetBorderWidth(int width);
+    void SetDisabledColor(int r, int g, int b);
 
 	TPanelControl *Create(TControlThread *dev, int xstart, int ystart, int xsize, int ysize);
 	TPanelControl *Create(TControl *control, int xstart, int ystart, int xsize, int ysize);
@@ -55,6 +56,12 @@ protected:
     int FBorderR;
     int FBorderG;
     int FBorderB;
+    
+    int FDisabledColorUsed;
+
+    int FDisabledR;
+    int FDisabledG;
+    int FDisabledB;
 
     int FBorderWidth;
 };
@@ -70,10 +77,11 @@ public:
     void SetBorderColor(int r, int g, int b);
     void SetBorderWidth(int width);
     int GetBorderWidth();
+    void SetDisabledColor(int r, int g, int b);
 
-protected:
     void SetBackColor(TGraphicDevice *dev);
 
+protected:
   	virtual void Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int height); 	
 
     int FInnerWidth;
@@ -88,6 +96,12 @@ private:
     int FBorderR;
     int FBorderG;
     int FBorderB;
+    
+    int FDisabledColorUsed;
+
+    int FDisabledR;
+    int FDisabledG;
+    int FDisabledB;
 
     int FBorderWidth;
 };        

@@ -53,6 +53,8 @@ TPanelFactory::TPanelFactory()
     FBorderG = 200;
     FBorderB = 200;
 
+    FDisabledColorUsed = FALSE;
+
     FBorderWidth = 2;
 }
 
@@ -125,6 +127,26 @@ void TPanelFactory::SetBorderWidth(int width)
 
 /*##########################################################################
 #
+#   Name       : TPanelFactory::SetDisabledColor
+#
+#   Purpose....: Set disabled color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelFactory::SetDisabledColor(int r, int g, int b)
+{
+    FDisabledColorUsed = TRUE;
+    
+    FDisabledR = r;
+    FDisabledG = g;
+    FDisabledB = b;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelFactory::Create
 #
 #   Purpose....: Create panel control
@@ -143,6 +165,9 @@ TPanelControl *TPanelFactory::Create(TControlThread *dev, int xstart, int ystart
     panel->SetBackColor(FBackR, FBackG, FBackB);
     panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
     panel->SetBorderWidth(FBorderWidth);
+
+    if (FDisabledColorUsed)
+        panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
 
     return panel;        
 }
@@ -167,6 +192,9 @@ TPanelControl *TPanelFactory::Create(TControl *control, int xstart, int ystart, 
     panel->SetBackColor(FBackR, FBackG, FBackB);
     panel->SetBorderColor(FBorderR, FBorderG, FBorderB);
     panel->SetBorderWidth(FBorderWidth);
+
+    if (FDisabledColorUsed)
+        panel->SetDisabledColor(FDisabledR, FDisabledG, FDisabledB);
 
     return panel;        
 }
@@ -244,6 +272,8 @@ void TPanelControl::Init(int xstart, int ystart, int xsize, int ysize)
     FBorderWidth = 2;
     FInnerWidth = FBorderWidth;
 
+    FDisabledColorUsed = FALSE;
+    
     Resize(xsize, ysize);
 	Move(xstart, ystart);
 	Show();
@@ -321,6 +351,26 @@ int TPanelControl::GetBorderWidth()
 
 /*##########################################################################
 #
+#   Name       : TPanelControl::SetDisabledColor
+#
+#   Purpose....: Set disabled color
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPanelControl::SetDisabledColor(int r, int g, int b)
+{
+    FDisabledColorUsed = TRUE;
+    
+    FDisabledR = r;
+    FDisabledG = g;
+    FDisabledB = b;
+}
+
+/*##########################################################################
+#
 #   Name       : TPanelControl::SetBackColor
 #
 #   Purpose....: Set back color into device
@@ -332,7 +382,15 @@ int TPanelControl::GetBorderWidth()
 ##########################################################################*/
 void TPanelControl::SetBackColor(TGraphicDevice *dev)
 {
-    dev->SetDrawColor(FBackR, FBackG, FBackB);
+    if (IsEnabled())
+        dev->SetDrawColor(FBackR, FBackG, FBackB);
+    else
+    {
+        if (FDisabledColorUsed)
+            dev->SetDrawColor(FDisabledR, FDisabledG, FDisabledB);
+        else
+           	dev->SetDrawColor(FBackR, FBackG, FBackB);
+    }
 }
 
 /*##########################################################################
@@ -357,7 +415,8 @@ void TPanelControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, in
     	dev->SetLgopNone();
         dev->SetFilledStyle();
 
-    	dev->SetDrawColor(FBackR, FBackG, FBackB);
+        SetBackColor(dev);
+            
     	dev->DrawRect(xmin + FBorderWidth, ymin + FBorderWidth, 
     	              xmax - FBorderWidth, ymax - FBorderWidth);
 

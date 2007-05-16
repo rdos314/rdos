@@ -79,6 +79,7 @@ protected:
 	virtual int OnRightUp(int x, int y, int ButtonState, int KeyState);
 	virtual int OnRightDown(int x, int y, int ButtonState, int KeyState);
 
+    void Unload();
     void HandleRedraw();
 	void SetClipRect(TGraphicDevice *dev, int xmin, int ymin);
 

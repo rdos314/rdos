@@ -237,6 +237,7 @@ TControl::TControl(TControl *control)
     FControlList = 0;
     FDelay = 0;
 
+    FDev = 0;
     FParent = control;
     FParent->Add(this);
 }
@@ -264,6 +265,7 @@ TControl::TControl(TControl *control, int xmin, int ymin, int width, int height)
     FControlList = 0;
     FDelay = 0;
 
+    FDev = 0;
     FParent = control;
     FParent->Add(this);
 }
@@ -305,7 +307,8 @@ TControl::~TControl()
 
     if (FParent)
         FParent->Delete(this);
-    else
+
+    if (FDev)
         FDev->Delete(this);
 }
 
@@ -486,7 +489,19 @@ void TControl::Disable()
 ##########################################################################*/
 int TControl::IsEnabled() const
 {
-    return FEnabled;
+    TControl *parent;
+    int enabled;
+
+    parent = FParent;
+	enabled = FEnabled;
+
+	while (parent && enabled)
+	{
+	    enabled = parent->IsEnabled();
+		parent = parent->FParent;
+    }
+
+    return enabled;
 }
 
 /*##########################################################################
@@ -593,6 +608,48 @@ void TControl::PutKey(char ch)
 int TControl::IsInside(int x, int y) const
 {
 	 return FXMin <= x && FXMin + FWidth > x && FYMin <= y && FYMin + FHeight > y;
+}
+
+/*##########################################################################
+#
+#   Name       : TControl::Unload
+#
+#   Purpose....: Unload
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TControl::Unload()
+{
+    TControl *control;
+
+    FListSection.Enter();
+
+    control = FControlList;
+
+    while (control)
+    {
+        FControlList = control->FNext;
+        delete control;
+
+        control = FControlList;
+    }
+
+    FControlList = 0;
+
+    FListSection.Leave();
+
+    if (FParent)
+        FParent->Delete(this);
+    else
+        FDev->Delete(this);
+
+    FParent = 0;
+    FDev = 0;
+
+    delete this;
 }
 
 /*##########################################################################
@@ -752,14 +809,13 @@ void TControl::HandleRedraw()
 
     if (!redrawn)
     {
-
         control = FControlList;
 
         while (control)
         {
             if (control->IsVisible())
                 if (currtime > control->GetRedrawTime())
-						  control->HandleRedraw();
+				    control->HandleRedraw();
 
             control = control->FNext;
         }
@@ -805,23 +861,26 @@ void TControl::Paint(TGraphicDevice *dev, int xmin, int ymin, int width, int hei
 
     FListSection.Enter();
 
-    control = FControlList;
-
-    while (control)
+    if (IsVisible())
     {
-        if (control->IsVisible())
+        control = FControlList;
+
+        while (control)
         {
-            xstart = xmin + control->FXMin;
-            ystart = ymin + control->FYMin;
+            if (control->IsVisible())
+            {
+                xstart = xmin + control->FXMin;
+                ystart = ymin + control->FYMin;
             
-        	dev->SetClipRect(  xstart, ystart,
-        					   xstart + control->FWidth - 1,
-        					   ystart + control->FHeight - 1);
+            	dev->SetClipRect(  xstart, ystart,
+            					   xstart + control->FWidth - 1,
+        	    				   ystart + control->FHeight - 1);
 
-            control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
-        }            
+                control->Paint(dev, xstart, ystart, control->FWidth, control->FHeight);
+            }            
 
-        control = control->FNext;
+            control = control->FNext;
+        }
     }
 
     FListSection.Leave();
@@ -1271,29 +1330,37 @@ void TControlThread::Redraw(TControl *control)
     int xmin;
     int ymin;
     TControl *parent;
+    int visible;
 
     xmin = control->FXMin;
     ymin = control->FYMin;
 
 	parent = control->FParent;
 
-	while (parent)
+	visible = control->IsVisible();
+
+	while (parent && visible)
 	{
+	    visible = parent->IsVisible();
+	    
 	    xmin += parent->FXMin;
 		ymin += parent->FYMin;
 
 		parent = parent->FParent;
     }
 
-    control->ClearRedraw();
+    if (visible)
+    {
+        control->ClearRedraw();
     
-    FPaintSection.Enter();
-	FGraphic->SetClipRect(   xmin, ymin,
-        			    xmin + control->FWidth - 1,
-        			    ymin + control->FHeight - 1);
+        FPaintSection.Enter();
+	    FGraphic->SetClipRect(   xmin, ymin,
+                			    xmin + control->FWidth - 1,
+            	    		    ymin + control->FHeight - 1);
 
-    control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
-    FPaintSection.Leave();
+        control->Paint(FGraphic, xmin, ymin, control->FWidth, control->FHeight);
+        FPaintSection.Leave();
+    }
 }
 
 /*##########################################################################
