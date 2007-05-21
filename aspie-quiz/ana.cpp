@@ -47,6 +47,7 @@
 #include "quizr4.h"
 #include "quizr5.h"
 #include "quizr6.h"
+#include "quizr7.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -81,6 +82,7 @@ int main(int argc, char **argv)
 	Quiz[12] = new TQuizR4("quizr4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11]);
 	Quiz[13] = new TQuizR5("quizr5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12]);
 	Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
+	Quiz[15] = new TQuizR7("quizr7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -96,7 +98,7 @@ int main(int argc, char **argv)
 //	 Quiz[11]->CheckCross();
 //	 Quiz[12]->CheckCross();
 //	 Quiz[13]->CheckCross();
-	 Quiz[14]->CheckCross();
+//	 Quiz[14]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -218,9 +220,9 @@ int main(int argc, char **argv)
 
 	 Quiz[14]->CalcGlobal();
 
-//	Quiz[14]->WritePhpQuestions("q.php");
-//	Quiz[14]->WriteSetupTexts("q.cpp");
-//	Quiz[14]->WriteSetupCross("c.cpp");
+	 Quiz[15]->WritePhpQuestions("q.php");
+	 Quiz[15]->WriteSetupTexts("q.cpp");
+	 Quiz[15]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -327,9 +329,9 @@ int main(int argc, char **argv)
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-	  Quiz[14]->WriteWiki("wiki.txt", 0.3, 0.4);
-//	  Quiz[11]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-//	  Quiz[11]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 50);
+//	  Quiz[14]->WriteWiki("wiki.txt", 0.3, 0.4);
+	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
+	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 80);
 
 //	  Quiz[12]->WriteQuizWiki("r4.txt", 0.5);
 
