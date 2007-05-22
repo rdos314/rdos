@@ -7730,8 +7730,19 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
 
 	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 	{
+	    if (GlobalAsNtCorrCount[i])
+            corr = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+        else
+            corr = 0.0;
+            
+        corr = corr * corr;
+
+        if (corr > 0.16)
+            Present[i] = TRUE;
+        else
+            Present[i] = FALSE;
+
 	    Selected[i] = FALSE;
-	    Present[i] = FALSE;
     }
 
 	while (size = infile.Read(buf, 4096))
@@ -7750,7 +7761,10 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
                 ptr += 3;
                 i = atoi(ptr);
                 if (i)
+                {
+                    Present[i - 1] = FALSE;
                     Selected[i - 1] = TRUE;
+                }
                    
             }
             else
@@ -7884,10 +7898,17 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
         file.Write("\", ");
 
         file.Write(" (");
-        corr = CorrArr[MaxInd];
+        corr = GlobalAsNtCorrSum[MaxInd] / GlobalAsNtCorrCount[MaxInd];
 
 		ival = round(100.0 * corr);
-    	sprintf(str, "%d)", ival);
+
+		if (ival < 0)
+		{
+		    file.Write("-");
+			ival = -ival;
+		}
+
+    	sprintf(str, ".%02d)", ival);
 	    file.Write(str);
         file.Write("<br>");
     }

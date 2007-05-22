@@ -56,7 +56,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-TQuiz *Quiz[15];
+TQuiz *Quiz[25];
 
 /*##################  main ##########################
 *   Purpose....: Program entry-point	   					      	        #
@@ -99,6 +99,7 @@ int main(int argc, char **argv)
 //	 Quiz[12]->CheckCross();
 //	 Quiz[13]->CheckCross();
 //	 Quiz[14]->CheckCross();
+	 Quiz[15]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -220,9 +221,9 @@ int main(int argc, char **argv)
 
 	 Quiz[14]->CalcGlobal();
 
-	 Quiz[15]->WritePhpQuestions("q.php");
-	 Quiz[15]->WriteSetupTexts("q.cpp");
-	 Quiz[15]->WriteSetupCross("c.cpp");
+//	 Quiz[15]->WritePhpQuestions("q.php");
+//	 Quiz[15]->WriteSetupTexts("q.cpp");
+//	 Quiz[15]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -324,14 +325,15 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
 	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
-	 Quiz[14]->WriteWeighting("weights.cpp");
-	 Quiz[14]->WritePhpWeighting("weights.php");
+	 Quiz[15]->WriteWeighting("weights.cpp");
+	 Quiz[15]->WritePhpWeighting("weights.php");
+	 Quiz[15]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
 //	  Quiz[14]->WriteWiki("wiki.txt", 0.3, 0.4);
 	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
-	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 80);
+	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
 //	  Quiz[12]->WriteQuizWiki("r4.txt", 0.5);
 
