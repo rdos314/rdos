@@ -77,8 +77,8 @@ TButtonFactory::TButtonFactory()
     FWidth = 0;
     FFont = 0;
 
-    FDown.ShiftX = 4;
-    FDown.ShiftY = 4;
+    FDown.ShiftX = -2;
+    FDown.ShiftY = 2;
 }
 
 /*##########################################################################

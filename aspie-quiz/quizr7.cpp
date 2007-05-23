@@ -79,7 +79,7 @@ TQuizR7::TQuizR7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -134,209 +134,6 @@ void TQuizR7::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizR7::DefineQuiz()
 {
-    return;
-
-	 DefineID(1, 330);
-	 DefineID(2, 609);
-	 DefineID(3, 514);
-	 DefineID(4, 509);
-	 DefineID(5, 46);
-	 DefineID(6, 207);
-	 DefineID(7, 693);
-	 DefineID(8, 53);
-	 DefineID(9, 61);
-	 DefineID(10, 55);
-	 DefineID(11, 503);
-	 DefineID(12, 632);
-	 DefineID(13, 57);
-	 DefineID(14, 26);
-	 DefineID(15, 100);
-	 DefineID(16, 20);
-	 DefineID(17, 23);
-	 DefineID(18, 695);
-	 DefineID(19, 519);
-	 DefineID(20, 5);
-	 DefineID(21, 591);
-	 DefineID(22, 599);
-	 DefineID(23, 606);
-	 DefineID(24, 319);
-	 DefineID(25, 316);
-	 DefineID(26, 487);
-	 DefineID(27, 70);
-	 DefineID(28, 66);
-	 DefineID(29, 549);
-	 DefineID(30, 269);
-	 DefineID(31, 542);
-	 DefineID(32, 507);
-	 DefineID(33, 497);
-	 DefineID(34, 78);
-	 DefineID(35, 37);
-	 DefineID(36, 601);
-	 DefineID(37, 73);
-	 DefineID(38, 552);
-	 DefineID(39, 702);
-	 DefineID(40, 454);
-	 DefineID(41, 544);
-	 DefineID(42, 545);
-	 DefineID(43, 31);
-	 DefineID(44, 255);
-	 DefineID(45, 134);
-	 DefineID(46, 368);
-	 DefineID(47, 366);
-	 DefineID(48, 97);
-	 DefineID(49, 32);
-	 DefineID(50, 737);
-	 DefineID(51, 378);
-	 DefineID(52, 495);
-	 DefineID(53, 243);
-	 DefineID(54, 283);
-	 DefineID(55, 256);
-	 DefineID(56, 595);
-	 DefineID(57, 282);
-	 DefineID(58, 277);
-	 DefineID(59, 149);
-	 DefineID(60, 125);
-	 DefineID(61, 367);
-
-#ifdef ENGLISH
-	DefineText(62, "Does it feel natural for you to say 'thank you' and 'sorry'?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(62, "Känns det naturligt för dig att säga 'tack' och 'förlåt'?", GROUP_MIXED);
-#endif
- 
-#ifdef ENGLISH
-	DefineText(63, "Do you tend to look a lot at people you like and little or not at all at people you dislike?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(63, "Har du en tendens att titta mycket på människor du gillar och lite eller inte alls på människor du ogillar?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(64, "Do you enjoy meeting new people?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(64, "Trivs du med att möta nya människor?", GROUP_MIXED);
-#endif
-
-	 DefineID(65, 25);
-	 DefineID(66, 151);
-	 DefineID(67, 443);
-	 DefineID(68, 249);
-	 DefineID(69, 361);
-	 DefineID(70, 397);
-	 DefineID(71, 36);
-	 DefineID(72, 39);
-	 DefineID(73, 551);
-	 DefineID(74, 433);
-	 DefineID(75, 126);
-	 DefineID(76, 466);
-	 DefineID(77, 516);
-	 DefineID(78, 596);
-	 DefineID(79, 403);
-	 DefineID(80, 731);
-	 DefineID(81, 174);
-	 DefineID(82, 718);
-	 DefineID(83, 240);
-	 DefineID(84, 716);
-	 DefineID(85, 48);
-	 DefineID(86, 17);
-	 DefineID(87, 616);
-	 DefineID(88, 592);
-	 DefineID(89, 623);
-	 DefineID(90, 362);
-	 DefineID(91, 448);
-	 DefineID(92, 123);
-	 DefineID(93, 234);
-	 DefineID(94, 518);
-	 DefineID(95, 631);
-	 DefineID(96, 473);
-	 DefineID(97, 385);
-	 DefineID(98, 600);
-	 DefineID(99, 712);
-	 DefineID(100, 575);
-	 DefineID(101, 15);
-	 DefineID(102, 402);
-	 DefineID(103, 570);
-	 DefineID(104, 582);
-	 DefineID(105, 590);
-	 DefineID(106, 574);
-	 DefineID(107, 572);
-	 DefineID(108, 589);
-	 DefineID(109, 401);
-	 DefineID(110, 230);
-	 DefineID(111, 130);
-	 DefineID(112, 83);
-	 DefineID(113, 3);
-	 DefineID(114, 278);
-	 DefineID(115, 86);
-	 DefineID(116, 6);
-	 DefineID(117, 115);
-	 DefineID(118, 82);
-	 DefineID(119, 226);
-	 DefineID(120, 262);
-	 DefineID(121, 85);
-	 DefineID(122, 84);
-	 DefineID(123, 547);
-	 DefineID(124, 713);
-	 DefineID(125, 95);
-	 DefineID(126, 18);
-	 DefineID(127, 707);
-	 DefineID(128, 129);
-	 DefineID(129, 128);
-	 DefineID(130, 54);
-	 DefineID(131, 227);
-	 DefineID(132, 359);
-	 DefineID(133, 510);
-	 DefineID(134, 50);
-	 DefineID(135, 167);
-	 DefineID(136, 93);
-	 DefineID(137, 708);
-	 DefineID(138, 113);
-	 DefineID(139, 715);
-	 DefineID(140, 279);
-	 DefineID(141, 89);
-	 DefineID(142, 286);
-	 DefineID(143, 613);
-	 DefineID(144, 726);
-	 DefineID(145, 250);
-	 DefineID(146, 724);
-
-#ifdef ENGLISH
-	DefineText(147, "Do you find it easy to 'read between the lines' when someone is talking to you?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(147, "Tycker du det är lätt att 'läsa mellan raderna' när någon talar med dig?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(148, "Do you find it easy to understand what someone is thinking or feeling just by looking at their face?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(148, "Tycker du det är lätt att förstå vad någon tänker eller känner genom att bara titta på deras ansikte?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(149, "If there is an interruption, can you quickly return to what you were doing before?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(149, "Om du blir avbruten, kan du snabbt återgå till vad du gjorde innan?", GROUP_MIXED);
-#endif
-
-#ifdef ENGLISH
-	DefineText(150, "Do you like to drive a car or to watch motor-sports?", GROUP_MIXED);
-#endif
-
-#ifdef SWEDISH
-	DefineText(150, "Gillar du att köra bil eller att titta på motorsport?", GROUP_MIXED);
-#endif
-
 }
 
 /*##########################################################################
@@ -368,6 +165,8 @@ void TQuizR7::SetupTexts()
   Quiz[58].Reverse = TRUE;
   Quiz[59].Reverse = TRUE;
   Quiz[60].Reverse = TRUE;
+  Quiz[61].Reverse = TRUE;
+  Quiz[63].Reverse = TRUE;
   Quiz[83].Reverse = TRUE;
   Quiz[119].Reverse = TRUE;
   Quiz[123].Reverse = TRUE;
@@ -379,6 +178,9 @@ void TQuizR7::SetupTexts()
   Quiz[141].Reverse = TRUE;
   Quiz[144].Reverse = TRUE;
   Quiz[145].Reverse = TRUE;
+  Quiz[146].Reverse = TRUE;
+  Quiz[147].Reverse = TRUE;
+  Quiz[148].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -441,9 +243,9 @@ void TQuizR7::SetupTexts()
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[61].MyGroup = GROUP_MIXED;
-  Quiz[62].MyGroup = GROUP_MIXED;
-  Quiz[63].MyGroup = GROUP_MIXED;
+  Quiz[61].MyGroup = GROUP_NONVERBAL;
+  Quiz[62].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_COMM;
   Quiz[65].MyGroup = GROUP_ASPIE_COMM;
   Quiz[66].MyGroup = GROUP_ASPIE_COMM;
@@ -526,9 +328,9 @@ void TQuizR7::SetupTexts()
   Quiz[143].MyGroup = GROUP_NONVERBAL;
   Quiz[144].MyGroup = GROUP_NONVERBAL;
   Quiz[145].MyGroup = GROUP_NONVERBAL;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_NONVERBAL;
+  Quiz[147].MyGroup = GROUP_NONVERBAL;
+  Quiz[148].MyGroup = GROUP_NONVERBAL;
   Quiz[149].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH

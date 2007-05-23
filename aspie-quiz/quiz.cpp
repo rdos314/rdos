@@ -5530,7 +5530,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[14]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -5540,6 +5540,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizr6.htm\">summering</a> <a href=\"refr6.htm\">referenssajter</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizr7.htm\">summary</a> <a href=\"refr7.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizr7.htm\">summering</a> <a href=\"refr7.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
@@ -7195,7 +7212,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteQuizWiki(const char *filename, long double corrlev)
+void TQuiz::WriteQuizWiki(const char *filename)
 {
 	long double sum;
 	int count;
@@ -7215,6 +7232,7 @@ void TQuiz::WriteQuizWiki(const char *filename, long double corrlev)
 	int ival;
 	int mark;
     long double val;
+    long double corrlev;
 	long double corrval;
 	long double CurrCorr;
 	long double MaxCorr;
@@ -7269,8 +7287,15 @@ void TQuiz::WriteQuizWiki(const char *filename, long double corrlev)
 	    	ival = -ival;
 		}
 
-    	sprintf(str, ".%02d)", ival);
+	    corrlev = 0.9 * val;
+
+    	sprintf(str, ".%02d, ", ival);
 	    file.Write(str);
+
+        ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
+    	sprintf(str, "%d%)", ival);
+	    file.Write(str);
+
 
 		file.Write("'''");
 
