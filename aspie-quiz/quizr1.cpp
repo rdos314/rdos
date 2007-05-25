@@ -160,11 +160,11 @@ void TQuizR1::SetupTexts()
   Quiz[109].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[1].MyGroup = GROUP_NONVERBAL;
+  Quiz[1].MyGroup = GROUP_ASPIE_COMM;
   Quiz[2].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[4].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[5].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[5].MyGroup = GROUP_ASPIE_COMM;
   Quiz[6].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[8].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -222,7 +222,7 @@ void TQuizR1::SetupTexts()
   Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[61].MyGroup = GROUP_ASPIE_COMM;
   Quiz[62].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[63].MyGroup = GROUP_ASPIE_COMM;
   Quiz[64].MyGroup = GROUP_ASPIE_COMM;
   Quiz[65].MyGroup = GROUP_ASPIE_COMM;
   Quiz[66].MyGroup = GROUP_ASPIE_COMM;
@@ -243,7 +243,7 @@ void TQuizR1::SetupTexts()
   Quiz[81].MyGroup = GROUP_SENSORY;
   Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[83].MyGroup = GROUP_SENSORY;
-  Quiz[84].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[84].MyGroup = GROUP_SENSORY;
   Quiz[85].MyGroup = GROUP_NONVERBAL;
   Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[87].MyGroup = GROUP_NT_BIOLOGY;
@@ -254,9 +254,9 @@ void TQuizR1::SetupTexts()
   Quiz[92].MyGroup = GROUP_NONVERBAL;
   Quiz[93].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[94].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[95].MyGroup = GROUP_NONVERBAL;
+  Quiz[95].MyGroup = GROUP_NT_TALENT;
   Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[97].MyGroup = GROUP_ASPIE_COMM;
   Quiz[98].MyGroup = GROUP_NONVERBAL;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NT_TALENT;
@@ -270,10 +270,10 @@ void TQuizR1::SetupTexts()
   Quiz[108].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[109].MyGroup = GROUP_NONVERBAL;
   Quiz[110].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[111].MyGroup = GROUP_SENSORY;
   Quiz[112].MyGroup = GROUP_SENSORY;
   Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[114].MyGroup = GROUP_SENSORY;
   Quiz[115].MyGroup = GROUP_ASPIE_NVC;
   Quiz[116].MyGroup = GROUP_ASPIE_COMM;
   Quiz[117].MyGroup = GROUP_ASPIE_NVC;
@@ -287,7 +287,7 @@ void TQuizR1::SetupTexts()
   Quiz[125].MyGroup = GROUP_ASPIE_NVC;
   Quiz[126].MyGroup = GROUP_ASPIE_COMM;
   Quiz[127].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[128].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[128].MyGroup = GROUP_SENSORY;
   Quiz[129].MyGroup = GROUP_SENSORY;
 
 #ifdef ENGLISH

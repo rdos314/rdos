@@ -216,7 +216,7 @@ void TQuiz5::SetupTexts()
 	Quiz[11].MyGroup = GROUP_SENSORY;
 	Quiz[12].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[13].MyGroup = GROUP_SENSORY;
-	Quiz[14].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[14].MyGroup = GROUP_SENSORY;
 	Quiz[15].MyGroup = GROUP_SENSORY;
 	Quiz[16].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[17].MyGroup = GROUP_NT_BIOLOGY;
@@ -238,7 +238,7 @@ void TQuiz5::SetupTexts()
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_NONVERBAL;
-	Quiz[36].MyGroup = GROUP_NONVERBAL;
+	Quiz[36].MyGroup = GROUP_NT_TALENT;
 	Quiz[37].MyGroup = GROUP_NONVERBAL;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
@@ -252,7 +252,7 @@ void TQuiz5::SetupTexts()
 	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[48].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[49].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[50].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[51].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[52].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
@@ -285,13 +285,13 @@ void TQuiz5::SetupTexts()
 	Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[81].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[82].MyGroup = GROUP_NT_TALENT;
-	Quiz[83].MyGroup = GROUP_NONVERBAL;
+	Quiz[83].MyGroup = GROUP_NT_TALENT;
 	Quiz[84].MyGroup = GROUP_NT_TALENT;
 	Quiz[85].MyGroup = GROUP_NT_TALENT;
 	Quiz[86].MyGroup = GROUP_NT_TALENT;
 	Quiz[87].MyGroup = GROUP_NT_TALENT;
 	Quiz[88].MyGroup = GROUP_NT_TALENT;
-	Quiz[89].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[89].MyGroup = GROUP_NT_TALENT;
 	Quiz[90].MyGroup = GROUP_NT_TALENT;
 	Quiz[91].MyGroup = GROUP_NT_TALENT;
 	Quiz[92].MyGroup = GROUP_NT_TALENT;
@@ -304,7 +304,7 @@ void TQuiz5::SetupTexts()
 	Quiz[99].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[100].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[101].MyGroup = GROUP_NONVERBAL;
-	Quiz[102].MyGroup = GROUP_ASPIE_BIOLOGY;
+	Quiz[102].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[103].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[104].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[105].MyGroup = GROUP_ASPIE_COMM;

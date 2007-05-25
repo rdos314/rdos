@@ -145,7 +145,7 @@ void TQuizII::SetupTexts()
 	Quiz[6].MyGroup = GROUP_SENSORY;
 	Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[8].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[9].MyGroup = GROUP_SENSORY;
 	Quiz[10].MyGroup = GROUP_SENSORY;
 	Quiz[11].MyGroup = GROUP_SENSORY;
 	Quiz[12].MyGroup = GROUP_SENSORY;
@@ -156,7 +156,7 @@ void TQuizII::SetupTexts()
 	Quiz[17].MyGroup = GROUP_NONVERBAL;
 	Quiz[18].MyGroup = GROUP_NONVERBAL;
 	Quiz[19].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[20].MyGroup = GROUP_NONVERBAL;
+	Quiz[20].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[21].MyGroup = GROUP_NONVERBAL;
 	Quiz[22].MyGroup = GROUP_NONVERBAL;
 	Quiz[23].MyGroup = GROUP_NONVERBAL;
@@ -184,7 +184,7 @@ void TQuizII::SetupTexts()
 	Quiz[45].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[46].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[47].MyGroup = GROUP_NONVERBAL;
-	Quiz[48].MyGroup = GROUP_NONVERBAL;
+	Quiz[48].MyGroup = GROUP_NT_TALENT;
 	Quiz[49].MyGroup = GROUP_NONVERBAL;
 	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[51].MyGroup = GROUP_ASPIE_COMM;
@@ -203,7 +203,7 @@ void TQuizII::SetupTexts()
 	Quiz[64].MyGroup = GROUP_NT_TALENT;
 	Quiz[65].MyGroup = GROUP_NT_TALENT;
 	Quiz[66].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[67].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[68].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[69].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[70].MyGroup = GROUP_NONVERBAL;
