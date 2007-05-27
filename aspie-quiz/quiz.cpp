@@ -35,7 +35,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-#define CALC_QUESTION_CORR       // turn on to calculate question correlations
+// #define CALC_QUESTION_CORR       // turn on to calculate question correlations
 
 #define MAX_GLOBAL_QUESTIONS       1024
 
