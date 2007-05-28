@@ -22,7 +22,7 @@
 #
 # quiz.cpp
 # Basic quiz class
-#
+#                                        
 ########################################################################*/
 
 #include <stdio.h>
@@ -35,7 +35,7 @@
 #define FALSE 0
 #define TRUE !FALSE
 
-// #define CALC_QUESTION_CORR       // turn on to calculate question correlations
+#define CALC_QUESTION_CORR       // turn on to calculate question correlations
 
 #define MAX_GLOBAL_QUESTIONS       1024
 
@@ -292,8 +292,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
 
-	Group[GROUP_NONVERBAL].PosName = "NT instinct problem";
-	Group[GROUP_NONVERBAL].NegName = "NT instinct";
+	Group[GROUP_NONVERBAL].PosName = "NT communication problem";
+	Group[GROUP_NONVERBAL].NegName = "NT communication";
 
 	Group[GROUP_SEX].PosName = "Sexual deviation";
 	Group[GROUP_SEX].NegName = "Sexual normality";
@@ -329,8 +329,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
 
-	Group[GROUP_NONVERBAL].PosName = "NT instinkt problem";
-	Group[GROUP_NONVERBAL].NegName = "NT instinkt";
+	Group[GROUP_NONVERBAL].PosName = "NT kommunikation problem";
+	Group[GROUP_NONVERBAL].NegName = "NT kommunikation";
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
@@ -6940,6 +6940,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 void TQuiz::WriteWiki(const char *filename, long double threshold, long double intercorr)
 {
 	long double CorrSum[MAX_GLOBAL_QUESTIONS];
+	long double NoAnswerSum[MAX_GLOBAL_QUESTIONS];
 	int CorrCount[MAX_GLOBAL_QUESTIONS];
 	int CorrGroup[MAX_GLOBAL_QUESTIONS];
 	TQuiz *CorrQuiz[MAX_GLOBAL_QUESTIONS];
@@ -6973,6 +6974,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
 	{
 		CorrSum[i] = 0.0;
+		NoAnswerSum[i] = 0.0;
 		CorrCount[i] = 0;
 	}    
 
@@ -7040,6 +7042,7 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 				while (quiz)
 				{
 					CorrSum[GlobalId] += quiz->Quiz[q].Corr;
+                    NoAnswerSum[GlobalId] += (long double)quiz->Quiz[i].NoAnswer / (long double)quiz->All.ValueCount;
 					CorrCount[GlobalId]++;
 
 					j = quiz->Quiz[q].CrossInd;
@@ -7114,10 +7117,14 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
 	    				ival = -ival;
 		    		}
 
-    				sprintf(str, ".%02d)", ival);
+    				sprintf(str, ".%02d, ", ival);
 	    			file.Write(str);
-    
-	    			if (Mark[GlobalId])
+
+                    ival = round(100.0 * NoAnswerSum[GlobalId] / CorrCount[GlobalId]);
+                	sprintf(str, "%d%)", ival);
+            	    file.Write(str);
+
+   	    			if (Mark[GlobalId])
 		    		    file.Write("'''");
 
             		file.Write("\r\n");
@@ -7173,8 +7180,12 @@ void TQuiz::WriteWiki(const char *filename, long double threshold, long double i
             	            	ival = -ival;
         		            }
 
-                        	sprintf(str, ".%02d), intercorr: ", ival);
+                        	sprintf(str, ".%02d, ", ival);
 	                        file.Write(str);
+            
+                            ival = round(100.0 * NoAnswerSum[q] / CorrCount[q]);
+                   	        sprintf(str, "%d%), intercorr: ", ival);
+                     	    file.Write(str);
 
                         	cnt = GlobalCorrCount[GlobalId][q];
 

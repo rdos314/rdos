@@ -342,7 +342,7 @@ int main(int argc, char **argv)
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-//	  Quiz[15]->WriteWiki("wiki.txt", 0.3, 0.4);
+	  Quiz[15]->WriteWiki("wiki.txt", 0.3, 0.4);
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
