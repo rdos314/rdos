@@ -48,6 +48,7 @@
 #include "quizr5.h"
 #include "quizr6.h"
 #include "quizr7.h"
+#include "quizs1.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
 	Quiz[13] = new TQuizR5("quizr5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12]);
 	Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
 	Quiz[15] = new TQuizR7("quizr7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14]);
+	Quiz[16] = new TQuizS1("quizs1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -99,7 +101,8 @@ int main(int argc, char **argv)
 //	 Quiz[12]->CheckCross();
 //	 Quiz[13]->CheckCross();
 //	 Quiz[14]->CheckCross();
-	 Quiz[15]->CheckCross();
+//	 Quiz[15]->CheckCross();
+	 Quiz[16]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -229,9 +232,9 @@ int main(int argc, char **argv)
 
 	 Quiz[15]->CalcGlobal();
 
-//	 Quiz[15]->WritePhpQuestions("q.php");
-//	 Quiz[15]->WriteSetupTexts("q.cpp");
-//	 Quiz[15]->WriteSetupCross("c.cpp");
+//	 Quiz[16]->WritePhpQuestions("q.php");
+//	 Quiz[16]->WriteSetupTexts("q.cpp");
+//	 Quiz[16]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -336,13 +339,13 @@ int main(int argc, char **argv)
 	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
 	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
 
-//	 Quiz[15]->WriteWeighting("weights.cpp");
-//	 Quiz[15]->WritePhpWeighting("weights.php");
-//	 Quiz[15]->WritePhpGroupWeighting("group.php");
+	 Quiz[16]->WriteWeighting("weights.cpp");
+	 Quiz[16]->WritePhpWeighting("weights.php");
+	 Quiz[16]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-	  Quiz[15]->WriteWiki("wiki.txt", 0.3, 0.4);
+//	  Quiz[15]->WriteWiki("wiki.txt", 0.3, 0.4);
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
