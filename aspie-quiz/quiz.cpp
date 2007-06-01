@@ -6716,9 +6716,9 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
     int cross;
     TQuiz *quiz;
     int count;
-	int HistAsCount[200];
-	int HistNtCount[200];
-    int HistScore[200];
+	int HistAsCount[201];
+	int HistNtCount[201];
+    int HistScore[201];
 	TFile file(filename, 0);
 	TPopulation *pop;
 
@@ -6759,10 +6759,12 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
                     for (e = 0; e < pop->ValueCount; e++)
                     {
                         i = pop->ValArr[e].AsScore / width;
-                        HistAsCount[i]++;
+                        if (i <= 200)
+                            HistAsCount[i]++;
 
                         i = pop->ValArr[e].NtScore / width;
-                        HistNtCount[i]++;        
+                        if (i <= 200)
+                            HistNtCount[i]++;        
                 	}
                 }
 	        }
@@ -6777,16 +6779,98 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 	        sprintf(str, "%d\t", j);
 	        file.Write(str);
 
-            val = HistAsCount[i] * 10000;
-            val = val / width / count;
+            if (All)
+                val = HistAsCount[i];
+            else
+            {
+                val = HistAsCount[i] * 10000;
+                val = val / width / count;
+            }
 	        sprintf(str, "%d\t", val);
 	        file.Write(str);
 
-            val = HistNtCount[i] * 10000;
-            val = val / width / count;
+            if (All)
+                val = HistNtCount[i];
+            else
+            {
+                val = HistNtCount[i] * 10000;
+                val = val / width / count;
+            }
 	        sprintf(str, "%d\n", val);
 	        file.Write(str);	        
 	    }
+	}
+}
+
+/*##################  TQuiz::ExportDiffHistogram ##########################
+*   Purpose....: Export histogram for score difference distribution for population       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
+{
+    char str[80];
+    int val;
+    int i;
+    int j;
+    int e;
+    int cross;
+    TQuiz *quiz;
+    int count;
+	int HistDiffCount[81];
+    int HistScore[81];
+	TFile file(filename, 0);
+	TPopulation *pop;
+
+    pop = GetPop(PopType);
+    if (pop == 0)
+        return;
+
+    count = pop->ValueCount;
+        
+    for (i = 0; i <= 80; i++)
+    {
+        HistDiffCount[i] = 0;
+        HistScore[i] = 5 * i - 200;
+    }
+
+    for (e = 0; e < pop->ValueCount; e++)
+    {
+        i = (pop->ValArr[e].AsScore - pop->ValArr[e].NtScore + 2) / 5;
+
+        if (i <= 40 && i >= -40)
+            HistDiffCount[i + 40]++;        
+	}
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+	{
+	    quiz = CrossQuiz[cross];
+	    if (quiz)
+	    {
+            pop = quiz->GetPop(PopType);
+            if (pop)
+            {
+                for (e = 0; e < pop->ValueCount; e++)
+                {
+                    i = (pop->ValArr[e].AsScore - pop->ValArr[e].NtScore + 2) / 5;
+
+                    if (i <= 40 && i >= -40)
+                        HistDiffCount[i + 40]++;
+
+                }
+	        }
+	    }
+	}
+
+	for (i = 0; i <= 80; i++)
+	{
+	    sprintf(str, "%d\t", HistScore[i]);
+	    file.Write(str);
+
+	    sprintf(str, "%d\n", HistDiffCount[i]);
+	    file.Write(str);
 	}
 }
 

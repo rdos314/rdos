@@ -307,21 +307,23 @@ int main(int argc, char **argv)
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
-	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[9]->ExportHistogram("allr1.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[10]->ExportHistogram("allr2.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[11]->ExportHistogram("allr3.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[12]->ExportHistogram("allr4.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[13]->ExportHistogram("allr5.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[14]->ExportHistogram("allr6.csv", POP_TYPE_ALL, 2, TRUE);
-	 Quiz[15]->ExportHistogram("allr7.csv", POP_TYPE_ALL, 2, TRUE);
+	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[2]->ExportHistogram("all3.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[3]->ExportHistogram("all4.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[4]->ExportHistogram("all5.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[5]->ExportHistogram("all6.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[6]->ExportHistogram("all7.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[7]->ExportHistogram("all8.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[8]->ExportHistogram("all9.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[9]->ExportHistogram("allr1.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[10]->ExportHistogram("allr2.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[11]->ExportHistogram("allr3.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[12]->ExportHistogram("allr4.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[13]->ExportHistogram("allr5.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[14]->ExportHistogram("allr6.csv", POP_TYPE_ALL, 2, FALSE);
+	 Quiz[15]->ExportHistogram("allr7.csv", POP_TYPE_ALL, 2, FALSE);
+
+	 Quiz[15]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
 	 Quiz[10]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
 	 Quiz[10]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);

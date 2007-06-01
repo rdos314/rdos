@@ -201,6 +201,7 @@ public:
     static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
+    void ExportDiffHistogram(const char *filename, int PopType);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
