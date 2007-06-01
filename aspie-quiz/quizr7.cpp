@@ -801,7 +801,10 @@ void TQuizR7::LoadPopulations()
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			}
 
-			if (Row.Autism == 2 || Row.Aspie == 2)
+			if (Row.Autism == 2)
+				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
@@ -821,6 +824,12 @@ void TQuizR7::LoadPopulations()
 				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		}
+		else
+		{
+		    ref = FindReferer(Row.Referer);
+		    if (ref && ref->NT)
+		        NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
@@ -1330,7 +1339,7 @@ void TQuizR7::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)

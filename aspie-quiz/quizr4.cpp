@@ -919,7 +919,10 @@ void TQuizR4::LoadPopulations()
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			}
 
-			if (Row.Autism == 2 || Row.Aspie == 2 || Row.PDD == 2)
+			if (Row.Autism == 2)
+				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
@@ -939,6 +942,12 @@ void TQuizR4::LoadPopulations()
 				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		}
+		else
+		{
+		    ref = FindReferer(Row.Referer);
+		    if (ref && ref->NT)
+		        NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)

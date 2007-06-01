@@ -80,6 +80,7 @@ TQuiz::TQuiz(int Questions)
 	 Add(Questions),
 	 AddMale(Questions),
 	 AddFemale(Questions),
+	 Autism(Questions),
 	 Aspie(Questions),
 	 AspieMale(Questions),
 	 AspieFemale(Questions),
@@ -91,6 +92,7 @@ TQuiz::TQuiz(int Questions)
 	 Nt(Questions),
 	 NtMale(Questions),
 	 NtFemale(Questions),
+	 NtControl(Questions),
 	 Ts(Questions),
 	 Hyperlexia(Questions),
 	 Dyspraxia(Questions),
@@ -1315,6 +1317,9 @@ TPopulation *TQuiz::GetPop(int PopType)
 	    case POP_TYPE_ALL:
 			return &All;
 
+	    case POP_TYPE_AUTISM:
+			return &Autism;
+
 	    case POP_TYPE_AS:
 			return &As;
 
@@ -1326,6 +1331,9 @@ TPopulation *TQuiz::GetPop(int PopType)
 
 		case POP_TYPE_NT:
 			return &Nt;
+
+		case POP_TYPE_NT_CONTROL:
+			return &NtControl;
 
 		case POP_TYPE_HYPERLEXIA:
 			return &Hyperlexia;
@@ -5993,6 +6001,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
         {
             switch (PopType)
             {
+                case POP_TYPE_AUTISM:
+                    ok = quiz->Autism.ValueCount > 5;
+                    break;
+
                 case POP_TYPE_AS:
                     ok = quiz->As.ValueCount > 5;
                     break;
@@ -6007,6 +6019,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
                 case POP_TYPE_NT:
                     ok = quiz->Nt.ValueCount > 5;
+                    break;
+
+                case POP_TYPE_NT_CONTROL:
+                    ok = quiz->NtControl.ValueCount > 5;
                     break;
 
                 case POP_TYPE_HYPERLEXIA:
@@ -6084,6 +6100,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
     switch (PopType)
     {
+        case POP_TYPE_AUTISM:
+            ok = Autism.ValueCount > 5;
+            break;
+
         case POP_TYPE_AS:
             ok = As.ValueCount > 5;
             break;
@@ -6098,6 +6118,10 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 
         case POP_TYPE_NT:
             ok = Nt.ValueCount > 5;
+            break;
+
+        case POP_TYPE_NT_CONTROL:
+            ok = NtControl.ValueCount > 5;
             break;
 
         case POP_TYPE_HYPERLEXIA:
@@ -6262,6 +6286,7 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 
 	file.Write("</tr>");
 
+	WritePcaCorrRow(file, "Diagnosed Autism", POP_TYPE_AUTISM);
 	WritePcaCorrRow(file, "Diagnosed AS", POP_TYPE_AS);
 	WritePcaCorrRow(file, "Aspie", POP_TYPE_ASPIE);
 	WritePcaCorrRow(file, "ADD/ADHD", POP_TYPE_ADD);
@@ -6278,7 +6303,7 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 	WritePcaCorrRow(file, "Bipolar", POP_TYPE_BIPOLAR);
 	WritePcaCorrRow(file, "Schizophrenia", POP_TYPE_SCHIZOPHRENIA);
 	WritePcaCorrRow(file, "Social phobia", POP_TYPE_SOCIAL_PHOBIA);
-	WritePcaCorrRow(file, "NT control", POP_TYPE_NT);
+	WritePcaCorrRow(file, "NT control", POP_TYPE_NT_CONTROL);
 	WritePcaCorrRow(file, "Low IQ", POP_TYPE_LOW_IQ);
 	WritePcaCorrRow(file, "High IQ", POP_TYPE_HIGH_IQ);
 
@@ -6838,10 +6863,12 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
 
     for (e = 0; e < pop->ValueCount; e++)
     {
-        i = (pop->ValArr[e].AsScore - pop->ValArr[e].NtScore + 2) / 5;
+        i = pop->ValArr[e].AsScore - pop->ValArr[e].NtScore;
+        i += 200;
+        i = i / 5;
 
-        if (i <= 40 && i >= -40)
-            HistDiffCount[i + 40]++;        
+        if (i <= 80)
+            HistDiffCount[i]++;        
 	}
 
 	for (cross = 0; cross < MAX_CROSS; cross++)
@@ -6854,10 +6881,12 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
             {
                 for (e = 0; e < pop->ValueCount; e++)
                 {
-                    i = (pop->ValArr[e].AsScore - pop->ValArr[e].NtScore + 2) / 5;
+                    i = pop->ValArr[e].AsScore - pop->ValArr[e].NtScore;
+                    i += 200;
+                    i = i / 5;
 
-                    if (i <= 40 && i >= -40)
-                        HistDiffCount[i + 40]++;
+                    if (i <= 80)
+                        HistDiffCount[i]++;
 
                 }
 	        }

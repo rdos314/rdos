@@ -325,21 +325,22 @@ int main(int argc, char **argv)
 
 	 Quiz[15]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
-	 Quiz[10]->ExportHistogram("as.csv", POP_TYPE_AS, 2, TRUE);
-	 Quiz[10]->ExportHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("nt.csv", POP_TYPE_NT, 2, TRUE);
-	 Quiz[10]->ExportHistogram("add.csv", POP_TYPE_ADD, 2, TRUE);
-	 Quiz[10]->ExportHistogram("ts.csv", POP_TYPE_TS, 2, TRUE);
-	 Quiz[10]->ExportHistogram("pa.csv", POP_TYPE_PA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("bip.csv", POP_TYPE_BIPOLAR, 2, TRUE);
-	 Quiz[10]->ExportHistogram("schizo.csv", POP_TYPE_SCHIZOPHRENIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("syn.csv", POP_TYPE_SYNAESTHESIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("dysl.csv", POP_TYPE_DYSLEXIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("dysc.csv", POP_TYPE_DYSCALCULIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("dysg.csv", POP_TYPE_DYSGRAPHIA, 2, TRUE);
-	 Quiz[10]->ExportHistogram("ocd.csv", POP_TYPE_OCD, 2, TRUE);
-	 Quiz[10]->ExportHistogram("odd.csv", POP_TYPE_ODD, 2, TRUE);
-	 Quiz[10]->ExportHistogram("dysp.csv", POP_TYPE_DYSPRAXIA, 2, TRUE);
+	 Quiz[15]->ExportDiffHistogram("autism.csv", POP_TYPE_AUTISM);
+	 Quiz[15]->ExportDiffHistogram("as.csv", POP_TYPE_AS);
+	 Quiz[15]->ExportDiffHistogram("nt.csv", POP_TYPE_NT_CONTROL);
+	 Quiz[15]->ExportDiffHistogram("soc.csv", POP_TYPE_SOCIAL_PHOBIA);
+	 Quiz[15]->ExportDiffHistogram("add.csv", POP_TYPE_ADD);
+	 Quiz[15]->ExportDiffHistogram("ts.csv", POP_TYPE_TS);
+	 Quiz[15]->ExportDiffHistogram("pa.csv", POP_TYPE_PA);
+	 Quiz[15]->ExportDiffHistogram("bip.csv", POP_TYPE_BIPOLAR);
+	 Quiz[15]->ExportDiffHistogram("schizo.csv", POP_TYPE_SCHIZOPHRENIA);
+	 Quiz[15]->ExportDiffHistogram("syn.csv", POP_TYPE_SYNAESTHESIA);
+	 Quiz[15]->ExportDiffHistogram("dysl.csv", POP_TYPE_DYSLEXIA);
+	 Quiz[15]->ExportDiffHistogram("dysc.csv", POP_TYPE_DYSCALCULIA);
+	 Quiz[15]->ExportDiffHistogram("dysg.csv", POP_TYPE_DYSGRAPHIA);
+	 Quiz[15]->ExportDiffHistogram("ocd.csv", POP_TYPE_OCD);
+	 Quiz[15]->ExportDiffHistogram("odd.csv", POP_TYPE_ODD);
+	 Quiz[15]->ExportDiffHistogram("dysp.csv", POP_TYPE_DYSPRAXIA);
 
 	 Quiz[16]->WriteWeighting("weights.cpp");
 	 Quiz[16]->WritePhpWeighting("weights.php");

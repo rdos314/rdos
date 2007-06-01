@@ -86,6 +86,8 @@
 #define POP_TYPE_LOW_IQ         17
 #define POP_TYPE_HIGH_IQ        18
 #define POP_TYPE_SOCIAL_PHOBIA  19
+#define POP_TYPE_NT_CONTROL     20
+#define POP_TYPE_AUTISM         21
 
 class TQuiz;
 
@@ -300,6 +302,7 @@ protected:
 	TPopulationCorrelation PopCorr;
 
     TPopulation All;
+    TPopulation Autism;
     TPopulation LowAs;
     TPopulation As;
     TPopulation AsMale;
@@ -318,6 +321,7 @@ protected:
 	TPopulation Nt;
 	TPopulation NtMale;
     TPopulation NtFemale;    
+    TPopulation NtControl;
     TPopulation Ts;
     TPopulation Hyperlexia;
     TPopulation Dyspraxia;

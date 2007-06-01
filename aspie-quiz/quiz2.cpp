@@ -672,6 +672,12 @@ void TQuizII::LoadPopulations()
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
+		else
+		{
+		    ref = FindReferer(Row.Referer);
+		    if (ref && ref->NT)
+		        NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
