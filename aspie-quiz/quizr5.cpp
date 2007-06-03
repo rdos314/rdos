@@ -183,6 +183,7 @@ void TQuizR5::SetupTexts()
   Quiz[130].Reverse = TRUE;
   Quiz[131].Reverse = TRUE;
   Quiz[134].Reverse = TRUE;
+  Quiz[136].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
   Quiz[0].MyGroup = GROUP_ASPIE_COMM;

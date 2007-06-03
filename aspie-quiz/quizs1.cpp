@@ -80,7 +80,7 @@ TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -175,6 +175,7 @@ void TQuizS1::SetupTexts()
   Quiz[133].Reverse = TRUE;
   Quiz[134].Reverse = TRUE;
   Quiz[136].Reverse = TRUE;
+  Quiz[137].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
 
@@ -325,7 +326,7 @@ void TQuizS1::SetupTexts()
   Quiz[2].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
   Quiz[3].Text = "Do you have difficulties judging distances, height, depth or speed?";
   Quiz[4].Text = "Do you have difficulties throwing and/or catching a ball?";
-  Quiz[5].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";
+  Quiz[5].Text = "Do you notice small sounds that others don't, or feel pained by loud or irritating noise?";
   Quiz[6].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
   Quiz[7].Text = "Are you hypo- or hypersensitive to physical pain, or even enjoy some types of pain?";
   Quiz[8].Text = "Are your eyes extra sensitive to stong light and glare?";
@@ -448,7 +449,7 @@ void TQuizS1::SetupTexts()
   Quiz[125].Text = "Do you have a good sense for what is the right thing to do socially?";
   Quiz[126].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
   Quiz[127].Text = "Is being honest so natural to you that you often don't notice - or care - if others may find your remarks inappropriate, hurtful or rude?";
-  Quiz[128].Text = "Do you have difficulty describing & summarising for example events, conversations or something you've read?";
+  Quiz[128].Text = "Do you have difficulty describing & summarising things for example events, conversations or something you've read?";
   Quiz[129].Text = "Do you have difficulties filtering out background noise when talking to someone?";
   Quiz[130].Text = "Do you know when you are expected to offer an apology?";
   Quiz[131].Text = "Do you find it hard to tell the age of people?";
@@ -468,7 +469,7 @@ void TQuizS1::SetupTexts()
   Quiz[2].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna?";
   Quiz[3].Text = "Har du svårigheter att bedöma avstånd, höjd, djup eller fart?";
   Quiz[4].Text = "Har du svårigheter med att kasta och/eller fånga en boll?";
-  Quiz[5].Text = "Brukar du höra ljud som andra inte hör och plågas av höga eller störande ljud?";
+  Quiz[5].Text = "Brukar du höra ljud som andra inte hör eller plågas av höga eller störande ljud?";
   Quiz[6].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt eller som är gjorda i 'fel' material?";
   Quiz[7].Text = "Är du över- eller underkänslig för smärta eller t.o.m tycker om vissa sorters smärta?";
   Quiz[8].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
@@ -698,6 +699,30 @@ void TQuizS1::LoadReferers()
 		if (Row.ADHD == 2)
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
+		if (Row.TS == 2)
+			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Dyslexia)
+			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Dyscalculia)
+			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult);
+
+		if (Row.OCD)
+			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult);
+
+		if (Row.ODD)
+			UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Bipolar)
+			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Schizophrenia)
+			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult);
+
+		if (Row.Social)
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult);
+
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
@@ -779,6 +804,30 @@ void TQuizS1::LoadPopulations()
 			else
 				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
+
+		if (Row.TS)
+			Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.Dyslexia)
+			Dyslexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.Dyscalculia)
+			Dyscalculia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.OCD)
+			OCD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.ODD)
+			ODD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.Bipolar)
+			Bipolar.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.Schizophrenia)
+			Schizophrenia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+		if (Row.Social)
+			SocialPhobia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (strlen(Row.Referer) == 0)
 		{
@@ -1286,7 +1335,7 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
