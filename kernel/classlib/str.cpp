@@ -183,7 +183,7 @@ void TString::ConcatInPlace(const char *str, int size)
 		{
 			memcpy(FBuf + FData->FDataSize - 1, str, size);
 			FData->FDataSize += size;
-			*(FBuf+FData->FDataSize) = 0;
+			*(FBuf+FData->FDataSize - 1) = 0;
 		}
 	}
 }

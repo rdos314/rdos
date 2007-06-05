@@ -246,7 +246,7 @@ void TQuiz6::SetupTexts()
 	Quiz[34].MyGroup = GROUP_NONVERBAL;
 	Quiz[35].MyGroup = GROUP_NONVERBAL;
 	Quiz[36].MyGroup = GROUP_NONVERBAL;
-	Quiz[37].MyGroup = GROUP_NONVERBAL;
+	Quiz[37].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[40].MyGroup = GROUP_ASPIE_TALENT;
