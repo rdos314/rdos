@@ -138,7 +138,7 @@ void TQuizIII::SetupTexts()
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_SENSORY;
 	Quiz[6].MyGroup = GROUP_SENSORY;
-	Quiz[7].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[7].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_SENSORY;
 	Quiz[10].MyGroup = GROUP_SENSORY;
@@ -172,9 +172,9 @@ void TQuizIII::SetupTexts()
 	Quiz[38].MyGroup = GROUP_NONVERBAL;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
 	Quiz[40].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[41].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[41].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[42].MyGroup = GROUP_NT_TALENT;
-	Quiz[43].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[43].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -655,6 +655,9 @@ void TQuizIII::LoadPopulations()
 
 				if (Row.Diagnos == DX_AS)
 					As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+				if (Row.Diagnos == SELF_AS)
+					AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 				break;
 
 			case DX_ADD:

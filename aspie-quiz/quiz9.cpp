@@ -405,7 +405,7 @@ void TQuiz9::SetupTexts()
   Quiz[104].MyGroup = GROUP_NONVERBAL;
   Quiz[105].MyGroup = GROUP_NONVERBAL;
   Quiz[106].MyGroup = GROUP_NONVERBAL;
-  Quiz[107].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[107].MyGroup = GROUP_ASPIE_NVC;
   Quiz[108].MyGroup = GROUP_NONVERBAL;
   Quiz[109].MyGroup = GROUP_NONVERBAL;
   Quiz[110].MyGroup = GROUP_ASPIE_COMM;
@@ -430,7 +430,7 @@ void TQuiz9::SetupTexts()
   Quiz[129].MyGroup = GROUP_ASPIE_COMM;
   Quiz[130].MyGroup = GROUP_NT_TALENT;
   Quiz[131].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[132].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[132].MyGroup = GROUP_ASPIE_NVC;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
   Quiz[134].MyGroup = GROUP_ASPIE_COMM;
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
@@ -995,6 +995,9 @@ void TQuiz9::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

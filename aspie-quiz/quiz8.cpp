@@ -224,12 +224,12 @@ void TQuiz8::SetupTexts()
   Quiz[0].MyGroup = GROUP_SENSORY;
   Quiz[1].MyGroup = GROUP_SENSORY;
   Quiz[2].MyGroup = GROUP_SENSORY;
-  Quiz[3].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[3].MyGroup = GROUP_ASPIE_NVC;
   Quiz[4].MyGroup = GROUP_ASPIE_NVC;
   Quiz[5].MyGroup = GROUP_ASPIE_COMM;
   Quiz[6].MyGroup = GROUP_SENSORY;
   Quiz[7].MyGroup = GROUP_SENSORY;
-  Quiz[8].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[8].MyGroup = GROUP_ASPIE_NVC;
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_ASPIE_NVC;
@@ -322,7 +322,7 @@ void TQuiz8::SetupTexts()
   Quiz[98].MyGroup = GROUP_NONVERBAL;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NONVERBAL;
-  Quiz[101].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[101].MyGroup = GROUP_ASPIE_NVC;
   Quiz[102].MyGroup = GROUP_NONVERBAL;
   Quiz[103].MyGroup = GROUP_ASPIE_COMM;
   Quiz[104].MyGroup = GROUP_ASPIE_COMM;
@@ -928,6 +928,9 @@ void TQuiz8::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

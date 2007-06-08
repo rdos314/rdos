@@ -192,7 +192,7 @@ void TQuizR7::SetupTexts()
   Quiz[6].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[7].MyGroup = GROUP_SENSORY;
   Quiz[8].MyGroup = GROUP_SENSORY;
-  Quiz[9].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[9].MyGroup = GROUP_ASPIE_NVC;
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_SENSORY;
   Quiz[12].MyGroup = GROUP_SENSORY;
@@ -262,20 +262,20 @@ void TQuizR7::SetupTexts()
   Quiz[76].MyGroup = GROUP_ASPIE_COMM;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[79].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_ASPIE_COMM;
   Quiz[81].MyGroup = GROUP_ASPIE_COMM;
   Quiz[82].MyGroup = GROUP_NT_TALENT;
   Quiz[83].MyGroup = GROUP_NONVERBAL;
   Quiz[84].MyGroup = GROUP_SENSORY;
-  Quiz[85].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_NT_TALENT;
   Quiz[87].MyGroup = GROUP_ASPIE_COMM;
   Quiz[88].MyGroup = GROUP_ASPIE_COMM;
   Quiz[89].MyGroup = GROUP_ASPIE_COMM;
   Quiz[90].MyGroup = GROUP_ASPIE_COMM;
   Quiz[91].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[92].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[92].MyGroup = GROUP_ASPIE_NVC;
   Quiz[93].MyGroup = GROUP_NT_TALENT;
   Quiz[94].MyGroup = GROUP_SENSORY;
   Quiz[95].MyGroup = GROUP_ASPIE_COMM;
@@ -314,7 +314,7 @@ void TQuizR7::SetupTexts()
   Quiz[128].MyGroup = GROUP_NONVERBAL;
   Quiz[129].MyGroup = GROUP_NONVERBAL;
   Quiz[130].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[131].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[131].MyGroup = GROUP_ASPIE_NVC;
   Quiz[132].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
   Quiz[134].MyGroup = GROUP_ASPIE_COMM;
@@ -807,6 +807,9 @@ void TQuizR7::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

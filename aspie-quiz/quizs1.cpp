@@ -255,27 +255,27 @@ void TQuizS1::SetupTexts()
   Quiz[73].MyGroup = GROUP_ASPIE_COMM;
   Quiz[74].MyGroup = GROUP_ASPIE_COMM;
   Quiz[75].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[76].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[76].MyGroup = GROUP_ASPIE_NVC;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[81].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_ASPIE_COMM;
   Quiz[83].MyGroup = GROUP_ASPIE_COMM;
   Quiz[84].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[85].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_ASPIE_COMM;
   Quiz[87].MyGroup = GROUP_ASPIE_COMM;
   Quiz[88].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[89].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[89].MyGroup = GROUP_ASPIE_NVC;
   Quiz[90].MyGroup = GROUP_ASPIE_COMM;
   Quiz[91].MyGroup = GROUP_ASPIE_COMM;
   Quiz[92].MyGroup = GROUP_ASPIE_COMM;
   Quiz[93].MyGroup = GROUP_ASPIE_COMM;
   Quiz[94].MyGroup = GROUP_ASPIE_COMM;
   Quiz[95].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[96].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[96].MyGroup = GROUP_ASPIE_NVC;
   Quiz[97].MyGroup = GROUP_ASPIE_COMM;
   Quiz[98].MyGroup = GROUP_ASPIE_COMM;
   Quiz[99].MyGroup = GROUP_ASPIE_COMM;
@@ -631,6 +631,8 @@ void TQuizS1::InitReferers()
 	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
 	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
 	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
+	AddReferer("tbg.nu", "tbg.nu/news_show/109118/40");
+	AddReferer("vof.se", "vof.se/forum/viewtopic.php?t=3080");
  }
 
 /*##########################################################################
@@ -792,8 +794,14 @@ void TQuizS1::LoadPopulations()
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			}
 
-			if (Row.Autism == 2 || Row.Aspie == 2)
+			if (Row.Autism == 2)
+				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)
@@ -877,6 +885,8 @@ void TQuizS1::SetupControlGroups()
 	DefineNt("circvsmaximvs.com");
 	DefineNt("panterachat.com");
 	DefineNt("kaytastrophe.com");
+	DefineNt("tbg.nu");
+	DefineNt("vof.se");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");

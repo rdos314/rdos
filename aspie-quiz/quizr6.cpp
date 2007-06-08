@@ -188,7 +188,7 @@ void TQuizR6::SetupTexts()
   Quiz[5].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[6].MyGroup = GROUP_SENSORY;
   Quiz[7].MyGroup = GROUP_SENSORY;
-  Quiz[8].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[8].MyGroup = GROUP_ASPIE_NVC;
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_SENSORY;
@@ -258,23 +258,23 @@ void TQuizR6::SetupTexts()
   Quiz[75].MyGroup = GROUP_ASPIE_NVC;
   Quiz[76].MyGroup = GROUP_ASPIE_COMM;
   Quiz[77].MyGroup = GROUP_NONVERBAL;
-  Quiz[78].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[78].MyGroup = GROUP_ASPIE_NVC;
   Quiz[79].MyGroup = GROUP_NT_TALENT;
   Quiz[80].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[81].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_ASPIE_COMM;
   Quiz[83].MyGroup = GROUP_ASPIE_COMM;
   Quiz[84].MyGroup = GROUP_ASPIE_COMM;
   Quiz[85].MyGroup = GROUP_NT_TALENT;
   Quiz[86].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[87].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[87].MyGroup = GROUP_ASPIE_NVC;
   Quiz[88].MyGroup = GROUP_ASPIE_COMM;
   Quiz[89].MyGroup = GROUP_ASPIE_COMM;
   Quiz[90].MyGroup = GROUP_ASPIE_COMM;
   Quiz[91].MyGroup = GROUP_SENSORY;
   Quiz[92].MyGroup = GROUP_ASPIE_COMM;
   Quiz[93].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[94].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_COMM;
   Quiz[96].MyGroup = GROUP_ASPIE_COMM;
   Quiz[97].MyGroup = GROUP_ASPIE_COMM;
@@ -309,7 +309,7 @@ void TQuizR6::SetupTexts()
   Quiz[126].MyGroup = GROUP_NONVERBAL;
   Quiz[127].MyGroup = GROUP_NONVERBAL;
   Quiz[128].MyGroup = GROUP_NONVERBAL;
-  Quiz[129].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[129].MyGroup = GROUP_ASPIE_NVC;
   Quiz[130].MyGroup = GROUP_ASPIE_COMM;
   Quiz[131].MyGroup = GROUP_NT_TALENT;
   Quiz[132].MyGroup = GROUP_NONVERBAL;
@@ -325,7 +325,7 @@ void TQuizR6::SetupTexts()
   Quiz[142].MyGroup = GROUP_NT_TALENT;
   Quiz[143].MyGroup = GROUP_ASPIE_COMM;
   Quiz[144].MyGroup = GROUP_NONVERBAL;
-  Quiz[145].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[145].MyGroup = GROUP_ASPIE_NVC;
   Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
@@ -795,6 +795,9 @@ void TQuizR6::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

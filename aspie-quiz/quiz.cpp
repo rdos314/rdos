@@ -82,6 +82,7 @@ TQuiz::TQuiz(int Questions)
 	 AddFemale(Questions),
 	 Autism(Questions),
 	 Aspie(Questions),
+	 AspieControl(Questions),
 	 AspieMale(Questions),
 	 AspieFemale(Questions),
 	 YoungMale(Questions),
@@ -1325,6 +1326,9 @@ TPopulation *TQuiz::GetPop(int PopType)
 
 		case POP_TYPE_ASPIE:
 			return &Aspie;
+
+		case POP_TYPE_ASPIE_CONTROL:
+			return &AspieControl;
 
 		case POP_TYPE_ADD:
 			return &Add;
@@ -5247,8 +5251,8 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
     file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
 
@@ -5261,8 +5265,8 @@ void TQuiz::WriteLinkReport(const char *filename)
     file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
     file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
     file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
-    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1</a><br>\n");
+    file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
+    file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
     file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
     file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
 
@@ -6000,8 +6004,9 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
     int count;
     TQuiz *quiz;
     TQuiz *QuizArr[MAX_CROSS + 1];
+    int CountArr[MAX_CROSS + 1];
     int rows;
-    int ok;
+    char str[80];
 
 	File.Write("<tr style='height:24.75pt'>");
 
@@ -6019,96 +6024,101 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             switch (PopType)
             {
                 case POP_TYPE_AUTISM:
-                    ok = quiz->Autism.ValueCount > 5;
+                    count = quiz->Autism.ValueCount;
                     break;
 
                 case POP_TYPE_AS:
-                    ok = quiz->As.ValueCount > 5;
+                    count = quiz->As.ValueCount;
                     break;
 
                 case POP_TYPE_ASPIE:
-                    ok = quiz->Aspie.ValueCount > 5;
+                    count = quiz->Aspie.ValueCount;
+                    break;
+
+                case POP_TYPE_ASPIE_CONTROL:
+                    count = quiz->AspieControl.ValueCount;
                     break;
 
                 case POP_TYPE_ADD:
-                    ok = quiz->Add.ValueCount > 5;
+                    count = quiz->Add.ValueCount;
                     break;
 
                 case POP_TYPE_NT:
-                    ok = quiz->Nt.ValueCount > 5;
+                    count = quiz->Nt.ValueCount;
                     break;
 
                 case POP_TYPE_NT_CONTROL:
-                    ok = quiz->NtControl.ValueCount > 5;
+                    count = quiz->NtControl.ValueCount;
                     break;
 
                 case POP_TYPE_HYPERLEXIA:
-                    ok = quiz->Hyperlexia.ValueCount > 5;
+                    count = quiz->Hyperlexia.ValueCount;
                     break;
 
                 case POP_TYPE_DYSPRAXIA:
-                    ok = quiz->Dyspraxia.ValueCount > 5;
+                    count = quiz->Dyspraxia.ValueCount;
                     break;
 
                 case POP_TYPE_DYSLEXIA:
-                    ok = quiz->Dyslexia.ValueCount > 5;
+                    count = quiz->Dyslexia.ValueCount;
                     break;
 
                 case POP_TYPE_DYSCALCULIA:
-                    ok = quiz->Dyscalculia.ValueCount > 5;
+                    count = quiz->Dyscalculia.ValueCount;
                     break;
 
                 case POP_TYPE_OCD:
-                    ok = quiz->OCD.ValueCount > 5;
+                    count = quiz->OCD.ValueCount;
                     break;
 
                 case POP_TYPE_ODD:
-                    ok = quiz->ODD.ValueCount > 5;
+                    count = quiz->ODD.ValueCount;
                     break;
 
                 case POP_TYPE_SYNAESTHESIA:
-                    ok = quiz->Synaesthesia.ValueCount > 5;
+                    count = quiz->Synaesthesia.ValueCount;
                     break;
 
                 case POP_TYPE_PA:
-                    ok = quiz->PA.ValueCount > 5;
+                    count = quiz->PA.ValueCount;
                     break;
 
                 case POP_TYPE_DYSGRAPHIA:
-                    ok = quiz->Dysgraphia.ValueCount > 5;
+                    count = quiz->Dysgraphia.ValueCount;
                     break;
 
                 case POP_TYPE_BIPOLAR:
-                    ok = quiz->Bipolar.ValueCount > 5;
+                    count = quiz->Bipolar.ValueCount;
                     break;
 
                 case POP_TYPE_TS:
-                    ok = quiz->Ts.ValueCount > 5;
+                    count = quiz->Ts.ValueCount;
                     break;
 
                 case POP_TYPE_SCHIZOPHRENIA:
-                    ok = quiz->Schizophrenia.ValueCount > 5;
+                    count = quiz->Schizophrenia.ValueCount;
                     break;
 
                 case POP_TYPE_SOCIAL_PHOBIA:
-                    ok = quiz->SocialPhobia.ValueCount > 5;
+                    count = quiz->SocialPhobia.ValueCount;
                     break;
 
                 case POP_TYPE_LOW_IQ:
-                    ok = quiz->LowIQ.ValueCount > 5;
+                    count = quiz->LowIQ.ValueCount;
                     break;
 
                 case POP_TYPE_HIGH_IQ:
-                    ok = quiz->HighIQ.ValueCount > 5;
+                    count = quiz->HighIQ.ValueCount;
                     break;
 
                 default:
-                    ok = FALSE;
+                    count = 0;
                     break;
             }
 
-            if (ok)
+            if (count > 5)
             {
+                CountArr[rows] = count;
                 QuizArr[rows] = quiz;
                 rows++;
             }
@@ -6118,100 +6128,105 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
     switch (PopType)
     {
         case POP_TYPE_AUTISM:
-            ok = Autism.ValueCount > 5;
+            count = Autism.ValueCount;
             break;
 
         case POP_TYPE_AS:
-            ok = As.ValueCount > 5;
+            count = As.ValueCount;
             break;
 
         case POP_TYPE_ASPIE:
-            ok = Aspie.ValueCount > 5;
+            count = Aspie.ValueCount;
+            break;
+
+        case POP_TYPE_ASPIE_CONTROL:
+            count = AspieControl.ValueCount;
             break;
 
         case POP_TYPE_ADD:
-            ok = Add.ValueCount > 5;
+            count = Add.ValueCount;
             break;
 
         case POP_TYPE_NT:
-            ok = Nt.ValueCount > 5;
+            count = Nt.ValueCount;
             break;
 
         case POP_TYPE_NT_CONTROL:
-            ok = NtControl.ValueCount > 5;
+            count = NtControl.ValueCount;
             break;
 
         case POP_TYPE_HYPERLEXIA:
-            ok = Hyperlexia.ValueCount > 5;
+            count = Hyperlexia.ValueCount;
             break;
 
         case POP_TYPE_DYSPRAXIA:
-            ok = Dyspraxia.ValueCount > 5;
+            count = Dyspraxia.ValueCount;
             break;
 
         case POP_TYPE_DYSLEXIA:
-            ok = Dyslexia.ValueCount > 5;
+            count = Dyslexia.ValueCount;
             break;
 
         case POP_TYPE_DYSCALCULIA:
-            ok = Dyscalculia.ValueCount > 5;
+            count = Dyscalculia.ValueCount;
             break;
 
         case POP_TYPE_OCD:
-            ok = OCD.ValueCount > 5;
+            count = OCD.ValueCount;
             break;
 
         case POP_TYPE_ODD:
-            ok = ODD.ValueCount > 5;
+            count = ODD.ValueCount;
             break;
 
         case POP_TYPE_SYNAESTHESIA:
-            ok = Synaesthesia.ValueCount > 5;
+            count = Synaesthesia.ValueCount;
             break;
 
         case POP_TYPE_PA:
-            ok = PA.ValueCount > 5;
+            count = PA.ValueCount;
             break;
 
         case POP_TYPE_DYSGRAPHIA:
-            ok = Dysgraphia.ValueCount > 5;
+            count = Dysgraphia.ValueCount;
             break;
 
         case POP_TYPE_BIPOLAR:
-            ok = Bipolar.ValueCount > 5;
+            count = Bipolar.ValueCount;
             break;
 
         case POP_TYPE_TS:
-            ok = Ts.ValueCount > 5;
+            count = Ts.ValueCount;
             break;
 
         case POP_TYPE_SCHIZOPHRENIA:
-            ok = Schizophrenia.ValueCount > 5;
+            count = Schizophrenia.ValueCount;
             break;
 
         case POP_TYPE_SOCIAL_PHOBIA:
-            ok = SocialPhobia.ValueCount > 5;
+            count = SocialPhobia.ValueCount;
             break;
 
         case POP_TYPE_LOW_IQ:
-            ok = LowIQ.ValueCount > 5;
+            count = LowIQ.ValueCount;
             break;
 
         case POP_TYPE_HIGH_IQ:
-            ok = HighIQ.ValueCount > 5;
+            count = HighIQ.ValueCount;
             break;
 
         default:
-            ok = FALSE;
+            count = 0;
     }
 
-    if (ok)
+    if (count > 5)
     {
+        CountArr[rows] = count;
         QuizArr[rows] = this;
         rows++;
     }
 
-	WriteCenteredFieldHeader(File, 10);
+	WriteCenteredFieldHeader(File, 5);
 
 	for (q = 0; q < rows; q++)
 	{
@@ -6219,6 +6234,18 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
 			File.Write("<br>");
             		
 		QuizArr[q]->WriteName(File);
+    }
+	WriteFieldFooter(File);
+
+	WriteCenteredFieldHeader(File, 5);
+
+	for (q = 0; q < rows; q++)
+	{
+        if (q)
+			File.Write("<br>");
+
+        sprintf(str, "%d", CountArr[q]);
+        File.Write(str);            		
     }
 	WriteFieldFooter(File);
                         
@@ -6277,8 +6304,12 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 	file.Write("Condition");
     WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 10);
+    WriteCenteredFieldHeader(file, 5);
 	file.Write("Quiz");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 5);
+	file.Write("N");
     WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 3);
@@ -6305,7 +6336,7 @@ void TQuiz::WritePcaCorrTable(const char *filename)
 
 	WritePcaCorrRow(file, "Diagnosed Autism", POP_TYPE_AUTISM);
 	WritePcaCorrRow(file, "Diagnosed AS", POP_TYPE_AS);
-	WritePcaCorrRow(file, "Aspie", POP_TYPE_ASPIE);
+	WritePcaCorrRow(file, "Self-diagnosed Aspie", POP_TYPE_ASPIE_CONTROL);
 	WritePcaCorrRow(file, "ADD/ADHD", POP_TYPE_ADD);
 	WritePcaCorrRow(file, "Tourette", POP_TYPE_TS);
 	WritePcaCorrRow(file, "Hyperlexia", POP_TYPE_HYPERLEXIA);

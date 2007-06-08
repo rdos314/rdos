@@ -196,7 +196,7 @@ void TQuizR5::SetupTexts()
   Quiz[7].MyGroup = GROUP_SENSORY;
   Quiz[8].MyGroup = GROUP_SENSORY;
   Quiz[9].MyGroup = GROUP_SENSORY;
-  Quiz[10].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[10].MyGroup = GROUP_ASPIE_NVC;
   Quiz[11].MyGroup = GROUP_SENSORY;
   Quiz[12].MyGroup = GROUP_SENSORY;
   Quiz[13].MyGroup = GROUP_ASPIE_COMM;
@@ -265,18 +265,18 @@ void TQuizR5::SetupTexts()
   Quiz[76].MyGroup = GROUP_NT_TALENT;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[79].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_NT_TALENT;
   Quiz[81].MyGroup = GROUP_SENSORY;
   Quiz[82].MyGroup = GROUP_ASPIE_COMM;
   Quiz[83].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[84].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[84].MyGroup = GROUP_ASPIE_NVC;
   Quiz[85].MyGroup = GROUP_ASPIE_COMM;
   Quiz[86].MyGroup = GROUP_ASPIE_COMM;
   Quiz[87].MyGroup = GROUP_ASPIE_COMM;
   Quiz[88].MyGroup = GROUP_SENSORY;
   Quiz[89].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[90].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[90].MyGroup = GROUP_ASPIE_NVC;
   Quiz[91].MyGroup = GROUP_ASPIE_COMM;
   Quiz[92].MyGroup = GROUP_ASPIE_COMM;
   Quiz[93].MyGroup = GROUP_ASPIE_COMM;
@@ -312,7 +312,7 @@ void TQuizR5::SetupTexts()
   Quiz[123].MyGroup = GROUP_NT_TALENT;
   Quiz[124].MyGroup = GROUP_NONVERBAL;
   Quiz[125].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[126].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[126].MyGroup = GROUP_ASPIE_NVC;
   Quiz[127].MyGroup = GROUP_NONVERBAL;
   Quiz[128].MyGroup = GROUP_NONVERBAL;
   Quiz[129].MyGroup = GROUP_ASPIE_COMM;
@@ -321,7 +321,7 @@ void TQuizR5::SetupTexts()
   Quiz[132].MyGroup = GROUP_ASPIE_COMM;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
   Quiz[134].MyGroup = GROUP_NONVERBAL;
-  Quiz[135].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[135].MyGroup = GROUP_ASPIE_NVC;
   Quiz[136].MyGroup = GROUP_NONVERBAL;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_NONVERBAL;
@@ -329,7 +329,7 @@ void TQuizR5::SetupTexts()
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_ASPIE_NVC;
   Quiz[142].MyGroup = GROUP_SENSORY;
-  Quiz[143].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[143].MyGroup = GROUP_ASPIE_NVC;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you look, feel or act younger than your biological age?";
@@ -792,6 +792,9 @@ void TQuizR5::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

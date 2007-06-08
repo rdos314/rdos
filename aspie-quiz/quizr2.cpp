@@ -174,7 +174,7 @@ void TQuizR2::SetupTexts()
   Quiz[8].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_SENSORY;
-  Quiz[11].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[11].MyGroup = GROUP_ASPIE_NVC;
   Quiz[12].MyGroup = GROUP_SENSORY;
   Quiz[13].MyGroup = GROUP_ASPIE_COMM;
   Quiz[14].MyGroup = GROUP_SENSORY;
@@ -257,17 +257,17 @@ void TQuizR2::SetupTexts()
   Quiz[91].MyGroup = GROUP_ASPIE_NVC;
   Quiz[92].MyGroup = GROUP_NONVERBAL;
   Quiz[93].MyGroup = GROUP_NONVERBAL;
-  Quiz[94].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_NONVERBAL;
   Quiz[96].MyGroup = GROUP_NONVERBAL;
   Quiz[97].MyGroup = GROUP_NONVERBAL;
-  Quiz[98].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[101].MyGroup = GROUP_NONVERBAL;
   Quiz[102].MyGroup = GROUP_NONVERBAL;
   Quiz[103].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[104].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[104].MyGroup = GROUP_ASPIE_NVC;
   Quiz[105].MyGroup = GROUP_ASPIE_COMM;
   Quiz[106].MyGroup = GROUP_ASPIE_COMM;
   Quiz[107].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -315,13 +315,13 @@ void TQuizR2::SetupTexts()
   Quiz[149].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[152].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[152].MyGroup = GROUP_ASPIE_NVC;
   Quiz[153].MyGroup = GROUP_NT_TALENT;
   Quiz[154].MyGroup = GROUP_ASPIE_COMM;
   Quiz[155].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[156].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[156].MyGroup = GROUP_ASPIE_NVC;
   Quiz[157].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[158].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[158].MyGroup = GROUP_ASPIE_NVC;
   Quiz[159].MyGroup = GROUP_NT_TALENT;
   Quiz[160].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[161].MyGroup = GROUP_ASPIE_COMM;
@@ -832,6 +832,9 @@ void TQuizR2::LoadPopulations()
 
 			if (Row.Aspie == 2)
 				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
+			if (Row.Autism == 1 || Row.Aspie == 1)
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.ADHD)

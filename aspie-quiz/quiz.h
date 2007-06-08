@@ -88,6 +88,7 @@
 #define POP_TYPE_SOCIAL_PHOBIA  19
 #define POP_TYPE_NT_CONTROL     20
 #define POP_TYPE_AUTISM         21
+#define POP_TYPE_ASPIE_CONTROL  22
 
 class TQuiz;
 
@@ -313,6 +314,7 @@ protected:
     TPopulation Aspie;
     TPopulation AspieMale;
     TPopulation AspieFemale;    
+    TPopulation AspieControl;
     TPopulation YoungMale;
     TPopulation YoungFemale;
     TPopulation Mix;
