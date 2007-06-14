@@ -293,7 +293,7 @@ void TQuizR3::SetupTexts()
   Quiz[132].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[133].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[134].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[135].MyGroup = GROUP_NONVERBAL;
+  Quiz[135].MyGroup = GROUP_ASPIE_COMM;
   Quiz[136].MyGroup = GROUP_ASPIE_COMM;
   Quiz[137].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[138].MyGroup = GROUP_ASPIE_COMM;

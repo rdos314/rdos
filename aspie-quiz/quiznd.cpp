@@ -396,7 +396,7 @@ void TQuizNd::SetupTexts()
 	Quiz[202].MyGroup = GROUP_SENSORY;
 	Quiz[203].MyGroup = GROUP_NT_TALENT;
 	Quiz[204].MyGroup = GROUP_SENSORY;
-	Quiz[205].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[205].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[206].MyGroup = GROUP_SENSORY;
 	Quiz[207].MyGroup = GROUP_NONVERBAL;
 	Quiz[208].MyGroup = GROUP_NT_BIOLOGY;

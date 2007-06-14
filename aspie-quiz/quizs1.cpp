@@ -298,7 +298,7 @@ void TQuizS1::SetupTexts()
   Quiz[116].MyGroup = GROUP_NONVERBAL;
   Quiz[117].MyGroup = GROUP_NONVERBAL;
   Quiz[118].MyGroup = GROUP_NONVERBAL;
-  Quiz[119].MyGroup = GROUP_NONVERBAL;
+  Quiz[119].MyGroup = GROUP_ASPIE_COMM;
   Quiz[120].MyGroup = GROUP_NONVERBAL;
   Quiz[121].MyGroup = GROUP_ASPIE_NVC;
   Quiz[122].MyGroup = GROUP_NONVERBAL;
@@ -845,6 +845,12 @@ void TQuizS1::LoadPopulations()
 			else
 				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
+		else
+		{
+		    ref = FindReferer(Row.Referer);
+		    if (ref && ref->NT)
+		        NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
@@ -1345,11 +1351,11 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_FEMALE)
+//						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

@@ -182,6 +182,7 @@ void TQuizR7::SetupTexts()
   Quiz[146].Reverse = TRUE;
   Quiz[147].Reverse = TRUE;
   Quiz[148].Reverse = TRUE;
+  Quiz[149].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_COMM;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -248,7 +249,7 @@ void TQuizR7::SetupTexts()
   Quiz[62].MyGroup = GROUP_ASPIE_NVC;
   Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[65].MyGroup = GROUP_NONVERBAL;
+  Quiz[65].MyGroup = GROUP_ASPIE_COMM;
   Quiz[66].MyGroup = GROUP_ASPIE_COMM;
   Quiz[67].MyGroup = GROUP_ASPIE_COMM;
   Quiz[68].MyGroup = GROUP_ASPIE_COMM;
@@ -332,7 +333,7 @@ void TQuizR7::SetupTexts()
   Quiz[146].MyGroup = GROUP_NONVERBAL;
   Quiz[147].MyGroup = GROUP_NONVERBAL;
   Quiz[148].MyGroup = GROUP_NT_TALENT;
-  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you look, feel or act younger than your biological age?";
@@ -1346,8 +1347,8 @@ void TQuizR7::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
-					if (PcaType == PCA_TYPE_ALL)
-						d3 = -d3;
+//					if (PcaType == PCA_TYPE_ALL)
+//						d3 = -d3;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d4 = -d4;

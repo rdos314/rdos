@@ -6370,9 +6370,10 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
     int g1;
 	int g2;
     long double corrval;
+    long double corrsum;
+    int corrcount;
     int count;
 	char str[80];
-	int insertcr;
 	int cross;
 	TFile file(filename, 0);
 
@@ -6415,26 +6416,26 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
         {
             WriteCenteredFieldHeader(file, 5);
 
-            insertcr = FALSE;
+            count = 0;
+            corrsum = 0.0;
+            corrcount = 0;
             
             for (cross = 0; cross < MAX_CROSS && Cross; cross++)
             {
                 if (CrossQuiz[cross])
                 {
-                    if (insertcr)
-                        file.Write("<br>");
-                    insertcr = TRUE;
-					corrval = CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
-					count = CrossQuiz[cross]->GroupCorr[g1][g2].Count;
-					WriteCorrVal(file, corrval, count);
+					corrsum += CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
+					count += CrossQuiz[cross]->GroupCorr[g1][g2].Count;
+					corrcount++;
 				}
 			}
 
-			if (insertcr)
-				file.Write("<br>");
+			corrsum += GroupCorr[g1][g2].Corr;
+			count += GroupCorr[g1][g2].Count;
+            corrcount++;
 
-			corrval = GroupCorr[g1][g2].Corr;
-			count = GroupCorr[g1][g2].Count;
+            corrval = corrsum / corrcount;
+            
 			WriteCorrVal(file, corrval, count);
 
             WriteFieldFooter(file);
