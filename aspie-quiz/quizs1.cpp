@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7)
-  : TQuiz(140),
+  : TQuiz(150),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -108,6 +108,21 @@ TQuizS1::~TQuizS1()
 int TQuizS1::GetPcaCount()
 {
 	return 4;
+}
+
+/*##################  TQuizS1::GetCatCount ##########################
+*   Purpose....: Return number of categories for question  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizS1::GetCatCount(int Question)
+{
+    if (Question < 140)
+        return 3;
+    else
+    	return 11;
 }
 
 /*##########################################################################
@@ -178,6 +193,10 @@ void TQuizS1::SetupTexts()
   Quiz[137].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
+
+  Quiz[142].Reverse = TRUE;
+  Quiz[143].Reverse = TRUE;
+  Quiz[146].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
@@ -320,6 +339,17 @@ void TQuizS1::SetupTexts()
   Quiz[138].MyGroup = GROUP_NONVERBAL;
   Quiz[139].MyGroup = GROUP_NONVERBAL;
 
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_NONVERBAL;
+  Quiz[143].MyGroup = GROUP_NONVERBAL;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
   Quiz[1].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
@@ -461,6 +491,18 @@ void TQuizS1::SetupTexts()
   Quiz[137].Text = "Can you easily keep track of several different people's conversations?";
   Quiz[138].Text = "Do you find it easy to estimate the age of people?";
   Quiz[139].Text = "Does it feel natural for you to say 'thank you' and 'sorry'?";
+
+  Quiz[140].Text = "Rating for Aspie male #1";
+  Quiz[141].Text = "Rating for Aspie female #1";
+  Quiz[142].Text = "Rating for NT male #1";
+  Quiz[143].Text = "Rating for NT female #1";
+  Quiz[144].Text = "Rating for Aspie male #2";
+  Quiz[145].Text = "Rating for cat";
+  Quiz[146].Text = "Rating for socker game";
+  Quiz[147].Text = "Rating for stream";
+  Quiz[148].Text = "Rating for cave";
+  Quiz[149].Text = "Rating for tropical beach";
+
 #endif
 
 #ifdef SWEDISH
@@ -604,6 +646,18 @@ void TQuizS1::SetupTexts()
   Quiz[137].Text = "Kan du lätt hålla koll på flera olika människors konversationer?";
   Quiz[138].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[139].Text = "Känns det naturligt för dig att säga 'tack' och 'förlåt'?";
+
+  Quiz[140].Text = "Bedömning för Aspie man #1";
+  Quiz[141].Text = "Bedömning för Aspie kvinna #1";
+  Quiz[142].Text = "Bedömning för NT man #1";
+  Quiz[143].Text = "Bedömning för NT kvinna #1";
+  Quiz[144].Text = "Bedömning för Aspie man #2";
+  Quiz[145].Text = "Bedömning för katt";
+  Quiz[146].Text = "Bedömning för fotbollsmatch";
+  Quiz[147].Text = "Bedömning för strömmande vatten";
+  Quiz[148].Text = "Bedömning för grotta";
+  Quiz[149].Text = "Bedömning för tropisk strand";
+
 #endif
 
 }
@@ -633,7 +687,8 @@ void TQuizS1::InitReferers()
 	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
 	AddReferer("tbg.nu", "tbg.nu/news_show/109118/40");
 	AddReferer("vof.se", "vof.se/forum/viewtopic.php?t=3080");
- }
+	AddReferer("autismspeaks.org", "autismspeaks.org/community/forums");
+}
 
 /*##########################################################################
 #
@@ -920,7 +975,7 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 2, 2);
     DefineCross(QuizR7, 3, 4);
     DefineCross(QuizR7, 4, 5);
-    DefineCross(QuizR7, 5, 7);
+	DefineCross(QuizR7, 5, 7);
     DefineCross(QuizR7, 6, 8);
     DefineCross(QuizR7, 7, 84);
     DefineCross(QuizR7, 8, 10);
@@ -955,7 +1010,7 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 37, 28);
     DefineCross(QuizR7, 38, 36);
     DefineCross(QuizR7, 39, 37);
-    DefineCross(QuizR7, 40, 39);
+	DefineCross(QuizR7, 40, 39);
     DefineCross(QuizR7, 41, 123);
     DefineCross(QuizR7, 42, 43);
     DefineCross(QuizR7, 43, 41);
@@ -990,7 +1045,7 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 72, 73);
     DefineCross(QuizR7, 73, 42);
     DefineCross(QuizR7, 74, 77);
-    DefineCross(QuizR7, 75, 122);
+	DefineCross(QuizR7, 75, 122);
     DefineCross(QuizR7, 76, 79);
     DefineCross(QuizR7, 77, 81);
     DefineCross(QuizR7, 78, 76);
@@ -1025,7 +1080,7 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 107, 106);
     DefineCross(QuizR7, 108, 100);
     DefineCross(QuizR7, 109, 105);
-    DefineCross(QuizR7, 110, 62);
+	DefineCross(QuizR7, 110, 62);
     DefineCross(QuizR7, 111, 107);
     DefineCross(QuizR7, 112, 108);
     DefineCross(QuizR7, 113, 109);
@@ -1055,6 +1110,17 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 137, 143);
     DefineCross(QuizR7, 138, 145);
     DefineCross(QuizR7, 139, 61);
+
+    DefineGlobalId(140, 745);
+    DefineGlobalId(141, 746);
+    DefineGlobalId(142, 747);
+    DefineGlobalId(143, 748);
+	DefineGlobalId(144, 749);
+    DefineGlobalId(145, 750);
+    DefineGlobalId(146, 751);
+    DefineGlobalId(147, 752);
+    DefineGlobalId(148, 753);
+    DefineGlobalId(149, 754);
 }
 
 /*##########################################################################
@@ -1189,9 +1255,9 @@ void TQuizS1::ExportExcelCase(const char *filename, int PcaType)
 				{
     				ival = Row.Quiz[i];
 	    			if (ival)
-		    			ival--;
+						ival--;
     
-					if (ival > 2)
+					if (ival < 140 && ival > 2)
 						ival = 0;
                     
 					sprintf(str, "\"%d\"", ival);
@@ -1351,8 +1417,8 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-//					if (PcaType == PCA_TYPE_FEMALE)
-//						d2 = -d2;
+					if (PcaType == PCA_TYPE_MALE)
+						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
@@ -1429,4 +1495,476 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  round ##########################
+*   Purpose....: round long double to int       	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int round(long double val)
+{
+	return (int)(val + 0.5);
+}
+
+/*##################  WriteCenteredFieldHeader ##########################
+*   Purpose....: Write centered field header for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCenteredFieldHeader(TFile &File, int RelWidth)
+{
+	char str[80];
+
+	sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+	File.Write(str);
+
+	File.Write("<p align=\"center\">\n");
+	File.Write("<b>\n");
+}
+
+/*##################  WriteFieldFooter ##########################
+*   Purpose....: Write field footer for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteFieldFooter(TFile &File)
+{
+	File.Write("\n</b>\n");
+	File.Write("</p>\n");
+
+	File.Write("</td>\n");
+}
+
+/*##################  TQuizS1::WritePictureRating ##########################
+*   Purpose....: Write picture rating report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS1::WritePictureRating(const char *filename)
+{
+    int NtRateCount[10];
+    long double NtRateSum[10];
+    long double NtRateMean[10];
+    long double NtRateSd[10];
+    int NtViewCount[10];
+    long double NtViewSum[10];
+    long double NtViewMean[10];
+    long double NtViewSd[10];
+    int AsRateCount[10];
+    long double AsRateSum[10];
+    long double AsRateMean[10];
+    long double AsRateSd[10];
+    int AsViewCount[10];
+    long double AsViewSum[10];
+    long double AsViewMean[10];
+    long double AsViewSd[10];
+    int i;
+	int rateok;
+	int timeok;
+	int ival;
+	long double val;
+	long double dev;
+    char str[80];
+	int diff;
+	TQuizRow Row;
+	TFile file(filename, 0);
+
+    for (i = 0; i < 10; i++)
+    {
+        AsRateCount[i] = 0;
+        AsRateSum[i] = 0;
+        AsViewCount[i] = 0;
+        AsViewSum[i] = 0;
+
+        NtRateCount[i] = 0;
+        NtRateSum[i] = 0;
+        NtViewCount[i] = 0;
+        NtViewSum[i] = 0;
+    }
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    rateok = FALSE;
+	    timeok = FALSE;
+	    
+        for (i = 0; i < 10; i++)
+        {
+            if (Row.Rating[i])
+                rateok = TRUE;
+
+            if (Row.ViewTime[i])
+            {
+                rateok = TRUE;
+				timeok = TRUE;
+            }
+        }
+
+        for (i = 0; i < 10; i++)
+        {
+            diff = Row.AsResult - Row.NtResult;
+            if (rateok)
+            {
+                if (diff > 0)
+                {
+                    AsRateCount[i]++;
+                    AsRateSum[i] += Row.Rating[i];
+                }
+                else
+                {
+                    NtRateCount[i]++;
+                    NtRateSum[i] += Row.Rating[i];
+                }
+            }
+
+            if (timeok)
+            {
+                if (Row.ViewTime[i] < 30000)
+                {
+                    if (diff > 0)
+                    {
+                        AsViewCount[i]++;
+                        AsViewSum[i] += Row.ViewTime[i];
+                    }
+                    else
+                    {
+                        NtViewCount[i]++;
+                        NtViewSum[i] += Row.ViewTime[i];
+                    }
+				}
+            }
+        }
+    }
+
+    for (i = 0; i < 10; i++)
+    {
+        AsRateMean[i] = AsRateSum[i] / AsRateCount[i];
+        AsViewMean[i] = AsViewSum[i] / AsViewCount[i];
+
+        NtRateMean[i] = NtRateSum[i] / NtRateCount[i];
+        NtViewMean[i] = NtViewSum[i] / NtViewCount[i];
+    }
+
+    for (i = 0; i < 10; i++)
+    {
+        AsRateCount[i] = 0;
+        AsRateSum[i] = 0;
+        AsViewCount[i] = 0;
+        AsViewSum[i] = 0;
+
+        NtRateCount[i] = 0;
+        NtRateSum[i] = 0;
+        NtViewCount[i] = 0;
+        NtViewSum[i] = 0;
+    }
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    rateok = FALSE;
+	    timeok = FALSE;
+	    
+        for (i = 0; i < 10; i++)
+        {
+			if (Row.Rating[i])
+                rateok = TRUE;
+
+            if (Row.ViewTime[i])
+            {
+                rateok = TRUE;
+                timeok = TRUE;
+            }
+        }
+
+        for (i = 0; i < 10; i++)
+        {
+            diff = Row.AsResult - Row.NtResult;
+            if (rateok)
+            {
+                if (diff > 0)
+                {
+                    AsRateCount[i]++;
+                    val = (long double)Row.Rating[i] - AsRateMean[i];
+                    AsRateSum[i] += val * val;
+                }
+                else
+                {
+                    NtRateCount[i]++;
+                    val = (long double)Row.Rating[i] - NtRateMean[i];
+                    NtRateSum[i] += val * val;
+                }
+            }
+
+            if (timeok)
+            {
+                if (Row.ViewTime[i] < 30000)
+                {
+                    if (diff > 0)
+                    {
+						AsViewCount[i]++;
+                        val = (long double)Row.Rating[i] - AsViewMean[i];
+                        AsViewSum[i] += val * val;
+                    }
+                    else
+                    {
+                        NtViewCount[i]++;
+                        val = (long double)Row.Rating[i] - NtViewMean[i];
+                        NtViewSum[i] += val * val;
+                    }
+                }
+            }
+        }
+    }
+
+    for (i = 0; i < 10; i++)
+    {
+        AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+        AsViewSd[i] = sqrtl(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
+
+        NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+        NtViewSd[i] = sqrtl(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
+    }
+
+    file.Write("<h3>Image rating</h3>");
+    
+	sprintf(str, "AS rate count: %d<br>", AsRateCount[0]);
+	file.Write(str);
+    
+	sprintf(str, "NT rate count: %d<br>", NtRateCount[0]);
+	file.Write(str);
+    
+	sprintf(str, "AS view time count: %d<br>", AsViewCount[0]);
+	file.Write(str);
+    
+	sprintf(str, "NT view time count: %d<br>", NtViewCount[0]);
+	file.Write(str);
+
+	file.Write("<br>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Image");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Rating (AS/NT)");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("View-time (AS/NT)");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+
+    for (i = 0; i < 10; i++)
+    {
+    	file.Write("<tr style='height:24.75pt'>");
+
+	    WriteCenteredFieldHeader(file, 25);
+	    switch (i)
+	    {
+	        case 0:
+            	file.Write("Aspie male #1");
+            	break;
+            	
+			case 1:
+            	file.Write("Aspie female");
+            	break;
+            	
+	        case 2:
+            	file.Write("Celebrity male");
+            	break;
+            	
+	        case 3:
+            	file.Write("Celebrity female");
+            	break;
+            	
+	        case 4:
+            	file.Write("Aspie male #2");
+            	break;
+            	
+	        case 5:
+            	file.Write("Cat");
+            	break;
+            	
+	        case 6:
+            	file.Write("Socker game");
+            	break;
+            	
+	        case 7:
+            	file.Write("Stream");
+            	break;
+            	
+	        case 8:
+            	file.Write("Cave");
+            	break;
+
+	        case 9:
+            	file.Write("Tropical beach");
+            	break;
+		}
+            	            	
+   	    WriteFieldFooter(file);
+
+    	WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+		dev = 1.96 * AsRateSd[i] / sqrtl(AsRateCount[i]);
+
+		val = AsRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = AsRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+		val = AsRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+
+#ifdef CI
+
+		dev = 1.96 * NtRateSd[i] / sqrtl(NtRateCount[i]);
+
+		val = NtRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = NtRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = NtRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+		dev = 1.96 * AsViewSd[i] / sqrtl(AsViewCount[i]);
+
+		val = AsViewMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = AsViewMean[i] + dev;
+
+		ival = round(val / 100);
+
+		sprintf(str, "-%d.%01d s / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = AsViewMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d s / ", ival / 10, ival % 10);
+		file.Write(str);
+#endif
+
+
+#ifdef  CI
+
+		dev = 1.96 * NtViewSd[i] / sqrtl(NtViewCount[i]);
+
+		val = NtViewMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = NtViewMean[i] + dev;
+
+		ival = round(val / 100);
+
+		sprintf(str, "-%d.%01d s", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = NtViewMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+    	WriteFieldFooter(file);
+
+    	file.Write("</tr>");
+    }
+	file.Write("</table>");
+   	
 }

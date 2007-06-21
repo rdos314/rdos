@@ -315,6 +315,8 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteHFE("hfe9.htm");
 	 Quiz[8]->WriteLeiden("leiden9.htm");
 
+	 Quiz[16]->WritePictureRating("imgrate1.htm");
+
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
 	 Quiz[1]->ExportHistogram("all2.csv", POP_TYPE_ALL, 2, FALSE);
@@ -356,6 +358,7 @@ int main(int argc, char **argv)
 	 Quiz[16]->WriteWeighting("weights.cpp");
 	 Quiz[16]->WritePhpWeighting("weights.php");
 	 Quiz[16]->WritePhpGroupWeighting("group.php");
+
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 

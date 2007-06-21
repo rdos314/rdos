@@ -21,5 +21,7 @@ struct TQuizRow
 	long AsResult;
 	long NtResult;
 	char Quiz[200];
+	char Rating[10];
+	int  ViewTime[10];
 };
 

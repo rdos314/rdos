@@ -2087,7 +2087,7 @@ void TQuiz::CalcGlobal()
 	long double val;
 	long double rsum;
 	long double exp;
-	int ChiArr[2][8];
+	int ChiArr[2][16];
 	int ChiCount[2];
 	int Cats;
 	long double dcount1;
@@ -2398,6 +2398,17 @@ void TQuiz::WriteLeiden(const char *FileName)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 void TQuiz::WriteAQ(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WritePictureRating ##########################
+*   Purpose....: Write picture rating report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePictureRating(const char *FileName)
 {
 }
 
@@ -2944,65 +2955,183 @@ void TQuiz::WriteChi2(TFile &File, long double chi2)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteP(TFile &File, long double chi2)
+void TQuiz::WriteP(TFile &File, int cats, long double chi2)
 {
-    char str[40];
+	char str[40];
 
-    if (chi2 >= 18.5)
-        strcpy(str, "0.0001");
-    else
-    {
-        if (chi2 >= 17.8)
-            strcpy(str, "0.0002");
-        else
-        {
-            if (chi2 >= 15.5)
-                strcpy(str, "0.0005");
-            else
-            {
-                if (chi2 >= 14.0)
-                    strcpy(str, "0.001");
-                else
-                {
-                    if (chi2 >= 12.5)
-                        strcpy(str, "0.002");
-                    else
-                    {
-                        if (chi2 >= 10.62)
-                            strcpy(str, "0.005");
-                        else
-                        {
-                            if (chi2 >= 9.23)
-                                strcpy(str, "0.01");
-                            else
-                            {
-                                if (chi2 >= 7.83)
-                                    strcpy(str, "0.02");
-                                else
-                                {
-                                    if (chi2 >= 6.00)
-                                        strcpy(str, "0.05");
-                                    else
-                                    {
-                                        if (chi2 >= 4.61)
-														  strcpy(str, "0.1");
-													 else
-													 {
-														  if (chi2 >= 3.22)
-																strcpy(str, "0.2");
-														  else
-																strcpy(str, "---");
-													 }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-            
+	switch (cats)
+	{
+		case 3:
+			if (chi2 >= 18.5)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 17.8)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 15.5)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 14.0)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 12.5)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 10.62)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 9.23)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 7.83)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 6.00)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 4.61)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 3.22)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+
+		case 4:
+			if (chi2 >= 20.3)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 19.3)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 18.0)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 16.4)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 14.9)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 12.86)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 11.36)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 9.84)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 7.82)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 6.26)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 4.64)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+
+		case 11:
+			if (chi2 >= 35.6)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 34.6)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 31.7)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 29.8)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 27.8)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 25.22)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 23.25)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 21.17)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 18.32)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 15.99)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 13.45)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+	}
 	File.Write(str);
 }
 
@@ -4102,7 +4231,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 				}       
 				NormCorr[cross] = 0.9 * NormCorr[cross]; 
 
-				WriteP(file, quiz->Quiz[q].Chi2);
+				WriteP(file, quiz->Quiz[q].Cats, quiz->Quiz[q].Chi2);
 				
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
                 if (quiz)
@@ -4586,7 +4715,7 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 4);
-				WriteP(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalCatCount[GlobalId], GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
 				NormCorr = 0.0;
@@ -4814,7 +4943,7 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 				file.Write(str);
 #endif
 				WriteCenteredFieldHeader(file, 3);
-				WriteP(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalCatCount[GlobalId], GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
 				for (j = 0; j < 4; j++)
@@ -5006,7 +5135,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 				WriteFieldFooter(file);
 
 				WriteCenteredFieldHeader(file, 3);
-				WriteP(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalCatCount[GlobalId], GlobalChi2[GlobalId]);
 				WriteFieldFooter(file);
 
                 if (GlobalPcaCount[GlobalId][0])
@@ -5580,12 +5709,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs1.htm\">summary</a> <a href=\"refs1.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs1.htm\">summary</a> <a href=\"refs1.htm\">referer sites</a> <a href=\"imgrate1.htm\">image rating</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs1.htm\">summering</a> <a href=\"refs1.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs1.htm\">summering</a> <a href=\"refs1.htm\">referenssajter</a> <a href=\"imgrate1.htm\">bildtest</a>");
 	 file.Write("<br>");
 #endif
 
@@ -5779,7 +5908,7 @@ void TQuiz::WriteLinkReport(const char *filename)
             	file.Write("p <  ");
 #endif
 
-				WriteP(file, GlobalChi2[GlobalId]);
+				WriteP(file, GlobalCatCount[GlobalId], GlobalChi2[GlobalId]);
 
                 file.Write("<br>");
 

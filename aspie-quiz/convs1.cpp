@@ -141,8 +141,9 @@ char *ProcessRow(char *str)
    int j;
 	TQuizRow Row;
 	int quote;
+	int valid;
 
-	for (fieldno = 0; fieldno < 161; fieldno++)
+	for (fieldno = 0; fieldno < 181; fieldno++)
 	{
 		valstr = str;
 
@@ -277,11 +278,33 @@ char *ProcessRow(char *str)
 
 				default:
 					i = fieldno - 21;
-					Row.Quiz[i] = atoi(valstr);
+
+					if (i >= 140)
+					{
+					    i -= 140;
+					    if (i % 2 == 0)
+							Row.ViewTime[i/2] = atoi(valstr);
+						else
+						{
+							Row.Rating[i/2] = atoi(valstr);
+							Row.Quiz[140 + i/2] = atoi(valstr);
+					    }
+					}
+					else
+    					Row.Quiz[i] = atoi(valstr);
 					break;
 			}
 		}
 	}
+
+    valid = FALSE;
+	for (i = 0; i < 10; i++)
+	    if (Row.Quiz[140 + i])
+	        valid = TRUE;
+
+	if (valid)
+    	for (i = 0; i < 10; i++)
+	        Row.Quiz[140 + i]++;
 
 	UpdateScore(&Row);
 	HandleRow(&Row);
