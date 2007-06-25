@@ -125,6 +125,18 @@ int TQuizS1::GetCatCount(int Question)
     	return 11;
 }
 
+/*##################  TQuiz::GetQuizN ##########################
+*   Purpose....: Return number of questions in the quiz (not counting fictive questions)  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizS1::GetQuizN()
+{
+	return 140;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuizS1::WriteName

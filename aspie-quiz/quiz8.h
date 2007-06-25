@@ -49,6 +49,7 @@ private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
     virtual int GetPcaCount();
+	virtual int GetQuizN();
 
     void DefineQuiz();
     void SetupTexts();

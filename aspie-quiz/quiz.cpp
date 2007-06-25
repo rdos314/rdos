@@ -380,6 +380,18 @@ int TQuiz::GetCatCount(int Question)
 	return 3;
 }
 
+/*##################  TQuiz::GetQuizN ##########################
+*   Purpose....: Return number of questions in the quiz (not counting fictive questions)  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::GetQuizN()
+{
+	return N;
+}
+
 /*##################  TQuiz::DefineCross ##########################
 *   Purpose....: Define cross reference quiz 					      	        #
 *   In params..: *                                                          #
@@ -3189,9 +3201,9 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
 
     pop = quiz->GetPop(PopType);
 
-	count = (long double)quiz->N;
+	count = (long double)quiz->GetQuizN();
 
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
     {
         val = quiz->All.GetMean(question);
         mean[question] = pop->GetMean(question) - val;
@@ -3242,19 +3254,19 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
     }
 
     sum = 0.0;
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
         sum += mean[question];
 
     PopMean = sum / count;
 
     sum = 0.0;
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
         sum += pca[question];
 
     PcaMean = sum / count;
 
     sum = 0.0;
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
     {
         val = mean[question] - PopMean;
         sum += val * val;
@@ -3262,7 +3274,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
     PopSd = sqrtl(sum / (count - 1.0));
 
     sum = 0.0;
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
     {
         val = pca[question] - PcaMean;
         sum += val * val;
@@ -3270,7 +3282,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
     PcaSd = sqrtl(sum / (count - 1.0));
 
     sum = 0.0;
-    for (question = 0; question < quiz->N; question++)
+    for (question = 0; question < quiz->GetQuizN(); question++)
     {
         zx = (mean[question] - PopMean) / PopSd;
         zy = (pca[question] - PcaMean) / PcaSd;

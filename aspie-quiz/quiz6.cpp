@@ -141,6 +141,18 @@ int TQuiz6::GetPcaCount()
 	return 4;
 }
 
+/*##################  TQuiz6::GetQuizN ##########################
+*   Purpose....: Return number of questions in the quiz (not counting fictive questions)  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz6::GetQuizN()
+{
+	return 150;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuiz6::WriteName

@@ -252,6 +252,7 @@ protected:
 	virtual void WriteName(TFile &File) = 0;
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
+	virtual int GetQuizN();
 
     TPopulation *GetPop(int PopType);
     void DefineCross(int id, TQuiz *quiz);
