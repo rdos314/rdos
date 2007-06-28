@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7)
-  : TQuiz(150),
+  : TQuiz(155),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -361,6 +361,11 @@ void TQuizS1::SetupTexts()
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -514,6 +519,11 @@ void TQuizS1::SetupTexts()
   Quiz[147].Text = "Rating for stream";
   Quiz[148].Text = "Rating for cave";
   Quiz[149].Text = "Rating for tropical beach";
+  Quiz[150].Text = "Rating for NT male #2";
+  Quiz[151].Text = "Rating for NT female #2";
+  Quiz[152].Text = "Rating for Aspie female #2";
+  Quiz[153].Text = "Rating for scandinavian scene";
+  Quiz[154].Text = "Rating for tropical scene";
 
 #endif
 
@@ -659,16 +669,21 @@ void TQuizS1::SetupTexts()
   Quiz[138].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[139].Text = "Känns det naturligt för dig att säga 'tack' och 'förlåt'?";
 
-  Quiz[140].Text = "Bedömning för Aspie man #1";
-  Quiz[141].Text = "Bedömning för Aspie kvinna #1";
-  Quiz[142].Text = "Bedömning för NT man #1";
-  Quiz[143].Text = "Bedömning för NT kvinna #1";
-  Quiz[144].Text = "Bedömning för Aspie man #2";
+  Quiz[140].Text = "Bedömning för Aspie kille #1";
+  Quiz[141].Text = "Bedömning för Aspie tjej #1";
+  Quiz[142].Text = "Bedömning för NT kille #1";
+  Quiz[143].Text = "Bedömning för NT tjej #1";
+  Quiz[144].Text = "Bedömning för Aspie kille #2";
   Quiz[145].Text = "Bedömning för katt";
   Quiz[146].Text = "Bedömning för fotbollsmatch";
   Quiz[147].Text = "Bedömning för strömmande vatten";
   Quiz[148].Text = "Bedömning för grotta";
   Quiz[149].Text = "Bedömning för tropisk strand";
+  Quiz[150].Text = "Bedömning för NT kille #2";
+  Quiz[151].Text = "Bedömning för NT tjej #2";
+  Quiz[152].Text = "Bedömning för Aspie tjej #2";
+  Quiz[153].Text = "Bedömning för skandinavisk scen";
+  Quiz[154].Text = "Bedömning för tropisk scen";
 
 #endif
 
@@ -1133,6 +1148,11 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineGlobalId(147, 752);
     DefineGlobalId(148, 753);
     DefineGlobalId(149, 754);
+    DefineGlobalId(150, 755);
+    DefineGlobalId(151, 756);
+    DefineGlobalId(152, 757);
+    DefineGlobalId(153, 758);
+    DefineGlobalId(154, 759);
 }
 
 /*##########################################################################
@@ -1429,7 +1449,7 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
@@ -1563,200 +1583,199 @@ void WriteFieldFooter(TFile &File)
 *##########################################################################*/
 void TQuizS1::WritePictureRating(const char *filename)
 {
-    int NtRateCount[10];
-    long double NtRateSum[10];
-    long double NtRateMean[10];
-    long double NtRateSd[10];
-    int NtViewCount[10];
-    long double NtViewSum[10];
-    long double NtViewMean[10];
-    long double NtViewSd[10];
-    int AsRateCount[10];
-    long double AsRateSum[10];
-    long double AsRateMean[10];
-    long double AsRateSd[10];
-    int AsViewCount[10];
-    long double AsViewSum[10];
-    long double AsViewMean[10];
-    long double AsViewSd[10];
-    int i;
-	int rateok;
-	int timeok;
+	int NtRateCount[15];
+	long double NtRateSum[15];
+	long double NtRateMean[15];
+	long double NtRateSd[15];
+	int NtViewCount[15];
+	long double NtViewSum[15];
+	long double NtViewMean[15];
+	long double NtViewSd[15];
+	int AsRateCount[15];
+	long double AsRateSum[15];
+	long double AsRateMean[15];
+	long double AsRateSd[15];
+	int AsViewCount[15];
+	long double AsViewSum[15];
+	long double AsViewMean[15];
+	long double AsViewSd[15];
+	int UseMale[15];
+	int UseFemale[15];
+	int use;
+	int i;
 	int ival;
 	long double val;
 	long double dev;
-    char str[80];
+	char str[80];
 	int diff;
 	TQuizRow Row;
 	TFile file(filename, 0);
 
-    for (i = 0; i < 10; i++)
-    {
-        AsRateCount[i] = 0;
-        AsRateSum[i] = 0;
-        AsViewCount[i] = 0;
-        AsViewSum[i] = 0;
+	for (i = 0; i < 15; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+		AsViewCount[i] = 0;
+		AsViewSum[i] = 0;
 
-        NtRateCount[i] = 0;
-        NtRateSum[i] = 0;
-        NtViewCount[i] = 0;
-        NtViewSum[i] = 0;
-    }
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+		NtViewCount[i] = 0;
+		NtViewSum[i] = 0;
+
+		UseMale[i] = TRUE;
+		UseFemale[i] = TRUE;
+	}
+
+	UseMale[0] = FALSE;
+	UseFemale[1] = FALSE;
+	UseMale[2] = FALSE;
+	UseFemale[3] = FALSE;
+	UseMale[4] = FALSE;
+	UseMale[10] = FALSE;
+	UseFemale[11] = FALSE;
+    UseFemale[12] = FALSE;            	
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    rateok = FALSE;
-	    timeok = FALSE;
-	    
-        for (i = 0; i < 10; i++)
-        {
-            if (Row.Rating[i])
-                rateok = TRUE;
+		for (i = 0; i < 15; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
 
-            if (Row.ViewTime[i])
-            {
-                rateok = TRUE;
-				timeok = TRUE;
-            }
-        }
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i] || Row.ViewTime[i])
+		    	{
+			    	if (diff > 0)
+				    {
+    					AsRateCount[i]++;
+	    				AsRateSum[i] += Row.Rating[i];
+		    		}
+			    	else
+				    {
+    					NtRateCount[i]++;
+	    				NtRateSum[i] += Row.Rating[i];
+		    		}
+    			}
 
-        for (i = 0; i < 10; i++)
-        {
-            diff = Row.AsResult - Row.NtResult;
-            if (rateok)
-            {
-                if (diff > 0)
-                {
-                    AsRateCount[i]++;
-                    AsRateSum[i] += Row.Rating[i];
-                }
-                else
-                {
-                    NtRateCount[i]++;
-                    NtRateSum[i] += Row.Rating[i];
-                }
-            }
+	    		if (Row.ViewTime[i])
+		    	{
+			    	if (Row.ViewTime[i] < 30000)
+				    {
+    					if (diff > 0)
+	    				{
+		    				AsViewCount[i]++;
+			    			AsViewSum[i] += Row.ViewTime[i];
+				    	}
+    					else
+	    				{
+		    				NtViewCount[i]++;
+			    			NtViewSum[i] += Row.ViewTime[i];
+				    	}
+    				}
+	    		}
+	        }
+		}
+	}
 
-            if (timeok)
-            {
-                if (Row.ViewTime[i] < 30000)
-                {
-                    if (diff > 0)
-                    {
-                        AsViewCount[i]++;
-                        AsViewSum[i] += Row.ViewTime[i];
-                    }
-                    else
-                    {
-                        NtViewCount[i]++;
-                        NtViewSum[i] += Row.ViewTime[i];
-                    }
-				}
-            }
-        }
-    }
+	for (i = 0; i < 15; i++)
+	{
+		AsRateMean[i] = AsRateSum[i] / AsRateCount[i];
+		AsViewMean[i] = AsViewSum[i] / AsViewCount[i];
 
-    for (i = 0; i < 10; i++)
-    {
-        AsRateMean[i] = AsRateSum[i] / AsRateCount[i];
-        AsViewMean[i] = AsViewSum[i] / AsViewCount[i];
+		NtRateMean[i] = NtRateSum[i] / NtRateCount[i];
+		NtViewMean[i] = NtViewSum[i] / NtViewCount[i];
+	}
 
-        NtRateMean[i] = NtRateSum[i] / NtRateCount[i];
-        NtViewMean[i] = NtViewSum[i] / NtViewCount[i];
-    }
+	for (i = 0; i < 15; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+		AsViewCount[i] = 0;
+		AsViewSum[i] = 0;
 
-    for (i = 0; i < 10; i++)
-    {
-        AsRateCount[i] = 0;
-        AsRateSum[i] = 0;
-        AsViewCount[i] = 0;
-        AsViewSum[i] = 0;
-
-        NtRateCount[i] = 0;
-        NtRateSum[i] = 0;
-        NtViewCount[i] = 0;
-        NtViewSum[i] = 0;
-    }
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+		NtViewCount[i] = 0;
+		NtViewSum[i] = 0;
+	}
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    rateok = FALSE;
-	    timeok = FALSE;
-	    
-        for (i = 0; i < 10; i++)
-        {
-			if (Row.Rating[i])
-                rateok = TRUE;
+		for (i = 0; i < 15; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
 
-            if (Row.ViewTime[i])
-            {
-                rateok = TRUE;
-                timeok = TRUE;
-            }
-        }
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i] || Row.ViewTime[i])
+		    	{
+			    	if (diff > 0)
+    				{
+	    				AsRateCount[i]++;
+		    			val = (long double)Row.Rating[i] - AsRateMean[i];
+			    		AsRateSum[i] += val * val;
+    				}
+	    			else
+		    		{
+			    		NtRateCount[i]++;
+    					val = (long double)Row.Rating[i] - NtRateMean[i];
+	    				NtRateSum[i] += val * val;
+		    		}
+			    }
 
-        for (i = 0; i < 10; i++)
-        {
-            diff = Row.AsResult - Row.NtResult;
-            if (rateok)
-            {
-                if (diff > 0)
-                {
-                    AsRateCount[i]++;
-                    val = (long double)Row.Rating[i] - AsRateMean[i];
-                    AsRateSum[i] += val * val;
-                }
-                else
-                {
-                    NtRateCount[i]++;
-                    val = (long double)Row.Rating[i] - NtRateMean[i];
-                    NtRateSum[i] += val * val;
-                }
-            }
+    			if (Row.ViewTime[i])
+	    		{
+		    		if (Row.ViewTime[i] < 30000)
+			    	{
+    					if (diff > 0)
+	    				{
+		    				AsViewCount[i]++;
+			    			val = (long double)Row.Rating[i] - AsViewMean[i];
+				    		AsViewSum[i] += val * val;
+    					}
+	    				else
+		    			{
+			    			NtViewCount[i]++;
+				    		val = (long double)Row.Rating[i] - NtViewMean[i];
+					    	NtViewSum[i] += val * val;
+    					}
+	    			}
+	    		}
+			}
+		}
+	}
 
-            if (timeok)
-            {
-                if (Row.ViewTime[i] < 30000)
-                {
-                    if (diff > 0)
-                    {
-						AsViewCount[i]++;
-                        val = (long double)Row.Rating[i] - AsViewMean[i];
-                        AsViewSum[i] += val * val;
-                    }
-                    else
-                    {
-                        NtViewCount[i]++;
-                        val = (long double)Row.Rating[i] - NtViewMean[i];
-                        NtViewSum[i] += val * val;
-                    }
-                }
-            }
-        }
-    }
+	for (i = 0; i < 15; i++)
+	{
+		AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+		AsViewSd[i] = sqrtl(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
 
-    for (i = 0; i < 10; i++)
-    {
-        AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
-        AsViewSd[i] = sqrtl(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
+		NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+		NtViewSd[i] = sqrtl(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
+	}
 
-        NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
-        NtViewSd[i] = sqrtl(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
-    }
+	file.Write("<h3>Image rating</h3>");
 
-    file.Write("<h3>Image rating</h3>");
-    
 	sprintf(str, "AS rate count: %d<br>", AsRateCount[0]);
 	file.Write(str);
-    
+
 	sprintf(str, "NT rate count: %d<br>", NtRateCount[0]);
 	file.Write(str);
-    
+
 	sprintf(str, "AS view time count: %d<br>", AsViewCount[0]);
 	file.Write(str);
-    
+
 	sprintf(str, "NT view time count: %d<br>", NtViewCount[0]);
 	file.Write(str);
 
@@ -1781,7 +1800,7 @@ void TQuizS1::WritePictureRating(const char *filename)
 	file.Write("</tr>");
 
 
-    for (i = 0; i < 10; i++)
+    for (i = 0; i < 15; i++)
     {
     	file.Write("<tr style='height:24.75pt'>");
 
@@ -1826,6 +1845,26 @@ void TQuizS1::WritePictureRating(const char *filename)
 
 	        case 9:
             	file.Write("Tropical beach");
+            	break;
+
+	        case 10:
+            	file.Write("NT male #2");
+            	break;
+
+	        case 11:
+            	file.Write("NT female #2");
+            	break;
+
+	        case 12:
+            	file.Write("Aspie female #2");
+            	break;
+            	
+	        case 13:
+            	file.Write("Scandinavian scene");
+            	break;
+
+	        case 14:
+            	file.Write("Tropical scene");
             	break;
 		}
             	            	

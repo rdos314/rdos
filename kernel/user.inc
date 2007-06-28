@@ -2180,3 +2180,30 @@ StartUsbTransaction      MACRO
 IsUsbPipeIdle      MACRO
 	UserGate is_usb_pipe_idle_nr
 						ENDM
+
+;;;;;;;;;;; ICSP (In-circuit serial programming) ;;;;;;;;;;
+
+;   IN  AL          Device #
+;   OUT BX          Handle
+OpenICSP      MACRO
+	UserGate open_icsp_nr
+						ENDM
+
+;   IN  BX          Handle
+CloseICSP      MACRO
+	UserGate close_icsp_nr
+						ENDM
+
+;   IN  BX          Handle
+;   IN  EDX         Command
+;   IN  EAX         Data
+WriteICSP      MACRO
+	UserGate write_icsp_nr
+						ENDM
+
+;   IN  BX          Handle
+;   IN  EDX         Command
+;   OUT EAX         Data
+ReadICSP      MACRO
+	UserGate read_icsp_nr
+						ENDM

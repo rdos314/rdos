@@ -143,7 +143,7 @@ char *ProcessRow(char *str)
 	int quote;
 	int valid;
 
-	for (fieldno = 0; fieldno < 181; fieldno++)
+	for (fieldno = 0; fieldno < 191; fieldno++)
 	{
 		valstr = str;
 

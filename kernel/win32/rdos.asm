@@ -8714,6 +8714,147 @@ iupiDone:
 	ret 4
 RdosIsUsbPipeIdle	ENDP
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosOpenICSP
+;
+;		DESCRIPTION:    Open ICSP device
+;
+;       PARAMETERS:     Device ID
+;
+;       RETURNS:        Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosOpenICSP
+
+RdosOpenICSP	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov eax,[ebp+8]
+	UserGate open_icsp_nr
+	jc oicspFail
+;
+    movzx eax,bx
+    jmp oicspDone
+
+oicspFail:
+    xor eax,eax
+
+oicspDone:
+	pop ebx
+	pop ebp
+	ret 4
+RdosOpenICSP	ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosCloseICSP
+;
+;		DESCRIPTION:    Close ICSP handle
+;
+;       PARAMETERS:     Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosCloseICSP
+
+RdosCloseICSP	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	UserGate close_icsp_nr
+	mov eax,1
+;	
+	pop ebx
+	pop ebp
+	ret 4
+RdosCloseICSP	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteICSP
+;
+;		DESCRIPTION:    Send command / write data sequence to ICSP
+;
+;       PARAMETERS:     Handle
+;                       Command
+;                       Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteICSP
+
+RdosWriteICSP	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov edx,[ebp+12]
+	mov eax,[ebp+16]
+	UserGate write_icsp_nr
+	jc wicspFail
+;
+    mov eax,1
+    jmp wicspDone
+
+wicspFail:
+    xor eax,eax
+
+wicspDone:
+	pop ebx
+	pop ebp
+	ret 12
+RdosWriteICSP	ENDP
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosReadICSP
+;
+;		DESCRIPTION:    Send command / read data sequence to ICSP
+;
+;       PARAMETERS:     Handle
+;                       Command
+;                       Data buffer
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosReadICSP
+
+RdosReadICSP	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+	push edi
+;
+	mov bx,[ebp+8]
+	mov edx,[ebp+12]
+	mov edi,[ebp+16]
+	UserGate read_icsp_nr
+	jc ricspFail
+;
+    mov [edi],eax
+    mov eax,1
+    jmp ricspDone
+
+ricspFail:
+    xor eax,eax
+
+ricspDone:
+    pop edi
+	pop ebx
+	pop ebp
+	ret 12
+RdosReadICSP	ENDP
+
 ;	extrn Startup:near
 
 ;	public _main

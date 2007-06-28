@@ -400,4 +400,9 @@ start_usb_transaction_nr    = 337
 
 open_ini_nr                 = 338
 
-usergate_entries			= 340
+open_icsp_nr                = 339
+close_icsp_nr               = 340
+write_icsp_nr               = 341
+read_icsp_nr                = 342
+
+usergate_entries			= 360

@@ -362,6 +362,11 @@ void __stdcall RdosReqUsbStatus(int Handle);
 void __stdcall RdosWriteUsbStatus(int Handle);
 int __stdcall RdosIsUsbPipeIdle(int Handle);
 
+int __stdcall RdosOpenICSP(int DeviceID);
+void __stdcall RdosCloseICSP(int Handle);
+int __stdcall RdosWriteICSP(int Handle, int Cmd, int Data);
+int __stdcall RdosReadICSP(int Handle, int Cmd, int *Data);
+
 #ifdef __cplusplus
 }
 #endif
