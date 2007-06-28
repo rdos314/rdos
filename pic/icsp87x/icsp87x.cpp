@@ -36,6 +36,129 @@
 #define FALSE	0
 #define	TRUE	!FALSE
 
+#define CMD_LOAD_PROGRAM	0x2
+#define CMD_INCR_ADDRESS	0x6
+#define CMD_BULK_ERASE1		0x1
+#define CMD_BULK_ERASE2		0x7
+#define CMD_PROGRAM_ONLY    0x18
+
+/*##########################################################################
+#
+#   Name       : ReadRecord
+#
+#   Purpose....: Read a single record from hex-file
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int ReadRecord(TFile &file, int *op, int *offset, char *buf)
+{
+	char ch;
+	char str[10];
+	int size;
+	char *ptr;
+	int i;
+	int val;
+
+	*offset = 0;
+	*op = 1;
+	size = 0;
+
+	ch = ' ';
+
+	while (ch != ':')
+	{
+		if (file.Read(&ch, 1) == 0)
+		{
+			printf("Unexpected end of hex-file\r\n");
+			return 0;
+		}
+	}
+
+	file.Read(str, 8);
+	str[8] = 0;
+
+	if (sscanf(str, "%2hX%4hX%2hX", &size, offset, op) == 3)
+	{
+		if (*op == 0)
+		{
+			ptr = buf;
+			for (i = 0; i < size; i++)
+			{
+				val = 0;
+				file.Read(str, 2);
+				if (sscanf(str, "%2hX", &val) == 1)
+					*ptr = (char)val;
+				else
+				{
+					printf("Data error in hex-file\r\n");
+					*op = 1;
+					return 0;
+				}
+				ptr++;
+			}
+			return size;
+		}
+		else
+			return 0;
+	}
+	else
+	{
+		*op = 1;
+		printf("Format error in hex-file\r\n");
+	}
+
+	return 0;
+}
+
+/*##########################################################################
+#
+#   Name       : Erase
+#
+#   Purpose....: Erase flash chip
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void Erase(int handle)
+{
+	RdosWriteICSP(handle, CMD_LOAD_PROGRAM, 0x3FFF);
+}
+
+/*##########################################################################
+#
+#   Name       : GotoNextAddress
+#
+#   Purpose....: Goto next chip address
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void GotoNextAddress()
+{
+}
+
+/*##########################################################################
+#
+#   Name       : WriteData
+#
+#   Purpose....: Write data word
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void WriteData(int handle, int data)
+{
+}
+
 /*##########################################################################
 #
 #   Name       : DoICSP
@@ -49,6 +172,46 @@
 ##########################################################################*/
 void DoICSP(int handle, TFile &file)
 {
+	int op;
+	int offset;
+	int size;
+	char buf[256];
+	int data;
+	int i;
+	char *ptr;
+	int adr;
+
+	adr = 0;
+	op = 0;
+
+	Erase();
+
+	while (op != 1)
+	{
+		size = ReadRecord(file, &op, &offset, buf);
+
+		if (size && op == 0)
+		{
+			size = size / 2;
+			offset = offset / 2;
+			ptr = buf;
+
+			while (offset > adr)
+			{
+				GotoNextAddress();
+				adr++;
+			}
+
+			for (i = 0; i < size; i++)
+			{
+				data = 0;
+				memcpy(&data, ptr, 2);
+				WriteData(handle, data);
+				ptr += 2;
+				adr++;
+			}
+		}
+	}
 }
 
 /*##########################################################################
@@ -86,23 +249,23 @@ int main(int argc, char **argv)
 
 	if (file.IsOpen())
 	{
-    	id = atoi(DeviceStr);
+		id = atoi(DeviceStr);
 
-    	if (id > 0)
-	        handle = RdosOpenICSP(id);
-    	else
-	        handle = 0;
+		if (id > 0)
+			handle = RdosOpenICSP(id);
+		else
+			handle = 0;
 
-    	if (handle)
-	    {
-    	    DoICSP(handle, file);
-    	    RdosCloseICSP(handle);
-	    }
-    	else
-	    	printf("Invalid device-id or no ICSP available\r\n");
-    }
-    else
-        printf("File not found\r\n");
+		if (handle)
+		{
+			DoICSP(handle, file);
+			RdosCloseICSP(handle);
+		}
+		else
+			printf("Invalid device-id or no ICSP available\r\n");
+	}
+	else
+		printf("File not found\r\n");
 
 	return 0;
 }
