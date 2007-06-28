@@ -40,6 +40,13 @@ INCLUDE ..\..\kernel\video.inc
 
 IO_BASE = 3A0h
 
+OUT_MCLR_0       = 1
+OUT_MCLR_1       = 2
+OUT_PGM_0        = 4
+OUT_PGM_1        = 8
+OUT_PGC          = 10h
+OUT_PGD          = 20h
+
 NODE_CNT            = 40h
 
 DQE_STAT_DONE       = 1
@@ -847,8 +854,38 @@ PAGE
 
 pic_name	DB 'PICLCD',0
 
+OUT_MCLR_0       = 1
+OUT_MCLR_1       = 2
+OUT_PGM_0        = 4
+OUT_PGM_1        = 8
+OUT_PGC          = 10h
+OUT_PGD          = 20h
+
 pic_thread:
     int 3
+    mov dx,3A8h
+    mov al,OUT_MCLR_0
+    out dx,al
+;
+    mov al,OUT_MCLR_1
+    out dx,al
+;
+    mov al,OUT_PGM_0
+    out dx,al
+;
+    mov al,OUT_PGM_1
+    out dx,al
+;
+    mov al,OUT_PGC
+    out dx,al
+;
+    mov al,OUT_PGD
+    out dx,al 
+;
+    xor al,al
+    out dx,al                   
+;
+
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
