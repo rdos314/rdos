@@ -81,6 +81,8 @@ DcfVal      DB ?
 PicThread   DW ?
 PicStatus   DB ?
 
+PicOut      DB ?
+
 ListSection section_typ <>
 
 DioQueue    DW ?,?,?
@@ -854,38 +856,26 @@ PAGE
 
 pic_name	DB 'PICLCD',0
 
-OUT_MCLR_0       = 1
-OUT_MCLR_1       = 2
-OUT_PGM_0        = 4
-OUT_PGM_1        = 8
-OUT_PGC          = 10h
-OUT_PGD          = 20h
-
 pic_thread:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+;    
+    mov ax,100
+    WaitMilliSec
+;
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,OUT_MCLR_0 OR OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+;    
     int 3
-    mov dx,3A8h
-    mov al,OUT_MCLR_0
-    out dx,al
-;
-    mov al,OUT_MCLR_1
-    out dx,al
-;
-    mov al,OUT_PGM_0
-    out dx,al
-;
-    mov al,OUT_PGM_1
-    out dx,al
-;
-    mov al,OUT_PGC
-    out dx,al
-;
-    mov al,OUT_PGD
-    out dx,al 
-;
-    xor al,al
-    out dx,al                   
-;
+    mov dx,IO_BASE + 10
 
+pl:
+    in al,dx
+    jmp pl    
+;    
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
@@ -898,6 +888,351 @@ pic_thread_loop:
     LeaveSection ds:ListSection
 	WaitForSignal
     jmp pic_thread_loop
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			OpenICSP
+;
+;		DESCRIPTION:	Open ICSP handle
+;
+;		PARAMETERS:		AL		Device #
+;
+;       RETURNS:        BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+open_icsp_name	DB 'Open ICSP', 0
+
+open_icsp    Proc far
+    push ds
+    push dx
+;    
+    cmp al,1
+    je oicsp1
+;
+    cmp al,2
+    je oicsp2
+    jmp oicspFail
+
+oicsp1:
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;	
+    cli
+	mov al,ds:PicOut
+	and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
+    out dx,al
+	mov ds:PicOut,al
+	sti
+;
+    mov ax,25
+    WaitMilliSec
+;
+    cli
+    mov al,ds:PicOut
+    or al,OUT_PGM_0
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_0
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;
+    mov ax,8
+    WaitMilliSec
+;        
+    mov bx,6DA0h
+    clc
+    jmp oicspDone
+
+oicsp2:
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;	
+    cli
+	mov al,ds:PicOut
+	and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
+    out dx,al
+	mov ds:PicOut,al
+	sti
+;
+    mov ax,25
+    WaitMilliSec
+;
+    cli
+    mov al,ds:PicOut
+    or al,OUT_PGM_1
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;
+    mov ax,8
+    WaitMilliSec
+;        
+    mov bx,6DA1h
+    clc
+    jmp oicspDone
+
+oicspFail:
+    xor bx,bx
+    stc
+
+oicspDone:            
+    pop dx
+    pop ds
+    retf32
+open_icsp   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			CloseICSP
+;
+;		DESCRIPTION:	Close ICSP handle
+;
+;		PARAMETERS:		BX      Handle
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+close_icsp_name	DB 'Close ICSP', 0
+
+close_icsp    Proc far
+    push ds
+    push ax
+    push dx
+;    
+    mov ax,bx
+    and ax,NOT 1
+    cmp ax,6DA0h
+    jne ciFail
+;    
+    mov al,bl
+    and al,1
+    cmp al,1
+    je ci2
+
+ci1:
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;	
+    cli
+	mov al,ds:PicOut
+	and al,NOT (OUT_MCLR_0 OR OUT_PGM_0 OR OUT_PGC OR OUT_PGD)
+    out dx,al
+	mov ds:PicOut,al
+	sti
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_0
+    out dx,al
+    mov ds:PicOut,al
+    sti
+    clc    	
+    jmp ciDone
+
+ci2:
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;	
+    cli
+	mov al,ds:PicOut
+	and al,NOT (OUT_MCLR_1 OR OUT_PGM_1 OR OUT_PGC OR OUT_PGD)
+    out dx,al
+	mov ds:PicOut,al
+	sti
+;
+    mov ax,10
+    WaitMilliSec
+;    
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti    	
+    clc
+    jmp ciDone
+
+ciFail:
+    stc
+
+ciDone:
+    pop dx
+    pop ax
+    pop ds
+    retf32
+close_icsp   Endp
+
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteICSPCommand
+;
+;		DESCRIPTION:	Write ICSP command
+;
+;		PARAMETERS:		BX      Handle
+;                       EAX     Command
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_icsp_cmd_name	DB 'Write ICSP Cmd', 0
+
+write_icsp_cmd    Proc far
+    push ds
+    push ax
+    push bx
+    push dx
+;
+    and bx,NOT 1
+    cmp bx,6DA0h
+    jne wicFail
+;    
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;
+    mov ah,al
+    mov cx,6
+
+wicLoop:
+    mov al,ah
+    and al,1
+    shl al,5
+    or al,ds:PicOut
+    or al,OUT_PGC
+    out dx,al
+    and al,NOT OUT_PGC
+    out dx,al
+;        
+    shr ah,1
+    loop wicLoop
+;
+    clc
+    jmp wicDone
+
+wicFail:
+    stc
+
+wicDone:
+    pop dx
+    pop bx
+    pop ax
+    pop ds        
+    retf32
+write_icsp_cmd   Endp
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			WriteICSPData
+;
+;		DESCRIPTION:	Write ICSP data
+;
+;		PARAMETERS:		BX      Handle
+;                       EAX     Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+write_icsp_data_name	DB 'Write ICSP Data', 0
+
+write_icsp_data    Proc far
+    push ds
+    push ax
+    push bx
+    push dx
+;
+    and bx,NOT 1
+    cmp bx,6DA0h
+    jne widFail
+;    
+	mov bx,piclcd_data_sel
+	mov ds,bx
+	mov dx,IO_BASE + 8
+;
+    mov bx,ax
+    shl bx,1
+    and bx,7FFEh
+    mov cx,16
+
+widLoop:
+    mov al,bl
+    and al,1
+    shl al,5
+    or al,ds:PicOut
+    or al,OUT_PGC
+    out dx,al
+    and al,NOT OUT_PGC
+    out dx,al
+;        
+    shr bx,1
+    loop widLoop
+;
+    clc
+    jmp widDone
+
+widFail:
+    stc
+
+widDone:
+    pop dx
+    pop bx
+    pop ax
+    pop ds        
+    retf32
+write_icsp_data   Endp
+
+
+PAGE
+	
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;	
+;
+;		NAME:			ReadICSPData
+;
+;		DESCRIPTION:	Read ICSP data
+;
+;		PARAMETERS:		BX      Handle
+;                       
+;       RETURNS:        EAX     Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+read_icsp_data_name	DB 'Read ICSP Data', 0
+
+read_icsp_data    Proc far
+    stc
+    retf32
+read_icsp_data   Endp
+
 
 PAGE
 	
@@ -1392,6 +1727,11 @@ init	PROC far
 	mov es:DioCurr,0
 	mov es:DioCurr+2,0
 	mov es:DioCurr+4,0
+;
+    xor al,al
+	mov es:PicOut,al
+	mov dx,IO_BASE + 8
+	out dx,al
 	InitSection es:ListSection
 ;
     mov di,NodeArr
@@ -1419,6 +1759,31 @@ init	PROC far
 	mov es,ax
 	mov di,OFFSET InitDriver
 	HookInitTasking
+;
+	mov si,OFFSET open_icsp
+	mov di,OFFSET open_icsp_name
+	mov ax,open_icsp_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET close_icsp
+	mov di,OFFSET close_icsp_name
+	mov ax,close_icsp_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET write_icsp_cmd
+	mov di,OFFSET write_icsp_cmd_name
+	mov ax,write_icsp_cmd_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET write_icsp_data
+	mov di,OFFSET write_icsp_data_name
+	mov ax,write_icsp_data_nr
+	RegisterBimodalUserGate
+;
+	mov si,OFFSET read_icsp_data
+	mov di,OFFSET read_icsp_data_name
+	mov ax,read_icsp_data_nr
+	RegisterBimodalUserGate
 ;
 	mov si,OFFSET read_serial_lines
 	mov di,OFFSET read_serial_lines_name

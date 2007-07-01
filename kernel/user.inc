@@ -2195,15 +2195,19 @@ CloseICSP      MACRO
 						ENDM
 
 ;   IN  BX          Handle
-;   IN  EDX         Command
-;   IN  EAX         Data
-WriteICSP      MACRO
-	UserGate write_icsp_nr
+;   IN  EAX         Command
+WriteICSPCommand      MACRO
+	UserGate write_icsp_cmd_nr
 						ENDM
 
 ;   IN  BX          Handle
-;   IN  EDX         Command
+;   IN  EAX         Data
+WriteICSPData      MACRO
+	UserGate write_icsp_data_nr
+						ENDM
+
+;   IN  BX          Handle
 ;   OUT EAX         Data
-ReadICSP      MACRO
-	UserGate read_icsp_nr
+ReadICSPData      MACRO
+	UserGate read_icsp_data_nr
 						ENDM

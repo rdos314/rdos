@@ -686,6 +686,30 @@ RdosWaitMilli	Endp
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:			RdosWaitMicro
+;
+;		description:	Wait a number of microseconds
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWaitMicro
+
+RdosWaitMicro	Proc
+	push ebp
+	mov ebp,esp
+	push eax
+;
+	mov eax,[ebp+8]
+	UserGate wait_micro_nr
+;
+	pop eax
+	pop ebp
+	ret 4
+RdosWaitMicro	Endp
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:			RdosWaitUntil
 ;
 ;		description:	Wait until tics expires
@@ -8779,81 +8803,112 @@ RdosCloseICSP	ENDP
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosWriteICSP
+;		NAME:			RdosWriteICSPCommand
 ;
-;		DESCRIPTION:    Send command / write data sequence to ICSP
+;		DESCRIPTION:    Write command to ICSP
 ;
 ;       PARAMETERS:     Handle
 ;                       Command
-;                       Data
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosWriteICSP
+	public RdosWriteICSPCommand
 
-RdosWriteICSP	PROC
+RdosWriteICSPCommand	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
 ;
 	mov bx,[ebp+8]
-	mov edx,[ebp+12]
-	mov eax,[ebp+16]
-	UserGate write_icsp_nr
-	jc wicspFail
+	mov eax,[ebp+12]
+	UserGate write_icsp_cmd_nr
+	jc wicspcFail
 ;
     mov eax,1
-    jmp wicspDone
+    jmp wicspcDone
 
-wicspFail:
+wicspcFail:
     xor eax,eax
 
-wicspDone:
+wicspcDone:
 	pop ebx
 	pop ebp
-	ret 12
-RdosWriteICSP	ENDP
+	ret 8
+RdosWriteICSPCommand	ENDP
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			RdosWriteICSPData
+;
+;		DESCRIPTION:    Write data to ICSP
+;
+;       PARAMETERS:     Handle
+;                       Data
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	public RdosWriteICSPData
+
+RdosWriteICSPData	PROC
+	push ebp
+	mov ebp,esp
+	push ebx
+;
+	mov bx,[ebp+8]
+	mov eax,[ebp+12]
+	UserGate write_icsp_data_nr
+	jc wicspdFail
+;
+    mov eax,1
+    jmp wicspdDone
+
+wicspdFail:
+    xor eax,eax
+
+wicspdDone:
+	pop ebx
+	pop ebp
+	ret 8
+RdosWriteICSPData	ENDP
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			RdosReadICSP
+;		NAME:			RdosReadICSPData
 ;
-;		DESCRIPTION:    Send command / read data sequence to ICSP
+;		DESCRIPTION:    Read data from ICSP
 ;
 ;       PARAMETERS:     Handle
-;                       Command
 ;                       Data buffer
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-	public RdosReadICSP
+	public RdosReadICSPData
 
-RdosReadICSP	PROC
+RdosReadICSPData	PROC
 	push ebp
 	mov ebp,esp
 	push ebx
 	push edi
 ;
 	mov bx,[ebp+8]
-	mov edx,[ebp+12]
 	mov edi,[ebp+16]
-	UserGate read_icsp_nr
-	jc ricspFail
+	UserGate read_icsp_data_nr
+	jc ricspdFail
 ;
     mov [edi],eax
     mov eax,1
-    jmp ricspDone
+    jmp ricspdDone
 
-ricspFail:
+ricspdFail:
     xor eax,eax
 
-ricspDone:
+ricspdDone:
     pop edi
 	pop ebx
 	pop ebp
-	ret 12
-RdosReadICSP	ENDP
+	ret 8
+RdosReadICSPData	ENDP
 
 ;	extrn Startup:near
 

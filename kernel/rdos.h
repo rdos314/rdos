@@ -165,6 +165,7 @@ int __stdcall RdosGetThreadHandle();
 int __stdcall RdosExec(const char *prog, const char *param);
 int __stdcall RdosSpawn(const char *prog, const char *param, const char *startdir);
 void __stdcall RdosWaitMilli(int ms);
+void __stdcall RdosWaitMicro(int us);
 void __stdcall RdosWaitUntil(unsigned long msb, unsigned long lsb);
 void __stdcall RdosGetTics(unsigned long *msb, unsigned long *lsb);
 void __stdcall RdosTicsToRecord(unsigned long msb, unsigned long lsb, int *year, int *month, int *day, int *hour, int *min, int *sec, int *milli);
@@ -364,8 +365,9 @@ int __stdcall RdosIsUsbPipeIdle(int Handle);
 
 int __stdcall RdosOpenICSP(int DeviceID);
 void __stdcall RdosCloseICSP(int Handle);
-int __stdcall RdosWriteICSP(int Handle, int Cmd, int Data);
-int __stdcall RdosReadICSP(int Handle, int Cmd, int *Data);
+int __stdcall RdosWriteICSPCommand(int Handle, int Cmd);
+int __stdcall RdosWriteICSPData(int Handle, int Data);
+int __stdcall RdosReadICSPData(int Handle, int *Data);
 
 #ifdef __cplusplus
 }

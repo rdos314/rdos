@@ -36,10 +36,12 @@
 #define FALSE	0
 #define	TRUE	!FALSE
 
+#define CMD_LOAD_CONFIG		0x0
 #define CMD_LOAD_PROGRAM	0x2
 #define CMD_INCR_ADDRESS	0x6
 #define CMD_BULK_ERASE1		0x1
 #define CMD_BULK_ERASE2		0x7
+#define CMD_PROGRAM_ERASE   0x8
 #define CMD_PROGRAM_ONLY    0x18
 
 /*##########################################################################
@@ -115,6 +117,42 @@ int ReadRecord(TFile &file, int *op, int *offset, char *buf)
 
 /*##########################################################################
 #
+#   Name       : SendCmd
+#
+#   Purpose....: Send ICSP command
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SendCmd(int handle, int cmd)
+{
+	RdosWriteICSPCommand(handle, cmd);
+	RdosWaitMicro(1);
+}
+
+/*##########################################################################
+#
+#   Name       : SendCmd
+#
+#   Purpose....: Send ICSP command & data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void SendCmd(int handle, int cmd, int data)
+{
+	RdosWriteICSPCommand(handle, cmd);
+	RdosWaitMicro(1);
+	RdosWriteICSPData(handle, data);
+	RdosWaitMicro(1);
+}
+
+/*##########################################################################
+#
 #   Name       : Erase
 #
 #   Purpose....: Erase flash chip
@@ -126,7 +164,39 @@ int ReadRecord(TFile &file, int *op, int *offset, char *buf)
 ##########################################################################*/
 void Erase(int handle)
 {
-	RdosWriteICSP(handle, CMD_LOAD_PROGRAM, 0x3FFF);
+	SendCmd(handle, CMD_LOAD_PROGRAM, 0x3FFF);
+	SendCmd(handle, CMD_BULK_ERASE1);
+	SendCmd(handle, CMD_BULK_ERASE2);
+	SendCmd(handle, CMD_PROGRAM_ERASE);
+	RdosWaitMilli(8);
+	SendCmd(handle, CMD_BULK_ERASE1);
+	SendCmd(handle, CMD_BULK_ERASE2);
+}
+
+/*##########################################################################
+#
+#   Name       : LoadConfig
+#
+#   Purpose....: Load configuration
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void LoadConfig(int handle, int data)
+{
+	int i;
+
+	SendCmd(handle, CMD_LOAD_CONFIG, 0x3FFF);
+
+	for (i = 0; i < 7; i++)
+		SendCmd(handle, CMD_INCR_ADDRESS);
+
+	SendCmd(handle, CMD_LOAD_PROGRAM, data);
+	SendCmd(handle, CMD_PROGRAM_ERASE);
+	RdosWaitMilli(8);
+
 }
 
 /*##########################################################################
@@ -140,8 +210,9 @@ void Erase(int handle)
 #   Returns....: *
 #
 ##########################################################################*/
-void GotoNextAddress()
+void GotoNextAddress(int handle)
 {
+	SendCmd(handle, CMD_INCR_ADDRESS);
 }
 
 /*##########################################################################
@@ -157,6 +228,9 @@ void GotoNextAddress()
 ##########################################################################*/
 void WriteData(int handle, int data)
 {
+	SendCmd(handle, CMD_LOAD_PROGRAM, data);
+	SendCmd(handle, CMD_PROGRAM_ONLY);
+	RdosWaitMilli(8);
 }
 
 /*##########################################################################
@@ -184,7 +258,7 @@ void DoICSP(int handle, TFile &file)
 	adr = 0;
 	op = 0;
 
-	Erase();
+	Erase(handle);
 
 	while (op != 1)
 	{
@@ -198,7 +272,7 @@ void DoICSP(int handle, TFile &file)
 
 			while (offset > adr)
 			{
-				GotoNextAddress();
+				GotoNextAddress(handle);
 				adr++;
 			}
 
@@ -259,6 +333,7 @@ int main(int argc, char **argv)
 		if (handle)
 		{
 			DoICSP(handle, file);
+			LoadConfig(handle, 0x3FFA);
 			RdosCloseICSP(handle);
 		}
 		else
