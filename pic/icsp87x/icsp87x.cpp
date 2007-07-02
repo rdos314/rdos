@@ -333,7 +333,7 @@ int main(int argc, char **argv)
 		if (handle)
 		{
 			DoICSP(handle, file);
-			LoadConfig(handle, 0x3FFA);
+//			LoadConfig(handle, 0x3FFA);
 			RdosCloseICSP(handle);
 		}
 		else
