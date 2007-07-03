@@ -282,6 +282,7 @@ void DoICSP(int handle, TFile &file)
 				memcpy(&data, ptr, 2);
 				WriteData(handle, data);
 				ptr += 2;
+				GotoNextAddress(handle);
 				adr++;
 			}
 		}
