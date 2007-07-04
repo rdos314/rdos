@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7)
-  : TQuiz(155),
+  : TQuiz(156),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -119,7 +119,7 @@ int TQuizS1::GetPcaCount()
 *##########################################################################*/
 int TQuizS1::GetCatCount(int Question)
 {
-    if (Question < 140)
+    if (Question < 141)
         return 3;
     else
     	return 11;
@@ -352,13 +352,14 @@ void TQuizS1::SetupTexts()
   Quiz[139].MyGroup = GROUP_NONVERBAL;
 
   Quiz[140].MyGroup = GROUP_MIXED;
+
   Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_NONVERBAL;
+  Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_NONVERBAL;
-  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_NONVERBAL;
   Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_MIXED;
   Quiz[150].MyGroup = GROUP_MIXED;
@@ -366,6 +367,7 @@ void TQuizS1::SetupTexts()
   Quiz[152].MyGroup = GROUP_MIXED;
   Quiz[153].MyGroup = GROUP_MIXED;
   Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -508,22 +510,23 @@ void TQuizS1::SetupTexts()
   Quiz[137].Text = "Can you easily keep track of several different people's conversations?";
   Quiz[138].Text = "Do you find it easy to estimate the age of people?";
   Quiz[139].Text = "Does it feel natural for you to say 'thank you' and 'sorry'?";
+  Quiz[140].Text = "Do you easily blush?";
 
-  Quiz[140].Text = "Rating for Aspie male #1";
-  Quiz[141].Text = "Rating for Aspie female #1";
-  Quiz[142].Text = "Rating for NT male #1";
-  Quiz[143].Text = "Rating for NT female #1";
-  Quiz[144].Text = "Rating for Aspie male #2";
-  Quiz[145].Text = "Rating for cat";
-  Quiz[146].Text = "Rating for socker game";
-  Quiz[147].Text = "Rating for stream";
-  Quiz[148].Text = "Rating for cave";
-  Quiz[149].Text = "Rating for tropical beach";
-  Quiz[150].Text = "Rating for NT male #2";
-  Quiz[151].Text = "Rating for NT female #2";
-  Quiz[152].Text = "Rating for Aspie female #2";
-  Quiz[153].Text = "Rating for scandinavian scene";
-  Quiz[154].Text = "Rating for tropical scene";
+  Quiz[141].Text = "Rating for Aspie male #1";
+  Quiz[142].Text = "Rating for Aspie female #1";
+  Quiz[143].Text = "Rating for NT male #1";
+  Quiz[144].Text = "Rating for NT female #1";
+  Quiz[145].Text = "Rating for Aspie male #2";
+  Quiz[146].Text = "Rating for cat";
+  Quiz[147].Text = "Rating for socker game";
+  Quiz[148].Text = "Rating for stream";
+  Quiz[149].Text = "Rating for cave";
+  Quiz[150].Text = "Rating for tropical beach";
+  Quiz[151].Text = "Rating for NT male #2";
+  Quiz[152].Text = "Rating for NT female #2";
+  Quiz[153].Text = "Rating for Aspie female #2";
+  Quiz[154].Text = "Rating for scandinavian scene";
+  Quiz[155].Text = "Rating for tropical scene";
 
 #endif
 
@@ -668,22 +671,23 @@ void TQuizS1::SetupTexts()
   Quiz[137].Text = "Kan du lätt hålla koll på flera olika människors konversationer?";
   Quiz[138].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[139].Text = "Känns det naturligt för dig att säga 'tack' och 'förlåt'?";
+  Quiz[140].Text = "Rodnar du lätt?";
 
-  Quiz[140].Text = "Bedömning för Aspie kille #1";
-  Quiz[141].Text = "Bedömning för Aspie tjej #1";
-  Quiz[142].Text = "Bedömning för NT kille #1";
-  Quiz[143].Text = "Bedömning för NT tjej #1";
-  Quiz[144].Text = "Bedömning för Aspie kille #2";
-  Quiz[145].Text = "Bedömning för katt";
-  Quiz[146].Text = "Bedömning för fotbollsmatch";
-  Quiz[147].Text = "Bedömning för strömmande vatten";
-  Quiz[148].Text = "Bedömning för grotta";
-  Quiz[149].Text = "Bedömning för tropisk strand";
-  Quiz[150].Text = "Bedömning för NT kille #2";
-  Quiz[151].Text = "Bedömning för NT tjej #2";
-  Quiz[152].Text = "Bedömning för Aspie tjej #2";
-  Quiz[153].Text = "Bedömning för skandinavisk scen";
-  Quiz[154].Text = "Bedömning för tropisk scen";
+  Quiz[141].Text = "Bedömning för Aspie kille #1";
+  Quiz[142].Text = "Bedömning för Aspie tjej #1";
+  Quiz[143].Text = "Bedömning för NT kille #1";
+  Quiz[144].Text = "Bedömning för NT tjej #1";
+  Quiz[145].Text = "Bedömning för Aspie kille #2";
+  Quiz[146].Text = "Bedömning för katt";
+  Quiz[147].Text = "Bedömning för fotbollsmatch";
+  Quiz[148].Text = "Bedömning för strömmande vatten";
+  Quiz[149].Text = "Bedömning för grotta";
+  Quiz[150].Text = "Bedömning för tropisk strand";
+  Quiz[151].Text = "Bedömning för NT kille #2";
+  Quiz[152].Text = "Bedömning för NT tjej #2";
+  Quiz[153].Text = "Bedömning för Aspie tjej #2";
+  Quiz[154].Text = "Bedömning för skandinavisk scen";
+  Quiz[155].Text = "Bedömning för tropisk scen";
 
 #endif
 
@@ -715,6 +719,9 @@ void TQuizS1::InitReferers()
 	AddReferer("tbg.nu", "tbg.nu/news_show/109118/40");
 	AddReferer("vof.se", "vof.se/forum/viewtopic.php?t=3080");
 	AddReferer("autismspeaks.org", "autismspeaks.org/community/forums");
+	AddReferer("nordisk.nu", "nordisk.nu/showthread.php?t=3117");
+	AddReferer("swedvdr.org", "swedvdr.org/forums.php?action=viewtopic");
+
 }
 
 /*##########################################################################
@@ -780,31 +787,31 @@ void TQuizS1::LoadReferers()
 		if (Row.Aspie == 2 || Row.Autism == 2)
 			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
 
-		if (Row.ADHD == 2)
+		if (Row.ADHD >= 1)
 			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
 
-		if (Row.TS == 2)
+		if (Row.TS >= 1)
 			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Dyslexia)
+		if (Row.Dyslexia >= 1)
 			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Dyscalculia)
+		if (Row.Dyscalculia >= 1)
 			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult);
 
-		if (Row.OCD)
+		if (Row.OCD >= 1)
 			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult);
 
-		if (Row.ODD)
+		if (Row.ODD >= 1)
 			UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Bipolar)
+		if (Row.Bipolar >= 1)
 			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Schizophrenia)
+		if (Row.Schizophrenia >= 1)
 			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult);
 
-		if (Row.Social)
+		if (Row.Social >= 1)
 			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult);
 
 		if (Row.Autism || Row.Aspie)
@@ -863,16 +870,16 @@ void TQuizS1::LoadPopulations()
 
 			if (Row.Gender == 1)
 			{
-			    if (Row.BirthYear > 1986)
-			        YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-			        
+				if (Row.BirthYear > 1986)
+					YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
 				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			}
 			else
 			{
-			    if (Row.BirthYear > 1986)
-			        YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
-			        
+				if (Row.BirthYear > 1986)
+					YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+
 				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			}
 
@@ -886,7 +893,7 @@ void TQuizS1::LoadPopulations()
 				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-		if (Row.ADHD)
+		if (Row.ADHD >= 1)
 		{
 			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 			if (Row.Gender == 1)
@@ -895,28 +902,28 @@ void TQuizS1::LoadPopulations()
 				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
-		if (Row.TS)
+		if (Row.TS >= 1)
 			Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.Dyslexia)
+		if (Row.Dyslexia >= 1)
 			Dyslexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.Dyscalculia)
+		if (Row.Dyscalculia >= 1)
 			Dyscalculia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.OCD)
+		if (Row.OCD >= 1)
 			OCD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.ODD)
+		if (Row.ODD >= 1)
 			ODD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.Bipolar)
+		if (Row.Bipolar >= 1)
 			Bipolar.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.Schizophrenia)
+		if (Row.Schizophrenia >= 1)
 			Schizophrenia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
-		if (Row.Social)
+		if (Row.Social >= 1)
 			SocialPhobia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 
 		if (strlen(Row.Referer) == 0)
@@ -975,6 +982,8 @@ void TQuizS1::SetupControlGroups()
 	DefineNt("kaytastrophe.com");
 	DefineNt("tbg.nu");
 	DefineNt("vof.se");
+    DefineNt("nordisk.nu");
+	DefineNt("swedvdr.org");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1153,6 +1162,7 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineGlobalId(152, 757);
     DefineGlobalId(153, 758);
     DefineGlobalId(154, 759);
+    DefineGlobalId(155, 760);
 }
 
 /*##########################################################################
@@ -1252,7 +1262,7 @@ void TQuizS1::ExportExcelCase(const char *filename, int PcaType)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < N; i++)
+	for (i = 0; i < GetQuizN(); i++)
 	{
 		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 		{
@@ -1281,7 +1291,7 @@ void TQuizS1::ExportExcelCase(const char *filename, int PcaType)
 			sprintf(str, "\"%d\", ", Row.NtResult);
 			file.Write(str);
 
-			for (i = 0; i < N; i++)
+			for (i = 0; i < GetQuizN(); i++)
 			{
 				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
 				{
@@ -1289,12 +1299,12 @@ void TQuizS1::ExportExcelCase(const char *filename, int PcaType)
 	    			if (ival)
 						ival--;
     
-					if (ival < 140 && ival > 2)
+					if (ival > 2)
 						ival = 0;
                     
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
-					if (i != N - 1)
+					if (i != GetQuizN() - 1)
 						file.Write(", ");
 				}
 			}
@@ -1349,7 +1359,7 @@ void TQuizS1::ExportExcelGroups(const char *filename)
 			GroupCount[i] = 0;
 		}
 
-		for (i = 0; i < N; i++)
+		for (i = 0; i < GetQuizN(); i++)
 		{
 			ival = Row.Quiz[i];
 

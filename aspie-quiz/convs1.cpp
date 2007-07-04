@@ -143,7 +143,7 @@ char *ProcessRow(char *str)
 	int quote;
 	int valid;
 
-	for (fieldno = 0; fieldno < 191; fieldno++)
+	for (fieldno = 0; fieldno < 192; fieldno++)
 	{
 		valstr = str;
 
@@ -279,15 +279,15 @@ char *ProcessRow(char *str)
 				default:
 					i = fieldno - 21;
 
-					if (i >= 140)
+					if (i >= 141)
 					{
-					    i -= 140;
+					    i -= 141;
 					    if (i % 2 == 0)
 							Row.ViewTime[i/2] = atoi(valstr);
 						else
 						{
 							Row.Rating[i/2] = atoi(valstr);
-							Row.Quiz[140 + i/2] = atoi(valstr);
+							Row.Quiz[141 + i/2] = atoi(valstr);
 					    }
 					}
 					else
@@ -297,14 +297,9 @@ char *ProcessRow(char *str)
 		}
 	}
 
-    valid = FALSE;
-	for (i = 0; i < 10; i++)
-	    if (Row.Quiz[140 + i])
-	        valid = TRUE;
-
-	if (valid)
-    	for (i = 0; i < 10; i++)
-	        Row.Quiz[140 + i]++;
+	for (i = 0; i < 15; i++)
+	    if (Row.Quiz[141 + i] || Row.ViewTime[i])
+	        Row.Quiz[141 + i]++;
 
 	UpdateScore(&Row);
 	HandleRow(&Row);
