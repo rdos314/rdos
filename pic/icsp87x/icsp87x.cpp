@@ -229,7 +229,7 @@ void GotoNextAddress(int handle)
 void WriteData(int handle, int data)
 {
 	SendCmd(handle, CMD_LOAD_PROGRAM, data);
-	SendCmd(handle, CMD_PROGRAM_ONLY);
+	SendCmd(handle, CMD_PROGRAM_ERASE);
 	RdosWaitMilli(8);
 }
 
@@ -258,7 +258,7 @@ void DoICSP(int handle, TFile &file)
 	adr = 0;
 	op = 0;
 
-	Erase(handle);
+//	Erase(handle);
 
 	while (op != 1)
 	{

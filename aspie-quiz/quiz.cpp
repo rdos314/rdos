@@ -2061,6 +2061,12 @@ void TQuiz::Calculate()
 
 		    if (count > 1)
 			{
+                if (Quiz[q1].Reverse)
+                    rsum = -rsum;
+
+                if (Quiz[q2].Reverse)
+                    rsum = -rsum;
+			
 		        gid1 = Quiz[q1].GlobalId;
 				gid2 = Quiz[q2].GlobalId;
 
@@ -6113,6 +6119,9 @@ void TQuiz::WriteLinkReport(const char *filename)
 					}
 					else
 						CorrArr[j] = 0.0;
+
+					if (CorrArr[j] < 0.01)
+					    CorrArr[j] = 0.0;
 				}
 
 				first = TRUE;
@@ -6180,7 +6189,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 #ifdef SWEDISH
-                file.Write("<h4>Korrelerade fr†gor</h4>\n");
+                file.Write("<h4>Korrelerade frågor</h4>\n");
 #endif
 
         		file.Write("<ul>\r\n");
@@ -6191,6 +6200,9 @@ void TQuiz::WriteLinkReport(const char *filename)
                         CorrArr[k] = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
                     else
                         CorrArr[k] = 0.0;
+
+        		    if (CorrArr[k] * CorrArr[k] < 0.01)
+		                CorrArr[k] = 0.0;
                 }
                 
                 corrlev = 0.9 * corrlev;
@@ -6234,12 +6246,17 @@ void TQuiz::WriteLinkReport(const char *filename)
             				TopQuestion = GlobalTopQuestion[q];
 
             				file.Write(TopQuiz->Quiz[TopQuestion].Text);
-            				file.Write("</a>");
+            				file.Write("</a> (");
 
                             val = CorrArr[q];
                     		ival = round(100.0 * val);
-    
-                	        sprintf(str, " (.%02d)", ival);
+                    	    if (ival < 0)
+	                        {
+            	            	file.Write("-");
+    	            	        ival = -ival;
+                    		}
+
+                	        sprintf(str, ".%02d)", ival);
                     	    file.Write(str);
         	                file.Write("</li>\r\n");
                 	    }
@@ -7961,6 +7978,9 @@ void TQuiz::WriteIntercorr(const char *filename)
 			else
 				CorrArr[k] = 0.0;
 
+		    if (CorrArr[k] * CorrArr[k] < 0.01)
+		        CorrArr[k] = 0.0;
+
 		}
 
     	MaxCorr = 1.0;
@@ -8043,6 +8063,11 @@ void TQuiz::WriteIntercorr(const char *filename)
 
                     val = CorrArr[q];
             		ival = round(100.0 * val);
+            	    if (ival < 0)
+	                {
+            	    	file.Write("-");
+    	            	ival = -ival;
+            		}
     
         	        sprintf(str, ".%02d", ival);
             	    file.Write(str);
