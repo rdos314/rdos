@@ -280,6 +280,24 @@ int main(int argc, char **argv)
 	 Quiz[15]->WriteSumaryTable("quizr7.htm", FALSE);
 	 Quiz[16]->WriteSumaryTable("quizs1.htm", FALSE);
 
+	 Quiz[0]->WriteIntercorr("rel1.htm");
+	 Quiz[1]->WriteIntercorr("rel2.htm");
+	 Quiz[2]->WriteIntercorr("rel3.htm");
+	 Quiz[3]->WriteIntercorr("relnd.htm");
+	 Quiz[4]->WriteIntercorr("rel5.htm");
+	 Quiz[5]->WriteIntercorr("rel6.htm");
+	 Quiz[6]->WriteIntercorr("rel7.htm");
+	 Quiz[7]->WriteIntercorr("rel8.htm");
+	 Quiz[8]->WriteIntercorr("rel9.htm");
+	 Quiz[9]->WriteIntercorr("relr1.htm");
+	 Quiz[10]->WriteIntercorr("relr2.htm");
+	 Quiz[11]->WriteIntercorr("relr3.htm");
+	 Quiz[12]->WriteIntercorr("relr4.htm");
+	 Quiz[13]->WriteIntercorr("relr5.htm");
+	 Quiz[14]->WriteIntercorr("relr6.htm");
+	 Quiz[15]->WriteIntercorr("relr7.htm");
+	 Quiz[16]->WriteIntercorr("rels1.htm");
+
 	 Quiz[16]->WriteGroupTable("group.htm", TRUE);
 	 Quiz[16]->WriteGroupCorrTable("groupcorr.htm");
 	 Quiz[16]->WritePcaLoadTable("pcaload.htm");

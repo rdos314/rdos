@@ -169,6 +169,7 @@ public:
 
     void WriteReferers(const char *filename);
     void WriteSumaryTable(const char *filename, int OnlyMixed);
+    void WriteIntercorr(const char *filename);
     void WriteAsNtCorrelation(const char *filename);
     void WriteAspieAsCorrelation(const char *filename);
     void WriteAddAsCorrelation(const char *filename);
