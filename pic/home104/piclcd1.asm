@@ -1,21 +1,9 @@
+#include p16f877a.inc   
+
+	__config 0x3FFA
 
 #define PAGE0   BCF 3,5
 #define PAGE1   BSF 3,5
-
-INDF:	EQU 0
-PCL:    EQU 2
-STATUS: EQU 3
-FSR:	EQU 4
-PORTA:  EQU 5
-PORTB:  EQU 6
-PORTC:	EQU 7
-PORTD:	EQU 8
-PORTE:	EQU 9
-TRISA:  EQU 5
-TRISB:  EQU 6
-TRISC:	EQU 7
-TRISD:	EQU 8
-TRISE:	EQU 9
 
 	org 0
 

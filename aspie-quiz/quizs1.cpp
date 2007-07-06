@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7)
-  : TQuiz(156),
+  : TQuiz(163),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -119,7 +119,7 @@ int TQuizS1::GetPcaCount()
 *##########################################################################*/
 int TQuizS1::GetCatCount(int Question)
 {
-    if (Question < 141)
+    if (Question < 148)
         return 3;
     else
     	return 11;

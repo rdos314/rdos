@@ -229,30 +229,37 @@ char *ProcessRow(char *str)
 
 				case 11:
 					Row.Dyslexia = atoi(valstr);
+					Row.Quiz[141] = Row.Dyslexia;
 					break;
 
 				case 12:
 					Row.Dyscalculia = atoi(valstr);
+					Row.Quiz[142] = Row.Dyscalculia;
 					break;
 
 				case 13:
 					Row.OCD = atoi(valstr);
+					Row.Quiz[143] = Row.OCD;
 					break;
 
 				case 14:
 					Row.ODD = atoi(valstr);
+					Row.Quiz[144] = Row.ODD;
 					break;
 
 				case 15:
 					Row.Bipolar = atoi(valstr);
+					Row.Quiz[145] = Row.Bipolar;
 					break;
 
 				case 16:
 					Row.Schizophrenia = atoi(valstr);
+					Row.Quiz[146] = Row.Schizophrenia;
 					break;
 
 				case 17:
 					Row.Social = atoi(valstr);
+					Row.Quiz[147] = Row.Social;
 					break;
 
 				case 18:
@@ -282,12 +289,13 @@ char *ProcessRow(char *str)
 					if (i >= 141)
 					{
 					    i -= 141;
+					    
 					    if (i % 2 == 0)
 							Row.ViewTime[i/2] = atoi(valstr);
 						else
 						{
 							Row.Rating[i/2] = atoi(valstr);
-							Row.Quiz[141 + i/2] = atoi(valstr);
+							Row.Quiz[148 + i/2] = atoi(valstr);
 					    }
 					}
 					else
@@ -298,8 +306,8 @@ char *ProcessRow(char *str)
 	}
 
 	for (i = 0; i < 15; i++)
-	    if (Row.Quiz[141 + i] || Row.ViewTime[i])
-	        Row.Quiz[141 + i]++;
+	    if (Row.Quiz[148 + i] || Row.ViewTime[i])
+	        Row.Quiz[148 + i]++;
 
 	UpdateScore(&Row);
 	HandleRow(&Row);
