@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7)
-  : TQuiz(163),
+  : TQuiz(162),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -119,7 +119,7 @@ int TQuizS1::GetPcaCount()
 *##########################################################################*/
 int TQuizS1::GetCatCount(int Question)
 {
-    if (Question < 148)
+    if (Question < 147)
         return 3;
     else
     	return 11;
@@ -206,9 +206,9 @@ void TQuizS1::SetupTexts()
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
 
-  Quiz[142].Reverse = TRUE;
-  Quiz[143].Reverse = TRUE;
-  Quiz[146].Reverse = TRUE;
+  Quiz[148].Reverse = TRUE;
+  Quiz[149].Reverse = TRUE;
+  Quiz[152].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
@@ -353,21 +353,28 @@ void TQuizS1::SetupTexts()
 
   Quiz[140].MyGroup = GROUP_MIXED;
 
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_NONVERBAL;
-  Quiz[144].MyGroup = GROUP_NONVERBAL;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[141].MyGroup = GROUP_SENSORY;
+  Quiz[142].MyGroup = GROUP_NT_TALENT;
+  Quiz[143].MyGroup = GROUP_SENSORY;
+  Quiz[144].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[145].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
+
+  Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
-  Quiz[149].MyGroup = GROUP_MIXED;
-  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_NONVERBAL;
+  Quiz[150].MyGroup = GROUP_NONVERBAL;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -512,21 +519,28 @@ void TQuizS1::SetupTexts()
   Quiz[139].Text = "Does it feel natural for you to say 'thank you' and 'sorry'?";
   Quiz[140].Text = "Do you easily blush?";
 
-  Quiz[141].Text = "Rating for Aspie male #1";
-  Quiz[142].Text = "Rating for Aspie female #1";
-  Quiz[143].Text = "Rating for NT male #1";
-  Quiz[144].Text = "Rating for NT female #1";
-  Quiz[145].Text = "Rating for Aspie male #2";
-  Quiz[146].Text = "Rating for cat";
-  Quiz[147].Text = "Rating for socker game";
-  Quiz[148].Text = "Rating for stream";
-  Quiz[149].Text = "Rating for cave";
-  Quiz[150].Text = "Rating for tropical beach";
-  Quiz[151].Text = "Rating for NT male #2";
-  Quiz[152].Text = "Rating for NT female #2";
-  Quiz[153].Text = "Rating for Aspie female #2";
-  Quiz[154].Text = "Rating for scandinavian scene";
-  Quiz[155].Text = "Rating for tropical scene";
+  Quiz[141].Text = "Dyslexia";
+  Quiz[142].Text = "Dyscalculia";
+  Quiz[143].Text = "OCD";
+  Quiz[144].Text = "ODD";
+  Quiz[145].Text = "Bipolar";
+  Quiz[146].Text = "Social phobia";
+
+  Quiz[147].Text = "Rating for Aspie male #1";
+  Quiz[148].Text = "Rating for Aspie female #1";
+  Quiz[149].Text = "Rating for NT male #1";
+  Quiz[150].Text = "Rating for NT female #1";
+  Quiz[151].Text = "Rating for Aspie male #2";
+  Quiz[152].Text = "Rating for cat";
+  Quiz[153].Text = "Rating for socker game";
+  Quiz[154].Text = "Rating for stream";
+  Quiz[155].Text = "Rating for cave";
+  Quiz[156].Text = "Rating for tropical beach";
+  Quiz[157].Text = "Rating for NT male #2";
+  Quiz[158].Text = "Rating for NT female #2";
+  Quiz[159].Text = "Rating for Aspie female #2";
+  Quiz[160].Text = "Rating for scandinavian scene";
+  Quiz[161].Text = "Rating for tropical scene";
 
 #endif
 
@@ -673,21 +687,28 @@ void TQuizS1::SetupTexts()
   Quiz[139].Text = "Känns det naturligt för dig att säga 'tack' och 'förlåt'?";
   Quiz[140].Text = "Rodnar du lätt?";
 
-  Quiz[141].Text = "Bedömning för Aspie kille #1";
-  Quiz[142].Text = "Bedömning för Aspie tjej #1";
-  Quiz[143].Text = "Bedömning för NT kille #1";
-  Quiz[144].Text = "Bedömning för NT tjej #1";
-  Quiz[145].Text = "Bedömning för Aspie kille #2";
-  Quiz[146].Text = "Bedömning för katt";
-  Quiz[147].Text = "Bedömning för fotbollsmatch";
-  Quiz[148].Text = "Bedömning för strömmande vatten";
-  Quiz[149].Text = "Bedömning för grotta";
-  Quiz[150].Text = "Bedömning för tropisk strand";
-  Quiz[151].Text = "Bedömning för NT kille #2";
-  Quiz[152].Text = "Bedömning för NT tjej #2";
-  Quiz[153].Text = "Bedömning för Aspie tjej #2";
-  Quiz[154].Text = "Bedömning för skandinavisk scen";
-  Quiz[155].Text = "Bedömning för tropisk scen";
+  Quiz[141].Text = "Dyslexi";
+  Quiz[142].Text = "Dyskaluli";
+  Quiz[143].Text = "OCD";
+  Quiz[144].Text = "ODD";
+  Quiz[145].Text = "Bipolär";
+  Quiz[146].Text = "Social fobi";
+
+  Quiz[147].Text = "Bedömning för Aspie kille #1";
+  Quiz[148].Text = "Bedömning för Aspie tjej #1";
+  Quiz[149].Text = "Bedömning för NT kille #1";
+  Quiz[150].Text = "Bedömning för NT tjej #1";
+  Quiz[151].Text = "Bedömning för Aspie kille #2";
+  Quiz[152].Text = "Bedömning för katt";
+  Quiz[153].Text = "Bedömning för fotbollsmatch";
+  Quiz[154].Text = "Bedömning för strömmande vatten";
+  Quiz[155].Text = "Bedömning för grotta";
+  Quiz[156].Text = "Bedömning för tropisk strand";
+  Quiz[157].Text = "Bedömning för NT kille #2";
+  Quiz[158].Text = "Bedömning för NT tjej #2";
+  Quiz[159].Text = "Bedömning för Aspie tjej #2";
+  Quiz[160].Text = "Bedömning för skandinavisk scen";
+  Quiz[161].Text = "Bedömning för tropisk scen";
 
 #endif
 
@@ -848,6 +869,12 @@ void TQuizS1::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+		Row.Quiz[141] = Row.Dyslexia + 1;
+		Row.Quiz[142] = Row.Dyscalculia + 1;
+		Row.Quiz[143] = Row.OCD + 1;
+		Row.Quiz[144] = Row.ODD + 1;
+		Row.Quiz[145] = Row.Bipolar + 1;
+		Row.Quiz[146] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1148,21 +1175,29 @@ void TQuizS1::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR7, 139, 61);
 
     DefineGlobalId(140, 745);
-    DefineGlobalId(141, 746);
-    DefineGlobalId(142, 747);
-    DefineGlobalId(143, 748);
-	DefineGlobalId(144, 749);
-    DefineGlobalId(145, 750);
-    DefineGlobalId(146, 751);
-    DefineGlobalId(147, 752);
-    DefineGlobalId(148, 753);
-    DefineGlobalId(149, 754);
-    DefineGlobalId(150, 755);
-    DefineGlobalId(151, 756);
-    DefineGlobalId(152, 757);
-    DefineGlobalId(153, 758);
-    DefineGlobalId(154, 759);
-    DefineGlobalId(155, 760);
+
+    DefineCross(QuizNd, 141, 202);
+    DefineCross(QuizNd, 142, 203);
+    DefineCross(QuizNd, 143, 204);
+    DefineCross(QuizNd, 144, 205);
+    DefineCross(QuizNd, 145, 209);
+    DefineCross(Quiz7, 146, 150);
+    
+    DefineGlobalId(147, 746);
+    DefineGlobalId(148, 747);
+    DefineGlobalId(149, 748);
+	DefineGlobalId(150, 749);
+    DefineGlobalId(151, 750);
+    DefineGlobalId(152, 751);
+    DefineGlobalId(153, 752);
+    DefineGlobalId(154, 753);
+    DefineGlobalId(155, 754);
+    DefineGlobalId(156, 755);
+    DefineGlobalId(157, 756);
+    DefineGlobalId(158, 757);
+    DefineGlobalId(159, 758);
+    DefineGlobalId(160, 759);
+    DefineGlobalId(161, 760);
 }
 
 /*##########################################################################

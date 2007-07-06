@@ -254,12 +254,11 @@ char *ProcessRow(char *str)
 
 				case 16:
 					Row.Schizophrenia = atoi(valstr);
-					Row.Quiz[146] = Row.Schizophrenia;
 					break;
 
 				case 17:
 					Row.Social = atoi(valstr);
-					Row.Quiz[147] = Row.Social;
+					Row.Quiz[146] = Row.Social;
 					break;
 
 				case 18:
@@ -295,7 +294,7 @@ char *ProcessRow(char *str)
 						else
 						{
 							Row.Rating[i/2] = atoi(valstr);
-							Row.Quiz[148 + i/2] = atoi(valstr);
+							Row.Quiz[147 + i/2] = atoi(valstr);
 					    }
 					}
 					else
@@ -306,8 +305,8 @@ char *ProcessRow(char *str)
 	}
 
 	for (i = 0; i < 15; i++)
-	    if (Row.Quiz[148 + i] || Row.ViewTime[i])
-	        Row.Quiz[148 + i]++;
+	    if (Row.Quiz[147 + i] || Row.ViewTime[i])
+	        Row.Quiz[147 + i]++;
 
 	UpdateScore(&Row);
 	HandleRow(&Row);

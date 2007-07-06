@@ -5387,6 +5387,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	int ok;
 	int first;
 	int more;
+	int HasPca;
 	TFile file(filename, 0);
 
 #ifdef ENGLISH
@@ -6001,111 +6002,115 @@ void TQuiz::WriteLinkReport(const char *filename)
 					}
 				}
 
+				if (AsLoad || NtLoad)
+				{
+
 #ifdef ENGLISH
-				file.Write("<h4>Quiz scoring</h4>\n");
+    				file.Write("<h4>Quiz scoring</h4>\n");
 #endif
 
 #ifdef SWEDISH
-				file.Write("<h4>Poängberäkning i quizen</h4>\n");
+	    			file.Write("<h4>Poängberäkning i quizen</h4>\n");
 #endif
 
+                    file.Write("<ul>");
+
+#ifdef ENGLISH
+			    	sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
+#endif
+
+#ifdef SWEDISH
+    				sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
+#endif
+	    			file.Write(str);
+		    		file.Write("<br>");
+
+
+    				if (GlobalPcaCount[GlobalId][1])
+	    			{
+    
+	    				if (NtLoad >= 0)
+#ifdef ENGLISH
+		    				sprintf(str, "Neurotypical score: NO 0, YES %d", NtLoad);
+#endif
+
+#ifdef SWEDISH
+    						sprintf(str, "Neurotypisk poäng: NEJ 0, JA %d", NtLoad);
+#endif
+	    				else
+#ifdef ENGLISH
+		    				sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
+#endif
+
+#ifdef SWEDISH
+    						sprintf(str, "Neurotypisk poäng: NEJ %d, JA 0", -NtLoad);
+#endif
+
+    					file.Write(str);
+	    				file.Write("<br>");
+		    		}
+                    file.Write("</ul>");
+
+#ifdef ENGLISH
+    				file.Write("<h4>Factor loadings from principal components analysis</h4>\n");
+#endif
+
+#ifdef SWEDISH
+    				file.Write("<h4>Faktor koefficienter från PCA</h4>\n");
+#endif
+                    file.Write("<ul>");
+    
+	    			if (GlobalPcaCount[GlobalId][0])
+		    		{
+			    		file.Write("Aspie: ");
+				    	WritePca(file, GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
+					    file.Write("<br>");
+    				}
+
+	    			if (GlobalPcaCount[GlobalId][1])
+		    		{
+			    		file.Write("Neurotypical: ");
+				    	WritePca(file, GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
+					    file.Write("<br>");
+    				}
+
+	    			if (GlobalPcaCount[GlobalId][2])
+		    		{
+			    		file.Write("g: ");
+				    	WritePca(file, GlobalPcaSum[GlobalId][2] / GlobalPcaCount[GlobalId][2]);
+					    file.Write("<br>");
+    				}
+
+	    			if (GlobalPcaCount[GlobalId][3])
+		    		{
+			    		file.Write("introvert: ");
+				    	WritePca(file, GlobalPcaSum[GlobalId][3] / GlobalPcaCount[GlobalId][3]);
+					    file.Write("<br>");
+    				}
+
+	    			file.Write("</ul>");
+	    		}
+
+
+#ifdef ENGLISH
+    			file.Write("<h4>Correlated groups</h4>\n");
+#endif
+
+#ifdef SWEDISH
+	    		file.Write("<h4>Korrelarade grupper</h4>\n");
+#endif
                 file.Write("<ul>");
 
-#ifdef ENGLISH
-				sprintf(str, "Aspie score: NO 0, YES %d", AsLoad);
-#endif
+	    		NormCorr = 0.0;
 
-#ifdef SWEDISH
-				sprintf(str, "Aspie poäng: NEJ 0, JA %d", AsLoad);
-#endif
-				file.Write(str);
-				file.Write("<br>");
-
-
-				if (GlobalPcaCount[GlobalId][1])
-				{
-
-					if (NtLoad >= 0)
-#ifdef ENGLISH
-						sprintf(str, "Neurotypical score: NO 0, YES %d", NtLoad);
-#endif
-
-#ifdef SWEDISH
-						sprintf(str, "Neurotypisk poäng: NEJ 0, JA %d", NtLoad);
-#endif
-					else
-#ifdef ENGLISH
-						sprintf(str, "Neurotypical score: NO %d, YES 0", -NtLoad);
-#endif
-
-#ifdef SWEDISH
-						sprintf(str, "Neurotypisk poäng: NEJ %d, JA 0", -NtLoad);
-#endif
-
-					file.Write(str);
-					file.Write("<br>");
-				}
-                file.Write("</ul>");
-
-#ifdef ENGLISH
-				file.Write("<h4>Factor loadings from principal components analysis</h4>\n");
-#endif
-
-#ifdef SWEDISH
-				file.Write("<h4>Faktor koefficienter från PCA</h4>\n");
-#endif
-                file.Write("<ul>");
-
-				if (GlobalPcaCount[GlobalId][0])
-				{
-					file.Write("Aspie: ");
-					WritePca(file, GlobalPcaSum[GlobalId][0] / GlobalPcaCount[GlobalId][0]);
-					file.Write("<br>");
-				}
-
-				if (GlobalPcaCount[GlobalId][1])
-				{
-					file.Write("Neurotypical: ");
-					WritePca(file, GlobalPcaSum[GlobalId][1] / GlobalPcaCount[GlobalId][1]);
-					file.Write("<br>");
-				}
-
-				if (GlobalPcaCount[GlobalId][2])
-				{
-					file.Write("g: ");
-					WritePca(file, GlobalPcaSum[GlobalId][2] / GlobalPcaCount[GlobalId][2]);
-					file.Write("<br>");
-				}
-
-				if (GlobalPcaCount[GlobalId][3])
-				{
-					file.Write("introvert: ");
-					WritePca(file, GlobalPcaSum[GlobalId][3] / GlobalPcaCount[GlobalId][3]);
-					file.Write("<br>");
-				}
-
-				file.Write("</ul>");
-
-
-#ifdef ENGLISH
-				file.Write("<h4>Correlated groups</h4>\n");
-#endif
-
-#ifdef SWEDISH
-				file.Write("<h4>Korrelarade grupper</h4>\n");
-#endif
-                file.Write("<ul>");
-
-				NormCorr = 0.0;
-
-				for (j = 0; j < GROUP_COUNT - 1; j++)
-				{
-					if (GlobalGroupCorrCount[GlobalId][j])
-					{
-						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
-						val = val * val;
-						if (val >= NormCorr)
-							NormCorr = val;
+		    	for (j = 0; j < GROUP_COUNT - 1; j++)
+			    {
+				    if (GlobalGroupCorrCount[GlobalId][j])
+			        {
+   						val = GlobalGroupCorrSum[GlobalId][j] / GlobalGroupCorrCount[GlobalId][j];
+	   					val = val * val;
+		   				if (val >= NormCorr)
+			   				NormCorr = val;
 					}
 				}
 				NormCorr = 0.81 * NormCorr;
@@ -6120,7 +6125,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 					else
 						CorrArr[j] = 0.0;
 
-					if (CorrArr[j] < 0.01)
+					if (CorrArr[j] < 0.04)
 					    CorrArr[j] = 0.0;
 				}
 
@@ -6201,11 +6206,11 @@ void TQuiz::WriteLinkReport(const char *filename)
                     else
                         CorrArr[k] = 0.0;
 
-        		    if (CorrArr[k] * CorrArr[k] < 0.01)
+        		    if (CorrArr[k] * CorrArr[k] < 0.04)
 		                CorrArr[k] = 0.0;
                 }
                 
-                corrlev = 0.9 * corrlev;
+                corrlev = 0.8 * corrlev;
 
             	MaxCorr = 1.0;
 
@@ -7978,7 +7983,7 @@ void TQuiz::WriteIntercorr(const char *filename)
 			else
 				CorrArr[k] = 0.0;
 
-		    if (CorrArr[k] * CorrArr[k] < 0.01)
+		    if (CorrArr[k] * CorrArr[k] < 0.04)
 		        CorrArr[k] = 0.0;
 
 		}
