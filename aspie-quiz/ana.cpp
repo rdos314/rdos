@@ -49,6 +49,7 @@
 #include "quizr6.h"
 #include "quizr7.h"
 #include "quizs1.h"
+#include "quizs2.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -85,6 +86,7 @@ int main(int argc, char **argv)
 	Quiz[14] = new TQuizR6("quizr6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13]);
 	Quiz[15] = new TQuizR7("quizr7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14]);
 	Quiz[16] = new TQuizS1("quizs1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15]);
+	Quiz[17] = new TQuizS2("quizs2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -240,9 +242,9 @@ int main(int argc, char **argv)
 
 	 Quiz[16]->CalcGlobal();
 
-//	 Quiz[16]->WritePhpQuestions("q.php");
-//	 Quiz[16]->WriteSetupTexts("q.cpp");
-//	 Quiz[16]->WriteSetupCross("c.cpp");
+//	 Quiz[17]->WritePhpQuestions("q.php");
+//	 Quiz[17]->WriteSetupTexts("q.cpp");
+//	 Quiz[17]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -373,24 +375,24 @@ int main(int argc, char **argv)
 	 Quiz[16]->ExportDiffHistogram("odd.csv", POP_TYPE_ODD);
 	 Quiz[16]->ExportDiffHistogram("dysp.csv", POP_TYPE_DYSPRAXIA);
 
-	 Quiz[16]->WriteWeighting("weights.cpp");
-	 Quiz[16]->WritePhpWeighting("weights.php");
-	 Quiz[16]->WritePhpGroupWeighting("group.php");
+	 Quiz[17]->WriteWeighting("weights.cpp");
+	 Quiz[17]->WritePhpWeighting("weights.php");
+	 Quiz[17]->WritePhpGroupWeighting("group.php");
 
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
-//	  Quiz[15]->WriteWiki("wiki.txt", 0.3, 0.4);
+//	  Quiz[16]->WriteWiki("wiki.txt", 0.2, 0.2);
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-	  Quiz[16]->WriteQuizWiki("s1.txt");
+//	  Quiz[16]->WriteQuizWiki("s2.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-//     TQuiz::WikiToQuiz("wiki.txt", "r2.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "s2.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }

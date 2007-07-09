@@ -229,7 +229,7 @@ void DoICSP(int handle, TFile &file)
 				adr++;
 			}
 
-			if ((offset & 7 == 0) && size == 8)
+			if ((offset & 7) == 0 && size == 8)
 			{
 				for (i = 0; i < 8; i++)
 				{

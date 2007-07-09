@@ -7733,115 +7733,38 @@ void TQuiz::WriteQuizWiki(const char *filename)
 		}
 	}
 
-	for (i = 0; i < N; i++)
+	for (g = 0; g < GROUP_COUNT; g++)
 	{
-	    sum = 0;
-	    count = 0;
+	    file.Write("== ");
+		file.Write(Group[g].PosName);
+	    file.Write(" ==\n");
 	    
-        quiz = this;
-        q = i;
-        while (quiz)
-        {
-	        sum += quiz->Quiz[q].Corr;
-		    count++;
-
-            j = quiz->Quiz[q].CrossInd;
-			quiz = quiz->Quiz[q].CrossQuiz;
-            q = j;
-		}
-
-        file.Write("* ");
-		file.Write("'''");
-
-    	sprintf(str, "%d. ", GlobalIdArr[i] + 1);
-	    file.Write(str);
-		file.Write(Quiz[i].Text);
-	    file.Write(" (");
-
-    	val = sum / count;
-		ival = round(100.0 * val);
-	    if (ival < 0)
+    	for (i = 0; i < N; i++)
 	    {
-    		file.Write("-");
-	    	ival = -ival;
-		}
-
-	    corrlev = 0.9 * val;
-
-    	sprintf(str, ".%02d, ", ival);
-	    file.Write(str);
-
-        ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
-    	sprintf(str, "%d%)", ival);
-	    file.Write(str);
-
-
-		file.Write("'''");
-
-		file.Write("\r\n");
-
-		gid1 = GlobalIdArr[i];
-
-		for (k = 0; k < N; k++)
-		{
-		    gid2 = GlobalIdArr[k];
-		    
-        	cnt = GlobalCorrCount[gid1][gid2];
-
-        	if (cnt > 1)
-            	CorrArr[k] = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
-            else
-                CorrArr[k] = 0.0;
-
-		}
-
-    	MaxCorr = 1.0;
-
-    	for (j = 0; j < 10; j++)
-    	{
-        	CurrCorr = corrlev * corrlev;
-
-        	q = -1;
-    	
-    	    for (k = 0; k < N; k++)
-    	    {
-        	    corrval = CorrArr[k];
-        	    corrval = corrval * corrval;
-            	    
-            	if (corrval > CurrCorr && corrval < MaxCorr)
-            	{
-            	    CurrCorr = corrval;
-            	    q = k;
-            	}
-        	}
-
-            MaxCorr = CurrCorr;
-            
-        	if (q >= 0)
-        	{
-        	    k = q;
-
-        	    sum = 0;
-	            count = 0;
-	            
+	        if (Quiz[i].MyGroup == g)
+	        {
+    	        sum = 0;
+        	    count = 0;
+	    
                 quiz = this;
+                q = i;
                 while (quiz)
                 {
-        	        sum += quiz->Quiz[q].Corr;
-		            count++;
+	                sum += quiz->Quiz[q].Corr;
+        		    count++;
 
                     j = quiz->Quiz[q].CrossInd;
-		        	quiz = quiz->Quiz[q].CrossQuiz;
+        			quiz = quiz->Quiz[q].CrossQuiz;
                     q = j;
-                }
+        		}
 
-                q = k;
-                
-        	    file.Write(":");
-            	sprintf(str, "%d. ", GlobalIdArr[q] + 1);
-	            file.Write(str);
-        		file.Write(Quiz[q].Text);
-        	    file.Write(" (");
+                file.Write("* ");
+		        file.Write("'''");
+
+            	sprintf(str, "%d. ", GlobalIdArr[i] + 1);
+        	    file.Write(str);
+        		file.Write(Quiz[i].Text);
+	            file.Write(" (");
 
             	val = sum / count;
 		        ival = round(100.0 * val);
@@ -7851,20 +7774,107 @@ void TQuiz::WriteQuizWiki(const char *filename)
 	            	ival = -ival;
         		}
 
-            	sprintf(str, ".%02d), intercorr: ", ival);
+        	    corrlev = 0.9 * val;
+
+            	sprintf(str, ".%02d, ", ival);
 	            file.Write(str);
 
-                val = CorrArr[q];
-        		ival = round(100.0 * val);
-
-    	        sprintf(str, ".%02d", ival);
+                ival = round(100.0 * Quiz[i].NoAnswer / All.ValueCount);
+    	        sprintf(str, "%d%)", ival);
         	    file.Write(str);
-        	    file.Write("\r\n");
-        	}
-    	}
+
+
+        		file.Write("'''");
+
+		        file.Write("\r\n");
+
+        		gid1 = GlobalIdArr[i];
+
+        		for (k = 0; k < N; k++)
+		        {
+        		    gid2 = GlobalIdArr[k];
+		    
+                	cnt = GlobalCorrCount[gid1][gid2];
+
+                	if (cnt > 1)
+                    	CorrArr[k] = GlobalCorrArr[gid1][gid2] / ((long double)cnt - 1);
+                    else
+                        CorrArr[k] = 0.0;
+
+        		}
+
+    	        MaxCorr = 1.0;
+
+            	for (j = 0; j < 10; j++)
+    	        {
+                	CurrCorr = corrlev * corrlev;
+
+                	q = -1;
+    	
+            	    for (k = 0; k < N; k++)
+    	            {
+        	            corrval = CorrArr[k];
+                	    corrval = corrval * corrval;
+            	    
+                    	if (corrval > CurrCorr && corrval < MaxCorr)
+            	        {
+                    	    CurrCorr = corrval;
+                    	    q = k;
+            	        }
+                	}
+
+                    MaxCorr = CurrCorr;
+            
+                	if (q >= 0)
+                	{
+        	            k = q;
+
+                	    sum = 0;
+	                    count = 0;
+	            
+                        quiz = this;
+                        while (quiz)
+                        {
+        	                sum += quiz->Quiz[q].Corr;
+        		            count++;
+
+                            j = quiz->Quiz[q].CrossInd;
+		                	quiz = quiz->Quiz[q].CrossQuiz;
+                            q = j;
+                        }
     
-    	file.Write("\r\n\r\n");
-	}
+                        q = k;
+                
+        	            file.Write(":");
+                    	sprintf(str, "%d. ", GlobalIdArr[q] + 1);
+	                    file.Write(str);
+                		file.Write(Quiz[q].Text);
+                	    file.Write(" (");
+
+                    	val = sum / count;
+		                ival = round(100.0 * val);
+                	    if (ival < 0)
+	                    {
+            	        	file.Write("-");
+        	            	ival = -ival;
+                		}
+
+            	        sprintf(str, ".%02d), intercorr: ", ival);
+        	            file.Write(str);
+
+                        val = CorrArr[q];
+        		        ival = round(100.0 * val);
+
+            	        sprintf(str, ".%02d", ival);
+                	    file.Write(str);
+        	            file.Write("\r\n");
+                	}
+    	        }
+    
+            	file.Write("\r\n\r\n");
+        	}
+        }
+    }
 }
 
 /*##################  TQuiz::WriteIntercorr ##########################

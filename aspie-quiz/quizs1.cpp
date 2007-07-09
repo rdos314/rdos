@@ -351,7 +351,7 @@ void TQuizS1::SetupTexts()
   Quiz[138].MyGroup = GROUP_NONVERBAL;
   Quiz[139].MyGroup = GROUP_NONVERBAL;
 
-  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_ASPIE_NVC;
 
   Quiz[141].MyGroup = GROUP_SENSORY;
   Quiz[142].MyGroup = GROUP_NT_TALENT;
@@ -1494,8 +1494,8 @@ void TQuizS1::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d3 = -d3;
