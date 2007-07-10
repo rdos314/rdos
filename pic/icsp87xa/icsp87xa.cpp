@@ -155,31 +155,6 @@ void SendCmd(int handle, int cmd, int data)
 
 /*##########################################################################
 #
-#   Name       : LoadConfig
-#
-#   Purpose....: Load configuration
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void LoadConfig(int handle, int data)
-{
-	int i;
-
-
-	for (i = 0; i < 7; i++)
-		SendCmd(handle, CMD_INCR_ADDRESS);
-
-	SendCmd(handle, CMD_LOAD_PROGRAM, data);
-	SendCmd(handle, CMD_PROGRAM_ERASE);
-	RdosWaitMilli(8);
-	SendCmd(handle, CMD_END_PROGRAM);
-}
-
-/*##########################################################################
-#
 #   Name       : DoICSP
 #
 #   Purpose....: Do ICSP programming
@@ -254,7 +229,12 @@ void DoICSP(int handle, TFile &file)
 					data = 0;
 					memcpy(&data, ptr, 2);
 					SendCmd(handle, CMD_LOAD_PROGRAM, data);
-					SendCmd(handle, CMD_PROGRAM_ONLY);
+
+					if (InConfig)
+						SendCmd(handle, CMD_PROGRAM_ERASE);
+					else
+						SendCmd(handle, CMD_PROGRAM_ONLY);
+
 					RdosWaitMilli(1);
 					SendCmd(handle, CMD_END_PROGRAM);
 					SendCmd(handle, CMD_INCR_ADDRESS);
