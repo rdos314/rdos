@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS2::TQuizS2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1)
-  : TQuiz(140),
+  : TQuiz(149),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -81,7 +81,7 @@ TQuizS2::TQuizS2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -124,7 +124,7 @@ int TQuizS2::GetCatCount(int Question)
 }
 
 /*##################  TQuiz::GetQuizN ##########################
-*   Purpose....: Return number of questions in the quiz (not counting fictive questions)  	       	        #
+*   Purpose....: Return number of questions in the quiz (not counting fictive or temporary questions)  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
@@ -160,148 +160,6 @@ void TQuizS2::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizS2::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 509);
-  DefineID(2, 510);
-  DefineID(3, 514);
-  DefineID(4, 46);
-  DefineID(5, 207);
-  DefineID(6, 53);
-  DefineID(7, 61);
-  DefineID(8, 48);
-  DefineID(9, 503);
-  DefineID(10, 632);
-  DefineID(11, 26);
-  DefineID(12, 497);
-  DefineID(13, 100);
-  DefineID(14, 20);
-  DefineID(15, 23);
-  DefineID(16, 519);
-  DefineID(17, 695);
-  DefineID(18, 5);
-  DefineID(19, 599);
-  DefineID(20, 606);
-  DefineID(21, 3);
-  DefineID(22, 743);
-  DefineID(23, 50);
-  DefineID(24, 240);
-  DefineID(25, 616);
-  DefineID(26, 319);
-  DefineID(27, 613);
-  DefineID(28, 518);
-  DefineID(29, 316);
-  DefineID(30, 487);
-  DefineID(31, 70);
-  DefineID(32, 66);
-  DefineID(33, 542);
-  DefineID(34, 269);
-  DefineID(35, 601);
-  DefineID(36, 549);
-  DefineID(37, 507);
-  DefineID(38, 73);
-  DefineID(39, 552);
-  DefineID(40, 454);
-  DefineID(41, 545);
-  DefineID(42, 255);
-  DefineID(43, 366);
-  DefineID(44, 134);
-  DefineID(45, 368);
-  DefineID(46, 740);
-  DefineID(47, 702);
-  DefineID(48, 97);
-  DefineID(49, 243);
-  DefineID(50, 32);
-  DefineID(51, 378);
-  DefineID(52, 282);
-  DefineID(53, 495);
-  DefineID(54, 737);
-  DefineID(55, 149);
-  DefineID(56, 277);
-  DefineID(57, 367);
-  DefineID(58, 25);
-  DefineID(59, 443);
-  DefineID(60, 151);
-  DefineID(61, 6);
-  DefineID(62, 249);
-  DefineID(63, 78);
-  DefineID(64, 37);
-  DefineID(65, 361);
-  DefineID(66, 397);
-  DefineID(67, 39);
-  DefineID(68, 551);
-  DefineID(69, 36);
-  DefineID(70, 544);
-  DefineID(71, 433);
-  DefineID(72, 596);
-  DefineID(73, 547);
-  DefineID(74, 31);
-  DefineID(75, 516);
-  DefineID(76, 126);
-  DefineID(77, 591);
-  DefineID(78, 718);
-  DefineID(79, 227);
-  DefineID(80, 174);
-  DefineID(81, 167);
-  DefineID(82, 93);
-  DefineID(83, 595);
-  DefineID(84, 623);
-  DefineID(85, 448);
-  DefineID(86, 473);
-  DefineID(87, 123);
-  DefineID(88, 385);
-  DefineID(89, 362);
-  DefineID(90, 330);
-  DefineID(91, 600);
-  DefineID(92, 745);
-  DefineID(93, 115);
-  DefineID(94, 731);
-  DefineID(95, 403);
-  DefineID(96, 712);
-  DefineID(97, 359);
-  DefineID(98, 55);
-  DefineID(99, 575);
-  DefineID(100, 570);
-  DefineID(101, 582);
-  DefineID(102, 402);
-  DefineID(103, 590);
-  DefineID(104, 15);
-  DefineID(105, 17);
-  DefineID(106, 589);
-  DefineID(107, 572);
-  DefineID(108, 574);
-  DefineID(109, 401);
-  DefineID(110, 234);
-  DefineID(111, 739);
-  DefineID(112, 746);
-  DefineID(113, 536);
-  DefineID(114, 130);
-  DefineID(115, 83);
-  DefineID(116, 278);
-  DefineID(117, 86);
-  DefineID(118, 82);
-  DefineID(119, 226);
-  DefineID(120, 85);
-  DefineID(121, 84);
-  DefineID(122, 262);
-  DefineID(123, 707);
-  DefineID(124, 95);
-  DefineID(125, 129);
-  DefineID(126, 54);
-  DefineID(127, 128);
-  DefineID(128, 113);
-  DefineID(129, 279);
-  DefineID(130, 741);
-  DefineID(131, 708);
-  DefineID(132, 89);
-  DefineID(133, 742);
-  DefineID(134, 726);
-  DefineID(135, 738);
-  DefineID(136, 713);
-  DefineID(137, 715);
-  DefineID(138, 283);
-  DefineID(139, 250);
-  DefineID(140, 724);
 }
 
 /*##########################################################################
@@ -487,6 +345,17 @@ void TQuizS2::SetupTexts()
   Quiz[138].MyGroup = GROUP_ASPIE_COMM;
   Quiz[139].MyGroup = GROUP_NONVERBAL;
 
+  Quiz[140].MyGroup = GROUP_SENSORY;
+  Quiz[141].MyGroup = GROUP_NT_TALENT;
+  Quiz[142].MyGroup = GROUP_SENSORY;
+  Quiz[143].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[144].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[145].MyGroup = GROUP_ASPIE_SOCIAL;
+
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -628,6 +497,18 @@ void TQuizS2::SetupTexts()
   Quiz[137].Text = "Do you enjoy team sport and group endeavours?";
   Quiz[138].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[139].Text = "Do you find it easy to estimate the age of people?";
+
+  Quiz[140].Text = "Dyslexia";
+  Quiz[141].Text = "Dyscalculia";
+  Quiz[142].Text = "OCD";
+  Quiz[143].Text = "ODD";
+  Quiz[144].Text = "Bipolar";
+  Quiz[145].Text = "Social phobia";
+
+  Quiz[146].Text = "Do you believe in God?";
+  Quiz[147].Text = "Do you go to church or religious services?";
+  Quiz[148].Text = "Do you pray to God?";
+
 #endif
 
 #ifdef SWEDISH
@@ -771,6 +652,18 @@ void TQuizS2::SetupTexts()
   Quiz[137].Text = "Tycker du om lagsporter och andra gruppaktiviteter?";
   Quiz[138].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
   Quiz[139].Text = "Har du lätt för att bedömma människors ålder?";
+
+  Quiz[140].Text = "Dyslexi";
+  Quiz[141].Text = "Dyskaluli";
+  Quiz[142].Text = "OCD";
+  Quiz[143].Text = "ODD";
+  Quiz[144].Text = "Bipolär";
+  Quiz[145].Text = "Social fobi";
+
+  Quiz[146].Text = "Tror du på Gud?";
+  Quiz[147].Text = "Går du till kyrkan eller religösa arrangemang?";
+  Quiz[148].Text = "Ber du till Gud?";
+
 #endif
 }
 
@@ -929,12 +822,12 @@ void TQuizS2::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		Row.Quiz[141] = Row.Dyslexia + 1;
-		Row.Quiz[142] = Row.Dyscalculia + 1;
-		Row.Quiz[143] = Row.OCD + 1;
-		Row.Quiz[144] = Row.ODD + 1;
-		Row.Quiz[145] = Row.Bipolar + 1;
-		Row.Quiz[146] = Row.Social + 1;
+		Row.Quiz[140] = Row.Dyslexia + 1;
+		Row.Quiz[141] = Row.Dyscalculia + 1;
+		Row.Quiz[142] = Row.OCD + 1;
+		Row.Quiz[143] = Row.ODD + 1;
+		Row.Quiz[144] = Row.Bipolar + 1;
+		Row.Quiz[145] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1233,6 +1126,17 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 137, 55);
     DefineCross(QuizS1, 138, 99);
     DefineCross(QuizS1, 139, 138);
+
+    DefineCross(QuizS1, 140, 141);
+    DefineCross(QuizS1, 141, 142);
+    DefineCross(QuizS1, 142, 143);
+    DefineCross(QuizS1, 143, 144);
+    DefineCross(QuizS1, 144, 145);
+    DefineCross(QuizS1, 145, 146);
+
+    DefineGlobalId(146, 761);
+    DefineGlobalId(147, 762);
+    DefineGlobalId(148, 763);
 }
 
 /*##########################################################################

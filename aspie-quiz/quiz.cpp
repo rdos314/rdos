@@ -1744,24 +1744,27 @@ void TQuiz::Calculate()
 		dcount1 = (long double)Quiz[i].ChiCount[0];
 		dcount2 = (long double)Quiz[i].ChiCount[1];
 
-		for (j = 0; j < Quiz[i].Cats; j++)
+		if (dcount1 + dcount2)
 		{
-			val1 = (long double)Quiz[i].ChiArr[0][j];
-			val2 = (long double)Quiz[i].ChiArr[1][j];
+    		for (j = 0; j < Quiz[i].Cats; j++)
+	    	{
+		    	val1 = (long double)Quiz[i].ChiArr[0][j];
+			    val2 = (long double)Quiz[i].ChiArr[1][j];
 
-			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
-			if (exp >= 5.0)
-			{
-				val = val1 - exp;
-				rsum += val * val / exp;
-			}
+    			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+	    		if (exp >= 5.0)
+		    	{
+			    	val = val1 - exp;
+				    rsum += val * val / exp;
+    			}
 
-			exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
-			if (exp >= 5.0)
-			{
-				val = val2 - exp;
-				rsum += val * val / exp;
-			}
+	    		exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+		    	if (exp >= 5.0)
+			    {
+    				val = val2 - exp;
+	    			rsum += val * val / exp;
+		    	}
+		    }
 		}
 
 		Quiz[i].Chi2 = rsum;
@@ -2236,26 +2239,28 @@ void TQuiz::CalcGlobal()
 	    	dcount1 = (long double)ChiCount[0];
 		    dcount2 = (long double)ChiCount[1];
 
-    		for (j = 0; j < Cats; j++)
+    		if (dcount1 + dcount2)
 	    	{
-		    	val1 = (long double)ChiArr[0][j];
-			    val2 = (long double)ChiArr[1][j];
+        		for (j = 0; j < Cats; j++)
+	        	{
+		        	val1 = (long double)ChiArr[0][j];
+		    	    val2 = (long double)ChiArr[1][j];
 			    
-    			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
-	    		if (exp >= 5.0)
-		    	{
-			    	val = val1 - exp;
-    				rsum += val * val / exp;
-	    		}
+           			exp = (val1 + val2) * dcount1 / (dcount1 + dcount2);
+	        		if (exp >= 5.0)
+		        	{
+			        	val = val1 - exp;
+    				    rsum += val * val / exp;
+    	    		}
 
-		    	exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
-			    if (exp >= 5.0)
-    			{
-	    			val = val2 - exp;
-		    		rsum += val * val / exp;
+	    	    	exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+		    	    if (exp >= 5.0)
+    		    	{
+	    		    	val = val2 - exp;
+		    		    rsum += val * val / exp;
+		    		}
 			    }
     		}
-
 		
 	        GlobalChi2[GlobalId] = rsum;
 		    
@@ -5729,7 +5734,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[16]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -5739,6 +5744,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizs1.htm\">översikt</a> <a href=\"rels1.htm\">relaterade frågor</a> <a href=\"refs1.htm\">referenssajter</a> <a href=\"imgrate1.htm\">bildtest</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs2.htm\">overview</a> <a href=\"rels2.htm\">related questions</a> <a href=\"refs2.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs2.htm\">översikt</a> <a href=\"rels2.htm\">relaterade frågor</a> <a href=\"refs2.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
