@@ -5755,12 +5755,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs2.htm\">overview</a> <a href=\"rels2.htm\">related questions</a> <a href=\"refs2.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs2.htm\">overview</a> <a href=\"rels2.htm\">related questions</a> <a href=\"refs2.htm\">referer sites</a> <a href=\"imgrate2.htm\">image rating</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs2.htm\">översikt</a> <a href=\"rels2.htm\">relaterade frågor</a> <a href=\"refs2.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs2.htm\">översikt</a> <a href=\"rels2.htm\">relaterade frågor</a> <a href=\"refs2.htm\">referenssajter</a> <a href=\"imgrate2.htm\">bildtest</a>");
 	 file.Write("<br>");
 #endif
 

@@ -348,6 +348,7 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteLeiden("leiden9.htm");
 
 	 Quiz[16]->WritePictureRating("imgrate1.htm");
+//	 Quiz[17]->WritePictureRating("imgrate2.htm");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 

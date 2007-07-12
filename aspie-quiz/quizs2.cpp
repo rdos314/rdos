@@ -1512,3 +1512,474 @@ void TQuizS2::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  round ##########################
+*   Purpose....: round long double to int       	   					      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int round(long double val)
+{
+	return (int)(val + 0.5);
+}
+
+/*##################  WriteCenteredFieldHeader ##########################
+*   Purpose....: Write centered field header for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteCenteredFieldHeader(TFile &File, int RelWidth)
+{
+	char str[80];
+
+	sprintf(str, "\n<td width=\"%d%\" colspan=2 valign=top>\n", RelWidth);
+	File.Write(str);
+
+	File.Write("<p align=\"center\">\n");
+	File.Write("<b>\n");
+}
+
+/*##################  WriteFieldFooter ##########################
+*   Purpose....: Write field footer for table    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void WriteFieldFooter(TFile &File)
+{
+	File.Write("\n</b>\n");
+	File.Write("</p>\n");
+
+	File.Write("</td>\n");
+}
+
+/*##################  TQuizS2::WritePictureRating ##########################
+*   Purpose....: Write picture rating report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS2::WritePictureRating(const char *filename)
+{
+	int NtRateCount[10];
+	long double NtRateSum[10];
+	long double NtRateMean[10];
+	long double NtRateSd[10];
+	int NtViewCount[10];
+	long double NtViewSum[10];
+	long double NtViewMean[10];
+	long double NtViewSd[10];
+	int AsRateCount[10];
+	long double AsRateSum[10];
+	long double AsRateMean[10];
+	long double AsRateSd[10];
+	int AsViewCount[10];
+	long double AsViewSum[10];
+	long double AsViewMean[10];
+	long double AsViewSd[10];
+	int UseMale[10];
+	int UseFemale[10];
+	int use;
+	int i;
+	int ival;
+	long double val;
+	long double dev;
+	char str[80];
+	int diff;
+	TQuizRow Row;
+	TFile file(filename, 0);
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+		AsViewCount[i] = 0;
+		AsViewSum[i] = 0;
+
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+		NtViewCount[i] = 0;
+		NtViewSum[i] = 0;
+
+		UseMale[i] = TRUE;
+		UseFemale[i] = TRUE;
+	}
+
+	UseMale[0] = FALSE;
+	UseFemale[1] = FALSE;
+	UseMale[2] = FALSE;
+	UseFemale[3] = FALSE;
+	UseMale[4] = FALSE;
+	UseMale[10] = FALSE;
+	UseFemale[11] = FALSE;
+    UseFemale[12] = FALSE;            	
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < 10; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
+
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i])
+		    	{
+			    	if (diff > 0)
+				    {
+    					AsRateCount[i]++;
+	    				AsRateSum[i] += Row.Rating[i] - 1;
+		    		}
+			    	else
+				    {
+    					NtRateCount[i]++;
+	    				NtRateSum[i] += Row.Rating[i] - 1;
+		    		}
+    			}
+
+	    		if (Row.ViewTime[i])
+		    	{
+			    	if (Row.ViewTime[i] < 30000)
+				    {
+    					if (diff > 0)
+	    				{
+		    				AsViewCount[i]++;
+			    			AsViewSum[i] += Row.ViewTime[i];
+				    	}
+    					else
+	    				{
+		    				NtViewCount[i]++;
+			    			NtViewSum[i] += Row.ViewTime[i];
+				    	}
+    				}
+	    		}
+	        }
+		}
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateMean[i] = AsRateSum[i] / AsRateCount[i];
+		AsViewMean[i] = AsViewSum[i] / AsViewCount[i];
+
+		NtRateMean[i] = NtRateSum[i] / NtRateCount[i];
+		NtViewMean[i] = NtViewSum[i] / NtViewCount[i];
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateCount[i] = 0;
+		AsRateSum[i] = 0;
+		AsViewCount[i] = 0;
+		AsViewSum[i] = 0;
+
+		NtRateCount[i] = 0;
+		NtRateSum[i] = 0;
+		NtViewCount[i] = 0;
+		NtViewSum[i] = 0;
+	}
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < 10; i++)
+		{
+		    if (Row.Gender == 2)
+		        use = UseFemale[i];
+		    else
+		        use = UseMale[i];
+
+            if (use)
+            {		    
+    			diff = Row.AsResult - Row.NtResult;
+	    		if (Row.Rating[i])
+		    	{
+			    	if (diff > 0)
+    				{
+	    				AsRateCount[i]++;
+		    			val = (long double)(Row.Rating[i] - 1) - AsRateMean[i];
+			    		AsRateSum[i] += val * val;
+    				}
+	    			else
+		    		{
+			    		NtRateCount[i]++;
+    					val = (long double)(Row.Rating[i] - 1) - NtRateMean[i];
+	    				NtRateSum[i] += val * val;
+		    		}
+			    }
+
+    			if (Row.ViewTime[i])
+	    		{
+		    		if (Row.ViewTime[i] < 30000)
+			    	{
+    					if (diff > 0)
+	    				{
+		    				AsViewCount[i]++;
+			    			val = (long double)Row.Rating[i] - AsViewMean[i];
+				    		AsViewSum[i] += val * val;
+    					}
+	    				else
+		    			{
+			    			NtViewCount[i]++;
+				    		val = (long double)Row.Rating[i] - NtViewMean[i];
+					    	NtViewSum[i] += val * val;
+    					}
+	    			}
+	    		}
+			}
+		}
+	}
+
+	for (i = 0; i < 10; i++)
+	{
+		AsRateSd[i] = sqrtl(AsRateSum[i] / ((long double)AsRateCount[i] - 1));
+		AsViewSd[i] = sqrtl(AsViewSum[i] / ((long double)AsViewCount[i] - 1));
+
+		NtRateSd[i] = sqrtl(NtRateSum[i] / ((long double)NtRateCount[i] - 1));
+		NtViewSd[i] = sqrtl(NtViewSum[i] / ((long double)NtViewCount[i] - 1));
+	}
+
+	file.Write("<h3>Image rating</h3>");
+
+	sprintf(str, "AS rate count: %d<br>", AsRateCount[0]);
+	file.Write(str);
+
+	sprintf(str, "NT rate count: %d<br>", NtRateCount[0]);
+	file.Write(str);
+
+	sprintf(str, "AS view time count: %d<br>", AsViewCount[0]);
+	file.Write(str);
+
+	sprintf(str, "NT view time count: %d<br>", NtViewCount[0]);
+	file.Write(str);
+
+	file.Write("<br>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("Image");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("Rating (AS/NT)");
+	WriteFieldFooter(file);
+
+	WriteCenteredFieldHeader(file, 12);
+	file.Write("View-time (AS/NT)");
+	WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
+
+    for (i = 0; i < 10; i++)
+    {
+    	file.Write("<tr style='height:24.75pt'>");
+
+	    WriteCenteredFieldHeader(file, 25);
+	    switch (i)
+	    {
+	        case 0:
+            	file.Write("Aspie male #1");
+            	break;
+            	
+			case 1:
+            	file.Write("NT female #3");
+            	break;
+            	
+	        case 2:
+            	file.Write("Aspie female #3");
+            	break;
+            	
+	        case 3:
+            	file.Write("Aspie female #1");
+            	break;
+            	
+	        case 4:
+            	file.Write("Body-builder");
+            	break;
+            	
+	        case 5:
+            	file.Write("Horse");
+            	break;
+            	
+	        case 6:
+            	file.Write("Goat");
+            	break;
+            	
+	        case 7:
+            	file.Write("Tropical scene #3");
+            	break;
+            	
+	        case 8:
+            	file.Write("Socker game");
+            	break;
+
+	        case 9:
+            	file.Write("Scandinavian scene #3");
+            	break;
+		}
+            	            	
+   	    WriteFieldFooter(file);
+
+    	WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+		dev = 1.96 * AsRateSd[i] / sqrtl(AsRateCount[i]);
+
+		val = AsRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = AsRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+		val = AsRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+
+#ifdef CI
+
+		dev = 1.96 * NtRateSd[i] / sqrtl(NtRateCount[i]);
+
+		val = NtRateMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = NtRateMean[i] + dev;
+		if (val > 10.0)
+			val = 10.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "-%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = NtRateMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(10 * val);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+		WriteFieldFooter(file);
+
+		WriteCenteredFieldHeader(file, 12);
+
+#ifdef CI
+
+		dev = 1.96 * AsViewSd[i] / sqrtl(AsViewCount[i]);
+
+		val = AsViewMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = AsViewMean[i] + dev;
+
+		ival = round(val / 100);
+
+		sprintf(str, "-%d.%01d s / ", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = AsViewMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d s / ", ival / 10, ival % 10);
+		file.Write(str);
+#endif
+
+
+#ifdef  CI
+
+		dev = 1.96 * NtViewSd[i] / sqrtl(NtViewCount[i]);
+
+		val = NtViewMean[i] - dev;
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+		val = NtViewMean[i] + dev;
+
+		ival = round(val / 100);
+
+		sprintf(str, "-%d.%01d s", ival / 10, ival % 10);
+		file.Write(str);
+
+#else
+
+		val = NtViewMean[i];
+		if (val < 0.0)
+			val = 0.0;
+
+		ival = round(val / 100);
+
+		sprintf(str, "%d.%01d", ival / 10, ival % 10);
+		file.Write(str);
+
+#endif
+
+    	WriteFieldFooter(file);
+
+    	file.Write("</tr>");
+    }
+	file.Write("</table>");
+   	
+}
