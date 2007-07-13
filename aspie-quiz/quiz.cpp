@@ -337,7 +337,7 @@ void TQuiz::Init()
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
-
+                               
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
 
@@ -1687,7 +1687,7 @@ TQuiz *TQuiz::GetHighestCorr(int MyQuestion, int *Question)
 void TQuiz::Calculate()
 {
 	int i;
-    int j;
+	int j;
 	int g;
 	int e;
 	int ok;
@@ -1758,13 +1758,13 @@ void TQuiz::Calculate()
 				    rsum += val * val / exp;
     			}
 
-	    		exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
-		    	if (exp >= 5.0)
-			    {
-    				val = val2 - exp;
-	    			rsum += val * val / exp;
-		    	}
-		    }
+				exp = (val1 + val2) * dcount2 / (dcount1 + dcount2);
+				if (exp >= 5.0)
+				{
+					val = val2 - exp;
+					rsum += val * val / exp;
+				}
+			}
 		}
 
 		Quiz[i].Chi2 = rsum;
@@ -1779,21 +1779,21 @@ void TQuiz::Calculate()
 
 	for (i = 0; i < GROUP_COUNT; i++)
 	{
-        Group[i].Answers = 0;
-        Group[i].Count = 0;
-        Group[i].Sum = 0;
+		Group[i].Answers = 0;
+		Group[i].Count = 0;
+		Group[i].Sum = 0;
 		Group[i].Questions = 0;
 	}
 
-    GroupValCount = All.ValueCount;
+	GroupValCount = All.ValueCount;
 
-    if (GroupValArr)
-        delete GroupValArr;
-        
+	if (GroupValArr)
+		delete GroupValArr;
+
 	GroupValArr = new TGroupValArr[GroupValCount];
 
-    for (e = 0; e < GroupValCount; e++)
-    {
+	for (e = 0; e < GroupValCount; e++)
+	{
 		for (i = 0; i < N; i++)
 		{
 			ival = All.ValArr[e].Quiz[i];
@@ -1830,83 +1830,83 @@ void TQuiz::Calculate()
 						count++;
 					}
 					else
-					    ok = FALSE;
+						ok = FALSE;
 				}
 			}
 
 			if (ok)
 			{
-			    GroupValArr[e].Group[g].Sum = sum;
-			    GroupValArr[e].Group[g].Count = count;
-                Group[g].Answers++;
-                Group[g].Sum += sum;
-                Group[g].Count += count;
+				GroupValArr[e].Group[g].Sum = sum;
+				GroupValArr[e].Group[g].Count = count;
+				Group[g].Answers++;
+				Group[g].Sum += sum;
+				Group[g].Count += count;
 			}
 			else
 			{
-			    GroupValArr[e].Group[g].Sum = 0;
-			    GroupValArr[e].Group[g].Count = 0;
+				GroupValArr[e].Group[g].Sum = 0;
+				GroupValArr[e].Group[g].Count = 0;
 			}
 		}
 	}
 
 	for (i = 0; i < N; i++)
 	{
-        g = Quiz[i].MyGroup;
-        Group[g].Questions++;
-	
-	    if (Quiz[i].Count > 1)
-	    {
-    		mean[i] = (long double)Quiz[i].Sum / Quiz[i].Count;
+		g = Quiz[i].MyGroup;
+		Group[g].Questions++;
 
-    		rsum = 0;
+		if (Quiz[i].Count > 1)
+		{
+			mean[i] = (long double)Quiz[i].Sum / Quiz[i].Count;
 
-	    	for (e = 0; e < GroupValCount; e++)
-		    {
-			    ival = All.ValArr[e].Quiz[i];
-    			if (ival)
-	    		{
-		    		if (Quiz[i].Reverse)
-			            ival = Quiz[i].Cats - ival;
-			        else
-    				    ival--;
+			rsum = 0;
 
-    				val = (long double)ival - mean[i];
-	    			rsum += val * val;
-		    	}
-		    }
-		    csd[i] = sqrtl(rsum / ((long double)Quiz[i].Count - 1));
+			for (e = 0; e < GroupValCount; e++)
+			{
+				ival = All.ValArr[e].Quiz[i];
+				if (ival)
+				{
+					if (Quiz[i].Reverse)
+						ival = Quiz[i].Cats - ival;
+					else
+						ival--;
+
+					val = (long double)ival - mean[i];
+					rsum += val * val;
+				}
+			}
+			csd[i] = sqrtl(rsum / ((long double)Quiz[i].Count - 1));
 		}
 		else
 		{
-		    mean[i] = 0;
-		    csd[i] = 0;
+			mean[i] = 0;
+			csd[i] = 0;
 		}
 	}
 
 	for (g = 0; g < GROUP_COUNT; g++)
 	{
-	    if (Group[g].Count > 1 && Group[g].Answers > 1)
-	    {
-    		Group[g].Mean = (long double)Group[g].Sum / Group[g].Count;
+		if (Group[g].Count > 1 && Group[g].Answers > 1)
+		{
+			Group[g].Mean = (long double)Group[g].Sum / Group[g].Count;
 
-	    	rsum = 0;
+			rsum = 0;
 
-    		for (e = 0; e < GroupValCount; e++)
-	    	{
-		        if (GroupValArr[e].Group[g].Count)
-			    {
-			        val = (long double)GroupValArr[e].Group[g].Sum / GroupValArr[e].Group[g].Count;
-    				val -= Group[g].Mean;
-	    			rsum += val * val;
-		    	}
-		    }
-		    Group[g].Sd = sqrtl(rsum / ((long double)Group[g].Answers - 1));
+			for (e = 0; e < GroupValCount; e++)
+			{
+				if (GroupValArr[e].Group[g].Count)
+				{
+					val = (long double)GroupValArr[e].Group[g].Sum / GroupValArr[e].Group[g].Count;
+					val -= Group[g].Mean;
+					rsum += val * val;
+				}
+			}
+			Group[g].Sd = sqrtl(rsum / ((long double)Group[g].Answers - 1));
 		}
 		else
 		{
-		    Group[g].Mean = 0;
-		    Group[g].Sd = 0;
+			Group[g].Mean = 0;
+			Group[g].Sd = 0;
 		}
 	}
 
@@ -1918,40 +1918,40 @@ void TQuiz::Calculate()
 
 			if (csd[q] && Group[g].Sd)
 			{
-    		    rsum = 0;
-	    		for (e = 0; e < GroupValCount; e++)
-		    	{
-			    	ival = All.ValArr[e].Quiz[q];
-	    			count = GroupValArr[e].Group[g].Count;
-		    		sum = GroupValArr[e].Group[g].Sum;
+				rsum = 0;
+				for (e = 0; e < GroupValCount; e++)
+				{
+					ival = All.ValArr[e].Quiz[q];
+					count = GroupValArr[e].Group[g].Count;
+					sum = GroupValArr[e].Group[g].Sum;
 
-    			    if (ival && count)
-	    		    {
-		    	        if (Quiz[q].Reverse)
-			                ival = Quiz[q].Cats - ival;
-			            else
-    			            ival--;
+					if (ival && count)
+					{
+						if (Quiz[q].Reverse)
+							ival = Quiz[q].Cats - ival;
+						else
+							ival--;
 
-                        if (Quiz[q].MyGroup == g)
-                        {
-                            count--;
-				    		sum -= ival;
-                        }
+						if (Quiz[q].MyGroup == g)
+						{
+							count--;
+							sum -= ival;
+						}
 
-                        if (count)
-                        {
-            			    Quiz[q].Group[g].Count++;
+						if (count)
+						{
+							Quiz[q].Group[g].Count++;
 
-    	    				zx = ((long double)ival - mean[q]) / csd[q];
-	    	    			zy = ((long double)sum / count - Group[g].Mean) / Group[g].Sd;
-		    	    		rsum += zx * zy;
-		     	        }
-				    }
-			    }
+							zx = ((long double)ival - mean[q]) / csd[q];
+							zy = ((long double)sum / count - Group[g].Mean) / Group[g].Sd;
+							rsum += zx * zy;
+						}
+					}
+				}
 
-    			if (Quiz[q].Group[g].Count)
-	    			Quiz[q].Group[g].Corr = rsum / ((long double)Quiz[q].Group[g].Count - 1);
-	    	}
+				if (Quiz[q].Group[g].Count > 1)
+					Quiz[q].Group[g].Corr = rsum / ((long double)Quiz[q].Group[g].Count - 1);
+			}
 		}
 	}
 
@@ -1962,29 +1962,29 @@ void TQuiz::Calculate()
 	{
 		for (g2 = 0; g2 < g1; g2++)
 		{
-		    GroupCorr[g1][g2].Corr = 0;
+			GroupCorr[g1][g2].Corr = 0;
 			GroupCorr[g1][g2].Count = 0;
 
 			rsum = 0;
 			for (e = 0; e < GroupValCount; e++)
 			{
-			    count1 = GroupValArr[e].Group[g1].Count;
+				count1 = GroupValArr[e].Group[g1].Count;
 				sum1 = GroupValArr[e].Group[g1].Sum;
 
-			    count2 = GroupValArr[e].Group[g2].Count;
-			    sum2 = GroupValArr[e].Group[g2].Sum;
+				count2 = GroupValArr[e].Group[g2].Count;
+				sum2 = GroupValArr[e].Group[g2].Sum;
 
-			    if (count1 && count2 && Group[g1].Sd && Group[g2].Sd)
-			    {
+				if (count1 && count2 && Group[g1].Sd && Group[g2].Sd)
+				{
 					GroupCorr[g1][g2].Count++;
 
 					zx = ((long double)sum1 / count1 - Group[g1].Mean) / Group[g1].Sd;
 					zy = ((long double)sum2 / count2 - Group[g2].Mean) / Group[g2].Sd;
 					rsum += zx * zy;
 				}
-            }
-            
-			if (GroupCorr[g1][g2].Count)
+			}
+
+			if (GroupCorr[g1][g2].Count > 1)
 			{
 				GroupCorr[g1][g2].Corr = rsum / ((long double)GroupCorr[g1][g2].Count - 1);
 				GroupCorr[g2][g1].Corr = rsum / ((long double)GroupCorr[g1][g2].Count - 1);
@@ -1993,34 +1993,34 @@ void TQuiz::Calculate()
 			else
 			{
 				GroupCorr[g1][g2].Corr = 0;
-		        GroupCorr[g2][g1].Corr = 0;
+				GroupCorr[g2][g1].Corr = 0;
 				GroupCorr[g2][g1].Count = 0;
 			}
 		}
 	}
 
-    if (!GlobalCorrInited)
-    {
-        GlobalCorrInited = TRUE;
+	if (!GlobalCorrInited)
+	{
+		GlobalCorrInited = TRUE;
 
 		for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
-        {
-            for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
-            {
-                GlobalCorrCount[gid1][gid2] = 0;
-                GlobalCorrArr[gid1][gid2] = 0.0;
-            }
-        }
-    }
+		{
+			for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
+			{
+				GlobalCorrCount[gid1][gid2] = 0;
+				GlobalCorrArr[gid1][gid2] = 0.0;
+			}
+		}
+	}
 
 
 #ifdef CALC_QUESTION_CORR
-                
-    for (q = 0; q < N; q++)
-    {
-        quiz = Quiz[q].CrossQuiz;
-        if (quiz)
-        {
+
+	for (q = 0; q < N; q++)
+	{
+		quiz = Quiz[q].CrossQuiz;
+		if (quiz)
+		{
 			cq = Quiz[q].CrossInd;
 			Quiz[q].GlobalId = quiz->Quiz[cq].GlobalId;
 		}
@@ -2028,9 +2028,9 @@ void TQuiz::Calculate()
 
 	for (q1 = 0; q1 < N; q1++)
 	{
-	    for (q2 = 0; q2 < q1; q2++)
+		for (q2 = 0; q2 < q1; q2++)
 		{
-		    count = 0;
+			count = 0;
 			rsum = 0;
 			for (e = 0; e < All.ValueCount; e++)
 			{

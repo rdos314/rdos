@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS2::TQuizS2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1)
-  : TQuiz(149),
+  : TQuiz(163),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -77,7 +77,7 @@ TQuizS2::TQuizS2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	DefineQuiz();
 	InitReferers();
 	LoadReferers();
-    SetupControlGroups();
+	SetupControlGroups();
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1);
@@ -120,7 +120,10 @@ int TQuizS2::GetPcaCount()
 *##########################################################################*/
 int TQuizS2::GetCatCount(int Question)
 {
-    return 3;
+    if (Question < 153)
+        return 3;
+    else
+    	return 11;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -356,6 +359,22 @@ void TQuizS2::SetupTexts()
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
 
+  Quiz[149].MyGroup = GROUP_SENSORY;
+  Quiz[150].MyGroup = GROUP_SENSORY;
+  Quiz[151].MyGroup = GROUP_SENSORY;
+  Quiz[152].MyGroup = GROUP_SENSORY;
+
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -508,6 +527,21 @@ void TQuizS2::SetupTexts()
   Quiz[146].Text = "Do you believe in God?";
   Quiz[147].Text = "Do you go to church or religious services?";
   Quiz[148].Text = "Do you pray to God?";
+  Quiz[149].Text = "Do you have psychic abilities?";
+  Quiz[150].Text = "Do you believe in ghosts and / or supernatural phenomens?";
+  Quiz[151].Text = "Are you superstitious?";
+  Quiz[152].Text = "Have you had paranormal experiences?";
+
+  Quiz[153].Text = "Rating for Aspie male #1";
+  Quiz[154].Text = "Rating for NT female #3";
+  Quiz[155].Text = "Rating for Aspie female #3";
+  Quiz[156].Text = "Rating for Aspie female #1";
+  Quiz[157].Text = "Rating for body-builder";
+  Quiz[158].Text = "Rating for horse";
+  Quiz[159].Text = "Rating for goat";
+  Quiz[160].Text = "Rating for tropical scene #3";
+  Quiz[161].Text = "Rating for socker game";
+  Quiz[162].Text = "Rating for scandinavian scene #3";
 
 #endif
 
@@ -663,6 +697,21 @@ void TQuizS2::SetupTexts()
   Quiz[146].Text = "Tror du på Gud?";
   Quiz[147].Text = "Går du till kyrkan eller religösa arrangemang?";
   Quiz[148].Text = "Ber du till Gud?";
+  Quiz[149].Text = "Har du övernaturliga förmågor?";
+  Quiz[150].Text = "Tror du på spöken och / eller övernaturliga fenomen?";
+  Quiz[151].Text = "Är du vidskeplig?";
+  Quiz[152].Text = "Har du haft övernaturliga upplevelser?";
+
+  Quiz[153].Text = "Bedömning för Aspie kille #1";
+  Quiz[154].Text = "Bedömning för NT tjej #3";
+  Quiz[155].Text = "Bedömning för Aspie tjej #3";
+  Quiz[156].Text = "Bedömning för Aspie tjej #1";
+  Quiz[157].Text = "Bedömning för kroppsbyggare";
+  Quiz[158].Text = "Bedömning för häst";
+  Quiz[159].Text = "Bedömning för get";
+  Quiz[160].Text = "Bedömning för tropisk scen #3";
+  Quiz[161].Text = "Bedömning för fotbollsmatch";
+  Quiz[162].Text = "Bedömning för skandinavisk scen #3";
 
 #endif
 }
@@ -995,26 +1044,26 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 6, 6);
     DefineCross(QuizS1, 7, 7);
     DefineCross(QuizS1, 8, 8);
-    DefineCross(QuizS1, 9, 9);
+	DefineCross(QuizS1, 9, 9);
     DefineCross(QuizS1, 10, 10);
     DefineCross(QuizS1, 11, 11);
-    DefineCross(QuizS1, 12, 12);
-    DefineCross(QuizS1, 13, 13);
+	DefineCross(QuizS1, 12, 12);
+	DefineCross(QuizS1, 13, 13);
     DefineCross(QuizS1, 14, 14);
     DefineCross(QuizS1, 15, 16);
     DefineCross(QuizS1, 16, 15);
-    DefineCross(QuizS1, 17, 17);
+	DefineCross(QuizS1, 17, 17);
     DefineCross(QuizS1, 18, 18);
     DefineCross(QuizS1, 19, 19);
     DefineCross(QuizS1, 20, 20);
     DefineCross(QuizS1, 21, 23);
     DefineCross(QuizS1, 22, 21);
     DefineCross(QuizS1, 23, 22);
-    DefineCross(QuizS1, 24, 24);
+	DefineCross(QuizS1, 24, 24);
     DefineCross(QuizS1, 25, 26);
     DefineCross(QuizS1, 26, 27);
     DefineCross(QuizS1, 27, 28);
-    DefineCross(QuizS1, 28, 29);
+	DefineCross(QuizS1, 28, 29);
     DefineCross(QuizS1, 29, 30);
     DefineCross(QuizS1, 30, 31);
     DefineCross(QuizS1, 31, 32);
@@ -1030,26 +1079,26 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 41, 42);
     DefineCross(QuizS1, 42, 45);
     DefineCross(QuizS1, 43, 44);
-    DefineCross(QuizS1, 44, 46);
+	DefineCross(QuizS1, 44, 46);
     DefineCross(QuizS1, 45, 47);
     DefineCross(QuizS1, 46, 48);
-    DefineCross(QuizS1, 47, 51);
-    DefineCross(QuizS1, 48, 49);
+	DefineCross(QuizS1, 47, 51);
+	DefineCross(QuizS1, 48, 49);
     DefineCross(QuizS1, 49, 50);
     DefineCross(QuizS1, 50, 54);
     DefineCross(QuizS1, 51, 52);
-    DefineCross(QuizS1, 52, 53);
+	DefineCross(QuizS1, 52, 53);
     DefineCross(QuizS1, 53, 56);
     DefineCross(QuizS1, 54, 57);
     DefineCross(QuizS1, 55, 58);
     DefineCross(QuizS1, 56, 59);
     DefineCross(QuizS1, 57, 60);
     DefineCross(QuizS1, 58, 61);
-    DefineCross(QuizS1, 59, 119);
+	DefineCross(QuizS1, 59, 119);
     DefineCross(QuizS1, 60, 62);
     DefineCross(QuizS1, 61, 63);
     DefineCross(QuizS1, 62, 64);
-    DefineCross(QuizS1, 63, 65);
+	DefineCross(QuizS1, 63, 65);
     DefineCross(QuizS1, 64, 66);
     DefineCross(QuizS1, 65, 69);
     DefineCross(QuizS1, 66, 67);
@@ -1065,26 +1114,26 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 76, 83);
     DefineCross(QuizS1, 77, 77);
     DefineCross(QuizS1, 78, 82);
-    DefineCross(QuizS1, 79, 84);
+	DefineCross(QuizS1, 79, 84);
     DefineCross(QuizS1, 80, 86);
     DefineCross(QuizS1, 81, 87);
-    DefineCross(QuizS1, 82, 88);
-    DefineCross(QuizS1, 83, 91);
+	DefineCross(QuizS1, 82, 88);
+	DefineCross(QuizS1, 83, 91);
     DefineCross(QuizS1, 84, 90);
     DefineCross(QuizS1, 85, 92);
     DefineCross(QuizS1, 86, 94);
-    DefineCross(QuizS1, 87, 95);
+	DefineCross(QuizS1, 87, 95);
     DefineCross(QuizS1, 88, 93);
     DefineCross(QuizS1, 89, 97);
     DefineCross(QuizS1, 90, 98);
     DefineCross(QuizS1, 91, 100);
     DefineCross(QuizS1, 92, 121);
     DefineCross(QuizS1, 93, 76);
-    DefineCross(QuizS1, 94, 79);
+	DefineCross(QuizS1, 94, 79);
     DefineCross(QuizS1, 95, 101);
     DefineCross(QuizS1, 96, 81);
     DefineCross(QuizS1, 97, 85);
-    DefineCross(QuizS1, 98, 104);
+	DefineCross(QuizS1, 98, 104);
     DefineCross(QuizS1, 99, 102);
     DefineCross(QuizS1, 100, 103);
     DefineCross(QuizS1, 101, 105);
@@ -1100,43 +1149,59 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 111, 140);
     DefineCross(QuizS1, 112, 114);
     DefineCross(QuizS1, 113, 115);
-    DefineCross(QuizS1, 114, 116);
+	DefineCross(QuizS1, 114, 116);
     DefineCross(QuizS1, 115, 117);
     DefineCross(QuizS1, 116, 118);
-    DefineCross(QuizS1, 117, 122);
-    DefineCross(QuizS1, 118, 123);
+	DefineCross(QuizS1, 117, 122);
+	DefineCross(QuizS1, 118, 123);
     DefineCross(QuizS1, 119, 120);
     DefineCross(QuizS1, 120, 124);
     DefineCross(QuizS1, 121, 125);
-    DefineCross(QuizS1, 122, 126);
+	DefineCross(QuizS1, 122, 126);
     DefineCross(QuizS1, 123, 127);
     DefineCross(QuizS1, 124, 128);
     DefineCross(QuizS1, 125, 129);
     DefineCross(QuizS1, 126, 130);
     DefineCross(QuizS1, 127, 131);
     DefineCross(QuizS1, 128, 133);
-    DefineCross(QuizS1, 129, 134);
+	DefineCross(QuizS1, 129, 134);
     DefineCross(QuizS1, 130, 132);
     DefineCross(QuizS1, 131, 135);
     DefineCross(QuizS1, 132, 136);
-    DefineCross(QuizS1, 133, 137);
-    DefineCross(QuizS1, 134, 139);
-    DefineCross(QuizS1, 135, 41);
-    DefineCross(QuizS1, 136, 25);
-    DefineCross(QuizS1, 137, 55);
-    DefineCross(QuizS1, 138, 99);
-    DefineCross(QuizS1, 139, 138);
+	DefineCross(QuizS1, 133, 137);
+	DefineCross(QuizS1, 134, 139);
+	DefineCross(QuizS1, 135, 41);
+	DefineCross(QuizS1, 136, 25);
+	DefineCross(QuizS1, 137, 55);
+	DefineCross(QuizS1, 138, 99);
+	DefineCross(QuizS1, 139, 138);
 
-    DefineCross(QuizS1, 140, 141);
-    DefineCross(QuizS1, 141, 142);
-    DefineCross(QuizS1, 142, 143);
-    DefineCross(QuizS1, 143, 144);
-    DefineCross(QuizS1, 144, 145);
-    DefineCross(QuizS1, 145, 146);
+	DefineCross(QuizS1, 140, 141);
+	DefineCross(QuizS1, 141, 142);
+	DefineCross(QuizS1, 142, 143);
+	DefineCross(QuizS1, 143, 144);
+	DefineCross(QuizS1, 144, 145);
+	DefineCross(QuizS1, 145, 146);
 
-    DefineGlobalId(146, 761);
-    DefineGlobalId(147, 762);
-    DefineGlobalId(148, 763);
+	DefineGlobalId(146, 761);
+	DefineGlobalId(147, 762);
+	DefineGlobalId(148, 763);
+	DefineCross(Quiz9, 149, 146);
+	DefineCross(QuizII, 150, 12);
+	DefineCross(Quiz8, 151, 134);
+	DefineCross(Quiz8, 152, 136);
+
+	DefineCross(QuizS1, 153, 147);
+	DefineGlobalId(153, 764);
+	DefineGlobalId(154, 765);
+	DefineGlobalId(155, 766);
+	DefineCross(QuizS1, 156, 148);
+	DefineGlobalId(157, 767);
+	DefineGlobalId(158, 768);
+	DefineGlobalId(159, 769);
+	DefineGlobalId(160, 770);
+	DefineCross(QuizS1, 161, 153);
+	DefineGlobalId(162, 771);
 }
 
 /*##########################################################################
@@ -1613,12 +1678,9 @@ void TQuizS2::WritePictureRating(const char *filename)
 
 	UseMale[0] = FALSE;
 	UseFemale[1] = FALSE;
-	UseMale[2] = FALSE;
+	UseFemale[2] = FALSE;
 	UseFemale[3] = FALSE;
 	UseMale[4] = FALSE;
-	UseMale[10] = FALSE;
-	UseFemale[11] = FALSE;
-    UseFemale[12] = FALSE;            	
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
