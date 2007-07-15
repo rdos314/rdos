@@ -5802,7 +5802,7 @@ void TQuiz::WriteLinkReport(const char *filename)
         quiz = GlobalTopQuiz[GlobalId];
         q = GlobalTopQuestion[GlobalId];
 
-        if (quiz && GlobalChi2[GlobalId] >= 6.0)
+        if (quiz && GlobalChi2[GlobalId] >= 1.0)
             quiz->WriteLinkQuestion(&file, q, GlobalId);
     }
 
@@ -5832,7 +5832,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 			{
 		        quiz = GlobalTopQuiz[i];
 				q = GlobalTopQuestion[i];
-				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= 6.0)
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= 1.0)
 				{
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;

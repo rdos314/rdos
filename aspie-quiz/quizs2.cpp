@@ -206,6 +206,8 @@ void TQuizS2::SetupTexts()
   Quiz[137].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
+  Quiz[154].Reverse = TRUE;
+  Quiz[157].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
