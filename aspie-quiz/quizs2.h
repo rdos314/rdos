@@ -41,6 +41,7 @@ public:
     virtual void ExportExcelGroups(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
 
+    virtual void WriteRetest(const char *filename);
     virtual void WritePictureRating(const char *filename);
 
 private:

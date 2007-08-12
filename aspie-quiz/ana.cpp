@@ -347,6 +347,8 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteHFE("hfe9.htm");
 	 Quiz[8]->WriteLeiden("leiden9.htm");
 
+	 Quiz[17]->WriteRetest("retests2.htm");
+
 	 Quiz[16]->WritePictureRating("imgrate1.htm");
 	 Quiz[17]->WritePictureRating("imgrate2.htm");
 

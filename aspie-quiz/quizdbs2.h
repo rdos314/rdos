@@ -2,6 +2,7 @@
 struct TQuizRow
 {
     long ID;
+    long userid;
     int  BirthYear;
     int  BirthMonth;
 	char Gender;

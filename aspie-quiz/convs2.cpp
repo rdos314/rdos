@@ -192,6 +192,9 @@ char *ProcessRow(char *str)
 					break;
 
 				case 1:
+					Row.userid = atol(valstr);
+					break;
+
 				case 2:
 				case 3:
 				case 4:

@@ -225,6 +225,7 @@ public:
     virtual void WriteCFTR(const char *filename);
     virtual void WriteHFE(const char *filename);
     virtual void WriteLeiden(const char *filename);
+    virtual void WriteRetest(const char *filename);
     virtual void WriteAQ(const char *filename);
     virtual void WritePictureRating(const char *filename);
 

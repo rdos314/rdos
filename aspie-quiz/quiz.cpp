@@ -2413,6 +2413,17 @@ void TQuiz::WriteLeiden(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteRetest ##########################
+*   Purpose....: Write retest report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteRetest(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WriteAQ ##########################
 *   Purpose....: Write AQ test report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -5755,12 +5766,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs2.htm\">overview</a> <a href=\"rels2.htm\">related questions</a> <a href=\"refs2.htm\">referer sites</a> <a href=\"imgrate2.htm\">image rating</a>");
+	file.Write(" <a href=\"quizs2.htm\">overview</a> <a href=\"rels2.htm\">related questions</a> <a href=\"refs2.htm\">referer sites</a> <a href=\"retests2.htm\">score stability</a> <a href=\"imgrate2.htm\">image rating</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs2.htm\">översikt</a> <a href=\"rels2.htm\">relaterade frågor</a> <a href=\"refs2.htm\">referenssajter</a> <a href=\"imgrate2.htm\">bildtest</a>");
+	 file.Write(" <a href=\"quizs2.htm\">översikt</a> <a href=\"rels2.htm\">relaterade frågor</a> <a href=\"refs2.htm\">referenssajter</a> <a href=\"retests2.htm\">poäng stabilitet</a> <a href=\"imgrate2.htm\">bildtest</a>");
 	 file.Write("<br>");
 #endif
 
