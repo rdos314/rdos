@@ -53,7 +53,7 @@
 #
 ##########################################################################*/
 TQuizS2::TQuizS2(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1)
-  : TQuiz(163),
+  : TQuiz(170),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -121,10 +121,10 @@ int TQuizS2::GetPcaCount()
 *##########################################################################*/
 int TQuizS2::GetCatCount(int Question)
 {
-    if (Question < 153)
-        return 3;
-    else
-    	return 11;
+	if (Question < 160)
+		return 3;
+	else
+		return 11;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -374,9 +374,17 @@ void TQuizS2::SetupTexts()
   Quiz[157].MyGroup = GROUP_MIXED;
   Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_MIXED;
+
   Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[169].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
@@ -535,16 +543,24 @@ void TQuizS2::SetupTexts()
   Quiz[151].Text = "Are you superstitious?";
   Quiz[152].Text = "Have you had paranormal experiences?";
 
-  Quiz[153].Text = "Rating for Aspie male #1";
-  Quiz[154].Text = "Rating for NT female #3";
-  Quiz[155].Text = "Rating for Aspie female #3";
-  Quiz[156].Text = "Rating for Aspie female #1";
-  Quiz[157].Text = "Rating for body-builder";
-  Quiz[158].Text = "Rating for horse";
-  Quiz[159].Text = "Rating for goat";
-  Quiz[160].Text = "Rating for tropical scene #3";
-  Quiz[161].Text = "Rating for socker game";
-  Quiz[162].Text = "Rating for scandinavian scene #3";
+  Quiz[153].Text = "Do you often have lots of thoughts that you find hard to verbalize?";
+  Quiz[154].Text = "Are you irritated by inefficiency and do you find it easy to see how things can be done in better ways?";
+  Quiz[155].Text = "Has it been harder for you than for others to keep friends?";
+  Quiz[156].Text = "Do you find it easy to understand when somebody is interested in you as a potential partner?";
+  Quiz[157].Text = "Do you instinctively know how to behave when somebody shows interest in you as a potential partner?";
+  Quiz[158].Text = "Do you pull hair?";
+  Quiz[159].Text = "Do you believe in a higher power from whom you expect favors, especially if you pray and follow the will of the higher power, as revealed in sacred narratives?";
+
+  Quiz[160].Text = "Rating for Aspie male #1";
+  Quiz[161].Text = "Rating for NT female #3";
+  Quiz[162].Text = "Rating for Aspie female #3";
+  Quiz[163].Text = "Rating for Aspie female #1";
+  Quiz[164].Text = "Rating for body-builder";
+  Quiz[165].Text = "Rating for horse";
+  Quiz[166].Text = "Rating for goat";
+  Quiz[167].Text = "Rating for tropical scene #3";
+  Quiz[168].Text = "Rating for socker game";
+  Quiz[169].Text = "Rating for scandinavian scene #3";
 
 #endif
 
@@ -705,16 +721,24 @@ void TQuizS2::SetupTexts()
   Quiz[151].Text = "Är du vidskeplig?";
   Quiz[152].Text = "Har du haft övernaturliga upplevelser?";
 
-  Quiz[153].Text = "Bedömning för Aspie kille #1";
-  Quiz[154].Text = "Bedömning för NT tjej #3";
-  Quiz[155].Text = "Bedömning för Aspie tjej #3";
-  Quiz[156].Text = "Bedömning för Aspie tjej #1";
-  Quiz[157].Text = "Bedömning för kroppsbyggare";
-  Quiz[158].Text = "Bedömning för häst";
-  Quiz[159].Text = "Bedömning för get";
-  Quiz[160].Text = "Bedömning för tropisk scen #3";
-  Quiz[161].Text = "Bedömning för fotbollsmatch";
-  Quiz[162].Text = "Bedömning för skandinavisk scen #3";
+  Quiz[153].Text = "Har du ofta massor av tankar som du har svårt för att formulera i ord?";
+  Quiz[154].Text = "Blir du irriterad på ineffektivitet och har du lätt för att se hur saker kan göras på smidigare sätt?";
+  Quiz[155].Text = "Har du haft svårare än andra att behålla vänner?";
+  Quiz[156].Text = "Tycker du det är lätt att förstå om någon är intresserad av dig som möjlig partner?";
+  Quiz[157].Text = "Vet du instinktivt hur du ska uppföra dig om någon visar intresse för dig som möjlig partner?";
+  Quiz[158].Text = "Brukar du dra ut hårstrån?";
+  Quiz[159].Text = "Tror du på en högre makt från vilken du förväntar dig tjänster, speciellt om du ber och följer denna högre makts vilja, så som det står beskriviet i heliga skrifter?";
+
+  Quiz[160].Text = "Bedömning för Aspie kille #1";
+  Quiz[161].Text = "Bedömning för NT tjej #3";
+  Quiz[162].Text = "Bedömning för Aspie tjej #3";
+  Quiz[163].Text = "Bedömning för Aspie tjej #1";
+  Quiz[164].Text = "Bedömning för kroppsbyggare";
+  Quiz[165].Text = "Bedömning för häst";
+  Quiz[166].Text = "Bedömning för get";
+  Quiz[167].Text = "Bedömning för tropisk scen #3";
+  Quiz[168].Text = "Bedömning för fotbollsmatch";
+  Quiz[169].Text = "Bedömning för skandinavisk scen #3";
 
 #endif
 }
@@ -968,9 +992,9 @@ void TQuizS2::LoadPopulations()
 		}
 		else
 		{
-		    ref = FindReferer(Row.Referer);
-		    if (ref && ref->NT)
-		        NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			ref = FindReferer(Row.Referer);
+			if (ref && ref->NT)
+				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
@@ -1014,7 +1038,7 @@ void TQuizS2::SetupControlGroups()
 	DefineNt("kaytastrophe.com");
 	DefineNt("tbg.nu");
 	DefineNt("vof.se");
-    DefineNt("nordisk.nu");
+	DefineNt("nordisk.nu");
 	DefineNt("swedvdr.org");
 
 	DefineAspie("wrongplanet.net");
@@ -1038,7 +1062,7 @@ void TQuizS2::SetupControlGroups()
 ##########################################################################*/
 void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1)
 {
-    DefineCross(QuizS1, 0, 1);
+	DefineCross(QuizS1, 0, 1);
     DefineCross(QuizS1, 1, 0);
     DefineCross(QuizS1, 2, 2);
     DefineCross(QuizS1, 3, 3);
@@ -1063,7 +1087,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 22, 21);
     DefineCross(QuizS1, 23, 22);
 	DefineCross(QuizS1, 24, 24);
-    DefineCross(QuizS1, 25, 26);
+	DefineCross(QuizS1, 25, 26);
     DefineCross(QuizS1, 26, 27);
     DefineCross(QuizS1, 27, 28);
 	DefineCross(QuizS1, 28, 29);
@@ -1072,8 +1096,8 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 31, 32);
     DefineCross(QuizS1, 32, 33);
     DefineCross(QuizS1, 33, 35);
-    DefineCross(QuizS1, 34, 34);
-    DefineCross(QuizS1, 35, 37);
+	DefineCross(QuizS1, 34, 34);
+	DefineCross(QuizS1, 35, 37);
     DefineCross(QuizS1, 36, 36);
     DefineCross(QuizS1, 37, 38);
     DefineCross(QuizS1, 38, 39);
@@ -1098,7 +1122,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 57, 60);
     DefineCross(QuizS1, 58, 61);
 	DefineCross(QuizS1, 59, 119);
-    DefineCross(QuizS1, 60, 62);
+	DefineCross(QuizS1, 60, 62);
     DefineCross(QuizS1, 61, 63);
     DefineCross(QuizS1, 62, 64);
 	DefineCross(QuizS1, 63, 65);
@@ -1107,8 +1131,8 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 66, 67);
     DefineCross(QuizS1, 67, 68);
     DefineCross(QuizS1, 68, 71);
-    DefineCross(QuizS1, 69, 70);
-    DefineCross(QuizS1, 70, 72);
+	DefineCross(QuizS1, 69, 70);
+	DefineCross(QuizS1, 70, 72);
     DefineCross(QuizS1, 71, 74);
     DefineCross(QuizS1, 72, 75);
     DefineCross(QuizS1, 73, 73);
@@ -1133,7 +1157,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 92, 121);
     DefineCross(QuizS1, 93, 76);
 	DefineCross(QuizS1, 94, 79);
-    DefineCross(QuizS1, 95, 101);
+	DefineCross(QuizS1, 95, 101);
     DefineCross(QuizS1, 96, 81);
     DefineCross(QuizS1, 97, 85);
 	DefineCross(QuizS1, 98, 104);
@@ -1142,8 +1166,8 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 101, 105);
     DefineCross(QuizS1, 102, 106);
     DefineCross(QuizS1, 103, 108);
-    DefineCross(QuizS1, 104, 89);
-    DefineCross(QuizS1, 105, 111);
+	DefineCross(QuizS1, 104, 89);
+	DefineCross(QuizS1, 105, 111);
     DefineCross(QuizS1, 106, 107);
     DefineCross(QuizS1, 107, 109);
     DefineCross(QuizS1, 108, 112);
@@ -1168,7 +1192,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 127, 131);
     DefineCross(QuizS1, 128, 133);
 	DefineCross(QuizS1, 129, 134);
-    DefineCross(QuizS1, 130, 132);
+	DefineCross(QuizS1, 130, 132);
     DefineCross(QuizS1, 131, 135);
     DefineCross(QuizS1, 132, 136);
 	DefineCross(QuizS1, 133, 137);
@@ -1194,17 +1218,24 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineCross(Quiz8, 151, 134);
 	DefineCross(Quiz8, 152, 136);
 
-	DefineCross(QuizS1, 153, 147);
 	DefineGlobalId(153, 764);
 	DefineGlobalId(154, 765);
 	DefineGlobalId(155, 766);
-	DefineCross(QuizS1, 156, 148);
-	DefineGlobalId(157, 767);
-	DefineGlobalId(158, 768);
-	DefineGlobalId(159, 769);
-	DefineGlobalId(160, 770);
-	DefineCross(QuizS1, 161, 153);
-	DefineGlobalId(162, 771);
+	DefineGlobalId(156, 767);
+	DefineGlobalId(157, 768);
+	DefineGlobalId(158, 769);
+	DefineGlobalId(159, 770);
+
+	DefineCross(QuizS1, 160, 147);
+	DefineGlobalId(161, 771);
+	DefineGlobalId(162, 772);
+	DefineCross(QuizS1, 163, 148);
+	DefineGlobalId(164, 773);
+	DefineGlobalId(165, 774);
+	DefineGlobalId(166, 775);
+	DefineGlobalId(167, 776);
+	DefineCross(QuizS1, 168, 153);
+	DefineGlobalId(169, 777);
 }
 
 /*##########################################################################
@@ -1266,7 +1297,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 
         case PCA_TYPE_YOUNG:
 			if (row->BirthYear >= 1980)
-                return TRUE;
+				return TRUE;
 			else
 				return FALSE;
 

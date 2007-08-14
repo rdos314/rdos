@@ -143,7 +143,7 @@ char *ProcessRow(char *str)
 	int quote;
 	int valid;
 
-	for (fieldno = 0; fieldno < 190; fieldno++)
+	for (fieldno = 0; fieldno < 197; fieldno++)
 	{
 		valstr = str;
 
@@ -290,19 +290,19 @@ char *ProcessRow(char *str)
 				default:
 					i = fieldno - 23;
 
-                    if (i >= 140)
-                        i += 6;
+					if (i >= 140)
+						i += 6;
 
-					if (i >= 153)
+					if (i >= 160)
 					{
-						i -= 153;
+						i -= 160;
 
 						if (i % 2 == 0)
 							Row.ViewTime[i/2] = atoi(valstr);
 						else
 						{
 							Row.Rating[i/2] = atoi(valstr);
-							Row.Quiz[153 + i/2] = atoi(valstr);
+							Row.Quiz[160 + i/2] = atoi(valstr);
 						}
 					}
 					else
