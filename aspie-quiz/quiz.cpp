@@ -7431,6 +7431,91 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 	}
 }
 
+/*##################  TQuiz::WriteGroupWeighting ##########################
+*   Purpose....: Write average group correlation in C++-format for current quiz	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteGroupWeighting(const char *filename)
+{
+    long double gsum;
+    int gcount;
+    long double val;
+    int count;
+    int questions;
+	int curr;
+	int grp;
+    TQuiz *quiz;
+	 int q;
+    int j;
+	 int ival;
+	 char str[80];
+	TFile file(filename, 0);
+
+    sprintf(str, "    static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 3);
+	file.Write(str);
+
+	for (q = 0; q < N; q++)
+	{
+        file.Write("    {");
+        
+		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
+		{
+			gsum = 0.0;
+			gcount = 0;
+
+			quiz = this;
+			curr = q;
+			while (quiz)
+			{
+				val = quiz->Quiz[curr].Group[grp].Corr;
+				count = quiz->Quiz[curr].Group[grp].Count;
+				questions = quiz->Group[grp].Questions;
+
+				if (count > 3)
+				{
+					gsum += val * questions;
+					gcount += questions;
+				}
+
+                if (quiz->Quiz[curr].CrossQuiz)
+                {
+                    j = quiz->Quiz[curr].CrossInd;
+                    quiz = quiz->Quiz[curr].CrossQuiz;
+                    curr = j;
+    			}
+    			else
+    			    quiz = 0;
+			}
+
+            if (gcount)
+           		ival = round(100.0 * gsum / gcount);
+            else
+                ival = 0;
+
+            if (Quiz[q].Reverse)
+                ival = -ival;
+
+			sprintf(str, "%d", ival);
+	    	file.Write(str);
+
+            if (grp != GROUP_COUNT - 3)
+                file.Write(", ");            
+			
+		}
+		file.Write("}");
+
+		if (q != N - 1)
+		    file.Write(",");
+
+		file.Write("\r\n");
+	}
+
+	file.Write("};\r\n");
+}
+
 /*##################  TQuiz::WriteWiki ##########################
 *   Purpose....: Write Wiki report      	      			      	        #
 *   In params..: *                                                          #

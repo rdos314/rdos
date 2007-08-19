@@ -193,6 +193,7 @@ public:
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
 	void WritePca(const char *filename);
 	void WriteWeighting(const char *filename);
+	void WriteGroupWeighting(const char *filename);
 	void WritePhpWeighting(const char *filename);
 	void WritePhpGroupWeighting(const char *filename);
 
