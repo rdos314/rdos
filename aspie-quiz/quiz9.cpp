@@ -806,38 +806,6 @@ void TQuiz9::InitReferers()
 	AddReferer("circvsmaximvs.com", "circvsmaximvs.com/showthread.php?t=14129");
 	AddReferer("panterachat.com", "panterachat.com/phpBB/viewtopic.php?t=24332");
 	AddReferer("kaytastrophe.com", "kaytastrophe.com/index.php?topic=708.0");
- }
-
-/*##########################################################################
-#
-#   Name       : TQuiz9::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuiz9::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
 }
 
 /*##################  TQuiz9::LoadReferers ##########################
@@ -860,26 +828,26 @@ void TQuiz9::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 	}
 }

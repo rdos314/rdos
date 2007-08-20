@@ -280,6 +280,8 @@ protected:
     void DefineNt(char *Referer);
     void DefineAspie(char *Referer);
 
+    void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[8]);
+
     void WriteFieldHeader(TFile &File, int RelWidth);
     void WriteCenteredFieldHeader(TFile &File, int RelWidth);
     void WriteRightFieldHeader(TFile &File, int RelWidth);

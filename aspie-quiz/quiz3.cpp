@@ -482,38 +482,6 @@ void TQuizIII::InitReferers()
 	AddReferer("teleboards.com", "teleboards.com/showthread.php?s=");
 	AddReferer("thorntree.lonelyplanet.com", "thorntree.lonelyplanet.com/categories.cfm?catid=41");
 	AddReferer("ninjatune.net", "ninjatune.net/forum/messages.php?id=3514339");
- }
-
-/*##########################################################################
-#
-#   Name       : TQuizIII::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizIII::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
 }
 
 /*##################  TQuizIII::LoadReferers ##########################
@@ -536,7 +504,7 @@ void TQuizIII::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		switch (Row.Diagnos)
 		{
@@ -570,7 +538,7 @@ void TQuizIII::LoadReferers()
 		}
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		switch (Row.Diagnos)
 		{
@@ -591,7 +559,7 @@ void TQuizIII::LoadReferers()
 		}
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 	}
 }

@@ -65,7 +65,6 @@ private:
     void LoadPopulations();
     void SetupControlGroups();
     void SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8);
-    void UpdateReferer(TReferer *ref, int AsResult, int NtResult);
 
     TFile FDataFile;
 };

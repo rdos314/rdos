@@ -50,9 +50,11 @@ public:
 	int ResultMixed;
 	int ResultAs;
 
+    int GroupResult[8];
+    
 	int NT;
 	int Aspie;
-
+	
 	char RefererSearch[MAX_QUESTIONS];
 	char RefererRef[MAX_QUESTIONS];
 };

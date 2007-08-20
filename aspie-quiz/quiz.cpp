@@ -1231,6 +1231,42 @@ void TQuiz::SortReferers()
     }
 }
 
+/*##########################################################################
+#
+#   Name       : TQuiz::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[8])
+{
+	int diff;
+	int grp;
+
+	ref->Count++;
+	ref->AsResult += AsResult;
+	ref->NtResult += NtResult;
+
+	diff = AsResult - NtResult;
+
+	if (diff >= 35)
+		ref->ResultAs++;
+	else
+	{
+		if (diff <= -35)
+			ref->ResultNt++;
+		else
+			ref->ResultMixed++;
+	}
+
+	for (grp = 0; grp < 8; grp++)
+	    ref->GroupResult[grp] += GroupResult[grp];
+}
+
 /*##################  TQuiz::DefineNt ##########################
 *   Purpose....: Define NT control group    					      	        #
 *   In params..: *                                                          #
@@ -2524,7 +2560,8 @@ void TQuiz::WriteFieldFooter(TFile &File)
 *##########################################################################*/
 void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 {
-    char str[80];
+	char str[80];
+	int grp;
 
     if (ref->Count)
     {
@@ -2590,7 +2627,35 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	        WriteFieldFooter(file);
 	    }
     
-	    WriteFieldHeader(file, 72);
+	    WriteFieldHeader(file, 6);
+
+#ifdef ENGLISH
+		file.Write("<a href=\"http://www.rdos.net/eng/polygon.php?");
+#endif
+
+#ifdef SWEDISH
+		file.Write("<a href=\"http://www.rdos.net/sv/polygon.php?");
+#endif
+
+        for (grp = 0; grp < 8; grp++)
+        {
+            sprintf(str, "p%d=%d", grp + 1, ref->GroupResult[grp] / ref->Count);
+            file.Write(str);
+            if (grp != 7)
+                file.Write("&");
+        }
+
+#ifdef ENGLISH
+		file.Write("\">Link</a>");
+#endif
+
+#ifdef SWEDISH
+		file.Write("\">Länk</a>");
+#endif
+
+	    WriteFieldFooter(file);
+    
+	    WriteFieldHeader(file, 66);
 
 	    if (strlen(ref->RefererSearch))
 		{
@@ -2674,7 +2739,11 @@ void TQuiz::WriteReferers(const char *filename)
 	    WriteFieldFooter(file);
 	}
 
-	WriteFieldHeader(file, 72);
+    WriteCenteredFieldHeader(file, 6);
+    file.Write("Groups");
+	WriteFieldFooter(file);
+
+	WriteFieldHeader(file, 66);
 	file.Write("Web site / description");
 	WriteFieldFooter(file);
 

@@ -590,38 +590,6 @@ void TQuiz5::InitReferers()
 	AddReferer("forum.rpg.net", "forum.rpg.net/showthread.php?t=268587");
 	AddReferer("99musik.se", "99musik.se/forum/showthread.php?t=12719");
 	AddReferer("ufs.fi", "forum.ufs.fi/showthread.php?t=1873");
- }
-
-/*##########################################################################
-#
-#   Name       : TQuiz5::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuiz5::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
 }
 
 /*##################  TQuiz5::LoadReferers ##########################
@@ -644,7 +612,7 @@ void TQuiz5::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		ref = 0;
 
@@ -661,7 +629,7 @@ void TQuiz5::LoadReferers()
 			ref = &DxAddRef;
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		ref = 0;
 
@@ -674,7 +642,7 @@ void TQuiz5::LoadReferers()
 		}
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 	}
 }

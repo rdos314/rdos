@@ -780,38 +780,6 @@ void TQuizS2::InitReferers()
 
 }
 
-/*##########################################################################
-#
-#   Name       : TQuizS2::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizS2::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
-}
-
 /*##################  TQuizS2::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
@@ -832,50 +800,50 @@ void TQuizS2::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD >= 1)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.TS >= 1)
-			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Dyslexia >= 1)
-			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Dyscalculia >= 1)
-			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.OCD >= 1)
-			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ODD >= 1)
-			UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Bipolar >= 1)
-			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Schizophrenia >= 1)
-			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SchizophreniaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Social >= 1)
-			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 	}
 }

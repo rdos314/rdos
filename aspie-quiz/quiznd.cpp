@@ -864,38 +864,6 @@ void TQuizNd::InitReferers()
 	AddReferer("rdos.net/sv", "rdos.net/sv");
 	AddReferer("kolozzeum.com", "kolozzeum.com/kolozzeum/showthread.php?t=65633");
 	AddReferer("aspalsta.net", "aspalsta.net/viewtopic.php?t=1951");
- }
-
-/*##########################################################################
-#
-#   Name       : TQuizNd::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuizNd::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
 }
 
 /*##################  TQuizNd::LoadReferers ##########################
@@ -925,25 +893,25 @@ void TQuizNd::LoadReferers()
 //                ref = 0;
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.TS == 1)
-			UpdateReferer(&SelfTsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.TS == 2)
-			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxTsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 //
 // uncomment to exclude autism/AS from ND-diagnosis
@@ -951,42 +919,42 @@ void TQuizNd::LoadReferers()
 //		if (Row.Aspie == 0 && Row.Autism == 0)
 		{
 			if (Row.Hyperlexia)
-				UpdateReferer(&HyperlexiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&HyperlexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Dyspraxia)
-				UpdateReferer(&DyspraxiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&DyspraxiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Dyslexia)
-				UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&DyslexiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Dyscalculia)
-				UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&DyscalculiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.OCD)
-				UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&OCDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.ODD)
-				UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&ODDRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Synaesthesia)
-				UpdateReferer(&SynaesthesiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&SynaesthesiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.PA)
-				UpdateReferer(&PARef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&PARef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Dysgraphia)
-				UpdateReferer(&DysgraphiaRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&DysgraphiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 			if (Row.Bipolar)
-				UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&BipolarRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-    		    UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-    		    UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 
 	}

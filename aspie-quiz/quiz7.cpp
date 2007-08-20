@@ -744,38 +744,6 @@ void TQuiz7::InitReferers()
 	AddReferer("airliners.net", "airliners.net/discussions/non_aviation/read.main/1295619");
 	AddReferer("supermama.lt", "supermama.lt/forumas/index.php?showtopic=99238");
     AddReferer("dickflash.com", "dickflash.com");
- }
-
-/*##########################################################################
-#
-#   Name       : TQuiz7::UpdateReferer
-#
-#   Purpose....: Update a referer
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TQuiz7::UpdateReferer(TReferer *ref, int AsResult, int NtResult)
-{
-	int diff;
-
-	ref->Count++;
-	ref->AsResult += AsResult;
-	ref->NtResult += NtResult;
-
-	diff = AsResult - NtResult;
-
-	if (diff >= 35)
-		ref->ResultAs++;
-	else
-	{
-		if (diff <= -35)
-			ref->ResultNt++;
-		else
-			ref->ResultMixed++;
-	}
 }
 
 /*##################  TQuiz7::LoadReferers ##########################
@@ -798,61 +766,61 @@ void TQuiz7::LoadReferers()
 			ref = AddReferer(Row.Referer, Row.Referer);
 
 		if (ref)
-			UpdateReferer(ref, Row.AsResult, Row.NtResult);
+			UpdateReferer(ref, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism == 1 || Row.Aspie == 1)
-			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 1)
-			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SelfAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Aspie == 2 || Row.Autism == 2)
-			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.ADHD == 2)
-			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&DxAddRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Ancestry == 3)
 			if (Row.Hair >= 6 && Row.Eye >= 5)
-				UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&AmerindianRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Ancestry == 5)
 		{
 			if (Row.Hair >= 6 && Row.Eye >= 5)
-				UpdateReferer(&AfroAmericanRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&AfroAmericanRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-				UpdateReferer(&MixedAfroAmericanRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MixedAfroAmericanRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 
 		if (Row.Ancestry == 6)
-			UpdateReferer(&HispanicRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&HispanicRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Ancestry >= 1000 && Row.Ancestry < 2000)
 		{
 			if (Row.Hair >= 6 && Row.Eye >= 5)
-				UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&AfricanRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-    			UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MixedAfricanRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 
 		if ((Row.Ancestry >= 2000 && Row.Ancestry < 3000) || Row.Ancestry == 3205)
-			UpdateReferer(&WhiteRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&WhiteRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Ancestry >= 3000 && Row.Ancestry < 4000 && Row.Ancestry != 3205)
-			UpdateReferer(&ArabRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&ArabRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Ancestry >= 4000)
-			UpdateReferer(&AsianRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&AsianRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Social)
-			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult);
+			UpdateReferer(&SocialPhobiaRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.Gender == 1)
-				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&MaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 			else
-				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult);
+				UpdateReferer(&FemaleAsRef, Row.AsResult, Row.NtResult, Row.GroupResult);
 		}
 	}
 }

@@ -45,6 +45,8 @@
 ##########################################################################*/
 TReferer::TReferer(const char *Search, const char *Ref)
 {
+    int grp;
+
 	strcpy(RefererSearch, Search);
 	strcpy(RefererRef, Ref);
 	Count = 0;
@@ -58,6 +60,9 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	ResultNt = 0;
 	ResultMixed = 0;
 	ResultAs = 0;
+
+	for (grp = 0; grp < 8; grp++)
+	    GroupResult[grp] = 0;
 
 	NT = FALSE;
 	Aspie = FALSE;

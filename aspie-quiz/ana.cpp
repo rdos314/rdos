@@ -372,7 +372,7 @@ int main(int argc, char **argv)
 	 Quiz[16]->ExportHistogram("alls1.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[17]->ExportHistogram("alls2.csv", POP_TYPE_ALL, 2, FALSE);
 
-	 Quiz[0]->WriteGroupWeighting("group.cpp");
+	 Quiz[17]->WriteGroupWeighting("group.cpp");
 
 	 Quiz[17]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
