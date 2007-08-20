@@ -207,8 +207,12 @@ void TQuizS2::SetupTexts()
   Quiz[137].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
-  Quiz[154].Reverse = TRUE;
+  Quiz[156].Reverse = TRUE;
   Quiz[157].Reverse = TRUE;
+  Quiz[159].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
+  Quiz[161].Reverse = TRUE;
+  Quiz[164].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
@@ -282,7 +286,7 @@ void TQuizS2::SetupTexts()
   Quiz[69].MyGroup = GROUP_ASPIE_COMM;
   Quiz[70].MyGroup = GROUP_ASPIE_COMM;
   Quiz[71].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[72].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[72].MyGroup = GROUP_ASPIE_NVC;
   Quiz[73].MyGroup = GROUP_ASPIE_COMM;
   Quiz[74].MyGroup = GROUP_ASPIE_COMM;
   Quiz[75].MyGroup = GROUP_ASPIE_COMM;
@@ -367,11 +371,11 @@ void TQuizS2::SetupTexts()
   Quiz[151].MyGroup = GROUP_SENSORY;
   Quiz[152].MyGroup = GROUP_SENSORY;
 
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[154].MyGroup = GROUP_NONVERBAL;
+  Quiz[155].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[156].MyGroup = GROUP_NONVERBAL;
+  Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_MIXED;
 
@@ -1080,7 +1084,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 15, 16);
     DefineCross(QuizS1, 16, 15);
 	DefineCross(QuizS1, 17, 17);
-    DefineCross(QuizS1, 18, 18);
+	DefineCross(QuizS1, 18, 18);
     DefineCross(QuizS1, 19, 19);
     DefineCross(QuizS1, 20, 20);
     DefineCross(QuizS1, 21, 23);
@@ -1115,7 +1119,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 50, 54);
     DefineCross(QuizS1, 51, 52);
 	DefineCross(QuizS1, 52, 53);
-    DefineCross(QuizS1, 53, 56);
+	DefineCross(QuizS1, 53, 56);
     DefineCross(QuizS1, 54, 57);
     DefineCross(QuizS1, 55, 58);
     DefineCross(QuizS1, 56, 59);
@@ -1150,7 +1154,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 85, 92);
     DefineCross(QuizS1, 86, 94);
 	DefineCross(QuizS1, 87, 95);
-    DefineCross(QuizS1, 88, 93);
+	DefineCross(QuizS1, 88, 93);
     DefineCross(QuizS1, 89, 97);
     DefineCross(QuizS1, 90, 98);
     DefineCross(QuizS1, 91, 100);
@@ -1185,7 +1189,7 @@ void TQuizS2::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS1, 120, 124);
     DefineCross(QuizS1, 121, 125);
 	DefineCross(QuizS1, 122, 126);
-    DefineCross(QuizS1, 123, 127);
+	DefineCross(QuizS1, 123, 127);
     DefineCross(QuizS1, 124, 128);
     DefineCross(QuizS1, 125, 129);
     DefineCross(QuizS1, 126, 130);
