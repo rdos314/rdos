@@ -775,6 +775,8 @@ void TQuizS2::InitReferers()
 	AddReferer("autismspeaks.org", "autismspeaks.org/community/forums");
 	AddReferer("nordisk.nu", "nordisk.nu/showthread.php?t=3117");
 	AddReferer("swedvdr.org", "swedvdr.org/forums.php?action=viewtopic");
+	AddReferer("filmtipset.se", "filmtipset.se/forum.cgi?id=1339244");
+	AddReferer("tvsushi.com", "forum.tvsushi.com/index.php?showtopic=52752");
 
 }
 
@@ -921,103 +923,103 @@ void TQuizS2::LoadPopulations()
 		if (Row.Autism || Row.Aspie)
 			aspie = TRUE;
 
-		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+		All.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Autism || Row.Aspie)
 		{
 			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				LowAs.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 			if (Row.Gender == 1)
 			{
 				if (Row.BirthYear > 1986)
-					YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+					YoungMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
-				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AsMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			}
 			else
 			{
 				if (Row.BirthYear > 1986)
-					YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+					YoungFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
-				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AsFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			}
 
 			if (Row.Autism == 2)
-				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				Autism.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 			if (Row.Aspie == 2)
-				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				As.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 			if (Row.Autism == 1 || Row.Aspie == 1)
-				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AspieControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.ADHD >= 1)
 		{
-			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Add.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AddMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			else
-				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AddFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.TS >= 1)
-			Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Ts.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dyslexia >= 1)
-			Dyslexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Dyslexia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Dyscalculia >= 1)
-			Dyscalculia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Dyscalculia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.OCD >= 1)
-			OCD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			OCD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.ODD >= 1)
-			ODD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			ODD.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Bipolar >= 1)
-			Bipolar.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Bipolar.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Schizophrenia >= 1)
-			Schizophrenia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Schizophrenia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (Row.Social >= 1)
-			SocialPhobia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			SocialPhobia.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 
 		if (strlen(Row.Referer) == 0)
 		{
-			Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Mix.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				MixMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			else
-				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				MixFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 		else
 		{
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
-				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				NtControl.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.NtResult - Row.AsResult >= 35)
 		{
-			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Nt.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				NtMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			else
-				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				NtFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 
 		if (Row.AsResult - Row.NtResult >= 35)
 		{
 
-			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+			Aspie.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			if (Row.Gender == 1)
-				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AspieMale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 			else
-				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz);
+				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
 	}
 }
@@ -1044,6 +1046,8 @@ void TQuizS2::SetupControlGroups()
 	DefineNt("vof.se");
 	DefineNt("nordisk.nu");
 	DefineNt("swedvdr.org");
+	DefineNt("filmtipset.se");
+	DefineNt("tvsushi.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1269,7 +1273,7 @@ void TQuizS2::GetReferer(const char *referer, TPopulation *pop)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 		if (ref->IsMatch(Row.Referer))
-			pop->Add(Row.AsResult, Row.NtResult, FALSE, Row.Quiz);
+			pop->Add(Row.AsResult, Row.NtResult, FALSE, Row.Quiz, Row.GroupResult);
 }
 
 /*##################  IsPca ##########################
@@ -1536,7 +1540,7 @@ void TQuizS2::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)

@@ -16,4 +16,5 @@ struct TQuizRow
     long ResultBefore;
     char Before[100];
     char Now[100];
+	int GroupResult[8];
 };

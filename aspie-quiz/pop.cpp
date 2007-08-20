@@ -90,7 +90,7 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS])
+void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS], int GroupScore[8])
 {
 	 int val;
 	 int i;
@@ -121,14 +121,17 @@ void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS])
 	 {
 		val = Arr[i];
 		ValArr[ValueCount].Quiz[i] = val;
-		  if (val)
-		  {
-				val--;
-				ChiArr[i][val]++;
-				Sum[i] += val;
-			 Count[i]++;
-		  }
+		if (val)
+		{
+		    val--;
+			ChiArr[i][val]++;
+			Sum[i] += val;
+			Count[i]++;
+		}
 	 }
+
+	 for (i = 0; i < 8; i++)
+	    ValArr[ValueCount].GroupScore[i] = GroupScore[i];
 
 	 ValueCount++;
 }
