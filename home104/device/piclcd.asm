@@ -83,6 +83,9 @@ PicStatus   DB ?
 
 PicOut      DB ?
 
+Data0       DB ?
+Data1       DB ?
+
 ListSection section_typ <>
 
 DioQueue    DW ?,?,?
@@ -111,87 +114,71 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 pic_int Proc far
+    mov dx,IO_BASE + 10
+    in al,dx
+;    
+    test al,8
+    jz pic_int_power_done
+;
+    test al,80h
+    jz pic_int_power_fail
 
-pic_int_loop:
-    mov dx,IO_BASE + 2
+pic_int_power_ok:
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,0C0h
+    out dx,al
+     
+    mov dx,IO_BASE + 14
+    out dx,al
+;
+    mov dx,IO_BASE + 8
+    and al,NOT 80h
+    out dx,al
+    mov ds:PicOut,al
+    jmp pic_int_power_done
+        
+pic_int_power_fail:
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,0C0h
+    out dx,al
+;    
+    mov dx,IO_BASE + 14
+    out dx,al
+;
+    mov dx,IO_BASE + 8
+    and al,NOT 40h
+    out dx,al
+    mov ds:PicOut,al
+
+pic_int_power_done:
+    mov dx,IO_BASE + 10
     in al,dx
     test al,1
-    jnz pic_int_not0
-;
-    mov dx,IO_BASE + 6
-    out dx,al
-    jmp pic_int_loop    
+    jz pic_int_not_req1
 
-pic_int_not0:    
-    test al,2
-    jnz pic_int_not1
-;
-    mov dx,IO_BASE + 0Ah
-	in al,dx
-    mov dx,ds:DioCurr
-    or dx,dx
-    jz pic_int_loop
-;
-    mov es,dx
-    and al,3Fh
-    mov es:dqe_val,al
-    or es:dqe_stat,DQE_STAT_DONE    	
-;    
-	mov bx,ds:PicThread
-	Signal
-	jmp pic_int_loop
-
-pic_int_not1:
-    test al,4
-    jnz pic_int_not2
-;    
-    mov dx,IO_BASE + 0Ch
-	in al,dx
-	mov dx,ds:DioCurr+2
-	or dx,dx
-	jz pic_int_loop
-;	
-    mov es,dx
-    and al,3Fh
-    mov es:dqe_val,al
-    or es:dqe_stat,DQE_STAT_DONE
-;	
-	mov bx,ds:PicThread
-	Signal
-	jmp pic_int_loop
-
-pic_int_not2:
-    test al,8
-    jnz pic_int_not3
-;    
-    mov dx,IO_BASE + 0Eh
-	in al,dx
-	mov dx,ds:DioCurr+4
-	or dx,dx
-	jz pic_int_loop
-;
-    mov es,dx
-    and al,3Fh
-    mov es:dqe_val,al
-    or es:dqe_stat,DQE_STAT_DONE
-;	
-	mov bx,ds:PicThread
-	Signal
-	jmp pic_int_loop
-
-
-pic_int_not3:
-    test al,10h
-    jnz pic_int_done    
-;
-    mov dx,IO_BASE + 4
+pic_int_req1:
+    mov dx,IO_BASE
     in al,dx
-    mov ds:DcfVal,al
-    mov bx,ds:DcfThread
+    mov ds:Data0,al
+    mov bx,ds:PicThread
     Signal
-    jmp pic_int_loop
+
+pic_int_not_req1:
+    mov dx,IO_BASE + 10
+    in al,dx
+    test al,10h
+    jz pic_int_not_req2
+
+pic_int_req2:
+    mov dx,IO_BASE + 2
+    in al,dx
+    mov ds:Data1,al
+    mov bx,ds:PicThread
+    Signal
     
-pic_int_done:
+pic_int_not_req2:    
     ret
 pic_int Endp
 
@@ -868,19 +855,22 @@ pic_thread:
     or al,OUT_MCLR_0 OR OUT_MCLR_1
     out dx,al
     mov ds:PicOut,al
-;    
-    int 3
-    mov dx,IO_BASE + 10
-
-pl:
-    in al,dx
-    jmp pl    
-;    
+;        
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
     mov ds:PicThread,ax    
     ClearSignal
+;
+    int 3
+
+pic_llp:
+    mov dx,IO_BASE
+    mov al,0AAh
+    out dx,al
+    WaitForSignal
+    mov al,Data0
+    jmp pic_llp    
 
 pic_thread_loop: 
     EnterSection ds:ListSection
@@ -1660,16 +1650,15 @@ InitDriver  Proc far
 	mov bx,cs
 	mov es,bx
 	mov di,OFFSET pic_int
-;	RequestPrivateIrqHandler
-;    
-;    mov dx,IO_BASE + 4
-;    in al,dx
+	RequestPrivateIrqHandler
 ;
-;    mov dx,IO_BASE + 2
-;    in al,dx
-;	
-;    mov dx,IO_BASE + 6
-;    out dx,al
+    cli
+    mov dx,IO_BASE + 8
+    mov al,ds:PicOut
+    or al,0C0h
+    out dx,al
+    mov ds:PicOut,al
+    sti
 ;
 	mov ax,cs
 	mov ds,ax

@@ -11,36 +11,61 @@
 
 	org 0x5
 
-W:      EQU 0          ;Working
-F:      EQU 1          ;File
-C:      EQU 0          ;Carry
-Z:      EQU 2          ;Zero
+Reset:
+	PAGE1
+	movlw 6
+	movwf ADCON1
+;
+	clrf TRISA
+;
+	movlw b'11101001'
+	movwf TRISB
+;
+	movlw b'10010001'
+	movwf TRISC
+;
+	movlw b'00010111'
+	movwf TRISE
+;
+	PAGE0
+;
+	movlw b'00111111'
+	movwf PORTA
+;
+	movlw b'00000110'
+	movwf PORTB
+;
+	movlw b'00000110'
+	movwf PORTC
+;
+	bcf PORTA, 3
 
-Reset:	    PAGE1
-			clrf TRISA
+	PAGE1
+WaitWrite:
+	btfss TRISE,IBF
+	goto WaitWrite
 ;
-			movlw b'11101001'
-			movwf TRISB
+	PAGE0
+	bcf PORTA, 0
+	bsf PORTA, 3
 ;
-			movlw b'10010001'
-			movwf TRISC
-;
-			movlw b'00010111'
-			movwf TRISE
-;
-			PAGE0
-;
-			movlw b'00111111'
-			movwf PORTA
-;
-			movlw b'00000110'
-			movwf PORTB
-;
-			movlw b'00000110'
-			movwf PORTC
+	movf PORTD,W
+	addlw 0x11
+	movwf PORTD
 
-			bcf PORTA, 3
+	PAGE1
 
-Stop:       goto Stop
+WaitRead:
+	btfsc TRISE,OBF
+	goto WaitRead
+;
+	PAGE0
+
+	bsf PORTA, 0
+
+	bcf PORTA,3	
+	
+	PAGE1
+	goto WaitWrite
 
     end
