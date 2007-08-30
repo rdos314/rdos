@@ -5,6 +5,11 @@
 #define PAGE0   BCF 3,5
 #define PAGE1   BSF 3,5
 
+; Flag bits
+
+FLAG_CMD_AVAIL_BIT:	    EQU 0
+FLAG_DATA_AVAIL_BIT:    EQU 1
+
 
 ; Page 0
 
@@ -18,6 +23,21 @@ Result:     EQU 0x26
 Cmd:        EQU 0x27
 LowTemp3:   EQU 0x28
 
+InPtr:      EQU 0x29
+OutPtr:     EQU 0x2A
+
+OutCount:   EQU 0x2B
+
+Flags:      EQU 0x2C
+
+
+; common area
+
+IntW:       EQU 0x70
+IntStatus:  EQU 0x71
+IntFSR:     EQU 0x72
+IntTemp:    EQU 0x73
+
 ; page 2, datalist
 
 DataList:   EQU 0x110
@@ -30,9 +50,98 @@ CmdList:    EQU 0x190
 
 	goto Reset
 
-	org 0x5
+	org 0x4
 
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; Interupt
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+Intr:	
+    movwf IntW
+    swapf STATUS,W
+    movwf IntStatus
+    movf FSR,W
+    movwf IntFSR
+;
+;    btfss PIR1,PSPIF
+;    goto IntrNotPSP
+
+IntrPspInLoop:
+    bsf STATUS,IRP
+    PAGE1
+    btfss TRISE,IBF
+    goto IntrNoPspIn
+
+    PAGE0
+;    
+    movf PORTD,W
+    movwf IntTemp
+;
+    btfsc Flags,FLAG_CMD_AVAIL_BIT    
+    goto IntrNoPspIn
+;
+    incf IntTemp,W
+    btfss STATUS,Z
+    goto IntrPspInMore
+;    
+    bsf Flags,FLAG_CMD_AVAIL_BIT
+    bcf Flags,FLAG_DATA_AVAIL_BIT
+;    
+    movlw CmdList
+    movwf InPtr    
+    goto IntrNoPspIn    
+
+IntrPspInMore:
+    movf InPtr,W
+    movwf FSR
+;
+    movf IntTemp,W    
+    movwf INDF
+;
+    incf InPtr,F    
+    goto IntrPspInLoop
+
+IntrNoPspIn:
+    PAGE0
+;    
+    btfss Flags,FLAG_DATA_AVAIL_BIT
+	goto IntrNoPspOut
+;
+    PAGE1
+    btfsc TRISE,OBF
+    goto IntrNoPspOut
+;
+    PAGE0
+    movf OutPtr,W
+    movwf FSR
+;
+    movf INDF,W
+    movwf PORTD
+    incf OutPtr,F
+;
+    decfsz OutCount,F
+    goto IntrNoPspIn
+;
+    bcf Flags,FLAG_DATA_AVAIL_BIT
+    movlw DataList
+    movwf OutPtr
+
+IntrNoPspOut:
+    PAGE0
+    bcf PIR1,PSPIF
+    
+IntrNotPSP:
+    movf IntFSR
+    movwf FSR
+    swapf IntStatus,W
+    movwf STATUS
+    swapf IntW,F
+    swapf IntW,W    
+    retfie
+    
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; position dependent code starts here
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -40,12 +149,11 @@ CmdList:    EQU 0x190
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; HandleCmd
+; ExecuteSerialCmd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
 	
-HandleCmd:
+ExecuteSerialCmd:
 	movf Cmd,W
 	andlw 7
 	addwf PCL,F
@@ -55,6 +163,37 @@ HandleCmd:
 	goto Write24        ; 3
 	goto ToggleLine     ; 4
 	goto ReadLine       ; 5
+	goto Dummy          ; 6
+	goto Dummy          ; 7
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ExecuteCmd
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+ExecuteCmd:
+    movlw CmdList
+    movwf FSR    
+;
+    movf INDF,W
+    andlw 0xC0
+    btfss STATUS,Z
+    goto ExecuteSerial
+;
+    movf INDF,W
+    movwf LowTemp1
+    rrf LowTemp1,F
+    rrf LowTemp1,F
+    rrf LowTemp1,W
+    andlw 7
+	addwf PCL,F
+	goto Dummy          ; 0
+	goto ReadData       ; 1
+ 	goto Dummy          ; 2
+	goto Dummy          ; 3
+	goto Dummy          ; 4
+	goto Dummy          ; 5
 	goto Dummy          ; 6
 	goto Dummy          ; 7
 
@@ -93,24 +232,45 @@ Reset:
     movlw 1
     movwf T1CON
 ;
+    PAGE1
+    movlw 0x80
+    movwf PIE1
+    movlw 0
+    movwf PIE2
+    PAGE0
+;    
+    movlw 0xC0
+    movwf INTCON      
+;
+    clrf Flags
+    movlw CmdList
+    movwf InPtr
+    movlw DataList
+    movwf OutPtr
+;    
     bsf STATUS,IRP
     
 HandleLoop:
 	bcf PORTA, 3
-	call ReadCmd
-	bsf PORTA, 3
+    bcf Flags,FLAG_CMD_AVAIL_BIT
+
+WaitCmdLoop:
+    btfss Flags,FLAG_CMD_AVAIL_BIT
+    goto WaitCmdLoop
 ;
-    call HandleSerial
+  	bsf PORTA, 3
+;
+    call ExecuteCmd
+;
+    movf Result,W
+    andlw 0xF
+    movwf OutCount
+;
+    btfss STATUS,Z
+    bsf Flags,FLAG_DATA_AVAIL_BIT
 ;
     movf Result,W
     call SendInt
-;
-    movf Result,W
-    btfsc STATUS,Z
-    goto HandleLoop
-;	
-	andlw 0xF
-    call SendData
     goto HandleLoop
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -144,37 +304,6 @@ DelayLoop:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; ReadCmd
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-ReadCmd:
-    bcf PORTA, 1
-    bsf PORTA, 2
-    movlw CmdList
-    movwf FSR
-	
-ReadCmdLoop:
-    PAGE1
-	btfss TRISE,IBF
-	goto ReadCmdLoop
-;
-    PAGE0
-    movf PORTD,W
-    movwf INDF
-    incf FSR,F
-;
-    movlw 4
-    xorwf PORTA,F
-;
-    btfss PORTB,7
-    goto ReadCmdLoop
-;    
-    bsf PORTA, 1
-    return
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
 ; SendInt
 ;
 ;   W   Result code
@@ -196,37 +325,19 @@ WaitInt:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; SendData
-;
-;  W bytes to send
+; ReadData
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	
-SendData:
-	movwf Count
-;
-    movlw DataList
+ReadData:
+    movf INDF,W
+    andlw 7
+    addlw DataList
     movwf FSR
-
-SendDataLoop:        
+;
     movf INDF,W
     movwf PORTD
-;
-    movlw 4
-    xorwf PORTA,F
-;    
-	PAGE1
-
-SendWait:
-	btfsc TRISE,OBF
-	goto SendWait
-;
-    PAGE0        
-    incf FSR,F
-    decfsz Count,F
-    goto SendDataLoop
-;    
-    return
+    return    
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -596,14 +707,11 @@ ReadLine:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-; HandleSerial
+; ExecuteSerial
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	
-HandleSerial:
-    movlw CmdList
-    movwf FSR    
-;
+
+ExecuteSerial:
     movf INDF,W
     andlw 0xC0
     movwf Result
@@ -624,7 +732,7 @@ HandleSerial:
     call CheckLineStatus
     movf Result,W
     btfsc STATUS,Z
-    goto HandleDone
+    goto ExecSerialDone
 ;
     movf INDF,W
     movwf Cmd
@@ -632,9 +740,9 @@ HandleSerial:
     call Output6
     call Delay
 ;    
-    call HandleCmd
+    call ExecuteSerialCmd
 
-HandleDone:
+ExecSerialDone:
 	bsf PORTB,1
 	bsf PORTC,1
     return

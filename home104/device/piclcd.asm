@@ -873,90 +873,36 @@ pic_thread:
     ClearSignal
 ;
     int 3
-    mov dx,IO_BASE + 10
-    in al,dx
-    mov ds:PrevStat,al
-;    
-    mov dx,IO_BASE + 8
-    mov al,ds:PicOut
-    and al,NOT OUT_PGD
-    out dx,al
-    mov ds:PicOut,al
-;
     mov bx,OFFSET cmd
     mov cx,2
+    mov dx,IO_BASE
 
 OutputLoop:
-    cmp cx,1
-    jne OutputDo
-;    
-    mov dx,IO_BASE + 8
-    mov al,ds:PicOut
-    or al,OUT_PGD
-    out dx,al
-    mov ds:PicOut,al
-
-OutputDo:
-    mov dx,IO_BASE
     mov al,cs:[bx]
     out dx,al
     inc bx
-
-OutputWait:    
-    mov dx,IO_BASE + 10
-    in al,dx    
-    xor al,ds:PrevStat
-    test al,4
-    jz OutputWait
-;
-    in al,dx
-    mov ds:PrevStat,al
     loop OutputLoop
-
-OutputDone:    
-    mov dx,IO_BASE + 10
-    in al,dx
 ;    
+    mov al,-1
+    out dx,al
+;
     int 3
     WaitForSignal
-    mov al,ds:Data0    
-;
-    and al,0Fh
-    jz InputDone
+    mov al,ds:Data0
 ;
     movzx cx,al
-    mov dx,IO_BASE + 10
-    in al,dx    
-    mov ds:PrevStat,al                    
+    and cx,0Fh
+    or cx,cx
+    jz InputDone
+;
 
 InputLoop:
     mov dx,IO_BASE
     in al,dx
-;
-    cmp cx,1
-    je InputDone    
-
-InputWait:    
-    mov dx,IO_BASE + 10
-    in al,dx    
-    xor al,ds:PrevStat
-    test al,4
-    jz InputWait
-;
-    in al,dx
-    mov ds:PrevStat,al
     loop InputLoop
 
-InputDone:
-           
-
-pic_llp:
-    mov dx,IO_BASE
-    mov al,0AAh
-    out dx,al
-    WaitForSignal
-    mov al,Data0
-    jmp pic_llp    
+InputDone:    
+    int 3    
 
 pic_thread_loop: 
     EnterSection ds:ListSection
