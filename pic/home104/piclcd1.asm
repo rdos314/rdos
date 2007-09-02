@@ -134,7 +134,7 @@ IntrNoPspOut:
     bcf PIR1,PSPIF
     
 IntrNotPSP:
-    movf IntFSR
+    movf IntFSR,W
     movwf FSR
     swapf IntStatus,W
     movwf STATUS
@@ -382,7 +382,7 @@ GetInput:
     btfss Result,6
     goto GetChan1
 ;
-    btfsc PORTB,0
+    btfsc PORTC,0
     retlw 0
     retlw 1
 
@@ -390,7 +390,7 @@ GetChan1:
     btfss Result,7
     retlw 0
 ;
-    btfsc PORTC,0
+    btfsc PORTB,0
     retlw 0
     retlw 1
             
@@ -423,10 +423,10 @@ InputBit:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 CheckLineStatus:
-    btfsc PORTB,0
+    btfsc PORTC,0
     bcf Result,6    
 ;    
-    btfsc PORTC,0
+    btfsc PORTB,0
     bcf Result,7
 ;
     return
@@ -604,7 +604,7 @@ InCrcLoop24:
     movf INDF,W
     xorwf Crc,W
     btfss STATUS,Z
-    bsf Result,5    
+    clrf Result
     return
 	
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -703,7 +703,55 @@ ToggleLine:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ReadLine:
+    movlw DataList
+    movwf FSR
+;    
+    clrf Crc
+    clrf INDF
+;    
+    movlw 8
+    movwf Count
+
+ReadLineLoop:
+    call InputBit
+    movwf Val
+    call UpdateCrc
+;
+    rrf Val,W
+    rrf INDF,F
+;    
+    decf Count,F
+    btfss STATUS,Z
+    goto ReadLineLoop
+;
+    incf FSR,F
+    incf Result,F
+;    
+    movlw 0x5A
+    xorwf Crc,F
+    movlw 8
+    movwf Count
+
+ReadLineCrcLoop:
+    call InputBit
+    movwf Val
+;
+    bsf STATUS,C
+;    
+    btfss Val,0
+    bcf STATUS,C
+    rrf INDF,F    
+;    
+    decf Count,F
+    btfss STATUS,Z
+    goto ReadLineCrcLoop
+;
+    movf INDF,W
+    xorwf Crc,W
+    btfss STATUS,Z    
+    clrf Result
     return
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -717,10 +765,10 @@ ExecuteSerial:
     movwf Result
 ;
     btfsc Result,6
-	bcf PORTB,1
+	bcf PORTC,1
 ;
     btfsc Result,7
-	bcf PORTC,1
+	bcf PORTB,1
 ;
     call Preamp
 ;        

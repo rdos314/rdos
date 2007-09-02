@@ -49,27 +49,20 @@ OUT_PGD          = 20h
 
 NODE_CNT            = 40h
 
-DQE_STAT_DONE       = 1
-DQE_STAT_TIMEOUT    = 2
-DQE_STAT_SUCCESS    = 4
-DQE_STAT_COMPLETE   = 8
-
 digio_queue_entry   STRUC
 
-dqe_prev    DW ?
-dqe_next    DW ?
+dqe_prev        DW ?
+dqe_next        DW ?
 
-dqe_stat    DB ?
-dqe_device  DB ?
-dqe_val     DB ?
-dqe_node    DB ?
-dqe_cmd     DB ?
-dqe_line    DB ?
-dqe_timeout DD ?
-dqe_data    DD ?
-dqe_proc    DW ?
-dqe_action  DW ?
-dqe_thread  DW ?
+dqe_out_size    DB ?
+dqe_out_buf     DB 8 DUP(?)
+
+dqe_in_size     DB ?
+dqe_in_buf      DB 8 DUP(?)
+
+dqe_queue       DB ?
+dqe_result      DB ?
+dqe_thread      DW ?
 
 digio_queue_entry   ENDS
 
@@ -78,27 +71,33 @@ data_seg    STRUC
 DcfThread   DW ?
 DcfVal      DB ?
 
-PicThread   DW ?
-PicStatus   DB ?
+PicThread0  DW ?
+PicThread1  DW ?
 
 PicOut      DB ?
 
 Data0       DB ?
 Data1       DB ?
 
+IntFlag     DB ?
+ResetFlag   DB ?
+IcspFlag    DB ?
+
+IcspThread0 DW ?
+IcspThread1 DW ?
+
 PrevStat    DB ?
 
 ListSection section_typ <>
 
-DioQueue    DW ?,?,?
-DioCurr     DW ?,?,?
+DioQueue0   DW ?
+DioQueue1   DW ?
+DioCurr0    DW ?
+DioCurr1    DW ?
 
 NodeArr     DB NODE_CNT DUP(?)
 
 data_seg    ENDS
-
-    LCD_WIDTH = 240
-    LCD_HEIGHT = 128
 
 code	SEGMENT byte public use16 'CODE'
 
@@ -161,10 +160,11 @@ pic_int_power_done:
     jz pic_int_not_req1
 
 pic_int_req1:
+    or ds:IntFlag,1
     mov dx,IO_BASE
     in al,dx
     mov ds:Data0,al
-    mov bx,ds:PicThread
+    mov bx,ds:PicThread0
     Signal
 
 pic_int_not_req1:
@@ -174,10 +174,11 @@ pic_int_not_req1:
     jz pic_int_not_req2
 
 pic_int_req2:
+    or ds:IntFlag,2
     mov dx,IO_BASE + 2
     in al,dx
     mov ds:Data1,al
-    mov bx,ds:PicThread
+    mov bx,ds:PicThread1
     Signal
     
 pic_int_not_req2:    
@@ -266,476 +267,444 @@ DioRemove	Proc near
 rem_done:
     ret
 DioRemove   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DioTimeout
-;
-;		description:	Sends a signal when a timeout expires
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DioTimeout	Proc far
-    push es
-;    
-    mov es,cx
-    or es:dqe_stat,DQE_STAT_TIMEOUT
-;
-	mov bx,piclcd_data_sel
-	mov ds,bx
-    mov bx,ds:PicThread
-    Signal
-;
-    pop es    
-    ret
-DioTimeout  Endp
-    
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:			DioRun
-;
-;		description:	Run dio-command
-;
-;       PARAMETERS:     ES      Entry
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DioRun  Proc near 
-    push es
-    pushad
-;
-    movzx ax,es:dqe_device
-   
-drClearLoop:
-    push ax
-    mov cl,al
-    mov ah,2
-    shl ah,cl
-;    
-    mov dx,IO_BASE + 2
-    in al,dx
-    test al,ah
-    pop ax
-    jnz drDo
-;
-    mov dx,IO_BASE + 0Ah
-    add dx,ax
-    add dx,ax
-    push ax
-    in al,dx
-    pop ax
-    jmp drClearLoop
-
-drDo:
-    and es:dqe_stat,NOT (DQE_STAT_DONE OR DQE_STAT_TIMEOUT)
-    mov di,ax
-    add di,di
-    add di,OFFSET DioCurr
-    mov [di],es
-;   
-    mov dx,IO_BASE + 0Ah
-    add dx,ax
-    add dx,ax
-    mov al,es:dqe_val
-    out dx,al
-;
-    mov cx,es
-	GetSystemTime
-	add eax,es:dqe_timeout
-	adc edx,0
-	mov bx,cs
-	mov es,bx
-	mov di,OFFSET DioTimeout
-	mov bx,cx
-	StartTimer
-;
-    popad
-    pop es
-    ret
-DioRun  Endp
 	
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioStartReq
+;		NAME:		    DioCheckReady1
 ;
-;		description:	Start a request
-;
-;       PARAMETERS:     AX      Queue #
+;		description:	Check current reqs for ready state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioStartReq Proc near
+DioCheckReady1 Proc near
     push es
-    push si
+    push ax
+    push bx
+    push cx
+    push dx
     push di
 ;    
-    mov si,ax
-    add si,si
-    add si,OFFSET DioQueue
-    mov di,[si]
-    or di,di
-    jz dsrDone
+    mov al,ds:IntFlag
+    test al,1
+    jz dcrDone1
 ;
-    call DioRemove
-    call DioRun
+    and ds:IntFlag, NOT 1
+    mov ax,ds:DioCurr0
+    or ax,ax
+    jz dcrDone1
+;
+    mov es,ax
+    mov al,ds:Data0
+    mov es:dqe_result,al
+;
+    movzx cx,al
+    mov es:dqe_in_size,cl
+    and cx,0Fh
+    or cx,cx
+    jz dcrInputOk1
+;
+    mov di,OFFSET dqe_in_buf
 
-dsrDone:
-    pop di
-    pop si
-    pop es
-    ret
-DioStartReq Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    DioCheckReq
-;
-;		description:	Check current req
-;
-;       PARAMETERS:     AX      Queue #
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DioCheckReq Proc near
-    push es
-    pushad
-;    
-    mov si,ax
-    add si,si
-    add si,OFFSET DioCurr
-    mov es,[si]
-;
-    test es:dqe_stat,DQE_STAT_DONE
-    jnz dcrRemove
-;
-    test es:dqe_stat,DQE_STAT_TIMEOUT
-    jz dcrDone
-;
-    push ax
-    mov cl,al
-    mov ah,2
-    shl ah,cl
-;    
-    mov dx,IO_BASE + 2
+dcrInputLoop1:
+    Swap
+    mov dx,IO_BASE
     in al,dx
-    test al,ah
-    pop ax
-    jnz dcrRemove
-;
-    mov dx,IO_BASE + 0Ah
-    add dx,ax
-    add dx,ax
-    in al,dx
-    and al,3Fh
-    mov es:dqe_val,al
-    or es:dqe_stat,DQE_STAT_DONE
+    stosb    
+    Swap
+    loop dcrInputLoop1
 
-dcrRemove:
-    mov word ptr [si],0
-    mov bx,es
-    StopTimer
-    call es:dqe_proc
-    jc dcrFree
-;
-    mov ds:[si],es
-    call DioRun
-    jmp dcrDone
-
-dcrFree:
-    or es:dqe_stat,DQE_STAT_COMPLETE
+dcrInputOk1:    
+    mov ds:DioCurr0,0
     mov bx,es:dqe_thread
     Signal
 
-dcrDone:
-    popad
+dcrDone1: 
+    pop di
+    pop dx
+    pop cx
+    pop bx    
+    pop ax
     pop es
     ret
-DioCheckReq Endp
+DioCheckReady1 Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioUpdate
+;		NAME:		    DioCheckReady2
 ;
-;		description:	Dio Update
+;		description:	Check current reqs for ready state
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioUpdate   Proc near
+DioCheckReady2 Proc near
+    push es
+    push ax
+    push bx
+    push cx
+    push dx
+    push di
+;    
+    mov al,ds:IntFlag
+    test al,2
+    jz dcrDone2
+;
+    and ds:IntFlag, NOT 2
+    mov ax,ds:DioCurr1
+    or ax,ax
+    jz dcrDone2
+;
+    mov es,ax
+    mov al,ds:Data1
+    mov es:dqe_result,al
+;
+    movzx cx,al
+    mov es:dqe_in_size,cl
+    and cx,0Fh
+    or cx,cx
+    jz dcrInputOk2
+;
+    mov di,OFFSET dqe_in_buf
+
+dcrInputLoop2:
+    Swap
+    mov dx,IO_BASE + 2
+    in al,dx
+    stosb    
+    Swap
+    loop dcrInputLoop2
+
+dcrInputOk2:    
+    mov ds:DioCurr1,0
+    mov bx,es:dqe_thread
+    Signal
+
+dcrDone2:
+    pop di
+    pop dx
+    pop cx
+    pop bx    
+    pop ax
+    pop es
+    ret
+DioCheckReady2 Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioCheckIdle1
+;
+;		description:	Dio check idle channels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioCheckIdle1   Proc near
+    push es
+    push ax
+    push cx
+    push dx
+    push si
+;
+    mov ax,ds:DioCurr0
+    or ax,ax
+    jnz dciDone1
+;
+    test ds:IcspFlag,1
+    jz dciNoIcsp1
+;
+    xor bx,bx
+    xchg bx,ds:IcspThread0
+    or bx,bx
+    jz dciDone1
+;
+    Signal
+    jmp dciDone1    
+
+dciNoIcsp1:    
+    mov si,OFFSET DioQueue0
+    mov ax,[si]
+    or ax,ax
+    jz dciDone1
+;
+    call DioRemove
+    mov ds:DioCurr0,es
+;
+    mov si,OFFSET dqe_out_buf
+    movzx cx,es:dqe_out_size
+    mov dx,IO_BASE
+
+dciOutputLoop1:
+    mov al,es:[si]
+    out dx,al
+    inc si
+    Swap
+    loop dciOutputLoop1
+;    
+    mov al,-1
+    out dx,al
+
+dciDone1:
+    pop si
+    pop dx
+    pop cx
+    pop ax
+    pop es
+    ret
+DioCheckIdle1  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    DioCheckIdle2
+;
+;		description:	Dio check idle channels
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+DioCheckIdle2   Proc near
+    push es
     push ax
     push cx
     push dx
     push si
 ;    
-    mov cx,3
-    xor ax,ax
-    mov si,OFFSET DioCurr
-    
-duLoop:
-    mov dx,[si]
-    or dx,dx
-    jz duFree
+    mov ax,ds:DioCurr1
+    or ax,ax
+    jnz dciDone2
 ;
-    call DioCheckReq
-    mov dx,[si]
-    or dx,dx
-    jnz duNext
-
-duFree:
-    call DioStartReq
-
-duNext:   
-    add si,2
-    inc ax
-    loop duLoop
+    test ds:IcspFlag,2
+    jz dciNoIcsp2
 ;
+    xor bx,bx
+    xchg bx,ds:IcspThread1
+    or bx,bx
+    jz dciDone2
+;
+    Signal
+    jmp dciDone2
+
+dciNoIcsp2:    
+    mov si,OFFSET DioQueue1
+    mov ax,[si]
+    or ax,ax
+    jz dciDone2
+;
+    call DioRemove
+    mov ds:DioCurr1,es
+;
+    mov si,OFFSET dqe_out_buf
+    movzx cx,es:dqe_out_size
+    mov dx,IO_BASE + 2
+
+dciOutputLoop2:
+    mov al,es:[si]
+    out dx,al
+    inc si
+    Swap
+    loop dciOutputLoop2
+;   
+    mov al,-1
+    out dx,al
+
+dciDone2:
     pop si
     pop dx
     pop cx
     pop ax
-    ret
-DioUpdate   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;
-;		NAME:		    DioOneReq
-;
-;		description:	Dio req, specified queue
-;
-;       PARAMETERS:     AX      Queue #
-;                       EDX     Timeout in tics
-;                       EBP     Data
-;                       BL      Cmd #
-;                       CL      Line #
-;                       CH      Node #
-;                       DI      Action proc
-;
-;       RETURNS:        EAX     Data returned
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-DioOneReq   Proc near
-    push ds
-    push es
-    push bx
-    push di
-;    
-    ClearSignal
-    push ax
-    mov ax,piclcd_data_sel
-    mov ds,ax    
-    mov eax,SIZE digio_queue_entry
-    AllocateSmallGlobalMem
-    GetThread
-    mov es:dqe_thread,ax
-    pop ax
-    mov es:dqe_device,al
-    mov es:dqe_stat,0
-    mov es:dqe_timeout,edx
-    mov es:dqe_proc,OFFSET node_proc
-    mov es:dqe_node,ch
-    mov es:dqe_line,cl
-    mov es:dqe_cmd,bl
-    mov es:dqe_data,ebp
-    mov es:dqe_action,di
-    EnterSection ds:ListSection
-    push ax
-    call es:dqe_proc
-    pop ax
-;
-    mov di,OFFSET DioQueue
-    add di,ax
-    add di,ax
-    call DioInsert
-    LeaveSection ds:ListSection
-;
-    mov bx,ds:PicThread
-    Signal    
-    WaitForSignal
-;
-    mov eax,es:dqe_data
-    mov bl,es:dqe_stat
-    FreeMem
-    test bl,DQE_STAT_SUCCESS
-    stc
-    jz dorDone
-;
-    clc
-
-dorDone:
-    pop di
-    pop bx
     pop es
-    pop ds
     ret
-DioOneReq    Endp
+DioCheckIdle2   Endp
 
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
-;		NAME:		    DioAllReq
+;		NAME:		    CreateDirectReq
 ;
-;		description:	Broadcase dio req
+;		description:	Create dio req, specified queue
 ;
-;       PARAMETERS:     EDX     Timeout in tics
-;                       EBP     Data
+;       PARAMETERS:     AL      Device # (bit 1) + Line # (bit 0)
 ;                       BL      Cmd #
-;                       CL      Line #
-;                       CH      Node #
-;                       DI      Action proc
+;                       DL      Line #
+;                       DH      Node #
+;                       CX      Data size
+;                       FS:SI   Data buffer
 ;
-;       RETURNS:        EAX     Data returned
+;       RETURNS:        ES      Cmd block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-DioAllReq   Proc near
-    push ds
-    push es
-    push fs
-    push bx
+CreateDirectReq   Proc near
+    push cx
     push si
     push di
 ;    
-    ClearSignal
-    mov ax,piclcd_data_sel
-    mov ds,ax    
-    mov eax,6
-    AllocateSmallGlobalMem
-    mov ax,es
-    mov fs,ax
-    xor si,si
-;
-    xor ax,ax    
-
-darAllocLoop:
     push ax
     mov eax,SIZE digio_queue_entry
     AllocateSmallGlobalMem
-    GetThread
-    mov fs:[si],es
-    mov es:dqe_thread,ax
     pop ax
-    mov es:dqe_device,al
-    mov es:dqe_stat,0
-    mov es:dqe_timeout,edx
-    mov es:dqe_proc,OFFSET node_proc
-    mov es:dqe_node,ch
-    mov es:dqe_line,cl
-    mov es:dqe_cmd,bl
-    mov es:dqe_data,ebp
-    mov es:dqe_action,di
-    EnterSection ds:ListSection
-    push ax
-    call es:dqe_proc
-    pop ax
+    mov es:dqe_queue,al
+    mov es:dqe_result,-1
 ;
-    push di
-    mov di,OFFSET DioQueue
-    add di,ax
-    add di,ax
-    call DioInsert
-    pop di
-    LeaveSection ds:ListSection
+    test al,1
+    jz cdrUnit0
+
+cdrUnit1:
+    mov al,80h
+    jmp cdrUnitOk
+
+cdrUnit0:
+    mov al,40h
+
+cdrUnitOk:
+    or al,dh
+    mov es:dqe_out_buf,al
 ;    
-    add si,2
-    inc ax
-    cmp ax,3
-    jne darAllocLoop    
+    mov al,dl
+    shl al,3
+    or al,bl
+    mov es:dqe_out_buf+1,al
+    mov es:dqe_out_size,2
 ;
-    mov bx,ds:PicThread
-    Signal
-
-darSignalLoop:
-    WaitForSignal
-;   
-    mov cx,3
-    xor si,si
-
-darCheckLoop:
-    mov es,fs:[si]
-    test es:dqe_stat, DQE_STAT_COMPLETE
-    jz darSignalLoop
+    or cx,cx
+    jz cdrDone
 ;
-    add si,2
-    loop darCheckLoop    
-; 
-    mov cx,3
-    xor si,si
+    add es:dqe_out_size,cl
+    mov di,2    
 
-darFreeLoop:
-    mov es,fs:[si]
-    mov eax,es:dqe_data
-    mov bl,es:dqe_stat
-    test bl,DQE_STAT_SUCCESS
-    jnz darOk
-;
-    FreeMem
-    add si,2
-    loop darFreeLoop    
-;
-    mov ax,fs
-    mov es,ax
-    xor ax,ax
-    mov fs,ax
-    FreeMem
-    stc
-    jmp darDone
+cdrDataLoop:
+    lods byte ptr fs:[si]
+    mov es:[di].dqe_out_buf,al
+    inc di
+    loop cdrDataLoop
 
-darOk:
-    movzx bx,es:dqe_node
-    push ax
-    mov ax,si
-    shr ax,1
-    mov ds:[bx].NodeArr,al
-    pop ax
-    FreeMem
-    add si,2
-    sub cx,1
-    jz darOkDone
-
-darOkLoop:
-    mov es,fs:[si]
-    FreeMem
-    add si,2
-    loop darOkLoop
-
-darOkDone:
-    mov dx,fs
-    mov es,dx
-    xor dx,dx
-    mov fs,dx
-    FreeMem
-    clc    
-
-darDone:
+cdrDone:
     pop di
     pop si
-    pop bx
-    pop fs
-    pop es
-    pop ds
+    pop cx       
     ret
-DioAllReq    Endp
+CreateDirectReq    Endp
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    CreateBroadcastReq
+;
+;		description:	Create dio req, broadcast mode
+;
+;       PARAMETERS:     AL      Device # (bit 1)
+;                       BL      Cmd #
+;                       DL      Line #
+;                       DH      Node #
+;                       CX      Data size
+;                       FS:SI   Data buffer
+;
+;       RETURNS:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateBroadcastReq   Proc near
+    push cx
+    push si
+    push di
+;    
+    push ax
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    pop ax
+    mov es:dqe_queue,al
+    mov es:dqe_result,-1
+;
+    mov al,0C0h
+    or al,dh
+    mov es:dqe_out_buf,al
+;    
+    mov al,dl
+    shl al,3
+    or al,bl
+    mov es:dqe_out_buf+1,al
+    mov es:dqe_out_size,2
+;
+    or cx,cx
+    jz cdbDone
+;
+    add es:dqe_out_size,cl
+    mov di,2    
+
+cdbDataLoop:
+    lods byte ptr fs:[si]
+    mov es:[di].dqe_out_buf,al
+    inc di
+    loop cdbDataLoop    
+
+cdbDone:
+    pop di
+    pop si
+    pop cx       
+    ret
+CreateBroadcastReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    QueueReq
+;
+;		description:	Queue dio req
+;
+;       PARAMETERS:     ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+QueueReq   Proc near
+    push ds
+    push ax
+    push bx
+    push di
+;   
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    ClearSignal
+    GetThread
+    mov es:dqe_thread,ax
+;    
+    EnterSection ds:ListSection
+;
+    movzx ax,es:dqe_queue
+    and al,2    
+    mov di,OFFSET DioQueue0
+    add di,ax
+    call DioInsert
+;    
+    LeaveSection ds:ListSection
+;
+    movzx ax,es:dqe_queue
+    and al,2    
+    mov bx,OFFSET PicThread0
+    add bx,ax
+    mov bx,ds:[bx]
+    Signal    
+;
+    pop di
+    pop bx
+    pop ax
+    pop ds 
+    ret
+QueueReq    Endp    
+       
 PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -745,45 +714,132 @@ PAGE
 ;
 ;		description:    Dio req
 ;
-;       PARAMETERS:     EDX     Timeout in tics
-;                       EBP     Data
-;                       BL      Cmd #
-;                       CL      Line #
-;                       CH      Node #
-;                       DI      Action proc
+;       PARAMETERS:     BL      Cmd #
+;                       DL      Line #
+;                       DH      Node #
+;                       CX      Data size
+;                       FS:SI   Data buffer   
 ;
-;       RETURNS:        EAX     Data returned
+;       Returns:        ES      Cmd block
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 DioReq  Proc near
+    push bp
+    sub sp,4
+    mov bp,sp
+;    
     push ds
+    push ax
 ;    
     mov ax,piclcd_data_sel
     mov ds,ax
     push bx
-    movzx bx,ch
+    movzx bx,dh
     mov al,ds:[bx].NodeArr
     pop bx
     cmp al,-1
     je drAll
 ;
     movzx ax,al
-    call DioOneReq
-    jnc drDone
+    call CreateDirectReq
+    call QueueReq
+    WaitForSignal
 ;
+    mov al,es:dqe_result
+    test al,0C0h
+    clc
+    jnz drDone
+;
+    FreeMem
     push bx
-    movzx bx,ch
+    movzx bx,dh
     mov byte ptr ds:[bx].NodeArr,-1
     pop bx
     stc
     jmp drDone
     
 drAll:
-    call DioAllReq 
+    xor al,al
+    call CreateBroadcastReq
+    call QueueReq
+    mov [bp],es
+;
+    mov al,2
+    call CreateBroadcastReq
+    call QueueReq
+    mov [bp+2],es
 
+drWait:    
+    WaitForSignal
+    mov es,[bp]
+    mov al,es:dqe_result
+    cmp al,-1
+    je drWait
+;
+    mov es,[bp+2]
+    mov al,es:dqe_result
+    cmp al,-1
+    je drWait
+;
+    mov es,[bp]
+    mov al,es:dqe_result
+    test al,0C0h
+    jz drDel1
+;
+    mov es,[bp+2]
+    FreeMem
+;    
+    mov es,[bp]
+    mov al,es:dqe_result
+    test al,80h
+    jnz drCh11
+
+drCh10:
+    xor al,al
+    jmp drInsertNode 
+
+drCh11:
+    mov al,1
+    jmp drInsertNode              
+
+drDel1:
+    FreeMem
+    mov word ptr [bp],0
+;
+    mov es,[bp+2]
+    mov al,es:dqe_result
+    test al,0C0h
+    jz drDel2
+;
+    test al,80h
+    jnz drCh21
+
+drCh20:
+    mov al,2
+    jmp drInsertNode
+    
+drCh21:
+    mov al,3
+    jmp drInsertNode
+
+drDel2:
+    FreeMem
+    stc
+    jmp drDone
+
+drInsertNode:
+    push bx
+    movzx bx,dh
+    mov ds:[bx].NodeArr,al
+    pop bx
+    clc
+        
 drDone:   
+    pop ax
     pop ds
+    add sp,4
+    pop bp
     ret
 DioReq  Endp
 
@@ -791,125 +847,136 @@ PAGE
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
-;		NAME:			node_proc
 ;
-;       PARAMETERS:     ES      Req block
+;		NAME:			PicTimeout1
 ;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-node_proc   Proc near
-    mov al,es:dqe_node
-    mov es:dqe_val,al
-    mov es:dqe_proc, OFFSET cmd_proc
-    clc
-    ret
-node_proc   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;		NAME:			cmd_proc
-;
-;       PARAMETERS:     ES      Req block
+;		description:	Supervises PIC chip
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-cmd_proc   Proc near
-    mov al,es:dqe_val
-    and al,3Fh
-    cmp al,1Ah
-    stc
-    jnz cmd_done
-;    
-    mov ah,es:dqe_cmd
-    mov al,es:dqe_line
-    shl al,3
-    or al,ah
-    mov es:dqe_val,al
-    mov ax,es:dqe_action
-    mov es:dqe_proc,ax
-    clc
-
-cmd_done:
-    ret
-cmd_proc   Endp
-
-PAGE
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;
-;		NAME:			PIC thread
-;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-pic_name	DB 'PICLCD',0
-
-cmd DB 0E6h, 0Ah
-
-pic_thread:
+PicTimeout1	Proc far
     mov ax,piclcd_data_sel
     mov ds,ax    
-;    
+    or ds:ResetFlag,1
+    mov bx,ds:PicThread0
+	Signal
+	ret
+PicTimeout1	Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			PIC thread 1
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pic1_name	DB 'DIO 1',0
+
+pic_thread1:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    or ds:ResetFlag,1
+;        
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    GetThread
+    mov ds:PicThread0,ax    
+    ClearSignal
+
+ptLoop1: 
+    test ds:ResetFlag,1
+    jz ptNoReset
+;        
     mov dx,IO_BASE + 8
+    cli
     mov al,ds:PicOut
-    and al,NOT (OUT_MCLR_0 OR OUT_MCLR_1)
+    and al,NOT OUT_MCLR_0
     out dx,al
     mov ds:PicOut,al
+    sti
 ;
     mov ax,250
     WaitMilliSec
 ;
     mov dx,IO_BASE + 8
+    cli
     mov al,ds:PicOut
-    or al,OUT_MCLR_0 OR OUT_MCLR_1
+    or al,OUT_MCLR_0
     out dx,al
     mov ds:PicOut,al
+    sti
+    or ds:IntFlag,1
+    and ds:ResetFlag,NOT 1
+
+ptNoReset:
+    EnterSection ds:ListSection
+;    
+    call DioCheckReady1
+    call DioCheckIdle1
+;    
+    LeaveSection ds:ListSection
+;
+	GetSystemTime
+	add eax,5 * 1193000
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET PicTimeout1
+	mov bx,ds:PicThread0
+	StopTimer
+	StartTimer
+;
+	WaitForSignal
+    jmp ptLoop1
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;		NAME:			PIC thread 2
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+pic2_name	DB 'DIO 2',0
+
+pic_thread2:
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+;    
+    mov dx,IO_BASE + 8
+    cli
+    mov al,ds:PicOut
+    and al,NOT OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti
+;
+    mov ax,250
+    WaitMilliSec
+;
+    mov dx,IO_BASE + 8
+    cli
+    mov al,ds:PicOut
+    or al,OUT_MCLR_1
+    out dx,al
+    mov ds:PicOut,al
+    sti
 ;        
     mov ax,piclcd_data_sel
     mov ds,ax    
     GetThread
-    mov ds:PicThread,ax    
+    mov ds:PicThread1,ax    
     ClearSignal
-;
-    int 3
-    mov bx,OFFSET cmd
-    mov cx,2
-    mov dx,IO_BASE
 
-OutputLoop:
-    mov al,cs:[bx]
-    out dx,al
-    inc bx
-    loop OutputLoop
-;    
-    mov al,-1
-    out dx,al
-;
-    int 3
-    WaitForSignal
-    mov al,ds:Data0
-;
-    movzx cx,al
-    and cx,0Fh
-    or cx,cx
-    jz InputDone
-;
-
-InputLoop:
-    mov dx,IO_BASE
-    in al,dx
-    loop InputLoop
-
-InputDone:    
-    int 3    
-
-pic_thread_loop: 
+ptLoop2: 
     EnterSection ds:ListSection
-    call DioUpdate   
+;    
+    call DioCheckReady2
+    call DioCheckIdle2
+;    
     LeaveSection ds:ListSection
 	WaitForSignal
-    jmp pic_thread_loop
+    jmp ptLoop2
 
 PAGE
 	
@@ -942,6 +1009,15 @@ open_icsp    Proc far
 oicsp1:
 	mov bx,piclcd_data_sel
 	mov ds,bx
+;	
+    ClearSignal
+    GetThread
+    mov ds:IcspThread0,ax
+    or ds:IcspFlag,1
+    mov bx,ds:PicThread0
+    Signal
+    WaitForSignal
+;    
 	mov dx,IO_BASE + 8
 ;	
     cli
@@ -978,6 +1054,15 @@ oicsp1:
 oicsp2:
 	mov bx,piclcd_data_sel
 	mov ds,bx
+;	
+    ClearSignal
+    GetThread
+    mov ds:IcspThread1,ax
+    or ds:IcspFlag,2
+    mov bx,ds:PicThread1
+    Signal
+    WaitForSignal
+;    
 	mov dx,IO_BASE + 8
 ;	
     cli
@@ -1072,6 +1157,12 @@ ci1:
     out dx,al
     mov ds:PicOut,al
     sti
+;
+    and ds:IcspFlag,NOT 1
+    mov ds:IcspThread0,0
+    mov bx,ds:PicThread0
+    Signal
+;	
     clc    	
     jmp ciDone
 
@@ -1096,6 +1187,12 @@ ci2:
     out dx,al
     mov ds:PicOut,al
     sti    	
+;
+    and ds:IcspFlag,NOT 2
+    mov ds:IcspThread1,0
+    mov bx,ds:PicThread1
+    Signal
+;    
     clc
     jmp ciDone
 
@@ -1272,35 +1369,26 @@ PAGE
 
 toggle_serial_line_name	DB 'Toggle Serial Line', 0
 
-toggle_proc    Proc near
-    or es:dqe_stat,DQE_STAT_SUCCESS
-    stc
-    ret
-toggle_proc    Endp
-
 toggle_serial_line	Proc far
-	push bx
-	push cx
-    push edx
-    push di
-;
-    stc
-    jmp tslDone
-    
-    push ebp
-    mov ebp,5000
-    mov cx,dx
-    mov edx,1193 * 100
-    mov di,OFFSET toggle_proc
+    push es
+    push bx
+    push cx
+;    
     mov bl,4
+    xor cx,cx
     call DioReq
-    pop ebp
+    mov ax,es
+    or ax,ax
+    stc
+    jz tslDone
+;    
+    FreeMem   
+    clc
 
 tslDone:
-	pop di
-	pop edx
-	pop cx
-	pop bx
+    pop cx
+    pop bx 
+    pop es   
 	retf32
 toggle_serial_line  Endp
 
@@ -1321,78 +1409,30 @@ PAGE
 
 read_serial_lines_name	DB 'Read Serial Lines', 0
 
-rl0_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz rl0_done
-;    
-    mov es:dqe_data,0
-    mov es:dqe_val,1
-    mov es:dqe_proc,OFFSET rl1_proc
-    clc
-
-rl0_done:
-    ret
-rl0_proc    Endp
-
-rl1_proc    Proc near
-    mov al,es:dqe_val
-    test al,30h
-    stc
-    jz rl1_done
-;    
-    and eax,0Fh
-    or es:dqe_data,eax
-    mov es:dqe_val,2
-    mov es:dqe_proc,OFFSET rl2_proc
-    clc
-
-rl1_done:
-    ret
-rl1_proc    Endp
-
-rl2_proc    Proc near
-    mov al,es:dqe_val
-    test al,30h
-    stc
-    jz rl2_done
-;    
-    and eax,0Fh
-    shl eax,4
-    or es:dqe_data,eax
-    mov es:dqe_val,3
-    or es:dqe_stat,DQE_STAT_SUCCESS
-
-rl2_done:
-    stc
-    ret
-rl2_proc    Endp
-
 read_serial_lines	Proc far
+    push es
 	push bx
 	push cx
-    push edx
-    push di
+	push dx
 ;
-    stc
-    jmp rslDone
-    
-    push ebp
-    mov ebp,5000
-    mov ch,dh
-    xor cl,cl
-    mov edx,1193 * 100
-    mov di,OFFSET rl0_proc
     mov bl,5
+    xor dl,dl
+    xor cx,cx
     call DioReq
-    pop ebp
+    mov ax,es
+    or ax,ax
+    stc
+    jz rslDone
+;    
+    mov al,es:dqe_in_buf
+    FreeMem
+    clc
 
-rslDone:
-	pop di
-	pop edx
+rslDone:    
+    pop dx
 	pop cx
 	pop bx
+	pop es
 	retf32
 read_serial_lines	Endp
 
@@ -1413,110 +1453,60 @@ PAGE
 
 write_serial_val_name	DB 'Write Serial Value', 0
 
-wr0_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz wr0_done
-;    
-    mov eax,es:dqe_data
-    and al,3Fh
-    mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr1_proc
-    clc
-
-wr0_done:
-    ret
-wr0_proc    Endp
-
-wr1_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz wr1_done
-;    
-    mov eax,es:dqe_data
-    shr eax,6
-    and al,3Fh
-    mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr2_proc
-    clc
-
-wr1_done:
-    ret
-wr1_proc    Endp
-
-wr2_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz wr1_done
-;    
-    mov eax,es:dqe_data
-    shr eax,12
-    and al,3Fh
-    mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr3_proc
-    clc
-
-wr2_done:
-    ret
-wr2_proc    Endp
-
-wr3_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz wr3_done
-;    
-    mov eax,es:dqe_data
-    shr eax,18
-    and al,3Fh
-    mov es:dqe_val,al
-    mov es:dqe_proc,OFFSET wr_check_proc
-    clc
-
-wr3_done:
-    ret
-wr3_proc    Endp
-
-wr_check_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    jz wr_check_done
-;    
-    or es:dqe_stat,DQE_STAT_SUCCESS
-
-wr_check_done:    
-    stc
-    ret
-wr_check_proc    Endp
-
 write_serial_val	Proc far
-	push eax
-	push bx
-	push cx
-    push edx
-    push di
-    push ebp
+    push bp
+    sub sp,4
+    mov bp,sp
+    push es
+    push fs
+    push eax
+    push bx
+    push cx
+    push si
 ;
-    stc
-    jmp wsvDone
-    
-    mov ebp,eax
-    mov cx,dx
-    mov edx,1193 * 100
-    mov di,OFFSET wr0_proc
+    mov bl,al
+    and bl,3Fh
+    mov [bp],bl
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov [bp+1],bl
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov [bp+2],bl
+;    
+    shr eax,6
+    mov bl,al
+    and bl,3Fh
+    mov [bp+3],bl
+;    
+    mov ax,ss
+    mov fs,ax
+    mov si,bp
+    mov cx,4
+;
     mov bl,3
     call DioReq
+    mov ax,es
+    or ax,ax
+    stc
+    jz wsvDone
+;    
+    FreeMem
+    clc
 
 wsvDone:
-	pop ebp
-	pop di
-	pop edx
-	pop cx
-	pop bx
-	pop eax
+    pop si
+    pop cx
+    pop bx
+    pop eax
+    pop fs
+    pop es
+    add sp,4
+    pop bp    
 	retf32
 write_serial_val	Endp
 
@@ -1538,99 +1528,41 @@ PAGE
 
 read_serial_val_name	DB 'Read Serial Value', 0
 
-rd0_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    stc
-    jz rd0_done
-;    
-    mov es:dqe_data,0
-    mov es:dqe_val,1
-    mov es:dqe_proc,OFFSET rd1_proc
-    clc
-
-rd0_done:
-    ret
-rd0_proc    Endp
-
-rd1_proc    Proc near
-    mov al,es:dqe_val
-    and eax,3Fh
-    or es:dqe_data,eax
-    mov es:dqe_val,2
-    mov es:dqe_proc,OFFSET rd2_proc
-    clc
-    ret
-rd1_proc    Endp
-
-rd2_proc    Proc near
-    mov al,es:dqe_val
-    and eax,3Fh
-    shl eax,6    
-    or es:dqe_data,eax
-    mov es:dqe_val,3
-    mov es:dqe_proc,OFFSET rd3_proc
-    clc
-    ret
-rd2_proc    Endp
-
-rd3_proc    Proc near
-    mov al,es:dqe_val
-    and eax,3Fh
-    shl eax,12  
-    or es:dqe_data,eax
-    mov es:dqe_val,4
-    mov es:dqe_proc,OFFSET rd4_proc
-    clc
-    ret
-rd3_proc    Endp
-
-rd4_proc    Proc near
-    mov al,es:dqe_val
-    and eax,3Fh
-    shl eax,18  
-    or es:dqe_data,eax
-    mov es:dqe_val,5
-    mov es:dqe_proc,OFFSET rd_check_proc
-    clc
-    ret
-rd4_proc    Endp
-
-rd_check_proc    Proc near
-    mov al,es:dqe_val
-    or al,al
-    jz rd_check_done
-;    
-    or es:dqe_stat,DQE_STAT_SUCCESS
-
-rd_check_done:
-    stc
-    ret
-rd_check_proc    Endp
-
 read_serial_val	Proc far
+    push es
 	push bx
 	push cx
-    push edx
-    push di
 ;
-    stc
-    jmp rsvDone
-
-    push ebp
-    mov ebp,5000
-    mov cx,dx
-    mov edx,1193 * 100
-    mov di,OFFSET rd0_proc
     mov bl,2
+    xor cx,cx
     call DioReq
-    pop ebp
+    mov ax,es
+    or ax,ax
+    stc
+    jz rsvDone
+;    
+    xor eax,eax
+    mov bx,OFFSET dqe_in_buf + 3
+    mov al,es:[bx]
+    dec bx
+;
+    shl eax,6
+    or al,es:[bx]
+    dec bx
+;
+    shl eax,6
+    or al,es:[bx]
+    dec bx
+;
+    shl eax,6
+    or al,es:[bx]
+    FreeMem
+    clc
 
-rsvDone:
-	pop di
-	pop edx
+rsvDone:    
 	pop cx
 	pop bx
+	pop es
 	retf32
 read_serial_val	Endp
 
@@ -1695,8 +1627,17 @@ InitDriver  Proc far
 	mov ax,cs
 	mov ds,ax
 	mov es,ax
-	mov di,OFFSET pic_name
-	mov si,OFFSET pic_thread
+	mov di,OFFSET pic1_name
+	mov si,OFFSET pic_thread1
+	mov ax,4
+	mov cx,100h
+	CreateThread
+;
+	mov ax,cs
+	mov ds,ax
+	mov es,ax
+	mov di,OFFSET pic2_name
+	mov si,OFFSET pic_thread2
 	mov ax,4
 	mov cx,100h
 	CreateThread
@@ -1741,14 +1682,17 @@ init	PROC far
 	AllocateFixedSystemMem
 ;	
     mov es:DcfThread,0
-	mov es:PicThread,0
-	mov es:DioQueue,0
-	mov es:DioQueue+2,0
-	mov es:DioQueue+4,0
-	mov es:DioCurr,0
-	mov es:DioCurr+2,0
-	mov es:DioCurr+4,0
-;
+	mov es:PicThread0,0
+	mov es:PicThread1,0
+	mov es:DioQueue0,0
+	mov es:DioQueue1,0
+	mov es:DioCurr0,0
+	mov es:DioCurr1,0
+	mov es:IntFlag,0
+	mov es:ResetFlag,0
+	mov es:IcspFlag,0
+	mov es:IcspThread0,0
+	mov es:IcspThread1,0	
     xor al,al
 	mov es:PicOut,al
 	mov dx,IO_BASE + 8
