@@ -213,7 +213,7 @@ void TQuizS3::DefineQuiz()
 	DefineID(28, 518);
 	DefineID(29, 316);
 
-	DefineID(30, 497);
+	DefineID(30, 487);
 	DefineID(31, 767);
 	DefineID(32, 70);
 	DefineID(33, 66);
@@ -380,6 +380,7 @@ void TQuizS3::SetupTexts()
   Quiz[50].Reverse = TRUE;
   Quiz[51].Reverse = TRUE;
   Quiz[52].Reverse = TRUE;
+  Quiz[65].Reverse = TRUE;
   Quiz[116].Reverse = TRUE;
   Quiz[117].Reverse = TRUE;
   Quiz[121].Reverse = TRUE;
@@ -393,7 +394,7 @@ void TQuizS3::SetupTexts()
   Quiz[131].Reverse = TRUE;
   Quiz[132].Reverse = TRUE;
   Quiz[133].Reverse = TRUE;
-  
+
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[2].MyGroup = GROUP_NT_BIOLOGY;
@@ -423,7 +424,7 @@ void TQuizS3::SetupTexts()
   Quiz[26].MyGroup = GROUP_NT_TALENT;
   Quiz[27].MyGroup = GROUP_NT_TALENT;
   Quiz[28].MyGroup = GROUP_NT_TALENT;
-  Quiz[29].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[29].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[30].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -559,7 +560,7 @@ void TQuizS3::SetupTexts()
   Quiz[26].Text = "Do you need lists and schedules in order to get things done?";
   Quiz[27].Text = "Do you tend to be impatient and/or impulsive?";
   Quiz[28].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
-  Quiz[29].Text = "As a child, was your play more directed towards, for example, sorting, building, investigating or taking things apart than towards social games with other kids?";
+  Quiz[29].Text = "Do you find it difficult to figure out how to behave in various situations?";
   Quiz[30].Text = "Has it been harder for you than for others to keep friends?";
   Quiz[31].Text = "Do you dislike or have difficulty with team sports and other group endeavours?";
   Quiz[32].Text = "Do you get very tired after socializing, and need to regenerate alone?";
@@ -696,7 +697,7 @@ void TQuizS3::SetupTexts()
   Quiz[26].Text = "Behöver du listor och scheman för att få saker gjorda?";
   Quiz[27].Text = "Brukar du vara otålig och/eller impulsiv?";
   Quiz[28].Text = "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
-  Quiz[29].Text = "Brukade dina lekar mer bestå i att t ex sortera, bygga, undersöka eller ta isär saker än i sociala lekar med andra barn?";
+  Quiz[29].Text = "Är det svårt att veta hur du ska bete dig i olika situationer?";
   Quiz[30].Text = "Har du haft svårare än andra att behålla vänner?";
   Quiz[31].Text = "Har du problem med lagsporter och andra saker som kräver samarbete i grupp?";
   Quiz[32].Text = "Brukar du bli utmattad av att umgås med folk och behöva vila ut ifred efteråt?";
@@ -1124,9 +1125,9 @@ void TQuizS3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS2, 25, 25);
     DefineCross(QuizS2, 26, 26);
     DefineCross(QuizS2, 27, 27);
-    DefineCross(QuizS2, 28, 28);
-    DefineCross(QuizS2, 29, 11);
-    DefineCross(QuizS2, 30, 155);
+	DefineCross(QuizS2, 28, 28);
+	DefineCross(QuizS2, 29, 29);
+	DefineCross(QuizS2, 30, 155);
     DefineCross(QuizS2, 31, 30);
     DefineCross(QuizS2, 32, 31);
     DefineCross(QuizS2, 33, 33);
@@ -1161,7 +1162,7 @@ void TQuizS3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS2, 62, 65);
     DefineCross(QuizS2, 63, 66);
     DefineCross(QuizS2, 64, 68);
-    DefineCross(QuizS2, 65, 69);
+	DefineGlobalId(65, 778);
     DefineCross(QuizS2, 66, 70);
     DefineCross(QuizS2, 67, 71);
     DefineCross(QuizS2, 68, 73);

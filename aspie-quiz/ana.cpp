@@ -108,7 +108,7 @@ int main(int argc, char **argv)
 //	 Quiz[15]->CheckCross();
 //	 Quiz[16]->CheckCross();
 //	 Quiz[17]->CheckCross();
-//	 Quiz[18]->CheckCross();
+	 Quiz[18]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -254,9 +254,9 @@ int main(int argc, char **argv)
 
 	 Quiz[17]->CalcGlobal();
 
-	 Quiz[18]->WritePhpQuestions("q.php");
-	 Quiz[18]->WriteSetupTexts("q.cpp");
-	 Quiz[18]->WriteSetupCross("c.cpp");
+//	 Quiz[18]->WritePhpQuestions("q.php");
+//	 Quiz[18]->WriteSetupTexts("q.cpp");
+//	 Quiz[18]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -375,7 +375,7 @@ int main(int argc, char **argv)
 	 Quiz[16]->ExportHistogram("alls1.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[17]->ExportHistogram("alls2.csv", POP_TYPE_ALL, 2, FALSE);
 
-	 Quiz[17]->WriteGroupWeighting("group.cpp");
+//	 Quiz[18]->WriteGroupWeighting("group.cpp");
 
 	 Quiz[17]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
@@ -396,9 +396,9 @@ int main(int argc, char **argv)
 	 Quiz[17]->ExportDiffHistogram("odd.csv", POP_TYPE_ODD);
 	 Quiz[17]->ExportDiffHistogram("dysp.csv", POP_TYPE_DYSPRAXIA);
 
-	 Quiz[17]->WriteWeighting("weights.cpp");
-	 Quiz[17]->WritePhpWeighting("weights.php");
-	 Quiz[17]->WritePhpGroupWeighting("group.php");
+//	 Quiz[18]->WriteWeighting("weights.cpp");
+	 Quiz[18]->WritePhpWeighting("weights.php");
+	 Quiz[18]->WritePhpGroupWeighting("group.php");
 
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);

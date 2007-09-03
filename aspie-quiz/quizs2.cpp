@@ -209,7 +209,6 @@ void TQuizS2::SetupTexts()
   Quiz[139].Reverse = TRUE;
   Quiz[156].Reverse = TRUE;
   Quiz[157].Reverse = TRUE;
-  Quiz[159].Reverse = TRUE;
   Quiz[160].Reverse = TRUE;
   Quiz[161].Reverse = TRUE;
   Quiz[164].Reverse = TRUE;
@@ -362,9 +361,9 @@ void TQuizS2::SetupTexts()
   Quiz[144].MyGroup = GROUP_ASPIE_COMM;
   Quiz[145].MyGroup = GROUP_ASPIE_SOCIAL;
 
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_SENSORY;
   Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_SENSORY;
 
   Quiz[149].MyGroup = GROUP_SENSORY;
   Quiz[150].MyGroup = GROUP_SENSORY;
@@ -377,7 +376,7 @@ void TQuizS2::SetupTexts()
   Quiz[156].MyGroup = GROUP_NONVERBAL;
   Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_SENSORY;
 
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
