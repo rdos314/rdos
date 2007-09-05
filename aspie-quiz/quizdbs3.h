@@ -21,10 +21,8 @@ struct TQuizRow
 	char Referer[100];
 	long AsResult;
 	long NtResult;
-	long SpdResult;
+	long SpqResult;
 	char Quiz[250];
 	int GroupResult[8];
-	char Rating[15];
-	int  ViewTime[15];
 };
 

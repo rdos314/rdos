@@ -53,7 +53,7 @@
 #
 ##########################################################################*/
 TQuizS3::TQuizS3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2)
-  : TQuiz(134),
+  : TQuiz(216),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -83,7 +83,7 @@ TQuizS3::TQuizS3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2);
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -122,7 +122,10 @@ int TQuizS3::GetPcaCount()
 *##########################################################################*/
 int TQuizS3::GetCatCount(int Question)
 {
-	return 3;
+    if (Question >= 136 && Question <= 209)
+        return 2;
+    else
+    	return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -134,7 +137,7 @@ int TQuizS3::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS3::GetQuizN()
 {
-	return 140;
+	return 134;
 }
 
 /*##########################################################################
@@ -163,198 +166,6 @@ void TQuizS3::WriteName(TFile &File)
 void TQuizS3::DefineQuiz()
 {
     return;
-
-	DefineID(1, 509);
-
-#ifdef ENGLISH
-	DefineID(2, 510);
-#endif
-
-#ifdef SWEDISH
-	RedefineText(2, 510, "Har du svårt att imitera och tajma andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?");
-#endif
-
-	DefineID(3, 514);
-	DefineID(4, 46);
-	DefineID(5, 207);
-
-	DefineID(6, 53);
-	DefineID(7, 61);
-	DefineID(8, 48);
-	DefineID(9, 503);
-	DefineID(10, 632);
-
-	DefineID(11, 26);
-	DefineID(12, 497);
-	DefineID(13, 100);
-	DefineID(14, 20);
-
-#ifdef ENGLISH
-	RedefineText(15, 23, "Do you or others think that you have unconventional ways of solving problems?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(15, 23, "Tycker du själv eller din omgivning att du löser problem på okonventionella sätt?");
-#endif
-
-	DefineID(16, 519);
-	DefineID(17, 695);
-	DefineID(18, 5);
-	DefineID(19, 599);
-	DefineID(20, 606);
-
-	DefineID(21, 3);
-	DefineID(22, 743);
-	DefineID(23, 50);
-	DefineID(24, 240);
-	DefineID(25, 616);
-	DefineID(26, 319);
-	DefineID(27, 613);
-	DefineID(28, 518);
-	DefineID(29, 316);
-
-	DefineID(30, 487);
-	DefineID(31, 767);
-	DefineID(32, 70);
-	DefineID(33, 66);
-	DefineID(34, 269);
-	DefineID(35, 601);
-	DefineID(36, 549);
-	DefineID(37, 507);
-	DefineID(38, 552);
-	DefineID(39, 73);
-	DefineID(40, 454);
-	DefineID(41, 545);
-	DefineID(42, 769);
-	DefineID(43, 366);
-	DefineID(44, 702);
-	DefineID(45, 97);
-	DefineID(46, 243);
-	DefineID(47, 32);
-	DefineID(48, 378);
-	DefineID(49, 282);
-	DefineID(50, 737);
-	DefineID(51, 495);
-	DefineID(52, 149);
-	DefineID(53, 277);
-
-	DefineID(54, 25);
-	DefineID(55, 443);
-	DefineID(56, 151);
-	DefineID(57, 6);
-	DefineID(58, 249);
-	DefineID(59, 78);
-	DefineID(60, 37);
-	DefineID(61, 361);
-	DefineID(62, 551);
-	DefineID(63, 397);
-	DefineID(64, 39);
-	DefineID(65, 36);
-
-#ifdef ENGLISH
-	RedefineText(66, 544, "Do you prefer the company of those of the same generation as yourself?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(66, 544, "Umgås du helst med personer ur din egen generation?");
-#endif
-
-	DefineID(67, 433);
-	DefineID(68, 596);
-	DefineID(69, 31);
-	DefineID(70, 516);
-	DefineID(71, 126);
-	DefineID(72, 591);
-	DefineID(73, 718);
-	DefineID(74, 227);
-
-#ifdef ENGLISH
-	RedefineText(75, 174, "Do you or others think that you have unusual eating habits?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(75, 174, "Tycker du själv eller din omgivning att du har ovanliga matvanor?");
-#endif
-
-	DefineID(76, 167);
-	DefineID(77, 93);
-	DefineID(78, 595);
-	DefineID(79, 448);
-	DefineID(80, 473);
-	DefineID(81, 123);
-	DefineID(82, 385);
-	DefineID(83, 330);
-	DefineID(84, 362);
-	DefineID(85, 600);
-
-	DefineID(86, 745);
-	DefineID(87, 765);
-	DefineID(88, 115);
-	DefineID(89, 547);
-	DefineID(90, 731);
-
-#ifdef ENGLISH
-	RedefineText(91, 712, "Have others commented or have you observed yourself that you make unusual facial expressions?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(91, 712, "Har andra kommenterat eller har du själv observerat att du har ovanliga ansiktsuttryck?");
-#endif
-
-	DefineID(92, 403);
-
-#ifdef ENGLISH
-	RedefineText(93, 359, "Have others told you that you have an odd posture or gait?");
-#endif
-
-#ifdef SWEDISH
-	RedefineText(93, 359, "Har andra kommenterat att du har udda kroppshållning eller gångstil?");
-#endif
-
-	DefineID(94, 55);
-	DefineID(95, 575);
-	DefineID(96, 570);
-	DefineID(97, 582);
-	DefineID(98, 402);
-	DefineID(99, 590);
-	DefineID(100, 15);
-	DefineID(101, 17);
-	DefineID(102, 589);
-	DefineID(103, 572);
-	DefineID(104, 574);
-	DefineID(105, 401);
-	DefineID(106, 234);
-	DefineID(107, 739);
-	DefineID(108, 536);
-
-	DefineID(109, 130);
-	DefineID(110, 83);
-	DefineID(111, 278);
-	DefineID(112, 86);
-	DefineID(113, 82);
-	DefineID(114, 226);
-	DefineID(115, 85);
-	DefineID(116, 84);
-	DefineID(117, 262);
-	DefineID(118, 707);
-	DefineID(119, 95);
-	DefineID(120, 129);
-	DefineID(121, 54);
-	DefineID(122, 128);
-	DefineID(123, 113);
-	DefineID(124, 279);
-	DefineID(125, 741);
-	DefineID(126, 708);
-	DefineID(127, 89);
-	DefineID(128, 726);
-	DefineID(129, 738);
-
-	DefineID(130, 283);
-	DefineID(131, 250);
-	DefineID(132, 724);
-	DefineID(133, 713);
-	DefineID(134, 715);
-
 }
 
 /*##########################################################################
@@ -530,6 +341,90 @@ void TQuizS3::SetupTexts()
   Quiz[132].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
 
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[189].MyGroup = GROUP_MIXED;
+  Quiz[190].MyGroup = GROUP_MIXED;
+  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[192].MyGroup = GROUP_MIXED;
+  Quiz[193].MyGroup = GROUP_MIXED;
+  Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[195].MyGroup = GROUP_MIXED;
+  Quiz[196].MyGroup = GROUP_MIXED;
+  Quiz[197].MyGroup = GROUP_MIXED;
+  Quiz[198].MyGroup = GROUP_MIXED;
+  Quiz[199].MyGroup = GROUP_MIXED;
+  Quiz[200].MyGroup = GROUP_MIXED;
+  Quiz[201].MyGroup = GROUP_MIXED;
+  Quiz[202].MyGroup = GROUP_MIXED;
+  Quiz[203].MyGroup = GROUP_MIXED;
+  Quiz[204].MyGroup = GROUP_MIXED;
+  Quiz[205].MyGroup = GROUP_MIXED;
+  Quiz[206].MyGroup = GROUP_MIXED;
+  Quiz[207].MyGroup = GROUP_MIXED;
+  Quiz[208].MyGroup = GROUP_MIXED;
+  Quiz[209].MyGroup = GROUP_MIXED;
+
+  Quiz[210].MyGroup = GROUP_SENSORY;
+  Quiz[211].MyGroup = GROUP_NT_TALENT;
+  Quiz[212].MyGroup = GROUP_SENSORY;
+  Quiz[213].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[214].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[215].MyGroup = GROUP_ASPIE_SOCIAL;
+  
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -665,6 +560,92 @@ void TQuizS3::SetupTexts()
   Quiz[131].Text = "Do you find it easy to estimate the age of people?";
   Quiz[132].Text = "Do people understand you?";
   Quiz[133].Text = "Can you easily remember verbal instructions?";
+
+  Quiz[134].Text = "Have you been in love with more than one person at the same time?";
+  Quiz[135].Text = "Have you have had long-lasting urges to take revenge?";
+
+  Quiz[136].Text = "SPQ - Do you sometimes feel that things you see on the TV or read in the newspaper have a special meaning for you?";          
+  Quiz[137].Text = "SPQ - I sometimes avoid going to places where there will be many people because I will get anxious.";
+  Quiz[138].Text = "SPQ - Have you had experiences with the supernatural?";
+  Quiz[139].Text = "SPQ - Have you often mistaken objects or shadows for people, or noises for voices?";
+  Quiz[140].Text = "SPQ - Other people see me as slightly eccentric (odd).";
+  Quiz[141].Text = "SPQ - I have little interest in getting to know other people.";
+  Quiz[142].Text = "SPQ - People sometimes find it hard to understand what I am saying.";
+  Quiz[143].Text = "SPQ - People sometimes find me aloof and distant.";
+  Quiz[144].Text = "SPQ - I am sure I am being talked about behind my back.";
+  Quiz[145].Text = "SPQ - I am aware that people notice me when I go out for a meal or to see a film.";
+  Quiz[146].Text = "SPQ - I get very nervous when I have to make polite conversation.";
+  Quiz[147].Text = "SPQ - Do you believe in telepathy (mind-reading)?";
+  Quiz[148].Text = "SPQ - Have you ever had the sense that some person or force is around you, even though you cannot see anyone?";
+  Quiz[149].Text = "SPQ - People sometimes comment on my unusual mannerisms and habits.";
+  Quiz[150].Text = "SPQ - I prefer to keep to myself.";
+  Quiz[151].Text = "SPQ - I sometimes jump quickly from one topic to another when speaking.";
+  Quiz[152].Text = "SPQ - I am poor at expressing my true feelings by the way I talk and look.";
+  Quiz[153].Text = "SPQ - Do you often feel that other people have got it in for you?";
+  Quiz[154].Text = "SPQ - Do some people drop hints about you or say things with a double meaning?";
+  Quiz[155].Text = "SPQ - Do you ever get nervous when someone is walking behind you?";
+  Quiz[156].Text = "SPQ - Are you sometimes sure that other people can tell what you are thinking?";
+  Quiz[157].Text = "SPQ - When you look at a person, or yourself in a mirror, have you ever seen the face change right before your eyes?";
+  Quiz[158].Text = "SPQ - Sometimes other people think that I am a little strange.";
+  Quiz[159].Text = "SPQ - I am mostly quiet when with other people.";
+  Quiz[160].Text = "SPQ - I sometimes forget what I am trying to say.";
+  Quiz[161].Text = "SPQ - I rarely laugh and smile.";
+  Quiz[162].Text = "SPQ - Do you sometimes get concerned that friends or co-workers are not really loyal or trustworthy?";
+  Quiz[163].Text = "SPQ - Have you ever noticed a common event or object that seemed to be a special sign for you?";
+  Quiz[164].Text = "SPQ - I get anxious when meeting people for the first time.";
+  Quiz[165].Text = "SPQ - Do you believe in clairvoyancy (psychic forces, fortune telling)?";
+  Quiz[166].Text = "SPQ - I often hear a voice speaking my thoughts aloud.";
+  Quiz[167].Text = "SPQ - Some people think that I am a very bizarre person.";
+  Quiz[168].Text = "SPQ - I find it hard to be emotionally close to other people.";
+  Quiz[169].Text = "SPQ - I often ramble on too much when speaking.";
+  Quiz[170].Text = "SPQ - My \"non-verbal\" communication (smiling and nodding during a Y N conversation) is poor.";
+  Quiz[171].Text = "SPQ - I feel I have to be on my guard even with friends.";
+  Quiz[172].Text = "SPQ - Do you sometimes see special meanings in advertisements, shop windows, or in the way things are arranged around you?";
+  Quiz[173].Text = "SPQ - Do you often feel nervous when you are in a group of unfamiliar people?";
+  Quiz[174].Text = "SPQ - Can other people feel your feelings when they are not there?";
+  Quiz[175].Text = "SPQ - Have you ever seen things invisible to other people?";
+  Quiz[176].Text = "SPQ - Do you feel that there is no-one you are really close to outside of your immediate family, or people you can confide in or talk to about personal problems?";
+  Quiz[177].Text = "SPQ - Some people find me a bit vague and elusive during a conversation.";
+  Quiz[178].Text = "SPQ - I am poor at returning social courtesies and gestures.";
+  Quiz[179].Text = "SPQ - Do you often pick up hidden threats or put-downs from what people say or do?";
+  Quiz[180].Text = "SPQ - When shopping do you get the feeling that other people are taking notice of you?";
+  Quiz[181].Text = "SPQ - I feel very uncomfortable in social situations involving unfamiliar people.";
+  Quiz[182].Text = "SPQ - Have you had experiences with astrology, seeing the future, UFOs, ESP or a sixth sense?";
+  Quiz[183].Text = "SPQ - Do everyday things seem unusually large or small?";
+  Quiz[184].Text = "SPQ - Writing letters to friends is more trouble than it is worth.";
+  Quiz[185].Text = "SPQ - I sometimes use words in unusual ways.";
+  Quiz[186].Text = "SPQ - I tend to avoid eye contact when conversing with others.";
+  Quiz[187].Text = "SPQ - Have you found that it is best not to let other people know too much about you?";
+  Quiz[188].Text = "SPQ - When you see people talking to each other, do you often wonder if they are talking about you?";
+  Quiz[189].Text = "SPQ - I would feel very anxious if I had to give a speech in front of a large group of people.";
+  Quiz[190].Text = "SPQ - Have you ever felt that you are communicating with another person telepathically (by mind-reading)?";
+  Quiz[191].Text = "SPQ - Does your sense of smell sometimes become unusually strong?";
+  Quiz[192].Text = "SPQ - I tend to keep in the background on social occasions.";
+  Quiz[193].Text = "SPQ - Do you tend to wander off the topic when having a conversation.";
+  Quiz[194].Text = "SPQ - I often feel that others have it in for me.";
+  Quiz[195].Text = "SPQ - Do you sometimes feel that other people are watching you?";
+  Quiz[196].Text = "SPQ - Do you ever suddenly feel distracted by distant sounds that you are not normally aware of?";
+  Quiz[197].Text = "SPQ - I attach little importance to having close friends.";
+  Quiz[198].Text = "SPQ - Do you sometimes feel that people are talking about you?";
+  Quiz[199].Text = "SPQ - Are your thoughts sometimes so strong that you can almost hear them?";
+  Quiz[200].Text = "SPQ - Do you often have to keep an eye out to stop people from taking advantage of you?";
+  Quiz[201].Text = "SPQ - Do you feel that you are unable to get \"close\" to people?";
+  Quiz[202].Text = "SPQ - I am an odd, unusual person.";
+  Quiz[203].Text = "SPQ - I do not have an expressive and lively way of speaking.";
+  Quiz[204].Text = "SPQ - I find it hard to communicate clearly what I want to say to people.";
+  Quiz[205].Text = "SPQ - I have some eccentric (odd) habits.";
+  Quiz[206].Text = "SPQ - I feel very uneasy talking to people I do not know well.";
+  Quiz[207].Text = "SPQ - People occasionally comment that my conversation is confusing.";
+  Quiz[208].Text = "SPQ - I tend to keep my feelings to myself.";
+  Quiz[209].Text = "SPQ - People sometimes stare at me because of my odd appearance.";
+
+  Quiz[210].Text = "Dyslexia";
+  Quiz[211].Text = "Dyscalculia";
+  Quiz[212].Text = "OCD";
+  Quiz[213].Text = "ODD";
+  Quiz[214].Text = "Bipolar";
+  Quiz[215].Text = "Social phobia";
+
 #endif
 
 #ifdef SWEDISH
@@ -802,6 +783,92 @@ void TQuizS3::SetupTexts()
   Quiz[131].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[132].Text = "Förstår sig folk på dig?";
   Quiz[133].Text = "Kommer du lätt ihåg verbala instruktioner?";
+
+  Quiz[134].Text = "Har du varit kär i mer än en person åt gången?";
+  Quiz[135].Text = "Har du haft långvariga hämndbegär?";
+
+  Quiz[136].Text = "SPQ - Do you sometimes feel that things you see on the TV or read in the newspaper have a special meaning for you?";          
+  Quiz[137].Text = "SPQ - I sometimes avoid going to places where there will be many people because I will get anxious.";
+  Quiz[138].Text = "SPQ - Have you had experiences with the supernatural?";
+  Quiz[139].Text = "SPQ - Have you often mistaken objects or shadows for people, or noises for voices?";
+  Quiz[140].Text = "SPQ - Other people see me as slightly eccentric (odd).";
+  Quiz[141].Text = "SPQ - I have little interest in getting to know other people.";
+  Quiz[142].Text = "SPQ - People sometimes find it hard to understand what I am saying.";
+  Quiz[143].Text = "SPQ - People sometimes find me aloof and distant.";
+  Quiz[144].Text = "SPQ - I am sure I am being talked about behind my back.";
+  Quiz[145].Text = "SPQ - I am aware that people notice me when I go out for a meal or to see a film.";
+  Quiz[146].Text = "SPQ - I get very nervous when I have to make polite conversation.";
+  Quiz[147].Text = "SPQ - Do you believe in telepathy (mind-reading)?";
+  Quiz[148].Text = "SPQ - Have you ever had the sense that some person or force is around you, even though you cannot see anyone?";
+  Quiz[149].Text = "SPQ - People sometimes comment on my unusual mannerisms and habits.";
+  Quiz[150].Text = "SPQ - I prefer to keep to myself.";
+  Quiz[151].Text = "SPQ - I sometimes jump quickly from one topic to another when speaking.";
+  Quiz[152].Text = "SPQ - I am poor at expressing my true feelings by the way I talk and look.";
+  Quiz[153].Text = "SPQ - Do you often feel that other people have got it in for you?";
+  Quiz[154].Text = "SPQ - Do some people drop hints about you or say things with a double meaning?";
+  Quiz[155].Text = "SPQ - Do you ever get nervous when someone is walking behind you?";
+  Quiz[156].Text = "SPQ - Are you sometimes sure that other people can tell what you are thinking?";
+  Quiz[157].Text = "SPQ - When you look at a person, or yourself in a mirror, have you ever seen the face change right before your eyes?";
+  Quiz[158].Text = "SPQ - Sometimes other people think that I am a little strange.";
+  Quiz[159].Text = "SPQ - I am mostly quiet when with other people.";
+  Quiz[160].Text = "SPQ - I sometimes forget what I am trying to say.";
+  Quiz[161].Text = "SPQ - I rarely laugh and smile.";
+  Quiz[162].Text = "SPQ - Do you sometimes get concerned that friends or co-workers are not really loyal or trustworthy?";
+  Quiz[163].Text = "SPQ - Have you ever noticed a common event or object that seemed to be a special sign for you?";
+  Quiz[164].Text = "SPQ - I get anxious when meeting people for the first time.";
+  Quiz[165].Text = "SPQ - Do you believe in clairvoyancy (psychic forces, fortune telling)?";
+  Quiz[166].Text = "SPQ - I often hear a voice speaking my thoughts aloud.";
+  Quiz[167].Text = "SPQ - Some people think that I am a very bizarre person.";
+  Quiz[168].Text = "SPQ - I find it hard to be emotionally close to other people.";
+  Quiz[169].Text = "SPQ - I often ramble on too much when speaking.";
+  Quiz[170].Text = "SPQ - My \"non-verbal\" communication (smiling and nodding during a Y N conversation) is poor.";
+  Quiz[171].Text = "SPQ - I feel I have to be on my guard even with friends.";
+  Quiz[172].Text = "SPQ - Do you sometimes see special meanings in advertisements, shop windows, or in the way things are arranged around you?";
+  Quiz[173].Text = "SPQ - Do you often feel nervous when you are in a group of unfamiliar people?";
+  Quiz[174].Text = "SPQ - Can other people feel your feelings when they are not there?";
+  Quiz[175].Text = "SPQ - Have you ever seen things invisible to other people?";
+  Quiz[176].Text = "SPQ - Do you feel that there is no-one you are really close to outside of your immediate family, or people you can confide in or talk to about personal problems?";
+  Quiz[177].Text = "SPQ - Some people find me a bit vague and elusive during a conversation.";
+  Quiz[178].Text = "SPQ - I am poor at returning social courtesies and gestures.";
+  Quiz[179].Text = "SPQ - Do you often pick up hidden threats or put-downs from what people say or do?";
+  Quiz[180].Text = "SPQ - When shopping do you get the feeling that other people are taking notice of you?";
+  Quiz[181].Text = "SPQ - I feel very uncomfortable in social situations involving unfamiliar people.";
+  Quiz[182].Text = "SPQ - Have you had experiences with astrology, seeing the future, UFOs, ESP or a sixth sense?";
+  Quiz[183].Text = "SPQ - Do everyday things seem unusually large or small?";
+  Quiz[184].Text = "SPQ - Writing letters to friends is more trouble than it is worth.";
+  Quiz[185].Text = "SPQ - I sometimes use words in unusual ways.";
+  Quiz[186].Text = "SPQ - I tend to avoid eye contact when conversing with others.";
+  Quiz[187].Text = "SPQ - Have you found that it is best not to let other people know too much about you?";
+  Quiz[188].Text = "SPQ - When you see people talking to each other, do you often wonder if they are talking about you?";
+  Quiz[189].Text = "SPQ - I would feel very anxious if I had to give a speech in front of a large group of people.";
+  Quiz[190].Text = "SPQ - Have you ever felt that you are communicating with another person telepathically (by mind-reading)?";
+  Quiz[191].Text = "SPQ - Does your sense of smell sometimes become unusually strong?";
+  Quiz[192].Text = "SPQ - I tend to keep in the background on social occasions.";
+  Quiz[193].Text = "SPQ - Do you tend to wander off the topic when having a conversation.";
+  Quiz[194].Text = "SPQ - I often feel that others have it in for me.";
+  Quiz[195].Text = "SPQ - Do you sometimes feel that other people are watching you?";
+  Quiz[196].Text = "SPQ - Do you ever suddenly feel distracted by distant sounds that you are not normally aware of?";
+  Quiz[197].Text = "SPQ - I attach little importance to having close friends.";
+  Quiz[198].Text = "SPQ - Do you sometimes feel that people are talking about you?";
+  Quiz[199].Text = "SPQ - Are your thoughts sometimes so strong that you can almost hear them?";
+  Quiz[200].Text = "SPQ - Do you often have to keep an eye out to stop people from taking advantage of you?";
+  Quiz[201].Text = "SPQ - Do you feel that you are unable to get \"close\" to people?";
+  Quiz[202].Text = "SPQ - I am an odd, unusual person.";
+  Quiz[203].Text = "SPQ - I do not have an expressive and lively way of speaking.";
+  Quiz[204].Text = "SPQ - I find it hard to communicate clearly what I want to say to people.";
+  Quiz[205].Text = "SPQ - I have some eccentric (odd) habits.";
+  Quiz[206].Text = "SPQ - I feel very uneasy talking to people I do not know well.";
+  Quiz[207].Text = "SPQ - People occasionally comment that my conversation is confusing.";
+  Quiz[208].Text = "SPQ - I tend to keep my feelings to myself.";
+  Quiz[209].Text = "SPQ - People sometimes stare at me because of my odd appearance.";
+
+  Quiz[210].Text = "Dyslexi";
+  Quiz[211].Text = "Dyskaluli";
+  Quiz[212].Text = "OCD";
+  Quiz[213].Text = "ODD";
+  Quiz[214].Text = "Bipolär";
+  Quiz[215].Text = "Social fobi";
+
 #endif  
 
 }
@@ -931,12 +998,12 @@ void TQuizS3::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		Row.Quiz[140] = Row.Dyslexia + 1;
-		Row.Quiz[141] = Row.Dyscalculia + 1;
-		Row.Quiz[142] = Row.OCD + 1;
-		Row.Quiz[143] = Row.ODD + 1;
-		Row.Quiz[144] = Row.Bipolar + 1;
-		Row.Quiz[145] = Row.Social + 1;
+		Row.Quiz[210] = Row.Dyslexia + 1;
+		Row.Quiz[211] = Row.Dyscalculia + 1;
+		Row.Quiz[212] = Row.OCD + 1;
+		Row.Quiz[213] = Row.ODD + 1;
+		Row.Quiz[214] = Row.Bipolar + 1;
+		Row.Quiz[215] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1231,6 +1298,91 @@ void TQuizS3::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS2, 131, 139);
     DefineCross(QuizS2, 132, 135);
     DefineCross(QuizS2, 133, 136);
+
+	DefineGlobalId(134, 779);
+	DefineGlobalId(135, 780);
+	DefineGlobalId(136, 781);
+	DefineGlobalId(137, 782);
+	DefineGlobalId(138, 783);
+	DefineGlobalId(139, 784);
+	DefineGlobalId(140, 785);
+	DefineGlobalId(141, 786);
+	DefineGlobalId(142, 787);
+	DefineGlobalId(143, 788);
+	DefineGlobalId(144, 789);
+	DefineGlobalId(145, 790);
+	DefineGlobalId(146, 791);
+	DefineGlobalId(147, 792);
+	DefineGlobalId(148, 793);
+	DefineGlobalId(149, 794);
+	DefineGlobalId(150, 795);
+	DefineGlobalId(151, 796);
+	DefineGlobalId(152, 797);
+	DefineGlobalId(153, 798);
+	DefineGlobalId(154, 799);
+	DefineGlobalId(155, 800);
+	DefineGlobalId(156, 801);
+	DefineGlobalId(157, 802);
+	DefineGlobalId(158, 803);
+	DefineGlobalId(159, 804);
+	DefineGlobalId(160, 805);
+	DefineGlobalId(161, 806);
+	DefineGlobalId(162, 807);
+	DefineGlobalId(163, 808);
+	DefineGlobalId(164, 809);
+	DefineGlobalId(165, 810);
+	DefineGlobalId(166, 811);
+	DefineGlobalId(167, 812);
+	DefineGlobalId(168, 813);
+	DefineGlobalId(169, 814);
+	DefineGlobalId(170, 815);
+	DefineGlobalId(171, 816);
+	DefineGlobalId(172, 817);
+	DefineGlobalId(173, 818);
+	DefineGlobalId(174, 819);
+	DefineGlobalId(175, 820);
+	DefineGlobalId(176, 821);
+	DefineGlobalId(177, 822);
+	DefineGlobalId(178, 823);
+	DefineGlobalId(179, 824);
+	DefineGlobalId(180, 825);
+	DefineGlobalId(181, 826);
+	DefineGlobalId(182, 827);
+	DefineGlobalId(183, 828);
+	DefineGlobalId(184, 829);
+	DefineGlobalId(185, 830);
+	DefineGlobalId(186, 831);
+	DefineGlobalId(187, 832);
+	DefineGlobalId(188, 833);
+	DefineGlobalId(189, 834);
+	DefineGlobalId(190, 835);
+	DefineGlobalId(191, 836);
+	DefineGlobalId(192, 837);
+	DefineGlobalId(193, 838);
+	DefineGlobalId(194, 839);
+	DefineGlobalId(195, 840);
+	DefineGlobalId(196, 841);
+	DefineGlobalId(197, 842);
+	DefineGlobalId(198, 843);
+	DefineGlobalId(199, 844);
+	DefineGlobalId(200, 845);
+	DefineGlobalId(201, 846);
+	DefineGlobalId(202, 847);
+	DefineGlobalId(203, 848);
+	DefineGlobalId(204, 849);
+	DefineGlobalId(205, 850);
+	DefineGlobalId(206, 851);
+	DefineGlobalId(207, 852);
+	DefineGlobalId(208, 853);
+	DefineGlobalId(209, 854);
+
+	DefineCross(QuizS2, 210, 140);
+	DefineCross(QuizS2, 211, 141);
+	DefineCross(QuizS2, 212, 142);
+	DefineCross(QuizS2, 213, 143);
+	DefineCross(QuizS2, 214, 144);
+	DefineCross(QuizS2, 215, 145);
+
 }
 
 /*##########################################################################
