@@ -302,7 +302,7 @@ DioCheckReady1 Proc near
 ;
     movzx cx,al
     mov es:dqe_in_size,cl
-    and cx,0Fh
+    and cx,7
     or cx,cx
     jz dcrInputOk1
 ;
@@ -365,7 +365,7 @@ DioCheckReady2 Proc near
 ;
     movzx cx,al
     mov es:dqe_in_size,cl
-    and cx,0Fh
+    and cx,7
     or cx,cx
     jz dcrInputOk2
 ;
