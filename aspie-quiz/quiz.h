@@ -243,6 +243,7 @@ public:
 protected:
 	void Init();
 	static int round(long double val);
+    static long double GetCutoffChi2(int cats, long double p);
 
     const char *GetGlobalQuestionText(int GlobalId);
 	
@@ -297,7 +298,7 @@ protected:
     static void WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr);
     void WritePcaCorrRow(TFile &File, const char *comment, int PopType);
 	void WriteReferer(TFile &file, TReferer *ref);
-    void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr);
+    void WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double p);
 
     void WriteLinkQuestion(TFile *file, int Question, int GlobalId);
     void WriteLinkGroup(TFile *file, int Group);

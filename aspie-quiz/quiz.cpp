@@ -2306,6 +2306,164 @@ void TQuiz::CalcGlobal()
 	}
 }
 
+/*##################  TQuiz::GetCutoffChi2 ##########################
+*   Purpose....: Get cutoff chi2 based on p value     	          	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+long double TQuiz::GetCutoffChi2(int cats, long double p)
+{
+	switch (cats)
+	{
+		case 2:
+			if (p >= 0.2)
+			    return 1.64;
+
+			if (p >= 0.1)
+			    return 2.70;
+			    
+            if (p >= 0.05)
+                return 3.83;
+
+            if (p >= 0.02)
+                return 5.41;
+
+		    if (p >= 0.01)
+		        return 6.64;
+
+			if (p >= 0.005)
+			    return 7.88;
+
+			if (p >= 0.002)
+			    return 9.6;
+
+		    if (p >= 0.001)
+		        return 10.8;
+
+            if (p >= 0.0005)
+                return 12;
+
+            if (p >= 0.0002)
+                return 14;
+
+            if (p >= 0.0001)
+                return 17;
+
+            return 1000;
+
+		case 3:
+            if (p >= 0.2)
+                return 3.22;
+
+            if (p >= 0.1)
+                return 4.61;
+                
+            if (p >= 0.05)
+                return 6.00;
+
+            if (p >= 0.02)
+                return 7.83;
+
+            if (p >= 0.01)
+                return 9.23;
+
+            if (p >= 0.005)
+                return 10.62;
+
+            if (p >= 0.002)
+                return 12.5;
+
+            if (p >= 0.001)
+                return 14.0;
+
+            if (p >= 0.0005)
+                return 15.5;
+
+            if (p >= 0.0002)
+                return 17.8;
+
+            if (p >= 0.0001)
+                return 18.5;
+
+            return 1000;
+                                
+		case 4:
+            if (p >= 0.2)
+                return 4.64;
+
+            if (p >= 0.1)
+                return 6.26;
+
+            if (p >= 0.05)
+                return 7.82;        
+
+            if (p >= 0.02)
+                return 9.84;
+
+            if (p >= 0.01)
+                return 11.36;
+
+            if (p >= 0.005)
+                return 12.86;
+
+            if (p >= 0.002)
+                return 14.9;
+
+            if (p >= 0.001)
+                return 16.4;
+
+            if (p >= 0.0005)
+                return 18.0;
+
+            if (p >= 0.0002)
+                return 19.3;
+
+            if (p >= 0.0001)
+                return 20.3;
+
+            return 1000;
+                
+		case 11:
+            if (p >= 0.2)
+                return 13.45;
+
+            if (p >= 0.1)
+                return 15.99;
+
+            if (p >= 0.05)
+                return 18.32;
+
+            if (p >= 0.02)
+                return 21.17;	
+
+            if (p >= 0.01)
+                return 23.25;
+
+            if (p >= 0.005)
+                return 25.22;
+
+            if (p >= 0.002)
+                return 27.8;
+
+            if (p >= 0.001)
+                return 29.8;
+
+            if (p >= 0.0005)
+                return 31.7;
+
+            if (p >= 0.0002)
+                return 34.6;
+
+            if (p >= 0.0001)
+                return 35.6;
+
+            return 1000;
+	}
+	return 1000;
+}
+
 /*##################  TQuiz::WriteIQ ##########################
 *   Purpose....: Write IQ report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -3064,6 +3222,63 @@ void TQuiz::WriteP(TFile &File, int cats, long double chi2)
 
 	switch (cats)
 	{
+		case 2:
+			if (chi2 >= 17)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 14)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 12)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 10.8)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 9.6)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 7.88)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 6.64)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 5.41)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 3.83)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 2.70)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 1.64)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+
 		case 3:
 			if (chi2 >= 18.5)
 				strcpy(str, "0.0001");
@@ -3654,7 +3869,7 @@ void TQuiz::WriteSumaryTable(const char *filename, int OnlyMixed)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double mincorr)
+void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *name2, TPopulation *pop1, TPopulation *pop2, long double p)
 {
 	int i;
 	int ok;
@@ -3662,6 +3877,7 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
 	int ind;
 	char str[80];
 	int ival;
+	long double mincorr;
 	TFile file(filename, 0);
 
     PopCorr.Correlate(pop1, pop2);
@@ -3673,6 +3889,8 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
 
 	for (i = 0; i < N; i++)
 	{
+        mincorr = GetCutoffChi2(Quiz[i].Cats, p);
+	
 		ind = PopCorr.IndArr[i];
 
 		ok = (PopCorr.chi2[ind] >= mincorr);
@@ -3756,7 +3974,7 @@ void TQuiz::WriteCorrTable(const char *filename, const char *name1, const char *
 void TQuiz::WriteAsNtCorrelation(const char *filename)
 {
     if (As.ValueCount >= 5 && Nt.ValueCount >= 5)
-    	WriteCorrTable(filename, "AS/HFA/PDD", "NT control", &As, &Nt, 6.0);
+    	WriteCorrTable(filename, "AS/HFA/PDD", "NT control", &As, &Nt, 0.05);
 }
 
 /*##################  TQuiz::WriteAsAspieCorrelation ##########################
@@ -3769,7 +3987,7 @@ void TQuiz::WriteAsNtCorrelation(const char *filename)
 void TQuiz::WriteAspieAsCorrelation(const char *filename)
 {
     if (Aspie.ValueCount >= 5 && As.ValueCount >= 5)
-    	WriteCorrTable(filename, "Aspie control", "AS/HFA/PDD", &Aspie, &As, 6.0);
+    	WriteCorrTable(filename, "Aspie control", "AS/HFA/PDD", &Aspie, &As, 0.05);
 }
 
 /*##################  TQuiz::WriteAddNtCorrelation ##########################
@@ -3782,7 +4000,7 @@ void TQuiz::WriteAspieAsCorrelation(const char *filename)
 void TQuiz::WriteAddNtCorrelation(const char *filename)
 {
     if (Add.ValueCount >= 5 && Nt.ValueCount >= 5)
-    	WriteCorrTable(filename, "ADD/ADHD", "NT control", &Add, &Nt, 6.0);
+    	WriteCorrTable(filename, "ADD/ADHD", "NT control", &Add, &Nt, 0.05);
 }
 
 /*##################  TQuiz::WriteAddAsCorrelation ##########################
@@ -3795,7 +4013,7 @@ void TQuiz::WriteAddNtCorrelation(const char *filename)
 void TQuiz::WriteAddAsCorrelation(const char *filename)
 {
     if (Add.ValueCount >= 5 && As.ValueCount >= 5)
-    	WriteCorrTable(filename, "ADD/ADHD", "AS/HFA/PDD", &Add, &As, 6.0);
+    	WriteCorrTable(filename, "ADD/ADHD", "AS/HFA/PDD", &Add, &As, 0.05);
 }
 
 /*##################  TQuiz::WriteGenderAsCorrelation ##########################
@@ -3808,7 +4026,7 @@ void TQuiz::WriteAddAsCorrelation(const char *filename)
 void TQuiz::WriteGenderAsCorrelation(const char *filename)
 {
 	if (AsMale.ValueCount >= 5 && AsFemale.ValueCount >= 5)
-		WriteCorrTable(filename, "Male AS", "Female AS", &AsMale, &AsFemale, 6.0);
+		WriteCorrTable(filename, "Male AS", "Female AS", &AsMale, &AsFemale, 0.05);
 }
 
 /*##################  TQuiz::WriteLowAsNtCorrelation ##########################
@@ -3821,7 +4039,7 @@ void TQuiz::WriteGenderAsCorrelation(const char *filename)
 void TQuiz::WriteLowAsNtCorrelation(const char *filename)
 {
 	if (LowAs.ValueCount >= 5 && Nt.ValueCount >= 5)
-		WriteCorrTable(filename, "Low AS", "NT control", &LowAs, &Nt, 6.0);
+		WriteCorrTable(filename, "Low AS", "NT control", &LowAs, &Nt, 0.05);
 }
 
 /*##################  TQuiz::WriteLowAsAsCorrelation ##########################
@@ -3834,7 +4052,7 @@ void TQuiz::WriteLowAsNtCorrelation(const char *filename)
 void TQuiz::WriteLowAsAsCorrelation(const char *filename)
 {
 	if (LowAs.ValueCount >= 5 && As.ValueCount >= 5)
-		WriteCorrTable(filename, "Low AS", "AS/HFA/PDD", &LowAs, &As, 6.0);
+		WriteCorrTable(filename, "Low AS", "AS/HFA/PDD", &LowAs, &As, 0.05);
 }
 
 /*##################  TQuiz::WriteRefererNtCorrelation ##########################
@@ -3851,7 +4069,7 @@ void TQuiz::WriteRefererNtCorrelation(const char *filename, const char *header, 
 	GetReferer(referer, &pop);
 
 	if (pop.ValueCount >= 5 && Nt.ValueCount >= 5)
-		WriteCorrTable(filename, header, "NT control", &pop, &Nt, 6.0);
+		WriteCorrTable(filename, header, "NT control", &pop, &Nt, 0.05);
 }
 
 /*##################  TQuiz::WriteRefererAsCorrelation ##########################
@@ -3868,7 +4086,7 @@ void TQuiz::WriteRefererAsCorrelation(const char *filename, const char *header, 
     GetReferer(referer, &pop);
 
     if (pop.ValueCount >= 5 && Aspie.ValueCount >= 5)
-		WriteCorrTable(filename, header, "Aspie control", &pop, &As, 6.0);
+		WriteCorrTable(filename, header, "Aspie control", &pop, &As, 0.05);
 }
 
 /*##################  TQuiz::WriteAsCI95 ##########################
@@ -4251,11 +4469,11 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
 	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
 		    while (quiz)
     		{
-                if (quiz->Quiz[q].Chi2 <= 6.0)
+                if (quiz->Quiz[q].Chi2 <= GetCutoffChi2(quiz->Quiz[q].Cats, 0.05))
     				file.Write("<span style='color:#EE0000'>");
     			else
     			{
-                    if (quiz->Quiz[q].Chi2 <= 9.3)
+                    if (quiz->Quiz[q].Chi2 <= GetCutoffChi2(quiz->Quiz[q].Cats, 0.01))
         				file.Write("<span style='color:#990099'>");
         		}
                 
@@ -4263,7 +4481,7 @@ void TQuiz::WriteGroupCorrTable(const char *filename)
     			sprintf(str, ":%d", q + 1);
 	    		file.Write(str);
 
-                if (quiz->Quiz[q].Chi2 <= 9.3)
+                if (quiz->Quiz[q].Chi2 <= GetCutoffChi2(quiz->Quiz[q].Cats, 0.01))
     				file.Write("</span>");
 
                 quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
@@ -4770,18 +4988,18 @@ void TQuiz::WriteAverageGroupCorrTable(const char *filename)
 
 				WriteCenteredFieldHeader(file, 3);
 
-                if (GlobalChi2[GlobalId] <= 6.0)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
     				file.Write("<span style='color:#EE0000'>");
     			else
     			{
-                    if (GlobalChi2[GlobalId] <= 9.3)
+                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
         				file.Write("<span style='color:#990099'>");
         		}
 
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
                 
-                if (GlobalChi2[GlobalId] <= 9.3)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
     				file.Write("</span>");
 
 				WriteFieldFooter(file);
@@ -5000,18 +5218,18 @@ void TQuiz::WriteAveragePcaTable(const char *filename)
 
 				WriteCenteredFieldHeader(file, 3);
 
-                if (GlobalChi2[GlobalId] <= 6.0)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
     				file.Write("<span style='color:#EE0000'>");
     			else
     			{
-                    if (GlobalChi2[GlobalId] <= 9.3)
+                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
         				file.Write("<span style='color:#990099'>");
         		}
 
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
                 
-                if (GlobalChi2[GlobalId] <= 9.3)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
     				file.Write("</span>");
 
 				WriteFieldFooter(file);
@@ -5169,7 +5387,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 			{
 		        quiz = GlobalTopQuiz[i];
 				q = GlobalTopQuestion[i];
-				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= 6.0)
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
 				{
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;
@@ -5190,18 +5408,18 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 
 				WriteCenteredFieldHeader(file, 3);
 
-                if (GlobalChi2[GlobalId] <= 6.0)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
     				file.Write("<span style='color:#EE0000'>");
     			else
     			{
-                    if (GlobalChi2[GlobalId] <= 9.3)
+                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
         				file.Write("<span style='color:#990099'>");
         		}
 
 				sprintf(str, "%d", GlobalId + 1);
 				file.Write(str);
                 
-                if (GlobalChi2[GlobalId] <= 9.3)
+                if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
     				file.Write("</span>");
 
 				WriteFieldFooter(file);
