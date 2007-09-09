@@ -2464,6 +2464,17 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 	return 1000;
 }
 
+/*##################  TQuiz::ExportExcelAspie ##########################
+*   Purpose....: Export Aspie-justified questions to excel format    			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportExcelAspie(const char *filename, int PcaType)
+{
+}
+
 /*##################  TQuiz::WriteIQ ##########################
 *   Purpose....: Write IQ report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -5387,7 +5398,7 @@ void TQuiz::WriteAveragePcaCorrTable(const char *filename)
 			{
 		        quiz = GlobalTopQuiz[i];
 				q = GlobalTopQuestion[i];
-				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i] && GlobalChi2[i] >= GetCutoffChi2(GlobalCatCount[i], 0.05))
 				{
                     corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
                     corrval = corrval * corrval;

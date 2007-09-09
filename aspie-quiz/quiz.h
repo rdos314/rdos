@@ -212,6 +212,7 @@ public:
 
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
+	virtual void ExportExcelAspie(const char *filename, int PcaType);
 
 	virtual void WriteIQ(const char *filename);
 	virtual void WriteHair(const char *filename);

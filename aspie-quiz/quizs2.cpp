@@ -323,7 +323,7 @@ void TQuizS2::SetupTexts()
   Quiz[107].MyGroup = GROUP_ASPIE_NVC;
   Quiz[108].MyGroup = GROUP_ASPIE_NVC;
   Quiz[109].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[110].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[110].MyGroup = GROUP_ASPIE_COMM;
   Quiz[111].MyGroup = GROUP_ASPIE_NVC;
   Quiz[112].MyGroup = GROUP_ASPIE_NVC;
   Quiz[113].MyGroup = GROUP_NONVERBAL;
@@ -375,7 +375,7 @@ void TQuizS2::SetupTexts()
   Quiz[155].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[156].MyGroup = GROUP_NONVERBAL;
   Quiz[157].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_ASPIE_NVC;
   Quiz[159].MyGroup = GROUP_SENSORY;
 
   Quiz[160].MyGroup = GROUP_MIXED;
@@ -1346,6 +1346,82 @@ void TQuizS2::ExportExcelCase(const char *filename, int PcaType)
     				ival = Row.Quiz[i];
 	    			if (ival)
 						ival--;
+    
+					if (ival > 2)
+						ival = 0;
+                    
+					sprintf(str, "\"%d\"", ival);
+					file.Write(str);
+					if (i != GetQuizN() - 1)
+						file.Write(", ");
+				}
+			}
+			file.Write("\n");
+		}
+	}
+}
+
+/*##################  TQuizS2::ExportExcelAspie ##########################
+*   Purpose....: Export cases as excel-data. Invert NT questions 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS2::ExportExcelAspie(const char *filename, int PcaType)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	file.Write("\"\", ");
+	file.Write("\"\", ");
+
+	for (i = 0; i < GetQuizN(); i++)
+	{
+		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+		{
+			file.Write("\"");
+
+//  	      strncpy(str, Quiz[i].Text, 35);
+//      	  str[35] = 0;
+			sprintf(str, "#%d", i + 1);
+			file.Write(str);
+
+			file.Write("\"");
+			if (i != N - 1)
+				file.Write(", ");
+		}
+	}
+	file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (IsPca(&Row, PcaType))
+		{
+			sprintf(str, "\"%d\", ", Row.AsResult);
+			file.Write(str);
+
+			sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
+
+			for (i = 0; i < GetQuizN(); i++)
+			{
+				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
+				{
+    				ival = Row.Quiz[i];
+
+                    if (ival)
+                    {
+        				if (Quiz[i].Reverse)
+	        				ival = 3 - ival;
+		        		else
+			        		ival--;
+			        }
+
     
 					if (ival > 2)
 						ival = 0;

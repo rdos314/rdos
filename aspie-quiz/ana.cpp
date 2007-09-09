@@ -186,6 +186,8 @@ int main(int argc, char **argv)
 	 Quiz[18]->ExportExcelCase("males3.dat", PCA_TYPE_MALE);
 	 Quiz[18]->ExportExcelCase("females3.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[17]->ExportExcelAspie("aspies2.dat", PCA_TYPE_ALL);
+
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("all2.txt", PCA_TYPE_ALL);
