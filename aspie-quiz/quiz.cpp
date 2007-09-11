@@ -2640,6 +2640,17 @@ void TQuiz::WriteAQ(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteSPQ ##########################
+*   Purpose....: Write SPQ test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteSPQ(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #

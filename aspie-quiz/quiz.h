@@ -229,6 +229,7 @@ public:
     virtual void WriteLeiden(const char *filename);
     virtual void WriteRetest(const char *filename);
     virtual void WriteAQ(const char *filename);
+    virtual void WriteSPQ(const char *filename);
     virtual void WritePictureRating(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);

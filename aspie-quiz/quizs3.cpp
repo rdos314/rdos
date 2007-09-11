@@ -344,7 +344,7 @@ void TQuizS3::SetupTexts()
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
-  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_ASPIE_NVC;
   Quiz[140].MyGroup = GROUP_ASPIE_COMM;
@@ -380,11 +380,11 @@ void TQuizS3::SetupTexts()
   Quiz[170].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[171].MyGroup = GROUP_MIXED;
   Quiz[172].MyGroup = GROUP_MIXED;
-  Quiz[173].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_MIXED;
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_ASPIE_NVC;
   Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[179].MyGroup = GROUP_MIXED;
   Quiz[180].MyGroup = GROUP_MIXED;
@@ -1679,7 +1679,7 @@ void TQuizS3::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 //					if (PcaType == PCA_TYPE_ALL)
@@ -1758,3 +1758,127 @@ void TQuizS3::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  TQuizS3::WriteSPQ ##########################
+*   Purpose....: Write SPQ test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS3::WriteSPQ(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double SpqSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double SpqMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double SpqSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	SpqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.SpqResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			SpqSum += Row.SpqResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	SpqMean = SpqSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	SpqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.SpqResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.SpqResult - SpqMean;
+			SpqSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	SpqSd = sqrtl(SpqSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.SpqResult)
+        {
+            zx = ((long double)Row.SpqResult - SpqMean) / SpqSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean SPQ score: %5.1Lf, SD: %5.1Lf\r\n", SpqMean, SpqSd);
+
+	printf("SPQ - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("SPQ - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("SPQ - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}
+
