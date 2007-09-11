@@ -186,6 +186,7 @@ void TQuizR4::SetupTexts()
   Quiz[192].Reverse = TRUE;
   Quiz[196].Reverse = TRUE;
   Quiz[199].Reverse = TRUE;
+  Quiz[200].Reverse = TRUE;
   Quiz[201].Reverse = TRUE;
   Quiz[202].Reverse = TRUE;
 
@@ -1485,8 +1486,8 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
-//					if (PcaType == PCA_TYPE_ALL)
-//						d3 = -d3;
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
 
 //					if (PcaType == PCA_TYPE_ALL)
 //						d4 = -d4;
