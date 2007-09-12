@@ -357,7 +357,7 @@ void TQuizS3::SetupTexts()
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[150].MyGroup = GROUP_ASPIE_COMM;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_NONVERBAL;
   Quiz[153].MyGroup = GROUP_MIXED;
@@ -370,7 +370,7 @@ void TQuizS3::SetupTexts()
   Quiz[160].MyGroup = GROUP_NT_TALENT;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_NT_TALENT;
-  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_ASPIE_NVC;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_MIXED;
   Quiz[166].MyGroup = GROUP_MIXED;
@@ -397,8 +397,8 @@ void TQuizS3::SetupTexts()
   Quiz[187].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[188].MyGroup = GROUP_MIXED;
   Quiz[189].MyGroup = GROUP_NT_TALENT;
-  Quiz[190].MyGroup = GROUP_MIXED;
-  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[190].MyGroup = GROUP_SENSORY;
+  Quiz[191].MyGroup = GROUP_SENSORY;
   Quiz[192].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[193].MyGroup = GROUP_NT_TALENT;
   Quiz[194].MyGroup = GROUP_MIXED;
@@ -1679,8 +1679,8 @@ void TQuizS3::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-//					if (PcaType == PCA_TYPE_FEMALE)
-//						d2 = -d2;
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
+						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
