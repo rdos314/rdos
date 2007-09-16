@@ -631,7 +631,7 @@ void CreateBirth()
 *##########################################################################*/
 int main(int argc, char **argv)
 {
-    CreateAll();
-    CreateDx();
-    CreateBirth();
+//    CreateAll();
+//    CreateDx();
+	CreateBirth();
 }

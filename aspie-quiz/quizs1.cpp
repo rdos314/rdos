@@ -78,8 +78,8 @@ TQuizS1::TQuizS1(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	LoadReferers();
     SetupControlGroups();
 	SortReferers();
-	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7);
+	LoadPopulations();
 	Calculate();
 }
 
@@ -835,13 +835,21 @@ void TQuizS1::LoadPopulations()
 	int i;
 	TReferer *ref;
 	int aspie;
+	int id;
+	char score;
+	int IdArr[MAX_QUESTIONS];
 
 	for (i = 0; i < N; i++)
+	{
 		Quiz[i].NoAnswer = 0;
+		IdArr[i] = GetGlobalId(i);
+    }
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
+
 		Row.Quiz[141] = Row.Dyslexia + 1;
 		Row.Quiz[142] = Row.Dyscalculia + 1;
 		Row.Quiz[143] = Row.OCD + 1;
@@ -853,6 +861,26 @@ void TQuizS1::LoadPopulations()
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
+		    else
+			{
+			    if (i < 141)
+			    {
+    			    score = Row.Quiz[i] - 1;
+	    		    id = IdArr[i];
+		    	    
+			        DsmAutism.Add(Row.Autism, id, score);
+			        DsmAs.Add(Row.Aspie, id, score);
+    			    DsmAdd.Add(Row.ADHD, id, score);
+	    		    DsmTs.Add(Row.TS, id, score);
+		    	    DsmDyslexia.Add(Row.Dyslexia, id, score);
+			        DsmDyscalculia.Add(Row.Dyscalculia, id, score);
+			        DsmOCD.Add(Row.OCD, id, score);
+    			    DsmODD.Add(Row.ODD, id, score);
+	    		    DsmBipolar.Add(Row.Bipolar, id, score);
+		    	    DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
+			    	DsmSocialPhobia.Add(Row.Social, id, score);
+    		    }
+			}
 
 		}
 

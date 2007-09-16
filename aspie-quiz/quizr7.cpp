@@ -77,8 +77,8 @@ TQuizR7::TQuizR7(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	LoadReferers();
     SetupControlGroups();
 	SortReferers();
-	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6);
+	LoadPopulations();
 	Calculate();
 }
 
@@ -729,19 +729,34 @@ void TQuizR7::LoadPopulations()
 	int i;
 	TReferer *ref;
 	int aspie;
+	int id;
+	char score;
+	int IdArr[MAX_QUESTIONS];
 
 	for (i = 0; i < N; i++)
+	{
 		Quiz[i].NoAnswer = 0;
+		IdArr[i] = GetGlobalId(i);
+    }
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
 		for (i = 0; i < N; i++)
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
-
+		    else
+			{
+			    score = Row.Quiz[i] - 1;
+			    id = IdArr[i];
+			    
+			    DsmAutism.Add(Row.Autism, id, score);
+			    DsmAs.Add(Row.Aspie, id, score);
+			    DsmAdd.Add(Row.ADHD, id, score);
+			}
 		}
 
 		aspie = FALSE;

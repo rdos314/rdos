@@ -30,6 +30,7 @@
 
 #include "pop.h"
 #include "popcorr.h"
+#include "dsmpop.h"
 #include "refer.h"
 #include "file.h"
 
@@ -52,7 +53,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             11
+#define GROUP_COUNT             12
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_NT_BIOLOGY        1
@@ -64,7 +65,8 @@
 #define GROUP_ASPIE_NVC         7
 #define GROUP_NONVERBAL         8
 #define GROUP_SEX               9
-#define GROUP_MIXED             10
+#define GROUP_PARANOID          10
+#define GROUP_MIXED             11
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
@@ -89,6 +91,18 @@
 #define POP_TYPE_NT_CONTROL     20
 #define POP_TYPE_AUTISM         21
 #define POP_TYPE_ASPIE_CONTROL  22
+
+class TBirthMonth
+{
+public:
+	TBirthMonth();
+	void Add(int AsResult, int NtResult, int BirthMonth);
+	int GetFactor(int index);
+	void ExportHistogram(const char *filename);
+
+	int AsCount[15];
+	int NtCount[15];
+};
 
 class TQuiz;
 
@@ -205,6 +219,10 @@ public:
         
     static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
+    static void WriteDsmReport(const char *filename, int PopType);
+
+    static void ExportBirthMonthHistogram(const char *filename);
+
     void ExportHistogram(const char *filename, int PopType, int Width, int All);
     void ExportDiffHistogram(const char *filename, int PopType);
 
@@ -220,8 +238,6 @@ public:
     virtual void WriteRace(const char *filename);
     virtual void WriteStim(const char *filename);
     virtual void WriteABO(const char *filename);
-    virtual void WriteBirthMonth(const char *filename);
-    virtual void ExportBirthMonthHistogram(const char *filename);
     virtual void WriteParkinson(const char *filename);
     virtual void WriteAlzheimer(const char *filename);
     virtual void WriteCFTR(const char *filename);
@@ -254,6 +270,8 @@ protected:
     void WriteAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void WriteWikiWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
+    static void WriteDsmReport(TFile &File, TDsmPopulation &DsmPop);
+
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
 	virtual int GetPcaCount();
@@ -269,6 +287,8 @@ protected:
     void CalcAspieNtCorr();
     void Calculate();
     void DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion);
+
+    int GetGlobalId(int question);
     
     void DefineID(int Question, int GlobalID);
     void DefineText(int Question, const char *Text, int Group);
@@ -349,6 +369,25 @@ protected:
     TPopulation SocialPhobia;
     TPopulation LowIQ;
     TPopulation HighIQ;
+
+    static TBirthMonth BirthMonth;
+    
+    static TDsmPopulation DsmAutism;
+    static TDsmPopulation DsmAs;
+    static TDsmPopulation DsmAdd;
+    static TDsmPopulation DsmTs;
+    static TDsmPopulation DsmHyperlexia;
+    static TDsmPopulation DsmDyspraxia;
+    static TDsmPopulation DsmDyslexia;
+    static TDsmPopulation DsmDyscalculia;
+    static TDsmPopulation DsmOCD;
+    static TDsmPopulation DsmODD;
+    static TDsmPopulation DsmSynaesthesia;
+    static TDsmPopulation DsmPA;
+    static TDsmPopulation DsmDysgraphia;
+    static TDsmPopulation DsmBipolar;
+    static TDsmPopulation DsmSchizophrenia;
+    static TDsmPopulation DsmSocialPhobia;
     
     int UseNtResult;
     int RefCount;

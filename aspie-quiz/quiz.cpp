@@ -37,8 +37,6 @@
 
 #define CALC_QUESTION_CORR       // turn on to calculate question correlations
 
-#define MAX_GLOBAL_QUESTIONS       1024
-
 static int GlobalArr[MAX_GLOBAL_QUESTIONS];
 
 static int GlobalCorrInited = FALSE;
@@ -58,6 +56,168 @@ static int GlobalGroupCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 
 static long double GlobalPcaSum[MAX_GLOBAL_QUESTIONS][4];
 static int GlobalPcaCount[MAX_GLOBAL_QUESTIONS][4];
+
+TDsmPopulation TQuiz::DsmAutism;
+TDsmPopulation TQuiz::DsmAs;
+TDsmPopulation TQuiz::DsmAdd;
+TDsmPopulation TQuiz::DsmTs;
+TDsmPopulation TQuiz::DsmHyperlexia;
+TDsmPopulation TQuiz::DsmDyspraxia;
+TDsmPopulation TQuiz::DsmDyslexia;
+TDsmPopulation TQuiz::DsmDyscalculia;
+TDsmPopulation TQuiz::DsmOCD;
+TDsmPopulation TQuiz::DsmODD;
+TDsmPopulation TQuiz::DsmSynaesthesia;
+TDsmPopulation TQuiz::DsmPA;
+TDsmPopulation TQuiz::DsmDysgraphia;
+TDsmPopulation TQuiz::DsmBipolar;
+TDsmPopulation TQuiz::DsmSchizophrenia;
+TDsmPopulation TQuiz::DsmSocialPhobia;
+
+TBirthMonth TQuiz::BirthMonth;
+
+/*##################  TBirthMonth::TBirthMonth ##########################
+*   Purpose....: Initialize TBirthMonth                  			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+TBirthMonth::TBirthMonth()
+{
+    int i;
+
+    for (i = 0; i < 15; i++)
+    {
+		AsCount[i] = 0;
+        NtCount[i] = 0;
+    }
+}
+
+/*##################  TBirthMonth::Add ##########################
+*   Purpose....: Add an answer                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::Add(int AsResult, int NtResult, int BirthMonth)
+{
+	int index;
+	int diff = AsResult - NtResult;
+
+    index = BirthMonth - 1;
+
+	if (diff > 0)
+		AsCount[index]++;
+	else
+		NtCount[index]++;
+}
+
+/*##################  TBirthMonth::GetFactor ##########################
+*   Purpose....: Get month factor                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TBirthMonth::GetFactor(int index)
+{
+	switch (index)
+	{
+		case 0:
+		case 2:
+		case 4:
+		case 6:
+		case 7:
+		case 9:
+		case 11:
+			return 3225;
+
+		case 1:
+			return  3539;
+
+		case 3:
+		case 5:
+		case 8:
+		case 10:
+			return 3333;
+	}
+}
+
+/*##################  TBirthMonth::ExportHistogram ##########################
+*   Purpose....: Export histogram                   			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TBirthMonth::ExportHistogram(const char *filename)
+{
+	char str[80];
+	int val;
+	int i;
+	int assum;
+	int ntsum;
+	TFile file(filename, 0);
+
+	assum = 0;
+	ntsum = 0;
+
+	for (i = 0; i < 12; i++)
+	{
+		assum += AsCount[i];
+		ntsum += NtCount[i];
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 1));
+		file.Write(str);
+
+		val = AsCount[i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[i] * GetFactor(i);
+		val = val / ntsum;
+		sprintf(str, "%d\n", val);
+		file.Write(str);
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 13));
+		file.Write(str);
+
+		val = AsCount[i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[i] * GetFactor(i);
+		val = val / ntsum;
+	    sprintf(str, "%d\n", val);
+	    file.Write(str);	        
+	}
+
+	for (i = 0; i < 12; i++)
+	{
+		sprintf(str, "%d\t", 100 * (i + 25));
+		file.Write(str);
+
+		val = AsCount[i] * GetFactor(i);
+		val = val / assum;
+		sprintf(str, "%d\t", val);
+		file.Write(str);
+
+		val = NtCount[i] * GetFactor(i);
+		val = val / ntsum;
+		sprintf(str, "%d\n", val);
+		file.Write(str);
+	}
+}
 
 /*##########################################################################
 #
@@ -301,6 +461,9 @@ void TQuiz::Init()
 	Group[GROUP_SEX].PosName = "Sexual deviation";
 	Group[GROUP_SEX].NegName = "Sexual normality";
 
+	Group[GROUP_PARANOID].PosName = "Paranoia";
+	Group[GROUP_PARANOID].NegName = "Paranoia problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -338,6 +501,9 @@ void TQuiz::Init()
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
                                
+	Group[GROUP_PARANOID].PosName = "Paranoia";
+	Group[GROUP_PARANOID].NegName = "Paranoia problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
 
@@ -726,6 +892,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_SEX:
                 file.Write("GROUP_SEX");
+                break;
+
+            case GROUP_PARANOID:
+                file.Write("GROUP_PARANOID");
                 break;
 
             default:
@@ -1350,6 +1520,32 @@ void TQuiz::DefineCross(TQuiz *quiz, int MyQuestion, int CrossQuestion)
 {
     Quiz[MyQuestion].CrossQuiz = quiz;
     Quiz[MyQuestion].CrossInd = CrossQuestion;
+}
+
+/*##################  TQuiz::GetGlobalId ##########################
+*   Purpose....: Get global id for question                     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::GetGlobalId(int question)
+{
+    TQuiz *quiz;
+    int q;
+    int i;
+
+    quiz = this;
+    q = question;
+
+	while (quiz->Quiz[q].CrossQuiz)
+	{
+		i = quiz->Quiz[q].CrossInd;
+		quiz = quiz->Quiz[q].CrossQuiz;
+		q = i;
+	}
+
+    return quiz->Quiz[q].GlobalId;
 }
 
 /*##################  TQuiz::GetPop ##########################
@@ -2155,6 +2351,23 @@ void TQuiz::CalcGlobal()
 	if (GlobalInited)
 	    return;
 
+    DsmAutism.Correlate();
+    DsmAs.Correlate();
+    DsmAdd.Correlate();
+    DsmTs.Correlate();
+    DsmHyperlexia.Correlate();
+    DsmDyspraxia.Correlate();
+    DsmDyslexia.Correlate();
+    DsmDyscalculia.Correlate();
+    DsmOCD.Correlate();
+    DsmODD.Correlate();
+    DsmSynaesthesia.Correlate();
+    DsmPA.Correlate();
+    DsmDysgraphia.Correlate();
+    DsmBipolar.Correlate();
+    DsmSchizophrenia.Correlate();
+    DsmSocialPhobia.Correlate();
+
 	GlobalInited = TRUE;
 
 	for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
@@ -2538,28 +2751,6 @@ void TQuiz::WriteStim(const char *FileName)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 void TQuiz::WriteABO(const char *FileName)
-{
-}
-
-/*##################  TQuiz::WriteBirthMonth ##########################
-*   Purpose....: Write birth month report (dummy)           			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::WriteBirthMonth(const char *FileName)
-{
-}
-
-/*##################  TQuiz::ExportBirthMonthHistogram ##########################
-*   Purpose....: Write birth month histogram (dummy)           			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz::ExportBirthMonthHistogram(const char *FileName)
 {
 }
 
@@ -5669,6 +5860,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("SEX");
 	        break;
 	            
+	    case GROUP_PARANOID:
+	        file->Write("PARANOID");
+	        break;
+	            
 	    case GROUP_MIXED:
 	        file->Write("MIXED");
 	        break;
@@ -5734,6 +5929,21 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
 
+    file.Write("<br>");
+	file.Write("<a href=\"autism.htm\">Autism diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"as.htm\">AS/HFA/PDD diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"add.htm\">ADD/ADHD diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"ts.htm\">Tourette diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"dysp.htm\">Dyspraxia diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"dysl.htm\">Dyslexia diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"dysc.htm\">Dyscalculia diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"ocd.htm\">OCD diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"odd.htm\">ODD diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"pa.htm\">Prosopagnosia diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"bip.htm\">Bipolar diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"schizo.htm\">Schizophrenia diagnosis correlations</a><br>\n");
+	file.Write("<a href=\"social.htm\">Social Phobia diagnosis correlations</a><br>\n");
+
 	file.Write("<h2>Quiz versions</h2>\n");
 #endif
 
@@ -5747,6 +5957,21 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
 	file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
+
+	file.Write("<br>");
+	file.Write("<a href=\"autism.htm\">Autism diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"as.htm\">AS/HFA/PDD diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"add.htm\">ADD/ADHD diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"ts.htm\">Tourette diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"dysp.htm\">Dyspraxi diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"dysl.htm\">Dyslexi diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"dysc.htm\">Dyskalkuli diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"ocd.htm\">OCD diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"odd.htm\">ODD diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"pa.htm\">Prosopagnosi diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"bip.htm\">Bipolär diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"schizo.htm\">Schizofreni diagnos korrelationer</a><br>\n");
+	file.Write("<a href=\"social.htm\">Social fobia diagnos korrelationer</a><br>\n");
 
 	file.Write("<h2>Quiz versioner</h2>\n");
 #endif
@@ -6092,7 +6317,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs3.htm\">overview</a> <a href=\"rels3.htm\">related questions</a> <a href=\"refs3.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs3.htm\">overview</a> <a href=\"rels3.htm\">related questions</a> <a href=\"refs3.htm\">referer sites</a> <a href=\"spq.htm\">SPQ-A test</a>");
 	file.Write("<br>");
 #endif
 
@@ -6103,9 +6328,20 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 	file.Write("<h3>Histograms</h3>\n");
 
-	file.Write("<p><img src=\"all.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=480 BORDER=0></p>");
-	file.Write("<p><img src=\"dx.jpg\" ALIGN=BOTTOM WIDTH=560 HEIGHT=600 BORDER=0></p>");
-	file.Write("<p><img src=\"birth9.jpg\" ALIGN=BOTTOM WIDTH=360 HEIGHT=480 BORDER=0></p>");
+	file.Write("<p><img src=\"all.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"autism.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"as.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"add.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"ts.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"dysp.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"dysl.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"dysc.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"ocd.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"odd.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"pa.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"bip.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"schizo.emf\" BORDER=0></p>");
+	file.Write("<p><img src=\"social.emf\" BORDER=0></p>");
 
 #ifdef ENGLISH
 	file.Write("<h3>Groups</h3>\n");
@@ -7436,6 +7672,290 @@ void TQuiz::WritePhpWeighting(const char *filename)
 	file.Write("\r\n");
 	file.Write("  return $nw;\r\n");
 	file.Write("\r\n");
+}
+
+/*##################  TQuiz::WriteDsmReport ##########################
+*   Purpose....: Write global correlation report with DSM diagnoses       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteDsmReport(TFile &File, TDsmPopulation &DsmPop)
+{
+	int GlobalId;
+	long double val;
+	int ival;
+	int i;
+    char str[80];
+    TQuiz *quiz;
+    long double limit;
+    int start;
+
+	start = 0;
+	limit = DsmPop.Corr[DsmPop.IndArr[start]];
+
+	if (limit > 0.9)
+	{
+		start = 1;
+		limit = DsmPop.Corr[DsmPop.IndArr[start]];
+	}
+
+	limit = limit / 2;
+	limit = limit * limit;
+
+	for (i = start; i < MAX_GLOBAL_QUESTIONS; i++)
+	{
+		GlobalId = DsmPop.IndArr[i];
+
+		val = DsmPop.Corr[GlobalId];
+
+		if (val * val < limit)
+			break;
+
+		sprintf(str, "%d. ", GlobalId + 1);
+		File.Write(str);
+
+		quiz = GlobalTopQuiz[GlobalId];
+		File.Write(quiz->GetGlobalQuestionText(GlobalId));
+
+#ifdef ENGLISH
+		File.Write(" (correlation: ");
+#endif
+
+#ifdef SWEDISH
+		File.Write(" (korrelation: ");
+#endif
+
+
+		ival = round(100.0 * val);
+		if (ival < 0)
+		{
+			File.Write("-");
+			ival = -ival;
+		}
+		sprintf(str, ".%02d)<br><br>", ival);
+		File.Write(str);
+	}
+}
+
+/*##################  TQuiz::WriteDsmReport ##########################
+*   Purpose....: Write global correlation report with DSM diagnoses       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteDsmReport(const char *filename, int PopType)
+{
+	TFile file(filename, 0);
+	
+    switch (PopType)
+    {
+        case POP_TYPE_AUTISM:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Autism diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Autism diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmAutism);
+            break;
+            
+        case POP_TYPE_AS:
+
+#ifdef ENGLISH
+        	file.Write("<h2>AS/HFA/PDD diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>AS/HFA/PDD diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmAs);
+            break;
+            
+        case POP_TYPE_ADD:
+
+#ifdef ENGLISH
+        	file.Write("<h2>ADD/ADHD diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>ADD/ADHD diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmAdd);
+            break;
+            
+        case POP_TYPE_TS:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Tourette diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Tourette diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmTs);
+            break;
+            
+        case POP_TYPE_HYPERLEXIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Hyperlexia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Hyperlexi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmHyperlexia);
+            break;
+            
+        case POP_TYPE_DYSPRAXIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Dyspraxia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Dyspraxi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmDyspraxia);
+            break;
+            
+        case POP_TYPE_DYSLEXIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Dyslexia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Dyslexi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmDyslexia);
+            break;
+            
+        case POP_TYPE_DYSCALCULIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Dyscalculia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Dyskalkuli diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmDyscalculia);
+            break;
+            
+        case POP_TYPE_OCD:
+
+#ifdef ENGLISH
+			file.Write("<h2>Obsessive Compulsive Disorder diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+			file.Write("<h2>Tvångssyndrom diagnos korrelationer</h2>\n");
+#endif
+			WriteDsmReport(file, DsmOCD);
+			break;
+
+		case POP_TYPE_ODD:
+
+#ifdef ENGLISH
+			file.Write("<h2>ODD diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+			file.Write("<h2>ODD diagnos korrelationer</h2>\n");
+#endif
+			WriteDsmReport(file, DsmODD);
+			break;
+            
+        case POP_TYPE_SYNAESTHESIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Synaesthesia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Synestesi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmSynaesthesia);
+            break;
+            
+        case POP_TYPE_PA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Prosopagnosia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Prosopagnosi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmPA);
+            break;
+            
+        case POP_TYPE_DYSGRAPHIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Dysgraphia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Dysgrafi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmDysgraphia);
+            break;
+            
+        case POP_TYPE_BIPOLAR:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Bipolar diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+			file.Write("<h2>Bipolär diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmBipolar);
+            break;
+            
+        case POP_TYPE_SCHIZOPHRENIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Schizophrenia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Schizofreni diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmSchizophrenia);
+            break;
+            
+        case POP_TYPE_SOCIAL_PHOBIA:
+
+#ifdef ENGLISH
+        	file.Write("<h2>Social phobia diagnosis correlations</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	        file.Write("<h2>Social fobi diagnos korrelationer</h2>\n");
+#endif
+            WriteDsmReport(file, DsmSocialPhobia);
+            break;
+    }            
+}
+
+/*##################  TQuiz::ExportBirthMonthHistogram ##########################
+*   Purpose....: Export histogram for score distribution for population       	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportBirthMonthHistogram(const char *filename)
+{
+    BirthMonth.ExportHistogram(filename);
 }
 
 /*##################  TQuiz::ExportHistogram ##########################

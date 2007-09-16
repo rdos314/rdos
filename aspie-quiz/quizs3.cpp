@@ -81,8 +81,8 @@ TQuizS3::TQuizS3(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	LoadReferers();
 	SetupControlGroups();
 	SortReferers();
-	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2);
+	LoadPopulations();
 	Calculate();
 }
 
@@ -345,40 +345,40 @@ void TQuizS3::SetupTexts()
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_NT_TALENT;
-  Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[138].MyGroup = GROUP_SENSORY;
+  Quiz[139].MyGroup = GROUP_PARANOID;
   Quiz[140].MyGroup = GROUP_ASPIE_COMM;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[142].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[143].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[144].MyGroup = GROUP_PARANOID;
   Quiz[145].MyGroup = GROUP_MIXED;
   Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_SENSORY;
   Quiz[148].MyGroup = GROUP_MIXED;
   Quiz[149].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[150].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_MIXED;
   Quiz[152].MyGroup = GROUP_NONVERBAL;
-  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_PARANOID;
   Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_NT_TALENT;
+  Quiz[156].MyGroup = GROUP_PARANOID;
   Quiz[157].MyGroup = GROUP_MIXED;
   Quiz[158].MyGroup = GROUP_ASPIE_NVC;
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_TALENT;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_NT_TALENT;
-  Quiz[163].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[161].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[162].MyGroup = GROUP_PARANOID;
+  Quiz[163].MyGroup = GROUP_SENSORY;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_PARANOID;
   Quiz[167].MyGroup = GROUP_ASPIE_NVC;
   Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[169].MyGroup = GROUP_ASPIE_NVC;
   Quiz[170].MyGroup = GROUP_NONVERBAL;
-  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_PARANOID;
   Quiz[172].MyGroup = GROUP_MIXED;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_MIXED;
@@ -387,27 +387,27 @@ void TQuizS3::SetupTexts()
   Quiz[177].MyGroup = GROUP_ASPIE_NVC;
   Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_PARANOID;
   Quiz[181].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[182].MyGroup = GROUP_SENSORY;
-  Quiz[183].MyGroup = GROUP_MIXED;
-  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_PARANOID;
+  Quiz[184].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[185].MyGroup = GROUP_ASPIE_NVC;
   Quiz[186].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[187].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_PARANOID;
+  Quiz[188].MyGroup = GROUP_PARANOID;
   Quiz[189].MyGroup = GROUP_NT_TALENT;
   Quiz[190].MyGroup = GROUP_SENSORY;
   Quiz[191].MyGroup = GROUP_SENSORY;
   Quiz[192].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[193].MyGroup = GROUP_NT_TALENT;
-  Quiz[194].MyGroup = GROUP_MIXED;
-  Quiz[195].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[196].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[193].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[194].MyGroup = GROUP_PARANOID;
+  Quiz[195].MyGroup = GROUP_PARANOID;
+  Quiz[196].MyGroup = GROUP_SENSORY;
   Quiz[197].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[198].MyGroup = GROUP_MIXED;
-  Quiz[199].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[200].MyGroup = GROUP_MIXED;
+  Quiz[198].MyGroup = GROUP_PARANOID;
+  Quiz[199].MyGroup = GROUP_PARANOID;
+  Quiz[200].MyGroup = GROUP_PARANOID;
   Quiz[201].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[202].MyGroup = GROUP_ASPIE_NVC;
   Quiz[203].MyGroup = GROUP_NONVERBAL;
@@ -415,8 +415,8 @@ void TQuizS3::SetupTexts()
   Quiz[205].MyGroup = GROUP_ASPIE_COMM;
   Quiz[206].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[207].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[208].MyGroup = GROUP_MIXED;
-  Quiz[209].MyGroup = GROUP_MIXED;
+  Quiz[208].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[209].MyGroup = GROUP_PARANOID;
 
   Quiz[210].MyGroup = GROUP_SENSORY;
   Quiz[211].MyGroup = GROUP_NT_TALENT;
@@ -424,7 +424,7 @@ void TQuizS3::SetupTexts()
   Quiz[213].MyGroup = GROUP_ASPIE_NVC;
   Quiz[214].MyGroup = GROUP_ASPIE_COMM;
   Quiz[215].MyGroup = GROUP_ASPIE_SOCIAL;
-  
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
@@ -989,15 +989,23 @@ void TQuizS3::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
+	int id;
 	TReferer *ref;
 	int aspie;
+	char score;
+	int IdArr[MAX_QUESTIONS];
 
 	for (i = 0; i < N; i++)
+	{
 		Quiz[i].NoAnswer = 0;
+		IdArr[i] = GetGlobalId(i);
+    }
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
+
 		Row.Quiz[210] = Row.Dyslexia + 1;
 		Row.Quiz[211] = Row.Dyscalculia + 1;
 		Row.Quiz[212] = Row.OCD + 1;
@@ -1009,7 +1017,26 @@ void TQuizS3::LoadPopulations()
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
-
+			else
+			{
+			    if (i < 210)
+			    {
+    			    score = Row.Quiz[i] - 1;
+	    		    id = IdArr[i];
+			    
+		    	    DsmAutism.Add(Row.Autism, id, score);
+			        DsmAs.Add(Row.Aspie, id, score);
+			        DsmAdd.Add(Row.ADHD, id, score);
+    			    DsmTs.Add(Row.TS, id, score);
+	    		    DsmDyslexia.Add(Row.Dyslexia, id, score);
+		    	    DsmDyscalculia.Add(Row.Dyscalculia, id, score);
+			        DsmOCD.Add(Row.OCD, id, score);
+    			    DsmODD.Add(Row.ODD, id, score);
+	    		    DsmBipolar.Add(Row.Bipolar, id, score);
+		    	    DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
+			    	DsmSocialPhobia.Add(Row.Social, id, score);
+			    }
+			}
 		}
 
 		aspie = FALSE;
@@ -1115,6 +1142,7 @@ void TQuizS3::LoadPopulations()
 			else
 				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
+		
 	}
 }
 
@@ -1679,7 +1707,7 @@ void TQuizS3::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

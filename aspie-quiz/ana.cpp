@@ -355,8 +355,6 @@ int main(int argc, char **argv)
 	 Quiz[8]->WriteHair("hair9.htm");
 	 Quiz[8]->WriteEye("eye9.htm");
 	 Quiz[8]->WriteABO("abo9.htm");
-	 Quiz[8]->WriteBirthMonth("birth9.htm");
-	 Quiz[8]->ExportBirthMonthHistogram("birth9.csv");
 	 Quiz[8]->WriteParkinson("park9.htm");
 	 Quiz[8]->WriteAlzheimer("alz9.htm");
 	 Quiz[8]->WriteCFTR("cftr9.htm");
@@ -411,6 +409,23 @@ int main(int argc, char **argv)
 	 Quiz[18]->ExportDiffHistogram("ocd.csv", POP_TYPE_OCD);
 	 Quiz[18]->ExportDiffHistogram("odd.csv", POP_TYPE_ODD);
 	 Quiz[18]->ExportDiffHistogram("dysp.csv", POP_TYPE_DYSPRAXIA);
+
+	 TQuiz::ExportBirthMonthHistogram("birth.csv");
+
+	 TQuiz::WriteDsmReport("autism.htm", POP_TYPE_AUTISM);
+	 TQuiz::WriteDsmReport("as.htm", POP_TYPE_AS);
+	 TQuiz::WriteDsmReport("add.htm", POP_TYPE_ADD);
+	 TQuiz::WriteDsmReport("ts.htm", POP_TYPE_TS);
+	 TQuiz::WriteDsmReport("dysp.htm", POP_TYPE_DYSPRAXIA);
+	 TQuiz::WriteDsmReport("dysl.htm", POP_TYPE_DYSLEXIA);
+	 TQuiz::WriteDsmReport("dysc.htm", POP_TYPE_DYSCALCULIA);
+	 TQuiz::WriteDsmReport("ocd.htm", POP_TYPE_OCD);
+	 TQuiz::WriteDsmReport("odd.htm", POP_TYPE_ODD);
+	 TQuiz::WriteDsmReport("pa.htm", POP_TYPE_PA);
+	 TQuiz::WriteDsmReport("dysg.htm", POP_TYPE_DYSGRAPHIA);
+	 TQuiz::WriteDsmReport("bip.htm", POP_TYPE_BIPOLAR);
+	 TQuiz::WriteDsmReport("schizo.htm", POP_TYPE_SCHIZOPHRENIA);
+	 TQuiz::WriteDsmReport("social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
 	 Quiz[18]->WritePhpWeighting("weights.php");

@@ -61,8 +61,8 @@ TQuizNd::TQuizNd(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
     LoadReferers();
     SetupControlGroups();
 	SortReferers();
-    LoadPopulations();
     SetupCross(QuizI, QuizII, QuizIII);
+    LoadPopulations();
     Calculate();
 }
 
@@ -977,9 +977,15 @@ void TQuizNd::LoadPopulations()
 	int i;
 	TReferer *ref;
 	int aspie;
+	int id;
+	char score;
+	int IdArr[MAX_QUESTIONS];
 
 	for (i = 0; i < N; i++)
+	{
 		Quiz[i].NoAnswer = 0;
+		IdArr[i] = GetGlobalId(i);
+    }
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
@@ -999,6 +1005,29 @@ void TQuizNd::LoadPopulations()
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
+		    else
+			{
+			    if (i < 200)
+			    {
+    			    score = Row.Quiz[i] - 1;
+	    		    id = IdArr[i];
+			    
+		    	    DsmAutism.Add(Row.Autism, id, score);
+    			    DsmAs.Add(Row.Aspie, id, score);
+	    		    DsmAdd.Add(Row.ADHD, id, score);
+		    	    DsmTs.Add(Row.TS, id, score);
+			        DsmHyperlexia.Add(Row.Hyperlexia, id, score);
+			        DsmDyspraxia.Add(Row.Dyspraxia, id, score);
+    			    DsmDyslexia.Add(Row.Dyslexia, id, score);
+	    		    DsmDyscalculia.Add(Row.Dyscalculia, id, score);
+		    	    DsmOCD.Add(Row.OCD, id, score);
+			        DsmODD.Add(Row.ODD, id, score);
+    			    DsmSynaesthesia.Add(Row.Synaesthesia, id, score);
+	    		    DsmPA.Add(Row.PA, id, score);
+		    	    DsmBipolar.Add(Row.Bipolar, id, score);
+			        DsmDysgraphia.Add(Row.Dysgraphia, id, score);
+			    }
+			}
 
 		}
 

@@ -44,8 +44,6 @@ public:
     virtual void WriteHair(const char *filename);
     virtual void WriteEye(const char *filename);
     virtual void WriteABO(const char *filename);
-    virtual void WriteBirthMonth(const char *filename);
-    virtual void ExportBirthMonthHistogram(const char *filename);
     virtual void WriteParkinson(const char *filename);
     virtual void WriteAlzheimer(const char *filename);
     virtual void WriteCFTR(const char *filename);

@@ -80,21 +80,6 @@ public:
 	int NtCount[4][7];
 };
 
-class TBirthMonth
-{
-public:
-	TBirthMonth();
-	void Add(TQuizRow *Row);
-	void WriteRow(TFile &file, int report, int index, const char *text);
-	void WriteEntry(TFile &file, int val, int count);
-	int GetFactor(int index);
-	void ExportHistogram(const char *filename);
-
-	static void WriteHeader(TFile &file);
-	int AsCount[4][15];
-	int NtCount[4][15];
-};
-
 class TDisease
 {
 public:
@@ -184,8 +169,8 @@ TQuiz9::TQuiz9(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII
 	LoadReferers();
     SetupControlGroups();
 	SortReferers();
-	LoadPopulations();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8);
+	LoadPopulations();
 	Calculate();
 }
 
@@ -869,13 +854,21 @@ void TQuiz9::LoadPopulations()
 	int i;
 	TReferer *ref;
 	int aspie;
+	int id;
+	char score;
+	int IdArr[MAX_QUESTIONS];
 
 	for (i = 0; i < N; i++)
+	{
 		Quiz[i].NoAnswer = 0;
+		IdArr[i] = GetGlobalId(i);
+    }
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
+	
 		switch (Row.Hair)
 		{
 			case 1:
@@ -940,7 +933,15 @@ void TQuiz9::LoadPopulations()
 		{
 			if (Row.Quiz[i] == 0)
 				Quiz[i].NoAnswer++;
-
+		    else
+			{
+			    score = Row.Quiz[i] - 1;
+			    id = IdArr[i];
+			    
+			    DsmAutism.Add(Row.Autism, id, score);
+			    DsmAs.Add(Row.Aspie, id, score);
+			    DsmAdd.Add(Row.ADHD, id, score);
+			}
 		}
 
 		aspie = FALSE;
@@ -2314,304 +2315,6 @@ void TABO::WriteRow(TFile &file, int report, int index, const char *text)
     file.Write("</tr>");
 }
 
-/*##################  TBirthMonth::TBirthMonth ##########################
-*   Purpose....: Initialize TBirthMonth                  			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-TBirthMonth::TBirthMonth()
-{
-    int i;
-    int j;
-
-    for (i = 0; i < 15; i++)
-    {
-        for (j = 0; j < 3; j++)
-        {
-			AsCount[j][i] = 0;
-            NtCount[j][i] = 0;
-        }
-    }
-}
-
-/*##################  TBirthMonth::Add ##########################
-*   Purpose....: Add an answer                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TBirthMonth::Add(TQuizRow *Row)
-{
-	int index;
-	int diff = Row->AsResult - Row->NtResult;
-
-    index = Row->BirthMonth - 1;
-
-	if (Row->Lang == 0)
-    {
-		if (diff > 0)
-		    AsCount[1][index]++;
-    	else
-	    	NtCount[1][index]++;
-	}
-
-    if (Row->Lang == 1)
-    {
-	    if (diff > 0)
-		    AsCount[2][index]++;
-    	else
-	    	NtCount[2][index]++;
-	}
-
-	if (diff > 0)
-		AsCount[0][index]++;
-	else
-		NtCount[0][index]++;
-}
-
-/*##################  TBirthMonth::WriteHeader ##########################
-*   Purpose....: Write header in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TBirthMonth::WriteHeader(TFile &file)
-{
-	file.Write("<tr style='height:24.75pt'>");
-
-	WriteCenteredFieldHeader(file, 25);
-	file.Write("Birth month");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("AS");
-	WriteFieldFooter(file);
-
-	WriteCenteredFieldHeader(file, 12);
-	file.Write("NT");
-	WriteFieldFooter(file);
-
-	file.Write("</tr>");
-}
-
-/*##################  TBirthMonth::WriteEntry ##########################
-*   Purpose....: Write entry in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TBirthMonth::WriteEntry(TFile &file, int val, int count)
-{
-    char str[80];
-    long double dev;
-    long double sd;
-    long double mean;
-    long double r;
-    long double rsum;
-	int ival;
-
-    WriteCenteredFieldHeader(file, 12);
-
-#ifdef CI
-
-    mean = (long double)val / (long double)count;
-
-	r = 1.0 - mean;
-    rsum = (long double)val * r * r;
-
-	r = -mean;
-    rsum += (long double)(count - val) * r * r;
-
-    if (count > 1 && val)
-    {
-		sd = sqrtl(rsum / ((long double)count - 1));
-
-		dev = 1.96 * sd / sqrtl(count);
-
-		r = mean - dev;
-		if (r < 0.0)
-			r = 0.0;
-
-		ival = round(1000.0 * r);
-
-		sprintf(str, "%d.%01d", ival / 10, ival % 10);
-		file.Write(str);
-
-		r = mean + dev;
-		if (r > 1.0)
-			r = 1.0;
-
-		ival = round(1000.0 * r);
-
-		sprintf(str, "-%d.%01d%", ival / 10, ival % 10);
-		file.Write(str);
-
-		ival = round(1000.0 * mean);
-		sprintf(str, " (%d.%01d%)", ival / 10, ival % 10);
-		file.Write(str);
-	}
-	else
-	    file.Write("---");
-	
-#else
-    ival = val * 100 / count;
-	sprintf(str, "%d%", ival);
-    file.Write(str);
-#endif
-
-	WriteFieldFooter(file);
-}
-
-/*##################  TBirthMonth::Write ##########################
-*   Purpose....: Write row in table                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TBirthMonth::WriteRow(TFile &file, int report, int index, const char *text)
-{
-    char str[80];
-	int sum;
-    int i;
-
-    file.Write("<tr style='height:24.75pt'>");
-	WriteCenteredFieldHeader(file, 25);
-	file.Write(text);
-	WriteFieldFooter(file);
-
-
-    sum = 0;
-	for (i = 0; i < 15; i++)
-		sum += AsCount[report][i];
-
-	if (sum)
-		WriteEntry(file, AsCount[report][index], sum);
-	else
-		file.Write("---");
-
-	sum = 0;
-	for (i = 0; i < 15; i++)
-		sum += NtCount[report][i];
-
-	if (sum)
-		WriteEntry(file, NtCount[report][index], sum);
-	else
-		file.Write("---");
-
-	file.Write("</tr>");
-}
-
-/*##################  TBirthMonth::GetFactor ##########################
-*   Purpose....: Get month factor                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-int TBirthMonth::GetFactor(int index)
-{
-	switch (index)
-	{
-		case 0:
-		case 2:
-		case 4:
-		case 6:
-		case 7:
-		case 9:
-		case 11:
-			return 3225;
-
-		case 1:
-			return  3539;
-
-		case 3:
-		case 5:
-		case 8:
-		case 10:
-			return 3333;
-	}
-}
-
-/*##################  TBirthMonth::ExportHistogram ##########################
-*   Purpose....: Export histogram                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TBirthMonth::ExportHistogram(const char *filename)
-{
-	char str[80];
-	int val;
-	int i;
-	int assum;
-	int ntsum;
-	TFile file(filename, 0);
-
-	assum = 0;
-	ntsum = 0;
-
-	for (i = 0; i < 12; i++)
-	{
-		assum += AsCount[0][i];
-		ntsum += NtCount[0][i];
-	}
-
-	for (i = 0; i < 12; i++)
-	{
-		sprintf(str, "%d\t", 100 * (i + 1));
-		file.Write(str);
-
-		val = AsCount[0][i] * GetFactor(i);
-		val = val / assum;
-		sprintf(str, "%d\t", val);
-		file.Write(str);
-
-		val = NtCount[0][i] * GetFactor(i);
-		val = val / ntsum;
-		sprintf(str, "%d\n", val);
-		file.Write(str);
-	}
-
-	for (i = 0; i < 12; i++)
-	{
-		sprintf(str, "%d\t", 100 * (i + 13));
-		file.Write(str);
-
-		val = AsCount[0][i] * GetFactor(i);
-		val = val / assum;
-		sprintf(str, "%d\t", val);
-		file.Write(str);
-
-		val = NtCount[0][i] * GetFactor(i);
-		val = val / ntsum;
-	    sprintf(str, "%d\n", val);
-	    file.Write(str);	        
-	}
-
-	for (i = 0; i < 12; i++)
-	{
-		sprintf(str, "%d\t", 100 * (i + 25));
-		file.Write(str);
-
-		val = AsCount[0][i] * GetFactor(i);
-		val = val / assum;
-		sprintf(str, "%d\t", val);
-		file.Write(str);
-
-		val = NtCount[0][i] * GetFactor(i);
-		val = val / ntsum;
-		sprintf(str, "%d\n", val);
-		file.Write(str);
-	}
-}
-
 /*##################  TDisease::TDisease ##########################
 *   Purpose....: Initialize TDisease                  			     	        #
 *   In params..: *                                                          #
@@ -3099,97 +2802,6 @@ void TQuiz9::WriteABO(const char *filename)
 
 	}
 
-}
-
-/*##################  TQuiz9::WriteBirthMonth ##########################
-*   Purpose....: Write birth month report                   			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz9::WriteBirthMonth(const char *filename)
-{
-	TQuizRow Row;
-	int i;
-	int ival;
-	char str[80];
-	TFile file(filename, 0);
-
-	TBirthMonth BirthMonth;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-		BirthMonth.Add(&Row);
-
-	for (i = 0; i < 3; i++)
-	{
-		file.Write("<h3>");
-
-		switch (i)
-		{
-			case 0:
-				file.Write("Birth month, whole population");
-				break;
-
-			case 1:
-				file.Write("Birth month, English speaking");
-				break;
-
-			case 2:
-				file.Write("Birth month, Swedish speaking");
-				break;
-        }
-
-		file.Write("</h3><br>");
-
-		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
-
-		TBirthMonth::WriteHeader(file);
-
-		BirthMonth.WriteRow(file, i, 0, "Jan");
-		BirthMonth.WriteRow(file, i, 1, "Feb");
-		BirthMonth.WriteRow(file, i, 2, "Mar");
-		BirthMonth.WriteRow(file, i, 3, "Apr");
-		BirthMonth.WriteRow(file, i, 4, "May");
-		BirthMonth.WriteRow(file, i, 5, "Jun");
-		BirthMonth.WriteRow(file, i, 6, "Jul");
-		BirthMonth.WriteRow(file, i, 7, "Aug");
-		BirthMonth.WriteRow(file, i, 8, "Sep");
-		BirthMonth.WriteRow(file, i, 9, "Oct");
-		BirthMonth.WriteRow(file, i, 10, "Nov");
-		BirthMonth.WriteRow(file, i, 11, "Dec");
-
-		file.Write("</table>");
-
-		file.Write("<br><br>");
-
-	}
-
-}
-
-
-/*##################  TQuiz9::ExportBirthMonthHistogram ##########################
-*   Purpose....: Export birth month histogram       			      	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuiz9::ExportBirthMonthHistogram(const char *filename)
-{
-	TQuizRow Row;
-	int i;
-	int ival;
-	char str[80];
-
-	TBirthMonth BirthMonth;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-		BirthMonth.Add(&Row);
-
-    BirthMonth.ExportHistogram(filename);
 }
 
 /*##################  TQuiz9::WriteParkinson ##########################
