@@ -522,6 +522,18 @@ int TQuiz::round(long double val)
 	return (int)(val + 0.5);
 }
 
+/*##################  TQuiz::IsSubQuiz ##########################
+*   Purpose....: Check if quiz is sub-quiz                	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::IsSubQuiz()
+{
+	return FALSE;
+}
+
 /*##################  TQuiz::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises  	       	        #
 *   In params..: *                                                          #
@@ -1729,7 +1741,7 @@ TQuiz *TQuiz::GetTopQuizCorr(int *Question)
 
     for (cross = 0; cross < MAX_CROSS; cross++)
     {
-        if (CrossQuiz[cross])
+        if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
         {
             for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
@@ -1821,7 +1833,7 @@ TQuiz *TQuiz::GetTopGroupCorr(int Group, int *Question)
 
     for (cross = MAX_CROSS - 1; cross >= 0; cross--)
     {
-        if (CrossQuiz[cross])
+        if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
         {
             for (q = 0; q < CrossQuiz[cross]->N; q++)
             {
@@ -7323,7 +7335,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
             
             for (cross = 0; cross < MAX_CROSS && Cross; cross++)
             {
-                if (CrossQuiz[cross])
+                if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
                 {
 					corrsum += CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
 					count += CrossQuiz[cross]->GroupCorr[g1][g2].Count;
@@ -8008,7 +8020,7 @@ void TQuiz::ExportHistogram(const char *filename, int PopType, int width, int Al
 	    for (cross = 0; cross < MAX_CROSS; cross++)
 	    {
 	        quiz = CrossQuiz[cross];
-	        if (quiz)
+	        if (quiz && !quiz->IsSubQuiz())
 	        {
                 pop = quiz->GetPop(PopType);
                 if (pop)
@@ -8108,7 +8120,7 @@ void TQuiz::ExportDiffHistogram(const char *filename, int PopType)
 	for (cross = 0; cross < MAX_CROSS; cross++)
 	{
 	    quiz = CrossQuiz[cross];
-	    if (quiz)
+	    if (quiz && !quiz->IsSubQuiz())
 	    {
             pop = quiz->GetPop(PopType);
             if (pop)
@@ -8164,7 +8176,7 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
             for (cross = 0; cross < MAX_CROSS && !found; cross++)
             {
                 quiz = CrossQuiz[cross];
-                if (quiz)
+                if (quiz && !quiz->IsSubQuiz())
                 {
                     for (q = 0; q < quiz->N && !found; q++)
                     {
@@ -9228,7 +9240,7 @@ void TQuiz::WriteWikiCorrelation(const char *wiki, const char *filename, int cou
         for (cross = MAX_CROSS - 1; cross >= 0 && !found; cross--)
         {
             quiz = CrossQuiz[cross];
-            if (quiz)
+            if (quiz && !quiz->IsSubQuiz())
             {
 			    for (q = 0; q < quiz->N && !found; q++)
                 {
@@ -9542,7 +9554,7 @@ void TQuiz::WriteWikiNoncorrelated(const char *wiki, const char *filename, int c
             for (cross = MAX_CROSS - 1; cross >= 0 && !found; cross--)
             {
                 quiz = CrossQuiz[cross];
-                if (quiz)
+                if (quiz && !quiz->IsSubQuiz())
                 {
 			        for (q = 0; q < quiz->N && !found; q++)
                     {

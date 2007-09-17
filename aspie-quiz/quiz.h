@@ -228,6 +228,8 @@ public:
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 
+    virtual int IsSubQuiz();
+
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
 	virtual void ExportExcelAspie(const char *filename, int PcaType);
