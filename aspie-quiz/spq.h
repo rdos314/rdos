@@ -20,25 +20,41 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# subquiz.h
-# Basic sub-quiz class
+# spq.h
+# Quiz SPQ-A class
 #
 ########################################################################*/
 
-#ifndef _SUBQUIZ_H
-#define _SUBQUIZ_H
+#ifndef _SPQ_H
+#define _SPQ_H
 
-#include "quiz.h"
+#include "subquiz.h"
+#include "file.h"
 
-class TSubQuiz : public TQuiz
+class TSpq : public TSubQuiz
 {
 public:
-    TSubQuiz(int questions);
-    ~TSubQuiz();
+    TSpq(const char *FileName);
+    ~TSpq();
 
-    virtual int IsSubQuiz();
-    virtual int GetPcaCount();
-    
+    virtual void ExportExcelCase(const char *filename, int PcaType);
+    virtual void ExportExcelGroups(const char *filename);
+    virtual void ImportMvsp(const char *filename, int PcaType);
+
+private:
+    virtual void GetReferer(const char *referer, TPopulation *pop);
+    virtual void WriteName(TFile &File);
+    virtual int GetCatCount(int Question);
+	virtual int GetQuizN();
+
+    void SetupTexts();
+    void InitReferers();
+    void LoadReferers();
+    void LoadPopulations();
+    void SetupControlGroups();
+
+    TFile FDataFile;
 };
 
 #endif
+

@@ -46,6 +46,7 @@
 #
 ##########################################################################*/
 TSubQuiz::TSubQuiz(int Questions)
+  : TQuiz(Questions)
 {
 }
 
@@ -78,4 +79,16 @@ TSubQuiz::~TSubQuiz()
 int TSubQuiz::IsSubQuiz()
 {
     return TRUE;
+}
+
+/*##################  TSubQuiz::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSubQuiz::GetPcaCount()
+{
+	return 1;
 }

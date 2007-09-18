@@ -1449,6 +1449,23 @@ void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupRe
 	    ref->GroupResult[grp] += GroupResult[grp];
 }
 
+/*##########################################################################
+#
+#   Name       : TQuiz::UpdateReferer
+#
+#   Purpose....: Update a referer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuiz::UpdateReferer(TReferer *ref, int Result)
+{
+	ref->Count++;
+	ref->AsResult += Result;
+}
+
 /*##################  TQuiz::DefineNt ##########################
 *   Purpose....: Define NT control group    					      	        #
 *   In params..: *                                                          #
@@ -3742,9 +3759,14 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
         switch (PcaNr)
         {
             case -1:
-                aw = quiz->Quiz[question].Pca[0];
-                nw = quiz->Quiz[question].Pca[1];
-                val = aw - nw;
+                if (quiz->IsSubQuiz())
+                    val = quiz->Quiz[question].Pca[0];
+                else
+                {
+                    aw = quiz->Quiz[question].Pca[0];
+                    nw = quiz->Quiz[question].Pca[1];
+                    val = aw - nw;
+                }
                 break;
                 
             case 0:
@@ -7175,8 +7197,13 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             		
 			quiz = QuizArr[q];
 
-			if (quiz->GetPcaCount() > pca)
+			if (quiz->IsSubQuiz() && pca == -1)
 				WritePcaPopCorr(File, quiz, PopType, pca);
+		    else
+            {
+    			if (quiz->GetPcaCount() > pca)
+	    			WritePcaPopCorr(File, quiz, PopType, pca);
+	    	}
 		}
 
 		WriteFieldFooter(File);

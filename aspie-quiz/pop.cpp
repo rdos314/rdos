@@ -138,6 +138,64 @@ void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS],
 
 /*##########################################################################
 #
+#   Name       : TPopulation::Add
+#
+#   Purpose....: Add an answer
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TPopulation::Add(int Score, char Arr[MAX_QUESTIONS])
+{
+	 int val;
+	 int i;
+	 TValArr *NewArr;
+
+	 if (ValArr == 0)
+	 {
+		  MaxSize = 8;
+		  ValArr = new TValArr[MaxSize];
+	 }
+
+	 if (ValueCount >= MaxSize)
+	 {
+		  MaxSize = 3 * MaxSize / 2;
+		  NewArr = new TValArr[MaxSize];
+
+		  for (i = 0; i < ValueCount; i++)
+				NewArr[i] = ValArr[i];
+
+		  delete ValArr;
+		  ValArr = NewArr;
+	 }
+
+	 ValArr[ValueCount].As = FALSE;
+	 ValArr[ValueCount].AsScore = Score;
+	 ValArr[ValueCount].NtScore = 0;
+	 
+	 for (i = 0; i < N; i++)
+	 {
+		val = Arr[i];
+		ValArr[ValueCount].Quiz[i] = val;
+		if (val)
+		{
+		    val--;
+			ChiArr[i][val]++;
+			Sum[i] += val;
+			Count[i]++;
+		}
+	 }
+
+	 for (i = 0; i < 8; i++)
+	    ValArr[ValueCount].GroupScore[i] = 0;
+
+	 ValueCount++;
+}
+
+/*##########################################################################
+#
 #   Name       : TPopulation::GetMean
 #
 #   Purpose....: Get mean
