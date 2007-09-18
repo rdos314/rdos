@@ -37,7 +37,6 @@ public:
     ~TSubQuiz();
 
     virtual int IsSubQuiz();
-    virtual int GetPcaCount();
     
 };
 

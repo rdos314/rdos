@@ -52,14 +52,29 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TSpq::TSpq(const char *FileName)
+TSpq::TSpq(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3)
   : TSubQuiz(74),
 	FDataFile(FileName)
 {
-    int i;
-
-    for (i = 0; i < N; i++)
-        Quiz[i].Pca[0] = 1;
+	DefineCross(0, QuizI);
+	DefineCross(1, QuizII);
+	DefineCross(2, QuizIII);
+	DefineCross(3, QuizNd);
+	DefineCross(4, Quiz5);
+	DefineCross(5, Quiz6);
+	DefineCross(6, Quiz7);
+	DefineCross(7, Quiz8);
+	DefineCross(8, Quiz9);
+	DefineCross(9, QuizR1);
+	DefineCross(10, QuizR2);
+	DefineCross(11, QuizR3);
+	DefineCross(12, QuizR4);
+	DefineCross(13, QuizR5);
+	DefineCross(14, QuizR6);
+	DefineCross(15, QuizR7);
+	DefineCross(16, QuizS1);
+	DefineCross(17, QuizS2);
+	DefineCross(18, QuizS3);
 
 	SetupTexts();
 	InitReferers();
@@ -84,6 +99,18 @@ TSpq::~TSpq()
 {
 }
 
+/*##################  TSpq::GetPcaCount ##########################
+*   Purpose....: Return number of available PCA axises  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TSpq::GetPcaCount()
+{
+	return 4;
+}
+
 /*##################  TSpq::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
@@ -93,7 +120,7 @@ TSpq::~TSpq()
 *##########################################################################*/
 int TSpq::GetCatCount(int Question)
 {
-    return 2;
+	return 2;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -337,92 +364,95 @@ void TSpq::LoadPopulations()
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-        for (i = 0; i < N; i++)
-            Spq.Quiz[i] = Row.Quiz[136 + i];
+	    if (Row.SpqResult)
+	    {
+            for (i = 0; i < N; i++)
+                Spq.Quiz[i] = Row.Quiz[136 + i];
 	
-		aspie = FALSE;
+    		aspie = FALSE;
+    
+	    	if (Row.Autism || Row.Aspie)
+		    	aspie = TRUE;
 
-		if (Row.Autism || Row.Aspie)
-			aspie = TRUE;
+    		All.Add(Row.SpqResult, Spq.Quiz);
+    
+	    	if (Row.Autism || Row.Aspie)
+		    {
+			    if (Row.AsResult < Row.NtResult)
+				    LowAs.Add(Row.SpqResult, Spq.Quiz);
 
-		All.Add(Row.SpqResult, Spq.Quiz);
+    			if (Row.Gender == 1)
+	    		{
+		    		if (Row.BirthYear > 1986)
+			    		YoungMale.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.Autism || Row.Aspie)
-		{
-			if (Row.AsResult < Row.NtResult)
-				LowAs.Add(Row.SpqResult, Spq.Quiz);
+    				AsMale.Add(Row.SpqResult, Spq.Quiz);
+	    		}
+		    	else
+			    {
+    				if (Row.BirthYear > 1986)
+	    				YoungFemale.Add(Row.SpqResult, Spq.Quiz);
+    
+	    			AsFemale.Add(Row.SpqResult, Spq.Quiz);
+		    	}
 
-			if (Row.Gender == 1)
-			{
-				if (Row.BirthYear > 1986)
-					YoungMale.Add(Row.SpqResult, Spq.Quiz);
+    			if (Row.Autism == 2)
+	    			Autism.Add(Row.SpqResult, Spq.Quiz);
 
-				AsMale.Add(Row.SpqResult, Spq.Quiz);
-			}
-			else
-			{
-				if (Row.BirthYear > 1986)
-					YoungFemale.Add(Row.SpqResult, Spq.Quiz);
+		    	if (Row.Aspie == 2)
+			    	As.Add(Row.SpqResult, Spq.Quiz);
 
-				AsFemale.Add(Row.SpqResult, Spq.Quiz);
-			}
+    			if (Row.Autism == 1 || Row.Aspie == 1)
+	    			AspieControl.Add(Row.SpqResult, Spq.Quiz);
+		    }
 
-			if (Row.Autism == 2)
-				Autism.Add(Row.SpqResult, Spq.Quiz);
+    		if (Row.ADHD >= 1)
+	    	{
+		    	Add.Add(Row.SpqResult, Spq.Quiz);
+    			if (Row.Gender == 1)
+	    			AddMale.Add(Row.SpqResult, Spq.Quiz);
+		    	else
+			    	AddFemale.Add(Row.SpqResult, Spq.Quiz);
+    		}
 
-			if (Row.Aspie == 2)
-				As.Add(Row.SpqResult, Spq.Quiz);
+	    	if (Row.TS >= 1)
+		    	Ts.Add(Row.SpqResult, Spq.Quiz);
+    
+	    	if (Row.Dyslexia >= 1)
+		    	Dyslexia.Add(Row.SpqResult, Spq.Quiz);
 
-			if (Row.Autism == 1 || Row.Aspie == 1)
-				AspieControl.Add(Row.SpqResult, Spq.Quiz);
-		}
+    		if (Row.Dyscalculia >= 1)
+	    		Dyscalculia.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.ADHD >= 1)
-		{
-			Add.Add(Row.SpqResult, Spq.Quiz);
-			if (Row.Gender == 1)
-				AddMale.Add(Row.SpqResult, Spq.Quiz);
-			else
-				AddFemale.Add(Row.SpqResult, Spq.Quiz);
-		}
+    		if (Row.OCD >= 1)
+	    		OCD.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.TS >= 1)
-			Ts.Add(Row.SpqResult, Spq.Quiz);
+    		if (Row.ODD >= 1)
+	    		ODD.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.Dyslexia >= 1)
-			Dyslexia.Add(Row.SpqResult, Spq.Quiz);
+    		if (Row.Bipolar >= 1)
+	    		Bipolar.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.Dyscalculia >= 1)
-			Dyscalculia.Add(Row.SpqResult, Spq.Quiz);
+    		if (Row.Schizophrenia >= 1)
+	    		Schizophrenia.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.OCD >= 1)
-			OCD.Add(Row.SpqResult, Spq.Quiz);
+    		if (Row.Social >= 1)
+	    		SocialPhobia.Add(Row.SpqResult, Spq.Quiz);
 
-		if (Row.ODD >= 1)
-			ODD.Add(Row.SpqResult, Spq.Quiz);
-
-		if (Row.Bipolar >= 1)
-			Bipolar.Add(Row.SpqResult, Spq.Quiz);
-
-		if (Row.Schizophrenia >= 1)
-			Schizophrenia.Add(Row.SpqResult, Spq.Quiz);
-
-		if (Row.Social >= 1)
-			SocialPhobia.Add(Row.SpqResult, Spq.Quiz);
-
-		if (strlen(Row.Referer) == 0)
-		{
-			Mix.Add(Row.SpqResult, Spq.Quiz);
-			if (Row.Gender == 1)
-				MixMale.Add(Row.SpqResult, Spq.Quiz);
-			else
-				MixFemale.Add(Row.SpqResult, Spq.Quiz);
-		}
-		else
-		{
-			ref = FindReferer(Row.Referer);
-			if (ref && ref->NT)
-				NtControl.Add(Row.SpqResult, Spq.Quiz);
+    		if (strlen(Row.Referer) == 0)
+	    	{
+		    	Mix.Add(Row.SpqResult, Spq.Quiz);
+    			if (Row.Gender == 1)
+	    			MixMale.Add(Row.SpqResult, Spq.Quiz);
+		    	else
+			    	MixFemale.Add(Row.SpqResult, Spq.Quiz);
+    		}
+	    	else
+		    {
+			    ref = FindReferer(Row.Referer);
+    			if (ref && ref->NT)
+	    			NtControl.Add(Row.SpqResult, Spq.Quiz);
+		    }
 		}
 	}
 }
@@ -578,7 +608,7 @@ void TSpq::ExportExcelCase(const char *filename, int PcaType)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (IsPca(&Row, PcaType))
+		if (IsPca(&Row, PcaType) && Row.SpqResult)
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -594,9 +624,6 @@ void TSpq::ExportExcelCase(const char *filename, int PcaType)
 	    			if (ival)
 						ival--;
     
-					if (ival > 2)
-						ival = 0;
-                    
 					sprintf(str, "\"%d\"", ival);
 					file.Write(str);
 					if (i != GetQuizN() - 1)
@@ -617,6 +644,83 @@ void TSpq::ExportExcelCase(const char *filename, int PcaType)
 *##########################################################################*/
 void TSpq::ExportExcelGroups(const char *filename)
 {
+	TQuizRow Row;
+	int i;
+	int ival;
+	int group;
+	int ok;
+	char str[80];
+	TFile file(filename, 0);
+	int GroupSum[GROUP_COUNT];
+	int GroupCount[GROUP_COUNT];
+
+	file.Write("\"\", ");
+	file.Write("\"\", ");
+
+	for (i = 0; i < GROUP_COUNT; i++)
+	{
+		file.Write("\"");
+
+		strncpy(str, Group[i].PosName, 35);
+		str[35] = 0;
+//        sprintf(str, "#%d", i + 1);
+		file.Write(str);
+
+		file.Write("\"");
+		if (i != GROUP_COUNT - 1)
+			file.Write(", ");
+	}
+	file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		for (i = 0; i < GROUP_COUNT; i++)
+		{
+			GroupSum[i] = 0;
+			GroupCount[i] = 0;
+		}
+
+		for (i = 0; i < GetQuizN(); i++)
+		{
+			ival = Row.Quiz[i];
+
+			if (ival)
+			{
+				if (Quiz[i].Reverse)
+					ival = 3 - ival;
+				else
+					ival--;
+				group = Quiz[i].MyGroup;
+				GroupSum[group] += ival;
+				GroupCount[group]++;
+			}
+		}
+
+		ok = TRUE;
+		for (i = 0; i < GROUP_COUNT; i++)
+			if (GroupCount[i] == 0)
+				ok = FALSE;
+
+		if (ok)
+		{
+			sprintf(str, "\%d\", ", Row.AsResult);
+			file.Write(str);
+
+				sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
+
+			for (i = 0; i < GROUP_COUNT; i++)
+			{
+				ival = round(100.0 * (long double)GroupSum[i] / (long double)GroupCount[i]);
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
+				if (i != GROUP_COUNT - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
+		}
+	}
 }
 
 /*##################  TSpq::ImportMvsp ##########################
@@ -628,4 +732,131 @@ void TSpq::ExportExcelGroups(const char *filename)
 *##########################################################################*/
 void TSpq::ImportMvsp(const char *filename, int PcaType)
 {
+	char buf[MAX_IN_ROW];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d1, d2, d3, d4;
+	int q;
+	int count;
+	TFile infile(filename);
+
+	while (size = infile.Read(buf, MAX_IN_ROW))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
+
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
+
+			if (sscanf(rowstr, "%d %Lf %Lf %Lf %Lf", &q, &d1, &d2, &d3, &d4) == 5)
+			{
+				if (PcaType != PCA_TYPE_MIXED)
+				{
+					if (PcaType == PCA_TYPE_ALL)
+						d2 = -d2;
+
+					if (PcaType == PCA_TYPE_ALL)
+						d3 = -d3;
+
+//					if (PcaType == PCA_TYPE_ALL)
+//						d4 = -d4;
+
+//					if (d1 > 0 && d2 > 0)
+//					{
+//						if (d1 > d2)
+//						{
+//							d1 = d1 - d2;
+//							d2 = 0;
+//						}
+//						else
+//						{
+//							d2 = d2 - d1;
+//							d1 = 0;
+//						}
+//					}
+				}
+
+				switch (PcaType)
+				{
+					case PCA_TYPE_ALL:
+						Quiz[q - 1].Pca[0] = d1;
+						Quiz[q - 1].Pca[1] = d2;
+						Quiz[q - 1].Pca[2] = d3;
+						Quiz[q - 1].Pca[3] = d4;
+						break;
+
+					case PCA_TYPE_MALE:
+						Quiz[q - 1].MalePca[0] = d1;
+						Quiz[q - 1].MalePca[1] = d2;
+						Quiz[q - 1].MalePca[2] = d3;
+						Quiz[q - 1].MalePca[3] = d4;
+						break;
+
+					case PCA_TYPE_FEMALE:
+						Quiz[q - 1].FemalePca[0] = d1;
+						Quiz[q - 1].FemalePca[1] = d2;
+						Quiz[q - 1].FemalePca[2] = d3;
+						Quiz[q - 1].FemalePca[3] = d4;
+						break;
+
+					case PCA_TYPE_YOUNG:
+						Quiz[q - 1].YoungPca[0] = d1;
+						Quiz[q - 1].YoungPca[1] = d2;
+						Quiz[q - 1].YoungPca[2] = d3;
+						Quiz[q - 1].YoungPca[3] = d4;
+						break;
+
+					case PCA_TYPE_OLD:
+						Quiz[q - 1].OldPca[0] = d1;
+						Quiz[q - 1].OldPca[1] = d2;
+						Quiz[q - 1].OldPca[2] = d3;
+						Quiz[q - 1].OldPca[3] = d4;
+						break;
+
+					case PCA_TYPE_AS:
+						Quiz[q - 1].AsPca[0] = d1;
+						Quiz[q - 1].AsPca[1] = d2;
+						Quiz[q - 1].AsPca[2] = d3;
+						Quiz[q - 1].AsPca[3] = d4;
+						break;
+
+					case PCA_TYPE_MIXED:
+						Quiz[q - 1].MixedPca[0] = d1;
+						Quiz[q - 1].MixedPca[1] = d2;
+						Quiz[q - 1].MixedPca[2] = d3;
+						Quiz[q - 1].MixedPca[3] = d4;
+						break;
+				}
+			}
+		}
+	}
 }

@@ -372,7 +372,7 @@ void TQuizS3::SetupTexts()
   Quiz[162].MyGroup = GROUP_PARANOID;
   Quiz[163].MyGroup = GROUP_SENSORY;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_SENSORY;
   Quiz[166].MyGroup = GROUP_PARANOID;
   Quiz[167].MyGroup = GROUP_ASPIE_NVC;
   Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;

@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	Quiz[16] = new TQuizS1("quizs1.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15]);
 	Quiz[17] = new TQuizS2("quizs2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16]);
 	Quiz[18] = new TQuizS3("quizs3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17]);
-	Quiz[19] = new TSpq("quizs3.bin");
+	Quiz[19] = new TSpq("quizs3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -265,6 +265,8 @@ int main(int argc, char **argv)
 	 Quiz[18]->ImportMvsp("alls3.txt", PCA_TYPE_ALL);
 	 Quiz[18]->ImportMvsp("males3.txt", PCA_TYPE_MALE);
 	 Quiz[18]->ImportMvsp("females3.txt", PCA_TYPE_FEMALE);
+
+	 Quiz[19]->ImportMvsp("spq.txt", PCA_TYPE_ALL);
 
 	 Quiz[19]->CalcGlobal();
 

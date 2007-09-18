@@ -34,8 +34,8 @@
 class TSpq : public TSubQuiz
 {
 public:
-    TSpq(const char *FileName);
-    ~TSpq();
+	TSpq(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3);
+	~TSpq();
 
     virtual void ExportExcelCase(const char *filename, int PcaType);
     virtual void ExportExcelGroups(const char *filename);
@@ -45,6 +45,7 @@ private:
     virtual void GetReferer(const char *referer, TPopulation *pop);
     virtual void WriteName(TFile &File);
     virtual int GetCatCount(int Question);
+    virtual int GetPcaCount();
 	virtual int GetQuizN();
 
     void SetupTexts();

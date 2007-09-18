@@ -3735,7 +3735,7 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
     long double nw;
     int question;
     long double mean[MAX_QUESTIONS];
-    long double pca[MAX_QUESTIONS];
+	long double pca[MAX_QUESTIONS];
     long double PopMean;
     long double PcaMean;
     long double PopSd;
@@ -3759,26 +3759,26 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
         switch (PcaNr)
         {
             case -1:
-                if (quiz->IsSubQuiz())
-                    val = quiz->Quiz[question].Pca[0];
-                else
-                {
-                    aw = quiz->Quiz[question].Pca[0];
-                    nw = quiz->Quiz[question].Pca[1];
-                    val = aw - nw;
-                }
-                break;
+				aw = quiz->Quiz[question].Pca[0];
+				nw = quiz->Quiz[question].Pca[1];
+				val = aw - nw;
+				break;
                 
             case 0:
                 aw = quiz->Quiz[question].Pca[0];
                 nw = quiz->Quiz[question].Pca[1];
 
-                if (aw > 0.0 && nw > 0.0)
+                if (!quiz->IsSubQuiz())
                 {
-                    if (aw > nw)
-                        val = aw - nw;
+                    if (aw > 0.0 && nw > 0.0)
+                    {
+                        if (aw > nw)
+                            val = aw - nw;
+                        else
+                            val = 0.0;
+                    }
                     else
-                        val = 0.0;
+                        val = aw;
                 }
                 else
                     val = aw;
@@ -3788,12 +3788,17 @@ void TQuiz::WritePcaPopCorr(TFile &File, TQuiz *quiz, int PopType, int PcaNr)
                 aw = quiz->Quiz[question].Pca[0];
                 nw = quiz->Quiz[question].Pca[1];
 
-                if (aw > 0.0 && nw > 0.0)
+                if (!quiz->IsSubQuiz())
                 {
-                    if (aw > nw)
-                        val = 0.0;
+                    if (aw > 0.0 && nw > 0.0)
+                    {
+                        if (aw > nw)
+                            val = 0.0;
+                        else
+                            val = nw - aw;
+                    }
                     else
-                        val = nw - aw;
+                        val = nw;
                 }
                 else
                     val = nw;
@@ -6344,10 +6349,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[18]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[18]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -7197,13 +7202,8 @@ void TQuiz::WritePcaCorrRow(TFile &File, const char *comment, int PopType)
             		
 			quiz = QuizArr[q];
 
-			if (quiz->IsSubQuiz() && pca == -1)
+			if (quiz->GetPcaCount() > pca)
 				WritePcaPopCorr(File, quiz, PopType, pca);
-		    else
-            {
-    			if (quiz->GetPcaCount() > pca)
-	    			WritePcaPopCorr(File, quiz, PopType, pca);
-	    	}
 		}
 
 		WriteFieldFooter(File);
