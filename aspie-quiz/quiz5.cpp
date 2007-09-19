@@ -1097,6 +1097,71 @@ void TQuiz5::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
+/*##################  TQuiz5::ExportExcelAspie ##########################
+*   Purpose....: Export cases as excel-data. Invert NT questions 	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz5::ExportExcelAspie(const char *filename)
+{
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+	TFile file(filename, 0);
+
+	file.Write("\"\", ");
+	file.Write("\"\", ");
+
+	for (i = 0; i < GetQuizN(); i++)
+	{
+		file.Write("\"");
+
+		sprintf(str, "#%d", i + 1);
+		file.Write(str);
+
+		file.Write("\"");
+		if (i != N - 1)
+			file.Write(", ");
+	}
+	file.Write("\n");
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		sprintf(str, "\"%d\", ", Row.AsResult);
+		file.Write(str);
+
+		sprintf(str, "\"%d\", ", Row.NtResult);
+		file.Write(str);
+
+		for (i = 0; i < GetQuizN(); i++)
+		{
+			ival = Row.Quiz[i];
+
+			if (ival)
+			{
+				if (Quiz[i].Reverse)
+					ival = 3 - ival;
+				else
+					ival--;
+			}
+
+
+			if (ival > 2)
+				ival = 0;
+
+			sprintf(str, "\"%d\"", ival);
+			file.Write(str);
+			if (i != GetQuizN() - 1)
+				file.Write(", ");
+		}
+		file.Write("\n");
+	}
+}
+
 /*##################  TQuiz5::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #

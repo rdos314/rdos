@@ -44,6 +44,7 @@
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
 #define MAX_PCA_AXIS            8
+#define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
 
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1
@@ -144,6 +145,8 @@ struct TQuizQuestion
     long double OldPca[MAX_PCA_AXIS];
 	long double AsPca[MAX_PCA_AXIS];
     long double MixedPca[MAX_PCA_AXIS];
+    long double AspiePca[MAX_ASPIE_PCA_AXIS];
+    long double GroupPca[MAX_GROUP_COUNT];
 };
 
 struct TGroupCorr
@@ -202,6 +205,7 @@ public:
     void WriteAveragePcaTable(const char *filename);
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
+    void WritePcaGroupCorr(const char *filename);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
@@ -231,8 +235,9 @@ public:
     virtual int IsSubQuiz();
 
 	virtual void ImportMvsp(const char *filename, int PcaType) = 0;
+	virtual void ImportMvspAspie(const char *filename);
 	virtual void ExportExcelCase(const char *filename, int PcaType) = 0;
-	virtual void ExportExcelAspie(const char *filename, int PcaType);
+	virtual void ExportExcelAspie(const char *filename) = 0;
 
 	virtual void WriteIQ(const char *filename);
 	virtual void WriteHair(const char *filename);
@@ -432,12 +437,14 @@ protected:
 
     TQuiz *CrossQuiz[MAX_CROSS];
 
+    int AspiePcaCount;
     int N;    
     int GroupValCount;
     TGroupValArr *GroupValArr;    
 	TGroup Group[MAX_GROUP_COUNT];
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
 	TQuizQuestion Quiz[MAX_QUESTIONS];
+	long double PcaGroupCorr[MAX_GROUP_COUNT][MAX_ASPIE_PCA_AXIS];
 
 };
 

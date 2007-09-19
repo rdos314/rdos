@@ -190,7 +190,25 @@ int main(int argc, char **argv)
 
 	 Quiz[19]->ExportExcelCase("spq.dat", PCA_TYPE_ALL);
 
-	 Quiz[17]->ExportExcelAspie("aspies2.dat", PCA_TYPE_ALL);
+	 Quiz[0]->ExportExcelAspie("aspie1.dat");
+	 Quiz[1]->ExportExcelAspie("aspie2.dat");
+	 Quiz[2]->ExportExcelAspie("aspie3.dat");
+	 Quiz[3]->ExportExcelAspie("aspie4.dat");
+	 Quiz[4]->ExportExcelAspie("aspie5.dat");
+	 Quiz[5]->ExportExcelAspie("aspie6.dat");
+	 Quiz[6]->ExportExcelAspie("aspie7.dat");
+	 Quiz[7]->ExportExcelAspie("aspie8.dat");
+	 Quiz[8]->ExportExcelAspie("aspie9.dat");
+	 Quiz[9]->ExportExcelAspie("aspier1.dat");
+	 Quiz[10]->ExportExcelAspie("aspier2.dat");
+	 Quiz[11]->ExportExcelAspie("aspier3.dat");
+	 Quiz[12]->ExportExcelAspie("aspier4.dat");
+	 Quiz[13]->ExportExcelAspie("aspier5.dat");
+	 Quiz[14]->ExportExcelAspie("aspier6.dat");
+	 Quiz[15]->ExportExcelAspie("aspier7.dat");
+	 Quiz[16]->ExportExcelAspie("aspies1.dat");
+	 Quiz[17]->ExportExcelAspie("aspies2.dat");
+	 Quiz[18]->ExportExcelAspie("aspies3.dat");
 
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
@@ -267,6 +285,26 @@ int main(int argc, char **argv)
 	 Quiz[18]->ImportMvsp("females3.txt", PCA_TYPE_FEMALE);
 
 	 Quiz[19]->ImportMvsp("spq.txt", PCA_TYPE_ALL);
+
+	 Quiz[0]->ImportMvspAspie("aspie1.txt");
+	 Quiz[1]->ImportMvspAspie("aspie2.txt");
+	 Quiz[2]->ImportMvspAspie("aspie3.txt");
+	 Quiz[3]->ImportMvspAspie("aspie4.txt");
+	 Quiz[4]->ImportMvspAspie("aspie5.txt");
+	 Quiz[5]->ImportMvspAspie("aspie6.txt");
+	 Quiz[6]->ImportMvspAspie("aspie7.txt");
+	 Quiz[7]->ImportMvspAspie("aspie8.txt");
+	 Quiz[8]->ImportMvspAspie("aspie9.txt");
+	 Quiz[9]->ImportMvspAspie("aspier1.txt");
+	 Quiz[10]->ImportMvspAspie("aspier2.txt");
+	 Quiz[11]->ImportMvspAspie("aspier3.txt");
+	 Quiz[12]->ImportMvspAspie("aspier4.txt");
+	 Quiz[13]->ImportMvspAspie("aspier5.txt");
+	 Quiz[14]->ImportMvspAspie("aspier6.txt");
+	 Quiz[15]->ImportMvspAspie("aspier7.txt");
+	 Quiz[16]->ImportMvspAspie("aspies1.txt");
+	 Quiz[17]->ImportMvspAspie("aspies2.txt");
+	 Quiz[18]->ImportMvspAspie("aspies3.txt");
 
 	 Quiz[19]->CalcGlobal();
 
@@ -371,6 +409,26 @@ int main(int argc, char **argv)
 
 	 Quiz[16]->WritePictureRating("imgrate1.htm");
 	 Quiz[17]->WritePictureRating("imgrate2.htm");
+
+	 Quiz[0]->WritePcaGroupCorr("pca1.htm");
+	 Quiz[1]->WritePcaGroupCorr("pca2.htm");
+	 Quiz[2]->WritePcaGroupCorr("pca3.htm");
+	 Quiz[3]->WritePcaGroupCorr("pca4.htm");
+	 Quiz[4]->WritePcaGroupCorr("pca5.htm");
+	 Quiz[5]->WritePcaGroupCorr("pca6.htm");
+	 Quiz[6]->WritePcaGroupCorr("pca7.htm");
+	 Quiz[7]->WritePcaGroupCorr("pca8.htm");
+	 Quiz[8]->WritePcaGroupCorr("pca9.htm");
+	 Quiz[9]->WritePcaGroupCorr("pcar1.htm");
+	 Quiz[10]->WritePcaGroupCorr("pcar2.htm");
+	 Quiz[11]->WritePcaGroupCorr("pcar3.htm");
+	 Quiz[12]->WritePcaGroupCorr("pcar4.htm");
+	 Quiz[13]->WritePcaGroupCorr("pcar5.htm");
+	 Quiz[14]->WritePcaGroupCorr("pcar6.htm");
+	 Quiz[15]->WritePcaGroupCorr("pcar7.htm");
+	 Quiz[16]->WritePcaGroupCorr("pcas1.htm");
+	 Quiz[17]->WritePcaGroupCorr("pcas2.htm");
+	 Quiz[18]->WritePcaGroupCorr("pcas3.htm");
 
 	 Quiz[18]->WriteSPQ("spq.htm");
 

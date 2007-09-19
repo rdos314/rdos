@@ -1398,7 +1398,7 @@ void TQuizS2::ExportExcelCase(const char *filename, int PcaType)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS2::ExportExcelAspie(const char *filename, int PcaType)
+void TQuizS2::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1411,59 +1411,48 @@ void TQuizS2::ExportExcelAspie(const char *filename, int PcaType)
 
 	for (i = 0; i < GetQuizN(); i++)
 	{
-		if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
-		{
-			file.Write("\"");
+		file.Write("\"");
 
-//  	      strncpy(str, Quiz[i].Text, 35);
-//      	  str[35] = 0;
-			sprintf(str, "#%d", i + 1);
-			file.Write(str);
+		sprintf(str, "#%d", i + 1);
+		file.Write(str);
 
-			file.Write("\"");
-			if (i != N - 1)
-				file.Write(", ");
-		}
+		file.Write("\"");
+		if (i != N - 1)
+			file.Write(", ");
 	}
 	file.Write("\n");
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (IsPca(&Row, PcaType))
+		sprintf(str, "\"%d\", ", Row.AsResult);
+		file.Write(str);
+
+		sprintf(str, "\"%d\", ", Row.NtResult);
+		file.Write(str);
+
+		for (i = 0; i < GetQuizN(); i++)
 		{
-			sprintf(str, "\"%d\", ", Row.AsResult);
-			file.Write(str);
+			ival = Row.Quiz[i];
 
-			sprintf(str, "\"%d\", ", Row.NtResult);
-			file.Write(str);
-
-			for (i = 0; i < GetQuizN(); i++)
+			if (ival)
 			{
-				if (PcaType != PCA_TYPE_MIXED || Quiz[i].MyGroup == GROUP_MIXED)
-				{
-    				ival = Row.Quiz[i];
-
-                    if (ival)
-                    {
-        				if (Quiz[i].Reverse)
-	        				ival = 3 - ival;
-		        		else
-			        		ival--;
-			        }
-
-    
-					if (ival > 2)
-						ival = 0;
-                    
-					sprintf(str, "\"%d\"", ival);
-					file.Write(str);
-					if (i != GetQuizN() - 1)
-						file.Write(", ");
-				}
+				if (Quiz[i].Reverse)
+					ival = 3 - ival;
+				else
+					ival--;
 			}
-			file.Write("\n");
+
+
+			if (ival > 2)
+				ival = 0;
+
+			sprintf(str, "\"%d\"", ival);
+			file.Write(str);
+			if (i != GetQuizN() - 1)
+				file.Write(", ");
 		}
+		file.Write("\n");
 	}
 }
 

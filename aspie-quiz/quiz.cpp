@@ -308,6 +308,8 @@ TQuiz::TQuiz(int Questions)
     int g;
     int g1, g2;
 
+    AspiePcaCount = 0;
+
     N = Questions;
 
     RefCount = 0;
@@ -354,6 +356,9 @@ TQuiz::TQuiz(int Questions)
 			Quiz[i].AsPca[g] = 0;
 			Quiz[i].MixedPca[g] = 0;
 		}
+
+        for (g = 0; g < MAX_ASPIE_PCA_AXIS; g++)
+            Quiz[i].AspiePca[g] = 0;
 	}
 
 	for (g1 = 0; g1 < MAX_GROUP_COUNT; g1++)
@@ -2706,15 +2711,83 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 	return 1000;
 }
 
-/*##################  TQuiz::ExportExcelAspie ##########################
-*   Purpose....: Export Aspie-justified questions to excel format    			     	        #
+/*##################  TQuiz::ImportMvspAspie ##########################
+*   Purpose....: Import Aspie-justified PCA-loadings from MVSP       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::ExportExcelAspie(const char *filename, int PcaType)
+void TQuiz::ImportMvspAspie(const char *filename)
 {
+	char buf[4096];
+	char formstr[512];
+	int size;
+	char *rowstr;
+	char *ptr;
+	long pos = 0;
+	int i;
+	long double d[MAX_ASPIE_PCA_AXIS];
+	int q;
+	int count;
+	TFile infile(filename);
+
+	strcpy(formstr, "%d");
+	for (i = 0; i < MAX_ASPIE_PCA_AXIS; i++)
+	{
+	    d[i] = 0;
+		strcat(formstr, " %Lf");
+    }
+
+	while (size = infile.Read(buf, 4096))
+	{
+		buf[size] = 0;
+		rowstr = strstr(buf, "#");
+		if (rowstr)
+		{
+			rowstr++;
+			ptr = strstr(rowstr, "\r");
+			if (ptr)
+				 *ptr = 0;
+			else
+				 rowstr = 0;
+		}
+
+		pos += strlen(buf) + 1;
+		infile.SetPos(pos);
+
+		if (rowstr)
+		{
+			for (i = 0; i < strlen(rowstr); i++)
+			{
+				switch (rowstr[i])
+				{
+					case ',':
+						rowstr[i] = '.';
+						break;
+
+					case 0x9:
+					case 0xd:
+						rowstr[i] = ' ';
+						break;
+				}
+			}
+
+			count = sscanf(rowstr, formstr, &q, 
+                        &d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7],
+                        &d[8], &d[9], &d[10], &d[11], &d[12], &d[13], &d[14], &d[15],
+                        &d[16], &d[17], &d[18], &d[19], &d[20], &d[21], &d[22], &d[23],
+						&d[24], &d[25], &d[26], &d[27], &d[28], &d[29], &d[30], &d[31]);
+
+			if (count)
+			{
+			    AspiePcaCount = count - 1;
+			    
+				for (i = 0; i < count - 1; i++)
+					Quiz[q - 1].AspiePca[i] = d[i];
+			}
+		}
+	}
 }
 
 /*##################  TQuiz::WriteIQ ##########################
@@ -9906,4 +9979,345 @@ void TQuiz::WikiToQuiz(const char *wikifile, const char *quizfile)
 		pos += strlen(buf) + 1;
 		fromfile.SetPos(pos);
 	}
+}
+
+/*##################  TQuiz::WritePcaGroupCorr ##########################
+*   Purpose....: Write Aspie-PCA - group correlation report                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WritePcaGroupCorr(const char *filename)
+{
+	int a;
+	int g;
+	int q;
+	char str[80];
+	int ival;
+	long double val;
+	TFile file(filename, 0);
+	int UseGender;
+	long double CorrArr[MAX_QUESTIONS];
+	long double LoadArr[MAX_QUESTIONS];
+	long double AxisMax[MAX_ASPIE_PCA_AXIS];
+	int count;
+	long double sum;
+	long double zx;
+	long double zy;
+	long double CorrMean;
+	long double LoadMean;
+	long double CorrSd;
+	long double LoadSd;
+
+	for (a = 0; a < AspiePcaCount; a++)
+	{
+	    AxisMax[a] = 0.0;
+	    
+		for (g = 0; g < GROUP_COUNT - 1; g++)
+		{
+			count = 0;
+
+			for (q = 0; q < GetQuizN(); q++)
+			{
+				count += Quiz[q].Group[g].Count;
+
+				if (Quiz[q].Group[g].Count > 1)
+					CorrArr[q] = Quiz[q].Group[g].Corr;
+				else
+					CorrArr[q] = 0;
+
+				LoadArr[q] = Quiz[q].AspiePca[a];
+			}
+
+			if (count > 1)
+			{
+				count = GetQuizN();
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+					sum += CorrArr[q];
+
+				CorrMean = sum / count;
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+					sum += LoadArr[q];
+
+				LoadMean = sum / count;
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+				{
+					val = CorrMean - CorrArr[q];
+					sum += val * val;
+				}
+
+				CorrSd = sqrtl(sum / (count - 1.0));
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+				{
+					val = LoadMean - LoadArr[q];
+					sum += val * val;
+				}
+
+				LoadSd = sqrtl(sum / (count - 1.0));
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+				{
+					zx = (CorrArr[q] - CorrMean) / CorrSd;
+					zy = (LoadArr[q] - LoadMean) / LoadSd;
+					sum += zx * zy;
+				}
+
+				val = sum / (count - 1.0);
+
+				if (val * val > AxisMax[a])
+				    AxisMax[a] = val * val;
+
+				PcaGroupCorr[g][a] = val;
+			}
+			else
+			    PcaGroupCorr[g][a] = 0;
+        }
+    }
+
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("#");
+	WriteFieldFooter(file);
+
+	for (a = 0; a < AspiePcaCount; a++)
+	{
+		if (AxisMax[a] > 0.02)
+		{
+		    WriteCenteredFieldHeader(file, 4);
+    		sprintf(str, "A:%d", a + 1);
+	    	file.Write(str);
+		    WriteFieldFooter(file);
+		}
+	}
+	file.Write("</tr>");
+
+	for (g = 0; g < GROUP_COUNT - 1; g++)
+	{
+		file.Write("<tr style='height:24.75pt'>");
+
+		WriteCenteredFieldHeader(file, 25);
+		file.Write(Group[g].PosName);
+		WriteFieldFooter(file);
+
+		for (a = 0; a < AspiePcaCount; a++)
+		{
+		    if (AxisMax[a] > 0.02)
+		    {
+    			WriteCenteredFieldHeader(file, 4);
+
+	    		val = PcaGroupCorr[g][a];
+
+                if (val * val > 0.01)
+                {
+                    if (val * val > AxisMax[a] / 4.0)
+                    	file.Write("<span style='color:#009999'>");
+                    
+#ifdef USE_PERCENT
+    				ival = round(100.0 * val * val);
+	    			sprintf(str, "%d%", ival);
+		    		file.Write(str);
+#else
+    				if (val <= 0.0)
+	    			{
+		    			file.Write("-");
+			    		val = -val;
+				    }
+
+    				ival = round(100 * val);
+	    			sprintf(str, ".%02d", ival);
+		    		file.Write(str);
+#endif
+                    if (val * val > AxisMax[a] / 4.0)
+                    	file.Write("</span>");
+                }
+                else
+                    file.Write("---");
+                
+                WriteFieldFooter(file);
+            }
+        }
+    	
+        file.Write("</tr>");
+    }
+
+	file.Write("</table>");
+
+    for (g = 0; g < GROUP_COUNT - 1; g++)
+    {
+        for (q = 0; q < GetQuizN(); q++)
+        {
+            val = 0;
+            
+            for (a = 0; a < AspiePcaCount; a++)
+                val += Quiz[q].AspiePca[a] * PcaGroupCorr[g][a];
+            
+            Quiz[q].GroupPca[g] = val;
+        }
+    }
+
+	for (a = 0; a < GROUP_COUNT - 1; a++)
+	{
+	    AxisMax[a] = 0.0;
+	    
+		for (g = 0; g < GROUP_COUNT - 1; g++)
+		{
+			count = 0;
+
+			for (q = 0; q < GetQuizN(); q++)
+			{
+				count += Quiz[q].Group[g].Count;
+
+				if (Quiz[q].Group[g].Count > 1)
+					CorrArr[q] = Quiz[q].Group[g].Corr;
+				else
+					CorrArr[q] = 0;
+
+				LoadArr[q] = Quiz[q].GroupPca[a];
+			}
+
+			if (count > 1)
+			{
+				count = GetQuizN();
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+					sum += CorrArr[q];
+
+				CorrMean = sum / count;
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+					sum += LoadArr[q];
+
+				LoadMean = sum / count;
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+				{
+					val = CorrMean - CorrArr[q];
+					sum += val * val;
+				}
+
+				CorrSd = sqrtl(sum / (count - 1.0));
+
+				sum = 0.0;
+				for (q = 0; q < count; q++)
+				{
+					val = LoadMean - LoadArr[q];
+					sum += val * val;
+				}
+
+				LoadSd = sqrtl(sum / (count - 1.0));
+
+				sum = 0.0;
+
+				if (CorrSd && LoadSd)
+				{
+    				for (q = 0; q < count; q++)
+	    			{
+		    			zx = (CorrArr[q] - CorrMean) / CorrSd;
+			    		zy = (LoadArr[q] - LoadMean) / LoadSd;
+				    	sum += zx * zy;
+				    }
+				}
+
+				val = sum / (count - 1.0);
+
+				if (val * val > AxisMax[a])
+				    AxisMax[a] = val * val;
+
+				PcaGroupCorr[g][a] = val;
+			}
+			else
+			    PcaGroupCorr[g][a] = 0;
+        }
+    }
+
+    file.Write("<br>");
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 25);
+	file.Write("#");
+	WriteFieldFooter(file);
+
+	for (a = 0; a < GROUP_COUNT - 1; a++)
+	{
+		if (AxisMax[a] > 0.02)
+		{
+		    WriteCenteredFieldHeader(file, 4);
+    		sprintf(str, "G:%d", a + 1);
+	    	file.Write(str);
+		    WriteFieldFooter(file);
+		}
+	}
+	file.Write("</tr>");
+
+	for (g = 0; g < GROUP_COUNT - 1; g++)
+	{
+		file.Write("<tr style='height:24.75pt'>");
+
+		WriteCenteredFieldHeader(file, 25);
+		file.Write(Group[g].PosName);
+		WriteFieldFooter(file);
+
+		for (a = 0; a < GROUP_COUNT - 1; a++)
+		{
+		    if (AxisMax[a] > 0.02)
+		    {
+    			WriteCenteredFieldHeader(file, 4);
+
+	    		val = PcaGroupCorr[g][a];
+
+                if (val * val > 0.01)
+                {
+                    if (val * val > AxisMax[a] / 4.0)
+                    	file.Write("<span style='color:#009999'>");
+                    
+#ifdef USE_PERCENT
+    				ival = round(100.0 * val * val);
+	    			sprintf(str, "%d%", ival);
+		    		file.Write(str);
+#else
+    				if (val <= 0.0)
+	    			{
+		    			file.Write("-");
+			    		val = -val;
+				    }
+
+    				ival = round(100 * val);
+	    			sprintf(str, ".%02d", ival);
+		    		file.Write(str);
+#endif
+                    if (val * val > AxisMax[a] / 4.0)
+                    	file.Write("</span>");
+                }
+                else
+                    file.Write("---");
+                
+                WriteFieldFooter(file);
+            }
+        }
+    	
+        file.Write("</tr>");
+    }
+
+	file.Write("</table>");
+
 }
