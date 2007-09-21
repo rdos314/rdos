@@ -10009,6 +10009,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 	long double LoadMean;
 	long double CorrSd;
 	long double LoadSd;
+	long double w;
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
@@ -10162,8 +10163,12 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
         {
             val = 0;
             
-            for (a = 0; a < AspiePcaCount; a++)
-                val += Quiz[q].AspiePca[a] * PcaGroupCorr[g][a];
+            for (a = 1; a < AspiePcaCount; a++)
+            {
+                w = PcaGroupCorr[g][a];
+                w = w * w / AxisMax[a]; 
+                val += Quiz[q].AspiePca[a] * PcaGroupCorr[g][a] * w; 
+            }
             
             Quiz[q].GroupPca[g] = val;
         }
