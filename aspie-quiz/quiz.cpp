@@ -10000,7 +10000,6 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 	int UseGender;
 	long double CorrArr[MAX_QUESTIONS];
 	long double LoadArr[MAX_QUESTIONS];
-	long double AxisMax[MAX_ASPIE_PCA_AXIS];
 	int count;
 	long double sum;
 	long double zx;
@@ -10013,7 +10012,69 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
-	    AxisMax[a] = 0.0;
+		for (g = 0; g < 2; g++)
+		{
+			count = 0;
+
+			for (q = 0; q < GetQuizN(); q++)
+			{
+			    if (Quiz[q].Reverse)
+    	    		LoadArr[q] = -Quiz[q].AspiePca[a];
+			    else
+    	    		LoadArr[q] = Quiz[q].AspiePca[a];
+
+                CorrArr[q] = Quiz[q].Pca[g];
+			}
+
+			count = GetQuizN();
+
+			sum = 0.0;
+			for (q = 0; q < count; q++)
+				sum += CorrArr[q];
+
+			CorrMean = sum / count;
+
+			sum = 0.0;
+			for (q = 0; q < count; q++)
+				sum += LoadArr[q];
+
+			LoadMean = sum / count;
+
+			sum = 0.0;
+			for (q = 0; q < count; q++)
+			{
+				val = CorrMean - CorrArr[q];
+				sum += val * val;
+			}
+
+			CorrSd = sqrtl(sum / (count - 1.0));
+
+			sum = 0.0;
+			for (q = 0; q < count; q++)
+			{
+				val = LoadMean - LoadArr[q];
+				sum += val * val;
+			}
+
+			LoadSd = sqrtl(sum / (count - 1.0));
+
+			sum = 0.0;
+			for (q = 0; q < count; q++)
+			{
+				zx = (CorrArr[q] - CorrMean) / CorrSd;
+				zy = (LoadArr[q] - LoadMean) / LoadSd;
+				sum += zx * zy;
+			}
+
+			val = sum / (count - 1.0);
+
+			Axis[a].PcaCorr[g] = val;
+        }
+    }
+
+	for (a = 0; a < AspiePcaCount; a++)
+	{
+	    Axis[a].MaxCorr = 0.0;
 	    
 		for (g = 0; g < GROUP_COUNT - 1; g++)
 		{
@@ -10028,7 +10089,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 				else
 					CorrArr[q] = 0;
 
-				LoadArr[q] = Quiz[q].AspiePca[a];
+    	    	LoadArr[q] = Quiz[q].AspiePca[a];
 			}
 
 			if (count > 1)
@@ -10075,13 +10136,13 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 				val = sum / (count - 1.0);
 
-				if (val * val > AxisMax[a])
-				    AxisMax[a] = val * val;
+				if (val * val > Axis[a].MaxCorr)
+				    Axis[a].MaxCorr = val * val;
 
-				PcaGroupCorr[g][a] = val;
+			    Axis[a].GroupCorr[g] = val;
 			}
 			else
-			    PcaGroupCorr[g][a] = 0;
+			    Axis[a].GroupCorr[g] = 0;
         }
     }
 
@@ -10096,7 +10157,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 	for (a = 0; a < AspiePcaCount; a++)
 	{
-		if (AxisMax[a] > 0.02)
+		if (Axis[a].MaxCorr > 0.02)
 		{
 		    WriteCenteredFieldHeader(file, 4);
     		sprintf(str, "A:%d", a + 1);
@@ -10105,6 +10166,54 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 		}
 	}
 	file.Write("</tr>");
+
+	for (g = 0; g < 2; g++)
+	{
+		file.Write("<tr style='height:24.75pt'>");
+
+		WriteCenteredFieldHeader(file, 25);
+		switch (g)
+		{
+		    case 0:
+        		file.Write("Aspie");
+        		break;
+
+            case 1:
+                file.Write("NT");
+                break;
+        }
+		WriteFieldFooter(file);
+
+		for (a = 0; a < AspiePcaCount; a++)
+		{
+		    if (Axis[a].MaxCorr > 0.02)
+		    {
+        		WriteCenteredFieldHeader(file, 4);
+
+	        	val = Axis[a].PcaCorr[g];
+                    
+#ifdef USE_PERCENT
+    	    	ival = round(100.0 * val * val);
+	    	    sprintf(str, "%d%", ival);
+    		    file.Write(str);
+#else
+        		if (val <= 0.0)
+	        	{
+		        	file.Write("-");
+			        val = -val;
+    			}
+
+        		ival = round(100 * val);
+	        	sprintf(str, ".%02d", ival);
+		        file.Write(str);
+#endif
+                
+                WriteFieldFooter(file);
+            }
+        }
+    	
+        file.Write("</tr>");
+    }
 
 	for (g = 0; g < GROUP_COUNT - 1; g++)
 	{
@@ -10116,15 +10225,15 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 		for (a = 0; a < AspiePcaCount; a++)
 		{
-		    if (AxisMax[a] > 0.02)
+		    if (Axis[a].MaxCorr > 0.02)
 		    {
     			WriteCenteredFieldHeader(file, 4);
 
-	    		val = PcaGroupCorr[g][a];
+	    		val = Axis[a].GroupCorr[g];
 
                 if (val * val > 0.01)
                 {
-                    if (val * val > AxisMax[a] / 4.0)
+                    if (val * val > Axis[a].MaxCorr / 4.0)
                     	file.Write("<span style='color:#009999'>");
                     
 #ifdef USE_PERCENT
@@ -10142,7 +10251,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 	    			sprintf(str, ".%02d", ival);
 		    		file.Write(str);
 #endif
-                    if (val * val > AxisMax[a] / 4.0)
+                    if (val * val > Axis[a].MaxCorr / 4.0)
                     	file.Write("</span>");
                 }
                 else
@@ -10154,8 +10263,10 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
     	
         file.Write("</tr>");
     }
-
+    
 	file.Write("</table>");
+
+    file.Write("<br>\n");
 
     for (g = 0; g < GROUP_COUNT - 1; g++)
     {
@@ -10165,9 +10276,9 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
             
             for (a = 1; a < AspiePcaCount; a++)
             {
-                w = PcaGroupCorr[g][a];
-                w = w * w / AxisMax[a]; 
-                val += Quiz[q].AspiePca[a] * PcaGroupCorr[g][a] * w; 
+//                w = Axis[a].GroupCorr[g];
+//                w = w * w / Axis[a].MaxCorr; 
+                val += Quiz[q].AspiePca[a] * Axis[a].GroupCorr[g]; 
             }
             
             Quiz[q].GroupPca[g] = val;
@@ -10176,7 +10287,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 	for (a = 0; a < GROUP_COUNT - 1; a++)
 	{
-	    AxisMax[a] = 0.0;
+	    Axis[a].MaxCorr = 0.0;
 	    
 		for (g = 0; g < GROUP_COUNT - 1; g++)
 		{
@@ -10191,7 +10302,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 				else
 					CorrArr[q] = 0;
 
-				LoadArr[q] = Quiz[q].GroupPca[a];
+    	    	LoadArr[q] = Quiz[q].GroupPca[a];
 			}
 
 			if (count > 1)
@@ -10242,13 +10353,13 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 				val = sum / (count - 1.0);
 
-				if (val * val > AxisMax[a])
-				    AxisMax[a] = val * val;
+				if (val * val > Axis[a].MaxCorr)
+				    Axis[a].MaxCorr = val * val;
 
-				PcaGroupCorr[g][a] = val;
+				Axis[a].GroupCorr[g] = val;
 			}
 			else
-			    PcaGroupCorr[g][a] = 0;
+			    Axis[a].GroupCorr[g] = 0;
         }
     }
 
@@ -10264,7 +10375,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 	for (a = 0; a < GROUP_COUNT - 1; a++)
 	{
-		if (AxisMax[a] > 0.02)
+		if (Axis[a].MaxCorr > 0.02)
 		{
 		    WriteCenteredFieldHeader(file, 4);
     		sprintf(str, "G:%d", a + 1);
@@ -10284,15 +10395,15 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 
 		for (a = 0; a < GROUP_COUNT - 1; a++)
 		{
-		    if (AxisMax[a] > 0.02)
+		    if (Axis[a].MaxCorr > 0.02)
 		    {
     			WriteCenteredFieldHeader(file, 4);
 
-	    		val = PcaGroupCorr[g][a];
+	    		val = Axis[a].GroupCorr[g];
 
                 if (val * val > 0.01)
                 {
-                    if (val * val > AxisMax[a] / 4.0)
+                    if (val * val > Axis[a].MaxCorr / 4.0)
                     	file.Write("<span style='color:#009999'>");
                     
 #ifdef USE_PERCENT
@@ -10310,7 +10421,7 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
 	    			sprintf(str, ".%02d", ival);
 		    		file.Write(str);
 #endif
-                    if (val * val > AxisMax[a] / 4.0)
+                    if (val * val > Axis[a].MaxCorr / 4.0)
                     	file.Write("</span>");
                 }
                 else

@@ -178,6 +178,13 @@ struct TGroup
 	int Questions;
 };
 
+struct TAxis
+{
+    long double MaxCorr;
+	long double PcaCorr[2];
+	long double GroupCorr[MAX_GROUP_COUNT];
+};
+
 class TQuiz
 {
 public:
@@ -443,8 +450,8 @@ protected:
     TGroupValArr *GroupValArr;    
 	TGroup Group[MAX_GROUP_COUNT];
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
+	TAxis Axis[MAX_ASPIE_PCA_AXIS];
 	TQuizQuestion Quiz[MAX_QUESTIONS];
-	long double PcaGroupCorr[MAX_GROUP_COUNT][MAX_ASPIE_PCA_AXIS];
 
 };
 

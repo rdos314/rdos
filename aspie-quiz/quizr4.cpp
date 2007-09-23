@@ -120,6 +120,18 @@ int TQuizR4::GetCatCount(int Question)
     	return 4;
 }
 
+/*##################  TQuizR4::GetQuizN ##########################
+*   Purpose....: Return number of questions in the quiz (not counting fictive or temporary questions)  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuizR4::GetQuizN()
+{
+	return 152;
+}
+
 /*##########################################################################
 #
 #   Name       : TQuizR4::WriteName
@@ -1323,7 +1335,7 @@ void TQuizR4::ExportExcelCase(const char *filename, int PcaType)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.AqResult && IsPca(&Row, PcaType))
+		if (IsPca(&Row, PcaType))
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -1564,7 +1576,7 @@ void TQuizR4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

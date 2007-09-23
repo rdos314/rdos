@@ -343,7 +343,7 @@ void TQuizS3::SetupTexts()
 
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_PARANOID;
   Quiz[137].MyGroup = GROUP_NT_TALENT;
   Quiz[138].MyGroup = GROUP_SENSORY;
   Quiz[139].MyGroup = GROUP_PARANOID;
@@ -364,7 +364,7 @@ void TQuizS3::SetupTexts()
   Quiz[154].MyGroup = GROUP_PARANOID;
   Quiz[155].MyGroup = GROUP_NT_TALENT;
   Quiz[156].MyGroup = GROUP_PARANOID;
-  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_PARANOID;
   Quiz[158].MyGroup = GROUP_ASPIE_NVC;
   Quiz[159].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[160].MyGroup = GROUP_NT_TALENT;
@@ -379,7 +379,7 @@ void TQuizS3::SetupTexts()
   Quiz[169].MyGroup = GROUP_ASPIE_NVC;
   Quiz[170].MyGroup = GROUP_NONVERBAL;
   Quiz[171].MyGroup = GROUP_PARANOID;
-  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_PARANOID;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[174].MyGroup = GROUP_MIXED;
   Quiz[175].MyGroup = GROUP_MIXED;
@@ -564,7 +564,7 @@ void TQuizS3::SetupTexts()
   Quiz[134].Text = "Have you been in love with more than one person at the same time?";
   Quiz[135].Text = "Have you have had long-lasting urges to take revenge?";
 
-  Quiz[136].Text = "SPQ - Do you sometimes feel that things you see on the TV or read in the newspaper have a special meaning for you?";          
+  Quiz[136].Text = "SPQ - Do you sometimes feel that things you see on the TV or read in the newspaper have a special meaning for you?";
   Quiz[137].Text = "SPQ - I sometimes avoid going to places where there will be many people because I will get anxious.";
   Quiz[138].Text = "SPQ - Have you had experiences with the supernatural?";
   Quiz[139].Text = "SPQ - Have you often mistaken objects or shadows for people, or noises for voices?";

@@ -49,6 +49,7 @@ private:
     virtual void WriteName(TFile &File);
     virtual int GetPcaCount();
     virtual int GetCatCount(int Question);
+	virtual int GetQuizN();
 
     void DefineQuiz();
     void SetupTexts();
