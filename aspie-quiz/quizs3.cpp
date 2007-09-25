@@ -903,7 +903,8 @@ void TQuizS3::InitReferers()
 	AddReferer("swedvdr.org", "swedvdr.org/forums.php?action=viewtopic");
 	AddReferer("filmtipset.se", "filmtipset.se/forum.cgi?id=1339244");
 	AddReferer("tvsushi.com", "forum.tvsushi.com/index.php?showtopic=52752");
-
+	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
+	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 }
 
 /*##################  TQuizS3::LoadReferers ##########################
@@ -1029,7 +1030,7 @@ void TQuizS3::LoadPopulations()
 			        DsmAdd.Add(Row.ADHD, id, score);
     			    DsmTs.Add(Row.TS, id, score);
 	    		    DsmDyslexia.Add(Row.Dyslexia, id, score);
-		    	    DsmDyscalculia.Add(Row.Dyscalculia, id, score);
+					DsmDyscalculia.Add(Row.Dyscalculia, id, score);
 			        DsmOCD.Add(Row.OCD, id, score);
     			    DsmODD.Add(Row.ODD, id, score);
 	    		    DsmBipolar.Add(Row.Bipolar, id, score);
@@ -1170,6 +1171,8 @@ void TQuizS3::SetupControlGroups()
 	DefineNt("swedvdr.org");
 	DefineNt("filmtipset.se");
 	DefineNt("tvsushi.com");
+	DefineNt("smogon.com");
+	DefineNt("mommyconnection.org");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
