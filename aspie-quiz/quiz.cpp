@@ -6667,10 +6667,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	CrossQuiz[18]->WriteName(file);
+	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	CrossQuiz[18]->WriteName(file);
+	WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
