@@ -163,140 +163,6 @@ void TQuizS4::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizS4::DefineQuiz()
 {
-    return;
-
-  DefineID(1, 509);
-  DefineID(2, 510);
-  DefineID(3, 514);
-  DefineID(4, 46);
-  DefineID(5, 207);
-  DefineID(6, 53);
-  DefineID(7, 61);
-  DefineID(8, 48);
-  DefineID(9, 503);
-  DefineID(10, 632);
-  DefineID(11, 26);
-  DefineID(12, 497);
-  DefineID(13, 100);
-  DefineID(14, 20);
-  DefineID(15, 23);
-  DefineID(16, 519);
-  DefineID(17, 695);
-  DefineID(18, 5);
-  DefineID(19, 599);
-  DefineID(20, 606);
-  DefineID(21, 3);
-  DefineID(22, 743);
-  DefineID(23, 50);
-  DefineID(24, 240);
-  DefineID(25, 616);
-  DefineID(26, 319);
-  DefineID(27, 613);
-  DefineID(28, 518);
-  DefineID(29, 316);
-  DefineID(30, 487);
-  DefineID(31, 767);
-  DefineID(32, 70);
-  DefineID(33, 66);
-  DefineID(34, 269);
-  DefineID(35, 601);
-  DefineID(36, 549);
-  DefineID(37, 507);
-  DefineID(38, 552);
-  DefineID(39, 73);
-  DefineID(40, 454);
-  DefineID(41, 769);
-  DefineID(42, 366);
-  DefineID(43, 702);
-  DefineID(44, 243);
-  DefineID(45, 97);
-  DefineID(46, 282);
-  DefineID(47, 378);
-  DefineID(48, 737);
-  DefineID(49, 32);
-  DefineID(50, 495);
-  DefineID(51, 149);
-  DefineID(52, 277);
-  DefineID(53, 25);
-  DefineID(54, 443);
-  DefineID(55, 151);
-  DefineID(56, 6);
-  DefineID(57, 249);
-  DefineID(58, 78);
-  DefineID(59, 37);
-  DefineID(60, 361);
-  DefineID(61, 551);
-  DefineID(62, 397);
-  DefineID(63, 39);
-  DefineID(64, 36);
-  DefineID(65, 433);
-  DefineID(66, 596);
-  DefineID(67, 31);
-  DefineID(68, 516);
-  DefineID(69, 126);
-  DefineID(70, 591);
-  DefineID(71, 718);
-  DefineID(72, 227);
-  DefineID(73, 174);
-  DefineID(74, 167);
-  DefineID(75, 93);
-  DefineID(76, 595);
-  DefineID(77, 448);
-  DefineID(78, 473);
-  DefineID(79, 123);
-  DefineID(80, 385);
-  DefineID(81, 739);
-  DefineID(82, 330);
-  DefineID(83, 362);
-  DefineID(84, 600);
-  DefineID(85, 781);
-  DefineID(86, 745);
-  DefineID(87, 115);
-  DefineID(88, 765);
-  DefineID(89, 547);
-  DefineID(90, 712);
-  DefineID(91, 731);
-  DefineID(92, 403);
-  DefineID(93, 359);
-  DefineID(94, 55);
-  DefineID(95, 575);
-  DefineID(96, 570);
-  DefineID(97, 582);
-  DefineID(98, 590);
-  DefineID(99, 402);
-  DefineID(100, 15);
-  DefineID(101, 589);
-  DefineID(102, 572);
-  DefineID(103, 17);
-  DefineID(104, 574);
-  DefineID(105, 401);
-  DefineID(106, 234);
-  DefineID(107, 536);
-  DefineID(108, 130);
-  DefineID(109, 83);
-  DefineID(110, 278);
-  DefineID(111, 86);
-  DefineID(112, 82);
-  DefineID(113, 226);
-  DefineID(114, 84);
-  DefineID(115, 85);
-  DefineID(116, 262);
-  DefineID(117, 707);
-  DefineID(118, 95);
-  DefineID(119, 54);
-  DefineID(120, 129);
-  DefineID(121, 128);
-  DefineID(122, 279);
-  DefineID(123, 113);
-  DefineID(124, 741);
-  DefineID(125, 708);
-  DefineID(126, 89);
-  DefineID(127, 726);
-  DefineID(128, 715);
-  DefineID(129, 545);
-  DefineID(130, 713);
-  DefineID(131, 250);
-  DefineID(132, 724);
 }
 
 /*##########################################################################
@@ -333,7 +199,7 @@ void TQuizS4::SetupTexts()
   Quiz[129].Reverse = TRUE;
   Quiz[130].Reverse = TRUE;
   Quiz[131].Reverse = TRUE;
-  
+
   Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[2].MyGroup = GROUP_NT_BIOLOGY;
@@ -467,7 +333,25 @@ void TQuizS4::SetupTexts()
   Quiz[130].MyGroup = GROUP_ASPIE_COMM;
   Quiz[131].MyGroup = GROUP_NONVERBAL;
 
-#ifdef ENGLISH
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
+
+#ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
   Quiz[2].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
@@ -600,6 +484,24 @@ void TQuizS4::SetupTexts()
   Quiz[129].Text = "Do people understand you?";
   Quiz[130].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[131].Text = "Do you find it easy to estimate the age of people?";
+
+  Quiz[132].Text = "Are you good at returning social courtesies and gestures?";
+  Quiz[133].Text = "Do people comment on your unusual mannerisms and habits?";
+  Quiz[134].Text = "Do people think you are aloof and distant?";
+  Quiz[135].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[136].Text = "Do you prefer to keep to yourself?";
+  Quiz[137].Text = "Do people see you as eccentric?";
+  Quiz[138].Text = "Do you suddenly feel distracted by distant sounds?";
+  Quiz[139].Text = "Do you mistake objects or shadows for people?";
+  Quiz[140].Text = "Do you mistake noises for voices?";
+  Quiz[141].Text = "Are your thoughts so strong that you can (almost) hear them?";
+  Quiz[142].Text = "Do you feel that people are watching you?";
+  Quiz[143].Text = "Do you wonder if people are talking about you behind your back?";
+  Quiz[144].Text = "Do you see a special meaning in the way things are arranged around you?";
+  Quiz[145].Text = "Do you hear a voice speaking your thoughts out loud?";
+  Quiz[146].Text = "Do you see things that other people don't see?";
+  Quiz[147].Text = "Do you dislike it when people stamp their foot in the floor?";
+  Quiz[148].Text = "When you read numbers or single letters, do particular colors or sounds come to mind?";
 #endif
 
 #ifdef SWEDISH
@@ -735,7 +637,25 @@ void TQuizS4::SetupTexts()
   Quiz[129].Text = "Förstår sig folk på dig?";
   Quiz[130].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
   Quiz[131].Text = "Har du lätt för att bedömma människors ålder?";
-#endif  
+
+  Quiz[132].Text = "Är du bra på att återgälda sociala gester och artigheter?";
+  Quiz[133].Text = "Brukar folk kommentera ditt ovanliga uppförande och dina ovanliga vanor?";
+  Quiz[134].Text = "Tycker folk att du är reserverad och distanserad?";
+  Quiz[135].Text = "Tycker du det är svårt att vara känslomässigt nära andra människor?";
+  Quiz[136].Text = "Föredrar du att vara för dig själv?";
+  Quiz[137].Text = "Tycker folk att du är excentrisk?";
+  Quiz[138].Text = "Blir du plötsligt distraherad av avlägsna ljud?";
+  Quiz[139].Text = "Misstar du saker eller skuggor för människor?";
+  Quiz[140].Text = "Misstar du ljud för röster?";
+  Quiz[141].Text = "Är dina tankar så starka att du (nästan) kan höra dem?";
+  Quiz[142].Text = "Tycker du att folk bevakar dig?";
+  Quiz[143].Text = "Undrar du om folk pratar om dig bakom din rygg?";
+  Quiz[144].Text = "Ser du en speciell mening i hur saker är arrangerade omkring dig?";
+  Quiz[145].Text = "Hör du en röst som högt talar ut dina tankar?";
+  Quiz[146].Text = "Ser du saker som andra inte ser?";
+  Quiz[147].Text = "Ogillar du när folk stampar med foten i golvet?";
+  Quiz[148].Text = "När du läser siffror eller enstaka bokstäver får du då associationer med speciella färger eller ljud?";
+#endif
 
 }
 
@@ -1094,7 +1014,7 @@ void TQuizS4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS3, 30, 30);
     DefineCross(QuizS3, 31, 31);
     DefineCross(QuizS3, 32, 32);
-    DefineCross(QuizS3, 33, 33);
+	DefineCross(QuizS3, 33, 33);
     DefineCross(QuizS3, 34, 34);
     DefineCross(QuizS3, 35, 35);
     DefineCross(QuizS3, 36, 36);
@@ -1129,7 +1049,7 @@ void TQuizS4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS3, 65, 67);
     DefineCross(QuizS3, 66, 68);
     DefineCross(QuizS3, 67, 69);
-    DefineCross(QuizS3, 68, 70);
+	DefineCross(QuizS3, 68, 70);
     DefineCross(QuizS3, 69, 71);
     DefineCross(QuizS3, 70, 72);
     DefineCross(QuizS3, 71, 73);
@@ -1164,7 +1084,7 @@ void TQuizS4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS3, 100, 101);
     DefineCross(QuizS3, 101, 102);
     DefineCross(QuizS3, 102, 100);
-    DefineCross(QuizS3, 103, 103);
+	DefineCross(QuizS3, 103, 103);
     DefineCross(QuizS3, 104, 104);
     DefineCross(QuizS3, 105, 105);
     DefineCross(QuizS3, 106, 107);
@@ -1193,6 +1113,24 @@ void TQuizS4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS3, 129, 132);
     DefineCross(QuizS3, 130, 130);
     DefineCross(QuizS3, 131, 131);
+
+	DefineGlobalId(132, 855);
+	DefineGlobalId(133, 856);
+	DefineGlobalId(134, 857);
+	DefineGlobalId(135, 858);
+	DefineGlobalId(136, 859);
+	DefineGlobalId(137, 860);
+	DefineGlobalId(138, 861);
+	DefineGlobalId(139, 862);
+	DefineGlobalId(140, 863);
+	DefineGlobalId(141, 864);
+	DefineGlobalId(142, 865);
+	DefineGlobalId(143, 866);
+	DefineGlobalId(144, 867);
+	DefineGlobalId(145, 868);
+	DefineGlobalId(146, 869);
+	DefineGlobalId(147, 870);
+	DefineGlobalId(148, 871);
 }
 
 /*##########################################################################

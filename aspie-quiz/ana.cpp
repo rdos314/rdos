@@ -111,7 +111,8 @@ int main(int argc, char **argv)
 //	 Quiz[15]->CheckCross();
 //	 Quiz[16]->CheckCross();
 //	 Quiz[17]->CheckCross();
-	 Quiz[18]->CheckCross();
+//	 Quiz[18]->CheckCross();
+	 Quiz[19]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -305,9 +306,9 @@ int main(int argc, char **argv)
 
 	 Quiz[18]->CalcGlobal();
 
-	 Quiz[19]->WritePhpQuestions("q.php");
-	 Quiz[19]->WriteSetupTexts("q.cpp");
-	 Quiz[19]->WriteSetupCross("c.cpp");
+//	 Quiz[19]->WritePhpQuestions("q.php");
+//	 Quiz[19]->WriteSetupTexts("q.cpp");
+//	 Quiz[19]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -489,8 +490,8 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[18]->WritePhpWeighting("weights.php");
-	 Quiz[18]->WritePhpGroupWeighting("group.php");
+	 Quiz[19]->WritePhpWeighting("weights.php");
+	 Quiz[19]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -504,7 +505,7 @@ int main(int argc, char **argv)
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-	 TQuiz::WikiToQuiz("wiki.txt", "s4.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "s4.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 }
