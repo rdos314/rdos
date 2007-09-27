@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizs3.cpp
-# Quiz stable release 3 class
+# quizs4.cpp
+# Quiz stable release 4 class
 #
 #######################################################################*/
 
@@ -53,7 +53,7 @@
 #
 ##########################################################################*/
 TQuizS4::TQuizS4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3)
-  : TQuiz(132),
+  : TQuiz(203),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -84,7 +84,7 @@ TQuizS4::TQuizS4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -123,7 +123,10 @@ int TQuizS4::GetPcaCount()
 *##########################################################################*/
 int TQuizS4::GetCatCount(int Question)
 {
-	return 3;
+    if (Question >= 149 && Question <= 196)
+        return 4;
+    else
+    	return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -333,25 +336,81 @@ void TQuizS4::SetupTexts()
   Quiz[130].MyGroup = GROUP_ASPIE_COMM;
   Quiz[131].MyGroup = GROUP_NONVERBAL;
 
-  Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
-  Quiz[134].MyGroup = GROUP_MIXED;
-  Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
-  Quiz[137].MyGroup = GROUP_MIXED;
-  Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
-  Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
-  Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_MIXED;
+  Quiz[133].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[135].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[138].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
 
-#ifdef ENGLISH
+  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[189].MyGroup = GROUP_MIXED;
+  Quiz[190].MyGroup = GROUP_MIXED;
+  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[192].MyGroup = GROUP_MIXED;
+  Quiz[193].MyGroup = GROUP_MIXED;
+  Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[195].MyGroup = GROUP_MIXED;
+  Quiz[196].MyGroup = GROUP_MIXED;
+
+  Quiz[197].MyGroup = GROUP_SENSORY;
+  Quiz[198].MyGroup = GROUP_NT_TALENT;
+  Quiz[199].MyGroup = GROUP_SENSORY;
+  Quiz[200].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[201].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[202].MyGroup = GROUP_ASPIE_SOCIAL;
+
+#ifdef ENGLISH
   Quiz[0].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
   Quiz[1].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
   Quiz[2].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
@@ -502,6 +561,63 @@ void TQuizS4::SetupTexts()
   Quiz[146].Text = "Do you see things that other people don't see?";
   Quiz[147].Text = "Do you dislike it when people stamp their foot in the floor?";
   Quiz[148].Text = "When you read numbers or single letters, do particular colors or sounds come to mind?";
+
+  Quiz[149].Text = "LSAS - Fear - Using a telephone in public";
+  Quiz[150].Text = "LSAS - Avoid - Using a telephone in public";
+  Quiz[151].Text = "LSAS - Fear - Participating in a small group activity";
+  Quiz[152].Text = "LSAS - Avoid - Participating in a small group activity";
+  Quiz[153].Text = "LSAS - Fear - Eating in public";
+  Quiz[154].Text = "LSAS - Avoid - Eating in public";
+  Quiz[155].Text = "LSAS - Fear - Drinking with others";
+  Quiz[156].Text = "LSAS - Avoid - Drinking with others";
+  Quiz[157].Text = "LSAS - Fear - Talking to someone in authority";
+  Quiz[158].Text = "LSAS - Avoid - Talking to someone in authority";
+  Quiz[159].Text = "LSAS - Fear - Acting, performing, or speaking in front of an audience";
+  Quiz[160].Text = "LSAS - Avoid - Acting, performing, or speaking in front of an audience";
+  Quiz[161].Text = "LSAS - Fear - Going to a party";
+  Quiz[162].Text = "LSAS - Avoid - Going to a party";
+  Quiz[163].Text = "LSAS - Fear - Working while being observed";
+  Quiz[164].Text = "LSAS - Avoid - Working while being observed";
+  Quiz[165].Text = "LSAS - Fear - Writing while being observed";
+  Quiz[166].Text = "LSAS - Avoid - Writing while being observed";
+  Quiz[167].Text = "LSAS - Fear - Calling someone you don't know very well";
+  Quiz[168].Text = "LSAS - Avoid - Calling someone you don't know very well";
+  Quiz[169].Text = "LSAS - Fear - Talking face to face with someone you don't know very well";
+  Quiz[170].Text = "LSAS - Avoid - Talking face to face with someone you don't know very well";
+  Quiz[171].Text = "LSAS - Fear - Meeting strangers";
+  Quiz[172].Text = "LSAS - Avoid - Meeting strangers";
+  Quiz[173].Text = "LSAS - Fear - Urinating in a public bathroom";
+  Quiz[174].Text = "LSAS - Avoid - Urinating in a public bathroom";
+  Quiz[175].Text = "LSAS - Fear - Entering a room when others are already seated";
+  Quiz[176].Text = "LSAS - Avoid - Entering a room when others are already seated";
+  Quiz[177].Text = "LSAS - Fear - Being the center of attention";
+  Quiz[178].Text = "LSAS - Avoid - Being the center of attention";
+  Quiz[179].Text = "LSAS - Fear - Speaking up at a meeting";
+  Quiz[180].Text = "LSAS - Avoid - Speaking up at a meeting";
+  Quiz[181].Text = "LSAS - Fear - Taking a test of your ability, skill, or knowledge";
+  Quiz[182].Text = "LSAS - Avoid - Taking a test of your ability, skill, or knowledge";
+  Quiz[183].Text = "LSAS - Fear - Expressing disagreement or disapproval to someone you don't know very well";
+  Quiz[184].Text = "LSAS - Avoid - Expressing disagreement or disapproval to someone you don't know very well";
+  Quiz[185].Text = "LSAS - Fear - Looking someone who you don't know very well straight in the eyes";
+  Quiz[186].Text = "LSAS - Avoid - Looking someone who you don't know very well straight in the eyes";
+  Quiz[187].Text = "LSAS - Fear - Giving a prepared oral talk to a group";
+  Quiz[188].Text = "LSAS - Avoid - Giving a prepared oral talk to a group";
+  Quiz[189].Text = "LSAS - Fear - Trying to make someone's acquaintance for the purpose of a romantic/sexual relationship";
+  Quiz[190].Text = "LSAS - Avoid - Trying to make someone's acquaintance for the purpose of a romantic/sexual relationship";
+  Quiz[191].Text = "LSAS - Fear - Returning goods to a store for a refund";
+  Quiz[192].Text = "LSAS - Avoid - Returning goods to a store for a refund";
+  Quiz[193].Text = "LSAS - Fear - Giving a party";
+  Quiz[194].Text = "LSAS - Avoid - Giving a party";
+  Quiz[195].Text = "LSAS - Fear - Resisting a high pressure sales person";
+  Quiz[196].Text = "LSAS - Avoid - Resisting a high pressure sales person";
+
+  Quiz[197].Text = "Dyslexia";
+  Quiz[198].Text = "Dyscalculia";
+  Quiz[199].Text = "OCD";
+  Quiz[200].Text = "ODD";
+  Quiz[201].Text = "Bipolar";
+  Quiz[202].Text = "Social phobia";
+
 #endif
 
 #ifdef SWEDISH
@@ -655,6 +771,63 @@ void TQuizS4::SetupTexts()
   Quiz[146].Text = "Ser du saker som andra inte ser?";
   Quiz[147].Text = "Ogillar du när folk stampar med foten i golvet?";
   Quiz[148].Text = "När du läser siffror eller enstaka bokstäver får du då associationer med speciella färger eller ljud?";
+
+  Quiz[149].Text = "LSAS - Fear - Using a telephone in public";
+  Quiz[150].Text = "LSAS - Avoid - Using a telephone in public";
+  Quiz[151].Text = "LSAS - Fear - Participating in a small group activity";
+  Quiz[152].Text = "LSAS - Avoid - Participating in a small group activity";
+  Quiz[153].Text = "LSAS - Fear - Eating in public";
+  Quiz[154].Text = "LSAS - Avoid - Eating in public";
+  Quiz[155].Text = "LSAS - Fear - Drinking with others";
+  Quiz[156].Text = "LSAS - Avoid - Drinking with others";
+  Quiz[157].Text = "LSAS - Fear - Talking to someone in authority";
+  Quiz[158].Text = "LSAS - Avoid - Talking to someone in authority";
+  Quiz[159].Text = "LSAS - Fear - Acting, performing, or speaking in front of an audience";
+  Quiz[160].Text = "LSAS - Avoid - Acting, performing, or speaking in front of an audience";
+  Quiz[161].Text = "LSAS - Fear - Going to a party";
+  Quiz[162].Text = "LSAS - Avoid - Going to a party";
+  Quiz[163].Text = "LSAS - Fear - Working while being observed";
+  Quiz[164].Text = "LSAS - Avoid - Working while being observed";
+  Quiz[165].Text = "LSAS - Fear - Writing while being observed";
+  Quiz[166].Text = "LSAS - Avoid - Writing while being observed";
+  Quiz[167].Text = "LSAS - Fear - Calling someone you don't know very well";
+  Quiz[168].Text = "LSAS - Avoid - Calling someone you don't know very well";
+  Quiz[169].Text = "LSAS - Fear - Talking face to face with someone you don't know very well";
+  Quiz[170].Text = "LSAS - Avoid - Talking face to face with someone you don't know very well";
+  Quiz[171].Text = "LSAS - Fear - Meeting strangers";
+  Quiz[172].Text = "LSAS - Avoid - Meeting strangers";
+  Quiz[173].Text = "LSAS - Fear - Urinating in a public bathroom";
+  Quiz[174].Text = "LSAS - Avoid - Urinating in a public bathroom";
+  Quiz[175].Text = "LSAS - Fear - Entering a room when others are already seated";
+  Quiz[176].Text = "LSAS - Avoid - Entering a room when others are already seated";
+  Quiz[177].Text = "LSAS - Fear - Being the center of attention";
+  Quiz[178].Text = "LSAS - Avoid - Being the center of attention";
+  Quiz[179].Text = "LSAS - Fear - Speaking up at a meeting";
+  Quiz[180].Text = "LSAS - Avoid - Speaking up at a meeting";
+  Quiz[181].Text = "LSAS - Fear - Taking a test of your ability, skill, or knowledge";
+  Quiz[182].Text = "LSAS - Avoid - Taking a test of your ability, skill, or knowledge";
+  Quiz[183].Text = "LSAS - Fear - Expressing disagreement or disapproval to someone you don't know very well";
+  Quiz[184].Text = "LSAS - Avoid - Expressing disagreement or disapproval to someone you don't know very well";
+  Quiz[185].Text = "LSAS - Fear - Looking someone who you don't know very well straight in the eyes";
+  Quiz[186].Text = "LSAS - Avoid - Looking someone who you don't know very well straight in the eyes";
+  Quiz[187].Text = "LSAS - Fear - Giving a prepared oral talk to a group";
+  Quiz[188].Text = "LSAS - Avoid - Giving a prepared oral talk to a group";
+  Quiz[189].Text = "LSAS - Fear - Trying to make someone's acquaintance for the purpose of a romantic/sexual relationship";
+  Quiz[190].Text = "LSAS - Avoid - Trying to make someone's acquaintance for the purpose of a romantic/sexual relationship";
+  Quiz[191].Text = "LSAS - Fear - Returning goods to a store for a refund";
+  Quiz[192].Text = "LSAS - Avoid - Returning goods to a store for a refund";
+  Quiz[193].Text = "LSAS - Fear - Giving a party";
+  Quiz[194].Text = "LSAS - Avoid - Giving a party";
+  Quiz[195].Text = "LSAS - Fear - Resisting a high pressure sales person";
+  Quiz[196].Text = "LSAS - Avoid - Resisting a high pressure sales person";
+
+  Quiz[197].Text = "Dyslexi";
+  Quiz[198].Text = "Dyskaluli";
+  Quiz[199].Text = "OCD";
+  Quiz[200].Text = "ODD";
+  Quiz[201].Text = "Bipolär";
+  Quiz[202].Text = "Social fobi";
+
 #endif
 
 }
@@ -793,12 +966,12 @@ void TQuizS4::LoadPopulations()
 	{
         BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-		Row.Quiz[210] = Row.Dyslexia + 1;
-		Row.Quiz[211] = Row.Dyscalculia + 1;
-		Row.Quiz[212] = Row.OCD + 1;
-		Row.Quiz[213] = Row.ODD + 1;
-		Row.Quiz[214] = Row.Bipolar + 1;
-		Row.Quiz[215] = Row.Social + 1;
+		Row.Quiz[197] = Row.Dyslexia + 1;
+		Row.Quiz[198] = Row.Dyscalculia + 1;
+		Row.Quiz[199] = Row.OCD + 1;
+		Row.Quiz[200] = Row.ODD + 1;
+		Row.Quiz[201] = Row.Bipolar + 1;
+		Row.Quiz[202] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -806,7 +979,7 @@ void TQuizS4::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-			    if (i < 210)
+			    if (i < 197)
 			    {
     			    score = Row.Quiz[i] - 1;
 	    		    id = IdArr[i];
@@ -1131,6 +1304,62 @@ void TQuizS4::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineGlobalId(146, 869);
 	DefineGlobalId(147, 870);
 	DefineGlobalId(148, 871);
+
+	DefineGlobalId(149, 872);
+	DefineGlobalId(150, 873);
+	DefineGlobalId(151, 874);
+	DefineGlobalId(152, 875);
+	DefineGlobalId(153, 876);
+	DefineGlobalId(154, 877);
+	DefineGlobalId(155, 878);
+	DefineGlobalId(156, 879);
+	DefineGlobalId(157, 880);
+	DefineGlobalId(158, 881);
+	DefineGlobalId(159, 882);
+	DefineGlobalId(160, 883);
+	DefineGlobalId(161, 884);
+	DefineGlobalId(162, 885);
+	DefineGlobalId(163, 886);
+	DefineGlobalId(164, 887);
+	DefineGlobalId(165, 888);
+	DefineGlobalId(166, 889);
+	DefineGlobalId(167, 890);
+	DefineGlobalId(168, 891);
+	DefineGlobalId(169, 892);
+	DefineGlobalId(170, 893);
+	DefineGlobalId(171, 894);
+	DefineGlobalId(172, 895);
+	DefineGlobalId(173, 896);
+	DefineGlobalId(174, 897);
+	DefineGlobalId(175, 898);
+	DefineGlobalId(176, 899);
+	DefineGlobalId(177, 900);
+	DefineGlobalId(178, 901);
+	DefineGlobalId(179, 902);
+	DefineGlobalId(180, 903);
+	DefineGlobalId(181, 904);
+	DefineGlobalId(182, 905);
+	DefineGlobalId(183, 906);
+	DefineGlobalId(184, 907);
+	DefineGlobalId(185, 908);
+	DefineGlobalId(186, 909);
+	DefineGlobalId(187, 910);
+	DefineGlobalId(188, 911);
+	DefineGlobalId(189, 912);
+	DefineGlobalId(190, 913);
+	DefineGlobalId(191, 914);
+	DefineGlobalId(192, 915);
+	DefineGlobalId(193, 916);
+	DefineGlobalId(194, 917);
+	DefineGlobalId(195, 918);
+	DefineGlobalId(196, 919);
+
+	DefineCross(QuizS3, 197, 210);
+	DefineCross(QuizS3, 198, 211);
+	DefineCross(QuizS3, 199, 212);
+	DefineCross(QuizS3, 200, 213);
+	DefineCross(QuizS3, 201, 214);
+	DefineCross(QuizS3, 202, 215);
 }
 
 /*##########################################################################
@@ -1571,3 +1800,126 @@ void TQuizS4::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  TQuizS4::WriteLSAS ##########################
+*   Purpose....: Write LSAS test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS4::WriteLSAS(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double LsasSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double LsasMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double LsasSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	LsasSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.LsasResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			LsasSum += Row.LsasResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	LsasMean = LsasSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	LsasSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.LsasResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.LsasResult - LsasMean;
+			LsasSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	LsasSd = sqrtl(LsasSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.LsasResult)
+        {
+            zx = ((long double)Row.LsasResult - LsasMean) / LsasSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean LSAS score: %5.1Lf, SD: %5.1Lf\r\n", LsasMean, LsasSd);
+
+	printf("LSAS - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("LSAS - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("LSAS - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}
+

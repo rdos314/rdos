@@ -36,7 +36,6 @@
 #define CI	1
 
 #define MAX_IN_ROW		4096
-#define MAX_USERS       500
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -2161,7 +2160,6 @@ void TQuizS2::WriteRetest(const char *filename)
 {
 	TQuizRow Row;
 	int userid;
-	int UserArr[MAX_USERS];
 	int i;
 	int index;
 	int birthyear;
@@ -2194,7 +2192,7 @@ void TQuizS2::WriteRetest(const char *filename)
 	TFile file(filename, 0);
 
 	for (userid = 0; userid < MAX_USERS; userid++)
-	    UserArr[userid] = 0;
+	    UserInfo[userid] = 0;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
@@ -2202,7 +2200,19 @@ void TQuizS2::WriteRetest(const char *filename)
 	    userid = Row.userid;
 
 	    if (userid)
-	        UserArr[userid]++;
+	    {
+	        if (UserInfo[userid] == 0)
+	        {
+	            UserInfo[userid] = new TUserInfo;
+	            UserInfo[userid]->Count = 1;
+       	        UserInfo[userid]->BirthYear = Row.BirthYear;
+       	        UserInfo[userid]->BirthMonth = Row.BirthMonth;
+            	UserInfo[userid]->AsSum = Row.AsResult;
+	            UserInfo[userid]->NtSum = Row.NtResult;
+	        }
+	        else
+	            UserInfo[userid]->Count++;
+	    }
 	}
 
     AsCount = 0;
@@ -2218,148 +2228,162 @@ void TQuizS2::WriteRetest(const char *filename)
 
 	for (userid = 1; userid < MAX_USERS; userid++)
 	{
-	
-	    if (UserArr[userid] > 1)
-	    {
-            for (i = 0; i < 20; i++)
-            {
-                AsArr[i] = 0;
-                NtArr[i] = 0;
+        if (UserInfo[userid])
+        {
+            if (UserInfo[userid]->Count > 1)
+       	    {
+                for (i = 0; i < 20; i++)
+                {
+                    AsArr[i] = 0;
+                    NtArr[i] = 0;
 
-                for (q = 0; q < 140; q++)
-                    QArr[q][i] = 0;
-            }
+                    for (q = 0; q < 140; q++)
+                        QArr[q][i] = 0;
+                }
 
-            index = 0;
+                index = 0;
 
-        	FDataFile.SetPos(0);
-        	while (FDataFile.Read(&Row, sizeof(Row)))
-        	{
-        	    if (Row.userid == userid)
-        	    {
-                    ok = FALSE;
+            	FDataFile.SetPos(0);
+        	    while (FDataFile.Read(&Row, sizeof(Row)))
+            	{
+            	    if (Row.userid == userid)
+            	    {
+                        ok = FALSE;
                     
-        	        if (index == 0)
-        	        {
-        	            birthyear = Row.BirthYear;
-        	            birthmonth = Row.BirthMonth;
-        	            gender = Row.Gender;
-        	            ok = TRUE;
-        	        }
-        	        else
-        	        {
-        	            if (    birthyear == Row.BirthYear &&
-        	                    birthmonth == Row.BirthMonth &&
-        	                    gender == Row.Gender)
-        	                ok = TRUE;        	                
-        	        }
+        	            if (index == 0)
+        	            {
+            	            birthyear = Row.BirthYear;
+            	            birthmonth = Row.BirthMonth;
+            	            gender = Row.Gender;
+        	                ok = TRUE;
+                   	    
+       	                    UserInfo[userid]->Count = 1;
+       	                    UserInfo[userid]->BirthYear = Row.BirthYear;
+       	                    UserInfo[userid]->BirthMonth = Row.BirthMonth;
+            	            UserInfo[userid]->AsSum = Row.AsResult;
+	                        UserInfo[userid]->NtSum = Row.NtResult;
+        	            }
+        	            else
+            	        {
+            	            if (    birthyear == Row.BirthYear &&
+            	                    birthmonth == Row.BirthMonth &&
+        	                        gender == Row.Gender)
+        	                {
+        	                    ok = TRUE;        	                
 
-        	        if (ok)
-        	        {
-            	        AsArr[index] = Row.AsResult;
-            	        NtArr[index] = Row.NtResult;
+                    	        UserInfo[userid]->Count++;
+                    	        UserInfo[userid]->AsSum += Row.AsResult;
+                    	        UserInfo[userid]->NtSum += Row.NtResult;
+        	                }
+        	            }
 
-            	        for (q = 0; q < 140; q++)
-            	            QArr[q][index] = Row.Quiz[q];
-            	        
-        	            index++;
+            	        if (ok)
+            	        {
+                	        AsArr[index] = Row.AsResult;
+                	        NtArr[index] = Row.NtResult;
+
+                	        for (q = 0; q < 140; q++)
+                	            QArr[q][index] = Row.Quiz[q];
+                	        
+        	                index++;
+        	            }
         	        }
         	    }
-			}
 
-			if (index > 1)
-			{
-				AsSum = 0;
-				NtSum = 0;
+    			if (index > 1)
+	    		{
+		    		AsSum = 0;
+			    	NtSum = 0;
 
-				for (i = 0; i < index; i++)
-				{
-					AsSum += AsArr[i];
-					NtSum += NtArr[i];
-				}
-
-				AsMean = AsSum / index;
-				NtMean = NtSum / index;
-
-				for (q = 0; q < 140; q++)
-				{
-				    count = 0;
-				    sum = 0;
-
-				    for (i = 0; i < index; i++)
-				    {
-				        if (QArr[q][i])
-				        {
-				            sum += QArr[q][i] - 1;
-				            count++;
-				        }
+    				for (i = 0; i < index; i++)
+	    			{
+		    			AsSum += AsArr[i];
+			    		NtSum += NtArr[i];
 				    }
 
-				    if (count)
-				        QMean[q] = sum / count;
-				    else
-				        QMean[q] = 0;
-				}
-				    
-				AsSum = 0;
-				NtSum = 0;
+    				AsMean = AsSum / index;
+	    			NtMean = NtSum / index;
+    
+	    			for (q = 0; q < 140; q++)
+		    		{
+			    	    count = 0;
+				        sum = 0;
 
-				for (i = 0; i < index; i++)
-				{
-					val = AsArr[i] - AsMean;
-					AsSum += val * val;
-
-					val = NtArr[i] - NtMean;
-					NtSum += val * val;
-				}
-
-				AsSd = sqrtl(AsSum / index);
-				NtSd = sqrtl(NtSum / index);
-
-				for (q = 0; q < 140; q++)
-				{
-				    count = 0;
-				    sum = 0;
-
-				    for (i = 0; i < index; i++)
-				    {
-				        if (QArr[q][i])
-				        {
-				            val = QArr[q][i] - 1 - QMean[q];
-				            sum += val * val;
-				            count++;
-				        }
-				    }
-
-                    if (count)
-                    {
-    				    QSd[q] = sqrtl(sum / count);
-
-    				    QTot[q] += QSd[q];
-    				    QCount[q]++;
+    				    for (i = 0; i < index; i++)
+	    			    {
+		    		        if (QArr[q][i])
+			    	        {
+				                sum += QArr[q][i] - 1;
+				                count++;
+				            }
+    				    }
+    
+	    			    if (count)
+		    		        QMean[q] = sum / count;
+			    	    else
+				            QMean[q] = 0;
     				}
-    				else
-    				    QSd[q] = 0;
-				}
+				    
+	    			AsSum = 0;
+		    		NtSum = 0;
 
-                AsTot += AsSd;
-                AsCount++;
+			    	for (i = 0; i < index; i++)
+				    {
+    					val = AsArr[i] - AsMean;
+	    				AsSum += val * val;
+    
+	    				val = NtArr[i] - NtMean;
+		    			NtSum += val * val;
+			    	}
 
-				NtTot += NtSd;
-				NtCount++;
+				    AsSd = sqrtl(AsSum / index);
+    				NtSd = sqrtl(NtSum / index);
 
-//				sprintf(str, "Userid: %d, AS: %5.1Lf (%5.1Lf), NT: %5.1Lf (%5.1Lf)<br>", userid, AsMean, AsSd, NtMean, NtSd);
-//				file.Write(str);
+	    			for (q = 0; q < 140; q++)
+		    		{
+			    	    count = 0;
+				        sum = 0;
+    
+	    			    for (i = 0; i < index; i++)
+		    		    {
+			    	        if (QArr[q][i])
+				            {
+				                val = QArr[q][i] - 1 - QMean[q];
+				                sum += val * val;
+				                count++;
+    				        }
+	    			    }
+
+                        if (count)
+                        {
+    			    	    QSd[q] = sqrtl(sum / count);
+    
+        				    QTot[q] += QSd[q];
+    	    			    QCount[q]++;
+    		    		}
+    			    	else
+    				        QSd[q] = 0;
+    				}
+
+                    AsTot += AsSd;
+                    AsCount++;
+
+			    	NtTot += NtSd;
+				    NtCount++;
+
+//  				sprintf(str, "Userid: %d, AS: %5.1Lf (%5.1Lf), NT: %5.1Lf (%5.1Lf)<br>", userid, AsMean, AsSd, NtMean, NtSd);
+//	    			file.Write(str);
 //
-//				for (q = 0; q < 140; q++)
-//				{
-//				    if (QSd[q] > 0.1)
-//				    {
-//    				    sprintf(str, "#%d, Sd = %5.1Lf<br>", q, QSd[q]);
-//    				    file.Write(str);
-//    				}
-//    		    }
-			}
+//		    		for (q = 0; q < 140; q++)
+//			    	{
+//				        if (QSd[q] > 0.1)
+//  				    {
+//        				    sprintf(str, "#%d, Sd = %5.1Lf<br>", q, QSd[q]);
+//    	    			    file.Write(str);
+//    		    		}
+//    		        }
+    			}
+    	    }
 		}
 	}
 
@@ -2428,5 +2452,4 @@ void TQuizS2::WriteRetest(const char *filename)
         sprintf(str, " <b>%3.2Lf</b><br>", sd);
     	file.Write(str);
     }
-
 }

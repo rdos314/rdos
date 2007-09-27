@@ -321,6 +321,9 @@ TQuiz::TQuiz(int Questions)
     for (i = 0; i < MAX_CROSS; i++)
         CrossQuiz[i] = 0;
 
+    for (i = 0; i < MAX_USERS; i++)
+        UserInfo[i] = 0;
+
     for (i = 0; i < N; i++)
     {
         Quiz[i].Text = "NO TEXT";
@@ -3186,6 +3189,17 @@ void TQuiz::WriteAQ(const char *FileName)
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
 void TQuiz::WriteSPQ(const char *FileName)
+{
+}
+
+/*##################  TQuiz::WriteLSAS ##########################
+*   Purpose....: Write LSAS test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteLSAS(const char *FileName)
 {
 }
 
@@ -6667,10 +6681,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[18]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[18]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -6680,6 +6694,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizs3.htm\">översikt</a> <a href=\"rels3.htm\">relaterade frågor</a> <a href=\"refs3.htm\">referenssajter</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs4.htm\">overview</a> <a href=\"rels4.htm\">related questions</a> <a href=\"refs4.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs4.htm\">översikt</a> <a href=\"rels4.htm\">relaterade frågor</a> <a href=\"refs4.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
@@ -10391,3 +10422,227 @@ void TQuiz::WritePcaGroupCorr(const char *filename)
     }
 	file.Write("</table>");
 }
+
+/*##################  TQuiz::WriteVersionRetest ##########################
+*   Purpose....: Write between version score differences                                       #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteVersionRetest(const char *filename)
+{
+	TFile file(filename, 0);
+	int id;
+	int cross;
+	TQuiz *quiz;
+	int count;
+	int UserCount;
+	int index;
+	TUserVersionInfo *UserArr;
+	TUserVersionQuiz *VerData;
+	int UseArr[MAX_USERS];
+	long double val;
+	long double AsSum;
+	long double NtSum;
+	long double AsMean;
+	long double NtMean;
+	long double AsSd;
+	long double NtSd;
+	long double AsTot;
+	long double NtTot;
+	int AsCount;
+	int NtCount;
+	int BirthYear;
+	int BirthMonth;
+    char str[80];
+
+    AsTot = 0;
+    NtTot = 0;
+    AsCount = 0;
+    NtCount = 0;
+    
+    UserCount = 0;
+    
+	for (id = 0; id < MAX_USERS; id++)
+	{
+	    count = 0;
+
+	    if (UserInfo[id])
+	    {
+	        count++;
+	        BirthYear = UserInfo[id]->BirthYear;
+	        BirthMonth = UserInfo[id]->BirthMonth;
+	    }
+
+        for (cross = 1; cross < MAX_CROSS; cross++)
+        {
+            quiz = CrossQuiz[cross];
+            if (quiz)
+            {
+                if (quiz->UserInfo[id])
+                {
+                    if (count)
+                    {
+                        if (    BirthYear == quiz->UserInfo[id]->BirthYear &&
+                                BirthMonth == quiz->UserInfo[id]->BirthMonth)
+                            count++;
+                    }
+                    else
+                    {
+            	        count = 1;
+            	        BirthYear = quiz->UserInfo[id]->BirthYear;
+	                    BirthMonth = quiz->UserInfo[id]->BirthMonth;
+	                }
+	            }                    
+            }
+        }
+
+        if (count > 1)
+        {
+            UseArr[id] = TRUE;
+            UserCount++;
+        }
+        else
+			UseArr[id] = FALSE;
+	}
+
+    index = 0;
+    UserArr = new TUserVersionInfo[UserCount];
+    
+	for (id = 0; id < MAX_USERS; id++)
+	{
+	    if (UseArr[id])
+	    {
+            for (cross = 0; cross < MAX_CROSS; cross++)
+                UserArr[index].ScoreArr[cross] = 0;
+        
+            if (UserInfo[id])
+            {
+                VerData = new TUserVersionQuiz;
+                UserArr[index].ScoreArr[0] = VerData;
+                VerData->Count = UserInfo[id]->Count;
+                VerData->AsScore = UserInfo[id]->AsSum / UserInfo[id]->Count;
+                VerData->NtScore = UserInfo[id]->NtSum / UserInfo[id]->Count;
+            }
+
+            for (cross = 1; cross < MAX_CROSS; cross++)
+            {
+                quiz = CrossQuiz[cross];
+                if (quiz)
+                {
+                    if (quiz->UserInfo[id])
+                    {
+                        VerData = new TUserVersionQuiz;
+                        UserArr[index].ScoreArr[cross] = VerData;
+                        VerData->Count = quiz->UserInfo[id]->Count;
+                        VerData->AsScore = quiz->UserInfo[id]->AsSum / quiz->UserInfo[id]->Count;
+                        VerData->NtScore = quiz->UserInfo[id]->NtSum / quiz->UserInfo[id]->Count;
+                    }
+                }
+            }
+            index++;
+        }
+	}
+
+    for (index = 0; index < UserCount; index++)
+    {
+   		AsSum = 0;
+	    NtSum = 0;
+	    count = 0;
+
+        for (cross = 0; cross < MAX_CROSS; cross++)
+        {
+            if (UserArr[index].ScoreArr[cross])
+            {
+                count++;
+                AsSum += UserArr[index].ScoreArr[cross]->AsScore;
+                NtSum += UserArr[index].ScoreArr[cross]->NtScore;
+            }
+        }
+
+        AsMean = AsSum / count;
+        NtMean = NtSum / count;
+    
+   		AsSum = 0;
+	    NtSum = 0;
+
+        for (cross = 0; cross < MAX_CROSS; cross++)
+        {
+            if (UserArr[index].ScoreArr[cross])
+            {
+                val = UserArr[index].ScoreArr[cross]->AsScore - AsMean;
+                AsSum += val * val;
+
+                val = UserArr[index].ScoreArr[cross]->NtScore - NtMean;
+                NtSum += val * val;
+            }
+        }
+
+		AsSd = sqrtl(AsSum / count);
+    	NtSd = sqrtl(NtSum / count);
+
+        AsTot += AsSd;
+        AsCount++;
+
+	    NtTot += NtSd;
+		NtCount++;
+    }
+        	        
+    for (index = 0; index < UserCount; index++)
+    {
+        for (cross = 0; cross < MAX_CROSS; cross++)
+        {
+            if (UserArr[index].ScoreArr[cross])
+                delete UserArr[index].ScoreArr[cross];
+        }
+    }
+    delete UserArr;        
+
+
+	AsSd = AsTot / AsCount;
+	NtSd = NtTot / NtCount;
+
+#ifdef ENGLISH
+	file.Write("<h2>Between versions retest result</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Omtestningsresultat mellan versioner</h2>\n");
+#endif
+
+#ifdef ENGLISH
+	sprintf(str, "Population size: %d", AsCount);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "Populationsstorlek: %d", AsCount);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+#ifdef ENGLISH
+	sprintf(str, "AS score standard deviation: %2.1Lf", AsSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "AS poäng standardavvikelse: %2.1Lf", AsSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br>");
+
+#ifdef ENGLISH
+	sprintf(str, "NT score standard deviation: %2.1Lf", NtSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "NT poäng standardavvikelse: %2.1Lf", NtSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+	
+}
+

@@ -46,6 +46,8 @@
 #define MAX_PCA_AXIS            8
 #define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
 
+#define MAX_USERS               1024
+
 #define PCA_TYPE_ALL            0
 #define PCA_TYPE_MALE           1
 #define PCA_TYPE_FEMALE         2
@@ -185,6 +187,27 @@ struct TAxis
 	long double GroupCorr[MAX_GROUP_COUNT];
 };
 
+struct TUserInfo
+{
+    int BirthYear;
+    int BirthMonth;
+    int Count;
+    int AsSum;
+    int NtSum;
+};
+
+struct TUserVersionQuiz
+{
+    int Count;
+    long double AsScore;
+    long double NtScore;
+};
+
+struct TUserVersionInfo
+{
+    TUserVersionQuiz *ScoreArr[MAX_CROSS];
+};
+
 class TQuiz
 {
 public:
@@ -213,6 +236,7 @@ public:
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
     void WritePcaGroupCorr(const char *filename);
+    void WriteVersionRetest(const char *filename);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);
     void MoveWiki(const char *fromwiki, const char *towiki, long double threshold);
@@ -260,6 +284,7 @@ public:
     virtual void WriteRetest(const char *filename);
     virtual void WriteAQ(const char *filename);
     virtual void WriteSPQ(const char *filename);
+    virtual void WriteLSAS(const char *filename);
     virtual void WritePictureRating(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);
@@ -452,6 +477,7 @@ protected:
 	TGroupCorr GroupCorr[MAX_GROUP_COUNT][MAX_GROUP_COUNT];
 	TAxis Axis[MAX_ASPIE_PCA_AXIS];
 	TQuizQuestion Quiz[MAX_QUESTIONS];
+    TUserInfo *UserInfo[MAX_USERS];
 
 };
 
