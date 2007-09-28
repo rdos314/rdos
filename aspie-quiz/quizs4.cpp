@@ -210,7 +210,7 @@ void TQuizS4::SetupTexts()
   Quiz[4].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[5].MyGroup = GROUP_SENSORY;
   Quiz[6].MyGroup = GROUP_SENSORY;
-  Quiz[7].MyGroup = GROUP_SENSORY;
+  Quiz[7].MyGroup = GROUP_MIXED;
   Quiz[8].MyGroup = GROUP_SENSORY;
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_ASPIE_TALENT;
@@ -336,21 +336,21 @@ void TQuizS4::SetupTexts()
   Quiz[130].MyGroup = GROUP_ASPIE_COMM;
   Quiz[131].MyGroup = GROUP_NONVERBAL;
 
-  Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_MIXED;
-  Quiz[134].MyGroup = GROUP_MIXED;
-  Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
-  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[132].MyGroup = GROUP_NONVERBAL;
+  Quiz[133].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[134].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[135].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[136].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_PARANOID;
   Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_PARANOID;
+  Quiz[142].MyGroup = GROUP_PARANOID;
+  Quiz[143].MyGroup = GROUP_PARANOID;
   Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_PARANOID;
+  Quiz[146].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
 
@@ -1721,7 +1721,7 @@ void TQuizS4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

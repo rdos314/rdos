@@ -193,7 +193,7 @@ void TQuizR6::SetupTexts()
   Quiz[10].MyGroup = GROUP_SENSORY;
   Quiz[11].MyGroup = GROUP_SENSORY;
   Quiz[12].MyGroup = GROUP_SENSORY;
-  Quiz[13].MyGroup = GROUP_SENSORY;
+  Quiz[13].MyGroup = GROUP_MIXED;
   Quiz[14].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[15].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[16].MyGroup = GROUP_ASPIE_TALENT;
@@ -271,7 +271,7 @@ void TQuizR6::SetupTexts()
   Quiz[88].MyGroup = GROUP_ASPIE_COMM;
   Quiz[89].MyGroup = GROUP_ASPIE_COMM;
   Quiz[90].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[91].MyGroup = GROUP_SENSORY;
+  Quiz[91].MyGroup = GROUP_MIXED;
   Quiz[92].MyGroup = GROUP_ASPIE_COMM;
   Quiz[93].MyGroup = GROUP_ASPIE_COMM;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;

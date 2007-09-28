@@ -57,6 +57,9 @@ static int GlobalGroupCorrCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
 static long double GlobalPcaSum[MAX_GLOBAL_QUESTIONS][4];
 static int GlobalPcaCount[MAX_GLOBAL_QUESTIONS][4];
 
+static long double GlobalAxisSum[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
+static int GlobalAxisCount[MAX_GLOBAL_QUESTIONS][MAX_GROUP_COUNT];
+
 TDsmPopulation TQuiz::DsmAutism;
 TDsmPopulation TQuiz::DsmAs;
 TDsmPopulation TQuiz::DsmAdd;
@@ -2368,6 +2371,7 @@ void TQuiz::CalcGlobal()
     int i;
 	int j;
 	int k;
+	int a;
     TQuiz *quiz;
   	TQuiz *TopQuiz;
 	int TopQuestion;
@@ -2423,6 +2427,12 @@ void TQuiz::CalcGlobal()
         {
             GlobalPcaSum[i][j] = 0.0;
             GlobalPcaCount[i][j] = 0;
+        }
+
+        for (j = 0; j < MAX_GROUP_COUNT; j++)
+        {
+            GlobalAxisSum[i][j] = 0.0;
+            GlobalAxisCount[i][j] = 0;
         }
 
 	}
@@ -2507,8 +2517,14 @@ void TQuiz::CalcGlobal()
                     if (quiz->GetPcaCount() > j)
                     {
 						GlobalPcaSum[GlobalId][j] += quiz->Quiz[q].Pca[j] * w;
-						 GlobalPcaCount[GlobalId][j] += w;
+						GlobalPcaCount[GlobalId][j] += w;
                     }
+                }
+
+                for (a = 0; a < GROUP_COUNT - 1; a++)
+                {
+                    GlobalAxisSum[GlobalId][a] += quiz->Quiz[q].GroupPca[a] * w;
+                    GlobalAxisCount[GlobalId][a] += w;
                 }
 
                 if (quiz->Quiz[q].CrossQuiz)
@@ -6299,8 +6315,9 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-3</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
+	file.Write("<a href=\"vervar.htm\">Score stability between versions</a><br>\n");
 
-    file.Write("<br>");
+	file.Write("<br>");
 	file.Write("<a href=\"autism.htm\">Autism diagnosis correlations</a><br>\n");
 	file.Write("<a href=\"as.htm\">AS/HFA/PDD diagnosis correlations</a><br>\n");
 	file.Write("<a href=\"add.htm\">ADD/ADHD diagnosis correlations</a><br>\n");
@@ -6328,6 +6345,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
 	file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
+	file.Write("<a href=\"vervar.htm\">Poängstabilitet mellan versioner</a><br>\n");
 
 	file.Write("<br>");
 	file.Write("<a href=\"autism.htm\">Autism diagnos korrelationer</a><br>\n");
@@ -6688,12 +6706,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs3.htm\">overview</a> <a href=\"rels3.htm\">related questions</a> <a href=\"refs3.htm\">referer sites</a> <a href=\"spq.htm\">SPQ-A test</a>");
+	file.Write(" <a href=\"quizs3.htm\">overview</a> <a href=\"rels3.htm\">related questions</a> <a href=\"refs3.htm\">referer sites</a> <a href=\"retests3.htm\">score stability</a> <a href=\"spq.htm\">SPQ-A test</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs3.htm\">översikt</a> <a href=\"rels3.htm\">relaterade frågor</a> <a href=\"refs3.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs3.htm\">översikt</a> <a href=\"rels3.htm\">relaterade frågor</a> <a href=\"refs3.htm\">referenssajter</a> <a href=\"retests3.htm\">poäng stabilitet</a>");
 	 file.Write("<br>");
 #endif
 
@@ -10646,3 +10664,378 @@ void TQuiz::WriteVersionRetest(const char *filename)
 	
 }
 
+/*##################  TQuiz::WriteAxisLoadTable ##########################
+*   Purpose....: Write Axis loading table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAxisLoadTable(const char *filename)
+{
+	int j;
+	int g;
+	int grp;
+	TQuiz *quiz;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+	int q;
+    int a;
+	char str[80];
+	long double NormCorr[MAX_CROSS];
+	int cross;
+	int ival;
+	int count;
+	long double val;
+	TFile file(filename, 0);
+
+	ClearUsed();
+
+#ifdef ENGLISH
+    file.Write("<h2>Axis-based group load factors</h2>\n");
+    file.Write("<span style='color:#990099'>");
+    file.Write("Reversed score questions are showed in red color");
+    file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Axel-baserade grupp loading faktorer</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+
+	file.Write("<span style='color:#009999'>");
+	 file.Write("Hög korrelation visas i ljusblått");
+	 file.Write("</span><br>");
+#endif
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+    	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+        
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+		WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
+        for (a = 0; a < GROUP_COUNT - 1; a++)
+        {
+            WriteCenteredFieldHeader(file, 3);
+            sprintf(str, "G:%d", a + 1);
+	    	file.Write(str);
+            WriteFieldFooter(file);
+        }
+
+		file.Write("</tr>");
+
+    	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+
+	    while (TopQuiz)
+    	{
+			file.Write("<tr style='height:24.75pt'>");
+
+    		WriteCenteredFieldHeader(file, 3);
+	    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    while (quiz)
+    		{
+		    	quiz->WriteName(file);
+    			sprintf(str, ":%d", q + 1);
+	    		file.Write(str);
+		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+		    	if (quiz)
+    	    		file.Write("<br>");
+		    }
+		    WriteFieldFooter(file);
+
+            WriteCenteredFieldHeader(file, 26);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("<span style='color:#990099'>");
+			file.Write(TopQuiz->Quiz[TopQuestion].Text);
+			if (TopQuiz->Quiz[TopQuestion].Reverse)
+				file.Write("</span>");
+		    WriteFieldFooter(file);
+					
+            cross = 0;
+			TopQuiz->ClearUsed(TopQuestion);
+            WriteCenteredFieldHeader(file, 6);
+            quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {
+                NormCorr[cross] = 0.0;
+				for (j = 0; j < GROUP_COUNT - 1; j++)
+				{
+					val = quiz->Quiz[q].Group[j].Corr;
+					if (val >= NormCorr[cross])
+						NormCorr[cross] = val;
+				}       
+				NormCorr[cross] = 0.9 * NormCorr[cross]; 
+
+#ifdef USE_PERCENT  
+				ival = round(100.0 * quiz->Quiz[q].Corr * quiz->Quiz[q].Corr);
+				sprintf(str, "%d%", ival);
+				file.Write(str);
+#else
+				ival = round(100.0 * quiz->Quiz[q].Corr);
+				if (ival < 0)
+				{
+				    file.Write("-");
+					ival = -ival;
+				}
+				
+				sprintf(str, ".%02d", ival);
+				file.Write(str);
+#endif
+				
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                if (quiz)
+                {   cross++;
+    			    file.Write("<br>");
+				}
+			}
+			WriteFieldFooter(file);
+
+            for (a = 0; a < GROUP_COUNT - 1; a++)
+            {					
+                cross = 0;
+                TopQuiz->ClearUsed(TopQuestion);
+                WriteCenteredFieldHeader(file, 6);
+                quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+                while (quiz)
+	    		{
+		    		WritePca(file, quiz->Quiz[q].GroupPca[a]);
+
+			    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+				    if (quiz)
+    				{   
+    				    cross++;
+    					file.Write("<br>");
+	    			}
+		    	}
+			    WriteFieldFooter(file);
+			}
+
+			file.Write("</tr>");    
+        	TopQuiz = GetTopGroupCorr(g, &TopQuestion);
+		}
+    	file.Write("</table>");
+    	file.Write("<br><br>");
+	}
+}
+
+/*##################  TQuiz::WriteAverageAxisTable ##########################
+*   Purpose....: Write averaged axis table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteAverageAxisTable(const char *filename)
+{
+	int Used[MAX_GLOBAL_QUESTIONS];
+	int GlobalId;
+	int i;
+	int j;
+	int g;
+	TQuiz *quiz;
+	int q;
+	int a;
+	char str[80];
+	int ival;
+	long double val;
+	long double corrval;
+	long double LowestCorr;
+	long double sum;
+	long double max;
+	TFile file(filename, 0);
+
+	CalcGlobal();
+
+	ClearUsed();
+
+#ifdef ENGLISH
+	file.Write("<h2>Averaged axis loading results</h2>\n");
+	file.Write("<span style='color:#990099'>");
+	file.Write("Reversed score questions are showed in red color");
+	file.Write("</span><br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write("<h2>Sammanslagna axel loading resultat</h2>\n");
+	 file.Write("<span style='color:#990099'>");
+	 file.Write("Reverserade frågor visas med röd färg");
+	 file.Write("</span><br>");
+#endif
+
+    for (q = 0; q < MAX_GLOBAL_QUESTIONS; q++)
+        Used[q] = FALSE;
+
+	for (g = 0; g < GROUP_COUNT; g++)
+	{
+		file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+		file.Write("<tr style='height:24.75pt'>");
+
+        WriteCenteredFieldHeader(file, 3);
+		sprintf(str, "G:%d", g + 1);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 26);
+		file.Write(Group[g].PosName);
+		file.Write(" / ");
+		file.Write(Group[g].NegName);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 3);
+		file.Write("AS-NT Corr");
+        WriteFieldFooter(file);
+
+        for (a = 0; a < GROUP_COUNT - 1; a++)
+        {
+            WriteCenteredFieldHeader(file, 3);
+            sprintf(str, "G:%d", a + 1);
+	    	file.Write(str);
+            WriteFieldFooter(file);
+        }
+
+		file.Write("</tr>");
+
+        for (;;)
+		{
+			LowestCorr = -0.1;
+            GlobalId = -1;
+
+            for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+			{
+		        quiz = GlobalTopQuiz[i];
+				q = GlobalTopQuestion[i];
+				if (!Used[i] && quiz && quiz->Quiz[q].MyGroup == g && GlobalAsNtCorrCount[i])
+				{
+                    corrval = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+                    corrval = corrval * corrval;
+                    if (corrval > LowestCorr)
+                    {
+                        GlobalId = i;
+						LowestCorr = corrval;
+                    }
+                }
+            }
+
+            if (GlobalId >= 0)
+            {
+				quiz = GlobalTopQuiz[GlobalId];
+				q = GlobalTopQuestion[GlobalId];
+
+                sum = 0;
+                max = 0;
+
+				for (a = 0; a < GROUP_COUNT - 1; a++)
+				{
+                    if (GlobalAxisCount[GlobalId][a])
+                    {   
+                        val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
+                        if (val > max)
+                            max = val;
+
+                        sum += val;
+                    }
+    		    }
+
+    		    max = 0.9 * max;
+
+	    		Used[GlobalId] = TRUE;
+
+                if (sum != 0)
+                {
+    				file.Write("<tr style='height:24.75pt'>");
+
+	    			WriteCenteredFieldHeader(file, 3);
+
+                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.05))
+        				file.Write("<span style='color:#EE0000'>");
+    	    		else
+    		    	{
+                        if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+        			    	file.Write("<span style='color:#990099'>");
+            		}
+
+	    			sprintf(str, "%d", GlobalId + 1);
+		    		file.Write(str);
+                    
+                    if (GlobalChi2[GlobalId] <= GetCutoffChi2(GlobalCatCount[GlobalId], 0.01))
+        				file.Write("</span>");
+
+	    			WriteFieldFooter(file);
+
+		    		WriteCenteredFieldHeader(file, 26);
+			    	if (quiz->Quiz[q].Reverse)
+					    file.Write("<span style='color:#990099'>");
+				    file.Write(quiz->Quiz[q].Text);
+    				if (quiz->Quiz[q].Reverse)
+	    				file.Write("</span>");
+		    		WriteFieldFooter(file);
+
+			    	WriteCenteredFieldHeader(file, 6);
+
+    				val = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+#ifdef USE_PERCENT  
+		    	    ival = round(100.0 * val * val);
+			    	sprintf(str, "%d%", ival);
+				    file.Write(str);
+#else
+    	    		ival = round(100.0 * val);
+	    	    	if (ival < 0)
+		    	    {
+			    		file.Write("-");
+    				    ival = -ival;
+	    			}
+
+		    		sprintf(str, ".%02d", ival);
+			    	file.Write(str);
+#endif
+    
+	    			for (a = 0; a < GROUP_COUNT - 1; a++)
+		    		{
+    		    		WriteCenteredFieldHeader(file, 6);
+    
+                        if (GlobalAxisCount[GlobalId][a])
+                        {
+                            val = GlobalAxisSum[GlobalId][a] / GlobalAxisCount[GlobalId][a];
+                            if (val > 0)
+                            {
+                                if (val > max)
+                			    	file.Write("<span style='color:#009999'>");
+                            
+		        				WritePca(file, val);
+
+                                if (val > max)
+                    				file.Write("</span>");
+                    	    }
+                    	}
+
+    		    		WriteFieldFooter(file);
+    		        }
+    		    }
+
+				file.Write("</tr>");
+			}
+			else
+			    break;
+		}
+		file.Write("</table>");
+		file.Write("<br><br>");
+	}
+}

@@ -268,7 +268,7 @@ void TQuizR7::SetupTexts()
   Quiz[81].MyGroup = GROUP_ASPIE_COMM;
   Quiz[82].MyGroup = GROUP_NT_TALENT;
   Quiz[83].MyGroup = GROUP_NONVERBAL;
-  Quiz[84].MyGroup = GROUP_SENSORY;
+  Quiz[84].MyGroup = GROUP_MIXED;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_NT_TALENT;
   Quiz[87].MyGroup = GROUP_ASPIE_COMM;

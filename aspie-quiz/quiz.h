@@ -236,6 +236,8 @@ public:
 	void WriteAveragePcaCorrTable(const char *filename);
 	void WriteLinkReport(const char *filename);
     void WritePcaGroupCorr(const char *filename);
+    void WriteAxisLoadTable(const char *filename);
+    void WriteAverageAxisTable(const char *filename);
     void WriteVersionRetest(const char *filename);
     void WriteWiki(const char *filename, long double threshold, long double intercorr);
     void WriteQuizWiki(const char *filename);

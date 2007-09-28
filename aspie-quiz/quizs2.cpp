@@ -221,7 +221,7 @@ void TQuizS2::SetupTexts()
   Quiz[4].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[5].MyGroup = GROUP_SENSORY;
   Quiz[6].MyGroup = GROUP_SENSORY;
-  Quiz[7].MyGroup = GROUP_SENSORY;
+  Quiz[7].MyGroup = GROUP_MIXED;
   Quiz[8].MyGroup = GROUP_SENSORY;
   Quiz[9].MyGroup = GROUP_SENSORY;
   Quiz[10].MyGroup = GROUP_ASPIE_TALENT;
@@ -368,8 +368,8 @@ void TQuizS2::SetupTexts()
 
   Quiz[149].MyGroup = GROUP_SENSORY;
   Quiz[150].MyGroup = GROUP_SENSORY;
-  Quiz[151].MyGroup = GROUP_SENSORY;
-  Quiz[152].MyGroup = GROUP_SENSORY;
+  Quiz[151].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_MIXED;
 
   Quiz[153].MyGroup = GROUP_ASPIE_NVC;
   Quiz[154].MyGroup = GROUP_NONVERBAL;

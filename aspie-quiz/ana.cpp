@@ -393,6 +393,9 @@ int main(int argc, char **argv)
 
 	 Quiz[19]->WritePcaCorrTable("pcacorr.htm");
 
+	 Quiz[19]->WriteAxisLoadTable("axisload.htm");
+	 Quiz[19]->WriteAverageAxisTable("avgaxis.htm");
+
 	 Quiz[19]->WriteLinkReport("index.htm");
 
 	 Quiz[5]->WriteHair("hair6.htm");

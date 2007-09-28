@@ -216,7 +216,7 @@ void TQuiz5::SetupTexts()
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
 	Quiz[1].MyGroup = GROUP_SENSORY;
-	Quiz[2].MyGroup = GROUP_SENSORY;
+	Quiz[2].MyGroup = GROUP_MIXED;
 	Quiz[3].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_SENSORY;
@@ -228,7 +228,7 @@ void TQuiz5::SetupTexts()
 	Quiz[11].MyGroup = GROUP_SENSORY;
 	Quiz[12].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[13].MyGroup = GROUP_SENSORY;
-	Quiz[14].MyGroup = GROUP_SENSORY;
+	Quiz[14].MyGroup = GROUP_MIXED;
 	Quiz[15].MyGroup = GROUP_SENSORY;
 	Quiz[16].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[17].MyGroup = GROUP_NT_BIOLOGY;

@@ -266,14 +266,14 @@ void TQuizR5::SetupTexts()
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_NT_TALENT;
-  Quiz[81].MyGroup = GROUP_SENSORY;
+  Quiz[81].MyGroup = GROUP_MIXED;
   Quiz[82].MyGroup = GROUP_ASPIE_COMM;
   Quiz[83].MyGroup = GROUP_ASPIE_COMM;
   Quiz[84].MyGroup = GROUP_ASPIE_NVC;
   Quiz[85].MyGroup = GROUP_ASPIE_COMM;
   Quiz[86].MyGroup = GROUP_ASPIE_COMM;
   Quiz[87].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[88].MyGroup = GROUP_SENSORY;
+  Quiz[88].MyGroup = GROUP_MIXED;
   Quiz[89].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[90].MyGroup = GROUP_ASPIE_NVC;
   Quiz[91].MyGroup = GROUP_ASPIE_COMM;
@@ -327,7 +327,7 @@ void TQuizR5::SetupTexts()
   Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[142].MyGroup = GROUP_SENSORY;
+  Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_ASPIE_NVC;
 
 #ifdef ENGLISH

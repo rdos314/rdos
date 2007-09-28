@@ -223,7 +223,7 @@ void TQuiz7::SetupTexts()
 	Quiz[135].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
-	Quiz[1].MyGroup = GROUP_SENSORY;
+	Quiz[1].MyGroup = GROUP_MIXED;
 	Quiz[2].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
@@ -232,7 +232,7 @@ void TQuiz7::SetupTexts()
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
 	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[10].MyGroup = GROUP_SENSORY;
+	Quiz[10].MyGroup = GROUP_MIXED;
 	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[13].MyGroup = GROUP_NT_BIOLOGY;

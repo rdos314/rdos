@@ -235,15 +235,15 @@ void TQuizR1::SetupTexts()
   Quiz[73].MyGroup = GROUP_SENSORY;
   Quiz[74].MyGroup = GROUP_SENSORY;
   Quiz[75].MyGroup = GROUP_SENSORY;
-  Quiz[76].MyGroup = GROUP_SENSORY;
+  Quiz[76].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[77].MyGroup = GROUP_SENSORY;
-  Quiz[78].MyGroup = GROUP_SENSORY;
+  Quiz[78].MyGroup = GROUP_MIXED;
   Quiz[79].MyGroup = GROUP_SENSORY;
   Quiz[80].MyGroup = GROUP_SENSORY;
   Quiz[81].MyGroup = GROUP_SENSORY;
   Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[83].MyGroup = GROUP_SENSORY;
-  Quiz[84].MyGroup = GROUP_SENSORY;
+  Quiz[84].MyGroup = GROUP_MIXED;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[87].MyGroup = GROUP_NT_BIOLOGY;
@@ -273,7 +273,7 @@ void TQuizR1::SetupTexts()
   Quiz[111].MyGroup = GROUP_SENSORY;
   Quiz[112].MyGroup = GROUP_SENSORY;
   Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[114].MyGroup = GROUP_SENSORY;
+  Quiz[114].MyGroup = GROUP_MIXED;
   Quiz[115].MyGroup = GROUP_ASPIE_NVC;
   Quiz[116].MyGroup = GROUP_ASPIE_COMM;
   Quiz[117].MyGroup = GROUP_ASPIE_NVC;
@@ -285,10 +285,10 @@ void TQuizR1::SetupTexts()
   Quiz[123].MyGroup = GROUP_ASPIE_NVC;
   Quiz[124].MyGroup = GROUP_ASPIE_NVC;
   Quiz[125].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[126].MyGroup = GROUP_SENSORY;
+  Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[128].MyGroup = GROUP_SENSORY;
-  Quiz[129].MyGroup = GROUP_SENSORY;
+  Quiz[128].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";
