@@ -236,7 +236,7 @@ void TQuiz8::SetupTexts()
   Quiz[0].MyGroup = GROUP_SENSORY;
   Quiz[1].MyGroup = GROUP_SENSORY;
   Quiz[2].MyGroup = GROUP_MIXED;
-  Quiz[3].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[3].MyGroup = GROUP_MIXED;
   Quiz[4].MyGroup = GROUP_ASPIE_NVC;
   Quiz[5].MyGroup = GROUP_ASPIE_COMM;
   Quiz[6].MyGroup = GROUP_SENSORY;
@@ -258,7 +258,7 @@ void TQuiz8::SetupTexts()
   Quiz[22].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[23].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[24].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[25].MyGroup = GROUP_NT_TALENT;
+  Quiz[25].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[26].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[27].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[28].MyGroup = GROUP_ASPIE_TALENT;
@@ -290,7 +290,7 @@ void TQuiz8::SetupTexts()
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[57].MyGroup = GROUP_MIXED;
   Quiz[58].MyGroup = GROUP_ASPIE_COMM;
   Quiz[59].MyGroup = GROUP_ASPIE_COMM;
   Quiz[60].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -309,13 +309,13 @@ void TQuiz8::SetupTexts()
   Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[74].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[75].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[76].MyGroup = GROUP_MIXED;
   Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[78].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[81].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[79].MyGroup = GROUP_MIXED;
+  Quiz[80].MyGroup = GROUP_MIXED;
+  Quiz[81].MyGroup = GROUP_MIXED;
+  Quiz[82].MyGroup = GROUP_MIXED;
   Quiz[83].MyGroup = GROUP_ASPIE_NVC;
   Quiz[84].MyGroup = GROUP_ASPIE_NVC;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
@@ -330,21 +330,21 @@ void TQuiz8::SetupTexts()
   Quiz[94].MyGroup = GROUP_NONVERBAL;
   Quiz[95].MyGroup = GROUP_NONVERBAL;
   Quiz[96].MyGroup = GROUP_NONVERBAL;
-  Quiz[97].MyGroup = GROUP_NONVERBAL;
+  Quiz[97].MyGroup = GROUP_MIXED;
   Quiz[98].MyGroup = GROUP_NONVERBAL;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NONVERBAL;
-  Quiz[101].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[101].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[102].MyGroup = GROUP_NONVERBAL;
-  Quiz[103].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[104].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[105].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[106].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[107].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[108].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[109].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[103].MyGroup = GROUP_OCD;
+  Quiz[104].MyGroup = GROUP_OCD;
+  Quiz[105].MyGroup = GROUP_OCD;
+  Quiz[106].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[107].MyGroup = GROUP_OCD;
+  Quiz[108].MyGroup = GROUP_OCD;
+  Quiz[109].MyGroup = GROUP_OCD;
   Quiz[110].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[111].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[111].MyGroup = GROUP_OCD;
   Quiz[112].MyGroup = GROUP_SEX;
   Quiz[113].MyGroup = GROUP_SEX;
   Quiz[114].MyGroup = GROUP_SEX;
@@ -357,18 +357,18 @@ void TQuiz8::SetupTexts()
   Quiz[121].MyGroup = GROUP_ASPIE_COMM;
   Quiz[122].MyGroup = GROUP_NT_TALENT;
   Quiz[123].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[124].MyGroup = GROUP_NONVERBAL;
+  Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[126].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[126].MyGroup = GROUP_OCD;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_NONVERBAL;
   Quiz[129].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[130].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_NT_TALENT;
   Quiz[132].MyGroup = GROUP_ASPIE_COMM;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
   Quiz[134].MyGroup = GROUP_MIXED;
-  Quiz[135].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_ASPIE_NVC;
@@ -384,7 +384,7 @@ void TQuiz8::SetupTexts()
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_ASPIE_COMM;
 
-  Quiz[150].MyGroup = GROUP_NONVERBAL;
+  Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[152].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[153].MyGroup = GROUP_MIXED;
@@ -1339,7 +1339,7 @@ void TQuiz8::ExportExcelAspie(const char *filename)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < GetQuizN(); i++)
+	for (i = 0; i < N; i++)
 	{
 		file.Write("\"");
 
@@ -1361,7 +1361,7 @@ void TQuiz8::ExportExcelAspie(const char *filename)
 		sprintf(str, "\"%d\", ", Row.NtResult);
 		file.Write(str);
 
-		for (i = 0; i < GetQuizN(); i++)
+		for (i = 0; i < N; i++)
 		{
 			ival = Row.Quiz[i];
 
@@ -1379,7 +1379,7 @@ void TQuiz8::ExportExcelAspie(const char *filename)
 
 			sprintf(str, "\"%d\"", ival);
 			file.Write(str);
-			if (i != GetQuizN() - 1)
+			if (i != N - 1)
 				file.Write(", ");
 		}
 		file.Write("\n");

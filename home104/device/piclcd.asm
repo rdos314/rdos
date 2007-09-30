@@ -886,7 +886,7 @@ pic_thread1:
 
 ptLoop1: 
     test ds:ResetFlag,1
-    jz ptNoReset
+    jz ptNoReset1
 ;        
     mov dx,IO_BASE + 8
     cli
@@ -906,15 +906,22 @@ ptLoop1:
     out dx,al
     mov ds:PicOut,al
     sti
-    or ds:IntFlag,1
     and ds:ResetFlag,NOT 1
-
-ptNoReset:
+;
+    mov ax,ds:DioCurr0
+    or ax,ax
+    jz ptNoReset1
+;
+    mov es,ax
+    mov es:dqe_result,0
+    mov ds:DioCurr0,0
+    mov bx,es:dqe_thread
+    Signal
+    
+ptNoReset1:
     EnterSection ds:ListSection
-;    
     call DioCheckReady1
     call DioCheckIdle1
-;    
     LeaveSection ds:ListSection
 ;
 	GetSystemTime
@@ -930,6 +937,25 @@ ptNoReset:
 	WaitForSignal
     jmp ptLoop1
 
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:			PicTimeout2
+;
+;		description:	Supervises PIC chip
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+PicTimeout2	Proc far
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    or ds:ResetFlag,2
+    mov bx,ds:PicThread1
+	Signal
+	ret
+PicTimeout2	Endp
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -942,6 +968,17 @@ pic2_name	DB 'DIO 2',0
 pic_thread2:
     mov ax,piclcd_data_sel
     mov ds,ax    
+    or ds:ResetFlag,2
+;        
+    mov ax,piclcd_data_sel
+    mov ds,ax    
+    GetThread
+    mov ds:PicThread1,ax    
+    ClearSignal
+
+ptLoop2: 
+    test ds:ResetFlag,2
+    jz ptNoReset2
 ;    
     mov dx,IO_BASE + 8
     cli
@@ -961,20 +998,34 @@ pic_thread2:
     out dx,al
     mov ds:PicOut,al
     sti
-;        
-    mov ax,piclcd_data_sel
-    mov ds,ax    
-    GetThread
-    mov ds:PicThread1,ax    
-    ClearSignal
-
-ptLoop2: 
+    and ds:ResetFlag,NOT 2
+;
+    mov ax,ds:DioCurr1
+    or ax,ax
+    jz ptNoReset2
+;
+    mov es,ax
+    mov es:dqe_result,0
+    mov ds:DioCurr1,0
+    mov bx,es:dqe_thread
+    Signal
+    
+ptNoReset2:
     EnterSection ds:ListSection
-;    
     call DioCheckReady2
     call DioCheckIdle2
-;    
     LeaveSection ds:ListSection
+;
+	GetSystemTime
+	add eax,5 * 1193000
+	adc edx,0
+	mov bx,cs
+	mov es,bx
+	mov di,OFFSET PicTimeout2
+	mov bx,ds:PicThread1
+	StopTimer
+	StartTimer
+;    
 	WaitForSignal
     jmp ptLoop2
 

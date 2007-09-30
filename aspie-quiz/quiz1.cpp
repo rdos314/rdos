@@ -121,7 +121,7 @@ void TQuizI::WriteName(TFile &File)
 void TQuizI::SetupTexts()
 {
 	Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[1].MyGroup = GROUP_MIXED;
 	Quiz[2].MyGroup = GROUP_NT_TALENT;
 	Quiz[3].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[4].MyGroup = GROUP_ASPIE_TALENT;
@@ -129,7 +129,7 @@ void TQuizI::SetupTexts()
 	Quiz[6].MyGroup = GROUP_NT_TALENT;
 	Quiz[7].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[8].MyGroup = GROUP_NT_TALENT;
-	Quiz[9].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_NT_TALENT;
 	Quiz[11].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[12].MyGroup = GROUP_ASPIE_TALENT;
@@ -144,25 +144,25 @@ void TQuizI::SetupTexts()
 	Quiz[21].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[22].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[24].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[24].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[25].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[26].MyGroup = GROUP_NT_TALENT;
-	Quiz[27].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[28].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[27].MyGroup = GROUP_OCD;
+	Quiz[28].MyGroup = GROUP_OCD;
 	Quiz[29].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[30].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[32].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[34].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[35].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[36].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[37].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[38].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[39].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[35].MyGroup = GROUP_OCD;
+	Quiz[36].MyGroup = GROUP_OCD;
+	Quiz[37].MyGroup = GROUP_OCD;
+	Quiz[38].MyGroup = GROUP_OCD;
+	Quiz[39].MyGroup = GROUP_OCD;
 	Quiz[40].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[41].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[42].MyGroup = GROUP_ASPIE_NVC;
+	Quiz[42].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[43].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[44].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[45].MyGroup = GROUP_NT_BIOLOGY;
@@ -173,15 +173,15 @@ void TQuizI::SetupTexts()
 	Quiz[50].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[51].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[52].MyGroup = GROUP_SENSORY;
-	Quiz[53].MyGroup = GROUP_NONVERBAL;
-	Quiz[54].MyGroup = GROUP_ASPIE_NVC;
+	Quiz[53].MyGroup = GROUP_MIXED;
+	Quiz[54].MyGroup = GROUP_MIXED;
 	Quiz[55].MyGroup = GROUP_SENSORY;
 	Quiz[56].MyGroup = GROUP_SENSORY;
 	Quiz[57].MyGroup = GROUP_SENSORY;
 	Quiz[58].MyGroup = GROUP_SENSORY;
 	Quiz[59].MyGroup = GROUP_SENSORY;
 	Quiz[60].MyGroup = GROUP_SENSORY;
-	Quiz[61].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[61].MyGroup = GROUP_MIXED;
 	Quiz[62].MyGroup = GROUP_SENSORY;
 	Quiz[63].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[64].MyGroup = GROUP_SENSORY;
@@ -196,7 +196,7 @@ void TQuizI::SetupTexts()
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[74].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[75].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[76].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[76].MyGroup = GROUP_OCD;
 	Quiz[77].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[78].MyGroup = GROUP_MIXED;
 	Quiz[79].MyGroup = GROUP_ASPIE_COMM;
@@ -204,11 +204,11 @@ void TQuizI::SetupTexts()
 	Quiz[81].MyGroup = GROUP_NONVERBAL;
 	Quiz[82].MyGroup = GROUP_NONVERBAL;
 	Quiz[83].MyGroup = GROUP_NONVERBAL;
-	Quiz[84].MyGroup = GROUP_NONVERBAL;
+	Quiz[84].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[85].MyGroup = GROUP_NONVERBAL;
 	Quiz[86].MyGroup = GROUP_NONVERBAL;
 	Quiz[87].MyGroup = GROUP_NONVERBAL;
-	Quiz[88].MyGroup = GROUP_NONVERBAL;
+	Quiz[88].MyGroup = GROUP_MIXED;
 	Quiz[89].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[90].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[91].MyGroup = GROUP_NONVERBAL;
@@ -941,7 +941,7 @@ void TQuizI::ExportExcelAspie(const char *filename)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < GetQuizN(); i++)
+	for (i = 0; i < N; i++)
 	{
 		file.Write("\"");
 
@@ -963,7 +963,7 @@ void TQuizI::ExportExcelAspie(const char *filename)
 		sprintf(str, "\"%d\", ", Row.Diagnos);
 		file.Write(str);
 
-		for (i = 0; i < GetQuizN(); i++)
+		for (i = 0; i < N; i++)
 		{
 			if (Row.Before[i] > Row.Now[i])
 				ival = Row.Before[i];
@@ -975,7 +975,7 @@ void TQuizI::ExportExcelAspie(const char *filename)
 
 			sprintf(str, "\"%d\"", ival);
 			file.Write(str);
-			if (i != GetQuizN() - 1)
+			if (i != N - 1)
 				file.Write(", ");
 		}
 		file.Write("\n");

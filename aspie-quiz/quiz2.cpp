@@ -137,11 +137,11 @@ void TQuizII::SetupTexts()
 	Quiz[93].Reverse = TRUE;
 
 	Quiz[0].MyGroup = GROUP_SENSORY;
-	Quiz[1].MyGroup = GROUP_NONVERBAL;
+	Quiz[1].MyGroup = GROUP_MIXED;
 	Quiz[2].MyGroup = GROUP_SENSORY;
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
-	Quiz[5].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[5].MyGroup = GROUP_MIXED;
 	Quiz[6].MyGroup = GROUP_SENSORY;
 	Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[8].MyGroup = GROUP_NT_BIOLOGY;
@@ -152,27 +152,27 @@ void TQuizII::SetupTexts()
 	Quiz[13].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[14].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[15].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[16].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[17].MyGroup = GROUP_NONVERBAL;
-	Quiz[18].MyGroup = GROUP_ASPIE_NVC;
+	Quiz[16].MyGroup = GROUP_MIXED;
+	Quiz[17].MyGroup = GROUP_MIXED;
+	Quiz[18].MyGroup = GROUP_MIXED;
 	Quiz[19].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[20].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[21].MyGroup = GROUP_NONVERBAL;
+	Quiz[21].MyGroup = GROUP_MIXED;
 	Quiz[22].MyGroup = GROUP_NONVERBAL;
 	Quiz[23].MyGroup = GROUP_NONVERBAL;
-	Quiz[24].MyGroup = GROUP_NONVERBAL;
+	Quiz[24].MyGroup = GROUP_MIXED;
 	Quiz[25].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[26].MyGroup = GROUP_ASPIE_NVC;
+	Quiz[26].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[27].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[28].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[29].MyGroup = GROUP_NONVERBAL;
 	Quiz[30].MyGroup = GROUP_NT_TALENT;
 	Quiz[31].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[32].MyGroup = GROUP_NONVERBAL;
+	Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[33].MyGroup = GROUP_NT_TALENT;
 	Quiz[34].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[35].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[36].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[35].MyGroup = GROUP_OCD;
+	Quiz[36].MyGroup = GROUP_OCD;
 	Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[39].MyGroup = GROUP_ASPIE_COMM;
@@ -184,18 +184,18 @@ void TQuizII::SetupTexts()
 	Quiz[45].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[46].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[47].MyGroup = GROUP_NONVERBAL;
-	Quiz[48].MyGroup = GROUP_NONVERBAL;
+	Quiz[48].MyGroup = GROUP_NT_TALENT;
 	Quiz[49].MyGroup = GROUP_NONVERBAL;
 	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[51].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[55].MyGroup = GROUP_MIXED;
 	Quiz[56].MyGroup = GROUP_SEX;
 	Quiz[57].MyGroup = GROUP_SEX;
 	Quiz[58].MyGroup = GROUP_SEX;
-	Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[59].MyGroup = GROUP_MIXED;
 	Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[61].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[62].MyGroup = GROUP_ASPIE_TALENT;
@@ -203,14 +203,14 @@ void TQuizII::SetupTexts()
 	Quiz[64].MyGroup = GROUP_NT_TALENT;
 	Quiz[65].MyGroup = GROUP_NT_TALENT;
 	Quiz[66].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[67].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[68].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[69].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[67].MyGroup = GROUP_OCD;
+	Quiz[68].MyGroup = GROUP_OCD;
+	Quiz[69].MyGroup = GROUP_MIXED;
 	Quiz[70].MyGroup = GROUP_NONVERBAL;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[74].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[74].MyGroup = GROUP_MIXED;
 	Quiz[75].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -980,7 +980,7 @@ void TQuizII::ExportExcelAspie(const char *filename)
 	file.Write("\"\", ");
 	file.Write("\"\", ");
 
-	for (i = 0; i < GetQuizN(); i++)
+	for (i = 0; i < N; i++)
 	{
 		file.Write("\"");
 
@@ -1002,7 +1002,7 @@ void TQuizII::ExportExcelAspie(const char *filename)
 		sprintf(str, "\"%d\", ", Row.NtResult);
 		file.Write(str);
 
-		for (i = 0; i < GetQuizN(); i++)
+		for (i = 0; i < N; i++)
 		{
 			ival = Row.Quiz[i];
 
@@ -1020,7 +1020,7 @@ void TQuizII::ExportExcelAspie(const char *filename)
 
 			sprintf(str, "\"%d\"", ival);
 			file.Write(str);
-			if (i != GetQuizN() - 1)
+			if (i != N - 1)
 				file.Write(", ");
 		}
 		file.Write("\n");

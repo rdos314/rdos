@@ -475,6 +475,9 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
+	Group[GROUP_OCD].PosName = "Obsession";
+	Group[GROUP_OCD].NegName = "Obsession problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -514,6 +517,9 @@ void TQuiz::Init()
                                
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
+
+	Group[GROUP_OCD].PosName = "Tvång";
+	Group[GROUP_OCD].NegName = "Tvång problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -919,6 +925,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_PARANOID:
                 file.Write("GROUP_PARANOID");
+                break;
+
+            case GROUP_OCD:
+                file.Write("GROUP_OCD");
                 break;
 
             default:
@@ -2828,7 +2838,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 		{
 			count = 0;
 
-			for (q = 0; q < GetQuizN(); q++)
+			for (q = 0; q < N; q++)
 			{
 			    if (Quiz[q].Reverse)
     	    		LoadArr[q] = -Quiz[q].AspiePca[a];
@@ -2838,7 +2848,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
                 CorrArr[q] = Quiz[q].Pca[g];
 			}
 
-			count = GetQuizN();
+			count = N;
 
 			sum = 0.0;
 			for (q = 0; q < count; q++)
@@ -2892,7 +2902,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 		{
 			count = 0;
 
-			for (q = 0; q < GetQuizN(); q++)
+			for (q = 0; q < N; q++)
 			{
 				count += Quiz[q].Group[g].Count;
 
@@ -2906,7 +2916,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
 			if (count > 1)
 			{
-				count = GetQuizN();
+				count = N;
 
 				sum = 0.0;
 				for (q = 0; q < count; q++)
@@ -2960,7 +2970,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
     for (g = 0; g < GROUP_COUNT - 1; g++)
     {
-        for (q = 0; q < GetQuizN(); q++)
+        for (q = 0; q < N; q++)
         {
             val = 0;
             
@@ -2983,7 +2993,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 		{
 			count = 0;
 
-			for (q = 0; q < GetQuizN(); q++)
+			for (q = 0; q < N; q++)
 			{
 				count += Quiz[q].Group[g].Count;
 
@@ -2997,7 +3007,7 @@ void TQuiz::ImportMvspAspie(const char *filename)
 
 			if (count > 1)
 			{
-				count = GetQuizN();
+				count = N;
 
 				sum = 0.0;
 				for (q = 0; q < count; q++)
@@ -6249,6 +6259,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_PARANOID:
 	        file->Write("PARANOID");
+	        break;
+	            
+	    case GROUP_OCD:
+	        file->Write("OCD");
 	        break;
 	            
 	    case GROUP_MIXED:

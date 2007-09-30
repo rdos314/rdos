@@ -251,14 +251,15 @@ Reset:
     bsf STATUS,IRP
     
 HandleLoop:
-	bcf PORTA, 3
+	bsf PORTA, 3
+	bsf PORTA, 4
     bcf Flags,FLAG_CMD_AVAIL_BIT
 
 WaitCmdLoop:
     btfss Flags,FLAG_CMD_AVAIL_BIT
     goto WaitCmdLoop
 ;
-  	bsf PORTA, 3
+  	bcf PORTA, 3
 ;
     call ExecuteCmd
 ;
@@ -280,7 +281,7 @@ WaitCmdLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Delay:
-    movlw 4
+    movlw 2
     movwf LowTemp1
 ;
 	movf TMR1H,W
@@ -782,6 +783,7 @@ ExecuteSerial:
     btfsc STATUS,Z
     goto ExecSerialDone
 ;
+	bcf PORTA,4
     movf INDF,W
     movwf Cmd
     incf FSR,F
