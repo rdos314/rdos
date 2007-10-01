@@ -478,6 +478,9 @@ void TQuiz::Init()
 	Group[GROUP_OCD].PosName = "Obsession";
 	Group[GROUP_OCD].NegName = "Obsession problem";
 
+	Group[GROUP_RELIGION].PosName = "Religion / superstition";
+	Group[GROUP_RELIGION].NegName = "Religion problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -520,6 +523,9 @@ void TQuiz::Init()
 
 	Group[GROUP_OCD].PosName = "Tvång";
 	Group[GROUP_OCD].NegName = "Tvång problem";
+
+	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
+	Group[GROUP_RELIGION].NegName = "Religion problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -929,6 +935,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_OCD:
                 file.Write("GROUP_OCD");
+                break;
+
+            case GROUP_RELIGION:
+                file.Write("GROUP_RELIGION");
                 break;
 
             default:
@@ -6263,6 +6273,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_OCD:
 	        file->Write("OCD");
+	        break;
+	            
+	    case GROUP_RELIGION:
+	        file->Write("RELIGION");
 	        break;
 	            
 	    case GROUP_MIXED:

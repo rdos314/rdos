@@ -365,11 +365,11 @@ void TQuiz8::SetupTexts()
   Quiz[129].MyGroup = GROUP_ASPIE_COMM;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_NT_TALENT;
-  Quiz[132].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_RELIGION;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_RELIGION;
   Quiz[137].MyGroup = GROUP_ASPIE_COMM;
   Quiz[138].MyGroup = GROUP_ASPIE_NVC;
   Quiz[139].MyGroup = GROUP_ASPIE_COMM;
@@ -382,7 +382,7 @@ void TQuiz8::SetupTexts()
   Quiz[146].MyGroup = GROUP_ASPIE_COMM;
   Quiz[147].MyGroup = GROUP_SEX;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[149].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[149].MyGroup = GROUP_MIXED;
 
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_ASPIE_BIOLOGY;

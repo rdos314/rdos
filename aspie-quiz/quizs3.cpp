@@ -344,7 +344,7 @@ void TQuizS3::SetupTexts()
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
   Quiz[136].MyGroup = GROUP_PARANOID;
   Quiz[137].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[138].MyGroup = GROUP_SENSORY;
+  Quiz[138].MyGroup = GROUP_RELIGION;
   Quiz[139].MyGroup = GROUP_PARANOID;
   Quiz[140].MyGroup = GROUP_ASPIE_NVC;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -353,8 +353,8 @@ void TQuizS3::SetupTexts()
   Quiz[144].MyGroup = GROUP_PARANOID;
   Quiz[145].MyGroup = GROUP_PARANOID;
   Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[147].MyGroup = GROUP_SENSORY;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_RELIGION;
+  Quiz[148].MyGroup = GROUP_RELIGION;
   Quiz[149].MyGroup = GROUP_ASPIE_NVC;
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_MIXED;
@@ -371,7 +371,7 @@ void TQuizS3::SetupTexts()
   Quiz[162].MyGroup = GROUP_PARANOID;
   Quiz[163].MyGroup = GROUP_PARANOID;
   Quiz[164].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[165].MyGroup = GROUP_SENSORY;
+  Quiz[165].MyGroup = GROUP_RELIGION;
   Quiz[166].MyGroup = GROUP_PARANOID;
   Quiz[167].MyGroup = GROUP_MIXED;
   Quiz[168].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -380,15 +380,15 @@ void TQuizS3::SetupTexts()
   Quiz[171].MyGroup = GROUP_PARANOID;
   Quiz[172].MyGroup = GROUP_PARANOID;
   Quiz[173].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[174].MyGroup = GROUP_MIXED;
-  Quiz[175].MyGroup = GROUP_SENSORY;
+  Quiz[174].MyGroup = GROUP_RELIGION;
+  Quiz[175].MyGroup = GROUP_RELIGION;
   Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[177].MyGroup = GROUP_MIXED;
   Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[179].MyGroup = GROUP_PARANOID;
   Quiz[180].MyGroup = GROUP_PARANOID;
   Quiz[181].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[182].MyGroup = GROUP_SENSORY;
+  Quiz[182].MyGroup = GROUP_RELIGION;
   Quiz[183].MyGroup = GROUP_PARANOID;
   Quiz[184].MyGroup = GROUP_PARANOID;
   Quiz[185].MyGroup = GROUP_ASPIE_NVC;
@@ -396,7 +396,7 @@ void TQuizS3::SetupTexts()
   Quiz[187].MyGroup = GROUP_PARANOID;
   Quiz[188].MyGroup = GROUP_PARANOID;
   Quiz[189].MyGroup = GROUP_MIXED;
-  Quiz[190].MyGroup = GROUP_SENSORY;
+  Quiz[190].MyGroup = GROUP_RELIGION;
   Quiz[191].MyGroup = GROUP_SENSORY;
   Quiz[192].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[193].MyGroup = GROUP_MIXED;

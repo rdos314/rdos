@@ -56,7 +56,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             13
+#define GROUP_COUNT             14
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_NT_BIOLOGY        1
@@ -70,7 +70,8 @@
 #define GROUP_SEX               9
 #define GROUP_PARANOID          10
 #define GROUP_OCD               11
-#define GROUP_MIXED             12
+#define GROUP_RELIGION          12
+#define GROUP_MIXED             13
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1

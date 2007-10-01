@@ -139,7 +139,7 @@ void TQuizIII::SetupTexts()
 	Quiz[5].MyGroup = GROUP_SENSORY;
 	Quiz[6].MyGroup = GROUP_SENSORY;
 	Quiz[7].MyGroup = GROUP_MIXED;
-	Quiz[8].MyGroup = GROUP_SENSORY;
+	Quiz[8].MyGroup = GROUP_MIXED;
 	Quiz[9].MyGroup = GROUP_SENSORY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[11].MyGroup = GROUP_NT_BIOLOGY;
@@ -215,9 +215,9 @@ void TQuizIII::SetupTexts()
 	Quiz[81].MyGroup = GROUP_OCD;
 	Quiz[82].MyGroup = GROUP_OCD;
 	Quiz[83].MyGroup = GROUP_OCD;
-	Quiz[84].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[84].MyGroup = GROUP_OCD;
 	Quiz[85].MyGroup = GROUP_OCD;
-	Quiz[86].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[86].MyGroup = GROUP_OCD;
 	Quiz[87].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[88].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[89].MyGroup = GROUP_ASPIE_BIOLOGY;
