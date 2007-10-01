@@ -365,8 +365,8 @@ void TQuiz8::SetupTexts()
   Quiz[129].MyGroup = GROUP_ASPIE_COMM;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_NT_TALENT;
-  Quiz[132].MyGroup = GROUP_MIXED;
-  Quiz[133].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[132].MyGroup = GROUP_INSTINCT;
+  Quiz[133].MyGroup = GROUP_INSTINCT;
   Quiz[134].MyGroup = GROUP_RELIGION;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_RELIGION;
@@ -375,7 +375,7 @@ void TQuiz8::SetupTexts()
   Quiz[139].MyGroup = GROUP_ASPIE_COMM;
   Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[141].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[142].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[142].MyGroup = GROUP_INSTINCT;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;

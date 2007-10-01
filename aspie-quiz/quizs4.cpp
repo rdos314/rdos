@@ -279,7 +279,7 @@ void TQuizS4::SetupTexts()
   Quiz[73].MyGroup = GROUP_ASPIE_COMM;
   Quiz[74].MyGroup = GROUP_ASPIE_COMM;
   Quiz[75].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[76].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[76].MyGroup = GROUP_INSTINCT;
   Quiz[77].MyGroup = GROUP_ASPIE_COMM;
   Quiz[78].MyGroup = GROUP_ASPIE_COMM;
   Quiz[79].MyGroup = GROUP_ASPIE_COMM;
@@ -299,7 +299,7 @@ void TQuizS4::SetupTexts()
   Quiz[93].MyGroup = GROUP_MIXED;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[96].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[96].MyGroup = GROUP_INSTINCT;
   Quiz[97].MyGroup = GROUP_ASPIE_NVC;
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ASPIE_NVC;

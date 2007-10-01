@@ -275,20 +275,20 @@ void TQuizR1::SetupTexts()
   Quiz[113].MyGroup = GROUP_MIXED;
   Quiz[114].MyGroup = GROUP_MIXED;
   Quiz[115].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[116].MyGroup = GROUP_MIXED;
+  Quiz[116].MyGroup = GROUP_INSTINCT;
   Quiz[117].MyGroup = GROUP_ASPIE_NVC;
   Quiz[118].MyGroup = GROUP_ASPIE_NVC;
   Quiz[119].MyGroup = GROUP_ASPIE_NVC;
   Quiz[120].MyGroup = GROUP_ASPIE_NVC;
   Quiz[121].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[122].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[122].MyGroup = GROUP_INSTINCT;
   Quiz[123].MyGroup = GROUP_ASPIE_NVC;
   Quiz[124].MyGroup = GROUP_ASPIE_NVC;
   Quiz[125].MyGroup = GROUP_ASPIE_NVC;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
-  Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[128].MyGroup = GROUP_INSTINCT;
+  Quiz[129].MyGroup = GROUP_INSTINCT;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";

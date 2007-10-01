@@ -481,6 +481,9 @@ void TQuiz::Init()
 	Group[GROUP_RELIGION].PosName = "Religion / superstition";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
 
+	Group[GROUP_INSTINCT].PosName = "Instinct";
+	Group[GROUP_INSTINCT].NegName = "Instinct problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -526,6 +529,9 @@ void TQuiz::Init()
 
 	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
+
+	Group[GROUP_INSTINCT].PosName = "Instinkt";
+	Group[GROUP_INSTINCT].NegName = "Instinkt problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -939,6 +945,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_RELIGION:
                 file.Write("GROUP_RELIGION");
+                break;
+
+            case GROUP_INSTINCT:
+                file.Write("GROUP_INSTINCT");
                 break;
 
             default:
@@ -6277,6 +6287,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_RELIGION:
 	        file->Write("RELIGION");
+	        break;
+	            
+	    case GROUP_INSTINCT:
+	        file->Write("INSTINCT");
 	        break;
 	            
 	    case GROUP_MIXED:

@@ -388,11 +388,11 @@ void TQuiz9::SetupTexts()
   Quiz[90].MyGroup = GROUP_ASPIE_NVC;
   Quiz[91].MyGroup = GROUP_ASPIE_NVC;
   Quiz[92].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[93].MyGroup = GROUP_MIXED;
+  Quiz[93].MyGroup = GROUP_INSTINCT;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_COMM;
   Quiz[96].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[97].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[97].MyGroup = GROUP_INSTINCT;
   Quiz[98].MyGroup = GROUP_NONVERBAL;
   Quiz[99].MyGroup = GROUP_NONVERBAL;
   Quiz[100].MyGroup = GROUP_NONVERBAL;
@@ -429,10 +429,10 @@ void TQuiz9::SetupTexts()
   Quiz[131].MyGroup = GROUP_ASPIE_COMM;
   Quiz[132].MyGroup = GROUP_ASPIE_NVC;
   Quiz[133].MyGroup = GROUP_ASPIE_COMM;
-  Quiz[134].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[134].MyGroup = GROUP_INSTINCT;
   Quiz[135].MyGroup = GROUP_ASPIE_COMM;
   Quiz[136].MyGroup = GROUP_NT_BIOLOGY;
-  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_INSTINCT;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_MIXED;
