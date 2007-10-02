@@ -275,7 +275,7 @@ void TQuizR6::SetupTexts()
   Quiz[92].MyGroup = GROUP_ASPIE_COMM;
   Quiz[93].MyGroup = GROUP_ASPIE_COMM;
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[95].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[95].MyGroup = GROUP_INSTINCT;
   Quiz[96].MyGroup = GROUP_INSTINCT;
   Quiz[97].MyGroup = GROUP_ASPIE_COMM;
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;

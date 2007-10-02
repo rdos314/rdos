@@ -269,7 +269,7 @@ void TQuizR1::SetupTexts()
   Quiz[107].MyGroup = GROUP_MIXED;
   Quiz[108].MyGroup = GROUP_NONVERBAL;
   Quiz[109].MyGroup = GROUP_NONVERBAL;
-  Quiz[110].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[110].MyGroup = GROUP_INSTINCT;
   Quiz[111].MyGroup = GROUP_SENSORY;
   Quiz[112].MyGroup = GROUP_SENSORY;
   Quiz[113].MyGroup = GROUP_MIXED;
