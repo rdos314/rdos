@@ -274,7 +274,7 @@ void TQuizR3::SetupTexts()
   Quiz[113].MyGroup = GROUP_ASPIE_COMM;
   Quiz[114].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[115].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[116].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[116].MyGroup = GROUP_ENVIRONMENT;
   Quiz[117].MyGroup = GROUP_OCD;
   Quiz[118].MyGroup = GROUP_ASPIE_COMM;
   Quiz[119].MyGroup = GROUP_OCD;
@@ -305,7 +305,7 @@ void TQuizR3::SetupTexts()
   Quiz[144].MyGroup = GROUP_INSTINCT;
   Quiz[145].MyGroup = GROUP_ASPIE_COMM;
   Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[147].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[147].MyGroup = GROUP_ENVIRONMENT;
   Quiz[148].MyGroup = GROUP_NT_TALENT;
   Quiz[149].MyGroup = GROUP_NT_TALENT;
   Quiz[150].MyGroup = GROUP_ASPIE_COMM;
@@ -337,7 +337,7 @@ void TQuizR3::SetupTexts()
   Quiz[176].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[177].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[178].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[179].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[179].MyGroup = GROUP_ENVIRONMENT;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Have you felt different from others for most of your life?";

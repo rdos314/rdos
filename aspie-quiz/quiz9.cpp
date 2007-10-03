@@ -418,7 +418,7 @@ void TQuiz9::SetupTexts()
   Quiz[120].MyGroup = GROUP_SEX;
   Quiz[121].MyGroup = GROUP_SEX;
   Quiz[122].MyGroup = GROUP_SEX;
-  Quiz[123].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[123].MyGroup = GROUP_ENVIRONMENT;
   Quiz[124].MyGroup = GROUP_NT_TALENT;
   Quiz[125].MyGroup = GROUP_NONVERBAL;
   Quiz[126].MyGroup = GROUP_ASPIE_TALENT;

@@ -40,7 +40,7 @@
 
 //#define USE_PERCENT     1     // write correlations in % variance explained
 
-#define MAX_GROUP_COUNT         15
+#define MAX_GROUP_COUNT         16
 #define MAX_REFERERS            1024
 #define MAX_CROSS               30
 #define MAX_PCA_AXIS            8
@@ -56,7 +56,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             15
+#define GROUP_COUNT             16
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_NT_BIOLOGY        1
@@ -67,12 +67,13 @@
 #define GROUP_ASPIE_COMM        6
 #define GROUP_ASPIE_NVC         7
 #define GROUP_NONVERBAL         8
-#define GROUP_SEX               9
-#define GROUP_PARANOID          10
-#define GROUP_OCD               11
+#define GROUP_OCD               9
+#define GROUP_INSTINCT          10
+#define GROUP_PARANOID          11
 #define GROUP_RELIGION          12
-#define GROUP_INSTINCT          13
-#define GROUP_MIXED             14
+#define GROUP_SEX               13
+#define GROUP_ENVIRONMENT       14
+#define GROUP_MIXED             15
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1

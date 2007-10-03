@@ -445,8 +445,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biology";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biology";
 
-	Group[GROUP_NT_BIOLOGY].PosName = "Motor problem";
-	Group[GROUP_NT_BIOLOGY].NegName = "Motor";
+	Group[GROUP_NT_BIOLOGY].PosName = "NT hunting problem";
+	Group[GROUP_NT_BIOLOGY].NegName = "NT hunting";
 
 	Group[GROUP_SENSORY].PosName = "Perception";
 	Group[GROUP_SENSORY].NegName = "Perception problem";
@@ -481,8 +481,11 @@ void TQuiz::Init()
 	Group[GROUP_RELIGION].PosName = "Religion / superstition";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
 
-	Group[GROUP_INSTINCT].PosName = "Instinct";
-	Group[GROUP_INSTINCT].NegName = "Instinct problem";
+	Group[GROUP_INSTINCT].PosName = "Aspie hunting";
+	Group[GROUP_INSTINCT].NegName = "Aspie hunting problem";
+
+	Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
+	Group[GROUP_ENVIRONMENT].NegName = "Environment";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -532,6 +535,9 @@ void TQuiz::Init()
 
 	Group[GROUP_INSTINCT].PosName = "Instinkt";
 	Group[GROUP_INSTINCT].NegName = "Instinkt problem";
+
+	Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
+	Group[GROUP_ENVIRONMENT].NegName = "Miljö";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -949,6 +955,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_INSTINCT:
                 file.Write("GROUP_INSTINCT");
+                break;
+
+            case GROUP_ENVIRONMENT:
+                file.Write("GROUP_ENVIRONMENT");
                 break;
 
             default:
@@ -6293,6 +6303,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("INSTINCT");
 	        break;
 	            
+	    case GROUP_ENVIRONMENT:
+	        file->Write("ENVIRONMENT");
+	        break;
+	            
 	    case GROUP_MIXED:
 	        file->Write("MIXED");
 	        break;
@@ -7722,6 +7736,7 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
     long double corrsum;
     int corrcount;
     int count;
+    int qcount;
 	char str[80];
 	int cross;
 	TFile file(filename, 0);
@@ -7773,19 +7788,27 @@ void TQuiz::WriteGroupTable(const char *filename, int Cross)
             {
                 if (CrossQuiz[cross] && !CrossQuiz[cross]->IsSubQuiz())
                 {
-					corrsum += CrossQuiz[cross]->GroupCorr[g1][g2].Corr;
+                    qcount = CrossQuiz[cross]->Group[g1].Questions;
+                    qcount = qcount * CrossQuiz[cross]->Group[g2].Questions;
+                    
+					corrsum += CrossQuiz[cross]->GroupCorr[g1][g2].Corr * qcount;
 					count += CrossQuiz[cross]->GroupCorr[g1][g2].Count;
-					corrcount++;
+					corrcount += qcount;
 				}
 			}
 
-			corrsum += GroupCorr[g1][g2].Corr;
+            qcount = Group[g1].Questions;
+            qcount = qcount * Group[g2].Questions;
+                    
+			corrsum += GroupCorr[g1][g2].Corr * qcount;
 			count += GroupCorr[g1][g2].Count;
-            corrcount++;
+            corrcount += qcount;
 
-            corrval = corrsum / corrcount;
-            
-			WriteCorrVal(file, corrval, count);
+            if (corrcount)
+            {
+                corrval = corrsum / corrcount;
+       			WriteCorrVal(file, corrval, count);
+       		}
 
             WriteFieldFooter(file);
 	    }

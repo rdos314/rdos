@@ -370,7 +370,7 @@ void TQuiz8::SetupTexts()
   Quiz[134].MyGroup = GROUP_RELIGION;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_RELIGION;
-  Quiz[137].MyGroup = GROUP_ASPIE_COMM;
+  Quiz[137].MyGroup = GROUP_ENVIRONMENT;
   Quiz[138].MyGroup = GROUP_ASPIE_NVC;
   Quiz[139].MyGroup = GROUP_ASPIE_COMM;
   Quiz[140].MyGroup = GROUP_ASPIE_BIOLOGY;

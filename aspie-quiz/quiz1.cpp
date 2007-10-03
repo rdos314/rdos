@@ -150,7 +150,7 @@ void TQuizI::SetupTexts()
 	Quiz[27].MyGroup = GROUP_OCD;
 	Quiz[28].MyGroup = GROUP_OCD;
 	Quiz[29].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[30].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[30].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[32].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
