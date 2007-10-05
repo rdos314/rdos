@@ -226,7 +226,7 @@ Reset:
 	movlw b'00000110'
 	movwf PORTB
 ;
-	movlw b'00000110'
+	movlw b'01101110'
 	movwf PORTC
 ;
     movlw 1
