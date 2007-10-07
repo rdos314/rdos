@@ -30,6 +30,9 @@ OutCount:   EQU 0x2B
 
 Flags:      EQU 0x2C
 
+AdcCount:   EQU 0x2E
+AdcControl: EQU 0x2F
+
 
 ; common area
 
@@ -149,6 +152,23 @@ IntrNotPSP:
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
+; GetAdcControl
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+	
+GetAdcControl:
+    rrf Cmd,F
+    rrf Cmd,F
+    rrf Cmd,W
+    andlw 3
+	addwf PCL,F
+    retlw b'10001000'   ; chan 0
+    retlw b'10011000'   ; chan 1
+    retlw b'10101000'   ; chan 2
+    retlw b'10111000'   ; chan 3
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
 ; ExecuteSerialCmd
 ;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -176,6 +196,13 @@ ExecuteCmd:
     movlw CmdList
     movwf FSR    
 ;
+    btfsc INDF,7
+    goto ExecuteNormal
+;
+    btfss INDF,6
+    goto ExecuteAdc
+
+ExecuteNormal:    
     movf INDF,W
     andlw 0xC0
     btfss STATUS,Z
@@ -253,13 +280,12 @@ Reset:
 HandleLoop:
 	bsf PORTA, 3
 	bsf PORTA, 4
+	bsf PORTA, 5
     bcf Flags,FLAG_CMD_AVAIL_BIT
 
 WaitCmdLoop:
     btfss Flags,FLAG_CMD_AVAIL_BIT
     goto WaitCmdLoop
-;
-  	bcf PORTA, 3
 ;
     call ExecuteCmd
 ;
@@ -301,7 +327,23 @@ DelayLoop:
     goto DelayLoop
 ;
     return
-	
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; AdcDelay
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdcDelay:
+    movlw 0x10
+    movwf LowTemp1
+
+AdcDelayLoop:
+    decf LowTemp1,F
+    btfss STATUS,Z
+    goto AdcDelayLoop
+;
+    return
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
@@ -556,6 +598,7 @@ Read24:
 InByteLoop24:
     movlw 6
     movwf Count
+    clrf INDF
 
 InDataLoop24:
     call InputBit
@@ -761,6 +804,8 @@ ReadLineCrcLoop:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ExecuteSerial:
+  	bcf PORTA, 3
+;  	
     movf INDF,W
     andlw 0xC0
     movwf Result
@@ -795,6 +840,120 @@ ExecuteSerial:
 ExecSerialDone:
 	bsf PORTB,1
 	bsf PORTC,1
+    return
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+; ExecuteAdc
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+ExecuteAdc:
+  	bcf PORTA, 5
+;  	
+    movf INDF,W
+    andlw 0xC0
+    movwf Result
+;    
+    incf FSR,F
+    movf INDF,W
+    movwf Cmd
+;
+    call GetAdcControl
+    movwf AdcControl
+;
+    movlw 7
+    movwf AdcCount
+;
+; CS = RC6
+; DOUT = RC5
+; CLK = RC3
+; DIN = RC4
+;
+    bsf PORTC,3
+    bsf PORTC,5
+    bcf PORTC,6       
+    call AdcDelay
+
+AdcControlLoop:
+    bcf PORTC,3
+;    
+    btfss AdcControl,7
+    goto AdcResetControlBit
+    
+AdcSetControlBit:
+    bsf PORTC,5
+    goto AdcNextControlBit
+
+AdcResetControlBit:
+    bcf PORTC,5
+        
+AdcNextControlBit:
+    rlf AdcControl,F
+    call AdcDelay
+;        
+    bsf PORTC,3
+    call AdcDelay    
+;
+    decfsz AdcCount,F
+    goto AdcControlLoop
+;    
+    bcf PORTC,3
+    call AdcDelay
+;    
+    movlw DataList
+	addlw 1
+    movwf FSR   
+;
+    clrf INDF
+    movlw 6
+    movwf AdcCount 
+
+AdcMsbLoop:
+    bsf PORTC,3
+    call AdcDelay
+;
+    bcf STATUS,C
+    rlf INDF,F  
+;
+    btfsc PORTC,4
+    bsf INDF,0 
+;
+    bcf PORTC,3
+    call AdcDelay
+;
+    decfsz AdcCount,F
+    goto AdcMsbLoop 
+;
+    decf FSR,F
+    clrf INDF
+    movlw 6
+    movwf AdcCount 
+
+AdcLsbLoop:
+    bsf PORTC,3
+    call AdcDelay
+;
+    bcf STATUS,C
+    rlf INDF,F  
+;
+    btfsc PORTC,4
+    bsf INDF,0 
+;
+    bcf PORTC,3
+    call AdcDelay
+;
+    decfsz AdcCount,F
+    goto AdcLsbLoop 
+;
+    bsf PORTC,6
+    bsf PORTC,3
+    bsf PORTC,5
+    call AdcDelay
+;
+    movlw 0xC2    
+    movwf Result
+;    
     return
 
     end

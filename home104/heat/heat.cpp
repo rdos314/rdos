@@ -73,7 +73,7 @@ void cdecl main()
 	int temperr;
 	int temperrmax;
 	long double val;
-    int ival;
+	int ival;
 	long double winddir;
 	long NtpIp;
 	int SyncCount = 0;
@@ -174,6 +174,58 @@ void cdecl main()
 		RdosSetCursorPosition(0,0);
 
 		CurrTime = new TDateTime;
+
+		if (RdosReadSerialRaw(0x40, 0, &ival))
+		{
+			val = (long double)ival / 1000;
+			sprintf(str, "ADC #0: %5.3Lfv", val);
+
+			vbe->SetFilledStyle();
+			vbe->SetDrawColor(0, 0, 0);
+			vbe->DrawRect(550, 340, 550 + 100, 340 + 12);
+
+			vbe->SetDrawColor(255, 255, 255);
+			vbe->DrawString(550, 340, str);
+		}
+
+		if (RdosReadSerialRaw(0x40, 1, &ival))
+		{
+			val = (long double)ival / 1000;
+			sprintf(str, "ADC #1: %5.3Lfv", val);
+
+			vbe->SetFilledStyle();
+			vbe->SetDrawColor(0, 0, 0);
+			vbe->DrawRect(550, 355, 550 + 100, 355 + 12);
+
+			vbe->SetDrawColor(255, 255, 255);
+			vbe->DrawString(550, 355, str);
+		}
+
+		if (RdosReadSerialRaw(0x40, 2, &ival))
+		{
+			val = (long double)ival / 1000;
+			sprintf(str, "ADC #2: %5.3Lfv", val);
+
+			vbe->SetFilledStyle();
+			vbe->SetDrawColor(0, 0, 0);
+			vbe->DrawRect(550, 370, 550 + 100, 370 + 12);
+
+			vbe->SetDrawColor(255, 255, 255);
+			vbe->DrawString(550, 370, str);
+		}
+
+		if (RdosReadSerialRaw(0x40, 3, &ival))
+		{
+			val = (long double)ival / 1000;
+			sprintf(str, "ADC #3: %5.3Lfv", val);
+
+			vbe->SetFilledStyle();
+			vbe->SetDrawColor(0, 0, 0);
+			vbe->DrawRect(550, 385, 550 + 100, 385 + 12);
+
+			vbe->SetDrawColor(255, 255, 255);
+			vbe->DrawString(550, 385, str);
+		}
 
 		if (RdosReadSerialLines(1, &diostat))
 		{

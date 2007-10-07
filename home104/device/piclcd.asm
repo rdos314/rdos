@@ -661,6 +661,39 @@ PAGE
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;
 ;
+;		NAME:		    CreateAdcReq
+;
+;		description:	Create ADC dio req
+;
+;       PARAMETERS:     DL      Line #
+;                       DH      Node #
+;
+;       RETURNS:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+CreateAdcReq   Proc near
+    push ax
+    mov eax,SIZE digio_queue_entry
+    AllocateSmallGlobalMem
+    pop ax
+    mov es:dqe_queue,0
+    mov es:dqe_result,-1
+    mov es:dqe_out_buf,dh
+;    
+    mov al,dl
+    shl al,3
+    or al,2
+    mov es:dqe_out_buf+1,al
+    mov es:dqe_out_size,2
+    ret
+CreateAdcReq    Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
 ;		NAME:		    QueueReq
 ;
 ;		description:	Queue dio req
@@ -744,9 +777,14 @@ DioReq  Proc near
     movzx ax,al
     call CreateDirectReq
     call QueueReq
+
+drWaitOne:
     WaitForSignal
 ;
     mov al,es:dqe_result
+    cmp al,-1
+    je drWaitOne
+;    
     test al,0C0h
     clc
     jnz drDone
@@ -770,17 +808,17 @@ drAll:
     call QueueReq
     mov [bp+2],es
 
-drWait:    
+drWaitAll:    
     WaitForSignal
     mov es,[bp]
     mov al,es:dqe_result
     cmp al,-1
-    je drWait
+    je drWaitAll
 ;
     mov es,[bp+2]
     mov al,es:dqe_result
     cmp al,-1
-    je drWait
+    je drWaitAll
 ;
     mov es,[bp]
     mov al,es:dqe_result
@@ -842,6 +880,49 @@ drDone:
     pop bp
     ret
 DioReq  Endp
+
+PAGE
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;
+;
+;		NAME:		    AdcReq
+;
+;		description:    Adc req
+;
+;       PARAMETERS:     DL      Line #
+;                       DH      Node #
+;
+;       Returns:        ES      Cmd block
+;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AdcReq  Proc near
+    push ax
+;
+    call CreateAdcReq
+    call QueueReq
+
+adcWaitOne:
+    WaitForSignal
+;
+    mov al,es:dqe_result
+    cmp al,-1
+    je adcWaitOne
+;    
+    test al,0C0h
+    clc
+    jnz adcDone
+;
+    FreeMem
+    stc
+    jmp adcDone
+    
+        
+adcDone:   
+    pop ax
+    ret
+AdcReq  Endp
 
 PAGE
 
@@ -1583,7 +1664,28 @@ read_serial_val	Proc far
     push es
 	push bx
 	push cx
+	push dx
 ;
+    test dh,0C0h
+    jz rsvSerial
+;
+    and dh,3Fh
+    call AdcReq
+    mov ax,es
+    or ax,ax
+    stc
+    jz rsvDone
+;    
+    xor eax,eax
+    mov al,es:dqe_in_buf+1
+    shl eax,6
+    or al,es:dqe_in_buf
+;    
+    FreeMem
+    clc
+    jmp rsvDone
+
+rsvSerial:
     mov bl,2
     xor cx,cx
     call DioReq
@@ -1591,26 +1693,34 @@ read_serial_val	Proc far
     or ax,ax
     stc
     jz rsvDone
-;    
+;
     xor eax,eax
     mov bx,OFFSET dqe_in_buf + 3
     mov al,es:[bx]
+    and al,3Fh
     dec bx
 ;
     shl eax,6
-    or al,es:[bx]
+    mov dl,es:[bx]
+    and dl,3Fh
+    or al,dl
     dec bx
 ;
     shl eax,6
-    or al,es:[bx]
+    mov dl,es:[bx]
+    and dl,3Fh
+    or al,dl
     dec bx
 ;
     shl eax,6
-    or al,es:[bx]
+    mov dl,es:[bx]
+    and dl,3Fh
+    or al,dl
     FreeMem
     clc
 
 rsvDone:    
+    pop dx
 	pop cx
 	pop bx
 	pop es
