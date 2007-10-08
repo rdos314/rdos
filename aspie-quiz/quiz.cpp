@@ -11104,3 +11104,433 @@ void TQuiz::WriteAverageAxisTable(const char *filename)
 		file.Write("<br><br>");
 	}
 }
+
+/*##################  TQuiz::ExportGlobalSql ##########################
+*   Purpose....: Export global SQL table	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGlobalSql(const char *filename)
+{
+    int first;
+    int i;
+    int count;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+    TQuiz *quiz;
+    int q;
+    long double val;
+	const char *ptr;
+    char str[1024];
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `global`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `global` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `Text` text NOT NULL,\n");
+    file.Write("  `Count` int(11) NOT NULL,\n");
+    file.Write("  `Cats` int(11) NOT NULL,\n");
+    file.Write("  `AsNtCorr` float default NULL,\n");
+    file.Write("  `Chi2` float default NULL,\n");
+    file.Write("  `Cramer` float default NULL,\n");
+    file.Write("  `AspieLoad` float default NULL,\n");
+    file.Write("  `NtLoad` float default NULL,\n");
+    file.Write("  `GLoad` float default NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `global` (`ID`, `Text`, `Count`, `Cats`, `AsNtCorr`, `Chi2`, `P`, `AspieLoad`, `NtLoad`, `GLoad`) VALUES\n");
+
+    first = TRUE;
+    
+    for (i = 0; i < MAX_GLOBAL_QUESTIONS; i++)
+    {
+        TopQuiz = GlobalTopQuiz[i];
+		TopQuestion = GlobalTopQuestion[i];
+
+		if (TopQuiz)
+		{
+            if (first)
+                first = FALSE;
+            else
+    		    file.Write("),\n");
+    					
+            file.Write("(");
+
+            sprintf(str, "%d, \"", i);
+            file.Write(str);
+
+			str[1] = 0;
+			ptr = TopQuiz->Quiz[TopQuestion].Text;
+			while (*ptr)
+			{
+				switch (*ptr)
+				{
+					case '"':
+						file.Write("\\\"");
+						break;
+
+					default:
+						str[0] = *ptr;
+						file.Write(str);
+                        break;                
+                }
+                ptr++;
+            }
+            file.Write("\", ");
+
+            count = 0;
+
+		    TopQuiz->ClearUsed(TopQuestion);
+    	    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+    		while (quiz)
+            {
+                count += quiz->All.Count[q];
+		    	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+    		}
+
+            sprintf(str, "%d, ", count);
+    		file.Write(str);
+
+            sprintf(str, "%d, ", GlobalCatCount[i]);
+    		file.Write(str);
+
+			val = GlobalAsNtCorrSum[i] / GlobalAsNtCorrCount[i];
+        	sprintf(str, "%4.3Lf, ", val);
+    		file.Write(str);
+
+			val = GlobalChi2[i];
+        	sprintf(str, "%4.3Lf, ", val);
+    		file.Write(str);
+
+			val = sqrtl(GlobalChi2[i] / count);
+        	sprintf(str, "%4.3Lf, ", val);
+    		file.Write(str);
+
+    		if (GlobalPcaCount[i][0])
+    		    val = GlobalPcaSum[i][0] / GlobalPcaCount[i][0];
+    		else
+    		    val = 0.0;
+
+        	sprintf(str, "%4.3Lf, ", val);
+    		file.Write(str);
+
+    		if (GlobalPcaCount[i][1])
+    		    val = GlobalPcaSum[i][1] / GlobalPcaCount[i][1];
+    		else
+    		    val = 0.0;
+
+        	sprintf(str, "%4.3Lf, ", val);
+    		file.Write(str);
+
+    		if (GlobalPcaCount[i][2])
+    		    val = GlobalPcaSum[i][2] / GlobalPcaCount[i][2];
+    		else
+    		    val = 0.0;
+
+        	sprintf(str, "%4.3Lf", val);
+    		file.Write(str);
+        }
+    }
+    file.Write(");\n");
+}
+
+/*##################  TQuiz::ExportQuizVerSql ##########################
+*   Purpose....: Export quiz version SQL table	      	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportQuizVerSql(const char *filename)
+{
+    int q;
+    TQuiz *quiz;
+	int maxq;
+    char str[64];
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `quizver`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `quizver` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `Text` text NOT NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    maxq = 0;
+
+    for (q = 0; q < MAX_CROSS; q++)
+    {
+        quiz = CrossQuiz[q];
+
+        if (quiz)
+        {
+            maxq = q;
+		    file.Write("INSERT INTO `quizver` (`ID`, `Text`) VALUES (");
+
+			sprintf(str, "%d, \"", q);
+			file.Write(str);
+
+            quiz->WriteName(file);
+
+            file.Write("\");\n");
+        }
+    }            
+    
+    file.Write("INSERT INTO `quizver` (`ID`, `Text`) VALUES (");
+
+    maxq++;        
+    sprintf(str, "%d, \"", maxq);
+    file.Write(str);
+
+    WriteName(file);
+
+    file.Write("\");\n");
+}
+
+/*##################  TQuiz::ExportGroupSql ##########################
+*   Purpose....: Export group SQL table     	      	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGroupSql(const char *filename)
+{
+    int g;
+    char str[64];
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `group`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `group` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `PosName` text NOT NULL,\n");
+    file.Write("  `NegName` text NOT NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    for (g = 0; g < GROUP_COUNT; g++)
+    {
+        file.Write("INSERT INTO `group` (`ID`, `PosName`, `NegName`) VALUES (");
+
+		sprintf(str, "%d, \"", g);
+		file.Write(str);
+
+        file.Write(Group[g].PosName);
+        file.Write("\", \"");
+
+        file.Write(Group[g].NegName);
+        file.Write("\");\n");
+    }            
+}
+
+/*##################  TQuiz::ExportPopTypeSql ##########################
+*   Purpose....: Export pop-type SQL table     	      	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportPopTypeSql(const char *filename)
+{
+    char str[64];
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `poptype`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `poptype` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `Text` text NOT NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `poptype` (`ID`, `Text`) VALUES\n");
+
+    sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ALL, "All");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_AUTISM, "Diagnosed Autism");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_AS, "Diagnosed AS/HFA/PDD");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ASPIE_CONTROL, "Self-diagnosed Aspie");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ADD, "ADD/ADHD");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_TS, "Tourette");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_HYPERLEXIA, "Hyperlexia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_DYSPRAXIA, "Dyspraxia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_DYSLEXIA, "Dyslexia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_DYSCALCULIA, "Dyscalculia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_OCD, "Obsessive Compulsive Disorder");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ODD, "ODD");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_SYNAESTHESIA, "Synaesthesia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_PA, "Prosopagnosia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_DYSGRAPHIA, "Dysgraphia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_BIPOLAR, "Bipolar");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_SCHIZOPHRENIA, "Schizophrenia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_SOCIAL_PHOBIA, "Social Phobia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\");\n", POP_TYPE_NT_CONTROL, "Neurotypical control group");
+	file.Write(str);
+}
+
+/*##################  TQuiz::ExportGlobalCorrSql ##########################
+*   Purpose....: Export global question intercorrelations SQL table	      	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGlobalCorrSql(const char *filename)
+{
+    int first;
+    int gid1;
+    int gid2;
+	char str[64];
+	long double val;
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `gcorr`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `gcorr` (\n");
+	file.Write("  `ID1` int(11) NOT NULL,\n");
+	file.Write("  `ID2` int(11) NOT NULL,\n");
+	file.Write("  `Corr` float default NULL,\n");
+	file.Write("  `Corr2` float default NULL,\n");
+	file.Write("  `Count` int(11) NOT NULL,\n");
+	file.Write("  PRIMARY KEY  (`ID1`, `ID2`),\n");
+	file.Write("  KEY `Corr2`  (`ID1`, `Corr2`)\n");
+	file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `gcorr` (`ID1`, `ID2`, `Corr`, `Corr2`, `Count`) VALUES\n");
+
+    first = TRUE;
+    
+    for (gid1 = 0; gid1 < MAX_GLOBAL_QUESTIONS; gid1++)
+    {
+        for (gid2 = 0; gid2 < MAX_GLOBAL_QUESTIONS; gid2++)
+        {
+            if (gid1 != gid2)
+            {
+                if (GlobalCorrCount[gid1][gid2])
+                {
+                    if (first)
+                        first = FALSE;
+                    else
+    					file.Write("),\n");
+    					
+        		    file.Write("(");
+
+        			sprintf(str, "%d, ", gid1);
+		        	file.Write(str);
+
+        			sprintf(str, "%d, ", gid2);
+		        	file.Write(str);
+
+                    val = GlobalCorrArr[gid1][gid2] / GlobalCorrCount[gid1][gid2];
+                	sprintf(str, "%4.3Lf, ", val);
+    	        	file.Write(str);
+
+                    val = val * val;
+                	sprintf(str, "%7.6Lf, ", val);
+    	        	file.Write(str);
+
+        			sprintf(str, "%d", GlobalCorrCount[gid1][gid2]);
+		        	file.Write(str);
+				}
+			}
+        }
+    }            
+	file.Write(");\n");
+}
+
+/*##################  TQuiz::ExportGlobalAxisSql ##########################
+*   Purpose....: Export global axis loadings SQL table	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportGlobalAxisSql(const char *filename)
+{
+    int first;
+    int id;
+    int group;
+	char str[64];
+	long double val;
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `gaxis`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `gaxis` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `Group` int(11) NOT NULL,\n");
+    file.Write("  `Load` float default NULL,\n");
+    file.Write("  `Load2` float default NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`, `Group`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `gaxis` (`ID`, `Group`, `Load`, `Load2`) VALUES\n");
+
+    first = TRUE;
+    
+    for (id = 0; id < MAX_GLOBAL_QUESTIONS; id++)
+    {
+        for (group = 0; group < GROUP_COUNT - 1; group++)
+        {
+            if (GlobalAxisCount[id][group])
+            {
+                if (first)
+                    first = FALSE;
+                else
+    				file.Write("),\n");
+    					
+        		file.Write("(");
+
+        		sprintf(str, "%d, ", id);
+		        file.Write(str);
+
+        		sprintf(str, "%d, ", group);
+		        file.Write(str);
+
+                val = GlobalAxisSum[id][group] / GlobalAxisCount[id][group];
+                sprintf(str, "%4.3Lf, ", val);
+    	        file.Write(str);
+
+                val = val * val;
+                sprintf(str, "%7.6Lf", val);
+    	        file.Write(str);
+			}
+        }
+    }            
+	file.Write(");\n");
+}

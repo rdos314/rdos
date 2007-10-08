@@ -528,5 +528,12 @@ int main(int argc, char **argv)
 //	 TQuiz::WikiToQuiz("wiki.txt", "s4.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
+
+    Quiz[19]->ExportGlobalSql("global.sql");
+    Quiz[19]->ExportQuizVerSql("quizver.sql");
+	Quiz[19]->ExportGroupSql("group.sql");
+	Quiz[19]->ExportPopTypeSql("poptype.sql");
+	Quiz[19]->ExportGlobalCorrSql("gcorr.sql");
+    Quiz[19]->ExportGlobalAxisSql("gaxis.sql");
 }
 

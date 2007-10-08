@@ -303,6 +303,13 @@ public:
 
     void CalcGlobal();
 
+    void ExportGlobalSql(const char *filename);
+    void ExportQuizVerSql(const char *filename);
+    void ExportGroupSql(const char *filename);
+    void ExportPopTypeSql(const char *filename);
+	void ExportGlobalCorrSql(const char *filename);
+    void ExportGlobalAxisSql(const char *filename);
+
 protected:
 	void Init();
 	static int round(long double val);
