@@ -38,7 +38,7 @@
 #define MAX_IN_ROW      0x8000
 #define MAX_REFERERS    1024
 
-const char InsertString[] = "INSERT INTO aspie-quiz-r4 VALUES (";
+const char InsertString[] = "INSERT INTO aspie-quiz-r4 VALUES(";
 
 TFile quizfile("quizr4.bin", 0);
 
