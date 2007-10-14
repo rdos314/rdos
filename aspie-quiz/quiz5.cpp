@@ -229,7 +229,7 @@ void TQuiz5::SetupTexts()
 	Quiz[12].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[13].MyGroup = GROUP_SENSORY;
 	Quiz[14].MyGroup = GROUP_MIXED;
-	Quiz[15].MyGroup = GROUP_MIXED;
+	Quiz[15].MyGroup = GROUP_RELIGION;
 	Quiz[16].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[17].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[18].MyGroup = GROUP_NT_BIOLOGY;
@@ -248,7 +248,7 @@ void TQuiz5::SetupTexts()
 	Quiz[31].MyGroup = GROUP_NONVERBAL;
 	Quiz[32].MyGroup = GROUP_NONVERBAL;
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
-	Quiz[34].MyGroup = GROUP_MIXED;
+	Quiz[34].MyGroup = GROUP_SENSORY;
 	Quiz[35].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[36].MyGroup = GROUP_NT_TALENT;
 	Quiz[37].MyGroup = GROUP_NONVERBAL;
@@ -257,7 +257,7 @@ void TQuiz5::SetupTexts()
 	Quiz[40].MyGroup = GROUP_NONVERBAL;
 	Quiz[41].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[42].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[43].MyGroup = GROUP_ASPIE_TALENT;
+	Quiz[43].MyGroup = GROUP_OCD;
 	Quiz[44].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[45].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[46].MyGroup = GROUP_ASPIE_TALENT;
@@ -266,10 +266,10 @@ void TQuiz5::SetupTexts()
 	Quiz[49].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[50].MyGroup = GROUP_OCD;
 	Quiz[51].MyGroup = GROUP_OCD;
-	Quiz[52].MyGroup = GROUP_OCD;
+	Quiz[52].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[54].MyGroup = GROUP_OCD;
-	Quiz[55].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[55].MyGroup = GROUP_OCD;
 	Quiz[56].MyGroup = GROUP_OCD;
 	Quiz[57].MyGroup = GROUP_OCD;
 	Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -284,7 +284,7 @@ void TQuiz5::SetupTexts()
 	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[70].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[70].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -317,16 +317,16 @@ void TQuiz5::SetupTexts()
 	Quiz[100].MyGroup = GROUP_NT_TALENT;
 	Quiz[101].MyGroup = GROUP_NONVERBAL;
 	Quiz[102].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[103].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[104].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[103].MyGroup = GROUP_ENVIRONMENT;
+	Quiz[104].MyGroup = GROUP_NT_TALENT;
 	Quiz[105].MyGroup = GROUP_NT_TALENT;
 	Quiz[106].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[107].MyGroup = GROUP_MIXED;
 	Quiz[108].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[109].MyGroup = GROUP_ASPIE_COMM;
 	Quiz[110].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[111].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[112].MyGroup = GROUP_MIXED;
+	Quiz[111].MyGroup = GROUP_ENVIRONMENT;
+	Quiz[112].MyGroup = GROUP_NT_TALENT;
 
 #ifdef ENGLISH
 
