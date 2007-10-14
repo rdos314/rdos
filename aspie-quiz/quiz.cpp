@@ -460,9 +460,6 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
 
-	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinct";
-	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinct problem";
-
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
 
@@ -923,10 +920,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ASPIE_SOCIAL:
                 file.Write("GROUP_ASPIE_SOCIAL");
-                break;
-
-            case GROUP_ASPIE_COMM:
-                file.Write("GROUP_ASPIE_COMM");
                 break;
 
             case GROUP_ASPIE_NVC:
@@ -6269,10 +6262,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_ASPIE_SOCIAL:
 	        file->Write("ASPIE_SOCIAL");
-	        break;
-	            
-	    case GROUP_ASPIE_COMM:
-	        file->Write("STIMS");
 	        break;
 	            
 	    case GROUP_ASPIE_NVC:

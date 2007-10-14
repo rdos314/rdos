@@ -228,10 +228,10 @@ void TQuiz7::SetupTexts()
 	Quiz[3].MyGroup = GROUP_SENSORY;
 	Quiz[4].MyGroup = GROUP_SENSORY;
 	Quiz[5].MyGroup = GROUP_SENSORY;
-	Quiz[6].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[6].MyGroup = GROUP_MIXED;
 	Quiz[7].MyGroup = GROUP_SENSORY;
 	Quiz[8].MyGroup = GROUP_SENSORY;
-	Quiz[9].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[9].MyGroup = GROUP_MIXED;
 	Quiz[10].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[11].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[12].MyGroup = GROUP_NT_BIOLOGY;
@@ -272,7 +272,7 @@ void TQuiz7::SetupTexts()
 	Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[50].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[50].MyGroup = GROUP_MIXED;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[53].MyGroup = GROUP_SEX;
@@ -337,7 +337,7 @@ void TQuiz7::SetupTexts()
 	Quiz[112].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[113].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[114].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[115].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[115].MyGroup = GROUP_MIXED;
 	Quiz[116].MyGroup = GROUP_NONVERBAL;
 	Quiz[117].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[118].MyGroup = GROUP_ASPIE_TALENT;
@@ -358,7 +358,7 @@ void TQuiz7::SetupTexts()
 	Quiz[133].MyGroup = GROUP_MIXED;
 	Quiz[134].MyGroup = GROUP_MIXED;
 	Quiz[135].MyGroup = GROUP_NT_BIOLOGY;
-	Quiz[136].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[136].MyGroup = GROUP_MIXED;
 	Quiz[137].MyGroup = GROUP_SENSORY;
 	Quiz[138].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[139].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -366,9 +366,9 @@ void TQuiz7::SetupTexts()
 	Quiz[141].MyGroup = GROUP_SENSORY;
 	Quiz[142].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[143].MyGroup = GROUP_MIXED;
-	Quiz[144].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[145].MyGroup = GROUP_ASPIE_COMM;
-	Quiz[146].MyGroup = GROUP_ASPIE_COMM;
+	Quiz[144].MyGroup = GROUP_MIXED;
+	Quiz[145].MyGroup = GROUP_MIXED;
+	Quiz[146].MyGroup = GROUP_MIXED;
 	Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[148].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[149].MyGroup = GROUP_ASPIE_NVC;

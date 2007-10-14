@@ -56,24 +56,23 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             16
+#define GROUP_COUNT             15
 
 #define GROUP_ASPIE_BIOLOGY     0
-#define GROUP_NT_BIOLOGY        1
-#define GROUP_SENSORY           2
-#define GROUP_ASPIE_TALENT      3
-#define GROUP_NT_TALENT         4
-#define GROUP_ASPIE_SOCIAL      5
-#define GROUP_ASPIE_COMM        6
+#define GROUP_INSTINCT          1
+#define GROUP_NT_BIOLOGY        2
+#define GROUP_SENSORY           3
+#define GROUP_ASPIE_TALENT      4
+#define GROUP_NT_TALENT         5
+#define GROUP_ASPIE_SOCIAL      6
 #define GROUP_ASPIE_NVC         7
 #define GROUP_NONVERBAL         8
 #define GROUP_OCD               9
-#define GROUP_INSTINCT          10
-#define GROUP_PARANOID          11
-#define GROUP_RELIGION          12
-#define GROUP_SEX               13
-#define GROUP_ENVIRONMENT       14
-#define GROUP_MIXED             15
+#define GROUP_PARANOID          10
+#define GROUP_RELIGION          11
+#define GROUP_SEX               12
+#define GROUP_ENVIRONMENT       13
+#define GROUP_MIXED             14
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1
