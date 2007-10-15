@@ -52,6 +52,7 @@
 #include "quizs2.h"
 #include "quizs3.h"
 #include "quizs4.h"
+#include "quizs5.h"
 // #include "spq.h"
 #include "pop.h"
 
@@ -92,6 +93,7 @@ int main(int argc, char **argv)
 	Quiz[17] = new TQuizS2("quizs2.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16]);
 	Quiz[18] = new TQuizS3("quizs3.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17]);
 	Quiz[19] = new TQuizS4("quizs4.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18]);
+	Quiz[20] = new TQuizS5("quizs5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -316,9 +318,9 @@ int main(int argc, char **argv)
 
 	 Quiz[19]->CalcGlobal();
 
-//	 Quiz[19]->WritePhpQuestions("q.php");
-//	 Quiz[19]->WriteSetupTexts("q.cpp");
-//	 Quiz[19]->WriteSetupCross("c.cpp");
+	 Quiz[20]->WritePhpQuestions("q.php");
+	 Quiz[20]->WriteSetupTexts("q.cpp");
+	 Quiz[20]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -519,13 +521,13 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[18]->WriteQuizWiki("s3.txt");
+//	  Quiz[19]->WriteQuizWiki("s4.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "s4.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "s5.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

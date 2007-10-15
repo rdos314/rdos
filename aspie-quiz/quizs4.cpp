@@ -36,7 +36,6 @@
 #define CI	1
 
 #define MAX_IN_ROW		4096
-#define MAX_USERS       500
 
 #define FALSE 0
 #define TRUE !FALSE
@@ -138,7 +137,7 @@ int TQuizS4::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS4::GetQuizN()
 {
-	return 132;
+	return 149;
 }
 
 /*##########################################################################
@@ -1728,7 +1727,7 @@ void TQuizS4::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

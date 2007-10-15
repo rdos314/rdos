@@ -509,9 +509,6 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
 
-	Group[GROUP_ASPIE_COMM].PosName = "Aspie instinkt";
-	Group[GROUP_ASPIE_COMM].NegName = "Aspie instinkt problem";
-
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
 
