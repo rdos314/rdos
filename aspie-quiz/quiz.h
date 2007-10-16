@@ -69,9 +69,9 @@
 #define GROUP_NONVERBAL         8
 #define GROUP_OCD               9
 #define GROUP_PARANOID          10
-#define GROUP_RELIGION          11
-#define GROUP_SEX               12
-#define GROUP_ENVIRONMENT       13
+#define GROUP_ENVIRONMENT       11
+#define GROUP_RELIGION          12
+#define GROUP_SEX               13
 #define GROUP_MIXED             14
 
 #define POP_TYPE_ALL            0

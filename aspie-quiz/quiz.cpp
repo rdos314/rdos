@@ -6356,6 +6356,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-3</a><br>\n");
 	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-3</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
+	file.Write("<a href=\"avgaxis.htm\">Averaged axis loadings</a><br>\n");
+	file.Write("<a href=\"axisload.htm\">Detailed axis loadings</a><br>\n");
 	file.Write("<a href=\"group.htm\">Correlation between groups</a><br>\n");
 	file.Write("<a href=\"vervar.htm\">Score stability between versions</a><br>\n");
 
@@ -6386,6 +6388,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
 	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
+	file.Write("<a href=\"avgaxis.htm\">Sammanvägda axel faktorer</a><br>\n");
+	file.Write("<a href=\"axisload.htm\">Detaljerade axel faktorer</a><br>\n");
 	file.Write("<a href=\"group.htm\">Korrelation mellan grupper</a><br>\n");
 	file.Write("<a href=\"vervar.htm\">Poängstabilitet mellan versioner</a><br>\n");
 
@@ -6765,12 +6769,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs4.htm\">overview</a> <a href=\"rels4.htm\">related questions</a> <a href=\"refs4.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs4.htm\">overview</a> <a href=\"rels4.htm\">related questions</a> <a href=\"refs4.htm\">referer sites</a> <a href=\"retests4.htm\">score stability</a> <a href=\"lsas.htm\">LSAS test</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs4.htm\">översikt</a> <a href=\"rels4.htm\">relaterade frågor</a> <a href=\"refs4.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs4.htm\">översikt</a> <a href=\"rels4.htm\">relaterade frågor</a> <a href=\"refs4.htm\">referenssajter</a> <a href=\"retests4.htm\">poäng stabilitet</a>");
 	 file.Write("<br>");
 #endif
 
@@ -8664,17 +8668,11 @@ void TQuiz::WritePhpGlobalQuestions(const char *filename)
 *##########################################################################*/
 void TQuiz::WritePhpGroupWeighting(const char *filename)
 {
-    long double gsum;
-    int gcount;
     long double val;
-    int count;
-    int questions;
-	int curr;
 	int grp;
-    TQuiz *quiz;
-	 int q;
-    int j;
-	 int ival;
+	int q;
+	int GlobalId;
+	int ival;
 	 char str[80];
 	TFile file(filename, 0);
 
@@ -8686,42 +8684,23 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
     	sprintf(str, "  $gw[%d] = array(0 => ", q);
 		file.Write(str);
 
+		GlobalId = GetGlobalId(q);
+
 		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
 		{
-			gsum = 0.0;
-			gcount = 0;
-
-			quiz = this;
-			curr = q;
-			while (quiz)
-			{
-				val = quiz->Quiz[curr].Group[grp].Corr;
-				count = quiz->Quiz[curr].Group[grp].Count;
-				questions = quiz->Group[grp].Questions;
-
-				if (count > 3)
-				{
-					gsum += val * questions;
-					gcount += questions;
-				}
-
-                if (quiz->Quiz[curr].CrossQuiz)
-                {
-                    j = quiz->Quiz[curr].CrossInd;
-                    quiz = quiz->Quiz[curr].CrossQuiz;
-                    curr = j;
-    			}
-    			else
-    			    quiz = 0;
-			}
-
-            if (gcount)
-           		ival = round(100.0 * gsum / gcount);
+            if (GlobalAxisCount[GlobalId][grp])
+            {
+                val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
+                if (val < 0)
+                    val = 0;
+            }
             else
-                ival = 0;
+                val = 0;
 
             if (Quiz[q].Reverse)
-                ival = -ival;
+                val = -val;
+
+           	ival = round(100.0 * val);
 
 			sprintf(str, "%d", ival);
 	    	file.Write(str);
@@ -8743,18 +8722,12 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 *##########################################################################*/
 void TQuiz::WriteGroupWeighting(const char *filename)
 {
-    long double gsum;
-    int gcount;
     long double val;
-    int count;
-    int questions;
-	int curr;
 	int grp;
-    TQuiz *quiz;
-	 int q;
-    int j;
-	 int ival;
-	 char str[80];
+	int q;
+	int ival;
+	int GlobalId;
+	char str[80];
 	TFile file(filename, 0);
 
     sprintf(str, "    static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 3);
@@ -8763,43 +8736,21 @@ void TQuiz::WriteGroupWeighting(const char *filename)
 	for (q = 0; q < N; q++)
 	{
         file.Write("    {");
+
+		GlobalId = GetGlobalId(q);
         
 		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
 		{
-			gsum = 0.0;
-			gcount = 0;
-
-			quiz = this;
-			curr = q;
-			while (quiz)
-			{
-				val = quiz->Quiz[curr].Group[grp].Corr;
-				count = quiz->Quiz[curr].Group[grp].Count;
-				questions = quiz->Group[grp].Questions;
-
-				if (count > 3)
-				{
-					gsum += val * questions;
-					gcount += questions;
-				}
-
-                if (quiz->Quiz[curr].CrossQuiz)
-                {
-                    j = quiz->Quiz[curr].CrossInd;
-                    quiz = quiz->Quiz[curr].CrossQuiz;
-                    curr = j;
-    			}
-    			else
-    			    quiz = 0;
-			}
-
-            if (gcount)
-           		ival = round(100.0 * gsum / gcount);
+            if (GlobalAxisCount[GlobalId][grp])
+            {
+                val = GlobalAxisSum[GlobalId][grp] / GlobalAxisCount[GlobalId][grp];
+                if (val < 0)
+                    val = 0;
+            }
             else
-                ival = 0;
+                val = 0;
 
-            if (Quiz[q].Reverse)
-                ival = -ival;
+           	ival = round(100.0 * val);
 
 			sprintf(str, "%d", ival);
 	    	file.Write(str);

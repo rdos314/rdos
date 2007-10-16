@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS5::TQuizS5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4)
-  : TQuiz(163),
+  : TQuiz(177),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -135,7 +135,7 @@ int TQuizS5::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS5::GetQuizN()
 {
-	return 163;
+	return 171;
 }
 
 /*##########################################################################
@@ -163,171 +163,6 @@ void TQuizS5::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizS5::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 433);
-  DefineID(2, 509);
-  DefineID(3, 510);
-  DefineID(4, 514);
-  DefineID(5, 46);
-  DefineID(6, 207);
-  DefineID(7, 53);
-  DefineID(8, 862);
-  DefineID(9, 54);
-  DefineID(10, 61);
-  DefineID(11, 503);
-  DefineID(12, 632);
-  DefineID(13, 385);
-  DefineID(14, 871);
-  DefineID(15, 25);
-  DefineID(16, 26);
-  DefineID(17, 151);
-  DefineID(18, 497);
-  DefineID(19, 100);
-  DefineID(20, 20);
-  DefineID(21, 85);
-  DefineID(22, 861);
-  DefineID(23, 23);
-  DefineID(24, 519);
-  DefineID(25, 5);
-  DefineID(26, 599);
-  DefineID(27, 606);
-  DefineID(28, 3);
-  DefineID(29, 6);
-  DefineID(30, 397);
-  DefineID(31, 129);
-  DefineID(32, 743);
-  DefineID(33, 50);
-  DefineID(34, 240);
-  DefineID(35, 616);
-  DefineID(36, 319);
-  DefineID(37, 316);
-  DefineID(38, 518);
-  DefineID(39, 767);
-  DefineID(40, 70);
-  DefineID(41, 66);
-  DefineID(42, 269);
-  DefineID(43, 549);
-  DefineID(44, 507);
-  DefineID(45, 552);
-  DefineID(46, 858);
-  DefineID(47, 859);
-  DefineID(48, 73);
-  DefineID(49, 454);
-  DefineID(50, 860);
-  DefineID(51, 769);
-  DefineID(52, 366);
-  DefineID(53, 702);
-  DefineID(54, 243);
-  DefineID(55, 97);
-  DefineID(56, 282);
-  DefineID(57, 378);
-  DefineID(58, 737);
-  DefineID(59, 495);
-  DefineID(60, 32);
-  DefineID(61, 708);
-  DefineID(62, 149);
-  DefineID(63, 277);
-  DefineID(64, 115);
-  DefineID(65, 765);
-  DefineID(66, 857);
-  DefineID(67, 547);
-  DefineID(68, 712);
-  DefineID(69, 731);
-  DefineID(70, 403);
-  DefineID(71, 359);
-  DefineID(72, 575);
-  DefineID(73, 570);
-  DefineID(74, 590);
-  DefineID(75, 402);
-  DefineID(76, 15);
-  DefineID(77, 589);
-  DefineID(78, 572);
-  DefineID(79, 17);
-  DefineID(80, 574);
-  DefineID(81, 401);
-  DefineID(82, 234);
-  DefineID(83, 536);
-  DefineID(84, 487);
-  DefineID(85, 130);
-  DefineID(86, 83);
-  DefineID(87, 86);
-  DefineID(88, 226);
-  DefineID(89, 82);
-  DefineID(90, 551);
-  DefineID(91, 84);
-  DefineID(92, 262);
-  DefineID(93, 707);
-  DefineID(94, 856);
-  DefineID(95, 95);
-  DefineID(96, 128);
-  DefineID(97, 279);
-  DefineID(98, 741);
-  DefineID(99, 726);
-  DefineID(100, 89);
-  DefineID(101, 249);
-  DefineID(102, 37);
-  DefineID(103, 361);
-  DefineID(104, 39);
-  DefineID(105, 36);
-  DefineID(106, 596);
-  DefineID(107, 591);
-  DefineID(108, 595);
-  DefineID(109, 443);
-  DefineID(110, 601);
-  DefineID(111, 31);
-  DefineID(112, 718);
-  DefineID(113, 167);
-  DefineID(114, 93);
-  DefineID(115, 473);
-  DefineID(116, 362);
-  DefineID(117, 745);
-  DefineID(118, 278);
-  DefineID(119, 78);
-  DefineID(120, 516);
-  DefineID(121, 126);
-  DefineID(122, 227);
-  DefineID(123, 55);
-  DefineID(124, 695);
-  DefineID(125, 866);
-  DefineID(126, 48);
-  DefineID(127, 174);
-  DefineID(128, 865);
-  DefineID(129, 582);
-  DefineID(130, 113);
-  DefineID(131, 864);
-  DefineID(132, 613);
-  DefineID(133, 448);
-  DefineID(134, 123);
-  DefineID(135, 739);
-  DefineID(136, 330);
-  DefineID(137, 600);
-  DefineID(138, 781);
-  DefineID(139, 715);
-  DefineID(140, 250);
-  DefineID(141, 724);
-  DefineID(142, 713);
-  DefineID(143, 545);
-  DefineID(144, 581);
-  DefineID(145, 523);
-  DefineID(146, 637);
-  DefineID(147, 638);
-  DefineID(148, 439);
-  DefineID(149, 438);
-  DefineID(150, 635);
-  DefineID(151, 585);
-  DefineID(152, 384);
-  DefineID(153, 539);
-  DefineID(154, 586);
-  DefineID(155, 148);
-  DefineID(156, 538);
-  DefineID(157, 698);
-  DefineID(158, 199);
-  DefineID(159, 541);
-  DefineID(160, 429);
-  DefineID(161, 728);
-  DefineID(162, 460);
-  DefineID(163, 432);
 }
 
 /*##########################################################################
@@ -531,6 +366,22 @@ void TQuizS5::SetupTexts()
   Quiz[161].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[162].MyGroup = GROUP_INSTINCT;
 
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+
+  Quiz[171].MyGroup = GROUP_NT_TALENT;
+  Quiz[172].MyGroup = GROUP_NT_TALENT;
+  Quiz[173].MyGroup = GROUP_SENSORY;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you drop things when your attention is on other things?";
   Quiz[1].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
@@ -695,6 +546,21 @@ void TQuizS5::SetupTexts()
   Quiz[160].Text = "Do you instinctively point to things of interest?";
   Quiz[161].Text = "Do you have a strong grip?";
   Quiz[162].Text = "Do you have above average physical endurance?";
+  Quiz[163].Text = "Do you avoid going to a party?";
+  Quiz[164].Text = "Do you dislike working while being observed?";
+  Quiz[165].Text = "Do you avoid talking face to face with someone you don't know very well?";
+  Quiz[166].Text = "Do you enjoy wandering through the woods all by yourself?";
+  Quiz[167].Text = "Have you been fascinated about making traps?";
+  Quiz[168].Text = "Do you enjoy mimicking animal sounds?";
+  Quiz[169].Text = "Do you enjoy sneaking through the woods?";
+  Quiz[170].Text = "Do you enjoy watching rodeo-riders?";
+
+  Quiz[171].Text = "Dyslexia";
+  Quiz[172].Text = "Dyscalculia";
+  Quiz[173].Text = "OCD";
+  Quiz[174].Text = "ODD";
+  Quiz[175].Text = "Bipolar";
+  Quiz[176].Text = "Social phobia";
 #endif
 
 #ifdef SWEDISH
@@ -861,6 +727,21 @@ void TQuizS5::SetupTexts()
   Quiz[160].Text = "Pekar du insktinktivt på saker du finner intressanta?";
   Quiz[161].Text = "Har du starka nypor?";
   Quiz[162].Text = "Är du mer fysiskt uthållig än normalt?";
+  Quiz[163].Text = "Undviker du att gå på fester?";
+  Quiz[164].Text = "Ogillar du att andra tittar på när du arbetar?";
+  Quiz[165].Text = "Undviker du att prata ansikte-mot-ansikte med folk du inte känner mycket väl?";
+  Quiz[166].Text = "Gillar du att vandra omkring i skogen för dig själv?";
+  Quiz[167].Text = "Har du varit fascinerad av att tillverka fällor?";
+  Quiz[168].Text = "Gillar du att härma djurläten?";
+  Quiz[169].Text = "Gillar du att smyga omkring i skogen?";
+  Quiz[170].Text = "Gillar du att titta på rodeo?";
+
+  Quiz[171].Text = "Dyslexi";
+  Quiz[172].Text = "Dyskaluli";
+  Quiz[173].Text = "OCD";
+  Quiz[174].Text = "ODD";
+  Quiz[175].Text = "Bipolär";
+  Quiz[176].Text = "Social fobi";
 #endif
 
 }
@@ -1001,12 +882,12 @@ void TQuizS5::LoadPopulations()
 	{
         BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-		Row.Quiz[197] = Row.Dyslexia + 1;
-		Row.Quiz[198] = Row.Dyscalculia + 1;
-		Row.Quiz[199] = Row.OCD + 1;
-		Row.Quiz[200] = Row.ODD + 1;
-		Row.Quiz[201] = Row.Bipolar + 1;
-		Row.Quiz[202] = Row.Social + 1;
+		Row.Quiz[171] = Row.Dyslexia + 1;
+		Row.Quiz[172] = Row.Dyscalculia + 1;
+		Row.Quiz[173] = Row.OCD + 1;
+		Row.Quiz[174] = Row.ODD + 1;
+		Row.Quiz[175] = Row.Bipolar + 1;
+		Row.Quiz[176] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1014,7 +895,7 @@ void TQuizS5::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-			    if (i < 197)
+			    if (i < 171)
 			    {
     			    score = Row.Quiz[i] - 1;
 	    		    id = IdArr[i];
@@ -1353,6 +1234,22 @@ void TQuizS5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizR5, 160, 140);
     DefineCross(Quiz9, 161, 6);
     DefineCross(Quiz8, 162, 18);
+
+	DefineGlobalId(163, 920);
+	DefineGlobalId(164, 921);
+	DefineGlobalId(165, 922);
+	DefineGlobalId(166, 923);
+	DefineGlobalId(167, 924);
+	DefineGlobalId(168, 925);
+	DefineGlobalId(169, 926);
+	DefineGlobalId(170, 927);
+
+	DefineCross(QuizS4, 171, 197);
+	DefineCross(QuizS4, 172, 198);
+	DefineCross(QuizS4, 173, 199);
+	DefineCross(QuizS4, 174, 200);
+	DefineCross(QuizS4, 175, 201);
+	DefineCross(QuizS4, 176, 202);
 }
 
 /*##########################################################################

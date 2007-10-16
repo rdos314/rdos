@@ -318,9 +318,9 @@ int main(int argc, char **argv)
 
 	 Quiz[19]->CalcGlobal();
 
-	 Quiz[20]->WritePhpQuestions("q.php");
-	 Quiz[20]->WriteSetupTexts("q.cpp");
-	 Quiz[20]->WriteSetupCross("c.cpp");
+//	 Quiz[20]->WritePhpQuestions("q.php");
+//	 Quiz[20]->WriteSetupTexts("q.cpp");
+//	 Quiz[20]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -423,7 +423,8 @@ int main(int argc, char **argv)
 
 	 Quiz[17]->WriteRetest("retests2.htm");
 	 Quiz[18]->WriteRetest("retests3.htm");
-	 Quiz[18]->WriteVersionRetest("vervar.htm");
+	 Quiz[19]->WriteRetest("retests4.htm");
+	 Quiz[19]->WriteVersionRetest("vervar.htm");
 
 	 Quiz[16]->WritePictureRating("imgrate1.htm");
 	 Quiz[17]->WritePictureRating("imgrate2.htm");
@@ -473,7 +474,7 @@ int main(int argc, char **argv)
 	 Quiz[18]->ExportHistogram("alls3.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[19]->ExportHistogram("alls4.csv", POP_TYPE_ALL, 2, FALSE);
 
-	 Quiz[19]->WriteGroupWeighting("group.cpp");
+//	 Quiz[20]->WriteGroupWeighting("group.cpp");
 
 	 Quiz[19]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
@@ -512,8 +513,8 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[19]->WritePhpWeighting("weights.php");
-	 Quiz[19]->WritePhpGroupWeighting("group.php");
+	 Quiz[20]->WritePhpWeighting("weights.php");
+	 Quiz[20]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -527,7 +528,7 @@ int main(int argc, char **argv)
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-	 TQuiz::WikiToQuiz("wiki.txt", "s5.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "s5.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

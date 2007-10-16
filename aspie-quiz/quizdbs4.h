@@ -22,7 +22,7 @@ struct TQuizRow
 	long AsResult;
 	long NtResult;
 	long LsasResult;
-	char Quiz[200];
+	char Quiz[250];
 	int GroupResult[8];
 };
 
