@@ -130,6 +130,7 @@ void TGraphic::Show()
 	int Line2;
 	int Line3;
 	int Line4;
+	int Line5;
 
 	from.AddDay(-1);
 
@@ -152,6 +153,9 @@ void TGraphic::Show()
 	vbe->SetFilledStyle();
 	vbe->DrawRect(440, 0, 529, 399);
 	vbe->SetFont(&Font);
+
+	vbe->SetDrawColor(255, 0, 0);
+	vbe->DrawString(442, 20, "Tank");
 
 	vbe->SetDrawColor(128, 255, 0);
 	vbe->DrawString(442, 40, "Temperatur");
@@ -192,6 +196,7 @@ void TGraphic::Show()
 	Line2 = 124;
 	Line3 = 149;
 	Line4 = 174;
+	Line5 = 199;
 
 	PowerChart->SetBackColor(0, 0, 0);
 
@@ -292,11 +297,13 @@ void TGraphic::Show()
     			    Line2++;
     			    Line3++;
     			    Line4++;
+    			    Line5++;
     			    
                 	TempChart->SetLineColor(Line1, 128, 128, 128);
                 	TempChart->SetLineColor(Line2, 128, 255, 0);
                 	TempChart->SetLineColor(Line3, 255, 128, 0);
                 	TempChart->SetLineColor(Line4, 0, 128, 255);
+                	TempChart->SetLineColor(Line5, 255, 0, 0);
                 	PowerChart->SetLineColor(Line1, 128, 255, 0);
             	    PowerChart->SetLineColor(Line2, 255, 128, 0);
                 	WindChart->SetLineColor(Line1, 128, 128, 240);
@@ -339,6 +346,23 @@ void TGraphic::Show()
 				                val = val / 10.0;
     
 								WindChart->Add(Line1, time, val);
+    	        		    }
+	            		}
+                		    
+                        if (tag->GetID() == LOG_TAG_TANK)
+                        {
+        			        var = tag->GetVar(LOG_VAR_Temp);
+    	        			if (var)
+	    		    		{
+		    	        	    ival = var->GetFloat1();
+
+		    	        	    if (ival < 500)
+		    	        	    {
+    								val = (long double)ival;
+	    			                val = val / 10.0;
+        
+		    						TempChart->Add(Line5, time, val);
+		    				    }
     	        		    }
 	            		}
                 		    

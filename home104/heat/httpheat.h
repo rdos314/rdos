@@ -33,6 +33,7 @@
 #include "ws2300.h"
 #include "circ.h"
 #include "vp.h"
+#include "temp.h"
 #include "log.h"
 #include "linxaxis.h"
 #include "linyaxis.h"
@@ -114,6 +115,7 @@ void AddHttpRad(TRad *Rad);
 void AddHttpWs2300(TWs2300 *ws);
 void AddHttpCirc(TCirc *circ);
 void AddHttpVp(TVp *vp);
+void AddHttpTemp(TTemperature *temp);
 void AddHttpLog(TLog *log);
 void InitHeatHttp();
 void HttpUpdate();

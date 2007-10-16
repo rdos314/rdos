@@ -50,6 +50,7 @@ TWs2300 *Ws2300 = 0;
 int LightOn = FALSE;
 TCirc *Circ;
 TVp *Vp;
+TTemperature *Temp;
 TLog *Log;
 
 /*##########################################################################
@@ -668,6 +669,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	int Line2;
 	int Line3;
 	int Line4;
+	int Line5;
 
 	TimeAxis.Hide();
 
@@ -689,6 +691,9 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	Jpeg->DrawRect(490, 0, 579, 399); 
 	Jpeg->SetFont(&Font);
 	
+	Jpeg->SetDrawColor(255, 0, 0);
+	Jpeg->DrawString(492, 20, "Tank");
+
 	Jpeg->SetDrawColor(128, 255, 0);
 	Jpeg->DrawString(492, 40, "Temperatur");
 
@@ -728,6 +733,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	Line2 = 124;
 	Line3 = 149;
 	Line4 = 174;
+	Line5 = 199;
 
 	PowerChart->SetBackColor(255, 255, 255);
 
@@ -828,11 +834,13 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     			    Line2++;
     			    Line3++;
     			    Line4++;
+    			    Line5++;
     			    
                 	TempChart->SetLineColor(Line1, 128, 128, 128);
                 	TempChart->SetLineColor(Line2, 128, 255, 0);
                 	TempChart->SetLineColor(Line3, 255, 128, 0);
                 	TempChart->SetLineColor(Line4, 0, 128, 255);
+                	TempChart->SetLineColor(Line5, 255, 0, 0);
                 	PowerChart->SetLineColor(Line1, 128, 255, 0);
             	    PowerChart->SetLineColor(Line2, 255, 128, 0);
                 	WindChart->SetLineColor(Line1, 128, 128, 240);
@@ -875,6 +883,23 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 				                val = val / 10.0;
     
 								WindChart->Add(Line1, time, val);
+    	        		    }
+	            		}
+
+                        if (tag->GetID() == LOG_TAG_TANK)
+                        {
+        			        var = tag->GetVar(LOG_VAR_Temp);
+    	        			if (var)
+	    		    		{
+		    	        	    ival = var->GetFloat1();
+
+		    	        	    if (ival < 500)
+		    	        	    {
+    								val = (long double)ival;
+	    			                val = val / 10.0;
+        
+		    						TempChart->Add(Line5, time, val);
+		    				    }
     	        		    }
 	            		}
                 		    
@@ -1492,6 +1517,34 @@ void THttpRadPage::WriteMain()
 		File.Write("<tr style='height:24.75pt'>");
 
 		WriteLeftFieldHeader(File, 15);
+		File.Write("Tank");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 15);
+	    ival = Temp->GetTankTemp();
+		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+		File.Write(str);
+		WriteFieldFooter(File);
+
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Panna");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 15);
+	    ival = Temp->GetHeatTemp();
+		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+		File.Write(str);
+		WriteFieldFooter(File);
+
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
 		File.Write("Värmepump");
 		WriteFieldFooter(File);
 
@@ -1714,6 +1767,22 @@ void AddHttpCirc(TCirc *circ)
 void AddHttpVp(TVp *vp)
 {
     Vp = vp;
+}
+
+/*##########################################################################
+#
+#   Name       : AddHttpTemp
+#
+#   Purpose....: Add temperature class
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void AddHttpTemp(TTemperature *temp)
+{
+    Temp = temp;
 }
 
 /*##########################################################################

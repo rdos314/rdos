@@ -34,6 +34,7 @@
 #include "ws2300.h"
 #include "circ.h"
 #include "vp.h"
+#include "temp.h"
 
 
 #define LOG_TAG_HEADER      50
@@ -43,6 +44,8 @@
 #define LOG_TAG_RAIN        54
 #define LOG_TAG_CIRC        55
 #define LOG_TAG_VP          56
+#define LOG_TAG_TANK        57
+#define LOG_TAG_HEAT        58
 
 #define LOG_VAR_Address     100
 #define LOG_VAR_MsbTime     101
@@ -75,6 +78,7 @@ public:
     void Add(TWs2300 *ws);	
     void Add(TCirc *circ);
     void Add(TVp *vp);
+    void Add(TTemperature *temp);
 
     TLogReader *GetLog(int year, int month, int day);    
     
@@ -97,6 +101,7 @@ protected:
     TWs2300 *FWs;
     TCirc *FCirc;
 	TVp *FVp;
+	TTemperature *FTemp;
 };
 
 

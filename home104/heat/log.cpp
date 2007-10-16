@@ -67,6 +67,7 @@ TLog::TLog(const char *RootDir)
     FWs = 0;
     FCirc = 0;
     FVp = 0;
+    FTemp = 0;
 
     Start("LOGGER", STACK_SIZE);
 }
@@ -266,6 +267,22 @@ void TLog::Add(TVp *vp)
 
 /*##########################################################################
 #
+#   Name       : TLog::Add
+#
+#   Purpose....: Add temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TLog::Add(TTemperature *temp)
+{
+    FTemp = temp;
+}
+
+/*##########################################################################
+#
 #   Name       : TLog::Execute
 #
 #   Purpose....: Execute thread loop
@@ -372,6 +389,21 @@ void TLog::Execute()
                 tag = doc->AddTag(LOG_TAG_VP);
                 ival = FVp->IsOn();
                 tag->AddBoolean(LOG_VAR_On, ival);
+            }
+
+            if (FTemp)
+			{
+				if (FTemp->HasValidTankTemp())
+				{
+					tag = doc->AddTag(LOG_TAG_TANK);
+					tag->AddFloat1(LOG_VAR_Temp, FTemp->GetTankTemp());
+				}
+
+				if (FTemp->HasValidHeatTemp())
+				{
+					tag = doc->AddTag(LOG_TAG_HEAT);
+					tag->AddFloat1(LOG_VAR_Temp, FTemp->GetHeatTemp());
+				}
             }
 
             for (i = 0; i < 256; i++)
