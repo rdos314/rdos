@@ -160,7 +160,7 @@ void cdecl main()
 
 	Vp = new TVp(vbe);
 
-	Temp = new TTemperature(vbe);
+	Temp = new TTemperature(vbe, log);
 
 	log->Add(Ws);
 	log->Add(Circ);

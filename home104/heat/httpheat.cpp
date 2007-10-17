@@ -911,37 +911,49 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	        	                var = tag->GetVar(LOG_VAR_Temp);
 		                        if (var)
 		                        {
-		                            ival = var->GetFloat1();
-		                            val = (long double)ival;
-								    val = val / 10.0;
+									ival = var->GetFloat1();
 
-            					    TempChart->Add(Line2, time, val);
-                			    }
-    
-	        	                var = tag->GetVar(LOG_VAR_AuxTemp);
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
+
+										TempChart->Add(Line2, time, val);
+									}
+								}
+
+								var = tag->GetVar(LOG_VAR_AuxTemp);
 								if (var)
-		                        {
-		                            ival = var->GetFloat1();
-									val = (long double)ival;
-		                            val = val / 10.0; 
-    
-            				    	TempChart->Add(Line3, time, val);
-                			    }
+								{
+									ival = var->GetFloat1();
 
-	        	                var = tag->GetVar(LOG_VAR_Ref);
-		                        if (var)
-		                        {
-		                            ival = var->GetFloat1();
-		                            val = (long double)ival;
-		                            val = val / 10.0; 
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
 
-            					    TempChart->Add(Line4, time, val);
-                			    }
+										TempChart->Add(Line3, time, val);
+									}
+								}
 
-	        	                var = tag->GetVar(LOG_VAR_Motor);
-		                        if (var)
-		                        {
-		                            ival = var->GetFloat1();
+								var = tag->GetVar(LOG_VAR_Ref);
+								if (var)
+								{
+									ival = var->GetFloat1();
+
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
+
+										TempChart->Add(Line4, time, val);
+									}
+								}
+
+								var = tag->GetVar(LOG_VAR_Motor);
+								if (var)
+								{
+									ival = var->GetFloat1();
 									val = (long double)ival;
 		                            val = val / 10.0; 
 
@@ -1517,12 +1529,12 @@ void THttpRadPage::WriteMain()
 		File.Write("<tr style='height:24.75pt'>");
 
 		WriteLeftFieldHeader(File, 15);
-		File.Write("Tank");
+		File.Write("Cirkulation");
 		WriteFieldFooter(File);
 
-		WriteCenteredFieldHeader(File, 15);
-	    ival = Temp->GetTankTemp();
-		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+		WriteCenteredFieldHeader(File, 6);
+		ival = round(10.0 * Circ->GetSpeed());
+		sprintf(str, "%d%", ival);
 		File.Write(str);
 		WriteFieldFooter(File);
 
@@ -1531,11 +1543,42 @@ void THttpRadPage::WriteMain()
 		File.Write("<tr style='height:24.75pt'>");
 
 		WriteLeftFieldHeader(File, 15);
+		File.Write("Tank");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 15);
+		ival = Temp->GetTankTemp();
+		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
+		File.Write(str);
+		WriteFieldFooter(File);
+
+		File.Write("</tr>");
+
+		if (Temp->HasValidEffect())
+		{
+			File.Write("<tr style='height:24.75pt'>");
+
+			WriteLeftFieldHeader(File, 15);
+			File.Write("Effekt");
+			WriteFieldFooter(File);
+
+			WriteCenteredFieldHeader(File, 15);
+			val = Temp->GetEffect();
+			sprintf(str, "%5.2Lf kW", val);
+			File.Write(str);
+			WriteFieldFooter(File);
+
+			File.Write("</tr>");
+		}
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
 		File.Write("Panna");
 		WriteFieldFooter(File);
 
 		WriteCenteredFieldHeader(File, 15);
-	    ival = Temp->GetHeatTemp();
+		ival = Temp->GetHeatTemp();
 		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 		File.Write(str);
 		WriteFieldFooter(File);
@@ -1566,20 +1609,6 @@ void THttpRadPage::WriteMain()
 			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
 			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
-
-		File.Write("</tr>");
-
-		File.Write("<tr style='height:24.75pt'>");
-
-		WriteLeftFieldHeader(File, 15);
-		File.Write("Cirkulation");
-		WriteFieldFooter(File);
-
-		WriteCenteredFieldHeader(File, 6);
-		ival = round(10.0 * Circ->GetSpeed());
-		sprintf(str, "%d%", ival);
-		File.Write(str);
-		WriteFieldFooter(File);
 
 		File.Write("</tr>");
 

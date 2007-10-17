@@ -374,66 +374,78 @@ void TGraphic::Show()
 	        	                var = tag->GetVar(LOG_VAR_Temp);
 		                        if (var)
 		                        {
-		                            ival = var->GetFloat1();
-		                            val = (long double)ival;
-								    val = val / 10.0;
+									ival = var->GetFloat1();
 
-            					    TempChart->Add(Line2, time, val);
-                			    }
-    
-	        	                var = tag->GetVar(LOG_VAR_AuxTemp);
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
+
+										TempChart->Add(Line2, time, val);
+									}
+								}
+
+								var = tag->GetVar(LOG_VAR_AuxTemp);
 								if (var)
-		                        {
-		                            ival = var->GetFloat1();
+								{
+									ival = var->GetFloat1();
+
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
+
+										TempChart->Add(Line3, time, val);
+									}
+								}
+
+								var = tag->GetVar(LOG_VAR_Ref);
+								if (var)
+								{
+									ival = var->GetFloat1();
+
+									if (ival < 500)
+									{
+										val = (long double)ival;
+										val = val / 10.0;
+
+										TempChart->Add(Line4, time, val);
+									}
+								}
+
+								var = tag->GetVar(LOG_VAR_Motor);
+								if (var)
+								{
+									ival = var->GetFloat1();
 									val = (long double)ival;
-		                            val = val / 10.0; 
-    
-            				    	TempChart->Add(Line3, time, val);
-                			    }
-
-	        	                var = tag->GetVar(LOG_VAR_Ref);
-		                        if (var)
-		                        {
-		                            ival = var->GetFloat1();
-		                            val = (long double)ival;
-		                            val = val / 10.0; 
-
-            					    TempChart->Add(Line4, time, val);
-                			    }
-
-	        	                var = tag->GetVar(LOG_VAR_Motor);
-		                        if (var)
-		                        {
-		                            ival = var->GetFloat1();
-									val = (long double)ival;
-		                            val = val / 10.0; 
+									val = val / 10.0;
 
 									PowerChart->Add(Line1, time, val);
-                			    }
+								}
 
-	        	                var = tag->GetVar(LOG_VAR_Light);
-		                        if (var)
-		                        {
-		                            ival = var->GetFloat1();
+								var = tag->GetVar(LOG_VAR_Light);
+								if (var)
+								{
+									ival = var->GetFloat1();
 									val = (long double)ival;
-		                            val = val / 10.0; 
+									val = val / 10.0;
 
 									LightChart->Add(Line1, time, val);
-                			    }
-                			}
-		                }
+								}
+							}
+						}
 
-                        if (tag->GetID() == LOG_TAG_CIRC)
-                        {
-	        	            var = tag->GetVar(LOG_VAR_Motor);
-		                    if (var)
-		                    {
-		                        ival = var->GetFloat1();
-		                        val = (long double)ival;
-		                        val = val / 10.0; 
+						if (tag->GetID() == LOG_TAG_CIRC)
+						{
+							var = tag->GetVar(LOG_VAR_Motor);
+							if (var)
+							{
+								ival = var->GetFloat1();
+								val = (long double)ival;
+								val = val / 10.0;
 
-            					PowerChart->Add(Line2, time, val);
-            			    }
+								PowerChart->Add(Line2, time, val);
+							}
             			}
 
                         if (tag->GetID() == LOG_TAG_VP)
