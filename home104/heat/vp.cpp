@@ -372,6 +372,7 @@ void TVp::ReadTankData()
 	int i;
 	unsigned long msb;
 	unsigned long lsb;
+	int ival;
 
 	for (i = 0; i < 40; i++)
 	    ValidTankArr[i] = FALSE;
@@ -382,6 +383,9 @@ void TVp::ReadTankData()
     StartTime.AddMin(-40);
     
 	log = Log->GetLog(StartTime.GetYear(), StartTime.GetMonth(), StartTime.GetDay());
+
+    FMaxHeatDay = StartTime.GetDay();
+    FMaxHeatTemp = 0;
 
     msg = 0;
     
@@ -433,6 +437,20 @@ void TVp::ReadTankData()
                         }
                     }
                 }
+
+                tag = msg->GetTag(LOG_TAG_HEAT);
+                if (tag)
+                {        			        
+                    var = tag->GetVar(LOG_VAR_Temp);
+    	        	if (var)
+	    		    {
+                        ival = var->GetFloat1();
+
+                        if (ival > FMaxHeatTemp)
+                            FMaxHeatTemp = ival;
+                    }
+                }
+
             }
         }
 
@@ -470,6 +488,7 @@ void TVp::Execute()
 	int Count;
 	int PrevCount;
 	long double PrevVal;
+	int EpLimit;
 	char str[50];
 
 	MotorSum = 0;
@@ -545,6 +564,9 @@ void TVp::Execute()
 			{
 				FHeatTemp = FHeatSum / FHeatCount;
 
+				if (FHeatTemp > FMaxHeatTemp)
+				    FMaxHeatTemp = FHeatTemp;
+
 				val = (long double)FHeatTemp / 10;
 				sprintf(str, "Panna: %5.1Lf", val);
 
@@ -567,6 +589,12 @@ void TVp::Execute()
 		if (LastMin != min && MotorCount && TempCount)
 		{
 			LastMin = min;
+
+			if (FMaxHeatDay != day)
+			{
+			    FMaxHeatDay = day;
+			    FMaxHeatTemp = 0;
+			}
 
 			for (i = 1; i < 40; i++)
 			{
@@ -722,13 +750,29 @@ void TVp::Execute()
 			if (FLevel > 7.5 && !FVpOn)
 				FVpOn = TRUE;
 
-			if (FValidPHeat)
+			if (FVpOn && FValidHeat && FHeatTemp > 400)
 			{
+			    FLevel = 0.0;
+			    FVpOn = FALSE;
+			}
+
+			if (FValidPHeat && FValidHeat)
+			{
+			    if (FMaxHeatTemp < 650)
+			        EpLimit = 650;
+			    else
+			        EpLimit = 500;
+			    
     			if (PHeat < -0.6)
 	    			FEpOn = FALSE;
 
-		    	if (PHeat > -0.2)
-			    	FEpOn = TRUE;
+			    if (FHeatTemp > EpLimit)
+			        FEpOn = FALSE;
+			    else
+			    {
+    		    	if (PHeat > -0.2)
+	    		    	FEpOn = TRUE;
+	    		}
 			}
 
 			if (RdosReadSerialLines(1, &diostat))

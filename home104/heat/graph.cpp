@@ -119,7 +119,8 @@ void TGraphic::Show()
 	TChart *PowerChart;
 	TChart *LightChart;
 	TChart *VpChart;
-	TChart *EffectChart;
+	TChart *PTankChart;
+	TChart *PHeatChart;
 	int width;
 	int retry;
 	long double ymin;
@@ -128,10 +129,13 @@ void TGraphic::Show()
 	TDateTime to;
 	int Line1;
 	int Line2;
-	int Line3;
 	int Line4;
 	int Line5;
 	int Line6;
+	int RefSum;
+	int RefCount;
+	int TempSum;
+	int TempCount;
 
 	from.AddDay(-1);
 
@@ -139,14 +143,14 @@ void TGraphic::Show()
 
 	TempChart = new TChart(vbe, &TimeAxis, &TempAxis);
 	PowerChart = new TChart(vbe, &TimeAxis, &TempAxis);
-	LightChart = new TChart(vbe, &TimeAxis, &TempAxis);
-	EffectChart = new TChart(vbe, &TimeAxis, &TempAxis);
+	PHeatChart = new TChart(vbe, &TimeAxis, &TempAxis);
+	PTankChart = new TChart(vbe, &TimeAxis, &TempAxis);
 	VpChart = new TChart(vbe, &TimeScaleAxis, &TempAxis);
 
 	TempChart->SetWindow(0, 0, 439, 269);
 	PowerChart->SetWindow(0, 270, 439, 299);
-	EffectChart->SetWindow(0, 305, 439, 334);
-	LightChart->SetWindow(0, 340, 439, 369);
+	PHeatChart->SetWindow(0, 305, 439, 334);
+	PTankChart->SetWindow(0, 340, 439, 369);
 	VpChart->SetWindow(0, 375, 439, 399);
 
 	vbe->SetClipRect(440, 0, 529, 419);
@@ -173,20 +177,14 @@ void TGraphic::Show()
 	vbe->SetDrawColor(128, 128, 128);
 	vbe->DrawString(442, 140, "Utetemperatur");
 
-	vbe->SetDrawColor(128, 255, 0);
-	vbe->DrawString(442, 280, "P†drag");
-
 	vbe->SetDrawColor(255, 128, 0);
-	vbe->DrawString(442, 295, "Cirkulation");
+	vbe->DrawString(442, 285, "Cirkulation");
 
 	vbe->SetDrawColor(255, 0, 0);
-	vbe->DrawString(442, 310, "P Panna");
+	vbe->DrawString(442, 315, "P Panna");
 
 	vbe->SetDrawColor(255, 0, 255);
-	vbe->DrawString(442, 330, "P Tank");
-
-	vbe->SetDrawColor(255, 128, 0);
-	vbe->DrawString(442, 355, "Ljus");
+	vbe->DrawString(442, 360, "P Tank");
 
 	vbe->SetDrawColor(255, 0, 255);
 	vbe->DrawString(442, 375, "V„rmepump");
@@ -204,16 +202,14 @@ void TGraphic::Show()
 
 	Line1 = 99;
 	Line2 = 124;
-	Line3 = 149;
 	Line4 = 174;
 	Line5 = 199;
 	Line6 = 224;
 
 	PowerChart->SetBackColor(0, 0, 0);
 
-	EffectChart->SetBackColor(0, 0, 0);
-
-	LightChart->SetBackColor(0, 0, 0);
+	PHeatChart->SetBackColor(0, 0, 0);
+	PTankChart->SetBackColor(0, 0, 0);
 
 	VpChart->SetBackColor(0, 0, 0);
 
@@ -223,11 +219,11 @@ void TGraphic::Show()
 
 	TempChart->SetXAxis(from, to);
 	PowerChart->SetXAxis(from, to);
-	EffectChart->SetXAxis(from, to);
-	LightChart->SetXAxis(from, to);
+	PHeatChart->SetXAxis(from, to);
+	PTankChart->SetXAxis(from, to);
 	VpChart->SetXAxis(from, to);
 
-    for (i = 0; i <= 25; i++) 
+    for (i = 0; i <= 60; i += 5) 
     {
         TempChart->SetLineColor(i, 60, 60, 60);
     	
@@ -247,11 +243,20 @@ void TGraphic::Show()
 
     for (i = -5; i <= 5; i += 5) 
     {
-        EffectChart->SetLineColor(i + 5, 60, 60, 60);
+        PHeatChart->SetLineColor(i + 5, 60, 60, 60);
 
     	val = (long double)i;
-	    EffectChart->Add(i + 5, from, val);
-		EffectChart->Add(i + 5, to, val);
+	    PHeatChart->Add(i + 5, from, val);
+		PHeatChart->Add(i + 5, to, val);
+    }
+
+    for (i = -5; i <= 5; i += 5) 
+    {
+        PTankChart->SetLineColor(i + 5, 60, 60, 60);
+
+    	val = (long double)i;
+	    PTankChart->Add(i + 5, from, val);
+		PTankChart->Add(i + 5, to, val);
     }
 
     prevtime = from;
@@ -315,22 +320,18 @@ void TGraphic::Show()
     			{
     			    Line1++;
     			    Line2++;
-    			    Line3++;
     			    Line4++;
     			    Line5++;
     			    Line6++;
     			    
                 	TempChart->SetLineColor(Line1, 128, 128, 128);
                 	TempChart->SetLineColor(Line2, 128, 255, 0);
-                	TempChart->SetLineColor(Line3, 255, 128, 0);
                 	TempChart->SetLineColor(Line4, 0, 128, 255);
                 	TempChart->SetLineColor(Line5, 255, 0, 255);
                 	TempChart->SetLineColor(Line6, 255, 0, 0);
-                	PowerChart->SetLineColor(Line1, 128, 255, 0);
-            	    PowerChart->SetLineColor(Line2, 255, 128, 0);
-                	EffectChart->SetLineColor(Line1, 255, 0, 0);
-            	    EffectChart->SetLineColor(Line2, 255, 0, 255);
-                	LightChart->SetLineColor(Line1, 255, 128, 0);
+            	    PowerChart->SetLineColor(Line1, 255, 128, 0);
+                	PHeatChart->SetLineColor(Line1, 255, 0, 0);
+            	    PTankChart->SetLineColor(Line1, 255, 0, 255);
                 	VpChart->SetLineColor(Line1, 255, 0, 255);
                 	VpChart->SetLineColor(Line2, 255, 0, 0);
 
@@ -343,6 +344,11 @@ void TGraphic::Show()
 
     			if (time >= firsttime && time <= lasttime && !skip)
     			{
+                    RefSum = 0;
+                    RefCount = 0;
+                    TempSum = 0;
+                    TempCount = 0;
+    			
     	    	    tag = msg->GotoFirstTag();
 	    	        while (tag)
 		            {
@@ -385,7 +391,7 @@ void TGraphic::Show()
 		    	        	    ival = var->GetFloat2();
     							val = (long double)ival;
 	    			            val = val / 100.0;        
-		    					EffectChart->Add(Line2, time, val);
+		    					PTankChart->Add(Line1, time, val);
     	        		    }
 	            		}
                 		    
@@ -411,7 +417,7 @@ void TGraphic::Show()
 		    	        	    ival = var->GetFloat2();
     							val = (long double)ival;
 	    			            val = val / 100.0;        
-		    					EffectChart->Add(Line1, time, val);
+		    					PHeatChart->Add(Line1, time, val);
     	        		    }
 
 							var = tag->GetVar(LOG_VAR_On);
@@ -428,69 +434,27 @@ void TGraphic::Show()
                 		    
 		                if (tag->GetID() == LOG_TAG_RAD)
 		                {
-		                    index = tag->GetSignedInt(LOG_VAR_Address, -1);
-    					    if (index == FAddress)
-        		            {
-	        	                var = tag->GetVar(LOG_VAR_Temp);
-		                        if (var)
-		                        {
-									ival = var->GetFloat1();
+	        	            var = tag->GetVar(LOG_VAR_Temp);
+		                    if (var)
+		                    {
+								ival = var->GetFloat1();
 
-									if (ival < 500)
-									{
-										val = (long double)ival;
-										val = val / 10.0;
+								if (ival < 500)
+                                {
+                                    TempSum += ival;
+                                    TempCount++;
+                                }
+                             }
 
-										TempChart->Add(Line2, time, val);
-									}
-								}
+							var = tag->GetVar(LOG_VAR_Ref);
+							if (var)
+							{
+								ival = var->GetFloat1();
 
-								var = tag->GetVar(LOG_VAR_AuxTemp);
-								if (var)
+								if (ival < 500)
 								{
-									ival = var->GetFloat1();
-
-									if (ival < 500)
-									{
-										val = (long double)ival;
-										val = val / 10.0;
-
-										TempChart->Add(Line3, time, val);
-									}
-								}
-
-								var = tag->GetVar(LOG_VAR_Ref);
-								if (var)
-								{
-									ival = var->GetFloat1();
-
-									if (ival < 500)
-									{
-										val = (long double)ival;
-										val = val / 10.0;
-
-										TempChart->Add(Line4, time, val);
-									}
-								}
-
-								var = tag->GetVar(LOG_VAR_Motor);
-								if (var)
-								{
-									ival = var->GetFloat1();
-									val = (long double)ival;
-									val = val / 10.0;
-
-									PowerChart->Add(Line1, time, val);
-								}
-
-								var = tag->GetVar(LOG_VAR_Light);
-								if (var)
-								{
-									ival = var->GetFloat1();
-									val = (long double)ival;
-									val = val / 10.0;
-
-									LightChart->Add(Line1, time, val);
+								    RefSum += ival;
+								    RefCount++;
 								}
 							}
 						}
@@ -504,7 +468,7 @@ void TGraphic::Show()
 								val = (long double)ival;
 								val = val / 10.0;
 
-								PowerChart->Add(Line2, time, val);
+								PowerChart->Add(Line1, time, val);
 							}
             			}
 
@@ -514,7 +478,7 @@ void TGraphic::Show()
 		                    if (var)
 		                    {
 								if (var->GetBoolean())
-		                            val = 2.0;
+		                            val = 1.4;
 		                        else
 		                            val = 0.0;
 
@@ -524,6 +488,18 @@ void TGraphic::Show()
 
 			        	tag = msg->GotoNextTag();
     		        }
+
+                    if (TempCount)
+                    {
+                        val = (long double)TempSum / (long double)TempCount / 10.0;
+						TempChart->Add(Line2, time, val);
+					}
+
+                    if (RefCount)
+                    {
+                        val = (long double)RefSum / (long double)RefCount / 10.0;
+						TempChart->Add(Line4, time, val);
+					}
     	    	}
     	    }
 
@@ -550,19 +526,15 @@ void TGraphic::Show()
 	    PowerChart->Add(i, currtime, 0.0);
 	    PowerChart->Add(i, currtime, 10.0);
 
-        EffectChart->SetLineColor(i, 60, 60, 60);
+        PHeatChart->SetLineColor(i, 60, 60, 60);
     	
-	    EffectChart->Add(i, currtime, -6.0);
-	    EffectChart->Add(i, currtime, 6.0);
+	    PHeatChart->Add(i, currtime, -6.0);
+	    PHeatChart->Add(i, currtime, 6.0);
 
-	    LightChart->GetYAxis(&ymin, &ymax);
-	    if (ymax < 10.0)
-	        ymax = 10.0;
-
-        LightChart->SetLineColor(i, 60, 60, 60);
+        PTankChart->SetLineColor(i, 60, 60, 60);
     	
-	    LightChart->Add(i, currtime, 0.0);
-	    LightChart->Add(i, currtime, ymax);
+	    PTankChart->Add(i, currtime, -6.0);
+	    PTankChart->Add(i, currtime, 6.0);
 
         VpChart->SetLineColor(i, 60, 60, 60);
     	
@@ -588,7 +560,7 @@ void TGraphic::Show()
     	TempAxis.SetMinWidth(width);
     }
 
-	EffectChart->Draw();
+	PHeatChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
@@ -596,7 +568,7 @@ void TGraphic::Show()
     	TempAxis.SetMinWidth(width);
     }
 	
-	LightChart->Draw();
+	PTankChart->Draw();
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
@@ -616,15 +588,15 @@ void TGraphic::Show()
     {
         TempChart->Draw();
         PowerChart->Draw();
-        EffectChart->Draw();
-        LightChart->Draw();
+        PHeatChart->Draw();
+        PTankChart->Draw();
         VpChart->Draw();
     }
 
     delete VpChart;
-    delete LightChart;
     delete PowerChart;
-    delete EffectChart;
+    delete PHeatChart;
+    delete PTankChart;
     delete TempChart;
 }
 

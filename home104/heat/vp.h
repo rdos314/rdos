@@ -102,6 +102,9 @@ protected:
 	int ValidHeatArr[20];
 	long double HeatArr[20];
 
+    int FMaxHeatTemp;
+    int FMaxHeatDay;
+
     TGraphicDevice *vbe;
 	TFont Font;
     TLog *Log;
