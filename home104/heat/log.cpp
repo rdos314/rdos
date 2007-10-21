@@ -67,7 +67,6 @@ TLog::TLog(const char *RootDir)
     FWs = 0;
     FCirc = 0;
     FVp = 0;
-    FTemp = 0;
 
     Start("LOGGER", STACK_SIZE);
 }
@@ -267,22 +266,6 @@ void TLog::Add(TVp *vp)
 
 /*##########################################################################
 #
-#   Name       : TLog::Add
-#
-#   Purpose....: Add temperature
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TLog::Add(TTemperature *temp)
-{
-    FTemp = temp;
-}
-
-/*##########################################################################
-#
 #   Name       : TLog::Execute
 #
 #   Purpose....: Execute thread loop
@@ -384,29 +367,36 @@ void TLog::Execute()
                 tag->AddFloat1(LOG_VAR_Motor, ival);
             }
 
-            if (FVp)
-            {
-                tag = doc->AddTag(LOG_TAG_VP);
-                ival = FVp->IsOn();
-                tag->AddBoolean(LOG_VAR_On, ival);
-            }
-
-            if (FTemp)
+			if (FVp)
 			{
-				if (FTemp->HasValidTankTemp())
+				tag = doc->AddTag(LOG_TAG_VP);
+				ival = FVp->IsVpOn();
+				tag->AddBoolean(LOG_VAR_On, ival);
+
+				if (FVp->HasValidTankTemp())
 				{
 					tag = doc->AddTag(LOG_TAG_TANK);
-					tag->AddFloat1(LOG_VAR_Temp, FTemp->GetTankTemp());
+					tag->AddFloat1(LOG_VAR_Temp, FVp->GetTankTemp());
+
+					if (FVp->HasValidTankP())
+						tag->AddFloat2(LOG_VAR_P, (int)(100 * FVp->GetTankP()));
+
 				}
 
-				if (FTemp->HasValidHeatTemp())
+				if (FVp->HasValidHeatTemp())
 				{
 					tag = doc->AddTag(LOG_TAG_HEAT);
-					tag->AddFloat1(LOG_VAR_Temp, FTemp->GetHeatTemp());
-				}
-            }
+					tag->AddFloat1(LOG_VAR_Temp, FVp->GetHeatTemp());
 
-            for (i = 0; i < 256; i++)
+					if (FVp->HasValidHeatP())
+						tag->AddFloat2(LOG_VAR_P, (int)(100 * FVp->GetHeatP()));
+
+					ival = FVp->IsEpOn();
+					tag->AddBoolean(LOG_VAR_On, ival);
+				}
+			}
+
+			for (i = 0; i < 256; i++)
             {
                 if (FRadArr[i])
                 {

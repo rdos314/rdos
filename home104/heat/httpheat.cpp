@@ -50,7 +50,6 @@ TWs2300 *Ws2300 = 0;
 int LightOn = FALSE;
 TCirc *Circ;
 TVp *Vp;
-TTemperature *Temp;
 TLog *Log;
 
 /*##########################################################################
@@ -670,6 +669,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	int Line3;
 	int Line4;
 	int Line5;
+	int Line6;
 
 	TimeAxis.Hide();
 
@@ -690,18 +690,21 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	Jpeg->SetFilledStyle();
 	Jpeg->DrawRect(490, 0, 579, 399); 
 	Jpeg->SetFont(&Font);
-	
+
 	Jpeg->SetDrawColor(255, 0, 0);
-	Jpeg->DrawString(492, 20, "Tank");
+	Jpeg->DrawString(442, 20, "Panna");
+	
+	Jpeg->SetDrawColor(255, 0, 255);
+	Jpeg->DrawString(492, 40, "Tank");
 
 	Jpeg->SetDrawColor(128, 255, 0);
-	Jpeg->DrawString(492, 40, "Temperatur");
+	Jpeg->DrawString(492, 60, "Temperatur");
 
 	Jpeg->SetDrawColor(255, 128, 0);
-	Jpeg->DrawString(492, 60, "Temperatur 2");
+	Jpeg->DrawString(492, 80, "Temperatur 2");
 
 	Jpeg->SetDrawColor(0, 128, 255);
-	Jpeg->DrawString(492, 80, "Referens");
+	Jpeg->DrawString(492, 100, "Referens");
 	
 	Jpeg->SetDrawColor(128, 128, 128);
 	Jpeg->DrawString(492, 140, "Utetemperatur");
@@ -734,6 +737,7 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	Line3 = 149;
 	Line4 = 174;
 	Line5 = 199;
+	Line6 = 224;
 
 	PowerChart->SetBackColor(255, 255, 255);
 
@@ -835,12 +839,14 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
     			    Line3++;
     			    Line4++;
     			    Line5++;
+    			    Line6++;
     			    
                 	TempChart->SetLineColor(Line1, 128, 128, 128);
                 	TempChart->SetLineColor(Line2, 128, 255, 0);
                 	TempChart->SetLineColor(Line3, 255, 128, 0);
                 	TempChart->SetLineColor(Line4, 0, 128, 255);
-                	TempChart->SetLineColor(Line5, 255, 0, 0);
+                	TempChart->SetLineColor(Line5, 255, 0, 255);
+                	TempChart->SetLineColor(Line6, 255, 0, 0);
                 	PowerChart->SetLineColor(Line1, 128, 255, 0);
             	    PowerChart->SetLineColor(Line2, 255, 128, 0);
                 	WindChart->SetLineColor(Line1, 128, 128, 240);
@@ -893,12 +899,29 @@ TJpegBitmapDevice *THttpRadPage::CreateTempJpeg(int address, TDateTime &from, TD
 	    		    		{
 		    	        	    ival = var->GetFloat1();
 
-		    	        	    if (ival < 500)
+		    	        	    if (ival < 900)
 		    	        	    {
     								val = (long double)ival;
 	    			                val = val / 10.0;
         
 		    						TempChart->Add(Line5, time, val);
+		    				    }
+    	        		    }
+	            		}
+
+                        if (tag->GetID() == LOG_TAG_HEAT)
+                        {
+        			        var = tag->GetVar(LOG_VAR_Temp);
+    	        			if (var)
+	    		    		{
+		    	        	    ival = var->GetFloat1();
+
+		    	        	    if (ival < 900)
+		    	        	    {
+    								val = (long double)ival;
+	    			                val = val / 10.0;
+        
+		    						TempChart->Add(Line6, time, val);
 		    				    }
     	        		    }
 	            		}
@@ -1547,23 +1570,40 @@ void THttpRadPage::WriteMain()
 		WriteFieldFooter(File);
 
 		WriteCenteredFieldHeader(File, 15);
-		ival = Temp->GetTankTemp();
+		ival = Vp->GetTankTemp();
 		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 		File.Write(str);
 		WriteFieldFooter(File);
 
 		File.Write("</tr>");
 
-		if (Temp->HasValidEffect())
+		if (Vp->HasValidTankP())
 		{
 			File.Write("<tr style='height:24.75pt'>");
 
 			WriteLeftFieldHeader(File, 15);
-			File.Write("Effekt");
+			File.Write("Effekt Tank");
 			WriteFieldFooter(File);
 
 			WriteCenteredFieldHeader(File, 15);
-			val = Temp->GetEffect();
+			val = Vp->GetTankP();
+			sprintf(str, "%5.2Lf kW", val);
+			File.Write(str);
+			WriteFieldFooter(File);
+
+			File.Write("</tr>");
+		}
+
+		if (Vp->HasValidHeatP())
+		{
+			File.Write("<tr style='height:24.75pt'>");
+
+			WriteLeftFieldHeader(File, 15);
+			File.Write("Effekt Heat");
+			WriteFieldFooter(File);
+
+			WriteCenteredFieldHeader(File, 15);
+			val = Vp->GetHeatP();
 			sprintf(str, "%5.2Lf kW", val);
 			File.Write(str);
 			WriteFieldFooter(File);
@@ -1578,7 +1618,7 @@ void THttpRadPage::WriteMain()
 		WriteFieldFooter(File);
 
 		WriteCenteredFieldHeader(File, 15);
-		ival = Temp->GetHeatTemp();
+		ival = Vp->GetHeatTemp();
 		sprintf(str, "%d.%d °C", ival / 10, ival % 10);
 		File.Write(str);
 		WriteFieldFooter(File);
@@ -1592,7 +1632,20 @@ void THttpRadPage::WriteMain()
 		WriteFieldFooter(File);
 
 		WriteCenteredFieldHeader(File, 6);
-		if (Vp->IsOn())
+		if (Vp->IsVpOn())
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
+		else
+			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
+		File.Write("</tr>");
+
+		File.Write("<tr style='height:24.75pt'>");
+
+		WriteLeftFieldHeader(File, 15);
+		File.Write("Panna");
+		WriteFieldFooter(File);
+
+		WriteCenteredFieldHeader(File, 6);
+		if (Vp->IsEpOn())
 			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_rd.gif\" width=\"26\" height=\"26\">");
 		else
 			File.Write("<img border=\"0\" src=\"http://www.rdos.net/home104/sol_bl.gif\" width=\"26\" height=\"26\">");
@@ -1796,22 +1849,6 @@ void AddHttpCirc(TCirc *circ)
 void AddHttpVp(TVp *vp)
 {
     Vp = vp;
-}
-
-/*##########################################################################
-#
-#   Name       : AddHttpTemp
-#
-#   Purpose....: Add temperature class
-#
-#   In params..: *
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void AddHttpTemp(TTemperature *temp)
-{
-    Temp = temp;
 }
 
 /*##########################################################################

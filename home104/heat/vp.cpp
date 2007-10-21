@@ -34,12 +34,16 @@
 #include <math.h>
 
 #include "vp.h"
+#include "log.h"
 #include "lowset.h"
 #include "midset.h"
 #include "highset.h"
 
 #define FALSE 0
 #define TRUE !FALSE
+
+#define VOLUME_TANK 500
+#define VOLUME_HEAT 200
 
 /*##########################################################################
 #
@@ -52,8 +56,10 @@
 #   Returns....: *
 #
 ##########################################################################*/
-TVp::TVp(TGraphicDevice *dev)
+TVp::TVp(TGraphicDevice *dev, TLog *log)
+ : Font(10)
 {
+    Log = log;
 	int i, j;
 	int SetArr[MAX_FUZZY_VARS];
 	int RuleArr[5][3] =
@@ -99,6 +105,16 @@ TVp::TVp(TGraphicDevice *dev)
 
 	vbe = new TGraphicDevice(*dev);
 
+	vbe->SetFont(&Font);
+
+	FTankTemp = 200;
+	FHeatTemp = 200;
+
+	FValidTank = FALSE;
+	FValidHeat = FALSE;
+	FValidPTank = FALSE;
+	FValidPHeat = FALSE;
+
 	Start("Vp", 0x2000);
 }
 
@@ -136,17 +152,160 @@ void TVp::DeviceName(char *Name, int Size) const
 
 /*##########################################################################
 #
-#   Name       : TVp::IsOn
+#   Name       : TVp::IsVpOn
 #
-#   Purpose....: Is on?
+#   Purpose....: Is VP on?
 #
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-int TVp::IsOn()
+int TVp::IsVpOn()
 {
-    return FOn;
+    return FVpOn;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::IsEpOn
+#
+#   Purpose....: Is EP on?
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::IsEpOn()
+{
+    return FEpOn;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::HasValidTankTemp
+#
+#   Purpose....: Check for valid tank temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::HasValidTankTemp()
+{
+    return FValidTank;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::HasValidHeatTemp
+#
+#   Purpose....: Check for valid heat temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::HasValidHeatTemp()
+{
+	return FValidHeat;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetTankTemp
+#
+#   Purpose....: Get tank temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::GetTankTemp()
+{
+	return FTankTemp;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetHeatTemp
+#
+#   Purpose....: Get heating system temperature
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::GetHeatTemp()
+{
+	return FHeatTemp;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::HasValidTankP
+#
+#   Purpose....: Check for valid tank effect
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::HasValidTankP()
+{
+	return FValidPTank;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetTankP
+#
+#   Purpose....: Get current tank effect
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TVp::GetTankP()
+{
+	return PTank;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::HasValidHeatP
+#
+#   Purpose....: Check for valid heat effect
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+int TVp::HasValidHeatP()
+{
+	return FValidPHeat;
+}
+
+/*##########################################################################
+#
+#   Name       : TVp::GetHeatP
+#
+#   Purpose....: Get current heat effect
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+long double TVp::GetHeatP()
+{
+	return PHeat;
 }
 
 /*##########################################################################
@@ -191,6 +350,102 @@ void TVp::SetTempError(int diff)
 
 /*##########################################################################
 #
+#   Name       : TVp::ReadTankData
+#
+#   Purpose....: Read old tank-data
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::ReadTankData()
+{
+    TDateTime StartTime;
+	TDateTime time;
+	TLogReader *log;
+	TDeviceMsg *msg;
+    TDeviceTag *header;
+	TDeviceTag *tag;
+	TDeviceVar *var;
+    int diff;
+	int i;
+	unsigned long msb;
+	unsigned long lsb;
+
+	for (i = 0; i < 40; i++)
+	    ValidTankArr[i] = FALSE;
+
+	for (i = 0; i < 20; i++)
+	    ValidHeatArr[i] = FALSE;
+	
+    StartTime.AddMin(-40);
+    
+	log = Log->GetLog(StartTime.GetYear(), StartTime.GetMonth(), StartTime.GetDay());
+
+    msg = 0;
+    
+    if (log)
+    	if (log->GotoFirst())
+            msg = log->Get();
+    
+    while (msg)
+    {
+        header = msg->GetTag(LOG_TAG_HEADER);
+    	if (header)
+	    {
+		    msb = header->GetUnsignedInt(LOG_VAR_MsbTime, 0);
+			lsb = header->GetUnsignedInt(LOG_VAR_LsbTime, 0);
+    		time = TDateTime(msb, lsb);
+
+    		if (time >= StartTime)
+    		{
+    		    diff = time.GetMin() - StartTime.GetMin();
+    		    if (diff < 0)
+    		        diff += 60;
+
+    		    if (diff >= 0 && diff < 40)
+    		    {
+                    tag = msg->GetTag(LOG_TAG_TANK);
+                    if (tag)
+                    {        			        
+                        var = tag->GetVar(LOG_VAR_Temp);
+    	        		if (var)
+	    		    	{
+                            TankArr[diff] = var->GetFloat1();
+                            ValidTankArr[diff] = TRUE;
+                        }
+                    }
+                }
+
+                diff -= 20;
+
+    		    if (diff >= 0 && diff < 20)
+    		    {
+                    tag = msg->GetTag(LOG_TAG_HEAT);
+                    if (tag)
+                    {        			        
+                        var = tag->GetVar(LOG_VAR_Temp);
+    	        		if (var)
+	    		    	{
+                            HeatArr[diff] = var->GetFloat1();
+                            ValidHeatArr[diff] = TRUE;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (log->GotoNext())
+		    msg = log->Get();
+		else
+		    msg = 0;
+    }
+    delete log;
+}
+
+/*##########################################################################
+#
 #   Name       : TVp::Execute
 #
 #   Purpose....: Handler thread
@@ -208,11 +463,14 @@ void TVp::Execute()
 	int i;
 	long double ValArr[MAX_FUZZY_VARS];
 	long double val;
+    int ival;
 	int diostat;
+	long double dT;
+	int Sum;
+	int Count;
+	int PrevCount;
+	long double PrevVal;
 	char str[50];
-	TFont font(10);
-
-	vbe->SetFont(&font);
 
 	MotorSum = 0;
 	MotorCount = 0;
@@ -226,24 +484,213 @@ void TVp::Execute()
 		RdosWaitMilli(250);
 
 	if (diostat & 0x20)
-		FOn = TRUE;
+		FVpOn = TRUE;
 	else
-		FOn = FALSE;
+		FVpOn = FALSE;
 
-	if (FOn)
+	if (diostat & 0x40)
+		FEpOn = TRUE;
+	else
+		FEpOn = FALSE;
+
+	if (FVpOn)
 		FLevel = 9.9;
 	else
 		FLevel = 0.0;
+
+	ReadTankData();
+
+	FTankSum = 0;
+	FTankCount = 0;
+
+	FHeatSum = 0;
+	FHeatCount = 0;
 
 	RdosGetTime(&year, &month, &day, &hour, &LastMin, &sec, &ms);
 
 	while (FInstalled)
 	{
+		if (RdosReadSerialRaw(0x40, 0, &ival))
+		{
+		    FTankSum += ival;
+            FTankCount++;
+
+            if (FTankCount >= 50)
+            {
+				FTankTemp = FTankSum / FTankCount;
+
+				val = (long double)FTankTemp / 10;
+				sprintf(str, "Tank: %5.1Lf", val);
+
+				vbe->SetFilledStyle();
+				vbe->SetDrawColor(0, 0, 0);
+				vbe->DrawRect(550, 340, 550 + 100, 340 + 12);
+
+				vbe->SetDrawColor(255, 255, 255);
+				vbe->DrawString(550, 340, str);
+
+				FValidTank = TRUE;
+
+				FTankSum = 0;
+				FTankCount = 0;
+			}
+		}
+
+		if (RdosReadSerialRaw(0x40, 1, &ival))
+		{
+			FHeatSum += ival;
+			FHeatCount++;
+
+			if (FHeatCount >= 50)
+			{
+				FHeatTemp = FHeatSum / FHeatCount;
+
+				val = (long double)FHeatTemp / 10;
+				sprintf(str, "Panna: %5.1Lf", val);
+
+				vbe->SetFilledStyle();
+				vbe->SetDrawColor(0, 0, 0);
+				vbe->DrawRect(550, 355, 550 + 100, 355 + 12);
+
+				vbe->SetDrawColor(255, 255, 255);
+				vbe->DrawString(550, 355, str);
+
+				FValidHeat = TRUE;
+
+				FHeatSum = 0;
+				FHeatCount = 0;
+			}
+		}
+
 		RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
 
 		if (LastMin != min && MotorCount && TempCount)
 		{
 			LastMin = min;
+
+			for (i = 1; i < 40; i++)
+			{
+			    TankArr[i-1] = TankArr[i];
+			    ValidTankArr[i-1] = ValidTankArr[i];
+			}
+
+			TankArr[39] = FTankTemp;
+			ValidTankArr[39] = FValidTank;
+
+            if (FValidTank)
+            {
+                Sum = 0;
+                PrevCount = 0;
+                
+                for (i = 0; i < 10; i++)
+                {
+                    if (ValidTankArr[i])
+                    {
+                        Sum += TankArr[i] * i;
+                        PrevCount += i;
+                    }
+                }
+
+                if (PrevCount)
+					PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
+				else
+					PrevVal = 0;
+
+				Sum = 0;
+				Count = 0;
+
+				for (i = 0; i < 10; i++)
+				{
+					if (ValidTankArr[i + 30])
+					{
+						Sum += TankArr[i + 30] * i;
+						Count += i;
+					}
+				}
+
+				if (Count)
+					val = (long double)Sum / (long double)Count / 10.0;
+				else
+					val = 0;
+
+				if (Count && PrevCount)
+				{
+					dT = val - PrevVal;
+					PTank = 0.07 * VOLUME_TANK * dT / 30;
+					FValidPTank = TRUE;
+
+					sprintf(str, "P Tank: %5.2Lf kW", PTank);
+
+					vbe->SetFilledStyle();
+					vbe->SetDrawColor(0, 0, 0);
+					vbe->DrawRect(550, 370, 550 + 100, 370 + 12);
+
+					vbe->SetDrawColor(255, 255, 255);
+					vbe->DrawString(550, 370, str);
+				}
+			}
+
+			for (i = 1; i < 20; i++)
+			{
+				HeatArr[i-1] = HeatArr[i];
+				ValidHeatArr[i-1] = ValidHeatArr[i];
+			}
+
+			HeatArr[19] = FHeatTemp;
+			ValidHeatArr[19] = FValidHeat;
+
+			if (FValidHeat)
+			{
+				Sum = 0;
+				PrevCount = 0;
+
+				for (i = 0; i < 5; i++)
+				{
+					if (ValidHeatArr[i])
+					{
+						Sum += HeatArr[i] * i;
+						PrevCount += i;
+					}
+				}
+
+				if (PrevCount)
+					PrevVal = (long double)Sum / (long double)PrevCount / 10.0;
+				else
+					PrevVal = 0;
+
+				Sum = 0;
+				Count = 0;
+
+				for (i = 0; i < 5; i++)
+				{
+					if (ValidHeatArr[i + 15])
+					{
+						Sum += HeatArr[i + 15] * i;
+						Count += i;
+					}
+				}
+
+				if (Count)
+					val = (long double)Sum / (long double)Count / 10.0;
+				else
+					val = 0;
+
+				if (Count && PrevCount)
+				{
+					dT = val - PrevVal;
+					PHeat = 0.07 * VOLUME_HEAT * dT / 15;
+					FValidPHeat = TRUE;
+
+					sprintf(str, "P Panna: %5.2Lf kW", PHeat);
+
+					vbe->SetFilledStyle();
+					vbe->SetDrawColor(0, 0, 0);
+					vbe->DrawRect(550, 385, 550 + 100, 385 + 12);
+
+					vbe->SetDrawColor(255, 255, 255);
+					vbe->DrawString(550, 385, str);
+				}
+			}
 
 			FSection.Enter();
 
@@ -264,30 +711,50 @@ void TVp::Execute()
 			FLevel += val;
 			
 			if (FLevel < 0.0)
-			    FLevel = 0.0;
+				FLevel = 0.0;
 
 			if (FLevel > 9.9)
-			    FLevel = 9.9;
+				FLevel = 9.9;
 
+			if (FLevel < 2.5 && FVpOn)
+				FVpOn = FALSE;
 
-			if (FLevel < 2.5 && FOn)
-				FOn = FALSE;
+			if (FLevel > 7.5 && !FVpOn)
+				FVpOn = TRUE;
 
-			if (FLevel > 7.5 && !FOn)
-				FOn = TRUE;
+			if (FValidPHeat)
+			{
+    			if (PHeat < -0.6)
+	    			FEpOn = FALSE;
+
+		    	if (PHeat > -0.2)
+			    	FEpOn = TRUE;
+			}
 
 			if (RdosReadSerialLines(1, &diostat))
 			{
 				if (diostat & 0x20)
 				{
-					if (!FOn)
+					if (!FVpOn)
 						RdosToggleSerialLine(1, 5);
 				}
 				else
 				{
-					if (FOn)
+					if (FVpOn)
 						RdosToggleSerialLine(1, 5);
 				}
+
+				if (diostat & 0x40)
+				{
+					if (!FEpOn)
+						RdosToggleSerialLine(1, 6);
+				}
+				else
+				{
+					if (FEpOn)
+						RdosToggleSerialLine(1, 6);
+				}
+
 			}
 
 			sprintf(str, "VP: %4.1Lf", FLevel);

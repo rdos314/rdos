@@ -39,7 +39,6 @@
 #include "ws2300.h"
 #include "log.h"
 #include "circ.h"
-#include "temp.h"
 #include "vp.h"
 #include "graph.h"
 #include "videodev.h"
@@ -61,7 +60,6 @@ void cdecl main()
 	TWs2300 *Ws;
 	TCirc *Circ;
 	TVp *Vp;
-	TTemperature *Temp;
 	int i;
 	int diostat;
 	int mask;
@@ -90,6 +88,10 @@ void cdecl main()
 	char str[80];
 
 	RdosWaitMilli(1000);
+
+	RdosWriteSerialVal(2, 0, 0);
+	RdosWriteSerialVal(2, 1, 0);
+
 
 	NtpIp = RdosNameToIp("ntp.lth.se");
 	RdosSyncTime(NtpIp);
@@ -158,23 +160,18 @@ void cdecl main()
 
 	Circ = new TCirc(vbe);
 
-	Vp = new TVp(vbe);
-
-	Temp = new TTemperature(vbe, log);
+	Vp = new TVp(vbe, log);
 
 	log->Add(Ws);
 	log->Add(Circ);
 	log->Add(Vp);
-	log->Add(Temp);
 
 	InitHeatHttp();
 
 	AddHttpWs2300(Ws);
 	AddHttpCirc(Circ);
 	AddHttpVp(Vp);
-	AddHttpTemp(Temp);
 	AddHttpLog(log);
-
 	for (;;)
 	{
 		RdosSetCursorPosition(0,0);

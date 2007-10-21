@@ -31,20 +31,37 @@
 #include "fuzzy.h"
 #include "graphdev.h"
 
+class TLog;
+
 class TVp : public TFuzzy
 {
 public:
-	TVp(TGraphicDevice *dev);
+	TVp(TGraphicDevice *dev, TLog *log);
 	~TVp();
 
 	void DeviceName(char *Name, int Size) const;
 
-	int IsOn();
+	int IsVpOn();
+	int IsEpOn();
 
+	int GetTankTemp();
+	int GetHeatTemp();
+
+	int HasValidTankTemp();
+	int HasValidHeatTemp();
+
+	int HasValidTankP();
+	long double GetTankP();
+
+	int HasValidHeatP();
+	long double GetHeatP();
+    
 	void SetMotor(int val);
 	void SetTempError(int temp);
     
 protected:
+    void ReadTankData();
+    
 	virtual void Execute();
 
     TFuzzyVar FMotorVar;
@@ -56,9 +73,38 @@ protected:
     int TempSum;
     int TempCount;
 
-    int FOn;
+    int FVpOn;
+    int FEpOn;
+    
     long double FLevel;
+    
+	int FValidTank;
+	int FValidHeat;
+
+	int FTankTemp;
+	int FHeatTemp;
+
+	int FTankSum;
+	int FTankCount;
+
+	int FHeatSum;
+	int FHeatCount;
+
+	int FValidPTank;
+	long double PTank;
+
+	int ValidTankArr[40];
+	long double TankArr[40];
+
+	int FValidPHeat;
+	long double PHeat;
+
+	int ValidHeatArr[20];
+	long double HeatArr[20];
+
     TGraphicDevice *vbe;
+	TFont Font;
+    TLog *Log;
 
     TSection FSection;
 };
