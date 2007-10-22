@@ -6353,8 +6353,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-3</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-3</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-5</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-5</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Averaged axis loadings</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detailed axis loadings</a><br>\n");
@@ -6762,10 +6762,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[19]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[19]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -6775,6 +6775,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizs4.htm\">översikt</a> <a href=\"rels4.htm\">relaterade frågor</a> <a href=\"refs4.htm\">referenssajter</a> <a href=\"retests4.htm\">poäng stabilitet</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs5.htm\">overview</a> <a href=\"rels5.htm\">related questions</a> <a href=\"refs5.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs5.htm\">översikt</a> <a href=\"rels5.htm\">relaterade frågor</a> <a href=\"refs5.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 

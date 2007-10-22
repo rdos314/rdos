@@ -84,7 +84,7 @@ TQuizS5::TQuizS5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -369,10 +369,10 @@ void TQuizS5::SetupTexts()
   Quiz[163].MyGroup = GROUP_MIXED;
   Quiz[164].MyGroup = GROUP_MIXED;
   Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_INSTINCT;
+  Quiz[167].MyGroup = GROUP_INSTINCT;
+  Quiz[168].MyGroup = GROUP_INSTINCT;
+  Quiz[169].MyGroup = GROUP_INSTINCT;
   Quiz[170].MyGroup = GROUP_MIXED;
 
   Quiz[171].MyGroup = GROUP_NT_TALENT;

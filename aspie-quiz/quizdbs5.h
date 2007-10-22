@@ -18,10 +18,16 @@ struct TQuizRow
 	char Bipolar;
 	char Schizophrenia;
 	char Social;
+	int Country;
+	int Ancestry;
+	char Adopt;
+	char Grow;
+	char Parent;
+	char Income;
 	char Referer[100];
 	long AsResult;
 	long NtResult;
 	char Quiz[200];
-	int GroupResult[8];
+	int GroupResult[10];
 };
 
