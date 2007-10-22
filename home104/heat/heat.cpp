@@ -82,6 +82,7 @@ void cdecl main()
 	int init = 0x8000;
 	int ambient;
 	int night;
+	int refsum;
 	TGraphic *graphic;
 	TGraphicDevice *vbe;
 	TFont Font(10);
@@ -227,6 +228,7 @@ void cdecl main()
 		vpmax = 0;
 		circmax = 0;
 		temperrmax = 255;
+		refsum = 0;
 
 		for (i = 0; i < 8; i++)
 		{
@@ -243,6 +245,8 @@ void cdecl main()
 
 				temp = RadArr[i]->GetTemp();
 				ref = RadArr[i]->GetRef();
+
+				refsum += ref;
 
 				temperr = temp - ref;
 
@@ -270,10 +274,11 @@ void cdecl main()
 			Circ->SetMaxTempError(temperrmax);
 
 		if (count)
+		{
 			Vp->SetMotor(vpmax);
-
-		if (count)
 			Vp->SetTempError(temperrmax);
+			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
+	    }
 
 		if (diostat & 1)
 			HttpSetLightOn();

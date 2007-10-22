@@ -223,13 +223,13 @@ void TGraphic::Show()
 	PTankChart->SetXAxis(from, to);
 	VpChart->SetXAxis(from, to);
 
-    for (i = 0; i <= 60; i += 5) 
+    for (i = 0; i <= 65; i += 5) 
     {
-        TempChart->SetLineColor(i, 60, 60, 60);
+        TempChart->SetLineColor(i / 5, 60, 60, 60);
     	
     	val = (long double)i;
-	    TempChart->Add(i, from, val);
-	    TempChart->Add(i, to, val);
+	    TempChart->Add(i / 5, from, val);
+	    TempChart->Add(i / 5, to, val);
     }
 
     for (i = 0; i <= 10; i += 2) 
@@ -519,7 +519,7 @@ void TGraphic::Show()
         TempChart->SetLineColor(i, 60, 60, 60);
     	
 	    TempChart->Add(i, currtime, 0.0);
-	    TempChart->Add(i, currtime, 25.0);
+	    TempChart->Add(i, currtime, 65.0);
 
         PowerChart->SetLineColor(i, 60, 60, 60);
     	

@@ -60,15 +60,31 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
  : Font(10)
 {
     Log = log;
-	int i, j;
+	int i, j, k;
 	int SetArr[MAX_FUZZY_VARS];
-	int RuleArr[5][3] =
+	int RuleArr[3][5][3] =
 				{
-					{3, 4, 4},
-					{2, 3, 4},
-					{2, 2, 2},
-					{1, 1, 1},
-					{0, 0, 0},
+				    {
+    					{2, 3, 3},
+	    				{1, 2, 3},
+		    			{1, 1, 1},
+			    		{0, 0, 0},
+				    	{0, 0, 0},
+				    },
+				    {
+    					{3, 4, 4},
+	    				{2, 3, 4},
+		    			{2, 2, 2},
+			    		{1, 1, 1},
+				    	{0, 0, 0},
+				    },
+				    {
+    					{4, 4, 4},
+	    				{3, 4, 4},
+		    			{3, 3, 3},
+			    		{2, 2, 2},
+				    	{1, 1, 1},
+				    },
 				};
 
 	FMotorVar.Add(0, new TLowFuzzySet(25.0, 50.0));
@@ -83,6 +99,11 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
     FTempDiffVar.Add(4, new THighFuzzySet(0.2, 0.5)); 
     AddInput(1, &FTempDiffVar);
 
+	FAmbientVar.Add(0, new TLowFuzzySet(0.5, 1.0));
+	FAmbientVar.Add(1, new TMidFuzzySet(0.5, 1.0, 1.5));
+    FAmbientVar.Add(2, new THighFuzzySet(1.0, 1.5)); 
+    AddInput(2, &FTempDiffVar);
+
     FOutputVar.Add(0, new TLowFuzzySet(-0.4, -0.2));
     FOutputVar.Add(1, new TMidFuzzySet(-0.4, -0.2, 0.0));
     FOutputVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
@@ -90,18 +111,23 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
     FOutputVar.Add(4, new THighFuzzySet(0.2, 0.4));
     AddOutput(&FOutputVar);
 
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 3; i++)
     {
-		for (j = 0; j < 3; j++)
-		{
-			SetArr[0] = j;
-			SetArr[1] = i;
-			DefineRule(SetArr, RuleArr[i][j]);
+        for (j = 0; j < 5; j++)
+        {
+		    for (k = 0; k < 3; k++)
+    		{
+	    		SetArr[0] = k;
+		    	SetArr[1] = j;
+				SetArr[2] = i;
+				DefineRule(SetArr, RuleArr[i][j][k]);
+			}
 		}
 	}
 
 	FMotorVar.SetInputValue(0.0);
 	FTempDiffVar.SetInputValue(0.0);
+	FAmbientVar.SetInputValue(1.0);
 
 	vbe = new TGraphicDevice(*dev);
 
@@ -114,6 +140,7 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
 	FValidHeat = FALSE;
 	FValidPTank = FALSE;
 	FValidPHeat = FALSE;
+	FValidAmbient = FALSE;
 
 	Start("Vp", 0x2000);
 }
@@ -350,6 +377,44 @@ void TVp::SetTempError(int diff)
 
 /*##########################################################################
 #
+#   Name       : TVp::SetAmbientDiff
+#
+#   Purpose....: Set ambient temp diff
+#
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TVp::SetAmbient(int ref, int ambient)
+{
+    long double fact;
+    long double ambdiff;
+    long double tankdiff;
+
+    if (FValidTank)
+    {
+
+        FSection.Enter();
+
+        FRef = ref;
+        FAmbient = ambient;
+
+        ambdiff = FRef - FAmbient;
+        tankdiff = FTankTemp - FRef;
+
+        fact = 1.5 * ambdiff / (ambdiff + 2.0 * tankdiff);
+
+        AmbientSum += fact;
+        AmbientCount++;
+    
+        FValidAmbient = TRUE;
+
+        FSection.Leave();    
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TVp::ReadTankData
 #
 #   Purpose....: Read old tank-data
@@ -495,9 +560,13 @@ void TVp::Execute()
 	MotorCount = 0;
 	TempSum = 0;
 	TempCount = 0;
+	AmbientSum = 0;
+	AmbientCount = 0;
 
 	for (i = 0; i < MAX_FUZZY_VARS; i++)
 		ValArr[i] = 0.0;
+
+    ValArr[2] = 1.0;
 
 	while (!RdosReadSerialLines(1, &diostat))
 		RdosWaitMilli(250);
@@ -728,38 +797,37 @@ void TVp::Execute()
 			if (TempCount)
 				ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
 
+            if (AmbientCount)
+                ValArr[2] = AmbientSum / (long double)AmbientCount; 
+
 			MotorSum = 0;
 			MotorCount = 0;
 			TempSum = 0;
 			TempCount = 0;
+			AmbientSum = 0;
+			AmbientCount = 0;
 
 			FSection.Leave();
 
 			val = Calc(ValArr);
 			FLevel += val;
-			
+
 			if (FLevel < 0.0)
 				FLevel = 0.0;
 
 			if (FLevel > 9.9)
 				FLevel = 9.9;
-
+			
 			if (FLevel < 2.5 && FVpOn)
 				FVpOn = FALSE;
 
 			if (FLevel > 7.5 && !FVpOn)
 				FVpOn = TRUE;
 
-			if (FVpOn && FValidHeat && FHeatTemp > 400)
-			{
-			    FLevel = 0.0;
-			    FVpOn = FALSE;
-			}
-
 			if (FValidPHeat && FValidHeat)
 			{
-			    if (FMaxHeatTemp < 650)
-			        EpLimit = 650;
+			    if (FMaxHeatTemp < 750)
+			        EpLimit = 750;
 			    else
 			        EpLimit = 500;
 			    

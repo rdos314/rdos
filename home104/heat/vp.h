@@ -58,6 +58,7 @@ public:
     
 	void SetMotor(int val);
 	void SetTempError(int temp);
+	void SetAmbient(int ref, int ambient);
     
 protected:
     void ReadTankData();
@@ -66,12 +67,15 @@ protected:
 
     TFuzzyVar FMotorVar;
     TFuzzyVar FTempDiffVar;
+    TFuzzyVar FAmbientVar;
     TFuzzyVar FOutputVar;
 
     int MotorSum;
     int MotorCount;
     int TempSum;
     int TempCount;
+    long double AmbientSum;
+    int AmbientCount;
 
     int FVpOn;
     int FEpOn;
@@ -104,6 +108,10 @@ protected:
 
     int FMaxHeatTemp;
     int FMaxHeatDay;
+
+    int FValidAmbient;
+    int FAmbient;
+    int FRef;
 
     TGraphicDevice *vbe;
 	TFont Font;
