@@ -239,10 +239,10 @@ void HandleRow(TQuizRow *Row)
 
 	printf("%d AS: %d, NT: %d, [", Row->ID, Row->AsResult, Row->NtResult);
 
-	for (grp = 0; grp < 10; grp++)
+	for (grp = 0; grp < 11; grp++)
 	{
 	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 7)
+	    if (grp != 10)
 	        printf(", ");
 	}
 
@@ -324,7 +324,7 @@ void UpdateScore(TQuizRow *row)
     int sum;
     int totsum;
 
-    for (grp = 0; grp < 10; grp++)
+    for (grp = 0; grp < 11; grp++)
     {
         sum = 0;
         totsum = 0;
@@ -345,8 +345,8 @@ void UpdateScore(TQuizRow *row)
                 else
                     val--;
 
-                sum += val * w * w;
-				totsum += 2 * w * w;
+                sum += val * w;
+				totsum += 2 * w;
             }
         }
 
@@ -509,18 +509,22 @@ char *ProcessRow(char *str)
 
 				case 22:
 					Row.Adopt = atoi(valstr);
+					Row.Quiz[177] = Row.Adopt;
 					break;
 
 				case 23:
 					Row.Grow = atoi(valstr);
+					Row.Quiz[178] = Row.Grow + 1;
 					break;
 
 				case 24:
 					Row.Parent = atoi(valstr);
+					Row.Quiz[179] = Row.Parent + 1;
 					break;
 
 				case 25:
 					Row.Income = atoi(valstr);
+					Row.Quiz[180] = Row.Income + 1;
 					break;
 
 				case 26:
@@ -577,36 +581,6 @@ int main(int argc, char **argv)
 	int grp;
 	int max;
 	long double w;
-
-	for (i = 0; i < 138; i++)
-	{
-	    max = 0;
-
-        for (grp = 0; grp < 10; grp++)
-        {        
-            w = Gw[i][grp];
-            w = w * w;
-			if (w > max)
-				max = w;
-		}
-
-		for (grp = 0; grp < 10; grp++)
-		{
-			if (max)
-			{
-				w = Gw[i][grp];
-				w = w * w / max;
-
-				if (w >= 0.64)
-					Gw[i][grp] = (int)((long double)Gw[i][grp] * w);
-				else
-					Gw[i][grp] = 0;
-			}
-			else
-				Gw[i][grp] = 0;
-
-		}
-	}
 
 	while (size = infile.Read(buf, MAX_IN_ROW))
 	{

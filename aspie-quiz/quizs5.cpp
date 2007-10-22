@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS5::TQuizS5(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4)
-  : TQuiz(177),
+  : TQuiz(181),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -123,7 +123,10 @@ int TQuizS5::GetPcaCount()
 *##########################################################################*/
 int TQuizS5::GetCatCount(int Question)
 {
-    return 3;
+    if (Question <= 177)
+        return 3;
+    else
+        return 5;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -382,6 +385,11 @@ void TQuizS5::SetupTexts()
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
 
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you drop things when your attention is on other things?";
   Quiz[1].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
@@ -561,6 +569,12 @@ void TQuizS5::SetupTexts()
   Quiz[174].Text = "ODD";
   Quiz[175].Text = "Bipolar";
   Quiz[176].Text = "Social phobia";
+
+  Quiz[177].Text = "Adopted";
+  Quiz[178].Text = "Satisfied with childhood";
+  Quiz[179].Text = "Biological parent income";
+  Quiz[180].Text = "My income";
+
 #endif
 
 #ifdef SWEDISH
@@ -742,6 +756,12 @@ void TQuizS5::SetupTexts()
   Quiz[174].Text = "ODD";
   Quiz[175].Text = "Bipolär";
   Quiz[176].Text = "Social fobi";
+
+  Quiz[177].Text = "Adopterad";
+  Quiz[178].Text = "Nöjd med min barndom";
+  Quiz[179].Text = "Biologiska föräldrars inkomst";
+  Quiz[180].Text = "Egen inkomst";
+
 #endif
 
 }
@@ -888,6 +908,11 @@ void TQuizS5::LoadPopulations()
 		Row.Quiz[174] = Row.ODD + 1;
 		Row.Quiz[175] = Row.Bipolar + 1;
 		Row.Quiz[176] = Row.Social + 1;
+
+		Row.Quiz[177] = Row.Adopt;
+		Row.Quiz[178] = Row.Grow + 1;
+		Row.Quiz[179] = Row.Parent + 1;
+		Row.Quiz[180] = Row.Income + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1250,6 +1275,11 @@ void TQuizS5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineCross(QuizS4, 174, 200);
 	DefineCross(QuizS4, 175, 201);
 	DefineCross(QuizS4, 176, 202);
+
+	DefineGlobalId(177, 928);
+	DefineGlobalId(178, 929);
+	DefineGlobalId(179, 930);
+	DefineGlobalId(180, 931);
 }
 
 /*##########################################################################
