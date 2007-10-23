@@ -910,9 +910,9 @@ void TQuizS5::LoadPopulations()
 		Row.Quiz[176] = Row.Social + 1;
 
 		Row.Quiz[177] = Row.Adopt;
-		Row.Quiz[178] = Row.Grow + 1;
-		Row.Quiz[179] = Row.Parent + 1;
-		Row.Quiz[180] = Row.Income + 1;
+		Row.Quiz[178] = Row.Grow;
+		Row.Quiz[179] = Row.Parent;
+		Row.Quiz[180] = Row.Income;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1641,7 +1641,7 @@ void TQuizS5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

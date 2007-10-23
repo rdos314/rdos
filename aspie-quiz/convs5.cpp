@@ -514,17 +514,17 @@ char *ProcessRow(char *str)
 
 				case 23:
 					Row.Grow = atoi(valstr);
-					Row.Quiz[178] = Row.Grow + 1;
+					Row.Quiz[178] = Row.Grow;
 					break;
 
 				case 24:
 					Row.Parent = atoi(valstr);
-					Row.Quiz[179] = Row.Parent + 1;
+					Row.Quiz[179] = Row.Parent;
 					break;
 
 				case 25:
 					Row.Income = atoi(valstr);
-					Row.Quiz[180] = Row.Income + 1;
+					Row.Quiz[180] = Row.Income;
 					break;
 
 				case 26:

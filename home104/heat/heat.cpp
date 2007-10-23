@@ -65,7 +65,6 @@ void cdecl main()
 	int mask;
 	TDateTime *CurrTime;
 	int mot;
-	int vpmax;
 	int circmax;
 	int temp;
 	int ref;
@@ -225,7 +224,6 @@ void cdecl main()
 		delete CurrTime;
 
 		count = 0;
-		vpmax = 0;
 		circmax = 0;
 		temperrmax = 255;
 		refsum = 0;
@@ -237,9 +235,6 @@ void cdecl main()
 				count++;
 
 				mot = RadArr[i]->GetMotor();
-				if (mot > vpmax && i != 7)
-					vpmax = mot;
-
 				if (mot > circmax)
 					circmax = mot;
 
@@ -250,7 +245,7 @@ void cdecl main()
 
 				temperr = temp - ref;
 
-				if (temperr < temperrmax && i != 7)
+				if (temperr < temperrmax)
 					temperrmax = temperr;
 
 				if (night)
@@ -275,7 +270,6 @@ void cdecl main()
 
 		if (count)
 		{
-			Vp->SetMotor(vpmax);
 			Vp->SetTempError(temperrmax);
 			Vp->SetAmbient(refsum / count, (int)(10.0 * Ws->GetOutdoorTemp()));
 	    }

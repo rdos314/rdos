@@ -56,7 +56,6 @@ public:
 	int HasValidHeatP();
 	long double GetHeatP();
     
-	void SetMotor(int val);
 	void SetTempError(int temp);
 	void SetAmbient(int ref, int ambient);
     
@@ -65,13 +64,10 @@ protected:
     
 	virtual void Execute();
 
-    TFuzzyVar FMotorVar;
     TFuzzyVar FTempDiffVar;
     TFuzzyVar FAmbientVar;
     TFuzzyVar FOutputVar;
 
-    int MotorSum;
-    int MotorCount;
     int TempSum;
     int TempCount;
     long double AmbientSum;

@@ -168,7 +168,7 @@ void TFuzzy::InitRule()
         
     FRuleArr = new TFuzzyRule[FSize];
 
-    for (i = 0; i < MAX_FUZZY_VARS; i++)
+    for (i = 0; i < MAX_FUZZY_SETS; i++)
         Arr[i] = 0;
 
     for (i = 0; i < FSize; i++)
@@ -219,7 +219,7 @@ void TFuzzy::DefineRule(int SetArr[MAX_FUZZY_VARS], int OutputSet)
 	{
 		ok = TRUE;
 
-		for (j = 0; j < MAX_FUZZY_SETS && ok; j++)
+		for (j = 0; j < MAX_FUZZY_VARS && ok; j++)
 			if (FVarArr[j])
 				if (FRuleArr[i].InputSetArr[j] != SetArr[j])
 					ok = FALSE;
@@ -249,13 +249,13 @@ long double TFuzzy::Calc(long double ValArr[MAX_FUZZY_VARS])
     long double minval;
     long double prodsum;
     long double sum;
-    long double OutputSum[MAX_FUZZY_SETS];
+    long double OutputSum[MAX_FUZZY_VARS * MAX_FUZZY_SETS];
 
     for (i = 0; i < MAX_FUZZY_VARS; i++)
         if (FVarArr[i])
 			FVarArr[i]->SetInputValue(ValArr[i]);
 
-    for (i = 0; i < MAX_FUZZY_SETS; i++)
+    for (i = 0; i < MAX_FUZZY_VARS * MAX_FUZZY_SETS; i++)
         OutputSum[i] = 0.0;
     
     for (i = 0; i < FSize; i++)
@@ -280,7 +280,7 @@ long double TFuzzy::Calc(long double ValArr[MAX_FUZZY_VARS])
     prodsum = 0.0;
     sum = 0.0;
     
-    for (i = 0; i < MAX_FUZZY_SETS; i++)
+    for (i = 0; i < MAX_FUZZY_VARS * MAX_FUZZY_SETS; i++)
     {
         if (OutputSum[i] != 0.0)
         {

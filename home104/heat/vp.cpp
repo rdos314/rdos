@@ -60,74 +60,48 @@ TVp::TVp(TGraphicDevice *dev, TLog *log)
  : Font(10)
 {
     Log = log;
-	int i, j, k;
+	int i, j;
 	int SetArr[MAX_FUZZY_VARS];
-	int RuleArr[3][5][3] =
+	int RuleArr[3][5] =
 				{
-				    {
-    					{2, 3, 3},
-	    				{1, 2, 3},
-		    			{1, 1, 1},
-			    		{0, 0, 0},
-				    	{0, 0, 0},
-				    },
-				    {
-    					{3, 4, 4},
-	    				{2, 3, 4},
-		    			{2, 2, 2},
-			    		{1, 1, 1},
-				    	{0, 0, 0},
-				    },
-				    {
-    					{4, 4, 4},
-	    				{3, 4, 4},
-		    			{3, 3, 3},
-			    		{2, 2, 2},
-				    	{1, 1, 1},
-				    },
+					{3, 2, 1, 0, 0},
+					{4, 3, 3, 3, 2},
+					{6, 6, 5, 4, 3},
 				};
 
-	FMotorVar.Add(0, new TLowFuzzySet(25.0, 50.0));
-	FMotorVar.Add(1, new TMidFuzzySet(25.0, 50.0, 75.0));
-	FMotorVar.Add(2, new THighFuzzySet(50.0, 75.0));
-	AddInput(0, &FMotorVar);
+	FTempDiffVar.Add(0, new TLowFuzzySet(-1.0, -0.5));
+	FTempDiffVar.Add(1, new TMidFuzzySet(-1.0, -0.5, 0.0));
+	FTempDiffVar.Add(2, new TMidFuzzySet(-0.5, 0.0, 0.5));
+	FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.5, 1.0));
+	FTempDiffVar.Add(4, new THighFuzzySet(0.5, 1.0));
+	AddInput(0, &FTempDiffVar);
 
-	FTempDiffVar.Add(0, new TLowFuzzySet(-0.5, -0.2));
-	FTempDiffVar.Add(1, new TMidFuzzySet(-0.5, -0.2, 0.0));
-	FTempDiffVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
-	FTempDiffVar.Add(3, new TMidFuzzySet(0.0, 0.2, 0.5));
-    FTempDiffVar.Add(4, new THighFuzzySet(0.2, 0.5)); 
-    AddInput(1, &FTempDiffVar);
+	FAmbientVar.Add(0, new TLowFuzzySet(0.25, 0.5));
+	FAmbientVar.Add(1, new TMidFuzzySet(0.25, 0.5, 1.0));
+	FAmbientVar.Add(2, new THighFuzzySet(0.5, 1.0));
+	AddInput(1, &FAmbientVar);
 
-	FAmbientVar.Add(0, new TLowFuzzySet(0.5, 1.0));
-	FAmbientVar.Add(1, new TMidFuzzySet(0.5, 1.0, 1.5));
-    FAmbientVar.Add(2, new THighFuzzySet(1.0, 1.5)); 
-    AddInput(2, &FTempDiffVar);
+	FOutputVar.Add(0, new TLowFuzzySet(-0.8, -0.4));
+	FOutputVar.Add(1, new TMidFuzzySet(-0.8, -0.4, -0.2));
+	FOutputVar.Add(2, new TMidFuzzySet(-0.4, -0.2, 0.0));
+	FOutputVar.Add(3, new TMidFuzzySet(-0.2, 0.0, 0.2));
+	FOutputVar.Add(4, new TMidFuzzySet(0.0, 0.2, 0.4));
+	FOutputVar.Add(5, new TMidFuzzySet(0.2, 0.4, 0.8));
+	FOutputVar.Add(6, new THighFuzzySet(0.4, 0.8));
+	AddOutput(&FOutputVar);
 
-    FOutputVar.Add(0, new TLowFuzzySet(-0.4, -0.2));
-    FOutputVar.Add(1, new TMidFuzzySet(-0.4, -0.2, 0.0));
-    FOutputVar.Add(2, new TMidFuzzySet(-0.2, 0.0, 0.2));
-    FOutputVar.Add(3, new TMidFuzzySet(0.0, 0.2, 0.4));
-    FOutputVar.Add(4, new THighFuzzySet(0.2, 0.4));
-    AddOutput(&FOutputVar);
-
-    for (i = 0; i < 3; i++)
-    {
-        for (j = 0; j < 5; j++)
-        {
-		    for (k = 0; k < 3; k++)
-    		{
-	    		SetArr[0] = k;
-		    	SetArr[1] = j;
-				SetArr[2] = i;
-				DefineRule(SetArr, RuleArr[i][j][k]);
-			}
+	for (i = 0; i < 3; i++)
+	{
+		for (j = 0; j < 5; j++)
+		{
+			SetArr[0] = j;
+			SetArr[1] = i;
+			DefineRule(SetArr, RuleArr[i][j]);
 		}
 	}
 
-	FMotorVar.SetInputValue(0.0);
 	FTempDiffVar.SetInputValue(0.0);
-	FAmbientVar.SetInputValue(1.0);
+	FAmbientVar.SetInputValue(0.5);
 
 	vbe = new TGraphicDevice(*dev);
 
@@ -337,26 +311,6 @@ long double TVp::GetHeatP()
 
 /*##########################################################################
 #
-#   Name       : TVp::SetMotor
-#
-#   Purpose....: Set current motor
-#
-#   Out params.: *
-#   Returns....: *
-#
-##########################################################################*/
-void TVp::SetMotor(int motor)
-{
-	FSection.Enter();
-    
-    MotorCount++;
-    MotorSum += motor;
-
-    FSection.Leave();    
-}
-
-/*##########################################################################
-#
 #   Name       : TVp::SetTempError
 #
 #   Purpose....: Set current temp error
@@ -556,8 +510,6 @@ void TVp::Execute()
 	int EpLimit;
 	char str[50];
 
-	MotorSum = 0;
-	MotorCount = 0;
 	TempSum = 0;
 	TempCount = 0;
 	AmbientSum = 0;
@@ -566,7 +518,7 @@ void TVp::Execute()
 	for (i = 0; i < MAX_FUZZY_VARS; i++)
 		ValArr[i] = 0.0;
 
-    ValArr[2] = 1.0;
+    ValArr[1] = 0.5;
 
 	while (!RdosReadSerialLines(1, &diostat))
 		RdosWaitMilli(250);
@@ -655,7 +607,7 @@ void TVp::Execute()
 
 		RdosGetTime(&year, &month, &day, &hour, &min, &sec, &ms);
 
-		if (LastMin != min && MotorCount && TempCount)
+		if (LastMin != min && TempCount)
 		{
 			LastMin = min;
 
@@ -791,17 +743,12 @@ void TVp::Execute()
 
 			FSection.Enter();
 
-			if (MotorCount)
-				ValArr[0] = (long double)MotorSum / (long double)MotorCount / 10.0;
-
 			if (TempCount)
-				ValArr[1] = (long double)TempSum / (long double)TempCount / 10.0;
+				ValArr[0] = (long double)TempSum / (long double)TempCount / 10.0;
 
             if (AmbientCount)
-                ValArr[2] = AmbientSum / (long double)AmbientCount; 
+                ValArr[1] = AmbientSum / (long double)AmbientCount; 
 
-			MotorSum = 0;
-			MotorCount = 0;
 			TempSum = 0;
 			TempCount = 0;
 			AmbientSum = 0;
