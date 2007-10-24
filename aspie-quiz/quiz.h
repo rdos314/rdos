@@ -56,7 +56,7 @@
 #define PCA_TYPE_AS             5
 #define PCA_TYPE_MIXED          6
 
-#define GROUP_COUNT             15
+#define GROUP_COUNT             16
 
 #define GROUP_ASPIE_BIOLOGY     0
 #define GROUP_INSTINCT          1
@@ -72,7 +72,8 @@
 #define GROUP_ENVIRONMENT       11
 #define GROUP_RELIGION          12
 #define GROUP_SEX               13
-#define GROUP_MIXED             14
+#define GROUP_CONFORM           14
+#define GROUP_MIXED             15
 
 #define POP_TYPE_ALL            0
 #define POP_TYPE_AS             1

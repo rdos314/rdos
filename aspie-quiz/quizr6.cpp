@@ -231,7 +231,7 @@ void TQuizR6::SetupTexts()
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_OCD;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[51].MyGroup = GROUP_CONFORM;
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;

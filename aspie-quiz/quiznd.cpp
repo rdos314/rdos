@@ -239,7 +239,7 @@ void TQuizNd::SetupTexts()
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_MIXED;
 	Quiz[35].MyGroup = GROUP_MIXED;
-	Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[36].MyGroup = GROUP_CONFORM;
 	Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[38].MyGroup = GROUP_NT_TALENT;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
@@ -279,7 +279,7 @@ void TQuizNd::SetupTexts()
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[74].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[75].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[76].MyGroup = GROUP_CONFORM;
 	Quiz[77].MyGroup = GROUP_OCD;
 	Quiz[78].MyGroup = GROUP_OCD;
 	Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -295,7 +295,7 @@ void TQuizNd::SetupTexts()
 	Quiz[89].MyGroup = GROUP_MIXED;
 	Quiz[90].MyGroup = GROUP_MIXED;
 	Quiz[91].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[92].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[92].MyGroup = GROUP_CONFORM;
 	Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -319,7 +319,7 @@ void TQuizNd::SetupTexts()
 	Quiz[113].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[114].MyGroup = GROUP_NT_TALENT;
 	Quiz[115].MyGroup = GROUP_MIXED;
-	Quiz[116].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[116].MyGroup = GROUP_CONFORM;
 	Quiz[117].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[118].MyGroup = GROUP_MIXED;
 	Quiz[119].MyGroup = GROUP_MIXED;
@@ -328,7 +328,7 @@ void TQuizNd::SetupTexts()
 	Quiz[122].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[123].MyGroup = GROUP_MIXED;
 	Quiz[124].MyGroup = GROUP_NONVERBAL;
-	Quiz[125].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[125].MyGroup = GROUP_CONFORM;
 	Quiz[126].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[127].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[128].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -400,9 +400,9 @@ void TQuizNd::SetupTexts()
 	Quiz[194].MyGroup = GROUP_NT_TALENT;
 	Quiz[195].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[196].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[197].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[197].MyGroup = GROUP_CONFORM;
 	Quiz[198].MyGroup = GROUP_MIXED;
-	Quiz[199].MyGroup = GROUP_MIXED;
+	Quiz[199].MyGroup = GROUP_CONFORM;
 	Quiz[200].MyGroup = GROUP_SENSORY;
 	Quiz[201].MyGroup = GROUP_NT_BIOLOGY;
 	Quiz[202].MyGroup = GROUP_NT_TALENT;

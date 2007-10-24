@@ -237,9 +237,9 @@ void TQuizR2::SetupTexts()
   Quiz[71].MyGroup = GROUP_SEX;
   Quiz[72].MyGroup = GROUP_MIXED;
   Quiz[73].MyGroup = GROUP_MIXED;
-  Quiz[74].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[75].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[74].MyGroup = GROUP_CONFORM;
+  Quiz[75].MyGroup = GROUP_CONFORM;
+  Quiz[76].MyGroup = GROUP_CONFORM;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;

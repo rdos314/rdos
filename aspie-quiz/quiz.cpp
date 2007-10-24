@@ -472,8 +472,8 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
-	Group[GROUP_OCD].PosName = "Obsession";
-	Group[GROUP_OCD].NegName = "Obsession problem";
+	Group[GROUP_OCD].PosName = "Compulsion";
+	Group[GROUP_OCD].NegName = "Compulsion problem";
 
 	Group[GROUP_RELIGION].PosName = "Religion / superstition";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
@@ -483,6 +483,9 @@ void TQuiz::Init()
 
 	Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Environment";
+
+	Group[GROUP_CONFORM].PosName = "Conformity";
+	Group[GROUP_CONFORM].NegName = "Conformity problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -494,8 +497,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biologi";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biologi";
 
-	Group[GROUP_NT_BIOLOGY].PosName = "Motorik problem";
-	Group[GROUP_NT_BIOLOGY].NegName = "Motorik";
+	Group[GROUP_NT_BIOLOGY].PosName = "NT jakt problem";
+	Group[GROUP_NT_BIOLOGY].NegName = "NT jakt";
 
 	Group[GROUP_SENSORY].PosName = "Perception";
 	Group[GROUP_SENSORY].NegName = "Perception problem";
@@ -527,11 +530,14 @@ void TQuiz::Init()
 	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
 
-	Group[GROUP_INSTINCT].PosName = "Instinkt";
-	Group[GROUP_INSTINCT].NegName = "Instinkt problem";
+	Group[GROUP_INSTINCT].PosName = "Aspie jakt";
+	Group[GROUP_INSTINCT].NegName = "Aspie jakt problem";
 
 	Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Miljö";
+
+	Group[GROUP_CONFORM].PosName = "Konformitet";
+	Group[GROUP_CONFORM].NegName = "Konformitet problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -949,6 +955,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ENVIRONMENT:
                 file.Write("GROUP_ENVIRONMENT");
+                break;
+
+            case GROUP_CONFORM:
+                file.Write("GROUP_CONFORM");
                 break;
 
             default:
@@ -6279,6 +6289,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_OCD:
 	        file->Write("OCD");
+	        break;
+	            
+	    case GROUP_CONFORM:
+	        file->Write("CONFORM");
 	        break;
 	            
 	    case GROUP_RELIGION:
