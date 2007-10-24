@@ -230,7 +230,7 @@ void TQuizS2::SetupTexts()
   Quiz[13].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[14].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[15].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[16].MyGroup = GROUP_INSTINCT;
+  Quiz[16].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[17].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[19].MyGroup = GROUP_ASPIE_TALENT;

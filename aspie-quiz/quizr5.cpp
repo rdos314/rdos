@@ -205,7 +205,7 @@ void TQuizR5::SetupTexts()
   Quiz[17].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[19].MyGroup = GROUP_OCD;
-  Quiz[20].MyGroup = GROUP_INSTINCT;
+  Quiz[20].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[21].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[22].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[23].MyGroup = GROUP_ASPIE_TALENT;
@@ -325,7 +325,7 @@ void TQuizR5::SetupTexts()
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_NONVERBAL;
   Quiz[139].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[140].MyGroup = GROUP_INSTINCT;
+  Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_MIXED;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_ASPIE_NVC;

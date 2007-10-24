@@ -201,7 +201,7 @@ void TQuizR7::SetupTexts()
   Quiz[14].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[15].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[16].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[17].MyGroup = GROUP_INSTINCT;
+  Quiz[17].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[19].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[20].MyGroup = GROUP_OCD;

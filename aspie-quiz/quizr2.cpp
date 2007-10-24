@@ -327,7 +327,7 @@ void TQuizR2::SetupTexts()
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_INSTINCT;
   Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_INSTINCT;
+  Quiz[164].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have odd teeth; e.g. teeth that are crooked or bigger than usual; gaps; overlaps; underbite etc.?";

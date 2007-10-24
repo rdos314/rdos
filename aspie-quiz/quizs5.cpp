@@ -203,9 +203,11 @@ void TQuizS5::SetupTexts()
   Quiz[140].Reverse = TRUE;
   Quiz[141].Reverse = TRUE;
   Quiz[142].Reverse = TRUE;
-  Quiz[159].Reverse = TRUE;
+  Quiz[178].Reverse = TRUE;
+  Quiz[179].Reverse = TRUE;
+  Quiz[180].Reverse = TRUE;
 
-  Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[0].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[1].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[2].MyGroup = GROUP_NT_BIOLOGY;
   Quiz[3].MyGroup = GROUP_NT_BIOLOGY;
@@ -328,7 +330,7 @@ void TQuizS5::SetupTexts()
   Quiz[120].MyGroup = GROUP_MIXED;
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
-  Quiz[123].MyGroup = GROUP_INSTINCT;
+  Quiz[123].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[124].MyGroup = GROUP_PARANOID;
   Quiz[125].MyGroup = GROUP_MIXED;
   Quiz[126].MyGroup = GROUP_MIXED;
@@ -359,24 +361,24 @@ void TQuizS5::SetupTexts()
   Quiz[151].MyGroup = GROUP_INSTINCT;
   Quiz[152].MyGroup = GROUP_INSTINCT;
   Quiz[153].MyGroup = GROUP_INSTINCT;
-  Quiz[154].MyGroup = GROUP_INSTINCT;
+  Quiz[154].MyGroup = GROUP_MIXED;
   Quiz[155].MyGroup = GROUP_INSTINCT;
   Quiz[156].MyGroup = GROUP_INSTINCT;
-  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_INSTINCT;
   Quiz[158].MyGroup = GROUP_INSTINCT;
   Quiz[159].MyGroup = GROUP_INSTINCT;
-  Quiz[160].MyGroup = GROUP_INSTINCT;
-  Quiz[161].MyGroup = GROUP_NT_BIOLOGY;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_INSTINCT;
   Quiz[162].MyGroup = GROUP_INSTINCT;
 
-  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[166].MyGroup = GROUP_INSTINCT;
   Quiz[167].MyGroup = GROUP_INSTINCT;
   Quiz[168].MyGroup = GROUP_INSTINCT;
   Quiz[169].MyGroup = GROUP_INSTINCT;
-  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_INSTINCT;
 
   Quiz[171].MyGroup = GROUP_NT_TALENT;
   Quiz[172].MyGroup = GROUP_NT_TALENT;
@@ -1641,8 +1643,8 @@ void TQuizS5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;

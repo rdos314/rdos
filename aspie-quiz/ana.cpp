@@ -465,7 +465,7 @@ int main(int argc, char **argv)
 	 Quiz[19]->WritePcaGroupCorr("pcas4.htm");
 	 Quiz[20]->WritePcaGroupCorr("pcas5.htm");
 
-	 Quiz[19]->WriteLSAS("");
+//	 Quiz[19]->WriteLSAS("");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 

@@ -191,7 +191,7 @@ void TQuizIII::SetupTexts()
 	Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[58].MyGroup = GROUP_MIXED;
 	Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[60].MyGroup = GROUP_SEX;
+	Quiz[60].MyGroup = GROUP_INSTINCT;
 	Quiz[61].MyGroup = GROUP_MIXED;
 	Quiz[62].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[63].MyGroup = GROUP_SEX;
@@ -230,7 +230,7 @@ void TQuizIII::SetupTexts()
 	Quiz[96].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[97].MyGroup = GROUP_ASPIE_BIOLOGY;
 	Quiz[98].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[99].MyGroup = GROUP_MIXED;
+	Quiz[99].MyGroup = GROUP_INSTINCT;
 
 #ifdef ENGLISH
 	Quiz[0].Text = "Do you notice small sounds that others don't, and feel pained by loud or irritating noise?";

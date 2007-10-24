@@ -354,7 +354,7 @@ void TQuizR4::SetupTexts()
   Quiz[149].MyGroup = GROUP_INSTINCT;
   Quiz[150].MyGroup = GROUP_INSTINCT;
   Quiz[151].MyGroup = GROUP_INSTINCT;
-  Quiz[152].MyGroup = GROUP_MIXED;
+  Quiz[152].MyGroup = GROUP_INSTINCT;
 
   Quiz[153].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[154].MyGroup = GROUP_OCD;

@@ -211,7 +211,7 @@ void TQuizII::SetupTexts()
 	Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[74].MyGroup = GROUP_MIXED;
-	Quiz[75].MyGroup = GROUP_INSTINCT;
+	Quiz[75].MyGroup = GROUP_MIXED;
 	Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[77].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[78].MyGroup = GROUP_ASPIE_TALENT;
