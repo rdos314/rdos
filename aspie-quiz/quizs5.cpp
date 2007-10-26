@@ -801,8 +801,8 @@ void TQuizS5::InitReferers()
 	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
 	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
-
-	}
+	AddReferer("fohguild.org", "fohguild.org/forums/screenshots/31489-ass-burgers.html");
+}
 
 /*##################  TQuizS5::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
@@ -937,7 +937,7 @@ void TQuizS5::LoadPopulations()
     			    DsmODD.Add(Row.ODD, id, score);
 	    		    DsmBipolar.Add(Row.Bipolar, id, score);
 		    	    DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
-			    	DsmSocialPhobia.Add(Row.Social, id, score);
+					DsmSocialPhobia.Add(Row.Social, id, score);
 			    }
 			}
 		}
@@ -1045,7 +1045,7 @@ void TQuizS5::LoadPopulations()
 			else
 				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
-		
+
 	}
 }
 
@@ -1076,6 +1076,7 @@ void TQuizS5::SetupControlGroups()
 	DefineNt("smogon.com");
 	DefineNt("mommyconnection.org");
 	DefineNt("calientemamas.com");
+    DefineNt("fohguild.org");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
@@ -1098,8 +1099,8 @@ void TQuizS5::SetupControlGroups()
 ##########################################################################*/
 void TQuizS5::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4)
 {
-    DefineCross(QuizS4, 0, 64);
-    DefineCross(QuizS4, 1, 0);
+	DefineCross(QuizS4, 0, 64);
+	DefineCross(QuizS4, 1, 0);
     DefineCross(QuizS4, 2, 1);
     DefineCross(QuizS4, 3, 2);
     DefineCross(QuizS4, 4, 3);
@@ -1643,8 +1644,8 @@ void TQuizS5::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
