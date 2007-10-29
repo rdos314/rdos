@@ -164,181 +164,6 @@ void TQuizR8::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizR8::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 582);
-  DefineID(2, 448);
-  DefineID(3, 927);
-  DefineID(4, 926);
-  DefineID(5, 581);
-  DefineID(6, 439);
-  DefineID(7, 925);
-  DefineID(8, 433);
-  DefineID(9, 509);
-  DefineID(10, 510);
-  DefineID(11, 514);
-  DefineID(12, 46);
-  DefineID(13, 207);
-  DefineID(14, 862);
-  DefineID(15, 53);
-  DefineID(16, 54);
-  DefineID(17, 61);
-  DefineID(18, 503);
-  DefineID(19, 632);
-  DefineID(20, 385);
-  DefineID(21, 871);
-  DefineID(22, 25);
-  DefineID(23, 26);
-  DefineID(24, 151);
-  DefineID(25, 497);
-  DefineID(26, 861);
-  DefineID(27, 100);
-  DefineID(28, 20);
-  DefineID(29, 85);
-  DefineID(30, 23);
-  DefineID(31, 519);
-  DefineID(32, 5);
-  DefineID(33, 695);
-  DefineID(34, 599);
-  DefineID(35, 606);
-  DefineID(36, 3);
-  DefineID(37, 6);
-  DefineID(38, 397);
-  DefineID(39, 129);
-  DefineID(40, 743);
-  DefineID(41, 50);
-  DefineID(42, 240);
-  DefineID(43, 616);
-  DefineID(44, 319);
-  DefineID(45, 316);
-  DefineID(46, 518);
-  DefineID(47, 70);
-  DefineID(48, 767);
-  DefineID(49, 923);
-  DefineID(50, 66);
-  DefineID(51, 269);
-  DefineID(52, 858);
-  DefineID(53, 549);
-  DefineID(54, 507);
-  DefineID(55, 859);
-  DefineID(56, 262);
-  DefineID(57, 860);
-  DefineID(58, 73);
-  DefineID(59, 454);
-  DefineID(60, 769);
-  DefineID(61, 702);
-  DefineID(62, 243);
-  DefineID(63, 282);
-  DefineID(64, 97);
-  DefineID(65, 495);
-  DefineID(66, 378);
-  DefineID(67, 737);
-  DefineID(68, 32);
-  DefineID(69, 708);
-  DefineID(70, 149);
-  DefineID(71, 277);
-  DefineID(72, 765);
-  DefineID(73, 115);
-  DefineID(74, 857);
-  DefineID(75, 547);
-  DefineID(76, 731);
-  DefineID(77, 712);
-  DefineID(78, 403);
-  DefineID(79, 359);
-  DefineID(80, 575);
-  DefineID(81, 570);
-  DefineID(82, 590);
-  DefineID(83, 402);
-  DefineID(84, 15);
-  DefineID(85, 589);
-  DefineID(86, 572);
-  DefineID(87, 17);
-  DefineID(88, 574);
-  DefineID(89, 401);
-  DefineID(90, 234);
-  DefineID(91, 536);
-  DefineID(92, 487);
-  DefineID(93, 130);
-  DefineID(94, 83);
-  DefineID(95, 86);
-  DefineID(96, 226);
-  DefineID(97, 82);
-  DefineID(98, 551);
-  DefineID(99, 84);
-  DefineID(100, 856);
-  DefineID(101, 707);
-  DefineID(102, 95);
-  DefineID(103, 128);
-  DefineID(104, 279);
-  DefineID(105, 741);
-  DefineID(106, 726);
-  DefineID(107, 89);
-  DefineID(108, 249);
-  DefineID(109, 37);
-  DefineID(110, 361);
-  DefineID(111, 39);
-  DefineID(112, 36);
-  DefineID(113, 596);
-  DefineID(114, 591);
-  DefineID(115, 595);
-  DefineID(116, 865);
-  DefineID(117, 866);
-  DefineID(118, 864);
-  DefineID(119, 781);
-  DefineID(120, 443);
-  DefineID(121, 601);
-  DefineID(122, 31);
-  DefineID(123, 718);
-  DefineID(124, 167);
-  DefineID(125, 93);
-  DefineID(126, 473);
-  DefineID(127, 362);
-  DefineID(128, 745);
-  DefineID(129, 278);
-  DefineID(130, 78);
-  DefineID(131, 516);
-  DefineID(132, 126);
-  DefineID(133, 227);
-  DefineID(134, 55);
-  DefineID(135, 48);
-  DefineID(136, 174);
-  DefineID(137, 113);
-  DefineID(138, 613);
-  DefineID(139, 922);
-  DefineID(140, 739);
-  DefineID(141, 123);
-  DefineID(142, 330);
-  DefineID(143, 600);
-  DefineID(144, 715);
-  DefineID(145, 713);
-  DefineID(146, 545);
-  DefineID(147, 250);
-  DefineID(148, 724);
-  DefineID(149, 256);
-  DefineID(150, 218);
-  DefineID(151, 124);
-  DefineID(152, 370);
-  DefineID(153, 367);
-  DefineID(154, 280);
-  DefineID(155, 180);
-  DefineID(156, 153);
-  DefineID(157, 184);
-  DefineID(158, 521);
-  DefineID(159, 434);
-  DefineID(160, 272);
-  DefineID(161, 345);
-  DefineID(162, 166);
-  DefineID(163, 162);
-  DefineID(164, 245);
-  DefineID(165, 396);
-  DefineID(166, 150);
-  DefineID(167, 181);
-  DefineID(168, 147);
-  DefineID(169, 183);
-  DefineID(170, 395);
-  DefineID(171, 706);
-  DefineID(172, 257);
-  DefineID(173, 135);
 }
 
 /*##########################################################################
@@ -574,6 +399,12 @@ void TQuizR8::SetupTexts()
   Quiz[169].MyGroup = GROUP_CONFORM;
   Quiz[170].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[171].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you enjoy watching a spinning or blinking object?";
@@ -749,6 +580,12 @@ void TQuizR8::SetupTexts()
   Quiz[170].Text = "Do you enjoy when people drop by to visit you uninvited?";
   Quiz[171].Text = "Do you spend more time getting to know others than yourself?";
   Quiz[172].Text = "Do you find it natural that males take initiatives to start a romantic relationship?";
+  Quiz[173].Text = "Are you good at judging distances?";
+  Quiz[174].Text = "Are you good at judging speed?";
+  Quiz[175].Text = "Are you good at judging acceleration?";
+  Quiz[176].Text = "Can you easily spot small differences between pictures?";
+  Quiz[177].Text = "Are you good at predicting motion?";
+
 #endif
 
 #ifdef SWEDISH
@@ -925,6 +762,12 @@ void TQuizR8::SetupTexts()
   Quiz[170].Text = "Gillar du när folk kommer på besök oanmälda?";
   Quiz[171].Text = "Använder du mer tid för att lära känna andra än dig själv?";
   Quiz[172].Text = "Tycker du det är naturligt att män tar initiativ till att starta ett förhållande?";
+  Quiz[173].Text = "Är du bra på att bedöma avstånd?";
+  Quiz[174].Text = "Är du bra på att bedöma hastighet?";
+  Quiz[175].Text = "Är du bra på att bedöma acceleration?";
+  Quiz[176].Text = "Kan du lätt se små skillnader mellan bilder?";
+  Quiz[177].Text = "Är du bra på att förutsäga rörelse?";
+
 #endif
 
 }
@@ -1407,26 +1250,26 @@ void TQuizR8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizII, 150, 43);
     DefineCross(Quiz9, 151, 52);
     DefineCross(QuizS2, 152, 56);
-    DefineCross(QuizND, 153, 125);
-    DefineCross(Quiz9, 154, 79);
-    DefineCross(QuizR2, 155, 75);
-    DefineCross(Quiz9, 156, 76);
-    DefineCross(QuizR1, 157, 108);
-    DefineCross(Quiz9, 158, 75);
-    DefineCross(QuizND, 159, 116);
-    DefineCross(QuizR2, 160, 76);
-    DefineCross(Quiz9, 161, 77);
-    DefineCross(Quiz7, 162, 60);
-    DefineCross(QuizND, 163, 76);
-    DefineCross(Quiz9, 164, 85);
-    DefineCross(Quiz9, 165, 80);
-    DefineCross(Quiz9, 166, 82);
-    DefineCross(Quiz9, 167, 83);
-    DefineCross(Quiz6, 168, 95);
-    DefineCross(Quiz8, 169, 81);
-    DefineCross(QuizR6, 170, 58);
-    DefineCross(Quiz5, 171, 79);
-    DefineCross(Quiz9, 172, 81);
+	DefineCross(QuizNd, 153, 125);
+	DefineCross(Quiz9, 154, 79);
+	DefineCross(QuizR2, 155, 75);
+	DefineCross(Quiz9, 156, 76);
+	DefineCross(QuizR1, 157, 108);
+	DefineCross(Quiz9, 158, 75);
+	DefineCross(QuizNd, 159, 116);
+	DefineCross(QuizR2, 160, 76);
+	DefineCross(Quiz9, 161, 77);
+	DefineCross(Quiz7, 162, 60);
+	DefineCross(QuizNd, 163, 76);
+	DefineCross(Quiz9, 164, 85);
+	DefineCross(Quiz9, 165, 80);
+	DefineCross(Quiz9, 166, 82);
+	DefineCross(Quiz9, 167, 83);
+	DefineCross(Quiz6, 168, 95);
+	DefineCross(Quiz8, 169, 81);
+	DefineCross(QuizR6, 170, 58);
+	DefineCross(Quiz5, 171, 79);
+	DefineCross(Quiz9, 172, 81);
 }
 
 /*##########################################################################
