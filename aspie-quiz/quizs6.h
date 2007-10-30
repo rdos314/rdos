@@ -20,22 +20,22 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizr8.h
-# Quiz experimental version 8 class
+# quizs6.h
+# Quiz stable version 6 class
 #
 ########################################################################*/
 
-#ifndef _QUIZR8_H
-#define _QUIZR8_H
+#ifndef _QUIZS6_H
+#define _QUIZS6_H
 
 #include "quiz.h"
 #include "file.h"
 
-class TQuizR8 : public TQuiz
+class TQuizS6 : public TQuiz
 {
 public:
-    TQuizR8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5);
-    ~TQuizR8();
+    TQuizS6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5);
+    ~TQuizS6();
 
     virtual void ExportExcelCase(const char *filename, int PcaType);
     virtual void ExportExcelGroups(const char *filename);

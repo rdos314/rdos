@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizr8.cpp
-# Quiz experimental version 8 class
+# quizs6.cpp
+# Quiz stable version 6 class
 #
 #######################################################################*/
 
@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizr8.h"
+#include "quizs6.h"
 #include "file.h"
-#include "quizdbr8.h"
+#include "quizdbs6.h"
 
 #define CI	1
 
@@ -42,16 +42,16 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::TQuizR8
+#   Name       : TQuizS6::TQuizS6
 #
-#   Purpose....: Constructor for TQuizR8
+#   Purpose....: Constructor for TQuizS6
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizR8::TQuizR8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
+TQuizS6::TQuizS6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
   : TQuiz(174),
 	FDataFile(FileName)
 {
@@ -90,39 +90,39 @@ TQuizR8::TQuizR8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::~TQuizR8
+#   Name       : TQuizS6::~TQuizS6
 #
-#   Purpose....: Destructor for TQuizR8
+#   Purpose....: Destructor for TQuizS6
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizR8::~TQuizR8()
+TQuizS6::~TQuizS6()
 {
 }
 
-/*##################  TQuizR8::GetPcaCount ##########################
+/*##################  TQuizS6::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizR8::GetPcaCount()
+int TQuizS6::GetPcaCount()
 {
 	return 4;
 }
 
-/*##################  TQuizR8::GetCatCount ##########################
+/*##################  TQuizS6::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizR8::GetCatCount(int Question)
+int TQuizS6::GetCatCount(int Question)
 {
     return 5;
 }
@@ -134,14 +134,14 @@ int TQuizR8::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizR8::GetQuizN()
+int TQuizS6::GetQuizN()
 {
 	return 174;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::WriteName
+#   Name       : TQuizS6::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -150,25 +150,25 @@ int TQuizR8::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::WriteName(TFile &File)
+void TQuizS6::WriteName(TFile &File)
 {
-	 File.Write("R8");
+	 File.Write("S6");
 }
 
-/*##################  TQuizR8::DefineQuiz ##########################
+/*##################  TQuizS6::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::DefineQuiz()
+void TQuizS6::DefineQuiz()
 {
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::SetupTexts
+#   Name       : TQuizS6::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -177,7 +177,7 @@ void TQuizR8::DefineQuiz()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::SetupTexts()
+void TQuizS6::SetupTexts()
 {
   Quiz[39].Reverse = TRUE;
   Quiz[55].Reverse = TRUE;
@@ -774,7 +774,7 @@ void TQuizR8::SetupTexts()
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::InitReferers
+#   Name       : TQuizS6::InitReferers
 #
 #   Purpose....: Init referers
 #
@@ -783,7 +783,7 @@ void TQuizR8::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::InitReferers()
+void TQuizS6::InitReferers()
 {
 	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
 	AddReferer("flashback.info", "flashback.info");
@@ -808,14 +808,14 @@ void TQuizR8::InitReferers()
 
 	}
 
-/*##################  TQuizR8::LoadReferers ##########################
+/*##################  TQuizS6::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::LoadReferers()
+void TQuizS6::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -878,7 +878,7 @@ void TQuizR8::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::LoadPopulations
+#   Name       : TQuizS6::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -887,7 +887,7 @@ void TQuizR8::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::LoadPopulations()
+void TQuizS6::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -1050,7 +1050,7 @@ void TQuizR8::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::SetupControlGroups
+#   Name       : TQuizS6::SetupControlGroups
 #
 #   Purpose....: Setup control-groups
 #
@@ -1059,7 +1059,7 @@ void TQuizR8::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::SetupControlGroups()
+void TQuizS6::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("rdos.net/sv");
@@ -1086,7 +1086,7 @@ void TQuizR8::SetupControlGroups()
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::SetupCross
+#   Name       : TQuizS6::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -1095,7 +1095,7 @@ void TQuizR8::SetupControlGroups()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
+void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
 {
     DefineCross(QuizS5, 0, 128);
     DefineCross(QuizS5, 1, 132);
@@ -1274,7 +1274,7 @@ void TQuizR8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 
 /*##########################################################################
 #
-#   Name       : TQuizR8::GetReferer
+#   Name       : TQuizS6::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -1283,7 +1283,7 @@ void TQuizR8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR8::GetReferer(const char *referer, TPopulation *pop)
+void TQuizS6::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -1351,14 +1351,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizR8::ExportExcelCases ##########################
+/*##################  TQuizS6::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::ExportExcelCase(const char *filename, int PcaType)
+void TQuizS6::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -1420,14 +1420,14 @@ void TQuizR8::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizR8::ExportExcelAspie ##########################
+/*##################  TQuizS6::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::ExportExcelAspie(const char *filename)
+void TQuizS6::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1485,14 +1485,14 @@ void TQuizR8::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizR8::ExportExcelGroups ##########################
+/*##################  TQuizS6::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::ExportExcelGroups(const char *filename)
+void TQuizS6::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1573,14 +1573,14 @@ void TQuizR8::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizR8::ImportMvsp ##########################
+/*##################  TQuizS6::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizR8::ImportMvsp(const char *filename, int PcaType)
+void TQuizS6::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
