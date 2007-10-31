@@ -442,7 +442,7 @@ void TQuizS6::SetupTexts()
   Quiz[31].Text = "Do you take an interest in, and remember, details that others do not seem to notice?";
   Quiz[32].Text = "Do you notice patterns in things all the time?";
   Quiz[33].Text = "Do you feel an urge to correct people with accurate facts, numbers, spelling, grammar etc., when they get something wrong?";
-  Quiz[34].Text = "Do tend to do everything worth doing, more perfect than really needed?";
+  Quiz[34].Text = "Do you tend to do everything worth doing, more perfect than really needed?";
   Quiz[35].Text = "Do you get confused by verbal instructions - especially several at the same time?";
   Quiz[36].Text = "Do you tend to get so stuck on details that you miss the overall picture?";
   Quiz[37].Text = "Do you need to do things yourself in order to remember them?";
