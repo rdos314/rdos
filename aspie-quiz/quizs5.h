@@ -42,6 +42,7 @@ public:
     virtual void ExportExcelAspie(const char *filename);
     virtual void ImportMvsp(const char *filename, int PcaType);
 
+    virtual void WriteRetest(const char *filename);
     virtual void WriteRace(const char *filename);
 
 private:

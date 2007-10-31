@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS6::TQuizS6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
-  : TQuiz(174),
+  : TQuiz(179),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -124,7 +124,7 @@ int TQuizS6::GetPcaCount()
 *##########################################################################*/
 int TQuizS6::GetCatCount(int Question)
 {
-    return 5;
+	return 5;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -136,7 +136,7 @@ int TQuizS6::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS6::GetQuizN()
 {
-	return 174;
+	return 179;
 }
 
 /*##########################################################################
@@ -405,6 +405,7 @@ void TQuizS6::SetupTexts()
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_MIXED;
   Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you enjoy watching a spinning or blinking object?";
@@ -585,6 +586,7 @@ void TQuizS6::SetupTexts()
   Quiz[175].Text = "Are you good at judging acceleration?";
   Quiz[176].Text = "Can you easily spot small differences between pictures?";
   Quiz[177].Text = "Are you good at predicting motion?";
+  Quiz[178].Text = "Are you dissatisfied with how some body-part looks like in yourself?";
 
 #endif
 
@@ -767,6 +769,7 @@ void TQuizS6::SetupTexts()
   Quiz[175].Text = "Är du bra på att bedöma acceleration?";
   Quiz[176].Text = "Kan du lätt se små skillnader mellan bilder?";
   Quiz[177].Text = "Är du bra på att förutsäga rörelse?";
+  Quiz[178].Text = "Är du missnöjd med hur någon kroppsdel ser ut hos dig?";
 
 #endif
 
@@ -926,7 +929,7 @@ void TQuizS6::LoadPopulations()
     			    score = Row.Quiz[i] - 1;
 	    		    id = IdArr[i];
 			    
-		    	    DsmAutism.Add(Row.Autism, id, score);
+					DsmAutism.Add(Row.Autism, id, score);
 			        DsmAs.Add(Row.Aspie, id, score);
 			        DsmAdd.Add(Row.ADHD, id, score);
     			    DsmTs.Add(Row.TS, id, score);
@@ -1101,7 +1104,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 1, 132);
     DefineCross(QuizS5, 2, 169);
     DefineCross(QuizS5, 3, 168);
-    DefineCross(QuizS5, 4, 143);
+	DefineCross(QuizS5, 4, 143);
     DefineCross(QuizS5, 5, 147);
     DefineCross(QuizS5, 6, 167);
     DefineCross(QuizS5, 7, 0);
@@ -1120,7 +1123,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 20, 13);
     DefineCross(QuizS5, 21, 14);
     DefineCross(QuizS5, 22, 15);
-    DefineCross(QuizS5, 23, 16);
+	DefineCross(QuizS5, 23, 16);
     DefineCross(QuizS5, 24, 17);
     DefineCross(QuizS5, 25, 21);
     DefineCross(QuizS5, 26, 18);
@@ -1136,7 +1139,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 36, 28);
     DefineCross(QuizS5, 37, 29);
     DefineCross(QuizS5, 38, 30);
-    DefineCross(QuizS5, 39, 31);
+	DefineCross(QuizS5, 39, 31);
     DefineCross(QuizS5, 40, 32);
     DefineCross(QuizS5, 41, 33);
     DefineCross(QuizS5, 42, 34);
@@ -1155,7 +1158,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 55, 91);
     DefineCross(QuizS5, 56, 49);
     DefineCross(QuizS5, 57, 47);
-    DefineCross(QuizS5, 58, 48);
+	DefineCross(QuizS5, 58, 48);
     DefineCross(QuizS5, 59, 50);
     DefineCross(QuizS5, 60, 52);
     DefineCross(QuizS5, 61, 53);
@@ -1171,7 +1174,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 71, 64);
     DefineCross(QuizS5, 72, 63);
     DefineCross(QuizS5, 73, 65);
-    DefineCross(QuizS5, 74, 66);
+	DefineCross(QuizS5, 74, 66);
     DefineCross(QuizS5, 75, 68);
     DefineCross(QuizS5, 76, 67);
     DefineCross(QuizS5, 77, 69);
@@ -1190,7 +1193,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 90, 82);
     DefineCross(QuizS5, 91, 83);
     DefineCross(QuizS5, 92, 84);
-    DefineCross(QuizS5, 93, 85);
+	DefineCross(QuizS5, 93, 85);
     DefineCross(QuizS5, 94, 86);
     DefineCross(QuizS5, 95, 87);
     DefineCross(QuizS5, 96, 88);
@@ -1206,7 +1209,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 106, 99);
     DefineCross(QuizS5, 107, 100);
     DefineCross(QuizS5, 108, 101);
-    DefineCross(QuizS5, 109, 102);
+	DefineCross(QuizS5, 109, 102);
     DefineCross(QuizS5, 110, 103);
     DefineCross(QuizS5, 111, 104);
     DefineCross(QuizS5, 112, 105);
@@ -1225,7 +1228,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 125, 114);
     DefineCross(QuizS5, 126, 115);
     DefineCross(QuizS5, 127, 116);
-    DefineCross(QuizS5, 128, 117);
+	DefineCross(QuizS5, 128, 117);
     DefineCross(QuizS5, 129, 118);
     DefineCross(QuizS5, 130, 119);
     DefineCross(QuizS5, 131, 120);
@@ -1241,7 +1244,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 141, 135);
     DefineCross(QuizS5, 142, 136);
     DefineCross(QuizS5, 143, 138);
-    DefineCross(QuizS5, 144, 141);
+	DefineCross(QuizS5, 144, 141);
     DefineCross(QuizS5, 145, 142);
     DefineCross(QuizS5, 146, 139);
     DefineCross(QuizS5, 147, 140);
@@ -1270,6 +1273,13 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineCross(QuizR6, 170, 58);
 	DefineCross(Quiz5, 171, 79);
 	DefineCross(Quiz9, 172, 81);
+
+	DefineGlobalId(173, 932);
+	DefineGlobalId(174, 933);
+	DefineGlobalId(175, 934);
+	DefineGlobalId(176, 935);
+	DefineGlobalId(177, 936);
+	DefineGlobalId(178, 937);
 }
 
 /*##########################################################################
