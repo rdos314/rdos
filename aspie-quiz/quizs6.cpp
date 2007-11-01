@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS6::TQuizS6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
-  : TQuiz(179),
+  : TQuiz(185),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -85,7 +85,7 @@ TQuizS6::TQuizS6(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -407,6 +407,13 @@ void TQuizS6::SetupTexts()
   Quiz[177].MyGroup = GROUP_MIXED;
   Quiz[178].MyGroup = GROUP_MIXED;
 
+  Quiz[179].MyGroup = GROUP_NT_TALENT;
+  Quiz[180].MyGroup = GROUP_NT_TALENT;
+  Quiz[181].MyGroup = GROUP_SENSORY;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_ASPIE_SOCIAL;
+
 #ifdef ENGLISH
   Quiz[0].Text = "Do you enjoy watching a spinning or blinking object?";
   Quiz[1].Text = "Do you have a fascination for slowly flowing water?";
@@ -587,6 +594,13 @@ void TQuizS6::SetupTexts()
   Quiz[176].Text = "Can you easily spot small differences between pictures?";
   Quiz[177].Text = "Are you good at predicting motion?";
   Quiz[178].Text = "Are you dissatisfied with how some body-part looks like in yourself?";
+
+  Quiz[179].Text = "Dyslexia";
+  Quiz[180].Text = "Dyscalculia";
+  Quiz[181].Text = "OCD";
+  Quiz[182].Text = "ODD";
+  Quiz[183].Text = "Bipolar";
+  Quiz[184].Text = "Social phobia";
 
 #endif
 
@@ -771,6 +785,13 @@ void TQuizS6::SetupTexts()
   Quiz[177].Text = "Är du bra på att förutsäga rörelse?";
   Quiz[178].Text = "Är du missnöjd med hur någon kroppsdel ser ut hos dig?";
 
+  Quiz[179].Text = "Dyslexi";
+  Quiz[180].Text = "Dyskaluli";
+  Quiz[181].Text = "OCD";
+  Quiz[182].Text = "ODD";
+  Quiz[183].Text = "Bipolär";
+  Quiz[184].Text = "Social fobi";
+
 #endif
 
 }
@@ -911,12 +932,12 @@ void TQuizS6::LoadPopulations()
 	{
         BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-//		Row.Quiz[171] = Row.Dyslexia + 1;
-//		Row.Quiz[172] = Row.Dyscalculia + 1;
-//		Row.Quiz[173] = Row.OCD + 1;
-//		Row.Quiz[174] = Row.ODD + 1;
-//		Row.Quiz[175] = Row.Bipolar + 1;
-//		Row.Quiz[176] = Row.Social + 1;
+		Row.Quiz[179] = Row.Dyslexia + 1;
+		Row.Quiz[180] = Row.Dyscalculia + 1;
+		Row.Quiz[181] = Row.OCD + 1;
+		Row.Quiz[182] = Row.ODD + 1;
+		Row.Quiz[183] = Row.Bipolar + 1;
+		Row.Quiz[184] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -924,23 +945,23 @@ void TQuizS6::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-			    if (i < 171)
-			    {
-    			    score = Row.Quiz[i] - 1;
-	    		    id = IdArr[i];
-			    
+				if (i < 179)
+				{
+					score = Row.Quiz[i] - 1;
+					id = IdArr[i];
+
 					DsmAutism.Add(Row.Autism, id, score);
-			        DsmAs.Add(Row.Aspie, id, score);
-			        DsmAdd.Add(Row.ADHD, id, score);
-    			    DsmTs.Add(Row.TS, id, score);
-	    		    DsmDyslexia.Add(Row.Dyslexia, id, score);
+					DsmAs.Add(Row.Aspie, id, score);
+					DsmAdd.Add(Row.ADHD, id, score);
+					DsmTs.Add(Row.TS, id, score);
+					DsmDyslexia.Add(Row.Dyslexia, id, score);
 					DsmDyscalculia.Add(Row.Dyscalculia, id, score);
-			        DsmOCD.Add(Row.OCD, id, score);
-    			    DsmODD.Add(Row.ODD, id, score);
-	    		    DsmBipolar.Add(Row.Bipolar, id, score);
-		    	    DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
-			    	DsmSocialPhobia.Add(Row.Social, id, score);
-			    }
+					DsmOCD.Add(Row.OCD, id, score);
+					DsmODD.Add(Row.ODD, id, score);
+					DsmBipolar.Add(Row.Bipolar, id, score);
+					DsmSchizophrenia.Add(Row.Schizophrenia, id, score);
+					DsmSocialPhobia.Add(Row.Social, id, score);
+				}
 			}
 		}
 
@@ -1047,7 +1068,7 @@ void TQuizS6::LoadPopulations()
 			else
 				AspieFemale.Add(Row.AsResult, Row.NtResult, aspie, Row.Quiz, Row.GroupResult);
 		}
-		
+
 	}
 }
 
@@ -1100,22 +1121,22 @@ void TQuizS6::SetupControlGroups()
 ##########################################################################*/
 void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5)
 {
-    DefineCross(QuizS5, 0, 128);
-    DefineCross(QuizS5, 1, 132);
-    DefineCross(QuizS5, 2, 169);
-    DefineCross(QuizS5, 3, 168);
+	DefineCross(QuizS5, 0, 128);
+	DefineCross(QuizS5, 1, 132);
+	DefineCross(QuizS5, 2, 169);
+	DefineCross(QuizS5, 3, 168);
 	DefineCross(QuizS5, 4, 143);
-    DefineCross(QuizS5, 5, 147);
-    DefineCross(QuizS5, 6, 167);
-    DefineCross(QuizS5, 7, 0);
-    DefineCross(QuizS5, 8, 1);
-    DefineCross(QuizS5, 9, 2);
-    DefineCross(QuizS5, 10, 3);
-    DefineCross(QuizS5, 11, 4);
-    DefineCross(QuizS5, 12, 5);
-    DefineCross(QuizS5, 13, 7);
-    DefineCross(QuizS5, 14, 6);
-    DefineCross(QuizS5, 15, 8);
+	DefineCross(QuizS5, 5, 147);
+	DefineCross(QuizS5, 6, 167);
+	DefineCross(QuizS5, 7, 0);
+	DefineCross(QuizS5, 8, 1);
+	DefineCross(QuizS5, 9, 2);
+	DefineCross(QuizS5, 10, 3);
+	DefineCross(QuizS5, 11, 4);
+	DefineCross(QuizS5, 12, 5);
+	DefineCross(QuizS5, 13, 7);
+	DefineCross(QuizS5, 14, 6);
+	DefineCross(QuizS5, 15, 8);
     DefineCross(QuizS5, 16, 9);
     DefineCross(QuizS5, 17, 10);
     DefineCross(QuizS5, 18, 11);
@@ -1150,7 +1171,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 47, 38);
     DefineCross(QuizS5, 48, 165);
     DefineCross(QuizS5, 49, 40);
-    DefineCross(QuizS5, 50, 41);
+	DefineCross(QuizS5, 50, 41);
     DefineCross(QuizS5, 51, 45);
     DefineCross(QuizS5, 52, 42);
     DefineCross(QuizS5, 53, 43);
@@ -1185,7 +1206,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 82, 74);
     DefineCross(QuizS5, 83, 75);
     DefineCross(QuizS5, 84, 76);
-    DefineCross(QuizS5, 85, 77);
+	DefineCross(QuizS5, 85, 77);
     DefineCross(QuizS5, 86, 78);
     DefineCross(QuizS5, 87, 79);
     DefineCross(QuizS5, 88, 80);
@@ -1220,7 +1241,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 117, 130);
     DefineCross(QuizS5, 118, 137);
     DefineCross(QuizS5, 119, 108);
-    DefineCross(QuizS5, 120, 109);
+	DefineCross(QuizS5, 120, 109);
     DefineCross(QuizS5, 121, 110);
     DefineCross(QuizS5, 122, 111);
     DefineCross(QuizS5, 123, 112);
@@ -1280,6 +1301,13 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineGlobalId(176, 935);
 	DefineGlobalId(177, 936);
 	DefineGlobalId(178, 937);
+
+	DefineCross(QuizS5, 179, 171);
+	DefineCross(QuizS5, 180, 172);
+	DefineCross(QuizS5, 181, 173);
+	DefineCross(QuizS5, 182, 174);
+	DefineCross(QuizS5, 183, 175);
+	DefineCross(QuizS5, 184, 176);
 }
 
 /*##########################################################################

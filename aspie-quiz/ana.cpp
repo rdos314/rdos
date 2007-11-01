@@ -117,7 +117,8 @@ int main(int argc, char **argv)
 //	 Quiz[17]->CheckCross();
 //	 Quiz[18]->CheckCross();
 //	 Quiz[19]->CheckCross();
-	 Quiz[20]->CheckCross();
+//	 Quiz[20]->CheckCross();
+	 Quiz[21]->CheckCross();
 
 	Quiz[0]->ExportExcelCase("all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("male1.dat", PCA_TYPE_MALE);
@@ -203,6 +204,10 @@ int main(int argc, char **argv)
 	 Quiz[20]->ExportExcelCase("males5.dat", PCA_TYPE_MALE);
 	 Quiz[20]->ExportExcelCase("females5.dat", PCA_TYPE_FEMALE);
 
+	 Quiz[21]->ExportExcelCase("alls6.dat", PCA_TYPE_ALL);
+	 Quiz[21]->ExportExcelCase("males6.dat", PCA_TYPE_MALE);
+	 Quiz[21]->ExportExcelCase("females6.dat", PCA_TYPE_FEMALE);
+
 	 Quiz[0]->ExportExcelAspie("aspie1.dat");
 	 Quiz[1]->ExportExcelAspie("aspie2.dat");
 	 Quiz[2]->ExportExcelAspie("aspie3.dat");
@@ -224,6 +229,7 @@ int main(int argc, char **argv)
 	 Quiz[18]->ExportExcelAspie("aspies3.dat");
 	 Quiz[19]->ExportExcelAspie("aspies4.dat");
 	 Quiz[20]->ExportExcelAspie("aspies5.dat");
+	 Quiz[21]->ExportExcelAspie("aspies6.dat");
 
 	 Quiz[0]->ImportMvsp("all1.txt", PCA_TYPE_ALL);
 
@@ -494,7 +500,7 @@ int main(int argc, char **argv)
 	 Quiz[19]->ExportHistogram("alls4.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[20]->ExportHistogram("alls5.csv", POP_TYPE_ALL, 2, FALSE);
 
-	 Quiz[20]->WriteGroupWeighting("group.cpp");
+	 Quiz[21]->WriteGroupWeighting("group.cpp");
 
 	 Quiz[20]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
