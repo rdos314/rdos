@@ -124,7 +124,7 @@ int TQuizS6::GetPcaCount()
 *##########################################################################*/
 int TQuizS6::GetCatCount(int Question)
 {
-	return 5;
+	return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -274,7 +274,7 @@ void TQuizS6::SetupTexts()
   Quiz[44].MyGroup = GROUP_NT_TALENT;
   Quiz[45].MyGroup = GROUP_NT_TALENT;
   Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[47].MyGroup = GROUP_NT_SOCIAL;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -1155,7 +1155,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 31, 24);
     DefineCross(QuizS5, 32, 123);
     DefineCross(QuizS5, 33, 25);
-    DefineCross(QuizS5, 34, 26);
+	DefineCross(QuizS5, 34, 26);
     DefineCross(QuizS5, 35, 27);
     DefineCross(QuizS5, 36, 28);
     DefineCross(QuizS5, 37, 29);
@@ -1182,7 +1182,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineCross(QuizS5, 58, 48);
     DefineCross(QuizS5, 59, 50);
     DefineCross(QuizS5, 60, 52);
-    DefineCross(QuizS5, 61, 53);
+	DefineCross(QuizS5, 61, 53);
     DefineCross(QuizS5, 62, 55);
     DefineCross(QuizS5, 63, 54);
     DefineCross(QuizS5, 64, 58);
@@ -1209,7 +1209,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineCross(QuizS5, 85, 77);
     DefineCross(QuizS5, 86, 78);
     DefineCross(QuizS5, 87, 79);
-    DefineCross(QuizS5, 88, 80);
+	DefineCross(QuizS5, 88, 80);
     DefineCross(QuizS5, 89, 81);
     DefineCross(QuizS5, 90, 82);
     DefineCross(QuizS5, 91, 83);
@@ -1236,7 +1236,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 112, 105);
     DefineCross(QuizS5, 113, 106);
     DefineCross(QuizS5, 114, 107);
-    DefineCross(QuizS5, 115, 127);
+	DefineCross(QuizS5, 115, 127);
     DefineCross(QuizS5, 116, 124);
     DefineCross(QuizS5, 117, 130);
     DefineCross(QuizS5, 118, 137);
@@ -1263,7 +1263,7 @@ void TQuizS6::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS5, 139, 134);
     DefineCross(QuizS5, 140, 133);
     DefineCross(QuizS5, 141, 135);
-    DefineCross(QuizS5, 142, 136);
+	DefineCross(QuizS5, 142, 136);
     DefineCross(QuizS5, 143, 138);
 	DefineCross(QuizS5, 144, 141);
     DefineCross(QuizS5, 145, 142);
@@ -1669,7 +1669,7 @@ void TQuizS6::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

@@ -233,7 +233,7 @@ void TQuizS4::SetupTexts()
   Quiz[27].MyGroup = GROUP_NT_TALENT;
   Quiz[28].MyGroup = GROUP_NT_TALENT;
   Quiz[29].MyGroup = GROUP_NONVERBAL;
-  Quiz[30].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[30].MyGroup = GROUP_NT_SOCIAL;
   Quiz[31].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;

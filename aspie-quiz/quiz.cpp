@@ -460,8 +460,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
 
-	Group[GROUP_NT_SOCIAL].PosName = "NT social";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
@@ -475,8 +475,8 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
-	Group[GROUP_OCD].PosName = "Compulsion";
-	Group[GROUP_OCD].NegName = "Compulsion problem";
+	Group[GROUP_OCD].PosName = "Aspie compulsion";
+	Group[GROUP_OCD].NegName = "Aspie compulsion problem";
 
 	Group[GROUP_RELIGION].PosName = "Religion / superstition";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
@@ -487,8 +487,8 @@ void TQuiz::Init()
 	Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Environment";
 
-	Group[GROUP_CONFORM].PosName = "Conformity";
-	Group[GROUP_CONFORM].NegName = "Conformity problem";
+	Group[GROUP_CONFORM].PosName = "NT compulsion problem";
+	Group[GROUP_CONFORM].NegName = "NT compulsion";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -515,8 +515,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
 	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
 
-	Group[GROUP_NT_SOCIAL].PosName = "NT social";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
@@ -530,8 +530,8 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
-	Group[GROUP_OCD].PosName = "Tvång";
-	Group[GROUP_OCD].NegName = "Tvång problem";
+	Group[GROUP_OCD].PosName = "Aspie tvång";
+	Group[GROUP_OCD].NegName = "Aspie tvång problem";
 
 	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
@@ -542,8 +542,8 @@ void TQuiz::Init()
 	Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Miljö";
 
-	Group[GROUP_CONFORM].PosName = "Konformitet";
-	Group[GROUP_CONFORM].NegName = "Konformitet problem";
+	Group[GROUP_CONFORM].PosName = "NT tvång problem";
+	Group[GROUP_CONFORM].NegName = "NT tvång";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";

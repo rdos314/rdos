@@ -220,7 +220,7 @@ void TQuizR5::SetupTexts()
   Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[34].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[35].MyGroup = GROUP_NT_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
