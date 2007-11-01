@@ -325,7 +325,7 @@ void TQuizNd::SetupTexts()
 	Quiz[119].MyGroup = GROUP_MIXED;
 	Quiz[120].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[121].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[122].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[122].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[123].MyGroup = GROUP_MIXED;
 	Quiz[124].MyGroup = GROUP_NONVERBAL;
 	Quiz[125].MyGroup = GROUP_CONFORM;

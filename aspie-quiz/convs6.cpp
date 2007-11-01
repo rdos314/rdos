@@ -522,7 +522,7 @@ char *ProcessRow(char *str)
 					break;
 
 				default:
-					i = fieldno - 22;
+					i = fieldno - 23;
 					Row.Quiz[i] = atoi(valstr);
 					break;
 			}

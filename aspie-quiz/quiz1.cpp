@@ -216,7 +216,7 @@ void TQuizI::SetupTexts()
 	Quiz[93].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[94].MyGroup = GROUP_NONVERBAL;
 	Quiz[95].MyGroup = GROUP_MIXED;
-	Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[96].MyGroup = GROUP_CONFORM;
 	Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[98].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[99].MyGroup = GROUP_ASPIE_TALENT;

@@ -221,10 +221,10 @@ void TQuizR6::SetupTexts()
   Quiz[38].MyGroup = GROUP_OCD;
   Quiz[39].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[41].MyGroup = GROUP_NT_SOCIAL;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[43].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[44].MyGroup = GROUP_NT_SOCIAL;
   Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -232,8 +232,8 @@ void TQuizR6::SetupTexts()
   Quiz[49].MyGroup = GROUP_OCD;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[51].MyGroup = GROUP_CONFORM;
-  Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[53].MyGroup = GROUP_NT_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -326,7 +326,7 @@ void TQuizR6::SetupTexts()
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[146].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[146].MyGroup = GROUP_NT_SOCIAL;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you look, feel or act younger than your biological age?";

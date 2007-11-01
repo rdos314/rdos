@@ -458,7 +458,10 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].NegName = "NT ability";
 
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+
+	Group[GROUP_NT_SOCIAL].PosName = "NT social";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social problem";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
@@ -510,7 +513,10 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].NegName = "NT talang";
 
 	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "NT social";
+	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
+
+	Group[GROUP_NT_SOCIAL].PosName = "NT social";
+	Group[GROUP_NT_SOCIAL].NegName = "NT social problem";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
@@ -703,46 +709,46 @@ void TQuiz::CheckCross()
 
     for (q = 0; q < N; q++)
     {
-        quiz = this;
-        group = quiz->Quiz[q].MyGroup;
-        text = quiz->Quiz[q].Text;
-        curr = q;
+		quiz = this;
+		group = quiz->Quiz[q].MyGroup;
+		text = quiz->Quiz[q].Text;
+		curr = q;
 
-        if (quiz->Quiz[q].CrossQuiz == 0 && quiz->Quiz[q].GlobalId < 0)
-            printf("Missing global ID, question:%d\n", q);
+		if (quiz->Quiz[q].CrossQuiz == 0 && quiz->Quiz[q].GlobalId < 0)
+			printf("Missing global ID, question:%d\n", q);
 
-        for (cross = 0; cross < MAX_CROSS; cross++)
-            CrossArr[cross] = -1;
+		for (cross = 0; cross < MAX_CROSS; cross++)
+			CrossArr[cross] = -1;
 
-        while (quiz)
-        {
-            for (cross = 0; cross < MAX_CROSS; cross++)
-                if (quiz == CrossQuiz[cross])
-                    CrossArr[cross] = curr;
-        
-            if (quiz->Quiz[curr].MyGroup != group)
-                printf("Group conflict, question:%d %d should be %d\n",
-                         q, quiz->Quiz[curr].MyGroup, group);
+		while (quiz)
+		{
+			for (cross = 0; cross < MAX_CROSS; cross++)
+				if (quiz == CrossQuiz[cross])
+					CrossArr[cross] = curr;
 
-            if (strcmp(quiz->Quiz[curr].Text, text))
-                printf("Text conflict, question:%d <%s> should be <%s>\n",
-                         q, quiz->Quiz[curr].Text, text);
-                    
+			if (quiz->Quiz[curr].MyGroup != group)
+				printf("Group conflict, question:%d %d should be %d\n",
+						 q, quiz->Quiz[curr].MyGroup, group);
 
-            i = quiz->Quiz[curr].CrossInd;
-            quiz = quiz->Quiz[curr].CrossQuiz;
-            curr = i;
-        }
+//            if (strcmp(quiz->Quiz[curr].Text, text))
+//				printf("Text conflict, question:%d <%s> should be <%s>\n",
+//						 q, quiz->Quiz[curr].Text, text);
 
-        for (cross = 0; cross < MAX_CROSS; cross++)
-            if (CrossQuiz[cross])
-                for (qc = 0; qc < CrossQuiz[cross]->N; qc++)
-                    if (qc != CrossArr[cross])
-                        if (!strcmp(CrossQuiz[cross]->Quiz[qc].Text, text))
-                            printf("Text duplicate, question:%d in cross %d:%d",
-                                q, cross, qc);
-                    
-    }
+
+			i = quiz->Quiz[curr].CrossInd;
+			quiz = quiz->Quiz[curr].CrossQuiz;
+			curr = i;
+		}
+
+		for (cross = 0; cross < MAX_CROSS; cross++)
+			if (CrossQuiz[cross])
+				for (qc = 0; qc < CrossQuiz[cross]->N; qc++)
+					if (qc != CrossArr[cross])
+						if (!strcmp(CrossQuiz[cross]->Quiz[qc].Text, text))
+							printf("Text duplicate, question:%d in cross %d:%d",
+								q, cross, qc);
+
+	}
 }
 
 /*##################  TQuiz::GetGlobalQuestionText ##########################
@@ -923,6 +929,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ASPIE_SOCIAL:
                 file.Write("GROUP_ASPIE_SOCIAL");
+                break;
+
+            case GROUP_NT_SOCIAL:
+                file.Write("GROUP_NT_SOCIAL");
                 break;
 
             case GROUP_ASPIE_NVC:
@@ -6271,6 +6281,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_SOCIAL");
 	        break;
 	            
+	    case GROUP_NT_SOCIAL:
+	        file->Write("NT_SOCIAL");
+	        break;
+	            
 	    case GROUP_ASPIE_NVC:
 	        file->Write("ASPIE_NVC");
 	        break;
@@ -6793,10 +6807,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[20]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[20]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -6806,6 +6820,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizs5.htm\">översikt</a> <a href=\"rels5.htm\">relaterade frågor</a> <a href=\"refs5.htm\">referenssajter</a> <a href=\"retests5.htm\">poäng stabilitet</a> <a href=\"races5.htm\">ursprung</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs6.htm\">overview</a> <a href=\"rels6.htm\">related questions</a> <a href=\"refs6.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs6.htm\">översikt</a> <a href=\"rels6.htm\">relaterade frågor</a> <a href=\"refs6.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
