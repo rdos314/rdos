@@ -448,8 +448,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_BIOLOGY].PosName = "NT hunting problem";
 	Group[GROUP_NT_BIOLOGY].NegName = "NT hunting";
 
-	Group[GROUP_SENSORY].PosName = "Perception";
-	Group[GROUP_SENSORY].NegName = "Perception problem";
+	Group[GROUP_SENSORY].PosName = "Aspie perception";
+	Group[GROUP_SENSORY].NegName = "Aspie perception problem";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
@@ -503,8 +503,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_BIOLOGY].PosName = "NT jakt problem";
 	Group[GROUP_NT_BIOLOGY].NegName = "NT jakt";
 
-	Group[GROUP_SENSORY].PosName = "Perception";
-	Group[GROUP_SENSORY].NegName = "Perception problem";
+	Group[GROUP_SENSORY].PosName = "Aspie perception";
+	Group[GROUP_SENSORY].NegName = "Aspie perception problem";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie talang";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie talang problem";

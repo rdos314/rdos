@@ -218,10 +218,10 @@ void TQuizR5::SetupTexts()
   Quiz[30].MyGroup = GROUP_NT_TALENT;
   Quiz[31].MyGroup = GROUP_NONVERBAL;
   Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[33].MyGroup = GROUP_MIXED;
   Quiz[34].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[35].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[36].MyGroup = GROUP_NT_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[39].MyGroup = GROUP_MIXED;
@@ -232,8 +232,8 @@ void TQuizR5::SetupTexts()
   Quiz[44].MyGroup = GROUP_NT_SOCIAL;
   Quiz[45].MyGroup = GROUP_ENVIRONMENT;
   Quiz[46].MyGroup = GROUP_MIXED;
-  Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[47].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[48].MyGroup = GROUP_NT_SOCIAL;
   Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[51].MyGroup = GROUP_OCD;
@@ -241,8 +241,8 @@ void TQuizR5::SetupTexts()
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_MIXED;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[56].MyGroup = GROUP_CONFORM;
-  Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[57].MyGroup = GROUP_NT_SOCIAL;
   Quiz[58].MyGroup = GROUP_NT_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[60].MyGroup = GROUP_ENVIRONMENT;
@@ -259,7 +259,7 @@ void TQuizR5::SetupTexts()
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
   Quiz[72].MyGroup = GROUP_MIXED;
   Quiz[73].MyGroup = GROUP_NT_TALENT;
-  Quiz[74].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[74].MyGroup = GROUP_NT_SOCIAL;
   Quiz[75].MyGroup = GROUP_MIXED;
   Quiz[76].MyGroup = GROUP_NT_TALENT;
   Quiz[77].MyGroup = GROUP_ENVIRONMENT;
@@ -295,7 +295,7 @@ void TQuizR5::SetupTexts()
   Quiz[107].MyGroup = GROUP_MIXED;
   Quiz[108].MyGroup = GROUP_ASPIE_NVC;
   Quiz[109].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[110].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[110].MyGroup = GROUP_NT_SOCIAL;
   Quiz[111].MyGroup = GROUP_NONVERBAL;
   Quiz[112].MyGroup = GROUP_NONVERBAL;
   Quiz[113].MyGroup = GROUP_MIXED;

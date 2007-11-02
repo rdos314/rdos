@@ -173,13 +173,13 @@ void TQuizII::SetupTexts()
 	Quiz[34].MyGroup = GROUP_MIXED;
 	Quiz[35].MyGroup = GROUP_OCD;
 	Quiz[36].MyGroup = GROUP_OCD;
-	Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[37].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[39].MyGroup = GROUP_MIXED;
 	Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[41].MyGroup = GROUP_NONVERBAL;
 	Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[43].MyGroup = GROUP_CONFORM;
+	Quiz[43].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[44].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[45].MyGroup = GROUP_MIXED;
 	Quiz[46].MyGroup = GROUP_MIXED;
@@ -190,7 +190,7 @@ void TQuizII::SetupTexts()
 	Quiz[51].MyGroup = GROUP_MIXED;
 	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_SEX;
-	Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[54].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[55].MyGroup = GROUP_MIXED;
 	Quiz[56].MyGroup = GROUP_SEX;
 	Quiz[57].MyGroup = GROUP_SEX;

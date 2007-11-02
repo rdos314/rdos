@@ -239,7 +239,7 @@ void TQuizNd::SetupTexts()
 	Quiz[33].MyGroup = GROUP_NONVERBAL;
 	Quiz[34].MyGroup = GROUP_MIXED;
 	Quiz[35].MyGroup = GROUP_MIXED;
-	Quiz[36].MyGroup = GROUP_CONFORM;
+	Quiz[36].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[38].MyGroup = GROUP_NT_TALENT;
 	Quiz[39].MyGroup = GROUP_NONVERBAL;
@@ -294,8 +294,8 @@ void TQuizNd::SetupTexts()
 	Quiz[88].MyGroup = GROUP_OCD;
 	Quiz[89].MyGroup = GROUP_MIXED;
 	Quiz[90].MyGroup = GROUP_MIXED;
-	Quiz[91].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[92].MyGroup = GROUP_CONFORM;
+	Quiz[91].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[92].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[93].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[94].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[95].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -312,7 +312,7 @@ void TQuizNd::SetupTexts()
 	Quiz[106].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[107].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[108].MyGroup = GROUP_MIXED;
-	Quiz[109].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[109].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[110].MyGroup = GROUP_NONVERBAL;
 	Quiz[111].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[112].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -327,11 +327,11 @@ void TQuizNd::SetupTexts()
 	Quiz[121].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[122].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[123].MyGroup = GROUP_MIXED;
-	Quiz[124].MyGroup = GROUP_NONVERBAL;
+	Quiz[124].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[125].MyGroup = GROUP_CONFORM;
 	Quiz[126].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[127].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[128].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[128].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[129].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[130].MyGroup = GROUP_MIXED;
 	Quiz[131].MyGroup = GROUP_NONVERBAL;
@@ -398,7 +398,7 @@ void TQuizNd::SetupTexts()
 	Quiz[192].MyGroup = GROUP_NT_TALENT;
 	Quiz[193].MyGroup = GROUP_NT_TALENT;
 	Quiz[194].MyGroup = GROUP_NT_TALENT;
-	Quiz[195].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[195].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[196].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[197].MyGroup = GROUP_CONFORM;
 	Quiz[198].MyGroup = GROUP_MIXED;

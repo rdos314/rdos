@@ -341,14 +341,14 @@ void TQuiz9::SetupTexts()
   Quiz[46].MyGroup = GROUP_NT_TALENT;
   Quiz[47].MyGroup = GROUP_NT_TALENT;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[52].MyGroup = GROUP_CONFORM;
+  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
   Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[54].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[56].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_SOCIAL;
   Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -358,7 +358,7 @@ void TQuiz9::SetupTexts()
   Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[66].MyGroup = GROUP_CONFORM;
+  Quiz[66].MyGroup = GROUP_NT_SOCIAL;
   Quiz[67].MyGroup = GROUP_CONFORM;
   Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -437,7 +437,7 @@ void TQuiz9::SetupTexts()
   Quiz[142].MyGroup = GROUP_ENVIRONMENT;
   Quiz[143].MyGroup = GROUP_ENVIRONMENT;
   Quiz[144].MyGroup = GROUP_RELIGION;
-  Quiz[145].MyGroup = GROUP_RELIGION;
+  Quiz[145].MyGroup = GROUP_INSTINCT;
   Quiz[146].MyGroup = GROUP_RELIGION;
   Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;

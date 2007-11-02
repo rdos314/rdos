@@ -203,7 +203,7 @@ void TQuizR4::SetupTexts()
   Quiz[202].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[1].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[1].MyGroup = GROUP_NT_SOCIAL;
   Quiz[2].MyGroup = GROUP_NT_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[4].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -220,13 +220,13 @@ void TQuizR4::SetupTexts()
   Quiz[15].MyGroup = GROUP_MIXED;
   Quiz[16].MyGroup = GROUP_CONFORM;
   Quiz[17].MyGroup = GROUP_NONVERBAL;
-  Quiz[18].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[18].MyGroup = GROUP_NT_SOCIAL;
   Quiz[19].MyGroup = GROUP_NT_SOCIAL;
   Quiz[20].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[21].MyGroup = GROUP_NONVERBAL;
   Quiz[22].MyGroup = GROUP_ASPIE_NVC;
   Quiz[23].MyGroup = GROUP_NONVERBAL;
-  Quiz[24].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[24].MyGroup = GROUP_MIXED;
   Quiz[25].MyGroup = GROUP_ASPIE_NVC;
   Quiz[26].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[27].MyGroup = GROUP_ASPIE_SOCIAL;

@@ -240,7 +240,7 @@ void TQuizS3::SetupTexts()
   Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[34].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[35].MyGroup = GROUP_MIXED;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[37].MyGroup = GROUP_NT_SOCIAL;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -253,7 +253,7 @@ void TQuizS3::SetupTexts()
   Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[48].MyGroup = GROUP_NT_SOCIAL;
   Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_NT_SOCIAL;
   Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -328,16 +328,16 @@ void TQuizS3::SetupTexts()
   Quiz[120].MyGroup = GROUP_SENSORY;
   Quiz[121].MyGroup = GROUP_NONVERBAL;
   Quiz[122].MyGroup = GROUP_MIXED;
-  Quiz[123].MyGroup = GROUP_NONVERBAL;
+  Quiz[123].MyGroup = GROUP_NT_SOCIAL;
   Quiz[124].MyGroup = GROUP_NONVERBAL;
-  Quiz[125].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[125].MyGroup = GROUP_NT_SOCIAL;
   Quiz[126].MyGroup = GROUP_NONVERBAL;
   Quiz[127].MyGroup = GROUP_NONVERBAL;
   Quiz[128].MyGroup = GROUP_NT_SOCIAL;
   Quiz[129].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_MIXED;
-  Quiz[132].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[132].MyGroup = GROUP_NT_SOCIAL;
   Quiz[133].MyGroup = GROUP_NT_TALENT;
 
   Quiz[134].MyGroup = GROUP_RELIGION;
@@ -358,7 +358,7 @@ void TQuizS3::SetupTexts()
   Quiz[149].MyGroup = GROUP_ASPIE_NVC;
   Quiz[150].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[151].MyGroup = GROUP_MIXED;
-  Quiz[152].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[152].MyGroup = GROUP_NT_SOCIAL;
   Quiz[153].MyGroup = GROUP_PARANOID;
   Quiz[154].MyGroup = GROUP_PARANOID;
   Quiz[155].MyGroup = GROUP_PARANOID;
@@ -384,7 +384,7 @@ void TQuizS3::SetupTexts()
   Quiz[175].MyGroup = GROUP_RELIGION;
   Quiz[176].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[177].MyGroup = GROUP_PARANOID;
-  Quiz[178].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[178].MyGroup = GROUP_NT_SOCIAL;
   Quiz[179].MyGroup = GROUP_PARANOID;
   Quiz[180].MyGroup = GROUP_PARANOID;
   Quiz[181].MyGroup = GROUP_ASPIE_SOCIAL;

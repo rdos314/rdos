@@ -159,7 +159,7 @@ void TQuizR3::SetupTexts()
   Quiz[52].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[1].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[1].MyGroup = GROUP_NT_SOCIAL;
   Quiz[2].MyGroup = GROUP_NT_SOCIAL;
   Quiz[3].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[4].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -180,7 +180,7 @@ void TQuizR3::SetupTexts()
   Quiz[19].MyGroup = GROUP_CONFORM;
   Quiz[20].MyGroup = GROUP_CONFORM;
   Quiz[21].MyGroup = GROUP_NONVERBAL;
-  Quiz[22].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[22].MyGroup = GROUP_NT_SOCIAL;
   Quiz[23].MyGroup = GROUP_NT_SOCIAL;
   Quiz[24].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[25].MyGroup = GROUP_NONVERBAL;
@@ -191,7 +191,7 @@ void TQuizR3::SetupTexts()
   Quiz[30].MyGroup = GROUP_ASPIE_NVC;
   Quiz[31].MyGroup = GROUP_MIXED;
   Quiz[32].MyGroup = GROUP_NONVERBAL;
-  Quiz[33].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[33].MyGroup = GROUP_MIXED;
   Quiz[34].MyGroup = GROUP_ASPIE_NVC;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -210,7 +210,7 @@ void TQuizR3::SetupTexts()
   Quiz[49].MyGroup = GROUP_NONVERBAL;
   Quiz[50].MyGroup = GROUP_NONVERBAL;
   Quiz[51].MyGroup = GROUP_NONVERBAL;
-  Quiz[52].MyGroup = GROUP_CONFORM;
+  Quiz[52].MyGroup = GROUP_NT_SOCIAL;
   Quiz[53].MyGroup = GROUP_SENSORY;
   Quiz[54].MyGroup = GROUP_SENSORY;
   Quiz[55].MyGroup = GROUP_SENSORY;
