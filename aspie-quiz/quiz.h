@@ -70,10 +70,10 @@
 #define GROUP_OCD               9
 #define GROUP_PARANOID          10
 #define GROUP_ENVIRONMENT       11
-#define GROUP_RELIGION          12
-#define GROUP_SEX               13
-#define GROUP_CONFORM           14
-#define GROUP_NT_SOCIAL         15
+#define GROUP_CONFORM           12
+#define GROUP_NT_SOCIAL         13
+#define GROUP_RELIGION          14
+#define GROUP_SEX               15
 #define GROUP_MIXED             16
 
 #define POP_TYPE_ALL            0
