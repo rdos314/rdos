@@ -529,7 +529,29 @@ int main(int argc, char **argv)
 	 Quiz[21]->ExportHistogram("alls6.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[22]->ExportHistogram("alls7.csv", POP_TYPE_ALL, 2, FALSE);
 
-//	 Quiz[22]->WriteGroupWeighting("group.cpp");
+	 Quiz[0]->WriteGroupWeighting("gr1.cpp");
+	 Quiz[1]->WriteGroupWeighting("gr2.cpp");
+	 Quiz[2]->WriteGroupWeighting("gr3.cpp");
+	 Quiz[3]->WriteGroupWeighting("gr4.cpp");
+	 Quiz[4]->WriteGroupWeighting("gr5.cpp");
+	 Quiz[5]->WriteGroupWeighting("gr6.cpp");
+	 Quiz[6]->WriteGroupWeighting("gr7.cpp");
+	 Quiz[7]->WriteGroupWeighting("gr8.cpp");
+	 Quiz[8]->WriteGroupWeighting("gr9.cpp");
+	 Quiz[9]->WriteGroupWeighting("grr1.cpp");
+	 Quiz[10]->WriteGroupWeighting("grr2.cpp");
+	 Quiz[11]->WriteGroupWeighting("grr3.cpp");
+	 Quiz[12]->WriteGroupWeighting("grr4.cpp");
+	 Quiz[13]->WriteGroupWeighting("grr5.cpp");
+	 Quiz[14]->WriteGroupWeighting("grr6.cpp");
+	 Quiz[15]->WriteGroupWeighting("grr7.cpp");
+	 Quiz[16]->WriteGroupWeighting("grs1.cpp");
+	 Quiz[17]->WriteGroupWeighting("grs2.cpp");
+	 Quiz[18]->WriteGroupWeighting("grs3.cpp");
+	 Quiz[19]->WriteGroupWeighting("grs4.cpp");
+	 Quiz[20]->WriteGroupWeighting("grs5.cpp");
+	 Quiz[21]->WriteGroupWeighting("grs6.cpp");
+	 Quiz[22]->WriteGroupWeighting("grs7.cpp");
 
 	 Quiz[22]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 

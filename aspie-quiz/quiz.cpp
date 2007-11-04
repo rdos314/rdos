@@ -445,11 +445,14 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biology";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biology";
 
-	Group[GROUP_NT_BIOLOGY].PosName = "NT hunting problem";
-	Group[GROUP_NT_BIOLOGY].NegName = "NT hunting";
+	Group[GROUP_NT_HUNTING].PosName = "NT hunting problem";
+	Group[GROUP_NT_HUNTING].NegName = "NT hunting";
 
-	Group[GROUP_SENSORY].PosName = "Aspie perception";
-	Group[GROUP_SENSORY].NegName = "Aspie perception problem";
+	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
+	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
+
+	Group[GROUP_NT_SENSORY].PosName = "NT perception";
+	Group[GROUP_NT_SENSORY].NegName = "NT perception problem";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
@@ -466,8 +469,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
 
-	Group[GROUP_NONVERBAL].PosName = "NT communication problem";
-	Group[GROUP_NONVERBAL].NegName = "NT communication";
+	Group[GROUP_NT_NVC].PosName = "NT communication problem";
+	Group[GROUP_NT_NVC].NegName = "NT communication";
 
 	Group[GROUP_SEX].PosName = "Sexual deviation";
 	Group[GROUP_SEX].NegName = "Sexual normality";
@@ -475,20 +478,20 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
-	Group[GROUP_OCD].PosName = "Aspie compulsion";
-	Group[GROUP_OCD].NegName = "Aspie compulsion problem";
+	Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie compulsion";
+	Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie compulsion problem";
 
 	Group[GROUP_RELIGION].PosName = "Religion / superstition";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
 
-	Group[GROUP_INSTINCT].PosName = "Aspie hunting";
-	Group[GROUP_INSTINCT].NegName = "Aspie hunting problem";
+	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie hunting";
+	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie hunting problem";
 
 	Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Environment";
 
-	Group[GROUP_CONFORM].PosName = "NT compulsion problem";
-	Group[GROUP_CONFORM].NegName = "NT compulsion";
+	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
+	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -500,11 +503,14 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biologi";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biologi";
 
-	Group[GROUP_NT_BIOLOGY].PosName = "NT jakt problem";
-	Group[GROUP_NT_BIOLOGY].NegName = "NT jakt";
+	Group[GROUP_NT_HUNTING].PosName = "NT jakt problem";
+	Group[GROUP_NT_HUNTING].NegName = "NT jakt";
 
-	Group[GROUP_SENSORY].PosName = "Aspie perception";
-	Group[GROUP_SENSORY].NegName = "Aspie perception problem";
+	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
+	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
+
+	Group[GROUP_NT_SENSORY].PosName = "NT perception";
+	Group[GROUP_NT_SENSORY].NegName = "NT perception problem";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie talang";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie talang problem";
@@ -521,8 +527,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
 
-	Group[GROUP_NONVERBAL].PosName = "NT kommunikation problem";
-	Group[GROUP_NONVERBAL].NegName = "NT kommunikation";
+	Group[GROUP_NT_NVC].PosName = "NT kommunikation problem";
+	Group[GROUP_NT_NVC].NegName = "NT kommunikation";
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
@@ -530,20 +536,20 @@ void TQuiz::Init()
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
-	Group[GROUP_OCD].PosName = "Aspie tvång";
-	Group[GROUP_OCD].NegName = "Aspie tvång problem";
+	Group[GROUP_ASPIE_OBSESSION].PosName = "Aspie tvång";
+	Group[GROUP_ASPIE_OBSESSION].NegName = "Aspie tvång problem";
 
 	Group[GROUP_RELIGION].PosName = "Religion / vidskeplighet";
 	Group[GROUP_RELIGION].NegName = "Religion problem";
 
-	Group[GROUP_INSTINCT].PosName = "Aspie jakt";
-	Group[GROUP_INSTINCT].NegName = "Aspie jakt problem";
+	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie jakt";
+	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie jakt problem";
 
 	Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Miljö";
 
-	Group[GROUP_CONFORM].PosName = "NT tvång problem";
-	Group[GROUP_CONFORM].NegName = "NT tvång";
+	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
+	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -911,12 +917,16 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_ASPIE_BIOLOGY");
                 break;
 
-            case GROUP_NT_BIOLOGY:
-                file.Write("GROUP_NT_BIOLOGY");
+            case GROUP_NT_HUNTING:
+                file.Write("GROUP_NT_HUNTING");
                 break;
 
-            case GROUP_SENSORY:
-                file.Write("GROUP_SENSORY");
+            case GROUP_ASPIE_SENSORY:
+                file.Write("GROUP_ASPIE_SENSORY");
+                break;
+
+            case GROUP_NT_SENSORY:
+                file.Write("GROUP_NT_SENSORY");
                 break;
 
             case GROUP_ASPIE_TALENT:
@@ -939,8 +949,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_ASPIE_NVC");
                 break;
 
-            case GROUP_NONVERBAL:
-                file.Write("GROUP_NONVERBAL");
+            case GROUP_NT_NVC:
+                file.Write("GROUP_NT_NVC");
                 break;
 
             case GROUP_SEX:
@@ -951,24 +961,24 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_PARANOID");
                 break;
 
-            case GROUP_OCD:
-                file.Write("GROUP_OCD");
+            case GROUP_ASPIE_OBSESSION:
+                file.Write("GROUP_ASPIE_OBSESSION");
                 break;
 
             case GROUP_RELIGION:
                 file.Write("GROUP_RELIGION");
                 break;
 
-            case GROUP_INSTINCT:
-                file.Write("GROUP_INSTINCT");
+            case GROUP_ASPIE_HUNTING:
+                file.Write("GROUP_ASPIE_HUNTING");
                 break;
 
             case GROUP_ENVIRONMENT:
                 file.Write("GROUP_ENVIRONMENT");
                 break;
 
-            case GROUP_CONFORM:
-                file.Write("GROUP_CONFORM");
+            case GROUP_NT_OBSESSION:
+                file.Write("GROUP_NT_OBSESSION");
                 break;
 
             default:
@@ -6265,8 +6275,8 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_BIOLOGY");
 	        break;
 	            
-	    case GROUP_NT_BIOLOGY:
-	        file->Write("NT_BIOLOGY");
+		case GROUP_NT_HUNTING:
+	        file->Write("NT_HUNTING");
 	        break;
 	            
 	    case GROUP_ASPIE_TALENT:
@@ -6289,8 +6299,8 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_NVC");
 	        break;
 	            
-	    case GROUP_NONVERBAL:
-	        file->Write("NT_COMMUNICATION");
+		case GROUP_NT_NVC:
+	        file->Write("NT_NVC");
 	        break;
 	            
 	    case GROUP_SEX:
@@ -6301,20 +6311,20 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("PARANOID");
 	        break;
 	            
-	    case GROUP_OCD:
-	        file->Write("OCD");
+		case GROUP_ASPIE_OBSESSION:
+	        file->Write("ASPIE_OBSESSION");
 	        break;
 	            
-	    case GROUP_CONFORM:
-	        file->Write("CONFORM");
+		case GROUP_NT_OBSESSION:
+	        file->Write("NT_OBSESSION");
 	        break;
 	            
 	    case GROUP_RELIGION:
 	        file->Write("RELIGION");
 	        break;
 	            
-	    case GROUP_INSTINCT:
-	        file->Write("INSTINCT");
+		case GROUP_ASPIE_HUNTING:
+	        file->Write("ASPIE_HUNTING");
 	        break;
 	            
 	    case GROUP_ENVIRONMENT:
@@ -8809,7 +8819,7 @@ void TQuiz::WriteGroupWeighting(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-    sprintf(str, "    static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 3);
+    sprintf(str, "    static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 1);
 	file.Write(str);
 
 	for (q = 0; q < N; q++)
@@ -8818,7 +8828,7 @@ void TQuiz::WriteGroupWeighting(const char *filename)
 
 		GlobalId = GetGlobalId(q);
         
-		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
+		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
             if (GlobalAxisCount[GlobalId][grp])
             {
@@ -8834,7 +8844,7 @@ void TQuiz::WriteGroupWeighting(const char *filename)
 			sprintf(str, "%d", ival);
 	    	file.Write(str);
 
-            if (grp != GROUP_COUNT - 3)
+            if (grp != GROUP_COUNT - 2)
                 file.Write(", ");            
 			
 		}

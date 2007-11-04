@@ -17,5 +17,5 @@ struct TQuizRow
     long AsResult;
     long NtResult;
     char Quiz[100];
-	int GroupResult[8];
+	int GroupResult[12];
 };
