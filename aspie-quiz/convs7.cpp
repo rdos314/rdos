@@ -31,6 +31,7 @@
 
 #include "file.h"
 #include "quizdbs7.h"
+#include "convs7.h"
 
 #define FALSE 0
 #define TRUE !FALSE
