@@ -8775,7 +8775,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 
 		GlobalId = GetGlobalId(q);
 
-		for (grp = 1; grp < GROUP_COUNT - 2; grp++)
+		for (grp = 0; grp < GROUP_COUNT - 1; grp++)
 		{
             if (GlobalAxisCount[GlobalId][grp])
             {
@@ -8794,7 +8794,7 @@ void TQuiz::WritePhpGroupWeighting(const char *filename)
 			sprintf(str, "%d", ival);
 	    	file.Write(str);
 
-            if (grp != GROUP_COUNT - 3)
+            if (grp != GROUP_COUNT - 2)
                 file.Write(", ");            
 			
 		}
@@ -8819,7 +8819,7 @@ void TQuiz::WriteGroupWeighting(const char *filename)
 	char str[80];
 	TFile file(filename, 0);
 
-    sprintf(str, "    static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 1);
+    sprintf(str, "  static int Gw[%d][%d] = \r\n{\r\n", N, GROUP_COUNT - 1);
 	file.Write(str);
 
 	for (q = 0; q < N; q++)
@@ -8838,6 +8838,9 @@ void TQuiz::WriteGroupWeighting(const char *filename)
             }
             else
                 val = 0;
+
+            if (Quiz[q].Reverse)
+                val = -val;
 
            	ival = round(100.0 * val);
 
