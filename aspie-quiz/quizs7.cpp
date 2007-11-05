@@ -409,7 +409,7 @@ void TQuizS7::SetupTexts()
   Quiz[177].MyGroup = GROUP_MIXED;
   Quiz[178].MyGroup = GROUP_MIXED;
   Quiz[179].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[181].MyGroup = GROUP_MIXED;
   Quiz[182].MyGroup = GROUP_MIXED;
 
@@ -1691,7 +1691,7 @@ void TQuizS7::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
