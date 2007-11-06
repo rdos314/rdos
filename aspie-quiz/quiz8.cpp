@@ -251,7 +251,7 @@ void TQuiz8::SetupTexts()
   Quiz[19].MyGroup = GROUP_NT_HUNTING;
   Quiz[20].MyGroup = GROUP_NT_HUNTING;
   Quiz[21].MyGroup = GROUP_NT_HUNTING;
-  Quiz[22].MyGroup = GROUP_NT_HUNTING;
+  Quiz[22].MyGroup = GROUP_NT_SENSORY;
   Quiz[23].MyGroup = GROUP_NT_HUNTING;
   Quiz[24].MyGroup = GROUP_NT_HUNTING;
   Quiz[25].MyGroup = GROUP_NT_HUNTING;

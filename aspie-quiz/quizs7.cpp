@@ -239,7 +239,7 @@ void TQuizS7::SetupTexts()
   Quiz[7].MyGroup = GROUP_NT_HUNTING;
   Quiz[8].MyGroup = GROUP_NT_HUNTING;
   Quiz[9].MyGroup = GROUP_NT_HUNTING;
-  Quiz[10].MyGroup = GROUP_NT_HUNTING;
+  Quiz[10].MyGroup = GROUP_NT_SENSORY;
   Quiz[11].MyGroup = GROUP_NT_HUNTING;
   Quiz[12].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[13].MyGroup = GROUP_ASPIE_SENSORY;
@@ -268,7 +268,7 @@ void TQuizS7::SetupTexts()
   Quiz[36].MyGroup = GROUP_NT_TALENT;
   Quiz[37].MyGroup = GROUP_NT_TALENT;
   Quiz[38].MyGroup = GROUP_NT_TALENT;
-  Quiz[39].MyGroup = GROUP_NT_TALENT;
+  Quiz[39].MyGroup = GROUP_NT_SENSORY;
   Quiz[40].MyGroup = GROUP_NT_TALENT;
   Quiz[41].MyGroup = GROUP_NT_TALENT;
   Quiz[42].MyGroup = GROUP_NT_TALENT;
@@ -331,7 +331,7 @@ void TQuizS7::SetupTexts()
   Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
-  Quiz[102].MyGroup = GROUP_NT_NVC;
+  Quiz[102].MyGroup = GROUP_NT_SENSORY;
   Quiz[103].MyGroup = GROUP_NT_NVC;
   Quiz[104].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[105].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -370,7 +370,7 @@ void TQuizS7::SetupTexts()
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_NT_SENSORY;
   Quiz[142].MyGroup = GROUP_MIXED;
   Quiz[143].MyGroup = GROUP_MIXED;
   Quiz[144].MyGroup = GROUP_MIXED;
@@ -378,12 +378,12 @@ void TQuizS7::SetupTexts()
   Quiz[146].MyGroup = GROUP_MIXED;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
-  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_NT_SENSORY;
   Quiz[150].MyGroup = GROUP_NT_TALENT;
   Quiz[151].MyGroup = GROUP_ENVIRONMENT;
   Quiz[152].MyGroup = GROUP_NT_SOCIAL;
   Quiz[153].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_NT_SENSORY;
   Quiz[155].MyGroup = GROUP_NT_SOCIAL;
   Quiz[156].MyGroup = GROUP_NT_SOCIAL;
   Quiz[157].MyGroup = GROUP_NT_SOCIAL;
@@ -406,12 +406,12 @@ void TQuizS7::SetupTexts()
   Quiz[174].MyGroup = GROUP_NT_HUNTING;
   Quiz[175].MyGroup = GROUP_NT_HUNTING;
   Quiz[176].MyGroup = GROUP_NT_HUNTING;
-  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_NT_SENSORY;
   Quiz[178].MyGroup = GROUP_MIXED;
   Quiz[179].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[180].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[181].MyGroup = GROUP_MIXED;
-  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_NT_SENSORY;
+  Quiz[182].MyGroup = GROUP_NT_SENSORY;
 
   Quiz[183].MyGroup = GROUP_NT_TALENT;
   Quiz[184].MyGroup = GROUP_NT_TALENT;
@@ -1691,7 +1691,7 @@ void TQuizS7::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

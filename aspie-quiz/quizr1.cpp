@@ -253,8 +253,8 @@ void TQuizR1::SetupTexts()
   Quiz[91].MyGroup = GROUP_NT_HUNTING;
   Quiz[92].MyGroup = GROUP_NT_HUNTING;
   Quiz[93].MyGroup = GROUP_NT_HUNTING;
-  Quiz[94].MyGroup = GROUP_NT_HUNTING;
-  Quiz[95].MyGroup = GROUP_NT_TALENT;
+  Quiz[94].MyGroup = GROUP_NT_SENSORY;
+  Quiz[95].MyGroup = GROUP_NT_SENSORY;
   Quiz[96].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[97].MyGroup = GROUP_ENVIRONMENT;
   Quiz[98].MyGroup = GROUP_NT_TALENT;
@@ -266,7 +266,7 @@ void TQuizR1::SetupTexts()
   Quiz[104].MyGroup = GROUP_NT_TALENT;
   Quiz[105].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[106].MyGroup = GROUP_NT_TALENT;
-  Quiz[107].MyGroup = GROUP_NT_NVC;
+  Quiz[107].MyGroup = GROUP_NT_SENSORY;
   Quiz[108].MyGroup = GROUP_NT_OBSESSION;
   Quiz[109].MyGroup = GROUP_NT_SOCIAL;
   Quiz[110].MyGroup = GROUP_ASPIE_HUNTING;

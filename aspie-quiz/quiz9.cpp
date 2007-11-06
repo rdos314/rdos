@@ -304,7 +304,7 @@ void TQuiz9::SetupTexts()
   Quiz[8].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[9].MyGroup = GROUP_NT_HUNTING;
   Quiz[10].MyGroup = GROUP_NT_HUNTING;
-  Quiz[11].MyGroup = GROUP_NT_HUNTING;
+  Quiz[11].MyGroup = GROUP_NT_SENSORY;
   Quiz[12].MyGroup = GROUP_NT_HUNTING;
   Quiz[13].MyGroup = GROUP_NT_HUNTING;
   Quiz[14].MyGroup = GROUP_NT_HUNTING;
@@ -336,7 +336,7 @@ void TQuiz9::SetupTexts()
   Quiz[40].MyGroup = GROUP_NT_TALENT;
   Quiz[41].MyGroup = GROUP_NT_TALENT;
   Quiz[42].MyGroup = GROUP_NT_TALENT;
-  Quiz[43].MyGroup = GROUP_NT_TALENT;
+  Quiz[43].MyGroup = GROUP_NT_SENSORY;
   Quiz[44].MyGroup = GROUP_NT_TALENT;
   Quiz[45].MyGroup = GROUP_NT_TALENT;
   Quiz[46].MyGroup = GROUP_NT_TALENT;

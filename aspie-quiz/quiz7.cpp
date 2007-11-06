@@ -238,7 +238,7 @@ void TQuiz7::SetupTexts()
 	Quiz[12].MyGroup = GROUP_NT_HUNTING;
 	Quiz[13].MyGroup = GROUP_NT_HUNTING;
 	Quiz[14].MyGroup = GROUP_NT_HUNTING;
-	Quiz[15].MyGroup = GROUP_NT_HUNTING;
+	Quiz[15].MyGroup = GROUP_NT_SENSORY;
 	Quiz[16].MyGroup = GROUP_NT_HUNTING;
 	Quiz[17].MyGroup = GROUP_NT_HUNTING;
 	Quiz[18].MyGroup = GROUP_ASPIE_TALENT;
@@ -345,7 +345,7 @@ void TQuiz7::SetupTexts()
 	Quiz[119].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[120].MyGroup = GROUP_NT_TALENT;
 	Quiz[121].MyGroup = GROUP_ENVIRONMENT;
-	Quiz[122].MyGroup = GROUP_NT_TALENT;
+	Quiz[122].MyGroup = GROUP_NT_SENSORY;
 	Quiz[123].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[124].MyGroup = GROUP_MIXED;
 	Quiz[125].MyGroup = GROUP_ENVIRONMENT;
