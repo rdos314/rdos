@@ -61,7 +61,7 @@ TReferer::TReferer(const char *Search, const char *Ref)
 	ResultMixed = 0;
 	ResultAs = 0;
 
-	for (grp = 0; grp < 8; grp++)
+	for (grp = 0; grp < 12; grp++)
 	    GroupResult[grp] = 0;
 
 	NT = FALSE;

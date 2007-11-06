@@ -50,7 +50,7 @@ public:
 	int ResultMixed;
 	int ResultAs;
 
-    int GroupResult[8];
+    int GroupResult[12];
     
 	int NT;
 	int Aspie;

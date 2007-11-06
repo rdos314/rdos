@@ -1495,7 +1495,7 @@ void TQuiz::SortReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[8])
+void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12])
 {
 	int diff;
 	int grp;
@@ -1516,7 +1516,7 @@ void TQuiz::UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupRe
 			ref->ResultMixed++;
 	}
 
-	for (grp = 0; grp < 8; grp++)
+	for (grp = 0; grp < 12; grp++)
 	    ref->GroupResult[grp] += GroupResult[grp];
 }
 
@@ -3438,18 +3438,18 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	    WriteFieldHeader(file, 6);
 
 #ifdef ENGLISH
-		file.Write("<a href=\"http://www.rdos.net/eng/polygon.php?");
+		file.Write("<a href=\"http://www.rdos.net/eng/poly12.php?");
 #endif
 
 #ifdef SWEDISH
-		file.Write("<a href=\"http://www.rdos.net/sv/polygon.php?");
+		file.Write("<a href=\"http://www.rdos.net/sv/poly12.php?");
 #endif
 
-        for (grp = 0; grp < 8; grp++)
+        for (grp = 0; grp < 12; grp++)
         {
             sprintf(str, "p%d=%d", grp + 1, ref->GroupResult[grp] / ref->Count);
             file.Write(str);
-            if (grp != 7)
+            if (grp != 11)
                 file.Write("&");
         }
 
