@@ -367,7 +367,7 @@ void TQuiz9::SetupTexts()
   Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[72].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[74].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[74].MyGroup = GROUP_NT_SOCIAL;
   Quiz[75].MyGroup = GROUP_NT_OBSESSION;
   Quiz[76].MyGroup = GROUP_NT_OBSESSION;
   Quiz[77].MyGroup = GROUP_NT_OBSESSION;
@@ -440,7 +440,7 @@ void TQuiz9::SetupTexts()
   Quiz[144].MyGroup = GROUP_RELIGION;
   Quiz[145].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[146].MyGroup = GROUP_RELIGION;
-  Quiz[147].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[147].MyGroup = GROUP_NT_SOCIAL;
   Quiz[148].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[149].MyGroup = GROUP_ASPIE_BIOLOGY;
 
