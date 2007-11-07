@@ -62,7 +62,7 @@ void HandleRow(TQuizRow *Row)
 	for (grp = 0; grp < 12; grp++)
 	{
 	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 12)
+	    if (grp != 11)
 	        printf(", ");
 	}
 

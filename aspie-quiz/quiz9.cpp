@@ -358,11 +358,11 @@ void TQuiz9::SetupTexts()
   Quiz[62].MyGroup = GROUP_MIXED;
   Quiz[63].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[65].MyGroup = GROUP_NT_HUNTING;
   Quiz[66].MyGroup = GROUP_NT_SOCIAL;
   Quiz[67].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[68].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[69].MyGroup = GROUP_NT_SOCIAL;
   Quiz[70].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[72].MyGroup = GROUP_ASPIE_SOCIAL;

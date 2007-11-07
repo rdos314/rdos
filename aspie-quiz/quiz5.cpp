@@ -281,7 +281,7 @@ void TQuiz5::SetupTexts()
 	Quiz[64].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[65].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[66].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[67].MyGroup = GROUP_NT_HUNTING;
 	Quiz[68].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[69].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[70].MyGroup = GROUP_ENVIRONMENT;

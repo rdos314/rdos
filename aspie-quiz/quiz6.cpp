@@ -300,7 +300,7 @@ void TQuiz6::SetupTexts()
 	Quiz[76].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[77].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[78].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[79].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[79].MyGroup = GROUP_NT_HUNTING;
 	Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[81].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[82].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -318,7 +318,7 @@ void TQuiz6::SetupTexts()
 	Quiz[94].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[95].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[96].MyGroup = GROUP_NT_OBSESSION;
-	Quiz[97].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[97].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[98].MyGroup = GROUP_NT_SENSORY;
 	Quiz[99].MyGroup = GROUP_NT_TALENT;
 	Quiz[100].MyGroup = GROUP_NT_TALENT;

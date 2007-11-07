@@ -210,7 +210,7 @@ void TQuizR7::SetupTexts()
   Quiz[23].MyGroup = GROUP_NT_TALENT;
   Quiz[24].MyGroup = GROUP_NT_TALENT;
   Quiz[25].MyGroup = GROUP_NT_NVC;
-  Quiz[26].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[26].MyGroup = GROUP_NT_HUNTING;
   Quiz[27].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[28].MyGroup = GROUP_MIXED;
   Quiz[29].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -229,7 +229,7 @@ void TQuizR7::SetupTexts()
   Quiz[42].MyGroup = GROUP_ENVIRONMENT;
   Quiz[43].MyGroup = GROUP_NT_SOCIAL;
   Quiz[44].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[45].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[45].MyGroup = GROUP_NT_SOCIAL;
   Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[47].MyGroup = GROUP_NT_OBSESSION;
   Quiz[48].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -237,10 +237,10 @@ void TQuizR7::SetupTexts()
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[51].MyGroup = GROUP_NT_SOCIAL;
   Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[53].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[53].MyGroup = GROUP_NT_HUNTING;
   Quiz[54].MyGroup = GROUP_NT_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[56].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_OBSESSION;
   Quiz[57].MyGroup = GROUP_NT_SOCIAL;
   Quiz[58].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
