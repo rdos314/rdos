@@ -173,7 +173,7 @@ void TQuizR1::SetupTexts()
   Quiz[11].MyGroup = GROUP_NT_NVC;
   Quiz[12].MyGroup = GROUP_NT_NVC;
   Quiz[13].MyGroup = GROUP_SEX;
-  Quiz[14].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[14].MyGroup = GROUP_NT_OBSESSION;
   Quiz[15].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[16].MyGroup = GROUP_NT_SOCIAL;
   Quiz[17].MyGroup = GROUP_NT_HUNTING;

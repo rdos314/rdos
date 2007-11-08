@@ -166,7 +166,7 @@ void TQuizI::SetupTexts()
 	Quiz[43].MyGroup = GROUP_NT_HUNTING;
 	Quiz[44].MyGroup = GROUP_NT_HUNTING;
 	Quiz[45].MyGroup = GROUP_NT_SENSORY;
-	Quiz[46].MyGroup = GROUP_NT_HUNTING;
+	Quiz[46].MyGroup = GROUP_NT_SENSORY;
 	Quiz[47].MyGroup = GROUP_MIXED;
 	Quiz[48].MyGroup = GROUP_MIXED;
 	Quiz[49].MyGroup = GROUP_NT_SENSORY;

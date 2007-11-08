@@ -55,6 +55,7 @@
 #include "quizs5.h"
 #include "quizs6.h"
 #include "quizs7.h"
+#include "quizs8.h"
 // #include "spq.h"
 #include "pop.h"
 
@@ -98,6 +99,7 @@ int main(int argc, char **argv)
 	Quiz[20] = new TQuizS5("quizs5.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19]);
 	Quiz[21] = new TQuizS6("quizs6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20]);
 	Quiz[22] = new TQuizS7("quizs7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21]);
+	Quiz[23] = new TQuizS8("quizs8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -355,9 +357,9 @@ int main(int argc, char **argv)
 
 	 Quiz[22]->CalcGlobal();
 
-//	 Quiz[22]->WritePhpQuestions("q.php");
-//	 Quiz[22]->WriteSetupTexts("q.cpp");
-//	 Quiz[22]->WriteSetupCross("c.cpp");
+	 Quiz[23]->WritePhpQuestions("q.php");
+	 Quiz[23]->WriteSetupTexts("q.cpp");
+	 Quiz[23]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -599,13 +601,13 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[21]->WriteQuizWiki("s7.txt");
+//	  Quiz[22]->WriteQuizWiki("s8.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "s7.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "s8.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 

@@ -219,7 +219,7 @@ void TQuizR4::SetupTexts()
   Quiz[13].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[14].MyGroup = GROUP_ENVIRONMENT;
   Quiz[15].MyGroup = GROUP_MIXED;
-  Quiz[16].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[16].MyGroup = GROUP_NT_OBSESSION;
   Quiz[17].MyGroup = GROUP_NT_NVC;
   Quiz[18].MyGroup = GROUP_NT_SOCIAL;
   Quiz[19].MyGroup = GROUP_NT_SOCIAL;

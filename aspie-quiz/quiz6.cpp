@@ -317,7 +317,7 @@ void TQuiz6::SetupTexts()
 	Quiz[93].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[94].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[95].MyGroup = GROUP_NT_OBSESSION;
-	Quiz[96].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[96].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[97].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[98].MyGroup = GROUP_NT_SENSORY;
 	Quiz[99].MyGroup = GROUP_NT_TALENT;
