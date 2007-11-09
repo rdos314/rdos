@@ -357,9 +357,9 @@ int main(int argc, char **argv)
 
 	 Quiz[22]->CalcGlobal();
 
-	 Quiz[23]->WritePhpQuestions("q.php");
-	 Quiz[23]->WriteSetupTexts("q.cpp");
-	 Quiz[23]->WriteSetupCross("c.cpp");
+//	 Quiz[23]->WritePhpQuestions("q.php");
+//	 Quiz[23]->WriteSetupTexts("q.cpp");
+//	 Quiz[23]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -592,8 +592,8 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-	 Quiz[22]->WritePhpWeighting("weights.php");
-	 Quiz[22]->WritePhpGroupWeighting("group.php");
+	 Quiz[23]->WritePhpWeighting("weights.php");
+	 Quiz[23]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -607,7 +607,7 @@ int main(int argc, char **argv)
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-	 TQuiz::WikiToQuiz("wiki.txt", "s8.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "s8.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
