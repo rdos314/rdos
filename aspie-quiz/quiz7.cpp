@@ -273,7 +273,7 @@ void TQuiz7::SetupTexts()
 	Quiz[47].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[48].MyGroup = GROUP_NT_HUNTING;
 	Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[50].MyGroup = GROUP_MIXED;
+	Quiz[50].MyGroup = GROUP_ASPIE_EMOTION;
 	Quiz[51].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[52].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[53].MyGroup = GROUP_SEX;

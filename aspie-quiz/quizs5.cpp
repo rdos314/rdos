@@ -340,9 +340,9 @@ void TQuizS5::SetupTexts()
   Quiz[113].MyGroup = GROUP_ENVIRONMENT;
   Quiz[114].MyGroup = GROUP_ENVIRONMENT;
   Quiz[115].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[116].MyGroup = GROUP_MIXED;
+  Quiz[116].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[117].MyGroup = GROUP_MIXED;
-  Quiz[118].MyGroup = GROUP_MIXED;
+  Quiz[118].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[119].MyGroup = GROUP_MIXED;
   Quiz[120].MyGroup = GROUP_MIXED;
   Quiz[121].MyGroup = GROUP_MIXED;

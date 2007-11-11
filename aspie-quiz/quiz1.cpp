@@ -193,11 +193,11 @@ void TQuizI::SetupTexts()
 	Quiz[70].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_ASPIE_SOCIAL;
-	Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[73].MyGroup = GROUP_ASPIE_EMOTION;
 	Quiz[74].MyGroup = GROUP_MIXED;
-	Quiz[75].MyGroup = GROUP_MIXED;
-	Quiz[76].MyGroup = GROUP_ASPIE_OBSESSION;
-	Quiz[77].MyGroup = GROUP_MIXED;
+	Quiz[75].MyGroup = GROUP_ASPIE_EMOTION;
+	Quiz[76].MyGroup = GROUP_ASPIE_EMOTION;
+	Quiz[77].MyGroup = GROUP_ASPIE_EMOTION;
 	Quiz[78].MyGroup = GROUP_MIXED;
 	Quiz[79].MyGroup = GROUP_MIXED;
 	Quiz[80].MyGroup = GROUP_ASPIE_SOCIAL;

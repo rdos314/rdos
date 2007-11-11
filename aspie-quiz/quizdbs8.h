@@ -21,6 +21,7 @@ struct TQuizRow
 	char Referer[100];
 	long AsResult;
 	long NtResult;
+	int MdqResult;
 	char Quiz[200];
 	int GroupResult[12];
 };

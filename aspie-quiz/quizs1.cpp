@@ -279,7 +279,7 @@ void TQuizS1::SetupTexts()
   Quiz[61].MyGroup = GROUP_ENVIRONMENT;
   Quiz[62].MyGroup = GROUP_NT_TALENT;
   Quiz[63].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[64].MyGroup = GROUP_MIXED;
+  Quiz[64].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[65].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[66].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -315,7 +315,7 @@ void TQuizS1::SetupTexts()
   Quiz[97].MyGroup = GROUP_MIXED;
   Quiz[98].MyGroup = GROUP_MIXED;
   Quiz[99].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[100].MyGroup = GROUP_MIXED;
+  Quiz[100].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[101].MyGroup = GROUP_ASPIE_NVC;
   Quiz[102].MyGroup = GROUP_ASPIE_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_HUNTING;

@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS8::TQuizS8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7)
-  : TQuiz(157),
+  : TQuiz(178),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -87,7 +87,7 @@ TQuizS8::TQuizS8(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -126,7 +126,10 @@ int TQuizS8::GetPcaCount()
 *##########################################################################*/
 int TQuizS8::GetCatCount(int Question)
 {
-	return 3;
+	if (Question >= 157 && Question <= 171)
+		return 2;
+	else
+		return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -166,165 +169,6 @@ void TQuizS8::WriteName(TFile &File)
 *##########################################################################*/
 void TQuizS8::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 25);
-  DefineID(2, 26);
-  DefineID(3, 151);
-  DefineID(4, 20);
-  DefineID(5, 497);
-  DefineID(6, 100);
-  DefineID(7, 85);
-  DefineID(8, 23);
-  DefineID(9, 861);
-  DefineID(10, 519);
-  DefineID(11, 5);
-  DefineID(12, 695);
-  DefineID(13, 599);
-  DefineID(14, 606);
-  DefineID(15, 3);
-  DefineID(16, 6);
-  DefineID(17, 397);
-  DefineID(18, 129);
-  DefineID(19, 743);
-  DefineID(20, 240);
-  DefineID(21, 616);
-  DefineID(22, 319);
-  DefineID(23, 316);
-  DefineID(24, 518);
-  DefineID(25, 249);
-  DefineID(26, 37);
-  DefineID(27, 361);
-  DefineID(28, 39);
-  DefineID(29, 36);
-  DefineID(30, 596);
-  DefineID(31, 591);
-  DefineID(32, 595);
-  DefineID(33, 97);
-  DefineID(34, 367);
-  DefineID(35, 153);
-  DefineID(36, 272);
-  DefineID(37, 166);
-  DefineID(38, 396);
-  DefineID(39, 66);
-  DefineID(40, 269);
-  DefineID(41, 507);
-  DefineID(42, 73);
-  DefineID(43, 923);
-  DefineID(44, 858);
-  DefineID(45, 454);
-  DefineID(46, 243);
-  DefineID(47, 378);
-  DefineID(48, 32);
-  DefineID(49, 149);
-  DefineID(50, 767);
-  DefineID(51, 552);
-  DefineID(52, 856);
-  DefineID(53, 859);
-  DefineID(54, 255);
-  DefineID(55, 279);
-  DefineID(56, 740);
-  DefineID(57, 265);
-  DefineID(58, 282);
-  DefineID(59, 495);
-  DefineID(60, 737);
-  DefineID(61, 708);
-  DefineID(62, 704);
-  DefineID(63, 115);
-  DefineID(64, 857);
-  DefineID(65, 765);
-  DefineID(66, 731);
-  DefineID(67, 547);
-  DefineID(68, 403);
-  DefineID(69, 712);
-  DefineID(70, 359);
-  DefineID(71, 575);
-  DefineID(72, 590);
-  DefineID(73, 402);
-  DefineID(74, 15);
-  DefineID(75, 589);
-  DefineID(76, 570);
-  DefineID(77, 17);
-  DefineID(78, 572);
-  DefineID(79, 574);
-  DefineID(80, 234);
-  DefineID(81, 401);
-  DefineID(82, 536);
-  DefineID(83, 487);
-  DefineID(84, 130);
-  DefineID(85, 83);
-  DefineID(86, 86);
-  DefineID(87, 82);
-  DefineID(88, 226);
-  DefineID(89, 551);
-  DefineID(90, 84);
-  DefineID(91, 707);
-  DefineID(92, 128);
-  DefineID(93, 95);
-  DefineID(94, 741);
-  DefineID(95, 726);
-  DefineID(96, 582);
-  DefineID(97, 448);
-  DefineID(98, 439);
-  DefineID(99, 581);
-  DefineID(100, 925);
-  DefineID(101, 926);
-  DefineID(102, 70);
-  DefineID(103, 433);
-  DefineID(104, 509);
-  DefineID(105, 510);
-  DefineID(106, 514);
-  DefineID(107, 44);
-  DefineID(108, 111);
-  DefineID(109, 862);
-  DefineID(110, 53);
-  DefineID(111, 54);
-  DefineID(112, 61);
-  DefineID(113, 503);
-  DefineID(114, 385);
-  DefineID(115, 632);
-  DefineID(116, 871);
-  DefineID(117, 50);
-  DefineID(118, 113);
-  DefineID(119, 46);
-  DefineID(120, 89);
-  DefineID(121, 940);
-  DefineID(122, 47);
-  DefineID(123, 866);
-  DefineID(124, 864);
-  DefineID(125, 865);
-  DefineID(126, 781);
-  DefineID(127, 443);
-  DefineID(128, 601);
-  DefineID(129, 31);
-  DefineID(130, 718);
-  DefineID(131, 167);
-  DefineID(132, 93);
-  DefineID(133, 473);
-  DefineID(134, 362);
-  DefineID(135, 745);
-  DefineID(136, 278);
-  DefineID(137, 78);
-  DefineID(138, 549);
-  DefineID(139, 126);
-  DefineID(140, 516);
-  DefineID(141, 227);
-  DefineID(142, 48);
-  DefineID(143, 174);
-  DefineID(144, 55);
-  DefineID(145, 123);
-  DefineID(146, 613);
-  DefineID(147, 739);
-  DefineID(148, 922);
-  DefineID(149, 330);
-  DefineID(150, 600);
-  DefineID(151, 715);
-  DefineID(152, 713);
-  DefineID(153, 545);
-  DefineID(154, 262);
-  DefineID(155, 724);
-  DefineID(156, 723);
-  DefineID(157, 250);
 }
 
 /*##########################################################################
@@ -370,6 +214,11 @@ void TQuizS8::SetupTexts()
   Quiz[154].Reverse = TRUE;
   Quiz[155].Reverse = TRUE;
   Quiz[156].Reverse = TRUE;
+  Quiz[159].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
+  Quiz[165].Reverse = TRUE;
+  Quiz[166].Reverse = TRUE;
+  Quiz[167].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -505,9 +354,9 @@ void TQuizS8::SetupTexts()
   Quiz[131].MyGroup = GROUP_ENVIRONMENT;
   Quiz[132].MyGroup = GROUP_ENVIRONMENT;
   Quiz[133].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[134].MyGroup = GROUP_MIXED;
+  Quiz[134].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[136].MyGroup = GROUP_ASPIE_EMOTION;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
@@ -528,6 +377,29 @@ void TQuizS8::SetupTexts()
   Quiz[154].MyGroup = GROUP_NT_SENSORY;
   Quiz[155].MyGroup = GROUP_NT_SENSORY;
   Quiz[156].MyGroup = GROUP_ENVIRONMENT;
+
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+
+  Quiz[172].MyGroup = GROUP_NT_TALENT;
+  Quiz[173].MyGroup = GROUP_NT_TALENT;
+  Quiz[174].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_ASPIE_SOCIAL;
 
 #ifdef ENGLISH
 
@@ -688,6 +560,29 @@ void TQuizS8::SetupTexts()
   Quiz[154].Text = "Do you find it easy to estimate the age of people?";
   Quiz[155].Text = "Do you have a good sense of what time it is?";
   Quiz[156].Text = "Are you gracious about criticism, correction and direction?";
+
+  Quiz[157].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you felt so good or so hyper that other people thought you were not your normal self or you were so hyper that you got into trouble?";
+  Quiz[158].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were so irritable that you shouted at people or started fights or arguments?";
+  Quiz[159].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you felt much more self-confident than usual?";
+  Quiz[160].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you got much less sleep than usual and found you didn't really miss it?";
+  Quiz[161].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more talkative or spoke faster than usual?";
+  Quiz[162].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) thoughts raced through your head or you couldn't slow you mind down?";
+  Quiz[163].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were so easily distracted by things around you that you had trouble concentrating or staying on track?";
+  Quiz[164].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you had much more energy than usual?";
+  Quiz[165].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more active or did many more things than usual?";
+  Quiz[166].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more social or outgoing than usual; for example, you telephoned friends in the middle of the night?";
+  Quiz[167].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more interested in sex than usual?";
+  Quiz[168].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you did things that were unusual for you or that other people might have thought were excessive, foolish, or risky?";
+  Quiz[169].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) spending money got you or your family into trouble?";
+  Quiz[170].Text = "MDQ - If you checked YES to more than one of the above, have several of these ever happened during the same period of time?";
+  Quiz[171].Text = "MDQ - How much of a problem did any of these cause you -- like being unable to work/; having family, money, or legal troubles; getting into arguments or fights?";
+
+  Quiz[172].Text = "Dyslexia";
+  Quiz[173].Text = "Dyscalculia";
+  Quiz[174].Text = "OCD";
+  Quiz[175].Text = "ODD";
+  Quiz[176].Text = "Bipolar";
+  Quiz[177].Text = "Social phobia";
 
 #endif
 
@@ -851,6 +746,29 @@ void TQuizS8::SetupTexts()
   Quiz[155].Text = "Har du ett bra sinne för hur mycket klockan är?";
   Quiz[156].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
 
+  Quiz[157].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you felt so good or so hyper that other people thought you were not your normal self or you were so hyper that you got into trouble?";
+  Quiz[158].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were so irritable that you shouted at people or started fights or arguments?";
+  Quiz[159].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you felt much more self-confident than usual?";
+  Quiz[160].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you got much less sleep than usual and found you didn't really miss it?";
+  Quiz[161].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more talkative or spoke faster than usual?";
+  Quiz[162].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) thoughts raced through your head or you couldn't slow you mind down?";
+  Quiz[163].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were so easily distracted by things around you that you had trouble concentrating or staying on track?";
+  Quiz[164].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you had much more energy than usual?";
+  Quiz[165].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more active or did many more things than usual?";
+  Quiz[166].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more social or outgoing than usual; for example, you telephoned friends in the middle of the night?";
+  Quiz[167].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you were much more interested in sex than usual?";
+  Quiz[168].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) you did things that were unusual for you or that other people might have thought were excessive, foolish, or risky?";
+  Quiz[169].Text = "MDQ - Has there ever been a period of time when you were not your usual self and (while not on drugs or alcohol) spending money got you or your family into trouble?";
+  Quiz[170].Text = "MDQ - If you checked YES to more than one of the above, have several of these ever happened during the same period of time?";
+  Quiz[171].Text = "MDQ - How much of a problem did any of these cause you -- like being unable to work/; having family, money, or legal troubles; getting into arguments or fights?";
+
+  Quiz[172].Text = "Dyslexi";
+  Quiz[173].Text = "Dyskaluli";
+  Quiz[174].Text = "OCD";
+  Quiz[175].Text = "ODD";
+  Quiz[176].Text = "Bipolär";
+  Quiz[177].Text = "Social fobi";
+
 #endif
 
 }
@@ -991,12 +909,12 @@ void TQuizS8::LoadPopulations()
 	{
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-//		Row.Quiz[183] = Row.Dyslexia + 1;
-//		Row.Quiz[184] = Row.Dyscalculia + 1;
-//		Row.Quiz[185] = Row.OCD + 1;
-//		Row.Quiz[186] = Row.ODD + 1;
-//		Row.Quiz[187] = Row.Bipolar + 1;
-//		Row.Quiz[188] = Row.Social + 1;
+		Row.Quiz[172] = Row.Dyslexia + 1;
+		Row.Quiz[173] = Row.Dyscalculia + 1;
+		Row.Quiz[174] = Row.OCD + 1;
+		Row.Quiz[175] = Row.ODD + 1;
+		Row.Quiz[176] = Row.Bipolar + 1;
+		Row.Quiz[177] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1337,6 +1255,30 @@ void TQuizS8::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS7, 154, 154);
     DefineCross(QuizS7, 155, 177);
     DefineCross(QuizS7, 156, 151);
+
+	DefineGlobalId(157, 941);
+	DefineGlobalId(158, 942);
+	DefineGlobalId(159, 943);
+	DefineGlobalId(160, 944);
+	DefineGlobalId(161, 945);
+	DefineGlobalId(162, 946);
+	DefineGlobalId(163, 947);
+	DefineGlobalId(164, 948);
+	DefineGlobalId(165, 949);
+	DefineGlobalId(166, 950);
+	DefineGlobalId(167, 951);
+	DefineGlobalId(168, 952);
+	DefineGlobalId(169, 953);
+	DefineGlobalId(170, 954);
+	DefineGlobalId(171, 955);
+
+	DefineCross(QuizS7, 172, 183);
+	DefineCross(QuizS7, 173, 184);
+	DefineCross(QuizS7, 174, 185);
+	DefineCross(QuizS7, 175, 186);
+	DefineCross(QuizS7, 176, 187);
+	DefineCross(QuizS7, 177, 188);
+
 }
 
 /*##########################################################################
@@ -1521,34 +1463,37 @@ void TQuizS8::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		sprintf(str, "\"%d\", ", Row.AsResult);
-		file.Write(str);
+	    if (Row.MdqResult)
+	    {
+    		sprintf(str, "\"%d\", ", Row.AsResult);
+	    	file.Write(str);
 
-		sprintf(str, "\"%d\", ", Row.NtResult);
-		file.Write(str);
+    		sprintf(str, "\"%d\", ", Row.NtResult);
+	    	file.Write(str);
 
-		for (i = 0; i < N; i++)
-		{
-			ival = Row.Quiz[i];
+    		for (i = 0; i < N; i++)
+	    	{
+		    	ival = Row.Quiz[i];
+    
+	    		if (ival)
+		    	{
+			    	if (Quiz[i].Reverse)
+				    	ival = GetCatCount(i) - ival;
+    				else
+	    				ival--;
+		    	}
 
-			if (ival)
-			{
-				if (Quiz[i].Reverse)
-					ival = GetCatCount(i) - ival;
-				else
-					ival--;
-			}
 
+    			if (ival >= GetCatCount(i))
+	    			ival = 0;
 
-			if (ival >= GetCatCount(i))
-				ival = 0;
-
-			sprintf(str, "\"%d\"", ival);
-			file.Write(str);
-			if (i != N - 1)
-				file.Write(", ");
-		}
-		file.Write("\n");
+		    	sprintf(str, "\"%d\"", ival);
+			    file.Write(str);
+    			if (i != N - 1)
+	    			file.Write(", ");
+	    	}
+    		file.Write("\n");
+        }
 	}
 }
 
@@ -1698,8 +1643,8 @@ void TQuizS8::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
-						d2 = -d2;
+//					if (PcaType == PCA_TYPE_MALE)
+//						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;

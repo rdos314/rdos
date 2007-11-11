@@ -493,6 +493,9 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
+	Group[GROUP_ASPIE_EMOTION].PosName = "Aspie emotion";
+	Group[GROUP_ASPIE_EMOTION].NegName = "Aspie emotion problem";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -550,6 +553,9 @@ void TQuiz::Init()
 
 	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
+
+	Group[GROUP_ASPIE_EMOTION].PosName = "Aspie känslor";
+	Group[GROUP_ASPIE_EMOTION].NegName = "Aspie känslor problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -979,6 +985,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_OBSESSION:
                 file.Write("GROUP_NT_OBSESSION");
+                break;
+
+            case GROUP_ASPIE_EMOTION:
+                file.Write("GROUP_ASPIE_EMOTION");
                 break;
 
             default:
@@ -6331,6 +6341,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ENVIRONMENT");
 	        break;
 	            
+	    case GROUP_ASPIE_EMOTION:
+	        file->Write("ASPIE_EMOTION");
+	        break;
+	            
 	    case GROUP_MIXED:
 	        file->Write("MIXED");
 	        break;
@@ -6851,6 +6865,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
+	CrossQuiz[22]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[22]->WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs7.htm\">overview</a> <a href=\"rels7.htm\">related questions</a> <a href=\"refs7.htm\">referer sites</a> <a href=\"retests7.htm\">score stability</a> ");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs7.htm\">översikt</a> <a href=\"rels7.htm\">relaterade frågor</a> <a href=\"refs7.htm\">referenssajter</a> <a href=\"retests7.htm\">poäng stabilitet</a> ");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
@@ -6858,12 +6889,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs7.htm\">overview</a> <a href=\"rels7.htm\">related questions</a> <a href=\"refs7.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs8.htm\">overview</a> <a href=\"rels8.htm\">related questions</a> <a href=\"refs8.htm\">referer sites</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs7.htm\">översikt</a> <a href=\"rels7.htm\">relaterade frågor</a> <a href=\"refs7.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs8.htm\">översikt</a> <a href=\"rels8.htm\">relaterade frågor</a> <a href=\"refs8.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
