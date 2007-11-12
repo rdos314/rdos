@@ -547,7 +547,7 @@ int main(int argc, char **argv)
 	 Quiz[22]->ExportHistogram("alls7.csv", POP_TYPE_ALL, 2, FALSE);
 	 Quiz[23]->ExportHistogram("alls8.csv", POP_TYPE_ALL, 2, FALSE);
 
-	 Quiz[0]->WriteGroupWeighting("conv.h");
+/*	 Quiz[0]->WriteGroupWeighting("conv.h");
 	 Quiz[1]->WriteGroupWeighting("conv2.h");
 	 Quiz[2]->WriteGroupWeighting("conv3.h");
 	 Quiz[3]->WriteGroupWeighting("convnd.h");
@@ -570,7 +570,7 @@ int main(int argc, char **argv)
 	 Quiz[20]->WriteGroupWeighting("convs5.h");
 	 Quiz[21]->WriteGroupWeighting("convs6.h");
 	 Quiz[22]->WriteGroupWeighting("convs7.h");
-	 Quiz[23]->WriteGroupWeighting("convs8.h");
+	 Quiz[23]->WriteGroupWeighting("convs8.h"); */
 
 	 Quiz[23]->ExportDiffHistogram("all.csv", POP_TYPE_ALL);
 
