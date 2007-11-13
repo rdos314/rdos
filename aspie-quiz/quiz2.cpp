@@ -146,12 +146,12 @@ void TQuizII::SetupTexts()
 	Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[7].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[8].MyGroup = GROUP_NT_SENSORY;
-	Quiz[9].MyGroup = GROUP_MIXED;
+	Quiz[9].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[10].MyGroup = GROUP_ASPIE_SENSORY;
-	Quiz[11].MyGroup = GROUP_RELIGION;
+	Quiz[11].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[12].MyGroup = GROUP_RELIGION;
 	Quiz[13].MyGroup = GROUP_MIXED;
-	Quiz[14].MyGroup = GROUP_MIXED;
+	Quiz[14].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[15].MyGroup = GROUP_NT_HUNTING;
 	Quiz[16].MyGroup = GROUP_MIXED;
 	Quiz[17].MyGroup = GROUP_MIXED;
@@ -172,7 +172,7 @@ void TQuizII::SetupTexts()
 	Quiz[32].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[33].MyGroup = GROUP_NT_TALENT;
 	Quiz[34].MyGroup = GROUP_MIXED;
-	Quiz[35].MyGroup = GROUP_ASPIE_EMOTION;
+	Quiz[35].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[36].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[37].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
@@ -187,7 +187,7 @@ void TQuizII::SetupTexts()
 	Quiz[47].MyGroup = GROUP_NT_NVC;
 	Quiz[48].MyGroup = GROUP_NT_TALENT;
 	Quiz[49].MyGroup = GROUP_NT_NVC;
-	Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
+	Quiz[50].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[51].MyGroup = GROUP_MIXED;
 	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_SEX;
@@ -196,7 +196,7 @@ void TQuizII::SetupTexts()
 	Quiz[56].MyGroup = GROUP_SEX;
 	Quiz[57].MyGroup = GROUP_SEX;
 	Quiz[58].MyGroup = GROUP_SEX;
-	Quiz[59].MyGroup = GROUP_MIXED;
+	Quiz[59].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[61].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[62].MyGroup = GROUP_ASPIE_TALENT;
@@ -206,7 +206,7 @@ void TQuizII::SetupTexts()
 	Quiz[66].MyGroup = GROUP_MIXED;
 	Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[68].MyGroup = GROUP_ASPIE_OBSESSION;
-	Quiz[69].MyGroup = GROUP_MIXED;
+	Quiz[69].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[70].MyGroup = GROUP_NT_NVC;
 	Quiz[71].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[72].MyGroup = GROUP_ASPIE_TALENT;
@@ -224,7 +224,7 @@ void TQuizII::SetupTexts()
 	Quiz[84].MyGroup = GROUP_RELIGION;
 	Quiz[85].MyGroup = GROUP_MIXED;
 	Quiz[86].MyGroup = GROUP_MIXED;
-	Quiz[87].MyGroup = GROUP_MIXED;
+	Quiz[87].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[88].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[89].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[90].MyGroup = GROUP_RELIGION;

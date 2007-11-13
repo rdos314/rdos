@@ -451,8 +451,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
 	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
 
-	Group[GROUP_NT_SENSORY].PosName = "NT perception";
-	Group[GROUP_NT_SENSORY].NegName = "NT perception problem";
+	Group[GROUP_NT_SENSORY].PosName = "NT perception problem";
+	Group[GROUP_NT_SENSORY].NegName = "NT perception";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie ability";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie ability problem";
@@ -493,9 +493,6 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
-	Group[GROUP_ASPIE_EMOTION].PosName = "Aspie emotion";
-	Group[GROUP_ASPIE_EMOTION].NegName = "Aspie emotion problem";
-
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -512,8 +509,8 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
 	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
 
-	Group[GROUP_NT_SENSORY].PosName = "NT perception";
-	Group[GROUP_NT_SENSORY].NegName = "NT perception problem";
+	Group[GROUP_NT_SENSORY].PosName = "NT perception problem";
+	Group[GROUP_NT_SENSORY].NegName = "NT perception";
 
 	Group[GROUP_ASPIE_TALENT].PosName = "Aspie talang";
 	Group[GROUP_ASPIE_TALENT].NegName = "Aspie talang problem";
@@ -553,9 +550,6 @@ void TQuiz::Init()
 
 	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
-
-	Group[GROUP_ASPIE_EMOTION].PosName = "Aspie känslor";
-	Group[GROUP_ASPIE_EMOTION].NegName = "Aspie känslor problem";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -985,10 +979,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_OBSESSION:
                 file.Write("GROUP_NT_OBSESSION");
-                break;
-
-            case GROUP_ASPIE_EMOTION:
-                file.Write("GROUP_ASPIE_EMOTION");
                 break;
 
             default:
@@ -6339,10 +6329,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_ENVIRONMENT:
 	        file->Write("ENVIRONMENT");
-	        break;
-	            
-	    case GROUP_ASPIE_EMOTION:
-	        file->Write("ASPIE_EMOTION");
 	        break;
 	            
 	    case GROUP_MIXED:

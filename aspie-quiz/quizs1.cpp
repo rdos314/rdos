@@ -222,7 +222,7 @@ void TQuizS1::SetupTexts()
   Quiz[4].MyGroup = GROUP_NT_HUNTING;
   Quiz[5].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[7].MyGroup = GROUP_MIXED;
+  Quiz[7].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[8].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[9].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[10].MyGroup = GROUP_ASPIE_TALENT;
@@ -251,7 +251,7 @@ void TQuizS1::SetupTexts()
   Quiz[33].MyGroup = GROUP_NT_SOCIAL;
   Quiz[34].MyGroup = GROUP_ENVIRONMENT;
   Quiz[35].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[36].MyGroup = GROUP_NT_SOCIAL;
   Quiz[37].MyGroup = GROUP_MIXED;
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[39].MyGroup = GROUP_NT_SOCIAL;
@@ -264,7 +264,7 @@ void TQuizS1::SetupTexts()
   Quiz[46].MyGroup = GROUP_NT_SOCIAL;
   Quiz[47].MyGroup = GROUP_NT_SOCIAL;
   Quiz[48].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[49].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[51].MyGroup = GROUP_NT_OBSESSION;
   Quiz[52].MyGroup = GROUP_NT_SOCIAL;
@@ -274,12 +274,12 @@ void TQuizS1::SetupTexts()
   Quiz[56].MyGroup = GROUP_NT_SOCIAL;
   Quiz[57].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[58].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[59].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[59].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[60].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[61].MyGroup = GROUP_ENVIRONMENT;
   Quiz[62].MyGroup = GROUP_NT_TALENT;
   Quiz[63].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[64].MyGroup = GROUP_ASPIE_EMOTION;
+  Quiz[64].MyGroup = GROUP_MIXED;
   Quiz[65].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[66].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -313,9 +313,9 @@ void TQuizS1::SetupTexts()
   Quiz[95].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[96].MyGroup = GROUP_ASPIE_NVC;
   Quiz[97].MyGroup = GROUP_MIXED;
-  Quiz[98].MyGroup = GROUP_MIXED;
+  Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[100].MyGroup = GROUP_ASPIE_EMOTION;
+  Quiz[100].MyGroup = GROUP_MIXED;
   Quiz[101].MyGroup = GROUP_ASPIE_NVC;
   Quiz[102].MyGroup = GROUP_ASPIE_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_HUNTING;
