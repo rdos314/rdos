@@ -191,7 +191,7 @@ void TQuizII::SetupTexts()
 	Quiz[51].MyGroup = GROUP_MIXED;
 	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_SEX;
-	Quiz[54].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[54].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[55].MyGroup = GROUP_MIXED;
 	Quiz[56].MyGroup = GROUP_SEX;
 	Quiz[57].MyGroup = GROUP_SEX;

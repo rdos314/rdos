@@ -221,7 +221,7 @@ void TQuizR4::SetupTexts()
   Quiz[15].MyGroup = GROUP_ENVIRONMENT;
   Quiz[16].MyGroup = GROUP_NT_SOCIAL;
   Quiz[17].MyGroup = GROUP_NT_NVC;
-  Quiz[18].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[18].MyGroup = GROUP_NT_OBSESSION;
   Quiz[19].MyGroup = GROUP_NT_SOCIAL;
   Quiz[20].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[21].MyGroup = GROUP_NT_NVC;

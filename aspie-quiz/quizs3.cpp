@@ -253,7 +253,7 @@ void TQuizS3::SetupTexts()
   Quiz[45].MyGroup = GROUP_NT_SOCIAL;
   Quiz[46].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[47].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[48].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[48].MyGroup = GROUP_NT_OBSESSION;
   Quiz[49].MyGroup = GROUP_NT_SOCIAL;
   Quiz[50].MyGroup = GROUP_NT_SOCIAL;
   Quiz[51].MyGroup = GROUP_NT_SOCIAL;
@@ -330,7 +330,7 @@ void TQuizS3::SetupTexts()
   Quiz[122].MyGroup = GROUP_NT_SENSORY;
   Quiz[123].MyGroup = GROUP_NT_SOCIAL;
   Quiz[124].MyGroup = GROUP_NT_NVC;
-  Quiz[125].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[125].MyGroup = GROUP_NT_OBSESSION;
   Quiz[126].MyGroup = GROUP_NT_SENSORY;
   Quiz[127].MyGroup = GROUP_NT_NVC;
   Quiz[128].MyGroup = GROUP_NT_SOCIAL;

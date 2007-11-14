@@ -331,7 +331,7 @@ void TQuizNd::SetupTexts()
 	Quiz[125].MyGroup = GROUP_NT_SOCIAL;
 	Quiz[126].MyGroup = GROUP_ASPIE_SOCIAL;
 	Quiz[127].MyGroup = GROUP_NT_SOCIAL;
-	Quiz[128].MyGroup = GROUP_NT_SOCIAL;
+	Quiz[128].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[129].MyGroup = GROUP_NT_HUNTING;
 	Quiz[130].MyGroup = GROUP_MIXED;
 	Quiz[131].MyGroup = GROUP_NT_NVC;

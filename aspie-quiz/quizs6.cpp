@@ -293,13 +293,13 @@ void TQuizS6::SetupTexts()
   Quiz[59].MyGroup = GROUP_NT_SOCIAL;
   Quiz[60].MyGroup = GROUP_NT_SOCIAL;
   Quiz[61].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[62].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[62].MyGroup = GROUP_NT_OBSESSION;
   Quiz[63].MyGroup = GROUP_NT_OBSESSION;
   Quiz[64].MyGroup = GROUP_NT_SOCIAL;
   Quiz[65].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_SOCIAL;
   Quiz[67].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[68].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[68].MyGroup = GROUP_NT_OBSESSION;
   Quiz[69].MyGroup = GROUP_NT_SOCIAL;
   Quiz[70].MyGroup = GROUP_NT_SOCIAL;
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
