@@ -231,17 +231,17 @@ void TQuizR2::SetupTexts()
   Quiz[65].MyGroup = GROUP_NT_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_SOCIAL;
   Quiz[67].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[68].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[68].MyGroup = GROUP_NT_OBSESSION;
   Quiz[69].MyGroup = GROUP_NT_SOCIAL;
   Quiz[70].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[71].MyGroup = GROUP_SEX;
   Quiz[72].MyGroup = GROUP_MIXED;
   Quiz[73].MyGroup = GROUP_ASPIE_SOCIAL;
-  Quiz[74].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[74].MyGroup = GROUP_NT_OBSESSION;
   Quiz[75].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[76].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[76].MyGroup = GROUP_NT_OBSESSION;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[78].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[78].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_ASPIE_NVC;
   Quiz[81].MyGroup = GROUP_ASPIE_NVC;
@@ -270,7 +270,7 @@ void TQuizR2::SetupTexts()
   Quiz[104].MyGroup = GROUP_ASPIE_NVC;
   Quiz[105].MyGroup = GROUP_ENVIRONMENT;
   Quiz[106].MyGroup = GROUP_MIXED;
-  Quiz[107].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[107].MyGroup = GROUP_NT_SOCIAL;
   Quiz[108].MyGroup = GROUP_MIXED;
   Quiz[109].MyGroup = GROUP_ENVIRONMENT;
   Quiz[110].MyGroup = GROUP_NT_TALENT;
@@ -326,8 +326,8 @@ void TQuizR2::SetupTexts()
   Quiz[160].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[161].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[162].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[164].MyGroup = GROUP_NT_OBSESSION;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you have odd teeth; e.g. teeth that are crooked or bigger than usual; gaps; overlaps; underbite etc.?";

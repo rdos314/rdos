@@ -253,7 +253,7 @@ void TQuizS8::SetupTexts()
   Quiz[30].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[31].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[32].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[33].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[33].MyGroup = GROUP_NT_OBSESSION;
   Quiz[34].MyGroup = GROUP_NT_OBSESSION;
   Quiz[35].MyGroup = GROUP_NT_OBSESSION;
   Quiz[36].MyGroup = GROUP_NT_OBSESSION;
@@ -261,7 +261,7 @@ void TQuizS8::SetupTexts()
   Quiz[38].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[39].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[40].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[41].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[41].MyGroup = GROUP_NT_SOCIAL;
   Quiz[42].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[43].MyGroup = GROUP_NT_SOCIAL;
   Quiz[44].MyGroup = GROUP_NT_SOCIAL;
@@ -276,7 +276,7 @@ void TQuizS8::SetupTexts()
   Quiz[53].MyGroup = GROUP_NT_SOCIAL;
   Quiz[54].MyGroup = GROUP_NT_SOCIAL;
   Quiz[55].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[56].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[56].MyGroup = GROUP_NT_OBSESSION;
   Quiz[57].MyGroup = GROUP_NT_OBSESSION;
   Quiz[58].MyGroup = GROUP_NT_SOCIAL;
   Quiz[59].MyGroup = GROUP_NT_SOCIAL;
@@ -292,7 +292,7 @@ void TQuizS8::SetupTexts()
   Quiz[69].MyGroup = GROUP_ASPIE_NVC;
   Quiz[70].MyGroup = GROUP_ASPIE_NVC;
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[72].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[72].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[73].MyGroup = GROUP_ASPIE_NVC;
   Quiz[74].MyGroup = GROUP_ASPIE_NVC;
   Quiz[75].MyGroup = GROUP_ASPIE_NVC;
@@ -1643,7 +1643,7 @@ void TQuizS8::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

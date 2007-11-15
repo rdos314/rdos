@@ -220,7 +220,7 @@ void TQuizR7::SetupTexts()
   Quiz[33].MyGroup = GROUP_MIXED;
   Quiz[34].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[35].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[36].MyGroup = GROUP_ASPIE_SOCIAL;
+  Quiz[36].MyGroup = GROUP_NT_SOCIAL;
   Quiz[37].MyGroup = GROUP_ASPIE_SOCIAL;
   Quiz[38].MyGroup = GROUP_NT_SOCIAL;
   Quiz[39].MyGroup = GROUP_NT_SOCIAL;
@@ -244,7 +244,7 @@ void TQuizR7::SetupTexts()
   Quiz[57].MyGroup = GROUP_NT_SOCIAL;
   Quiz[58].MyGroup = GROUP_NT_SOCIAL;
   Quiz[59].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[60].MyGroup = GROUP_NT_SOCIAL;
+  Quiz[60].MyGroup = GROUP_NT_OBSESSION;
   Quiz[61].MyGroup = GROUP_NT_SOCIAL;
   Quiz[62].MyGroup = GROUP_MIXED;
   Quiz[63].MyGroup = GROUP_NT_SOCIAL;
@@ -285,7 +285,7 @@ void TQuizR7::SetupTexts()
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ASPIE_NVC;
   Quiz[100].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[101].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[101].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[102].MyGroup = GROUP_ASPIE_NVC;
   Quiz[103].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[104].MyGroup = GROUP_ASPIE_NVC;
@@ -333,7 +333,7 @@ void TQuizR7::SetupTexts()
   Quiz[146].MyGroup = GROUP_NT_NVC;
   Quiz[147].MyGroup = GROUP_NT_NVC;
   Quiz[148].MyGroup = GROUP_NT_TALENT;
-  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[149].MyGroup = GROUP_NT_OBSESSION;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you look, feel or act younger than your biological age?";

@@ -711,10 +711,11 @@ void TQuiz::CheckCross()
     TQuiz *quiz;
     const char *text;
     int CrossArr[MAX_CROSS];
-    int cross;
+	int cross;
+	int currcross;
 
-    for (q = 0; q < N; q++)
-    {
+	for (q = 0; q < N; q++)
+	{
 		quiz = this;
 		group = quiz->Quiz[q].MyGroup;
 		text = quiz->Quiz[q].Text;
@@ -730,11 +731,14 @@ void TQuiz::CheckCross()
 		{
 			for (cross = 0; cross < MAX_CROSS; cross++)
 				if (quiz == CrossQuiz[cross])
+				{
 					CrossArr[cross] = curr;
+					currcross = cross;
+				}
 
 			if (quiz->Quiz[curr].MyGroup != group)
-				printf("Group conflict, question:%d %d should be %d\n",
-						 q, quiz->Quiz[curr].MyGroup, group);
+				printf("Group conflict, question:%d:%d %d should be %d\n",
+						 currcross, curr, quiz->Quiz[curr].MyGroup, group);
 
 //            if (strcmp(quiz->Quiz[curr].Text, text))
 //				printf("Text conflict, question:%d <%s> should be <%s>\n",
