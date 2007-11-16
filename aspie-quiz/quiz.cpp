@@ -617,6 +617,29 @@ int TQuiz::GetQuizN()
 	return N;
 }
 
+/*##################  TQuiz::GetQuizId ##########################
+*   Purpose....: Return quiz ID number  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+int TQuiz::GetQuizId(TQuiz *quiz)
+{
+    int cross;
+    int maxcross;
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+	{
+		if (CrossQuiz[cross])
+		    maxcross = cross;
+
+		if (CrossQuiz[cross] == quiz)
+		    return cross;
+    }
+    return maxcross + 1;
+}
+
 /*##################  TQuiz::DefineCross ##########################
 *   Purpose....: Define cross reference quiz 					      	        #
 *   In params..: *                                                          #
@@ -11191,7 +11214,7 @@ void TQuiz::ExportGlobalSql(const char *filename)
     file.Write("  PRIMARY KEY  (`ID`)\n");
     file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
 
-    file.Write("INSERT INTO `global` (`ID`, `Text`, `Count`, `Cats`, `AsNtCorr`, `Chi2`, `P`, `AspieLoad`, `NtLoad`, `GLoad`) VALUES\n");
+    file.Write("INSERT INTO `global` (`ID`, `Text`, `Count`, `Cats`, `AsNtCorr`, `Chi2`, `Cramer`, `AspieLoad`, `NtLoad`, `GLoad`) VALUES\n");
 
     first = TRUE;
     
@@ -11582,5 +11605,197 @@ void TQuiz::ExportGlobalAxisSql(const char *filename)
 			}
         }
     }            
+	file.Write(");\n");
+}
+
+/*##################  TQuiz::ExportOneCatPopSql ##########################
+*   Purpose....: Export raw category counts for one SQL table	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype)
+{
+    int cat;
+	TPopulation *pop;
+    char str[80];
+
+    for (cat = 0; cat < quiz->GetCatCount(q); cat++)
+    {
+        pop = quiz->GetPop(poptype);
+
+        if (pop)
+        {
+            if (pop->ChiArr[q][cat])
+            {
+                if (FFirst)
+                    FFirst = FALSE;
+                else
+    				file.Write("),\n");
+    					
+        		file.Write("(");
+
+        		sprintf(str, "%d, ", id);
+		        file.Write(str);
+
+        		sprintf(str, "%d, ", q);
+		        file.Write(str);
+
+        		sprintf(str, "%d, ", poptype);
+		        file.Write(str);
+
+        		sprintf(str, "%d, ", cat);
+		        file.Write(str);
+
+        		sprintf(str, "%d", pop->ChiArr[q][cat]);
+		        file.Write(str);
+			}
+        }
+    }            
+}
+
+/*##################  TQuiz::ExportOneQuizCatPopSql ##########################
+*   Purpose....: Export raw category counts for one SQL table	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportOneQuizCatPopSql(TFile &file, TQuiz *quiz, int id)
+{
+    int q;
+
+    for (q = 0; q < quiz->GetQuizN(); q++)
+    {
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_ALL);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_AS);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_ASPIE);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_ADD);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_NT);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_HYPERLEXIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_DYSPRAXIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_DYSLEXIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_DYSCALCULIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_OCD);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_ODD);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_SYNAESTHESIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_PA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_DYSGRAPHIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_BIPOLAR);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_TS);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_SCHIZOPHRENIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_LOW_IQ);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_HIGH_IQ);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_SOCIAL_PHOBIA);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_NT_CONTROL);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_AUTISM);
+        ExportOneCatPopSql(file, quiz, id, q, POP_TYPE_ASPIE_CONTROL);
+    }
+}
+
+/*##################  TQuiz::ExportQuizCatPopSql ##########################
+*   Purpose....: Export raw category counts per quiz & population SQL table	         	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportQuizCatPopSql(const char *filename)
+{
+    int cross;
+    int CurrQuiz;
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `qcatpop`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `qcatpop` (\n");
+    file.Write("  `Quiz` int(11) NOT NULL,\n");
+    file.Write("  `Question` int(11) NOT NULL,\n");
+    file.Write("  `PopType` int(11) NOT NULL,\n");
+    file.Write("  `Cat` int(11) NOT NULL,\n");
+    file.Write("  `Count` int(11) NOT NULL,\n");
+    file.Write("  PRIMARY KEY  (`Quiz`, `Question`, `PopType`, `Cat`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `qcatpop` (`Quiz`, `Question`, `PopType`, `Cat`, `Count`) VALUES\n");
+
+    FFirst = TRUE;
+
+	for (cross = 0; cross < MAX_CROSS; cross++)
+		if (CrossQuiz[cross])
+		{
+		    CurrQuiz = cross;
+		    ExportOneQuizCatPopSql(file, CrossQuiz[cross], cross);
+		}
+		
+    ExportOneQuizCatPopSql(file, this, CurrQuiz + 1);
+
+	file.Write(");\n");
+}
+
+/*##################  TQuiz::ExportQuizGlobalSql ##########################
+*   Purpose....: Write link report	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportQuizGlobalSql(const char *filename)
+{
+    int GlobalId;
+    TQuiz *TopQuiz;
+    int TopQuestion;
+    TQuiz *quiz;
+	int q;
+    char str[80];
+	TFile file(filename, 0);
+
+	file.Write("DROP TABLE IF EXISTS `qglobal`;\n\n");
+    file.Write("CREATE TABLE IF NOT EXISTS `qglobal` (\n");
+    file.Write("  `ID` int(11) NOT NULL,\n");
+    file.Write("  `Quiz` int(11) NOT NULL,\n");
+    file.Write("  `Question` int(11) NOT NULL,\n");
+    file.Write("  `Count` int(11) NOT NULL,\n");
+    file.Write("  PRIMARY KEY  (`ID`, `Quiz`, `Question`)\n");
+    file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
+
+    file.Write("INSERT INTO `qglobal` (`ID`, `Quiz`, `Question`, `Count`) VALUES\n");
+
+    FFirst = TRUE;
+
+    for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+    {
+		TopQuiz = GlobalTopQuiz[GlobalId];
+		TopQuestion = GlobalTopQuestion[GlobalId];
+
+        if (TopQuiz)
+        {
+    	    TopQuiz->ClearUsed(TopQuestion);
+        	quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            while (quiz)
+            {
+                if (FFirst)
+                    FFirst = FALSE;
+                else
+    		        file.Write("),\n");
+    					
+                file.Write("(");
+    
+            	sprintf(str, "%d, ", GlobalId);
+		        file.Write(str);
+    
+            	sprintf(str, "%d, ", GetQuizId(quiz));
+		        file.Write(str);
+
+            	sprintf(str, "%d, ", q);
+	    	    file.Write(str);
+    
+            	sprintf(str, "%d", quiz->All.Count[q]);
+		        file.Write(str);
+
+    		    quiz = TopQuiz->GetHighestCorr(TopQuestion, &q);
+            }
+        }
+    }
 	file.Write(");\n");
 }

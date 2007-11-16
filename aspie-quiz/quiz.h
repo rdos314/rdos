@@ -312,6 +312,8 @@ public:
     void ExportPopTypeSql(const char *filename);
 	void ExportGlobalCorrSql(const char *filename);
     void ExportGlobalAxisSql(const char *filename);
+    void ExportQuizCatPopSql(const char *filename);
+    void ExportQuizGlobalSql(const char *filename);
 
 protected:
 	void Init();
@@ -332,6 +334,8 @@ protected:
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
+
+    int GetQuizId(TQuiz *quiz);
 
     TPopulation *GetPop(int PopType);
     void DefineCross(int id, TQuiz *quiz);
@@ -385,6 +389,9 @@ protected:
     void WriteNtCI95(TFile &File, int Question);
     void WriteAsNtChi2(TFile &File, int Question);
     void WriteAsNtCorr95(TFile &File, int Question);
+
+    void ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int poptype);
+    void ExportOneQuizCatPopSql(TFile &file, TQuiz *quiz, int id);
 
 	TPopulationCorrelation PopCorr;
 
@@ -482,6 +489,8 @@ protected:
     TReferer WhiteRef;
     TReferer ArabRef;
     TReferer AsianRef;
+
+    int FFirst;
 
     TQuiz *CrossQuiz[MAX_CROSS];
 

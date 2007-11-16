@@ -634,5 +634,7 @@ int main(int argc, char **argv)
 	Quiz[23]->ExportPopTypeSql("poptype.sql");
 	Quiz[23]->ExportGlobalCorrSql("gcorr.sql");
 	Quiz[23]->ExportGlobalAxisSql("gaxis.sql");
+    Quiz[23]->ExportQuizCatPopSql("qcatpop.sql");
+    Quiz[23]->ExportQuizGlobalSql("qglobal.sql");
 }
 
