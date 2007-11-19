@@ -11328,7 +11328,8 @@ void TQuiz::ExportQuizVerSql(const char *filename)
 	file.Write("DROP TABLE IF EXISTS `quizver`;\n\n");
     file.Write("CREATE TABLE IF NOT EXISTS `quizver` (\n");
     file.Write("  `ID` int(11) NOT NULL,\n");
-    file.Write("  `Text` text NOT NULL,\n");
+    file.Write("  `ShortName` text NOT NULL,\n");
+    file.Write("  `LongName` text NOT NULL,\n");
     file.Write("  PRIMARY KEY  (`ID`)\n");
     file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
 
@@ -11341,25 +11342,33 @@ void TQuiz::ExportQuizVerSql(const char *filename)
         if (quiz)
         {
             maxq = q;
-		    file.Write("INSERT INTO `quizver` (`ID`, `Text`) VALUES (");
+		    file.Write("INSERT INTO `quizver` (`ID`, `ShortName`, `LongName`) VALUES (");
 
-			sprintf(str, "%d, \"", q);
+			sprintf(str, "%d, ", q);
 			file.Write(str);
 
+            file.Write("\"");
             quiz->WriteName(file);
+            file.Write("\", ");
 
+            file.Write("\"");
+			quiz->WriteLongName(file);
             file.Write("\");\n");
         }
     }            
     
-    file.Write("INSERT INTO `quizver` (`ID`, `Text`) VALUES (");
+    file.Write("INSERT INTO `quizver` (`ID`, `ShortName`, `LongName`) VALUES (");
 
     maxq++;        
-    sprintf(str, "%d, \"", maxq);
+    sprintf(str, "%d, ", maxq);
     file.Write(str);
 
+    file.Write("\"");
     WriteName(file);
+    file.Write("\", ");
 
+    file.Write("\"");
+    WriteLongName(file);
     file.Write("\");\n");
 }
 
@@ -11432,6 +11441,9 @@ void TQuiz::ExportPopTypeSql(const char *filename)
 	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ASPIE_CONTROL, "Self-diagnosed Aspie");
 	file.Write(str);
 
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ASPIE, "Aspie control group");
+	file.Write(str);
+
 	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_ADD, "ADD/ADHD");
 	file.Write(str);
 
@@ -11472,6 +11484,9 @@ void TQuiz::ExportPopTypeSql(const char *filename)
 	file.Write(str);
 
 	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_SOCIAL_PHOBIA, "Social Phobia");
+	file.Write(str);
+
+	sprintf(str, "(%d, \"%s\"),\n", POP_TYPE_NT, "Neurotypical");
 	file.Write(str);
 
 	sprintf(str, "(%d, \"%s\");\n", POP_TYPE_NT_CONTROL, "Neurotypical control group");
@@ -11648,7 +11663,13 @@ void TQuiz::ExportOneCatPopSql(TFile &file, TQuiz *quiz, int id, int q, int popt
         		sprintf(str, "%d, ", cat);
 		        file.Write(str);
 
-        		sprintf(str, "%d", pop->ChiArr[q][cat]);
+        		sprintf(str, "%d, ", pop->ChiArr[q][cat]);
+		        file.Write(str);
+
+        		sprintf(str, "%d, ", pop->MaleChiArr[q][cat]);
+		        file.Write(str);
+
+        		sprintf(str, "%d", pop->FemaleChiArr[q][cat]);
 		        file.Write(str);
 			}
         }
@@ -11714,10 +11735,12 @@ void TQuiz::ExportQuizCatPopSql(const char *filename)
     file.Write("  `PopType` int(11) NOT NULL,\n");
     file.Write("  `Cat` int(11) NOT NULL,\n");
     file.Write("  `Count` int(11) NOT NULL,\n");
+    file.Write("  `MaleCount` int(11) NOT NULL,\n");
+    file.Write("  `FemaleCount` int(11) NOT NULL,\n");
     file.Write("  PRIMARY KEY  (`Quiz`, `Question`, `PopType`, `Cat`)\n");
     file.Write(") ENGINE=MyISAM DEFAULT CHARSET=latin1;\n\n");
 
-    file.Write("INSERT INTO `qcatpop` (`Quiz`, `Question`, `PopType`, `Cat`, `Count`) VALUES\n");
+    file.Write("INSERT INTO `qcatpop` (`Quiz`, `Question`, `PopType`, `Cat`, `Count`, `MaleCount`, `FemaleCount`) VALUES\n");
 
     FFirst = TRUE;
 

@@ -109,6 +109,22 @@ void TQuizI::WriteName(TFile &File)
 
 /*##########################################################################
 #
+#   Name       : TQuizI::WriteLongName
+#
+#   Purpose....: Write long quiz name
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::WriteLongName(TFile &File)
+{
+	 File.Write("initial version");
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
@@ -618,34 +634,34 @@ void TQuizI::LoadPopulations()
 			case DX_AS:
 				aspie = TRUE;
 				 if (Row.ResultNow < 100)
-					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+					  LowAs.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 
-				  As.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+				  As.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				if (Row.Gender == 1)
-					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+					AsMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				else
-					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+					AsFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				break;
 
 			case DX_ADD:
-				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+				  Add.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				if (Row.Gender == 1)
-					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+					AddMale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				else
-					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+					AddFemale.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 				break;
 		}
 
-		All.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+		All.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 
 		if (Row.Diagnos == DX_REFERER && strlen(Row.Referer) == 0)
-			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+			 Mix.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 
 		if (Row.ResultNow  < 90)
-			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+			Nt.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 
 		if (Row.ResultNow  > 110)
-			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, ValArr, Row.GroupResult);
+			Aspie.Add(Row.ResultNow, 200 - Row.ResultNow, aspie, Row.Gender, ValArr, Row.GroupResult);
 	}
 }
 
@@ -850,7 +866,7 @@ void TQuizI::GetReferer(const char *referer, TPopulation *pop)
 					ValArr[i] = Row.Before[i] + 1;
 				else
 					ValArr[i] = Row.Now[i] + 1;
-				pop->Add(Row.ResultNow, 200 - Row.ResultNow, FALSE, ValArr, Row.GroupResult);
+				pop->Add(Row.ResultNow, 200 - Row.ResultNow, FALSE, Row.Gender, ValArr, Row.GroupResult);
 			}
 		}
 	}

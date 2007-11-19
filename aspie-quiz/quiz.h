@@ -331,6 +331,7 @@ protected:
 
 	virtual void GetReferer(const char *referer, TPopulation *pop) = 0;
 	virtual void WriteName(TFile &File) = 0;
+	virtual void WriteLongName(TFile &File) = 0;
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();

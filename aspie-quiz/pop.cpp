@@ -58,7 +58,11 @@ TPopulation::TPopulation(int questions)
 		Count[i] = 0;
 		Sum[i] = 0;
         for (j = 0; j < MAX_CATS; j++)
+        {
 			ChiArr[i][j] = 0;
+			MaleChiArr[i][j] = 0;
+			FemaleChiArr[i][j] = 0;
+	    }
 	}
 }
 
@@ -90,7 +94,7 @@ TPopulation::~TPopulation()
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS], int GroupScore[8])
+void TPopulation::Add(int AsScore, int NtScore, int As, int Gender, char Arr[MAX_QUESTIONS], int GroupScore[8])
 {
 	 int val;
 	 int i;
@@ -127,6 +131,17 @@ void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS],
 			ChiArr[i][val]++;
 			Sum[i] += val;
 			Count[i]++;
+
+			switch (Gender)
+			{
+			    case 1:
+			        MaleChiArr[i][val]++;
+			        break;
+
+			    case 2:
+			        FemaleChiArr[i][val]++;
+			        break;
+			}
 		}
 	 }
 
@@ -147,7 +162,7 @@ void TPopulation::Add(int AsScore, int NtScore, int As, char Arr[MAX_QUESTIONS],
 #   Returns....: *
 #
 ##########################################################################*/
-void TPopulation::Add(int Score, char Arr[MAX_QUESTIONS])
+void TPopulation::Add(int Score, int Gender, char Arr[MAX_QUESTIONS])
 {
 	 int val;
 	 int i;
@@ -185,6 +200,17 @@ void TPopulation::Add(int Score, char Arr[MAX_QUESTIONS])
 			ChiArr[i][val]++;
 			Sum[i] += val;
 			Count[i]++;
+
+			switch (Gender)
+			{
+			    case 1:
+			        MaleChiArr[i][val]++;
+			        break;
+
+			    case 2:
+			        FemaleChiArr[i][val]++;
+			        break;
+			}
 		}
 	 }
 
