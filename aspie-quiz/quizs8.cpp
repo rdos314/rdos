@@ -1738,3 +1738,125 @@ void TQuizS8::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  TQuizS8::WriteMDQ ##########################
+*   Purpose....: Write MDQ test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS8::WriteMDQ(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double MdqSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double MdqMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double MdqSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	MdqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.MdqResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			MdqSum += Row.MdqResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	MdqMean = MdqSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	MdqSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.MdqResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.MdqResult - MdqMean;
+			MdqSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	MdqSd = sqrtl(MdqSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.MdqResult)
+        {
+            zx = ((long double)Row.MdqResult - MdqMean) / MdqSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean MDQ score: %5.1Lf, SD: %5.1Lf\r\n", MdqMean, MdqSd);
+
+	printf("MDQ - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("MDQ - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("MDQ - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}

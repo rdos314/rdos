@@ -294,6 +294,7 @@ public:
     virtual void WriteAQ(const char *filename);
     virtual void WriteSPQ(const char *filename);
     virtual void WriteLSAS(const char *filename);
+    virtual void WriteMDQ(const char *filename);
     virtual void WritePictureRating(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);
