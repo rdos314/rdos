@@ -56,6 +56,7 @@
 #include "quizs6.h"
 #include "quizs7.h"
 #include "quizs8.h"
+#include "quizs9.h"
 // #include "spq.h"
 #include "pop.h"
 
@@ -100,6 +101,7 @@ int main(int argc, char **argv)
 	Quiz[21] = new TQuizS6("quizs6.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20]);
 	Quiz[22] = new TQuizS7("quizs7.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21]);
 	Quiz[23] = new TQuizS8("quizs8.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22]);
+	Quiz[24] = new TQuizS9("quizs9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23]);
 
 //  Quiz[0]->CheckCross();
 //	Quiz[1]->CheckCross();
@@ -368,9 +370,9 @@ int main(int argc, char **argv)
 
 	 Quiz[23]->CalcGlobal();
 
-//	 Quiz[23]->WritePhpQuestions("q.php");
-//	 Quiz[23]->WriteSetupTexts("q.cpp");
-//	 Quiz[23]->WriteSetupCross("c.cpp");
+//	 Quiz[24]->WritePhpQuestions("q.php");
+//	 Quiz[24]->WriteSetupTexts("q.cpp");
+//	 Quiz[24]->WriteSetupCross("c.cpp");
 
 	 Quiz[0]->WriteReferers("ref1.htm");
 	 Quiz[1]->WriteReferers("ref2.htm");
@@ -520,7 +522,7 @@ int main(int argc, char **argv)
 	 Quiz[22]->WritePcaGroupCorr("pcas7.htm");
 	 Quiz[23]->WritePcaGroupCorr("pcas8.htm");
 
-//	 Quiz[19]->WriteLSAS("");
+	 Quiz[19]->WriteLSAS("");
 	 Quiz[23]->WriteMDQ("");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
@@ -611,8 +613,8 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[23]->WritePhpWeighting("weights.php");
-//	 Quiz[23]->WritePhpGroupWeighting("group.php");
+	 Quiz[24]->WritePhpWeighting("weights.php");
+	 Quiz[24]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 
@@ -626,7 +628,7 @@ int main(int argc, char **argv)
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-	 TQuiz::WikiToQuiz("wiki.txt", "s9.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "s9.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
@@ -636,7 +638,7 @@ int main(int argc, char **argv)
 	Quiz[23]->ExportPopTypeSql("poptype.sql");
 	Quiz[23]->ExportGlobalCorrSql("gcorr.sql");
 	Quiz[23]->ExportGlobalAxisSql("gaxis.sql");
-    Quiz[23]->ExportQuizCatPopSql("qcatpop.sql");
-    Quiz[23]->ExportQuizGlobalSql("qglobal.sql");
+	Quiz[23]->ExportQuizCatPopSql("qcatpop.sql");
+	Quiz[23]->ExportQuizGlobalSql("qglobal.sql");
 }
 
