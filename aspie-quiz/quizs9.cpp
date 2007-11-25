@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS9::TQuizS9(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8)
-  : TQuiz(158),
+  : TQuiz(242),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -88,7 +88,7 @@ TQuizS9::TQuizS9(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -127,7 +127,10 @@ int TQuizS9::GetPcaCount()
 *##########################################################################*/
 int TQuizS9::GetCatCount(int Question)
 {
-	return 3;
+	if (Question >= 158 && Question <= 235)
+		return 5;
+	else
+		return 3;
 }
 
 /*##################  TQuiz::GetQuizN ##########################
@@ -384,6 +387,92 @@ void TQuizS9::SetupTexts()
   Quiz[156].MyGroup = GROUP_MIXED;
   Quiz[157].MyGroup = GROUP_MIXED;
 
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[188].MyGroup = GROUP_MIXED;
+  Quiz[189].MyGroup = GROUP_MIXED;
+  Quiz[190].MyGroup = GROUP_MIXED;
+  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[192].MyGroup = GROUP_MIXED;
+  Quiz[193].MyGroup = GROUP_MIXED;
+  Quiz[194].MyGroup = GROUP_MIXED;
+  Quiz[195].MyGroup = GROUP_MIXED;
+  Quiz[196].MyGroup = GROUP_MIXED;
+  Quiz[197].MyGroup = GROUP_MIXED;
+  Quiz[198].MyGroup = GROUP_MIXED;
+  Quiz[199].MyGroup = GROUP_MIXED;
+  Quiz[200].MyGroup = GROUP_MIXED;
+  Quiz[201].MyGroup = GROUP_MIXED;
+  Quiz[202].MyGroup = GROUP_MIXED;
+  Quiz[203].MyGroup = GROUP_MIXED;
+  Quiz[204].MyGroup = GROUP_MIXED;
+  Quiz[205].MyGroup = GROUP_MIXED;
+  Quiz[206].MyGroup = GROUP_MIXED;
+  Quiz[207].MyGroup = GROUP_MIXED;
+  Quiz[208].MyGroup = GROUP_MIXED;
+  Quiz[209].MyGroup = GROUP_MIXED;
+  Quiz[210].MyGroup = GROUP_MIXED;
+  Quiz[211].MyGroup = GROUP_MIXED;
+  Quiz[212].MyGroup = GROUP_MIXED;
+  Quiz[213].MyGroup = GROUP_MIXED;
+  Quiz[214].MyGroup = GROUP_MIXED;
+  Quiz[215].MyGroup = GROUP_MIXED;
+  Quiz[216].MyGroup = GROUP_MIXED;
+  Quiz[217].MyGroup = GROUP_MIXED;
+  Quiz[218].MyGroup = GROUP_MIXED;
+  Quiz[219].MyGroup = GROUP_MIXED;
+  Quiz[220].MyGroup = GROUP_MIXED;
+  Quiz[221].MyGroup = GROUP_MIXED;
+  Quiz[222].MyGroup = GROUP_MIXED;
+  Quiz[223].MyGroup = GROUP_MIXED;
+  Quiz[224].MyGroup = GROUP_MIXED;
+  Quiz[225].MyGroup = GROUP_MIXED;
+  Quiz[226].MyGroup = GROUP_MIXED;
+  Quiz[227].MyGroup = GROUP_MIXED;
+  Quiz[228].MyGroup = GROUP_MIXED;
+  Quiz[229].MyGroup = GROUP_MIXED;
+  Quiz[230].MyGroup = GROUP_MIXED;
+  Quiz[231].MyGroup = GROUP_MIXED;
+  Quiz[232].MyGroup = GROUP_MIXED;
+  Quiz[233].MyGroup = GROUP_MIXED;
+  Quiz[234].MyGroup = GROUP_MIXED;
+  Quiz[235].MyGroup = GROUP_MIXED;
+
+  Quiz[236].MyGroup = GROUP_NT_TALENT;
+  Quiz[237].MyGroup = GROUP_NT_TALENT;
+  Quiz[238].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[239].MyGroup = GROUP_MIXED;
+  Quiz[240].MyGroup = GROUP_MIXED;
+  Quiz[241].MyGroup = GROUP_ASPIE_SOCIAL;
+
 #ifdef ENGLISH
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
@@ -546,6 +635,91 @@ void TQuizS9::SetupTexts()
   Quiz[156].Text = "Has there been a period of time when you were not your usual self and you were much more social or outgoing than usual?";
   Quiz[157].Text = "Do you have less body-hair than others of your gender?";
 
+  Quiz[158].Text = "ADD - History of ADD symptoms in childhood, such as distractibility, short attention span, impulsivity or restlessness. ADD doesn't start at age 30.";
+  Quiz[159].Text = "ADD - History of not living up to potential in school or work (report cards with comments such as 'not living up to potential')";
+  Quiz[160].Text = "ADD - History of frequent behavior problems in school (mostly for males)";
+  Quiz[161].Text = "ADD - History of bed wetting past age 5";
+  Quiz[162].Text = "ADD - Family history of ADD, learning problems, mood disorders or substance abuse problems";
+  Quiz[163].Text = "ADD - Short attention span, unless very interested in something";
+  Quiz[164].Text = "ADD - Easily distracted, tendency to drift away (although at times can be hyper focused)";
+  Quiz[165].Text = "ADD - Lacks attention to detail, due to distractibility";
+  Quiz[166].Text = "ADD - Trouble listening carefully to directions";
+  Quiz[167].Text = "ADD - Frequently misplaces things";
+  Quiz[168].Text = "ADD - Skips around while reading, or goes to the end first, trouble staying on track";
+  Quiz[169].Text = "ADD - Difficulty learning new games, because it is hard to stay on track during directions";
+  Quiz[170].Text = "ADD - Easily distracted during sex, causing frequent breaks or turn-offs during lovemaking";
+  Quiz[171].Text = "ADD - Poor listening skills";
+  Quiz[172].Text = "ADD - Tendency to be easily bored (tunes out)";
+  Quiz[173].Text = "ADD - Restlessness, constant motion, legs moving, fidgetiness";
+  Quiz[174].Text = "ADD - Has to be moving in order to think";
+  Quiz[175].Text = "ADD - Trouble sitting still, such as trouble sitting in one place for too long, sitting at a desk job for long periods, sitting through a movie";
+  Quiz[176].Text = "ADD - An internal sense of anxiety or nervousness";
+  Quiz[177].Text = "ADD - Impulsive, in words and/or actions (spending)";
+  Quiz[178].Text = "ADD - Say just what comes to mind without considering its impact (tactless)";
+  Quiz[179].Text = "ADD - Trouble going through established channels, trouble following proper procedure, an attitude of 'read the directions when all else fails'";
+  Quiz[180].Text = "ADD - Impatient, low frustration tolerance";
+  Quiz[181].Text = "ADD - A prisoner of the moment";
+  Quiz[182].Text = "ADD - Frequent traffic violations";
+  Quiz[183].Text = "ADD - Frequent, impulsive job changes";
+  Quiz[184].Text = "ADD - Tendency to embarrass others";
+  Quiz[185].Text = "ADD - Lying or stealing on impulse";
+  Quiz[186].Text = "ADD - Poor organization and planning, trouble maintaining an organized work/living area";
+  Quiz[187].Text = "ADD - Chronically late or chronically in a hurry";
+  Quiz[188].Text = "ADD - Often have piles of stuff";
+  Quiz[189].Text = "ADD - Easily overwhelmed by tasks of daily living";
+  Quiz[190].Text = "ADD - Poor financial management (late bills, check book a mess, spending unnecessary money on late fees)";
+  Quiz[191].Text = "ADD - Some adults with ADD are very successful, but often only if they are surrounded with people who organize them.";
+  Quiz[192].Text = "ADD - Chronic procrastination or trouble getting started";
+  Quiz[193].Text = "ADD - Starting projects but not finishing them, poor follow through";
+  Quiz[194].Text = "ADD - Enthusiastic beginnings but poor endings";
+  Quiz[195].Text = "ADD - Spends excessive time at work because of inefficiencies";
+  Quiz[196].Text = "ADD - Inconsistent work performance";
+  Quiz[197].Text = "ADD - Chronic sense of underachievement, feeling you should be much further along in your life than you are";
+  Quiz[198].Text = "ADD - Chronic problems with self-esteem";
+  Quiz[199].Text = "ADD - Sense of impending doom";
+  Quiz[200].Text = "ADD - Mood swings";
+  Quiz[201].Text = "ADD - Negativity";
+  Quiz[202].Text = "ADD - Frequent feeling of demoralization or that things won't work out for you";
+  Quiz[203].Text = "ADD - Trouble sustaining friendships or intimate relationships, promiscuity";
+  Quiz[204].Text = "ADD - Trouble with intimacy";
+  Quiz[205].Text = "ADD - Tendency to be immature";
+  Quiz[206].Text = "ADD - Self-centered; immature interests";
+  Quiz[207].Text = "ADD - Failure to see others' needs or activities as important";
+  Quiz[208].Text = "ADD - Lack of talking in a relationship";
+  Quiz[209].Text = "ADD - Verbally abusive to others";
+  Quiz[210].Text = "ADD - Proneness to hysterical outburst";
+  Quiz[211].Text = "ADD - Avoids group activities";
+  Quiz[212].Text = "ADD - Trouble with authority";
+  Quiz[213].Text = "ADD - Quick responses to slights that are real or imagined";
+  Quiz[214].Text = "ADD - Rage outbursts, short fuse";
+  Quiz[215].Text = "ADD - Frequent search for high stimulation (bungee jumping, gambling, race track, high stress jobs, ER doctors, doing many things at once, etc.)";
+  Quiz[216].Text = "ADD - Tendency to seek conflict, be argumentative or to start disagreements for the fun of it";
+  Quiz[217].Text = "ADD - Tendency to worry needlessly and endlessly";
+  Quiz[218].Text = "ADD - Tendency toward addictions (food, alcohol, drugs, work)";
+  Quiz[219].Text = "ADD - Switches around numbers, letters or words";
+  Quiz[220].Text = "ADD - Turn words around in conversations";
+  Quiz[221].Text = "ADD - Poor writing skills (hard to get information from brain to pen)";
+  Quiz[222].Text = "ADD - Poor handwriting, often prints";
+  Quiz[223].Text = "ADD - Coordination difficulties";
+  Quiz[224].Text = "ADD - Performance becomes worse under pressure'";
+  Quiz[225].Text = "ADD - Test anxiety, or during tests your mind tends to go blank";
+  Quiz[226].Text = "ADD - The harder you try, the worse it gets";
+  Quiz[227].Text = "ADD - Work or schoolwork deteriorates under pressure";
+  Quiz[228].Text = "ADD - Tendency to turn off or become stuck when asked questions in social situation";
+  Quiz[229].Text = "ADD - Falls asleep or becomes tired while reading";
+  Quiz[230].Text = "ADD - Difficulties falling asleep, may be due to too many thoughts at night";
+  Quiz[231].Text = "ADD - Difficulty coming awake (may need coffee or other stimulant or activity before feeling fully awake)";
+  Quiz[232].Text = "ADD - Periods of low energy, especially early in the morning and in the afternoon";
+  Quiz[233].Text = "ADD - Frequently feeling tired";
+  Quiz[234].Text = "ADD - Startles easily";
+  Quiz[235].Text = "ADD - Sensitive to touch, clothes, noise and light";
+
+  Quiz[236].Text = "Dyslexia";
+  Quiz[237].Text = "Dyscalculia";
+  Quiz[238].Text = "OCD";
+  Quiz[239].Text = "ODD";
+  Quiz[240].Text = "Bipolar";
+  Quiz[241].Text = "Social phobia";
 
 #endif
 
@@ -711,6 +885,92 @@ void TQuizS9::SetupTexts()
   Quiz[156].Text = "Har det funnits en tid då du inte var dig själv och att du var mycket mer social och utåtriktad än normalt?";
   Quiz[157].Text = "Har du mindre kroppshår än andra av samma kön som dig själv?";
 
+  Quiz[158].Text = "ADD - History of ADD symptoms in childhood, such as distractibility, short attention span, impulsivity or restlessness. ADD doesn't start at age 30.";
+  Quiz[159].Text = "ADD - History of not living up to potential in school or work (report cards with comments such as 'not living up to potential')";
+  Quiz[160].Text = "ADD - History of frequent behavior problems in school (mostly for males)";
+  Quiz[161].Text = "ADD - History of bed wetting past age 5";
+  Quiz[162].Text = "ADD - Family history of ADD, learning problems, mood disorders or substance abuse problems";
+  Quiz[163].Text = "ADD - Short attention span, unless very interested in something";
+  Quiz[164].Text = "ADD - Easily distracted, tendency to drift away (although at times can be hyper focused)";
+  Quiz[165].Text = "ADD - Lacks attention to detail, due to distractibility";
+  Quiz[166].Text = "ADD - Trouble listening carefully to directions";
+  Quiz[167].Text = "ADD - Frequently misplaces things";
+  Quiz[168].Text = "ADD - Skips around while reading, or goes to the end first, trouble staying on track";
+  Quiz[169].Text = "ADD - Difficulty learning new games, because it is hard to stay on track during directions";
+  Quiz[170].Text = "ADD - Easily distracted during sex, causing frequent breaks or turn-offs during lovemaking";
+  Quiz[171].Text = "ADD - Poor listening skills";
+  Quiz[172].Text = "ADD - Tendency to be easily bored (tunes out)";
+  Quiz[173].Text = "ADD - Restlessness, constant motion, legs moving, fidgetiness";
+  Quiz[174].Text = "ADD - Has to be moving in order to think";
+  Quiz[175].Text = "ADD - Trouble sitting still, such as trouble sitting in one place for too long, sitting at a desk job for long periods, sitting through a movie";
+  Quiz[176].Text = "ADD - An internal sense of anxiety or nervousness";
+  Quiz[177].Text = "ADD - Impulsive, in words and/or actions (spending)";
+  Quiz[178].Text = "ADD - Say just what comes to mind without considering its impact (tactless)";
+  Quiz[179].Text = "ADD - Trouble going through established channels, trouble following proper procedure, an attitude of 'read the directions when all else fails'";
+  Quiz[180].Text = "ADD - Impatient, low frustration tolerance";
+  Quiz[181].Text = "ADD - A prisoner of the moment";
+  Quiz[182].Text = "ADD - Frequent traffic violations";
+  Quiz[183].Text = "ADD - Frequent, impulsive job changes";
+  Quiz[184].Text = "ADD - Tendency to embarrass others";
+  Quiz[185].Text = "ADD - Lying or stealing on impulse";
+  Quiz[186].Text = "ADD - Poor organization and planning, trouble maintaining an organized work/living area";
+  Quiz[187].Text = "ADD - Chronically late or chronically in a hurry";
+  Quiz[188].Text = "ADD - Often have piles of stuff";
+  Quiz[189].Text = "ADD - Easily overwhelmed by tasks of daily living";
+  Quiz[190].Text = "ADD - Poor financial management (late bills, check book a mess, spending unnecessary money on late fees)";
+  Quiz[191].Text = "ADD - Some adults with ADD are very successful, but often only if they are surrounded with people who organize them.";
+  Quiz[192].Text = "ADD - Chronic procrastination or trouble getting started";
+  Quiz[193].Text = "ADD - Starting projects but not finishing them, poor follow through";
+  Quiz[194].Text = "ADD - Enthusiastic beginnings but poor endings";
+  Quiz[195].Text = "ADD - Spends excessive time at work because of inefficiencies";
+  Quiz[196].Text = "ADD - Inconsistent work performance";
+  Quiz[197].Text = "ADD - Chronic sense of underachievement, feeling you should be much further along in your life than you are";
+  Quiz[198].Text = "ADD - Chronic problems with self-esteem";
+  Quiz[199].Text = "ADD - Sense of impending doom";
+  Quiz[200].Text = "ADD - Mood swings";
+  Quiz[201].Text = "ADD - Negativity";
+  Quiz[202].Text = "ADD - Frequent feeling of demoralization or that things won't work out for you";
+  Quiz[203].Text = "ADD - Trouble sustaining friendships or intimate relationships, promiscuity";
+  Quiz[204].Text = "ADD - Trouble with intimacy";
+  Quiz[205].Text = "ADD - Tendency to be immature";
+  Quiz[206].Text = "ADD - Self-centered; immature interests";
+  Quiz[207].Text = "ADD - Failure to see others' needs or activities as important";
+  Quiz[208].Text = "ADD - Lack of talking in a relationship";
+  Quiz[209].Text = "ADD - Verbally abusive to others";
+  Quiz[210].Text = "ADD - Proneness to hysterical outburst";
+  Quiz[211].Text = "ADD - Avoids group activities";
+  Quiz[212].Text = "ADD - Trouble with authority";
+  Quiz[213].Text = "ADD - Quick responses to slights that are real or imagined";
+  Quiz[214].Text = "ADD - Rage outbursts, short fuse";
+  Quiz[215].Text = "ADD - Frequent search for high stimulation (bungee jumping, gambling, race track, high stress jobs, ER doctors, doing many things at once, etc.)";
+  Quiz[216].Text = "ADD - Tendency to seek conflict, be argumentative or to start disagreements for the fun of it";
+  Quiz[217].Text = "ADD - Tendency to worry needlessly and endlessly";
+  Quiz[218].Text = "ADD - Tendency toward addictions (food, alcohol, drugs, work)";
+  Quiz[219].Text = "ADD - Switches around numbers, letters or words";
+  Quiz[220].Text = "ADD - Turn words around in conversations";
+  Quiz[221].Text = "ADD - Poor writing skills (hard to get information from brain to pen)";
+  Quiz[222].Text = "ADD - Poor handwriting, often prints";
+  Quiz[223].Text = "ADD - Coordination difficulties";
+  Quiz[224].Text = "ADD - Performance becomes worse under pressure'";
+  Quiz[225].Text = "ADD - Test anxiety, or during tests your mind tends to go blank";
+  Quiz[226].Text = "ADD - The harder you try, the worse it gets";
+  Quiz[227].Text = "ADD - Work or schoolwork deteriorates under pressure";
+  Quiz[228].Text = "ADD - Tendency to turn off or become stuck when asked questions in social situation";
+  Quiz[229].Text = "ADD - Falls asleep or becomes tired while reading";
+  Quiz[230].Text = "ADD - Difficulties falling asleep, may be due to too many thoughts at night";
+  Quiz[231].Text = "ADD - Difficulty coming awake (may need coffee or other stimulant or activity before feeling fully awake)";
+  Quiz[232].Text = "ADD - Periods of low energy, especially early in the morning and in the afternoon";
+  Quiz[233].Text = "ADD - Frequently feeling tired";
+  Quiz[234].Text = "ADD - Startles easily";
+  Quiz[235].Text = "ADD - Sensitive to touch, clothes, noise and light";
+
+  Quiz[236].Text = "Dyslexi";
+  Quiz[237].Text = "Dyskaluli";
+  Quiz[238].Text = "OCD";
+  Quiz[239].Text = "ODD";
+  Quiz[240].Text = "Bipolär";
+  Quiz[241].Text = "Social fobi";
+
 #endif
 
 }
@@ -844,19 +1104,19 @@ void TQuizS9::LoadPopulations()
 	{
 		Quiz[i].NoAnswer = 0;
 		IdArr[i] = GetGlobalId(i);
-    }
+	}
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-//		Row.Quiz[172] = Row.Dyslexia + 1;
-//		Row.Quiz[173] = Row.Dyscalculia + 1;
-//		Row.Quiz[174] = Row.OCD + 1;
-//		Row.Quiz[175] = Row.ODD + 1;
-//		Row.Quiz[176] = Row.Bipolar + 1;
-//		Row.Quiz[177] = Row.Social + 1;
+		Row.Quiz[236] = Row.Dyslexia + 1;
+		Row.Quiz[237] = Row.Dyscalculia + 1;
+		Row.Quiz[238] = Row.OCD + 1;
+		Row.Quiz[239] = Row.ODD + 1;
+		Row.Quiz[240] = Row.Bipolar + 1;
+		Row.Quiz[241] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -864,7 +1124,7 @@ void TQuizS9::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-				if (i < 183)
+				if (i < 236)
 				{
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
@@ -1041,10 +1301,10 @@ void TQuizS9::SetupControlGroups()
 void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8)
 {
     DefineCross(QuizS8, 0, 1);
-    DefineCross(QuizS8, 1, 2);
+	DefineCross(QuizS8, 1, 2);
     DefineCross(QuizS8, 2, 39);
 	DefineCross(QuizS8, 3, 3);
-    DefineCross(QuizS8, 4, 5);
+	DefineCross(QuizS8, 4, 5);
     DefineCross(QuizS8, 5, 6);
     DefineCross(QuizS8, 6, 4);
     DefineCross(QuizS8, 7, 7);
@@ -1061,17 +1321,17 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS8, 18, 18);
     DefineCross(QuizS8, 19, 19);
     DefineCross(QuizS8, 20, 20);
-    DefineCross(QuizS8, 21, 21);
+	DefineCross(QuizS8, 21, 21);
     DefineCross(QuizS8, 22, 22);
     DefineCross(QuizS8, 23, 23);
     DefineCross(QuizS8, 24, 0);
     DefineCross(QuizS8, 25, 24);
     DefineCross(QuizS8, 26, 25);
     DefineCross(QuizS8, 27, 26);
-    DefineCross(QuizS8, 28, 27);
+	DefineCross(QuizS8, 28, 27);
     DefineCross(QuizS8, 29, 28);
     DefineCross(QuizS8, 30, 29);
-    DefineCross(QuizS8, 31, 30);
+	DefineCross(QuizS8, 31, 30);
     DefineCross(QuizS8, 32, 31);
     DefineCross(QuizS8, 33, 56);
     DefineCross(QuizS8, 34, 57);
@@ -1088,17 +1348,17 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS8, 45, 147);
     DefineCross(QuizS8, 46, 49);
     DefineCross(QuizS8, 47, 40);
-    DefineCross(QuizS8, 48, 41);
+	DefineCross(QuizS8, 48, 41);
     DefineCross(QuizS8, 49, 43);
     DefineCross(QuizS8, 50, 44);
     DefineCross(QuizS8, 51, 51);
     DefineCross(QuizS8, 52, 52);
     DefineCross(QuizS8, 53, 53);
     DefineCross(QuizS8, 54, 54);
-    DefineCross(QuizS8, 55, 55);
+	DefineCross(QuizS8, 55, 55);
     DefineCross(QuizS8, 56, 58);
     DefineCross(QuizS8, 57, 59);
-    DefineCross(QuizS8, 58, 63);
+	DefineCross(QuizS8, 58, 63);
     DefineCross(QuizS8, 59, 62);
     DefineCross(QuizS8, 60, 64);
     DefineCross(QuizS8, 61, 65);
@@ -1115,17 +1375,17 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS8, 72, 77);
 	DefineCross(QuizS8, 73, 78);
     DefineCross(QuizS8, 74, 79);
-    DefineCross(QuizS8, 75, 80);
+	DefineCross(QuizS8, 75, 80);
     DefineCross(QuizS8, 76, 81);
     DefineCross(QuizS8, 77, 149);
     DefineCross(QuizS8, 78, 82);
     DefineCross(QuizS8, 79, 83);
     DefineCross(QuizS8, 80, 84);
     DefineCross(QuizS8, 81, 85);
-    DefineCross(QuizS8, 82, 86);
+	DefineCross(QuizS8, 82, 86);
     DefineCross(QuizS8, 83, 87);
     DefineCross(QuizS8, 84, 88);
-    DefineCross(QuizS8, 85, 89);
+	DefineCross(QuizS8, 85, 89);
     DefineCross(QuizS8, 86, 90);
     DefineCross(QuizS8, 87, 91);
     DefineCross(QuizS8, 88, 92);
@@ -1142,17 +1402,17 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS8, 99, 102);
     DefineCross(QuizS8, 100, 103);
     DefineCross(QuizS8, 101, 104);
-    DefineCross(QuizS8, 102, 105);
+	DefineCross(QuizS8, 102, 105);
     DefineCross(QuizS8, 103, 106);
     DefineCross(QuizS8, 104, 107);
     DefineCross(QuizS8, 105, 108);
     DefineCross(QuizS8, 106, 109);
     DefineCross(QuizS8, 107, 110);
 	DefineCross(QuizS8, 108, 111);
-    DefineCross(QuizS8, 109, 141);
+	DefineCross(QuizS8, 109, 141);
     DefineCross(QuizS8, 110, 112);
     DefineCross(QuizS8, 111, 113);
-    DefineCross(QuizS8, 112, 114);
+	DefineCross(QuizS8, 112, 114);
     DefineCross(QuizS8, 113, 115);
     DefineCross(QuizS8, 114, 116);
     DefineCross(QuizS8, 115, 117);
@@ -1169,17 +1429,17 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
     DefineCross(QuizS8, 126, 128);
     DefineCross(QuizS8, 127, 129);
     DefineCross(QuizS8, 128, 130);
-    DefineCross(QuizS8, 129, 131);
+	DefineCross(QuizS8, 129, 131);
     DefineCross(QuizS8, 130, 132);
     DefineCross(QuizS8, 131, 133);
     DefineCross(QuizS8, 132, 134);
     DefineCross(QuizS8, 133, 135);
     DefineCross(QuizS8, 134, 136);
     DefineCross(QuizS8, 135, 137);
-    DefineCross(QuizS8, 136, 138);
+	DefineCross(QuizS8, 136, 138);
     DefineCross(QuizS8, 137, 139);
     DefineCross(QuizS8, 138, 142);
-    DefineCross(QuizS8, 139, 140);
+	DefineCross(QuizS8, 139, 140);
     DefineCross(QuizS8, 140, 143);
     DefineCross(QuizS8, 141, 144);
     DefineCross(QuizS8, 142, 145);
@@ -1199,7 +1459,91 @@ void TQuizS9::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qui
 	DefineGlobalId(155, 959);
 	DefineGlobalId(156, 960);
 	DefineGlobalId(157, 961);
+	DefineGlobalId(158, 962);
+	DefineGlobalId(159, 963);
+	DefineGlobalId(160, 964);
+	DefineGlobalId(161, 965);
+	DefineGlobalId(162, 966);
+	DefineGlobalId(163, 967);
+	DefineGlobalId(164, 968);
+	DefineGlobalId(165, 969);
+	DefineGlobalId(166, 970);
+	DefineGlobalId(167, 971);
+	DefineGlobalId(168, 972);
+	DefineGlobalId(169, 973);
+	DefineGlobalId(170, 974);
+	DefineGlobalId(171, 975);
+	DefineGlobalId(172, 976);
+	DefineGlobalId(173, 977);
+	DefineGlobalId(174, 978);
+	DefineGlobalId(175, 979);
+	DefineGlobalId(176, 980);
+	DefineGlobalId(177, 981);
+	DefineGlobalId(178, 982);
+	DefineGlobalId(179, 983);
+	DefineGlobalId(180, 984);
+	DefineGlobalId(181, 985);
+	DefineGlobalId(182, 986);
+	DefineGlobalId(183, 987);
+	DefineGlobalId(184, 988);
+	DefineGlobalId(185, 989);
+	DefineGlobalId(186, 990);
+	DefineGlobalId(187, 991);
+	DefineGlobalId(188, 992);
+	DefineGlobalId(189, 993);
+	DefineGlobalId(190, 994);
+	DefineGlobalId(191, 995);
+	DefineGlobalId(192, 996);
+	DefineGlobalId(193, 997);
+	DefineGlobalId(194, 998);
+	DefineGlobalId(195, 999);
+	DefineGlobalId(196, 1000);
+	DefineGlobalId(197, 1001);
+	DefineGlobalId(198, 1002);
+	DefineGlobalId(199, 1003);
+	DefineGlobalId(200, 1004);
+	DefineGlobalId(201, 1005);
+	DefineGlobalId(202, 1006);
+	DefineGlobalId(203, 1007);
+	DefineGlobalId(204, 1008);
+	DefineGlobalId(205, 1009);
+	DefineGlobalId(206, 1010);
+	DefineGlobalId(207, 1011);
+	DefineGlobalId(208, 1012);
+	DefineGlobalId(209, 1013);
+	DefineGlobalId(210, 1014);
+	DefineGlobalId(211, 1015);
+	DefineGlobalId(212, 1016);
+	DefineGlobalId(213, 1017);
+	DefineGlobalId(214, 1018);
+	DefineGlobalId(215, 1019);
+	DefineGlobalId(216, 1020);
+	DefineGlobalId(217, 1021);
+	DefineGlobalId(218, 1022);
+	DefineGlobalId(219, 1023);
+	DefineGlobalId(220, 1024);
+	DefineGlobalId(221, 1025);
+	DefineGlobalId(222, 1026);
+	DefineGlobalId(223, 1027);
+	DefineGlobalId(224, 1028);
+	DefineGlobalId(225, 1029);
+	DefineGlobalId(226, 1030);
+	DefineGlobalId(227, 1031);
+	DefineGlobalId(228, 1032);
+	DefineGlobalId(229, 1033);
+	DefineGlobalId(230, 1034);
+	DefineGlobalId(231, 1035);
+	DefineGlobalId(232, 1036);
+	DefineGlobalId(233, 1037);
+	DefineGlobalId(234, 1038);
+	DefineGlobalId(235, 1039);
 
+	DefineCross(QuizS8, 236, 172);
+	DefineCross(QuizS8, 237, 173);
+	DefineCross(QuizS8, 238, 174);
+	DefineCross(QuizS8, 239, 175);
+	DefineCross(QuizS8, 240, 176);
+	DefineCross(QuizS8, 241, 177);
 }
 
 /*##########################################################################
@@ -1247,7 +1591,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 		case PCA_TYPE_MIXED:
             return TRUE;
 
-        case PCA_TYPE_MALE:
+		case PCA_TYPE_MALE:
 			if (row->Gender == 1)
                 return TRUE;
 			else
@@ -1384,32 +1728,32 @@ void TQuizS9::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-//	    if (Row.MdqResult)
-	    {
-    		sprintf(str, "\"%d\", ", Row.AsResult);
-	    	file.Write(str);
+		if (Row.AddResult)
+		{
+			sprintf(str, "\"%d\", ", Row.AsResult);
+			file.Write(str);
 
-    		sprintf(str, "\"%d\", ", Row.NtResult);
-	    	file.Write(str);
+			sprintf(str, "\"%d\", ", Row.NtResult);
+			file.Write(str);
 
-    		for (i = 0; i < N; i++)
-	    	{
-		    	ival = Row.Quiz[i];
-    
-	    		if (ival)
-		    	{
-			    	if (Quiz[i].Reverse)
-				    	ival = GetCatCount(i) - ival;
-    				else
-	    				ival--;
-		    	}
+			for (i = 0; i < N; i++)
+			{
+				ival = Row.Quiz[i];
+
+				if (ival)
+				{
+					if (Quiz[i].Reverse)
+						ival = GetCatCount(i) - ival;
+					else
+						ival--;
+				}
 
 
-    			if (ival >= GetCatCount(i))
-	    			ival = 0;
+				if (ival >= GetCatCount(i))
+					ival = 0;
 
-		    	sprintf(str, "\"%d\"", ival);
-			    file.Write(str);
+				sprintf(str, "\"%d\"", ival);
+				file.Write(str);
     			if (i != N - 1)
 	    			file.Write(", ");
 	    	}

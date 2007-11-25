@@ -29,7 +29,7 @@
 #define _POP_H
 
 #define MAX_CATS        16
-#define MAX_QUESTIONS   225
+#define MAX_QUESTIONS   250
 
 struct TValArr
 {

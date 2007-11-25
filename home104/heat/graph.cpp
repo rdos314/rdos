@@ -147,50 +147,50 @@ void TGraphic::Show()
 	PTankChart = new TChart(vbe, &TimeAxis, &TempAxis);
 	VpChart = new TChart(vbe, &TimeScaleAxis, &TempAxis);
 
-	TempChart->SetWindow(0, 0, 439, 269);
-	PowerChart->SetWindow(0, 270, 439, 299);
-	PHeatChart->SetWindow(0, 305, 439, 334);
-	PTankChart->SetWindow(0, 340, 439, 369);
-	VpChart->SetWindow(0, 375, 439, 399);
+	TempChart->SetWindow(0, 0, 399, 249);
+	PowerChart->SetWindow(0, 250, 399, 279);
+	PHeatChart->SetWindow(0, 280, 399, 309);
+	PTankChart->SetWindow(0, 310, 399, 329);
+	VpChart->SetWindow(0, 330, 399, 349);
 
-	vbe->SetClipRect(440, 0, 529, 419);
+	vbe->SetClipRect(400, 0, 489, 419);
 	vbe->SetDrawColor(0, 0, 0);
 	vbe->SetFilledStyle();
-	vbe->DrawRect(440, 0, 529, 419);
+	vbe->DrawRect(400, 0, 489, 419);
 	vbe->SetFont(&Font);
 
 	vbe->SetDrawColor(255, 0, 0);
-	vbe->DrawString(442, 20, "Panna");
+	vbe->DrawString(402, 20, "Panna");
 
 	vbe->SetDrawColor(255, 0, 255);
-	vbe->DrawString(442, 40, "Tank");
+	vbe->DrawString(402, 40, "Tank");
 
 	vbe->SetDrawColor(128, 255, 0);
-	vbe->DrawString(442, 60, "Temperatur");
+	vbe->DrawString(402, 60, "Temperatur");
 
 	vbe->SetDrawColor(255, 128, 0);
-	vbe->DrawString(442, 80, "Temperatur 2");
+	vbe->DrawString(402, 80, "Temperatur 2");
 
 	vbe->SetDrawColor(0, 128, 255);
-	vbe->DrawString(442, 100, "Referens");
+	vbe->DrawString(402, 100, "Referens");
 
 	vbe->SetDrawColor(128, 128, 128);
-	vbe->DrawString(442, 140, "Utetemperatur");
+	vbe->DrawString(402, 140, "Utetemperatur");
 
 	vbe->SetDrawColor(255, 128, 0);
-	vbe->DrawString(442, 285, "Cirkulation");
+	vbe->DrawString(402, 265, "Cirkulation");
 
 	vbe->SetDrawColor(255, 0, 0);
-	vbe->DrawString(442, 315, "P Panna");
+	vbe->DrawString(402, 290, "P Panna");
 
 	vbe->SetDrawColor(255, 0, 255);
-	vbe->DrawString(442, 360, "P Tank");
+	vbe->DrawString(402, 320, "P Tank");
 
 	vbe->SetDrawColor(255, 0, 255);
-	vbe->DrawString(442, 375, "V„rmepump");
+	vbe->DrawString(402, 330, "V„rmepump");
 
 	vbe->SetDrawColor(255, 0, 0);
-	vbe->DrawString(442, 390, "Elpatron");
+	vbe->DrawString(402, 345, "Elpatron");
 
 	TimeScaleAxis.SetForeColor(255, 255, 255);
 	TimeScaleAxis.SetBackColor(0, 0, 0);
@@ -248,7 +248,7 @@ void TGraphic::Show()
     	val = (long double)i;
 	    PHeatChart->Add(i + 5, from, val);
 		PHeatChart->Add(i + 5, to, val);
-    }
+	}
 
     for (i = -5; i <= 5; i += 5) 
     {
@@ -275,7 +275,7 @@ void TGraphic::Show()
         else
         {
             currtime.AddDay(1);
-            firsttime = currtime;
+			firsttime = currtime;
         }
 
     	sameday = TRUE;
@@ -329,7 +329,7 @@ void TGraphic::Show()
                 	TempChart->SetLineColor(Line4, 0, 128, 255);
                 	TempChart->SetLineColor(Line5, 255, 0, 255);
                 	TempChart->SetLineColor(Line6, 255, 0, 0);
-            	    PowerChart->SetLineColor(Line1, 255, 128, 0);
+					PowerChart->SetLineColor(Line1, 255, 128, 0);
                 	PHeatChart->SetLineColor(Line1, 255, 0, 0);
             	    PTankChart->SetLineColor(Line1, 255, 0, 255);
                 	VpChart->SetLineColor(Line1, 255, 0, 255);
@@ -356,7 +356,7 @@ void TGraphic::Show()
                         {
         			        var = tag->GetVar(LOG_VAR_Temp);
     	        			if (var)
-	    		    		{
+							{
 		    	        	    ival = var->GetFloat1();
 
 		    	        	    if (ival < 500)
@@ -383,7 +383,7 @@ void TGraphic::Show()
         
 		    						TempChart->Add(Line5, time, val);
 		    				    }
-    	        		    }
+							}
 
         			        var = tag->GetVar(LOG_VAR_P);
     	        			if (var)
@@ -491,7 +491,7 @@ void TGraphic::Show()
 
                     if (TempCount)
                     {
-                        val = (long double)TempSum / (long double)TempCount / 10.0;
+						val = (long double)TempSum / (long double)TempCount / 10.0;
 						TempChart->Add(Line2, time, val);
 					}
 
@@ -518,7 +518,7 @@ void TGraphic::Show()
     {
         TempChart->SetLineColor(i, 60, 60, 60);
     	
-	    TempChart->Add(i, currtime, 0.0);
+		TempChart->Add(i, currtime, 0.0);
 	    TempChart->Add(i, currtime, 65.0);
 
         PowerChart->SetLineColor(i, 60, 60, 60);
@@ -545,7 +545,7 @@ void TGraphic::Show()
 		currtime.AddHour(1);
 	}
 
-    retry = FALSE;
+	retry = FALSE;
 
 	TempChart->Draw();
 
@@ -572,7 +572,7 @@ void TGraphic::Show()
     if (width < TempAxis.RequiredWidth())
     {
         retry = TRUE;
-    	width = TempAxis.RequiredWidth();
+		width = TempAxis.RequiredWidth();
     	TempAxis.SetMinWidth(width);
     }
 	

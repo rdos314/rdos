@@ -98,7 +98,7 @@ void cdecl main()
 
 	log = new TLog("e:\\log");
 
-	vbe = new TVideoGraphicDevice(24, 800, 600);
+	vbe = new TVideoGraphicDevice(24, 640, 480);
 	vbe->SetFont(&Font);
 
 	graphic = new TGraphic(vbe, log);

@@ -287,27 +287,27 @@ char *ProcessRow(char *str)
 
 				case 13:
 					Row.Dyslexia = atoi(valstr);
-					Row.Quiz[237] = Row.Dyslexia;
+					Row.Quiz[236] = Row.Dyslexia;
 					break;
 
 				case 14:
 					Row.Dyscalculia = atoi(valstr);
-					Row.Quiz[238] = Row.Dyscalculia;
+					Row.Quiz[237] = Row.Dyscalculia;
 					break;
 
 				case 15:
 					Row.OCD = atoi(valstr);
-					Row.Quiz[239] = Row.OCD;
+					Row.Quiz[238] = Row.OCD;
 					break;
 
 				case 16:
 					Row.ODD = atoi(valstr);
-					Row.Quiz[240] = Row.ODD;
+					Row.Quiz[239] = Row.ODD;
 					break;
 
 				case 17:
 					Row.Bipolar = atoi(valstr);
-					Row.Quiz[241] = Row.Bipolar;
+					Row.Quiz[240] = Row.Bipolar;
 					break;
 
 				case 18:
@@ -316,7 +316,7 @@ char *ProcessRow(char *str)
 
 				case 19:
 					Row.Social = atoi(valstr);
-					Row.Quiz[242] = Row.Social;
+					Row.Quiz[241] = Row.Social;
 					break;
 
 				case 20:
@@ -348,7 +348,7 @@ char *ProcessRow(char *str)
 					i = fieldno - 24;
 					Row.Quiz[i] = atoi(valstr);
 
-					if (Row.AddResult && i >= 158 && i <= 236)
+					if (Row.AddResult && i >= 158 && i <= 235)
 					    Row.Quiz[i]++;
 					
 					break;

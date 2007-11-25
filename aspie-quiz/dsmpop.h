@@ -28,7 +28,7 @@
 #ifndef _DSMPOP_H
 #define _DSMPOP_H
 
-#define MAX_GLOBAL_QUESTIONS   1024
+#define MAX_GLOBAL_QUESTIONS   1500
 
 struct TDsmElem
 {
