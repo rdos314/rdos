@@ -493,6 +493,9 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
+	Group[GROUP_ACTIVITY].PosName = "ADD activity";
+	Group[GROUP_ACTIVITY].NegName = "NT activity";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -550,6 +553,9 @@ void TQuiz::Init()
 
 	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
+
+	Group[GROUP_ACTIVITY].PosName = "ADD aktivitet";
+	Group[GROUP_ACTIVITY].NegName = "NT aktivity";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -1006,6 +1012,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_NT_OBSESSION:
                 file.Write("GROUP_NT_OBSESSION");
+                break;
+
+            case GROUP_ACTIVITY:
+                file.Write("GROUP_ACTIVITY");
                 break;
 
             default:
@@ -2778,6 +2788,42 @@ long double TQuiz::GetCutoffChi2(int cats, long double p)
 
             return 1000;
                 
+		case 5:
+            if (p >= 0.2)
+                return 5.99;
+
+            if (p >= 0.1)
+                return 7.79;
+
+            if (p >= 0.05)
+                return 9.50;        
+
+            if (p >= 0.02)
+                return 11.68;
+
+            if (p >= 0.01)
+                return 13.29;
+
+            if (p >= 0.005)
+                return 14.89;
+
+            if (p >= 0.002)
+                return 17.0;
+
+            if (p >= 0.001)
+                return 18.6;
+
+            if (p >= 0.0005)
+                return 20.3;
+
+            if (p >= 0.0002)
+                return 22.7;
+
+            if (p >= 0.0001)
+                return 23.6;
+
+            return 1000;
+                
 		case 11:
             if (p >= 0.2)
                 return 13.45;
@@ -4066,6 +4112,63 @@ void TQuiz::WriteP(TFile &File, int cats, long double chi2)
 												else
 												{
 													if (chi2 >= 4.64)
+														strcpy(str, "0.2");
+													else
+														strcpy(str, "---");
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+			break;
+
+		case 5:
+			if (chi2 >= 23.6)
+				strcpy(str, "0.0001");
+			else
+			{
+				if (chi2 >= 22.7)
+					strcpy(str, "0.0002");
+				else
+				{
+					if (chi2 >= 20.3)
+						strcpy(str, "0.0005");
+					else
+					{
+						if (chi2 >= 18.6)
+							strcpy(str, "0.001");
+						else
+						{
+							if (chi2 >= 17.0)
+								strcpy(str, "0.002");
+							else
+							{
+								if (chi2 >= 14.89)
+									strcpy(str, "0.005");
+								else
+								{
+									if (chi2 >= 13.29)
+										strcpy(str, "0.01");
+									else
+									{
+										if (chi2 >= 11.68)
+											strcpy(str, "0.02");
+										else
+										{
+											if (chi2 >= 9.50)
+												strcpy(str, "0.05");
+											else
+											{
+												if (chi2 >= 7.79)
+													strcpy(str, "0.1");
+												else
+												{
+													if (chi2 >= 5.99)
 														strcpy(str, "0.2");
 													else
 														strcpy(str, "---");
@@ -6367,6 +6470,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 	    case GROUP_ENVIRONMENT:
 	        file->Write("ENVIRONMENT");
+	        break;
+	            
+		case GROUP_ACTIVITY:
+	        file->Write("ACTIVITY");
 	        break;
 	            
 	    case GROUP_MIXED:
