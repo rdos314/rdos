@@ -247,10 +247,10 @@ void TQuizS9::SetupTexts()
   Quiz[17].MyGroup = GROUP_NT_TALENT;
   Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
-  Quiz[20].MyGroup = GROUP_NT_TALENT;
+  Quiz[20].MyGroup = GROUP_ACTIVITY;
   Quiz[21].MyGroup = GROUP_NT_TALENT;
   Quiz[22].MyGroup = GROUP_NT_TALENT;
-  Quiz[23].MyGroup = GROUP_NT_TALENT;
+  Quiz[23].MyGroup = GROUP_ACTIVITY;
   Quiz[24].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[25].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -364,7 +364,7 @@ void TQuizS9::SetupTexts()
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_MIXED;
-  Quiz[137].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_ACTIVITY;
   Quiz[138].MyGroup = GROUP_MIXED;
   Quiz[139].MyGroup = GROUP_MIXED;
   Quiz[140].MyGroup = GROUP_MIXED;
@@ -387,34 +387,34 @@ void TQuizS9::SetupTexts()
   Quiz[156].MyGroup = GROUP_MIXED;
   Quiz[157].MyGroup = GROUP_MIXED;
 
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_ACTIVITY;
   Quiz[159].MyGroup = GROUP_ACTIVITY;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_ACTIVITY;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_ACTIVITY;
-  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_ACTIVITY;
   Quiz[164].MyGroup = GROUP_ACTIVITY;
   Quiz[165].MyGroup = GROUP_ACTIVITY;
-  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_ACTIVITY;
   Quiz[167].MyGroup = GROUP_ACTIVITY;
   Quiz[168].MyGroup = GROUP_ACTIVITY;
   Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_MIXED;
-  Quiz[172].MyGroup = GROUP_MIXED;
-  Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_ACTIVITY;
-  Quiz[175].MyGroup = GROUP_NT_TALENT;
-  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_NT_NVC;
+  Quiz[171].MyGroup = GROUP_ACTIVITY;
+  Quiz[172].MyGroup = GROUP_ACTIVITY;
+  Quiz[173].MyGroup = GROUP_ACTIVITY;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_ACTIVITY;
+  Quiz[176].MyGroup = GROUP_ENVIRONMENT;
   Quiz[177].MyGroup = GROUP_ACTIVITY;
   Quiz[178].MyGroup = GROUP_NT_NVC;
-  Quiz[179].MyGroup = GROUP_NT_TALENT;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_ACTIVITY;
+  Quiz[180].MyGroup = GROUP_ENVIRONMENT;
   Quiz[181].MyGroup = GROUP_ACTIVITY;
-  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_ACTIVITY;
   Quiz[183].MyGroup = GROUP_ACTIVITY;
   Quiz[184].MyGroup = GROUP_NT_NVC;
-  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_ACTIVITY;
   Quiz[186].MyGroup = GROUP_ACTIVITY;
   Quiz[187].MyGroup = GROUP_ACTIVITY;
   Quiz[188].MyGroup = GROUP_ACTIVITY;
@@ -426,44 +426,44 @@ void TQuizS9::SetupTexts()
   Quiz[194].MyGroup = GROUP_ACTIVITY;
   Quiz[195].MyGroup = GROUP_ACTIVITY;
   Quiz[196].MyGroup = GROUP_ACTIVITY;
-  Quiz[197].MyGroup = GROUP_MIXED;
+  Quiz[197].MyGroup = GROUP_ENVIRONMENT;
   Quiz[198].MyGroup = GROUP_ENVIRONMENT;
   Quiz[199].MyGroup = GROUP_ENVIRONMENT;
   Quiz[200].MyGroup = GROUP_ENVIRONMENT;
   Quiz[201].MyGroup = GROUP_ENVIRONMENT;
   Quiz[202].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[203].MyGroup = GROUP_MIXED;
-  Quiz[204].MyGroup = GROUP_MIXED;
+  Quiz[203].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[204].MyGroup = GROUP_NT_NVC;
   Quiz[205].MyGroup = GROUP_MIXED;
-  Quiz[206].MyGroup = GROUP_MIXED;
+  Quiz[206].MyGroup = GROUP_NT_NVC;
   Quiz[207].MyGroup = GROUP_NT_NVC;
   Quiz[208].MyGroup = GROUP_NT_SOCIAL;
-  Quiz[209].MyGroup = GROUP_MIXED;
-  Quiz[210].MyGroup = GROUP_MIXED;
+  Quiz[209].MyGroup = GROUP_NT_NVC;
+  Quiz[210].MyGroup = GROUP_ENVIRONMENT;
   Quiz[211].MyGroup = GROUP_MIXED;
   Quiz[212].MyGroup = GROUP_MIXED;
-  Quiz[213].MyGroup = GROUP_MIXED;
-  Quiz[214].MyGroup = GROUP_MIXED;
-  Quiz[215].MyGroup = GROUP_MIXED;
+  Quiz[213].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[214].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[215].MyGroup = GROUP_ACTIVITY;
   Quiz[216].MyGroup = GROUP_MIXED;
   Quiz[217].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[218].MyGroup = GROUP_MIXED;
+  Quiz[218].MyGroup = GROUP_ACTIVITY;
   Quiz[219].MyGroup = GROUP_MIXED;
-  Quiz[220].MyGroup = GROUP_MIXED;
-  Quiz[221].MyGroup = GROUP_MIXED;
-  Quiz[222].MyGroup = GROUP_MIXED;
+  Quiz[220].MyGroup = GROUP_NT_TALENT;
+  Quiz[221].MyGroup = GROUP_NT_TALENT;
+  Quiz[222].MyGroup = GROUP_NT_TALENT;
   Quiz[223].MyGroup = GROUP_NT_HUNTING;
-  Quiz[224].MyGroup = GROUP_MIXED;
-  Quiz[225].MyGroup = GROUP_NT_TALENT;
-  Quiz[226].MyGroup = GROUP_ACTIVITY;
-  Quiz[227].MyGroup = GROUP_ACTIVITY;
-  Quiz[228].MyGroup = GROUP_MIXED;
-  Quiz[229].MyGroup = GROUP_ACTIVITY;
+  Quiz[224].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[225].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[226].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[227].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[228].MyGroup = GROUP_NT_NVC;
+  Quiz[229].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[230].MyGroup = GROUP_MIXED;
   Quiz[231].MyGroup = GROUP_ACTIVITY;
   Quiz[232].MyGroup = GROUP_ACTIVITY;
   Quiz[233].MyGroup = GROUP_ACTIVITY;
-  Quiz[234].MyGroup = GROUP_NT_HUNTING;
+  Quiz[234].MyGroup = GROUP_MIXED;
   Quiz[235].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[236].MyGroup = GROUP_NT_TALENT;
@@ -1908,7 +1908,7 @@ void TQuizS9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1986,4 +1986,126 @@ void TQuizS9::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizS9::WriteADD ##########################
+*   Purpose....: Write ADD test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS9::WriteADD(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double AddSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double AddMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double AddSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	AddSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AddResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			AddSum += Row.AddResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	AddMean = AddSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	AddSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AddResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.AddResult - AddMean;
+			AddSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	AddSd = sqrtl(AddSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.AddResult)
+        {
+            zx = ((long double)Row.AddResult - AddMean) / AddSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean ADD score: %5.1Lf, SD: %5.1Lf\r\n", AddMean, AddSd);
+
+	printf("ADD - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("ADD - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("ADD - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }

@@ -166,7 +166,7 @@ void TQuizII::SetupTexts()
 	Quiz[10].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[11].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[12].MyGroup = GROUP_RELIGION;
-	Quiz[13].MyGroup = GROUP_MIXED;
+	Quiz[13].MyGroup = GROUP_ACTIVITY;
 	Quiz[14].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[15].MyGroup = GROUP_NT_HUNTING;
 	Quiz[16].MyGroup = GROUP_MIXED;
@@ -216,10 +216,10 @@ void TQuizII::SetupTexts()
 	Quiz[60].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[61].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[62].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[63].MyGroup = GROUP_NT_TALENT;
-	Quiz[64].MyGroup = GROUP_NT_TALENT;
-	Quiz[65].MyGroup = GROUP_NT_TALENT;
-	Quiz[66].MyGroup = GROUP_MIXED;
+	Quiz[63].MyGroup = GROUP_ACTIVITY;
+	Quiz[64].MyGroup = GROUP_ACTIVITY;
+	Quiz[65].MyGroup = GROUP_ACTIVITY;
+	Quiz[66].MyGroup = GROUP_ACTIVITY;
 	Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[68].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[69].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -234,7 +234,7 @@ void TQuizII::SetupTexts()
 	Quiz[78].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[79].MyGroup = GROUP_RELIGION;
 	Quiz[80].MyGroup = GROUP_NT_OBSESSION;
-	Quiz[81].MyGroup = GROUP_MIXED;
+	Quiz[81].MyGroup = GROUP_ACTIVITY;
 	Quiz[82].MyGroup = GROUP_MIXED;
 	Quiz[83].MyGroup = GROUP_MIXED;
 	Quiz[84].MyGroup = GROUP_RELIGION;

@@ -275,11 +275,11 @@ void TQuizR1::SetupTexts()
   Quiz[97].MyGroup = GROUP_ENVIRONMENT;
   Quiz[98].MyGroup = GROUP_NT_TALENT;
   Quiz[99].MyGroup = GROUP_NT_NVC;
-  Quiz[100].MyGroup = GROUP_NT_TALENT;
-  Quiz[101].MyGroup = GROUP_NT_TALENT;
-  Quiz[102].MyGroup = GROUP_MIXED;
-  Quiz[103].MyGroup = GROUP_NT_TALENT;
-  Quiz[104].MyGroup = GROUP_NT_TALENT;
+  Quiz[100].MyGroup = GROUP_ACTIVITY;
+  Quiz[101].MyGroup = GROUP_ACTIVITY;
+  Quiz[102].MyGroup = GROUP_ACTIVITY;
+  Quiz[103].MyGroup = GROUP_ACTIVITY;
+  Quiz[104].MyGroup = GROUP_ACTIVITY;
   Quiz[105].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[106].MyGroup = GROUP_NT_TALENT;
   Quiz[107].MyGroup = GROUP_NT_SENSORY;

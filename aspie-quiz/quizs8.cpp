@@ -230,11 +230,6 @@ void TQuizS8::SetupTexts()
   Quiz[154].Reverse = TRUE;
   Quiz[155].Reverse = TRUE;
   Quiz[156].Reverse = TRUE;
-  Quiz[159].Reverse = TRUE;
-  Quiz[160].Reverse = TRUE;
-  Quiz[165].Reverse = TRUE;
-  Quiz[166].Reverse = TRUE;
-  Quiz[167].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -256,10 +251,10 @@ void TQuizS8::SetupTexts()
   Quiz[17].MyGroup = GROUP_NT_TALENT;
   Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
-  Quiz[20].MyGroup = GROUP_NT_TALENT;
+  Quiz[20].MyGroup = GROUP_ACTIVITY;
   Quiz[21].MyGroup = GROUP_NT_TALENT;
   Quiz[22].MyGroup = GROUP_NT_TALENT;
-  Quiz[23].MyGroup = GROUP_NT_TALENT;
+  Quiz[23].MyGroup = GROUP_ACTIVITY;
   Quiz[24].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[25].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[26].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -375,7 +370,7 @@ void TQuizS8::SetupTexts()
   Quiz[136].MyGroup = GROUP_MIXED;
   Quiz[137].MyGroup = GROUP_MIXED;
   Quiz[138].MyGroup = GROUP_MIXED;
-  Quiz[139].MyGroup = GROUP_MIXED;
+  Quiz[139].MyGroup = GROUP_ACTIVITY;
   Quiz[140].MyGroup = GROUP_MIXED;
   Quiz[141].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[142].MyGroup = GROUP_MIXED;
@@ -394,21 +389,21 @@ void TQuizS8::SetupTexts()
   Quiz[155].MyGroup = GROUP_NT_SENSORY;
   Quiz[156].MyGroup = GROUP_ENVIRONMENT;
 
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_ACTIVITY;
+  Quiz[158].MyGroup = GROUP_ACTIVITY;
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_ACTIVITY;
+  Quiz[162].MyGroup = GROUP_ACTIVITY;
+  Quiz[163].MyGroup = GROUP_ACTIVITY;
+  Quiz[164].MyGroup = GROUP_ACTIVITY;
+  Quiz[165].MyGroup = GROUP_ACTIVITY;
+  Quiz[166].MyGroup = GROUP_ACTIVITY;
   Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_ACTIVITY;
+  Quiz[169].MyGroup = GROUP_ACTIVITY;
+  Quiz[170].MyGroup = GROUP_ACTIVITY;
+  Quiz[171].MyGroup = GROUP_ACTIVITY;
 
   Quiz[172].MyGroup = GROUP_NT_TALENT;
   Quiz[173].MyGroup = GROUP_NT_TALENT;
@@ -1859,4 +1854,309 @@ void TQuizS8::WriteMDQ(const char *filename)
 	printf("MDQ - Aspie score correlation: %5.2Lf\r\n", AsCorr);
 	printf("MDQ - NT score correlation: %5.2Lf\r\n", NtCorr);
 	printf("MDQ - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}
+
+/*##################  TQuizS8::WriteRetest ##########################
+*   Purpose....: Write retest report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS8::WriteRetest(const char *filename)
+{
+	TQuizRow Row;
+	int userid;
+	int i;
+	int index;
+	int birthyear;
+	int birthmonth;
+	int gender;
+	long double val;
+	long double AsSum;
+	long double NtSum;
+	long double AsMean;
+	long double NtMean;
+	long double QMean[157];
+	long double AsSd;
+	long double NtSd;
+	long double QSd[157];
+	long double AsTot;
+	long double NtTot;
+	int AsCount;
+	int NtCount;
+	long double QTot[157];
+	int QCount[157];
+	long double sd;
+	int AsArr[20];
+	int NtArr[20];
+	int q;
+	int count;
+	long double sum;
+	int QArr[157][20];
+	int ok;
+	char str[80];
+	TFile file(filename, 0);
+
+	for (userid = 0; userid < MAX_USERS; userid++)
+	    UserInfo[userid] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    userid = Row.userid;
+
+	    if (userid)
+	    {
+	        if (UserInfo[userid] == 0)
+	        {
+	            UserInfo[userid] = new TUserInfo;
+	            UserInfo[userid]->Count = 1;
+       	        UserInfo[userid]->BirthYear = Row.BirthYear;
+       	        UserInfo[userid]->BirthMonth = Row.BirthMonth;
+            	UserInfo[userid]->AsSum = Row.AsResult;
+	            UserInfo[userid]->NtSum = Row.NtResult;
+	        }
+	        else
+	            UserInfo[userid]->Count++;
+	    }
+	}
+
+    AsCount = 0;
+    NtCount = 0;
+    AsTot = 0;
+    NtTot = 0;
+
+    for (q = 0; q < 157; q++)
+    {
+        QTot[q] = 0;
+        QCount[q] = 0;
+    }
+
+	for (userid = 1; userid < MAX_USERS; userid++)
+	{
+        if (UserInfo[userid])
+        {
+            if (UserInfo[userid]->Count > 1)
+       	    {
+                for (i = 0; i < 20; i++)
+                {
+                    AsArr[i] = 0;
+                    NtArr[i] = 0;
+
+                    for (q = 0; q < 157; q++)
+                        QArr[q][i] = 0;
+                }
+
+                index = 0;
+
+            	FDataFile.SetPos(0);
+        	    while (FDataFile.Read(&Row, sizeof(Row)))
+            	{
+            	    if (Row.userid == userid)
+            	    {
+                        ok = FALSE;
+                    
+        	            if (index == 0)
+        	            {
+            	            birthyear = Row.BirthYear;
+            	            birthmonth = Row.BirthMonth;
+            	            gender = Row.Gender;
+        	                ok = TRUE;
+                   	    
+       	                    UserInfo[userid]->Count = 1;
+           	                UserInfo[userid]->BirthYear = Row.BirthYear;
+           	                UserInfo[userid]->BirthMonth = Row.BirthMonth;
+            	            UserInfo[userid]->AsSum = Row.AsResult;
+	                        UserInfo[userid]->NtSum = Row.NtResult;
+        	            }
+        	            else
+            	        {
+            	            if (    birthyear == Row.BirthYear &&
+            	                    birthmonth == Row.BirthMonth &&
+        	                        gender == Row.Gender)
+        	                {
+        	                    ok = TRUE;        	                
+
+                    	        UserInfo[userid]->Count++;
+                    	        UserInfo[userid]->AsSum += Row.AsResult;
+                    	        UserInfo[userid]->NtSum += Row.NtResult;
+        	                }
+        	            }
+
+            	        if (ok)
+            	        {
+                	        AsArr[index] = Row.AsResult;
+                	        NtArr[index] = Row.NtResult;
+
+                	        for (q = 0; q < 157; q++)
+                	            QArr[q][index] = Row.Quiz[q];
+                	        
+        	                index++;
+        	            }
+        	        }
+        	    }
+
+    			if (index > 1)
+	    		{
+		    		AsSum = 0;
+			    	NtSum = 0;
+
+    				for (i = 0; i < index; i++)
+	    			{
+		    			AsSum += AsArr[i];
+			    		NtSum += NtArr[i];
+				    }
+
+    				AsMean = AsSum / index;
+	    			NtMean = NtSum / index;
+    
+	    			for (q = 0; q < 157; q++)
+		    		{
+			    	    count = 0;
+				        sum = 0;
+
+    				    for (i = 0; i < index; i++)
+	    			    {
+		    		        if (QArr[q][i])
+			    	        {
+				                sum += QArr[q][i] - 1;
+				                count++;
+				            }
+    				    }
+    
+	    			    if (count)
+		    		        QMean[q] = sum / count;
+			    	    else
+				            QMean[q] = 0;
+    				}
+				    
+	    			AsSum = 0;
+		    		NtSum = 0;
+
+			    	for (i = 0; i < index; i++)
+				    {
+    					val = AsArr[i] - AsMean;
+	    				AsSum += val * val;
+    
+	    				val = NtArr[i] - NtMean;
+		    			NtSum += val * val;
+			    	}
+
+				    AsSd = sqrtl(AsSum / index);
+    				NtSd = sqrtl(NtSum / index);
+
+	    			for (q = 0; q < 157; q++)
+		    		{
+			    	    count = 0;
+				        sum = 0;
+    
+	    			    for (i = 0; i < index; i++)
+		    		    {
+			    	        if (QArr[q][i])
+				            {
+				                val = QArr[q][i] - 1 - QMean[q];
+				                sum += val * val;
+				                count++;
+    				        }
+	    			    }
+
+                        if (count)
+                        {
+    			    	    QSd[q] = sqrtl(sum / count);
+    
+        				    QTot[q] += QSd[q];
+    	    			    QCount[q]++;
+    		    		}
+    			    	else
+    				        QSd[q] = 0;
+    				}
+
+                    AsTot += AsSd;
+                    AsCount++;
+
+			    	NtTot += NtSd;
+				    NtCount++;
+
+//  				sprintf(str, "Userid: %d, AS: %5.1Lf (%5.1Lf), NT: %5.1Lf (%5.1Lf)<br>", userid, AsMean, AsSd, NtMean, NtSd);
+//	    			file.Write(str);
+//
+//		    		for (q = 0; q < 135; q++)
+//			    	{
+//				        if (QSd[q] > 0.1)
+//  				    {
+//        				    sprintf(str, "#%d, Sd = %5.1Lf<br>", q, QSd[q]);
+//    	    			    file.Write(str);
+//    		    		}
+//    		        }
+    			}
+    	    }
+		}
+	}
+
+	AsSd = AsTot / AsCount;
+	NtSd = NtTot / NtCount;
+
+#ifdef ENGLISH
+	file.Write("<h2>Retest result</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Omtestnings resultat</h2>\n");
+#endif
+
+#ifdef ENGLISH
+	sprintf(str, "Population size: %d", AsCount);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "Populationsstorlek: %d", AsCount);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+#ifdef ENGLISH
+	sprintf(str, "AS score standard deviation: %2.1Lf", AsSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "AS poäng standardavvikelse: %2.1Lf", AsSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br>");
+
+#ifdef ENGLISH
+	sprintf(str, "NT score standard deviation: %2.1Lf", NtSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "NT poäng standardavvikelse: %2.1Lf", NtSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+
+#ifdef ENGLISH
+	file.Write("<h3>Question standard deviations</h3>");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h3>Standardavvikelser per fråga</h3>");
+#endif
+
+	for (q = 0; q < 157; q++)
+	{
+	    sprintf(str, "%d. ", q + 1);
+	    file.Write(str);
+	    
+		file.Write(Quiz[q].Text);
+	    
+	    sd = QTot[q] / QCount[q];
+
+        sprintf(str, " <b>%3.2Lf</b><br>", sd);
+    	file.Write(str);
+    }
 }

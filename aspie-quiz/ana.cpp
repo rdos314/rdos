@@ -506,7 +506,8 @@ int main(int argc, char **argv)
 	 Quiz[20]->WriteRetest("retests5.htm");
 	 Quiz[21]->WriteRetest("retests6.htm");
 	 Quiz[22]->WriteRetest("retests7.htm");
-	 Quiz[22]->WriteVersionRetest("vervar.htm");
+	 Quiz[23]->WriteRetest("retests8.htm");
+	 Quiz[23]->WriteVersionRetest("vervar.htm");
 
 	 Quiz[16]->WritePictureRating("imgrate1.htm");
 	 Quiz[17]->WritePictureRating("imgrate2.htm");
@@ -539,6 +540,7 @@ int main(int argc, char **argv)
 
 	 Quiz[19]->WriteLSAS("");
 	 Quiz[23]->WriteMDQ("");
+	 Quiz[24]->WriteADD("");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 

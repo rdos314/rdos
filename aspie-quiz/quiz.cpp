@@ -3363,6 +3363,17 @@ void TQuiz::WriteMDQ(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteADD ##########################
+*   Purpose....: Write ADD test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteADD(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -7003,7 +7014,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs7.htm\">overview</a> <a href=\"rels7.htm\">related questions</a> <a href=\"refs7.htm\">referer sites</a> <a href=\"retests7.htm\">score stability</a> ");
+	file.Write(" <a href=\"quizs7.htm\">overview</a> <a href=\"rels7.htm\">related questions</a> <a href=\"refs7.htm\">referer sites</a> <a href=\"retests7.htm\">score stability</a>");
 	file.Write("<br>");
 #endif
 
@@ -7020,7 +7031,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs8.htm\">overview</a> <a href=\"rels8.htm\">related questions</a> <a href=\"refs8.htm\">referer sites</a> <a href=\"retests8.htm\">score stability</a> ");
+	file.Write(" <a href=\"quizs8.htm\">overview</a> <a href=\"rels8.htm\">related questions</a> <a href=\"refs8.htm\">referer sites</a> <a href=\"retests8.htm\">score stability</a> <a href=\"mdq.htm\">MDQ test</a>");
 	file.Write("<br>");
 #endif
 
@@ -7037,7 +7048,7 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs9.htm\">overview</a> <a href=\"rels9.htm\">related questions</a> <a href=\"refs9.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs9.htm\">overview</a> <a href=\"rels9.htm\">related questions</a> <a href=\"refs9.htm\">referer sites</a> <a href=\"amen-add.htm\">Dr Amen's ADD test</a>");
 	file.Write("<br>");
 #endif
 

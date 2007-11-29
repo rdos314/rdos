@@ -274,10 +274,10 @@ void TQuizS5::SetupTexts()
   Quiz[31].MyGroup = GROUP_NT_TALENT;
   Quiz[32].MyGroup = GROUP_NT_SENSORY;
   Quiz[33].MyGroup = GROUP_NT_TALENT;
-  Quiz[34].MyGroup = GROUP_NT_TALENT;
+  Quiz[34].MyGroup = GROUP_ACTIVITY;
   Quiz[35].MyGroup = GROUP_NT_TALENT;
   Quiz[36].MyGroup = GROUP_NT_TALENT;
-  Quiz[37].MyGroup = GROUP_NT_TALENT;
+  Quiz[37].MyGroup = GROUP_ACTIVITY;
   Quiz[38].MyGroup = GROUP_NT_SOCIAL;
   Quiz[39].MyGroup = GROUP_NT_HUNTING;
   Quiz[40].MyGroup = GROUP_ASPIE_SOCIAL;
@@ -359,7 +359,7 @@ void TQuizS5::SetupTexts()
   Quiz[116].MyGroup = GROUP_MIXED;
   Quiz[117].MyGroup = GROUP_MIXED;
   Quiz[118].MyGroup = GROUP_MIXED;
-  Quiz[119].MyGroup = GROUP_MIXED;
+  Quiz[119].MyGroup = GROUP_ACTIVITY;
   Quiz[120].MyGroup = GROUP_MIXED;
   Quiz[121].MyGroup = GROUP_MIXED;
   Quiz[122].MyGroup = GROUP_MIXED;
