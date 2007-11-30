@@ -460,11 +460,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].PosName = "NT ability problem";
 	Group[GROUP_NT_TALENT].NegName = "NT ability";
 
-	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-
-	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+	Group[GROUP_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie communication";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie communication problem";
@@ -493,7 +490,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT compulsion problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT compulsion";
 
-	Group[GROUP_ACTIVITY].PosName = "ADD activity";
+	Group[GROUP_ACTIVITY].PosName = "Aspie activity";
 	Group[GROUP_ACTIVITY].NegName = "NT activity";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
@@ -521,11 +518,8 @@ void TQuiz::Init()
 	Group[GROUP_NT_TALENT].PosName = "NT talang problem";
 	Group[GROUP_NT_TALENT].NegName = "NT talang";
 
-	Group[GROUP_ASPIE_SOCIAL].PosName = "Aspie social";
-	Group[GROUP_ASPIE_SOCIAL].NegName = "Aspie social problem";
-
-	Group[GROUP_NT_SOCIAL].PosName = "NT social problem";
-	Group[GROUP_NT_SOCIAL].NegName = "NT social";
+	Group[GROUP_SOCIAL].PosName = "Aspie social";
+	Group[GROUP_SOCIAL].NegName = "NT social";
 
 	Group[GROUP_ASPIE_NVC].PosName = "Aspie kommunikation";
 	Group[GROUP_ASPIE_NVC].NegName = "Aspie kommunikation problem";
@@ -535,7 +529,7 @@ void TQuiz::Init()
 
 	Group[GROUP_SEX].PosName = "Avvikande sexualitet";
 	Group[GROUP_SEX].NegName = "Normal sexualitet";
-                               
+
 	Group[GROUP_PARANOID].PosName = "Paranoia";
 	Group[GROUP_PARANOID].NegName = "Paranoia problem";
 
@@ -554,7 +548,7 @@ void TQuiz::Init()
 	Group[GROUP_NT_OBSESSION].PosName = "NT tvång problem";
 	Group[GROUP_NT_OBSESSION].NegName = "NT tvång";
 
-	Group[GROUP_ACTIVITY].PosName = "ADD aktivitet";
+	Group[GROUP_ACTIVITY].PosName = "Aspie aktivitet";
 	Group[GROUP_ACTIVITY].NegName = "NT aktivity";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
@@ -970,13 +964,9 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_NT_TALENT");
                 break;
 
-            case GROUP_ASPIE_SOCIAL:
-                file.Write("GROUP_ASPIE_SOCIAL");
-                break;
-
-            case GROUP_NT_SOCIAL:
-                file.Write("GROUP_NT_SOCIAL");
-                break;
+			case GROUP_SOCIAL:
+				file.Write("GROUP_SOCIAL");
+				break;
 
             case GROUP_ASPIE_NVC:
                 file.Write("GROUP_ASPIE_NVC");
@@ -3533,11 +3523,11 @@ void TQuiz::WriteReferer(TFile &file, TReferer *ref)
 	    WriteFieldHeader(file, 6);
 
 #ifdef ENGLISH
-		file.Write("<a href=\"http://www.rdos.net/eng/poly12.php?");
+		file.Write("<a href=\"http://www.rdos.net/eng/poly12b.php?");
 #endif
 
 #ifdef SWEDISH
-		file.Write("<a href=\"http://www.rdos.net/sv/poly12.php?");
+		file.Write("<a href=\"http://www.rdos.net/sv/poly12b.php?");
 #endif
 
         for (grp = 0; grp < 12; grp++)
@@ -6439,14 +6429,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_DISABILITY");
 	        break;
 	            
-	    case GROUP_ASPIE_SOCIAL:
-	        file->Write("ASPIE_SOCIAL");
-	        break;
-	            
-	    case GROUP_NT_SOCIAL:
-	        file->Write("NT_SOCIAL");
-	        break;
-	            
+		case GROUP_SOCIAL:
+			file->Write("SOCIAL");
+			break;
+
 	    case GROUP_ASPIE_NVC:
 	        file->Write("ASPIE_NVC");
 	        break;
