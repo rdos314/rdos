@@ -278,7 +278,7 @@ void TQuizS1::SetupTexts()
   Quiz[44].MyGroup = GROUP_NT_NVC;
   Quiz[45].MyGroup = GROUP_SOCIAL;
   Quiz[46].MyGroup = GROUP_SOCIAL;
-  Quiz[47].MyGroup = GROUP_SOCIAL;
+  Quiz[47].MyGroup = GROUP_NT_OBSESSION;
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_SOCIAL;
   Quiz[50].MyGroup = GROUP_SOCIAL;

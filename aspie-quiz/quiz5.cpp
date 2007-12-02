@@ -295,7 +295,7 @@ void TQuiz5::SetupTexts()
 	Quiz[62].MyGroup = GROUP_SOCIAL;
 	Quiz[63].MyGroup = GROUP_SOCIAL;
 	Quiz[64].MyGroup = GROUP_SOCIAL;
-	Quiz[65].MyGroup = GROUP_SOCIAL;
+	Quiz[65].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[66].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[67].MyGroup = GROUP_NT_HUNTING;
 	Quiz[68].MyGroup = GROUP_NT_OBSESSION;

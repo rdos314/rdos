@@ -244,8 +244,8 @@ void TQuizR2::SetupTexts()
   Quiz[62].MyGroup = GROUP_MIXED;
   Quiz[63].MyGroup = GROUP_MIXED;
   Quiz[64].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[65].MyGroup = GROUP_SOCIAL;
-  Quiz[66].MyGroup = GROUP_SOCIAL;
+  Quiz[65].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[66].MyGroup = GROUP_NT_OBSESSION;
   Quiz[67].MyGroup = GROUP_SOCIAL;
   Quiz[68].MyGroup = GROUP_NT_NVC;
   Quiz[69].MyGroup = GROUP_SOCIAL;

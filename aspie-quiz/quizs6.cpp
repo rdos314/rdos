@@ -395,12 +395,12 @@ void TQuizS6::SetupTexts()
   Quiz[145].MyGroup = GROUP_SOCIAL;
   Quiz[146].MyGroup = GROUP_ENVIRONMENT;
   Quiz[147].MyGroup = GROUP_NT_SENSORY;
-  Quiz[148].MyGroup = GROUP_SOCIAL;
+  Quiz[148].MyGroup = GROUP_NT_OBSESSION;
   Quiz[149].MyGroup = GROUP_SOCIAL;
-  Quiz[150].MyGroup = GROUP_SOCIAL;
-  Quiz[151].MyGroup = GROUP_SOCIAL;
+  Quiz[150].MyGroup = GROUP_NT_OBSESSION;
+  Quiz[151].MyGroup = GROUP_NT_OBSESSION;
   Quiz[152].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[153].MyGroup = GROUP_SOCIAL;
+  Quiz[153].MyGroup = GROUP_NT_OBSESSION;
   Quiz[154].MyGroup = GROUP_NT_OBSESSION;
   Quiz[155].MyGroup = GROUP_NT_OBSESSION;
   Quiz[156].MyGroup = GROUP_NT_OBSESSION;
