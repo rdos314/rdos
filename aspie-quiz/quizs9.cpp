@@ -399,11 +399,11 @@ void TQuizS9::SetupTexts()
   Quiz[167].MyGroup = GROUP_ACTIVITY;
   Quiz[168].MyGroup = GROUP_ACTIVITY;
   Quiz[169].MyGroup = GROUP_ACTIVITY;
-  Quiz[170].MyGroup = GROUP_NT_NVC;
+  Quiz[170].MyGroup = GROUP_ACTIVITY;
   Quiz[171].MyGroup = GROUP_ACTIVITY;
   Quiz[172].MyGroup = GROUP_ACTIVITY;
   Quiz[173].MyGroup = GROUP_ACTIVITY;
-  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_ACTIVITY;
   Quiz[175].MyGroup = GROUP_ACTIVITY;
   Quiz[176].MyGroup = GROUP_ENVIRONMENT;
   Quiz[177].MyGroup = GROUP_ACTIVITY;
@@ -438,7 +438,7 @@ void TQuizS9::SetupTexts()
   Quiz[206].MyGroup = GROUP_NT_NVC;
   Quiz[207].MyGroup = GROUP_NT_NVC;
   Quiz[208].MyGroup = GROUP_SOCIAL;
-  Quiz[209].MyGroup = GROUP_NT_NVC;
+  Quiz[209].MyGroup = GROUP_ENVIRONMENT;
   Quiz[210].MyGroup = GROUP_ENVIRONMENT;
   Quiz[211].MyGroup = GROUP_SOCIAL;
   Quiz[212].MyGroup = GROUP_MIXED;
@@ -448,7 +448,7 @@ void TQuizS9::SetupTexts()
   Quiz[216].MyGroup = GROUP_ENVIRONMENT;
   Quiz[217].MyGroup = GROUP_ENVIRONMENT;
   Quiz[218].MyGroup = GROUP_ACTIVITY;
-  Quiz[219].MyGroup = GROUP_MIXED;
+  Quiz[219].MyGroup = GROUP_NT_TALENT;
   Quiz[220].MyGroup = GROUP_NT_TALENT;
   Quiz[221].MyGroup = GROUP_NT_TALENT;
   Quiz[222].MyGroup = GROUP_NT_TALENT;
@@ -457,13 +457,13 @@ void TQuizS9::SetupTexts()
   Quiz[225].MyGroup = GROUP_ENVIRONMENT;
   Quiz[226].MyGroup = GROUP_ENVIRONMENT;
   Quiz[227].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[228].MyGroup = GROUP_NT_NVC;
-  Quiz[229].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[228].MyGroup = GROUP_SOCIAL;
+  Quiz[229].MyGroup = GROUP_ACTIVITY;
   Quiz[230].MyGroup = GROUP_ENVIRONMENT;
   Quiz[231].MyGroup = GROUP_ACTIVITY;
   Quiz[232].MyGroup = GROUP_ACTIVITY;
   Quiz[233].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[234].MyGroup = GROUP_MIXED;
+  Quiz[234].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[235].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[236].MyGroup = GROUP_NT_TALENT;
@@ -1908,7 +1908,7 @@ void TQuizS9::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
