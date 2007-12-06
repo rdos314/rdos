@@ -641,13 +641,13 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[23]->WriteQuizWiki("s9.txt");
+	  Quiz[24]->WriteQuizWiki("s10.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "s9.txt");
+//	 TQuiz::WikiToQuiz("wiki.txt", "s10.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
