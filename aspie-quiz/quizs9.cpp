@@ -1008,7 +1008,8 @@ void TQuizS9::InitReferers()
 	AddReferer("smogon.com", "smogon.com/forums/showthread.php?t=29171");
 	AddReferer("mommyconnection.org", "mommyconnection.org/board/index.php/topic,2840.0.html");
 	AddReferer("calientemamas.com", "calientemamas.com/forum_posts.asp?TID=12136");
-
+	AddReferer("forums.britxbox.co.uk", "forums.britxbox.co.uk/viewtopic.php?t=54722");
+	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
 }
 
 /*##################  TQuizS9::LoadReferers ##########################
@@ -1278,6 +1279,8 @@ void TQuizS9::SetupControlGroups()
 	DefineNt("smogon.com");
 	DefineNt("mommyconnection.org");
 	DefineNt("calientemamas.com");
+	DefineNt("forums.britxbox.co.uk");
+	DefineNt("goonfleet.com");
 
 	DefineAspie("wrongplanet.net");
 	DefineAspie("livejournal.com/community/asperger");
