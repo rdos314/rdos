@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS10::TQuizS10(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9)
-  : TQuiz(154),
+  : TQuiz(194),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -89,7 +89,7 @@ TQuizS10::TQuizS10(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Qui
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -128,8 +128,8 @@ int TQuizS10::GetPcaCount()
 *##########################################################################*/
 int TQuizS10::GetCatCount(int Question)
 {
-	if (Question >= 158 && Question <= 235)
-		return 5;
+	if (Question >= 168 && Question <= 187)
+		return 2;
 	else
 		return 3;
 }
@@ -143,7 +143,7 @@ int TQuizS10::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS10::GetQuizN()
 {
-	return 154;
+	return 168;
 }
 
 /*##########################################################################
@@ -187,161 +187,6 @@ void TQuizS10::WriteLongName(TFile &File)
 *##########################################################################*/
 void TQuizS10::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 26);
-  DefineID(2, 151);
-  DefineID(3, 269);
-  DefineID(4, 20);
-  DefineID(5, 100);
-  DefineID(6, 85);
-  DefineID(7, 23);
-  DefineID(8, 497);
-  DefineID(9, 861);
-  DefineID(10, 519);
-  DefineID(11, 5);
-  DefineID(12, 695);
-  DefineID(13, 599);
-  DefineID(14, 606);
-  DefineID(15, 3);
-  DefineID(16, 6);
-  DefineID(17, 397);
-  DefineID(18, 129);
-  DefineID(19, 743);
-  DefineID(20, 240);
-  DefineID(21, 319);
-  DefineID(22, 316);
-  DefineID(23, 25);
-  DefineID(24, 249);
-  DefineID(25, 37);
-  DefineID(26, 361);
-  DefineID(27, 39);
-  DefineID(28, 36);
-  DefineID(29, 596);
-  DefineID(30, 591);
-  DefineID(31, 595);
-  DefineID(32, 740);
-  DefineID(33, 282);
-  DefineID(34, 97);
-  DefineID(35, 367);
-  DefineID(36, 272);
-  DefineID(37, 153);
-  DefineID(38, 516);
-  DefineID(39, 616);
-  DefineID(40, 958);
-  DefineID(41, 959);
-  DefineID(42, 518);
-  DefineID(43, 767);
-  DefineID(44, 66);
-  DefineID(45, 552);
-  DefineID(46, 507);
-  DefineID(47, 923);
-  DefineID(48, 856);
-  DefineID(49, 73);
-  DefineID(50, 858);
-  DefineID(51, 859);
-  DefineID(52, 454);
-  DefineID(53, 279);
-  DefineID(54, 495);
-  DefineID(55, 378);
-  DefineID(56, 737);
-  DefineID(57, 32);
-  DefineID(58, 922);
-  DefineID(59, 857);
-  DefineID(60, 115);
-  DefineID(61, 765);
-  DefineID(62, 731);
-  DefineID(63, 547);
-  DefineID(64, 403);
-  DefineID(65, 712);
-  DefineID(66, 359);
-  DefineID(67, 575);
-  DefineID(68, 590);
-  DefineID(69, 15);
-  DefineID(70, 589);
-  DefineID(71, 570);
-  DefineID(72, 17);
-  DefineID(73, 572);
-  DefineID(74, 574);
-  DefineID(75, 234);
-  DefineID(76, 401);
-  DefineID(77, 536);
-  DefineID(78, 600);
-  DefineID(79, 487);
-  DefineID(80, 130);
-  DefineID(81, 83);
-  DefineID(82, 86);
-  DefineID(83, 82);
-  DefineID(84, 84);
-  DefineID(85, 226);
-  DefineID(86, 551);
-  DefineID(87, 707);
-  DefineID(88, 128);
-  DefineID(89, 95);
-  DefineID(90, 255);
-  DefineID(91, 265);
-  DefineID(92, 741);
-  DefineID(93, 708);
-  DefineID(94, 726);
-  DefineID(95, 402);
-  DefineID(96, 582);
-  DefineID(97, 448);
-  DefineID(98, 439);
-  DefineID(99, 581);
-  DefineID(100, 926);
-  DefineID(101, 925);
-  DefineID(102, 70);
-  DefineID(103, 433);
-  DefineID(104, 509);
-  DefineID(105, 510);
-  DefineID(106, 514);
-  DefineID(107, 44);
-  DefineID(108, 111);
-  DefineID(109, 862);
-  DefineID(110, 53);
-  DefineID(111, 54);
-  DefineID(112, 61);
-  DefineID(113, 48);
-  DefineID(114, 503);
-  DefineID(115, 385);
-  DefineID(116, 632);
-  DefineID(117, 871);
-  DefineID(118, 50);
-  DefineID(119, 113);
-  DefineID(120, 46);
-  DefineID(121, 89);
-  DefineID(122, 940);
-  DefineID(123, 47);
-  DefineID(124, 866);
-  DefineID(125, 864);
-  DefineID(126, 865);
-  DefineID(127, 781);
-  DefineID(128, 443);
-  DefineID(129, 601);
-  DefineID(130, 31);
-  DefineID(131, 718);
-  DefineID(132, 167);
-  DefineID(133, 93);
-  DefineID(134, 473);
-  DefineID(135, 362);
-  DefineID(136, 745);
-  DefineID(137, 278);
-  DefineID(138, 78);
-  DefineID(139, 549);
-  DefineID(140, 126);
-  DefineID(141, 174);
-  DefineID(142, 227);
-  DefineID(143, 55);
-  DefineID(144, 123);
-  DefineID(145, 739);
-  DefineID(146, 613);
-  DefineID(147, 715);
-  DefineID(148, 713);
-  DefineID(149, 545);
-  DefineID(150, 262);
-  DefineID(151, 724);
-  DefineID(152, 723);
-  DefineID(153, 250);
 }
 
 /*##########################################################################
@@ -538,6 +383,49 @@ void TQuizS10::SetupTexts()
   Quiz[152].MyGroup = GROUP_ENVIRONMENT;
   Quiz[153].MyGroup = GROUP_ASPIE_TALENT;
 
+  Quiz[154].MyGroup = GROUP_MIXED;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_MIXED;
+  Quiz[183].MyGroup = GROUP_MIXED;
+  Quiz[184].MyGroup = GROUP_MIXED;
+  Quiz[185].MyGroup = GROUP_MIXED;
+  Quiz[186].MyGroup = GROUP_MIXED;
+  Quiz[187].MyGroup = GROUP_MIXED;
+
+  Quiz[188].MyGroup = GROUP_NT_TALENT;
+  Quiz[189].MyGroup = GROUP_NT_TALENT;
+  Quiz[190].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[191].MyGroup = GROUP_MIXED;
+  Quiz[192].MyGroup = GROUP_ACTIVITY;
+  Quiz[193].MyGroup = GROUP_SOCIAL;
+
 #ifdef ENGLISH
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
@@ -693,6 +581,50 @@ void TQuizS10::SetupTexts()
   Quiz[150].Text = "Do you find it easy to estimate the age of people?";
   Quiz[151].Text = "Do you have a good sense of what time it is?";
   Quiz[152].Text = "Are you gracious about criticism, correction and direction?";
+
+  Quiz[153].Text = "Do you frequently misplace things?";
+  Quiz[154].Text = "Do you turn words around in conversations?";
+  Quiz[155].Text = "Do you have a tendency to turn off when asked questions in social situation?";
+  Quiz[156].Text = "Do you have a tendency to become stuck when asked questions in social situation?";
+  Quiz[157].Text = "Are you self-centered?";
+  Quiz[158].Text = "Do you have immature interests?";
+  Quiz[159].Text = "Do you have trouble with authority?";
+  Quiz[160].Text = "Do you have good self-esteem?";
+  Quiz[161].Text = "Do you respond quickly to slights?";
+  Quiz[162].Text = "Do you find it natural to go through established channels?";
+  Quiz[163].Text = "Do you follow expected procedures?";
+  Quiz[164].Text = "Do you prefer to read directions only when all else have failed?";
+  Quiz[165].Text = "Do you have problems starting and / or finishing projects?";
+  Quiz[166].Text = "Are you poor at organizing your work and / or life?";
+  Quiz[167].Text = "Do you like to organize your work and / or life?";
+
+  Quiz[168].Text = "DYSLEXIA - Do you find difficulty in telling left from right?";
+  Quiz[169].Text = "DYSLEXIA - Is map reading or finding your way to a strange place confusing?";
+  Quiz[170].Text = "DYSLEXIA - Do you dislike reading aloud?";
+  Quiz[171].Text = "DYSLEXIA - Do you take longer than you should to read a page of a book?";
+  Quiz[172].Text = "DYSLEXIA - Do you find it difficult to remember the sense of what you have read?";
+  Quiz[173].Text = "DYSLEXIA - Do you dislike reading long books?";
+  Quiz[174].Text = "DYSLEXIA - Is your spelling poor?";
+  Quiz[175].Text = "DYSLEXIA - Is your writing difficult to read?";
+  Quiz[176].Text = "DYSLEXIA - Do you get confused if you have to speak in public?";
+  Quiz[177].Text = "DYSLEXIA - Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[178].Text = "DYSLEXIA - When you have to say a long word, do you sometimes find it difficult to get all the sounds in the right order?";
+  Quiz[179].Text = "DYSLEXIA - Do you find it difficult to do sums in your head without using your fingers or paper?";
+  Quiz[180].Text = "DYSLEXIA - When using the telephone, do you tend to get the numbers mixed up when you dial?";
+  Quiz[181].Text = "DYSLEXIA - Do you find it difficult to say the months of the year forwards in a fluent manner?";
+  Quiz[182].Text = "DYSLEXIA - Do you find it difficult to say the months of the year backwards?";
+  Quiz[183].Text = "DYSLEXIA - Do you mix up dates and times and miss appointments?";
+  Quiz[184].Text = "DYSLEXIA - When writing cheques, do you frequently find yourself making mistakes?";
+  Quiz[185].Text = "DYSLEXIA - Do you find forms difficult and confusing?";
+  Quiz[186].Text = "DYSLEXIA - Do you mix up bus numbers like 95 and 59?";
+  Quiz[187].Text = "DYSLEXIA - When you were at school, did you find it hard to learn your multiplication tables?";
+
+  Quiz[188].Text = "Dyslexia";
+  Quiz[189].Text = "Dyscalculia";
+  Quiz[190].Text = "OCD";
+  Quiz[191].Text = "ODD";
+  Quiz[192].Text = "Bipolar";
+  Quiz[193].Text = "Social phobia";
 
 #endif
 
@@ -852,6 +784,50 @@ void TQuizS10::SetupTexts()
   Quiz[151].Text = "Har du ett bra sinne för hur mycket klockan är?";
   Quiz[152].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
 
+  Quiz[153].Text = "Placerar du ofta saker på fel ställe?";
+  Quiz[154].Text = "Vänder du på ord i konversationer?";
+  Quiz[155].Text = "Har du en tendens att stänga av när du får frågor i sociala situationer?";
+  Quiz[156].Text = "Låser det sig för dig när du får frågor i sociala situationer?";
+  Quiz[157].Text = "Är du självcentrerad?";
+  Quiz[158].Text = "Har du omogna intressen?";
+  Quiz[159].Text = "Har du problem med auktoriteter?";
+  Quiz[160].Text = "Har du bra självförtroende?";
+  Quiz[161].Text = "Reagerar du snabbt på förolämpningar?";
+  Quiz[162].Text = "Tycker du det är naturligt att gå genom etablerade kanaler?";
+  Quiz[163].Text = "Följer du förväntade procedurer?";
+  Quiz[164].Text = "Föredrar du att läsa instruktioner enbart när allt annat har misslyckats?";
+  Quiz[165].Text = "Har du problem att starta och / eller slutföra projekt?";
+  Quiz[166].Text = "Är du dålig på att organisera ditt arbete och / eller liv?";
+  Quiz[167].Text = "Tycker du om att organisera ditt arbete och / eller liv?";
+
+  Quiz[168].Text = "DYSLEXIA - Do you find difficulty in telling left from right?";
+  Quiz[169].Text = "DYSLEXIA - Is map reading or finding your way to a strange place confusing?";
+  Quiz[170].Text = "DYSLEXIA - Do you dislike reading aloud?";
+  Quiz[171].Text = "DYSLEXIA - Do you take longer than you should to read a page of a book?";
+  Quiz[172].Text = "DYSLEXIA - Do you find it difficult to remember the sense of what you have read?";
+  Quiz[173].Text = "DYSLEXIA - Do you dislike reading long books?";
+  Quiz[174].Text = "DYSLEXIA - Is your spelling poor?";
+  Quiz[175].Text = "DYSLEXIA - Is your writing difficult to read?";
+  Quiz[176].Text = "DYSLEXIA - Do you get confused if you have to speak in public?";
+  Quiz[177].Text = "DYSLEXIA - Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[178].Text = "DYSLEXIA - When you have to say a long word, do you sometimes find it difficult to get all the sounds in the right order?";
+  Quiz[179].Text = "DYSLEXIA - Do you find it difficult to do sums in your head without using your fingers or paper?";
+  Quiz[180].Text = "DYSLEXIA - When using the telephone, do you tend to get the numbers mixed up when you dial?";
+  Quiz[181].Text = "DYSLEXIA - Do you find it difficult to say the months of the year forwards in a fluent manner?";
+  Quiz[182].Text = "DYSLEXIA - Do you find it difficult to say the months of the year backwards?";
+  Quiz[183].Text = "DYSLEXIA - Do you mix up dates and times and miss appointments?";
+  Quiz[184].Text = "DYSLEXIA - When writing cheques, do you frequently find yourself making mistakes?";
+  Quiz[185].Text = "DYSLEXIA - Do you find forms difficult and confusing?";
+  Quiz[186].Text = "DYSLEXIA - Do you mix up bus numbers like 95 and 59?";
+  Quiz[187].Text = "DYSLEXIA - When you were at school, did you find it hard to learn your multiplication tables?";
+
+  Quiz[188].Text = "Dyslexi";
+  Quiz[189].Text = "Dyskaluli";
+  Quiz[190].Text = "OCD";
+  Quiz[191].Text = "ODD";
+  Quiz[192].Text = "Bipolär";
+  Quiz[193].Text = "Social fobi";
+
 #endif
 
 }
@@ -993,12 +969,12 @@ void TQuizS10::LoadPopulations()
 	{
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-		Row.Quiz[236] = Row.Dyslexia + 1;
-		Row.Quiz[237] = Row.Dyscalculia + 1;
-		Row.Quiz[238] = Row.OCD + 1;
-		Row.Quiz[239] = Row.ODD + 1;
-		Row.Quiz[240] = Row.Bipolar + 1;
-		Row.Quiz[241] = Row.Social + 1;
+		Row.Quiz[188] = Row.Dyslexia + 1;
+		Row.Quiz[189] = Row.Dyscalculia + 1;
+		Row.Quiz[190] = Row.OCD + 1;
+		Row.Quiz[191] = Row.ODD + 1;
+		Row.Quiz[192] = Row.Bipolar + 1;
+		Row.Quiz[193] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1196,7 +1172,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 9, 9);
     DefineCross(QuizS9, 10, 10);
     DefineCross(QuizS9, 11, 11);
-    DefineCross(QuizS9, 12, 12);
+	DefineCross(QuizS9, 12, 12);
     DefineCross(QuizS9, 13, 13);
     DefineCross(QuizS9, 14, 14);
     DefineCross(QuizS9, 15, 15);
@@ -1205,7 +1181,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 18, 18);
     DefineCross(QuizS9, 19, 19);
     DefineCross(QuizS9, 20, 21);
-    DefineCross(QuizS9, 21, 22);
+	DefineCross(QuizS9, 21, 22);
     DefineCross(QuizS9, 22, 24);
     DefineCross(QuizS9, 23, 25);
     DefineCross(QuizS9, 24, 26);
@@ -1223,7 +1199,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 36, 38);
     DefineCross(QuizS9, 37, 137);
     DefineCross(QuizS9, 38, 20);
-    DefineCross(QuizS9, 39, 153);
+	DefineCross(QuizS9, 39, 153);
     DefineCross(QuizS9, 40, 154);
     DefineCross(QuizS9, 41, 23);
     DefineCross(QuizS9, 42, 46);
@@ -1232,7 +1208,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 45, 47);
     DefineCross(QuizS9, 46, 42);
     DefineCross(QuizS9, 47, 51);
-    DefineCross(QuizS9, 48, 48);
+	DefineCross(QuizS9, 48, 48);
     DefineCross(QuizS9, 49, 49);
     DefineCross(QuizS9, 50, 52);
     DefineCross(QuizS9, 51, 50);
@@ -1250,7 +1226,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 63, 63);
     DefineCross(QuizS9, 64, 64);
     DefineCross(QuizS9, 65, 65);
-    DefineCross(QuizS9, 66, 66);
+	DefineCross(QuizS9, 66, 66);
     DefineCross(QuizS9, 67, 67);
     DefineCross(QuizS9, 68, 68);
     DefineCross(QuizS9, 69, 69);
@@ -1259,7 +1235,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 72, 72);
     DefineCross(QuizS9, 73, 73);
     DefineCross(QuizS9, 74, 74);
-    DefineCross(QuizS9, 75, 75);
+	DefineCross(QuizS9, 75, 75);
     DefineCross(QuizS9, 76, 76);
     DefineCross(QuizS9, 77, 77);
     DefineCross(QuizS9, 78, 78);
@@ -1277,7 +1253,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 90, 33);
     DefineCross(QuizS9, 91, 89);
     DefineCross(QuizS9, 92, 36);
-    DefineCross(QuizS9, 93, 90);
+	DefineCross(QuizS9, 93, 90);
     DefineCross(QuizS9, 94, 91);
     DefineCross(QuizS9, 95, 92);
     DefineCross(QuizS9, 96, 93);
@@ -1286,7 +1262,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 99, 96);
     DefineCross(QuizS9, 100, 97);
     DefineCross(QuizS9, 101, 98);
-    DefineCross(QuizS9, 102, 99);
+	DefineCross(QuizS9, 102, 99);
     DefineCross(QuizS9, 103, 100);
     DefineCross(QuizS9, 104, 101);
     DefineCross(QuizS9, 105, 102);
@@ -1304,7 +1280,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 117, 114);
     DefineCross(QuizS9, 118, 115);
     DefineCross(QuizS9, 119, 116);
-    DefineCross(QuizS9, 120, 117);
+	DefineCross(QuizS9, 120, 117);
     DefineCross(QuizS9, 121, 118);
     DefineCross(QuizS9, 122, 119);
     DefineCross(QuizS9, 123, 120);
@@ -1313,7 +1289,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 126, 123);
     DefineCross(QuizS9, 127, 124);
     DefineCross(QuizS9, 128, 125);
-    DefineCross(QuizS9, 129, 126);
+	DefineCross(QuizS9, 129, 126);
     DefineCross(QuizS9, 130, 127);
     DefineCross(QuizS9, 131, 128);
     DefineCross(QuizS9, 132, 129);
@@ -1331,12 +1307,57 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 144, 143);
     DefineCross(QuizS9, 145, 142);
     DefineCross(QuizS9, 146, 145);
-    DefineCross(QuizS9, 147, 146);
-    DefineCross(QuizS9, 148, 147);
-    DefineCross(QuizS9, 149, 148);
-    DefineCross(QuizS9, 150, 149);
-    DefineCross(QuizS9, 151, 150);
-    DefineCross(QuizS9, 152, 151);
+	DefineCross(QuizS9, 147, 146);
+	DefineCross(QuizS9, 148, 147);
+	DefineCross(QuizS9, 149, 148);
+	DefineCross(QuizS9, 150, 149);
+	DefineCross(QuizS9, 151, 150);
+	DefineCross(QuizS9, 152, 151);
+
+	DefineGlobalId(153, 1040);
+	DefineGlobalId(154, 1041);
+	DefineGlobalId(155, 1042);
+	DefineGlobalId(156, 1043);
+	DefineGlobalId(157, 1044);
+	DefineGlobalId(158, 1045);
+	DefineGlobalId(159, 1046);
+	DefineGlobalId(160, 1047);
+	DefineGlobalId(161, 1048);
+	DefineGlobalId(162, 1049);
+	DefineGlobalId(163, 1050);
+	DefineGlobalId(164, 1051);
+	DefineGlobalId(165, 1052);
+	DefineGlobalId(166, 1053);
+	DefineGlobalId(167, 1054);
+
+	DefineGlobalId(168, 1055);
+	DefineGlobalId(169, 1056);
+	DefineGlobalId(170, 1057);
+	DefineGlobalId(171, 1058);
+	DefineGlobalId(172, 1059);
+	DefineGlobalId(173, 1060);
+	DefineGlobalId(174, 1061);
+	DefineGlobalId(175, 1062);
+	DefineGlobalId(176, 1063);
+	DefineGlobalId(177, 1064);
+	DefineGlobalId(178, 1065);
+	DefineGlobalId(179, 1066);
+	DefineGlobalId(180, 1067);
+	DefineGlobalId(181, 1068);
+	DefineGlobalId(182, 1069);
+	DefineGlobalId(183, 1070);
+	DefineGlobalId(184, 1071);
+	DefineGlobalId(185, 1072);
+	DefineGlobalId(186, 1073);
+	DefineGlobalId(187, 1074);
+
+	DefineCross(QuizS9, 188, 236);
+	DefineCross(QuizS9, 189, 237);
+	DefineCross(QuizS9, 190, 238);
+	DefineCross(QuizS9, 191, 239);
+	DefineCross(QuizS9, 192, 240);
+	DefineCross(QuizS9, 193, 241);
+
 }
 
 /*##########################################################################
@@ -1521,7 +1542,7 @@ void TQuizS10::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.AddResult)
+		if (Row.DysResult)
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -1547,11 +1568,11 @@ void TQuizS10::ExportExcelAspie(const char *filename)
 
 				sprintf(str, "\"%d\"", ival);
 				file.Write(str);
-    			if (i != N - 1)
-	    			file.Write(", ");
-	    	}
-    		file.Write("\n");
-        }
+				if (i != N - 1)
+					file.Write(", ");
+			}
+			file.Write("\n");
+		}
 	}
 }
 

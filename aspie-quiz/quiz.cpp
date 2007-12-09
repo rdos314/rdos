@@ -6533,8 +6533,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-5</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-5</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Averaged axis loadings</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detailed axis loadings</a><br>\n");
@@ -6565,8 +6565,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Sammanvägda axel faktorer</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detaljerade axel faktorer</a><br>\n");
@@ -7027,6 +7027,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
+	CrossQuiz[24]->WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	CrossQuiz[24]->WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs9.htm\">overview</a> <a href=\"rels9.htm\">related questions</a> <a href=\"refs9.htm\">referer sites</a> <a href=\"retests9.htm\">score stability</a> <a href=\"amen-add.htm\">Dr Amen's ADD test</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs9.htm\">översikt</a> <a href=\"rels9.htm\">relaterade frågor</a> <a href=\"refs9.htm\">referenssajter</a> <a href=\"retests9.htm\">poäng stabilitet</a> ");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
 	WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
@@ -7034,12 +7051,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs9.htm\">overview</a> <a href=\"rels9.htm\">related questions</a> <a href=\"refs9.htm\">referer sites</a> <a href=\"amen-add.htm\">Dr Amen's ADD test</a>");
+	file.Write(" <a href=\"quizs10.htm\">overview</a> <a href=\"rels10.htm\">related questions</a> <a href=\"refs10.htm\">referer sites</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs9.htm\">översikt</a> <a href=\"rels9.htm\">relaterade frågor</a> <a href=\"refs9.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs10.htm\">översikt</a> <a href=\"rels10.htm\">relaterade frågor</a> <a href=\"refs10.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 
