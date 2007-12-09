@@ -434,8 +434,8 @@ void TQuizS9::SetupTexts()
   Quiz[202].MyGroup = GROUP_ENVIRONMENT;
   Quiz[203].MyGroup = GROUP_ENVIRONMENT;
   Quiz[204].MyGroup = GROUP_NT_NVC;
-  Quiz[205].MyGroup = GROUP_MIXED;
-  Quiz[206].MyGroup = GROUP_NT_NVC;
+  Quiz[205].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[206].MyGroup = GROUP_ENVIRONMENT;
   Quiz[207].MyGroup = GROUP_NT_NVC;
   Quiz[208].MyGroup = GROUP_SOCIAL;
   Quiz[209].MyGroup = GROUP_ENVIRONMENT;

@@ -387,14 +387,14 @@ void TQuizS10::SetupTexts()
   Quiz[155].MyGroup = GROUP_MIXED;
   Quiz[156].MyGroup = GROUP_MIXED;
   Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_ENVIRONMENT;
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_MIXED;
   Quiz[161].MyGroup = GROUP_MIXED;
   Quiz[162].MyGroup = GROUP_MIXED;
   Quiz[163].MyGroup = GROUP_MIXED;
   Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_ACTIVITY;
   Quiz[166].MyGroup = GROUP_MIXED;
   Quiz[167].MyGroup = GROUP_MIXED;
 
