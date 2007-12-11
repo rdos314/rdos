@@ -1722,7 +1722,7 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1800,4 +1800,126 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizS10::WriteDyslexia ##########################
+*   Purpose....: Write dyslexia test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS10::WriteDyslexia(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double DysSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double DysMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double DysSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	DysSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.DysResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			DysSum += Row.DysResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	DysMean = DysSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	DysSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.DysResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.DysResult - DysMean;
+			DysSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	DysSd = sqrtl(DysSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.DysResult)
+        {
+            zx = ((long double)Row.DysResult - DysMean) / DysSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean Dyslexia score: %5.1Lf, SD: %5.1Lf\r\n", DysMean, DysSd);
+
+	printf("Dyslexia - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("Dyslexia - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("Dyslexia - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }

@@ -558,6 +558,7 @@ int main(int argc, char **argv)
 //	 Quiz[19]->WriteLSAS("");
 //	 Quiz[23]->WriteMDQ("");
 	 Quiz[24]->WriteADD("");
+	 Quiz[25]->WriteDyslexia("");
 
 	 Quiz[6]->WriteRefererNtCorrelation("exhnt.htm", "Exhibitionism", "dickflash.com");
 
