@@ -182,7 +182,7 @@ void TQuizI::SetupTexts()
 	Quiz[43].MyGroup = GROUP_NT_HUNTING;
 	Quiz[44].MyGroup = GROUP_NT_HUNTING;
 	Quiz[45].MyGroup = GROUP_NT_SENSORY;
-	Quiz[46].MyGroup = GROUP_NT_SENSORY;
+	Quiz[46].MyGroup = GROUP_DYSC;
 	Quiz[47].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[48].MyGroup = GROUP_ACTIVITY;
 	Quiz[49].MyGroup = GROUP_NT_SENSORY;

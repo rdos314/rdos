@@ -419,7 +419,7 @@ void TQuizS7::SetupTexts()
   Quiz[171].MyGroup = GROUP_NT_HUNTING;
   Quiz[172].MyGroup = GROUP_NT_HUNTING;
   Quiz[173].MyGroup = GROUP_NT_HUNTING;
-  Quiz[174].MyGroup = GROUP_NT_SENSORY;
+  Quiz[174].MyGroup = GROUP_DYSC;
   Quiz[175].MyGroup = GROUP_NT_HUNTING;
   Quiz[176].MyGroup = GROUP_NT_HUNTING;
   Quiz[177].MyGroup = GROUP_NT_SENSORY;

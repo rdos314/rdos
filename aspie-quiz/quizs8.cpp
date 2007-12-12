@@ -352,7 +352,7 @@ void TQuizS8::SetupTexts()
   Quiz[118].MyGroup = GROUP_NT_SENSORY;
   Quiz[119].MyGroup = GROUP_NT_SENSORY;
   Quiz[120].MyGroup = GROUP_NT_SENSORY;
-  Quiz[121].MyGroup = GROUP_NT_SENSORY;
+  Quiz[121].MyGroup = GROUP_DYSC;
   Quiz[122].MyGroup = GROUP_PARANOID;
   Quiz[123].MyGroup = GROUP_PARANOID;
   Quiz[124].MyGroup = GROUP_PARANOID;

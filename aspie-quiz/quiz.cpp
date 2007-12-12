@@ -493,6 +493,9 @@ void TQuiz::Init()
 	Group[GROUP_ACTIVITY].PosName = "Aspie activity";
 	Group[GROUP_ACTIVITY].NegName = "NT activity";
 
+	Group[GROUP_DYSC].PosName = "Dyscalculia";
+	Group[GROUP_DYSC].NegName = "Anti-dyscalculia";
+
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
 
@@ -550,6 +553,9 @@ void TQuiz::Init()
 
 	Group[GROUP_ACTIVITY].PosName = "Aspie aktivitet";
 	Group[GROUP_ACTIVITY].NegName = "NT aktivity";
+
+	Group[GROUP_DYSC].PosName = "Dyskalkuli";
+	Group[GROUP_DYSC].NegName = "Anti-dyskalkuli";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -1006,6 +1012,10 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ACTIVITY:
                 file.Write("GROUP_ACTIVITY");
+                break;
+
+            case GROUP_DYSC:
+                file.Write("GROUP_DYSC");
                 break;
 
             default:
@@ -6482,6 +6492,10 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	            
 		case GROUP_ACTIVITY:
 	        file->Write("ACTIVITY");
+	        break;
+	            
+		case GROUP_DYSC:
+	        file->Write("DYSC");
 	        break;
 	            
 	    case GROUP_MIXED:

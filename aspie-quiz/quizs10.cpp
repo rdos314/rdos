@@ -350,7 +350,7 @@ void TQuizS10::SetupTexts()
   Quiz[119].MyGroup = GROUP_NT_SENSORY;
   Quiz[120].MyGroup = GROUP_NT_SENSORY;
   Quiz[121].MyGroup = GROUP_NT_SENSORY;
-  Quiz[122].MyGroup = GROUP_NT_SENSORY;
+  Quiz[122].MyGroup = GROUP_DYSC;
   Quiz[123].MyGroup = GROUP_PARANOID;
   Quiz[124].MyGroup = GROUP_PARANOID;
   Quiz[125].MyGroup = GROUP_PARANOID;
@@ -398,8 +398,8 @@ void TQuizS10::SetupTexts()
   Quiz[166].MyGroup = GROUP_MIXED;
   Quiz[167].MyGroup = GROUP_MIXED;
 
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_DYSC;
+  Quiz[169].MyGroup = GROUP_DYSC;
   Quiz[170].MyGroup = GROUP_MIXED;
   Quiz[171].MyGroup = GROUP_MIXED;
   Quiz[172].MyGroup = GROUP_MIXED;
@@ -409,15 +409,15 @@ void TQuizS10::SetupTexts()
   Quiz[176].MyGroup = GROUP_SOCIAL;
   Quiz[177].MyGroup = GROUP_MIXED;
   Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[179].MyGroup = GROUP_DYSC;
+  Quiz[180].MyGroup = GROUP_DYSC;
   Quiz[181].MyGroup = GROUP_MIXED;
-  Quiz[182].MyGroup = GROUP_MIXED;
-  Quiz[183].MyGroup = GROUP_MIXED;
-  Quiz[184].MyGroup = GROUP_MIXED;
-  Quiz[185].MyGroup = GROUP_MIXED;
-  Quiz[186].MyGroup = GROUP_MIXED;
-  Quiz[187].MyGroup = GROUP_MIXED;
+  Quiz[182].MyGroup = GROUP_DYSC;
+  Quiz[183].MyGroup = GROUP_DYSC;
+  Quiz[184].MyGroup = GROUP_DYSC;
+  Quiz[185].MyGroup = GROUP_DYSC;
+  Quiz[186].MyGroup = GROUP_DYSC;
+  Quiz[187].MyGroup = GROUP_DYSC;
 
   Quiz[188].MyGroup = GROUP_NT_TALENT;
   Quiz[189].MyGroup = GROUP_NT_TALENT;
@@ -1722,7 +1722,7 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
