@@ -131,110 +131,137 @@ int main(int argc, char **argv)
 //	 Quiz[24]->CheckCross();
 	 Quiz[25]->CheckCross();
 
+	printf("all1\r\n");
 	Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
 	Quiz[0]->ExportExcelCase("pca\\male1.dat", PCA_TYPE_MALE);
 	Quiz[0]->ExportExcelCase("pca\\female1.dat", PCA_TYPE_FEMALE);
 
+	printf("all2\r\n");
 	Quiz[1]->ExportExcelCase("pca\\all2.dat", PCA_TYPE_ALL);
 	Quiz[1]->ExportExcelCase("pca\\male2.dat", PCA_TYPE_MALE);
 	Quiz[1]->ExportExcelCase("pca\\female2.dat", PCA_TYPE_FEMALE);
 
+	printf("all3\r\n");
 	 Quiz[2]->ExportExcelCase("pca\\all3.dat", PCA_TYPE_ALL);
 	 Quiz[2]->ExportExcelCase("pca\\male3.dat", PCA_TYPE_MALE);
 	 Quiz[2]->ExportExcelCase("pca\\female3.dat", PCA_TYPE_FEMALE);
 
+	printf("all4\r\n");
 	 Quiz[3]->ExportExcelCase("pca\\all4.dat", PCA_TYPE_ALL);
 	 Quiz[3]->ExportExcelCase("pca\\male4.dat", PCA_TYPE_MALE);
 	 Quiz[3]->ExportExcelCase("pca\\female4.dat", PCA_TYPE_FEMALE);
 
+	printf("all5\r\n");
 	 Quiz[4]->ExportExcelCase("pca\\all5.dat", PCA_TYPE_ALL);
 	 Quiz[4]->ExportExcelCase("pca\\male5.dat", PCA_TYPE_MALE);
 	 Quiz[4]->ExportExcelCase("pca\\female5.dat", PCA_TYPE_FEMALE);
 
+	printf("all6\r\n");
 	 Quiz[5]->ExportExcelCase("pca\\all6.dat", PCA_TYPE_ALL);
 	 Quiz[5]->ExportExcelCase("pca\\male6.dat", PCA_TYPE_MALE);
 	 Quiz[5]->ExportExcelCase("pca\\female6.dat", PCA_TYPE_FEMALE);
 
+	printf("all7\r\n");
 	 Quiz[6]->ExportExcelCase("pca\\all7.dat", PCA_TYPE_ALL);
 	 Quiz[6]->ExportExcelCase("pca\\male7.dat", PCA_TYPE_MALE);
 	 Quiz[6]->ExportExcelCase("pca\\female7.dat", PCA_TYPE_FEMALE);
 
+	printf("all8\r\n");
 	 Quiz[7]->ExportExcelCase("pca\\all8.dat", PCA_TYPE_ALL);
 	 Quiz[7]->ExportExcelCase("pca\\male8.dat", PCA_TYPE_MALE);
 	 Quiz[7]->ExportExcelCase("pca\\female8.dat", PCA_TYPE_FEMALE);
 
+	printf("all9\r\n");
 	 Quiz[8]->ExportExcelCase("pca\\all9.dat", PCA_TYPE_ALL);
 	 Quiz[8]->ExportExcelCase("pca\\male9.dat", PCA_TYPE_MALE);
 	 Quiz[8]->ExportExcelCase("pca\\female9.dat", PCA_TYPE_FEMALE);
 
+	printf("allr1\r\n");
 	 Quiz[9]->ExportExcelCase("pca\\allr1.dat", PCA_TYPE_ALL);
 	 Quiz[9]->ExportExcelCase("pca\\maler1.dat", PCA_TYPE_MALE);
 	 Quiz[9]->ExportExcelCase("pca\\femaler1.dat", PCA_TYPE_FEMALE);
 
+	printf("allr2\r\n");
 	 Quiz[10]->ExportExcelCase("pca\\allr2.dat", PCA_TYPE_ALL);
 	 Quiz[10]->ExportExcelCase("pca\\maler2.dat", PCA_TYPE_MALE);
 	 Quiz[10]->ExportExcelCase("pca\\femaler2.dat", PCA_TYPE_FEMALE);
 
+	printf("allr3\r\n");
 	 Quiz[11]->ExportExcelCase("pca\\allr3.dat", PCA_TYPE_ALL);
 	 Quiz[11]->ExportExcelCase("pca\\maler3.dat", PCA_TYPE_MALE);
 	 Quiz[11]->ExportExcelCase("pca\\femaler3.dat", PCA_TYPE_FEMALE);
 
+	printf("allr4\r\n");
 	 Quiz[12]->ExportExcelCase("pca\\allr4.dat", PCA_TYPE_ALL);
 	 Quiz[12]->ExportExcelCase("pca\\maler4.dat", PCA_TYPE_MALE);
 	 Quiz[12]->ExportExcelCase("pca\\femaler4.dat", PCA_TYPE_FEMALE);
 
+	printf("allr5\r\n");
 	 Quiz[13]->ExportExcelCase("pca\\allr5.dat", PCA_TYPE_ALL);
 	 Quiz[13]->ExportExcelCase("pca\\maler5.dat", PCA_TYPE_MALE);
 	 Quiz[13]->ExportExcelCase("pca\\femaler5.dat", PCA_TYPE_FEMALE);
 
+	printf("allr6\r\n");
 	 Quiz[14]->ExportExcelCase("pca\\allr6.dat", PCA_TYPE_ALL);
 	 Quiz[14]->ExportExcelCase("pca\\maler6.dat", PCA_TYPE_MALE);
 	 Quiz[14]->ExportExcelCase("pca\\femaler6.dat", PCA_TYPE_FEMALE);
 
+	printf("allr7\r\n");
 	 Quiz[15]->ExportExcelCase("pca\\allr7.dat", PCA_TYPE_ALL);
 	 Quiz[15]->ExportExcelCase("pca\\maler7.dat", PCA_TYPE_MALE);
 	 Quiz[15]->ExportExcelCase("pca\\femaler7.dat", PCA_TYPE_FEMALE);
 
+	printf("alls1\r\n");
 	 Quiz[16]->ExportExcelCase("pca\\alls1.dat", PCA_TYPE_ALL);
 	 Quiz[16]->ExportExcelCase("pca\\males1.dat", PCA_TYPE_MALE);
 	 Quiz[16]->ExportExcelCase("pca\\females1.dat", PCA_TYPE_FEMALE);
 
+	printf("alls2\r\n");
 	 Quiz[17]->ExportExcelCase("pca\\alls2.dat", PCA_TYPE_ALL);
 	 Quiz[17]->ExportExcelCase("pca\\males2.dat", PCA_TYPE_MALE);
 	 Quiz[17]->ExportExcelCase("pca\\females2.dat", PCA_TYPE_FEMALE);
 
+	printf("alls3\r\n");
 	 Quiz[18]->ExportExcelCase("pca\\alls3.dat", PCA_TYPE_ALL);
 	 Quiz[18]->ExportExcelCase("pca\\males3.dat", PCA_TYPE_MALE);
 	 Quiz[18]->ExportExcelCase("pca\\females3.dat", PCA_TYPE_FEMALE);
 
+	printf("alls4\r\n");
 	 Quiz[19]->ExportExcelCase("pca\\alls4.dat", PCA_TYPE_ALL);
 	 Quiz[19]->ExportExcelCase("pca\\males4.dat", PCA_TYPE_MALE);
 	 Quiz[19]->ExportExcelCase("pca\\females4.dat", PCA_TYPE_FEMALE);
 
+	printf("alls5\r\n");
 	 Quiz[20]->ExportExcelCase("pca\\alls5.dat", PCA_TYPE_ALL);
 	 Quiz[20]->ExportExcelCase("pca\\males5.dat", PCA_TYPE_MALE);
 	 Quiz[20]->ExportExcelCase("pca\\females5.dat", PCA_TYPE_FEMALE);
 
+	printf("alls6\r\n");
 	 Quiz[21]->ExportExcelCase("pca\\alls6.dat", PCA_TYPE_ALL);
 	 Quiz[21]->ExportExcelCase("pca\\males6.dat", PCA_TYPE_MALE);
 	 Quiz[21]->ExportExcelCase("pca\\females6.dat", PCA_TYPE_FEMALE);
 
+	printf("alls7\r\n");
 	 Quiz[22]->ExportExcelCase("pca\\alls7.dat", PCA_TYPE_ALL);
 	 Quiz[22]->ExportExcelCase("pca\\males7.dat", PCA_TYPE_MALE);
 	 Quiz[22]->ExportExcelCase("pca\\females7.dat", PCA_TYPE_FEMALE);
 
+	printf("alls8\r\n");
 	 Quiz[23]->ExportExcelCase("pca\\alls8.dat", PCA_TYPE_ALL);
 	 Quiz[23]->ExportExcelCase("pca\\males8.dat", PCA_TYPE_MALE);
 	 Quiz[23]->ExportExcelCase("pca\\females8.dat", PCA_TYPE_FEMALE);
 
+	printf("alls9\r\n");
 	 Quiz[24]->ExportExcelCase("pca\\alls9.dat", PCA_TYPE_ALL);
 	 Quiz[24]->ExportExcelCase("pca\\males9.dat", PCA_TYPE_MALE);
 	 Quiz[24]->ExportExcelCase("pca\\females9.dat", PCA_TYPE_FEMALE);
 
+	printf("alls10\r\n");
 	 Quiz[25]->ExportExcelCase("pca\\alls10.dat", PCA_TYPE_ALL);
 	 Quiz[25]->ExportExcelCase("pca\\males10.dat", PCA_TYPE_MALE);
 	 Quiz[25]->ExportExcelCase("pca\\fems10.dat", PCA_TYPE_FEMALE);
 
+	printf("aspie\r\n");
 	 Quiz[0]->ExportExcelAspie("pca\\aspie1.dat");
 	 Quiz[1]->ExportExcelAspie("pca\\aspie2.dat");
 	 Quiz[2]->ExportExcelAspie("pca\\aspie3.dat");
@@ -262,6 +289,7 @@ int main(int argc, char **argv)
 	 Quiz[24]->ExportExcelAspie("pca\\aspies9.dat");
 	 Quiz[25]->ExportExcelAspie("pca\\aspies10.dat");
 
+	printf("import\r\n");
 	 Quiz[0]->ImportMvsp("pca\\all1.txt", PCA_TYPE_ALL);
 
 	 Quiz[1]->ImportMvsp("pca\\all2.txt", PCA_TYPE_ALL);
@@ -364,6 +392,7 @@ int main(int argc, char **argv)
 	 Quiz[25]->ImportMvsp("pca\\males10.txt", PCA_TYPE_MALE);
 	 Quiz[25]->ImportMvsp("pca\\fems10.txt", PCA_TYPE_FEMALE);
 
+	printf("import aspie\r\n");
 	 Quiz[0]->ImportMvspAspie("pca\\aspie1.txt");
 	 Quiz[1]->ImportMvspAspie("pca\\aspie2.txt");
 	 Quiz[2]->ImportMvspAspie("pca\\aspie3.txt");
@@ -391,12 +420,14 @@ int main(int argc, char **argv)
 	 Quiz[24]->ImportMvspAspie("pca\\aspies9.txt");
 	 Quiz[25]->ImportMvspAspie("pca\\aspies10.txt");
 
+	printf("calc global\r\n");
 	 Quiz[25]->CalcGlobal();
 
 //	 Quiz[25]->WritePhpQuestions("q.php");
 //	 Quiz[25]->WriteSetupTexts("q.cpp");
 //	 Quiz[25]->WriteSetupCross("c.cpp");
 
+	printf("referers\r\n");
 	 Quiz[0]->WriteReferers("eval\\ref1.htm");
 	 Quiz[1]->WriteReferers("eval\\ref2.htm");
 	 Quiz[2]->WriteReferers("eval\\ref3.htm");
@@ -424,6 +455,7 @@ int main(int argc, char **argv)
 	 Quiz[24]->WriteReferers("eval\\refs9.htm");
 	 Quiz[25]->WriteReferers("eval\\refs10.htm");
 
+	printf("details\r\n");
 	 Quiz[0]->WriteSumaryTable("eval\\quiz1.htm", FALSE);
 	 Quiz[1]->WriteSumaryTable("eval\\quiz2.htm", FALSE);
 	 Quiz[2]->WriteSumaryTable("eval\\quiz3.htm", FALSE);
@@ -451,6 +483,7 @@ int main(int argc, char **argv)
 	 Quiz[24]->WriteSumaryTable("eval\\quizs9.htm", FALSE);
 	 Quiz[25]->WriteSumaryTable("eval\\quizs10.htm", FALSE);
 
+	printf("rel\r\n");
 	 Quiz[0]->WriteIntercorr("eval\\rel1.htm");
 	 Quiz[1]->WriteIntercorr("eval\\rel2.htm");
 	 Quiz[2]->WriteIntercorr("eval\\rel3.htm");
@@ -478,8 +511,11 @@ int main(int argc, char **argv)
 	 Quiz[24]->WriteIntercorr("eval\\rels9.htm");
 	 Quiz[25]->WriteIntercorr("eval\\rels10.htm");
 
+	printf("group\r\n");
 	 Quiz[25]->WriteGroupTable("eval\\group.htm", TRUE);
+	printf("groupcorr\r\n");
 	 Quiz[25]->WriteGroupCorrTable("eval\\groupcorr.htm");
+	printf("pcaload\r\n");
 	 Quiz[25]->WritePcaLoadTable("eval\\pcaload.htm");
 
 	 Quiz[25]->WriteAverageGroupCorrTable("eval\\avgcorr.htm");
