@@ -62,7 +62,8 @@ TQuizR4::TQuizR4(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizI
 	DefineCross(4, Quiz5);
 	DefineCross(5, Quiz6);
 	DefineCross(6, Quiz7);
-	DefineCross(7, Quiz8);   	DefineCross(8, Quiz9);
+	DefineCross(7, Quiz8);
+	DefineCross(8, Quiz9);
 	DefineCross(9, QuizR1);
 	DefineCross(10, QuizR2);
 	DefineCross(11, QuizR3);

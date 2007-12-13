@@ -434,7 +434,7 @@ void TQuizS3::SetupTexts()
   Quiz[209].MyGroup = GROUP_PARANOID;
 
   Quiz[210].MyGroup = GROUP_NT_TALENT;
-  Quiz[211].MyGroup = GROUP_NT_TALENT;
+  Quiz[211].MyGroup = GROUP_DYSC;
   Quiz[212].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[213].MyGroup = GROUP_MIXED;
   Quiz[214].MyGroup = GROUP_ACTIVITY;

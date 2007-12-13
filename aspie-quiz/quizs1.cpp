@@ -375,7 +375,7 @@ void TQuizS1::SetupTexts()
   Quiz[140].MyGroup = GROUP_ASPIE_SENSORY;
 
   Quiz[141].MyGroup = GROUP_NT_TALENT;
-  Quiz[142].MyGroup = GROUP_NT_TALENT;
+  Quiz[142].MyGroup = GROUP_DYSC;
   Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ACTIVITY;

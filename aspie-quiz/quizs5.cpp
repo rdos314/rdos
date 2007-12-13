@@ -414,7 +414,7 @@ void TQuizS5::SetupTexts()
   Quiz[170].MyGroup = GROUP_ASPIE_HUNTING;
 
   Quiz[171].MyGroup = GROUP_NT_TALENT;
-  Quiz[172].MyGroup = GROUP_NT_TALENT;
+  Quiz[172].MyGroup = GROUP_DYSC;
   Quiz[173].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[174].MyGroup = GROUP_MIXED;
   Quiz[175].MyGroup = GROUP_ACTIVITY;
