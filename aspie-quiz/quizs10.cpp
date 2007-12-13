@@ -249,7 +249,7 @@ void TQuizS10::SetupTexts()
   Quiz[18].MyGroup = GROUP_NT_TALENT;
   Quiz[19].MyGroup = GROUP_NT_TALENT;
   Quiz[20].MyGroup = GROUP_NT_TALENT;
-  Quiz[21].MyGroup = GROUP_NT_TALENT;
+  Quiz[21].MyGroup = GROUP_DYSC;
   Quiz[22].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[23].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[24].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -408,7 +408,7 @@ void TQuizS10::SetupTexts()
   Quiz[175].MyGroup = GROUP_MIXED;
   Quiz[176].MyGroup = GROUP_SOCIAL;
   Quiz[177].MyGroup = GROUP_DYSC;
-  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_DYSC;
   Quiz[179].MyGroup = GROUP_DYSC;
   Quiz[180].MyGroup = GROUP_DYSC;
   Quiz[181].MyGroup = GROUP_MIXED;
@@ -1722,8 +1722,8 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-//					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
-//						d2 = -d2;
+					if (PcaType == PCA_TYPE_MALE)
+						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;

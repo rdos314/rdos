@@ -350,13 +350,13 @@ void TQuiz9::SetupTexts()
   Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[39].MyGroup = GROUP_NT_TALENT;
   Quiz[40].MyGroup = GROUP_NT_TALENT;
-  Quiz[41].MyGroup = GROUP_NT_TALENT;
+  Quiz[41].MyGroup = GROUP_DYSC;
   Quiz[42].MyGroup = GROUP_NT_TALENT;
   Quiz[43].MyGroup = GROUP_NT_SENSORY;
   Quiz[44].MyGroup = GROUP_NT_TALENT;
-  Quiz[45].MyGroup = GROUP_NT_TALENT;
-  Quiz[46].MyGroup = GROUP_NT_TALENT;
-  Quiz[47].MyGroup = GROUP_NT_TALENT;
+  Quiz[45].MyGroup = GROUP_DYSC;
+  Quiz[46].MyGroup = GROUP_DYSC;
+  Quiz[47].MyGroup = GROUP_DYSC;
   Quiz[48].MyGroup = GROUP_SOCIAL;
   Quiz[49].MyGroup = GROUP_NT_NVC;
   Quiz[50].MyGroup = GROUP_SOCIAL;

@@ -258,7 +258,7 @@ void TQuizS2::SetupTexts()
   Quiz[25].MyGroup = GROUP_NT_TALENT;
   Quiz[26].MyGroup = GROUP_MIXED;
   Quiz[27].MyGroup = GROUP_ACTIVITY;
-  Quiz[28].MyGroup = GROUP_NT_TALENT;
+  Quiz[28].MyGroup = GROUP_DYSC;
   Quiz[29].MyGroup = GROUP_NT_NVC;
   Quiz[30].MyGroup = GROUP_NT_HUNTING;
   Quiz[31].MyGroup = GROUP_SOCIAL;
