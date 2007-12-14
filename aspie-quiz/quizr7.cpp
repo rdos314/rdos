@@ -202,10 +202,10 @@ void TQuizR7::SetupTexts()
 
   Quiz[0].MyGroup = GROUP_MIXED;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[2].MyGroup = GROUP_NT_HUNTING;
-  Quiz[3].MyGroup = GROUP_NT_HUNTING;
+  Quiz[2].MyGroup = GROUP_MIXED;
+  Quiz[3].MyGroup = GROUP_MIXED;
   Quiz[4].MyGroup = GROUP_NT_SENSORY;
-  Quiz[5].MyGroup = GROUP_NT_HUNTING;
+  Quiz[5].MyGroup = GROUP_NT_SENSORY;
   Quiz[6].MyGroup = GROUP_NT_SENSORY;
   Quiz[7].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[8].MyGroup = GROUP_ASPIE_SENSORY;
@@ -224,9 +224,9 @@ void TQuizR7::SetupTexts()
   Quiz[21].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[22].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[23].MyGroup = GROUP_NT_TALENT;
-  Quiz[24].MyGroup = GROUP_DYSC;
+  Quiz[24].MyGroup = GROUP_NT_HUNTING;
   Quiz[25].MyGroup = GROUP_NT_NVC;
-  Quiz[26].MyGroup = GROUP_NT_HUNTING;
+  Quiz[26].MyGroup = GROUP_MIXED;
   Quiz[27].MyGroup = GROUP_SOCIAL;
   Quiz[28].MyGroup = GROUP_MIXED;
   Quiz[29].MyGroup = GROUP_ASPIE_TALENT;
@@ -253,7 +253,7 @@ void TQuizR7::SetupTexts()
   Quiz[50].MyGroup = GROUP_SOCIAL;
   Quiz[51].MyGroup = GROUP_SOCIAL;
   Quiz[52].MyGroup = GROUP_SOCIAL;
-  Quiz[53].MyGroup = GROUP_NT_HUNTING;
+  Quiz[53].MyGroup = GROUP_MIXED;
   Quiz[54].MyGroup = GROUP_NT_OBSESSION;
   Quiz[55].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[56].MyGroup = GROUP_NT_OBSESSION;
@@ -273,7 +273,7 @@ void TQuizR7::SetupTexts()
   Quiz[70].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[71].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[72].MyGroup = GROUP_NT_NVC;
-  Quiz[73].MyGroup = GROUP_NT_HUNTING;
+  Quiz[73].MyGroup = GROUP_MIXED;
   Quiz[74].MyGroup = GROUP_MIXED;
   Quiz[75].MyGroup = GROUP_MIXED;
   Quiz[76].MyGroup = GROUP_ACTIVITY;
@@ -332,7 +332,7 @@ void TQuizR7::SetupTexts()
   Quiz[129].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[132].MyGroup = GROUP_NT_HUNTING;
+  Quiz[132].MyGroup = GROUP_NT_SENSORY;
   Quiz[133].MyGroup = GROUP_NT_SENSORY;
   Quiz[134].MyGroup = GROUP_ENVIRONMENT;
   Quiz[135].MyGroup = GROUP_ENVIRONMENT;

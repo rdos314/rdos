@@ -586,7 +586,6 @@ int main(int argc, char **argv)
 
 	printf("retest\r\n");
 
-#ifdef ALL
 	 Quiz[17]->WriteRetest("eval\\retests2.htm");
 	 Quiz[18]->WriteRetest("eval\\retests3.htm");
 	 Quiz[19]->WriteRetest("eval\\retests4.htm");
@@ -596,7 +595,6 @@ int main(int argc, char **argv)
 	 Quiz[23]->WriteRetest("eval\\retests8.htm");
 	 Quiz[24]->WriteRetest("eval\\retests9.htm");
 	 Quiz[24]->WriteVersionRetest("eval\\vervar.htm");
-#endif
 
 #ifdef ALL
 	printf("imgrate\r\n");

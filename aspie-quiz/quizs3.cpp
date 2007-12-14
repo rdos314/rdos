@@ -221,11 +221,11 @@ void TQuizS3::SetupTexts()
   Quiz[132].Reverse = TRUE;
   Quiz[133].Reverse = TRUE;
 
-  Quiz[0].MyGroup = GROUP_NT_HUNTING;
-  Quiz[1].MyGroup = GROUP_NT_HUNTING;
-  Quiz[2].MyGroup = GROUP_NT_HUNTING;
+  Quiz[0].MyGroup = GROUP_MIXED;
+  Quiz[1].MyGroup = GROUP_NT_SENSORY;
+  Quiz[2].MyGroup = GROUP_MIXED;
   Quiz[3].MyGroup = GROUP_NT_SENSORY;
-  Quiz[4].MyGroup = GROUP_NT_HUNTING;
+  Quiz[4].MyGroup = GROUP_NT_SENSORY;
   Quiz[5].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[7].MyGroup = GROUP_ASPIE_SENSORY;
@@ -249,10 +249,10 @@ void TQuizS3::SetupTexts()
   Quiz[25].MyGroup = GROUP_NT_TALENT;
   Quiz[26].MyGroup = GROUP_MIXED;
   Quiz[27].MyGroup = GROUP_ACTIVITY;
-  Quiz[28].MyGroup = GROUP_DYSC;
+  Quiz[28].MyGroup = GROUP_NT_HUNTING;
   Quiz[29].MyGroup = GROUP_NT_NVC;
   Quiz[30].MyGroup = GROUP_SOCIAL;
-  Quiz[31].MyGroup = GROUP_NT_HUNTING;
+  Quiz[31].MyGroup = GROUP_MIXED;
   Quiz[32].MyGroup = GROUP_SOCIAL;
   Quiz[33].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[34].MyGroup = GROUP_ENVIRONMENT;
@@ -287,7 +287,7 @@ void TQuizS3::SetupTexts()
   Quiz[63].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[64].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[65].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[66].MyGroup = GROUP_NT_HUNTING;
+  Quiz[66].MyGroup = GROUP_MIXED;
   Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[68].MyGroup = GROUP_ENVIRONMENT;
   Quiz[69].MyGroup = GROUP_ACTIVITY;
@@ -350,7 +350,7 @@ void TQuizS3::SetupTexts()
   Quiz[126].MyGroup = GROUP_NT_SENSORY;
   Quiz[127].MyGroup = GROUP_NT_NVC;
   Quiz[128].MyGroup = GROUP_SOCIAL;
-  Quiz[129].MyGroup = GROUP_NT_HUNTING;
+  Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_ENVIRONMENT;
   Quiz[131].MyGroup = GROUP_NT_SENSORY;
   Quiz[132].MyGroup = GROUP_SOCIAL;
@@ -433,8 +433,8 @@ void TQuizS3::SetupTexts()
   Quiz[208].MyGroup = GROUP_SOCIAL;
   Quiz[209].MyGroup = GROUP_PARANOID;
 
-  Quiz[210].MyGroup = GROUP_NT_TALENT;
-  Quiz[211].MyGroup = GROUP_DYSC;
+  Quiz[210].MyGroup = GROUP_NT_HUNTING;
+  Quiz[211].MyGroup = GROUP_NT_HUNTING;
   Quiz[212].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[213].MyGroup = GROUP_MIXED;
   Quiz[214].MyGroup = GROUP_ACTIVITY;

@@ -445,9 +445,6 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biology";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biology";
 
-	Group[GROUP_NT_HUNTING].PosName = "NT hunting problem";
-	Group[GROUP_NT_HUNTING].NegName = "NT hunting";
-
 	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
 	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
 
@@ -484,6 +481,9 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie hunting";
 	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie hunting problem";
 
+	Group[GROUP_NT_HUNTING].PosName = "NT hunting problem";
+	Group[GROUP_NT_HUNTING].NegName = "NT hunting";
+
 	Group[GROUP_ENVIRONMENT].PosName = "Environment problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Environment";
 
@@ -492,9 +492,6 @@ void TQuiz::Init()
 
 	Group[GROUP_ACTIVITY].PosName = "Aspie activity";
 	Group[GROUP_ACTIVITY].NegName = "NT activity";
-
-	Group[GROUP_DYSC].PosName = "Dyscalculia";
-	Group[GROUP_DYSC].NegName = "Anti-dyscalculia";
 
 	Group[GROUP_MIXED].PosName = "Aspie mixed";
 	Group[GROUP_MIXED].NegName = "NT mixed";
@@ -505,9 +502,6 @@ void TQuiz::Init()
 
 	Group[GROUP_ASPIE_BIOLOGY].PosName = "Aspie biologi";
 	Group[GROUP_ASPIE_BIOLOGY].NegName = "NT biologi";
-
-	Group[GROUP_NT_HUNTING].PosName = "NT jakt problem";
-	Group[GROUP_NT_HUNTING].NegName = "NT jakt";
 
 	Group[GROUP_ASPIE_SENSORY].PosName = "Aspie perception";
 	Group[GROUP_ASPIE_SENSORY].NegName = "Aspie perception problem";
@@ -545,6 +539,9 @@ void TQuiz::Init()
 	Group[GROUP_ASPIE_HUNTING].PosName = "Aspie jakt";
 	Group[GROUP_ASPIE_HUNTING].NegName = "Aspie jakt problem";
 
+	Group[GROUP_NT_HUNTING].PosName = "NT jakt problem";
+	Group[GROUP_NT_HUNTING].NegName = "NT jakt";
+
 	Group[GROUP_ENVIRONMENT].PosName = "Miljö problem";
 	Group[GROUP_ENVIRONMENT].NegName = "Miljö";
 
@@ -553,9 +550,6 @@ void TQuiz::Init()
 
 	Group[GROUP_ACTIVITY].PosName = "Aspie aktivitet";
 	Group[GROUP_ACTIVITY].NegName = "NT aktivity";
-
-	Group[GROUP_DYSC].PosName = "Dyskalkuli";
-	Group[GROUP_DYSC].NegName = "Anti-dyskalkuli";
 
 	Group[GROUP_MIXED].PosName = "Aspie blandat";
 	Group[GROUP_MIXED].NegName = "NT blandat";
@@ -950,11 +944,7 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_ASPIE_BIOLOGY");
                 break;
 
-            case GROUP_NT_HUNTING:
-                file.Write("GROUP_NT_HUNTING");
-                break;
-
-            case GROUP_ASPIE_SENSORY:
+			case GROUP_ASPIE_SENSORY:
                 file.Write("GROUP_ASPIE_SENSORY");
                 break;
 
@@ -964,10 +954,6 @@ void TQuiz::WriteSetupTexts(const char *filename)
 
             case GROUP_ASPIE_TALENT:
                 file.Write("GROUP_ASPIE_TALENT");
-                break;
-
-            case GROUP_NT_TALENT:
-                file.Write("GROUP_NT_TALENT");
                 break;
 
 			case GROUP_SOCIAL:
@@ -1014,8 +1000,8 @@ void TQuiz::WriteSetupTexts(const char *filename)
                 file.Write("GROUP_ACTIVITY");
                 break;
 
-            case GROUP_DYSC:
-                file.Write("GROUP_DYSC");
+			case GROUP_NT_HUNTING:
+				file.Write("GROUP_NT_HUNTING");
                 break;
 
             default:
@@ -6438,10 +6424,6 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ASPIE_BIOLOGY");
 	        break;
 	            
-		case GROUP_NT_HUNTING:
-	        file->Write("NT_HUNTING");
-	        break;
-	            
 	    case GROUP_ASPIE_TALENT:
 	        file->Write("ASPIE_ABILITY");
 	        break;
@@ -6494,8 +6476,8 @@ void TQuiz::WriteLinkGroup(TFile *file, int Group)
 	        file->Write("ACTIVITY");
 	        break;
 	            
-		case GROUP_DYSC:
-	        file->Write("DYSC");
+		case GROUP_NT_HUNTING:
+			file->Write("NT_HUNTING");
 	        break;
 	            
 	    case GROUP_MIXED:

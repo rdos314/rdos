@@ -158,12 +158,12 @@ void TQuizIII::SetupTexts()
 	Quiz[8].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[9].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[10].MyGroup = GROUP_ASPIE_BIOLOGY;
-	Quiz[11].MyGroup = GROUP_NT_HUNTING;
-	Quiz[12].MyGroup = GROUP_NT_HUNTING;
+	Quiz[11].MyGroup = GROUP_NT_SENSORY;
+	Quiz[12].MyGroup = GROUP_NT_SENSORY;
 	Quiz[13].MyGroup = GROUP_NT_SENSORY;
 	Quiz[14].MyGroup = GROUP_NT_SENSORY;
 	Quiz[15].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[16].MyGroup = GROUP_DYSC;
+	Quiz[16].MyGroup = GROUP_NT_HUNTING;
 	Quiz[17].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[18].MyGroup = GROUP_ACTIVITY;
 	Quiz[19].MyGroup = GROUP_MIXED;
@@ -191,7 +191,7 @@ void TQuizIII::SetupTexts()
 	Quiz[41].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[42].MyGroup = GROUP_NT_TALENT;
 	Quiz[43].MyGroup = GROUP_ASPIE_NVC;
-	Quiz[44].MyGroup = GROUP_NT_HUNTING;
+	Quiz[44].MyGroup = GROUP_MIXED;
 	Quiz[45].MyGroup = GROUP_SOCIAL;
 	Quiz[46].MyGroup = GROUP_SOCIAL;
 	Quiz[47].MyGroup = GROUP_ASPIE_TALENT;

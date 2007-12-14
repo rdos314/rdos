@@ -168,11 +168,11 @@ void TQuizII::SetupTexts()
 	Quiz[12].MyGroup = GROUP_RELIGION;
 	Quiz[13].MyGroup = GROUP_ACTIVITY;
 	Quiz[14].MyGroup = GROUP_ENVIRONMENT;
-	Quiz[15].MyGroup = GROUP_NT_HUNTING;
+	Quiz[15].MyGroup = GROUP_NT_SENSORY;
 	Quiz[16].MyGroup = GROUP_MIXED;
 	Quiz[17].MyGroup = GROUP_NT_NVC;
 	Quiz[18].MyGroup = GROUP_MIXED;
-	Quiz[19].MyGroup = GROUP_NT_HUNTING;
+	Quiz[19].MyGroup = GROUP_NT_SENSORY;
 	Quiz[20].MyGroup = GROUP_MIXED;
 	Quiz[21].MyGroup = GROUP_NT_SENSORY;
 	Quiz[22].MyGroup = GROUP_NT_NVC;
@@ -193,7 +193,7 @@ void TQuizII::SetupTexts()
 	Quiz[37].MyGroup = GROUP_SOCIAL;
 	Quiz[38].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[39].MyGroup = GROUP_MIXED;
-	Quiz[40].MyGroup = GROUP_NT_HUNTING;
+	Quiz[40].MyGroup = GROUP_MIXED;
 	Quiz[41].MyGroup = GROUP_NT_NVC;
 	Quiz[42].MyGroup = GROUP_SOCIAL;
 	Quiz[43].MyGroup = GROUP_NT_OBSESSION;

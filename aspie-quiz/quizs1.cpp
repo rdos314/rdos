@@ -231,11 +231,11 @@ void TQuizS1::SetupTexts()
   Quiz[158].Reverse = TRUE;
   Quiz[161].Reverse = TRUE;
 
-  Quiz[0].MyGroup = GROUP_NT_HUNTING;
-  Quiz[1].MyGroup = GROUP_NT_HUNTING;
-  Quiz[2].MyGroup = GROUP_NT_HUNTING;
+  Quiz[0].MyGroup = GROUP_NT_SENSORY;
+  Quiz[1].MyGroup = GROUP_MIXED;
+  Quiz[2].MyGroup = GROUP_MIXED;
   Quiz[3].MyGroup = GROUP_NT_SENSORY;
-  Quiz[4].MyGroup = GROUP_NT_HUNTING;
+  Quiz[4].MyGroup = GROUP_NT_SENSORY;
   Quiz[5].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[7].MyGroup = GROUP_ASPIE_SENSORY;
@@ -260,9 +260,9 @@ void TQuizS1::SetupTexts()
   Quiz[26].MyGroup = GROUP_NT_TALENT;
   Quiz[27].MyGroup = GROUP_MIXED;
   Quiz[28].MyGroup = GROUP_ACTIVITY;
-  Quiz[29].MyGroup = GROUP_DYSC;
+  Quiz[29].MyGroup = GROUP_NT_HUNTING;
   Quiz[30].MyGroup = GROUP_NT_NVC;
-  Quiz[31].MyGroup = GROUP_NT_HUNTING;
+  Quiz[31].MyGroup = GROUP_MIXED;
   Quiz[32].MyGroup = GROUP_SOCIAL;
   Quiz[33].MyGroup = GROUP_SOCIAL;
   Quiz[34].MyGroup = GROUP_ENVIRONMENT;
@@ -286,7 +286,7 @@ void TQuizS1::SetupTexts()
   Quiz[52].MyGroup = GROUP_NT_OBSESSION;
   Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_SOCIAL;
-  Quiz[55].MyGroup = GROUP_NT_HUNTING;
+  Quiz[55].MyGroup = GROUP_MIXED;
   Quiz[56].MyGroup = GROUP_SOCIAL;
   Quiz[57].MyGroup = GROUP_SOCIAL;
   Quiz[58].MyGroup = GROUP_SOCIAL;
@@ -303,7 +303,7 @@ void TQuizS1::SetupTexts()
   Quiz[69].MyGroup = GROUP_NT_TALENT;
   Quiz[70].MyGroup = GROUP_MIXED;
   Quiz[71].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[72].MyGroup = GROUP_NT_HUNTING;
+  Quiz[72].MyGroup = GROUP_MIXED;
   Quiz[73].MyGroup = GROUP_ENVIRONMENT;
   Quiz[74].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[75].MyGroup = GROUP_ASPIE_NVC;
@@ -374,8 +374,8 @@ void TQuizS1::SetupTexts()
 
   Quiz[140].MyGroup = GROUP_ASPIE_SENSORY;
 
-  Quiz[141].MyGroup = GROUP_NT_TALENT;
-  Quiz[142].MyGroup = GROUP_DYSC;
+  Quiz[141].MyGroup = GROUP_NT_HUNTING;
+  Quiz[142].MyGroup = GROUP_NT_HUNTING;
   Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ACTIVITY;
