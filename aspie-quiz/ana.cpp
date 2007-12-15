@@ -32,6 +32,7 @@
 
 // #define EXPORT	1
 // #define ALL		1
+#define CONV		1
 
 #include "file.h"
 
@@ -672,7 +673,7 @@ int main(int argc, char **argv)
 
 	 Quiz[25]->ExportHistogram("csv\\alls10.csv", POP_TYPE_ALL, 2, FALSE);
 
-#ifdef ALL
+#ifdef CONV
 	printf("conv headers\r\n");
 	 Quiz[0]->WriteGroupWeighting("conv.h");
 	 Quiz[1]->WriteGroupWeighting("conv2.h");
