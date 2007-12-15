@@ -316,7 +316,7 @@ void TQuiz6::SetupTexts()
 	Quiz[76].MyGroup = GROUP_SOCIAL;
 	Quiz[77].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[78].MyGroup = GROUP_SOCIAL;
-	Quiz[79].MyGroup = GROUP_MIXED;
+	Quiz[79].MyGroup = GROUP_SOCIAL;
 	Quiz[80].MyGroup = GROUP_SOCIAL;
 	Quiz[81].MyGroup = GROUP_ENVIRONMENT;
 	Quiz[82].MyGroup = GROUP_SOCIAL;
@@ -339,7 +339,7 @@ void TQuiz6::SetupTexts()
 	Quiz[99].MyGroup = GROUP_NT_TALENT;
 	Quiz[100].MyGroup = GROUP_NT_TALENT;
 	Quiz[101].MyGroup = GROUP_NT_HUNTING;
-	Quiz[102].MyGroup = GROUP_NT_TALENT;
+	Quiz[102].MyGroup = GROUP_NT_HUNTING;
 	Quiz[103].MyGroup = GROUP_NT_HUNTING;
 	Quiz[104].MyGroup = GROUP_NT_HUNTING;
 	Quiz[105].MyGroup = GROUP_NT_HUNTING;

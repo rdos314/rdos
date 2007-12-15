@@ -323,7 +323,7 @@ void TQuizR3::SetupTexts()
   Quiz[146].MyGroup = GROUP_SOCIAL;
   Quiz[147].MyGroup = GROUP_ENVIRONMENT;
   Quiz[148].MyGroup = GROUP_NT_SENSORY;
-  Quiz[149].MyGroup = GROUP_NT_TALENT;
+  Quiz[149].MyGroup = GROUP_NT_HUNTING;
   Quiz[150].MyGroup = GROUP_NT_TALENT;
   Quiz[151].MyGroup = GROUP_ENVIRONMENT;
   Quiz[152].MyGroup = GROUP_NT_TALENT;

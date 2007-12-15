@@ -55,10 +55,10 @@ void HandleRow(TQuizRow *Row)
 	quizfile.Write(Row, sizeof(TQuizRow));
 	printf("%d Now: %d Before: %d, [", Row->ID, Row->ResultNow, Row->ResultBefore);
 
-	for (grp = 0; grp < 12; grp++)
+	for (grp = 0; grp < 14; grp++)
 	{
 	    printf("%d", Row->GroupResult[grp]);
-	    if (grp != 11)
+	    if (grp != 13)
 	        printf(", ");
 	}
 
@@ -129,7 +129,7 @@ void CalcScore(TQuizRow *Row)
 	else
 		 Row->ResultBefore = fsum;
 
-	for (grp = 0; grp < 12; grp++)
+	for (grp = 0; grp < 14; grp++)
 	{
 		sum = 0;
 		totsum = 0;

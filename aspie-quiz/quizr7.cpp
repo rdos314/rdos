@@ -203,7 +203,7 @@ void TQuizR7::SetupTexts()
   Quiz[0].MyGroup = GROUP_MIXED;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[2].MyGroup = GROUP_MIXED;
-  Quiz[3].MyGroup = GROUP_MIXED;
+  Quiz[3].MyGroup = GROUP_NT_SENSORY;
   Quiz[4].MyGroup = GROUP_NT_SENSORY;
   Quiz[5].MyGroup = GROUP_NT_SENSORY;
   Quiz[6].MyGroup = GROUP_NT_SENSORY;
@@ -253,7 +253,7 @@ void TQuizR7::SetupTexts()
   Quiz[50].MyGroup = GROUP_SOCIAL;
   Quiz[51].MyGroup = GROUP_SOCIAL;
   Quiz[52].MyGroup = GROUP_SOCIAL;
-  Quiz[53].MyGroup = GROUP_MIXED;
+  Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_NT_OBSESSION;
   Quiz[55].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[56].MyGroup = GROUP_NT_OBSESSION;
@@ -343,7 +343,7 @@ void TQuizR7::SetupTexts()
   Quiz[140].MyGroup = GROUP_NT_SENSORY;
   Quiz[141].MyGroup = GROUP_NT_NVC;
   Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_NT_NVC;
+  Quiz[143].MyGroup = GROUP_NT_TALENT;
   Quiz[144].MyGroup = GROUP_ENVIRONMENT;
   Quiz[145].MyGroup = GROUP_NT_SENSORY;
   Quiz[146].MyGroup = GROUP_NT_NVC;

@@ -345,7 +345,7 @@ void TQuizR4::SetupTexts()
   Quiz[122].MyGroup = GROUP_NT_SENSORY;
   Quiz[123].MyGroup = GROUP_NT_TALENT;
   Quiz[124].MyGroup = GROUP_NT_SENSORY;
-  Quiz[125].MyGroup = GROUP_NT_TALENT;
+  Quiz[125].MyGroup = GROUP_NT_HUNTING;
   Quiz[126].MyGroup = GROUP_ACTIVITY;
   Quiz[127].MyGroup = GROUP_ACTIVITY;
   Quiz[128].MyGroup = GROUP_NT_TALENT;
@@ -383,7 +383,7 @@ void TQuizR4::SetupTexts()
   Quiz[159].MyGroup = GROUP_NT_NVC;
   Quiz[160].MyGroup = GROUP_NT_NVC;
   Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[162].MyGroup = GROUP_NT_NVC;
+  Quiz[162].MyGroup = GROUP_NT_TALENT;
   Quiz[163].MyGroup = GROUP_SOCIAL;
   Quiz[164].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[165].MyGroup = GROUP_SOCIAL;

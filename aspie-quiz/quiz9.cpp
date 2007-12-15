@@ -323,10 +323,10 @@ void TQuiz9::SetupTexts()
   Quiz[11].MyGroup = GROUP_NT_SENSORY;
   Quiz[12].MyGroup = GROUP_NT_SENSORY;
   Quiz[13].MyGroup = GROUP_MIXED;
-  Quiz[14].MyGroup = GROUP_MIXED;
+  Quiz[14].MyGroup = GROUP_NT_SENSORY;
   Quiz[15].MyGroup = GROUP_NT_SENSORY;
   Quiz[16].MyGroup = GROUP_MIXED;
-  Quiz[17].MyGroup = GROUP_MIXED;
+  Quiz[17].MyGroup = GROUP_NT_SENSORY;
   Quiz[18].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[20].MyGroup = GROUP_MIXED;
@@ -351,8 +351,8 @@ void TQuiz9::SetupTexts()
   Quiz[39].MyGroup = GROUP_NT_TALENT;
   Quiz[40].MyGroup = GROUP_NT_TALENT;
   Quiz[41].MyGroup = GROUP_NT_HUNTING;
-  Quiz[42].MyGroup = GROUP_NT_TALENT;
-  Quiz[43].MyGroup = GROUP_NT_SENSORY;
+  Quiz[42].MyGroup = GROUP_NT_HUNTING;
+  Quiz[43].MyGroup = GROUP_NT_HUNTING;
   Quiz[44].MyGroup = GROUP_NT_HUNTING;
   Quiz[45].MyGroup = GROUP_NT_HUNTING;
   Quiz[46].MyGroup = GROUP_NT_HUNTING;
@@ -374,7 +374,7 @@ void TQuiz9::SetupTexts()
   Quiz[62].MyGroup = GROUP_MIXED;
   Quiz[63].MyGroup = GROUP_SOCIAL;
   Quiz[64].MyGroup = GROUP_SOCIAL;
-  Quiz[65].MyGroup = GROUP_MIXED;
+  Quiz[65].MyGroup = GROUP_SOCIAL;
   Quiz[66].MyGroup = GROUP_NT_OBSESSION;
   Quiz[67].MyGroup = GROUP_NT_OBSESSION;
   Quiz[68].MyGroup = GROUP_SOCIAL;

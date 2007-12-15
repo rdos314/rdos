@@ -297,7 +297,7 @@ void TQuiz5::SetupTexts()
 	Quiz[64].MyGroup = GROUP_SOCIAL;
 	Quiz[65].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[66].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[67].MyGroup = GROUP_MIXED;
+	Quiz[67].MyGroup = GROUP_SOCIAL;
 	Quiz[68].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[69].MyGroup = GROUP_SOCIAL;
 	Quiz[70].MyGroup = GROUP_ENVIRONMENT;
@@ -319,7 +319,7 @@ void TQuiz5::SetupTexts()
 	Quiz[86].MyGroup = GROUP_NT_HUNTING;
 	Quiz[87].MyGroup = GROUP_NT_HUNTING;
 	Quiz[88].MyGroup = GROUP_NT_HUNTING;
-	Quiz[89].MyGroup = GROUP_NT_TALENT;
+	Quiz[89].MyGroup = GROUP_NT_HUNTING;
 	Quiz[90].MyGroup = GROUP_NT_HUNTING;
 	Quiz[91].MyGroup = GROUP_NT_TALENT;
 	Quiz[92].MyGroup = GROUP_NT_HUNTING;
@@ -342,7 +342,7 @@ void TQuiz5::SetupTexts()
 	Quiz[109].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[110].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[111].MyGroup = GROUP_ENVIRONMENT;
-	Quiz[112].MyGroup = GROUP_NT_TALENT;
+	Quiz[112].MyGroup = GROUP_NT_HUNTING;
 
 #ifdef ENGLISH
 

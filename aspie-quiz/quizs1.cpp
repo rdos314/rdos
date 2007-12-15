@@ -232,7 +232,7 @@ void TQuizS1::SetupTexts()
   Quiz[161].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_NT_SENSORY;
-  Quiz[1].MyGroup = GROUP_MIXED;
+  Quiz[1].MyGroup = GROUP_NT_SENSORY;
   Quiz[2].MyGroup = GROUP_MIXED;
   Quiz[3].MyGroup = GROUP_NT_SENSORY;
   Quiz[4].MyGroup = GROUP_NT_SENSORY;
@@ -286,7 +286,7 @@ void TQuizS1::SetupTexts()
   Quiz[52].MyGroup = GROUP_NT_OBSESSION;
   Quiz[53].MyGroup = GROUP_SOCIAL;
   Quiz[54].MyGroup = GROUP_SOCIAL;
-  Quiz[55].MyGroup = GROUP_MIXED;
+  Quiz[55].MyGroup = GROUP_SOCIAL;
   Quiz[56].MyGroup = GROUP_SOCIAL;
   Quiz[57].MyGroup = GROUP_SOCIAL;
   Quiz[58].MyGroup = GROUP_SOCIAL;
@@ -368,7 +368,7 @@ void TQuizS1::SetupTexts()
   Quiz[134].MyGroup = GROUP_NT_NVC;
   Quiz[135].MyGroup = GROUP_NT_SENSORY;
   Quiz[136].MyGroup = GROUP_NT_NVC;
-  Quiz[137].MyGroup = GROUP_NT_NVC;
+  Quiz[137].MyGroup = GROUP_NT_TALENT;
   Quiz[138].MyGroup = GROUP_NT_SENSORY;
   Quiz[139].MyGroup = GROUP_SOCIAL;
 

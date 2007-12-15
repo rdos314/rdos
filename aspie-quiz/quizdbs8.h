@@ -23,6 +23,6 @@ struct TQuizRow
 	long NtResult;
 	int MdqResult;
 	char Quiz[200];
-	int GroupResult[12];
+	int GroupResult[14];
 };
 

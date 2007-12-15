@@ -240,7 +240,7 @@ void TQuizNd::SetupTexts()
 	Quiz[18].MyGroup = GROUP_NT_SENSORY;
 	Quiz[19].MyGroup = GROUP_NT_SENSORY;
 	Quiz[20].MyGroup = GROUP_NT_SENSORY;
-	Quiz[21].MyGroup = GROUP_MIXED;
+	Quiz[21].MyGroup = GROUP_NT_SENSORY;
 	Quiz[22].MyGroup = GROUP_MIXED;
 	Quiz[23].MyGroup = GROUP_MIXED;
 	Quiz[24].MyGroup = GROUP_NT_HUNTING;
@@ -348,7 +348,7 @@ void TQuizNd::SetupTexts()
 	Quiz[126].MyGroup = GROUP_SOCIAL;
 	Quiz[127].MyGroup = GROUP_SOCIAL;
 	Quiz[128].MyGroup = GROUP_NT_OBSESSION;
-	Quiz[129].MyGroup = GROUP_MIXED;
+	Quiz[129].MyGroup = GROUP_SOCIAL;
 	Quiz[130].MyGroup = GROUP_ASPIE_HUNTING;
 	Quiz[131].MyGroup = GROUP_NT_NVC;
 	Quiz[132].MyGroup = GROUP_NT_NVC;
@@ -359,7 +359,7 @@ void TQuizNd::SetupTexts()
 	Quiz[137].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[138].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[139].MyGroup = GROUP_ASPIE_TALENT;
-	Quiz[140].MyGroup = GROUP_NT_TALENT;
+	Quiz[140].MyGroup = GROUP_NT_HUNTING;
 	Quiz[141].MyGroup = GROUP_NT_HUNTING;
 	Quiz[142].MyGroup = GROUP_NT_HUNTING;
 	Quiz[143].MyGroup = GROUP_NT_HUNTING;
@@ -385,7 +385,7 @@ void TQuizNd::SetupTexts()
 	Quiz[163].MyGroup = GROUP_NT_TALENT;
 	Quiz[164].MyGroup = GROUP_NT_HUNTING;
 	Quiz[165].MyGroup = GROUP_NT_TALENT;
-	Quiz[166].MyGroup = GROUP_NT_TALENT;
+	Quiz[166].MyGroup = GROUP_NT_HUNTING;
 	Quiz[167].MyGroup = GROUP_NT_TALENT;
 	Quiz[168].MyGroup = GROUP_NT_TALENT;
 	Quiz[169].MyGroup = GROUP_NT_TALENT;
@@ -397,7 +397,7 @@ void TQuizNd::SetupTexts()
 	Quiz[175].MyGroup = GROUP_NT_TALENT;
 	Quiz[176].MyGroup = GROUP_NT_SENSORY;
 	Quiz[177].MyGroup = GROUP_NT_SENSORY;
-	Quiz[178].MyGroup = GROUP_NT_SENSORY;
+	Quiz[178].MyGroup = GROUP_NT_HUNTING;
 	Quiz[179].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[180].MyGroup = GROUP_NT_TALENT;
 	Quiz[181].MyGroup = GROUP_ASPIE_BIOLOGY;
@@ -420,14 +420,14 @@ void TQuizNd::SetupTexts()
 	Quiz[198].MyGroup = GROUP_MIXED;
 	Quiz[199].MyGroup = GROUP_NT_OBSESSION;
 	Quiz[200].MyGroup = GROUP_ASPIE_SENSORY;
-	Quiz[201].MyGroup = GROUP_MIXED;
+	Quiz[201].MyGroup = GROUP_NT_SENSORY;
 	Quiz[202].MyGroup = GROUP_NT_HUNTING;
 	Quiz[203].MyGroup = GROUP_NT_HUNTING;
 	Quiz[204].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[205].MyGroup = GROUP_MIXED;
 	Quiz[206].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[207].MyGroup = GROUP_MIXED;
-	Quiz[208].MyGroup = GROUP_MIXED;
+	Quiz[208].MyGroup = GROUP_NT_SENSORY;
 	Quiz[209].MyGroup = GROUP_ACTIVITY;
 
 #ifdef ENGLISH

@@ -199,7 +199,7 @@ void TQuizR6::SetupTexts()
   Quiz[0].MyGroup = GROUP_MIXED;
   Quiz[1].MyGroup = GROUP_ASPIE_BIOLOGY;
   Quiz[2].MyGroup = GROUP_MIXED;
-  Quiz[3].MyGroup = GROUP_MIXED;
+  Quiz[3].MyGroup = GROUP_NT_SENSORY;
   Quiz[4].MyGroup = GROUP_NT_SENSORY;
   Quiz[5].MyGroup = GROUP_NT_SENSORY;
   Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;

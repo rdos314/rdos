@@ -70,10 +70,10 @@
 #define GROUP_NT_HUNTING        9
 #define GROUP_ASPIE_SENSORY     10
 #define GROUP_NT_SENSORY        11
+#define GROUP_PARANOID          12
+#define GROUP_ENVIRONMENT       13
 
-#define GROUP_ASPIE_BIOLOGY     12
-#define GROUP_PARANOID          13
-#define GROUP_ENVIRONMENT       14
+#define GROUP_ASPIE_BIOLOGY     14
 #define GROUP_RELIGION          15
 #define GROUP_SEX               16
 #define GROUP_MIXED             17

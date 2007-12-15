@@ -24,5 +24,5 @@ struct TQuizRow
     long Hs;
     long Hn;
     char Quiz[210];
-	int GroupResult[12];
+	int GroupResult[14];
 };
