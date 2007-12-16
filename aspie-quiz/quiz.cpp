@@ -617,6 +617,17 @@ int TQuiz::GetQuizN()
 	return N;
 }
 
+/*##################  TQuiz::GetRegressData ##########################
+*   Purpose....: Fill in regression data for dsm & group  	       	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+}
+
 /*##################  TQuiz::GetQuizId ##########################
 *   Purpose....: Return quiz ID number  	       	        #
 *   In params..: *                                                          #
@@ -11978,3 +11989,125 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
     }
 	file.Write(");\n");
 }
+
+/*##################  TQuiz::RegressDsm ##########################
+*   Purpose....: Regress DSM        	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::RegressDsm(const char *filename, int PopType)
+{
+	 int g;
+	 int i;
+	 int cross;
+	 int ValArr[101][2];
+	 int WeightArr[101];
+	 long double LogOdds[101];
+	 long double xmean;
+	 long double ymean;
+	 long double sum;
+	 long double sum2;
+	 long double val;
+	 long double xdiff;
+    long double ydiff;
+	 long double slope;
+	 int count;
+	 int n;
+	TFile file(filename, 0);
+
+	 for (g = 0; g < 14; g++)
+	 {
+		  for (i = 0; i < 101; i++)
+		  {
+				ValArr[i][0] = 0;
+				ValArr[i][1] = 0;
+		}
+
+		GetRegressData(PopType, g, ValArr);
+
+		for (cross = 0; cross < MAX_CROSS; cross++)
+			 if (CrossQuiz[cross])
+				 CrossQuiz[cross]->GetRegressData(PopType, g, ValArr);
+
+		  n = 100;
+		  count = 0;
+
+		  while (count == 0 && n)
+		  {
+
+				count = 0;
+
+			  for (i = 0; i < n + 1; i++)
+			 {
+					if (ValArr[i][0] && ValArr[i][1])
+							WeightArr[i] = ValArr[i][0] + ValArr[i][1];
+					  else
+						  WeightArr[i] = 0;
+
+					if (WeightArr[i])
+					{
+						  count++;
+						  val = (long double)ValArr[i][1] / (long double)ValArr[i][0];
+					 LogOdds[i] = logl(val);
+				}
+			}
+
+			if (n > 25)
+			 {
+				 n = n / 2;
+				 for (i = 0; i < n; i++)
+				  {
+						ValArr[i][0] = ValArr[2 * i][0] + ValArr[2 * i + 1][0];
+					  ValArr[i][1] = ValArr[2 * i][1] + ValArr[2 * i + 1][1];
+				 }
+				  count = 0;
+			}
+		 }
+
+		if (n == 0)
+			  break;
+
+		  sum = 0;
+		  count = 0;
+		for (i = 0; i < n + 1; i++)
+		 {
+			  if (WeightArr[i])
+			 {
+					count += WeightArr[i];
+					sum += LogOdds[i] * WeightArr[i];
+			 }
+		 }
+		xmean = sum / count;
+
+		  sum = 0;
+		  count = 0;
+		 for (i = 0; i < n + 1; i++)
+		{
+			  if (WeightArr[i])
+			  {
+				  count += WeightArr[i];
+					sum += i * WeightArr[i];
+			  }
+		}
+		 ymean = sum / count;
+
+		sum = 0;
+		 sum2 = 0;
+		for (i = 0; i < n + 1; i++)
+		 {
+			  if (WeightArr[i])
+			 {
+				 xdiff = LogOdds[i] - xmean;
+				 ydiff = i - ymean;
+					sum += xdiff * ydiff * WeightArr[i];
+					sum2 += xdiff * xdiff * WeightArr[i];
+			 }
+		 }
+
+		slope = sum / sum2;
+		 printf("Slope: %5.4Lf\r\n", slope);
+	}
+}
+

@@ -271,6 +271,7 @@ public:
     void ExportDiffHistogram(const char *filename, int PopType);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
+    void RegressDsm(const char *filename, int PopType);
 
     virtual int IsSubQuiz();
 
@@ -338,6 +339,8 @@ protected:
 	virtual int GetPcaCount();
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
+
+	virtual void GetRegressData(int PopType, int Group, int Arr[101][2]); 
 
     int GetQuizId(TQuiz *quiz);
 

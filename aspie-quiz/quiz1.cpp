@@ -125,6 +125,45 @@ void TQuizI::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
+#   Name       : TQuizI::GetRegressData
+#
+#   Purpose....: Get regression data for dsm & group
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizI::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+	TQuizRow Row;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    switch (PopType)
+        {
+            case POP_TYPE_AS:
+                if (Row.Diagnos == DX_AS)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Diagnos == DX_UNKNOWN)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ADD:
+                if (Row.Diagnos == DX_ADD)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Diagnos == DX_UNKNOWN)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;                
+        }                    
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizI::SetupTexts
 #
 #   Purpose....: Init quiz texts and more

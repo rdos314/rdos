@@ -139,6 +139,141 @@ void TQuizNd::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
+#   Name       : TQuizNd::GetRegressData
+#
+#   Purpose....: Get regression data for dsm & group
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizNd::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+	TQuizRow Row;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    switch (PopType)
+        {
+            case POP_TYPE_AUTISM:
+                if (Row.Autism == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Autism == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_AS:
+                if (Row.Aspie == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Aspie == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ADD:
+                if (Row.ADHD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.ADHD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_TS:
+                if (Row.TS == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.TS == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_HYPERLEXIA:
+                if (Row.Hyperlexia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Hyperlexia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSPRAXIA:
+                if (Row.Dyspraxia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyspraxia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSLEXIA:
+                if (Row.Dyslexia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyslexia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSCALCULIA:
+                if (Row.Dyscalculia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyscalculia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_OCD:
+                if (Row.OCD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.OCD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ODD:
+                if (Row.ODD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.ODD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_SYNAESTHESIA:
+                if (Row.Synaesthesia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Synaesthesia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_PA:
+                if (Row.PA == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.PA == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSGRAPHIA:
+                if (Row.Dysgraphia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dysgraphia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_BIPOLAR:
+                if (Row.Bipolar == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Bipolar == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+        }                    
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TQuizNd::SetupTexts
 #
 #   Purpose....: Init quiz texts and more

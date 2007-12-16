@@ -32,7 +32,7 @@
 
 // #define EXPORT	1
 // #define ALL		1
-#define CONV		1
+// #define CONV		1
 
 #include "file.h"
 
@@ -740,6 +740,9 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("eval\\bip.htm", POP_TYPE_BIPOLAR);
 	 TQuiz::WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
 	 TQuiz::WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
+
+	 printf("Regression\r\n");
+     Quiz[25]->RegressDsm("dsm\\as.htm", POP_TYPE_ADD);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
 //	 Quiz[25]->WritePhpWeighting("weights.php");
