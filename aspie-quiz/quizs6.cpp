@@ -185,102 +185,109 @@ void TQuizS6::WriteLongName(TFile &File)
 void TQuizS6::GetRegressData(int PopType, int Group, int Arr[101][2])
 {
 	TQuizRow Row;
+	int res;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    switch (PopType)
-        {
-            case POP_TYPE_AUTISM:
-                if (Row.Autism == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
 
-                if (Row.Autism == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+		res = Row.GroupResult[Group];
+		if (res >= 0 && res <= 100)
+		{
 
-            case POP_TYPE_AS:
-                if (Row.Aspie == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+			switch (PopType)
+			{
+				case POP_TYPE_AUTISM:
+					 if (Row.Autism == 2)
+						  Arr[res][1]++;
 
-                if (Row.Aspie == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Autism == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_ADD:
-                if (Row.ADHD == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_AS:
+					 if (Row.Aspie == 2)
+						  Arr[res][1]++;
 
-                if (Row.ADHD == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Aspie == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_TS:
-                if (Row.TS == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_ADD:
+					 if (Row.ADHD == 2)
+						  Arr[res][1]++;
 
-                if (Row.TS == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.ADHD == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_DYSLEXIA:
-                if (Row.Dyslexia == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_TS:
+					 if (Row.TS == 2)
+						  Arr[res][1]++;
 
-                if (Row.Dyslexia == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.TS == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_DYSCALCULIA:
-                if (Row.Dyscalculia == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_DYSLEXIA:
+					 if (Row.Dyslexia == 2)
+						  Arr[res][1]++;
 
-                if (Row.Dyscalculia == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Dyslexia == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_OCD:
-                if (Row.OCD == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_DYSCALCULIA:
+					 if (Row.Dyscalculia == 2)
+						  Arr[res][1]++;
 
-                if (Row.OCD == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Dyscalculia == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_ODD:
-                if (Row.ODD == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_OCD:
+					 if (Row.OCD == 2)
+						  Arr[res][1]++;
 
-                if (Row.ODD == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.OCD == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_BIPOLAR:
-                if (Row.Bipolar == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_ODD:
+					 if (Row.ODD == 2)
+						  Arr[res][1]++;
 
-                if (Row.Bipolar == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.ODD == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_SCHIZOPHRENIA:
-                if (Row.Schizophrenia == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_BIPOLAR:
+					 if (Row.Bipolar == 2)
+						  Arr[res][1]++;
 
-                if (Row.Schizophrenia == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Bipolar == 0)
+						  Arr[res][0]++;
+					 break;
 
-            case POP_TYPE_SOCIAL_PHOBIA:
-                if (Row.Social == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+				case POP_TYPE_SCHIZOPHRENIA:
+					 if (Row.Schizophrenia == 2)
+						  Arr[res][1]++;
 
-                if (Row.Social == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Schizophrenia == 0)
+						  Arr[res][0]++;
+					 break;
 
-        }                    
-    }
+				case POP_TYPE_SOCIAL_PHOBIA:
+					 if (Row.Social == 2)
+						  Arr[res][1]++;
+
+					 if (Row.Social == 0)
+						  Arr[res][0]++;
+					 break;
+
+			}
+		 }
+	 }
 }
 
 /*##################  TQuizS6::DefineQuiz ##########################

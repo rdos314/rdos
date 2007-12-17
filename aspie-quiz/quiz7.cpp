@@ -201,46 +201,52 @@ void TQuiz7::WriteLongName(TFile &File)
 void TQuiz7::GetRegressData(int PopType, int Group, int Arr[101][2])
 {
 	TQuizRow Row;
+	int res;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	    switch (PopType)
-        {
-            case POP_TYPE_AUTISM:
-                if (Row.Autism == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
 
-                if (Row.Autism == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+	  res = Row.GroupResult[Group];
+	  if (res >= 0 && res <= 100)
+	  {
+		 switch (PopType)
+		  {
+				case POP_TYPE_AUTISM:
+					 if (Row.Autism == 2)
+						  Arr[res][1]++;
 
-            case POP_TYPE_AS:
-                if (Row.Aspie == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+					 if (Row.Autism == 0)
+						  Arr[res][0]++;
+					 break;
 
-                if (Row.Aspie == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+				case POP_TYPE_AS:
+					 if (Row.Aspie == 2)
+						  Arr[res][1]++;
 
-            case POP_TYPE_ADD:
-                if (Row.ADHD == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+					 if (Row.Aspie == 0)
+						  Arr[res][0]++;
+					 break;
 
-                if (Row.ADHD == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+				case POP_TYPE_ADD:
+					 if (Row.ADHD == 2)
+						  Arr[res][1]++;
+
+					 if (Row.ADHD == 0)
+						  Arr[res][0]++;
+					 break;
 
 			case POP_TYPE_SOCIAL_PHOBIA:
-                if (Row.Social == 2)
-                    Arr[Row.GroupResult[Group]][1]++;
+					 if (Row.Social == 2)
+						  Arr[res][1]++;
 
-                if (Row.Social == 0)
-                    Arr[Row.GroupResult[Group]][0]++;
-                break;
+					 if (Row.Social == 0)
+						  Arr[res][0]++;
+					 break;
 
-        }                    
-    }
+		  }
+	   }
+	 }
 }
 
 /*##########################################################################

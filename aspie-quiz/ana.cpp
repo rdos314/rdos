@@ -742,7 +742,7 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
 	 printf("Regression\r\n");
-     Quiz[25]->RegressDsm("dsm\\as.htm", POP_TYPE_ADD);
+	  Quiz[25]->RegressDsm("dsm\\as.htm", POP_TYPE_DYSLEXIA);
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
 //	 Quiz[25]->WritePhpWeighting("weights.php");
