@@ -187,6 +187,62 @@ void TQuiz6::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
+#   Name       : TQuiz6::GetRegressData
+#
+#   Purpose....: Get regression data for dsm & group
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuiz6::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+	TQuizRow Row;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    switch (PopType)
+        {
+            case POP_TYPE_AUTISM:
+                if (Row.Autism == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Autism == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_AS:
+                if (Row.Aspie == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Aspie == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ADD:
+                if (Row.ADHD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.ADHD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_SCHIZOPHRENIA:
+                if (Row.Schizophrenia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Schizophrenia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+        }                    
+    }
+}
+
+/*##########################################################################
+#
 #   Name       : TQuiz6::SetupTexts
 #
 #   Purpose....: Init quiz texts and more

@@ -137,6 +137,53 @@ void TQuizR3::WriteLongName(TFile &File)
 	 File.Write("experimental version 3");
 }
 
+/*##########################################################################
+#
+#   Name       : TQuizR3::GetRegressData
+#
+#   Purpose....: Get regression data for dsm & group
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizR3::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+	TQuizRow Row;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    switch (PopType)
+        {
+            case POP_TYPE_AUTISM:
+                if (Row.Autism == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Autism == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_AS:
+                if (Row.Aspie == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Aspie == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ADD:
+                if (Row.ADHD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.ADHD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+        }                    
+    }
+}
+
 /*##################  TQuizR3::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #

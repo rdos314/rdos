@@ -135,6 +135,102 @@ void TQuizR1::WriteLongName(TFile &File)
 	 File.Write("experimental version 1");
 }
 
+/*##########################################################################
+#
+#   Name       : TQuizR1::GetRegressData
+#
+#   Purpose....: Get regression data for dsm & group
+#
+#   In params..: *
+#   Out params.: *
+#   Returns....: *
+#
+##########################################################################*/
+void TQuizR1::GetRegressData(int PopType, int Group, int Arr[101][2])
+{
+	TQuizRow Row;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+	    switch (PopType)
+        {
+            case POP_TYPE_AUTISM:
+                if (Row.Autism == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Autism == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_AS:
+                if (Row.Aspie == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Aspie == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_ADD:
+                if (Row.ADHD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.ADHD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_TS:
+                if (Row.TS == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.TS == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_HYPERLEXIA:
+                if (Row.Hyperlexia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Hyperlexia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSPRAXIA:
+                if (Row.Dyspraxia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyspraxia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSLEXIA:
+                if (Row.Dyslexia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyslexia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_DYSCALCULIA:
+                if (Row.Dyscalculia == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.Dyscalculia == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+            case POP_TYPE_OCD:
+                if (Row.OCD == 2)
+                    Arr[Row.GroupResult[Group]][1]++;
+
+                if (Row.OCD == 0)
+                    Arr[Row.GroupResult[Group]][0]++;
+                break;
+
+        }                    
+    }
+}
+
 /*##################  TQuizR1::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
