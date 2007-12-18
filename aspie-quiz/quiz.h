@@ -271,7 +271,7 @@ public:
     void ExportDiffHistogram(const char *filename, int PopType);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-    void RegressDsm(const char *filename, int PopType);
+    void RegressDsm(const char *filename);
 
     virtual int IsSubQuiz();
 
@@ -368,6 +368,8 @@ protected:
 
     void DefineNt(char *Referer);
     void DefineAspie(char *Referer);
+
+    void RegressDsm(TFile &file, int PopType);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12]);
     void UpdateReferer(TReferer *ref, int Result);

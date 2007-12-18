@@ -11997,12 +11997,13 @@ void TQuiz::ExportQuizGlobalSql(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::RegressDsm(const char *filename, int PopType)
+void TQuiz::RegressDsm(TFile &file, int PopType)
 {
 	int g;
 	int i;
 	int cross;
 	int ValArr[101][2];
+	long double SlopeArr[14];
 	long double xmean;
 	long double ymean;
 	long double sum;
@@ -12010,10 +12011,9 @@ void TQuiz::RegressDsm(const char *filename, int PopType)
 	long double val;
 	long double xdiff;
     long double ydiff;
-	long double slope;
 	int count;
-	int n;
-	TFile file(filename, 0);
+	int slope;
+	char str[80];
 
 	for (g = 0; g < 14; g++)
 	{
@@ -12082,14 +12082,142 @@ void TQuiz::RegressDsm(const char *filename, int PopType)
                     sum2 += xdiff * xdiff * ValArr[i][1];
                 }
 
-    		}
+			}
 
-            slope = sum / sum2;
-        }
-        else
-            slope = 0;
-            
-		printf("Slope: %5.4Lf\r\n", slope);
+			SlopeArr[g] = sum / sum2;
+		}
+		else
+			SlopeArr[g] = 0;
 	}
+
+	sum = 0;
+
+	for (g = 0; g < 14; g++)
+		sum += SlopeArr[g];
+
+	if (sum)
+		for (g = 0; g < 14; g++)
+			SlopeArr[g] = 14 * 100 * SlopeArr[g] / sum;
+
+	for (g = 0; g < 14; g++)
+	{
+		file.Write(Group[g].PosName);
+
+		slope = (int)SlopeArr[g];
+		sprintf(str, " <b>%d</b><br>\n", slope);
+		file.Write(str);
+	}
+}
+
+/*##################  TQuiz::RegressDsm ##########################
+*   Purpose....: Regress DSM        	      			      	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::RegressDsm(const char *filename)
+{
+	TFile file(filename, 0);
+
+#ifdef ENGLISH
+	file.Write("<h2>Autism</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Autism</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_AUTISM);
+
+#ifdef ENGLISH
+	file.Write("<h2>AS/HFA/PDD</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>AS/HFA/PDD</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_AS);
+
+#ifdef ENGLISH
+	file.Write("<h2>ADD/ADHD</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>ADD/ADHD</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_ADD);
+
+#ifdef ENGLISH
+	file.Write("<h2>Dyspraxia</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Dyspraxi</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_DYSPRAXIA);
+
+#ifdef ENGLISH
+	file.Write("<h2>Dyslexia</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Dyslexi</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_DYSLEXIA);
+
+#ifdef ENGLISH
+	file.Write("<h2>Dyscalculia</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Dyskalkuli</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_DYSCALCULIA);
+
+#ifdef ENGLISH
+	file.Write("<h2>Obsessive Compulsive Disorder (OCD)</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Tvångssyndrom (OCD)</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_OCD);
+
+#ifdef ENGLISH
+	file.Write("<h2>Bipolar</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Bipolär</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_BIPOLAR);
+
+#ifdef ENGLISH
+	file.Write("<h2>Tourette</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Tourette</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_TS);
+
+#ifdef ENGLISH
+	file.Write("<h2>Schizophrenia</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Schizofreni</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_SCHIZOPHRENIA);
 }
 
