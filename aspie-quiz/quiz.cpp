@@ -12004,6 +12004,8 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 	int cross;
 	int ValArr[101][2];
 	long double SlopeArr[14];
+	int DxArr[14];
+	int NoDxArr[14];
 	long double xmean;
 	long double ymean;
 	long double sum;
@@ -12011,6 +12013,7 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 	long double val;
 	long double xdiff;
     long double ydiff;
+    long double level;
 	int count;
 	int slope;
 	char str[80];
@@ -12031,6 +12034,15 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 			    if (CrossQuiz[cross]->Group[g].Questions >= 3)
     		        CrossQuiz[cross]->GetRegressData(PopType, g, ValArr);
 
+        DxArr[g] = 0;
+        NoDxArr[g] = 0;
+        
+        for (i = 0; i < 101; i++)
+        {   
+            NoDxArr[g] += ValArr[i][0];     
+            DxArr[g] += ValArr[i][1];
+        }
+            
 		count = 0;
 		for (i = 0; i < 101; i++)
 		{
@@ -12099,14 +12111,72 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 		for (g = 0; g < 14; g++)
 			SlopeArr[g] = 14 * 100 * SlopeArr[g] / sum;
 
+    level = 0.0;
+    for (g = 0; g < 14; g++)
+        if (SlopeArr[g] >= level)
+            level = SlopeArr[g];
+
+    level = 0.9 * level;
+
+	file.Write("<table border=3 cellspacing=0 cellpadding=0>");
+
+	file.Write("<tr style='height:24.75pt'>");
+
+	WriteCenteredFieldHeader(file, 35);
+	file.Write("Group");
+	WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 10);
+    file.Write("Weight");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 20);
+    file.Write("Diagnosis");
+    WriteFieldFooter(file);
+
+    WriteCenteredFieldHeader(file, 20);
+    file.Write("No diagnosis");
+    WriteFieldFooter(file);
+
+	file.Write("</tr>");
+
 	for (g = 0; g < 14; g++)
 	{
-		file.Write(Group[g].PosName);
+    	file.Write("<tr style='height:24.75pt'>");
 
+    	WriteCenteredFieldHeader(file, 35);
+		file.Write(Group[g].PosName);
+	    WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 10);
 		slope = (int)SlopeArr[g];
-		sprintf(str, " <b>%d</b><br>\n", slope);
+		sprintf(str, " %d\n", slope);
+
+        if (slope >= level)
+        	file.Write("<span style='color:#009999'>");
+		
 		file.Write(str);
+
+        if (slope >= level)
+            file.Write("</span>");
+
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 20);
+		sprintf(str, " %d\n", DxArr[g]);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+        WriteCenteredFieldHeader(file, 20);
+		sprintf(str, " %d\n", NoDxArr[g]);
+		file.Write(str);
+        WriteFieldFooter(file);
+
+    	file.Write("</tr>\n");
+
 	}
+
+	file.Write("</table>\n");
 }
 
 /*##################  TQuiz::RegressDsm ##########################
@@ -12199,6 +12269,16 @@ void TQuiz::RegressDsm(const char *filename)
 #endif
 
 	RegressDsm(file, POP_TYPE_BIPOLAR);
+
+#ifdef ENGLISH
+	file.Write("<h2>Social phobia</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Social fobi</h2>\n";
+#endif
+
+	RegressDsm(file, POP_TYPE_SOCIAL_PHOBIA);
 
 #ifdef ENGLISH
 	file.Write("<h2>Tourette</h2>\n");
