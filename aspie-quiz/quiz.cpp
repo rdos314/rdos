@@ -12030,7 +12030,7 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 				if (CrossQuiz[cross]->Group[g].Questions >= 3)
 					CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
 
-        DxArr[g] = 0;
+		  DxArr[g] = 0;
         NoDxArr[g] = 0;
         
         for (i = 0; i < 101; i++)
@@ -12051,7 +12051,7 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
 
         if (count)
         {
-    		sum = 0;
+			sum = 0;
 	    	for (i = 0; i < 101; i++)
 		    {
                 if (ValArr[i][0])
@@ -12081,7 +12081,7 @@ void TQuiz::RegressDsm(TFile &file, int PopType)
                     sum2 += xdiff * xdiff * ValArr[i][0];
                 }
 
-                if (ValArr[i][1])
+					 if (ValArr[i][1])
                 {
                     xdiff = i - xmean;
                     ydiff = 1.0 - ymean;
@@ -12312,8 +12312,9 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[M
 	int ValArr[MAX_SCORE][2];
 	int count;
 	int groupsum;
-    int cutoff;
+	 int cutoff;
 	int fpos;
+	long double val;
 	char str[80];
 
 	groupsum = 0;
@@ -12335,61 +12336,58 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[M
 
 	for (cross = 0; cross < MAX_CROSS; cross++)
 	{
-	    if (CrossQuiz[cross])
-	    {
-            count = 0;
-            for (g = 0; g < 14; g++)
+		 if (CrossQuiz[cross])
+		 {
+				count = 0;
+				for (g = 0; g < 14; g++)
 				count += GroupArr[g] * CrossQuiz[cross]->Group[g].Questions;
 
-            if (count / groupsum >= 3)            
+				if (count / groupsum >= 3)
 				CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
-        }
-    }
+		  }
+	 }
 
-    count = 0;
-
-	for (i = 0; i < MAX_SCORE; i++)
-	    count += ValArr[i][1];
-
-    count = DxErrorPercent * count / 100;
-
-    for (cutoff = 0; cutoff < MAX_SCORE && count > 0; cutoff++)
-        count -= ValArr[cutoff][1];
-
-    fpos = 0;
+	 count = 0;
 
 	for (i = 0; i < MAX_SCORE; i++)
-	    fpos += ValArr[i][0];
+		 count += ValArr[i][1];
 
-    count = 0;
+	 count = DxErrorPercent * count / 100;
 
-    for (i = cutoff; i < MAX_SCORE; i++)
-        count += ValArr[i][0];
+	 for (cutoff = 0; cutoff < MAX_SCORE && count > 0; cutoff++)
+		  count -= ValArr[cutoff][1];
 
-    fpos = 100 * count / fpos;
+	 fpos = 0;
 
-    file.Write("<tr style='height:24.75pt'>");
+	for (i = 0; i < MAX_SCORE; i++)
+		 fpos += ValArr[i][0];
 
-    WriteCenteredFieldHeader(file, 35);
+	 count = 0;
+
+	 for (i = cutoff; i < MAX_SCORE; i++)
+		  count += ValArr[i][0];
+
+	 fpos = 100 * count / fpos;
+
+	 file.Write("<tr style='height:24.75pt'>");
+
+	 WriteCenteredFieldHeader(file, 35);
 	file.Write(Text);
 	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
-	sprintf(str, " %d\n", cutoff);
-	file.Write(str);
-    WriteFieldFooter(file);
+	val = (long double)cutoff / (long double)groupsum / 10.0;
 
-    WriteCenteredFieldHeader(file, 15);
-	sprintf(str, " %d\n", groupsum * 100);
+	 WriteCenteredFieldHeader(file, 15);
+	sprintf(str, " %2.1Lf\n", val);
 	file.Write(str);
-    WriteFieldFooter(file);
+	 WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
+	 WriteCenteredFieldHeader(file, 15);
 	sprintf(str, " %d%\n", DxErrorPercent);
 	file.Write(str);
-    WriteFieldFooter(file);	
+	 WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
+	 WriteCenteredFieldHeader(file, 15);
 	sprintf(str, " %d%\n", fpos);
 	file.Write(str);
     WriteFieldFooter(file);	
@@ -12419,13 +12417,9 @@ void TQuiz::DsmCutoff(const char *filename)
 	file.Write("Diagnosis");
 	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
-    file.Write("Cutoff");
-    WriteFieldFooter(file);
-
-    WriteCenteredFieldHeader(file, 15);
-    file.Write("Max score");
-    WriteFieldFooter(file);
+	 WriteCenteredFieldHeader(file, 15);
+	 file.Write("Cutoff");
+	 WriteFieldFooter(file);
 
     WriteCenteredFieldHeader(file, 15);
     file.Write("Misdiagnosis");
@@ -12449,132 +12443,148 @@ void TQuiz::DsmCutoff(const char *filename)
         GroupArr[g] = 0;
 
     GroupArr[GROUP_ASPIE_NVC] = 2;
-    DsmCutoff(file, str, POP_TYPE_AUTISM, GroupArr, 20);
+	 DsmCutoff(file, str, POP_TYPE_AUTISM, GroupArr, 30);
 
 
 #ifdef ENGLISH
-    strcpy(str, "AS/HFA/PDD");
+	 strcpy(str, "AS/HFA/PDD");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "AS/HFA/PDD");
+	 strcpy(str, "AS/HFA/PDD");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_ASPIE_NVC] = 2;
-    GroupArr[GROUP_NT_NVC] = 2;
-    DsmCutoff(file, str, POP_TYPE_AS, GroupArr, 20);
+	 GroupArr[GROUP_ASPIE_NVC] = 2;
+	 GroupArr[GROUP_NT_NVC] = 2;
+	 DsmCutoff(file, str, POP_TYPE_AS, GroupArr, 22);
 
 
 #ifdef ENGLISH
-    strcpy(str, "ADD/ADHD");
+	 strcpy(str, "ADD/ADHD");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "ADD/ADHD");
+	 strcpy(str, "ADD/ADHD");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_ACTIVITY] = 2;
-    DsmCutoff(file, str, POP_TYPE_ADD, GroupArr, 20);
+	 GroupArr[GROUP_ACTIVITY] = 2;
+	 DsmCutoff(file, str, POP_TYPE_ADD, GroupArr, 32);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Dyspraxia");
+	 strcpy(str, "Tourette");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Dyspraxi");
+	 strcpy(str, "Tourette");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_NT_SENSORY] = 2;
-    DsmCutoff(file, str, POP_TYPE_DYSPRAXIA, GroupArr, 20);
+	 GroupArr[GROUP_ASPIE_NVC] = 2;
+	 GroupArr[GROUP_ASPIE_HUNTING] = 2;
+	 DsmCutoff(file, str, POP_TYPE_TS, GroupArr, 39);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Dyslexia");
+	 strcpy(str, "Dyspraxia");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Dyslexi");
+	 strcpy(str, "Dyspraxi");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_NT_HUNTING] = 2;
-    GroupArr[GROUP_ASPIE_HUNTING] = 1;
-    DsmCutoff(file, str, POP_TYPE_DYSLEXIA, GroupArr, 20);
+	 GroupArr[GROUP_NT_SENSORY] = 2;
+	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA, GroupArr, 20);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Dyscalculia");
+	 strcpy(str, "Dyslexia");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Dyskalkuli");
+	 strcpy(str, "Dyslexi");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_NT_HUNTING] = 2;
-    GroupArr[GROUP_NT_SENSORY] = 1;
-    DsmCutoff(file, str, POP_TYPE_DYSCALCULIA, GroupArr, 20);
+	 GroupArr[GROUP_NT_HUNTING] = 2;
+	 GroupArr[GROUP_ASPIE_HUNTING] = 1;
+	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA, GroupArr, 34);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Bipolar");
+	 strcpy(str, "Dyscalculia");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Bipolär");
+	 strcpy(str, "Dyskalkuli");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_ACTIVITY] = 2;
-    GroupArr[GROUP_ASPIE_SENSORY] = 1;
-    DsmCutoff(file, str, POP_TYPE_BIPOLAR, GroupArr, 20);
+	 GroupArr[GROUP_NT_HUNTING] = 2;
+	 GroupArr[GROUP_NT_SENSORY] = 1;
+	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA, GroupArr, 31);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Social phobia");
+	 strcpy(str, "Bipolar");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Social fobi");
+	 strcpy(str, "Bipolär");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_SOCIAL] = 2;
-    GroupArr[GROUP_ENVIRONMENT] = 1;
-    DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA, GroupArr, 20);
+	 GroupArr[GROUP_ACTIVITY] = 2;
+	 GroupArr[GROUP_ASPIE_SENSORY] = 1;
+	 DsmCutoff(file, str, POP_TYPE_BIPOLAR, GroupArr, 34);
 
 
 #ifdef ENGLISH
-    strcpy(str, "Schizophrenia");
+	 strcpy(str, "Social phobia");
 #endif
 
 #ifdef SWEDISH
-    strcpy(str, "Schizofreni");
+	 strcpy(str, "Social fobi");
 #endif
 
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
 
-    GroupArr[GROUP_PARANOID] = 2;
-    DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA, GroupArr, 20);
+	 GroupArr[GROUP_SOCIAL] = 2;
+	 GroupArr[GROUP_ENVIRONMENT] = 1;
+	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA, GroupArr, 27);
+
+
+#ifdef ENGLISH
+	 strcpy(str, "Schizophrenia");
+#endif
+
+#ifdef SWEDISH
+	 strcpy(str, "Schizofreni");
+#endif
+
+	 for (g = 0; g < MAX_GROUP_COUNT; g++)
+		  GroupArr[g] = 0;
+
+	 GroupArr[GROUP_PARANOID] = 2;
+	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA, GroupArr, 28);
 
 
 	file.Write("</table>\n");

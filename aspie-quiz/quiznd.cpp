@@ -148,15 +148,28 @@ void TQuizNd::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
+void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
 {
 	TQuizRow Row;
     int res;
 	int g;
+	TReferer *ref;
+	int NoDx;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+	    NoDx = FALSE;
+	    
+	    if (OnlyNtControl)
+	    {
+			ref = FindReferer(Row.Referer);
+			if (ref && ref->NT)
+			    NoDx = TRUE;
+	    }
+	    else
+	        NoDx = TRUE;
+
         res = 0;
 	    for (g = 0; g < MAX_GROUP_COUNT; g++)
     	    res += Row.GroupResult[g] * GroupArr[g];
@@ -170,7 +183,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Autism == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Autism == 0)
+					 if (NoDx && (Row.Autism == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -178,7 +191,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Aspie == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Aspie == 0)
+					 if (NoDx && (Row.Aspie == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -186,7 +199,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.ADHD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.ADHD == 0)
+					 if (NoDx && (Row.ADHD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -194,7 +207,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.TS == 2)
 						  Arr[res][1]++;
 
-					 if (Row.TS == 0)
+					 if (NoDx && (Row.TS == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -202,7 +215,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Hyperlexia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Hyperlexia == 0)
+					 if (NoDx && (Row.Hyperlexia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -210,7 +223,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Dyspraxia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dyspraxia == 0)
+					 if (NoDx && (Row.Dyspraxia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -218,7 +231,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Dyslexia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dyslexia == 0)
+					 if (NoDx && (Row.Dyslexia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -226,7 +239,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Dyscalculia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dyscalculia == 0)
+					 if (NoDx && (Row.Dyscalculia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -234,7 +247,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.OCD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.OCD == 0)
+					 if (NoDx && (Row.OCD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -242,7 +255,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.ODD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.ODD == 0)
+					 if (NoDx && (Row.ODD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -250,7 +263,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Synaesthesia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Synaesthesia == 0)
+					 if (NoDx && (Row.Synaesthesia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -258,7 +271,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.PA == 2)
 						  Arr[res][1]++;
 
-					 if (Row.PA == 0)
+					 if (NoDx && (Row.PA == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -266,7 +279,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Dysgraphia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dysgraphia == 0)
+					 if (NoDx && (Row.Dysgraphia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -274,7 +287,7 @@ void TQuizNd::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_
 					 if (Row.Bipolar == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Bipolar == 0)
+					 if (NoDx && (Row.Bipolar == 0))
 						  Arr[res][0]++;
 					 break;
 		    }

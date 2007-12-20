@@ -256,15 +256,28 @@ void TQuiz9::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuiz9::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
+void TQuiz9::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
 {
 	TQuizRow Row;
 	int res;
 	int g;
+	TReferer *ref;
+	int NoDx;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+	    NoDx = FALSE;
+	    
+	    if (OnlyNtControl)
+	    {
+			ref = FindReferer(Row.Referer);
+			if (ref && ref->NT)
+			    NoDx = TRUE;
+	    }
+	    else
+	        NoDx = TRUE;
+
         res = 0;
 	    for (g = 0; g < MAX_GROUP_COUNT; g++)
     	    res += Row.GroupResult[g] * GroupArr[g];
@@ -277,7 +290,7 @@ void TQuiz9::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_S
 					 if (Row.Autism == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Autism == 0)
+					 if (NoDx && (Row.Autism == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -285,7 +298,7 @@ void TQuiz9::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_S
 					 if (Row.Aspie == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Aspie == 0)
+					 if (NoDx && (Row.Aspie == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -293,7 +306,7 @@ void TQuiz9::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_S
 					 if (Row.ADHD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.ADHD == 0)
+					 if (NoDx && (Row.ADHD == 0))
 						  Arr[res][0]++;
 					 break;
 		    }

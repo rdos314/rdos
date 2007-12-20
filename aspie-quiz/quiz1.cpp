@@ -134,15 +134,28 @@ void TQuizI::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizI::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
+void TQuizI::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
 {
 	TQuizRow Row;
 	int res;
 	int g;
+	TReferer *ref;
+	int NoDx;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+	    NoDx = FALSE;
+	    
+	    if (OnlyNtControl)
+	    {
+			ref = FindReferer(Row.Referer);
+			if (ref && ref->NT)
+			    NoDx = TRUE;
+	    }
+	    else
+	        NoDx = TRUE;
+
         res = 0;
 	    for (g = 0; g < MAX_GROUP_COUNT; g++)
     	    res += Row.GroupResult[g] * GroupArr[g];
@@ -156,7 +169,7 @@ void TQuizI::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_S
 					 if (Row.Diagnos == DX_AS)
 						  Arr[res][1]++;
 
-					 if (Row.Diagnos == DX_UNKNOWN)
+					 if (NoDx && (Row.Diagnos == DX_UNKNOWN))
 						  Arr[res][0]++;
 					 break;
 
@@ -164,7 +177,7 @@ void TQuizI::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_S
 					 if (Row.Diagnos == DX_ADD)
 						  Arr[res][1]++;
 
-					 if (Row.Diagnos == DX_UNKNOWN)
+					 if (NoDx && (Row.Diagnos == DX_UNKNOWN))
 						  Arr[res][0]++;
 					 break;
 		    }

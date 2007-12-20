@@ -47,7 +47,7 @@ private:
     virtual void WriteName(TFile &File);
     virtual void WriteLongName(TFile &File);
     virtual int GetPcaCount();
-	virtual void GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2]);
+	virtual void GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl);
 
     void DefineQuiz();
     void SetupTexts();
