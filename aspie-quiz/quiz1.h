@@ -45,7 +45,7 @@ private:
     virtual void WriteName(TFile &File);
     virtual void WriteLongName(TFile &File);
     virtual int GetPcaCount();
-	virtual void GetRegressData(int PopType, int Group, int Arr[101][2]); 
+	virtual void GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2]);
 
     void SetupTexts();
     void InitReferers();

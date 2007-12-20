@@ -125,29 +125,33 @@ void TQuizI::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizI::GetRegressData
+#   Name       : TQuizI::GetDxData
 #
-#   Purpose....: Get regression data for dsm & group
+#   Purpose....: Get diagnostic data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizI::GetRegressData(int PopType, int Group, int Arr[101][2])
+void TQuizI::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
 {
 	TQuizRow Row;
 	int res;
+	int g;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-	  res = Row.GroupResult[Group];
-	  if (res >= 0 && res <= 100)
-	  {
+        res = 0;
+	    for (g = 0; g < MAX_GROUP_COUNT; g++)
+    	    res += Row.GroupResult[g] * GroupArr[g];
 
-		 switch (PopType)
-		  {
+    	if (res >= 0 && res < MAX_SCORE)
+	    {
+
+		    switch (PopType)
+		    {
 				case POP_TYPE_AS:
 					 if (Row.Diagnos == DX_AS)
 						  Arr[res][1]++;
@@ -163,9 +167,9 @@ void TQuizI::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Diagnos == DX_UNKNOWN)
 						  Arr[res][0]++;
 					 break;
-		  }
-		}
-	 }
+		    }
+	    }
+    }
 }
 
 /*##########################################################################

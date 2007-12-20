@@ -741,8 +741,9 @@ int main(int argc, char **argv)
 	 TQuiz::WriteDsmReport("eval\\schizo.htm", POP_TYPE_SCHIZOPHRENIA);
 	 TQuiz::WriteDsmReport("eval\\social.htm", POP_TYPE_SOCIAL_PHOBIA);
 
-	 printf("Regression\r\n");
+	 printf("Regression & cutoff\r\n");
 	  Quiz[25]->RegressDsm("eval\\dx.htm");
+	  Quiz[25]->DsmCutoff("eval\\cutoff.htm");
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
 //	 Quiz[25]->WritePhpWeighting("weights.php");

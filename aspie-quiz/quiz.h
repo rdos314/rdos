@@ -45,6 +45,7 @@
 #define MAX_CROSS               30
 #define MAX_PCA_AXIS            8
 #define MAX_ASPIE_PCA_AXIS      32      // must change in Import method as well!
+#define MAX_SCORE               501
 
 #define MAX_USERS               2048
 
@@ -272,6 +273,7 @@ public:
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
     void RegressDsm(const char *filename);
+    void DsmCutoff(const char *filename);
 
     virtual int IsSubQuiz();
 
@@ -340,7 +342,7 @@ protected:
 	virtual int GetCatCount(int Question);
 	virtual int GetQuizN();
 
-	virtual void GetRegressData(int PopType, int Group, int Arr[101][2]); 
+	virtual void GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl) = 0; 
 
     int GetQuizId(TQuiz *quiz);
 
@@ -370,6 +372,7 @@ protected:
     void DefineAspie(char *Referer);
 
     void RegressDsm(TFile &file, int PopType);
+	void DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], int DxErrorPercent);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12]);
     void UpdateReferer(TReferer *ref, int Result);

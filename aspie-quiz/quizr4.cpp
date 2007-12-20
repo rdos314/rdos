@@ -167,30 +167,32 @@ void TQuizR4::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizR4::GetRegressData
+#   Name       : TQuizR4::GetDxData
 #
-#   Purpose....: Get regression data for dsm & group
+#   Purpose....: Get diagnostic data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR4::GetRegressData(int PopType, int Group, int Arr[101][2])
+void TQuizR4::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
 {
 	TQuizRow Row;
 	int res;
+	int g;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        res = 0;
+	    for (g = 0; g < MAX_GROUP_COUNT; g++)
+    	    res += Row.GroupResult[g] * GroupArr[g];
 
-	  res = Row.GroupResult[Group];
-	  if (res >= 0 && res <= 100)
-	  {
-
-		 switch (PopType)
-		  {
+	    if (res >= 0 && res < MAX_SCORE)
+	    {
+		    switch (PopType)
+		    {
 				case POP_TYPE_AUTISM:
 					 if (Row.Autism == 2)
 						  Arr[res][1]++;
@@ -216,18 +218,18 @@ void TQuizR4::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 break;
 				case POP_TYPE_TS:
 					 if (Row.TS == 2)
-						  Arr[Row.GroupResult[Group]][1]++;
+						  Arr[res][1]++;
 
 					 if (Row.TS == 0)
-						  Arr[Row.GroupResult[Group]][0]++;
+						  Arr[res][0]++;
 					 break;
 
 				case POP_TYPE_DYSLEXIA:
 					 if (Row.Dyslexia == 2)
-						  Arr[Row.GroupResult[Group]][1]++;
+						  Arr[res][1]++;
 
 					 if (Row.Dyslexia == 0)
-						  Arr[Row.GroupResult[Group]][0]++;
+						  Arr[res][0]++;
 					 break;
 
 				case POP_TYPE_DYSCALCULIA:
@@ -246,9 +248,9 @@ void TQuizR4::GetRegressData(int PopType, int Group, int Arr[101][2])
 						  Arr[res][0]++;
 					 break;
 
-		  }
+			}
 		}
-	 }
+	}
 }
 
 /*##################  TQuizR4::DefineQuiz ##########################

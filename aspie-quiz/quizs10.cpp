@@ -180,35 +180,50 @@ void TQuizS10::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizS10::GetRegressData
+#   Name       : TQuizS10::GetDxData
 #
-#   Purpose....: Get regression data for dsm & group
+#   Purpose....: Get diagnostic data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
+void TQuizS10::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
 {
 	TQuizRow Row;
 	int res;
+	int g;
+	TReferer *ref;
+	int NoDx;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+	    NoDx = FALSE;
+	    
+	    if (OnlyNtControl)
+	    {
+			ref = FindReferer(Row.Referer);
+			if (ref && ref->NT)
+			    NoDx = TRUE;
+	    }
+	    else
+	        NoDx = TRUE;
 
-		res = Row.GroupResult[Group];
-		if (res >= 0 && res <= 100)
-		{
+        res = 0;
+	    for (g = 0; g < MAX_GROUP_COUNT; g++)
+    	    res += Row.GroupResult[g] * GroupArr[g];
 
+	    if (res >= 0 && res < MAX_SCORE)
+	    {
 			switch (PopType)
 			{
 				case POP_TYPE_AUTISM:
 					 if (Row.Autism == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Autism == 0)
+					 if (NoDx && (Row.Autism == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -216,7 +231,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Aspie == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Aspie == 0)
+					 if (NoDx && (Row.Aspie == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -224,7 +239,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.ADHD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.ADHD == 0)
+					 if (NoDx && (Row.ADHD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -232,7 +247,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.TS == 2)
 						  Arr[res][1]++;
 
-					 if (Row.TS == 0)
+					 if (NoDx && (Row.TS == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -240,7 +255,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Dyslexia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dyslexia == 0)
+					 if (NoDx && (Row.Dyslexia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -248,7 +263,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Dyscalculia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Dyscalculia == 0)
+					 if (NoDx && (Row.Dyscalculia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -256,7 +271,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.OCD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.OCD == 0)
+					 if (NoDx && (Row.OCD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -264,7 +279,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.ODD == 2)
 						  Arr[res][1]++;
 
-					 if (Row.ODD == 0)
+					 if (NoDx && (Row.ODD == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -272,7 +287,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Bipolar == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Bipolar == 0)
+					 if (NoDx && (Row.Bipolar == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -280,7 +295,7 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Schizophrenia == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Schizophrenia == 0)
+					 if (NoDx && (Row.Schizophrenia == 0))
 						  Arr[res][0]++;
 					 break;
 
@@ -288,13 +303,13 @@ void TQuizS10::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.Social == 2)
 						  Arr[res][1]++;
 
-					 if (Row.Social == 0)
+					 if (NoDx && (Row.Social == 0))
 						  Arr[res][0]++;
 					 break;
 
 			}
-		 }
-	 }
+		}
+	}
 }
 
 /*##################  TQuizS10::DefineQuiz ##########################
@@ -1841,7 +1856,7 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE || PcaType == PCA_TYPE_MALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)

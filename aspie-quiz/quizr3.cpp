@@ -139,30 +139,32 @@ void TQuizR3::WriteLongName(TFile &File)
 
 /*##########################################################################
 #
-#   Name       : TQuizR3::GetRegressData
+#   Name       : TQuizR3::GetDxData
 #
-#   Purpose....: Get regression data for dsm & group
+#   Purpose....: Get diagnostic data
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizR3::GetRegressData(int PopType, int Group, int Arr[101][2])
+void TQuizR3::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2])
 {
 	TQuizRow Row;
 	int res;
+	int g;
 
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
+        res = 0;
+	    for (g = 0; g < MAX_GROUP_COUNT; g++)
+    	    res += Row.GroupResult[g] * GroupArr[g];
 
-	  res = Row.GroupResult[Group];
-	  if (res >= 0 && res <= 100)
-	  {
-
-		 switch (PopType)
-		  {
+	    if (res >= 0 && res < MAX_SCORE)
+	    {
+		    switch (PopType)
+		    {
 				case POP_TYPE_AUTISM:
 					 if (Row.Autism == 2)
 						  Arr[res][1]++;
@@ -186,9 +188,9 @@ void TQuizR3::GetRegressData(int PopType, int Group, int Arr[101][2])
 					 if (Row.ADHD == 0)
 						  Arr[res][0]++;
 					 break;
-		  }
-		}
-	 }
+		    }
+	    }
+    }
 }
 
 /*##################  TQuizR3::DefineQuiz ##########################
