@@ -261,19 +261,19 @@ public:
     void WriteWikiNoncorrelated(const char *wiki, const char *filename, int count);
 
     static void PrintGlobalCorrelation(int q1, int q2);
-        
-    static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
-    static void WriteDsmReport(const char *filename, int PopType);
+	static void WikiToQuiz(const char *wikifile, const char *quizfile);
 
-    static void ExportBirthMonthHistogram(const char *filename);
+	static void WriteDsmReport(const char *filename, int PopType);
 
-    void ExportHistogram(const char *filename, int PopType, int Width, int All);
-    void ExportDiffHistogram(const char *filename, int PopType);
+	static void ExportBirthMonthHistogram(const char *filename);
+
+	void ExportHistogram(const char *filename, int PopType, int Width, int All);
+	void ExportDiffHistogram(const char *filename, int PopType);
 
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
-    void RegressDsm(const char *filename);
-    void DsmCutoff(const char *filename);
+	void RegressDsm(const char *filename);
+	void DsmCutoff(const char *filename, int All);
 
     virtual int IsSubQuiz();
 
@@ -297,7 +297,7 @@ public:
     virtual void WriteAQ(const char *filename);
     virtual void WriteSPQ(const char *filename);
     virtual void WriteLSAS(const char *filename);
-    virtual void WriteMDQ(const char *filename);
+	virtual void WriteMDQ(const char *filename);
     virtual void WriteADD(const char *filename);
     virtual void WriteDyslexia(const char *filename);
     virtual void WritePictureRating(const char *filename);
@@ -369,10 +369,10 @@ protected:
     TQuiz *GetHighestCorr(int MyQuestion, int *Question);
 
     void DefineNt(char *Referer);
-    void DefineAspie(char *Referer);
+	void DefineAspie(char *Referer);
 
-    void RegressDsm(TFile &file, int PopType);
-	void DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], int DxErrorPercent);
+	void RegressDsm(TFile &file, int PopType);
+	void DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], long double Cutoff, int All);
 
     void UpdateReferer(TReferer *ref, int AsResult, int NtResult, int GroupResult[12]);
     void UpdateReferer(TReferer *ref, int Result);

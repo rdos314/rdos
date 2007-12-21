@@ -743,7 +743,35 @@ int main(int argc, char **argv)
 
 	 printf("Regression & cutoff\r\n");
 	  Quiz[25]->RegressDsm("eval\\dx.htm");
-	  Quiz[25]->DsmCutoff("eval\\cutoff.htm");
+	  Quiz[25]->DsmCutoff("eval\\cutoff.htm", TRUE);
+
+	  Quiz[0]->DsmCutoff("eval\\cut1.htm", FALSE);
+	  Quiz[1]->DsmCutoff("eval\\cut2.htm", FALSE);
+	  Quiz[2]->DsmCutoff("eval\\cut3.htm", FALSE);
+	  Quiz[3]->DsmCutoff("eval\\cutnd.htm", FALSE);
+	  Quiz[4]->DsmCutoff("eval\\cut5.htm", FALSE);
+	  Quiz[5]->DsmCutoff("eval\\cut6.htm", FALSE);
+	  Quiz[6]->DsmCutoff("eval\\cut7.htm", FALSE);
+	  Quiz[7]->DsmCutoff("eval\\cut8.htm", FALSE);
+	  Quiz[8]->DsmCutoff("eval\\cut9.htm", FALSE);
+	  Quiz[9]->DsmCutoff("eval\\cutr1.htm", FALSE);
+	  Quiz[10]->DsmCutoff("eval\\cutr2.htm", FALSE);
+	  Quiz[11]->DsmCutoff("eval\\cutr3.htm", FALSE);
+	  Quiz[12]->DsmCutoff("eval\\cutr4.htm", FALSE);
+	  Quiz[13]->DsmCutoff("eval\\cutr5.htm", FALSE);
+	  Quiz[14]->DsmCutoff("eval\\cutr6.htm", FALSE);
+	  Quiz[15]->DsmCutoff("eval\\cutr7.htm", FALSE);
+	  Quiz[16]->DsmCutoff("eval\\cuts1.htm", FALSE);
+	  Quiz[17]->DsmCutoff("eval\\cuts2.htm", FALSE);
+	  Quiz[18]->DsmCutoff("eval\\cuts3.htm", FALSE);
+	  Quiz[19]->DsmCutoff("eval\\cuts4.htm", FALSE);
+	  Quiz[20]->DsmCutoff("eval\\cuts5.htm", FALSE);
+	  Quiz[21]->DsmCutoff("eval\\cuts6.htm", FALSE);
+	  Quiz[22]->DsmCutoff("eval\\cuts7.htm", FALSE);
+	  Quiz[23]->DsmCutoff("eval\\cuts8.htm", FALSE);
+	  Quiz[24]->DsmCutoff("eval\\cuts9.htm", FALSE);
+	  Quiz[25]->DsmCutoff("eval\\cuts10.htm", FALSE);
+
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
 //	 Quiz[25]->WritePhpWeighting("weights.php");

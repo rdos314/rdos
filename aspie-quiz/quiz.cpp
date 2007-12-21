@@ -79,6 +79,17 @@ TDsmPopulation TQuiz::DsmSocialPhobia;
 
 TBirthMonth TQuiz::BirthMonth;
 
+// diagnostic cutoffs
+
+long double AsCutoff = 5.2;
+long double AddCutoff = 6.2;
+long double DyspraxiaCutoff = 6.3;
+long double DyslexiaCutoff = 5.4;
+long double DyscalculiaCutoff = 5.6;
+long double BipolarCutoff = 6.2;
+long double SocialPhobiaCutoff = 6.5;
+long double SchizophreniaCutoff = 6.0;
+
 /*##################  TBirthMonth::TBirthMonth ##########################
 *   Purpose....: Initialize TBirthMonth                  			     	        #
 *   In params..: *                                                          #
@@ -12304,17 +12315,18 @@ void TQuiz::RegressDsm(const char *filename)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], int DxErrorPercent)
+void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[MAX_GROUP_COUNT], long double Cutoff, int All)
 {
 	int g;
 	int i;
 	int cross;
 	int ValArr[MAX_SCORE][2];
 	int count;
+	int tot;
 	int groupsum;
-	 int cutoff;
+	int cutoff;
 	int fpos;
-	long double val;
+	int errs;
 	char str[80];
 
 	groupsum = 0;
@@ -12334,65 +12346,76 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[M
 	if (count / groupsum >= 3)
 		GetDxData(PopType, GroupArr, ValArr, FALSE);
 
-	for (cross = 0; cross < MAX_CROSS; cross++)
+	if (All)
 	{
-		 if (CrossQuiz[cross])
-		 {
+		for (cross = 0; cross < MAX_CROSS; cross++)
+		{
+			if (CrossQuiz[cross])
+			{
 				count = 0;
 				for (g = 0; g < 14; g++)
-				count += GroupArr[g] * CrossQuiz[cross]->Group[g].Questions;
+					count += GroupArr[g] * CrossQuiz[cross]->Group[g].Questions;
 
 				if (count / groupsum >= 3)
-				CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
-		  }
-	 }
+					CrossQuiz[cross]->GetDxData(PopType, GroupArr, ValArr, FALSE);
+			}
+		}
+	}
 
-	 count = 0;
+	cutoff = (int)(Cutoff * 10 * (long double)groupsum);
 
-	for (i = 0; i < MAX_SCORE; i++)
-		 count += ValArr[i][1];
-
-	 count = DxErrorPercent * count / 100;
-
-	 for (cutoff = 0; cutoff < MAX_SCORE && count > 0; cutoff++)
-		  count -= ValArr[cutoff][1];
-
-	 fpos = 0;
+	tot = 0;
 
 	for (i = 0; i < MAX_SCORE; i++)
-		 fpos += ValArr[i][0];
+		 tot += ValArr[i][1];
 
-	 count = 0;
+	if (tot)
+	{
+		count = 0;
 
-	 for (i = cutoff; i < MAX_SCORE; i++)
-		  count += ValArr[i][0];
+		for (i = 0; i < cutoff; i++)
+			count += ValArr[i][1];
 
-	 fpos = 100 * count / fpos;
+		errs = 100 * count / tot;
 
-	 file.Write("<tr style='height:24.75pt'>");
+		tot = 0;
 
-	 WriteCenteredFieldHeader(file, 35);
-	file.Write(Text);
-	WriteFieldFooter(file);
+		for (i = 0; i < MAX_SCORE; i++)
+			tot += ValArr[i][0];
 
-	val = (long double)cutoff / (long double)groupsum / 10.0;
+		if (tot)
+		{
+			count = 0;
 
-	 WriteCenteredFieldHeader(file, 15);
-	sprintf(str, " %2.1Lf\n", val);
-	file.Write(str);
-	 WriteFieldFooter(file);
+			for (i = cutoff; i < MAX_SCORE; i++)
+				count += ValArr[i][0];
 
-	 WriteCenteredFieldHeader(file, 15);
-	sprintf(str, " %d%\n", DxErrorPercent);
-	file.Write(str);
-	 WriteFieldFooter(file);
+			fpos = 100 * count / tot;
 
-	 WriteCenteredFieldHeader(file, 15);
-	sprintf(str, " %d%\n", fpos);
-	file.Write(str);
-    WriteFieldFooter(file);	
+			file.Write("<tr style='height:24.75pt'>");
 
-    file.Write("</tr>\n");
+			WriteCenteredFieldHeader(file, 35);
+			file.Write(Text);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 15);
+			sprintf(str, " %2.1Lf\n", Cutoff);
+			file.Write(str);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 15);
+			sprintf(str, " %d%\n", errs);
+			file.Write(str);
+			WriteFieldFooter(file);
+
+			WriteCenteredFieldHeader(file, 15);
+			sprintf(str, " %d%\n", fpos);
+			file.Write(str);
+			WriteFieldFooter(file);
+
+			file.Write("</tr>\n");
+		}
+	}
 }
 
 /*##################  TQuiz::DsmCutoff ##########################
@@ -12402,10 +12425,10 @@ void TQuiz::DsmCutoff(TFile &file, const char *Text, int PopType, int GroupArr[M
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuiz::DsmCutoff(const char *filename)
+void TQuiz::DsmCutoff(const char *filename, int All)
 {
-    int g;
-    int GroupArr[MAX_GROUP_COUNT];
+	int g;
+	int GroupArr[MAX_GROUP_COUNT];
 	char str[80];
 	TFile file(filename, 0);
 
@@ -12421,29 +12444,15 @@ void TQuiz::DsmCutoff(const char *filename)
 	 file.Write("Cutoff");
 	 WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
-    file.Write("Misdiagnosis");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("Misdiagnosis");
+	WriteFieldFooter(file);
 
-    WriteCenteredFieldHeader(file, 15);
-    file.Write("False positives");
-    WriteFieldFooter(file);
+	WriteCenteredFieldHeader(file, 15);
+	file.Write("False positives");
+	WriteFieldFooter(file);
 
 	file.Write("</tr>");
-
-#ifdef ENGLISH
-    strcpy(str, "Autism");
-#endif
-
-#ifdef SWEDISH
-    strcpy(str, "Autism");
-#endif
-
-    for (g = 0; g < MAX_GROUP_COUNT; g++)
-        GroupArr[g] = 0;
-
-    GroupArr[GROUP_ASPIE_NVC] = 2;
-	 DsmCutoff(file, str, POP_TYPE_AUTISM, GroupArr, 30);
 
 
 #ifdef ENGLISH
@@ -12459,7 +12468,7 @@ void TQuiz::DsmCutoff(const char *filename)
 
 	 GroupArr[GROUP_ASPIE_NVC] = 2;
 	 GroupArr[GROUP_NT_NVC] = 2;
-	 DsmCutoff(file, str, POP_TYPE_AS, GroupArr, 22);
+	 DsmCutoff(file, str, POP_TYPE_AS, GroupArr, AsCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12474,23 +12483,7 @@ void TQuiz::DsmCutoff(const char *filename)
 		  GroupArr[g] = 0;
 
 	 GroupArr[GROUP_ACTIVITY] = 2;
-	 DsmCutoff(file, str, POP_TYPE_ADD, GroupArr, 32);
-
-
-#ifdef ENGLISH
-	 strcpy(str, "Tourette");
-#endif
-
-#ifdef SWEDISH
-	 strcpy(str, "Tourette");
-#endif
-
-	 for (g = 0; g < MAX_GROUP_COUNT; g++)
-		  GroupArr[g] = 0;
-
-	 GroupArr[GROUP_ASPIE_NVC] = 2;
-	 GroupArr[GROUP_ASPIE_HUNTING] = 2;
-	 DsmCutoff(file, str, POP_TYPE_TS, GroupArr, 39);
+	 DsmCutoff(file, str, POP_TYPE_ADD, GroupArr, AddCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12505,7 +12498,7 @@ void TQuiz::DsmCutoff(const char *filename)
 		  GroupArr[g] = 0;
 
 	 GroupArr[GROUP_NT_SENSORY] = 2;
-	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA, GroupArr, 20);
+	 DsmCutoff(file, str, POP_TYPE_DYSPRAXIA, GroupArr, DyspraxiaCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12521,7 +12514,7 @@ void TQuiz::DsmCutoff(const char *filename)
 
 	 GroupArr[GROUP_NT_HUNTING] = 2;
 	 GroupArr[GROUP_ASPIE_HUNTING] = 1;
-	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA, GroupArr, 34);
+	 DsmCutoff(file, str, POP_TYPE_DYSLEXIA, GroupArr, DyslexiaCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12537,7 +12530,7 @@ void TQuiz::DsmCutoff(const char *filename)
 
 	 GroupArr[GROUP_NT_HUNTING] = 2;
 	 GroupArr[GROUP_NT_SENSORY] = 1;
-	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA, GroupArr, 31);
+	 DsmCutoff(file, str, POP_TYPE_DYSCALCULIA, GroupArr, DyscalculiaCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12553,7 +12546,7 @@ void TQuiz::DsmCutoff(const char *filename)
 
 	 GroupArr[GROUP_ACTIVITY] = 2;
 	 GroupArr[GROUP_ASPIE_SENSORY] = 1;
-	 DsmCutoff(file, str, POP_TYPE_BIPOLAR, GroupArr, 34);
+	 DsmCutoff(file, str, POP_TYPE_BIPOLAR, GroupArr, BipolarCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12569,7 +12562,7 @@ void TQuiz::DsmCutoff(const char *filename)
 
 	 GroupArr[GROUP_SOCIAL] = 2;
 	 GroupArr[GROUP_ENVIRONMENT] = 1;
-	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA, GroupArr, 27);
+	 DsmCutoff(file, str, POP_TYPE_SOCIAL_PHOBIA, GroupArr, SocialPhobiaCutoff, All);
 
 
 #ifdef ENGLISH
@@ -12584,8 +12577,9 @@ void TQuiz::DsmCutoff(const char *filename)
 		  GroupArr[g] = 0;
 
 	 GroupArr[GROUP_PARANOID] = 2;
-	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA, GroupArr, 28);
+	 DsmCutoff(file, str, POP_TYPE_SCHIZOPHRENIA, GroupArr, SchizophreniaCutoff, All);
 
 
 	file.Write("</table>\n");
 }
+
