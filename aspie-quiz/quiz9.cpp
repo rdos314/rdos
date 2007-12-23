@@ -391,10 +391,10 @@ void TQuiz9::SetupTexts()
   Quiz[10].MyGroup = GROUP_NT_SENSORY;
   Quiz[11].MyGroup = GROUP_NT_SENSORY;
   Quiz[12].MyGroup = GROUP_NT_SENSORY;
-  Quiz[13].MyGroup = GROUP_MIXED;
+  Quiz[13].MyGroup = GROUP_NT_SENSORY;
   Quiz[14].MyGroup = GROUP_NT_SENSORY;
   Quiz[15].MyGroup = GROUP_NT_SENSORY;
-  Quiz[16].MyGroup = GROUP_MIXED;
+  Quiz[16].MyGroup = GROUP_NT_SENSORY;
   Quiz[17].MyGroup = GROUP_NT_SENSORY;
   Quiz[18].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[19].MyGroup = GROUP_ASPIE_SENSORY;

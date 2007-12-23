@@ -379,7 +379,7 @@ void TQuizNd::SetupTexts()
 
 	Quiz[0].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[1].MyGroup = GROUP_ASPIE_SENSORY;
-	Quiz[2].MyGroup = GROUP_MIXED;
+	Quiz[2].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[3].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[4].MyGroup = GROUP_ASPIE_SENSORY;
 	Quiz[5].MyGroup = GROUP_MIXED;
@@ -399,7 +399,7 @@ void TQuizNd::SetupTexts()
 	Quiz[19].MyGroup = GROUP_NT_SENSORY;
 	Quiz[20].MyGroup = GROUP_NT_SENSORY;
 	Quiz[21].MyGroup = GROUP_NT_SENSORY;
-	Quiz[22].MyGroup = GROUP_MIXED;
+	Quiz[22].MyGroup = GROUP_NT_SENSORY;
 	Quiz[23].MyGroup = GROUP_MIXED;
 	Quiz[24].MyGroup = GROUP_NT_HUNTING;
 	Quiz[25].MyGroup = GROUP_MIXED;

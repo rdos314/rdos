@@ -317,7 +317,7 @@ void TQuiz8::SetupTexts()
   Quiz[0].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[1].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[2].MyGroup = GROUP_MIXED;
-  Quiz[3].MyGroup = GROUP_MIXED;
+  Quiz[3].MyGroup = GROUP_ASPIE_NVC;
   Quiz[4].MyGroup = GROUP_ASPIE_NVC;
   Quiz[5].MyGroup = GROUP_MIXED;
   Quiz[6].MyGroup = GROUP_ASPIE_SENSORY;
@@ -331,7 +331,7 @@ void TQuiz8::SetupTexts()
   Quiz[14].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[15].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[16].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[17].MyGroup = GROUP_MIXED;
+  Quiz[17].MyGroup = GROUP_NT_SENSORY;
   Quiz[18].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[19].MyGroup = GROUP_MIXED;
   Quiz[20].MyGroup = GROUP_NT_SENSORY;
