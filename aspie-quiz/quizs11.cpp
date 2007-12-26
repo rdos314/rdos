@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10)
-  : TQuiz(141),
+  : TQuiz(149),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -129,7 +129,7 @@ int TQuizS11::GetPcaCount()
 *##########################################################################*/
 int TQuizS11::GetCatCount(int Question)
 {
-	if (Question >= 168 && Question <= 187)
+	if (Question >= 149 && Question <= 187)
 		return 2;
 	else
 		return 3;
@@ -144,7 +144,7 @@ int TQuizS11::GetCatCount(int Question)
 *##########################################################################*/
 int TQuizS11::GetQuizN()
 {
-	return 141;
+	return 149;
 }
 
 /*##########################################################################
@@ -203,7 +203,7 @@ void TQuizS11::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX
 	{
 	    NoDx = FALSE;
 	    
-	    if (OnlyNtControl)
+		 if (OnlyNtControl)
 	    {
 			ref = FindReferer(Row.Referer);
 			if (ref && ref->NT)
@@ -314,148 +314,6 @@ void TQuizS11::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX
 *##########################################################################*/
 void TQuizS11::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 26);
-  DefineID(2, 151);
-  DefineID(3, 269);
-  DefineID(4, 20);
-  DefineID(5, 85);
-  DefineID(6, 100);
-  DefineID(7, 23);
-  DefineID(8, 5);
-  DefineID(9, 695);
-  DefineID(10, 3);
-  DefineID(11, 6);
-  DefineID(12, 397);
-  DefineID(13, 129);
-  DefineID(14, 743);
-  DefineID(15, 240);
-  DefineID(16, 319);
-  DefineID(17, 726);
-  DefineID(18, 25);
-  DefineID(19, 249);
-  DefineID(20, 37);
-  DefineID(21, 361);
-  DefineID(22, 39);
-  DefineID(23, 36);
-  DefineID(24, 596);
-  DefineID(25, 591);
-  DefineID(26, 595);
-  DefineID(27, 613);
-  DefineID(28, 740);
-  DefineID(29, 282);
-  DefineID(30, 97);
-  DefineID(31, 367);
-  DefineID(32, 272);
-  DefineID(33, 153);
-  DefineID(34, 516);
-  DefineID(35, 616);
-  DefineID(36, 1053);
-  DefineID(37, 518);
-  DefineID(38, 614);
-  DefineID(39, 1044);
-  DefineID(40, 70);
-  DefineID(41, 767);
-  DefineID(42, 66);
-  DefineID(43, 552);
-  DefineID(44, 507);
-  DefineID(45, 923);
-  DefineID(46, 856);
-  DefineID(47, 73);
-  DefineID(48, 858);
-  DefineID(49, 859);
-  DefineID(50, 454);
-  DefineID(51, 495);
-  DefineID(52, 378);
-  DefineID(53, 737);
-  DefineID(54, 32);
-  DefineID(55, 857);
-  DefineID(56, 115);
-  DefineID(57, 765);
-  DefineID(58, 731);
-  DefineID(59, 547);
-  DefineID(60, 403);
-  DefineID(61, 712);
-  DefineID(62, 359);
-  DefineID(63, 575);
-  DefineID(64, 55);
-  DefineID(65, 590);
-  DefineID(66, 15);
-  DefineID(67, 589);
-  DefineID(68, 570);
-  DefineID(69, 17);
-  DefineID(70, 572);
-  DefineID(71, 739);
-  DefineID(72, 574);
-  DefineID(73, 234);
-  DefineID(74, 401);
-  DefineID(75, 487);
-  DefineID(76, 130);
-  DefineID(77, 83);
-  DefineID(78, 745);
-  DefineID(79, 86);
-  DefineID(80, 82);
-  DefineID(81, 226);
-  DefineID(82, 551);
-  DefineID(83, 707);
-  DefineID(84, 128);
-  DefineID(85, 255);
-  DefineID(86, 265);
-  DefineID(87, 741);
-  DefineID(88, 708);
-  DefineID(89, 402);
-  DefineID(90, 582);
-  DefineID(91, 448);
-  DefineID(92, 439);
-  DefineID(93, 581);
-  DefineID(94, 926);
-  DefineID(95, 925);
-  DefineID(96, 316);
-  DefineID(97, 47);
-  DefineID(98, 862);
-  DefineID(99, 53);
-  DefineID(100, 54);
-  DefineID(101, 61);
-  DefineID(102, 48);
-  DefineID(103, 503);
-  DefineID(104, 385);
-  DefineID(105, 871);
-  DefineID(106, 632);
-  DefineID(107, 509);
-  DefineID(108, 510);
-  DefineID(109, 50);
-  DefineID(110, 514);
-  DefineID(111, 113);
-  DefineID(112, 46);
-  DefineID(113, 111);
-  DefineID(114, 89);
-  DefineID(115, 865);
-  DefineID(116, 866);
-  DefineID(117, 864);
-  DefineID(118, 781);
-  DefineID(119, 443);
-  DefineID(120, 601);
-  DefineID(121, 31);
-  DefineID(122, 718);
-  DefineID(123, 167);
-  DefineID(124, 93);
-  DefineID(125, 1046);
-  DefineID(126, 362);
-  DefineID(127, 433);
-  DefineID(128, 278);
-  DefineID(129, 78);
-  DefineID(130, 549);
-  DefineID(131, 126);
-  DefineID(132, 174);
-  DefineID(133, 227);
-  DefineID(134, 123);
-  DefineID(135, 1047);
-  DefineID(136, 715);
-  DefineID(137, 250);
-  DefineID(138, 724);
-  DefineID(139, 545);
-  DefineID(140, 262);
 }
 
 /*##########################################################################
@@ -633,7 +491,16 @@ void TQuizS11::SetupTexts()
   Quiz[137].MyGroup = GROUP_NT_SENSORY;
   Quiz[138].MyGroup = GROUP_SOCIAL;
   Quiz[139].MyGroup = GROUP_NT_NVC;
-  Quiz[140].MyGroup = GROUP_ASPIE_TALENT;
+
+  Quiz[140].MyGroup = GROUP_MIXED;
+  Quiz[141].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+  Quiz[144].MyGroup = GROUP_MIXED;
+  Quiz[145].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[147].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -763,10 +630,10 @@ void TQuizS11::SetupTexts()
   Quiz[123].Text = "Have you been bullied, abused or taken advantage of?";
   Quiz[124].Text = "Do you have immature interests?";
   Quiz[125].Text = "Have you experienced stronger than normal attachments to certain people?";
-  Quiz[126].Text = "Do you drop things when your attention is on other things?";
-  Quiz[127].Text = "Do you forget you are in a social situation when something gets your attention?";
-  Quiz[128].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
-  Quiz[129].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[126].Text = "Do you forget you are in a social situation when something gets your attention?";
+  Quiz[127].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
+  Quiz[128].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[129].Text = "Do you drop things when your attention is on other things?";
   Quiz[130].Text = "Have you had the feeling of playing a game, pretending to be like people around you?";
   Quiz[131].Text = "Do you or others think that you have unusual eating habits?";
   Quiz[132].Text = "Have you taken initiative only to find out it was not wanted?";
@@ -777,6 +644,16 @@ void TQuizS11::SetupTexts()
   Quiz[137].Text = "Do you find it easy to estimate the age of people?";
   Quiz[138].Text = "Are you good at teamwork?";
   Quiz[139].Text = "Do you have a good sense for what is the right thing to do socially?";
+
+  Quiz[140].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[141].Text = "Do you dislike reading aloud?";
+  Quiz[142].Text = "Do you have problems finding your way to new places?";
+  Quiz[143].Text = "Do you have problems filling out forms?";
+  Quiz[144].Text = "Do you mix up digits in numbers like 95 and 59?";
+  Quiz[145].Text = "Have you thought of one word but written another?";
+  Quiz[146].Text = "Do you mix up dates and times and miss appointments?";
+  Quiz[147].Text = "Are you good at games that require that you remember where several cards or other objects are located?";
+  Quiz[148].Text = "Do like it when people you are fond of looks a lot at you and continue to do so for several hours without anything else happening?";
 
 #endif
 
@@ -908,10 +785,10 @@ void TQuizS11::SetupTexts()
   Quiz[123].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad?";
   Quiz[124].Text = "Har du omogna intressen?";
   Quiz[125].Text = "Har du upplevt starkare bindningar än normalt med vissa människor?";
-  Quiz[126].Text = "Tappar du saker när din uppmärksamhet är på annat håll?";
-  Quiz[127].Text = "Glömmer du bort att du är i en social situation när något annat fångar ditt intresse?";
-  Quiz[128].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
-  Quiz[129].Text = "I samtal, brukar du behöva extra tid att noggant tänka ut vad du ska säga, så att det kan uppstå en paus innan du svarar?";
+  Quiz[126].Text = "Glömmer du bort att du är i en social situation när något annat fångar ditt intresse?";
+  Quiz[127].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
+  Quiz[128].Text = "I samtal, brukar du behöva extra tid att noggant tänka ut vad du ska säga, så att det kan uppstå en paus innan du svarar?";
+  Quiz[129].Text = "Tappar du saker när din uppmärksamhet är på annat håll?";
   Quiz[130].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
   Quiz[131].Text = "Tycker du själv eller din omgivning att du har ovanliga matvanor?";
   Quiz[132].Text = "Har du tagit initiativ som inte visat sig önskade?";
@@ -922,6 +799,16 @@ void TQuizS11::SetupTexts()
   Quiz[137].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[138].Text = "Är du bra på att arbeta i grupp?";
   Quiz[139].Text = "Har du en bra känla för vad som är rätt socialt?";
+
+  Quiz[140].Text = "Tycker du det är svårt att ta meddelenden på telefon och skicka dem vidare rätt?'";
+  Quiz[141].Text = "Ogillar du högläsning?";
+  Quiz[142].Text = "Har du svårt att hitta till nya platser?";
+  Quiz[143].Text = "Har du svårt att fylla i formulär?";
+  Quiz[144].Text = "Blandar du ihop siffor i tal som t.ex. 95 och 59?";
+  Quiz[145].Text = "Har du tänkt på ett ord men skrivit ett annat?";
+  Quiz[146].Text = "Blandar du ihop tider och datum och missar möten?";
+  Quiz[147].Text = "Är du bra på spel som kräver att du kommer ihåg var flera olika kort eller andra saker finns?";
+  Quiz[148].Text = "Gillar du när människor du är förtjust i tittar mycket på dig och fortsätter att göra det under flera timmar utan att något annat händer?";
 
 #endif
 
@@ -1267,16 +1154,16 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 17, 22);
     DefineCross(QuizS10, 18, 23);
     DefineCross(QuizS10, 19, 24);
-    DefineCross(QuizS10, 20, 25);
+	 DefineCross(QuizS10, 20, 25);
     DefineCross(QuizS10, 21, 26);
     DefineCross(QuizS10, 22, 27);
     DefineCross(QuizS10, 23, 28);
     DefineCross(QuizS10, 24, 29);
     DefineCross(QuizS10, 25, 30);
-    DefineCross(QuizS10, 26, 145);
+	 DefineCross(QuizS10, 26, 145);
     DefineCross(QuizS10, 27, 31);
     DefineCross(QuizS10, 28, 32);
-    DefineCross(QuizS10, 29, 33);
+	 DefineCross(QuizS10, 29, 33);
     DefineCross(QuizS10, 30, 34);
     DefineCross(QuizS10, 31, 35);
     DefineCross(QuizS10, 32, 36);
@@ -1297,16 +1184,16 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 47, 49);
     DefineCross(QuizS10, 48, 50);
     DefineCross(QuizS10, 49, 51);
-    DefineCross(QuizS10, 50, 53);
+	 DefineCross(QuizS10, 50, 53);
     DefineCross(QuizS10, 51, 54);
     DefineCross(QuizS10, 52, 55);
     DefineCross(QuizS10, 53, 56);
     DefineCross(QuizS10, 54, 58);
     DefineCross(QuizS10, 55, 59);
-    DefineCross(QuizS10, 56, 60);
+	 DefineCross(QuizS10, 56, 60);
     DefineCross(QuizS10, 57, 61);
     DefineCross(QuizS10, 58, 62);
-    DefineCross(QuizS10, 59, 63);
+	 DefineCross(QuizS10, 59, 63);
     DefineCross(QuizS10, 60, 64);
     DefineCross(QuizS10, 61, 65);
     DefineCross(QuizS10, 62, 66);
@@ -1327,16 +1214,16 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 77, 135);
     DefineCross(QuizS10, 78, 81);
     DefineCross(QuizS10, 79, 82);
-    DefineCross(QuizS10, 80, 84);
+	 DefineCross(QuizS10, 80, 84);
     DefineCross(QuizS10, 81, 85);
     DefineCross(QuizS10, 82, 86);
     DefineCross(QuizS10, 83, 87);
     DefineCross(QuizS10, 84, 89);
     DefineCross(QuizS10, 85, 90);
-    DefineCross(QuizS10, 86, 91);
+	 DefineCross(QuizS10, 86, 91);
     DefineCross(QuizS10, 87, 92);
     DefineCross(QuizS10, 88, 94);
-    DefineCross(QuizS10, 89, 95);
+	 DefineCross(QuizS10, 89, 95);
     DefineCross(QuizS10, 90, 96);
     DefineCross(QuizS10, 91, 97);
     DefineCross(QuizS10, 92, 98);
@@ -1357,36 +1244,45 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 107, 104);
     DefineCross(QuizS10, 108, 117);
     DefineCross(QuizS10, 109, 105);
-    DefineCross(QuizS10, 110, 118);
+	 DefineCross(QuizS10, 110, 118);
     DefineCross(QuizS10, 111, 119);
     DefineCross(QuizS10, 112, 107);
     DefineCross(QuizS10, 113, 120);
     DefineCross(QuizS10, 114, 125);
     DefineCross(QuizS10, 115, 123);
-    DefineCross(QuizS10, 116, 124);
+	 DefineCross(QuizS10, 116, 124);
     DefineCross(QuizS10, 117, 126);
     DefineCross(QuizS10, 118, 127);
-    DefineCross(QuizS10, 119, 128);
+	 DefineCross(QuizS10, 119, 128);
     DefineCross(QuizS10, 120, 129);
     DefineCross(QuizS10, 121, 130);
     DefineCross(QuizS10, 122, 131);
     DefineCross(QuizS10, 123, 132);
     DefineCross(QuizS10, 124, 158);
-    DefineCross(QuizS10, 125, 134);
-    DefineCross(QuizS10, 126, 102);
-    DefineCross(QuizS10, 127, 136);
-    DefineCross(QuizS10, 128, 137);
-    DefineCross(QuizS10, 129, 138);
-    DefineCross(QuizS10, 130, 139);
-    DefineCross(QuizS10, 131, 140);
-    DefineCross(QuizS10, 132, 141);
-    DefineCross(QuizS10, 133, 143);
-    DefineCross(QuizS10, 134, 159);
-    DefineCross(QuizS10, 135, 146);
-    DefineCross(QuizS10, 136, 152);
-    DefineCross(QuizS10, 137, 150);
-    DefineCross(QuizS10, 138, 148);
-    DefineCross(QuizS10, 139, 149);
+	 DefineCross(QuizS10, 125, 134);
+	 DefineCross(QuizS10, 126, 136);
+	 DefineCross(QuizS10, 127, 137);
+	 DefineCross(QuizS10, 128, 138);
+	 DefineCross(QuizS10, 129, 102);
+	 DefineCross(QuizS10, 130, 139);
+	 DefineCross(QuizS10, 131, 140);
+	 DefineCross(QuizS10, 132, 141);
+	 DefineCross(QuizS10, 133, 143);
+	 DefineCross(QuizS10, 134, 159);
+	 DefineCross(QuizS10, 135, 146);
+	 DefineCross(QuizS10, 136, 152);
+	 DefineCross(QuizS10, 137, 150);
+	 DefineCross(QuizS10, 138, 148);
+	 DefineCross(QuizS10, 139, 149);
+
+	 DefineGlobalId(140, 1075);
+	 DefineGlobalId(141, 1076);
+	 DefineGlobalId(142, 1077);
+	 DefineGlobalId(143, 1078);
+	 DefineGlobalId(144, 1079);
+	 DefineGlobalId(145, 1080);
+	 DefineGlobalId(146, 1081);
+	 DefineGlobalId(147, 1082);
 }
 
 /*##########################################################################

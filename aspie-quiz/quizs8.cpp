@@ -1071,7 +1071,7 @@ void TQuizS8::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-				if (i < 183)
+				if (i < 172)
 				{
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];

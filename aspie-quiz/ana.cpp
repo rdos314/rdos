@@ -136,7 +136,8 @@ int main(int argc, char **argv)
 //	 Quiz[22]->CheckCross();
 //	 Quiz[23]->CheckCross();
 //	 Quiz[24]->CheckCross();
-	 Quiz[25]->CheckCross();
+//	 Quiz[25]->CheckCross();
+	 Quiz[26]->CheckCross();
 
 	printf("all1\r\n");
 	Quiz[0]->ExportExcelCase("pca\\all1.dat", PCA_TYPE_ALL);
@@ -437,9 +438,9 @@ int main(int argc, char **argv)
 	printf("calc global\r\n");
 	 Quiz[25]->CalcGlobal();
 
-	 Quiz[26]->WritePhpQuestions("q.php");
-	 Quiz[26]->WriteSetupTexts("q.cpp");
-	 Quiz[26]->WriteSetupCross("c.cpp");
+//	 Quiz[26]->WritePhpQuestions("q.php");
+//	 Quiz[26]->WriteSetupTexts("q.cpp");
+//	 Quiz[26]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -465,12 +466,12 @@ int main(int argc, char **argv)
 	 Quiz[18]->WriteReferers("eval\\refs3.htm");
 	 Quiz[19]->WriteReferers("eval\\refs4.htm");
 	 Quiz[20]->WriteReferers("eval\\refs5.htm");
+#endif
+
 	 Quiz[21]->WriteReferers("eval\\refs6.htm");
 	 Quiz[22]->WriteReferers("eval\\refs7.htm");
 	 Quiz[23]->WriteReferers("eval\\refs8.htm");
 	 Quiz[24]->WriteReferers("eval\\refs9.htm");
-#endif
-
 	 Quiz[25]->WriteReferers("eval\\refs10.htm");
 
 	printf("details\r\n");
@@ -497,12 +498,12 @@ int main(int argc, char **argv)
 	 Quiz[18]->WriteSumaryTable("eval\\quizs3.htm", FALSE);
 	 Quiz[19]->WriteSumaryTable("eval\\quizs4.htm", FALSE);
 	 Quiz[20]->WriteSumaryTable("eval\\quizs5.htm", FALSE);
+#endif
+
 	 Quiz[21]->WriteSumaryTable("eval\\quizs6.htm", FALSE);
 	 Quiz[22]->WriteSumaryTable("eval\\quizs7.htm", FALSE);
 	 Quiz[23]->WriteSumaryTable("eval\\quizs8.htm", FALSE);
 	 Quiz[24]->WriteSumaryTable("eval\\quizs9.htm", FALSE);
-#endif
-
 	 Quiz[25]->WriteSumaryTable("eval\\quizs10.htm", FALSE);
 
 	printf("rel\r\n");
@@ -529,12 +530,12 @@ int main(int argc, char **argv)
 	 Quiz[18]->WriteIntercorr("eval\\rels3.htm");
 	 Quiz[19]->WriteIntercorr("eval\\rels4.htm");
 	 Quiz[20]->WriteIntercorr("eval\\rels5.htm");
+#endif
+
 	 Quiz[21]->WriteIntercorr("eval\\rels6.htm");
 	 Quiz[22]->WriteIntercorr("eval\\rels7.htm");
 	 Quiz[23]->WriteIntercorr("eval\\rels8.htm");
 	 Quiz[24]->WriteIntercorr("eval\\rels9.htm");
-#endif
-
 	 Quiz[25]->WriteIntercorr("eval\\rels10.htm");
 
 	printf("group\r\n");
@@ -597,7 +598,8 @@ int main(int argc, char **argv)
 	 Quiz[22]->WriteRetest("eval\\retests7.htm");
 	 Quiz[23]->WriteRetest("eval\\retests8.htm");
 	 Quiz[24]->WriteRetest("eval\\retests9.htm");
-	 Quiz[24]->WriteVersionRetest("eval\\vervar.htm");
+	 Quiz[25]->WriteRetest("eval\\retests10.htm");
+	 Quiz[25]->WriteVersionRetest("eval\\vervar.htm");
 
 #ifdef ALL
 	printf("imgrate\r\n");
@@ -705,6 +707,8 @@ int main(int argc, char **argv)
 	 Quiz[25]->WriteGroupWeighting("convs10.h");
 #endif
 
+	 Quiz[26]->WriteGroupWeighting("convs11.h");
+
 	printf("type histograms\r\n");
 	 Quiz[25]->ExportDiffHistogram("csv\\all.csv", POP_TYPE_ALL);
 
@@ -776,8 +780,8 @@ int main(int argc, char **argv)
 
 
 //	 Quiz[18]->WriteWeighting("weights.cpp");
-//	 Quiz[25]->WritePhpWeighting("weights.php");
-//	 Quiz[25]->WritePhpGroupWeighting("group.php");
+	 Quiz[26]->WritePhpWeighting("weights.php");
+	 Quiz[26]->WritePhpGroupWeighting("group.php");
 
 //	 Quiz[9]->MoveWiki("iwiki.txt", "wiki.txt", 0.2);
 

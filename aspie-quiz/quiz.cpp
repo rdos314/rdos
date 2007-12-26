@@ -7069,12 +7069,12 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("</a>");
 
 #ifdef ENGLISH
-	file.Write(" <a href=\"quizs10.htm\">overview</a> <a href=\"rels10.htm\">related questions</a> <a href=\"refs10.htm\">referer sites</a>");
+	file.Write(" <a href=\"quizs10.htm\">overview</a> <a href=\"rels10.htm\">related questions</a> <a href=\"refs10.htm\">referer sites</a> <a href=\"retests10.htm\">score stability</a> <a href=\"adult-dyslexia.htm\">Adult Dyslexia test</a>");
 	file.Write("<br>");
 #endif
 
 #ifdef SWEDISH
-	 file.Write(" <a href=\"quizs10.htm\">översikt</a> <a href=\"rels10.htm\">relaterade frågor</a> <a href=\"refs10.htm\">referenssajter</a>");
+	 file.Write(" <a href=\"quizs10.htm\">översikt</a> <a href=\"rels10.htm\">relaterade frågor</a> <a href=\"refs10.htm\">referenssajter</a> <a href=\"retests10.htm\">poäng stabilitet</a>");
 	 file.Write("<br>");
 #endif
 

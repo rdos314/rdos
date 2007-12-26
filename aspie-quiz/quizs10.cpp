@@ -1116,7 +1116,7 @@ void TQuizS10::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-				if (i < 236)
+				if (i < 188)
 				{
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
@@ -1297,20 +1297,20 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 0, 0);
     DefineCross(QuizS9, 1, 1);
     DefineCross(QuizS9, 2, 2);
-    DefineCross(QuizS9, 3, 3);
+	 DefineCross(QuizS9, 3, 3);
     DefineCross(QuizS9, 4, 4);
     DefineCross(QuizS9, 5, 5);
     DefineCross(QuizS9, 6, 7);
     DefineCross(QuizS9, 7, 6);
     DefineCross(QuizS9, 8, 8);
-    DefineCross(QuizS9, 9, 9);
+	 DefineCross(QuizS9, 9, 9);
     DefineCross(QuizS9, 10, 10);
     DefineCross(QuizS9, 11, 11);
 	DefineCross(QuizS9, 12, 12);
     DefineCross(QuizS9, 13, 13);
     DefineCross(QuizS9, 14, 14);
     DefineCross(QuizS9, 15, 15);
-    DefineCross(QuizS9, 16, 16);
+	 DefineCross(QuizS9, 16, 16);
     DefineCross(QuizS9, 17, 17);
     DefineCross(QuizS9, 18, 18);
     DefineCross(QuizS9, 19, 19);
@@ -1327,7 +1327,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 30, 32);
     DefineCross(QuizS9, 31, 55);
     DefineCross(QuizS9, 32, 34);
-    DefineCross(QuizS9, 33, 35);
+	 DefineCross(QuizS9, 33, 35);
     DefineCross(QuizS9, 34, 37);
     DefineCross(QuizS9, 35, 39);
     DefineCross(QuizS9, 36, 38);
@@ -1340,7 +1340,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 43, 40);
     DefineCross(QuizS9, 44, 41);
     DefineCross(QuizS9, 45, 47);
-    DefineCross(QuizS9, 46, 42);
+	 DefineCross(QuizS9, 46, 42);
     DefineCross(QuizS9, 47, 51);
 	DefineCross(QuizS9, 48, 48);
     DefineCross(QuizS9, 49, 49);
@@ -1357,20 +1357,20 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 60, 60);
     DefineCross(QuizS9, 61, 61);
     DefineCross(QuizS9, 62, 62);
-    DefineCross(QuizS9, 63, 63);
+	 DefineCross(QuizS9, 63, 63);
     DefineCross(QuizS9, 64, 64);
     DefineCross(QuizS9, 65, 65);
 	DefineCross(QuizS9, 66, 66);
     DefineCross(QuizS9, 67, 67);
     DefineCross(QuizS9, 68, 68);
-    DefineCross(QuizS9, 69, 69);
+	 DefineCross(QuizS9, 69, 69);
     DefineCross(QuizS9, 70, 70);
     DefineCross(QuizS9, 71, 71);
     DefineCross(QuizS9, 72, 72);
     DefineCross(QuizS9, 73, 73);
     DefineCross(QuizS9, 74, 74);
 	DefineCross(QuizS9, 75, 75);
-    DefineCross(QuizS9, 76, 76);
+	 DefineCross(QuizS9, 76, 76);
     DefineCross(QuizS9, 77, 77);
     DefineCross(QuizS9, 78, 78);
     DefineCross(QuizS9, 79, 79);
@@ -1393,14 +1393,14 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 96, 93);
     DefineCross(QuizS9, 97, 94);
     DefineCross(QuizS9, 98, 95);
-    DefineCross(QuizS9, 99, 96);
+	 DefineCross(QuizS9, 99, 96);
     DefineCross(QuizS9, 100, 97);
     DefineCross(QuizS9, 101, 98);
 	DefineCross(QuizS9, 102, 99);
     DefineCross(QuizS9, 103, 100);
     DefineCross(QuizS9, 104, 101);
     DefineCross(QuizS9, 105, 102);
-    DefineCross(QuizS9, 106, 103);
+	 DefineCross(QuizS9, 106, 103);
     DefineCross(QuizS9, 107, 104);
     DefineCross(QuizS9, 108, 105);
     DefineCross(QuizS9, 109, 106);
@@ -1417,7 +1417,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 	DefineCross(QuizS9, 120, 117);
     DefineCross(QuizS9, 121, 118);
     DefineCross(QuizS9, 122, 119);
-    DefineCross(QuizS9, 123, 120);
+	 DefineCross(QuizS9, 123, 120);
     DefineCross(QuizS9, 124, 121);
     DefineCross(QuizS9, 125, 122);
     DefineCross(QuizS9, 126, 123);
@@ -1430,7 +1430,7 @@ void TQuizS10::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS9, 133, 130);
     DefineCross(QuizS9, 134, 131);
     DefineCross(QuizS9, 135, 132);
-    DefineCross(QuizS9, 136, 133);
+	 DefineCross(QuizS9, 136, 133);
     DefineCross(QuizS9, 137, 134);
     DefineCross(QuizS9, 138, 135);
     DefineCross(QuizS9, 139, 136);
@@ -1537,13 +1537,13 @@ static int IsPca(TQuizRow *row, int PcaType)
 	{
 		case PCA_TYPE_ALL:
 		case PCA_TYPE_MIXED:
-            return TRUE;
+				return TRUE;
 
 		case PCA_TYPE_MALE:
 			if (row->Gender == 1)
                 return TRUE;
 			else
-                return FALSE;
+					 return FALSE;
 
         case PCA_TYPE_FEMALE:
 			if (row->Gender == 2)
@@ -1567,7 +1567,7 @@ static int IsPca(TQuizRow *row, int PcaType)
 				if (row->Autism == 2 || row->Aspie == 2)
 				return TRUE;
 			else
-                return FALSE;
+					 return FALSE;
 
     }
 	return FALSE;
@@ -1627,7 +1627,7 @@ void TQuizS10::ExportExcelCase(const char *filename, int PcaType)
     				ival = Row.Quiz[i];
 	    			if (ival)
 						ival--;
-    
+
 					if (ival > 2)
 						ival = 0;
                     
@@ -1856,7 +1856,7 @@ void TQuizS10::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -2030,7 +2030,7 @@ void TQuizS10::WriteDyslexia(const char *filename)
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
 		if (Row.DysResult)
-        {
+		  {
             zx = ((long double)Row.DysResult - DysMean) / DysSd;
 
             zy = ((long double)Row.AsResult - AsMean) / AsSd;
@@ -2057,3 +2057,310 @@ void TQuizS10::WriteDyslexia(const char *filename)
 	printf("Dyslexia - NT score correlation: %5.2Lf\r\n", NtCorr);
 	printf("Dyslexia - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }
+
+
+/*##################  TQuizS10::WriteRetest ##########################
+*   Purpose....: Write retest report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS10::WriteRetest(const char *filename)
+{
+	TQuizRow Row;
+	int userid;
+	int i;
+	int index;
+	int birthyear;
+	int birthmonth;
+	int gender;
+	long double val;
+	long double AsSum;
+	long double NtSum;
+	long double AsMean;
+	long double NtMean;
+	long double QMean[168];
+	long double AsSd;
+	long double NtSd;
+	long double QSd[168];
+	long double AsTot;
+	long double NtTot;
+	int AsCount;
+	int NtCount;
+	long double QTot[168];
+	int QCount[168];
+	long double sd;
+	int AsArr[20];
+	int NtArr[20];
+	int q;
+	int count;
+	long double sum;
+	int QArr[168][20];
+	int ok;
+	char str[80];
+	TFile file(filename, 0);
+
+	for (userid = 0; userid < MAX_USERS; userid++)
+		 UserInfo[userid] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		 userid = Row.userid;
+
+		 if (userid)
+		 {
+			  if (UserInfo[userid] == 0)
+			  {
+					UserInfo[userid] = new TUserInfo;
+					UserInfo[userid]->Count = 1;
+					  UserInfo[userid]->BirthYear = Row.BirthYear;
+					  UserInfo[userid]->BirthMonth = Row.BirthMonth;
+					UserInfo[userid]->AsSum = Row.AsResult;
+					UserInfo[userid]->NtSum = Row.NtResult;
+			  }
+			  else
+					UserInfo[userid]->Count++;
+		 }
+	}
+
+	 AsCount = 0;
+	 NtCount = 0;
+	 AsTot = 0;
+	 NtTot = 0;
+
+	 for (q = 0; q < 168; q++)
+	 {
+		  QTot[q] = 0;
+		  QCount[q] = 0;
+	 }
+
+	for (userid = 1; userid < MAX_USERS; userid++)
+	{
+		  if (UserInfo[userid])
+		  {
+				if (UserInfo[userid]->Count > 1)
+				 {
+					 for (i = 0; i < 20; i++)
+					 {
+						  AsArr[i] = 0;
+						  NtArr[i] = 0;
+
+						  for (q = 0; q < 168; q++)
+								QArr[q][i] = 0;
+					 }
+
+					 index = 0;
+
+					FDataFile.SetPos(0);
+				 while (FDataFile.Read(&Row, sizeof(Row)))
+					{
+						 if (Row.userid == userid)
+						 {
+								ok = FALSE;
+
+							if (index == 0)
+							{
+									birthyear = Row.BirthYear;
+									birthmonth = Row.BirthMonth;
+									gender = Row.Gender;
+								 ok = TRUE;
+
+									  UserInfo[userid]->Count = 1;
+									 UserInfo[userid]->BirthYear = Row.BirthYear;
+									 UserInfo[userid]->BirthMonth = Row.BirthMonth;
+									UserInfo[userid]->AsSum = Row.AsResult;
+									UserInfo[userid]->NtSum = Row.NtResult;
+							}
+							else
+							  {
+									if (    birthyear == Row.BirthYear &&
+											  birthmonth == Row.BirthMonth &&
+											gender == Row.Gender)
+								 {
+									  ok = TRUE;
+
+									  UserInfo[userid]->Count++;
+									  UserInfo[userid]->AsSum += Row.AsResult;
+									  UserInfo[userid]->NtSum += Row.NtResult;
+								 }
+							}
+
+							  if (ok)
+							  {
+								  AsArr[index] = Row.AsResult;
+								  NtArr[index] = Row.NtResult;
+
+								  for (q = 0; q < 168; q++)
+										QArr[q][index] = Row.Quiz[q];
+
+								 index++;
+							}
+					  }
+				 }
+
+				if (index > 1)
+				{
+					AsSum = 0;
+					NtSum = 0;
+
+					for (i = 0; i < index; i++)
+					{
+						AsSum += AsArr[i];
+						NtSum += NtArr[i];
+					 }
+
+					AsMean = AsSum / index;
+					NtMean = NtSum / index;
+
+					for (q = 0; q < 168; q++)
+					{
+						 count = 0;
+						  sum = 0;
+
+						 for (i = 0; i < index; i++)
+						 {
+							  if (QArr[q][i])
+							  {
+									 sum += QArr[q][i] - 1;
+									 count++;
+								}
+						 }
+
+						 if (count)
+							  QMean[q] = sum / count;
+						 else
+								QMean[q] = 0;
+					}
+
+					AsSum = 0;
+					NtSum = 0;
+
+					for (i = 0; i < index; i++)
+					 {
+						val = AsArr[i] - AsMean;
+						AsSum += val * val;
+
+						val = NtArr[i] - NtMean;
+						NtSum += val * val;
+					}
+
+					 AsSd = sqrtl(AsSum / index);
+					NtSd = sqrtl(NtSum / index);
+
+					for (q = 0; q < 168; q++)
+					{
+						 count = 0;
+						  sum = 0;
+
+						 for (i = 0; i < index; i++)
+						 {
+							  if (QArr[q][i])
+								{
+									 val = QArr[q][i] - 1 - QMean[q];
+									 sum += val * val;
+									 count++;
+							  }
+						 }
+
+								if (count)
+								{
+							 QSd[q] = sqrtl(sum / count);
+
+							 QTot[q] += QSd[q];
+							 QCount[q]++;
+						}
+						else
+							  QSd[q] = 0;
+					}
+
+						  AsTot += AsSd;
+						  AsCount++;
+
+					NtTot += NtSd;
+					 NtCount++;
+
+//  				sprintf(str, "Userid: %d, AS: %5.1Lf (%5.1Lf), NT: %5.1Lf (%5.1Lf)<br>", userid, AsMean, AsSd, NtMean, NtSd);
+//	    			file.Write(str);
+//
+//		    		for (q = 0; q < 135; q++)
+//			    	{
+//				        if (QSd[q] > 0.1)
+//  				    {
+//        				    sprintf(str, "#%d, Sd = %5.1Lf<br>", q, QSd[q]);
+//    	    			    file.Write(str);
+//    		    		}
+//    		        }
+				}
+			 }
+		}
+	}
+
+	AsSd = AsTot / AsCount;
+	NtSd = NtTot / NtCount;
+
+#ifdef ENGLISH
+	file.Write("<h2>Retest result</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Omtestnings resultat</h2>\n");
+#endif
+
+#ifdef ENGLISH
+	sprintf(str, "Population size: %d", AsCount);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "Populationsstorlek: %d", AsCount);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+#ifdef ENGLISH
+	sprintf(str, "AS score standard deviation: %2.1Lf", AsSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "AS poäng standardavvikelse: %2.1Lf", AsSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br>");
+
+#ifdef ENGLISH
+	sprintf(str, "NT score standard deviation: %2.1Lf", NtSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "NT poäng standardavvikelse: %2.1Lf", NtSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+
+#ifdef ENGLISH
+	file.Write("<h3>Question standard deviations</h3>");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h3>Standardavvikelser per fråga</h3>");
+#endif
+
+	for (q = 0; q < 168; q++)
+	{
+		 sprintf(str, "%d. ", q + 1);
+		 file.Write(str);
+
+		file.Write(Quiz[q].Text);
+
+		 sd = QTot[q] / QCount[q];
+
+		  sprintf(str, " <b>%3.2Lf</b><br>", sd);
+		file.Write(str);
+	 }
+}
+
