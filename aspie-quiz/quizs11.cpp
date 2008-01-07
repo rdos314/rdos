@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10)
-  : TQuiz(149),
+  : TQuiz(181),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -90,7 +90,7 @@ TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Qui
 	SortReferers();
 	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10);
 	LoadPopulations();
-//	Calculate();
+	Calculate();
 }
 
 /*##########################################################################
@@ -129,7 +129,7 @@ int TQuizS11::GetPcaCount()
 *##########################################################################*/
 int TQuizS11::GetCatCount(int Question)
 {
-	if (Question >= 149 && Question <= 187)
+	if (Question >= 149 && Question <= 175)
 		return 2;
 	else
 		return 3;
@@ -439,7 +439,7 @@ void TQuizS11::SetupTexts()
   Quiz[85].MyGroup = GROUP_NT_NVC;
   Quiz[86].MyGroup = GROUP_NT_NVC;
   Quiz[87].MyGroup = GROUP_NT_NVC;
-  Quiz[88].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[88].MyGroup = GROUP_ASPIE_NVC;
   Quiz[89].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[90].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[91].MyGroup = GROUP_ASPIE_HUNTING;
@@ -464,23 +464,23 @@ void TQuizS11::SetupTexts()
   Quiz[110].MyGroup = GROUP_NT_SENSORY;
   Quiz[111].MyGroup = GROUP_NT_SENSORY;
   Quiz[112].MyGroup = GROUP_NT_SENSORY;
-  Quiz[113].MyGroup = GROUP_NT_SENSORY;
+  Quiz[113].MyGroup = GROUP_NT_NVC;
   Quiz[114].MyGroup = GROUP_PARANOID;
   Quiz[115].MyGroup = GROUP_PARANOID;
   Quiz[116].MyGroup = GROUP_PARANOID;
-  Quiz[117].MyGroup = GROUP_PARANOID;
+  Quiz[117].MyGroup = GROUP_ENVIRONMENT;
   Quiz[118].MyGroup = GROUP_ENVIRONMENT;
   Quiz[119].MyGroup = GROUP_ENVIRONMENT;
   Quiz[120].MyGroup = GROUP_ENVIRONMENT;
   Quiz[121].MyGroup = GROUP_ENVIRONMENT;
   Quiz[122].MyGroup = GROUP_ENVIRONMENT;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[124].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[124].MyGroup = GROUP_MIXED;
   Quiz[125].MyGroup = GROUP_ENVIRONMENT;
   Quiz[126].MyGroup = GROUP_MIXED;
   Quiz[127].MyGroup = GROUP_MIXED;
   Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_MIXED;
+  Quiz[129].MyGroup = GROUP_NT_HUNTING;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
@@ -492,15 +492,49 @@ void TQuizS11::SetupTexts()
   Quiz[138].MyGroup = GROUP_SOCIAL;
   Quiz[139].MyGroup = GROUP_NT_NVC;
 
-  Quiz[140].MyGroup = GROUP_MIXED;
-  Quiz[141].MyGroup = GROUP_MIXED;
-  Quiz[142].MyGroup = GROUP_MIXED;
-  Quiz[143].MyGroup = GROUP_MIXED;
-  Quiz[144].MyGroup = GROUP_MIXED;
-  Quiz[145].MyGroup = GROUP_MIXED;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[140].MyGroup = GROUP_NT_HUNTING;
+  Quiz[141].MyGroup = GROUP_SOCIAL;
+  Quiz[142].MyGroup = GROUP_NT_SENSORY;
+  Quiz[143].MyGroup = GROUP_NT_HUNTING;
+  Quiz[144].MyGroup = GROUP_NT_HUNTING;
+  Quiz[145].MyGroup = GROUP_NT_HUNTING;
+  Quiz[146].MyGroup = GROUP_NT_HUNTING;
   Quiz[147].MyGroup = GROUP_MIXED;
   Quiz[148].MyGroup = GROUP_MIXED;
+
+  Quiz[149].MyGroup = GROUP_MIXED;
+  Quiz[150].MyGroup = GROUP_MIXED;
+  Quiz[151].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[152].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[153].MyGroup = GROUP_MIXED;
+  Quiz[154].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[155].MyGroup = GROUP_MIXED;
+  Quiz[156].MyGroup = GROUP_MIXED;
+  Quiz[157].MyGroup = GROUP_MIXED;
+  Quiz[158].MyGroup = GROUP_MIXED;
+  Quiz[159].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[162].MyGroup = GROUP_MIXED;
+  Quiz[163].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[165].MyGroup = GROUP_MIXED;
+  Quiz[166].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[168].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_MIXED;
+  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[171].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[173].MyGroup = GROUP_MIXED;
+  Quiz[174].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_MIXED;
+
+  Quiz[176].MyGroup = GROUP_NT_HUNTING;
+  Quiz[177].MyGroup = GROUP_NT_HUNTING;
+  Quiz[178].MyGroup = GROUP_NT_SENSORY;
+  Quiz[179].MyGroup = GROUP_ACTIVITY;
+  Quiz[180].MyGroup = GROUP_SOCIAL;
 
 #ifdef ENGLISH
 
@@ -654,6 +688,40 @@ void TQuizS11::SetupTexts()
   Quiz[146].Text = "Do you mix up dates and times and miss appointments?";
   Quiz[147].Text = "Are you good at games that require that you remember where several cards or other objects are located?";
   Quiz[148].Text = "Do like it when people you are fond of looks a lot at you and continue to do so for several hours without anything else happening?";
+
+  Quiz[149].Text = "TS - Do you involuntarily swear or utter obscene words or socially inappropriate and derogatory remarks (coprolalia)?";
+  Quiz[150].Text = "TS - Do you involuntarily repeat or imitate observed movements of others (echopraxia)?";
+  Quiz[151].Text = "TS - Do you repeat vocalizations made by others (echolalia)?";
+  Quiz[152].Text = "TS - Do you repeat or echo your own spoken words (stuttering, palilalia)?";
+  Quiz[153].Text = "TS - Do you have complex motor tics (eg facial grimaces, pulling cloth, touching people or objects, obscene gesturing or gyrating movements)?";
+  Quiz[154].Text = "TS - Do you have complex vocal tics (eg talking to yourself, using socially meaningless sentences)?";
+  Quiz[155].Text = "TS - Did you have tics before the age of twelve?";
+  Quiz[156].Text = "TS - If you have tics, do the wax and wane?";
+  Quiz[157].Text = "TS - If you have tics, did they begin above shoulders";
+  Quiz[158].Text = "TS - Do you have five or more motor tic types in the list above?";
+  Quiz[159].Text = "TS - Do you have three or more vocal tic types in the list above?";
+  Quiz[160].Text = "TS - If you have motor tics, do they affect multiple body locations?";
+  Quiz[161].Text = "TS - If you have tics, have they varied with some tics disappearing and new tics appearing over time?";
+  Quiz[162].Text = "TS - If you have tics, do you have them even if you are not in a stressful situation?";
+  Quiz[163].Text = "TS - If you have tics, are they voluntarily suppressible?";
+  Quiz[164].Text = "TS - If you have tics, do you attempt to suppress them?";
+  Quiz[165].Text = "TS - If you have tics and you try to suppress them, do they become worse (rebound effect)?";
+  Quiz[166].Text = "TS - If you have tics, can you sense their coming beforehand (premonitory sensation)?";
+  Quiz[167].Text = "TS - If you have tics, do you sense relief after you had them?";
+  Quiz[168].Text = "TS - If you have tics, do a mention or sight of a specific tic induce it (suggestible)?";
+  Quiz[169].Text = "TS - Do you have frequent tics (more than one per minute at times)?";
+  Quiz[170].Text = "TS - Do you have orchestrated sequences of tics?";
+  Quiz[171].Text = "TS - If you have tics, do they cause distress?";
+  Quiz[172].Text = "TS - If you have tics, have you sought treatment or diagnosis?";
+  Quiz[173].Text = "TS - Have you had tics for a duration of two or more years";
+  Quiz[174].Text = "TS - Have your tics been confirmed by one or more reliable observers?";
+  Quiz[175].Text = "TS - Do you have an absence of other medical problems that might cause tics (eg prior stimulant therapy, history of encephalitis)?";
+
+  Quiz[176].Text = "Dyslexia";
+  Quiz[177].Text = "Dyscalculia";
+  Quiz[178].Text = "Dyspraxia";
+  Quiz[179].Text = "Bipolar";
+  Quiz[180].Text = "Social phobia";
 
 #endif
 
@@ -810,6 +878,40 @@ void TQuizS11::SetupTexts()
   Quiz[147].Text = "Är du bra på spel som kräver att du kommer ihåg var flera olika kort eller andra saker finns?";
   Quiz[148].Text = "Gillar du när människor du är förtjust i tittar mycket på dig och fortsätter att göra det under flera timmar utan att något annat händer?";
 
+  Quiz[149].Text = "TS - Do you involuntarily swear or utter obscene words or socially inappropriate and derogatory remarks (coprolalia)?";
+  Quiz[150].Text = "TS - Do you involuntarily repeat or imitate observed movements of others (echopraxia)?";
+  Quiz[151].Text = "TS - Do you repeat vocalizations made by others (echolalia)?";
+  Quiz[152].Text = "TS - Do you repeat or echo your own spoken words (stuttering, palilalia)?";
+  Quiz[153].Text = "TS - Do you have complex motor tics (eg facial grimaces, pulling cloth, touching people or objects, obscene gesturing or gyrating movements)?";
+  Quiz[154].Text = "TS - Do you have complex vocal tics (eg talking to yourself, using socially meaningless sentences)?";
+  Quiz[155].Text = "TS - Did you have tics before the age of twelve?";
+  Quiz[156].Text = "TS - If you have tics, do the wax and wane?";
+  Quiz[157].Text = "TS - If you have tics, did they begin above shoulders";
+  Quiz[158].Text = "TS - Do you have five or more motor tic types in the list above?";
+  Quiz[159].Text = "TS - Do you have three or more vocal tic types in the list above?";
+  Quiz[160].Text = "TS - If you have motor tics, do they affect multiple body locations?";
+  Quiz[161].Text = "TS - If you have tics, have they varied with some tics disappearing and new tics appearing over time?";
+  Quiz[162].Text = "TS - If you have tics, do you have them even if you are not in a stressful situation?";
+  Quiz[163].Text = "TS - If you have tics, are they voluntarily suppressible?";
+  Quiz[164].Text = "TS - If you have tics, do you attempt to suppress them?";
+  Quiz[165].Text = "TS - If you have tics and you try to suppress them, do they become worse (rebound effect)?";
+  Quiz[166].Text = "TS - If you have tics, can you sense their coming beforehand (premonitory sensation)?";
+  Quiz[167].Text = "TS - If you have tics, do you sense relief after you had them?";
+  Quiz[168].Text = "TS - If you have tics, do a mention or sight of a specific tic induce it (suggestible)?";
+  Quiz[169].Text = "TS - Do you have frequent tics (more than one per minute at times)?";
+  Quiz[170].Text = "TS - Do you have orchestrated sequences of tics?";
+  Quiz[171].Text = "TS - If you have tics, do they cause distress?";
+  Quiz[172].Text = "TS - If you have tics, have you sought treatment or diagnosis?";
+  Quiz[173].Text = "TS - Have you had tics for a duration of two or more years";
+  Quiz[174].Text = "TS - Have your tics been confirmed by one or more reliable observers?";
+  Quiz[175].Text = "TS - Do you have an absence of other medical problems that might cause tics (eg prior stimulant therapy, history of encephalitis)?";
+
+  Quiz[176].Text = "Dyslexi";
+  Quiz[177].Text = "Dyskaluli";
+  Quiz[178].Text = "Dyspraxi";
+  Quiz[179].Text = "Bipolär";
+  Quiz[180].Text = "Social fobi";
+
 #endif
 
 }
@@ -948,11 +1050,11 @@ void TQuizS11::LoadPopulations()
 	{
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-//		Row.Quiz[188] = Row.Dyspraxia + 1;
-//		Row.Quiz[188] = Row.Dyslexia + 1;
-//		Row.Quiz[189] = Row.Dyscalculia + 1;
-//		Row.Quiz[192] = Row.Bipolar + 1;
-//		Row.Quiz[193] = Row.Social + 1;
+		Row.Quiz[176] = Row.Dyslexia + 1;
+		Row.Quiz[177] = Row.Dyscalculia + 1;
+		Row.Quiz[178] = Row.Dyspraxia + 1;
+		Row.Quiz[179] = Row.Bipolar + 1;
+		Row.Quiz[180] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1135,25 +1237,25 @@ void TQuizS11::SetupControlGroups()
 void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10)
 {
     DefineCross(QuizS10, 0, 0);
-    DefineCross(QuizS10, 1, 1);
+	 DefineCross(QuizS10, 1, 1);
     DefineCross(QuizS10, 2, 2);
     DefineCross(QuizS10, 3, 3);
     DefineCross(QuizS10, 4, 5);
-    DefineCross(QuizS10, 5, 4);
+	 DefineCross(QuizS10, 5, 4);
     DefineCross(QuizS10, 6, 6);
     DefineCross(QuizS10, 7, 10);
     DefineCross(QuizS10, 8, 11);
     DefineCross(QuizS10, 9, 14);
     DefineCross(QuizS10, 10, 15);
     DefineCross(QuizS10, 11, 16);
-    DefineCross(QuizS10, 12, 17);
+	 DefineCross(QuizS10, 12, 17);
     DefineCross(QuizS10, 13, 18);
     DefineCross(QuizS10, 14, 19);
     DefineCross(QuizS10, 15, 20);
     DefineCross(QuizS10, 16, 93);
-    DefineCross(QuizS10, 17, 22);
+	 DefineCross(QuizS10, 17, 22);
     DefineCross(QuizS10, 18, 23);
-    DefineCross(QuizS10, 19, 24);
+	 DefineCross(QuizS10, 19, 24);
 	 DefineCross(QuizS10, 20, 25);
     DefineCross(QuizS10, 21, 26);
     DefineCross(QuizS10, 22, 27);
@@ -1161,29 +1263,29 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 24, 29);
     DefineCross(QuizS10, 25, 30);
 	 DefineCross(QuizS10, 26, 145);
-    DefineCross(QuizS10, 27, 31);
+	 DefineCross(QuizS10, 27, 31);
     DefineCross(QuizS10, 28, 32);
 	 DefineCross(QuizS10, 29, 33);
     DefineCross(QuizS10, 30, 34);
-    DefineCross(QuizS10, 31, 35);
+	 DefineCross(QuizS10, 31, 35);
     DefineCross(QuizS10, 32, 36);
     DefineCross(QuizS10, 33, 37);
     DefineCross(QuizS10, 34, 38);
-    DefineCross(QuizS10, 35, 165);
+	 DefineCross(QuizS10, 35, 165);
     DefineCross(QuizS10, 36, 41);
     DefineCross(QuizR3, 37, 160);
     DefineCross(QuizS10, 38, 156);
     DefineCross(QuizS10, 39, 101);
     DefineCross(QuizS10, 40, 42);
     DefineCross(QuizS10, 41, 43);
-    DefineCross(QuizS10, 42, 44);
+	 DefineCross(QuizS10, 42, 44);
     DefineCross(QuizS10, 43, 45);
     DefineCross(QuizS10, 44, 46);
     DefineCross(QuizS10, 45, 47);
     DefineCross(QuizS10, 46, 48);
-    DefineCross(QuizS10, 47, 49);
+	 DefineCross(QuizS10, 47, 49);
     DefineCross(QuizS10, 48, 50);
-    DefineCross(QuizS10, 49, 51);
+	 DefineCross(QuizS10, 49, 51);
 	 DefineCross(QuizS10, 50, 53);
     DefineCross(QuizS10, 51, 54);
     DefineCross(QuizS10, 52, 55);
@@ -1191,29 +1293,29 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 54, 58);
     DefineCross(QuizS10, 55, 59);
 	 DefineCross(QuizS10, 56, 60);
-    DefineCross(QuizS10, 57, 61);
+	 DefineCross(QuizS10, 57, 61);
     DefineCross(QuizS10, 58, 62);
 	 DefineCross(QuizS10, 59, 63);
     DefineCross(QuizS10, 60, 64);
-    DefineCross(QuizS10, 61, 65);
+	 DefineCross(QuizS10, 61, 65);
     DefineCross(QuizS10, 62, 66);
     DefineCross(QuizS10, 63, 142);
     DefineCross(QuizS10, 64, 67);
-    DefineCross(QuizS10, 65, 68);
+	 DefineCross(QuizS10, 65, 68);
     DefineCross(QuizS10, 66, 69);
     DefineCross(QuizS10, 67, 70);
     DefineCross(QuizS10, 68, 71);
     DefineCross(QuizS10, 69, 72);
     DefineCross(QuizS10, 70, 144);
     DefineCross(QuizS10, 71, 73);
-    DefineCross(QuizS10, 72, 74);
+	 DefineCross(QuizS10, 72, 74);
     DefineCross(QuizS10, 73, 75);
     DefineCross(QuizS10, 74, 78);
     DefineCross(QuizS10, 75, 79);
     DefineCross(QuizS10, 76, 80);
-    DefineCross(QuizS10, 77, 135);
+	 DefineCross(QuizS10, 77, 135);
     DefineCross(QuizS10, 78, 81);
-    DefineCross(QuizS10, 79, 82);
+	 DefineCross(QuizS10, 79, 82);
 	 DefineCross(QuizS10, 80, 84);
     DefineCross(QuizS10, 81, 85);
     DefineCross(QuizS10, 82, 86);
@@ -1221,29 +1323,29 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 84, 89);
     DefineCross(QuizS10, 85, 90);
 	 DefineCross(QuizS10, 86, 91);
-    DefineCross(QuizS10, 87, 92);
+	 DefineCross(QuizS10, 87, 92);
     DefineCross(QuizS10, 88, 94);
 	 DefineCross(QuizS10, 89, 95);
     DefineCross(QuizS10, 90, 96);
-    DefineCross(QuizS10, 91, 97);
+	 DefineCross(QuizS10, 91, 97);
     DefineCross(QuizS10, 92, 98);
     DefineCross(QuizS10, 93, 99);
     DefineCross(QuizS10, 94, 100);
-    DefineCross(QuizS10, 95, 21);
+	 DefineCross(QuizS10, 95, 21);
     DefineCross(QuizS10, 96, 122);
     DefineCross(QuizS10, 97, 108);
     DefineCross(QuizS10, 98, 109);
     DefineCross(QuizS10, 99, 110);
     DefineCross(QuizS10, 100, 111);
     DefineCross(QuizS10, 101, 112);
-    DefineCross(QuizS10, 102, 113);
+	 DefineCross(QuizS10, 102, 113);
     DefineCross(QuizS10, 103, 114);
     DefineCross(QuizS10, 104, 116);
     DefineCross(QuizS10, 105, 115);
     DefineCross(QuizS10, 106, 103);
-    DefineCross(QuizS10, 107, 104);
+	 DefineCross(QuizS10, 107, 104);
     DefineCross(QuizS10, 108, 117);
-    DefineCross(QuizS10, 109, 105);
+	 DefineCross(QuizS10, 109, 105);
 	 DefineCross(QuizS10, 110, 118);
     DefineCross(QuizS10, 111, 119);
     DefineCross(QuizS10, 112, 107);
@@ -1251,11 +1353,11 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 114, 125);
     DefineCross(QuizS10, 115, 123);
 	 DefineCross(QuizS10, 116, 124);
-    DefineCross(QuizS10, 117, 126);
+	 DefineCross(QuizS10, 117, 126);
     DefineCross(QuizS10, 118, 127);
 	 DefineCross(QuizS10, 119, 128);
     DefineCross(QuizS10, 120, 129);
-    DefineCross(QuizS10, 121, 130);
+	 DefineCross(QuizS10, 121, 130);
     DefineCross(QuizS10, 122, 131);
     DefineCross(QuizS10, 123, 132);
     DefineCross(QuizS10, 124, 158);
@@ -1283,6 +1385,41 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 	 DefineGlobalId(145, 1080);
 	 DefineGlobalId(146, 1081);
 	 DefineGlobalId(147, 1082);
+	 DefineGlobalId(148, 1083);
+
+	 DefineGlobalId(149, 1084);
+	 DefineGlobalId(150, 1085);
+	 DefineGlobalId(151, 1086);
+	 DefineGlobalId(152, 1087);
+	 DefineGlobalId(153, 1088);
+	 DefineGlobalId(154, 1089);
+	 DefineGlobalId(155, 1090);
+	 DefineGlobalId(156, 1091);
+	 DefineGlobalId(157, 1092);
+	 DefineGlobalId(158, 1093);
+	 DefineGlobalId(159, 1094);
+	 DefineGlobalId(160, 1095);
+	 DefineGlobalId(161, 1096);
+	 DefineGlobalId(162, 1097);
+	 DefineGlobalId(163, 1098);
+	 DefineGlobalId(164, 1099);
+	 DefineGlobalId(165, 1100);
+	 DefineGlobalId(166, 1101);
+	 DefineGlobalId(167, 1102);
+	 DefineGlobalId(168, 1103);
+	 DefineGlobalId(169, 1104);
+	 DefineGlobalId(170, 1105);
+	 DefineGlobalId(171, 1106);
+	 DefineGlobalId(172, 1107);
+	 DefineGlobalId(173, 1108);
+	 DefineGlobalId(174, 1109);
+	 DefineGlobalId(175, 1110);
+
+	 DefineCross(QuizS10, 176, 188);
+	 DefineCross(QuizS10, 177, 189);
+	 DefineCross(QuizNd, 178, 201);
+	 DefineCross(QuizS10, 179, 192);
+	 DefineCross(QuizS10, 180, 193);
 }
 
 /*##########################################################################
@@ -1647,7 +1784,7 @@ void TQuizS11::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE)
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_ALL || PcaType == PCA_TYPE_FEMALE)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
@@ -1725,4 +1862,126 @@ void TQuizS11::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
+}
+
+/*##################  TQuizS11::WriteTS ##########################
+*   Purpose....: Write TS test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS11::WriteTS(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double TsSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double TsMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double TsSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	TsSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.TsResult)
+        {
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			TsSum += Row.TsResult;
+	    }
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	TsMean = TsSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	TsSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.TsResult)
+        {
+            val = (long double)Row.AsResult - AsMean;
+   			AsSum += val * val;
+   			
+            val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+			
+            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+            val = (long double)Row.TsResult - TsMean;
+			TsSum += val * val;
+	    }
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	TsSd = sqrtl(TsSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.TsResult)
+		  {
+            zx = ((long double)Row.TsResult - TsMean) / TsSd;
+
+            zy = ((long double)Row.AsResult - AsMean) / AsSd;
+            AsSum += zx * zy;
+        
+            zy = ((long double)Row.NtResult - NtMean) / NtSd;
+            NtSum += zx * zy;
+
+            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+            DiffSum += zx * zy;
+	    }
+	}
+
+    AsCorr = AsSum / (Count - 1);
+    NtCorr = NtSum / (Count - 1);
+    DiffCorr = DiffSum / (Count - 1);
+	
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean TS score: %5.1Lf, SD: %5.1Lf\r\n", TsMean, TsSd);
+
+	printf("TS - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("TS - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("TS - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }

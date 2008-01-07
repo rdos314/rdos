@@ -374,7 +374,7 @@ void TQuizS5::SetupTexts()
   Quiz[179].Reverse = TRUE;
   Quiz[180].Reverse = TRUE;
 
-  Quiz[0].MyGroup = GROUP_MIXED;
+  Quiz[0].MyGroup = GROUP_NT_HUNTING;
   Quiz[1].MyGroup = GROUP_NT_SENSORY;
   Quiz[2].MyGroup = GROUP_NT_SENSORY;
   Quiz[3].MyGroup = GROUP_NT_SENSORY;
@@ -448,7 +448,7 @@ void TQuizS5::SetupTexts()
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
   Quiz[72].MyGroup = GROUP_ASPIE_NVC;
   Quiz[73].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[74].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[74].MyGroup = GROUP_ASPIE_NVC;
   Quiz[75].MyGroup = GROUP_ASPIE_NVC;
   Quiz[76].MyGroup = GROUP_ASPIE_NVC;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
@@ -473,7 +473,7 @@ void TQuizS5::SetupTexts()
   Quiz[96].MyGroup = GROUP_SOCIAL;
   Quiz[97].MyGroup = GROUP_NT_NVC;
   Quiz[98].MyGroup = GROUP_NT_TALENT;
-  Quiz[99].MyGroup = GROUP_NT_SENSORY;
+  Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[101].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[102].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -511,7 +511,7 @@ void TQuizS5::SetupTexts()
   Quiz[134].MyGroup = GROUP_ASPIE_NVC;
   Quiz[135].MyGroup = GROUP_MIXED;
   Quiz[136].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[137].MyGroup = GROUP_PARANOID;
+  Quiz[137].MyGroup = GROUP_ENVIRONMENT;
   Quiz[138].MyGroup = GROUP_NT_TALENT;
   Quiz[139].MyGroup = GROUP_ENVIRONMENT;
   Quiz[140].MyGroup = GROUP_NT_SENSORY;
@@ -529,12 +529,12 @@ void TQuizS5::SetupTexts()
   Quiz[152].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[153].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[154].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[155].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[155].MyGroup = GROUP_ASPIE_NVC;
   Quiz[156].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[157].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[158].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[159].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[160].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_ASPIE_NVC;
   Quiz[161].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[162].MyGroup = GROUP_ASPIE_HUNTING;
 
@@ -554,10 +554,10 @@ void TQuizS5::SetupTexts()
   Quiz[175].MyGroup = GROUP_ACTIVITY;
   Quiz[176].MyGroup = GROUP_SOCIAL;
 
-  Quiz[177].MyGroup = GROUP_MIXED;
-  Quiz[178].MyGroup = GROUP_MIXED;
+  Quiz[177].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[178].MyGroup = GROUP_ENVIRONMENT;
   Quiz[179].MyGroup = GROUP_MIXED;
-  Quiz[180].MyGroup = GROUP_MIXED;
+  Quiz[180].MyGroup = GROUP_ENVIRONMENT;
 
 #ifdef ENGLISH
   Quiz[0].Text = "Do you drop things when your attention is on other things?";

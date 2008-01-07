@@ -385,7 +385,7 @@ void TQuizS7::SetupTexts()
   Quiz[3].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[4].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[5].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[6].MyGroup = GROUP_MIXED;
+  Quiz[6].MyGroup = GROUP_NT_HUNTING;
   Quiz[7].MyGroup = GROUP_NT_SENSORY;
   Quiz[8].MyGroup = GROUP_NT_SENSORY;
   Quiz[9].MyGroup = GROUP_NT_SENSORY;
@@ -458,7 +458,7 @@ void TQuizS7::SetupTexts()
   Quiz[76].MyGroup = GROUP_ASPIE_NVC;
   Quiz[77].MyGroup = GROUP_ASPIE_NVC;
   Quiz[78].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[79].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[79].MyGroup = GROUP_ASPIE_NVC;
   Quiz[80].MyGroup = GROUP_ASPIE_NVC;
   Quiz[81].MyGroup = GROUP_ASPIE_NVC;
   Quiz[82].MyGroup = GROUP_ASPIE_NVC;
@@ -481,7 +481,7 @@ void TQuizS7::SetupTexts()
   Quiz[99].MyGroup = GROUP_NT_NVC;
   Quiz[100].MyGroup = GROUP_NT_NVC;
   Quiz[101].MyGroup = GROUP_NT_NVC;
-  Quiz[102].MyGroup = GROUP_NT_SENSORY;
+  Quiz[102].MyGroup = GROUP_NT_NVC;
   Quiz[103].MyGroup = GROUP_NT_TALENT;
   Quiz[104].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[105].MyGroup = GROUP_ASPIE_OBSESSION;
@@ -501,7 +501,7 @@ void TQuizS7::SetupTexts()
   Quiz[119].MyGroup = GROUP_PARANOID;
   Quiz[120].MyGroup = GROUP_PARANOID;
   Quiz[121].MyGroup = GROUP_PARANOID;
-  Quiz[122].MyGroup = GROUP_PARANOID;
+  Quiz[122].MyGroup = GROUP_ENVIRONMENT;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
   Quiz[124].MyGroup = GROUP_ENVIRONMENT;
   Quiz[125].MyGroup = GROUP_ENVIRONMENT;

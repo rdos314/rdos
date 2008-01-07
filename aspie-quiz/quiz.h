@@ -300,6 +300,7 @@ public:
 	virtual void WriteMDQ(const char *filename);
     virtual void WriteADD(const char *filename);
     virtual void WriteDyslexia(const char *filename);
+    virtual void WriteTS(const char *filename);
     virtual void WritePictureRating(const char *filename);
 
     void WritePhpGlobalQuestions(const char *filename);

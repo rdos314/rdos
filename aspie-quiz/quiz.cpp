@@ -3382,6 +3382,17 @@ void TQuiz::WriteDyslexia(const char *FileName)
 {
 }
 
+/*##################  TQuiz::WriteTS ##########################
+*   Purpose....: Write TS test report (dummy)           			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::WriteTS(const char *FileName)
+{
+}
+
 /*##################  TQuiz::WritePictureRating ##########################
 *   Purpose....: Write picture rating report (dummy)           			     	        #
 *   In params..: *                                                          #
@@ -6551,8 +6562,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Grouped overview</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Averaged group correlations</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Averaged PCA-loadings</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Grouping of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA loadings of Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Correlation between PCA loadings and psychiatric diagnosis</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Averaged axis loadings</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detailed axis loadings</a><br>\n");
@@ -6583,8 +6594,8 @@ void TQuiz::WriteLinkReport(const char *filename)
 	file.Write("<a href=\"avg.htm\">Översiktlig, grupperad rapport</a><br>\n");
 	file.Write("<a href=\"avgcorr.htm\">Sammanvägda gruppkorrelationer</a><br>\n");
 	file.Write("<a href=\"avgpca.htm\">Sammanvägda PCA-vikter</a><br>\n");
-	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
-	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-10</a><br>\n");
+	file.Write("<a href=\"groupcorr.htm\">Gruppering av Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
+	file.Write("<a href=\"pcaload.htm\">PCA koefficienter för Aspie-quiz I-III + ND + 5-9 + R1-R7 + stable 1-11</a><br>\n");
 	file.Write("<a href=\"pcacorr.htm\">Korrelation mellan PCA och psykiatriska diagnoser</a><br>\n");
 	file.Write("<a href=\"avgaxis.htm\">Sammanvägda axel faktorer</a><br>\n");
 	file.Write("<a href=\"axisload.htm\">Detaljerade axel faktorer</a><br>\n");
@@ -7062,10 +7073,10 @@ void TQuiz::WriteLinkReport(const char *filename)
 #endif
 
 	file.Write("<a name=\"QUIZ");
-	WriteName(file);
+	CrossQuiz[25]->WriteName(file);
 	file.Write("\">");
 	file.Write("Version ");
-	WriteName(file);
+	CrossQuiz[25]->WriteName(file);
 	file.Write("</a>");
 
 #ifdef ENGLISH
@@ -7075,6 +7086,23 @@ void TQuiz::WriteLinkReport(const char *filename)
 
 #ifdef SWEDISH
 	 file.Write(" <a href=\"quizs10.htm\">översikt</a> <a href=\"rels10.htm\">relaterade frågor</a> <a href=\"refs10.htm\">referenssajter</a> <a href=\"retests10.htm\">poäng stabilitet</a>");
+	 file.Write("<br>");
+#endif
+
+	file.Write("<a name=\"QUIZ");
+	WriteName(file);
+	file.Write("\">");
+	file.Write("Version ");
+	WriteName(file);
+	file.Write("</a>");
+
+#ifdef ENGLISH
+	file.Write(" <a href=\"quizs11.htm\">overview</a> <a href=\"rels11.htm\">related questions</a> <a href=\"refs11.htm\">referer sites</a>");
+	file.Write("<br>");
+#endif
+
+#ifdef SWEDISH
+	 file.Write(" <a href=\"quizs11.htm\">översikt</a> <a href=\"rels11.htm\">relaterade frågor</a> <a href=\"refs11.htm\">referenssajter</a>");
 	 file.Write("<br>");
 #endif
 

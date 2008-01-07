@@ -361,6 +361,8 @@ void TQuizS10::SetupTexts()
   Quiz[150].Reverse = TRUE;
   Quiz[151].Reverse = TRUE;
   Quiz[152].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
+  Quiz[163].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -456,7 +458,7 @@ void TQuizS10::SetupTexts()
   Quiz[91].MyGroup = GROUP_NT_NVC;
   Quiz[92].MyGroup = GROUP_NT_NVC;
   Quiz[93].MyGroup = GROUP_NT_TALENT;
-  Quiz[94].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[96].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[97].MyGroup = GROUP_ASPIE_HUNTING;
@@ -464,7 +466,7 @@ void TQuizS10::SetupTexts()
   Quiz[99].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[100].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[101].MyGroup = GROUP_SOCIAL;
-  Quiz[102].MyGroup = GROUP_MIXED;
+  Quiz[102].MyGroup = GROUP_NT_HUNTING;
   Quiz[103].MyGroup = GROUP_NT_SENSORY;
   Quiz[104].MyGroup = GROUP_NT_SENSORY;
   Quiz[105].MyGroup = GROUP_NT_SENSORY;
@@ -482,13 +484,13 @@ void TQuizS10::SetupTexts()
   Quiz[117].MyGroup = GROUP_NT_SENSORY;
   Quiz[118].MyGroup = GROUP_NT_SENSORY;
   Quiz[119].MyGroup = GROUP_NT_SENSORY;
-  Quiz[120].MyGroup = GROUP_NT_SENSORY;
+  Quiz[120].MyGroup = GROUP_NT_NVC;
   Quiz[121].MyGroup = GROUP_NT_SENSORY;
   Quiz[122].MyGroup = GROUP_NT_HUNTING;
   Quiz[123].MyGroup = GROUP_PARANOID;
   Quiz[124].MyGroup = GROUP_PARANOID;
   Quiz[125].MyGroup = GROUP_PARANOID;
-  Quiz[126].MyGroup = GROUP_PARANOID;
+  Quiz[126].MyGroup = GROUP_ENVIRONMENT;
   Quiz[127].MyGroup = GROUP_ENVIRONMENT;
   Quiz[128].MyGroup = GROUP_ENVIRONMENT;
   Quiz[129].MyGroup = GROUP_ENVIRONMENT;
@@ -521,7 +523,7 @@ void TQuizS10::SetupTexts()
   Quiz[155].MyGroup = GROUP_SOCIAL;
   Quiz[156].MyGroup = GROUP_SOCIAL;
   Quiz[157].MyGroup = GROUP_SOCIAL;
-  Quiz[158].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_MIXED;
   Quiz[160].MyGroup = GROUP_ENVIRONMENT;
   Quiz[161].MyGroup = GROUP_MIXED;
@@ -534,7 +536,7 @@ void TQuizS10::SetupTexts()
 
   Quiz[168].MyGroup = GROUP_NT_HUNTING;
   Quiz[169].MyGroup = GROUP_NT_HUNTING;
-  Quiz[170].MyGroup = GROUP_NT_HUNTING;
+  Quiz[170].MyGroup = GROUP_SOCIAL;
   Quiz[171].MyGroup = GROUP_NT_HUNTING;
   Quiz[172].MyGroup = GROUP_MIXED;
   Quiz[173].MyGroup = GROUP_NT_HUNTING;

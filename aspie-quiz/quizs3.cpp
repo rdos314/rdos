@@ -421,7 +421,7 @@ void TQuizS3::SetupTexts()
   Quiz[63].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[64].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[65].MyGroup = GROUP_NT_OBSESSION;
-  Quiz[66].MyGroup = GROUP_MIXED;
+  Quiz[66].MyGroup = GROUP_NT_HUNTING;
   Quiz[67].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[68].MyGroup = GROUP_ENVIRONMENT;
   Quiz[69].MyGroup = GROUP_ACTIVITY;
@@ -452,7 +452,7 @@ void TQuizS3::SetupTexts()
   Quiz[94].MyGroup = GROUP_ASPIE_NVC;
   Quiz[95].MyGroup = GROUP_ASPIE_NVC;
   Quiz[96].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[97].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[97].MyGroup = GROUP_ASPIE_NVC;
   Quiz[98].MyGroup = GROUP_ASPIE_NVC;
   Quiz[99].MyGroup = GROUP_ASPIE_NVC;
   Quiz[100].MyGroup = GROUP_ASPIE_NVC;
@@ -481,7 +481,7 @@ void TQuizS3::SetupTexts()
   Quiz[123].MyGroup = GROUP_SOCIAL;
   Quiz[124].MyGroup = GROUP_NT_NVC;
   Quiz[125].MyGroup = GROUP_NT_NVC;
-  Quiz[126].MyGroup = GROUP_NT_SENSORY;
+  Quiz[126].MyGroup = GROUP_NT_NVC;
   Quiz[127].MyGroup = GROUP_NT_TALENT;
   Quiz[128].MyGroup = GROUP_SOCIAL;
   Quiz[129].MyGroup = GROUP_SOCIAL;
@@ -491,7 +491,7 @@ void TQuizS3::SetupTexts()
   Quiz[133].MyGroup = GROUP_NT_TALENT;
 
   Quiz[134].MyGroup = GROUP_RELIGION;
-  Quiz[135].MyGroup = GROUP_PARANOID;
+  Quiz[135].MyGroup = GROUP_ENVIRONMENT;
   Quiz[136].MyGroup = GROUP_RELIGION;
   Quiz[137].MyGroup = GROUP_SOCIAL;
   Quiz[138].MyGroup = GROUP_RELIGION;

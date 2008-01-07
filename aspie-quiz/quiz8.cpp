@@ -333,7 +333,7 @@ void TQuiz8::SetupTexts()
   Quiz[16].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[17].MyGroup = GROUP_NT_SENSORY;
   Quiz[18].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[19].MyGroup = GROUP_MIXED;
+  Quiz[19].MyGroup = GROUP_NT_HUNTING;
   Quiz[20].MyGroup = GROUP_NT_SENSORY;
   Quiz[21].MyGroup = GROUP_NT_SENSORY;
   Quiz[22].MyGroup = GROUP_NT_SENSORY;
@@ -401,7 +401,7 @@ void TQuiz8::SetupTexts()
   Quiz[84].MyGroup = GROUP_ASPIE_NVC;
   Quiz[85].MyGroup = GROUP_ASPIE_NVC;
   Quiz[86].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[87].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[87].MyGroup = GROUP_ASPIE_NVC;
   Quiz[88].MyGroup = GROUP_ASPIE_NVC;
   Quiz[89].MyGroup = GROUP_ASPIE_NVC;
   Quiz[90].MyGroup = GROUP_RELIGION;
@@ -460,7 +460,7 @@ void TQuiz8::SetupTexts()
   Quiz[143].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[144].MyGroup = GROUP_MIXED;
   Quiz[145].MyGroup = GROUP_ASPIE_BIOLOGY;
-  Quiz[146].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[146].MyGroup = GROUP_ASPIE_NVC;
   Quiz[147].MyGroup = GROUP_SEX;
   Quiz[148].MyGroup = GROUP_SOCIAL;
   Quiz[149].MyGroup = GROUP_RELIGION;

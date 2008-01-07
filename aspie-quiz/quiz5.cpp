@@ -351,7 +351,7 @@ void TQuiz5::SetupTexts()
 	Quiz[49].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[50].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[51].MyGroup = GROUP_ASPIE_OBSESSION;
-	Quiz[52].MyGroup = GROUP_ENVIRONMENT;
+	Quiz[52].MyGroup = GROUP_MIXED;
 	Quiz[53].MyGroup = GROUP_ASPIE_TALENT;
 	Quiz[54].MyGroup = GROUP_ASPIE_OBSESSION;
 	Quiz[55].MyGroup = GROUP_ASPIE_OBSESSION;

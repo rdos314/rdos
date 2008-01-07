@@ -196,7 +196,7 @@ char *ProcessRow(char *str)
 	int quote;
 	int valid;
 
-	for (fieldno = 0; fieldno < 198; fieldno++)
+	for (fieldno = 0; fieldno < 199; fieldno++)
 	{
 		valstr = str;
 
@@ -287,22 +287,22 @@ char *ProcessRow(char *str)
 
 				case 13:
 					Row.Dyslexia = atoi(valstr);
-					Row.Quiz[175] = Row.Dyslexia;
+					Row.Quiz[176] = Row.Dyslexia;
 					break;
 
 				case 14:
 					Row.Dyscalculia = atoi(valstr);
-					Row.Quiz[176] = Row.Dyscalculia;
+					Row.Quiz[177] = Row.Dyscalculia;
 					break;
 
 				case 15:
 					Row.Dyspraxia = atoi(valstr);
-					Row.Quiz[177] = Row.Dyspraxia;
+					Row.Quiz[178] = Row.Dyspraxia;
 					break;
 
 				case 16:
 					Row.Bipolar = atoi(valstr);
-					Row.Quiz[178] = Row.Bipolar;
+					Row.Quiz[179] = Row.Bipolar;
 					break;
 
 				case 17:
@@ -311,7 +311,7 @@ char *ProcessRow(char *str)
 
 				case 18:
 					Row.Social = atoi(valstr);
-					Row.Quiz[179] = Row.Social;
+					Row.Quiz[180] = Row.Social;
 					break;
 
 				case 19:
@@ -343,7 +343,7 @@ char *ProcessRow(char *str)
 					i = fieldno - 23;
 					Row.Quiz[i] = atoi(valstr);
 
-					if (Row.DysResult && i >= 148 && i <= 174)
+					if (Row.TsResult && i >= 149 && i <= 175)
 						Row.Quiz[i]++;
 					
 					break;

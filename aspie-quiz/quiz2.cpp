@@ -247,7 +247,7 @@ void TQuizII::SetupTexts()
 	Quiz[21].MyGroup = GROUP_NT_SENSORY;
 	Quiz[22].MyGroup = GROUP_NT_NVC;
 	Quiz[23].MyGroup = GROUP_NT_NVC;
-	Quiz[24].MyGroup = GROUP_NT_SENSORY;
+	Quiz[24].MyGroup = GROUP_NT_NVC;
 	Quiz[25].MyGroup = GROUP_SOCIAL;
 	Quiz[26].MyGroup = GROUP_ASPIE_NVC;
 	Quiz[27].MyGroup = GROUP_MIXED;
