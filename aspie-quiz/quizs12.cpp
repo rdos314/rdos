@@ -52,7 +52,7 @@
 #
 ##########################################################################*/
 TQuizS12::TQuizS12(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11)
-  : TQuiz(142),
+  : TQuiz(144),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -214,7 +214,7 @@ void TQuizS12::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX
 	        NoDx = TRUE;
 
         res = 0;
-	    for (g = 0; g < MAX_GROUP_COUNT; g++)
+		for (g = 0; g < MAX_GROUP_COUNT; g++)
     	    res += Row.GroupResult[g] * GroupArr[g];
 
 	    if (res >= 0 && res < MAX_SCORE)
@@ -315,150 +315,6 @@ void TQuizS12::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX
 *##########################################################################*/
 void TQuizS12::DefineQuiz()
 {
-  return;
-
-  DefineID(1, 26);
-  DefineID(2, 151);
-  DefineID(3, 269);
-  DefineID(4, 20);
-  DefineID(5, 85);
-  DefineID(6, 100);
-  DefineID(7, 23);
-  DefineID(8, 5);
-  DefineID(9, 695);
-  DefineID(10, 3);
-  DefineID(11, 6);
-  DefineID(12, 397);
-  DefineID(13, 129);
-  DefineID(14, 743);
-  DefineID(15, 240);
-  DefineID(16, 319);
-  DefineID(17, 726);
-  DefineID(18, 25);
-  DefineID(19, 249);
-  DefineID(20, 37);
-  DefineID(21, 361);
-  DefineID(22, 39);
-  DefineID(23, 36);
-  DefineID(24, 596);
-  DefineID(25, 591);
-  DefineID(26, 595);
-  DefineID(27, 613);
-  DefineID(28, 740);
-  DefineID(29, 282);
-  DefineID(30, 97);
-  DefineID(31, 367);
-  DefineID(32, 272);
-  DefineID(33, 153);
-  DefineID(34, 516);
-  DefineID(35, 616);
-  DefineID(36, 1053);
-  DefineID(37, 518);
-  DefineID(38, 614);
-  DefineID(39, 1044);
-  DefineID(40, 70);
-  DefineID(41, 767);
-  DefineID(42, 66);
-  DefineID(43, 552);
-  DefineID(44, 507);
-  DefineID(45, 858);
-  DefineID(46, 859);
-  DefineID(47, 856);
-  DefineID(48, 73);
-  DefineID(49, 923);
-  DefineID(50, 454);
-  DefineID(51, 495);
-  DefineID(52, 378);
-  DefineID(53, 737);
-  DefineID(54, 32);
-  DefineID(55, 1077);
-  DefineID(56, 857);
-  DefineID(57, 115);
-  DefineID(58, 765);
-  DefineID(59, 731);
-  DefineID(60, 547);
-  DefineID(61, 403);
-  DefineID(62, 712);
-  DefineID(63, 359);
-  DefineID(64, 575);
-  DefineID(65, 55);
-  DefineID(66, 590);
-  DefineID(67, 15);
-  DefineID(68, 402);
-  DefineID(69, 589);
-  DefineID(70, 570);
-  DefineID(71, 17);
-  DefineID(72, 572);
-  DefineID(73, 739);
-  DefineID(74, 574);
-  DefineID(75, 234);
-  DefineID(76, 401);
-  DefineID(77, 487);
-  DefineID(78, 130);
-  DefineID(79, 83);
-  DefineID(80, 745);
-  DefineID(81, 86);
-  DefineID(82, 82);
-  DefineID(83, 226);
-  DefineID(84, 551);
-  DefineID(85, 707);
-  DefineID(86, 128);
-  DefineID(87, 255);
-  DefineID(88, 265);
-  DefineID(89, 741);
-  DefineID(90, 708);
-  DefineID(91, 89);
-  DefineID(92, 582);
-  DefineID(93, 448);
-  DefineID(94, 439);
-  DefineID(95, 581);
-  DefineID(96, 926);
-  DefineID(97, 925);
-  DefineID(98, 1076);
-  DefineID(99, 433);
-  DefineID(100, 1079);
-  DefineID(101, 316);
-  DefineID(102, 1082);
-  DefineID(103, 1080);
-  DefineID(104, 862);
-  DefineID(105, 53);
-  DefineID(106, 54);
-  DefineID(107, 61);
-  DefineID(108, 48);
-  DefineID(109, 503);
-  DefineID(110, 385);
-  DefineID(111, 871);
-  DefineID(112, 632);
-  DefineID(113, 509);
-  DefineID(114, 510);
-  DefineID(115, 50);
-  DefineID(116, 514);
-  DefineID(117, 46);
-  DefineID(118, 113);
-  DefineID(119, 111);
-  DefineID(120, 1078);
-  DefineID(121, 865);
-  DefineID(122, 866);
-  DefineID(123, 864);
-  DefineID(124, 443);
-  DefineID(125, 601);
-  DefineID(126, 31);
-  DefineID(127, 718);
-  DefineID(128, 167);
-  DefineID(129, 93);
-  DefineID(130, 278);
-  DefineID(131, 78);
-  DefineID(132, 549);
-  DefineID(133, 126);
-  DefineID(134, 227);
-  DefineID(135, 1046);
-  DefineID(136, 174);
-  DefineID(137, 123);
-  DefineID(138, 545);
-  DefineID(139, 262);
-  DefineID(140, 724);
-  DefineID(141, 250);
-  DefineID(142, 715);
 }
 
 /*##########################################################################
@@ -639,6 +495,9 @@ void TQuizS12::SetupTexts()
   Quiz[140].MyGroup = GROUP_ENVIRONMENT;
   Quiz[141].MyGroup = GROUP_MIXED;
 
+  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[143].MyGroup = GROUP_MIXED;
+
 #ifdef ENGLISH
 
   Quiz[0].Text = "Do you tend to get so absorbed by your special interests that you forget or ignore everything else?";
@@ -783,6 +642,9 @@ void TQuizS12::SetupTexts()
   Quiz[139].Text = "Do you find it easy to estimate the age of people?";
   Quiz[140].Text = "Are you gracious about criticism, correction and direction?";
   Quiz[141].Text = "Can you easily remember verbal instructions?";
+
+  Quiz[142].Text = "Do you have a fascination with fire?";
+  Quiz[143].Text = "Do you crave salt?";
 
 #endif
 
@@ -930,6 +792,9 @@ void TQuizS12::SetupTexts()
   Quiz[139].Text = "Har du lätt för att bedömma människors ålder?";
   Quiz[140].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
   Quiz[141].Text = "Kommer du lätt ihåg verbala instruktioner?";
+
+  Quiz[142].Text = "Är du fascinerad av eld?";
+  Quiz[143].Text = "Suktar du efter salt?";
 
 #endif
 
