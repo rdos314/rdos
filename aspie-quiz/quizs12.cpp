@@ -20,8 +20,8 @@
 #
 # The author of this program may be contacted at leif@rdos.net
 #
-# quizs11.cpp
-# Quiz stable version 11 class
+# quizs12.cpp
+# Quiz stable version 12 class
 #
 #######################################################################*/
 
@@ -29,9 +29,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "quizs11.h"
+#include "quizS12.h"
 #include "file.h"
-#include "quizds11.h"
+#include "quizdS12.h"
 
 #define CI	1
 
@@ -42,17 +42,17 @@
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::TQuizS11
+#   Name       : TQuizS12::TQuizS12
 #
-#   Purpose....: Constructor for TQuizS11
+#   Purpose....: Constructor for TQuizS12
 #
 #   In params..: Filename to load quiz from
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10)
-  : TQuiz(181),
+TQuizS12::TQuizS12(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11)
+  : TQuiz(142),
 	FDataFile(FileName)
 {
 	DefineCross(0, QuizI);
@@ -81,6 +81,7 @@ TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Qui
 	DefineCross(23, QuizS8);
 	DefineCross(24, QuizS9);
 	DefineCross(25, QuizS10);
+	DefineCross(26, QuizS11);
 
 	SetupTexts();
 	DefineQuiz();
@@ -88,46 +89,46 @@ TQuizS11::TQuizS11(const char *FileName, TQuiz *QuizI, TQuiz *QuizII, TQuiz *Qui
 	LoadReferers();
 	SetupControlGroups();
 	SortReferers();
-	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10);
+	SetupCross(QuizI, QuizII, QuizIII, QuizNd, Quiz5, Quiz6, Quiz7, Quiz8, Quiz9, QuizR1, QuizR2, QuizR3, QuizR4, QuizR5, QuizR6, QuizR7, QuizS1, QuizS2, QuizS3, QuizS4, QuizS5, QuizS6, QuizS7, QuizS8, QuizS9, QuizS10, QuizS11);
 	LoadPopulations();
-	Calculate();
+//	Calculate();
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::~TQuizS11
+#   Name       : TQuizS12::~TQuizS12
 #
-#   Purpose....: Destructor for TQuizS11
+#   Purpose....: Destructor for TQuizS12
 #
 #   In params..: *
 #   Out params.: *
 #   Returns....: *
 #
 ##########################################################################*/
-TQuizS11::~TQuizS11()
+TQuizS12::~TQuizS12()
 {
 }
 
-/*##################  TQuizS11::GetPcaCount ##########################
+/*##################  TQuizS12::GetPcaCount ##########################
 *   Purpose....: Return number of available PCA axises  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizS11::GetPcaCount()
+int TQuizS12::GetPcaCount()
 {
 	return 4;
 }
 
-/*##################  TQuizS11::GetCatCount ##########################
+/*##################  TQuizS12::GetCatCount ##########################
 *   Purpose....: Return number of categories for question  	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizS11::GetCatCount(int Question)
+int TQuizS12::GetCatCount(int Question)
 {
 	if (Question >= 149 && Question <= 175)
 		return 2;
@@ -142,14 +143,14 @@ int TQuizS11::GetCatCount(int Question)
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-int TQuizS11::GetQuizN()
+int TQuizS12::GetQuizN()
 {
-	return 149;
+	return 142;
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::WriteName
+#   Name       : TQuizS12::WriteName
 #
 #   Purpose....: Write quiz name
 #
@@ -158,14 +159,14 @@ int TQuizS11::GetQuizN()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::WriteName(TFile &File)
+void TQuizS12::WriteName(TFile &File)
 {
-	 File.Write("S11");
+	 File.Write("S12");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::WriteLongName
+#   Name       : TQuizS12::WriteLongName
 #
 #   Purpose....: Write long quiz name
 #
@@ -174,14 +175,14 @@ void TQuizS11::WriteName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::WriteLongName(TFile &File)
+void TQuizS12::WriteLongName(TFile &File)
 {
-	 File.Write("stable version 11");
+	 File.Write("stable version 12");
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::GetDxData
+#   Name       : TQuizS12::GetDxData
 #
 #   Purpose....: Get diagnostic data
 #
@@ -190,7 +191,7 @@ void TQuizS11::WriteLongName(TFile &File)
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
+void TQuizS12::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX_SCORE][2], int OnlyNtControl)
 {
 	TQuizRow Row;
 	int res;
@@ -305,20 +306,164 @@ void TQuizS11::GetDxData(int PopType, int GroupArr[MAX_GROUP_COUNT], int Arr[MAX
 	}
 }
 
-/*##################  TQuizS11::DefineQuiz ##########################
+/*##################  TQuizS12::DefineQuiz ##########################
 *   Purpose....: Define global IDs in quiz                	       	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::DefineQuiz()
+void TQuizS12::DefineQuiz()
 {
+  return;
+
+  DefineID(1, 26);
+  DefineID(2, 151);
+  DefineID(3, 269);
+  DefineID(4, 20);
+  DefineID(5, 85);
+  DefineID(6, 100);
+  DefineID(7, 23);
+  DefineID(8, 5);
+  DefineID(9, 695);
+  DefineID(10, 3);
+  DefineID(11, 6);
+  DefineID(12, 397);
+  DefineID(13, 129);
+  DefineID(14, 743);
+  DefineID(15, 240);
+  DefineID(16, 319);
+  DefineID(17, 726);
+  DefineID(18, 25);
+  DefineID(19, 249);
+  DefineID(20, 37);
+  DefineID(21, 361);
+  DefineID(22, 39);
+  DefineID(23, 36);
+  DefineID(24, 596);
+  DefineID(25, 591);
+  DefineID(26, 595);
+  DefineID(27, 613);
+  DefineID(28, 740);
+  DefineID(29, 282);
+  DefineID(30, 97);
+  DefineID(31, 367);
+  DefineID(32, 272);
+  DefineID(33, 153);
+  DefineID(34, 516);
+  DefineID(35, 616);
+  DefineID(36, 1053);
+  DefineID(37, 518);
+  DefineID(38, 614);
+  DefineID(39, 1044);
+  DefineID(40, 70);
+  DefineID(41, 767);
+  DefineID(42, 66);
+  DefineID(43, 552);
+  DefineID(44, 507);
+  DefineID(45, 858);
+  DefineID(46, 859);
+  DefineID(47, 856);
+  DefineID(48, 73);
+  DefineID(49, 923);
+  DefineID(50, 454);
+  DefineID(51, 495);
+  DefineID(52, 378);
+  DefineID(53, 737);
+  DefineID(54, 32);
+  DefineID(55, 1077);
+  DefineID(56, 857);
+  DefineID(57, 115);
+  DefineID(58, 765);
+  DefineID(59, 731);
+  DefineID(60, 547);
+  DefineID(61, 403);
+  DefineID(62, 712);
+  DefineID(63, 359);
+  DefineID(64, 575);
+  DefineID(65, 55);
+  DefineID(66, 590);
+  DefineID(67, 15);
+  DefineID(68, 402);
+  DefineID(69, 589);
+  DefineID(70, 570);
+  DefineID(71, 17);
+  DefineID(72, 572);
+  DefineID(73, 739);
+  DefineID(74, 574);
+  DefineID(75, 234);
+  DefineID(76, 401);
+  DefineID(77, 487);
+  DefineID(78, 130);
+  DefineID(79, 83);
+  DefineID(80, 745);
+  DefineID(81, 86);
+  DefineID(82, 82);
+  DefineID(83, 226);
+  DefineID(84, 551);
+  DefineID(85, 707);
+  DefineID(86, 128);
+  DefineID(87, 255);
+  DefineID(88, 265);
+  DefineID(89, 741);
+  DefineID(90, 708);
+  DefineID(91, 89);
+  DefineID(92, 582);
+  DefineID(93, 448);
+  DefineID(94, 439);
+  DefineID(95, 581);
+  DefineID(96, 926);
+  DefineID(97, 925);
+  DefineID(98, 1076);
+  DefineID(99, 433);
+  DefineID(100, 1079);
+  DefineID(101, 316);
+  DefineID(102, 1082);
+  DefineID(103, 1080);
+  DefineID(104, 862);
+  DefineID(105, 53);
+  DefineID(106, 54);
+  DefineID(107, 61);
+  DefineID(108, 48);
+  DefineID(109, 503);
+  DefineID(110, 385);
+  DefineID(111, 871);
+  DefineID(112, 632);
+  DefineID(113, 509);
+  DefineID(114, 510);
+  DefineID(115, 50);
+  DefineID(116, 514);
+  DefineID(117, 46);
+  DefineID(118, 113);
+  DefineID(119, 111);
+  DefineID(120, 1078);
+  DefineID(121, 865);
+  DefineID(122, 866);
+  DefineID(123, 864);
+  DefineID(124, 443);
+  DefineID(125, 601);
+  DefineID(126, 31);
+  DefineID(127, 718);
+  DefineID(128, 167);
+  DefineID(129, 93);
+  DefineID(130, 278);
+  DefineID(131, 78);
+  DefineID(132, 549);
+  DefineID(133, 126);
+  DefineID(134, 227);
+  DefineID(135, 1046);
+  DefineID(136, 174);
+  DefineID(137, 123);
+  DefineID(138, 545);
+  DefineID(139, 262);
+  DefineID(140, 724);
+  DefineID(141, 250);
+  DefineID(142, 715);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::SetupTexts
+#   Name       : TQuizS12::SetupTexts
 #
 #   Purpose....: Init quiz texts and more
 #
@@ -327,7 +472,7 @@ void TQuizS11::DefineQuiz()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::SetupTexts()
+void TQuizS12::SetupTexts()
 {
   Quiz[13].Reverse = TRUE;
   Quiz[16].Reverse = TRUE;
@@ -336,20 +481,20 @@ void TQuizS11::SetupTexts()
   Quiz[30].Reverse = TRUE;
   Quiz[31].Reverse = TRUE;
   Quiz[32].Reverse = TRUE;
-  Quiz[45].Reverse = TRUE;
+  Quiz[46].Reverse = TRUE;
   Quiz[50].Reverse = TRUE;
   Quiz[52].Reverse = TRUE;
-  Quiz[82].Reverse = TRUE;
-  Quiz[83].Reverse = TRUE;
   Quiz[84].Reverse = TRUE;
   Quiz[85].Reverse = TRUE;
   Quiz[86].Reverse = TRUE;
   Quiz[87].Reverse = TRUE;
-  Quiz[135].Reverse = TRUE;
-  Quiz[136].Reverse = TRUE;
+  Quiz[88].Reverse = TRUE;
+  Quiz[89].Reverse = TRUE;
   Quiz[137].Reverse = TRUE;
   Quiz[138].Reverse = TRUE;
   Quiz[139].Reverse = TRUE;
+  Quiz[140].Reverse = TRUE;
+  Quiz[141].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[1].MyGroup = GROUP_ASPIE_TALENT;
@@ -405,7 +550,7 @@ void TQuizS11::SetupTexts()
   Quiz[51].MyGroup = GROUP_SOCIAL;
   Quiz[52].MyGroup = GROUP_SOCIAL;
   Quiz[53].MyGroup = GROUP_SOCIAL;
-  Quiz[54].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[54].MyGroup = GROUP_SOCIAL;
   Quiz[55].MyGroup = GROUP_ASPIE_NVC;
   Quiz[56].MyGroup = GROUP_ASPIE_NVC;
   Quiz[57].MyGroup = GROUP_ASPIE_NVC;
@@ -425,8 +570,8 @@ void TQuizS11::SetupTexts()
   Quiz[71].MyGroup = GROUP_ASPIE_NVC;
   Quiz[72].MyGroup = GROUP_ASPIE_NVC;
   Quiz[73].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[74].MyGroup = GROUP_NT_NVC;
-  Quiz[75].MyGroup = GROUP_NT_NVC;
+  Quiz[74].MyGroup = GROUP_ASPIE_NVC;
+  Quiz[75].MyGroup = GROUP_ASPIE_NVC;
   Quiz[76].MyGroup = GROUP_NT_NVC;
   Quiz[77].MyGroup = GROUP_NT_NVC;
   Quiz[78].MyGroup = GROUP_NT_NVC;
@@ -439,102 +584,60 @@ void TQuizS11::SetupTexts()
   Quiz[85].MyGroup = GROUP_NT_NVC;
   Quiz[86].MyGroup = GROUP_NT_NVC;
   Quiz[87].MyGroup = GROUP_NT_NVC;
-  Quiz[88].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[89].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[90].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[88].MyGroup = GROUP_NT_NVC;
+  Quiz[89].MyGroup = GROUP_NT_NVC;
+  Quiz[90].MyGroup = GROUP_NT_NVC;
   Quiz[91].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[92].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[93].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[94].MyGroup = GROUP_ASPIE_HUNTING;
-  Quiz[95].MyGroup = GROUP_NT_HUNTING;
-  Quiz[96].MyGroup = GROUP_NT_HUNTING;
-  Quiz[97].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[98].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[99].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[100].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[101].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[102].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[95].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[96].MyGroup = GROUP_ASPIE_HUNTING;
+  Quiz[97].MyGroup = GROUP_NT_HUNTING;
+  Quiz[98].MyGroup = GROUP_NT_HUNTING;
+  Quiz[99].MyGroup = GROUP_NT_HUNTING;
+  Quiz[100].MyGroup = GROUP_NT_HUNTING;
+  Quiz[101].MyGroup = GROUP_NT_HUNTING;
+  Quiz[102].MyGroup = GROUP_NT_HUNTING;
   Quiz[103].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[104].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[105].MyGroup = GROUP_ASPIE_SENSORY;
-  Quiz[106].MyGroup = GROUP_NT_SENSORY;
-  Quiz[107].MyGroup = GROUP_NT_SENSORY;
-  Quiz[108].MyGroup = GROUP_NT_SENSORY;
-  Quiz[109].MyGroup = GROUP_NT_SENSORY;
-  Quiz[110].MyGroup = GROUP_NT_SENSORY;
-  Quiz[111].MyGroup = GROUP_NT_SENSORY;
+  Quiz[106].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[107].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[108].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[109].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[110].MyGroup = GROUP_ASPIE_SENSORY;
+  Quiz[111].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[112].MyGroup = GROUP_NT_SENSORY;
-  Quiz[113].MyGroup = GROUP_NT_NVC;
-  Quiz[114].MyGroup = GROUP_PARANOID;
-  Quiz[115].MyGroup = GROUP_PARANOID;
-  Quiz[116].MyGroup = GROUP_PARANOID;
-  Quiz[117].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[118].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[119].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[120].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[121].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[122].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[113].MyGroup = GROUP_NT_SENSORY;
+  Quiz[114].MyGroup = GROUP_NT_SENSORY;
+  Quiz[115].MyGroup = GROUP_NT_SENSORY;
+  Quiz[116].MyGroup = GROUP_NT_SENSORY;
+  Quiz[117].MyGroup = GROUP_NT_SENSORY;
+  Quiz[118].MyGroup = GROUP_NT_SENSORY;
+  Quiz[119].MyGroup = GROUP_NT_SENSORY;
+  Quiz[120].MyGroup = GROUP_PARANOID;
+  Quiz[121].MyGroup = GROUP_PARANOID;
+  Quiz[122].MyGroup = GROUP_PARANOID;
   Quiz[123].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[124].MyGroup = GROUP_MIXED;
+  Quiz[124].MyGroup = GROUP_ENVIRONMENT;
   Quiz[125].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[126].MyGroup = GROUP_MIXED;
-  Quiz[127].MyGroup = GROUP_MIXED;
-  Quiz[128].MyGroup = GROUP_MIXED;
-  Quiz[129].MyGroup = GROUP_NT_HUNTING;
+  Quiz[126].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[127].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[128].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[129].MyGroup = GROUP_MIXED;
   Quiz[130].MyGroup = GROUP_MIXED;
   Quiz[131].MyGroup = GROUP_MIXED;
   Quiz[132].MyGroup = GROUP_MIXED;
   Quiz[133].MyGroup = GROUP_MIXED;
   Quiz[134].MyGroup = GROUP_MIXED;
   Quiz[135].MyGroup = GROUP_MIXED;
-  Quiz[136].MyGroup = GROUP_ENVIRONMENT;
-  Quiz[137].MyGroup = GROUP_NT_SENSORY;
-  Quiz[138].MyGroup = GROUP_SOCIAL;
-  Quiz[139].MyGroup = GROUP_NT_NVC;
-
-  Quiz[140].MyGroup = GROUP_NT_HUNTING;
-  Quiz[141].MyGroup = GROUP_SOCIAL;
-  Quiz[142].MyGroup = GROUP_NT_SENSORY;
-  Quiz[143].MyGroup = GROUP_NT_HUNTING;
-  Quiz[144].MyGroup = GROUP_NT_HUNTING;
-  Quiz[145].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[146].MyGroup = GROUP_NT_HUNTING;
-  Quiz[147].MyGroup = GROUP_MIXED;
-  Quiz[148].MyGroup = GROUP_MIXED;
-
-  Quiz[149].MyGroup = GROUP_MIXED;
-  Quiz[150].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[151].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[152].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_ASPIE_NVC;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_MIXED;
-  Quiz[157].MyGroup = GROUP_MIXED;
-  Quiz[158].MyGroup = GROUP_MIXED;
-  Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
-  Quiz[162].MyGroup = GROUP_MIXED;
-  Quiz[163].MyGroup = GROUP_MIXED;
-  Quiz[164].MyGroup = GROUP_MIXED;
-  Quiz[165].MyGroup = GROUP_MIXED;
-  Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
-  Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
-  Quiz[171].MyGroup = GROUP_MIXED;
-  Quiz[172].MyGroup = GROUP_MIXED;
-  Quiz[173].MyGroup = GROUP_MIXED;
-  Quiz[174].MyGroup = GROUP_MIXED;
-  Quiz[175].MyGroup = GROUP_MIXED;
-
-  Quiz[176].MyGroup = GROUP_NT_HUNTING;
-  Quiz[177].MyGroup = GROUP_NT_HUNTING;
-  Quiz[178].MyGroup = GROUP_NT_SENSORY;
-  Quiz[179].MyGroup = GROUP_ACTIVITY;
-  Quiz[180].MyGroup = GROUP_SOCIAL;
+  Quiz[136].MyGroup = GROUP_MIXED;
+  Quiz[137].MyGroup = GROUP_SOCIAL;
+  Quiz[138].MyGroup = GROUP_NT_NVC;
+  Quiz[139].MyGroup = GROUP_NT_SENSORY;
+  Quiz[140].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[141].MyGroup = GROUP_MIXED;
 
 #ifdef ENGLISH
 
@@ -582,146 +685,104 @@ void TQuizS11::SetupTexts()
   Quiz[41].Text = "Do you get very tired after socializing, and need to regenerate alone?";
   Quiz[42].Text = "Do you prefer to avoid eye-contact?";
   Quiz[43].Text = "Do you dislike being touched or hugged unless you're prepared or have asked for it?";
-  Quiz[44].Text = "Do you avoid talking face to face with someone you don't know very well?";
-  Quiz[45].Text = "Are you good at returning social courtesies and gestures?";
-  Quiz[46].Text = "Do you dislike shaking hands?";
-  Quiz[47].Text = "Do people think you are aloof and distant?";
-  Quiz[48].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[44].Text = "Do people think you are aloof and distant?";
+  Quiz[45].Text = "Do you find it hard to be emotionally close to other people?";
+  Quiz[46].Text = "Are you good at returning social courtesies and gestures?";
+  Quiz[47].Text = "Do you dislike shaking hands?";
+  Quiz[48].Text = "Do you avoid talking face to face with someone you don't know very well?";
   Quiz[49].Text = "Do you prefer to do things on your own even if you could use others' help or expertise?";
   Quiz[50].Text = "Do you find it easy to describe your feelings?";
   Quiz[51].Text = "Do you dislike it when people drop by to visit you uninvited?";
   Quiz[52].Text = "Do you find it natural to wave or say 'hi' when you meet people?";
   Quiz[53].Text = "Do you have a tendency to be passive and not initiate things yourself?";
-  Quiz[54].Text = "Do people comment on your unusual mannerisms and habits?";
-  Quiz[55].Text = "Do people sometimes think you are smiling at the wrong occasion?";
-  Quiz[56].Text = "Do you often have lots of thoughts that you find hard to verbalize?";
-  Quiz[57].Text = "Do you often don't know where to put your arms?";
-  Quiz[58].Text = "Do you tend to talk either too softly or too loudly?";
-  Quiz[59].Text = "Have you been accused of staring?";
-  Quiz[60].Text = "Have others commented or have you observed yourself that you make unusual facial expressions?";
-  Quiz[61].Text = "Have others told you that you have an odd posture or gait?";
-  Quiz[62].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
-  Quiz[63].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
-  Quiz[64].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
-  Quiz[65].Text = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)?";
-  Quiz[66].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
-  Quiz[67].Text = "Do you fiddle with things?";
-  Quiz[68].Text = "Do you use stock phrases or phrases borrowed from other situations or people?";
-  Quiz[69].Text = "Do you pace (e.g. when thinking or anxious)?";
-  Quiz[70].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
-  Quiz[71].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
-  Quiz[72].Text = "Do you stutter when stressed?";
-  Quiz[73].Text = "Do you talk to yourself?";
-  Quiz[74].Text = "Do you find it difficult to figure out how to behave in various situations?";
-  Quiz[75].Text = "Do others often misunderstand you?";
-  Quiz[76].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
-  Quiz[77].Text = "Do you tend to express your feelings in ways that may baffle others?";
-  Quiz[78].Text = "Do you tend to interpret things literally and/or reply to rhetorical questions?";
-  Quiz[79].Text = "Are you usually unaware of social rules & boundaries unless they are clearly spelled out?";
-  Quiz[80].Text = "Are you often surprised what people's motives are ?";
-  Quiz[81].Text = "Do you tend to say things that are considered socially inappropriate?";
-  Quiz[82].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
-  Quiz[83].Text = "Do you know when you are expected to offer an apology?";
-  Quiz[84].Text = "Do you find yourself at ease in romantic situations?";
-  Quiz[85].Text = "Do you judge a potential mate as most anybody else would?";
-  Quiz[86].Text = "Do you find it easy to 'read between the lines' when someone is talking to you?";
-  Quiz[87].Text = "Do you naturally fit into the expected gender stereotypes?";
-  Quiz[88].Text = "In conversations, do you use small sounds that others don't seem to use?";
-  Quiz[89].Text = "Do you enjoy watching a spinning or blinking object?";
-  Quiz[90].Text = "Do you have a fascination for slowly flowing water?";
-  Quiz[91].Text = "Do you sometimes have an urge to jump over things?";
-  Quiz[92].Text = "Do you enjoy walking on your toes?";
-  Quiz[93].Text = "Do you enjoy mimicking animal sounds?";
-  Quiz[94].Text = "Have you been fascinated about making traps?";
-  Quiz[95].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
-  Quiz[96].Text = "Do you confuse left and right?";
-  Quiz[97].Text = "Do you suddenly feel distracted by distant sounds?";
-  Quiz[98].Text = "Do you notice small sounds that others don't, or feel pained by loud or irritating noise?";
-  Quiz[99].Text = "Do you have difficulties filtering out background noise when talking to someone?";
-  Quiz[100].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
-  Quiz[101].Text = "Are you hypo- or hypersensitive to physical pain, or even enjoy some types of pain?";
-  Quiz[102].Text = "Are your eyes extra sensitive to stong light and glare?";
-  Quiz[103].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
-  Quiz[104].Text = "Do you dislike it when people stamp their foot in the floor?";
-  Quiz[105].Text = "Are you affected negatively by high air humidity combined with hot weather?";
-  Quiz[106].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
-  Quiz[107].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
-  Quiz[108].Text = "Do you have poor concept of time?";
-  Quiz[109].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
-  Quiz[110].Text = "Do you find it hard to tell the age of people?";
-  Quiz[111].Text = "Do you have difficulties judging distances, height, depth or speed?";
-  Quiz[112].Text = "Did you perceive practical classes like handi-work or gymnasics as hard in school?";
-  Quiz[113].Text = "Do you have problems recognizing faces (prosopagnosia)?";
-  Quiz[114].Text = "Are your thoughts so strong that you can (almost) hear them?";
-  Quiz[115].Text = "Do you feel that people are watching you?";
-  Quiz[116].Text = "Do you mistake noises for voices?";
-  Quiz[117].Text = "Have you have had long-lasting urges to take revenge?";
-  Quiz[118].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
-  Quiz[119].Text = "Do you feel stressed in unfamiliar situations?";
-  Quiz[120].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
-  Quiz[121].Text = "Are you sometimes afraid in safe situations?";
-  Quiz[122].Text = "Do you have difficulty accepting criticism, correction, and direction?";
-  Quiz[123].Text = "Have you been bullied, abused or taken advantage of?";
-  Quiz[124].Text = "Do you have immature interests?";
-  Quiz[125].Text = "Have you experienced stronger than normal attachments to certain people?";
-  Quiz[126].Text = "Do you forget you are in a social situation when something gets your attention?";
-  Quiz[127].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
-  Quiz[128].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
-  Quiz[129].Text = "Do you drop things when your attention is on other things?";
-  Quiz[130].Text = "Have you had the feeling of playing a game, pretending to be like people around you?";
-  Quiz[131].Text = "Do you or others think that you have unusual eating habits?";
-  Quiz[132].Text = "Have you taken initiative only to find out it was not wanted?";
-  Quiz[133].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
-  Quiz[134].Text = "Do you have trouble with authority?";
-  Quiz[135].Text = "Can you easily remember verbal instructions?";
-  Quiz[136].Text = "Are you gracious about criticism, correction and direction?";
-  Quiz[137].Text = "Do you find it easy to estimate the age of people?";
-  Quiz[138].Text = "Are you good at teamwork?";
-  Quiz[139].Text = "Do you have a good sense for what is the right thing to do socially?";
-
-  Quiz[140].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
-  Quiz[141].Text = "Do you dislike reading aloud?";
-  Quiz[142].Text = "Do you have problems finding your way to new places?";
-  Quiz[143].Text = "Do you have problems filling out forms?";
-  Quiz[144].Text = "Do you mix up digits in numbers like 95 and 59?";
-  Quiz[145].Text = "Have you thought of one word but written another?";
-  Quiz[146].Text = "Do you mix up dates and times and miss appointments?";
-  Quiz[147].Text = "Are you good at games that require that you remember where several cards or other objects are located?";
-  Quiz[148].Text = "Do like it when people you are fond of looks a lot at you and continue to do so for several hours without anything else happening?";
-
-  Quiz[149].Text = "TS - Do you involuntarily swear or utter obscene words or socially inappropriate and derogatory remarks (coprolalia)?";
-  Quiz[150].Text = "TS - Do you involuntarily repeat or imitate observed movements of others (echopraxia)?";
-  Quiz[151].Text = "TS - Do you repeat vocalizations made by others (echolalia)?";
-  Quiz[152].Text = "TS - Do you repeat or echo your own spoken words (stuttering, palilalia)?";
-  Quiz[153].Text = "TS - Do you have complex motor tics (eg facial grimaces, pulling cloth, touching people or objects, obscene gesturing or gyrating movements)?";
-  Quiz[154].Text = "TS - Do you have complex vocal tics (eg talking to yourself, using socially meaningless sentences)?";
-  Quiz[155].Text = "TS - Did you have tics before the age of twelve?";
-  Quiz[156].Text = "TS - If you have tics, do the wax and wane?";
-  Quiz[157].Text = "TS - If you have tics, did they begin above shoulders";
-  Quiz[158].Text = "TS - Do you have five or more motor tic types in the list above?";
-  Quiz[159].Text = "TS - Do you have three or more vocal tic types in the list above?";
-  Quiz[160].Text = "TS - If you have motor tics, do they affect multiple body locations?";
-  Quiz[161].Text = "TS - If you have tics, have they varied with some tics disappearing and new tics appearing over time?";
-  Quiz[162].Text = "TS - If you have tics, do you have them even if you are not in a stressful situation?";
-  Quiz[163].Text = "TS - If you have tics, are they voluntarily suppressible?";
-  Quiz[164].Text = "TS - If you have tics, do you attempt to suppress them?";
-  Quiz[165].Text = "TS - If you have tics and you try to suppress them, do they become worse (rebound effect)?";
-  Quiz[166].Text = "TS - If you have tics, can you sense their coming beforehand (premonitory sensation)?";
-  Quiz[167].Text = "TS - If you have tics, do you sense relief after you had them?";
-  Quiz[168].Text = "TS - If you have tics, do a mention or sight of a specific tic induce it (suggestible)?";
-  Quiz[169].Text = "TS - Do you have frequent tics (more than one per minute at times)?";
-  Quiz[170].Text = "TS - Do you have orchestrated sequences of tics?";
-  Quiz[171].Text = "TS - If you have tics, do they cause distress?";
-  Quiz[172].Text = "TS - If you have tics, have you sought treatment or diagnosis?";
-  Quiz[173].Text = "TS - Have you had tics for a duration of two or more years";
-  Quiz[174].Text = "TS - Have your tics been confirmed by one or more reliable observers?";
-  Quiz[175].Text = "TS - Do you have an absence of other medical problems that might cause tics (eg prior stimulant therapy, history of encephalitis)?";
-
-  Quiz[176].Text = "Dyslexia";
-  Quiz[177].Text = "Dyscalculia";
-  Quiz[178].Text = "Dyspraxia";
-  Quiz[179].Text = "Bipolar";
-  Quiz[180].Text = "Social phobia";
+  Quiz[54].Text = "Do you dislike reading aloud?";
+  Quiz[55].Text = "Do people comment on your unusual mannerisms and habits?";
+  Quiz[56].Text = "Do people sometimes think you are smiling at the wrong occasion?";
+  Quiz[57].Text = "Do you often have lots of thoughts that you find hard to verbalize?";
+  Quiz[58].Text = "Do you often don't know where to put your arms?";
+  Quiz[59].Text = "Do you tend to talk either too softly or too loudly?";
+  Quiz[60].Text = "Have you been accused of staring?";
+  Quiz[61].Text = "Have others commented or have you observed yourself that you make unusual facial expressions?";
+  Quiz[62].Text = "Have others told you that you have an odd posture or gait?";
+  Quiz[63].Text = "Do you wring your hands, rub your hands together or twirl your fingers?";
+  Quiz[64].Text = "Do recently heard phrases, tunes or rhythms tend to stick and repeat themselves in your head?";
+  Quiz[65].Text = "Do you rock back-&-forth or side-to-side (e.g. for comfort, to calm yourself, when excited or overstimulated)?";
+  Quiz[66].Text = "Do you have a habit of repeating your own or others' last words, internally or out loud (echolalia)?";
+  Quiz[67].Text = "In conversations, do you use small sounds that others don't seem to use?";
+  Quiz[68].Text = "Do you tap your ears or press your eyes (e.g. when thinking, when stressed or distressed)?";
+  Quiz[69].Text = "Do you fiddle with things?";
+  Quiz[70].Text = "Do you use stock phrases or phrases borrowed from other situations or people?";
+  Quiz[71].Text = "Do you pace (e.g. when thinking or anxious)?";
+  Quiz[72].Text = "Do you tend to look a lot at people you like and little or not at all at people you dislike?";
+  Quiz[73].Text = "Do you bite your lip, cheek or tongue (e.g. when thinking, when anxious or nervous)?";
+  Quiz[74].Text = "Do you stutter when stressed?";
+  Quiz[75].Text = "Do you talk to yourself?";
+  Quiz[76].Text = "Do you find it difficult to figure out how to behave in various situations?";
+  Quiz[77].Text = "Do others often misunderstand you?";
+  Quiz[78].Text = "In conversations, do you have trouble with things like timing and reciprocity?";
+  Quiz[79].Text = "Do you tend to express your feelings in ways that may baffle others?";
+  Quiz[80].Text = "Do you tend to interpret things literally and/or reply to rhetorical questions?";
+  Quiz[81].Text = "Are you usually unaware of social rules & boundaries unless they are clearly spelled out?";
+  Quiz[82].Text = "Are you often surprised what people's motives are ?";
+  Quiz[83].Text = "Do you tend to say things that are considered socially inappropriate?";
+  Quiz[84].Text = "Do you instinctively know when it is your turn to speak when talking on the phone?";
+  Quiz[85].Text = "Do you know when you are expected to offer an apology?";
+  Quiz[86].Text = "Do you find yourself at ease in romantic situations?";
+  Quiz[87].Text = "Do you judge a potential mate as most anybody else would?";
+  Quiz[88].Text = "Do you find it easy to 'read between the lines' when someone is talking to you?";
+  Quiz[89].Text = "Do you naturally fit into the expected gender stereotypes?";
+  Quiz[90].Text = "Do you have problems recognizing faces (prosopagnosia)?";
+  Quiz[91].Text = "Do you enjoy watching a spinning or blinking object?";
+  Quiz[92].Text = "Do you have a fascination for slowly flowing water?";
+  Quiz[93].Text = "Do you sometimes have an urge to jump over things?";
+  Quiz[94].Text = "Do you enjoy walking on your toes?";
+  Quiz[95].Text = "Do you enjoy mimicking animal sounds?";
+  Quiz[96].Text = "Have you been fascinated about making traps?";
+  Quiz[97].Text = "Do you find it difficult to take messages on the telephone and pass them on correctly?";
+  Quiz[98].Text = "Do you drop things when your attention is on other things?";
+  Quiz[99].Text = "Do you have problems filling out forms?";
+  Quiz[100].Text = "Do you find it hard to recognise phone numbers when said in a different way?";
+  Quiz[101].Text = "Do you mix up dates and times and miss appointments?";
+  Quiz[102].Text = "Do you mix up digits in numbers like 95 and 59?";
+  Quiz[103].Text = "Do you suddenly feel distracted by distant sounds?";
+  Quiz[104].Text = "Do you notice small sounds that others don't, or feel pained by loud or irritating noise?";
+  Quiz[105].Text = "Do you have difficulties filtering out background noise when talking to someone?";
+  Quiz[106].Text = "Do you feel tortured by clothes tags, clothes that are too tight or are made in the 'wrong' material?";
+  Quiz[107].Text = "Are you hypo- or hypersensitive to physical pain, or even enjoy some types of pain?";
+  Quiz[108].Text = "Are your eyes extra sensitive to stong light and glare?";
+  Quiz[109].Text = "Do you instinctively become frightened by the sound of a motor-bike?";
+  Quiz[110].Text = "Do you dislike it when people stamp their foot in the floor?";
+  Quiz[111].Text = "Are you affected negatively by high air humidity combined with hot weather?";
+  Quiz[112].Text = "Do you have poor awareness or body control and a tendency to fall, stumble or bump into things?";
+  Quiz[113].Text = "Do you have difficulties imitating & timing the movements of others, e.g. when learning new dance steps or in gym class?";
+  Quiz[114].Text = "Do you have poor concept of time?";
+  Quiz[115].Text = "Do you have a poor sense of how much pressure to apply when doing things with your hands?";
+  Quiz[116].Text = "Do you have difficulties judging distances, height, depth or speed?";
+  Quiz[117].Text = "Do you find it hard to tell the age of people?";
+  Quiz[118].Text = "Did you perceive practical classes like handi-work or gymnasics as hard in school?";
+  Quiz[119].Text = "Do you have problems finding your way to new places?";
+  Quiz[120].Text = "Are your thoughts so strong that you can (almost) hear them?";
+  Quiz[121].Text = "Do you feel that people are watching you?";
+  Quiz[122].Text = "Do you mistake noises for voices?";
+  Quiz[123].Text = "Do you tend to shut down or have a meltdown when stressed or overwhelmed?";
+  Quiz[124].Text = "Do you feel stressed in unfamiliar situations?";
+  Quiz[125].Text = "Has it been harder for you to make it on your own, than it seems to be for most others of the same age?";
+  Quiz[126].Text = "Are you sometimes afraid in safe situations?";
+  Quiz[127].Text = "Do you have difficulty accepting criticism, correction, and direction?";
+  Quiz[128].Text = "Have you been bullied, abused or taken advantage of?";
+  Quiz[129].Text = "Do you forget you are in a social situation when something gets your attention?";
+  Quiz[130].Text = "Do you sometimes not feel anything at all, even though other people expect you to?";
+  Quiz[131].Text = "In conversations, do you need extra time to carefully think out your reply, so that there may be a pause before you answer?";
+  Quiz[132].Text = "Have you had the feeling of playing a game, pretending to be like people around you?";
+  Quiz[133].Text = "Have you taken initiative only to find out it was not wanted?";
+  Quiz[134].Text = "Do you have immature interests?";
+  Quiz[135].Text = "Do you or others think that you have unusual eating habits?";
+  Quiz[136].Text = "Do you expect other people to know your thoughts, experiences and opinions without you having to tell them?";
+  Quiz[137].Text = "Are you good at teamwork?";
+  Quiz[138].Text = "Do you have a good sense for what is the right thing to do socially?";
+  Quiz[139].Text = "Do you find it easy to estimate the age of people?";
+  Quiz[140].Text = "Are you gracious about criticism, correction and direction?";
+  Quiz[141].Text = "Can you easily remember verbal instructions?";
 
 #endif
 
@@ -771,146 +832,104 @@ void TQuizS11::SetupTexts()
   Quiz[41].Text = "Brukar du bli utmattad av att umgås med folk och behöva vila ut ifred efteråt?";
   Quiz[42].Text = "Föredrar du att undvika ögonkontakt?";
   Quiz[43].Text = "Ogillar du att bli tagen i eller kramad om du inte är beredd eller har bett om det?";
-  Quiz[44].Text = "Undviker du att prata ansikte-mot-ansikte med folk du inte känner mycket väl?";
-  Quiz[45].Text = "Är du bra på att återgälda sociala gester och artigheter?";
-  Quiz[46].Text = "Ogillar du att behöva ta i hand?";
-  Quiz[47].Text = "Tycker folk att du är reserverad och distanserad?";
-  Quiz[48].Text = "Tycker du det är svårt att vara känslomässigt nära andra människor?";
+  Quiz[44].Text = "Tycker folk att du är reserverad och distanserad?";
+  Quiz[45].Text = "Tycker du det är svårt att vara känslomässigt nära andra människor?";
+  Quiz[46].Text = "Är du bra på att återgälda sociala gester och artigheter?";
+  Quiz[47].Text = "Ogillar du att behöva ta i hand?";
+  Quiz[48].Text = "Undviker du att prata ansikte-mot-ansikte med folk du inte känner mycket väl?";
   Quiz[49].Text = "Föredrar du att göra saker på egen hand även om du skulle ha användning för andras hjälp och expertis?";
   Quiz[50].Text = "Har du lätt att beskriva dina känslor?";
   Quiz[51].Text = "Ogillar du när folk kommer på besök oanmälda?";
   Quiz[52].Text = "Tycker du det är naturligt att vinka eller säga 'hej' när du möter folk?";
   Quiz[53].Text = "Har du en tendens att vara passiv och ha svårt att ta initiativ och komma igång med saker på egen hand?";
-  Quiz[54].Text = "Brukar folk kommentera ditt ovanliga uppförande och dina ovanliga vanor?";
-  Quiz[55].Text = "Tycker andra ibland att du ler vid fel tillfällen?";
-  Quiz[56].Text = "Har du ofta massor av tankar som du har svårt för att formulera i ord?";
-  Quiz[57].Text = "Vet du ofta inte var du ska göra av dina armar?";
-  Quiz[58].Text = "Har du en tendens att tala antingen för tyst eller för högt?";
-  Quiz[59].Text = "Har du blivit anklagad för att stirra?";
-  Quiz[60].Text = "Har andra kommenterat eller har du själv observerat att du har ovanliga ansiktsuttryck?";
-  Quiz[61].Text = "Har andra kommenterat att du har udda kroppshållning eller gångstil?";
-  Quiz[62].Text = "Brukar du gnugga händer, eller vrida händerna eller fingrarna om varandra?";
-  Quiz[63].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas upp om och om igen?";
-  Quiz[64].Text = "Brukar du gunga fram-&-tillbaka eller i sidled (t ex för att lunga ner dig, när du är upprymd eller övertimulerad)?";
-  Quiz[65].Text = "Har du för vana att upprepa de sista orden som du själv eller någon annan just sagt?";
-  Quiz[66].Text = "Brukar du trumma på öronen eller trycka på ögonen (t ex när du tänker, när du är stressad eller upprörd)?";
-  Quiz[67].Text = "Brukar du fingra på saker?";
-  Quiz[68].Text = "Brukar du memorera och använda uttryck som du kopierat från andra människor och situationer?";
-  Quiz[69].Text = "Brukar du vanka av och an (t ex när du tänker eller är orolig)?";
-  Quiz[70].Text = "Har du en tendens att titta mycket på människor du gillar och lite eller inte alls på människor du ogillar?";
-  Quiz[71].Text = "Brukar du bita dig i läppen, kinden eller tungan (t ex när du tänker, när du är orolig eller nervös)?";
-  Quiz[72].Text = "Stammar du när du blir stressad?";
-  Quiz[73].Text = "Brukar du prata med dig själv?";
-  Quiz[74].Text = "Är det svårt att veta hur du ska bete dig i olika situationer?";
-  Quiz[75].Text = "Blir du ofta missförstådd av andra?";
-  Quiz[76].Text = "I samtal, brukar du ha problem med saker som timing, turtagning och ömsesidighet?";
-  Quiz[77].Text = "Brukar du uttrycka känslor på sätt som förbryllar andra?";
-  Quiz[78].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
-  Quiz[79].Text = "Är du oftast omedveten om outtalade sociala regler?";
-  Quiz[80].Text = "Blir du ofta överraskad av vad folks motiv är?";
-  Quiz[81].Text = "Brukar du säga saker som anses socialt opassande?";
-  Quiz[82].Text = "Känner du instinktivt på dig när det är din tur att tala när du pratar i telefon?";
-  Quiz[83].Text = "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
-  Quiz[84].Text = "Trivs du i romantiska situationer?";
-  Quiz[85].Text = "Bedömmer du en potentiell partner på samma sätt som de flesta andra människor?";
-  Quiz[86].Text = "Tycker du det är lätt att 'läsa mellan raderna' när någon talar med dig?";
-  Quiz[87].Text = "Passar du naturligt in i de förväntade könsrollerna?";
-  Quiz[88].Text = "I samtal, använder du små ljud som andra inte verkar använda?";
-  Quiz[89].Text = "Gillar du att titta på något som snurrar eller blinkar?";
-  Quiz[90].Text = "Är du fascinerad av långsamt flytande vatten?";
-  Quiz[91].Text = "Brukar du ibland ha ett behov av att hoppa över saker?";
-  Quiz[92].Text = "Gillar du att gå på tå?";
-  Quiz[93].Text = "Gillar du att härma djurläten?";
-  Quiz[94].Text = "Har du varit fascinerad av att tillverka fällor?";
-  Quiz[95].Text = "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
-  Quiz[96].Text = "Brukar du blanda ihop höger och vänster?";
-  Quiz[97].Text = "Blir du plötsligt distraherad av avlägsna ljud?";
-  Quiz[98].Text = "Brukar du höra ljud som andra inte hör eller plågas av höga eller störande ljud?";
-  Quiz[99].Text = "Har du svårt att filtrera bort störande bakgrundsljud när du talar med någon?";
-  Quiz[100].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt eller som är gjorda i 'fel' material?";
-  Quiz[101].Text = "Är du över- eller underkänslig för smärta eller t.o.m tycker om vissa sorters smärta?";
-  Quiz[102].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
-  Quiz[103].Text = "Blir du instinktivt rädd för ljudet från en motorcykel?";
-  Quiz[104].Text = "Ogillar du när folk stampar med foten i golvet?";
-  Quiz[105].Text = "Brukar du påverkas negativt av hög luftfuktighet i kombination med varmt väder?";
-  Quiz[106].Text = "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?";
-  Quiz[107].Text = "Har du svårt att imitera och tajma andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?";
-  Quiz[108].Text = "Har du dålig tidsuppfattning?";
-  Quiz[109].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna?";
-  Quiz[110].Text = "Har du svårt för att bedöma andra människors ålder?";
-  Quiz[111].Text = "Har du svårigheter att bedöma avstånd, höjd, djup eller fart?";
-  Quiz[112].Text = "Tyckte du praktiska ämnen som slöjd och gymnastik var svårt i skolan?";
-  Quiz[113].Text = "Har du svårt att känna igen ansikten?";
-  Quiz[114].Text = "Är dina tankar så starka att du (nästan) kan höra dem?";
-  Quiz[115].Text = "Tycker du att folk bevakar dig?";
-  Quiz[116].Text = "Misstar du ljud för röster?";
-  Quiz[117].Text = "Har du haft långvariga hämndbegär?";
-  Quiz[118].Text = "Brukar du stänga av eller bryta ihop när du blir stressad eller överväldigad?";
-  Quiz[119].Text = "Känner du dig stressad i nya okända situationer?";
-  Quiz[120].Text = "Har du haft svårare att klara dig själv än andra i samma ålder?";
-  Quiz[121].Text = "Är du ibland rädd i ofarliga situationer?";
-  Quiz[122].Text = "Har du svårt för att acceptera kritik, korrektion och direktiv?";
-  Quiz[123].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad?";
-  Quiz[124].Text = "Har du omogna intressen?";
-  Quiz[125].Text = "Har du upplevt starkare bindningar än normalt med vissa människor?";
-  Quiz[126].Text = "Glömmer du bort att du är i en social situation när något annat fångar ditt intresse?";
-  Quiz[127].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
-  Quiz[128].Text = "I samtal, brukar du behöva extra tid att noggant tänka ut vad du ska säga, så att det kan uppstå en paus innan du svarar?";
-  Quiz[129].Text = "Tappar du saker när din uppmärksamhet är på annat håll?";
-  Quiz[130].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
-  Quiz[131].Text = "Tycker du själv eller din omgivning att du har ovanliga matvanor?";
-  Quiz[132].Text = "Har du tagit initiativ som inte visat sig önskade?";
-  Quiz[133].Text = "Förväntar du dig att andra ska känna till dina tankar, upplevelser och åsikter utan att du behöver berätta?";
-  Quiz[134].Text = "Har du problem med auktoriteter?";
-  Quiz[135].Text = "Kommer du lätt ihåg verbala instruktioner?";
-  Quiz[136].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
-  Quiz[137].Text = "Har du lätt för att bedömma människors ålder?";
-  Quiz[138].Text = "Är du bra på att arbeta i grupp?";
-  Quiz[139].Text = "Har du en bra känla för vad som är rätt socialt?";
-
-  Quiz[140].Text = "Tycker du det är svårt att ta meddelenden på telefon och skicka dem vidare rätt?'";
-  Quiz[141].Text = "Ogillar du högläsning?";
-  Quiz[142].Text = "Har du svårt att hitta till nya platser?";
-  Quiz[143].Text = "Har du svårt att fylla i formulär?";
-  Quiz[144].Text = "Blandar du ihop siffor i tal som t.ex. 95 och 59?";
-  Quiz[145].Text = "Har du tänkt på ett ord men skrivit ett annat?";
-  Quiz[146].Text = "Blandar du ihop tider och datum och missar möten?";
-  Quiz[147].Text = "Är du bra på spel som kräver att du kommer ihåg var flera olika kort eller andra saker finns?";
-  Quiz[148].Text = "Gillar du när människor du är förtjust i tittar mycket på dig och fortsätter att göra det under flera timmar utan att något annat händer?";
-
-  Quiz[149].Text = "TS - Do you involuntarily swear or utter obscene words or socially inappropriate and derogatory remarks (coprolalia)?";
-  Quiz[150].Text = "TS - Do you involuntarily repeat or imitate observed movements of others (echopraxia)?";
-  Quiz[151].Text = "TS - Do you repeat vocalizations made by others (echolalia)?";
-  Quiz[152].Text = "TS - Do you repeat or echo your own spoken words (stuttering, palilalia)?";
-  Quiz[153].Text = "TS - Do you have complex motor tics (eg facial grimaces, pulling cloth, touching people or objects, obscene gesturing or gyrating movements)?";
-  Quiz[154].Text = "TS - Do you have complex vocal tics (eg talking to yourself, using socially meaningless sentences)?";
-  Quiz[155].Text = "TS - Did you have tics before the age of twelve?";
-  Quiz[156].Text = "TS - If you have tics, do the wax and wane?";
-  Quiz[157].Text = "TS - If you have tics, did they begin above shoulders";
-  Quiz[158].Text = "TS - Do you have five or more motor tic types in the list above?";
-  Quiz[159].Text = "TS - Do you have three or more vocal tic types in the list above?";
-  Quiz[160].Text = "TS - If you have motor tics, do they affect multiple body locations?";
-  Quiz[161].Text = "TS - If you have tics, have they varied with some tics disappearing and new tics appearing over time?";
-  Quiz[162].Text = "TS - If you have tics, do you have them even if you are not in a stressful situation?";
-  Quiz[163].Text = "TS - If you have tics, are they voluntarily suppressible?";
-  Quiz[164].Text = "TS - If you have tics, do you attempt to suppress them?";
-  Quiz[165].Text = "TS - If you have tics and you try to suppress them, do they become worse (rebound effect)?";
-  Quiz[166].Text = "TS - If you have tics, can you sense their coming beforehand (premonitory sensation)?";
-  Quiz[167].Text = "TS - If you have tics, do you sense relief after you had them?";
-  Quiz[168].Text = "TS - If you have tics, do a mention or sight of a specific tic induce it (suggestible)?";
-  Quiz[169].Text = "TS - Do you have frequent tics (more than one per minute at times)?";
-  Quiz[170].Text = "TS - Do you have orchestrated sequences of tics?";
-  Quiz[171].Text = "TS - If you have tics, do they cause distress?";
-  Quiz[172].Text = "TS - If you have tics, have you sought treatment or diagnosis?";
-  Quiz[173].Text = "TS - Have you had tics for a duration of two or more years";
-  Quiz[174].Text = "TS - Have your tics been confirmed by one or more reliable observers?";
-  Quiz[175].Text = "TS - Do you have an absence of other medical problems that might cause tics (eg prior stimulant therapy, history of encephalitis)?";
-
-  Quiz[176].Text = "Dyslexi";
-  Quiz[177].Text = "Dyskaluli";
-  Quiz[178].Text = "Dyspraxi";
-  Quiz[179].Text = "Bipolär";
-  Quiz[180].Text = "Social fobi";
+  Quiz[54].Text = "Ogillar du högläsning?";
+  Quiz[55].Text = "Brukar folk kommentera ditt ovanliga uppförande och dina ovanliga vanor?";
+  Quiz[56].Text = "Tycker andra ibland att du ler vid fel tillfällen?";
+  Quiz[57].Text = "Har du ofta massor av tankar som du har svårt för att formulera i ord?";
+  Quiz[58].Text = "Vet du ofta inte var du ska göra av dina armar?";
+  Quiz[59].Text = "Har du en tendens att tala antingen för tyst eller för högt?";
+  Quiz[60].Text = "Har du blivit anklagad för att stirra?";
+  Quiz[61].Text = "Har andra kommenterat eller har du själv observerat att du har ovanliga ansiktsuttryck?";
+  Quiz[62].Text = "Har andra kommenterat att du har udda kroppshållning eller gångstil?";
+  Quiz[63].Text = "Brukar du gnugga händer, eller vrida händerna eller fingrarna om varandra?";
+  Quiz[64].Text = "Brukar fraser, melodier eller rytmer du nyligen hört fastna i huvudet och fortsätta spelas upp om och om igen?";
+  Quiz[65].Text = "Brukar du gunga fram-&-tillbaka eller i sidled (t ex för att lunga ner dig, när du är upprymd eller övertimulerad)?";
+  Quiz[66].Text = "Har du för vana att upprepa de sista orden som du själv eller någon annan just sagt?";
+  Quiz[67].Text = "I samtal, använder du små ljud som andra inte verkar använda?";
+  Quiz[68].Text = "Brukar du trumma på öronen eller trycka på ögonen (t ex när du tänker, när du är stressad eller upprörd)?";
+  Quiz[69].Text = "Brukar du fingra på saker?";
+  Quiz[70].Text = "Brukar du memorera och använda uttryck som du kopierat från andra människor och situationer?";
+  Quiz[71].Text = "Brukar du vanka av och an (t ex när du tänker eller är orolig)?";
+  Quiz[72].Text = "Har du en tendens att titta mycket på människor du gillar och lite eller inte alls på människor du ogillar?";
+  Quiz[73].Text = "Brukar du bita dig i läppen, kinden eller tungan (t ex när du tänker, när du är orolig eller nervös)?";
+  Quiz[74].Text = "Stammar du när du blir stressad?";
+  Quiz[75].Text = "Brukar du prata med dig själv?";
+  Quiz[76].Text = "Är det svårt att veta hur du ska bete dig i olika situationer?";
+  Quiz[77].Text = "Blir du ofta missförstådd av andra?";
+  Quiz[78].Text = "I samtal, brukar du ha problem med saker som timing, turtagning och ömsesidighet?";
+  Quiz[79].Text = "Brukar du uttrycka känslor på sätt som förbryllar andra?";
+  Quiz[80].Text = "Har du en tendens att tolka saker bokstavligt och/eller svara på retoriska frågor?";
+  Quiz[81].Text = "Är du oftast omedveten om outtalade sociala regler?";
+  Quiz[82].Text = "Blir du ofta överraskad av vad folks motiv är?";
+  Quiz[83].Text = "Brukar du säga saker som anses socialt opassande?";
+  Quiz[84].Text = "Känner du instinktivt på dig när det är din tur att tala när du pratar i telefon?";
+  Quiz[85].Text = "Känner du på dig när det förväntas att du ska be folk om ursäkt?";
+  Quiz[86].Text = "Trivs du i romantiska situationer?";
+  Quiz[87].Text = "Bedömmer du en potentiell partner på samma sätt som de flesta andra människor?";
+  Quiz[88].Text = "Tycker du det är lätt att 'läsa mellan raderna' när någon talar med dig?";
+  Quiz[89].Text = "Passar du naturligt in i de förväntade könsrollerna?";
+  Quiz[90].Text = "Har du svårt att känna igen ansikten?";
+  Quiz[91].Text = "Gillar du att titta på något som snurrar eller blinkar?";
+  Quiz[92].Text = "Är du fascinerad av långsamt flytande vatten?";
+  Quiz[93].Text = "Brukar du ibland ha ett behov av att hoppa över saker?";
+  Quiz[94].Text = "Gillar du att gå på tå?";
+  Quiz[95].Text = "Gillar du att härma djurläten?";
+  Quiz[96].Text = "Har du varit fascinerad av att tillverka fällor?";
+  Quiz[97].Text = "Tycker du det är svårt att ta meddelenden på telefon och skicka dem vidare rätt?'";
+  Quiz[98].Text = "Tappar du saker när din uppmärksamhet är på annat håll?";
+  Quiz[99].Text = "Har du svårt att fylla i formulär?";
+  Quiz[100].Text = "Har du svårt att känna igen telefonnummer om de sägs på ett annat sätt?";
+  Quiz[101].Text = "Blandar du ihop tider och datum och missar möten?";
+  Quiz[102].Text = "Blandar du ihop siffor i tal som t.ex. 95 och 59?";
+  Quiz[103].Text = "Blir du plötsligt distraherad av avlägsna ljud?";
+  Quiz[104].Text = "Brukar du höra ljud som andra inte hör eller plågas av höga eller störande ljud?";
+  Quiz[105].Text = "Har du svårt att filtrera bort störande bakgrundsljud när du talar med någon?";
+  Quiz[106].Text = "Pinas du av skavande sömmar och etiketter i kläderna, av kläder som sitter åt eller som är gjorda i 'fel' material?";
+  Quiz[107].Text = "Är du över- eller underkänslig för smärta eller t.o.m tycker om vissa sorters smärta?";
+  Quiz[108].Text = "Är dina ögon extra känsliga för starkt ljus och bländning?";
+  Quiz[109].Text = "Blir du instinktivt rädd för ljudet från en motorcykel?";
+  Quiz[110].Text = "Ogillar du när folk stampar med foten i golvet?";
+  Quiz[111].Text = "Brukar du påverkas negativt av hög luftfuktighet i kombination med varmt väder?";
+  Quiz[112].Text = "Har du dålig koll på eller kontroll över kroppen och tendens att ramla, snubbla eller springa in i saker?";
+  Quiz[113].Text = "Har du svårt att imitera och tajma andras rörelser, t ex när du ska lära dig nya danssteg eller göra gymnastikpass i grupp?";
+  Quiz[114].Text = "Har du dålig tidsuppfattning?";
+  Quiz[115].Text = "Har du svårt att avgöra hur hårt man bör ta i när man gör saker med händerna?";
+  Quiz[116].Text = "Har du svårigheter att bedöma avstånd, höjd, djup eller fart?";
+  Quiz[117].Text = "Har du svårt för att bedöma andra människors ålder?";
+  Quiz[118].Text = "Tyckte du praktiska ämnen som slöjd och gymnastik var svårt i skolan?";
+  Quiz[119].Text = "Har du svårt att hitta till nya platser?";
+  Quiz[120].Text = "Är dina tankar så starka att du (nästan) kan höra dem?";
+  Quiz[121].Text = "Tycker du att folk bevakar dig?";
+  Quiz[122].Text = "Misstar du ljud för röster?";
+  Quiz[123].Text = "Brukar du stänga av eller bryta ihop när du blir stressad eller överväldigad?";
+  Quiz[124].Text = "Känner du dig stressad i nya okända situationer?";
+  Quiz[125].Text = "Har du haft svårare att klara dig själv än andra i samma ålder?";
+  Quiz[126].Text = "Är du ibland rädd i ofarliga situationer?";
+  Quiz[127].Text = "Har du svårt för att acceptera kritik, korrektion och direktiv?";
+  Quiz[128].Text = "Har du blivit mobbad, lurad, utnyttjad eller illa behandlad?";
+  Quiz[129].Text = "Glömmer du bort att du är i en social situation när något annat fångar ditt intresse?";
+  Quiz[130].Text = "Händer det att du inte känner något alls fastän andra tycker att du borde?";
+  Quiz[131].Text = "I samtal, brukar du behöva extra tid att noggant tänka ut vad du ska säga, så att det kan uppstå en paus innan du svarar?";
+  Quiz[132].Text = "Har du haft en känsla av att spela ett spel för att vara som andra runt omkring dig?";
+  Quiz[133].Text = "Har du tagit initiativ som inte visat sig önskade?";
+  Quiz[134].Text = "Har du omogna intressen?";
+  Quiz[135].Text = "Tycker du själv eller din omgivning att du har ovanliga matvanor?";
+  Quiz[136].Text = "Förväntar du dig att andra ska känna till dina tankar, upplevelser och åsikter utan att du behöver berätta?";
+  Quiz[137].Text = "Är du bra på att arbeta i grupp?";
+  Quiz[138].Text = "Har du en bra känla för vad som är rätt socialt?";
+  Quiz[139].Text = "Har du lätt för att bedömma människors ålder?";
+  Quiz[140].Text = "Accepterar du lätt kritik, tillrättavisningar och instruktioner?";
+  Quiz[141].Text = "Kommer du lätt ihåg verbala instruktioner?";
 
 #endif
 
@@ -918,7 +937,7 @@ void TQuizS11::SetupTexts()
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::InitReferers
+#   Name       : TQuizS12::InitReferers
 #
 #   Purpose....: Init referers
 #
@@ -927,7 +946,7 @@ void TQuizS11::SetupTexts()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::InitReferers()
+void TQuizS12::InitReferers()
 {
 	AddReferer("livejournal.com/community/asperger", "livejournal.com/community/asperger");
 	AddReferer("flashback.info", "flashback.info");
@@ -953,14 +972,14 @@ void TQuizS11::InitReferers()
 	AddReferer("goonfleet.com", "goonfleet.com/showthread.php?t=77152");
 }
 
-/*##################  TQuizS11::LoadReferers ##########################
+/*##################  TQuizS12::LoadReferers ##########################
 *   Purpose....: Load referers    					      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::LoadReferers()
+void TQuizS12::LoadReferers()
 {
 	TQuizRow Row;
 	TReferer *ref;
@@ -1020,7 +1039,7 @@ void TQuizS11::LoadReferers()
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::LoadPopulations
+#   Name       : TQuizS12::LoadPopulations
 #
 #   Purpose....: Load populations
 #
@@ -1029,7 +1048,7 @@ void TQuizS11::LoadReferers()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::LoadPopulations()
+void TQuizS12::LoadPopulations()
 {
 	TQuizRow Row;
 	int i;
@@ -1050,11 +1069,11 @@ void TQuizS11::LoadPopulations()
 	{
 		BirthMonth.Add(Row.AsResult, Row.NtResult, Row.BirthMonth);
 
-		Row.Quiz[176] = Row.Dyslexia + 1;
-		Row.Quiz[177] = Row.Dyscalculia + 1;
-		Row.Quiz[178] = Row.Dyspraxia + 1;
-		Row.Quiz[179] = Row.Bipolar + 1;
-		Row.Quiz[180] = Row.Social + 1;
+//		Row.Quiz[176] = Row.Dyslexia + 1;
+//		Row.Quiz[177] = Row.Dyscalculia + 1;
+//		Row.Quiz[178] = Row.Dyspraxia + 1;
+//		Row.Quiz[179] = Row.Bipolar + 1;
+//		Row.Quiz[180] = Row.Social + 1;
 
 		for (i = 0; i < N; i++)
 		{
@@ -1187,7 +1206,7 @@ void TQuizS11::LoadPopulations()
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::SetupControlGroups
+#   Name       : TQuizS12::SetupControlGroups
 #
 #   Purpose....: Setup control-groups
 #
@@ -1196,7 +1215,7 @@ void TQuizS11::LoadPopulations()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::SetupControlGroups()
+void TQuizS12::SetupControlGroups()
 {
 	DefineNt("flashback.info");
 	DefineNt("rdos.net/sv");
@@ -1225,7 +1244,7 @@ void TQuizS11::SetupControlGroups()
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::SetupCross
+#   Name       : TQuizS12::SetupCross
 #
 #   Purpose....: Setup cross-references
 #
@@ -1234,197 +1253,155 @@ void TQuizS11::SetupControlGroups()
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10)
+void TQuizS12::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *QuizNd, TQuiz *Quiz5, TQuiz *Quiz6, TQuiz *Quiz7, TQuiz *Quiz8, TQuiz *Quiz9, TQuiz *QuizR1, TQuiz *QuizR2, TQuiz *QuizR3, TQuiz *QuizR4, TQuiz *QuizR5, TQuiz *QuizR6, TQuiz *QuizR7, TQuiz *QuizS1, TQuiz *QuizS2, TQuiz *QuizS3, TQuiz *QuizS4, TQuiz *QuizS5, TQuiz *QuizS6, TQuiz *QuizS7, TQuiz *QuizS8, TQuiz *QuizS9, TQuiz *QuizS10, TQuiz *QuizS11)
 {
-    DefineCross(QuizS10, 0, 0);
-	 DefineCross(QuizS10, 1, 1);
-    DefineCross(QuizS10, 2, 2);
-    DefineCross(QuizS10, 3, 3);
-    DefineCross(QuizS10, 4, 5);
-	 DefineCross(QuizS10, 5, 4);
-    DefineCross(QuizS10, 6, 6);
-    DefineCross(QuizS10, 7, 10);
-    DefineCross(QuizS10, 8, 11);
-    DefineCross(QuizS10, 9, 14);
-    DefineCross(QuizS10, 10, 15);
-    DefineCross(QuizS10, 11, 16);
-	 DefineCross(QuizS10, 12, 17);
-    DefineCross(QuizS10, 13, 18);
-    DefineCross(QuizS10, 14, 19);
-    DefineCross(QuizS10, 15, 20);
-    DefineCross(QuizS10, 16, 93);
-	 DefineCross(QuizS10, 17, 22);
-    DefineCross(QuizS10, 18, 23);
-	 DefineCross(QuizS10, 19, 24);
-	 DefineCross(QuizS10, 20, 25);
-    DefineCross(QuizS10, 21, 26);
-    DefineCross(QuizS10, 22, 27);
-    DefineCross(QuizS10, 23, 28);
-    DefineCross(QuizS10, 24, 29);
-    DefineCross(QuizS10, 25, 30);
-	 DefineCross(QuizS10, 26, 145);
-	 DefineCross(QuizS10, 27, 31);
-    DefineCross(QuizS10, 28, 32);
-	 DefineCross(QuizS10, 29, 33);
-    DefineCross(QuizS10, 30, 34);
-	 DefineCross(QuizS10, 31, 35);
-    DefineCross(QuizS10, 32, 36);
-    DefineCross(QuizS10, 33, 37);
-    DefineCross(QuizS10, 34, 38);
-	 DefineCross(QuizS10, 35, 165);
-    DefineCross(QuizS10, 36, 41);
-    DefineCross(QuizR3, 37, 160);
-    DefineCross(QuizS10, 38, 156);
-    DefineCross(QuizS10, 39, 101);
-    DefineCross(QuizS10, 40, 42);
-    DefineCross(QuizS10, 41, 43);
-	 DefineCross(QuizS10, 42, 44);
-    DefineCross(QuizS10, 43, 45);
-    DefineCross(QuizS10, 44, 46);
-    DefineCross(QuizS10, 45, 47);
-    DefineCross(QuizS10, 46, 48);
-	 DefineCross(QuizS10, 47, 49);
-    DefineCross(QuizS10, 48, 50);
-	 DefineCross(QuizS10, 49, 51);
-	 DefineCross(QuizS10, 50, 53);
-    DefineCross(QuizS10, 51, 54);
-    DefineCross(QuizS10, 52, 55);
-    DefineCross(QuizS10, 53, 56);
-    DefineCross(QuizS10, 54, 58);
-    DefineCross(QuizS10, 55, 59);
-	 DefineCross(QuizS10, 56, 60);
-	 DefineCross(QuizS10, 57, 61);
-    DefineCross(QuizS10, 58, 62);
-	 DefineCross(QuizS10, 59, 63);
-    DefineCross(QuizS10, 60, 64);
-	 DefineCross(QuizS10, 61, 65);
-    DefineCross(QuizS10, 62, 66);
-    DefineCross(QuizS10, 63, 142);
-    DefineCross(QuizS10, 64, 67);
-	 DefineCross(QuizS10, 65, 68);
-    DefineCross(QuizS10, 66, 69);
-    DefineCross(QuizS10, 67, 70);
-    DefineCross(QuizS10, 68, 71);
-    DefineCross(QuizS10, 69, 72);
-    DefineCross(QuizS10, 70, 144);
-    DefineCross(QuizS10, 71, 73);
-	 DefineCross(QuizS10, 72, 74);
-    DefineCross(QuizS10, 73, 75);
-    DefineCross(QuizS10, 74, 78);
-    DefineCross(QuizS10, 75, 79);
-    DefineCross(QuizS10, 76, 80);
-	 DefineCross(QuizS10, 77, 135);
-    DefineCross(QuizS10, 78, 81);
-	 DefineCross(QuizS10, 79, 82);
-	 DefineCross(QuizS10, 80, 84);
-    DefineCross(QuizS10, 81, 85);
-    DefineCross(QuizS10, 82, 86);
-    DefineCross(QuizS10, 83, 87);
-    DefineCross(QuizS10, 84, 89);
-    DefineCross(QuizS10, 85, 90);
-	 DefineCross(QuizS10, 86, 91);
-	 DefineCross(QuizS10, 87, 92);
-    DefineCross(QuizS10, 88, 94);
-	 DefineCross(QuizS10, 89, 95);
-    DefineCross(QuizS10, 90, 96);
-	 DefineCross(QuizS10, 91, 97);
-    DefineCross(QuizS10, 92, 98);
-    DefineCross(QuizS10, 93, 99);
-    DefineCross(QuizS10, 94, 100);
-	 DefineCross(QuizS10, 95, 21);
-    DefineCross(QuizS10, 96, 122);
-    DefineCross(QuizS10, 97, 108);
-    DefineCross(QuizS10, 98, 109);
-    DefineCross(QuizS10, 99, 110);
-    DefineCross(QuizS10, 100, 111);
-    DefineCross(QuizS10, 101, 112);
-	 DefineCross(QuizS10, 102, 113);
-    DefineCross(QuizS10, 103, 114);
-    DefineCross(QuizS10, 104, 116);
-    DefineCross(QuizS10, 105, 115);
-    DefineCross(QuizS10, 106, 103);
-	 DefineCross(QuizS10, 107, 104);
-    DefineCross(QuizS10, 108, 117);
-	 DefineCross(QuizS10, 109, 105);
-	 DefineCross(QuizS10, 110, 118);
-    DefineCross(QuizS10, 111, 119);
-    DefineCross(QuizS10, 112, 107);
-    DefineCross(QuizS10, 113, 120);
-    DefineCross(QuizS10, 114, 125);
-    DefineCross(QuizS10, 115, 123);
-	 DefineCross(QuizS10, 116, 124);
-	 DefineCross(QuizS10, 117, 126);
-    DefineCross(QuizS10, 118, 127);
-	 DefineCross(QuizS10, 119, 128);
-    DefineCross(QuizS10, 120, 129);
-	 DefineCross(QuizS10, 121, 130);
-    DefineCross(QuizS10, 122, 131);
-    DefineCross(QuizS10, 123, 132);
-    DefineCross(QuizS10, 124, 158);
-	 DefineCross(QuizS10, 125, 134);
-	 DefineCross(QuizS10, 126, 136);
-	 DefineCross(QuizS10, 127, 137);
-	 DefineCross(QuizS10, 128, 138);
-	 DefineCross(QuizS10, 129, 102);
-	 DefineCross(QuizS10, 130, 139);
-	 DefineCross(QuizS10, 131, 140);
-	 DefineCross(QuizS10, 132, 141);
-	 DefineCross(QuizS10, 133, 143);
-	 DefineCross(QuizS10, 134, 159);
-	 DefineCross(QuizS10, 135, 146);
-	 DefineCross(QuizS10, 136, 152);
-	 DefineCross(QuizS10, 137, 150);
-	 DefineCross(QuizS10, 138, 148);
-	 DefineCross(QuizS10, 139, 149);
-
-	 DefineGlobalId(140, 1075);
-	 DefineGlobalId(141, 1076);
-	 DefineGlobalId(142, 1077);
-	 DefineGlobalId(143, 1078);
-	 DefineGlobalId(144, 1079);
-	 DefineGlobalId(145, 1080);
-	 DefineGlobalId(146, 1081);
-	 DefineGlobalId(147, 1082);
-	 DefineGlobalId(148, 1083);
-
-	 DefineGlobalId(149, 1084);
-	 DefineGlobalId(150, 1085);
-	 DefineGlobalId(151, 1086);
-	 DefineGlobalId(152, 1087);
-	 DefineGlobalId(153, 1088);
-	 DefineGlobalId(154, 1089);
-	 DefineGlobalId(155, 1090);
-	 DefineGlobalId(156, 1091);
-	 DefineGlobalId(157, 1092);
-	 DefineGlobalId(158, 1093);
-	 DefineGlobalId(159, 1094);
-	 DefineGlobalId(160, 1095);
-	 DefineGlobalId(161, 1096);
-	 DefineGlobalId(162, 1097);
-	 DefineGlobalId(163, 1098);
-	 DefineGlobalId(164, 1099);
-	 DefineGlobalId(165, 1100);
-	 DefineGlobalId(166, 1101);
-	 DefineGlobalId(167, 1102);
-	 DefineGlobalId(168, 1103);
-	 DefineGlobalId(169, 1104);
-	 DefineGlobalId(170, 1105);
-	 DefineGlobalId(171, 1106);
-	 DefineGlobalId(172, 1107);
-	 DefineGlobalId(173, 1108);
-	 DefineGlobalId(174, 1109);
-	 DefineGlobalId(175, 1110);
-
-	 DefineCross(QuizS10, 176, 188);
-	 DefineCross(QuizS10, 177, 189);
-	 DefineCross(QuizNd, 178, 201);
-	 DefineCross(QuizS10, 179, 192);
-	 DefineCross(QuizS10, 180, 193);
+    DefineCross(QuizS11, 0, 0);
+    DefineCross(QuizS11, 1, 1);
+    DefineCross(QuizS11, 2, 2);
+    DefineCross(QuizS11, 3, 3);
+    DefineCross(QuizS11, 4, 4);
+    DefineCross(QuizS11, 5, 5);
+    DefineCross(QuizS11, 6, 6);
+    DefineCross(QuizS11, 7, 7);
+    DefineCross(QuizS11, 8, 8);
+    DefineCross(QuizS11, 9, 9);
+    DefineCross(QuizS11, 10, 10);
+    DefineCross(QuizS11, 11, 11);
+    DefineCross(QuizS11, 12, 12);
+    DefineCross(QuizS11, 13, 13);
+    DefineCross(QuizS11, 14, 14);
+    DefineCross(QuizS11, 15, 15);
+    DefineCross(QuizS11, 16, 16);
+    DefineCross(QuizS11, 17, 17);
+    DefineCross(QuizS11, 18, 18);
+    DefineCross(QuizS11, 19, 19);
+    DefineCross(QuizS11, 20, 20);
+    DefineCross(QuizS11, 21, 21);
+    DefineCross(QuizS11, 22, 22);
+    DefineCross(QuizS11, 23, 23);
+    DefineCross(QuizS11, 24, 24);
+    DefineCross(QuizS11, 25, 25);
+    DefineCross(QuizS11, 26, 26);
+    DefineCross(QuizS11, 27, 27);
+    DefineCross(QuizS11, 28, 28);
+    DefineCross(QuizS11, 29, 29);
+    DefineCross(QuizS11, 30, 30);
+    DefineCross(QuizS11, 31, 31);
+    DefineCross(QuizS11, 32, 32);
+    DefineCross(QuizS11, 33, 33);
+    DefineCross(QuizS11, 34, 34);
+    DefineCross(QuizS11, 35, 35);
+    DefineCross(QuizS11, 36, 36);
+    DefineCross(QuizS11, 37, 37);
+    DefineCross(QuizS11, 38, 38);
+    DefineCross(QuizS11, 39, 39);
+    DefineCross(QuizS11, 40, 40);
+    DefineCross(QuizS11, 41, 41);
+    DefineCross(QuizS11, 42, 42);
+    DefineCross(QuizS11, 43, 43);
+    DefineCross(QuizS11, 44, 47);
+    DefineCross(QuizS11, 45, 48);
+    DefineCross(QuizS11, 46, 45);
+    DefineCross(QuizS11, 47, 46);
+    DefineCross(QuizS11, 48, 44);
+    DefineCross(QuizS11, 49, 49);
+    DefineCross(QuizS11, 50, 50);
+    DefineCross(QuizS11, 51, 51);
+    DefineCross(QuizS11, 52, 52);
+    DefineCross(QuizS11, 53, 53);
+    DefineCross(QuizS11, 54, 141);
+    DefineCross(QuizS11, 55, 54);
+    DefineCross(QuizS11, 56, 55);
+    DefineCross(QuizS11, 57, 56);
+    DefineCross(QuizS11, 58, 57);
+    DefineCross(QuizS11, 59, 58);
+    DefineCross(QuizS11, 60, 59);
+    DefineCross(QuizS11, 61, 60);
+    DefineCross(QuizS11, 62, 61);
+    DefineCross(QuizS11, 63, 62);
+    DefineCross(QuizS11, 64, 63);
+    DefineCross(QuizS11, 65, 64);
+    DefineCross(QuizS11, 66, 65);
+    DefineCross(QuizS11, 67, 88);
+    DefineCross(QuizS11, 68, 66);
+    DefineCross(QuizS11, 69, 67);
+    DefineCross(QuizS11, 70, 68);
+    DefineCross(QuizS11, 71, 69);
+    DefineCross(QuizS11, 72, 70);
+    DefineCross(QuizS11, 73, 71);
+    DefineCross(QuizS11, 74, 72);
+    DefineCross(QuizS11, 75, 73);
+    DefineCross(QuizS11, 76, 74);
+    DefineCross(QuizS11, 77, 75);
+    DefineCross(QuizS11, 78, 76);
+    DefineCross(QuizS11, 79, 77);
+    DefineCross(QuizS11, 80, 78);
+    DefineCross(QuizS11, 81, 79);
+    DefineCross(QuizS11, 82, 80);
+    DefineCross(QuizS11, 83, 81);
+    DefineCross(QuizS11, 84, 82);
+    DefineCross(QuizS11, 85, 83);
+    DefineCross(QuizS11, 86, 84);
+    DefineCross(QuizS11, 87, 85);
+    DefineCross(QuizS11, 88, 86);
+    DefineCross(QuizS11, 89, 87);
+    DefineCross(QuizS11, 90, 113);
+    DefineCross(QuizS11, 91, 89);
+    DefineCross(QuizS11, 92, 90);
+    DefineCross(QuizS11, 93, 91);
+    DefineCross(QuizS11, 94, 92);
+    DefineCross(QuizS11, 95, 93);
+    DefineCross(QuizS11, 96, 94);
+    DefineCross(QuizS11, 97, 140);
+    DefineCross(QuizS11, 98, 129);
+    DefineCross(QuizS11, 99, 143);
+    DefineCross(QuizS11, 100, 95);
+    DefineCross(QuizS11, 101, 146);
+    DefineCross(QuizS11, 102, 144);
+    DefineCross(QuizS11, 103, 97);
+    DefineCross(QuizS11, 104, 98);
+    DefineCross(QuizS11, 105, 99);
+    DefineCross(QuizS11, 106, 100);
+    DefineCross(QuizS11, 107, 101);
+    DefineCross(QuizS11, 108, 102);
+    DefineCross(QuizS11, 109, 103);
+    DefineCross(QuizS11, 110, 104);
+    DefineCross(QuizS11, 111, 105);
+    DefineCross(QuizS11, 112, 106);
+    DefineCross(QuizS11, 113, 107);
+    DefineCross(QuizS11, 114, 108);
+    DefineCross(QuizS11, 115, 109);
+    DefineCross(QuizS11, 116, 111);
+    DefineCross(QuizS11, 117, 110);
+    DefineCross(QuizS11, 118, 112);
+    DefineCross(QuizS11, 119, 142);
+    DefineCross(QuizS11, 120, 114);
+    DefineCross(QuizS11, 121, 115);
+    DefineCross(QuizS11, 122, 116);
+    DefineCross(QuizS11, 123, 118);
+    DefineCross(QuizS11, 124, 119);
+    DefineCross(QuizS11, 125, 120);
+    DefineCross(QuizS11, 126, 121);
+    DefineCross(QuizS11, 127, 122);
+    DefineCross(QuizS11, 128, 123);
+    DefineCross(QuizS11, 129, 126);
+    DefineCross(QuizS11, 130, 127);
+    DefineCross(QuizS11, 131, 128);
+    DefineCross(QuizS11, 132, 130);
+    DefineCross(QuizS11, 133, 132);
+    DefineCross(QuizS11, 134, 124);
+    DefineCross(QuizS11, 135, 131);
+    DefineCross(QuizS11, 136, 133);
+    DefineCross(QuizS11, 137, 138);
+    DefineCross(QuizS11, 138, 139);
+    DefineCross(QuizS11, 139, 137);
+    DefineCross(QuizS11, 140, 136);
+    DefineCross(QuizS11, 141, 135);
 }
 
 /*##########################################################################
 #
-#   Name       : TQuizS11::GetReferer
+#   Name       : TQuizS12::GetReferer
 #
 #   Purpose....: Get referer population
 #
@@ -1433,7 +1410,7 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
 #   Returns....: *
 #
 ##########################################################################*/
-void TQuizS11::GetReferer(const char *referer, TPopulation *pop)
+void TQuizS12::GetReferer(const char *referer, TPopulation *pop)
 {
 	int i;
 	TReferer *ref;
@@ -1501,14 +1478,14 @@ static int IsPca(TQuizRow *row, int PcaType)
 	return FALSE;
 }
 
-/*##################  TQuizS11::ExportExcelCases ##########################
+/*##################  TQuizS12::ExportExcelCases ##########################
 *   Purpose....: Export cases as excel-data. Make ? into 'NO' case 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::ExportExcelCase(const char *filename, int PcaType)
+void TQuizS12::ExportExcelCase(const char *filename, int PcaType)
 {
 	TQuizRow Row;
 	int i;
@@ -1570,14 +1547,14 @@ void TQuizS11::ExportExcelCase(const char *filename, int PcaType)
 	}
 }
 
-/*##################  TQuizS11::ExportExcelAspie ##########################
+/*##################  TQuizS12::ExportExcelAspie ##########################
 *   Purpose....: Export cases as excel-data. Invert NT questions 	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::ExportExcelAspie(const char *filename)
+void TQuizS12::ExportExcelAspie(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1604,7 +1581,7 @@ void TQuizS11::ExportExcelAspie(const char *filename)
 	FDataFile.SetPos(0);
 	while (FDataFile.Read(&Row, sizeof(Row)))
 	{
-		if (Row.TsResult)
+		if (Row.GiftedResult)
 		{
 			sprintf(str, "\"%d\", ", Row.AsResult);
 			file.Write(str);
@@ -1638,14 +1615,14 @@ void TQuizS11::ExportExcelAspie(const char *filename)
 	}
 }
 
-/*##################  TQuizS11::ExportExcelGroups ##########################
+/*##################  TQuizS12::ExportExcelGroups ##########################
 *   Purpose....: Export group cases in excel format             	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::ExportExcelGroups(const char *filename)
+void TQuizS12::ExportExcelGroups(const char *filename)
 {
 	TQuizRow Row;
 	int i;
@@ -1726,14 +1703,14 @@ void TQuizS11::ExportExcelGroups(const char *filename)
 	}
 }
 
-/*##################  TQuizS11::ImportMvsp ##########################
+/*##################  TQuizS12::ImportMvsp ##########################
 *   Purpose....: Import MVSP loadings   	      			      	        #
 *   In params..: *                                                          #
 *   Out params.: *                                                          #
 *   Returns....: *                                                          #
 *   Created....: 96-11-20 le                                                #
 *##########################################################################*/
-void TQuizS11::ImportMvsp(const char *filename, int PcaType)
+void TQuizS12::ImportMvsp(const char *filename, int PcaType)
 {
 	char buf[MAX_IN_ROW];
 	int size;
@@ -1862,126 +1839,4 @@ void TQuizS11::ImportMvsp(const char *filename, int PcaType)
 			}
 		}
 	}
-}
-
-/*##################  TQuizS11::WriteTS ##########################
-*   Purpose....: Write TS test report             			     	        #
-*   In params..: *                                                          #
-*   Out params.: *                                                          #
-*   Returns....: *                                                          #
-*   Created....: 96-11-20 le                                                #
-*##########################################################################*/
-void TQuizS11::WriteTS(const char *filename)
-{
-	int Count;
-	long double AsSum;
-	long double NtSum;
-	long double DiffSum;
-	long double TsSum;
-	long double AsMean;
-	long double NtMean;
-	long double DiffMean;
-	long double TsMean;
-	long double AsSd;
-	long double NtSd;
-	long double DiffSd;
-	long double TsSd;
-	long double AsCorr;
-	long double NtCorr;
-	long double DiffCorr;
-	long double val;
-	long double zx;
-	long double zy;
-	TQuizRow Row;
-	int i;
-	int ival;
-	char str[80];
-
-	Count = 0;
-	AsSum = 0;
-	NtSum = 0;
-	TsSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.TsResult)
-        {
-			Count++;
-			AsSum += Row.AsResult;
-			NtSum += Row.NtResult;
-			DiffSum += Row.AsResult - Row.NtResult;
-			TsSum += Row.TsResult;
-	    }
-	}
-
-	AsMean = AsSum / Count;
-	NtMean = NtSum / Count;
-	DiffMean = DiffSum / Count;
-	TsMean = TsSum / Count;
-
-	AsSum = 0;
-	NtSum = 0;
-	TsSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.TsResult)
-        {
-            val = (long double)Row.AsResult - AsMean;
-   			AsSum += val * val;
-   			
-            val = (long double)Row.NtResult - NtMean;
-			NtSum += val * val;
-			
-            val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
-			DiffSum += val * val;
-
-            val = (long double)Row.TsResult - TsMean;
-			TsSum += val * val;
-	    }
-	}
-
-	AsSd = sqrtl(AsSum / (Count - 1));
-	NtSd = sqrtl(NtSum / (Count - 1));
-	DiffSd = sqrtl(DiffSum / (Count - 1));
-	TsSd = sqrtl(TsSum / (Count - 1));
-
-	AsSum = 0;
-	NtSum = 0;
-	DiffSum = 0;
-
-	FDataFile.SetPos(0);
-	while (FDataFile.Read(&Row, sizeof(Row)))
-	{
-		if (Row.TsResult)
-		  {
-            zx = ((long double)Row.TsResult - TsMean) / TsSd;
-
-            zy = ((long double)Row.AsResult - AsMean) / AsSd;
-            AsSum += zx * zy;
-        
-            zy = ((long double)Row.NtResult - NtMean) / NtSd;
-            NtSum += zx * zy;
-
-            zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
-            DiffSum += zx * zy;
-	    }
-	}
-
-    AsCorr = AsSum / (Count - 1);
-    NtCorr = NtSum / (Count - 1);
-    DiffCorr = DiffSum / (Count - 1);
-	
-	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
-	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
-	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
-	printf("Mean TS score: %5.1Lf, SD: %5.1Lf\r\n", TsMean, TsSd);
-
-	printf("TS - Aspie score correlation: %5.2Lf\r\n", AsCorr);
-	printf("TS - NT score correlation: %5.2Lf\r\n", NtCorr);
-	printf("TS - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }

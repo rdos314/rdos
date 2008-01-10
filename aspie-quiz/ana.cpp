@@ -63,6 +63,7 @@
 #include "quizs9.h"
 #include "quizs10.h"
 #include "quizs11.h"
+#include "quizs12.h"
 #include "pop.h"
 
 //#define SWEDISH     1
@@ -109,6 +110,7 @@ int main(int argc, char **argv)
 	Quiz[24] = new TQuizS9("quizs9.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23]);
 	Quiz[25] = new TQuizS10("quizs10.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24]);
 	Quiz[26] = new TQuizS11("quizs11.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25]);
+	Quiz[27] = new TQuizS12("quizs12.bin", Quiz[0], Quiz[1], Quiz[2], Quiz[3], Quiz[4], Quiz[5], Quiz[6], Quiz[7], Quiz[8], Quiz[9], Quiz[10], Quiz[11], Quiz[12], Quiz[13], Quiz[14], Quiz[15], Quiz[16], Quiz[17], Quiz[18], Quiz[19], Quiz[20], Quiz[21], Quiz[22], Quiz[23], Quiz[24], Quiz[25], Quiz[26]);
 
 #ifdef ALL
 //  Quiz[0]->CheckCross();
@@ -450,9 +452,9 @@ int main(int argc, char **argv)
 	printf("calc global\r\n");
 	 Quiz[26]->CalcGlobal();
 
-//	 Quiz[26]->WritePhpQuestions("q.php");
-//	 Quiz[26]->WriteSetupTexts("q.cpp");
-//	 Quiz[26]->WriteSetupCross("c.cpp");
+	 Quiz[27]->WritePhpQuestions("q.php");
+	 Quiz[27]->WriteSetupTexts("q.cpp");
+	 Quiz[27]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 
@@ -808,13 +810,13 @@ int main(int argc, char **argv)
 //	  Quiz[14]->WriteWikiCorrelation("wiki.txt", "maxcorr.htm", 150);
 //	  Quiz[14]->WriteWikiNoncorrelated("wiki.txt", "mincorr.htm", 150);
 
-//	  Quiz[25]->WriteQuizWiki("s11.txt");
+//	  Quiz[26]->WriteQuizWiki("s12.txt");
 
 //	  TQuiz::PrintGlobalCorrelation(258, 81);
 //	  TQuiz::PrintGlobalCorrelation(556, 493);
 
 
-//	 TQuiz::WikiToQuiz("wiki.txt", "s11.txt");
+	 TQuiz::WikiToQuiz("wiki.txt", "s12.txt");
 
 //	 Quiz[7]->WritePhpGlobalQuestions("global.php");
 
