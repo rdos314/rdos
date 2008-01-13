@@ -43,6 +43,7 @@ public:
     virtual void ImportMvsp(const char *filename, int PcaType);
 
     virtual void WriteTS(const char *filename);
+    virtual void WriteRetest(const char *filename);
 
 private:
     virtual void GetReferer(const char *referer, TPopulation *pop);

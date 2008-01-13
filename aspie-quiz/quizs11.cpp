@@ -1062,7 +1062,7 @@ void TQuizS11::LoadPopulations()
 				Quiz[i].NoAnswer++;
 			else
 			{
-				if (i < 236)
+				if (i < 176)
 				{
 					score = Row.Quiz[i] - 1;
 					id = IdArr[i];
@@ -1243,7 +1243,7 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 4, 5);
 	 DefineCross(QuizS10, 5, 4);
     DefineCross(QuizS10, 6, 6);
-    DefineCross(QuizS10, 7, 10);
+	 DefineCross(QuizS10, 7, 10);
     DefineCross(QuizS10, 8, 11);
     DefineCross(QuizS10, 9, 14);
     DefineCross(QuizS10, 10, 15);
@@ -1273,7 +1273,7 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 34, 38);
 	 DefineCross(QuizS10, 35, 165);
     DefineCross(QuizS10, 36, 41);
-    DefineCross(QuizR3, 37, 160);
+	 DefineCross(QuizR3, 37, 160);
     DefineCross(QuizS10, 38, 156);
     DefineCross(QuizS10, 39, 101);
     DefineCross(QuizS10, 40, 42);
@@ -1303,7 +1303,7 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 64, 67);
 	 DefineCross(QuizS10, 65, 68);
     DefineCross(QuizS10, 66, 69);
-    DefineCross(QuizS10, 67, 70);
+	 DefineCross(QuizS10, 67, 70);
     DefineCross(QuizS10, 68, 71);
     DefineCross(QuizS10, 69, 72);
     DefineCross(QuizS10, 70, 144);
@@ -1333,7 +1333,7 @@ void TQuizS11::SetupCross(TQuiz *QuizI, TQuiz *QuizII, TQuiz *QuizIII, TQuiz *Qu
     DefineCross(QuizS10, 94, 100);
 	 DefineCross(QuizS10, 95, 21);
     DefineCross(QuizS10, 96, 122);
-    DefineCross(QuizS10, 97, 108);
+	 DefineCross(QuizS10, 97, 108);
     DefineCross(QuizS10, 98, 109);
     DefineCross(QuizS10, 99, 110);
     DefineCross(QuizS10, 100, 111);
@@ -1985,3 +1985,310 @@ void TQuizS11::WriteTS(const char *filename)
 	printf("TS - NT score correlation: %5.2Lf\r\n", NtCorr);
 	printf("TS - score diff correlation: %5.2Lf\r\n", DiffCorr);
 }
+
+
+/*##################  TQuizS11::WriteRetest ##########################
+*   Purpose....: Write retest report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS11::WriteRetest(const char *filename)
+{
+	TQuizRow Row;
+	int userid;
+	int i;
+	int index;
+	int birthyear;
+	int birthmonth;
+	int gender;
+	long double val;
+	long double AsSum;
+	long double NtSum;
+	long double AsMean;
+	long double NtMean;
+	long double QMean[149];
+	long double AsSd;
+	long double NtSd;
+	long double QSd[149];
+	long double AsTot;
+	long double NtTot;
+	int AsCount;
+	int NtCount;
+	long double QTot[149];
+	int QCount[149];
+	long double sd;
+	int AsArr[20];
+	int NtArr[20];
+	int q;
+	int count;
+	long double sum;
+	int QArr[149][20];
+	int ok;
+	char str[80];
+	TFile file(filename, 0);
+
+	for (userid = 0; userid < MAX_USERS; userid++)
+		 UserInfo[userid] = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		 userid = Row.userid;
+
+		 if (userid)
+		 {
+			  if (UserInfo[userid] == 0)
+			  {
+					UserInfo[userid] = new TUserInfo;
+					UserInfo[userid]->Count = 1;
+					  UserInfo[userid]->BirthYear = Row.BirthYear;
+					  UserInfo[userid]->BirthMonth = Row.BirthMonth;
+					UserInfo[userid]->AsSum = Row.AsResult;
+					UserInfo[userid]->NtSum = Row.NtResult;
+			  }
+			  else
+					UserInfo[userid]->Count++;
+		 }
+	}
+
+	 AsCount = 0;
+	 NtCount = 0;
+	 AsTot = 0;
+	 NtTot = 0;
+
+	 for (q = 0; q < 149; q++)
+	 {
+		  QTot[q] = 0;
+		  QCount[q] = 0;
+	 }
+
+	for (userid = 1; userid < MAX_USERS; userid++)
+	{
+		  if (UserInfo[userid])
+		  {
+				if (UserInfo[userid]->Count > 1)
+				 {
+					 for (i = 0; i < 20; i++)
+					 {
+						  AsArr[i] = 0;
+						  NtArr[i] = 0;
+
+						  for (q = 0; q < 149; q++)
+								QArr[q][i] = 0;
+					 }
+
+					 index = 0;
+
+					FDataFile.SetPos(0);
+				 while (FDataFile.Read(&Row, sizeof(Row)))
+					{
+						 if (Row.userid == userid)
+						 {
+								ok = FALSE;
+
+							if (index == 0)
+							{
+									birthyear = Row.BirthYear;
+									birthmonth = Row.BirthMonth;
+									gender = Row.Gender;
+								 ok = TRUE;
+
+									  UserInfo[userid]->Count = 1;
+									 UserInfo[userid]->BirthYear = Row.BirthYear;
+									 UserInfo[userid]->BirthMonth = Row.BirthMonth;
+									UserInfo[userid]->AsSum = Row.AsResult;
+									UserInfo[userid]->NtSum = Row.NtResult;
+							}
+							else
+							  {
+									if (    birthyear == Row.BirthYear &&
+											  birthmonth == Row.BirthMonth &&
+											gender == Row.Gender)
+								 {
+									  ok = TRUE;
+
+									  UserInfo[userid]->Count++;
+									  UserInfo[userid]->AsSum += Row.AsResult;
+									  UserInfo[userid]->NtSum += Row.NtResult;
+								 }
+							}
+
+							  if (ok)
+							  {
+								  AsArr[index] = Row.AsResult;
+								  NtArr[index] = Row.NtResult;
+
+								  for (q = 0; q < 149; q++)
+										QArr[q][index] = Row.Quiz[q];
+
+								 index++;
+							}
+					  }
+				 }
+
+				if (index > 1)
+				{
+					AsSum = 0;
+					NtSum = 0;
+
+					for (i = 0; i < index; i++)
+					{
+						AsSum += AsArr[i];
+						NtSum += NtArr[i];
+					 }
+
+					AsMean = AsSum / index;
+					NtMean = NtSum / index;
+
+					for (q = 0; q < 149; q++)
+					{
+						 count = 0;
+						  sum = 0;
+
+						 for (i = 0; i < index; i++)
+						 {
+							  if (QArr[q][i])
+							  {
+									 sum += QArr[q][i] - 1;
+									 count++;
+								}
+						 }
+
+						 if (count)
+							  QMean[q] = sum / count;
+						 else
+								QMean[q] = 0;
+					}
+
+					AsSum = 0;
+					NtSum = 0;
+
+					for (i = 0; i < index; i++)
+					 {
+						val = AsArr[i] - AsMean;
+						AsSum += val * val;
+
+						val = NtArr[i] - NtMean;
+						NtSum += val * val;
+					}
+
+					 AsSd = sqrtl(AsSum / index);
+					NtSd = sqrtl(NtSum / index);
+
+					for (q = 0; q < 149; q++)
+					{
+						 count = 0;
+						  sum = 0;
+
+						 for (i = 0; i < index; i++)
+						 {
+							  if (QArr[q][i])
+								{
+									 val = QArr[q][i] - 1 - QMean[q];
+									 sum += val * val;
+									 count++;
+							  }
+						 }
+
+								if (count)
+								{
+							 QSd[q] = sqrtl(sum / count);
+
+							 QTot[q] += QSd[q];
+							 QCount[q]++;
+						}
+						else
+							  QSd[q] = 0;
+					}
+
+						  AsTot += AsSd;
+						  AsCount++;
+
+					NtTot += NtSd;
+					 NtCount++;
+
+//  				sprintf(str, "Userid: %d, AS: %5.1Lf (%5.1Lf), NT: %5.1Lf (%5.1Lf)<br>", userid, AsMean, AsSd, NtMean, NtSd);
+//	    			file.Write(str);
+//
+//		    		for (q = 0; q < 135; q++)
+//			    	{
+//				        if (QSd[q] > 0.1)
+//  				    {
+//        				    sprintf(str, "#%d, Sd = %5.1Lf<br>", q, QSd[q]);
+//    	    			    file.Write(str);
+//    		    		}
+//    		        }
+				}
+			 }
+		}
+	}
+
+	AsSd = AsTot / AsCount;
+	NtSd = NtTot / NtCount;
+
+#ifdef ENGLISH
+	file.Write("<h2>Retest result</h2>\n");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h2>Omtestnings resultat</h2>\n");
+#endif
+
+#ifdef ENGLISH
+	sprintf(str, "Population size: %d", AsCount);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "Populationsstorlek: %d", AsCount);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+#ifdef ENGLISH
+	sprintf(str, "AS score standard deviation: %2.1Lf", AsSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "AS poäng standardavvikelse: %2.1Lf", AsSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br>");
+
+#ifdef ENGLISH
+	sprintf(str, "NT score standard deviation: %2.1Lf", NtSd);
+#endif
+
+#ifdef SWEDISH
+	sprintf(str, "NT poäng standardavvikelse: %2.1Lf", NtSd);
+#endif
+
+	file.Write(str);
+	file.Write("<br><br>");
+
+
+#ifdef ENGLISH
+	file.Write("<h3>Question standard deviations</h3>");
+#endif
+
+#ifdef SWEDISH
+	file.Write("<h3>Standardavvikelser per fråga</h3>");
+#endif
+
+	for (q = 0; q < 149; q++)
+	{
+		 sprintf(str, "%d. ", q + 1);
+		 file.Write(str);
+
+		file.Write(Quiz[q].Text);
+
+		 sd = QTot[q] / QCount[q];
+
+		  sprintf(str, " <b>%3.2Lf</b><br>", sd);
+		file.Write(str);
+	 }
+}
+
