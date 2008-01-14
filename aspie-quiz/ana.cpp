@@ -680,6 +680,7 @@ int main(int argc, char **argv)
 //	 Quiz[24]->WriteADD("");
 	 Quiz[25]->WriteDyslexia("");
 	 Quiz[26]->WriteTS("");
+	 Quiz[27]->WriteGifted("");
 
 	 Quiz[6]->WriteRefererNtCorrelation("eval\\exhnt.htm", "Exhibitionism", "dickflash.com");
 

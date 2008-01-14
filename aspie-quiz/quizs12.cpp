@@ -1809,8 +1809,8 @@ void TQuizS12::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-//					if (PcaType == PCA_TYPE_FEMALE)
-//						d2 = -d2;
+					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
 						d3 = -d3;
@@ -1888,3 +1888,126 @@ void TQuizS12::ImportMvsp(const char *filename, int PcaType)
 		}
 	}
 }
+
+/*##################  TQuizS12::WriteGifted ##########################
+*   Purpose....: Write gifted test report             			     	        #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuizS12::WriteGifted(const char *filename)
+{
+	int Count;
+	long double AsSum;
+	long double NtSum;
+	long double DiffSum;
+	long double GiftedSum;
+	long double AsMean;
+	long double NtMean;
+	long double DiffMean;
+	long double GiftedMean;
+	long double AsSd;
+	long double NtSd;
+	long double DiffSd;
+	long double GiftedSd;
+	long double AsCorr;
+	long double NtCorr;
+	long double DiffCorr;
+	long double val;
+	long double zx;
+	long double zy;
+	TQuizRow Row;
+	int i;
+	int ival;
+	char str[80];
+
+	Count = 0;
+	AsSum = 0;
+	NtSum = 0;
+	GiftedSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.GiftedResult)
+		{
+			Count++;
+			AsSum += Row.AsResult;
+			NtSum += Row.NtResult;
+			DiffSum += Row.AsResult - Row.NtResult;
+			GiftedSum += Row.GiftedResult;
+		}
+	}
+
+	AsMean = AsSum / Count;
+	NtMean = NtSum / Count;
+	DiffMean = DiffSum / Count;
+	GiftedMean = GiftedSum / Count;
+
+	AsSum = 0;
+	NtSum = 0;
+	GiftedSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.GiftedResult)
+		{
+			val = (long double)Row.AsResult - AsMean;
+			AsSum += val * val;
+
+			val = (long double)Row.NtResult - NtMean;
+			NtSum += val * val;
+
+			val = (long double)(Row.AsResult - Row.NtResult) - DiffMean;
+			DiffSum += val * val;
+
+			val = (long double)Row.GiftedResult - GiftedMean;
+			GiftedSum += val * val;
+		}
+	}
+
+	AsSd = sqrtl(AsSum / (Count - 1));
+	NtSd = sqrtl(NtSum / (Count - 1));
+	DiffSd = sqrtl(DiffSum / (Count - 1));
+	GiftedSd = sqrtl(GiftedSum / (Count - 1));
+
+	AsSum = 0;
+	NtSum = 0;
+	DiffSum = 0;
+
+	FDataFile.SetPos(0);
+	while (FDataFile.Read(&Row, sizeof(Row)))
+	{
+		if (Row.GiftedResult)
+		  {
+			zx = ((long double)Row.GiftedResult - GiftedMean) / GiftedSd;
+
+			zy = ((long double)Row.AsResult - AsMean) / AsSd;
+			AsSum += zx * zy;
+
+			zy = ((long double)Row.NtResult - NtMean) / NtSd;
+			NtSum += zx * zy;
+
+			zy = ((long double)(Row.AsResult - Row.NtResult) - DiffMean) / DiffSd;
+			DiffSum += zx * zy;
+		}
+	}
+
+	AsCorr = AsSum / (Count - 1);
+	NtCorr = NtSum / (Count - 1);
+	DiffCorr = DiffSum / (Count - 1);
+
+	printf("Mean Aspie score: %5.1Lf, SD: %5.1Lf\r\n", AsMean, AsSd);
+	printf("Mean NT score: %5.1Lf, SD: %5.1Lf\r\n", NtMean, NtSd);
+	printf("Mean score diff: %5.1Lf, SD: %5.1Lf\r\n", DiffMean, DiffSd);
+	printf("Mean gifted score: %5.1Lf, SD: %5.1Lf\r\n", GiftedMean, GiftedSd);
+
+	printf("Gifted - Aspie score correlation: %5.2Lf\r\n", AsCorr);
+	printf("Gifted - NT score correlation: %5.2Lf\r\n", NtCorr);
+	printf("Gifted - score diff correlation: %5.2Lf\r\n", DiffCorr);
+}
+
