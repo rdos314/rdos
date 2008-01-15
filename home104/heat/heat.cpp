@@ -150,9 +150,14 @@ void cdecl main()
 
 		vbe->DrawString(5, 420 + 16 * (i + 1), str);
 
-		RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
-		AddHttpRad(RadArr[i]);
-		log->Add(RadArr[i]);
+        if (i == 4)
+            RadArr[i] = 0;
+        else
+        {
+    		RadArr[i] = new TRad(vbe, 0x20 + i, 170, 420 + 16 * (i + 1));
+    		AddHttpRad(RadArr[i]);
+	    	log->Add(RadArr[i]);
+	    }
 	}
 
 	Ws = new TWs2300(1);
@@ -230,7 +235,7 @@ void cdecl main()
 
 		for (i = 0; i < 8; i++)
 		{
-			if (RadArr[i]->IsOnline())
+			if (RadArr[i] && RadArr[i]->IsOnline())
 			{
 				count++;
 
