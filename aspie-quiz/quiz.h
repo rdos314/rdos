@@ -271,6 +271,8 @@ public:
 	void ExportHistogram(const char *filename, int PopType, int Width, int All);
 	void ExportDiffHistogram(const char *filename, int PopType);
 
+	static void ExportHighestIntercorr(const char *filename, int Group);
+
 	void OptimizeAsWeights(int Asw[MAX_QUESTIONS], int Ntw[MAX_QUESTIONS]);
 	void RegressDsm(const char *filename);
 	void DsmCutoff(const char *filename, int All);

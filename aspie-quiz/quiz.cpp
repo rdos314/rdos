@@ -12641,3 +12641,68 @@ void TQuiz::DsmCutoff(const char *filename, int All)
 	file.Write("</table>\n");
 }
 
+/*##################  TQuiz::ExportHigestIntercorr ##########################
+*   Purpose....: Export highest AS-NT corr + highest intercorr         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportHighestIntercorr(const char *filename, int Group)
+{
+    int GlobalId;
+    TQuiz *quiz;
+	int q;
+	int use;
+	int k;
+	long double corr;
+	long double MaxCorr;
+    char str[80];
+	TFile file(filename, 0);
+
+    for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+    {
+        if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+        {
+            if (Group == 0)
+                use = TRUE;
+            else
+            {
+                use = FALSE;
+                quiz = GlobalTopQuiz[GlobalId];
+                if (quiz)
+                {
+                    q = GlobalTopQuestion[GlobalId];
+                    if (quiz->Quiz[q].MyGroup == Group)
+                        use = TRUE;
+                }
+            }
+        }
+
+        if (use)
+        {
+            MaxCorr = 0.0;
+            	
+            for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+            {
+                if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+                {
+                    corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+                    if (corr > MaxCorr)
+                        MaxCorr = corr;
+                }                     
+            }
+
+            if (MaxCorr > 0.0)
+            {            
+    		    corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+        		sprintf(str, "%Lf\t", corr);
+    	    	file.Write(str);
+
+        		sprintf(str, "%Lf\n", MaxCorr);
+	        	file.Write(str);
+	        }
+	    }
+	}
+}

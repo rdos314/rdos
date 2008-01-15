@@ -465,9 +465,12 @@ int main(int argc, char **argv)
 	printf("calc global\r\n");
 	 Quiz[27]->CalcGlobal();
 
-	 Quiz[27]->WritePhpQuestions("q.php");
-	 Quiz[27]->WriteSetupTexts("q.cpp");
-	 Quiz[27]->WriteSetupCross("c.cpp");
+	 printf("export intercorr\n");
+	 TQuiz::ExportHighestIntercorr("csv\\corr.csv", 0);
+
+//	 Quiz[27]->WritePhpQuestions("q.php");
+//	 Quiz[27]->WriteSetupTexts("q.cpp");
+//	 Quiz[27]->WriteSetupCross("c.cpp");
 
 	printf("referers\r\n");
 

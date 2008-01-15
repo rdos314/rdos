@@ -353,9 +353,16 @@ void TQuizS12::SetupTexts()
   Quiz[141].Reverse = TRUE;
   Quiz[144].Reverse = TRUE;
   Quiz[145].Reverse = TRUE;
+  Quiz[146].Reverse = TRUE;
   Quiz[147].Reverse = TRUE;
   Quiz[148].Reverse = TRUE;
+  Quiz[150].Reverse = TRUE;
+  Quiz[156].Reverse = TRUE;
+  Quiz[160].Reverse = TRUE;
   Quiz[162].Reverse = TRUE;
+  Quiz[167].Reverse = TRUE;
+  Quiz[169].Reverse = TRUE;
+  Quiz[170].Reverse = TRUE;
   Quiz[174].Reverse = TRUE;
 
   Quiz[0].MyGroup = GROUP_ASPIE_TALENT;
@@ -501,47 +508,47 @@ void TQuizS12::SetupTexts()
   Quiz[140].MyGroup = GROUP_ENVIRONMENT;
   Quiz[141].MyGroup = GROUP_MIXED;
 
-  Quiz[142].MyGroup = GROUP_MIXED;
+  Quiz[142].MyGroup = GROUP_ASPIE_HUNTING;
   Quiz[143].MyGroup = GROUP_MIXED;
 
   Quiz[144].MyGroup = GROUP_NT_TALENT;
   Quiz[145].MyGroup = GROUP_NT_TALENT;
-  Quiz[146].MyGroup = GROUP_MIXED;
+  Quiz[146].MyGroup = GROUP_NT_TALENT;
   Quiz[147].MyGroup = GROUP_NT_TALENT;
-  Quiz[148].MyGroup = GROUP_MIXED;
+  Quiz[148].MyGroup = GROUP_NT_TALENT;
   Quiz[149].MyGroup = GROUP_ASPIE_SENSORY;
   Quiz[150].MyGroup = GROUP_MIXED;
   Quiz[151].MyGroup = GROUP_ASPIE_OBSESSION;
   Quiz[152].MyGroup = GROUP_MIXED;
-  Quiz[153].MyGroup = GROUP_MIXED;
-  Quiz[154].MyGroup = GROUP_MIXED;
-  Quiz[155].MyGroup = GROUP_MIXED;
-  Quiz[156].MyGroup = GROUP_ENVIRONMENT;
+  Quiz[153].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[154].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[155].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[156].MyGroup = GROUP_NT_TALENT;
   Quiz[157].MyGroup = GROUP_SOCIAL;
   Quiz[158].MyGroup = GROUP_MIXED;
   Quiz[159].MyGroup = GROUP_MIXED;
-  Quiz[160].MyGroup = GROUP_MIXED;
-  Quiz[161].MyGroup = GROUP_MIXED;
+  Quiz[160].MyGroup = GROUP_NT_TALENT;
+  Quiz[161].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[162].MyGroup = GROUP_NT_TALENT;
   Quiz[163].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[164].MyGroup = GROUP_MIXED;
+  Quiz[164].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[165].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[166].MyGroup = GROUP_MIXED;
-  Quiz[167].MyGroup = GROUP_MIXED;
+  Quiz[167].MyGroup = GROUP_NT_TALENT;
   Quiz[168].MyGroup = GROUP_MIXED;
-  Quiz[169].MyGroup = GROUP_MIXED;
-  Quiz[170].MyGroup = GROUP_MIXED;
+  Quiz[169].MyGroup = GROUP_NT_TALENT;
+  Quiz[170].MyGroup = GROUP_NT_TALENT;
   Quiz[171].MyGroup = GROUP_ASPIE_OBSESSION;
-  Quiz[172].MyGroup = GROUP_MIXED;
+  Quiz[172].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[173].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[174].MyGroup = GROUP_NT_TALENT;
-  Quiz[175].MyGroup = GROUP_MIXED;
-  Quiz[176].MyGroup = GROUP_MIXED;
+  Quiz[175].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[176].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[177].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[178].MyGroup = GROUP_MIXED;
-  Quiz[179].MyGroup = GROUP_MIXED;
+  Quiz[178].MyGroup = GROUP_ASPIE_TALENT;
+  Quiz[179].MyGroup = GROUP_ASPIE_TALENT;
   Quiz[180].MyGroup = GROUP_ASPIE_TALENT;
-  Quiz[181].MyGroup = GROUP_MIXED;
+  Quiz[181].MyGroup = GROUP_ASPIE_TALENT;
 
   Quiz[182].MyGroup = GROUP_NT_HUNTING;
   Quiz[183].MyGroup = GROUP_NT_HUNTING;
@@ -1815,7 +1822,7 @@ void TQuizS12::ImportMvsp(const char *filename, int PcaType)
 			{
 				if (PcaType != PCA_TYPE_MIXED)
 				{
-					if (PcaType == PCA_TYPE_MALE || PcaType == PCA_TYPE_FEMALE)
+					if (PcaType == PCA_TYPE_ALL)
 						d2 = -d2;
 
 					if (PcaType == PCA_TYPE_ALL)
