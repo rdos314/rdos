@@ -12694,15 +12694,93 @@ void TQuiz::ExportHighestIntercorr(const char *filename, int Group)
             }
 
             if (MaxCorr > 0.0)
-            {            
-    		    corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+				{
+				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
 
-        		sprintf(str, "%Lf\t", corr);
-    	    	file.Write(str);
+				 if (corr < 0.0)
+					corr = -corr;
 
-        		sprintf(str, "%Lf\n", MaxCorr);
-	        	file.Write(str);
-	        }
-	    }
+				sprintf(str, "%Lf\t", corr);
+				file.Write(str);
+
+				sprintf(str, "%Lf\n", MaxCorr);
+				file.Write(str);
+			  }
+		 }
+	}
+}
+
+/*##################  TQuiz::ExportAverageIntercorr ##########################
+*   Purpose....: Export AS-NT corr + average intercorr         	      			      	    #
+*   In params..: *                                                          #
+*   Out params.: *                                                          #
+*   Returns....: *                                                          #
+*   Created....: 96-11-20 le                                                #
+*##########################################################################*/
+void TQuiz::ExportAverageIntercorr(const char *filename, int Group)
+{
+	 int GlobalId;
+	 TQuiz *quiz;
+	int q;
+	int use;
+	int k;
+	long double corr;
+	long double sum;
+	int count;
+	 char str[80];
+	TFile file(filename, 0);
+
+	 for (GlobalId = 0; GlobalId < MAX_GLOBAL_QUESTIONS; GlobalId++)
+	 {
+		  if (GlobalCorrCount[GlobalId][k] > 1 && GlobalAsNtCorrCount[GlobalId] > 1)
+		  {
+				if (Group == 0)
+					 use = TRUE;
+				else
+				{
+					 use = FALSE;
+					 quiz = GlobalTopQuiz[GlobalId];
+					 if (quiz)
+					 {
+						  q = GlobalTopQuestion[GlobalId];
+						  if (quiz->Quiz[q].MyGroup == Group)
+								use = TRUE;
+					 }
+				}
+		  }
+
+		  if (use)
+		  {
+				count = 0;
+				sum = 0.0;
+
+				for (k = 0; k < MAX_GLOBAL_QUESTIONS; k++)
+				{
+					 if (GlobalCorrCount[GlobalId][k] > 1 && k != GlobalId)
+					 {
+						  corr = GlobalCorrArr[GlobalId][k] / ((long double)GlobalCorrCount[GlobalId][k] - 1);
+
+						  if (corr < 0.0)
+								corr = -corr;
+
+						  sum += corr;
+						  count++;
+					 }
+				}
+
+				if (count)
+				{
+				 corr = GlobalAsNtCorrSum[GlobalId] / GlobalAsNtCorrCount[GlobalId];
+
+				 if (corr < 0.0)
+					corr = -corr;
+
+				sprintf(str, "%Lf\t", corr);
+				file.Write(str);
+
+				sprintf(str, "%Lf\n", sum / (long double)count);
+				file.Write(str);
+			  }
+		 }
 	}
 }

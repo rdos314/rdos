@@ -466,7 +466,8 @@ int main(int argc, char **argv)
 	 Quiz[27]->CalcGlobal();
 
 	 printf("export intercorr\n");
-	 TQuiz::ExportHighestIntercorr("csv\\corr.csv", 0);
+	 TQuiz::ExportHighestIntercorr("csv\\highcorr.csv", 0);
+	 TQuiz::ExportAverageIntercorr("csv\\avgcorr.csv", 0);
 
 //	 Quiz[27]->WritePhpQuestions("q.php");
 //	 Quiz[27]->WriteSetupTexts("q.cpp");
